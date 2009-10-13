@@ -198,7 +198,7 @@ gen_terms_body (Xapian::TermGenerator term_gen,
     GIOChannel *channel;
     GIOStatus gio_status;
     GError *error = NULL;
-    char *body_str;
+    char *body_line = NULL;
 
     channel = g_io_channel_new_file (filename, "r", &error);
     if (channel == NULL) {
@@ -213,16 +213,31 @@ gen_terms_body (Xapian::TermGenerator term_gen,
 	exit (1);
     }
 
-    gio_status = g_io_channel_read_to_end (channel, &body_str,
-					   NULL, &error);
-    if (gio_status != G_IO_STATUS_NORMAL) {
-	fprintf (stderr, "Error: %s\n", error->message);
-	exit (1);
+    while (1) {
+	if (body_line)
+	    g_free (body_line);
+
+	gio_status = g_io_channel_read_line (channel, &body_line,
+					     NULL, NULL, &error);
+	if (gio_status == G_IO_STATUS_EOF)
+	    break;
+	if (gio_status != G_IO_STATUS_NORMAL) {
+	    fprintf (stderr, "Error: %s\n", error->message);
+	    exit (1);
+	}
+
+	if (body_line[0] == '>')
+	    continue;
+
+	if (strncmp (body_line, "-- ", 3) == 0)
+	    break;
+
+	gen_terms (term_gen, "body", body_line);
     }
 
-    gen_terms (term_gen, "body", body_str);
+    if (body_line)
+	g_free (body_line);
 
-    g_free (body_str);
     g_io_channel_close (channel);
 }
 
