@@ -198,7 +198,7 @@ gen_terms_body (Xapian::TermGenerator term_gen,
     GIOChannel *channel;
     GIOStatus gio_status;
     GError *error = NULL;
-    char *body_line = NULL;
+    char *p, *body_line = NULL, *prev_line = NULL;
 
     channel = g_io_channel_new_file (filename, "r", &error);
     if (channel == NULL) {
@@ -226,9 +226,38 @@ gen_terms_body (Xapian::TermGenerator term_gen,
 	    exit (1);
 	}
 
-	if (body_line[0] == '>')
+	if (strlen (body_line) == 0)
 	    continue;
 
+	/* If the line looks like it might be introducing a quote,
+	 * save it until we see if the next line begins a quote. */
+	p = body_line + strlen (body_line) - 1;
+	while (p > body_line and isspace (*p))
+	    p--;
+	if (*p == ':') {
+	    prev_line = body_line;
+	    body_line = NULL;
+	    continue;
+	}
+
+	/* Skip quoted lines, (and previous lines that introduced them) */
+	if (body_line[0] == '>') {
+	    if (prev_line) {
+		g_free (prev_line);
+		prev_line = NULL;
+	    }
+	    continue;
+	}
+
+	/* Now that we're not looking at a quote we can add the prev_line */
+	if (prev_line) {
+	    gen_terms (term_gen, "body", prev_line);
+	    g_free (prev_line);
+	    prev_line = NULL;
+	}
+
+	/* Skip signatures */
+	/* XXX: Should only do this if "near" the end of the message. */
 	if (strncmp (body_line, "-- ", 3) == 0)
 	    break;
 
