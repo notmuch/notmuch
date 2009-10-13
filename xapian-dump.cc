@@ -44,7 +44,7 @@ print_document_terms (Xapian::Document doc)
 {
     Xapian::TermIterator i;
 
-    printf ("Terms:\n");
+    printf ("    Terms:\n");
 
     for (i = doc.termlist_begin (); i != doc.termlist_end (); i++)
 	cout << "\t" << *i << endl;
@@ -67,7 +67,7 @@ print_document_values (Xapian::Document doc)
     int value_no, value_int;
     double value_float;
 
-    printf ("Values:\n");
+    printf ("    Values:\n");
 
     for (i = doc.values_begin (); i != doc.values_end (); i++) {
 	value_no = i.get_valueno();
@@ -98,7 +98,7 @@ print_document (Xapian::Database db, Xapian::docid id)
 
     doc = db.get_document (id);
 
-    printf ("Data:\n");
+    printf ("    Data:\n");
     cout << "\t" << doc.get_data () << endl;
 
     print_document_terms (doc);
