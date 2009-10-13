@@ -34,10 +34,13 @@
 
 #include <cstdlib>
 #include <iostream>
+#include <algorithm>
 
 #include <xapian.h>
 
 using namespace std;
+
+vector<int> UNSERIALIZE;
 
 static void
 print_document_terms (Xapian::Document doc)
@@ -50,15 +53,43 @@ print_document_terms (Xapian::Document doc)
 	cout << "\t" << *i << endl;
 }
 
+static int
+vector_int_contains (vector<int> v, int i)
+{
+    vector<int>::iterator result;
+
+    result = find (v.begin(), v.end(), i);
+
+    return result != v.end();
+}
+
 static void
 print_document_values (Xapian::Document doc)
 {
     Xapian::ValueIterator i;
+    int value_no, value_int;
+    double value_float;
 
     printf ("Values:\n");
 
-    for (i = doc.values_begin (); i != doc.values_end (); i++)
-	cout << "\t" << i.get_valueno() << ": " << *i << endl;
+    for (i = doc.values_begin (); i != doc.values_end (); i++) {
+	value_no = i.get_valueno();
+
+	cout << "\t" << i.get_valueno() << ": ";
+
+	if (vector_int_contains (UNSERIALIZE, value_no)) {
+	    value_float = Xapian::sortable_unserialise (*i);
+	    value_int = value_float;
+	    if (value_int == value_float)
+		cout << value_int;
+	    else
+		cout << value_float;
+	} else {
+	    cout << *i;
+	}
+
+	cout << endl;
+    }
 }
 
 static void
@@ -79,14 +110,23 @@ int
 main (int argc, char *argv[])
 {
     const char *database_path;
+    int i;
 
     if (argc < 2) {
-	fprintf (stderr, "Usage: %s <path-to-xapian-database>\n",
+	fprintf (stderr, "Usage: %s <path-to-xapian-database> [value_nos...]\n",
 		 argv[0]);
+	fprintf (stderr, "Dumps data from the given database.\n");
+	fprintf (stderr, "The values corresponding to any value numbers given on the command line\n");
+	fprintf (stderr, "will be unserialized to an before being printed.\n");
 	exit (1);
     }
 
     database_path = argv[1];
+
+    UNSERIALIZE = vector<int> ();
+
+    for (i = 2; i < argc; i++)
+	UNSERIALIZE.push_back (atoi (argv[i]));
 
     try {
 
