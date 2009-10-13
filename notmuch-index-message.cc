@@ -23,7 +23,13 @@
 #include <errno.h>
 #include <time.h>
 
+#include <iostream>
+
 #include <gmime/gmime.h>
+
+#include <xapian.h>
+
+using namespace std;
 
 #define ARRAY_SIZE(arr) (sizeof (arr) / sizeof (arr[0]))
 
@@ -61,6 +67,15 @@ prefix_t BOOLEAN_PREFIX[] = {
     { "ref", "R" }
 };
 
+/* Similarly, these value numbers are also chosen to be sup
+ * compatible. */
+
+typedef enum {
+    NOTMUCH_VALUE_MESSAGE_ID = 0,
+    NOTMUCH_VALUE_THREAD = 1,
+    NOTMUCH_VALUE_DATE = 2
+} notmuch_value_t;
+
 static const char *
 find_prefix (const char *name)
 {
@@ -80,48 +95,73 @@ find_prefix (const char *name)
 int TERM_COMBINED = 0;
 
 static void
-print_term (const char *prefix_name, const char *value)
+add_term (Xapian::Document doc,
+	  const char *prefix_name,
+	  const char *value)
 {
     const char *prefix;
+    char *term;
 
     if (value == NULL)
 	return;
 
     prefix = find_prefix (prefix_name);
 
-    if (TERM_COMBINED)
-	printf ("\"%s%s\", ", prefix, value);
-    else
-	printf ("[\"%s\", \"%s\"], ", value, prefix);
+    term = g_strdup_printf ("%s%s", prefix, value);
+
+    doc.add_term (term);
+
+    g_free (term);
 }
 
 static void
-add_address_name (InternetAddress *address, const char *prefix_name)
+gen_terms (Xapian::TermGenerator term_gen,
+	   const char *prefix_name,
+	   const char *text)
+{
+    const char *prefix;
+
+    if (text == NULL)
+	return;
+
+    prefix = find_prefix (prefix_name);
+
+    term_gen.index_text (text, 1, prefix);
+}
+
+static void
+gen_terms_address_name (Xapian::TermGenerator term_gen,
+			InternetAddress *address,
+			const char *prefix_name)
 {
     const char *name;
 
     name = internet_address_get_name (address);
 
     if (name)
-	print_term (prefix_name, name);
+	gen_terms (term_gen, prefix_name, name);
 }
 
 static void
-add_address_names (InternetAddressList *addresses, const char *address_type)
+gen_terms_address_names (Xapian::TermGenerator term_gen,
+			 InternetAddressList *addresses,
+			 const char *address_type)
 {
     int i;
     InternetAddress *address;
 
     for (i = 0; i < internet_address_list_length (addresses); i++) {
 	address = internet_address_list_get_address (addresses, i);
-	add_address_name (address, address_type);
-	add_address_name (address, "name");
-	add_address_name (address, "body");
+	gen_terms_address_name (term_gen, address, address_type);
+	gen_terms_address_name (term_gen, address, "name");
+	gen_terms_address_name (term_gen, address, "body");
     }
 }
 
 static void
-add_address_addr (InternetAddress *address, const char *prefix_name)
+add_term_address_addr (Xapian::Document doc,
+		       InternetAddress *address,
+		       const char *prefix_name)
 {
     InternetAddressMailbox *mailbox = INTERNET_ADDRESS_MAILBOX (address);
     const char *addr;
@@ -129,19 +169,21 @@ add_address_addr (InternetAddress *address, const char *prefix_name)
     addr = internet_address_mailbox_get_addr (mailbox);
 
     if (addr)
-	print_term (prefix_name, addr);
+	add_term (doc, prefix_name, addr);
 }
 
 static void
-add_address_addrs (InternetAddressList *addresses, const char *address_type)
+add_terms_address_addrs (Xapian::Document doc,
+			 InternetAddressList *addresses,
+			 const char *address_type)
 {
     int i;
     InternetAddress *address;
 
     for (i = 0; i < internet_address_list_length (addresses); i++) {
 	address = internet_address_list_get_address (addresses, i);
-	add_address_addr (address, address_type);
-	add_address_addr (address, "email");
+	add_term_address_addr (doc, address, address_type);
+	add_term_address_addr (doc, address, "email");
     }
 }
 
@@ -152,23 +194,29 @@ main (int argc, char **argv)
     GMimeParser *parser;
     GMimeMessage *message;
     InternetAddressList *addresses;
+    GIOChannel *channel;
+    GIOStatus gio_status;
+    GError *error = NULL;
 
-    const char *filename;
+    const char *database_path, *filename;
     FILE *file;
+    gint64 body_offset;
+    char *body_str;
 
     const char *value, *from;
 
     time_t time;
     struct tm gm_time_tm;
-    char time_str[16]; /* YYYYMMDDHHMMSS + 1 for Y100k compatibility ;-) */
+    char date_str[16]; /* YYYYMMDDHHMMSS + 1 for Y100k compatibility ;-) */
 
-    if (argc < 2) {
-	fprintf (stderr, "Usage: %s <mail-message>\n",
+    if (argc < 3) {
+	fprintf (stderr, "Usage: %s <path-to-xapian-database> <mail-message>\n",
 		 argv[0]);
 	exit (1);
     }
 
-    filename = argv[1];
+    database_path = argv[1];
+    filename = argv[2];
 
     file = fopen (filename, "r");
     if (! file) {
@@ -184,56 +232,104 @@ main (int argc, char **argv)
 
     message = g_mime_parser_construct_message (parser);
 
-    printf ("text is:\n[");
-    from = g_mime_message_get_sender (message);
-    addresses = internet_address_list_parse_string (from);
+    try {
+	Xapian::WritableDatabase db;
+	Xapian::TermGenerator term_gen;
+	Xapian::Document doc;
 
-    add_address_names (addresses, "from_name");
+	doc = Xapian::Document ();
 
-    add_address_names (g_mime_message_get_all_recipients (message),
-		       "to_name");
+	doc.set_data (filename);
 
-    value = g_mime_message_get_subject (message);
-    print_term ("subject", value);
-    print_term ("body", value);
+	db = Xapian::WritableDatabase (database_path,
+				       Xapian::DB_CREATE_OR_OPEN);
 
-    printf ("]\nterms is:\n[");
+	term_gen = Xapian::TermGenerator ();
+	term_gen.set_stemmer (Xapian::Stem ("english"));
 
-    TERM_COMBINED = 1;
+	term_gen.set_document (doc);
 
-    from = g_mime_message_get_sender (message);
-    addresses = internet_address_list_parse_string (from);
+	from = g_mime_message_get_sender (message);
+	addresses = internet_address_list_parse_string (from);
 
-    add_address_addrs (addresses, "from_email");
+	gen_terms_address_names (term_gen, addresses, "from_name");
 
-    add_address_addrs (g_mime_message_get_all_recipients (message),
-		       "to_email");
+	addresses = g_mime_message_get_all_recipients (message);
+	gen_terms_address_names (term_gen, addresses, "to_name");
 
-    g_mime_message_get_date (message, &time, NULL);
+	value = g_mime_message_get_subject (message);
+	gen_terms (term_gen, "subject", value);
+	gen_terms (term_gen, "body", value);
 
-    gmtime_r (&time, &gm_time_tm);
+	body_offset = g_mime_parser_get_headers_end (parser);
+	channel = g_io_channel_new_file (filename, "r", &error);
+	if (channel == NULL) {
+	    fprintf (stderr, "Error: %s\n", error->message);
+	    exit (1);
+	}
 
-    if (strftime (time_str, sizeof (time_str),
-		  "%Y%m%d%H%M%S", &gm_time_tm) == 0) {
-	fprintf (stderr, "Internal error formatting time\n");
+	gio_status = g_io_channel_seek_position (channel, body_offset,
+						 G_SEEK_SET, &error);
+	if (gio_status != G_IO_STATUS_NORMAL) {
+	    fprintf (stderr, "Error: %s\n", error->message);
+	    exit (1);
+	}
+
+	gio_status = g_io_channel_read_to_end (channel, &body_str,
+					       NULL, &error);
+	if (gio_status != G_IO_STATUS_NORMAL) {
+	    fprintf (stderr, "Error: %s\n", error->message);
+	    exit (1);
+	}
+
+	gen_terms (term_gen, "body", body_str);
+
+	g_free (body_str);
+	g_io_channel_close (channel);
+
+	from = g_mime_message_get_sender (message);
+	addresses = internet_address_list_parse_string (from);
+
+	add_terms_address_addrs (doc, addresses, "from_email");
+
+	add_terms_address_addrs (doc,
+				 g_mime_message_get_all_recipients (message),
+				 "to_email");
+
+	g_mime_message_get_date (message, &time, NULL);
+
+	gmtime_r (&time, &gm_time_tm);
+
+	if (strftime (date_str, sizeof (date_str),
+		      "%Y%m%d%H%M%S", &gm_time_tm) == 0) {
+	    fprintf (stderr, "Internal error formatting time\n");
+	    exit (1);
+	}
+
+	add_term (doc, "date", date_str);
+
+	add_term (doc, "label", "inbox");
+	add_term (doc, "label", "unread");
+	add_term (doc, "type", "mail");
+
+	value = g_mime_message_get_message_id (message);
+	add_term (doc, "msgid", value);
+
+	add_term (doc, "source_id", "1");
+
+	add_term (doc, "thread", value);
+
+	doc.add_value (NOTMUCH_VALUE_MESSAGE_ID, value);
+	doc.add_value (NOTMUCH_VALUE_THREAD, value);
+
+	doc.add_value (NOTMUCH_VALUE_DATE, Xapian::sortable_serialise (time));
+
+	db.add_document (doc);
+
+    } catch (const Xapian::Error &error) {
+	cerr << "A Xapian exception occurred: " << error.get_msg () << endl;
 	exit (1);
     }
-
-    print_term ("date", time_str);
-
-    print_term ("label", "inbox");
-    print_term ("label", "unread");
-    print_term ("type", "mail");
-
-    value = g_mime_message_get_message_id (message);
-    print_term ("msgid", value);
-
-    print_term ("source_id", "1");
-
-    value = g_mime_message_get_message_id (message);
-    print_term ("thread", value);
-
-    printf ("]\n");
 
     g_object_unref (message);
     g_object_unref (parser);
