@@ -24,12 +24,9 @@
  *
  * And for each document ID:
  *
- *	All terms
- *	All values
- *
- * Things not yet dumped include:
- *
- * Data associated with a document.
+ *	Document data
+ *	All document terms
+ *	All document values
  */
 
 #include <cstdlib>
@@ -100,6 +97,9 @@ print_document (Xapian::Database db, Xapian::docid id)
     printf ("Document %u:\n", id);
 
     doc = db.get_document (id);
+
+    printf ("Data:\n");
+    cout << "\t" << doc.get_data () << endl;
 
     print_document_terms (doc);
 
