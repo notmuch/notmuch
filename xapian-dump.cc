@@ -1,4 +1,4 @@
-/* xapian-dump: Dump document IDs and associated terms from a Xapian database
+/* xapian-dump: Create a textual dump of a Xapian database.
  *
  * Copyright © 2009 Carl Worth
  *
@@ -18,6 +18,20 @@
  * Author: Carl Worth <cworth@cworth.org>
  */
 
+/* Currently the dumped data includes:
+ *
+ * 	All document IDs
+ *
+ * And for each document ID:
+ *
+ *	All terms
+ *	All values
+ *
+ * Things not yet dumped include:
+ *
+ * Data associated with a document.
+ */
+
 #include <cstdlib>
 #include <iostream>
 
@@ -26,14 +40,39 @@
 using namespace std;
 
 static void
-print_document (Xapian::Database db, Xapian::docid id)
+print_document_terms (Xapian::Document doc)
 {
     Xapian::TermIterator i;
 
+    printf ("Terms:\n");
+
+    for (i = doc.termlist_begin (); i != doc.termlist_end (); i++)
+	cout << "\t" << *i << endl;
+}
+
+static void
+print_document_values (Xapian::Document doc)
+{
+    Xapian::ValueIterator i;
+
+    printf ("Values:\n");
+
+    for (i = doc.values_begin (); i != doc.values_end (); i++)
+	cout << "\t" << i.get_valueno() << ": " << *i << endl;
+}
+
+static void
+print_document (Xapian::Database db, Xapian::docid id)
+{
+    Xapian::Document doc;
+
     printf ("Document %u:\n", id);
 
-    for (i = db.termlist_begin (id); i != db.termlist_end (id); i++)
-	cout << "\t" << *i << endl;
+    doc = db.get_document (id);
+
+    print_document_terms (doc);
+
+    print_document_values (doc);
 }
 
 int
