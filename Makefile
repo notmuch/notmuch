@@ -1,12 +1,11 @@
-PROGS=g_mime_test xapian-dump
+PROGS=notmuch-index-message xapian-dump
 
-MYCFLAGS=-Wall
 MYCXXFLAGS=-Wall
 
 all: $(PROGS)
 
-g_mime_test: g_mime_test.c
-	$(CC) $(CFLAGS) $(MYCFLAGS) g_mime_test.c `pkg-config --cflags --libs gmime-2.4` -o g_mime_test
+notmuch-index-message: notmuch-index-message.cc
+	$(CC) $(CXXFLAGS) $(MYCXXFLAGS) notmuch-index-message.cc `pkg-config --cflags --libs gmime-2.4` `xapian-config --cxxflags --libs` -o notmuch-index-message
 
 xapian-dump: xapian-dump.cc
 	$(CXX) $(CXXFLAGS) $(MYCXXFLAGS) xapian-dump.cc `xapian-config --libs --cxxflags` -o xapian-dump

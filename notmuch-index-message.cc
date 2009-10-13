@@ -64,7 +64,7 @@ prefix_t BOOLEAN_PREFIX[] = {
 static const char *
 find_prefix (const char *name)
 {
-    int i;
+    unsigned int i;
 
     for (i = 0; i < ARRAY_SIZE (NORMAL_PREFIX); i++)
 	if (strcmp (name, NORMAL_PREFIX[i].name) == 0)
@@ -175,9 +175,9 @@ main (int argc, char **argv)
 	fprintf (stderr, "Error opening %s: %s\n", filename, strerror (errno));
 	exit (1);
     }
-    
+
     g_mime_init (0);
-    
+
     stream = g_mime_stream_file_new (file);
 
     parser = g_mime_parser_new_with_stream (stream);
@@ -238,6 +238,6 @@ main (int argc, char **argv)
     g_object_unref (message);
     g_object_unref (parser);
     g_object_unref (stream);
-    
+
     return 0;
 }
