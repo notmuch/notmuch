@@ -187,6 +187,46 @@ add_terms_address_addrs (Xapian::Document doc,
     }
 }
 
+/* Generate terms for the body of a message, given the filename of the
+ * message and the offset at which the headers of the message end,
+ * (and hence the body begins). */
+static void
+gen_terms_body (Xapian::TermGenerator term_gen,
+		const char * filename,
+		gint64 body_offset)
+{
+    GIOChannel *channel;
+    GIOStatus gio_status;
+    GError *error = NULL;
+    char *body_str;
+
+    channel = g_io_channel_new_file (filename, "r", &error);
+    if (channel == NULL) {
+	fprintf (stderr, "Error: %s\n", error->message);
+	exit (1);
+    }
+
+    gio_status = g_io_channel_seek_position (channel, body_offset,
+					     G_SEEK_SET, &error);
+    if (gio_status != G_IO_STATUS_NORMAL) {
+	fprintf (stderr, "Error: %s\n", error->message);
+	exit (1);
+    }
+
+    gio_status = g_io_channel_read_to_end (channel, &body_str,
+					   NULL, &error);
+    if (gio_status != G_IO_STATUS_NORMAL) {
+	fprintf (stderr, "Error: %s\n", error->message);
+	exit (1);
+    }
+
+    gen_terms (term_gen, "body", body_str);
+
+    g_free (body_str);
+    g_io_channel_close (channel);
+}
+
+
 int
 main (int argc, char **argv)
 {
@@ -194,14 +234,9 @@ main (int argc, char **argv)
     GMimeParser *parser;
     GMimeMessage *message;
     InternetAddressList *addresses;
-    GIOChannel *channel;
-    GIOStatus gio_status;
-    GError *error = NULL;
 
     const char *database_path, *filename;
     FILE *file;
-    gint64 body_offset;
-    char *body_str;
 
     const char *value, *from;
 
@@ -261,31 +296,8 @@ main (int argc, char **argv)
 	gen_terms (term_gen, "subject", value);
 	gen_terms (term_gen, "body", value);
 
-	body_offset = g_mime_parser_get_headers_end (parser);
-	channel = g_io_channel_new_file (filename, "r", &error);
-	if (channel == NULL) {
-	    fprintf (stderr, "Error: %s\n", error->message);
-	    exit (1);
-	}
-
-	gio_status = g_io_channel_seek_position (channel, body_offset,
-						 G_SEEK_SET, &error);
-	if (gio_status != G_IO_STATUS_NORMAL) {
-	    fprintf (stderr, "Error: %s\n", error->message);
-	    exit (1);
-	}
-
-	gio_status = g_io_channel_read_to_end (channel, &body_str,
-					       NULL, &error);
-	if (gio_status != G_IO_STATUS_NORMAL) {
-	    fprintf (stderr, "Error: %s\n", error->message);
-	    exit (1);
-	}
-
-	gen_terms (term_gen, "body", body_str);
-
-	g_free (body_str);
-	g_io_channel_close (channel);
+	gen_terms_body (term_gen, filename,
+			g_mime_parser_get_headers_end (parser));
 
 	from = g_mime_message_get_sender (message);
 	addresses = internet_address_list_parse_string (from);
