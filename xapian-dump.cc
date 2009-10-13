@@ -1,4 +1,4 @@
-/* xapian-dump: Dump all document IDs from a Xapian database
+/* xapian-dump: Dump document IDs and associated terms from a Xapian database
  *
  * Copyright © 2009 Carl Worth
  *
@@ -25,6 +25,17 @@
 
 using namespace std;
 
+static void
+print_document (Xapian::Database db, Xapian::docid id)
+{
+    Xapian::TermIterator i;
+
+    printf ("Document %u:\n", id);
+
+    for (i = db.termlist_begin (id); i != db.termlist_end (id); i++)
+	cout << "\t" << *i << endl;
+}
+
 int
 main (int argc, char *argv[])
 {
@@ -47,7 +58,8 @@ main (int argc, char *argv[])
 	db = Xapian::Database (database_path);
 	for (i = db.postlist_begin (""); i != db.postlist_end (""); i++) {
 	    doc_id = *i;
-	    printf ("Found document %u\n", doc_id);
+
+	    print_document (db, doc_id);
 	}
 
     } catch (const Xapian::Error &error) {
