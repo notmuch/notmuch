@@ -1,4 +1,5 @@
-/*
+/* xapian-dump: Dump all document IDs from a Xapian database
+ *
  * Copyright © 2009 Carl Worth
  *
  * This program is free software: you can redistribute it and/or modify
@@ -18,15 +19,39 @@
  */
 
 #include <cstdlib>
+#include <iostream>
 
 #include <xapian.h>
+
+using namespace std;
 
 int
 main (int argc, char *argv[])
 {
+    const char *database_path;
+
     if (argc < 2) {
 	fprintf (stderr, "Usage: %s <path-to-xapian-database>\n",
 		 argv[0]);
+	exit (1);
+    }
+
+    database_path = argv[1];
+
+    try {
+
+	Xapian::Database db;
+        Xapian::PostingIterator i;
+	Xapian::docid doc_id;
+
+	db = Xapian::Database (database_path);
+	for (i = db.postlist_begin (""); i != db.postlist_end (""); i++) {
+	    doc_id = *i;
+	    printf ("Found document %u\n", doc_id);
+	}
+
+    } catch (const Xapian::Error &error) {
+	cerr << "A Xapian exception occurred: " << error.get_msg () << endl;
 	exit (1);
     }
 
