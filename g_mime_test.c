@@ -157,7 +157,6 @@ main (int argc, char **argv)
     FILE *file;
 
     const char *value, *from;
-    int i;
 
     time_t time;
     struct tm gm_time_tm;
