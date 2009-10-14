@@ -395,15 +395,31 @@ gen_terms_body_str (Xapian::TermGenerator term_gen,
 
 /* Callback to generate terms for each mime part of a message. */
 static void
-gen_terms_part (GMimeObject *parent,
-		GMimeObject *part,
-		gpointer user_data)
+gen_terms_part (Xapian::TermGenerator term_gen,
+		GMimeObject *part)
 {
-    Xapian::TermGenerator *term_gen = (Xapian::TermGenerator *) user_data;
     GMimeStream *stream;
     GMimeDataWrapper *wrapper;
     GByteArray *byte_array;
     char *body;
+
+    if (GMIME_IS_MULTIPART (part)) {
+	GMimeMultipart *multipart = GMIME_MULTIPART (part);
+	int i;
+
+	for (i = 0; i < g_mime_multipart_get_count (multipart); i++) {
+	    if (GMIME_IS_MULTIPART_SIGNED (multipart)) {
+		/* Don't index the signature. */
+		if (i == 1)
+		    continue;
+		if (i > 1)
+		    fprintf (stderr, "Warning: Unexpected extra parts of mutlipart/signed. Indexing anyway.\n");
+	    }
+	    gen_terms_part (term_gen,
+			    g_mime_multipart_get_part (multipart, i));
+	}
+	return;
+    }
 
     if (! GMIME_IS_PART (part)) {
 	fprintf (stderr, "Warning: Not indexing unknown mime part: %s.\n",
@@ -422,7 +438,7 @@ gen_terms_part (GMimeObject *parent,
 
     body = (char *) g_byte_array_free (byte_array, FALSE);
 
-    gen_terms_body_str (*term_gen, body);
+    gen_terms_body_str (term_gen, body);
 
     free (body);
 }
@@ -483,7 +499,7 @@ index_file (Xapian::WritableDatabase db,
     gen_terms (term_gen, "subject", subject);
     gen_terms (term_gen, "body", subject);
 
-    g_mime_message_foreach (message, gen_terms_part, &term_gen);
+    gen_terms_part (term_gen, g_mime_message_get_mime_part (message));
 
     parents = g_ptr_array_new ();
 
