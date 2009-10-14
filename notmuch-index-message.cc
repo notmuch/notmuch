@@ -419,19 +419,30 @@ index_file (Xapian::WritableDatabase db,
     g_object_unref (stream);
 }
 
+static void
+usage (const char *argv0)
+{
+    fprintf (stderr, "Usage: %s <path-to-xapian-database>\n", argv0);
+    fprintf (stderr, "\n");
+    fprintf (stderr, "Messages to be indexed are read from stdnin as absolute filenames\n");
+    fprintf (stderr, "one file per line.");
+}
+
 int
 main (int argc, char **argv)
 {
-    const char *database_path, *filename;
+    const char *database_path;
+    char *filename;
+    GIOChannel *channel;
+    GIOStatus gio_status;
+    GError *error = NULL;
 
-    if (argc < 3) {
-	fprintf (stderr, "Usage: %s <path-to-xapian-database> <mail-message>\n",
-		 argv[0]);
+    if (argc < 2) {
+	usage (argv[0]);
 	exit (1);
     }
 
     database_path = argv[1];
-    filename = argv[2];
 
     g_mime_init (0);
 
@@ -444,7 +455,24 @@ main (int argc, char **argv)
 
 	term_gen = Xapian::TermGenerator ();
 
-	index_file (db, term_gen, filename);
+	channel = g_io_channel_unix_new (fileno (stdin));
+
+	while (1) {
+	    gio_status = g_io_channel_read_line (channel, &filename,
+						 NULL, NULL, &error);
+	    if (gio_status == G_IO_STATUS_EOF)
+		break;
+	    if (gio_status != G_IO_STATUS_NORMAL) {
+		fprintf (stderr, "An error occurred reading from stdin: %s\n",
+			 error->message);
+		exit (1);
+	    }
+
+	    g_strchomp (filename);
+	    index_file (db, term_gen, filename);
+
+	    g_free (filename);
+	}
 
     } catch (const Xapian::Error &error) {
 	cerr << "A Xapian exception occurred: " << error.get_msg () << endl;
