@@ -310,7 +310,9 @@ gen_terms_body (Xapian::TermGenerator term_gen,
 
 	/* Skip signatures */
 	/* XXX: Should only do this if "near" the end of the message. */
-	if (strncmp (body_line, "-- ", 3) == 0)
+	if (strncmp (body_line, "-- ", 3) == 0 ||
+	    strncmp (body_line, "----------", 10) == 0 ||
+	    strncmp (body_line, "__________", 10) == 0)
 	    break;
 
 	gen_terms (term_gen, "body", body_line);
