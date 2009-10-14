@@ -436,6 +436,7 @@ gen_terms_part (Xapian::TermGenerator term_gen,
 
     g_object_unref (stream);
 
+    g_byte_array_append (byte_array, (guint8 *) "\0", 1);
     body = (char *) g_byte_array_free (byte_array, FALSE);
 
     gen_terms_body_str (term_gen, body);
