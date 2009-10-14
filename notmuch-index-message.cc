@@ -443,9 +443,20 @@ gen_terms_part (Xapian::TermGenerator term_gen,
     if (disposition &&
 	strcmp (disposition->disposition, GMIME_DISPOSITION_ATTACHMENT) == 0)
     {
+	const char *filename = g_mime_part_get_filename (GMIME_PART (part));
+	const char *extension;
+
 	add_term (term_gen.get_document (), "label", "attachment");
-	gen_terms (term_gen, "attachment",
-		  g_mime_part_get_filename (GMIME_PART (part)));
+	gen_terms (term_gen, "attachment", filename);
+
+	if (filename) {
+	    extension = strchr (filename, '.');
+	    if (extension) {
+		add_term (term_gen.get_document (), "attachment_extension",
+			  extension + 1);
+	    }
+	}
+
 	return;
     }
 
