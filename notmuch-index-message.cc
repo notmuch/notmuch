@@ -215,6 +215,9 @@ add_terms_references (Xapian::Document doc,
 
     refs = g_mime_object_get_header (GMIME_OBJECT (message), "references");
 
+    if (refs == NULL)
+	return;
+
     while (*refs) {
 	while (*refs && isspace (*refs))
 	    refs++;
