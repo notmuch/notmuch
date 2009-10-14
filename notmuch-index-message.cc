@@ -277,18 +277,25 @@ insert_thread_id (GHashTable *thread_ids, Xapian::Document doc)
 	g_hash_table_insert (thread_ids, strdup (value), NULL);
 }
 
-static char *
-find_thread_id (Xapian::Database db,
-		GPtrArray *parents,
-		const char *message_id)
+/* Return one or more thread_ids, (as a GPtrArray of strings), for the
+ * given message based on looking into the database for any messages
+ * referenced in parents, and also for any messages in the database
+ * referencing message_id.
+ *
+ * Caller should free all strings in the array and the array itself,
+ * (g_ptr_array_free) when done. */
+static GPtrArray *
+find_thread_ids (Xapian::Database db,
+		 GPtrArray *parents,
+		 const char *message_id)
 {
     Xapian::PostingIterator child, children_end;
     Xapian::Document doc;
     GHashTable *thread_ids;
     GList *keys, *l;
-    GString *result = NULL;
     unsigned int i;
     const char *parent_message_id;
+    GPtrArray *result;
 
     thread_ids = g_hash_table_new (g_str_hash, g_str_equal);
 
@@ -304,21 +311,15 @@ find_thread_id (Xapian::Database db,
 	insert_thread_id (thread_ids, doc);
     }
 
+    result = g_ptr_array_new ();
+
     keys = g_hash_table_get_keys (thread_ids);
     for (l = keys; l; l = l->next) {
 	char *id = (char *) l->data;
-	if (result == NULL) {
-	    result = g_string_new (id);
-	} else {
-	    g_string_append_printf (result, ",%s", id);
-	}
-	free (id);
+	g_ptr_array_add (result, id);
     }
 
-    if (result)
-	return g_string_free (result, FALSE);
-    else
-	return NULL;
+    return result;
 }
 
 /* Add a term for each message-id in the References header of the
@@ -440,12 +441,12 @@ index_file (Xapian::WritableDatabase db,
     GMimeParser *parser;
     GMimeMessage *message;
     InternetAddressList *addresses;
-    GPtrArray *parents;
+    GPtrArray *parents, *thread_ids;
 
     FILE *file;
 
     const char *subject, *refs, *in_reply_to, *from;
-    const char *message_id, *thread_id;
+    const char *message_id;
 
     time_t time;
     struct tm gm_time_tm;
@@ -501,7 +502,7 @@ index_file (Xapian::WritableDatabase db,
 
     message_id = g_mime_message_get_message_id (message);
 
-    thread_id = find_thread_id (db, parents, message_id);
+    thread_ids = find_thread_ids (db, parents, message_id);
 
     for (i = 0; i < parents->len; i++)
 	g_free (g_ptr_array_index (parents, i));
@@ -536,10 +537,28 @@ index_file (Xapian::WritableDatabase db,
     add_term (doc, "msgid", message_id);
     doc.add_value (NOTMUCH_VALUE_MESSAGE_ID, message_id);
 
-    if (thread_id) {
-	add_term (doc, "thread", thread_id);
-	doc.add_value (NOTMUCH_VALUE_THREAD, thread_id);
-	free ((void *) thread_id);
+    if (thread_ids->len) {
+	unsigned int i;
+	GString *thread_id;
+	char *id;
+
+	for (i = 0; i < thread_ids->len; i++) {
+	    id = (char *) thread_ids->pdata[i];
+
+	    add_term (doc, "thread", id);
+
+	    if (i == 0)
+		thread_id = g_string_new (id);
+	    else
+		g_string_append_printf (thread_id, ",%s", id);
+
+	    free (id);
+	}
+	g_ptr_array_free (thread_ids, TRUE);
+
+	doc.add_value (NOTMUCH_VALUE_THREAD, thread_id->str);
+
+	g_string_free (thread_id, TRUE);
     } else {
 	/* If not referenced thread, use the message ID */
 	add_term (doc, "thread", message_id);
