@@ -390,7 +390,8 @@ index_file (Xapian::WritableDatabase db,
 
     FILE *file;
 
-    const char *value, *from, *thread_id;
+    const char *subject, *refs, *in_reply_to, *from;
+    const char *message_id, *thread_id;
 
     time_t time;
     struct tm gm_time_tm;
@@ -425,21 +426,22 @@ index_file (Xapian::WritableDatabase db,
     addresses = g_mime_message_get_all_recipients (message);
     gen_terms_address_names (term_gen, addresses, "to_name");
 
-    value = g_mime_message_get_subject (message);
-    value = skip_re_in_subject (value);
-    gen_terms (term_gen, "subject", value);
-    gen_terms (term_gen, "body", value);
+    subject = g_mime_message_get_subject (message);
+    subject = skip_re_in_subject (subject);
+    gen_terms (term_gen, "subject", subject);
+    gen_terms (term_gen, "body", subject);
 
     gen_terms_body (term_gen, filename,
 		    g_mime_parser_get_headers_end (parser));
 
     parents = g_ptr_array_new ();
 
-    value = g_mime_object_get_header (GMIME_OBJECT (message), "references");
-    parse_references (parents, value);
+    refs = g_mime_object_get_header (GMIME_OBJECT (message), "references");
+    parse_references (parents, refs);
 
-    value = g_mime_object_get_header (GMIME_OBJECT (message), "in-reply-to");
-    parse_references (parents, value);
+    in_reply_to = g_mime_object_get_header (GMIME_OBJECT (message),
+					    "in-reply-to");
+    parse_references (parents, in_reply_to);
 
     for (i = 0; i < parents->len; i++)
 	add_term (doc, "ref", (char *) g_ptr_array_index (parents, i));
@@ -476,9 +478,9 @@ index_file (Xapian::WritableDatabase db,
     add_term (doc, "type", "mail");
     add_term (doc, "source_id", "1");
 
-    value = g_mime_message_get_message_id (message);
-    add_term (doc, "msgid", value);
-    doc.add_value (NOTMUCH_VALUE_MESSAGE_ID, value);
+    message_id = g_mime_message_get_message_id (message);
+    add_term (doc, "msgid", message_id);
+    doc.add_value (NOTMUCH_VALUE_MESSAGE_ID, message_id);
 
     if (thread_id) {
 	add_term (doc, "thread", thread_id);
@@ -486,8 +488,8 @@ index_file (Xapian::WritableDatabase db,
 	free ((void *) thread_id);
     } else {
 	/* If not referenced thread, use the message ID */
-	add_term (doc, "thread", value);
-	doc.add_value (NOTMUCH_VALUE_THREAD, value);
+	add_term (doc, "thread", message_id);
+	doc.add_value (NOTMUCH_VALUE_THREAD, message_id);
     }
 
     doc.add_value (NOTMUCH_VALUE_DATE, Xapian::sortable_serialise (time));
