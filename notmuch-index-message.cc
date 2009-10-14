@@ -204,6 +204,38 @@ skip_re_in_subject (const char *subject)
     return s;
 }
 
+/* Add a term for each message-id in the References header of the
+ * message. */
+static void
+add_terms_references (Xapian::Document doc,
+		      GMimeMessage *message)
+{
+    const char *refs, *end, *next;
+    char *term;
+
+    refs = g_mime_object_get_header (GMIME_OBJECT (message), "references");
+
+    while (*refs) {
+	while (*refs && isspace (*refs))
+	    refs++;
+	if (*refs == '<')
+	    refs++;
+	end = refs;
+	while (*end && !isspace (*end))
+	    end++;
+	next = end;
+	end--;
+	if (end > refs && *end == '>')
+	    end--;
+	if (end > refs) {
+	    term = g_strndup (refs, end - refs + 1);
+	    add_term (doc, "ref", term);
+	    g_free (term);
+	}
+	refs = next;
+    }
+}
+
 /* Generate terms for the body of a message, given the filename of the
  * message and the offset at which the headers of the message end,
  * (and hence the body begins). */
@@ -360,6 +392,8 @@ main (int argc, char **argv)
 
 	gen_terms_body (term_gen, filename,
 			g_mime_parser_get_headers_end (parser));
+
+	add_terms_references (doc, message);
 
 	from = g_mime_message_get_sender (message);
 	addresses = internet_address_list_parse_string (from);
