@@ -333,89 +333,90 @@ parse_references (GPtrArray *array,
     }
 }
 
-/* Generate terms for the body of a message, given the filename of the
- * message and the offset at which the headers of the message end,
- * (and hence the body begins). */
+/* Given a string representing the body of a message, generate terms
+ * for it, (skipping quoted portions and signatures). */
 static void
-gen_terms_body (Xapian::TermGenerator term_gen,
-		const char * filename,
-		gint64 body_offset)
+gen_terms_body_str (Xapian::TermGenerator term_gen,
+		    char *body)
 {
-    GIOChannel *channel;
-    GIOStatus gio_status;
-    GError *error = NULL;
-    char *p, *body_line = NULL, *prev_line = NULL;
+    char *line, *line_end, *next_line;
 
-    channel = g_io_channel_new_file (filename, "r", &error);
-    if (channel == NULL) {
-	fprintf (stderr, "Error: %s\n", error->message);
-	exit (1);
-    }
+    if (body == NULL)
+	return;
 
-    gio_status = g_io_channel_seek_position (channel, body_offset,
-					     G_SEEK_SET, &error);
-    if (gio_status != G_IO_STATUS_NORMAL) {
-	fprintf (stderr, "Error: %s\n", error->message);
-	exit (1);
-    }
+    next_line = body;
 
     while (1) {
-	if (body_line)
-	    g_free (body_line);
-
-	gio_status = g_io_channel_read_line (channel, &body_line,
-					     NULL, NULL, &error);
-	if (gio_status == G_IO_STATUS_EOF)
+	line = next_line;
+	if (*line == '\0')
 	    break;
-	if (gio_status != G_IO_STATUS_NORMAL) {
-	    fprintf (stderr, "Error: %s\n", error->message);
-	    exit (1);
-	}
 
-	if (strlen (body_line) == 0)
+	next_line = strchr (line, '\n');
+	if (next_line == NULL) {
+	    next_line = line + strlen (line);
+	}
+	line_end = next_line - 1;
+
+	/* Trim whitespace. */
+	while (*next_line && isspace (*next_line))
+	    next_line++;
+
+	/* Skip lines that are quotes. */
+	if (*line == '>')
 	    continue;
 
-	/* If the line looks like it might be introducing a quote,
-	 * save it until we see if the next line begins a quote. */
-	p = body_line + strlen (body_line) - 1;
-	while (p > body_line and isspace (*p))
-	    p--;
-	if (*p == ':') {
-	    prev_line = body_line;
-	    body_line = NULL;
+	/* Also skip lines introducing a quote on the next line. */
+	while (line_end > line && isspace (*line_end))
+	    line_end--;
+
+	if (*line_end == ':' && *next_line == '>')
 	    continue;
-	}
 
-	/* Skip quoted lines, (and previous lines that introduced them) */
-	if (body_line[0] == '>') {
-	    if (prev_line) {
-		g_free (prev_line);
-		prev_line = NULL;
-	    }
-	    continue;
-	}
-
-	/* Now that we're not looking at a quote we can add the prev_line */
-	if (prev_line) {
-	    gen_terms (term_gen, "body", prev_line);
-	    g_free (prev_line);
-	    prev_line = NULL;
-	}
-
-	/* Skip signatures */
+	/* Finally, bail as soon as we see a signature. */
 	/* XXX: Should only do this if "near" the end of the message. */
-	if (strncmp (body_line, "-- ", 3) == 0 ||
-	    strncmp (body_line, "----------", 10) == 0 ||
-	    strncmp (body_line, "__________", 10) == 0)
+	if (strncmp (line, "-- ", 3) == 0 ||
+	    strncmp (line, "----------", 10) == 0 ||
+	    strncmp (line, "__________", 10) == 0)
 	    break;
 
-	gen_terms (term_gen, "body", body_line);
+	*(line_end + 1) = '\0';
+	gen_terms (term_gen, "body", line);
+    }
+}
+
+
+/* Callback to generate terms for each mime part of a message. */
+static void
+gen_terms_part (GMimeObject *parent,
+		GMimeObject *part,
+		gpointer user_data)
+{
+    Xapian::TermGenerator *term_gen = (Xapian::TermGenerator *) user_data;
+    GMimeStream *stream;
+    GMimeDataWrapper *wrapper;
+    GByteArray *byte_array;
+    char *body;
+
+    if (! GMIME_IS_PART (part)) {
+	fprintf (stderr, "Warning: Not indexing unknown mime part: %s.\n",
+		 g_type_name (G_OBJECT_TYPE (part)));
+	return;
     }
 
-    if (body_line)
-	g_free (body_line);
+    byte_array = g_byte_array_new ();
 
-    g_io_channel_close (channel);
+    stream = g_mime_stream_mem_new_with_byte_array (byte_array);
+    g_mime_stream_mem_set_owner (GMIME_STREAM_MEM (stream), FALSE);
+    wrapper = g_mime_part_get_content_object (GMIME_PART (part));
+    g_mime_data_wrapper_write_to_stream (wrapper, stream);
+
+    g_object_unref (stream);
+
+    body = (char *) g_byte_array_free (byte_array, FALSE);
+
+    gen_terms_body_str (*term_gen, body);
+
+    free (body);
 }
 
 static void
@@ -474,8 +475,7 @@ index_file (Xapian::WritableDatabase db,
     gen_terms (term_gen, "subject", subject);
     gen_terms (term_gen, "body", subject);
 
-    gen_terms_body (term_gen, filename,
-		    g_mime_parser_get_headers_end (parser));
+    g_mime_message_foreach (message, gen_terms_part, &term_gen);
 
     parents = g_ptr_array_new ();
 
