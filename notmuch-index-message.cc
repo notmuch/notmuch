@@ -33,6 +33,9 @@ using namespace std;
 
 #define ARRAY_SIZE(arr) (sizeof (arr) / sizeof (arr[0]))
 
+/* Xapian complains if we provide a term longer than this. */
+#define NOTMUCH_MAX_TERM 245
+
 /* These prefix values are specifically chosen to be compatible
  * with sup, (http://sup.rubyforge.org), written by
  * William Morgan <wmorgan-sup@masanjin.net>, and released
@@ -109,7 +112,8 @@ add_term (Xapian::Document doc,
 
     term = g_strdup_printf ("%s%s", prefix, value);
 
-    doc.add_term (term);
+    if (strlen (term) <= NOTMUCH_MAX_TERM)
+	doc.add_term (term);
 
     g_free (term);
 }
@@ -202,6 +206,58 @@ skip_re_in_subject (const char *subject)
     }
 
     return s;
+}
+
+Xapian::Document
+find_message (Xapian::Database db, const char *message_id)
+{
+    Xapian::PostingIterator i;
+    char *term;
+
+    term = g_strdup_printf ("%s%s", find_prefix ("msgid"), message_id);
+    i = db.postlist_begin (term);
+    if (i != db.postlist_end (term))
+	return db.get_document (*i);
+    else
+	return Xapian::Document ();
+}
+
+static char *
+find_thread_id (Xapian::Database db, GPtrArray *parents)
+{
+    Xapian::Document doc;
+    GHashTable *thread_ids;
+    GList *keys, *l;
+    GString *result = NULL;
+    unsigned int i;
+    string value_string;
+    const char *value;
+
+    thread_ids = g_hash_table_new (g_str_hash, g_str_equal);
+
+    for (i = 0; i < parents->len; i++) {
+	doc = find_message (db, (char *) g_ptr_array_index (parents, i));
+	value_string = doc.get_value (NOTMUCH_VALUE_THREAD);
+	value = value_string.c_str();
+	if (strlen (value))
+	    g_hash_table_insert (thread_ids, strdup (value), NULL);
+    }
+
+    keys = g_hash_table_get_keys (thread_ids);
+    for (l = keys; l; l = l->next) {
+	char *id = (char *) l->data;
+	if (result == NULL) {
+	    result = g_string_new (id);
+	} else {
+	    g_string_append_printf (result, ",%s", id);
+	}
+	free (id);
+    }
+
+    if (result)
+	return g_string_free (result, FALSE);
+    else
+	return NULL;
 }
 
 /* Add a term for each message-id in the References header of the
@@ -334,7 +390,7 @@ index_file (Xapian::WritableDatabase db,
 
     FILE *file;
 
-    const char *value, *from;
+    const char *value, *from, *thread_id;
 
     time_t time;
     struct tm gm_time_tm;
@@ -386,7 +442,9 @@ index_file (Xapian::WritableDatabase db,
     parse_references (parents, value);
 
     for (i = 0; i < parents->len; i++)
-	add_term (doc, "ref", (const char *) g_ptr_array_index (parents, i));
+	add_term (doc, "ref", (char *) g_ptr_array_index (parents, i));
+
+    thread_id = find_thread_id (db, parents);
 
     for (i = 0; i < parents->len; i++)
 	g_free (g_ptr_array_index (parents, i));
@@ -420,10 +478,17 @@ index_file (Xapian::WritableDatabase db,
 
     value = g_mime_message_get_message_id (message);
     add_term (doc, "msgid", value);
-    add_term (doc, "thread", value);
-
     doc.add_value (NOTMUCH_VALUE_MESSAGE_ID, value);
-    doc.add_value (NOTMUCH_VALUE_THREAD, value);
+
+    if (thread_id) {
+	add_term (doc, "thread", thread_id);
+	doc.add_value (NOTMUCH_VALUE_THREAD, thread_id);
+	free ((void *) thread_id);
+    } else {
+	/* If not referenced thread, use the message ID */
+	add_term (doc, "thread", value);
+	doc.add_value (NOTMUCH_VALUE_THREAD, value);
+    }
 
     doc.add_value (NOTMUCH_VALUE_DATE, Xapian::sortable_serialise (time));
 
