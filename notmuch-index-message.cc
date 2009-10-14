@@ -17,6 +17,38 @@
  * Author: Carl Worth <cworth@cworth.org>
  */
 
+/* This indexer creates a Xapian mail index that is remarkably similar
+ * to that created by sup. The big difference, (and the thing that
+ * will keep a notmuch index from being used by sup directly), is that
+ * sup expects a serialized ruby data structure in the document's data
+ * field, but notmuch just puts the mail's filename there (trusting
+ * that the email client can get the data in needs from the filename).
+ *
+ * Note: One bug here is that sup actually merges together fields such
+ * as To, CC, Bcc etc. when finding multiple emails with the same
+ * message ID. To support something similar, notmuch should list
+ * multiple files in the data field.
+ *
+ * Other differences between sup and notmuch-index identified so far:
+ *
+ *   o sup supports encrypted mime parts by prompting for a passphrase
+ *     to decrypt the message. So far, notmuch doesn't support this,
+ *     both because I'm lazy to code it, and I also think doing so
+ *     would present a security leak.
+ *
+ *   o sup and notmuch have different heuristics for identifying (and
+ *     thus ignoring) signatures. For example, sup considers a line
+ *     consisting of two hypens as a signature separator, while
+ *     notmuch expects those two hyphens to be followed by a space
+ *     character.
+ *
+ *   o sup as been seen to split some numbers before indexing
+ *     them. For example, the number 1754 in an email message was
+ *     indexed by sup as separate terms 17 and 54. I couldn't find any
+ *     explanation for this behavior and did not try to replicate it
+ *     in notmuch.
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
