@@ -385,12 +385,10 @@ main (int argc, char **argv)
 	add_term (doc, "label", "inbox");
 	add_term (doc, "label", "unread");
 	add_term (doc, "type", "mail");
+	add_term (doc, "source_id", "1");
 
 	value = g_mime_message_get_message_id (message);
 	add_term (doc, "msgid", value);
-
-	add_term (doc, "source_id", "1");
-
 	add_term (doc, "thread", value);
 
 	doc.add_value (NOTMUCH_VALUE_MESSAGE_ID, value);
