@@ -269,12 +269,23 @@ static void
 insert_thread_id (GHashTable *thread_ids, Xapian::Document doc)
 {
     string value_string;
-    const char *value;
+    const char *value, *id, *comma;
 
     value_string = doc.get_value (NOTMUCH_VALUE_THREAD);
     value = value_string.c_str();
-    if (strlen (value))
-	g_hash_table_insert (thread_ids, strdup (value), NULL);
+    if (strlen (value)) {
+	id = value;
+	while (*id) {
+	    comma = strchr (id, ',');
+	    if (comma == NULL)
+		comma = id + strlen (id);
+	    g_hash_table_insert (thread_ids,
+				 strndup (id, comma - id), NULL);
+	    id = comma;
+	    if (*id)
+		id++;
+	}
+    }
 }
 
 /* Return one or more thread_ids, (as a GPtrArray of strings), for the
