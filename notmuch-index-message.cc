@@ -208,39 +208,82 @@ skip_re_in_subject (const char *subject)
     return s;
 }
 
-Xapian::Document
-find_message (Xapian::Database db, const char *message_id)
+static void
+find_messages_by_term (Xapian::Database db,
+		       const char *prefix_name,
+		       const char *value,
+		       Xapian::PostingIterator *begin,
+		       Xapian::PostingIterator *end)
 {
     Xapian::PostingIterator i;
     char *term;
 
-    term = g_strdup_printf ("%s%s", find_prefix ("msgid"), message_id);
-    i = db.postlist_begin (term);
-    if (i != db.postlist_end (term))
-	return db.get_document (*i);
+    term = g_strdup_printf ("%s%s", find_prefix (prefix_name), value);
+
+    *begin = db.postlist_begin (term);
+
+    if (end)
+	*end = db.postlist_end (term);
+
+    free (term);
+}
+
+Xapian::Document
+find_message_by_docid (Xapian::Database db, Xapian::docid docid)
+{
+    return db.get_document (docid);
+}
+
+Xapian::Document
+find_message_by_message_id (Xapian::Database db, const char *message_id)
+{
+    Xapian::PostingIterator i, end;
+
+    find_messages_by_term (db, "msgid", message_id, &i, &end);
+
+    if (i != end)
+	return find_message_by_docid (db, *i);
     else
 	return Xapian::Document ();
 }
 
-static char *
-find_thread_id (Xapian::Database db, GPtrArray *parents)
+static void
+insert_thread_id (GHashTable *thread_ids, Xapian::Document doc)
 {
+    string value_string;
+    const char *value;
+
+    value_string = doc.get_value (NOTMUCH_VALUE_THREAD);
+    value = value_string.c_str();
+    if (strlen (value))
+	g_hash_table_insert (thread_ids, strdup (value), NULL);
+}
+
+static char *
+find_thread_id (Xapian::Database db,
+		GPtrArray *parents,
+		const char *message_id)
+{
+    Xapian::PostingIterator child, children_end;
     Xapian::Document doc;
     GHashTable *thread_ids;
     GList *keys, *l;
     GString *result = NULL;
     unsigned int i;
-    string value_string;
-    const char *value;
+    const char *parent_message_id;
 
     thread_ids = g_hash_table_new (g_str_hash, g_str_equal);
 
+    find_messages_by_term (db, "ref", message_id, &child, &children_end);
+    for ( ; child != children_end; child++) {
+	doc = find_message_by_docid (db, *child);
+	insert_thread_id (thread_ids, doc);
+    }
+
     for (i = 0; i < parents->len; i++) {
-	doc = find_message (db, (char *) g_ptr_array_index (parents, i));
-	value_string = doc.get_value (NOTMUCH_VALUE_THREAD);
-	value = value_string.c_str();
-	if (strlen (value))
-	    g_hash_table_insert (thread_ids, strdup (value), NULL);
+	parent_message_id = (char *) g_ptr_array_index (parents, i);
+	doc = find_message_by_message_id (db, parent_message_id);
+	insert_thread_id (thread_ids, doc);
     }
 
     keys = g_hash_table_get_keys (thread_ids);
@@ -446,7 +489,9 @@ index_file (Xapian::WritableDatabase db,
     for (i = 0; i < parents->len; i++)
 	add_term (doc, "ref", (char *) g_ptr_array_index (parents, i));
 
-    thread_id = find_thread_id (db, parents);
+    message_id = g_mime_message_get_message_id (message);
+
+    thread_id = find_thread_id (db, parents, message_id);
 
     for (i = 0; i < parents->len; i++)
 	g_free (g_ptr_array_index (parents, i));
@@ -478,7 +523,6 @@ index_file (Xapian::WritableDatabase db,
     add_term (doc, "type", "mail");
     add_term (doc, "source_id", "1");
 
-    message_id = g_mime_message_get_message_id (message);
     add_term (doc, "msgid", message_id);
     doc.add_value (NOTMUCH_VALUE_MESSAGE_ID, message_id);
 
