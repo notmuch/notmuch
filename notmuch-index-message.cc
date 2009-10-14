@@ -439,11 +439,13 @@ gen_terms_part (Xapian::TermGenerator term_gen,
 	return;
     }
 
-    disposition = g_mime_object_get_content_disposition (GMIME_OBJECT (part));
+    disposition = g_mime_object_get_content_disposition (part);
     if (disposition &&
 	strcmp (disposition->disposition, GMIME_DISPOSITION_ATTACHMENT) == 0)
     {
 	add_term (term_gen.get_document (), "label", "attachment");
+	gen_terms (term_gen, "attachment",
+		  g_mime_part_get_filename (GMIME_PART (part)));
 	return;
     }
 
