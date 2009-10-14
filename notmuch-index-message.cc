@@ -207,13 +207,10 @@ skip_re_in_subject (const char *subject)
 /* Add a term for each message-id in the References header of the
  * message. */
 static void
-add_terms_references (Xapian::Document doc,
-		      GMimeMessage *message)
+parse_references (GPtrArray *array,
+		  const char *refs)
 {
-    const char *refs, *end, *next;
-    char *term;
-
-    refs = g_mime_object_get_header (GMIME_OBJECT (message), "references");
+    const char *end, *next;
 
     if (refs == NULL)
 	return;
@@ -231,9 +228,7 @@ add_terms_references (Xapian::Document doc,
 	if (end > refs && *end == '>')
 	    end--;
 	if (end > refs) {
-	    term = g_strndup (refs, end - refs + 1);
-	    add_term (doc, "ref", term);
-	    g_free (term);
+	    g_ptr_array_add (array, g_strndup (refs, end - refs + 1));
 	}
 	refs = next;
     }
@@ -335,6 +330,7 @@ index_file (Xapian::WritableDatabase db,
     GMimeParser *parser;
     GMimeMessage *message;
     InternetAddressList *addresses;
+    GPtrArray *parents;
 
     FILE *file;
 
@@ -343,6 +339,7 @@ index_file (Xapian::WritableDatabase db,
     time_t time;
     struct tm gm_time_tm;
     char date_str[16]; /* YYYYMMDDHHMMSS + 1 for Y100k compatibility ;-) */
+    unsigned int i;
 
     file = fopen (filename, "r");
     if (! file) {
@@ -380,7 +377,20 @@ index_file (Xapian::WritableDatabase db,
     gen_terms_body (term_gen, filename,
 		    g_mime_parser_get_headers_end (parser));
 
-    add_terms_references (doc, message);
+    parents = g_ptr_array_new ();
+
+    value = g_mime_object_get_header (GMIME_OBJECT (message), "references");
+    parse_references (parents, value);
+
+    value = g_mime_object_get_header (GMIME_OBJECT (message), "in-reply-to");
+    parse_references (parents, value);
+
+    for (i = 0; i < parents->len; i++)
+	add_term (doc, "ref", (const char *) g_ptr_array_index (parents, i));
+
+    for (i = 0; i < parents->len; i++)
+	g_free (g_ptr_array_index (parents, i));
+    g_ptr_array_free (parents, TRUE);
 
     from = g_mime_message_get_sender (message);
     addresses = internet_address_list_parse_string (from);
