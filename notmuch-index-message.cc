@@ -444,6 +444,7 @@ gen_terms_part (Xapian::TermGenerator term_gen,
 	strcmp (disposition->disposition, GMIME_DISPOSITION_ATTACHMENT) == 0)
     {
 	add_term (term_gen.get_document (), "label", "attachment");
+	return;
     }
 
     byte_array = g_byte_array_new ();
