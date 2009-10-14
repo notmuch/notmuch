@@ -187,6 +187,23 @@ add_terms_address_addrs (Xapian::Document doc,
     }
 }
 
+static const char *
+skip_re_in_subject (const char *subject)
+{
+    const char *s = subject;
+
+    while (*s) {
+	while (*s && isspace (*s))
+	    s++;
+	if (strncasecmp (s, "re:", 3) == 0)
+	    s += 3;
+	else
+	    break;
+    }
+
+    return s;
+}
+
 /* Generate terms for the body of a message, given the filename of the
  * message and the offset at which the headers of the message end,
  * (and hence the body begins). */
@@ -337,6 +354,7 @@ main (int argc, char **argv)
 	gen_terms_address_names (term_gen, addresses, "to_name");
 
 	value = g_mime_message_get_subject (message);
+	value = skip_re_in_subject (value);
 	gen_terms (term_gen, "subject", value);
 	gen_terms (term_gen, "body", value);
 
