@@ -379,8 +379,8 @@ gen_terms_body_str (Xapian::TermGenerator term_gen,
 	}
 	line_end = next_line - 1;
 
-	/* Trim whitespace. */
-	while (*next_line && isspace (*next_line))
+	/* Get to the next non-blank line. */
+	while (*next_line == '\n')
 	    next_line++;
 
 	/* Skip lines that are quotes. */
