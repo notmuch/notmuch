@@ -307,30 +307,22 @@ find_thread_id (Xapian::Database db,
  * message. */
 static void
 parse_references (GPtrArray *array,
-		  const char *refs)
+		  const char *refs_str)
 {
-    const char *end, *next;
+    GMimeReferences *refs, *r;
+    const char *message_id;
 
-    if (refs == NULL)
+    if (refs_str == NULL)
 	return;
 
-    while (*refs) {
-	while (*refs && isspace (*refs))
-	    refs++;
-	if (*refs == '<')
-	    refs++;
-	end = refs;
-	while (*end && !isspace (*end))
-	    end++;
-	next = end;
-	end--;
-	if (end > refs && *end == '>')
-	    end--;
-	if (end > refs) {
-	    g_ptr_array_add (array, g_strndup (refs, end - refs + 1));
-	}
-	refs = next;
+    refs = g_mime_references_decode (refs_str);
+
+    for (r = refs; r; r = r->next) {
+	message_id = g_mime_references_get_message_id (r);
+	g_ptr_array_add (array, g_strdup (message_id));
     }
+
+    g_mime_references_free (refs);
 }
 
 /* Given a string representing the body of a message, generate terms
