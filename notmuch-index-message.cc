@@ -412,6 +412,7 @@ gen_terms_part (Xapian::TermGenerator term_gen,
     GMimeStream *stream;
     GMimeDataWrapper *wrapper;
     GByteArray *byte_array;
+    GMimeContentDisposition *disposition;
     char *body;
 
     if (GMIME_IS_MULTIPART (part)) {
@@ -436,6 +437,13 @@ gen_terms_part (Xapian::TermGenerator term_gen,
 	fprintf (stderr, "Warning: Not indexing unknown mime part: %s.\n",
 		 g_type_name (G_OBJECT_TYPE (part)));
 	return;
+    }
+
+    disposition = g_mime_object_get_content_disposition (GMIME_OBJECT (part));
+    if (disposition &&
+	strcmp (disposition->disposition, GMIME_DISPOSITION_ATTACHMENT) == 0)
+    {
+	add_term (term_gen.get_document (), "label", "attachment");
     }
 
     byte_array = g_byte_array_new ();
