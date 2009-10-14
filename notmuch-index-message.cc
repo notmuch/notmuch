@@ -377,9 +377,6 @@ gen_terms_body_str (Xapian::TermGenerator term_gen,
 	    continue;
 
 	/* Also skip lines introducing a quote on the next line. */
-	while (line_end > line && isspace (*line_end))
-	    line_end--;
-
 	if (*line_end == ':' && *next_line == '>')
 	    continue;
 
