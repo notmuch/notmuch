@@ -139,11 +139,29 @@ gen_terms_address_name (Xapian::TermGenerator term_gen,
 			const char *prefix_name)
 {
     const char *name;
+    int own_name = 0;
 
     name = internet_address_get_name (address);
 
+    /* In the absence of a name, we'll strip the part before the @
+     * from the address. */
+    if (! name) {
+	InternetAddressMailbox *mailbox = INTERNET_ADDRESS_MAILBOX (address);
+	const char *addr = internet_address_mailbox_get_addr (mailbox);
+	const char *at;
+
+	at = strchr (addr, '@');
+	if (at) {
+	    name = strndup (addr, at - addr);
+	    own_name = 1;
+	}
+    }
+
     if (name)
 	gen_terms (term_gen, prefix_name, name);
+
+    if (own_name)
+	free ((void *) name);
 }
 
 static void
