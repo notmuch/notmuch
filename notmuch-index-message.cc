@@ -475,7 +475,17 @@ gen_terms_part (Xapian::TermGenerator term_gen,
 	return;
     }
 
-    if (! GMIME_IS_PART (part)) {
+    if (GMIME_IS_MESSAGE_PART (part)) {
+	GMimeMessage *message;
+
+	message = g_mime_message_part_get_message (GMIME_MESSAGE_PART (part));
+
+	gen_terms_part (term_gen, g_mime_message_get_mime_part (message));
+
+	return;
+    }
+
+    if (! (GMIME_IS_PART (part))) {
 	fprintf (stderr, "Warning: Not indexing unknown mime part: %s.\n",
 		 g_type_name (G_OBJECT_TYPE (part)));
 	return;
