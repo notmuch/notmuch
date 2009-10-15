@@ -735,7 +735,7 @@ main (int argc, char **argv)
 	    g_free (filename);
 
 	    count++;
-	    if (count % 250 == 0) {
+	    if (count % 1000 == 0) {
 		gettimeofday (&tv_now, NULL);
 		printf ("Indexed %d messages (%g messages/second)\n",
 			count, count / ((tv_now.tv_sec - tv_start.tv_sec) +
