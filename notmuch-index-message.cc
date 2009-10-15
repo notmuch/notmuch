@@ -204,6 +204,9 @@ gen_terms_address_names (Xapian::TermGenerator term_gen,
     int i;
     InternetAddress *address;
 
+    if (addresses == NULL)
+	return;
+
     for (i = 0; i < internet_address_list_length (addresses); i++) {
 	address = internet_address_list_get_address (addresses, i);
 	gen_terms_address_name (term_gen, address, address_type);
@@ -233,6 +236,9 @@ add_terms_address_addrs (Xapian::Document doc,
 {
     int i;
     InternetAddress *address;
+
+    if (addresses == NULL)
+	return;
 
     for (i = 0; i < internet_address_list_length (addresses); i++) {
 	address = internet_address_list_get_address (addresses, i);
