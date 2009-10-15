@@ -171,30 +171,44 @@ gen_terms_address_name (Xapian::TermGenerator term_gen,
 			InternetAddress *address,
 			const char *prefix_name)
 {
-    const char *name;
-    int own_name = 0;
+    if (INTERNET_ADDRESS_IS_MAILBOX(address)) {
+	const char *name;
+	int own_name = 0;
 
-    name = internet_address_get_name (address);
+	name = internet_address_get_name (address);
 
-    /* In the absence of a name, we'll strip the part before the @
-     * from the address. */
-    if (! name) {
-	InternetAddressMailbox *mailbox = INTERNET_ADDRESS_MAILBOX (address);
-	const char *addr = internet_address_mailbox_get_addr (mailbox);
-	const char *at;
+	/* In the absence of a name, we'll strip the part before the @
+	 * from the address. */
+	if (! name) {
+	    InternetAddressMailbox *mailbox = INTERNET_ADDRESS_MAILBOX (address);
+	    const char *addr = internet_address_mailbox_get_addr (mailbox);
+	    const char *at;
 
-	at = strchr (addr, '@');
-	if (at) {
-	    name = strndup (addr, at - addr);
-	    own_name = 1;
+	    at = strchr (addr, '@');
+	    if (at) {
+		name = strndup (addr, at - addr);
+		own_name = 1;
+	    }
+	}
+
+	if (name)
+	    gen_terms (term_gen, prefix_name, name);
+
+	if (own_name)
+	    free ((void *) name);
+    } else if (INTERNET_ADDRESS_IS_GROUP (address)) {
+	InternetAddressGroup *group = INTERNET_ADDRESS_GROUP (address);
+	InternetAddressList *list = internet_address_group_get_members(group);
+	if (list) {
+	    int	length = internet_address_list_length(list);
+	    int i;
+
+	    for (i = 0; i < length; i++)
+		gen_terms_address_name(term_gen,
+				       internet_address_list_get_address(list, i),
+				       prefix_name);
 	}
     }
-
-    if (name)
-	gen_terms (term_gen, prefix_name, name);
-
-    if (own_name)
-	free ((void *) name);
 }
 
 static void
@@ -221,13 +235,27 @@ add_term_address_addr (Xapian::Document doc,
 		       InternetAddress *address,
 		       const char *prefix_name)
 {
-    InternetAddressMailbox *mailbox = INTERNET_ADDRESS_MAILBOX (address);
-    const char *addr;
+    if (INTERNET_ADDRESS_IS_MAILBOX(address)) {
+	InternetAddressMailbox *mailbox = INTERNET_ADDRESS_MAILBOX (address);
+	const char *addr;
 
-    addr = internet_address_mailbox_get_addr (mailbox);
+	addr = internet_address_mailbox_get_addr (mailbox);
 
-    if (addr)
-	add_term (doc, prefix_name, addr);
+	if (addr)
+	    add_term (doc, prefix_name, addr);
+    } else if (INTERNET_ADDRESS_IS_GROUP (address)) {
+	InternetAddressGroup *group = INTERNET_ADDRESS_GROUP (address);
+	InternetAddressList *list = internet_address_group_get_members(group);
+	if (list) {
+	    int	length = internet_address_list_length(list);
+	    int i;
+
+	    for (i = 0; i < length; i++)
+		add_term_address_addr(doc,
+				      internet_address_list_get_address(list, i),
+				      prefix_name);
+	}
+    }
 }
 
 static void
