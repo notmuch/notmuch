@@ -253,6 +253,9 @@ skip_re_in_subject (const char *subject)
 {
     const char *s = subject;
 
+    if (subject == NULL)
+	return NULL;
+
     while (*s) {
 	while (*s && isspace (*s))
 	    s++;
