@@ -54,6 +54,7 @@
 #include <string.h>
 #include <errno.h>
 #include <time.h>
+#include <sys/time.h>
 
 #include <iostream>
 
@@ -677,6 +678,8 @@ main (int argc, char **argv)
     GIOChannel *channel;
     GIOStatus gio_status;
     GError *error = NULL;
+    int count;
+    struct timeval tv_start, tv_now;
 
     if (argc < 2) {
 	usage (argv[0]);
@@ -698,6 +701,10 @@ main (int argc, char **argv)
 
 	channel = g_io_channel_unix_new (fileno (stdin));
 
+	count = 0;
+
+	gettimeofday (&tv_start, NULL);
+
 	while (1) {
 	    gio_status = g_io_channel_read_line (channel, &filename,
 						 NULL, NULL, &error);
@@ -713,6 +720,14 @@ main (int argc, char **argv)
 	    index_file (db, term_gen, filename);
 
 	    g_free (filename);
+
+	    count++;
+	    if (count % 250 == 0) {
+		gettimeofday (&tv_now, NULL);
+		printf ("Indexed %d messages (%g messages/second)\n",
+			count, count / ((tv_now.tv_sec - tv_start.tv_sec) +
+					(tv_now.tv_usec - tv_start.tv_usec) / 1e6));
+	    }
 	}
 
     } catch (const Xapian::Error &error) {
