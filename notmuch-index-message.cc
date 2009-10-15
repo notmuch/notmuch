@@ -722,7 +722,8 @@ main (int argc, char **argv)
     GIOStatus gio_status;
     GError *error = NULL;
     int count;
-    struct timeval tv_start, tv_now;
+    struct timeval tv_start, tv_last, tv_now;
+    double elapsed;
 
     if (argc < 2) {
 	usage (argv[0]);
@@ -747,6 +748,7 @@ main (int argc, char **argv)
 	count = 0;
 
 	gettimeofday (&tv_start, NULL);
+	tv_last = tv_start;
 
 	while (1) {
 	    gio_status = g_io_channel_read_line (channel, &filename,
@@ -768,10 +770,17 @@ main (int argc, char **argv)
 	    if (count % 1000 == 0) {
 		gettimeofday (&tv_now, NULL);
 		printf ("Indexed %d messages (%g messages/second)\n",
-			count, count / ((tv_now.tv_sec - tv_start.tv_sec) +
-					(tv_now.tv_usec - tv_start.tv_usec) / 1e6));
+			count, 1000 / ((tv_now.tv_sec - tv_last.tv_sec) +
+				       (tv_now.tv_usec - tv_last.tv_usec) / 1e6));
+		tv_last = tv_now;
 	    }
 	}
+
+	gettimeofday (&tv_now, NULL);
+	elapsed = (tv_now.tv_sec - tv_start.tv_sec +
+		   (tv_now.tv_usec - tv_start.tv_usec) / 1e6);
+	printf ("Completed indexing of %d messages in %g seconds (%g messages/second)\n",
+		count, elapsed, count / elapsed);
 
     } catch (const Xapian::Error &error) {
 	cerr << "A Xapian exception occurred: " << error.get_msg () << endl;
