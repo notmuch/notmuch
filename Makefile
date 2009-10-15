@@ -1,6 +1,6 @@
 PROGS=notmuch-index-message xapian-dump
 
-MYCXXFLAGS=-Wall
+MYCXXFLAGS=-Wall -O0 -g
 
 all: $(PROGS)
 

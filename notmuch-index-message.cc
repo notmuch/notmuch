@@ -662,8 +662,10 @@ index_file (Xapian::WritableDatabase db,
     add_term (doc, "type", "mail");
     add_term (doc, "source_id", "1");
 
-    add_term (doc, "msgid", message_id);
-    doc.add_value (NOTMUCH_VALUE_MESSAGE_ID, message_id);
+    if (message_id) {
+	add_term (doc, "msgid", message_id);
+	doc.add_value (NOTMUCH_VALUE_MESSAGE_ID, message_id);
+    }
 
     if (thread_ids->len) {
 	unsigned int i;
@@ -687,7 +689,7 @@ index_file (Xapian::WritableDatabase db,
 	doc.add_value (NOTMUCH_VALUE_THREAD, thread_id->str);
 
 	g_string_free (thread_id, TRUE);
-    } else {
+    } else if (message_id) {
 	/* If not referenced thread, use the message ID */
 	add_term (doc, "thread", message_id);
 	doc.add_value (NOTMUCH_VALUE_THREAD, message_id);
