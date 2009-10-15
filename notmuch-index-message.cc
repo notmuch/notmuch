@@ -503,7 +503,8 @@ gen_terms_part (Xapian::TermGenerator term_gen,
     stream = g_mime_stream_mem_new_with_byte_array (byte_array);
     g_mime_stream_mem_set_owner (GMIME_STREAM_MEM (stream), FALSE);
     wrapper = g_mime_part_get_content_object (GMIME_PART (part));
-    g_mime_data_wrapper_write_to_stream (wrapper, stream);
+    if (wrapper)
+	g_mime_data_wrapper_write_to_stream (wrapper, stream);
 
     g_object_unref (stream);
 
