@@ -411,7 +411,8 @@ find_thread_ids (Xapian::Database db,
     const char *parent_message_id;
     GPtrArray *result;
 
-    thread_ids = g_hash_table_new (g_str_hash, g_str_equal);
+    thread_ids = g_hash_table_new_full (g_str_hash, g_str_equal,
+					free, NULL);
 
     find_messages_by_term (db, "ref", message_id, &child, &children_end);
     for ( ; child != children_end; child++) {
@@ -432,6 +433,13 @@ find_thread_ids (Xapian::Database db,
 	char *id = (char *) l->data;
 	g_ptr_array_add (result, id);
     }
+    g_list_free (keys);
+
+    /* We're done with the hash table, but we've taken the pointers to
+     * the allocated strings and put them into our result array, so
+     * tell the hash not to free them on its way out. */
+    g_hash_table_steal_all (thread_ids);
+    g_hash_table_unref (thread_ids);
 
     return result;
 }
