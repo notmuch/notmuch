@@ -486,6 +486,10 @@ gen_terms_body_str (Xapian::TermGenerator term_gen,
 	while (*next_line == '\n')
 	    next_line++;
 
+	/* Skip blank lines. */
+	if (line_end < line)
+	    continue;
+
 	/* Skip lines that are quotes. */
 	if (*line == '>')
 	    continue;
