@@ -817,6 +817,8 @@ main (int argc, char **argv)
 	    }
 	}
 
+	g_io_channel_unref (channel);
+
 	gettimeofday (&tv_now, NULL);
 	elapsed = (tv_now.tv_sec - tv_start.tv_sec +
 		   (tv_now.tv_usec - tv_start.tv_usec) / 1e6);
