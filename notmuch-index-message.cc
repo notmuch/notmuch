@@ -128,7 +128,40 @@ find_prefix (const char *name)
     return "";
 }
 
-int TERM_COMBINED = 0;
+/* "128 bits of thread-id ought to be enough for anybody" */
+#define NOTMUCH_THREAD_ID_BITS	 128
+#define NOTMUCH_THREAD_ID_DIGITS (NOTMUCH_THREAD_ID_BITS / 4)
+typedef struct _thread_id {
+    char str[NOTMUCH_THREAD_ID_DIGITS + 1];
+} thread_id_t;
+
+static void
+thread_id_generate (thread_id_t *thread_id)
+{
+    FILE *urandom;
+    uint32_t value;
+    char *s;
+    int i;
+
+    urandom = fopen ("/dev/urandom", "r");
+    if (urandom == NULL) {
+	fprintf (stderr, "Error opening /dev/urandom: %s\n",
+		 strerror (errno));
+	fprintf (stderr, "Perhaps notmuch needs some portability fixes for your platform?\n");
+	exit (1);
+    }
+
+    s = thread_id->str;
+    for (i = 0; i < NOTMUCH_THREAD_ID_DIGITS; i += 8) {
+	fread ((void *) &value, sizeof (value), 1, urandom);
+	sprintf (s, "%08x", value);
+	s += 8;
+    }
+
+    fclose (urandom);
+
+    printf ("Generated thread id: %s\n", thread_id->str);
+}
 
 static void
 add_term (Xapian::Document doc,
@@ -690,9 +723,13 @@ index_file (Xapian::WritableDatabase db,
 
 	g_string_free (thread_id, TRUE);
     } else if (message_id) {
-	/* If not referenced thread, use the message ID */
-	add_term (doc, "thread", message_id);
-	doc.add_value (NOTMUCH_VALUE_THREAD, message_id);
+	/* If not part of any existing thread, generate a new thread_id. */
+	thread_id_t thread_id;
+
+	thread_id_generate (&thread_id);
+
+	add_term (doc, "thread", thread_id.str);
+	doc.add_value (NOTMUCH_VALUE_THREAD, thread_id.str);
     }
 
     doc.add_value (NOTMUCH_VALUE_DATE, Xapian::sortable_serialise (time));
