@@ -638,21 +638,8 @@ gmime_datetok_table_init (void)
 }
 #endif
 
-
-/**
- * g_mime_utils_header_decode_date:
- * @str: input date string
- * @tz_offset: timezone offset
- *
- * Decodes the rfc822 date string and saves the GMT offset into
- * @tz_offset if non-NULL.
- *
- * Returns: the time_t representation of the date string specified by
- * @str or (time_t) %0 on error. If @tz_offset is non-NULL, the value
- * of the timezone offset will be stored.
- **/
 time_t
-g_mime_utils_header_decode_date (const char *str, int *tz_offset)
+notmuch_parse_date (const char *str, int *tz_offset)
 {
 	date_token *token, *tokens;
 	time_t date;
