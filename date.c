@@ -115,8 +115,8 @@ typedef struct _date_token {
 	size_t len;
 } date_token;
 
-#define date_token_free(tok) g_slice_free (date_token, tok)
-#define date_token_new() g_slice_new (date_token)
+#define date_token_free(tok) free (tok)
+#define date_token_new() malloc (sizeof (date_token))
 
 static date_token *
 datetok (const char *date)
