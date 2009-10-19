@@ -253,9 +253,14 @@ count_files (const char *path, int *count)
 	if (e == NULL)
 	    break;
 
-	/* Skip these special directories to avoid infinite recursion. */
+	/* Ignore special directories to avoid infinite recursion.
+	 * Also ignore the .notmuch directory.
+	 */
+	/* XXX: Eventually we'll want more sophistication to let the
+	 * user specify files to be ignored. */
 	if (strcmp (entry->d_name, ".") == 0 ||
-	    strcmp (entry->d_name, "..") == 0)
+	    strcmp (entry->d_name, "..") == 0 ||
+	    strcmp (entry->d_name, ".notmuch") == 0)
 	{
 	    continue;
 	}
