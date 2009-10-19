@@ -292,7 +292,7 @@ get_year (const char *in, size_t inlen)
 	return year;
 }
 
-static gboolean
+static int
 get_time (const char *in, size_t inlen, int *hour, int *min, int *sec)
 {
 	register const char *inptr;
@@ -486,7 +486,7 @@ parse_rfc822_date (date_token *tokens, int *tzone)
 static time_t
 parse_broken_date (date_token *tokens, int *tzone)
 {
-	gboolean got_wday, got_month, got_tzone;
+	int got_wday, got_month, got_tzone;
 	int hour, min, sec, offset, n;
 	date_token *token;
 	struct tm tm;
