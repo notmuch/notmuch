@@ -24,19 +24,25 @@
 
 #include <glib.h> /* GHashTable */
 
+typedef struct {
+    char *str;
+    size_t size;
+    size_t len;
+} header_value_closure_t;
+
 struct _notmuch_message {
-    /* File objects */
-    int fd;
-    void *map;
+    /* File object */
+    FILE *file;
 
     /* Header storage */
     int restrict_headers;
     GHashTable *headers;
 
     /* Parsing state */
-    char *start;
-    size_t size;
-    const char *next_line;
+    char *line;
+    size_t line_size;
+    header_value_closure_t value;
+
     int parsing_started;
     int parsing_finished;
 };
@@ -66,20 +72,11 @@ notmuch_message_t *
 notmuch_message_open (const char *filename)
 {
     notmuch_message_t *message;
-    struct stat st;
 
     message = xcalloc (1, sizeof (notmuch_message_t));
 
-    message->fd = open (filename, O_RDONLY);
-    if (message->fd < 0)
-	goto FAIL;
-
-    if (fstat (message->fd, &st) < 0)
-	goto FAIL;
-
-    message->map = mmap (NULL, st.st_size, PROT_READ, MAP_PRIVATE,
-			message->fd, 0);
-    if (message->map == MAP_FAILED)
+    message->file = fopen (filename, "r");
+    if (message->file == NULL)
 	goto FAIL;
 
     message->headers = g_hash_table_new_full (strcase_hash,
@@ -87,9 +84,6 @@ notmuch_message_open (const char *filename)
 					      free,
 					      free);
 
-    message->start = (char *) message->map;
-    message->size = st.st_size;
-    message->next_line = message->start;
     message->parsing_started = 0;
     message->parsing_finished = 0;
 
@@ -111,10 +105,8 @@ notmuch_message_close (notmuch_message_t *message)
     if (message->headers)
 	g_hash_table_unref (message->headers);
 
-    if (message->map)
-	munmap (message->map, message->size);
-    if (message->fd)
-	close (message->fd);
+    if (message->file)
+	fclose (message->file);
 
     free (message);
 }
@@ -151,80 +143,44 @@ notmuch_message_restrict_headers (notmuch_message_t *message, ...)
     notmuch_message_restrict_headersv (message, va_headers);
 }
 
-/* With our mmapped file, we don't get the benefit of terminated
- * strings, so we can't use things like strchr(). We don't even know
- * if there's a newline at the end of the file so we also have to be
- * careful of that. Basically, every time we advance a pointer while
- * parsing we must ensure we don't go beyond our buffer.
- */
-#define WITHIN(s) (((s) - message->start) < (message->size -1))
-
-/* In each of the macros below, "without overrunning the buffer" means
- * that the macro will never dereference a character beyond the end of
- * the buffer. However, all of the macros may return a pointer
- * pointing to the first character beyond the buffer. So callers
- * should test with WITHIN before dereferencing the result. */
-
-/* Advance 'ptr' until pointing at a non-space character in the same
- * line, (without overrunning the buffer) */
-#define SKIP_SPACE_IN_LINE(ptr)				      \
-    while (WITHIN (ptr) && (*(ptr) == ' ' || *(ptr) == '\t')) \
-	(ptr)++;
-
-/* Advance 'ptr' until pointing at a non-space character, (without
- * overrunning the buffer) */
-#define SKIP_SPACE(ptr)				\
-    while (WITHIN (ptr) && isspace(*(ptr)))	\
-	(ptr)++;
-
-/* Advance 'ptr' to the first occurrence of 'c' within the same
- * line, (without overrunning the buffer). */
-#define ADVANCE_TO(ptr, c)			\
-    while (WITHIN (ptr) && *(ptr) != '\n' &&    \
-	   *(ptr) != (c))			\
-    {						\
-	(ptr)++;				\
-    }
-
-/* Advance 'ptr' to the beginning of the next line not starting with
- * an initial tab character, (without overruning the buffer). */
-#define ADVANCE_TO_NEXT_HEADER_LINE(ptr)	\
-    do {					\
-	ADVANCE_TO ((ptr), '\n');		\
-	if (WITHIN (ptr))			\
-	    (ptr)++;				\
-    } while (WITHIN (ptr) &&			\
-	     (*(ptr) == '\t' || *(ptr) == ' '));
-        
-char *
-copy_header_value (const char *start, const char *end)
+void
+copy_header_unfolding (header_value_closure_t *value,
+		       const char *chunk)
 {
-    const char *s;
-    char *result, *r;
-    int was_newline = 0;
+    char *last;
 
-    result = xmalloc (end - start + 1);
+    if (chunk == NULL)
+	return;
 
-    s = start;
-    r = result;
+    while (*chunk == ' ' || *chunk == '\t')
+	chunk++;
 
-    while (s < end) {
-	if (*s == '\n') {
-	    was_newline = 1;
-	} else {
-	    if (*s == '\t' && was_newline)
-		*r = ' ';
-	    else
-		*r = *s;
-	    r++;
-	    was_newline = 0;
-	}
-	s++;
+    if (value->len + 1 + strlen (chunk) + 1 > value->size) {
+	int new_size = value->size;
+	if (value->size == 0)
+	    new_size = strlen (chunk) + 1;
+	else
+	    while (value->len + 1 + strlen (chunk) + 1 > new_size)
+		new_size *= 2;
+	value->str = xrealloc (value->str, new_size);
+	value->size = new_size;
     }
 
-    *r = '\0';
+    last = value->str + value->len;
+    if (value->len) {
+	*last = ' ';
+	last++;
+	value->len++;
+    }
 
-    return result;
+    strcpy (last, chunk);
+    value->len += strlen (chunk);
+
+    last = value->str + value->len - 1;
+    if (*last == '\n') {
+	*last = '\0';
+	value->len--;
+    }
 }
 
 const char *
@@ -232,8 +188,8 @@ notmuch_message_get_header (notmuch_message_t *message,
 			    const char *header_desired)
 {
     int contains;
-    const char *s, *colon;
     char *header, *value;
+    const char *s, *colon;
     int match;
 
     message->parsing_started = 1;
@@ -247,54 +203,82 @@ notmuch_message_get_header (notmuch_message_t *message,
     if (message->parsing_finished)
 	return NULL;
 
+#define NEXT_HEADER_LINE(closure)				\
+    do {							\
+	ssize_t bytes_read = getline (&message->line,		\
+				      &message->line_size,	\
+				      message->file);		\
+	if (bytes_read == -1) {					\
+	    message->parsing_finished = 1;			\
+	    break;						\
+	}							\
+	if (*message->line == '\n') {				\
+	    message->parsing_finished = 1;			\
+	    break;						\
+	}							\
+	if (closure &&						\
+	    (*message->line == ' ' || *message->line == '\t'))	\
+	{							\
+	    copy_header_unfolding ((closure), message->line);	\
+	}							\
+    } while (*message->line == ' ' || *message->line == '\t');
+
+    if (message->line == NULL)
+	NEXT_HEADER_LINE (NULL);
+
     while (1) {
-	s = message->next_line;
 
-	if (*s == '\n') {
-	    message->parsing_finished = 1;
-	    return NULL;
-	}
+	if (message->parsing_finished)
+	    break;
 
-	if (*s == '\t') {
-	    fprintf (stderr, "Warning: Unexpected continued value\n");
-	    ADVANCE_TO_NEXT_HEADER_LINE (message->next_line);
+	colon = strchr (message->line, ':');
+
+	if (colon == NULL) {
+	    fprintf (stderr, "Warning: Unexpected non-header line: %s\n",
+		     message->line);
+	    NEXT_HEADER_LINE (NULL);
 	    continue;
 	}
 
-	colon = s;
-	ADVANCE_TO (colon, ':');
-
-	if (! WITHIN (colon) || *colon == '\n') {
-	    fprintf (stderr, "Warning: Unexpected non-header line: %s\n", s);
-	    ADVANCE_TO_NEXT_HEADER_LINE (message->next_line);
-	    continue;
-	}
-
-	header = xstrndup (s, colon - s);
+	header = xstrndup (message->line, colon - message->line);
 
 	if (message->restrict_headers &&
 	    ! g_hash_table_lookup_extended (message->headers,
 					    header, NULL, NULL))
 	{
 	    free (header);
-	    message->next_line = colon;
-	    ADVANCE_TO_NEXT_HEADER_LINE (message->next_line);
+	    NEXT_HEADER_LINE (NULL);
 	    continue;
 	}
 
 	s = colon + 1;
-	SKIP_SPACE_IN_LINE (s);
+	while (*s == ' ' || *s == '\t')
+	    s++;
 
-	message->next_line = s;
-	ADVANCE_TO_NEXT_HEADER_LINE (message->next_line);
+	message->value.len = 0;
+	copy_header_unfolding (&message->value, s);
 
-	value = copy_header_value (s, message->next_line);
+	NEXT_HEADER_LINE (&message->value);
 
 	match = (strcasecmp (header, header_desired) == 0);
 
-	g_hash_table_insert (message->headers, header, value);
+	g_hash_table_insert (message->headers, header,
+			     xstrdup (message->value.str));
 
 	if (match)
 	    return value;
     }
+
+    if (message->line)
+	free (message->line);
+    message->line = NULL;
+
+    if (message->value.size) {
+	free (message->value.str);
+	message->value.str = NULL;
+	message->value.size = 0;
+	message->value.len = 0;
+    }
+
+    return NULL;
 }

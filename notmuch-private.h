@@ -23,6 +23,8 @@
 
 #include "notmuch.h"
 
+#define _GNU_SOURCE /* For getline */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
