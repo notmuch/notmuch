@@ -363,6 +363,8 @@ get_tzone (date_token **token)
 	return -1;
 }
 
+#define HAVE_TIMEZONE
+
 static time_t
 mktime_utc (struct tm *tm)
 {
