@@ -18,11 +18,14 @@
  * Author: Carl Worth <cworth@cworth.org>
  */
 
+#include "notmuch.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/time.h>
 #include <unistd.h>
 #include <dirent.h>
 #include <errno.h>
@@ -75,6 +78,143 @@ read_line (void)
     return result;
 }
 
+typedef struct {
+    int messages_total;
+    int count;
+    int count_last;
+    struct timeval tv_start;
+    struct timeval tv_last;
+} add_files_state_t;
+
+/* Compute the number of seconds elapsed from start to end. */
+double
+tv_elapsed (struct timeval start, struct timeval end)
+{
+    return ((end.tv_sec - start.tv_sec) +
+	    (end.tv_usec - start.tv_usec) / 1e6);
+}
+
+void
+print_formatted_seconds (double seconds)
+{
+    int hours;
+    int minutes;
+
+    if (seconds > 3600) {
+	hours = (int) seconds / 3600;
+	printf ("%d:", hours);
+	seconds -= hours * 3600;
+    }
+
+    if (seconds > 60)
+	minutes = (int) seconds / 60;
+    else
+	minutes = 0;
+
+    printf ("%02d:", minutes);
+    seconds -= minutes * 60;
+
+    printf ("%02d", (int) seconds);
+}
+
+void
+add_files_print_progress (add_files_state_t *state)
+{
+    struct timeval tv_now;
+    double ratio_complete;
+    double elapsed_current, rate_current;
+    double elapsed_overall;
+
+    gettimeofday (&tv_now, NULL);
+
+    ratio_complete = (double) state->count / state->messages_total;
+    elapsed_current = tv_elapsed (state->tv_last, tv_now);
+    rate_current = (state->count - state->count_last) / elapsed_current;
+    elapsed_overall = tv_elapsed (state->tv_start, tv_now);
+
+    printf ("Added %d messages at %d messages/sec. ",
+	    state->count, (int) rate_current);
+    print_formatted_seconds (elapsed_overall);
+    printf ("/");
+    print_formatted_seconds (elapsed_overall / ratio_complete);
+    printf (" elapsed (%.2f%%).     \r", 100 * ratio_complete);
+
+    fflush (stdout);
+
+    state->tv_last = tv_now;
+    state->count_last = state->count;
+}
+
+/* Recursively find all regular files in 'path' and add them to the
+ * database. */
+void
+add_files (notmuch_database_t *notmuch, const char *path,
+	   add_files_state_t *state)
+{
+    DIR *dir;
+    struct dirent *entry, *e;
+    int entry_length;
+    int err;
+    char *next;
+    struct stat st;
+
+    dir = opendir (path);
+
+    if (dir == NULL) {
+	fprintf (stderr, "Warning: failed to open directory %s: %s\n",
+		 path, strerror (errno));
+	return;
+    }
+
+    entry_length = offsetof (struct dirent, d_name) +
+	pathconf (path, _PC_NAME_MAX) + 1;
+    entry = malloc (entry_length);
+
+    while (1) {
+	err = readdir_r (dir, entry, &e);
+	if (err) {
+	    fprintf (stderr, "Error reading directory: %s\n",
+		     strerror (errno));
+	    free (entry);
+	    return;
+	}
+
+	if (e == NULL)
+	    break;
+
+	/* Ignore special directories to avoid infinite recursion.
+	 * Also ignore the .notmuch directory.
+	 */
+	/* XXX: Eventually we'll want more sophistication to let the
+	 * user specify files to be ignored. */
+	if (strcmp (entry->d_name, ".") == 0 ||
+	    strcmp (entry->d_name, "..") == 0 ||
+	    strcmp (entry->d_name, ".notmuch") ==0)
+	{
+	    continue;
+	}
+
+	next = g_strdup_printf ("%s/%s", path, entry->d_name);
+
+	stat (next, &st);
+
+	if (S_ISREG (st.st_mode)) {
+	    notmuch_database_add_message (notmuch, next);
+	    state->count++;
+	    if (state->count % 1000 == 0)
+		add_files_print_progress (state);
+	} else if (S_ISDIR (st.st_mode)) {
+	    add_files (notmuch, next, state);
+	}
+
+	free (next);
+    }
+
+    free (entry);
+
+    closedir (dir);
+}
+
 /* Recursively count all regular files in path and all sub-direcotries
  * of path.  The result is added to *count (which should be
  * initialized to zero by the top-level caller before calling
@@ -124,14 +264,14 @@ count_files (const char *path, int *count)
 
 	stat (next, &st);
 
-	if (S_ISREG (st.st_mode))
+	if (S_ISREG (st.st_mode)) {
 	    *count = *count + 1;
-	else if (S_ISDIR (st.st_mode))
+	    if (*count % 1000 == 0) {
+		printf ("Found %d files so far.\r", *count);
+		fflush (stdout);
+	    }
+	} else if (S_ISDIR (st.st_mode)) {
 	    count_files (next, count);
-
-	if (*count % 1000 == 0) {
-	    printf ("Found %d files so far.\r", *count);
-	    fflush (stdout);
 	}
 
 	free (next);
@@ -145,8 +285,11 @@ count_files (const char *path, int *count)
 int
 setup_command (int argc, char *argv[])
 {
+    notmuch_database_t *notmuch;
     char *mail_directory;
     int count;
+    add_files_state_t add_files_state;
+    double elapsed;
 
     printf ("Welcome to notmuch!\n\n");
 
@@ -187,13 +330,40 @@ setup_command (int argc, char *argv[])
 	mail_directory = g_strdup_printf ("%s/mail", home);
     }
 
+    notmuch = notmuch_database_create (mail_directory);
+    if (notmuch == NULL) {
+	fprintf (stderr, "Failed to create new notmuch database at %s\n",
+		 mail_directory);
+	free (mail_directory);
+	return 1;
+    }
+
     printf ("OK. Let's take a look at the mail we can find in the directory\n");
     printf ("%s ...\n", mail_directory);
 
     count = 0;
     count_files (mail_directory, &count);
 
-    printf ("Found %d total files. That's not much mail.\n", count);
+    printf ("Found %d total files. That's not much mail.\n\n", count);
+
+    printf ("Next, we'll inspect the messages and create a database of threads:\n");
+
+    add_files_state.messages_total = count;
+    add_files_state.count = 0;
+    add_files_state.count_last = 0;
+    gettimeofday (&add_files_state.tv_start, NULL);
+    add_files_state.tv_last = add_files_state.tv_start;
+
+    add_files (notmuch, mail_directory, &add_files_state);
+
+    gettimeofday (&add_files_state.tv_last, NULL);
+    elapsed = tv_elapsed (add_files_state.tv_start,
+			  add_files_state.tv_last);
+    printf ("Added %d total messages in ", add_files_state.count);
+    print_formatted_seconds (elapsed);
+    printf (" (%d messages/sec.).                 \n", (int) (add_files_state.count / elapsed));
+
+    notmuch_database_close (notmuch);
 
     free (mail_directory);
     
