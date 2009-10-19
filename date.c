@@ -23,54 +23,17 @@
  * some glib-isms.
  */
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
+#include "notmuch-private.h"
+
+#include <time.h>
+
+#ifndef FALSE
+#define FALSE 0
 #endif
 
-#define _GNU_SOURCE
-
-#include <glib.h>
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#ifdef HAVE_SYS_PARAM_H
-#include <sys/param.h>      /* for MAXHOSTNAMELEN */
-#else
-#define MAXHOSTNAMELEN 64
+#ifndef TRUE
+#define TRUE 1
 #endif
-#ifdef HAVE_UTSNAME_DOMAINNAME
-#include <sys/utsname.h>    /* for uname() */
-#endif
-#include <sys/types.h>
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>         /* Unix header for getpid() */
-#endif
-#ifdef G_OS_WIN32
-#include <winsock2.h>
-#include <ws2tcpip.h>
-#include <process.h>
-#define getpid() _getpid()
-#endif
-#ifdef HAVE_NETDB_H
-#include <netdb.h>
-#endif
-#include <ctype.h>
-#include <errno.h>
-
-#include "gmime-utils.h"
-#include "gmime-table-private.h"
-#include "gmime-parse-utils.h"
-#include "gmime-part.h"
-#include "gmime-charset.h"
-#include "gmime-iconv.h"
-#include "gmime-iconv-utils.h"
-
-#ifdef ENABLE_WARNINGS
-#define w(x) x
-#else
-#define w(x)
-#endif /* ENABLE_WARNINGS */
 
 #define d(x)
 
