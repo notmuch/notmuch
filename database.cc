@@ -554,13 +554,11 @@ notmuch_database_add_message (notmuch_database_t *notmuch,
 
 	free (message_id);
 
-/*
 	date = notmuch_message_get_header (message, "date");
 	time_value = notmuch_parse_date (date, NULL);
 
 	doc.add_value (NOTMUCH_VALUE_DATE,
 		       Xapian::sortable_serialise (time_value));
-*/
 
 	db->add_document (doc);
     } catch (const Xapian::Error &error) {

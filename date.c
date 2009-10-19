@@ -27,6 +27,8 @@
 
 #include <time.h>
 
+#include <glib.h> /* For g_ascii_strncasecmp only. */
+
 #ifndef FALSE
 #define FALSE 0
 #endif
