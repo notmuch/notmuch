@@ -30,7 +30,7 @@
 #include <dirent.h>
 #include <errno.h>
 
-#include <glib.h>
+#include <glib.h> /* GIOChannel */
 
 #define ARRAY_SIZE(arr) (sizeof (arr) / sizeof (arr[0]))
 

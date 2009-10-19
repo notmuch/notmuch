@@ -22,7 +22,7 @@
 
 #include "notmuch-private.h"
 
-#include <glib.h>
+#include <glib.h> /* GHashTable */
 
 struct _notmuch_message {
     /* File objects */
