@@ -241,7 +241,7 @@ notmuch_message_get_header (notmuch_message_t *message,
     contains = g_hash_table_lookup_extended (message->headers,
 					     header_desired, NULL,
 					     (gpointer *) &value);
-    if (contains)
+    if (contains && value)
 	return value;
 
     if (message->parsing_finished)

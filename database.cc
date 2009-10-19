@@ -486,6 +486,13 @@ notmuch_database_add_message (notmuch_database_t *notmuch,
 
     message = notmuch_message_open (filename);
 
+    notmuch_message_restrict_headers (message,
+				      "references",
+				      "in-reply-to",
+				      "message-id",
+				      "date",
+				      (char *) NULL);
+
     try {
 	doc = Xapian::Document ();
 
