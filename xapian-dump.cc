@@ -39,15 +39,44 @@ using namespace std;
 
 vector<int> UNSERIALIZE;
 
+unsigned int MAX_TERMS = 0;
+
+static void
+print_escaped_string (const char *s)
+{
+    printf ("\"");
+
+    while (*s) {
+	if (*s == '"')
+	    printf ("\\");
+	printf ("%c", *s);
+	s++;
+    }
+
+    printf ("\"");
+}
+
 static void
 print_document_terms (Xapian::Document doc)
 {
-    Xapian::TermIterator i;
+    Xapian::TermIterator it;
+    unsigned int i;
 
-    printf ("    Terms:\n");
+    printf ("    {\n");
 
-    for (i = doc.termlist_begin (); i != doc.termlist_end (); i++)
-	cout << "\t" << *i << endl;
+    for (it = doc.termlist_begin (), i = 0;
+	 it != doc.termlist_end ();
+	 it++, i++)
+    {
+	printf ("        ");
+	print_escaped_string ((*it).c_str());
+	printf (",\n");
+    }
+
+    for ( ; i < MAX_TERMS; i++)
+	printf ("        \"\",\n");
+
+    printf ("    },\n");
 }
 
 static int
@@ -67,26 +96,25 @@ print_document_values (Xapian::Document doc)
     int value_no, value_int;
     double value_float;
 
-    printf ("    Values:\n");
-
     for (i = doc.values_begin (); i != doc.values_end (); i++) {
 	value_no = i.get_valueno();
 
-	cout << "\t" << i.get_valueno() << ": ";
+	printf ("    ");
 
 	if (vector_int_contains (UNSERIALIZE, value_no)) {
 	    value_float = Xapian::sortable_unserialise (*i);
 	    value_int = value_float;
 	    if (value_int == value_float)
-		cout << value_int;
+		printf ("%d", value_int);
 	    else
-		cout << value_float;
+		printf ("\"%f\"", value_float);
 	} else {
-	    cout << *i;
+	    print_escaped_string ((*i).c_str ());
 	}
 
-	cout << endl;
+	printf (",\n");
     }
+
 }
 
 static void
@@ -94,16 +122,17 @@ print_document (Xapian::Database db, Xapian::docid id)
 {
     Xapian::Document doc;
 
-    printf ("Document %u:\n", id);
+    printf ("{\n");
 
     doc = db.get_document (id);
 
-    printf ("    Data:\n");
-    cout << "\t" << doc.get_data () << endl;
+    printf ("    \"%s\",\n", doc.get_data ().c_str());
 
     print_document_terms (doc);
 
     print_document_values (doc);
+
+    printf ("},\n");
 }
 
 int
@@ -129,17 +158,42 @@ main (int argc, char *argv[])
 	UNSERIALIZE.push_back (atoi (argv[i]));
 
     try {
-
 	Xapian::Database db;
         Xapian::PostingIterator i;
 	Xapian::docid doc_id;
 
 	db = Xapian::Database (database_path);
+
+	for (i = db.postlist_begin (""); i != db.postlist_end (""); i++) {
+	    Xapian::Document doc;
+
+	    doc_id = *i;
+
+	    doc = db.get_document (doc_id);
+
+	    if (doc.termlist_count () > MAX_TERMS)
+		MAX_TERMS = doc.termlist_count ();
+	}
+
+	printf ("#define MAX_TERMS %d\n\n", MAX_TERMS);
+
+	printf ("typedef struct {\n"
+		"    char data[255];\n"
+		"    char terms[MAX_TERMS][255];\n"
+		"    char message_id[255];\n"
+		"    char thread_id[4096];\n"
+		"    time_t time;\n"
+		"} document_dump_t;\n\n");
+
+	printf ("document_dump_t dump[] = {\n");
+
 	for (i = db.postlist_begin (""); i != db.postlist_end (""); i++) {
 	    doc_id = *i;
 
 	    print_document (db, doc_id);
 	}
+
+	printf ("};\n");
 
     } catch (const Xapian::Error &error) {
 	cerr << "A Xapian exception occurred: " << error.get_msg () << endl;
