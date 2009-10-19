@@ -643,12 +643,15 @@ notmuch_parse_date (const char *str, int *tz_offset)
 {
 	date_token *token, *tokens;
 	time_t date;
-	
+
+	if (str == NULL)
+		return 0;
+
 	if (!(tokens = datetok (str))) {
 		if (tz_offset)
 			*tz_offset = 0;
 		
-		return (time_t) 0;
+		return 0;
 	}
 	
 	if (!(date = parse_rfc822_date (tokens, tz_offset)))
