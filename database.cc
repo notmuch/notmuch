@@ -20,19 +20,11 @@
 
 #include "notmuch-private.h"
 
-#include <stdio.h>
-#include <errno.h>
-#include <time.h>
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <sys/time.h>
-
 #include <iostream>
 
-#include <gmime/gmime.h>
-
 #include <xapian.h>
+
+#include <glib.h>
 
 using namespace std;
 
@@ -278,26 +270,113 @@ find_thread_ids (Xapian::Database *db,
     return result;
 }
 
-/* Add a term for each message-id in the References header of the
- * message. */
+/* Advance 'str' past any whitespace or RFC 822 comments. A comment is
+ * a (potentially nested) parenthesized sequence with '\' used to
+ * escape any character (including parentheses).
+ *
+ * If the sequence to be skipped continues to the end of the string,
+ * then 'str' will be left pointing at the final terminating '\0'
+ * character.
+ */
 static void
-parse_references (GPtrArray *array,
-		  const char *refs_str)
+skip_space_and_comments (const char **str)
 {
-    GMimeReferences *refs, *r;
-    const char *message_id;
+    const char *s;
 
-    if (refs_str == NULL)
-	return;
-
-    refs = g_mime_references_decode (refs_str);
-
-    for (r = refs; r; r = r->next) {
-	message_id = g_mime_references_get_message_id (r);
-	g_ptr_array_add (array, g_strdup (message_id));
+    s = *str;
+    while (*s && (isspace (*s) || *s == '(')) {
+	while (*s && isspace (*s))
+	    s++;
+	if (*s == '(') {
+	    int nesting = 1;
+	    s++;
+	    while (*s && nesting) {
+		if (*s == '(')
+		    nesting++;
+		else if (*s == ')')
+		    nesting--;
+		else if (*s == '\\')
+		    if (*(s+1))
+			s++;
+		s++;
+	    }
+	}
     }
 
-    g_mime_references_free (refs);
+    *str = s;
+}
+
+/* Parse an RFC 822 message-id, discarding whitespace, any RFC 822
+ * comments, and the '<' and '>' delimeters.
+ *
+ * If not NULL, then *next will be made to point to the first character
+ * not parsed, (possibly pointing to the final '\0' terminator.
+ *
+ * Returns a newly allocated string which the caller should free()
+ * when done with it.
+ *
+ * Returns NULL if there is any error parsing the message-id. */
+static char *
+parse_message_id (const char *message_id, const char **next)
+{
+    const char *s, *end;
+
+    if (message_id == NULL)
+	return NULL;
+
+    s = message_id;
+
+    skip_space_and_comments (&s);
+
+    /* Skip any unstructured text as well. */
+    while (*s && *s != '<')
+	s++;
+
+    if (*s == '<') {
+	s++;
+    } else {
+	if (next)
+	    *next = s;
+	return NULL;
+    }
+
+    skip_space_and_comments (&s);
+
+    end = s;
+    while (*end && *end != '>')
+	end++;
+    if (next) {
+	if (*end)
+	    *next = end + 1;
+	else
+	    *next = end;
+    }
+
+    if (end > s && *end == '>')
+	end--;
+    if (end > s)
+	return strndup (s, end - s + 1);
+    else
+	return NULL;
+}
+
+/* Parse a References header value, putting a copy of each referenced
+ * message-id into 'array'. */
+static void
+parse_references (GPtrArray *array,
+		  const char *refs)
+{
+    char *ref;
+
+    if (refs == NULL)
+	return;
+
+    while (*refs) {
+	ref = parse_message_id (refs, &refs);
+
+	if (ref)
+	    g_ptr_array_add (array, ref);
+    }
 }
 
 notmuch_database_t *
@@ -343,8 +422,6 @@ notmuch_database_open (const char *path)
     char *notmuch_path, *xapian_path;
     struct stat st;
     int err;
-
-    g_mime_init (0);
 
     notmuch_path = g_strdup_printf ("%s/%s", path, ".notmuch");
 
@@ -397,31 +474,17 @@ notmuch_database_add_message (notmuch_database_t *notmuch,
 {
     Xapian::WritableDatabase *db = notmuch->xapian_db;
     Xapian::Document doc;
+    notmuch_message_t *message;
 
-    GMimeStream *stream;
-    GMimeParser *parser;
-    GMimeMessage *message;
     GPtrArray *parents, *thread_ids;
 
-    FILE *file;
+    const char *refs, *in_reply_to, *date, *header;
+    char *message_id;
 
-    const char *refs, *in_reply_to;
-    const char *message_id;
-
-    time_t time;
+    time_t time_value;
     unsigned int i;
 
-    file = fopen (filename, "r");
-    if (! file) {
-	fprintf (stderr, "Error opening %s: %s\n", filename, strerror (errno));
-	exit (1);
-    }
-
-    stream = g_mime_stream_file_new (file);
-
-    parser = g_mime_parser_new_with_stream (stream);
-
-    message = g_mime_parser_construct_message (parser);
+    message = notmuch_message_open (filename);
 
     try {
 	doc = Xapian::Document ();
@@ -430,16 +493,27 @@ notmuch_database_add_message (notmuch_database_t *notmuch,
 
 	parents = g_ptr_array_new ();
 
-	refs = g_mime_object_get_header (GMIME_OBJECT (message), "references");
+	refs = notmuch_message_get_header (message, "references");
 	parse_references (parents, refs);
 
-	in_reply_to = g_mime_object_get_header (GMIME_OBJECT (message),
-						"in-reply-to");
+	in_reply_to = notmuch_message_get_header (message, "in-reply-to");
 	parse_references (parents, in_reply_to);
+
 	for (i = 0; i < parents->len; i++)
 	    add_term (doc, "ref", (char *) g_ptr_array_index (parents, i));
 
-	message_id = g_mime_message_get_message_id (message);
+	header = notmuch_message_get_header (message, "message-id");
+	if (header) {
+	    message_id = parse_message_id (header, NULL);
+	    /* So the header value isn't RFC-compliant, but it's
+	     * better than no message-id at all. */
+	    if (message_id == NULL)
+		message_id = xstrdup (header);
+	} else {
+	    /* XXX: Should generate a message_id here, (such as a SHA1
+	     * sum of the message itself) */
+	    message_id = NULL;
+	}
 
 	thread_ids = find_thread_ids (db, parents, message_id);
 
@@ -478,8 +552,15 @@ notmuch_database_add_message (notmuch_database_t *notmuch,
 	    doc.add_value (NOTMUCH_VALUE_THREAD, thread_id.str);
 	}
 
-	g_mime_message_get_date (message, &time, NULL);
-	doc.add_value (NOTMUCH_VALUE_DATE, Xapian::sortable_serialise (time));
+	free (message_id);
+
+/*
+	date = notmuch_message_get_header (message, "date");
+	time_value = notmuch_parse_date (date, NULL);
+
+	doc.add_value (NOTMUCH_VALUE_DATE,
+		       Xapian::sortable_serialise (time_value));
+*/
 
 	db->add_document (doc);
     } catch (const Xapian::Error &error) {
@@ -488,9 +569,7 @@ notmuch_database_add_message (notmuch_database_t *notmuch,
 	return NOTMUCH_STATUS_XAPIAN_EXCEPTION;
     }
 
-    g_object_unref (message);
-    g_object_unref (parser);
-    g_object_unref (stream);
+    notmuch_message_close (message);
 
     return NOTMUCH_STATUS_SUCCESS;
 }
