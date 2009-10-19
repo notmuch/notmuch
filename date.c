@@ -222,8 +222,9 @@ static int
 get_wday (const char *in, size_t inlen)
 {
 	int wday;
-	
-	g_return_val_if_fail (in != NULL, -1);
+
+	if (in == NULL)
+		return -1;
 	
 	if (inlen < 3)
 		return -1;
@@ -241,7 +242,8 @@ get_mday (const char *in, size_t inlen)
 {
 	int mday;
 	
-	g_return_val_if_fail (in != NULL, -1);
+	if (in == NULL)
+		return -1;
 	
 	mday = decode_int (in, inlen);
 	
@@ -256,7 +258,8 @@ get_month (const char *in, size_t inlen)
 {
 	int i;
 	
-	g_return_val_if_fail (in != NULL, -1);
+	if (in == NULL)
+		return -1;
 	
 	if (inlen < 3)
 		return -1;
@@ -274,7 +277,8 @@ get_year (const char *in, size_t inlen)
 {
 	int year;
 	
-	g_return_val_if_fail (in != NULL, -1);
+	if (in == NULL)
+		return -1;
 	
 	if ((year = decode_int (in, inlen)) == -1)
 		return -1;
@@ -405,7 +409,8 @@ parse_rfc822_date (date_token *tokens, int *tzone)
 	struct tm tm;
 	time_t t;
 	
-	g_return_val_if_fail (tokens != NULL, (time_t) 0);
+	if (tokens == NULL)
+		return 0;
 	
 	token = tokens;
 	
