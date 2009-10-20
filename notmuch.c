@@ -310,25 +310,19 @@ setup_command (int argc, char *argv[])
 	    "such as mb2md. In that case, press Control-C now and run notmuch again\n"
 	    "once the conversion is complete.\n\n");
 
-    printf ("Top-level mail directory [~/mail]: ");
-    fflush (stdout);
+    {
+	char *default_path = notmuch_database_default_path ();
+	printf ("Top-level mail directory [%s]: ", default_path);
+	free (default_path);
+	fflush (stdout);
+    }
 
     mail_directory = read_line ();
 
     if (mail_directory == NULL || strlen (mail_directory) == 0) {
-	char *home;
-
 	if (mail_directory)
 	    free (mail_directory);
-
-	home = getenv ("HOME");
-	if (!home) {
-	    fprintf (stderr, "Error: No mail directory provided HOME environment variable is not set.\n");
-	    fprintf (stderr, "Cowardly refusing to just guess where your mail might be.\n");
-	    exit (1);
-	}
-
-	mail_directory = g_strdup_printf ("%s/mail", home);
+	mail_directory = notmuch_database_default_path ();
     }
 
     notmuch = notmuch_database_create (mail_directory);

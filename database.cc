@@ -379,24 +379,38 @@ parse_references (GPtrArray *array,
     }
 }
 
+char *
+notmuch_database_default_path (void)
+{
+    if (getenv ("NOTMUCH_BASE"))
+	return strdup (getenv ("NOTMUCH_BASE"));
+
+    return g_strdup_printf ("%s/mail", getenv ("HOME"));
+}
+
 notmuch_database_t *
 notmuch_database_create (const char *path)
 {
-    char *notmuch_path;
+    notmuch_database_t *notmuch = NULL;
+    char *notmuch_path = NULL;
     struct stat st;
     int err;
+    char *local_path = NULL;
+
+    if (path == NULL)
+	path = local_path = notmuch_database_default_path ();
 
     err = stat (path, &st);
     if (err) {
 	fprintf (stderr, "Error: Cannot create database at %s: %s.\n",
 		 path, strerror (errno));
-	return NULL;
+	goto DONE;
     }
 
     if (! S_ISDIR (st.st_mode)) {
 	fprintf (stderr, "Error: Cannot create database at %s: Not a directory.\n",
 		 path);
-	return NULL;
+	goto DONE;
     }
 
     notmuch_path = g_strdup_printf ("%s/%s", path, ".notmuch");
@@ -406,22 +420,31 @@ notmuch_database_create (const char *path)
     if (err) {
 	fprintf (stderr, "Error: Cannot create directory %s: %s.\n",
 		 notmuch_path, strerror (errno));
-	free (notmuch_path);
-	return NULL;
+	goto DONE;
     }
 
-    free (notmuch_path);
+    notmuch = notmuch_database_open (path);
 
-    return notmuch_database_open (path);
+  DONE:
+    if (notmuch_path)
+	free (notmuch_path);
+    if (local_path)
+	free (local_path);
+
+    return notmuch;
 }
 
 notmuch_database_t *
 notmuch_database_open (const char *path)
 {
-    notmuch_database_t *notmuch;
-    char *notmuch_path, *xapian_path;
+    notmuch_database_t *notmuch = NULL;
+    char *notmuch_path = NULL, *xapian_path = NULL;
     struct stat st;
     int err;
+    char *local_path = NULL;
+
+    if (path == NULL)
+	path = local_path = notmuch_database_default_path ();
 
     notmuch_path = g_strdup_printf ("%s/%s", path, ".notmuch");
 
@@ -429,12 +452,10 @@ notmuch_database_open (const char *path)
     if (err) {
 	fprintf (stderr, "Error: Cannot stat %s: %s\n",
 		 notmuch_path, strerror (err));
-	free (notmuch_path);
-	return NULL;
+	goto DONE;
     }
 
     xapian_path = g_strdup_printf ("%s/%s", notmuch_path, "xapian");
-    free (notmuch_path);
 
     /* C++ is so nasty in requiring these casts. I'm almost tempted to
      * write a C wrapper for Xapian... */
@@ -449,7 +470,13 @@ notmuch_database_open (const char *path)
 		 error.get_msg().c_str());
     }
     
-    free (xapian_path);
+  DONE:
+    if (local_path)
+	free (local_path);
+    if (notmuch_path)
+	free (notmuch_path);
+    if (xapian_path)
+	free (xapian_path);
 
     return notmuch;
 }

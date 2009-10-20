@@ -110,6 +110,23 @@ notmuch_database_open (const char *path);
 void
 notmuch_database_close (notmuch_database_t *database);
 
+/* Lookup the default database path.
+ *
+ * This is the path that will be used by notmuch_database_create and
+ * notmuch_database_open if given a NULL path. Specifically it will be
+ * the value of the NOTMUCH_BASE environment variable if set,
+ * otherwise ${HOME}/mail
+ *
+ * Returns a newly allocated string which the caller should free()
+ * when finished with it.
+ */
+char *
+notmuch_database_default_path (void);
+
+/* Return the database path of the given database.
+ *
+ * The return value is a string owned by notmuch so should not be
+ * modified nor freed by the caller. */
 const char *
 notmuch_database_get_path (notmuch_database_t *database);
 
