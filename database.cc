@@ -450,8 +450,8 @@ notmuch_database_open (const char *path)
 
     err = stat (notmuch_path, &st);
     if (err) {
-	fprintf (stderr, "Error: Cannot stat %s: %s\n",
-		 notmuch_path, strerror (err));
+	fprintf (stderr, "Error opening database at %s: %s\n",
+		 notmuch_path, strerror (errno));
 	goto DONE;
     }
 
