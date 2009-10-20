@@ -111,7 +111,7 @@ notmuch_message_close (notmuch_message_t *message)
 	free (message->value.str);
 
     if (message->headers)
-	g_hash_table_unref (message->headers);
+	g_hash_table_destroy (message->headers);
 
     if (message->file)
 	fclose (message->file);
