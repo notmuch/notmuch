@@ -379,19 +379,49 @@ search_command (int argc, char *argv[])
 int
 show_command (int argc, char *argv[])
 {
-    fprintf (stderr, "Error: show-thread is not implemented yet.\n");
+    fprintf (stderr, "Error: show is not implemented yet.\n");
+    return 1;
+}
+
+int
+dump_command (int argc, char *argv[])
+{
+    fprintf (stderr, "Error: dump is not implemented yet.\n");
+    return 1;
+}
+
+int
+restore_command (int argc, char *argv[])
+{
+    fprintf (stderr, "Error: restore is not implemented yet.\n");
     return 1;
 }
 
 command_t commands[] = {
     { "setup", setup_command,
-      "Interactively setup notmuch for first use (no arguments).\n"
+      "Interactively setup notmuch for first use.\n"
       "\t\tInvoking notmuch with no command argument will run setup if\n"
-      "\t\the setup command has not previously been completed." },
+      "\t\tthe setup command has not previously been completed." },
     { "search", search_command,
-      "Search for threads matching the given search terms." },
+      "<search-term> [...]\n\n"
+      "\t\tSearch for threads matching the given search terms.\n"
+      "\t\tOnce we actually implement search we'll document the\n"
+      "\t\tsyntax here." },
     { "show", show_command,
-      "Show the thread with the given thread ID (see 'search')." }
+      "<thread-id>\n\n"
+      "\t\tShow the thread with the given thread ID (see 'search')." },
+    { "dump", dump_command,
+      "[<filename>]\n\n"
+      "\t\tCreate a plain-text dump of the tags for each message\n"
+      "\t\twriting to the given filename, if any, or to stdout.\n"
+      "\t\tThese tags are the only data in the notmuch database\n"
+      "\t\tthat can't be recreated from the messages themselves.\n"
+      "\t\tThe output of notmuch dump is therefore the only\n"
+      "\t\tcritical thing to backup (and much more friendly to\n"
+      "\t\tincremental backup than the native database files." },
+    { "restore", restore_command,
+      "<filename>\n\n"
+      "\t\tRestore the tags from the given dump file (see 'dump')." }
 };
 
 void
@@ -402,7 +432,7 @@ usage (void)
 
     fprintf (stderr, "Usage: notmuch <command> [args...]\n");
     fprintf (stderr, "\n");
-    fprintf (stderr, "Where <command> is one of the following:\n");
+    fprintf (stderr, "Where <command> and [args...] are as follows:\n");
     fprintf (stderr, "\n");
 
     for (i = 0; i < ARRAY_SIZE (commands); i++) {
@@ -428,7 +458,15 @@ main (int argc, char *argv[])
 	    return (command->function) (argc - 2, &argv[2]);
     }
 
-    fprintf (stderr, "Error: Unknown command '%s'\n\n", argv[1]);
+    /* Don't complain about "help" being an unknown command when we're
+       about to provide exactly what's wanted anyway. */
+    if (strcmp (argv[1], "help") == 0 ||
+	strcmp (argv[1], "--help") == 0)
+    {
+	fprintf (stderr, "The notmuch mail system.\n\n");
+    } else {
+	fprintf (stderr, "Error: Unknown command '%s'\n\n", argv[1]);
+    }
     usage ();
     exit (1);
 
