@@ -285,7 +285,7 @@ int
 setup_command (int argc, char *argv[])
 {
     notmuch_database_t *notmuch;
-    char *mail_directory;
+    char *mail_directory, *default_path;
     int count;
     add_files_state_t add_files_state;
     double elapsed;
@@ -310,19 +310,32 @@ setup_command (int argc, char *argv[])
 	    "such as mb2md. In that case, press Control-C now and run notmuch again\n"
 	    "once the conversion is complete.\n\n");
 
-    {
-	char *default_path = notmuch_database_default_path ();
-	printf ("Top-level mail directory [%s]: ", default_path);
-	free (default_path);
-	fflush (stdout);
-    }
+
+    default_path = notmuch_database_default_path ();
+    printf ("Top-level mail directory [%s]: ", default_path);
+    fflush (stdout);
 
     mail_directory = read_line ();
+    printf ("\n");
 
     if (mail_directory == NULL || strlen (mail_directory) == 0) {
 	if (mail_directory)
 	    free (mail_directory);
-	mail_directory = notmuch_database_default_path ();
+	mail_directory = default_path;
+    } else {
+	/* XXX: Instead of telling the user to use an environment
+	 * variable here, we should really be writing out a configuration
+	 * file and loading that on the next run. */
+	if (strcmp (mail_directory, default_path)) {
+	    printf ("Note: Since you are not using the default path, you will want to set\n"
+		    "the NOTMUCH_BASE environment variable to %s so that\n"
+		    "future calls to notmuch commands will know where to find your mail.\n",
+		    mail_directory);
+	    printf ("For example, if you are using bash for your shell, add:\n\n");
+	    printf ("\texport NOTMUCH_BASE=%s\n\n", mail_directory);
+	    printf ("to your ~/.bashrc file.\n\n");
+	}
+	free (default_path);
     }
 
     notmuch = notmuch_database_create (mail_directory);
