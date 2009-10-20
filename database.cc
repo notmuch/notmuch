@@ -577,7 +577,6 @@ notmuch_database_add_message (notmuch_database_t *notmuch,
 
 		free (id);
 	    }
-	    g_ptr_array_free (thread_ids, TRUE);
 	    doc.add_value (NOTMUCH_VALUE_THREAD, thread_id->str);
 	    g_string_free (thread_id, TRUE);
 	} else if (message_id) {
@@ -588,6 +587,8 @@ notmuch_database_add_message (notmuch_database_t *notmuch,
 	    add_term (doc, "thread", thread_id.str);
 	    doc.add_value (NOTMUCH_VALUE_THREAD, thread_id.str);
 	}
+
+	g_ptr_array_free (thread_ids, TRUE);
 
 	free (message_id);
 
