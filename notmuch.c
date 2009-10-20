@@ -79,11 +79,9 @@ read_line (void)
 }
 
 typedef struct {
-    int messages_total;
+    int total_messages;
     int count;
-    int count_last;
     struct timeval tv_start;
-    struct timeval tv_last;
 } add_files_state_t;
 
 /* Compute the number of seconds elapsed from start to end. */
@@ -102,47 +100,37 @@ print_formatted_seconds (double seconds)
 
     if (seconds > 3600) {
 	hours = (int) seconds / 3600;
-	printf ("%d:", hours);
+	printf ("%dh ", hours);
 	seconds -= hours * 3600;
     }
 
-    if (seconds > 60)
+    if (seconds > 60) {
 	minutes = (int) seconds / 60;
-    else
-	minutes = 0;
+	printf ("%dm ", minutes);
+	seconds -= minutes * 60;
+    }
 
-    printf ("%02d:", minutes);
-    seconds -= minutes * 60;
-
-    printf ("%02d", (int) seconds);
+    printf ("%02ds", (int) seconds);
 }
 
 void
 add_files_print_progress (add_files_state_t *state)
 {
     struct timeval tv_now;
-    double ratio_complete;
-    double elapsed_current, rate_current;
-    double elapsed_overall;
+    double elapsed_overall, rate_overall;
 
     gettimeofday (&tv_now, NULL);
 
-    ratio_complete = (double) state->count / state->messages_total;
-    elapsed_current = tv_elapsed (state->tv_last, tv_now);
-    rate_current = (state->count - state->count_last) / elapsed_current;
     elapsed_overall = tv_elapsed (state->tv_start, tv_now);
+    rate_overall = (state->count) / elapsed_overall;
 
-    printf ("Added %d messages at %d messages/sec. ",
-	    state->count, (int) rate_current);
-    print_formatted_seconds (elapsed_overall);
-    printf ("/");
-    print_formatted_seconds (elapsed_overall / ratio_complete);
-    printf (" elapsed (%.2f%%).     \r", 100 * ratio_complete);
+    printf ("Added %d of %d messages (",
+	    state->count, state->total_messages);
+    print_formatted_seconds ((state->total_messages - state->count) /
+			     rate_overall);
+    printf (" remaining).\r");
 
     fflush (stdout);
-
-    state->tv_last = tv_now;
-    state->count_last = state->count;
 }
 
 /* Recursively find all regular files in 'path' and add them to the
@@ -295,6 +283,7 @@ setup_command (int argc, char *argv[])
     int count;
     add_files_state_t add_files_state;
     double elapsed;
+    struct timeval tv_now;
 
     printf ("Welcome to notmuch!\n\n");
 
@@ -353,17 +342,15 @@ setup_command (int argc, char *argv[])
 
     printf ("Next, we'll inspect the messages and create a database of threads:\n");
 
-    add_files_state.messages_total = count;
+    add_files_state.total_messages = count;
     add_files_state.count = 0;
-    add_files_state.count_last = 0;
     gettimeofday (&add_files_state.tv_start, NULL);
-    add_files_state.tv_last = add_files_state.tv_start;
 
     add_files (notmuch, mail_directory, &add_files_state);
 
-    gettimeofday (&add_files_state.tv_last, NULL);
+    gettimeofday (&tv_now, NULL);
     elapsed = tv_elapsed (add_files_state.tv_start,
-			  add_files_state.tv_last);
+			  tv_now);
     printf ("Added %d total messages in ", add_files_state.count);
     print_formatted_seconds (elapsed);
     printf (" (%d messages/sec.).                 \n", (int) (add_files_state.count / elapsed));
