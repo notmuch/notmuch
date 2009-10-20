@@ -20,8 +20,13 @@
 
 #include "notmuch.h"
 
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE /* for getline */
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
+#include <stddef.h>
 #include <string.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -30,7 +35,7 @@
 #include <dirent.h>
 #include <errno.h>
 
-#include <glib.h> /* GIOChannel */
+#include <glib.h> /* g_strdup_printf */
 
 #define ARRAY_SIZE(arr) (sizeof (arr) / sizeof (arr[0]))
 
@@ -41,42 +46,6 @@ typedef struct command {
     command_function_t function;
     const char *usage;
 } command_t;
-
-/* Read a line from stdin, without any line-terminator character.  The
- * return value is a newly allocated string. The caller should free()
- * the string when finished with it.
- *
- * This function returns NULL if EOF is encountered before any
- * characters are input (otherwise it returns those characters).
- */
-char *
-read_line (void)
-{
-    char *result = NULL;
-    GError *error = NULL;
-    GIOStatus g_io_status;
-    gsize length;
-
-    GIOChannel *channel = g_io_channel_unix_new (fileno (stdin));
-
-    g_io_status = g_io_channel_read_line (channel, &result,
-					  &length, NULL, &error);
-
-    if (g_io_status == EOF)
-	goto DONE;
-
-    if (g_io_status != G_IO_STATUS_NORMAL) {
-	fprintf(stderr, "Read error: %s\n", error->message);
-	exit (1);
-    }
-
-    if (length && result[length - 1] == '\n')
-	result[length - 1] = '\0';
-
-  DONE:
-    g_io_channel_unref (channel);
-    return result;
-}
 
 typedef struct {
     int total_messages;
@@ -286,6 +255,7 @@ setup_command (int argc, char *argv[])
 {
     notmuch_database_t *notmuch;
     char *mail_directory, *default_path;
+    size_t line_size;
     int count;
     add_files_state_t add_files_state;
     double elapsed;
@@ -315,7 +285,8 @@ setup_command (int argc, char *argv[])
     printf ("Top-level mail directory [%s]: ", default_path);
     fflush (stdout);
 
-    mail_directory = read_line ();
+    mail_directory = NULL;
+    getline (&mail_directory, &line_size, stdin);
     printf ("\n");
 
     if (mail_directory == NULL || strlen (mail_directory) == 0) {
@@ -323,6 +294,8 @@ setup_command (int argc, char *argv[])
 	    free (mail_directory);
 	mail_directory = default_path;
     } else {
+	if (mail_directory[strlen(mail_directory)-1] == '\n')
+	    mail_directory[strlen(mail_directory)-1] = '\0';
 	/* XXX: Instead of telling the user to use an environment
 	 * variable here, we should really be writing out a configuration
 	 * file and loading that on the next run. */
