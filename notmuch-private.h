@@ -57,13 +57,13 @@ xstrdup (const char *s);
 char *
 xstrndup (const char *s, size_t n);
 
-/* message.c */
+/* message-file.c */
 
 /* XXX: I haven't decided yet whether these will actually get exported
  * into the public interface in notmuch.h
  */
 
-typedef struct _notmuch_message notmuch_message_t;
+typedef struct _notmuch_message_file notmuch_message_file_t;
 
 /* Open a file containing a single email message.
  *
@@ -71,12 +71,12 @@ typedef struct _notmuch_message notmuch_message_t;
  *
  * Returns NULL if any error occurs.
  */
-notmuch_message_t *
-notmuch_message_open (const char *filename);
+notmuch_message_file_t *
+notmuch_message_file_open (const char *filename);
 
 /* Close a notmuch message preivously opened with notmuch_message_open. */
 void
-notmuch_message_close (notmuch_message_t *message);
+notmuch_message_file_close (notmuch_message_file_t *message);
 
 /* Restrict 'message' to only save the named headers.
  *
@@ -95,12 +95,12 @@ notmuch_message_close (notmuch_message_t *message);
  * returned even if that header exists in the actual message.
  */
 void
-notmuch_message_restrict_headers (notmuch_message_t *message, ...);
+notmuch_message_file_restrict_headers (notmuch_message_file_t *message, ...);
 
 /* Identical to notmuch_message_restrict_headers but accepting a va_list. */
 void
-notmuch_message_restrict_headersv (notmuch_message_t *message,
-				   va_list va_headers);
+notmuch_message_file_restrict_headersv (notmuch_message_file_t *message,
+					va_list va_headers);
 
 /* Get the value of the specified header from the message.
  *
@@ -114,8 +114,8 @@ notmuch_message_restrict_headersv (notmuch_message_t *message,
  * 'header'.
  */
 const char *
-notmuch_message_get_header (notmuch_message_t *message,
-			    const char *header);
+notmuch_message_file_get_header (notmuch_message_file_t *message,
+				 const char *header);
 
 /* date.c */
 

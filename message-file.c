@@ -30,7 +30,7 @@ typedef struct {
     size_t len;
 } header_value_closure_t;
 
-struct _notmuch_message {
+struct _notmuch_message_file {
     /* File object */
     FILE *file;
 
@@ -70,12 +70,12 @@ strcase_hash (const void *ptr)
     return hash;
 }
 
-notmuch_message_t *
-notmuch_message_open (const char *filename)
+notmuch_message_file_t *
+notmuch_message_file_open (const char *filename)
 {
-    notmuch_message_t *message;
+    notmuch_message_file_t *message;
 
-    message = xcalloc (1, sizeof (notmuch_message_t));
+    message = xcalloc (1, sizeof (notmuch_message_file_t));
 
     message->file = fopen (filename, "r");
     if (message->file == NULL)
@@ -93,13 +93,13 @@ notmuch_message_open (const char *filename)
 
   FAIL:
     fprintf (stderr, "Error opening %s: %s\n", filename, strerror (errno));
-    notmuch_message_close (message);
+    notmuch_message_file_close (message);
 
     return NULL;
 }
 
 void
-notmuch_message_close (notmuch_message_t *message)
+notmuch_message_file_close (notmuch_message_file_t *message)
 {
     if (message == NULL)
 	return;
@@ -120,13 +120,13 @@ notmuch_message_close (notmuch_message_t *message)
 }
 
 void
-notmuch_message_restrict_headersv (notmuch_message_t *message,
-				   va_list va_headers)
+notmuch_message_file_restrict_headersv (notmuch_message_file_t *message,
+					va_list va_headers)
 {
     char *header;
 
     if (message->parsing_started ) {
-	fprintf (stderr, "Error: notmuch_message_restrict_headers called after parsing has started\n");
+	fprintf (stderr, "Error: notmuch_message_file_restrict_headers called after parsing has started\n");
 	exit (1);
     }
 
@@ -142,13 +142,13 @@ notmuch_message_restrict_headersv (notmuch_message_t *message,
 }
 
 void
-notmuch_message_restrict_headers (notmuch_message_t *message, ...)
+notmuch_message_file_restrict_headers (notmuch_message_file_t *message, ...)
 {
     va_list va_headers;
 
     va_start (va_headers, message);
 
-    notmuch_message_restrict_headersv (message, va_headers);
+    notmuch_message_file_restrict_headersv (message, va_headers);
 }
 
 void
@@ -192,8 +192,8 @@ copy_header_unfolding (header_value_closure_t *value,
 }
 
 const char *
-notmuch_message_get_header (notmuch_message_t *message,
-			    const char *header_desired)
+notmuch_message_file_get_header (notmuch_message_file_t *message,
+				 const char *header_desired)
 {
     int contains;
     char *header, *value;

@@ -13,7 +13,7 @@ all: $(PROGS)
 %.o: %.c
 	$(CC) -c $(CFLAGS) $(MYCFLAGS) $< -o $@
 
-notmuch: notmuch.o database.o date.o message.o xutil.o
+notmuch: notmuch.o database.o date.o message-file.o xutil.o
 	$(CC) $(MYLDFLAGS) $^ -o $@
 
 Makefile.dep: *.c *.cc
