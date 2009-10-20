@@ -104,6 +104,12 @@ notmuch_message_close (notmuch_message_t *message)
     if (message == NULL)
 	return;
 
+    if (message->line)
+	free (message->line);
+
+    if (message->value.size)
+	free (message->value.str);
+
     if (message->headers)
 	g_hash_table_unref (message->headers);
 
