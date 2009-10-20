@@ -273,8 +273,9 @@ notmuch_message_get_header (notmuch_message_t *message,
 
 	match = (strcasecmp (header, header_desired) == 0);
 
-	g_hash_table_insert (message->headers, header,
-			     xstrdup (message->value.str));
+	value = xstrdup (message->value.str);
+
+	g_hash_table_insert (message->headers, header, value);
 
 	if (match)
 	    return value;
