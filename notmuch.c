@@ -289,13 +289,17 @@ setup_command (int argc, char *argv[])
     getline (&mail_directory, &line_size, stdin);
     printf ("\n");
 
+    if (mail_directory &&
+	mail_directory[strlen(mail_directory)-1] == '\n')
+    {
+	mail_directory[strlen(mail_directory)-1] = '\0';
+    }
+
     if (mail_directory == NULL || strlen (mail_directory) == 0) {
 	if (mail_directory)
 	    free (mail_directory);
 	mail_directory = default_path;
     } else {
-	if (mail_directory[strlen(mail_directory)-1] == '\n')
-	    mail_directory[strlen(mail_directory)-1] = '\0';
 	/* XXX: Instead of telling the user to use an environment
 	 * variable here, we should really be writing out a configuration
 	 * file and loading that on the next run. */
