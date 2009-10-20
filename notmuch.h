@@ -40,10 +40,14 @@ NOTMUCH_BEGIN_DECLS
  * NOTMUCH_STATUS_SUCCESS: No error occurred.
  *
  * NOTMUCH_STATUS_XAPIAN_EXCEPTION: A Xapian exception occurred
+ *
+ * NOTMUCH_STATUS_FILE_NOT_EMAIL: A file was presented that doesn't
+ * 	appear to be an email message.
  */
 typedef enum _notmuch_status {
     NOTMUCH_STATUS_SUCCESS = 0,
-    NOTMUCH_STATUS_XAPIAN_EXCEPTION
+    NOTMUCH_STATUS_XAPIAN_EXCEPTION,
+    NOTMUCH_STATUS_FILE_NOT_EMAIL
 } notmuch_status_t;
 
 /* An opaque data structure representing a notmuch database. See
@@ -116,7 +120,15 @@ notmuch_database_get_path (notmuch_database_t *database);
  * single mail message (not a multi-message mbox) that is expected to
  * remain at its current location, (since the notmuch database will
  * reference the filename, and will not copy the entire contents of
- * the file. */
+ * the file.
+ *
+ * Return value:
+ *
+ * NOTMUCH_STATUS_SUCCESS: Message successfully added to database.
+ *
+ * NOTMUCH_STATUS_FILE_NOT_EMAIL: the contents of filename don't look
+ * 	like an email message. Nothing added to the database.
+ */
 notmuch_status_t
 notmuch_database_add_message (notmuch_database_t *database,
 			      const char *filename);

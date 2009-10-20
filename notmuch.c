@@ -145,6 +145,7 @@ add_files (notmuch_database_t *notmuch, const char *path,
     int err;
     char *next;
     struct stat st;
+    notmuch_status_t status;
 
     dir = opendir (path);
 
@@ -187,8 +188,13 @@ add_files (notmuch_database_t *notmuch, const char *path,
 	stat (next, &st);
 
 	if (S_ISREG (st.st_mode)) {
-	    notmuch_database_add_message (notmuch, next);
-	    state->count++;
+	    status = notmuch_database_add_message (notmuch, next);
+	    if (status == NOTMUCH_STATUS_FILE_NOT_EMAIL) {
+		fprintf (stderr, "Note: Ignoring non-mail file: %s\n",
+			 next);
+	    } else {
+		state->count++;
+	    }
 	    if (state->count % 1000 == 0)
 		add_files_print_progress (state);
 	} else if (S_ISDIR (st.st_mode)) {
@@ -293,9 +299,10 @@ setup_command (int argc, char *argv[])
     printf ("Notmuch needs to know the top-level directory of your email archive,\n"
 	    "(where you already have mail stored and where messages will be delivered\n"
 	    "in the future). This directory can contain any number of sub-directories\n"
-	    "but the only files it contains should be individual email messages.\n"
-	    "Either maildir or mh format directories are fine, but you will want to\n"
-	    "move away any auxiliary files maintained by other email programs.\n\n");
+	    "and primarily just files with indvidual email messages (eg. maildir or mh\n"
+	    "archives are perfect). If there are other, non-email files (such as\n"
+	    "indexes maintained by other email programs) then notmuch will do its\n"
+	    "best to detect those and ignore them.\n\n");
 
     printf ("Mail storage that uses mbox format, (where one mbox file contains many\n"
 	    "messages), will not work with notmuch. If that's how your mail is currently\n"

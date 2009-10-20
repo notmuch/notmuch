@@ -37,6 +37,8 @@ struct _notmuch_message {
     /* Header storage */
     int restrict_headers;
     GHashTable *headers;
+    int broken_headers;
+    int good_headers;
 
     /* Parsing state */
     char *line;
@@ -234,11 +236,20 @@ notmuch_message_get_header (notmuch_message_t *message,
 	colon = strchr (message->line, ':');
 
 	if (colon == NULL) {
-	    fprintf (stderr, "Warning: Unexpected non-header line: %s\n",
-		     message->line);
+	    message->broken_headers++;
+	    /* A simple heuristic for giving up on things that just
+	     * don't look like mail messages. */
+	    if (message->broken_headers >= 10 &&
+		message->good_headers < 5)
+	    {
+		message->parsing_finished = 1;
+		continue;
+	    }
 	    NEXT_HEADER_LINE (NULL);
 	    continue;
 	}
+
+	message->good_headers++;
 
 	header = xstrndup (message->line, colon - message->line);
 

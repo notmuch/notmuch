@@ -479,6 +479,7 @@ notmuch_database_add_message (notmuch_database_t *notmuch,
     GPtrArray *parents, *thread_ids;
 
     const char *refs, *in_reply_to, *date, *header;
+    const char *from, *to, *subject;
     char *message_id;
 
     time_t time_value;
@@ -487,10 +488,12 @@ notmuch_database_add_message (notmuch_database_t *notmuch,
     message = notmuch_message_open (filename);
 
     notmuch_message_restrict_headers (message,
-				      "references",
+				      "date",
+				      "from",
 				      "in-reply-to",
 				      "message-id",
-				      "date",
+				      "references",
+				      "subject",
 				      (char *) NULL);
 
     try {
@@ -567,7 +570,19 @@ notmuch_database_add_message (notmuch_database_t *notmuch,
 	doc.add_value (NOTMUCH_VALUE_DATE,
 		       Xapian::sortable_serialise (time_value));
 
-	db->add_document (doc);
+	from = notmuch_message_get_header (message, "from");
+	subject = notmuch_message_get_header (message, "subject");
+	to = notmuch_message_get_header (message, "to");
+
+	if (from == NULL &&
+	    subject == NULL &&
+	    to == NULL)
+	{
+	    notmuch_message_close (message);
+	    return NOTMUCH_STATUS_FILE_NOT_EMAIL;
+	} else {
+	    db->add_document (doc);
+	}
     } catch (const Xapian::Error &error) {
 	fprintf (stderr, "A Xapian exception occurred: %s.\n",
 		 error.get_msg().c_str());
