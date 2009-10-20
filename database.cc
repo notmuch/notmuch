@@ -24,7 +24,7 @@
 
 #include <xapian.h>
 
-#include <glib.h> /* g_strdup_printf, g_free, GHashTable */
+#include <glib.h> /* g_strdup_printf, g_free, GPtrArray, GHashTable */
 
 using namespace std;
 
