@@ -115,6 +115,12 @@ notmuch_message_get_tags (notmuch_message_t *message)
     return tags;
 }
 
+void
+notmuch_message_destroy (notmuch_message_t *message)
+{
+    talloc_free (message);
+}
+
 notmuch_bool_t
 notmuch_tags_has_more (notmuch_tags_t *tags)
 {
@@ -140,4 +146,10 @@ void
 notmuch_tags_advance (notmuch_tags_t *tags)
 {
     tags->iterator++;
+}
+
+void
+notmuch_tags_destroy (notmuch_tags_t *tags)
+{
+    talloc_free (tags);
 }

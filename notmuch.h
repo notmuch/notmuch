@@ -226,8 +226,13 @@ notmuch_query_set_sort (notmuch_query_t *query, notmuch_sort_t sort);
  *
  *     notmuch_query_destroy (query);
  *
- * Note that there's no explicit destructor for the notmuch_results_t
- * object.
+ * Note that there's no explicit destructor needed for the
+ * notmuch_results_t object.
+ *
+ * (For consistency, we do provide a notmuch_results_destroy function,
+ * but there's no point in calling it if you're about to destroy the
+ * query object as well too---either call will free all the memory of
+ * the results).
  */
 notmuch_results_t *
 notmuch_query_search (notmuch_query_t *query);
@@ -272,6 +277,15 @@ notmuch_results_get (notmuch_results_t *results);
 void
 notmuch_results_advance (notmuch_results_t *results);
 
+/* Destroy a notmuch_results_t object.
+ *
+ * It's not strictly necessary to call this function. All memory from
+ * the notmuch_results_t object will be reclaimed when the containg
+ * query object is destroyed.
+ */
+void
+notmuch_results_destroy (notmuch_results_t *results);
+
 /* Get the message ID of 'message'.
  *
  * The returned string belongs to 'message' and as such, should not be
@@ -305,11 +319,24 @@ notmuch_message_get_message_id (notmuch_message_t *message);
  *         ....
  *     }
  *
- * Note that there's no explicit destructor for the notmuch_tags_t
- * object.
+ * Note: If you are finished with a message before its containing
+ * query, you can call notmuch_message_destroy to clean up some memory
+ * sooner. If you don't call it, all the memory will still be
+ * reclaimed when the query is destroyed.
  */
 notmuch_tags_t *
 notmuch_message_get_tags (notmuch_message_t *message);
+
+/* Destroy a notmuch_message_t object.
+ *
+ * It can be useful to call this function in the case of a single
+ * query object with many messages in the result, (such as iterating
+ * over the entire database). Otherwise, it's fine to never call this
+ * function and there will still be no memory leaks. (The memory from
+ * the messages get reclaimed when the containing query is destroyed.)
+ */
+void
+notmuch_message_destroy (notmuch_message_t *message);
 
 /* Does the given notmuch_tags_t object contain any more results.
  *
@@ -341,6 +368,15 @@ notmuch_tags_get (notmuch_tags_t *tags);
  */
 void
 notmuch_tags_advance (notmuch_tags_t *results);
+
+/* Destroy a notmuch_tags_t object.
+ *
+ * It's not strictly necessary to call this function. All memory from
+ * the notmuch_tags_t object will be reclaimed when the containg
+ * message or query objects are destroyed.
+ */
+void
+notmuch_tags_destroy (notmuch_tags_t *tags);
 
 NOTMUCH_END_DECLS
 

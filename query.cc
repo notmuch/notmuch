@@ -141,3 +141,9 @@ notmuch_results_advance (notmuch_results_t *results)
 {
     results->iterator++;
 }
+
+void
+notmuch_results_destroy (notmuch_results_t *results)
+{
+    talloc_free (results);
+}
