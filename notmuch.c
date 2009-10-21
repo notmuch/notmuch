@@ -55,6 +55,13 @@ typedef struct {
     struct timeval tv_start;
 } add_files_state_t;
 
+static void
+chomp_newline (char *str)
+{
+    if (str && str[strlen(str)-1] == '\n')
+	str[strlen(str)-1] = '\0';
+}
+
 /* Compute the number of seconds elapsed from start to end. */
 double
 tv_elapsed (struct timeval start, struct timeval end)
@@ -289,13 +296,9 @@ setup_command (int argc, char *argv[])
 
     mail_directory = NULL;
     getline (&mail_directory, &line_size, stdin);
-    printf ("\n");
+    chomp_newline (mail_directory);
 
-    if (mail_directory &&
-	mail_directory[strlen(mail_directory)-1] == '\n')
-    {
-	mail_directory[strlen(mail_directory)-1] = '\0';
-    }
+    printf ("\n");
 
     if (mail_directory == NULL || strlen (mail_directory) == 0) {
 	if (mail_directory)
