@@ -41,6 +41,31 @@
 
 NOTMUCH_BEGIN_DECLS
 
+#include <talloc.h>
+
+
+/* Thanks to Andrew Tridgell's (SAMBA's) talloc for this definition of
+ * unlikely. The talloc source code comes to us via the GNU LGPL v. 3.
+ */
+/* these macros gain us a few percent of speed on gcc */
+#if (__GNUC__ >= 3)
+/* the strange !! is to ensure that __builtin_expect() takes either 0 or 1
+   as its first argument */
+#ifndef likely
+#define likely(x)   __builtin_expect(!!(x), 1)
+#endif
+#ifndef unlikely
+#define unlikely(x) __builtin_expect(!!(x), 0)
+#endif
+#else
+#ifndef likely
+#define likely(x) (x)
+#endif
+#ifndef unlikely
+#define unlikely(x) (x)
+#endif
+#endif
+
 /* xutil.c */
 void *
 xcalloc (size_t nmemb, size_t size);
@@ -56,6 +81,13 @@ xstrdup (const char *s);
 
 char *
 xstrndup (const char *s, size_t n);
+
+/* message.cc */
+
+notmuch_message_t *
+_notmuch_message_create (notmuch_results_t *owner,
+			 notmuch_database_t *notmuch,
+			 unsigned int doc_id);
 
 /* message-file.c */
 

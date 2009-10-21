@@ -18,7 +18,7 @@
  * Author: Carl Worth <cworth@cworth.org>
  */
 
-#include "notmuch-private.h"
+#include "database-private.h"
 
 #include <iostream>
 
@@ -27,12 +27,6 @@
 #include <glib.h> /* g_strdup_printf, g_free, GPtrArray, GHashTable */
 
 using namespace std;
-
-struct _notmuch_database {
-    char *path;
-    Xapian::WritableDatabase *xapian_db;
-    Xapian::TermGenerator *term_gen;
-};
 
 #define ARRAY_SIZE(arr) (sizeof (arr) / sizeof (arr[0]))
 
@@ -463,6 +457,7 @@ notmuch_database_open (const char *path)
     notmuch->path = xstrdup (path);
 
     try {
+	Xapian::PostingIterator i;
 	notmuch->xapian_db = new Xapian::WritableDatabase (xapian_path,
 							   Xapian::DB_CREATE_OR_OPEN);
     } catch (const Xapian::Error &error) {

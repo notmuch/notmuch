@@ -35,6 +35,8 @@
 #include <dirent.h>
 #include <errno.h>
 
+#include <talloc.h>
+
 #include <glib.h> /* g_strdup_printf */
 
 #define ARRAY_SIZE(arr) (sizeof (arr) / sizeof (arr[0]))
@@ -370,8 +372,76 @@ show_command (int argc, char *argv[])
 int
 dump_command (int argc, char *argv[])
 {
-    fprintf (stderr, "Error: dump is not implemented yet.\n");
-    return 1;
+    FILE *output;
+    notmuch_database_t *notmuch = NULL;
+    notmuch_query_t *query;
+    notmuch_results_t *results;
+    notmuch_message_t *message;
+    notmuch_tags_t *tags;
+    int ret = 0;
+
+    if (argc) {
+	output = fopen (argv[0], "w");
+	if (output == NULL) {
+	    fprintf (stderr, "Error opening %s for writing: %s\n",
+		     argv[1], strerror (errno));
+	    ret = 1;
+	    goto DONE;
+	}
+    } else {
+	output = stdout;
+    }
+
+    notmuch = notmuch_database_open (NULL);
+    if (notmuch == NULL) {
+	ret = 1;
+	goto DONE;
+    }
+
+    query = notmuch_query_create (notmuch, NOTMUCH_QUERY_ALL);
+    if (query == NULL) {
+	fprintf (stderr, "Out of memory\n");
+	ret = 1;
+	goto DONE;
+    }
+
+    notmuch_query_set_sort (query, NOTMUCH_SORT_MESSAGE_ID);
+
+    for (results = notmuch_query_search (query);
+	 notmuch_results_has_more (results);
+	 notmuch_results_advance (results))
+    {
+	message = notmuch_results_get (results);
+
+	fprintf (output,
+		 "%s (", notmuch_message_get_message_id (message));
+
+	for (tags = notmuch_message_get_tags (message);
+	     notmuch_tags_has_more (tags);
+	     notmuch_tags_advance (tags))
+	{
+	    int first = 1;
+
+	    if (! first)
+		fprintf (output, " ");
+
+	    fprintf (output, "%s", notmuch_tags_get (tags));
+
+	    first = 0;
+	}
+
+	fprintf (output, ")\n");
+    }
+
+    notmuch_query_destroy (query);
+
+  DONE:
+    if (notmuch)
+	notmuch_database_close (notmuch);
+    if (output != stdout)
+	fclose (output);
+
+    return ret;
 }
 
 int
