@@ -457,7 +457,6 @@ notmuch_database_open (const char *path)
     notmuch->path = xstrdup (path);
 
     try {
-	Xapian::PostingIterator i;
 	notmuch->xapian_db = new Xapian::WritableDatabase (xapian_path,
 							   Xapian::DB_CREATE_OR_OPEN);
     } catch (const Xapian::Error &error) {
@@ -519,8 +518,6 @@ notmuch_database_add_message (notmuch_database_t *notmuch,
 					   (char *) NULL);
 
     try {
-	doc = Xapian::Document ();
-
 	doc.set_data (filename);
 
 	parents = g_ptr_array_new ();
