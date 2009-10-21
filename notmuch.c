@@ -24,11 +24,15 @@
 #define _GNU_SOURCE /* for getline */
 #endif
 
+/* This is separate from notmuch-private.h because we're trying to
+ * keep notmuch.c from looking into any internals, (which helps us
+ * develop notmuch.h into a plausible library interface).
+ */
+#include "xutil.h"
+
 #include <stdio.h>
-#include <stdlib.h>
 #include <stddef.h>
 #include <string.h>
-#include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <unistd.h>
@@ -451,8 +455,99 @@ dump_command (int argc, char *argv[])
 int
 restore_command (int argc, char *argv[])
 {
-    fprintf (stderr, "Error: restore is not implemented yet.\n");
-    return 1;
+    FILE *input;
+    notmuch_database_t *notmuch = NULL;
+    char *line = NULL;
+    size_t line_size, line_len;
+    regex_t regex;
+    int rerr;
+    int ret = 0;
+
+    if (argc) {
+	input = fopen (argv[0], "r");
+	if (input == NULL) {
+	    fprintf (stderr, "Error opening %s for reading: %s\n",
+		     argv[0], strerror (errno));
+	    ret = 1;
+	    goto DONE;
+	}
+    } else {
+	printf ("No filename given. Reading dump from stdin.\n");
+	input = stdin;
+    }
+
+    notmuch = notmuch_database_open (NULL);
+    if (notmuch == NULL) {
+	ret = 1;
+	goto DONE;
+    }
+
+    /* Dump output is one line per message. We match a sequence of
+     * non-space characters for the message-id, then one or more
+     * spaces, then a list of space-separated tags as a sequence of
+     * characters within literal '(' and ')'. */
+    xregcomp (&regex,
+	      "^([^ ]+) \\(([^)]*)\\)$",
+	      REG_EXTENDED);
+
+    while ((line_len = getline (&line, &line_size, input)) != -1) {
+	regmatch_t match[3];
+	char *message_id, *tags, *tag, *next;
+	notmuch_message_t *message;
+	notmuch_status_t status;
+
+	chomp_newline (line);
+
+	rerr = xregexec (&regex, line, 3, match, 0);
+	if (rerr == REG_NOMATCH)
+	{
+	    fprintf (stderr, "Warning: Ignoring invalid input line: %s\n",
+		     line);
+	    continue;
+	}
+
+	message_id = xstrndup (line + match[1].rm_so,
+			       match[1].rm_eo - match[1].rm_so);
+	tags = xstrndup (line + match[2].rm_so,
+			 match[2].rm_eo - match[2].rm_so);
+
+	if (strlen (tags)) {
+
+	    message = notmuch_database_find_message (notmuch, message_id);
+	    if (message == NULL) {
+		fprintf (stderr, "Warning: Cannot apply tags to missing message: %s\n",
+			 message_id);
+		goto NEXT_LINE;
+	    }
+
+	    next = tags;
+	    while (next) {
+		tag = strsep (&next, " ");
+		if (*tag == '\0')
+		    continue;
+		status = notmuch_message_add_tag (message, tag);
+		if (status) {
+		    fprintf (stderr, "Error applying tag %s to message %s.\n",
+			     tag, message_id);
+		}
+	    }
+
+	    notmuch_message_destroy (message);
+	}
+      NEXT_LINE:
+	free (message_id);
+	free (tags);
+    }
+
+    regfree (&regex);
+
+  DONE:
+    if (line)
+	free (line);
+    if (notmuch)
+	notmuch_database_close (notmuch);
+
+    return ret;
 }
 
 command_t commands[] = {
