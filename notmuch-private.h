@@ -76,8 +76,10 @@ typedef enum {
     NOTMUCH_VALUE_DATE = 2
 } notmuch_value_t;
 
-/* Xapian complains if we provide a term longer than this. */
-#define NOTMUCH_MAX_TERM 245
+/* Xapian (with flint backend) complains if we provide a term longer
+ * than this, but I haven't yet found a way to query the limit
+ * programmatically. */
+#define NOTMUCH_TERM_MAX 245
 
 /* message.cc */
 

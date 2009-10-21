@@ -79,7 +79,7 @@ add_term (Xapian::Document doc,
 
     term = g_strdup_printf ("%s%s", prefix, value);
 
-    if (strlen (term) <= NOTMUCH_MAX_TERM)
+    if (strlen (term) <= NOTMUCH_TERM_MAX)
 	doc.add_term (term);
 
     g_free (term);
