@@ -67,15 +67,6 @@ prefix_t BOOLEAN_PREFIX[] = {
     { "ref", "R" }
 };
 
-/* Similarly, these value numbers are also chosen to be sup
- * compatible. */
-
-typedef enum {
-    NOTMUCH_VALUE_MESSAGE_ID = 0,
-    NOTMUCH_VALUE_THREAD = 1,
-    NOTMUCH_VALUE_DATE = 2
-} notmuch_value_t;
-
 static const char *
 find_prefix (const char *name)
 {
@@ -459,6 +450,9 @@ notmuch_database_open (const char *path)
     try {
 	notmuch->xapian_db = new Xapian::WritableDatabase (xapian_path,
 							   Xapian::DB_CREATE_OR_OPEN);
+	notmuch->query_parser = new Xapian::QueryParser;
+	notmuch->query_parser->set_default_op (Xapian::Query::OP_AND);
+	notmuch->query_parser->set_database (*notmuch->xapian_db);
     } catch (const Xapian::Error &error) {
 	fprintf (stderr, "A Xapian exception occurred: %s\n",
 		 error.get_msg().c_str());
@@ -478,6 +472,7 @@ notmuch_database_open (const char *path)
 void
 notmuch_database_close (notmuch_database_t *notmuch)
 {
+    delete notmuch->query_parser;
     delete notmuch->xapian_db;
     free (notmuch->path);
     free (notmuch);

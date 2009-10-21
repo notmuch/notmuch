@@ -31,8 +31,8 @@ struct _notmuch_query {
 
 struct _notmuch_results {
     notmuch_database_t *notmuch;
-    Xapian::PostingIterator iterator;
-    Xapian::PostingIterator iterator_end;
+    Xapian::MSetIterator iterator;
+    Xapian::MSetIterator iterator_end;
 };
 
 notmuch_query_t *
@@ -69,8 +69,8 @@ notmuch_query_set_sort (notmuch_query_t *query, notmuch_sort_t sort)
 static int
 _notmuch_results_destructor (notmuch_results_t *results)
 {
-    results->iterator.~PostingIterator ();
-    results->iterator_end.~PostingIterator ();
+    results->iterator.~MSetIterator ();
+    results->iterator_end.~MSetIterator ();
 
     return 0;
 }
@@ -78,6 +78,8 @@ _notmuch_results_destructor (notmuch_results_t *results)
 notmuch_results_t *
 notmuch_query_search (notmuch_query_t *query)
 {
+    notmuch_database_t *notmuch = query->notmuch;
+    const char *query_string = query->query_string;
     notmuch_results_t *results;
 
     results = talloc (query, notmuch_results_t);
@@ -85,19 +87,50 @@ notmuch_query_search (notmuch_query_t *query)
 	return NULL;
 
     try {
-	if (strlen (query->query_string)) {
-	    fprintf (stderr, "Error: Arbitrary search strings are not supported yet. Come back soon!\n");
-	    exit (1);
+	Xapian::Enquire enquire (*notmuch->xapian_db);
+	Xapian::Query mail_query ("Kmail");
+	Xapian::Query string_query, final_query;
+	Xapian::MSet mset;
+	unsigned int flags = (Xapian::QueryParser::FLAG_BOOLEAN &
+			      Xapian::QueryParser::FLAG_PHRASE &
+			      Xapian::QueryParser::FLAG_LOVEHATE &
+			      Xapian::QueryParser::FLAG_BOOLEAN_ANY_CASE &
+			      Xapian::QueryParser::FLAG_WILDCARD);
+
+	if (strcmp (query_string, "") == 0) {
+	    final_query = mail_query;
+	} else {
+	    string_query = notmuch->query_parser->
+		parse_query (query_string, flags);
+	    final_query = Xapian::Query (Xapian::Query::OP_AND,
+					 mail_query, string_query);
 	}
 
-	results->notmuch = query->notmuch;
-	new (&results->iterator) Xapian::PostingIterator ();
-	new (&results->iterator_end) Xapian::PostingIterator ();
+	switch (query->sort) {
+	case NOTMUCH_SORT_DATE_OLDEST_FIRST:
+	    enquire.set_sort_by_value (NOTMUCH_VALUE_DATE, FALSE);
+	    break;
+	case NOTMUCH_SORT_DATE_NEWEST_FIRST:
+	    enquire.set_sort_by_value (NOTMUCH_VALUE_DATE, TRUE);
+	    break;
+	case NOTMUCH_SORT_MESSAGE_ID:
+	    enquire.set_sort_by_value (NOTMUCH_VALUE_MESSAGE_ID, FALSE);
+	    break;
+	}
+
+	enquire.set_query (final_query);
+
+	mset = enquire.get_mset (0, notmuch->xapian_db->get_doccount ());
+
+	results->notmuch = notmuch;
+
+	new (&results->iterator) Xapian::MSetIterator ();
+	new (&results->iterator_end) Xapian::MSetIterator ();
 
 	talloc_set_destructor (results, _notmuch_results_destructor);
 
-	results->iterator = query->notmuch->xapian_db->postlist_begin ("");
-	results->iterator_end = query->notmuch->xapian_db->postlist_end ("");
+	results->iterator = mset.begin ();
+	results->iterator_end = mset.end ();
 
     } catch (const Xapian::Error &error) {
 	fprintf (stderr, "A Xapian exception occurred: %s\n",
