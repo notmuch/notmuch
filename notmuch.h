@@ -164,6 +164,19 @@ notmuch_status_t
 notmuch_database_add_message (notmuch_database_t *database,
 			      const char *filename);
 
+/* Find a message with the given messsage_id.
+ *
+ * If the database contains a message with the given message_id, then
+ * a new notmuch_message_t object is returned. The caller should call
+ * notmuch_message_destroy when done with the message.
+ *
+ * If no message is found with the given message_id, this function
+ * returns NULL.
+ */
+notmuch_message_t *
+notmuch_database_find_message (notmuch_database_t *database,
+			       const char *message_id);
+
 /* Create a new query for 'database'.
  *
  * Here, 'database' should be an open database, (see

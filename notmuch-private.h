@@ -84,7 +84,7 @@ typedef enum {
 /* message.cc */
 
 notmuch_message_t *
-_notmuch_message_create (notmuch_results_t *owner,
+_notmuch_message_create (const void *talloc_owner,
 			 notmuch_database_t *notmuch,
 			 unsigned int doc_id);
 

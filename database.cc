@@ -111,40 +111,19 @@ find_message_by_docid (Xapian::Database *db, Xapian::docid docid)
     return db->get_document (docid);
 }
 
-Xapian::Document
-find_message_by_message_id (Xapian::Database *db, const char *message_id)
+notmuch_message_t *
+notmuch_database_find_message (notmuch_database_t *notmuch,
+			       const char *message_id)
 {
     Xapian::PostingIterator i, end;
 
-    find_messages_by_term (db, "msgid", message_id, &i, &end);
+    find_messages_by_term (notmuch->xapian_db,
+			   "msgid", message_id, &i, &end);
 
-    if (i != end)
-	return find_message_by_docid (db, *i);
-    else
-	return Xapian::Document ();
-}
+    if (i == end)
+	return NULL;
 
-static void
-insert_thread_id (GHashTable *thread_ids, Xapian::Document doc)
-{
-    string value_string;
-    const char *value, *id, *comma;
-
-    value_string = doc.get_value (NOTMUCH_VALUE_THREAD);
-    value = value_string.c_str();
-    if (strlen (value)) {
-	id = value;
-	while (*id) {
-	    comma = strchr (id, ',');
-	    if (comma == NULL)
-		comma = id + strlen (id);
-	    g_hash_table_insert (thread_ids,
-				 strndup (id, comma - id), NULL);
-	    id = comma;
-	    if (*id)
-		id++;
-	}
-    }
+    return _notmuch_message_create (notmuch, notmuch, *i);
 }
 
 /* Return one or more thread_ids, (as a GPtrArray of strings), for the
@@ -155,10 +134,11 @@ insert_thread_id (GHashTable *thread_ids, Xapian::Document doc)
  * Caller should free all strings in the array and the array itself,
  * (g_ptr_array_free) when done. */
 static GPtrArray *
-find_thread_ids (Xapian::Database *db,
+find_thread_ids (notmuch_database_t *notmuch,
 		 GPtrArray *parents,
 		 const char *message_id)
 {
+    Xapian::WritableDatabase *db = notmuch->xapian_db;
     Xapian::PostingIterator child, children_end;
     Xapian::Document doc;
     GHashTable *thread_ids;
@@ -172,14 +152,38 @@ find_thread_ids (Xapian::Database *db,
 
     find_messages_by_term (db, "ref", message_id, &child, &children_end);
     for ( ; child != children_end; child++) {
+	const char *thread_id;
 	doc = find_message_by_docid (db, *child);
-	insert_thread_id (thread_ids, doc);
+
+	thread_id = doc.get_value (NOTMUCH_VALUE_THREAD).c_str ();
+	if (strlen (thread_id) == 0) {
+	    fprintf (stderr, "Database error: Message with doc_id %u has empty thread-id value (value index %d)\n",
+		     *child, NOTMUCH_VALUE_THREAD);
+	} else {
+	    g_hash_table_insert (thread_ids, strdup (thread_id), NULL);
+	}
     }
 
     for (i = 0; i < parents->len; i++) {
+	notmuch_message_t *parent;
+	notmuch_thread_ids_t *ids;
+
 	parent_message_id = (char *) g_ptr_array_index (parents, i);
-	doc = find_message_by_message_id (db, parent_message_id);
-	insert_thread_id (thread_ids, doc);
+	parent = notmuch_database_find_message (notmuch, parent_message_id);
+	if (parent == NULL)
+	    continue;
+
+	for (ids = notmuch_message_get_thread_ids (parent);
+	     notmuch_thread_ids_has_more (ids);
+	     notmuch_thread_ids_advance (ids))
+	{
+	    const char *id;
+
+	    id = notmuch_thread_ids_get (ids);
+	    g_hash_table_insert (thread_ids, strdup (id), NULL);
+	}
+
+	notmuch_message_destroy (parent);
     }
 
     result = g_ptr_array_new ();
@@ -497,7 +501,7 @@ notmuch_database_add_message (notmuch_database_t *notmuch,
 	    message_id = NULL;
 	}
 
-	thread_ids = find_thread_ids (db, parents, message_id);
+	thread_ids = find_thread_ids (notmuch, parents, message_id);
 
 	for (i = 0; i < parents->len; i++)
 	    g_free (g_ptr_array_index (parents, i));

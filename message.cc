@@ -104,13 +104,13 @@ _notmuch_message_destructor (notmuch_message_t *message)
 }
 
 notmuch_message_t *
-_notmuch_message_create (notmuch_results_t *owner,
+_notmuch_message_create (const void *talloc_owner,
 			 notmuch_database_t *notmuch,
-			 Xapian::docid doc_id)
+			 unsigned int doc_id)
 {
     notmuch_message_t *message;
 
-    message = talloc (owner, notmuch_message_t);
+    message = talloc (talloc_owner, notmuch_message_t);
     if (unlikely (message == NULL))
 	return NULL;
 
