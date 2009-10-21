@@ -43,6 +43,7 @@ NOTMUCH_BEGIN_DECLS
 
 #include <talloc.h>
 
+#include "xutil.h"
 
 /* Thanks to Andrew Tridgell's (SAMBA's) talloc for this definition of
  * unlikely. The talloc source code comes to us via the GNU LGPL v. 3.
@@ -74,22 +75,6 @@ typedef enum {
     NOTMUCH_VALUE_THREAD = 1,
     NOTMUCH_VALUE_DATE = 2
 } notmuch_value_t;
-
-/* xutil.c */
-void *
-xcalloc (size_t nmemb, size_t size);
-
-void *
-xmalloc (size_t size);
-
-void *
-xrealloc (void *ptrr, size_t size);
-
-char *
-xstrdup (const char *s);
-
-char *
-xstrndup (const char *s, size_t n);
 
 /* message.cc */
 
