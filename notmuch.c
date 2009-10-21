@@ -99,7 +99,7 @@ add_files_print_progress (add_files_state_t *state)
 	    state->count, state->total_messages);
     print_formatted_seconds ((state->total_messages - state->count) /
 			     rate_overall);
-    printf (" remaining).\r");
+    printf (" remaining).      \r");
 
     fflush (stdout);
 }
