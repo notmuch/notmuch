@@ -32,6 +32,11 @@ struct _notmuch_tags {
     Xapian::TermIterator iterator_end;
 };
 
+struct _notmuch_thread_ids {
+    char *current;
+    char *next;
+};
+
 #define ARRAY_SIZE(arr) (sizeof (arr) / sizeof (arr[0]))
 
 /* These prefix values are specifically chosen to be compatible
@@ -167,6 +172,25 @@ notmuch_message_get_tags (notmuch_message_t *message)
     return tags;
 }
 
+notmuch_thread_ids_t *
+notmuch_message_get_thread_ids (notmuch_message_t *message)
+{
+    notmuch_thread_ids_t *thread_ids;
+    const char *id_str;
+
+    thread_ids = talloc (message, notmuch_thread_ids_t);
+    if (unlikely (thread_ids == NULL))
+	return NULL;
+
+    id_str = message->doc.get_value (NOTMUCH_VALUE_THREAD).c_str ();
+    thread_ids->next = talloc_strdup (message, id_str);
+
+    /* Initialize thread_ids->current and terminate first ID. */
+    notmuch_thread_ids_advance (thread_ids);
+
+    return thread_ids;
+}
+
 void
 notmuch_message_destroy (notmuch_message_t *message)
 {
@@ -204,4 +228,31 @@ void
 notmuch_tags_destroy (notmuch_tags_t *tags)
 {
     talloc_free (tags);
+}
+
+notmuch_bool_t
+notmuch_thread_ids_has_more (notmuch_thread_ids_t *thread_ids)
+{
+    if (thread_ids->current == NULL || *thread_ids->current == '\0')
+	return FALSE;
+    else
+	return TRUE;
+}
+
+const char *
+notmuch_thread_ids_get (notmuch_thread_ids_t *thread_ids)
+{
+    return thread_ids->current;
+}
+
+void
+notmuch_thread_ids_advance (notmuch_thread_ids_t *thread_ids)
+{
+    thread_ids->current = strsep (&thread_ids->next, ",");
+}
+
+void
+notmuch_thread_ids_destroy (notmuch_thread_ids_t *thread_ids)
+{
+    talloc_free (thread_ids);
 }
