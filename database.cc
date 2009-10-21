@@ -456,10 +456,8 @@ notmuch_database_open (const char *path)
 
     xapian_path = g_strdup_printf ("%s/%s", notmuch_path, "xapian");
 
-    /* C++ is so nasty in requiring these casts. I'm almost tempted to
-     * write a C wrapper for Xapian... */
-    notmuch = (notmuch_database_t *) xmalloc (sizeof (notmuch_database_t));
-    notmuch->path = xstrdup (path);
+    notmuch = talloc (NULL, notmuch_database_t);
+    notmuch->path = talloc_strdup (notmuch, path);
 
     try {
 	notmuch->xapian_db = new Xapian::WritableDatabase (xapian_path,
@@ -488,8 +486,7 @@ notmuch_database_close (notmuch_database_t *notmuch)
 {
     delete notmuch->query_parser;
     delete notmuch->xapian_db;
-    free (notmuch->path);
-    free (notmuch);
+    talloc_free (notmuch);
 }
 
 const char *
