@@ -520,6 +520,8 @@ notmuch_database_add_message (notmuch_database_t *notmuch,
     try {
 	doc.set_data (filename);
 
+	add_term (doc, "type", "mail");
+
 	parents = g_ptr_array_new ();
 
 	refs = notmuch_message_file_get_header (message, "references");
