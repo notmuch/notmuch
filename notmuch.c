@@ -431,6 +431,8 @@ dump_command (int argc, char *argv[])
 	}
 
 	fprintf (output, ")\n");
+
+	notmuch_message_destroy (message);
     }
 
     notmuch_query_destroy (query);
