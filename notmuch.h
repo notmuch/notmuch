@@ -231,17 +231,22 @@ notmuch_query_set_sort (notmuch_query_t *query, notmuch_sort_t sort);
  *     {
  *         message = notmuch_results_get (results);
  *         ....
+ *         notmuch_message_destroy (message);
  *     }
  *
  *     notmuch_query_destroy (query);
  *
- * Note that there's no explicit destructor needed for the
- * notmuch_results_t object.
+ * Note: If you are finished with a message before its containing
+ * query, you can call notmuch_message_destroy to clean up some memory
+ * sooner (as in the above example). Otherwise, if your message
+ * objects are long-lived, then you don't need to call
+ * notmuch_message_destroy and all the memory will still be reclaimed
+ * when the query is destroyed.
  *
- * (For consistency, we do provide a notmuch_results_destroy function,
- * but there's no point in calling it if you're about to destroy the
- * query object as well too---either call will free all the memory of
- * the results).
+ * Note that there's no explicit destructor needed for the
+ * notmuch_results_t object. (For consistency, we do provide a
+ * notmuch_results_destroy function, but there's no good reason to
+ * call it if the query is about to be destroyed).
  */
 notmuch_results_t *
 notmuch_query_search (notmuch_query_t *query);
