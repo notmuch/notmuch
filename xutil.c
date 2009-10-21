@@ -92,3 +92,42 @@ xstrndup (const char *s, size_t n)
 
     return ret;
 }
+
+void
+xregcomp (regex_t *preg, const char *regex, int cflags)
+{
+    int rerr;
+
+    rerr = regcomp (preg, regex, cflags);
+    if (rerr) {
+	size_t error_size = regerror (rerr, preg, NULL, 0);
+	char *error = xmalloc (error_size);
+
+	regerror (rerr, preg, error, error_size);
+	fprintf (stderr, "Internal error compiling regex %s: %s\n",
+		 regex, error);
+	free (error);
+	exit (1);
+    }
+}
+
+int
+xregexec (const regex_t *preg, const char *string,
+	  size_t nmatch, regmatch_t pmatch[], int eflags)
+{
+    int i, rerr;
+
+    rerr = regexec (preg, string, nmatch, pmatch, eflags);
+    if (rerr)
+	return rerr;
+
+    for (i = 0; i < nmatch; i++) {
+	if (pmatch[i].rm_so == -1) {
+	    fprintf (stderr, "Internal error matching regex against %s: Sub-match %d not found\n",
+		     string, i);
+	    exit (1);
+	}
+    }
+
+    return 0;
+}

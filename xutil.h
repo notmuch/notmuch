@@ -41,4 +41,11 @@ xstrdup (const char *s);
 char *
 xstrndup (const char *s, size_t n);
 
+void
+xregcomp (regex_t *preg, const char *regex, int cflags);
+
+int
+xregexec (const regex_t *preg, const char *string,
+	  size_t nmatch, regmatch_t pmatch[], int eflags);
+
 #endif
