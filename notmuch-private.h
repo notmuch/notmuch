@@ -23,6 +23,8 @@
 
 #include "notmuch.h"
 
+NOTMUCH_BEGIN_DECLS
+
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE /* For getline */
 #endif
@@ -38,8 +40,6 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <ctype.h>
-
-NOTMUCH_BEGIN_DECLS
 
 #include <talloc.h>
 
