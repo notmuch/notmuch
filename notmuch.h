@@ -382,7 +382,7 @@ notmuch_message_get_thread_ids (notmuch_message_t *message);
 void
 notmuch_message_destroy (notmuch_message_t *message);
 
-/* Does the given notmuch_tags_t object contain any more results.
+/* Does the given notmuch_tags_t object contain any more tags.
  *
  * When this function returns TRUE, notmuch_tags_get will return a
  * valid string. Whereas when this function returns FALSE,
@@ -394,7 +394,7 @@ notmuch_message_destroy (notmuch_message_t *message);
 notmuch_bool_t
 notmuch_tags_has_more (notmuch_tags_t *tags);
 
-/* Get the current result from 'tags' as a string.
+/* Get the current tag from 'tags' as a string.
  *
  * Note: The returned string belongs to 'tags' and has a lifetime
  * identical to it (and the query to which it utlimately belongs).
@@ -411,7 +411,7 @@ notmuch_tags_get (notmuch_tags_t *tags);
  * showing how to iterate over a notmuch_tags_t object.
  */
 void
-notmuch_tags_advance (notmuch_tags_t *results);
+notmuch_tags_advance (notmuch_tags_t *tags);
 
 /* Destroy a notmuch_tags_t object.
  *
