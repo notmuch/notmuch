@@ -66,8 +66,14 @@ notmuch_query_set_sort (notmuch_query_t *query, notmuch_sort_t sort)
     query->sort = sort;
 }
 
+/* We end up having to call the destructors explicitly because we had
+ * to use "placement new" in order to initialize C++ objects within a
+ * block that we allocated with talloc. So C++ is making talloc
+ * slightly less simple to use, (we wouldn't need
+ * talloc_set_destructor at all otherwise).
+ */
 static int
-_notmuch_results_destroy (notmuch_results_t *results)
+_notmuch_results_destructor (notmuch_results_t *results)
 {
     results->iterator.~PostingIterator ();
     results->iterator_end.~PostingIterator ();
@@ -94,7 +100,7 @@ notmuch_query_search (notmuch_query_t *query)
 	new (&results->iterator) Xapian::PostingIterator ();
 	new (&results->iterator_end) Xapian::PostingIterator ();
 
-	talloc_set_destructor (results, _notmuch_results_destroy);
+	talloc_set_destructor (results, _notmuch_results_destructor);
 
 	results->iterator = query->notmuch->xapian_db->postlist_begin ("");
 	results->iterator_end = query->notmuch->xapian_db->postlist_end ("");
