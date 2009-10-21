@@ -24,6 +24,9 @@
 #include <xapian.h>
 
 struct _notmuch_message {
+    notmuch_database_t *notmuch;
+    Xapian::docid doc_id;
+    char *message_id;
     Xapian::Document doc;
 };
 
@@ -66,6 +69,7 @@ prefix_t BOOLEAN_PREFIX[] = {
     { "email", "E" },
     { "date", "D" },
     { "label", "L" },
+    { "tag", "L" },
     { "source_id", "I" },
     { "attachment_extension", "O" },
     { "msgid", "Q" },
@@ -114,6 +118,9 @@ _notmuch_message_create (const void *talloc_owner,
     if (unlikely (message == NULL))
 	return NULL;
 
+    message->notmuch = notmuch;
+    message->doc_id = doc_id;
+    message->message_id = NULL; /* lazily created */
     new (&message->doc) Xapian::Document;
 
     talloc_set_destructor (message, _notmuch_message_destructor);
@@ -128,12 +135,19 @@ notmuch_message_get_message_id (notmuch_message_t *message)
 {
     Xapian::TermIterator i;
 
+    if (message->message_id)
+	return message->message_id;
+
     i = message->doc.termlist_begin ();
-    i.skip_to ("Q");
-    if (i != message->doc.termlist_end ())
-	return talloc_strdup (message, (*i).c_str () + 1);
-    else
+    i.skip_to (_find_prefix ("msgid"));
+
+    /* XXX: This should really be an internal error, but we'll need to
+     * fix the add_message side of things first. */
+    if (i == message->doc.termlist_end ())
 	return NULL;
+
+    message->message_id = talloc_strdup (message, (*i).c_str () + 1);
+    return message->message_id;
 }
 
 /* We end up having to call the destructors explicitly because we had
@@ -166,7 +180,7 @@ notmuch_message_get_tags (notmuch_message_t *message)
     talloc_set_destructor (tags, _notmuch_tags_destructor);
 
     tags->iterator = message->doc.termlist_begin ();
-    tags->iterator.skip_to ("L");
+    tags->iterator.skip_to (_find_prefix ("tag"));
     tags->iterator_end = message->doc.termlist_end ();
 
     return tags;
