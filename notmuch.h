@@ -49,6 +49,10 @@ typedef int notmuch_bool_t;
  *
  * NOTMUCH_STATUS_SUCCESS: No error occurred.
  *
+ * XXX: We don't really want to expose this lame XAPIAN_EXCEPTION
+ * value. Instead we should map to things like DATABASE_LOCKED or
+ * whatever.
+ *
  * NOTMUCH_STATUS_XAPIAN_EXCEPTION: A Xapian exception occurred
  *
  * NOTMUCH_STATUS_FILE_NOT_EMAIL: A file was presented that doesn't
@@ -71,6 +75,13 @@ typedef enum _notmuch_status {
 
     NOTMUCH_STATUS_LAST_STATUS
 } notmuch_status_t;
+
+/* Get a string representation of a notmuch_status_t value.
+ *
+ * The result is readonly.
+ */
+const char *
+notmuch_status_to_string (notmuch_status_t status);
 
 /* Various opaque data types. For each notmuch_<foo>_t see the various
  * notmuch_<foo> functions below. */

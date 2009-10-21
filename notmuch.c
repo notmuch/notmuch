@@ -527,8 +527,11 @@ restore_command (int argc, char *argv[])
 		    continue;
 		status = notmuch_message_add_tag (message, tag);
 		if (status) {
-		    fprintf (stderr, "Error applying tag %s to message %s.\n",
+		    fprintf (stderr,
+			     "Error applying tag %s to message %s:\n",
 			     tag, message_id);
+		    fprintf (stderr, "%s\n",
+			     notmuch_status_to_string (status));
 		}
 	    }
 

@@ -28,6 +28,26 @@
 
 using namespace std;
 
+const char *
+notmuch_status_to_string (notmuch_status_t status)
+{
+    switch (status) {
+    case NOTMUCH_STATUS_SUCCESS:
+	return "No error occurred";
+    case NOTMUCH_STATUS_XAPIAN_EXCEPTION:
+	return "A Xapian exception occurred";
+    case NOTMUCH_STATUS_FILE_NOT_EMAIL:
+	return "File is not an email";
+    case NOTMUCH_STATUS_NULL_POINTER:
+	return "Erroneous NULL pointer";
+    case NOTMUCH_STATUS_TAG_TOO_LONG:
+	return "Tag value is too long";
+    default:
+    case NOTMUCH_STATUS_LAST_STATUS:
+	return "Unknown error status value";
+    }
+}
+
 /* "128 bits of thread-id ought to be enough for anybody" */
 #define NOTMUCH_THREAD_ID_BITS	 128
 #define NOTMUCH_THREAD_ID_DIGITS (NOTMUCH_THREAD_ID_BITS / 4)
