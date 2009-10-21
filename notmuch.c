@@ -398,7 +398,7 @@ dump_command (int argc, char *argv[])
 	goto DONE;
     }
 
-    query = notmuch_query_create (notmuch, NOTMUCH_QUERY_ALL);
+    query = notmuch_query_create (notmuch, "");
     if (query == NULL) {
 	fprintf (stderr, "Out of memory\n");
 	ret = 1;

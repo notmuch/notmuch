@@ -174,9 +174,8 @@ notmuch_database_add_message (notmuch_database_t *database,
  *
  * http://xapian.org/docs/queryparser.html
  *
- * As a special case, passing a value of NOTMUCH_QUERY_ALL for the
- * query string will result in a query that returns all messages in
- * the database.
+ * As a special case, passing a length-zero string, (that is ""), will
+ * result in a query that returns all messages in the database.
  *
  * See notmuch_query_set_sort for controlling the order of results and
  * notmuch_query_search to actually execute the query.
@@ -189,10 +188,6 @@ notmuch_database_add_message (notmuch_database_t *database,
 notmuch_query_t *
 notmuch_query_create (notmuch_database_t *database,
 		      const char *query_string);
-
-/* Special value to cause notmuch_query_create to return all
- * messages. */
-extern const char *NOTMUCH_QUERY_ALL;
 
 /* Sort values for notmuch_query_set_sort */
 typedef enum {

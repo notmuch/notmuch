@@ -23,8 +23,6 @@
 
 #include <xapian.h>
 
-const char *NOTMUCH_QUERY_ALL = "";
-
 struct _notmuch_query {
     notmuch_database_t *notmuch;
     const char *query_string;
@@ -49,11 +47,7 @@ notmuch_query_create (notmuch_database_t *notmuch,
 
     query->notmuch = notmuch;
 
-    /* Special-case NOTMUCH_QUERY_ALL so we see it and not a copy. */
-    if (query_string == NOTMUCH_QUERY_ALL)
-	query->query_string = query_string;
-    else
-	query->query_string = talloc_strdup (query, query_string);
+    query->query_string = talloc_strdup (query, query_string);
 
     query->sort = NOTMUCH_SORT_DATE_OLDEST_FIRST;
 
@@ -91,7 +85,7 @@ notmuch_query_search (notmuch_query_t *query)
 	return NULL;
 
     try {
-	if (query->query_string != NOTMUCH_QUERY_ALL) {
+	if (strlen (query->query_string)) {
 	    fprintf (stderr, "Error: Arbitrary search strings are not supported yet. Come back soon!\n");
 	    exit (1);
 	}
