@@ -384,7 +384,7 @@ dump_command (int argc, char *argv[])
 	output = fopen (argv[0], "w");
 	if (output == NULL) {
 	    fprintf (stderr, "Error opening %s for writing: %s\n",
-		     argv[1], strerror (errno));
+		     argv[0], strerror (errno));
 	    ret = 1;
 	    goto DONE;
 	}
