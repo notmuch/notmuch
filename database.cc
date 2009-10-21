@@ -28,61 +28,6 @@
 
 using namespace std;
 
-#define ARRAY_SIZE(arr) (sizeof (arr) / sizeof (arr[0]))
-
-/* Xapian complains if we provide a term longer than this. */
-#define NOTMUCH_MAX_TERM 245
-
-/* These prefix values are specifically chosen to be compatible
- * with sup, (http://sup.rubyforge.org), written by
- * William Morgan <wmorgan-sup@masanjin.net>, and released
- * under the GNU GPL v2.
- */
-
-typedef struct {
-    const char *name;
-    const char *prefix;
-} prefix_t;
-
-prefix_t NORMAL_PREFIX[] = {
-    { "subject", "S" },
-    { "body", "B" },
-    { "from_name", "FN" },
-    { "to_name", "TN" },
-    { "name", "N" },
-    { "attachment", "A" }
-};
-
-prefix_t BOOLEAN_PREFIX[] = {
-    { "type", "K" },
-    { "from_email", "FE" },
-    { "to_email", "TE" },
-    { "email", "E" },
-    { "date", "D" },
-    { "label", "L" },
-    { "source_id", "I" },
-    { "attachment_extension", "O" },
-    { "msgid", "Q" },
-    { "thread", "H" },
-    { "ref", "R" }
-};
-
-static const char *
-find_prefix (const char *name)
-{
-    unsigned int i;
-
-    for (i = 0; i < ARRAY_SIZE (NORMAL_PREFIX); i++)
-	if (strcmp (name, NORMAL_PREFIX[i].name) == 0)
-	    return NORMAL_PREFIX[i].prefix;
-
-    for (i = 0; i < ARRAY_SIZE (BOOLEAN_PREFIX); i++)
-	if (strcmp (name, BOOLEAN_PREFIX[i].name) == 0)
-	    return BOOLEAN_PREFIX[i].prefix;
-
-    return "";
-}
-
 /* "128 bits of thread-id ought to be enough for anybody" */
 #define NOTMUCH_THREAD_ID_BITS	 128
 #define NOTMUCH_THREAD_ID_DIGITS (NOTMUCH_THREAD_ID_BITS / 4)
@@ -130,7 +75,7 @@ add_term (Xapian::Document doc,
     if (value == NULL)
 	return;
 
-    prefix = find_prefix (prefix_name);
+    prefix = _find_prefix (prefix_name);
 
     term = g_strdup_printf ("%s%s", prefix, value);
 
@@ -150,7 +95,7 @@ find_messages_by_term (Xapian::Database *db,
     Xapian::PostingIterator i;
     char *term;
 
-    term = g_strdup_printf ("%s%s", find_prefix (prefix_name), value);
+    term = g_strdup_printf ("%s%s", _find_prefix (prefix_name), value);
 
     *begin = db->postlist_begin (term);
 

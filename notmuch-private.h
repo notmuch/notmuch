@@ -76,12 +76,19 @@ typedef enum {
     NOTMUCH_VALUE_DATE = 2
 } notmuch_value_t;
 
+/* Xapian complains if we provide a term longer than this. */
+#define NOTMUCH_MAX_TERM 245
+
 /* message.cc */
 
 notmuch_message_t *
 _notmuch_message_create (notmuch_results_t *owner,
 			 notmuch_database_t *notmuch,
 			 unsigned int doc_id);
+
+/* Lookup a prefix value by name. */
+const char *
+_find_prefix (const char *name);
 
 /* message-file.c */
 
