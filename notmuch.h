@@ -53,11 +53,23 @@ typedef int notmuch_bool_t;
  *
  * NOTMUCH_STATUS_FILE_NOT_EMAIL: A file was presented that doesn't
  * 	appear to be an email message.
+ *
+ * NOTMUCH_STATUS_NULL_POINTER: The user erroneously passed a NULL
+ * 	pointer to a notmuch function.
+ *
+ * NOTMUCH_STATUS_TAG_TOO_LONG: A tag value is too long.
+ *
+ * NOTMUCH_STATUS_LAST_STATUS: Not an actual status value. Just a way
+ * 	to find out how many valid status values there are.
  */
 typedef enum _notmuch_status {
     NOTMUCH_STATUS_SUCCESS = 0,
     NOTMUCH_STATUS_XAPIAN_EXCEPTION,
-    NOTMUCH_STATUS_FILE_NOT_EMAIL
+    NOTMUCH_STATUS_FILE_NOT_EMAIL,
+    NOTMUCH_STATUS_NULL_POINTER,
+    NOTMUCH_STATUS_TAG_TOO_LONG,
+
+    NOTMUCH_STATUS_LAST_STATUS
 } notmuch_status_t;
 
 /* Various opaque data types. For each notmuch_<foo>_t see the various
@@ -375,6 +387,37 @@ notmuch_message_get_tags (notmuch_message_t *message);
  */
 notmuch_thread_ids_t *
 notmuch_message_get_thread_ids (notmuch_message_t *message);
+
+/* The longest possible tag value. */
+#define NOTMUCH_TAG_MAX 200
+
+/* Add a tag to the given message.
+ *
+ * Return value:
+ *
+ * NOTMUCH_STATUS_SUCCESS: Tag successfully added to message
+ *
+ * NOTMUCH_STATUS_NULL_POINTER: The 'tag' argument is NULL
+ *
+ * NOTMUCH_STATUS_TAG_TOO_LONG: The length of 'tag' is longer than
+ * 	too long (exceeds NOTMUCH_TAG_MAX)
+ */
+notmuch_status_t
+notmuch_message_add_tag (notmuch_message_t *message, const char *tag);
+
+/* Remove a tag from the given message.
+ *
+ * Return value:
+ *
+ * NOTMUCH_STATUS_SUCCESS: Tag successfully added to message
+ *
+ * NOTMUCH_STATUS_NULL_POINTER: The 'tag' argument is NULL
+ *
+ * NOTMUCH_STATUS_TAG_TOO_LONG: The length of 'tag' is longer than
+ * 	too long (exceeds NOTMUCH_TAG_MAX)
+ */
+notmuch_status_t
+notmuch_message_remove_tag (notmuch_message_t *message, const char *tag);
 
 /* Destroy a notmuch_message_t object.
  *

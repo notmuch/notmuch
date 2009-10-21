@@ -64,6 +64,8 @@ thread_id_generate (thread_id_t *thread_id)
     }
 }
 
+/* XXX: We should drop this function and convert all callers to call
+ * _notmuch_message_add_term instead. */
 static void
 add_term (Xapian::Document doc,
 	  const char *prefix_name,

@@ -205,6 +205,106 @@ notmuch_message_get_thread_ids (notmuch_message_t *message)
     return thread_ids;
 }
 
+/* Synchronize changes made to message->doc into the database. */
+static void
+_notmuch_message_sync (notmuch_message_t *message)
+{
+    Xapian::WritableDatabase *db = message->notmuch->xapian_db;
+
+    db->replace_document (message->doc_id, message->doc);
+}
+
+notmuch_private_status_t
+_notmuch_message_add_term (notmuch_message_t *message,
+			   const char *prefix_name,
+			   const char *value)
+{
+
+    char *term;
+
+    if (value == NULL)
+	return NOTMUCH_PRIVATE_STATUS_NULL_POINTER;
+
+    term = talloc_asprintf (message, "%s%s",
+			    _find_prefix (prefix_name), value);
+
+    if (strlen (term) > NOTMUCH_TERM_MAX)
+	return NOTMUCH_PRIVATE_STATUS_TERM_TOO_LONG;
+
+    message->doc.add_term (term);
+    _notmuch_message_sync (message);
+
+    talloc_free (term);
+
+    return NOTMUCH_PRIVATE_STATUS_SUCCESS;
+}
+
+notmuch_private_status_t
+_notmuch_message_remove_term (notmuch_message_t *message,
+			      const char *prefix_name,
+			      const char *value)
+{
+    char *term;
+
+    if (value == NULL)
+	return NOTMUCH_PRIVATE_STATUS_NULL_POINTER;
+
+    term = talloc_asprintf (message, "%s%s",
+			    _find_prefix (prefix_name), value);
+
+    if (strlen (term) > NOTMUCH_TERM_MAX)
+	return NOTMUCH_PRIVATE_STATUS_TERM_TOO_LONG;
+
+    message->doc.remove_term (term);
+    _notmuch_message_sync (message);
+
+    talloc_free (term);
+
+    return NOTMUCH_PRIVATE_STATUS_SUCCESS;
+}
+
+notmuch_status_t
+notmuch_message_add_tag (notmuch_message_t *message, const char *tag)
+{
+    notmuch_private_status_t status;
+
+    if (tag == NULL)
+	return NOTMUCH_STATUS_NULL_POINTER;
+
+    if (strlen (tag) > NOTMUCH_TAG_MAX)
+	return NOTMUCH_STATUS_TAG_TOO_LONG;
+
+    status = _notmuch_message_add_term (message, "tag", tag);
+    if (status) {
+	fprintf (stderr, "Internal error: _notmuch_message_add_term return unexpected value: %d\n",
+		 status);
+	exit (1);
+    }
+
+    return NOTMUCH_STATUS_SUCCESS;
+}
+
+notmuch_status_t
+notmuch_message_remove_tag (notmuch_message_t *message, const char *tag)
+{
+    notmuch_private_status_t status;
+
+    if (tag == NULL)
+	return NOTMUCH_STATUS_NULL_POINTER;
+
+    if (strlen (tag) > NOTMUCH_TAG_MAX)
+	return NOTMUCH_STATUS_TAG_TOO_LONG;
+
+    status = _notmuch_message_remove_term (message, "tag", tag);
+    if (status) {
+	fprintf (stderr, "Internal error: _notmuch_message_remove_term return unexpected value: %d\n",
+		 status);
+	exit (1);
+    }
+
+    return NOTMUCH_STATUS_SUCCESS;
+}
+
 void
 notmuch_message_destroy (notmuch_message_t *message)
 {

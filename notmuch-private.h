@@ -81,6 +81,20 @@ typedef enum {
  * programmatically. */
 #define NOTMUCH_TERM_MAX 245
 
+typedef enum _notmuch_private_status {
+    /* First, copy all the public status values. */
+    NOTMUCH_PRIVATE_STATUS_SUCCESS = NOTMUCH_STATUS_SUCCESS,
+    NOTMUCH_PRIVATE_STATUS_XAPIAN_EXCEPTION = NOTMUCH_STATUS_XAPIAN_EXCEPTION,
+    NOTMUCH_PRIVATE_STATUS_FILE_NOT_EMAIL = NOTMUCH_STATUS_FILE_NOT_EMAIL,
+    NOTMUCH_PRIVATE_STATUS_NULL_POINTER = NOTMUCH_STATUS_NULL_POINTER,
+    NOTMUCH_PRIVATE_STATUS_TAG_TOO_LONG = NOTMUCH_STATUS_TAG_TOO_LONG,
+
+    /* Then add our own private values. */
+    NOTMUCH_PRIVATE_STATUS_TERM_TOO_LONG,
+
+    NOTMUCH_PRIVATE_STATUS_LAST_STATUS
+} notmuch_private_status_t;
+
 /* message.cc */
 
 notmuch_message_t *
@@ -88,9 +102,23 @@ _notmuch_message_create (const void *talloc_owner,
 			 notmuch_database_t *notmuch,
 			 unsigned int doc_id);
 
-/* Lookup a prefix value by name. */
+/* Lookup a prefix value by name.
+ *
+ * XXX: This should really be static inside of message.cc, and we can
+ * do that once we convert database.cc to use the
+ * _notmuch_message_add/remove_term functions. */
 const char *
 _find_prefix (const char *name);
+
+notmuch_private_status_t
+_notmuch_message_add_term (notmuch_message_t *message,
+			   const char *prefix_name,
+			   const char *value);
+
+notmuch_private_status_t
+_notmuch_message_remove_term (notmuch_message_t *message,
+			      const char *prefix_name,
+			      const char *value);
 
 /* message-file.c */
 
