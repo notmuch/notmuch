@@ -305,6 +305,7 @@ static char *
 parse_message_id (const char *message_id, const char **next)
 {
     const char *s, *end;
+    char *result;
 
     if (message_id == NULL)
 	return NULL;
@@ -339,10 +340,23 @@ parse_message_id (const char *message_id, const char **next)
 
     if (end > s && *end == '>')
 	end--;
-    if (end > s)
-	return strndup (s, end - s + 1);
-    else
+    if (end <= s)
 	return NULL;
+
+    result = strndup (s, end - s + 1);
+
+    /* Finally, collapse any whitespace that is within the message-id
+     * itself. */
+    {
+	char *r;
+	int len;
+
+	for (r = result, len = strlen (r); *r; r++, len--)
+	    if (*r == ' ' || *r == '\t')
+		memmove (r, r+1, len);
+    }
+
+    return result;
 }
 
 /* Parse a References header value, putting a copy of each referenced
