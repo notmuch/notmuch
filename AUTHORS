@@ -10,7 +10,7 @@ without their specific knowledge (but with their full permission
 thanks to the GNU General Public License). This includes:
 
 Brian Gladman (with Mikhail Gusarov <dottedmag@dottedmag.net>)
-	Implementation of SHA-1 (nice and small) (sha1.c)
+	Implementation of SHA-1 (nice and small) (libsha1.c)
 
 Jeffrey Stedfast
 	Parsing of myriad date formats in email messages (date.c)
