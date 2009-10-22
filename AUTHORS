@@ -1,0 +1,25 @@
+Carl Worth <cworth@cworth.org> is the primary author of Notmuch.
+But there's really not much that he's done. There's been a lot of
+standing on shoulders here:
+
+William Morgan deserves credit for providing the primary inspiration
+for Notmuch with his program Sup (http://sup.rubyforge.org/).
+
+Some people have contributed code that has made it into Notmuch
+without their specific knowledge (but with their full permission
+thanks to the GNU General Public License). This includes:
+
+Brian Gladman (with Mikhail Gusarov <dottedmag@dottedmag.net>)
+	Implementation of SHA-1 (nice and small) (sha1.c)
+
+Jeffrey Stedfast
+	Parsing of myriad date formats in email messages (date.c)
+
+Please see the various files in the Notmuch distribution for
+individual copyright statements.
+
+And of course, though their code isn't distributed here, Notmuch would
+be not much of anything without the contributors to Xapian, the search
+engine that does the really heavy lifting, as well as the various
+system libraries, compilers, and the kernel that make it all work
+(thanks GNU, thanks Linux). Thanks to everyone who has played a part!
