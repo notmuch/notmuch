@@ -514,6 +514,7 @@ notmuch_database_add_message (notmuch_database_t *notmuch,
 					   "message-id",
 					   "references",
 					   "subject",
+					   "to",
 					   (char *) NULL);
 
     try {
