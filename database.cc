@@ -502,6 +502,10 @@ notmuch_database_add_message (notmuch_database_t *notmuch,
     unsigned int i;
 
     message = notmuch_message_file_open (filename);
+    if (message == NULL) {
+	ret = NOTMUCH_STATUS_FILE_ERROR;
+	goto DONE;
+    }
 
     notmuch_message_file_restrict_headers (message,
 					   "date",
