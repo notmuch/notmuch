@@ -55,6 +55,10 @@ typedef int notmuch_bool_t;
  *
  * NOTMUCH_STATUS_XAPIAN_EXCEPTION: A Xapian exception occurred
  *
+ * NOTMUCH_STATUS_FILE_ERROR: An error occurred trying to read or
+ * 	write to a file (this could be file not found, permission
+ * 	denied, etc.)
+ *
  * NOTMUCH_STATUS_FILE_NOT_EMAIL: A file was presented that doesn't
  * 	appear to be an email message.
  *
@@ -69,6 +73,7 @@ typedef int notmuch_bool_t;
 typedef enum _notmuch_status {
     NOTMUCH_STATUS_SUCCESS = 0,
     NOTMUCH_STATUS_XAPIAN_EXCEPTION,
+    NOTMUCH_STATUS_FILE_ERROR,
     NOTMUCH_STATUS_FILE_NOT_EMAIL,
     NOTMUCH_STATUS_NULL_POINTER,
     NOTMUCH_STATUS_TAG_TOO_LONG,
@@ -179,6 +184,10 @@ notmuch_database_get_path (notmuch_database_t *database);
  * Return value:
  *
  * NOTMUCH_STATUS_SUCCESS: Message successfully added to database.
+ *
+ * NOTMUCH_STATUS_FILE_ERROR: an error occurred trying to open the
+ * 	file, (such as permission denied, or file not found,
+ * 	etc.). Nothing added to the database.
  *
  * NOTMUCH_STATUS_FILE_NOT_EMAIL: the contents of filename don't look
  * 	like an email message. Nothing added to the database.

@@ -5,6 +5,17 @@ MYCXXFLAGS=$(MYCFLAGS) `xapian-config --cxxflags`
 
 MYLDFLAGS=`pkg-config --libs glib-2.0 talloc` `xapian-config --libs`
 
+MODULES=		\
+	notmuch.o	\
+	database.o	\
+	date.o		\
+	message.o	\
+	message-file.o	\
+	query.o		\
+	sha1.o		\
+	libsha1.o	\
+	xutil.o
+
 all: $(PROGS)
 
 %.o: %.cc
@@ -13,7 +24,7 @@ all: $(PROGS)
 %.o: %.c
 	$(CC) -c $(CFLAGS) $(MYCFLAGS) $< -o $@
 
-notmuch: notmuch.o database.o date.o message.o message-file.o query.o xutil.o
+notmuch: $(MODULES)
 	$(CC) $(MYLDFLAGS) $^ -o $@
 
 Makefile.dep: *.c *.cc

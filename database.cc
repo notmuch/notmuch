@@ -36,6 +36,8 @@ notmuch_status_to_string (notmuch_status_t status)
 	return "No error occurred";
     case NOTMUCH_STATUS_XAPIAN_EXCEPTION:
 	return "A Xapian exception occurred";
+    case NOTMUCH_STATUS_FILE_ERROR:
+	return "Something went wrong trying to read or write a file";
     case NOTMUCH_STATUS_FILE_NOT_EMAIL:
 	return "File is not an email";
     case NOTMUCH_STATUS_NULL_POINTER:
@@ -488,6 +490,7 @@ notmuch_database_add_message (notmuch_database_t *notmuch,
     Xapian::WritableDatabase *db = notmuch->xapian_db;
     Xapian::Document doc;
     notmuch_message_file_t *message;
+    notmuch_status_t ret = NOTMUCH_STATUS_SUCCESS;
 
     GPtrArray *parents, *thread_ids;
 
@@ -533,9 +536,18 @@ notmuch_database_add_message (notmuch_database_t *notmuch,
 	    if (message_id == NULL)
 		message_id = xstrdup (header);
 	} else {
-	    /* XXX: Should generate a message_id here, (such as a SHA1
-	     * sum of the message itself) */
-	    message_id = NULL;
+	    /* No message-id at all, let's generate one by taking a
+	     * hash over the file's contents. */
+	    char *sha1 = notmuch_sha1_of_file (filename);
+
+	    /* If that failed too, something is really wrong. Give up. */
+	    if (sha1 == NULL) {
+		ret = NOTMUCH_STATUS_FILE_ERROR;
+		goto DONE;
+	    }
+
+	    message_id = g_strdup_printf ("notmuch-sha1-%s", sha1);
+	    free (sha1);
 	}
 
 	thread_ids = find_thread_ids (notmuch, parents, message_id);
@@ -543,10 +555,11 @@ notmuch_database_add_message (notmuch_database_t *notmuch,
 	for (i = 0; i < parents->len; i++)
 	    g_free (g_ptr_array_index (parents, i));
 	g_ptr_array_free (parents, TRUE);
-	if (message_id) {
-	    add_term (doc, "msgid", message_id);
-	    doc.add_value (NOTMUCH_VALUE_MESSAGE_ID, message_id);
-	}
+
+	add_term (doc, "msgid", message_id);
+	doc.add_value (NOTMUCH_VALUE_MESSAGE_ID, message_id);
+
+	free (message_id);
 
 	if (thread_ids->len) {
 	    unsigned int i;
@@ -565,7 +578,7 @@ notmuch_database_add_message (notmuch_database_t *notmuch,
 	    }
 	    doc.add_value (NOTMUCH_VALUE_THREAD, thread_id->str);
 	    g_string_free (thread_id, TRUE);
-	} else if (message_id) {
+	} else {
 	    /* If not part of any existing thread, generate a new thread_id. */
 	    thread_id_t thread_id;
 
@@ -575,8 +588,6 @@ notmuch_database_add_message (notmuch_database_t *notmuch,
 	}
 
 	g_ptr_array_free (thread_ids, TRUE);
-
-	free (message_id);
 
 	date = notmuch_message_file_get_header (message, "date");
 	time_value = notmuch_parse_date (date, NULL);
@@ -592,18 +603,21 @@ notmuch_database_add_message (notmuch_database_t *notmuch,
 	    subject == NULL &&
 	    to == NULL)
 	{
-	    notmuch_message_file_close (message);
-	    return NOTMUCH_STATUS_FILE_NOT_EMAIL;
+	    ret = NOTMUCH_STATUS_FILE_NOT_EMAIL;
+	    goto DONE;
 	} else {
 	    db->add_document (doc);
 	}
     } catch (const Xapian::Error &error) {
 	fprintf (stderr, "A Xapian exception occurred: %s.\n",
 		 error.get_msg().c_str());
-	return NOTMUCH_STATUS_XAPIAN_EXCEPTION;
+	ret = NOTMUCH_STATUS_XAPIAN_EXCEPTION;
+	goto DONE;
     }
 
-    notmuch_message_file_close (message);
+  DONE:
+    if (message)
+	notmuch_message_file_close (message);
 
-    return NOTMUCH_STATUS_SUCCESS;
+    return ret;
 }
