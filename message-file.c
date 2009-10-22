@@ -298,5 +298,19 @@ notmuch_message_file_get_header (notmuch_message_file_t *message,
 	message->value.len = 0;
     }
 
+    /* We've parsed all headers and never found the one we're looking
+     * for. It's probably just not there, but let's check that we
+     * didn't make a mistake preventing us from seeing it. */
+    if (message->restrict_headers &&
+	! g_hash_table_lookup_extended (message->headers,
+					header_desired, NULL, NULL))
+    {
+	fprintf (stderr,
+		 "Internal error: Attempt to get header \"%s\" which was not\n"
+		 "included in call to notmuch_message_file_restrict_headers\n",
+		 header_desired);
+	exit (1);
+    }
+
     return NULL;
 }
