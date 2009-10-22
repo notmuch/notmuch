@@ -23,3 +23,11 @@ be not much of anything without the contributors to Xapian, the search
 engine that does the really heavy lifting, as well as the various
 system libraries, compilers, and the kernel that make it all work
 (thanks GNU, thanks Linux). Thanks to everyone who has played a part!
+
+Here is an incomplete list of other people that have made
+contributions to Notmuch (whether by code, bug reporting/fixes,
+ideas, inspiration, testing or feedback):
+
+Martin Krafft
+Keith Packard
+Jamey Sharp
