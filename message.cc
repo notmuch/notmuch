@@ -176,14 +176,14 @@ notmuch_thread_ids_t *
 notmuch_message_get_thread_ids (notmuch_message_t *message)
 {
     notmuch_thread_ids_t *thread_ids;
-    const char *id_str;
+    std::string id_str;
 
     thread_ids = talloc (message, notmuch_thread_ids_t);
     if (unlikely (thread_ids == NULL))
 	return NULL;
 
-    id_str = message->doc.get_value (NOTMUCH_VALUE_THREAD).c_str ();
-    thread_ids->next = talloc_strdup (message, id_str);
+    id_str = message->doc.get_value (NOTMUCH_VALUE_THREAD);
+    thread_ids->next = talloc_strdup (message, id_str.c_str ());
 
     /* Initialize thread_ids->current and terminate first ID. */
     notmuch_thread_ids_advance (thread_ids);
