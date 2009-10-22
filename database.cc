@@ -111,6 +111,29 @@ find_message_by_docid (Xapian::Database *db, Xapian::docid docid)
     return db->get_document (docid);
 }
 
+static void
+insert_thread_id (GHashTable *thread_ids, Xapian::Document doc)
+{
+    string value_string;
+    const char *value, *id, *comma;
+
+    value_string = doc.get_value (NOTMUCH_VALUE_THREAD);
+    value = value_string.c_str();
+    if (strlen (value)) {
+	id = value;
+	while (*id) {
+	    comma = strchr (id, ',');
+	    if (comma == NULL)
+		comma = id + strlen (id);
+	    g_hash_table_insert (thread_ids,
+				 strndup (id, comma - id), NULL);
+	    id = comma;
+	    if (*id)
+		id++;
+	}
+    }
+}
+
 notmuch_message_t *
 notmuch_database_find_message (notmuch_database_t *notmuch,
 			       const char *message_id)
@@ -152,16 +175,8 @@ find_thread_ids (notmuch_database_t *notmuch,
 
     find_messages_by_term (db, "ref", message_id, &child, &children_end);
     for ( ; child != children_end; child++) {
-	const char *thread_id;
 	doc = find_message_by_docid (db, *child);
-
-	thread_id = doc.get_value (NOTMUCH_VALUE_THREAD).c_str ();
-	if (strlen (thread_id) == 0) {
-	    fprintf (stderr, "Database error: Message with doc_id %u has empty thread-id value (value index %d)\n",
-		     *child, NOTMUCH_VALUE_THREAD);
-	} else {
-	    g_hash_table_insert (thread_ids, strdup (thread_id), NULL);
-	}
+	insert_thread_id (thread_ids, doc);
     }
 
     for (i = 0; i < parents->len; i++) {
