@@ -40,6 +40,8 @@ notmuch_status_to_string (notmuch_status_t status)
 	return "Something went wrong trying to read or write a file";
     case NOTMUCH_STATUS_FILE_NOT_EMAIL:
 	return "File is not an email";
+    case NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID:
+	return "Message ID is identical to a message in database";
     case NOTMUCH_STATUS_NULL_POINTER:
 	return "Erroneous NULL pointer";
     case NOTMUCH_STATUS_TAG_TOO_LONG:
@@ -656,23 +658,8 @@ notmuch_database_add_message (notmuch_database_t *notmuch,
 	/* Has a message previously been added with the same ID? */
 	old_filename = notmuch_message_get_filename (message);
 	if (old_filename && strlen (old_filename)) {
-	    /* XXX: This is too noisy to actually print, and what do we
-	     * really expect the user to do? Go manually delete a
-	     * redundant message or merge two similar messages?
-	     * Instead we should handle this transparently.
-	     *
-	     * What we likely want to move to is adding both filenames
-	     * to the database so that subsequent indexing will pick up
-	     * terms from both files.
-	     */
-#if 0
-	    fprintf (stderr,
-		     "Note: Attempting to add a message with a duplicate message ID:\n"
-		     "Old: %s\n"   "New: %s\n",
-		     old_filename, filename);
-	    fprintf (stderr, "The old filename will be used, but any new terms\n"
-		     "from the new message will added to the database.\n");
-#endif
+	    ret = NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID;
+	    goto DONE;
 	} else {
 	    _notmuch_message_set_filename (message, filename);
 	    _notmuch_message_add_term (message, "type", "mail");

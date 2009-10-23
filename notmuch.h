@@ -64,6 +64,9 @@ typedef int notmuch_bool_t;
  * NOTMUCH_STATUS_FILE_NOT_EMAIL: A file was presented that doesn't
  *	appear to be an email message.
  *
+ * NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID: A file contains a message ID
+ *	that is identical to a message already in the database.
+ *
  * NOTMUCH_STATUS_NULL_POINTER: The user erroneously passed a NULL
  *	pointer to a notmuch function.
  *
@@ -78,6 +81,7 @@ typedef enum _notmuch_status {
     NOTMUCH_STATUS_XAPIAN_EXCEPTION,
     NOTMUCH_STATUS_FILE_ERROR,
     NOTMUCH_STATUS_FILE_NOT_EMAIL,
+    NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID,
     NOTMUCH_STATUS_NULL_POINTER,
     NOTMUCH_STATUS_TAG_TOO_LONG,
 
@@ -238,6 +242,10 @@ notmuch_database_get_timestamp (notmuch_database_t *database,
  * Return value:
  *
  * NOTMUCH_STATUS_SUCCESS: Message successfully added to database.
+ *
+ * NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID: Message has the same message
+ *	ID as another message already in the database. Nothing added
+ *	to the database.
  *
  * NOTMUCH_STATUS_FILE_ERROR: an error occurred trying to open the
  *	file, (such as permission denied, or file not found,
