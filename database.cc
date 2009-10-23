@@ -489,7 +489,7 @@ notmuch_database_add_message (notmuch_database_t *notmuch,
 {
     Xapian::WritableDatabase *db = notmuch->xapian_db;
     Xapian::Document doc;
-    notmuch_message_file_t *message;
+    notmuch_message_file_t *message_file;
     notmuch_status_t ret = NOTMUCH_STATUS_SUCCESS;
 
     GPtrArray *parents, *thread_ids;
@@ -501,13 +501,13 @@ notmuch_database_add_message (notmuch_database_t *notmuch,
     time_t time_value;
     unsigned int i;
 
-    message = notmuch_message_file_open (filename);
-    if (message == NULL) {
+    message_file = notmuch_message_file_open (filename);
+    if (message_file == NULL) {
 	ret = NOTMUCH_STATUS_FILE_ERROR;
 	goto DONE;
     }
 
-    notmuch_message_file_restrict_headers (message,
+    notmuch_message_file_restrict_headers (message_file,
 					   "date",
 					   "from",
 					   "in-reply-to",
@@ -524,16 +524,16 @@ notmuch_database_add_message (notmuch_database_t *notmuch,
 
 	parents = g_ptr_array_new ();
 
-	refs = notmuch_message_file_get_header (message, "references");
+	refs = notmuch_message_file_get_header (message_file, "references");
 	parse_references (parents, refs);
 
-	in_reply_to = notmuch_message_file_get_header (message, "in-reply-to");
+	in_reply_to = notmuch_message_file_get_header (message_file, "in-reply-to");
 	parse_references (parents, in_reply_to);
 
 	for (i = 0; i < parents->len; i++)
 	    add_term (doc, "ref", (char *) g_ptr_array_index (parents, i));
 
-	header = notmuch_message_file_get_header (message, "message-id");
+	header = notmuch_message_file_get_header (message_file, "message-id");
 	if (header) {
 	    message_id = parse_message_id (header, NULL);
 	    /* So the header value isn't RFC-compliant, but it's
@@ -594,15 +594,15 @@ notmuch_database_add_message (notmuch_database_t *notmuch,
 
 	g_ptr_array_free (thread_ids, TRUE);
 
-	date = notmuch_message_file_get_header (message, "date");
+	date = notmuch_message_file_get_header (message_file, "date");
 	time_value = notmuch_parse_date (date, NULL);
 
 	doc.add_value (NOTMUCH_VALUE_DATE,
 		       Xapian::sortable_serialise (time_value));
 
-	from = notmuch_message_file_get_header (message, "from");
-	subject = notmuch_message_file_get_header (message, "subject");
-	to = notmuch_message_file_get_header (message, "to");
+	from = notmuch_message_file_get_header (message_file, "from");
+	subject = notmuch_message_file_get_header (message_file, "subject");
+	to = notmuch_message_file_get_header (message_file, "to");
 
 	if (from == NULL &&
 	    subject == NULL &&
@@ -621,8 +621,8 @@ notmuch_database_add_message (notmuch_database_t *notmuch,
     }
 
   DONE:
-    if (message)
-	notmuch_message_file_close (message);
+    if (message_file)
+	notmuch_message_file_close (message_file);
 
     return ret;
 }
