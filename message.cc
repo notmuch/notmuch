@@ -215,10 +215,11 @@ notmuch_message_get_message_id (notmuch_message_t *message)
     i = message->doc.termlist_begin ();
     i.skip_to (_find_prefix ("msgid"));
 
-    /* XXX: This should really be an internal error, but we'll need to
-     * fix the add_message side of things first. */
-    if (i == message->doc.termlist_end ())
-	return NULL;
+    if (i == message->doc.termlist_end ()) {
+	fprintf (stderr, "Internal error: Message with document ID of %d has no message ID.\n",
+		 message->doc_id);
+	exit (1);
+    }
 
     message->message_id = talloc_strdup (message, (*i).c_str () + 1);
     return message->message_id;
