@@ -82,7 +82,8 @@ prefix_t BOOLEAN_PREFIX[] = {
     { "attachment_extension", "O" },
     { "msgid", "Q" },
     { "thread", "H" },
-    { "ref", "R" }
+    { "ref", "R" },
+    { "timestamp", "KTS" },
 };
 
 const char *

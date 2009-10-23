@@ -18,11 +18,12 @@
  * Author: Carl Worth <cworth@cworth.org>
  */
 
-#include "notmuch.h"
-
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE /* for getline */
 #endif
+#include <stdio.h>
+
+#include "notmuch.h"
 
 /* This is separate from notmuch-private.h because we're trying to
  * keep notmuch.c from looking into any internals, (which helps us
@@ -30,7 +31,6 @@
  */
 #include "xutil.h"
 
-#include <stdio.h>
 #include <stddef.h>
 #include <string.h>
 #include <sys/stat.h>

@@ -31,6 +31,8 @@
 
 NOTMUCH_BEGIN_DECLS
 
+#include <time.h>
+
 #ifndef FALSE
 #define FALSE 0
 #endif
@@ -171,6 +173,57 @@ notmuch_database_default_path (void);
  * modified nor freed by the caller. */
 const char *
 notmuch_database_get_path (notmuch_database_t *database);
+
+/* Store a timestamp within the database.
+ *
+ * The Notmuch database will not interpret this key nor the timestamp
+ * values at all. It will merely store them together and return the
+ * timestamp when notmuch_database_get_timestamp is called with the
+ * same value for 'key'.
+ *
+ * The intention is for the caller to use the timestamp to allow
+ * efficient identification of new messages to be added to the
+ * database. The recommended usage is as follows:
+ *
+ *   o Read the mtime of a directory from the filesystem
+ *
+ *   o Call add_message for all mail files in the directory
+ *
+ *   o Call notmuch_database_set_timestamp with the path of the
+ *     directory as 'key' and the originally read mtime as 'value'.
+ *
+ * Then, when wanting to check for updates to the directory in the
+ * future, the client can call notmuch_database_get_timestamp and know
+ * that it only needs to add files if the mtime of the directory and
+ * files are newer than the stored timestamp.
+ *
+ * Note: The notmuch_database_get_timestamp function does not allow
+ * the caller to distinguish a timestamp of 0 from a non-existent
+ * timestamp. So don't store a timestamp of 0 unless you are
+ * comfortable with that.
+ *
+ * Return value:
+ *
+ * NOTMUCH_STATUS_SUCCESS: Timestamp successfully stored in database.
+ *
+ * NOTMUCH_STATUS_XAPIAN_EXCEPTION: A Xapian exception
+ *	occurred. Timestamp not stored.
+ */
+notmuch_status_t
+notmuch_database_set_timestamp (notmuch_database_t *database,
+				const char *key, time_t timestamp);
+
+/* Retrieve a timestamp from the database.
+ *
+ * Returns the timestamp value previously stored by calling
+ * notmuch_database_set_timestamp with the same value for 'key'.
+ *
+ * Returns 0 if no timestamp is stored for 'key' or if any error
+ * occurred querying the database.
+ */
+time_t
+notmuch_database_get_timestamp (notmuch_database_t *database,
+				const char *key);
 
 /* Add a new message to the given notmuch database.
  *

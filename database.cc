@@ -484,6 +484,101 @@ notmuch_database_get_path (notmuch_database_t *notmuch)
     return notmuch->path;
 }
 
+notmuch_private_status_t
+find_timestamp_document (notmuch_database_t *notmuch, const char *db_key,
+			 Xapian::Document *doc, unsigned int *doc_id)
+{
+    return find_unique_document (notmuch, "timestamp", db_key, doc, doc_id);
+}
+
+/* We allow the user to use arbitrarily long keys for timestamps,
+ * (they're for filesystem paths after all, which have no limit we
+ * know about). But we have a term-length limit. So if we exceed that,
+ * we'll use the SHA-1 of the user's key as the actual key for
+ * constructing a database term.
+ *
+ * Caution: This function returns a newly allocated string which the
+ * caller should free() when finished.
+ */
+static char *
+timestamp_db_key (const char *key)
+{
+    if (strlen (key) + 1 > NOTMUCH_TERM_MAX) {
+	return notmuch_sha1_of_string (key);
+    } else {
+	return strdup (key);
+    }
+}
+
+notmuch_status_t
+notmuch_database_set_timestamp (notmuch_database_t *notmuch,
+				const char *key, time_t timestamp)
+{
+    Xapian::Document doc;
+    unsigned int doc_id;
+    notmuch_private_status_t status;
+    notmuch_status_t ret = NOTMUCH_STATUS_SUCCESS;
+    char *db_key = NULL;
+
+    db_key = timestamp_db_key (key);
+
+    try {
+	status = find_timestamp_document (notmuch, db_key, &doc, &doc_id);
+
+	doc.add_value (0, Xapian::sortable_serialise (timestamp));
+
+	if (status == NOTMUCH_PRIVATE_STATUS_NO_DOCUMENT_FOUND) {
+	    char *term = talloc_asprintf (NULL, "%s%s",
+					  _find_prefix ("timestamp"), db_key);
+	    doc.add_term (term);
+	    talloc_free (term);
+
+	    notmuch->xapian_db->add_document (doc);
+	} else {
+	    notmuch->xapian_db->replace_document (doc_id, doc);
+	}
+
+    } catch (Xapian::Error &error) {
+	fprintf (stderr, "A Xapian exception occurred: %s.\n",
+		 error.get_msg().c_str());
+	ret = NOTMUCH_STATUS_XAPIAN_EXCEPTION;
+    }
+
+    if (db_key)
+	free (db_key);
+
+    return ret;
+}
+
+time_t
+notmuch_database_get_timestamp (notmuch_database_t *notmuch, const char *key)
+{
+    Xapian::Document doc;
+    unsigned int doc_id;
+    notmuch_private_status_t status;
+    char *db_key = NULL;
+    time_t ret = 0;
+
+    db_key = timestamp_db_key (key);
+
+    try {
+	status = find_timestamp_document (notmuch, db_key, &doc, &doc_id);
+
+	if (status == NOTMUCH_PRIVATE_STATUS_NO_DOCUMENT_FOUND)
+	    goto DONE;
+
+	ret =  Xapian::sortable_unserialise (doc.get_value (0));
+    } catch (Xapian::Error &error) {
+	goto DONE;
+    }
+
+  DONE:
+    if (db_key)
+	free (db_key);
+
+    return ret;
+}
+
 notmuch_status_t
 notmuch_database_add_message (notmuch_database_t *notmuch,
 			      const char *filename)

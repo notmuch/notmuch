@@ -21,15 +21,15 @@
 #ifndef NOTMUCH_PRIVATE_H
 #define NOTMUCH_PRIVATE_H
 
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE /* For getline */
+#endif
+#include <stdio.h>
+
 #include "notmuch.h"
 
 NOTMUCH_BEGIN_DECLS
 
-#ifndef _GNU_SOURCE
-#define _GNU_SOURCE /* For getline */
-#endif
-
-#include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
 #include <sys/types.h>
