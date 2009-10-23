@@ -142,32 +142,25 @@ add_files_print_progress (add_files_state_t *state)
  *         same function.
  *
  *   o Tell the database to update its time of 'path' to 'path_mtime'
+ *
+ * The 'struct stat *st' must point to a structure that has already
+ * been initialized for 'path' by calling stat().
  */
 notmuch_status_t
-add_files (notmuch_database_t *notmuch, const char *path,
-	   add_files_state_t *state)
+add_files_recursive (notmuch_database_t *notmuch,
+		     const char *path,
+		     struct stat *st,
+		     add_files_state_t *state)
 {
     DIR *dir = NULL;
     struct dirent *e, *entry = NULL;
     int entry_length;
     int err;
     char *next = NULL;
-    struct stat st;
     time_t path_mtime, path_dbtime;
     notmuch_status_t status, ret = NOTMUCH_STATUS_SUCCESS;
 
-    if (stat (path, &st)) {
-	fprintf (stderr, "Error reading directory %s: %s\n",
-		 path, strerror (errno));
-	return NOTMUCH_STATUS_FILE_ERROR;
-    }
-
-    if (! S_ISDIR (st.st_mode)) {
-	fprintf (stderr, "Error: %s is not a directory.\n", path);
-	return NOTMUCH_STATUS_FILE_ERROR;
-    }
-
-    path_mtime = st.st_mtime;
+    path_mtime = st->st_mtime;
 
     path_dbtime = notmuch_database_get_timestamp (notmuch, path);
 
@@ -215,17 +208,17 @@ add_files (notmuch_database_t *notmuch, const char *path,
 
 	next = g_strdup_printf ("%s/%s", path, entry->d_name);
 
-	if (stat (next, &st)) {
+	if (stat (next, st)) {
 	    fprintf (stderr, "Error reading %s: %s\n",
 		     next, strerror (errno));
 	    ret = NOTMUCH_STATUS_FILE_ERROR;
 	    continue;
 	}
 
-	if (S_ISREG (st.st_mode)) {
+	if (S_ISREG (st->st_mode)) {
 	    /* If the file hasn't been modified since the last
 	     * add_files, then we need not look at it. */
-	    if (st.st_mtime > path_dbtime) {
+	    if (st->st_mtime > path_dbtime) {
 		state->processed_files++;
 
 		status = notmuch_database_add_message (notmuch, next);
@@ -255,8 +248,8 @@ add_files (notmuch_database_t *notmuch, const char *path,
 		if (state->processed_files % 1000 == 0)
 		    add_files_print_progress (state);
 	    }
-	} else if (S_ISDIR (st.st_mode)) {
-	    status = add_files (notmuch, next, state);
+	} else if (S_ISDIR (st->st_mode)) {
+	    status = add_files_recursive (notmuch, next, st, state);
 	    if (status && ret == NOTMUCH_STATUS_SUCCESS)
 		ret = status;
 	}
@@ -276,6 +269,32 @@ add_files (notmuch_database_t *notmuch, const char *path,
 	closedir (dir);
 
     return ret;
+}
+
+/* This is the top-level entry point for add_files. It does a couple
+ * of error checks, and then calls into the recursive function,
+ * (avoiding the repeating of these error checks at every
+ * level---which would be useless becaues we already do a stat() at
+ * the level above). */
+static notmuch_status_t
+add_files (notmuch_database_t *notmuch,
+	   const char *path,
+	   add_files_state_t *state)
+{
+    struct stat st;
+
+    if (stat (path, &st)) {
+	fprintf (stderr, "Error reading directory %s: %s\n",
+		 path, strerror (errno));
+	return NOTMUCH_STATUS_FILE_ERROR;
+    }
+
+    if (! S_ISDIR (st.st_mode)) {
+	fprintf (stderr, "Error: %s is not a directory.\n", path);
+	return NOTMUCH_STATUS_FILE_ERROR;
+    }
+
+    return add_files_recursive (notmuch, path, &st, state);
 }
 
 /* Recursively count all regular files in path and all sub-direcotries
