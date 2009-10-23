@@ -121,8 +121,23 @@ add_files_print_progress (add_files_state_t *state)
     fflush (stdout);
 }
 
-/* Recursively find all regular files in 'path' and add them to the
- * database. */
+/* Examine 'path' recursively as follows:
+ *
+ *   o Ask the filesystem for the mtime of 'path' (path_mtime)
+ *
+ *   o Ask the database for its timestamp of 'path' (path_dbtime)
+ *
+ *   o If 'path_mtime' > 'path_dbtime'
+ *
+ *       o For each regular file in 'path' with mtime newer than the
+ *         'path_dbtime' call add_message to add the file to the
+ *         database.
+ *
+ *       o For each sub-directory of path, recursively call into this
+ *         same function.
+ *
+ *   o Tell the database to update its time of 'path' to 'path_mtime'
+ */
 notmuch_status_t
 add_files (notmuch_database_t *notmuch, const char *path,
 	   add_files_state_t *state)
@@ -133,11 +148,27 @@ add_files (notmuch_database_t *notmuch, const char *path,
     int err;
     char *next = NULL;
     struct stat st;
+    time_t path_mtime, path_dbtime;
     notmuch_status_t status, ret = NOTMUCH_STATUS_SUCCESS;
+
+    if (stat (path, &st)) {
+	fprintf (stderr, "Error reading directory %s: %s\n",
+		 path, strerror (errno));
+	return NOTMUCH_STATUS_FILE_ERROR;
+    }
+
+    if (! S_ISDIR (st.st_mode)) {
+	fprintf (stderr, "Error: %s is not a directory.\n", path);
+	return NOTMUCH_STATUS_FILE_ERROR;
+    }
+
+    path_mtime = st.st_mtime;
+
+    path_dbtime = notmuch_database_get_timestamp (notmuch, path);
 
     dir = opendir (path);
     if (dir == NULL) {
-	fprintf (stderr, "Warning: failed to open directory %s: %s\n",
+	fprintf (stderr, "Error opening directory %s: %s\n",
 		 path, strerror (errno));
 	ret = NOTMUCH_STATUS_FILE_ERROR;
 	goto DONE;
@@ -158,6 +189,12 @@ add_files (notmuch_database_t *notmuch, const char *path,
 
 	if (e == NULL)
 	    break;
+
+	/* If this directory hasn't been modified since the last
+	 * add_files, then we only need to look further for
+	 * sub-directories. */
+	if (path_mtime <= path_dbtime && entry->d_type != DT_DIR)
+	    continue;
 
 	/* Ignore special directories to avoid infinite recursion.
 	 * Also ignore the .notmuch directory.
@@ -181,16 +218,38 @@ add_files (notmuch_database_t *notmuch, const char *path,
 	}
 
 	if (S_ISREG (st.st_mode)) {
-	    state->processed_files++;
-	    status = notmuch_database_add_message (notmuch, next);
-	    if (status == NOTMUCH_STATUS_FILE_NOT_EMAIL) {
-		fprintf (stderr, "Note: Ignoring non-mail file: %s\n",
-			 next);
-	    } else if (status != NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID) {
-		state->added_messages++;
+	    /* If the file hasn't been modified since the last
+	     * add_files, then we need not look at it. */
+	    if (st.st_mtime > path_dbtime) {
+		state->processed_files++;
+
+		status = notmuch_database_add_message (notmuch, next);
+		switch (status) {
+		    /* success */
+		    case NOTMUCH_STATUS_SUCCESS:
+			state->added_messages++;
+			break;
+		    /* Non-fatal issues (go on to next file) */
+		    case NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID:
+		        /* Stay silent on this one. */
+			break;
+		    case NOTMUCH_STATUS_FILE_NOT_EMAIL:
+			fprintf (stderr, "Note: Ignoring non-mail file: %s\n",
+				 next);
+			break;
+		    /* Fatal issues. Don't process anymore. */
+		    case NOTMUCH_STATUS_XAPIAN_EXCEPTION:
+			fprintf (stderr, "A Xapian error was encountered. Halting processing.\n");
+			ret = status;
+			goto DONE;
+		    default:
+			fprintf (stderr, "Internal error: add_message returned unexpected value: %d\n",  status);
+			ret = status;
+			goto DONE;
+		}
+		if (state->processed_files % 1000 == 0)
+		    add_files_print_progress (state);
 	    }
-	    if (state->processed_files % 1000 == 0)
-		add_files_print_progress (state);
 	} else if (S_ISDIR (st.st_mode)) {
 	    status = add_files (notmuch, next, state);
 	    if (status && ret == NOTMUCH_STATUS_SUCCESS)
@@ -200,6 +259,8 @@ add_files (notmuch_database_t *notmuch, const char *path,
 	free (next);
 	next = NULL;
     }
+
+    notmuch_database_set_timestamp (notmuch, path, path_mtime);
 
   DONE:
     if (next)
@@ -392,6 +453,59 @@ setup_command (int argc, char *argv[])
   DONE:
     if (mail_directory)
 	free (mail_directory);
+    if (notmuch)
+	notmuch_database_close (notmuch);
+
+    return ret;
+}
+
+int
+new_command (int argc, char *argv[])
+{
+    notmuch_database_t *notmuch;
+    const char *mail_directory;
+    add_files_state_t add_files_state;
+    double elapsed;
+    struct timeval tv_now;
+    int ret = 0;
+
+    notmuch = notmuch_database_open (NULL);
+    if (notmuch == NULL) {
+	ret = 1;
+	goto DONE;
+    }
+
+    mail_directory = notmuch_database_get_path (notmuch);
+
+    add_files_state.total_files = 0;
+    add_files_state.processed_files = 0;
+    add_files_state.added_messages = 0;
+    gettimeofday (&add_files_state.tv_start, NULL);
+
+    ret = add_files (notmuch, mail_directory, &add_files_state);
+
+    gettimeofday (&tv_now, NULL);
+    elapsed = tv_elapsed (add_files_state.tv_start,
+			  tv_now);
+    if (add_files_state.processed_files) {
+	printf ("Processed %d total files in ", add_files_state.processed_files);
+	print_formatted_seconds (elapsed);
+	printf (" (%d files/sec.).                 \n",
+		(int) (add_files_state.processed_files / elapsed));
+    }
+    if (add_files_state.added_messages) {
+	printf ("Added %d new messages to the database (not much, really).\n",
+		add_files_state.added_messages);
+    } else {
+	printf ("No new mail---and that's not much!.\n");
+    }
+
+    if (ret) {
+	printf ("Note: At least one error was encountered: %s\n",
+		notmuch_status_to_string (ret));
+    }
+
+  DONE:
     if (notmuch)
 	notmuch_database_close (notmuch);
 
@@ -599,6 +713,8 @@ command_t commands[] = {
       "Interactively setup notmuch for first use.\n"
       "\t\tInvoking notmuch with no command argument will run setup if\n"
       "\t\tthe setup command has not previously been completed." },
+    { "new", new_command,
+      "Find and import any new messages."},
     { "search", search_command,
       "<search-term> [...]\n\n"
       "\t\tSearch for threads matching the given search terms.\n"
