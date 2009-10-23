@@ -91,6 +91,7 @@ typedef enum _notmuch_private_status {
 
     /* Then add our own private values. */
     NOTMUCH_PRIVATE_STATUS_TERM_TOO_LONG,
+    NOTMUCH_PRIVATE_STATUS_NO_DOCUMENT_FOUND,
 
     NOTMUCH_PRIVATE_STATUS_LAST_STATUS
 } notmuch_private_status_t;

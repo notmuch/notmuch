@@ -92,10 +92,49 @@ find_doc_ids (notmuch_database_t *notmuch,
     free (term);
 }
 
+static notmuch_private_status_t
+find_unique_doc_id (notmuch_database_t *notmuch,
+		    const char *prefix_name,
+		    const char *value,
+		    unsigned int *doc_id)
+{
+    Xapian::PostingIterator i, end;
+
+    find_doc_ids (notmuch, prefix_name, value, &i, &end);
+
+    if (i == end) {
+	*doc_id = 0;
+	return NOTMUCH_PRIVATE_STATUS_NO_DOCUMENT_FOUND;
+    } else {
+	*doc_id = *i;
+	return NOTMUCH_PRIVATE_STATUS_SUCCESS;
+    }
+}
+
 static Xapian::Document
 find_document_for_doc_id (notmuch_database_t *notmuch, unsigned doc_id)
 {
     return notmuch->xapian_db->get_document (doc_id);
+}
+
+static notmuch_private_status_t
+find_unique_document (notmuch_database_t *notmuch,
+		      const char *prefix_name,
+		      const char *value,
+		      Xapian::Document *document,
+		      unsigned int *doc_id)
+{
+    notmuch_private_status_t status;
+
+    status = find_unique_doc_id (notmuch, prefix_name, value, doc_id);
+
+    if (status) {
+	*document = Xapian::Document ();
+	return status;
+    }
+
+    *document = find_document_for_doc_id (notmuch, *doc_id);
+    return NOTMUCH_PRIVATE_STATUS_SUCCESS;
 }
 
 static void
@@ -125,14 +164,15 @@ notmuch_message_t *
 notmuch_database_find_message (notmuch_database_t *notmuch,
 			       const char *message_id)
 {
-    Xapian::PostingIterator i, end;
+    notmuch_private_status_t status;
+    unsigned int doc_id;
 
-    find_doc_ids (notmuch, "msgid", message_id, &i, &end);
+    status = find_unique_doc_id (notmuch, "msgid", message_id, &doc_id);
 
-    if (i == end)
+    if (status == NOTMUCH_PRIVATE_STATUS_NO_DOCUMENT_FOUND)
 	return NULL;
 
-    return _notmuch_message_create (notmuch, notmuch, *i);
+    return _notmuch_message_create (notmuch, notmuch, doc_id);
 }
 
 /* Return one or more thread_ids, (as a GPtrArray of strings), for the
