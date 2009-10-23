@@ -74,21 +74,20 @@ add_term (Xapian::Document doc,
 }
 
 static void
-find_messages_by_term (Xapian::Database *db,
-		       const char *prefix_name,
-		       const char *value,
-		       Xapian::PostingIterator *begin,
-		       Xapian::PostingIterator *end)
+find_doc_ids (notmuch_database_t *notmuch,
+	      const char *prefix_name,
+	      const char *value,
+	      Xapian::PostingIterator *begin,
+	      Xapian::PostingIterator *end)
 {
     Xapian::PostingIterator i;
     char *term;
 
     term = g_strdup_printf ("%s%s", _find_prefix (prefix_name), value);
 
-    *begin = db->postlist_begin (term);
+    *begin = notmuch->xapian_db->postlist_begin (term);
 
-    if (end)
-	*end = db->postlist_end (term);
+    *end = notmuch->xapian_db->postlist_end (term);
 
     free (term);
 }
@@ -128,8 +127,7 @@ notmuch_database_find_message (notmuch_database_t *notmuch,
 {
     Xapian::PostingIterator i, end;
 
-    find_messages_by_term (notmuch->xapian_db,
-			   "msgid", message_id, &i, &end);
+    find_doc_ids (notmuch, "msgid", message_id, &i, &end);
 
     if (i == end)
 	return NULL;
@@ -161,7 +159,7 @@ find_thread_ids (notmuch_database_t *notmuch,
     thread_ids = g_hash_table_new_full (g_str_hash, g_str_equal,
 					free, NULL);
 
-    find_messages_by_term (db, "ref", message_id, &child, &children_end);
+    find_doc_ids (notmuch, "ref", message_id, &child, &children_end);
     for ( ; child != children_end; child++) {
 	doc = find_message_by_docid (db, *child);
 	insert_thread_id (thread_ids, doc);
