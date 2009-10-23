@@ -439,7 +439,9 @@ setup_command (int argc, char *argv[])
     gettimeofday (&tv_now, NULL);
     elapsed = tv_elapsed (add_files_state.tv_start,
 			  tv_now);
-    printf ("Processed %d total files in ", add_files_state.processed_files);
+    printf ("Processed %d %s in ", add_files_state.processed_files,
+	    add_files_state.processed_files == 1 ?
+	    "file" : "total files");
     print_formatted_seconds (elapsed);
     if (elapsed > 1) {
 	printf (" (%d files/sec.).                 \n",
@@ -501,7 +503,9 @@ new_command (int argc, char *argv[])
     elapsed = tv_elapsed (add_files_state.tv_start,
 			  tv_now);
     if (add_files_state.processed_files) {
-	printf ("Processed %d total files in ", add_files_state.processed_files);
+	printf ("Processed %d %s in ", add_files_state.processed_files,
+		add_files_state.processed_files == 1 ?
+		"file" : "total files");
 	print_formatted_seconds (elapsed);
 	if (elapsed > 1) {
 	    printf (" (%d files/sec.).                 \n",
