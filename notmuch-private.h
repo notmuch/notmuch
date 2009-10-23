@@ -217,15 +217,9 @@ notmuch_parse_date (const char *str, int *tz_offset);
 
 /* sha1.c */
 
-/* Create a hexadecimal string version of the SHA-1 digest of the
- * named file.
- *
- * This function returns a newly allocated string which the caller
- * should free() when finished.
- *
- * If any error occurs while reading the file, (permission denied,
- * file not found, etc.), this function returns NULL.
- */
+char *
+notmuch_sha1_of_string (const char *str);
+
 char *
 notmuch_sha1_of_file (const char *filename);
 

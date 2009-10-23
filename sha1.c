@@ -25,6 +25,54 @@
 /* Just some simple interfaces on top of libsha1 so that we can leave
  * libsha1 as untouched as possible. */
 
+static char *
+_hex_of_sha1_digest (const unsigned char digest[SHA1_DIGEST_SIZE])
+{
+    char *result, *r;
+    int i;
+
+    result = xcalloc (SHA1_DIGEST_SIZE * 2 + 1, 1);
+
+    for (r = result, i = 0;
+	 i < SHA1_DIGEST_SIZE;
+	 r += 2, i++)
+    {
+	sprintf (r, "%02x", digest[i]);
+    }
+
+    return result;
+}
+
+/* Create a hexadcimal string version of the SHA-1 digest of 'str'
+ * (including its null terminating character).
+ *
+ * This function returns a newly allocated string which the caller
+ * should free() when finished.
+ */
+char *
+notmuch_sha1_of_string (const char *str)
+{
+    sha1_ctx sha1;
+    unsigned char digest[SHA1_DIGEST_SIZE];
+
+    sha1_begin (&sha1);
+
+    sha1_hash ((unsigned char *) str, strlen (str) + 1, &sha1);
+
+    sha1_end (digest, &sha1);
+
+    return _hex_of_sha1_digest (digest);
+}
+
+/* Create a hexadecimal string version of the SHA-1 digest of the
+ * contents of the named file.
+ *
+ * This function returns a newly allocated string which the caller
+ * should free() when finished.
+ *
+ * If any error occurs while reading the file, (permission denied,
+ * file not found, etc.), this function returns NULL.
+ */
 char *
 notmuch_sha1_of_file (const char *filename)
 {
@@ -34,8 +82,7 @@ notmuch_sha1_of_file (const char *filename)
     size_t bytes_read;
     sha1_ctx sha1;
     unsigned char digest[SHA1_DIGEST_SIZE];
-    char *result, *r;
-    int i;
+    char *result;
 
     file = fopen (filename, "r");
     if (file == NULL)
@@ -59,16 +106,7 @@ notmuch_sha1_of_file (const char *filename)
 
     sha1_end (digest, &sha1);
 
-    result = calloc (SHA1_DIGEST_SIZE * 2 + 1, 1);
-    if (result == NULL)
-	return NULL;
-
-    for (r = result, i = 0;
-	 i < SHA1_DIGEST_SIZE;
-	 r += 2, i++)
-    {
-	sprintf (r, "%02x", digest[i]);
-    }
+    result = _hex_of_sha1_digest (digest);
 
     fclose (file);
 
