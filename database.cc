@@ -482,21 +482,6 @@ notmuch_database_add_message (notmuch_database_t *notmuch,
 					   (char *) NULL);
 
     try {
-	doc.set_data (filename);
-
-	add_term (doc, "type", "mail");
-
-	parents = g_ptr_array_new ();
-
-	refs = notmuch_message_file_get_header (message_file, "references");
-	parse_references (parents, refs);
-
-	in_reply_to = notmuch_message_file_get_header (message_file, "in-reply-to");
-	parse_references (parents, in_reply_to);
-
-	for (i = 0; i < parents->len; i++)
-	    add_term (doc, "ref", (char *) g_ptr_array_index (parents, i));
-
 	header = notmuch_message_file_get_header (message_file, "message-id");
 	if (header) {
 	    message_id = parse_message_id (header, NULL);
@@ -518,6 +503,21 @@ notmuch_database_add_message (notmuch_database_t *notmuch,
 	    message_id = g_strdup_printf ("notmuch-sha1-%s", sha1);
 	    free (sha1);
 	}
+
+	doc.set_data (filename);
+
+	add_term (doc, "type", "mail");
+
+	parents = g_ptr_array_new ();
+
+	refs = notmuch_message_file_get_header (message_file, "references");
+	parse_references (parents, refs);
+
+	in_reply_to = notmuch_message_file_get_header (message_file, "in-reply-to");
+	parse_references (parents, in_reply_to);
+
+	for (i = 0; i < parents->len; i++)
+	    add_term (doc, "ref", (char *) g_ptr_array_index (parents, i));
 
 	thread_ids = find_thread_ids (notmuch, parents, message_id);
 
