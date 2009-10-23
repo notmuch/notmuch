@@ -107,18 +107,6 @@ _notmuch_message_create_for_message_id (const void *talloc_owner,
 					notmuch_database_t *notmuch,
 					const char *message_id);
 
-/* XXX: Here temporarily during code movement only. */
-/* "128 bits of thread-id ought to be enough for anybody" */
-#define NOTMUCH_THREAD_ID_BITS	 128
-#define NOTMUCH_THREAD_ID_DIGITS (NOTMUCH_THREAD_ID_BITS / 4)
-typedef struct _thread_id {
-    char str[NOTMUCH_THREAD_ID_DIGITS + 1];
-} thread_id_t;
-
-
-void
-thread_id_generate (thread_id_t *thread_id);
-
 /* Lookup a prefix value by name.
  *
  * XXX: This should really be static inside of message.cc, and we can

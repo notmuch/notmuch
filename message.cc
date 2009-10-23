@@ -41,6 +41,13 @@ struct _notmuch_thread_ids {
     char *next;
 };
 
+/* "128 bits of thread-id ought to be enough for anybody" */
+#define NOTMUCH_THREAD_ID_BITS	 128
+#define NOTMUCH_THREAD_ID_DIGITS (NOTMUCH_THREAD_ID_BITS / 4)
+typedef struct _thread_id {
+    char str[NOTMUCH_THREAD_ID_DIGITS + 1];
+} thread_id_t;
+
 #define ARRAY_SIZE(arr) (sizeof (arr) / sizeof (arr[0]))
 
 /* These prefix values are specifically chosen to be compatible

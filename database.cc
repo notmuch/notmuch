@@ -451,18 +451,16 @@ notmuch_status_t
 notmuch_database_add_message (notmuch_database_t *notmuch,
 			      const char *filename)
 {
-    Xapian::WritableDatabase *db = notmuch->xapian_db;
-    Xapian::Document doc;
     notmuch_message_file_t *message_file;
+    notmuch_message_t *message;
     notmuch_status_t ret = NOTMUCH_STATUS_SUCCESS;
 
     GPtrArray *parents, *thread_ids;
 
     const char *refs, *in_reply_to, *date, *header;
-    const char *from, *to, *subject;
+    const char *from, *to, *subject, *old_filename;
     char *message_id;
 
-    time_t time_value;
     unsigned int i;
 
     message_file = notmuch_message_file_open (filename);
@@ -482,6 +480,8 @@ notmuch_database_add_message (notmuch_database_t *notmuch,
 					   (char *) NULL);
 
     try {
+	/* The first order of business is to find/create a message ID. */
+
 	header = notmuch_message_file_get_header (message_file, "message-id");
 	if (header) {
 	    message_id = parse_message_id (header, NULL);
@@ -504,10 +504,49 @@ notmuch_database_add_message (notmuch_database_t *notmuch,
 	    free (sha1);
 	}
 
-	doc.set_data (filename);
+	/* Now that we have a message ID, we get a message object,
+	 * (which may or may not reference an existing document in the
+	 * database). */
 
-	add_term (doc, "type", "mail");
+	/* Use NULL for owner since we want to free this locally. */
 
+	/* XXX: This call can fail by either out-of-memory or an
+	 * "impossible" Xapian exception. We should rewrite it to
+	 * allow us to propagate the error status. */
+	message = _notmuch_message_create_for_message_id (NULL, notmuch,
+							  message_id);
+	if (message == NULL) {
+	    fprintf (stderr, "Internal error. This shouldn't happen.\n\n");
+	    fprintf (stderr, "I mean, it's possible you ran out of memory, but then this code path is still an internal error since it should have detected that and propagated the status value up the stack.\n");
+	    exit (1);
+	}
+
+	/* Has a message previously been added with the same ID? */
+	old_filename = notmuch_message_get_filename (message);
+	if (old_filename && strlen (old_filename)) {
+	    /* XXX: This is too noisy to actually print, and what do we
+	     * really expect the user to do? Go manually delete a
+	     * redundant message or merge two similar messages?
+	     * Instead we should handle this transparently.
+	     *
+	     * What we likely want to move to is adding both filenames
+	     * to the database so that subsequent indexing will pick up
+	     * terms from both files.
+	     */
+#if 0
+	    fprintf (stderr,
+		     "Note: Attempting to add a message with a duplicate message ID:\n"
+		     "Old: %s\n"   "New: %s\n",
+		     old_filename, filename);
+	    fprintf (stderr, "The old filename will be used, but any new terms\n"
+		     "from the new message will added to the database.\n");
+#endif
+	} else {
+	    _notmuch_message_set_filename (message, filename);
+	    _notmuch_message_add_term (message, "type", "mail");
+	}
+
+	/* Next, find the thread(s) to which this message belongs. */
 	parents = g_ptr_array_new ();
 
 	refs = notmuch_message_file_get_header (message_file, "references");
@@ -517,18 +556,16 @@ notmuch_database_add_message (notmuch_database_t *notmuch,
 	parse_references (parents, in_reply_to);
 
 	for (i = 0; i < parents->len; i++)
-	    add_term (doc, "ref", (char *) g_ptr_array_index (parents, i));
+	    _notmuch_message_add_term (message, "ref",
+				       (char *) g_ptr_array_index (parents, i));
 
 	thread_ids = find_thread_ids (notmuch, parents, message_id);
+
+	free (message_id);
 
 	for (i = 0; i < parents->len; i++)
 	    g_free (g_ptr_array_index (parents, i));
 	g_ptr_array_free (parents, TRUE);
-
-	add_term (doc, "msgid", message_id);
-	doc.add_value (NOTMUCH_VALUE_MESSAGE_ID, message_id);
-
-	free (message_id);
 
 	if (thread_ids->len) {
 	    unsigned int i;
@@ -537,7 +574,7 @@ notmuch_database_add_message (notmuch_database_t *notmuch,
 
 	    for (i = 0; i < thread_ids->len; i++) {
 		id = (char *) thread_ids->pdata[i];
-		add_term (doc, "thread", id);
+		_notmuch_message_add_thread_id (message, id);
 		if (i == 0)
 		    thread_id = g_string_new (id);
 		else
@@ -545,24 +582,15 @@ notmuch_database_add_message (notmuch_database_t *notmuch,
 
 		free (id);
 	    }
-	    doc.add_value (NOTMUCH_VALUE_THREAD, thread_id->str);
 	    g_string_free (thread_id, TRUE);
 	} else {
-	    /* If not part of any existing thread, generate a new thread_id. */
-	    thread_id_t thread_id;
-
-	    thread_id_generate (&thread_id);
-	    add_term (doc, "thread", thread_id.str);
-	    doc.add_value (NOTMUCH_VALUE_THREAD, thread_id.str);
+	    _notmuch_message_ensure_thread_id (message);
 	}
 
 	g_ptr_array_free (thread_ids, TRUE);
 
 	date = notmuch_message_file_get_header (message_file, "date");
-	time_value = notmuch_parse_date (date, NULL);
-
-	doc.add_value (NOTMUCH_VALUE_DATE,
-		       Xapian::sortable_serialise (time_value));
+	_notmuch_message_set_date (message, date);
 
 	from = notmuch_message_file_get_header (message_file, "from");
 	subject = notmuch_message_file_get_header (message_file, "subject");
@@ -575,7 +603,7 @@ notmuch_database_add_message (notmuch_database_t *notmuch,
 	    ret = NOTMUCH_STATUS_FILE_NOT_EMAIL;
 	    goto DONE;
 	} else {
-	    db->add_document (doc);
+	    _notmuch_message_sync (message);
 	}
     } catch (const Xapian::Error &error) {
 	fprintf (stderr, "A Xapian exception occurred: %s.\n",
@@ -585,6 +613,8 @@ notmuch_database_add_message (notmuch_database_t *notmuch,
     }
 
   DONE:
+    if (message)
+	notmuch_message_destroy (message);
     if (message_file)
 	notmuch_message_file_close (message_file);
 
