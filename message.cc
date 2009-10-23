@@ -205,6 +205,35 @@ notmuch_message_get_thread_ids (notmuch_message_t *message)
     return thread_ids;
 }
 
+void
+thread_id_generate (thread_id_t *thread_id)
+{
+    static int seeded = 0;
+    FILE *dev_random;
+    uint32_t value;
+    char *s;
+    int i;
+
+    if (! seeded) {
+	dev_random = fopen ("/dev/random", "r");
+	if (dev_random == NULL) {
+	    srand (time (NULL));
+	} else {
+	    fread ((void *) &value, sizeof (value), 1, dev_random);
+	    srand (value);
+	    fclose (dev_random);
+	}
+	seeded = 1;
+    }
+
+    s = thread_id->str;
+    for (i = 0; i < NOTMUCH_THREAD_ID_DIGITS; i += 8) {
+	value = rand ();
+	sprintf (s, "%08x", value);
+	s += 8;
+    }
+}
+
 /* Synchronize changes made to message->doc into the database. */
 static void
 _notmuch_message_sync (notmuch_message_t *message)

@@ -50,42 +50,6 @@ notmuch_status_to_string (notmuch_status_t status)
     }
 }
 
-/* "128 bits of thread-id ought to be enough for anybody" */
-#define NOTMUCH_THREAD_ID_BITS	 128
-#define NOTMUCH_THREAD_ID_DIGITS (NOTMUCH_THREAD_ID_BITS / 4)
-typedef struct _thread_id {
-    char str[NOTMUCH_THREAD_ID_DIGITS + 1];
-} thread_id_t;
-
-static void
-thread_id_generate (thread_id_t *thread_id)
-{
-    static int seeded = 0;
-    FILE *dev_random;
-    uint32_t value;
-    char *s;
-    int i;
-
-    if (! seeded) {
-	dev_random = fopen ("/dev/random", "r");
-	if (dev_random == NULL) {
-	    srand (time (NULL));
-	} else {
-	    fread ((void *) &value, sizeof (value), 1, dev_random);
-	    srand (value);
-	    fclose (dev_random);
-	}
-	seeded = 1;
-    }
-
-    s = thread_id->str;
-    for (i = 0; i < NOTMUCH_THREAD_ID_DIGITS; i += 8) {
-	value = rand ();
-	sprintf (s, "%08x", value);
-	s += 8;
-    }
-}
-
 /* XXX: We should drop this function and convert all callers to call
  * _notmuch_message_add_term instead. */
 static void
