@@ -58,20 +58,20 @@ typedef int notmuch_bool_t;
  * NOTMUCH_STATUS_XAPIAN_EXCEPTION: A Xapian exception occurred
  *
  * NOTMUCH_STATUS_FILE_ERROR: An error occurred trying to read or
- * 	write to a file (this could be file not found, permission
- * 	denied, etc.)
+ *	write to a file (this could be file not found, permission
+ *	denied, etc.)
  *
  * NOTMUCH_STATUS_FILE_NOT_EMAIL: A file was presented that doesn't
- * 	appear to be an email message.
+ *	appear to be an email message.
  *
  * NOTMUCH_STATUS_NULL_POINTER: The user erroneously passed a NULL
- * 	pointer to a notmuch function.
+ *	pointer to a notmuch function.
  *
  * NOTMUCH_STATUS_TAG_TOO_LONG: A tag value is too long (exceeds
  *	NOTMUCH_TAG_MAX)
  *
  * NOTMUCH_STATUS_LAST_STATUS: Not an actual status value. Just a way
- * 	to find out how many valid status values there are.
+ *	to find out how many valid status values there are.
  */
 typedef enum _notmuch_status {
     NOTMUCH_STATUS_SUCCESS = 0,
@@ -240,11 +240,11 @@ notmuch_database_get_timestamp (notmuch_database_t *database,
  * NOTMUCH_STATUS_SUCCESS: Message successfully added to database.
  *
  * NOTMUCH_STATUS_FILE_ERROR: an error occurred trying to open the
- * 	file, (such as permission denied, or file not found,
- * 	etc.). Nothing added to the database.
+ *	file, (such as permission denied, or file not found,
+ *	etc.). Nothing added to the database.
  *
  * NOTMUCH_STATUS_FILE_NOT_EMAIL: the contents of filename don't look
- * 	like an email message. Nothing added to the database.
+ *	like an email message. Nothing added to the database.
  */
 notmuch_status_t
 notmuch_database_add_message (notmuch_database_t *database,
