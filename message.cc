@@ -27,6 +27,7 @@ struct _notmuch_message {
     notmuch_database_t *notmuch;
     Xapian::docid doc_id;
     char *message_id;
+    char *filename;
     Xapian::Document doc;
 };
 
@@ -121,6 +122,7 @@ _notmuch_message_create (const void *talloc_owner,
     message->notmuch = notmuch;
     message->doc_id = doc_id;
     message->message_id = NULL; /* lazily created */
+    message->filename = NULL; /* lazily created */
     new (&message->doc) Xapian::Document;
 
     talloc_set_destructor (message, _notmuch_message_destructor);
@@ -148,6 +150,20 @@ notmuch_message_get_message_id (notmuch_message_t *message)
 
     message->message_id = talloc_strdup (message, (*i).c_str () + 1);
     return message->message_id;
+}
+
+const char *
+notmuch_message_get_filename (notmuch_message_t *message)
+{
+    std::string filename_str;
+
+    if (message->filename)
+	return message->filename;
+
+    filename_str = message->doc.get_data ();
+    message->filename = talloc_strdup (message, filename_str.c_str ());
+
+    return message->filename;
 }
 
 /* We end up having to call the destructors explicitly because we had

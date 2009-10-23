@@ -342,6 +342,13 @@ notmuch_results_destroy (notmuch_results_t *results);
 const char *
 notmuch_message_get_message_id (notmuch_message_t *message);
 
+/* Get this filename for the email corresponding to 'message'.
+ *
+ * The returned filename is relative to the base of the database from
+ * which 'message' was obtained. See notmuch_database_get_path() .*/
+const char *
+notmuch_message_get_filename (notmuch_message_t *message);
+
 /* Get the tags for 'message', returning a notmuch_tags_t object which
  * can be used to iterate over all tags.
  *
