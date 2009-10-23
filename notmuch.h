@@ -408,10 +408,13 @@ notmuch_results_destroy (notmuch_results_t *results);
 const char *
 notmuch_message_get_message_id (notmuch_message_t *message);
 
-/* Get this filename for the email corresponding to 'message'.
+/* Get the filename for the email corresponding to 'message'.
  *
  * The returned filename is relative to the base of the database from
- * which 'message' was obtained. See notmuch_database_get_path() .*/
+ * which 'message' was obtained. See notmuch_database_get_path() .
+ * The returned string belongs to the message so should not be
+ * modified or freed by the caller (nor should it be referenced after
+ * the message is destroyed). */
 const char *
 notmuch_message_get_filename (notmuch_message_t *message);
 
