@@ -522,7 +522,7 @@ notmuch_tags_has_more (notmuch_tags_t *tags)
 	return FALSE;
 
     s = *tags->iterator;
-    if (s.size () && s[0] == 'L')
+    if (! s.empty () && s[0] == 'L')
 	return TRUE;
     else
 	return FALSE;
