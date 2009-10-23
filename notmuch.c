@@ -123,24 +123,24 @@ add_files_print_progress (add_files_state_t *state)
 
 /* Recursively find all regular files in 'path' and add them to the
  * database. */
-void
+notmuch_status_t
 add_files (notmuch_database_t *notmuch, const char *path,
 	   add_files_state_t *state)
 {
-    DIR *dir;
-    struct dirent *entry, *e;
+    DIR *dir = NULL;
+    struct dirent *e, *entry = NULL;
     int entry_length;
     int err;
-    char *next;
+    char *next = NULL;
     struct stat st;
-    notmuch_status_t status;
+    notmuch_status_t status, ret = NOTMUCH_STATUS_SUCCESS;
 
     dir = opendir (path);
-
     if (dir == NULL) {
 	fprintf (stderr, "Warning: failed to open directory %s: %s\n",
 		 path, strerror (errno));
-	return;
+	ret = NOTMUCH_STATUS_FILE_ERROR;
+	goto DONE;
     }
 
     entry_length = offsetof (struct dirent, d_name) +
@@ -152,8 +152,8 @@ add_files (notmuch_database_t *notmuch, const char *path,
 	if (err) {
 	    fprintf (stderr, "Error reading directory: %s\n",
 		     strerror (errno));
-	    free (entry);
-	    return;
+	    ret = NOTMUCH_STATUS_FILE_ERROR;
+	    goto DONE;
 	}
 
 	if (e == NULL)
@@ -173,7 +173,12 @@ add_files (notmuch_database_t *notmuch, const char *path,
 
 	next = g_strdup_printf ("%s/%s", path, entry->d_name);
 
-	stat (next, &st);
+	if (stat (next, &st)) {
+	    fprintf (stderr, "Error reading %s: %s\n",
+		     next, strerror (errno));
+	    ret = NOTMUCH_STATUS_FILE_ERROR;
+	    continue;
+	}
 
 	if (S_ISREG (st.st_mode)) {
 	    state->processed_files++;
@@ -187,15 +192,24 @@ add_files (notmuch_database_t *notmuch, const char *path,
 	    if (state->processed_files % 1000 == 0)
 		add_files_print_progress (state);
 	} else if (S_ISDIR (st.st_mode)) {
-	    add_files (notmuch, next, state);
+	    status = add_files (notmuch, next, state);
+	    if (status && ret == NOTMUCH_STATUS_SUCCESS)
+		ret = status;
 	}
 
 	free (next);
+	next = NULL;
     }
 
-    free (entry);
+  DONE:
+    if (next)
+	free (next);
+    if (entry)
+	free (entry);
+    if (dir)
+	closedir (dir);
 
-    closedir (dir);
+    return ret;
 }
 
 /* Recursively count all regular files in path and all sub-direcotries
@@ -354,7 +368,7 @@ setup_command (int argc, char *argv[])
     add_files_state.added_messages = 0;
     gettimeofday (&add_files_state.tv_start, NULL);
 
-    add_files (notmuch, mail_directory, &add_files_state);
+    ret = add_files (notmuch, mail_directory, &add_files_state);
 
     gettimeofday (&tv_now, NULL);
     elapsed = tv_elapsed (add_files_state.tv_start,
@@ -370,12 +384,17 @@ setup_command (int argc, char *argv[])
 	    "run \"notmuch new\" to add it to the database.\n",
 	    mail_directory);
 
+    if (ret) {
+	printf ("Note: At least one error was encountered: %s\n",
+		notmuch_status_to_string (ret));
+    }
+
   DONE:
     if (mail_directory)
 	free (mail_directory);
     if (notmuch)
 	notmuch_database_close (notmuch);
-    
+
     return ret;
 }
 
