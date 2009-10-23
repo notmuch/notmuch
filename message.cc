@@ -214,6 +214,13 @@ _notmuch_message_sync (notmuch_message_t *message)
     db->replace_document (message->doc_id, message->doc);
 }
 
+/* Add a name:value term to 'message', (the actual term will be
+ * encoded by prefixing the value with a short prefix). See
+ * NORMAL_PREFIX and BOOLEAN_PREFIX arrays for the mapping of term
+ * names to prefix values.
+ *
+ * This change will not be reflected in the database until the next
+ * call to _notmuch_message_set_sync. */
 notmuch_private_status_t
 _notmuch_message_add_term (notmuch_message_t *message,
 			   const char *prefix_name,
@@ -232,13 +239,19 @@ _notmuch_message_add_term (notmuch_message_t *message,
 	return NOTMUCH_PRIVATE_STATUS_TERM_TOO_LONG;
 
     message->doc.add_term (term);
-    _notmuch_message_sync (message);
 
     talloc_free (term);
 
     return NOTMUCH_PRIVATE_STATUS_SUCCESS;
 }
 
+/* Remove a name:value term from 'message', (the actual term will be
+ * encoded by prefixing the value with a short prefix). See
+ * NORMAL_PREFIX and BOOLEAN_PREFIX arrays for the mapping of term
+ * names to prefix values.
+ *
+ * This change will not be reflected in the database until the next
+ * call to _notmuch_message_set_sync. */
 notmuch_private_status_t
 _notmuch_message_remove_term (notmuch_message_t *message,
 			      const char *prefix_name,
@@ -256,7 +269,6 @@ _notmuch_message_remove_term (notmuch_message_t *message,
 	return NOTMUCH_PRIVATE_STATUS_TERM_TOO_LONG;
 
     message->doc.remove_term (term);
-    _notmuch_message_sync (message);
 
     talloc_free (term);
 
@@ -281,6 +293,8 @@ notmuch_message_add_tag (notmuch_message_t *message, const char *tag)
 	exit (1);
     }
 
+    _notmuch_message_sync (message);
+
     return NOTMUCH_STATUS_SUCCESS;
 }
 
@@ -301,6 +315,8 @@ notmuch_message_remove_tag (notmuch_message_t *message, const char *tag)
 		 status);
 	exit (1);
     }
+
+    _notmuch_message_sync (message);
 
     return NOTMUCH_STATUS_SUCCESS;
 }
