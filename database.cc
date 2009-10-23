@@ -92,10 +92,10 @@ find_doc_ids (notmuch_database_t *notmuch,
     free (term);
 }
 
-Xapian::Document
-find_message_by_docid (Xapian::Database *db, Xapian::docid docid)
+static Xapian::Document
+find_document_for_doc_id (notmuch_database_t *notmuch, unsigned doc_id)
 {
-    return db->get_document (docid);
+    return notmuch->xapian_db->get_document (doc_id);
 }
 
 static void
@@ -147,7 +147,6 @@ find_thread_ids (notmuch_database_t *notmuch,
 		 GPtrArray *parents,
 		 const char *message_id)
 {
-    Xapian::WritableDatabase *db = notmuch->xapian_db;
     Xapian::PostingIterator child, children_end;
     Xapian::Document doc;
     GHashTable *thread_ids;
@@ -161,7 +160,7 @@ find_thread_ids (notmuch_database_t *notmuch,
 
     find_doc_ids (notmuch, "ref", message_id, &child, &children_end);
     for ( ; child != children_end; child++) {
-	doc = find_message_by_docid (db, *child);
+	doc = find_document_for_doc_id (notmuch, *child);
 	insert_thread_id (thread_ids, doc);
     }
 
