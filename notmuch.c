@@ -54,8 +54,9 @@ typedef struct command {
 } command_t;
 
 typedef struct {
-    int total_messages;
-    int count;
+    int total_files;
+    int processed_files;
+    int added_messages;
     struct timeval tv_start;
 } add_files_state_t;
 
@@ -92,7 +93,7 @@ print_formatted_seconds (double seconds)
 	seconds -= minutes * 60;
     }
 
-    printf ("%02ds", (int) seconds);
+    printf ("%ds", (int) seconds);
 }
 
 void
@@ -104,13 +105,18 @@ add_files_print_progress (add_files_state_t *state)
     gettimeofday (&tv_now, NULL);
 
     elapsed_overall = tv_elapsed (state->tv_start, tv_now);
-    rate_overall = (state->count) / elapsed_overall;
+    rate_overall = (state->processed_files) / elapsed_overall;
 
-    printf ("Added %d of %d messages (",
-	    state->count, state->total_messages);
-    print_formatted_seconds ((state->total_messages - state->count) /
-			     rate_overall);
-    printf (" remaining).      \r");
+    printf ("Processed %d", state->processed_files);
+
+    if (state->total_files) {
+	printf (" of %d files (", state->total_files);
+	print_formatted_seconds ((state->total_files - state->processed_files) /
+				 rate_overall);
+	printf (" remaining).      \r");
+    } else {
+	printf (" files (%d files/sec.)    \r", (int) rate_overall);
+    }
 
     fflush (stdout);
 }
@@ -170,14 +176,15 @@ add_files (notmuch_database_t *notmuch, const char *path,
 	stat (next, &st);
 
 	if (S_ISREG (st.st_mode)) {
+	    state->processed_files++;
 	    status = notmuch_database_add_message (notmuch, next);
 	    if (status == NOTMUCH_STATUS_FILE_NOT_EMAIL) {
 		fprintf (stderr, "Note: Ignoring non-mail file: %s\n",
 			 next);
-	    } else {
-		state->count++;
+	    } else if (status != NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID) {
+		state->added_messages++;
 	    }
-	    if (state->count % 1000 == 0)
+	    if (state->processed_files % 1000 == 0)
 		add_files_print_progress (state);
 	} else if (S_ISDIR (st.st_mode)) {
 	    add_files (notmuch, next, state);
@@ -342,8 +349,9 @@ setup_command (int argc, char *argv[])
 
     printf ("Next, we'll inspect the messages and create a database of threads:\n");
 
-    add_files_state.total_messages = count;
-    add_files_state.count = 0;
+    add_files_state.total_files = count;
+    add_files_state.processed_files = 0;
+    add_files_state.added_messages = 0;
     gettimeofday (&add_files_state.tv_start, NULL);
 
     add_files (notmuch, mail_directory, &add_files_state);
@@ -351,9 +359,16 @@ setup_command (int argc, char *argv[])
     gettimeofday (&tv_now, NULL);
     elapsed = tv_elapsed (add_files_state.tv_start,
 			  tv_now);
-    printf ("Added %d total messages in ", add_files_state.count);
+    printf ("Processed %d total files in ", add_files_state.processed_files);
     print_formatted_seconds (elapsed);
-    printf (" (%d messages/sec.).                 \n", (int) (add_files_state.count / elapsed));
+    printf (" (%d files/sec.).                 \n",
+	    (int) (add_files_state.processed_files / elapsed));
+    printf ("Added %d unique messages to the database.\n\n",
+	    add_files_state.added_messages);
+
+    printf ("When new mail is delivered to %s in the future,\n"
+	    "run \"notmuch new\" to add it to the database.\n",
+	    mail_directory);
 
   DONE:
     if (mail_directory)
