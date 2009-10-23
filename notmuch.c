@@ -266,13 +266,14 @@ count_files (const char *path, int *count)
 int
 setup_command (int argc, char *argv[])
 {
-    notmuch_database_t *notmuch;
-    char *mail_directory, *default_path;
+    notmuch_database_t *notmuch = NULL;
+    char *default_path, *mail_directory = NULL;
     size_t line_size;
     int count;
     add_files_state_t add_files_state;
     double elapsed;
     struct timeval tv_now;
+    notmuch_status_t ret = NOTMUCH_STATUS_SUCCESS;
 
     printf ("Welcome to notmuch!\n\n");
 
@@ -298,7 +299,6 @@ setup_command (int argc, char *argv[])
     printf ("Top-level mail directory [%s]: ", default_path);
     fflush (stdout);
 
-    mail_directory = NULL;
     getline (&mail_directory, &line_size, stdin);
     chomp_newline (mail_directory);
 
@@ -328,8 +328,8 @@ setup_command (int argc, char *argv[])
     if (notmuch == NULL) {
 	fprintf (stderr, "Failed to create new notmuch database at %s\n",
 		 mail_directory);
-	free (mail_directory);
-	return 1;
+	ret = NOTMUCH_STATUS_FILE_ERROR;
+	goto DONE;
     }
 
     printf ("OK. Let's take a look at the mail we can find in the directory\n");
@@ -355,11 +355,13 @@ setup_command (int argc, char *argv[])
     print_formatted_seconds (elapsed);
     printf (" (%d messages/sec.).                 \n", (int) (add_files_state.count / elapsed));
 
-    notmuch_database_close (notmuch);
-
-    free (mail_directory);
+  DONE:
+    if (mail_directory)
+	free (mail_directory);
+    if (notmuch)
+	notmuch_database_close (notmuch);
     
-    return 0;
+    return ret;
 }
 
 int
