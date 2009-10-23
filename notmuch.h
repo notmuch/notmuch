@@ -104,6 +104,19 @@ typedef struct _notmuch_message notmuch_message_t;
 typedef struct _notmuch_tags notmuch_tags_t;
 typedef struct _notmuch_thread_ids notmuch_thread_ids_t;
 
+/* Lookup the default database path.
+ *
+ * This is the path that will be used by notmuch_database_create and
+ * notmuch_database_open if given a NULL path. Specifically it will be
+ * the value of the NOTMUCH_BASE environment variable if set,
+ * otherwise ${HOME}/mail
+ *
+ * Returns a newly allocated string which the caller should free()
+ * when finished with it.
+ */
+char *
+notmuch_database_default_path (void);
+
 /* Create a new, empty notmuch database located at 'path'.
  *
  * The path should be a top-level directory to a collection of
@@ -158,19 +171,6 @@ notmuch_database_open (const char *path);
  * resources. See notmuch_database_open. */
 void
 notmuch_database_close (notmuch_database_t *database);
-
-/* Lookup the default database path.
- *
- * This is the path that will be used by notmuch_database_create and
- * notmuch_database_open if given a NULL path. Specifically it will be
- * the value of the NOTMUCH_BASE environment variable if set,
- * otherwise ${HOME}/mail
- *
- * Returns a newly allocated string which the caller should free()
- * when finished with it.
- */
-char *
-notmuch_database_default_path (void);
 
 /* Return the database path of the given database.
  *
