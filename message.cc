@@ -153,6 +153,50 @@ _notmuch_message_create (const void *talloc_owner,
     return message;
 }
 
+/* Create a new notmuch_message_t object for a specific message ID,
+ * (which may or may not already exist in the databas).
+ *
+ * Here, 'talloc owner' is an optional talloc context to which the new
+ * message will belong. This allows for the caller to not bother
+ * calling notmuch_message_destroy on the message, and no that all
+ * memory will be reclaimed with 'talloc_owner' is free. The caller
+ * still can call notmuch_message_destroy when finished with the
+ * message if desired.
+ *
+ * The 'talloc_owner' argument can also be NULL, in which case the
+ * caller *is* responsible for calling notmuch_message_destroy.
+ *
+ * If there is already a document with message ID 'message_id' in the
+ * database, then the returned message can be used to query/modify the
+ * document. Otherwise, a new document will be inserted into the
+ * database before this function returns;
+ */
+notmuch_message_t *
+_notmuch_message_create_for_message_id (const void *talloc_owner,
+					notmuch_database_t *notmuch,
+					const char *message_id)
+{
+    notmuch_message_t *message;
+    Xapian::Document doc;
+    unsigned int doc_id;
+    char *term;
+
+    message = notmuch_database_find_message (notmuch, message_id);
+    if (message)
+	return talloc_steal (talloc_owner, message);
+
+    term = talloc_asprintf (NULL, "%s%s",
+			    _find_prefix ("msgid"), message_id);
+    doc.add_term (term);
+    talloc_free (term);
+
+    doc.add_value (NOTMUCH_VALUE_MESSAGE_ID, message_id);
+
+    doc_id = notmuch->xapian_db->add_document (doc);
+
+    return _notmuch_message_create (talloc_owner, notmuch, doc_id);
+}
+
 const char *
 notmuch_message_get_message_id (notmuch_message_t *message)
 {

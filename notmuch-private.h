@@ -102,6 +102,11 @@ _notmuch_message_create (const void *talloc_owner,
 			 notmuch_database_t *notmuch,
 			 unsigned int doc_id);
 
+notmuch_message_t *
+_notmuch_message_create_for_message_id (const void *talloc_owner,
+					notmuch_database_t *notmuch,
+					const char *message_id);
+
 /* XXX: Here temporarily during code movement only. */
 /* "128 bits of thread-id ought to be enough for anybody" */
 #define NOTMUCH_THREAD_ID_BITS	 128
