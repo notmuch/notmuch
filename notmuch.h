@@ -67,7 +67,8 @@ typedef int notmuch_bool_t;
  * NOTMUCH_STATUS_NULL_POINTER: The user erroneously passed a NULL
  * 	pointer to a notmuch function.
  *
- * NOTMUCH_STATUS_TAG_TOO_LONG: A tag value is too long.
+ * NOTMUCH_STATUS_TAG_TOO_LONG: A tag value is too long (exceeds
+ *	NOTMUCH_TAG_MAX)
  *
  * NOTMUCH_STATUS_LAST_STATUS: Not an actual status value. Just a way
  * 	to find out how many valid status values there are.
@@ -484,7 +485,7 @@ notmuch_message_get_thread_ids (notmuch_message_t *message);
  * NOTMUCH_STATUS_NULL_POINTER: The 'tag' argument is NULL
  *
  * NOTMUCH_STATUS_TAG_TOO_LONG: The length of 'tag' is longer than
- * 	too long (exceeds NOTMUCH_TAG_MAX)
+ *	too long (exceeds NOTMUCH_TAG_MAX)
  */
 notmuch_status_t
 notmuch_message_add_tag (notmuch_message_t *message, const char *tag);
@@ -498,7 +499,7 @@ notmuch_message_add_tag (notmuch_message_t *message, const char *tag);
  * NOTMUCH_STATUS_NULL_POINTER: The 'tag' argument is NULL
  *
  * NOTMUCH_STATUS_TAG_TOO_LONG: The length of 'tag' is longer than
- * 	too long (exceeds NOTMUCH_TAG_MAX)
+ *	too long (exceeds NOTMUCH_TAG_MAX)
  */
 notmuch_status_t
 notmuch_message_remove_tag (notmuch_message_t *message, const char *tag);

@@ -43,7 +43,7 @@ notmuch_status_to_string (notmuch_status_t status)
     case NOTMUCH_STATUS_NULL_POINTER:
 	return "Erroneous NULL pointer";
     case NOTMUCH_STATUS_TAG_TOO_LONG:
-	return "Tag value is too long";
+	return "Tag value is too long (exceeds NOTMUCH_TAG_MAX)";
     default:
     case NOTMUCH_STATUS_LAST_STATUS:
 	return "Unknown error status value";
