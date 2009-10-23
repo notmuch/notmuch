@@ -152,6 +152,25 @@ notmuch_message_get_message_id (notmuch_message_t *message)
     return message->message_id;
 }
 
+/* Set the filename for 'message' to 'filename'.
+ *
+ * XXX: We should still figure out what we want to do for multiple
+ * files with identical message IDs. We will probably want to store a
+ * list of filenames here, (so that this will be "add_filename"
+ * instead of "set_filename"). Which would make this very similar to
+ * add_thread_ids.
+ *
+ * This change will not be reflected in the database until the next
+ * call to _notmuch_message_set_sync. */
+void
+_notmuch_message_set_filename (notmuch_message_t *message,
+			       const char *filename)
+{
+    if (message->filename)
+	talloc_free (message->filename);
+    message->doc.set_data (filename);
+}
+
 const char *
 notmuch_message_get_filename (notmuch_message_t *message)
 {
@@ -222,6 +241,44 @@ notmuch_message_get_thread_ids (notmuch_message_t *message)
 }
 
 void
+_notmuch_message_set_date (notmuch_message_t *message,
+			   const char *date)
+{
+    time_t time_value;
+
+    time_value = notmuch_parse_date (date, NULL);
+
+    message->doc.add_value (NOTMUCH_VALUE_DATE,
+			    Xapian::sortable_serialise (time_value));
+}
+
+void
+_notmuch_message_add_thread_id (notmuch_message_t *message,
+				const char *thread_id)
+{
+    std::string id_str;
+
+    _notmuch_message_add_term (message, "thread", thread_id);
+
+    id_str = message->doc.get_value (NOTMUCH_VALUE_THREAD);
+
+    if (id_str.empty ()) {
+	message->doc.add_value (NOTMUCH_VALUE_THREAD, thread_id);
+    } else {
+	size_t pos;
+
+	/* Think about using a hash here if there's any performance
+	 * problem. */
+	pos = id_str.find (thread_id);
+	if (pos == std::string::npos) {
+	    id_str.append (",");
+	    id_str.append (thread_id);
+	    message->doc.add_value (NOTMUCH_VALUE_THREAD, id_str);
+	}
+    }
+}
+
+static void
 thread_id_generate (thread_id_t *thread_id)
 {
     static int seeded = 0;
@@ -250,8 +307,19 @@ thread_id_generate (thread_id_t *thread_id)
     }
 }
 
-/* Synchronize changes made to message->doc into the database. */
-static void
+void
+_notmuch_message_ensure_thread_id (notmuch_message_t *message)
+{
+    /* If not part of any existing thread, generate a new thread_id. */
+    thread_id_t thread_id;
+
+    thread_id_generate (&thread_id);
+    _notmuch_message_add_term (message, "thread", thread_id.str);
+    message->doc.add_value (NOTMUCH_VALUE_THREAD, thread_id.str);
+}
+
+/* Synchronize changes made to message->doc out into the database. */
+void
 _notmuch_message_sync (notmuch_message_t *message)
 {
     Xapian::WritableDatabase *db = message->notmuch->xapian_db;
