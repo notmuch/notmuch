@@ -108,6 +108,22 @@ _notmuch_message_destructor (notmuch_message_t *message)
     return 0;
 }
 
+/* Create a new notmuch_message_t object for an existing document in
+ * the database.
+ *
+ * Here, 'talloc owner' is an optional talloc context to which the new
+ * message will belong. This allows for the caller to not bother
+ * calling notmuch_message_destroy on the message, and no that all
+ * memory will be reclaimed with 'talloc_owner' is free. The caller
+ * still can call notmuch_message_destroy when finished with the
+ * message if desired.
+ *
+ * The 'talloc_owner' argument can also be NULL, in which case the
+ * caller *is* responsible for calling notmuch_message_destroy.
+ *
+ * If no document exists in the database with document ID of 'doc_id'
+ * then this function returns NULL.
+ */
 notmuch_message_t *
 _notmuch_message_create (const void *talloc_owner,
 			 notmuch_database_t *notmuch,
@@ -127,7 +143,12 @@ _notmuch_message_create (const void *talloc_owner,
 
     talloc_set_destructor (message, _notmuch_message_destructor);
 
-    message->doc = notmuch->xapian_db->get_document (doc_id);
+    try {
+	message->doc = notmuch->xapian_db->get_document (doc_id);
+    } catch (const Xapian::DocNotFoundError &error) {
+	talloc_free (message);
+	return NULL;
+    }
 
     return message;
 }
