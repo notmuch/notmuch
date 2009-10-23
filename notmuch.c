@@ -81,6 +81,11 @@ print_formatted_seconds (double seconds)
     int hours;
     int minutes;
 
+    if (seconds < 1) {
+	printf ("almost no time");
+	return;
+    }
+
     if (seconds > 3600) {
 	hours = (int) seconds / 3600;
 	printf ("%dh ", hours);
@@ -436,8 +441,12 @@ setup_command (int argc, char *argv[])
 			  tv_now);
     printf ("Processed %d total files in ", add_files_state.processed_files);
     print_formatted_seconds (elapsed);
-    printf (" (%d files/sec.).                 \n",
-	    (int) (add_files_state.processed_files / elapsed));
+    if (elapsed > 1) {
+	printf (" (%d files/sec.).                 \n",
+		(int) (add_files_state.processed_files / elapsed));
+    } else {
+	printf (".                    \n");
+    }
     printf ("Added %d unique messages to the database.\n\n",
 	    add_files_state.added_messages);
 
@@ -490,14 +499,18 @@ new_command (int argc, char *argv[])
     if (add_files_state.processed_files) {
 	printf ("Processed %d total files in ", add_files_state.processed_files);
 	print_formatted_seconds (elapsed);
-	printf (" (%d files/sec.).                 \n",
-		(int) (add_files_state.processed_files / elapsed));
+	if (elapsed > 1) {
+	    printf (" (%d files/sec.).                 \n",
+		    (int) (add_files_state.processed_files / elapsed));
+	} else {
+	    printf (".                    \n");
+	}
     }
     if (add_files_state.added_messages) {
 	printf ("Added %d new messages to the database (not much, really).\n",
 		add_files_state.added_messages);
     } else {
-	printf ("No new mail---and that's not much!.\n");
+	printf ("No new mail---and that's not much!\n");
     }
 
     if (ret) {
