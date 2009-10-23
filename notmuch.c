@@ -447,8 +447,12 @@ setup_command (int argc, char *argv[])
     } else {
 	printf (".                    \n");
     }
-    printf ("Added %d unique messages to the database.\n\n",
-	    add_files_state.added_messages);
+    if (add_files_state.added_messages) {
+	printf ("Added %d %s to the database.\n\n",
+		add_files_state.added_messages,
+		add_files_state.added_messages == 1 ?
+		"message" : "unique messages");
+    }
 
     printf ("When new mail is delivered to %s in the future,\n"
 	    "run \"notmuch new\" to add it to the database.\n",
@@ -507,8 +511,10 @@ new_command (int argc, char *argv[])
 	}
     }
     if (add_files_state.added_messages) {
-	printf ("Added %d new messages to the database (not much, really).\n",
-		add_files_state.added_messages);
+	printf ("Added %d new %s to the database (not much, really).\n",
+		add_files_state.added_messages,
+		add_files_state.added_messages == 1 ?
+		"message" : "messages");
     } else {
 	printf ("No new mail---and that's not much!\n");
     }
