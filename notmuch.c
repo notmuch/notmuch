@@ -54,6 +54,8 @@ typedef struct command {
 } command_t;
 
 typedef struct {
+    int ignore_read_only_directories;
+
     int total_files;
     int processed_files;
     int added_messages;
@@ -159,6 +161,16 @@ add_files_recursive (notmuch_database_t *notmuch,
     char *next = NULL;
     time_t path_mtime, path_dbtime;
     notmuch_status_t status, ret = NOTMUCH_STATUS_SUCCESS;
+
+    /* If we're told to, we bail out on encountering a read-only
+     * directory, (with this being a clear clue from the user to
+     * Notmuch that new mail won't be arriving there and we need not
+     * look. */
+    if (state->ignore_read_only_directories &&
+	(st->st_mode & S_IWUSR) == 0)
+    {
+	goto DONE;
+    }
 
     path_mtime = st->st_mtime;
 
@@ -448,6 +460,7 @@ setup_command (int argc, char *argv[])
 
     printf ("Next, we'll inspect the messages and create a database of threads:\n");
 
+    add_files_state.ignore_read_only_directories = FALSE;
     add_files_state.total_files = count;
     add_files_state.processed_files = 0;
     add_files_state.added_messages = 0;
@@ -476,8 +489,12 @@ setup_command (int argc, char *argv[])
     }
 
     printf ("When new mail is delivered to %s in the future,\n"
-	    "run \"notmuch new\" to add it to the database.\n",
+	    "run \"notmuch new\" to add it to the database.\n\n",
 	    mail_directory);
+    printf ("And if you have any sub-directories that are archives (that is,\n"
+	    "they will never receive new mail), marking these directores as\n"
+	    "read-only (chmod u-w /path/to/dir) will make \"notmuch new\"\n"
+	    "much more efficient (it won't even look in those directories).\n\n");
 
     if (ret) {
 	printf ("Note: At least one error was encountered: %s\n",
@@ -511,6 +528,7 @@ new_command (int argc, char *argv[])
 
     mail_directory = notmuch_database_get_path (notmuch);
 
+    add_files_state.ignore_read_only_directories = TRUE;
     add_files_state.total_files = 0;
     add_files_state.processed_files = 0;
     add_files_state.added_messages = 0;
@@ -752,11 +770,15 @@ restore_command (int argc, char *argv[])
 
 command_t commands[] = {
     { "setup", setup_command,
-      "Interactively setup notmuch for first use.\n"
+      "Interactively setup notmuch for first use.\n\n"
       "\t\tInvoking notmuch with no command argument will run setup if\n"
       "\t\tthe setup command has not previously been completed." },
     { "new", new_command,
-      "Find and import any new messages."},
+      "Find and import any new messages.\n\n"
+      "\t\tScans all sub-directories of the database, adding new files\n"
+      "\t\tthat are found. Note: \"notmuch new\" will skip any\n"
+      "\t\tread-only directories, so you can use that to mark\n"
+      "\t\tdirectories that will not receive any new mail."},
     { "search", search_command,
       "<search-term> [...]\n\n"
       "\t\tSearch for threads matching the given search terms.\n"
