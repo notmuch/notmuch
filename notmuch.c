@@ -590,7 +590,7 @@ int
 dump_command (int argc, char *argv[])
 {
     FILE *output;
-    notmuch_database_t *notmuch;
+    notmuch_database_t *notmuch = NULL;
     notmuch_query_t *query;
     notmuch_results_t *results;
     notmuch_message_t *message;
@@ -666,7 +666,7 @@ int
 restore_command (int argc, char *argv[])
 {
     FILE *input;
-    notmuch_database_t *notmuch;
+    notmuch_database_t *notmuch = NULL;
     char *line = NULL;
     size_t line_size, line_len;
     regex_t regex;
