@@ -557,7 +557,7 @@ new_command (int argc, char *argv[])
 		add_files_state.added_messages == 1 ?
 		"message" : "messages");
     } else {
-	printf ("No new mail---and that's not much!\n");
+	printf ("No new mail---and that's not much.\n");
     }
 
     if (ret) {
