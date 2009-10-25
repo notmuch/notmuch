@@ -27,6 +27,7 @@ struct _notmuch_message {
     notmuch_database_t *notmuch;
     Xapian::docid doc_id;
     char *message_id;
+    char *thread_id;
     char *filename;
     Xapian::Document doc;
 };
@@ -38,10 +39,6 @@ typedef struct _notmuch_terms {
 } notmuch_terms_t;
 
 struct _notmuch_tags {
-    notmuch_terms_t terms;
-};
-
-struct _notmuch_thread_ids {
     notmuch_terms_t terms;
 };
 
@@ -80,13 +77,15 @@ _notmuch_message_destructor (notmuch_message_t *message)
  * caller *is* responsible for calling notmuch_message_destroy.
  *
  * If no document exists in the database with document ID of 'doc_id'
- * then this function returns NULL and sets *status to
+ * then this function returns NULL and optionally sets *status to
  * NOTMUCH_PRIVATE_STATUS_NO_DOCUMENT_FOUND.
  *
  * This function can also fail to due lack of available memory,
  * returning NULL and optionally setting *status to
- * NOTMUCH_PRIVATE_STATUS_OUT_OF_MEMORY. Caller can pass NULL
- * for status if uninterested in distinguishing these two cases.
+ * NOTMUCH_PRIVATE_STATUS_OUT_OF_MEMORY.
+ *
+ * The caller can pass NULL for status if uninterested in
+ * distinguishing these two cases.
  */
 notmuch_message_t *
 _notmuch_message_create (const void *talloc_owner,
@@ -109,6 +108,7 @@ _notmuch_message_create (const void *talloc_owner,
     message->notmuch = notmuch;
     message->doc_id = doc_id;
     message->message_id = NULL; /* lazily created */
+    message->thread_id = NULL; /* lazily created */
     message->filename = NULL; /* lazily created */
 
     /* This is C++'s creepy "placement new", which is really just an
@@ -195,12 +195,8 @@ _notmuch_message_create_for_message_id (const void *talloc_owner,
     message = _notmuch_message_create (talloc_owner, notmuch,
 				       doc_id, &private_status);
 
-    if (private_status >= (notmuch_private_status_t) NOTMUCH_STATUS_LAST_STATUS)
-    {
-	INTERNAL_ERROR ("Failed to find document immediately after adding it.\n");
-    }
-
-    *status = (notmuch_status_t) private_status;
+    *status = COERCE_STATUS (private_status,
+			     "Failed to find dcocument after inserting it.");
 
     return message;
 }
@@ -216,22 +212,63 @@ notmuch_message_get_message_id (notmuch_message_t *message)
     i = message->doc.termlist_begin ();
     i.skip_to (_find_prefix ("id"));
 
-    if (i == message->doc.termlist_end ()) {
+    if (i == message->doc.termlist_end ())
 	INTERNAL_ERROR ("Message with document ID of %d has no message ID.\n",
 			message->doc_id);
-    }
 
     message->message_id = talloc_strdup (message, (*i).c_str () + 1);
+
+#if DEBUG_DATABASE_SANITY
+    i++;
+
+    if (i != message->doc.termlist_end () &&
+	strncmp ((*i).c_str (), _find_prefix ("id"),
+		 strlen (_find_prefix ("id"))) == 0)
+    {
+	INTERNAL_ERROR ("Mail (doc_id: %d) has duplicate message IDs",
+			message->doc_id);
+    }
+#endif
+
     return message->message_id;
+}
+
+const char *
+notmuch_message_get_thread_id (notmuch_message_t *message)
+{
+    Xapian::TermIterator i;
+
+    if (message->thread_id)
+	return message->thread_id;
+
+    i = message->doc.termlist_begin ();
+    i.skip_to (_find_prefix ("thread"));
+
+    if (i == message->doc.termlist_end ())
+	INTERNAL_ERROR ("Message with document ID of %d has no thread ID.\n",
+			message->doc_id);
+
+    message->thread_id = talloc_strdup (message, (*i).c_str () + 1);
+
+#if DEBUG_DATABASE_SANITY
+    i++;
+
+    if (i != message->doc.termlist_end () &&
+	strncmp ((*i).c_str (), _find_prefix ("thread"),
+		 strlen (_find_prefix ("thread"))) == 0)
+    {
+	INTERNAL_ERROR ("Message with document ID of %d has duplicate thread IDs.\n",
+			message->doc_id);
+    }
+#endif
+
+    return message->thread_id;
 }
 
 /* Set the filename for 'message' to 'filename'.
  *
- * XXX: We should still figure out what we want to do for multiple
- * files with identical message IDs. We will probably want to store a
- * list of filenames here, (so that this will be "add_filename"
- * instead of "set_filename"). Which would make this very similar to
- * add_thread_ids.
+ * XXX: We should still figure out if we think it's important to store
+ * multiple filenames for email messages with identical message IDs.
  *
  * This change will not be reflected in the database until the next
  * call to _notmuch_message_set_sync. */
@@ -318,13 +355,6 @@ notmuch_message_get_tags (notmuch_message_t *message)
 				       notmuch_tags_t);
 }
 
-notmuch_thread_ids_t *
-notmuch_message_get_thread_ids (notmuch_message_t *message)
-{
-    return _notmuch_terms_create_type (message, message->doc, "thread",
-				       notmuch_thread_ids_t);
-}
-
 void
 _notmuch_message_set_date (notmuch_message_t *message,
 			   const char *date)
@@ -335,13 +365,6 @@ _notmuch_message_set_date (notmuch_message_t *message,
 
     message->doc.add_value (NOTMUCH_VALUE_TIMESTAMP,
 			    Xapian::sortable_serialise (time_value));
-}
-
-void
-_notmuch_message_add_thread_id (notmuch_message_t *message,
-				const char *thread_id)
-{
-    _notmuch_message_add_term (message, "thread", thread_id);
 }
 
 static void
@@ -558,28 +581,4 @@ void
 notmuch_tags_destroy (notmuch_tags_t *tags)
 {
     return _notmuch_terms_destroy (&tags->terms);
-}
-
-notmuch_bool_t
-notmuch_thread_ids_has_more (notmuch_thread_ids_t *thread_ids)
-{
-    return _notmuch_terms_has_more (&thread_ids->terms);
-}
-
-const char *
-notmuch_thread_ids_get (notmuch_thread_ids_t *thread_ids)
-{
-    return _notmuch_terms_get (&thread_ids->terms);
-}
-
-void
-notmuch_thread_ids_advance (notmuch_thread_ids_t *thread_ids)
-{
-    return _notmuch_terms_advance (&thread_ids->terms);
-}
-
-void
-notmuch_thread_ids_destroy (notmuch_thread_ids_t *thread_ids)
-{
-    return _notmuch_terms_destroy (&thread_ids->terms);
 }

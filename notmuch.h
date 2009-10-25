@@ -105,7 +105,6 @@ typedef struct _notmuch_query notmuch_query_t;
 typedef struct _notmuch_results notmuch_results_t;
 typedef struct _notmuch_message notmuch_message_t;
 typedef struct _notmuch_tags notmuch_tags_t;
-typedef struct _notmuch_thread_ids notmuch_thread_ids_t;
 
 /* Lookup the default database path.
  *
@@ -417,6 +416,21 @@ notmuch_results_destroy (notmuch_results_t *results);
 const char *
 notmuch_message_get_message_id (notmuch_message_t *message);
 
+
+/* Get the thread ID of 'message'.
+ *
+ * The returned string belongs to 'message' and as such, should not be
+ * modified by the caller and will only be valid for as long as the
+ * message is valid, (for example, until the user calls
+ * notmuch_message_destroy on 'message' or until a query from which it
+ * derived is destroyed).
+ *
+ * This function will not return NULL since Notmuch ensures that every
+ * message belongs to a single thread.
+ */
+const char *
+notmuch_message_get_thread_id (notmuch_message_t *message);
+
 /* Get the filename for the email corresponding to 'message'.
  *
  * The returned filename is relative to the base of the database from
@@ -459,39 +473,6 @@ notmuch_message_get_filename (notmuch_message_t *message);
  */
 notmuch_tags_t *
 notmuch_message_get_tags (notmuch_message_t *message);
-
-/* Get the thread IDs for 'message', returning a notmuch_thread_ids_t
- * object which can be used to iterate over all thread IDs.
- *
- * The thread_ids object is owned by the message and as such, will
- * only be valid for as long as the message is valid, (which is until
- * the query from which it derived is destroyed).
- *
- * Typical usage might be:
- *
- *     notmuch_message_t *message;
- *     notmuch_thread_ids_t *thread_ids;
- *     const char *thread_id;
- *
- *     message = notmuch_database_find_message (database, message_id);
- *
- *     for (thread_ids = notmuch_message_get_thread_ids (message);
- *          notmuch_thread_ids_has_more (thread_ids);
- *          notmuch_thread_ids_advance (thread_ids))
- *     {
- *         thread_id = notmuch_thread_ids_get (thread_ids);
- *         ....
- *     }
- *
- *     notmuch_message_destroy (message);
- *
- * Note that there's no explicit destructor needed for the
- * notmuch_thread_ids_t object. (For consistency, we do provide a
- * notmuch_thread_ids_destroy function, but there's no good reason to
- * call it if the message is about to be destroyed).
- */
-notmuch_thread_ids_t *
-notmuch_message_get_thread_ids (notmuch_message_t *message);
 
 /* The longest possible tag value. */
 #define NOTMUCH_TAG_MAX 200
@@ -574,46 +555,6 @@ notmuch_tags_advance (notmuch_tags_t *tags);
  */
 void
 notmuch_tags_destroy (notmuch_tags_t *tags);
-
-/* Does the given notmuch_thread_ids_t object contain any more thread IDs.
- *
- * When this function returns TRUE, notmuch_thread_ids_get will return a
- * valid string. Whereas when this function returns FALSE,
- * notmuch_thread_ids_get will return NULL.
- *
- * See the documentation of notmuch_message_get_thread_ids for example code
- * showing how to iterate over a notmuch_thread_ids_t object.
- */
-notmuch_bool_t
-notmuch_thread_ids_has_more (notmuch_thread_ids_t *thread_ids);
-
-/* Get the current thread ID from 'thread_ids' as a string.
- *
- * Note: The returned string belongs to 'thread_ids' and has a lifetime
- * identical to it (and the query to which it utlimately belongs).
- *
- * See the documentation of notmuch_message_get_thread_ids for example code
- * showing how to iterate over a notmuch_thread_ids_t object.
- */
-const char *
-notmuch_thread_ids_get (notmuch_thread_ids_t *thread_ids);
-
-/* Advance the 'thread_ids' iterator to the next tag.
- *
- * See the documentation of notmuch_message_get_thread_ids for example code
- * showing how to iterate over a notmuch_thread_ids_t object.
- */
-void
-notmuch_thread_ids_advance (notmuch_thread_ids_t *thread_ids);
-
-/* Destroy a notmuch_thread_ids_t object.
- *
- * It's not strictly necessary to call this function. All memory from
- * the notmuch_thread_ids_t object will be reclaimed when the containg
- * message or query objects are destroyed.
- */
-void
-notmuch_thread_ids_destroy (notmuch_thread_ids_t *thread_ids);
 
 NOTMUCH_END_DECLS
 

@@ -51,14 +51,17 @@ typedef struct {
  *	id:	Unique ID of mail, (from Message-ID header or generated
  *		as "notmuch-sha1-<sha1_sum_of_entire_file>.
  *
+ *	thread:	The ID of the thread to which the mail belongs
+ *
  *    Multiple terms of given prefix:
  *
- *	ref:	The message IDs from all In-Reply-To and References
- *		headers in the message.
+ *	ref:    All unresolved message IDs from In-Reply-To and
+ *		References headers in the message. (Once a referenced
+ *		message is added to the database and the thread IDs
+ *		are linked the corresponding "ref" term is dropped
+ *		from the message document.)
  *
  *	tag:	Any tags associated with this message by the user.
- *
- *	thread:	The thread ID of all threads to which the mail belongs
  *
  *    A mail document also has two values:
  *
@@ -110,6 +113,20 @@ prefix_t BOOLEAN_PREFIX_EXTERNAL[] = {
     { "tag", "K" },
     { "id", "Q" }
 };
+
+int
+_internal_error (const char *format, ...)
+{
+    va_list va_args;
+
+    va_start (va_args, format);
+
+    vfprintf (stderr, format, va_args);
+
+    exit (1);
+
+    return 1;
+}
 
 const char *
 _find_prefix (const char *name)
@@ -240,37 +257,6 @@ find_unique_document (notmuch_database_t *notmuch,
     return NOTMUCH_PRIVATE_STATUS_SUCCESS;
 }
 
-/* XXX: Should rewrite this to accept a notmuch_message_t* instead of
- * a Xapian:Document and then we could just use
- * notmuch_message_get_thread_ids instead of duplicating its logic
- * here. */
-static void
-insert_thread_id (GHashTable *thread_ids, Xapian::Document doc)
-{
-    string value_string;
-    Xapian::TermIterator i;
-    const char *prefix_str = _find_prefix ("thread");
-    char prefix;
-
-    assert (strlen (prefix_str) == 1);
-
-    prefix = *prefix_str;
-
-    i = doc.termlist_begin ();
-    i.skip_to (prefix_str);
-
-    while (1) {
-	if (i == doc.termlist_end ())
-	    break;
-	value_string = *i;
-	if (value_string.empty () || value_string[0] != prefix)
-	    break;
-	g_hash_table_insert (thread_ids,
-			     strdup (value_string.c_str () + 1), NULL);
-	i++;
-    }
-}
-
 notmuch_message_t *
 notmuch_database_find_message (notmuch_database_t *notmuch,
 			       const char *message_id)
@@ -284,75 +270,6 @@ notmuch_database_find_message (notmuch_database_t *notmuch,
 	return NULL;
 
     return _notmuch_message_create (notmuch, notmuch, doc_id, NULL);
-}
-
-/* Return one or more thread_ids, (as a GPtrArray of strings), for the
- * given message based on looking into the database for any messages
- * referenced in parents, and also for any messages in the database
- * referencing message_id.
- *
- * Caller should free all strings in the array and the array itself,
- * (g_ptr_array_free) when done. */
-static GPtrArray *
-find_thread_ids (notmuch_database_t *notmuch,
-		 GPtrArray *parents,
-		 const char *message_id)
-{
-    Xapian::PostingIterator child, children_end;
-    Xapian::Document doc;
-    GHashTable *thread_ids;
-    GList *keys, *l;
-    unsigned int i;
-    const char *parent_message_id;
-    GPtrArray *result;
-
-    thread_ids = g_hash_table_new_full (g_str_hash, g_str_equal,
-					free, NULL);
-
-    find_doc_ids (notmuch, "ref", message_id, &child, &children_end);
-    for ( ; child != children_end; child++) {
-	doc = find_document_for_doc_id (notmuch, *child);
-	insert_thread_id (thread_ids, doc);
-    }
-
-    for (i = 0; i < parents->len; i++) {
-	notmuch_message_t *parent;
-	notmuch_thread_ids_t *ids;
-
-	parent_message_id = (char *) g_ptr_array_index (parents, i);
-	parent = notmuch_database_find_message (notmuch, parent_message_id);
-	if (parent == NULL)
-	    continue;
-
-	for (ids = notmuch_message_get_thread_ids (parent);
-	     notmuch_thread_ids_has_more (ids);
-	     notmuch_thread_ids_advance (ids))
-	{
-	    const char *id;
-
-	    id = notmuch_thread_ids_get (ids);
-	    g_hash_table_insert (thread_ids, strdup (id), NULL);
-	}
-
-	notmuch_message_destroy (parent);
-    }
-
-    result = g_ptr_array_new ();
-
-    keys = g_hash_table_get_keys (thread_ids);
-    for (l = keys; l; l = l->next) {
-	char *id = (char *) l->data;
-	g_ptr_array_add (result, id);
-    }
-    g_list_free (keys);
-
-    /* We're done with the hash table, but we've taken the pointers to
-     * the allocated strings and put them into our result array, so
-     * tell the hash not to free them on its way out. */
-    g_hash_table_steal_all (thread_ids);
-    g_hash_table_unref (thread_ids);
-
-    return result;
 }
 
 /* Advance 'str' past any whitespace or RFC 822 comments. A comment is
@@ -460,9 +377,9 @@ parse_message_id (const char *message_id, const char **next)
 }
 
 /* Parse a References header value, putting a copy of each referenced
- * message-id into 'array'. */
+ * message-id into 'hash'. */
 static void
-parse_references (GPtrArray *array,
+parse_references (GHashTable *hash,
 		  const char *refs)
 {
     char *ref;
@@ -474,7 +391,7 @@ parse_references (GPtrArray *array,
 	ref = parse_message_id (refs, &refs);
 
 	if (ref)
-	    g_ptr_array_add (array, ref);
+	    g_hash_table_insert (hash, ref, NULL);
     }
 }
 
@@ -699,6 +616,171 @@ notmuch_database_get_timestamp (notmuch_database_t *notmuch, const char *key)
     return ret;
 }
 
+/* Find the thread ID to which the message with 'message_id' belongs.
+ *
+ * Returns NULL if no message with message ID 'message_id' is in the
+ * database.
+ *
+ * Otherwise, returns a newly talloced string belonging to 'ctx'.
+ */
+const char *
+_resolve_message_id_to_thread_id (notmuch_database_t *notmuch,
+				  void *ctx,
+				  const char *message_id)
+{
+    notmuch_message_t *message;
+    const char *ret = NULL;
+
+    message = notmuch_database_find_message (notmuch, message_id);
+    if (message == NULL)
+	goto DONE;
+
+    ret = talloc_steal (ctx, notmuch_message_get_thread_id (message));
+
+  DONE:
+    if (message)
+	notmuch_message_destroy (message);
+
+    return ret;
+}
+
+static notmuch_status_t
+_merge_threads (notmuch_database_t *notmuch,
+		const char *winner_thread_id,
+		const char *loser_thread_id)
+{
+    Xapian::PostingIterator loser, loser_end;
+    notmuch_message_t *message = NULL;
+    notmuch_private_status_t private_status;
+    notmuch_status_t ret = NOTMUCH_STATUS_SUCCESS;
+
+    find_doc_ids (notmuch, "thread", loser_thread_id, &loser, &loser_end);
+
+    for ( ; loser != loser_end; loser++) {
+	message = _notmuch_message_create (notmuch, notmuch,
+					   *loser, &private_status);
+	if (message == NULL) {
+	    ret = COERCE_STATUS (private_status,
+				 "Cannot find document for doc_id from query");
+	    goto DONE;
+	}
+
+	_notmuch_message_remove_term (message, "thread", loser_thread_id);
+	_notmuch_message_add_term (message, "thread", winner_thread_id);
+	_notmuch_message_sync (message);
+
+	notmuch_message_destroy (message);
+	message = NULL;
+    }
+
+  DONE:
+    if (message)
+	notmuch_message_destroy (message);
+
+    return ret;
+}
+
+static notmuch_status_t
+_notmuch_database_link_message_to_parents (notmuch_database_t *notmuch,
+					   notmuch_message_t *message,
+					   notmuch_message_file_t *message_file,
+					   const char **thread_id)
+{
+    GHashTable *parents = NULL;
+    const char *refs, *in_reply_to;
+    GList *l, *keys = NULL;
+    notmuch_status_t ret = NOTMUCH_STATUS_SUCCESS;
+
+    parents = g_hash_table_new_full (g_str_hash, g_str_equal,
+				     free, NULL);
+
+    refs = notmuch_message_file_get_header (message_file, "references");
+    parse_references (parents, refs);
+
+    in_reply_to = notmuch_message_file_get_header (message_file, "in-reply-to");
+    parse_references (parents, in_reply_to);
+
+    keys = g_hash_table_get_keys (parents);
+    for (l = keys; l; l = l->next) {
+	char *parent_message_id;
+	const char *parent_thread_id;
+
+	parent_message_id = (char *) l->data;
+	parent_thread_id = _resolve_message_id_to_thread_id (notmuch,
+							     message,
+							     parent_message_id);
+
+	if (parent_thread_id == NULL) {
+	    _notmuch_message_add_term (message, "ref", parent_message_id);
+	} else {
+	    if (*thread_id == NULL) {
+		*thread_id = talloc_strdup (message, parent_thread_id);
+		_notmuch_message_add_term (message, "thread", *thread_id);
+	    } else if (strcmp (*thread_id, parent_thread_id)) {
+		ret = _merge_threads (notmuch, *thread_id, parent_thread_id);
+		if (ret)
+		    goto DONE;
+	    }
+	}
+    }
+
+  DONE:
+    if (keys)
+	g_list_free (keys);
+    if (parents)
+	g_hash_table_unref (parents);
+
+    return ret;
+}
+
+static notmuch_status_t
+_notmuch_database_link_message_to_children (notmuch_database_t *notmuch,
+					    notmuch_message_t *message,
+					    const char **thread_id)
+{
+    const char *message_id = notmuch_message_get_message_id (message);
+    Xapian::PostingIterator child, children_end;
+    notmuch_message_t *child_message = NULL;
+    const char *child_thread_id;
+    notmuch_status_t ret = NOTMUCH_STATUS_SUCCESS;
+    notmuch_private_status_t private_status;
+
+    find_doc_ids (notmuch, "ref", message_id, &child, &children_end);
+
+    for ( ; child != children_end; child++) {
+
+	child_message = _notmuch_message_create (message, notmuch,
+						 *child, &private_status);
+	if (child_message == NULL) {
+	    ret = COERCE_STATUS (private_status,
+				 "Cannot find document for doc_id from query");
+	    goto DONE;
+	}
+
+	child_thread_id = notmuch_message_get_thread_id (child_message);
+	if (*thread_id == NULL) {
+	    *thread_id = talloc_strdup (message, child_thread_id);
+	    _notmuch_message_add_term (message, "thread", *thread_id);
+	} else if (strcmp (*thread_id, child_thread_id)) {
+	    _notmuch_message_remove_term (child_message, "ref",
+					  message_id);
+	    _notmuch_message_sync (child_message);
+	    ret = _merge_threads (notmuch, *thread_id, child_thread_id);
+	    if (ret)
+		goto DONE;
+	}
+
+	notmuch_message_destroy (child_message);
+	child_message = NULL;
+    }
+
+  DONE:
+    if (child_message)
+	notmuch_message_destroy (child_message);
+
+    return ret;
+}
+
 /* Given a (mostly empty) 'message' and its corresponding
  * 'message_file' link it to existing threads in the database.
  *
@@ -716,44 +798,20 @@ _notmuch_database_link_message (notmuch_database_t *notmuch,
 				notmuch_message_t *message,
 				notmuch_message_file_t *message_file)
 {
-    GPtrArray *parents, *thread_ids;
-    const char *refs, *in_reply_to;
-    const char *message_id = notmuch_message_get_message_id (message);
-    unsigned int i;
+    notmuch_status_t ret = NOTMUCH_STATUS_SUCCESS;
+    const char *thread_id = NULL;
 
-    parents = g_ptr_array_new ();
+    _notmuch_database_link_message_to_parents (notmuch, message,
+					       message_file,
+					       &thread_id);
 
-    refs = notmuch_message_file_get_header (message_file, "references");
-    parse_references (parents, refs);
+    ret = _notmuch_database_link_message_to_children (notmuch, message,
+						      &thread_id);
 
-    in_reply_to = notmuch_message_file_get_header (message_file, "in-reply-to");
-    parse_references (parents, in_reply_to);
-
-    for (i = 0; i < parents->len; i++)
-	_notmuch_message_add_term (message, "ref",
-				   (char *) g_ptr_array_index (parents, i));
-
-    thread_ids = find_thread_ids (notmuch, parents, message_id);
-
-    for (i = 0; i < parents->len; i++)
-	g_free (g_ptr_array_index (parents, i));
-    g_ptr_array_free (parents, TRUE);
-
-    if (thread_ids->len) {
-	char *id;
-
-	for (i = 0; i < thread_ids->len; i++) {
-	    id = (char *) thread_ids->pdata[i];
-	    _notmuch_message_add_thread_id (message, id);
-	    free (id);
-	}
-    } else {
+    if (thread_id == NULL)
 	_notmuch_message_ensure_thread_id (message);
-    }
 
-    g_ptr_array_free (thread_ids, TRUE);
-
-    return NOTMUCH_STATUS_SUCCESS;
+    return ret;
 }
 
 notmuch_status_t

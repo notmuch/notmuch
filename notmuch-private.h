@@ -46,7 +46,21 @@ NOTMUCH_BEGIN_DECLS
 
 #include "xutil.h"
 
+#ifdef DEBUG
+# define DEBUG_DATABASE_SANITY 1
+# define DEBUG_QUERY 1
+#endif
+
 #define COMPILE_TIME_ASSERT(pred) ((void)sizeof(char[1 - 2*!(pred)]))
+
+/* There's no point in continuing when we've detected that we've done
+ * something wrong internally (as opposed to the user passing in a
+ * bogus value).
+ *
+ * Note that PRINTF_ATTRIBUTE comes from talloc.h
+ */
+int
+_internal_error (const char *format, ...) PRINTF_ATTRIBUTE (1, 2);
 
 /* There's no point in continuing when we've detected that we've done
  * something wrong internally (as opposed to the user passing in a
@@ -55,12 +69,8 @@ NOTMUCH_BEGIN_DECLS
  * Note that __location__ comes from talloc.h.
  */
 #define INTERNAL_ERROR(format, ...)			\
-    do {						\
-	fprintf(stderr,					\
-		"Internal error: " format " (%s)\n",	\
-		##__VA_ARGS__, __location__);		\
-	exit (1);					\
-    } while (0)
+    _internal_error (format " (%s).\n",			\
+		     ##__VA_ARGS__, __location__)
 
 /* Thanks to Andrew Tridgell's (SAMBA's) talloc for this definition of
  * unlikely. The talloc source code comes to us via the GNU LGPL v. 3.
@@ -109,6 +119,21 @@ typedef enum _notmuch_private_status {
 
     NOTMUCH_PRIVATE_STATUS_LAST_STATUS
 } notmuch_private_status_t;
+
+/* Coerce a notmuch_private_status_t value to a notmuch_status_t
+ * value, generating an internal error if the private value is equal
+ * to or greater than NOTMUCH_STATUS_LAST_STATUS. (The idea here is
+ * that the caller has previously handled any expected
+ * notmuch_private_status_t values.)
+ */
+#define COERCE_STATUS(private_status, format, ...)			\
+    ((private_status >= (notmuch_private_status_t) NOTMUCH_STATUS_LAST_STATUS)\
+     ?									\
+     (notmuch_status_t) _internal_error (format " (%s).\n",		\
+                                         ##__VA_ARGS__,			\
+                                         __location__)			\
+     :									\
+     (notmuch_status_t) private_status)
 
 /* message.cc */
 
