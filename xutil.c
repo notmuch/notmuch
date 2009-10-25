@@ -113,7 +113,8 @@ int
 xregexec (const regex_t *preg, const char *string,
 	  size_t nmatch, regmatch_t pmatch[], int eflags)
 {
-    int i, rerr;
+    unsigned int i;
+    int rerr;
 
     rerr = regexec (preg, string, nmatch, pmatch, eflags);
     if (rerr)

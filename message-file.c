@@ -162,7 +162,7 @@ copy_header_unfolding (header_value_closure_t *value,
 	chunk++;
 
     if (value->len + 1 + strlen (chunk) + 1 > value->size) {
-	int new_size = value->size;
+	unsigned int new_size = value->size;
 	if (value->size == 0)
 	    new_size = strlen (chunk) + 1;
 	else

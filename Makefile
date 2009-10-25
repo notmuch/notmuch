@@ -1,7 +1,7 @@
 PROGS=notmuch
 
-CXXWARNINGS_FLAGS=-Wall
-CWARNINGS_FLAGS=$(CXX_WARNINGS_FLAGS)
+CXXWARNINGS_FLAGS=-Wall -Wextra -Wno-unused-parameter
+CWARNINGS_FLAGS=$(CXXWARNINGS_FLAGS)
 
 CDEPENDS_FLAGS=`pkg-config --cflags glib-2.0 talloc`
 CXXDEPENDS_FLAGS=`pkg-config --cflags glib-2.0 talloc` `xapian-config --cxxflags`

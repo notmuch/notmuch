@@ -755,7 +755,8 @@ restore_command (int argc, char *argv[])
     FILE *input;
     notmuch_database_t *notmuch = NULL;
     char *line = NULL;
-    size_t line_size, line_len;
+    size_t line_size;
+    ssize_t line_len;
     regex_t regex;
     int rerr;
     int ret = 0;
@@ -893,7 +894,7 @@ void
 usage (void)
 {
     command_t *command;
-    int i;
+    unsigned int i;
 
     fprintf (stderr, "Usage: notmuch <command> [args...]\n");
     fprintf (stderr, "\n");
@@ -911,7 +912,7 @@ int
 main (int argc, char *argv[])
 {
     command_t *command;
-    int i;
+    unsigned int i;
 
     if (argc == 1)
 	return setup_command (0, NULL);
