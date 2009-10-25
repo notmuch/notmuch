@@ -31,9 +31,14 @@ struct _notmuch_message {
     Xapian::Document doc;
 };
 
-struct _notmuch_tags {
+typedef struct _notmuch_terms {
+    char prefix_char;
     Xapian::TermIterator iterator;
     Xapian::TermIterator iterator_end;
+} notmuch_terms_t;
+
+struct _notmuch_tags {
+    notmuch_terms_t terms;
 };
 
 struct _notmuch_thread_ids {
@@ -212,33 +217,53 @@ notmuch_message_get_filename (notmuch_message_t *message)
  * talloc_set_destructor at all otherwise).
  */
 static int
-_notmuch_tags_destructor (notmuch_tags_t *tags)
+_notmuch_terms_destructor (notmuch_terms_t *terms)
 {
-    tags->iterator.~TermIterator ();
-    tags->iterator_end.~TermIterator ();
+    terms->iterator.~TermIterator ();
+    terms->iterator_end.~TermIterator ();
 
     return 0;
 }
 
+notmuch_terms_t *
+_notmuch_terms_create (void *ctx,
+		       Xapian::Document doc,
+		       const char *prefix_name)
+{
+    notmuch_terms_t *terms;
+    const char *prefix = _find_prefix (prefix_name);
+
+    /* Currently, notmuch_terms_t is written with the assumption that
+     * any prefix its derivatives use will be only a single
+     * character. */
+    assert (strlen (prefix) == 1);
+
+    terms = talloc (ctx, notmuch_terms_t);
+    if (unlikely (terms == NULL))
+	return NULL;
+
+    terms->prefix_char = *prefix;
+    new (&terms->iterator) Xapian::TermIterator;
+    new (&terms->iterator_end) Xapian::TermIterator;
+
+    talloc_set_destructor (terms, _notmuch_terms_destructor);
+
+    terms->iterator = doc.termlist_begin ();
+    terms->iterator.skip_to (prefix);
+    terms->iterator_end = doc.termlist_end ();
+
+    return terms;
+}
+
+#define _notmuch_terms_create_type(ctx, doc, prefix_name, type) \
+    (COMPILE_TIME_ASSERT(offsetof(type, terms) == 0),		\
+     (type *) _notmuch_terms_create (ctx, doc, prefix_name))
+
 notmuch_tags_t *
 notmuch_message_get_tags (notmuch_message_t *message)
 {
-    notmuch_tags_t *tags;
-
-    tags = talloc (message, notmuch_tags_t);
-    if (unlikely (tags == NULL))
-	return NULL;
-
-    new (&tags->iterator) Xapian::TermIterator;
-    new (&tags->iterator_end) Xapian::TermIterator;
-
-    talloc_set_destructor (tags, _notmuch_tags_destructor);
-
-    tags->iterator = message->doc.termlist_begin ();
-    tags->iterator.skip_to (_find_prefix ("tag"));
-    tags->iterator_end = message->doc.termlist_end ();
-
-    return tags;
+    return _notmuch_terms_create_type (message, message->doc, "tag",
+				       notmuch_tags_t);
 }
 
 notmuch_thread_ids_t *
@@ -461,36 +486,60 @@ notmuch_message_destroy (notmuch_message_t *message)
 }
 
 notmuch_bool_t
-notmuch_tags_has_more (notmuch_tags_t *tags)
+_notmuch_terms_has_more (notmuch_terms_t *terms)
 {
     std::string s;
 
-    if (tags->iterator == tags->iterator_end)
+    if (terms->iterator == terms->iterator_end)
 	return FALSE;
 
-    s = *tags->iterator;
-    if (! s.empty () && s[0] == 'L')
+    s = *terms->iterator;
+    if (! s.empty () && s[0] == terms->prefix_char)
 	return TRUE;
     else
 	return FALSE;
 }
 
 const char *
+_notmuch_terms_get (notmuch_terms_t *terms)
+{
+    return talloc_strdup (terms, (*terms->iterator).c_str () + 1);
+}
+
+void
+_notmuch_terms_advance (notmuch_terms_t *terms)
+{
+    terms->iterator++;
+}
+
+void
+_notmuch_terms_destroy (notmuch_terms_t *terms)
+{
+    talloc_free (terms);
+}
+
+notmuch_bool_t
+notmuch_tags_has_more (notmuch_tags_t *tags)
+{
+    return _notmuch_terms_has_more (&tags->terms);
+}
+
+const char *
 notmuch_tags_get (notmuch_tags_t *tags)
 {
-    return talloc_strdup (tags, (*tags->iterator).c_str () + 1);
+    return _notmuch_terms_get (&tags->terms);
 }
 
 void
 notmuch_tags_advance (notmuch_tags_t *tags)
 {
-    tags->iterator++;
+    return _notmuch_terms_advance (&tags->terms);
 }
 
 void
 notmuch_tags_destroy (notmuch_tags_t *tags)
 {
-    talloc_free (tags);
+    return _notmuch_terms_destroy (&tags->terms);
 }
 
 notmuch_bool_t

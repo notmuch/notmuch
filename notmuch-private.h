@@ -45,6 +45,8 @@ NOTMUCH_BEGIN_DECLS
 
 #include "xutil.h"
 
+#define COMPILE_TIME_ASSERT(pred) ((void)sizeof(char[1 - 2*!(pred)]))
+
 /* Thanks to Andrew Tridgell's (SAMBA's) talloc for this definition of
  * unlikely. The talloc source code comes to us via the GNU LGPL v. 3.
  */
