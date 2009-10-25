@@ -152,6 +152,8 @@ notmuch_status_to_string (notmuch_status_t status)
     switch (status) {
     case NOTMUCH_STATUS_SUCCESS:
 	return "No error occurred";
+    case NOTMUCH_STATUS_OUT_OF_MEMORY:
+	return "Out of memory";
     case NOTMUCH_STATUS_XAPIAN_EXCEPTION:
 	return "A Xapian exception occurred";
     case NOTMUCH_STATUS_FILE_ERROR:

@@ -267,10 +267,16 @@ add_files_recursive (notmuch_database_t *notmuch,
 			break;
 		    /* Fatal issues. Don't process anymore. */
 		    case NOTMUCH_STATUS_XAPIAN_EXCEPTION:
-			fprintf (stderr, "A Xapian error was encountered. Halting processing.\n");
+		    case NOTMUCH_STATUS_OUT_OF_MEMORY:
+			fprintf (stderr, "Error: %s. Halting processing.\n",
+				 notmuch_status_to_string (status));
 			ret = status;
 			goto DONE;
 		    default:
+		    case NOTMUCH_STATUS_FILE_ERROR:
+		    case NOTMUCH_STATUS_NULL_POINTER:
+		    case NOTMUCH_STATUS_TAG_TOO_LONG:
+		    case NOTMUCH_STATUS_LAST_STATUS:
 			INTERNAL_ERROR ("add_message returned unexpected value: %d",  status);
 			goto DONE;
 		}
