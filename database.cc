@@ -699,6 +699,70 @@ notmuch_database_get_timestamp (notmuch_database_t *notmuch, const char *key)
     return ret;
 }
 
+/* Given a (mostly empty) 'message' and its corresponding
+ * 'message_file' link it to existing threads in the database.
+ *
+ * We first looke at 'message_file' and its link-relevant headers
+ * (References and In-Reply-To) for message IDs. We also look in the
+ * database for existing message that reference 'message'.p
+ *
+ * The end result is to call _notmuch_message_add_thread_id with one
+ * or more thread IDs to which this message belongs, (including
+ * generating a new thread ID if necessary if the message doesn't
+ * connect to any existing threads).
+ */
+static notmuch_status_t
+_notmuch_database_link_message (notmuch_database_t *notmuch,
+				notmuch_message_t *message,
+				notmuch_message_file_t *message_file)
+{
+    GPtrArray *parents, *thread_ids;
+    const char *refs, *in_reply_to;
+    const char *message_id = notmuch_message_get_message_id (message);
+    unsigned int i;
+
+    parents = g_ptr_array_new ();
+
+    refs = notmuch_message_file_get_header (message_file, "references");
+    parse_references (parents, refs);
+
+    in_reply_to = notmuch_message_file_get_header (message_file, "in-reply-to");
+    parse_references (parents, in_reply_to);
+
+    for (i = 0; i < parents->len; i++)
+	_notmuch_message_add_term (message, "ref",
+				   (char *) g_ptr_array_index (parents, i));
+
+    thread_ids = find_thread_ids (notmuch, parents, message_id);
+
+    for (i = 0; i < parents->len; i++)
+	g_free (g_ptr_array_index (parents, i));
+    g_ptr_array_free (parents, TRUE);
+
+    if (thread_ids->len) {
+	GString *thread_id;
+	char *id;
+
+	for (i = 0; i < thread_ids->len; i++) {
+	    id = (char *) thread_ids->pdata[i];
+	    _notmuch_message_add_thread_id (message, id);
+	    if (i == 0)
+		thread_id = g_string_new (id);
+	    else
+		g_string_append_printf (thread_id, ",%s", id);
+
+	    free (id);
+	}
+	g_string_free (thread_id, TRUE);
+    } else {
+	_notmuch_message_ensure_thread_id (message);
+    }
+
+    g_ptr_array_free (thread_ids, TRUE);
+
+    return NOTMUCH_STATUS_SUCCESS;
+}
+
 notmuch_status_t
 notmuch_database_add_message (notmuch_database_t *notmuch,
 			      const char *filename)
@@ -707,13 +771,9 @@ notmuch_database_add_message (notmuch_database_t *notmuch,
     notmuch_message_t *message;
     notmuch_status_t ret = NOTMUCH_STATUS_SUCCESS;
 
-    GPtrArray *parents, *thread_ids;
-
-    const char *refs, *in_reply_to, *date, *header;
+    const char *date, *header;
     const char *from, *to, *subject, *old_filename;
     char *message_id;
-
-    unsigned int i;
 
     message_file = notmuch_message_file_open (filename);
     if (message_file == NULL) {
@@ -765,6 +825,8 @@ notmuch_database_add_message (notmuch_database_t *notmuch,
 							  notmuch,
 							  message_id,
 							  &ret);
+	free (message_id);
+
 	if (message == NULL)
 	    goto DONE;
 
@@ -778,48 +840,9 @@ notmuch_database_add_message (notmuch_database_t *notmuch,
 	    _notmuch_message_add_term (message, "type", "mail");
 	}
 
-	/* Next, find the thread(s) to which this message belongs. */
-	parents = g_ptr_array_new ();
-
-	refs = notmuch_message_file_get_header (message_file, "references");
-	parse_references (parents, refs);
-
-	in_reply_to = notmuch_message_file_get_header (message_file, "in-reply-to");
-	parse_references (parents, in_reply_to);
-
-	for (i = 0; i < parents->len; i++)
-	    _notmuch_message_add_term (message, "ref",
-				       (char *) g_ptr_array_index (parents, i));
-
-	thread_ids = find_thread_ids (notmuch, parents, message_id);
-
-	free (message_id);
-
-	for (i = 0; i < parents->len; i++)
-	    g_free (g_ptr_array_index (parents, i));
-	g_ptr_array_free (parents, TRUE);
-
-	if (thread_ids->len) {
-	    unsigned int i;
-	    GString *thread_id;
-	    char *id;
-
-	    for (i = 0; i < thread_ids->len; i++) {
-		id = (char *) thread_ids->pdata[i];
-		_notmuch_message_add_thread_id (message, id);
-		if (i == 0)
-		    thread_id = g_string_new (id);
-		else
-		    g_string_append_printf (thread_id, ",%s", id);
-
-		free (id);
-	    }
-	    g_string_free (thread_id, TRUE);
-	} else {
-	    _notmuch_message_ensure_thread_id (message);
-	}
-
-	g_ptr_array_free (thread_ids, TRUE);
+	ret = _notmuch_database_link_message (notmuch, message, message_file);
+	if (ret)
+	    goto DONE;
 
 	date = notmuch_message_file_get_header (message_file, "date");
 	_notmuch_message_set_date (message, date);
