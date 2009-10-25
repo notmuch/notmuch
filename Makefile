@@ -33,7 +33,7 @@ notmuch: $(MODULES)
 	$(CC) $(MYLDFLAGS) $^ -o $@
 
 Makefile.dep: *.c *.cc
-	$(CC) -M $(CPPFLAGS) $(CDEPENDS_FLAGS) $^ > $@
+	$(CXX) -M $(CPPFLAGS) $(CDEPENDS_FLAGS) $(CXXDEPENDS_FLAGS) $^ > $@
 -include Makefile.dep
 
 clean:
