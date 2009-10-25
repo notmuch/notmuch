@@ -172,29 +172,6 @@ notmuch_status_to_string (notmuch_status_t status)
     }
 }
 
-/* XXX: We should drop this function and convert all callers to call
- * _notmuch_message_add_term instead. */
-static void
-add_term (Xapian::Document doc,
-	  const char *prefix_name,
-	  const char *value)
-{
-    const char *prefix;
-    char *term;
-
-    if (value == NULL)
-	return;
-
-    prefix = _find_prefix (prefix_name);
-
-    term = g_strdup_printf ("%s%s", prefix, value);
-
-    if (strlen (term) <= NOTMUCH_TERM_MAX)
-	doc.add_term (term);
-
-    g_free (term);
-}
-
 static void
 find_doc_ids (notmuch_database_t *notmuch,
 	      const char *prefix_name,
