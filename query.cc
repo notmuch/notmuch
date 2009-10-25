@@ -95,10 +95,10 @@ notmuch_query_search (notmuch_query_t *query)
 	Xapian::Query mail_query ("Kmail");
 	Xapian::Query string_query, final_query;
 	Xapian::MSet mset;
-	unsigned int flags = (Xapian::QueryParser::FLAG_BOOLEAN &
-			      Xapian::QueryParser::FLAG_PHRASE &
-			      Xapian::QueryParser::FLAG_LOVEHATE &
-			      Xapian::QueryParser::FLAG_BOOLEAN_ANY_CASE &
+	unsigned int flags = (Xapian::QueryParser::FLAG_BOOLEAN |
+			      Xapian::QueryParser::FLAG_PHRASE |
+			      Xapian::QueryParser::FLAG_LOVEHATE |
+			      Xapian::QueryParser::FLAG_BOOLEAN_ANY_CASE |
 			      Xapian::QueryParser::FLAG_WILDCARD);
 
 	if (strcmp (query_string, "") == 0) {
