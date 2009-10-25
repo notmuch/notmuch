@@ -542,11 +542,12 @@ find_timestamp_document (notmuch_database_t *notmuch, const char *db_key,
 static char *
 timestamp_db_key (const char *key)
 {
-    if (strlen (key) + 1 > NOTMUCH_TERM_MAX) {
+    int term_len = strlen (_find_prefix ("timestamp")) + strlen (key);
+
+    if (term_len > NOTMUCH_TERM_MAX)
 	return notmuch_sha1_of_string (key);
-    } else {
+    else
 	return strdup (key);
-    }
 }
 
 notmuch_status_t
