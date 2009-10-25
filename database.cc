@@ -28,6 +28,63 @@
 
 using namespace std;
 
+#define ARRAY_SIZE(arr) (sizeof (arr) / sizeof (arr[0]))
+
+/* These prefix values are specifically chosen to be compatible
+ * with sup, (http://sup.rubyforge.org), written by
+ * William Morgan <wmorgan-sup@masanjin.net>, and released
+ * under the GNU GPL v2.
+ */
+
+typedef struct {
+    const char *name;
+    const char *prefix;
+} prefix_t;
+
+prefix_t NORMAL_PREFIX[] = {
+    { "subject", "S" },
+    { "body", "B" },
+    { "from_name", "FN" },
+    { "to_name", "TN" },
+    { "name", "N" },
+    { "attachment", "A" }
+};
+
+prefix_t BOOLEAN_PREFIX[] = {
+    { "type", "K" },
+    { "from_email", "FE" },
+    { "to_email", "TE" },
+    { "email", "E" },
+    { "date", "D" },
+    { "label", "L" },
+    { "tag", "L" },
+    { "source_id", "I" },
+    { "attachment_extension", "O" },
+    { "msgid", "Q" },
+    { "thread", "H" },
+    { "ref", "R" },
+    { "timestamp", "KTS" },
+};
+
+const char *
+_find_prefix (const char *name)
+{
+    unsigned int i;
+
+    for (i = 0; i < ARRAY_SIZE (NORMAL_PREFIX); i++)
+	if (strcmp (name, NORMAL_PREFIX[i].name) == 0)
+	    return NORMAL_PREFIX[i].prefix;
+
+    for (i = 0; i < ARRAY_SIZE (BOOLEAN_PREFIX); i++)
+	if (strcmp (name, BOOLEAN_PREFIX[i].name) == 0)
+	    return BOOLEAN_PREFIX[i].prefix;
+
+    fprintf (stderr, "Internal error: No prefix exists for '%s'\n", name);
+    exit (1);
+
+    return "";
+}
+
 const char *
 notmuch_status_to_string (notmuch_status_t status)
 {
