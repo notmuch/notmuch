@@ -45,6 +45,7 @@ prefix_t BOOLEAN_PREFIX[] = {
     { "type", "K" },
     { "tag", "L" },
     { "msgid", "Q" },
+    { "id", "Q" },
     { "thread", "H" },
     { "ref", "R" },
     { "timestamp", "KTS" },
@@ -493,6 +494,9 @@ notmuch_database_open (const char *path)
 	notmuch->query_parser = new Xapian::QueryParser;
 	notmuch->query_parser->set_default_op (Xapian::Query::OP_AND);
 	notmuch->query_parser->set_database (*notmuch->xapian_db);
+	notmuch->query_parser->add_boolean_prefix ("id", _find_prefix ("id"));
+	notmuch->query_parser->add_boolean_prefix ("tag", _find_prefix ("tag"));
+	notmuch->query_parser->add_boolean_prefix ("type", _find_prefix ("type"));
     } catch (const Xapian::Error &error) {
 	fprintf (stderr, "A Xapian exception occurred: %s\n",
 		 error.get_msg().c_str());
