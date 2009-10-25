@@ -798,20 +798,24 @@ _notmuch_database_link_message (notmuch_database_t *notmuch,
 				notmuch_message_t *message,
 				notmuch_message_file_t *message_file)
 {
-    notmuch_status_t ret = NOTMUCH_STATUS_SUCCESS;
+    notmuch_status_t status;
     const char *thread_id = NULL;
 
-    _notmuch_database_link_message_to_parents (notmuch, message,
-					       message_file,
-					       &thread_id);
+    status = _notmuch_database_link_message_to_parents (notmuch, message,
+							message_file,
+							&thread_id);
+    if (status)
+	return status;
 
-    ret = _notmuch_database_link_message_to_children (notmuch, message,
-						      &thread_id);
+    status = _notmuch_database_link_message_to_children (notmuch, message,
+							 &thread_id);
+    if (status)
+	return status;
 
     if (thread_id == NULL)
 	_notmuch_message_ensure_thread_id (message);
 
-    return ret;
+    return NOTMUCH_STATUS_SUCCESS;
 }
 
 notmuch_status_t
