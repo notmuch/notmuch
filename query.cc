@@ -114,10 +114,10 @@ notmuch_query_search (notmuch_query_t *query)
 
 	switch (query->sort) {
 	case NOTMUCH_SORT_DATE_OLDEST_FIRST:
-	    enquire.set_sort_by_value (NOTMUCH_VALUE_DATE, FALSE);
+	    enquire.set_sort_by_value (NOTMUCH_VALUE_TIMESTAMP, FALSE);
 	    break;
 	case NOTMUCH_SORT_DATE_NEWEST_FIRST:
-	    enquire.set_sort_by_value (NOTMUCH_VALUE_DATE, TRUE);
+	    enquire.set_sort_by_value (NOTMUCH_VALUE_TIMESTAMP, TRUE);
 	    break;
 	case NOTMUCH_SORT_MESSAGE_ID:
 	    enquire.set_sort_by_value (NOTMUCH_VALUE_MESSAGE_ID, FALSE);

@@ -588,7 +588,8 @@ notmuch_database_set_timestamp (notmuch_database_t *notmuch,
     try {
 	status = find_timestamp_document (notmuch, db_key, &doc, &doc_id);
 
-	doc.add_value (0, Xapian::sortable_serialise (timestamp));
+	doc.add_value (NOTMUCH_VALUE_TIMESTAMP,
+		       Xapian::sortable_serialise (timestamp));
 
 	if (status == NOTMUCH_PRIVATE_STATUS_NO_DOCUMENT_FOUND) {
 	    char *term = talloc_asprintf (NULL, "%s%s",
@@ -630,7 +631,7 @@ notmuch_database_get_timestamp (notmuch_database_t *notmuch, const char *key)
 	if (status == NOTMUCH_PRIVATE_STATUS_NO_DOCUMENT_FOUND)
 	    goto DONE;
 
-	ret =  Xapian::sortable_unserialise (doc.get_value (0));
+	ret =  Xapian::sortable_unserialise (doc.get_value (NOTMUCH_VALUE_TIMESTAMP));
     } catch (Xapian::Error &error) {
 	goto DONE;
     }

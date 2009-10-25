@@ -268,7 +268,7 @@ _notmuch_message_set_date (notmuch_message_t *message,
 
     time_value = notmuch_parse_date (date, NULL);
 
-    message->doc.add_value (NOTMUCH_VALUE_DATE,
+    message->doc.add_value (NOTMUCH_VALUE_TIMESTAMP,
 			    Xapian::sortable_serialise (time_value));
 }
 

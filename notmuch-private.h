@@ -67,13 +67,10 @@ NOTMUCH_BEGIN_DECLS
 #endif
 #endif
 
-/* These value numbers are chosen to be sup compatible (for now at
- * least). */
-
 typedef enum {
-    NOTMUCH_VALUE_MESSAGE_ID = 0,
-    NOTMUCH_VALUE_THREAD = 1,
-    NOTMUCH_VALUE_DATE = 2
+    NOTMUCH_VALUE_TIMESTAMP = 0,
+    NOTMUCH_VALUE_MESSAGE_ID,
+    NOTMUCH_VALUE_THREAD
 } notmuch_value_t;
 
 /* Xapian (with flint backend) complains if we provide a term longer
