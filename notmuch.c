@@ -55,6 +55,7 @@ typedef struct command {
 
 typedef struct {
     int ignore_read_only_directories;
+    int saw_read_only_directory;
 
     int total_files;
     int processed_files;
@@ -169,6 +170,7 @@ add_files_recursive (notmuch_database_t *notmuch,
     if (state->ignore_read_only_directories &&
 	(st->st_mode & S_IWUSR) == 0)
     {
+	state->saw_read_only_directory = TRUE;
 	goto DONE;
     }
 
@@ -463,6 +465,7 @@ setup_command (int argc, char *argv[])
     printf ("Next, we'll inspect the messages and create a database of threads:\n");
 
     add_files_state.ignore_read_only_directories = FALSE;
+    add_files_state.saw_read_only_directory = FALSE;
     add_files_state.total_files = count;
     add_files_state.processed_files = 0;
     add_files_state.added_messages = 0;
@@ -493,10 +496,6 @@ setup_command (int argc, char *argv[])
     printf ("When new mail is delivered to %s in the future,\n"
 	    "run \"notmuch new\" to add it to the database.\n\n",
 	    mail_directory);
-    printf ("And if you have any sub-directories that are archives (that is,\n"
-	    "they will never receive new mail), marking these directores as\n"
-	    "read-only (chmod u-w /path/to/dir) will make \"notmuch new\"\n"
-	    "much more efficient (it won't even look in those directories).\n\n");
 
     if (ret) {
 	printf ("Note: At least one error was encountered: %s\n",
@@ -531,6 +530,7 @@ new_command (int argc, char *argv[])
     mail_directory = notmuch_database_get_path (notmuch);
 
     add_files_state.ignore_read_only_directories = TRUE;
+    add_files_state.saw_read_only_directory = FALSE;
     add_files_state.total_files = 0;
     add_files_state.processed_files = 0;
     add_files_state.added_messages = 0;
@@ -562,8 +562,15 @@ new_command (int argc, char *argv[])
 	printf ("No new mail---and that's not much.\n");
     }
 
+    if (elapsed > 1 && ! add_files_state.saw_read_only_directory) {
+	printf ("\nTip: If you have any sub-directories that are archives (that is,\n"
+		"they will never receive new mail), marking these directores as\n"
+		"read-only (chmod u-w /path/to/dir) will make \"notmuch new\"\n"
+		"much more efficient (it won't even look in those directories).\n");
+    }
+
     if (ret) {
-	printf ("Note: At least one error was encountered: %s\n",
+	printf ("\nNote: At least one error was encountered: %s\n",
 		notmuch_status_to_string (ret));
     }
 
