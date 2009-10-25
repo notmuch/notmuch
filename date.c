@@ -79,7 +79,7 @@ static unsigned char gmime_datetok_table[256] = {
 
 /* hrm, is there a library for this stuff? */
 static struct {
-	char *name;
+	const char *name;
 	int offset;
 } tz_offsets [] = {
 	{ "UT", 0 },
@@ -99,12 +99,12 @@ static struct {
 	{ "Y", 1200 },
 };
 
-static char *tm_months[] = {
+static const char *tm_months[] = {
 	"Jan", "Feb", "Mar", "Apr", "May", "Jun",
 	"Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
 };
 
-static char *tm_days[] = {
+static const char *tm_days[] = {
 	"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"
 };
 
