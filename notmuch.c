@@ -270,7 +270,9 @@ add_files_recursive (notmuch_database_t *notmuch,
 	next = NULL;
     }
 
-    notmuch_database_set_timestamp (notmuch, path, path_mtime);
+    status = notmuch_database_set_timestamp (notmuch, path, path_mtime);
+    if (status && ret == NOTMUCH_STATUS_SUCCESS)
+	ret = status;
 
   DONE:
     if (next)
