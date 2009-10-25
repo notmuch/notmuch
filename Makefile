@@ -1,7 +1,13 @@
 PROGS=notmuch
 
-MYCFLAGS=-Wall -O0 -g `pkg-config --cflags glib-2.0 talloc`
-MYCXXFLAGS=$(MYCFLAGS) `xapian-config --cxxflags`
+CXXWARNINGS_FLAGS=-Wall
+CWARNINGS_FLAGS=$(CXX_WARNINGS_FLAGS)
+
+CDEPENDS_FLAGS=`pkg-config --cflags glib-2.0 talloc`
+CXXDEPENDS_FLAGS=`pkg-config --cflags glib-2.0 talloc` `xapian-config --cxxflags`
+
+MYCFLAGS=$(CWARNINGS_FLAGS) -O0 -g $(CDEPENDS_FLAGS)
+MYCXXFLAGS=$(CXXWARNINGS_FLAGS) -O0 -g $(CXXDEPENDS_FLAGS)
 
 MYLDFLAGS=`pkg-config --libs glib-2.0 talloc` `xapian-config --libs`
 
@@ -28,7 +34,7 @@ notmuch: $(MODULES)
 	$(CC) $(MYLDFLAGS) $^ -o $@
 
 Makefile.dep: *.c *.cc
-	$(CC) -M $(CPPFLAGS) $(MYCFLAGS) $^ > $@
+	$(CC) -M $(CPPFLAGS) $(CDEPENDS_FLAGS) $^ > $@
 -include Makefile.dep
 
 clean:
