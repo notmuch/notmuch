@@ -577,8 +577,73 @@ new_command (int argc, char *argv[])
 int
 search_command (int argc, char *argv[])
 {
-    fprintf (stderr, "Error: search is not implemented yet.\n");
-    return 1;
+    void *local = talloc_new (NULL);
+    notmuch_database_t *notmuch = NULL;
+    notmuch_query_t *query;
+    notmuch_results_t *results;
+    notmuch_message_t *message;
+    notmuch_tags_t *tags;
+    char *query_str;
+    int i;
+    notmuch_status_t ret = NOTMUCH_STATUS_SUCCESS;
+
+    notmuch = notmuch_database_open (NULL);
+    if (notmuch == NULL) {
+	ret = 1;
+	goto DONE;
+    }
+
+    /* XXX: Should add xtalloc wrappers here and use them. */
+    query_str = talloc_strdup (local, "");
+
+    for (i = 0; i < argc; i++) {
+	if (i != 0)
+	    query_str = talloc_asprintf_append (query_str, " ");
+
+	query_str = talloc_asprintf_append (query_str, "%s", argv[i]);
+    }
+
+    query = notmuch_query_create (notmuch, query_str);
+    if (query == NULL) {
+	fprintf (stderr, "Out of memory\n");
+	ret = 1;
+	goto DONE;
+    }
+
+    for (results = notmuch_query_search (query);
+	 notmuch_results_has_more (results);
+	 notmuch_results_advance (results))
+    {
+	int first = 1;
+	message = notmuch_results_get (results);
+
+	printf ("%s (", notmuch_message_get_message_id (message));
+
+	for (tags = notmuch_message_get_tags (message);
+	     notmuch_tags_has_more (tags);
+	     notmuch_tags_advance (tags))
+	{
+	    if (! first)
+		printf (" ");
+
+	    printf ("%s", notmuch_tags_get (tags));
+
+	    first = 0;
+	}
+
+	printf (")\n");
+
+	notmuch_message_destroy (message);
+    }
+
+    notmuch_query_destroy (query);
+
+  DONE:
+    if (notmuch)
+	notmuch_database_close (notmuch);
+    talloc_free (local);
+
+    return ret;
 }
 
 int
