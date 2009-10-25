@@ -1,14 +1,12 @@
 PROGS=notmuch
 
-CXXWARNINGS_FLAGS=-Wall -Wextra -Wmissing-declarations -Wwrite-strings \
--Wswitch-enum
-CWARNINGS_FLAGS=$(CXXWARNINGS_FLAGS)
+WARN_FLAGS=-Wall -Wextra -Wmissing-declarations -Wwrite-strings -Wswitch-enum
 
 CDEPENDS_FLAGS=`pkg-config --cflags glib-2.0 talloc`
 CXXDEPENDS_FLAGS=`pkg-config --cflags glib-2.0 talloc` `xapian-config --cxxflags`
 
-MYCFLAGS=$(CWARNINGS_FLAGS) -O0 -g $(CDEPENDS_FLAGS)
-MYCXXFLAGS=$(CXXWARNINGS_FLAGS) -O0 -g $(CXXDEPENDS_FLAGS)
+MYCFLAGS=$(WARN_FLAGS) -O0 -g $(CDEPENDS_FLAGS)
+MYCXXFLAGS=$(WARN_FLAGS) -O0 -g $(CXXDEPENDS_FLAGS)
 
 MYLDFLAGS=`pkg-config --libs glib-2.0 talloc` `xapian-config --libs`
 
