@@ -144,6 +144,9 @@ notmuch_database_default_path (void);
 notmuch_database_t *
 notmuch_database_create (const char *path);
 
+/* XXX: I think I'd like this to take an extra argument of
+ * notmuch_status_t* for returning a status value on failure. */
+
 /* Open a an existing notmuch database located at 'path'.
  *
  * The database should have been created at some time in the past,
