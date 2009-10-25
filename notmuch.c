@@ -818,7 +818,8 @@ restore_command (int argc, char *argv[])
 				 notmuch_status_to_string (status));
 		    }
 		} else {
-		    fprintf (stderr, "%s ", tag);
+		    fprintf (stderr, "%s%s",
+			     tag == tags ? "" : " ", tag);
 		}
 	    }
 
