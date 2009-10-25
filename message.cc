@@ -42,8 +42,7 @@ struct _notmuch_tags {
 };
 
 struct _notmuch_thread_ids {
-    char *current;
-    char *next;
+    notmuch_terms_t terms;
 };
 
 /* "128 bits of thread-id ought to be enough for anybody" */
@@ -255,6 +254,10 @@ _notmuch_terms_create (void *ctx,
     return terms;
 }
 
+/* The assertion is to ensure that 'type' is a derivative of
+ * notmuch_terms_t in that it contains a notmuch_terms_t as its first
+ * member. We do this by name of 'terms' as opposed to type, because
+ * that's as clever as I've been so far. */
 #define _notmuch_terms_create_type(ctx, doc, prefix_name, type) \
     (COMPILE_TIME_ASSERT(offsetof(type, terms) == 0),		\
      (type *) _notmuch_terms_create (ctx, doc, prefix_name))
@@ -269,20 +272,8 @@ notmuch_message_get_tags (notmuch_message_t *message)
 notmuch_thread_ids_t *
 notmuch_message_get_thread_ids (notmuch_message_t *message)
 {
-    notmuch_thread_ids_t *thread_ids;
-    std::string id_str;
-
-    thread_ids = talloc (message, notmuch_thread_ids_t);
-    if (unlikely (thread_ids == NULL))
-	return NULL;
-
-    id_str = message->doc.get_value (NOTMUCH_VALUE_THREAD);
-    thread_ids->next = talloc_strdup (message, id_str.c_str ());
-
-    /* Initialize thread_ids->current and terminate first ID. */
-    notmuch_thread_ids_advance (thread_ids);
-
-    return thread_ids;
+    return _notmuch_terms_create_type (message, message->doc, "thread",
+				       notmuch_thread_ids_t);
 }
 
 void
@@ -545,26 +536,23 @@ notmuch_tags_destroy (notmuch_tags_t *tags)
 notmuch_bool_t
 notmuch_thread_ids_has_more (notmuch_thread_ids_t *thread_ids)
 {
-    if (thread_ids->current == NULL || *thread_ids->current == '\0')
-	return FALSE;
-    else
-	return TRUE;
+    return _notmuch_terms_has_more (&thread_ids->terms);
 }
 
 const char *
 notmuch_thread_ids_get (notmuch_thread_ids_t *thread_ids)
 {
-    return thread_ids->current;
+    return _notmuch_terms_get (&thread_ids->terms);
 }
 
 void
 notmuch_thread_ids_advance (notmuch_thread_ids_t *thread_ids)
 {
-    thread_ids->current = strsep (&thread_ids->next, ",");
+    return _notmuch_terms_advance (&thread_ids->terms);
 }
 
 void
 notmuch_thread_ids_destroy (notmuch_thread_ids_t *thread_ids)
 {
-    talloc_free (thread_ids);
+    return _notmuch_terms_destroy (&thread_ids->terms);
 }
