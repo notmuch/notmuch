@@ -41,13 +41,16 @@ typedef struct {
     const char *prefix;
 } prefix_t;
 
-prefix_t BOOLEAN_PREFIX[] = {
+prefix_t BOOLEAN_PREFIX_INTERNAL[] = {
     { "type", "K" },
-    { "tag", "L" },
-    { "id", "Q" },
     { "thread", "H" },
     { "ref", "R" },
     { "timestamp", "KTS" },
+};
+
+prefix_t BOOLEAN_PREFIX_EXTERNAL[] = {
+    { "tag", "L" },
+    { "id", "Q" }
 };
 
 const char *
@@ -55,9 +58,13 @@ _find_prefix (const char *name)
 {
     unsigned int i;
 
-    for (i = 0; i < ARRAY_SIZE (BOOLEAN_PREFIX); i++)
-	if (strcmp (name, BOOLEAN_PREFIX[i].name) == 0)
-	    return BOOLEAN_PREFIX[i].prefix;
+    for (i = 0; i < ARRAY_SIZE (BOOLEAN_PREFIX_INTERNAL); i++)
+	if (strcmp (name, BOOLEAN_PREFIX_INTERNAL[i].name) == 0)
+	    return BOOLEAN_PREFIX_INTERNAL[i].prefix;
+
+    for (i = 0; i < ARRAY_SIZE (BOOLEAN_PREFIX_EXTERNAL); i++)
+	if (strcmp (name, BOOLEAN_PREFIX_EXTERNAL[i].name) == 0)
+	    return BOOLEAN_PREFIX_EXTERNAL[i].prefix;
 
     fprintf (stderr, "Internal error: No prefix exists for '%s'\n", name);
     exit (1);
@@ -469,6 +476,7 @@ notmuch_database_open (const char *path)
     struct stat st;
     int err;
     char *local_path = NULL;
+    unsigned int i;
 
     if (path == NULL)
 	path = local_path = notmuch_database_default_path ();
@@ -493,9 +501,12 @@ notmuch_database_open (const char *path)
 	notmuch->query_parser = new Xapian::QueryParser;
 	notmuch->query_parser->set_default_op (Xapian::Query::OP_AND);
 	notmuch->query_parser->set_database (*notmuch->xapian_db);
-	notmuch->query_parser->add_boolean_prefix ("id", _find_prefix ("id"));
-	notmuch->query_parser->add_boolean_prefix ("tag", _find_prefix ("tag"));
-	notmuch->query_parser->add_boolean_prefix ("type", _find_prefix ("type"));
+
+	for (i = 0; i < ARRAY_SIZE (BOOLEAN_PREFIX_EXTERNAL); i++) {
+	    prefix_t *prefix = &BOOLEAN_PREFIX_EXTERNAL[i];
+	    notmuch->query_parser->add_boolean_prefix (prefix->name,
+						       prefix->prefix);
+	}
     } catch (const Xapian::Error &error) {
 	fprintf (stderr, "A Xapian exception occurred: %s\n",
 		 error.get_msg().c_str());
