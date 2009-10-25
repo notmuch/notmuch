@@ -41,6 +41,10 @@ notmuch_query_create (notmuch_database_t *notmuch,
 {
     notmuch_query_t *query;
 
+#ifdef DEBUG_QUERY
+    fprintf (stderr, "Query string is:\n%s\n", query_string);
+#endif
+
     query = talloc (NULL, notmuch_query_t);
     if (unlikely (query == NULL))
 	return NULL;
@@ -117,6 +121,10 @@ notmuch_query_search (notmuch_query_t *query)
 	    enquire.set_sort_by_value (NOTMUCH_VALUE_MESSAGE_ID, FALSE);
 	    break;
 	}
+
+#if DEBUG_QUERY
+	fprintf (stderr, "Final query is:\n%s\n", final_query.get_description().c_str());
+#endif
 
 	enquire.set_query (final_query);
 

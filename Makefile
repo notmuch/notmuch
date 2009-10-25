@@ -19,7 +19,7 @@ MODULES=		\
 all: $(PROGS)
 
 %.o: %.cc
-	$(CXX) -c $(CXXFLAGS) $(MYCXXFLAGS) $< -o $@
+	$(CXX) -c $(CFLAGS) $(CXXFLAGS) $(MYCXXFLAGS) $< -o $@
 
 %.o: %.c
 	$(CC) -c $(CFLAGS) $(MYCFLAGS) $< -o $@
