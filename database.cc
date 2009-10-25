@@ -30,26 +30,35 @@ using namespace std;
 
 #define ARRAY_SIZE(arr) (sizeof (arr) / sizeof (arr[0]))
 
-/* These prefix values are specifically chosen to be compatible
- * with sup, (http://sup.rubyforge.org), written by
- * William Morgan <wmorgan-sup@masanjin.net>, and released
- * under the GNU GPL v2.
- */
-
 typedef struct {
     const char *name;
     const char *prefix;
 } prefix_t;
 
+/* With these prefix values we follow the conventions published here:
+ *
+ * http://xapian.org/docs/omega/termprefixes.html
+ *
+ * as much as makes sense. Note that I took some liberty in matching
+ * the reserved prefix values to notmuch concepts, (for example, 'G'
+ * is documented as "newsGroup (or similar entity - e.g. a web forum
+ * name)", for which I think the thread is the closest analogue in
+ * notmuch. This in spite of the fact that we will eventually be
+ * storing mailing-list messages where 'G' for "mailing list name"
+ * might be even a closer analogue. I'm treating the single-character
+ * prefixes preferentially for core notmuch concepts (which will be
+ * nearly universal to all mail messages).
+ */
+
 prefix_t BOOLEAN_PREFIX_INTERNAL[] = {
-    { "type", "K" },
-    { "thread", "H" },
-    { "ref", "R" },
-    { "timestamp", "KTS" },
+    { "type", "T" },
+    { "thread", "G" },
+    { "ref", "XREFERENCE" },
+    { "timestamp", "XTIMESTAMP" },
 };
 
 prefix_t BOOLEAN_PREFIX_EXTERNAL[] = {
-    { "tag", "L" },
+    { "tag", "K" },
     { "id", "Q" }
 };
 
