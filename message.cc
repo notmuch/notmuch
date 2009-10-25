@@ -140,7 +140,7 @@ _notmuch_message_create_for_message_id (const void *talloc_owner,
 	return talloc_steal (talloc_owner, message);
 
     term = talloc_asprintf (NULL, "%s%s",
-			    _find_prefix ("msgid"), message_id);
+			    _find_prefix ("id"), message_id);
     doc.add_term (term);
     talloc_free (term);
 
@@ -160,7 +160,7 @@ notmuch_message_get_message_id (notmuch_message_t *message)
 	return message->message_id;
 
     i = message->doc.termlist_begin ();
-    i.skip_to (_find_prefix ("msgid"));
+    i.skip_to (_find_prefix ("id"));
 
     if (i == message->doc.termlist_end ()) {
 	fprintf (stderr, "Internal error: Message with document ID of %d has no message ID.\n",

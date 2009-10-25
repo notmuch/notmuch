@@ -44,7 +44,6 @@ typedef struct {
 prefix_t BOOLEAN_PREFIX[] = {
     { "type", "K" },
     { "tag", "L" },
-    { "msgid", "Q" },
     { "id", "Q" },
     { "thread", "H" },
     { "ref", "R" },
@@ -207,7 +206,7 @@ notmuch_database_find_message (notmuch_database_t *notmuch,
     notmuch_private_status_t status;
     unsigned int doc_id;
 
-    status = find_unique_doc_id (notmuch, "msgid", message_id, &doc_id);
+    status = find_unique_doc_id (notmuch, "id", message_id, &doc_id);
 
     if (status == NOTMUCH_PRIVATE_STATUS_NO_DOCUMENT_FOUND)
 	return NULL;
