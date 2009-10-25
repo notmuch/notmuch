@@ -519,7 +519,7 @@ notmuch_database_get_path (notmuch_database_t *notmuch)
     return notmuch->path;
 }
 
-notmuch_private_status_t
+static notmuch_private_status_t
 find_timestamp_document (notmuch_database_t *notmuch, const char *db_key,
 			 Xapian::Document *doc, unsigned int *doc_id)
 {
@@ -623,7 +623,7 @@ notmuch_database_get_timestamp (notmuch_database_t *notmuch, const char *key)
  *
  * Otherwise, returns a newly talloced string belonging to 'ctx'.
  */
-const char *
+static const char *
 _resolve_message_id_to_thread_id (notmuch_database_t *notmuch,
 				  void *ctx,
 				  const char *message_id)

@@ -310,7 +310,7 @@ _notmuch_terms_destructor (notmuch_terms_t *terms)
     return 0;
 }
 
-notmuch_terms_t *
+static notmuch_terms_t *
 _notmuch_terms_create (void *ctx,
 		       Xapian::Document doc,
 		       const char *prefix_name)
@@ -526,7 +526,7 @@ notmuch_message_destroy (notmuch_message_t *message)
     talloc_free (message);
 }
 
-notmuch_bool_t
+static notmuch_bool_t
 _notmuch_terms_has_more (notmuch_terms_t *terms)
 {
     std::string s;
@@ -541,19 +541,19 @@ _notmuch_terms_has_more (notmuch_terms_t *terms)
 	return FALSE;
 }
 
-const char *
+static const char *
 _notmuch_terms_get (notmuch_terms_t *terms)
 {
     return talloc_strdup (terms, (*terms->iterator).c_str () + 1);
 }
 
-void
+static void
 _notmuch_terms_advance (notmuch_terms_t *terms)
 {
     terms->iterator++;
 }
 
-void
+static void
 _notmuch_terms_destroy (notmuch_terms_t *terms)
 {
     talloc_free (terms);

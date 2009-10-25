@@ -149,7 +149,7 @@ notmuch_message_file_restrict_headers (notmuch_message_file_t *message, ...)
     notmuch_message_file_restrict_headersv (message, va_headers);
 }
 
-void
+static void
 copy_header_unfolding (header_value_closure_t *value,
 		       const char *chunk)
 {

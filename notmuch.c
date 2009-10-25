@@ -87,14 +87,14 @@ chomp_newline (char *str)
 }
 
 /* Compute the number of seconds elapsed from start to end. */
-double
+static double
 tv_elapsed (struct timeval start, struct timeval end)
 {
     return ((end.tv_sec - start.tv_sec) +
 	    (end.tv_usec - start.tv_usec) / 1e6);
 }
 
-void
+static void
 print_formatted_seconds (double seconds)
 {
     int hours;
@@ -120,7 +120,7 @@ print_formatted_seconds (double seconds)
     printf ("%ds", (int) seconds);
 }
 
-void
+static void
 add_files_print_progress (add_files_state_t *state)
 {
     struct timeval tv_now;
@@ -165,7 +165,7 @@ add_files_print_progress (add_files_state_t *state)
  * The 'struct stat *st' must point to a structure that has already
  * been initialized for 'path' by calling stat().
  */
-notmuch_status_t
+static notmuch_status_t
 add_files_recursive (notmuch_database_t *notmuch,
 		     const char *path,
 		     struct stat *st,
@@ -332,7 +332,7 @@ add_files (notmuch_database_t *notmuch,
  * of path.  The result is added to *count (which should be
  * initialized to zero by the top-level caller before calling
  * count_files). */
-void
+static void
 count_files (const char *path, int *count)
 {
     DIR *dir;
@@ -400,7 +400,7 @@ count_files (const char *path, int *count)
     closedir (dir);
 }
 
-int
+static int
 setup_command (unused (int argc), unused (char *argv[]))
 {
     notmuch_database_t *notmuch = NULL;
@@ -526,7 +526,7 @@ setup_command (unused (int argc), unused (char *argv[]))
     return ret;
 }
 
-int
+static int
 new_command (unused (int argc), unused (char *argv[]))
 {
     notmuch_database_t *notmuch;
@@ -596,7 +596,7 @@ new_command (unused (int argc), unused (char *argv[]))
     return ret;
 }
 
-int
+static int
 search_command (int argc, char *argv[])
 {
     void *local = talloc_new (NULL);
@@ -668,14 +668,14 @@ search_command (int argc, char *argv[])
     return ret;
 }
 
-int
+static int
 show_command (unused (int argc), unused (char *argv[]))
 {
     fprintf (stderr, "Error: show is not implemented yet.\n");
     return 1;
 }
 
-int
+static int
 dump_command (int argc, char *argv[])
 {
     FILE *output;
@@ -751,7 +751,7 @@ dump_command (int argc, char *argv[])
     return ret;
 }
 
-int
+static int
 restore_command (int argc, char *argv[])
 {
     FILE *input;
@@ -892,7 +892,7 @@ command_t commands[] = {
       "\t\tRestore the tags from the given dump file (see 'dump')." }
 };
 
-void
+static void
 usage (void)
 {
     command_t *command;
