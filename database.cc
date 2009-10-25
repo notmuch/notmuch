@@ -740,20 +740,13 @@ _notmuch_database_link_message (notmuch_database_t *notmuch,
     g_ptr_array_free (parents, TRUE);
 
     if (thread_ids->len) {
-	GString *thread_id;
 	char *id;
 
 	for (i = 0; i < thread_ids->len; i++) {
 	    id = (char *) thread_ids->pdata[i];
 	    _notmuch_message_add_thread_id (message, id);
-	    if (i == 0)
-		thread_id = g_string_new (id);
-	    else
-		g_string_append_printf (thread_id, ",%s", id);
-
 	    free (id);
 	}
-	g_string_free (thread_id, TRUE);
     } else {
 	_notmuch_message_ensure_thread_id (message);
     }
