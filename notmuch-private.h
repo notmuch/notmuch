@@ -40,6 +40,7 @@ NOTMUCH_BEGIN_DECLS
 #include <fcntl.h>
 #include <unistd.h>
 #include <ctype.h>
+#include <assert.h>
 
 #include <talloc.h>
 
@@ -71,8 +72,7 @@ NOTMUCH_BEGIN_DECLS
 
 typedef enum {
     NOTMUCH_VALUE_TIMESTAMP = 0,
-    NOTMUCH_VALUE_MESSAGE_ID,
-    NOTMUCH_VALUE_THREAD
+    NOTMUCH_VALUE_MESSAGE_ID
 } notmuch_value_t;
 
 /* Xapian (with flint backend) complains if we provide a term longer

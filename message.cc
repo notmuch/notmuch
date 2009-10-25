@@ -292,26 +292,7 @@ void
 _notmuch_message_add_thread_id (notmuch_message_t *message,
 				const char *thread_id)
 {
-    std::string id_str;
-
     _notmuch_message_add_term (message, "thread", thread_id);
-
-    id_str = message->doc.get_value (NOTMUCH_VALUE_THREAD);
-
-    if (id_str.empty ()) {
-	message->doc.add_value (NOTMUCH_VALUE_THREAD, thread_id);
-    } else {
-	size_t pos;
-
-	/* Think about using a hash here if there's any performance
-	 * problem. */
-	pos = id_str.find (thread_id);
-	if (pos == std::string::npos) {
-	    id_str.append (",");
-	    id_str.append (thread_id);
-	    message->doc.add_value (NOTMUCH_VALUE_THREAD, id_str);
-	}
-    }
 }
 
 static void
@@ -351,7 +332,6 @@ _notmuch_message_ensure_thread_id (notmuch_message_t *message)
 
     thread_id_generate (&thread_id);
     _notmuch_message_add_term (message, "thread", thread_id.str);
-    message->doc.add_value (NOTMUCH_VALUE_THREAD, thread_id.str);
 }
 
 /* Synchronize changes made to message->doc out into the database. */

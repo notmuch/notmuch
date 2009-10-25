@@ -192,26 +192,34 @@ find_unique_document (notmuch_database_t *notmuch,
     return NOTMUCH_PRIVATE_STATUS_SUCCESS;
 }
 
+/* XXX: Should rewrite this to accept a notmuch_message_t* instead of
+ * a Xapian:Document and then we could just use
+ * notmuch_message_get_thread_ids instead of duplicating its logic
+ * here. */
 static void
 insert_thread_id (GHashTable *thread_ids, Xapian::Document doc)
 {
     string value_string;
-    const char *value, *id, *comma;
+    Xapian::TermIterator i;
+    const char *prefix_str = _find_prefix ("thread");
+    char prefix;
 
-    value_string = doc.get_value (NOTMUCH_VALUE_THREAD);
-    value = value_string.c_str();
-    if (strlen (value)) {
-	id = value;
-	while (*id) {
-	    comma = strchr (id, ',');
-	    if (comma == NULL)
-		comma = id + strlen (id);
-	    g_hash_table_insert (thread_ids,
-				 strndup (id, comma - id), NULL);
-	    id = comma;
-	    if (*id)
-		id++;
-	}
+    assert (strlen (prefix_str) == 1);
+
+    prefix = *prefix_str;
+
+    i = doc.termlist_begin ();
+    i.skip_to (prefix_str);
+
+    while (1) {
+	if (i == doc.termlist_end ())
+	    break;
+	value_string = *i;
+	if (value_string.empty () || value_string[0] != prefix)
+	    break;
+	g_hash_table_insert (thread_ids,
+			     strdup (value_string.c_str () + 1), NULL);
+	i++;
     }
 }
 
