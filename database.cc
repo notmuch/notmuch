@@ -35,6 +35,55 @@ typedef struct {
     const char *prefix;
 } prefix_t;
 
+/* Here's the current schema for our database:
+ *
+ * We currently have two different types of documents: mail and timestamps.
+ *
+ * Mail document
+ * -------------
+ * A mail document is associated with a particular email message file
+ * on disk. It is indexed with the following prefixed terms:
+ *
+ *    Single terms of given prefix:
+ *
+ *	type:	mail
+ *
+ *	id:	Unique ID of mail, (from Message-ID header or generated
+ *		as "notmuch-sha1-<sha1_sum_of_entire_file>.
+ *
+ *    Multiple terms of given prefix:
+ *
+ *	ref:	The message IDs from all In-Reply-To and References
+ *		headers in the message.
+ *
+ *	tag:	Any tags associated with this message by the user.
+ *
+ *	thread:	The thread ID of all threads to which the mail belongs
+ *
+ *    A mail document also has two values:
+ *
+ *	TIMESTAMP:	The time_t value corresponding to the message's
+ *			Date header.
+ *
+ *	MESSAGE_ID:	The unique ID of the mail mess (see "id" above)
+ *
+ * Timestamp document
+ * ------------------
+ * A timestamp document is used by a client of the notmuch library to
+ * maintain data necessary to allow for efficient polling of mail
+ * directories. The notmuch library does no interpretation of
+ * timestamps, but merely allows the user to store and retrieve
+ * timestamps as name/value pairs.
+ *
+ * The timestamp document is indexed with a single prefixed term:
+ *
+ *	timestamp:	The user's key value (likely a directory name)
+ *
+ * and has a single value:
+ *
+ *	TIMETAMPS:	The time_t value from the user.
+ */
+
 /* With these prefix values we follow the conventions published here:
  *
  * http://xapian.org/docs/omega/termprefixes.html
