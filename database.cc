@@ -124,8 +124,7 @@ _find_prefix (const char *name)
 	if (strcmp (name, BOOLEAN_PREFIX_EXTERNAL[i].name) == 0)
 	    return BOOLEAN_PREFIX_EXTERNAL[i].prefix;
 
-    fprintf (stderr, "Internal error: No prefix exists for '%s'\n", name);
-    exit (1);
+    INTERNAL_ERROR ("No prefix exists for '%s'\n", name);
 
     return "";
 }

@@ -125,10 +125,8 @@ notmuch_message_file_restrict_headersv (notmuch_message_file_t *message,
 {
     char *header;
 
-    if (message->parsing_started ) {
-	fprintf (stderr, "Error: notmuch_message_file_restrict_headers called after parsing has started\n");
-	exit (1);
-    }
+    if (message->parsing_started)
+	INTERNAL_ERROR ("notmuch_message_file_restrict_headers called after parsing has started");
 
     while (1) {
 	header = va_arg (va_headers, char*);
@@ -305,11 +303,9 @@ notmuch_message_file_get_header (notmuch_message_file_t *message,
 	! g_hash_table_lookup_extended (message->headers,
 					header_desired, NULL, NULL))
     {
-	fprintf (stderr,
-		 "Internal error: Attempt to get header \"%s\" which was not\n"
-		 "included in call to notmuch_message_file_restrict_headers\n",
-		 header_desired);
-	exit (1);
+	INTERNAL_ERROR ("Attempt to get header \"%s\" which was not\n"
+			"included in call to notmuch_message_file_restrict_headers\n",
+			header_desired);
     }
 
     return NULL;

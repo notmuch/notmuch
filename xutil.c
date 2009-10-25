@@ -104,10 +104,8 @@ xregcomp (regex_t *preg, const char *regex, int cflags)
 	char *error = xmalloc (error_size);
 
 	regerror (rerr, preg, error, error_size);
-	fprintf (stderr, "Internal error compiling regex %s: %s\n",
-		 regex, error);
-	free (error);
-	exit (1);
+	INTERNAL_ERROR ("compiling regex %s: %s\n",
+			regex, error);
     }
 }
 
@@ -122,11 +120,9 @@ xregexec (const regex_t *preg, const char *string,
 	return rerr;
 
     for (i = 0; i < nmatch; i++) {
-	if (pmatch[i].rm_so == -1) {
-	    fprintf (stderr, "Internal error matching regex against %s: Sub-match %d not found\n",
-		     string, i);
-	    exit (1);
-	}
+	if (pmatch[i].rm_so == -1)
+	    INTERNAL_ERROR ("matching regex against %s: Sub-match %d not found\n",
+			    string, i);
     }
 
     return 0;

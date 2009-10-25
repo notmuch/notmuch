@@ -197,8 +197,7 @@ _notmuch_message_create_for_message_id (const void *talloc_owner,
 
     if (private_status >= (notmuch_private_status_t) NOTMUCH_STATUS_LAST_STATUS)
     {
-	fprintf (stderr, "Internal error: Failed to find document immediately after adding it.\n");
-	exit (1);
+	INTERNAL_ERROR ("Failed to find document immediately after adding it.\n");
     }
 
     *status = (notmuch_status_t) private_status;
@@ -218,9 +217,8 @@ notmuch_message_get_message_id (notmuch_message_t *message)
     i.skip_to (_find_prefix ("id"));
 
     if (i == message->doc.termlist_end ()) {
-	fprintf (stderr, "Internal error: Message with document ID of %d has no message ID.\n",
-		 message->doc_id);
-	exit (1);
+	INTERNAL_ERROR ("Message with document ID of %d has no message ID.\n",
+			message->doc_id);
     }
 
     message->message_id = talloc_strdup (message, (*i).c_str () + 1);
@@ -468,9 +466,8 @@ notmuch_message_add_tag (notmuch_message_t *message, const char *tag)
 
     status = _notmuch_message_add_term (message, "tag", tag);
     if (status) {
-	fprintf (stderr, "Internal error: _notmuch_message_add_term return unexpected value: %d\n",
-		 status);
-	exit (1);
+	INTERNAL_ERROR ("_notmuch_message_add_term return unexpected value: %d\n",
+			status);
     }
 
     _notmuch_message_sync (message);
@@ -491,9 +488,8 @@ notmuch_message_remove_tag (notmuch_message_t *message, const char *tag)
 
     status = _notmuch_message_remove_term (message, "tag", tag);
     if (status) {
-	fprintf (stderr, "Internal error: _notmuch_message_remove_term return unexpected value: %d\n",
-		 status);
-	exit (1);
+	INTERNAL_ERROR ("_notmuch_message_remove_term return unexpected value: %d\n",
+			status);
     }
 
     _notmuch_message_sync (message);

@@ -178,8 +178,7 @@ notmuch_results_get (notmuch_results_t *results)
     if (message == NULL &&
 	status == NOTMUCH_PRIVATE_STATUS_NO_DOCUMENT_FOUND)
     {
-	fprintf (stderr, "Internal error: a results iterator contains a non-existent document ID.\n");
-	exit (1);
+	INTERNAL_ERROR ("a results iterator contains a non-existent document ID.\n");
     }
 
     return message;

@@ -48,6 +48,20 @@ NOTMUCH_BEGIN_DECLS
 
 #define COMPILE_TIME_ASSERT(pred) ((void)sizeof(char[1 - 2*!(pred)]))
 
+/* There's no point in continuing when we've detected that we've done
+ * something wrong internally (as opposed to the user passing in a
+ * bogus value).
+ *
+ * Note that __location__ comes from talloc.h.
+ */
+#define INTERNAL_ERROR(format, ...)			\
+    do {						\
+	fprintf(stderr,					\
+		"Internal error: " format " (%s)\n",	\
+		##__VA_ARGS__, __location__);		\
+	exit (1);					\
+    } while (0)
+
 /* Thanks to Andrew Tridgell's (SAMBA's) talloc for this definition of
  * unlikely. The talloc source code comes to us via the GNU LGPL v. 3.
  */

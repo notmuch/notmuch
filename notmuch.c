@@ -43,6 +43,20 @@
 
 #include <glib.h> /* g_strdup_printf */
 
+/* There's no point in continuing when we've detected that we've done
+ * something wrong internally (as opposed to the user passing in a
+ * bogus value).
+ *
+ * Note that __location__ comes from talloc.h.
+ */
+#define INTERNAL_ERROR(format, ...)			\
+    do {						\
+	fprintf(stderr,					\
+		"Internal error: " format " (%s)\n",	\
+		##__VA_ARGS__, __location__);		\
+	exit (1);					\
+    } while (0)
+
 #define ARRAY_SIZE(arr) (sizeof (arr) / sizeof (arr[0]))
 
 typedef int (*command_function_t) (int argc, char *argv[]);
@@ -255,8 +269,7 @@ add_files_recursive (notmuch_database_t *notmuch,
 			ret = status;
 			goto DONE;
 		    default:
-			fprintf (stderr, "Internal error: add_message returned unexpected value: %d\n",  status);
-			ret = status;
+			INTERNAL_ERROR ("add_message returned unexpected value: %d",  status);
 			goto DONE;
 		}
 		if (state->processed_files % 1000 == 0)
