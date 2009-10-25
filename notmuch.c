@@ -43,6 +43,8 @@
 
 #include <glib.h> /* g_strdup_printf */
 
+#define unused(x) x __attribute__ ((unused))
+
 /* There's no point in continuing when we've detected that we've done
  * something wrong internally (as opposed to the user passing in a
  * bogus value).
@@ -399,7 +401,7 @@ count_files (const char *path, int *count)
 }
 
 int
-setup_command (int argc, char *argv[])
+setup_command (unused (int argc), unused (char *argv[]))
 {
     notmuch_database_t *notmuch = NULL;
     char *default_path, *mail_directory = NULL;
@@ -525,7 +527,7 @@ setup_command (int argc, char *argv[])
 }
 
 int
-new_command (int argc, char *argv[])
+new_command (unused (int argc), unused (char *argv[]))
 {
     notmuch_database_t *notmuch;
     const char *mail_directory;
@@ -667,7 +669,7 @@ search_command (int argc, char *argv[])
 }
 
 int
-show_command (int argc, char *argv[])
+show_command (unused (int argc), unused (char *argv[]))
 {
     fprintf (stderr, "Error: show is not implemented yet.\n");
     return 1;

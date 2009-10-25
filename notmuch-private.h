@@ -72,6 +72,8 @@ _internal_error (const char *format, ...) PRINTF_ATTRIBUTE (1, 2);
     _internal_error (format " (%s).\n",			\
 		     ##__VA_ARGS__, __location__)
 
+#define unused(x) x __attribute__ ((unused))
+
 /* Thanks to Andrew Tridgell's (SAMBA's) talloc for this definition of
  * unlikely. The talloc source code comes to us via the GNU LGPL v. 3.
  */

@@ -1,6 +1,6 @@
 PROGS=notmuch
 
-CXXWARNINGS_FLAGS=-Wall -Wextra -Wno-unused-parameter
+CXXWARNINGS_FLAGS=-Wall -Wextra
 CWARNINGS_FLAGS=$(CXXWARNINGS_FLAGS)
 
 CDEPENDS_FLAGS=`pkg-config --cflags glib-2.0 talloc`
