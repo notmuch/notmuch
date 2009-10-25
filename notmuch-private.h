@@ -83,6 +83,7 @@ typedef enum {
 typedef enum _notmuch_private_status {
     /* First, copy all the public status values. */
     NOTMUCH_PRIVATE_STATUS_SUCCESS = NOTMUCH_STATUS_SUCCESS,
+    NOTMUCH_PRIVATE_STATUS_OUT_OF_MEMORY = NOTMUCH_STATUS_OUT_OF_MEMORY,
     NOTMUCH_PRIVATE_STATUS_XAPIAN_EXCEPTION = NOTMUCH_STATUS_XAPIAN_EXCEPTION,
     NOTMUCH_PRIVATE_STATUS_FILE_NOT_EMAIL = NOTMUCH_STATUS_FILE_NOT_EMAIL,
     NOTMUCH_PRIVATE_STATUS_NULL_POINTER = NOTMUCH_STATUS_NULL_POINTER,
@@ -100,12 +101,14 @@ typedef enum _notmuch_private_status {
 notmuch_message_t *
 _notmuch_message_create (const void *talloc_owner,
 			 notmuch_database_t *notmuch,
-			 unsigned int doc_id);
+			 unsigned int doc_id,
+			 notmuch_private_status_t *status);
 
 notmuch_message_t *
 _notmuch_message_create_for_message_id (const void *talloc_owner,
 					notmuch_database_t *notmuch,
-					const char *message_id);
+					const char *message_id,
+					notmuch_status_t *status);
 
 /* Lookup a prefix value by name.
  *

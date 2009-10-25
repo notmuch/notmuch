@@ -284,7 +284,7 @@ notmuch_database_find_message (notmuch_database_t *notmuch,
     if (status == NOTMUCH_PRIVATE_STATUS_NO_DOCUMENT_FOUND)
 	return NULL;
 
-    return _notmuch_message_create (notmuch, notmuch, doc_id);
+    return _notmuch_message_create (notmuch, notmuch, doc_id, NULL);
 }
 
 /* Return one or more thread_ids, (as a GPtrArray of strings), for the
@@ -762,17 +762,12 @@ notmuch_database_add_message (notmuch_database_t *notmuch,
 	 * database). */
 
 	/* Use NULL for owner since we want to free this locally. */
-
-	/* XXX: This call can fail by either out-of-memory or an
-	 * "impossible" Xapian exception. We should rewrite it to
-	 * allow us to propagate the error status. */
-	message = _notmuch_message_create_for_message_id (NULL, notmuch,
-							  message_id);
-	if (message == NULL) {
-	    fprintf (stderr, "Internal error. This shouldn't happen.\n\n");
-	    fprintf (stderr, "I mean, it's possible you ran out of memory, but then this code path is still an internal error since it should have detected that and propagated the status value up the stack.\n");
-	    exit (1);
-	}
+	message = _notmuch_message_create_for_message_id (NULL,
+							  notmuch,
+							  message_id,
+							  &ret);
+	if (message == NULL)
+	    goto DONE;
 
 	/* Has a message previously been added with the same ID? */
 	old_filename = notmuch_message_get_filename (message);

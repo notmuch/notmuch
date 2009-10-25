@@ -165,12 +165,24 @@ notmuch_results_has_more (notmuch_results_t *results)
 notmuch_message_t *
 notmuch_results_get (notmuch_results_t *results)
 {
+    notmuch_message_t *message;
     Xapian::docid doc_id;
+    notmuch_private_status_t status;
 
     doc_id = *results->iterator;
 
-    return _notmuch_message_create (results,
-				    results->notmuch, doc_id);
+    message = _notmuch_message_create (results,
+				       results->notmuch, doc_id,
+				       &status);
+
+    if (message == NULL &&
+	status == NOTMUCH_PRIVATE_STATUS_NO_DOCUMENT_FOUND)
+    {
+	fprintf (stderr, "Internal error: a results iterator contains a non-existent document ID.\n");
+	exit (1);
+    }
+
+    return message;
 }
 
 void

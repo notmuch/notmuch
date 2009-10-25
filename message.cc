@@ -80,23 +80,43 @@ _notmuch_message_destructor (notmuch_message_t *message)
  * caller *is* responsible for calling notmuch_message_destroy.
  *
  * If no document exists in the database with document ID of 'doc_id'
- * then this function returns NULL.
+ * then this function returns NULL and sets *status to
+ * NOTMUCH_PRIVATE_STATUS_NO_DOCUMENT_FOUND.
+ *
+ * This function can also fail to due lack of available memory,
+ * returning NULL and optionally setting *status to
+ * NOTMUCH_PRIVATE_STATUS_OUT_OF_MEMORY. Caller can pass NULL
+ * for status if uninterested in distinguishing these two cases.
  */
 notmuch_message_t *
 _notmuch_message_create (const void *talloc_owner,
 			 notmuch_database_t *notmuch,
-			 unsigned int doc_id)
+			 unsigned int doc_id,
+			 notmuch_private_status_t *status)
 {
     notmuch_message_t *message;
 
+    if (status)
+	*status = NOTMUCH_PRIVATE_STATUS_SUCCESS;
+
     message = talloc (talloc_owner, notmuch_message_t);
-    if (unlikely (message == NULL))
+    if (unlikely (message == NULL)) {
+	if (status)
+	    *status = NOTMUCH_PRIVATE_STATUS_OUT_OF_MEMORY;
 	return NULL;
+    }
 
     message->notmuch = notmuch;
     message->doc_id = doc_id;
     message->message_id = NULL; /* lazily created */
     message->filename = NULL; /* lazily created */
+
+    /* This is C++'s creepy "placement new", which is really just an
+     * ugly way to call a constructor for a pre-allocated object. So
+     * it's really not an error to not be checking for OUT_OF_MEMORY
+     * here, since this "new" isn't actually allocating memory. This
+     * is language-design comedy of the wrong kind. */
+
     new (&message->doc) Xapian::Document;
 
     talloc_set_destructor (message, _notmuch_message_destructor);
@@ -105,6 +125,8 @@ _notmuch_message_create (const void *talloc_owner,
 	message->doc = notmuch->xapian_db->get_document (doc_id);
     } catch (const Xapian::DocNotFoundError &error) {
 	talloc_free (message);
+	if (status)
+	    *status = NOTMUCH_PRIVATE_STATUS_NO_DOCUMENT_FOUND;
 	return NULL;
     }
 
@@ -127,17 +149,25 @@ _notmuch_message_create (const void *talloc_owner,
  * If there is already a document with message ID 'message_id' in the
  * database, then the returned message can be used to query/modify the
  * document. Otherwise, a new document will be inserted into the
- * database before this function returns;
+ * database before this function returns.
+ *
+ * If an error occurs, this function will return NULL and *status
+ * will be set as appropriate. (The status pointer argument must
+ * not be NULL.)
  */
 notmuch_message_t *
 _notmuch_message_create_for_message_id (const void *talloc_owner,
 					notmuch_database_t *notmuch,
-					const char *message_id)
+					const char *message_id,
+					notmuch_status_t *status)
 {
+    notmuch_private_status_t private_status;
     notmuch_message_t *message;
     Xapian::Document doc;
     unsigned int doc_id;
     char *term;
+
+    *status = NOTMUCH_STATUS_SUCCESS;
 
     message = notmuch_database_find_message (notmuch, message_id);
     if (message)
@@ -145,14 +175,35 @@ _notmuch_message_create_for_message_id (const void *talloc_owner,
 
     term = talloc_asprintf (NULL, "%s%s",
 			    _find_prefix ("id"), message_id);
-    doc.add_term (term);
-    talloc_free (term);
+    if (term == NULL) {
+	*status = NOTMUCH_STATUS_OUT_OF_MEMORY;
+	return NULL;
+    }
 
-    doc.add_value (NOTMUCH_VALUE_MESSAGE_ID, message_id);
+    try {
+	doc.add_term (term);
+	talloc_free (term);
 
-    doc_id = notmuch->xapian_db->add_document (doc);
+	doc.add_value (NOTMUCH_VALUE_MESSAGE_ID, message_id);
 
-    return _notmuch_message_create (talloc_owner, notmuch, doc_id);
+	doc_id = notmuch->xapian_db->add_document (doc);
+    } catch (const Xapian::Error &error) {
+	*status = NOTMUCH_STATUS_XAPIAN_EXCEPTION;
+	return NULL;
+    }
+
+    message = _notmuch_message_create (talloc_owner, notmuch,
+				       doc_id, &private_status);
+
+    if (private_status >= (notmuch_private_status_t) NOTMUCH_STATUS_LAST_STATUS)
+    {
+	fprintf (stderr, "Internal error: Failed to find document immediately after adding it.\n");
+	exit (1);
+    }
+
+    *status = (notmuch_status_t) private_status;
+
+    return message;
 }
 
 const char *

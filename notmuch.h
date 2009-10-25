@@ -51,6 +51,8 @@ typedef int notmuch_bool_t;
  *
  * NOTMUCH_STATUS_SUCCESS: No error occurred.
  *
+ * NOTMUCH_STATUS_OUT_OF_MEMORY: Out of memory
+ *
  * XXX: We don't really want to expose this lame XAPIAN_EXCEPTION
  * value. Instead we should map to things like DATABASE_LOCKED or
  * whatever.
@@ -78,6 +80,7 @@ typedef int notmuch_bool_t;
  */
 typedef enum _notmuch_status {
     NOTMUCH_STATUS_SUCCESS = 0,
+    NOTMUCH_STATUS_OUT_OF_MEMORY,
     NOTMUCH_STATUS_XAPIAN_EXCEPTION,
     NOTMUCH_STATUS_FILE_ERROR,
     NOTMUCH_STATUS_FILE_NOT_EMAIL,
@@ -267,8 +270,8 @@ notmuch_database_add_message (notmuch_database_t *database,
  * a new notmuch_message_t object is returned. The caller should call
  * notmuch_message_destroy when done with the message.
  *
- * If no message is found with the given message_id, this function
- * returns NULL.
+ * If no message is found with the given message_id or if an
+ * out-of-memory situation occurs, this function returns NULL.
  */
 notmuch_message_t *
 notmuch_database_find_message (notmuch_database_t *database,
@@ -376,6 +379,9 @@ notmuch_results_has_more (notmuch_results_t *results);
  *
  * See the documentation of notmuch_query_search for example code
  * showing how to iterate over a notmuch_results_t object.
+ *
+ * If an out-of-memory situation occurs, this function will return
+ * NULL.
  */
 notmuch_message_t *
 notmuch_results_get (notmuch_results_t *results);
