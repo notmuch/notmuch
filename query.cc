@@ -92,7 +92,9 @@ notmuch_query_search (notmuch_query_t *query)
 
     try {
 	Xapian::Enquire enquire (*notmuch->xapian_db);
-	Xapian::Query mail_query ("Kmail");
+	Xapian::Query mail_query (talloc_asprintf (query, "%s%s",
+						   _find_prefix ("type"),
+						   "mail"));
 	Xapian::Query string_query, final_query;
 	Xapian::MSet mset;
 	unsigned int flags = (Xapian::QueryParser::FLAG_BOOLEAN |
