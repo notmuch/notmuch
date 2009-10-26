@@ -18,6 +18,7 @@ MODULES=		\
 	message-file.o	\
 	query.o		\
 	sha1.o		\
+	tags.o		\
 	thread.o	\
 	libsha1.o	\
 	xutil.o
