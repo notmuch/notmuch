@@ -102,7 +102,7 @@ notmuch_status_to_string (notmuch_status_t status);
  * notmuch_<foo> functions below. */
 typedef struct _notmuch_database notmuch_database_t;
 typedef struct _notmuch_query notmuch_query_t;
-typedef struct _notmuch_results notmuch_results_t;
+typedef struct _notmuch_message_results notmuch_message_results_t;
 typedef struct _notmuch_message notmuch_message_t;
 typedef struct _notmuch_tags notmuch_tags_t;
 
@@ -313,22 +313,24 @@ typedef enum {
 void
 notmuch_query_set_sort (notmuch_query_t *query, notmuch_sort_t sort);
 
-/* Execute a query, returning a notmuch_results_t object which can be
- * used to iterate over the results. The results object is owned by
- * the query and as such, will only be valid until notmuch_query_destroy.
+/* Execute a query for messages, returning a notmuch_message_results_t
+ * object which can be used to iterate over the results. The results
+ * object is owned by the query and as such, will only be valid until
+ * notmuch_query_destroy.
  *
  * Typical usage might be:
  *
  *     notmuch_query_t *query;
- *     notmuch_results_t *results;
+ *     notmuch_message_results_t *results;
+ *     notmuch_message_t *message;
  *
  *     query = notmuch_query_create (database, query_string);
  *
- *     for (results = notmuch_query_search (query);
- *          notmuch_results_has_more (results);
- *          notmuch_result_advance (results))
+ *     for (results = notmuch_query_search_messages (query);
+ *          notmuch_message_results_has_more (results);
+ *          notmuch_message_results_advance (results))
  *     {
- *         message = notmuch_results_get (results);
+ *         message = notmuch_message_results_get (results);
  *         ....
  *         notmuch_message_destroy (message);
  *     }
@@ -343,12 +345,12 @@ notmuch_query_set_sort (notmuch_query_t *query, notmuch_sort_t sort);
  * when the query is destroyed.
  *
  * Note that there's no explicit destructor needed for the
- * notmuch_results_t object. (For consistency, we do provide a
- * notmuch_results_destroy function, but there's no good reason to
- * call it if the query is about to be destroyed).
+ * notmuch_message_results_t object. (For consistency, we do provide a
+ * notmuch_message_results_destroy function, but there's no good
+ * reason to call it if the query is about to be destroyed).
  */
-notmuch_results_t *
-notmuch_query_search (notmuch_query_t *query);
+notmuch_message_results_t *
+notmuch_query_search_messages (notmuch_query_t *query);
 
 /* Destroy a notmuch_query_t along with any associated resources.
  *
@@ -359,48 +361,52 @@ notmuch_query_search (notmuch_query_t *query);
 void
 notmuch_query_destroy (notmuch_query_t *query);
 
-/* Does the given notmuch_results_t object contain any more results.
+/* Does the given notmuch_message_results_t object contain any more
+ * results.
  *
- * When this function returns TRUE, notmuch_results_get will return a
- * valid object. Whereas when this function returns FALSE,
- * notmuch_results_get will return NULL.
+ * When this function returns TRUE, notmuch_message_results_get will
+ * return a valid object. Whereas when this function returns FALSE,
+ * notmuch_message_results_get will return NULL.
  *
- * See the documentation of notmuch_query_search for example code
- * showing how to iterate over a notmuch_results_t object.
+ * See the documentation of notmuch_query_search_messages for example
+ * code showing how to iterate over a notmuch_message_results_t
+ * object.
  */
 notmuch_bool_t
-notmuch_results_has_more (notmuch_results_t *results);
+notmuch_message_results_has_more (notmuch_message_results_t *results);
 
 /* Get the current result from 'results' as a notmuch_message_t.
  *
  * Note: The returned message belongs to 'results' and has a lifetime
  * identical to it (and the query to which it belongs).
  *
- * See the documentation of notmuch_query_search for example code
- * showing how to iterate over a notmuch_results_t object.
+ * See the documentation of notmuch_query_search_messages for example
+ * code showing how to iterate over a notmuch_message_results_t
+ * object.
  *
  * If an out-of-memory situation occurs, this function will return
  * NULL.
  */
 notmuch_message_t *
-notmuch_results_get (notmuch_results_t *results);
+notmuch_message_results_get (notmuch_message_results_t *results);
 
 /* Advance the 'results' iterator to the next result.
  *
- * See the documentation of notmuch_query_search for example code
- * showing how to iterate over a notmuch_results_t object.
+ * See the documentation of notmuch_query_search_messages for example
+ * code showing how to iterate over a notmuch_message_results_t
+ * object.
  */
 void
-notmuch_results_advance (notmuch_results_t *results);
+notmuch_message_results_advance (notmuch_message_results_t *results);
 
-/* Destroy a notmuch_results_t object.
+/* Destroy a notmuch_message_results_t object.
  *
  * It's not strictly necessary to call this function. All memory from
- * the notmuch_results_t object will be reclaimed when the containg
- * query object is destroyed.
+ * the notmuch_message_results_t object will be reclaimed when the
+ * containg query object is destroyed.
  */
 void
-notmuch_results_destroy (notmuch_results_t *results);
+notmuch_message_results_destroy (notmuch_message_results_t *results);
 
 /* Get the message ID of 'message'.
  *
@@ -415,7 +421,6 @@ notmuch_results_destroy (notmuch_results_t *results);
  */
 const char *
 notmuch_message_get_message_id (notmuch_message_t *message);
-
 
 /* Get the thread ID of 'message'.
  *

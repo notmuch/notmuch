@@ -608,7 +608,7 @@ search_command (int argc, char *argv[])
     void *local = talloc_new (NULL);
     notmuch_database_t *notmuch = NULL;
     notmuch_query_t *query;
-    notmuch_results_t *results;
+    notmuch_message_results_t *results;
     notmuch_message_t *message;
     notmuch_tags_t *tags;
     char *query_str;
@@ -638,12 +638,12 @@ search_command (int argc, char *argv[])
 	goto DONE;
     }
 
-    for (results = notmuch_query_search (query);
-	 notmuch_results_has_more (results);
-	 notmuch_results_advance (results))
+    for (results = notmuch_query_search_messages (query);
+	 notmuch_message_results_has_more (results);
+	 notmuch_message_results_advance (results))
     {
 	int first = 1;
-	message = notmuch_results_get (results);
+	message = notmuch_message_results_get (results);
 
 	printf ("%s (", notmuch_message_get_message_id (message));
 
@@ -687,7 +687,7 @@ dump_command (int argc, char *argv[])
     FILE *output;
     notmuch_database_t *notmuch = NULL;
     notmuch_query_t *query;
-    notmuch_results_t *results;
+    notmuch_message_results_t *results;
     notmuch_message_t *message;
     notmuch_tags_t *tags;
     int ret = 0;
@@ -719,12 +719,12 @@ dump_command (int argc, char *argv[])
 
     notmuch_query_set_sort (query, NOTMUCH_SORT_MESSAGE_ID);
 
-    for (results = notmuch_query_search (query);
-	 notmuch_results_has_more (results);
-	 notmuch_results_advance (results))
+    for (results = notmuch_query_search_messages (query);
+	 notmuch_message_results_has_more (results);
+	 notmuch_message_results_advance (results))
     {
 	int first = 1;
-	message = notmuch_results_get (results);
+	message = notmuch_message_results_get (results);
 
 	fprintf (output,
 		 "%s (", notmuch_message_get_message_id (message));

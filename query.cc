@@ -29,7 +29,7 @@ struct _notmuch_query {
     notmuch_sort_t sort;
 };
 
-struct _notmuch_results {
+struct _notmuch_message_results {
     notmuch_database_t *notmuch;
     Xapian::MSetIterator iterator;
     Xapian::MSetIterator iterator_end;
@@ -71,7 +71,7 @@ notmuch_query_set_sort (notmuch_query_t *query, notmuch_sort_t sort)
  * talloc_set_destructor at all otherwise).
  */
 static int
-_notmuch_results_destructor (notmuch_results_t *results)
+_notmuch_message_results_destructor (notmuch_message_results_t *results)
 {
     results->iterator.~MSetIterator ();
     results->iterator_end.~MSetIterator ();
@@ -79,14 +79,14 @@ _notmuch_results_destructor (notmuch_results_t *results)
     return 0;
 }
 
-notmuch_results_t *
-notmuch_query_search (notmuch_query_t *query)
+notmuch_message_results_t *
+notmuch_query_search_messages (notmuch_query_t *query)
 {
     notmuch_database_t *notmuch = query->notmuch;
     const char *query_string = query->query_string;
-    notmuch_results_t *results;
+    notmuch_message_results_t *results;
 
-    results = talloc (query, notmuch_results_t);
+    results = talloc (query, notmuch_message_results_t);
     if (unlikely (results == NULL))
 	return NULL;
 
@@ -137,7 +137,7 @@ notmuch_query_search (notmuch_query_t *query)
 	new (&results->iterator) Xapian::MSetIterator ();
 	new (&results->iterator_end) Xapian::MSetIterator ();
 
-	talloc_set_destructor (results, _notmuch_results_destructor);
+	talloc_set_destructor (results, _notmuch_message_results_destructor);
 
 	results->iterator = mset.begin ();
 	results->iterator_end = mset.end ();
@@ -157,13 +157,13 @@ notmuch_query_destroy (notmuch_query_t *query)
 }
 
 notmuch_bool_t
-notmuch_results_has_more (notmuch_results_t *results)
+notmuch_message_results_has_more (notmuch_message_results_t *results)
 {
     return (results->iterator != results->iterator_end);
 }
 
 notmuch_message_t *
-notmuch_results_get (notmuch_results_t *results)
+notmuch_message_results_get (notmuch_message_results_t *results)
 {
     notmuch_message_t *message;
     Xapian::docid doc_id;
@@ -185,13 +185,13 @@ notmuch_results_get (notmuch_results_t *results)
 }
 
 void
-notmuch_results_advance (notmuch_results_t *results)
+notmuch_message_results_advance (notmuch_message_results_t *results)
 {
     results->iterator++;
 }
 
 void
-notmuch_results_destroy (notmuch_results_t *results)
+notmuch_message_results_destroy (notmuch_message_results_t *results)
 {
     talloc_free (results);
 }
