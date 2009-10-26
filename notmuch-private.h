@@ -137,6 +137,13 @@ typedef enum _notmuch_private_status {
      :									\
      (notmuch_status_t) private_status)
 
+/* thread.cc */
+
+notmuch_thread_t *
+_notmuch_thread_create (const void *talloc_owner,
+			notmuch_database_t *notmuch,
+			const char *thread_id);
+
 /* message.cc */
 
 notmuch_message_t *

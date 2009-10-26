@@ -608,9 +608,8 @@ search_command (int argc, char *argv[])
     void *local = talloc_new (NULL);
     notmuch_database_t *notmuch = NULL;
     notmuch_query_t *query;
-    notmuch_message_results_t *results;
-    notmuch_message_t *message;
-    notmuch_tags_t *tags;
+    notmuch_thread_results_t *results;
+    notmuch_thread_t *thread;
     char *query_str;
     int i;
     notmuch_status_t ret = NOTMUCH_STATUS_SUCCESS;
@@ -638,30 +637,15 @@ search_command (int argc, char *argv[])
 	goto DONE;
     }
 
-    for (results = notmuch_query_search_messages (query);
-	 notmuch_message_results_has_more (results);
-	 notmuch_message_results_advance (results))
+    for (results = notmuch_query_search_threads (query);
+	 notmuch_thread_results_has_more (results);
+	 notmuch_thread_results_advance (results))
     {
-	int first = 1;
-	message = notmuch_message_results_get (results);
+	thread = notmuch_thread_results_get (results);
 
-	printf ("%s (", notmuch_message_get_message_id (message));
+	printf ("%s\n", notmuch_thread_get_thread_id (thread));
 
-	for (tags = notmuch_message_get_tags (message);
-	     notmuch_tags_has_more (tags);
-	     notmuch_tags_advance (tags))
-	{
-	    if (! first)
-		printf (" ");
-
-	    printf ("%s", notmuch_tags_get (tags));
-
-	    first = 0;
-	}
-
-	printf (")\n");
-
-	notmuch_message_destroy (message);
+	notmuch_thread_destroy (thread);
     }
 
     notmuch_query_destroy (query);

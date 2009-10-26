@@ -21,6 +21,8 @@
 #include "notmuch-private.h"
 #include "database-private.h"
 
+#include <glib.h> /* GHashTable, GPtrArray */
+
 #include <xapian.h>
 
 struct _notmuch_query {
@@ -33,6 +35,12 @@ struct _notmuch_message_results {
     notmuch_database_t *notmuch;
     Xapian::MSetIterator iterator;
     Xapian::MSetIterator iterator_end;
+};
+
+struct _notmuch_thread_results {
+    notmuch_database_t *notmuch;
+    GPtrArray *thread_ids;
+    unsigned int index;
 };
 
 notmuch_query_t *
@@ -150,6 +158,50 @@ notmuch_query_search_messages (notmuch_query_t *query)
     return results;
 }
 
+notmuch_thread_results_t *
+notmuch_query_search_threads (notmuch_query_t *query)
+{
+    notmuch_thread_results_t *thread_results;
+    notmuch_message_results_t *message_results;
+    notmuch_message_t *message;
+    const char *thread_id;
+    GHashTable *seen;
+
+    thread_results = talloc (query, notmuch_thread_results_t);
+    if (thread_results == NULL)
+	return NULL;
+
+    thread_results->notmuch = query->notmuch;
+    thread_results->thread_ids = g_ptr_array_new ();
+    thread_results->index = 0;
+
+    seen = g_hash_table_new_full (g_str_hash, g_str_equal,
+				  free, NULL);
+
+    for (message_results = notmuch_query_search_messages (query);
+	 notmuch_message_results_has_more (message_results);
+	 notmuch_message_results_advance (message_results))
+    {
+	message = notmuch_message_results_get (message_results);
+	thread_id = notmuch_message_get_thread_id (message);
+
+	if (g_hash_table_lookup_extended (seen,
+					  thread_id, NULL, NULL))
+	{
+	    continue;
+	}
+
+	g_hash_table_insert (seen, xstrdup (thread_id), NULL);
+
+	g_ptr_array_add (thread_results->thread_ids,
+			 talloc_strdup (thread_results, thread_id));
+    }
+
+    g_hash_table_unref (seen);
+
+    return thread_results;
+}
+
 void
 notmuch_query_destroy (notmuch_query_t *query)
 {
@@ -193,5 +245,40 @@ notmuch_message_results_advance (notmuch_message_results_t *results)
 void
 notmuch_message_results_destroy (notmuch_message_results_t *results)
 {
+    talloc_free (results);
+}
+
+notmuch_bool_t
+notmuch_thread_results_has_more (notmuch_thread_results_t *results)
+{
+    return (results->index < results->thread_ids->len);
+}
+
+notmuch_thread_t *
+notmuch_thread_results_get (notmuch_thread_results_t *results)
+{
+    notmuch_thread_t *thread;
+    const char *thread_id;
+
+    thread_id = (const char *) g_ptr_array_index (results->thread_ids,
+						  results->index);
+
+    thread = _notmuch_thread_create (results,
+				     results->notmuch,
+				     thread_id);
+
+    return thread;
+}
+
+void
+notmuch_thread_results_advance (notmuch_thread_results_t *results)
+{
+    results->index++;
+}
+
+void
+notmuch_thread_results_destroy (notmuch_thread_results_t *results)
+{
+    g_ptr_array_free (results->thread_ids, TRUE);
     talloc_free (results);
 }
