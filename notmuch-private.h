@@ -22,7 +22,7 @@
 #define NOTMUCH_PRIVATE_H
 
 #ifndef _GNU_SOURCE
-#define _GNU_SOURCE /* For getline */
+#define _GNU_SOURCE /* For getline and asprintf */
 #endif
 #include <stdio.h>
 

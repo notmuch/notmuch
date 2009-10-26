@@ -24,7 +24,7 @@
 
 #include <xapian.h>
 
-#include <glib.h> /* g_strdup_printf, g_free, GPtrArray, GHashTable */
+#include <glib.h> /* g_free, GPtrArray, GHashTable */
 
 using namespace std;
 
@@ -182,13 +182,14 @@ find_doc_ids (notmuch_database_t *notmuch,
     Xapian::PostingIterator i;
     char *term;
 
-    term = g_strdup_printf ("%s%s", _find_prefix (prefix_name), value);
+    term = talloc_asprintf (notmuch, "%s%s",
+			    _find_prefix (prefix_name), value);
 
     *begin = notmuch->xapian_db->postlist_begin (term);
 
     *end = notmuch->xapian_db->postlist_end (term);
 
-    free (term);
+    talloc_free (term);
 }
 
 static notmuch_private_status_t
@@ -293,12 +294,11 @@ skip_space_and_comments (const char **str)
  * If not NULL, then *next will be made to point to the first character
  * not parsed, (possibly pointing to the final '\0' terminator.
  *
- * Returns a newly allocated string which the caller should free()
- * when done with it.
+ * Returns a newly talloc'ed string belonging to 'ctx'.
  *
  * Returns NULL if there is any error parsing the message-id. */
 static char *
-parse_message_id (const char *message_id, const char **next)
+parse_message_id (void *ctx, const char *message_id, const char **next)
 {
     const char *s, *end;
     char *result;
@@ -339,7 +339,7 @@ parse_message_id (const char *message_id, const char **next)
     if (end <= s)
 	return NULL;
 
-    result = strndup (s, end - s + 1);
+    result = talloc_strndup (ctx, s, end - s + 1);
 
     /* Finally, collapse any whitespace that is within the message-id
      * itself. */
@@ -355,10 +355,11 @@ parse_message_id (const char *message_id, const char **next)
     return result;
 }
 
-/* Parse a References header value, putting a copy of each referenced
- * message-id into 'hash'. */
+/* Parse a References header value, putting a (talloc'ed under 'ctx')
+ * copy of each referenced message-id into 'hash'. */
 static void
-parse_references (GHashTable *hash,
+parse_references (void *ctx,
+		  GHashTable *hash,
 		  const char *refs)
 {
     char *ref;
@@ -367,7 +368,7 @@ parse_references (GHashTable *hash,
 	return;
 
     while (*refs) {
-	ref = parse_message_id (refs, &refs);
+	ref = parse_message_id (ctx, refs, &refs);
 
 	if (ref)
 	    g_hash_table_insert (hash, ref, NULL);
@@ -377,10 +378,17 @@ parse_references (GHashTable *hash,
 char *
 notmuch_database_default_path (void)
 {
+    char *path;
+
     if (getenv ("NOTMUCH_BASE"))
 	return strdup (getenv ("NOTMUCH_BASE"));
 
-    return g_strdup_printf ("%s/mail", getenv ("HOME"));
+    if (asprintf (&path, "%s/mail", getenv ("HOME")) == -1) {
+	fprintf (stderr, "Out of memory.\n");
+	return xstrdup("");
+    }
+
+    return path;
 }
 
 notmuch_database_t *
@@ -408,7 +416,7 @@ notmuch_database_create (const char *path)
 	goto DONE;
     }
 
-    notmuch_path = g_strdup_printf ("%s/%s", path, ".notmuch");
+    notmuch_path = talloc_asprintf (NULL, "%s/%s", path, ".notmuch");
 
     err = mkdir (notmuch_path, 0755);
 
@@ -422,7 +430,7 @@ notmuch_database_create (const char *path)
 
   DONE:
     if (notmuch_path)
-	free (notmuch_path);
+	talloc_free (notmuch_path);
     if (local_path)
 	free (local_path);
 
@@ -442,7 +450,11 @@ notmuch_database_open (const char *path)
     if (path == NULL)
 	path = local_path = notmuch_database_default_path ();
 
-    notmuch_path = g_strdup_printf ("%s/%s", path, ".notmuch");
+    if (asprintf (&notmuch_path, "%s/%s", path, ".notmuch") == -1) {
+	notmuch_path = NULL;
+	fprintf (stderr, "Out of memory\n");
+	goto DONE;
+    }
 
     err = stat (notmuch_path, &st);
     if (err) {
@@ -451,7 +463,11 @@ notmuch_database_open (const char *path)
 	goto DONE;
     }
 
-    xapian_path = g_strdup_printf ("%s/%s", notmuch_path, "xapian");
+    if (asprintf (&xapian_path, "%s/%s", notmuch_path, "xapian") == -1) {
+	xapian_path = NULL;
+	fprintf (stderr, "Out of memory\n");
+	goto DONE;
+    }
 
     notmuch = talloc (NULL, notmuch_database_t);
     notmuch->path = talloc_strdup (notmuch, path);
@@ -659,6 +675,12 @@ _merge_threads (notmuch_database_t *notmuch,
     return ret;
 }
 
+static void
+_my_talloc_free_for_g_hash (void *ptr)
+{
+    talloc_free (ptr);
+}
+
 static notmuch_status_t
 _notmuch_database_link_message_to_parents (notmuch_database_t *notmuch,
 					   notmuch_message_t *message,
@@ -671,13 +693,13 @@ _notmuch_database_link_message_to_parents (notmuch_database_t *notmuch,
     notmuch_status_t ret = NOTMUCH_STATUS_SUCCESS;
 
     parents = g_hash_table_new_full (g_str_hash, g_str_equal,
-				     free, NULL);
+				     _my_talloc_free_for_g_hash, NULL);
 
     refs = notmuch_message_file_get_header (message_file, "references");
-    parse_references (parents, refs);
+    parse_references (message, parents, refs);
 
     in_reply_to = notmuch_message_file_get_header (message_file, "in-reply-to");
-    parse_references (parents, in_reply_to);
+    parse_references (message, parents, in_reply_to);
 
     keys = g_hash_table_get_keys (parents);
     for (l = keys; l; l = l->next) {
@@ -830,11 +852,11 @@ notmuch_database_add_message (notmuch_database_t *notmuch,
 
 	header = notmuch_message_file_get_header (message_file, "message-id");
 	if (header) {
-	    message_id = parse_message_id (header, NULL);
+	    message_id = parse_message_id (message_file, header, NULL);
 	    /* So the header value isn't RFC-compliant, but it's
 	     * better than no message-id at all. */
 	    if (message_id == NULL)
-		message_id = xstrdup (header);
+		message_id = talloc_strdup (message_file, header);
 	} else {
 	    /* No message-id at all, let's generate one by taking a
 	     * hash over the file's contents. */
@@ -846,7 +868,8 @@ notmuch_database_add_message (notmuch_database_t *notmuch,
 		goto DONE;
 	    }
 
-	    message_id = g_strdup_printf ("notmuch-sha1-%s", sha1);
+	    message_id = talloc_asprintf (message_file,
+					  "notmuch-sha1-%s", sha1);
 	    free (sha1);
 	}
 
@@ -859,7 +882,8 @@ notmuch_database_add_message (notmuch_database_t *notmuch,
 							  notmuch,
 							  message_id,
 							  &ret);
-	free (message_id);
+
+	talloc_free (message_id);
 
 	if (message == NULL)
 	    goto DONE;

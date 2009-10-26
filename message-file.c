@@ -75,7 +75,7 @@ notmuch_message_file_open (const char *filename)
 {
     notmuch_message_file_t *message;
 
-    message = xcalloc (1, sizeof (notmuch_message_file_t));
+    message = talloc_zero (NULL, notmuch_message_file_t);
 
     message->file = fopen (filename, "r");
     if (message->file == NULL)
@@ -116,7 +116,7 @@ notmuch_message_file_close (notmuch_message_file_t *message)
     if (message->file)
 	fclose (message->file);
 
-    free (message);
+    talloc_free (message);
 }
 
 void

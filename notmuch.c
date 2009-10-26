@@ -41,8 +41,6 @@
 
 #include <talloc.h>
 
-#include <glib.h> /* g_strdup_printf */
-
 #define unused(x) x __attribute__ ((unused))
 
 /* There's no point in continuing when we've detected that we've done
@@ -236,7 +234,7 @@ add_files_recursive (notmuch_database_t *notmuch,
 	    continue;
 	}
 
-	next = g_strdup_printf ("%s/%s", path, entry->d_name);
+	next = talloc_asprintf (notmuch, "%s/%s", path, entry->d_name);
 
 	if (stat (next, st)) {
 	    fprintf (stderr, "Error reading %s: %s\n",
@@ -289,7 +287,7 @@ add_files_recursive (notmuch_database_t *notmuch,
 		ret = status;
 	}
 
-	free (next);
+	talloc_free (next);
 	next = NULL;
     }
 
@@ -299,7 +297,7 @@ add_files_recursive (notmuch_database_t *notmuch,
 
   DONE:
     if (next)
-	free (next);
+	talloc_free (next);
     if (entry)
 	free (entry);
     if (dir)
@@ -342,7 +340,7 @@ static void
 count_files (const char *path, int *count)
 {
     DIR *dir;
-    struct dirent *entry, *e;
+    struct dirent *e, *entry = NULL;
     int entry_length;
     int err;
     char *next;
@@ -353,7 +351,7 @@ count_files (const char *path, int *count)
     if (dir == NULL) {
 	fprintf (stderr, "Warning: failed to open directory %s: %s\n",
 		 path, strerror (errno));
-	return;
+	goto DONE;
     }
 
     entry_length = offsetof (struct dirent, d_name) +
@@ -366,7 +364,7 @@ count_files (const char *path, int *count)
 	    fprintf (stderr, "Error reading directory: %s\n",
 		     strerror (errno));
 	    free (entry);
-	    return;
+	    goto DONE;
 	}
 
 	if (e == NULL)
@@ -384,7 +382,12 @@ count_files (const char *path, int *count)
 	    continue;
 	}
 
-	next = g_strdup_printf ("%s/%s", path, entry->d_name);
+	if (asprintf (&next, "%s/%s", path, entry->d_name) == -1) {
+	    next = NULL;
+	    fprintf (stderr, "Error descending from %s to %s: Out of memory\n",
+		     path, entry->d_name);
+	    continue;
+	}
 
 	stat (next, &st);
 
@@ -401,7 +404,9 @@ count_files (const char *path, int *count)
 	free (next);
     }
 
-    free (entry);
+  DONE:
+    if (entry)
+	free (entry);
 
     closedir (dir);
 }
