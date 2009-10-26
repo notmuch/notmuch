@@ -158,6 +158,18 @@ notmuch_query_search_messages (notmuch_query_t *query)
     return results;
 }
 
+/* Glib objects force use to use a talloc destructor as well, (but not
+ * nearly as ugly as the for message_results due to C++ objects). At
+ * this point, I'd really like to have some talloc-friendly
+ * equivalents for the few pieces of glib that I'm using. */
+static int
+_notmuch_thread_results_destructor (notmuch_thread_results_t *results)
+{
+    g_ptr_array_free (results->thread_ids, TRUE);
+
+    return 0;
+}
+
 notmuch_thread_results_t *
 notmuch_query_search_threads (notmuch_query_t *query)
 {
@@ -174,6 +186,8 @@ notmuch_query_search_threads (notmuch_query_t *query)
     thread_results->notmuch = query->notmuch;
     thread_results->thread_ids = g_ptr_array_new ();
     thread_results->index = 0;
+
+    talloc_set_destructor (thread_results, _notmuch_thread_results_destructor);
 
     seen = g_hash_table_new_full (g_str_hash, g_str_equal,
 				  free, NULL);
@@ -285,6 +299,5 @@ notmuch_thread_results_advance (notmuch_thread_results_t *results)
 void
 notmuch_thread_results_destroy (notmuch_thread_results_t *results)
 {
-    g_ptr_array_free (results->thread_ids, TRUE);
     talloc_free (results);
 }
