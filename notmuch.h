@@ -458,6 +458,45 @@ notmuch_thread_results_destroy (notmuch_thread_results_t *results);
 const char *
 notmuch_thread_get_thread_id (notmuch_thread_t *thread);
 
+/* Get the tags for 'thread', returning a notmuch_tags_t object which
+ * can be used to iterate over all tags.
+ *
+ * Note: In the Notmuch database, tags are stored on individual
+ * messages, not on threads. So the tags returned here will be all
+ * tags of the messages which matched the search and which belong to
+ * this thread.
+ *
+ * The tags object is owned by the thread and as such, will only be
+ * valid for as long as the thread is valid, (for example, until
+ * notmuch_thread_destroy or until the query from which it derived is
+ * destroyed).
+ *
+ * Typical usage might be:
+ *
+ *     notmuch_thread_t *thread;
+ *     notmuch_tags_t *tags;
+ *     const char *tag;
+ *
+ *     thread = notmuch_thread_results_get (thread_results);
+ *
+ *     for (tags = notmuch_thread_get_tags (thread);
+ *          notmuch_tags_has_more (tags);
+ *          notmuch_result_advance (tags))
+ *     {
+ *         tag = notmuch_tags_get (tags);
+ *         ....
+ *     }
+ *
+ *     notmuch_thread_destroy (thread);
+ *
+ * Note that there's no explicit destructor needed for the
+ * notmuch_tags_t object. (For consistency, we do provide a
+ * notmuch_tags_destroy function, but there's no good reason to call
+ * it if the message is about to be destroyed).
+ */
+notmuch_tags_t *
+notmuch_thread_get_tags (notmuch_thread_t *thread);
+
 /* Destroy a notmuch_thread_t object. */
 void
 notmuch_thread_destroy (notmuch_thread_t *thread);

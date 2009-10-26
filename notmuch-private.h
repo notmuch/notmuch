@@ -144,6 +144,9 @@ _notmuch_thread_create (const void *talloc_owner,
 			notmuch_database_t *notmuch,
 			const char *thread_id);
 
+void
+_notmuch_thread_add_tag (notmuch_thread_t *thread, const char *tag);
+
 /* message.cc */
 
 notmuch_message_t *

@@ -23,10 +23,21 @@
 
 #include <xapian.h>
 
+#include <glib.h> /* GHashTable */
+
 struct _notmuch_thread {
     notmuch_database_t *notmuch;
     char *thread_id;
+    GHashTable *tags;
 };
+
+static int
+_notmuch_thread_destructor (notmuch_thread_t *thread)
+{
+    g_hash_table_unref (thread->tags);
+
+    return 0;
+}
 
 /* Create a new notmuch_thread_t object for an existing document in
  * the database.
@@ -54,8 +65,12 @@ _notmuch_thread_create (const void *talloc_owner,
     if (unlikely (thread == NULL))
 	return NULL;
 
+    talloc_set_destructor (thread, _notmuch_thread_destructor);
+
     thread->notmuch = notmuch;
     thread->thread_id = talloc_strdup (thread, thread_id);
+    thread->tags = g_hash_table_new_full (g_str_hash, g_str_equal,
+					  free, NULL);
 
     return thread;
 }
@@ -64,6 +79,34 @@ const char *
 notmuch_thread_get_thread_id (notmuch_thread_t *thread)
 {
     return thread->thread_id;
+}
+
+void
+_notmuch_thread_add_tag (notmuch_thread_t *thread, const char *tag)
+{
+    g_hash_table_insert (thread->tags, xstrdup (tag), NULL);
+}
+
+notmuch_tags_t *
+notmuch_thread_get_tags (notmuch_thread_t *thread)
+{
+    notmuch_tags_t *tags;
+    GList *keys, *l;
+
+    tags = _notmuch_tags_create (thread);
+    if (unlikely (tags == NULL))
+	return NULL;
+
+    keys = g_hash_table_get_keys (thread->tags);
+
+    for (l = keys; l; l = l->next)
+	_notmuch_tags_add_tag (tags, (char *) l->data);
+
+    g_list_free (keys);
+
+    _notmuch_tags_prepare_iterator (tags);
+
+    return tags;
 }
 
 void

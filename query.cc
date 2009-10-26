@@ -39,7 +39,7 @@ struct _notmuch_message_results {
 
 struct _notmuch_thread_results {
     notmuch_database_t *notmuch;
-    GPtrArray *thread_ids;
+    GPtrArray *threads;
     unsigned int index;
 };
 
@@ -165,7 +165,7 @@ notmuch_query_search_messages (notmuch_query_t *query)
 static int
 _notmuch_thread_results_destructor (notmuch_thread_results_t *results)
 {
-    g_ptr_array_free (results->thread_ids, TRUE);
+    g_ptr_array_free (results->threads, TRUE);
 
     return 0;
 }
@@ -174,9 +174,12 @@ notmuch_thread_results_t *
 notmuch_query_search_threads (notmuch_query_t *query)
 {
     notmuch_thread_results_t *thread_results;
+    notmuch_thread_t *thread;
+    const char *thread_id;
     notmuch_message_results_t *message_results;
     notmuch_message_t *message;
-    const char *thread_id;
+    notmuch_tags_t *tags;
+    const char *tag;
     GHashTable *seen;
 
     thread_results = talloc (query, notmuch_thread_results_t);
@@ -184,7 +187,7 @@ notmuch_query_search_threads (notmuch_query_t *query)
 	return NULL;
 
     thread_results->notmuch = query->notmuch;
-    thread_results->thread_ids = g_ptr_array_new ();
+    thread_results->threads = g_ptr_array_new ();
     thread_results->index = 0;
 
     talloc_set_destructor (thread_results, _notmuch_thread_results_destructor);
@@ -197,18 +200,28 @@ notmuch_query_search_threads (notmuch_query_t *query)
 	 notmuch_message_results_advance (message_results))
     {
 	message = notmuch_message_results_get (message_results);
+
 	thread_id = notmuch_message_get_thread_id (message);
 
-	if (g_hash_table_lookup_extended (seen,
-					  thread_id, NULL, NULL))
+	if (! g_hash_table_lookup_extended (seen,
+					    thread_id, NULL,
+					    (void **) &thread))
 	{
-	    continue;
+	    thread = _notmuch_thread_create (query, query->notmuch,
+					     thread_id);
+
+	    g_hash_table_insert (seen, xstrdup (thread_id), thread);
+
+	    g_ptr_array_add (thread_results->threads, thread);
 	}
 
-	g_hash_table_insert (seen, xstrdup (thread_id), NULL);
-
-	g_ptr_array_add (thread_results->thread_ids,
-			 talloc_strdup (thread_results, thread_id));
+	for (tags = notmuch_message_get_tags (message);
+	     notmuch_tags_has_more (tags);
+	     notmuch_tags_advance (tags))
+	{
+	    tag = notmuch_tags_get (tags);
+	    _notmuch_thread_add_tag (thread, tag);
+	}
     }
 
     g_hash_table_unref (seen);
@@ -268,26 +281,17 @@ notmuch_message_results_destroy (notmuch_message_results_t *results)
 notmuch_bool_t
 notmuch_thread_results_has_more (notmuch_thread_results_t *results)
 {
-    return (results->index < results->thread_ids->len);
+    return (results->index < results->threads->len);
 }
 
 notmuch_thread_t *
 notmuch_thread_results_get (notmuch_thread_results_t *results)
 {
-    notmuch_thread_t *thread;
-    const char *thread_id;
-
     if (! notmuch_thread_results_has_more (results))
 	return NULL;
 
-    thread_id = (const char *) g_ptr_array_index (results->thread_ids,
-						  results->index);
-
-    thread = _notmuch_thread_create (results,
-				     results->notmuch,
-				     thread_id);
-
-    return thread;
+    return (notmuch_thread_t *) g_ptr_array_index (results->threads,
+						   results->index);
 }
 
 void

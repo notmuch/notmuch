@@ -610,6 +610,7 @@ search_command (int argc, char *argv[])
     notmuch_query_t *query;
     notmuch_thread_results_t *results;
     notmuch_thread_t *thread;
+    notmuch_tags_t *tags;
     char *query_str;
     int i;
     notmuch_status_t ret = NOTMUCH_STATUS_SUCCESS;
@@ -641,9 +642,23 @@ search_command (int argc, char *argv[])
 	 notmuch_thread_results_has_more (results);
 	 notmuch_thread_results_advance (results))
     {
+	int first = 1;
+
 	thread = notmuch_thread_results_get (results);
 
-	printf ("%s\n", notmuch_thread_get_thread_id (thread));
+	printf ("%s (", notmuch_thread_get_thread_id (thread));
+
+	for (tags = notmuch_thread_get_tags (thread);
+	     notmuch_tags_has_more (tags);
+	     notmuch_tags_advance (tags))
+	{
+	    if (! first)
+		printf (" ");
+	    printf ("%s", notmuch_tags_get (tags));
+	    first = 0;
+	}
+
+	printf (")\n");
 
 	notmuch_thread_destroy (thread);
     }
