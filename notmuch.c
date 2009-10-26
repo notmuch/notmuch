@@ -924,11 +924,11 @@ main (int argc, char *argv[])
 	strcmp (argv[1], "--help") == 0)
     {
 	fprintf (stderr, "The notmuch mail system.\n\n");
+	usage ();
+	return 0;
     } else {
 	fprintf (stderr, "Error: Unknown command '%s'\n\n", argv[1]);
+	usage ();
+	return 1;
     }
-    usage ();
-    exit (1);
-
-    return 0;
 }

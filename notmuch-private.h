@@ -274,6 +274,20 @@ notmuch_sha1_of_string (const char *str);
 char *
 notmuch_sha1_of_file (const char *filename);
 
+/* tags.c */
+
+notmuch_tags_t *
+_notmuch_tags_create (void *ctx);
+
+void
+_notmuch_tags_add_tag (notmuch_tags_t *tags, const char *tag);
+
+void
+_notmuch_tags_sort (notmuch_tags_t *tags);
+
+void
+_notmuch_tags_reset (notmuch_tags_t *tags);
+
 NOTMUCH_END_DECLS
 
 #endif

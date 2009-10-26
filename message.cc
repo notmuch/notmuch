@@ -18,7 +18,7 @@
  * Author: Carl Worth <cworth@cworth.org>
  */
 
-#include "notmuch-private-cxx.h"
+#include "notmuch-private.h"
 #include "database-private.h"
 
 #include <xapian.h>
@@ -289,7 +289,40 @@ notmuch_message_get_filename (notmuch_message_t *message)
 notmuch_tags_t *
 notmuch_message_get_tags (notmuch_message_t *message)
 {
-    return _notmuch_tags_create_terms (message, message->doc, "tag");
+    const char *prefix = _find_prefix ("tag");
+    Xapian::TermIterator i, end;
+    notmuch_tags_t *tags;
+    std::string tag;
+
+    /* Currently this iteration is written with the assumption that
+     * "tag" has a single-character prefix. */
+    assert (strlen (prefix) == 1);
+
+    tags = _notmuch_tags_create (message);
+    if (unlikely (tags == NULL))
+	return NULL;
+
+    i = message->doc.termlist_begin ();
+    end = message->doc.termlist_end ();
+
+    i.skip_to (prefix);
+
+    while (1) {
+	tag = *i;
+
+	if (tag.empty () || tag[0] != *prefix)
+	    break;
+
+	_notmuch_tags_add_tag (tags, tag.c_str () + 1);
+
+	i++;
+    }
+
+    _notmuch_tags_sort (tags);
+
+    _notmuch_tags_reset (tags);
+
+    return tags;
 }
 
 void
