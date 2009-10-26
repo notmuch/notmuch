@@ -34,27 +34,9 @@
 /* tags.cc */
 /***********/
 
-typedef struct _notmuch_terms {
-    char prefix_char;
-    Xapian::TermIterator iterator;
-    Xapian::TermIterator iterator_end;
-} notmuch_terms_t;
-
-struct _notmuch_tags {
-    notmuch_terms_t terms;
-};
-
-notmuch_terms_t *
-_notmuch_terms_create (void *ctx,
-		       Xapian::Document doc,
-		       const char *prefix_name);
-
-/* The assertion is to ensure that 'type' is a derivative of
- * notmuch_terms_t in that it contains a notmuch_terms_t as its first
- * member. We do this by name of 'terms' as opposed to type, because
- * that's as clever as I've been so far. */
-#define _notmuch_terms_create_type(ctx, doc, prefix_name, type) \
-    (COMPILE_TIME_ASSERT(offsetof(type, terms) == 0),		\
-     (type *) _notmuch_terms_create (ctx, doc, prefix_name))
+notmuch_tags_t *
+_notmuch_tags_create_terms (void *ctx,
+			    Xapian::Document doc,
+			    const char *prefix_name);
 
 #endif

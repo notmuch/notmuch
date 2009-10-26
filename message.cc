@@ -289,8 +289,7 @@ notmuch_message_get_filename (notmuch_message_t *message)
 notmuch_tags_t *
 notmuch_message_get_tags (notmuch_message_t *message)
 {
-    return _notmuch_terms_create_type (message, message->doc, "tag",
-				       notmuch_tags_t);
+    return _notmuch_tags_create_terms (message, message->doc, "tag");
 }
 
 void
