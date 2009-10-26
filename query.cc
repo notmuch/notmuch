@@ -221,6 +221,9 @@ notmuch_message_results_get (notmuch_message_results_t *results)
     Xapian::docid doc_id;
     notmuch_private_status_t status;
 
+    if (! notmuch_message_results_has_more (results))
+	return NULL;
+
     doc_id = *results->iterator;
 
     message = _notmuch_message_create (results,
@@ -259,6 +262,9 @@ notmuch_thread_results_get (notmuch_thread_results_t *results)
 {
     notmuch_thread_t *thread;
     const char *thread_id;
+
+    if (! notmuch_thread_results_has_more (results))
+	return NULL;
 
     thread_id = (const char *) g_ptr_array_index (results->thread_ids,
 						  results->index);
