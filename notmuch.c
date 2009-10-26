@@ -668,7 +668,7 @@ show_command (unused (int argc), unused (char *argv[]))
 static int
 dump_command (int argc, char *argv[])
 {
-    FILE *output;
+    FILE *output = NULL;
     notmuch_database_t *notmuch = NULL;
     notmuch_query_t *query;
     notmuch_message_results_t *results;
@@ -735,7 +735,7 @@ dump_command (int argc, char *argv[])
   DONE:
     if (notmuch)
 	notmuch_database_close (notmuch);
-    if (output != stdout)
+    if (output && output != stdout)
 	fclose (output);
 
     return ret;
@@ -744,7 +744,7 @@ dump_command (int argc, char *argv[])
 static int
 restore_command (int argc, char *argv[])
 {
-    FILE *input;
+    FILE *input = NULL;
     notmuch_database_t *notmuch = NULL;
     char *line = NULL;
     size_t line_size;
@@ -845,6 +845,8 @@ restore_command (int argc, char *argv[])
 	free (line);
     if (notmuch)
 	notmuch_database_close (notmuch);
+    if (input && input != stdin)
+	fclose (input);
 
     return ret;
 }
