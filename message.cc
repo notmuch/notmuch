@@ -318,9 +318,7 @@ notmuch_message_get_tags (notmuch_message_t *message)
 	i++;
     }
 
-    _notmuch_tags_sort (tags);
-
-    _notmuch_tags_reset (tags);
+    _notmuch_tags_prepare_iterator (tags);
 
     return tags;
 }

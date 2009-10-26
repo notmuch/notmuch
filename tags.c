@@ -23,6 +23,7 @@
 #include <glib.h> /* GList */
 
 struct _notmuch_tags {
+    int sorted;
     GList *tags;
     GList *iterator;
 };
@@ -52,27 +53,38 @@ _notmuch_tags_create (void *ctx)
 
     talloc_set_destructor (tags, _notmuch_tags_destructor);
 
+    tags->sorted = 1;
     tags->tags = NULL;
     tags->iterator = NULL;
 
     return tags;
 }
 
+/* Add a new tag to 'tags'. The tags object will create its own copy
+ * of the string.
+ *
+ * Note: The tags object will not do anything to prevent duplicate
+ * tags being stored, so the caller really shouldn't pass
+ * duplicates. */
 void
 _notmuch_tags_add_tag (notmuch_tags_t *tags, const char *tag)
 {
     tags->tags = g_list_prepend (tags->tags, talloc_strdup (tags, tag));
+    tags->sorted = 0;
 }
 
+/* Prepare 'tag' for iteration.
+ *
+ * The internal creator of 'tags' should call this function before
+ * returning 'tags' to the user to call the public functions such as
+ * notmuch_tags_has_more, notmuch_tags_get, and notmuch_tags_advance. */
 void
-_notmuch_tags_sort (notmuch_tags_t *tags)
+_notmuch_tags_prepare_iterator (notmuch_tags_t *tags)
 {
-    tags->tags = g_list_sort (tags->tags, (GCompareFunc) strcmp);
-}
+    if (! tags->sorted)
+	tags->tags = g_list_sort (tags->tags, (GCompareFunc) strcmp);
+    tags->sorted = 1;
 
-void
-_notmuch_tags_reset (notmuch_tags_t *tags)
-{
     tags->iterator = tags->tags;
 }
 

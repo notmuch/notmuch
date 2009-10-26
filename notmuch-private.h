@@ -283,10 +283,7 @@ void
 _notmuch_tags_add_tag (notmuch_tags_t *tags, const char *tag);
 
 void
-_notmuch_tags_sort (notmuch_tags_t *tags);
-
-void
-_notmuch_tags_reset (notmuch_tags_t *tags);
+_notmuch_tags_prepare_iterator (notmuch_tags_t *tags);
 
 NOTMUCH_END_DECLS
 
