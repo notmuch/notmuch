@@ -836,6 +836,9 @@ notmuch_database_add_message (notmuch_database_t *notmuch,
     const char *from, *to, *subject, *old_filename;
     char *message_id;
 
+    if (message_ret)
+	*message_ret = NULL;
+
     message_file = notmuch_message_file_open (filename);
     if (message_file == NULL) {
 	ret = NOTMUCH_STATUS_FILE_ERROR;
@@ -932,7 +935,7 @@ notmuch_database_add_message (notmuch_database_t *notmuch,
 
   DONE:
     if (message) {
-	if (message_ret)
+	if (ret == NOTMUCH_STATUS_SUCCESS && message_ret)
 	    *message_ret = message;
 	else
 	    notmuch_message_destroy (message);

@@ -252,10 +252,11 @@ notmuch_database_get_timestamp (notmuch_database_t *database,
  * reference the filename, and will not copy the entire contents of
  * the file.
  *
- * If 'message' is not NULL, then '*message' will be initialized to a
- * message object that can be used for things such as adding tags to
- * the just-added message. The user should call
- * notmuch_message_destroy when done with the message.
+ * If 'message' is not NULL, then, on successful return '*message'
+ * will be initialized to a message object that can be used for things
+ * such as adding tags to the just-added message. The user should call
+ * notmuch_message_destroy when done with the message. On any failure
+ * '*message' will be set to NULL.
  *
  * Return value:
  *
