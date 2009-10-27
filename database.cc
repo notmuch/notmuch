@@ -821,7 +821,8 @@ _notmuch_database_link_message (notmuch_database_t *notmuch,
 
 notmuch_status_t
 notmuch_database_add_message (notmuch_database_t *notmuch,
-			      const char *filename)
+			      const char *filename,
+			      notmuch_message_t **message_ret)
 {
     notmuch_message_file_t *message_file;
     notmuch_message_t *message;
@@ -926,8 +927,13 @@ notmuch_database_add_message (notmuch_database_t *notmuch,
     }
 
   DONE:
-    if (message)
-	notmuch_message_destroy (message);
+    if (message) {
+	if (message_ret)
+	    *message_ret = message;
+	else
+	    notmuch_message_destroy (message);
+    }
+
     if (message_file)
 	notmuch_message_file_close (message_file);
 

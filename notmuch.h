@@ -246,6 +246,11 @@ notmuch_database_get_timestamp (notmuch_database_t *database,
  * reference the filename, and will not copy the entire contents of
  * the file.
  *
+ * If 'message' is not NULL, then '*message' will be initialized to a
+ * message object that can be used for things such as adding tags to
+ * the just-added message. The user should call
+ * notmuch_message_destroy when done with the message.
+ *
  * Return value:
  *
  * NOTMUCH_STATUS_SUCCESS: Message successfully added to database.
@@ -263,7 +268,8 @@ notmuch_database_get_timestamp (notmuch_database_t *database,
  */
 notmuch_status_t
 notmuch_database_add_message (notmuch_database_t *database,
-			      const char *filename);
+			      const char *filename,
+			      notmuch_message_t **message);
 
 /* Find a message with the given messsage_id.
  *

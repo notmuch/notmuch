@@ -67,6 +67,8 @@ typedef struct command {
     const char *usage;
 } command_t;
 
+typedef void (*add_files_callback_t) (notmuch_message_t *message);
+
 typedef struct {
     int ignore_read_only_directories;
     int saw_read_only_directory;
@@ -75,6 +77,8 @@ typedef struct {
     int processed_files;
     int added_messages;
     struct timeval tv_start;
+
+    add_files_callback_t callback;
 } add_files_state_t;
 
 static void
@@ -176,6 +180,7 @@ add_files_recursive (notmuch_database_t *notmuch,
     char *next = NULL;
     time_t path_mtime, path_dbtime;
     notmuch_status_t status, ret = NOTMUCH_STATUS_SUCCESS;
+    notmuch_message_t *message, **closure;
 
     /* If we're told to, we bail out on encountering a read-only
      * directory, (with this being a clear clue from the user to
@@ -249,11 +254,19 @@ add_files_recursive (notmuch_database_t *notmuch,
 	    if (st->st_mtime > path_dbtime) {
 		state->processed_files++;
 
-		status = notmuch_database_add_message (notmuch, next);
+		if (state->callback)
+		    closure = &message;
+		else
+		    closure = NULL;
+
+		status = notmuch_database_add_message (notmuch, next, closure);
 		switch (status) {
 		    /* success */
 		    case NOTMUCH_STATUS_SUCCESS:
 			state->added_messages++;
+			if (state->callback)
+			    (state->callback) (message);
+			notmuch_message_destroy (message);
 			break;
 		    /* Non-fatal issues (go on to next file) */
 		    case NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID:
@@ -495,6 +508,7 @@ setup_command (unused (int argc), unused (char *argv[]))
     add_files_state.total_files = count;
     add_files_state.processed_files = 0;
     add_files_state.added_messages = 0;
+    add_files_state.callback = NULL;
     gettimeofday (&add_files_state.tv_start, NULL);
 
     ret = add_files (notmuch, mail_directory, &add_files_state);
@@ -537,6 +551,13 @@ setup_command (unused (int argc), unused (char *argv[]))
     return ret;
 }
 
+static void
+tag_inbox_and_unread (notmuch_message_t *message)
+{
+    notmuch_message_add_tag (message, "inbox");
+    notmuch_message_add_tag (message, "unread");
+}
+
 static int
 new_command (unused (int argc), unused (char *argv[]))
 {
@@ -560,6 +581,7 @@ new_command (unused (int argc), unused (char *argv[]))
     add_files_state.total_files = 0;
     add_files_state.processed_files = 0;
     add_files_state.added_messages = 0;
+    add_files_state.callback = tag_inbox_and_unread;
     gettimeofday (&add_files_state.tv_start, NULL);
 
     ret = add_files (notmuch, mail_directory, &add_files_state);
@@ -880,10 +902,13 @@ command_t commands[] = {
       "\t\tthe setup command has not previously been completed." },
     { "new", new_command,
       "Find and import any new messages.\n\n"
-      "\t\tScans all sub-directories of the database, adding new files\n"
-      "\t\tthat are found. Note: \"notmuch new\" will skip any\n"
-      "\t\tread-only directories, so you can use that to mark\n"
-      "\t\tdirectories that will not receive any new mail."},
+      "\t\tScans all sub-directories of the database, adding new messages\n"
+      "\t\tthat are found. Each new message will be tagges as both\n"
+      "\t\t\"inbox\" and \"unread\".\n"
+      "\n"
+      "\t\tNote: \"notmuch new\" will skip any read-only directories,\n"
+      "\t\tso you can use that to mark tdirectories that will not\n"
+      "\t\treceive any new mail (and make \"notmuch new\" faster)." },
     { "search", search_command,
       "<search-term> [...]\n\n"
       "\t\tSearch for threads matching the given search terms.\n"
