@@ -849,8 +849,9 @@ restore_command (int argc, char *argv[])
 
 	    message = notmuch_database_find_message (notmuch, message_id);
 	    if (message == NULL) {
-		fprintf (stderr, "Warning: Cannot apply tags to missing message: %s (",
+		fprintf (stderr, "Warning: Cannot apply tags to missing message: %s\n",
 			 message_id);
+		goto NEXT_LINE;
 	    }
 
 	    next = tags;
@@ -858,26 +859,19 @@ restore_command (int argc, char *argv[])
 		tag = strsep (&next, " ");
 		if (*tag == '\0')
 		    continue;
-		if (message) {
-		    status = notmuch_message_add_tag (message, tag);
-		    if (status) {
-			fprintf (stderr,
-				 "Error applying tag %s to message %s:\n",
-				 tag, message_id);
-			fprintf (stderr, "%s\n",
-				 notmuch_status_to_string (status));
-		    }
-		} else {
-		    fprintf (stderr, "%s%s",
-			     tag == tags ? "" : " ", tag);
+		status = notmuch_message_add_tag (message, tag);
+		if (status) {
+		    fprintf (stderr,
+			     "Error applying tag %s to message %s:\n",
+			     tag, message_id);
+		    fprintf (stderr, "%s\n",
+			     notmuch_status_to_string (status));
 		}
 	    }
 
-	    if (message)
-		notmuch_message_destroy (message);
-	    else
-		fprintf (stderr, ")\n");
+	    notmuch_message_destroy (message);
 	}
+      NEXT_LINE:
 	free (message_id);
 	free (tags);
     }
