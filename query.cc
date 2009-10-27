@@ -207,8 +207,14 @@ notmuch_query_search_threads (notmuch_query_t *query)
 					    thread_id, NULL,
 					    (void **) &thread))
 	{
+	    const char *subject;
+
 	    thread = _notmuch_thread_create (query, query->notmuch,
 					     thread_id);
+
+	    subject = _notmuch_message_get_subject (message);
+
+	    _notmuch_thread_set_subject (thread, subject);
 
 	    g_hash_table_insert (seen, xstrdup (thread_id), thread);
 
@@ -222,6 +228,8 @@ notmuch_query_search_threads (notmuch_query_t *query)
 	    tag = notmuch_tags_get (tags);
 	    _notmuch_thread_add_tag (thread, tag);
 	}
+
+	notmuch_message_destroy (message);
     }
 
     g_hash_table_unref (seen);

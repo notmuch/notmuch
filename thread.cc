@@ -28,6 +28,7 @@
 struct _notmuch_thread {
     notmuch_database_t *notmuch;
     char *thread_id;
+    char *subject;
     GHashTable *tags;
 };
 
@@ -69,6 +70,7 @@ _notmuch_thread_create (const void *talloc_owner,
 
     thread->notmuch = notmuch;
     thread->thread_id = talloc_strdup (thread, thread_id);
+    thread->subject = NULL;
     thread->tags = g_hash_table_new_full (g_str_hash, g_str_equal,
 					  free, NULL);
 
@@ -85,6 +87,18 @@ void
 _notmuch_thread_add_tag (notmuch_thread_t *thread, const char *tag)
 {
     g_hash_table_insert (thread->tags, xstrdup (tag), NULL);
+}
+
+void
+_notmuch_thread_set_subject (notmuch_thread_t *thread, const char *subject)
+{
+    thread->subject = talloc_strdup (thread, subject);
+}
+
+const char *
+_notmuch_thread_get_subject (notmuch_thread_t *thread)
+{
+    return thread->subject;
 }
 
 notmuch_tags_t *

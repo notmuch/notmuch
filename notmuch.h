@@ -458,6 +458,20 @@ notmuch_thread_results_destroy (notmuch_thread_results_t *results);
 const char *
 notmuch_thread_get_thread_id (notmuch_thread_t *thread);
 
+/* Get the subject of 'thread'
+ *
+ * The subject is taken from the first message (according to the query
+ * order---see notmuch_query_set_sort) in the query results that
+ * belongs to this thread.
+ *
+ * The returned string belongs to 'thread' and as such, should not be
+ * modified by the caller and will only be valid for as long as the
+ * thread is valid, (which is until notmuch_thread_destroy or until
+ * the query from which it derived is destroyed).
+ */
+const char *
+notmuch_thread_get_subject (notmuch_thread_t *thread);
+
 /* Get the tags for 'thread', returning a notmuch_tags_t object which
  * can be used to iterate over all tags.
  *

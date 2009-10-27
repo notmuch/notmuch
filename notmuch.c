@@ -651,8 +651,11 @@ search_command (int argc, char *argv[])
 
 	thread = notmuch_thread_results_get (results);
 
-	printf ("%s (", notmuch_thread_get_thread_id (thread));
+	printf ("%s %s",
+		notmuch_thread_get_thread_id (thread),
+		_notmuch_thread_get_subject (thread));
 
+	printf (" (");
 	for (tags = notmuch_thread_get_tags (thread);
 	     notmuch_tags_has_more (tags);
 	     notmuch_tags_advance (tags))
@@ -662,7 +665,6 @@ search_command (int argc, char *argv[])
 	    printf ("%s", notmuch_tags_get (tags));
 	    first = 0;
 	}
-
 	printf (")\n");
 
 	notmuch_thread_destroy (thread);

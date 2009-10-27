@@ -70,12 +70,36 @@ strcase_hash (const void *ptr)
     return hash;
 }
 
+static int
+_notmuch_message_file_destructor (notmuch_message_file_t *message)
+{
+    if (message->line)
+	free (message->line);
+
+    if (message->value.size)
+	free (message->value.str);
+
+    if (message->headers)
+	g_hash_table_destroy (message->headers);
+
+    if (message->file)
+	fclose (message->file);
+
+    return 0;
+}
+
+/* Create a new notmuch_message_file_t for 'filename' with 'ctx' as
+ * the talloc owner. */
 notmuch_message_file_t *
-notmuch_message_file_open (const char *filename)
+_notmuch_message_file_open_ctx (void *ctx, const char *filename)
 {
     notmuch_message_file_t *message;
 
-    message = talloc_zero (NULL, notmuch_message_file_t);
+    message = talloc_zero (ctx, notmuch_message_file_t);
+    if (unlikely (message == NULL))
+	return NULL;
+
+    talloc_set_destructor (message, _notmuch_message_file_destructor);
 
     message->file = fopen (filename, "r");
     if (message->file == NULL)
@@ -98,24 +122,15 @@ notmuch_message_file_open (const char *filename)
     return NULL;
 }
 
+notmuch_message_file_t *
+notmuch_message_file_open (const char *filename)
+{
+    return _notmuch_message_file_open_ctx (NULL, filename);
+}
+
 void
 notmuch_message_file_close (notmuch_message_file_t *message)
 {
-    if (message == NULL)
-	return;
-
-    if (message->line)
-	free (message->line);
-
-    if (message->value.size)
-	free (message->value.str);
-
-    if (message->headers)
-	g_hash_table_destroy (message->headers);
-
-    if (message->file)
-	fclose (message->file);
-
     talloc_free (message);
 }
 

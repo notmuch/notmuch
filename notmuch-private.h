@@ -137,6 +137,16 @@ typedef enum _notmuch_private_status {
      :									\
      (notmuch_status_t) private_status)
 
+/* database.cc */
+
+/* Lookup a prefix value by name.
+ *
+ * XXX: This should really be static inside of message.cc, and we can
+ * do that once we convert database.cc to use the
+ * _notmuch_message_add/remove_term functions. */
+const char *
+_find_prefix (const char *name);
+
 /* thread.cc */
 
 notmuch_thread_t *
@@ -146,6 +156,12 @@ _notmuch_thread_create (const void *talloc_owner,
 
 void
 _notmuch_thread_add_tag (notmuch_thread_t *thread, const char *tag);
+
+void
+_notmuch_thread_set_subject (notmuch_thread_t *thread, const char *subject);
+
+const char *
+_notmuch_thread_get_subject (notmuch_thread_t *thread);
 
 /* message.cc */
 
@@ -161,13 +177,8 @@ _notmuch_message_create_for_message_id (const void *talloc_owner,
 					const char *message_id,
 					notmuch_status_t *status);
 
-/* Lookup a prefix value by name.
- *
- * XXX: This should really be static inside of message.cc, and we can
- * do that once we convert database.cc to use the
- * _notmuch_message_add/remove_term functions. */
 const char *
-_find_prefix (const char *name);
+_notmuch_message_get_subject (notmuch_message_t *message);
 
 notmuch_private_status_t
 _notmuch_message_add_term (notmuch_message_t *message,
@@ -213,6 +224,10 @@ typedef struct _notmuch_message_file notmuch_message_file_t;
  */
 notmuch_message_file_t *
 notmuch_message_file_open (const char *filename);
+
+/* Like notmuch_message_file_open but with 'ctx' as the talloc owner. */
+notmuch_message_file_t *
+_notmuch_message_file_open_ctx (void *ctx, const char *filename);
 
 /* Close a notmuch message preivously opened with notmuch_message_open. */
 void

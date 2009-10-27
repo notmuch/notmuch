@@ -29,6 +29,7 @@ struct _notmuch_message {
     char *message_id;
     char *thread_id;
     char *filename;
+    notmuch_message_file_t *message_file;
     Xapian::Document doc;
 };
 
@@ -98,9 +99,12 @@ _notmuch_message_create (const void *talloc_owner,
 
     message->notmuch = notmuch;
     message->doc_id = doc_id;
-    message->message_id = NULL; /* lazily created */
-    message->thread_id = NULL; /* lazily created */
-    message->filename = NULL; /* lazily created */
+
+    /* Each of these will be lazily created as needed. */
+    message->message_id = NULL;
+    message->thread_id = NULL;
+    message->filename = NULL;
+    message->message_file = NULL;
 
     /* This is C++'s creepy "placement new", which is really just an
      * ugly way to call a constructor for a pre-allocated object. So
@@ -222,6 +226,28 @@ notmuch_message_get_message_id (notmuch_message_t *message)
 #endif
 
     return message->message_id;
+}
+
+const char *
+_notmuch_message_get_subject (notmuch_message_t *message)
+{
+    if (! message->message_file) {
+	notmuch_message_file_t *message_file;
+	const char *filename;
+
+	filename = notmuch_message_get_filename (message);
+	if (unlikely (filename == NULL))
+	    return NULL;
+
+	message_file = _notmuch_message_file_open_ctx (message, filename);
+	if (unlikely (message_file == NULL))
+	    return NULL;
+
+	message->message_file = message_file;
+    }
+
+    return notmuch_message_file_get_header (message->message_file,
+					    "subject");
 }
 
 const char *
