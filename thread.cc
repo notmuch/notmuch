@@ -96,7 +96,7 @@ _notmuch_thread_set_subject (notmuch_thread_t *thread, const char *subject)
 }
 
 const char *
-_notmuch_thread_get_subject (notmuch_thread_t *thread)
+notmuch_thread_get_subject (notmuch_thread_t *thread)
 {
     return thread->subject;
 }

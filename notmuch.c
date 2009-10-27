@@ -653,7 +653,7 @@ search_command (int argc, char *argv[])
 
 	printf ("%s %s",
 		notmuch_thread_get_thread_id (thread),
-		_notmuch_thread_get_subject (thread));
+		notmuch_thread_get_subject (thread));
 
 	printf (" (");
 	for (tags = notmuch_thread_get_tags (thread);

@@ -160,9 +160,6 @@ _notmuch_thread_add_tag (notmuch_thread_t *thread, const char *tag);
 void
 _notmuch_thread_set_subject (notmuch_thread_t *thread, const char *subject);
 
-const char *
-_notmuch_thread_get_subject (notmuch_thread_t *thread);
-
 /* message.cc */
 
 notmuch_message_t *
