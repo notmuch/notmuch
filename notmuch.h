@@ -75,6 +75,11 @@ typedef int notmuch_bool_t;
  * NOTMUCH_STATUS_TAG_TOO_LONG: A tag value is too long (exceeds
  *	NOTMUCH_TAG_MAX)
  *
+ * NOTMUCH_STATUS_UNBALANCED_FREEZE_THAW: The notmuch_message_thaw
+ *	function has been called more times than notmuch_message_freeze.
+ *
+ * And finally:
+ *
  * NOTMUCH_STATUS_LAST_STATUS: Not an actual status value. Just a way
  *	to find out how many valid status values there are.
  */
@@ -87,6 +92,7 @@ typedef enum _notmuch_status {
     NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID,
     NOTMUCH_STATUS_NULL_POINTER,
     NOTMUCH_STATUS_TAG_TOO_LONG,
+    NOTMUCH_STATUS_UNBALANCED_FREEZE_THAW,
 
     NOTMUCH_STATUS_LAST_STATUS
 } notmuch_status_t;
@@ -650,8 +656,8 @@ notmuch_message_get_tags (notmuch_message_t *message);
  *
  * NOTMUCH_STATUS_NULL_POINTER: The 'tag' argument is NULL
  *
- * NOTMUCH_STATUS_TAG_TOO_LONG: The length of 'tag' is longer than
- *	too long (exceeds NOTMUCH_TAG_MAX)
+ * NOTMUCH_STATUS_TAG_TOO_LONG: The length of 'tag' is too long
+ *	(exceeds NOTMUCH_TAG_MAX)
  */
 notmuch_status_t
 notmuch_message_add_tag (notmuch_message_t *message, const char *tag);
@@ -660,15 +666,82 @@ notmuch_message_add_tag (notmuch_message_t *message, const char *tag);
  *
  * Return value:
  *
- * NOTMUCH_STATUS_SUCCESS: Tag successfully added to message
+ * NOTMUCH_STATUS_SUCCESS: Tag successfully removed from message
  *
  * NOTMUCH_STATUS_NULL_POINTER: The 'tag' argument is NULL
  *
- * NOTMUCH_STATUS_TAG_TOO_LONG: The length of 'tag' is longer than
- *	too long (exceeds NOTMUCH_TAG_MAX)
+ * NOTMUCH_STATUS_TAG_TOO_LONG: The length of 'tag' is too long
+ *	(exceeds NOTMUCH_TAG_MAX)
  */
 notmuch_status_t
 notmuch_message_remove_tag (notmuch_message_t *message, const char *tag);
+
+/* Remove all tags from the given message.
+ *
+ * See notmuch_message_freeze for an example showing how to safely
+ * replace tag values.
+ */
+void
+notmuch_message_remove_all_tags (notmuch_message_t *message);
+
+/* Freeze the current state of 'message' within the database.
+ *
+ * This means that changes to the message state, (via
+ * notmuch_message_add_tag, notmuch_message_remove_tag, and
+ * notmuch_message_remove_all_tags), will not be committed to the
+ * database until the message is thawed with notmuch_message_thaw.
+ *
+ * Multiple calls to freeze/thaw are valid and these calls with
+ * "stack". That is there must be as many calls to thaw as to freeze
+ * before a message is actually thawed.
+ *
+ * The ability to do freeze/thaw allows for safe transactions to
+ * change tag values. For example, explicitly setting a message to
+ * have a given set of tags might look like this:
+ *
+ *    notmuch_message_freeze (message);
+ *
+ *    notmuch_message_remove_all_tags (message);
+ *
+ *    for (i = 0; i < NUM_TAGS; i++)
+ *        notmuch_message_add_tag (message, tags[i]);
+ *
+ *    notmuch_message_thaw (message);
+ *
+ * With freeze/thaw used like this, the message in the database is
+ * guaranteed to have either the full set of original tag value, or
+ * the full set of new tag values, but nothing in between.
+ *
+ * Imagine the example above without freeze/thaw and the operation
+ * somehow getting interrupted. This could result in the message being
+ * left with no tags if the interruption happened after
+ * notmuch_message_remove_all_tags but before notmuch_message_add_tag.
+ */
+void
+notmuch_message_freeze (notmuch_message_t *message);
+
+/* Thaw the current 'message', synchronizing any changes that may have
+ * occurred while 'message' was frozen into the notmuch database.
+ *
+ * See notmuch_message_freeze for an example of how to use this
+ * function to safely provide tag changes.
+ *
+ * Multiple calls to freeze/thaw are valid and these calls with
+ * "stack". That is there must be as many calls to thaw as to freeze
+ * before a message is actually thawed.
+ *
+ * Return value:
+ *
+ * NOTMUCH_STATUS_SUCCESS: Message successfully thawed, (or at least
+ *	its frozen count has successfully been reduced by 1).
+ *
+ * NOTMUCH_STATUS_UNBALANCE_FREEZE_THAW: An attempt was made to thaw
+ *	an unfrozen message. That is, there have been an unbalanced
+ *	number of calls to notmuch_message_freeze and
+ *	notmuch_message_thaw.
+ */
+notmuch_status_t
+notmuch_message_thaw (notmuch_message_t *message);
 
 /* Destroy a notmuch_message_t object.
  *

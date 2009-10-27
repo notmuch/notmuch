@@ -26,13 +26,13 @@
 struct _notmuch_message {
     notmuch_database_t *notmuch;
     Xapian::docid doc_id;
+    int frozen;
     char *message_id;
     char *thread_id;
     char *filename;
     notmuch_message_file_t *message_file;
     Xapian::Document doc;
 };
-
 
 /* "128 bits of thread-id ought to be enough for anybody" */
 #define NOTMUCH_THREAD_ID_BITS	 128
@@ -99,6 +99,8 @@ _notmuch_message_create (const void *talloc_owner,
 
     message->notmuch = notmuch;
     message->doc_id = doc_id;
+
+    message->frozen = 0;
 
     /* Each of these will be lazily created as needed. */
     message->message_id = NULL;
@@ -487,7 +489,8 @@ notmuch_message_add_tag (notmuch_message_t *message, const char *tag)
 			status);
     }
 
-    _notmuch_message_sync (message);
+    if (! message->frozen)
+	_notmuch_message_sync (message);
 
     return NOTMUCH_STATUS_SUCCESS;
 }
@@ -509,9 +512,53 @@ notmuch_message_remove_tag (notmuch_message_t *message, const char *tag)
 			status);
     }
 
-    _notmuch_message_sync (message);
+    if (! message->frozen)
+	_notmuch_message_sync (message);
 
     return NOTMUCH_STATUS_SUCCESS;
+}
+
+void
+notmuch_message_remove_all_tags (notmuch_message_t *message)
+{
+    notmuch_private_status_t status;
+    notmuch_tags_t *tags;
+    const char *tag;
+
+    for (tags = notmuch_message_get_tags (message);
+	 notmuch_tags_has_more (tags);
+	 notmuch_tags_advance (tags))
+    {
+	tag = notmuch_tags_get (tags);
+
+	status = _notmuch_message_remove_term (message, "tag", tag);
+	if (status) {
+	    INTERNAL_ERROR ("_notmuch_message_remove_term return unexpected value: %d\n",
+			    status);
+	}
+    }
+
+    if (! message->frozen)
+	_notmuch_message_sync (message);
+}
+
+void
+notmuch_message_freeze (notmuch_message_t *message)
+{
+    message->frozen++;
+}
+
+notmuch_status_t
+notmuch_message_thaw (notmuch_message_t *message)
+{
+    if (message->frozen > 0) {
+	message->frozen--;
+	if (message->frozen == 0)
+	    _notmuch_message_sync (message);
+	return NOTMUCH_STATUS_SUCCESS;
+    } else {
+	return NOTMUCH_STATUS_UNBALANCED_FREEZE_THAW;
+    }
 }
 
 void

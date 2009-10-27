@@ -287,6 +287,7 @@ add_files_recursive (notmuch_database_t *notmuch,
 		    case NOTMUCH_STATUS_FILE_ERROR:
 		    case NOTMUCH_STATUS_NULL_POINTER:
 		    case NOTMUCH_STATUS_TAG_TOO_LONG:
+		    case NOTMUCH_STATUS_UNBALANCED_FREEZE_THAW:
 		    case NOTMUCH_STATUS_LAST_STATUS:
 			INTERNAL_ERROR ("add_message returned unexpected value: %d",  status);
 			goto DONE;
@@ -854,6 +855,10 @@ restore_command (int argc, char *argv[])
 		goto NEXT_LINE;
 	    }
 
+	    notmuch_message_freeze (message);
+
+	    notmuch_message_remove_all_tags (message);
+
 	    next = tags;
 	    while (next) {
 		tag = strsep (&next, " ");
@@ -869,6 +874,7 @@ restore_command (int argc, char *argv[])
 		}
 	    }
 
+	    notmuch_message_thaw (message);
 	    notmuch_message_destroy (message);
 	}
       NEXT_LINE:

@@ -3,10 +3,3 @@ Write a "notmuch show" that displays a single thread.
 Fix to use the *last* Message-ID header if multiple such headers are
 encountered, (I noticed this is one thing that kept me from seeing the
 same message-ID values as sup).
-
-Fix "notmuch restore" to delete the old tags from a message/thread
-before adding new ones. This will require someway to temporarily
-'disconnect' a notmuch_message_t from the database, (that it, disable
-automatic sync for add_tag, etc.), and then reconnect it. That is, the
-removal and subsequent addition of tags to the message/thread needs to
-be transactional.
