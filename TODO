@@ -1,5 +1,25 @@
+Write a "notmuch tag" command to add/remove tags from messages
+matching a search query.
+
 Write a "notmuch show" that displays a single thread.
 
 Fix to use the *last* Message-ID header if multiple such headers are
 encountered, (I noticed this is one thing that kept me from seeing the
 same message-ID values as sup).
+
+Think about this race condition:
+
+	A client executes "notmuch search"
+	Then executes "notmuch show" on a thread
+	While user is reading, new mail is added to database for the thread
+	Client asks for the thread to be archived.
+
+   The bug here is that email that was never read will be
+   archived. That's bad. With the command set above, the user can
+   avoid the problem by just not running "notmuch new" while reading
+   mail, but the same problems exists with the API. One possible
+   solution would be to store an additional timestamp with each mail
+   document for the time it was added to the database. Then searches
+   could return a timestamp, and the client could pass that same
+   timestamp back to the archive command to not modify any messages
+   with a timestamp newer than what's passed.
