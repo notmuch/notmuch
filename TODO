@@ -15,11 +15,26 @@ Think about this race condition:
 	Client asks for the thread to be archived.
 
    The bug here is that email that was never read will be
-   archived. That's bad. With the command set above, the user can
-   avoid the problem by just not running "notmuch new" while reading
-   mail, but the same problems exists with the API. One possible
-   solution would be to store an additional timestamp with each mail
-   document for the time it was added to the database. Then searches
-   could return a timestamp, and the client could pass that same
-   timestamp back to the archive command to not modify any messages
-   with a timestamp newer than what's passed.
+   archived. That's bad. The fix for the above is for the client to
+   archive the individual messages already retrieved and shown, not
+   the thread. (And in fact, we don't even have functions for removing
+   tags on threads.)
+
+   But this one is harder to fix:
+
+	A client executes "notmuch search"
+	While user is reading, new mail is added to database for the thread
+	Client asks for a thread to be archived.
+
+   To support this operation, (archiving a thread without even seeing
+   the individual messages), we might need to provide a command to
+   archive a thread as a whole. The problem is actually easy to fix
+   for a persistent client. It can onto the originally retrieved
+   thread objects which can hold onto the originally retrieved
+   messages. So archiving those thread objects, (and not newly created
+   thread objects), will be safe.
+
+   It's harder to fix the non-persistent "notmuch" client. One
+   approach is to simply tell the user to not run "notmuch new"
+   between reading the results of "notmuch search" and executing
+   "notmuch archive-thread" (or whatever we name it).
