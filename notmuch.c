@@ -264,9 +264,10 @@ add_files_recursive (notmuch_database_t *notmuch,
 		    /* success */
 		    case NOTMUCH_STATUS_SUCCESS:
 			state->added_messages++;
-			if (state->callback)
+			if (state->callback) {
 			    (state->callback) (message);
-			notmuch_message_destroy (message);
+			    notmuch_message_destroy (message);
+			}
 			break;
 		    /* Non-fatal issues (go on to next file) */
 		    case NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID:
