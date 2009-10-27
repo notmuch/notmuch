@@ -505,6 +505,8 @@ notmuch_database_open (const char *path)
 void
 notmuch_database_close (notmuch_database_t *notmuch)
 {
+    notmuch->xapian_db->flush ();
+
     delete notmuch->query_parser;
     delete notmuch->xapian_db;
     talloc_free (notmuch);
