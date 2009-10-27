@@ -180,7 +180,7 @@ add_files_recursive (notmuch_database_t *notmuch,
     char *next = NULL;
     time_t path_mtime, path_dbtime;
     notmuch_status_t status, ret = NOTMUCH_STATUS_SUCCESS;
-    notmuch_message_t *message, **closure;
+    notmuch_message_t *message = NULL, **closure;
 
     /* If we're told to, we bail out on encountering a read-only
      * directory, (with this being a clear clue from the user to
@@ -264,10 +264,8 @@ add_files_recursive (notmuch_database_t *notmuch,
 		    /* success */
 		    case NOTMUCH_STATUS_SUCCESS:
 			state->added_messages++;
-			if (state->callback) {
+			if (state->callback)
 			    (state->callback) (message);
-			    notmuch_message_destroy (message);
-			}
 			break;
 		    /* Non-fatal issues (go on to next file) */
 		    case NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID:
@@ -292,6 +290,12 @@ add_files_recursive (notmuch_database_t *notmuch,
 			INTERNAL_ERROR ("add_message returned unexpected value: %d",  status);
 			goto DONE;
 		}
+
+		if (message) {
+		    notmuch_message_destroy (message);
+		    message = NULL;
+		}
+
 		if (state->processed_files % 1000 == 0)
 		    add_files_print_progress (state);
 	    }
