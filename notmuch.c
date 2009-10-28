@@ -38,6 +38,7 @@
 #include <unistd.h>
 #include <dirent.h>
 #include <errno.h>
+#include <signal.h>
 
 #include <talloc.h>
 
@@ -121,6 +122,14 @@ print_formatted_seconds (double seconds)
     }
 
     printf ("%ds", (int) seconds);
+}
+
+static volatile sig_atomic_t do_add_files_print_progress = 0;
+
+static void
+handle_sigalrm (unused (int signal))
+{
+    do_add_files_print_progress = 1;
 }
 
 static void
@@ -298,8 +307,10 @@ add_files_recursive (notmuch_database_t *notmuch,
 		    message = NULL;
 		}
 
-		if (state->processed_files % 1000 == 0)
+		if (do_add_files_print_progress) {
+		    do_add_files_print_progress = 0;
 		    add_files_print_progress (state);
+		}
 	    }
 	} else if (S_ISDIR (st->st_mode)) {
 	    status = add_files_recursive (notmuch, next, st, state);
@@ -327,16 +338,17 @@ add_files_recursive (notmuch_database_t *notmuch,
 }
 
 /* This is the top-level entry point for add_files. It does a couple
- * of error checks, and then calls into the recursive function,
- * (avoiding the repeating of these error checks at every
- * level---which would be useless becaues we already do a stat() at
- * the level above). */
+ * of error checks, sets up the progress-printing timer and then calls
+ * into the recursive function. */
 static notmuch_status_t
 add_files (notmuch_database_t *notmuch,
 	   const char *path,
 	   add_files_state_t *state)
 {
     struct stat st;
+    notmuch_status_t status;
+    struct sigaction action;
+    struct itimerval timerval;
 
     if (stat (path, &st)) {
 	fprintf (stderr, "Error reading directory %s: %s\n",
@@ -349,7 +361,34 @@ add_files (notmuch_database_t *notmuch,
 	return NOTMUCH_STATUS_FILE_ERROR;
     }
 
-    return add_files_recursive (notmuch, path, &st, state);
+    /* Setup our handler for SIGALRM */
+    memset (&action, 0, sizeof (struct sigaction));
+    action.sa_handler = handle_sigalrm;
+    sigemptyset (&action.sa_mask);
+    action.sa_flags = SA_RESTART;
+    sigaction (SIGALRM, &action, NULL);
+
+    /* Then start a timer to send SIGALRM once per second. */
+    timerval.it_interval.tv_sec = 1;
+    timerval.it_interval.tv_usec = 0;
+    timerval.it_value.tv_sec = 1;
+    timerval.it_value.tv_usec = 0;
+    setitimer (ITIMER_REAL, &timerval, NULL);
+
+    status = add_files_recursive (notmuch, path, &st, state);
+
+    /* Now stop the timer. */
+    timerval.it_interval.tv_sec = 0;
+    timerval.it_interval.tv_usec = 0;
+    timerval.it_value.tv_sec = 0;
+    timerval.it_value.tv_usec = 0;
+    setitimer (ITIMER_REAL, &timerval, NULL);
+
+    /* And disable the signal handler. */
+    action.sa_handler = SIG_IGN;
+    sigaction (SIGALRM, &action, NULL);
+
+    return status;
 }
 
 /* Recursively count all regular files in path and all sub-direcotries
