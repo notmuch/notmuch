@@ -64,7 +64,8 @@ typedef int (*command_function_t) (int argc, char *argv[]);
 typedef struct command {
     const char *name;
     command_function_t function;
-    const char *usage;
+    const char *summary;
+    const char *documentation;
 } command_t;
 
 typedef void (*add_files_callback_t) (notmuch_message_t *message);
@@ -1030,13 +1031,16 @@ restore_command (int argc, char *argv[])
     return ret;
 }
 
+static int
+help_command (int argc, char *argv[]);
+
 command_t commands[] = {
     { "setup", setup_command,
-      "Interactively setup notmuch for first use.\n\n"
+      "Interactively setup notmuch for first use.",
       "\t\tInvoking notmuch with no command argument will run setup if\n"
       "\t\tthe setup command has not previously been completed." },
     { "new", new_command,
-      "Find and import any new messages.\n\n"
+      "Find and import any new messages.",
       "\t\tScans all sub-directories of the database, adding new messages\n"
       "\t\tthat are found. Each new message will be tagges as both\n"
       "\t\t\"inbox\" and \"unread\".\n"
@@ -1046,18 +1050,18 @@ command_t commands[] = {
       "\t\treceive any new mail (and make \"notmuch new\" faster)." },
     { "search", search_command,
       "<search-term> [...]\n\n"
-      "\t\tSearch for threads matching the given search terms.\n"
+      "\t\tSearch for threads matching the given search terms.",
       "\t\tOnce we actually implement search we'll document the\n"
       "\t\tsyntax here." },
     { "show", show_command,
       "<thread-id>\n\n"
-      "\t\tShow the thread with the given thread ID (see 'search')." },
+      "\t\tShow the thread with the given thread ID (see 'search').",
+      "" },
     { "tag", tag_command,
       "+<tag>|-<tag> [...] [--] <search-term> [...]\n\n"
-      "\t\tAdd or remove the specified tags to all messages matching\n"
-      "\t\tthe specified search terms. The search terms are handled\n"
-      "\t\texactly as in 'search' so one can use that command first\n"
-      "\t\tto see what will be modified.\n\n"
+      "\t\tAdd/remove tags for all messages matching the search terms.",
+      "\t\tThe search terms are handled texactly as in 'search' so one\n"
+      "\t\tcan use that command first to see what will be modified.\n\n"
       "\t\tTags prefixed by '+' are added while those prefixed by '-' are\n"
       "\t\tremoved. For each message, tag removal is before tag addition.\n\n"
       "\t\tThe beginning of <search-terms> is recognized by the first\n"
@@ -1067,8 +1071,8 @@ command_t commands[] = {
       "\t\tthe tags from the search terms." },
     { "dump", dump_command,
       "[<filename>]\n\n"
-      "\t\tCreate a plain-text dump of the tags for each message\n"
-      "\t\twriting to the given filename, if any, or to stdout.\n"
+      "\t\tCreate a plain-text dump of the tags for each message.",
+      "\t\tOutput is to the given filename, if any, or to stdout.\n"
       "\t\tThese tags are the only data in the notmuch database\n"
       "\t\tthat can't be recreated from the messages themselves.\n"
       "\t\tThe output of notmuch dump is therefore the only\n"
@@ -1076,7 +1080,12 @@ command_t commands[] = {
       "\t\tincremental backup than the native database files." },
     { "restore", restore_command,
       "<filename>\n\n"
-      "\t\tRestore the tags from the given dump file (see 'dump')." }
+      "\t\tRestore the tags from the given dump file (see 'dump').",
+      "" },
+    { "help", help_command,
+      "[<command>]\n\n"
+      "\t\tThis message, or more detailed help for the named command.",
+      "" }
 };
 
 static void
@@ -1093,8 +1102,39 @@ usage (void)
     for (i = 0; i < ARRAY_SIZE (commands); i++) {
 	command = &commands[i];
 
-	fprintf (stderr, "\t%s\t%s\n\n", command->name, command->usage);
+	fprintf (stderr, "\t%s\t%s\n\n", command->name, command->summary);
     }
+
+    fprintf (stderr, "Use \"notmuch help <command>\" for more details on each command.\n\n");
+}
+
+static int
+help_command (int argc, char *argv[])
+{
+    command_t *command;
+    unsigned int i;
+
+    if (argc == 0) {
+	fprintf (stderr, "The notmuch mail system.\n\n");
+	usage ();
+	return 0;
+    }
+
+    for (i = 0; i < ARRAY_SIZE (commands); i++) {
+	command = &commands[i];
+
+	if (strcmp (argv[0], command->name) == 0) {
+	    fprintf (stderr, "Help for \"notmuch %s\":\n\n", argv[0]);
+	    fprintf (stderr, "\t%s\t%s\n\n%s\n\n", command->name,
+		     command->summary, command->documentation);
+	    return 0;
+	}
+    }
+
+    fprintf (stderr,
+	     "\nSorry, %s is not a known command. There's not much I can do to help.\n\n",
+	     argv[0]);
+    return 1;
 }
     
 int
@@ -1115,15 +1155,8 @@ main (int argc, char *argv[])
 
     /* Don't complain about "help" being an unknown command when we're
        about to provide exactly what's wanted anyway. */
-    if (strcmp (argv[1], "help") == 0 ||
-	strcmp (argv[1], "--help") == 0)
-    {
-	fprintf (stderr, "The notmuch mail system.\n\n");
-	usage ();
-	return 0;
-    } else {
-	fprintf (stderr, "Error: Unknown command '%s'\n\n", argv[1]);
-	usage ();
-	return 1;
-    }
+    fprintf (stderr, "Error: Unknown command '%s'\n\n", argv[1]);
+    usage ();
+
+    return 1;
 }
