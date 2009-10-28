@@ -635,6 +635,40 @@ new_command (unused (int argc), unused (char *argv[]))
     return ret;
 }
 
+/* Construct a single query string from the passed arguments, using
+ * 'ctx' as the talloc owner for all allocations.
+ *
+ * Currently, the arguments are just connected with space characters,
+ * but we might do more processing in the future, (such as inserting
+ * any AND operators needed to work around Xapian QueryParser bugs).
+ *
+ * This function returns NULL in case of insufficient memory.
+ */
+static char *
+query_string_from_args (void *ctx, int argc, char *argv[])
+{
+    char *query_string;
+    int i;
+
+    query_string = talloc_strdup (ctx, "");
+    if (query_string == NULL)
+	return NULL;
+
+    for (i = 0; i < argc; i++) {
+	if (i != 0) {
+	    query_string = talloc_strdup_append (query_string, " ");
+	    if (query_string == NULL)
+		return NULL;
+	}
+
+	query_string = talloc_strdup_append (query_string, argv[i]);
+	if (query_string == NULL)
+	    return NULL;
+    }
+
+    return query_string;
+}
+
 static int
 search_command (int argc, char *argv[])
 {
@@ -645,7 +679,6 @@ search_command (int argc, char *argv[])
     notmuch_thread_t *thread;
     notmuch_tags_t *tags;
     char *query_str;
-    int i;
     notmuch_status_t ret = NOTMUCH_STATUS_SUCCESS;
 
     notmuch = notmuch_database_open (NULL);
@@ -654,15 +687,7 @@ search_command (int argc, char *argv[])
 	goto DONE;
     }
 
-    /* XXX: Should add xtalloc wrappers here and use them. */
-    query_str = talloc_strdup (local, "");
-
-    for (i = 0; i < argc; i++) {
-	if (i != 0)
-	    query_str = talloc_asprintf_append (query_str, " ");
-
-	query_str = talloc_asprintf_append (query_str, "%s", argv[i]);
-    }
+    query_str = query_string_from_args (local, argc, argv);
 
     query = notmuch_query_create (notmuch, query_str);
     if (query == NULL) {
@@ -713,6 +738,111 @@ show_command (unused (int argc), unused (char *argv[]))
 {
     fprintf (stderr, "Error: show is not implemented yet.\n");
     return 1;
+}
+
+static int
+tag_command (unused (int argc), unused (char *argv[]))
+{
+    void *local;
+    int *add_tags, *remove_tags;
+    int add_tags_count = 0;
+    int remove_tags_count = 0;
+    char *query_string;
+    notmuch_database_t *notmuch = NULL;
+    notmuch_query_t *query;
+    notmuch_message_results_t *results;
+    notmuch_message_t *message;
+    int ret = 0;
+    int i;
+
+    local = talloc_new (NULL);
+    if (local == NULL) {
+	ret = 1;
+	goto DONE;
+    }
+
+    add_tags = talloc_size (local, argc * sizeof (int));
+    if (add_tags == NULL) {
+	ret = 1;
+	goto DONE;
+    }
+
+    remove_tags = talloc_size (local, argc * sizeof (int));
+    if (remove_tags == NULL) {
+	ret = 1;
+	goto DONE;
+    }
+
+    for (i = 0; i < argc; i++) {
+	if (strcmp (argv[i], "--") == 0) {
+	    i++;
+	    break;
+	}
+	if (argv[i][0] == '+') {
+	    add_tags[add_tags_count++] = i;
+	} else if (argv[i][0] == '-') {
+	    remove_tags[remove_tags_count++] = i;
+	} else {
+	    break;
+	}
+    }
+
+    if (add_tags_count == 0 && remove_tags_count == 0) {
+	fprintf (stderr, "Error: 'notmuch tag' requires at least one tag to add or remove.\n");
+	ret = 1;
+	goto DONE;
+    }
+
+    if (i == argc) {
+	fprintf (stderr, "Error: 'notmuch tag' requires at least one search term.\n");
+	ret = 1;
+	goto DONE;
+    }
+
+    notmuch = notmuch_database_open (NULL);
+    if (notmuch == NULL) {
+	ret = 1;
+	goto DONE;
+    }
+
+    query_string = query_string_from_args (local, argc - i, &argv[i]);
+
+    query = notmuch_query_create (notmuch, query_string);
+    if (query == NULL) {
+	fprintf (stderr, "Out of memory.\n");
+	ret = 1;
+	goto DONE;
+    }
+
+    for (results = notmuch_query_search_messages (query);
+	 notmuch_message_results_has_more (results);
+	 notmuch_message_results_advance (results))
+    {
+	message = notmuch_message_results_get (results);
+
+	notmuch_message_freeze (message);
+
+	for (i = 0; i < remove_tags_count; i++)
+	    notmuch_message_remove_tag (message,
+					argv[remove_tags[i]] + 1);
+
+	for (i = 0; i < add_tags_count; i++)
+	    notmuch_message_add_tag (message, argv[add_tags[i]] + 1);
+
+	notmuch_message_thaw (message);
+
+	notmuch_message_destroy (message);
+    }
+
+    notmuch_query_destroy (query);
+
+  DONE:
+    if (notmuch)
+	notmuch_database_close (notmuch);
+
+    talloc_free (local);
+
+    return ret;
 }
 
 static int
@@ -922,6 +1052,19 @@ command_t commands[] = {
     { "show", show_command,
       "<thread-id>\n\n"
       "\t\tShow the thread with the given thread ID (see 'search')." },
+    { "tag", tag_command,
+      "+<tag>|-<tag> [...] [--] <search-term> [...]\n\n"
+      "\t\tAdd or remove the specified tags to all messages matching\n"
+      "\t\tthe specified search terms. The search terms are handled\n"
+      "\t\texactly as in 'search' so one can use that command first\n"
+      "\t\tto see what will be modified.\n\n"
+      "\t\tTags prefixed by '+' are added while those prefixed by '-' are\n"
+      "\t\tremoved. For each message, tag removal is before tag addition.\n\n"
+      "\t\tThe beginning of <search-terms> is recognized by the first\n"
+      "\t\targument that begins with neither '+' nor '-'. Support for\n"
+      "\t\tan initial search term beginning with '+' or '-' is provided\n"
+      "\t\tby allowing the user to specify a \"--\" argument to separate\n"
+      "\t\tthe tags from the search terms." },
     { "dump", dump_command,
       "[<filename>]\n\n"
       "\t\tCreate a plain-text dump of the tags for each message\n"
