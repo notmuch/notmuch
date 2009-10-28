@@ -465,7 +465,14 @@ _notmuch_message_remove_term (notmuch_message_t *message,
     if (strlen (term) > NOTMUCH_TERM_MAX)
 	return NOTMUCH_PRIVATE_STATUS_TERM_TOO_LONG;
 
-    message->doc.remove_term (term);
+    try {
+	message->doc.remove_term (term);
+    } catch (const Xapian::InvalidArgumentError) {
+	/* We'll let the philosopher's try to wrestle with the
+	 * question of whether failing to remove that which was not
+	 * there in the first place is failure. For us, we'll silently
+	 * consider it all good. */
+    }
 
     talloc_free (term);
 
