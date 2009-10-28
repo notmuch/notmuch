@@ -129,6 +129,7 @@ _internal_error (const char *format, ...)
 
     va_start (va_args, format);
 
+    fprintf (stderr, "Internal error: ");
     vfprintf (stderr, format, va_args);
 
     exit (1);

@@ -276,8 +276,10 @@ notmuch_message_get_thread_id (notmuch_message_t *message)
 	strncmp ((*i).c_str (), _find_prefix ("thread"),
 		 strlen (_find_prefix ("thread"))) == 0)
     {
-	INTERNAL_ERROR ("Message with document ID of %d has duplicate thread IDs.\n",
-			message->doc_id);
+	INTERNAL_ERROR ("Message %s has duplicate thread IDs: %s and %s\n",
+			notmuch_message_get_message_id (message),
+			message->thread_id,
+			(*i).c_str () + 1);
     }
 #endif
 
