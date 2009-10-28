@@ -246,11 +246,14 @@ notmuch_database_get_timestamp (notmuch_database_t *database,
 /* Add a new message to the given notmuch database.
  *
  * Here,'filename' should be a path relative to the the path of
- * 'database' (see notmuch_database_get_path). The file should be a
- * single mail message (not a multi-message mbox) that is expected to
- * remain at its current location, (since the notmuch database will
- * reference the filename, and will not copy the entire contents of
- * the file.
+ * 'database' (see notmuch_database_get_path), or else should be an
+ * absolute filename with initial components that match the path of
+ * 'database'.
+ *
+ * The file should be a single mail message (not a multi-message mbox)
+ * that is expected to remain at its current location, (since the
+ * notmuch database will reference the filename, and will not copy the
+ * entire contents of the file.
  *
  * If 'message' is not NULL, then, on successful return '*message'
  * will be initialized to a message object that can be used for things
@@ -605,8 +608,9 @@ notmuch_message_get_thread_id (notmuch_message_t *message);
 
 /* Get the filename for the email corresponding to 'message'.
  *
- * The returned filename is relative to the base of the database from
- * which 'message' was obtained. See notmuch_database_get_path() .
+ * The returned filename is an absolute filename, (the initial
+ * component will match notmuch_database_get_path() ).
+ *
  * The returned string belongs to the message so should not be
  * modified or freed by the caller (nor should it be referenced after
  * the message is destroyed). */

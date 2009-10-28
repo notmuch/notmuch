@@ -531,6 +531,30 @@ setup_command (unused (int argc), unused (char *argv[]))
 	free (default_path);
     }
 
+    /* Coerce th directory into an absolute directory name. */
+    if (*mail_directory != '/') {
+	char *cwd, *absolute_mail_directory;
+
+	cwd = getcwd (NULL, 0);
+	if (cwd == NULL) {
+	    fprintf (stderr, "Out of memory.\n");
+	    exit (1);
+	}
+
+	if (asprintf (&absolute_mail_directory, "%s/%s",
+		      cwd, mail_directory) < 0)
+	{
+	    fprintf (stderr, "Out of memory.\n");
+	    exit (1);
+	}
+
+	free (cwd);
+	free (mail_directory);
+	mail_directory = absolute_mail_directory;
+
+	printf ("Abs: %s\n", mail_directory);
+    }
+
     notmuch = notmuch_database_create (mail_directory);
     if (notmuch == NULL) {
 	fprintf (stderr, "Failed to create new notmuch database at %s\n",

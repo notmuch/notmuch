@@ -487,6 +487,9 @@ notmuch_database_open (const char *path)
     notmuch = talloc (NULL, notmuch_database_t);
     notmuch->path = talloc_strdup (notmuch, path);
 
+    if (notmuch->path[strlen (notmuch->path) - 1] == '/')
+	notmuch->path[strlen (notmuch->path) - 1] = '\0';
+
     try {
 	notmuch->xapian_db = new Xapian::WritableDatabase (xapian_path,
 							   Xapian::DB_CREATE_OR_OPEN);
@@ -856,9 +859,10 @@ notmuch_database_add_message (notmuch_database_t *notmuch,
     notmuch_message_file_t *message_file;
     notmuch_message_t *message;
     notmuch_status_t ret = NOTMUCH_STATUS_SUCCESS;
+    notmuch_private_status_t private_status;
 
     const char *date, *header;
-    const char *from, *to, *subject, *old_filename;
+    const char *from, *to, *subject;
     char *message_id;
 
     if (message_ret)
@@ -932,21 +936,20 @@ notmuch_database_add_message (notmuch_database_t *notmuch,
 	message = _notmuch_message_create_for_message_id (NULL,
 							  notmuch,
 							  message_id,
-							  &ret);
+							  &private_status);
 
 	talloc_free (message_id);
 
 	if (message == NULL)
 	    goto DONE;
 
-	/* Has a message previously been added with the same ID? */
-	old_filename = notmuch_message_get_filename (message);
-	if (old_filename && strlen (old_filename)) {
-	    ret = NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID;
-	    goto DONE;
-	} else {
+	/* Is this a newly created message object? */
+	if (private_status == NOTMUCH_PRIVATE_STATUS_NO_DOCUMENT_FOUND) {
 	    _notmuch_message_set_filename (message, filename);
 	    _notmuch_message_add_term (message, "type", "mail");
+	} else {
+	    ret = NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID;
+	    goto DONE;
 	}
 
 	ret = _notmuch_database_link_message (notmuch, message, message_file);

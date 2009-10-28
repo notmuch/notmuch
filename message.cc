@@ -146,7 +146,8 @@ _notmuch_message_create (const void *talloc_owner,
  * If there is already a document with message ID 'message_id' in the
  * database, then the returned message can be used to query/modify the
  * document. Otherwise, a new document will be inserted into the
- * database before this function returns.
+ * database before this function returns, (and *status will be set
+ * to NOTMUCH_PRIVATE_STATUS_NO_DOCUMENT_FOUND).
  *
  * If an error occurs, this function will return NULL and *status
  * will be set as appropriate. (The status pointer argument must
@@ -156,15 +157,14 @@ notmuch_message_t *
 _notmuch_message_create_for_message_id (const void *talloc_owner,
 					notmuch_database_t *notmuch,
 					const char *message_id,
-					notmuch_status_t *status)
+					notmuch_private_status_t *status_ret)
 {
-    notmuch_private_status_t private_status;
     notmuch_message_t *message;
     Xapian::Document doc;
     unsigned int doc_id;
     char *term;
 
-    *status = NOTMUCH_STATUS_SUCCESS;
+    *status_ret = NOTMUCH_PRIVATE_STATUS_SUCCESS;
 
     message = notmuch_database_find_message (notmuch, message_id);
     if (message)
@@ -173,7 +173,7 @@ _notmuch_message_create_for_message_id (const void *talloc_owner,
     term = talloc_asprintf (NULL, "%s%s",
 			    _find_prefix ("id"), message_id);
     if (term == NULL) {
-	*status = NOTMUCH_STATUS_OUT_OF_MEMORY;
+	*status_ret = NOTMUCH_PRIVATE_STATUS_OUT_OF_MEMORY;
 	return NULL;
     }
 
@@ -185,15 +185,17 @@ _notmuch_message_create_for_message_id (const void *talloc_owner,
 
 	doc_id = notmuch->xapian_db->add_document (doc);
     } catch (const Xapian::Error &error) {
-	*status = NOTMUCH_STATUS_XAPIAN_EXCEPTION;
+	*status_ret = NOTMUCH_PRIVATE_STATUS_XAPIAN_EXCEPTION;
 	return NULL;
     }
 
     message = _notmuch_message_create (talloc_owner, notmuch,
-				       doc_id, &private_status);
+				       doc_id, status_ret);
 
-    *status = COERCE_STATUS (private_status,
-			     "Failed to find dcocument after inserting it.");
+    /* We want to inform the caller that we had to create a new
+     * document. */
+    if (*status_ret == NOTMUCH_PRIVATE_STATUS_SUCCESS)
+	*status_ret = NOTMUCH_PRIVATE_STATUS_NO_DOCUMENT_FOUND;
 
     return message;
 }
@@ -297,21 +299,49 @@ void
 _notmuch_message_set_filename (notmuch_message_t *message,
 			       const char *filename)
 {
-    if (message->filename)
+    const char *s;
+    const char *db_path;
+    unsigned int db_path_len;
+
+    if (message->filename) {
 	talloc_free (message->filename);
-    message->doc.set_data (filename);
+	message->filename = NULL;
+    }
+
+    if (filename == NULL)
+	INTERNAL_ERROR ("Message filename cannot be NULL.");
+
+    s = filename;
+
+    db_path = notmuch_database_get_path (message->notmuch);
+    db_path_len = strlen (db_path);
+
+    if (*s == '/' && strncmp (s, db_path, db_path_len) == 0
+	&& strlen (s) > db_path_len)
+    {
+	s += db_path_len + 1;
+    }
+
+    message->doc.set_data (s);
 }
 
 const char *
 notmuch_message_get_filename (notmuch_message_t *message)
 {
     std::string filename_str;
+    const char *db_path;
 
     if (message->filename)
 	return message->filename;
 
     filename_str = message->doc.get_data ();
-    message->filename = talloc_strdup (message, filename_str.c_str ());
+    db_path = notmuch_database_get_path (message->notmuch);
+
+    if (filename_str[0] != '/')
+	message->filename = talloc_asprintf (message, "%s/%s", db_path,
+					     filename_str.c_str ());
+    else
+	message->filename = talloc_strdup (message, filename_str.c_str ());
 
     return message->filename;
 }

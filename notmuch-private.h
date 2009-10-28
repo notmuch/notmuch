@@ -172,7 +172,7 @@ notmuch_message_t *
 _notmuch_message_create_for_message_id (const void *talloc_owner,
 					notmuch_database_t *notmuch,
 					const char *message_id,
-					notmuch_status_t *status);
+					notmuch_private_status_t *status);
 
 const char *
 _notmuch_message_get_subject (notmuch_message_t *message);
