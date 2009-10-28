@@ -114,6 +114,13 @@ prefix_t BOOLEAN_PREFIX_EXTERNAL[] = {
     { "id", "Q" }
 };
 
+prefix_t PROBABILISTIC_PREFIX[]= {
+    { "from", "XFROM" },
+    { "to", "XTO" },
+    { "attachment", "XATTACHMENT" },
+    { "subject", "XSUBJECT"}
+};
+
 int
 _internal_error (const char *format, ...)
 {
@@ -140,6 +147,10 @@ _find_prefix (const char *name)
     for (i = 0; i < ARRAY_SIZE (BOOLEAN_PREFIX_EXTERNAL); i++)
 	if (strcmp (name, BOOLEAN_PREFIX_EXTERNAL[i].name) == 0)
 	    return BOOLEAN_PREFIX_EXTERNAL[i].prefix;
+
+    for (i = 0; i < ARRAY_SIZE (PROBABILISTIC_PREFIX); i++)
+	if (strcmp (name, PROBABILISTIC_PREFIX[i].name) == 0)
+	    return PROBABILISTIC_PREFIX[i].prefix;
 
     INTERNAL_ERROR ("No prefix exists for '%s'\n", name);
 
@@ -478,13 +489,23 @@ notmuch_database_open (const char *path)
 	notmuch->xapian_db = new Xapian::WritableDatabase (xapian_path,
 							   Xapian::DB_CREATE_OR_OPEN);
 	notmuch->query_parser = new Xapian::QueryParser;
+	notmuch->term_gen = new Xapian::TermGenerator;
+	notmuch->term_gen->set_stemmer (Xapian::Stem ("english"));
+
 	notmuch->query_parser->set_default_op (Xapian::Query::OP_AND);
 	notmuch->query_parser->set_database (*notmuch->xapian_db);
+	notmuch->query_parser->set_stemmer (Xapian::Stem ("english"));
+	notmuch->query_parser->set_stemming_strategy (Xapian::QueryParser::STEM_SOME);
 
 	for (i = 0; i < ARRAY_SIZE (BOOLEAN_PREFIX_EXTERNAL); i++) {
 	    prefix_t *prefix = &BOOLEAN_PREFIX_EXTERNAL[i];
 	    notmuch->query_parser->add_boolean_prefix (prefix->name,
 						       prefix->prefix);
+	}
+
+	for (i = 0; i < ARRAY_SIZE (PROBABILISTIC_PREFIX); i++) {
+	    prefix_t *prefix = &PROBABILISTIC_PREFIX[i];
+	    notmuch->query_parser->add_prefix (prefix->name, prefix->prefix);
 	}
     } catch (const Xapian::Error &error) {
 	fprintf (stderr, "A Xapian exception occurred: %s\n",
@@ -508,6 +529,7 @@ notmuch_database_close (notmuch_database_t *notmuch)
 {
     notmuch->xapian_db->flush ();
 
+    delete notmuch->term_gen;
     delete notmuch->query_parser;
     delete notmuch->xapian_db;
     talloc_free (notmuch);
@@ -924,9 +946,11 @@ notmuch_database_add_message (notmuch_database_t *notmuch,
 	{
 	    ret = NOTMUCH_STATUS_FILE_NOT_EMAIL;
 	    goto DONE;
-	} else {
-	    _notmuch_message_sync (message);
 	}
+
+	_notmuch_message_index_file (message, filename);
+
+	_notmuch_message_sync (message);
     } catch (const Xapian::Error &error) {
 	fprintf (stderr, "A Xapian exception occurred: %s.\n",
 		 error.get_msg().c_str());

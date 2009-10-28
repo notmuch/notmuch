@@ -442,6 +442,32 @@ _notmuch_message_add_term (notmuch_message_t *message,
     return NOTMUCH_PRIVATE_STATUS_SUCCESS;
 }
 
+/* Parse 'text' and add a term to 'message' for each parsed word. Each
+ * term will be added both prefixed (if prefix_name is not NULL) and
+ * also unprefixed). */
+notmuch_private_status_t
+_notmuch_message_gen_terms (notmuch_message_t *message,
+			    const char *prefix_name,
+			    const char *text)
+{
+    Xapian::TermGenerator *term_gen = message->notmuch->term_gen;
+
+    if (text == NULL)
+	return NOTMUCH_PRIVATE_STATUS_NULL_POINTER;
+
+    term_gen->set_document (message->doc);
+
+    if (prefix_name) {
+	const char *prefix = _find_prefix (prefix_name);
+
+	term_gen->index_text (text, 1, prefix);
+    }
+
+    term_gen->index_text (text);
+
+    return NOTMUCH_PRIVATE_STATUS_SUCCESS;
+}
+
 /* Remove a name:value term from 'message', (the actual term will be
  * encoded by prefixing the value with a short prefix). See
  * NORMAL_PREFIX and BOOLEAN_PREFIX arrays for the mapping of term

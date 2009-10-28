@@ -187,6 +187,11 @@ _notmuch_message_remove_term (notmuch_message_t *message,
 			      const char *prefix_name,
 			      const char *value);
 
+notmuch_private_status_t
+_notmuch_message_gen_terms (notmuch_message_t *message,
+			    const char *prefix_name,
+			    const char *text);
+
 void
 _notmuch_message_set_filename (notmuch_message_t *message,
 			       const char *filename);
@@ -204,6 +209,12 @@ _notmuch_message_set_date (notmuch_message_t *message,
 
 void
 _notmuch_message_sync (notmuch_message_t *message);
+
+/* index.cc */
+
+notmuch_status_t
+_notmuch_message_index_file (notmuch_message_t *message,
+			     const char *filename);
 
 /* message-file.c */
 

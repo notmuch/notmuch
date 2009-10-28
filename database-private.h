@@ -29,6 +29,7 @@ struct _notmuch_database {
     char *path;
     Xapian::WritableDatabase *xapian_db;
     Xapian::QueryParser *query_parser;
+    Xapian::TermGenerator *term_gen;
 };
 
 #endif

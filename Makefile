@@ -2,26 +2,29 @@ PROGS=notmuch
 
 WARN_FLAGS=-Wall -Wextra -Wmissing-declarations -Wwrite-strings -Wswitch-enum
 
-CDEPENDS_FLAGS=`pkg-config --cflags glib-2.0 talloc`
-CXXDEPENDS_FLAGS=`pkg-config --cflags glib-2.0 talloc` `xapian-config --cxxflags`
+CDEPENDS_FLAGS=`pkg-config --cflags glib-2.0 gmime-2.4 talloc`
+CXXDEPENDS_FLAGS=$(CDEPENDS_FLAGS) `xapian-config --cxxflags`
 
 MYCFLAGS=$(WARN_FLAGS) -O0 -g $(CDEPENDS_FLAGS)
 MYCXXFLAGS=$(WARN_FLAGS) -O0 -g $(CXXDEPENDS_FLAGS)
 
-MYLDFLAGS=`pkg-config --libs glib-2.0 talloc` `xapian-config --libs`
+MYLDFLAGS=`pkg-config --libs glib-2.0 gmime-2.4 talloc` `xapian-config --libs`
 
-MODULES=		\
-	notmuch.o	\
+LIBRARY=		\
 	database.o	\
 	date.o		\
+	index.o		\
+	libsha1.o	\
 	message.o	\
 	message-file.o	\
 	query.o		\
 	sha1.o		\
 	tags.o		\
 	thread.o	\
-	libsha1.o	\
 	xutil.o
+
+MAIN=			\
+	notmuch.o
 
 all: $(PROGS)
 
@@ -31,7 +34,7 @@ all: $(PROGS)
 %.o: %.c
 	$(CC) -c $(CFLAGS) $(MYCFLAGS) $< -o $@
 
-notmuch: $(MODULES)
+notmuch: $(MAIN) $(LIBRARY)
 	$(CC) $(MYLDFLAGS) $^ -o $@
 
 Makefile.dep: *.c *.cc
