@@ -104,12 +104,12 @@ typedef struct {
 
 prefix_t BOOLEAN_PREFIX_INTERNAL[] = {
     { "type", "T" },
-    { "thread", "G" },
     { "ref", "XREFERENCE" },
     { "timestamp", "XTIMESTAMP" },
 };
 
 prefix_t BOOLEAN_PREFIX_EXTERNAL[] = {
+    { "thread", "G" },
     { "tag", "K" },
     { "id", "Q" }
 };
