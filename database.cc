@@ -881,7 +881,25 @@ notmuch_database_add_message (notmuch_database_t *notmuch,
 					   (char *) NULL);
 
     try {
-	/* The first order of business is to find/create a message ID. */
+	/* Before we do any real work, (especially before doing a
+	 * potential SHA-1 computation on the entire file's contents),
+	 * let's make sure that what we're looking at looks like an
+	 * actual email message.
+	 */
+	from = notmuch_message_file_get_header (message_file, "from");
+	subject = notmuch_message_file_get_header (message_file, "subject");
+	to = notmuch_message_file_get_header (message_file, "to");
+
+	if (from == NULL &&
+	    subject == NULL &&
+	    to == NULL)
+	{
+	    ret = NOTMUCH_STATUS_FILE_NOT_EMAIL;
+	    goto DONE;
+	}
+
+	/* Now that we're sure it's mail, the first order of business
+	 * is to find a message ID (or else create one ourselves). */
 
 	header = notmuch_message_file_get_header (message_file, "message-id");
 	if (header) {
@@ -937,18 +955,6 @@ notmuch_database_add_message (notmuch_database_t *notmuch,
 
 	date = notmuch_message_file_get_header (message_file, "date");
 	_notmuch_message_set_date (message, date);
-
-	from = notmuch_message_file_get_header (message_file, "from");
-	subject = notmuch_message_file_get_header (message_file, "subject");
-	to = notmuch_message_file_get_header (message_file, "to");
-
-	if (from == NULL &&
-	    subject == NULL &&
-	    to == NULL)
-	{
-	    ret = NOTMUCH_STATUS_FILE_NOT_EMAIL;
-	    goto DONE;
-	}
 
 	_notmuch_message_index_file (message, filename);
 
