@@ -106,6 +106,7 @@ prefix_t BOOLEAN_PREFIX_INTERNAL[] = {
     { "type", "T" },
     { "ref", "XREFERENCE" },
     { "timestamp", "XTIMESTAMP" },
+    { "contact", "XCONTACT" }
 };
 
 prefix_t BOOLEAN_PREFIX_EXTERNAL[] = {

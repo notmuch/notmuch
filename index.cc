@@ -30,13 +30,23 @@ _index_address_mailbox (notmuch_message_t *message,
 			InternetAddress *address)
 {
     InternetAddressMailbox *mailbox = INTERNET_ADDRESS_MAILBOX (address);
-    const char *name, *addr = internet_address_mailbox_get_addr (mailbox);
+    const char *name, *addr;
+    char *contact;
     int own_name = 0;
 
-    if (addr)
-	_notmuch_message_gen_terms (message, prefix_name, addr);
-
     name = internet_address_get_name (address);
+    addr = internet_address_mailbox_get_addr (mailbox);
+
+    if (addr) {
+	if (name) {
+	    contact = talloc_asprintf (message, "\"%s\" <%s>",
+				       name, addr);
+	    _notmuch_message_add_term (message, "contact", contact);
+	    talloc_free (contact);
+	} else {
+	    _notmuch_message_add_term (message, "contact", addr);
+	}
+    }
 
     /* In the absence of a name, we'll strip the part before the @
      * from the address. */
@@ -52,6 +62,8 @@ _index_address_mailbox (notmuch_message_t *message,
 
     if (name)
 	_notmuch_message_gen_terms (message, prefix_name, name);
+    if (addr)
+	_notmuch_message_gen_terms (message, prefix_name, addr);
 }
 
 static void
