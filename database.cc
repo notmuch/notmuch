@@ -489,6 +489,7 @@ notmuch_database_open (const char *path)
     } catch (const Xapian::Error &error) {
 	fprintf (stderr, "A Xapian exception occurred: %s\n",
 		 error.get_msg().c_str());
+	notmuch = NULL;
     }
     
   DONE:
