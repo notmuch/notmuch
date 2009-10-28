@@ -1037,12 +1037,16 @@ help_command (int argc, char *argv[]);
 command_t commands[] = {
     { "setup", setup_command,
       "Interactively setup notmuch for first use.",
+      "\t\tThe setup command is the first command you will run in order\n"
+      "\t\tto start using notmuch. It will prompt you for the directory\n"
+      "\t\tcontaining your email archives, and will then proceed to build\n"
+      "\t\ta database to allow fast searching of that mail.\n\n"
       "\t\tInvoking notmuch with no command argument will run setup if\n"
       "\t\tthe setup command has not previously been completed." },
     { "new", new_command,
       "Find and import any new messages.",
       "\t\tScans all sub-directories of the database, adding new messages\n"
-      "\t\tthat are found. Each new message will be tagges as both\n"
+      "\t\tthat are found. Each new message will be tagged as both\n"
       "\t\t\"inbox\" and \"unread\".\n"
       "\n"
       "\t\tNote: \"notmuch new\" will skip any read-only directories,\n"
@@ -1051,16 +1055,40 @@ command_t commands[] = {
     { "search", search_command,
       "<search-term> [...]\n\n"
       "\t\tSearch for threads matching the given search terms.",
-      "\t\tOnce we actually implement search we'll document the\n"
-      "\t\tsyntax here." },
+      "\t\tNote that the individual mail messages will be matched\n"
+      "\t\tagainst the search terms, but the results will be the\n"
+      "\t\tthreads containing the matched messages.\n\n"
+      "\t\tCurrently, the supported search terms are as follows, (where\n"
+      "\t\t<brackets> indicate user-supplied values):\n\n"
+      "\t\t\ttag:<tag>\n"
+      "\t\t\tid:<message-id>\n"
+      "\t\t\tthread:<thread-id>\n\n"
+      "\t\tValid tag values include \"inbox\" and \"unread\" by default\n"
+      "\t\tfor new messages added by \"notmuch new\" as well as any other\n"
+      "\t\ttag values added manually with \"notmuch tag\".\n\n"
+      "\t\tMessage ID values are the literal contents of the Message-ID:\n"
+      "\t\theader of email messages, but without the '<','>' delimiters.\n\n"
+      "\t\tThread ID values are generated internally by notmuch but can\n"
+      "\t\tbe seen in the output of \"notmuch search\" for example.\n\n"
+      "\t\tIn addition to individual terms, multiple terms can be\n"
+      "\t\tcombined with Boolean operators (\"and\", \"or\", \"not\", etc.).\n"
+      "\t\tEach term in the query will be implicitly connected by a\n"
+      "\t\tlogical AND if no explicit operator is provided.\n\n"
+      "\t\tParentheses can also be used to control the combination of\n"
+      "\t\tthe Boolean operators, but will have to be protected from\n"
+      "\t\tinterpretation by the shell, (such as by putting quotation\n"
+      "\t\tmarks around any parenthesized expression)." },
     { "show", show_command,
       "<thread-id>\n\n"
+      "\t\tNote: The \"notmuch show\" command is not implemented yet.\n\n"
       "\t\tShow the thread with the given thread ID (see 'search').",
-      "" },
+      "\t\tThread ID values are given as the first column in the\n"
+      "\t\toutput of the \"notmuch search\" command. These are the\n"
+      "\t\trandom-looking strings of 32 characters." },
     { "tag", tag_command,
       "+<tag>|-<tag> [...] [--] <search-term> [...]\n\n"
       "\t\tAdd/remove tags for all messages matching the search terms.",
-      "\t\tThe search terms are handled texactly as in 'search' so one\n"
+      "\t\tThe search terms are handled exactly as in 'search' so one\n"
       "\t\tcan use that command first to see what will be modified.\n\n"
       "\t\tTags prefixed by '+' are added while those prefixed by '-' are\n"
       "\t\tremoved. For each message, tag removal is before tag addition.\n\n"
@@ -1068,7 +1096,13 @@ command_t commands[] = {
       "\t\targument that begins with neither '+' nor '-'. Support for\n"
       "\t\tan initial search term beginning with '+' or '-' is provided\n"
       "\t\tby allowing the user to specify a \"--\" argument to separate\n"
-      "\t\tthe tags from the search terms." },
+      "\t\tthe tags from the search terms.\n\n"
+      "\t\tNote: If you run \"notmuch new\" between reading a thread with\n"
+      "\t\t\"notmuch show\" and removing the \"inbox\" tag for that thread\n"
+      "\t\twith \"notmuch tag\" then you create the possibility of moving\n"
+      "\t\tsome messages from that thread out of your inbox without ever\n"
+      "\t\treading them. The easiest way to avoid this problem is to not\n"
+      "\t\trun \"notmuch new\" between reading and removing tags." },
     { "dump", dump_command,
       "[<filename>]\n\n"
       "\t\tCreate a plain-text dump of the tags for each message.",
@@ -1077,15 +1111,20 @@ command_t commands[] = {
       "\t\tthat can't be recreated from the messages themselves.\n"
       "\t\tThe output of notmuch dump is therefore the only\n"
       "\t\tcritical thing to backup (and much more friendly to\n"
-      "\t\tincremental backup than the native database files." },
+      "\t\tincremental backup than the native database files.)" },
     { "restore", restore_command,
       "<filename>\n\n"
       "\t\tRestore the tags from the given dump file (see 'dump').",
-      "" },
+      "\t\tNote: The dump file format is specifically chosen to be\n"
+      "\t\tcompatible with the format of files produced by sup-dump.\n"
+      "\t\tSo if you've previously been using sup for mail, then the\n"
+      "\t\t\"notmuch restore\" command provides you a way to import\n"
+      "\t\tall of your tags (or labels as sup calls them)." },
     { "help", help_command,
       "[<command>]\n\n"
       "\t\tThis message, or more detailed help for the named command.",
-      "" }
+      "\t\tExcept in this case, where there's not much more detailed\n"
+      "\t\thelp available." }
 };
 
 static void
