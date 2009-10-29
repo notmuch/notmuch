@@ -84,7 +84,7 @@ typedef struct {
  *
  * and has a single value:
  *
- *	TIMETAMPS:	The time_t value from the user.
+ *	TIMESTAMP:	The time_t value from the user.
  */
 
 /* With these prefix values we follow the conventions published here:

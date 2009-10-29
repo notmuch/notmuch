@@ -797,6 +797,97 @@ search_command (int argc, char *argv[])
     return ret;
 }
 
+/* Format a nice representation of 'time' relative to the current time.
+ *
+ * Examples include:
+ *
+ *	5 minutes ago	(For times less than 60 minutes ago)
+ *	12:30		(For times >60 minutes but still today)
+ *	Yesterday
+ *	Monday		(Before yesterday but fewer than 7 days ago)
+ *	Oct. 12		(Between 7 and 180 days ago (about 6 months))
+ *	2008-06-30	(More than 180 days ago)
+ */
+#define MINUTE (60)
+#define HOUR (60 * MINUTE)
+#define DAY (24 * HOUR)
+#define RELATIVE_DATE_MAX 20
+static const char *
+_format_relative_date (void *ctx, time_t then)
+{
+    struct tm tm_now, tm_then;
+    time_t now = time(NULL);
+    time_t delta;
+    char *result;
+
+    localtime_r (&now, &tm_now);
+    localtime_r (&then, &tm_then);
+
+    result = talloc_zero_size (ctx, RELATIVE_DATE_MAX);
+    if (result == NULL)
+	return "when?";
+
+    if (then > now)
+	return "the future";
+
+    delta = now - then;
+
+    if (delta > 180 * DAY) {
+	strftime (result, RELATIVE_DATE_MAX,
+		  "%F", &tm_then);
+	return result;
+    }
+
+    if (delta < 3600) {
+	snprintf (result, RELATIVE_DATE_MAX,
+		  "%d minutes ago", (int) (delta / 60));
+	return result;
+    }
+
+    if (delta <= 6 * DAY) {
+	if (tm_then.tm_wday == tm_now.tm_wday &&
+	    delta < DAY)
+	{
+	    strftime (result, RELATIVE_DATE_MAX,
+		      "%R", &tm_then);
+	    return result;
+	} else if ((tm_now.tm_wday + 7 - tm_then.tm_wday) % 7 == 1) {
+	    return "Yesterday";
+	} else {
+	    strftime (result, RELATIVE_DATE_MAX,
+		      "%A", &tm_then);
+	    return result;
+	}
+    }
+
+    strftime (result, RELATIVE_DATE_MAX,
+	      "%b %d", &tm_then);
+    return result;
+}
+#undef MINUTE
+#undef HOUR
+#undef DAY
+
+/* Get a nice, single-line summary of message. */
+static const char *
+_get_one_line_summary (void *ctx, notmuch_message_t *message)
+{
+    const char *from;
+    time_t date;
+    const char *relative_date;
+    const char *subject;
+
+    from = notmuch_message_get_header (message, "from");
+
+    date = notmuch_message_get_date (message);
+    relative_date = _format_relative_date (ctx, date);
+
+    subject = notmuch_message_get_header (message, "subject");
+
+    return talloc_asprintf (ctx, "%s (%s) %s",
+			    from, relative_date, subject);
+}
+
 static int
 show_command (unused (int argc), unused (char *argv[]))
 {
@@ -852,6 +943,8 @@ show_command (unused (int argc), unused (char *argv[]))
 	printf ("%%message{\n");
 
 	printf ("%%header{\n");
+
+	printf ("%s\n", _get_one_line_summary (local, message));
 
 	for (i = 0; i < ARRAY_SIZE (headers); i++) {
 	    name = headers[i];

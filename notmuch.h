@@ -617,6 +617,14 @@ notmuch_message_get_thread_id (notmuch_message_t *message);
 const char *
 notmuch_message_get_filename (notmuch_message_t *message);
 
+/* Get the date of 'message' as a time_t value.
+ *
+ * For the original textual representation of the Date header from the
+ * message call notmuch_message_get_header() with a header value of
+ * "date". */
+time_t
+notmuch_message_get_date  (notmuch_message_t *message);
+
 /* Get the size in bytes of the full header section of 'message'.
  *
  * This is useful in conjunction with notmuch_message_get_filename

@@ -370,6 +370,21 @@ notmuch_message_get_filename (notmuch_message_t *message)
     return message->filename;
 }
 
+time_t
+notmuch_message_get_date (notmuch_message_t *message)
+{
+    std::string value;
+
+    try {
+	value = message->doc.get_value (NOTMUCH_VALUE_TIMESTAMP);
+    } catch (Xapian::Error &error) {
+	INTERNAL_ERROR ("Failed to read timestamp value from document.");
+	return 0;
+    }
+
+    return Xapian::sortable_unserialise (value);
+}
+
 notmuch_tags_t *
 notmuch_message_get_tags (notmuch_message_t *message)
 {
