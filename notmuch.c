@@ -811,6 +811,12 @@ show_command (unused (int argc), unused (char *argv[]))
     int ret = 0;
     int c;
 
+    const char *headers[] = {
+	"Subject", "From", "To", "Cc", "Bcc", "Date"
+    };
+    const char *name, *value;
+    unsigned int i;
+
     if (argc != 1) {
 	fprintf (stderr, "Error: \"notmuch show\" requires exactly one thread-ID argument.\n");
 	ret = 1;
@@ -847,7 +853,12 @@ show_command (unused (int argc), unused (char *argv[]))
 
 	printf ("%%header{\n");
 
-	printf ("%s", notmuch_message_get_all_headers (message));
+	for (i = 0; i < ARRAY_SIZE (headers); i++) {
+	    name = headers[i];
+	    value = notmuch_message_get_header (message, name);
+	    if (value)
+		printf ("%s: %s\n", name, value);
+	}
 
 	printf ("%%header}\n");
 
