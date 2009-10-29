@@ -291,6 +291,13 @@ notmuch_message_file_get_header (notmuch_message_file_t *message,
 const char *
 notmuch_message_file_get_all_headers (notmuch_message_file_t *message);
 
+/* Get the size in bytes of the full header section of 'message'.
+ *
+ * Returns 0 in the case of any error.
+ */
+size_t
+notmuch_message_file_get_header_size (notmuch_message_file_t *message);
+
 /* date.c */
 
 /* Parse an RFC 8222 date string to a time_t value.

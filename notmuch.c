@@ -806,7 +806,10 @@ show_command (unused (int argc), unused (char *argv[]))
     notmuch_query_t *query = NULL;
     notmuch_message_results_t *messages;
     notmuch_message_t *message;
+    const char *filename;
+    FILE *file;
     int ret = 0;
+    int c;
 
     if (argc != 1) {
 	fprintf (stderr, "Error: \"notmuch show\" requires exactly one thread-ID argument.\n");
@@ -847,6 +850,22 @@ show_command (unused (int argc), unused (char *argv[]))
 	printf ("%s", notmuch_message_get_all_headers (message));
 
 	printf ("%%header}\n");
+
+	filename = notmuch_message_get_filename (message);
+
+	file = fopen (filename, "r");
+	if (file) {
+	    size_t header_size = notmuch_message_get_header_size (message);
+	    fseek (file, header_size + 1, SEEK_SET);
+	    while (1) {
+		c = fgetc (file);
+		if (c == EOF)
+		    break;
+		putchar (c);
+	    }
+	}
+	fclose (file);
+
 	printf ("%%message}\n");
 
 	notmuch_message_destroy (message);
@@ -1206,7 +1225,6 @@ command_t commands[] = {
       "\t\tmarks around any parenthesized expression)." },
     { "show", show_command,
       "<thread-id>\n\n"
-      "\t\tNote: The \"notmuch show\" command is not implemented yet.\n\n"
       "\t\tShow the thread with the given thread ID (see 'search').",
       "\t\tThread ID values are given as the first column in the\n"
       "\t\toutput of the \"notmuch search\" command. These are the\n"

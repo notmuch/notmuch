@@ -343,8 +343,8 @@ notmuch_message_file_get_header (notmuch_message_file_t *message,
     return NULL;
 }
 
-static size_t
-_notmuch_message_file_get_header_size (notmuch_message_file_t *message)
+size_t
+notmuch_message_file_get_header_size (notmuch_message_file_t *message)
 {
     if (! message->parsing_finished)
 	notmuch_message_file_get_header (message, NULL);
@@ -359,7 +359,7 @@ const char *
 notmuch_message_file_get_all_headers (notmuch_message_file_t *message)
 {
     char *headers = NULL;
-    size_t header_size = _notmuch_message_file_get_header_size (message);
+    size_t header_size = notmuch_message_file_get_header_size (message);
 
     if (header_size == 0)
 	return "";

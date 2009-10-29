@@ -267,6 +267,17 @@ notmuch_message_get_all_headers (notmuch_message_t *message)
     return notmuch_message_file_get_all_headers (message->message_file);
 }
 
+size_t
+notmuch_message_get_header_size (notmuch_message_t *message)
+{
+    _notmuch_message_ensure_message_file (message);
+    if (message->message_file == NULL)
+	return 0;
+
+    return notmuch_message_file_get_header_size (message->message_file);
+
+}
+
 const char *
 notmuch_message_get_thread_id (notmuch_message_t *message)
 {

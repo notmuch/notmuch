@@ -617,6 +617,16 @@ notmuch_message_get_thread_id (notmuch_message_t *message);
 const char *
 notmuch_message_get_filename (notmuch_message_t *message);
 
+/* Get the size in bytes of the full header section of 'message'.
+ *
+ * This is useful in conjunction with notmuch_message_get_filename
+ * for separately parsing the message header and content.
+ *
+ * Returns 0 in the case of any error.
+ */
+size_t
+notmuch_message_get_header_size (notmuch_message_t *message);
+
 /* Get the value of the specified header from 'message'.
  *
  * The value will be read from the actual message file, not from the
