@@ -39,6 +39,7 @@ struct _notmuch_message_file {
     GHashTable *headers;
     int broken_headers;
     int good_headers;
+    size_t header_size; /* Length of full message header in bytes. */
 
     /* Parsing state */
     char *line;
@@ -204,6 +205,9 @@ copy_header_unfolding (header_value_closure_t *value,
     }
 }
 
+/* As a special-case, a value of NULL for header_desired will force
+ * the entire header to be parsed if it is not parsed already. This is
+ * used by the _notmuch_message_file_get_headers_end function. */
 const char *
 notmuch_message_file_get_header (notmuch_message_file_t *message,
 				 const char *header_desired)
@@ -215,9 +219,13 @@ notmuch_message_file_get_header (notmuch_message_file_t *message,
 
     message->parsing_started = 1;
 
-    contains = g_hash_table_lookup_extended (message->headers,
-					     header_desired, NULL,
-					     (gpointer *) &value);
+    if (header_desired == NULL)
+	contains = 0;
+    else
+	contains = g_hash_table_lookup_extended (message->headers,
+						 header_desired, NULL,
+						 (gpointer *) &value);
+
     if (contains && value)
 	return value;
 
@@ -225,7 +233,7 @@ notmuch_message_file_get_header (notmuch_message_file_t *message,
 	return NULL;
 
 #define NEXT_HEADER_LINE(closure)				\
-    do {							\
+    while (1) {							\
 	ssize_t bytes_read = getline (&message->line,		\
 				      &message->line_size,	\
 				      message->file);		\
@@ -242,7 +250,11 @@ notmuch_message_file_get_header (notmuch_message_file_t *message,
 	{							\
 	    copy_header_unfolding ((closure), message->line);	\
 	}							\
-    } while (*message->line == ' ' || *message->line == '\t');
+	if (*message->line == ' ' || *message->line == '\t')	\
+	    message->header_size += strlen (message->line);	\
+	else							\
+	    break;						\
+    }
 
     if (message->line == NULL)
 	NEXT_HEADER_LINE (NULL);
@@ -268,6 +280,8 @@ notmuch_message_file_get_header (notmuch_message_file_t *message,
 	    continue;
 	}
 
+	message->header_size += strlen (message->line);
+
 	message->good_headers++;
 
 	header = xstrndup (message->line, colon - message->line);
@@ -290,7 +304,10 @@ notmuch_message_file_get_header (notmuch_message_file_t *message,
 
 	NEXT_HEADER_LINE (&message->value);
 
-	match = (strcasecmp (header, header_desired) == 0);
+	if (header_desired == 0)
+	    match = 0;
+	else
+	    match = (strcasecmp (header, header_desired) == 0);
 
 	value = xstrdup (message->value.str);
 
@@ -314,7 +331,7 @@ notmuch_message_file_get_header (notmuch_message_file_t *message,
     /* We've parsed all headers and never found the one we're looking
      * for. It's probably just not there, but let's check that we
      * didn't make a mistake preventing us from seeing it. */
-    if (message->restrict_headers &&
+    if (message->restrict_headers && header_desired &&
 	! g_hash_table_lookup_extended (message->headers,
 					header_desired, NULL, NULL))
     {
@@ -324,4 +341,41 @@ notmuch_message_file_get_header (notmuch_message_file_t *message,
     }
 
     return NULL;
+}
+
+static size_t
+_notmuch_message_file_get_header_size (notmuch_message_file_t *message)
+{
+    if (! message->parsing_finished)
+	notmuch_message_file_get_header (message, NULL);
+
+    if (! message->parsing_finished)
+	INTERNAL_ERROR ("Parsing for NULL header did not force parsing to finish.\n");
+
+    return message->header_size;
+}
+
+const char *
+notmuch_message_file_get_all_headers (notmuch_message_file_t *message)
+{
+    char *headers = NULL;
+    size_t header_size = _notmuch_message_file_get_header_size (message);
+
+    if (header_size == 0)
+	return "";
+
+    headers = talloc_size (message, header_size + 1);
+    if (unlikely (headers == NULL))
+	return NULL;
+
+    rewind (message->file);
+    if (fread (headers, 1, header_size, message->file) != header_size) {
+	fprintf (stderr, "Error: Short read occurred trying to read message header.\n");
+	talloc_free (headers);
+	return NULL;
+    }
+
+    headers[header_size] = '\0';
+
+    return headers;
 }

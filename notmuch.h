@@ -617,6 +617,35 @@ notmuch_message_get_thread_id (notmuch_message_t *message);
 const char *
 notmuch_message_get_filename (notmuch_message_t *message);
 
+/* Get the value of the specified header from 'message'.
+ *
+ * The value will be read from the actual message file, not from the
+ * notmuch database. The header name is case insensitive.
+ *
+ * The returned string belongs to the message so should not be
+ * modified or freed by the caller (nor should it be referenced after
+ * the message is destroyed).
+ *
+ * Returns NULL if the message does not contain a header line matching
+ * 'header' of if any error occurs.
+ */
+const char *
+notmuch_message_get_header (notmuch_message_t *message, const char *header);
+
+/* Get the entire set of headers from an email message as a string.
+ *
+ * The value will be read from the actual message file, not from the
+ * notmuch database.
+ *
+ * The returned value is owned by the notmuch message and is valid
+ * only until the message is closed. The caller should copy it if
+ * needing to modify the value or to hold onto it for longer.
+ *
+ * Returns NULL in the case of any error.
+ */
+const char *
+notmuch_message_get_all_headers (notmuch_message_t *message);
+
 /* Get the tags for 'message', returning a notmuch_tags_t object which
  * can be used to iterate over all tags.
  *

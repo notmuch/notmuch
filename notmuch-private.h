@@ -280,6 +280,17 @@ const char *
 notmuch_message_file_get_header (notmuch_message_file_t *message,
 				 const char *header);
 
+/* Get the entire set of headers from an email message as a string.
+ *
+ * The returned value is owned by the notmuch message and is valid
+ * only until the message is closed. The caller should copy it if
+ * needing to modify the value or to hold onto it for longer.
+ *
+ * Returns NULL in the case of any error.
+ */
+const char *
+notmuch_message_file_get_all_headers (notmuch_message_file_t *message);
+
 /* date.c */
 
 /* Parse an RFC 8222 date string to a time_t value.

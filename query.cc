@@ -212,7 +212,7 @@ notmuch_query_search_threads (notmuch_query_t *query)
 	    thread = _notmuch_thread_create (query, query->notmuch,
 					     thread_id);
 
-	    subject = _notmuch_message_get_subject (message);
+	    subject = notmuch_message_get_header (message, "subject");
 
 	    _notmuch_thread_set_subject (thread, subject);
 

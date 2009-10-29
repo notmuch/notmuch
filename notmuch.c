@@ -800,8 +800,69 @@ search_command (int argc, char *argv[])
 static int
 show_command (unused (int argc), unused (char *argv[]))
 {
-    fprintf (stderr, "Error: show is not implemented yet.\n");
-    return 1;
+    void *local = talloc_new (NULL);
+    char *query_string;
+    notmuch_database_t *notmuch = NULL;
+    notmuch_query_t *query = NULL;
+    notmuch_message_results_t *messages;
+    notmuch_message_t *message;
+    int ret = 0;
+
+    if (argc != 1) {
+	fprintf (stderr, "Error: \"notmuch show\" requires exactly one thread-ID argument.\n");
+	ret = 1;
+	goto DONE;
+    }
+
+    notmuch = notmuch_database_open (NULL);
+    if (notmuch == NULL) {
+	ret = 1;
+	goto DONE;
+    }
+
+    query_string = talloc_asprintf (local, "thread:%s", argv[0]);
+    if (query_string == NULL) {
+	fprintf (stderr, "Out of memory\n");
+	ret = 1;
+	goto DONE;
+    }
+
+    query = notmuch_query_create (notmuch, query_string);
+    if (query == NULL) {
+	fprintf (stderr, "Out of memory\n");
+	ret = 1;
+	goto DONE;
+    }
+
+    for (messages = notmuch_query_search_messages (query);
+	 notmuch_message_results_has_more (messages);
+	 notmuch_message_results_advance (messages))
+    {
+	message = notmuch_message_results_get (messages);
+
+	printf ("%%message{\n");
+
+	printf ("%%header{\n");
+
+	printf ("%s", notmuch_message_get_all_headers (message));
+
+	printf ("%%header}\n");
+	printf ("%%message}\n");
+
+	notmuch_message_destroy (message);
+    }
+
+  DONE:
+    if (local)
+	talloc_free (local);
+
+    if (query)
+	notmuch_query_destroy (query);
+
+    if (notmuch)
+	notmuch_database_close (notmuch);
+
+    return ret;
 }
 
 static int

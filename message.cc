@@ -232,26 +232,39 @@ notmuch_message_get_message_id (notmuch_message_t *message)
     return message->message_id;
 }
 
-const char *
-_notmuch_message_get_subject (notmuch_message_t *message)
+static void
+_notmuch_message_ensure_message_file (notmuch_message_t *message)
 {
-    if (! message->message_file) {
-	notmuch_message_file_t *message_file;
-	const char *filename;
+    const char *filename;
 
-	filename = notmuch_message_get_filename (message);
-	if (unlikely (filename == NULL))
-	    return NULL;
+    if (message->message_file)
+	return;
 
-	message_file = _notmuch_message_file_open_ctx (message, filename);
-	if (unlikely (message_file == NULL))
-	    return NULL;
+    filename = notmuch_message_get_filename (message);
+    if (unlikely (filename == NULL))
+	return;
 
-	message->message_file = message_file;
-    }
+    message->message_file = _notmuch_message_file_open_ctx (message, filename);
+}
 
-    return notmuch_message_file_get_header (message->message_file,
-					    "subject");
+const char *
+notmuch_message_get_header (notmuch_message_t *message, const char *header)
+{
+    _notmuch_message_ensure_message_file (message);
+    if (message->message_file == NULL)
+	return NULL;
+
+    return notmuch_message_file_get_header (message->message_file, header);
+}
+
+const char *
+notmuch_message_get_all_headers (notmuch_message_t *message)
+{
+    _notmuch_message_ensure_message_file (message);
+    if (message->message_file == NULL)
+	return NULL;
+
+    return notmuch_message_file_get_all_headers (message->message_file);
 }
 
 const char *
