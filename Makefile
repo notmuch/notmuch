@@ -41,5 +41,9 @@ Makefile.dep: *.c *.cc
 	$(CXX) -M $(CPPFLAGS) $(CDEPENDS_FLAGS) $(CXXDEPENDS_FLAGS) $^ > $@
 -include Makefile.dep
 
+install:
+	install -C -D notmuch $(DESTDIR)/usr/bin/notmuch
+	install -C -D notmuch-completion.bash $(DESTDIR)/etc/bash_completion.d/notmuch
+
 clean:
 	rm -f $(PROGS) *.o Makefile.dep
