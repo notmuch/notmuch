@@ -770,7 +770,7 @@ _format_relative_date (void *ctx, time_t then)
 
     if (delta > 180 * DAY) {
 	strftime (result, RELATIVE_DATE_MAX,
-		  "%F", &tm_then);
+		  "%F", &tm_then); /* 2008-06-30 */
 	return result;
     }
 
@@ -780,24 +780,26 @@ _format_relative_date (void *ctx, time_t then)
 	return result;
     }
 
-    if (delta <= 6 * DAY) {
+    if (delta <= 7 * DAY) {
 	if (tm_then.tm_wday == tm_now.tm_wday &&
 	    delta < DAY)
 	{
 	    strftime (result, RELATIVE_DATE_MAX,
-		      "%R", &tm_then);
+		      "%R", &tm_then); /* 12:30 */
 	    return result;
 	} else if ((tm_now.tm_wday + 7 - tm_then.tm_wday) % 7 == 1) {
 	    return "Yesterday";
 	} else {
-	    strftime (result, RELATIVE_DATE_MAX,
-		      "%A", &tm_then);
-	    return result;
+	    if (tm_then.tm_wday != tm_now.tm_wday) {
+		strftime (result, RELATIVE_DATE_MAX,
+			  "%A", &tm_then); /* Monday */
+		return result;
+	    }
 	}
     }
 
     strftime (result, RELATIVE_DATE_MAX,
-	      "%b %d", &tm_then);
+	      "%b %d", &tm_then); /* Oct. 12 */
     return result;
 }
 #undef MINUTE
