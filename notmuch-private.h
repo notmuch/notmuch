@@ -155,10 +155,8 @@ _notmuch_thread_create (const void *talloc_owner,
 			const char *thread_id);
 
 void
-_notmuch_thread_add_tag (notmuch_thread_t *thread, const char *tag);
-
-void
-_notmuch_thread_set_subject (notmuch_thread_t *thread, const char *subject);
+_notmuch_thread_add_message (notmuch_thread_t *thread,
+			     notmuch_message_t *message);
 
 /* message.cc */
 

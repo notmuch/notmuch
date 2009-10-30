@@ -178,8 +178,6 @@ notmuch_query_search_threads (notmuch_query_t *query)
     const char *thread_id;
     notmuch_message_results_t *message_results;
     notmuch_message_t *message;
-    notmuch_tags_t *tags;
-    const char *tag;
     GHashTable *seen;
 
     thread_results = talloc (query, notmuch_thread_results_t);
@@ -207,27 +205,15 @@ notmuch_query_search_threads (notmuch_query_t *query)
 					    thread_id, NULL,
 					    (void **) &thread))
 	{
-	    const char *subject;
-
 	    thread = _notmuch_thread_create (query, query->notmuch,
 					     thread_id);
-
-	    subject = notmuch_message_get_header (message, "subject");
-
-	    _notmuch_thread_set_subject (thread, subject);
 
 	    g_hash_table_insert (seen, xstrdup (thread_id), thread);
 
 	    g_ptr_array_add (thread_results->threads, thread);
 	}
 
-	for (tags = notmuch_message_get_tags (message);
-	     notmuch_tags_has_more (tags);
-	     notmuch_tags_advance (tags))
-	{
-	    tag = notmuch_tags_get (tags);
-	    _notmuch_thread_add_tag (thread, tag);
-	}
+	_notmuch_thread_add_message (thread, message);
 
 	notmuch_message_destroy (message);
     }

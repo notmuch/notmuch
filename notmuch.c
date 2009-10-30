@@ -733,70 +733,6 @@ query_string_from_args (void *ctx, int argc, char *argv[])
     return query_string;
 }
 
-static int
-search_command (int argc, char *argv[])
-{
-    void *local = talloc_new (NULL);
-    notmuch_database_t *notmuch = NULL;
-    notmuch_query_t *query;
-    notmuch_thread_results_t *results;
-    notmuch_thread_t *thread;
-    notmuch_tags_t *tags;
-    char *query_str;
-    notmuch_status_t ret = NOTMUCH_STATUS_SUCCESS;
-
-    notmuch = notmuch_database_open (NULL);
-    if (notmuch == NULL) {
-	ret = 1;
-	goto DONE;
-    }
-
-    query_str = query_string_from_args (local, argc, argv);
-
-    query = notmuch_query_create (notmuch, query_str);
-    if (query == NULL) {
-	fprintf (stderr, "Out of memory\n");
-	ret = 1;
-	goto DONE;
-    }
-
-    for (results = notmuch_query_search_threads (query);
-	 notmuch_thread_results_has_more (results);
-	 notmuch_thread_results_advance (results))
-    {
-	int first = 1;
-
-	thread = notmuch_thread_results_get (results);
-
-	printf ("%s %s",
-		notmuch_thread_get_thread_id (thread),
-		notmuch_thread_get_subject (thread));
-
-	printf (" (");
-	for (tags = notmuch_thread_get_tags (thread);
-	     notmuch_tags_has_more (tags);
-	     notmuch_tags_advance (tags))
-	{
-	    if (! first)
-		printf (" ");
-	    printf ("%s", notmuch_tags_get (tags));
-	    first = 0;
-	}
-	printf (")\n");
-
-	notmuch_thread_destroy (thread);
-    }
-
-    notmuch_query_destroy (query);
-
-  DONE:
-    if (notmuch)
-	notmuch_database_close (notmuch);
-    talloc_free (local);
-
-    return ret;
-}
-
 /* Format a nice representation of 'time' relative to the current time.
  *
  * Examples include:
@@ -867,6 +803,76 @@ _format_relative_date (void *ctx, time_t then)
 #undef MINUTE
 #undef HOUR
 #undef DAY
+
+static int
+search_command (int argc, char *argv[])
+{
+    void *local = talloc_new (NULL);
+    notmuch_database_t *notmuch = NULL;
+    notmuch_query_t *query;
+    notmuch_thread_results_t *results;
+    notmuch_thread_t *thread;
+    notmuch_tags_t *tags;
+    char *query_str;
+    const char *relative_date;
+    time_t date;
+    notmuch_status_t ret = NOTMUCH_STATUS_SUCCESS;
+
+    notmuch = notmuch_database_open (NULL);
+    if (notmuch == NULL) {
+	ret = 1;
+	goto DONE;
+    }
+
+    query_str = query_string_from_args (local, argc, argv);
+
+    query = notmuch_query_create (notmuch, query_str);
+    if (query == NULL) {
+	fprintf (stderr, "Out of memory\n");
+	ret = 1;
+	goto DONE;
+    }
+
+    for (results = notmuch_query_search_threads (query);
+	 notmuch_thread_results_has_more (results);
+	 notmuch_thread_results_advance (results))
+    {
+	int first = 1;
+
+	thread = notmuch_thread_results_get (results);
+
+	date = notmuch_thread_get_oldest_date (thread);
+	relative_date = _format_relative_date (local, date);
+
+	printf ("%s (%s) %s",
+		notmuch_thread_get_thread_id (thread),
+		relative_date,
+		notmuch_thread_get_subject (thread));
+
+	printf (" (");
+	for (tags = notmuch_thread_get_tags (thread);
+	     notmuch_tags_has_more (tags);
+	     notmuch_tags_advance (tags))
+	{
+	    if (! first)
+		printf (" ");
+	    printf ("%s", notmuch_tags_get (tags));
+	    first = 0;
+	}
+	printf (")\n");
+
+	notmuch_thread_destroy (thread);
+    }
+
+    notmuch_query_destroy (query);
+
+  DONE:
+    if (notmuch)
+	notmuch_database_close (notmuch);
+    talloc_free (local);
+
+    return ret;
+}
 
 /* Get a nice, single-line summary of message. */
 static const char *

@@ -488,6 +488,16 @@ notmuch_thread_get_thread_id (notmuch_thread_t *thread);
 const char *
 notmuch_thread_get_subject (notmuch_thread_t *thread);
 
+/* Get the date of the oldest message in 'thread' as a time_t value.
+ */
+time_t
+notmuch_thread_get_oldest_date (notmuch_thread_t *thread);
+
+/* Get the date of the oldest message in 'thread' as a time_t value.
+ */
+time_t
+notmuch_thread_get_newest_date (notmuch_thread_t *thread);
+
 /* Get the tags for 'thread', returning a notmuch_tags_t object which
  * can be used to iterate over all tags.
  *
