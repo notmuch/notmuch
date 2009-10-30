@@ -4,6 +4,10 @@ notmuch_threads_t and notmuch_messages_t respectively.
 Add a talloc context as the first argument to each command in
 notmuch.c.
 
+Write a notmuch man page.
+
+Compile and install a libnotmuch library.
+
 Make "notmuch setup" not index all messages, but only what it can do
 in a reasonable amount of time, (then add "notmuch index" so the user
 can complete the job when convenient).
