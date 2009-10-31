@@ -1,6 +1,3 @@
-Rename notmuch_thread_results_t and notmuch_message_results_t to
-notmuch_threads_t and notmuch_messages_t respectively.
-
 Add a talloc context as the first argument to each command in
 notmuch.c.
 

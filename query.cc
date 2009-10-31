@@ -31,13 +31,13 @@ struct _notmuch_query {
     notmuch_sort_t sort;
 };
 
-struct _notmuch_message_results {
+struct _notmuch_messages {
     notmuch_database_t *notmuch;
     Xapian::MSetIterator iterator;
     Xapian::MSetIterator iterator_end;
 };
 
-struct _notmuch_thread_results {
+struct _notmuch_threads {
     notmuch_database_t *notmuch;
     GPtrArray *threads;
     unsigned int index;
@@ -79,23 +79,23 @@ notmuch_query_set_sort (notmuch_query_t *query, notmuch_sort_t sort)
  * talloc_set_destructor at all otherwise).
  */
 static int
-_notmuch_message_results_destructor (notmuch_message_results_t *results)
+_notmuch_messages_destructor (notmuch_messages_t *messages)
 {
-    results->iterator.~MSetIterator ();
-    results->iterator_end.~MSetIterator ();
+    messages->iterator.~MSetIterator ();
+    messages->iterator_end.~MSetIterator ();
 
     return 0;
 }
 
-notmuch_message_results_t *
+notmuch_messages_t *
 notmuch_query_search_messages (notmuch_query_t *query)
 {
     notmuch_database_t *notmuch = query->notmuch;
     const char *query_string = query->query_string;
-    notmuch_message_results_t *results;
+    notmuch_messages_t *messages;
 
-    results = talloc (query, notmuch_message_results_t);
-    if (unlikely (results == NULL))
+    messages = talloc (query, notmuch_messages_t);
+    if (unlikely (messages == NULL))
 	return NULL;
 
     try {
@@ -140,64 +140,64 @@ notmuch_query_search_messages (notmuch_query_t *query)
 
 	mset = enquire.get_mset (0, notmuch->xapian_db->get_doccount ());
 
-	results->notmuch = notmuch;
+	messages->notmuch = notmuch;
 
-	new (&results->iterator) Xapian::MSetIterator ();
-	new (&results->iterator_end) Xapian::MSetIterator ();
+	new (&messages->iterator) Xapian::MSetIterator ();
+	new (&messages->iterator_end) Xapian::MSetIterator ();
 
-	talloc_set_destructor (results, _notmuch_message_results_destructor);
+	talloc_set_destructor (messages, _notmuch_messages_destructor);
 
-	results->iterator = mset.begin ();
-	results->iterator_end = mset.end ();
+	messages->iterator = mset.begin ();
+	messages->iterator_end = mset.end ();
 
     } catch (const Xapian::Error &error) {
 	fprintf (stderr, "A Xapian exception occurred: %s\n",
 		 error.get_msg().c_str());
     }
 
-    return results;
+    return messages;
 }
 
 /* Glib objects force use to use a talloc destructor as well, (but not
- * nearly as ugly as the for message_results due to C++ objects). At
+ * nearly as ugly as the for messages due to C++ objects). At
  * this point, I'd really like to have some talloc-friendly
  * equivalents for the few pieces of glib that I'm using. */
 static int
-_notmuch_thread_results_destructor (notmuch_thread_results_t *results)
+_notmuch_threads_destructor (notmuch_threads_t *threads)
 {
-    g_ptr_array_free (results->threads, TRUE);
+    g_ptr_array_free (threads->threads, TRUE);
 
     return 0;
 }
 
-notmuch_thread_results_t *
+notmuch_threads_t *
 notmuch_query_search_threads (notmuch_query_t *query)
 {
-    notmuch_thread_results_t *thread_results;
+    notmuch_threads_t *threads;
     notmuch_thread_t *thread;
     const char *thread_id;
-    notmuch_message_results_t *message_results;
+    notmuch_messages_t *messages;
     notmuch_message_t *message;
     GHashTable *seen;
 
-    thread_results = talloc (query, notmuch_thread_results_t);
-    if (thread_results == NULL)
+    threads = talloc (query, notmuch_threads_t);
+    if (threads == NULL)
 	return NULL;
 
-    thread_results->notmuch = query->notmuch;
-    thread_results->threads = g_ptr_array_new ();
-    thread_results->index = 0;
+    threads->notmuch = query->notmuch;
+    threads->threads = g_ptr_array_new ();
+    threads->index = 0;
 
-    talloc_set_destructor (thread_results, _notmuch_thread_results_destructor);
+    talloc_set_destructor (threads, _notmuch_threads_destructor);
 
     seen = g_hash_table_new_full (g_str_hash, g_str_equal,
 				  free, NULL);
 
-    for (message_results = notmuch_query_search_messages (query);
-	 notmuch_message_results_has_more (message_results);
-	 notmuch_message_results_advance (message_results))
+    for (messages = notmuch_query_search_messages (query);
+	 notmuch_messages_has_more (messages);
+	 notmuch_messages_advance (messages))
     {
-	message = notmuch_message_results_get (message_results);
+	message = notmuch_messages_get (messages);
 
 	thread_id = notmuch_message_get_thread_id (message);
 
@@ -210,7 +210,7 @@ notmuch_query_search_threads (notmuch_query_t *query)
 
 	    g_hash_table_insert (seen, xstrdup (thread_id), thread);
 
-	    g_ptr_array_add (thread_results->threads, thread);
+	    g_ptr_array_add (threads->threads, thread);
 	}
 
 	_notmuch_thread_add_message (thread, message);
@@ -220,7 +220,7 @@ notmuch_query_search_threads (notmuch_query_t *query)
 
     g_hash_table_unref (seen);
 
-    return thread_results;
+    return threads;
 }
 
 void
@@ -230,72 +230,72 @@ notmuch_query_destroy (notmuch_query_t *query)
 }
 
 notmuch_bool_t
-notmuch_message_results_has_more (notmuch_message_results_t *results)
+notmuch_messages_has_more (notmuch_messages_t *messages)
 {
-    return (results->iterator != results->iterator_end);
+    return (messages->iterator != messages->iterator_end);
 }
 
 notmuch_message_t *
-notmuch_message_results_get (notmuch_message_results_t *results)
+notmuch_messages_get (notmuch_messages_t *messages)
 {
     notmuch_message_t *message;
     Xapian::docid doc_id;
     notmuch_private_status_t status;
 
-    if (! notmuch_message_results_has_more (results))
+    if (! notmuch_messages_has_more (messages))
 	return NULL;
 
-    doc_id = *results->iterator;
+    doc_id = *messages->iterator;
 
-    message = _notmuch_message_create (results,
-				       results->notmuch, doc_id,
+    message = _notmuch_message_create (messages,
+				       messages->notmuch, doc_id,
 				       &status);
 
     if (message == NULL &&
 	status == NOTMUCH_PRIVATE_STATUS_NO_DOCUMENT_FOUND)
     {
-	INTERNAL_ERROR ("a results iterator contains a non-existent document ID.\n");
+	INTERNAL_ERROR ("a messages iterator contains a non-existent document ID.\n");
     }
 
     return message;
 }
 
 void
-notmuch_message_results_advance (notmuch_message_results_t *results)
+notmuch_messages_advance (notmuch_messages_t *messages)
 {
-    results->iterator++;
+    messages->iterator++;
 }
 
 void
-notmuch_message_results_destroy (notmuch_message_results_t *results)
+notmuch_messages_destroy (notmuch_messages_t *messages)
 {
-    talloc_free (results);
+    talloc_free (messages);
 }
 
 notmuch_bool_t
-notmuch_thread_results_has_more (notmuch_thread_results_t *results)
+notmuch_threads_has_more (notmuch_threads_t *threads)
 {
-    return (results->index < results->threads->len);
+    return (threads->index < threads->threads->len);
 }
 
 notmuch_thread_t *
-notmuch_thread_results_get (notmuch_thread_results_t *results)
+notmuch_threads_get (notmuch_threads_t *threads)
 {
-    if (! notmuch_thread_results_has_more (results))
+    if (! notmuch_threads_has_more (threads))
 	return NULL;
 
-    return (notmuch_thread_t *) g_ptr_array_index (results->threads,
-						   results->index);
+    return (notmuch_thread_t *) g_ptr_array_index (threads->threads,
+						   threads->index);
 }
 
 void
-notmuch_thread_results_advance (notmuch_thread_results_t *results)
+notmuch_threads_advance (notmuch_threads_t *threads)
 {
-    results->index++;
+    threads->index++;
 }
 
 void
-notmuch_thread_results_destroy (notmuch_thread_results_t *results)
+notmuch_threads_destroy (notmuch_threads_t *threads)
 {
-    talloc_free (results);
+    talloc_free (threads);
 }
