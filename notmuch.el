@@ -43,7 +43,20 @@
 (defun notmuch-search (query)
   "Run \"notmuch search\" with the given query string and display results."
   (interactive "sNotmuch search: ")
-  (start-process "notmuch-search" (concat "*notmuch-search-" query) "notmuch" "search" query))
+  (let ((buffer (get-buffer-create (concat "*notmuch-search-" query))))
+    (switch-to-buffer buffer)
+    (setq buffer-read-only t)
+    (let ((proc (get-buffer-process (current-buffer)))
+	  (inhibit-read-only t))
+      (if proc
+	  (error "notmuch search process already running for query `%s'" query)
+	)
+      (erase-buffer)
+      (beginning-of-buffer)
+      (save-excursion
+	(call-process "notmuch" nil t nil "search" query)
+	)
+      )))
 
 (defun notmuch ()
   "Run notmuch to display all mail with tag of 'inbox'"
