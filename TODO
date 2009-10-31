@@ -1,6 +1,3 @@
-Add a talloc context as the first argument to each command in
-notmuch.c.
-
 Write a notmuch man page.
 
 Compile and install a libnotmuch library.

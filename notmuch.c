@@ -60,7 +60,7 @@
 
 #define ARRAY_SIZE(arr) (sizeof (arr) / sizeof (arr[0]))
 
-typedef int (*command_function_t) (int argc, char *argv[]);
+typedef int (*command_function_t) (void *ctx, int argc, char *argv[]);
 
 typedef struct command {
     const char *name;
@@ -471,7 +471,7 @@ count_files (const char *path, int *count)
 }
 
 static int
-setup_command (unused (int argc), unused (char *argv[]))
+setup_command (unused (void *ctx), unused (int argc), unused (char *argv[]))
 {
     notmuch_database_t *notmuch = NULL;
     char *default_path, *mail_directory = NULL;
@@ -629,7 +629,7 @@ tag_inbox_and_unread (notmuch_message_t *message)
 }
 
 static int
-new_command (unused (int argc), unused (char *argv[]))
+new_command (unused (void *ctx), unused (int argc), unused (char *argv[]))
 {
     notmuch_database_t *notmuch;
     const char *mail_directory;
@@ -807,9 +807,9 @@ _format_relative_date (void *ctx, time_t then)
 #undef DAY
 
 static int
-search_command (int argc, char *argv[])
+search_command (void *ctx, int argc, char *argv[])
 {
-    void *local = talloc_new (NULL);
+    void *local = talloc_new (ctx);
     notmuch_database_t *notmuch = NULL;
     notmuch_query_t *query;
     notmuch_threads_t *threads;
@@ -897,9 +897,9 @@ _get_one_line_summary (void *ctx, notmuch_message_t *message)
 }
 
 static int
-show_command (unused (int argc), unused (char *argv[]))
+show_command (void *ctx, unused (int argc), unused (char *argv[]))
 {
-    void *local = talloc_new (NULL);
+    void *local = talloc_new (ctx);
     char *query_string;
     notmuch_database_t *notmuch = NULL;
     notmuch_query_t *query = NULL;
@@ -997,7 +997,7 @@ show_command (unused (int argc), unused (char *argv[]))
 }
 
 static int
-tag_command (unused (int argc), unused (char *argv[]))
+tag_command (void *ctx, unused (int argc), unused (char *argv[]))
 {
     void *local;
     int *add_tags, *remove_tags;
@@ -1011,7 +1011,7 @@ tag_command (unused (int argc), unused (char *argv[]))
     int ret = 0;
     int i;
 
-    local = talloc_new (NULL);
+    local = talloc_new (ctx);
     if (local == NULL) {
 	ret = 1;
 	goto DONE;
@@ -1102,7 +1102,7 @@ tag_command (unused (int argc), unused (char *argv[]))
 }
 
 static int
-dump_command (int argc, char *argv[])
+dump_command (unused (void *ctx), int argc, char *argv[])
 {
     FILE *output = NULL;
     notmuch_database_t *notmuch = NULL;
@@ -1178,7 +1178,7 @@ dump_command (int argc, char *argv[])
 }
 
 static int
-restore_command (int argc, char *argv[])
+restore_command (unused (void *ctx), int argc, char *argv[])
 {
     FILE *input = NULL;
     notmuch_database_t *notmuch = NULL;
@@ -1287,7 +1287,7 @@ restore_command (int argc, char *argv[])
 }
 
 static int
-help_command (int argc, char *argv[]);
+help_command (void *ctx, int argc, char *argv[]);
 
 command_t commands[] = {
     { "setup", setup_command,
@@ -1404,7 +1404,7 @@ usage (void)
 }
 
 static int
-help_command (int argc, char *argv[])
+help_command (unused (void *ctx), int argc, char *argv[])
 {
     command_t *command;
     unsigned int i;
@@ -1435,23 +1435,26 @@ help_command (int argc, char *argv[])
 int
 main (int argc, char *argv[])
 {
+    void *local = talloc_new (NULL);
     command_t *command;
     unsigned int i;
 
     if (argc == 1)
-	return setup_command (0, NULL);
+	return setup_command (local, 0, NULL);
 
     for (i = 0; i < ARRAY_SIZE (commands); i++) {
 	command = &commands[i];
 
 	if (strcmp (argv[1], command->name) == 0)
-	    return (command->function) (argc - 2, &argv[2]);
+	    return (command->function) (local, argc - 2, &argv[2]);
     }
 
     /* Don't complain about "help" being an unknown command when we're
        about to provide exactly what's wanted anyway. */
     fprintf (stderr, "Error: Unknown command '%s' (see \"notmuch help\")\n",
 	     argv[1]);
+
+    talloc_free (local);
 
     return 1;
 }
