@@ -68,9 +68,12 @@
 
 (defvar notmuch-search-mode-map
   (let ((map (make-sparse-keymap)))
+    (define-key map "a" 'notmuch-search-archive-thread)
     (define-key map "n" 'next-line)
     (define-key map "p" 'previous-line)
     (define-key map "\r" 'notmuch-search-show-thread)
+    (define-key map "+" 'notmuch-search-add-tag)
+    (define-key map "-" 'notmuch-search-remove-tag)
     map)
   "Keymap for \"notmuch search\" buffers.")
 (fset 'notmuch-search-mode-map notmuch-search-mode-map)
@@ -96,11 +99,30 @@
   (interactive)
   (notmuch-show (notmuch-search-find-thread-id)))
 
+(defun notmuch-search-call-notmuch-process (&rest args)
+  (let ((error-buffer (get-buffer-create "*Notmuch errors*")))
+    (with-current-buffer error-buffer
+	(erase-buffer))
+    (if (eq (apply 'call-process "notmuch" nil error-buffer nil args) 0)
+	(point)
+      (progn
+	(with-current-buffer error-buffer
+	  (let ((beg (point-min))
+		(end (- (point-max) 1)))
+	    (error (buffer-substring beg end))
+	    ))))))
+
+(defun notmuch-search-add-tag (tag)
+  (interactive "sTag to add: ")
+  (notmuch-search-call-notmuch-process "tag" (concat "+" tag) (concat "thread:" (notmuch-search-find-thread-id))))
+
+(defun notmuch-search-remove-tag (tag)
+  (interactive "sTag to remove: ")
+  (notmuch-search-call-notmuch-process "tag" (concat "-" tag) (concat "thread:" (notmuch-search-find-thread-id))))
+
 (defun notmuch-search-archive-thread ()
   (interactive)
-  (if (eq (call-process "notmuch" nil (get-buffer-create "*Messages*") nil "tag" "-inbox" (concat "thread:" (notmuch-search-find-thread-id))) 0)
-      (let ((inhibit-read-only t))
-	(kill-whole-line))))
+  (notmuch-search-remove-tag "inbox"))
 
 (defun notmuch-search (query)
   "Run \"notmuch search\" with the given query string and display results."
