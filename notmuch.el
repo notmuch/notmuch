@@ -40,8 +40,13 @@
 	mode-name "notmuch-search")
   (setq buffer-read-only t))
 
+(defun notmuch-search (query)
+  "Run \"notmuch search\" with the given query string and display results."
+  (interactive "sNotmuch search:")
+  (compilation-start (concat "notmuch search " query) 'notmuch-search-mode))
+
 (defun notmuch ()
   "Run notmuch to display all mail with tag of 'inbox'"
   (interactive)
   (require 'compile)
-  (compilation-start "notmuch search tag:inbox" 'notmuch-search-mode))
+  (notmuch-search "tag:inbox"))
