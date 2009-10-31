@@ -51,7 +51,7 @@
 (defun notmuch-show (thread-id)
   "Run \"notmuch show\" with the given thread ID and display results."
   (interactive "sNotmuch show: ")
-  (let ((buffer (get-buffer-create (concat "*notmuch-show-" thread-id))))
+  (let ((buffer (get-buffer-create (concat "*notmuch-show-" thread-id "*"))))
     (switch-to-buffer buffer)
     (notmuch-show-mode)
     (let ((proc (get-buffer-process (current-buffer)))
@@ -96,10 +96,16 @@
   (interactive)
   (notmuch-show (notmuch-search-find-thread-id)))
 
+(defun notmuch-search-archive-thread ()
+  (interactive)
+  (if (eq (call-process "notmuch" nil (get-buffer-create "*Messages*") nil "tag" "-inbox" (concat "thread:" (notmuch-search-find-thread-id))) 0)
+      (let ((inhibit-read-only t))
+	(kill-whole-line))))
+
 (defun notmuch-search (query)
   "Run \"notmuch search\" with the given query string and display results."
   (interactive "sNotmuch search: ")
-  (let ((buffer (get-buffer-create (concat "*notmuch-search-" query))))
+  (let ((buffer (get-buffer-create (concat "*notmuch-search-" query "*"))))
     (switch-to-buffer buffer)
     (notmuch-search-mode)
     (let ((proc (get-buffer-process (current-buffer)))
