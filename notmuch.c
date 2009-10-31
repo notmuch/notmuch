@@ -1450,8 +1450,8 @@ main (int argc, char *argv[])
 
     /* Don't complain about "help" being an unknown command when we're
        about to provide exactly what's wanted anyway. */
-    fprintf (stderr, "Error: Unknown command '%s'\n\n", argv[1]);
-    usage ();
+    fprintf (stderr, "Error: Unknown command '%s' (see \"notmuch help\")\n",
+	     argv[1]);
 
     return 1;
 }
