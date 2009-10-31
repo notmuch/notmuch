@@ -31,11 +31,20 @@
 ; Authors: Roland McGrath <roland@gnu.org>,
 ;	    Daniel Pfeiffer <occitan@esperanto.org>
 
+(defvar notmuch-search-mode-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map "n" 'next-line)
+    (define-key map "p" 'previous-line)
+    map)
+  "Keymap for \"notmuch search\" buffers.")
+(fset 'notmuch-search-mode-map notmuch-search-mode-map)
+
 ;;;###autoload
 (defun notmuch-search-mode ()
   "Major mode for handling the output of notmuch search"
   (interactive)
   (kill-all-local-variables)
+  (use-local-map notmuch-search-mode-map)
   (setq major-mode 'notmuch-search-mode
 	mode-name "notmuch-search")
   (setq buffer-read-only t))
@@ -45,7 +54,7 @@
   (interactive "sNotmuch search: ")
   (let ((buffer (get-buffer-create (concat "*notmuch-search-" query))))
     (switch-to-buffer buffer)
-    (setq buffer-read-only t)
+    (notmuch-search-mode)
     (let ((proc (get-buffer-process (current-buffer)))
 	  (inhibit-read-only t))
       (if proc
@@ -61,5 +70,6 @@
 (defun notmuch ()
   "Run notmuch to display all mail with tag of 'inbox'"
   (interactive)
-  (require 'compile)
   (notmuch-search "tag:inbox"))
+
+(provide 'notmuch)
