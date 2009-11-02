@@ -112,13 +112,37 @@
 	    (error (buffer-substring beg end))
 	    ))))))
 
+(defun notmuch-search-set-tags (tags)
+  (save-excursion
+    (end-of-line)
+    (re-search-backward "(")
+    (forward-char)
+    (let ((beg (point))
+	  (inhibit-read-only t))
+      (re-search-forward ")")
+      (backward-char)
+      (let ((end (point)))
+	(delete-region beg end)
+	(insert (mapconcat  'identity tags " "))))))
+
+(defun notmuch-search-get-tags ()
+  (save-excursion
+    (end-of-line)
+    (re-search-backward "(")
+    (let ((beg (+ (point) 1)))
+      (re-search-forward ")")
+      (let ((end (- (point) 1)))
+	(split-string (buffer-substring beg end))))))
+
 (defun notmuch-search-add-tag (tag)
   (interactive "sTag to add: ")
-  (notmuch-search-call-notmuch-process "tag" (concat "+" tag) (concat "thread:" (notmuch-search-find-thread-id))))
+  (notmuch-search-call-notmuch-process "tag" (concat "+" tag) (concat "thread:" (notmuch-search-find-thread-id)))
+  (notmuch-search-set-tags (delete-dups (sort (cons tag (notmuch-search-get-tags)) 'string<))))
 
 (defun notmuch-search-remove-tag (tag)
   (interactive "sTag to remove: ")
-  (notmuch-search-call-notmuch-process "tag" (concat "-" tag) (concat "thread:" (notmuch-search-find-thread-id))))
+  (notmuch-search-call-notmuch-process "tag" (concat "-" tag) (concat "thread:" (notmuch-search-find-thread-id)))
+  (notmuch-search-set-tags (delete tag (notmuch-search-get-tags))))
 
 (defun notmuch-search-archive-thread ()
   (interactive)
