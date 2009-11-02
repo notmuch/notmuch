@@ -904,6 +904,7 @@ show_message_part (GMimeObject *part)
     GMimeStream *stream;
     GMimeDataWrapper *wrapper;
     GMimeContentDisposition *disposition;
+    GMimeContentType *content_type;
 
     if (GMIME_IS_MULTIPART (part)) {
 	GMimeMultipart *multipart = GMIME_MULTIPART (part);
@@ -943,19 +944,30 @@ show_message_part (GMimeObject *part)
 	strcmp (disposition->disposition, GMIME_DISPOSITION_ATTACHMENT) == 0)
     {
 	const char *filename = g_mime_part_get_filename (GMIME_PART (part));
+	content_type = g_mime_object_get_content_type (GMIME_OBJECT (part));
 
-	/* XXX: Need to print content type here as well. */
-	printf ("%%attachment{ %s %%attachment}\n", filename);
+	printf ("%%attachment{ Content-type: %s\n",
+		g_mime_content_type_to_string (content_type));
+	printf ("%s\n", filename);
+	printf ("%%attachment}\n");
+
 	return;
     }
 
     /* Stream the MIME part out to stdout. */
+    content_type = g_mime_object_get_content_type (GMIME_OBJECT (part));
+
+    printf ("%%part{ Content-type: %s\n",
+	    g_mime_content_type_to_string (content_type));
+
     stream = g_mime_stream_file_new (stdout);
     g_mime_stream_file_set_owner (GMIME_STREAM_FILE (stream), FALSE);
 
     wrapper = g_mime_part_get_content_object (GMIME_PART (part));
     if (wrapper)
 	g_mime_data_wrapper_write_to_stream (wrapper, stream);
+
+    printf ("%%part}\n");
 
     g_object_unref (stream);
 }

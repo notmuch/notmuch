@@ -1,5 +1,3 @@
-Fix "notmuch show" to actually MIME-decode messages.
-
 Add support to format a reply buffer for a particular message.
 
 Add feedback for tag addition/removal to notmuch.el.
