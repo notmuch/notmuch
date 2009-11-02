@@ -1,0 +1,70 @@
+Notmuch - thread-based email index, search and tagging.
+
+Notmuch is a system for indexing, searching, reading, and tagging
+large collections of email messages. It uses the Xapian library to
+provide fast, full-text search of very large collection of email with
+a very convenient search syntas.
+
+Notmuch is free software, released under the GNU General Public
+License version 3 (or later).
+
+Building notmuch
+----------------
+See the INSTALL file for notes on compiling and installing notmuch.
+
+Contacting users and developers
+-------------------------------
+The website for Notmuch is:
+
+	http://notmuchmail.org
+
+We will soon be creating a mailing list for users and developers of
+notmuch. Details will appear on the website. Until then, please feel
+free to email Carl with any questions you have:
+
+	Carl Worth <cworth@cworth.org>
+
+There is also an IRC channel dedicated to talk about using and
+developing notmuch:
+
+	IRC server:	irc.freenode.net
+	Channel:	#notmuch
+
+Interface options
+-----------------
+Notmuch includes a "notmuch" command-line interface to the system.
+This is not a very convenient interface and it is not expected that
+users will find it satisfying. Instead, there are two option for
+obtaining a more sophisticated interface:
+
+     1. Build on top of the "notmuch" command-line interface.
+
+	This might be a reasonable option for a very text-oriented
+	client environment. For example, an emacs-based interface for
+	notmuch is already under development and is available in the
+	notmuch.el file in this distribution.
+
+	If someone were to write a curses-based interface, or similar,
+	it might also be reasonable to buil on the "notmuch"
+	command-line interface.
+
+     2. Build on top of the notmuch library interface.
+
+	This is a better choice for developing an interface that has
+	full control of the presentation of email threads and
+	messages. It is expected that anyone integrating Notmuch into
+	an existing, graphical email program use the notmuch library
+	interface.
+
+	The public interface to the notmuch library is contained in
+	the notmuch.h header file. The "notmuch" command-line program
+	in notmuch.c can be used as good example code, since it is a
+	simple program that is written on top of the library
+	interface.
+
+As can be seen, alternate interfaces to the Notmuch mail system are
+still in development. We would appreciate any contributions to these
+efforts.
+
+
+	
