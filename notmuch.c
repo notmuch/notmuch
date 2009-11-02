@@ -899,12 +899,14 @@ _get_one_line_summary (void *ctx, notmuch_message_t *message)
 }
 
 static void
-show_message_part (GMimeObject *part)
+show_message_part (GMimeObject *part, int *part_count)
 {
     GMimeStream *stream;
     GMimeDataWrapper *wrapper;
     GMimeContentDisposition *disposition;
     GMimeContentType *content_type;
+
+    *part_count = *part_count + 1;
 
     if (GMIME_IS_MULTIPART (part)) {
 	GMimeMultipart *multipart = GMIME_MULTIPART (part);
@@ -918,7 +920,8 @@ show_message_part (GMimeObject *part)
 		if (i > 1)
 		    fprintf (stderr, "Warning: Unexpected extra parts of mutlipart/signed. Continuing.\n");
 	    }
-	    show_message_part (g_mime_multipart_get_part (multipart, i));
+	    show_message_part (g_mime_multipart_get_part (multipart, i),
+			       part_count);
 	}
 	return;
     }
@@ -928,7 +931,8 @@ show_message_part (GMimeObject *part)
 
 	mime_message = g_mime_message_part_get_message (GMIME_MESSAGE_PART (part));
 
-	show_message_part (g_mime_message_get_mime_part (mime_message));
+	show_message_part (g_mime_message_get_mime_part (mime_message),
+			   part_count);
 
 	return;
     }
@@ -946,26 +950,31 @@ show_message_part (GMimeObject *part)
 	const char *filename = g_mime_part_get_filename (GMIME_PART (part));
 	content_type = g_mime_object_get_content_type (GMIME_OBJECT (part));
 
-	printf ("%%attachment{ Content-type: %s\n",
+	printf ("%%attachment{ ID: %d, Content-type: %s, ",
+		*part_count,
 		g_mime_content_type_to_string (content_type));
-	printf ("%s\n", filename);
+	printf ("Filename: %s ", filename);
 	printf ("%%attachment}\n");
 
 	return;
     }
 
-    /* Stream the MIME part out to stdout. */
     content_type = g_mime_object_get_content_type (GMIME_OBJECT (part));
 
-    printf ("%%part{ Content-type: %s\n",
+    printf ("%%part{ ID: %d, Content-type: %s\n",
+	    *part_count,
 	    g_mime_content_type_to_string (content_type));
 
-    stream = g_mime_stream_file_new (stdout);
-    g_mime_stream_file_set_owner (GMIME_STREAM_FILE (stream), FALSE);
+    if (g_mime_content_type_is_type (content_type, "text", "*") &&
+	!g_mime_content_type_is_type (content_type, "text", "html"))
+    {
+	stream = g_mime_stream_file_new (stdout);
+	g_mime_stream_file_set_owner (GMIME_STREAM_FILE (stream), FALSE);
 
-    wrapper = g_mime_part_get_content_object (GMIME_PART (part));
-    if (wrapper)
-	g_mime_data_wrapper_write_to_stream (wrapper, stream);
+	wrapper = g_mime_part_get_content_object (GMIME_PART (part));
+	if (wrapper)
+	    g_mime_data_wrapper_write_to_stream (wrapper, stream);
+    }
 
     printf ("%%part}\n");
 
@@ -981,6 +990,7 @@ show_message_body (const char *filename)
     notmuch_status_t ret = NOTMUCH_STATUS_SUCCESS;
     static int initialized = 0;
     FILE *file = NULL;
+    int part_count = 0;
 
     if (! initialized) {
 	g_mime_init (0);
@@ -1001,7 +1011,8 @@ show_message_body (const char *filename)
 
     mime_message = g_mime_parser_construct_message (parser);
 
-    show_message_part (g_mime_message_get_mime_part (mime_message));
+    show_message_part (g_mime_message_get_mime_part (mime_message),
+		       &part_count);
 
   DONE:
     if (mime_message)
