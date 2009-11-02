@@ -12,9 +12,6 @@ thanks to the GNU General Public License). This includes:
 Brian Gladman (with Mikhail Gusarov <dottedmag@dottedmag.net>)
 	Implementation of SHA-1 (nice and small) (libsha1.c)
 
-Jeffrey Stedfast
-	Parsing of myriad date formats in email messages (date.c)
-
 Please see the various files in the Notmuch distribution for
 individual copyright statements.
 

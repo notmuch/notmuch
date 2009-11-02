@@ -21,6 +21,8 @@
 #include "notmuch-private.h"
 #include "database-private.h"
 
+#include <gmime/gmime.h>
+
 #include <xapian.h>
 
 struct _notmuch_message {
@@ -428,7 +430,7 @@ _notmuch_message_set_date (notmuch_message_t *message,
 {
     time_t time_value;
 
-    time_value = notmuch_parse_date (date, NULL);
+    time_value = g_mime_utils_header_decode_date (date, NULL);
 
     message->doc.add_value (NOTMUCH_VALUE_TIMESTAMP,
 			    Xapian::sortable_serialise (time_value));

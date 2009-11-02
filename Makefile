@@ -13,7 +13,6 @@ NOTMUCH_LDFLAGS=`pkg-config --libs glib-2.0 gmime-2.4 talloc` \
 
 LIBRARY=		\
 	database.o	\
-	date.o		\
 	index.o		\
 	libsha1.o	\
 	message.o	\
