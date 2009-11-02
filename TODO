@@ -1,5 +1,3 @@
-Write a notmuch man page.
-
 Compile and install a libnotmuch library.
 
 Make "notmuch setup" not index all messages, but only what it can do

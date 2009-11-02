@@ -1305,7 +1305,7 @@ command_t commands[] = {
       "\t\t\"inbox\" and \"unread\".\n"
       "\n"
       "\t\tNote: \"notmuch new\" will skip any read-only directories,\n"
-      "\t\tso you can use that to mark tdirectories that will not\n"
+      "\t\tso you can use that to mark directories that will not\n"
       "\t\treceive any new mail (and make \"notmuch new\" faster)." },
     { "search", search_command,
       "<search-term> [...]\n\n"

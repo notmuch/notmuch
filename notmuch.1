@@ -1,0 +1,239 @@
+.\" notmuch - Not much of an email program, (just index, search and tagging)
+.\"
+.\" Copyright © 2009 Carl Worth
+.\"
+.\" Notmuch is free software: you can redistribute it and/or modify
+.\" it under the terms of the GNU General Public License as published by
+.\" the Free Software Foundation, either version 3 of the License, or
+.\" (at your option) any later version.
+.\"
+.\" Notmuch is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public License
+.\" along with this program.  If not, see http://www.gnu.org/licenses/ .
+.\"
+.\" Author: Carl Worth <cworth@cworth.org>
+.TH NOTMUCH 1 2009-10-31 "Notmuch 0.1"
+.SH NAME
+notmuch \- thread-based email index, search, and tagging
+.SH SYNOPSIS
+.B notmuch
+.IR command " [" args " ...]"
+.SH DESCRIPTION
+Notmuch is a command-line based program for indexing, searching,
+reading, and tagging large collections of email messages.
+
+The quickest way to get started with Notmuch is to simply invoke the
+.B notmuch
+command with no arguments, which will interactively guide you through
+the process of indexing your mail.
+.SH NOTE
+While the command-line program
+.B notmuch
+provides powerful functionality, it does not provide the most
+convenient interface for that functionality. More sophisticated
+interfaces are expected to be built on top of either the command-line
+interface, or more likely, on top of the notmuch library
+interface. See http://notmuchmail.org for more about alternate
+interfaces to notmuch.
+.SH COMMANDS
+All commands need to know where your mail (and the notmuch database)
+are stored. This is ${HOME}/mail by default. An alternate location can
+be specified with the
+.B NOTMUCH_BASE
+environment variable.
+
+The
+.BR setup " and " new
+commands are used to add new mail messages to the notmuch database.
+.RS 4
+.TP 4
+.B setup
+
+Interactively sets up notmuch for first use.
+
+The setup command will prompt for the directory containing your email
+archives, and will then proceed to build a database that indexes the
+mail to allow for fast search of the archive.
+
+This directory can contain any number of sub-directories and should
+primarily contain only files with indvidual email messages
+(eg. maildir or mh archives are perfect). If there are other,
+non-email files (such as indexes maintained by other email programs)
+then notmuch will do its best to detect those and ignore them.
+
+Mail storage that uses mbox format, (where one mbox file contains many
+messages), will not work with notmuch. If that's how your mail is
+currently stored, it is recommended you first convert it to maildir
+format with a utility such as mb2md before running
+.BR "notmuch setup" .
+
+Invoking
+.B notmuch
+with no command argument will run
+.B setup
+if the setup command has not previously been completed.
+
+.TP
+.B new
+
+Find and import any new messages to the database.
+
+The
+.B new
+command scans all sub-directories of the database, adding new messages
+that are found. Each new message will automatically be tagged with
+both the
+.BR inbox and unread
+tags.
+
+Note:
+.B notmuch new
+will skip any read-only directories, so you can use that to mark
+directories that will not receive any new mail (and make
+.B notmuch new
+faster).
+.RE
+
+The
+.BR search " and "show
+commands are used to query the email database.
+.RS 4
+.TP 4
+.BR search " <search-term>..."
+
+Search for messages matching the given search terms, and display as
+results the threads containing the matched messages.
+
+The output consists of one line per thread, giving a thread ID, the
+date of the oldest matched message in the thread, and the subject from
+that message.
+
+Currently, the supported search terms are as follows, (where
+<brackets> indicate user-supplied values):
+
+	tag:<tag>
+	id:<message-id>
+	thread:<thread-id>
+
+Valid tag values include
+.BR inbox " and " unread
+by default for new messages added by
+.B notmuch new
+as well as any other tag values added manually with
+.BR "notmuch tag" .
+
+Message ID values are the literal contents of the Message-ID: header
+of email messages, but without the '<', '>' delimiters.
+
+Thread ID values are generated internally by notmuch but can be seen
+in the first column of output from
+.B notmuch search
+for example.
+
+In addition to individual terms, multiple terms can be
+combined with Boolean operators (
+.BR and ", " or ", " not
+, etc.). each term in the query will be implicitly connected by a
+logical AND if no explicit operator is provided, (except that terms
+with a common prefix will be implicitly combined with OR until we get
+Xapian defect #402 fixed).
+
+Parentheses can also be used to control the combination of the Boolean
+operators, but will have to be protected from interpretation by the
+shell, (such as by putting quotation marks around any parenthesized
+expression).
+.TP
+.BR show " <thread-ID>"
+
+Show the thread with the given thread ID.
+
+Displays each message in the thread on stdout.
+
+Thread ID values are given as the first column in the output of the
+"notmuch search" command. These are the random-looking strings of 32
+characters.
+.RE
+
+The
+.B tag
+command is the only command available for manipulating database
+contents.
+
+.RS 4
+.TP 4
+.BR tag " +<tag>|-<tag> [...] [--] <search-term>..."
+
+Add/remove tags for all messages matching the search terms.
+
+The search terms are handled exactly as in
+.B "notmuch search"
+so one can use that command first to see what will be modified.
+
+Tags prefixed by '+' are added while those prefixed by '-' are
+removed. For each message, tag removal is before tag addition.
+
+The beginning of <search-terms> is recognized by the first
+argument that begins with neither '+' nor '-'. Support for
+an initial search term beginning with '+' or '-' is provided
+by allowing the user to specify a "--" argument to separate
+the tags from the search terms.
+
+Caution: If you run
+.B "notmuch new"
+between reading a thread with
+.B "notmuch show"
+and removing the "inbox" tag for that thread with
+.B "notmuch tag"
+then you create the possibility of moving some messages from that
+thread out of your inbox without ever reading them. The easiest way to
+avoid this problem is to not run
+.B "notmuch new"
+between reading mail and removing tags.
+.RE
+
+The
+.BR dump " and " restore
+commands can be used to create a textual dump of email tags for backup
+purposes, and to restore from that dump
+
+.RS 4
+.TP 4
+.BR dump " [<filename>]"
+
+Creates a plain-text dump of the tags of each message.
+
+The output is to the given filename, if any, or to stdout.
+
+These tags are the only data in the notmuch database that can't be
+recreated from the messages themselves.  The output of notmuch dump is
+therefore the only critical thing to backup (and much more friendly to
+incremental backup than the native database files.)
+.TP
+.BR restore " <filename>"
+
+Restores the tags from the given file (see
+.BR "notmuch dump" "."
+
+Note: The dump file format is specifically chosen to be
+compatible with the format of files produced by sup-dump.
+So if you've previously been using sup for mail, then the
+.B "notmuch restore"
+command provides you a way to import all of your tags (or labels as
+sup calls them).
+.SH ENVIRONMENT
+.B NOTMUCH_BASE
+Set to the directory which contains the user's mail to be indexed and
+searched by notmuch. Notmuch will create a directory named
+.B .notmuch
+at the toplevel of this directory where it will store its database.
+.SH SEE ALSO
+The emacs-based interface to notmuch (available as
+.B notmuch.el
+in the Notmuch distribution).
+
+The notmuch website:
+.B http://notmuchmail.org
