@@ -22,6 +22,8 @@
 
 #include "notmuch-private.h"
 
+#include <gmime/gmime.h>
+
 #include <glib.h> /* GHashTable */
 
 typedef struct {
@@ -213,9 +215,15 @@ notmuch_message_file_get_header (notmuch_message_file_t *message,
 				 const char *header_desired)
 {
     int contains;
-    char *header, *value;
+    char *header, *decoded_value;
     const char *s, *colon;
     int match;
+    static int initialized = 0;
+
+    if (! initialized) {
+	g_mime_init (0);
+	initialized = 1;
+    }
 
     message->parsing_started = 1;
 
@@ -224,10 +232,10 @@ notmuch_message_file_get_header (notmuch_message_file_t *message,
     else
 	contains = g_hash_table_lookup_extended (message->headers,
 						 header_desired, NULL,
-						 (gpointer *) &value);
+						 (gpointer *) &decoded_value);
 
-    if (contains && value)
-	return value;
+    if (contains && decoded_value)
+	return decoded_value;
 
     if (message->parsing_finished)
 	return NULL;
@@ -309,12 +317,12 @@ notmuch_message_file_get_header (notmuch_message_file_t *message,
 	else
 	    match = (strcasecmp (header, header_desired) == 0);
 
-	value = xstrdup (message->value.str);
+	decoded_value = g_mime_utils_header_decode_text (message->value.str);
 
-	g_hash_table_insert (message->headers, header, value);
+	g_hash_table_insert (message->headers, header, decoded_value);
 
 	if (match)
-	    return value;
+	    return decoded_value;
     }
 
     if (message->line)
