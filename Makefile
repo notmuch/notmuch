@@ -2,13 +2,14 @@ PROGS=notmuch
 
 WARN_FLAGS=-Wall -Wextra -Wmissing-declarations -Wwrite-strings -Wswitch-enum
 
-CDEPENDS_FLAGS=`pkg-config --cflags glib-2.0 gmime-2.4 talloc`
-CXXDEPENDS_FLAGS=$(CDEPENDS_FLAGS) `xapian-config --cxxflags`
+NOTMUCH_DEPENDS_FLAGS=`pkg-config --cflags glib-2.0 gmime-2.4 talloc`
+NOTMUCH_CXX_DEPENDS_FLAGS=$(NOTMUCH_DEPENDS_FLAGS) `xapian-config --cxxflags`
 
-MYCFLAGS=$(WARN_FLAGS) -O0 -g $(CDEPENDS_FLAGS)
-MYCXXFLAGS=$(WARN_FLAGS) -O0 -g $(CXXDEPENDS_FLAGS)
+NOTMUCH_CFLAGS=$(WARN_FLAGS) -O0 -g $(NOTMUCH_DEPENDS_FLAGS)
+NOTMUCH_CXXFLAGS=$(WARN_FLAGS) -O0 -g $(NOTMUCH_CXX_DEPENDS_FLAGS)
 
-MYLDFLAGS=`pkg-config --libs glib-2.0 gmime-2.4 talloc` `xapian-config --libs`
+NOTMUCH_LDFLAGS=`pkg-config --libs glib-2.0 gmime-2.4 talloc` \
+		`xapian-config --libs`
 
 LIBRARY=		\
 	database.o	\
@@ -29,16 +30,17 @@ MAIN=			\
 all: $(PROGS)
 
 %.o: %.cc
-	$(CXX) -c $(CFLAGS) $(CXXFLAGS) $(MYCXXFLAGS) $< -o $@
+	$(CXX) -c $(CFLAGS) $(CXXFLAGS) $(NOTMUCH_CXXFLAGS) $< -o $@
 
 %.o: %.c
-	$(CC) -c $(CFLAGS) $(MYCFLAGS) $< -o $@
+	$(CC) -c $(CFLAGS) $(NOTMUCH_CFLAGS) $< -o $@
 
 notmuch: $(MAIN) $(LIBRARY)
-	$(CC) $(MYLDFLAGS) $^ -o $@
+	$(CC) $(NOTMUCH_LDFLAGS) $^ -o $@
 
 Makefile.dep: *.c *.cc
-	$(CXX) -M $(CPPFLAGS) $(CDEPENDS_FLAGS) $(CXXDEPENDS_FLAGS) $^ > $@
+	$(CXX) -M $(CPPFLAGS) $(NOTMUCH_DEPENDS_FLAGS) \
+	$(NOTMUCH_CXX_DEPENDS_FLAGS) $^ > $@
 -include Makefile.dep
 
 notmuch.1.gz:
@@ -47,7 +49,8 @@ notmuch.1.gz:
 install: notmuch.1.gz
 	install -C -D notmuch $(DESTDIR)/usr/bin/notmuch
 	install -C -D notmuch.1.gz $(DESTDIR)/usr/share/man/man1
-	install -C -D notmuch-completion.bash $(DESTDIR)/etc/bash_completion.d/notmuch
+	install -C -D notmuch-completion.bash \
+		$(DESTDIR)/etc/bash_completion.d/notmuch
 
 clean:
 	rm -f $(PROGS) *.o Makefile.dep
