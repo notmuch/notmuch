@@ -23,6 +23,8 @@
 #endif
 #include <stdio.h>
 
+#include <gmime/gmime.h>
+
 #include "notmuch.h"
 
 /* This is separate from notmuch-private.h because we're trying to
@@ -896,6 +898,115 @@ _get_one_line_summary (void *ctx, notmuch_message_t *message)
 			    from, relative_date, subject);
 }
 
+static void
+show_message_part (GMimeObject *part)
+{
+    GMimeStream *stream;
+    GMimeDataWrapper *wrapper;
+    GMimeContentDisposition *disposition;
+
+    if (GMIME_IS_MULTIPART (part)) {
+	GMimeMultipart *multipart = GMIME_MULTIPART (part);
+	int i;
+
+	for (i = 0; i < g_mime_multipart_get_count (multipart); i++) {
+	    if (GMIME_IS_MULTIPART_SIGNED (multipart)) {
+		/* Don't index the signature. */
+		if (i == 1)
+		    continue;
+		if (i > 1)
+		    fprintf (stderr, "Warning: Unexpected extra parts of mutlipart/signed. Continuing.\n");
+	    }
+	    show_message_part (g_mime_multipart_get_part (multipart, i));
+	}
+	return;
+    }
+
+    if (GMIME_IS_MESSAGE_PART (part)) {
+	GMimeMessage *mime_message;
+
+	mime_message = g_mime_message_part_get_message (GMIME_MESSAGE_PART (part));
+
+	show_message_part (g_mime_message_get_mime_part (mime_message));
+
+	return;
+    }
+
+    if (! (GMIME_IS_PART (part))) {
+	fprintf (stderr, "Warning: Not displaying unknown mime part: %s.\n",
+		 g_type_name (G_OBJECT_TYPE (part)));
+	return;
+    }
+
+    disposition = g_mime_object_get_content_disposition (part);
+    if (disposition &&
+	strcmp (disposition->disposition, GMIME_DISPOSITION_ATTACHMENT) == 0)
+    {
+	const char *filename = g_mime_part_get_filename (GMIME_PART (part));
+
+	/* XXX: Need to print content type here as well. */
+	printf ("%%attachment{ %s %%attachment}\n", filename);
+	return;
+    }
+
+    /* Stream the MIME part out to stdout. */
+    stream = g_mime_stream_file_new (stdout);
+    g_mime_stream_file_set_owner (GMIME_STREAM_FILE (stream), FALSE);
+
+    wrapper = g_mime_part_get_content_object (GMIME_PART (part));
+    if (wrapper)
+	g_mime_data_wrapper_write_to_stream (wrapper, stream);
+
+    g_object_unref (stream);
+}
+
+static notmuch_status_t
+show_message_body (const char *filename)
+{
+    GMimeStream *stream = NULL;
+    GMimeParser *parser = NULL;
+    GMimeMessage *mime_message = NULL;
+    notmuch_status_t ret = NOTMUCH_STATUS_SUCCESS;
+    static int initialized = 0;
+    FILE *file = NULL;
+
+    if (! initialized) {
+	g_mime_init (0);
+	initialized = 1;
+    }
+
+    file = fopen (filename, "r");
+    if (! file) {
+	fprintf (stderr, "Error opening %s: %s\n", filename, strerror (errno));
+	ret = NOTMUCH_STATUS_FILE_ERROR;
+	goto DONE;
+    }
+
+    stream = g_mime_stream_file_new (file);
+    g_mime_stream_file_set_owner (GMIME_STREAM_FILE (stream), FALSE);
+
+    parser = g_mime_parser_new_with_stream (stream);
+
+    mime_message = g_mime_parser_construct_message (parser);
+
+    show_message_part (g_mime_message_get_mime_part (mime_message));
+
+  DONE:
+    if (mime_message)
+	g_object_unref (mime_message);
+
+    if (parser)
+	g_object_unref (parser);
+
+    if (stream)
+	g_object_unref (stream);
+
+    if (file)
+	fclose (file);
+
+    return ret;
+}
+
 static int
 show_command (void *ctx, unused (int argc), unused (char *argv[]))
 {
@@ -905,10 +1016,7 @@ show_command (void *ctx, unused (int argc), unused (char *argv[]))
     notmuch_query_t *query = NULL;
     notmuch_messages_t *messages;
     notmuch_message_t *message;
-    const char *filename;
-    FILE *file;
     int ret = 0;
-    int c;
 
     const char *headers[] = {
 	"Subject", "From", "To", "Cc", "Bcc", "Date"
@@ -963,20 +1071,7 @@ show_command (void *ctx, unused (int argc), unused (char *argv[]))
 
 	printf ("%%header}\n");
 
-	filename = notmuch_message_get_filename (message);
-
-	file = fopen (filename, "r");
-	if (file) {
-	    size_t header_size = notmuch_message_get_header_size (message);
-	    fseek (file, header_size + 1, SEEK_SET);
-	    while (1) {
-		c = fgetc (file);
-		if (c == EOF)
-		    break;
-		putchar (c);
-	    }
-	}
-	fclose (file);
+	show_message_body (notmuch_message_get_filename (message));
 
 	printf ("%%message}\n");
 
