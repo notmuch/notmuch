@@ -1,0 +1,123 @@
+#! /bin/sh
+
+cat <<EOF
+Welcome to Notmuch, a system for indexing, searching and tagging your email.
+
+We hope that the process of building and installing notmuch is quick
+and smooth so that you can soon be reading and processing your email
+more efficiently than ever.
+
+If anything goes wrong in this process, please do as much as you can
+to figure out what could be different on your machine compared to
+those of the notmuch developers. Then, please email those details to
+Carl Worth <cworth@cworth.org> so that we can hopefully make future
+versions of notmuch easier for you to use.
+
+We'll now investigate your system to find verify that various software
+components that notmuch relies on are available.
+
+EOF
+
+errors=0
+
+if pkg-config --version > /dev/null 2>&1; then
+    have_pkg_config=1
+else
+    have_pkg_config=0
+fi
+
+if xapian-config --version > /dev/null 2>&1; then
+    echo "Checking for Xapian development files... Yes."
+    have_xapian=1
+else
+    echo "Checking for Xapian development files... No."
+    have_xapian=0
+    errors=$((errors + 1))
+fi
+
+if pkg-config --modversion gmime-2.4 > /dev/null 2>&1; then
+    echo "Checking for GMime 2.4 development files... Yes."
+    have_gmime=1
+else
+    echo "Checking for GMime 2.4 development files... No."
+    have_gmime=0
+    errors=$((errors + 1))
+fi
+
+if pkg-config --modversion talloc > /dev/null 2>&1; then
+    echo "Checking for talloc development files... Yes."
+    have_talloc=1
+else
+    echo "Checking for talloc development files... No."
+    have_talloc=0
+    errors=$((errors + 1))
+fi
+
+if [ $errors -gt 0 ]; then
+    cat <<EOF
+
+*** Error: The dependencies of notmuch could not be satisfied. You will
+need to install the following packages before being able to compile
+notmuch:
+
+EOF
+    if [ $have_xapian -eq 0 ]; then
+	echo "	Xapian library (including development files such as headers)"
+	echo "	http://xapian.org/"
+    fi
+    if [ $have_gmime -eq 0 ]; then
+	echo "	GMime 2.4 library (including development files such as headers)"
+	echo "	http://spruce.sourceforge.net/gmime/"
+    fi
+    if [ $have_talloc -eq 0 ]; then
+	echo "	The talloc library (including development files such as headers)"
+	echo "	http://talloc.samba.org/"
+    fi
+    cat <<EOF
+
+On a modern, package-based operating system such as Debian, you can
+install all of the dependencies with the following simple command
+line:
+
+	sudo apt-get install libxapian-dev libgmime-2.4-dev libtalloc-dev
+
+On other systems, a similar command can be used, but the details of the 
+package names may be different, (such as "devel" in place of "dev").
+
+EOF
+    if [ $have_pkg_config -eq 0 ]; then
+cat <<EOF
+Note: the pkg-config program is not available. Both this configure
+script and the Makefile of notmuch use pkg-config to find the
+compilation flags required to link against the various libraries
+needed by notmuch. It's possible you simply need to install pkg-config
+with a command such as:
+
+	sudo apt-get install pkg-config
+
+But if pkg-config is not available for your system, then you will need
+to manually edit the notmuch Makefile to set NOTMUCH_CFLAGS and
+NOTMUCH_LDFLAGS to the correct values without calling pkg-config.
+
+EOF
+    fi
+cat <<EOF
+When you have installed the necessary dependencies, you can run
+configure again to ensure the packages can be found, or simply run
+"make" to compile notmuch.
+
+EOF
+    exit 1
+else
+cat <<EOF
+
+All required packages were found. You may now run the following
+commands to compile and install notmuch:
+
+	make
+	sudo make install
+
+EOF
+    exit 0
+fi
+cat <<EOF
