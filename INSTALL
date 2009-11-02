@@ -1,0 +1,64 @@
+Build and install instructions for Notmuch.
+
+Compilation commands
+--------------------
+The process for compiling and installing Notmuch is the very standard
+sequence of:
+
+	./configure
+	make
+	sudo make install
+
+You can even skip the configure step if all of the dependencies of
+Notmuch are satisfied. If they are not, the configure script will
+notice that and provide instructions on where to obtain the necessary
+dependencies.
+
+Dependencies
+------------
+Notmuch depends on three libraries: Xapian, GMime 2.4, and Talloc
+which are each described below:
+
+	Xapian
+	------
+	Xapian is the search-engine library underlying Notmuch.
+
+	It provides all the real machinery of indexing and searching,
+	(including the very nice parsing of the query string).
+
+	Xapian is available from http://xapian.org
+
+	GMime 2.4
+	---------
+	GMime 2.4 provides decoding of MIME email messages for Notmuch.
+
+	Without GMime, Notmuch would not be able to extract and index
+	the actual text from email message encoded as BASE64, etc.
+
+	GMime 2.4 is available from http://spruce.sourceforge.net/gmime/
+
+	Talloc
+	------
+	Talloc is a memory-pool allocator used by Notmuch.
+
+	Talloc is an extremely lightweight and easy-to-use tool for
+	allocating memory in a hierarchical fashion and then freeing
+	it with a single call of the top-level handle. Using it has
+	made development of Notmuch much easier and much less prone to
+	memory leaks.
+
+	Talloc is available from http://talloc.samba.org/
+
+On a modern, package-based operating system such as Debian, you can
+install all of the dependencies with the following simple command
+line:
+
+        sudo apt-get install libxapian-dev libgmime-2.4-dev libtalloc-dev
+
+On other systems, a similar command can be used, but the details of
+the package names may be different, (such as "devel" in place of
+"dev").
+
+
+	
+
