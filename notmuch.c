@@ -880,6 +880,32 @@ search_command (void *ctx, int argc, char *argv[])
     return ret;
 }
 
+static const char *
+_get_tags_as_string (void *ctx, notmuch_message_t *message)
+{
+    notmuch_tags_t *tags;
+    int first = 1;
+    const char *tag;
+    char *result;
+
+    result = talloc_strdup (ctx, "");
+    if (result == NULL)
+	return NULL;
+
+    for (tags = notmuch_message_get_tags (message);
+	 notmuch_tags_has_more (tags);
+	 notmuch_tags_advance (tags))
+    {
+	tag = notmuch_tags_get (tags);
+
+	result = talloc_asprintf_append (result, "%s%s",
+					 first ? "" : " ", tag);
+	first = 0;
+    }
+
+    return result;
+}
+
 /* Get a nice, single-line summary of message. */
 static const char *
 _get_one_line_summary (void *ctx, notmuch_message_t *message)
@@ -888,6 +914,7 @@ _get_one_line_summary (void *ctx, notmuch_message_t *message)
     time_t date;
     const char *relative_date;
     const char *subject;
+    const char *tags;
 
     from = notmuch_message_get_header (message, "from");
 
@@ -896,8 +923,10 @@ _get_one_line_summary (void *ctx, notmuch_message_t *message)
 
     subject = notmuch_message_get_header (message, "subject");
 
-    return talloc_asprintf (ctx, "%s (%s) %s",
-			    from, relative_date, subject);
+    tags = _get_tags_as_string (ctx, message);
+
+    return talloc_asprintf (ctx, "%s (%s) %s (%s)",
+			    from, relative_date, subject, tags);
 }
 
 static void
