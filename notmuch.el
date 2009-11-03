@@ -40,10 +40,11 @@
     ; Will be much preferable to switch to direct manipulation for
     ; toggling visibility of these components. Probably using
     ; overlays-at to query and manipulate the current overlay.
+    (define-key map "a" 'notmuch-show-archive-thread)
     (define-key map "b" 'notmuch-show-toggle-body-read-visible)
     (define-key map "c" 'notmuch-show-toggle-citations-visible)
     (define-key map "h" 'notmuch-show-toggle-headers-visible)
-    (define-key map "n" 'notmuch-show-next-message)
+    (define-key map "n" 'notmuch-show-mark-read-then-next-message)
     (define-key map "p" 'notmuch-show-previous-message)
     (define-key map "q" 'kill-this-buffer)
     (define-key map "s" 'notmuch-show-toggle-signatures-visible)
@@ -108,13 +109,28 @@
   (notmuch-call-notmuch-process "tag" (concat "-" tag) (concat "id:" (notmuch-show-get-message-id)))
   (notmuch-show-set-tags (delete tag (notmuch-show-get-tags))))
 
+(defun notmuch-show-archive-thread ()
+  "Archive each message currrently shown by removing the \"inbox\" tag from each.
+
+This command is safe from any race condition of new messages
+being delivered to the same thread. It does not archive the
+entire thread, but only the messages shown in the current
+buffer."
+  (interactive)
+  (save-excursion
+    (goto-char (point-min))
+    (while (not (eobp))
+      (notmuch-show-remove-tag "inbox")
+      (if (not (eobp))
+	  (forward-char))
+      (if (not (re-search-forward notmuch-show-message-begin-regexp nil t))
+	  (goto-char (point-max))))))
+
 (defun notmuch-show-next-message ()
   "Advance point to the beginning of the next message in the buffer.
 
-Before moving, also remove the \"unread\" tag from the current message."
+Does nothing if already on the last message."
   (interactive)
-  (if (member "unread" (notmuch-show-get-tags))
-      (notmuch-show-remove-tag "unread"))
   ; First, ensure we get off the current message marker
   (if (not (eobp))
       (forward-char))
@@ -135,7 +151,9 @@ Before moving, also remove the \"unread\" tag from the current message."
   (recenter 0))
 
 (defun notmuch-show-previous-message ()
-  "Advance point to the beginning of the previous message in the buffer."
+  "Backup to the beginning of the previous message in the buffer.
+
+Does nothing if already on the first message in the buffer."
   (interactive)
   ; First, ensure we get off the current message marker
   (if (not (bobp))
@@ -155,6 +173,13 @@ Before moving, also remove the \"unread\" tag from the current message."
   (end-of-visible-line)
   (beginning-of-line)
   (recenter 0))
+
+(defun notmuch-show-mark-read-then-next-message ()
+  "Remove uread tag from current message, then advance to next message."
+  (interactive)
+  (if (member "unread" (notmuch-show-get-tags))
+      (notmuch-show-remove-tag "unread"))
+  (notmuch-show-next-message))
 
 (defun notmuch-show-markup-citations-region (beg end)
   (goto-char beg)
