@@ -64,13 +64,38 @@
 (defvar notmuch-show-part-end-regexp         "part}")
 (defvar notmuch-show-marker-regexp "\\(message\\|header\\|body\\|attachment\\|part\\)[{}].*$")
 
+(defvar notmuch-show-id-regexp "ID: \\([^ ]*\\)")
+
+(defun notmuch-show-get-message-id ()
+  (save-excursion
+    (beginning-of-line)
+    (if (not (looking-at notmuch-show-message-begin-regexp))
+	(re-search-backward notmuch-show-message-begin-regexp))
+    (re-search-forward notmuch-show-id-regexp)
+    (buffer-substring (match-beginning 1) (match-end 1))))
+
 (defun notmuch-show-next-message ()
-  "Advance point to the beginning of the next message in the buffer."
+  "Advance point to the beginning of the next message in the buffer.
+
+Before moving, also remove the \"unread\" tag from the current message."
   (interactive)
+  (notmuch-call-notmuch-process "tag" "-unread" (concat "id:" (notmuch-show-get-message-id)))
   ; First, ensure we get off the current message marker
   (if (not (eobp))
       (forward-char))
   (re-search-forward notmuch-show-message-begin-regexp nil t)
+  ; This dance might look pointless, but it's important. I originally
+  ; just had (beginning-of-line) here which looked right on the
+  ; display but actually put point all the way back to the first
+  ; character of the first invisible line. That is, it put point into
+  ; the closing markers of the previous message rather than at the
+  ; beginning of the current message. And that in turn meant that
+  ; looking up the current message-ID would actually return the
+  ; previous message ID.
+  ;
+  ; So this dance ensures that we're actually on the current message
+  ; when it looks like we are.
+  (end-of-visible-line)
   (beginning-of-line)
   (recenter 0))
 
@@ -81,6 +106,18 @@
   (if (not (bobp))
       (previous-line))
   (re-search-backward notmuch-show-message-begin-regexp nil t)
+  ; This dance might look pointless, but it's important. I originally
+  ; just had (beginning-of-line) here which looked right on the
+  ; display but actually put point all the way back to the first
+  ; character of the first invisible line. That is, it put point into
+  ; the closing markers of the previous message rather than at the
+  ; beginning of the current message. And that in turn meant that
+  ; looking up the current message-ID would actually return the
+  ; previous message ID.
+  ;
+  ; So this dance ensures that we're actually on the current message
+  ; when it looks like we are.
+  (end-of-visible-line)
   (beginning-of-line)
   (recenter 0))
 
@@ -304,7 +341,7 @@
   (interactive)
   (notmuch-show (notmuch-search-find-thread-id)))
 
-(defun notmuch-search-call-notmuch-process (&rest args)
+(defun notmuch-call-notmuch-process (&rest args)
   (let ((error-buffer (get-buffer-create "*Notmuch errors*")))
     (with-current-buffer error-buffer
 	(erase-buffer))
@@ -341,12 +378,12 @@
 
 (defun notmuch-search-add-tag (tag)
   (interactive "sTag to add: ")
-  (notmuch-search-call-notmuch-process "tag" (concat "+" tag) (concat "thread:" (notmuch-search-find-thread-id)))
+  (notmuch-call-notmuch-process "tag" (concat "+" tag) (concat "thread:" (notmuch-search-find-thread-id)))
   (notmuch-search-set-tags (delete-dups (sort (cons tag (notmuch-search-get-tags)) 'string<))))
 
 (defun notmuch-search-remove-tag (tag)
   (interactive "sTag to remove: ")
-  (notmuch-search-call-notmuch-process "tag" (concat "-" tag) (concat "thread:" (notmuch-search-find-thread-id)))
+  (notmuch-call-notmuch-process "tag" (concat "-" tag) (concat "thread:" (notmuch-search-find-thread-id)))
   (notmuch-search-set-tags (delete tag (notmuch-search-get-tags))))
 
 (defun notmuch-search-archive-thread ()

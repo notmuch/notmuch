@@ -2,11 +2,6 @@ Emacs interface (notmuch.el)
 ----------------------------
 Add support to compose a reply to the current messaage.
 
-Selectively hide bodies in notmuch-show mode.  (for example, for read
-messages).
-
-Remove "unread" tag from messages as they are read.
-
 notmuch command-line tool
 -------------------------
 Make "notmuch setup" not index all messages, but only what it can do
