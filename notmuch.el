@@ -66,7 +66,7 @@
 (defvar notmuch-show-part-end-regexp         "part}")
 (defvar notmuch-show-marker-regexp "\\(message\\|header\\|body\\|attachment\\|part\\)[{}].*$")
 
-(defvar notmuch-show-id-regexp "ID: \\([^ ]*\\)")
+(defvar notmuch-show-id-regexp "ID: \\(.*\\)$")
 (defvar notmuch-show-tags-regexp "(\\([^)]*\\))$")
 
 (defun notmuch-show-get-message-id ()
@@ -178,17 +178,17 @@ Before moving, also remove the \"unread\" tag from the current message."
 	    (goto-char end)))
       (next-line))))
 
-(defun notmuch-show-markup-body (unread)
+(defun notmuch-show-markup-body ()
   (re-search-forward notmuch-show-body-begin-regexp)
   (next-line 1)
   (beginning-of-line)
   (let ((beg (point)))
     (re-search-forward notmuch-show-body-end-regexp)
-    (if (not unread)
-	(overlay-put (make-overlay beg (match-beginning 0))
-		     'invisible 'notmuch-show-body-read))
-    (notmuch-show-markup-citations-region beg (point))
-    ))
+    (let ((end (match-beginning 0)))
+      (if (not (member "unread" (notmuch-show-get-tags)))
+	  (overlay-put (make-overlay beg end)
+		       'invisible 'notmuch-show-body-read))
+      (notmuch-show-markup-citations-region beg end))))
 
 (defun notmuch-show-markup-header ()
   (re-search-forward notmuch-show-header-begin-regexp)
@@ -202,9 +202,8 @@ Before moving, also remove the \"unread\" tag from the current message."
 (defun notmuch-show-markup-message ()
   (if (re-search-forward notmuch-show-message-begin-regexp nil t)
       (progn
-	(let ((unread (looking-at ".*unread$")))
-	  (notmuch-show-markup-header)
-	  (notmuch-show-markup-body unread)))
+	(notmuch-show-markup-header)
+	(notmuch-show-markup-body))
     (goto-char (point-max))))
 
 (defun notmuch-show-hide-markers ()

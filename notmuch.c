@@ -1068,25 +1068,6 @@ show_message_body (const char *filename)
 }
 
 static int
-_message_is_unread (notmuch_message_t *message)
-{
-    notmuch_tags_t *tags;
-    const char *tag;
-
-    for (tags = notmuch_message_get_tags (message);
-	 notmuch_tags_has_more (tags);
-	 notmuch_tags_advance (tags))
-    {
-	tag = notmuch_tags_get (tags);
-
-	if (strcmp (tag, "unread") == 0)
-	    return 1;
-    }
-
-    return 0;
-}
-
-static int
 show_command (void *ctx, unused (int argc), unused (char *argv[]))
 {
     void *local = talloc_new (ctx);
@@ -1096,7 +1077,6 @@ show_command (void *ctx, unused (int argc), unused (char *argv[]))
     notmuch_messages_t *messages;
     notmuch_message_t *message;
     int ret = 0;
-    int unread;
 
     const char *headers[] = {
 	"Subject", "From", "To", "Cc", "Bcc", "Date"
@@ -1135,11 +1115,9 @@ show_command (void *ctx, unused (int argc), unused (char *argv[]))
 	 notmuch_messages_advance (messages))
     {
 	message = notmuch_messages_get (messages);
-	unread = _message_is_unread (message);
 
-	printf ("\fmessage{ ID: %s %s\n",
-		notmuch_message_get_message_id (message),
-		unread ? "unread" : "");
+	printf ("\fmessage{ ID: %s\n",
+		notmuch_message_get_message_id (message));
 
 	printf ("\fheader{\n");
 
