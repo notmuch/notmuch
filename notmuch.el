@@ -420,11 +420,20 @@ Before moving, also remove the \"unread\" tag from the current message."
   "Refresh the current view.
 
 Kills the current buffer and runs a new search with the same
-query string as the current search."
+query string as the current search. If the current thread is in
+the new search results, then point will be placed on the same
+thread. Otherwise, point will be moved to attempt to be in the
+same relative position within the new buffer."
   (interactive)
-  (let ((query notmuch-search-query-string))
+  (let ((here (point))
+	(thread (notmuch-search-find-thread-id))
+	(query notmuch-search-query-string))
     (kill-this-buffer)
-    (notmuch-search query)))
+    (notmuch-search query)
+    (goto-char (point-min))
+    (if (re-search-forward (concat "^" thread) nil t)
+	(beginning-of-line)
+      (goto-char here))))
 
 (defun notmuch-search-filter (query)
   "Run \"notmuch search\" to refine the current search results.
