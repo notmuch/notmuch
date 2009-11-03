@@ -48,6 +48,8 @@
     (define-key map "q" 'kill-this-buffer)
     (define-key map "s" 'notmuch-show-toggle-signatures-visible)
     (define-key map "x" 'kill-this-buffer)
+    (define-key map "+" 'notmuch-show-add-tag)
+    (define-key map "-" 'notmuch-show-remove-tag)
     map)
   "Keymap for \"notmuch show\" buffers.")
 (fset 'notmuch-show-mode-map notmuch-show-mode-map)
@@ -65,6 +67,7 @@
 (defvar notmuch-show-marker-regexp "\\(message\\|header\\|body\\|attachment\\|part\\)[{}].*$")
 
 (defvar notmuch-show-id-regexp "ID: \\([^ ]*\\)")
+(defvar notmuch-show-tags-regexp "(\\([^)]*\\))$")
 
 (defun notmuch-show-get-message-id ()
   (save-excursion
@@ -74,12 +77,43 @@
     (re-search-forward notmuch-show-id-regexp)
     (buffer-substring (match-beginning 1) (match-end 1))))
 
+(defun notmuch-show-set-tags (tags)
+  (save-excursion
+    (beginning-of-line)
+    (if (not (looking-at notmuch-show-message-begin-regexp))
+	(re-search-backward notmuch-show-message-begin-regexp))
+    (re-search-forward notmuch-show-tags-regexp)
+    (let ((inhibit-read-only t)
+	  (beg (match-beginning 1))
+	  (end (match-end 1)))
+      (delete-region beg end)
+      (goto-char beg)
+      (insert (mapconcat 'identity tags " ")))))
+
+(defun notmuch-show-get-tags ()
+  (save-excursion
+    (beginning-of-line)
+    (if (not (looking-at notmuch-show-message-begin-regexp))
+	(re-search-backward notmuch-show-message-begin-regexp))
+    (re-search-forward notmuch-show-tags-regexp)
+    (split-string (buffer-substring (match-beginning 1) (match-end 1)))))
+
+(defun notmuch-show-add-tag (tag)
+  (interactive "sTag to add: ")
+  (notmuch-call-notmuch-process "tag" (concat "+" tag) (concat "id:" (notmuch-show-get-message-id)))
+  (notmuch-show-set-tags (delete-dups (sort (cons tag (notmuch-show-get-tags)) 'string<))))
+
+(defun notmuch-show-remove-tag (tag)
+  (interactive "sTag to remove: ")
+  (notmuch-call-notmuch-process "tag" (concat "-" tag) (concat "id:" (notmuch-show-get-message-id)))
+  (notmuch-show-set-tags (delete tag (notmuch-show-get-tags))))
+
 (defun notmuch-show-next-message ()
   "Advance point to the beginning of the next message in the buffer.
 
 Before moving, also remove the \"unread\" tag from the current message."
   (interactive)
-  (notmuch-call-notmuch-process "tag" "-unread" (concat "id:" (notmuch-show-get-message-id)))
+  (notmuch-show-remove-tag "unread")
   ; First, ensure we get off the current message marker
   (if (not (eobp))
       (forward-char))
