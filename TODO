@@ -1,13 +1,32 @@
-Add support to format a reply buffer for a particular message.
+Emacs interface (notmuch.el)
+----------------------------
+Add support to compose a reply to the current messaage.
 
-Selectively hide headers and bodies in notmuch-show mode in
-notmuch.el, (for example, for read messages).
+Selectively hide headers and bodies in notmuch-show mode.  (for
+example, for read messages).
 
-Compile and install a libnotmuch library.
+Remove "unread" tag from messages as they are read.
 
+notmuch command-line tool
+-------------------------
 Make "notmuch setup" not index all messages, but only what it can do
 in a reasonable amount of time, (then add "notmuch index" so the user
 can complete the job when convenient).
+
+Fix notmuch.c to call add_timestamp/get_timestamp with path names
+relative to the database path. (Otherwise, moving the database to a
+new directory will result in notmuch creating new timestamp documents
+and leaving stale ones behind.)
+
+Fix notmuch.c to use a DIR prefix for directory timestamps, (the idea
+being that it can then add other non-directory timestamps such as for
+noting how far back in the past mail has been indexed, and whether it
+needs to re-tag messages based on a theoretical "auto-tags"
+configuration file).
+
+notmuch library
+---------------
+Actually compile and install a libnotmuch shared library.
 
 Fix to use the *last* Message-ID header if multiple such headers are
 encountered, (I noticed this is one thing that kept me from seeing the
@@ -19,19 +38,13 @@ Add support for automatic tagging of new messages based on particular
 search criteria, (likely using an InMemory database for the new
 messages).
 
-Fix notmuch.c to call add_timestamp/get_timestampt with path names
-relative to the database path. (Otherwise, moving the database to a
-new directory will result in notmuch creating new timestamp documents
-and leaving stale ones behind.)
-
-Fix notmuch.c to use a DIR prefix for directory timestamps, (the idea
-being that it can then add other non-directory timestamps such as for
-noting how far back in the past mail has been indexed, and whether it
-needs to re-tag messages based on a theoretical "auto-tags"
-configuration file).
-
+General
+-------
 Audit everything for dealing with out-of-memory (and drop xutil.c).
 
 Write a test suite.
 
 Achieve 100% test coverage with the test suite.
+
+Investigate why the notmuch database is slightly larger than the sup
+database for the same corpus of email.
