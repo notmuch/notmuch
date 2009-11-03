@@ -33,6 +33,7 @@
 
 (defvar notmuch-show-mode-map
   (let ((map (make-sparse-keymap)))
+    (define-key map "b" 'notmuch-show-toggle-body-read-visible)
     (define-key map "h" 'notmuch-show-toggle-headers-visible)
     (define-key map "n" 'notmuch-show-next-message)
     (define-key map "p" 'notmuch-show-previous-message)
@@ -42,11 +43,17 @@
   "Keymap for \"notmuch show\" buffers.")
 (fset 'notmuch-show-mode-map notmuch-show-mode-map)
 
-(defvar notmuch-show-message-begin-regexp "message{")
-(defvar notmuch-show-message-end-regexp   "message}")
-(defvar notmuch-show-header-begin-regexp  "header{")
-(defvar notmuch-show-header-end-regexp    "header}")
-
+(defvar notmuch-show-message-begin-regexp    "message{")
+(defvar notmuch-show-message-end-regexp      "message}")
+(defvar notmuch-show-header-begin-regexp     "header{")
+(defvar notmuch-show-header-end-regexp       "header}")
+(defvar notmuch-show-body-begin-regexp       "body{")
+(defvar notmuch-show-body-end-regexp         "body}")
+(defvar notmuch-show-attachment-begin-regexp "attachment{")
+(defvar notmuch-show-attachment-end-regexp   "attachment}")
+(defvar notmuch-show-part-begin-regexp       "part{")
+(defvar notmuch-show-part-end-regexp         "part}")
+(defvar notmuch-show-marker-regexp "\\(message\\|header\\|body\\|attachment\\|part\\)[{}].*$")
 (defvar notmuch-show-headers-visible t)
 
 (defun notmuch-show-next-message ()
@@ -55,8 +62,7 @@
   ; First, ensure we get off the current message marker
   (if (not (eobp))
       (forward-char))
-  (if (not (re-search-forward notmuch-show-message-begin-regexp nil t))
-      (goto-char (point-max)))
+  (re-search-forward notmuch-show-message-begin-regexp nil t)
   (beginning-of-line)
   (recenter 0))
 
@@ -64,49 +70,79 @@
   "Advance point to the beginning of the previous message in the buffer."
   (interactive)
   ; First, ensure we get off the current message marker
-  (if (not (eobp))
-      (forward-char))
-  (if (not (re-search-backward notmuch-show-message-begin-regexp nil t))
-      (goto-char (point-min)))
+  (if (not (bobp))
+      (previous-line))
+  (re-search-backward notmuch-show-message-begin-regexp nil t)
   (beginning-of-line)
   (recenter 0))
 
-(defun notmuch-show-markup-this-header ()
-  (if (re-search-forward notmuch-show-header-begin-regexp nil t)
+(defun notmuch-show-markup-body (unread)
+  (re-search-forward notmuch-show-body-begin-regexp)
+  (next-line 1)
+  (beginning-of-line)
+  (let ((beg (point)))
+    (re-search-forward notmuch-show-body-end-regexp)
+    (if (not unread)
+	(overlay-put (make-overlay beg (match-beginning 0))
+		     'invisible 'notmuch-show-body-read))
+;      (notmuch-show-markup-citations-region beg point)
+    ))
+
+(defun notmuch-show-markup-header ()
+  (re-search-forward notmuch-show-header-begin-regexp)
+  (next-line 2)
+  (beginning-of-line)
+  (let ((beg (point)))
+    (re-search-forward notmuch-show-header-end-regexp)
+    (overlay-put (make-overlay beg (match-beginning 0))
+		 'invisible 'notmuch-show-header)))
+
+(defun notmuch-show-markup-message ()
+  (if (re-search-forward notmuch-show-message-begin-regexp nil t)
       (progn
-	(overlay-put (make-overlay (match-beginning 0) (+ (match-end 0) 1))
-		     'invisible 'notmuch-show-marker)
-	(next-line 1)
-	(beginning-of-line)
-	(let ((beg (point)))
-	  (if (re-search-forward notmuch-show-header-end-regexp nil t)
-	      (progn
-		(overlay-put (make-overlay beg (match-beginning 0))
-			     'invisible 'notmuch-show-header)
-		(overlay-put (make-overlay (match-beginning 0) (+ (match-end 0) 1))
-			     'invisible 'notmuch-show-marker)))))
+	(let ((unread (looking-at ".*unread$")))
+	  (notmuch-show-markup-header)
+	  (notmuch-show-markup-body unread)))
     (goto-char (point-max))))
 
-(defun notmuch-show-markup-headers ()
+(defun notmuch-show-hide-markers ()
   (save-excursion
     (goto-char (point-min))
     (while (not (eobp))
-      (notmuch-show-markup-this-header))))
+      (if (re-search-forward notmuch-show-marker-regexp nil t)
+	  (progn
+	    (overlay-put (make-overlay (match-beginning 0) (+ (match-end 0) 1))
+			 'invisible 'notmuch-show-marker))
+	(goto-char (point-max))))))
+
+(defun notmuch-show-markup-messages ()
+  (save-excursion
+    (goto-char (point-min))
+    (while (not (eobp))
+      (notmuch-show-markup-message)))
+  (notmuch-show-hide-markers))
 
 (defun notmuch-show-toggle-headers-visible ()
   "Toggle visibility of header fields"
   (interactive)
   (if notmuch-show-headers-visible
-      (progn
-	(add-to-invisibility-spec 'notmuch-show-header)
-	(set 'notmuch-show-headers-visible nil)
-	; Need to force the redisplay for some reason
-	(force-window-update)
-	(redisplay t))
-    (remove-from-invisibility-spec 'notmuch-show-header)
-    (set 'notmuch-show-headers-visible t)
-    (force-window-update)
-    (redisplay t)))
+      (add-to-invisibility-spec 'notmuch-show-header)
+    (remove-from-invisibility-spec 'notmuch-show-header))
+  (set 'notmuch-show-headers-visible (not notmuch-show-headers-visible))
+  ; Need to force the redisplay for some reason
+  (force-window-update)
+  (redisplay t))
+
+(defun notmuch-show-toggle-body-read-visible ()
+  "Toggle visibility of message bodies of read messages"
+  (interactive)
+  (if notmuch-show-body-read-visible
+      (add-to-invisibility-spec 'notmuch-show-body-read)
+    (remove-from-invisibility-spec 'notmuch-show-body-read))
+  (set 'notmuch-show-body-read-visible (not notmuch-show-body-read-visible))
+  ; Need to force the redisplay for some reason
+  (force-window-update)
+  (redisplay t))
 
 ;;;###autoload
 (defun notmuch-show-mode ()
@@ -115,6 +151,8 @@
   (kill-all-local-variables)
   (set (make-local-variable 'notmuch-show-headers-visible) t)
   (notmuch-show-toggle-headers-visible)
+  (set (make-local-variable 'notmuch-show-body-read-visible) t)
+  (notmuch-show-toggle-body-read-visible)
   (add-to-invisibility-spec 'notmuch-show-marker)
   (use-local-map notmuch-show-mode-map)
   (setq major-mode 'notmuch-show-mode
@@ -136,7 +174,7 @@
       (goto-char (point-min))
       (save-excursion
 	(call-process "notmuch" nil t nil "show" thread-id)
-	(notmuch-show-markup-headers)
+	(notmuch-show-markup-messages)
 	)
       )))
 
