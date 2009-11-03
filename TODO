@@ -24,6 +24,15 @@ noting how far back in the past mail has been indexed, and whether it
 needs to re-tag messages based on a theoretical "auto-tags"
 configuration file).
 
+Make "notmuch new" notice when a mail directory has gone more than a
+month without receiving new mail and use that to trigger the printing
+of the note that the user might want to mark the directory read-only.
+
+Also make "notmuch new" optionally able to just mark those month-old
+directories read-only on its own. (Could conflict with low-volume
+lists such as announce lists if they are setup to deliver to their own
+maildirs.)
+
 notmuch library
 ---------------
 Actually compile and install a libnotmuch shared library.
