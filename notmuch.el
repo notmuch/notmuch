@@ -51,7 +51,8 @@
       (forward-char))
   (if (not (re-search-forward notmuch-show-message-begin-regexp nil t))
       (goto-char (point-max)))
-  (beginning-of-line))
+  (beginning-of-line)
+  (recenter 0))
 
 (defun notmuch-show-previous-message ()
   "Advance point to the beginning of the previous message in the buffer."
@@ -60,9 +61,9 @@
   (if (not (eobp))
       (forward-char))
   (if (not (re-search-backward notmuch-show-message-begin-regexp nil t))
-      (progn
-	(goto-char (point-min))
-	(beginning-of-line))))
+      (goto-char (point-min)))
+  (beginning-of-line)
+  (recenter 0))
 
 ;;;###autoload
 (defun notmuch-show-mode ()
