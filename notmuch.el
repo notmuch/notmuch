@@ -33,11 +33,20 @@
 
 (defvar notmuch-show-mode-map
   (let ((map (make-sparse-keymap)))
+    ; I don't actually want all of these toggle commands occupying
+    ; keybindings. They steal valuable key-binding space, are hard
+    ; to remember, and act globally rather than locally.
+    ;
+    ; Will be much preferable to switch to direct manipulation for
+    ; toggling visibility of these components. Probably using
+    ; overlays-at to query and manipulate the current overlay.
     (define-key map "b" 'notmuch-show-toggle-body-read-visible)
+    (define-key map "c" 'notmuch-show-toggle-citations-visible)
     (define-key map "h" 'notmuch-show-toggle-headers-visible)
     (define-key map "n" 'notmuch-show-next-message)
     (define-key map "p" 'notmuch-show-previous-message)
     (define-key map "q" 'kill-this-buffer)
+    (define-key map "s" 'notmuch-show-toggle-signatures-visible)
     (define-key map "x" 'kill-this-buffer)
     map)
   "Keymap for \"notmuch show\" buffers.")
@@ -54,7 +63,6 @@
 (defvar notmuch-show-part-begin-regexp       "part{")
 (defvar notmuch-show-part-end-regexp         "part}")
 (defvar notmuch-show-marker-regexp "\\(message\\|header\\|body\\|attachment\\|part\\)[{}].*$")
-(defvar notmuch-show-headers-visible t)
 
 (defun notmuch-show-next-message ()
   "Advance point to the beginning of the next message in the buffer."
@@ -76,6 +84,29 @@
   (beginning-of-line)
   (recenter 0))
 
+(defun notmuch-show-markup-citations-region (beg end)
+  (goto-char beg)
+  (beginning-of-line)
+  (while (< (point) end)
+    (let ((beg-sub (point)))
+      (if (looking-at ">")
+	  (progn
+	    (while (looking-at ">")
+	      (next-line))
+	    (let ((overlay (make-overlay beg-sub (point))))
+	      (overlay-put overlay 'invisible 'notmuch-show-citation)
+	      (overlay-put overlay 'before-string
+			   (concat "[" (number-to-string (count-lines beg-sub (point)))
+				   " quoted lines.]")))))
+      (if (looking-at "--[ ]?$")
+	  (let ((overlay (make-overlay beg-sub end)))
+	    (overlay-put overlay 'invisible 'notmuch-show-signature)
+	    (overlay-put overlay 'before-string
+			 (concat "[" (number-to-string (count-lines beg-sub (point)))
+				 "-line signature.]"))
+	    (goto-char end)))
+      (next-line))))
+
 (defun notmuch-show-markup-body (unread)
   (re-search-forward notmuch-show-body-begin-regexp)
   (next-line 1)
@@ -85,7 +116,7 @@
     (if (not unread)
 	(overlay-put (make-overlay beg (match-beginning 0))
 		     'invisible 'notmuch-show-body-read))
-;      (notmuch-show-markup-citations-region beg point)
+    (notmuch-show-markup-citations-region beg (point))
     ))
 
 (defun notmuch-show-markup-header ()
@@ -122,6 +153,28 @@
       (notmuch-show-markup-message)))
   (notmuch-show-hide-markers))
 
+(defun notmuch-show-toggle-citations-visible ()
+  "Toggle visibility of citations"
+  (interactive)
+  (if notmuch-show-citations-visible
+      (add-to-invisibility-spec 'notmuch-show-citation)
+    (remove-from-invisibility-spec 'notmuch-show-citation))
+  (set 'notmuch-show-citations-visible (not notmuch-show-citations-visible))
+  ; Need to force the redisplay for some reason
+  (force-window-update)
+  (redisplay t))
+
+(defun notmuch-show-toggle-signatures-visible ()
+  "Toggle visibility of signatures"
+  (interactive)
+  (if notmuch-show-signatures-visible
+      (add-to-invisibility-spec 'notmuch-show-signature)
+    (remove-from-invisibility-spec 'notmuch-show-signature))
+  (set 'notmuch-show-signatures-visible (not notmuch-show-signatures-visible))
+  ; Need to force the redisplay for some reason
+  (force-window-update)
+  (redisplay t))
+
 (defun notmuch-show-toggle-headers-visible ()
   "Toggle visibility of header fields"
   (interactive)
@@ -153,6 +206,10 @@
   (notmuch-show-toggle-headers-visible)
   (set (make-local-variable 'notmuch-show-body-read-visible) t)
   (notmuch-show-toggle-body-read-visible)
+  (set (make-local-variable 'notmuch-show-citations-visible) t)
+  (notmuch-show-toggle-citations-visible)
+  (set (make-local-variable 'notmuch-show-signatures-visible) t)
+  (notmuch-show-toggle-signatures-visible)
   (add-to-invisibility-spec 'notmuch-show-marker)
   (use-local-map notmuch-show-mode-map)
   (setq major-mode 'notmuch-show-mode
