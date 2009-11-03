@@ -33,6 +33,7 @@
 
 (defvar notmuch-show-mode-map
   (let ((map (make-sparse-keymap)))
+    (define-key map "q" 'kill-this-buffer)
     (define-key map "x" 'kill-this-buffer)
     map)
   "Keymap for \"notmuch show\" buffers.")
@@ -69,8 +70,12 @@
 (defvar notmuch-search-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map "a" 'notmuch-search-archive-thread)
+    (define-key map "f" 'notmuch-search-filter)
     (define-key map "n" 'next-line)
     (define-key map "p" 'previous-line)
+    (define-key map "q" 'kill-this-buffer)
+    (define-key map "s" 'notmuch-search)
+    (define-key map "x" 'kill-this-buffer)
     (define-key map "\r" 'notmuch-search-show-thread)
     (define-key map "+" 'notmuch-search-add-tag)
     (define-key map "-" 'notmuch-search-remove-tag)
@@ -83,6 +88,7 @@
   "Major mode for handling the output of \"notmuch search\""
   (interactive)
   (kill-all-local-variables)
+  (make-local-variable 'notmuch-search-query-string)
   (use-local-map notmuch-search-mode-map)
   (setq major-mode 'notmuch-search-mode
 	mode-name "notmuch-search")
@@ -176,6 +182,7 @@
   (let ((buffer (get-buffer-create (concat "*notmuch-search-" query "*"))))
     (switch-to-buffer buffer)
     (notmuch-search-mode)
+    (set 'notmuch-search-query-string query)
     (let ((proc (get-buffer-process (current-buffer)))
 	  (inhibit-read-only t))
       (if proc
@@ -188,6 +195,15 @@
 	)
       (notmuch-search-markup-thread-ids)
       )))
+
+(defun notmuch-search-filter (query)
+  "Run \"notmuch search\" to refine the current search results.
+
+A search string will be constructed by appending QUERY to the
+current search string, and the results of \"notmuch search\" for
+the combined query will be displayed."
+  (interactive "sFilter search: ")
+  (notmuch-search (concat notmuch-search-query-string " and " query)))
 
 (defun notmuch ()
   "Run notmuch to display all mail with tag of 'inbox'"
