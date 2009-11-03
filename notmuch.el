@@ -113,7 +113,8 @@
 
 Before moving, also remove the \"unread\" tag from the current message."
   (interactive)
-  (notmuch-show-remove-tag "unread")
+  (if (member "unread" (notmuch-show-get-tags))
+      (notmuch-show-remove-tag "unread"))
   ; First, ensure we get off the current message marker
   (if (not (eobp))
       (forward-char))
