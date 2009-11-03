@@ -286,6 +286,7 @@ Before moving, also remove the \"unread\" tag from the current message."
     (define-key map "-" 'notmuch-search-remove-tag)
     (define-key map "<" 'beginning-of-buffer)
     (define-key map ">" 'notmuch-search-goto-last-thread)
+    (define-key map "=" 'notmuch-search-refresh-view)
     (define-key map "\M->" 'notmuch-search-goto-last-thread)
     map)
   "Keymap for \"notmuch search\" buffers.")
@@ -414,6 +415,16 @@ Before moving, also remove the \"unread\" tag from the current message."
 	    (delete-backward-char 1)
 	  )
 	))))
+
+(defun notmuch-search-refresh-view ()
+  "Refresh the current view.
+
+Kills the current buffer and runs a new search with the same
+query string as the current search."
+  (interactive)
+  (let ((query notmuch-search-query-string))
+    (kill-this-buffer)
+    (notmuch-search query)))
 
 (defun notmuch-search-filter (query)
   "Run \"notmuch search\" to refine the current search results.
