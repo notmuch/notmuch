@@ -95,6 +95,28 @@
       (re-search-forward "[a-fA-F0-9]*")
       (filter-buffer-substring beg (point)))))
 
+(defun notmuch-search-markup-this-thread-id ()
+  (beginning-of-line)
+  (let ((beg (point)))
+    (re-search-forward "[a-fA-F0-9]*")
+    (forward-char)
+    (overlay-put (make-overlay beg (point)) 'invisible 'notmuch-search)))
+
+(defun notmuch-search-markup-thread-ids ()
+  (save-excursion
+    (beginning-of-buffer)
+    (while (not (eobp))
+      (notmuch-search-markup-this-thread-id)
+      (next-line))))
+
+(defun notmuch-search-hide-thread-ids ()
+  (interactive)
+  (add-to-invisibility-spec 'notmuch-search))
+
+(defun notmuch-search-show-thread-ids ()
+  (interactive)
+  (remove-from-invisibility-spec 'notmuch-search))
+
 (defun notmuch-search-show-thread ()
   (interactive)
   (notmuch-show (notmuch-search-find-thread-id)))
@@ -164,6 +186,7 @@
       (save-excursion
 	(call-process "notmuch" nil t nil "search" query)
 	)
+      (notmuch-search-markup-thread-ids)
       )))
 
 (defun notmuch ()

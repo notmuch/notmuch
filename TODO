@@ -1,7 +1,5 @@
 Add support to format a reply buffer for a particular message.
 
-Hide thread IDs in notmuch-search mode in notmuch.el.
-
 Selectively hide headers and bodies in notmuch-show mode in
 notmuch.el, (for example, for read messages).
 
