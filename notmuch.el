@@ -33,6 +33,7 @@
 
 (defvar notmuch-show-mode-map
   (let ((map (make-sparse-keymap)))
+    (define-key map "h" 'notmuch-show-toggle-headers-visible)
     (define-key map "n" 'notmuch-show-next-message)
     (define-key map "p" 'notmuch-show-previous-message)
     (define-key map "q" 'kill-this-buffer)
@@ -42,6 +43,11 @@
 (fset 'notmuch-show-mode-map notmuch-show-mode-map)
 
 (defvar notmuch-show-message-begin-regexp "message{")
+(defvar notmuch-show-message-end-regexp   "message}")
+(defvar notmuch-show-header-begin-regexp  "header{")
+(defvar notmuch-show-header-end-regexp    "header}")
+
+(defvar notmuch-show-headers-visible t)
 
 (defun notmuch-show-next-message ()
   "Advance point to the beginning of the next message in the buffer."
@@ -65,11 +71,51 @@
   (beginning-of-line)
   (recenter 0))
 
+(defun notmuch-show-markup-this-header ()
+  (if (re-search-forward notmuch-show-header-begin-regexp nil t)
+      (progn
+	(overlay-put (make-overlay (match-beginning 0) (+ (match-end 0) 1))
+		     'invisible 'notmuch-show-marker)
+	(next-line 1)
+	(beginning-of-line)
+	(let ((beg (point)))
+	  (if (re-search-forward notmuch-show-header-end-regexp nil t)
+	      (progn
+		(overlay-put (make-overlay beg (match-beginning 0))
+			     'invisible 'notmuch-show-header)
+		(overlay-put (make-overlay (match-beginning 0) (+ (match-end 0) 1))
+			     'invisible 'notmuch-show-marker)))))
+    (goto-char (point-max))))
+
+(defun notmuch-show-markup-headers ()
+  (save-excursion
+    (goto-char (point-min))
+    (while (not (eobp))
+      (notmuch-show-markup-this-header))))
+
+(defun notmuch-show-toggle-headers-visible ()
+  "Toggle visibility of header fields"
+  (interactive)
+  (if notmuch-show-headers-visible
+      (progn
+	(add-to-invisibility-spec 'notmuch-show-header)
+	(set 'notmuch-show-headers-visible nil)
+	; Need to force the redisplay for some reason
+	(force-window-update)
+	(redisplay t))
+    (remove-from-invisibility-spec 'notmuch-show-header)
+    (set 'notmuch-show-headers-visible t)
+    (force-window-update)
+    (redisplay t)))
+
 ;;;###autoload
 (defun notmuch-show-mode ()
   "Major mode for handling the output of \"notmuch show\""
   (interactive)
   (kill-all-local-variables)
+  (set (make-local-variable 'notmuch-show-headers-visible) t)
+  (notmuch-show-toggle-headers-visible)
+  (add-to-invisibility-spec 'notmuch-show-marker)
   (use-local-map notmuch-show-mode-map)
   (setq major-mode 'notmuch-show-mode
 	mode-name "notmuch-show")
@@ -90,6 +136,7 @@
       (goto-char (point-min))
       (save-excursion
 	(call-process "notmuch" nil t nil "show" thread-id)
+	(notmuch-show-markup-headers)
 	)
       )))
 

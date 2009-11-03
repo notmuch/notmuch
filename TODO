@@ -2,8 +2,8 @@ Emacs interface (notmuch.el)
 ----------------------------
 Add support to compose a reply to the current messaage.
 
-Selectively hide headers and bodies in notmuch-show mode.  (for
-example, for read messages).
+Selectively hide bodies in notmuch-show mode.  (for example, for read
+messages).
 
 Remove "unread" tag from messages as they are read.
 
