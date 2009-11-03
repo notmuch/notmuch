@@ -33,11 +33,36 @@
 
 (defvar notmuch-show-mode-map
   (let ((map (make-sparse-keymap)))
+    (define-key map "n" 'notmuch-show-next-message)
+    (define-key map "p" 'notmuch-show-previous-message)
     (define-key map "q" 'kill-this-buffer)
     (define-key map "x" 'kill-this-buffer)
     map)
   "Keymap for \"notmuch show\" buffers.")
 (fset 'notmuch-show-mode-map notmuch-show-mode-map)
+
+(defvar notmuch-show-message-begin-regexp "%message{")
+
+(defun notmuch-show-next-message ()
+  "Advance point to the beginning of the next message in the buffer."
+  (interactive)
+  ; First, ensure we get off the current message marker
+  (if (not (eobp))
+      (forward-char))
+  (if (not (re-search-forward notmuch-show-message-begin-regexp nil t))
+      (goto-char (point-max)))
+  (beginning-of-line))
+
+(defun notmuch-show-previous-message ()
+  "Advance point to the beginning of the previous message in the buffer."
+  (interactive)
+  ; First, ensure we get off the current message marker
+  (if (not (eobp))
+      (forward-char))
+  (if (not (re-search-backward notmuch-show-message-begin-regexp nil t))
+      (progn
+	(goto-char (point-min))
+	(beginning-of-line))))
 
 ;;;###autoload
 (defun notmuch-show-mode ()
