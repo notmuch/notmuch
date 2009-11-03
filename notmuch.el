@@ -61,7 +61,7 @@
 	  (error "notmuch search process already running for query `%s'" query)
 	)
       (erase-buffer)
-      (beginning-of-buffer)
+      (goto-char (point-min))
       (save-excursion
 	(call-process "notmuch" nil t nil "show" thread-id)
 	)
@@ -79,9 +79,18 @@
     (define-key map "\r" 'notmuch-search-show-thread)
     (define-key map "+" 'notmuch-search-add-tag)
     (define-key map "-" 'notmuch-search-remove-tag)
+    (define-key map "<" 'beginning-of-buffer)
+    (define-key map ">" 'notmuch-search-goto-last-thread)
+    (define-key map "\M->" 'notmuch-search-goto-last-thread)
     map)
   "Keymap for \"notmuch search\" buffers.")
 (fset 'notmuch-search-mode-map notmuch-search-mode-map)
+
+(defun notmuch-search-goto-last-thread (&optional arg)
+  "Move point to the last thread in the buffer."
+  (interactive "^P")
+  (end-of-buffer arg)
+  (beginning-of-line))
 
 ;;;###autoload
 (defun notmuch-search-mode ()
@@ -110,7 +119,7 @@
 
 (defun notmuch-search-markup-thread-ids ()
   (save-excursion
-    (beginning-of-buffer)
+    (goto-char (point-min))
     (while (not (eobp))
       (notmuch-search-markup-this-thread-id)
       (next-line))))
@@ -189,12 +198,17 @@
 	  (error "notmuch search process already running for query `%s'" query)
 	)
       (erase-buffer)
-      (beginning-of-buffer)
+      (goto-char (point-min))
       (save-excursion
 	(call-process "notmuch" nil t nil "search" query)
-	)
-      (notmuch-search-markup-thread-ids)
-      )))
+	(notmuch-search-markup-thread-ids)
+        ; A well-behaved program ends its output with a newline, but we
+        ; don't actually want the blank line at the end of the file.
+	(goto-char (point-max))
+	(if (looking-at "^$")
+	    (delete-backward-char 1)
+	  )
+	))))
 
 (defun notmuch-search-filter (query)
   "Run \"notmuch search\" to refine the current search results.
