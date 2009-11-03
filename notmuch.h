@@ -632,16 +632,6 @@ notmuch_message_get_filename (notmuch_message_t *message);
 time_t
 notmuch_message_get_date  (notmuch_message_t *message);
 
-/* Get the size in bytes of the full header section of 'message'.
- *
- * This is useful in conjunction with notmuch_message_get_filename
- * for separately parsing the message header and content.
- *
- * Returns 0 in the case of any error.
- */
-size_t
-notmuch_message_get_header_size (notmuch_message_t *message);
-
 /* Get the value of the specified header from 'message'.
  *
  * The value will be read from the actual message file, not from the
@@ -656,20 +646,6 @@ notmuch_message_get_header_size (notmuch_message_t *message);
  */
 const char *
 notmuch_message_get_header (notmuch_message_t *message, const char *header);
-
-/* Get the entire set of headers from an email message as a string.
- *
- * The value will be read from the actual message file, not from the
- * notmuch database.
- *
- * The returned value is owned by the notmuch message and is valid
- * only until the message is closed. The caller should copy it if
- * needing to modify the value or to hold onto it for longer.
- *
- * Returns NULL in the case of any error.
- */
-const char *
-notmuch_message_get_all_headers (notmuch_message_t *message);
 
 /* Get the tags for 'message', returning a notmuch_tags_t object which
  * can be used to iterate over all tags.
