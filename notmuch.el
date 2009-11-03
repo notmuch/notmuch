@@ -41,7 +41,7 @@
   "Keymap for \"notmuch show\" buffers.")
 (fset 'notmuch-show-mode-map notmuch-show-mode-map)
 
-(defvar notmuch-show-message-begin-regexp "%message{")
+(defvar notmuch-show-message-begin-regexp "message{")
 
 (defun notmuch-show-next-message ()
   "Advance point to the beginning of the next message in the buffer."

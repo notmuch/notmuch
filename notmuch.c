@@ -952,18 +952,18 @@ show_message_part (GMimeObject *part, int *part_count)
 	const char *filename = g_mime_part_get_filename (GMIME_PART (part));
 	content_type = g_mime_object_get_content_type (GMIME_OBJECT (part));
 
-	printf ("%%attachment{ ID: %d, Content-type: %s, ",
+	printf ("\fattachment{ ID: %d, Content-type: %s, ",
 		*part_count,
 		g_mime_content_type_to_string (content_type));
 	printf ("Filename: %s ", filename);
-	printf ("%%attachment}\n");
+	printf ("\fattachment}\n");
 
 	return;
     }
 
     content_type = g_mime_object_get_content_type (GMIME_OBJECT (part));
 
-    printf ("%%part{ ID: %d, Content-type: %s\n",
+    printf ("\fpart{ ID: %d, Content-type: %s\n",
 	    *part_count,
 	    g_mime_content_type_to_string (content_type));
 
@@ -978,7 +978,7 @@ show_message_part (GMimeObject *part, int *part_count)
 	    g_mime_data_wrapper_write_to_stream (wrapper, stream);
     }
 
-    printf ("%%part}\n");
+    printf ("\fpart}\n");
 
     g_object_unref (stream);
 }
@@ -1081,9 +1081,9 @@ show_command (void *ctx, unused (int argc), unused (char *argv[]))
     {
 	message = notmuch_messages_get (messages);
 
-	printf ("%%message{\n");
+	printf ("\fmessage{\n");
 
-	printf ("%%header{\n");
+	printf ("\fheader{\n");
 
 	printf ("%s\n", _get_one_line_summary (local, message));
 
@@ -1094,11 +1094,11 @@ show_command (void *ctx, unused (int argc), unused (char *argv[]))
 		printf ("%s: %s\n", name, value);
 	}
 
-	printf ("%%header}\n");
+	printf ("\fheader}\n");
 
 	show_message_body (notmuch_message_get_filename (message));
 
-	printf ("%%message}\n");
+	printf ("\fmessage}\n");
 
 	notmuch_message_destroy (message);
     }
