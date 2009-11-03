@@ -739,11 +739,11 @@ query_string_from_args (void *ctx, int argc, char *argv[])
  *
  * Examples include:
  *
- *	5 minutes ago	(For times less than 60 minutes ago)
- *	12:30		(For times >60 minutes but still today)
- *	Yesterday
- *	Monday		(Before yesterday but fewer than 7 days ago)
- *	Oct. 12		(Between 7 and 180 days ago (about 6 months))
+ *	5 mins. ago	(For times less than 60 minutes ago)
+ *	Today 12:30	(For times >60 minutes but still today)
+ *	Yest. 12:30
+ *	Mon.  12:30	(Before yesterday but fewer than 7 days ago)
+ *	October 12	(Between 7 and 180 days ago (about 6 months))
  *	2008-06-30	(More than 180 days ago)
  */
 #define MINUTE (60)
@@ -778,7 +778,7 @@ _format_relative_date (void *ctx, time_t then)
 
     if (delta < 3600) {
 	snprintf (result, RELATIVE_DATE_MAX,
-		  "%d minutes ago", (int) (delta / 60));
+		  "%d mins. ago", (int) (delta / 60));
 	return result;
     }
 
@@ -787,21 +787,23 @@ _format_relative_date (void *ctx, time_t then)
 	    delta < DAY)
 	{
 	    strftime (result, RELATIVE_DATE_MAX,
-		      "%R", &tm_then); /* 12:30 */
+		      "Today %R", &tm_then); /* Today 12:30 */
 	    return result;
 	} else if ((tm_now.tm_wday + 7 - tm_then.tm_wday) % 7 == 1) {
-	    return "Yesterday";
+	    strftime (result, RELATIVE_DATE_MAX,
+		      "Yest. %R", &tm_then); /* Yest. 12:30 */
+	    return result;
 	} else {
 	    if (tm_then.tm_wday != tm_now.tm_wday) {
 		strftime (result, RELATIVE_DATE_MAX,
-			  "%A", &tm_then); /* Monday */
+			  "%a. %R", &tm_then); /* Mon. 12:30 */
 		return result;
 	    }
 	}
     }
 
     strftime (result, RELATIVE_DATE_MAX,
-	      "%b %d", &tm_then); /* Oct. 12 */
+	      "%B %d", &tm_then); /* October 12 */
     return result;
 }
 #undef MINUTE
@@ -848,7 +850,7 @@ search_command (void *ctx, int argc, char *argv[])
 	date = notmuch_thread_get_oldest_date (thread);
 	relative_date = _format_relative_date (local, date);
 
-	printf ("%s (%s) %s",
+	printf ("%s %12s %s",
 		notmuch_thread_get_thread_id (thread),
 		relative_date,
 		notmuch_thread_get_subject (thread));
