@@ -46,6 +46,9 @@
   "Keymap for \"notmuch show\" buffers.")
 (fset 'notmuch-show-mode-map notmuch-show-mode-map)
 
+(defvar notmuch-show-signature-lines-max 6
+  "Maximum length of signature that will be hidden by default.")
+
 (defvar notmuch-show-message-begin-regexp    "message{")
 (defvar notmuch-show-message-end-regexp      "message}")
 (defvar notmuch-show-header-begin-regexp     "header{")
@@ -297,20 +300,24 @@ which this thread was originally shown."
       (if (looking-at ">")
 	  (progn
 	    (while (looking-at ">")
-	      (next-line))
+	      (forward-line))
 	    (let ((overlay (make-overlay beg-sub (point))))
 	      (overlay-put overlay 'invisible 'notmuch-show-citation)
 	      (overlay-put overlay 'before-string
 			   (concat "[" (number-to-string (count-lines beg-sub (point)))
-				   " quoted lines.]")))))
+				   " quoted lines.]\n")))))
       (if (looking-at "--[ ]?$")
-	  (let ((overlay (make-overlay beg-sub end)))
-	    (overlay-put overlay 'invisible 'notmuch-show-signature)
-	    (overlay-put overlay 'before-string
-			 (concat "[" (number-to-string (count-lines beg-sub end))
-				 "-line signature.]"))
-	    (goto-char end)))
-      (next-line))))
+	  (let ((sig-lines (count-lines beg-sub end)))
+	    (if (<= sig-lines notmuch-show-signature-lines-max)
+		(progn
+		  (overlay-put (make-overlay beg-sub (+ beg-sub 1))
+			       'before-string
+			       (concat "[" (number-to-string sig-lines)
+				       "-line signature.]"))
+		  (overlay-put (make-overlay (+ beg-sub 2) end)
+			       'invisible 'notmuch-show-signature)
+		  (goto-char end)))))
+      (forward-line))))
 
 (defun notmuch-show-markup-body ()
   (re-search-forward notmuch-show-body-begin-regexp)
