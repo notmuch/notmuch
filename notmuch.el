@@ -114,52 +114,47 @@ buffer."
       (if (not (re-search-forward notmuch-show-message-begin-regexp nil t))
 	  (goto-char (point-max))))))
 
-(defun notmuch-show-next-message ()
-  "Advance point to the beginning of the next message in the buffer.
+(defun notmuch-show-move-to-current-message-summary-line ()
+  "Move to the beginning of the one-line summary of the current message.
 
-Does nothing if already on the last message."
-  (interactive)
-  ; First, ensure we get off the current message marker
-  (if (not (eobp))
-      (forward-char))
-  (re-search-forward notmuch-show-message-begin-regexp nil t)
-  ; This dance might look pointless, but it's important. I originally
-  ; just had (beginning-of-line) here which looked right on the
-  ; display but actually put point all the way back to the first
-  ; character of the first invisible line. That is, it put point into
-  ; the closing markers of the previous message rather than at the
-  ; beginning of the current message. And that in turn meant that
-  ; looking up the current message-ID would actually return the
-  ; previous message ID.
-  ;
-  ; So this dance ensures that we're actually on the current message
-  ; when it looks like we are.
-  (end-of-visible-line)
+This gives us a stable place to move to and work from since the
+summary line is always visible. This is important since moving to
+an invisible location is unreliable, (the main command loop moves
+point either forward or backward to the next visible character
+when a command ends with point on an invisible character).
+
+Emits an error if point is not within a valid message, (that is
+not pattern of `notmuch-show-message-begin-regexp' could be found
+by searching backward)."
   (beginning-of-line)
+  (if (not (looking-at notmuch-show-message-begin-regexp))
+      (if (re-search-backward notmuch-show-message-begin-regexp nil t)
+	  (forward-line 2)
+	(error "Not within a valid message."))
+    (forward-line 2)))
+
+(defun notmuch-show-next-message ()
+  "Advance to the beginning of the next message in the buffer.
+
+Moves to the beginning of the current message if already on the
+last message in the buffer."
+  (interactive)
+  (notmuch-show-move-to-current-message-summary-line)
+  (re-search-forward notmuch-show-message-begin-regexp nil t)
+  (notmuch-show-move-to-current-message-summary-line)
   (recenter 0))
 
 (defun notmuch-show-previous-message ()
   "Backup to the beginning of the previous message in the buffer.
 
-Does nothing if already on the first message in the buffer."
+Moves to the beginning of the current message if already on the
+first message in the buffer."
   (interactive)
-  ; First, ensure we get off the current message marker
-  (if (not (bobp))
-      (previous-line))
+  (notmuch-show-move-to-current-message-summary-line)
+  ; Go backward twice to skip the current message's marker
   (re-search-backward notmuch-show-message-begin-regexp nil t)
-  ; This dance might look pointless, but it's important. I originally
-  ; just had (beginning-of-line) here which looked right on the
-  ; display but actually put point all the way back to the first
-  ; character of the first invisible line. That is, it put point into
-  ; the closing markers of the previous message rather than at the
-  ; beginning of the current message. And that in turn meant that
-  ; looking up the current message-ID would actually return the
-  ; previous message ID.
-  ;
-  ; So this dance ensures that we're actually on the current message
-  ; when it looks like we are.
-  (end-of-visible-line)
-  (beginning-of-line)
+  (re-search-backward notmuch-show-message-begin-regexp nil t)
+  (notmuch-show-move-to-current-message-summary-line)
   (recenter 0))
 
 (defun notmuch-show-mark-read-then-next-message ()
