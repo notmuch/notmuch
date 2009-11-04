@@ -32,7 +32,7 @@
     (define-key map "b" 'notmuch-show-toggle-body-read-visible)
     (define-key map "c" 'notmuch-show-toggle-citations-visible)
     (define-key map "h" 'notmuch-show-toggle-headers-visible)
-    (define-key map "n" 'notmuch-show-mark-read-then-next-message)
+    (define-key map "n" 'notmuch-show-next-message)
     (define-key map "p" 'notmuch-show-previous-message)
     (define-key map "q" 'kill-this-buffer)
     (define-key map "s" 'notmuch-show-toggle-signatures-visible)
@@ -162,8 +162,8 @@ the buffer."
 (defun notmuch-show-find-next-message ()
   "Returns the position of the next message in the buffer.
 
-Or the beginning of the current message if already within the last
-message in the buffer."
+Or the end of the buffer if already within the last message in
+the buffer."
   ; save-excursion doesn't save our window position
   ; save-window-excursion doesn't save point
   ; Looks like we have to use both.
@@ -180,6 +180,19 @@ current point."
   (while (and (not (eobp))
 	      (not (member "unread" (notmuch-show-get-tags))))
     (notmuch-show-next-message)))
+
+(defun notmuch-show-find-next-unread-message ()
+  "Returns the position of the next message in the buffer.
+
+Returns the current point if there are no more unread messages
+past the current point."
+  ; save-excursion doesn't save our window position
+  ; save-window-excursion doesn't save point
+  ; Looks like we have to use both.
+  (save-excursion
+    (save-window-excursion
+      (notmuch-show-next-unread-message)
+      (point))))
 
 (defun notmuch-show-previous-message ()
   "Backup to the beginning of the previous message in the buffer.
@@ -198,11 +211,11 @@ simply move to the beginning of the current message."
 	  ))
     (recenter 0)))
 
-(defun notmuch-show-mark-read-then-next-message ()
-  "Remove unread tag from current message, then advance to next message."
+(defun notmuch-show-mark-read-then-next-unread-message ()
+  "Remove unread tag from current message, then advance to next unread message."
   (interactive)
   (notmuch-show-remove-tag "unread")
-  (notmuch-show-next-message))
+  (notmuch-show-next-unread-message))
 
 (defun notmuch-show-advance-marking-read-and-archiving ()
   "Advance through buffer, marking read and archiving.
@@ -223,7 +236,7 @@ thread, (remove the \"inbox\" tag from each message). Also kill
 this buffer, and display the next thread from the search from
 which this thread was originally shown."
   (interactive)
-  (let ((next (notmuch-show-find-next-message))
+  (let ((next (notmuch-show-find-next-unread-message))
 	(unread (member "unread" (notmuch-show-get-tags))))
     (if (and (not unread)
 	     (equal next (point)))
@@ -231,7 +244,7 @@ which this thread was originally shown."
       (if (and (> next (window-end))
 	       (< next (point-max)))
 	  (scroll-up nil)
-	(notmuch-show-mark-read-then-next-message)))))
+	(notmuch-show-mark-read-then-next-unread-message)))))
 
 (defun notmuch-show-markup-citations-region (beg end)
   (goto-char beg)
