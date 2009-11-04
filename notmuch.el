@@ -328,6 +328,7 @@ Does nothing if already on the first message in the buffer."
     (define-key map "p" 'previous-line)
     (define-key map "q" 'kill-this-buffer)
     (define-key map "s" 'notmuch-search)
+    (define-key map "t" 'notmuch-search-filter-by-tag)
     (define-key map "x" 'kill-this-buffer)
     (define-key map "\r" 'notmuch-search-show-thread)
     (define-key map "+" 'notmuch-search-add-tag)
@@ -492,13 +493,20 @@ same relative position within the new buffer."
       (goto-char here))))
 
 (defun notmuch-search-filter (query)
-  "Run \"notmuch search\" to refine the current search results.
+  "Filter the current search results based on an additional query string.
 
-A search string will be constructed by appending QUERY to the
-current search string, and the results of \"notmuch search\" for
-the combined query will be displayed."
+Runs a new search matching only messages that match both the
+current search results AND the additional query string provided."
   (interactive "sFilter search: ")
   (notmuch-search (concat notmuch-search-query-string " and " query)))
+
+(defun notmuch-search-filter-by-tag (tag)
+  "Filter the current search results based on a single tag.
+
+Runs a new search matching only messages that match both the
+current search results AND that are tagged with the given tag."
+  (interactive "sFilter by tag: ")
+  (notmuch-search (concat notmuch-search-query-string " and tag:" tag)))
 
 (defun notmuch ()
   "Run notmuch to display all mail with tag of 'inbox'"
