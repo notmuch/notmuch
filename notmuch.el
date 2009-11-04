@@ -172,6 +172,15 @@ message in the buffer."
       (notmuch-show-next-message)
       (point))))
 
+(defun notmuch-show-next-unread-message ()
+  "Advance to the beginning of the next unread message in the buffer.
+
+Does nothing if there are no more unread messages past the
+current point."
+  (while (and (not (eobp))
+	      (not (member "unread" (notmuch-show-get-tags))))
+    (notmuch-show-next-message)))
+
 (defun notmuch-show-previous-message ()
   "Backup to the beginning of the previous message in the buffer.
 
@@ -400,6 +409,7 @@ thread from that buffer can be show when done with this one)."
 	(call-process "notmuch" nil t nil "show" thread-id)
 	(notmuch-show-markup-messages)
 	)
+      (notmuch-show-next-unread-message)
       )))
 
 (defvar notmuch-search-mode-map
