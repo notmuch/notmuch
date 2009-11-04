@@ -95,8 +95,11 @@
 
 (defun notmuch-show-remove-tag (tag)
   (interactive "sTag to remove: ")
-  (notmuch-call-notmuch-process "tag" (concat "-" tag) (concat "id:" (notmuch-show-get-message-id)))
-  (notmuch-show-set-tags (delete tag (notmuch-show-get-tags))))
+  (let ((tags (notmuch-show-get-tags)))
+    (if (member tag tags)
+	(progn
+	  (notmuch-call-notmuch-process "tag" (concat "-" tag) (concat "id:" (notmuch-show-get-message-id)))
+	  (notmuch-show-set-tags (delete tag tags))))))
 
 (defun notmuch-show-archive-thread ()
   "Archive each message currrently shown by removing the \"inbox\" tag from each.
@@ -178,8 +181,7 @@ simply move to the beginning of the current message."
 (defun notmuch-show-mark-read-then-next-message ()
   "Remove unread tag from current message, then advance to next message."
   (interactive)
-  (if (member "unread" (notmuch-show-get-tags))
-      (notmuch-show-remove-tag "unread"))
+  (notmuch-show-remove-tag "unread")
   (notmuch-show-next-message))
 
 (defun notmuch-show-advance-marking-read-and-archiving ()
