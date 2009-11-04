@@ -307,7 +307,7 @@ which this thread was originally shown."
 	  (let ((overlay (make-overlay beg-sub end)))
 	    (overlay-put overlay 'invisible 'notmuch-show-signature)
 	    (overlay-put overlay 'before-string
-			 (concat "[" (number-to-string (count-lines beg-sub (point)))
+			 (concat "[" (number-to-string (count-lines beg-sub end))
 				 "-line signature.]"))
 	    (goto-char end)))
       (next-line))))
