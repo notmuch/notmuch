@@ -147,15 +147,19 @@ last message in the buffer."
 (defun notmuch-show-previous-message ()
   "Backup to the beginning of the previous message in the buffer.
 
-Moves to the beginning of the current message if already on the
-first message in the buffer."
+If within a message rather than at the beginning of it, then
+simply move to the beginning of the current message."
   (interactive)
-  (notmuch-show-move-to-current-message-summary-line)
-  ; Go backward twice to skip the current message's marker
-  (re-search-backward notmuch-show-message-begin-regexp nil t)
-  (re-search-backward notmuch-show-message-begin-regexp nil t)
-  (notmuch-show-move-to-current-message-summary-line)
-  (recenter 0))
+  (let ((start (point)))
+    (notmuch-show-move-to-current-message-summary-line)
+    (if (not (< (point) start))
+	; Go backward twice to skip the current message's marker
+	(progn
+	  (re-search-backward notmuch-show-message-begin-regexp nil t)
+	  (re-search-backward notmuch-show-message-begin-regexp nil t)
+	  (notmuch-show-move-to-current-message-summary-line)
+	  ))
+    (recenter 0)))
 
 (defun notmuch-show-mark-read-then-next-message ()
   "Remove uread tag from current message, then advance to next message."
