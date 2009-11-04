@@ -102,9 +102,13 @@
 	  (notmuch-show-set-tags (delete tag tags))))))
 
 (defun notmuch-show-archive-thread ()
-  "Archive each message currrently shown by removing the \"inbox\" tag from each.
+  "Archive each message in thread, and show next thread from search.
 
-This command is safe from any race condition of new messages
+Archive each message currrently shown by removing the \"inbox\"
+tag from each. Then kill this buffer and show the next thread
+from the search from which this thread was originally shown.
+
+Note: This command is safe from any race condition of new messages
 being delivered to the same thread. It does not archive the
 entire thread, but only the messages shown in the current
 buffer."
@@ -116,7 +120,13 @@ buffer."
       (if (not (eobp))
 	  (forward-char))
       (if (not (re-search-forward notmuch-show-message-begin-regexp nil t))
-	  (goto-char (point-max))))))
+	  (goto-char (point-max)))))
+  (let ((parent-buffer notmuch-show-parent-buffer))
+    (kill-this-buffer)
+    (if parent-buffer
+	(progn
+	  (switch-to-buffer parent-buffer)
+	  (notmuch-search-show-thread)))))
 
 (defun notmuch-show-move-to-current-message-summary-line ()
   "Move to the beginning of the one-line summary of the current message.
@@ -207,14 +217,7 @@ which this thread was originally shown."
 	(unread (member "unread" (notmuch-show-get-tags))))
     (if (and (not unread)
 	     (equal next (point)))
-	(progn
-	  (notmuch-show-archive-thread)
-	  (let ((parent-buffer notmuch-show-parent-buffer))
-	    (kill-this-buffer)
-	    (if parent-buffer
-		(progn
-		  (switch-to-buffer parent-buffer)
-		  (notmuch-search-show-thread)))))
+	(notmuch-show-archive-thread)
       (if (< (notmuch-show-find-next-message) (window-end))
 	  (notmuch-show-mark-read-then-next-message)
 	(scroll-up nil)))))
