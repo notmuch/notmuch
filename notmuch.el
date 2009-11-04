@@ -199,13 +199,22 @@ message and advance to the next message.
 
 Finally, if there is no further message to advance to, and this
 last message is already read, then archive the entire current
-thread, (remove the \"inbox\" tag from each message)."
+thread, (remove the \"inbox\" tag from each message). Also kill
+this buffer, and display the next thread from the search from
+which this thread was originally shown."
   (interactive)
   (let ((next (notmuch-show-find-next-message))
 	(unread (member "unread" (notmuch-show-get-tags))))
     (if (and (not unread)
 	     (equal next (point)))
-	(notmuch-show-archive-thread)
+	(progn
+	  (notmuch-show-archive-thread)
+	  (let ((parent-buffer notmuch-show-parent-buffer))
+	    (kill-this-buffer)
+	    (if parent-buffer
+		(progn
+		  (switch-to-buffer parent-buffer)
+		  (notmuch-search-show-thread)))))
       (if (< (notmuch-show-find-next-message) (window-end))
 	  (notmuch-show-mark-read-then-next-message)
 	(scroll-up nil)))))
@@ -364,12 +373,17 @@ view, (remove the \"inbox\" tag from each), with
 	mode-name "notmuch-show")
   (setq buffer-read-only t))
 
-(defun notmuch-show (thread-id)
-  "Run \"notmuch show\" with the given thread ID and display results."
+(defun notmuch-show (thread-id &optional parent-buffer)
+  "Run \"notmuch show\" with the given thread ID and display results.
+
+The optional PARENT-BUFFER is the notmuch-search buffer from
+which this notmuch-show command was executed, (so that the next
+thread from that buffer can be show when done with this one)."
   (interactive "sNotmuch show: ")
   (let ((buffer (get-buffer-create (concat "*notmuch-show-" thread-id "*"))))
     (switch-to-buffer buffer)
     (notmuch-show-mode)
+    (set (make-local-variable 'notmuch-show-parent-buffer) parent-buffer)
     (let ((proc (get-buffer-process (current-buffer)))
 	  (inhibit-read-only t))
       (if proc
@@ -480,7 +494,7 @@ global search.
   (interactive)
   (let ((thread-id (notmuch-search-find-thread-id)))
     (forward-line)
-    (notmuch-show thread-id)))
+    (notmuch-show thread-id (current-buffer))))
 
 (defun notmuch-call-notmuch-process (&rest args)
   (let ((error-buffer (get-buffer-create "*Notmuch errors*")))
