@@ -445,8 +445,12 @@ Does nothing if already on the first message in the buffer."
   (notmuch-search-set-tags (delete tag (notmuch-search-get-tags))))
 
 (defun notmuch-search-archive-thread ()
+  "Archive the current thread (remove its \"inbox\" tag).
+
+This function advances point to the next line when finished."
   (interactive)
-  (notmuch-search-remove-tag "inbox"))
+  (notmuch-search-remove-tag "inbox")
+  (next-line))
 
 (defun notmuch-search (query)
   "Run \"notmuch search\" with the given query string and display results."
