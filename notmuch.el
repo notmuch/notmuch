@@ -38,6 +38,7 @@
     (define-key map (kbd "C-p") 'notmuch-show-previous-line)
     (define-key map "q" 'kill-this-buffer)
     (define-key map "s" 'notmuch-show-toggle-signatures-visible)
+    (define-key map "w" 'notmuch-show-view-raw-message)
     (define-key map "x" 'kill-this-buffer)
     (define-key map "+" 'notmuch-show-add-tag)
     (define-key map "-" 'notmuch-show-remove-tag)
@@ -61,7 +62,8 @@
 (set 'notmuch-show-part-end-regexp         "part}")
 (set 'notmuch-show-marker-regexp "\\(message\\|header\\|body\\|attachment\\|part\\)[{}].*$")
 
-(set 'notmuch-show-id-regexp "ID: \\(.*\\)$")
+(set 'notmuch-show-id-regexp "ID: \\([^ ]*\\)")
+(set 'notmuch-show-filename-regexp "Filename: \\(.*\\)$")
 (set 'notmuch-show-tags-regexp "(\\([^)]*\\))$")
 
 ; XXX: This should be a generic function in emacs somewhere, not here
@@ -108,6 +110,14 @@ Unlike builtin `next-line' this version accepts no arguments."
     (if (not (looking-at notmuch-show-message-begin-regexp))
 	(re-search-backward notmuch-show-message-begin-regexp))
     (re-search-forward notmuch-show-id-regexp)
+    (buffer-substring (match-beginning 1) (match-end 1))))
+
+(defun notmuch-show-get-filename ()
+  (save-excursion
+    (beginning-of-line)
+    (if (not (looking-at notmuch-show-message-begin-regexp))
+	(re-search-backward notmuch-show-message-begin-regexp))
+    (re-search-forward notmuch-show-filename-regexp)
     (buffer-substring (match-beginning 1) (match-end 1))))
 
 (defun notmuch-show-set-tags (tags)
@@ -170,6 +180,11 @@ buffer."
 	(progn
 	  (switch-to-buffer parent-buffer)
 	  (notmuch-search-show-thread)))))
+
+(defun notmuch-show-view-raw-message ()
+  "View the raw email of the current message."
+  (interactive)
+  (view-file (notmuch-show-get-filename)))
 
 (defun notmuch-show-move-to-current-message-summary-line ()
   "Move to the beginning of the one-line summary of the current message.
