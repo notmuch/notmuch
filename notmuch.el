@@ -322,6 +322,7 @@ Does nothing if already on the first message in the buffer."
 (defvar notmuch-search-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map "a" 'notmuch-search-archive-thread)
+    (define-key map "b" 'scroll-down)
     (define-key map "f" 'notmuch-search-filter)
     (define-key map "n" 'next-line)
     (define-key map "p" 'previous-line)
@@ -335,6 +336,8 @@ Does nothing if already on the first message in the buffer."
     (define-key map ">" 'notmuch-search-goto-last-thread)
     (define-key map "=" 'notmuch-search-refresh-view)
     (define-key map "\M->" 'notmuch-search-goto-last-thread)
+    (define-key map " " 'scroll-up)
+    (define-key map (kbd "<DEL>") 'scroll-down)
     map)
   "Keymap for \"notmuch search\" buffers.")
 (fset 'notmuch-search-mode-map notmuch-search-mode-map)
@@ -351,6 +354,7 @@ Does nothing if already on the first message in the buffer."
   (interactive)
   (kill-all-local-variables)
   (make-local-variable 'notmuch-search-query-string)
+  (set (make-local-variable 'scroll-preserve-screen-position) t)
   (add-to-invisibility-spec 'notmuch-search)
   (use-local-map notmuch-search-mode-map)
   (setq major-mode 'notmuch-search-mode
