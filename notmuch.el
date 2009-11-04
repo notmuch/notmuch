@@ -39,7 +39,7 @@
     (define-key map "x" 'kill-this-buffer)
     (define-key map "+" 'notmuch-show-add-tag)
     (define-key map "-" 'notmuch-show-remove-tag)
-    (define-key map " " 'notmuch-show-advance-marking-read)
+    (define-key map " " 'notmuch-show-advance-marking-read-and-archiving)
     map)
   "Keymap for \"notmuch show\" buffers.")
 (fset 'notmuch-show-mode-map notmuch-show-mode-map)
@@ -182,8 +182,8 @@ simply move to the beginning of the current message."
       (notmuch-show-remove-tag "unread"))
   (notmuch-show-next-message))
 
-(defun notmuch-show-advance-marking-read ()
-  "Advance through buffer, marking messages as read.
+(defun notmuch-show-advance-marking-read-and-archiving ()
+  "Advance through buffer, marking read and archiving.
 
 This command is intended to be one of the simplest ways to
 process a thread of email. It does the following:
@@ -193,11 +193,20 @@ scroll by a near screenful to read more of the message.
 
 Otherwise, (the end of the current message is already within the
 current window), remove the \"unread\" tag from the current
-message and advance to the next message."
+message and advance to the next message.
+
+Finally, if there is no further message to advance to, and this
+last message is already read, then archive the entire current
+thread, (remove the \"inbox\" tag from each message)."
   (interactive)
-  (if (< (notmuch-show-find-next-message) (window-end))
-      (notmuch-show-mark-read-then-next-message)
-    (scroll-up nil)))
+  (let ((next (notmuch-show-find-next-message))
+	(unread (member "unread" (notmuch-show-get-tags))))
+    (if (and (not unread)
+	     (equal next (point)))
+	(notmuch-show-archive-thread)
+      (if (< (notmuch-show-find-next-message) (window-end))
+	  (notmuch-show-mark-read-then-next-message)
+	(scroll-up nil)))))
 
 (defun notmuch-show-markup-citations-region (beg end)
   (goto-char beg)
