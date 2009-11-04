@@ -59,6 +59,20 @@
 (defvar notmuch-show-id-regexp "ID: \\(.*\\)$")
 (defvar notmuch-show-tags-regexp "(\\([^)]*\\))$")
 
+; XXX: This should be a generic function in emacs somewhere, not here
+(defun point-invisible-p ()
+  "Return whether the character at point is invisible.
+
+Here visibility is determined by `buffer-invisibility-spec' and
+the invisible property of any overlays for point. It doesn't have
+anything to do with whether point is currently being displayed
+within the current window."
+  (let ((prop (get-char-property (point) 'invisible)))
+    (if (eq buffer-invisibility-spec t)
+	prop
+      (or (memq prop buffer-invisibility-spec)
+	  (assq prop buffer-invisibility-spec)))))
+
 (defun notmuch-show-get-message-id ()
   (save-excursion
     (beginning-of-line)
@@ -147,23 +161,36 @@ by searching backward)."
 	(error "Not within a valid message."))
     (forward-line 2)))
 
+(defun notmuch-show-last-message-p ()
+  "Predicate testing whether point is within the last message."
+  (save-window-excursion
+    (save-excursion
+      (notmuch-show-move-to-current-message-summary-line)
+      (not (re-search-forward notmuch-show-message-begin-regexp nil t)))))
+
+(defun notmuch-show-message-unread-p ()
+  "Preficate testing whether current message is unread."
+  (member "unread" (notmuch-show-get-tags)))
+
 (defun notmuch-show-next-message ()
   "Advance to the beginning of the next message in the buffer.
 
-Moves to the end of the buffer if already on the last message in
-the buffer."
+Moves to the last visible character of the current message if
+already on the last message in the buffer."
   (interactive)
   (notmuch-show-move-to-current-message-summary-line)
   (if (re-search-forward notmuch-show-message-begin-regexp nil t)
       (notmuch-show-move-to-current-message-summary-line)
-    (goto-char (point-max)))
+    (goto-char (- (point-max) 1))
+    (while (point-invisible-p)
+      (backward-char)))
   (recenter 0))
 
 (defun notmuch-show-find-next-message ()
   "Returns the position of the next message in the buffer.
 
-Or the end of the buffer if already within the last message in
-the buffer."
+Or the position of the last visible character of the current
+message if already within the last message in the buffer."
   ; save-excursion doesn't save our window position
   ; save-window-excursion doesn't save point
   ; Looks like we have to use both.
@@ -175,24 +202,14 @@ the buffer."
 (defun notmuch-show-next-unread-message ()
   "Advance to the beginning of the next unread message in the buffer.
 
-Moves to the end of the buffer if there are no more unread
-messages past the current point."
-  (while (and (not (eobp))
-	      (not (member "unread" (notmuch-show-get-tags))))
-    (notmuch-show-next-message)))
-
-(defun notmuch-show-find-next-unread-message ()
-  "Returns the position of the next message in the buffer.
-
-Or the end of the buffer if there are no more unread messages
-past the current point."
-  ; save-excursion doesn't save our window position
-  ; save-window-excursion doesn't save point
-  ; Looks like we have to use both.
-  (save-excursion
-    (save-window-excursion
-      (notmuch-show-next-unread-message)
-      (point))))
+Moves to the last visible character of the current message if
+there are no more unread messages past the current point."
+  (notmuch-show-next-message)
+  (while (and (not (notmuch-show-last-message-p))
+	      (not (notmuch-show-message-unread-p)))
+    (notmuch-show-next-message))
+  (if (not (notmuch-show-message-unread-p))
+      (notmuch-show-next-message)))
 
 (defun notmuch-show-previous-message ()
   "Backup to the beginning of the previous message in the buffer.
@@ -227,8 +244,8 @@ If the current message in the thread is not yet fully visible,
 scroll by a near screenful to read more of the message.
 
 Otherwise, (the end of the current message is already within the
-current window), remove the \"unread\" tag from the current
-message and advance to the next message.
+current window), remove the \"unread\" tag (if present) from the
+current message and advance to the next message.
 
 Finally, if there is no further message to advance to, and this
 last message is already read, then archive the entire current
@@ -236,15 +253,15 @@ thread, (remove the \"inbox\" tag from each message). Also kill
 this buffer, and display the next thread from the search from
 which this thread was originally shown."
   (interactive)
-  (let ((next (notmuch-show-find-next-unread-message))
-	(unread (member "unread" (notmuch-show-get-tags))))
-    (if (and (not unread)
-	     (equal next (point)))
-	(notmuch-show-archive-thread)
-      (if (and (> next (window-end))
-	       (< next (point-max)))
-	  (scroll-up nil)
-	(notmuch-show-mark-read-then-next-unread-message)))))
+  (let ((next (notmuch-show-find-next-message))
+	(unread (notmuch-show-message-unread-p)))
+    (if (> next (window-end))
+	(scroll-up nil)
+      (if unread
+	  (notmuch-show-mark-read-then-next-unread-message)
+	(if (notmuch-show-last-message-p)
+	    (notmuch-show-archive-thread)
+	  (notmuch-show-next-unread-message))))))
 
 (defun notmuch-show-markup-citations-region (beg end)
   (goto-char beg)
@@ -277,7 +294,7 @@ which this thread was originally shown."
     (re-search-forward notmuch-show-body-end-regexp)
     (let ((end (match-beginning 0)))
       (notmuch-show-markup-citations-region beg end)
-      (if (not (member "unread" (notmuch-show-get-tags)))
+      (if (not (notmuch-show-message-unread-p))
 	  (overlay-put (make-overlay beg end)
 		       'invisible 'notmuch-show-body-read)))))
 
@@ -422,9 +439,14 @@ thread from that buffer can be show when done with this one)."
 	(call-process "notmuch" nil t nil "show" thread-id)
 	(notmuch-show-markup-messages)
 	)
-      (notmuch-show-next-unread-message)
-      (if (eobp)
-	  (goto-char (point-min)))
+      ; Move straight to the first unread message
+      (if (not (notmuch-show-message-unread-p))
+	  (progn
+	    (notmuch-show-next-unread-message)
+	    ; But if there are no unread messages, go back to the
+	    ; beginning of the buffer.
+	    (if (not (notmuch-show-message-unread-p))
+		(goto-char (point-min)))))
       )))
 
 (defvar notmuch-search-mode-map
