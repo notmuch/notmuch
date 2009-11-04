@@ -1116,8 +1116,9 @@ show_command (void *ctx, unused (int argc), unused (char *argv[]))
     {
 	message = notmuch_messages_get (messages);
 
-	printf ("\fmessage{ ID: %s\n",
-		notmuch_message_get_message_id (message));
+	printf ("\fmessage{ ID: %s Filename: %s\n",
+		notmuch_message_get_message_id (message),
+		notmuch_message_get_filename (message));
 
 	printf ("\fheader{\n");
 
