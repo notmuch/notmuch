@@ -363,6 +363,7 @@ Does nothing if already on the first message in the buffer."
   (interactive)
   (kill-all-local-variables)
   (make-local-variable 'notmuch-search-query-string)
+  (add-to-invisibility-spec 'notmuch-search)
   (use-local-map notmuch-search-mode-map)
   (setq major-mode 'notmuch-search-mode
 	mode-name "notmuch-search")
@@ -391,11 +392,15 @@ Does nothing if already on the first message in the buffer."
 
 (defun notmuch-search-hide-thread-ids ()
   (interactive)
-  (add-to-invisibility-spec 'notmuch-search))
+  (add-to-invisibility-spec 'notmuch-search)
+  (force-window-update)
+  (redisplay t))
 
 (defun notmuch-search-show-thread-ids ()
   (interactive)
-  (remove-from-invisibility-spec 'notmuch-search))
+  (remove-from-invisibility-spec 'notmuch-search)
+  (force-window-update)
+  (redisplay t))
 
 (defun notmuch-search-show-thread ()
   (interactive)
