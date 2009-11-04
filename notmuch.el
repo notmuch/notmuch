@@ -198,10 +198,10 @@ simply move to the beginning of the current message."
   (let ((beg (point)))
     (re-search-forward notmuch-show-body-end-regexp)
     (let ((end (match-beginning 0)))
+      (notmuch-show-markup-citations-region beg end)
       (if (not (member "unread" (notmuch-show-get-tags)))
 	  (overlay-put (make-overlay beg end)
-		       'invisible 'notmuch-show-body-read))
-      (notmuch-show-markup-citations-region beg end))))
+		       'invisible 'notmuch-show-body-read)))))
 
 (defun notmuch-show-markup-header ()
   (re-search-forward notmuch-show-header-begin-regexp)
