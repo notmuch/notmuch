@@ -428,7 +428,7 @@ thread from that buffer can be show when done with this one)."
   "Move point to the last thread in the buffer."
   (interactive "^P")
   (end-of-buffer arg)
-  (beginning-of-line))
+  (forward-line -1))
 
 ;;;###autoload
 (defun notmuch-search-mode ()
@@ -497,7 +497,9 @@ global search.
   (interactive)
   (let ((thread-id (notmuch-search-find-thread-id)))
     (forward-line)
-    (notmuch-show thread-id (current-buffer))))
+    (if (> (length thread-id) 0)
+	(notmuch-show thread-id (current-buffer))
+      (error "End of search results"))))
 
 (defun notmuch-call-notmuch-process (&rest args)
   (let ((error-buffer (get-buffer-create "*Notmuch errors*")))
@@ -569,12 +571,6 @@ This function advances point to the next line when finished."
       (save-excursion
 	(call-process "notmuch" nil t nil "search" query)
 	(notmuch-search-markup-thread-ids)
-        ; A well-behaved program ends its output with a newline, but we
-        ; don't actually want the blank line at the end of the file.
-	(goto-char (point-max))
-	(if (looking-at "^$")
-	    (delete-backward-char 1)
-	  )
 	))))
 
 (defun notmuch-search-refresh-view ()
