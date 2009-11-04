@@ -470,9 +470,12 @@ thread from that buffer can be show when done with this one)."
 	  (progn
 	    (notmuch-show-next-unread-message)
 	    ; But if there are no unread messages, go back to the
-	    ; beginning of the buffer.
+	    ; beginning of the buffer, and open up the bodies of all
+	    ; read message.
 	    (if (not (notmuch-show-message-unread-p))
-		(goto-char (point-min)))))
+		(progn
+		  (goto-char (point-min))
+		  (notmuch-show-toggle-body-read-visible)))))
       )))
 
 (defvar notmuch-search-mode-map
