@@ -150,12 +150,13 @@ by searching backward)."
 (defun notmuch-show-next-message ()
   "Advance to the beginning of the next message in the buffer.
 
-Moves to the beginning of the current message if already on the
-last message in the buffer."
+Moves to the end of the buffer if already on the last message in
+the buffer."
   (interactive)
   (notmuch-show-move-to-current-message-summary-line)
-  (re-search-forward notmuch-show-message-begin-regexp nil t)
-  (notmuch-show-move-to-current-message-summary-line)
+  (if (re-search-forward notmuch-show-message-begin-regexp nil t)
+      (notmuch-show-move-to-current-message-summary-line)
+    (goto-char (point-max)))
   (recenter 0))
 
 (defun notmuch-show-find-next-message ()
@@ -218,9 +219,10 @@ which this thread was originally shown."
     (if (and (not unread)
 	     (equal next (point)))
 	(notmuch-show-archive-thread)
-      (if (< (notmuch-show-find-next-message) (window-end))
-	  (notmuch-show-mark-read-then-next-message)
-	(scroll-up nil)))))
+      (if (and (> next (window-end))
+	       (< next (point-max)))
+	  (scroll-up nil)
+	(notmuch-show-mark-read-then-next-message)))))
 
 (defun notmuch-show-markup-citations-region (beg end)
   (goto-char beg)
