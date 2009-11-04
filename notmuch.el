@@ -18,18 +18,6 @@
 ; along with Notmuch.  If not, see <http://www.gnu.org/licenses/>.
 ;
 ; Authors: Carl Worth <cworth@cworth.org>
-;
-; Much of notmuch.el was written by looking at the implementation of
-; compile.el from the emacs distribution source which has the
-; following copyright and authorsip (and the identical license as
-; above):
-;
-; Copyright (C) 1985, 1986, 1987, 1993, 1994, 1995, 1996, 1997, 1998, 1999,
-;   2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009
-;   Free Software Foundation, Inc.
-
-; Authors: Roland McGrath <roland@gnu.org>,
-;	    Daniel Pfeiffer <occitan@esperanto.org>
 
 (defvar notmuch-show-mode-map
   (let ((map (make-sparse-keymap)))
