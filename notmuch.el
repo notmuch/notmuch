@@ -49,20 +49,20 @@
 (defvar notmuch-show-signature-lines-max 6
   "Maximum length of signature that will be hidden by default.")
 
-(defvar notmuch-show-message-begin-regexp    "message{")
-(defvar notmuch-show-message-end-regexp      "message}")
-(defvar notmuch-show-header-begin-regexp     "header{")
-(defvar notmuch-show-header-end-regexp       "header}")
-(defvar notmuch-show-body-begin-regexp       "body{")
-(defvar notmuch-show-body-end-regexp         "body}")
-(defvar notmuch-show-attachment-begin-regexp "attachment{")
-(defvar notmuch-show-attachment-end-regexp   "attachment}")
-(defvar notmuch-show-part-begin-regexp       "part{")
-(defvar notmuch-show-part-end-regexp         "part}")
-(defvar notmuch-show-marker-regexp "\\(message\\|header\\|body\\|attachment\\|part\\)[{}].*$")
+(set 'notmuch-show-message-begin-regexp    "message{")
+(set 'notmuch-show-message-end-regexp      "message}")
+(set 'notmuch-show-header-begin-regexp     "header{")
+(set 'notmuch-show-header-end-regexp       "header}")
+(set 'notmuch-show-body-begin-regexp       "body{")
+(set 'notmuch-show-body-end-regexp         "body}")
+(set 'notmuch-show-attachment-begin-regexp "attachment{")
+(set 'notmuch-show-attachment-end-regexp   "attachment}")
+(set 'notmuch-show-part-begin-regexp       "part{")
+(set 'notmuch-show-part-end-regexp         "part}")
+(set 'notmuch-show-marker-regexp "\\(message\\|header\\|body\\|attachment\\|part\\)[{}].*$")
 
-(defvar notmuch-show-id-regexp "ID: \\(.*\\)$")
-(defvar notmuch-show-tags-regexp "(\\([^)]*\\))$")
+(set 'notmuch-show-id-regexp "ID: \\(.*\\)$")
+(set 'notmuch-show-tags-regexp "(\\([^)]*\\))$")
 
 ; XXX: This should be a generic function in emacs somewhere, not here
 (defun point-invisible-p ()
