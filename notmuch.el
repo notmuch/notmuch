@@ -175,8 +175,8 @@ the buffer."
 (defun notmuch-show-next-unread-message ()
   "Advance to the beginning of the next unread message in the buffer.
 
-Does nothing if there are no more unread messages past the
-current point."
+Moves to the end of the buffer if there are no more unread
+messages past the current point."
   (while (and (not (eobp))
 	      (not (member "unread" (notmuch-show-get-tags))))
     (notmuch-show-next-message)))
@@ -184,7 +184,7 @@ current point."
 (defun notmuch-show-find-next-unread-message ()
   "Returns the position of the next message in the buffer.
 
-Returns the current point if there are no more unread messages
+Or the end of the buffer if there are no more unread messages
 past the current point."
   ; save-excursion doesn't save our window position
   ; save-window-excursion doesn't save point
@@ -423,6 +423,8 @@ thread from that buffer can be show when done with this one)."
 	(notmuch-show-markup-messages)
 	)
       (notmuch-show-next-unread-message)
+      (if (eobp)
+	  (goto-char (point-min)))
       )))
 
 (defvar notmuch-search-mode-map
