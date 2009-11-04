@@ -478,7 +478,7 @@ thread from that buffer can be show when done with this one)."
 (defvar notmuch-search-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map "a" 'notmuch-search-archive-thread)
-    (define-key map "b" 'scroll-down)
+    (define-key map "b" 'notmuch-search-scroll-down)
     (define-key map "f" 'notmuch-search-filter)
     (define-key map "n" 'next-line)
     (define-key map "p" 'previous-line)
@@ -493,11 +493,33 @@ thread from that buffer can be show when done with this one)."
     (define-key map ">" 'notmuch-search-goto-last-thread)
     (define-key map "=" 'notmuch-search-refresh-view)
     (define-key map "\M->" 'notmuch-search-goto-last-thread)
-    (define-key map " " 'scroll-up)
-    (define-key map (kbd "<DEL>") 'scroll-down)
+    (define-key map " " 'notmuch-search-scroll-up)
+    (define-key map (kbd "<DEL>") 'notmuch-search-scroll-down)
     map)
   "Keymap for \"notmuch search\" buffers.")
 (fset 'notmuch-search-mode-map notmuch-search-mode-map)
+
+(defun notmuch-search-scroll-up ()
+  "Scroll up, moving point to last message in thread if at end."
+  (interactive)
+  (condition-case nil
+      (scroll-up nil)
+    ((end-of-buffer) (notmuch-search-goto-last-thread))))
+
+(defun notmuch-search-scroll-down ()
+  "Scroll down, moving point to first message in thread if at beginning."
+  (interactive)
+  ; I don't know why scroll-down doesn't signal beginning-of-buffer
+  ; the way that scroll-up signals end-of-buffer, but c'est la vie.
+  ;
+  ; So instead of trapping a signal we instead check whether the
+  ; window begins on the first line of the buffer and if so, move
+  ; directly to that position. (We have to count lines since the
+  ; window-start position is not the same as point-min due to the
+  ; invisible thread-ID characters on the first line.
+  (if (equal (count-lines (point-min) (window-start)) 1)
+      (goto-char (window-start))
+    (scroll-down nil)))
 
 (defun notmuch-search-goto-last-thread (&optional arg)
   "Move point to the last thread in the buffer."
