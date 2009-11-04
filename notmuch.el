@@ -283,7 +283,30 @@ Does nothing if already on the first message in the buffer."
 
 ;;;###autoload
 (defun notmuch-show-mode ()
-  "Major mode for handling the output of \"notmuch show\""
+  "Major mode for viewing a thread with notmuch.
+
+This buffer contains the results of the \"notmuch show\" command
+for displaying a single thread of email from your email archives.
+
+By default, various components of email messages, (citations,
+signatures, already-read messages), are invisible to help you
+focus on the most important things, (new text from unread
+messages). See the various commands below for toggling the
+visibility of hidden components.
+
+The `notmuch-show-next-message' and
+`notmuch-show-previous-message' commands, (bound to 'n' and 'p by
+default), allow you to navigate to the next and previous
+messages. Each time you navigate away from a message with
+`notmuch-show-next-message' the current message will have its
+\"unread\" tag removed.
+
+You can add or remove tags from the current message with '+' and
+'-'.  You can also archive all messages in the current
+view, (remove the \"inbox\" tag from each), with
+`notmuch-show-archive-thread' (bound to 'a' by default).
+
+\\{notmuch-show-mode-map}"
   (interactive)
   (kill-all-local-variables)
   (set (make-local-variable 'notmuch-show-headers-visible) t)
@@ -351,7 +374,24 @@ Does nothing if already on the first message in the buffer."
 
 ;;;###autoload
 (defun notmuch-search-mode ()
-  "Major mode for handling the output of \"notmuch search\""
+  "Major mode for searching mail with notmuch.
+
+This buffer contains the results of a \"notmuch search\" of your
+email archives. Each line in the buffer represents a single
+thread giving a relative date for the thread and a subject.
+
+Pressing RET on any line displays that thread. The '+' and '-'
+keys can be used to add or remove tags from a thread. The 'a' key
+is a convenience key for archiving a thread (removing the
+\"inbox\" tag).
+
+Other useful commands are `notmuch-search-filter' for filtering
+the current search based on an additional query string,
+`notmuch-search-filter-by-tag' for filtering to include only
+messages with a given tag, and `notmuch-search' to execute a new,
+global search.
+
+\\{notmuch-search-mode-map}"
   (interactive)
   (kill-all-local-variables)
   (make-local-variable 'notmuch-search-query-string)
