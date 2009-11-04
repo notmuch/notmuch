@@ -394,7 +394,7 @@ view, (remove the \"inbox\" tag from each), with
     (define-key map "s" 'notmuch-search)
     (define-key map "t" 'notmuch-search-filter-by-tag)
     (define-key map "x" 'kill-this-buffer)
-    (define-key map "\r" 'notmuch-search-show-thread)
+    (define-key map (kbd "RET") 'notmuch-search-show-thread)
     (define-key map "+" 'notmuch-search-add-tag)
     (define-key map "-" 'notmuch-search-remove-tag)
     (define-key map "<" 'beginning-of-buffer)
@@ -478,7 +478,9 @@ global search.
 
 (defun notmuch-search-show-thread ()
   (interactive)
-  (notmuch-show (notmuch-search-find-thread-id)))
+  (let ((thread-id (notmuch-search-find-thread-id)))
+    (forward-line)
+    (notmuch-show thread-id)))
 
 (defun notmuch-call-notmuch-process (&rest args)
   (let ((error-buffer (get-buffer-create "*Notmuch errors*")))
@@ -531,7 +533,7 @@ global search.
 This function advances point to the next line when finished."
   (interactive)
   (notmuch-search-remove-tag "inbox")
-  (next-line))
+  (forward-line))
 
 (defun notmuch-search (query)
   "Run \"notmuch search\" with the given query string and display results."
