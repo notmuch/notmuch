@@ -39,6 +39,7 @@
     (define-key map "x" 'kill-this-buffer)
     (define-key map "+" 'notmuch-show-add-tag)
     (define-key map "-" 'notmuch-show-remove-tag)
+    (define-key map " " 'notmuch-show-advance-marking-read)
     map)
   "Keymap for \"notmuch show\" buffers.")
 (fset 'notmuch-show-mode-map notmuch-show-mode-map)
@@ -144,6 +145,19 @@ last message in the buffer."
   (notmuch-show-move-to-current-message-summary-line)
   (recenter 0))
 
+(defun notmuch-show-find-next-message ()
+  "Returns the position of the next message in the buffer.
+
+Or the beginning of the current message if already within the last
+message in the buffer."
+  ; save-excursion doesn't save our window position
+  ; save-window-excursion doesn't save point
+  ; Looks like we have to use both.
+  (save-excursion
+    (save-window-excursion
+      (notmuch-show-next-message)
+      (point))))
+
 (defun notmuch-show-previous-message ()
   "Backup to the beginning of the previous message in the buffer.
 
@@ -162,11 +176,28 @@ simply move to the beginning of the current message."
     (recenter 0)))
 
 (defun notmuch-show-mark-read-then-next-message ()
-  "Remove uread tag from current message, then advance to next message."
+  "Remove unread tag from current message, then advance to next message."
   (interactive)
   (if (member "unread" (notmuch-show-get-tags))
       (notmuch-show-remove-tag "unread"))
   (notmuch-show-next-message))
+
+(defun notmuch-show-advance-marking-read ()
+  "Advance through buffer, marking messages as read.
+
+This command is intended to be one of the simplest ways to
+process a thread of email. It does the following:
+
+If the current message in the thread is not yet fully visible,
+scroll by a near screenful to read more of the message.
+
+Otherwise, (the end of the current message is already within the
+current window), remove the \"unread\" tag from the current
+message and advance to the next message."
+  (interactive)
+  (if (< (notmuch-show-find-next-message) (window-end))
+      (notmuch-show-mark-read-then-next-message)
+    (scroll-up nil)))
 
 (defun notmuch-show-markup-citations-region (beg end)
   (goto-char beg)
