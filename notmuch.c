@@ -1006,6 +1006,8 @@ show_message_part (GMimeObject *part, int *part_count)
 	wrapper = g_mime_part_get_content_object (GMIME_PART (part));
 	if (wrapper)
 	    g_mime_data_wrapper_write_to_stream (wrapper, stream);
+
+	g_object_unref (stream);
     }
     else
     {
@@ -1014,8 +1016,6 @@ show_message_part (GMimeObject *part, int *part_count)
     }
 
     printf ("\fpart}\n");
-
-    g_object_unref (stream);
 }
 
 static notmuch_status_t
