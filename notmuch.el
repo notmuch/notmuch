@@ -34,6 +34,8 @@
     (define-key map "h" 'notmuch-show-toggle-headers-visible)
     (define-key map "n" 'notmuch-show-next-message)
     (define-key map "p" 'notmuch-show-previous-message)
+    (define-key map (kbd "C-n") 'notmuch-show-next-line)
+    (define-key map (kbd "C-p") 'notmuch-show-previous-line)
     (define-key map "q" 'kill-this-buffer)
     (define-key map "s" 'notmuch-show-toggle-signatures-visible)
     (define-key map "x" 'kill-this-buffer)
@@ -72,6 +74,30 @@ within the current window."
 	prop
       (or (memq prop buffer-invisibility-spec)
 	  (assq prop buffer-invisibility-spec)))))
+
+(defun notmuch-show-next-line ()
+  "Like builtin `next-line' but ensuring we end on a visible character.
+
+By advancing forward until reaching a visible character.
+
+Unlike builtin `next-line' this version accepts no arguments."
+  (interactive)
+  (set 'this-command 'next-line)
+  (call-interactively 'next-line)
+  (while (point-invisible-p)
+    (forward-char)))
+
+(defun notmuch-show-previous-line ()
+  "Like builtin `previous-line' but ensuring we end on a visible character.
+
+By advancing forward until reaching a visible character.
+
+Unlike builtin `next-line' this version accepts no arguments."
+  (interactive)
+  (set 'this-command 'previous-line)
+  (call-interactively 'previous-line)
+  (while (point-invisible-p)
+    (forward-char)))
 
 (defun notmuch-show-get-message-id ()
   (save-excursion
