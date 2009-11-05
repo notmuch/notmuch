@@ -42,6 +42,7 @@
     (define-key map "x" 'kill-this-buffer)
     (define-key map "+" 'notmuch-show-add-tag)
     (define-key map "-" 'notmuch-show-remove-tag)
+    (define-key map (kbd "DEL") 'notmuch-show-rewind)
     (define-key map " " 'notmuch-show-advance-marking-read-and-archiving)
     map)
   "Keymap for \"notmuch show\" buffers.")
@@ -272,11 +273,47 @@ simply move to the beginning of the current message."
 	  ))
     (recenter 0)))
 
+(defun notmuch-show-find-previous-message ()
+  "Returns the position of the previous message in the buffer.
+
+Or the position of the beginning of the current message if point
+is originally within the message rather than at the beginning of
+it."
+  ; save-excursion doesn't save our window position
+  ; save-window-excursion doesn't save point
+  ; Looks like we have to use both.
+  (save-excursion
+    (save-window-excursion
+      (notmuch-show-previous-message)
+      (point))))
+
 (defun notmuch-show-mark-read-then-next-unread-message ()
   "Remove unread tag from current message, then advance to next unread message."
   (interactive)
   (notmuch-show-remove-tag "unread")
   (notmuch-show-next-unread-message))
+
+(defun notmuch-show-rewind ()
+  "Do reverse scrolling compared to `notmuch-show-advance-marking-read-and-archiving'
+
+Specifically, if the beginning of the previous email is fewer
+than `window-height' lines from the current point, move to it
+just like `notmuch-show-previous-message'.
+
+Otherwise, just scroll down a screenful of the current message.
+
+This command does not modify any message tags, (it does not undo
+any effects from previous calls to
+`notmuch-show-advance-marking-read-and-archiving'."
+  (interactive)
+  (let ((previous (notmuch-show-find-previous-message)))
+    (if (> (count-lines previous (point)) (- (window-height) next-screen-context-lines))
+	(progn
+	  (condition-case nil
+	      (scroll-down nil)
+	    ((beginning-of-buffer) nil))
+	  (goto-char (window-start)))
+      (notmuch-show-previous-message))))
 
 (defun notmuch-show-advance-marking-read-and-archiving ()
   "Advance through buffer, marking read and archiving.
