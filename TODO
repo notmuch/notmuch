@@ -1,5 +1,9 @@
 Emacs interface (notmuch.el)
 ----------------------------
+Make hidden components self documenting, such as:
+
+	[24-line citation, press 'c' to display.]
+
 Add support to compose a reply to the current messaage.
 
 notmuch command-line tool

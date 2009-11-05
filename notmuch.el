@@ -33,6 +33,7 @@
     (define-key map "c" 'notmuch-show-toggle-citations-visible)
     (define-key map "h" 'notmuch-show-toggle-headers-visible)
     (define-key map "n" 'notmuch-show-next-message)
+    (define-key map "N" 'notmuch-show-mark-read-then-next-open-message)
     (define-key map "p" 'notmuch-show-previous-message)
     (define-key map (kbd "C-n") 'notmuch-show-next-line)
     (define-key map (kbd "C-p") 'notmuch-show-previous-line)
