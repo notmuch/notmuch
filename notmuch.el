@@ -256,6 +256,16 @@ there are no more unread messages past the current point."
   (if (not (notmuch-show-message-unread-p))
       (notmuch-show-next-message)))
 
+(defun notmuch-show-next-open-message ()
+  "Advance to the the next message which is not hidden.
+
+If read messages are currently hidden, advance to the next unread
+message. Otherwise, advance to the next message."
+  (if (or (memq 'notmuch-show-body-read buffer-invisibility-spec)
+	  (assq 'notmuch-show-body-read buffer-invisibility-spec))
+      (notmuch-show-next-unread-message)
+    (notmuch-show-next-message)))
+
 (defun notmuch-show-previous-message ()
   "Backup to the beginning of the previous message in the buffer.
 
@@ -287,11 +297,11 @@ it."
       (notmuch-show-previous-message)
       (point))))
 
-(defun notmuch-show-mark-read-then-next-unread-message ()
+(defun notmuch-show-mark-read-then-next-open-message ()
   "Remove unread tag from current message, then advance to next unread message."
   (interactive)
   (notmuch-show-remove-tag "unread")
-  (notmuch-show-next-unread-message))
+  (notmuch-show-next-open-message))
 
 (defun notmuch-show-rewind ()
   "Do reverse scrolling compared to `notmuch-show-advance-marking-read-and-archiving'
@@ -326,7 +336,7 @@ scroll by a near screenful to read more of the message.
 
 Otherwise, (the end of the current message is already within the
 current window), remove the \"unread\" tag (if present) from the
-current message and advance to the next message.
+current message and advance to the next open message.
 
 Finally, if there is no further message to advance to, and this
 last message is already read, then archive the entire current
@@ -339,10 +349,10 @@ which this thread was originally shown."
     (if (> next (window-end))
 	(scroll-up nil)
       (if unread
-	  (notmuch-show-mark-read-then-next-unread-message)
+	  (notmuch-show-mark-read-then-next-open-message)
 	(if (notmuch-show-last-message-p)
 	    (notmuch-show-archive-thread)
-	  (notmuch-show-next-unread-message))))))
+	  (notmuch-show-next-open-message))))))
 
 (defun notmuch-show-markup-citations-region (beg end)
   (goto-char beg)
