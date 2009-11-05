@@ -358,11 +358,10 @@ which this thread was originally shown."
 	(unread (notmuch-show-message-unread-p)))
     (if (> next (window-end))
 	(scroll-up nil)
-      (if unread
-	  (notmuch-show-mark-read-then-next-open-message)
-	(if (notmuch-show-last-message-p)
-	    (notmuch-show-archive-thread)
-	  (notmuch-show-next-open-message))))))
+      (let ((last (notmuch-show-last-message-p)))
+	(notmuch-show-mark-read-then-next-open-message)
+	(if last
+	    (notmuch-show-archive-thread))))))
 
 (defun notmuch-show-markup-citations-region (beg end)
   (goto-char beg)
