@@ -19,6 +19,8 @@
 ;
 ; Authors: Carl Worth <cworth@cworth.org>
 
+(load "cl-seq")
+
 (defvar notmuch-show-mode-map
   (let ((map (make-sparse-keymap)))
     ; I don't actually want all of these toggle commands occupying
@@ -29,6 +31,7 @@
     ; toggling visibility of these components. Probably using
     ; overlays-at to query and manipulate the current overlay.
     (define-key map "a" 'notmuch-show-archive-thread)
+    (define-key map "A" 'notmuch-show-mark-read-then-archive-thread)
     (define-key map "b" 'notmuch-show-toggle-body-read-visible)
     (define-key map "c" 'notmuch-show-toggle-citations-visible)
     (define-key map "h" 'notmuch-show-toggle-headers-visible)
@@ -144,18 +147,59 @@ Unlike builtin `next-line' this version accepts no arguments."
     (re-search-forward notmuch-show-tags-regexp)
     (split-string (buffer-substring (match-beginning 1) (match-end 1)))))
 
-(defun notmuch-show-add-tag (tag)
+(defun notmuch-show-add-tag (&rest toadd)
+  "Add a tag to the current message."
   (interactive "sTag to add: ")
-  (notmuch-call-notmuch-process "tag" (concat "+" tag) (concat "id:" (notmuch-show-get-message-id)))
-  (notmuch-show-set-tags (delete-dups (sort (cons tag (notmuch-show-get-tags)) 'string<))))
+  (apply 'notmuch-call-notmuch-process
+	 (append (cons "tag"
+		       (mapcar (lambda (s) (concat "+" s)) toadd))
+		 (cons (concat "id:" (notmuch-show-get-message-id)) nil)))
+  (notmuch-show-set-tags (sort (union toadd (notmuch-show-get-tags) :test 'string=) 'string<)))
 
-(defun notmuch-show-remove-tag (tag)
+(defun notmuch-show-remove-tag (&rest toremove)
+  "Remove a tag from the current message."
   (interactive "sTag to remove: ")
   (let ((tags (notmuch-show-get-tags)))
-    (if (member tag tags)
+    (if (intersection tags toremove :test 'string=)
 	(progn
-	  (notmuch-call-notmuch-process "tag" (concat "-" tag) (concat "id:" (notmuch-show-get-message-id)))
-	  (notmuch-show-set-tags (delete tag tags))))))
+	  (apply 'notmuch-call-notmuch-process
+		 (append (cons "tag"
+			       (mapcar (lambda (s) (concat "-" s)) toremove))
+			 (cons (concat "id:" (notmuch-show-get-message-id)) nil)))
+	  (notmuch-show-set-tags (sort (set-difference tags toremove :test 'string=) 'string<))))))
+
+(defun notmuch-show-archive-thread-maybe-mark-read (markread)
+  (save-excursion
+    (goto-char (point-min))
+    (while (not (eobp))
+      (if markread
+	  (notmuch-show-remove-tag "unread" "inbox")
+	(notmuch-show-remove-tag "inbox"))
+      (if (not (eobp))
+	  (forward-char))
+      (if (not (re-search-forward notmuch-show-message-begin-regexp nil t))
+	  (goto-char (point-max)))))
+  (let ((parent-buffer notmuch-show-parent-buffer))
+    (kill-this-buffer)
+    (if parent-buffer
+	(progn
+	  (switch-to-buffer parent-buffer)
+	  (notmuch-search-show-thread)))))
+
+(defun notmuch-show-mark-read-then-archive-thread ()
+  "Remove \"unread\" tag from each message, then archive and show next thread.
+
+Archive each message currrently shown by removing the \"unread\"
+and \"inbox\" tag from each. Then kill this buffer and show the
+next thread from the search from which this thread was originally
+shown.
+
+Note: This command is safe from any race condition of new messages
+being delivered to the same thread. It does not archive the
+entire thread, but only the messages shown in the current
+buffer."
+  (interactive)
+  (notmuch-show-archive-thread-maybe-mark-read t))
 
 (defun notmuch-show-archive-thread ()
   "Archive each message in thread, and show next thread from search.
@@ -169,20 +213,7 @@ being delivered to the same thread. It does not archive the
 entire thread, but only the messages shown in the current
 buffer."
   (interactive)
-  (save-excursion
-    (goto-char (point-min))
-    (while (not (eobp))
-      (notmuch-show-remove-tag "inbox")
-      (if (not (eobp))
-	  (forward-char))
-      (if (not (re-search-forward notmuch-show-message-begin-regexp nil t))
-	  (goto-char (point-max)))))
-  (let ((parent-buffer notmuch-show-parent-buffer))
-    (kill-this-buffer)
-    (if parent-buffer
-	(progn
-	  (switch-to-buffer parent-buffer)
-	  (notmuch-search-show-thread)))))
+  (notmuch-show-archive-thread-maybe-mark-read nil))
 
 (defun notmuch-show-view-raw-message ()
   "View the raw email of the current message."
@@ -681,6 +712,10 @@ global search.
       (error "End of search results"))))
 
 (defun notmuch-call-notmuch-process (&rest args)
+  "Synchronously invoke \"notmuch\" with the given list of arguments.
+
+Output from the process will be presented to the user as an error
+and will also appear in a buffer named \"*Notmuch errors*\"."
   (let ((error-buffer (get-buffer-create "*Notmuch errors*")))
     (with-current-buffer error-buffer
 	(erase-buffer))
