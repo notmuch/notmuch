@@ -674,15 +674,16 @@ global search.
   (save-excursion
     (beginning-of-line)
     (let ((beg (point)))
-      (re-search-forward "thread:[a-fA-F0-9]*")
+      (re-search-forward "thread:[a-fA-F0-9]*" nil t)
       (filter-buffer-substring beg (point)))))
 
 (defun notmuch-search-markup-this-thread-id ()
   (beginning-of-line)
   (let ((beg (point)))
-    (re-search-forward "thread:[a-fA-F0-9]*")
-    (forward-char)
-    (overlay-put (make-overlay beg (point)) 'invisible 'notmuch-search)))
+    (if (re-search-forward "thread:[a-fA-F0-9]*" nil t)
+	(progn
+	  (forward-char)
+	  (overlay-put (make-overlay beg (point)) 'invisible 'notmuch-search)))))
 
 (defun notmuch-search-markup-thread-ids ()
   (save-excursion
