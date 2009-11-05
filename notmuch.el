@@ -408,7 +408,7 @@ which this thread was originally shown."
 	      (overlay-put overlay 'invisible 'notmuch-show-citation)
 	      (overlay-put overlay 'before-string
 			   (concat "[" (number-to-string (count-lines beg-sub (point)))
-				   " quoted lines.]\n")))))
+				   "-line citation. Press 'c' to show.]\n")))))
       (if (looking-at "--[ ]?$")
 	  (let ((sig-lines (count-lines beg-sub end)))
 	    (if (<= sig-lines notmuch-show-signature-lines-max)
@@ -416,7 +416,7 @@ which this thread was originally shown."
 		  (overlay-put (make-overlay beg-sub (+ beg-sub 1))
 			       'before-string
 			       (concat "[" (number-to-string sig-lines)
-				       "-line signature.]"))
+				       "-line signature. Press 's' to show.]"))
 		  (overlay-put (make-overlay (+ beg-sub 2) end)
 			       'invisible 'notmuch-show-signature)
 		  (goto-char end)))))
