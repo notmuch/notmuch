@@ -44,6 +44,7 @@
     (define-key map "-" 'notmuch-show-remove-tag)
     (define-key map (kbd "DEL") 'notmuch-show-rewind)
     (define-key map " " 'notmuch-show-advance-marking-read-and-archiving)
+    (define-key map "|" 'notmuch-show-pipe-message)
     map)
   "Keymap for \"notmuch show\" buffers.")
 (fset 'notmuch-show-mode-map notmuch-show-mode-map)
@@ -186,6 +187,15 @@ buffer."
   "View the raw email of the current message."
   (interactive)
   (view-file (notmuch-show-get-filename)))
+
+(defun notmuch-show-pipe-message (command)
+  "Pipe the contents of the current message to the given command.
+
+The given command will be executed with the raw contents of the
+current email message as stdin. Anything printed by the command
+to stdout or stderr will appear in the *Messages* buffer."
+  (interactive "sPipe message to command: ")
+  (apply 'start-process-shell-command "notmuch-pipe-command" "*notmuch-pipe*" (split-string (concat command " < " (notmuch-show-get-filename)))))
 
 (defun notmuch-show-move-to-current-message-summary-line ()
   "Move to the beginning of the one-line summary of the current message.
