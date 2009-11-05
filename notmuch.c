@@ -913,7 +913,6 @@ _get_one_line_summary (void *ctx, notmuch_message_t *message)
     const char *from;
     time_t date;
     const char *relative_date;
-    const char *subject;
     const char *tags;
 
     from = notmuch_message_get_header (message, "from");
@@ -921,12 +920,10 @@ _get_one_line_summary (void *ctx, notmuch_message_t *message)
     date = notmuch_message_get_date (message);
     relative_date = _format_relative_date (ctx, date);
 
-    subject = notmuch_message_get_header (message, "subject");
-
     tags = _get_tags_as_string (ctx, message);
 
-    return talloc_asprintf (ctx, "%s (%s) %s (%s)",
-			    from, relative_date, subject, tags);
+    return talloc_asprintf (ctx, "%s (%s) (%s)",
+			    from, relative_date, tags);
 }
 
 static void
@@ -1117,6 +1114,8 @@ show_command (void *ctx, unused (int argc), unused (char *argv[]))
 	printf ("\fheader{\n");
 
 	printf ("%s\n", _get_one_line_summary (local, message));
+
+	printf ("%s\n", notmuch_message_get_header (message, "subject"));
 
 	for (i = 0; i < ARRAY_SIZE (headers); i++) {
 	    name = headers[i];

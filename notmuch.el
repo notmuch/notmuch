@@ -436,9 +436,15 @@ which this thread was originally shown."
 
 (defun notmuch-show-markup-header ()
   (re-search-forward notmuch-show-header-begin-regexp)
-  (next-line 2)
+  (forward-line 1)
   (beginning-of-line)
   (let ((beg (point)))
+    (end-of-line)
+    ; Inverse video for subject
+    (overlay-put (make-overlay beg (point)) 'face '((cons :inverse-video t)))
+    (beginning-of-line)
+    (forward-line 2)
+    (set 'beg (point))
     (re-search-forward notmuch-show-header-end-regexp)
     (overlay-put (make-overlay beg (match-beginning 0))
 		 'invisible 'notmuch-show-header)))
