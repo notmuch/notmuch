@@ -850,7 +850,7 @@ search_command (void *ctx, int argc, char *argv[])
 	date = notmuch_thread_get_oldest_date (thread);
 	relative_date = _format_relative_date (local, date);
 
-	printf ("%s %12s %s",
+	printf ("thread:%s %12s %s",
 		notmuch_thread_get_thread_id (thread),
 		relative_date,
 		notmuch_thread_get_subject (thread));
@@ -1084,19 +1084,13 @@ show_command (void *ctx, unused (int argc), unused (char *argv[]))
     const char *name, *value;
     unsigned int i;
 
-    if (argc != 1) {
-	fprintf (stderr, "Error: \"notmuch show\" requires exactly one thread-ID argument.\n");
-	ret = 1;
-	goto DONE;
-    }
-
     notmuch = notmuch_database_open (NULL);
     if (notmuch == NULL) {
 	ret = 1;
 	goto DONE;
     }
 
-    query_string = talloc_asprintf (local, "thread:%s", argv[0]);
+    query_string = query_string_from_args (local, argc, argv);
     if (query_string == NULL) {
 	fprintf (stderr, "Out of memory\n");
 	ret = 1;
@@ -1116,7 +1110,7 @@ show_command (void *ctx, unused (int argc), unused (char *argv[]))
     {
 	message = notmuch_messages_get (messages);
 
-	printf ("\fmessage{ ID: %s Filename: %s\n",
+	printf ("\fmessage{ id:%s filename:%s\n",
 		notmuch_message_get_message_id (message),
 		notmuch_message_get_filename (message));
 
@@ -1496,11 +1490,22 @@ command_t commands[] = {
       "\t\tinterpretation by the shell, (such as by putting quotation\n"
       "\t\tmarks around any parenthesized expression)." },
     { "show", show_command,
-      "<thread-id>\n\n"
-      "\t\tShow the thread with the given thread ID (see 'search').",
-      "\t\tThread ID values are given as the first column in the\n"
-      "\t\toutput of the \"notmuch search\" command. These are the\n"
-      "\t\trandom-looking strings of 32 characters." },
+      "<search-terms> [...]\n\n"
+      "\t\tShows all messages matching the search terms.",
+      "\t\tSee the documentation of \"notmuch search\" for details\n"
+      "\t\tof the supported syntax of search terms.\n\n"
+      "\t\tA common use of \"notmuch show\" is to display a single\n"
+      "\t\tthread of email messages. For this, use a search term of\n"
+      "\t\t\"thread:<thread-id>\" as can be seen in the first column\n"
+      "\t\tof output from the \"notmuch search\" command.\n\n"
+      "\t\tAll messages will be displayed in date order. The output\n"
+      "\t\tformat is plain-text, with all text-content MIME parts\n"
+      "\t\tdecoded. Various components in the output, ('message',\n"
+      "\t\t'header', 'body', 'attachment', and MIME 'part') will be\n"
+      "\t\tdelimited by easily-parsed markers. Each marker consists\n"
+      "\t\tof a Control-L character (ASCII decimal 12), the name of\n"
+      "\t\tthe marker, and then either an opening or closing brace,\n"
+      "\t\t'{' or '}' to either open or close the component."},
     { "tag", tag_command,
       "+<tag>|-<tag> [...] [--] <search-term> [...]\n\n"
       "\t\tAdd/remove tags for all messages matching the search terms.",

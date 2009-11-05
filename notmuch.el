@@ -65,8 +65,8 @@
 (set 'notmuch-show-part-end-regexp         "part}")
 (set 'notmuch-show-marker-regexp "\\(message\\|header\\|body\\|attachment\\|part\\)[{}].*$")
 
-(set 'notmuch-show-id-regexp "ID: \\([^ ]*\\)")
-(set 'notmuch-show-filename-regexp "Filename: \\(.*\\)$")
+(set 'notmuch-show-id-regexp "id:\\([^ ]*\\)")
+(set 'notmuch-show-filename-regexp "filename:\\(.*\\)$")
 (set 'notmuch-show-tags-regexp "(\\([^)]*\\))$")
 
 ; XXX: This should be a generic function in emacs somewhere, not here
@@ -643,13 +643,13 @@ global search.
   (save-excursion
     (beginning-of-line)
     (let ((beg (point)))
-      (re-search-forward "[a-fA-F0-9]*")
+      (re-search-forward "thread:[a-fA-F0-9]*")
       (filter-buffer-substring beg (point)))))
 
 (defun notmuch-search-markup-this-thread-id ()
   (beginning-of-line)
   (let ((beg (point)))
-    (re-search-forward "[a-fA-F0-9]*")
+    (re-search-forward "thread:[a-fA-F0-9]*")
     (forward-char)
     (overlay-put (make-overlay beg (point)) 'invisible 'notmuch-search)))
 
