@@ -112,12 +112,32 @@ The output consists of one line per thread, giving a thread ID, the
 date of the oldest matched message in the thread, and the subject from
 that message.
 
-Currently, the supported search terms are as follows, (where
-<brackets> indicate user-supplied values):
+Currently, in addition to free text (and quoted phrases) which match
+terms appearing anywhere within an email, the following prefixes can
+be used to search specific portions of an email, (where <brackets>
+indicate user-supplied values):
+
+	from:<name-or-address>
+
+	to:<name-or-address>
+
+	subject:<word-or-quoted-phrase>
 
 	tag:<tag>
+
 	id:<message-id>
+
 	thread:<thread-id>
+
+The from: prefix is used to match the name or address of the sender of
+an email message.
+
+The to: prefix is used to match the names or addresses of any
+recipient of an email message, (whether To, Cc, or Bcc).
+
+Any term prefixed with subject: will match only text from
+the subject of an email. Quoted phrases are supported when
+searching with: subject:\"this is a phrase\".
 
 Valid tag values include
 .BR inbox " and " unread
@@ -147,15 +167,30 @@ operators, but will have to be protected from interpretation by the
 shell, (such as by putting quotation marks around any parenthesized
 expression).
 .TP
-.BR show " <thread-ID>"
+.BR show " <search-term>..."
 
-Show the thread with the given thread ID.
+Shows all messages matching the search terms.
 
-Displays each message in the thread on stdout.
+See the documentation of
+.B search
+for details of the supported syntax of search terms.
 
-Thread ID values are given as the first column in the output of the
-"notmuch search" command. These are the random-looking strings of 32
-characters.
+A common use of
+.B notmuch show
+is to display a single thread of email messages. For this, use a
+search term of "thread:<thread-id>" as can be seen in the first
+column of output from the
+.B notmuch search
+command.
+
+All messages will be displayed in date order. The output format is
+plain-text, with all text-content MIME parts decoded. Various
+components in the output,
+.RB ( message ", " header ", " body ", " attachment ", and MIME " part ),
+will be delimited by easily-parsed markers. Each marker consists of a
+Control-L character (ASCII decimal 12), the name of the marker, and
+then either an opening or closing brace, ('{' or '}'), to either open
+or close the component.
 .RE
 
 The
