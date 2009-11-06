@@ -105,6 +105,7 @@ typedef struct {
 prefix_t BOOLEAN_PREFIX_INTERNAL[] = {
     { "type", "T" },
     { "ref", "XREFERENCE" },
+    { "replyto", "XREPLYTO" },
     { "timestamp", "XTIMESTAMP" },
     { "contact", "XCONTACT" }
 };
@@ -732,6 +733,8 @@ _notmuch_database_link_message_to_parents (notmuch_database_t *notmuch,
 
     in_reply_to = notmuch_message_file_get_header (message_file, "in-reply-to");
     parse_references (message, parents, in_reply_to);
+    _notmuch_message_add_term (message, "replyto",
+			       parse_message_id (message, in_reply_to, NULL));
 
     keys = g_hash_table_get_keys (parents);
     for (l = keys; l; l = l->next) {
