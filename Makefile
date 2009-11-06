@@ -45,7 +45,7 @@ Makefile.dep: *.c *.cc
 notmuch.1.gz:
 	gzip --stdout notmuch.1 > notmuch.1.gz
 
-install: notmuch.1.gz
+install: all notmuch.1.gz
 	install -C -D notmuch $(DESTDIR)/usr/bin/notmuch
 	install -C -D notmuch.1.gz $(DESTDIR)/usr/share/man/man1
 	install -C -D notmuch-completion.bash \
