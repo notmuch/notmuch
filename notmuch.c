@@ -1076,7 +1076,7 @@ show_command (void *ctx, unused (int argc), unused (char *argv[]))
     int ret = 0;
 
     const char *headers[] = {
-	"Subject", "From", "To", "Cc", "Bcc", "Date"
+	"From", "To", "Cc", "Bcc", "Date"
     };
     const char *name, *value;
     unsigned int i;
