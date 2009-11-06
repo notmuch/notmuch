@@ -409,7 +409,12 @@ _notmuch_message_set_date (notmuch_message_t *message,
 {
     time_t time_value;
 
-    time_value = g_mime_utils_header_decode_date (date, NULL);
+    /* GMime really doesn't want to see a NULL date, so protect its
+     * sensibilities. */
+    if (date == NULL)
+	time_value = 0;
+    else
+	time_value = g_mime_utils_header_decode_date (date, NULL);
 
     message->doc.add_value (NOTMUCH_VALUE_TIMESTAMP,
 			    Xapian::sortable_serialise (time_value));
