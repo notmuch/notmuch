@@ -4,6 +4,7 @@ notmuch_client_srcs =		\
 	notmuch.c		\
 	notmuch-dump.c		\
 	notmuch-new.c		\
+	notmuch-reply.c		\
 	notmuch-restore.c	\
 	notmuch-search.c	\
 	notmuch-setup.c		\
@@ -11,7 +12,9 @@ notmuch_client_srcs =		\
 	notmuch-tag.c		\
 	notmuch-time.c		\
 	add-files.c		\
-	query-string.c
+	gmime-filter-reply.c	\
+	query-string.c		\
+	show-message.c
 
 notmuch_client_modules = $(notmuch_client_srcs:.c=.o)
 notmuch: $(notmuch_client_modules) lib/notmuch.a

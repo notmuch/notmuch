@@ -167,6 +167,25 @@ operators, but will have to be protected from interpretation by the
 shell, (such as by putting quotation marks around any parenthesized
 expression).
 .TP
+.BR reply " <search-term>..."
+
+Constructs a reply template for a set of messages.
+
+See the documentation of
+.B search
+for deatils of the supported syntax of search terms.
+
+To make replying to email easier,
+.B notmuch reply
+takes an existing set of messages and constructs a suitable mail
+template, taking From: and To: messages and using those for the new
+To: address; copying Cc: addresses, building a suitable new subject
+including Re: at the front, adding the old message IDs to the
+References list and setting the In-Reply-To: field correctly.
+
+The resulting message template is output to stdout.
+
+.TP
 .BR show " <search-term>..."
 
 Shows all messages matching the search terms.

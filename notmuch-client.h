@@ -103,6 +103,9 @@ int
 notmuch_new_command (void *ctx, int argc, char *argv[]);
 
 int
+notmuch_reply_command (void *ctx, int argc, char *argv[]);
+
+int
 notmuch_restore_command (void *ctx, int argc, char *argv[]);
 
 int
@@ -117,13 +120,6 @@ notmuch_show_command (void *ctx, int argc, char *argv[]);
 int
 notmuch_tag_command (void *ctx, int argc, char *argv[]);
 
-notmuch_status_t
-add_files (notmuch_database_t *notmuch, const char *path,
-	   add_files_state_t *state);
-
-char *
-query_string_from_args (void *ctx, int argc, char *argv[]);
-
 const char *
 notmuch_time_relative_date (void *ctx, time_t then);
 
@@ -132,5 +128,16 @@ notmuch_time_print_formatted_seconds (double seconds);
 
 double
 notmuch_time_elapsed (struct timeval start, struct timeval end);
+
+notmuch_status_t
+add_files (notmuch_database_t *notmuch, const char *path,
+	   add_files_state_t *state);
+
+char *
+query_string_from_args (void *ctx, int argc, char *argv[]);
+
+notmuch_status_t
+show_message_body (const char *filename,
+		   void (*show_part) (GMimeObject *part, int *part_count));
 
 #endif

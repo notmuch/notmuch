@@ -1,6 +1,7 @@
 /* notmuch - Not much of an email program, (just index and search)
  *
  * Copyright © 2009 Carl Worth
+ * Copyright © 2009 Keith Packard
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,7 +16,8 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see http://www.gnu.org/licenses/ .
  *
- * Author: Carl Worth <cworth@cworth.org>
+ * Authors: Carl Worth <cworth@cworth.org>
+ *	    Keith Packard <keithp@keithp.com>
  */
 
 #include "notmuch-client.h"
@@ -82,6 +84,19 @@ command_t commands[] = {
       "\t\tthe Boolean operators, but will have to be protected from\n"
       "\t\tinterpretation by the shell, (such as by putting quotation\n"
       "\t\tmarks around any parenthesized expression)." },
+    { "reply", notmuch_reply_command,
+      "<search-terms> [...]\n\n"
+      "\t\tFormats a reply from a set of existing messages.",
+      "\t\tConstructs a new message as a reply to a set of existing\n"
+      "\t\tmessages. The From: address is used as a To: address\n"
+      "\t\talong with all old To: addresses. All of the Cc: addresses\n"
+      "\t\tare copied as new Cc: addresses. An In-Reply-To: header\n"
+      "\t\twill be constructed from the name and date of the original\n"
+      "\t\tmessage, and the original Message-ID will be added to the\n"
+      "\t\tlist of References in the new message. The text of each\n"
+      "\t\tmessage (as described in the \"show\" command) will be\n"
+      "\t\tpresented, each line prefixed with \"> \" The resulting\n"
+      "\t\tmessage will be dumped to stdout." },
     { "show", notmuch_show_command,
       "<search-terms> [...]\n\n"
       "\t\tShows all messages matching the search terms.",

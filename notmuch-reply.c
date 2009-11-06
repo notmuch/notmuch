@@ -1,6 +1,7 @@
 /* notmuch - Not much of an email program, (just index and search)
  *
  * Copyright © 2009 Carl Worth
+ * Copyright © 2009 Keith Packard
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,64 +16,21 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see http://www.gnu.org/licenses/ .
  *
- * Author: Carl Worth <cworth@cworth.org>
+ * Authors: Carl Worth <cworth@cworth.org>
+ *	    Keith Packard <keithp@keithp.com>
  */
 
 #include "notmuch-client.h"
-
-static const char *
-_get_tags_as_string (void *ctx, notmuch_message_t *message)
-{
-    notmuch_tags_t *tags;
-    int first = 1;
-    const char *tag;
-    char *result;
-
-    result = talloc_strdup (ctx, "");
-    if (result == NULL)
-	return NULL;
-
-    for (tags = notmuch_message_get_tags (message);
-	 notmuch_tags_has_more (tags);
-	 notmuch_tags_advance (tags))
-    {
-	tag = notmuch_tags_get (tags);
-
-	result = talloc_asprintf_append (result, "%s%s",
-					 first ? "" : " ", tag);
-	first = 0;
-    }
-
-    return result;
-}
-
-/* Get a nice, single-line summary of message. */
-static const char *
-_get_one_line_summary (void *ctx, notmuch_message_t *message)
-{
-    const char *from;
-    time_t date;
-    const char *relative_date;
-    const char *tags;
-
-    from = notmuch_message_get_header (message, "from");
-
-    date = notmuch_message_get_date (message);
-    relative_date = notmuch_time_relative_date (ctx, date);
-
-    tags = _get_tags_as_string (ctx, message);
-
-    return talloc_asprintf (ctx, "%s (%s) (%s)",
-			    from, relative_date, tags);
-}
+#include "gmime-filter-reply.h"
 
 static void
-show_part(GMimeObject *part, int *part_count)
+reply_part(GMimeObject *part, int *part_count)
 {
     GMimeContentDisposition *disposition;
     GMimeContentType *content_type;
     GMimeDataWrapper *wrapper;
 
+    (void) part_count;
     disposition = g_mime_object_get_content_disposition (part);
     if (disposition &&
 	strcmp (disposition->disposition, GMIME_DISPOSITION_ATTACHMENT) == 0)
@@ -80,45 +38,41 @@ show_part(GMimeObject *part, int *part_count)
 	const char *filename = g_mime_part_get_filename (GMIME_PART (part));
 	content_type = g_mime_object_get_content_type (GMIME_OBJECT (part));
 
-	printf ("\fattachment{ ID: %d, Content-type: %s\n",
-		*part_count,
-		g_mime_content_type_to_string (content_type));
 	printf ("Attachment: %s (%s)\n", filename,
 		g_mime_content_type_to_string (content_type));
-	printf ("\fattachment}\n");
-
 	return;
     }
 
     content_type = g_mime_object_get_content_type (GMIME_OBJECT (part));
 
-    printf ("\fpart{ ID: %d, Content-type: %s\n",
-	    *part_count,
-	    g_mime_content_type_to_string (content_type));
-
     if (g_mime_content_type_is_type (content_type, "text", "*") &&
 	!g_mime_content_type_is_type (content_type, "text", "html"))
     {
-	GMimeStream *stream = g_mime_stream_file_new (stdout);
-	g_mime_stream_file_set_owner (GMIME_STREAM_FILE (stream), FALSE);
-
+	GMimeStream *stream_stdout = NULL, *stream_filter = NULL;
+	stream_stdout = g_mime_stream_file_new (stdout);
+	if (stream_stdout) {
+	    g_mime_stream_file_set_owner (GMIME_STREAM_FILE (stream_stdout), FALSE);
+	    stream_filter = g_mime_stream_filter_new(stream_stdout);
+	}
+	g_mime_stream_filter_add(GMIME_STREAM_FILTER(stream_filter),
+				 g_mime_filter_reply_new(TRUE));
 	wrapper = g_mime_part_get_content_object (GMIME_PART (part));
-	if (wrapper && stream)
-	    g_mime_data_wrapper_write_to_stream (wrapper, stream);
-	if (stream)
-	    g_object_unref(stream);
+	if (wrapper && stream_filter)
+	    g_mime_data_wrapper_write_to_stream (wrapper, stream_filter);
+	if (stream_filter)
+	    g_object_unref(stream_filter);
+	if (stream_stdout)
+	    g_object_unref(stream_stdout);
     }
     else
     {
 	printf ("Non-text part: %s\n",
 		g_mime_content_type_to_string (content_type));
     }
-
-    printf ("\fpart}\n");
 }
 
 int
-notmuch_show_command (void *ctx, unused (int argc), unused (char *argv[]))
+notmuch_reply_command (void *ctx, int argc, char *argv[])
 {
     void *local = talloc_new (ctx);
     char *query_string;
@@ -129,7 +83,8 @@ notmuch_show_command (void *ctx, unused (int argc), unused (char *argv[]))
     int ret = 0;
 
     const char *headers[] = {
-	"From", "To", "Cc", "Bcc", "Date"
+	    "Subject", "From", "To", "Cc", "Bcc", "Date",
+	    "In-Reply-To", "References"
     };
     const char *name, *value;
     unsigned int i;
@@ -160,16 +115,6 @@ notmuch_show_command (void *ctx, unused (int argc), unused (char *argv[]))
     {
 	message = notmuch_messages_get (messages);
 
-	printf ("\fmessage{ id:%s filename:%s\n",
-		notmuch_message_get_message_id (message),
-		notmuch_message_get_filename (message));
-
-	printf ("\fheader{\n");
-
-	printf ("%s\n", _get_one_line_summary (local, message));
-
-	printf ("%s\n", notmuch_message_get_header (message, "subject"));
-
 	for (i = 0; i < ARRAY_SIZE (headers); i++) {
 	    name = headers[i];
 	    value = notmuch_message_get_header (message, name);
@@ -177,14 +122,7 @@ notmuch_show_command (void *ctx, unused (int argc), unused (char *argv[]))
 		printf ("%s: %s\n", name, value);
 	}
 
-	printf ("\fheader}\n");
-	printf ("\fbody{\n");
-
-	show_message_body (notmuch_message_get_filename (message), show_part);
-
-	printf ("\fbody}\n");
-
-	printf ("\fmessage}\n");
+	show_message_body (notmuch_message_get_filename (message), reply_part);
 
 	notmuch_message_destroy (message);
     }
