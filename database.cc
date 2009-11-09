@@ -860,7 +860,7 @@ notmuch_database_add_message (notmuch_database_t *notmuch,
 			      notmuch_message_t **message_ret)
 {
     notmuch_message_file_t *message_file;
-    notmuch_message_t *message;
+    notmuch_message_t *message = NULL;
     notmuch_status_t ret = NOTMUCH_STATUS_SUCCESS;
     notmuch_private_status_t private_status;
 
