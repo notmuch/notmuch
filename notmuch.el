@@ -184,6 +184,7 @@ Unlike builtin `next-line' this version accepts no arguments."
     (if parent-buffer
 	(progn
 	  (switch-to-buffer parent-buffer)
+	  (forward-line)
 	  (notmuch-search-show-thread)))))
 
 (defun notmuch-show-mark-read-then-archive-thread ()
@@ -713,7 +714,6 @@ global search.
 (defun notmuch-search-show-thread ()
   (interactive)
   (let ((thread-id (notmuch-search-find-thread-id)))
-    (forward-line)
     (if (> (length thread-id) 0)
 	(notmuch-show thread-id (current-buffer))
       (error "End of search results"))))
