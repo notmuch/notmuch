@@ -759,12 +759,12 @@ and will also appear in a buffer named \"*Notmuch errors*\"."
 
 (defun notmuch-search-add-tag (tag)
   (interactive "sTag to add: ")
-  (notmuch-call-notmuch-process "tag" (concat "+" tag) (concat "thread:" (notmuch-search-find-thread-id)))
+  (notmuch-call-notmuch-process "tag" (concat "+" tag) (notmuch-search-find-thread-id))
   (notmuch-search-set-tags (delete-dups (sort (cons tag (notmuch-search-get-tags)) 'string<))))
 
 (defun notmuch-search-remove-tag (tag)
   (interactive "sTag to remove: ")
-  (notmuch-call-notmuch-process "tag" (concat "-" tag) (concat "thread:" (notmuch-search-find-thread-id)))
+  (notmuch-call-notmuch-process "tag" (concat "-" tag) (notmuch-search-find-thread-id))
   (notmuch-search-set-tags (delete tag (notmuch-search-get-tags))))
 
 (defun notmuch-search-archive-thread ()
