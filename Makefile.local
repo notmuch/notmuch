@@ -1,7 +1,7 @@
 all: notmuch
 
 notmuch: notmuch.o lib/notmuch.a
-	$(CC) $(NOTMUCH_LDFLAGS) $^ -o $@
+	$(CC) $(LDFLAGS) $^ -o $@
 
 notmuch.1.gz:
 	gzip --stdout notmuch.1 > notmuch.1.gz
