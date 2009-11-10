@@ -19,14 +19,21 @@ include lib/Makefile.local
 %.o: %.c
 	$(CC) -c $(CFLAGS) $(NOTMUCH_CFLAGS) $< -o $@
 
-.depends: $(SRCS)
-	$(CXX) -M $(CPPFLAGS) $(NOTMUCH_DEPENDS_FLAGS) \
-	$(NOTMUCH_CXX_DEPENDS_FLAGS) $^ > $@
--include .depends
+.deps/%.d: %.c
+	@set -e; rm -f $@; mkdir -p $$(dirname $@) ; \
+	$(CC) -M $(CPPFLAGS) $(NOTMUCH_DEPENDS_FLAGS) $< > $@.$$$$; \
+	sed 's,\($*\)\.o[ :]*,\1.o $@ : ,g' < $@.$$$$ > $@; \
+	rm -f $@.$$$$
 
-CLEAN := $(CLEAN) .depends
+.deps/%.d: %.cc
+	@set -e; rm -f $@; mkdir -p $$(dirname $@) ; \
+	$(CXX) -M $(CPPFLAGS) $(NOTMUCH_CXX_DEPENDS_FLAGS) $< > $@.$$$$; \
+	sed 's,\($*\)\.o[ :]*,\1.o $@ : ,g' < $@.$$$$ > $@; \
+	rm -f $@.$$$$
+
+DEPS := $(SRCS:%.c=.deps/%.d)
+DEPS := $(DEPS:%.cc=.deps/%.d)
+-include $(DEPS)
 
 clean:
-	rm -f $(CLEAN)
-
-
+	rm -f $(CLEAN); rm -rf .deps

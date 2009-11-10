@@ -1,19 +1,22 @@
 dir=lib
 
-lib_notmuch_modules =		\
-	$(dir)/database.o	\
-	$(dir)/index.o		\
-	$(dir)/$(dir)sha1.o	\
-	$(dir)/message.o	\
-	$(dir)/message-file.o	\
-	$(dir)/query.o		\
-	$(dir)/sha1.o		\
-	$(dir)/tags.o		\
-	$(dir)/thread.o		\
-	$(dir)/xutil.o
+libnotmuch_c_srcs =		\
+	$(dir)/libsha1.c	\
+	$(dir)/message-file.c	\
+	$(dir)/sha1.c		\
+	$(dir)/tags.c		\
+	$(dir)/xutil.c
 
-$(dir)/notmuch.a: $(lib_notmuch_modules)
+libnotmuch_cxx_srcs =		\
+	$(dir)/database.cc	\
+	$(dir)/index.cc		\
+	$(dir)/message.cc	\
+	$(dir)/query.cc		\
+	$(dir)/thread.cc
+
+libnotmuch_modules = $(libnotmuch_c_srcs:.c=.o) $(libnotmuch_cxx_srcs:.cc=.o)
+$(dir)/notmuch.a: $(libnotmuch_modules)
 	$(AR) rcs $@ $^
 
-SRCS  := $(SRCS) lib/*.c lib/*.cc
-CLEAN := $(CLEAN) $(dir)/*.o $(dir)/notmuch.a
+SRCS  := $(SRCS) $(libnotmuch_c_srcs) $(libnotmuch_cxx_srcs)
+CLEAN := $(CLEAN) $(libnotmuch_modules) $(dir)/notmuch.a
