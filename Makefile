@@ -1,6 +1,6 @@
 # Default FLAGS, (can be overriden by user such as "make CFLAGS=-O2")
 WARN_FLAGS=-Wall -Wextra -Wmissing-declarations -Wwrite-strings -Wswitch-enum
-CFLAGS=-g -O0
+CFLAGS=-O2
 
 # Additional flags that we will append to whatever the user set.
 # These aren't intended for the user to manipulate.
