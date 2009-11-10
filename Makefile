@@ -2,7 +2,7 @@ PROGS=notmuch
 
 WARN_FLAGS=-Wall -Wextra -Wmissing-declarations -Wwrite-strings -Wswitch-enum
 
-NOTMUCH_DEPENDS_FLAGS=`pkg-config --cflags glib-2.0 gmime-2.4 talloc`
+NOTMUCH_DEPENDS_FLAGS=-I./lib `pkg-config --cflags glib-2.0 gmime-2.4 talloc`
 NOTMUCH_CXX_DEPENDS_FLAGS=$(NOTMUCH_DEPENDS_FLAGS) `xapian-config --cxxflags`
 
 NOTMUCH_CFLAGS=$(WARN_FLAGS) -O0 -g $(NOTMUCH_DEPENDS_FLAGS)
@@ -11,17 +11,17 @@ NOTMUCH_CXXFLAGS=$(WARN_FLAGS) -O0 -g $(NOTMUCH_CXX_DEPENDS_FLAGS)
 NOTMUCH_LDFLAGS=`pkg-config --libs glib-2.0 gmime-2.4 talloc` \
 		`xapian-config --libs`
 
-LIBRARY=		\
-	database.o	\
-	index.o		\
-	libsha1.o	\
-	message.o	\
-	message-file.o	\
-	query.o		\
-	sha1.o		\
-	tags.o		\
-	thread.o	\
-	xutil.o
+LIBRARY=			\
+	lib/database.o		\
+	lib/index.o		\
+	lib/libsha1.o		\
+	lib/message.o		\
+	lib/message-file.o	\
+	lib/query.o		\
+	lib/sha1.o		\
+	lib/tags.o		\
+	lib/thread.o		\
+	lib/xutil.o
 
 MAIN=			\
 	notmuch.o
@@ -37,7 +37,7 @@ all: $(PROGS)
 notmuch: $(MAIN) $(LIBRARY)
 	$(CC) $(NOTMUCH_LDFLAGS) $^ -o $@
 
-Makefile.dep: *.c *.cc
+Makefile.dep: *.c lib/*.c lib/*.cc
 	$(CXX) -M $(CPPFLAGS) $(NOTMUCH_DEPENDS_FLAGS) \
 	$(NOTMUCH_CXX_DEPENDS_FLAGS) $^ > $@
 -include Makefile.dep
@@ -52,4 +52,4 @@ install: all notmuch.1.gz
 		$(DESTDIR)/etc/bash_completion.d/notmuch
 
 clean:
-	rm -f $(PROGS) *.o Makefile.dep
+	rm -f $(PROGS) lib/*.o *.o Makefile.dep
