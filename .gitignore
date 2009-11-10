@@ -1,4 +1,4 @@
-Makefile.dep
+.depends
 notmuch
 notmuch.1.gz
 

@@ -37,10 +37,10 @@ all: $(PROGS)
 notmuch: $(MAIN) $(LIBRARY)
 	$(CC) $(NOTMUCH_LDFLAGS) $^ -o $@
 
-Makefile.dep: *.c lib/*.c lib/*.cc
+.depends: *.c lib/*.c lib/*.cc
 	$(CXX) -M $(CPPFLAGS) $(NOTMUCH_DEPENDS_FLAGS) \
 	$(NOTMUCH_CXX_DEPENDS_FLAGS) $^ > $@
--include Makefile.dep
+-include .depends
 
 notmuch.1.gz:
 	gzip --stdout notmuch.1 > notmuch.1.gz
@@ -52,4 +52,4 @@ install: all notmuch.1.gz
 		$(DESTDIR)/etc/bash_completion.d/notmuch
 
 clean:
-	rm -f $(PROGS) lib/*.o *.o Makefile.dep
+	rm -f $(PROGS) lib/*.o *.o .depends
