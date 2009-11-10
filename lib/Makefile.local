@@ -1,4 +1,5 @@
 dir=lib
+extra_cflags += -I$(dir)
 
 libnotmuch_c_srcs =		\
 	$(dir)/libsha1.c	\
