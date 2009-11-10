@@ -1,6 +1,20 @@
 all: notmuch
 
-notmuch: notmuch.o lib/notmuch.a
+notmuch_client_srcs =		\
+	notmuch.c		\
+	notmuch-dump.c		\
+	notmuch-new.c		\
+	notmuch-restore.c	\
+	notmuch-search.c	\
+	notmuch-setup.c		\
+	notmuch-show.c		\
+	notmuch-tag.c		\
+	notmuch-time.c		\
+	add-files.c		\
+	query-string.c
+
+notmuch_client_modules = $(notmuch_client_srcs:.c=.o)
+notmuch: $(notmuch_client_modules) lib/notmuch.a
 	$(CC) $(LDFLAGS) $^ -o $@
 
 notmuch.1.gz:
@@ -12,5 +26,5 @@ install: all notmuch.1.gz
 	install -C -D notmuch-completion.bash \
 		$(DESTDIR)/etc/bash_completion.d/notmuch
 
-SRCS  := $(SRCS) notmuch.c
-CLEAN := $(CLEAN) notmuch *.o
+SRCS  := $(SRCS) $(notmuch_client_srcs)
+CLEAN := $(CLEAN) notmuch $(notmuch_client_modules)
