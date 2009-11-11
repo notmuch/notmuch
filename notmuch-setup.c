@@ -20,6 +20,52 @@
 
 #include "notmuch-client.h"
 
+static notmuch_status_t
+add_all_files (notmuch_database_t *notmuch,
+	       const char *mail_directory,
+	       int num_files)
+{
+    add_files_state_t add_files_state;
+    double elapsed;
+    struct timeval tv_now;
+    notmuch_status_t ret = NOTMUCH_STATUS_SUCCESS;
+
+    add_files_state.ignore_read_only_directories = FALSE;
+    add_files_state.saw_read_only_directory = FALSE;
+    add_files_state.total_files = num_files;
+    add_files_state.processed_files = 0;
+    add_files_state.added_messages = 0;
+    add_files_state.callback = NULL;
+    gettimeofday (&add_files_state.tv_start, NULL);
+
+    ret = add_files (notmuch, mail_directory, &add_files_state);
+
+    gettimeofday (&tv_now, NULL);
+    elapsed = notmuch_time_elapsed (add_files_state.tv_start,
+				    tv_now);
+    printf ("Processed %d %s in ", add_files_state.processed_files,
+	    add_files_state.processed_files == 1 ?
+	    "file" : "total files");
+    notmuch_time_print_formatted_seconds (elapsed);
+    if (elapsed > 1) {
+	printf (" (%d files/sec.).                 \n",
+		(int) (add_files_state.processed_files / elapsed));
+    } else {
+	printf (".                    \n");
+    }
+    if (add_files_state.added_messages) {
+	printf ("Added %d %s to the database.\n\n",
+		add_files_state.added_messages,
+		add_files_state.added_messages == 1 ?
+		"message" : "unique messages");
+    }
+
+    return ret;
+}
+
+
+/* XXX: This should be merged with the existing add_files function in
+ * add-files.c. */
 /* Recursively count all regular files in path and all sub-direcotries
  * of path.  The result is added to *count (which should be
  * initialized to zero by the top-level caller before calling
@@ -99,38 +145,32 @@ count_files (const char *path, int *count)
     closedir (dir);
 }
 
-int
-notmuch_setup_command (unused (void *ctx),
-		       unused (int argc), unused (char *argv[]))
+static void
+welcome_message (void)
 {
-    notmuch_database_t *notmuch = NULL;
+    printf (
+"Welcome to notmuch!\n\n"
+"The goal of notmuch is to help you manage and search your collection of\n"
+"email, and to efficiently keep up with the flow of email as it comes in.\n\n"
+"Notmuch needs to know the top-level directory of your email archive,\n"
+"(where you already have mail stored and where messages will be delivered\n"
+"in the future). This directory can contain any number of sub-directories\n"
+"and primarily just files with indvidual email messages (eg. maildir or mh\n"
+"archives are perfect). If there are other, non-email files (such as\n"
+"indexes maintained by other email programs) then notmuch will do its\n"
+"best to detect those and ignore them.\n\n"
+"Mail storage that uses mbox format, (where one mbox file contains many\n"
+"messages), will not work with notmuch. If that's how your mail is currently\n"
+"stored, we recommend you first convert it to maildir format with a utility\n"
+"such as mb2md. In that case, press Control-C now and run notmuch again\n"
+"once the conversion is complete.\n\n");
+}
+
+static char *
+prompt_user_for_mail_directory ()
+{
     char *default_path, *mail_directory = NULL;
     size_t line_size;
-    int count;
-    add_files_state_t add_files_state;
-    double elapsed;
-    struct timeval tv_now;
-    notmuch_status_t ret = NOTMUCH_STATUS_SUCCESS;
-
-    printf ("Welcome to notmuch!\n\n");
-
-    printf ("The goal of notmuch is to help you manage and search your collection of\n"
-	    "email, and to efficiently keep up with the flow of email as it comes in.\n\n");
-
-    printf ("Notmuch needs to know the top-level directory of your email archive,\n"
-	    "(where you already have mail stored and where messages will be delivered\n"
-	    "in the future). This directory can contain any number of sub-directories\n"
-	    "and primarily just files with indvidual email messages (eg. maildir or mh\n"
-	    "archives are perfect). If there are other, non-email files (such as\n"
-	    "indexes maintained by other email programs) then notmuch will do its\n"
-	    "best to detect those and ignore them.\n\n");
-
-    printf ("Mail storage that uses mbox format, (where one mbox file contains many\n"
-	    "messages), will not work with notmuch. If that's how your mail is currently\n"
-	    "stored, we recommend you first convert it to maildir format with a utility\n"
-	    "such as mb2md. In that case, press Control-C now and run notmuch again\n"
-	    "once the conversion is complete.\n\n");
-
 
     default_path = notmuch_database_default_path ();
     printf ("Top-level mail directory [%s]: ", default_path);
@@ -183,6 +223,22 @@ notmuch_setup_command (unused (void *ctx),
 	mail_directory = absolute_mail_directory;
     }
 
+    return mail_directory;
+}
+
+int
+notmuch_setup_command (unused (void *ctx),
+		       unused (int argc), unused (char *argv[]))
+{
+    notmuch_database_t *notmuch = NULL;
+    char *mail_directory = NULL;
+    int count;
+    notmuch_status_t ret = NOTMUCH_STATUS_SUCCESS;
+
+    welcome_message ();
+
+    mail_directory = prompt_user_for_mail_directory ();
+
     notmuch = notmuch_database_create (mail_directory);
     if (notmuch == NULL) {
 	fprintf (stderr, "Failed to create new notmuch database at %s\n",
@@ -201,35 +257,7 @@ notmuch_setup_command (unused (void *ctx),
 
     printf ("Next, we'll inspect the messages and create a database of threads:\n");
 
-    add_files_state.ignore_read_only_directories = FALSE;
-    add_files_state.saw_read_only_directory = FALSE;
-    add_files_state.total_files = count;
-    add_files_state.processed_files = 0;
-    add_files_state.added_messages = 0;
-    add_files_state.callback = NULL;
-    gettimeofday (&add_files_state.tv_start, NULL);
-
-    ret = add_files (notmuch, mail_directory, &add_files_state);
-
-    gettimeofday (&tv_now, NULL);
-    elapsed = notmuch_time_elapsed (add_files_state.tv_start,
-				    tv_now);
-    printf ("Processed %d %s in ", add_files_state.processed_files,
-	    add_files_state.processed_files == 1 ?
-	    "file" : "total files");
-    notmuch_time_print_formatted_seconds (elapsed);
-    if (elapsed > 1) {
-	printf (" (%d files/sec.).                 \n",
-		(int) (add_files_state.processed_files / elapsed));
-    } else {
-	printf (".                    \n");
-    }
-    if (add_files_state.added_messages) {
-	printf ("Added %d %s to the database.\n\n",
-		add_files_state.added_messages,
-		add_files_state.added_messages == 1 ?
-		"message" : "unique messages");
-    }
+    ret = add_all_files (notmuch, mail_directory, count);
 
     printf ("When new mail is delivered to %s in the future,\n"
 	    "run \"notmuch new\" to add it to the database.\n\n",
