@@ -71,18 +71,79 @@ reply_part(GMimeObject *part, int *part_count)
     }
 }
 
+static void
+add_recipients_for_address_list (GMimeMessage *message,
+				 GMimeRecipientType type,
+				 InternetAddressList *list)
+{
+    InternetAddress *address;
+    int i;
+
+    for (i = 0; i < internet_address_list_length (list); i++) {
+	address = internet_address_list_get_address (list, i);
+	if (INTERNET_ADDRESS_IS_GROUP (address)) {
+	    InternetAddressGroup *group;
+	    InternetAddressList *group_list;
+
+	    group = INTERNET_ADDRESS_GROUP (address);
+	    group_list = internet_address_group_get_members (group);
+	    if (group_list == NULL)
+		continue;
+
+	    add_recipients_for_address_list (message, type, group_list);
+	} else {
+	    InternetAddressMailbox *mailbox;
+	    const char *name;
+	    const char *addr;
+
+	    mailbox = INTERNET_ADDRESS_MAILBOX (address);
+
+	    name = internet_address_get_name (address);
+	    addr = internet_address_mailbox_get_addr (mailbox);
+
+	    g_mime_message_add_recipient (message, type, name, addr);
+	}
+    }
+}
+
+static void
+add_recipients_for_string (GMimeMessage *message,
+			   GMimeRecipientType type,
+			   const char *recipients)
+{
+    InternetAddressList *list;
+
+    list = internet_address_list_parse_string (recipients);
+    if (list == NULL)
+	return;
+
+    add_recipients_for_address_list (message, type, list);
+}
+
 int
 notmuch_reply_command (void *ctx, int argc, char *argv[])
 {
     void *local = talloc_new (ctx);
-    char *query_string;
-    notmuch_database_t *notmuch = NULL;
     notmuch_query_t *query = NULL;
+    notmuch_database_t *notmuch = NULL;
+    GMimeMessage *reply = NULL;
+    char *query_string;
     notmuch_messages_t *messages;
     notmuch_message_t *message;
     int ret = 0;
-    int has_recipient;
-    const char *subject, *to, *references;
+    const char *subject, *recipients;
+    const char *in_reply_to, *orig_references, *references;
+    char *reply_headers;
+    struct {
+	const char *header;
+	GMimeRecipientType recipient_type;
+    } reply_to_map[] = {
+	{ "from", GMIME_RECIPIENT_TYPE_TO  },
+	{ "to",   GMIME_RECIPIENT_TYPE_TO  },
+	{ "cc",   GMIME_RECIPIENT_TYPE_CC  },
+	{ "bcc",  GMIME_RECIPIENT_TYPE_BCC }
+    };
+    unsigned int i;
 
     notmuch = notmuch_database_open (NULL);
     if (notmuch == NULL) {
@@ -110,58 +171,59 @@ notmuch_reply_command (void *ctx, int argc, char *argv[])
     {
 	message = notmuch_messages_get (messages);
 
+	/* The 1 means we want headers in a "pretty" order. */
+	reply = g_mime_message_new (1);
+	if (reply == NULL) {
+	    fprintf (stderr, "Out of memory\n");
+	    ret = 1;
+	    goto DONE;
+	}
+
+	/* XXX: We need a configured email address (or addresses) for
+	 * the user here, so that we can prevent replying to the user,
+	 * and also call _mime_message_set_sender to set From: (either
+	 * from the first "owned" address mentioned as a recipient in
+	 * the original message, or else some default address).
+	 */
+
 	subject = notmuch_message_get_header (message, "subject");
-
-	/* XXX: Should have the user's email address(es) configured
-	 * somewhere, and should fish it out of any recipient headers
-	 * to reply by default from the same address that the original
-	 * email was sent to */
-	printf ("From: \n");
-
-	/* XXX: Should fold long recipient lists. */
-	printf ("To:");
-	has_recipient = 0;
-
-	to = notmuch_message_get_header (message, "from");
-	if (to) {
-	    printf (" %s", to);
-	    has_recipient = 1;
-	}
-	to = notmuch_message_get_header (message, "to");
-	if (to) {
-	    printf ("%s%s",
-		    has_recipient ? ", " : " ", to);
-	    has_recipient = 1;
-	}
-	to = notmuch_message_get_header (message, "cc");
-	if (to) {
-	    printf ("%s%s",
-		    has_recipient ? ", " : " ", to);
-	    has_recipient = 1;
-	}
-	to = notmuch_message_get_header (message, "bcc");
-	if (to) {
-	    printf ("%s%s",
-		    has_recipient ? ", " : " ", to);
-	    has_recipient = 1;
-	}
-
-	printf ("\n");
 
 	if (strncasecmp (subject, "Re:", 3))
 	    subject = talloc_asprintf (ctx, "Re: %s", subject);
-	printf ("Subject: %s\n", subject);
+	g_mime_message_set_subject (reply, subject);
 
-	printf ("In-Reply-To: <%s>\n",
-		notmuch_message_get_message_id (message));
+	for (i = 0; i < ARRAY_SIZE (reply_to_map); i++) {
+	    recipients = notmuch_message_get_header (message,
+						     reply_to_map[i].header);
+	    add_recipients_for_string (reply,
+				       reply_to_map[i].recipient_type,
+				       recipients);
+	}
 
-	/* XXX: Should fold long references lists. */
-	references = notmuch_message_get_header (message, "references");
-	printf ("References: %s <%s>\n",
-		references ? references : "",
-		notmuch_message_get_message_id (message));
+	in_reply_to = talloc_asprintf (ctx, "<%s>",
+			     notmuch_message_get_message_id (message));
 
-	printf ("--text follows this line--\n");
+	g_mime_object_set_header (GMIME_OBJECT (reply),
+				  "In-Reply-To", in_reply_to);
+
+	orig_references = notmuch_message_get_header (message, "references");
+	references = talloc_asprintf (ctx, "%s%s%s",
+				      orig_references ? orig_references : "",
+				      orig_references ? " " : "",
+				      in_reply_to);
+	g_mime_object_set_header (GMIME_OBJECT (reply),
+				  "References", references);
+
+	reply_headers = g_mime_object_to_string (GMIME_OBJECT (reply));
+	printf ("%s", reply_headers);
+	free (reply_headers);
+
+	g_object_unref (G_OBJECT (reply));
+	reply = NULL;
+
+	printf ("On %s, %s wrote:\n",
+		notmuch_message_get_header (message, "date"),
+		notmuch_message_get_header (message, "from"));
 
 	show_message_body (notmuch_message_get_filename (message), reply_part);
 
@@ -177,6 +239,9 @@ notmuch_reply_command (void *ctx, int argc, char *argv[])
 
     if (notmuch)
 	notmuch_database_close (notmuch);
+
+    if (reply)
+	g_object_unref (G_OBJECT (reply));
 
     return ret;
 }

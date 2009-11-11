@@ -212,6 +212,8 @@ main (int argc, char *argv[])
     command_t *command;
     unsigned int i;
 
+    g_mime_init (0);
+
     if (argc == 1)
 	return notmuch_setup_command (local, 0, NULL);
 

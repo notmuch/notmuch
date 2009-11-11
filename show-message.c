@@ -74,14 +74,8 @@ show_message_body (const char *filename,
     GMimeParser *parser = NULL;
     GMimeMessage *mime_message = NULL;
     notmuch_status_t ret = NOTMUCH_STATUS_SUCCESS;
-    static int initialized = 0;
     FILE *file = NULL;
     int part_count = 0;
-
-    if (! initialized) {
-	g_mime_init (0);
-	initialized = 1;
-    }
 
     file = fopen (filename, "r");
     if (! file) {
