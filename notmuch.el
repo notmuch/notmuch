@@ -41,6 +41,7 @@
     (define-key map (kbd "C-n") 'notmuch-show-next-line)
     (define-key map (kbd "C-p") 'notmuch-show-previous-line)
     (define-key map "q" 'kill-this-buffer)
+    (define-key map "r" 'notmuch-show-reply)
     (define-key map "s" 'notmuch-show-toggle-signatures-visible)
     (define-key map "w" 'notmuch-show-view-raw-message)
     (define-key map "x" 'kill-this-buffer)
@@ -220,6 +221,14 @@ buffer."
   "View the raw email of the current message."
   (interactive)
   (view-file (notmuch-show-get-filename)))
+
+(defun notmuch-show-reply ()
+  "Begin composing a reply to the current message in a new buffer."
+  (interactive)
+  (view-file (notmuch-show-get-filename))
+  (let ((buf (current-buffer)))
+    (message-reply)
+    (kill-buffer buf)))
 
 (defun notmuch-show-pipe-message (command)
   "Pipe the contents of the current message to the given command.
