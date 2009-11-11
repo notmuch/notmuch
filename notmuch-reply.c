@@ -81,13 +81,8 @@ notmuch_reply_command (void *ctx, int argc, char *argv[])
     notmuch_messages_t *messages;
     notmuch_message_t *message;
     int ret = 0;
-
-    const char *headers[] = {
-	    "Subject", "From", "To", "Cc", "Bcc", "Date",
-	    "In-Reply-To", "References"
-    };
-    const char *name, *value;
-    unsigned int i;
+    int has_recipient;
+    const char *subject, *to, *references;
 
     notmuch = notmuch_database_open (NULL);
     if (notmuch == NULL) {
@@ -115,12 +110,58 @@ notmuch_reply_command (void *ctx, int argc, char *argv[])
     {
 	message = notmuch_messages_get (messages);
 
-	for (i = 0; i < ARRAY_SIZE (headers); i++) {
-	    name = headers[i];
-	    value = notmuch_message_get_header (message, name);
-	    if (value)
-		printf ("%s: %s\n", name, value);
+	subject = notmuch_message_get_header (message, "subject");
+
+	/* XXX: Should have the user's email address(es) configured
+	 * somewhere, and should fish it out of any recipient headers
+	 * to reply by default from the same address that the original
+	 * email was sent to */
+	printf ("From: \n");
+
+	/* XXX: Should fold long recipient lists. */
+	printf ("To:");
+	has_recipient = 0;
+
+	to = notmuch_message_get_header (message, "from");
+	if (to) {
+	    printf (" %s", to);
+	    has_recipient = 1;
 	}
+	to = notmuch_message_get_header (message, "to");
+	if (to) {
+	    printf ("%s%s",
+		    has_recipient ? ", " : " ", to);
+	    has_recipient = 1;
+	}
+	to = notmuch_message_get_header (message, "cc");
+	if (to) {
+	    printf ("%s%s",
+		    has_recipient ? ", " : " ", to);
+	    has_recipient = 1;
+	}
+	to = notmuch_message_get_header (message, "bcc");
+	if (to) {
+	    printf ("%s%s",
+		    has_recipient ? ", " : " ", to);
+	    has_recipient = 1;
+	}
+
+	printf ("\n");
+
+	if (strncasecmp (subject, "Re:", 3))
+	    subject = talloc_asprintf (ctx, "Re: %s", subject);
+	printf ("Subject: %s\n", subject);
+
+	printf ("In-Reply-To: <%s>\n",
+		notmuch_message_get_message_id (message));
+
+	/* XXX: Should fold long references lists. */
+	references = notmuch_message_get_header (message, "references");
+	printf ("References: %s <%s>\n",
+		references ? references : "",
+		notmuch_message_get_message_id (message));
+
+	printf ("--text follows this line--\n");
 
 	show_message_body (notmuch_message_get_filename (message), reply_part);
 
