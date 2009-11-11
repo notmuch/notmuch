@@ -68,7 +68,7 @@
 (set 'notmuch-show-part-end-regexp         "part}")
 (set 'notmuch-show-marker-regexp "\\(message\\|header\\|body\\|attachment\\|part\\)[{}].*$")
 
-(set 'notmuch-show-id-regexp "id:\\([^ ]*\\)")
+(set 'notmuch-show-id-regexp "\\(id:[^ ]*\\)")
 (set 'notmuch-show-filename-regexp "filename:\\(.*\\)$")
 (set 'notmuch-show-tags-regexp "(\\([^)]*\\))$")
 
@@ -153,7 +153,7 @@ Unlike builtin `next-line' this version accepts no arguments."
   (apply 'notmuch-call-notmuch-process
 	 (append (cons "tag"
 		       (mapcar (lambda (s) (concat "+" s)) toadd))
-		 (cons (concat "id:" (notmuch-show-get-message-id)) nil)))
+		 (cons (notmuch-show-get-message-id) nil)))
   (notmuch-show-set-tags (sort (union toadd (notmuch-show-get-tags) :test 'string=) 'string<)))
 
 (defun notmuch-show-remove-tag (&rest toremove)
@@ -165,7 +165,7 @@ Unlike builtin `next-line' this version accepts no arguments."
 	  (apply 'notmuch-call-notmuch-process
 		 (append (cons "tag"
 			       (mapcar (lambda (s) (concat "-" s)) toremove))
-			 (cons (concat "id:" (notmuch-show-get-message-id)) nil)))
+			 (cons (notmuch-show-get-message-id) nil)))
 	  (notmuch-show-set-tags (sort (set-difference tags toremove :test 'string=) 'string<))))))
 
 (defun notmuch-show-archive-thread-maybe-mark-read (markread)
