@@ -12,6 +12,10 @@ relative to the database path. (Otherwise, moving the database to a
 new directory will result in notmuch creating new timestamp documents
 and leaving stale ones behind.)
 
+Ensure that "notmuch new" is sane if its first, giant indexing session
+gets interrupted, (that is, ensure that any results indexed so far are
+flushed).
+
 Fix notmuch.c to use a DIR prefix for directory timestamps, (the idea
 being that it can then add other non-directory timestamps such as for
 noting how far back in the past mail has been indexed, and whether it
