@@ -259,6 +259,7 @@ notmuch (void *ctx)
 	    "from a search. Finally, you may want to explore using a more sophisticated\n"
 	    "interface to notmuch such as the emacs interface implemented in notmuch.el\n"
 	    "or any other interface described at http://notmuchmail.org\n\n"
+	    "And don't forget to run \"notmuch new\" whenever new mail arrives.\n\n"
 	    "Have fun, and may your inbox never have much mail.\n\n",
 	    notmuch_config_get_user_name (config),
 	    notmuch_config_get_user_primary_email (config));

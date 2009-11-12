@@ -12,7 +12,6 @@ notmuch_client_srcs =		\
 	notmuch-show.c		\
 	notmuch-tag.c		\
 	notmuch-time.c		\
-	add-files.c		\
 	gmime-filter-reply.c	\
 	query-string.c		\
 	show-message.c
