@@ -618,8 +618,8 @@ notmuch_message_get_date  (notmuch_message_t *message);
  * modified or freed by the caller (nor should it be referenced after
  * the message is destroyed).
  *
- * Returns NULL if the message does not contain a header line matching
- * 'header' of if any error occurs.
+ * Returns an empty string ("") if the message does not contain a
+ * header line matching 'header'. Returns NULL if any error occurs.
  */
 const char *
 notmuch_message_get_header (notmuch_message_t *message, const char *header);

@@ -238,7 +238,7 @@ notmuch_message_file_get_header (notmuch_message_file_t *message,
 	return decoded_value;
 
     if (message->parsing_finished)
-	return NULL;
+	return "";
 
 #define NEXT_HEADER_LINE(closure)				\
     while (1) {							\
@@ -348,5 +348,5 @@ notmuch_message_file_get_header (notmuch_message_file_t *message,
 			header_desired);
     }
 
-    return NULL;
+    return "";
 }
