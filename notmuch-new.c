@@ -167,7 +167,7 @@ add_files_recursive (notmuch_database_t *notmuch,
 	if (S_ISREG (st->st_mode)) {
 	    /* If the file hasn't been modified since the last
 	     * add_files, then we need not look at it. */
-	    if (st->st_mtime > path_dbtime) {
+	    if (path_dbtime == 0 || st->st_mtime > path_dbtime) {
 		state->processed_files++;
 
 		status = notmuch_database_add_message (notmuch, next, &message);
