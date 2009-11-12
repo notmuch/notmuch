@@ -1,20 +1,11 @@
 Emacs interface (notmuch.el)
 ----------------------------
-Make hidden components self documenting, such as:
-
-	[24-line citation, press 'c' to display.]
-
-Add support to compose a reply to the current messaage.
 
 notmuch command-line tool
 -------------------------
 Give "notmuch restore" some progress indicator. Until we get the
 Xapian bugs fixed that are making this operation slow, we really need
 to let the user know that things are still moving.
-
-Make "notmuch setup" not index all messages, but only what it can do
-in a reasonable amount of time, (then add "notmuch index" so the user
-can complete the job when convenient).
 
 Fix notmuch.c to call add_timestamp/get_timestamp with path names
 relative to the database path. (Otherwise, moving the database to a
