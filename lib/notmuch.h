@@ -451,6 +451,20 @@ notmuch_threads_destroy (notmuch_threads_t *threads);
 const char *
 notmuch_thread_get_thread_id (notmuch_thread_t *thread);
 
+/* Get the authors of 'thread'
+ *
+ * The returned string is a comma-separated list of the names of the
+ * authors of mail messages in the query results that belong to this
+ * thread.
+ *
+ * The returned string belongs to 'thread' and as such, should not be
+ * modified by the caller and will only be valid for as long as the
+ * thread is valid, (which is until notmuch_thread_destroy or until
+ * the query from which it derived is destroyed).
+ */
+const char *
+notmuch_thread_get_authors (notmuch_thread_t *thread);
+
 /* Get the subject of 'thread'
  *
  * The subject is taken from the first message (according to the query

@@ -23,12 +23,14 @@
 
 #include <xapian.h>
 
+#include <gmime/gmime.h>
 #include <glib.h> /* GHashTable */
 
 struct _notmuch_thread {
     notmuch_database_t *notmuch;
     char *thread_id;
     char *subject;
+    char *authors;
     GHashTable *tags;
 
     notmuch_bool_t has_message;
@@ -75,6 +77,7 @@ _notmuch_thread_create (const void *talloc_owner,
     thread->notmuch = notmuch;
     thread->thread_id = talloc_strdup (thread, thread_id);
     thread->subject = NULL;
+    thread->authors = NULL;
     thread->tags = g_hash_table_new_full (g_str_hash, g_str_equal,
 					  free, NULL);
 
@@ -98,6 +101,32 @@ _notmuch_thread_add_message (notmuch_thread_t *thread,
     notmuch_tags_t *tags;
     const char *tag;
     time_t date;
+    InternetAddressList *list;
+    InternetAddress *address;
+    const char *from, *author;
+
+    from = notmuch_message_get_header (message, "from");
+    list = internet_address_list_parse_string (from);
+    if (list) {
+	address = internet_address_list_get_address (list, 0);
+	if (address) {
+	    author = internet_address_get_name (address);
+	    if (author == NULL) {
+		InternetAddressMailbox *mailbox;
+		mailbox = INTERNET_ADDRESS_MAILBOX (address);
+		author = internet_address_mailbox_get_addr (mailbox);
+	    }
+	    if (author) {
+		if (thread->authors)
+		    thread->authors = talloc_asprintf (thread, "%s, %s",
+						       thread->authors,
+						       author);
+		else
+		    thread->authors = talloc_strdup (thread, author);
+	    }
+	}
+	g_object_unref (G_OBJECT (list));
+    }
 
     if (! thread->subject) {
 	const char *subject;
@@ -122,6 +151,12 @@ _notmuch_thread_add_message (notmuch_thread_t *thread,
 	thread->newest = date;
 
     thread->has_message = 1;
+}
+
+const char *
+notmuch_thread_get_authors (notmuch_thread_t *thread)
+{
+    return thread->authors;
 }
 
 const char *

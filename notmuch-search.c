@@ -64,9 +64,10 @@ notmuch_search_command (void *ctx, int argc, char *argv[])
 	date = notmuch_thread_get_oldest_date (thread);
 	relative_date = notmuch_time_relative_date (ctx, date);
 
-	printf ("thread:%s %12s %s",
+	printf ("thread:%s %12s %s; %s",
 		notmuch_thread_get_thread_id (thread),
 		relative_date,
+		notmuch_thread_get_authors (thread),
 		notmuch_thread_get_subject (thread));
 
 	printf (" (");
