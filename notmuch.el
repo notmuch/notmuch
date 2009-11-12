@@ -225,10 +225,15 @@ buffer."
 (defun notmuch-show-reply ()
   "Begin composing a reply to the current message in a new buffer."
   (interactive)
-  (view-file (notmuch-show-get-filename))
-  (let ((buf (current-buffer)))
-    (message-reply)
-    (kill-buffer buf)))
+  (let ((message-id (notmuch-show-get-message-id)))
+    (switch-to-buffer (generate-new-buffer "notmuch-draft"))
+    (call-process "notmuch" nil t nil "reply" message-id)
+    (goto-char (point-min))
+    (if (re-search-forward "^$" nil t)
+	(progn
+	  (insert "--text follows this line--")
+	  (forward-line)))
+    (message-mode)))
 
 (defun notmuch-show-pipe-message (command)
   "Pipe the contents of the current message to the given command.
