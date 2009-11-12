@@ -251,6 +251,9 @@ notmuch_reply_command (void *ctx, int argc, char *argv[])
 	g_mime_object_set_header (GMIME_OBJECT (reply),
 				  "From", from_addr);
 
+	g_mime_object_set_header (GMIME_OBJECT (reply), "Bcc",
+			   notmuch_config_get_user_primary_email (config));
+
 	in_reply_to = talloc_asprintf (ctx, "<%s>",
 			     notmuch_message_get_message_id (message));
 
