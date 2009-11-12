@@ -145,10 +145,15 @@ get_username_from_passwd_file (void *ctx)
  * in editing the file directly.
  */
 notmuch_config_t *
-notmuch_config_open (void *ctx, const char *filename)
+notmuch_config_open (void *ctx,
+		     const char *filename,
+		     notmuch_bool_t *is_new_ret)
 {
     GError *error = NULL;
-    int config_file_is_new = 0;
+    int is_new = 0;
+
+    if (is_new_ret)
+	*is_new_ret = 0;
 
     notmuch_config_t *config = talloc (ctx, notmuch_config_t);
     if (config == NULL) {
@@ -188,7 +193,7 @@ notmuch_config_open (void *ctx, const char *filename)
 	    return NULL;
 	}
 
-	config_file_is_new = 1;
+	is_new = 1;
     }
 
     if (notmuch_config_get_database_path (config) == NULL) {
@@ -236,7 +241,7 @@ notmuch_config_open (void *ctx, const char *filename)
 
     /* When we create a new configuration file here, we  add some
      * comments to help the user understand what can be done. */
-    if (config_file_is_new) {
+    if (is_new) {
 	g_key_file_set_comment (config->key_file, NULL, NULL,
 				toplevel_config_comment, NULL);
 	g_key_file_set_comment (config->key_file, "database", NULL,
@@ -244,6 +249,9 @@ notmuch_config_open (void *ctx, const char *filename)
 	g_key_file_set_comment (config->key_file, "user", NULL,
 				user_config_comment, NULL);
     }
+
+    if (is_new_ret)
+	*is_new_ret = is_new;
 
     return config;
 }

@@ -145,7 +145,9 @@ show_message_body (const char *filename,
 typedef struct _notmuch_config notmuch_config_t;
 
 notmuch_config_t *
-notmuch_config_open (void *ctx, const char *filename);
+notmuch_config_open (void *ctx,
+		     const char *filename,
+		     notmuch_bool_t *is_new_ret);
 
 void
 notmuch_config_close (notmuch_config_t *config);
