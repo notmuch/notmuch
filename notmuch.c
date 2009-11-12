@@ -212,7 +212,60 @@ notmuch_help_command (unused (void *ctx), int argc, char *argv[])
 static int
 notmuch (void *ctx)
 {
-    return notmuch_setup_command (ctx, 0, NULL);
+    notmuch_config_t *config;
+    notmuch_bool_t is_new;
+    char *db_path;
+    struct stat st;
+
+    config = notmuch_config_open (ctx, NULL, &is_new);
+
+    /* If the user has never configured notmuch, then run
+     * notmuch_setup_command which will give a nice welcome message,
+     * and interactively guide the user through the configuration. */
+    if (is_new) {
+	notmuch_config_close (config);
+	return notmuch_setup_command (ctx, 0, NULL);
+    }
+
+    /* Notmuch is already configured, but is there a database? */
+    db_path = talloc_asprintf (ctx, "%s/%s",
+			       notmuch_config_get_database_path (config),
+			       ".notmuch");
+    if (stat (db_path, &st)) {
+	notmuch_config_close (config);
+	if (errno != ENOENT) {
+	    fprintf (stderr, "Error looking for notmuch database at %s: %s\n",
+		     db_path, strerror (errno));
+	    return 1;
+	}
+	printf ("Notmuch is configured, but there's not yet a database at\n\n\t%s\n\n",
+		db_path);
+	printf ("You probably want to run \"notmuch new\" now to create that database.\n\n"
+		"Note that the first run of \"notmuch new\" can take a very long time\n"
+		"and that the resulting database will use roughly the same amount of\n"
+		"storage space as the email being indexed.\n\n");
+	return 0;
+    }
+
+    printf ("Notmuch is configured and appears to have a database. Excellent!\n\n"
+	    "At this point you can start exploring the functionality of notmuch by\n"
+	    "using commands such as:\n\n"
+	    "\tnotmuch search tag:inbox\n\n"
+	    "\tnotmuch search to:\"%s\"\n\n"
+	    "\tnotmuch search from:\"%s\"\n\n"
+	    "\tnotmuch search subject:\"my favorite things\"\n\n"
+	    "See \"notmuch help search\" for more details.\n\n"
+	    "You can also use \"notmuch show\" with any of the thread IDs resulting\n"
+	    "from a search. Finally, you may want to explore using a more sophisticated\n"
+	    "interface to notmuch such as the emacs interface implemented in notmuch.el\n"
+	    "or any other interface described at http://notmuchmail.org\n\n"
+	    "Have fun, and may your inbox never have much mail.\n\n",
+	    notmuch_config_get_user_name (config),
+	    notmuch_config_get_user_primary_email (config));
+
+    notmuch_config_close (config);
+
+    return 0;
 }
 
 int
