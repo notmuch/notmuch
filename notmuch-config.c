@@ -23,6 +23,36 @@
 #include <pwd.h>
 #include <netdb.h>
 
+static const char toplevel_config_comment[] =
+    " .notmuch-config - Configuration file for the notmuch mail system\n"
+    "\n"
+    " For more information about notmuch, see http://notmuchmail.org";
+
+static const char database_config_comment[] =
+    " Database configuration\n"
+    "\n"
+    " The only value supported here is 'path' which should be the top-level\n"
+    " directory where your mail currently exists and to where mail will be\n"
+    " delivered in the future. Files should be individual email messages.\n"
+    " Notmuch will store its database within a sub-directory of the path\n"
+    " configured here named \".notmuch\".\n";
+
+static const char user_config_comment[] =
+    " User configuration\n"
+    "\n"
+    " Here is where you can let notmuch know how you would like to be\n"
+    " addressed. Valid settings are\n"
+    "\n"
+    "\tname		Your full name.\n"
+    "\tprimary_email	Your primary email address.\n"
+    "\tother_email	A list (separated by ';') of other email addresses\n"
+    "\t		at which you receive email.\n"
+    "\n"
+    " Notmuch will use the various email addresses configured here when\n"
+    " formatting replies. It will avoid including your own addresses in the\n"
+    " recipient list of replies, and will set the From address based on the\n"
+    " address to which the original email was addressed.\n";
+
 struct _notmuch_config {
     char *filename;
     GKeyFile *key_file;
@@ -118,6 +148,7 @@ notmuch_config_t *
 notmuch_config_open (void *ctx, const char *filename)
 {
     GError *error = NULL;
+    int config_file_is_new = 0;
 
     notmuch_config_t *config = talloc (ctx, notmuch_config_t);
     if (config == NULL) {
@@ -156,6 +187,8 @@ notmuch_config_open (void *ctx, const char *filename)
 	    talloc_free (config);
 	    return NULL;
 	}
+
+	config_file_is_new = 1;
     }
 
     if (notmuch_config_get_database_path (config) == NULL) {
@@ -199,6 +232,17 @@ notmuch_config_open (void *ctx, const char *filename)
 	    talloc_free (username);
 	    talloc_free (email);
 	}
+    }
+
+    /* When we create a new configuration file here, we  add some
+     * comments to help the user understand what can be done. */
+    if (config_file_is_new) {
+	g_key_file_set_comment (config->key_file, NULL, NULL,
+				toplevel_config_comment, NULL);
+	g_key_file_set_comment (config->key_file, "database", NULL,
+				database_config_comment, NULL);
+	g_key_file_set_comment (config->key_file, "user", NULL,
+				user_config_comment, NULL);
     }
 
     return config;
