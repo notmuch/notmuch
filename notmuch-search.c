@@ -23,8 +23,8 @@
 int
 notmuch_search_command (void *ctx, int argc, char *argv[])
 {
-    void *local = talloc_new (ctx);
-    notmuch_database_t *notmuch = NULL;
+    notmuch_config_t *config;
+    notmuch_database_t *notmuch;
     notmuch_query_t *query;
     notmuch_threads_t *threads;
     notmuch_thread_t *thread;
@@ -32,21 +32,25 @@ notmuch_search_command (void *ctx, int argc, char *argv[])
     char *query_str;
     const char *relative_date;
     time_t date;
-    notmuch_status_t ret = NOTMUCH_STATUS_SUCCESS;
 
-    notmuch = notmuch_database_open (NULL);
-    if (notmuch == NULL) {
-	ret = 1;
-	goto DONE;
+    config = notmuch_config_open (ctx, NULL, NULL);
+    if (config == NULL)
+	return 1;
+
+    notmuch = notmuch_database_open (notmuch_config_get_database_path (config));
+    if (notmuch == NULL)
+	return 1;
+
+    query_str = query_string_from_args (ctx, argc, argv);
+    if (query_str == NULL) {
+	fprintf (stderr, "Out of moemory.\n");
+	return 1;
     }
-
-    query_str = query_string_from_args (local, argc, argv);
 
     query = notmuch_query_create (notmuch, query_str);
     if (query == NULL) {
 	fprintf (stderr, "Out of memory\n");
-	ret = 1;
-	goto DONE;
+	return 1;
     }
 
     for (threads = notmuch_query_search_threads (query);
@@ -58,7 +62,7 @@ notmuch_search_command (void *ctx, int argc, char *argv[])
 	thread = notmuch_threads_get (threads);
 
 	date = notmuch_thread_get_oldest_date (thread);
-	relative_date = notmuch_time_relative_date (local, date);
+	relative_date = notmuch_time_relative_date (ctx, date);
 
 	printf ("thread:%s %12s %s",
 		notmuch_thread_get_thread_id (thread),
@@ -81,11 +85,7 @@ notmuch_search_command (void *ctx, int argc, char *argv[])
     }
 
     notmuch_query_destroy (query);
+    notmuch_database_close (notmuch);
 
-  DONE:
-    if (notmuch)
-	notmuch_database_close (notmuch);
-    talloc_free (local);
-
-    return ret;
+    return 0;
 }

@@ -23,32 +23,33 @@
 int
 notmuch_restore_command (unused (void *ctx), int argc, char *argv[])
 {
-    FILE *input = NULL;
-    notmuch_database_t *notmuch = NULL;
+    notmuch_config_t *config;
+    notmuch_database_t *notmuch;
+    FILE *input;
     char *line = NULL;
     size_t line_size;
     ssize_t line_len;
     regex_t regex;
     int rerr;
-    int ret = 0;
+
+    config = notmuch_config_open (ctx, NULL, NULL);
+    if (config == NULL)
+	return 1;
+
+    notmuch = notmuch_database_open (notmuch_config_get_database_path (config));
+    if (notmuch == NULL)
+	return 1;
 
     if (argc) {
 	input = fopen (argv[0], "r");
 	if (input == NULL) {
 	    fprintf (stderr, "Error opening %s for reading: %s\n",
 		     argv[0], strerror (errno));
-	    ret = 1;
-	    goto DONE;
+	    return 1;
 	}
     } else {
 	printf ("No filename given. Reading dump from stdin.\n");
 	input = stdin;
-    }
-
-    notmuch = notmuch_database_open (NULL);
-    if (notmuch == NULL) {
-	ret = 1;
-	goto DONE;
     }
 
     /* Dump output is one line per message. We match a sequence of
@@ -118,13 +119,12 @@ notmuch_restore_command (unused (void *ctx), int argc, char *argv[])
 
     regfree (&regex);
 
-  DONE:
     if (line)
 	free (line);
-    if (notmuch)
-	notmuch_database_close (notmuch);
-    if (input && input != stdin)
+
+    notmuch_database_close (notmuch);
+    if (input != stdin)
 	fclose (input);
 
-    return ret;
+    return 0;
 }

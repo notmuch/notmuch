@@ -120,13 +120,12 @@ show_part(GMimeObject *part, int *part_count)
 int
 notmuch_show_command (void *ctx, unused (int argc), unused (char *argv[]))
 {
-    void *local = talloc_new (ctx);
-    char *query_string;
-    notmuch_database_t *notmuch = NULL;
-    notmuch_query_t *query = NULL;
+    notmuch_config_t *config;
+    notmuch_database_t *notmuch;
+    notmuch_query_t *query;
     notmuch_messages_t *messages;
     notmuch_message_t *message;
-    int ret = 0;
+    char *query_string;
 
     const char *headers[] = {
 	"From", "To", "Cc", "Bcc", "Date"
@@ -134,24 +133,24 @@ notmuch_show_command (void *ctx, unused (int argc), unused (char *argv[]))
     const char *name, *value;
     unsigned int i;
 
-    notmuch = notmuch_database_open (NULL);
-    if (notmuch == NULL) {
-	ret = 1;
-	goto DONE;
-    }
+    config = notmuch_config_open (ctx, NULL, NULL);
+    if (config == NULL)
+	return 1;
 
-    query_string = query_string_from_args (local, argc, argv);
+    notmuch = notmuch_database_open (notmuch_config_get_database_path (config));
+    if (notmuch == NULL)
+	return 1;
+
+    query_string = query_string_from_args (ctx, argc, argv);
     if (query_string == NULL) {
 	fprintf (stderr, "Out of memory\n");
-	ret = 1;
-	goto DONE;
+	return 1;
     }
 
     query = notmuch_query_create (notmuch, query_string);
     if (query == NULL) {
 	fprintf (stderr, "Out of memory\n");
-	ret = 1;
-	goto DONE;
+	return 1;
     }
 
     for (messages = notmuch_query_search_messages (query);
@@ -166,7 +165,7 @@ notmuch_show_command (void *ctx, unused (int argc), unused (char *argv[]))
 
 	printf ("\fheader{\n");
 
-	printf ("%s\n", _get_one_line_summary (local, message));
+	printf ("%s\n", _get_one_line_summary (ctx, message));
 
 	printf ("%s\n", notmuch_message_get_header (message, "subject"));
 
@@ -189,15 +188,8 @@ notmuch_show_command (void *ctx, unused (int argc), unused (char *argv[]))
 	notmuch_message_destroy (message);
     }
 
-  DONE:
-    if (local)
-	talloc_free (local);
+    notmuch_query_destroy (query);
+    notmuch_database_close (notmuch);
 
-    if (query)
-	notmuch_query_destroy (query);
-
-    if (notmuch)
-	notmuch_database_close (notmuch);
-
-    return ret;
+    return 0;
 }

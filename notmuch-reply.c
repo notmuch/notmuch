@@ -123,10 +123,10 @@ add_recipients_for_string (GMimeMessage *message,
 int
 notmuch_reply_command (void *ctx, int argc, char *argv[])
 {
-    void *local = talloc_new (ctx);
-    notmuch_query_t *query = NULL;
-    notmuch_database_t *notmuch = NULL;
-    GMimeMessage *reply = NULL;
+    notmuch_config_t *config;
+    notmuch_database_t *notmuch;
+    notmuch_query_t *query;
+    GMimeMessage *reply;
     char *query_string;
     notmuch_messages_t *messages;
     notmuch_message_t *message;
@@ -145,24 +145,24 @@ notmuch_reply_command (void *ctx, int argc, char *argv[])
     };
     unsigned int i;
 
-    notmuch = notmuch_database_open (NULL);
-    if (notmuch == NULL) {
-	ret = 1;
-	goto DONE;
-    }
+    config = notmuch_config_open (ctx, NULL, NULL);
+    if (config == NULL)
+	return 1;
 
-    query_string = query_string_from_args (local, argc, argv);
+    notmuch = notmuch_database_open (notmuch_config_get_database_path (config));
+    if (notmuch == NULL)
+	return 1;
+
+    query_string = query_string_from_args (ctx, argc, argv);
     if (query_string == NULL) {
 	fprintf (stderr, "Out of memory\n");
-	ret = 1;
-	goto DONE;
+	return 1;
     }
 
     query = notmuch_query_create (notmuch, query_string);
     if (query == NULL) {
 	fprintf (stderr, "Out of memory\n");
-	ret = 1;
-	goto DONE;
+	return 1;
     }
 
     for (messages = notmuch_query_search_messages (query);
@@ -175,8 +175,7 @@ notmuch_reply_command (void *ctx, int argc, char *argv[])
 	reply = g_mime_message_new (1);
 	if (reply == NULL) {
 	    fprintf (stderr, "Out of memory\n");
-	    ret = 1;
-	    goto DONE;
+	    return 1;
 	}
 
 	/* XXX: We need a configured email address (or addresses) for
@@ -230,18 +229,8 @@ notmuch_reply_command (void *ctx, int argc, char *argv[])
 	notmuch_message_destroy (message);
     }
 
-  DONE:
-    if (local)
-	talloc_free (local);
-
-    if (query)
-	notmuch_query_destroy (query);
-
-    if (notmuch)
-	notmuch_database_close (notmuch);
-
-    if (reply)
-	g_object_unref (G_OBJECT (reply));
+    notmuch_query_destroy (query);
+    notmuch_database_close (notmuch);
 
     return ret;
 }

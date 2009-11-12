@@ -23,34 +23,27 @@
 int
 notmuch_tag_command (void *ctx, unused (int argc), unused (char *argv[]))
 {
-    void *local;
     int *add_tags, *remove_tags;
     int add_tags_count = 0;
     int remove_tags_count = 0;
     char *query_string;
-    notmuch_database_t *notmuch = NULL;
+    notmuch_config_t *config;
+    notmuch_database_t *notmuch;
     notmuch_query_t *query;
     notmuch_messages_t *messages;
     notmuch_message_t *message;
-    int ret = 0;
     int i;
 
-    local = talloc_new (ctx);
-    if (local == NULL) {
-	ret = 1;
-	goto DONE;
-    }
-
-    add_tags = talloc_size (local, argc * sizeof (int));
+    add_tags = talloc_size (ctx, argc * sizeof (int));
     if (add_tags == NULL) {
-	ret = 1;
-	goto DONE;
+	fprintf (stderr, "Out of memory.\n");
+	return 1;
     }
 
-    remove_tags = talloc_size (local, argc * sizeof (int));
+    remove_tags = talloc_size (ctx, argc * sizeof (int));
     if (remove_tags == NULL) {
-	ret = 1;
-	goto DONE;
+	fprintf (stderr, "Out of memory.\n");
+	return 1;
     }
 
     for (i = 0; i < argc; i++) {
@@ -69,29 +62,28 @@ notmuch_tag_command (void *ctx, unused (int argc), unused (char *argv[]))
 
     if (add_tags_count == 0 && remove_tags_count == 0) {
 	fprintf (stderr, "Error: 'notmuch tag' requires at least one tag to add or remove.\n");
-	ret = 1;
-	goto DONE;
+	return 1;
     }
 
     if (i == argc) {
 	fprintf (stderr, "Error: 'notmuch tag' requires at least one search term.\n");
-	ret = 1;
-	goto DONE;
+	return 1;
     }
 
-    notmuch = notmuch_database_open (NULL);
-    if (notmuch == NULL) {
-	ret = 1;
-	goto DONE;
-    }
+    config = notmuch_config_open (ctx, NULL, NULL);
+    if (config == NULL)
+	return 1;
 
-    query_string = query_string_from_args (local, argc - i, &argv[i]);
+    notmuch = notmuch_database_open (notmuch_config_get_database_path (config));
+    if (notmuch == NULL)
+	return 1;
+
+    query_string = query_string_from_args (ctx, argc - i, &argv[i]);
 
     query = notmuch_query_create (notmuch, query_string);
     if (query == NULL) {
 	fprintf (stderr, "Out of memory.\n");
-	ret = 1;
-	goto DONE;
+	return 1;
     }
 
     for (messages = notmuch_query_search_messages (query);
@@ -115,12 +107,7 @@ notmuch_tag_command (void *ctx, unused (int argc), unused (char *argv[]))
     }
 
     notmuch_query_destroy (query);
+    notmuch_database_close (notmuch);
 
-  DONE:
-    if (notmuch)
-	notmuch_database_close (notmuch);
-
-    talloc_free (local);
-
-    return ret;
+    return 0;
 }
