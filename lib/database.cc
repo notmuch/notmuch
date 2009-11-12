@@ -107,7 +107,6 @@ prefix_t BOOLEAN_PREFIX_INTERNAL[] = {
     { "ref", "XREFERENCE" },
     { "replyto", "XREPLYTO" },
     { "timestamp", "XTIMESTAMP" },
-    { "contact", "XCONTACT" }
 };
 
 prefix_t BOOLEAN_PREFIX_EXTERNAL[] = {
