@@ -71,8 +71,30 @@ reply_part(GMimeObject *part, int *part_count)
     }
 }
 
+/* Is the given address configured as one of the user's "personal" or
+ * "other" addresses. */
+static int
+address_is_users (const char *address, notmuch_config_t *config)
+{
+    const char *primary;
+    char **other;
+    unsigned int i, other_len;
+
+    primary = notmuch_config_get_user_primary_email (config);
+    if (strcmp (primary, address) == 0)
+	return 1;
+
+    other = notmuch_config_get_user_other_email (config, &other_len);
+    for (i = 0; i < other_len; i++)
+	if (strcmp (other[i], address) == 0)
+	    return 1;
+
+    return 0;
+}
+
 static void
 add_recipients_for_address_list (GMimeMessage *message,
+				 notmuch_config_t *config,
 				 GMimeRecipientType type,
 				 InternetAddressList *list)
 {
@@ -90,7 +112,8 @@ add_recipients_for_address_list (GMimeMessage *message,
 	    if (group_list == NULL)
 		continue;
 
-	    add_recipients_for_address_list (message, type, group_list);
+	    add_recipients_for_address_list (message, config,
+					     type, group_list);
 	} else {
 	    InternetAddressMailbox *mailbox;
 	    const char *name;
@@ -101,13 +124,15 @@ add_recipients_for_address_list (GMimeMessage *message,
 	    name = internet_address_get_name (address);
 	    addr = internet_address_mailbox_get_addr (mailbox);
 
-	    g_mime_message_add_recipient (message, type, name, addr);
+	    if (! address_is_users (addr, config))
+		g_mime_message_add_recipient (message, type, name, addr);
 	}
     }
 }
 
 static void
 add_recipients_for_string (GMimeMessage *message,
+			   notmuch_config_t *config,
 			   GMimeRecipientType type,
 			   const char *recipients)
 {
@@ -117,7 +142,7 @@ add_recipients_for_string (GMimeMessage *message,
     if (list == NULL)
 	return;
 
-    add_recipients_for_address_list (message, type, list);
+    add_recipients_for_address_list (message, config, type, list);
 }
 
 int
@@ -194,7 +219,7 @@ notmuch_reply_command (void *ctx, int argc, char *argv[])
 	for (i = 0; i < ARRAY_SIZE (reply_to_map); i++) {
 	    recipients = notmuch_message_get_header (message,
 						     reply_to_map[i].header);
-	    add_recipients_for_string (reply,
+	    add_recipients_for_string (reply, config,
 				       reply_to_map[i].recipient_type,
 				       recipients);
 	}
