@@ -391,22 +391,6 @@ parse_references (void *ctx,
     }
 }
 
-char *
-notmuch_database_default_path (void)
-{
-    char *path;
-
-    if (getenv ("NOTMUCH_BASE"))
-	return strdup (getenv ("NOTMUCH_BASE"));
-
-    if (asprintf (&path, "%s/mail", getenv ("HOME")) == -1) {
-	fprintf (stderr, "Out of memory.\n");
-	return xstrdup("");
-    }
-
-    return path;
-}
-
 notmuch_database_t *
 notmuch_database_create (const char *path)
 {
@@ -414,10 +398,11 @@ notmuch_database_create (const char *path)
     char *notmuch_path = NULL;
     struct stat st;
     int err;
-    char *local_path = NULL;
 
-    if (path == NULL)
-	path = local_path = notmuch_database_default_path ();
+    if (path == NULL) {
+	fprintf (stderr, "Error: Cannot create a database for a NULL path.\n");
+	goto DONE;
+    }
 
     err = stat (path, &st);
     if (err) {
@@ -447,8 +432,6 @@ notmuch_database_create (const char *path)
   DONE:
     if (notmuch_path)
 	talloc_free (notmuch_path);
-    if (local_path)
-	free (local_path);
 
     return notmuch;
 }
@@ -460,11 +443,7 @@ notmuch_database_open (const char *path)
     char *notmuch_path = NULL, *xapian_path = NULL;
     struct stat st;
     int err;
-    char *local_path = NULL;
     unsigned int i;
-
-    if (path == NULL)
-	path = local_path = notmuch_database_default_path ();
 
     if (asprintf (&notmuch_path, "%s/%s", path, ".notmuch") == -1) {
 	notmuch_path = NULL;
@@ -520,8 +499,6 @@ notmuch_database_open (const char *path)
     }
     
   DONE:
-    if (local_path)
-	free (local_path);
     if (notmuch_path)
 	free (notmuch_path);
     if (xapian_path)

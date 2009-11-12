@@ -204,18 +204,69 @@ notmuch_help_command (unused (void *ctx), int argc, char *argv[])
 	     argv[0]);
     return 1;
 }
-    
+
+/* Handle the case of "notmuch" being invoked with no command
+ * argument. Print a welcome and explanatory message, then invoke
+ * notmuch_setup_command.
+ */
+static int
+notmuch (void *ctx)
+{
+    int ret;
+
+    printf (
+"Welcome to notmuch!\n\n"
+
+"The goal of notmuch is to help you manage and search your collection of\n"
+"email, and to efficiently keep up with the flow of email as it comes in.\n\n"
+
+"Notmuch needs to know a few things about you such as your name and email\n"
+"address, as well as the directory that contains your email. This is where\n"
+"you already have mail stored and where messages will be delivered in the\n"
+"future. This directory can contain any number of sub-directories. Regular\n"
+"files in these directories should be individual email messages. If there\n"
+"are other, non-email files (such as indexes maintained by other email\n"
+"programs) then notmuch will do its best to detect those and ignore them.\n\n"
+
+"If you already have your email being delivered to directories in either\n"
+"maildir or mh format, then that's perfect. Mail storage that uses mbox\n"
+"format, (where one mbox file contains many messages), will not work with\n"
+"notmuch. If that's how your mail is currently stored, we recommend you\n"
+"first convert it to maildir format with a utility such as mb2md. You can\n"
+"continue configuring notmuch now, but be sure to complete the conversion\n"
+"before you run \"notmuch new\" for the first time.\n\n");
+
+    ret = notmuch_setup_command (ctx, 0, NULL);
+
+    printf ("\n"
+"Notmuch is now configured, and the configuration settings are saved in\n"
+"a file in your home directory named .notmuch-config . If you'd like to\n"
+"change the configuration in the future, you can either edit that file\n"
+"directly or run \"notmuch setup\".\n\n"
+
+"The next step is to run \"notmuch new\" which will create a database\n"
+"that indexes all of your mail. Depending on the amount of mail you have\n"
+"the initial indexing process can take a long time, so expect that.\n"
+"Also, the resulting database will require roughly the same amount of\n"
+"storage space as your current collection of email. So please ensure you\n"
+"have sufficient storage space available now.\n\n");
+
+    return ret;
+}
+
 int
 main (int argc, char *argv[])
 {
-    void *local = talloc_new (NULL);
+    void *local;
     command_t *command;
     unsigned int i;
+
+    local = talloc_new (NULL);
 
     g_mime_init (0);
 
     if (argc == 1)
-	return notmuch_setup_command (local, 0, NULL);
+	return notmuch (local);
 
     for (i = 0; i < ARRAY_SIZE (commands); i++) {
 	command = &commands[i];

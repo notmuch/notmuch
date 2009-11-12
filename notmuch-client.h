@@ -140,4 +140,47 @@ notmuch_status_t
 show_message_body (const char *filename,
 		   void (*show_part) (GMimeObject *part, int *part_count));
 
+/* notmuch-config.c */
+
+typedef struct _notmuch_config notmuch_config_t;
+
+notmuch_config_t *
+notmuch_config_open (void *ctx, const char *filename);
+
+void
+notmuch_config_close (notmuch_config_t *config);
+
+int
+notmuch_config_save (notmuch_config_t *config);
+
+const char *
+notmuch_config_get_database_path (notmuch_config_t *config);
+
+void
+notmuch_config_set_database_path (notmuch_config_t *config,
+				  const char *database_path);
+
+const char *
+notmuch_config_get_user_name (notmuch_config_t *config);
+
+void
+notmuch_config_set_user_name (notmuch_config_t *config,
+			      const char *user_name);
+
+const char *
+notmuch_config_get_user_primary_email (notmuch_config_t *config);
+
+void
+notmuch_config_set_user_primary_email (notmuch_config_t *config,
+				       const char *primary_email);
+
+char **
+notmuch_config_get_user_other_email (notmuch_config_t *config,
+				     size_t *length);
+
+void
+notmuch_config_set_user_other_email (notmuch_config_t *config,
+				     const char *other_email[],
+				     size_t length);
+
 #endif

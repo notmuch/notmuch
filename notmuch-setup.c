@@ -145,134 +145,95 @@ count_files (const char *path, int *count)
     closedir (dir);
 }
 
-static void
-welcome_message (void)
+static const char *
+make_path_absolute (void *ctx, const char *path)
 {
-    printf (
-"Welcome to notmuch!\n\n"
-"The goal of notmuch is to help you manage and search your collection of\n"
-"email, and to efficiently keep up with the flow of email as it comes in.\n\n"
-"Notmuch needs to know the top-level directory of your email archive,\n"
-"(where you already have mail stored and where messages will be delivered\n"
-"in the future). This directory can contain any number of sub-directories\n"
-"and primarily just files with indvidual email messages (eg. maildir or mh\n"
-"archives are perfect). If there are other, non-email files (such as\n"
-"indexes maintained by other email programs) then notmuch will do its\n"
-"best to detect those and ignore them.\n\n"
-"Mail storage that uses mbox format, (where one mbox file contains many\n"
-"messages), will not work with notmuch. If that's how your mail is currently\n"
-"stored, we recommend you first convert it to maildir format with a utility\n"
-"such as mb2md. In that case, press Control-C now and run notmuch again\n"
-"once the conversion is complete.\n\n");
-}
+    char *cwd;
 
-static char *
-prompt_user_for_mail_directory ()
-{
-    char *default_path, *mail_directory = NULL;
-    size_t line_size;
+    if (*path == '/')
+	return path;
 
-    default_path = notmuch_database_default_path ();
-    printf ("Top-level mail directory [%s]: ", default_path);
-    fflush (stdout);
-
-    getline (&mail_directory, &line_size, stdin);
-    chomp_newline (mail_directory);
-
-    printf ("\n");
-
-    if (mail_directory == NULL || strlen (mail_directory) == 0) {
-	if (mail_directory)
-	    free (mail_directory);
-	mail_directory = default_path;
-    } else {
-	/* XXX: Instead of telling the user to use an environment
-	 * variable here, we should really be writing out a configuration
-	 * file and loading that on the next run. */
-	if (strcmp (mail_directory, default_path)) {
-	    printf ("Note: Since you are not using the default path, you will want to set\n"
-		    "the NOTMUCH_BASE environment variable to %s so that\n"
-		    "future calls to notmuch commands will know where to find your mail.\n",
-		    mail_directory);
-	    printf ("For example, if you are using bash for your shell, add:\n\n");
-	    printf ("\texport NOTMUCH_BASE=%s\n\n", mail_directory);
-	    printf ("to your ~/.bashrc file.\n\n");
-	}
-	free (default_path);
+    cwd = getcwd (NULL, 0);
+    if (cwd == NULL) {
+	fprintf (stderr, "Out of memory.\n");
+	return NULL;
     }
 
-    /* Coerce the directory into an absolute directory name. */
-    if (*mail_directory != '/') {
-	char *cwd, *absolute_mail_directory;
+    path = talloc_asprintf (ctx, "%s/%s", cwd, path);
+    if (path == NULL)
+	fprintf (stderr, "Out of memory.\n");
 
-	cwd = getcwd (NULL, 0);
-	if (cwd == NULL) {
-	    fprintf (stderr, "Out of memory.\n");
-	    exit (1);
-	}
+    free (cwd);
 
-	if (asprintf (&absolute_mail_directory, "%s/%s",
-		      cwd, mail_directory) < 0)
-	{
-	    fprintf (stderr, "Out of memory.\n");
-	    exit (1);
-	}
-
-	free (cwd);
-	free (mail_directory);
-	mail_directory = absolute_mail_directory;
-    }
-
-    return mail_directory;
+    return path;
 }
 
 int
 notmuch_setup_command (unused (void *ctx),
 		       unused (int argc), unused (char *argv[]))
 {
-    notmuch_database_t *notmuch = NULL;
-    char *mail_directory = NULL;
-    int count;
-    notmuch_status_t ret = NOTMUCH_STATUS_SUCCESS;
+    char *response = NULL;
+    size_t response_size;
+    notmuch_config_t *config;
+    char **old_other_emails;
+    size_t old_other_emails_len;
+    GPtrArray *other_emails;
+    unsigned int i;
 
-    welcome_message ();
+#define prompt(format, ...)				\
+    do {						\
+	printf (format, ##__VA_ARGS__);			\
+	fflush (stdout);				\
+	getline (&response, &response_size, stdin);	\
+	chomp_newline (response);			\
+    } while (0)
 
-    mail_directory = prompt_user_for_mail_directory ();
+    config = notmuch_config_open (ctx, NULL);
 
-    notmuch = notmuch_database_create (mail_directory);
-    if (notmuch == NULL) {
-	fprintf (stderr, "Failed to create new notmuch database at %s\n",
-		 mail_directory);
-	ret = NOTMUCH_STATUS_FILE_ERROR;
-	goto DONE;
+    prompt ("Your full name [%s]: ", notmuch_config_get_user_name (config));
+    if (strlen (response))
+	notmuch_config_set_user_name (config, response);
+
+    prompt ("Your primary email address [%s]: ",
+	    notmuch_config_get_user_primary_email (config));
+    if (strlen (response))
+	notmuch_config_set_user_primary_email (config, response);
+
+    other_emails = g_ptr_array_new ();
+
+    old_other_emails = notmuch_config_get_user_other_email (config,
+					     &old_other_emails_len);
+    for (i = 0; i < old_other_emails_len; i++) {
+	prompt ("Additional email address [%s]: ", old_other_emails[i]);
+	if (strlen (response))
+	    g_ptr_array_add (other_emails, talloc_strdup (ctx, response));
+	else
+	    g_ptr_array_add (other_emails, talloc_strdup (ctx,
+							 old_other_emails[i]));
     }
 
-    printf ("OK. Let's take a look at the mail we can find in the directory\n");
-    printf ("%s ...\n", mail_directory);
+    do {
+	prompt ("Additional email address [Press 'Enter' if none]: ");
+	if (strlen (response))
+	    g_ptr_array_add (other_emails, talloc_strdup (ctx, response));
+    } while (strlen (response));
+    if (other_emails->len)
+	notmuch_config_set_user_other_email (config,
+					     (const char **)
+					     other_emails->pdata,
+					     other_emails->len);
+    g_ptr_array_free (other_emails, TRUE);
 
-    count = 0;
-    count_files (mail_directory, &count);
+    prompt ("Top-level directory of your email archive [%s]: ",
+	    notmuch_config_get_database_path (config));
+    if (strlen (response)) {
+	const char *absolute_path;
 
-    printf ("Found %d total files. That's not much mail.\n\n", count);
-
-    printf ("Next, we'll inspect the messages and create a database of threads:\n");
-
-    ret = add_all_files (notmuch, mail_directory, count);
-
-    printf ("When new mail is delivered to %s in the future,\n"
-	    "run \"notmuch new\" to add it to the database.\n\n",
-	    mail_directory);
-
-    if (ret) {
-	printf ("Note: At least one error was encountered: %s\n",
-		notmuch_status_to_string (ret));
+	absolute_path = make_path_absolute (ctx, response);
+	notmuch_config_set_database_path (config, absolute_path);
     }
 
-  DONE:
-    if (mail_directory)
-	free (mail_directory);
-    if (notmuch)
-	notmuch_database_close (notmuch);
+    notmuch_config_save (config);
 
-    return ret;
+    return 0;
 }

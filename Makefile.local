@@ -2,6 +2,7 @@ all: notmuch
 
 notmuch_client_srcs =		\
 	notmuch.c		\
+	notmuch-config.c	\
 	notmuch-dump.c		\
 	notmuch-new.c		\
 	notmuch-reply.c		\
