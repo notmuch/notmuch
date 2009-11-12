@@ -713,18 +713,6 @@ global search.
       (notmuch-search-markup-this-thread-id)
       (next-line))))
 
-(defun notmuch-search-hide-thread-ids ()
-  (interactive)
-  (add-to-invisibility-spec 'notmuch-search)
-  (force-window-update)
-  (redisplay t))
-
-(defun notmuch-search-show-thread-ids ()
-  (interactive)
-  (remove-from-invisibility-spec 'notmuch-search)
-  (force-window-update)
-  (redisplay t))
-
 (defun notmuch-search-show-thread ()
   (interactive)
   (let ((thread-id (notmuch-search-find-thread-id)))
