@@ -128,7 +128,7 @@ notmuch_show_command (void *ctx, unused (int argc), unused (char *argv[]))
     char *query_string;
 
     const char *headers[] = {
-	"From", "To", "Cc", "Bcc", "Date"
+	"Subject", "From", "To", "Cc", "Bcc", "Date"
     };
     const char *name, *value;
     unsigned int i;
@@ -166,8 +166,6 @@ notmuch_show_command (void *ctx, unused (int argc), unused (char *argv[]))
 	printf ("\fheader{\n");
 
 	printf ("%s\n", _get_one_line_summary (ctx, message));
-
-	printf ("%s\n", notmuch_message_get_header (message, "subject"));
 
 	for (i = 0; i < ARRAY_SIZE (headers); i++) {
 	    name = headers[i];
