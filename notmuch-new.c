@@ -410,6 +410,7 @@ notmuch_new_command (void *ctx,
 
     if (new_database) {
 	int count;
+	count = 0;
 	count_files (db_path, &count);
 	add_files_state.ignore_read_only_directories = FALSE;
 	add_files_state.total_files = count;
