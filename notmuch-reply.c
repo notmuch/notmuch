@@ -92,7 +92,14 @@ address_is_users (const char *address, notmuch_config_t *config)
     return 0;
 }
 
-static void
+/* For each address in 'list' that is not configured as one of the
+ * user's addresses in 'config', add that address to 'message' as an
+ * address of 'type'.
+ *
+ * The first address encountered that *is* the user's address will be
+ * returned, (otherwise NULL is returned).
+ */
+static const char *
 add_recipients_for_address_list (GMimeMessage *message,
 				 notmuch_config_t *config,
 				 GMimeRecipientType type,
@@ -100,6 +107,7 @@ add_recipients_for_address_list (GMimeMessage *message,
 {
     InternetAddress *address;
     int i;
+    const char *ret = NULL;
 
     for (i = 0; i < internet_address_list_length (list); i++) {
 	address = internet_address_list_get_address (list, i);
@@ -124,13 +132,26 @@ add_recipients_for_address_list (GMimeMessage *message,
 	    name = internet_address_get_name (address);
 	    addr = internet_address_mailbox_get_addr (mailbox);
 
-	    if (! address_is_users (addr, config))
+	    if (address_is_users (addr, config)) {
+		if (ret == NULL)
+		    ret = addr;
+	    } else {
 		g_mime_message_add_recipient (message, type, name, addr);
+	    }
 	}
     }
+
+    return ret;
 }
 
-static void
+/* For each address in 'recipients' that is not configured as one of
+ * the user's addresses in 'config', add that address to 'message' as
+ * an address of 'type'.
+ *
+ * The first address encountered that *is* the user's address will be
+ * returned, (otherwise NULL is returned).
+ */
+static const char *
 add_recipients_for_string (GMimeMessage *message,
 			   notmuch_config_t *config,
 			   GMimeRecipientType type,
@@ -140,9 +161,9 @@ add_recipients_for_string (GMimeMessage *message,
 
     list = internet_address_list_parse_string (recipients);
     if (list == NULL)
-	return;
+	return NULL;
 
-    add_recipients_for_address_list (message, config, type, list);
+    return add_recipients_for_address_list (message, config, type, list);
 }
 
 int
@@ -156,7 +177,7 @@ notmuch_reply_command (void *ctx, int argc, char *argv[])
     notmuch_messages_t *messages;
     notmuch_message_t *message;
     int ret = 0;
-    const char *subject, *recipients;
+    const char *subject, *recipients, *from_addr = NULL;
     const char *in_reply_to, *orig_references, *references;
     char *reply_headers;
     struct {
@@ -203,13 +224,6 @@ notmuch_reply_command (void *ctx, int argc, char *argv[])
 	    return 1;
 	}
 
-	/* XXX: We need a configured email address (or addresses) for
-	 * the user here, so that we can prevent replying to the user,
-	 * and also call _mime_message_set_sender to set From: (either
-	 * from the first "owned" address mentioned as a recipient in
-	 * the original message, or else some default address).
-	 */
-
 	subject = notmuch_message_get_header (message, "subject");
 
 	if (strncasecmp (subject, "Re:", 3))
@@ -217,12 +231,25 @@ notmuch_reply_command (void *ctx, int argc, char *argv[])
 	g_mime_message_set_subject (reply, subject);
 
 	for (i = 0; i < ARRAY_SIZE (reply_to_map); i++) {
+	    const char *addr;
+
 	    recipients = notmuch_message_get_header (message,
 						     reply_to_map[i].header);
-	    add_recipients_for_string (reply, config,
-				       reply_to_map[i].recipient_type,
-				       recipients);
+	    addr = add_recipients_for_string (reply, config,
+					      reply_to_map[i].recipient_type,
+					      recipients);
+	    if (from_addr == NULL)
+		from_addr = addr;
 	}
+
+	if (from_addr == NULL)
+	    from_addr = notmuch_config_get_user_primary_email (config);
+
+	from_addr = talloc_asprintf (ctx, "%s <%s>",
+				     notmuch_config_get_user_name (config),
+				     from_addr);
+	g_mime_object_set_header (GMIME_OBJECT (reply),
+				  "From", from_addr);
 
 	in_reply_to = talloc_asprintf (ctx, "<%s>",
 			     notmuch_message_get_message_id (message));
