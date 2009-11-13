@@ -88,7 +88,9 @@ _notmuch_messages_destructor (notmuch_messages_t *messages)
 }
 
 notmuch_messages_t *
-notmuch_query_search_messages (notmuch_query_t *query)
+notmuch_query_search_messages (notmuch_query_t *query,
+			       int first,
+			       int max_messages)
 {
     notmuch_database_t *notmuch = query->notmuch;
     const char *query_string = query->query_string;
@@ -138,7 +140,9 @@ notmuch_query_search_messages (notmuch_query_t *query)
 
 	enquire.set_query (final_query);
 
-	mset = enquire.get_mset (0, notmuch->xapian_db->get_doccount ());
+	if (max_messages == -1)
+	    max_messages = notmuch->xapian_db->get_doccount ();
+	mset = enquire.get_mset (first, max_messages);
 
 	messages->notmuch = notmuch;
 
@@ -171,7 +175,9 @@ _notmuch_threads_destructor (notmuch_threads_t *threads)
 }
 
 notmuch_threads_t *
-notmuch_query_search_threads (notmuch_query_t *query)
+notmuch_query_search_threads (notmuch_query_t *query,
+			      int first,
+			      int max_threads)
 {
     notmuch_threads_t *threads;
     notmuch_thread_t *thread;
@@ -179,6 +185,7 @@ notmuch_query_search_threads (notmuch_query_t *query)
     notmuch_messages_t *messages;
     notmuch_message_t *message;
     GHashTable *seen;
+    int messages_seen = 0, threads_seen = 0;
 
     threads = talloc (query, notmuch_threads_t);
     if (threads == NULL)
@@ -193,29 +200,48 @@ notmuch_query_search_threads (notmuch_query_t *query)
     seen = g_hash_table_new_full (g_str_hash, g_str_equal,
 				  free, NULL);
 
-    for (messages = notmuch_query_search_messages (query);
-	 notmuch_messages_has_more (messages);
-	 notmuch_messages_advance (messages))
+    while (threads_seen < first + max_threads)
     {
-	message = notmuch_messages_get (messages);
+	int messages_seen_previously = messages_seen;
 
-	thread_id = notmuch_message_get_thread_id (message);
-
-	if (! g_hash_table_lookup_extended (seen,
-					    thread_id, NULL,
-					    (void **) &thread))
+	for (messages = notmuch_query_search_messages (query,
+						       messages_seen,
+						       max_threads);
+	     notmuch_messages_has_more (messages);
+	     notmuch_messages_advance (messages))
 	{
-	    thread = _notmuch_thread_create (query, query->notmuch,
-					     thread_id);
+	    message = notmuch_messages_get (messages);
 
-	    g_hash_table_insert (seen, xstrdup (thread_id), thread);
+	    thread_id = notmuch_message_get_thread_id (message);
 
-	    g_ptr_array_add (threads->threads, thread);
+	    if (! g_hash_table_lookup_extended (seen,
+						thread_id, NULL,
+						(void **) &thread))
+	    {
+		if (threads_seen > first) {
+		    thread = _notmuch_thread_create (query, query->notmuch,
+						     thread_id);
+		    g_ptr_array_add (threads->threads, thread);
+		} else {
+		    thread = NULL;
+		}
+
+		g_hash_table_insert (seen, xstrdup (thread_id), thread);
+
+		threads_seen++;
+	    }
+
+	    if (thread)
+		_notmuch_thread_add_message (thread, message);
+
+	    notmuch_message_destroy (message);
+
+	    messages_seen++;
 	}
 
-	_notmuch_thread_add_message (thread, message);
-
-	notmuch_message_destroy (message);
+	/* Stop if we're not seeing any more messages. */
+	if (messages_seen == messages_seen_previously)
+	    break;
     }
 
     g_hash_table_unref (seen);

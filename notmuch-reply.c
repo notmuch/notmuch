@@ -211,7 +211,7 @@ notmuch_reply_command (void *ctx, int argc, char *argv[])
 	return 1;
     }
 
-    for (messages = notmuch_query_search_messages (query);
+    for (messages = notmuch_query_search_messages (query, 0, -1);
 	 notmuch_messages_has_more (messages);
 	 notmuch_messages_advance (messages))
     {

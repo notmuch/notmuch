@@ -53,7 +53,7 @@ notmuch_search_command (void *ctx, int argc, char *argv[])
 	return 1;
     }
 
-    for (threads = notmuch_query_search_threads (query);
+    for (threads = notmuch_query_search_threads (query, 0, -1);
 	 notmuch_threads_has_more (threads);
 	 notmuch_threads_advance (threads))
     {
