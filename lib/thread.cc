@@ -34,7 +34,8 @@ struct _notmuch_thread {
     char *authors;
     GHashTable *tags;
 
-    notmuch_bool_t has_message;
+    int total_messages;
+    int matched_messages;
     time_t oldest;
     time_t newest;
 };
@@ -112,49 +113,57 @@ _thread_add_message (notmuch_thread_t *thread,
 
     date = notmuch_message_get_date (message);
 
-    if (date < thread->oldest || ! thread->has_message)
+    if (date < thread->oldest || ! thread->total_messages)
 	thread->oldest = date;
 
-    if (date > thread->newest || ! thread->has_message)
+    if (date > thread->newest || ! thread->total_messages)
 	thread->newest = date;
 
-    thread->has_message = 1;
+    thread->total_messages++;
 }
 
-/* Create a new notmuch_thread_t object for the given thread ID.
+/* Create a new notmuch_thread_t object for the given thread ID,
+ * treating any messages matching 'query_string' as "matched".
  *
- * Creating the thread will trigger a database search for the messages
- * belonging to the thread so that the thread object can return some
- * details about them, (authors, subject, etc.).
+ * Creating the thread will trigger two database searches. The first
+ * is for all messages belonging to the thread, (to get the first
+ * subject line, the total count of messages, and all authors). The
+ * second search is for all messages that are in the thread and that
+ * also match the given query_string. This is to allow for a separate
+ * count of matched messages, and to allow a viewer to diplay these
+ * messages differently.
  *
- * Here, 'talloc owner' is an optional talloc context to which the new
- * thread will belong. This allows for the caller to not bother
- * calling notmuch_thread_destroy on the thread, and know that all
- * memory will be reclaimed with 'talloc_owner' is freed. The caller
- * still can call notmuch_thread_destroy when finished with the
- * thread if desired.
- *
- * The 'talloc_owner' argument can also be NULL, in which case the
- * caller *is* responsible for calling notmuch_thread_destroy.
+ * Here, 'ctx' is talloc context for the resulting thread object.
  *
  * This function returns NULL in the case of any error.
  */
 notmuch_thread_t *
-_notmuch_thread_create (const void *ctx,
+_notmuch_thread_create (void *ctx,
 			notmuch_database_t *notmuch,
-			const char *thread_id)
+			const char *thread_id,
+			const char *query_string)
 {
     notmuch_thread_t *thread;
-    const char *query_string;
-    notmuch_query_t *query;
+    const char *thread_id_query_string, *matched_query_string;
+    notmuch_query_t *thread_id_query, *matched_query;
     notmuch_messages_t *messages;
 
-    query_string = talloc_asprintf (ctx, "thread:%s", thread_id);
+    thread_id_query_string = talloc_asprintf (ctx, "thread:%s", thread_id);
     if (unlikely (query_string == NULL))
 	return NULL;
 
-    query = notmuch_query_create (notmuch, query_string);
-    if (unlikely (query == NULL))
+    matched_query_string = talloc_asprintf (ctx, "%s AND (%s)",
+					    thread_id_query_string,
+					    query_string);
+    if (unlikely (matched_query_string == NULL))
+	return NULL;
+
+    thread_id_query = notmuch_query_create (notmuch, thread_id_query_string);
+    if (unlikely (thread_id_query == NULL))
+	return NULL;
+
+    matched_query = notmuch_query_create (notmuch, matched_query_string);
+    if (unlikely (thread_id_query == NULL))
 	return NULL;
 
     thread = talloc (ctx, notmuch_thread_t);
@@ -172,20 +181,30 @@ _notmuch_thread_create (const void *ctx,
     thread->tags = g_hash_table_new_full (g_str_hash, g_str_equal,
 					  free, NULL);
 
-    thread->has_message = 0;
+    thread->total_messages = 0;
+    thread->matched_messages = 0;
     thread->oldest = 0;
     thread->newest = 0;
 
-    notmuch_query_set_sort (query, NOTMUCH_SORT_DATE_OLDEST_FIRST);
+    notmuch_query_set_sort (thread_id_query, NOTMUCH_SORT_DATE_OLDEST_FIRST);
 
-    for (messages = notmuch_query_search_messages (query, 0, -1);
+    for (messages = notmuch_query_search_messages (thread_id_query, 0, -1);
 	 notmuch_messages_has_more (messages);
 	 notmuch_messages_advance (messages))
     {
 	_thread_add_message (thread, notmuch_messages_get (messages));
     }
 
-    notmuch_query_destroy (query);
+    notmuch_query_destroy (thread_id_query);
+
+    for (messages = notmuch_query_search_messages (matched_query, 0, -1);
+	 notmuch_messages_has_more (messages);
+	 notmuch_messages_advance (messages))
+    {
+	thread->matched_messages++;
+    }
+
+    notmuch_query_destroy (matched_query);
 
     return thread;
 }
@@ -194,6 +213,18 @@ const char *
 notmuch_thread_get_thread_id (notmuch_thread_t *thread)
 {
     return thread->thread_id;
+}
+
+int
+notmuch_thread_get_total_messages (notmuch_thread_t *thread)
+{
+    return thread->total_messages;
+}
+
+int
+notmuch_thread_get_matched_messages (notmuch_thread_t *thread)
+{
+    return thread->matched_messages;
 }
 
 const char *

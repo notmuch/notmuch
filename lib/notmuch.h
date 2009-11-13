@@ -469,6 +469,23 @@ notmuch_threads_destroy (notmuch_threads_t *threads);
 const char *
 notmuch_thread_get_thread_id (notmuch_thread_t *thread);
 
+/* Get the total number of messages in 'thread'.
+ *
+ * This count consists of all messages in the database belonging to
+ * this thread. Contrast with notmuch_thread_get_matched_messages() .
+ */
+int
+notmuch_thread_get_total_messages (notmuch_thread_t *thread);
+
+/* Get the number of messages in 'thread' that matched the search.
+ *
+ * This count includes only the messages in this thread that were
+ * matched by the search from which the thread was created. Contrast
+ * with notmuch_thread_get_total_messages() .
+ */
+int
+notmuch_thread_get_matched_messages (notmuch_thread_t *thread);
+
 /* Get the authors of 'thread'
  *
  * The returned string is a comma-separated list of the names of the
