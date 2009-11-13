@@ -218,7 +218,7 @@ notmuch_query_search_threads (notmuch_query_t *query,
 						thread_id, NULL,
 						(void **) &thread))
 	    {
-		if (threads_seen > first) {
+		if (threads_seen >= first) {
 		    thread = _notmuch_thread_create (query, query->notmuch,
 						     thread_id);
 		    g_ptr_array_add (threads->threads, thread);
