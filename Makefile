@@ -27,13 +27,13 @@ include lib/Makefile.local
 .deps/%.d: %.c
 	@set -e; rm -f $@; mkdir -p $$(dirname $@) ; \
 	$(CC) -M $(CPPFLAGS) $(CFLAGS) $< > $@.$$$$; \
-	sed 's,\($*\)\.o[ :]*,\1.o $@ : ,g' < $@.$$$$ > $@; \
+	sed 's,'$$(basename $*)'\.o[ :]*,$*.o $@ : ,g' < $@.$$$$ > $@; \
 	rm -f $@.$$$$
 
 .deps/%.d: %.cc
 	@set -e; rm -f $@; mkdir -p $$(dirname $@) ; \
 	$(CXX) -M $(CPPFLAGS) $(CXXFLAGS) $< > $@.$$$$; \
-	sed 's,\($*\)\.o[ :]*,\1.o $@ : ,g' < $@.$$$$ > $@; \
+	sed 's,'$$(basename $*)'\.o[ :]*,$*.o $@ : ,g' < $@.$$$$ > $@; \
 	rm -f $@.$$$$
 
 DEPS := $(SRCS:%.c=.deps/%.d)
