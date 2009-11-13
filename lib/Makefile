@@ -1,5 +1,5 @@
 all:
-	make -C .. all
+	$(MAKE) -C .. all
 
 clean:
-	make -C .. clean
+	$(MAKE) -C .. clean
