@@ -19,7 +19,7 @@
 ;
 ; Authors: Carl Worth <cworth@cworth.org>
 
-(load "cl-seq")
+(require 'cl)
 
 (defvar notmuch-show-mode-map
   (let ((map (make-sparse-keymap)))
