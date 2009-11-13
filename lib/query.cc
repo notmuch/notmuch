@@ -200,7 +200,7 @@ notmuch_query_search_threads (notmuch_query_t *query,
     seen = g_hash_table_new_full (g_str_hash, g_str_equal,
 				  free, NULL);
 
-    while (threads_seen < first + max_threads)
+    while (max_threads < 0 || threads_seen < first + max_threads)
     {
 	int messages_seen_previously = messages_seen;
 
