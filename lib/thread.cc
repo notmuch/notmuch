@@ -111,15 +111,24 @@ _thread_add_message (notmuch_thread_t *thread,
 	g_hash_table_insert (thread->tags, xstrdup (tag), NULL);
     }
 
+    thread->total_messages++;
+}
+
+static void
+_thread_add_matched_message (notmuch_thread_t *thread,
+			     notmuch_message_t *message)
+{
+    time_t date;
+
     date = notmuch_message_get_date (message);
 
-    if (date < thread->oldest || ! thread->total_messages)
+    if (date < thread->oldest || ! thread->matched_messages)
 	thread->oldest = date;
 
-    if (date > thread->newest || ! thread->total_messages)
+    if (date > thread->newest || ! thread->matched_messages)
 	thread->newest = date;
 
-    thread->total_messages++;
+    thread->matched_messages++;
 }
 
 /* Create a new notmuch_thread_t object for the given thread ID,
@@ -201,7 +210,7 @@ _notmuch_thread_create (void *ctx,
 	 notmuch_messages_has_more (messages);
 	 notmuch_messages_advance (messages))
     {
-	thread->matched_messages++;
+	_thread_add_matched_message (thread, notmuch_messages_get (messages));
     }
 
     notmuch_query_destroy (matched_query);
