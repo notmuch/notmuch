@@ -237,6 +237,9 @@ notmuch_query_search_threads (notmuch_query_t *query,
 	    notmuch_message_destroy (message);
 
 	    messages_seen++;
+
+	    if (max_threads >= 0 && threads_seen >= first + max_threads)
+		break;
 	}
 
 	/* Stop if we're not seeing any more messages. */
