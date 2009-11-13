@@ -182,12 +182,13 @@ notmuch_reply_command (void *ctx, int argc, char *argv[])
     char *reply_headers;
     struct {
 	const char *header;
+	const char *fallback;
 	GMimeRecipientType recipient_type;
     } reply_to_map[] = {
-	{ "from", GMIME_RECIPIENT_TYPE_TO  },
-	{ "to",   GMIME_RECIPIENT_TYPE_TO  },
-	{ "cc",   GMIME_RECIPIENT_TYPE_CC  },
-	{ "bcc",  GMIME_RECIPIENT_TYPE_BCC }
+	{ "reply-to", "from", GMIME_RECIPIENT_TYPE_TO  },
+	{ "to",         NULL, GMIME_RECIPIENT_TYPE_TO  },
+	{ "cc",         NULL, GMIME_RECIPIENT_TYPE_CC  },
+	{ "bcc",        NULL, GMIME_RECIPIENT_TYPE_BCC }
     };
     unsigned int i;
 
@@ -235,6 +236,10 @@ notmuch_reply_command (void *ctx, int argc, char *argv[])
 
 	    recipients = notmuch_message_get_header (message,
 						     reply_to_map[i].header);
+	    if (recipients == NULL && reply_to_map[i].fallback)
+		recipients = notmuch_message_get_header (message,
+							 reply_to_map[i].fallback);
+
 	    addr = add_recipients_for_string (reply, config,
 					      reply_to_map[i].recipient_type,
 					      recipients);
