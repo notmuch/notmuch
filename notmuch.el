@@ -684,6 +684,7 @@ global search.
   (interactive)
   (kill-all-local-variables)
   (make-local-variable 'notmuch-search-query-string)
+  (make-local-variable 'notmuch-search-oldest-first)
   (set (make-local-variable 'scroll-preserve-screen-position) t)
   (add-to-invisibility-spec 'notmuch-search)
   (use-local-map notmuch-search-mode-map)
@@ -777,13 +778,14 @@ This function advances point to the next line when finished."
   (notmuch-search-remove-tag "inbox")
   (forward-line))
 
-(defun notmuch-search (query)
+(defun notmuch-search (query &optional oldest-first)
   "Run \"notmuch search\" with the given query string and display results."
   (interactive "sNotmuch search: ")
   (let ((buffer (get-buffer-create (concat "*notmuch-search-" query "*"))))
     (switch-to-buffer buffer)
     (notmuch-search-mode)
     (set 'notmuch-search-query-string query)
+    (set 'notmuch-search-oldest-first oldest-first)
     (let ((proc (get-buffer-process (current-buffer)))
 	  (inhibit-read-only t))
       (if proc
@@ -792,7 +794,9 @@ This function advances point to the next line when finished."
       (erase-buffer)
       (goto-char (point-min))
       (save-excursion
-	(call-process "notmuch" nil t nil "search" query)
+	(if oldest-first
+	    (call-process "notmuch" nil t nil "search" query)
+	  (call-process "notmuch" nil t nil "search" "--reverse" query))
 	(notmuch-search-markup-thread-ids)
 	))))
 
@@ -806,10 +810,11 @@ thread. Otherwise, point will be moved to attempt to be in the
 same relative position within the new buffer."
   (interactive)
   (let ((here (point))
+	(oldest-first notmuch-search-oldest-first)
 	(thread (notmuch-search-find-thread-id))
 	(query notmuch-search-query-string))
     (kill-this-buffer)
-    (notmuch-search query)
+    (notmuch-search query oldest-first)
     (goto-char (point-min))
     (if (re-search-forward (concat "^" thread) nil t)
 	(beginning-of-line)
@@ -821,7 +826,7 @@ same relative position within the new buffer."
 Runs a new search matching only messages that match both the
 current search results AND the additional query string provided."
   (interactive "sFilter search: ")
-  (notmuch-search (concat notmuch-search-query-string " and " query)))
+  (notmuch-search (concat notmuch-search-query-string " and " query) notmuch-search-oldest-first))
 
 (defun notmuch-search-filter-by-tag (tag)
   "Filter the current search results based on a single tag.
@@ -829,11 +834,11 @@ current search results AND the additional query string provided."
 Runs a new search matching only messages that match both the
 current search results AND that are tagged with the given tag."
   (interactive "sFilter by tag: ")
-  (notmuch-search (concat notmuch-search-query-string " and tag:" tag)))
+  (notmuch-search (concat notmuch-search-query-string " and tag:" tag) notmuch-search-oldest-first))
 
 (defun notmuch ()
   "Run notmuch to display all mail with tag of 'inbox'"
   (interactive)
-  (notmuch-search "tag:inbox"))
+  (notmuch-search "tag:inbox" t))
 
 (provide 'notmuch)
