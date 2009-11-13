@@ -20,6 +20,16 @@
 
 #include "notmuch-client.h"
 
+static volatile sig_atomic_t interrupted;
+
+static void
+handle_sigint (unused (int sig))
+{
+    static char msg[] = "Stopping...         \n";
+    write(2, msg, sizeof(msg)-1);
+    interrupted = 1;
+}
+
 int
 notmuch_tag_command (void *ctx, unused (int argc), unused (char *argv[]))
 {
@@ -32,7 +42,15 @@ notmuch_tag_command (void *ctx, unused (int argc), unused (char *argv[]))
     notmuch_query_t *query;
     notmuch_messages_t *messages;
     notmuch_message_t *message;
+    struct sigaction action;
     int i;
+
+    /* Setup our handler for SIGINT */
+    memset (&action, 0, sizeof (struct sigaction));
+    action.sa_handler = handle_sigint;
+    sigemptyset (&action.sa_mask);
+    action.sa_flags = SA_RESTART;
+    sigaction (SIGINT, &action, NULL);
 
     add_tags = talloc_size (ctx, argc * sizeof (int));
     if (add_tags == NULL) {
@@ -87,7 +105,7 @@ notmuch_tag_command (void *ctx, unused (int argc), unused (char *argv[]))
     }
 
     for (messages = notmuch_query_search_messages (query, 0, -1);
-	 notmuch_messages_has_more (messages);
+	 notmuch_messages_has_more (messages) && !interrupted;
 	 notmuch_messages_advance (messages))
     {
 	message = notmuch_messages_get (messages);
@@ -109,5 +127,5 @@ notmuch_tag_command (void *ctx, unused (int argc), unused (char *argv[]))
     notmuch_query_destroy (query);
     notmuch_database_close (notmuch);
 
-    return 0;
+    return interrupted;
 }

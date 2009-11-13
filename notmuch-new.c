@@ -28,6 +28,16 @@ handle_sigalrm (unused (int signal))
     do_add_files_print_progress = 1;
 }
 
+static volatile sig_atomic_t interrupted;
+
+static void
+handle_sigint (unused (int sig))
+{
+    static char msg[] = "Stopping...         \n";
+    write(2, msg, sizeof(msg)-1);
+    interrupted = 1;
+}
+
 static void
 tag_inbox_and_unread (notmuch_message_t *message)
 {
@@ -125,7 +135,7 @@ add_files_recursive (notmuch_database_t *notmuch,
 	pathconf (path, _PC_NAME_MAX) + 1;
     entry = malloc (entry_length);
 
-    while (1) {
+    while (!interrupted) {
 	err = readdir_r (dir, entry, &e);
 	if (err) {
 	    fprintf (stderr, "Error reading directory: %s\n",
@@ -319,7 +329,7 @@ count_files (const char *path, int *count)
 	pathconf (path, _PC_NAME_MAX) + 1;
     entry = malloc (entry_length);
 
-    while (1) {
+    while (!interrupted) {
 	err = readdir_r (dir, entry, &e);
 	if (err) {
 	    fprintf (stderr, "Error reading directory: %s\n",
@@ -385,7 +395,14 @@ notmuch_new_command (void *ctx,
     struct stat st;
     const char *db_path;
     char *dot_notmuch_path;
-    int new_database = 0;
+    struct sigaction action;
+
+    /* Setup our handler for SIGINT */
+    memset (&action, 0, sizeof (struct sigaction));
+    action.sa_handler = handle_sigint;
+    sigemptyset (&action.sa_mask);
+    action.sa_flags = SA_RESTART;
+    sigaction (SIGINT, &action, NULL);
 
     config = notmuch_config_open (ctx, NULL, NULL);
     if (config == NULL)
@@ -396,10 +413,20 @@ notmuch_new_command (void *ctx,
     dot_notmuch_path = talloc_asprintf (ctx, "%s/%s", db_path, ".notmuch");
 
     if (stat (dot_notmuch_path, &st)) {
-	new_database = 1;
+	int count;
+
+	count = 0;
+	count_files (db_path, &count);
+	if (interrupted)
+	    return 1;
+
 	notmuch = notmuch_database_create (db_path);
+	add_files_state.ignore_read_only_directories = FALSE;
+	add_files_state.total_files = count;
     } else {
 	notmuch = notmuch_database_open (db_path);
+	add_files_state.ignore_read_only_directories = TRUE;
+	add_files_state.total_files = 0;
     }
 
     if (notmuch == NULL)
@@ -407,17 +434,6 @@ notmuch_new_command (void *ctx,
 
     talloc_free (dot_notmuch_path);
     dot_notmuch_path = NULL;
-
-    if (new_database) {
-	int count;
-	count = 0;
-	count_files (db_path, &count);
-	add_files_state.ignore_read_only_directories = FALSE;
-	add_files_state.total_files = count;
-    } else {
-	add_files_state.ignore_read_only_directories = TRUE;
-	add_files_state.total_files = 0;
-    }
 
     add_files_state.saw_read_only_directory = FALSE;
     add_files_state.total_files = 0;
@@ -465,5 +481,5 @@ notmuch_new_command (void *ctx,
 
     notmuch_database_close (notmuch);
 
-    return ret;
+    return ret || interrupted;
 }
