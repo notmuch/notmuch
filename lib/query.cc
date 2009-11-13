@@ -231,9 +231,6 @@ notmuch_query_search_threads (notmuch_query_t *query,
 		threads_seen++;
 	    }
 
-	    if (thread)
-		_notmuch_thread_add_message (thread, message);
-
 	    notmuch_message_destroy (message);
 
 	    messages_seen++;

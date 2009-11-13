@@ -46,57 +46,9 @@ _notmuch_thread_destructor (notmuch_thread_t *thread)
     return 0;
 }
 
-/* Create a new notmuch_thread_t object for an existing document in
- * the database.
- *
- * Here, 'talloc owner' is an optional talloc context to which the new
- * thread will belong. This allows for the caller to not bother
- * calling notmuch_thread_destroy on the thread, and know that all
- * memory will be reclaimed with 'talloc_owner' is freed. The caller
- * still can call notmuch_thread_destroy when finished with the
- * thread if desired.
- *
- * The 'talloc_owner' argument can also be NULL, in which case the
- * caller *is* responsible for calling notmuch_thread_destroy.
- *
- * This function returns NULL in the case of any error.
- */
-notmuch_thread_t *
-_notmuch_thread_create (const void *talloc_owner,
-			notmuch_database_t *notmuch,
-			const char *thread_id)
-{
-    notmuch_thread_t *thread;
-
-    thread = talloc (talloc_owner, notmuch_thread_t);
-    if (unlikely (thread == NULL))
-	return NULL;
-
-    talloc_set_destructor (thread, _notmuch_thread_destructor);
-
-    thread->notmuch = notmuch;
-    thread->thread_id = talloc_strdup (thread, thread_id);
-    thread->subject = NULL;
-    thread->authors = NULL;
-    thread->tags = g_hash_table_new_full (g_str_hash, g_str_equal,
-					  free, NULL);
-
-    thread->has_message = 0;
-    thread->oldest = 0;
-    thread->newest = 0;
-
-    return thread;
-}
-
-const char *
-notmuch_thread_get_thread_id (notmuch_thread_t *thread)
-{
-    return thread->thread_id;
-}
-
-void
-_notmuch_thread_add_message (notmuch_thread_t *thread,
-			     notmuch_message_t *message)
+static void
+_thread_add_message (notmuch_thread_t *thread,
+		     notmuch_message_t *message)
 {
     notmuch_tags_t *tags;
     const char *tag;
@@ -151,6 +103,79 @@ _notmuch_thread_add_message (notmuch_thread_t *thread,
 	thread->newest = date;
 
     thread->has_message = 1;
+}
+
+/* Create a new notmuch_thread_t object for the given thread ID.
+ *
+ * Creating the thread will trigger a database search for the messages
+ * belonging to the thread so that the thread object can return some
+ * details about them, (authors, subject, etc.).
+ *
+ * Here, 'talloc owner' is an optional talloc context to which the new
+ * thread will belong. This allows for the caller to not bother
+ * calling notmuch_thread_destroy on the thread, and know that all
+ * memory will be reclaimed with 'talloc_owner' is freed. The caller
+ * still can call notmuch_thread_destroy when finished with the
+ * thread if desired.
+ *
+ * The 'talloc_owner' argument can also be NULL, in which case the
+ * caller *is* responsible for calling notmuch_thread_destroy.
+ *
+ * This function returns NULL in the case of any error.
+ */
+notmuch_thread_t *
+_notmuch_thread_create (const void *ctx,
+			notmuch_database_t *notmuch,
+			const char *thread_id)
+{
+    notmuch_thread_t *thread;
+    const char *query_string;
+    notmuch_query_t *query;
+    notmuch_messages_t *messages;
+
+    query_string = talloc_asprintf (ctx, "thread:%s", thread_id);
+    if (unlikely (query_string == NULL))
+	return NULL;
+
+    query = notmuch_query_create (notmuch, query_string);
+    if (unlikely (query == NULL))
+	return NULL;
+
+    thread = talloc (ctx, notmuch_thread_t);
+    if (unlikely (thread == NULL))
+	return NULL;
+
+    talloc_set_destructor (thread, _notmuch_thread_destructor);
+
+    thread->notmuch = notmuch;
+    thread->thread_id = talloc_strdup (thread, thread_id);
+    thread->subject = NULL;
+    thread->authors = NULL;
+    thread->tags = g_hash_table_new_full (g_str_hash, g_str_equal,
+					  free, NULL);
+
+    thread->has_message = 0;
+    thread->oldest = 0;
+    thread->newest = 0;
+
+    notmuch_query_set_sort (query, NOTMUCH_SORT_DATE_OLDEST_FIRST);
+
+    for (messages = notmuch_query_search_messages (query, 0, -1);
+	 notmuch_messages_has_more (messages);
+	 notmuch_messages_advance (messages))
+    {
+	_thread_add_message (thread, notmuch_messages_get (messages));
+    }
+
+    notmuch_query_destroy (query);
+
+    return thread;
+}
+
+const char *
+notmuch_thread_get_thread_id (notmuch_thread_t *thread)
+{
+    return thread->thread_id;
 }
 
 const char *

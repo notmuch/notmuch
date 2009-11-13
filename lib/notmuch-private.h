@@ -150,13 +150,9 @@ _find_prefix (const char *name);
 /* thread.cc */
 
 notmuch_thread_t *
-_notmuch_thread_create (const void *talloc_owner,
+_notmuch_thread_create (const void *ctx,
 			notmuch_database_t *notmuch,
 			const char *thread_id);
-
-void
-_notmuch_thread_add_message (notmuch_thread_t *thread,
-			     notmuch_message_t *message);
 
 /* message.cc */
 
