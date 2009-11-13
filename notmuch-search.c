@@ -32,6 +32,33 @@ notmuch_search_command (void *ctx, int argc, char *argv[])
     char *query_str;
     const char *relative_date;
     time_t date;
+    int i, first = 0, max_threads = -1;
+    char *opt, *end;
+
+    for (i = 0; i < argc && argv[i][0] == '-'; i++) {
+	if (strcmp (argv[i], "--") == 0) {
+	    i++;
+	    break;
+	}
+	if (STRNCMP_LITERAL (argv[i], "--first=") == 0) {
+	    opt = argv[i] + sizeof ("--first=") - 1;
+	    first = strtoul (opt, &end, 10);
+	    if (*opt == '\0' || *end != '\0') {
+		fprintf (stderr, "Invalid value for --first: %s\n", opt);
+		return 1;
+	    }
+	} else if (STRNCMP_LITERAL (argv[i], "--max-threads=") == 0) {
+	    opt = argv[i] + sizeof ("--max-threads=") - 1;
+	    max_threads = strtoul (opt, &end, 10);
+	    if (*opt == '\0' || *end != '\0') {
+		fprintf (stderr, "Invalid value for --max-threads: %s\n", opt);
+		return 1;
+	    }
+	}
+    }
+
+    argc -= i;
+    argv += i;
 
     config = notmuch_config_open (ctx, NULL, NULL);
     if (config == NULL)
@@ -53,7 +80,7 @@ notmuch_search_command (void *ctx, int argc, char *argv[])
 	return 1;
     }
 
-    for (threads = notmuch_query_search_threads (query, 0, -1);
+    for (threads = notmuch_query_search_threads (query, first, max_threads);
 	 notmuch_threads_has_more (threads);
 	 notmuch_threads_advance (threads))
     {

@@ -66,6 +66,9 @@
 
 #define ARRAY_SIZE(arr) (sizeof (arr) / sizeof (arr[0]))
 
+#define STRNCMP_LITERAL(var, literal) \
+    strncmp ((var), (literal), sizeof (literal) - 1)
+
 typedef int (*command_function_t) (void *ctx, int argc, char *argv[]);
 
 typedef struct command {
