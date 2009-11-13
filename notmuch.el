@@ -615,6 +615,7 @@ thread from that buffer can be show when done with this one)."
     (define-key map "b" 'notmuch-search-scroll-down)
     (define-key map "f" 'notmuch-search-filter)
     (define-key map "n" 'next-line)
+    (define-key map "o" 'notmuch-search-toggle-order)
     (define-key map "p" 'previous-line)
     (define-key map "q" 'kill-this-buffer)
     (define-key map "s" 'notmuch-search)
@@ -819,6 +820,24 @@ same relative position within the new buffer."
     (if (re-search-forward (concat "^" thread) nil t)
 	(beginning-of-line)
       (goto-char here))))
+
+(defun notmuch-search-toggle-order ()
+  "Toggle the current search order.
+
+By default, the \"inbox\" view created by `notmuch' is displayed
+in chronological order (oldest thread at the beginning of the
+buffer), while any global searches created by `notmuch-search'
+are displayed in reverse-chronological order (newest thread at
+the beginning of the buffer).
+
+This command toggles the sort order for the current search.
+
+Note that any fitlered searches created by
+`notmuch-search-filter' retain the search order of the parent
+search."
+  (interactive)
+  (set 'notmuch-search-oldest-first (not notmuch-search-oldest-first))
+  (notmuch-search-refresh-view))
 
 (defun notmuch-search-filter (query)
   "Filter the current search results based on an additional query string.
