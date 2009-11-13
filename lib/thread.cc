@@ -30,6 +30,7 @@ struct _notmuch_thread {
     notmuch_database_t *notmuch;
     char *thread_id;
     char *subject;
+    GHashTable *authors_hash;
     char *authors;
     GHashTable *tags;
 
@@ -41,9 +42,31 @@ struct _notmuch_thread {
 static int
 _notmuch_thread_destructor (notmuch_thread_t *thread)
 {
+    g_hash_table_unref (thread->authors_hash);
     g_hash_table_unref (thread->tags);
 
     return 0;
+}
+
+static void
+_thread_add_author (notmuch_thread_t *thread,
+		    const char *author)
+{
+    if (author == NULL)
+	return;
+
+    if (g_hash_table_lookup_extended (thread->authors_hash,
+				      author, NULL, NULL))
+	return;
+
+    g_hash_table_insert (thread->authors_hash, xstrdup (author), NULL);
+
+    if (thread->authors)
+	thread->authors = talloc_asprintf (thread, "%s, %s",
+					   thread->authors,
+					   author);
+    else
+	thread->authors = talloc_strdup (thread, author);
 }
 
 static void
@@ -68,14 +91,7 @@ _thread_add_message (notmuch_thread_t *thread,
 		mailbox = INTERNET_ADDRESS_MAILBOX (address);
 		author = internet_address_mailbox_get_addr (mailbox);
 	    }
-	    if (author) {
-		if (thread->authors)
-		    thread->authors = talloc_asprintf (thread, "%s, %s",
-						       thread->authors,
-						       author);
-		else
-		    thread->authors = talloc_strdup (thread, author);
-	    }
+	    _thread_add_author (thread, author);
 	}
 	g_object_unref (G_OBJECT (list));
     }
@@ -150,6 +166,8 @@ _notmuch_thread_create (const void *ctx,
     thread->notmuch = notmuch;
     thread->thread_id = talloc_strdup (thread, thread_id);
     thread->subject = NULL;
+    thread->authors_hash = g_hash_table_new_full (g_str_hash, g_str_equal,
+						  free, NULL);
     thread->authors = NULL;
     thread->tags = g_hash_table_new_full (g_str_hash, g_str_equal,
 					  free, NULL);
