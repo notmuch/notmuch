@@ -20,6 +20,7 @@
 ; Authors: Carl Worth <cworth@cworth.org>
 
 (require 'cl)
+(require 'mm-view)
 
 (defvar notmuch-show-mode-map
   (let ((map (make-sparse-keymap)))
@@ -44,6 +45,7 @@
     (define-key map "q" 'kill-this-buffer)
     (define-key map "r" 'notmuch-show-reply)
     (define-key map "s" 'notmuch-show-toggle-signatures-visible)
+    (define-key map "v" 'notmuch-show-view-all-mime-parts)
     (define-key map "w" 'notmuch-show-view-raw-message)
     (define-key map "x" 'kill-this-buffer)
     (define-key map "+" 'notmuch-show-add-tag)
@@ -222,6 +224,18 @@ buffer."
   "View the raw email of the current message."
   (interactive)
   (view-file (notmuch-show-get-filename)))
+
+(defun notmuch-show-view-all-mime-parts ()
+  "Use external viewers (according to mailcap) to view all MIME-encoded parts."
+  (interactive)
+  (save-excursion
+    (let ((filename (notmuch-show-get-filename)))
+      (switch-to-buffer (generate-new-buffer (concat "*notmuch-mime-"
+						     filename
+						     "*")))
+      (insert-file-contents filename nil nil nil t)
+      (mm-display-parts (mm-dissect-buffer))
+      (kill-this-buffer))))
 
 (defun notmuch-show-reply ()
   "Begin composing a reply to the current message in a new buffer."
