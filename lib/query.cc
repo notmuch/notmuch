@@ -72,21 +72,6 @@ notmuch_query_set_sort (notmuch_query_t *query, notmuch_sort_t sort)
     query->sort = sort;
 }
 
-/* We end up having to call the destructors explicitly because we had
- * to use "placement new" in order to initialize C++ objects within a
- * block that we allocated with talloc. So C++ is making talloc
- * slightly less simple to use, (we wouldn't need
- * talloc_set_destructor at all otherwise).
- */
-static int
-_notmuch_messages_destructor (notmuch_messages_t *messages)
-{
-    messages->iterator.~MSetIterator ();
-    messages->iterator_end.~MSetIterator ();
-
-    return 0;
-}
-
 notmuch_messages_t *
 notmuch_query_search_messages (notmuch_query_t *query,
 			       int first,
@@ -95,8 +80,9 @@ notmuch_query_search_messages (notmuch_query_t *query,
     notmuch_database_t *notmuch = query->notmuch;
     const char *query_string = query->query_string;
     notmuch_messages_t *messages;
+    Xapian::MSetIterator i;
 
-    messages = talloc (query, notmuch_messages_t);
+    messages = _notmuch_messages_create (query);
     if (unlikely (messages == NULL))
 	return NULL;
 
@@ -144,15 +130,22 @@ notmuch_query_search_messages (notmuch_query_t *query,
 	    max_messages = notmuch->xapian_db->get_doccount ();
 	mset = enquire.get_mset (first, max_messages);
 
-	messages->notmuch = notmuch;
+	for (i = mset.begin (); i != mset.end (); i++) {
+	    notmuch_message_t *message;
+	    notmuch_private_status_t status;
 
-	new (&messages->iterator) Xapian::MSetIterator ();
-	new (&messages->iterator_end) Xapian::MSetIterator ();
+	    message = _notmuch_message_create (messages, notmuch,
+					       *i, &status);
+	    if (message == NULL)
+	    {
+		if (status == NOTMUCH_PRIVATE_STATUS_NO_DOCUMENT_FOUND)
+		    INTERNAL_ERROR ("A message iterator contains a "
+				    "non-existent document ID.\n");
+		break;
+	    }
 
-	talloc_set_destructor (messages, _notmuch_messages_destructor);
-
-	messages->iterator = mset.begin ();
-	messages->iterator_end = mset.end ();
+	    _notmuch_messages_add_message (messages, message);
+	}
 
     } catch (const Xapian::Error &error) {
 	fprintf (stderr, "A Xapian exception occurred: %s\n",
@@ -254,49 +247,6 @@ void
 notmuch_query_destroy (notmuch_query_t *query)
 {
     talloc_free (query);
-}
-
-notmuch_bool_t
-notmuch_messages_has_more (notmuch_messages_t *messages)
-{
-    return (messages->iterator != messages->iterator_end);
-}
-
-notmuch_message_t *
-notmuch_messages_get (notmuch_messages_t *messages)
-{
-    notmuch_message_t *message;
-    Xapian::docid doc_id;
-    notmuch_private_status_t status;
-
-    if (! notmuch_messages_has_more (messages))
-	return NULL;
-
-    doc_id = *messages->iterator;
-
-    message = _notmuch_message_create (messages,
-				       messages->notmuch, doc_id,
-				       &status);
-
-    if (message == NULL &&
-	status == NOTMUCH_PRIVATE_STATUS_NO_DOCUMENT_FOUND)
-    {
-	INTERNAL_ERROR ("a messages iterator contains a non-existent document ID.\n");
-    }
-
-    return message;
-}
-
-void
-notmuch_messages_advance (notmuch_messages_t *messages)
-{
-    messages->iterator++;
-}
-
-void
-notmuch_messages_destroy (notmuch_messages_t *messages)
-{
-    talloc_free (messages);
 }
 
 notmuch_bool_t

@@ -275,6 +275,15 @@ const char *
 notmuch_message_file_get_header (notmuch_message_file_t *message,
 				 const char *header);
 
+/* messages.c */
+
+notmuch_messages_t *
+_notmuch_messages_create (void *ctx);
+
+void
+_notmuch_messages_add_message (notmuch_messages_t *messages,
+			       notmuch_message_t *message);
+
 /* date.c */
 
 /* Parse an RFC 8222 date string to a time_t value.

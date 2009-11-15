@@ -4,6 +4,7 @@ extra_cflags += -I$(dir)
 libnotmuch_c_srcs =		\
 	$(dir)/libsha1.c	\
 	$(dir)/message-file.c	\
+	$(dir)/messages.c	\
 	$(dir)/sha1.c		\
 	$(dir)/tags.c		\
 	$(dir)/xutil.c
