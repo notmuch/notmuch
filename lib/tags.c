@@ -97,15 +97,18 @@ notmuch_tags_has_more (notmuch_tags_t *tags)
 const char *
 notmuch_tags_get (notmuch_tags_t *tags)
 {
-    if (tags->iterator)
-	return (char *) tags->iterator->data;
-    else
+    if (tags->iterator == NULL)
 	return NULL;
+
+    return (char *) tags->iterator->data;
 }
 
 void
 notmuch_tags_advance (notmuch_tags_t *tags)
 {
+    if (tags->iterator == NULL)
+	return;
+
     tags->iterator = tags->iterator->next;
 }
 
