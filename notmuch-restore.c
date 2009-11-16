@@ -81,37 +81,34 @@ notmuch_restore_command (unused (void *ctx), int argc, char *argv[])
 	tags = xstrndup (line + match[2].rm_so,
 			 match[2].rm_eo - match[2].rm_so);
 
-	if (strlen (tags)) {
-
-	    message = notmuch_database_find_message (notmuch, message_id);
-	    if (message == NULL) {
-		fprintf (stderr, "Warning: Cannot apply tags to missing message: %s\n",
-			 message_id);
-		goto NEXT_LINE;
-	    }
-
-	    notmuch_message_freeze (message);
-
-	    notmuch_message_remove_all_tags (message);
-
-	    next = tags;
-	    while (next) {
-		tag = strsep (&next, " ");
-		if (*tag == '\0')
-		    continue;
-		status = notmuch_message_add_tag (message, tag);
-		if (status) {
-		    fprintf (stderr,
-			     "Error applying tag %s to message %s:\n",
-			     tag, message_id);
-		    fprintf (stderr, "%s\n",
-			     notmuch_status_to_string (status));
-		}
-	    }
-
-	    notmuch_message_thaw (message);
-	    notmuch_message_destroy (message);
+	message = notmuch_database_find_message (notmuch, message_id);
+	if (message == NULL) {
+	    fprintf (stderr, "Warning: Cannot apply tags to missing message: %s\n",
+		     message_id);
+	    goto NEXT_LINE;
 	}
+
+	notmuch_message_freeze (message);
+
+	notmuch_message_remove_all_tags (message);
+
+	next = tags;
+	while (next) {
+	    tag = strsep (&next, " ");
+	    if (*tag == '\0')
+		continue;
+	    status = notmuch_message_add_tag (message, tag);
+	    if (status) {
+		fprintf (stderr,
+			 "Error applying tag %s to message %s:\n",
+			 tag, message_id);
+		fprintf (stderr, "%s\n",
+			 notmuch_status_to_string (status));
+	    }
+	}
+
+	notmuch_message_thaw (message);
+	notmuch_message_destroy (message);
       NEXT_LINE:
 	free (message_id);
 	free (tags);
