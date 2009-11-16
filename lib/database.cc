@@ -312,8 +312,8 @@ skip_space_and_comments (const char **str)
  * Returns a newly talloc'ed string belonging to 'ctx'.
  *
  * Returns NULL if there is any error parsing the message-id. */
-static char *
-parse_message_id (void *ctx, const char *message_id, const char **next)
+char *
+_parse_message_id (void *ctx, const char *message_id, const char **next)
 {
     const char *s, *end;
     char *result;
@@ -383,7 +383,7 @@ parse_references (void *ctx,
 	return;
 
     while (*refs) {
-	ref = parse_message_id (ctx, refs, &refs);
+	ref = _parse_message_id (ctx, refs, &refs);
 
 	if (ref)
 	    g_hash_table_insert (hash, ref, NULL);
@@ -710,7 +710,7 @@ _notmuch_database_link_message_to_parents (notmuch_database_t *notmuch,
     in_reply_to = notmuch_message_file_get_header (message_file, "in-reply-to");
     parse_references (message, parents, in_reply_to);
     _notmuch_message_add_term (message, "replyto",
-			       parse_message_id (message, in_reply_to, NULL));
+			       _parse_message_id (message, in_reply_to, NULL));
 
     keys = g_hash_table_get_keys (parents);
     for (l = keys; l; l = l->next) {
@@ -886,7 +886,7 @@ notmuch_database_add_message (notmuch_database_t *notmuch,
 
 	header = notmuch_message_file_get_header (message_file, "message-id");
 	if (header) {
-	    message_id = parse_message_id (message_file, header, NULL);
+	    message_id = _parse_message_id (message_file, header, NULL);
 	    /* So the header value isn't RFC-compliant, but it's
 	     * better than no message-id at all. */
 	    if (message_id == NULL)

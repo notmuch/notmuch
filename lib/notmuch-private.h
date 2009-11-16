@@ -147,6 +147,9 @@ typedef enum _notmuch_private_status {
 const char *
 _find_prefix (const char *name);
 
+char *
+_parse_message_id (void *ctx, const char *message_id, const char **next);
+
 /* thread.cc */
 
 notmuch_thread_t *
