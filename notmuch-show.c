@@ -117,21 +117,71 @@ show_part (GMimeObject *part, int *part_count)
     printf ("\fpart}\n");
 }
 
+static void
+show_message (void *ctx, notmuch_message_t *message, int indent)
+{
+    const char *headers[] = {
+	"Subject", "From", "To", "Cc", "Bcc", "Date"
+    };
+    const char *name, *value;
+    unsigned int i;
+
+    printf ("\fmessage{ id:%s depth:%d filename:%s\n",
+	    notmuch_message_get_message_id (message),
+	    indent,
+	    notmuch_message_get_filename (message));
+
+    printf ("\fheader{\n");
+
+    printf ("%s\n", _get_one_line_summary (ctx, message));
+
+    for (i = 0; i < ARRAY_SIZE (headers); i++) {
+	name = headers[i];
+	value = notmuch_message_get_header (message, name);
+	if (value)
+	    printf ("%s: %s\n", name, value);
+    }
+
+    printf ("\fheader}\n");
+    printf ("\fbody{\n");
+
+    show_message_body (notmuch_message_get_filename (message), show_part);
+
+    printf ("\fbody}\n");
+
+    printf ("\fmessage}\n");
+}
+
+
+static void
+show_messages (void *ctx, notmuch_messages_t *messages, int indent)
+{
+    notmuch_message_t *message;
+
+    for (;
+	 notmuch_messages_has_more (messages);
+	 notmuch_messages_advance (messages))
+    {
+	message = notmuch_messages_get (messages);
+
+	show_message (ctx, message, indent);
+
+	show_messages (ctx, notmuch_message_get_replies (message), indent + 1);
+
+	notmuch_message_destroy (message);
+    }
+}
+
 int
 notmuch_show_command (void *ctx, unused (int argc), unused (char *argv[]))
 {
     notmuch_config_t *config;
     notmuch_database_t *notmuch;
     notmuch_query_t *query;
+    notmuch_threads_t *threads;
+    notmuch_thread_t *thread;
     notmuch_messages_t *messages;
-    notmuch_message_t *message;
     char *query_string;
-
-    const char *headers[] = {
-	"Subject", "From", "To", "Cc", "Bcc", "Date"
-    };
-    const char *name, *value;
-    unsigned int i;
 
     config = notmuch_config_open (ctx, NULL, NULL);
     if (config == NULL)
@@ -153,37 +203,17 @@ notmuch_show_command (void *ctx, unused (int argc), unused (char *argv[]))
 	return 1;
     }
 
-    for (messages = notmuch_query_search_messages (query, 0, -1);
-	 notmuch_messages_has_more (messages);
-	 notmuch_messages_advance (messages))
+    for (threads = notmuch_query_search_threads (query, 0, -1);
+	 notmuch_threads_has_more (threads);
+	 notmuch_threads_advance (threads))
     {
-	message = notmuch_messages_get (messages);
+	thread = notmuch_threads_get (threads);
 
-	printf ("\fmessage{ id:%s filename:%s\n",
-		notmuch_message_get_message_id (message),
-		notmuch_message_get_filename (message));
+	messages = notmuch_thread_get_toplevel_messages (thread);
 
-	printf ("\fheader{\n");
+	show_messages (ctx, messages, 0);
 
-	printf ("%s\n", _get_one_line_summary (ctx, message));
-
-	for (i = 0; i < ARRAY_SIZE (headers); i++) {
-	    name = headers[i];
-	    value = notmuch_message_get_header (message, name);
-	    if (value)
-		printf ("%s: %s\n", name, value);
-	}
-
-	printf ("\fheader}\n");
-	printf ("\fbody{\n");
-
-	show_message_body (notmuch_message_get_filename (message), show_part);
-
-	printf ("\fbody}\n");
-
-	printf ("\fmessage}\n");
-
-	notmuch_message_destroy (message);
+	notmuch_thread_destroy (thread);
     }
 
     notmuch_query_destroy (query);

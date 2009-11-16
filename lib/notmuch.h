@@ -477,6 +477,21 @@ notmuch_thread_get_thread_id (notmuch_thread_t *thread);
 int
 notmuch_thread_get_total_messages (notmuch_thread_t *thread);
 
+/* Get a notmuch_messages_t iterator for the top-level messages in
+ * 'thread'.
+ *
+ * This iterator will not necessarily iterate over all of the messages
+ * in the thread. It will only iterate over the messages in the thread
+ * which are not replies to other messages in the thread.
+ *
+ * To iterate over all messages in the thread, the caller will need to
+ * iterate over the result of notmuch_message_get_replies for each
+ * top-level message (and do that recursively for the resulting
+ * messages, etc.).
+ */
+notmuch_messages_t *
+notmuch_thread_get_toplevel_messages (notmuch_thread_t *thread);
+
 /* Get the number of messages in 'thread' that matched the search.
  *
  * This count includes only the messages in this thread that were
@@ -638,6 +653,26 @@ notmuch_message_get_message_id (notmuch_message_t *message);
  */
 const char *
 notmuch_message_get_thread_id (notmuch_message_t *message);
+
+/* Get a notmuch_messages_t iterator for all of the replies to
+ * 'message'.
+ *
+ * Note: This call only makes sense if 'message' was ultimately
+ * obtained from a notmuch_thread_t object, (such as by coming
+ * directly from the result of calling notmuch_thread_get_
+ * toplevel_messages or by any number of subsequent
+ * calls to notmuch_message_get_replies).
+ *
+ * If 'message' was obtained through some non-thread means, (such as
+ * by a call to notmuch_query_search_messages), then this function
+ * will return NULL.
+ *
+ * If there are no replies to 'message', this function will return
+ * NULL. (Note that notmuch_messages_has_more will accept that NULL
+ * value as legitimate, and simply return FALSE for it.)
+ */
+notmuch_messages_t *
+notmuch_message_get_replies (notmuch_message_t *message);
 
 /* Get the filename for the email corresponding to 'message'.
  *

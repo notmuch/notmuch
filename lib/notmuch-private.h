@@ -304,6 +304,12 @@ _notmuch_message_list_add_message (notmuch_message_list_t *list,
 notmuch_messages_t *
 _notmuch_messages_create (notmuch_message_list_t *list);
 
+/* message.cc */
+
+void
+_notmuch_message_add_reply (notmuch_message_t *message,
+			    notmuch_message_node_t *reply);
+
 /* date.c */
 
 /* Parse an RFC 8222 date string to a time_t value.

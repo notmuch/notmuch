@@ -34,6 +34,8 @@ struct _notmuch_thread {
     char *authors;
     GHashTable *tags;
 
+    notmuch_message_list_t *message_list;
+    GHashTable *message_hash;
     int total_messages;
     int matched_messages;
     time_t oldest;
@@ -45,6 +47,7 @@ _notmuch_thread_destructor (notmuch_thread_t *thread)
 {
     g_hash_table_unref (thread->authors_hash);
     g_hash_table_unref (thread->tags);
+    g_hash_table_unref (thread->message_hash);
 
     return 0;
 }
@@ -70,6 +73,11 @@ _thread_add_author (notmuch_thread_t *thread,
 	thread->authors = talloc_strdup (thread, author);
 }
 
+/* Add 'message' as a message that belongs to 'thread'.
+ *
+ * The 'thread' will talloc_steal the 'message' and hold onto a
+ * reference to it.
+ */
 static void
 _thread_add_message (notmuch_thread_t *thread,
 		     notmuch_message_t *message)
@@ -79,6 +87,14 @@ _thread_add_message (notmuch_thread_t *thread,
     InternetAddressList *list;
     InternetAddress *address;
     const char *from, *author;
+
+    _notmuch_message_list_add_message (thread->message_list,
+				       talloc_steal (thread, message));
+    thread->total_messages++;
+
+    g_hash_table_insert (thread->message_hash,
+			 xstrdup (notmuch_message_get_message_id (message)),
+			 message);
 
     from = notmuch_message_get_header (message, "from");
     list = internet_address_list_parse_string (from);
@@ -109,8 +125,6 @@ _thread_add_message (notmuch_thread_t *thread,
 	tag = notmuch_tags_get (tags);
 	g_hash_table_insert (thread->tags, xstrdup (tag), NULL);
     }
-
-    thread->total_messages++;
 }
 
 static void
@@ -128,6 +142,44 @@ _thread_add_matched_message (notmuch_thread_t *thread,
 	thread->newest = date;
 
     thread->matched_messages++;
+}
+
+static void
+_resolve_thread_relationships (unused (notmuch_thread_t *thread))
+{
+    notmuch_message_node_t **prev, *node;
+    notmuch_message_t *message, *parent;
+    const char *in_reply_to;
+
+    prev = &thread->message_list->head;
+    while ((node = *prev)) {
+	message = node->message;
+	in_reply_to = _notmuch_message_get_in_reply_to (message);
+	if (in_reply_to &&
+	    g_hash_table_lookup_extended (thread->message_hash,
+					  in_reply_to, NULL,
+					  (void **) &parent))
+	{
+	    *prev = node->next;
+	    if (thread->message_list->tail == &node->next)
+		thread->message_list->tail = prev;
+	    node->next = NULL;
+	    _notmuch_message_add_reply (parent, node);
+	} else {
+	    prev = &((*prev)->next);
+	}
+    }
+
+    /* XXX: After scanning through the entire list looking for parents
+     * via "In-Reply-To", we should do a second pass that looks at the
+     * list of messages IDs in the "References" header instead. (And
+     * for this the parent would be the "deepest" message of all the
+     * messages found in the "References" list.)
+     *
+     * Doing this will allow messages and sub-threads to be positioned
+     * correctly in the thread even when an intermediate message is
+     * missing from the thread.
+     */
 }
 
 /* Create a new notmuch_thread_t object for the given thread ID,
@@ -160,6 +212,10 @@ _notmuch_thread_create (void *ctx,
     if (unlikely (query_string == NULL))
 	return NULL;
 
+    /* XXX: We could be a bit more efficient here if
+     * thread_id_query_string is identical to query_string, (then we
+     * could get by with just one database search instead of two). */
+
     matched_query_string = talloc_asprintf (ctx, "%s AND (%s)",
 					    thread_id_query_string,
 					    query_string);
@@ -189,6 +245,13 @@ _notmuch_thread_create (void *ctx,
     thread->tags = g_hash_table_new_full (g_str_hash, g_str_equal,
 					  free, NULL);
 
+    thread->message_list = _notmuch_message_list_create (thread);
+    if (unlikely (thread->message_list == NULL))
+	return NULL;
+
+    thread->message_hash = g_hash_table_new_full (g_str_hash, g_str_equal,
+						  free, NULL);
+
     thread->total_messages = 0;
     thread->matched_messages = 0;
     thread->oldest = 0;
@@ -214,7 +277,15 @@ _notmuch_thread_create (void *ctx,
 
     notmuch_query_destroy (matched_query);
 
+    _resolve_thread_relationships (thread);
+
     return thread;
+}
+
+notmuch_messages_t *
+notmuch_thread_get_toplevel_messages (notmuch_thread_t *thread)
+{
+    return _notmuch_messages_create (thread->message_list);
 }
 
 const char *

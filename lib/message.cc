@@ -33,6 +33,8 @@ struct _notmuch_message {
     char *thread_id;
     char *filename;
     notmuch_message_file_t *message_file;
+    notmuch_message_list_t *replies;
+
     Xapian::Document doc;
 };
 
@@ -109,6 +111,13 @@ _notmuch_message_create (const void *talloc_owner,
     message->thread_id = NULL;
     message->filename = NULL;
     message->message_file = NULL;
+
+    message->replies = _notmuch_message_list_create (message);
+    if (unlikely (message->replies == NULL)) {
+	if (status)
+	    *status = NOTMUCH_PRIVATE_STATUS_OUT_OF_MEMORY;
+	return NULL;
+    }
 
     /* This is C++'s creepy "placement new", which is really just an
      * ugly way to call a constructor for a pre-allocated object. So
@@ -303,6 +312,19 @@ notmuch_message_get_thread_id (notmuch_message_t *message)
 #endif
 
     return message->thread_id;
+}
+
+void
+_notmuch_message_add_reply (notmuch_message_t *message,
+			    notmuch_message_node_t *reply)
+{
+    _notmuch_message_list_append (message->replies, reply);
+}
+
+notmuch_messages_t *
+notmuch_message_get_replies (notmuch_message_t *message)
+{
+    return _notmuch_messages_create (message->replies);
 }
 
 /* Set the filename for 'message' to 'filename'.
