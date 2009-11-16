@@ -280,12 +280,29 @@ notmuch_message_file_get_header (notmuch_message_file_t *message,
 
 /* messages.c */
 
-notmuch_messages_t *
-_notmuch_messages_create (void *ctx);
+typedef struct _notmuch_message_node {
+    notmuch_message_t *message;
+    struct _notmuch_message_node *next;
+} notmuch_message_node_t;
+
+typedef struct _notmuch_message_list {
+    notmuch_message_node_t *head;
+    notmuch_message_node_t **tail;
+} notmuch_message_list_t;
+
+notmuch_message_list_t *
+_notmuch_message_list_create (const void *ctx);
 
 void
-_notmuch_messages_add_message (notmuch_messages_t *messages,
-			       notmuch_message_t *message);
+_notmuch_message_list_append (notmuch_message_list_t *list,
+			      notmuch_message_node_t *node);
+
+void
+_notmuch_message_list_add_message (notmuch_message_list_t *list,
+				   notmuch_message_t *message);
+
+notmuch_messages_t *
+_notmuch_messages_create (notmuch_message_list_t *list);
 
 /* date.c */
 

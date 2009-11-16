@@ -79,11 +79,11 @@ notmuch_query_search_messages (notmuch_query_t *query,
 {
     notmuch_database_t *notmuch = query->notmuch;
     const char *query_string = query->query_string;
-    notmuch_messages_t *messages;
+    notmuch_message_list_t *message_list;
     Xapian::MSetIterator i;
 
-    messages = _notmuch_messages_create (query);
-    if (unlikely (messages == NULL))
+    message_list = _notmuch_message_list_create (query);
+    if (unlikely (message_list == NULL))
 	return NULL;
 
     try {
@@ -134,7 +134,7 @@ notmuch_query_search_messages (notmuch_query_t *query,
 	    notmuch_message_t *message;
 	    notmuch_private_status_t status;
 
-	    message = _notmuch_message_create (messages, notmuch,
+	    message = _notmuch_message_create (message_list, notmuch,
 					       *i, &status);
 	    if (message == NULL)
 	    {
@@ -144,7 +144,7 @@ notmuch_query_search_messages (notmuch_query_t *query,
 		break;
 	    }
 
-	    _notmuch_messages_add_message (messages, message);
+	    _notmuch_message_list_add_message (message_list, message);
 	}
 
     } catch (const Xapian::Error &error) {
@@ -152,7 +152,7 @@ notmuch_query_search_messages (notmuch_query_t *query,
 		 error.get_msg().c_str());
     }
 
-    return messages;
+    return _notmuch_messages_create (message_list);
 }
 
 /* Glib objects force use to use a talloc destructor as well, (but not
