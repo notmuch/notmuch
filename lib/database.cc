@@ -796,7 +796,7 @@ _notmuch_database_link_message_to_children (notmuch_database_t *notmuch,
 /* Given a (mostly empty) 'message' and its corresponding
  * 'message_file' link it to existing threads in the database.
  *
- * We first looke at 'message_file' and its link-relevant headers
+ * We first look at 'message_file' and its link-relevant headers
  * (References and In-Reply-To) for message IDs. We also look in the
  * database for existing message that reference 'message'.p
  *
