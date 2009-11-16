@@ -172,9 +172,6 @@ _notmuch_message_create_for_message_id (const void *talloc_owner,
 					const char *message_id,
 					notmuch_private_status_t *status);
 
-const char *
-_notmuch_message_get_subject (notmuch_message_t *message);
-
 notmuch_private_status_t
 _notmuch_message_add_term (notmuch_message_t *message,
 			   const char *prefix_name,
