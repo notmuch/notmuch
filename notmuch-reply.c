@@ -24,7 +24,7 @@
 #include "gmime-filter-reply.h"
 
 static void
-reply_part(GMimeObject *part, int *part_count)
+reply_part (GMimeObject *part, int *part_count)
 {
     GMimeContentDisposition *disposition;
     GMimeContentType *content_type;

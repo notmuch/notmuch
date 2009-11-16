@@ -67,7 +67,7 @@ _get_one_line_summary (void *ctx, notmuch_message_t *message)
 }
 
 static void
-show_part(GMimeObject *part, int *part_count)
+show_part (GMimeObject *part, int *part_count)
 {
     GMimeContentDisposition *disposition;
     GMimeContentType *content_type;
