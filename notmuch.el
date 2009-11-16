@@ -464,11 +464,15 @@ which this thread was originally shown."
 	(let ((beg (point-marker)))
 	  (re-search-forward notmuch-show-part-end-regexp)
 	  (let ((end (copy-marker (match-beginning 0))))
+	    (goto-char end)
+	    (if (not (bolp))
+		(insert "\n"))
 	    (indent-rigidly beg end depth)
 	    (notmuch-show-markup-citations-region beg end depth)
 	    ; Advance to the next part (if any) (so the outer loop can
 	    ; determine whether we've left the current message.
-	    (re-search-forward notmuch-show-part-begin-regexp nil t))))
+	    (if (re-search-forward notmuch-show-part-begin-regexp nil t)
+		(beginning-of-line)))))
     (goto-char end)))
 
 (defun notmuch-show-markup-parts-region (beg end depth)
