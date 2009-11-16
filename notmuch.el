@@ -658,6 +658,9 @@ thread from that buffer can be show when done with this one)."
 		  (notmuch-show-toggle-body-read-visible)))))
       )))
 
+(defvar notmuch-search-authors-width 40
+  "Number of columns to use to diplay authors in a notmuch-search buffer.")
+
 (defvar notmuch-search-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map "a" 'notmuch-search-archive-thread)
@@ -756,7 +759,17 @@ global search.
     (if (re-search-forward "thread:[a-fA-F0-9]*" nil t)
 	(progn
 	  (forward-char)
-	  (overlay-put (make-overlay beg (point)) 'invisible 'notmuch-search)))))
+	  (overlay-put (make-overlay beg (point)) 'invisible 'notmuch-search)
+	  (re-search-forward ".*\\[[0-9]*/[0-9]*\\] \\([^;]*\\)\\(;\\)")
+	  (let* ((authors (buffer-substring (match-beginning 1) (match-end 1)))
+		 (authors-length (length authors)))
+	    ;; Drop the semi-colon
+	    (replace-match "" t nil nil 2)
+	    (if (<= authors-length notmuch-search-authors-width)
+		(replace-match (concat authors (make-string
+						(- notmuch-search-authors-width
+						   authors-length) ? )) t t nil 1)
+	      (replace-match (concat (substring authors 0 (- notmuch-search-authors-width 3)) "...") t t nil 1)))))))
 
 (defun notmuch-search-markup-thread-ids ()
   (save-excursion
