@@ -259,6 +259,18 @@ notmuch_message_get_header (notmuch_message_t *message, const char *header)
     return notmuch_message_file_get_header (message->message_file, header);
 }
 
+/* XXX: We probably want to store the In-Reply-To header in the
+ * database (separate from the References message IDs) so that we can
+ * fetch it out again without having to go load the message file. */
+const char *
+_notmuch_message_get_in_reply_to (notmuch_message_t *message)
+{
+    return _parse_message_id (message,
+			      notmuch_message_get_header (message,
+							  "in-reply-to"),
+			      NULL);
+}
+
 const char *
 notmuch_message_get_thread_id (notmuch_message_t *message)
 {
