@@ -76,7 +76,6 @@ _thread_add_message (notmuch_thread_t *thread,
 {
     notmuch_tags_t *tags;
     const char *tag;
-    time_t date;
     InternetAddressList *list;
     InternetAddress *address;
     const char *from, *author;
