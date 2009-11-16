@@ -57,7 +57,7 @@
   "Keymap for \"notmuch show\" buffers.")
 (fset 'notmuch-show-mode-map notmuch-show-mode-map)
 
-(defvar notmuch-show-signature-lines-max 6
+(defvar notmuch-show-signature-lines-max 12
   "Maximum length of signature that will be hidden by default.")
 
 (set 'notmuch-show-message-begin-regexp    "message{")
@@ -73,6 +73,7 @@
 (set 'notmuch-show-marker-regexp "\\(message\\|header\\|body\\|attachment\\|part\\)[{}].*$")
 
 (set 'notmuch-show-id-regexp "\\(id:[^ ]*\\)")
+(set 'notmuch-show-depth-regexp " depth:\\([0-9]*\\) ")
 (set 'notmuch-show-filename-regexp "filename:\\(.*\\)$")
 (set 'notmuch-show-tags-regexp "(\\([^)]*\\))$")
 
@@ -425,65 +426,98 @@ which this thread was originally shown."
 	(if last
 	    (notmuch-show-archive-thread))))))
 
-(defun notmuch-show-markup-citations-region (beg end)
+(defun notmuch-show-markup-citations-region (beg end depth)
   (goto-char beg)
   (beginning-of-line)
   (while (< (point) end)
-    (let ((beg-sub (point)))
-      (if (looking-at ">")
+    (let ((beg-sub (point-marker))
+	  (indent (make-string depth ? ))
+	  (citation "[[:space:]]*>"))
+      (if (looking-at citation)
 	  (progn
-	    (while (looking-at ">")
+	    (while (looking-at citation)
 	      (forward-line))
 	    (let ((overlay (make-overlay beg-sub (point))))
 	      (overlay-put overlay 'invisible 'notmuch-show-citation)
 	      (overlay-put overlay 'before-string
-			   (concat "[" (number-to-string (count-lines beg-sub (point)))
+			   (concat indent
+				   "[" (number-to-string (count-lines beg-sub (point)))
 				   "-line citation. Press 'c' to show.]\n")))))
-      (if (looking-at "--[ ]?$")
-	  (let ((sig-lines (count-lines beg-sub end)))
+      (if (looking-at "[[:space:]]*-- ?$")
+	  (let ((sig-lines (- (count-lines beg-sub end) 1)))
 	    (if (<= sig-lines notmuch-show-signature-lines-max)
 		(progn
-		  (overlay-put (make-overlay beg-sub (+ beg-sub 1))
-			       'before-string
-			       (concat "[" (number-to-string sig-lines)
-				       "-line signature. Press 's' to show.]"))
-		  (overlay-put (make-overlay (+ beg-sub 2) end)
+		  (overlay-put (make-overlay beg-sub end)
 			       'invisible 'notmuch-show-signature)
+		  (overlay-put (make-overlay beg (- beg-sub 1))
+			       'after-string
+			       (concat "\n" indent
+				       "[" (number-to-string sig-lines)
+				       "-line signature. Press 's' to show.]"))
 		  (goto-char end)))))
       (forward-line))))
 
-(defun notmuch-show-markup-body ()
+(defun notmuch-show-markup-part (beg end depth)
+  (if (re-search-forward notmuch-show-part-begin-regexp nil t)
+      (progn
+	(forward-line)
+	(let ((beg (point-marker)))
+	  (re-search-forward notmuch-show-part-end-regexp)
+	  (let ((end (copy-marker (match-beginning 0))))
+	    (indent-rigidly beg end depth)
+	    (notmuch-show-markup-citations-region beg end depth)
+	    ; Advance to the next part (if any) (so the outer loop can
+	    ; determine whether we've left the current message.
+	    (re-search-forward notmuch-show-part-begin-regexp nil t))))
+    (goto-char end)))
+
+(defun notmuch-show-markup-parts-region (beg end depth)
+  (save-excursion
+    (goto-char beg)
+    (while (< (point) end)
+      (notmuch-show-markup-part beg end depth))))
+
+(defun notmuch-show-markup-body (depth)
   (re-search-forward notmuch-show-body-begin-regexp)
-  (next-line 1)
-  (beginning-of-line)
-  (let ((beg (point)))
+  (forward-line)
+  (let ((beg (point-marker)))
     (re-search-forward notmuch-show-body-end-regexp)
-    (let ((end (match-beginning 0)))
-      (notmuch-show-markup-citations-region beg end)
+    (let ((end (copy-marker (match-beginning 0))))
+      (notmuch-show-markup-parts-region beg end depth)
       (if (not (notmuch-show-message-unread-p))
 	  (overlay-put (make-overlay beg end)
-		       'invisible 'notmuch-show-body-read)))))
+		       'invisible 'notmuch-show-body-read))
+      (set-marker beg nil)
+      (set-marker end nil)
+      )))
 
-(defun notmuch-show-markup-header ()
+(defun notmuch-show-markup-header (depth)
   (re-search-forward notmuch-show-header-begin-regexp)
-  (forward-line 1)
-  (beginning-of-line)
-  (let ((beg (point)))
+  (forward-line)
+  (let ((beg (point-marker)))
     (end-of-line)
     ; Inverse video for subject
     (overlay-put (make-overlay beg (point)) 'face '((cons :inverse-video t)))
-    (beginning-of-line)
     (forward-line 2)
-    (set 'beg (point))
-    (re-search-forward notmuch-show-header-end-regexp)
-    (overlay-put (make-overlay beg (match-beginning 0))
-		 'invisible 'notmuch-show-header)))
+    (let ((beg-hidden (point-marker)))
+      (re-search-forward notmuch-show-header-end-regexp)
+      (beginning-of-line)
+      (let ((end (point-marker)))
+	(indent-rigidly beg end depth)
+	(overlay-put (make-overlay beg-hidden end)
+		     'invisible 'notmuch-show-header)
+	(set-marker beg nil)
+	(set-marker beg-hidden nil)
+	(set-marker end nil)
+	))))
 
 (defun notmuch-show-markup-message ()
   (if (re-search-forward notmuch-show-message-begin-regexp nil t)
       (progn
-	(notmuch-show-markup-header)
-	(notmuch-show-markup-body))
+	(re-search-forward notmuch-show-depth-regexp)
+	(let ((depth (string-to-number (buffer-substring (match-beginning 1) (match-end 1)))))
+	  (notmuch-show-markup-header depth)
+	  (notmuch-show-markup-body depth)))
     (goto-char (point-max))))
 
 (defun notmuch-show-hide-markers ()
