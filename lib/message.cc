@@ -320,31 +320,39 @@ _notmuch_message_get_in_reply_to (notmuch_message_t *message)
 const char *
 notmuch_message_get_thread_id (notmuch_message_t *message)
 {
+    const char *prefix = _find_prefix ("thread");
     Xapian::TermIterator i;
+    std::string id;
+
+    /* This code is written with the assumption that "thread" has a
+     * single-character prefix. */
+    assert (strlen (prefix) == 1);
 
     if (message->thread_id)
 	return message->thread_id;
 
     i = message->doc.termlist_begin ();
-    i.skip_to (_find_prefix ("thread"));
 
-    if (i == message->doc.termlist_end ())
+    i.skip_to (prefix);
+
+    id = *i;
+
+    if (i == message->doc.termlist_end () || id[0] != *prefix)
 	INTERNAL_ERROR ("Message with document ID of %d has no thread ID.\n",
 			message->doc_id);
 
-    message->thread_id = talloc_strdup (message, (*i).c_str () + 1);
+    message->thread_id = talloc_strdup (message, id.c_str () + 1);
 
 #if DEBUG_DATABASE_SANITY
     i++;
+    id = *i;
 
-    if (i != message->doc.termlist_end () &&
-	strncmp ((*i).c_str (), _find_prefix ("thread"),
-		 strlen (_find_prefix ("thread"))) == 0)
+    if (i != message->doc.termlist_end () && id[0] == *prefix)
     {
 	INTERNAL_ERROR ("Message %s has duplicate thread IDs: %s and %s\n",
 			notmuch_message_get_message_id (message),
 			message->thread_id,
-			(*i).c_str () + 1);
+			id.c_str () + 1);
     }
 #endif
 
