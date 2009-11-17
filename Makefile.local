@@ -29,8 +29,8 @@ install: all notmuch.1.gz
 	do \
 		install -C -d $$d ; \
 	done ;
-	install -C notmuch $(DESTDIR)/usr/bin/notmuch
-	install -C notmuch.1.gz $(DESTDIR)/usr/share/man/man1
+	install -C notmuch $(DESTDIR)/usr/bin/
+	install -C notmuch.1.gz $(DESTDIR)/usr/share/man/man1/
 	install -C notmuch-completion.bash \
 		$(DESTDIR)/etc/bash_completion.d/notmuch
 
