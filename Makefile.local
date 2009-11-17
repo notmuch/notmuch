@@ -27,11 +27,11 @@ install: all notmuch.1.gz
 	for d in $(DESTDIR)$(prefix)/bin/ $(DESTDIR)$(prefix)/share/man/man1 \
 		$(DESTDIR)/etc/bash_completion.d/ ; \
 	do \
-		install -C -d $$d ; \
+		install -d $$d ; \
 	done ;
-	install -C notmuch $(DESTDIR)$(prefix)/bin/
-	install -C -m0644 notmuch.1.gz $(DESTDIR)$(prefix)/share/man/man1/
-	install -C notmuch-completion.bash \
+	install notmuch $(DESTDIR)$(prefix)/bin/
+	install -m0644 notmuch.1.gz $(DESTDIR)$(prefix)/share/man/man1/
+	install notmuch-completion.bash \
 		$(DESTDIR)/etc/bash_completion.d/notmuch
 
 SRCS  := $(SRCS) $(notmuch_client_srcs)
