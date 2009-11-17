@@ -912,7 +912,6 @@ notmuch_database_add_message (notmuch_database_t *notmuch,
 	 * database). */
 
 	message = _notmuch_message_create_for_message_id (notmuch,
-							  notmuch,
 							  message_id,
 							  &private_status);
 
