@@ -911,8 +911,7 @@ notmuch_database_add_message (notmuch_database_t *notmuch,
 	 * (which may or may not reference an existing document in the
 	 * database). */
 
-	/* Use NULL for owner since we want to free this locally. */
-	message = _notmuch_message_create_for_message_id (NULL,
+	message = _notmuch_message_create_for_message_id (database,
 							  notmuch,
 							  message_id,
 							  &private_status);
