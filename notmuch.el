@@ -639,6 +639,18 @@ view, (remove the \"inbox\" tag from each), with
 	mode-name "notmuch-show")
   (setq buffer-read-only t))
 
+;;;###autoload
+
+(defgroup notmuch nil
+  "Notmuch mail reader for Emacs."
+  :group 'mail)
+
+(defcustom notmuch-show-hook nil
+  "List of functions to call when notmuch displays a message."
+  :type 'hook
+  :options '(goto-address)
+  :group 'notmuch)
+
 (defun notmuch-show (thread-id &optional parent-buffer)
   "Run \"notmuch show\" with the given thread ID and display results.
 
@@ -661,6 +673,7 @@ thread from that buffer can be show when done with this one)."
 	(call-process "notmuch" nil t nil "show" thread-id)
 	(notmuch-show-markup-messages)
 	)
+      (run-hooks 'notmuch-show-hook)
       ; Move straight to the first unread message
       (if (not (notmuch-show-message-unread-p))
 	  (progn
