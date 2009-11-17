@@ -21,6 +21,8 @@
 #include "notmuch-private.h"
 #include "database-private.h"
 
+#include <stdint.h>
+
 #include <gmime/gmime.h>
 
 #include <xapian.h>
