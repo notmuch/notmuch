@@ -30,7 +30,7 @@ install: all notmuch.1.gz
 		install -C -d $$d ; \
 	done ;
 	install -C notmuch $(DESTDIR)$(prefix)/bin/
-	install -C notmuch.1.gz $(DESTDIR)$(prefix)/share/man/man1/
+	install -C -m0644 notmuch.1.gz $(DESTDIR)$(prefix)/share/man/man1/
 	install -C notmuch-completion.bash \
 		$(DESTDIR)/etc/bash_completion.d/notmuch
 
