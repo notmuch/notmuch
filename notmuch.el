@@ -57,6 +57,16 @@
   "Keymap for \"notmuch show\" buffers.")
 (fset 'notmuch-show-mode-map notmuch-show-mode-map)
 
+(defvar notmuch-show-signature-regexp "\\(-- ?\\|_+\\)$"
+  "Pattern to match a line that separates content from signature.
+
+The regexp can (and should) include $ to match the end of the
+line, but should not include ^ to match the beginning of the
+line. This is because notmuch may have inserted additional space
+for indentation at the beginning of the line. But notmuch will
+move past the indentation when testing this pattern, (so that the
+pattern can still test against the entire line).")
+
 (defvar notmuch-show-signature-lines-max 12
   "Maximum length of signature that will be hidden by default.")
 
@@ -443,7 +453,8 @@ which this thread was originally shown."
 			   (concat indent
 				   "[" (number-to-string (count-lines beg-sub (point)))
 				   "-line citation. Press 'c' to show.]\n")))))
-      (if (looking-at "[[:space:]]*-- ?$")
+      (move-to-column depth)
+      (if (looking-at notmuch-show-signature-regexp)
 	  (let ((sig-lines (- (count-lines beg-sub end) 1)))
 	    (if (<= sig-lines notmuch-show-signature-lines-max)
 		(progn
