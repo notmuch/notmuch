@@ -325,6 +325,11 @@ notmuch_message_file_get_header (notmuch_message_file_t *message,
 	    return decoded_value;
     }
 
+    if (message->parsing_finished) {
+        fclose (message->file);
+        message->file = NULL;
+    }
+
     if (message->line)
 	free (message->line);
     message->line = NULL;
