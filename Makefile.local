@@ -24,13 +24,13 @@ notmuch.1.gz:
 	gzip --stdout notmuch.1 > notmuch.1.gz
 
 install: all notmuch.1.gz
-	for d in $(DESTDIR)/usr/bin/ $(DESTDIR)/usr/share/man/man1 \
+	for d in $(DESTDIR)$(prefix)/bin/ $(DESTDIR)$(prefix)/share/man/man1 \
 		$(DESTDIR)/etc/bash_completion.d/ ; \
 	do \
 		install -C -d $$d ; \
 	done ;
-	install -C notmuch $(DESTDIR)/usr/bin/
-	install -C notmuch.1.gz $(DESTDIR)/usr/share/man/man1/
+	install -C notmuch $(DESTDIR)$(prefix)/bin/
+	install -C notmuch.1.gz $(DESTDIR)$(prefix)/share/man/man1/
 	install -C notmuch-completion.bash \
 		$(DESTDIR)/etc/bash_completion.d/notmuch
 

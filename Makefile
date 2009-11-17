@@ -18,6 +18,9 @@ override LDFLAGS += `pkg-config --libs glib-2.0 gmime-2.4 talloc` \
 include Makefile.local
 include lib/Makefile.local
 
+# And get user settings from the output of configure
+include Makefile.config
+
 %.o: %.cc
 	$(CXX) -c $(CFLAGS) $(CXXFLAGS) $< -o $@
 
