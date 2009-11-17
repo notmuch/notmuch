@@ -234,7 +234,7 @@ notmuch_message_file_open (const char *filename);
 notmuch_message_file_t *
 _notmuch_message_file_open_ctx (void *ctx, const char *filename);
 
-/* Close a notmuch message preivously opened with notmuch_message_open. */
+/* Close a notmuch message previously opened with notmuch_message_open. */
 void
 notmuch_message_file_close (notmuch_message_file_t *message);
 

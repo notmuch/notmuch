@@ -40,7 +40,7 @@ typedef struct _GMimeFilterReplyClass GMimeFilterReplyClass;
  * @saw_nl: previous char was a \n
  * @saw_angle: previous char was a >
  *
- * A filter to insert/remove reply markers (lines begining with >)
+ * A filter to insert/remove reply markers (lines beginning with >)
  **/
 struct _GMimeFilterReply {
 	GMimeFilter parent_object;

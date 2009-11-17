@@ -1,4 +1,4 @@
-# Bash completion for notmutch
+# Bash completion for notmuch
 #
 # Copyright © 2009 Carl Worth
 #

@@ -222,7 +222,7 @@ notmuch_database_get_timestamp (notmuch_database_t *database,
 
 /* Add a new message to the given notmuch database.
  *
- * Here,'filename' should be a path relative to the the path of
+ * Here,'filename' should be a path relative to the path of
  * 'database' (see notmuch_database_get_path), or else should be an
  * absolute filename with initial components that match the path of
  * 'database'.
@@ -258,7 +258,7 @@ notmuch_database_add_message (notmuch_database_t *database,
 			      const char *filename,
 			      notmuch_message_t **message);
 
-/* Find a message with the given messsage_id.
+/* Find a message with the given message_id.
  *
  * If the database contains a message with the given message_id, then
  * a new notmuch_message_t object is returned. The caller should call
@@ -620,7 +620,7 @@ notmuch_messages_advance (notmuch_messages_t *messages);
 /* Destroy a notmuch_messages_t object.
  *
  * It's not strictly necessary to call this function. All memory from
- * the notmuch_messages_t object will be reclaimed when the containg
+ * the notmuch_messages_t object will be reclaimed when the containing
  * query object is destroyed.
  */
 void
@@ -865,7 +865,7 @@ notmuch_tags_has_more (notmuch_tags_t *tags);
 /* Get the current tag from 'tags' as a string.
  *
  * Note: The returned string belongs to 'tags' and has a lifetime
- * identical to it (and the query to which it utlimately belongs).
+ * identical to it (and the query to which it ultimately belongs).
  *
  * See the documentation of notmuch_message_get_tags for example code
  * showing how to iterate over a notmuch_tags_t object.
@@ -884,7 +884,7 @@ notmuch_tags_advance (notmuch_tags_t *tags);
 /* Destroy a notmuch_tags_t object.
  *
  * It's not strictly necessary to call this function. All memory from
- * the notmuch_tags_t object will be reclaimed when the containg
+ * the notmuch_tags_t object will be reclaimed when the containing
  * message or query objects are destroyed.
  */
 void

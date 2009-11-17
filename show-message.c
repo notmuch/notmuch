@@ -38,7 +38,7 @@ show_message_part (GMimeObject *part, int *part_count,
 		if (i == 1)
 		    continue;
 		if (i > 1)
-		    fprintf (stderr, "Warning: Unexpected extra parts of mutlipart/signed. Continuing.\n");
+		    fprintf (stderr, "Warning: Unexpected extra parts of multipart/signed. Continuing.\n");
 	    }
 	    show_message_part (g_mime_multipart_get_part (multipart, i),
 			       part_count, show_part);

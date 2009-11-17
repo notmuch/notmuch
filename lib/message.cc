@@ -146,7 +146,7 @@ _notmuch_message_create (const void *talloc_owner,
 }
 
 /* Create a new notmuch_message_t object for a specific message ID,
- * (which may or may not already exist in the databas).
+ * (which may or may not already exist in the database).
  *
  * The 'notmuch' database will be the talloc owner of the returned
  * message.

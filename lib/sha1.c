@@ -43,7 +43,7 @@ _hex_of_sha1_digest (const unsigned char digest[SHA1_DIGEST_SIZE])
     return result;
 }
 
-/* Create a hexadcimal string version of the SHA-1 digest of 'str'
+/* Create a hexadecimal string version of the SHA-1 digest of 'str'
  * (including its null terminating character).
  *
  * This function returns a newly allocated string which the caller

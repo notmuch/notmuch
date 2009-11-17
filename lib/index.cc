@@ -198,7 +198,7 @@ _index_mime_part (notmuch_message_t *message,
 		if (i == 1)
 		    continue;
 		if (i > 1)
-		    fprintf (stderr, "Warning: Unexpected extra parts of mutlipart/signed. Indexing anyway.\n");
+		    fprintf (stderr, "Warning: Unexpected extra parts of multipart/signed. Indexing anyway.\n");
 	    }
 	    _index_mime_part (message,
 			      g_mime_multipart_get_part (multipart, i));

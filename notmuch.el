@@ -205,7 +205,7 @@ Unlike builtin `next-line' this version accepts no arguments."
 (defun notmuch-show-mark-read-then-archive-thread ()
   "Remove \"unread\" tag from each message, then archive and show next thread.
 
-Archive each message currrently shown by removing the \"unread\"
+Archive each message currently shown by removing the \"unread\"
 and \"inbox\" tag from each. Then kill this buffer and show the
 next thread from the search from which this thread was originally
 shown.
@@ -220,7 +220,7 @@ buffer."
 (defun notmuch-show-archive-thread ()
   "Archive each message in thread, and show next thread from search.
 
-Archive each message currrently shown by removing the \"inbox\"
+Archive each message currently shown by removing the \"inbox\"
 tag from each. Then kill this buffer and show the next thread
 from the search from which this thread was originally shown.
 
@@ -340,7 +340,7 @@ there are no more unread messages past the current point."
       (notmuch-show-next-message)))
 
 (defun notmuch-show-next-open-message ()
-  "Advance to the the next message which is not hidden.
+  "Advance to the next message which is not hidden.
 
 If read messages are currently hidden, advance to the next unread
 message. Otherwise, advance to the next message."
@@ -674,7 +674,7 @@ thread from that buffer can be show when done with this one)."
       )))
 
 (defvar notmuch-search-authors-width 40
-  "Number of columns to use to diplay authors in a notmuch-search buffer.")
+  "Number of columns to use to display authors in a notmuch-search buffer.")
 
 (defvar notmuch-search-mode-map
   (let ((map (make-sparse-keymap)))
@@ -910,7 +910,7 @@ the beginning of the buffer).
 
 This command toggles the sort order for the current search.
 
-Note that any fitlered searches created by
+Note that any filtered searches created by
 `notmuch-search-filter' retain the search order of the parent
 search."
   (interactive)

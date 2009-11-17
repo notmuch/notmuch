@@ -185,7 +185,7 @@ notmuch_status_to_string (notmuch_status_t status)
     case NOTMUCH_STATUS_TAG_TOO_LONG:
 	return "Tag value is too long (exceeds NOTMUCH_TAG_MAX)";
     case NOTMUCH_STATUS_UNBALANCED_FREEZE_THAW:
-	return "Unblanced number of calls to notmuch_message_freeze/thaw";
+	return "Unbalanced number of calls to notmuch_message_freeze/thaw";
     default:
     case NOTMUCH_STATUS_LAST_STATUS:
 	return "Unknown error status value";

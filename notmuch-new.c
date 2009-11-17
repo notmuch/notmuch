@@ -303,7 +303,7 @@ add_files (notmuch_database_t *notmuch,
 
 /* XXX: This should be merged with the add_files function since it
  * shares a lot of logic with it. */
-/* Recursively count all regular files in path and all sub-direcotries
+/* Recursively count all regular files in path and all sub-directories
  * of path.  The result is added to *count (which should be
  * initialized to zero by the top-level caller before calling
  * count_files). */
@@ -469,7 +469,7 @@ notmuch_new_command (void *ctx,
 
     if (elapsed > 1 && ! add_files_state.saw_read_only_directory) {
 	printf ("\nTip: If you have any sub-directories that are archives (that is,\n"
-		"they will never receive new mail), marking these directores as\n"
+		"they will never receive new mail), marking these directories as\n"
 		"read-only (chmod u-w /path/to/dir) will make \"notmuch new\"\n"
 		"much more efficient (it won't even look in those directories).\n");
     }

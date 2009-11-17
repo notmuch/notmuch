@@ -190,7 +190,7 @@ _resolve_thread_relationships (unused (notmuch_thread_t *thread))
  * subject line, the total count of messages, and all authors). The
  * second search is for all messages that are in the thread and that
  * also match the given query_string. This is to allow for a separate
- * count of matched messages, and to allow a viewer to diplay these
+ * count of matched messages, and to allow a viewer to display these
  * messages differently.
  *
  * Here, 'ctx' is talloc context for the resulting thread object.

@@ -1,4 +1,4 @@
-# Default FLAGS, (can be overriden by user such as "make CFLAGS=-O2")
+# Default FLAGS, (can be overridden by user such as "make CFLAGS=-O2")
 WARN_FLAGS=-Wall -Wextra -Wmissing-declarations -Wwrite-strings -Wswitch-enum
 CFLAGS=-O2
 
@@ -14,7 +14,7 @@ override CXXFLAGS += $(WARN_FLAGS) $(extra_cflags) $(extra_cxxflags)
 override LDFLAGS += `pkg-config --libs glib-2.0 gmime-2.4 talloc` \
 			`xapian-config --libs`
 
-# Include our local Makfile.local first so that its first target is default
+# Include our local Makefile.local first so that its first target is default
 include Makefile.local
 include lib/Makefile.local
 

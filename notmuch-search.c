@@ -135,7 +135,7 @@ notmuch_search_command (void *ctx, int argc, char *argv[])
 
     query_str = query_string_from_args (ctx, argc, argv);
     if (query_str == NULL) {
-	fprintf (stderr, "Out of moemory.\n");
+	fprintf (stderr, "Out of memory.\n");
 	return 1;
     }
 
