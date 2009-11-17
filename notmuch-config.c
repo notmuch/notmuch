@@ -80,8 +80,17 @@ get_name_from_passwd_file (void *ctx)
     char *pw_buf = talloc_zero_size (ctx, pw_buf_size);
     struct passwd passwd, *ignored;
     char *name;
+    int e;
 
-    if (getpwuid_r (getuid (), &passwd, pw_buf, pw_buf_size, &ignored) == 0) {
+    if (pw_buf_size == -1) pw_buf_size = 64;
+
+    while ((e = getpwuid_r (getuid (), &passwd, pw_buf,
+                            pw_buf_size, &ignored)) == ERANGE) {
+        pw_buf_size = pw_buf_size * 2;
+        pw_buf = talloc_zero_size(ctx, pw_buf_size);
+    }
+
+    if (e == 0) {
 	char *comma = strchr (passwd.pw_gecos, ',');
 	if (comma)
 	    name = talloc_strndup (ctx, passwd.pw_gecos,
@@ -104,8 +113,16 @@ get_username_from_passwd_file (void *ctx)
     char *pw_buf = talloc_zero_size (ctx, pw_buf_size);
     struct passwd passwd, *ignored;
     char *name;
+    int e;
 
-    if (getpwuid_r (getuid (), &passwd, pw_buf, pw_buf_size, &ignored) == 0)
+    if (pw_buf_size == -1) pw_buf_size = 64;
+    while ((e = getpwuid_r (getuid (), &passwd, pw_buf,
+                            pw_buf_size, &ignored)) == ERANGE) {
+        pw_buf_size = pw_buf_size * 2;
+        pw_buf = talloc_zero_size(ctx, pw_buf_size);
+    }
+
+    if (e == 0)
 	name = talloc_strdup (ctx, passwd.pw_name);
     else
 	name = talloc_strdup (ctx, "");
