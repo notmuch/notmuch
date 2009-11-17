@@ -791,7 +791,7 @@ global search.
     (goto-char (point-min))
     (while (not (eobp))
       (notmuch-search-markup-this-thread-id)
-      (next-line))))
+      (forward-line))))
 
 (defun notmuch-search-show-thread ()
   (interactive)
