@@ -236,7 +236,7 @@ notmuch_reply_command (void *ctx, int argc, char *argv[])
 
 	    recipients = notmuch_message_get_header (message,
 						     reply_to_map[i].header);
-	    if (recipients == NULL && reply_to_map[i].fallback)
+	    if ((recipients == NULL || recipients[0] == '\0') && reply_to_map[i].fallback)
 		recipients = notmuch_message_get_header (message,
 							 reply_to_map[i].fallback);
 
