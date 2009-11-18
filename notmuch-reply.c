@@ -78,7 +78,7 @@ address_is_users (const char *address, notmuch_config_t *config)
 {
     const char *primary;
     char **other;
-    unsigned int i, other_len;
+    size_t i, other_len;
 
     primary = notmuch_config_get_user_primary_email (config);
     if (strcmp (primary, address) == 0)
