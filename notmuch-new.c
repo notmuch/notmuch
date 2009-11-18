@@ -407,6 +407,7 @@ notmuch_new_command (void *ctx,
 	if (interrupted)
 	    return 1;
 
+	printf ("Found %d total files.     \n", count);
 	notmuch = notmuch_database_create (db_path);
 	add_files_state.ignore_read_only_directories = FALSE;
 	add_files_state.total_files = count;
