@@ -238,28 +238,28 @@ command_t commands[] = {
 };
 
 static void
-usage (void)
+usage (FILE *out)
 {
     command_t *command;
     unsigned int i;
 
-    fprintf (stderr, "Usage: notmuch <command> [args...]\n");
-    fprintf (stderr, "\n");
-    fprintf (stderr, "Where <command> and [args...] are as follows:\n");
-    fprintf (stderr, "\n");
+    fprintf (out, "Usage: notmuch <command> [args...]\n");
+    fprintf (out, "\n");
+    fprintf (out, "Where <command> and [args...] are as follows:\n");
+    fprintf (out, "\n");
 
     for (i = 0; i < ARRAY_SIZE (commands); i++) {
 	command = &commands[i];
 
 	if (command->arguments)
-	    fprintf (stderr, "\t%s\t%s\n\n%s\n\n",
+	    fprintf (out, "\t%s\t%s\n\n%s\n\n",
 		     command->name, command->arguments, command->summary);
 	else
-	    fprintf (stderr, "\t%s\t%s\n\n",
+	    fprintf (out, "\t%s\t%s\n\n",
 		     command->name, command->summary);
     }
 
-    fprintf (stderr,
+    fprintf (out,
     "Use \"notmuch help <command>\" for more details on each command.\n"
     "And \"notmuch help search-terms\" for the common search-terms syntax.\n\n");
 }
@@ -271,8 +271,8 @@ notmuch_help_command (unused (void *ctx), int argc, char *argv[])
     unsigned int i;
 
     if (argc == 0) {
-	fprintf (stderr, "The notmuch mail system.\n\n");
-	usage ();
+	printf ("The notmuch mail system.\n\n");
+	usage (stdout);
 	return 0;
     }
 
@@ -280,32 +280,32 @@ notmuch_help_command (unused (void *ctx), int argc, char *argv[])
 	command = &commands[i];
 
 	if (strcmp (argv[0], command->name) == 0) {
-	    fprintf (stderr, "Help for \"notmuch %s\":\n\n", argv[0]);
+	    printf ("Help for \"notmuch %s\":\n\n", argv[0]);
 	    if (command->arguments)
-		fprintf (stderr, "\t%s\t%s\n\n%s\n\n%s\n\n",
-			 command->name, command->arguments,
-			 command->summary, command->documentation);
+		printf ("\t%s\t%s\n\n%s\n\n%s\n\n",
+			command->name, command->arguments,
+			command->summary, command->documentation);
 	    else
-		fprintf (stderr, "\t%s\t%s\n\n%s\n\n", command->name,
-			 command->summary, command->documentation);
+		printf ("\t%s\t%s\n\n%s\n\n", command->name,
+			command->summary, command->documentation);
 	    return 0;
 	}
     }
 
     if (strcmp (argv[0], "search-terms") == 0) {
-	fprintf (stderr, "Help for <%s>\n\n", argv[0]);
+	printf ("Help for <%s>\n\n", argv[0]);
 	for (i = 0; i < ARRAY_SIZE (commands); i++) {
 	    command = &commands[i];
 
 	    if (command->arguments &&
 		strstr (command->arguments, "search-terms"))
 	    {
-		fprintf (stderr, "\t%s\t%s\n",
-			 command->name, command->arguments);
+		printf ("\t%s\t%s\n",
+			command->name, command->arguments);
 	    }
 	}
-	fprintf (stderr, "\n");
-	fprintf (stderr, search_terms_help);
+	printf ("\n");
+	printf (search_terms_help);
 	return 0;
     }
 
