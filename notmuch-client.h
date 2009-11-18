@@ -69,15 +69,6 @@
 #define STRNCMP_LITERAL(var, literal) \
     strncmp ((var), (literal), sizeof (literal) - 1)
 
-typedef int (*command_function_t) (void *ctx, int argc, char *argv[]);
-
-typedef struct command {
-    const char *name;
-    command_function_t function;
-    const char *summary;
-    const char *documentation;
-} command_t;
-
 typedef void (*add_files_callback_t) (notmuch_message_t *message);
 
 typedef struct {
