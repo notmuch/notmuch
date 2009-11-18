@@ -317,7 +317,7 @@ skip_space_and_comments (const char **str)
  * Returns a newly talloc'ed string belonging to 'ctx'.
  *
  * Returns NULL if there is any error parsing the message-id. */
-char *
+static char *
 _parse_message_id (void *ctx, const char *message_id, const char **next)
 {
     const char *s, *end;
