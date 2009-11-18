@@ -75,7 +75,7 @@ add_files_print_progress (add_files_state_t *state)
 
 static int ino_cmp(const struct dirent **a, const struct dirent **b)
 {
-  return ((*a)->d_ino < (*b)->d_ino)? -1: 1;
+    return ((*a)->d_ino < (*b)->d_ino) ? -1 : 1;
 }
 
 /* Examine 'path' recursively as follows:
@@ -111,6 +111,7 @@ add_files_recursive (notmuch_database_t *notmuch,
     notmuch_status_t status, ret = NOTMUCH_STATUS_SUCCESS;
     notmuch_message_t *message = NULL;
     struct dirent **namelist = NULL;
+    int num_entries;
 
     /* If we're told to, we bail out on encountering a read-only
      * directory, (with this being a clear clue from the user to
@@ -126,9 +127,9 @@ add_files_recursive (notmuch_database_t *notmuch,
     path_mtime = st->st_mtime;
 
     path_dbtime = notmuch_database_get_timestamp (notmuch, path);
-    int n_entries= scandir(path, &namelist, 0, ino_cmp);
+    num_entries = scandir (path, &namelist, 0, ino_cmp);
 
-    if (n_entries == -1) {
+    if (num_entries == -1) {
 	fprintf (stderr, "Error opening directory %s: %s\n",
 		 path, strerror (errno));
 	ret = NOTMUCH_STATUS_FILE_ERROR;
@@ -138,7 +139,7 @@ add_files_recursive (notmuch_database_t *notmuch,
     int i=0;
 
     while (!interrupted) {
-	if (i == n_entries)
+	if (i == num_entries)
 	    break;
 
         entry= namelist[i++];
