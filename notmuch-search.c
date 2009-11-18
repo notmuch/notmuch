@@ -20,18 +20,69 @@
 
 #include "notmuch-client.h"
 
+/* If the user asks for a *lot* of threads, lets give some results as
+ * quickly as possible and let the user read those while we compute
+ * the remainder. */
+#define NOTMUCH_SHOW_INITIAL_BURST 100
+
+static void
+do_search_threads (const void *ctx,
+		   notmuch_query_t *query,
+		   notmuch_sort_t sort,
+		   int first, int max_threads)
+{
+    notmuch_thread_t *thread;
+    notmuch_threads_t *threads;
+    notmuch_tags_t *tags;
+    time_t date;
+    const char *relative_date;
+
+    for (threads = notmuch_query_search_threads (query, first, max_threads);
+	 notmuch_threads_has_more (threads);
+	 notmuch_threads_advance (threads))
+    {
+	int first_tag = 1;
+
+	thread = notmuch_threads_get (threads);
+
+	if (sort == NOTMUCH_SORT_DATE)
+	    date = notmuch_thread_get_oldest_date (thread);
+	else
+	    date = notmuch_thread_get_newest_date (thread);
+
+	relative_date = notmuch_time_relative_date (ctx, date);
+
+	printf ("thread:%s %12s [%d/%d] %s; %s",
+		notmuch_thread_get_thread_id (thread),
+		relative_date,
+		notmuch_thread_get_matched_messages (thread),
+		notmuch_thread_get_total_messages (thread),
+		notmuch_thread_get_authors (thread),
+		notmuch_thread_get_subject (thread));
+
+	printf (" (");
+	for (tags = notmuch_thread_get_tags (thread);
+	     notmuch_tags_has_more (tags);
+	     notmuch_tags_advance (tags))
+	{
+	    if (! first_tag)
+		printf (" ");
+	    printf ("%s", notmuch_tags_get (tags));
+	    first_tag = 0;
+	}
+	printf (")\n");
+
+	notmuch_thread_destroy (thread);
+    }
+}
+
 int
 notmuch_search_command (void *ctx, int argc, char *argv[])
 {
     notmuch_config_t *config;
     notmuch_database_t *notmuch;
     notmuch_query_t *query;
-    notmuch_threads_t *threads;
-    notmuch_thread_t *thread;
-    notmuch_tags_t *tags;
     char *query_str;
-    const char *relative_date;
-    time_t date;
     int i, first = 0, max_threads = -1;
     char *opt, *end;
     notmuch_sort_t sort = NOTMUCH_SORT_DATE;
@@ -88,43 +139,17 @@ notmuch_search_command (void *ctx, int argc, char *argv[])
 
     notmuch_query_set_sort (query, sort);
 
-    for (threads = notmuch_query_search_threads (query, first, max_threads);
-	 notmuch_threads_has_more (threads);
-	 notmuch_threads_advance (threads))
+    if (max_threads < 0 || max_threads > NOTMUCH_SHOW_INITIAL_BURST)
     {
-	int first = 1;
+	do_search_threads (ctx, query, sort,
+			   first, NOTMUCH_SHOW_INITIAL_BURST);
 
-	thread = notmuch_threads_get (threads);
-
-	if (sort == NOTMUCH_SORT_DATE)
-	    date = notmuch_thread_get_oldest_date (thread);
-	else
-	    date = notmuch_thread_get_newest_date (thread);
-
-	relative_date = notmuch_time_relative_date (ctx, date);
-
-	printf ("thread:%s %12s [%d/%d] %s; %s",
-		notmuch_thread_get_thread_id (thread),
-		relative_date,
-		notmuch_thread_get_matched_messages (thread),
-		notmuch_thread_get_total_messages (thread),
-		notmuch_thread_get_authors (thread),
-		notmuch_thread_get_subject (thread));
-
-	printf (" (");
-	for (tags = notmuch_thread_get_tags (thread);
-	     notmuch_tags_has_more (tags);
-	     notmuch_tags_advance (tags))
-	{
-	    if (! first)
-		printf (" ");
-	    printf ("%s", notmuch_tags_get (tags));
-	    first = 0;
-	}
-	printf (")\n");
-
-	notmuch_thread_destroy (thread);
+	first += NOTMUCH_SHOW_INITIAL_BURST;
+	if (max_threads > 0)
+	    max_threads -= NOTMUCH_SHOW_INITIAL_BURST;
     }
+
+    do_search_threads (ctx, query, sort, first, max_threads);
 
     notmuch_query_destroy (query);
     notmuch_database_close (notmuch);
