@@ -137,7 +137,7 @@ The
 commands are used to query the email database.
 .RS 4
 .TP 4
-.BR search " [options] <search-term>..."
+.BR search " [options...] <search-term>..."
 
 Search for messages matching the given search terms, and display as
 results the threads containing the matched messages.
@@ -242,11 +242,11 @@ Constructs a reply template for a set of messages.
 To make replying to email easier,
 .B notmuch reply
 takes an existing set of messages and constructs a suitable mail
-template. It take the content of the Reply-to header (if any,
-otherwise From:) and places it int the To: header. It also copies any
-value from the To: and CC: lists, but avoids including any of the
-current user's email addresses (as configured in primary_mail or
-other_email in the .notmuch-config file) in the recipient list
+template. The Reply-to header (if any, otherwise From:) is used for
+the To: address. Vales from the To: and Cc: headers are copied, but
+not including any of the current user's email addresses (as configured
+in primary_mail or other_email in the .notmuch-config file) in the
+recipient list
 
 It also builds a suitable new subject, including Re: at the front (if
 not already present), and adding the message IDs of the messages being
