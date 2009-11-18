@@ -772,6 +772,7 @@ global search.
   (set (make-local-variable 'scroll-preserve-screen-position) t)
   (add-to-invisibility-spec 'notmuch-search)
   (use-local-map notmuch-search-mode-map)
+  (setq truncate-lines t)
   (setq major-mode 'notmuch-search-mode
 	mode-name "notmuch-search")
   (setq buffer-read-only t))
