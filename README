@@ -18,11 +18,15 @@ The website for Notmuch is:
 
 	http://notmuchmail.org
 
-We will soon be creating a mailing list for users and developers of
-notmuch. Details will appear on the website. Until then, please feel
-free to email Carl with any questions you have:
+The mailing list address for the notmuch community is:
 
-	Carl Worth <cworth@cworth.org>
+	notmuch@notmuchmail.org
+
+We welcome any sort of questions, comments, kudos, or code there.
+
+Subscription is not required, (but if you do subscribe you'll avoid
+any delay due to moderation). See the website for subscription
+information.
 
 There is also an IRC channel dedicated to talk about using and
 developing notmuch:
