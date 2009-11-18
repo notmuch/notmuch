@@ -423,7 +423,6 @@ notmuch_new_command (void *ctx,
     dot_notmuch_path = NULL;
 
     add_files_state.saw_read_only_directory = FALSE;
-    add_files_state.total_files = 0;
     add_files_state.processed_files = 0;
     add_files_state.added_messages = 0;
     gettimeofday (&add_files_state.tv_start, NULL);
