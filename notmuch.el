@@ -962,4 +962,6 @@ current search results AND that are tagged with the given tag."
   (interactive)
   (notmuch-search "tag:inbox" t))
 
+(setq mail-user-agent 'message-user-agent)
+
 (provide 'notmuch)
