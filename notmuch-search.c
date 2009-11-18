@@ -138,6 +138,10 @@ notmuch_search_command (void *ctx, int argc, char *argv[])
 	fprintf (stderr, "Out of memory.\n");
 	return 1;
     }
+    if (*query_str == '\0') {
+	fprintf (stderr, "Error: notmuch search requires at least one search term.\n");
+	return 1;
+    }
 
     query = notmuch_query_create (notmuch, query_str);
     if (query == NULL) {
