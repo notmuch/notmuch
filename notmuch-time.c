@@ -43,7 +43,7 @@
 #define DAY (24 * HOUR)
 #define RELATIVE_DATE_MAX 20
 const char *
-notmuch_time_relative_date (void *ctx, time_t then)
+notmuch_time_relative_date (const void *ctx, time_t then)
 {
     struct tm tm_now, tm_then;
     time_t now = time(NULL);

@@ -124,7 +124,7 @@ int
 notmuch_tag_command (void *ctx, int argc, char *argv[]);
 
 const char *
-notmuch_time_relative_date (void *ctx, time_t then);
+notmuch_time_relative_date (const void *ctx, time_t then);
 
 void
 notmuch_time_print_formatted_seconds (double seconds);
