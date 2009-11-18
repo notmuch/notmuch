@@ -73,6 +73,11 @@ add_files_print_progress (add_files_state_t *state)
     fflush (stdout);
 }
 
+static int ino_cmp(const struct dirent **a, const struct dirent **b)
+{
+  return ((*a)->d_ino < (*b)->d_ino)? -1: 1;
+}
+
 /* Examine 'path' recursively as follows:
  *
  *   o Ask the filesystem for the mtime of 'path' (path_mtime)
@@ -100,13 +105,12 @@ add_files_recursive (notmuch_database_t *notmuch,
 		     add_files_state_t *state)
 {
     DIR *dir = NULL;
-    struct dirent *e, *entry = NULL;
-    int entry_length;
-    int err;
+    struct dirent *entry = NULL;
     char *next = NULL;
     time_t path_mtime, path_dbtime;
     notmuch_status_t status, ret = NOTMUCH_STATUS_SUCCESS;
     notmuch_message_t *message = NULL;
+    struct dirent **namelist = NULL;
 
     /* If we're told to, we bail out on encountering a read-only
      * directory, (with this being a clear clue from the user to
@@ -122,30 +126,22 @@ add_files_recursive (notmuch_database_t *notmuch,
     path_mtime = st->st_mtime;
 
     path_dbtime = notmuch_database_get_timestamp (notmuch, path);
+    int n_entries= scandir(path, &namelist, 0, ino_cmp);
 
-    dir = opendir (path);
-    if (dir == NULL) {
+    if (n_entries == -1) {
 	fprintf (stderr, "Error opening directory %s: %s\n",
 		 path, strerror (errno));
 	ret = NOTMUCH_STATUS_FILE_ERROR;
 	goto DONE;
     }
 
-    entry_length = offsetof (struct dirent, d_name) +
-	pathconf (path, _PC_NAME_MAX) + 1;
-    entry = malloc (entry_length);
+    int i=0;
 
     while (!interrupted) {
-	err = readdir_r (dir, entry, &e);
-	if (err) {
-	    fprintf (stderr, "Error reading directory: %s\n",
-		     strerror (errno));
-	    ret = NOTMUCH_STATUS_FILE_ERROR;
-	    goto DONE;
-	}
-
-	if (e == NULL)
+	if (i == n_entries)
 	    break;
+
+        entry= namelist[i++];
 
 	/* If this directory hasn't been modified since the last
 	 * add_files, then we only need to look further for
@@ -243,6 +239,8 @@ add_files_recursive (notmuch_database_t *notmuch,
 	free (entry);
     if (dir)
 	closedir (dir);
+    if (namelist)
+	free (namelist);
 
     return ret;
 }
