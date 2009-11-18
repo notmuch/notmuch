@@ -249,18 +249,21 @@ buffer."
       (mm-display-parts (mm-dissect-buffer))
       (kill-this-buffer))))
 
+(defun notmuch-reply (query-string)
+  (switch-to-buffer (generate-new-buffer "notmuch-draft"))
+  (call-process "notmuch" nil t nil "reply" query-string)
+  (goto-char (point-min))
+  (if (re-search-forward "^$" nil t)
+      (progn
+	(insert "--text follows this line--")
+	(forward-line)))
+  (message-mode))
+
 (defun notmuch-show-reply ()
   "Begin composing a reply to the current message in a new buffer."
   (interactive)
   (let ((message-id (notmuch-show-get-message-id)))
-    (switch-to-buffer (generate-new-buffer "notmuch-draft"))
-    (call-process "notmuch" nil t nil "reply" message-id)
-    (goto-char (point-min))
-    (if (re-search-forward "^$" nil t)
-	(progn
-	  (insert "--text follows this line--")
-	  (forward-line)))
-    (message-mode)))
+    (notmuch-reply message-id)))
 
 (defun notmuch-show-pipe-message (command)
   "Pipe the contents of the current message to the given command.
@@ -708,6 +711,7 @@ thread from that buffer can be show when done with this one)."
     (define-key map "o" 'notmuch-search-toggle-order)
     (define-key map "p" 'previous-line)
     (define-key map "q" 'kill-this-buffer)
+    (define-key map "r" 'notmuch-search-reply-to-thread)
     (define-key map "s" 'notmuch-search)
     (define-key map "t" 'notmuch-search-filter-by-tag)
     (define-key map "x" 'kill-this-buffer)
@@ -823,6 +827,12 @@ global search.
     (if (> (length thread-id) 0)
 	(notmuch-show thread-id (current-buffer))
       (error "End of search results"))))
+
+(defun notmuch-search-reply-to-thread ()
+  "Begin composing a reply to the entire current thread in a new buffer."
+  (interactive)
+  (let ((message-id (notmuch-search-find-thread-id)))
+    (notmuch-reply message-id)))
 
 (defun notmuch-call-notmuch-process (&rest args)
   "Synchronously invoke \"notmuch\" with the given list of arguments.
