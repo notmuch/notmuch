@@ -40,159 +40,182 @@ interface, or more likely, on top of the notmuch library
 interface. See http://notmuchmail.org for more about alternate
 interfaces to notmuch.
 .SH COMMANDS
-All commands need to know where your mail (and the notmuch database)
-are stored. This is ${HOME}/mail by default. An alternate location can
-be specified with the
-.B NOTMUCH_BASE
-environment variable.
-
 The
-.BR setup " and " new
-commands are used to add new mail messages to the notmuch database.
+.BR setup
+command is used to configure Notmuch for first use, (or to reconfigure
+it later).
 .RS 4
 .TP 4
 .B setup
 
 Interactively sets up notmuch for first use.
 
-The setup command will prompt for the directory containing your email
-archives, and will then proceed to build a database that indexes the
-mail to allow for fast search of the archive.
+The setup command will prompt for your full name, your primary email
+address, any alternate email addresses you use, and the directory
+containing your email archives. Your answers will be written to a
+configuration file in ${HOME}/.notmuch-config . This configuration
+file will be created with descriptive comments, making it easy to edit
+by hand later to change the configuration. Or you can run
+.B "notmuch setup"
+again to change the configuration.
 
-This directory can contain any number of sub-directories and should
-primarily contain only files with indvidual email messages
-(eg. maildir or mh archives are perfect). If there are other,
-non-email files (such as indexes maintained by other email programs)
-then notmuch will do its best to detect those and ignore them.
+The mail directory you specify can contain any number of
+sub-directories and should primarily contain only files with individual
+email messages (eg. maildir or mh archives are perfect). If there are
+other, non-email files (such as indexes maintained by other email
+programs) then notmuch will do its best to detect those and ignore
+them.
 
 Mail storage that uses mbox format, (where one mbox file contains many
 messages), will not work with notmuch. If that's how your mail is
 currently stored, it is recommended you first convert it to maildir
 format with a utility such as mb2md before running
-.BR "notmuch setup" .
+.B "notmuch setup" .
 
 Invoking
 .B notmuch
 with no command argument will run
 .B setup
 if the setup command has not previously been completed.
+.RE
 
-.TP
+The
+.B new
+command is used to incorporate new mail into the notmuch database.
+.RS 4
+.TP 4
 .B new
 
 Find and import any new messages to the database.
 
 The
 .B new
-command scans all sub-directories of the database, adding new messages
-that are found. Each new message will automatically be tagged with
-both the
-.BR inbox and unread
+command scans all sub-directories of the database, performing
+full-text indexing on new messages that are found. Each new message
+will automatically be tagged with both the
+.BR inbox " and " unread
 tags.
+
+You should run
+.B "notmuch new"
+once after first running
+.B "notmuch setup"
+to create the initial database. The first run may take a long time if
+you have a significant amount of mail (several hundred thousand
+messages or more). Subsequently, you should run
+.B "notmuch new"
+whenever new mail is delivered and you wish to incorporate it into the
+database. These subsequent runs will be much quicker than the initial
+run.
 
 Note:
 .B notmuch new
-will skip any read-only directories, so you can use that to mark
-directories that will not receive any new mail (and make
+runs (other than the first run) will skip any read-only directories,
+so you can use that to mark directories that will not receive any new
+mail (and make
 .B notmuch new
-faster).
+even faster).
+
+Invoking
+.B notmuch
+with no command argument will run
+.B new
+if
+.B "notmuch setup"
+has previously been completed, but
+.B "notmuch new"
+has not previously been run.
 .RE
+
+Several of the notmuch commands accept search terms with a common
+syntax. See the
+.B "SEARCH SYNTAX"
+section below for more details on the supported syntax.
 
 The
 .BR search " and "show
 commands are used to query the email database.
 .RS 4
 .TP 4
-.BR search " <search-term>..."
+.BR search " [options] <search-term>..."
 
 Search for messages matching the given search terms, and display as
 results the threads containing the matched messages.
 
 The output consists of one line per thread, giving a thread ID, the
-date of the oldest matched message in the thread, and the subject from
-that message.
+date of the newest (or oldest, depending on the sort option) matched
+message in the thread, the number of matched messages and total
+messages in the thread, the names of all participants in the thread,
+and the subject of the newest (or oldest) message.
 
-Currently, in addition to free text (and quoted phrases) which match
-terms appearing anywhere within an email, the following prefixes can
-be used to search specific portions of an email, (where <brackets>
-indicate user-supplied values):
-
-	from:<name-or-address>
-
-	to:<name-or-address>
-
-	subject:<word-or-quoted-phrase>
-
-	tag:<tag>
-
-	id:<message-id>
-
-	thread:<thread-id>
-
-The from: prefix is used to match the name or address of the sender of
-an email message.
-
-The to: prefix is used to match the names or addresses of any
-recipient of an email message, (whether To, Cc, or Bcc).
-
-Any term prefixed with subject: will match only text from
-the subject of an email. Quoted phrases are supported when
-searching with: subject:\"this is a phrase\".
-
-Valid tag values include
-.BR inbox " and " unread
-by default for new messages added by
-.B notmuch new
-as well as any other tag values added manually with
-.BR "notmuch tag" .
-
-Message ID values are the literal contents of the Message-ID: header
-of email messages, but without the '<', '>' delimiters.
-
-Thread ID values are generated internally by notmuch but can be seen
-in the first column of output from
-.B notmuch search
-for example.
-
-In addition to individual terms, multiple terms can be
-combined with Boolean operators (
-.BR and ", " or ", " not
-, etc.). each term in the query will be implicitly connected by a
-logical AND if no explicit operator is provided, (except that terms
-with a common prefix will be implicitly combined with OR until we get
-Xapian defect #402 fixed).
-
-Parentheses can also be used to control the combination of the Boolean
-operators, but will have to be protected from interpretation by the
-shell, (such as by putting quotation marks around any parenthesized
-expression).
-.TP
-.BR reply " <search-term>..."
-
-Constructs a reply template for a set of messages.
-
-See the documentation of
+Supported options for
 .B search
-for deatils of the supported syntax of search terms.
+include
+.RS 4
+.TP 4
+.BR \-\-max\-threads= <value>
 
-To make replying to email easier,
-.B notmuch reply
-takes an existing set of messages and constructs a suitable mail
-template, taking From: and To: messages and using those for the new
-To: address; copying Cc: addresses, building a suitable new subject
-including Re: at the front, adding the old message IDs to the
-References list and setting the In-Reply-To: field correctly.
+Restricts displayed search results to a subset of the complete results
+that would match the terms. With this option, no more than <value>
+thread results will be displayed. If this option is not used, then all
+matching threads will be displayed. See also the
+.B \-\-first
+option.
 
-The resulting message template is output to stdout.
+.TP
+.BR \-\-first= <value>
 
+Omits the first <value> threads from the search results that would
+otherwise be displayed. Together with the
+.BR \-\-max\-threads
+option, this can be used to perform incremental searches. For example,
+the first 50 thread results can be displayed with
+.B "\-\-first=0 \-\-max\-threads=50"
+and the next 50 could be displayed with
+.B "\-\-first=50 \-\-max\-threads=50"
+etc.
+
+.TP
+.BR \-\-sort= ( newest\-first | oldest\-first )
+
+This option can be used to present results in either chronological order
+.RB ( oldest\-first )
+or reverse chronological order
+.RB ( newest\-first ).
+
+Note: The thread order will be distinct between these two options
+(beyond being simply reversed). When sorting by
+.B oldest\-first
+the threads will be sorted by the oldest message in each thread, but
+when sorting by
+.B newest\-first
+the threads will be sorted by the newest message in each thread.
+
+By default, results will be displayed in reverse chronological order,
+(that is, the newest results will be displayed first).
+
+See the
+.B "SEARCH SYNTAX"
+section below for details of the supported syntax for <search-terms>.
+.RE
 .TP
 .BR show " <search-term>..."
 
 Shows all messages matching the search terms.
 
-See the documentation of
-.B search
-for details of the supported syntax of search terms.
+The messages will be grouped and sorted based on the threading (all
+replies to a particular message will appear immediately after that
+message in date order). The output is not indented by default, but
+depth tags are printed so that proper indentation can be performed by
+a post-processor (such as the emacs interface to notmuch).
+
+The  output format  is plain-text,  with all  text-content  MIME parts
+decoded. Various components in the output,
+.RB ( message ", " header ", " body ", " attachment ", and MIME " part ),
+will be delimited by easily-parsed markers. Each marker consists of a
+Control-L character (ASCII decimal 12), the name of the marker, and
+then either an opening or closing brace, ('{' or '}'), to either open
+or close the component.
 
 A common use of
 .B notmuch show
@@ -202,14 +225,50 @@ column of output from the
 .B notmuch search
 command.
 
-All messages will be displayed in date order. The output format is
-plain-text, with all text-content MIME parts decoded. Various
-components in the output,
-.RB ( message ", " header ", " body ", " attachment ", and MIME " part ),
-will be delimited by easily-parsed markers. Each marker consists of a
-Control-L character (ASCII decimal 12), the name of the marker, and
-then either an opening or closing brace, ('{' or '}'), to either open
-or close the component.
+See the
+.B "SEARCH SYNTAX"
+section below for details of the supported syntax for <search-terms>.
+.RE
+
+The
+.B reply
+command is useful for preparing a template for an email reply.
+
+.TP
+.BR reply " <search-term>..."
+
+Constructs a reply template for a set of messages.
+
+To make replying to email easier,
+.B notmuch reply
+takes an existing set of messages and constructs a suitable mail
+template. It take the content of the Reply-to header (if any,
+otherwise From:) and places it int the To: header. It also copies any
+value from the To: and CC: lists, but avoids including any of the
+current user's email addresses (as configured in primary_mail or
+other_email in the .notmuch-config file) in the recipient list
+
+It also builds a suitable new subject, including Re: at the front (if
+not already present), and adding the message IDs of the messages being
+replied to to the References list and setting the In-Reply-To: field
+correctly.
+
+Finally, the original contents of the emails are quoted by prefixing
+each line with '> ' and included in the body.
+
+The resulting message template is output to stdout.
+
+See the
+.B "SEARCH SYNTAX"
+section below for details of the supported syntax for <search-terms>.
+
+Note: It is most common to use
+.B "notmuch reply"
+with a search string matching a single message, (such as
+id:<message-id>), but it can be useful to reply to several messages at
+once. For example, when a series of patches are sent in a single
+thread, replying to the entire thread allows for the reply to comment
+on issue found in multiple patches.
 .RE
 
 The
@@ -223,12 +282,9 @@ contents.
 
 Add/remove tags for all messages matching the search terms.
 
-The search terms are handled exactly as in
-.B "notmuch search"
-so one can use that command first to see what will be modified.
-
 Tags prefixed by '+' are added while those prefixed by '-' are
-removed. For each message, tag removal is before tag addition.
+removed. For each message, tag removal is performed before tag
+addition.
 
 The beginning of <search-terms> is recognized by the first
 argument that begins with neither '+' nor '-'. Support for
@@ -236,17 +292,9 @@ an initial search term beginning with '+' or '-' is provided
 by allowing the user to specify a "--" argument to separate
 the tags from the search terms.
 
-Caution: If you run
-.B "notmuch new"
-between reading a thread with
-.B "notmuch show"
-and removing the "inbox" tag for that thread with
-.B "notmuch tag"
-then you create the possibility of moving some messages from that
-thread out of your inbox without ever reading them. The easiest way to
-avoid this problem is to not run
-.B "notmuch new"
-between reading mail and removing tags.
+See the
+.B "SEARCH SYNTAX"
+section below for details of the supported syntax for <search-terms>.
 .RE
 
 The
@@ -278,12 +326,87 @@ So if you've previously been using sup for mail, then the
 .B "notmuch restore"
 command provides you a way to import all of your tags (or labels as
 sup calls them).
-.SH ENVIRONMENT
-.B NOTMUCH_BASE
-Set to the directory which contains the user's mail to be indexed and
-searched by notmuch. Notmuch will create a directory named
-.B .notmuch
-at the toplevel of this directory where it will store its database.
+.SH SEARCH SYNTAX
+Several notmuch commands accept a common syntax for search terms.
+
+The search terms can consist of free-form text (and quoted phrases)
+which will match all messages that contain all of the given
+terms/phrases in the body, the subject, or any of the sender or
+recipient headers.
+
+In addition to free text, the following prefixes can be used to force
+terms to match against specific portions of an email, (where
+<brackets> indicate user-supplied values):
+
+	from:<name-or-address>
+
+	to:<name-or-address>
+
+	subject:<word-or-quoted-phrase>
+
+	attachment:<word>
+
+	tag:<tag>
+
+	id:<message-id>
+
+	thread:<thread-id>
+
+The
+.B from:
+prefix is used to match the name or address of the sender of an email
+message.
+
+The
+.B to:
+prefix is used to match the names or addresses of any recipient of an
+email message, (whether To, Cc, or Bcc).
+
+Any term prefixed with
+.B subject:
+will match only text from the subject of an email. Searching for a
+phrase in the subject is supported by including quotation marks around
+the phrase, immediately following
+.BR subject: .
+
+The
+.B attachment:
+prefix can be used to search for specific filenames (or extensions) of
+attachments to email messages.
+
+For
+.BR tag: ,
+valid tag values include
+.BR inbox " and " unread
+by default for new messages added by
+.B notmuch new
+as well as any other tag values added manually with
+.BR "notmuch tag" .
+
+For
+.BR id: ,
+message ID values are the literal contents of the Message-ID: header
+of email messages, but without the '<', '>' delimiters.
+
+The
+.B thread:
+prefix can be used with the thread ID values that are generated
+internally by notmuch (and do not appear in email messages). These
+thread ID values can be seen in the first column of output from
+.B "notmuch search"
+
+In addition to individual terms, multiple terms can be
+combined with Boolean operators (
+.BR and ", " or ", " not
+, etc.). Each term in the query will be implicitly connected by a
+logical AND if no explicit operator is provided, (except that terms
+with a common prefix will be implicitly combined with OR until we get
+Xapian defect #402 fixed).
+
+Parentheses can also be used to control the combination of the Boolean
+operators, but will have to be protected from interpretation by the
+shell, (such as by putting quotation marks around any parenthesized
+expression).
 .SH SEE ALSO
 The emacs-based interface to notmuch (available as
 .B notmuch.el
@@ -291,3 +414,10 @@ in the Notmuch distribution).
 
 The notmuch website:
 .B http://notmuchmail.org
+.SH CONTACT
+Feel free to send questions, comments, or kudos to the notmuch mailing
+list <notmuch@notmuchmail.org> . Subscription is not required before
+posting, but is available from the notmuchmail.org website.
+
+Real-time interaction with the Notmuch community is available via IRC
+(server: irc.freenode.net, channel: #notmuch).
