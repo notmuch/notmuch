@@ -4,15 +4,16 @@ CFLAGS=-O2
 
 # Additional flags that we will append to whatever the user set.
 # These aren't intended for the user to manipulate.
-extra_cflags = `pkg-config --cflags glib-2.0 gmime-2.4 talloc`
-extra_cxxflags = `xapian-config --cxxflags`
+extra_cflags := $(shell pkg-config --cflags glib-2.0 gmime-2.4 talloc)
+extra_cxxflags := $(shell xapian-config --cxxflags)
 
 # Now smash together user's values with our extra values
 override CFLAGS += $(WARN_FLAGS) $(extra_cflags)
 override CXXFLAGS += $(WARN_FLAGS) $(extra_cflags) $(extra_cxxflags)
 
-override LDFLAGS += `pkg-config --libs glib-2.0 gmime-2.4 talloc` \
-			`xapian-config --libs`
+override LDFLAGS += \
+	$(shell pkg-config --libs glib-2.0 gmime-2.4 talloc) \
+	$(shell xapian-config --libs)
 
 # Include our local Makefile.local first so that its first target is default
 include Makefile.local
