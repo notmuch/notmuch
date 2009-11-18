@@ -130,8 +130,9 @@ filter_filter (GMimeFilter *filter, char *inbuf, size_t inlen, size_t prespace,
 				reply->saw_nl = TRUE;
 			else
 				reply->saw_nl = FALSE;
-
-			*outptr++ = *inptr++;
+			if (*inptr != '\r')
+				*outptr++ = *inptr;
+			inptr++;
 		}
 	} else {
 		g_mime_filter_set_size (filter, inlen + 1, FALSE);
@@ -150,7 +151,7 @@ filter_filter (GMimeFilter *filter, char *inbuf, size_t inlen, size_t prespace,
 				else
 					*outptr++ = *inptr;
 				reply->saw_angle = FALSE;
-			} else {
+			} else if (*inptr != '\r') {
 				if (*inptr == '\n')
 					reply->saw_nl = TRUE;
 				*outptr++ = *inptr;

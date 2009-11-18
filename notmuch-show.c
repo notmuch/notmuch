@@ -99,14 +99,23 @@ show_part (GMimeObject *part, int *part_count)
     if (g_mime_content_type_is_type (content_type, "text", "*") &&
 	!g_mime_content_type_is_type (content_type, "text", "html"))
     {
-	GMimeStream *stream = g_mime_stream_file_new (stdout);
-	g_mime_stream_file_set_owner (GMIME_STREAM_FILE (stream), FALSE);
+	GMimeStream *stream_stdout = g_mime_stream_file_new (stdout);
+	GMimeStream *stream_filter = NULL;
+
+	if (stream_stdout) {
+	    g_mime_stream_file_set_owner (GMIME_STREAM_FILE (stream_stdout), FALSE);
+	    stream_filter = g_mime_stream_filter_new(stream_stdout);
+	    g_mime_stream_filter_add(GMIME_STREAM_FILTER(stream_filter),
+				     g_mime_filter_crlf_new(FALSE, FALSE));
+	}
 
 	wrapper = g_mime_part_get_content_object (GMIME_PART (part));
-	if (wrapper && stream)
-	    g_mime_data_wrapper_write_to_stream (wrapper, stream);
-	if (stream)
-	    g_object_unref(stream);
+	if (wrapper && stream_filter)
+	    g_mime_data_wrapper_write_to_stream (wrapper, stream_filter);
+	if (stream_filter)
+	    g_object_unref(stream_filter);
+	if (stream_stdout)
+	    g_object_unref(stream_stdout);
     }
     else
     {
