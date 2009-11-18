@@ -547,6 +547,19 @@ _notmuch_message_sync (notmuch_message_t *message)
     db->replace_document (message->doc_id, message->doc);
 }
 
+/* Ensure that 'message' is not holding any file object open. Future
+ * calls to various functions will still automatically open the
+ * message file as needed.
+ */
+void
+_notmuch_message_close (notmuch_message_t *message)
+{
+    if (message->message_file) {
+	notmuch_message_file_close (message->message_file);
+	message->message_file = NULL;
+    }
+}
+
 /* Add a name:value term to 'message', (the actual term will be
  * encoded by prefixing the value with a short prefix). See
  * NORMAL_PREFIX and BOOLEAN_PREFIX arrays for the mapping of term

@@ -207,6 +207,7 @@ _notmuch_thread_create (void *ctx,
     const char *thread_id_query_string, *matched_query_string;
     notmuch_query_t *thread_id_query, *matched_query;
     notmuch_messages_t *messages;
+    notmuch_message_t *message;
 
     thread_id_query_string = talloc_asprintf (ctx, "thread:%s", thread_id);
     if (unlikely (query_string == NULL))
@@ -263,7 +264,9 @@ _notmuch_thread_create (void *ctx,
 	 notmuch_messages_has_more (messages);
 	 notmuch_messages_advance (messages))
     {
-	_thread_add_message (thread, notmuch_messages_get (messages));
+	message = notmuch_messages_get (messages);
+	_thread_add_message (thread, message);
+	_notmuch_message_close (message);
     }
 
     notmuch_query_destroy (thread_id_query);
@@ -272,7 +275,9 @@ _notmuch_thread_create (void *ctx,
 	 notmuch_messages_has_more (messages);
 	 notmuch_messages_advance (messages))
     {
-	_thread_add_matched_message (thread, notmuch_messages_get (messages));
+	message = notmuch_messages_get (messages);
+	_thread_add_matched_message (thread, message);
+	_notmuch_message_close (message);
     }
 
     notmuch_query_destroy (matched_query);
