@@ -42,7 +42,8 @@ typedef struct {
  * Mail document
  * -------------
  * A mail document is associated with a particular email message file
- * on disk. It is indexed with the following prefixed terms:
+ * on disk. It is indexed with the following prefixed terms which the
+ * database uses to construct threads, etc.:
  *
  *    Single terms of given prefix:
  *
@@ -52,6 +53,8 @@ typedef struct {
  *		as "notmuch-sha1-<sha1_sum_of_entire_file>.
  *
  *	thread:	The ID of the thread to which the mail belongs
+ *
+ *	replyto: The ID from the In-Reply-To header of the mail (if any).
  *
  *    Multiple terms of given prefix:
  *
@@ -66,6 +69,11 @@ typedef struct {
  *			Date header.
  *
  *	MESSAGE_ID:	The unique ID of the mail mess (see "id" above)
+ *
+ * In addition, terms from the content of the message are added with
+ * "from", "to", "attachment", and "subject" prefixes for use by the
+ * user in searching. But the database doesn't really care itself
+ * about any of these.
  *
  * Timestamp document
  * ------------------
