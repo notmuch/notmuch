@@ -726,7 +726,8 @@ _notmuch_database_link_message_to_parents (notmuch_database_t *notmuch,
 
     /* Carefully avoid adding any self-referential in-reply-to term. */
     in_reply_to_message_id = _parse_message_id (message, in_reply_to, NULL);
-    if (strcmp (in_reply_to_message_id,
+    if (in_reply_to_message_id &&
+	strcmp (in_reply_to_message_id,
 		notmuch_message_get_message_id (message)))
     {
 	_notmuch_message_add_term (message, "replyto",
