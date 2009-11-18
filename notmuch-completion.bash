@@ -27,24 +27,37 @@
 #
 #	new
 #
-#	search <search-term> [...]
+#	search [options] <search-term> [...]
 #
-#	show <thread-id>
+#	show <search-terms>
+#
+#	reply <search-terms>
+#
+#	tag +<tag>|-<tag> [...] [--] <search-terms> [...]
 #
 #	dump [<filename>]
 #
 #	restore <filename>
+#
+#	help [<command>]
 
 _notmuch()
 {
     current="$2"
 
-    commands="help setup new search show dump restore"
+    commands="setup new search show reply tag dump restore help"
+
+    help_options="setup new search show reply tag dump restore search-terms"
 
     COMPREPLY=()
+    prev=${COMP_WORDS[COMP_CWORD-1]}
 
     if [ "$COMP_CWORD" = "1" ]; then
 	COMPREPLY=( $(compgen -W "${commands}" -- ${current}) )
+    fi
+
+    if [ $prev = "help" ] && [ "$COMP_CWORD" = "2" ]; then
+	COMPREPLY=( $(compgen -W "${help_options}" -- ${current}) )
     fi
 }
 complete -o default -o bashdefault -F _notmuch notmuch
