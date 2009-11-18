@@ -371,9 +371,16 @@ _parse_message_id (void *ctx, const char *message_id, const char **next)
 }
 
 /* Parse a References header value, putting a (talloc'ed under 'ctx')
- * copy of each referenced message-id into 'hash'. */
+ * copy of each referenced message-id into 'hash'.
+ *
+ * We explicitly avoid including any reference identical to
+ * 'message_id' in the result (to avoid mass confusion when a single
+ * message references itself cyclically---and yes, mail messages are
+ * not infrequent in the wild that do this---don't ask me why).
+*/
 static void
 parse_references (void *ctx,
+		  const char *message_id,
 		  GHashTable *hash,
 		  const char *refs)
 {
@@ -385,7 +392,7 @@ parse_references (void *ctx,
     while (*refs) {
 	ref = _parse_message_id (ctx, refs, &refs);
 
-	if (ref)
+	if (ref && strcmp (ref, message_id))
 	    g_hash_table_insert (hash, ref, NULL);
     }
 }
@@ -697,7 +704,7 @@ _notmuch_database_link_message_to_parents (notmuch_database_t *notmuch,
 					   const char **thread_id)
 {
     GHashTable *parents = NULL;
-    const char *refs, *in_reply_to;
+    const char *refs, *in_reply_to, *in_reply_to_message_id;
     GList *l, *keys = NULL;
     notmuch_status_t ret = NOTMUCH_STATUS_SUCCESS;
 
@@ -705,12 +712,21 @@ _notmuch_database_link_message_to_parents (notmuch_database_t *notmuch,
 				     _my_talloc_free_for_g_hash, NULL);
 
     refs = notmuch_message_file_get_header (message_file, "references");
-    parse_references (message, parents, refs);
+    parse_references (message, notmuch_message_get_message_id (message),
+		      parents, refs);
 
     in_reply_to = notmuch_message_file_get_header (message_file, "in-reply-to");
-    parse_references (message, parents, in_reply_to);
-    _notmuch_message_add_term (message, "replyto",
-			       _parse_message_id (message, in_reply_to, NULL));
+    parse_references (message, notmuch_message_get_message_id (message),
+		      parents, in_reply_to);
+
+    /* Carefully avoid adding any self-referential in-reply-to term. */
+    in_reply_to_message_id = _parse_message_id (message, in_reply_to, NULL);
+    if (strcmp (in_reply_to_message_id,
+		notmuch_message_get_message_id (message)))
+    {
+	_notmuch_message_add_term (message, "replyto",
+			     _parse_message_id (message, in_reply_to, NULL));
+    }
 
     keys = g_hash_table_get_keys (parents);
     for (l = keys; l; l = l->next) {
