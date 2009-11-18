@@ -61,7 +61,7 @@ notmuch_query_create (notmuch_database_t *notmuch,
 
     query->query_string = talloc_strdup (query, query_string);
 
-    query->sort = NOTMUCH_SORT_DATE;
+    query->sort = NOTMUCH_SORT_NEWEST_FIRST;
 
     return query;
 }
@@ -109,10 +109,10 @@ notmuch_query_search_messages (notmuch_query_t *query,
 	}
 
 	switch (query->sort) {
-	case NOTMUCH_SORT_DATE:
+	case NOTMUCH_SORT_OLDEST_FIRST:
 	    enquire.set_sort_by_value (NOTMUCH_VALUE_TIMESTAMP, FALSE);
 	    break;
-	case NOTMUCH_SORT_DATE_REVERSE:
+	case NOTMUCH_SORT_NEWEST_FIRST:
 	    enquire.set_sort_by_value (NOTMUCH_VALUE_TIMESTAMP, TRUE);
 	    break;
 	case NOTMUCH_SORT_MESSAGE_ID:

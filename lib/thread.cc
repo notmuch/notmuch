@@ -258,7 +258,7 @@ _notmuch_thread_create (void *ctx,
     thread->oldest = 0;
     thread->newest = 0;
 
-    notmuch_query_set_sort (thread_id_query, NOTMUCH_SORT_DATE);
+    notmuch_query_set_sort (thread_id_query, NOTMUCH_SORT_OLDEST_FIRST);
 
     for (messages = notmuch_query_search_messages (thread_id_query, 0, -1);
 	 notmuch_messages_has_more (messages);

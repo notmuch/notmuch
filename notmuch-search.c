@@ -45,7 +45,7 @@ do_search_threads (const void *ctx,
 
 	thread = notmuch_threads_get (threads);
 
-	if (sort == NOTMUCH_SORT_DATE)
+	if (sort == NOTMUCH_SORT_OLDEST_FIRST)
 	    date = notmuch_thread_get_oldest_date (thread);
 	else
 	    date = notmuch_thread_get_newest_date (thread);
@@ -85,7 +85,7 @@ notmuch_search_command (void *ctx, int argc, char *argv[])
     char *query_str;
     int i, first = 0, max_threads = -1;
     char *opt, *end;
-    notmuch_sort_t sort = NOTMUCH_SORT_DATE;
+    notmuch_sort_t sort = NOTMUCH_SORT_NEWEST_FIRST;
 
     for (i = 0; i < argc && argv[i][0] == '-'; i++) {
 	if (strcmp (argv[i], "--") == 0) {
@@ -106,8 +106,16 @@ notmuch_search_command (void *ctx, int argc, char *argv[])
 		fprintf (stderr, "Invalid value for --max-threads: %s\n", opt);
 		return 1;
 	    }
-	} else if (strcmp (argv[i], "--reverse") == 0) {
-	    sort = NOTMUCH_SORT_DATE_REVERSE;
+	} else if (STRNCMP_LITERAL (argv[i], "--sort=") == 0) {
+	    opt = argv[i] + sizeof ("--sort=") - 1;
+	    if (strcmp (opt, "oldest-first") == 0) {
+		sort = NOTMUCH_SORT_OLDEST_FIRST;
+	    } else if (strcmp (opt, "newest-first") == 0) {
+		sort = NOTMUCH_SORT_NEWEST_FIRST;
+	    } else {
+		fprintf (stderr, "Invalid value for --sort: %s\n", opt);
+		return 1;
+	    }
 	} else {
 	    fprintf (stderr, "Unrecognized option: %s\n", argv[i]);
 	    return 1;

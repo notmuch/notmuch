@@ -874,8 +874,8 @@ This function advances point to the next line when finished."
       (goto-char (point-min))
       (save-excursion
 	(if oldest-first
-	    (call-process "notmuch" nil t nil "search" query)
-	  (call-process "notmuch" nil t nil "search" "--reverse" query))
+	    (call-process "notmuch" nil t nil "search" "--sort=oldest-first" query)
+	  (call-process "notmuch" nil t nil "search" "--sort=newest-first" query))
 	(notmuch-search-markup-thread-ids)
 	))))
 
