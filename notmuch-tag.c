@@ -83,8 +83,10 @@ notmuch_tag_command (void *ctx, unused (int argc), unused (char *argv[]))
 	return 1;
     }
 
-    if (i == argc) {
-	fprintf (stderr, "Error: 'notmuch tag' requires at least one search term.\n");
+    query_string = query_string_from_args (ctx, argc - i, &argv[i]);
+
+    if (*query_string == '\0') {
+	fprintf (stderr, "Error: notmuch tag requires at least one search term.\n");
 	return 1;
     }
 
@@ -95,8 +97,6 @@ notmuch_tag_command (void *ctx, unused (int argc), unused (char *argv[]))
     notmuch = notmuch_database_open (notmuch_config_get_database_path (config));
     if (notmuch == NULL)
 	return 1;
-
-    query_string = query_string_from_args (ctx, argc - i, &argv[i]);
 
     query = notmuch_query_create (notmuch, query_string);
     if (query == NULL) {

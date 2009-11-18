@@ -196,15 +196,20 @@ notmuch_show_command (void *ctx, unused (int argc), unused (char *argv[]))
     if (config == NULL)
 	return 1;
 
-    notmuch = notmuch_database_open (notmuch_config_get_database_path (config));
-    if (notmuch == NULL)
-	return 1;
-
     query_string = query_string_from_args (ctx, argc, argv);
     if (query_string == NULL) {
 	fprintf (stderr, "Out of memory\n");
 	return 1;
     }
+
+    if (*query_string == '\0') {
+	fprintf (stderr, "Error: notmuch show requires at least one search term.\n");
+	return 1;
+    }
+
+    notmuch = notmuch_database_open (notmuch_config_get_database_path (config));
+    if (notmuch == NULL)
+	return 1;
 
     query = notmuch_query_create (notmuch, query_string);
     if (query == NULL) {
