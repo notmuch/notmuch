@@ -55,13 +55,10 @@ typedef struct {
  *
  *    Multiple terms of given prefix:
  *
- *	ref:    All unresolved message IDs from In-Reply-To and
- *		References headers in the message. (Once a referenced
- *		message is added to the database and the thread IDs
- *		are linked the corresponding "ref" term is dropped
- *		from the message document.)
+ *	reference: All message IDs from In-Reply-To and Re ferences
+ *		   headers in the message.
  *
- *	tag:	Any tags associated with this message by the user.
+ *	tag:	   Any tags associated with this message by the user.
  *
  *    A mail document also has two values:
  *
@@ -104,7 +101,7 @@ typedef struct {
 
 prefix_t BOOLEAN_PREFIX_INTERNAL[] = {
     { "type", "T" },
-    { "ref", "XREFERENCE" },
+    { "reference", "XREFERENCE" },
     { "replyto", "XREPLYTO" },
     { "timestamp", "XTIMESTAMP" },
 };
@@ -739,7 +736,8 @@ _notmuch_database_link_message_to_parents (notmuch_database_t *notmuch,
 							     parent_message_id);
 
 	if (parent_thread_id == NULL) {
-	    _notmuch_message_add_term (message, "ref", parent_message_id);
+	    _notmuch_message_add_term (message, "reference",
+				       parent_message_id);
 	} else {
 	    if (*thread_id == NULL) {
 		*thread_id = talloc_strdup (message, parent_thread_id);
@@ -773,7 +771,7 @@ _notmuch_database_link_message_to_children (notmuch_database_t *notmuch,
     notmuch_status_t ret = NOTMUCH_STATUS_SUCCESS;
     notmuch_private_status_t private_status;
 
-    find_doc_ids (notmuch, "ref", message_id, &child, &children_end);
+    find_doc_ids (notmuch, "reference", message_id, &child, &children_end);
 
     for ( ; child != children_end; child++) {
 
@@ -790,7 +788,7 @@ _notmuch_database_link_message_to_children (notmuch_database_t *notmuch,
 	    *thread_id = talloc_strdup (message, child_thread_id);
 	    _notmuch_message_add_term (message, "thread", *thread_id);
 	} else if (strcmp (*thread_id, child_thread_id)) {
-	    _notmuch_message_remove_term (child_message, "ref",
+	    _notmuch_message_remove_term (child_message, "reference",
 					  message_id);
 	    _notmuch_message_sync (child_message);
 	    ret = _merge_threads (notmuch, *thread_id, child_thread_id);
