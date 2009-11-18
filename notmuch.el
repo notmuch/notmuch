@@ -651,6 +651,14 @@ view, (remove the \"inbox\" tag from each), with
   :options '(goto-address)
   :group 'notmuch)
 
+; Make show mode a bit prettier, highlighting URLs and using word wrap
+
+(defun notmuch-show-pretty-hook ()
+  (goto-address-mode 1)
+  (visual-line-mode))
+
+(add-hook 'notmuch-show-hook 'notmuch-show-pretty-hook)
+
 (defun notmuch-show (thread-id &optional parent-buffer)
   "Run \"notmuch show\" with the given thread ID and display results.
 
