@@ -282,7 +282,7 @@ notmuch_message_file_get_header (notmuch_message_file_t *message,
 		message->good_headers < 5)
 	    {
 		message->parsing_finished = 1;
-		continue;
+		break;
 	    }
 	    NEXT_HEADER_LINE (NULL);
 	    continue;
