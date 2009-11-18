@@ -309,36 +309,24 @@ add_files (notmuch_database_t *notmuch,
 static void
 count_files (const char *path, int *count)
 {
-    DIR *dir;
-    struct dirent *e, *entry = NULL;
-    int entry_length;
-    int err;
+    struct dirent *entry = NULL;
     char *next;
     struct stat st;
+    struct dirent **namelist = NULL;
+    int n_entries = scandir (path, &namelist, 0, ino_cmp);
+    int i = 0;
 
-    dir = opendir (path);
-
-    if (dir == NULL) {
+    if (n_entries == -1) {
 	fprintf (stderr, "Warning: failed to open directory %s: %s\n",
 		 path, strerror (errno));
 	goto DONE;
     }
 
-    entry_length = offsetof (struct dirent, d_name) +
-	pathconf (path, _PC_NAME_MAX) + 1;
-    entry = malloc (entry_length);
-
     while (!interrupted) {
-	err = readdir_r (dir, entry, &e);
-	if (err) {
-	    fprintf (stderr, "Error reading directory: %s\n",
-		     strerror (errno));
-	    free (entry);
-	    goto DONE;
-	}
-
-	if (e == NULL)
+        if (i == n_entries)
 	    break;
+
+        entry= namelist[i++];
 
 	/* Ignore special directories to avoid infinite recursion.
 	 * Also ignore the .notmuch directory.
@@ -377,8 +365,8 @@ count_files (const char *path, int *count)
   DONE:
     if (entry)
 	free (entry);
-
-    closedir (dir);
+    if (namelist)
+        free (namelist);
 }
 
 int
