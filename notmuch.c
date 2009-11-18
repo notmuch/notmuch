@@ -400,8 +400,6 @@ main (int argc, char *argv[])
 	    return (command->function) (local, argc - 2, &argv[2]);
     }
 
-    /* Don't complain about "help" being an unknown command when we're
-       about to provide exactly what's wanted anyway. */
     fprintf (stderr, "Error: Unknown command '%s' (see \"notmuch help\")\n",
 	     argv[1]);
 
