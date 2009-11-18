@@ -211,6 +211,10 @@ notmuch_show_command (void *ctx, unused (int argc), unused (char *argv[]))
 
 	messages = notmuch_thread_get_toplevel_messages (thread);
 
+	if (messages == NULL)
+	    INTERNAL_ERROR ("Thread %s has no toplevel messages.\n",
+			    notmuch_thread_get_thread_id (thread));
+
 	show_messages (ctx, messages, 0);
 
 	notmuch_thread_destroy (thread);
