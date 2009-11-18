@@ -33,6 +33,7 @@ struct _notmuch_message {
     int frozen;
     char *message_id;
     char *thread_id;
+    char *in_reply_to;
     char *filename;
     notmuch_message_file_t *message_file;
     notmuch_message_list_t *replies;
@@ -111,6 +112,7 @@ _notmuch_message_create (const void *talloc_owner,
     /* Each of these will be lazily created as needed. */
     message->message_id = NULL;
     message->thread_id = NULL;
+    message->in_reply_to = NULL;
     message->filename = NULL;
     message->message_file = NULL;
 
@@ -270,16 +272,57 @@ notmuch_message_get_header (notmuch_message_t *message, const char *header)
     return notmuch_message_file_get_header (message->message_file, header);
 }
 
-/* XXX: We probably want to store the In-Reply-To header in the
- * database (separate from the References message IDs) so that we can
- * fetch it out again without having to go load the message file. */
+/* Return the message ID from the In-Reply-To header of 'message'.
+ *
+ * Returns an empty string ("") if 'message' has no In-Reply-To
+ * header.
+ *
+ * Returns NULL if any error occurs.
+ */
 const char *
 _notmuch_message_get_in_reply_to (notmuch_message_t *message)
 {
-    return _parse_message_id (message,
-			      notmuch_message_get_header (message,
-							  "in-reply-to"),
-			      NULL);
+    const char *prefix = _find_prefix ("replyto");
+    int prefix_len = strlen (prefix);
+    Xapian::TermIterator i;
+    std::string in_reply_to;
+
+    if (message->in_reply_to)
+	return message->in_reply_to;
+
+    i = message->doc.termlist_begin ();
+    i.skip_to (prefix);
+
+    in_reply_to = *i;
+
+    /* It's perfectly valid for a message to have no In-Reply-To
+     * header. For these cases, we return an empty string. */
+    if (i == message->doc.termlist_end () ||
+	strncmp (in_reply_to.c_str (), prefix, prefix_len))
+    {
+	message->in_reply_to = talloc_strdup (message, "");
+	return message->in_reply_to;
+    }
+
+    message->in_reply_to = talloc_strdup (message,
+					  in_reply_to.c_str () + prefix_len);
+
+#if DEBUG_DATABASE_SANITY
+    i++;
+
+    in_reply_to = *i;
+
+    if (i != message->doc.termlist_end () &&
+	strncmp ((*i).c_str (), prefix, prefix_len))
+    {
+	INTERNAL_ERROR ("Message %s has duplicate In-Reply-To IDs: %s and %s\n"
+			notmuch_message_get_message_id (message),
+			message->in_reply_to,
+			(*i).c_str () + prefix_len);
+    }
+#endif
+
+    return message->in_reply_to;
 }
 
 const char *

@@ -155,7 +155,7 @@ _resolve_thread_relationships (unused (notmuch_thread_t *thread))
     while ((node = *prev)) {
 	message = node->message;
 	in_reply_to = _notmuch_message_get_in_reply_to (message);
-	if (in_reply_to &&
+	if (in_reply_to && strlen (in_reply_to) &&
 	    g_hash_table_lookup_extended (thread->message_hash,
 					  in_reply_to, NULL,
 					  (void **) &parent))
