@@ -52,11 +52,11 @@ _notmuch()
     COMPREPLY=()
     prev=${COMP_WORDS[COMP_CWORD-1]}
 
-    if [ "$COMP_CWORD" = "1" ]; then
+    if [[ "$COMP_CWORD" == "1" ]]; then
 	COMPREPLY=( $(compgen -W "${commands}" -- ${current}) )
     fi
 
-    if [ $prev = "help" ] && [ "$COMP_CWORD" = "2" ]; then
+    if [[ $prev = "help" && "$COMP_CWORD" == "2" ]]; then
 	COMPREPLY=( $(compgen -W "${help_options}" -- ${current}) )
     fi
 }
