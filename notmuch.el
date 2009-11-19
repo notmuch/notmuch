@@ -490,10 +490,17 @@ which this thread was originally shown."
 	      (forward-line))
 	    (let ((overlay (make-overlay beg-sub (point))))
 	      (overlay-put overlay 'invisible 'notmuch-show-citation)
-	      (overlay-put overlay 'before-string
-			   (concat indent
-				   "[" (number-to-string (count-lines beg-sub (point)))
-				   "-line citation. Press 'c' to show.]\n")))))
+              (let (
+                    (p (point))
+                    (cite-button-text (concat "[" (number-to-string (count-lines beg-sub (point)))
+                                              "-line citation. Press 'c' to show.]"))
+                    )
+                (goto-char (- beg-sub 1))
+                (insert (concat "\n" indent))
+                (insert-button cite-button-text)
+                (insert "\n")
+                (goto-char (+ (length cite-button-text) p))
+              ))))
       (move-to-column depth)
       (if (looking-at notmuch-show-signature-regexp)
 	  (let ((sig-lines (- (count-lines beg-sub end) 1)))
