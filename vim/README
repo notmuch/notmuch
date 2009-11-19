@@ -1,10 +1,28 @@
 This directory contains a vim script that allows reading notmuch mail
 through vim.
 
-To install:
+NOTE: this is a work in progress.  Patches welcome. <bart@jukie.net>
 
+To install:
         make install
 
 To run:
-
         vim -c ':NotMuch'
+
+    from vim:
+        :NotMuch
+
+Buffer types:
+    [notmuch-search]
+        You are presented with the search results when you run :NotMuch.
+
+        Keybindings:
+            <Enter> - show the selected message
+            s       - alter search criteria
+
+    [notmuch-show]
+        This is the display of the message.
+
+        Keybindings:
+            q       - return to search display
+
