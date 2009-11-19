@@ -53,11 +53,11 @@ function! s:NM_cmd_search(words)
 endfunction
 
 function! s:NM_search_display()
-        let line = line('.')
         if !exists('b:nm_raw_data')
                 echo 'no b:nm_raw_data'
         else
-                let info = b:nm_raw_data[line]
+                let line = line('.')
+                let info = b:nm_raw_data[line-1]
                 let what = split(info, '\s\+')[0]
                 call s:NM_cmd_show([what])
         endif
@@ -78,7 +78,7 @@ function! s:NM_cmd_show(words)
 endfunction
 
 
-" --- helper function
+" --- helper functions
 
 function! s:NM_newBuffer(ft, content)
         enew
