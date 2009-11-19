@@ -50,15 +50,22 @@ _notmuch()
 
     commands="setup new search show reply tag dump restore help"
     help_options="setup new search show reply tag dump restore search-terms"
+    search_options="--max-threads= --first= --sort="
 
     COMPREPLY=()
 
-    if [[ "$COMP_CWORD" == "1" ]]; then
-        COMPREPLY=( $(compgen -W "${commands}" -- ${current}) )
-    fi
-
-    if [[ $previous = "help" && "$COMP_CWORD" == "2" ]]; then
-        COMPREPLY=( $(compgen -W "${help_options}" -- ${current}) )
-    fi
+    case $COMP_CWORD in
+        1)
+            COMPREPLY=( $(compgen -W "${commands}" -- ${current}) ) ;;
+        2)
+            case $previous in
+                help)
+                    COMPREPLY=( $(compgen -W "${help_options}" -- ${current}) ) ;;
+                search)
+                    COMPREPLY=( $(compgen -W "${search_options}" -- ${current}) ) ;;
+            esac
+            ;;
+    esac
 }
+
 complete -o default -o bashdefault -F _notmuch notmuch
