@@ -654,6 +654,12 @@ view, (remove the \"inbox\" tag from each), with
   :options '(goto-address)
   :group 'notmuch)
 
+(defcustom notmuch-search-hook nil
+  "List of functions to call when notmuch displays the search results."
+  :type 'hook
+  :options '(hl-line-mode)
+  :group 'notmuch)
+
 ; Make show mode a bit prettier, highlighting URLs and using word wrap
 
 (defun notmuch-show-pretty-hook ()
@@ -661,6 +667,9 @@ view, (remove the \"inbox\" tag from each), with
   (visual-line-mode))
 
 (add-hook 'notmuch-show-hook 'notmuch-show-pretty-hook)
+(add-hook 'notmuch-search-hook
+	  (lambda()
+	    (hl-line-mode 1) ))
 
 (defun notmuch-show (thread-id &optional parent-buffer)
   "Run \"notmuch show\" with the given thread ID and display results.
@@ -911,7 +920,8 @@ This function advances point to the next line when finished."
 	    (call-process "notmuch" nil t nil "search" "--sort=oldest-first" query)
 	  (call-process "notmuch" nil t nil "search" "--sort=newest-first" query))
 	(notmuch-search-markup-thread-ids)
-	))))
+	))
+    (run-hooks 'notmuch-search-hook)))
 
 (defun notmuch-search-refresh-view ()
   "Refresh the current view.
