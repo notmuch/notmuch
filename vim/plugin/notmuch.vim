@@ -25,10 +25,18 @@ if !exists('g:notmuch_cmd')
         let g:notmuch_cmd = 'notmuch'
 endif
 
+if !exists('g:notmuch_search_reverse')
+        let g:notmuch_search_reverse = 1
+endif
+
 " --- implement search screen
 
 function! s:NM_cmd_search(words)
-        let data = s:NM_run(['search'] + a:words)
+        let cmd = ['search']
+        if g:notmuch_search_reverse
+                let cmd = cmd + ['--reverse']
+        endif
+        let data = s:NM_run(cmd + a:words)
         "let data = substitute(data, '27/27', '25/27', '')
         "let data = substitute(data, '\[4/4\]', '[0/4]', '')
         let lines = split(data, "\n")
