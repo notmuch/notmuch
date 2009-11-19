@@ -25,7 +25,7 @@ notmuch.1.gz: notmuch.1
 
 install: all notmuch.1.gz
 	for d in $(DESTDIR)$(prefix)/bin/ $(DESTDIR)$(prefix)/share/man/man1 \
-		$(DESTDIR)/etc/bash_completion.d/ ; \
+		$(DESTDIR)/$(prefix)/share/emacs/site-lisp/ $(DESTDIR)/etc/bash_completion.d/ ; \
 	do \
 		install -d $$d ; \
 	done ;
