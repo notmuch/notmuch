@@ -1,0 +1,10 @@
+This directory contains a vim script that allows reading notmuch mail
+through vim.
+
+To install:
+
+        make install
+
+To run:
+
+        vim -c ':NotMuch'
