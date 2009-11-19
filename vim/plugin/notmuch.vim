@@ -25,18 +25,22 @@ if !exists('g:notmuch_cmd')
         let g:notmuch_cmd = 'notmuch'
 endif
 
-
 " --- implement search screen
 
 function! s:NM_cmd_search(words)
-        let data = split(s:NM_run(['search'] + a:words), "\n")
-        let disp = copy(data)
+        let data = s:NM_run(['search'] + a:words)
+        "let data = substitute(data, '27/27', '25/27', '')
+        "let data = substitute(data, '\[4/4\]', '[0/4]', '')
+        let lines = split(data, "\n")
+        let disp = copy(lines)
         call map(disp, 'substitute(v:val, "^thread:\\S* ", "", "")' )
 
         call s:NM_newBuffer('search', join(disp, "\n"))
-        let b:nm_raw_data = data
+        let b:nm_raw_data = lines
 
         nnoremap <buffer> <Enter> :call <SID>NM_search_display()<CR>
+        setlocal cursorline
+        setlocal nowrap
 endfunction
 
 function! s:NM_search_display()
@@ -45,7 +49,7 @@ function! s:NM_search_display()
                 echo 'no b:nm_raw_data'
         else
                 let info = b:nm_raw_data[line]
-                let what = split(info, '\W\+')[0]
+                let what = split(info, '\s\+')[0]
                 call s:NM_cmd_show([what])
         endif
 endfunction
@@ -54,10 +58,14 @@ endfunction
 " --- implement show screen
 
 function! s:NM_cmd_show(words)
+        let bufnr = bufnr('%')
         let data = s:NM_run(['show'] + a:words)
 
         call s:NM_newBuffer('show', data)
+        setlocal bufhidden=delete
         let b:nm_raw_data = data
+
+        exec printf("nnoremap <buffer> q :b %d<CR>", bufnr)
 endfunction
 
 
@@ -66,12 +74,11 @@ endfunction
 function! s:NM_newBuffer(ft, content)
         enew
         setlocal buftype=nofile readonly modifiable
-        setlocal bufhidden=delete
         silent put=a:content
         keepjumps 0d
         setlocal nomodifiable
-        setlocal cursorline
-        execute printf('setlocal filetype=notmuch-%s', a:ft)
+        execute printf('set filetype=notmuch-%s', a:ft)
+        execute printf('set syntax=notmuch-%s', a:ft)
 endfunction
 
 function! s:NM_run(args)
