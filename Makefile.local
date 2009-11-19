@@ -18,7 +18,7 @@ notmuch_client_srcs =		\
 
 notmuch_client_modules = $(notmuch_client_srcs:.c=.o)
 notmuch: $(notmuch_client_modules) lib/notmuch.a
-	$(CXX) $(LDFLAGS) $^ -o $@
+	$(CXX) $^ $(LDFLAGS) -o $@
 
 notmuch.1.gz: notmuch.1
 	gzip --stdout notmuch.1 > notmuch.1.gz
