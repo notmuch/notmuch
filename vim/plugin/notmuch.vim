@@ -96,7 +96,34 @@ function! s:NM_cmd_show(words)
         setlocal bufhidden=delete
         let b:nm_raw_data = data
 
+        call s:NM_cmd_show_mkfolds()
+
         exec printf("nnoremap <buffer> q :b %d<CR>", bufnr)
+endfunction
+
+function! s:NM_cmd_show_mkfolds()
+        let modetype = ''
+        let modeline = -1
+        let lnum = 1
+        while lnum <= line('$')
+                let line = getline(lnum)
+                if modetype == ''
+                        if match(line, s:notmuch_show_signature_regexp) != -1
+                                let modetype = 'sig'
+                                let modeline = lnum
+                                echo "start=" . modeline
+                        endif
+                elseif modetype == 'sig'
+                        if (lnum - modeline) > s:notmuch_show_signature_lines_max
+                                let modetype = ''
+                        elseif match(line, s:notmuch_show_part_end_regexp) != -1
+                                exec printf('%d,%dfold', modeline, lnum)
+                                let modetype = ''
+                        endif
+                endif
+
+                let lnum = lnum + 1
+        endwhile
 endfunction
 
 
