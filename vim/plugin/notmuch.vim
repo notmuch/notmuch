@@ -99,17 +99,53 @@ function! s:NM_cmd_show(words)
         let b:nm_raw_data = data
 
         call s:NM_cmd_show_mkfolds()
+        setlocal foldtext=NM_cmd_show_foldtext()
+        setlocal fillchars=
+        setlocal foldcolumn=5
 
         exec printf("nnoremap <buffer> q :b %d<CR>", bufnr)
 endfunction
 
 function! s:NM_cmd_show_mkfolds()
+        let msg_start = -1
+        let hdr_start = -1
+        let bdy_start = -1
+        let prt_start = -1
         let modetype = ''
         let modeline = -1
         let lnum = 1
+        let b:nm_fold_data = {}
         while lnum <= line('$')
                 let line = getline(lnum)
-                if modetype == ''
+                if match(line, s:notmuch_show_message_begin_regexp) != -1
+                        let msg_start = lnum
+                elseif match(line, s:notmuch_show_message_end_regexp) != -1
+                        exec printf('%d,%dfold', msg_start, lnum)
+                        exec printf('%dfoldopen', msg_start)
+                        let b:nm_fold_data[msg_start] = ['msg', getline(msg_start)]
+
+                elseif match(line, s:notmuch_show_header_begin_regexp) != -1
+                        let hdr_start = lnum
+                elseif match(line, s:notmuch_show_header_end_regexp) != -1
+                        exec printf('%d,%dfold', hdr_start, lnum)
+                        exec printf('%dfoldclose', hdr_start)
+                        let b:nm_fold_data[hdr_start] = ['hdr', '* ' . getline(hdr_start+1) . ' [ Press "h" for full header. ]']
+
+                elseif match(line, s:notmuch_show_body_begin_regexp) != -1
+                        let bdy_start = lnum
+                elseif match(line, s:notmuch_show_body_end_regexp) != -1
+                        exec printf('%d,%dfold', bdy_start, lnum)
+                        exec printf('%dfoldopen', bdy_start)
+                        let b:nm_fold_data[bdy_start] = ['bdy', getline(bdy_start)]
+
+                elseif match(line, s:notmuch_show_part_begin_regexp) != -1
+                        let prt_start = lnum
+                elseif match(line, s:notmuch_show_part_end_regexp) != -1
+                        exec printf('%d,%dfold', prt_start, lnum)
+                        exec printf('%dfoldopen', prt_start)
+                        let b:nm_fold_data[msg_start] = ['msg', getline(prt_start)]
+
+                elseif modetype == ''
                         if match(line, s:notmuch_show_signature_regexp) != -1
                                 let modetype = 'sig'
                                 let modeline = lnum
@@ -120,19 +156,26 @@ function! s:NM_cmd_show_mkfolds()
                 elseif modetype == 'cit'
                         if match(line, s:notmuch_show_citation_regexp) == -1
                                 exec printf('%d,%dfold', modeline, lnum)
+                                let b:nm_fold_data[modeline] = [modetype, printf('[ %d-line citation.  Press "c" to show. ]', lnum - modeline)]
                                 let modetype = ''
                         endif
                 elseif modetype == 'sig'
                         if (lnum - modeline) > s:notmuch_show_signature_lines_max
                                 let modetype = ''
                         elseif match(line, s:notmuch_show_part_end_regexp) != -1
-                                exec printf('%d,%dfold', modeline, lnum)
+                                let modeline2 = lnum - 1
+                                exec printf('%d,%dfold', modeline, modeline2)
+                                let b:nm_fold_data[modeline] = [modetype, printf('[ %d-line signature.  Press "s" to show. ]', modeline2 - modeline)]
                                 let modetype = ''
                         endif
                 endif
 
                 let lnum = lnum + 1
         endwhile
+endfunction
+
+function! NM_cmd_show_foldtext()
+        return b:nm_fold_data[v:foldstart][1]
 endfunction
 
 
