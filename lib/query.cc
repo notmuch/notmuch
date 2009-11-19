@@ -97,7 +97,8 @@ notmuch_query_search_messages (notmuch_query_t *query,
 			      Xapian::QueryParser::FLAG_PHRASE |
 			      Xapian::QueryParser::FLAG_LOVEHATE |
 			      Xapian::QueryParser::FLAG_BOOLEAN_ANY_CASE |
-			      Xapian::QueryParser::FLAG_WILDCARD);
+			      Xapian::QueryParser::FLAG_WILDCARD |
+			      Xapian::QueryParser::FLAG_PURE_NOT);
 
 	if (strcmp (query_string, "") == 0) {
 	    final_query = mail_query;
