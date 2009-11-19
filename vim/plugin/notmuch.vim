@@ -29,6 +29,28 @@ if !exists('g:notmuch_search_reverse')
         let g:notmuch_search_reverse = 1
 endif
 
+" --- used to match output of notmuch
+
+let s:notmuch_show_message_begin_regexp    = '^message{'
+let s:notmuch_show_message_end_regexp      = '^message}'
+let s:notmuch_show_header_begin_regexp     = '^header{'
+let s:notmuch_show_header_end_regexp       = '^header}'
+let s:notmuch_show_body_begin_regexp       = '^body{'
+let s:notmuch_show_body_end_regexp         = '^body}'
+let s:notmuch_show_attachment_begin_regexp = '^attachment{'
+let s:notmuch_show_attachment_end_regexp   = '^attachment}'
+let s:notmuch_show_part_begin_regexp       = '^part{'
+let s:notmuch_show_part_end_regexp         = '^part}'
+let s:notmuch_show_marker_regexp           = '^\\(message\\|header\\|body\\|attachment\\|part\\)[{}].*$'
+
+let s:notmuch_show_id_regexp               = '\(id:[^ ]*\)'
+let s:notmuch_show_depth_regexp            = ' depth:\([0-9]*\) '
+let s:notmuch_show_filename_regexp         = 'filename:\(.*\)$'
+let s:notmuch_show_tags_regexp             = '(\([^)]*\))$'
+
+let s:notmuch_show_signature_regexp        = '^\(-- \?\|_\+\)$'
+let s:notmuch_show_signature_lines_max     = 12
+
 " --- implement search screen
 
 function! s:NM_cmd_search(words)
