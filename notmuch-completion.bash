@@ -53,11 +53,11 @@ _notmuch()
     prev=${COMP_WORDS[COMP_CWORD-1]}
 
     if [[ "$COMP_CWORD" == "1" ]]; then
-	COMPREPLY=( $(compgen -W "${commands}" -- ${current}) )
+        COMPREPLY=( $(compgen -W "${commands}" -- ${current}) )
     fi
 
     if [[ $prev = "help" && "$COMP_CWORD" == "2" ]]; then
-	COMPREPLY=( $(compgen -W "${help_options}" -- ${current}) )
+        COMPREPLY=( $(compgen -W "${help_options}" -- ${current}) )
     fi
 }
 complete -o default -o bashdefault -F _notmuch notmuch
