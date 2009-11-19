@@ -47,6 +47,7 @@ function! s:NM_cmd_search(words)
         let b:nm_raw_data = lines
 
         nnoremap <buffer> <Enter> :call <SID>NM_search_display()<CR>
+        nnoremap <buffer> s       :call <SID>NM_cmd_search(split(input('NotMuch Search:')))<CR>
         setlocal cursorline
         setlocal nowrap
 endfunction
