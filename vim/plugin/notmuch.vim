@@ -51,6 +51,8 @@ let s:notmuch_show_tags_regexp             = '(\([^)]*\))$'
 let s:notmuch_show_signature_regexp        = '^\(-- \?\|_\+\)$'
 let s:notmuch_show_signature_lines_max     = 12
 
+let s:notmuch_show_citation_regexp         = '^\s*>'
+
 " --- implement search screen
 
 function! s:NM_cmd_search(words)
@@ -111,7 +113,14 @@ function! s:NM_cmd_show_mkfolds()
                         if match(line, s:notmuch_show_signature_regexp) != -1
                                 let modetype = 'sig'
                                 let modeline = lnum
-                                echo "start=" . modeline
+                        elseif match(line, s:notmuch_show_citation_regexp) != -1
+                                let modetype = 'cit'
+                                let modeline = lnum
+                        endif
+                elseif modetype == 'cit'
+                        if match(line, s:notmuch_show_citation_regexp) == -1
+                                exec printf('%d,%dfold', modeline, lnum)
+                                let modetype = ''
                         endif
                 elseif modetype == 'sig'
                         if (lnum - modeline) > s:notmuch_show_signature_lines_max
