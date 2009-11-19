@@ -1,0 +1,7 @@
+[Desktop Entry]
+Name=Not Much Mail
+Exec=emacs -f notmuch
+Icon=emblem-mail
+Terminal=false
+Type=Application
+Categories=Network;Email
