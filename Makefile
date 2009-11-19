@@ -13,6 +13,9 @@ ifeq ($(emacs_lispdir),)
 	emacs_lispdir = $(prefix)/share/site-lisp
 endif
 
+all_deps = Makefile Makefile.local Makefile.config \
+		   lib/Makefile lib/Makefile.local
+
 # Now smash together user's values with our extra values
 override CFLAGS += $(WARN_FLAGS) $(extra_cflags)
 override CXXFLAGS += $(WARN_FLAGS) $(extra_cflags) $(extra_cxxflags)
@@ -28,22 +31,22 @@ include lib/Makefile.local
 # And get user settings from the output of configure
 include Makefile.config
 
-%.o: %.cc
+%.o: %.cc $(all_deps)
 	$(CXX) -c $(CFLAGS) $(CXXFLAGS) $< -o $@
 
-%.o: %.c
+%.o: %.c $(all_deps)
 	$(CC) -c $(CFLAGS) $< -o $@
 
 %.elc: %.el
 	emacs -batch -f batch-byte-compile $<
 
-.deps/%.d: %.c
+.deps/%.d: %.c $(all_deps)
 	@set -e; rm -f $@; mkdir -p $$(dirname $@) ; \
 	$(CC) -M $(CPPFLAGS) $(CFLAGS) $< > $@.$$$$; \
 	sed 's,'$$(basename $*)'\.o[ :]*,$*.o $@ : ,g' < $@.$$$$ > $@; \
 	rm -f $@.$$$$
 
-.deps/%.d: %.cc
+.deps/%.d: %.cc $(all_deps)
 	@set -e; rm -f $@; mkdir -p $$(dirname $@) ; \
 	$(CXX) -M $(CPPFLAGS) $(CXXFLAGS) $< > $@.$$$$; \
 	sed 's,'$$(basename $*)'\.o[ :]*,$*.o $@ : ,g' < $@.$$$$ > $@; \
