@@ -1,5 +1,7 @@
 all: notmuch notmuch.1.gz
 
+emacs: notmuch.elc
+
 notmuch_client_srcs =		\
 	notmuch.c		\
 	notmuch-config.c	\
@@ -25,15 +27,22 @@ notmuch.1.gz: notmuch.1
 
 install: all notmuch.1.gz
 	for d in $(DESTDIR)$(prefix)/bin/ $(DESTDIR)$(prefix)/share/man/man1 \
-		$(DESTDIR)/$(prefix)/share/emacs/site-lisp/ $(DESTDIR)/etc/bash_completion.d/ ; \
+		$(DESTDIR)/etc/bash_completion.d/ ; \
 	do \
 		install -d $$d ; \
 	done ;
 	install notmuch $(DESTDIR)$(prefix)/bin/
 	install -m0644 notmuch.1.gz $(DESTDIR)$(prefix)/share/man/man1/
-	install -m0644 notmuch.el $(DESTDIR)$(prefix)/share/emacs/site-lisp/
 	install notmuch-completion.bash \
 		$(DESTDIR)/etc/bash_completion.d/notmuch
 
+install-emacs: install emacs
+	for d in $(DESTDIR)/$(emacs_lispdir) ; \
+	do \
+		install -d $$d ; \
+	done ;
+	install -m0644 notmuch.el $(DESTDIR)$(emacs_lispdir)
+	install -m0644 notmuch.elc $(DESTDIR)$(emacs_lispdir)
+
 SRCS  := $(SRCS) $(notmuch_client_srcs)
-CLEAN := $(CLEAN) notmuch $(notmuch_client_modules)
+CLEAN := $(CLEAN) notmuch $(notmuch_client_modules) notmuch.elc
