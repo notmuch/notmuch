@@ -45,4 +45,4 @@ install-emacs: install emacs
 	install -m0644 notmuch.elc $(DESTDIR)$(emacs_lispdir)
 
 SRCS  := $(SRCS) $(notmuch_client_srcs)
-CLEAN := $(CLEAN) notmuch $(notmuch_client_modules) notmuch.elc
+CLEAN := $(CLEAN) notmuch $(notmuch_client_modules) notmuch.elc notmuch.1.gz
