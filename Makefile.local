@@ -33,7 +33,7 @@ install: all notmuch.1.gz
 	done ;
 	install notmuch $(DESTDIR)$(prefix)/bin/
 	install -m0644 notmuch.1.gz $(DESTDIR)$(prefix)/share/man/man1/
-	install notmuch-completion.bash \
+	install contrib/notmuch-completion.bash \
 		$(DESTDIR)/etc/bash_completion.d/notmuch
 
 install-emacs: install emacs
