@@ -32,8 +32,10 @@ Buffer types:
         This is the display of the message.
 
         Keybindings:
-            q       - return to search display
             ^n      - next message
-            s       - toggle folding of signatures on and off
-            c       - toggle folding of citations on and off
+            b       - toggle folding of message bodies
+            c       - toggle folding of citations
+            h       - toggle folding of extra header lines
+            s       - toggle folding of signatures
+            q       - return to search display
 

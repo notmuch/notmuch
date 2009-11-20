@@ -29,6 +29,8 @@ let s:notmuch_defaults = {
         \
         \ 'g:notmuch_show_fold_signatures':          1                            ,
         \ 'g:notmuch_show_fold_citations':           1                            ,
+        \ 'g:notmuch_show_fold_bodies':              0                            ,
+        \ 'g:notmuch_show_fold_headers':             1                            ,
         \
         \ 'g:notmuch_show_message_begin_regexp':     '^message{'                ,
         \ 'g:notmuch_show_message_end_regexp':       '^message}'                ,
@@ -61,7 +63,10 @@ let s:notmuch_initial_search_words_defaults = [
 " override with: let g:notmuch_show_headers = [ ... ]
 let s:notmuch_show_headers_defaults = [
         \ 'Subject',
-        \ 'From'
+        \ 'To',
+        \ 'Cc',
+        \ 'Bcc',
+        \ 'Date'
         \ ]
 
 " --- keyboard mapping definitions {{{1
@@ -85,8 +90,11 @@ let g:notmuch_search_maps = {
 
 " --- --- bindings for show screen {{{2
 let g:notmuch_show_maps = {
+        \ '<C-P>':      ':call <SID>NM_cmd_show_prev()<CR>',
         \ '<C-N>':      ':call <SID>NM_cmd_show_next()<CR>',
+        \ 'b':          ':call <SID>NM_cmd_show_fold_toggle(''b'', ''bdy'', !g:notmuch_show_fold_bodies)<CR>',
         \ 'c':          ':call <SID>NM_cmd_show_fold_toggle(''c'', ''cit'', !g:notmuch_show_fold_citations)<CR>',
+        \ 'h':          ':call <SID>NM_cmd_show_fold_toggle(''h'', ''hdr'', !g:notmuch_show_fold_headers)<CR>',
         \ 's':          ':call <SID>NM_cmd_show_fold_toggle(''s'', ''sig'', !g:notmuch_show_fold_signatures)<CR>',
         \ 'q':          ':call <SID>NM_kill_buffer()<CR>',
         \ }
@@ -304,6 +312,10 @@ function! s:NM_kill_buffer()
         endif
 endfunction
 
+function! s:NM_cmd_show_prev()
+        echoe "not implemented"
+endfunction
+
 function! s:NM_cmd_show_next()
         let info = b:nm_raw_info
         let lnum = line('.')
@@ -394,7 +406,6 @@ function! s:NM_cmd_show_parse(inlines)
                                 elseif mode_type == 'sig'
                                         let outlnum = len(info['disp'])
                                         if (outlnum - mode_start) > g:notmuch_show_signature_lines_max
-                                                echoe 'line ' . outlnum . ' stopped matching'
                                                 let mode_type = ''
                                         elseif part_end
                                                 let foldinfo = [ mode_type, mode_start, outlnum,
@@ -424,7 +435,7 @@ function! s:NM_cmd_show_parse(inlines)
                         endif
                         if match(line, g:notmuch_show_body_end_regexp) != -1
                                 let body_end = len(info['disp'])
-                                let foldinfo = [ 'body', body_start, body_end,
+                                let foldinfo = [ 'bdy', body_start, body_end,
                                                \ printf('[ BODY %d - %d lines ]', len(info['msgs']), body_end - body_start) ]
 
                                 let in_body = 0
@@ -449,6 +460,10 @@ function! s:NM_cmd_show_parse(inlines)
 
                         else
                                 if match(line, g:notmuch_show_header_end_regexp) != -1
+                                        let hdr_start = msg['hdr_start']+1
+                                        let hdr_end = len(info['disp'])
+                                        let foldinfo = [ 'hdr', hdr_start, hdr_end,
+                                               \ printf('[ %d-line headers.  Press "h" to show. ]', hdr_end - hdr_start) ]
                                         let msg['header'] = hdr
                                         let in_header = 0
                                         let hdr = {}
@@ -468,7 +483,7 @@ function! s:NM_cmd_show_parse(inlines)
                                 let msg['end'] = len(info['disp'])
                                 call add(info['disp'], '')
 
-                                let foldinfo = [ 'match', msg['start'], msg['end'],
+                                let foldinfo = [ 'msg', msg['start'], msg['end'],
                                                \ printf('[ MSG %d - %s ]', len(info['msgs']), msg['descr']) ]
 
                                 call add(info['msgs'], msg)
@@ -518,6 +533,8 @@ function! s:NM_cmd_show_mkfolds()
                 exec printf('%d,%dfold', afold[1], afold[2])
                 if (afold[0] == 'sig' && g:notmuch_show_fold_signatures)
                  \ || (afold[0] == 'cit' && g:notmuch_show_fold_citations)
+                 \ || (afold[0] == 'bdy' && g:notmuch_show_fold_bodies)
+                 \ || (afold[0] == 'hdr' && g:notmuch_show_fold_headers)
                         exec printf('%dfoldclose', afold[1])
                 else
                         exec printf('%dfoldopen', afold[1])
