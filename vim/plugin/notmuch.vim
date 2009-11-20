@@ -181,7 +181,10 @@ function! s:NM_new_mail()
 endfunction
 
 function! s:NM_search_toggle_order()
-        echoe 'Not implemented'
+        let g:notmuch_search_reverse = !g:notmuch_search_reverse
+        " FIXME: maybe this would be better done w/o reading re-reading the lines
+        "         reversing the b:nm_raw_lines and the buffer lines would be better
+        call <SID>NM_search_refresh_view()
 endfunction
 
 function! s:NM_search_reply_to_thread()
@@ -198,6 +201,7 @@ endfunction
 
 function! s:NM_search_refresh_view()
         let lno = line('.')
+        setlocal bufhidden=delete
         call <SID>NM_cmd_search(b:nm_search_words)
         " FIXME: should find the line of the thread we were on if possible
         exec printf('norm %dG', lno)
