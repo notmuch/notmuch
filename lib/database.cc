@@ -323,7 +323,7 @@ _parse_message_id (void *ctx, const char *message_id, const char **next)
     const char *s, *end;
     char *result;
 
-    if (message_id == NULL)
+    if (message_id == NULL || *message_id == '\0')
 	return NULL;
 
     s = message_id;
@@ -391,7 +391,7 @@ parse_references (void *ctx,
 {
     char *ref;
 
-    if (refs == NULL)
+    if (refs == NULL || *refs == '\0')
 	return;
 
     while (*refs) {
@@ -896,9 +896,9 @@ notmuch_database_add_message (notmuch_database_t *notmuch,
 	subject = notmuch_message_file_get_header (message_file, "subject");
 	to = notmuch_message_file_get_header (message_file, "to");
 
-	if (from == NULL &&
-	    subject == NULL &&
-	    to == NULL)
+	if ((from == NULL || *from == '\0') &&
+	    (subject == NULL || *subject == '\0') &&
+	    (to == NULL || *to == '\0'))
 	{
 	    ret = NOTMUCH_STATUS_FILE_NOT_EMAIL;
 	    goto DONE;

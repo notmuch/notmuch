@@ -491,7 +491,7 @@ _notmuch_message_set_date (notmuch_message_t *message,
 
     /* GMime really doesn't want to see a NULL date, so protect its
      * sensibilities. */
-    if (date == NULL)
+    if (date == NULL || *date == '\0')
 	time_value = 0;
     else
 	time_value = g_mime_utils_header_decode_date (date, NULL);
