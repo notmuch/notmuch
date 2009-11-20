@@ -8,6 +8,10 @@ extra_cflags := $(shell pkg-config --cflags glib-2.0 gmime-2.4 talloc)
 extra_cxxflags := $(shell xapian-config --cxxflags)
 
 emacs_lispdir := $(shell pkg-config emacs --variable sitepkglispdir)
+# Hard-code if this system doesn't have an emacs.pc file
+ifeq ($(emacs_lispdir),)
+	emacs_lispdir = $(prefix)/share/site-lisp
+endif
 
 # Now smash together user's values with our extra values
 override CFLAGS += $(WARN_FLAGS) $(extra_cflags)
