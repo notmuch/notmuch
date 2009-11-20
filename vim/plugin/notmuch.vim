@@ -658,8 +658,15 @@ endfunction
 
 function! s:NM_run(args)
         let cmd = g:notmuch_cmd . ' ' . join(a:args) . '< /dev/null'
+
+        let start = reltime()
         let out = system(cmd)
-        if v:shell_error
+        let err = v:shell_error
+        let delta = reltime(start)
+
+        echo printf('[%s] {%s} %s', reltimestr(delta), string(err), string(cmd))
+
+        if err
                 echohl Error
                 echo substitute(out, '\n*$', '', '')
                 echohl None
