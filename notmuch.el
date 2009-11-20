@@ -694,7 +694,7 @@ thread from that buffer can be show when done with this one)."
     (let ((proc (get-buffer-process (current-buffer)))
 	  (inhibit-read-only t))
       (if proc
-	  (error "notmuch search process already running for query `%s'" query)
+	  (error "notmuch search process already running for query `%s'" thread-id)
 	)
       (erase-buffer)
       (goto-char (point-min))
