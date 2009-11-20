@@ -53,6 +53,13 @@ if !exists('g:notmuch_show_headers')
         let g:notmuch_show_headers = [ 'Subject', 'From' ]
 endif
 
+" --- keyboard mapping definitions {{{1
+
+let g:notmuch_search_maps = {
+        \ '<Enter>': ':call <SID>NM_search_display()<CR>',
+        \ 's':       ':call <SID>NM_cmd_search(split(input(''NotMuch Search:'')))<CR>',
+        \ }
+
 " --- process and set the defaults {{{1
 
 function! NM_set_defaults(force)
@@ -77,6 +84,15 @@ function! NM_set_defaults(force)
 endfunction
 call NM_set_defaults(0)
 
+" --- assign keymaps {{{1
+
+function! s:NM_set_map(maps)
+        for [key, code] in items(a:maps)
+                exec printf('nnoremap <buffer> %s %s', key, code)
+        endfor
+endfunction
+
+
 " --- implement search screen {{{1
 
 function! s:NM_cmd_search(words)
@@ -94,8 +110,7 @@ function! s:NM_cmd_search(words)
         call s:NM_newBuffer('search', join(disp, "\n"))
         let b:nm_raw_lines = lines
 
-        nnoremap <buffer> <Enter> :call <SID>NM_search_display()<CR>
-        nnoremap <buffer> s       :call <SID>NM_cmd_search(split(input('NotMuch Search:')))<CR>
+        call <SID>NM_set_map(g:notmuch_search_maps)
         setlocal cursorline
         setlocal nowrap
 endfunction
