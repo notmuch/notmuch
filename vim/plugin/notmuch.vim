@@ -74,6 +74,7 @@ let g:notmuch_search_maps = {
         \ 's':          ':call <SID>NM_search_prompt()<CR>',
         \ 'S':          ':call <SID>NM_search_edit()<CR>',
         \ 't':          ':call <SID>NM_search_filter_by_tag()<CR>',
+        \ 'q':          ':call <SID>NM_kill_buffer()<CR>',
         \ '+':          ':call <SID>NM_search_add_tags([])<CR>',
         \ '-':          ':call <SID>NM_search_remove_tags([])<CR>',
         \ '=':          ':call <SID>NM_search_refresh_view()<CR>',
@@ -81,10 +82,10 @@ let g:notmuch_search_maps = {
 
 " --- --- bindings for show screen {{{2
 let g:notmuch_show_maps = {
-        \ 'q':         ':call <SID>NM_cmd_show_quit()<CR>',
-        \ '<C-N>':     ':call <SID>NM_cmd_show_next()<CR>',
-        \ 'c':         ':call <SID>NM_cmd_show_fold_toggle(''c'', ''cit'', !g:notmuch_show_fold_citations)<CR>',
-        \ 's':         ':call <SID>NM_cmd_show_fold_toggle(''s'', ''sig'', !g:notmuch_show_fold_signatures)<CR>',
+        \ '<C-N>':      ':call <SID>NM_cmd_show_next()<CR>',
+        \ 'c':          ':call <SID>NM_cmd_show_fold_toggle(''c'', ''cit'', !g:notmuch_show_fold_citations)<CR>',
+        \ 's':          ':call <SID>NM_cmd_show_fold_toggle(''s'', ''sig'', !g:notmuch_show_fold_signatures)<CR>',
+        \ 'q':          ':call <SID>NM_kill_buffer()<CR>',
         \ }
 
 " --- implement search screen {{{1
@@ -94,7 +95,6 @@ function! s:NM_cmd_search(words)
         if g:notmuch_search_reverse
                 let cmd = cmd + ['--reverse']
         endif
-        let g:notmuch_current_search_words = a:words
         let data = s:NM_run(cmd + a:words)
         "let data = substitute(data, '27/27', '25/27', '')
         "let data = substitute(data, '\[4/4\]', '[0/4]', '')
@@ -104,6 +104,7 @@ function! s:NM_cmd_search(words)
 
         call <SID>NM_newBuffer('search', join(disp, "\n"))
         let b:nm_raw_lines = lines
+        let b:nm_search_words = a:words
 
         call <SID>NM_set_map(g:notmuch_search_maps)
         setlocal cursorline
@@ -123,13 +124,17 @@ function! s:NM_search_prompt()
         " TODO: input() can support completion
         let text = input('NotMuch Search: ')
         if strlen(text)
-                call <SID>NM_cmd_search(split(text))
+                let tags = split(text)
+        else
+                let tags = s:notmuch_initial_search_words_defaults
         endif
+        setlocal bufhidden=delete
+        call <SID>NM_cmd_search(tags)
 endfunction
 
 function! s:NM_search_edit()
         " TODO: input() can support completion
-        let text = input('NotMuch Search: ', join(g:notmuch_current_search_words, ' '))
+        let text = input('NotMuch Search: ', join(b:nm_search_words, ' '))
         if strlen(text)
                 call <SID>NM_cmd_search(split(text))
         endif
@@ -137,6 +142,7 @@ endfunction
 
 function! s:NM_search_archive_thread()
         call <SID>NM_add_remove_tags('-', ['inbox'])
+        " TODO: this could be made better and more generic
         setlocal modifiable
         s/(\([^)]*\)\<inbox\>\([^)]*\))$/(\1\2)/
         setlocal nomodifiable
@@ -144,7 +150,30 @@ function! s:NM_search_archive_thread()
 endfunction
 
 function! s:NM_search_filter()
-        echoe 'Not implemented'
+        call <SID>NM_search_filter_helper('Filter: ', '')
+endfunction
+
+function! s:NM_search_filter_by_tag()
+        call <SID>NM_search_filter_helper('Filter Tag(s): ', 'tag:')
+endfunction
+
+function! s:NM_search_filter_helper(prompt, prefix)
+        " TODO: input() can support completion
+        let text = input(a:prompt)
+        if !strlen(text)
+                return
+        endif
+
+        let tags = split(text)
+        map(tags, 'a:prefix . v:val')
+        let tags = b:nm_search_words + tags
+        echo tags
+
+        let prev_bufnr = bufnr('%')
+        setlocal bufhidden=hide
+        call <SID>NM_cmd_search(tags)
+        setlocal bufhidden=delete
+        let b:nm_prev_bufnr = prev_bufnr
 endfunction
 
 function! s:NM_new_mail()
@@ -159,10 +188,6 @@ function! s:NM_search_reply_to_thread()
         echoe 'Not implemented'
 endfunction
 
-function! s:NM_search_filter_by_tag()
-        echoe 'Not implemented'
-endfunction
-
 function! s:NM_search_add_tags(tags)
         call <SID>NM_search_add_remove_tags('Add Tag(s): ', '+', a:tags)
 endfunction
@@ -173,7 +198,7 @@ endfunction
 
 function! s:NM_search_refresh_view()
         let lno = line('.')
-        call <SID>NM_cmd_search(g:notmuch_current_search_words)
+        call <SID>NM_cmd_search(b:nm_search_words)
         " FIXME: should find the line of the thread we were on if possible
         exec printf('norm %dG', lno)
 endfunction
@@ -225,6 +250,7 @@ function! s:NM_cmd_show(words)
 
         let info = s:NM_cmd_show_parse(lines)
 
+        setlocal bufhidden=hide
         call <SID>NM_newBuffer('show', join(info['disp'], "\n"))
         setlocal bufhidden=delete
         let b:nm_raw_info = info
@@ -239,8 +265,13 @@ function! s:NM_cmd_show(words)
 
 endfunction
 
-function! s:NM_cmd_show_quit()
-        exec printf(":buffer %d", b:nm_prev_bufnr)
+function! s:NM_kill_buffer()
+        if exists('b:nm_prev_bufnr')
+                setlocal bufhidden=delete
+                exec printf(":buffer %d", b:nm_prev_bufnr)
+        else
+                echo "Nothing to kill."
+        endif
 endfunction
 
 function! s:NM_cmd_show_next()
@@ -541,9 +572,6 @@ if !exists('g:notmuch_initial_search_words')
         let g:notmuch_initial_search_words = s:notmuch_initial_search_words_defaults
 endif
 
-" this is the default querry
-let g:notmuch_current_search_words = g:notmuch_initial_search_words
-
 
 " --- assign keymaps {{{1
 
@@ -557,7 +585,12 @@ endfunction
 
 function! NotMuch(args)
         if !strlen(a:args)
-                call <SID>NM_cmd_search(g:notmuch_current_search_words)
+                if exists('b:nm_search_words')
+                        let words = b:nm_search_words
+                else
+                        let words = g:notmuch_initial_search_words
+                endif
+                call <SID>NM_cmd_search(words)
                 return
         endif
 

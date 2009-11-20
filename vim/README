@@ -19,8 +19,10 @@ Buffer types:
         Keybindings:
             <Enter> - show the selected message
             a       - archive message (remove inbox tag)
+            f       - filter the current search terms
             s       - enter search criteria
             S       - alter search criteria
+            f       - filter the current search terms with tags
             +       - add tag(s) to selected message
             -       - remove tag(s) from selected message
             =       - refresh display
