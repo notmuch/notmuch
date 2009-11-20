@@ -102,7 +102,7 @@ function! s:NM_cmd_search(words)
         let disp = copy(lines)
         call map(disp, 'substitute(v:val, "^thread:\\S* ", "", "")' )
 
-        call s:NM_newBuffer('search', join(disp, "\n"))
+        call <SID>NM_newBuffer('search', join(disp, "\n"))
         let b:nm_raw_lines = lines
 
         call <SID>NM_set_map(g:notmuch_search_maps)
@@ -115,7 +115,7 @@ endfunction
 function! s:NM_search_show_thread()
         let id = <SID>NM_search_find_thread_id()
         if id != ''
-                call s:NM_cmd_show([id])
+                call <SID>NM_cmd_show([id])
         endif
 endfunction
 
@@ -170,7 +170,7 @@ endfunction
 
 function! s:NM_search_refresh_view()
         let lno = line('.')
-        call s:NM_cmd_search(g:notmuch_current_search_words)
+        call <SID>NM_cmd_search(g:notmuch_current_search_words)
         " FIXME: should find the line of the thread we were on if possible
         exec printf('norm %dG', lno)
 endfunction
@@ -218,13 +218,13 @@ function! s:NM_cmd_show(words)
 
         let info = s:NM_cmd_show_parse(lines)
 
-        call s:NM_newBuffer('show', join(info['disp'], "\n"))
+        call <SID>NM_newBuffer('show', join(info['disp'], "\n"))
         setlocal bufhidden=delete
         let b:nm_raw_info = info
         let b:nm_prev_bufnr = prev_bufnr
 
-        call s:NM_cmd_show_mkfolds()
-        call s:NM_cmd_show_mksyntax()
+        call <SID>NM_cmd_show_mkfolds()
+        call <SID>NM_cmd_show_mksyntax()
         call <SID>NM_set_map(g:notmuch_show_maps)
         setlocal foldtext=NM_cmd_show_foldtext()
         setlocal fillchars=
@@ -550,7 +550,7 @@ endfunction
 
 function! NotMuch(args)
         if !strlen(a:args)
-                call s:NM_cmd_search(g:notmuch_current_search_words)
+                call <SID>NM_cmd_search(g:notmuch_current_search_words)
                 return
         endif
 
