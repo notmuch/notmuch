@@ -74,22 +74,28 @@ pattern can still test against the entire line).")
 (defvar notmuch-command "notmuch"
   "Command to run the notmuch binary.")
 
-(set 'notmuch-show-message-begin-regexp    "\fmessage{")
-(set 'notmuch-show-message-end-regexp      "\fmessage}")
-(set 'notmuch-show-header-begin-regexp     "\fheader{")
-(set 'notmuch-show-header-end-regexp       "\fheader}")
-(set 'notmuch-show-body-begin-regexp       "\fbody{")
-(set 'notmuch-show-body-end-regexp         "\fbody}")
-(set 'notmuch-show-attachment-begin-regexp "\fattachment{")
-(set 'notmuch-show-attachment-end-regexp   "\fattachment}")
-(set 'notmuch-show-part-begin-regexp       "\fpart{")
-(set 'notmuch-show-part-end-regexp         "\fpart}")
-(set 'notmuch-show-marker-regexp "\f\\(message\\|header\\|body\\|attachment\\|part\\)[{}].*$")
+(defvar notmuch-show-message-begin-regexp    "\fmessage{")
+(defvar notmuch-show-message-end-regexp      "\fmessage}")
+(defvar notmuch-show-header-begin-regexp     "\fheader{")
+(defvar notmuch-show-header-end-regexp       "\fheader}")
+(defvar notmuch-show-body-begin-regexp       "\fbody{")
+(defvar notmuch-show-body-end-regexp         "\fbody}")
+(defvar notmuch-show-attachment-begin-regexp "\fattachment{")
+(defvar notmuch-show-attachment-end-regexp   "\fattachment}")
+(defvar notmuch-show-part-begin-regexp       "\fpart{")
+(defvar notmuch-show-part-end-regexp         "\fpart}")
+(defvar notmuch-show-marker-regexp "\f\\(message\\|header\\|body\\|attachment\\|part\\)[{}].*$")
 
-(set 'notmuch-show-id-regexp "\\(id:[^ ]*\\)")
-(set 'notmuch-show-depth-regexp " depth:\\([0-9]*\\) ")
-(set 'notmuch-show-filename-regexp "filename:\\(.*\\)$")
-(set 'notmuch-show-tags-regexp "(\\([^)]*\\))$")
+(defvar notmuch-show-id-regexp "\\(id:[^ ]*\\)")
+(defvar notmuch-show-depth-regexp " depth:\\([0-9]*\\) ")
+(defvar notmuch-show-filename-regexp "filename:\\(.*\\)$")
+(defvar notmuch-show-tags-regexp "(\\([^)]*\\))$")
+
+(defvar notmuch-show-parent-buffer nil)
+(defvar notmuch-show-body-read-visible nil)
+(defvar notmuch-show-citations-visible nil)
+(defvar notmuch-show-signatures-visible nil)
+(defvar notmuch-show-headers-visible nil)
 
 ; XXX: This should be a generic function in emacs somewhere, not here
 (defun point-invisible-p ()
@@ -740,6 +746,9 @@ thread from that buffer can be show when done with this one)."
     map)
   "Keymap for \"notmuch search\" buffers.")
 (fset 'notmuch-search-mode-map notmuch-search-mode-map)
+
+(defvar notmuch-search-query-string)
+(defvar notmuch-search-oldest-first)
 
 (defun notmuch-search-scroll-up ()
   "Scroll up, moving point to last message in thread if at end."
