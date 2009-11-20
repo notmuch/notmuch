@@ -182,7 +182,7 @@ function! s:NM_cmd_show_parse(inlines)
                                         endif
                                 elseif mode_type == 'cit'
                                         if part_end || match(line, s:notmuch_show_citation_regexp) == -1
-                                                let outlnum = len(info['disp']) -1
+                                                let outlnum = len(info['disp'])
                                                 let foldinfo = [ mode_type, mode_start, outlnum,
                                                                \ printf('[ %d-line citation.  Press "c" to show. ]', outlnum - mode_start) ]
                                                 let mode_type = ''
