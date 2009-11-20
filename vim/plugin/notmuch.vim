@@ -23,7 +23,10 @@
 
 let s:notmuch_defaults = {
         \ 'g:notmuch_cmd':                           'notmuch'                    ,
+        \
         \ 'g:notmuch_search_newest_first':           1                            ,
+        \ 'g:notmuch_search_from_column_width':      20                           ,
+        \
         \ 'g:notmuch_show_fold_signatures':          1                            ,
         \ 'g:notmuch_show_fold_citations':           1                            ,
         \
@@ -102,15 +105,36 @@ function! s:NM_cmd_search(words)
         "let data = substitute(data, '\[4/4\]', '[0/4]', '')
         let lines = split(data, "\n")
         let disp = copy(lines)
-        call map(disp, 'substitute(v:val, "^thread:\\S* ", "", "")' )
+        "call map(disp, 'substitute(v:val, "^thread:\\S* ", "", "")' )
+        call map(disp, 's:NM_cmd_search_fmtline(v:val)')
 
         call <SID>NM_newBuffer('search', join(disp, "\n"))
         let b:nm_raw_lines = lines
         let b:nm_search_words = a:words
 
+        call <SID>NM_cmd_search_mksyntax()
         call <SID>NM_set_map(g:notmuch_search_maps)
         setlocal cursorline
         setlocal nowrap
+endfunction
+function! s:NM_cmd_search_fmtline(line)
+        let m = matchlist(a:line, '^\(thread:\S\+\)\s\([^]]\+\]\) \([^;]\+\); \(.*\) (\([^(]*\))$')
+        if !len(m)
+                return 'ERROR PARSING: ' . a:line
+        endif
+        let max = g:notmuch_search_from_column_width
+        let from = m[3]
+        if strlen(from) >= max
+                let from = m[3][0:max-4] . '...'
+        endif
+        return printf('%s %-20s | %s (%s)', m[2], from, m[4], m[5])
+endfunction
+function! s:NM_cmd_search_mksyntax()
+        syntax clear nmSearchFrom
+        "syntax region nmSearchFrom start='\]\@<=' end='.'me=e+5,he=e+5,re=e+5 oneline contained
+        "syntax match nmSearchFrom /\]\@<=.\{10\}/ oneline contained
+        exec printf('syntax match nmSearchFrom /\(\] \)\@<=.\{%d\}/ oneline contained', g:notmuch_search_from_column_width)
+        "exec printf('syntax region nmSearchFrom start=''\%%%dv'' end=''\%%%dv'' oneline contained', 20, 30)
 endfunction
 
 " --- --- search screen action functions {{{2
@@ -167,7 +191,7 @@ function! s:NM_search_filter_helper(prompt, prefix)
         endif
 
         let tags = split(text)
-        map(tags, 'a:prefix . v:val')
+        map(tags, 'and a:prefix . v:val')
         let tags = b:nm_search_words + tags
         echo tags
 
@@ -230,9 +254,9 @@ function! s:NM_search_add_remove_tags(prompt, prefix, intags)
                 if !strlen(text)
                         return
                 endif
-                call <SID>NM_add_remove_tags(prefix, split(text, ' '))
+                call <SID>NM_add_remove_tags(a:prefix, split(text, ' '))
         else
-                call <SID>NM_add_remove_tags(prefix, a:intags)
+                call <SID>NM_add_remove_tags(a:prefix, a:intags)
         endif
         call <SID>NM_search_refresh_view()
 endfunction
