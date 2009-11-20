@@ -189,11 +189,8 @@ function! s:NM_search_edit()
 endfunction
 
 function! s:NM_search_archive_thread()
+        call <SID>NM_add_remove_tags_on_screen('-', ['inbox'])
         call <SID>NM_add_remove_tags('-', ['inbox'])
-        " TODO: this could be made better and more generic
-        setlocal modifiable
-        s/(\([^)]*\)\<inbox\>\([^)]*\))$/(\1\2)/
-        setlocal nomodifiable
         norm j
 endfunction
 
@@ -272,21 +269,12 @@ function! s:NM_search_add_remove_tags(prompt, prefix, intags)
                 if !strlen(text)
                         return
                 endif
-                call <SID>NM_add_remove_tags(a:prefix, split(text, ' '))
+                let tags = split(text, ' ')
         else
-                call <SID>NM_add_remove_tags(a:prefix, a:intags)
+                let tags = a:intags
         endif
-        call <SID>NM_search_refresh_view()
-endfunction
-
-function! s:NM_add_remove_tags(prefix, tags)
-        let id = <SID>NM_search_find_thread_id()
-        if id == ''
-                echoe 'Eeek! I couldn''t find the thead id!'
-        endif
-        call map(a:tags, 'a:prefix . v:val')
-        " TODO: handle errors
-        call <SID>NM_run(['tag'] + a:tags + ['--', id])
+        call <SID>NM_add_remove_tags(a:prefix, tags)
+        call <SID>NM_add_remove_tags_on_screen(a:prefix, tags)
 endfunction
 
 " --- implement show screen {{{1
@@ -691,6 +679,31 @@ function! s:NM_kill_this_buffer()
         else
                 echo "Nothing to kill."
         endif
+endfunction
+
+function! s:NM_add_remove_tags(prefix, tags)
+        let id = <SID>NM_search_find_thread_id()
+        if id == ''
+                echoe 'Eeek! I couldn''t find the thead id!'
+        endif
+        call map(a:tags, 'a:prefix . v:val')
+        " TODO: handle errors
+        call <SID>NM_run(['tag'] + a:tags + ['--', id])
+endfunction
+
+function! s:NM_add_remove_tags_on_screen(prefix, tags)
+        let online = ''
+        setlocal modifiable
+        if a:prefix == '-'
+                for tagname in a:tags
+                        exec printf('silent %ss/(\([^)]*\)\<%s\>\([^)]*\))$/(\1\2)/', online, tagname)
+                endfor
+        else
+                for tagname in a:tags
+                        exec printf('silent %ss/(\([^)]*\)\([^)]*\))$/(\1 %s)/', online, tagname)
+                endfor
+        endif
+        setlocal nomodifiable
 endfunction
 
 " --- process and set the defaults {{{1
