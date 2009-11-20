@@ -105,9 +105,10 @@ function! s:NM_cmd_show(words)
         let b:nm_raw_info = info
 
         call s:NM_cmd_show_mkfolds()
+        call s:NM_cmd_show_mksyntax()
         setlocal foldtext=NM_cmd_show_foldtext()
         setlocal fillchars=
-        setlocal foldcolumn=5
+        setlocal foldcolumn=6
 
         exec printf("nnoremap <buffer> q :b %d<CR>", bufnr)
 endfunction
@@ -128,9 +129,10 @@ function! s:NM_cmd_show_parse(inlines)
         let in_message = 0
         let in_header = 0
         let in_body = 0
-        let in_part = 0
+        let in_part = ''
 
         let body_start = -1
+        let part_start = -1
 
         let mode_type = ''
         let mode_start = -1
@@ -140,44 +142,62 @@ function! s:NM_cmd_show_parse(inlines)
                 let inlnum = inlnum + 1
                 let foldinfo = []
 
-                if in_part
+                if strlen(in_part)
+                        let part_end = 0
+
                         if match(line, s:notmuch_show_part_end_regexp) != -1
-                                call add(info['disp'], '')
-                                let in_part = 0
+                                let part_end = len(info['disp'])
                         else
                                 call add(info['disp'], line)
-                        end
+                        endif
 
-                        if in_part && mode_type == ''
-                                if match(line, s:notmuch_show_signature_regexp) != -1
-                                        let mode_type = 'sig'
-                                        let mode_start = len(info['disp'])
-                                        "echoe 'TYPE: ' . mode_type . ' @' . mode_start
-                                elseif match(line, s:notmuch_show_citation_regexp) != -1
-                                        let mode_type = 'cit'
-                                        let mode_start = len(info['disp'])
-                                        "echoe 'TYPE: ' . mode_type . ' @' . mode_start
-                                endif
-                        elseif mode_type == 'cit'
-                                if !in_part || match(line, s:notmuch_show_citation_regexp) == -1
+                        if in_part == 'text/plain'
+                                if !part_end && mode_type == ''
+                                        if match(line, s:notmuch_show_signature_regexp) != -1
+                                                let mode_type = 'sig'
+                                                let mode_start = len(info['disp'])
+                                        elseif match(line, s:notmuch_show_citation_regexp) != -1
+                                                let mode_type = 'cit'
+                                                let mode_start = len(info['disp'])
+                                        endif
+                                elseif mode_type == 'cit'
+                                        if part_end || match(line, s:notmuch_show_citation_regexp) == -1
+                                                let outlnum = len(info['disp']) -1
+                                                let foldinfo = [ mode_type, mode_start, outlnum,
+                                                               \ printf('[ %d-line citation.  Press "c" to show. ]', outlnum - mode_start) ]
+                                                let mode_type = ''
+                                        endif
+                                elseif mode_type == 'sig'
                                         let outlnum = len(info['disp'])
-                                        let foldinfo = [ mode_type, mode_start, outlnum,
-                                                       \ printf('[ %d-line citation.  Press "c" to show. ]', outlnum - mode_start) ]
-                                        let mode_type = ''
-                                endif
-                        elseif mode_type == 'sig'
-                                let outlnum = len(info['disp'])
-                                if (outlnum - mode_start) > s:notmuch_show_signature_lines_max
-                                        let mode_type = ''
-                                elseif !in_part
-                                        let outlnum = outlnum - 1
-                                        let foldinfo = [ mode_type, mode_start, outlnum,
-                                                       \ printf('[ %d-line signature.  Press "s" to show. ]', outlnum - mode_start) ]
-                                        let mode_type = ''
+                                        if (outlnum - mode_start) > s:notmuch_show_signature_lines_max
+                                                echoe 'line ' . outlnum . ' stopped matching'
+                                                let mode_type = ''
+                                        elseif part_end
+                                                let foldinfo = [ mode_type, mode_start, outlnum,
+                                                               \ printf('[ %d-line signature.  Press "s" to show. ]', outlnum - mode_start) ]
+                                                let mode_type = ''
+                                        endif
                                 endif
                         endif
 
+                        if part_end
+                                " FIXME: this is a hack for handling two folds being added for one line
+                                "         we should handle addinga fold in a function
+                                if len(foldinfo)
+                                        call add(info['folds'], foldinfo[0:2])
+                                        let info['foldtext'][foldinfo[1]] = foldinfo[3]
+                                endif
+
+                                let foldinfo = [ 'text', part_start, part_end,
+                                               \ printf('[ %d-line %s.  Press "p" to show. ]', part_end - part_start, in_part) ]
+                                let in_part = ''
+                                call add(info['disp'], '')
+                        endif
+
                 elseif in_body
+                        if !has_key(msg,'body_start')
+                                let msg['body_start'] = len(info['disp']) + 1
+                        endif
                         if match(line, s:notmuch_show_body_end_regexp) != -1
                                 let body_end = len(info['disp'])
                                 let foldinfo = [ 'body', body_start, body_end,
@@ -186,12 +206,14 @@ function! s:NM_cmd_show_parse(inlines)
                                 let in_body = 0
 
                         elseif match(line, s:notmuch_show_part_begin_regexp) != -1
-                                let in_part = 1
                                 let m = matchlist(line, 'ID: \(\d\+\), Content-type: \(\S\+\)')
+                                let in_part = 'unknown'
                                 if len(m)
-                                        call add(info['disp'],
-                                                 \ printf('--- part %d --- %s ---', m[1], m[2]))
+                                        let in_part = m[2]
                                 endif
+                                call add(info['disp'],
+                                         \ printf('--- %s ---', in_part))
+                                let part_start = len(info['disp']) + 1
                         endif
 
                 elseif in_header
@@ -199,6 +221,7 @@ function! s:NM_cmd_show_parse(inlines)
                                 let msg['descr'] = line
                                 call add(info['disp'], line)
                                 let in_header = 2
+                                let msg['hdr_start'] = len(info['disp']) + 1
 
                         else
                                 if match(line, s:notmuch_show_header_end_regexp) != -1
@@ -229,7 +252,7 @@ function! s:NM_cmd_show_parse(inlines)
                                 let in_message = 0
                                 let in_header = 0
                                 let in_body = 0
-                                let in_part = 0
+                                let in_part = ''
 
                         elseif match(line, s:notmuch_show_header_begin_regexp) != -1
                                 let in_header = 1
