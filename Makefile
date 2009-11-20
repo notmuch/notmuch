@@ -32,7 +32,7 @@ include lib/Makefile.local
 include Makefile.config
 
 %.o: %.cc $(all_deps)
-	$(CXX) -c $(CFLAGS) $(CXXFLAGS) $< -o $@
+	$(CXX) -c $(CXXFLAGS) $< -o $@
 
 %.o: %.c $(all_deps)
 	$(CC) -c $(CFLAGS) $< -o $@
