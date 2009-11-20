@@ -23,7 +23,7 @@
 
 let s:notmuch_defaults = {
         \ 'g:notmuch_cmd':                           'notmuch'                    ,
-        \ 'g:notmuch_search_reverse':                1                            ,
+        \ 'g:notmuch_search_newest_first':           1                            ,
         \ 'g:notmuch_show_fold_signatures':          1                            ,
         \ 'g:notmuch_show_fold_citations':           1                            ,
         \
@@ -92,8 +92,10 @@ let g:notmuch_show_maps = {
 
 function! s:NM_cmd_search(words)
         let cmd = ['search']
-        if g:notmuch_search_reverse
-                let cmd = cmd + ['--reverse']
+        if g:notmuch_search_newest_first
+                let cmd = cmd + ['--sort=newest-first']
+        else
+                let cmd = cmd + ['--sort=oldest-first']
         endif
         let data = s:NM_run(cmd + a:words)
         "let data = substitute(data, '27/27', '25/27', '')
@@ -181,7 +183,7 @@ function! s:NM_new_mail()
 endfunction
 
 function! s:NM_search_toggle_order()
-        let g:notmuch_search_reverse = !g:notmuch_search_reverse
+        let g:notmuch_search_newest_first = !g:notmuch_search_newest_first
         " FIXME: maybe this would be better done w/o reading re-reading the lines
         "         reversing the b:nm_raw_lines and the buffer lines would be better
         call <SID>NM_search_refresh_view()
