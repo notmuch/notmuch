@@ -71,17 +71,17 @@ pattern can still test against the entire line).")
 (defvar notmuch-show-signature-lines-max 12
   "Maximum length of signature that will be hidden by default.")
 
-(set 'notmuch-show-message-begin-regexp    "message{")
-(set 'notmuch-show-message-end-regexp      "message}")
-(set 'notmuch-show-header-begin-regexp     "header{")
-(set 'notmuch-show-header-end-regexp       "header}")
-(set 'notmuch-show-body-begin-regexp       "body{")
-(set 'notmuch-show-body-end-regexp         "body}")
-(set 'notmuch-show-attachment-begin-regexp "attachment{")
-(set 'notmuch-show-attachment-end-regexp   "attachment}")
-(set 'notmuch-show-part-begin-regexp       "part{")
-(set 'notmuch-show-part-end-regexp         "part}")
-(set 'notmuch-show-marker-regexp "\\(message\\|header\\|body\\|attachment\\|part\\)[{}].*$")
+(set 'notmuch-show-message-begin-regexp    "\fmessage{")
+(set 'notmuch-show-message-end-regexp      "\fmessage}")
+(set 'notmuch-show-header-begin-regexp     "\fheader{")
+(set 'notmuch-show-header-end-regexp       "\fheader}")
+(set 'notmuch-show-body-begin-regexp       "\fbody{")
+(set 'notmuch-show-body-end-regexp         "\fbody}")
+(set 'notmuch-show-attachment-begin-regexp "\fattachment{")
+(set 'notmuch-show-attachment-end-regexp   "\fattachment}")
+(set 'notmuch-show-part-begin-regexp       "\fpart{")
+(set 'notmuch-show-part-end-regexp         "\fpart}")
+(set 'notmuch-show-marker-regexp "\f\\(message\\|header\\|body\\|attachment\\|part\\)[{}].*$")
 
 (set 'notmuch-show-id-regexp "\\(id:[^ ]*\\)")
 (set 'notmuch-show-depth-regexp " depth:\\([0-9]*\\) ")
