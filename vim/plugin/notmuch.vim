@@ -57,9 +57,18 @@ let s:notmuch_show_headers_defaults = [
 
 " --- keyboard mapping definitions {{{1
 
+" --- --- bindings for search screen {{{2
 let g:notmuch_search_maps = {
-        \ '<Enter>': ':call <SID>NM_search_display()<CR>',
-        \ 's':       ':call <SID>NM_cmd_search(split(input(''NotMuch Search:'')))<CR>',
+        \ '<Enter>':    ':call <SID>NM_search_display()<CR>',
+        \ 's':          ':call <SID>NM_cmd_search(split(input(''NotMuch Search:'')))<CR>',
+        \ }
+
+" --- --- bindings for show screen {{{2
+let g:notmuch_show_maps = {
+        \ 'q':         ':call <SID>NM_cmd_show_quit()<CR>',
+        \ '<C-N>':     ':call <SID>NM_cmd_show_next()<CR>',
+        \ 'c':         ':call <SID>NM_cmd_show_fold_toggle(''c'', ''cit'', !g:notmuch_show_fold_citations)<CR>',
+        \ 's':         ':call <SID>NM_cmd_show_fold_toggle(''s'', ''sig'', !g:notmuch_show_fold_signatures)<CR>',
         \ }
 
 " --- implement search screen {{{1
@@ -112,14 +121,15 @@ function! s:NM_cmd_show(words)
 
         call s:NM_cmd_show_mkfolds()
         call s:NM_cmd_show_mksyntax()
+        call <SID>NM_set_map(g:notmuch_show_maps)
         setlocal foldtext=NM_cmd_show_foldtext()
         setlocal fillchars=
         setlocal foldcolumn=6
 
-        exec printf("nnoremap <buffer> q :b %d<CR>", b:nm_prev_bufnr)
-        nnoremap <buffer> <C-N> :call <SID>NM_cmd_show_next()<CR>
-        nnoremap <buffer> c     :call <SID>NM_cmd_show_fold_toggle('c', 'cit', !g:notmuch_show_fold_citations)<CR>
-        nnoremap <buffer> s     :call <SID>NM_cmd_show_fold_toggle('s', 'sig', !g:notmuch_show_fold_signatures)<CR>
+endfunction
+
+function! s:NM_cmd_show_quit()
+        exec printf(":buffer %d", b:nm_prev_bufnr)
 endfunction
 
 function! s:NM_cmd_show_next()
@@ -407,7 +417,6 @@ function! NM_set_defaults(force)
                                                 \ a:force, key, string(dflt))
                         continue
                 endif
-                echoe cmd
                 exec cmd
         endfor
 endfunction
