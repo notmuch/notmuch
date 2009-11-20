@@ -285,7 +285,8 @@ _notmuch_message_get_in_reply_to (notmuch_message_t *message)
     i = message->doc.termlist_begin ();
     i.skip_to (prefix);
 
-    in_reply_to = *i;
+    if (i != message->doc.termlist_end ())
+	in_reply_to = *i;
 
     /* It's perfectly valid for a message to have no In-Reply-To
      * header. For these cases, we return an empty string. */
@@ -332,10 +333,10 @@ notmuch_message_get_thread_id (notmuch_message_t *message)
 	return message->thread_id;
 
     i = message->doc.termlist_begin ();
-
     i.skip_to (prefix);
 
-    id = *i;
+    if (i != message->doc.termlist_end ())
+	id = *i;
 
     if (i == message->doc.termlist_end () || id[0] != *prefix)
 	INTERNAL_ERROR ("Message with document ID of %d has no thread ID.\n",
@@ -466,7 +467,7 @@ notmuch_message_get_tags (notmuch_message_t *message)
 
     i.skip_to (prefix);
 
-    while (1) {
+    while (i != end) {
 	tag = *i;
 
 	if (tag.empty () || tag[0] != *prefix)
