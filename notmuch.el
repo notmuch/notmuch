@@ -71,6 +71,9 @@ pattern can still test against the entire line).")
 (defvar notmuch-show-signature-lines-max 12
   "Maximum length of signature that will be hidden by default.")
 
+(defvar notmuch-command "notmuch"
+  "Command to run the notmuch binary.")
+
 (set 'notmuch-show-message-begin-regexp    "\fmessage{")
 (set 'notmuch-show-message-end-regexp      "\fmessage}")
 (set 'notmuch-show-header-begin-regexp     "\fheader{")
@@ -251,7 +254,7 @@ buffer."
 
 (defun notmuch-reply (query-string)
   (switch-to-buffer (generate-new-buffer "notmuch-draft"))
-  (call-process "notmuch" nil t nil "reply" query-string)
+  (call-process notmuch-command nil t nil "reply" query-string)
   (goto-char (point-min))
   (if (re-search-forward "^$" nil t)
       (progn
@@ -690,7 +693,7 @@ thread from that buffer can be show when done with this one)."
       (erase-buffer)
       (goto-char (point-min))
       (save-excursion
-	(call-process "notmuch" nil t nil "show" thread-id)
+	(call-process notmuch-command nil t nil "show" thread-id)
 	(notmuch-show-markup-messages)
 	)
       (run-hooks 'notmuch-show-hook)
@@ -851,7 +854,7 @@ and will also appear in a buffer named \"*Notmuch errors*\"."
   (let ((error-buffer (get-buffer-create "*Notmuch errors*")))
     (with-current-buffer error-buffer
 	(erase-buffer))
-    (if (eq (apply 'call-process "notmuch" nil error-buffer nil args) 0)
+    (if (eq (apply 'call-process notmuch-command nil error-buffer nil args) 0)
 	(point)
       (progn
 	(with-current-buffer error-buffer
@@ -917,8 +920,8 @@ This function advances point to the next line when finished."
       (goto-char (point-min))
       (save-excursion
 	(if oldest-first
-	    (call-process "notmuch" nil t nil "search" "--sort=oldest-first" query)
-	  (call-process "notmuch" nil t nil "search" "--sort=newest-first" query))
+	    (call-process notmuch-command nil t nil "search" "--sort=oldest-first" query)
+	  (call-process notmuch-command nil t nil "search" "--sort=newest-first" query))
 	(notmuch-search-markup-thread-ids)
 	))
     (run-hooks 'notmuch-search-hook)))
