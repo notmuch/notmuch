@@ -18,6 +18,7 @@ Buffer types:
 
         Keybindings:
             <Enter> - show the selected message
+            a       - archive message (remove inbox tag)
             s       - enter search criteria
             S       - alter search criteria
             +       - add tag(s) to selected message

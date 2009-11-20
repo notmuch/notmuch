@@ -136,7 +136,10 @@ function! s:NM_search_edit()
 endfunction
 
 function! s:NM_search_archive_thread()
-        call <SID>NM_search_remove_tags('inbox')
+        call <SID>NM_add_remove_tags('-', ['inbox'])
+        setlocal modifiable
+        s/(\([^)]*\)\<inbox\>\([^)]*\))$/(\1\2)/
+        setlocal nomodifiable
         norm j
 endfunction
 
@@ -190,23 +193,27 @@ function! s:NM_search_find_thread_id()
 endfunction
 
 function! s:NM_search_add_remove_tags(prompt, prefix, intags)
-        let id = <SID>NM_search_find_thread_id()
-        if id != ''
-                if type(a:intags) != type([]) || len(a:intags) == 0
-                        " TODO: input() can support completion
-                        let text = input(a:prompt)
-                        if !strlen(text)
-                                return
-                        endif
-                        let tags = split(text, ' ')
-                else
-                        let tags = a:intags
+        if type(a:intags) != type([]) || len(a:intags) == 0
+                " TODO: input() can support completion
+                let text = input(a:prompt)
+                if !strlen(text)
+                        return
                 endif
-                call map(tags, 'a:prefix . v:val')
-                " TODO: handle errors
-                call <SID>NM_run(['tag'] + tags + ['--', id])
-                call <SID>NM_search_refresh_view()
+                call <SID>NM_add_remove_tags(prefix, split(text, ' '))
+        else
+                call <SID>NM_add_remove_tags(prefix, a:intags)
         endif
+        call <SID>NM_search_refresh_view()
+endfunction
+
+function! s:NM_add_remove_tags(prefix, tags)
+        let id = <SID>NM_search_find_thread_id()
+        if id == ''
+                echoe 'Eeek! I couldn''t find the thead id!'
+        endif
+        call map(a:tags, 'a:prefix . v:val')
+        " TODO: handle errors
+        call <SID>NM_run(['tag'] + a:tags + ['--', id])
 endfunction
 
 " --- implement show screen {{{1
