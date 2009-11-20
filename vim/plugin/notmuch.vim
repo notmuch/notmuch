@@ -43,15 +43,18 @@ let s:notmuch_show_part_begin_regexp       = '^part{'
 let s:notmuch_show_part_end_regexp         = '^part}'
 let s:notmuch_show_marker_regexp           = '^\\(message\\|header\\|body\\|attachment\\|part\\)[{}].*$'
 
-let s:notmuch_show_id_regexp               = '\(id:[^ ]*\)'
-let s:notmuch_show_depth_regexp            = ' depth:\([0-9]*\) '
-let s:notmuch_show_filename_regexp         = 'filename:\(.*\)$'
+let s:notmuch_show_message_parse_regexp    = '\(id:[^ ]*\) depth:\([0-9]*\) filename:\(.*\)$'
 let s:notmuch_show_tags_regexp             = '(\([^)]*\))$'
 
 let s:notmuch_show_signature_regexp        = '^\(-- \?\|_\+\)$'
 let s:notmuch_show_signature_lines_max     = 12
 
 let s:notmuch_show_citation_regexp         = '^\s*>'
+
+let s:notmuch_show_headers                 = [ 'Subject', 'From' ]
+
+let s:notmuch_show_fold_signatures         = 1
+let s:notmuch_show_fold_citations          = 1
 
 " --- implement search screen
 
@@ -68,7 +71,7 @@ function! s:NM_cmd_search(words)
         call map(disp, 'substitute(v:val, "^thread:\\S* ", "", "")' )
 
         call s:NM_newBuffer('search', join(disp, "\n"))
-        let b:nm_raw_data = lines
+        let b:nm_raw_lines = lines
 
         nnoremap <buffer> <Enter> :call <SID>NM_search_display()<CR>
         nnoremap <buffer> s       :call <SID>NM_cmd_search(split(input('NotMuch Search:')))<CR>
@@ -77,11 +80,11 @@ function! s:NM_cmd_search(words)
 endfunction
 
 function! s:NM_search_display()
-        if !exists('b:nm_raw_data')
-                echo 'no b:nm_raw_data'
+        if !exists('b:nm_raw_lines')
+                echo 'no b:nm_raw_lines'
         else
                 let line = line('.')
-                let info = b:nm_raw_data[line-1]
+                let info = b:nm_raw_lines[line-1]
                 let what = split(info, '\s\+')[0]
                 call s:NM_cmd_show([what])
         endif
@@ -93,10 +96,13 @@ endfunction
 function! s:NM_cmd_show(words)
         let bufnr = bufnr('%')
         let data = s:NM_run(['show'] + a:words)
+        let lines = split(data, "\n")
 
-        call s:NM_newBuffer('show', data)
+        let info = s:NM_cmd_show_parse(lines)
+
+        call s:NM_newBuffer('show', join(info['disp'], "\n"))
         setlocal bufhidden=delete
-        let b:nm_raw_data = data
+        let b:nm_raw_info = info
 
         call s:NM_cmd_show_mkfolds()
         setlocal foldtext=NM_cmd_show_foldtext()
@@ -106,76 +112,175 @@ function! s:NM_cmd_show(words)
         exec printf("nnoremap <buffer> q :b %d<CR>", bufnr)
 endfunction
 
-function! s:NM_cmd_show_mkfolds()
-        let msg_start = -1
-        let hdr_start = -1
-        let bdy_start = -1
-        let prt_start = -1
-        let modetype = ''
-        let modeline = -1
-        let lnum = 1
-        let b:nm_fold_data = {}
-        while lnum <= line('$')
-                let line = getline(lnum)
-                if match(line, s:notmuch_show_message_begin_regexp) != -1
-                        let msg_start = lnum
-                elseif match(line, s:notmuch_show_message_end_regexp) != -1
-                        exec printf('%d,%dfold', msg_start, lnum)
-                        exec printf('%dfoldopen', msg_start)
-                        let b:nm_fold_data[msg_start] = ['msg', getline(msg_start)]
+" s:NM_cmd_show_parse returns the following dictionary:
+"    'disp':     lines to display
+"    'msgs':     message info dicts { start, end, id, depth, filename, descr, header }
+"    'folds':    fold info arrays [ type, start, end ]
+"    'foldtext': fold text indexed by start line
+function! s:NM_cmd_show_parse(inlines)
+        let info = { 'disp': [],       
+                   \ 'msgs': [],       
+                   \ 'folds': [],      
+                   \ 'foldtext': {} }  
+        let msg = {}
+        let hdr = {}
 
-                elseif match(line, s:notmuch_show_header_begin_regexp) != -1
-                        let hdr_start = lnum
-                elseif match(line, s:notmuch_show_header_end_regexp) != -1
-                        exec printf('%d,%dfold', hdr_start, lnum)
-                        exec printf('%dfoldclose', hdr_start)
-                        let b:nm_fold_data[hdr_start] = ['hdr', '* ' . getline(hdr_start+1) . ' [ Press "h" for full header. ]']
+        let in_message = 0
+        let in_header = 0
+        let in_body = 0
+        let in_part = 0
 
-                elseif match(line, s:notmuch_show_body_begin_regexp) != -1
-                        let bdy_start = lnum
-                elseif match(line, s:notmuch_show_body_end_regexp) != -1
-                        exec printf('%d,%dfold', bdy_start, lnum)
-                        exec printf('%dfoldopen', bdy_start)
-                        let b:nm_fold_data[bdy_start] = ['bdy', getline(bdy_start)]
+        let body_start = -1
 
-                elseif match(line, s:notmuch_show_part_begin_regexp) != -1
-                        let prt_start = lnum
-                elseif match(line, s:notmuch_show_part_end_regexp) != -1
-                        exec printf('%d,%dfold', prt_start, lnum)
-                        exec printf('%dfoldopen', prt_start)
-                        let b:nm_fold_data[msg_start] = ['msg', getline(prt_start)]
+        let mode_type = ''
+        let mode_start = -1
 
-                elseif modetype == ''
-                        if match(line, s:notmuch_show_signature_regexp) != -1
-                                let modetype = 'sig'
-                                let modeline = lnum
-                        elseif match(line, s:notmuch_show_citation_regexp) != -1
-                                let modetype = 'cit'
-                                let modeline = lnum
+        let inlnum = 0
+        for line in a:inlines
+                let inlnum = inlnum + 1
+                let foldinfo = []
+
+                if in_part
+                        if match(line, s:notmuch_show_part_end_regexp) != -1
+                                call add(info['disp'], '')
+                                let in_part = 0
+                        else
+                                call add(info['disp'], line)
+                        end
+
+                        if in_part && mode_type == ''
+                                if match(line, s:notmuch_show_signature_regexp) != -1
+                                        let mode_type = 'sig'
+                                        let mode_start = len(info['disp'])
+                                        "echoe 'TYPE: ' . mode_type . ' @' . mode_start
+                                elseif match(line, s:notmuch_show_citation_regexp) != -1
+                                        let mode_type = 'cit'
+                                        let mode_start = len(info['disp'])
+                                        "echoe 'TYPE: ' . mode_type . ' @' . mode_start
+                                endif
+                        elseif mode_type == 'cit'
+                                if !in_part || match(line, s:notmuch_show_citation_regexp) == -1
+                                        let outlnum = len(info['disp'])
+                                        let foldinfo = [ mode_type, mode_start, outlnum,
+                                                       \ printf('[ %d-line citation.  Press "c" to show. ]', outlnum - mode_start) ]
+                                        let mode_type = ''
+                                endif
+                        elseif mode_type == 'sig'
+                                let outlnum = len(info['disp'])
+                                if (outlnum - mode_start) > s:notmuch_show_signature_lines_max
+                                        let mode_type = ''
+                                elseif !in_part
+                                        let outlnum = outlnum - 1
+                                        let foldinfo = [ mode_type, mode_start, outlnum,
+                                                       \ printf('[ %d-line signature.  Press "s" to show. ]', outlnum - mode_start) ]
+                                        let mode_type = ''
+                                endif
                         endif
-                elseif modetype == 'cit'
-                        if match(line, s:notmuch_show_citation_regexp) == -1
-                                exec printf('%d,%dfold', modeline, lnum)
-                                let b:nm_fold_data[modeline] = [modetype, printf('[ %d-line citation.  Press "c" to show. ]', lnum - modeline)]
-                                let modetype = ''
+
+                elseif in_body
+                        if match(line, s:notmuch_show_body_end_regexp) != -1
+                                let body_end = len(info['disp'])
+                                let foldinfo = [ 'body', body_start, body_end,
+                                               \ printf('[ BODY %d - %d lines ]', len(info['msgs']), body_end - body_start) ]
+
+                                let in_body = 0
+
+                        elseif match(line, s:notmuch_show_part_begin_regexp) != -1
+                                let in_part = 1
+                                let m = matchlist(line, 'ID: \(\d\+\), Content-type: \(\S\+\)')
+                                if len(m)
+                                        call add(info['disp'],
+                                                 \ printf('--- part %d --- %s ---', m[1], m[2]))
+                                endif
                         endif
-                elseif modetype == 'sig'
-                        if (lnum - modeline) > s:notmuch_show_signature_lines_max
-                                let modetype = ''
-                        elseif match(line, s:notmuch_show_part_end_regexp) != -1
-                                let modeline2 = lnum - 1
-                                exec printf('%d,%dfold', modeline, modeline2)
-                                let b:nm_fold_data[modeline] = [modetype, printf('[ %d-line signature.  Press "s" to show. ]', modeline2 - modeline)]
-                                let modetype = ''
+
+                elseif in_header
+                        if in_header == 1
+                                let msg['descr'] = line
+                                call add(info['disp'], line)
+                                let in_header = 2
+
+                        else
+                                if match(line, s:notmuch_show_header_end_regexp) != -1
+                                        let msg['header'] = hdr
+                                        let in_header = 0
+                                        let hdr = {}
+                                else
+                                        let m = matchlist(line, '^\(\w\+\):\s*\(.*\)$')
+                                        if len(m)
+                                                let hdr[m[1]] = m[2]
+                                                if match(s:notmuch_show_headers, m[1]) != -1
+                                                        call add(info['disp'], line)
+                                                endif
+                                        endif
+                                endif
+                        endif
+
+                elseif in_message
+                        if match(line, s:notmuch_show_message_end_regexp) != -1
+                                let msg['end'] = len(info['disp'])
+                                call add(info['disp'], '')
+
+                                let foldinfo = [ 'match', msg['start'], msg['end'],
+                                               \ printf('[ MSG %d - %s ]', len(info['msgs']), msg['descr']) ]
+
+                                call add(info['msgs'], msg)
+                                let msg = {}
+                                let in_message = 0
+                                let in_header = 0
+                                let in_body = 0
+                                let in_part = 0
+
+                        elseif match(line, s:notmuch_show_header_begin_regexp) != -1
+                                let in_header = 1
+                                continue
+
+                        elseif match(line, s:notmuch_show_body_begin_regexp) != -1
+                                let body_start = len(info['disp']) + 1
+                                let in_body = 1
+                                continue
+                        endif
+
+                else
+                        if match(line, s:notmuch_show_message_begin_regexp) != -1
+                                let msg['start'] = len(info['disp']) + 1
+
+                                let m = matchlist(line, s:notmuch_show_message_parse_regexp)
+                                if len(m)
+                                        let msg['id'] = m[1]
+                                        let msg['depth'] = m[2]
+                                        let msg['filename'] = m[3]
+                                endif
+
+                                let in_message = 1
                         endif
                 endif
 
-                let lnum = lnum + 1
-        endwhile
+                if len(foldinfo)
+                        call add(info['folds'], foldinfo[0:2])
+                        let info['foldtext'][foldinfo[1]] = foldinfo[3]
+                endif
+        endfor
+        return info
+endfunction
+
+function! s:NM_cmd_show_mkfolds()
+        let info = b:nm_raw_info
+
+        for afold in info['folds']
+                exec printf('%d,%dfold', afold[1], afold[2])
+                if (afold[0] == 'sig' && s:notmuch_show_fold_signatures)
+                 \ || (afold[0] == 'cit' && s:notmuch_show_fold_citations)
+                        exec printf('%dfoldclose', afold[1])
+                else
+                        exec printf('%dfoldopen', afold[1])
+                endif
+        endfor
 endfunction
 
 function! NM_cmd_show_foldtext()
-        return b:nm_fold_data[v:foldstart][1]
+        let foldtext = b:nm_raw_info['foldtext']
+        return foldtext[v:foldstart]
 endfunction
 
 
