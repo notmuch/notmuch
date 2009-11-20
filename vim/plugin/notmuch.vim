@@ -56,7 +56,7 @@ let s:notmuch_defaults = {
 " defaults for g:notmuch_initial_search_words
 " override with: let g:notmuch_initial_search_words = [ ... ]
 let s:notmuch_initial_search_words_defaults = [
-        \ 'tag:inbox'
+        \ 'tag:inbox and tag:unread',
         \ ]
 
 " defaults for g:notmuch_show_headers
@@ -66,7 +66,7 @@ let s:notmuch_show_headers_defaults = [
         \ 'To',
         \ 'Cc',
         \ 'Bcc',
-        \ 'Date'
+        \ 'Date',
         \ ]
 
 " --- keyboard mapping definitions {{{1
@@ -82,7 +82,7 @@ let g:notmuch_search_maps = {
         \ 's':          ':call <SID>NM_search_prompt()<CR>',
         \ 'S':          ':call <SID>NM_search_edit()<CR>',
         \ 't':          ':call <SID>NM_search_filter_by_tag()<CR>',
-        \ 'q':          ':call <SID>NM_kill_buffer()<CR>',
+        \ 'q':          ':call <SID>NM_kill_this_buffer()<CR>',
         \ '+':          ':call <SID>NM_search_add_tags([])<CR>',
         \ '-':          ':call <SID>NM_search_remove_tags([])<CR>',
         \ '=':          ':call <SID>NM_search_refresh_view()<CR>',
@@ -90,14 +90,28 @@ let g:notmuch_search_maps = {
 
 " --- --- bindings for show screen {{{2
 let g:notmuch_show_maps = {
-        \ '<C-P>':      ':call <SID>NM_cmd_show_prev()<CR>',
-        \ '<C-N>':      ':call <SID>NM_cmd_show_next()<CR>',
-        \ 'b':          ':call <SID>NM_cmd_show_fold_toggle(''b'', ''bdy'', !g:notmuch_show_fold_bodies)<CR>',
-        \ 'c':          ':call <SID>NM_cmd_show_fold_toggle(''c'', ''cit'', !g:notmuch_show_fold_citations)<CR>',
-        \ 'h':          ':call <SID>NM_cmd_show_fold_toggle(''h'', ''hdr'', !g:notmuch_show_fold_headers)<CR>',
-        \ 's':          ':call <SID>NM_cmd_show_fold_toggle(''s'', ''sig'', !g:notmuch_show_fold_signatures)<CR>',
-        \ 'q':          ':call <SID>NM_kill_buffer()<CR>',
+        \ '<C-P>':      ':call <SID>NM_show_prev()<CR>',
+        \ '<C-N>':      ':call <SID>NM_show_next()<CR>',
+        \ 'q':          ':call <SID>NM_kill_this_buffer()<CR>',
+        \
+        \ 'b':          ':call <SID>NM_show_fold_toggle(''b'', ''bdy'', !g:notmuch_show_fold_bodies)<CR>',
+        \ 'c':          ':call <SID>NM_show_fold_toggle(''c'', ''cit'', !g:notmuch_show_fold_citations)<CR>',
+        \ 'h':          ':call <SID>NM_show_fold_toggle(''h'', ''hdr'', !g:notmuch_show_fold_headers)<CR>',
+        \ 's':          ':call <SID>NM_show_fold_toggle(''s'', ''sig'', !g:notmuch_show_fold_signatures)<CR>',
+        \
+        \ 'a':          ':call <SID>NM_show_archive_thread()<CR>',
+        \ 'A':          ':call <SID>NM_show_mark_read_then_archive_thread()<CR>',
+        \ 'N':          ':call <SID>NM_show_mark_read_then_next_open_message()<CR>',
+        \ 'v':          ':call <SID>NM_show_view_all_mime_parts()<CR>',
+        \ '+':          ':call <SID>NM_show_add_tag()<CR>',
+        \ '-':          ':call <SID>NM_show_remove_tag()<CR>',
+        \ '<Space>':    ':call <SID>NM_show_advance_marking_read_and_archiving()<CR>',
+        \ '\|':         ':call <SID>NM_show_pipe_message()<CR>',
+        \
+        \ 'r':          ':call <SID>NM_show_reply()<CR>',
+        \ 'm':          ':call <SID>NM_new_mail()<CR>',
         \ }
+
 
 " --- implement search screen {{{1
 
@@ -210,10 +224,6 @@ function! s:NM_search_filter_helper(prompt, prefix)
         let b:nm_prev_bufnr = prev_bufnr
 endfunction
 
-function! s:NM_new_mail()
-        echoe 'Not implemented'
-endfunction
-
 function! s:NM_search_toggle_order()
         let g:notmuch_search_newest_first = !g:notmuch_search_newest_first
         " FIXME: maybe this would be better done w/o reading re-reading the lines
@@ -222,7 +232,7 @@ function! s:NM_search_toggle_order()
 endfunction
 
 function! s:NM_search_reply_to_thread()
-        echoe 'Not implemented'
+        echo 'not implemented'
 endfunction
 
 function! s:NM_search_add_tags(tags)
@@ -303,20 +313,11 @@ function! s:NM_cmd_show(words)
 
 endfunction
 
-function! s:NM_kill_buffer()
-        if exists('b:nm_prev_bufnr')
-                setlocal bufhidden=delete
-                exec printf(":buffer %d", b:nm_prev_bufnr)
-        else
-                echo "Nothing to kill."
-        endif
-endfunction
-
-function! s:NM_cmd_show_prev()
+function! s:NM_show_prev()
         echoe "not implemented"
 endfunction
 
-function! s:NM_cmd_show_next()
+function! s:NM_show_next()
         let info = b:nm_raw_info
         let lnum = line('.')
         let cnt = 0
@@ -334,7 +335,57 @@ function! s:NM_cmd_show_next()
         call <SID>NM_search_show_thread()
 endfunction
 
-function! s:NM_cmd_show_fold_toggle(key, type, fold)
+function! s:NM_show_archive_thread()
+        echo 'not implemented'
+endfunction
+
+function! s:NM_show_mark_read_then_archive_thread()
+        echo 'not implemented'
+endfunction
+
+function! s:NM_show_next_message()
+        echo 'not implemented'
+endfunction
+
+function! s:NM_show_mark_read_then_next_open_message()
+        echo 'not implemented'
+endfunction
+
+function! s:NM_show_previous_message()
+        echo 'not implemented'
+endfunction
+
+function! s:NM_show_reply()
+        echo 'not implemented'
+endfunction
+
+function! s:NM_show_view_all_mime_parts()
+        echo 'not implemented'
+endfunction
+
+function! s:NM_show_view_raw_message()
+        echo 'not implemented'
+endfunction
+
+function! s:NM_show_add_tag()
+        echo 'not implemented'
+endfunction
+
+function! s:NM_show_remove_tag()
+        echo 'not implemented'
+endfunction
+
+function! s:NM_show_advance_marking_read_and_archiving()
+        echo 'not implemented'
+endfunction
+
+function! s:NM_show_pipe_message()
+        echo 'not implemented'
+endfunction
+
+" --- --- search screen helper functions {{{2
+
+function! s:NM_show_fold_toggle(key, type, fold)
         let info = b:nm_raw_info
         let act = 'open'
         if a:fold
@@ -345,7 +396,7 @@ function! s:NM_cmd_show_fold_toggle(key, type, fold)
                         exec printf('%dfold%s', fld[1], act)
                 endif
         endfor
-        exec printf('nnoremap <buffer> %s :call <SID>NM_cmd_show_fold_toggle(''%s'', ''%s'', %d)<CR>', a:key, a:key, a:type, !a:fold)
+        exec printf('nnoremap <buffer> %s :call <SID>NM_show_fold_toggle(''%s'', ''%s'', %d)<CR>', a:key, a:key, a:type, !a:fold)
 endfunction
 
 
@@ -399,7 +450,7 @@ function! s:NM_cmd_show_parse(inlines)
                                 elseif mode_type == 'cit'
                                         if part_end || match(line, g:notmuch_show_citation_regexp) == -1
                                                 let outlnum = len(info['disp'])
-                                                let foldinfo = [ mode_type, mode_start, outlnum,
+                                                let foldinfo = [ mode_type, mode_start, outlnum-1,
                                                                \ printf('[ %d-line citation.  Press "c" to show. ]', outlnum - mode_start) ]
                                                 let mode_type = ''
                                         endif
@@ -585,6 +636,23 @@ function! s:NM_run(args)
                 return ''
         else
                 return out
+        endif
+endfunction
+
+" --- external mail handling helpers {{{1
+
+function! s:NM_new_mail()
+        echo 'not implemented'
+endfunction
+
+" --- other helpers {{{1
+
+function! s:NM_kill_this_buffer()
+        if exists('b:nm_prev_bufnr')
+                setlocal bufhidden=delete
+                exec printf(":buffer %d", b:nm_prev_bufnr)
+        else
+                echo "Nothing to kill."
         endif
 endfunction
 
