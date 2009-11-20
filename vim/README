@@ -33,6 +33,7 @@ Buffer types:
 
         Keybindings:
             ^n      - next message
+            ^p      - previous message
             b       - toggle folding of message bodies
             c       - toggle folding of citations
             h       - toggle folding of extra header lines

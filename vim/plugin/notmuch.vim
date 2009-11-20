@@ -90,8 +90,8 @@ let g:notmuch_search_maps = {
 
 " --- --- bindings for show screen {{{2
 let g:notmuch_show_maps = {
-        \ '<C-P>':      ':call <SID>NM_show_prev()<CR>',
-        \ '<C-N>':      ':call <SID>NM_show_next()<CR>',
+        \ '<C-P>':      ':call <SID>NM_show_prev(1)<CR>',
+        \ '<C-N>':      ':call <SID>NM_show_next(1)<CR>',
         \ 'q':          ':call <SID>NM_kill_this_buffer()<CR>',
         \
         \ 'b':          ':call <SID>NM_show_fold_toggle(''b'', ''bdy'', !g:notmuch_show_fold_bodies)<CR>',
@@ -313,26 +313,56 @@ function! s:NM_cmd_show(words)
 
 endfunction
 
-function! s:NM_show_prev()
-        echoe "not implemented"
-endfunction
-
-function! s:NM_show_next()
+function! s:NM_show_prev(can_change_thread)
         let info = b:nm_raw_info
         let lnum = line('.')
-        let cnt = 0
+        for msg in reverse(copy(info['msgs']))
+                if lnum <= msg['start']
+                        continue
+                endif
+
+                exec printf('norm %dG', msg['start'])
+                " TODO: try to fit the message on screen
+                norm zz
+                return
+        endfor
+        if !a:can_change_thread
+                return
+        endif
+        call <SID>NM_kill_this_buffer()
+        if line('.') != line('0')
+                norm k
+                call <SID>NM_search_show_thread()
+                norm G
+                call <SID>NM_show_prev(0)
+        else
+                echo 'No more messages.'
+        endif
+endfunction
+
+function! s:NM_show_next(can_change_thread)
+        let info = b:nm_raw_info
+        let lnum = line('.')
         for msg in info['msgs']
-                let cnt = cnt + 1
                 if lnum >= msg['start']
                         continue
                 endif
 
                 exec printf('norm %dG', msg['start'])
+                " TODO: try to fit the message on screen
                 norm zz
                 return
         endfor
-        norm qj
-        call <SID>NM_search_show_thread()
+        if !a:can_change_thread
+                return
+        endif
+        call <SID>NM_kill_this_buffer()
+        if line('.') != line('$')
+                norm j
+                call <SID>NM_search_show_thread()
+        else
+                echo 'No more messages.'
+        endif
 endfunction
 
 function! s:NM_show_archive_thread()
