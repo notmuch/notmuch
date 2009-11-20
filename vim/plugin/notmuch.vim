@@ -53,8 +53,8 @@ let s:notmuch_show_citation_regexp         = '^\s*>'
 
 let s:notmuch_show_headers                 = [ 'Subject', 'From' ]
 
-let s:notmuch_show_fold_signatures         = 1
-let s:notmuch_show_fold_citations          = 1
+let g:notmuch_show_fold_signatures         = 1
+let g:notmuch_show_fold_citations          = 1
 
 " --- implement search screen
 
@@ -113,6 +113,8 @@ function! s:NM_cmd_show(words)
 
         exec printf("nnoremap <buffer> q :b %d<CR>", b:nm_prev_bufnr)
         nnoremap <buffer> <C-N> :call <SID>NM_cmd_show_next()<CR>
+        nnoremap <buffer> c     :call <SID>NM_cmd_show_fold_toggle('c', 'cit', !g:notmuch_show_fold_citations)<CR>
+        nnoremap <buffer> s     :call <SID>NM_cmd_show_fold_toggle('s', 'sig', !g:notmuch_show_fold_signatures)<CR>
 endfunction
 
 function! s:NM_cmd_show_next()
@@ -132,6 +134,21 @@ function! s:NM_cmd_show_next()
         norm qj
         call <SID>NM_search_display()
 endfunction
+
+function! s:NM_cmd_show_fold_toggle(key, type, fold)
+        let info = b:nm_raw_info
+        let act = 'open'
+        if a:fold
+                let act = 'close'
+        endif
+        for fld in info['folds']
+                if fld[0] == a:type
+                        exec printf('%dfold%s', fld[1], act)
+                endif
+        endfor
+        exec printf('nnoremap <buffer> %s :call <SID>NM_cmd_show_fold_toggle(''%s'', ''%s'', %d)<CR>', a:key, a:key, a:type, !a:fold)
+endfunction
+
 
 " s:NM_cmd_show_parse returns the following dictionary:
 "    'disp':     lines to display
@@ -312,8 +329,8 @@ function! s:NM_cmd_show_mkfolds()
 
         for afold in info['folds']
                 exec printf('%d,%dfold', afold[1], afold[2])
-                if (afold[0] == 'sig' && s:notmuch_show_fold_signatures)
-                 \ || (afold[0] == 'cit' && s:notmuch_show_fold_citations)
+                if (afold[0] == 'sig' && g:notmuch_show_fold_signatures)
+                 \ || (afold[0] == 'cit' && g:notmuch_show_fold_citations)
                         exec printf('%dfoldclose', afold[1])
                 else
                         exec printf('%dfoldopen', afold[1])
