@@ -908,7 +908,7 @@ notmuch_database_add_message (notmuch_database_t *notmuch,
 	 * is to find a message ID (or else create one ourselves). */
 
 	header = notmuch_message_file_get_header (message_file, "message-id");
-	if (header) {
+	if (header && *header != '\0') {
 	    message_id = _parse_message_id (message_file, header, NULL);
 	    /* So the header value isn't RFC-compliant, but it's
 	     * better than no message-id at all. */
