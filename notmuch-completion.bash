@@ -50,7 +50,7 @@ _notmuch()
 
     commands="setup new search show reply tag dump restore help"
     help_options="setup new search show reply tag dump restore search-terms"
-    search_options="--max-threads= --first= --sort=oldest-first --sort=newest-first"
+    search_options="--max-threads= --first= --sort="
 
     COMPREPLY=()
 
