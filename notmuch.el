@@ -508,11 +508,11 @@ which this thread was originally shown."
 		(progn
 		  (overlay-put (make-overlay beg-sub end)
 			       'invisible 'notmuch-show-signature)
-		  (overlay-put (make-overlay beg (- beg-sub 1))
-			       'after-string
-			       (concat "\n" indent
-				       "[" (number-to-string sig-lines)
-				       "-line signature. Press 's' to show.]"))
+                  (goto-char (- beg-sub 1))
+                  (insert (concat "\n" indent))
+                  (insert-button (concat "[" (number-to-string sig-lines)
+                                         "-line signature. Press 's' to show.]"))
+                  (insert "\n")
 		  (goto-char end)))))
       (forward-line))))
 
