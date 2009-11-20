@@ -19,44 +19,65 @@
 "
 " Authors: Bart Trojanowski <bart@jukie.net>
 
-" --- defaults
+" --- configuration defaults {{{1
 
-if !exists('g:notmuch_cmd')
-        let g:notmuch_cmd = 'notmuch'
+let s:notmuch_defaults = {
+        \ 'g:notmuch_cmd':                           'notmuch'                    ,
+        \ 'g:notmuch_search_reverse':                1                            ,
+        \ 'g:notmuch_show_fold_signatures':          1                            ,
+        \ 'g:notmuch_show_fold_citations':           1                            ,
+        \
+        \ 'g:notmuch_show_message_begin_regexp':     '^message{'                ,
+        \ 'g:notmuch_show_message_end_regexp':       '^message}'                ,
+        \ 'g:notmuch_show_header_begin_regexp':      '^header{'                 ,
+        \ 'g:notmuch_show_header_end_regexp':        '^header}'                 ,
+        \ 'g:notmuch_show_body_begin_regexp':        '^body{'                   ,
+        \ 'g:notmuch_show_body_end_regexp':          '^body}'                   ,
+        \ 'g:notmuch_show_attachment_begin_regexp':  '^attachment{'             ,
+        \ 'g:notmuch_show_attachment_end_regexp':    '^attachment}'             ,
+        \ 'g:notmuch_show_part_begin_regexp':        '^part{'                   ,
+        \ 'g:notmuch_show_part_end_regexp':          '^part}'                   ,
+        \ 'g:notmuch_show_marker_regexp':            '^\\(message\\|header\\|body\\|attachment\\|part\\)[{}].*$',
+        \
+        \ 'g:notmuch_show_message_parse_regexp':     '\(id:[^ ]*\) depth:\([0-9]*\) filename:\(.*\)$',
+        \ 'g:notmuch_show_tags_regexp':              '(\([^)]*\))$'               ,
+        \
+        \ 'g:notmuch_show_signature_regexp':         '^\(-- \?\|_\+\)$'           ,
+        \ 'g:notmuch_show_signature_lines_max':      12                           ,
+        \
+        \ 'g:notmuch_show_citation_regexp':          '^\s*>'                      ,
+        \ }
+
+" for some reason NM_set_defaults() didn't work for arrays...
+if !exists('g:notmuch_show_headers')
+        let g:notmuch_show_headers = [ 'Subject', 'From' ]
 endif
 
-if !exists('g:notmuch_search_reverse')
-        let g:notmuch_search_reverse = 1
-endif
+" --- process and set the defaults {{{1
 
-" --- used to match output of notmuch
+function! NM_set_defaults(force)
+        for [key, dflt] in items(s:notmuch_defaults)
+                let cmd = ''
+                if !a:force && exists(key) && type(dflt) == type(eval(key))
+                        continue
+                elseif type(dflt) == type(0)
+                        let cmd = printf('let %s = %d', key, dflt)
+                elseif type(dflt) == type('')
+                        let cmd = printf('let %s = ''%s''', key, dflt)
+                "elseif type(dflt) == type([])
+                "        let cmd = printf('let %s = %s', key, string(dflt))
+                else
+                        echoe printf('E: Unknown type in NM_set_defaults(%d) using [%s,%s]',
+                                                \ a:force, key, string(dflt))
+                        continue
+                endif
+                echoe cmd
+                exec cmd
+        endfor
+endfunction
+call NM_set_defaults(0)
 
-let s:notmuch_show_message_begin_regexp    = '^message{'
-let s:notmuch_show_message_end_regexp      = '^message}'
-let s:notmuch_show_header_begin_regexp     = '^header{'
-let s:notmuch_show_header_end_regexp       = '^header}'
-let s:notmuch_show_body_begin_regexp       = '^body{'
-let s:notmuch_show_body_end_regexp         = '^body}'
-let s:notmuch_show_attachment_begin_regexp = '^attachment{'
-let s:notmuch_show_attachment_end_regexp   = '^attachment}'
-let s:notmuch_show_part_begin_regexp       = '^part{'
-let s:notmuch_show_part_end_regexp         = '^part}'
-let s:notmuch_show_marker_regexp           = '^\\(message\\|header\\|body\\|attachment\\|part\\)[{}].*$'
-
-let s:notmuch_show_message_parse_regexp    = '\(id:[^ ]*\) depth:\([0-9]*\) filename:\(.*\)$'
-let s:notmuch_show_tags_regexp             = '(\([^)]*\))$'
-
-let s:notmuch_show_signature_regexp        = '^\(-- \?\|_\+\)$'
-let s:notmuch_show_signature_lines_max     = 12
-
-let s:notmuch_show_citation_regexp         = '^\s*>'
-
-let s:notmuch_show_headers                 = [ 'Subject', 'From' ]
-
-let g:notmuch_show_fold_signatures         = 1
-let g:notmuch_show_fold_citations          = 1
-
-" --- implement search screen
+" --- implement search screen {{{1
 
 function! s:NM_cmd_search(words)
         let cmd = ['search']
@@ -91,7 +112,7 @@ function! s:NM_search_display()
 endfunction
 
 
-" --- implement show screen
+" --- implement show screen {{{1
 
 function! s:NM_cmd_show(words)
         let prev_bufnr = bufnr('%')
@@ -182,7 +203,7 @@ function! s:NM_cmd_show_parse(inlines)
                 if strlen(in_part)
                         let part_end = 0
 
-                        if match(line, s:notmuch_show_part_end_regexp) != -1
+                        if match(line, g:notmuch_show_part_end_regexp) != -1
                                 let part_end = len(info['disp'])
                         else
                                 call add(info['disp'], line)
@@ -190,15 +211,15 @@ function! s:NM_cmd_show_parse(inlines)
 
                         if in_part == 'text/plain'
                                 if !part_end && mode_type == ''
-                                        if match(line, s:notmuch_show_signature_regexp) != -1
+                                        if match(line, g:notmuch_show_signature_regexp) != -1
                                                 let mode_type = 'sig'
                                                 let mode_start = len(info['disp'])
-                                        elseif match(line, s:notmuch_show_citation_regexp) != -1
+                                        elseif match(line, g:notmuch_show_citation_regexp) != -1
                                                 let mode_type = 'cit'
                                                 let mode_start = len(info['disp'])
                                         endif
                                 elseif mode_type == 'cit'
-                                        if part_end || match(line, s:notmuch_show_citation_regexp) == -1
+                                        if part_end || match(line, g:notmuch_show_citation_regexp) == -1
                                                 let outlnum = len(info['disp'])
                                                 let foldinfo = [ mode_type, mode_start, outlnum,
                                                                \ printf('[ %d-line citation.  Press "c" to show. ]', outlnum - mode_start) ]
@@ -206,7 +227,7 @@ function! s:NM_cmd_show_parse(inlines)
                                         endif
                                 elseif mode_type == 'sig'
                                         let outlnum = len(info['disp'])
-                                        if (outlnum - mode_start) > s:notmuch_show_signature_lines_max
+                                        if (outlnum - mode_start) > g:notmuch_show_signature_lines_max
                                                 echoe 'line ' . outlnum . ' stopped matching'
                                                 let mode_type = ''
                                         elseif part_end
@@ -235,14 +256,14 @@ function! s:NM_cmd_show_parse(inlines)
                         if !has_key(msg,'body_start')
                                 let msg['body_start'] = len(info['disp']) + 1
                         endif
-                        if match(line, s:notmuch_show_body_end_regexp) != -1
+                        if match(line, g:notmuch_show_body_end_regexp) != -1
                                 let body_end = len(info['disp'])
                                 let foldinfo = [ 'body', body_start, body_end,
                                                \ printf('[ BODY %d - %d lines ]', len(info['msgs']), body_end - body_start) ]
 
                                 let in_body = 0
 
-                        elseif match(line, s:notmuch_show_part_begin_regexp) != -1
+                        elseif match(line, g:notmuch_show_part_begin_regexp) != -1
                                 let m = matchlist(line, 'ID: \(\d\+\), Content-type: \(\S\+\)')
                                 let in_part = 'unknown'
                                 if len(m)
@@ -261,7 +282,7 @@ function! s:NM_cmd_show_parse(inlines)
                                 let msg['hdr_start'] = len(info['disp']) + 1
 
                         else
-                                if match(line, s:notmuch_show_header_end_regexp) != -1
+                                if match(line, g:notmuch_show_header_end_regexp) != -1
                                         let msg['header'] = hdr
                                         let in_header = 0
                                         let hdr = {}
@@ -269,7 +290,7 @@ function! s:NM_cmd_show_parse(inlines)
                                         let m = matchlist(line, '^\(\w\+\):\s*\(.*\)$')
                                         if len(m)
                                                 let hdr[m[1]] = m[2]
-                                                if match(s:notmuch_show_headers, m[1]) != -1
+                                                if match(g:notmuch_show_headers, m[1]) != -1
                                                         call add(info['disp'], line)
                                                 endif
                                         endif
@@ -277,7 +298,7 @@ function! s:NM_cmd_show_parse(inlines)
                         endif
 
                 elseif in_message
-                        if match(line, s:notmuch_show_message_end_regexp) != -1
+                        if match(line, g:notmuch_show_message_end_regexp) != -1
                                 let msg['end'] = len(info['disp'])
                                 call add(info['disp'], '')
 
@@ -291,21 +312,21 @@ function! s:NM_cmd_show_parse(inlines)
                                 let in_body = 0
                                 let in_part = ''
 
-                        elseif match(line, s:notmuch_show_header_begin_regexp) != -1
+                        elseif match(line, g:notmuch_show_header_begin_regexp) != -1
                                 let in_header = 1
                                 continue
 
-                        elseif match(line, s:notmuch_show_body_begin_regexp) != -1
+                        elseif match(line, g:notmuch_show_body_begin_regexp) != -1
                                 let body_start = len(info['disp']) + 1
                                 let in_body = 1
                                 continue
                         endif
 
                 else
-                        if match(line, s:notmuch_show_message_begin_regexp) != -1
+                        if match(line, g:notmuch_show_message_begin_regexp) != -1
                                 let msg['start'] = len(info['disp']) + 1
 
-                                let m = matchlist(line, s:notmuch_show_message_parse_regexp)
+                                let m = matchlist(line, g:notmuch_show_message_parse_regexp)
                                 if len(m)
                                         let msg['id'] = m[1]
                                         let msg['depth'] = m[2]
@@ -359,7 +380,7 @@ function! NM_cmd_show_foldtext()
 endfunction
 
 
-" --- helper functions
+" --- helper functions {{{1
 
 function! s:NM_newBuffer(ft, content)
         enew
@@ -385,7 +406,7 @@ function! s:NM_run(args)
 endfunction
 
 
-" --- command handler
+" --- command handler {{{1
 
 function! NotMuch(args)
         if !strlen(a:args)
@@ -403,11 +424,13 @@ function! CompleteNotMuch(arg_lead, cmd_line, cursor_pos)
 endfunction
 
 
-" --- glue
+" --- glue {{{1
 
 command! -nargs=* -complete=customlist,CompleteNotMuch NotMuch call NotMuch(<q-args>)
 cabbrev  notmuch <c-r>=(getcmdtype()==':' && getcmdpos()==1 ? 'NotMuch' : 'notmuch')<CR>
 
-" --- hacks, only for development :)
+" --- hacks, only for development :) {{{1
 
 nnoremap ,nmr :source ~/.vim/plugin/notmuch.vim<CR>:call NotMuch('')<CR>
+
+" vim: set ft=vim ts=8 sw=8 et foldmethod=marker :
