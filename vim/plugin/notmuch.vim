@@ -301,6 +301,21 @@ function! s:NM_cmd_show_mkfolds()
         endfor
 endfunction
 
+function! s:NM_cmd_show_mksyntax()
+        let info = b:nm_raw_info
+        let cnt = 0
+        for msg in info['msgs']
+                let cnt = cnt + 1
+                let start = msg['start']
+                let hdr_start = msg['hdr_start']
+                let body_start = msg['body_start']
+                let end = msg['end']
+                exec printf('syntax region nmShowMsg%dDesc start=''\%%%dl'' end=''\%%%dl'' contains=@nmShowMsgDesc', cnt, start, start+1)
+                exec printf('syntax region nmShowMsg%dHead start=''\%%%dl'' end=''\%%%dl'' contains=@nmShowMsgHead', cnt, hdr_start, body_start)
+                exec printf('syntax region nmShowMsg%dBody start=''\%%%dl'' end=''\%%%dl'' contains=@nmShowMsgBody', cnt, body_start, end)
+        endfor
+endfunction
+
 function! NM_cmd_show_foldtext()
         let foldtext = b:nm_raw_info['foldtext']
         return foldtext[v:foldstart]
