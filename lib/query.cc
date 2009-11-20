@@ -151,6 +151,7 @@ notmuch_query_search_messages (notmuch_query_t *query,
     } catch (const Xapian::Error &error) {
 	fprintf (stderr, "A Xapian exception occurred: %s\n",
 		 error.get_msg().c_str());
+	fprintf (stderr, "Query string was: %s\n", query->query_string);
     }
 
     return _notmuch_messages_create (message_list);
