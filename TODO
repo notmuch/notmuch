@@ -1,6 +1,16 @@
 Emacs interface (notmuch.el)
 ----------------------------
 
+Completion
+----------
+Move completion scripts down into a contrib directory.
+
+Add completion scripts for other shells as seen on mailing list.
+
+Fix bash completion to complete multiple search options (both --first
+and *then* --max-threads), and also complete value for --sort=
+(oldest-first or newest-first).
+
 notmuch command-line tool
 -------------------------
 Give "notmuch restore" some progress indicator. Until we get the
