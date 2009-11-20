@@ -8,7 +8,6 @@ extra_cflags := $(shell pkg-config --cflags glib-2.0 gmime-2.4 talloc)
 extra_cxxflags := $(shell xapian-config --cxxflags)
 
 emacs_lispdir := $(shell pkg-config emacs --variable sitepkglispdir)
-emacs_startdir := $(shell pkg-config emacs --variable sitestartdir)
 
 # Now smash together user's values with our extra values
 override CFLAGS += $(WARN_FLAGS) $(extra_cflags)
