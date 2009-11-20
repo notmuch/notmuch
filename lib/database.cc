@@ -940,8 +940,11 @@ notmuch_database_add_message (notmuch_database_t *notmuch,
 
 	talloc_free (message_id);
 
-	if (message == NULL)
+	if (message == NULL) {
+	    ret = COERCE_STATUS (private_status,
+				 "Unexpected status value from _notmuch_message_create_for_message_id");
 	    goto DONE;
+	}
 
 	/* Is this a newly created message object? */
 	if (private_status == NOTMUCH_PRIVATE_STATUS_NO_DOCUMENT_FOUND) {
