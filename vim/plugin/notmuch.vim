@@ -94,7 +94,7 @@ endfunction
 " --- implement show screen
 
 function! s:NM_cmd_show(words)
-        let bufnr = bufnr('%')
+        let prev_bufnr = bufnr('%')
         let data = s:NM_run(['show'] + a:words)
         let lines = split(data, "\n")
 
@@ -103,6 +103,7 @@ function! s:NM_cmd_show(words)
         call s:NM_newBuffer('show', join(info['disp'], "\n"))
         setlocal bufhidden=delete
         let b:nm_raw_info = info
+        let b:nm_prev_bufnr = prev_bufnr
 
         call s:NM_cmd_show_mkfolds()
         call s:NM_cmd_show_mksyntax()
@@ -110,7 +111,26 @@ function! s:NM_cmd_show(words)
         setlocal fillchars=
         setlocal foldcolumn=6
 
-        exec printf("nnoremap <buffer> q :b %d<CR>", bufnr)
+        exec printf("nnoremap <buffer> q :b %d<CR>", b:nm_prev_bufnr)
+        nnoremap <buffer> <C-N> :call <SID>NM_cmd_show_next()<CR>
+endfunction
+
+function! s:NM_cmd_show_next()
+        let info = b:nm_raw_info
+        let lnum = line('.')
+        let cnt = 0
+        for msg in info['msgs']
+                let cnt = cnt + 1
+                if lnum >= msg['start']
+                        continue
+                endif
+
+                exec printf('norm %dG', msg['start'])
+                norm zz
+                return
+        endfor
+        norm qj
+        call <SID>NM_search_display()
 endfunction
 
 " s:NM_cmd_show_parse returns the following dictionary:

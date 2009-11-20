@@ -25,4 +25,5 @@ Buffer types:
 
         Keybindings:
             q       - return to search display
+            ^n      - next message
 
