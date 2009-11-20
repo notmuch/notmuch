@@ -743,6 +743,7 @@ endif
 " --- assign keymaps {{{1
 
 function! s:NM_set_map(maps)
+        nmapclear
         for [key, code] in items(a:maps)
                 exec printf('nnoremap <buffer> %s %s', key, code)
         endfor
