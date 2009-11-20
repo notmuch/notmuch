@@ -747,6 +747,8 @@ function! s:NM_set_map(maps)
         for [key, code] in items(a:maps)
                 exec printf('nnoremap <buffer> %s %s', key, code)
         endfor
+        " --- this is a hack for development :)
+        nnoremap ,nmr :source ~/.vim/plugin/notmuch.vim<CR>:call NotMuch('')<CR>
 endfunction
 
 " --- command handler {{{1
@@ -776,9 +778,5 @@ endfunction
 
 command! -nargs=* -complete=customlist,CompleteNotMuch NotMuch call NotMuch(<q-args>)
 cabbrev  notmuch <c-r>=(getcmdtype()==':' && getcmdpos()==1 ? 'NotMuch' : 'notmuch')<CR>
-
-" --- hacks, only for development :) {{{1
-
-nnoremap ,nmr :source ~/.vim/plugin/notmuch.vim<CR>:call NotMuch('')<CR>
 
 " vim: set ft=vim ts=8 sw=8 et foldmethod=marker :
