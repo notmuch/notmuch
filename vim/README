@@ -18,7 +18,11 @@ Buffer types:
 
         Keybindings:
             <Enter> - show the selected message
-            s       - alter search criteria
+            s       - enter search criteria
+            S       - alter search criteria
+            +       - add tag(s) to selected message
+            -       - remove tag(s) from selected message
+            =       - refresh display
 
     [notmuch-show]
         This is the display of the message.

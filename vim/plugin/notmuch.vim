@@ -72,9 +72,10 @@ let g:notmuch_search_maps = {
         \ 'o':          ':call <SID>NM_search_toggle_order()<CR>',
         \ 'r':          ':call <SID>NM_search_reply_to_thread()<CR>',
         \ 's':          ':call <SID>NM_search_prompt()<CR>',
+        \ 'S':          ':call <SID>NM_search_edit()<CR>',
         \ 't':          ':call <SID>NM_search_filter_by_tag()<CR>',
-        \ '+':          ':call <SID>NM_search_add_tag()<CR>',
-        \ '-':          ':call <SID>NM_search_remove_tag()<CR>',
+        \ '+':          ':call <SID>NM_search_add_tags([])<CR>',
+        \ '-':          ':call <SID>NM_search_remove_tags([])<CR>',
         \ '=':          ':call <SID>NM_search_refresh_view()<CR>',
         \ }
 
@@ -109,24 +110,34 @@ function! s:NM_cmd_search(words)
         setlocal nowrap
 endfunction
 
+" --- --- search screen action functions {{{2
+
 function! s:NM_search_show_thread()
-        if !exists('b:nm_raw_lines')
-                echo 'no b:nm_raw_lines'
-        else
-                let line = line('.')
-                let info = b:nm_raw_lines[line-1]
-                let what = split(info, '\s\+')[0]
-                call s:NM_cmd_show([what])
+        let id = NM_search_find_thread_id()
+        if id != ''
+                call s:NM_cmd_show([id])
         endif
 endfunction
 
 function! s:NM_search_prompt()
-        let new_list = input('NotMuch Search: ', join(g:notmuch_current_search_words, ' '))
-        call <SID>NM_cmd_search(split(new_list))
+        " TODO: input() can support completion
+        let text = input('NotMuch Search: ')
+        if strlen(text)
+                call <SID>NM_cmd_search(split(text))
+        endif
+endfunction
+
+function! s:NM_search_edit()
+        " TODO: input() can support completion
+        let text = input('NotMuch Search: ', join(g:notmuch_current_search_words, ' '))
+        if strlen(text)
+                call <SID>NM_cmd_search(split(text))
+        endif
 endfunction
 
 function! s:NM_search_archive_thread()
-        echoe 'Not implemented'
+        call <SID>NM_search_remove_tags('inbox')
+        norm j
 endfunction
 
 function! s:NM_search_filter()
@@ -149,18 +160,54 @@ function! s:NM_search_filter_by_tag()
         echoe 'Not implemented'
 endfunction
 
-function! s:NM_search_add_tag()
-        echoe 'Not implemented'
+function! s:NM_search_add_tags(tags)
+        call <SID>NM_search_add_remove_tags('Add Tag(s): ', '+', a:tags)
 endfunction
 
-function! s:NM_search_remove_tag()
-        echoe 'Not implemented'
+function! s:NM_search_remove_tags(tags)
+        call <SID>NM_search_add_remove_tags('Remove Tag(s): ', '-', a:tags)
 endfunction
 
 function! s:NM_search_refresh_view()
-        echoe 'Not implemented'
+        let lno = line('.')
+        call s:NM_cmd_search(g:notmuch_current_search_words)
+        " FIXME: should find the line of the thread we were on if possible
+        exec printf('norm %dG', lno)
 endfunction
 
+" --- --- search screen helper functions {{{2
+
+function! s:NM_search_find_thread_id()
+        if !exists('b:nm_raw_lines')
+                echoe 'no b:nm_raw_lines'
+                return ''
+        else
+                let line = line('.')
+                let info = b:nm_raw_lines[line-1]
+                let what = split(info, '\s\+')[0]
+                return what
+        endif
+endfunction
+
+function! s:NM_search_add_remove_tags(prompt, prefix, intags)
+        let id = <SID>NM_search_find_thread_id()
+        if id != ''
+                if type(a:intags) != type([]) || len(a:intags) == 0
+                        " TODO: input() can support completion
+                        let text = input(a:prompt)
+                        if !strlen(text)
+                                return
+                        endif
+                        let tags = split(text, ' ')
+                else
+                        let tags = a:intags
+                endif
+                call map(tags, 'a:prefix . v:val')
+                " TODO: handle errors
+                call <SID>NM_run(['tag'] + tags + ['--', id])
+                call <SID>NM_search_refresh_view()
+        endif
+endfunction
 
 " --- implement show screen {{{1
 
