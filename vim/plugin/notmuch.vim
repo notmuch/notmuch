@@ -48,10 +48,12 @@ let s:notmuch_defaults = {
         \ 'g:notmuch_show_citation_regexp':          '^\s*>'                      ,
         \ }
 
-" for some reason NM_set_defaults() didn't work for arrays...
-if !exists('g:notmuch_show_headers')
-        let g:notmuch_show_headers = [ 'Subject', 'From' ]
-endif
+" defaults for g:notmuch_show_headers
+" override with: let g:notmuch_show_headers = [ ... ]
+let s:notmuch_show_headers_defaults = [
+        \ 'Subject',
+        \ 'From'
+        \ ]
 
 " --- keyboard mapping definitions {{{1
 
@@ -59,39 +61,6 @@ let g:notmuch_search_maps = {
         \ '<Enter>': ':call <SID>NM_search_display()<CR>',
         \ 's':       ':call <SID>NM_cmd_search(split(input(''NotMuch Search:'')))<CR>',
         \ }
-
-" --- process and set the defaults {{{1
-
-function! NM_set_defaults(force)
-        for [key, dflt] in items(s:notmuch_defaults)
-                let cmd = ''
-                if !a:force && exists(key) && type(dflt) == type(eval(key))
-                        continue
-                elseif type(dflt) == type(0)
-                        let cmd = printf('let %s = %d', key, dflt)
-                elseif type(dflt) == type('')
-                        let cmd = printf('let %s = ''%s''', key, dflt)
-                "elseif type(dflt) == type([])
-                "        let cmd = printf('let %s = %s', key, string(dflt))
-                else
-                        echoe printf('E: Unknown type in NM_set_defaults(%d) using [%s,%s]',
-                                                \ a:force, key, string(dflt))
-                        continue
-                endif
-                echoe cmd
-                exec cmd
-        endfor
-endfunction
-call NM_set_defaults(0)
-
-" --- assign keymaps {{{1
-
-function! s:NM_set_map(maps)
-        for [key, code] in items(a:maps)
-                exec printf('nnoremap <buffer> %s %s', key, code)
-        endfor
-endfunction
-
 
 " --- implement search screen {{{1
 
@@ -395,7 +364,7 @@ function! NM_cmd_show_foldtext()
 endfunction
 
 
-" --- helper functions {{{1
+" --- notmuch helper functions {{{1
 
 function! s:NM_newBuffer(ft, content)
         enew
@@ -420,6 +389,42 @@ function! s:NM_run(args)
         endif
 endfunction
 
+" --- process and set the defaults {{{1
+
+function! NM_set_defaults(force)
+        for [key, dflt] in items(s:notmuch_defaults)
+                let cmd = ''
+                if !a:force && exists(key) && type(dflt) == type(eval(key))
+                        continue
+                elseif type(dflt) == type(0)
+                        let cmd = printf('let %s = %d', key, dflt)
+                elseif type(dflt) == type('')
+                        let cmd = printf('let %s = ''%s''', key, dflt)
+                "elseif type(dflt) == type([])
+                "        let cmd = printf('let %s = %s', key, string(dflt))
+                else
+                        echoe printf('E: Unknown type in NM_set_defaults(%d) using [%s,%s]',
+                                                \ a:force, key, string(dflt))
+                        continue
+                endif
+                echoe cmd
+                exec cmd
+        endfor
+endfunction
+call NM_set_defaults(0)
+
+" for some reason NM_set_defaults() didn't work for arrays...
+if !exists('g:notmuch_show_headers')
+        let g:notmuch_show_headers = s:notmuch_show_headers_defaults
+endif
+
+" --- assign keymaps {{{1
+
+function! s:NM_set_map(maps)
+        for [key, code] in items(a:maps)
+                exec printf('nnoremap <buffer> %s %s', key, code)
+        endfor
+endfunction
 
 " --- command handler {{{1
 
