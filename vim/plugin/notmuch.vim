@@ -48,6 +48,12 @@ let s:notmuch_defaults = {
         \ 'g:notmuch_show_citation_regexp':          '^\s*>'                      ,
         \ }
 
+" defaults for g:notmuch_initial_search_words
+" override with: let g:notmuch_initial_search_words = [ ... ]
+let s:notmuch_initial_search_words_defaults = [
+        \ 'tag:inbox'
+        \ ]
+
 " defaults for g:notmuch_show_headers
 " override with: let g:notmuch_show_headers = [ ... ]
 let s:notmuch_show_headers_defaults = [
@@ -59,8 +65,17 @@ let s:notmuch_show_headers_defaults = [
 
 " --- --- bindings for search screen {{{2
 let g:notmuch_search_maps = {
-        \ '<Enter>':    ':call <SID>NM_search_display()<CR>',
-        \ 's':          ':call <SID>NM_cmd_search(split(input(''NotMuch Search:'')))<CR>',
+        \ '<Enter>':    ':call <SID>NM_search_show_thread()<CR>',
+        \ 'a':          ':call <SID>NM_search_archive_thread()<CR>',
+        \ 'f':          ':call <SID>NM_search_filter()<CR>',
+        \ 'm':          ':call <SID>NM_new_mail()<CR>',
+        \ 'o':          ':call <SID>NM_search_toggle_order()<CR>',
+        \ 'r':          ':call <SID>NM_search_reply_to_thread()<CR>',
+        \ 's':          ':call <SID>NM_search_prompt()<CR>',
+        \ 't':          ':call <SID>NM_search_filter_by_tag()<CR>',
+        \ '+':          ':call <SID>NM_search_add_tag()<CR>',
+        \ '-':          ':call <SID>NM_search_remove_tag()<CR>',
+        \ '=':          ':call <SID>NM_search_refresh_view()<CR>',
         \ }
 
 " --- --- bindings for show screen {{{2
@@ -78,6 +93,7 @@ function! s:NM_cmd_search(words)
         if g:notmuch_search_reverse
                 let cmd = cmd + ['--reverse']
         endif
+        let g:notmuch_current_search_words = a:words
         let data = s:NM_run(cmd + a:words)
         "let data = substitute(data, '27/27', '25/27', '')
         "let data = substitute(data, '\[4/4\]', '[0/4]', '')
@@ -93,7 +109,7 @@ function! s:NM_cmd_search(words)
         setlocal nowrap
 endfunction
 
-function! s:NM_search_display()
+function! s:NM_search_show_thread()
         if !exists('b:nm_raw_lines')
                 echo 'no b:nm_raw_lines'
         else
@@ -102,6 +118,47 @@ function! s:NM_search_display()
                 let what = split(info, '\s\+')[0]
                 call s:NM_cmd_show([what])
         endif
+endfunction
+
+function! s:NM_search_prompt()
+        let new_list = input('NotMuch Search: ', join(g:notmuch_current_search_words, ' '))
+        call <SID>NM_cmd_search(split(new_list))
+endfunction
+
+function! s:NM_search_archive_thread()
+        echoe 'Not implemented'
+endfunction
+
+function! s:NM_search_filter()
+        echoe 'Not implemented'
+endfunction
+
+function! s:NM_new_mail()
+        echoe 'Not implemented'
+endfunction
+
+function! s:NM_search_toggle_order()
+        echoe 'Not implemented'
+endfunction
+
+function! s:NM_search_reply_to_thread()
+        echoe 'Not implemented'
+endfunction
+
+function! s:NM_search_filter_by_tag()
+        echoe 'Not implemented'
+endfunction
+
+function! s:NM_search_add_tag()
+        echoe 'Not implemented'
+endfunction
+
+function! s:NM_search_remove_tag()
+        echoe 'Not implemented'
+endfunction
+
+function! s:NM_search_refresh_view()
+        echoe 'Not implemented'
 endfunction
 
 
@@ -147,7 +204,7 @@ function! s:NM_cmd_show_next()
                 return
         endfor
         norm qj
-        call <SID>NM_search_display()
+        call <SID>NM_search_show_thread()
 endfunction
 
 function! s:NM_cmd_show_fold_toggle(key, type, fold)
@@ -426,6 +483,13 @@ call NM_set_defaults(0)
 if !exists('g:notmuch_show_headers')
         let g:notmuch_show_headers = s:notmuch_show_headers_defaults
 endif
+if !exists('g:notmuch_initial_search_words')
+        let g:notmuch_initial_search_words = s:notmuch_initial_search_words_defaults
+endif
+
+" this is the default querry
+let g:notmuch_current_search_words = g:notmuch_initial_search_words
+
 
 " --- assign keymaps {{{1
 
@@ -439,7 +503,7 @@ endfunction
 
 function! NotMuch(args)
         if !strlen(a:args)
-                call s:NM_cmd_search(['tag:inbox'])
+                call s:NM_cmd_search(g:notmuch_current_search_words)
                 return
         endif
 
