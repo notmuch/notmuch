@@ -113,7 +113,7 @@ endfunction
 " --- --- search screen action functions {{{2
 
 function! s:NM_search_show_thread()
-        let id = NM_search_find_thread_id()
+        let id = <SID>NM_search_find_thread_id()
         if id != ''
                 call s:NM_cmd_show([id])
         endif
