@@ -477,6 +477,14 @@ which this thread was originally shown."
 	(if last
 	    (notmuch-show-archive-thread))))))
 
+(defun notmuch-toggle-invisible-action (cite-button)
+  (let ((invis-spec (button-get button 'invisibility-spec)))
+        (if (invisible-p invis-spec)
+            (remove-from-invisibility-spec invis-spec)
+          (add-to-invisibility-spec invis-spec)
+          ))
+  (goto-char (button-end cite-button)))
+
 (defun notmuch-show-markup-citations-region (beg end depth)
   (goto-char beg)
   (beginning-of-line)
@@ -488,16 +496,25 @@ which this thread was originally shown."
 	  (progn
 	    (while (looking-at citation)
 	      (forward-line))
-	    (let ((overlay (make-overlay beg-sub (point))))
-	      (overlay-put overlay 'invisible 'notmuch-show-citation)
+	    (let ((overlay (make-overlay beg-sub (point)))
+                  (invis-spec (make-symbol "notmuch-citation-region")))
+              (add-to-invisibility-spec invis-spec)
+	      (overlay-put overlay 'invisible invis-spec)
               (let (
                     (p (point))
-                    (cite-button-text (concat "[" (number-to-string (count-lines beg-sub (point)))
-                                              "-line citation. Press 'c' to show.]"))
+                    (cite-button-text
+                     (concat "["  (number-to-string (count-lines beg-sub (point)))
+                             "-line citation.]"))
                     )
                 (goto-char (- beg-sub 1))
                 (insert (concat "\n" indent))
-                (insert-button cite-button-text)
+                (let ((cite-button (insert-button cite-button-text)))
+                  (button-put cite-button 'invisibility-spec invis-spec)
+                  (button-put cite-button 'action 'notmuch-toggle-invisible-action)
+                  (button-put cite-button 'help-echo
+                              "mouse-2, RET: Show citation")
+
+                  )
                 (insert "\n")
                 (goto-char (+ (length cite-button-text) p))
               ))))
@@ -506,14 +523,24 @@ which this thread was originally shown."
 	  (let ((sig-lines (- (count-lines beg-sub end) 1)))
 	    (if (<= sig-lines notmuch-show-signature-lines-max)
 		(progn
-		  (overlay-put (make-overlay beg-sub end)
-			       'invisible 'notmuch-show-signature)
-                  (goto-char (- beg-sub 1))
-                  (insert (concat "\n" indent))
-                  (insert-button (concat "[" (number-to-string sig-lines)
-                                         "-line signature. Press 's' to show.]"))
-                  (insert "\n")
-		  (goto-char end)))))
+                  (let ((invis-spec (make-symbol "notmuch-signature-region")))
+                    (add-to-invisibility-spec invis-spec)
+                    (overlay-put (make-overlay beg-sub end)
+                                 'invisible invis-spec)
+                  
+                    (goto-char (- beg-sub 1))
+                    (insert (concat "\n" indent))
+                    (let ((sig-button (insert-button 
+                                       (concat "[" (number-to-string sig-lines)
+                                         "-line signature.]"))))
+                      (button-put sig-button 'invisibility-spec invis-spec)
+                      (button-put sig-button 'action
+                                  'notmuch-toggle-invisible-action)
+                      (button-put sig-button 'help-echo
+                                  "mouse-2, RET: Show signature")
+                      )
+                    (insert "\n")
+                    (goto-char end))))))
       (forward-line))))
 
 (defun notmuch-show-markup-part (beg end depth)
