@@ -772,10 +772,10 @@ thread from that buffer can be show when done with this one)."
       (goto-char (window-start))
     (scroll-down nil)))
 
-(defun notmuch-search-goto-last-thread (&optional arg)
+(defun notmuch-search-goto-last-thread ()
   "Move point to the last thread in the buffer."
-  (interactive "^P")
-  (end-of-buffer arg)
+  (interactive)
+  (goto-char (point-max))
   (forward-line -1))
 
 ;;;###autoload
