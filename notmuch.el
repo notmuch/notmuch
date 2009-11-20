@@ -604,6 +604,8 @@ which this thread was originally shown."
 	(indent-rigidly beg end depth)
 	(overlay-put (make-overlay beg-hidden end)
 		     'invisible 'notmuch-show-header)
+        (goto-char end)
+        (insert "\n")
 	(set-marker beg nil)
 	(set-marker beg-hidden nil)
 	(set-marker end nil)
