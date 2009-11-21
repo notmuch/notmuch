@@ -289,6 +289,7 @@ buffer."
 (defun notmuch-reply (query-string)
   (switch-to-buffer (generate-new-buffer "notmuch-draft"))
   (call-process notmuch-command nil t nil "reply" query-string)
+  (message-insert-signature)
   (goto-char (point-min))
   (if (re-search-forward "^$" nil t)
       (progn
