@@ -137,13 +137,13 @@ typedef struct _notmuch_tags notmuch_tags_t;
 notmuch_database_t *
 notmuch_database_create (const char *path);
 
+typedef enum {
+    NOTMUCH_DATABASE_MODE_READ_ONLY = 0,
+    NOTMUCH_DATABASE_MODE_READ_Write
+} notmuch_database_mode_t;
+
 /* XXX: I think I'd like this to take an extra argument of
  * notmuch_status_t* for returning a status value on failure. */
-
-typedef enum {
-    NOTMUCH_DATABASE_MODE_READONLY = 0,
-    NOTMUCH_DATABASE_MODE_WRITABLE
-} notmuch_database_mode_t;
 
 /* Open an existing notmuch database located at 'path'.
  *

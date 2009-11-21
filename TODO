@@ -47,6 +47,9 @@ maildirs.)
 
 notmuch library
 ---------------
+Add support for files that are moved or deleted (which obviously need
+to be handled differently).
+
 Actually compile and install a libnotmuch shared library.
 
 Fix to use the *last* Message-ID header if multiple such headers are

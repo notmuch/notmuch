@@ -441,7 +441,7 @@ notmuch_database_create (const char *path)
     }
 
     notmuch = notmuch_database_open (path,
-				     NOTMUCH_DATABASE_MODE_WRITABLE);
+				     NOTMUCH_DATABASE_MODE_READ_WRITE);
 
   DONE:
     if (notmuch_path)
@@ -487,7 +487,7 @@ notmuch_database_open (const char *path,
 
     notmuch->mode = mode;
     try {
-	if (mode == NOTMUCH_DATABASE_MODE_WRITABLE) {
+	if (mode == NOTMUCH_DATABASE_MODE_READ_WRITE) {
 	    notmuch->xapian_db = new Xapian::WritableDatabase (xapian_path,
 							       Xapian::DB_CREATE_OR_OPEN);
 	} else {
@@ -530,7 +530,7 @@ notmuch_database_open (const char *path,
 void
 notmuch_database_close (notmuch_database_t *notmuch)
 {
-    if (notmuch->mode == NOTMUCH_DATABASE_MODE_WRITABLE)
+    if (notmuch->mode == NOTMUCH_DATABASE_MODE_READ_WRITE)
 	(static_cast <Xapian::WritableDatabase *> (notmuch->xapian_db))->flush ();
 
     delete notmuch->term_gen;
@@ -583,7 +583,7 @@ notmuch_database_set_timestamp (notmuch_database_t *notmuch,
     notmuch_status_t ret = NOTMUCH_STATUS_SUCCESS;
     char *db_key = NULL;
 
-    if (notmuch->mode == NOTMUCH_DATABASE_MODE_READONLY) {
+    if (notmuch->mode == NOTMUCH_DATABASE_MODE_READ_ONLY) {
 	fprintf (stderr, "Attempted to update a read-only database.\n");
 	return NOTMUCH_STATUS_READONLY_DATABASE;
     }

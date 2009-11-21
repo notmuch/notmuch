@@ -414,7 +414,7 @@ notmuch_new_command (void *ctx,
 	add_files_state.total_files = count;
     } else {
 	notmuch = notmuch_database_open (db_path,
-					 NOTMUCH_DATABASE_MODE_READONLY);
+					 NOTMUCH_DATABASE_MODE_READ_ONLY);
 	add_files_state.ignore_read_only_directories = TRUE;
 	add_files_state.total_files = 0;
     }

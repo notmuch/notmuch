@@ -95,7 +95,7 @@ notmuch_tag_command (void *ctx, unused (int argc), unused (char *argv[]))
 	return 1;
 
     notmuch = notmuch_database_open (notmuch_config_get_database_path (config),
-				     NOTMUCH_DATABASE_MODE_WRITABLE);
+				     NOTMUCH_DATABASE_MODE_READ_WRITE);
     if (notmuch == NULL)
 	return 1;
 

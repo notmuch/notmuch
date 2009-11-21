@@ -221,7 +221,7 @@ notmuch_show_command (void *ctx, unused (int argc), unused (char *argv[]))
     }
 
     notmuch = notmuch_database_open (notmuch_config_get_database_path (config),
-				     NOTMUCH_DATABASE_MODE_READONLY);
+				     NOTMUCH_DATABASE_MODE_READ_ONLY);
     if (notmuch == NULL)
 	return 1;
 

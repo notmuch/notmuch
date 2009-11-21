@@ -172,7 +172,7 @@ _notmuch_message_create_for_message_id (notmuch_database_t *notmuch,
     unsigned int doc_id;
     char *term;
 
-    if (notmuch->mode == NOTMUCH_DATABASE_MODE_READONLY) {
+    if (notmuch->mode == NOTMUCH_DATABASE_MODE_READ_ONLY) {
 	*status_ret = NOTMUCH_PRIVATE_STATUS_READONLY_DATABASE;
 	return NULL;
     }
@@ -552,7 +552,7 @@ _notmuch_message_sync (notmuch_message_t *message)
 {
     Xapian::WritableDatabase *db;
 
-    if (message->notmuch->mode == NOTMUCH_DATABASE_MODE_READONLY)
+    if (message->notmuch->mode == NOTMUCH_DATABASE_MODE_READ_ONLY)
 	return;
 
     db = static_cast <Xapian::WritableDatabase *> (message->notmuch->xapian_db);
