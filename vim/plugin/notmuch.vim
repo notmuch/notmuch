@@ -90,7 +90,7 @@ let g:notmuch_search_maps = {
 
 " --- --- bindings for show screen {{{2
 let g:notmuch_show_maps = {
-        \ '<C-P>':      ':call <SID>NM_show_prev(1)<CR>',
+        \ '<C-P>':      ':call <SID>NM_show_previous(1)<CR>',
         \ '<C-N>':      ':call <SID>NM_show_next(1)<CR>',
         \ 'q':          ':call <SID>NM_kill_this_buffer()<CR>',
         \
@@ -301,7 +301,7 @@ function! s:NM_cmd_show(words)
 
 endfunction
 
-function! s:NM_show_prev(can_change_thread)
+function! s:NM_show_previous(can_change_thread)
         let info = b:nm_raw_info
         let lnum = line('.')
         for msg in reverse(copy(info['msgs']))
@@ -322,7 +322,7 @@ function! s:NM_show_prev(can_change_thread)
                 norm k
                 call <SID>NM_search_show_thread()
                 norm G
-                call <SID>NM_show_prev(0)
+                call <SID>NM_show_previous(0)
         else
                 echo 'No more messages.'
         endif
