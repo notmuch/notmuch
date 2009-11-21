@@ -86,6 +86,7 @@ typedef int notmuch_bool_t;
 typedef enum _notmuch_status {
     NOTMUCH_STATUS_SUCCESS = 0,
     NOTMUCH_STATUS_OUT_OF_MEMORY,
+    NOTMUCH_STATUS_READONLY_DATABASE,
     NOTMUCH_STATUS_XAPIAN_EXCEPTION,
     NOTMUCH_STATUS_FILE_ERROR,
     NOTMUCH_STATUS_FILE_NOT_EMAIL,
@@ -139,11 +140,18 @@ notmuch_database_create (const char *path);
 /* XXX: I think I'd like this to take an extra argument of
  * notmuch_status_t* for returning a status value on failure. */
 
+typedef enum {
+    NOTMUCH_DATABASE_MODE_READONLY = 0,
+    NOTMUCH_DATABASE_MODE_WRITABLE
+} notmuch_database_mode_t;
+
 /* Open an existing notmuch database located at 'path'.
  *
  * The database should have been created at some time in the past,
  * (not necessarily by this process), by calling
- * notmuch_database_create with 'path'.
+ * notmuch_database_create with 'path'. By default the database should be
+ * opened for reading only. In order to write to the database you need to
+ * pass the NOTMUCH_DATABASE_MODE_WRITABLE mode.
  *
  * An existing notmuch database can be identified by the presence of a
  * directory named ".notmuch" below 'path'.
@@ -155,7 +163,8 @@ notmuch_database_create (const char *path);
  * an error message on stderr).
  */
 notmuch_database_t *
-notmuch_database_open (const char *path);
+notmuch_database_open (const char *path,
+		       notmuch_database_mode_t mode);
 
 /* Close the given notmuch database, freeing all associated
  * resources. See notmuch_database_open. */

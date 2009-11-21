@@ -220,7 +220,8 @@ notmuch_show_command (void *ctx, unused (int argc), unused (char *argv[]))
 	return 1;
     }
 
-    notmuch = notmuch_database_open (notmuch_config_get_database_path (config));
+    notmuch = notmuch_database_open (notmuch_config_get_database_path (config),
+				     NOTMUCH_DATABASE_MODE_READONLY);
     if (notmuch == NULL)
 	return 1;
 

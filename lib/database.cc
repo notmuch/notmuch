@@ -172,6 +172,8 @@ notmuch_status_to_string (notmuch_status_t status)
 	return "No error occurred";
     case NOTMUCH_STATUS_OUT_OF_MEMORY:
 	return "Out of memory";
+    case NOTMUCH_STATUS_READONLY_DATABASE:
+	return "The database is read-only";
     case NOTMUCH_STATUS_XAPIAN_EXCEPTION:
 	return "A Xapian exception occurred";
     case NOTMUCH_STATUS_FILE_ERROR:
@@ -438,7 +440,8 @@ notmuch_database_create (const char *path)
 	goto DONE;
     }
 
-    notmuch = notmuch_database_open (path);
+    notmuch = notmuch_database_open (path,
+				     NOTMUCH_DATABASE_MODE_WRITABLE);
 
   DONE:
     if (notmuch_path)
@@ -448,7 +451,8 @@ notmuch_database_create (const char *path)
 }
 
 notmuch_database_t *
-notmuch_database_open (const char *path)
+notmuch_database_open (const char *path,
+		       notmuch_database_mode_t mode)
 {
     notmuch_database_t *notmuch = NULL;
     char *notmuch_path = NULL, *xapian_path = NULL;
@@ -481,9 +485,14 @@ notmuch_database_open (const char *path)
     if (notmuch->path[strlen (notmuch->path) - 1] == '/')
 	notmuch->path[strlen (notmuch->path) - 1] = '\0';
 
+    notmuch->mode = mode;
     try {
-	notmuch->xapian_db = new Xapian::WritableDatabase (xapian_path,
-							   Xapian::DB_CREATE_OR_OPEN);
+	if (mode == NOTMUCH_DATABASE_MODE_WRITABLE) {
+	    notmuch->xapian_db = new Xapian::WritableDatabase (xapian_path,
+							       Xapian::DB_CREATE_OR_OPEN);
+	} else {
+	    notmuch->xapian_db = new Xapian::Database (xapian_path);
+	}
 	notmuch->query_parser = new Xapian::QueryParser;
 	notmuch->term_gen = new Xapian::TermGenerator;
 	notmuch->term_gen->set_stemmer (Xapian::Stem ("english"));
@@ -521,7 +530,8 @@ notmuch_database_open (const char *path)
 void
 notmuch_database_close (notmuch_database_t *notmuch)
 {
-    notmuch->xapian_db->flush ();
+    if (notmuch->mode == NOTMUCH_DATABASE_MODE_WRITABLE)
+	(static_cast <Xapian::WritableDatabase *> (notmuch->xapian_db))->flush ();
 
     delete notmuch->term_gen;
     delete notmuch->query_parser;
@@ -567,11 +577,18 @@ notmuch_database_set_timestamp (notmuch_database_t *notmuch,
 				const char *key, time_t timestamp)
 {
     Xapian::Document doc;
+    Xapian::WritableDatabase *db;
     unsigned int doc_id;
     notmuch_private_status_t status;
     notmuch_status_t ret = NOTMUCH_STATUS_SUCCESS;
     char *db_key = NULL;
 
+    if (notmuch->mode == NOTMUCH_DATABASE_MODE_READONLY) {
+	fprintf (stderr, "Attempted to update a read-only database.\n");
+	return NOTMUCH_STATUS_READONLY_DATABASE;
+    }
+
+    db = static_cast <Xapian::WritableDatabase *> (notmuch->xapian_db);
     db_key = timestamp_db_key (key);
 
     try {
@@ -586,9 +603,9 @@ notmuch_database_set_timestamp (notmuch_database_t *notmuch,
 	    doc.add_term (term);
 	    talloc_free (term);
 
-	    notmuch->xapian_db->add_document (doc);
+	    db->add_document (doc);
 	} else {
-	    notmuch->xapian_db->replace_document (doc_id, doc);
+	    db->replace_document (doc_id, doc);
 	}
 
     } catch (Xapian::Error &error) {

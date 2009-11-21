@@ -27,7 +27,8 @@
 
 struct _notmuch_database {
     char *path;
-    Xapian::WritableDatabase *xapian_db;
+    notmuch_database_mode_t mode;
+    Xapian::Database *xapian_db;
     Xapian::QueryParser *query_parser;
     Xapian::TermGenerator *term_gen;
 };

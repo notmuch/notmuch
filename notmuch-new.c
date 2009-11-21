@@ -193,6 +193,7 @@ add_files_recursive (notmuch_database_t *notmuch,
 				 next);
 			break;
 		    /* Fatal issues. Don't process anymore. */
+		    case NOTMUCH_STATUS_READONLY_DATABASE:
 		    case NOTMUCH_STATUS_XAPIAN_EXCEPTION:
 		    case NOTMUCH_STATUS_OUT_OF_MEMORY:
 			fprintf (stderr, "Error: %s. Halting processing.\n",
@@ -412,7 +413,8 @@ notmuch_new_command (void *ctx,
 	add_files_state.ignore_read_only_directories = FALSE;
 	add_files_state.total_files = count;
     } else {
-	notmuch = notmuch_database_open (db_path);
+	notmuch = notmuch_database_open (db_path,
+					 NOTMUCH_DATABASE_MODE_READONLY);
 	add_files_state.ignore_read_only_directories = TRUE;
 	add_files_state.total_files = 0;
     }

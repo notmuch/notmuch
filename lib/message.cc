@@ -168,8 +168,14 @@ _notmuch_message_create_for_message_id (notmuch_database_t *notmuch,
 {
     notmuch_message_t *message;
     Xapian::Document doc;
+    Xapian::WritableDatabase *db;
     unsigned int doc_id;
     char *term;
+
+    if (notmuch->mode == NOTMUCH_DATABASE_MODE_READONLY) {
+	*status_ret = NOTMUCH_PRIVATE_STATUS_READONLY_DATABASE;
+	return NULL;
+    }
 
     *status_ret = NOTMUCH_PRIVATE_STATUS_SUCCESS;
 
@@ -184,13 +190,14 @@ _notmuch_message_create_for_message_id (notmuch_database_t *notmuch,
 	return NULL;
     }
 
+    db = static_cast<Xapian::WritableDatabase *> (notmuch->xapian_db);
     try {
 	doc.add_term (term);
 	talloc_free (term);
 
 	doc.add_value (NOTMUCH_VALUE_MESSAGE_ID, message_id);
 
-	doc_id = notmuch->xapian_db->add_document (doc);
+	doc_id = db->add_document (doc);
     } catch (const Xapian::Error &error) {
 	*status_ret = NOTMUCH_PRIVATE_STATUS_XAPIAN_EXCEPTION;
 	return NULL;
@@ -543,8 +550,12 @@ _notmuch_message_ensure_thread_id (notmuch_message_t *message)
 void
 _notmuch_message_sync (notmuch_message_t *message)
 {
-    Xapian::WritableDatabase *db = message->notmuch->xapian_db;
+    Xapian::WritableDatabase *db;
 
+    if (message->notmuch->mode == NOTMUCH_DATABASE_MODE_READONLY)
+	return;
+
+    db = static_cast <Xapian::WritableDatabase *> (message->notmuch->xapian_db);
     db->replace_document (message->doc_id, message->doc);
 }
 
