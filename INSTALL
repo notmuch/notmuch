@@ -14,6 +14,14 @@ Notmuch are satisfied. If they are not, the configure script will
 notice that and provide instructions on where to obtain the necessary
 dependencies.
 
+notmuch.el installation
+-----------------------
+Installing the notmuch.el emacs lisp function systemwide:
+
+	sudo make install-emacs
+
+Each user needs to add (require 'notmuch) in his ~/.emacs to activate it.
+
 Dependencies
 ------------
 Notmuch depends on three libraries: Xapian, GMime 2.4, and Talloc
