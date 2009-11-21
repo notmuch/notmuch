@@ -33,13 +33,6 @@ show_message_part (GMimeObject *part, int *part_count,
 	int i;
 
 	for (i = 0; i < g_mime_multipart_get_count (multipart); i++) {
-	    if (GMIME_IS_MULTIPART_SIGNED (multipart)) {
-		/* Don't index the signature. */
-		if (i == 1)
-		    continue;
-		if (i > 1)
-		    fprintf (stderr, "Warning: Unexpected extra parts of multipart/signed. Continuing.\n");
-	    }
 	    show_message_part (g_mime_multipart_get_part (multipart, i),
 			       part_count, show_part);
 	}
