@@ -207,9 +207,11 @@ notmuch_config_open (void *ctx,
 	    fprintf (stderr, "Error reading configuration file %s: %s\n",
 		     config->filename, error->message);
 	    talloc_free (config);
+	    g_error_free (error);
 	    return NULL;
 	}
 
+	g_error_free (error);
 	is_new = 1;
     }
 
@@ -308,6 +310,7 @@ notmuch_config_save (notmuch_config_t *config)
     if (! g_file_set_contents (config->filename, data, length, &error)) {
 	fprintf (stderr, "Error saving configuration to %s: %s\n",
 		 config->filename, error->message);
+	g_error_free (error);
 	return 1;
     }
 
