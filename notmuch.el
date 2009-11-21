@@ -811,6 +811,7 @@ thread from that buffer can be show when done with this one)."
     (define-key map "t" 'notmuch-search-filter-by-tag)
     (define-key map "x" 'kill-this-buffer)
     (define-key map (kbd "RET") 'notmuch-search-show-thread)
+    (define-key map [mouse-1] 'notmuch-search-show-thread)
     (define-key map "+" 'notmuch-search-add-tag)
     (define-key map "-" 'notmuch-search-remove-tag)
     (define-key map "<" 'beginning-of-buffer)
