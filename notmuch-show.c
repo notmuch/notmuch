@@ -67,11 +67,33 @@ _get_one_line_summary (void *ctx, notmuch_message_t *message)
 }
 
 static void
+show_part_content (GMimeObject *part)
+{
+    GMimeStream *stream_stdout = g_mime_stream_file_new (stdout);
+    GMimeStream *stream_filter = NULL;
+    GMimeDataWrapper *wrapper;
+
+    if (stream_stdout) {
+	g_mime_stream_file_set_owner (GMIME_STREAM_FILE (stream_stdout), FALSE);
+	stream_filter = g_mime_stream_filter_new(stream_stdout);
+	g_mime_stream_filter_add(GMIME_STREAM_FILTER(stream_filter),
+				 g_mime_filter_crlf_new(FALSE, FALSE));
+    }
+
+    wrapper = g_mime_part_get_content_object (GMIME_PART (part));
+    if (wrapper && stream_filter)
+	g_mime_data_wrapper_write_to_stream (wrapper, stream_filter);
+    if (stream_filter)
+	g_object_unref(stream_filter);
+    if (stream_stdout)
+	g_object_unref(stream_stdout);
+}
+
+static void
 show_part (GMimeObject *part, int *part_count)
 {
     GMimeContentDisposition *disposition;
     GMimeContentType *content_type;
-    GMimeDataWrapper *wrapper;
 
     disposition = g_mime_object_get_content_disposition (part);
     if (disposition &&
@@ -85,6 +107,13 @@ show_part (GMimeObject *part, int *part_count)
 		g_mime_content_type_to_string (content_type));
 	printf ("Attachment: %s (%s)\n", filename,
 		g_mime_content_type_to_string (content_type));
+
+	if (g_mime_content_type_is_type (content_type, "text", "*") &&
+	    !g_mime_content_type_is_type (content_type, "text", "html"))
+	{
+	    show_part_content (part);
+	}
+
 	printf ("\fattachment}\n");
 
 	return;
@@ -99,23 +128,7 @@ show_part (GMimeObject *part, int *part_count)
     if (g_mime_content_type_is_type (content_type, "text", "*") &&
 	!g_mime_content_type_is_type (content_type, "text", "html"))
     {
-	GMimeStream *stream_stdout = g_mime_stream_file_new (stdout);
-	GMimeStream *stream_filter = NULL;
-
-	if (stream_stdout) {
-	    g_mime_stream_file_set_owner (GMIME_STREAM_FILE (stream_stdout), FALSE);
-	    stream_filter = g_mime_stream_filter_new(stream_stdout);
-	    g_mime_stream_filter_add(GMIME_STREAM_FILTER(stream_filter),
-				     g_mime_filter_crlf_new(FALSE, FALSE));
-	}
-
-	wrapper = g_mime_part_get_content_object (GMIME_PART (part));
-	if (wrapper && stream_filter)
-	    g_mime_data_wrapper_write_to_stream (wrapper, stream_filter);
-	if (stream_filter)
-	    g_object_unref(stream_filter);
-	if (stream_stdout)
-	    g_object_unref(stream_stdout);
+	show_part_content (part);
     }
     else
     {
