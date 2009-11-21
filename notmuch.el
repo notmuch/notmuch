@@ -1074,4 +1074,85 @@ current search results AND that are tagged with the given tag."
 
 (setq mail-user-agent 'message-user-agent)
 
+(defvar notmuch-folder-mode-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map "n" 'next-line)
+    (define-key map "p" 'previous-line)
+    (define-key map "x" 'kill-this-buffer)
+    (define-key map "q" 'kill-this-buffer)
+    (define-key map "s" 'notmuch-search)
+    (define-key map (kbd "RET") 'notmuch-folder-show-search)
+    (define-key map "<" 'beginning-of-buffer)
+    (define-key map "=" 'notmuch-folder)
+    (define-key map "?" 'describe-mode)
+    (define-key map [mouse-1] 'notmuch-folder-show-search)
+    map)
+  "Keymap for \"notmuch folder\" buffers.")
+
+(fset 'notmuch-folder-mode-map notmuch-folder-mode-map)
+
+(defcustom notmuch-folders (quote (("inbox" . "tag:inbox") ("unread" . "tag:unread")))
+  "List of searches for the notmuch folder view"
+  :type '(alist :key-type (string) :value-type (string))
+  :group 'notmuch)
+
+(defun notmuch-folder-mode ()
+  "Major mode for showing notmuch 'folders'.
+
+This buffer contains a list of messages counts returned by a
+customizable set of searches of your email archives. Each line
+in the buffer shows the search terms and the resulting message count.
+
+Pressing RET on any line opens a search window containing the
+results for the search terms in that line.
+
+\\{notmuch-folder-mode-map}"
+  (interactive)
+  (kill-all-local-variables)
+  (use-local-map 'notmuch-folder-mode-map)
+  (setq truncate-lines t)
+  (hl-line-mode 1)
+  (setq major-mode 'notmuch-folder-mode
+	mode-name "notmuch-folder")
+  (setq buffer-read-only t))
+
+(defun notmuch-folder-add (folders)
+  (if folders
+      (let ((name (car (car folders)))
+	    (inhibit-read-only t)
+	    (search (cdr (car folders))))
+	(insert name)
+	(indent-to 16 1)
+	(call-process notmuch-command nil t nil "count" search)
+	(notmuch-folder-add (cdr folders)))))
+
+(defun notmuch-folder-find-name ()
+  (save-excursion
+    (beginning-of-line)
+    (let ((beg (point)))
+      (forward-word)
+      (filter-buffer-substring beg (point)))))
+
+(defun notmuch-folder-show-search (&optional folder)
+  "Show a search window for the search related to the specified folder."
+  (interactive)
+  (if (null folder)
+      (setq folder (notmuch-folder-find-name)))
+  (let ((search (assoc folder notmuch-folders)))
+    (if search
+	(notmuch-search (cdr search) t))))
+
+(defun notmuch-folder ()
+  "Show the notmuch folder view and update the displayed counts."
+  (interactive)
+  (let ((buffer (get-buffer-create "*notmuch-folders*")))
+    (switch-to-buffer buffer)
+    (let ((inhibit-read-only t)
+	  (n (line-number-at-pos)))
+      (erase-buffer)
+      (notmuch-folder-mode)
+      (notmuch-folder-add notmuch-folders)
+      (goto-char (point-min))
+      (goto-line n))))
+
 (provide 'notmuch)
