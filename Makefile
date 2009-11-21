@@ -10,7 +10,7 @@ extra_cxxflags := $(shell xapian-config --cxxflags)
 emacs_lispdir := $(shell pkg-config emacs --variable sitepkglispdir)
 # Hard-code if this system doesn't have an emacs.pc file
 ifeq ($(emacs_lispdir),)
-	emacs_lispdir = $(prefix)/share/site-lisp
+	emacs_lispdir = $(prefix)/share/emacs/site-lisp
 endif
 
 all_deps = Makefile Makefile.local Makefile.config \
