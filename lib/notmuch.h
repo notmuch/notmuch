@@ -139,7 +139,7 @@ notmuch_database_create (const char *path);
 
 typedef enum {
     NOTMUCH_DATABASE_MODE_READ_ONLY = 0,
-    NOTMUCH_DATABASE_MODE_READ_Write
+    NOTMUCH_DATABASE_MODE_READ_WRITE
 } notmuch_database_mode_t;
 
 /* XXX: I think I'd like this to take an extra argument of
