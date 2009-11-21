@@ -20,10 +20,10 @@ notmuch_client_srcs =		\
 
 notmuch_client_modules = $(notmuch_client_srcs:.c=.o)
 notmuch: $(notmuch_client_modules) lib/notmuch.a
-	$(CXX) $^ $(LDFLAGS) -o $@
+	$(call quiet,CXX) $^ $(LDFLAGS) -o $@
 
 notmuch.1.gz: notmuch.1
-	gzip --stdout notmuch.1 > notmuch.1.gz
+	$(call quiet,GZIP) --stdout $^ > $@
 
 install: all notmuch.1.gz
 	for d in $(DESTDIR)$(prefix)/bin/ $(DESTDIR)$(prefix)/share/man/man1 \

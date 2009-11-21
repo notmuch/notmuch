@@ -2,6 +2,10 @@
 WARN_FLAGS=-Wall -Wextra -Wmissing-declarations -Wwrite-strings -Wswitch-enum
 CFLAGS=-O2
 
+# Additional programs that are used during the compilation process.
+EMACS ?= emacs
+GZIP ?= gzip
+
 # Additional flags that we will append to whatever the user set.
 # These aren't intended for the user to manipulate.
 extra_cflags := $(shell pkg-config --cflags glib-2.0 gmime-2.4 talloc)
@@ -31,14 +35,27 @@ include lib/Makefile.local
 # And get user settings from the output of configure
 include Makefile.config
 
+# The user has not set any verbosity, default to quiet mode and inform the
+# user how to enable verbose compiles.
+ifeq ($(V),)
+quiet_DOC := "Use \"$(MAKE) V=1\" to see the verbose compile lines.\n"
+quiet = @echo $(quiet_DOC)$(eval quiet_DOC:=)"  $1	$@"; $($1)
+endif
+# The user has explicitly enabled quiet compilation.
+ifeq ($(V),0)
+quiet = @echo "  $1	$@"; $($1)
+endif
+# Otherwise, print the full command line.
+quiet ?= $($1)
+
 %.o: %.cc $(all_deps)
-	$(CXX) -c $(CXXFLAGS) $< -o $@
+	$(call quiet,CXX) -c $(CXXFLAGS) $< -o $@
 
 %.o: %.c $(all_deps)
-	$(CC) -c $(CFLAGS) $< -o $@
+	$(call quiet,CC) -c $(CFLAGS) $< -o $@
 
 %.elc: %.el
-	emacs -batch -f batch-byte-compile $<
+	$(call quiet,EMACS) -batch -f batch-byte-compile $<
 
 .deps/%.d: %.c $(all_deps)
 	@set -e; rm -f $@; mkdir -p $$(dirname $@) ; \

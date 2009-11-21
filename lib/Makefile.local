@@ -18,7 +18,7 @@ libnotmuch_cxx_srcs =		\
 
 libnotmuch_modules = $(libnotmuch_c_srcs:.c=.o) $(libnotmuch_cxx_srcs:.cc=.o)
 $(dir)/notmuch.a: $(libnotmuch_modules)
-	$(AR) rcs $@ $^
+	$(call quiet,AR) rcs $@ $^
 
 SRCS  := $(SRCS) $(libnotmuch_c_srcs) $(libnotmuch_cxx_srcs)
 CLEAN := $(CLEAN) $(libnotmuch_modules) $(dir)/notmuch.a
