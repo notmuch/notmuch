@@ -19,6 +19,34 @@
 ;
 ; Authors: Carl Worth <cworth@cworth.org>
 
+; This is an emacs-based interface to the notmuch mail system.
+;
+; You will first need to have the notmuch program installed and have a
+; notmuch database built in order to use this. See
+; http://notmuchmail.org for details.
+;
+; To install this software, copy it to a directory that is on the
+; `load-path' variable within emacs (a good candidate is
+; /usr/local/share/emacs/site-lisp). If you are viewing this from the
+; notmuch source distribution then you can simply run:
+;
+;	sudo make install-emacs
+;
+; to install it.
+;
+; Then, to actually run it, add:
+;
+;	(require 'notmuch)
+;
+; to your ~/.emacs file, and then run "M-x notmuch" from within emacs,
+; or run:
+;
+;	emacs -f notmuch
+;
+; Have fun, and let us know if you have any comment, questions, or
+; kudos: Notmuch list <notmuch@notmuchmail.org> (subscription is not
+; required, but is available from http://notmuchmail.org).
+
 (require 'cl)
 (require 'mm-view)
 

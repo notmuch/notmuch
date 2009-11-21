@@ -20,7 +20,9 @@ Installing the notmuch.el emacs lisp function systemwide:
 
 	sudo make install-emacs
 
-Each user needs to add (require 'notmuch) in his ~/.emacs to activate it.
+Each user needs to add (require 'notmuch) in his ~/.emacs to make it
+available and then start emacs running notmuch with "emacs -f notmuch"
+or start notmuch from within emacs with "M-x notmuch".
 
 Dependencies
 ------------
