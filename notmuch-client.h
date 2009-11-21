@@ -93,6 +93,9 @@ chomp_newline (char *str)
 }
 
 int
+notmuch_count_command (void *ctx, int argc, char *argv[]);
+
+int
 notmuch_dump_command (void *ctx, int argc, char *argv[]);
 
 int

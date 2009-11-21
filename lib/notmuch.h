@@ -468,6 +468,14 @@ notmuch_threads_advance (notmuch_threads_t *threads);
 void
 notmuch_threads_destroy (notmuch_threads_t *threads);
 
+/* Return an estimate of the number of messages matching a search
+ *
+ * This function performs a search and returns Xapian's best
+ * guess as to number of matching messages.
+ */
+unsigned
+notmuch_query_count_messages (notmuch_query_t *query);
+ 
 /* Get the thread ID of 'thread'.
  *
  * The returned string belongs to 'thread' and as such, should not be

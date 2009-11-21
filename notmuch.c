@@ -187,6 +187,17 @@ command_t commands[] = {
       "\n"
       "\t\tSee \"notmuch help search-terms\" for details of the search\n"
       "\t\tterms syntax." },
+    { "count", notmuch_count_command,
+      "<search-terms> [...]",
+      "\t\tCount messages matching the search terms.",
+      "\t\tThe number of matching messages is output to stdout.\n"
+      "\n"
+      "\t\tA common use of \"notmuch count\" is to display the count\n"
+      "\t\tof messages matching both a specific tag and either inbox\n"
+      "\t\tor unread\n"
+      "\n"
+      "\t\tSee \"notmuch help search-terms\" for details of the search\n"
+      "\t\tterms syntax." },
     { "reply", notmuch_reply_command,
       "<search-terms> [...]",
       "\t\tConstruct a reply template for a set of messages.",

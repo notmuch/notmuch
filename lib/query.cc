@@ -279,3 +279,55 @@ notmuch_threads_destroy (notmuch_threads_t *threads)
 {
     talloc_free (threads);
 }
+
+unsigned
+notmuch_query_count_messages (notmuch_query_t *query)
+{
+    notmuch_database_t *notmuch = query->notmuch;
+    const char *query_string = query->query_string;
+    Xapian::doccount count;
+
+    try {
+	Xapian::Enquire enquire (*notmuch->xapian_db);
+	Xapian::Query mail_query (talloc_asprintf (query, "%s%s",
+						   _find_prefix ("type"),
+						   "mail"));
+	Xapian::Query string_query, final_query;
+	Xapian::MSet mset;
+	unsigned int flags = (Xapian::QueryParser::FLAG_BOOLEAN |
+			      Xapian::QueryParser::FLAG_PHRASE |
+			      Xapian::QueryParser::FLAG_LOVEHATE |
+			      Xapian::QueryParser::FLAG_BOOLEAN_ANY_CASE |
+			      Xapian::QueryParser::FLAG_WILDCARD |
+			      Xapian::QueryParser::FLAG_PURE_NOT);
+
+	if (strcmp (query_string, "") == 0) {
+	    final_query = mail_query;
+	} else {
+	    string_query = notmuch->query_parser->
+		parse_query (query_string, flags);
+	    final_query = Xapian::Query (Xapian::Query::OP_AND,
+					 mail_query, string_query);
+	}
+
+	enquire.set_weighting_scheme(Xapian::BoolWeight());
+	enquire.set_docid_order(Xapian::Enquire::ASCENDING);
+
+#if DEBUG_QUERY
+	fprintf (stderr, "Final query is:\n%s\n", final_query.get_description().c_str());
+#endif
+
+	enquire.set_query (final_query);
+
+	mset = enquire.get_mset (0, notmuch->xapian_db->get_doccount ());
+
+	count = mset.get_matches_estimated();
+
+    } catch (const Xapian::Error &error) {
+	fprintf (stderr, "A Xapian exception occurred: %s\n",
+		 error.get_msg().c_str());
+	fprintf (stderr, "Query string was: %s\n", query->query_string);
+    }
+
+    return count;
+}
