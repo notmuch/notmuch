@@ -28,6 +28,11 @@ which are each described below:
 
 	Xapian is available from http://xapian.org
 
+	After installing Xapian, please ensure that you have a command
+	named "xapian-config" on your $PATH as notmuch expects. (At
+	least one notmuch user found that Xapian installed the config
+	program to /usr/local/bin/xapian-config-1.1 ).
+
 	GMime 2.4
 	---------
 	GMime 2.4 provides decoding of MIME email messages for Notmuch.
