@@ -479,8 +479,10 @@ function! s:NM_cmd_show_parse(inlines)
                                         if (outlnum - mode_start) > g:notmuch_show_signature_lines_max
                                                 let mode_type = ''
                                         elseif part_end
-                                                let foldinfo = [ mode_type, mode_start, outlnum,
-                                                               \ printf('[ %d-line signature.  Press "s" to show. ]', outlnum - mode_start) ]
+                                                if mode_start != outlnum
+                                                        let foldinfo = [ mode_type, mode_start, outlnum-1,
+                                                                       \ printf('[ %d-line signature.  Press "s" to show. ]', outlnum - mode_start) ]
+                                                endif
                                                 let mode_type = ''
                                         endif
                                 endif
@@ -534,7 +536,7 @@ function! s:NM_cmd_show_parse(inlines)
                                         let hdr_start = msg['hdr_start']+1
                                         let hdr_end = len(info['disp'])
                                         let foldinfo = [ 'hdr', hdr_start, hdr_end,
-                                               \ printf('[ %d-line headers.  Press "h" to show. ]', hdr_end - hdr_start) ]
+                                               \ printf('[ %d-line headers.  Press "h" to show. ]', hdr_end + 1 - hdr_start) ]
                                         let msg['header'] = hdr
                                         let in_header = 0
                                         let hdr = {}
