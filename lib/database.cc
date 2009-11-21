@@ -147,17 +147,20 @@ _find_prefix (const char *name)
 {
     unsigned int i;
 
-    for (i = 0; i < ARRAY_SIZE (BOOLEAN_PREFIX_INTERNAL); i++)
+    for (i = 0; i < ARRAY_SIZE (BOOLEAN_PREFIX_INTERNAL); i++) {
 	if (strcmp (name, BOOLEAN_PREFIX_INTERNAL[i].name) == 0)
 	    return BOOLEAN_PREFIX_INTERNAL[i].prefix;
+    }
 
-    for (i = 0; i < ARRAY_SIZE (BOOLEAN_PREFIX_EXTERNAL); i++)
+    for (i = 0; i < ARRAY_SIZE (BOOLEAN_PREFIX_EXTERNAL); i++) {
 	if (strcmp (name, BOOLEAN_PREFIX_EXTERNAL[i].name) == 0)
 	    return BOOLEAN_PREFIX_EXTERNAL[i].prefix;
+    }
 
-    for (i = 0; i < ARRAY_SIZE (PROBABILISTIC_PREFIX); i++)
+    for (i = 0; i < ARRAY_SIZE (PROBABILISTIC_PREFIX); i++) {
 	if (strcmp (name, PROBABILISTIC_PREFIX[i].name) == 0)
 	    return PROBABILISTIC_PREFIX[i].prefix;
+    }
 
     INTERNAL_ERROR ("No prefix exists for '%s'\n", name);
 
@@ -295,13 +298,14 @@ skip_space_and_comments (const char **str)
 	    int nesting = 1;
 	    s++;
 	    while (*s && nesting) {
-		if (*s == '(')
+		if (*s == '(') {
 		    nesting++;
-		else if (*s == ')')
+		} else if (*s == ')') {
 		    nesting--;
-		else if (*s == '\\')
+		} else if (*s == '\\') {
 		    if (*(s+1))
 			s++;
+		}
 		s++;
 	    }
 	}
@@ -518,7 +522,7 @@ notmuch_database_open (const char *path,
 		 error.get_msg().c_str());
 	notmuch = NULL;
     }
-    
+
   DONE:
     if (notmuch_path)
 	free (notmuch_path);
