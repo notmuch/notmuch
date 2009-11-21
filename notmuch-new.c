@@ -101,7 +101,6 @@ static int ino_cmp(const struct dirent **a, const struct dirent **b)
 static notmuch_status_t
 add_files_recursive (notmuch_database_t *notmuch,
 		     const char *path,
-		     const char *tag,
 		     struct stat *st,
 		     add_files_state_t *state)
 {
@@ -184,7 +183,6 @@ add_files_recursive (notmuch_database_t *notmuch,
 		    case NOTMUCH_STATUS_SUCCESS:
 			state->added_messages++;
 			tag_inbox_and_unread (message);
-			notmuch_message_add_tag (message, tag);
 			break;
 		    /* Non-fatal issues (go on to next file) */
 		    case NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID:
@@ -222,13 +220,7 @@ add_files_recursive (notmuch_database_t *notmuch,
 		}
 	    }
 	} else if (S_ISDIR (st->st_mode)) {
-		if ((strcmp (entry->d_name, "cur") == 0) ||
-			(strcmp (entry->d_name, "new") == 0) ||
-			(strcmp (entry->d_name, "tmp") == 0)) {
-			status = add_files_recursive (notmuch, next, tag, st, state);
-		} else {
-			status = add_files_recursive (notmuch, next, entry->d_name, st, state);
-		}
+	    status = add_files_recursive (notmuch, next, st, state);
 	    if (status && ret == NOTMUCH_STATUS_SUCCESS)
 		ret = status;
 	}
@@ -292,7 +284,7 @@ add_files (notmuch_database_t *notmuch,
     timerval.it_value.tv_usec = 0;
     setitimer (ITIMER_REAL, &timerval, NULL);
 
-    status = add_files_recursive (notmuch, path, basename(path), &st, state);
+    status = add_files_recursive (notmuch, path, &st, state);
 
     /* Now stop the timer. */
     timerval.it_interval.tv_sec = 0;
