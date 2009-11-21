@@ -4,4 +4,4 @@ Exec=emacs -f notmuch
 Icon=emblem-mail
 Terminal=false
 Type=Application
-Categories=Network;Email
+Categories=Network;Email;
