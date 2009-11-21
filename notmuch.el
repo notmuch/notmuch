@@ -309,7 +309,8 @@ The given command will be executed with the raw contents of the
 current email message as stdin. Anything printed by the command
 to stdout or stderr will appear in the *Messages* buffer."
   (interactive "sPipe message to command: ")
-  (apply 'start-process-shell-command "notmuch-pipe-command" "*notmuch-pipe*" (split-string (concat command " < " (notmuch-show-get-filename)))))
+  (apply 'start-process-shell-command "notmuch-pipe-command" "*notmuch-pipe*"
+	 (list command " < " (shell-quote-argument (notmuch-show-get-filename)))))
 
 (defun notmuch-show-move-to-current-message-summary-line ()
   "Move to the beginning of the one-line summary of the current message.
