@@ -107,8 +107,8 @@ command_t commands[] = {
       "\t\tInvoking notmuch with no command argument will run setup if\n"
       "\t\tthe setup command has not previously been completed." },
     { "new", notmuch_new_command,
-      NULL,
-      "Find and import new messages to the notmuch database.",
+      "[--verbose]",
+      "\t\tFind and import new messages to the notmuch database.",
       "\t\tScans all sub-directories of the mail directory, performing\n"
       "\t\tfull-text indexing on new messages that are found. Each new\n"
       "\t\tmessage will be tagged as both \"inbox\" and \"unread\".\n"
@@ -121,6 +121,13 @@ command_t commands[] = {
       "\t\tSubsequently, you should run \"notmuch new\" whenever new mail\n"
       "\t\tis delivered and you wish to incorporate it into the database.\n"
       "\t\tThese subsequent runs will be much quicker than the initial run.\n"
+      "\n"
+      "\t\tSupported options for new include:\n"
+      "\n"
+      "\t\t--verbose\n"
+      "\n"
+      "\t\t\tVerbose operation. Shows paths of message files as\n"
+      "\t\t\tthey are being indexed.\n"
       "\n"
       "\t\tNote: \"notmuch new\" runs (other than the first run) will\n"
       "\t\tskip any read-only directories, so you can use that to mark\n"

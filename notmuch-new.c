@@ -179,6 +179,14 @@ add_files_recursive (notmuch_database_t *notmuch,
 	    if (path_dbtime == 0 || st->st_mtime > path_dbtime) {
 		state->processed_files++;
 
+		if (state->verbose) {
+		    printf ("\r\033[K%i/%i: %s\r",
+			    state->processed_files,
+			    state->total_files,
+			    next);
+		    fflush (stdout);
+		}
+
 		status = notmuch_database_add_message (notmuch, next, &message);
 		switch (status) {
 		    /* success */
@@ -274,8 +282,10 @@ add_files (notmuch_database_t *notmuch,
 	return NOTMUCH_STATUS_FILE_ERROR;
     }
 
-    /* Setup our handler for SIGALRM */
-    if (isatty (fileno (stdout)) && ! debugger_is_active ()) {
+    if (isatty (fileno (stdout)) && ! debugger_is_active ()
+	&& ! state->verbose)
+    {
+	/* Setup our handler for SIGALRM */
 	memset (&action, 0, sizeof (struct sigaction));
 	action.sa_handler = handle_sigalrm;
 	sigemptyset (&action.sa_mask);
@@ -294,8 +304,8 @@ add_files (notmuch_database_t *notmuch,
 
     status = add_files_recursive (notmuch, path, &st, state);
 
-    /* Now stop the timer. */
     if (timer_is_active) {
+	/* Now stop the timer. */
 	timerval.it_interval.tv_sec = 0;
 	timerval.it_interval.tv_usec = 0;
 	timerval.it_value.tv_sec = 0;
@@ -380,8 +390,7 @@ count_files (const char *path, int *count)
 }
 
 int
-notmuch_new_command (void *ctx,
-		     unused (int argc), unused (char *argv[]))
+notmuch_new_command (void *ctx, int argc, char *argv[])
 {
     notmuch_config_t *config;
     notmuch_database_t *notmuch;
@@ -393,6 +402,18 @@ notmuch_new_command (void *ctx,
     const char *db_path;
     char *dot_notmuch_path;
     struct sigaction action;
+    int i;
+
+    add_files_state.verbose = 0;
+
+    for (i = 0; i < argc && argv[i][0] == '-'; i++) {
+	if (STRNCMP_LITERAL (argv[i], "--verbose") == 0) {
+	    add_files_state.verbose = 1;
+	} else {
+	    fprintf (stderr, "Unrecognized option: %s\n", argv[i]);
+	    return 1;
+	}
+    }
 
     /* Setup our handler for SIGINT */
     memset (&action, 0, sizeof (struct sigaction));
