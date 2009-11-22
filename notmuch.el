@@ -483,7 +483,8 @@ which this thread was originally shown."
             (remove-from-invisibility-spec invis-spec)
           (add-to-invisibility-spec invis-spec)
           ))
-  (goto-char (button-end cite-button)))
+  (force-window-update)
+  (redisplay t))
 
 (defun notmuch-show-markup-citations-region (beg end depth)
   (goto-char beg)
