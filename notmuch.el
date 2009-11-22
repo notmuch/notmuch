@@ -512,8 +512,9 @@ which this thread was originally shown."
                 (let ((cite-button (insert-button cite-button-text)))
                   (button-put cite-button 'invisibility-spec invis-spec)
                   (button-put cite-button 'action 'notmuch-toggle-invisible-action)
+                  (button-put cite-button 'follow-link t)
                   (button-put cite-button 'help-echo
-                              "mouse-2, RET: Show citation")
+                              "mouse-1, RET: Show citation")
 
                   )
                 (insert "\n")
@@ -537,8 +538,9 @@ which this thread was originally shown."
                       (button-put sig-button 'invisibility-spec invis-spec)
                       (button-put sig-button 'action
                                   'notmuch-toggle-invisible-action)
+                      (button-put sig-button 'follow-link t)
                       (button-put sig-button 'help-echo
-                                  "mouse-2, RET: Show signature")
+                                  "mouse-1, RET: Show signature")
                       )
                     (insert "\n")
                     (goto-char end))))))
