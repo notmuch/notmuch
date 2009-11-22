@@ -104,6 +104,7 @@ let g:notmuch_search_maps = {
         \ '+':          ':call <SID>NM_search_add_tags([])<CR>',
         \ '-':          ':call <SID>NM_search_remove_tags([])<CR>',
         \ '=':          ':call <SID>NM_search_refresh_view()<CR>',
+        \ '?':          ':echo <SID>NM_search_thread_id()<CR>',
         \ }
 
 " --- --- bindings for show screen {{{2
@@ -129,6 +130,7 @@ let g:notmuch_show_maps = {
         \
         \ 'r':          ':call <SID>NM_show_reply()<CR>',
         \ 'm':          ':call <SID>NM_new_mail()<CR>',
+        \ '?':          ':echo <SID>NM_show_thread_id() . '' '' . <SID>NM_show_message_id()<CR>',
         \ }
 
 
@@ -226,7 +228,7 @@ endfunction
 " --- --- search screen action functions {{{2
 
 function! s:NM_search_show_thread()
-        let id = <SID>NM_search_find_thread_id()
+        let id = <SID>NM_search_thread_id()
         if id != ''
                 call <SID>NM_cmd_show([id])
         endif
@@ -324,7 +326,7 @@ endfunction
 
 " --- --- search screen helper functions {{{2
 
-function! s:NM_search_find_thread_id()
+function! s:NM_search_thread_id()
         if !exists('b:nm_raw_lines')
                 echoe 'no b:nm_raw_lines'
                 return ''
@@ -363,6 +365,7 @@ function! s:NM_cmd_show(words)
         setlocal bufhidden=hide
         call <SID>NM_newBuffer('show', join(info['disp'], "\n"))
         setlocal bufhidden=delete
+        let b:nm_words = a:words
         let b:nm_raw_info = info
         let b:nm_prev_bufnr = prev_bufnr
 
@@ -475,7 +478,32 @@ function! s:NM_show_pipe_message()
         echo 'not implemented'
 endfunction
 
-" --- --- search screen helper functions {{{2
+" --- --- show screen helper functions {{{2
+
+function! s:NM_show_thread_id()
+        if !exists('b:nm_words')
+                echoe 'no b:nm_words'
+                return ''
+        endif
+        return b:nm_words[0]
+endfunction
+
+function! s:NM_show_message_id()
+        if !exists('b:nm_raw_info')
+                echoe 'no b:nm_raw_info'
+                return ''
+        endif
+        let info = b:nm_raw_info
+        let lnum = line('.')
+        for msg in info['msgs']
+                if lnum < msg['start']
+                        continue
+                endif
+
+                return msg['id']
+        endfor
+        return ''
+endfunction
 
 function! s:NM_show_fold_toggle(key, type, fold)
         let info = b:nm_raw_info
@@ -766,7 +794,7 @@ function! s:NM_search_expand(arg)
 endfunction
 
 function! s:NM_add_remove_tags(prefix, tags)
-        let id = <SID>NM_search_find_thread_id()
+        let id = <SID>NM_search_thread_id()
         if id == ''
                 echoe 'Eeek! I couldn''t find the thead id!'
         endif

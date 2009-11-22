@@ -36,6 +36,7 @@ Buffer types:
             +       - add tag(s) to selected message
             -       - remove tag(s) from selected message
             =       - refresh display
+            ?       - reveal the thread ID of what's under cursor
             ^]      - search using word under cursor
 
     [notmuch-show]
@@ -49,5 +50,6 @@ Buffer types:
             h       - toggle folding of extra header lines
             s       - toggle folding of signatures
             q       - return to search display
+            ?       - reveal the message and thread IDs of what's under cursor
             ^]      - search using word under cursor
 
