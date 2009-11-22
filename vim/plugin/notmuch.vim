@@ -91,6 +91,7 @@ let g:notmuch_folders_maps = {
 " --- --- bindings for search screen {{{2
 let g:notmuch_search_maps = {
         \ '<Enter>':    ':call <SID>NM_search_show_thread()<CR>',
+        \ '<C-]>':      ':call <SID>NM_search_expand(''<cword>'')<CR>',
         \ 'a':          ':call <SID>NM_search_archive_thread()<CR>',
         \ 'f':          ':call <SID>NM_search_filter()<CR>',
         \ 'm':          ':call <SID>NM_new_mail()<CR>',
@@ -109,6 +110,7 @@ let g:notmuch_search_maps = {
 let g:notmuch_show_maps = {
         \ '<C-P>':      ':call <SID>NM_show_previous(1)<CR>',
         \ '<C-N>':      ':call <SID>NM_show_next(1)<CR>',
+        \ '<C-]>':      ':call <SID>NM_search_expand(''<cword>'')<CR>',
         \ 'q':          ':call <SID>NM_kill_this_buffer()<CR>',
         \
         \ 'b':          ':call <SID>NM_show_fold_toggle(''b'', ''bdy'', !g:notmuch_show_fold_bodies)<CR>',
@@ -756,6 +758,15 @@ function! s:NM_kill_this_buffer()
         else
                 echo "Nothing to kill."
         endif
+endfunction
+
+function! s:NM_search_expand(arg)
+        let word = expand(a:arg)
+        let prev_bufnr = bufnr('%')
+        setlocal bufhidden=hide
+        call <SID>NM_cmd_search([word])
+        setlocal bufhidden=delete
+        let b:nm_prev_bufnr = prev_bufnr
 endfunction
 
 function! s:NM_add_remove_tags(prefix, tags)
