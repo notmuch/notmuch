@@ -553,7 +553,7 @@ which this thread was originally shown."
   (let ((beg (point-marker)))
     (end-of-line)
     ; Inverse video for subject
-    (overlay-put (make-overlay beg (point)) 'face '((cons :inverse-video t)))
+    (overlay-put (make-overlay beg (point)) 'face '(:inverse-video t))
     (forward-line 2)
     (let ((beg-hidden (point-marker)))
       (re-search-forward notmuch-show-header-end-regexp)
