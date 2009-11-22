@@ -72,12 +72,19 @@ show_part_content (GMimeObject *part)
     GMimeStream *stream_stdout = g_mime_stream_file_new (stdout);
     GMimeStream *stream_filter = NULL;
     GMimeDataWrapper *wrapper;
+    const char *charset;
+
+    charset = g_mime_object_get_content_type_parameter (part, "charset");
 
     if (stream_stdout) {
 	g_mime_stream_file_set_owner (GMIME_STREAM_FILE (stream_stdout), FALSE);
 	stream_filter = g_mime_stream_filter_new(stream_stdout);
 	g_mime_stream_filter_add(GMIME_STREAM_FILTER(stream_filter),
 				 g_mime_filter_crlf_new(FALSE, FALSE));
+        if (charset) {
+          g_mime_stream_filter_add(GMIME_STREAM_FILTER(stream_filter),
+                                   g_mime_filter_charset_new(charset, "UTF-8"));
+        }
     }
 
     wrapper = g_mime_part_get_content_object (GMIME_PART (part));
