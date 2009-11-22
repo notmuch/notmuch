@@ -477,6 +477,15 @@ which this thread was originally shown."
 	(if last
 	    (notmuch-show-archive-thread))))))
 
+(defun notmuch-toggle-invisible-action (cite-button)
+  (let ((invis-spec (button-get button 'invisibility-spec)))
+        (if (invisible-p invis-spec)
+            (remove-from-invisibility-spec invis-spec)
+          (add-to-invisibility-spec invis-spec)
+          ))
+  (force-window-update)
+  (redisplay t))
+
 (defun notmuch-show-markup-citations-region (beg end depth)
   (goto-char beg)
   (beginning-of-line)
@@ -488,25 +497,53 @@ which this thread was originally shown."
 	  (progn
 	    (while (looking-at citation)
 	      (forward-line))
-	    (let ((overlay (make-overlay beg-sub (point))))
-	      (overlay-put overlay 'invisible 'notmuch-show-citation)
-	      (overlay-put overlay 'before-string
-			   (concat indent
-				   "[" (number-to-string (count-lines beg-sub (point)))
-				   "-line citation. Press 'c' to show.]\n")))))
+	    (let ((overlay (make-overlay beg-sub (point)))
+                  (invis-spec (make-symbol "notmuch-citation-region")))
+              (add-to-invisibility-spec invis-spec)
+	      (overlay-put overlay 'invisible invis-spec)
+              (let (
+                    (p (point))
+                    (cite-button-text
+                     (concat "["  (number-to-string (count-lines beg-sub (point)))
+                             "-line citation.]"))
+                    )
+                (goto-char (- beg-sub 1))
+                (insert (concat "\n" indent))
+                (let ((cite-button (insert-button cite-button-text)))
+                  (button-put cite-button 'invisibility-spec invis-spec)
+                  (button-put cite-button 'action 'notmuch-toggle-invisible-action)
+                  (button-put cite-button 'follow-link t)
+                  (button-put cite-button 'help-echo
+                              "mouse-1, RET: Show citation")
+
+                  )
+                (insert "\n")
+                (goto-char (+ (length cite-button-text) p))
+              ))))
       (move-to-column depth)
       (if (looking-at notmuch-show-signature-regexp)
 	  (let ((sig-lines (- (count-lines beg-sub end) 1)))
 	    (if (<= sig-lines notmuch-show-signature-lines-max)
 		(progn
-		  (overlay-put (make-overlay beg-sub end)
-			       'invisible 'notmuch-show-signature)
-		  (overlay-put (make-overlay beg (- beg-sub 1))
-			       'after-string
-			       (concat "\n" indent
-				       "[" (number-to-string sig-lines)
-				       "-line signature. Press 's' to show.]"))
-		  (goto-char end)))))
+                  (let ((invis-spec (make-symbol "notmuch-signature-region")))
+                    (add-to-invisibility-spec invis-spec)
+                    (overlay-put (make-overlay beg-sub end)
+                                 'invisible invis-spec)
+                  
+                    (goto-char (- beg-sub 1))
+                    (insert (concat "\n" indent))
+                    (let ((sig-button (insert-button 
+                                       (concat "[" (number-to-string sig-lines)
+                                         "-line signature.]"))))
+                      (button-put sig-button 'invisibility-spec invis-spec)
+                      (button-put sig-button 'action
+                                  'notmuch-toggle-invisible-action)
+                      (button-put sig-button 'follow-link t)
+                      (button-put sig-button 'help-echo
+                                  "mouse-1, RET: Show signature")
+                      )
+                    (insert "\n")
+                    (goto-char end))))))
       (forward-line))))
 
 (defun notmuch-show-markup-part (beg end depth)
@@ -559,9 +596,19 @@ which this thread was originally shown."
       (re-search-forward notmuch-show-header-end-regexp)
       (beginning-of-line)
       (let ((end (point-marker)))
+        (goto-char beg)
+        (forward-line)
+        (while (looking-at "[A-Za-z][-A-Za-z0-9]*:")
+          (beginning-of-line)
+          (overlay-put (make-overlay (point) (re-search-forward ":"))
+                       'face 'bold)
+          (forward-line)
+          )
 	(indent-rigidly beg end depth)
 	(overlay-put (make-overlay beg-hidden end)
 		     'invisible 'notmuch-show-header)
+        (goto-char end)
+        (insert "\n")
 	(set-marker beg nil)
 	(set-marker beg-hidden nil)
 	(set-marker end nil)
