@@ -411,10 +411,14 @@ _notmuch_message_set_filename (notmuch_message_t *message,
     db_path = notmuch_database_get_path (message->notmuch);
     db_path_len = strlen (db_path);
 
-    if (*s == '/' && strncmp (s, db_path, db_path_len) == 0
-	&& strlen (s) > db_path_len)
+    if (*s == '/' && strlen (s) > db_path_len
+	&& strncmp (s, db_path, db_path_len) == 0)
     {
-	s += db_path_len + 1;
+	s += db_path_len;
+	while (*s == '/') s++;
+
+	if (!*s)
+		INTERNAL_ERROR ("Message filename was same as db prefix.");
     }
 
     message->doc.set_data (s);
