@@ -123,11 +123,8 @@ function! s:NM_cmd_search(words)
                 let cmd = cmd + ['--sort=oldest-first']
         endif
         let data = s:NM_run(cmd + a:words)
-        "let data = substitute(data, '27/27', '25/27', '')
-        "let data = substitute(data, '\[4/4\]', '[0/4]', '')
         let lines = split(data, "\n")
         let disp = copy(lines)
-        "call map(disp, 'substitute(v:val, "^thread:\\S* ", "", "")' )
         call map(disp, 's:NM_cmd_search_fmtline(v:val)')
 
         call <SID>NM_newBuffer('search', join(disp, "\n"))
