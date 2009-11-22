@@ -1,5 +1,26 @@
+Fix the things that are causing the most pain to new users
+----------------------------------------------------------
+1. A new import is tagging all messages as "inbox" -- total pain
+
+2. Allow an easy way to get tags from directory names (if the user has them)
+
+3. Allow an easy way to remove excess tags, (date-based search)
+
+4. Make emacs fast for big search results (see "lazy searching" below)
+
+5. Fix Xapian defect #250 so tagging is fast.
+
 Emacs interface (notmuch.el)
 ----------------------------
+Add a command to archive all threads in a search view.
+
+Lazy searching: call "notmuch search" with --first and --max to fill
+just a screenful of results, and then fill in more as ther user pages
+through the buffer.
+
+Add a '|' binding from the search view.
+
+Add a binding to run a search from notmuch-show-mode.
 
 Portability
 -----------
@@ -17,6 +38,21 @@ and *then* --max-threads), and also complete value for --sort=
 
 notmuch command-line tool
 -------------------------
+Teach "notmuch search" to return many different kinds of results. Some
+ideas:
+
+	notmuch search --for threads	# Default if no --for is given
+	notmuch search --for messages
+	notmuch search --for tags
+	notmuch search --for addresses
+	notmuch search --for terms
+
+Add a "--format" option to "notmuch search", (something printf-like
+for selecting what gets printed).
+
+Add a "--count-only" (or so?) option to "notmuch search" for returning
+the count of search results.
+
 Give "notmuch restore" some progress indicator. Until we get the
 Xapian bugs fixed that are making this operation slow, we really need
 to let the user know that things are still moving.
