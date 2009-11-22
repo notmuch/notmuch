@@ -542,10 +542,8 @@ function! s:NM_cmd_show_parse(inlines)
                                 elseif mode_type == 'cit'
                                         if part_end || match(line, g:notmuch_show_citation_regexp) == -1
                                                 let outlnum = len(info['disp'])
-                                                if mode_start != outlnum
-                                                        let foldinfo = [ mode_type, mode_start, outlnum-1,
-                                                                       \ printf('[ %d-line citation.  Press "c" to show. ]', outlnum - mode_start) ]
-                                                endif
+                                                let foldinfo = [ mode_type, mode_start, outlnum-1,
+                                                               \ printf('[ %d-line citation.  Press "c" to show. ]', outlnum - mode_start) ]
                                                 let mode_type = ''
                                         endif
                                 elseif mode_type == 'sig'
@@ -553,10 +551,8 @@ function! s:NM_cmd_show_parse(inlines)
                                         if (outlnum - mode_start) > g:notmuch_show_signature_lines_max
                                                 let mode_type = ''
                                         elseif part_end
-                                                if mode_start != outlnum
-                                                        let foldinfo = [ mode_type, mode_start, outlnum-1,
-                                                                       \ printf('[ %d-line signature.  Press "s" to show. ]', outlnum - mode_start) ]
-                                                endif
+                                                let foldinfo = [ mode_type, mode_start, outlnum-1,
+                                                               \ printf('[ %d-line signature.  Press "s" to show. ]', outlnum - mode_start) ]
                                                 let mode_type = ''
                                         endif
                                 endif
@@ -565,7 +561,7 @@ function! s:NM_cmd_show_parse(inlines)
                         if part_end
                                 " FIXME: this is a hack for handling two folds being added for one line
                                 "         we should handle addinga fold in a function
-                                if len(foldinfo)
+                                if len(foldinfo) && foldinfo[1] < foldinfo[2]
                                         call add(info['folds'], foldinfo[0:2])
                                         let info['foldtext'][foldinfo[1]] = foldinfo[3]
                                 endif
@@ -665,7 +661,7 @@ function! s:NM_cmd_show_parse(inlines)
                         endif
                 endif
 
-                if len(foldinfo)
+                if len(foldinfo) && foldinfo[1] < foldinfo[2]
                         call add(info['folds'], foldinfo[0:2])
                         let info['foldtext'][foldinfo[1]] = foldinfo[3]
                 endif
