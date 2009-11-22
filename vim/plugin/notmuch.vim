@@ -242,13 +242,13 @@ function! s:NM_search_prompt()
         else
                 let tags = s:notmuch_initial_search_words_defaults
         endif
+        let prev_bufnr = bufnr('%')
         if b:nm_type == 'search'
                 " TODO: we intend to replace the current buffer,
                 "       ... maybe we could just clear it
                 let prev_bufnr = b:nm_prev_bufnr
                 setlocal bufhidden=delete
         else
-                let prev_bufnr = bufnr('%')
                 setlocal bufhidden=hide
         endif
         call <SID>NM_cmd_search(tags)
@@ -288,7 +288,6 @@ function! s:NM_search_filter_helper(prompt, prefix)
         let tags = split(text)
         map(tags, 'and a:prefix . v:val')
         let tags = b:nm_search_words + tags
-        echo tags
 
         let prev_bufnr = bufnr('%')
         setlocal bufhidden=hide
@@ -780,7 +779,7 @@ function! s:NM_kill_this_buffer()
                 setlocal bufhidden=delete
                 exec printf(":buffer %d", b:nm_prev_bufnr)
         else
-                echo "Nothing to kill."
+                echo "This is the last buffer; use :q<CR> to quit."
         endif
 endfunction
 
