@@ -513,7 +513,7 @@ notmuch_database_open (const char *path,
 	    notmuch->query_parser->add_prefix (prefix->name, prefix->prefix);
 	}
     } catch (const Xapian::Error &error) {
-	fprintf (stderr, "A Xapian exception occurred: %s\n",
+	fprintf (stderr, "A Xapian exception occurred opening database: %s\n",
 		 error.get_msg().c_str());
 	notmuch = NULL;
     }
@@ -608,8 +608,8 @@ notmuch_database_set_timestamp (notmuch_database_t *notmuch,
 	    db->replace_document (doc_id, doc);
 	}
 
-    } catch (Xapian::Error &error) {
-	fprintf (stderr, "A Xapian exception occurred: %s.\n",
+    } catch (const Xapian::Error &error) {
+	fprintf (stderr, "A Xapian exception occurred setting timestamp: %s.\n",
 		 error.get_msg().c_str());
 	ret = NOTMUCH_STATUS_XAPIAN_EXCEPTION;
     }
@@ -983,8 +983,8 @@ notmuch_database_add_message (notmuch_database_t *notmuch,
 
 	_notmuch_message_sync (message);
     } catch (const Xapian::Error &error) {
-	fprintf (stderr, "A Xapian exception occurred: %s.\n",
-		 error.get_msg().c_str());
+	fprintf (stderr, "A Xapian exception occurred adding message: %s.\n",
+		 error.get_description().c_str());
 	ret = NOTMUCH_STATUS_XAPIAN_EXCEPTION;
 	goto DONE;
     }
