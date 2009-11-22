@@ -69,7 +69,25 @@ let s:notmuch_show_headers_defaults = [
         \ 'Date',
         \ ]
 
+" defaults for g:notmuch_folders
+" override with: let g:notmuch_folders = [ ... ]
+let s:notmuch_folders_defaults = [
+        \ [ 'new',    'tag:inbox and tag:unread' ],
+        \ [ 'inbox',  'tag:inbox'                ],
+        \ [ 'unread', 'tag:unread'               ],
+        \ ]
+
 " --- keyboard mapping definitions {{{1
+
+" --- --- bindings for folders mode {{{2
+
+let g:notmuch_folders_maps = {
+        \ 's':          ':call <SID>NM_folders_notmuch_search()<CR>',
+        \ 'q':          ':call <SID>NM_kill_this_buffer()<CR>',
+        \ '<':          ':call <SID>NM_folders_beginning_of_buffer()<CR>',
+        \ '=':          ':call <SID>NM_folders_refresh_view()<CR>',
+        \ '<Enter>':    ':call <SID>NM_folders_show_search()<CR>',
+        \ }
 
 " --- --- bindings for search screen {{{2
 let g:notmuch_search_maps = {
@@ -111,6 +129,66 @@ let g:notmuch_show_maps = {
         \ 'r':          ':call <SID>NM_show_reply()<CR>',
         \ 'm':          ':call <SID>NM_new_mail()<CR>',
         \ }
+
+
+" --- implement folders screen {{{1
+
+function! s:NM_cmd_folders(words)
+        if len(a:words)
+                echoe 'Not exapecting any arguments for folders command.'
+        endif
+        let cmd = ['count']
+        let disp = []
+        let searches = []
+        for entry in g:notmuch_folders
+                let [ name, search ] = entry
+                let data = s:NM_run(cmd + [search])
+                let cnt = matchlist(data, '\(\d\+\)')[1]
+                call add(disp, printf('%9d %-20s (%s)', cnt, name, search))
+                call add(searches, search)
+        endfor
+
+        call <SID>NM_newBuffer('folders', join(disp, "\n"))
+        let b:nm_searches = searches
+        let b:nm_timestamp = reltime()
+
+        call <SID>NM_cmd_folders_mksyntax()
+        call <SID>NM_set_map(g:notmuch_folders_maps)
+        setlocal cursorline
+        setlocal nowrap
+endfunction
+
+function! s:NM_cmd_folders_mksyntax()
+endfunction
+
+" --- --- folders screen action functions {{{2
+
+function! s:NM_folders_notmuch_search()
+        echo 'not implemented'
+endfunction
+
+function! s:NM_kill_this_buffer()
+        echo 'not implemented'
+endfunction
+
+function! s:NM_folders_beginning_of_buffer()
+        echo 'not implemented'
+endfunction
+
+function! s:NM_folders_notmuch_folder()
+        echo 'not implemented'
+endfunction
+
+function! s:NM_folders_show_search()
+        let line = line('.')
+        let search = b:nm_searches[line-1]
+
+        let prev_bufnr = bufnr('%')
+        setlocal bufhidden=hide
+        call <SID>NM_cmd_search([search])
+        setlocal bufhidden=delete
+        let b:nm_prev_bufnr = prev_bufnr
+endfunction
 
 
 " --- implement search screen {{{1
@@ -737,6 +815,9 @@ endif
 if !exists('g:notmuch_initial_search_words')
         let g:notmuch_initial_search_words = s:notmuch_initial_search_words_defaults
 endif
+if !exists('g:notmuch_folders')
+        let g:notmuch_folders = s:notmuch_folders_defaults
+endif
 
 
 " --- assign keymaps {{{1
@@ -753,20 +834,28 @@ endfunction
 " --- command handler {{{1
 
 function! NotMuch(args)
-        if !strlen(a:args)
-                if exists('b:nm_search_words')
+        let args = a:args
+        if !strlen(args)
+                let args = 'folders'
+        endif
+
+        let words = split(args)
+        if words[0] == 'folders'
+                let words = words[1:]
+                call <SID>NM_cmd_folders(words)
+        elseif words[0] == 'search'
+                if len(words) > 1
+                        let words = words[1:]
+                elseif exists('b:nm_search_words')
                         let words = b:nm_search_words
                 else
                         let words = g:notmuch_initial_search_words
                 endif
                 call <SID>NM_cmd_search(words)
-                return
+
+        elseif words[0] == 'show'
+                echoe 'show is not yet implemented.'
         endif
-
-        echo "blarg!"
-
-        let words = split(a:args)
-        " TODO: handle commands passed as arguments
 endfunction
 function! CompleteNotMuch(arg_lead, cmd_line, cursor_pos)
         return []

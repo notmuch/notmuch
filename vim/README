@@ -13,6 +13,12 @@ To run:
         :NotMuch
 
 Buffer types:
+    [notmuch-folders]
+        Folder list, or technically a list of saved searches.
+
+        Keybindings:
+            <Enter> - show the selected search
+
     [notmuch-search]
         You are presented with the search results when you run :NotMuch.
 
@@ -23,7 +29,8 @@ Buffer types:
             o       - toggle search screen order
             s       - enter search criteria
             S       - alter search criteria
-            f       - filter the current search terms with tags
+            t       - filter the current search terms with tags
+            q       - return to folder display, or undo filter
             +       - add tag(s) to selected message
             -       - remove tag(s) from selected message
             =       - refresh display
