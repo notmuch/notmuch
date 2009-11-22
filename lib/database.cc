@@ -648,6 +648,7 @@ notmuch_database_get_timestamp (notmuch_database_t *notmuch, const char *key)
 
 	ret =  Xapian::sortable_unserialise (doc.get_value (NOTMUCH_VALUE_TIMESTAMP));
     } catch (Xapian::Error &error) {
+	ret = 0;
 	goto DONE;
     }
 
