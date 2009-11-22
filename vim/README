@@ -30,7 +30,7 @@ Buffer types:
             f       - filter the current search terms
             o       - toggle search screen order
             s       - enter search criteria
-            S       - alter search criteria
+            es      - alter search criteria
             t       - filter the current search terms with tags
             q       - return to folder display, or undo filter
             +       - add tag(s) to selected message

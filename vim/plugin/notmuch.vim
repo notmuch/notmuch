@@ -98,7 +98,7 @@ let g:notmuch_search_maps = {
         \ 'o':          ':call <SID>NM_search_toggle_order()<CR>',
         \ 'r':          ':call <SID>NM_search_reply_to_thread()<CR>',
         \ 's':          ':call <SID>NM_search_prompt()<CR>',
-        \ 'S':          ':call <SID>NM_search_edit()<CR>',
+        \ ',s':         ':call <SID>NM_search_edit()<CR>',
         \ 't':          ':call <SID>NM_search_filter_by_tag()<CR>',
         \ 'q':          ':call <SID>NM_kill_this_buffer()<CR>',
         \ '+':          ':call <SID>NM_search_add_tags([])<CR>',
