@@ -241,12 +241,13 @@ function! s:NM_search_prompt()
         else
                 let tags = s:notmuch_initial_search_words_defaults
         endif
-        let prev_bufnr = bufnr('%')
         if b:nm_type == 'search'
                 " TODO: we intend to replace the current buffer,
                 "       ... maybe we could just clear it
+                let prev_bufnr = b:nm_prev_bufnr
                 setlocal bufhidden=delete
         else
+                let prev_bufnr = bufnr('%')
                 setlocal bufhidden=hide
         endif
         call <SID>NM_cmd_search(tags)
