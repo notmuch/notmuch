@@ -271,14 +271,14 @@ function! s:NM_search_archive_thread()
 endfunction
 
 function! s:NM_search_filter()
-        call <SID>NM_search_filter_helper('Filter: ', '')
+        call <SID>NM_search_filter_helper('Filter: ', '', '')
 endfunction
 
 function! s:NM_search_filter_by_tag()
-        call <SID>NM_search_filter_helper('Filter Tag(s): ', 'tag:')
+        call <SID>NM_search_filter_helper('Filter Tag(s): ', 'tag:', 'and')
 endfunction
 
-function! s:NM_search_filter_helper(prompt, prefix)
+function! s:NM_search_filter_helper(prompt, prefix, joiner)
         " TODO: input() can support completion
         let text = input(a:prompt)
         if !strlen(text)
@@ -286,8 +286,17 @@ function! s:NM_search_filter_helper(prompt, prefix)
         endif
 
         let tags = split(text)
-        map(tags, 'and a:prefix . v:val')
-        let tags = b:nm_search_words + tags
+        if strlen(a:prefix)
+                call map(tags, 'a:prefix . v:val')
+        endif
+        if strlen(a:joiner)
+                let idx = len(tags) - 1
+                while idx > 0
+                        call insert(tags, a:joiner, idx)
+                        let idx = idx - 1
+                endwhile
+        endif
+        let tags = b:nm_search_words + ['and', '''('] + tags + [')''']
 
         let prev_bufnr = bufnr('%')
         setlocal bufhidden=hide
