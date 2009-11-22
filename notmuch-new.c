@@ -259,6 +259,7 @@ add_files (notmuch_database_t *notmuch,
     notmuch_status_t status;
     struct sigaction action;
     struct itimerval timerval;
+    notmuch_bool_t timer_is_active = FALSE;
 
     if (stat (path, &st)) {
 	fprintf (stderr, "Error reading directory %s: %s\n",
@@ -272,31 +273,37 @@ add_files (notmuch_database_t *notmuch,
     }
 
     /* Setup our handler for SIGALRM */
-    memset (&action, 0, sizeof (struct sigaction));
-    action.sa_handler = handle_sigalrm;
-    sigemptyset (&action.sa_mask);
-    action.sa_flags = SA_RESTART;
-    sigaction (SIGALRM, &action, NULL);
+    if (! debugger_is_active ()) {
+	memset (&action, 0, sizeof (struct sigaction));
+	action.sa_handler = handle_sigalrm;
+	sigemptyset (&action.sa_mask);
+	action.sa_flags = SA_RESTART;
+	sigaction (SIGALRM, &action, NULL);
 
-    /* Then start a timer to send SIGALRM once per second. */
-    timerval.it_interval.tv_sec = 1;
-    timerval.it_interval.tv_usec = 0;
-    timerval.it_value.tv_sec = 1;
-    timerval.it_value.tv_usec = 0;
-    setitimer (ITIMER_REAL, &timerval, NULL);
+	/* Then start a timer to send SIGALRM once per second. */
+	timerval.it_interval.tv_sec = 1;
+	timerval.it_interval.tv_usec = 0;
+	timerval.it_value.tv_sec = 1;
+	timerval.it_value.tv_usec = 0;
+	setitimer (ITIMER_REAL, &timerval, NULL);
+
+	timer_is_active = TRUE;
+    }
 
     status = add_files_recursive (notmuch, path, &st, state);
 
     /* Now stop the timer. */
-    timerval.it_interval.tv_sec = 0;
-    timerval.it_interval.tv_usec = 0;
-    timerval.it_value.tv_sec = 0;
-    timerval.it_value.tv_usec = 0;
-    setitimer (ITIMER_REAL, &timerval, NULL);
+    if (timer_is_active) {
+	timerval.it_interval.tv_sec = 0;
+	timerval.it_interval.tv_usec = 0;
+	timerval.it_value.tv_sec = 0;
+	timerval.it_value.tv_usec = 0;
+	setitimer (ITIMER_REAL, &timerval, NULL);
 
-    /* And disable the signal handler. */
-    action.sa_handler = SIG_IGN;
-    sigaction (SIGALRM, &action, NULL);
+	/* And disable the signal handler. */
+	action.sa_handler = SIG_IGN;
+	sigaction (SIGALRM, &action, NULL);
+    }
 
     return status;
 }

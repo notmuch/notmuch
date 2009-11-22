@@ -3,6 +3,8 @@ all: notmuch notmuch.1.gz
 emacs: notmuch.elc
 
 notmuch_client_srcs =		\
+	debugger.c		\
+	gmime-filter-reply.c	\
 	notmuch.c		\
 	notmuch-config.c	\
 	notmuch-dump.c		\
@@ -14,7 +16,6 @@ notmuch_client_srcs =		\
 	notmuch-show.c		\
 	notmuch-tag.c		\
 	notmuch-time.c		\
-	gmime-filter-reply.c	\
 	query-string.c		\
 	show-message.c
 

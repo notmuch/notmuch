@@ -53,6 +53,14 @@ else
     errors=$((errors + 1))
 fi
 
+if pkg-config --modversion valgrind > /dev/null 2>&1; then
+    echo "Checking for valgrind development files... Yes."
+    have_valgrind=-DHAVE_VALGRIND
+else
+    echo "Checking for valgrind development files... No."
+    have_valgrind=
+fi
+
 if [ $errors -gt 0 ]; then
     cat <<EOF
 
@@ -108,7 +116,8 @@ configure again to ensure the packages can be found, or simply run
 
 EOF
     exit 1
-else
+fi
+
 cat <<EOF
 
 All required packages were found. You may now run the following
@@ -118,6 +127,10 @@ commands to compile and install notmuch:
 	sudo make install
 
 EOF
-    exit 0
-fi
-cat <<EOF
+
+# construct the Makefile.config
+cat > Makefile.config <<EOF
+prefix = /usr/local
+bash_completion_dir = /etc/bash_completion.d
+CFLAGS += ${have_valgrind}
+EOF

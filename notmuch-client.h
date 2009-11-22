@@ -179,4 +179,7 @@ notmuch_config_set_user_other_email (notmuch_config_t *config,
 				     const char *other_email[],
 				     size_t length);
 
+notmuch_bool_t
+debugger_is_active (void);
+
 #endif
