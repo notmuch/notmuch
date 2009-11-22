@@ -75,5 +75,6 @@ DEPS := $(SRCS:%.c=.deps/%.d)
 DEPS := $(DEPS:%.cc=.deps/%.d)
 -include $(DEPS)
 
+.PHONY : clean
 clean:
 	rm -f $(CLEAN); rm -rf .deps
