@@ -20,6 +20,8 @@
 
 #include "notmuch-client.h"
 
+#include <unistd.h>
+
 static volatile sig_atomic_t do_add_files_print_progress = 0;
 
 static void
@@ -273,7 +275,7 @@ add_files (notmuch_database_t *notmuch,
     }
 
     /* Setup our handler for SIGALRM */
-    if (! debugger_is_active ()) {
+    if (isatty (fileno (stdout)) && ! debugger_is_active ()) {
 	memset (&action, 0, sizeof (struct sigaction));
 	action.sa_handler = handle_sigalrm;
 	sigemptyset (&action.sa_mask);
