@@ -23,7 +23,7 @@ notmuch: $(notmuch_client_modules) lib/notmuch.a
 	$(call quiet,CXX) $^ $(LDFLAGS) -o $@
 
 notmuch.1.gz: notmuch.1
-	$(call quiet,GZIP) --stdout $^ > $@
+	$(call quiet,gzip) --stdout $^ > $@
 
 install: all notmuch.1.gz
 	for d in $(DESTDIR)$(prefix)/bin/ $(DESTDIR)$(prefix)/share/man/man1 \

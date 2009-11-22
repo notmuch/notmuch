@@ -4,7 +4,9 @@ CFLAGS=-O2
 
 # Additional programs that are used during the compilation process.
 EMACS ?= emacs
-GZIP ?= gzip
+# Lowercase to avoid clash with GZIP environment variable for passing
+# arguments to gzip.
+gzip = gzip
 
 # Additional flags that we will append to whatever the user set.
 # These aren't intended for the user to manipulate.
