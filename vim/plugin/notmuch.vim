@@ -496,7 +496,7 @@ function! s:NM_show_message_id()
         let info = b:nm_raw_info
         let lnum = line('.')
         for msg in info['msgs']
-                if lnum < msg['start']
+                if lnum >= msg['start']
                         continue
                 endif
 
