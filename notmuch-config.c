@@ -132,9 +132,10 @@ get_username_from_passwd_file (void *ctx)
     return name;
 }
 
-/* Open the named notmuch configuration file. A filename of NULL will
- * be interpreted as the default configuration file
- * ($HOME/.notmuch-config).
+/* Open the named notmuch configuration file. If the filename is NULL,
+ * the value of the environment variable $NOTMUCH_CONFIG will be used.
+ * If $NOTMUCH_CONFIG is unset, the default configuration file
+ * ($HOME/.notmuch-config) will be used.
  *
  * If any error occurs, (out of memory, or a permission-denied error,
  * etc.), this function will print a message to stderr and return
@@ -168,6 +169,7 @@ notmuch_config_open (void *ctx,
 {
     GError *error = NULL;
     int is_new = 0;
+    char *notmuch_config_env = NULL;
 
     if (is_new_ret)
 	*is_new_ret = 0;
@@ -180,11 +182,15 @@ notmuch_config_open (void *ctx,
     
     talloc_set_destructor (config, notmuch_config_destructor);
 
-    if (filename)
+    if (filename) {
 	config->filename = talloc_strdup (config, filename);
-    else
+    } else if ((notmuch_config_env = getenv ("NOTMUCH_CONFIG"))) {
+	config->filename = talloc_strdup (config, notmuch_config_env);
+	notmuch_config_env = NULL;
+    } else {
 	config->filename = talloc_asprintf (config, "%s/.notmuch-config",
 					    getenv ("HOME"));
+    }
 
     config->key_file = g_key_file_new ();
 
