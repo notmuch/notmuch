@@ -26,6 +26,7 @@
 #include <xapian.h>
 
 struct _notmuch_database {
+    notmuch_bool_t exception_reported;
     char *path;
     notmuch_database_mode_t mode;
     Xapian::Database *xapian_db;

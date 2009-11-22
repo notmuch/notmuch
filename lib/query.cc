@@ -152,6 +152,7 @@ notmuch_query_search_messages (notmuch_query_t *query,
 	fprintf (stderr, "A Xapian exception occurred performing query: %s\n",
 		 error.get_msg().c_str());
 	fprintf (stderr, "Query string was: %s\n", query->query_string);
+	notmuch->exception_reported = TRUE;
     }
 
     return _notmuch_messages_create (message_list);

@@ -480,6 +480,7 @@ notmuch_database_open (const char *path,
     }
 
     notmuch = talloc (NULL, notmuch_database_t);
+    notmuch->exception_reported = FALSE;
     notmuch->path = talloc_strdup (notmuch, path);
 
     if (notmuch->path[strlen (notmuch->path) - 1] == '/')
@@ -530,8 +531,15 @@ notmuch_database_open (const char *path,
 void
 notmuch_database_close (notmuch_database_t *notmuch)
 {
-    if (notmuch->mode == NOTMUCH_DATABASE_MODE_READ_WRITE)
-	(static_cast <Xapian::WritableDatabase *> (notmuch->xapian_db))->flush ();
+    try {
+	if (notmuch->mode == NOTMUCH_DATABASE_MODE_READ_WRITE)
+	    (static_cast <Xapian::WritableDatabase *> (notmuch->xapian_db))->flush ();
+    } catch (const Xapian::Error &error) {
+	if (! notmuch->exception_reported) {
+	    fprintf (stderr, "Error: A Xapian exception occurred flushing database: %s\n",
+		     error.get_msg().c_str());
+	}
+    }
 
     delete notmuch->term_gen;
     delete notmuch->query_parser;
@@ -611,6 +619,7 @@ notmuch_database_set_timestamp (notmuch_database_t *notmuch,
     } catch (const Xapian::Error &error) {
 	fprintf (stderr, "A Xapian exception occurred setting timestamp: %s.\n",
 		 error.get_msg().c_str());
+	notmuch->exception_reported = TRUE;
 	ret = NOTMUCH_STATUS_XAPIAN_EXCEPTION;
     }
 
@@ -985,6 +994,7 @@ notmuch_database_add_message (notmuch_database_t *notmuch,
     } catch (const Xapian::Error &error) {
 	fprintf (stderr, "A Xapian exception occurred adding message: %s.\n",
 		 error.get_description().c_str());
+	notmuch->exception_reported = TRUE;
 	ret = NOTMUCH_STATUS_XAPIAN_EXCEPTION;
 	goto DONE;
     }

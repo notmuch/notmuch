@@ -201,6 +201,7 @@ _notmuch_message_create_for_message_id (notmuch_database_t *notmuch,
     } catch (const Xapian::Error &error) {
 	fprintf (stderr, "A Xapian exception occurred creating message: %s\n",
 		 error.get_msg().c_str());
+	notmuch->exception_reported = TRUE;
 	*status_ret = NOTMUCH_PRIVATE_STATUS_XAPIAN_EXCEPTION;
 	return NULL;
     }
