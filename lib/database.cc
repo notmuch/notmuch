@@ -892,7 +892,7 @@ notmuch_database_add_message (notmuch_database_t *notmuch,
 
     const char *date, *header;
     const char *from, *to, *subject;
-    char *message_id;
+    char *message_id = NULL;
 
     if (message_ret)
 	*message_ret = NULL;
@@ -937,11 +937,20 @@ notmuch_database_add_message (notmuch_database_t *notmuch,
 	header = notmuch_message_file_get_header (message_file, "message-id");
 	if (header && *header != '\0') {
 	    message_id = _parse_message_id (message_file, header, NULL);
+
 	    /* So the header value isn't RFC-compliant, but it's
 	     * better than no message-id at all. */
 	    if (message_id == NULL)
 		message_id = talloc_strdup (message_file, header);
-	} else {
+
+	    /* Reject a Message ID that's too long. */
+	    if (message_id && strlen (message_id) + 1 > NOTMUCH_TERM_MAX) {
+		talloc_free (message_id);
+		message_id = NULL;
+	    }
+	}
+
+	if (message_id == NULL ) {
 	    /* No message-id at all, let's generate one by taking a
 	     * hash over the file's contents. */
 	    char *sha1 = notmuch_sha1_of_file (filename);
