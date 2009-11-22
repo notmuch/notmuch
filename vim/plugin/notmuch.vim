@@ -212,7 +212,7 @@ function! s:NM_cmd_search_fmtline(line)
         let max = g:notmuch_search_from_column_width
         let from = m[3]
         if strlen(from) >= max
-                let from = m[3][0:max-4] . '...'
+                let from = substitute(m[3][0:max-4], '[^A-Za-z1-9_]*$', '', '') . '...'
         endif
         return printf('%s %-20s | %s (%s)', m[2], from, m[4], m[5])
 endfunction
