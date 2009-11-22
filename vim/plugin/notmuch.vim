@@ -218,10 +218,7 @@ function! s:NM_cmd_search_fmtline(line)
 endfunction
 function! s:NM_cmd_search_mksyntax()
         syntax clear nmSearchFrom
-        "syntax region nmSearchFrom start='\]\@<=' end='.'me=e+5,he=e+5,re=e+5 oneline contained
-        "syntax match nmSearchFrom /\]\@<=.\{10\}/ oneline contained
         exec printf('syntax match nmSearchFrom /\(\] \)\@<=.\{%d\}/ oneline contained', g:notmuch_search_from_column_width)
-        "exec printf('syntax region nmSearchFrom start=''\%%%dv'' end=''\%%%dv'' oneline contained', 20, 30)
 endfunction
 
 " --- --- search screen action functions {{{2
@@ -797,6 +794,7 @@ function! NM_set_defaults(force)
                         let cmd = printf('let %s = %d', key, dflt)
                 elseif type(dflt) == type('')
                         let cmd = printf('let %s = ''%s''', key, dflt)
+                " FIXME: not sure why this didn't work when dflt is an array
                 "elseif type(dflt) == type([])
                 "        let cmd = printf('let %s = %s', key, string(dflt))
                 else
