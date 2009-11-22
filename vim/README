@@ -18,6 +18,8 @@ Buffer types:
 
         Keybindings:
             <Enter> - show the selected search
+            s       - enter search criteria
+            =       - refresh display
 
     [notmuch-search]
         You are presented with the search results when you run :NotMuch.

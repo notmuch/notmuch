@@ -82,9 +82,8 @@ let s:notmuch_folders_defaults = [
 " --- --- bindings for folders mode {{{2
 
 let g:notmuch_folders_maps = {
-        \ 's':          ':call <SID>NM_folders_notmuch_search()<CR>',
+        \ 's':          ':call <SID>NM_search_prompt()<CR>',
         \ 'q':          ':call <SID>NM_kill_this_buffer()<CR>',
-        \ '<':          ':call <SID>NM_folders_beginning_of_buffer()<CR>',
         \ '=':          ':call <SID>NM_folders_refresh_view()<CR>',
         \ '<Enter>':    ':call <SID>NM_folders_show_search()<CR>',
         \ }
@@ -163,20 +162,11 @@ endfunction
 
 " --- --- folders screen action functions {{{2
 
-function! s:NM_folders_notmuch_search()
-        echo 'not implemented'
-endfunction
-
-function! s:NM_kill_this_buffer()
-        echo 'not implemented'
-endfunction
-
-function! s:NM_folders_beginning_of_buffer()
-        echo 'not implemented'
-endfunction
-
-function! s:NM_folders_notmuch_folder()
-        echo 'not implemented'
+function! s:NM_folders_refresh_view()
+        let lno = line('.')
+        setlocal bufhidden=delete
+        call s:NM_cmd_folders([])
+        exec printf('norm %dG', lno)
 endfunction
 
 function! s:NM_folders_show_search()
@@ -251,8 +241,17 @@ function! s:NM_search_prompt()
         else
                 let tags = s:notmuch_initial_search_words_defaults
         endif
-        setlocal bufhidden=delete
+        let prev_bufnr = bufnr('%')
+        if b:nm_type == 'search'
+                " TODO: we intend to replace the current buffer,
+                "       ... maybe we could just clear it
+                setlocal bufhidden=delete
+        else
+                setlocal bufhidden=hide
+        endif
         call <SID>NM_cmd_search(tags)
+        setlocal bufhidden=delete
+        let b:nm_prev_bufnr = prev_bufnr
 endfunction
 
 function! s:NM_search_edit()
@@ -713,14 +712,15 @@ endfunction
 
 " --- notmuch helper functions {{{1
 
-function! s:NM_newBuffer(ft, content)
+function! s:NM_newBuffer(type, content)
         enew
         setlocal buftype=nofile readonly modifiable
         silent put=a:content
         keepjumps 0d
         setlocal nomodifiable
-        execute printf('set filetype=notmuch-%s', a:ft)
-        execute printf('set syntax=notmuch-%s', a:ft)
+        execute printf('set filetype=notmuch-%s', a:type)
+        execute printf('set syntax=notmuch-%s', a:type)
+        let b:nm_type = a:type
 endfunction
 
 function! s:NM_run(args)
