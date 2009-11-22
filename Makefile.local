@@ -43,6 +43,10 @@ install-emacs: install emacs
 	install -m0644 notmuch.el $(DESTDIR)$(emacs_lispdir)
 	install -m0644 notmuch.elc $(DESTDIR)$(emacs_lispdir)
 
+install-desktop:
+	install -d $(DESTDIR)$(desktop_dir)
+	desktop-file-install --mode 0644 --dir $(DESTDIR)$(desktop_dir) notmuch.desktop
+
 install-bash:
 	install -d $(DESTDIR)$(bash_completion_dir)
 	install -m0644 contrib/notmuch-completion.bash \

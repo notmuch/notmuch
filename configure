@@ -274,6 +274,9 @@ prefix = ${PREFIX}
 # The directory to which emacs lisp files should be installed
 emacs_lispdir=${emacs_lispdir}
 
+# The directory to which desktop files should be installed
+desktop_dir = \${prefix}/share/applications
+
 # Whether the getline function is available (if not, then notmuch will
 # build its own version)
 HAVE_GETLINE = ${have_getline}
