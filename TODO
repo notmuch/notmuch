@@ -107,6 +107,9 @@ directories read-only on its own. (Could conflict with low-volume
 lists such as announce lists if they are setup to deliver to their own
 maildirs.)
 
+Allow configuration for filename patterns that should be ignored when
+indexing.
+
 notmuch library
 ---------------
 Add support for files that are moved or deleted (which obviously need
