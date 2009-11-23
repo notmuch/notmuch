@@ -180,10 +180,15 @@ add_files_recursive (notmuch_database_t *notmuch,
 		state->processed_files++;
 
 		if (state->verbose) {
-		    printf ("\r\033[K%i/%i: %s\r",
+		    if (state->output_is_a_tty)
+			printf("\r\033[K");
+
+		    printf ("%i/%i: %s",
 			    state->processed_files,
 			    state->total_files,
 			    next);
+
+		    putchar((state->output_is_a_tty) ? '\r' : '\n');
 		    fflush (stdout);
 		}
 
@@ -282,9 +287,7 @@ add_files (notmuch_database_t *notmuch,
 	return NOTMUCH_STATUS_FILE_ERROR;
     }
 
-    if (isatty (fileno (stdout)) && ! debugger_is_active ()
-	&& ! state->verbose)
-    {
+    if (state->output_is_a_tty && ! debugger_is_active () && ! state->verbose) {
 	/* Setup our handler for SIGALRM */
 	memset (&action, 0, sizeof (struct sigaction));
 	action.sa_handler = handle_sigalrm;
@@ -405,6 +408,7 @@ notmuch_new_command (void *ctx, int argc, char *argv[])
     int i;
 
     add_files_state.verbose = 0;
+    add_files_state.output_is_a_tty = isatty (fileno (stdout));
 
     for (i = 0; i < argc && argv[i][0] == '-'; i++) {
 	if (STRNCMP_LITERAL (argv[i], "--verbose") == 0) {

@@ -74,6 +74,7 @@ typedef void (*add_files_callback_t) (notmuch_message_t *message);
 typedef struct {
     int ignore_read_only_directories;
     int saw_read_only_directory;
+    int output_is_a_tty;
     int verbose;
 
     int total_files;
