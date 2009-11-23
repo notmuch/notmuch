@@ -134,6 +134,11 @@ Add support for configuring "virtual tags" which are a tuple of
 (tag-name, search-specification). The database is responsible for
 ensuring that the virtual tag is always consistent.
 
+Think about optimizing chunked searches (max-threads > 0) to avoid
+repeating work. That would be saving state from the previous chunk and
+reusing it if the next search is the next chunk with the same search
+string.
+
 General
 -------
 Audit everything for dealing with out-of-memory (and drop xutil.c).

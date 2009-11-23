@@ -20,12 +20,20 @@
 
 #include "notmuch-client.h"
 
-/* If the user asks for a *lot* of threads, lets give some results as
- * quickly as possible and let the user read those while we compute
- * the remainder. */
-#define NOTMUCH_SHOW_INITIAL_BURST 100
+/* If the user asks for more than this number of threads, then break
+   the results down into chunks so that results start appearing
+   quickly rather than the user having to wait until all results are
+   available before anything appears.
 
-static void
+   Since each subsequent chunk ends up having to re-do threading work
+   done by all previous chunks, we double the chunk size repeatedly
+   until all desired results have been returned.
+*/
+#define NOTMUCH_SEARCH_INITIAL_CHUNK_SIZE 100
+
+/* Do the actual search for a chunk of threads and display the results,
+   (returning the number of threads found in this chunk). */
+static int
 do_search_threads (const void *ctx,
 		   notmuch_query_t *query,
 		   notmuch_sort_t sort,
@@ -36,6 +44,7 @@ do_search_threads (const void *ctx,
     notmuch_tags_t *tags;
     time_t date;
     const char *relative_date;
+    int num_threads = 0;
 
     for (threads = notmuch_query_search_threads (query, first, max_threads);
 	 notmuch_threads_has_more (threads);
@@ -44,6 +53,7 @@ do_search_threads (const void *ctx,
 	int first_tag = 1;
 
 	thread = notmuch_threads_get (threads);
+	num_threads++;
 
 	if (sort == NOTMUCH_SORT_OLDEST_FIRST)
 	    date = notmuch_thread_get_oldest_date (thread);
@@ -74,6 +84,8 @@ do_search_threads (const void *ctx,
 
 	notmuch_thread_destroy (thread);
     }
+
+    return num_threads;
 }
 
 int
@@ -86,6 +98,8 @@ notmuch_search_command (void *ctx, int argc, char *argv[])
     int i, first = 0, max_threads = -1;
     char *opt, *end;
     notmuch_sort_t sort = NOTMUCH_SORT_NEWEST_FIRST;
+    int chunk_size;
+    int threads_in_chunk;
 
     for (i = 0; i < argc && argv[i][0] == '-'; i++) {
 	if (strcmp (argv[i], "--") == 0) {
@@ -152,17 +166,25 @@ notmuch_search_command (void *ctx, int argc, char *argv[])
 
     notmuch_query_set_sort (query, sort);
 
-    if (max_threads < 0 || max_threads > NOTMUCH_SHOW_INITIAL_BURST)
-    {
-	do_search_threads (ctx, query, sort,
-			   first, NOTMUCH_SHOW_INITIAL_BURST);
+    /* If we receive a max-threads option, then the user is
+       responsible for any chunking and we return all results at
+       once. */
+    if (max_threads < 0)
+	chunk_size = NOTMUCH_SEARCH_INITIAL_CHUNK_SIZE;
+    else
+	chunk_size = max_threads;
 
-	first += NOTMUCH_SHOW_INITIAL_BURST;
-	if (max_threads > 0)
-	    max_threads -= NOTMUCH_SHOW_INITIAL_BURST;
-    }
+    do {
+	threads_in_chunk = do_search_threads (ctx, query, sort,
+					      first, chunk_size);
+	if (chunk_size == max_threads)
+	    break;
 
-    do_search_threads (ctx, query, sort, first, max_threads);
+	first += chunk_size;
+
+	chunk_size *= 2;
+
+    } while (threads_in_chunk);
 
     notmuch_query_destroy (query);
     notmuch_database_close (notmuch);
