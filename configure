@@ -126,6 +126,15 @@ EOF
     exit 1
 fi
 
+if ! gcc -o getlinetest getlinetest.c > /dev/null 2>&1
+then
+    echo "Checking for getline... No."
+    getline=-Dgetline=_notmuch_getline
+else
+    echo "Checking for getline... Yes."
+fi
+rm -f getlinetest
+
 cat <<EOF
 
 All required packages were found. You may now run the following
@@ -139,5 +148,5 @@ EOF
 # construct the Makefile.config
 cat > Makefile.config <<EOF
 prefix = /usr/local
-override CFLAGS += -DHAVE_VALGRIND=${have_valgrind} ${valgrind_flags}
+override CFLAGS += -DHAVE_VALGRIND=${have_valgrind} ${valgrind_flags} ${getline}
 EOF
