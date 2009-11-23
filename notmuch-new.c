@@ -159,6 +159,7 @@ add_files_recursive (notmuch_database_t *notmuch,
 	 * user specify files to be ignored. */
 	if (strcmp (entry->d_name, ".") == 0 ||
 	    strcmp (entry->d_name, "..") == 0 ||
+	    strcmp (entry->d_name, "tmp") == 0 ||
 	    strcmp (entry->d_name, ".notmuch") ==0)
 	{
 	    continue;
