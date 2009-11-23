@@ -137,6 +137,13 @@ within the current window."
       (or (memq prop buffer-invisibility-spec)
 	  (assq prop buffer-invisibility-spec)))))
 
+(defun notmuch-select-tag-with-completion (prompt)
+  (let ((tag-list
+	 (with-output-to-string
+	   (with-current-buffer standard-output
+	     (call-process notmuch-command nil t nil "search-tags")))))
+    (completing-read prompt (split-string tag-list "\n+" t) nil nil nil)))
+
 (defun notmuch-show-next-line ()
   "Like builtin `next-line' but ensuring we end on a visible character.
 
@@ -200,7 +207,8 @@ Unlike builtin `next-line' this version accepts no arguments."
 
 (defun notmuch-show-add-tag (&rest toadd)
   "Add a tag to the current message."
-  (interactive "sTag to add: ")
+  (interactive
+   (list (notmuch-select-tag-with-completion "Tag to add: ")))
   (apply 'notmuch-call-notmuch-process
 	 (append (cons "tag"
 		       (mapcar (lambda (s) (concat "+" s)) toadd))
@@ -209,7 +217,8 @@ Unlike builtin `next-line' this version accepts no arguments."
 
 (defun notmuch-show-remove-tag (&rest toremove)
   "Remove a tag from the current message."
-  (interactive "sTag to remove: ")
+  (interactive
+   (list (notmuch-select-tag-with-completion "Tag to remove: ")))
   (let ((tags (notmuch-show-get-tags)))
     (if (intersection tags toremove :test 'string=)
 	(progn
@@ -924,12 +933,14 @@ and will also appear in a buffer named \"*Notmuch errors*\"."
 	(split-string (buffer-substring beg end))))))
 
 (defun notmuch-search-add-tag (tag)
-  (interactive "sTag to add: ")
+  (interactive
+   (list (notmuch-select-tag-with-completion "Tag to add: ")))
   (notmuch-call-notmuch-process "tag" (concat "+" tag) (notmuch-search-find-thread-id))
   (notmuch-search-set-tags (delete-dups (sort (cons tag (notmuch-search-get-tags)) 'string<))))
 
 (defun notmuch-search-remove-tag (tag)
-  (interactive "sTag to remove: ")
+  (interactive
+   (list (notmuch-select-tag-with-completion "Tag to remove: ")))
   (notmuch-call-notmuch-process "tag" (concat "-" tag) (notmuch-search-find-thread-id))
   (notmuch-search-set-tags (delete tag (notmuch-search-get-tags))))
 
@@ -1064,7 +1075,8 @@ current search results AND the additional query string provided."
 
 Runs a new search matching only messages that match both the
 current search results AND that are tagged with the given tag."
-  (interactive "sFilter by tag: ")
+  (interactive
+   (list (notmuch-select-tag-with-completion "Filter by tag: ")))
   (notmuch-search (concat notmuch-search-query-string " and tag:" tag) notmuch-search-oldest-first))
 
 (defun notmuch ()
