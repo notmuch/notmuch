@@ -174,7 +174,7 @@ Unlike builtin `next-line' this version accepts no arguments."
     (if (not (looking-at notmuch-show-message-begin-regexp))
 	(re-search-backward notmuch-show-message-begin-regexp))
     (re-search-forward notmuch-show-id-regexp)
-    (buffer-substring (match-beginning 1) (match-end 1))))
+    (buffer-substring-no-properties (match-beginning 1) (match-end 1))))
 
 (defun notmuch-show-get-filename ()
   (save-excursion
@@ -182,7 +182,7 @@ Unlike builtin `next-line' this version accepts no arguments."
     (if (not (looking-at notmuch-show-message-begin-regexp))
 	(re-search-backward notmuch-show-message-begin-regexp))
     (re-search-forward notmuch-show-filename-regexp)
-    (buffer-substring (match-beginning 1) (match-end 1))))
+    (buffer-substring-no-properties (match-beginning 1) (match-end 1))))
 
 (defun notmuch-show-set-tags (tags)
   (save-excursion
