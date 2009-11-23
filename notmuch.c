@@ -254,6 +254,12 @@ command_t commands[] = {
       "\t\tSo if you've previously been using sup for mail, then the\n"
       "\t\t\"notmuch restore\" command provides you a way to import\n"
       "\t\tall of your tags (or labels as sup calls them)." },
+    { "search-tags", notmuch_search_tags_command,
+      NULL,
+      "List all tags found in the database.",
+      "\t\tThis command returns an alphabetically sorted list of all tags\n"
+      "\t\tthat are present in the database. In other words, the resulting\n"
+      "\t\tlist is a collection of all tags from all messages." },
     { "help", notmuch_help_command,
       "[<command>]",
       "\t\tThis message, or more detailed help for the named command.",
