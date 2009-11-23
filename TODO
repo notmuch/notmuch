@@ -134,3 +134,50 @@ Achieve 100% test coverage with the test suite.
 
 Investigate why the notmuch database is slightly larger than the sup
 database for the same corpus of email.
+
+Xapian
+------
+Fix defect #250
+
+	replace_document should make minimal changes to database file
+	http://trac.xapian.org/ticket/250
+
+	It looks like it's going to be easy to fix. Here's the file to
+	change:
+
+		xapian-core/backends/flint/flint_database.cc
+
+	And look for:
+
+	  // FIXME - in the case where there is overlap between the new
+	  // termlist and the old termlist, it would be better to compare the
+	  // two lists, and make the minimum set of modifications required.
+	  // This would lead to smaller changesets for replication, and
+	  // probably be faster overall
+
+	So I think this might be as easy as just walking over two
+	sorted lists looking for differences.
+
+	Note that this is in the currently default "flint" backend,
+	but the Xapian folks are probably more interested in fixing
+	the in-development "chert" backend. So the patch to get
+	upstreamed there will probably also fix:
+
+		xapian-core/backends/chert/chert_database.cc
+
+	(I'm hoping the fix will be the same---an identical comment
+	exists there.)
+
+	Also, if you want to experiment with the chert backend,
+	compile current Xapian source and run notmuch with
+	XAPIAN_PREFER_CHERT=1. I haven't tried that yet, but there are
+	claims that a chert database can be 40% smaller than an
+	equivalent flint database.
+
+Report this bug:
+
+	"tag:foo and tag:bar and -tag:deleted" goes insane
+
+	This seems to be triggered by a Boolean operator next to a
+	token starting with a non-word character---suddenly all the
+	Boolean operators get treated as literal tokens)
