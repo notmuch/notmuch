@@ -3,14 +3,21 @@ through vim.
 
 NOTE: this is a work in progress.  Patches welcome. <bart@jukie.net>
 
+The vim interface makes use of the git-diff.vim syntax file which is
+available from
+    http://github.com/motemen/git-vim/blob/master/syntax/git-diff.vim
+
+
 To install:
         make install
+
 
 To run:
         vim -c ':NotMuch'
 
     from vim:
         :NotMuch
+
 
 Buffer types:
     [notmuch-folders]

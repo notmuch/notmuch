@@ -11,7 +11,9 @@ syntax match   nmShowMsgHeadVal /^\([^:]\+: \)\@<=.*/ contained
 
 syntax cluster nmShowMsgBody contains=@nmShowMsgBodyMail,@nmShowMsgBodyGit
 syntax include @nmShowMsgBodyMail syntax/mail.vim
-syntax include @nmShowMsgBodyGit syntax/git-diff.vim
+
+" git-diff.vim marks up diffs in emails, see README for details
+silent! syntax include @nmShowMsgBodyGit syntax/git-diff.vim
 
 highlight nmShowMsgDescWho term=reverse cterm=reverse gui=reverse
 highlight link nmShowMsgDescDate Type
