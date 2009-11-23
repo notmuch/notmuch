@@ -4,11 +4,9 @@ Fix the things that are causing the most pain to new users
 
 2. Allow an easy way to get tags from directory names (if the user has them)
 
-3. Allow an easy way to remove excess tags, (date-based search)
+3. Make emacs fast for big search results (see "lazy searching" below)
 
-4. Make emacs fast for big search results (see "lazy searching" below)
-
-5. Fix Xapian defect #250 so tagging is fast.
+4. Fix Xapian defect #250 so tagging is fast.
 
 Emacs interface (notmuch.el)
 ----------------------------
@@ -112,6 +110,15 @@ indexing.
 
 notmuch library
 ---------------
+Provide a sane syntax for date ranges. First, we don't want to require
+both endpoints to be specified. For example it would be nice to be
+able to say things like "since:2009-01-1" or "until:2009-01-1" and
+have the other enpoint be implicit. Second we'de like to support
+relative specifications of time such as "since:'2 months ago'". To do
+any of this we're probably going to need to break down an write our
+own parser for the query string rather than using Xapian's QueryParser
+class.
+
 Add support for files that are moved or deleted (which obviously need
 to be handled differently).
 

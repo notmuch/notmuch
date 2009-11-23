@@ -32,6 +32,7 @@ struct _notmuch_database {
     Xapian::Database *xapian_db;
     Xapian::QueryParser *query_parser;
     Xapian::TermGenerator *term_gen;
+    Xapian::ValueRangeProcessor *value_range_processor;
 };
 
 #endif
