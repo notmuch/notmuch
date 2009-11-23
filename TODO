@@ -31,6 +31,11 @@ Add a binding to run a search from notmuch-show-mode.
 When a thread has been entirely read, start out by closing all
 messages except those that matched the search terms.
 
+Add support for choosing from one of the user's configured email
+addresses for the From line.
+
+Make 'notmuch-show-pipe-message have a private history.
+
 Portability
 -----------
 Fix configure script to test each compiler warning we want to use.
