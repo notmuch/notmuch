@@ -97,12 +97,12 @@ address_is_users (const char *address, notmuch_config_t *config)
     size_t i, other_len;
 
     primary = notmuch_config_get_user_primary_email (config);
-    if (strcmp (primary, address) == 0)
+    if (strcasecmp (primary, address) == 0)
 	return 1;
 
     other = notmuch_config_get_user_other_email (config, &other_len);
     for (i = 0; i < other_len; i++)
-	if (strcmp (other[i], address) == 0)
+	if (strcasecmp (other[i], address) == 0)
 	    return 1;
 
     return 0;
