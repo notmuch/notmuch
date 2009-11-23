@@ -36,6 +36,15 @@ addresses for the From line.
 
 Make 'notmuch-show-pipe-message have a private history.
 
+Add support for a delete keybinding that adds a "deleted" tag to the
+current message/thread and make searches not return deleted messages
+by default, (unless the user asks explicitly for deleted messags in
+the search query).
+
+Add support to "mute" a thread (add a "muted" tag and then don't
+display threads in searches by default where any message of the thread
+has the "muted" tag).
+
 Portability
 -----------
 Fix configure script to test each compiler warning we want to use.
@@ -70,6 +79,9 @@ the count of search results.
 Give "notmuch restore" some progress indicator. Until we get the
 Xapian bugs fixed that are making this operation slow, we really need
 to let the user know that things are still moving.
+
+Add a "-f <filename>" option to select an alternate configuration
+file.
 
 Fix notmuch.c to call add_timestamp/get_timestamp with path names
 relative to the database path. (Otherwise, moving the database to a
@@ -108,9 +120,9 @@ same message-ID values as sup).
 
 Add support for the user to specify custom headers to be indexed.
 
-Add support for automatic tagging of new messages based on particular
-search criteria, (likely using an InMemory database for the new
-messages).
+Add support for configuring "virtual tags" which are a tuple of
+(tag-name, search-specification). The database is responsible for
+ensuring that the virtual tag is always consistent.
 
 General
 -------
