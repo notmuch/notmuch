@@ -12,6 +12,12 @@ Fix the things that are causing the most pain to new users
 
 Emacs interface (notmuch.el)
 ----------------------------
+Make the keybindings help ('?') display the summary of each command's
+documentation, not the function name.
+
+Add a global keybinding table for notmuch, and then view-specific
+tables that add to it.
+
 Add a command to archive all threads in a search view.
 
 Lazy searching: call "notmuch search" with --first and --max to fill
@@ -21,6 +27,9 @@ through the buffer.
 Add a '|' binding from the search view.
 
 Add a binding to run a search from notmuch-show-mode.
+
+When a thread has been entirely read, start out by closing all
+messages except those that matched the search terms.
 
 Portability
 -----------
