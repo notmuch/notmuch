@@ -813,7 +813,8 @@ thread from that buffer can be show when done with this one)."
 (fset 'notmuch-search-mode-map notmuch-search-mode-map)
 
 (defvar notmuch-search-query-string)
-(defvar notmuch-search-oldest-first)
+(defvar notmuch-search-oldest-first t
+  "Show the oldest mail first in the search-mode")
 
 
 (defun notmuch-search-scroll-up ()
@@ -1082,7 +1083,7 @@ current search results AND that are tagged with the given tag."
 (defun notmuch ()
   "Run notmuch to display all mail with tag of 'inbox'"
   (interactive)
-  (notmuch-search "tag:inbox" t))
+  (notmuch-search "tag:inbox" notmuch-search-oldest-first))
 
 (setq mail-user-agent 'message-user-agent)
 
@@ -1152,7 +1153,7 @@ results for the search terms in that line.
       (setq folder (notmuch-folder-find-name)))
   (let ((search (assoc folder notmuch-folders)))
     (if search
-	(notmuch-search (cdr search) t))))
+	(notmuch-search (cdr search) notmuch-search-oldest-first))))
 
 (defun notmuch-folder ()
   "Show the notmuch folder view and update the displayed counts."
