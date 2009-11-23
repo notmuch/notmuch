@@ -280,6 +280,16 @@ notmuch_message_t *
 notmuch_database_find_message (notmuch_database_t *database,
 			       const char *message_id);
 
+/* Return a list of all tags found in the database.
+ *
+ * This function creates a list of all tags found in the database. The
+ * resulting list contains all tags from all messages found in the database.
+ *
+ * On error this function returns NULL.
+ */
+notmuch_tags_t *
+notmuch_database_get_all_tags (notmuch_database_t *db);
+
 /* Create a new query for 'database'.
  *
  * Here, 'database' should be an open database, (see
