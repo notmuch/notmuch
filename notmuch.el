@@ -82,6 +82,8 @@
     (define-key map " " 'notmuch-show-advance-marking-read-and-archiving)
     (define-key map "|" 'notmuch-show-pipe-message)
     (define-key map "?" 'describe-mode)
+    (define-key map (kbd "TAB") 'notmuch-show-next-button)
+    (define-key map (kbd "M-TAB") 'notmuch-show-previous-button)
     map)
   "Keymap for \"notmuch show\" buffers.")
 (fset 'notmuch-show-mode-map notmuch-show-mode-map)
@@ -478,6 +480,16 @@ which this thread was originally shown."
 	(notmuch-show-mark-read-then-next-open-message)
 	(if last
 	    (notmuch-show-archive-thread))))))
+
+(defun notmuch-show-next-button ()
+  "Advance point to the next button in the buffer."
+  (interactive)
+  (goto-char (button-start (next-button (point)))))
+
+(defun notmuch-show-previous-button ()
+  "Move point back to the previous button in the buffer."
+  (interactive)
+  (goto-char (button-start (previous-button (point)))))
 
 (defun notmuch-toggle-invisible-action (cite-button)
   (let ((invis-spec (button-get button 'invisibility-spec)))
