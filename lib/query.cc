@@ -31,11 +31,12 @@ struct _notmuch_query {
     notmuch_sort_t sort;
 };
 
-struct _notmuch_messages {
+typedef struct _notmuch_mset_messages {
+    notmuch_messages_t base;
     notmuch_database_t *notmuch;
     Xapian::MSetIterator iterator;
     Xapian::MSetIterator iterator_end;
-};
+} notmuch_mset_messages_t;
 
 struct _notmuch_threads {
     notmuch_query_t *query;
@@ -75,19 +76,42 @@ notmuch_query_set_sort (notmuch_query_t *query, notmuch_sort_t sort)
     query->sort = sort;
 }
 
+/* We end up having to call the destructors explicitly because we had
+ * to use "placement new" in order to initialize C++ objects within a
+ * block that we allocated with talloc. So C++ is making talloc
+ * slightly less simple to use, (we wouldn't need
+ * talloc_set_destructor at all otherwise).
+ */
+static int
+_notmuch_messages_destructor (notmuch_mset_messages_t *messages)
+{
+    messages->iterator.~MSetIterator ();
+    messages->iterator_end.~MSetIterator ();
+
+    return 0;
+}
+
 notmuch_messages_t *
 notmuch_query_search_messages (notmuch_query_t *query)
 {
     notmuch_database_t *notmuch = query->notmuch;
     const char *query_string = query->query_string;
-    notmuch_message_list_t *message_list;
-    Xapian::MSetIterator i;
+    notmuch_mset_messages_t *messages;
 
-    message_list = _notmuch_message_list_create (query);
-    if (unlikely (message_list == NULL))
+    messages = talloc (query, notmuch_mset_messages_t);
+    if (unlikely (messages == NULL))
 	return NULL;
 
     try {
+
+	messages->base.is_of_list_type = FALSE;
+	messages->base.iterator = NULL;
+	messages->notmuch = notmuch;
+	new (&messages->iterator) Xapian::MSetIterator ();
+	new (&messages->iterator_end) Xapian::MSetIterator ();
+
+	talloc_set_destructor (messages, _notmuch_messages_destructor);
+
 	Xapian::Enquire enquire (*notmuch->xapian_db);
 	Xapian::Query mail_query (talloc_asprintf (query, "%s%s",
 						   _find_prefix ("type"),
@@ -130,22 +154,8 @@ notmuch_query_search_messages (notmuch_query_t *query)
 
 	mset = enquire.get_mset (0, notmuch->xapian_db->get_doccount ());
 
-	for (i = mset.begin (); i != mset.end (); i++) {
-	    notmuch_message_t *message;
-	    notmuch_private_status_t status;
-
-	    message = _notmuch_message_create (message_list, notmuch,
-					       *i, &status);
-	    if (message == NULL)
-	    {
-		if (status == NOTMUCH_PRIVATE_STATUS_NO_DOCUMENT_FOUND)
-		    INTERNAL_ERROR ("A message iterator contains a "
-				    "non-existent document ID.\n");
-		break;
-	    }
-
-	    _notmuch_message_list_add_message (message_list, message);
-	}
+	messages->iterator = mset.begin ();
+	messages->iterator_end = mset.end ();
 
     } catch (const Xapian::Error &error) {
 	fprintf (stderr, "A Xapian exception occurred performing query: %s\n",
@@ -154,7 +164,55 @@ notmuch_query_search_messages (notmuch_query_t *query)
 	notmuch->exception_reported = TRUE;
     }
 
-    return _notmuch_messages_create (message_list);
+    return &messages->base;
+}
+
+notmuch_bool_t
+_notmuch_mset_messages_has_more (notmuch_messages_t *messages)
+{
+    notmuch_mset_messages_t *mset_messages;
+
+    mset_messages = (notmuch_mset_messages_t *) messages;
+
+    return (mset_messages->iterator != mset_messages->iterator_end);
+}
+
+notmuch_message_t *
+_notmuch_mset_messages_get (notmuch_messages_t *messages)
+{
+    notmuch_message_t *message;
+    Xapian::docid doc_id;
+    notmuch_private_status_t status;
+    notmuch_mset_messages_t *mset_messages;
+
+    mset_messages = (notmuch_mset_messages_t *) messages;
+
+    if (! _notmuch_mset_messages_has_more (&mset_messages->base))
+	return NULL;
+
+    doc_id = *mset_messages->iterator;
+
+    message = _notmuch_message_create (mset_messages,
+				       mset_messages->notmuch, doc_id,
+				       &status);
+
+    if (message == NULL &&
+       status == NOTMUCH_PRIVATE_STATUS_NO_DOCUMENT_FOUND)
+    {
+	INTERNAL_ERROR ("a messages iterator contains a non-existent document ID.\n");
+    }
+
+    return message;
+}
+
+void
+_notmuch_mset_messages_advance (notmuch_messages_t *messages)
+{
+    notmuch_mset_messages_t *mset_messages;
+
+    mset_messages = (notmuch_mset_messages_t *) messages;
+
+    mset_messages->iterator++;
 }
 
 /* Glib objects force use to use a talloc destructor as well, (but not

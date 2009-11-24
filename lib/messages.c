@@ -20,13 +20,6 @@
 
 #include "notmuch-private.h"
 
-#include <glib.h> /* GList */
-
-
-struct _notmuch_messages {
-    notmuch_message_node_t *iterator;
-};
-
 /* Create a new notmuch_message_list_t object, with 'ctx' as its
  * talloc owner.
  *
@@ -85,20 +78,45 @@ _notmuch_messages_create (notmuch_message_list_t *list)
     if (unlikely (messages == NULL))
 	return NULL;
 
+    messages->is_of_list_type = TRUE;
     messages->iterator = list->head;
 
     return messages;
 }
 
+/* We're using the "is_of_type_list" to conditionally defer to the
+ * notmuch_mset_messages_t implementation of notmuch_messages_t in
+ * query.cc. It's ugly that that's over in query.cc, and it's ugly
+ * that we're not using a union here. Both of those uglies are due to
+ * C++:
+ *
+ *	1. I didn't want to force a C++ header file onto
+ *	   notmuch-private.h and suddenly subject all our code to a
+ *	   C++ compiler and its rules.
+ *
+ *	2. C++ won't allow me to put C++ objects, (with non-trivial
+ *	   constructors) into a union anyway. Even though I'd
+ *	   carefully control object construction with placement new
+ *	   anyway. *sigh*
+ */
 notmuch_bool_t
 notmuch_messages_has_more (notmuch_messages_t *messages)
 {
-    return (messages != NULL && messages->iterator != NULL);
+    if (messages == NULL)
+	return FALSE;
+
+    if (! messages->is_of_list_type)
+	return _notmuch_mset_messages_has_more (messages);
+
+    return (messages->iterator != NULL);
 }
 
 notmuch_message_t *
 notmuch_messages_get (notmuch_messages_t *messages)
 {
+    if (! messages->is_of_list_type)
+	return _notmuch_mset_messages_get (messages);
+
     if (messages->iterator == NULL)
 	return NULL;
 
@@ -108,6 +126,9 @@ notmuch_messages_get (notmuch_messages_t *messages)
 void
 notmuch_messages_advance (notmuch_messages_t *messages)
 {
+    if (! messages->is_of_list_type)
+	return _notmuch_mset_messages_advance (messages);
+
     if (messages->iterator == NULL)
 	return;
 

@@ -290,6 +290,15 @@ typedef struct _notmuch_message_list {
     notmuch_message_node_t **tail;
 } notmuch_message_list_t;
 
+/* There's a rumor that there's an alternate struct _notmuch_messages
+ * somewhere with some nasty C++ objects in it. We'll try to maintain
+ * ignorance of that here. (See notmuch_mset_messages_t in query.cc)
+ */
+struct _notmuch_messages {
+    notmuch_bool_t is_of_list_type;
+    notmuch_message_node_t *iterator;
+};
+
 notmuch_message_list_t *
 _notmuch_message_list_create (const void *ctx);
 
@@ -303,6 +312,17 @@ _notmuch_message_list_add_message (notmuch_message_list_t *list,
 
 notmuch_messages_t *
 _notmuch_messages_create (notmuch_message_list_t *list);
+
+/* query.cc */
+
+notmuch_bool_t
+_notmuch_mset_messages_has_more (notmuch_messages_t *messages);
+
+notmuch_message_t *
+_notmuch_mset_messages_get (notmuch_messages_t *messages);
+
+void
+_notmuch_mset_messages_advance (notmuch_messages_t *messages);
 
 /* message.cc */
 
