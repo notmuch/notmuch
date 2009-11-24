@@ -128,6 +128,10 @@ let g:notmuch_show_maps = {
         \ '<Space>':    ':call <SID>NM_show_advance_marking_read_and_archiving()<CR>',
         \ '\|':         ':call <SID>NM_show_pipe_message()<CR>',
         \
+        \ '<S-Tab>':    ':call <SID>NM_show_previous_fold()<CR>',
+        \ '<Tab>':      ':call <SID>NM_show_next_fold()<CR>',
+        \ '<Enter>':    ':call <SID>NM_show_toggle_fold()<CR>',
+        \
         \ 'r':          ':call <SID>NM_show_reply()<CR>',
         \ 'm':          ':call <SID>NM_new_mail()<CR>',
         \ '?':          ':echo <SID>NM_show_message_id() . ''  @ '' . join(<SID>NM_show_search_words())<CR>',
@@ -494,15 +498,20 @@ function! s:NM_show_pipe_message()
         echo 'not implemented'
 endfunction
 
-" --- --- show screen helper functions {{{2
-
-function! s:NM_show_thread_id()
-        if !exists('b:nm_words')
-                echoe 'no b:nm_words'
-                return ''
-        endif
-        return b:nm_words[0]
+function! s:NM_show_previous_fold()
+        echo 'not implemented'
 endfunction
+
+function! s:NM_show_next_fold()
+        echo 'not implemented'
+endfunction
+
+function! s:NM_show_toggle_fold()
+        echo 'not implemented'
+endfunction
+
+
+" --- --- show screen helper functions {{{2
 
 function! s:NM_show_message_id()
         if !exists('b:nm_raw_info')
