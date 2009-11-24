@@ -230,7 +230,13 @@ endfunction
 function! s:NM_search_show_thread()
         let id = <SID>NM_search_thread_id()
         if id != ''
-                call <SID>NM_cmd_show([id])
+                let words = [id]
+                if exists('b:nm_search_words')
+                        let words = ['('] + b:nm_search_words + [')', 'and', id]
+                endif
+                if len(words)
+                        call <SID>NM_cmd_show(words)
+                endif
         endif
 endfunction
 
