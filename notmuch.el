@@ -62,8 +62,6 @@
     (define-key map "a" 'notmuch-show-archive-thread)
     (define-key map "A" 'notmuch-show-mark-read-then-archive-thread)
     (define-key map "b" 'notmuch-show-toggle-body-read-visible)
-    (define-key map "c" 'notmuch-show-toggle-citations-visible)
-    (define-key map "h" 'notmuch-show-toggle-headers-visible)
     (define-key map "m" 'message-mail)
     (define-key map "n" 'notmuch-show-next-message)
     (define-key map "N" 'notmuch-show-mark-read-then-next-open-message)
@@ -72,7 +70,6 @@
     (define-key map (kbd "C-p") 'notmuch-show-previous-line)
     (define-key map "q" 'kill-this-buffer)
     (define-key map "r" 'notmuch-show-reply)
-    (define-key map "s" 'notmuch-show-toggle-signatures-visible)
     (define-key map "v" 'notmuch-show-view-all-mime-parts)
     (define-key map "w" 'notmuch-show-view-raw-message)
     (define-key map "x" 'kill-this-buffer)
@@ -665,39 +662,6 @@ which this thread was originally shown."
     (while (not (eobp))
       (notmuch-show-markup-message)))
   (notmuch-show-hide-markers))
-
-(defun notmuch-show-toggle-citations-visible ()
-  "Toggle visibility of citations"
-  (interactive)
-  (if notmuch-show-citations-visible
-      (add-to-invisibility-spec 'notmuch-show-citation)
-    (remove-from-invisibility-spec 'notmuch-show-citation))
-  (set 'notmuch-show-citations-visible (not notmuch-show-citations-visible))
-  ; Need to force the redisplay for some reason
-  (force-window-update)
-  (redisplay t))
-
-(defun notmuch-show-toggle-signatures-visible ()
-  "Toggle visibility of signatures"
-  (interactive)
-  (if notmuch-show-signatures-visible
-      (add-to-invisibility-spec 'notmuch-show-signature)
-    (remove-from-invisibility-spec 'notmuch-show-signature))
-  (set 'notmuch-show-signatures-visible (not notmuch-show-signatures-visible))
-  ; Need to force the redisplay for some reason
-  (force-window-update)
-  (redisplay t))
-
-(defun notmuch-show-toggle-headers-visible ()
-  "Toggle visibility of header fields"
-  (interactive)
-  (if notmuch-show-headers-visible
-      (add-to-invisibility-spec 'notmuch-show-header)
-    (remove-from-invisibility-spec 'notmuch-show-header))
-  (set 'notmuch-show-headers-visible (not notmuch-show-headers-visible))
-  ; Need to force the redisplay for some reason
-  (force-window-update)
-  (redisplay t))
 
 (defun notmuch-show-toggle-body-read-visible ()
   "Toggle visibility of message bodies of read messages"
