@@ -497,12 +497,15 @@ which this thread was originally shown."
   (force-window-update)
   (redisplay t))
 
-(defun notmuch-configure-invisibility-button (btn invis-spec help-msg)
-  (button-put btn 'invisibility-spec invis-spec)
-  (button-put btn 'action 'notmuch-toggle-invisible-action)
-  (button-put btn 'follow-link t)
-  (button-put btn 'help-echo (concat "mouse-1, RET: " help-msg))
-)
+(define-button-type 'notmuch-button-invisibility-toggle-type 'action 'notmuch-toggle-invisible-action 'follow-link t)
+(define-button-type 'notmuch-button-citation-toggle-type 'help-echo "mouse-1, RET: Show citation"
+  :supertype 'notmuch-button-invisibility-toggle-type)
+(define-button-type 'notmuch-button-signature-toggle-type 'help-echo "mouse-1, RET: Show signature"
+  :supertype 'notmuch-button-invisibility-toggle-type)
+(define-button-type 'notmuch-button-headers-toggle-type 'help-echo "mouse-1, RET: Show headers"
+  :supertype 'notmuch-button-invisibility-toggle-type)
+(define-button-type 'notmuch-button-body-toggle-type 'help-echo "mouse-1, RET: Show message"
+  :supertype 'notmuch-button-invisibility-toggle-type)
 
 (defun notmuch-show-markup-citations-region (beg end depth)
   (goto-char beg)
@@ -525,7 +528,9 @@ which this thread was originally shown."
                              "-line citation.]")))
                 (goto-char (- beg-sub 1))
                 (insert (concat "\n" indent))
-                (notmuch-configure-invisibility-button (insert-button cite-button-text) invis-spec "Show citation")
+                (insert-button cite-button-text
+                               'invisibility-spec invis-spec
+                               :type 'notmuch-button-citation-toggle-type)
                 (insert "\n")
                 (goto-char (+ (length cite-button-text) p))
               ))))
@@ -541,9 +546,11 @@ which this thread was originally shown."
                   
                     (goto-char (- beg-sub 1))
                     (insert (concat "\n" indent))
-                    (notmuch-configure-invisibility-button
-                     (insert-button (concat "[" (number-to-string sig-lines)
-                                            "-line signature.]"))  invis-spec "Show signature")
+                    (let ((sig-button-text (concat "[" (number-to-string sig-lines)
+                                                   "-line signature.]")))
+                      (insert-button sig-button-text 'invisibility-spec invis-spec
+                                     :type 'notmuch-button-signature-toggle-type)
+                     )
                     (insert "\n")
                     (goto-char end))))))
       (forward-line))))
@@ -572,16 +579,19 @@ which this thread was originally shown."
     (while (< (point) end)
       (notmuch-show-markup-part beg end depth))))
 
-(defun notmuch-show-markup-body (depth)
+(defun notmuch-show-markup-body (depth btn)
   (re-search-forward notmuch-show-body-begin-regexp)
   (forward-line)
   (let ((beg (point-marker)))
     (re-search-forward notmuch-show-body-end-regexp)
     (let ((end (copy-marker (match-beginning 0))))
       (notmuch-show-markup-parts-region beg end depth)
-      (if (not (notmuch-show-message-unread-p))
-	  (overlay-put (make-overlay beg end)
-		       'invisible 'notmuch-show-body-read))
+      (let ((invis-spec (make-symbol "notmuch-show-body-read")))
+        (overlay-put (make-overlay beg end)
+                     'invisible invis-spec)
+        (button-put btn 'invisibility-spec invis-spec)
+        (if (not (notmuch-show-message-unread-p))
+            (add-to-invisibility-spec invis-spec)))
       (set-marker beg nil)
       (set-marker end nil)
       )))
@@ -589,10 +599,12 @@ which this thread was originally shown."
 (defun notmuch-show-markup-header (depth)
   (re-search-forward notmuch-show-header-begin-regexp)
   (forward-line)
-  (let ((beg (point-marker)))
+  (let ((beg (point-marker))
+        (btn nil))
     (end-of-line)
     ; Inverse video for subject
     (overlay-put (make-overlay beg (point)) 'face '(:inverse-video t))
+    (setq btn (make-button beg (point) :type 'notmuch-button-body-toggle-type))
     (forward-line 1)
     (end-of-line)
     (let ((beg-hidden (point-marker)))
@@ -614,23 +626,25 @@ which this thread was originally shown."
                        'invisible invis-spec)
           (goto-char beg)
           (forward-line)
-          (notmuch-configure-invisibility-button
-           (make-button (line-beginning-position) (line-end-position))
-           (cons invis-spec t) "Show headers"))
+          (make-button (line-beginning-position) (line-end-position)
+                        'invisibility-spec (cons invis-spec t)
+                        :type 'notmuch-button-headers-toggle-type))
         (goto-char end)
         (insert "\n")
 	(set-marker beg nil)
 	(set-marker beg-hidden nil)
 	(set-marker end nil)
-	))))
+	))
+    btn))
 
 (defun notmuch-show-markup-message ()
   (if (re-search-forward notmuch-show-message-begin-regexp nil t)
       (progn
 	(re-search-forward notmuch-show-depth-regexp)
-	(let ((depth (string-to-number (buffer-substring (match-beginning 1) (match-end 1)))))
-	  (notmuch-show-markup-header depth)
-	  (notmuch-show-markup-body depth)))
+	(let ((depth (string-to-number (buffer-substring (match-beginning 1) (match-end 1))))
+              (btn nil))
+	  (setq btn (notmuch-show-markup-header depth))
+	  (notmuch-show-markup-body depth btn)))
     (goto-char (point-max))))
 
 (defun notmuch-show-hide-markers ()
@@ -649,17 +663,6 @@ which this thread was originally shown."
     (while (not (eobp))
       (notmuch-show-markup-message)))
   (notmuch-show-hide-markers))
-
-(defun notmuch-show-toggle-body-read-visible ()
-  "Toggle visibility of message bodies of read messages"
-  (interactive)
-  (if notmuch-show-body-read-visible
-      (add-to-invisibility-spec 'notmuch-show-body-read)
-    (remove-from-invisibility-spec 'notmuch-show-body-read))
-  (set 'notmuch-show-body-read-visible (not notmuch-show-body-read-visible))
-  ; Need to force the redisplay for some reason
-  (force-window-update)
-  (redisplay t))
 
 ;;;###autoload
 (defun notmuch-show-mode ()
@@ -689,14 +692,6 @@ view, (remove the \"inbox\" tag from each), with
 \\{notmuch-show-mode-map}"
   (interactive)
   (kill-all-local-variables)
-  (set (make-local-variable 'notmuch-show-headers-visible) t)
-  (notmuch-show-toggle-headers-visible)
-  (set (make-local-variable 'notmuch-show-body-read-visible) t)
-  (notmuch-show-toggle-body-read-visible)
-  (set (make-local-variable 'notmuch-show-citations-visible) t)
-  (notmuch-show-toggle-citations-visible)
-  (set (make-local-variable 'notmuch-show-signatures-visible) t)
-  (notmuch-show-toggle-signatures-visible)
   (add-to-invisibility-spec 'notmuch-show-marker)
   (use-local-map notmuch-show-mode-map)
   (setq major-mode 'notmuch-show-mode
@@ -765,7 +760,16 @@ thread from that buffer can be show when done with this one)."
 	    (if (not (notmuch-show-message-unread-p))
 		(progn
 		  (goto-char (point-min))
-		  (notmuch-show-toggle-body-read-visible)))))
+                  (let ((btn (forward-button 1)))
+                    (while btn
+                      (if (button-has-type-p btn 'notmuch-button-body-toggle-type)
+                          (push-button))
+                      (condition-case err
+                          (setq btn (forward-button 1))
+                        (error (setq btn nil)))
+                    ))
+                  (beginning-of-buffer)
+                  ))))
       )))
 
 (defvar notmuch-search-authors-width 40
@@ -802,6 +806,7 @@ thread from that buffer can be show when done with this one)."
 
 (defvar notmuch-search-query-string)
 (defvar notmuch-search-oldest-first)
+
 
 (defun notmuch-search-scroll-up ()
   "Scroll up, moving point to last message in thread if at end."
