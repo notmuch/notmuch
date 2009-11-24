@@ -260,7 +260,7 @@ _notmuch_thread_create (void *ctx,
 
     notmuch_query_set_sort (thread_id_query, NOTMUCH_SORT_OLDEST_FIRST);
 
-    for (messages = notmuch_query_search_messages (thread_id_query, 0, -1);
+    for (messages = notmuch_query_search_messages (thread_id_query);
 	 notmuch_messages_has_more (messages);
 	 notmuch_messages_advance (messages))
     {
@@ -271,7 +271,7 @@ _notmuch_thread_create (void *ctx,
 
     notmuch_query_destroy (thread_id_query);
 
-    for (messages = notmuch_query_search_messages (matched_query, 0, -1);
+    for (messages = notmuch_query_search_messages (matched_query);
 	 notmuch_messages_has_more (messages);
 	 notmuch_messages_advance (messages))
     {

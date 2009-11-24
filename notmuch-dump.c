@@ -58,7 +58,7 @@ notmuch_dump_command (unused (void *ctx), int argc, char *argv[])
 	output = stdout;
     }
 
-    for (messages = notmuch_query_search_messages (query, 0, -1);
+    for (messages = notmuch_query_search_messages (query);
 	 notmuch_messages_has_more (messages);
 	 notmuch_messages_advance (messages))
     {

@@ -105,7 +105,7 @@ notmuch_tag_command (void *ctx, unused (int argc), unused (char *argv[]))
 	return 1;
     }
 
-    for (messages = notmuch_query_search_messages (query, 0, -1);
+    for (messages = notmuch_query_search_messages (query);
 	 notmuch_messages_has_more (messages) && !interrupted;
 	 notmuch_messages_advance (messages))
     {

@@ -76,9 +76,7 @@ notmuch_query_set_sort (notmuch_query_t *query, notmuch_sort_t sort)
 }
 
 notmuch_messages_t *
-notmuch_query_search_messages (notmuch_query_t *query,
-			       int first,
-			       int max_messages)
+notmuch_query_search_messages (notmuch_query_t *query)
 {
     notmuch_database_t *notmuch = query->notmuch;
     const char *query_string = query->query_string;
@@ -130,9 +128,7 @@ notmuch_query_search_messages (notmuch_query_t *query,
 
 	enquire.set_query (final_query);
 
-	if (max_messages == -1)
-	    max_messages = notmuch->xapian_db->get_doccount ();
-	mset = enquire.get_mset (first, max_messages);
+	mset = enquire.get_mset (0, notmuch->xapian_db->get_doccount ());
 
 	for (i = mset.begin (); i != mset.end (); i++) {
 	    notmuch_message_t *message;
@@ -186,7 +182,7 @@ notmuch_query_search_threads (notmuch_query_t *query)
     threads->threads = g_hash_table_new_full (g_str_hash, g_str_equal,
 					      free, NULL);
 
-    threads->messages = notmuch_query_search_messages (query, 0, -1);
+    threads->messages = notmuch_query_search_messages (query);
 
     threads->thread_id = NULL;
 

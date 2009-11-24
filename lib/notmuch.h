@@ -361,14 +361,6 @@ notmuch_query_search_threads (notmuch_query_t *query);
  * messages object is owned by the query and as such, will only be
  * valid until notmuch_query_destroy.
  *
- * The 'first' and 'max_messages' arguments can be used to obtain
- * partial results from the search. For example, to get results 10 at
- * a time, pass 'max_messages' as 10 and for 'first' pass the values
- * 0, 10, 20, etc. As a special case, a value of -1 for 'max_messages'
- * indicates that no limiting is to be performed. So a search with
- * 'first' == 0 and 'max_messages' == -1 will return the complete
- * results of the search.
- *
  * Typical usage might be:
  *
  *     notmuch_query_t *query;
@@ -401,8 +393,7 @@ notmuch_query_search_threads (notmuch_query_t *query);
  * reason to call it if the query is about to be destroyed).
  */
 notmuch_messages_t *
-notmuch_query_search_messages (notmuch_query_t *query,
-			       int first, int max_messages);
+notmuch_query_search_messages (notmuch_query_t *query);
 
 /* Destroy a notmuch_query_t along with any associated resources.
  *
