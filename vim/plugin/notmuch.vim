@@ -218,7 +218,7 @@ function! s:NM_cmd_search_fmtline(line)
         if strlen(from) >= max
                 let from = substitute(m[3][0:max-4], '[^A-Za-z1-9_]*$', '', '') . '...'
         endif
-        return printf('%s %-20s | %s (%s)', m[2], from, m[4], m[5])
+        return printf('%-20s %-20s | %s (%s)', m[2], from, m[4], m[5])
 endfunction
 function! s:NM_cmd_search_mksyntax()
         syntax clear nmSearchFrom
