@@ -130,7 +130,7 @@ let g:notmuch_show_maps = {
         \
         \ 'r':          ':call <SID>NM_show_reply()<CR>',
         \ 'm':          ':call <SID>NM_new_mail()<CR>',
-        \ '?':          ':echo <SID>NM_show_thread_id() . '' '' . <SID>NM_show_message_id()<CR>',
+        \ '?':          ':echo <SID>NM_show_message_id() . ''  @ '' . join(<SID>NM_show_search_words())<CR>',
         \ }
 
 
@@ -506,13 +506,21 @@ function! s:NM_show_message_id()
         let info = b:nm_raw_info
         let lnum = line('.')
         for msg in info['msgs']
-                if lnum >= msg['start']
+                if lnum > msg['end']
                         continue
                 endif
 
                 return msg['id']
         endfor
         return ''
+endfunction
+
+function! s:NM_show_search_words()
+        if !exists('b:nm_words')
+                echoe 'no b:nm_words'
+                return []
+        endif
+        return b:nm_words
 endfunction
 
 function! s:NM_show_fold_toggle(key, type, fold)
