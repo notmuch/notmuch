@@ -497,6 +497,13 @@ which this thread was originally shown."
   (force-window-update)
   (redisplay t))
 
+(defun notmuch-configure-invisibility-button (btn invis-spec help-msg)
+  (button-put btn 'invisibility-spec invis-spec)
+  (button-put btn 'action 'notmuch-toggle-invisible-action)
+  (button-put btn 'follow-link t)
+  (button-put btn 'help-echo (concat "mouse-1, RET: " help-msg))
+)
+
 (defun notmuch-show-markup-citations-region (beg end depth)
   (goto-char beg)
   (beginning-of-line)
@@ -512,22 +519,13 @@ which this thread was originally shown."
                   (invis-spec (make-symbol "notmuch-citation-region")))
               (add-to-invisibility-spec invis-spec)
 	      (overlay-put overlay 'invisible invis-spec)
-              (let (
-                    (p (point))
+              (let ((p (point))
                     (cite-button-text
                      (concat "["  (number-to-string (count-lines beg-sub (point)))
-                             "-line citation.]"))
-                    )
+                             "-line citation.]")))
                 (goto-char (- beg-sub 1))
                 (insert (concat "\n" indent))
-                (let ((cite-button (insert-button cite-button-text)))
-                  (button-put cite-button 'invisibility-spec invis-spec)
-                  (button-put cite-button 'action 'notmuch-toggle-invisible-action)
-                  (button-put cite-button 'follow-link t)
-                  (button-put cite-button 'help-echo
-                              "mouse-1, RET: Show citation")
-
-                  )
+                (notmuch-configure-invisibility-button (insert-button cite-button-text) invis-spec "Show citation")
                 (insert "\n")
                 (goto-char (+ (length cite-button-text) p))
               ))))
@@ -543,16 +541,9 @@ which this thread was originally shown."
                   
                     (goto-char (- beg-sub 1))
                     (insert (concat "\n" indent))
-                    (let ((sig-button (insert-button 
-                                       (concat "[" (number-to-string sig-lines)
-                                         "-line signature.]"))))
-                      (button-put sig-button 'invisibility-spec invis-spec)
-                      (button-put sig-button 'action
-                                  'notmuch-toggle-invisible-action)
-                      (button-put sig-button 'follow-link t)
-                      (button-put sig-button 'help-echo
-                                  "mouse-1, RET: Show signature")
-                      )
+                    (notmuch-configure-invisibility-button
+                     (insert-button (concat "[" (number-to-string sig-lines)
+                                            "-line signature.]"))  invis-spec "Show signature")
                     (insert "\n")
                     (goto-char end))))))
       (forward-line))))
@@ -623,13 +614,9 @@ which this thread was originally shown."
                        'invisible invis-spec)
           (goto-char beg)
           (forward-line)
-          (let ((header-button (make-button (line-beginning-position) (line-end-position))))
-            (button-put header-button 'invisibility-spec (cons invis-spec t))
-            (button-put header-button 'action 'notmuch-toggle-invisible-action)
-            (button-put header-button 'follow-link t)
-            (button-put header-button 'help-echo
-                        "mouse-1, RET: Show headers")
-          ))
+          (notmuch-configure-invisibility-button
+           (make-button (line-beginning-position) (line-end-position))
+           (cons invis-spec t) "Show headers"))
         (goto-char end)
         (insert "\n")
 	(set-marker beg nil)
