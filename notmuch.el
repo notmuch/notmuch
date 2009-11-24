@@ -61,7 +61,6 @@
     ; overlays-at to query and manipulate the current overlay.
     (define-key map "a" 'notmuch-show-archive-thread)
     (define-key map "A" 'notmuch-show-mark-read-then-archive-thread)
-    (define-key map "b" 'notmuch-show-toggle-body-read-visible)
     (define-key map "m" 'message-mail)
     (define-key map "n" 'notmuch-show-next-message)
     (define-key map "N" 'notmuch-show-mark-read-then-next-open-message)
