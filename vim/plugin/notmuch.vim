@@ -326,8 +326,10 @@ endfunction
 
 function! s:NM_search_refresh_view()
         let lno = line('.')
+        let prev_bufnr = b:nm_prev_bufnr
         setlocal bufhidden=delete
         call <SID>NM_cmd_search(b:nm_search_words)
+        let b:nm_prev_bufnr = prev_bufnr
         " FIXME: should find the line of the thread we were on if possible
         exec printf('norm %dG', lno)
 endfunction
