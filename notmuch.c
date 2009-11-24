@@ -104,7 +104,7 @@ static const char search_terms_help[] =
     "\t\tfollowing syntax would specify a date range to return messages\n"
     "\t\tfrom 2009-10-01 until the current time:\n"
     "\n"
-    "\t\t\t$(date +%s -d 2009-10-01)..$(date +%s)\n\n";
+    "\t\t\t$(date +%%s -d 2009-10-01)..$(date +%%s)\n\n";
 
 command_t commands[] = {
     { "setup", notmuch_setup_command,
