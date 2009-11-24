@@ -171,9 +171,7 @@ _notmuch_threads_destructor (notmuch_threads_t *threads)
 }
 
 notmuch_threads_t *
-notmuch_query_search_threads (notmuch_query_t *query,
-			      int first,
-			      int max_threads)
+notmuch_query_search_threads (notmuch_query_t *query)
 {
     notmuch_threads_t *threads;
     notmuch_thread_t *thread;
@@ -181,7 +179,6 @@ notmuch_query_search_threads (notmuch_query_t *query,
     notmuch_messages_t *messages;
     notmuch_message_t *message;
     GHashTable *seen;
-    int messages_seen = 0, threads_seen = 0;
 
     threads = talloc (query, notmuch_threads_t);
     if (threads == NULL)
@@ -196,49 +193,27 @@ notmuch_query_search_threads (notmuch_query_t *query,
     seen = g_hash_table_new_full (g_str_hash, g_str_equal,
 				  free, NULL);
 
-    while (max_threads < 0 || threads_seen < first + max_threads)
+    for (messages = notmuch_query_search_messages (query, 0, -1);
+	 notmuch_messages_has_more (messages);
+	 notmuch_messages_advance (messages))
     {
-	int messages_seen_previously = messages_seen;
+	message = notmuch_messages_get (messages);
 
-	for (messages = notmuch_query_search_messages (query,
-						       messages_seen,
-						       max_threads);
-	     notmuch_messages_has_more (messages);
-	     notmuch_messages_advance (messages))
+	thread_id = notmuch_message_get_thread_id (message);
+
+	if (! g_hash_table_lookup_extended (seen,
+					    thread_id, NULL,
+					    (void **) &thread))
 	{
-	    message = notmuch_messages_get (messages);
+	    thread = _notmuch_thread_create (query, query->notmuch,
+					     thread_id,
+					     query->query_string);
+	    g_ptr_array_add (threads->threads, thread);
 
-	    thread_id = notmuch_message_get_thread_id (message);
-
-	    if (! g_hash_table_lookup_extended (seen,
-						thread_id, NULL,
-						(void **) &thread))
-	    {
-		if (threads_seen >= first) {
-		    thread = _notmuch_thread_create (query, query->notmuch,
-						     thread_id,
-						     query->query_string);
-		    g_ptr_array_add (threads->threads, thread);
-		} else {
-		    thread = NULL;
-		}
-
-		g_hash_table_insert (seen, xstrdup (thread_id), thread);
-
-		threads_seen++;
-	    }
-
-	    notmuch_message_destroy (message);
-
-	    messages_seen++;
-
-	    if (max_threads >= 0 && threads_seen >= first + max_threads)
-		break;
+	    g_hash_table_insert (seen, xstrdup (thread_id), thread);
 	}
 
-	/* Stop if we're not seeing any more messages. */
-	if (messages_seen == messages_seen_previously)
-	    break;
+	notmuch_message_destroy (message);
     }
 
     g_hash_table_unref (seen);

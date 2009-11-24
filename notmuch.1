@@ -154,29 +154,6 @@ Supported options for
 include
 .RS 4
 .TP 4
-.BR \-\-max\-threads= <value>
-
-Restricts displayed search results to a subset of the complete results
-that would match the terms. With this option, no more than <value>
-thread results will be displayed. If this option is not used, then all
-matching threads will be displayed. See also the
-.B \-\-first
-option.
-
-.TP
-.BR \-\-first= <value>
-
-Omits the first <value> threads from the search results that would
-otherwise be displayed. Together with the
-.BR \-\-max\-threads
-option, this can be used to perform incremental searches. For example,
-the first 50 thread results can be displayed with
-.B "\-\-first=0 \-\-max\-threads=50"
-and the next 50 could be displayed with
-.B "\-\-first=50 \-\-max\-threads=50"
-etc.
-
-.TP
 .BR \-\-sort= ( newest\-first | oldest\-first )
 
 This option can be used to present results in either chronological order
