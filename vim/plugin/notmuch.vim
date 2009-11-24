@@ -296,7 +296,7 @@ function! s:NM_search_filter_helper(prompt, prefix, joiner)
                         let idx = idx - 1
                 endwhile
         endif
-        let tags = b:nm_search_words + ['and', '''('] + tags + [')''']
+        let tags = b:nm_search_words + ['and', '('] + tags + [')']
 
         let prev_bufnr = bufnr('%')
         setlocal bufhidden=hide
@@ -757,8 +757,15 @@ function! s:NM_newBuffer(type, content)
         let b:nm_type = a:type
 endfunction
 
+function! s:NM_shell_escape(word)
+        let word = substitute(a:word, '''', '\\''', 'g')
+        return '''' . word . ''''
+endfunction
+
 function! s:NM_run(args)
-        let cmd = g:notmuch_cmd . ' ' . join(a:args) . '< /dev/null'
+        let words = a:args
+        call map(words, 's:NM_shell_escape(v:val)')
+        let cmd = g:notmuch_cmd . ' ' . join(words) . '< /dev/null'
 
         let start = reltime()
         let out = system(cmd)
