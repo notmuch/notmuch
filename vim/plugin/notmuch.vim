@@ -110,8 +110,8 @@ let g:notmuch_search_maps = {
 
 " --- --- bindings for show screen {{{2
 let g:notmuch_show_maps = {
-        \ '<C-P>':      ':call <SID>NM_show_previous(1)<CR>',
-        \ '<C-N>':      ':call <SID>NM_show_next(1)<CR>',
+        \ '<C-P>':      ':call <SID>NM_show_previous(1, 0)<CR>',
+        \ '<C-N>':      ':call <SID>NM_show_next(1, 0)<CR>',
         \ '<C-]>':      ':call <SID>NM_search_expand(''<cword>'')<CR>',
         \ 'q':          ':call <SID>NM_kill_this_buffer()<CR>',
         \
@@ -399,10 +399,13 @@ function! s:NM_cmd_show(words)
 
 endfunction
 
-function! s:NM_show_previous(can_change_thread)
+function! s:NM_show_previous(can_change_thread, find_matching)
         let info = b:nm_raw_info
         let lnum = line('.')
         for msg in reverse(copy(info['msgs']))
+                if a:find_matching && msg['match'] == '0'
+                        continue
+                endif
                 if lnum <= msg['start']
                         continue
                 endif
@@ -426,10 +429,13 @@ function! s:NM_show_previous(can_change_thread)
         endif
 endfunction
 
-function! s:NM_show_next(can_change_thread)
+function! s:NM_show_next(can_change_thread, find_matching)
         let info = b:nm_raw_info
         let lnum = line('.')
         for msg in info['msgs']
+                if a:find_matching && msg['match'] == '0'
+                        continue
+                endif
                 if lnum >= msg['start']
                         continue
                 endif
