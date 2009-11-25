@@ -871,31 +871,6 @@ global search.
   "Return the thread for the current thread"
   (get-text-property (point) 'notmuch-search-thread-id))
 
-(defun notmuch-search-markup-this-thread-id ()
-  (beginning-of-line)
-  (let ((beg (point)))
-    (if (re-search-forward "thread:[a-fA-F0-9]*" nil t)
-	(progn
-	  (forward-char)
-	  (overlay-put (make-overlay beg (point)) 'invisible 'notmuch-search)
-	  (re-search-forward ".*\\[[0-9]*/[0-9]*\\] \\([^;]*\\)\\(;\\)")
-	  (let* ((authors (buffer-substring (match-beginning 1) (match-end 1)))
-		 (authors-length (length authors)))
-	    ;; Drop the semi-colon
-	    (replace-match "" t nil nil 2)
-	    (if (<= authors-length notmuch-search-authors-width)
-		(replace-match (concat authors (make-string
-						(- notmuch-search-authors-width
-						   authors-length) ? )) t t nil 1)
-	      (replace-match (concat (substring authors 0 (- notmuch-search-authors-width 3)) "...") t t nil 1)))))))
-
-(defun notmuch-search-markup-thread-ids ()
-  (save-excursion
-    (goto-char (point-min))
-    (while (not (eobp))
-      (notmuch-search-markup-this-thread-id)
-      (forward-line))))
-
 (defun notmuch-search-show-thread ()
   (interactive)
   (let ((thread-id (notmuch-search-find-thread-id)))
