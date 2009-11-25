@@ -310,15 +310,19 @@ notmuch_reply_format_headers_only(void *ctx, notmuch_config_t *config, notmuch_q
 	in_reply_to = talloc_asprintf (ctx, "<%s>",
 			     notmuch_message_get_message_id (message));
 
+        g_mime_object_set_header (GMIME_OBJECT (reply),
+				  "In-Reply-To", in_reply_to);
+
+
 	orig_references = notmuch_message_get_header (message, "references");
 
-	/* We print References first because git format-patch treats it specially.
-	 * Git uses the first entry of References to create In-Reply-To.
+	/* We print In-Reply-To followed by References because git format-patch treats them
+         * specially.  Git does not interpret the other headers specially
 	 */
 	references = talloc_asprintf (ctx, "%s%s%s",
-				      in_reply_to,
 				      orig_references ? orig_references : "",
-				      orig_references ? " " : "");
+				      orig_references ? " " : "",
+				      in_reply_to);
 	g_mime_object_set_header (GMIME_OBJECT (reply),
 				  "References", references);
 
