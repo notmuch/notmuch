@@ -132,6 +132,7 @@ _thread_add_matched_message (notmuch_thread_t *thread,
 			     notmuch_message_t *message)
 {
     time_t date;
+    notmuch_message_t *hashed_message;
 
     date = notmuch_message_get_date (message);
 
@@ -142,6 +143,13 @@ _thread_add_matched_message (notmuch_thread_t *thread,
 	thread->newest = date;
 
     thread->matched_messages++;
+
+    if (g_hash_table_lookup_extended (thread->message_hash,
+			    notmuch_message_get_message_id (message), NULL,
+			    (void **) &hashed_message)) {
+	notmuch_message_set_flag (hashed_message,
+			NOTMUCH_MSG_FLAG_MATCHING_SEARCH, 1);
+    }
 }
 
 static void
