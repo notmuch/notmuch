@@ -315,7 +315,7 @@ notmuch_query_count_messages (notmuch_query_t *query)
 {
     notmuch_database_t *notmuch = query->notmuch;
     const char *query_string = query->query_string;
-    Xapian::doccount count;
+    Xapian::doccount count = 0;
 
     try {
 	Xapian::Enquire enquire (*notmuch->xapian_db);
