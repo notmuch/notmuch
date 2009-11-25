@@ -494,8 +494,69 @@ function! s:NM_show_remove_tag()
         echo 'not implemented'
 endfunction
 
+" if entire message is not visible scroll down 1/2 page or less to get to the bottom of message
+" otherwise go to next message
+" any message that is viewed entirely has inbox and unread tags removed
 function! s:NM_show_advance_marking_read_and_archiving()
-        echo 'not implemented'
+        let advance_tags = ['unread', 'inbox']
+
+        let vis_top = line('w0')
+        let vis_bot = line('w$')
+
+        let msg_top = <SID>NM_show_get_message_for_line(vis_top)
+        if !has_key(msg_top,'id')
+                echo "No top visible message."
+        endif
+
+        " if the top message is the last message, just expunge the entire thread and move on
+        if msg_top['end'] == line('$')
+                let ids = []
+                for msg in b:nm_raw_info['msgs']
+                        if has_key(msg,'match') && msg['match'] != '0'
+                                if len(ids)
+                                        call add(ids, 'OR')
+                                endif
+                                call add(ids, msg['id'])
+                        endif
+                endfor
+
+                let filter = ['('] + advance_tags + [')', 'AND', '('] + ids + [')']
+echo 'NM_add_remove_tags ALL filter=' . string(filter)
+                call <SID>NM_add_remove_tags(filter, '-', advance_tags)
+                call <SID>NM_show_next(1, 1)
+                return
+        endif
+
+        let msg_bot = <SID>NM_show_get_message_for_line(vis_bot)
+        if !has_key(msg_bot,'id')
+                echo "No bottom visible message."
+        endif
+
+        echo 'top=' . msg_top['id'] . '  bot=' . msg_top['id']
+
+        " if entire message fits on the screen, read/archive it, move to the next one
+        if msg_top['id'] != msg_bot['id'] || msg_top['end'] <= vis_bot
+                call <SID>NM_add_remove_tags_on_screen(msg_top['start'], '-', advance_tags)
+                exec printf('norm %dG', vis_top)
+                call <SID>NM_show_next(0, 1)
+                if has_key(msg_top,'match') && msg_top['match'] != '0'
+                        redraw
+                        " do this last to hide the latency
+                        let filter = ['('] + advance_tags + [')', 'AND', msg_top['id']]
+echo 'NM_add_remove_tags 1 filter=' . string(filter)
+                        call <SID>NM_add_remove_tags(filter, '-', advance_tags)
+                endif
+                return
+        endif
+
+        " entire message does not fit on the screen, scroll down to bottom, max 1/2 screen
+        let jmp = winheight(winnr()) / 2
+        let max = msg_bot['end'] - vis_bot
+        if jmp > max
+                let jmp = max
+        endif
+        exec printf('norm %dGzt', vis_top + jmp)
+        return
 endfunction
 
 function! s:NM_show_pipe_message()
