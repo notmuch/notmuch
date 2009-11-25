@@ -23,6 +23,7 @@
 
 let s:notmuch_defaults = {
         \ 'g:notmuch_cmd':                           'notmuch'                    ,
+        \ 'g:notmuch_debug':                         0                            ,
         \
         \ 'g:notmuch_search_newest_first':           1                            ,
         \ 'g:notmuch_search_from_column_width':      20                           ,
@@ -795,7 +796,9 @@ function! s:NM_run(args)
         let err = v:shell_error
         let delta = reltime(start)
 
-        echo printf('[%s] {%s} %s', reltimestr(delta), string(err), string(cmd))
+        if exists('g:notmuch_debug') && g:notmuch_debug
+                echo printf('[%s] {%s} %s', reltimestr(delta), string(err), string(cmd))
+        endif
 
         if err
                 echohl Error
