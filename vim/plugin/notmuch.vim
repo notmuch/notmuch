@@ -276,8 +276,8 @@ function! s:NM_search_edit()
 endfunction
 
 function! s:NM_search_archive_thread()
-        call <SID>NM_add_remove_tags_on_screen('-', ['inbox'])
-        call <SID>NM_add_remove_tags('-', ['inbox'])
+        call <SID>NM_add_remove_tags_on_screen('', '-', ['inbox'])
+        call <SID>NM_add_remove_tags([], '-', ['inbox'])
         norm j
 endfunction
 
@@ -370,8 +370,8 @@ function! s:NM_search_add_remove_tags(prompt, prefix, intags)
         else
                 let tags = a:intags
         endif
-        call <SID>NM_add_remove_tags(a:prefix, tags)
-        call <SID>NM_add_remove_tags_on_screen(a:prefix, tags)
+        call <SID>NM_add_remove_tags([], a:prefix, tags)
+        call <SID>NM_add_remove_tags_on_screen('', a:prefix, tags)
 endfunction
 
 " --- implement show screen {{{1
@@ -845,26 +845,31 @@ function! s:NM_search_expand(arg)
         let b:nm_prev_bufnr = prev_bufnr
 endfunction
 
-function! s:NM_add_remove_tags(prefix, tags)
-        let id = <SID>NM_search_thread_id()
-        if id == ''
+function! s:NM_add_remove_tags(filter, prefix, tags)
+        let filter = len(a:filter) ? a:filter : [<SID>NM_search_thread_id()]
+        if !len(filter)
                 echoe 'Eeek! I couldn''t find the thead id!'
         endif
+        echo 'filter = ' . string(filter) . ' ... ' . string(type(filter))
         call map(a:tags, 'a:prefix . v:val')
         " TODO: handle errors
-        call <SID>NM_run(['tag'] + a:tags + ['--', id])
+        let args = ['tag']
+        call extend(args, a:tags)
+        call add(args, '--')
+        call extend(args, filter)
+        echo 'NUM_run( ' . string(args) . ' )'
+        call <SID>NM_run(args)
 endfunction
 
-function! s:NM_add_remove_tags_on_screen(prefix, tags)
-        let online = ''
+function! s:NM_add_remove_tags_on_screen(online, prefix, tags)
         setlocal modifiable
         if a:prefix == '-'
                 for tagname in a:tags
-                        exec printf('silent %ss/(\([^)]*\)\<%s\>\([^)]*\))$/(\1\2)/', online, tagname)
+                        exec printf('silent! %ss/(\([^)]*\)\<%s\>\([^)]*\))$/(\1\2)/', string(a:online), tagname)
                 endfor
         else
                 for tagname in a:tags
-                        exec printf('silent %ss/(\([^)]*\)\([^)]*\))$/(\1 %s)/', online, tagname)
+                        exec printf('silent! %ss/(\([^)]*\)\([^)]*\))$/(\1 %s)/', string(a:online), tagname)
                 endfor
         endif
         setlocal nomodifiable
