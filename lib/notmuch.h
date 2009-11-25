@@ -709,6 +709,20 @@ notmuch_message_get_replies (notmuch_message_t *message);
 const char *
 notmuch_message_get_filename (notmuch_message_t *message);
 
+/* Message flags */
+typedef enum _notmuch_message_flag {
+} notmuch_message_flag_t;
+
+/* Get a value of a flag for the email corresponding to 'message'. */
+notmuch_bool_t
+notmuch_message_get_flag (notmuch_message_t *message,
+			  notmuch_message_flag_t flag);
+
+/* Set a value of a flag for the email corresponding to 'message'. */
+void
+notmuch_message_set_flag (notmuch_message_t *message,
+			  notmuch_message_flag_t flag, notmuch_bool_t value);
+
 /* Get the date of 'message' as a time_t value.
  *
  * For the original textual representation of the Date header from the
