@@ -23,6 +23,17 @@
 #include "notmuch-client.h"
 #include "gmime-filter-reply.h"
 
+static const struct {
+    const char *header;
+    const char *fallback;
+    GMimeRecipientType recipient_type;
+} reply_to_map[] = {
+    { "reply-to", "from", GMIME_RECIPIENT_TYPE_TO  },
+    { "to",         NULL, GMIME_RECIPIENT_TYPE_TO  },
+    { "cc",         NULL, GMIME_RECIPIENT_TYPE_CC  },
+    { "bcc",        NULL, GMIME_RECIPIENT_TYPE_BCC }
+};
+
 static void
 reply_part_content (GMimeObject *part)
 {
@@ -182,57 +193,16 @@ add_recipients_for_string (GMimeMessage *message,
     return add_recipients_for_address_list (message, config, type, list);
 }
 
-int
-notmuch_reply_command (void *ctx, int argc, char *argv[])
+static int
+notmuch_reply_format_default(void *ctx, notmuch_config_t *config, notmuch_query_t *query)
 {
-    notmuch_config_t *config;
-    notmuch_database_t *notmuch;
-    notmuch_query_t *query;
     GMimeMessage *reply;
-    char *query_string;
     notmuch_messages_t *messages;
     notmuch_message_t *message;
-    int ret = 0;
     const char *subject, *recipients, *from_addr = NULL;
     const char *in_reply_to, *orig_references, *references;
     char *reply_headers;
-    struct {
-	const char *header;
-	const char *fallback;
-	GMimeRecipientType recipient_type;
-    } reply_to_map[] = {
-	{ "reply-to", "from", GMIME_RECIPIENT_TYPE_TO  },
-	{ "to",         NULL, GMIME_RECIPIENT_TYPE_TO  },
-	{ "cc",         NULL, GMIME_RECIPIENT_TYPE_CC  },
-	{ "bcc",        NULL, GMIME_RECIPIENT_TYPE_BCC }
-    };
     unsigned int i;
-
-    config = notmuch_config_open (ctx, NULL, NULL);
-    if (config == NULL)
-	return 1;
-
-    query_string = query_string_from_args (ctx, argc, argv);
-    if (query_string == NULL) {
-	fprintf (stderr, "Out of memory\n");
-	return 1;
-    }
-
-    if (*query_string == '\0') {
-	fprintf (stderr, "Error: notmuch reply requires at least one search term.\n");
-	return 1;
-    }
-
-    notmuch = notmuch_database_open (notmuch_config_get_database_path (config),
-				     NOTMUCH_DATABASE_MODE_READ_ONLY);
-    if (notmuch == NULL)
-	return 1;
-
-    query = notmuch_query_create (notmuch, query_string);
-    if (query == NULL) {
-	fprintf (stderr, "Out of memory\n");
-	return 1;
-    }
 
     for (messages = notmuch_query_search_messages (query);
 	 notmuch_messages_has_more (messages);
@@ -310,6 +280,71 @@ notmuch_reply_command (void *ctx, int argc, char *argv[])
 
 	notmuch_message_destroy (message);
     }
+    return 0;
+}
+
+int
+notmuch_reply_command (void *ctx, int argc, char *argv[])
+{
+    notmuch_config_t *config;
+    notmuch_database_t *notmuch;
+    notmuch_query_t *query;
+    char *opt, *query_string;
+    int i, ret = 0;
+    int (*reply_format_func)(void *ctx, notmuch_config_t *config, notmuch_query_t *query);
+
+    reply_format_func = notmuch_reply_format_default;
+
+    for (i = 0; i < argc && argv[i][0] == '-'; i++) {
+	if (strcmp (argv[i], "--") == 0) {
+	    i++;
+	    break;
+	}
+        if (STRNCMP_LITERAL (argv[i], "--format=") == 0) {
+	    opt = argv[i] + sizeof ("--format=") - 1;
+	    if (strcmp (opt, "default") == 0) {
+		reply_format_func = notmuch_reply_format_default;
+	    } else {
+		fprintf (stderr, "Invalid value for --format: %s\n", opt);
+		return 1;
+	    }
+	} else {
+	    fprintf (stderr, "Unrecognized option: %s\n", argv[i]);
+	    return 1;
+	}
+    }
+
+    argc -= i;
+    argv += i;
+
+    config = notmuch_config_open (ctx, NULL, NULL);
+    if (config == NULL)
+	return 1;
+
+    query_string = query_string_from_args (ctx, argc, argv);
+    if (query_string == NULL) {
+	fprintf (stderr, "Out of memory\n");
+	return 1;
+    }
+
+    if (*query_string == '\0') {
+	fprintf (stderr, "Error: notmuch reply requires at least one search term.\n");
+	return 1;
+    }
+
+    notmuch = notmuch_database_open (notmuch_config_get_database_path (config),
+				     NOTMUCH_DATABASE_MODE_READ_ONLY);
+    if (notmuch == NULL)
+	return 1;
+
+    query = notmuch_query_create (notmuch, query_string);
+    if (query == NULL) {
+	fprintf (stderr, "Out of memory\n");
+	return 1;
+    }
+
+    if (reply_format_func (ctx, config, query) != 0)
+	return 1;
 
     notmuch_query_destroy (query);
     notmuch_database_close (notmuch);
