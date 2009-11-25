@@ -255,11 +255,14 @@ command_t commands[] = {
       "\t\t\"notmuch restore\" command provides you a way to import\n"
       "\t\tall of your tags (or labels as sup calls them)." },
     { "search-tags", notmuch_search_tags_command,
-      NULL,
-      "List all tags found in the database.",
-      "\t\tThis command returns an alphabetically sorted list of all tags\n"
-      "\t\tthat are present in the database. In other words, the resulting\n"
-      "\t\tlist is a collection of all tags from all messages." },
+      "[<search-terms> [...] ]",
+      "\t\tList all tags found in the database or matching messages.",
+      "\t\tRun this command without any search-term(s) to obtain a list\n"
+      "\t\tof all tags found in the database. If you provide one or more\n"
+      "\t\tsearch-terms as argument(s) then the resulting list will\n"
+      "\t\tcontain tags only from messages that match the search-term(s).\n"
+      "\n"
+      "\t\tIn both cases the list will be alphabetically sorted." },
     { "help", notmuch_help_command,
       "[<command>]",
       "\t\tThis message, or more detailed help for the named command.",
