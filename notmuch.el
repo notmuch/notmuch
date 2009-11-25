@@ -49,6 +49,7 @@
 
 (require 'cl)
 (require 'mm-view)
+(require 'message)
 
 (defvar notmuch-show-mode-map
   (let ((map (make-sparse-keymap)))
