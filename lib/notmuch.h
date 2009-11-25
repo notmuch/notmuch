@@ -635,6 +635,21 @@ notmuch_messages_advance (notmuch_messages_t *messages);
 void
 notmuch_messages_destroy (notmuch_messages_t *messages);
 
+/* Return a list of tags from all messages.
+ *
+ * The resulting list is guaranteed not to contain duplicated tags.
+ *
+ * WARNING: You can no longer iterate over messages after calling this
+ * function, because the iterator will point at the end of the list.
+ * We do not have a function to reset the iterator yet and the only
+ * way how you can iterate over the list again is to recreate the
+ * message list.
+ *
+ * The function returns NULL on error.
+ */
+notmuch_tags_t *
+notmuch_messages_collect_tags (notmuch_messages_t *messages);
+
 /* Get the message ID of 'message'.
  *
  * The returned string belongs to 'message' and as such, should not be
