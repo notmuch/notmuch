@@ -517,22 +517,25 @@ endfunction
 
 " --- --- show screen helper functions {{{2
 
+function! s:NM_show_get_message_for_line(line)
+        for msg in b:nm_raw_info['msgs']
+                if a:line > msg['end']
+                        continue
+                endif
+                return msg
+        endfor
+        return {}
+endfunction
+
 function! s:NM_show_message_id()
         if !exists('b:nm_raw_info')
                 echoe 'no b:nm_raw_info'
                 return ''
         endif
-        let info = b:nm_raw_info
-        let lnum = line('.')
-        for msg in info['msgs']
-                if lnum > msg['end']
-                        continue
-                endif
-                if has_key(msg,'id')
-                        return msg['id']
-                endif
-                return ''
-        endfor
+        let msg = <SID>NM_show_get_message_for_line(line('.'))
+        if has_key(msg,'id')
+                return msg['id']
+        endif
         return ''
 endfunction
 
