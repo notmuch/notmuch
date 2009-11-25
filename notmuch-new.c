@@ -149,7 +149,7 @@ add_files_recursive (notmuch_database_t *notmuch,
 	/* If this directory hasn't been modified since the last
 	 * add_files, then we only need to look further for
 	 * sub-directories. */
-	if (path_mtime <= path_dbtime && entry->d_type != DT_DIR)
+	if (path_mtime <= path_dbtime && entry->d_type == DT_REG)
 	    continue;
 
 	/* Ignore special directories to avoid infinite recursion.
