@@ -2,9 +2,9 @@
 
 " TODO: I cannot figure out why nmSearchTags is not matching anything :(
 
-syntax region nmSearchDate      start='^' end='\%13v'
+syntax region nmSearchDate      start='^' end='\%13v'      oneline
 syntax region nmSearchCountAndFrom start='\%14v\[' end='|' oneline contains=nmSearchCount,nmSearchFrom
-syntax region nmSearchCount     start='\%14v\[' end='\]'   contained contains=nmSearchCountZero,nmSearchCountSome,nmSearchCountAll
+syntax region nmSearchCount     start='\[' end='\]'        oneline contained contains=nmSearchCountZero,nmSearchCountSome,nmSearchCountAll
 syntax region nmSearchFrom      start='\]\@<=' end='|'     oneline contained
 syntax match  nmSearchCountZero '0/\(\d\+\)'               contained
 syntax match  nmSearchCountSome '\([1-9]\d*\)/\(\d\+\)'    contained
