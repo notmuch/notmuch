@@ -868,11 +868,8 @@ global search.
   (setq buffer-read-only t))
 
 (defun notmuch-search-find-thread-id ()
-  (save-excursion
-    (beginning-of-line)
-    (let ((beg (point)))
-      (re-search-forward "thread:[a-fA-F0-9]*" nil t)
-      (filter-buffer-substring beg (point)))))
+  "Return the thread for the current thread"
+  (get-text-property (point) 'notmuch-search-thread-id))
 
 (defun notmuch-search-markup-this-thread-id ()
   (beginning-of-line)
@@ -969,6 +966,54 @@ This function advances point to the next line when finished."
   (notmuch-search-remove-tag "inbox")
   (forward-line))
 
+(defun notmuch-search-process-sentinel (proc msg)
+  "Add a message to let user know when \"notmuch search\" exits"
+  (let ((buffer (process-buffer proc))
+	(status (process-status proc))
+	(exit-status (process-exit-status proc)))
+    (if (memq status '(exit signal))
+	(if (buffer-live-p buffer)
+	    (with-current-buffer buffer
+	      (save-excursion
+		(let ((inhibit-read-only t))
+		  (goto-char (point-max))
+		  (if (eq status 'signal)
+		      (insert "Incomplete search results (search process was killed).\n"))
+		  (if (eq status 'exit)
+		      (progn
+			(insert "End of search results.")
+			(if (not (= exit-status 0))
+			    (insert (format " (process returned %d)" exit-status)))
+			(insert "\n"))))))))))
+
+(defun notmuch-search-process-filter (proc string)
+  "Process and filter the output of \"notmuch search\""
+  (let ((buffer (process-buffer proc)))
+    (if (buffer-live-p buffer)
+	(with-current-buffer buffer
+	  (save-excursion
+	    (let ((line 0)
+		  (more t)
+		  (inhibit-read-only t))
+	      (while more
+		(if (string-match "^\\(thread:[0-9A-Fa-f]*\\) \\(.*\\) \\(\\[[0-9/]*\\]\\) \\([^:]*\\); \\(.*\\) (\\([^()]*\\))$" string line)
+		    (let* ((thread-id (match-string 1 string))
+			   (date (match-string 2 string))
+			   (count (match-string 3 string))
+			   (authors (match-string 4 string))
+			   (authors-length (length authors))
+			   (subject (match-string 5 string))
+			   (tags (match-string 6 string)))
+		      (if (> authors-length 40)
+			  (set 'authors (concat (substring authors 0 (- 40 3)) "...")))
+		      (goto-char (point-max))
+		      (let ((beg (point-marker)))
+			(insert (format "%s %-7s %-40s %s (%s)\n" date count authors subject tags))
+			(put-text-property beg (point-marker) 'notmuch-search-thread-id thread-id))
+		      (set 'line (match-end 0)))
+		  (set 'more nil))))))
+      (delete-process proc))))
+
 (defun notmuch-search (query &optional oldest-first)
   "Run \"notmuch search\" with the given query string and display results."
   (interactive "sNotmuch search: ")
@@ -985,11 +1030,12 @@ This function advances point to the next line when finished."
       (erase-buffer)
       (goto-char (point-min))
       (save-excursion
-	(if oldest-first
-	    (call-process notmuch-command nil t nil "search" "--sort=oldest-first" query)
-	  (call-process notmuch-command nil t nil "search" "--sort=newest-first" query))
-	(notmuch-search-markup-thread-ids)
-	))
+	(let ((proc (start-process-shell-command
+		     "notmuch-search" buffer notmuch-command "search"
+		     (if oldest-first "--sort=oldest-first" "--sort=newest-first")
+		     query)))
+	  (set-process-sentinel proc 'notmuch-search-process-sentinel)
+	  (set-process-filter proc 'notmuch-search-process-filter))))
     (run-hooks 'notmuch-search-hook)))
 
 (defun notmuch-search-refresh-view ()
