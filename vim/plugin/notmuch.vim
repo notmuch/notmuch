@@ -525,8 +525,10 @@ function! s:NM_show_message_id()
                 if lnum > msg['end']
                         continue
                 endif
-
-                return msg['id']
+                if has_key(msg,'id')
+                        return msg['id']
+                endif
+                return ''
         endfor
         return ''
 endfunction
