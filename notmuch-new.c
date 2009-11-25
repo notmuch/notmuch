@@ -80,6 +80,31 @@ static int ino_cmp(const struct dirent **a, const struct dirent **b)
     return ((*a)->d_ino < (*b)->d_ino) ? -1 : 1;
 }
 
+/* Test if the directory looks like a Maildir directory.
+ *
+ * Search through the array of directory entries to see if we can find all
+ * three subdirectories typical for Maildir, that is "new", "cur", and "tmp".
+ *
+ * Return 1 if the directory looks like a Maildir and 0 otherwise.
+ */
+static int is_maildir (struct dirent **entries, int count)
+{
+    int i, found = 0;
+
+    for (i = 0; i < count; i++) {
+	if (entries[i]->d_type != DT_DIR) continue;
+	if (strcmp(entries[i]->d_name, "new") == 0 ||
+	    strcmp(entries[i]->d_name, "cur") == 0 ||
+	    strcmp(entries[i]->d_name, "tmp") == 0)
+	{
+	    found++;
+	    if (found == 3) return 1;
+	}
+    }
+
+    return 0;
+}
+
 /* Examine 'path' recursively as follows:
  *
  *   o Ask the filesystem for the mtime of 'path' (path_mtime)
@@ -159,7 +184,9 @@ add_files_recursive (notmuch_database_t *notmuch,
 	 * user specify files to be ignored. */
 	if (strcmp (entry->d_name, ".") == 0 ||
 	    strcmp (entry->d_name, "..") == 0 ||
-	    strcmp (entry->d_name, "tmp") == 0 ||
+	    (entry->d_type == DT_DIR &&
+	     (strcmp (entry->d_name, "tmp") == 0) &&
+	     is_maildir (namelist, num_entries)) ||
 	    strcmp (entry->d_name, ".notmuch") ==0)
 	{
 	    continue;
