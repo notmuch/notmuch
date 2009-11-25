@@ -37,6 +37,7 @@ struct _notmuch_message {
     char *filename;
     notmuch_message_file_t *message_file;
     notmuch_message_list_t *replies;
+    unsigned long flags;
 
     Xapian::Document doc;
 };
@@ -108,6 +109,7 @@ _notmuch_message_create (const void *talloc_owner,
     message->doc_id = doc_id;
 
     message->frozen = 0;
+    message->flags = 0;
 
     /* Each of these will be lazily created as needed. */
     message->message_id = NULL;
@@ -443,6 +445,23 @@ notmuch_message_get_filename (notmuch_message_t *message)
 	message->filename = talloc_strdup (message, filename_str.c_str ());
 
     return message->filename;
+}
+
+notmuch_bool_t
+notmuch_message_get_flag (notmuch_message_t *message,
+			  notmuch_message_flag_t flag)
+{
+    return message->flags & (1 << flag);
+}
+
+void
+notmuch_message_set_flag (notmuch_message_t *message,
+			  notmuch_message_flag_t flag, notmuch_bool_t enable)
+{
+    if (enable)
+	message->flags |= (1 << flag);
+    else
+	message->flags &= ~(1 << flag);
 }
 
 time_t
