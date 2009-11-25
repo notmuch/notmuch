@@ -45,7 +45,7 @@ let s:notmuch_defaults = {
         \ 'g:notmuch_show_part_end_regexp':          '^part}'                   ,
         \ 'g:notmuch_show_marker_regexp':            '^\\(message\\|header\\|body\\|attachment\\|part\\)[{}].*$',
         \
-        \ 'g:notmuch_show_message_parse_regexp':     '\(id:[^ ]*\) depth:\([0-9]*\) filename:\(.*\)$',
+        \ 'g:notmuch_show_message_parse_regexp':     '\(id:[^ ]*\) depth:\([0-9]*\) match:\([0-9]*\) filename:\(.*\)$',
         \ 'g:notmuch_show_tags_regexp':              '(\([^)]*\))$'               ,
         \
         \ 'g:notmuch_show_signature_regexp':         '^\(-- \?\|_\+\)$'           ,
@@ -606,7 +606,7 @@ function! s:NM_cmd_show_parse(inlines)
                                 elseif mode_type == 'cit'
                                         if part_end || match(line, g:notmuch_show_citation_regexp) == -1
                                                 let outlnum = len(info['disp'])
-                                                let foldinfo = [ mode_type, mode_start, outlnum-1,
+                                                let foldinfo = [ mode_type, mode_start, outlnum-1, len(info['msgs']),
                                                                \ printf('[ %d-line citation.  Press "c" to show. ]', outlnum - mode_start) ]
                                                 let mode_type = ''
                                         endif
@@ -615,7 +615,7 @@ function! s:NM_cmd_show_parse(inlines)
                                         if (outlnum - mode_start) > g:notmuch_show_signature_lines_max
                                                 let mode_type = ''
                                         elseif part_end
-                                                let foldinfo = [ mode_type, mode_start, outlnum-1,
+                                                let foldinfo = [ mode_type, mode_start, outlnum-1, len(info['msgs']),
                                                                \ printf('[ %d-line signature.  Press "s" to show. ]', outlnum - mode_start) ]
                                                 let mode_type = ''
                                         endif
@@ -626,11 +626,11 @@ function! s:NM_cmd_show_parse(inlines)
                                 " FIXME: this is a hack for handling two folds being added for one line
                                 "         we should handle addinga fold in a function
                                 if len(foldinfo) && foldinfo[1] < foldinfo[2]
-                                        call add(info['folds'], foldinfo[0:2])
-                                        let info['foldtext'][foldinfo[1]] = foldinfo[3]
+                                        call add(info['folds'], foldinfo[0:3])
+                                        let info['foldtext'][foldinfo[1]] = foldinfo[4]
                                 endif
 
-                                let foldinfo = [ 'text', part_start, part_end,
+                                let foldinfo = [ 'text', part_start, part_end, len(info['msgs']),
                                                \ printf('[ %d-line %s.  Press "p" to show. ]', part_end - part_start, in_part) ]
                                 let in_part = ''
                                 call add(info['disp'], '')
@@ -642,7 +642,7 @@ function! s:NM_cmd_show_parse(inlines)
                         endif
                         if match(line, g:notmuch_show_body_end_regexp) != -1
                                 let body_end = len(info['disp'])
-                                let foldinfo = [ 'bdy', body_start, body_end,
+                                let foldinfo = [ 'bdy', body_start, body_end, len(info['msgs']),
                                                \ printf('[ BODY %d - %d lines ]', len(info['msgs']), body_end - body_start) ]
 
                                 let in_body = 0
@@ -669,7 +669,7 @@ function! s:NM_cmd_show_parse(inlines)
                                 if match(line, g:notmuch_show_header_end_regexp) != -1
                                         let hdr_start = msg['hdr_start']+1
                                         let hdr_end = len(info['disp'])
-                                        let foldinfo = [ 'hdr', hdr_start, hdr_end,
+                                        let foldinfo = [ 'hdr', hdr_start, hdr_end, len(info['msgs']),
                                                \ printf('[ %d-line headers.  Press "h" to show. ]', hdr_end + 1 - hdr_start) ]
                                         let msg['header'] = hdr
                                         let in_header = 0
@@ -690,7 +690,7 @@ function! s:NM_cmd_show_parse(inlines)
                                 let msg['end'] = len(info['disp'])
                                 call add(info['disp'], '')
 
-                                let foldinfo = [ 'msg', msg['start'], msg['end'],
+                                let foldinfo = [ 'msg', msg['start'], msg['end'], len(info['msgs']),
                                                \ printf('[ MSG %d - %s ]', len(info['msgs']), msg['descr']) ]
 
                                 call add(info['msgs'], msg)
@@ -718,7 +718,8 @@ function! s:NM_cmd_show_parse(inlines)
                                 if len(m)
                                         let msg['id'] = m[1]
                                         let msg['depth'] = m[2]
-                                        let msg['filename'] = m[3]
+                                        let msg['match'] = m[3]
+                                        let msg['filename'] = m[4]
                                 endif
 
                                 let in_message = 1
@@ -726,8 +727,8 @@ function! s:NM_cmd_show_parse(inlines)
                 endif
 
                 if len(foldinfo) && foldinfo[1] < foldinfo[2]
-                        call add(info['folds'], foldinfo[0:2])
-                        let info['foldtext'][foldinfo[1]] = foldinfo[3]
+                        call add(info['folds'], foldinfo[0:3])
+                        let info['foldtext'][foldinfo[1]] = foldinfo[4]
                 endif
         endfor
         return info
@@ -738,14 +739,20 @@ function! s:NM_cmd_show_mkfolds()
 
         for afold in info['folds']
                 exec printf('%d,%dfold', afold[1], afold[2])
+                let state = 'open'
                 if (afold[0] == 'sig' && g:notmuch_show_fold_signatures)
                  \ || (afold[0] == 'cit' && g:notmuch_show_fold_citations)
                  \ || (afold[0] == 'bdy' && g:notmuch_show_fold_bodies)
                  \ || (afold[0] == 'hdr' && g:notmuch_show_fold_headers)
-                        exec printf('%dfoldclose', afold[1])
-                else
-                        exec printf('%dfoldopen', afold[1])
+                        let state = 'close'
+                elseif afold[0] == 'msg'
+                        let idx = afold[3]
+                        let msg = info['msgs'][idx]
+                        if has_key(msg,'match') && msg['match'] == '0'
+                                let state = 'close'
+                        endif
                 endif
+                exec printf('%dfold%s', afold[1], state)
         endfor
 endfunction
 
