@@ -137,11 +137,11 @@ within the current window."
       (or (memq prop buffer-invisibility-spec)
 	  (assq prop buffer-invisibility-spec)))))
 
-(defun notmuch-select-tag-with-completion (prompt)
+(defun notmuch-select-tag-with-completion (prompt &rest search-terms)
   (let ((tag-list
 	 (with-output-to-string
 	   (with-current-buffer standard-output
-	     (call-process notmuch-command nil t nil "search-tags")))))
+	     (apply 'call-process notmuch-command nil t nil "search-tags" search-terms)))))
     (completing-read prompt (split-string tag-list "\n+" t) nil nil nil)))
 
 (defun notmuch-show-next-line ()
@@ -218,7 +218,7 @@ Unlike builtin `next-line' this version accepts no arguments."
 (defun notmuch-show-remove-tag (&rest toremove)
   "Remove a tag from the current message."
   (interactive
-   (list (notmuch-select-tag-with-completion "Tag to remove: ")))
+   (list (notmuch-select-tag-with-completion "Tag to remove: " (notmuch-show-get-message-id))))
   (let ((tags (notmuch-show-get-tags)))
     (if (intersection tags toremove :test 'string=)
 	(progn
@@ -940,7 +940,7 @@ and will also appear in a buffer named \"*Notmuch errors*\"."
 
 (defun notmuch-search-remove-tag (tag)
   (interactive
-   (list (notmuch-select-tag-with-completion "Tag to remove: ")))
+   (list (notmuch-select-tag-with-completion "Tag to remove: " (notmuch-search-find-thread-id))))
   (notmuch-call-notmuch-process "tag" (concat "-" tag) (notmuch-search-find-thread-id))
   (notmuch-search-set-tags (delete tag (notmuch-search-get-tags))))
 
