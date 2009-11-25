@@ -410,20 +410,19 @@ function! s:NM_show_previous(can_change_thread, find_matching)
                         continue
                 endif
 
-                exec printf('norm %dG', msg['start'])
+                exec printf('norm %dGzt', msg['start'])
                 " TODO: try to fit the message on screen
-                norm zz
                 return
         endfor
         if !a:can_change_thread
                 return
         endif
         call <SID>NM_kill_this_buffer()
-        if line('.') != line('0')
+        if line('.') > 1
                 norm k
                 call <SID>NM_search_show_thread()
                 norm G
-                call <SID>NM_show_previous(0)
+                call <SID>NM_show_previous(0, a:find_matching)
         else
                 echo 'No more messages.'
         endif
@@ -440,14 +439,16 @@ function! s:NM_show_next(can_change_thread, find_matching)
                         continue
                 endif
 
-                exec printf('norm %dG', msg['start'])
+                exec printf('norm %dGzt', msg['start'])
                 " TODO: try to fit the message on screen
-                norm zz
                 return
         endfor
-        if !a:can_change_thread
-                return
+        if a:can_change_thread
+                call <SID>NM_show_next_thread()
         endif
+endfunction
+
+function! s:NM_show_next_thread()
         call <SID>NM_kill_this_buffer()
         if line('.') != line('$')
                 norm j
@@ -462,10 +463,6 @@ function! s:NM_show_archive_thread()
 endfunction
 
 function! s:NM_show_mark_read_then_archive_thread()
-        echo 'not implemented'
-endfunction
-
-function! s:NM_show_next_message()
         echo 'not implemented'
 endfunction
 
