@@ -521,7 +521,6 @@ function! s:NM_show_advance_marking_read_and_archiving()
                 endfor
 
                 let filter = ['('] + advance_tags + [')', 'AND', '('] + ids + [')']
-echo 'NM_add_remove_tags ALL filter=' . string(filter)
                 call <SID>NM_add_remove_tags(filter, '-', advance_tags)
                 call <SID>NM_show_next(1, 1)
                 return
@@ -532,8 +531,6 @@ echo 'NM_add_remove_tags ALL filter=' . string(filter)
                 echo "No bottom visible message."
         endif
 
-        echo 'top=' . msg_top['id'] . '  bot=' . msg_top['id']
-
         " if entire message fits on the screen, read/archive it, move to the next one
         if msg_top['id'] != msg_bot['id'] || msg_top['end'] <= vis_bot
                 call <SID>NM_add_remove_tags_on_screen(msg_top['start'], '-', advance_tags)
@@ -543,7 +540,6 @@ echo 'NM_add_remove_tags ALL filter=' . string(filter)
                         redraw
                         " do this last to hide the latency
                         let filter = ['('] + advance_tags + [')', 'AND', msg_top['id']]
-echo 'NM_add_remove_tags 1 filter=' . string(filter)
                         call <SID>NM_add_remove_tags(filter, '-', advance_tags)
                 endif
                 return
@@ -919,14 +915,12 @@ function! s:NM_add_remove_tags(filter, prefix, tags)
         if !len(filter)
                 echoe 'Eeek! I couldn''t find the thead id!'
         endif
-        echo 'filter = ' . string(filter) . ' ... ' . string(type(filter))
         call map(a:tags, 'a:prefix . v:val')
-        " TODO: handle errors
         let args = ['tag']
         call extend(args, a:tags)
         call add(args, '--')
         call extend(args, filter)
-        echo 'NUM_run( ' . string(args) . ' )'
+        " TODO: handle errors
         call <SID>NM_run(args)
 endfunction
 
