@@ -283,6 +283,74 @@ notmuch_reply_format_default(void *ctx, notmuch_config_t *config, notmuch_query_
     return 0;
 }
 
+/* This format is currently tuned for a git send-email --notmuch hook */
+static int
+notmuch_reply_format_headers_only(void *ctx, notmuch_config_t *config, notmuch_query_t *query)
+{
+    GMimeMessage *reply;
+    notmuch_messages_t *messages;
+    notmuch_message_t *message;
+    const char *recipients, *in_reply_to, *orig_references, *references;
+    char *reply_headers;
+    unsigned int i;
+
+    for (messages = notmuch_query_search_messages (query);
+	 notmuch_messages_has_more (messages);
+	 notmuch_messages_advance (messages))
+    {
+	message = notmuch_messages_get (messages);
+
+	/* The 0 means we do not want headers in a "pretty" order. */
+	reply = g_mime_message_new (0);
+	if (reply == NULL) {
+	    fprintf (stderr, "Out of memory\n");
+	    return 1;
+	}
+
+	in_reply_to = talloc_asprintf (ctx, "<%s>",
+			     notmuch_message_get_message_id (message));
+
+	orig_references = notmuch_message_get_header (message, "references");
+
+	/* We print References first because git format-patch treats it specially.
+	 * Git uses the first entry of References to create In-Reply-To.
+	 */
+	references = talloc_asprintf (ctx, "%s%s%s",
+				      in_reply_to,
+				      orig_references ? orig_references : "",
+				      orig_references ? " " : "");
+	g_mime_object_set_header (GMIME_OBJECT (reply),
+				  "References", references);
+
+	for (i = 0; i < ARRAY_SIZE (reply_to_map); i++) {
+	    const char *addr;
+
+	    recipients = notmuch_message_get_header (message,
+						     reply_to_map[i].header);
+	    if ((recipients == NULL || recipients[0] == '\0') && reply_to_map[i].fallback)
+		recipients = notmuch_message_get_header (message,
+							 reply_to_map[i].fallback);
+
+	    addr = add_recipients_for_string (reply, config,
+					      reply_to_map[i].recipient_type,
+					      recipients);
+	}
+
+	g_mime_object_set_header (GMIME_OBJECT (reply), "Bcc",
+			   notmuch_config_get_user_primary_email (config));
+
+	reply_headers = g_mime_object_to_string (GMIME_OBJECT (reply));
+	printf ("%s", reply_headers);
+	free (reply_headers);
+
+	g_object_unref (G_OBJECT (reply));
+	reply = NULL;
+
+	notmuch_message_destroy (message);
+    }
+    return 0;
+}
+
 int
 notmuch_reply_command (void *ctx, int argc, char *argv[])
 {
@@ -304,6 +372,8 @@ notmuch_reply_command (void *ctx, int argc, char *argv[])
 	    opt = argv[i] + sizeof ("--format=") - 1;
 	    if (strcmp (opt, "default") == 0) {
 		reply_format_func = notmuch_reply_format_default;
+	    } else if (strcmp (opt, "headers-only") == 0) {
+		reply_format_func = notmuch_reply_format_headers_only;
 	    } else {
 		fprintf (stderr, "Invalid value for --format: %s\n", opt);
 		return 1;
