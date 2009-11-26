@@ -935,15 +935,19 @@ and will also appear in a buffer named \"*Notmuch errors*\"."
 	(split-string (buffer-substring beg end))))))
 
 (defun notmuch-search-add-tag (tag)
+  "Add a tag to messages in the current thread matching the
+active query."
   (interactive
    (list (notmuch-select-tag-with-completion "Tag to add: ")))
-  (notmuch-call-notmuch-process "tag" (concat "+" tag) (notmuch-search-find-thread-id))
+  (notmuch-call-notmuch-process "tag" (concat "+" tag) (notmuch-search-find-thread-id) " and " notmuch-search-query-string)
   (notmuch-search-set-tags (delete-dups (sort (cons tag (notmuch-search-get-tags)) 'string<))))
 
 (defun notmuch-search-remove-tag (tag)
+  "Remove a tag from messages in the current thread matching the
+active query."
   (interactive
    (list (notmuch-select-tag-with-completion "Tag to remove: " (notmuch-search-find-thread-id))))
-  (notmuch-call-notmuch-process "tag" (concat "-" tag) (notmuch-search-find-thread-id))
+  (notmuch-call-notmuch-process "tag" (concat "-" tag) (notmuch-search-find-thread-id) " and " notmuch-search-query-string)
   (notmuch-search-set-tags (delete tag (notmuch-search-get-tags))))
 
 (defun notmuch-search-archive-thread ()
