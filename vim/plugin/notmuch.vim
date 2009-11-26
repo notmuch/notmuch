@@ -254,7 +254,7 @@ function! s:NM_search_prompt()
                 let tags = s:notmuch_initial_search_words_defaults
         endif
         let prev_bufnr = bufnr('%')
-        if b:nm_type == 'search'
+        if b:nm_type == 'search' && exists('b:nm_prev_bufnr')
                 " TODO: we intend to replace the current buffer,
                 "       ... maybe we could just clear it
                 let prev_bufnr = b:nm_prev_bufnr
@@ -1000,6 +1000,7 @@ function! NotMuch(args)
         if words[0] == 'folders'
                 let words = words[1:]
                 call <SID>NM_cmd_folders(words)
+
         elseif words[0] == 'search'
                 if len(words) > 1
                         let words = words[1:]
