@@ -351,12 +351,15 @@ function! s:NM_search_thread_id()
         if !exists('b:nm_raw_lines')
                 echoe 'no b:nm_raw_lines'
                 return ''
-        else
-                let line = line('.')
-                let info = b:nm_raw_lines[line-1]
-                let what = split(info, '\s\+')[0]
-                return what
         endif
+        let mnum = line('.') - 1
+        if len(b:nm_raw_lines) <= mnum
+                return ''
+        endif
+        echo 'len=' . string(len(b:nm_raw_lines)) . '  mnum=' . string(mnum)
+        let info = b:nm_raw_lines[mnum]
+        let what = split(info, '\s\+')[0]
+        return what
 endfunction
 
 function! s:NM_search_add_remove_tags(prompt, prefix, intags)
