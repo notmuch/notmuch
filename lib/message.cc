@@ -320,7 +320,7 @@ _notmuch_message_get_in_reply_to (notmuch_message_t *message)
     if (i != message->doc.termlist_end () &&
 	strncmp ((*i).c_str (), prefix, prefix_len))
     {
-	INTERNAL_ERROR ("Message %s has duplicate In-Reply-To IDs: %s and %s\n"
+       INTERNAL_ERROR ("Message %s has duplicate In-Reply-To IDs: %s and %s\n",
 			notmuch_message_get_message_id (message),
 			message->in_reply_to,
 			(*i).c_str () + prefix_len);
