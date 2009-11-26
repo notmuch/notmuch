@@ -113,6 +113,10 @@ any of this we're probably going to need to break down an write our
 own parser for the query string rather than using Xapian's QueryParser
 class.
 
+Make failure to read a file (such as a permissions problem) a warning
+rather than an error (should be similar to the existing warning for a
+non-mail file).
+
 Add support for files that are moved or deleted (which obviously need
 to be handled differently).
 
