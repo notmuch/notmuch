@@ -801,6 +801,7 @@ thread from that buffer can be show when done with this one)."
     (define-key map [mouse-1] 'notmuch-search-show-thread)
     (define-key map "+" 'notmuch-search-add-tag)
     (define-key map "-" 'notmuch-search-remove-tag)
+    (define-key map "*" 'notmuch-search-operate-all)
     (define-key map "<" 'beginning-of-buffer)
     (define-key map ">" 'notmuch-search-goto-last-thread)
     (define-key map "=" 'notmuch-search-refresh-view)
@@ -1000,6 +1001,29 @@ This function advances point to the next line when finished."
 		      (set 'line (match-end 0)))
 		  (set 'more nil))))))
       (delete-process proc))))
+
+(defun notmuch-search-operate-all (action)
+  "Operate on all messages matching the current query.  Any
+number of whitespace separated actions can be given.  Each action
+must have one of the two forms
+
+  +tagname              Add the tag `tagname'
+  -tagname              Remove the tag `tagname'
+
+Each character of the tag name may consist of alphanumeric
+characters as well as `_.+-'.
+"
+  (interactive "sOperation (+add -drop): notmuch tag ")
+  (let ((action-split (split-string action " +")))
+    ;; Perform some validation
+    (let ((words action-split))
+      (when (null words) (error "No operation given"))
+      (while words
+	(unless (string-match-p "^[\+\-][_\+\-\\w]+$" (car words))
+	  (error "Action must be of the form `+thistag -that_tag'"))
+	(setq words (cdr words))))
+    (apply 'notmuch-call-notmuch-process "tag"
+	   (append action-split (list notmuch-search-query-string) nil))))
 
 (defun notmuch-search (query &optional oldest-first)
   "Run \"notmuch search\" with the given query string and display results."
