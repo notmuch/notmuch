@@ -639,9 +639,19 @@ function! s:NM_show_fold_toggle(key, type, fold)
                 let act = 'close'
         endif
         for fld in info['folds']
-                if fld[0] == a:type
-                        exec printf('%dfold%s', fld[1], act)
+                if fld[0] != a:type
+                        continue
                 endif
+                "let idx = fld[3]
+                "let msg = info['msgs'][idx]
+                "if has_key(msg,'match') && msg['match'] == '0'
+                "        continue
+                "endif
+                let cls = foldclosed(fld[1])
+                if cls != -1 && cls != fld[1]
+                        continue
+                endif
+                exec printf('%dfold%s', fld[1], act)
         endfor
         exec printf('nnoremap <buffer> %s :call <SID>NM_show_fold_toggle(''%s'', ''%s'', %d)<CR>', a:key, a:key, a:type, !a:fold)
 endfunction
