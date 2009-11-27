@@ -1337,7 +1337,7 @@ function! s:NM_set_map(type, maps)
                 exec printf('%snoremap <buffer> %s %s', a:type, key, code)
         endfor
         " --- this is a hack for development :)
-        nnoremap ,nmr :source ~/.vim/plugin/notmuch.vim<CR>:call NotMuch('')<CR>
+        nnoremap ,nmr :runtime! plugin/notmuch.vim<CR>
 endfunction
 
 " --- command handler {{{1
