@@ -949,7 +949,99 @@ function! s:NM_cmd_compose(words, body_lines)
 endfunction
 
 function! s:NM_compose_send()
-        echo 'not implemented'
+        call <SID>NM_assert_buffer_type('compose')
+        let fname = expand('%')
+        let lnum = 1
+        let line = getline(lnum)
+        let hdrs = {}
+        let lst_hdr = ''
+        while match(line, '^$') == -1
+                if match(line, '^Notmuch-Help:') != -1
+                        " skip it
+                elseif strlen(lst_hdr) && match(line, '^\s') != -1
+                        let hdrs[lst_hdr][-1] = hdrs[lst_hdr][-1] . substitute(line, '^\s*', ' ', '')
+                else
+                        let m = matchlist(line, '^\(\w[^:]*\):\s*\(.*\)\s*$')
+                        if !len(m)
+                                cursor(lnum, 0)
+                                throw printf('Eeek! invalid header on line %d', lnum)
+                        endif
+                        let key = substitute(m[1], '\<\w', '\U&', 'g')
+                        if strlen(m[2])
+                                if !has_key(hdrs, key)
+                                        let hdrs[key] = []
+                                endif
+                                call add(hdrs[key], m[2])
+                        endif
+                        let lst_hdr = key
+                endif
+                let lnum = lnum + 1
+                let line = getline(lnum)
+        endwhile
+        let body_starts = lnum + 1
+        exec printf('0,%dd', body_starts)
+        write
+
+        "[-a header] [-b bcc-addr] [-c cc-addr] [-s subject] to-addr
+        let cmd = ['mail']
+        let tos = []
+        for [key, vals] in items(hdrs)
+                if key == 'To'
+                        call extend(tos, vals)
+                elseif key == 'Bcc'
+                        for adr in vals
+                                call add(cmd, '-b')
+                                call add(cmd, adr)
+                        endfor
+                elseif key == 'Cc'
+                        for adr in vals
+                                call add(cmd, '-c')
+                                call add(cmd, adr)
+                        endfor
+                elseif key == 'Subject'
+                        for txt in vals
+                                call add(cmd, '-s')
+                                call add(cmd, txt)
+                        endfor
+                else
+                        for val in vals
+                                call add(cmd, '-a')
+                                call add(cmd, key . ': ' . val)
+                        endfor
+                endif
+        endfor
+        call extend(cmd, tos)
+
+        call map(cmd, 's:NM_shell_escape(v:val)')
+        let cmdtxt = join(cmd) . '< ' . fname
+        let out = system(cmdtxt)
+        let err = v:shell_error
+        if err
+                undo
+                write
+                call <SID>NM_newBuffer('new', 'error',
+                            \ "While running...\n" .
+                            \ '  ' . cmdtxt . "\n" .
+                            \ "\n" .
+                            \ "Failed with...\n" .
+                            \ substitute(out, '^', '  ', 'g'))
+                echohl Error
+                echo 'Eeek! unable to send mail'
+                echohl None
+                return
+        endif
+
+        if !exists('b:nm_prev_bufnr')
+                bdelete
+        else
+                let prev_bufnr = b:nm_prev_bufnr
+                bdelete
+                if prev_bufnr == bufnr('%')
+                        exec printf("buffer %d", prev_bufnr)
+                endif
+        endif
+        call delete(fname)
+        echo 'Mail sent successfully.'
 endfunction
 
 function! s:NM_compose_attach()
@@ -1045,6 +1137,13 @@ function! s:NM_newFileBuffer(fdir, fname, type, lines)
         let b:nm_type = a:type
 endfunction
 
+function! s:NM_assert_buffer_type(type)
+        if !exists('b:nm_type') || b:nm_type != a:type
+                throw printf('Eeek! expected type %s, but got %s.', a:type,
+                            \ exists(b:nm_type) ? b:nm_type : 'something else')
+        endif
+endfunction
+
 function! s:NM_mktemp(dir, name)
         let time_stamp = strftime('%Y%m%d-%H%M%S')
         let file_name = substitute(a:dir,'/*$','/','') . printf(a:name, time_stamp)
@@ -1132,8 +1231,9 @@ endfunction
 
 function! s:NM_kill_this_buffer()
         if exists('b:nm_prev_bufnr')
-                setlocal bufhidden=delete
-                exec printf(":buffer %d", b:nm_prev_bufnr)
+                let prev_bufnr = b:nm_prev_bufnr
+                bdelete
+                exec printf("buffer %d", prev_bufnr)
         else
                 echo "This is the last buffer; use :q<CR> to quit."
         endif
