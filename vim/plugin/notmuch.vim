@@ -936,6 +936,7 @@ function! s:NM_cmd_compose(words, body_lines)
         call <SID>NM_newFileBuffer(g:notmuch_compose_temp_file_dir, '%s.mail',
                                   \ 'compose', lines)
         setlocal bufhidden=hide
+        let b:nm_prev_bufnr = prev_bufnr
 
         call <SID>NM_set_map('n', g:notmuch_compose_nmaps)
         call <SID>NM_set_map('i', g:notmuch_compose_imaps)
