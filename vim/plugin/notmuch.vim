@@ -886,7 +886,7 @@ function! s:NM_cmd_compose(words, body_lines)
 
         let hdrs = { }
         for word in a:words
-                let m = matchlist(word, '^\([^:]\+\):\s*\(.*\)\s*$')
+                let m = matchlist(word, '^\(\w[^:]*\):\s*\(.*\)\s*$')
                 if !len(m)
                         throw 'Eeek! bad parameter ''' . string(word) . ''''
                 endif
