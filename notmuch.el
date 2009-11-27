@@ -300,6 +300,47 @@ buffer."
   (with-current-notmuch-show-message
    (mm-display-parts (mm-dissect-buffer))))
 
+(defun notmuch-foreach-mime-part (function mm-handle)
+  (cond ((stringp (car mm-handle))
+         (dolist (part (cdr mm-handle))
+           (notmuch-foreach-mime-part function part)))
+        ((bufferp (car mm-handle))
+         (funcall function mm-handle))
+        (t (dolist (part mm-handle)
+             (notmuch-foreach-mime-part function part)))))
+
+(defun notmuch-count-attachments (mm-handle)
+  (let ((count 0))
+    (notmuch-foreach-mime-part
+     (lambda (p)
+       (let ((disposition (mm-handle-disposition p)))
+         (and (listp disposition)
+              (equal (car disposition) "attachment")
+              (incf count))))
+     mm-handle)
+    count))
+
+(defun notmuch-save-attachments (mm-handle &optional queryp)
+  (notmuch-foreach-mime-part
+   (lambda (p)
+     (let ((disposition (mm-handle-disposition p)))
+       (and (listp disposition)
+            (equal (car disposition) "attachment")
+            (or (not queryp)
+                (y-or-n-p
+                 (concat "Save '" (cdr (assq 'filename disposition)) "' ")))
+            (mm-save-part p))))
+   mm-handle))
+
+(defun notmuch-show-save-attachments ()
+  "Save the attachments to a message"
+  (interactive)
+  (with-current-notmuch-show-message
+   (let ((mm-handle (mm-dissect-buffer)))
+     (notmuch-save-attachments
+      mm-handle (> (notmuch-count-attachments mm-handle) 1))))
+  (message "Done"))
+
 (defun notmuch-reply (query-string)
   (switch-to-buffer (generate-new-buffer "notmuch-draft"))
   (call-process notmuch-command nil t nil "reply" query-string)
