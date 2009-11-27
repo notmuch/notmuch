@@ -283,17 +283,21 @@ buffer."
   (interactive)
   (view-file (notmuch-show-get-filename)))
 
+(defmacro with-current-notmuch-show-message (&rest body)
+  "Evaluate body with current buffer set to the text of current message"
+  `(save-excursion
+     (let ((filename (notmuch-show-get-filename)))
+       (let ((buf (generate-new-buffer (concat "*notmuch-msg-" filename "*"))))
+         (with-current-buffer buf
+           (insert-file-contents filename nil nil nil t)
+           ,@body)
+        (kill-buffer buf)))))
+
 (defun notmuch-show-view-all-mime-parts ()
   "Use external viewers (according to mailcap) to view all MIME-encoded parts."
   (interactive)
-  (save-excursion
-    (let ((filename (notmuch-show-get-filename)))
-      (switch-to-buffer (generate-new-buffer (concat "*notmuch-mime-"
-						     filename
-						     "*")))
-      (insert-file-contents filename nil nil nil t)
-      (mm-display-parts (mm-dissect-buffer))
-      (kill-this-buffer))))
+  (with-current-notmuch-show-message
+   (mm-display-parts (mm-dissect-buffer))))
 
 (defun notmuch-reply (query-string)
   (switch-to-buffer (generate-new-buffer "notmuch-draft"))
