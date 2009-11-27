@@ -939,8 +939,6 @@ function! s:NM_compose_send()
                 let line = getline(lnum)
         endwhile
         let body_starts = lnum
-        exec printf('0,%dd', body_starts)
-        write
 
         "[-a header] [-b bcc-addr] [-c cc-addr] [-s subject] to-addr
         let cmd = ['mail']
@@ -971,6 +969,12 @@ function! s:NM_compose_send()
                 endif
         endfor
         call extend(cmd, tos)
+
+        " TODO: make sure we have at least one target
+        " TODO: ask about empty jubject, etc
+
+        exec printf('0,%dd', body_starts)
+        write
 
         call map(cmd, 's:NM_shell_escape(v:val)')
         let cmdtxt = join(cmd) . '< ' . fname
