@@ -25,6 +25,7 @@ To run:
 
     from vim:
         :NotMuch
+        :NotMuch new to:bart@jukie.net 'subject:this is a test'
 
 
 Buffer types:
@@ -33,6 +34,7 @@ Buffer types:
 
         Keybindings:
             <Enter> - show the selected search
+            m       - compose a new message
             s       - enter search criteria
             =       - refresh display
 
@@ -44,6 +46,7 @@ Buffer types:
             a       - archive message (remove inbox tag)
             f       - filter the current search terms
             o       - toggle search screen order
+            m       - compose a new message
             s       - enter search criteria
             ,s      - alter search criteria
             t       - filter the current search terms with tags
@@ -64,8 +67,20 @@ Buffer types:
             b       - toggle folding of message bodies
             c       - toggle folding of citations
             h       - toggle folding of extra header lines
+            m       - compose a new message
             s       - toggle folding of signatures
             q       - return to search display
             ?       - reveal the message and thread IDs of what's under cursor
             ^]      - search using word under cursor
+
+    [notmuch-compose]
+        When you're writing an email, you're in this mode.
+
+        Insert-mode keybindings:
+            <Tab>   - go to the next header line
+
+        Normal-mode keybindings:
+            <Tab>   - go to the next header line
+            ,s      - send this message
+            ,q      - abort this message
 

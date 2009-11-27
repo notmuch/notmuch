@@ -105,6 +105,7 @@ let s:notmuch_compose_headers_defaults = [
 " --- --- bindings for folders mode {{{2
 
 let g:notmuch_folders_maps = {
+        \ 'm':          ':call <SID>NM_new_mail()<CR>',
         \ 's':          ':call <SID>NM_search_prompt()<CR>',
         \ 'q':          ':call <SID>NM_kill_this_buffer()<CR>',
         \ '=':          ':call <SID>NM_folders_refresh_view()<CR>',
@@ -1134,7 +1135,7 @@ function! s:NM_newComposeBuffer(lines, start_on_line)
         if start_on_line > 0 && start_on_line <= len(lines)
                 call cursor(start_on_line, strlen(getline(start_on_line)) + 1)
         else
-                call cursor(real_hdr_start, strlen(getline(real_hdr_start) + 1)
+                call cursor(real_hdr_start, strlen(getline(real_hdr_start)) + 1)
                 call <SID>NM_compose_next_entry_area()
         endif
 
@@ -1231,7 +1232,7 @@ endfunction
 " --- external mail handling helpers {{{1
 
 function! s:NM_new_mail()
-        echo 'not implemented'
+        call <SID>NM_cmd_compose([], [])
 endfunction
 
 " --- tag manipulation helpers {{{1
