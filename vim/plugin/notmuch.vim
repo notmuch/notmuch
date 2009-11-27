@@ -1232,7 +1232,7 @@ endfunction
 function! s:NM_kill_this_buffer()
         if exists('b:nm_prev_bufnr')
                 let prev_bufnr = b:nm_prev_bufnr
-                bdelete
+                bdelete!
                 exec printf("buffer %d", prev_bufnr)
         else
                 echo "This is the last buffer; use :q<CR> to quit."
