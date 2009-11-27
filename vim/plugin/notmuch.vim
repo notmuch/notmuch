@@ -188,7 +188,7 @@ function! s:NM_cmd_folders(words)
                 call add(searches, search)
         endfor
 
-        call <SID>NM_newBuffer('folders', join(disp, "\n"))
+        call <SID>NM_newBuffer('', 'folders', join(disp, "\n"))
         let b:nm_searches = searches
         let b:nm_timestamp = reltime()
 
@@ -236,7 +236,7 @@ function! s:NM_cmd_search(words)
         let disp = copy(lines)
         call map(disp, 's:NM_cmd_search_fmtline(v:val)')
 
-        call <SID>NM_newBuffer('search', join(disp, "\n"))
+        call <SID>NM_newBuffer('', 'search', join(disp, "\n"))
         let b:nm_raw_lines = lines
         let b:nm_search_words = a:words
 
@@ -418,7 +418,7 @@ function! s:NM_cmd_show(words)
         let info = s:NM_cmd_show_parse(lines)
 
         setlocal bufhidden=hide
-        call <SID>NM_newBuffer('show', join(info['disp'], "\n"))
+        call <SID>NM_newBuffer('', 'show', join(info['disp'], "\n"))
         setlocal bufhidden=delete
         let b:nm_words = a:words
         let b:nm_raw_info = info
@@ -1013,8 +1013,12 @@ endfunction
 
 " --- notmuch helper functions {{{1
 
-function! s:NM_newBuffer(type, content)
-        enew
+function! s:NM_newBuffer(how, type, content)
+        if strlen(a:how)
+                exec a:how
+        else
+                enew
+        endif
         setlocal buftype=nofile readonly modifiable scrolloff=0 sidescrolloff=0
         silent put=a:content
         keepjumps 0d
