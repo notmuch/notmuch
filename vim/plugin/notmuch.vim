@@ -161,7 +161,7 @@ function! s:NM_cmd_folders(words)
         let b:nm_timestamp = reltime()
 
         call <SID>NM_cmd_folders_mksyntax()
-        call <SID>NM_set_map(g:notmuch_folders_maps)
+        call <SID>NM_set_map('n', g:notmuch_folders_maps)
         setlocal cursorline
         setlocal nowrap
 endfunction
@@ -209,7 +209,7 @@ function! s:NM_cmd_search(words)
         let b:nm_search_words = a:words
 
         call <SID>NM_cmd_search_mksyntax()
-        call <SID>NM_set_map(g:notmuch_search_maps)
+        call <SID>NM_set_map('n', g:notmuch_search_maps)
         setlocal cursorline
         setlocal nowrap
 endfunction
@@ -395,7 +395,7 @@ function! s:NM_cmd_show(words)
 
         call <SID>NM_cmd_show_mkfolds()
         call <SID>NM_cmd_show_mksyntax()
-        call <SID>NM_set_map(g:notmuch_show_maps)
+        call <SID>NM_set_map('n', g:notmuch_show_maps)
         setlocal foldtext=NM_cmd_show_foldtext()
         setlocal fillchars=
         setlocal foldcolumn=6
@@ -979,10 +979,10 @@ endif
 
 " --- assign keymaps {{{1
 
-function! s:NM_set_map(maps)
+function! s:NM_set_map(type, maps)
         nmapclear
         for [key, code] in items(a:maps)
-                exec printf('nnoremap <buffer> %s %s', key, code)
+                exec printf('%snoremap <buffer> %s %s', a:type, key, code)
         endfor
         " --- this is a hack for development :)
         nnoremap ,nmr :source ~/.vim/plugin/notmuch.vim<CR>:call NotMuch('')<CR>
