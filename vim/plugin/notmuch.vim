@@ -1213,7 +1213,7 @@ endfunction
 " example:
 "     NM_combine_tags('tag:', ['one', 'two', 'three'], 'OR', '()')
 "  -> ['(', 'tag:one', 'OR', 'tag:two', 'OR', 'tag:three', ')']
-function s:NM_combine_tags(word_prefix, words, separator, brackets)
+function! s:NM_combine_tags(word_prefix, words, separator, brackets)
         let res = []
         for word in a:words
                 if len(res) && strlen(a:separator)
