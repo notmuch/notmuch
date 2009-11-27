@@ -627,6 +627,32 @@ which this thread was originally shown."
       (set-marker beg nil)
       (set-marker end nil)
       )))
+(defun notmuch-fontify-headers ()
+  (progn
+    (if (looking-at "[Tt]o:")
+	(progn
+	  (overlay-put (make-overlay (point) (re-search-forward ":"))
+                       'face 'message-header-name)
+          (overlay-put (make-overlay (point) (re-search-forward ".*$"))
+                       'face 'message-header-to))
+    (if (looking-at "[B]?[Cc][Cc]:")
+	(progn
+	  (overlay-put (make-overlay (point) (re-search-forward ":"))
+                       'face 'message-header-name)
+          (overlay-put (make-overlay (point) (re-search-forward ".*$"))
+                       'face 'message-header-cc))
+    (if (looking-at "[Ss]ubject:")
+	(progn
+	  (overlay-put (make-overlay (point) (re-search-forward ":"))
+                       'face 'message-header-name)
+          (overlay-put (make-overlay (point) (re-search-forward ".*$"))
+                       'face 'message-header-subject))
+    (if (looking-at "[Ff]rom:")
+	(progn
+	  (overlay-put (make-overlay (point) (re-search-forward ":"))
+                       'face 'message-header-name)
+          (overlay-put (make-overlay (point) (re-search-forward ".*$"))
+                       'face 'message-header-other))))))))
 
 (defun notmuch-show-markup-header (depth)
   (re-search-forward notmuch-show-header-begin-regexp)
@@ -647,8 +673,7 @@ which this thread was originally shown."
         (forward-line)
         (while (looking-at "[A-Za-z][-A-Za-z0-9]*:")
           (beginning-of-line)
-          (overlay-put (make-overlay (point) (re-search-forward ":"))
-                       'face 'bold)
+	  (notmuch-fontify-headers)
           (forward-line)
           )
 	(indent-rigidly beg end depth)
