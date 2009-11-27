@@ -1270,7 +1270,7 @@ function! s:NM_add_remove_tags_on_screen(online, prefix, tags)
                 endfor
         else
                 for tagname in a:tags
-                        exec printf('silent! %ss/(\([^)]*\)\([^)]*\))$/(\1 %s)/', string(a:online), tagname)
+                        exec printf('silent! %ss/(\([^)]*\))$/(\1 %s)/', string(a:online), tagname)
                 endfor
         endif
         setlocal nomodifiable
