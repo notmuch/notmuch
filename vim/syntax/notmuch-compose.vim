@@ -1,0 +1,2 @@
+silent! setlocal syntax=mail
+
