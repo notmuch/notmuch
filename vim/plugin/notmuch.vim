@@ -269,7 +269,7 @@ function! s:NM_search_show_thread()
         if id != ''
                 let words = [id]
                 if exists('b:nm_search_words')
-                        let words = ['('] + b:nm_search_words + [')', 'and', id]
+                        let words = ['('] + b:nm_search_words + [')', 'AND', id]
                 endif
                 if len(words)
                         call <SID>NM_cmd_show(words)
@@ -323,23 +323,13 @@ endfunction
 
 function! s:NM_search_filter_helper(prompt, prefix, joiner)
         " TODO: input() can support completion
-        let text = input(a:prompt)
+        let text = substitute(input(a:prompt), '\v(^\s*|\s*$|\n)', '', 'g')
         if !strlen(text)
                 return
         endif
 
-        let tags = split(text)
-        if strlen(a:prefix)
-                call map(tags, 'a:prefix . v:val')
-        endif
-        if strlen(a:joiner)
-                let idx = len(tags) - 1
-                while idx > 0
-                        call insert(tags, a:joiner, idx)
-                        let idx = idx - 1
-                endwhile
-        endif
-        let tags = b:nm_search_words + ['and', '('] + tags + [')']
+        let tags = b:nm_search_words + ['AND']
+                 \ + <SID>NM_combine_tags(a:prefix, split(text), a:joiner, '()')
 
         let prev_bufnr = bufnr('%')
         setlocal bufhidden=hide
@@ -546,14 +536,12 @@ function! s:NM_show_advance_marking_read_and_archiving()
                 let ids = []
                 for msg in b:nm_raw_info['msgs']
                         if has_key(msg,'match') && msg['match'] != '0'
-                                if len(ids)
-                                        call add(ids, 'OR')
-                                endif
                                 call add(ids, msg['id'])
                         endif
                 endfor
-
-                let filter = ['('] + advance_tags + [')', 'AND', '('] + ids + [')']
+                let filter = <SID>NM_combine_tags('tag:', advance_tags, 'OR', '()')
+                         \ + ['AND']
+                         \ + <SID>NM_combine_tags('', ids, 'OR', '()')
                 call <SID>NM_add_remove_tags(filter, '-', advance_tags)
                 call <SID>NM_show_next(1, 1)
                 return
@@ -572,7 +560,8 @@ function! s:NM_show_advance_marking_read_and_archiving()
                 if has_key(msg_top,'match') && msg_top['match'] != '0'
                         redraw
                         " do this last to hide the latency
-                        let filter = ['('] + advance_tags + [')', 'AND', msg_top['id']]
+                        let filter = <SID>NM_combine_tags('tag:', advance_tags, 'OR', '()')
+                                 \ + ['AND', msg_top['id']]
                         call <SID>NM_add_remove_tags(filter, '-', advance_tags)
                 endif
                 return
@@ -1216,6 +1205,30 @@ endfunction
 
 function! s:NM_new_mail()
         echo 'not implemented'
+endfunction
+
+" --- tag manipulation helpers {{{1
+
+" used to combine an array of words with prefixes and separators
+" example:
+"     NM_combine_tags('tag:', ['one', 'two', 'three'], 'OR', '()')
+"  -> ['(', 'tag:one', 'OR', 'tag:two', 'OR', 'tag:three', ')']
+function s:NM_combine_tags(word_prefix, words, separator, brackets)
+        let res = []
+        for word in a:words
+                if len(res) && strlen(a:separator)
+                        call add(res, a:separator)
+                endif
+                call add(res, a:word_prefix . word)
+        endfor
+        if len(res) > 1 && strlen(a:brackets)
+                if strlen(a:brackets) != 2
+                        throw 'Eeek! brackets arg to NM_combine_tags must be 2 chars'
+                endif
+                call insert(res, a:brackets[0])
+                call add(res, a:brackets[1])
+        endif
+        return res
 endfunction
 
 " --- other helpers {{{1
