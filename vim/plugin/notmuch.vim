@@ -52,6 +52,8 @@ let s:notmuch_defaults = {
         \ 'g:notmuch_show_signature_lines_max':      12                           ,
         \
         \ 'g:notmuch_show_citation_regexp':          '^\s*>'                      ,
+        \
+        \ 'g:notmuch_compose_temp_file_dir':         '~/.notmuch/compose/'        ,
         \ }
 
 " defaults for g:notmuch_initial_search_words
@@ -76,6 +78,24 @@ let s:notmuch_folders_defaults = [
         \ [ 'new',    'tag:inbox and tag:unread' ],
         \ [ 'inbox',  'tag:inbox'                ],
         \ [ 'unread', 'tag:unread'               ],
+        \ ]
+
+" defaults for g:notmuch_signature
+" override with: let g:notmuch_signature = [ ... ]
+let s:notmuch_signature_defaults = [
+        \ '',
+        \ '-- ',
+        \ 'email sent from notmuch.vim plugin'
+        \ ]
+
+" defaults for g:notmuch_compose_headers
+" override with: let g:notmuch_compose_headers = [ ... ]
+let s:notmuch_compose_headers_defaults = [
+        \ 'From',
+        \ 'To',
+        \ 'Cc',
+        \ 'Bcc',
+        \ 'Subject'
         \ ]
 
 " --- keyboard mapping definitions {{{1
@@ -843,6 +863,92 @@ function! NM_cmd_show_foldtext()
 endfunction
 
 
+" --- implement compose screen {{{1
+
+function! s:NM_cmd_compose(words, body_lines)
+        let lines = []
+        let start_on_line = 0
+
+        let hdrs = { }
+        for word in a:words
+                let m = matchlist(word, '^\([^:]\+\):\s*\(.*\)\s*$')
+                if !len(m)
+                        throw 'Eeek! bad parameter ''' . string(word) . ''''
+                endif
+                let key = substitute(m[1], '\<\w', '\U&', 'g')
+                if !has_key(hdrs, key)
+                        let hdrs[key] = []
+                endif
+                if strlen(m[2])
+                        call add(hdrs[key], m[2])
+                endif
+        endfor
+
+        if !has_key(hdrs, 'From') || !len(hdrs['From'])
+                let me = <SID>NM_compose_get_user_email()
+                let hdrs['From'] = [ me ]
+        endif
+
+        for key in g:notmuch_compose_headers
+                let text = has_key(hdrs, key) ? join(hdrs[key], ', ') : ''
+                call add(lines, key . ': ' . text)
+                if !start_on_line && !strlen(text)
+                        let start_on_line = len(lines)
+                endif
+        endfor
+
+        for [key,val] in items(hdrs)
+                if match(g:notmuch_compose_headers, key) == -1
+                        let line = key . ': ' . join(val, ', ')
+                        call add(lines, line)
+                endif
+        endfor
+
+        call extend(lines, [ '', '' ])
+        if !start_on_line
+                let start_on_line = len(lines) + 1
+        endif
+
+        if len(a:body_lines)
+                call extend(lines, a:body_lines)
+        else
+                call add(lines, '')
+        endif
+        call extend(lines, g:notmuch_signature)
+
+        let prev_bufnr = bufnr('%')
+        setlocal bufhidden=hide
+        call <SID>NM_newFileBuffer(g:notmuch_compose_temp_file_dir, '%s.mail',
+                                  \ 'compose', lines)
+        setlocal bufhidden=hide
+
+        call <SID>NM_cmd_compose_mksyntax()
+        call <SID>NM_set_map('n', g:notmuch_compose_nmaps)
+        call <SID>NM_set_map('i', g:notmuch_compose_imaps)
+
+        exec printf('norm %dG', start_on_line)
+        startinsert!
+        echo 'Type your message, use <TAB> to jump to next header and then body.'
+endfunction
+function! s:NM_cmd_compose_mksyntax()
+        silent! setlocal syntax=mail
+endfunction
+
+function! s:NM_compose_send()
+        echo 'not implemented'
+endfunction
+
+" --- --- compose screen helper functions {{{2
+
+function! s:NM_compose_get_user_email()
+        let name = substitute(system('id -u -n'), '\v(^\s*|\s*$|\n)', '', 'g')
+        let fqdn = substitute(system('hostname -f'), '\v(^\s*|\s*$|\n)', '', 'g')
+
+        " TODO: do this properly
+        return name . '@' . fqdn
+endfunction
+
+
 " --- notmuch helper functions {{{1
 
 function! s:NM_newBuffer(type, content)
@@ -856,7 +962,31 @@ function! s:NM_newBuffer(type, content)
         let b:nm_type = a:type
 endfunction
 
+function! s:NM_newFileBuffer(fdir, fname, type, lines)
+        let fdir = expand(a:fdir)
+        if !isdirectory(fdir)
+                call mkdir(fdir, 'p')
+        endif
+        let file_name = <SID>NM_mktemp(fdir, a:fname)
+        if writefile(a:lines, file_name)
+                throw 'Eeek! couldn''t write to temporary file ' . file_name
+        endif
+        exec printf('edit %s', file_name)
+        setlocal buftype= noreadonly modifiable scrolloff=0 sidescrolloff=0
+        execute printf('set filetype=notmuch-%s', a:type)
+        execute printf('set syntax=notmuch-%s', a:type)
+        let b:nm_type = a:type
+endfunction
+
+function! s:NM_mktemp(dir, name)
+        let time_stamp = strftime('%Y%m%d-%H%M%S')
+        let file_name = substitute(a:dir,'/*$','/','') . printf(a:name, time_stamp)
+        " TODO: check if it exists, try again
+        return file_name
+endfunction
+
 function! s:NM_shell_escape(word)
+        " TODO: use shellescape()
         let word = substitute(a:word, '''', '\\''', 'g')
         return '''' . word . ''''
 endfunction
@@ -1014,6 +1144,12 @@ if !exists('g:notmuch_folders')
         let g:notmuch_folders = s:notmuch_folders_defaults
 endif
 
+if !exists('g:notmuch_signature')
+        let g:notmuch_signature = s:notmuch_signature_defaults
+endif
+if !exists('g:notmuch_compose_headers')
+        let g:notmuch_compose_headers = s:notmuch_compose_headers_defaults
+endif
 
 " --- assign keymaps {{{1
 
@@ -1051,6 +1187,10 @@ function! NotMuch(args)
 
         elseif words[0] == 'show'
                 echoe 'show is not yet implemented.'
+
+        elseif words[0] == 'new' || words[0] == 'compose'
+                let words = words[1:]
+                call <SID>NM_cmd_compose(words, [])
         endif
 endfunction
 function! CompleteNotMuch(arg_lead, cmd_line, cursor_pos)
