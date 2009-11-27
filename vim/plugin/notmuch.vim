@@ -53,6 +53,7 @@ let s:notmuch_defaults = {
         \
         \ 'g:notmuch_show_citation_regexp':          '^\s*>'                      ,
         \
+        \ 'g:notmuch_compose_insert_mode_start':     1                            ,
         \ 'g:notmuch_compose_header_help':           1                            ,
         \ 'g:notmuch_compose_temp_file_dir':         '~/.notmuch/compose/'        ,
         \ }
@@ -943,7 +944,9 @@ function! s:NM_cmd_compose(words, body_lines)
         call <SID>NM_set_map('i', g:notmuch_compose_imaps)
 
         call cursor(start_on_line, strlen(start_on_line) + 1)
-        startinsert!
+        if g:notmuch_compose_insert_mode_start
+                startinsert!
+        endif
         echo 'Type your message, use <TAB> to jump to next header and then body.'
 endfunction
 
@@ -976,7 +979,6 @@ function! s:NM_compose_next_entry_area()
                 call cursor(lnum+1, strlen(getline(lnum+1)) + 1)
                 return ''
         endif
-        echo 'mode=' . mode()
         if mode() == 'i'
                 if !getbufvar(bufnr('.'), '&et')
                         return "\t"
