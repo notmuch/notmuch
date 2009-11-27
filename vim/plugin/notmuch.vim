@@ -938,7 +938,7 @@ function! s:NM_compose_send()
                 let lnum = lnum + 1
                 let line = getline(lnum)
         endwhile
-        let body_starts = lnum + 1
+        let body_starts = lnum
         exec printf('0,%dd', body_starts)
         write
 
