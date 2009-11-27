@@ -847,12 +847,10 @@ endfunction
 
 function! s:NM_newBuffer(type, content)
         enew
-        setlocal buftype=nofile readonly modifiable
+        setlocal buftype=nofile readonly modifiable scrolloff=0 sidescrolloff=0
         silent put=a:content
         keepjumps 0d
         setlocal nomodifiable
-        set scrolloff=0
-        set sidescrolloff=0
         execute printf('set filetype=notmuch-%s', a:type)
         execute printf('set syntax=notmuch-%s', a:type)
         let b:nm_type = a:type
