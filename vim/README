@@ -3,9 +3,17 @@ through vim.
 
 NOTE: this is a work in progress.  Patches welcome. <bart@jukie.net>
 
-The vim interface makes use of the git-diff.vim syntax file which is
-available from
-    http://github.com/motemen/git-vim/blob/master/syntax/git-diff.vim
+Dependencies:
+    notmuch:
+        Naturally, it expects you have notmuch installed and configured.
+
+    mail:
+        To send mail, notmuch.vim uses the UNIX mail command.
+
+    git-diff:
+        The vim interface makes use of the git-diff.vim syntax file
+        which is available from
+            http://github.com/motemen/git-vim/blob/master/syntax/git-diff.vim
 
 
 To install:
@@ -37,7 +45,7 @@ Buffer types:
             f       - filter the current search terms
             o       - toggle search screen order
             s       - enter search criteria
-            es      - alter search criteria
+            ,s      - alter search criteria
             t       - filter the current search terms with tags
             q       - return to folder display, or undo filter
             +       - add tag(s) to selected message
@@ -50,6 +58,7 @@ Buffer types:
         This is the display of the message.
 
         Keybindings:
+            <Space> - mark read, archive, go to next matching message
             ^n      - next message
             ^p      - previous message
             b       - toggle folding of message bodies
