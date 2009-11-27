@@ -114,7 +114,8 @@ let g:notmuch_folders_maps = {
 
 " --- --- bindings for search screen {{{2
 let g:notmuch_search_maps = {
-        \ '<Enter>':    ':call <SID>NM_search_show_thread()<CR>',
+        \ '<Space>':    ':call <SID>NM_search_show_thread(0)<CR>',
+        \ '<Enter>':    ':call <SID>NM_search_show_thread(1)<CR>',
         \ '<C-]>':      ':call <SID>NM_search_expand(''<cword>'')<CR>',
         \ 'a':          ':call <SID>NM_search_archive_thread()<CR>',
         \ 'f':          ':call <SID>NM_search_filter()<CR>',
@@ -266,17 +267,14 @@ endfunction
 
 " --- --- search screen action functions {{{2
 
-function! s:NM_search_show_thread()
-        let id = <SID>NM_search_thread_id()
-        if id != ''
-                let words = [id]
-                if exists('b:nm_search_words')
-                        let words = ['('] + b:nm_search_words + [')', 'AND', id]
-                endif
-                if len(words)
-                        call <SID>NM_cmd_show(words)
-                endif
+function! s:NM_search_show_thread(everything)
+        let words = [ <SID>NM_search_thread_id() ]
+        if !a:everything && exists('b:nm_search_words')
+                call extend(words, ['AND', '('])
+                call extend(words, b:nm_search_words)
+                call add(words, ')')
         endif
+        call <SID>NM_cmd_show(words)
 endfunction
 
 function! s:NM_search_prompt()
