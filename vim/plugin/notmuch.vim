@@ -175,7 +175,7 @@ let g:notmuch_compose_imaps = {
 
 function! s:NM_cmd_folders(words)
         if len(a:words)
-                echoe 'Not exapecting any arguments for folders command.'
+                throw 'Not exapecting any arguments for folders command.'
         endif
         let cmd = ['count']
         let disp = []
@@ -387,7 +387,6 @@ function! s:NM_search_thread_id()
         if len(b:nm_raw_lines) <= mnum
                 return ''
         endif
-        echo 'len=' . string(len(b:nm_raw_lines)) . '  mnum=' . string(mnum)
         let info = b:nm_raw_lines[mnum]
         let what = split(info, '\s\+')[0]
         return what
@@ -539,7 +538,7 @@ function! s:NM_show_advance_marking_read_and_archiving()
 
         let msg_top = <SID>NM_show_get_message_for_line(vis_top)
         if !has_key(msg_top,'id')
-                echo "No top visible message."
+                throw "No top visible message."
         endif
 
         " if the top message is the last message, just expunge the entire thread and move on
@@ -562,7 +561,7 @@ function! s:NM_show_advance_marking_read_and_archiving()
 
         let msg_bot = <SID>NM_show_get_message_for_line(vis_bot)
         if !has_key(msg_bot,'id')
-                echo "No bottom visible message."
+                throw "No bottom visible message."
         endif
 
         " if entire message fits on the screen, read/archive it, move to the next one
@@ -1051,7 +1050,6 @@ endfunction
 function! s:NM_compose_next_entry_area()
         let lnum = line('.')
         let hdr_end = <SID>NM_compose_find_line_match(1,'^$',1)
-        echo 'header end = ' . string(hdr_end)
         if lnum < hdr_end
                 let lnum = lnum + 1
                 let line = getline(lnum)
@@ -1251,7 +1249,7 @@ endfunction
 function! s:NM_add_remove_tags(filter, prefix, tags)
         let filter = len(a:filter) ? a:filter : [<SID>NM_search_thread_id()]
         if !len(filter)
-                echoe 'Eeek! I couldn''t find the thead id!'
+                throw 'Eeek! I couldn''t find the thead id!'
         endif
         call map(a:tags, 'a:prefix . v:val')
         let args = ['tag']
