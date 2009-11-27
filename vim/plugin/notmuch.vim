@@ -506,7 +506,14 @@ function! s:NM_show_previous_message()
 endfunction
 
 function! s:NM_show_reply()
-        echo 'not implemented'
+        let cmd = ['reply']
+        call add(cmd, <SID>NM_show_message_id())
+        call add(cmd, 'AND')
+        call extend(cmd, <SID>NM_get_search_words())
+
+        let data = <SID>NM_run(cmd)
+        let lines = split(data, "\n")
+        call <SID>NM_newComposeBuffer(lines, 0)
 endfunction
 
 function! s:NM_show_view_all_mime_parts()

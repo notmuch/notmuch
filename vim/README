@@ -69,6 +69,7 @@ Buffer types:
             c       - toggle folding of citations
             h       - toggle folding of extra header lines
             m       - compose a new message
+            r       - reply to the message
             s       - toggle folding of signatures
             q       - return to search display
             ?       - reveal the message and thread IDs of what's under cursor
