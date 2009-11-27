@@ -158,6 +158,15 @@ let g:notmuch_show_maps = {
         \ '?':          ':echo <SID>NM_show_message_id() . ''  @ '' . join(<SID>NM_show_search_words())<CR>',
         \ }
 
+" --- --- bindings for compose screen {{{2
+let g:notmuch_compose_nmaps = {
+        \ ',s':         ':call <SID>NM_compose_send()<CR>',
+        \ ',q':         ':call <SID>NM_kill_this_buffer()<CR>',
+        \ '<Tab>':      ':call <SID>NM_compose_next_entry_area()<CR>',
+        \ }
+let g:notmuch_compose_imaps = {
+        \ '<Tab>':      '<C-r>=<SID>NM_compose_next_entry_area()<CR>',
+        \ }
 
 " --- implement folders screen {{{1
 
@@ -938,6 +947,40 @@ function! s:NM_compose_send()
         echo 'not implemented'
 endfunction
 
+function! s:NM_compose_next_entry_area()
+        let lnum = line('.')
+        let hdr_end = <SID>NM_compose_find_line_match(1,'^$',1)
+        echo 'header end = ' . string(hdr_end)
+        if lnum < hdr_end
+                let lnum = lnum + 1
+                let line = getline(lnum)
+                if match(line, '^\([^:]\+\):\s*$') == -1
+                        call cursor(lnum, strlen(line) + 1)
+                        return ''
+                endif
+                while match(getline(lnum+1), '^\s') != -1
+                        let lnum = lnum + 1
+                endwhile
+                call cursor(lnum, strlen(getline(lnum)) + 1)
+                return ''
+
+        elseif lnum == hdr_end
+                call cursor(lnum+1, strlen(getline(lnum+1)) + 1)
+                return ''
+        endif
+        echo 'mode=' . mode()
+        if mode() == 'i'
+                if !getbufvar(bufnr('.'), '&et')
+                        return "\t"
+                endif
+		let space = ''
+		let shiftwidth = a:shiftwidth
+		let shiftwidth = shiftwidth - ((virtcol('.')-1) % shiftwidth)
+                " we assume no one has shiftwidth set to more than 40 :)
+                return '                                        '[0:shiftwidth]
+        endif
+endfunction
+
 " --- --- compose screen helper functions {{{2
 
 function! s:NM_compose_get_user_email()
@@ -946,6 +989,18 @@ function! s:NM_compose_get_user_email()
 
         " TODO: do this properly
         return name . '@' . fqdn
+endfunction
+
+function! s:NM_compose_find_line_match(start, pattern, failure)
+        let lnum = a:start
+        let lend = line('$')
+        while lnum < lend
+                if match(getline(lnum), a:pattern) != -1
+                        return lnum
+                endif
+                let lnum = lnum + 1
+        endwhile
+        return a:failure
 endfunction
 
 
