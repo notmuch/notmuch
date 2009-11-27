@@ -137,11 +137,12 @@ let g:notmuch_show_maps = {
         \ '<C-N>':      ':call <SID>NM_show_next(1, 0)<CR>',
         \ '<C-]>':      ':call <SID>NM_search_expand(''<cword>'')<CR>',
         \ 'q':          ':call <SID>NM_kill_this_buffer()<CR>',
+        \ 's':          ':call <SID>NM_search_prompt()<CR>',
         \
         \ 'b':          ':call <SID>NM_show_fold_toggle(''b'', ''bdy'', !g:notmuch_show_fold_bodies)<CR>',
         \ 'c':          ':call <SID>NM_show_fold_toggle(''c'', ''cit'', !g:notmuch_show_fold_citations)<CR>',
         \ 'h':          ':call <SID>NM_show_fold_toggle(''h'', ''hdr'', !g:notmuch_show_fold_headers)<CR>',
-        \ 's':          ':call <SID>NM_show_fold_toggle(''s'', ''sig'', !g:notmuch_show_fold_signatures)<CR>',
+        \ 'i':          ':call <SID>NM_show_fold_toggle(''s'', ''sig'', !g:notmuch_show_fold_signatures)<CR>',
         \
         \ 'a':          ':call <SID>NM_show_archive_thread()<CR>',
         \ 'A':          ':call <SID>NM_show_mark_read_then_archive_thread()<CR>',

@@ -68,9 +68,10 @@ Buffer types:
             b       - toggle folding of message bodies
             c       - toggle folding of citations
             h       - toggle folding of extra header lines
+            i       - toggle folding of signatures
             m       - compose a new message
             r       - reply to the message
-            s       - toggle folding of signatures
+            s       - enter search criteria
             q       - return to search display
             ?       - reveal the message and thread IDs of what's under cursor
             ^]      - search using word under cursor
