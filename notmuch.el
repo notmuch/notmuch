@@ -62,6 +62,7 @@
     ; overlays-at to query and manipulate the current overlay.
     (define-key map "a" 'notmuch-show-archive-thread)
     (define-key map "A" 'notmuch-show-mark-read-then-archive-thread)
+    (define-key map "f" 'notmuch-show-forward-current)
     (define-key map "m" 'message-mail)
     (define-key map "n" 'notmuch-show-next-message)
     (define-key map "N" 'notmuch-show-mark-read-then-next-open-message)
@@ -315,6 +316,12 @@ buffer."
   (interactive)
   (let ((message-id (notmuch-show-get-message-id)))
     (notmuch-reply message-id)))
+
+(defun notmuch-show-forward-current ()
+  "Forward a the current message."
+  (interactive)
+  (with-current-notmuch-show-message
+   (message-forward)))
 
 (defun notmuch-show-pipe-message (command)
   "Pipe the contents of the current message to the given command.
