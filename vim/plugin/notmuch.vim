@@ -863,6 +863,46 @@ function! s:NM_shell_escape(word)
         return '''' . word . ''''
 endfunction
 
+" this function was taken from git.vim, then fixed up
+" http://github.com/motemen/git-vim
+function! s:NM_shell_split(cmd)
+        let l:split_cmd = []
+        let cmd = a:cmd
+        let iStart = 0
+        while 1
+                let t = match(cmd, '\S', iStart)
+                if t < iStart
+                        break
+                endif
+                let iStart = t
+
+                let iSpace = match(cmd, '\v(\s|$)', iStart)
+                if iSpace < iStart
+                        break
+                endif
+
+                let iQuote1 = match(cmd, '\(^["'']\|[^\\]\@<=["'']\)', iStart)
+                if iQuote1 > iSpace || iQuote1 < iStart
+                        let iEnd = iSpace - 1
+                        let l:split_cmd += [ cmd[iStart : iEnd] ]
+                else
+                        let q = cmd[iQuote1]
+                        let iQuote2 = match(cmd, '[^\\]\@<=[' . q . ']', iQuote1 + 1)
+                        if iQuote2 < iQuote1
+                                throw 'No matching ' . q . ' quote'
+                        endif
+                        let iEnd = iQuote2
+                        let l:split_cmd += [ cmd[iStart+1 : iEnd-1 ] ]
+                endif
+
+
+                let iStart = iEnd + 1
+        endwhile
+
+        return l:split_cmd
+endfunction
+
+
 function! s:NM_run(args)
         let words = a:args
         call map(words, 's:NM_shell_escape(v:val)')
@@ -996,12 +1036,12 @@ function! NotMuch(args)
                 let args = 'folders'
         endif
 
-        let words = split(args)
-        if words[0] == 'folders'
+        let words = <SID>NM_shell_split(args)
+        if words[0] == 'folders' || words[0] == 'f'
                 let words = words[1:]
                 call <SID>NM_cmd_folders(words)
 
-        elseif words[0] == 'search'
+        elseif words[0] == 'search' || words[0] == 's'
                 if len(words) > 1
                         let words = words[1:]
                 elseif exists('b:nm_search_words')
