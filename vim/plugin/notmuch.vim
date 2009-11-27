@@ -381,8 +381,7 @@ endfunction
 
 function! s:NM_search_thread_id()
         if !exists('b:nm_raw_lines')
-                echoe 'no b:nm_raw_lines'
-                return ''
+                throw 'Eeek! no b:nm_raw_lines'
         endif
         let mnum = line('.') - 1
         if len(b:nm_raw_lines) <= mnum
@@ -621,8 +620,7 @@ endfunction
 
 function! s:NM_show_message_id()
         if !exists('b:nm_raw_info')
-                echoe 'no b:nm_raw_info'
-                return ''
+                throw 'Eeek! no b:nm_raw_info'
         endif
         let msg = <SID>NM_show_get_message_for_line(line('.'))
         if has_key(msg,'id')
@@ -633,8 +631,7 @@ endfunction
 
 function! s:NM_show_search_words()
         if !exists('b:nm_words')
-                echoe 'no b:nm_words'
-                return []
+                throw 'Eeek! no b:nm_words'
         endif
         return b:nm_words
 endfunction
