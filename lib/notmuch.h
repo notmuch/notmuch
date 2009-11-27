@@ -280,6 +280,16 @@ notmuch_message_t *
 notmuch_database_find_message (notmuch_database_t *database,
 			       const char *message_id);
 
+/* Return a list of all tags found in the database.
+ *
+ * This function creates a list of all tags found in the database. The
+ * resulting list contains all tags from all messages found in the database.
+ *
+ * On error this function returns NULL.
+ */
+notmuch_tags_t *
+notmuch_database_get_all_tags (notmuch_database_t *db);
+
 /* Create a new query for 'database'.
  *
  * Here, 'database' should be an open database, (see
@@ -624,6 +634,21 @@ notmuch_messages_advance (notmuch_messages_t *messages);
  */
 void
 notmuch_messages_destroy (notmuch_messages_t *messages);
+
+/* Return a list of tags from all messages.
+ *
+ * The resulting list is guaranteed not to contain duplicated tags.
+ *
+ * WARNING: You can no longer iterate over messages after calling this
+ * function, because the iterator will point at the end of the list.
+ * We do not have a function to reset the iterator yet and the only
+ * way how you can iterate over the list again is to recreate the
+ * message list.
+ *
+ * The function returns NULL on error.
+ */
+notmuch_tags_t *
+notmuch_messages_collect_tags (notmuch_messages_t *messages);
 
 /* Get the message ID of 'message'.
  *

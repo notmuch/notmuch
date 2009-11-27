@@ -20,6 +20,8 @@
 
 #include "notmuch-private.h"
 
+#include <glib.h>
+
 /* Create a new notmuch_message_list_t object, with 'ctx' as its
  * talloc owner.
  *
@@ -139,4 +141,42 @@ void
 notmuch_messages_destroy (notmuch_messages_t *messages)
 {
     talloc_free (messages);
+}
+
+
+notmuch_tags_t *
+notmuch_messages_collect_tags (notmuch_messages_t *messages)
+{
+    notmuch_tags_t *tags, *msg_tags;
+    notmuch_message_t *msg;
+    GHashTable *htable;
+    GList *keys, *l;
+    const char *tag;
+
+    tags = _notmuch_tags_create (messages);
+    if (tags == NULL) return NULL;
+
+    htable = g_hash_table_new_full (g_str_hash, g_str_equal, free, NULL);
+
+    while ((msg = notmuch_messages_get (messages))) {
+	msg_tags = notmuch_message_get_tags (msg);
+	while ((tag = notmuch_tags_get (msg_tags))) {
+	    g_hash_table_insert (htable, xstrdup (tag), NULL);
+	    notmuch_tags_advance (msg_tags);
+	}
+	notmuch_tags_destroy (msg_tags);
+	notmuch_message_destroy (msg);
+	notmuch_messages_advance (messages);
+    }
+
+    keys = g_hash_table_get_keys (htable);
+    for (l = keys; l; l = l->next) {
+	_notmuch_tags_add_tag (tags, (char *)l->data);
+    }
+
+    g_list_free (keys);
+    g_hash_table_destroy (htable);
+
+    _notmuch_tags_prepare_iterator (tags);
+    return tags;
 }

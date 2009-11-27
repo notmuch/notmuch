@@ -4,9 +4,7 @@ Fix the things that are causing the most pain to new users
 
 2. Allow an easy way to get tags from directory names (if the user has them)
 
-3. Make emacs fast for big search results (see "lazy searching" below)
-
-4. Fix Xapian defect #250 so tagging is fast.
+3. Fix Xapian defect #250 so tagging is fast.
 
 Emacs interface (notmuch.el)
 ----------------------------
@@ -17,11 +15,7 @@ Add a global keybinding table for notmuch, and then view-specific
 tables that add to it.
 
 Add a command to archive all threads in a search view.
-
-Lazy searching: call "notmuch search" with --first and --max to fill
-just a screenful of results, and then fill in more as ther user pages
-through the buffer.
-
+	
 Add a '|' binding from the search view.
 
 Add a binding to run a search from notmuch-show-mode.
@@ -118,6 +112,10 @@ relative specifications of time such as "since:'2 months ago'". To do
 any of this we're probably going to need to break down an write our
 own parser for the query string rather than using Xapian's QueryParser
 class.
+
+Make failure to read a file (such as a permissions problem) a warning
+rather than an error (should be similar to the existing warning for a
+non-mail file).
 
 Add support for files that are moved or deleted (which obviously need
 to be handled differently).

@@ -137,6 +137,13 @@ within the current window."
       (or (memq prop buffer-invisibility-spec)
 	  (assq prop buffer-invisibility-spec)))))
 
+(defun notmuch-select-tag-with-completion (prompt &rest search-terms)
+  (let ((tag-list
+	 (with-output-to-string
+	   (with-current-buffer standard-output
+	     (apply 'call-process notmuch-command nil t nil "search-tags" search-terms)))))
+    (completing-read prompt (split-string tag-list "\n+" t) nil nil nil)))
+
 (defun notmuch-show-next-line ()
   "Like builtin `next-line' but ensuring we end on a visible character.
 
@@ -167,7 +174,7 @@ Unlike builtin `next-line' this version accepts no arguments."
     (if (not (looking-at notmuch-show-message-begin-regexp))
 	(re-search-backward notmuch-show-message-begin-regexp))
     (re-search-forward notmuch-show-id-regexp)
-    (buffer-substring (match-beginning 1) (match-end 1))))
+    (buffer-substring-no-properties (match-beginning 1) (match-end 1))))
 
 (defun notmuch-show-get-filename ()
   (save-excursion
@@ -175,7 +182,7 @@ Unlike builtin `next-line' this version accepts no arguments."
     (if (not (looking-at notmuch-show-message-begin-regexp))
 	(re-search-backward notmuch-show-message-begin-regexp))
     (re-search-forward notmuch-show-filename-regexp)
-    (buffer-substring (match-beginning 1) (match-end 1))))
+    (buffer-substring-no-properties (match-beginning 1) (match-end 1))))
 
 (defun notmuch-show-set-tags (tags)
   (save-excursion
@@ -200,7 +207,8 @@ Unlike builtin `next-line' this version accepts no arguments."
 
 (defun notmuch-show-add-tag (&rest toadd)
   "Add a tag to the current message."
-  (interactive "sTag to add: ")
+  (interactive
+   (list (notmuch-select-tag-with-completion "Tag to add: ")))
   (apply 'notmuch-call-notmuch-process
 	 (append (cons "tag"
 		       (mapcar (lambda (s) (concat "+" s)) toadd))
@@ -209,7 +217,8 @@ Unlike builtin `next-line' this version accepts no arguments."
 
 (defun notmuch-show-remove-tag (&rest toremove)
   "Remove a tag from the current message."
-  (interactive "sTag to remove: ")
+  (interactive
+   (list (notmuch-select-tag-with-completion "Tag to remove: " (notmuch-show-get-message-id))))
   (let ((tags (notmuch-show-get-tags)))
     (if (intersection tags toremove :test 'string=)
 	(progn
@@ -804,7 +813,8 @@ thread from that buffer can be show when done with this one)."
 (fset 'notmuch-search-mode-map notmuch-search-mode-map)
 
 (defvar notmuch-search-query-string)
-(defvar notmuch-search-oldest-first)
+(defvar notmuch-search-oldest-first t
+  "Show the oldest mail first in the search-mode")
 
 
 (defun notmuch-search-scroll-up ()
@@ -871,31 +881,6 @@ global search.
   "Return the thread for the current thread"
   (get-text-property (point) 'notmuch-search-thread-id))
 
-(defun notmuch-search-markup-this-thread-id ()
-  (beginning-of-line)
-  (let ((beg (point)))
-    (if (re-search-forward "thread:[a-fA-F0-9]*" nil t)
-	(progn
-	  (forward-char)
-	  (overlay-put (make-overlay beg (point)) 'invisible 'notmuch-search)
-	  (re-search-forward ".*\\[[0-9]*/[0-9]*\\] \\([^;]*\\)\\(;\\)")
-	  (let* ((authors (buffer-substring (match-beginning 1) (match-end 1)))
-		 (authors-length (length authors)))
-	    ;; Drop the semi-colon
-	    (replace-match "" t nil nil 2)
-	    (if (<= authors-length notmuch-search-authors-width)
-		(replace-match (concat authors (make-string
-						(- notmuch-search-authors-width
-						   authors-length) ? )) t t nil 1)
-	      (replace-match (concat (substring authors 0 (- notmuch-search-authors-width 3)) "...") t t nil 1)))))))
-
-(defun notmuch-search-markup-thread-ids ()
-  (save-excursion
-    (goto-char (point-min))
-    (while (not (eobp))
-      (notmuch-search-markup-this-thread-id)
-      (forward-line))))
-
 (defun notmuch-search-show-thread ()
   (interactive)
   (let ((thread-id (notmuch-search-find-thread-id)))
@@ -949,12 +934,14 @@ and will also appear in a buffer named \"*Notmuch errors*\"."
 	(split-string (buffer-substring beg end))))))
 
 (defun notmuch-search-add-tag (tag)
-  (interactive "sTag to add: ")
+  (interactive
+   (list (notmuch-select-tag-with-completion "Tag to add: ")))
   (notmuch-call-notmuch-process "tag" (concat "+" tag) (notmuch-search-find-thread-id))
   (notmuch-search-set-tags (delete-dups (sort (cons tag (notmuch-search-get-tags)) 'string<))))
 
 (defun notmuch-search-remove-tag (tag)
-  (interactive "sTag to remove: ")
+  (interactive
+   (list (notmuch-select-tag-with-completion "Tag to remove: " (notmuch-search-find-thread-id))))
   (notmuch-call-notmuch-process "tag" (concat "-" tag) (notmuch-search-find-thread-id))
   (notmuch-search-set-tags (delete tag (notmuch-search-get-tags))))
 
@@ -1089,13 +1076,14 @@ current search results AND the additional query string provided."
 
 Runs a new search matching only messages that match both the
 current search results AND that are tagged with the given tag."
-  (interactive "sFilter by tag: ")
+  (interactive
+   (list (notmuch-select-tag-with-completion "Filter by tag: ")))
   (notmuch-search (concat notmuch-search-query-string " and tag:" tag) notmuch-search-oldest-first))
 
 (defun notmuch ()
   "Run notmuch to display all mail with tag of 'inbox'"
   (interactive)
-  (notmuch-search "tag:inbox" t))
+  (notmuch-search "tag:inbox" notmuch-search-oldest-first))
 
 (setq mail-user-agent 'message-user-agent)
 
@@ -1165,7 +1153,7 @@ results for the search terms in that line.
       (setq folder (notmuch-folder-find-name)))
   (let ((search (assoc folder notmuch-folders)))
     (if search
-	(notmuch-search (cdr search) t))))
+	(notmuch-search (cdr search) notmuch-search-oldest-first))))
 
 (defun notmuch-folder ()
   "Show the notmuch folder view and update the displayed counts."

@@ -156,10 +156,11 @@ notmuch_setup_command (unused (void *ctx),
 	notmuch_config_set_database_path (config, absolute_path);
     }
 
-    notmuch_config_save (config);
-
-    if (is_new)
-	welcome_message_post_setup ();
-
-    return 0;
+    if (! notmuch_config_save (config)) {
+	if (is_new)
+	  welcome_message_post_setup ();
+	return 0;
+    } else {
+	return 1;
+    }
 }

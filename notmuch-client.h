@@ -119,6 +119,9 @@ notmuch_show_command (void *ctx, int argc, char *argv[]);
 int
 notmuch_tag_command (void *ctx, int argc, char *argv[]);
 
+int
+notmuch_search_tags_command (void *ctx, int argc, char *argv[]);
+
 const char *
 notmuch_time_relative_date (const void *ctx, time_t then);
 
