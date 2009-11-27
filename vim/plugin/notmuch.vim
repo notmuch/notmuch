@@ -33,17 +33,17 @@ let s:notmuch_defaults = {
         \ 'g:notmuch_show_fold_bodies':              0                            ,
         \ 'g:notmuch_show_fold_headers':             1                            ,
         \
-        \ 'g:notmuch_show_message_begin_regexp':     '^message{'                ,
-        \ 'g:notmuch_show_message_end_regexp':       '^message}'                ,
-        \ 'g:notmuch_show_header_begin_regexp':      '^header{'                 ,
-        \ 'g:notmuch_show_header_end_regexp':        '^header}'                 ,
-        \ 'g:notmuch_show_body_begin_regexp':        '^body{'                   ,
-        \ 'g:notmuch_show_body_end_regexp':          '^body}'                   ,
-        \ 'g:notmuch_show_attachment_begin_regexp':  '^attachment{'             ,
-        \ 'g:notmuch_show_attachment_end_regexp':    '^attachment}'             ,
-        \ 'g:notmuch_show_part_begin_regexp':        '^part{'                   ,
-        \ 'g:notmuch_show_part_end_regexp':          '^part}'                   ,
-        \ 'g:notmuch_show_marker_regexp':            '^\\(message\\|header\\|body\\|attachment\\|part\\)[{}].*$',
+        \ 'g:notmuch_show_message_begin_regexp':     'message{'                ,
+        \ 'g:notmuch_show_message_end_regexp':       'message}'                ,
+        \ 'g:notmuch_show_header_begin_regexp':      'header{'                 ,
+        \ 'g:notmuch_show_header_end_regexp':        'header}'                 ,
+        \ 'g:notmuch_show_body_begin_regexp':        'body{'                   ,
+        \ 'g:notmuch_show_body_end_regexp':          'body}'                   ,
+        \ 'g:notmuch_show_attachment_begin_regexp':  'attachment{'             ,
+        \ 'g:notmuch_show_attachment_end_regexp':    'attachment}'             ,
+        \ 'g:notmuch_show_part_begin_regexp':        'part{'                   ,
+        \ 'g:notmuch_show_part_end_regexp':          'part}'                   ,
+        \ 'g:notmuch_show_marker_regexp':            '\\(message\\|header\\|body\\|attachment\\|part\\)[{}].*$',
         \
         \ 'g:notmuch_show_message_parse_regexp':     '\(id:[^ ]*\) depth:\([0-9]*\) match:\([0-9]*\) filename:\(.*\)$',
         \ 'g:notmuch_show_tags_regexp':              '(\([^)]*\))$'               ,
