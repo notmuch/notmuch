@@ -70,6 +70,7 @@
     (define-key map (kbd "C-p") 'notmuch-show-previous-line)
     (define-key map "q" 'kill-this-buffer)
     (define-key map "r" 'notmuch-show-reply)
+    (define-key map "s" 'notmuch-search)
     (define-key map "v" 'notmuch-show-view-all-mime-parts)
     (define-key map "w" 'notmuch-show-view-raw-message)
     (define-key map "x" 'kill-this-buffer)
