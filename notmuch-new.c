@@ -197,10 +197,21 @@ add_files_recursive (notmuch_database_t *notmuch,
 	next = talloc_asprintf (notmuch, "%s/%s", path, entry->d_name);
 
 	if (stat (next, st)) {
+	    int err = errno;
+
+	    switch (err) {
+	    case ENOENT:
+		/* The file was removed between scandir and now... */
+	    case EPERM:
+	    case EACCES:
+		/* We can't read this file so don't add it to the cache. */
+		continue;
+	    }
+
 	    fprintf (stderr, "Error reading %s: %s\n",
 		     next, strerror (errno));
 	    ret = NOTMUCH_STATUS_FILE_ERROR;
-	    continue;
+	    goto DONE;
 	}
 
 	if (S_ISREG (st->st_mode)) {
