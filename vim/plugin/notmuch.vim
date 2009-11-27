@@ -856,13 +856,7 @@ endfunction
 " --- implement compose screen {{{1
 
 function! s:NM_cmd_compose(words, body_lines)
-        let lines = !g:notmuch_compose_header_help ? [] : [
-                  \ 'Notmuch-Help: Type in your message here; to help you use these bindings:',
-                  \ 'Notmuch-Help:   ,a    - attach a file',
-                  \ 'Notmuch-Help:   ,s    - send the message (Notmuch-Help lines will be removed)',
-                  \ 'Notmuch-Help:   ,q    - abort the message',
-                  \ 'Notmuch-Help:   <Tab> - skip through header lines',
-                  \ ]
+        let lines = []
         let start_on_line = 0
 
         let hdrs = { }
@@ -900,7 +894,7 @@ function! s:NM_cmd_compose(words, body_lines)
                 endif
         endfor
 
-        call extend(lines, [ '', '' ])
+        call add(lines, '')
         if !start_on_line
                 let start_on_line = len(lines) + 1
         endif
@@ -908,25 +902,10 @@ function! s:NM_cmd_compose(words, body_lines)
         if len(a:body_lines)
                 call extend(lines, a:body_lines)
         else
-                call add(lines, '')
+                call extend(lines, [ '', '' ])
         endif
-        call extend(lines, g:notmuch_signature)
 
-        let prev_bufnr = bufnr('%')
-        setlocal bufhidden=hide
-        call <SID>NM_newFileBuffer(g:notmuch_compose_temp_file_dir, '%s.mail',
-                                  \ 'compose', lines)
-        setlocal bufhidden=hide
-        let b:nm_prev_bufnr = prev_bufnr
-
-        call <SID>NM_set_map('n', g:notmuch_compose_nmaps)
-        call <SID>NM_set_map('i', g:notmuch_compose_imaps)
-
-        call cursor(start_on_line, strlen(start_on_line) + 1)
-        if g:notmuch_compose_insert_mode_start
-                startinsert!
-        endif
-        echo 'Type your message, use <TAB> to jump to next header and then body.'
+        call <SID>NM_newComposeBuffer(lines, start_on_line)
 endfunction
 
 function! s:NM_compose_send()
@@ -1115,6 +1094,50 @@ function! s:NM_newFileBuffer(fdir, fname, type, lines)
         execute printf('set filetype=notmuch-%s', a:type)
         execute printf('set syntax=notmuch-%s', a:type)
         let b:nm_type = a:type
+endfunction
+
+function! s:NM_newComposeBuffer(lines, start_on_line)
+        let lines = a:lines
+        let start_on_line = a:start_on_line
+        let real_hdr_start = 1
+        if g:notmuch_compose_header_help
+                let help_lines = [
+                  \ 'Notmuch-Help: Type in your message here; to help you use these bindings:',
+                  \ 'Notmuch-Help:   ,a    - attach a file',
+                  \ 'Notmuch-Help:   ,s    - send the message (Notmuch-Help lines will be removed)',
+                  \ 'Notmuch-Help:   ,q    - abort the message',
+                  \ 'Notmuch-Help:   <Tab> - skip through header lines',
+                  \ ]
+                call extend(lines, help_lines, 0)
+                let real_hdr_start = len(help_lines)
+                if start_on_line > 0
+                        let start_on_line = start_on_line + len(help_lines)
+                endif
+        endif
+        call extend(lines, g:notmuch_signature)
+
+
+        let prev_bufnr = bufnr('%')
+        setlocal bufhidden=hide
+        call <SID>NM_newFileBuffer(g:notmuch_compose_temp_file_dir, '%s.mail',
+                                  \ 'compose', lines)
+        setlocal bufhidden=hide
+        let b:nm_prev_bufnr = prev_bufnr
+
+        call <SID>NM_set_map('n', g:notmuch_compose_nmaps)
+        call <SID>NM_set_map('i', g:notmuch_compose_imaps)
+
+        if start_on_line > 0 && start_on_line <= len(lines)
+                call cursor(start_on_line, strlen(getline(start_on_line)) + 1)
+        else
+                call cursor(real_hdr_start, strlen(getline(real_hdr_start) + 1)
+                call <SID>NM_compose_next_entry_area()
+        endif
+
+        if g:notmuch_compose_insert_mode_start
+                startinsert!
+        endif
+        echo 'Type your message, use <TAB> to jump to next header and then body.'
 endfunction
 
 function! s:NM_assert_buffer_type(type)
