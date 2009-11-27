@@ -127,7 +127,7 @@ let g:notmuch_search_maps = {
         \ '+':          ':call <SID>NM_search_add_tags([])<CR>',
         \ '-':          ':call <SID>NM_search_remove_tags([])<CR>',
         \ '=':          ':call <SID>NM_search_refresh_view()<CR>',
-        \ '?':          ':echo <SID>NM_search_thread_id()<CR>',
+        \ '?':          ':echo <SID>NM_search_thread_id() . ''  @ '' . join(<SID>NM_get_search_words())<CR>',
         \ }
 
 " --- --- bindings for show screen {{{2
@@ -157,7 +157,7 @@ let g:notmuch_show_maps = {
         \
         \ 'r':          ':call <SID>NM_show_reply()<CR>',
         \ 'm':          ':call <SID>NM_new_mail()<CR>',
-        \ '?':          ':echo <SID>NM_show_message_id() . ''  @ '' . join(<SID>NM_show_search_words())<CR>',
+        \ '?':          ':echo <SID>NM_show_message_id() . ''  @ '' . join(<SID>NM_get_search_words())<CR>',
         \ }
 
 " --- --- bindings for compose screen {{{2
@@ -419,7 +419,7 @@ function! s:NM_cmd_show(words)
         setlocal bufhidden=hide
         call <SID>NM_newBuffer('', 'show', join(info['disp'], "\n"))
         setlocal bufhidden=delete
-        let b:nm_words = a:words
+        let b:nm_search_words = a:words
         let b:nm_raw_info = info
         let b:nm_prev_bufnr = prev_bufnr
 
@@ -626,13 +626,6 @@ function! s:NM_show_message_id()
                 return msg['id']
         endif
         return ''
-endfunction
-
-function! s:NM_show_search_words()
-        if !exists('b:nm_words')
-                throw 'Eeek! no b:nm_words'
-        endif
-        return b:nm_words
 endfunction
 
 function! s:NM_show_fold_toggle(key, type, fold)
@@ -1226,6 +1219,13 @@ function! s:NM_new_mail()
 endfunction
 
 " --- other helpers {{{1
+
+function! s:NM_get_search_words()
+        if !exists('b:nm_search_words')
+                throw 'Eeek! no b:nm_search_words'
+        endif
+        return b:nm_search_words
+endfunction
 
 function! s:NM_kill_this_buffer()
         if exists('b:nm_prev_bufnr')
