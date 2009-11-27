@@ -347,7 +347,14 @@ function! s:NM_search_toggle_order()
 endfunction
 
 function! s:NM_search_reply_to_thread()
-        echo 'not implemented'
+        let cmd = ['reply']
+        call add(cmd, <SID>NM_search_thread_id())
+        call add(cmd, 'AND')
+        call extend(cmd, <SID>NM_get_search_words())
+
+        let data = <SID>NM_run(cmd)
+        let lines = split(data, "\n")
+        call <SID>NM_newComposeBuffer(lines, 0)
 endfunction
 
 function! s:NM_search_add_tags(tags)
