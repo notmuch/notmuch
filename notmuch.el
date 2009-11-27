@@ -809,8 +809,6 @@ view, (remove the \"inbox\" tag from each), with
 	mode-name "notmuch-show")
   (setq buffer-read-only t))
 
-;;;###autoload
-
 (defgroup notmuch nil
   "Notmuch mail reader for Emacs."
   :group 'mail)
@@ -1160,6 +1158,7 @@ characters as well as `_.+-'.
     (apply 'notmuch-call-notmuch-process "tag"
 	   (append action-split (list notmuch-search-query-string) nil))))
 
+;;;###autoload
 (defun notmuch-search (query &optional oldest-first)
   "Run \"notmuch search\" with the given query string and display results."
   (interactive "sNotmuch search: ")
@@ -1239,6 +1238,8 @@ current search results AND that are tagged with the given tag."
    (list (notmuch-select-tag-with-completion "Filter by tag: ")))
   (notmuch-search (concat notmuch-search-query-string " and tag:" tag) notmuch-search-oldest-first))
 
+
+;;;###autoload
 (defun notmuch ()
   "Run notmuch to display all mail with tag of 'inbox'"
   (interactive)
@@ -1314,6 +1315,7 @@ results for the search terms in that line.
     (if search
 	(notmuch-search (cdr search) notmuch-search-oldest-first))))
 
+;;;###autoload
 (defun notmuch-folder ()
   "Show the notmuch folder view and update the displayed counts."
   (interactive)
