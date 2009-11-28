@@ -148,7 +148,7 @@ _thread_add_matched_message (notmuch_thread_t *thread,
 			    notmuch_message_get_message_id (message), NULL,
 			    (void **) &hashed_message)) {
 	notmuch_message_set_flag (hashed_message,
-			NOTMUCH_MSG_FLAG_MATCHING_SEARCH, 1);
+				  NOTMUCH_MESSAGE_FLAG_MATCH, 1);
     }
 }
 

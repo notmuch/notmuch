@@ -158,7 +158,7 @@ show_message (void *ctx, notmuch_message_t *message, int indent)
     printf ("\fmessage{ id:%s depth:%d match:%d filename:%s\n",
 	    notmuch_message_get_message_id (message),
 	    indent,
-	    notmuch_message_get_flag (message, NOTMUCH_MSG_FLAG_MATCHING_SEARCH),
+	    notmuch_message_get_flag (message, NOTMUCH_MESSAGE_FLAG_MATCH),
 	    notmuch_message_get_filename (message));
 
     printf ("\fheader{\n");
