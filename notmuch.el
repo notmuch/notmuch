@@ -1152,7 +1152,7 @@ characters as well as `_.+-'.
     (let ((words action-split))
       (when (null words) (error "No operation given"))
       (while words
-	(unless (string-match-p "^[\+\-][_\+\-\\w]+$" (car words))
+	(unless (string-match-p "^[-+][-+_.[:word:]]+$" (car words))
 	  (error "Action must be of the form `+thistag -that_tag'"))
 	(setq words (cdr words))))
     (apply 'notmuch-call-notmuch-process "tag"
