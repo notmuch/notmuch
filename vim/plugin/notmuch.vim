@@ -408,7 +408,7 @@ endfunction
 
 function! s:NM_cmd_show(words)
         let prev_bufnr = bufnr('%')
-        let data = s:NM_run(['show'] + a:words)
+        let data = s:NM_run(['show', '--entire-thread'] + a:words)
         let lines = split(data, "\n")
 
         let info = s:NM_cmd_show_parse(lines)
