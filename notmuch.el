@@ -949,6 +949,23 @@ thread from that buffer can be show when done with this one)."
   (goto-char (point-max))
   (forward-line -1))
 
+(defface notmuch-tag-face
+  '((((class color)
+      (background dark))
+     (:foreground "OliveDrab1"))
+    (((class color)
+      (background light))
+     (:foreground "navy blue" :bold t))
+    (t
+     (:bold t)))
+  "Notmuch search mode face used to highligh tags."
+  :group 'notmuch)
+
+(defvar notmuch-tag-face-alist nil
+  "List containing the tag list that need to be highlighed")
+
+(defvar notmuch-search-font-lock-keywords  nil)
+
 ;;;###autoload
 (defun notmuch-search-mode ()
   "Major mode for searching mail with notmuch.
@@ -979,7 +996,18 @@ global search.
   (setq truncate-lines t)
   (setq major-mode 'notmuch-search-mode
 	mode-name "notmuch-search")
-  (setq buffer-read-only t))
+  (setq buffer-read-only t)
+  (if (not notmuch-tag-face-alist)
+      (add-to-list 'notmuch-search-font-lock-keywords (list
+		"(\\([^)]*\\))$" '(1  'notmuch-tag-face)))
+    (progn
+  (setq notmuch-search-tags (mapcar 'car notmuch-tag-face-alist))
+  (loop for notmuch-search-tag  in notmuch-search-tags
+    do (add-to-list 'notmuch-search-font-lock-keywords (list
+				(concat "([^)]*\\(" notmuch-search-tag "\\)[^)]*)$")
+		    `(1  ,(cdr (assoc notmuch-search-tag notmuch-tag-face-alist))))))))
+  (set (make-local-variable 'font-lock-defaults)
+         '(notmuch-search-font-lock-keywords t)))
 
 (defun notmuch-search-find-thread-id ()
   "Return the thread for the current thread"
