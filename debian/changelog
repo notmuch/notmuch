@@ -1,0 +1,5 @@
+notmuch (0.0-1) unstable; urgency=low
+
+  * New Debian package
+
+ -- Jameson Graef Rollins <jrollins@finestructure.net>  Fri, 27 Nov 2009 13:39:09 -0500
