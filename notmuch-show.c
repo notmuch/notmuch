@@ -212,6 +212,24 @@ notmuch_show_command (void *ctx, unused (int argc), unused (char *argv[]))
     notmuch_thread_t *thread;
     notmuch_messages_t *messages;
     char *query_string;
+    int entire_thread = 0;
+    int i;
+
+    for (i = 0; i < argc && argv[i][0] == '-'; i++) {
+	if (strcmp (argv[i], "--") == 0) {
+	    i++;
+	    break;
+	}
+        if (strcmp(argv[i], "--entire-thread") == 0) {
+	    entire_thread = 1;
+	} else {
+	    fprintf (stderr, "Unrecognized option: %s\n", argv[i]);
+	    return 1;
+	}
+    }
+
+    argc -= i;
+    argv += i;
 
     config = notmuch_config_open (ctx, NULL, NULL);
     if (config == NULL)
@@ -239,21 +257,29 @@ notmuch_show_command (void *ctx, unused (int argc), unused (char *argv[]))
 	return 1;
     }
 
-    for (threads = notmuch_query_search_threads (query);
-	 notmuch_threads_has_more (threads);
-	 notmuch_threads_advance (threads))
-    {
-	thread = notmuch_threads_get (threads);
-
-	messages = notmuch_thread_get_toplevel_messages (thread);
-
+    if (!entire_thread) {
+	messages = notmuch_query_search_messages (query);
 	if (messages == NULL)
-	    INTERNAL_ERROR ("Thread %s has no toplevel messages.\n",
-			    notmuch_thread_get_thread_id (thread));
-
+	    INTERNAL_ERROR ("No messages.\n");
 	show_messages (ctx, messages, 0);
 
-	notmuch_thread_destroy (thread);
+    } else {
+	for (threads = notmuch_query_search_threads (query);
+		notmuch_threads_has_more (threads);
+		notmuch_threads_advance (threads))
+	{
+	    thread = notmuch_threads_get (threads);
+
+	    messages = notmuch_thread_get_toplevel_messages (thread);
+
+	    if (messages == NULL)
+		INTERNAL_ERROR ("Thread %s has no toplevel messages.\n",
+			notmuch_thread_get_thread_id (thread));
+
+	    show_messages (ctx, messages, 0);
+
+	    notmuch_thread_destroy (thread);
+	}
     }
 
     notmuch_query_destroy (query);
