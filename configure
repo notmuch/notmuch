@@ -1,5 +1,15 @@
 #! /bin/sh
 
+# defaults
+PREFIX=/usr/local
+
+# option parsing
+for option; do
+    if [ "${option%=*}" = '--prefix' ] ; then
+	PREFIX="${option#*=}"
+    fi
+done
+
 cat <<EOF
 Welcome to Notmuch, a system for indexing, searching and tagging your email.
 
@@ -130,7 +140,7 @@ EOF
 
 # construct the Makefile.config
 cat > Makefile.config <<EOF
-prefix = /usr/local
+prefix = $PREFIX
 bash_completion_dir = /etc/bash_completion.d
 CFLAGS += ${have_valgrind}
 EOF
