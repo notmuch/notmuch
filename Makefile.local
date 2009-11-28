@@ -45,7 +45,7 @@ install-emacs: install emacs
 
 install-bash:
 	install -d $(DESTDIR)$(bash_completion_dir)
-	install contrib/notmuch-completion.bash \
+	install -m0644 contrib/notmuch-completion.bash \
 		$(DESTDIR)$(bash_completion_dir)/notmuch
 
 SRCS  := $(SRCS) $(notmuch_client_srcs)
