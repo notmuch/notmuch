@@ -188,6 +188,39 @@ add_recipients_for_string (GMimeMessage *message,
     return add_recipients_for_address_list (message, config, type, list);
 }
 
+/* Some mailing lists munge the Reply-To header despite it being A Bad
+ * Thing, see http://www.unicom.com/pw/reply-to-harmful.html
+ *
+ * This function detects such munging so that reasonable headers can be
+ * generated anyway.  Returns 1 if munged, else 0.
+ *
+ * The current logic is fairly naive, Reply-To is diagnosed as munged if
+ * it contains exactly one address, and this address is also present in
+ * the To or Cc fields.
+ */
+static int
+mailing_list_munged_reply_to (notmuch_message_t *message)
+{
+    const char *header, *addr;
+    InternetAddressList *list;
+    InternetAddress *address;
+    InternetAddressMailbox *mailbox;
+
+    header = notmuch_message_get_header (message, "reply-to");
+    list = internet_address_list_parse_string (header);
+    if (internet_address_list_length (list) != 1)
+	return 0;
+    address = internet_address_list_get_address (list, 0);
+    if (INTERNET_ADDRESS_IS_GROUP (address))
+	return 0;
+    mailbox = INTERNET_ADDRESS_MAILBOX (address);
+    addr = internet_address_mailbox_get_addr (mailbox);
+    /* Note that strcasestr() is a GNU extension, strstr() might be sufficient */
+    if (strcasestr (notmuch_message_get_header (message, "to"), addr) == 0 ||
+	strcasestr (notmuch_message_get_header (message, "cc"), addr) == 0)
+	return 1;
+    return 0; }
+
 /* Augments the recipients of reply from the headers of message.
  *
  * If any of the user's addresses were found in these headers, the first
@@ -198,7 +231,7 @@ add_recipients_from_message (GMimeMessage *reply,
 			     notmuch_config_t *config,
 			     notmuch_message_t *message)
 {
-    static const struct {
+    struct {
 	const char *header;
 	const char *fallback;
 	GMimeRecipientType recipient_type;
@@ -210,6 +243,18 @@ add_recipients_from_message (GMimeMessage *reply,
     };
     const char *from_addr = NULL;
     unsigned int i;
+
+    /* When we have detected Reply-To munging, we ignore the Reply-To
+     * field (because it appears in the To or Cc headers) and use the
+     * From header so that person will get pinged and will actually
+     * receive the response if not subscribed to the list.  Note that
+     * under no circumstances does this fail to reply to the address in
+     * the Reply-To header.
+     */
+    if (mailing_list_munged_reply_to (message)) {
+	reply_to_map[0].header = "from";
+	reply_to_map[0].fallback = NULL;
+    }
 
     for (i = 0; i < ARRAY_SIZE (reply_to_map); i++) {
 	const char *addr, *recipients;
