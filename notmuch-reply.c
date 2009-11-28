@@ -23,17 +23,6 @@
 #include "notmuch-client.h"
 #include "gmime-filter-reply.h"
 
-static const struct {
-    const char *header;
-    const char *fallback;
-    GMimeRecipientType recipient_type;
-} reply_to_map[] = {
-    { "reply-to", "from", GMIME_RECIPIENT_TYPE_TO  },
-    { "to",         NULL, GMIME_RECIPIENT_TYPE_TO  },
-    { "cc",         NULL, GMIME_RECIPIENT_TYPE_CC  },
-    { "bcc",        NULL, GMIME_RECIPIENT_TYPE_BCC }
-};
-
 static void
 reply_part_content (GMimeObject *part)
 {
@@ -199,16 +188,56 @@ add_recipients_for_string (GMimeMessage *message,
     return add_recipients_for_address_list (message, config, type, list);
 }
 
+/* Augments the recipients of reply from the headers of message.
+ *
+ * If any of the user's addresses were found in these headers, the first
+ * of these returned, otherwise NULL is returned.
+ */
+static const char *
+add_recipients_from_message (GMimeMessage *reply,
+			     notmuch_config_t *config,
+			     notmuch_message_t *message)
+{
+    static const struct {
+	const char *header;
+	const char *fallback;
+	GMimeRecipientType recipient_type;
+    } reply_to_map[] = {
+	{ "reply-to", "from", GMIME_RECIPIENT_TYPE_TO  },
+	{ "to",         NULL, GMIME_RECIPIENT_TYPE_TO  },
+	{ "cc",         NULL, GMIME_RECIPIENT_TYPE_CC  },
+	{ "bcc",        NULL, GMIME_RECIPIENT_TYPE_BCC }
+    };
+    const char *from_addr = NULL;
+    unsigned int i;
+
+    for (i = 0; i < ARRAY_SIZE (reply_to_map); i++) {
+	const char *addr, *recipients;
+
+	recipients = notmuch_message_get_header (message,
+						 reply_to_map[i].header);
+	if ((recipients == NULL || recipients[0] == '\0') && reply_to_map[i].fallback)
+	    recipients = notmuch_message_get_header (message,
+						     reply_to_map[i].fallback);
+
+	addr = add_recipients_for_string (reply, config,
+					  reply_to_map[i].recipient_type,
+					  recipients);
+	if (from_addr == NULL)
+	    from_addr = addr;
+    }
+    return from_addr;
+}
+
 static int
 notmuch_reply_format_default(void *ctx, notmuch_config_t *config, notmuch_query_t *query)
 {
     GMimeMessage *reply;
     notmuch_messages_t *messages;
     notmuch_message_t *message;
-    const char *subject, *recipients, *from_addr = NULL;
+    const char *subject, *from_addr = NULL;
     const char *in_reply_to, *orig_references, *references;
     char *reply_headers;
-    unsigned int i;
 
     for (messages = notmuch_query_search_messages (query);
 	 notmuch_messages_has_more (messages);
@@ -229,21 +258,7 @@ notmuch_reply_format_default(void *ctx, notmuch_config_t *config, notmuch_query_
 	    subject = talloc_asprintf (ctx, "Re: %s", subject);
 	g_mime_message_set_subject (reply, subject);
 
-	for (i = 0; i < ARRAY_SIZE (reply_to_map); i++) {
-	    const char *addr;
-
-	    recipients = notmuch_message_get_header (message,
-						     reply_to_map[i].header);
-	    if ((recipients == NULL || recipients[0] == '\0') && reply_to_map[i].fallback)
-		recipients = notmuch_message_get_header (message,
-							 reply_to_map[i].fallback);
-
-	    addr = add_recipients_for_string (reply, config,
-					      reply_to_map[i].recipient_type,
-					      recipients);
-	    if (from_addr == NULL)
-		from_addr = addr;
-	}
+	from_addr = add_recipients_from_message (reply, config, message);
 
 	if (from_addr == NULL)
 	    from_addr = notmuch_config_get_user_primary_email (config);
@@ -296,9 +311,8 @@ notmuch_reply_format_headers_only(void *ctx, notmuch_config_t *config, notmuch_q
     GMimeMessage *reply;
     notmuch_messages_t *messages;
     notmuch_message_t *message;
-    const char *recipients, *in_reply_to, *orig_references, *references;
+    const char *in_reply_to, *orig_references, *references;
     char *reply_headers;
-    unsigned int i;
 
     for (messages = notmuch_query_search_messages (query);
 	 notmuch_messages_has_more (messages);
@@ -332,19 +346,7 @@ notmuch_reply_format_headers_only(void *ctx, notmuch_config_t *config, notmuch_q
 	g_mime_object_set_header (GMIME_OBJECT (reply),
 				  "References", references);
 
-	for (i = 0; i < ARRAY_SIZE (reply_to_map); i++) {
-	    const char *addr;
-
-	    recipients = notmuch_message_get_header (message,
-						     reply_to_map[i].header);
-	    if ((recipients == NULL || recipients[0] == '\0') && reply_to_map[i].fallback)
-		recipients = notmuch_message_get_header (message,
-							 reply_to_map[i].fallback);
-
-	    addr = add_recipients_for_string (reply, config,
-					      reply_to_map[i].recipient_type,
-					      recipients);
-	}
+	(void)add_recipients_from_message (reply, config, message);
 
 	g_mime_object_set_header (GMIME_OBJECT (reply), "Bcc",
 			   notmuch_config_get_user_primary_email (config));
