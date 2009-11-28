@@ -87,7 +87,8 @@ static int ino_cmp(const struct dirent **a, const struct dirent **b)
  *
  * Return 1 if the directory looks like a Maildir and 0 otherwise.
  */
-static int is_maildir (struct dirent **entries, int count)
+static int
+is_maildir (struct dirent **entries, int count)
 {
     int i, found = 0;
 
@@ -98,7 +99,8 @@ static int is_maildir (struct dirent **entries, int count)
 	    strcmp(entries[i]->d_name, "tmp") == 0)
 	{
 	    found++;
-	    if (found == 3) return 1;
+	    if (found == 3)
+		return 1;
 	}
     }
 
