@@ -10,8 +10,8 @@ more efficiently than ever.
 If anything goes wrong in this process, please do as much as you can
 to figure out what could be different on your machine compared to
 those of the notmuch developers. Then, please email those details to
-Carl Worth <cworth@cworth.org> so that we can hopefully make future
-versions of notmuch easier for you to use.
+the Notmuch list (notmuch@notmuchmail.org) so that we can hopefully make
+future versions of notmuch easier for you to use.
 
 We'll now investigate your system to find verify that various software
 components that notmuch relies on are available.
