@@ -63,6 +63,15 @@ else
     errors=$((errors + 1))
 fi
 
+if printf 'int main(){return 0;}' | gcc -x c -lz -o /dev/null - > /dev/null 2>&1; then
+    echo "Checking for zlib development files... Yes."
+    have_zlib=1
+else
+    echo "Checking for zlib development files... No."
+    have_zlib=0
+    errors=$((errors + 1))
+fi
+
 if pkg-config --modversion valgrind > /dev/null 2>&1; then
     echo "Checking for valgrind development files... Yes."
     have_valgrind=-DHAVE_VALGRIND
@@ -91,13 +100,16 @@ EOF
 	echo "	The talloc library (including development files such as headers)"
 	echo "	http://talloc.samba.org/"
     fi
+    if [ $have_zlib -eq 0 ]; then
+	echo "	The zlib library (including development files such as headers)"
+    fi
     cat <<EOF
 
 On a modern, package-based operating system such as Debian, you can
 install all of the dependencies with the following simple command
 line:
 
-	sudo apt-get install libxapian-dev libgmime-2.4-dev libtalloc-dev
+	sudo apt-get install libxapian-dev libgmime-2.4-dev libtalloc-dev libz-dev
 
 On other systems, a similar command can be used, but the details of the 
 package names may be different, (such as "devel" in place of "dev").
