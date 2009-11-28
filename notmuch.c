@@ -204,7 +204,7 @@ command_t commands[] = {
       "\t\tSee \"notmuch help search-terms\" for details of the search\n"
       "\t\tterms syntax." },
     { "reply", notmuch_reply_command,
-      "<search-terms> [...]",
+      "[options...] <search-terms> [...]",
       "\t\tConstruct a reply template for a set of messages.",
       "\t\tConstructs a new message as a reply to a set of existing\n"
       "\t\tmessages. The Reply-To: header (if any, otherwise From:) is\n"
@@ -213,9 +213,21 @@ command_t commands[] = {
       "\n"
       "\t\tA suitable subject is constructed. The In-Reply-to: and\n"
       "\t\tReferences: headers are set appropriately, and the content\n"
-      "\t\tof the original messages is quoted and included in the body.\n"
+      "\t\tof the original messages is quoted and included in the body\n"
+      "\t\t(unless --format=headers-only is given).\n"
       "\n"
       "\t\tThe resulting message template is output to stdout.\n"
+      "\n"
+      "\t\tSupported options for reply include:\n"
+      "\n"
+      "\t\t--format=(default|headers-only)\n"
+      "\n"
+      "\t\t\tdefault:\n"
+      "\t\t\t\tIncludes subject and quoted message body.\n"
+      "\n"
+      "\t\t\theaders-only:\n"
+      "\t\t\t\tOnly produces In-Reply-To, References, To\n"
+      "\t\t\t\tCc, and Bcc headers.\n"
       "\n"
       "\t\tSee \"notmuch help search-terms\" for details of the search\n"
       "\t\tterms syntax." },
