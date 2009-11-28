@@ -112,6 +112,10 @@ line:
 
 	sudo apt-get install libxapian-dev libgmime-2.4-dev libtalloc-dev
 
+Or on Fedora or other RPM-based systems:
+
+	sudo yum install xapian-core-devel gmime-devel libtalloc-devel
+
 On other systems, a similar command can be used, but the details of the 
 package names may be different, (such as "devel" in place of "dev").
 
@@ -124,6 +128,9 @@ the various libraries needed by notmuch. It's possible you simply need
 to install pkg-config with a command such as:
 
 	sudo apt-get install pkg-config
+
+Or:
+	sudo yum install pkgconfig
 
 But if pkg-config is not available for your system, then you will need
 to modify the configure script to manually set the cflags and ldflags
