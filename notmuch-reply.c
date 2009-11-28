@@ -39,11 +39,17 @@ reply_part_content (GMimeObject *part)
 {
     GMimeStream *stream_stdout = NULL, *stream_filter = NULL;
     GMimeDataWrapper *wrapper;
+    const char *charset;
 
+    charset = g_mime_object_get_content_type_parameter (part, "charset");
     stream_stdout = g_mime_stream_file_new (stdout);
     if (stream_stdout) {
 	g_mime_stream_file_set_owner (GMIME_STREAM_FILE (stream_stdout), FALSE);
 	stream_filter = g_mime_stream_filter_new(stream_stdout);
+        if (charset) {
+          g_mime_stream_filter_add(GMIME_STREAM_FILTER(stream_filter),
+                                   g_mime_filter_charset_new(charset, "UTF-8"));
+        }
     }
     g_mime_stream_filter_add(GMIME_STREAM_FILTER(stream_filter),
 			     g_mime_filter_reply_new(TRUE));
