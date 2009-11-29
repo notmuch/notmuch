@@ -18,28 +18,22 @@ echo install/${PACKAGE}: Handling install for emacsen flavor ${FLAVOR}
 #else
 #    SITEFLAG="--no-site-file"
 #fi
-FLAGS="${SITEFLAG} -q -batch -l path.el -f batch-byte-compile"
+#FLAGS="${SITEFLAG} -q -batch -l path.el -f batch-byte-compile"
+FLAGS="--no-site-file -q -batch -l path.el -f batch-byte-compile"
 
 ELDIR=/usr/share/emacs/site-lisp/${PACKAGE}
 ELCDIR=/usr/share/${FLAVOR}/site-lisp/${PACKAGE}
 
-# Install-info-altdir does not actually exist.
-# Maybe somebody will write it.
-if test -x /usr/sbin/install-info-altdir; then
-    echo install/${PACKAGE}: install Info links for ${FLAVOR}
-    install-info-altdir --quiet --section "" "" --dirname=${FLAVOR} /usr/share/info/${PACKAGE}.info.gz
-fi
-
 install -m 755 -d ${ELCDIR}
 cd ${ELDIR}
 FILES=`echo *.el`
-cp ${FILES} ${ELCDIR}
 cd ${ELCDIR}
+ln -sf ${ELDIR}/${FILES} ${ELCDIR}
 
 cat << EOF > path.el
 (setq load-path (cons "." load-path) byte-compile-warnings nil)
 EOF
 ${FLAVOR} ${FLAGS} ${FILES}
-rm -f *.el path.el
+rm -f path.el
 
 exit 0
