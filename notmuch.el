@@ -1012,6 +1012,7 @@ global search.
   (get-text-property (point) 'notmuch-search-thread-id))
 
 (defun notmuch-search-show-thread ()
+  "Display the currently selected thread."
   (interactive)
   (let ((thread-id (notmuch-search-find-thread-id)))
     (if (> (length thread-id) 0)
