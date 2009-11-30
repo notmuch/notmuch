@@ -877,7 +877,7 @@ thread from that buffer can be show when done with this one)."
                           (setq btn (forward-button 1))
                         (error (setq btn nil)))
                     ))
-                  (beginning-of-buffer)
+                  (goto-char (point-min))
                   ))))
       )))
 
