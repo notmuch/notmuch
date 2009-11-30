@@ -81,7 +81,7 @@
     (define-key map (kbd "DEL") 'notmuch-show-rewind)
     (define-key map " " 'notmuch-show-advance-marking-read-and-archiving)
     (define-key map "|" 'notmuch-show-pipe-message)
-    (define-key map "?" 'describe-mode)
+    (define-key map "?" 'notmuch-help)
     (define-key map (kbd "TAB") 'notmuch-show-next-button)
     (define-key map (kbd "M-TAB") 'notmuch-show-previous-button)
     map)
@@ -775,6 +775,42 @@ which this thread was originally shown."
       (notmuch-show-markup-message)))
   (notmuch-show-hide-markers))
 
+(defun notmuch-documentation-first-line (symbol)
+  "Return the first line of the documentation string for SYMBOL."
+  (let ((doc (documentation symbol)))
+    (if doc
+	(with-temp-buffer
+	  (insert (documentation symbol))
+	  (goto-char (point-min))
+	  (let ((beg (point)))
+	    (end-of-line)
+	    (buffer-substring beg (point))))
+      "")))
+
+(defun notmuch-substitute-one-command-key (binding)
+  "For a key binding, return a string showing a human-readable representation
+of the key as well as the first line of documentation from the bound function."
+  (concat (format-kbd-macro (vector (car binding)))
+	  "\t"
+	  (notmuch-documentation-first-line (cdr binding))))
+
+(defun notmuch-substitute-command-keys (doc)
+  "Like `substitute-command-keys' but with documentation, not function names."
+  (let ((beg 0))
+    (while (string-match "\\\\{\\([^}[:space:]]*\\)}" doc beg)
+      (let ((map (substring doc (match-beginning 1) (match-end 1))))
+	(setq doc (replace-match (mapconcat 'notmuch-substitute-one-command-key
+					    (cdr (symbol-value (intern map))) "\n") 1 1 doc)))
+      (setq beg (match-end 0)))
+    doc))
+
+(defun notmuch-help ()
+  "Display help for the current notmuch mode."
+  (interactive)
+  (let ((mode major-mode))
+    (with-help-window (help-buffer)
+      (princ (notmuch-substitute-command-keys (documentation mode t))))))
+
 ;;;###autoload
 (defun notmuch-show-mode ()
   "Major mode for viewing a thread with notmuch.
@@ -909,7 +945,7 @@ thread from that buffer can be show when done with this one)."
     (define-key map "\M->" 'notmuch-search-goto-last-thread)
     (define-key map " " 'notmuch-search-scroll-up)
     (define-key map (kbd "<DEL>") 'notmuch-search-scroll-down)
-    (define-key map "?" 'describe-mode)
+    (define-key map "?" 'notmuch-help)
     map)
   "Keymap for \"notmuch search\" buffers.")
 (fset 'notmuch-search-mode-map notmuch-search-mode-map)
@@ -977,8 +1013,8 @@ keys can be used to add or remove tags from a thread. The 'a' key
 is a convenience key for archiving a thread (removing the
 \"inbox\" tag).
 
-Other useful commands are `notmuch-search-filter' for filtering
-the current search based on an additional query string,
+Other useful commands are `notmuch-search-filter' for
+filtering the current search based on an additional query string,
 `notmuch-search-filter-by-tag' for filtering to include only
 messages with a given tag, and `notmuch-search' to execute a new,
 global search.
@@ -1258,7 +1294,7 @@ current search results AND that are tagged with the given tag."
     (define-key map (kbd "RET") 'notmuch-folder-show-search)
     (define-key map "<" 'beginning-of-buffer)
     (define-key map "=" 'notmuch-folder)
-    (define-key map "?" 'describe-mode)
+    (define-key map "?" 'notmuch-help)
     (define-key map [mouse-1] 'notmuch-folder-show-search)
     map)
   "Keymap for \"notmuch folder\" buffers.")
