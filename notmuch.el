@@ -1333,16 +1333,17 @@ current search results AND that are tagged with the given tag."
 
 (defvar notmuch-folder-mode-map
   (let ((map (make-sparse-keymap)))
-    (define-key map "n" 'next-line)
-    (define-key map "p" 'previous-line)
+    (define-key map "?" 'notmuch-help)
     (define-key map "x" 'kill-this-buffer)
     (define-key map "q" 'kill-this-buffer)
-    (define-key map "s" 'notmuch-search)
-    (define-key map (kbd "RET") 'notmuch-folder-show-search)
-    (define-key map "<" 'beginning-of-buffer)
+    (define-key map ">" 'notmuch-folder-last)
+    (define-key map "<" 'notmuch-folder-first)
     (define-key map "=" 'notmuch-folder)
-    (define-key map "?" 'notmuch-help)
+    (define-key map "s" 'notmuch-search)
     (define-key map [mouse-1] 'notmuch-folder-show-search)
+    (define-key map (kbd "RET") 'notmuch-folder-show-search)
+    (define-key map "p" 'notmuch-folder-previous)
+    (define-key map "n" 'notmuch-folder-next)
     map)
   "Keymap for \"notmuch folder\" buffers.")
 
@@ -1356,12 +1357,26 @@ current search results AND that are tagged with the given tag."
 (defun notmuch-folder-mode ()
   "Major mode for showing notmuch 'folders'.
 
-This buffer contains a list of messages counts returned by a
-customizable set of searches of your email archives. Each line
-in the buffer shows the search terms and the resulting message count.
+This buffer contains a list of message counts returned by a
+customizable set of searches of your email archives. Each line in
+the buffer shows the name of a saved search and the resulting
+message count.
 
 Pressing RET on any line opens a search window containing the
-results for the search terms in that line.
+results for the saved search on that line.
+
+Here is an example of how the search list could be
+customized, (the following text would be placed in your ~/.emacs
+file):
+
+(setq notmuch-folders '((\"inbox\" . \"tag:inbox\")
+                        (\"unread\" . \"tag:inbox AND tag:unread\")
+                        (\"notmuch\" . \"tag:inbox AND to:notmuchmail.org\")))
+
+Of course, you can have any number of folders, each configured
+with any supported search terms (see \"notmuch help search-terms\").
+
+Currently available key bindings:
 
 \\{notmuch-folder-mode-map}"
   (interactive)
@@ -1372,6 +1387,29 @@ results for the search terms in that line.
   (setq major-mode 'notmuch-folder-mode
 	mode-name "notmuch-folder")
   (setq buffer-read-only t))
+
+(defun notmuch-folder-next ()
+  "Select the next folder in the list."
+  (interactive)
+  (forward-line 1)
+  (if (eobp)
+      (forward-line -1)))
+
+(defun notmuch-folder-previous ()
+  "Select the previous folder in the list."
+  (interactive)
+  (forward-line -1))
+
+(defun notmuch-folder-first ()
+  "Select the first folder in the list."
+  (interactive)
+  (goto-char (point-min)))
+
+(defun notmuch-folder-last ()
+  "Select the last folder in the list."
+  (interactive)
+  (goto-char (point-max))
+  (forward-line -1))
 
 (defun notmuch-folder-add (folders)
   (if folders
