@@ -564,12 +564,12 @@ which this thread was originally shown."
 (defun notmuch-show-next-button ()
   "Advance point to the next button in the buffer."
   (interactive)
-  (goto-char (button-start (next-button (point)))))
+  (forward-button 1))
 
 (defun notmuch-show-previous-button ()
   "Move point back to the previous button in the buffer."
   (interactive)
-  (goto-char (button-start (previous-button (point)))))
+  (backward-button 1))
 
 (defun notmuch-toggle-invisible-action (cite-button)
   (let ((invis-spec (button-get cite-button 'invisibility-spec)))
