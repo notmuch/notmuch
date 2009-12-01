@@ -826,9 +826,13 @@ For a mouse binding, return nil."
 (defun notmuch-help ()
   "Display help for the current notmuch mode."
   (interactive)
-  (let ((mode major-mode))
-    (with-help-window (help-buffer)
-      (princ (substitute-command-keys (notmuch-substitute-command-keys (documentation mode t)))))))
+  (let* ((mode major-mode)
+	 (doc (substitute-command-keys (notmuch-substitute-command-keys (documentation mode t)))))
+    (with-current-buffer (generate-new-buffer "*notmuch-help*")
+      (insert doc)
+      (goto-char (point-min))
+      (set-buffer-modified-p nil)
+      (view-buffer (current-buffer) 'kill-buffer-if-not-modified))))
 
 ;;;###autoload
 (defun notmuch-show-mode ()
