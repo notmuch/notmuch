@@ -55,7 +55,6 @@
   (let ((map (make-sparse-keymap)))
     (define-key map "?" 'notmuch-help)
     (define-key map "q" 'kill-this-buffer)
-    (define-key map "x" 'kill-this-buffer)
     (define-key map (kbd "C-p") 'notmuch-show-previous-line)
     (define-key map (kbd "C-n") 'notmuch-show-next-line)
     (define-key map (kbd "M-TAB") 'notmuch-show-previous-button)
@@ -70,6 +69,8 @@
     (define-key map "v" 'notmuch-show-view-all-mime-parts)
     (define-key map "-" 'notmuch-show-remove-tag)
     (define-key map "+" 'notmuch-show-add-tag)
+    (define-key map "X" 'notmuch-show-mark-read-then-archive-then-exit)
+    (define-key map "x" 'notmuch-show-archive-thread-then-exit)
     (define-key map "A" 'notmuch-show-mark-read-then-archive-thread)
     (define-key map "a" 'notmuch-show-archive-thread)
     (define-key map "p" 'notmuch-show-previous-message)
@@ -272,6 +273,18 @@ entire thread, but only the messages shown in the current
 buffer."
   (interactive)
   (notmuch-show-archive-thread-maybe-mark-read nil))
+
+(defun notmuch-show-archive-thread-then-exit ()
+  "Archive each message in thread, then exit back to search results."
+  (interactive)
+  (notmuch-show-archive-thread)
+  (kill-this-buffer))
+
+(defun notmuch-show-mark-read-then-archive-then-exit ()
+  "Remove unread tags from thread, then archive and exit to search results."
+  (interactive)
+  (notmuch-show-mark-read-then-archive-thread)
+  (kill-this-buffer))
 
 (defun notmuch-show-view-raw-message ()
   "View the raw email of the current message."
