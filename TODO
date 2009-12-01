@@ -41,8 +41,6 @@ Portability
 -----------
 Fix configure script to test each compiler warning we want to use.
 
-Implement strndup locally (or call talloc_strndup instead).
-
 Implement getline locally, (look at gnulib).
 
 Completion
