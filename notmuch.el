@@ -545,7 +545,7 @@ which this thread was originally shown."
   (goto-char (button-start (previous-button (point)))))
 
 (defun notmuch-toggle-invisible-action (cite-button)
-  (let ((invis-spec (button-get button 'invisibility-spec)))
+  (let ((invis-spec (button-get cite-button 'invisibility-spec)))
         (if (invisible-p invis-spec)
             (remove-from-invisibility-spec invis-spec)
           (add-to-invisibility-spec invis-spec)
