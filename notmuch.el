@@ -933,10 +933,10 @@ thread from that buffer can be show when done with this one)."
     (define-key map (kbd "<DEL>") 'notmuch-search-scroll-down)
     (define-key map "b" 'notmuch-search-scroll-down)
     (define-key map " " 'notmuch-search-scroll-up)
-    (define-key map "<" 'beginning-of-buffer)
-    (define-key map ">" 'notmuch-search-goto-last-thread)
-    (define-key map "p" 'previous-line)
-    (define-key map "n" 'next-line)
+    (define-key map "<" 'notmuch-search-first-thread)
+    (define-key map ">" 'notmuch-search-last-thread)
+    (define-key map "p" 'notmuch-search-previous-thread)
+    (define-key map "n" 'notmuch-search-next-thread)
     (define-key map "r" 'notmuch-search-reply-to-thread)
     (define-key map "m" 'message-mail)
     (define-key map "s" 'notmuch-search)
@@ -958,16 +958,15 @@ thread from that buffer can be show when done with this one)."
 (defvar notmuch-search-oldest-first t
   "Show the oldest mail first in the search-mode")
 
-
 (defun notmuch-search-scroll-up ()
-  "Scroll up, moving point to last message in thread if at end."
+  "Move forward through search results by one window's worth."
   (interactive)
   (condition-case nil
       (scroll-up nil)
-    ((end-of-buffer) (notmuch-search-goto-last-thread))))
+    ((end-of-buffer) (notmuch-search-last-thread))))
 
 (defun notmuch-search-scroll-down ()
-  "Scroll down, moving point to first message in thread if at beginning."
+  "Move backward through the search results by one window's worth."
   (interactive)
   ; I don't know why scroll-down doesn't signal beginning-of-buffer
   ; the way that scroll-up signals end-of-buffer, but c'est la vie.
@@ -981,11 +980,26 @@ thread from that buffer can be show when done with this one)."
       (goto-char (point-min))
     (scroll-down nil)))
 
-(defun notmuch-search-goto-last-thread ()
-  "Move point to the last thread in the buffer."
+(defun notmuch-search-next-thread ()
+  "Select the next thread in the search results."
+  (interactive)
+  (next-line))
+
+(defun notmuch-search-previous-thread ()
+  "Select the previous thread in the search results."
+  (interactive)
+  (previous-line))
+
+(defun notmuch-search-last-thread ()
+  "Select the last thread in the search results."
   (interactive)
   (goto-char (point-max))
   (forward-line -2))
+
+(defun notmuch-search-first-thread ()
+  "Select the first thread in the search results."
+  (interactive)
+  (goto-char (point-min)))
 
 (defface notmuch-tag-face
   '((((class color)
@@ -1110,25 +1124,29 @@ and will also appear in a buffer named \"*Notmuch errors*\"."
 	(split-string (buffer-substring beg end))))))
 
 (defun notmuch-search-add-tag (tag)
-  "Add a tag to messages in the current thread matching the
-active query."
+  "Add a tag to the currently selected thread.
+
+The tag is added to messages in the currently selected thread
+which match the current search terms."
   (interactive
    (list (notmuch-select-tag-with-completion "Tag to add: ")))
   (notmuch-call-notmuch-process "tag" (concat "+" tag) (notmuch-search-find-thread-id) " and " notmuch-search-query-string)
   (notmuch-search-set-tags (delete-dups (sort (cons tag (notmuch-search-get-tags)) 'string<))))
 
 (defun notmuch-search-remove-tag (tag)
-  "Remove a tag from messages in the current thread matching the
-active query."
+  "Remove a tag from the currently selected thread.
+
+The tag is removed from messages in the currently selected thread
+which match the current search terms."
   (interactive
    (list (notmuch-select-tag-with-completion "Tag to remove: " (notmuch-search-find-thread-id))))
   (notmuch-call-notmuch-process "tag" (concat "-" tag) (notmuch-search-find-thread-id) " and " notmuch-search-query-string)
   (notmuch-search-set-tags (delete tag (notmuch-search-get-tags))))
 
 (defun notmuch-search-archive-thread ()
-  "Archive the current thread (remove its \"inbox\" tag).
+  "Archive the currently selected thread (remove its \"inbox\" tag).
 
-This function advances point to the next line when finished."
+This function advances the next thread when finished."
   (interactive)
   (notmuch-search-remove-tag "inbox")
   (forward-line))
@@ -1182,12 +1200,12 @@ This function advances point to the next line when finished."
       (delete-process proc))))
 
 (defun notmuch-search-operate-all (action)
-  "Operate on all messages matching the current query.  Any
-number of whitespace separated actions can be given.  Each action
-must have one of the two forms
+  "Add/remove tags from all matching messages.
 
-  +tagname              Add the tag `tagname'
-  -tagname              Remove the tag `tagname'
+Tis command adds or removes tags from all messages matching the
+current search terms. When called interactively, this command
+will prompt for tags to be added or removed. Tags prefixed with
+'+' will be added and tags prefixed with '-' will be removed.
 
 Each character of the tag name may consist of alphanumeric
 characters as well as `_.+-'.
