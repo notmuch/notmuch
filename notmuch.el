@@ -787,17 +787,38 @@ which this thread was originally shown."
 	    (buffer-substring beg (point))))
       "")))
 
-(defun notmuch-substitute-one-command-key (binding)
-  "For a key binding, return a string showing a human-readable representation
-of the key as well as the first line of documentation from the bound function.
+(defun notmuch-prefix-key-description (key)
+  "Given a prefix key code, return a human-readable string representation.
+
+This is basically just `format-kbd-macro' but we also convert ESC to M-."
+  (let ((desc (format-kbd-macro (vector key))))
+    (if (string= desc "ESC")
+	"M-"
+      (concat desc " "))))
+
+; I would think that emacs would have code handy for walking a keymap
+; and generating strings for each key, and I would prefer to just call
+; that. But I couldn't find any (could be all implemented in C I
+; suppose), so I wrote my own here.
+(defun notmuch-substitute-one-command-key-with-prefix (prefix binding)
+  "For a key binding, return a string showing a human-readable
+representation of the prefixed key as well as the first line of
+documentation from the bound function.
 
 For a mouse binding, return nil."
-  (let ((key (car binding)))
+  (let ((key (car binding))
+	(action (cdr binding)))
     (if (mouse-event-p key)
 	nil
-      (concat (format-kbd-macro (vector key))
-	      "\t"
-	      (notmuch-documentation-first-line (cdr binding))))))
+      (if (keymapp action)
+	  (let ((substitute (apply-partially 'notmuch-substitute-one-command-key-with-prefix (notmuch-prefix-key-description key))))
+	    (mapconcat substitute (cdr action) "\n"))
+	(concat prefix (format-kbd-macro (vector key))
+		"\t"
+		(notmuch-documentation-first-line action))))))
+
+(defalias 'notmuch-substitute-one-command-key
+  (apply-partially 'notmuch-substitute-one-command-key-with-prefix nil))
 
 (defun notmuch-substitute-command-keys (doc)
   "Like `substitute-command-keys' but with documentation, not function names."
