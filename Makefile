@@ -19,6 +19,8 @@ ifeq ($(emacs_lispdir),)
 	emacs_lispdir = $(prefix)/share/emacs/site-lisp
 endif
 
+bash_completion_dir = /etc/bash_completion.d
+
 all_deps = Makefile Makefile.local Makefile.config \
 		   lib/Makefile lib/Makefile.local
 

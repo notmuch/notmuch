@@ -133,6 +133,5 @@ EOF
 # construct the Makefile.config
 cat > Makefile.config <<EOF
 prefix = /usr/local
-bash_completion_dir = /etc/bash_completion.d
 CFLAGS += ${have_valgrind}
 EOF
