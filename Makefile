@@ -35,6 +35,9 @@ include Makefile.local
 include lib/Makefile.local
 
 # And get user settings from the output of configure
+Makefile.config: configure
+	./configure
+
 include Makefile.config
 
 # The user has not set any verbosity, default to quiet mode and inform the
