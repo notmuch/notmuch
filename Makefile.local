@@ -1,8 +1,7 @@
-all: notmuch notmuch.1.gz
-
 emacs: notmuch.elc
 
 notmuch_client_srcs =		\
+	$(notmuch_compat_srcs)	\
 	debugger.c		\
 	gmime-filter-reply.c	\
 	notmuch.c		\

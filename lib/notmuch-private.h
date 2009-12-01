@@ -26,6 +26,8 @@
 #endif
 #include <stdio.h>
 
+#include "compat.h"
+
 #include "notmuch.h"
 
 NOTMUCH_BEGIN_DECLS

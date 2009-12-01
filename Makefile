@@ -32,9 +32,11 @@ override LDFLAGS += \
 	$(shell pkg-config --libs glib-2.0 gmime-2.4 talloc) \
 	$(shell xapian-config --libs)
 
-# Include our local Makefile.local first so that its first target is default
-include Makefile.local
+all: notmuch notmuch.1.gz
+
 include lib/Makefile.local
+include compat/Makefile.local
+include Makefile.local
 
 # And get user settings from the output of configure
 Makefile.config: configure

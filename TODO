@@ -41,8 +41,6 @@ Portability
 -----------
 Fix configure script to test each compiler warning we want to use.
 
-Implement getline locally, (look at gnulib).
-
 Completion
 ----------
 Fix bash completion to complete multiple search options (both --first
