@@ -977,8 +977,8 @@ thread from that buffer can be show when done with this one)."
   ; directly to that position. (We have to count lines since the
   ; window-start position is not the same as point-min due to the
   ; invisible thread-ID characters on the first line.
-  (if (equal (count-lines (point-min) (window-start)) 1)
-      (goto-char (window-start))
+  (if (equal (count-lines (point-min) (window-start)) 0)
+      (goto-char (point-min))
     (scroll-down nil)))
 
 (defun notmuch-search-goto-last-thread ()
