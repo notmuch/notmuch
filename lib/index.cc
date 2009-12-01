@@ -31,7 +31,7 @@ _index_address_mailbox (notmuch_message_t *message,
 {
     InternetAddressMailbox *mailbox = INTERNET_ADDRESS_MAILBOX (address);
     const char *name, *addr;
-    int own_name = 0;
+    void *local = talloc_new (NULL);
 
     name = internet_address_get_name (address);
     addr = internet_address_mailbox_get_addr (mailbox);
@@ -42,16 +42,16 @@ _index_address_mailbox (notmuch_message_t *message,
 	const char *at;
 
 	at = strchr (addr, '@');
-	if (at) {
-	    name = strndup (addr, at - addr);
-	    own_name = 1;
-	}
+	if (at)
+	    name = talloc_strndup (local, addr, at - addr);
     }
 
     if (name)
 	_notmuch_message_gen_terms (message, prefix_name, name);
     if (addr)
 	_notmuch_message_gen_terms (message, prefix_name, addr);
+
+    talloc_free (local);
 }
 
 static void
