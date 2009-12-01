@@ -28,38 +28,42 @@ else
     have_pkg_config=0
 fi
 
+printf "Checking for Xapian development files... "
 if xapian-config --version > /dev/null 2>&1; then
-    echo "Checking for Xapian development files... Yes."
+    printf "Yes.\n"
     have_xapian=1
 else
-    echo "Checking for Xapian development files... No."
+    printf "No.\n"
     have_xapian=0
     errors=$((errors + 1))
 fi
 
+printf "Checking for GMime 2.4 development files... "
 if pkg-config --modversion gmime-2.4 > /dev/null 2>&1; then
-    echo "Checking for GMime 2.4 development files... Yes."
+    printf "Yes.\n"
     have_gmime=1
 else
-    echo "Checking for GMime 2.4 development files... No."
+    printf "No.\n"
     have_gmime=0
     errors=$((errors + 1))
 fi
 
+printf "Checking for talloc development files... "
 if pkg-config --modversion talloc > /dev/null 2>&1; then
-    echo "Checking for talloc development files... Yes."
+    printf "Yes.\n"
     have_talloc=1
 else
-    echo "Checking for talloc development files... No."
+    printf "No.\n"
     have_talloc=0
     errors=$((errors + 1))
 fi
 
+printf "Checking for valgrind development files... "
 if pkg-config --modversion valgrind > /dev/null 2>&1; then
-    echo "Checking for valgrind development files... Yes."
+    printf "Yes.\n"
     have_valgrind=-DHAVE_VALGRIND
 else
-    echo "Checking for valgrind development files... No."
+    printf "No (but that's fine).\n"
     have_valgrind=
 fi
 
