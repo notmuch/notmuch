@@ -53,37 +53,30 @@
 
 (defvar notmuch-show-mode-map
   (let ((map (make-sparse-keymap)))
-    ; I don't actually want all of these toggle commands occupying
-    ; keybindings. They steal valuable key-binding space, are hard
-    ; to remember, and act globally rather than locally.
-    ;
-    ; Will be much preferable to switch to direct manipulation for
-    ; toggling visibility of these components. Probably using
-    ; overlays-at to query and manipulate the current overlay.
-    (define-key map "a" 'notmuch-show-archive-thread)
-    (define-key map "A" 'notmuch-show-mark-read-then-archive-thread)
-    (define-key map "f" 'notmuch-show-forward-current)
-    (define-key map "m" 'message-mail)
-    (define-key map "n" 'notmuch-show-next-message)
-    (define-key map "N" 'notmuch-show-mark-read-then-next-open-message)
-    (define-key map "p" 'notmuch-show-previous-message)
-    (define-key map (kbd "C-n") 'notmuch-show-next-line)
-    (define-key map (kbd "C-p") 'notmuch-show-previous-line)
+    (define-key map "?" 'notmuch-help)
     (define-key map "q" 'kill-this-buffer)
-    (define-key map "r" 'notmuch-show-reply)
-    (define-key map "s" 'notmuch-search)
-    (define-key map "v" 'notmuch-show-view-all-mime-parts)
-    (define-key map "V" 'notmuch-show-view-raw-message)
-    (define-key map "w" 'notmuch-show-save-attachments)
     (define-key map "x" 'kill-this-buffer)
-    (define-key map "+" 'notmuch-show-add-tag)
+    (define-key map (kbd "C-p") 'notmuch-show-previous-line)
+    (define-key map (kbd "C-n") 'notmuch-show-next-line)
+    (define-key map (kbd "M-TAB") 'notmuch-show-previous-button)
+    (define-key map (kbd "TAB") 'notmuch-show-next-button)
+    (define-key map "s" 'notmuch-search)
+    (define-key map "m" 'message-mail)
+    (define-key map "f" 'notmuch-show-forward-current)
+    (define-key map "r" 'notmuch-show-reply)
+    (define-key map "|" 'notmuch-show-pipe-message)
+    (define-key map "w" 'notmuch-show-save-attachments)
+    (define-key map "V" 'notmuch-show-view-raw-message)
+    (define-key map "v" 'notmuch-show-view-all-mime-parts)
     (define-key map "-" 'notmuch-show-remove-tag)
+    (define-key map "+" 'notmuch-show-add-tag)
+    (define-key map "A" 'notmuch-show-mark-read-then-archive-thread)
+    (define-key map "a" 'notmuch-show-archive-thread)
+    (define-key map "p" 'notmuch-show-previous-message)
+    (define-key map "N" 'notmuch-show-mark-read-then-next-open-message)
+    (define-key map "n" 'notmuch-show-next-message)
     (define-key map (kbd "DEL") 'notmuch-show-rewind)
     (define-key map " " 'notmuch-show-advance-marking-read-and-archiving)
-    (define-key map "|" 'notmuch-show-pipe-message)
-    (define-key map "?" 'notmuch-help)
-    (define-key map (kbd "TAB") 'notmuch-show-next-button)
-    (define-key map (kbd "M-TAB") 'notmuch-show-previous-button)
     map)
   "Keymap for \"notmuch show\" buffers.")
 (fset 'notmuch-show-mode-map notmuch-show-mode-map)
@@ -252,7 +245,7 @@ Unlike builtin `next-line' this version accepts no arguments."
 	  (notmuch-search-show-thread)))))
 
 (defun notmuch-show-mark-read-then-archive-thread ()
-  "Remove \"unread\" tag from each message, then archive and show next thread.
+  "Remove unread tags from thread, then archive and show next thread.
 
 Archive each message currently shown by removing the \"unread\"
 and \"inbox\" tag from each. Then kill this buffer and show the
@@ -267,7 +260,7 @@ buffer."
   (notmuch-show-archive-thread-maybe-mark-read t))
 
 (defun notmuch-show-archive-thread ()
-  "Archive each message in thread, and show next thread from search.
+  "Archive each message in thread, then show next thread from search.
 
 Archive each message currently shown by removing the \"inbox\"
 tag from each. Then kill this buffer and show the next thread
@@ -296,7 +289,7 @@ buffer."
         (kill-buffer buf)))))
 
 (defun notmuch-show-view-all-mime-parts ()
-  "Use external viewers (according to mailcap) to view all MIME-encoded parts."
+  "Use external viewers to view all attachments from the current message."
   (interactive)
   (with-current-notmuch-show-message
    (mm-display-parts (mm-dissect-buffer))))
@@ -334,7 +327,7 @@ buffer."
    mm-handle))
 
 (defun notmuch-show-save-attachments ()
-  "Save the attachments to a message"
+  "Save all attachments from the current message."
   (interactive)
   (with-current-notmuch-show-message
    (let ((mm-handle (mm-dissect-buffer)))
@@ -360,7 +353,7 @@ buffer."
     (notmuch-reply message-id)))
 
 (defun notmuch-show-forward-current ()
-  "Forward a the current message."
+  "Forward the current message."
   (interactive)
   (with-current-notmuch-show-message
    (message-forward)))
@@ -486,13 +479,13 @@ it."
       (point))))
 
 (defun notmuch-show-mark-read-then-next-open-message ()
-  "Remove unread tag from current message, then advance to next unread message."
+  "Remove unread tag from this message, then advance to next open message."
   (interactive)
   (notmuch-show-remove-tag "unread")
   (notmuch-show-next-open-message))
 
 (defun notmuch-show-rewind ()
-  "Do reverse scrolling compared to `notmuch-show-advance-marking-read-and-archiving'
+  "Backup through the thread, (reverse scrolling compared to \\[notmuch-show-advance-marking-read-and-archiving]).
 
 Specifically, if the beginning of the previous email is fewer
 than `window-height' lines from the current point, move to it
@@ -514,7 +507,7 @@ any effects from previous calls to
       (notmuch-show-previous-message))))
 
 (defun notmuch-show-advance-marking-read-and-archiving ()
-  "Advance through buffer, marking read and archiving.
+  "Advance through thread, marking read and archiving.
 
 This command is intended to be one of the simplest ways to
 process a thread of email. It does the following:
@@ -780,7 +773,7 @@ which this thread was originally shown."
   (let ((doc (documentation symbol)))
     (if doc
 	(with-temp-buffer
-	  (insert (documentation symbol))
+	  (insert (documentation symbol t))
 	  (goto-char (point-min))
 	  (let ((beg (point)))
 	    (end-of-line)
@@ -835,7 +828,7 @@ For a mouse binding, return nil."
   (interactive)
   (let ((mode major-mode))
     (with-help-window (help-buffer)
-      (princ (notmuch-substitute-command-keys (documentation mode t))))))
+      (princ (substitute-command-keys (notmuch-substitute-command-keys (documentation mode t)))))))
 
 ;;;###autoload
 (defun notmuch-show-mode ()
@@ -845,22 +838,28 @@ This buffer contains the results of the \"notmuch show\" command
 for displaying a single thread of email from your email archives.
 
 By default, various components of email messages, (citations,
-signatures, already-read messages), are invisible to help you
-focus on the most important things, (new text from unread
-messages). See the various commands below for toggling the
-visibility of hidden components.
+signatures, already-read messages), are hidden. You can make
+these parts visible by clicking with the mouse button or by
+pressing RET after positioning the cursor on a hidden part, (for
+which \\[notmuch-show-next-button] and \\[notmuch-show-previous-button] are helpful).
 
-The `notmuch-show-next-message' and
-`notmuch-show-previous-message' commands, (bound to 'n' and 'p by
-default), allow you to navigate to the next and previous
-messages. Each time you navigate away from a message with
-`notmuch-show-next-message' the current message will have its
-\"unread\" tag removed.
+Reading the thread sequentially is well-supported by pressing
+\\[notmuch-show-advance-marking-read-and-archiving]. This will scroll the current message (if necessary),
+advance to the next message, or advance to the next thread (if
+already on the last message of a thread). As each message is
+scrolled away its \"unread\" tag will be removed, and as each
+thread is scrolled away the \"inbox\" tag will be removed from
+each message in the thread.
 
-You can add or remove tags from the current message with '+' and
-'-'.  You can also archive all messages in the current
-view, (remove the \"inbox\" tag from each), with
-`notmuch-show-archive-thread' (bound to 'a' by default).
+Other commands are available to read or manipulate the thread more
+selectively, (such as '\\[notmuch-show-next-message]' and '\\[notmuch-show-previous-message]' to advance to messages without
+removing any tags, and '\\[notmuch-show-archive-thread]' to archive an entire thread without
+scrolling through with \\[notmuch-show-advance-marking-read-and-archiving]).
+
+You can add or remove arbitary tags from the current message with
+'\\[notmuch-show-add-tag]' or '\\[notmuch-show-remove-tag]'.
+
+All currently available key bindings:
 
 \\{notmuch-show-mode-map}"
   (interactive)
