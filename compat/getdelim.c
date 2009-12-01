@@ -19,7 +19,7 @@
 
 /* Ported from glibc by Simon Josefsson. */
 
-#include <config.h>
+#include "compat.h"
 
 #include <stdio.h>
 
