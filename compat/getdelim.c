@@ -124,7 +124,7 @@ getdelim (char **lineptr, size_t *n, int delimiter, FILE *fp)
 	break;
     }
   (*lineptr)[cur_len] = '\0';
-  result = cur_len ? cur_len : result;
+  result = cur_len ? (ssize_t) cur_len : result;
 
  unlock_return:
   funlockfile (fp); /* doesn't set errno */
