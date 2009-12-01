@@ -1081,12 +1081,11 @@ Complete list of currently available key bindings:
   (if (not notmuch-tag-face-alist)
       (add-to-list 'notmuch-search-font-lock-keywords (list
 		"(\\([^)]*\\))$" '(1  'notmuch-tag-face)))
-    (progn
-  (setq notmuch-search-tags (mapcar 'car notmuch-tag-face-alist))
-  (loop for notmuch-search-tag  in notmuch-search-tags
-    do (add-to-list 'notmuch-search-font-lock-keywords (list
-				(concat "([^)]*\\(" notmuch-search-tag "\\)[^)]*)$")
-		    `(1  ,(cdr (assoc notmuch-search-tag notmuch-tag-face-alist))))))))
+    (let ((notmuch-search-tags (mapcar 'car notmuch-tag-face-alist)))
+      (loop for notmuch-search-tag  in notmuch-search-tags
+	    do (add-to-list 'notmuch-search-font-lock-keywords (list
+			(concat "([^)]*\\(" notmuch-search-tag "\\)[^)]*)$")
+			`(1  ,(cdr (assoc notmuch-search-tag notmuch-tag-face-alist))))))))
   (set (make-local-variable 'font-lock-defaults)
          '(notmuch-search-font-lock-keywords t)))
 
