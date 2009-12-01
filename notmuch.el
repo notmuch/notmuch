@@ -985,7 +985,7 @@ thread from that buffer can be show when done with this one)."
   "Move point to the last thread in the buffer."
   (interactive)
   (goto-char (point-max))
-  (forward-line -1))
+  (forward-line -2))
 
 (defface notmuch-tag-face
   '((((class color)
