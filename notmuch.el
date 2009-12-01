@@ -789,10 +789,15 @@ which this thread was originally shown."
 
 (defun notmuch-substitute-one-command-key (binding)
   "For a key binding, return a string showing a human-readable representation
-of the key as well as the first line of documentation from the bound function."
-  (concat (format-kbd-macro (vector (car binding)))
-	  "\t"
-	  (notmuch-documentation-first-line (cdr binding))))
+of the key as well as the first line of documentation from the bound function.
+
+For a mouse binding, return nil."
+  (let ((key (car binding)))
+    (if (mouse-event-p key)
+	nil
+      (concat (format-kbd-macro (vector key))
+	      "\t"
+	      (notmuch-documentation-first-line (cdr binding))))))
 
 (defun notmuch-substitute-command-keys (doc)
   "Like `substitute-command-keys' but with documentation, not function names."
@@ -939,11 +944,11 @@ thread from that buffer can be show when done with this one)."
     (define-key map "=" 'notmuch-search-refresh-view)
     (define-key map "t" 'notmuch-search-filter-by-tag)
     (define-key map "f" 'notmuch-search-filter)
+    (define-key map [mouse-1] 'notmuch-search-show-thread)
     (define-key map "*" 'notmuch-search-operate-all)
     (define-key map "a" 'notmuch-search-archive-thread)
     (define-key map "-" 'notmuch-search-remove-tag)
     (define-key map "+" 'notmuch-search-add-tag)
-    (define-key map [mouse-1] 'notmuch-search-show-thread)
     (define-key map (kbd "RET") 'notmuch-search-show-thread)
     map)
   "Keymap for \"notmuch search\" buffers.")
