@@ -61,10 +61,12 @@ fi
 printf "Checking for valgrind development files... "
 if pkg-config --modversion valgrind > /dev/null 2>&1; then
     printf "Yes.\n"
-    have_valgrind=-DHAVE_VALGRIND
+    have_valgrind=1
+    valgrind_flags=$(pkg-config --cflags valgrind)
 else
     printf "No (but that's fine).\n"
-    have_valgrind=
+    have_valgrind=0
+    valgrind_flags=
 fi
 
 if [ $errors -gt 0 ]; then
@@ -137,5 +139,5 @@ EOF
 # construct the Makefile.config
 cat > Makefile.config <<EOF
 prefix = /usr/local
-CFLAGS += ${have_valgrind}
+override CFLAGS += -DHAVE_VALGRIND=${have_valgrind} ${valgrind_flags}
 EOF
