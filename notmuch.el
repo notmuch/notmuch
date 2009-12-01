@@ -922,30 +922,29 @@ thread from that buffer can be show when done with this one)."
 
 (defvar notmuch-search-mode-map
   (let ((map (make-sparse-keymap)))
-    (define-key map "a" 'notmuch-search-archive-thread)
-    (define-key map "b" 'notmuch-search-scroll-down)
-    (define-key map "f" 'notmuch-search-filter)
-    (define-key map "m" 'message-mail)
-    (define-key map "n" 'next-line)
-    (define-key map "o" 'notmuch-search-toggle-order)
-    (define-key map "p" 'previous-line)
+    (define-key map "?" 'notmuch-help)
     (define-key map "q" 'kill-this-buffer)
-    (define-key map "r" 'notmuch-search-reply-to-thread)
-    (define-key map "s" 'notmuch-search)
-    (define-key map "t" 'notmuch-search-filter-by-tag)
     (define-key map "x" 'kill-this-buffer)
-    (define-key map (kbd "RET") 'notmuch-search-show-thread)
-    (define-key map [mouse-1] 'notmuch-search-show-thread)
-    (define-key map "+" 'notmuch-search-add-tag)
-    (define-key map "-" 'notmuch-search-remove-tag)
-    (define-key map "*" 'notmuch-search-operate-all)
+    (define-key map (kbd "<DEL>") 'notmuch-search-scroll-down)
+    (define-key map "b" 'notmuch-search-scroll-down)
+    (define-key map " " 'notmuch-search-scroll-up)
     (define-key map "<" 'beginning-of-buffer)
     (define-key map ">" 'notmuch-search-goto-last-thread)
+    (define-key map "p" 'previous-line)
+    (define-key map "n" 'next-line)
+    (define-key map "r" 'notmuch-search-reply-to-thread)
+    (define-key map "m" 'message-mail)
+    (define-key map "s" 'notmuch-search)
+    (define-key map "o" 'notmuch-search-toggle-order)
     (define-key map "=" 'notmuch-search-refresh-view)
-    (define-key map "\M->" 'notmuch-search-goto-last-thread)
-    (define-key map " " 'notmuch-search-scroll-up)
-    (define-key map (kbd "<DEL>") 'notmuch-search-scroll-down)
-    (define-key map "?" 'notmuch-help)
+    (define-key map "t" 'notmuch-search-filter-by-tag)
+    (define-key map "f" 'notmuch-search-filter)
+    (define-key map "*" 'notmuch-search-operate-all)
+    (define-key map "a" 'notmuch-search-archive-thread)
+    (define-key map "-" 'notmuch-search-remove-tag)
+    (define-key map "+" 'notmuch-search-add-tag)
+    (define-key map [mouse-1] 'notmuch-search-show-thread)
+    (define-key map (kbd "RET") 'notmuch-search-show-thread)
     map)
   "Keymap for \"notmuch search\" buffers.")
 (fset 'notmuch-search-mode-map notmuch-search-mode-map)
@@ -1002,22 +1001,27 @@ thread from that buffer can be show when done with this one)."
 
 ;;;###autoload
 (defun notmuch-search-mode ()
-  "Major mode for searching mail with notmuch.
+  "Major mode displaying results of a notmuch search.
 
 This buffer contains the results of a \"notmuch search\" of your
 email archives. Each line in the buffer represents a single
-thread giving a relative date for the thread and a subject.
+thread giving a summary of the thread (a relative date, the
+number of matched messages and total messages in the thread,
+participants in the thread, a representative subject line, and
+any tags).
 
-Pressing RET on any line displays that thread. The '+' and '-'
-keys can be used to add or remove tags from a thread. The 'a' key
-is a convenience key for archiving a thread (removing the
-\"inbox\" tag).
+By default, pressing RET on any line displays that thread. The
+'+' and '-' keys can be used to add or remove tags from a
+thread. The 'a' key is a convenience key for archiving a
+thread (removing the \"inbox\" tag). The '*' key can be used to
+add or remove a tag from all threads in the current buffer.
 
-Other useful commands are `notmuch-search-filter' for
-filtering the current search based on an additional query string,
-`notmuch-search-filter-by-tag' for filtering to include only
-messages with a given tag, and `notmuch-search' to execute a new,
-global search.
+Other useful commands are 'f' for filtering the current search
+based on an additional query string, 't' for filtering to include
+only messages with a given tag, and 's' to execute a new, global
+search.
+
+Complete list of currently available key bindings:
 
 \\{notmuch-search-mode-map}"
   (interactive)
