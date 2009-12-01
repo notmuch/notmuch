@@ -158,7 +158,7 @@ Unlike builtin `next-line' this version accepts no arguments."
 
 By advancing forward until reaching a visible character.
 
-Unlike builtin `next-line' this version accepts no arguments."
+Unlike builtin `previous-line' this version accepts no arguments."
   (interactive)
   (set 'this-command 'previous-line)
   (call-interactively 'previous-line)
@@ -1007,12 +1007,12 @@ thread from that buffer can be show when done with this one)."
 (defun notmuch-search-next-thread ()
   "Select the next thread in the search results."
   (interactive)
-  (next-line))
+  (forward-line 1))
 
 (defun notmuch-search-previous-thread ()
   "Select the previous thread in the search results."
   (interactive)
-  (previous-line))
+  (forward-line -1))
 
 (defun notmuch-search-last-thread ()
   "Select the last thread in the search results."
