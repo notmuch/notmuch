@@ -34,15 +34,16 @@ override LDFLAGS += \
 
 all: notmuch notmuch.1.gz
 
-include lib/Makefile.local
-include compat/Makefile.local
-include Makefile.local
-
-# And get user settings from the output of configure
+# Before including any other Makefile fragments, get settings from the
+# output of configure
 Makefile.config: configure
 	./configure
 
 include Makefile.config
+
+include lib/Makefile.local
+include compat/Makefile.local
+include Makefile.local
 
 # The user has not set any verbosity, default to quiet mode and inform the
 # user how to enable verbose compiles.

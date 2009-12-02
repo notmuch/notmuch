@@ -126,12 +126,14 @@ EOF
     exit 1
 fi
 
+printf "Checking for getline... "
 if ! gcc -o getlinetest getlinetest.c > /dev/null 2>&1
 then
-    echo "Checking for getline... No."
-    getline=-Dgetline=_notmuch_getline
+    printf "No.\n"
+    have_getline=0
 else
-    echo "Checking for getline... Yes."
+    printf "Yes.\n"
+    have_getline=1
 fi
 rm -f getlinetest
 
@@ -148,5 +150,6 @@ EOF
 # construct the Makefile.config
 cat > Makefile.config <<EOF
 prefix = /usr/local
-override CFLAGS += -DHAVE_VALGRIND=${have_valgrind} ${valgrind_flags} ${getline}
+HAVE_GETLINE = ${have_getline}
+override CFLAGS += -DHAVE_VALGRIND=${have_valgrind} ${valgrind_flags} -DHAVE_GETLINE=\$(HAVE_GETLINE)
 EOF
