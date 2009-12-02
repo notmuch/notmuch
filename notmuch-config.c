@@ -317,9 +317,11 @@ notmuch_config_save (notmuch_config_t *config)
 	fprintf (stderr, "Error saving configuration to %s: %s\n",
 		 config->filename, error->message);
 	g_error_free (error);
+	g_free (data);
 	return 1;
     }
 
+    g_free (data);
     return 0;
 }
 
