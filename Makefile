@@ -10,29 +10,17 @@ EMACS ?= emacs
 # arguments to gzip.
 gzip = gzip
 
-# Additional flags that we will append to whatever the user set.
-# These aren't intended for the user to manipulate.
-extra_cflags := $(shell pkg-config --cflags glib-2.0 gmime-2.4 talloc)
-extra_cxxflags := $(shell xapian-config --cxxflags)
-
-emacs_lispdir := $(shell pkg-config emacs --variable sitepkglispdir)
-# Hard-code if this system doesn't have an emacs.pc file
-ifeq ($(emacs_lispdir),)
-	emacs_lispdir = $(prefix)/share/emacs/site-lisp
-endif
-
 bash_completion_dir = /etc/bash_completion.d
 
 all_deps = Makefile Makefile.local Makefile.config \
 		   lib/Makefile lib/Makefile.local
 
+extra_cflags :=
+extra_cxxflags :=
+
 # Now smash together user's values with our extra values
 override CFLAGS += $(WARN_CFLAGS) $(extra_cflags)
 override CXXFLAGS += $(WARN_CXXFLAGS) $(extra_cflags) $(extra_cxxflags)
-
-override LDFLAGS += \
-	$(shell pkg-config --libs glib-2.0 gmime-2.4 talloc) \
-	$(shell xapian-config --libs)
 
 all: notmuch notmuch.1.gz
 

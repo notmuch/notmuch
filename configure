@@ -32,6 +32,8 @@ printf "Checking for Xapian development files... "
 if xapian-config --version > /dev/null 2>&1; then
     printf "Yes.\n"
     have_xapian=1
+    cxxflags="${cxxflags} $(xapian-config --cxxflags)"
+    ldflags="${ldflags} $(xapian-config --libs)"
 else
     printf "No.\n"
     have_xapian=0
@@ -42,6 +44,8 @@ printf "Checking for GMime 2.4 development files... "
 if pkg-config --modversion gmime-2.4 > /dev/null 2>&1; then
     printf "Yes.\n"
     have_gmime=1
+    cflags="${cflags} $(pkg-config --cflags gmime-2.4)"
+    ldflags="${ldflags} $(pkg-config --libs gmime-2.4)"
 else
     printf "No.\n"
     have_gmime=0
@@ -52,9 +56,12 @@ printf "Checking for talloc development files... "
 if pkg-config --modversion talloc > /dev/null 2>&1; then
     printf "Yes.\n"
     have_talloc=1
+    cflags="${cflags} $(pkg-config --cflags talloc)"
+    ldflags="${ldflags} $(pkg-config --libs talloc)"
 else
     printf "No.\n"
     have_talloc=0
+    talloc_cflags=
     errors=$((errors + 1))
 fi
 
@@ -62,11 +69,16 @@ printf "Checking for valgrind development files... "
 if pkg-config --modversion valgrind > /dev/null 2>&1; then
     printf "Yes.\n"
     have_valgrind=1
-    valgrind_flags=$(pkg-config --cflags valgrind)
+    cflags="${cflags} $(pkg-config --cflags valgrind)"
 else
     printf "No (but that's fine).\n"
     have_valgrind=0
-    valgrind_flags=
+fi
+
+if pkg-config --modversion emacs > /dev/null 2>&1; then
+    emacs_lispdir=$(pkg-config emacs --variable sitepkglispdir)
+else
+    emacs_lispdir='$(prefix)/share/emacs/site-lisp'
 fi
 
 if [ $errors -gt 0 ]; then
@@ -150,6 +162,9 @@ EOF
 # construct the Makefile.config
 cat > Makefile.config <<EOF
 prefix = /usr/local
+emacs_lispdir=${emacs_lispdir}
 HAVE_GETLINE = ${have_getline}
-override CFLAGS += -DHAVE_VALGRIND=${have_valgrind} ${valgrind_flags} -DHAVE_GETLINE=\$(HAVE_GETLINE)
+override CFLAGS += ${cflags} -DHAVE_VALGRIND=${have_valgrind} -DHAVE_GETLINE=\$(HAVE_GETLINE)
+override CXXFLAGS += ${cflags} ${cxxflags}
+override LDFLAGS += ${ldflags}
 EOF
