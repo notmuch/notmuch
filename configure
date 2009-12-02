@@ -1,5 +1,8 @@
 #! /bin/sh
 
+CC=${CC:-gcc}
+CXX=${CXX:-g++}
+
 cat <<EOF
 Welcome to Notmuch, a system for indexing, searching and tagging your email.
 
@@ -139,7 +142,7 @@ EOF
 fi
 
 printf "Checking for getline... "
-if gcc -o config/have_getline config/have_getline.c > /dev/null 2>&1
+if ${CC} -o config/have_getline config/have_getline.c > /dev/null 2>&1
 then
     printf "Yes.\n"
     have_getline=1
@@ -167,6 +170,12 @@ cat > Makefile.config <<EOF
 # but be warned that if configure is run again it will destroy your
 # changes, (and this could happen by simply calling "make" if the
 # configure script is updated).
+
+# The C compiler to use
+CC = ${CC}
+
+# The C++ compiler to use
+CXX = ${CXX}
 
 # The prefix to which notmuch should be installed
 prefix = /usr/local
