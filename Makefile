@@ -1,6 +1,8 @@
-# Default FLAGS, (can be overridden by user such as "make CFLAGS=-O2")
-WARN_FLAGS=-Wall -Wextra -Wmissing-declarations -Wwrite-strings -Wswitch-enum
+# Default FLAGS, (can be overridden by user such as "make CFLAGS=-g")
 CFLAGS=-O2
+
+WARN_CXXFLAGS=-Wall -Wextra -Wwrite-strings -Wswitch-enum
+WARN_CFLAGS=$(WARN_CXXFLAGS) -Wmissing-declarations
 
 # Additional programs that are used during the compilation process.
 EMACS ?= emacs
@@ -25,8 +27,8 @@ all_deps = Makefile Makefile.local Makefile.config \
 		   lib/Makefile lib/Makefile.local
 
 # Now smash together user's values with our extra values
-override CFLAGS += $(WARN_FLAGS) $(extra_cflags)
-override CXXFLAGS += $(WARN_FLAGS) $(extra_cflags) $(extra_cxxflags)
+override CFLAGS += $(WARN_CFLAGS) $(extra_cflags)
+override CXXFLAGS += $(WARN_CXXFLAGS) $(extra_cflags) $(extra_cxxflags)
 
 override LDFLAGS += \
 	$(shell pkg-config --libs glib-2.0 gmime-2.4 talloc) \
