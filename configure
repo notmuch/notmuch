@@ -115,17 +115,17 @@ package names may be different, (such as "devel" in place of "dev").
 EOF
     if [ $have_pkg_config -eq 0 ]; then
 cat <<EOF
-Note: the pkg-config program is not available. Both this configure
-script and the Makefile of notmuch use pkg-config to find the
-compilation flags required to link against the various libraries
-needed by notmuch. It's possible you simply need to install pkg-config
-with a command such as:
+Note: the pkg-config program is not available. This configure script
+uses pkg-config to find the compilation flags required to link against
+the various libraries needed by notmuch. It's possible you simply need
+to install pkg-config with a command such as:
 
 	sudo apt-get install pkg-config
 
 But if pkg-config is not available for your system, then you will need
-to manually edit the notmuch Makefile to set the variables such as
-CFLAGS and LDFLAGS to the correct values without calling pkg-config.
+to modify the configure script to manually set the cflags and ldflags
+variables to the correct values to link against each library in each
+case that pkg-config could not be used to determine those values.
 
 EOF
     fi
