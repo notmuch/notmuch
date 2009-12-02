@@ -49,11 +49,11 @@ include Makefile.local
 # user how to enable verbose compiles.
 ifeq ($(V),)
 quiet_DOC := "Use \"$(MAKE) V=1\" to see the verbose compile lines.\n"
-quiet = @echo $(quiet_DOC)$(eval quiet_DOC:=)"  $1	$@"; $($1)
+quiet = @printf $(quiet_DOC)$(eval quiet_DOC:=)"  $1	$@\n"; $($1)
 endif
 # The user has explicitly enabled quiet compilation.
 ifeq ($(V),0)
-quiet = @echo "  $1	$@"; $($1)
+quiet = @printf "  $1	$@\n"; $($1)
 endif
 # Otherwise, print the full command line.
 quiet ?= $($1)
