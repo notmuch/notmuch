@@ -169,6 +169,8 @@ when sorting by
 .B newest\-first
 the threads will be sorted by the newest message in each thread.
 
+.RE
+.RS 4
 By default, results will be displayed in reverse chronological order,
 (that is, the newest results will be displayed first).
 
@@ -177,7 +179,7 @@ See the
 section below for details of the supported syntax for <search-terms>.
 .RE
 .TP
-.BR show " <search-term>..."
+.BR show " [options...] <search-term>..."
 
 Shows all messages matching the search terms.
 
@@ -187,6 +189,19 @@ message in date order). The output is not indented by default, but
 depth tags are printed so that proper indentation can be performed by
 a post-processor (such as the emacs interface to notmuch).
 
+Supported options for
+.B show
+include
+.RS 4
+.TP 4
+.B \-\-entire\-thread
+
+By default only those messages that match the search terms will be
+displayed. With this option, all messages in the same thread as any
+matched message will be displayed.
+.RE
+
+.RS 4
 The  output format  is plain-text,  with all  text-content  MIME parts
 decoded. Various components in the output,
 .RB ( message ", " header ", " body ", " attachment ", and MIME " part ),
@@ -206,6 +221,7 @@ command.
 See the
 .B "SEARCH SYNTAX"
 section below for details of the supported syntax for <search-terms>.
+.RE
 .RE
 
 The
