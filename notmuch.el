@@ -1014,6 +1014,8 @@ thread from that buffer can be show when done with this one)."
 (defvar notmuch-search-oldest-first t
   "Show the oldest mail first in the search-mode")
 
+(defvar notmuch-search-disjunctive-regexp      "\\<[oO][rR]\\>")
+
 (defun notmuch-search-scroll-up ()
   "Move forward through search results by one window's worth."
   (interactive)
@@ -1352,7 +1354,8 @@ search."
 Runs a new search matching only messages that match both the
 current search results AND the additional query string provided."
   (interactive "sFilter search: ")
-  (notmuch-search (concat notmuch-search-query-string " and " query) notmuch-search-oldest-first))
+  (let ((grouped-query (if (string-match-p notmuch-search-disjunctive-regexp query) (concat "( " query " )") query)))
+    (notmuch-search (concat notmuch-search-query-string " and " grouped-query) notmuch-search-oldest-first)))
 
 (defun notmuch-search-filter-by-tag (tag)
   "Filter the current search results based on a single tag.
