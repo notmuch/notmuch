@@ -32,8 +32,8 @@ printf "Checking for Xapian development files... "
 if xapian-config --version > /dev/null 2>&1; then
     printf "Yes.\n"
     have_xapian=1
-    cxxflags="${cxxflags} $(xapian-config --cxxflags)"
-    ldflags="${ldflags} $(xapian-config --libs)"
+    xapian_cxxflags=$(xapian-config --cxxflags)
+    xapian_ldflags=$(xapian-config --libs)
 else
     printf "No.\n"
     have_xapian=0
@@ -44,8 +44,8 @@ printf "Checking for GMime 2.4 development files... "
 if pkg-config --modversion gmime-2.4 > /dev/null 2>&1; then
     printf "Yes.\n"
     have_gmime=1
-    cflags="${cflags} $(pkg-config --cflags gmime-2.4)"
-    ldflags="${ldflags} $(pkg-config --libs gmime-2.4)"
+    gmime_cflags=$(pkg-config --cflags gmime-2.4)
+    gmime_ldflags=$(pkg-config --libs gmime-2.4)
 else
     printf "No.\n"
     have_gmime=0
@@ -56,8 +56,8 @@ printf "Checking for talloc development files... "
 if pkg-config --modversion talloc > /dev/null 2>&1; then
     printf "Yes.\n"
     have_talloc=1
-    cflags="${cflags} $(pkg-config --cflags talloc)"
-    ldflags="${ldflags} $(pkg-config --libs talloc)"
+    talloc_cflags=$(pkg-config --cflags talloc)
+    talloc_ldflags=$(pkg-config --libs talloc)
 else
     printf "No.\n"
     have_talloc=0
@@ -69,7 +69,7 @@ printf "Checking for valgrind development files... "
 if pkg-config --modversion valgrind > /dev/null 2>&1; then
     printf "Yes.\n"
     have_valgrind=1
-    cflags="${cflags} $(pkg-config --cflags valgrind)"
+    valgrind_cflags=$(pkg-config --cflags valgrind)
 else
     printf "No (but that's fine).\n"
     have_valgrind=0
@@ -178,9 +178,30 @@ emacs_lispdir=${emacs_lispdir}
 # build its own version)
 HAVE_GETLINE = ${have_getline}
 
-# Various flags needed to compile and link against the dependencies of
-# notmuch.
-override CFLAGS += ${cflags} -DHAVE_VALGRIND=${have_valgrind} -DHAVE_GETLINE=\$(HAVE_GETLINE)
-override CXXFLAGS += ${cflags} ${cxxflags}
-override LDFLAGS += ${ldflags}
+# Flags needed to compile and link against Xapian
+XAPIAN_CXXFLAGS = ${xapian_cxxflags}
+XAPIAN_LDFLAGS = ${xapian_ldflags}
+
+# Flags needed to compile and link against GMime-2.4
+GMIME_CFLAGS = ${gmime_cflags}
+GMIME_LDFLAGS = ${gmime_ldflags}
+
+# Flags needed to compile and linke against talloc
+TALLOC_CFLAGS = ${talloc_cflags}
+TALLOC_LDFLAGS = ${talloc_ldflags}
+
+# Whether valgrind header files are available
+HAVE_VALGRIND = ${have_valgrind}
+
+# And if so, flags needed at compile time for valgrind macros
+VALGRIND_CFLAGS = ${valgrind_cflags}
+
+# Combined flags for compiling and linking against all of the above
+override CFLAGS += -DHAVE_GETLINE=\$(HAVE_GETLINE) \$(GMIME_CFLAGS)      \\
+		   \$(TALLOC_CFLAGS) -DHAVE_VALGRIND=\$(HAVE_VALGRIND)   \\
+		   \$(VALGRIND_CFLAGS)
+override CXXFLAGS += -DHAVE_GETLINE=\$(HAVE_GETLINE) \$(GMIME_CFLAGS)    \\
+		     \$(TALLOC_CFLAGS) -DHAVE_VALGRIND=\$(HAVE_VALGRIND) \\
+		     \$(VALGRIND_CFLAGS) \$(XAPIAN_CXXFLAGS)
+override LDFLAGS += \$(GMIME_LDFLAGS) \$(TALLOC_LDFLAGS) \$(XAPIAN_LDFLAGS)
 EOF
