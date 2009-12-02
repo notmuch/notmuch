@@ -933,7 +933,7 @@ thread from that buffer can be show when done with this one)."
       (erase-buffer)
       (goto-char (point-min))
       (save-excursion
-	(call-process notmuch-command nil t nil "show" thread-id)
+	(call-process notmuch-command nil t nil "show" "--entire-thread" thread-id)
 	(notmuch-show-markup-messages)
 	)
       (run-hooks 'notmuch-show-hook)
