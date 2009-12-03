@@ -728,8 +728,7 @@ which this thread was originally shown."
   (let ((beg (point-marker))
 	(summary-end (copy-marker (line-beginning-position 2)))
         (btn nil))
-    ; Inverse video for subject
-    (overlay-put (make-overlay beg summary-end) 'face '(:inverse-video t))
+    (overlay-put (make-overlay beg summary-end) 'face 'notmuch-message-summary-face)
     (setq btn (make-button beg summary-end :type 'notmuch-button-body-toggle-type))
     (forward-line 1)
     (end-of-line)
@@ -1045,6 +1044,12 @@ thread from that buffer can be show when done with this one)."
   "Select the first thread in the search results."
   (interactive)
   (goto-char (point-min)))
+
+(defface notmuch-message-summary-face
+ '((((class color) (background light)) (:background "#f0f0f0"))
+   (((class color) (background dark)) (:background "#303030")))
+ "Face for the single-line message summary in notmuch-show-mode."
+ :group 'notmuch)
 
 (defface notmuch-tag-face
   '((((class color)
