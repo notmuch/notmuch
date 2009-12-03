@@ -697,33 +697,32 @@ which this thread was originally shown."
       )))
 
 (defun notmuch-fontify-headers ()
-  (progn
-    (while (looking-at "[[:space:]]")
-      (forward-char))
-    (if (looking-at "[Tt]o:")
-	(progn
-	  (overlay-put (make-overlay (point) (re-search-forward ":"))
-                       'face 'message-header-name)
-          (overlay-put (make-overlay (point) (re-search-forward ".*$"))
-                       'face 'message-header-to))
+  (while (looking-at "[[:space:]]")
+    (forward-char))
+  (if (looking-at "[Tt]o:")
+      (progn
+	(overlay-put (make-overlay (point) (re-search-forward ":"))
+		     'face 'message-header-name)
+	(overlay-put (make-overlay (point) (re-search-forward ".*$"))
+		     'face 'message-header-to))
     (if (looking-at "[B]?[Cc][Cc]:")
 	(progn
 	  (overlay-put (make-overlay (point) (re-search-forward ":"))
-                       'face 'message-header-name)
-          (overlay-put (make-overlay (point) (re-search-forward ".*$"))
-                       'face 'message-header-cc))
-    (if (looking-at "[Ss]ubject:")
-	(progn
-	  (overlay-put (make-overlay (point) (re-search-forward ":"))
-                       'face 'message-header-name)
-          (overlay-put (make-overlay (point) (re-search-forward ".*$"))
-                       'face 'message-header-subject))
-    (if (looking-at "[Ff]rom:")
-	(progn
-	  (overlay-put (make-overlay (point) (re-search-forward ":"))
-                       'face 'message-header-name)
-          (overlay-put (make-overlay (point) (re-search-forward ".*$"))
-                       'face 'message-header-other))))))))
+		       'face 'message-header-name)
+	  (overlay-put (make-overlay (point) (re-search-forward ".*$"))
+		       'face 'message-header-cc))
+      (if (looking-at "[Ss]ubject:")
+	  (progn
+	    (overlay-put (make-overlay (point) (re-search-forward ":"))
+			 'face 'message-header-name)
+	    (overlay-put (make-overlay (point) (re-search-forward ".*$"))
+			 'face 'message-header-subject))
+	(if (looking-at "[Ff]rom:")
+	    (progn
+	      (overlay-put (make-overlay (point) (re-search-forward ":"))
+			   'face 'message-header-name)
+	      (overlay-put (make-overlay (point) (re-search-forward ".*$"))
+			   'face 'message-header-other)))))))
 
 (defun notmuch-show-markup-header (depth)
   (re-search-forward notmuch-show-header-begin-regexp)
