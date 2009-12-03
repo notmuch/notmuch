@@ -100,7 +100,7 @@ Index content from citations, please.
 Provide a sane syntax for date ranges. First, we don't want to require
 both endpoints to be specified. For example it would be nice to be
 able to say things like "since:2009-01-1" or "until:2009-01-1" and
-have the other enpoint be implicit. Second we'd like to support
+have the other endpoint be implicit. Second we'd like to support
 relative specifications of time such as "since:'2 months ago'". To do
 any of this we're probably going to need to break down an write our
 own parser for the query string rather than using Xapian's QueryParser

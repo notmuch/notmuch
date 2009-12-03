@@ -391,7 +391,7 @@ point either forward or backward to the next visible character
 when a command ends with point on an invisible character).
 
 Emits an error if point is not within a valid message, (that is
-not pattern of `notmuch-show-message-begin-regexp' could be found
+no pattern of `notmuch-show-message-begin-regexp' could be found
 by searching backward)."
   (beginning-of-line)
   (if (not (looking-at notmuch-show-message-begin-regexp))
@@ -408,7 +408,7 @@ by searching backward)."
       (not (re-search-forward notmuch-show-message-begin-regexp nil t)))))
 
 (defun notmuch-show-message-unread-p ()
-  "Preficate testing whether current message is unread."
+  "Predicate testing whether current message is unread."
   (member "unread" (notmuch-show-get-tags)))
 
 (defun notmuch-show-next-message ()
