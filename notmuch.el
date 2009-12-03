@@ -729,7 +729,18 @@ which this thread was originally shown."
 	      (overlay-put (make-overlay (point) (re-search-forward ".*$"))
 			   'face 'message-header-other)))))))
 
-(defun notmuch-show-markup-header (depth)
+(defun notmuch-show-markup-header (message-begin depth)
+  "Buttonize and decorate faces in a message header.
+
+MESSAGE-BEGIN is the position of the absolute first character in
+the message (including all delimiters that will end up being
+invisible etc.). This is to allow a button to reliably extend to
+the beginning of the message even if point is positioned at an
+invisible character (such as the beginning of the buffer).
+
+DEPTH specifies the depth at which this message appears in the
+tree of the current thread, (the top-level messages have depth 0
+and each reply increases depth by 1)."
   (re-search-forward notmuch-show-header-begin-regexp)
   (forward-line)
   (let ((beg (point-marker))
@@ -742,7 +753,7 @@ which this thread was originally shown."
     (let ((end (point-marker)))
       (indent-rigidly beg end depth)
       (goto-char beg)
-      (setq btn (make-button (line-beginning-position) summary-end :type 'notmuch-button-body-toggle-type))
+      (setq btn (make-button message-begin summary-end :type 'notmuch-button-body-toggle-type))
       (forward-line)
       (add-to-invisibility-spec invis-spec)
       (overlay-put (make-overlay subject-end end)
@@ -766,11 +777,11 @@ which this thread was originally shown."
 
 (defun notmuch-show-markup-message ()
   (if (re-search-forward notmuch-show-message-begin-regexp nil t)
-      (progn
+      (let ((message-begin (match-beginning 0)))
 	(re-search-forward notmuch-show-depth-regexp)
 	(let ((depth (string-to-number (buffer-substring (match-beginning 1) (match-end 1))))
               (btn nil))
-	  (setq btn (notmuch-show-markup-header depth))
+	  (setq btn (notmuch-show-markup-header message-begin depth))
 	  (notmuch-show-markup-body depth btn)))
     (goto-char (point-max))))
 
