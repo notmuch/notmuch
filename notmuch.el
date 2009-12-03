@@ -111,7 +111,7 @@ pattern can still test against the entire line).")
 (defvar notmuch-show-marker-regexp "\f\\(message\\|header\\|body\\|attachment\\|part\\)[{}].*$")
 
 (defvar notmuch-show-id-regexp "\\(id:[^ ]*\\)")
-(defvar notmuch-show-depth-regexp " depth:\\([0-9]*\\) ")
+(defvar notmuch-show-depth-match-regexp " depth:\\([0-9]*\\).*match:\\([01]\\) ")
 (defvar notmuch-show-filename-regexp "filename:\\(.*\\)$")
 (defvar notmuch-show-tags-regexp "(\\([^)]*\\))$")
 
@@ -684,7 +684,20 @@ which this thread was originally shown."
               (notmuch-show-markup-part
                beg end depth mime-message))))))
 
-(defun notmuch-show-markup-body (depth btn)
+(defun notmuch-show-markup-body (depth match btn)
+  "Markup a message body, (indenting, buttonizing citations,
+etc.), and conditionally hiding the body itself if the message
+has been read and does not match the current search.
+
+DEPTH specifies the depth at which this message appears in the
+tree of the current thread, (the top-level messages have depth 0
+and each reply increases depth by 1). MATCH indicates whether
+this message is regarded as matching the current search. BTN is
+the button which is used to toggle the visibility of this
+message.
+
+When this function is called, point must be within the message, but
+before the delimiter marking the beginning of the body."
   (re-search-forward notmuch-show-body-begin-regexp)
   (forward-line)
   (let ((beg (point-marker)))
@@ -695,7 +708,7 @@ which this thread was originally shown."
         (overlay-put (make-overlay beg end)
                      'invisible invis-spec)
         (button-put btn 'invisibility-spec invis-spec)
-        (if (not (notmuch-show-message-unread-p))
+        (if (not (or (notmuch-show-message-unread-p) match))
             (add-to-invisibility-spec invis-spec)))
       (set-marker beg nil)
       (set-marker end nil)
@@ -778,11 +791,12 @@ and each reply increases depth by 1)."
 (defun notmuch-show-markup-message ()
   (if (re-search-forward notmuch-show-message-begin-regexp nil t)
       (let ((message-begin (match-beginning 0)))
-	(re-search-forward notmuch-show-depth-regexp)
+	(re-search-forward notmuch-show-depth-match-regexp)
 	(let ((depth (string-to-number (buffer-substring (match-beginning 1) (match-end 1))))
+	      (match (string= "1" (buffer-substring (match-beginning 2) (match-end 2))))
               (btn nil))
 	  (setq btn (notmuch-show-markup-header message-begin depth))
-	  (notmuch-show-markup-body depth btn)))
+	  (notmuch-show-markup-body depth match btn)))
     (goto-char (point-max))))
 
 (defun notmuch-show-hide-markers ()
@@ -942,7 +956,8 @@ The optional PARENT-BUFFER is the notmuch-search buffer from
 which this notmuch-show command was executed, (so that the next
 thread from that buffer can be show when done with this one)."
   (interactive "sNotmuch show: ")
-  (let ((buffer (get-buffer-create (concat "*notmuch-show-" thread-id "*"))))
+  (let ((query notmuch-search-query-string)
+	(buffer (get-buffer-create (concat "*notmuch-show-" thread-id "*"))))
     (switch-to-buffer buffer)
     (notmuch-show-mode)
     (set (make-local-variable 'notmuch-show-parent-buffer) parent-buffer)
@@ -954,30 +969,13 @@ thread from that buffer can be show when done with this one)."
       (erase-buffer)
       (goto-char (point-min))
       (save-excursion
-	(call-process notmuch-command nil t nil "show" "--entire-thread" thread-id)
+	(call-process notmuch-command nil t nil "show" "--entire-thread" thread-id "and (" query ")")
 	(notmuch-show-markup-messages)
 	)
       (run-hooks 'notmuch-show-hook)
-      ; Move straight to the first unread message
-      (if (not (notmuch-show-message-unread-p))
-	  (progn
-	    (notmuch-show-next-unread-message)
-	    ; But if there are no unread messages, go back to the
-	    ; beginning of the buffer, and open up the bodies of all
-	    ; read message.
-	    (if (not (notmuch-show-message-unread-p))
-		(progn
-		  (goto-char (point-min))
-                  (let ((btn (forward-button 1)))
-                    (while btn
-                      (if (button-has-type-p btn 'notmuch-button-body-toggle-type)
-                          (push-button))
-                      (condition-case err
-                          (setq btn (forward-button 1))
-                        (error (setq btn nil)))
-                    ))
-                  (goto-char (point-min))
-                  ))))
+      ; Move straight to the first open message
+      (if (not (notmuch-show-message-open-p))
+	  (notmuch-show-next-open-message))
       )))
 
 (defvar notmuch-search-authors-width 40
