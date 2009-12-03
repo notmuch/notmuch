@@ -574,14 +574,19 @@ which this thread was originally shown."
   (force-window-update)
   (redisplay t))
 
-(define-button-type 'notmuch-button-invisibility-toggle-type 'action 'notmuch-toggle-invisible-action 'follow-link t)
+(define-button-type 'notmuch-button-invisibility-toggle-type
+  'action 'notmuch-toggle-invisible-action
+  'follow-link t
+  'face "default")
 (define-button-type 'notmuch-button-citation-toggle-type 'help-echo "mouse-1, RET: Show citation"
   :supertype 'notmuch-button-invisibility-toggle-type)
 (define-button-type 'notmuch-button-signature-toggle-type 'help-echo "mouse-1, RET: Show signature"
   :supertype 'notmuch-button-invisibility-toggle-type)
 (define-button-type 'notmuch-button-headers-toggle-type 'help-echo "mouse-1, RET: Show headers"
   :supertype 'notmuch-button-invisibility-toggle-type)
-(define-button-type 'notmuch-button-body-toggle-type 'help-echo "mouse-1, RET: Show message"
+(define-button-type 'notmuch-button-body-toggle-type
+  'help-echo "mouse-1, RET: Show message"
+  'face 'notmuch-message-summary-face
   :supertype 'notmuch-button-invisibility-toggle-type)
 
 (defun notmuch-show-markup-citations-region (beg end depth)
@@ -737,7 +742,6 @@ which this thread was originally shown."
     (let ((end (point-marker)))
       (indent-rigidly beg end depth)
       (goto-char beg)
-      (overlay-put (make-overlay (line-beginning-position) summary-end) 'face 'notmuch-message-summary-face)
       (setq btn (make-button (line-beginning-position) summary-end :type 'notmuch-button-body-toggle-type))
       (forward-line)
       (add-to-invisibility-spec invis-spec)
