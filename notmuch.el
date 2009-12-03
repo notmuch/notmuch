@@ -411,19 +411,32 @@ by searching backward)."
   "Predicate testing whether current message is unread."
   (member "unread" (notmuch-show-get-tags)))
 
+(defun notmuch-show-message-open-p ()
+  "Predicate testing whether current message is open (body is visible)."
+  (let ((btn (previous-button (point) t)))
+    (while (not (button-has-type-p btn 'notmuch-button-body-toggle-type))
+      (setq btn (previous-button (button-start btn))))
+    (not (invisible-p (button-get btn 'invisibility-spec)))))
+
 (defun notmuch-show-next-message ()
   "Advance to the beginning of the next message in the buffer.
 
 Moves to the last visible character of the current message if
-already on the last message in the buffer."
+already on the last message in the buffer.
+
+Returns nil if already on the last message in the buffer."
   (interactive)
   (notmuch-show-move-to-current-message-summary-line)
   (if (re-search-forward notmuch-show-message-begin-regexp nil t)
-      (notmuch-show-move-to-current-message-summary-line)
+      (progn
+	(notmuch-show-move-to-current-message-summary-line)
+	(recenter 0)
+	t)
     (goto-char (- (point-max) 1))
     (while (point-invisible-p)
-      (backward-char)))
-  (recenter 0))
+      (backward-char))
+    (recenter 0)
+    nil))
 
 (defun notmuch-show-find-next-message ()
   "Returns the position of the next message in the buffer.
@@ -451,14 +464,9 @@ there are no more unread messages past the current point."
       (notmuch-show-next-message)))
 
 (defun notmuch-show-next-open-message ()
-  "Advance to the next message which is not hidden.
-
-If read messages are currently hidden, advance to the next unread
-message. Otherwise, advance to the next message."
-  (if (or (memq 'notmuch-show-body-read buffer-invisibility-spec)
-	  (assq 'notmuch-show-body-read buffer-invisibility-spec))
-      (notmuch-show-next-unread-message)
-    (notmuch-show-next-message)))
+  "Advance to the next open message (that is, body is not invisible)."
+  (while (and (notmuch-show-next-message)
+	      (not (notmuch-show-message-open-p)))))
 
 (defun notmuch-show-previous-message ()
   "Backup to the beginning of the previous message in the buffer.
