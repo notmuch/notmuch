@@ -184,9 +184,12 @@ show_message (void *ctx, notmuch_message_t *message, int indent)
 
 
 static void
-show_messages (void *ctx, notmuch_messages_t *messages, int indent)
+show_messages (void *ctx, notmuch_messages_t *messages, int indent,
+	       notmuch_bool_t entire_thread)
 {
     notmuch_message_t *message;
+    notmuch_bool_t match;
+    int next_indent;
 
     for (;
 	 notmuch_messages_has_more (messages);
@@ -194,9 +197,17 @@ show_messages (void *ctx, notmuch_messages_t *messages, int indent)
     {
 	message = notmuch_messages_get (messages);
 
-	show_message (ctx, message, indent);
+	match = notmuch_message_get_flag (message, NOTMUCH_MESSAGE_FLAG_MATCH);
 
-	show_messages (ctx, notmuch_message_get_replies (message), indent + 1);
+	next_indent = indent;
+
+	if (match || entire_thread) {
+	    show_message (ctx, message, indent);
+	    next_indent = indent + 1;
+	}
+
+	show_messages (ctx, notmuch_message_get_replies (message),
+		       next_indent, entire_thread);
 
 	notmuch_message_destroy (message);
     }
@@ -257,29 +268,21 @@ notmuch_show_command (void *ctx, unused (int argc), unused (char *argv[]))
 	return 1;
     }
 
-    if (!entire_thread) {
-	messages = notmuch_query_search_messages (query);
+    for (threads = notmuch_query_search_threads (query);
+	 notmuch_threads_has_more (threads);
+	 notmuch_threads_advance (threads))
+    {
+	thread = notmuch_threads_get (threads);
+
+	messages = notmuch_thread_get_toplevel_messages (thread);
+
 	if (messages == NULL)
-	    INTERNAL_ERROR ("No messages.\n");
-	show_messages (ctx, messages, 0);
+	    INTERNAL_ERROR ("Thread %s has no toplevel messages.\n",
+			    notmuch_thread_get_thread_id (thread));
 
-    } else {
-	for (threads = notmuch_query_search_threads (query);
-		notmuch_threads_has_more (threads);
-		notmuch_threads_advance (threads))
-	{
-	    thread = notmuch_threads_get (threads);
+	show_messages (ctx, messages, 0, entire_thread);
 
-	    messages = notmuch_thread_get_toplevel_messages (thread);
-
-	    if (messages == NULL)
-		INTERNAL_ERROR ("Thread %s has no toplevel messages.\n",
-			notmuch_thread_get_thread_id (thread));
-
-	    show_messages (ctx, messages, 0);
-
-	    notmuch_thread_destroy (thread);
-	}
+	notmuch_thread_destroy (thread);
     }
 
     notmuch_query_destroy (query);
