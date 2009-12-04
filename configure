@@ -2,6 +2,8 @@
 
 CC=${CC:-gcc}
 CXX=${CXX:-g++}
+CFLAGS=${CFLAGS:--O2}
+CXXFLAGS=${CXXFLAGS:-\$(CFLAGS)}
 
 # defaults
 PREFIX=/usr/local
@@ -194,6 +196,12 @@ CC = ${CC}
 
 # The C++ compiler to use
 CXX = ${CXX}
+
+# Default FLAGS for C compiler (can be overridden by user such as "make CFLAGS=-g")
+CFLAGS = ${CFLAGS}
+
+# Default FLAGS for C++ compiler (can be overridden by user such as "make CXXFLAGS=-g")
+CXXFLAGS = ${CXXFLAGS}
 
 # The prefix to which notmuch should be installed
 prefix = ${PREFIX}

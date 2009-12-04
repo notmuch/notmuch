@@ -1,6 +1,3 @@
-# Default FLAGS, (can be overridden by user such as "make CFLAGS=-g")
-CFLAGS=-O2
-
 WARN_CXXFLAGS=-Wall -Wextra -Wwrite-strings -Wswitch-enum
 WARN_CFLAGS=$(WARN_CXXFLAGS) -Wmissing-declarations
 
