@@ -25,6 +25,11 @@ all: notmuch notmuch.1.gz
 # Before including any other Makefile fragments, get settings from the
 # output of configure
 Makefile.config: configure
+	@echo ""
+	@echo "Note: Calling ./configure with no command-line arguments. This is often fine,"
+	@echo "      but if you want to specify any arguments (such as an alternate prefix"
+	@echo "      into which to install), call ./configure explicitly and then make again."
+	@echo ""
 	./configure
 
 include Makefile.config
