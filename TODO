@@ -44,6 +44,11 @@ and *then* --max-threads), and also complete value for --sort=
 
 notmuch command-line tool
 -------------------------
+Fix "notmuch show" so that the UI doesn't fail to show a thread that
+is visible in a search buffer, but happens to no longer match the
+current search. (Perhaps add a --matching=<secondary-search-terms>
+option (or similar) to "notmuch show".)
+
 Teach "notmuch search" to return many different kinds of results. Some
 ideas:
 
