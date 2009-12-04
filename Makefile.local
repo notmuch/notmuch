@@ -22,7 +22,7 @@ notmuch_client_srcs =		\
 
 notmuch_client_modules = $(notmuch_client_srcs:.c=.o)
 notmuch: $(notmuch_client_modules) lib/notmuch.a
-	$(call quiet,CXX) $^ $(LDFLAGS) -o $@
+	$(call quiet,CXX,$(LDFLAGS)) $^ $(FINAL_LDFLAGS) -o $@
 
 notmuch.1.gz: notmuch.1
 	$(call quiet,gzip) --stdout $^ > $@

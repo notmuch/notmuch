@@ -19,8 +19,9 @@ extra_cflags :=
 extra_cxxflags :=
 
 # Now smash together user's values with our extra values
-override CFLAGS += $(WARN_CFLAGS) $(extra_cflags)
-override CXXFLAGS += $(WARN_CXXFLAGS) $(extra_cflags) $(extra_cxxflags)
+FINAL_CFLAGS = $(CFLAGS) $(WARN_CFLAGS) $(CONFIGURE_CFLAGS) $(extra_cflags)
+FINAL_CXXFLAGS = $(CXXFLAGS) $(WARN_CXXFLAGS) $(CONFIGURE_CXXFLAGS) $(extra_cflags) $(extra_cxxflags)
+FINAL_LDFLAGS = $(LDFLAGS) $(CONFIGURE_LDFLAGS)
 
 all: notmuch notmuch.1.gz
 
@@ -39,7 +40,7 @@ include Makefile.local
 # user how to enable verbose compiles.
 ifeq ($(V),)
 quiet_DOC := "Use \"$(MAKE) V=1\" to see the verbose compile lines.\n"
-quiet = @printf $(quiet_DOC)$(eval quiet_DOC:=)"  $1	$@\n"; $($1)
+quiet = @printf $(quiet_DOC)$(eval quiet_DOC:=)"  $1 $2	$@\n"; $($1)
 endif
 # The user has explicitly enabled quiet compilation.
 ifeq ($(V),0)
@@ -49,23 +50,23 @@ endif
 quiet ?= $($1)
 
 %.o: %.cc $(all_deps)
-	$(call quiet,CXX) -c $(CXXFLAGS) $< -o $@
+	$(call quiet,CXX,$(CXXFLAGS)) -c $(FINAL_CXXFLAGS) $< -o $@
 
 %.o: %.c $(all_deps)
-	$(call quiet,CC) -c $(CFLAGS) $< -o $@
+	$(call quiet,CC,$(CFLAGS)) -c $(FINAL_CFLAGS) $< -o $@
 
 %.elc: %.el
 	$(call quiet,EMACS) -batch -f batch-byte-compile $<
 
 .deps/%.d: %.c $(all_deps)
 	@set -e; rm -f $@; mkdir -p $$(dirname $@) ; \
-	$(CC) -M $(CPPFLAGS) $(CFLAGS) $< > $@.$$$$; \
+	$(CC) -M $(CPPFLAGS) $(FINAL_CFLAGS) $< > $@.$$$$; \
 	sed 's,'$$(basename $*)'\.o[ :]*,$*.o $@ : ,g' < $@.$$$$ > $@; \
 	rm -f $@.$$$$
 
 .deps/%.d: %.cc $(all_deps)
 	@set -e; rm -f $@; mkdir -p $$(dirname $@) ; \
-	$(CXX) -M $(CPPFLAGS) $(CXXFLAGS) $< > $@.$$$$; \
+	$(CXX) -M $(CPPFLAGS) $(FINAL_CXXFLAGS) $< > $@.$$$$; \
 	sed 's,'$$(basename $*)'\.o[ :]*,$*.o $@ : ,g' < $@.$$$$ > $@; \
 	rm -f $@.$$$$
 
