@@ -106,18 +106,20 @@ EOF
     fi
     cat <<EOF
 
-On a modern, package-based operating system such as Debian, you can
-install all of the dependencies with the following simple command
-line:
+With any luck, you're using a modern, package-based operating system
+that has all of these packages available in the distribution. In that
+case a simple command will install everything you need. For example:
+
+On Debian and similar systems:
 
 	sudo apt-get install libxapian-dev libgmime-2.4-dev libtalloc-dev
 
-Or on Fedora or other RPM-based systems:
+Or on Fedora and similar systems:
 
 	sudo yum install xapian-core-devel gmime-devel libtalloc-devel
 
-On other systems, a similar command can be used, but the details of the 
-package names may be different, (such as "devel" in place of "dev").
+On other systems, similar commands can be used, but the details of the
+package names may be different.
 
 EOF
     if [ $have_pkg_config -eq 0 ]; then
@@ -128,7 +130,6 @@ the various libraries needed by notmuch. It's possible you simply need
 to install pkg-config with a command such as:
 
 	sudo apt-get install pkg-config
-
 Or:
 	sudo yum install pkgconfig
 
@@ -202,7 +203,7 @@ XAPIAN_LDFLAGS = ${xapian_ldflags}
 GMIME_CFLAGS = ${gmime_cflags}
 GMIME_LDFLAGS = ${gmime_ldflags}
 
-# Flags needed to compile and linke against talloc
+# Flags needed to compile and link against talloc
 TALLOC_CFLAGS = ${talloc_cflags}
 TALLOC_LDFLAGS = ${talloc_ldflags}
 
