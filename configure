@@ -8,7 +8,7 @@ PREFIX=/usr/local
 
 # option parsing
 for option; do
-    if [ "${option%=*}" = '--prefix' ] ; then
+    if [ "${option%%=*}" = '--prefix' ] ; then
 	PREFIX="${option#*=}"
     fi
 done
