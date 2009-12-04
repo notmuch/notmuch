@@ -62,13 +62,13 @@ quiet ?= $($1)
 
 .deps/%.d: %.c $(all_deps)
 	@set -e; rm -f $@; mkdir -p $$(dirname $@) ; \
-	$(CC) -M $(CPPFLAGS) $(FINAL_CFLAGS) $< > $@.$$$$; \
+	$(CC) -M $(CPPFLAGS) $(FINAL_CFLAGS) $< > $@.$$$$ 2>/dev/null ; \
 	sed 's,'$$(basename $*)'\.o[ :]*,$*.o $@ : ,g' < $@.$$$$ > $@; \
 	rm -f $@.$$$$
 
 .deps/%.d: %.cc $(all_deps)
 	@set -e; rm -f $@; mkdir -p $$(dirname $@) ; \
-	$(CXX) -M $(CPPFLAGS) $(FINAL_CXXFLAGS) $< > $@.$$$$; \
+	$(CXX) -M $(CPPFLAGS) $(FINAL_CXXFLAGS) $< > $@.$$$$ 2>/dev/null ; \
 	sed 's,'$$(basename $*)'\.o[ :]*,$*.o $@ : ,g' < $@.$$$$ > $@; \
 	rm -f $@.$$$$
 
