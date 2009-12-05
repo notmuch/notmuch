@@ -926,15 +926,17 @@ All currently available key bindings:
 	  (lambda()
 	    (hl-line-mode 1) ))
 
-(defun notmuch-show (thread-id &optional parent-buffer)
+(defun notmuch-show (thread-id &optional parent-buffer query-context)
   "Run \"notmuch show\" with the given thread ID and display results.
 
 The optional PARENT-BUFFER is the notmuch-search buffer from
 which this notmuch-show command was executed, (so that the next
-thread from that buffer can be show when done with this one)."
+thread from that buffer can be show when done with this one).
+
+The optional QUERY-CONTEXT is a notmuch search term. Only messages from the thread 
+matching this search term are shown if non-nil. "
   (interactive "sNotmuch show: ")
-  (let ((query notmuch-search-query-string)
-	(buffer (get-buffer-create (concat "*notmuch-show-" thread-id "*"))))
+  (let ((buffer (get-buffer-create (concat "*notmuch-show-" thread-id "*"))))
     (switch-to-buffer buffer)
     (notmuch-show-mode)
     (set (make-local-variable 'notmuch-show-parent-buffer) parent-buffer)
@@ -946,7 +948,9 @@ thread from that buffer can be show when done with this one)."
       (erase-buffer)
       (goto-char (point-min))
       (save-excursion
-	(call-process notmuch-command nil t nil "show" "--entire-thread" thread-id "and (" query ")")
+	(let* ((basic-args (list notmuch-command nil t nil "show" "--entire-thread" thread-id))
+		(args (if query-context (append basic-args (list "and (" query-context ")")) basic-args)))
+	  (apply 'call-process args))
 	(notmuch-show-markup-messages)
 	)
       (run-hooks 'notmuch-show-hook)
@@ -1123,7 +1127,7 @@ Complete list of currently available key bindings:
   (interactive)
   (let ((thread-id (notmuch-search-find-thread-id)))
     (if (> (length thread-id) 0)
-	(notmuch-show thread-id (current-buffer))
+	(notmuch-show thread-id (current-buffer) notmuch-search-query-string)
       (error "End of search results"))))
 
 (defun notmuch-search-reply-to-thread ()
