@@ -1110,6 +1110,14 @@ Complete list of currently available key bindings:
   "Return the thread for the current thread"
   (get-text-property (point) 'notmuch-search-thread-id))
 
+(defun notmuch-search-find-authors ()
+  "Return the authors for the current thread"
+  (get-text-property (point) 'notmuch-search-authors))
+
+(defun notmuch-search-find-subject ()
+  "Return the subject for the current thread"
+  (get-text-property (point) 'notmuch-search-subject))
+
 (defun notmuch-search-show-thread ()
   "Display the currently selected thread."
   (interactive)
@@ -1234,7 +1242,9 @@ This function advances the next thread when finished."
 		      (goto-char (point-max))
 		      (let ((beg (point-marker)))
 			(insert (format "%s %-7s %-40s %s (%s)\n" date count authors subject tags))
-			(put-text-property beg (point-marker) 'notmuch-search-thread-id thread-id))
+			(put-text-property beg (point-marker) 'notmuch-search-thread-id thread-id)
+			(put-text-property beg (point-marker) 'notmuch-search-authors authors)
+			(put-text-property beg (point-marker) 'notmuch-search-subject subject))
 		      (set 'line (match-end 0)))
 		  (set 'more nil))))))
       (delete-process proc))))
