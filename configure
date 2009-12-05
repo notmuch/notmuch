@@ -59,12 +59,6 @@ for option; do
 	exit 0
     elif [ "${option%%=*}" = '--prefix' ] ; then
 	PREFIX="${option#*=}"
-    else
-	echo "Unrecognized option: ${option}."
-	echo "See:"
-	echo "	$0 --help"
-	echo ""
-	exit 1
     fi
 done
 
