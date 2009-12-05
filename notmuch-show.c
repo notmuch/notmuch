@@ -184,9 +184,12 @@ show_message (void *ctx, notmuch_message_t *message, int indent)
 
 
 static void
-show_messages (void *ctx, notmuch_messages_t *messages, int indent)
+show_messages (void *ctx, notmuch_messages_t *messages, int indent,
+	       notmuch_bool_t entire_thread)
 {
     notmuch_message_t *message;
+    notmuch_bool_t match;
+    int next_indent;
 
     for (;
 	 notmuch_messages_has_more (messages);
@@ -194,9 +197,17 @@ show_messages (void *ctx, notmuch_messages_t *messages, int indent)
     {
 	message = notmuch_messages_get (messages);
 
-	show_message (ctx, message, indent);
+	match = notmuch_message_get_flag (message, NOTMUCH_MESSAGE_FLAG_MATCH);
 
-	show_messages (ctx, notmuch_message_get_replies (message), indent + 1);
+	next_indent = indent;
+
+	if (match || entire_thread) {
+	    show_message (ctx, message, indent);
+	    next_indent = indent + 1;
+	}
+
+	show_messages (ctx, notmuch_message_get_replies (message),
+		       next_indent, entire_thread);
 
 	notmuch_message_destroy (message);
     }
@@ -212,6 +223,24 @@ notmuch_show_command (void *ctx, unused (int argc), unused (char *argv[]))
     notmuch_thread_t *thread;
     notmuch_messages_t *messages;
     char *query_string;
+    int entire_thread = 0;
+    int i;
+
+    for (i = 0; i < argc && argv[i][0] == '-'; i++) {
+	if (strcmp (argv[i], "--") == 0) {
+	    i++;
+	    break;
+	}
+        if (strcmp(argv[i], "--entire-thread") == 0) {
+	    entire_thread = 1;
+	} else {
+	    fprintf (stderr, "Unrecognized option: %s\n", argv[i]);
+	    return 1;
+	}
+    }
+
+    argc -= i;
+    argv += i;
 
     config = notmuch_config_open (ctx, NULL, NULL);
     if (config == NULL)
@@ -251,7 +280,7 @@ notmuch_show_command (void *ctx, unused (int argc), unused (char *argv[]))
 	    INTERNAL_ERROR ("Thread %s has no toplevel messages.\n",
 			    notmuch_thread_get_thread_id (thread));
 
-	show_messages (ctx, messages, 0);
+	show_messages (ctx, messages, 0, entire_thread);
 
 	notmuch_thread_destroy (thread);
     }

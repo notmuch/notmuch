@@ -53,37 +53,31 @@
 
 (defvar notmuch-show-mode-map
   (let ((map (make-sparse-keymap)))
-    ; I don't actually want all of these toggle commands occupying
-    ; keybindings. They steal valuable key-binding space, are hard
-    ; to remember, and act globally rather than locally.
-    ;
-    ; Will be much preferable to switch to direct manipulation for
-    ; toggling visibility of these components. Probably using
-    ; overlays-at to query and manipulate the current overlay.
-    (define-key map "a" 'notmuch-show-archive-thread)
-    (define-key map "A" 'notmuch-show-mark-read-then-archive-thread)
-    (define-key map "f" 'notmuch-show-forward-current)
-    (define-key map "m" 'message-mail)
-    (define-key map "n" 'notmuch-show-next-message)
-    (define-key map "N" 'notmuch-show-mark-read-then-next-open-message)
-    (define-key map "p" 'notmuch-show-previous-message)
-    (define-key map (kbd "C-n") 'notmuch-show-next-line)
-    (define-key map (kbd "C-p") 'notmuch-show-previous-line)
+    (define-key map "?" 'notmuch-help)
     (define-key map "q" 'kill-this-buffer)
-    (define-key map "r" 'notmuch-show-reply)
+    (define-key map (kbd "C-p") 'notmuch-show-previous-line)
+    (define-key map (kbd "C-n") 'notmuch-show-next-line)
+    (define-key map (kbd "M-TAB") 'notmuch-show-previous-button)
+    (define-key map (kbd "TAB") 'notmuch-show-next-button)
     (define-key map "s" 'notmuch-search)
-    (define-key map "v" 'notmuch-show-view-all-mime-parts)
-    (define-key map "V" 'notmuch-show-view-raw-message)
+    (define-key map "m" 'message-mail)
+    (define-key map "f" 'notmuch-show-forward-current)
+    (define-key map "r" 'notmuch-show-reply)
+    (define-key map "|" 'notmuch-show-pipe-message)
     (define-key map "w" 'notmuch-show-save-attachments)
-    (define-key map "x" 'kill-this-buffer)
-    (define-key map "+" 'notmuch-show-add-tag)
+    (define-key map "V" 'notmuch-show-view-raw-message)
+    (define-key map "v" 'notmuch-show-view-all-mime-parts)
     (define-key map "-" 'notmuch-show-remove-tag)
+    (define-key map "+" 'notmuch-show-add-tag)
+    (define-key map "X" 'notmuch-show-mark-read-then-archive-then-exit)
+    (define-key map "x" 'notmuch-show-archive-thread-then-exit)
+    (define-key map "A" 'notmuch-show-mark-read-then-archive-thread)
+    (define-key map "a" 'notmuch-show-archive-thread)
+    (define-key map "p" 'notmuch-show-previous-message)
+    (define-key map "N" 'notmuch-show-mark-read-then-next-open-message)
+    (define-key map "n" 'notmuch-show-next-message)
     (define-key map (kbd "DEL") 'notmuch-show-rewind)
     (define-key map " " 'notmuch-show-advance-marking-read-and-archiving)
-    (define-key map "|" 'notmuch-show-pipe-message)
-    (define-key map "?" 'describe-mode)
-    (define-key map (kbd "TAB") 'notmuch-show-next-button)
-    (define-key map (kbd "M-TAB") 'notmuch-show-previous-button)
     map)
   "Keymap for \"notmuch show\" buffers.")
 (fset 'notmuch-show-mode-map notmuch-show-mode-map)
@@ -117,7 +111,7 @@ pattern can still test against the entire line).")
 (defvar notmuch-show-marker-regexp "\f\\(message\\|header\\|body\\|attachment\\|part\\)[{}].*$")
 
 (defvar notmuch-show-id-regexp "\\(id:[^ ]*\\)")
-(defvar notmuch-show-depth-regexp " depth:\\([0-9]*\\) ")
+(defvar notmuch-show-depth-match-regexp " depth:\\([0-9]*\\).*match:\\([01]\\) ")
 (defvar notmuch-show-filename-regexp "filename:\\(.*\\)$")
 (defvar notmuch-show-tags-regexp "(\\([^)]*\\))$")
 
@@ -165,7 +159,7 @@ Unlike builtin `next-line' this version accepts no arguments."
 
 By advancing forward until reaching a visible character.
 
-Unlike builtin `next-line' this version accepts no arguments."
+Unlike builtin `previous-line' this version accepts no arguments."
   (interactive)
   (set 'this-command 'previous-line)
   (call-interactively 'previous-line)
@@ -252,7 +246,7 @@ Unlike builtin `next-line' this version accepts no arguments."
 	  (notmuch-search-show-thread)))))
 
 (defun notmuch-show-mark-read-then-archive-thread ()
-  "Remove \"unread\" tag from each message, then archive and show next thread.
+  "Remove unread tags from thread, then archive and show next thread.
 
 Archive each message currently shown by removing the \"unread\"
 and \"inbox\" tag from each. Then kill this buffer and show the
@@ -267,7 +261,7 @@ buffer."
   (notmuch-show-archive-thread-maybe-mark-read t))
 
 (defun notmuch-show-archive-thread ()
-  "Archive each message in thread, and show next thread from search.
+  "Archive each message in thread, then show next thread from search.
 
 Archive each message currently shown by removing the \"inbox\"
 tag from each. Then kill this buffer and show the next thread
@@ -279,6 +273,18 @@ entire thread, but only the messages shown in the current
 buffer."
   (interactive)
   (notmuch-show-archive-thread-maybe-mark-read nil))
+
+(defun notmuch-show-archive-thread-then-exit ()
+  "Archive each message in thread, then exit back to search results."
+  (interactive)
+  (notmuch-show-archive-thread)
+  (kill-this-buffer))
+
+(defun notmuch-show-mark-read-then-archive-then-exit ()
+  "Remove unread tags from thread, then archive and exit to search results."
+  (interactive)
+  (notmuch-show-mark-read-then-archive-thread)
+  (kill-this-buffer))
 
 (defun notmuch-show-view-raw-message ()
   "View the raw email of the current message."
@@ -296,7 +302,7 @@ buffer."
         (kill-buffer buf)))))
 
 (defun notmuch-show-view-all-mime-parts ()
-  "Use external viewers (according to mailcap) to view all MIME-encoded parts."
+  "Use external viewers to view all attachments from the current message."
   (interactive)
   (with-current-notmuch-show-message
    (mm-display-parts (mm-dissect-buffer))))
@@ -334,7 +340,7 @@ buffer."
    mm-handle))
 
 (defun notmuch-show-save-attachments ()
-  "Save the attachments to a message"
+  "Save all attachments from the current message."
   (interactive)
   (with-current-notmuch-show-message
    (let ((mm-handle (mm-dissect-buffer)))
@@ -360,7 +366,7 @@ buffer."
     (notmuch-reply message-id)))
 
 (defun notmuch-show-forward-current ()
-  "Forward a the current message."
+  "Forward the current message."
   (interactive)
   (with-current-notmuch-show-message
    (message-forward)))
@@ -385,7 +391,7 @@ point either forward or backward to the next visible character
 when a command ends with point on an invisible character).
 
 Emits an error if point is not within a valid message, (that is
-not pattern of `notmuch-show-message-begin-regexp' could be found
+no pattern of `notmuch-show-message-begin-regexp' could be found
 by searching backward)."
   (beginning-of-line)
   (if (not (looking-at notmuch-show-message-begin-regexp))
@@ -402,22 +408,35 @@ by searching backward)."
       (not (re-search-forward notmuch-show-message-begin-regexp nil t)))))
 
 (defun notmuch-show-message-unread-p ()
-  "Preficate testing whether current message is unread."
+  "Predicate testing whether current message is unread."
   (member "unread" (notmuch-show-get-tags)))
+
+(defun notmuch-show-message-open-p ()
+  "Predicate testing whether current message is open (body is visible)."
+  (let ((btn (previous-button (point) t)))
+    (while (not (button-has-type-p btn 'notmuch-button-body-toggle-type))
+      (setq btn (previous-button (button-start btn))))
+    (not (invisible-p (button-get btn 'invisibility-spec)))))
 
 (defun notmuch-show-next-message ()
   "Advance to the beginning of the next message in the buffer.
 
 Moves to the last visible character of the current message if
-already on the last message in the buffer."
+already on the last message in the buffer.
+
+Returns nil if already on the last message in the buffer."
   (interactive)
   (notmuch-show-move-to-current-message-summary-line)
   (if (re-search-forward notmuch-show-message-begin-regexp nil t)
-      (notmuch-show-move-to-current-message-summary-line)
+      (progn
+	(notmuch-show-move-to-current-message-summary-line)
+	(recenter 0)
+	t)
     (goto-char (- (point-max) 1))
     (while (point-invisible-p)
-      (backward-char)))
-  (recenter 0))
+      (backward-char))
+    (recenter 0)
+    nil))
 
 (defun notmuch-show-find-next-message ()
   "Returns the position of the next message in the buffer.
@@ -445,14 +464,9 @@ there are no more unread messages past the current point."
       (notmuch-show-next-message)))
 
 (defun notmuch-show-next-open-message ()
-  "Advance to the next message which is not hidden.
-
-If read messages are currently hidden, advance to the next unread
-message. Otherwise, advance to the next message."
-  (if (or (memq 'notmuch-show-body-read buffer-invisibility-spec)
-	  (assq 'notmuch-show-body-read buffer-invisibility-spec))
-      (notmuch-show-next-unread-message)
-    (notmuch-show-next-message)))
+  "Advance to the next open message (that is, body is not invisible)."
+  (while (and (notmuch-show-next-message)
+	      (not (notmuch-show-message-open-p)))))
 
 (defun notmuch-show-previous-message ()
   "Backup to the beginning of the previous message in the buffer.
@@ -486,13 +500,13 @@ it."
       (point))))
 
 (defun notmuch-show-mark-read-then-next-open-message ()
-  "Remove unread tag from current message, then advance to next unread message."
+  "Remove unread tag from this message, then advance to next open message."
   (interactive)
   (notmuch-show-remove-tag "unread")
   (notmuch-show-next-open-message))
 
 (defun notmuch-show-rewind ()
-  "Do reverse scrolling compared to `notmuch-show-advance-marking-read-and-archiving'
+  "Backup through the thread, (reverse scrolling compared to \\[notmuch-show-advance-marking-read-and-archiving]).
 
 Specifically, if the beginning of the previous email is fewer
 than `window-height' lines from the current point, move to it
@@ -514,7 +528,7 @@ any effects from previous calls to
       (notmuch-show-previous-message))))
 
 (defun notmuch-show-advance-marking-read-and-archiving ()
-  "Advance through buffer, marking read and archiving.
+  "Advance through thread, marking read and archiving.
 
 This command is intended to be one of the simplest ways to
 process a thread of email. It does the following:
@@ -552,7 +566,7 @@ which this thread was originally shown."
   (goto-char (button-start (previous-button (point)))))
 
 (defun notmuch-toggle-invisible-action (cite-button)
-  (let ((invis-spec (button-get button 'invisibility-spec)))
+  (let ((invis-spec (button-get cite-button 'invisibility-spec)))
         (if (invisible-p invis-spec)
             (remove-from-invisibility-spec invis-spec)
           (add-to-invisibility-spec invis-spec)
@@ -560,14 +574,19 @@ which this thread was originally shown."
   (force-window-update)
   (redisplay t))
 
-(define-button-type 'notmuch-button-invisibility-toggle-type 'action 'notmuch-toggle-invisible-action 'follow-link t)
+(define-button-type 'notmuch-button-invisibility-toggle-type
+  'action 'notmuch-toggle-invisible-action
+  'follow-link t
+  'face "default")
 (define-button-type 'notmuch-button-citation-toggle-type 'help-echo "mouse-1, RET: Show citation"
   :supertype 'notmuch-button-invisibility-toggle-type)
 (define-button-type 'notmuch-button-signature-toggle-type 'help-echo "mouse-1, RET: Show signature"
   :supertype 'notmuch-button-invisibility-toggle-type)
 (define-button-type 'notmuch-button-headers-toggle-type 'help-echo "mouse-1, RET: Show headers"
   :supertype 'notmuch-button-invisibility-toggle-type)
-(define-button-type 'notmuch-button-body-toggle-type 'help-echo "mouse-1, RET: Show message"
+(define-button-type 'notmuch-button-body-toggle-type
+  'help-echo "mouse-1, RET: Show message"
+  'face 'notmuch-message-summary-face
   :supertype 'notmuch-button-invisibility-toggle-type)
 
 (defun notmuch-show-markup-citations-region (beg end depth)
@@ -665,7 +684,20 @@ which this thread was originally shown."
               (notmuch-show-markup-part
                beg end depth mime-message))))))
 
-(defun notmuch-show-markup-body (depth btn)
+(defun notmuch-show-markup-body (depth match btn)
+  "Markup a message body, (indenting, buttonizing citations,
+etc.), and conditionally hiding the body itself if the message
+has been read and does not match the current search.
+
+DEPTH specifies the depth at which this message appears in the
+tree of the current thread, (the top-level messages have depth 0
+and each reply increases depth by 1). MATCH indicates whether
+this message is regarded as matching the current search. BTN is
+the button which is used to toggle the visibility of this
+message.
+
+When this function is called, point must be within the message, but
+before the delimiter marking the beginning of the body."
   (re-search-forward notmuch-show-body-begin-regexp)
   (forward-line)
   (let ((beg (point-marker)))
@@ -676,86 +708,95 @@ which this thread was originally shown."
         (overlay-put (make-overlay beg end)
                      'invisible invis-spec)
         (button-put btn 'invisibility-spec invis-spec)
-        (if (not (notmuch-show-message-unread-p))
+        (if (not (or (notmuch-show-message-unread-p) match))
             (add-to-invisibility-spec invis-spec)))
       (set-marker beg nil)
       (set-marker end nil)
       )))
+
 (defun notmuch-fontify-headers ()
-  (progn
-    (if (looking-at "[Tt]o:")
-	(progn
-	  (overlay-put (make-overlay (point) (re-search-forward ":"))
-                       'face 'message-header-name)
-          (overlay-put (make-overlay (point) (re-search-forward ".*$"))
-                       'face 'message-header-to))
+  (while (looking-at "[[:space:]]")
+    (forward-char))
+  (if (looking-at "[Tt]o:")
+      (progn
+	(overlay-put (make-overlay (point) (re-search-forward ":"))
+		     'face 'message-header-name)
+	(overlay-put (make-overlay (point) (re-search-forward ".*$"))
+		     'face 'message-header-to))
     (if (looking-at "[B]?[Cc][Cc]:")
 	(progn
 	  (overlay-put (make-overlay (point) (re-search-forward ":"))
-                       'face 'message-header-name)
-          (overlay-put (make-overlay (point) (re-search-forward ".*$"))
-                       'face 'message-header-cc))
-    (if (looking-at "[Ss]ubject:")
-	(progn
-	  (overlay-put (make-overlay (point) (re-search-forward ":"))
-                       'face 'message-header-name)
-          (overlay-put (make-overlay (point) (re-search-forward ".*$"))
-                       'face 'message-header-subject))
-    (if (looking-at "[Ff]rom:")
-	(progn
-	  (overlay-put (make-overlay (point) (re-search-forward ":"))
-                       'face 'message-header-name)
-          (overlay-put (make-overlay (point) (re-search-forward ".*$"))
-                       'face 'message-header-other))))))))
+		       'face 'message-header-name)
+	  (overlay-put (make-overlay (point) (re-search-forward ".*$"))
+		       'face 'message-header-cc))
+      (if (looking-at "[Ss]ubject:")
+	  (progn
+	    (overlay-put (make-overlay (point) (re-search-forward ":"))
+			 'face 'message-header-name)
+	    (overlay-put (make-overlay (point) (re-search-forward ".*$"))
+			 'face 'message-header-subject))
+	(if (looking-at "[Ff]rom:")
+	    (progn
+	      (overlay-put (make-overlay (point) (re-search-forward ":"))
+			   'face 'message-header-name)
+	      (overlay-put (make-overlay (point) (re-search-forward ".*$"))
+			   'face 'message-header-other)))))))
 
-(defun notmuch-show-markup-header (depth)
+(defun notmuch-show-markup-header (message-begin depth)
+  "Buttonize and decorate faces in a message header.
+
+MESSAGE-BEGIN is the position of the absolute first character in
+the message (including all delimiters that will end up being
+invisible etc.). This is to allow a button to reliably extend to
+the beginning of the message even if point is positioned at an
+invisible character (such as the beginning of the buffer).
+
+DEPTH specifies the depth at which this message appears in the
+tree of the current thread, (the top-level messages have depth 0
+and each reply increases depth by 1)."
   (re-search-forward notmuch-show-header-begin-regexp)
   (forward-line)
   (let ((beg (point-marker))
+	(summary-end (copy-marker (line-beginning-position 2)))
+	(subject-end (copy-marker (line-end-position 2)))
+	(invis-spec (make-symbol "notmuch-show-header"))
         (btn nil))
-    (end-of-line)
-    ; Inverse video for subject
-    (overlay-put (make-overlay beg (point)) 'face '(:inverse-video t))
-    (setq btn (make-button beg (point) :type 'notmuch-button-body-toggle-type))
-    (forward-line 1)
-    (end-of-line)
-    (let ((beg-hidden (point-marker)))
-      (re-search-forward notmuch-show-header-end-regexp)
-      (beginning-of-line)
-      (let ((end (point-marker)))
-        (goto-char beg)
-        (forward-line)
-        (while (looking-at "[A-Za-z][-A-Za-z0-9]*:")
-          (beginning-of-line)
-	  (notmuch-fontify-headers)
-          (forward-line)
-          )
-	(indent-rigidly beg end depth)
-        (let ((invis-spec (make-symbol "notmuch-show-header")))
-          (add-to-invisibility-spec (cons invis-spec t))
-          (overlay-put (make-overlay beg-hidden end)
-                       'invisible invis-spec)
-          (goto-char beg)
-          (forward-line)
-          (make-button (line-beginning-position) (line-end-position)
-                        'invisibility-spec (cons invis-spec t)
-                        :type 'notmuch-button-headers-toggle-type))
-        (goto-char end)
-        (insert "\n")
-	(set-marker beg nil)
-	(set-marker beg-hidden nil)
-	(set-marker end nil)
-	))
-    btn))
+    (re-search-forward notmuch-show-header-end-regexp)
+    (beginning-of-line)
+    (let ((end (point-marker)))
+      (indent-rigidly beg end depth)
+      (goto-char beg)
+      (setq btn (make-button message-begin summary-end :type 'notmuch-button-body-toggle-type))
+      (forward-line)
+      (add-to-invisibility-spec invis-spec)
+      (overlay-put (make-overlay subject-end end)
+		   'invisible invis-spec)
+      (make-button (line-beginning-position) subject-end
+		   'invisibility-spec invis-spec
+		   :type 'notmuch-button-headers-toggle-type)
+      (while (looking-at "[[:space:]]*[A-Za-z][-A-Za-z0-9]*:")
+	(beginning-of-line)
+	(notmuch-fontify-headers)
+	(forward-line)
+	)
+      (goto-char end)
+      (insert "\n")
+      (set-marker beg nil)
+      (set-marker summary-end nil)
+      (set-marker subject-end nil)
+      (set-marker end nil)
+      )
+  btn))
 
 (defun notmuch-show-markup-message ()
   (if (re-search-forward notmuch-show-message-begin-regexp nil t)
-      (progn
-	(re-search-forward notmuch-show-depth-regexp)
+      (let ((message-begin (match-beginning 0)))
+	(re-search-forward notmuch-show-depth-match-regexp)
 	(let ((depth (string-to-number (buffer-substring (match-beginning 1) (match-end 1))))
+	      (match (string= "1" (buffer-substring (match-beginning 2) (match-end 2))))
               (btn nil))
-	  (setq btn (notmuch-show-markup-header depth))
-	  (notmuch-show-markup-body depth btn)))
+	  (setq btn (notmuch-show-markup-header message-begin depth))
+	  (notmuch-show-markup-body depth match btn)))
     (goto-char (point-max))))
 
 (defun notmuch-show-hide-markers ()
@@ -775,6 +816,72 @@ which this thread was originally shown."
       (notmuch-show-markup-message)))
   (notmuch-show-hide-markers))
 
+(defun notmuch-documentation-first-line (symbol)
+  "Return the first line of the documentation string for SYMBOL."
+  (let ((doc (documentation symbol)))
+    (if doc
+	(with-temp-buffer
+	  (insert (documentation symbol t))
+	  (goto-char (point-min))
+	  (let ((beg (point)))
+	    (end-of-line)
+	    (buffer-substring beg (point))))
+      "")))
+
+(defun notmuch-prefix-key-description (key)
+  "Given a prefix key code, return a human-readable string representation.
+
+This is basically just `format-kbd-macro' but we also convert ESC to M-."
+  (let ((desc (format-kbd-macro (vector key))))
+    (if (string= desc "ESC")
+	"M-"
+      (concat desc " "))))
+
+; I would think that emacs would have code handy for walking a keymap
+; and generating strings for each key, and I would prefer to just call
+; that. But I couldn't find any (could be all implemented in C I
+; suppose), so I wrote my own here.
+(defun notmuch-substitute-one-command-key-with-prefix (prefix binding)
+  "For a key binding, return a string showing a human-readable
+representation of the prefixed key as well as the first line of
+documentation from the bound function.
+
+For a mouse binding, return nil."
+  (let ((key (car binding))
+	(action (cdr binding)))
+    (if (mouse-event-p key)
+	nil
+      (if (keymapp action)
+	  (let ((substitute (apply-partially 'notmuch-substitute-one-command-key-with-prefix (notmuch-prefix-key-description key))))
+	    (mapconcat substitute (cdr action) "\n"))
+	(concat prefix (format-kbd-macro (vector key))
+		"\t"
+		(notmuch-documentation-first-line action))))))
+
+(defalias 'notmuch-substitute-one-command-key
+  (apply-partially 'notmuch-substitute-one-command-key-with-prefix nil))
+
+(defun notmuch-substitute-command-keys (doc)
+  "Like `substitute-command-keys' but with documentation, not function names."
+  (let ((beg 0))
+    (while (string-match "\\\\{\\([^}[:space:]]*\\)}" doc beg)
+      (let ((map (substring doc (match-beginning 1) (match-end 1))))
+	(setq doc (replace-match (mapconcat 'notmuch-substitute-one-command-key
+					    (cdr (symbol-value (intern map))) "\n") 1 1 doc)))
+      (setq beg (match-end 0)))
+    doc))
+
+(defun notmuch-help ()
+  "Display help for the current notmuch mode."
+  (interactive)
+  (let* ((mode major-mode)
+	 (doc (substitute-command-keys (notmuch-substitute-command-keys (documentation mode t)))))
+    (with-current-buffer (generate-new-buffer "*notmuch-help*")
+      (insert doc)
+      (goto-char (point-min))
+      (set-buffer-modified-p nil)
+      (view-buffer (current-buffer) 'kill-buffer-if-not-modified))))
+
 ;;;###autoload
 (defun notmuch-show-mode ()
   "Major mode for viewing a thread with notmuch.
@@ -783,22 +890,28 @@ This buffer contains the results of the \"notmuch show\" command
 for displaying a single thread of email from your email archives.
 
 By default, various components of email messages, (citations,
-signatures, already-read messages), are invisible to help you
-focus on the most important things, (new text from unread
-messages). See the various commands below for toggling the
-visibility of hidden components.
+signatures, already-read messages), are hidden. You can make
+these parts visible by clicking with the mouse button or by
+pressing RET after positioning the cursor on a hidden part, (for
+which \\[notmuch-show-next-button] and \\[notmuch-show-previous-button] are helpful).
 
-The `notmuch-show-next-message' and
-`notmuch-show-previous-message' commands, (bound to 'n' and 'p by
-default), allow you to navigate to the next and previous
-messages. Each time you navigate away from a message with
-`notmuch-show-next-message' the current message will have its
-\"unread\" tag removed.
+Reading the thread sequentially is well-supported by pressing
+\\[notmuch-show-advance-marking-read-and-archiving]. This will scroll the current message (if necessary),
+advance to the next message, or advance to the next thread (if
+already on the last message of a thread). As each message is
+scrolled away its \"unread\" tag will be removed, and as each
+thread is scrolled away the \"inbox\" tag will be removed from
+each message in the thread.
 
-You can add or remove tags from the current message with '+' and
-'-'.  You can also archive all messages in the current
-view, (remove the \"inbox\" tag from each), with
-`notmuch-show-archive-thread' (bound to 'a' by default).
+Other commands are available to read or manipulate the thread more
+selectively, (such as '\\[notmuch-show-next-message]' and '\\[notmuch-show-previous-message]' to advance to messages without
+removing any tags, and '\\[notmuch-show-archive-thread]' to archive an entire thread without
+scrolling through with \\[notmuch-show-advance-marking-read-and-archiving]).
+
+You can add or remove arbitary tags from the current message with
+'\\[notmuch-show-add-tag]' or '\\[notmuch-show-remove-tag]'.
+
+All currently available key bindings:
 
 \\{notmuch-show-mode-map}"
   (interactive)
@@ -843,7 +956,8 @@ The optional PARENT-BUFFER is the notmuch-search buffer from
 which this notmuch-show command was executed, (so that the next
 thread from that buffer can be show when done with this one)."
   (interactive "sNotmuch show: ")
-  (let ((buffer (get-buffer-create (concat "*notmuch-show-" thread-id "*"))))
+  (let ((query notmuch-search-query-string)
+	(buffer (get-buffer-create (concat "*notmuch-show-" thread-id "*"))))
     (switch-to-buffer buffer)
     (notmuch-show-mode)
     (set (make-local-variable 'notmuch-show-parent-buffer) parent-buffer)
@@ -855,30 +969,13 @@ thread from that buffer can be show when done with this one)."
       (erase-buffer)
       (goto-char (point-min))
       (save-excursion
-	(call-process notmuch-command nil t nil "show" thread-id)
+	(call-process notmuch-command nil t nil "show" "--entire-thread" thread-id "and (" query ")")
 	(notmuch-show-markup-messages)
 	)
       (run-hooks 'notmuch-show-hook)
-      ; Move straight to the first unread message
-      (if (not (notmuch-show-message-unread-p))
-	  (progn
-	    (notmuch-show-next-unread-message)
-	    ; But if there are no unread messages, go back to the
-	    ; beginning of the buffer, and open up the bodies of all
-	    ; read message.
-	    (if (not (notmuch-show-message-unread-p))
-		(progn
-		  (goto-char (point-min))
-                  (let ((btn (forward-button 1)))
-                    (while btn
-                      (if (button-has-type-p btn 'notmuch-button-body-toggle-type)
-                          (push-button))
-                      (condition-case err
-                          (setq btn (forward-button 1))
-                        (error (setq btn nil)))
-                    ))
-                  (beginning-of-buffer)
-                  ))))
+      ; Move straight to the first open message
+      (if (not (notmuch-show-message-open-p))
+	  (notmuch-show-next-open-message))
       )))
 
 (defvar notmuch-search-authors-width 40
@@ -886,30 +983,29 @@ thread from that buffer can be show when done with this one)."
 
 (defvar notmuch-search-mode-map
   (let ((map (make-sparse-keymap)))
-    (define-key map "a" 'notmuch-search-archive-thread)
-    (define-key map "b" 'notmuch-search-scroll-down)
-    (define-key map "f" 'notmuch-search-filter)
-    (define-key map "m" 'message-mail)
-    (define-key map "n" 'next-line)
-    (define-key map "o" 'notmuch-search-toggle-order)
-    (define-key map "p" 'previous-line)
+    (define-key map "?" 'notmuch-help)
     (define-key map "q" 'kill-this-buffer)
-    (define-key map "r" 'notmuch-search-reply-to-thread)
-    (define-key map "s" 'notmuch-search)
-    (define-key map "t" 'notmuch-search-filter-by-tag)
     (define-key map "x" 'kill-this-buffer)
-    (define-key map (kbd "RET") 'notmuch-search-show-thread)
-    (define-key map [mouse-1] 'notmuch-search-show-thread)
-    (define-key map "+" 'notmuch-search-add-tag)
-    (define-key map "-" 'notmuch-search-remove-tag)
-    (define-key map "*" 'notmuch-search-operate-all)
-    (define-key map "<" 'beginning-of-buffer)
-    (define-key map ">" 'notmuch-search-goto-last-thread)
-    (define-key map "=" 'notmuch-search-refresh-view)
-    (define-key map "\M->" 'notmuch-search-goto-last-thread)
-    (define-key map " " 'notmuch-search-scroll-up)
     (define-key map (kbd "<DEL>") 'notmuch-search-scroll-down)
-    (define-key map "?" 'describe-mode)
+    (define-key map "b" 'notmuch-search-scroll-down)
+    (define-key map " " 'notmuch-search-scroll-up)
+    (define-key map "<" 'notmuch-search-first-thread)
+    (define-key map ">" 'notmuch-search-last-thread)
+    (define-key map "p" 'notmuch-search-previous-thread)
+    (define-key map "n" 'notmuch-search-next-thread)
+    (define-key map "r" 'notmuch-search-reply-to-thread)
+    (define-key map "m" 'message-mail)
+    (define-key map "s" 'notmuch-search)
+    (define-key map "o" 'notmuch-search-toggle-order)
+    (define-key map "=" 'notmuch-search-refresh-view)
+    (define-key map "t" 'notmuch-search-filter-by-tag)
+    (define-key map "f" 'notmuch-search-filter)
+    (define-key map [mouse-1] 'notmuch-search-show-thread)
+    (define-key map "*" 'notmuch-search-operate-all)
+    (define-key map "a" 'notmuch-search-archive-thread)
+    (define-key map "-" 'notmuch-search-remove-tag)
+    (define-key map "+" 'notmuch-search-add-tag)
+    (define-key map (kbd "RET") 'notmuch-search-show-thread)
     map)
   "Keymap for \"notmuch search\" buffers.")
 (fset 'notmuch-search-mode-map notmuch-search-mode-map)
@@ -918,16 +1014,17 @@ thread from that buffer can be show when done with this one)."
 (defvar notmuch-search-oldest-first t
   "Show the oldest mail first in the search-mode")
 
+(defvar notmuch-search-disjunctive-regexp      "\\<[oO][rR]\\>")
 
 (defun notmuch-search-scroll-up ()
-  "Scroll up, moving point to last message in thread if at end."
+  "Move forward through search results by one window's worth."
   (interactive)
   (condition-case nil
       (scroll-up nil)
-    ((end-of-buffer) (notmuch-search-goto-last-thread))))
+    ((end-of-buffer) (notmuch-search-last-thread))))
 
 (defun notmuch-search-scroll-down ()
-  "Scroll down, moving point to first message in thread if at beginning."
+  "Move backward through the search results by one window's worth."
   (interactive)
   ; I don't know why scroll-down doesn't signal beginning-of-buffer
   ; the way that scroll-up signals end-of-buffer, but c'est la vie.
@@ -937,15 +1034,36 @@ thread from that buffer can be show when done with this one)."
   ; directly to that position. (We have to count lines since the
   ; window-start position is not the same as point-min due to the
   ; invisible thread-ID characters on the first line.
-  (if (equal (count-lines (point-min) (window-start)) 1)
-      (goto-char (window-start))
+  (if (equal (count-lines (point-min) (window-start)) 0)
+      (goto-char (point-min))
     (scroll-down nil)))
 
-(defun notmuch-search-goto-last-thread ()
-  "Move point to the last thread in the buffer."
+(defun notmuch-search-next-thread ()
+  "Select the next thread in the search results."
+  (interactive)
+  (forward-line 1))
+
+(defun notmuch-search-previous-thread ()
+  "Select the previous thread in the search results."
+  (interactive)
+  (forward-line -1))
+
+(defun notmuch-search-last-thread ()
+  "Select the last thread in the search results."
   (interactive)
   (goto-char (point-max))
-  (forward-line -1))
+  (forward-line -2))
+
+(defun notmuch-search-first-thread ()
+  "Select the first thread in the search results."
+  (interactive)
+  (goto-char (point-min)))
+
+(defface notmuch-message-summary-face
+ '((((class color) (background light)) (:background "#f0f0f0"))
+   (((class color) (background dark)) (:background "#303030")))
+ "Face for the single-line message summary in notmuch-show-mode."
+ :group 'notmuch)
 
 (defface notmuch-tag-face
   '((((class color)
@@ -966,22 +1084,27 @@ thread from that buffer can be show when done with this one)."
 
 ;;;###autoload
 (defun notmuch-search-mode ()
-  "Major mode for searching mail with notmuch.
+  "Major mode displaying results of a notmuch search.
 
 This buffer contains the results of a \"notmuch search\" of your
 email archives. Each line in the buffer represents a single
-thread giving a relative date for the thread and a subject.
+thread giving a summary of the thread (a relative date, the
+number of matched messages and total messages in the thread,
+participants in the thread, a representative subject line, and
+any tags).
 
-Pressing RET on any line displays that thread. The '+' and '-'
-keys can be used to add or remove tags from a thread. The 'a' key
-is a convenience key for archiving a thread (removing the
-\"inbox\" tag).
+Pressing \\[notmuch-search-show-thread] on any line displays that thread. The '\\[notmuch-search-add-tag]' and '\\[notmuch-search-remove-tag]'
+keys can be used to add or remove tags from a thread. The '\\[notmuch-search-archive-thread]' key
+is a convenience for archiving a thread (removing the \"inbox\"
+tag). The '\\[notmuch-search-operate-all]' key can be used to add or remove a tag from all
+threads in the current buffer.
 
-Other useful commands are `notmuch-search-filter' for filtering
-the current search based on an additional query string,
-`notmuch-search-filter-by-tag' for filtering to include only
-messages with a given tag, and `notmuch-search' to execute a new,
-global search.
+Other useful commands are '\\[notmuch-search-filter]' for filtering the current search
+based on an additional query string, '\\[notmuch-search-filter-by-tag]' for filtering to include
+only messages with a given tag, and '\\[notmuch-search]' to execute a new, global
+search.
+
+Complete list of currently available key bindings:
 
 \\{notmuch-search-mode-map}"
   (interactive)
@@ -998,12 +1121,11 @@ global search.
   (if (not notmuch-tag-face-alist)
       (add-to-list 'notmuch-search-font-lock-keywords (list
 		"(\\([^)]*\\))$" '(1  'notmuch-tag-face)))
-    (progn
-  (setq notmuch-search-tags (mapcar 'car notmuch-tag-face-alist))
-  (loop for notmuch-search-tag  in notmuch-search-tags
-    do (add-to-list 'notmuch-search-font-lock-keywords (list
-				(concat "([^)]*\\(" notmuch-search-tag "\\)[^)]*)$")
-		    `(1  ,(cdr (assoc notmuch-search-tag notmuch-tag-face-alist))))))))
+    (let ((notmuch-search-tags (mapcar 'car notmuch-tag-face-alist)))
+      (loop for notmuch-search-tag  in notmuch-search-tags
+	    do (add-to-list 'notmuch-search-font-lock-keywords (list
+			(concat "([^)]*\\(" notmuch-search-tag "\\)[^)]*)$")
+			`(1  ,(cdr (assoc notmuch-search-tag notmuch-tag-face-alist))))))))
   (set (make-local-variable 'font-lock-defaults)
          '(notmuch-search-font-lock-keywords t)))
 
@@ -1012,6 +1134,7 @@ global search.
   (get-text-property (point) 'notmuch-search-thread-id))
 
 (defun notmuch-search-show-thread ()
+  "Display the currently selected thread."
   (interactive)
   (let ((thread-id (notmuch-search-find-thread-id)))
     (if (> (length thread-id) 0)
@@ -1064,25 +1187,29 @@ and will also appear in a buffer named \"*Notmuch errors*\"."
 	(split-string (buffer-substring beg end))))))
 
 (defun notmuch-search-add-tag (tag)
-  "Add a tag to messages in the current thread matching the
-active query."
+  "Add a tag to the currently selected thread.
+
+The tag is added to messages in the currently selected thread
+which match the current search terms."
   (interactive
    (list (notmuch-select-tag-with-completion "Tag to add: ")))
   (notmuch-call-notmuch-process "tag" (concat "+" tag) (notmuch-search-find-thread-id) " and " notmuch-search-query-string)
   (notmuch-search-set-tags (delete-dups (sort (cons tag (notmuch-search-get-tags)) 'string<))))
 
 (defun notmuch-search-remove-tag (tag)
-  "Remove a tag from messages in the current thread matching the
-active query."
+  "Remove a tag from the currently selected thread.
+
+The tag is removed from messages in the currently selected thread
+which match the current search terms."
   (interactive
    (list (notmuch-select-tag-with-completion "Tag to remove: " (notmuch-search-find-thread-id))))
   (notmuch-call-notmuch-process "tag" (concat "-" tag) (notmuch-search-find-thread-id) " and " notmuch-search-query-string)
   (notmuch-search-set-tags (delete tag (notmuch-search-get-tags))))
 
 (defun notmuch-search-archive-thread ()
-  "Archive the current thread (remove its \"inbox\" tag).
+  "Archive the currently selected thread (remove its \"inbox\" tag).
 
-This function advances point to the next line when finished."
+This function advances the next thread when finished."
   (interactive)
   (notmuch-search-remove-tag "inbox")
   (forward-line))
@@ -1136,12 +1263,12 @@ This function advances point to the next line when finished."
       (delete-process proc))))
 
 (defun notmuch-search-operate-all (action)
-  "Operate on all messages matching the current query.  Any
-number of whitespace separated actions can be given.  Each action
-must have one of the two forms
+  "Add/remove tags from all matching messages.
 
-  +tagname              Add the tag `tagname'
-  -tagname              Remove the tag `tagname'
+Tis command adds or removes tags from all messages matching the
+current search terms. When called interactively, this command
+will prompt for tags to be added or removed. Tags prefixed with
+'+' will be added and tags prefixed with '-' will be removed.
 
 Each character of the tag name may consist of alphanumeric
 characters as well as `_.+-'.
@@ -1227,7 +1354,8 @@ search."
 Runs a new search matching only messages that match both the
 current search results AND the additional query string provided."
   (interactive "sFilter search: ")
-  (notmuch-search (concat notmuch-search-query-string " and " query) notmuch-search-oldest-first))
+  (let ((grouped-query (if (string-match-p notmuch-search-disjunctive-regexp query) (concat "( " query " )") query)))
+    (notmuch-search (concat notmuch-search-query-string " and " grouped-query) notmuch-search-oldest-first)))
 
 (defun notmuch-search-filter-by-tag (tag)
   "Filter the current search results based on a single tag.
@@ -1249,16 +1377,17 @@ current search results AND that are tagged with the given tag."
 
 (defvar notmuch-folder-mode-map
   (let ((map (make-sparse-keymap)))
-    (define-key map "n" 'next-line)
-    (define-key map "p" 'previous-line)
+    (define-key map "?" 'notmuch-help)
     (define-key map "x" 'kill-this-buffer)
     (define-key map "q" 'kill-this-buffer)
-    (define-key map "s" 'notmuch-search)
-    (define-key map (kbd "RET") 'notmuch-folder-show-search)
-    (define-key map "<" 'beginning-of-buffer)
+    (define-key map ">" 'notmuch-folder-last)
+    (define-key map "<" 'notmuch-folder-first)
     (define-key map "=" 'notmuch-folder)
-    (define-key map "?" 'describe-mode)
+    (define-key map "s" 'notmuch-search)
     (define-key map [mouse-1] 'notmuch-folder-show-search)
+    (define-key map (kbd "RET") 'notmuch-folder-show-search)
+    (define-key map "p" 'notmuch-folder-previous)
+    (define-key map "n" 'notmuch-folder-next)
     map)
   "Keymap for \"notmuch folder\" buffers.")
 
@@ -1272,12 +1401,26 @@ current search results AND that are tagged with the given tag."
 (defun notmuch-folder-mode ()
   "Major mode for showing notmuch 'folders'.
 
-This buffer contains a list of messages counts returned by a
-customizable set of searches of your email archives. Each line
-in the buffer shows the search terms and the resulting message count.
+This buffer contains a list of message counts returned by a
+customizable set of searches of your email archives. Each line in
+the buffer shows the name of a saved search and the resulting
+message count.
 
 Pressing RET on any line opens a search window containing the
-results for the search terms in that line.
+results for the saved search on that line.
+
+Here is an example of how the search list could be
+customized, (the following text would be placed in your ~/.emacs
+file):
+
+(setq notmuch-folders '((\"inbox\" . \"tag:inbox\")
+                        (\"unread\" . \"tag:inbox AND tag:unread\")
+                        (\"notmuch\" . \"tag:inbox AND to:notmuchmail.org\")))
+
+Of course, you can have any number of folders, each configured
+with any supported search terms (see \"notmuch help search-terms\").
+
+Currently available key bindings:
 
 \\{notmuch-folder-mode-map}"
   (interactive)
@@ -1288,6 +1431,29 @@ results for the search terms in that line.
   (setq major-mode 'notmuch-folder-mode
 	mode-name "notmuch-folder")
   (setq buffer-read-only t))
+
+(defun notmuch-folder-next ()
+  "Select the next folder in the list."
+  (interactive)
+  (forward-line 1)
+  (if (eobp)
+      (forward-line -1)))
+
+(defun notmuch-folder-previous ()
+  "Select the previous folder in the list."
+  (interactive)
+  (forward-line -1))
+
+(defun notmuch-folder-first ()
+  "Select the first folder in the list."
+  (interactive)
+  (goto-char (point-min)))
+
+(defun notmuch-folder-last ()
+  "Select the last folder in the list."
+  (interactive)
+  (goto-char (point-max))
+  (forward-line -1))
 
 (defun notmuch-folder-add (folders)
   (if folders

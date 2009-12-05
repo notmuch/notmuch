@@ -100,12 +100,15 @@ notmuch_setup_command (unused (void *ctx),
     unsigned int i;
     int is_new;
 
-#define prompt(format, ...)				\
-    do {						\
-	printf (format, ##__VA_ARGS__);			\
-	fflush (stdout);				\
-	getline (&response, &response_size, stdin);	\
-	chomp_newline (response);			\
+#define prompt(format, ...)					\
+    do {							\
+	printf (format, ##__VA_ARGS__);				\
+	fflush (stdout);					\
+	if (getline (&response, &response_size, stdin) < 0) {	\
+	    printf ("Exiting.\n");				\
+	    exit (1);						\
+	}							\
+	chomp_newline (response);				\
     } while (0)
 
     config = notmuch_config_open (ctx, NULL, &is_new);

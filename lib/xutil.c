@@ -18,7 +18,6 @@
  * Author: Carl Worth <cworth@cworth.org>
  */
 
-#define _GNU_SOURCE /* For strndup */
 #include "notmuch-private.h"
 
 #include <stdio.h>
@@ -84,11 +83,16 @@ xstrndup (const char *s, size_t n)
 {
     char *ret;
 
-    ret = strndup (s, n);
+    if (strlen (s) <= n)
+	n = strlen (s);
+
+    ret = malloc (n + 1);
     if (ret == NULL) {
 	fprintf (stderr, "Out of memory.\n");
 	exit (1);
     }
+    memcpy (ret, s, n);
+    ret[n] = '\0';
 
     return ret;
 }

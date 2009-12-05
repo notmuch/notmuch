@@ -275,6 +275,7 @@ function! s:NM_search_show_thread(everything)
                 call add(words, ')')
         endif
         call <SID>NM_cmd_show(words)
+        let b:nm_show_everything = a:everything
 endfunction
 
 function! s:NM_search_prompt()
@@ -408,7 +409,7 @@ endfunction
 
 function! s:NM_cmd_show(words)
         let prev_bufnr = bufnr('%')
-        let data = s:NM_run(['show'] + a:words)
+        let data = s:NM_run(['show', '--entire-thread'] + a:words)
         let lines = split(data, "\n")
 
         let info = s:NM_cmd_show_parse(lines)
@@ -430,6 +431,7 @@ function! s:NM_cmd_show(words)
 endfunction
 
 function! s:NM_show_previous(can_change_thread, find_matching)
+        let everything = exists('b:nm_show_everything') ? b:nm_show_everything : 0
         let info = b:nm_raw_info
         let lnum = line('.')
         for msg in reverse(copy(info['msgs']))
@@ -450,7 +452,7 @@ function! s:NM_show_previous(can_change_thread, find_matching)
         call <SID>NM_kill_this_buffer()
         if line('.') > 1
                 norm k
-                call <SID>NM_search_show_thread()
+                call <SID>NM_search_show_thread(everything)
                 norm G
                 call <SID>NM_show_previous(0, a:find_matching)
         else
@@ -479,10 +481,11 @@ function! s:NM_show_next(can_change_thread, find_matching)
 endfunction
 
 function! s:NM_show_next_thread()
+        let everything = exists('b:nm_show_everything') ? b:nm_show_everything : 0
         call <SID>NM_kill_this_buffer()
         if line('.') != line('$')
                 norm j
-                call <SID>NM_search_show_thread()
+                call <SID>NM_search_show_thread(everything)
         else
                 echo 'No more messages.'
         endif

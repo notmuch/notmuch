@@ -35,8 +35,10 @@ static volatile sig_atomic_t interrupted;
 static void
 handle_sigint (unused (int sig))
 {
+    ssize_t ignored;
     static char msg[] = "Stopping...         \n";
-    write(2, msg, sizeof(msg)-1);
+
+    ignored = write(2, msg, sizeof(msg)-1);
     interrupted = 1;
 }
 

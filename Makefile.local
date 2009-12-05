@@ -1,8 +1,7 @@
-all: notmuch notmuch.1.gz
-
 emacs: notmuch.elc
 
 notmuch_client_srcs =		\
+	$(notmuch_compat_srcs)	\
 	debugger.c		\
 	gmime-filter-reply.c	\
 	notmuch.c		\
@@ -23,21 +22,18 @@ notmuch_client_srcs =		\
 
 notmuch_client_modules = $(notmuch_client_srcs:.c=.o)
 notmuch: $(notmuch_client_modules) lib/notmuch.a
-	$(call quiet,CXX) $^ $(LDFLAGS) -o $@
+	$(call quiet,CXX,$(LDFLAGS)) $^ $(FINAL_LDFLAGS) -o $@
 
 notmuch.1.gz: notmuch.1
 	$(call quiet,gzip) --stdout $^ > $@
 
 install: all notmuch.1.gz
-	for d in $(DESTDIR)$(prefix)/bin/ $(DESTDIR)$(prefix)/share/man/man1 \
-		$(DESTDIR)$(bash_completion_dir) ; \
+	for d in $(DESTDIR)$(prefix)/bin/ $(DESTDIR)$(prefix)/share/man/man1 ; \
 	do \
 		install -d $$d ; \
 	done ;
 	install notmuch $(DESTDIR)$(prefix)/bin/
 	install -m0644 notmuch.1.gz $(DESTDIR)$(prefix)/share/man/man1/
-	install -m0644 contrib/notmuch-completion.bash \
-		$(DESTDIR)$(bash_completion_dir)/notmuch
 
 install-emacs: install emacs
 	for d in $(DESTDIR)/$(emacs_lispdir) ; \
@@ -46,6 +42,11 @@ install-emacs: install emacs
 	done ;
 	install -m0644 notmuch.el $(DESTDIR)$(emacs_lispdir)
 	install -m0644 notmuch.elc $(DESTDIR)$(emacs_lispdir)
+
+install-bash:
+	install -d $(DESTDIR)$(bash_completion_dir)
+	install -m0644 contrib/notmuch-completion.bash \
+		$(DESTDIR)$(bash_completion_dir)/notmuch
 
 SRCS  := $(SRCS) $(notmuch_client_srcs)
 CLEAN := $(CLEAN) notmuch $(notmuch_client_modules) notmuch.elc notmuch.1.gz

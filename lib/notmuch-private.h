@@ -26,6 +26,8 @@
 #endif
 #include <stdio.h>
 
+#include "compat.h"
+
 #include "notmuch.h"
 
 NOTMUCH_BEGIN_DECLS
@@ -329,18 +331,6 @@ _notmuch_mset_messages_advance (notmuch_messages_t *messages);
 void
 _notmuch_message_add_reply (notmuch_message_t *message,
 			    notmuch_message_node_t *reply);
-
-/* date.c */
-
-/* Parse an RFC 8222 date string to a time_t value.
- *
- * The tz_offset argument can be used to also obtain the time-zone
- * offset, (but can be NULL if the call is not interested in that).
- *
- * Returns 0 on error.
- */
-time_t
-notmuch_parse_date (const char *str, int *tz_offset);
 
 /* sha1.c */
 

@@ -1,12 +1,70 @@
 #! /bin/sh
 
-# defaults
+# Set several defaults (optionally specified by the user in
+# environemnt variables)
+CC=${CC:-gcc}
+CXX=${CXX:-g++}
+CFLAGS=${CFLAGS:--O2}
+CXXFLAGS=${CXXFLAGS:-\$(CFLAGS)}
+
+# Set the defaults for values the user can specify with command-line
+# options.
 PREFIX=/usr/local
 
-# option parsing
+usage ()
+{
+    cat <<EOF
+Usage: ./configure [options]...
+
+This script configures notmuch to build on your system.
+
+It verifies that dependencies are available, determines flags needed
+to compile and link against various required libraries, and identifies
+whether various system functions can be used or if locally-provided
+replacements will be built instead.
+
+Finally, it allows you to control various aspects of the build and
+installation process.
+
+First, some common variables can specified via environment variables:
+
+	CC		The C compiler to use
+	CFLAGS		Flags to pass to the C compiler
+	CXX		The C++ compiler to use
+	CXXFLAGS	Flags to pass to the C compiler
+	LDFLAGS		Flags to pass when linking
+
+Each of these values can further be controlled by specifying them
+later on the "make" command line.
+
+Additionally, various options can be specified on the configure
+command line.
+
+	--prefix=PREFIX	Install files in PREFIX [$PREFIX]
+
+By default, "make install" will install the resulting program to
+$PREFIX/bin, documentation to $PREFIX/share, etc. You can
+specify an installation prefix other than $PREFIX using
+--prefix, for instance:
+
+	./configure --prefix=\$HOME
+
+EOF
+}
+
+# Parse command-line options
 for option; do
-    if [ "${option%=*}" = '--prefix' ] ; then
+    if [ "${option}" = '--help' ] ; then
+	usage
+	exit 0
+    elif [ "${option%%=*}" = '--prefix' ] ; then
 	PREFIX="${option#*=}"
+    else
+	echo "Unrecognized option: ${option}."
+	echo "See:"
+	echo "	$0 --help"
+	echo ""
+	exit 1
     fi
 done
 
@@ -17,14 +75,16 @@ We hope that the process of building and installing notmuch is quick
 and smooth so that you can soon be reading and processing your email
 more efficiently than ever.
 
-If anything goes wrong in this process, please do as much as you can
-to figure out what could be different on your machine compared to
-those of the notmuch developers. Then, please email those details to
-the Notmuch list (notmuch@notmuchmail.org) so that we can hopefully make
-future versions of notmuch easier for you to use.
+If anything goes wrong in the configure process, you can override any
+decisions it makes by manually editing the Makefile.config file that
+it creates. Also please do as much as you can to figure out what could
+be different on your machine compared to those of the notmuch
+developers. Then, please email those details to the Notmuch list
+(notmuch@notmuchmail.org) so that we can hopefully make future
+versions of notmuch easier for you to use.
 
-We'll now investigate your system to find verify that various software
-components that notmuch relies on are available.
+We'll now investigate your system to verify that all required
+dependencies are available:
 
 EOF
 
@@ -36,48 +96,57 @@ else
     have_pkg_config=0
 fi
 
+printf "Checking for Xapian development files... "
 if xapian-config --version > /dev/null 2>&1; then
-    echo "Checking for Xapian development files... Yes."
+    printf "Yes.\n"
     have_xapian=1
+    xapian_cxxflags=$(xapian-config --cxxflags)
+    xapian_ldflags=$(xapian-config --libs)
 else
-    echo "Checking for Xapian development files... No."
+    printf "No.\n"
     have_xapian=0
     errors=$((errors + 1))
 fi
 
+printf "Checking for GMime 2.4 development files... "
 if pkg-config --modversion gmime-2.4 > /dev/null 2>&1; then
-    echo "Checking for GMime 2.4 development files... Yes."
+    printf "Yes.\n"
     have_gmime=1
+    gmime_cflags=$(pkg-config --cflags gmime-2.4)
+    gmime_ldflags=$(pkg-config --libs gmime-2.4)
 else
-    echo "Checking for GMime 2.4 development files... No."
+    printf "No.\n"
     have_gmime=0
     errors=$((errors + 1))
 fi
 
+printf "Checking for talloc development files... "
 if pkg-config --modversion talloc > /dev/null 2>&1; then
-    echo "Checking for talloc development files... Yes."
+    printf "Yes.\n"
     have_talloc=1
+    talloc_cflags=$(pkg-config --cflags talloc)
+    talloc_ldflags=$(pkg-config --libs talloc)
 else
-    echo "Checking for talloc development files... No."
+    printf "No.\n"
     have_talloc=0
+    talloc_cflags=
     errors=$((errors + 1))
 fi
 
-if printf 'int main(){return 0;}' | gcc -x c -lz -o /dev/null - > /dev/null 2>&1; then
-    echo "Checking for zlib development files... Yes."
-    have_zlib=1
-else
-    echo "Checking for zlib development files... No."
-    have_zlib=0
-    errors=$((errors + 1))
-fi
-
+printf "Checking for valgrind development files... "
 if pkg-config --modversion valgrind > /dev/null 2>&1; then
-    echo "Checking for valgrind development files... Yes."
-    have_valgrind=-DHAVE_VALGRIND
+    printf "Yes.\n"
+    have_valgrind=1
+    valgrind_cflags=$(pkg-config --cflags valgrind)
 else
-    echo "Checking for valgrind development files... No."
-    have_valgrind=
+    printf "No (but that's fine).\n"
+    have_valgrind=0
+fi
+
+if pkg-config --modversion emacs > /dev/null 2>&1; then
+    emacs_lispdir=$(pkg-config emacs --variable sitepkglispdir)
+else
+    emacs_lispdir='$(prefix)/share/emacs/site-lisp'
 fi
 
 if [ $errors -gt 0 ]; then
@@ -100,34 +169,39 @@ EOF
 	echo "	The talloc library (including development files such as headers)"
 	echo "	http://talloc.samba.org/"
     fi
-    if [ $have_zlib -eq 0 ]; then
-	echo "	The zlib library (including development files such as headers)"
-    fi
     cat <<EOF
 
-On a modern, package-based operating system such as Debian, you can
-install all of the dependencies with the following simple command
-line:
+With any luck, you're using a modern, package-based operating system
+that has all of these packages available in the distribution. In that
+case a simple command will install everything you need. For example:
 
-	sudo apt-get install libxapian-dev libgmime-2.4-dev libtalloc-dev libz-dev
+On Debian and similar systems:
 
-On other systems, a similar command can be used, but the details of the 
-package names may be different, (such as "devel" in place of "dev").
+	sudo apt-get install libxapian-dev libgmime-2.4-dev libtalloc-dev
+
+Or on Fedora and similar systems:
+
+	sudo yum install xapian-core-devel gmime-devel libtalloc-devel
+
+On other systems, similar commands can be used, but the details of the
+package names may be different.
 
 EOF
     if [ $have_pkg_config -eq 0 ]; then
 cat <<EOF
-Note: the pkg-config program is not available. Both this configure
-script and the Makefile of notmuch use pkg-config to find the
-compilation flags required to link against the various libraries
-needed by notmuch. It's possible you simply need to install pkg-config
-with a command such as:
+Note: the pkg-config program is not available. This configure script
+uses pkg-config to find the compilation flags required to link against
+the various libraries needed by notmuch. It's possible you simply need
+to install pkg-config with a command such as:
 
 	sudo apt-get install pkg-config
+Or:
+	sudo yum install pkgconfig
 
 But if pkg-config is not available for your system, then you will need
-to manually edit the notmuch Makefile to set NOTMUCH_CFLAGS and
-NOTMUCH_LDFLAGS to the correct values without calling pkg-config.
+to modify the configure script to manually set the cflags and ldflags
+variables to the correct values to link against each library in each
+case that pkg-config could not be used to determine those values.
 
 EOF
     fi
@@ -139,6 +213,17 @@ configure again to ensure the packages can be found, or simply run
 EOF
     exit 1
 fi
+
+printf "Checking for getline... "
+if ${CC} -o config/have_getline config/have_getline.c > /dev/null 2>&1
+then
+    printf "Yes.\n"
+    have_getline=1
+else
+    printf "No (will use our own instead).\n"
+    have_getline=0
+fi
+rm -f config/have_getline
 
 cat <<EOF
 
@@ -152,7 +237,59 @@ EOF
 
 # construct the Makefile.config
 cat > Makefile.config <<EOF
-prefix = $PREFIX
-bash_completion_dir = /etc/bash_completion.d
-CFLAGS += ${have_valgrind}
+# This Makefile.config was automatically generated by the ./configure
+# script of notmuch. If the configure script identified anything
+# incorrectly, then you can edit this file to try to correct things,
+# but be warned that if configure is run again it will destroy your
+# changes, (and this could happen by simply calling "make" if the
+# configure script is updated).
+
+# The C compiler to use
+CC = ${CC}
+
+# The C++ compiler to use
+CXX = ${CXX}
+
+# Default FLAGS for C compiler (can be overridden by user such as "make CFLAGS=-g")
+CFLAGS = ${CFLAGS}
+
+# Default FLAGS for C++ compiler (can be overridden by user such as "make CXXFLAGS=-g")
+CXXFLAGS = ${CXXFLAGS}
+
+# The prefix to which notmuch should be installed
+prefix = ${PREFIX}
+
+# The directory to which emacs lisp files should be installed
+emacs_lispdir=${emacs_lispdir}
+
+# Whether the getline function is available (if not, then notmuch will
+# build its own version)
+HAVE_GETLINE = ${have_getline}
+
+# Flags needed to compile and link against Xapian
+XAPIAN_CXXFLAGS = ${xapian_cxxflags}
+XAPIAN_LDFLAGS = ${xapian_ldflags}
+
+# Flags needed to compile and link against GMime-2.4
+GMIME_CFLAGS = ${gmime_cflags}
+GMIME_LDFLAGS = ${gmime_ldflags}
+
+# Flags needed to compile and link against talloc
+TALLOC_CFLAGS = ${talloc_cflags}
+TALLOC_LDFLAGS = ${talloc_ldflags}
+
+# Whether valgrind header files are available
+HAVE_VALGRIND = ${have_valgrind}
+
+# And if so, flags needed at compile time for valgrind macros
+VALGRIND_CFLAGS = ${valgrind_cflags}
+
+# Combined flags for compiling and linking against all of the above
+CONFIGURE_CFLAGS = -DHAVE_GETLINE=\$(HAVE_GETLINE) \$(GMIME_CFLAGS)      \\
+		   \$(TALLOC_CFLAGS) -DHAVE_VALGRIND=\$(HAVE_VALGRIND)   \\
+		   \$(VALGRIND_CFLAGS)
+CONFIGURE_CXXFLAGS = -DHAVE_GETLINE=\$(HAVE_GETLINE) \$(GMIME_CFLAGS)    \\
+		     \$(TALLOC_CFLAGS) -DHAVE_VALGRIND=\$(HAVE_VALGRIND) \\
+		     \$(VALGRIND_CFLAGS) \$(XAPIAN_CXXFLAGS)
+CONFIGURE_LDFLAGS =  \$(GMIME_LDFLAGS) \$(TALLOC_LDFLAGS) \$(XAPIAN_LDFLAGS)
 EOF

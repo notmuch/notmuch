@@ -8,17 +8,12 @@ Fix the things that are causing the most pain to new users
 
 Emacs interface (notmuch.el)
 ----------------------------
-Make the keybindings help ('?') display the summary of each command's
-documentation, not the function name.
-
 Add a global keybinding table for notmuch, and then view-specific
 tables that add to it.
 
 Add a command to archive all threads in a search view.
 	
 Add a '|' binding from the search view.
-
-Add a binding to run a search from notmuch-show-mode.
 
 When a thread has been entirely read, start out by closing all
 messages except those that matched the search terms.
@@ -41,10 +36,6 @@ Portability
 -----------
 Fix configure script to test each compiler warning we want to use.
 
-Implement strndup locally (or call talloc_strndup instead).
-
-Implement getline locally, (look at gnulib).
-
 Completion
 ----------
 Fix bash completion to complete multiple search options (both --first
@@ -53,6 +44,11 @@ and *then* --max-threads), and also complete value for --sort=
 
 notmuch command-line tool
 -------------------------
+Fix "notmuch show" so that the UI doesn't fail to show a thread that
+is visible in a search buffer, but happens to no longer match the
+current search. (Perhaps add a --matching=<secondary-search-terms>
+option (or similar) to "notmuch show".)
+
 Teach "notmuch search" to return many different kinds of results. Some
 ideas:
 
@@ -72,6 +68,10 @@ Give "notmuch restore" some progress indicator. Until we get the
 Xapian bugs fixed that are making this operation slow, we really need
 to let the user know that things are still moving.
 
+Fix "notmuch restore" to operate in a single pass much like "notmuch
+dump" does, rather than doing N searches into the database, each
+matching 1/N messages.
+
 Add a "-f <filename>" option to select an alternate configuration
 file.
 
@@ -79,10 +79,6 @@ Fix notmuch.c to call add_timestamp/get_timestamp with path names
 relative to the database path. (Otherwise, moving the database to a
 new directory will result in notmuch creating new timestamp documents
 and leaving stale ones behind.)
-
-Ensure that "notmuch new" is sane if its first, giant indexing session
-gets interrupted, (that is, ensure that any results indexed so far are
-flushed).
 
 Fix notmuch.c to use a DIR prefix for directory timestamps, (the idea
 being that it can then add other non-directory timestamps such as for
@@ -104,10 +100,12 @@ indexing.
 
 notmuch library
 ---------------
+Index content from citations, please.
+
 Provide a sane syntax for date ranges. First, we don't want to require
 both endpoints to be specified. For example it would be nice to be
 able to say things like "since:2009-01-1" or "until:2009-01-1" and
-have the other enpoint be implicit. Second we'de like to support
+have the other endpoint be implicit. Second we'd like to support
 relative specifications of time such as "since:'2 months ago'". To do
 any of this we're probably going to need to break down an write our
 own parser for the query string rather than using Xapian's QueryParser
@@ -131,11 +129,6 @@ Add support for the user to specify custom headers to be indexed.
 Add support for configuring "virtual tags" which are a tuple of
 (tag-name, search-specification). The database is responsible for
 ensuring that the virtual tag is always consistent.
-
-Think about optimizing chunked searches (max-threads > 0) to avoid
-repeating work. That would be saving state from the previous chunk and
-reusing it if the next search is the next chunk with the same search
-string.
 
 General
 -------
