@@ -1,17 +1,70 @@
 #! /bin/sh
 
+# Set several defaults (optionally specified by the user in
+# environemnt variables)
 CC=${CC:-gcc}
 CXX=${CXX:-g++}
 CFLAGS=${CFLAGS:--O2}
 CXXFLAGS=${CXXFLAGS:-\$(CFLAGS)}
 
-# defaults
+# Set the defaults for values the user can specify with command-line
+# options.
 PREFIX=/usr/local
 
-# option parsing
+usage ()
+{
+    cat <<EOF
+Usage: ./configure [options]...
+
+This script configures notmuch to build on your system.
+
+It verifies that dependencies are available, determines flags needed
+to compile and link against various required libraries, and identifies
+whether various system functions can be used or if locally-provided
+replacements will be built instead.
+
+Finally, it allows you to control various aspects of the build and
+installation process.
+
+First, some common variables can specified via environment variables:
+
+	CC		The C compiler to use
+	CFLAGS		Flags to pass to the C compiler
+	CXX		The C++ compiler to use
+	CXXFLAGS	Flags to pass to the C compiler
+	LDFLAGS		Flags to pass when linking
+
+Each of these values can further be controlled by specifying them
+later on the "make" command line.
+
+Additionally, various options can be specified on the configure
+command line.
+
+	--prefix=PREFIX	Install files in PREFIX [$PREFIX]
+
+By default, "make install" will install the resulting program to
+$PREFIX/bin, documentation to $PREFIX/share, etc. You can
+specify an installation prefix other than $PREFIX using
+--prefix, for instance:
+
+	./configure --prefix=\$HOME
+
+EOF
+}
+
+# Parse command-line options
 for option; do
-    if [ "${option%%=*}" = '--prefix' ] ; then
+    if [ "${option}" = '--help' ] ; then
+	usage
+	exit 0
+    elif [ "${option%%=*}" = '--prefix' ] ; then
 	PREFIX="${option#*=}"
+    else
+	echo "Unrecognized option: ${option}."
+	echo "See:"
+	echo "	$0 --help"
+	echo ""
+	exit 1
     fi
 done
 
