@@ -327,8 +327,9 @@ notmuch_database_get_all_tags (notmuch_database_t *db);
  * As a special case, passing a length-zero string, (that is ""), will
  * result in a query that returns all messages in the database.
  *
- * See notmuch_query_set_sort for controlling the order of results and
- * notmuch_query_search to actually execute the query.
+ * See notmuch_query_set_sort for controlling the order of results.
+ * See notmuch_query_search_messages and notmuch_query_search_threads
+ * to actually execute the query.
  *
  * User should call notmuch_query_destroy when finished with this
  * query.
