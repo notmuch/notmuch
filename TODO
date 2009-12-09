@@ -44,6 +44,10 @@ and *then* --max-threads), and also complete value for --sort=
 
 notmuch command-line tool
 -------------------------
+Implement "notmuch search --exclude-threads=<search-terms>" to allow
+for excluding muted threads, (and any other negative, thread-based
+filtering that the user wants to do).
+
 Fix "notmuch show" so that the UI doesn't fail to show a thread that
 is visible in a search buffer, but happens to no longer match the
 current search. (Perhaps add a --matching=<secondary-search-terms>
