@@ -114,6 +114,8 @@ typedef struct _notmuch_thread notmuch_thread_t;
 typedef struct _notmuch_messages notmuch_messages_t;
 typedef struct _notmuch_message notmuch_message_t;
 typedef struct _notmuch_tags notmuch_tags_t;
+typedef struct _notmuch_directory notmuch_directory_t;
+typedef struct _notmuch_files notmuch_files_t;
 
 /* Create a new, empty notmuch database located at 'path'.
  *
@@ -178,56 +180,47 @@ notmuch_database_close (notmuch_database_t *database);
 const char *
 notmuch_database_get_path (notmuch_database_t *database);
 
-/* Store an mtime within the database for 'path'.
+/* Read the stored contents of a directory from the database.
  *
- * Here,'path' should be the path of a directory relative to the path
- * of 'database' (see notmuch_database_get_path), or else should be an
- * absolute path with initial components that match the path of
+ * Here, 'dirname' should be a path relative to the path of
+ * 'database' (see notmuch_database_get_path), or else should be an
+ * absolute filename with initial components that match the path of
  * 'database'.
  *
- * The intention is for the caller to use the mtime to allow efficient
- * identification of new messages to be added to the database. The
- * recommended usage is as follows:
- *
- *   o Read the mtime of a directory from the filesystem
- *
- *   o Call add_message for all mail files in the directory
- *
- *   o Call notmuch_database_set_directory_mtime
- *
- * Then, when wanting to check for updates to the directory in the
- * future, the client can call notmuch_database_get_directory_mtime
- * and know that it only needs to add files if the mtime of the
- * directory and files are newer than the stored timestamp.
- *
- * Note: The notmuch_database_get_directory_mtime function does not
- * allow the caller to distinguish a timestamp of 0 from a
- * non-existent timestamp. So don't store a timestamp of 0 unless you
- * are comfortable with that.
- *
- * Return value:
- *
- * NOTMUCH_STATUS_SUCCESS: mtime successfully stored in database.
- *
- * NOTMUCH_STATUS_XAPIAN_EXCEPTION: A Xapian exception
- *	occurred, mtime not stored.
+ * The stored mtime of the directory along with a list of messages
+ * and directories in the database contained in 'dirname' are
+ * returned in 'directory'. The entries are sorted by filename.
  */
 notmuch_status_t
-notmuch_database_set_directory_mtime (notmuch_database_t *database,
-				      const char *path,
-				      time_t mtime);
+notmuch_database_read_directory (notmuch_database_t *database,
+				 const char *filename,
+				 notmuch_directory_t **directory);
 
-/* Retrieve the mtime from the database for 'path'.
- *
- * Returns the mtime value previously stored by calling
- * notmuch_database_set_directory_mtime with the same 'path'.
- *
- * Returns 0 if no mtime is stored for 'path' or if any error occurred
- * querying the database.
+/* Return the recorded 'mtime' for the given directory
  */
 time_t
-notmuch_database_get_directory_mtime (notmuch_database_t *database,
-				      const char *path);
+notmuch_directory_get_mtime (notmuch_directory_t *directory);
+
+/* Return a notmuch_files_t iterator for all regular files in 'directory'.
+ */
+notmuch_files_t *
+notmuch_directory_get_files (notmuch_directory_t *directory);
+
+/* Return a notmuch_files_t iterator for all sub-directories of
+ * 'directory'.
+ */
+notmuch_files_t *
+notmuch_directory_get_subdirs (notmuch_directory_t *directory);
+
+/* Does the given notmuch_files_t object contain any more results.
+ */
+notmuch_bool_t
+notmuch_files_has_more (notmuch_files_t *files);
+
+/* Get the current filename from 'files' as a string.
+ */
+const char *
+notmuch_files_get_filename (notmuch_files_t *files);
 
 /* Add a new message to the given notmuch database.
  *
@@ -727,6 +720,16 @@ notmuch_message_get_replies (notmuch_message_t *message);
  */
 const char *
 notmuch_message_get_filename (notmuch_message_t *message);
+
+/* Remove a filename for the email corresponding to 'message'.
+ *
+ * This removes the association between a filename and a message,
+ * when the last filename is gone, the entire message is removed
+ * from the database.
+ */
+notmuch_status_t
+notmuch_message_remove_filename (notmuch_message_t *message,
+				 const char *filename);
 
 /* Message flags */
 typedef enum _notmuch_message_flag {
