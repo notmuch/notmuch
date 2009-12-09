@@ -130,6 +130,12 @@ Add support for configuring "virtual tags" which are a tuple of
 (tag-name, search-specification). The database is responsible for
 ensuring that the virtual tag is always consistent.
 
+Indicate to the user if two files with the same message ID have
+content that is actually different in some interesting way. Perhaps
+notmuch initially sees all changes as interesting, and quickly learns
+from the user which changes are not interesting (such as the very
+common mailing-list footer).
+
 General
 -------
 Audit everything for dealing with out-of-memory (and drop xutil.c).
