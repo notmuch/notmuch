@@ -194,10 +194,6 @@ _notmuch_message_set_filename (notmuch_message_t *message,
 			       const char *filename);
 
 void
-_notmuch_message_add_thread_id (notmuch_message_t *message,
-				const char *thread_id);
-
-void
 _notmuch_message_ensure_thread_id (notmuch_message_t *message);
 
 void
