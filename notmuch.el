@@ -950,7 +950,9 @@ matching this search term are shown if non-nil. "
       (save-excursion
 	(let* ((basic-args (list notmuch-command nil t nil "show" "--entire-thread" thread-id))
 		(args (if query-context (append basic-args (list "and (" query-context ")")) basic-args)))
-	  (apply 'call-process args))
+	  (apply 'call-process args)
+	  (when (and (eq (buffer-size) 0) query-context)
+	    (apply 'call-process basic-args)))
 	(notmuch-show-markup-messages)
 	)
       (run-hooks 'notmuch-show-hook)
