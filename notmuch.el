@@ -1184,7 +1184,7 @@ The tag is added to messages in the currently selected thread
 which match the current search terms."
   (interactive
    (list (notmuch-select-tag-with-completion "Tag to add: ")))
-  (notmuch-call-notmuch-process "tag" (concat "+" tag) (notmuch-search-find-thread-id) " and " notmuch-search-query-string)
+  (notmuch-call-notmuch-process "tag" (concat "+" tag) (notmuch-search-find-thread-id))
   (notmuch-search-set-tags (delete-dups (sort (cons tag (notmuch-search-get-tags)) 'string<))))
 
 (defun notmuch-search-remove-tag (tag)
@@ -1194,7 +1194,7 @@ The tag is removed from messages in the currently selected thread
 which match the current search terms."
   (interactive
    (list (notmuch-select-tag-with-completion "Tag to remove: " (notmuch-search-find-thread-id))))
-  (notmuch-call-notmuch-process "tag" (concat "-" tag) (notmuch-search-find-thread-id) " and " notmuch-search-query-string)
+  (notmuch-call-notmuch-process "tag" (concat "-" tag) (notmuch-search-find-thread-id))
   (notmuch-search-set-tags (delete tag (notmuch-search-get-tags))))
 
 (defun notmuch-search-archive-thread ()

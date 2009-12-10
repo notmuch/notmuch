@@ -8,6 +8,12 @@ Fix the things that are causing the most pain to new users
 
 Emacs interface (notmuch.el)
 ----------------------------
+Enhance '+' and '-' in the search view to operate on an entire region
+if set.
+
+Fix '*' to work by simply calling '+' or '-' on a region consisting of
+the entire buffer.
+
 Add a global keybinding table for notmuch, and then view-specific
 tables that add to it.
 
