@@ -619,7 +619,6 @@ which this thread was originally shown."
                 (insert-button cite-button-text
                                'invisibility-spec invis-spec
                                :type 'notmuch-button-citation-toggle-type)
-                (insert "\n")
                 (goto-char (+ (length cite-button-text) p))
               ))))
       (move-to-column depth)
