@@ -613,13 +613,13 @@ which this thread was originally shown."
               (let ((p (point-marker))
                     (cite-button-text
                      (concat "["  (number-to-string (count-lines beg-sub (point)))
-                             "-line citation.]")))
+                             "-line citation. Click/Enter to show.]")))
                 (goto-char (- beg-sub 1))
                 (insert (concat "\n" indent))
                 (insert-button cite-button-text
                                'invisibility-spec invis-spec
                                :type 'notmuch-button-citation-toggle-type)
-                (goto-char (+ (length cite-button-text) p))
+                (forward-line)
               ))))
       (move-to-column depth)
       (if (looking-at notmuch-show-signature-regexp)
