@@ -6,6 +6,7 @@ CC=${CC:-gcc}
 CXX=${CXX:-g++}
 CFLAGS=${CFLAGS:--O2}
 CXXFLAGS=${CXXFLAGS:-\$(CFLAGS)}
+XAPIAN_CONFIG=${XAPIAN_CONFIG:-xapian-config-1.1 xapian-config}
 
 # Set the defaults for values the user can specify with command-line
 # options.
@@ -36,6 +37,13 @@ First, some common variables can specified via environment variables:
 
 Each of these values can further be controlled by specifying them
 later on the "make" command line.
+
+Other environment variables can be used to control configure itself,
+(and for which there is no equivalent build-time control):
+
+	XAPIAN_CONFIG	The program to use to determine flags for
+			compiling and linking against the Xapian
+			library. [$XAPIAN_CONFIG]
 
 Additionally, various options can be specified on the configure
 command line.
@@ -97,14 +105,18 @@ else
 fi
 
 printf "Checking for Xapian development files... "
-if xapian-config --version > /dev/null 2>&1; then
-    printf "Yes.\n"
-    have_xapian=1
-    xapian_cxxflags=$(xapian-config --cxxflags)
-    xapian_ldflags=$(xapian-config --libs)
-else
+have_xapian=0
+for xapian_config in ${XAPIAN_CONFIG}; do
+    if ${xapian_config} --version > /dev/null 2>&1; then
+	printf "Yes.\n"
+	have_xapian=1
+	xapian_cxxflags=$(${xapian_config} --cxxflags)
+	xapian_ldflags=$(${xapian_config} --libs)
+	break
+    fi
+done
+if [ ${have_xapian} = "0" ]; then
     printf "No.\n"
-    have_xapian=0
     errors=$((errors + 1))
 fi
 
