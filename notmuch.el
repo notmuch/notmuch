@@ -622,7 +622,7 @@ which this thread was originally shown."
 (define-button-type 'notmuch-button-invisibility-toggle-type
   'action 'notmuch-toggle-invisible-action
   'follow-link t
-  'face "default")
+  'face 'font-lock-comment-face)
 (define-button-type 'notmuch-button-citation-toggle-type 'help-echo "mouse-1, RET: Show citation"
   :supertype 'notmuch-button-invisibility-toggle-type)
 (define-button-type 'notmuch-button-signature-toggle-type 'help-echo "mouse-1, RET: Show signature"
