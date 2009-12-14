@@ -145,11 +145,6 @@ command_t commands[] = {
       "\t\t\tVerbose operation. Shows paths of message files as\n"
       "\t\t\tthey are being indexed.\n"
       "\n"
-      "\t\tNote: \"notmuch new\" runs (other than the first run) will\n"
-      "\t\tskip any read-only directories, so you can use that to mark\n"
-      "\t\tdirectories that will not receive any new mail (and make\n"
-      "\t\t\"notmuch new\" even faster).\n"
-      "\n"
       "\t\tInvoking notmuch with no command argument will run new if\n"
       "\t\tthe setup command has previously been completed, but new has\n"
       "\t\tnot previously been run." },

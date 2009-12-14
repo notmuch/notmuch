@@ -144,17 +144,6 @@ add_files_recursive (notmuch_database_t *notmuch,
     struct dirent **namelist = NULL;
     int num_entries;
 
-    /* If we're told to, we bail out on encountering a read-only
-     * directory, (with this being a clear clue from the user to
-     * Notmuch that new mail won't be arriving there and we need not
-     * look. */
-    if (state->ignore_read_only_directories &&
-	(st->st_mode & S_IWUSR) == 0)
-    {
-	state->saw_read_only_directory = TRUE;
-	goto DONE;
-    }
-
     path_mtime = st->st_mtime;
 
     path_dbtime = notmuch_database_get_timestamp (notmuch, path);
@@ -487,12 +476,10 @@ notmuch_new_command (void *ctx, int argc, char *argv[])
 
 	printf ("Found %d total files (that's not much mail).\n", count);
 	notmuch = notmuch_database_create (db_path);
-	add_files_state.ignore_read_only_directories = FALSE;
 	add_files_state.total_files = count;
     } else {
 	notmuch = notmuch_database_open (db_path,
 					 NOTMUCH_DATABASE_MODE_READ_WRITE);
-	add_files_state.ignore_read_only_directories = TRUE;
 	add_files_state.total_files = 0;
     }
 
@@ -502,7 +489,6 @@ notmuch_new_command (void *ctx, int argc, char *argv[])
     talloc_free (dot_notmuch_path);
     dot_notmuch_path = NULL;
 
-    add_files_state.saw_read_only_directory = FALSE;
     add_files_state.processed_files = 0;
     add_files_state.added_messages = 0;
     gettimeofday (&add_files_state.tv_start, NULL);
@@ -531,13 +517,6 @@ notmuch_new_command (void *ctx, int argc, char *argv[])
 		"message" : "messages");
     } else {
 	printf ("No new mail.\n");
-    }
-
-    if (elapsed > 1 && ! add_files_state.saw_read_only_directory) {
-	printf ("\nTip: If you have any sub-directories that are archives (that is,\n"
-		"they will never receive new mail), marking these directories as\n"
-		"read-only (chmod u-w /path/to/dir) will make \"notmuch new\"\n"
-		"much more efficient (it won't even look in those directories).\n");
     }
 
     if (ret) {
