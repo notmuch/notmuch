@@ -485,7 +485,7 @@ notmuch_new_command (void *ctx, int argc, char *argv[])
 	if (interrupted)
 	    return 1;
 
-	printf ("Found %d total files.     \n", count);
+	printf ("Found %d total files (that's not much mail).\n", count);
 	notmuch = notmuch_database_create (db_path);
 	add_files_state.ignore_read_only_directories = FALSE;
 	add_files_state.total_files = count;
@@ -525,12 +525,12 @@ notmuch_new_command (void *ctx, int argc, char *argv[])
 	}
     }
     if (add_files_state.added_messages) {
-	printf ("Added %d new %s to the database (not much, really).\n",
+	printf ("Added %d new %s to the database.\n",
 		add_files_state.added_messages,
 		add_files_state.added_messages == 1 ?
 		"message" : "messages");
     } else {
-	printf ("No new mail---and that's not much.\n");
+	printf ("No new mail.\n");
     }
 
     if (elapsed > 1 && ! add_files_state.saw_read_only_directory) {
