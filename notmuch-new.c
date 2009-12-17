@@ -146,7 +146,7 @@ add_files_recursive (notmuch_database_t *notmuch,
 
     path_mtime = st->st_mtime;
 
-    path_dbtime = notmuch_database_get_timestamp (notmuch, path);
+    path_dbtime = notmuch_database_get_directory_mtime (notmuch, path);
     num_entries = scandir (path, &namelist, 0, ino_cmp);
 
     if (num_entries == -1) {
@@ -277,7 +277,7 @@ add_files_recursive (notmuch_database_t *notmuch,
 	next = NULL;
     }
 
-    status = notmuch_database_set_timestamp (notmuch, path, path_mtime);
+    status = notmuch_database_set_directory_mtime (notmuch, path, path_mtime);
     if (status && ret == NOTMUCH_STATUS_SUCCESS)
 	ret = status;
 

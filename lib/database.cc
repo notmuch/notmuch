@@ -37,7 +37,7 @@ typedef struct {
 
 /* Here's the current schema for our database:
  *
- * We currently have two different types of documents: mail and timestamps.
+ * We currently have two different types of documents: mail and directory.
  *
  * Mail document
  * -------------
@@ -75,21 +75,19 @@ typedef struct {
  * user in searching. But the database doesn't really care itself
  * about any of these.
  *
- * Timestamp document
+ * Directory document
  * ------------------
- * A timestamp document is used by a client of the notmuch library to
+ * A directory document is used by a client of the notmuch library to
  * maintain data necessary to allow for efficient polling of mail
- * directories. The notmuch library does no interpretation of
- * timestamps, but merely allows the user to store and retrieve
- * timestamps as name/value pairs.
+ * directories.
  *
- * The timestamp document is indexed with a single prefixed term:
+ * The directory document is indexed with a single prefixed term:
  *
- *	timestamp:	The user's key value (likely a directory name)
+ *	directory:	The directory path (an absolute path)
  *
  * and has a single value:
  *
- *	TIMESTAMP:	The time_t value from the user.
+ *	TIMESTAMP:	The mtime of the directory (at last scan)
  */
 
 /* With these prefix values we follow the conventions published here:
@@ -111,7 +109,8 @@ prefix_t BOOLEAN_PREFIX_INTERNAL[] = {
     { "type", "T" },
     { "reference", "XREFERENCE" },
     { "replyto", "XREPLYTO" },
-    { "timestamp", "XTIMESTAMP" },
+    /* XXX: Need a flag day to rename XTIMESTAMP. */
+    { "directory", "XTIMESTAMP" },
 };
 
 prefix_t BOOLEAN_PREFIX_EXTERNAL[] = {
@@ -561,30 +560,29 @@ notmuch_database_get_path (notmuch_database_t *notmuch)
 }
 
 static notmuch_private_status_t
-find_timestamp_document (notmuch_database_t *notmuch, const char *db_key,
+find_directory_document (notmuch_database_t *notmuch, const char *db_path,
 			 Xapian::Document *doc, unsigned int *doc_id)
 {
-    return find_unique_document (notmuch, "timestamp", db_key, doc, doc_id);
+    return find_unique_document (notmuch, "directory", db_path, doc, doc_id);
 }
 
-/* We allow the user to use arbitrarily long keys for timestamps,
- * (they're for filesystem paths after all, which have no limit we
- * know about). But we have a term-length limit. So if we exceed that,
- * we'll use the SHA-1 of the user's key as the actual key for
- * constructing a database term.
+/* We allow the user to use arbitrarily long paths for directories. But
+ * we have a term-length limit. So if we exceed that, we'll use the
+ * SHA-1 of the path for the database term.
  *
- * Caution: This function returns a newly allocated string which the
- * caller should free() when finished.
+ * Note: This function may return the original value of 'path'. If it
+ * does not, then the caller is responsible to free() the returned
+ * value.
  */
-static char *
-timestamp_db_key (const char *key)
+static const char *
+directory_db_path (const char *path)
 {
-    int term_len = strlen (_find_prefix ("timestamp")) + strlen (key);
+    int term_len = strlen (_find_prefix ("directory")) + strlen (path);
 
     if (term_len > NOTMUCH_TERM_MAX)
-	return notmuch_sha1_of_string (key);
+	return notmuch_sha1_of_string (path);
     else
-	return strdup (key);
+	return path;
 }
 
 /* Given a legal 'path' for the database, return the relative path.
@@ -622,15 +620,16 @@ _notmuch_database_relative_path (notmuch_database_t *notmuch,
 }
 
 notmuch_status_t
-notmuch_database_set_timestamp (notmuch_database_t *notmuch,
-				const char *key, time_t timestamp)
+notmuch_database_set_directory_mtime (notmuch_database_t *notmuch,
+				      const char *path,
+				      time_t mtime)
 {
     Xapian::Document doc;
     Xapian::WritableDatabase *db;
     unsigned int doc_id;
     notmuch_private_status_t status;
     notmuch_status_t ret = NOTMUCH_STATUS_SUCCESS;
-    char *db_key = NULL;
+    const char *db_path = NULL;
 
     if (notmuch->mode == NOTMUCH_DATABASE_MODE_READ_ONLY) {
 	fprintf (stderr, "Attempted to update a read-only database.\n");
@@ -638,17 +637,17 @@ notmuch_database_set_timestamp (notmuch_database_t *notmuch,
     }
 
     db = static_cast <Xapian::WritableDatabase *> (notmuch->xapian_db);
-    db_key = timestamp_db_key (key);
+    db_path = directory_db_path (path);
 
     try {
-	status = find_timestamp_document (notmuch, db_key, &doc, &doc_id);
+	status = find_directory_document (notmuch, db_path, &doc, &doc_id);
 
 	doc.add_value (NOTMUCH_VALUE_TIMESTAMP,
-		       Xapian::sortable_serialise (timestamp));
+		       Xapian::sortable_serialise (mtime));
 
 	if (status == NOTMUCH_PRIVATE_STATUS_NO_DOCUMENT_FOUND) {
 	    char *term = talloc_asprintf (NULL, "%s%s",
-					  _find_prefix ("timestamp"), db_key);
+					  _find_prefix ("directory"), db_path);
 	    doc.add_term (term);
 	    talloc_free (term);
 
@@ -658,31 +657,32 @@ notmuch_database_set_timestamp (notmuch_database_t *notmuch,
 	}
 
     } catch (const Xapian::Error &error) {
-	fprintf (stderr, "A Xapian exception occurred setting timestamp: %s.\n",
+	fprintf (stderr, "A Xapian exception occurred setting directory mtime: %s.\n",
 		 error.get_msg().c_str());
 	notmuch->exception_reported = TRUE;
 	ret = NOTMUCH_STATUS_XAPIAN_EXCEPTION;
     }
 
-    if (db_key)
-	free (db_key);
+    if (db_path != path)
+	free ((char *) db_path);
 
     return ret;
 }
 
 time_t
-notmuch_database_get_timestamp (notmuch_database_t *notmuch, const char *key)
+notmuch_database_get_directory_mtime (notmuch_database_t *notmuch,
+				      const char *path)
 {
     Xapian::Document doc;
     unsigned int doc_id;
     notmuch_private_status_t status;
-    char *db_key = NULL;
+    const char *db_path = NULL;
     time_t ret = 0;
 
-    db_key = timestamp_db_key (key);
+    db_path = directory_db_path (path);
 
     try {
-	status = find_timestamp_document (notmuch, db_key, &doc, &doc_id);
+	status = find_directory_document (notmuch, db_path, &doc, &doc_id);
 
 	if (status == NOTMUCH_PRIVATE_STATUS_NO_DOCUMENT_FOUND)
 	    goto DONE;
@@ -694,8 +694,8 @@ notmuch_database_get_timestamp (notmuch_database_t *notmuch, const char *key)
     }
 
   DONE:
-    if (db_key)
-	free (db_key);
+    if (db_path != path)
+	free ((char *) db_path);
 
     return ret;
 }

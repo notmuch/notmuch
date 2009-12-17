@@ -178,56 +178,51 @@ notmuch_database_close (notmuch_database_t *database);
 const char *
 notmuch_database_get_path (notmuch_database_t *database);
 
-/* Store a timestamp within the database.
+/* Store an mtime within the database for 'path'.
  *
- * The Notmuch database will not interpret this key nor the timestamp
- * values at all. It will merely store them together and return the
- * timestamp when notmuch_database_get_timestamp is called with the
- * same value for 'key'.
- *
- * The intention is for the caller to use the timestamp to allow
- * efficient identification of new messages to be added to the
- * database. The recommended usage is as follows:
+ * The intention is for the caller to use the mtime to allow efficient
+ * identification of new messages to be added to the database. The
+ * recommended usage is as follows:
  *
  *   o Read the mtime of a directory from the filesystem
  *
  *   o Call add_message for all mail files in the directory
  *
- *   o Call notmuch_database_set_timestamp with the path of the
- *     directory as 'key' and the originally read mtime as 'value'.
+ *   o Call notmuch_database_set_directory_mtime
  *
  * Then, when wanting to check for updates to the directory in the
- * future, the client can call notmuch_database_get_timestamp and know
- * that it only needs to add files if the mtime of the directory and
- * files are newer than the stored timestamp.
+ * future, the client can call notmuch_database_get_directory_mtime
+ * and know that it only needs to add files if the mtime of the
+ * directory and files are newer than the stored timestamp.
  *
- * Note: The notmuch_database_get_timestamp function does not allow
- * the caller to distinguish a timestamp of 0 from a non-existent
- * timestamp. So don't store a timestamp of 0 unless you are
- * comfortable with that.
+ * Note: The notmuch_database_get_directory_mtime function does not
+ * allow the caller to distinguish a timestamp of 0 from a
+ * non-existent timestamp. So don't store a timestamp of 0 unless you
+ * are comfortable with that.
  *
  * Return value:
  *
- * NOTMUCH_STATUS_SUCCESS: Timestamp successfully stored in database.
+ * NOTMUCH_STATUS_SUCCESS: mtime successfully stored in database.
  *
  * NOTMUCH_STATUS_XAPIAN_EXCEPTION: A Xapian exception
- *	occurred. Timestamp not stored.
+ *	occurred, mtime not stored.
  */
 notmuch_status_t
-notmuch_database_set_timestamp (notmuch_database_t *database,
-				const char *key, time_t timestamp);
+notmuch_database_set_directory_mtime (notmuch_database_t *database,
+				      const char *path,
+				      time_t mtime);
 
-/* Retrieve a timestamp from the database.
+/* Retrieve the mtime from the database for 'path'.
  *
- * Returns the timestamp value previously stored by calling
- * notmuch_database_set_timestamp with the same value for 'key'.
+ * Returns the mtime value previously stored by calling
+ * notmuch_database_set_directory_mtime with the same 'path'.
  *
- * Returns 0 if no timestamp is stored for 'key' or if any error
- * occurred querying the database.
+ * Returns 0 if no mtime is stored for 'path' or if any error occurred
+ * querying the database.
  */
 time_t
-notmuch_database_get_timestamp (notmuch_database_t *database,
-				const char *key);
+notmuch_database_get_directory_mtime (notmuch_database_t *database,
+				      const char *path);
 
 /* Add a new message to the given notmuch database.
  *
