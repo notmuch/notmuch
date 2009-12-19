@@ -155,6 +155,11 @@ const char *
 _notmuch_database_relative_path (notmuch_database_t *notmuch,
 				 const char *path);
 
+notmuch_status_t
+_notmuch_database_find_parent_id (notmuch_database_t *notmuch,
+				  const char *path,
+				  unsigned int *parent_id);
+
 /* thread.cc */
 
 notmuch_thread_t *

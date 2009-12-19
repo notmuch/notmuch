@@ -590,10 +590,32 @@ directory_db_path (const char *path)
 	return path;
 }
 
+/* Given a 'path' (relative to the database path) return the document
+ * ID of the directory document corresponding to the parent directory
+ * of 'path' in 'parent_id'.
+ *
+ * The original 'path' can represent either a regular file or a
+ * directory, (in either case, the document ID of the parent will be
+ * returned). Trailing slashes on 'path' will be ignored, and any
+ * cases of multiple '/' characters appearing in series will be
+ * treated as a single '/'.
+ *
+ * If no directory document exists in the database for the parent, (or
+ * for any of its parents up to the top-level database path), then
+ * directory documents will be created for these (each with an mtime
+ * of 0).
+ *
+ * Return value:
+ *
+ * NOTMUCH_STATUS_SUCCESS: Valid value available in parent_id.
+ *
+ * NOTMUCH_STATUS_XAPIAN_EXCEPTION: A Xapian exception
+ *	occurred and parent_id will be set to (unsigned) -1.
+ */
 notmuch_status_t
-_find_parent_id (notmuch_database_t *notmuch,
-		 const char *path,
-		 Xapian::docid *parent_id)
+_notmuch_database_find_parent_id (notmuch_database_t *notmuch,
+				  const char *path,
+				  unsigned int *parent_id)
 {
     const char *slash, *parent_db_path;
     char *parent_path;
@@ -657,6 +679,9 @@ _find_parent_id (notmuch_database_t *notmuch,
 
     talloc_free (parent_path);
 
+    if (status)
+	*parent_id = -1;
+
     return status;
 }
 
@@ -705,7 +730,7 @@ notmuch_database_set_directory_mtime (notmuch_database_t *notmuch,
     notmuch_private_status_t status;
     notmuch_status_t ret = NOTMUCH_STATUS_SUCCESS;
     const char *db_path = NULL;
-    Xapian::docid parent_id;
+    unsigned int parent_id;
 
     if (notmuch->mode == NOTMUCH_DATABASE_MODE_READ_ONLY) {
 	fprintf (stderr, "Attempted to update a read-only database.\n");
@@ -729,9 +754,10 @@ notmuch_database_set_directory_mtime (notmuch_database_t *notmuch,
 	    doc.add_term (term);
 	    talloc_free (term);
 
-	    status = _find_parent_id (notmuch, path, &parent_id);
-	    if (status)
-		return status;
+	    ret = _notmuch_database_find_parent_id (notmuch, path,
+						    &parent_id);
+	    if (ret)
+		return ret;
 
 	    term = talloc_asprintf (NULL, "%s%u",
 				    _find_prefix ("parent"),
