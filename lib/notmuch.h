@@ -180,6 +180,11 @@ notmuch_database_get_path (notmuch_database_t *database);
 
 /* Store an mtime within the database for 'path'.
  *
+ * Here,'path' should be the path of a directory relative to the path
+ * of 'database' (see notmuch_database_get_path), or else should be an
+ * absolute path with initial components that match the path of
+ * 'database'.
+ *
  * The intention is for the caller to use the mtime to allow efficient
  * identification of new messages to be added to the database. The
  * recommended usage is as follows:

@@ -86,7 +86,7 @@ typedef struct {
  *
  * The directory document is indexed with a single prefixed term:
  *
- *	directory:	The directory path (an absolute path)
+ *	directory:	The directory path (relative to the database path)
  *
  * and has a single value:
  *
@@ -638,6 +638,8 @@ notmuch_database_set_directory_mtime (notmuch_database_t *notmuch,
 	fprintf (stderr, "Attempted to update a read-only database.\n");
 	return NOTMUCH_STATUS_READONLY_DATABASE;
     }
+
+    path = _notmuch_database_relative_path (notmuch, path);
 
     db = static_cast <Xapian::WritableDatabase *> (notmuch->xapian_db);
     db_path = directory_db_path (path);
