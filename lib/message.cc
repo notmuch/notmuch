@@ -396,9 +396,7 @@ void
 _notmuch_message_set_filename (notmuch_message_t *message,
 			       const char *filename)
 {
-    const char *s;
-    const char *db_path;
-    unsigned int db_path_len;
+    const char *relative;
 
     if (message->filename) {
 	talloc_free (message->filename);
@@ -408,22 +406,8 @@ _notmuch_message_set_filename (notmuch_message_t *message,
     if (filename == NULL)
 	INTERNAL_ERROR ("Message filename cannot be NULL.");
 
-    s = filename;
-
-    db_path = notmuch_database_get_path (message->notmuch);
-    db_path_len = strlen (db_path);
-
-    if (*s == '/' && strlen (s) > db_path_len
-	&& strncmp (s, db_path, db_path_len) == 0)
-    {
-	s += db_path_len;
-	while (*s == '/') s++;
-
-	if (!*s)
-		INTERNAL_ERROR ("Message filename was same as db prefix.");
-    }
-
-    message->doc.set_data (s);
+    relative = _notmuch_database_relative_path (message->notmuch, filename);
+    message->doc.set_data (relative);
 }
 
 const char *

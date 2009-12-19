@@ -587,6 +587,40 @@ timestamp_db_key (const char *key)
 	return strdup (key);
 }
 
+/* Given a legal 'path' for the database, return the relative path.
+ *
+ * The return value will be a pointer to the originl path contents,
+ * and will be either the original string (if 'path' was relative) or
+ * a portion of the string (if path was absolute and begins with the
+ * database path).
+ */
+const char *
+_notmuch_database_relative_path (notmuch_database_t *notmuch,
+				 const char *path)
+{
+    const char *db_path, *relative;
+    unsigned int db_path_len;
+
+    db_path = notmuch_database_get_path (notmuch);
+    db_path_len = strlen (db_path);
+
+    relative = path;
+
+    if (*relative == '/') {
+	while (*relative == '/' && *(relative+1) == '/')
+	    relative++;
+
+	if (strncmp (relative, db_path, db_path_len) == 0)
+	{
+	    relative += db_path_len;
+	    while (*relative == '/')
+		relative++;
+	}
+    }
+
+    return relative;
+}
+
 notmuch_status_t
 notmuch_database_set_timestamp (notmuch_database_t *notmuch,
 				const char *key, time_t timestamp)

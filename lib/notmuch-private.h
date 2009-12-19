@@ -151,6 +151,10 @@ typedef enum _notmuch_private_status {
 const char *
 _find_prefix (const char *name);
 
+const char *
+_notmuch_database_relative_path (notmuch_database_t *notmuch,
+				 const char *path);
+
 /* thread.cc */
 
 notmuch_thread_t *
