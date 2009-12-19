@@ -75,6 +75,9 @@ typedef struct {
  * user in searching. But the database doesn't really care itself
  * about any of these.
  *
+ * Finally, the data portion of a mail document contains the path name
+ * of the mail message (relative to the database path).
+ *
  * Directory document
  * ------------------
  * A directory document is used by a client of the notmuch library to
