@@ -424,6 +424,10 @@ specify a date range to return messages from 2009-10-01 until the
 current time:
 
 	$(date +%s -d 2009-10-01)..$(date +%s)
+.SH ENVIRONMENT VARIABLES
+.IP NOTMUCH_CONFIG
+Specifies the location of the configuration file to override the default of
+.IR ~/.notmuch-config .
 .SH SEE ALSO
 The emacs-based interface to notmuch (available as
 .B notmuch.el
