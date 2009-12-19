@@ -84,9 +84,11 @@ typedef struct {
  * maintain data necessary to allow for efficient polling of mail
  * directories.
  *
- * The directory document is indexed with a single prefixed term:
+ * The directory document contains the following terms:
  *
  *	directory:	The directory path (relative to the database path)
+ *	parent:		The document ID of the parent directory document.
+ *			Top-level directories will have a parent value of 0.
  *
  * and has a single value:
  *
@@ -113,6 +115,7 @@ prefix_t BOOLEAN_PREFIX_INTERNAL[] = {
     { "reference", "XREFERENCE" },
     { "replyto", "XREPLYTO" },
     { "directory", "XDIRECTORY" },
+    { "parent", "XPARENT" },
 };
 
 prefix_t BOOLEAN_PREFIX_EXTERNAL[] = {
@@ -587,6 +590,76 @@ directory_db_path (const char *path)
 	return path;
 }
 
+notmuch_status_t
+_find_parent_id (notmuch_database_t *notmuch,
+		 const char *path,
+		 Xapian::docid *parent_id)
+{
+    const char *slash, *parent_db_path;
+    char *parent_path;
+    notmuch_private_status_t private_status;
+    notmuch_status_t status = NOTMUCH_STATUS_SUCCESS;
+
+    if (path == NULL || *path == '\0') {
+	*parent_id = 0;
+	return NOTMUCH_STATUS_SUCCESS;
+    }
+
+    /* Find the last slash (not counting a trailing slash), if any. */
+
+    slash = path + strlen (path) - 1;
+
+    /* First, skip trailing slashes. */
+    while (slash != path) {
+	if (*slash != '/')
+	    break;
+
+	--slash;
+    }
+
+    /* Then, find a slash. */
+    while (slash != path) {
+	if (*slash == '/')
+	    break;
+
+	--slash;
+    }
+
+    /* Finally, skip multiple slashes. */
+    while (slash != path) {
+	if (*slash != '/')
+	    break;
+
+	--slash;
+    }
+
+    if (slash == path)
+	parent_path = talloc_strdup (notmuch, "");
+    else
+	parent_path = talloc_strndup (notmuch, path, slash - path + 1);
+
+    parent_db_path = directory_db_path (parent_path);
+
+    private_status = find_unique_doc_id (notmuch, "directory",
+					 parent_db_path, parent_id);
+    if (private_status == NOTMUCH_PRIVATE_STATUS_NO_DOCUMENT_FOUND) {
+	status = notmuch_database_set_directory_mtime (notmuch,
+						       parent_path, 0);
+	if (status)
+	    return status;
+	private_status = find_unique_doc_id (notmuch, "directory",
+					     parent_db_path, parent_id);
+	status = COERCE_STATUS (private_status, "_find_parent_id");
+    }
+
+    if (parent_db_path != parent_path)
+	free ((char *) parent_db_path);
+
+    talloc_free (parent_path);
+
+    return status;
+}
+
 /* Given a legal 'path' for the database, return the relative path.
  *
  * The return value will be a pointer to the originl path contents,
@@ -632,6 +705,7 @@ notmuch_database_set_directory_mtime (notmuch_database_t *notmuch,
     notmuch_private_status_t status;
     notmuch_status_t ret = NOTMUCH_STATUS_SUCCESS;
     const char *db_path = NULL;
+    Xapian::docid parent_id;
 
     if (notmuch->mode == NOTMUCH_DATABASE_MODE_READ_ONLY) {
 	fprintf (stderr, "Attempted to update a read-only database.\n");
@@ -652,6 +726,16 @@ notmuch_database_set_directory_mtime (notmuch_database_t *notmuch,
 	if (status == NOTMUCH_PRIVATE_STATUS_NO_DOCUMENT_FOUND) {
 	    char *term = talloc_asprintf (NULL, "%s%s",
 					  _find_prefix ("directory"), db_path);
+	    doc.add_term (term);
+	    talloc_free (term);
+
+	    status = _find_parent_id (notmuch, path, &parent_id);
+	    if (status)
+		return status;
+
+	    term = talloc_asprintf (NULL, "%s%u",
+				    _find_prefix ("parent"),
+				    parent_id);
 	    doc.add_term (term);
 	    talloc_free (term);
 
