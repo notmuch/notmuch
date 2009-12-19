@@ -112,8 +112,7 @@ prefix_t BOOLEAN_PREFIX_INTERNAL[] = {
     { "type", "T" },
     { "reference", "XREFERENCE" },
     { "replyto", "XREPLYTO" },
-    /* XXX: Need a flag day to rename XTIMESTAMP. */
-    { "directory", "XTIMESTAMP" },
+    { "directory", "XDIRECTORY" },
 };
 
 prefix_t BOOLEAN_PREFIX_EXTERNAL[] = {
