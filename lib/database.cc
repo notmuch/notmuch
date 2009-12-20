@@ -855,12 +855,11 @@ _notmuch_database_link_message_to_children (notmuch_database_t *notmuch,
  *
  * We first look at 'message_file' and its link-relevant headers
  * (References and In-Reply-To) for message IDs. We also look in the
- * database for existing message that reference 'message'.p
+ * database for existing message that reference 'message'.
  *
- * The end result is to call _notmuch_message_add_thread_id with one
- * or more thread IDs to which this message belongs, (including
- * generating a new thread ID if necessary if the message doesn't
- * connect to any existing threads).
+ * The end result is to call _notmuch_message_ensure_thread_id which
+ * generates a new thread ID if the message doesn't connect to any
+ * existing threads.
  */
 static notmuch_status_t
 _notmuch_database_link_message (notmuch_database_t *notmuch,

@@ -8,6 +8,12 @@ Fix the things that are causing the most pain to new users
 
 Emacs interface (notmuch.el)
 ----------------------------
+Enhance '+' and '-' in the search view to operate on an entire region
+if set.
+
+Fix '*' to work by simply calling '+' or '-' on a region consisting of
+the entire buffer.
+
 Add a global keybinding table for notmuch, and then view-specific
 tables that add to it.
 
@@ -44,6 +50,10 @@ and *then* --max-threads), and also complete value for --sort=
 
 notmuch command-line tool
 -------------------------
+Implement "notmuch search --exclude-threads=<search-terms>" to allow
+for excluding muted threads, (and any other negative, thread-based
+filtering that the user wants to do).
+
 Fix "notmuch show" so that the UI doesn't fail to show a thread that
 is visible in a search buffer, but happens to no longer match the
 current search. (Perhaps add a --matching=<secondary-search-terms>
@@ -129,6 +139,12 @@ Add support for the user to specify custom headers to be indexed.
 Add support for configuring "virtual tags" which are a tuple of
 (tag-name, search-specification). The database is responsible for
 ensuring that the virtual tag is always consistent.
+
+Indicate to the user if two files with the same message ID have
+content that is actually different in some interesting way. Perhaps
+notmuch initially sees all changes as interesting, and quickly learns
+from the user which changes are not interesting (such as the very
+common mailing-list footer).
 
 General
 -------
