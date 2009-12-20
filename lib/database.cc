@@ -87,12 +87,19 @@ typedef struct {
  * The directory document contains the following terms:
  *
  *	directory:	The directory path (relative to the database path)
+ *			Or the SHA1 sum of the directory path (if the
+ *			path itself is too long to fit in a Xapian
+ *			term).
+ *
  *	parent:		The document ID of the parent directory document.
  *			Top-level directories will have a parent value of 0.
  *
  * and has a single value:
  *
  *	TIMESTAMP:	The mtime of the directory (at last scan)
+ *
+ * The data portion of a directory document contains the path of the
+ * directory (relative to the datbase path).
  */
 
 /* With these prefix values we follow the conventions published here:
@@ -753,6 +760,8 @@ notmuch_database_set_directory_mtime (notmuch_database_t *notmuch,
 					  _find_prefix ("directory"), db_path);
 	    doc.add_term (term);
 	    talloc_free (term);
+
+	    doc.set_data (path);
 
 	    ret = _notmuch_database_find_parent_id (notmuch, path,
 						    &parent_id);
