@@ -31,7 +31,7 @@ _index_address_mailbox (notmuch_message_t *message,
 {
     InternetAddressMailbox *mailbox = INTERNET_ADDRESS_MAILBOX (address);
     const char *name, *addr;
-    void *local = talloc_new (NULL);
+    void *local = talloc_new (message);
 
     name = internet_address_get_name (address);
     addr = internet_address_mailbox_get_addr (mailbox);

@@ -166,6 +166,11 @@ _notmuch_database_find_directory_id (notmuch_database_t *database,
 				     const char *path,
 				     unsigned int *directory_id);
 
+const char *
+_notmuch_database_get_directory_path (void *ctx,
+				      notmuch_database_t *notmuch,
+				      unsigned int doc_id);
+
 /* thread.cc */
 
 notmuch_thread_t *
@@ -205,7 +210,7 @@ _notmuch_message_gen_terms (notmuch_message_t *message,
 			    const char *prefix_name,
 			    const char *text);
 
-void
+notmuch_status_t
 _notmuch_message_set_filename (notmuch_message_t *message,
 			       const char *filename);
 

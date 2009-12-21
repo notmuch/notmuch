@@ -63,6 +63,11 @@ typedef struct {
  *
  *	tag:	   Any tags associated with this message by the user.
  *
+ *	direntry:  A colon-separated pair of values (INTEGER:STRING),
+ *		   where INTEGER is the document ID of a directory
+ *		   document, and STRING is the name of a file within
+ *		   that directory for this mail message.
+ *
  *    A mail document also has two values:
  *
  *	TIMESTAMP:	The time_t value corresponding to the message's
@@ -75,8 +80,7 @@ typedef struct {
  * user in searching. But the database doesn't really care itself
  * about any of these.
  *
- * Finally, the data portion of a mail document contains the path name
- * of the mail message (relative to the database path).
+ * The data portion of a mail document is empty.
  *
  * Directory document
  * ------------------
@@ -122,6 +126,7 @@ prefix_t BOOLEAN_PREFIX_INTERNAL[] = {
     { "reference", "XREFERENCE" },
     { "replyto", "XREPLYTO" },
     { "directory", "XDIRECTORY" },
+    { "direntry", "XDIRENTRY" },
     { "parent", "XPARENT" },
 };
 
@@ -717,6 +722,18 @@ _notmuch_database_find_directory_id (notmuch_database_t *notmuch,
     return status;
 }
 
+const char *
+_notmuch_database_get_directory_path (void *ctx,
+				      notmuch_database_t *notmuch,
+				      unsigned int doc_id)
+{
+    Xapian::Document document;
+
+    document = find_document_for_doc_id (notmuch, doc_id);
+
+    return talloc_strdup (ctx, document.get_data ().c_str ());
+}
+
 /* Given a legal 'path' for the database, return the relative path.
  *
  * The return value will be a pointer to the originl path contents,
@@ -812,6 +829,8 @@ notmuch_database_set_directory_mtime (notmuch_database_t *notmuch,
     if (db_path != path)
 	free ((char *) db_path);
 
+    talloc_free (local);
+
     return ret;
 }
 
@@ -843,8 +862,6 @@ notmuch_database_get_directory_mtime (notmuch_database_t *notmuch,
   DONE:
     if (db_path != path)
 	free ((char *) db_path);
-
-    talloc_free (local);
 
     return ret;
 }

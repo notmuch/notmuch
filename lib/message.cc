@@ -392,11 +392,15 @@ notmuch_message_get_replies (notmuch_message_t *message)
  *
  * This change will not be reflected in the database until the next
  * call to _notmuch_message_set_sync. */
-void
+notmuch_status_t
 _notmuch_message_set_filename (notmuch_message_t *message,
 			       const char *filename)
 {
-    const char *relative;
+    const char *relative, *directory, *basename;
+    char *term;
+    Xapian::docid directory_id;
+    notmuch_status_t status;
+    void *local = talloc_new (message);
 
     if (message->filename) {
 	talloc_free (message->filename);
@@ -407,26 +411,79 @@ _notmuch_message_set_filename (notmuch_message_t *message,
 	INTERNAL_ERROR ("Message filename cannot be NULL.");
 
     relative = _notmuch_database_relative_path (message->notmuch, filename);
-    message->doc.set_data (relative);
+
+    status = _notmuch_database_split_path (local, relative,
+					   &directory, &basename);
+    if (status)
+	return status;
+
+    status = _notmuch_database_find_directory_id (message->notmuch, directory,
+						  &directory_id);
+    if (status)
+	return status;
+
+    term = talloc_asprintf (local, "%s%u:%s",
+			    _find_prefix ("direntry"), directory_id, basename);
+
+    message->doc.add_term (term);
+
+    talloc_free (local);
+
+    return NOTMUCH_STATUS_SUCCESS;
 }
 
 const char *
 notmuch_message_get_filename (notmuch_message_t *message)
 {
-    std::string filename_str;
-    const char *db_path;
+    const char *prefix = _find_prefix ("direntry");
+    int prefix_len = strlen (prefix);
+    Xapian::TermIterator i;
+    char *direntry, *colon;
+    const char *db_path, *directory, *basename;
+    unsigned int directory_id;
+    void *local = talloc_new (message);
 
     if (message->filename)
 	return message->filename;
 
-    filename_str = message->doc.get_data ();
+    i = message->doc.termlist_begin ();
+    i.skip_to (prefix);
+
+    if (i != message->doc.termlist_end ())
+	direntry = talloc_strdup (local, (*i).c_str ());
+
+    if (i == message->doc.termlist_end () ||
+	strncmp (direntry, prefix, prefix_len))
+    {
+	INTERNAL_ERROR ("message with no filename");
+    }
+
+    direntry += prefix_len;
+
+    directory_id = strtol (direntry, &colon, 10);
+
+    if (colon == NULL || *colon != ':')
+	INTERNAL_ERROR ("malformed direntry");
+
+    basename = colon + 1;
+
+    *colon = '\0';
+
     db_path = notmuch_database_get_path (message->notmuch);
 
-    if (filename_str[0] != '/')
-	message->filename = talloc_asprintf (message, "%s/%s", db_path,
-					     filename_str.c_str ());
+    directory = _notmuch_database_get_directory_path (local,
+						      message->notmuch,
+						      directory_id);
+
+    if (strlen (directory))
+	message->filename = talloc_asprintf (message, "%s/%s/%s",
+					     db_path, directory, basename);
     else
-	message->filename = talloc_strdup (message, filename_str.c_str ());
+	message->filename = talloc_asprintf (message, "%s/%s",
+					     db_path, basename);
+    talloc_free ((void *) directory);
+
+    talloc_free (local);
 
     return message->filename;
 }
