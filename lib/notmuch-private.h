@@ -171,6 +171,12 @@ _notmuch_database_get_directory_path (void *ctx,
 				      notmuch_database_t *notmuch,
 				      unsigned int doc_id);
 
+notmuch_status_t
+_notmuch_database_filename_to_direntry (void *ctx,
+					notmuch_database_t *notmuch,
+					const char *filename,
+					char **direntry);
+
 /* thread.cc */
 
 notmuch_thread_t *

@@ -734,6 +734,38 @@ _notmuch_database_get_directory_path (void *ctx,
     return talloc_strdup (ctx, document.get_data ().c_str ());
 }
 
+/* Given a legal 'filename' for the database, (either relative to
+ * database path or absolute with initial components identical to
+ * database path), return a new string (with 'ctx' as the talloc
+ * owner) suitable for use as a direntry term value.
+ */
+notmuch_status_t
+_notmuch_database_filename_to_direntry (void *ctx,
+					notmuch_database_t *notmuch,
+					const char *filename,
+					char **direntry)
+{
+    const char *relative, *directory, *basename;
+    Xapian::docid directory_id;
+    notmuch_status_t status;
+
+    relative = _notmuch_database_relative_path (notmuch, filename);
+
+    status = _notmuch_database_split_path (ctx, relative,
+					   &directory, &basename);
+    if (status)
+	return status;
+
+    status = _notmuch_database_find_directory_id (notmuch, directory,
+						  &directory_id);
+    if (status)
+	return status;
+
+    *direntry = talloc_asprintf (ctx, "%u:%s", directory_id, basename);
+
+    return NOTMUCH_STATUS_SUCCESS;
+}
+
 /* Given a legal 'path' for the database, return the relative path.
  *
  * The return value will be a pointer to the originl path contents,

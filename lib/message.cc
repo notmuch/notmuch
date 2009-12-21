@@ -393,11 +393,9 @@ notmuch_status_t
 _notmuch_message_add_filename (notmuch_message_t *message,
 			       const char *filename)
 {
-    const char *relative, *directory, *basename;
-    char *term;
-    Xapian::docid directory_id;
     notmuch_status_t status;
     void *local = talloc_new (message);
+    char *direntry;
 
     if (message->filename) {
 	talloc_free (message->filename);
@@ -407,22 +405,13 @@ _notmuch_message_add_filename (notmuch_message_t *message,
     if (filename == NULL)
 	INTERNAL_ERROR ("Message filename cannot be NULL.");
 
-    relative = _notmuch_database_relative_path (message->notmuch, filename);
-
-    status = _notmuch_database_split_path (local, relative,
-					   &directory, &basename);
+    status = _notmuch_database_filename_to_direntry (local,
+						     message->notmuch,
+						     filename, &direntry);
     if (status)
 	return status;
 
-    status = _notmuch_database_find_directory_id (message->notmuch, directory,
-						  &directory_id);
-    if (status)
-	return status;
-
-    term = talloc_asprintf (local, "%s%u:%s",
-			    _find_prefix ("direntry"), directory_id, basename);
-
-    message->doc.add_term (term);
+    _notmuch_message_add_term (message, "direntry", direntry);
 
     talloc_free (local);
 
