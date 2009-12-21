@@ -214,21 +214,29 @@ notmuch_status_to_string (notmuch_status_t status)
 }
 
 static void
+find_doc_ids_for_term (notmuch_database_t *notmuch,
+		       const char *term,
+		       Xapian::PostingIterator *begin,
+		       Xapian::PostingIterator *end)
+{
+    *begin = notmuch->xapian_db->postlist_begin (term);
+
+    *end = notmuch->xapian_db->postlist_end (term);
+}
+
+static void
 find_doc_ids (notmuch_database_t *notmuch,
 	      const char *prefix_name,
 	      const char *value,
 	      Xapian::PostingIterator *begin,
 	      Xapian::PostingIterator *end)
 {
-    Xapian::PostingIterator i;
     char *term;
 
     term = talloc_asprintf (notmuch, "%s%s",
 			    _find_prefix (prefix_name), value);
 
-    *begin = notmuch->xapian_db->postlist_begin (term);
-
-    *end = notmuch->xapian_db->postlist_end (term);
+    find_doc_ids_for_term (notmuch, term, begin, end);
 
     talloc_free (term);
 }
