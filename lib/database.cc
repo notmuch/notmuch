@@ -1278,6 +1278,59 @@ notmuch_database_add_message (notmuch_database_t *notmuch,
     return ret;
 }
 
+notmuch_status_t
+notmuch_database_remove_message (notmuch_database_t *notmuch,
+				 const char *filename)
+{
+    Xapian::WritableDatabase *db;
+    void *local = talloc_new (notmuch);
+    const char *direntry_prefix = _find_prefix ("direntry");
+    char *direntry, *term;
+    Xapian::PostingIterator i, end;
+    Xapian::Document document;
+    notmuch_status_t status;
+
+    if (notmuch->mode == NOTMUCH_DATABASE_MODE_READ_ONLY) {
+	fprintf (stderr, "Attempted to update a read-only database.\n");
+	return NOTMUCH_STATUS_READONLY_DATABASE;
+    }
+
+    db = static_cast <Xapian::WritableDatabase *> (notmuch->xapian_db);
+
+    status = _notmuch_database_filename_to_direntry (local, notmuch,
+						     filename, &direntry);
+    if (status)
+	return status;
+
+    term = talloc_asprintf (notmuch, "%s%s", direntry_prefix, direntry);
+
+    find_doc_ids_for_term (notmuch, term, &i, &end);
+
+    for ( ; i != end; i++) {
+	Xapian::TermIterator j;
+
+	document = find_document_for_doc_id (notmuch, *i);
+
+	document.remove_term (term);
+
+	j = document.termlist_begin ();
+	j.skip_to (direntry_prefix);
+
+	/* Was this the last direntry in the message? */
+	if (j == document.termlist_end () ||
+	    strncmp ((*j).c_str (), direntry_prefix, strlen (direntry_prefix)))
+	{
+	    db->delete_document (document.get_docid ());
+	} else {
+	    db->replace_document (document.get_docid (), document);
+	}
+    }
+
+    talloc_free (local);
+
+    return NOTMUCH_STATUS_SUCCESS;
+}
+
 notmuch_tags_t *
 _notmuch_convert_tags (void *ctx, Xapian::TermIterator &i,
 		       Xapian::TermIterator &end)

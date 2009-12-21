@@ -267,6 +267,19 @@ notmuch_database_add_message (notmuch_database_t *database,
 			      const char *filename,
 			      notmuch_message_t **message);
 
+/* Remove a message from the given notmuch database.
+ *
+ * Note that the only this particular filename association is removed
+ * from the database. If the same message (as determined by the
+ * message ID) is still available via other filenames, then the
+ * message will persist in the database for those filenames. When the
+ * last filename is removed for a particular message, the database
+ * content for that message will be entirely removed.
+ */
+notmuch_status_t
+notmuch_database_remove_message (notmuch_database_t *database,
+				 const char *filename);
+
 /* Find a message with the given message_id.
  *
  * If the database contains a message with the given message_id, then
