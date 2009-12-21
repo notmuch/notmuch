@@ -156,9 +156,15 @@ _notmuch_database_relative_path (notmuch_database_t *notmuch,
 				 const char *path);
 
 notmuch_status_t
-_notmuch_database_find_parent_id (notmuch_database_t *notmuch,
-				  const char *path,
-				  unsigned int *parent_id);
+_notmuch_database_split_path (void *ctx,
+			      const char *path,
+			      const char **directory,
+			      const char **basename);
+
+notmuch_status_t
+_notmuch_database_find_directory_id (notmuch_database_t *database,
+				     const char *path,
+				     unsigned int *directory_id);
 
 /* thread.cc */
 

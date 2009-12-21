@@ -597,40 +597,40 @@ directory_db_path (const char *path)
 	return path;
 }
 
-/* Given a 'path' (relative to the database path) return the document
- * ID of the directory document corresponding to the parent directory
- * of 'path' in 'parent_id'.
+/* Given a path, split it into two parts: the directory part is all
+ * components except for the last, and the basename is that last
+ * component. Getting the return-value for either part is optional
+ * (the caller can pass NULL).
  *
  * The original 'path' can represent either a regular file or a
- * directory, (in either case, the document ID of the parent will be
- * returned). Trailing slashes on 'path' will be ignored, and any
+ * directory---the splitting will be carried out in the same way in
+ * either case. Trailing slashes on 'path' will be ignored, and any
  * cases of multiple '/' characters appearing in series will be
  * treated as a single '/'.
  *
- * If no directory document exists in the database for the parent, (or
- * for any of its parents up to the top-level database path), then
- * directory documents will be created for these (each with an mtime
- * of 0).
+ * Allocation (if any) will have 'ctx' as the talloc owner. But
+ * pointers will be returned within the original path string whenever
+ * possible.
  *
- * Return value:
- *
- * NOTMUCH_STATUS_SUCCESS: Valid value available in parent_id.
- *
- * NOTMUCH_STATUS_XAPIAN_EXCEPTION: A Xapian exception
- *	occurred and parent_id will be set to (unsigned) -1.
+ * Note: If 'path' is non-empty and contains no non-trailing slash,
+ * (that is, consists of a filename with no parent directory), then
+ * the directory returned will be an empty string. However, if 'path'
+ * is an empty string, then both directory and basename will be
+ * returned as NULL.
  */
 notmuch_status_t
-_notmuch_database_find_parent_id (notmuch_database_t *notmuch,
-				  const char *path,
-				  unsigned int *parent_id)
+_notmuch_database_split_path (void *ctx,
+			      const char *path,
+			      const char **directory,
+			      const char **basename)
 {
-    const char *slash, *parent_db_path;
-    char *parent_path;
-    notmuch_private_status_t private_status;
-    notmuch_status_t status = NOTMUCH_STATUS_SUCCESS;
+    const char *slash;
 
     if (path == NULL || *path == '\0') {
-	*parent_id = 0;
+	if (directory)
+	    *directory = NULL;
+	if (basename)
+	    *basename = NULL;
 	return NOTMUCH_STATUS_SUCCESS;
     }
 
@@ -651,6 +651,9 @@ _notmuch_database_find_parent_id (notmuch_database_t *notmuch,
 	if (*slash == '/')
 	    break;
 
+	if (basename)
+	    *basename = slash;
+
 	--slash;
     }
 
@@ -662,32 +665,54 @@ _notmuch_database_find_parent_id (notmuch_database_t *notmuch,
 	--slash;
     }
 
-    if (slash == path)
-	parent_path = talloc_strdup (notmuch, "");
-    else
-	parent_path = talloc_strndup (notmuch, path, slash - path + 1);
-
-    parent_db_path = directory_db_path (parent_path);
-
-    private_status = find_unique_doc_id (notmuch, "directory",
-					 parent_db_path, parent_id);
-    if (private_status == NOTMUCH_PRIVATE_STATUS_NO_DOCUMENT_FOUND) {
-	status = notmuch_database_set_directory_mtime (notmuch,
-						       parent_path, 0);
-	if (status)
-	    return status;
-	private_status = find_unique_doc_id (notmuch, "directory",
-					     parent_db_path, parent_id);
-	status = COERCE_STATUS (private_status, "_find_parent_id");
+    if (slash == path) {
+	if (directory)
+	    *directory = talloc_strdup (ctx, "");
+	if (basename)
+	    *basename = path;
+    } else {
+	if (directory)
+	    *directory = talloc_strndup (ctx, path, slash - path + 1);
     }
 
-    if (parent_db_path != parent_path)
-	free ((char *) parent_db_path);
+    return NOTMUCH_STATUS_SUCCESS;
+}
 
-    talloc_free (parent_path);
+notmuch_status_t
+_notmuch_database_find_directory_id (notmuch_database_t *notmuch,
+				     const char *path,
+				     unsigned int *directory_id)
+{
+    notmuch_private_status_t private_status;
+    notmuch_status_t status = NOTMUCH_STATUS_SUCCESS;
+    const char *db_path;
+
+    if (path == NULL) {
+	*directory_id = 0;
+	return NOTMUCH_STATUS_SUCCESS;
+    }
+
+    db_path = directory_db_path (path);
+
+    private_status = find_unique_doc_id (notmuch, "directory",
+					 db_path, directory_id);
+    if (private_status == NOTMUCH_PRIVATE_STATUS_NO_DOCUMENT_FOUND) {
+	status = notmuch_database_set_directory_mtime (notmuch,
+						       path, 0);
+	if (status)
+	    goto DONE;
+
+	private_status = find_unique_doc_id (notmuch, "directory",
+					     db_path, directory_id);
+	status = COERCE_STATUS (private_status, "_find_directory_id");
+    }
+
+  DONE:
+    if (db_path != path)
+	free ((char *) db_path);
 
     if (status)
-	*parent_id = -1;
+	*directory_id = -1;
 
     return status;
 }
@@ -736,8 +761,9 @@ notmuch_database_set_directory_mtime (notmuch_database_t *notmuch,
     unsigned int doc_id;
     notmuch_private_status_t status;
     notmuch_status_t ret = NOTMUCH_STATUS_SUCCESS;
-    const char *db_path = NULL;
+    const char *parent, *db_path = NULL;
     unsigned int parent_id;
+    void *local = talloc_new (notmuch);
 
     if (notmuch->mode == NOTMUCH_DATABASE_MODE_READ_ONLY) {
 	fprintf (stderr, "Attempted to update a read-only database.\n");
@@ -756,23 +782,20 @@ notmuch_database_set_directory_mtime (notmuch_database_t *notmuch,
 		       Xapian::sortable_serialise (mtime));
 
 	if (status == NOTMUCH_PRIVATE_STATUS_NO_DOCUMENT_FOUND) {
-	    char *term = talloc_asprintf (NULL, "%s%s",
+	    char *term = talloc_asprintf (local, "%s%s",
 					  _find_prefix ("directory"), db_path);
 	    doc.add_term (term);
-	    talloc_free (term);
 
 	    doc.set_data (path);
 
-	    ret = _notmuch_database_find_parent_id (notmuch, path,
-						    &parent_id);
-	    if (ret)
-		return ret;
+	    _notmuch_database_split_path (local, path, &parent, NULL);
 
-	    term = talloc_asprintf (NULL, "%s%u",
+	    _notmuch_database_find_directory_id (notmuch, parent, &parent_id);
+
+	    term = talloc_asprintf (local, "%s%u",
 				    _find_prefix ("parent"),
 				    parent_id);
 	    doc.add_term (term);
-	    talloc_free (term);
 
 	    db->add_document (doc);
 	} else {
@@ -801,6 +824,7 @@ notmuch_database_get_directory_mtime (notmuch_database_t *notmuch,
     notmuch_private_status_t status;
     const char *db_path = NULL;
     time_t ret = 0;
+    void *local = talloc_new (notmuch);
 
     db_path = directory_db_path (path);
 
@@ -819,6 +843,8 @@ notmuch_database_get_directory_mtime (notmuch_database_t *notmuch,
   DONE:
     if (db_path != path)
 	free ((char *) db_path);
+
+    talloc_free (local);
 
     return ret;
 }
