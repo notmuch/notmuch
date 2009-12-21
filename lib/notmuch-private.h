@@ -211,7 +211,7 @@ _notmuch_message_gen_terms (notmuch_message_t *message,
 			    const char *text);
 
 notmuch_status_t
-_notmuch_message_set_filename (notmuch_message_t *message,
+_notmuch_message_add_filename (notmuch_message_t *message,
 			       const char *filename);
 
 void

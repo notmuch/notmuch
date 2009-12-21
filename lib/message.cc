@@ -385,15 +385,12 @@ notmuch_message_get_replies (notmuch_message_t *message)
     return _notmuch_messages_create (message->replies);
 }
 
-/* Set the filename for 'message' to 'filename'.
- *
- * XXX: We should still figure out if we think it's important to store
- * multiple filenames for email messages with identical message IDs.
+/* Add an additional 'filename' for 'message'.
  *
  * This change will not be reflected in the database until the next
  * call to _notmuch_message_set_sync. */
 notmuch_status_t
-_notmuch_message_set_filename (notmuch_message_t *message,
+_notmuch_message_add_filename (notmuch_message_t *message,
 			       const char *filename)
 {
     const char *relative, *directory, *basename;

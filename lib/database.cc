@@ -843,7 +843,6 @@ notmuch_database_get_directory_mtime (notmuch_database_t *notmuch,
     notmuch_private_status_t status;
     const char *db_path = NULL;
     time_t ret = 0;
-    void *local = talloc_new (notmuch);
 
     db_path = directory_db_path (path);
 
@@ -1188,23 +1187,24 @@ notmuch_database_add_message (notmuch_database_t *notmuch,
 	    goto DONE;
 	}
 
+	_notmuch_message_add_filename (message, filename);
+
 	/* Is this a newly created message object? */
 	if (private_status == NOTMUCH_PRIVATE_STATUS_NO_DOCUMENT_FOUND) {
-	    _notmuch_message_set_filename (message, filename);
 	    _notmuch_message_add_term (message, "type", "mail");
+
+	    ret = _notmuch_database_link_message (notmuch, message,
+						  message_file);
+	    if (ret)
+		goto DONE;
+
+	    date = notmuch_message_file_get_header (message_file, "date");
+	    _notmuch_message_set_date (message, date);
+
+	    _notmuch_message_index_file (message, filename);
 	} else {
 	    ret = NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID;
-	    goto DONE;
 	}
-
-	ret = _notmuch_database_link_message (notmuch, message, message_file);
-	if (ret)
-	    goto DONE;
-
-	date = notmuch_message_file_get_header (message_file, "date");
-	_notmuch_message_set_date (message, date);
-
-	_notmuch_message_index_file (message, filename);
 
 	_notmuch_message_sync (message);
     } catch (const Xapian::Error &error) {

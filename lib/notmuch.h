@@ -698,14 +698,20 @@ notmuch_message_get_thread_id (notmuch_message_t *message);
 notmuch_messages_t *
 notmuch_message_get_replies (notmuch_message_t *message);
 
-/* Get the filename for the email corresponding to 'message'.
+/* Get a filename for the email corresponding to 'message'.
  *
  * The returned filename is an absolute filename, (the initial
  * component will match notmuch_database_get_path() ).
  *
  * The returned string belongs to the message so should not be
  * modified or freed by the caller (nor should it be referenced after
- * the message is destroyed). */
+ * the message is destroyed).
+ *
+ * Note: If this message corresponds to multiple files in the mail
+ * store, (that is, multiple files contain identical message IDs),
+ * this function will arbitrarily return a single one of those
+ * filenames.
+ */
 const char *
 notmuch_message_get_filename (notmuch_message_t *message);
 
