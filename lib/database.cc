@@ -246,10 +246,19 @@ find_unique_doc_id (notmuch_database_t *notmuch,
     if (i == end) {
 	*doc_id = 0;
 	return NOTMUCH_PRIVATE_STATUS_NO_DOCUMENT_FOUND;
-    } else {
-	*doc_id = *i;
-	return NOTMUCH_PRIVATE_STATUS_SUCCESS;
     }
+
+    *doc_id = *i;
+
+#if DEBUG_DATABASE_SANITY
+    i++;
+
+    if (i != end)
+	INTERNAL_ERROR ("Term %s:%s is not unique as expected.\n",
+			prefix_name, value);
+#endif
+
+    return NOTMUCH_PRIVATE_STATUS_SUCCESS;
 }
 
 static Xapian::Document
