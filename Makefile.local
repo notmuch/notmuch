@@ -27,7 +27,7 @@ notmuch: $(notmuch_client_modules) lib/notmuch.a
 notmuch.1.gz: notmuch.1
 	$(call quiet,gzip) --stdout $^ > $@
 
-install: all notmuch.1.gz
+install: all notmuch.1.gz install-emacs install-bash
 	for d in $(DESTDIR)$(prefix)/bin/ $(DESTDIR)$(prefix)/share/man/man1 ; \
 	do \
 		install -d $$d ; \
@@ -35,7 +35,7 @@ install: all notmuch.1.gz
 	install notmuch $(DESTDIR)$(prefix)/bin/
 	install -m0644 notmuch.1.gz $(DESTDIR)$(prefix)/share/man/man1/
 
-install-emacs: install emacs
+install-emacs: emacs
 	for d in $(DESTDIR)/$(emacs_lispdir) ; \
 	do \
 		install -d $$d ; \
