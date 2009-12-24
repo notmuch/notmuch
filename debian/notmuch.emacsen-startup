@@ -2,18 +2,22 @@
 ;;
 ;; Emacs startup file, e.g.  /etc/emacs/site-start.d/50notmuch.el
 ;; for the Debian notmuch package
-;;
-;; Originally contributed by Nils Naumann <naumann@unileoben.ac.at>
-;; Modified by Dirk Eddelbuettel <edd@debian.org>
-;; Adapted for dh-make by Jim Van Zandt <jrv@debian.org>
 
 ;; The notmuch package follows the Debian/GNU Linux 'emacsen' policy and
 ;; byte-compiles its elisp files for each 'emacs flavor' (emacs19,
 ;; xemacs19, emacs20, xemacs20...).  The compiled code is then
 ;; installed in a subdirectory of the respective site-lisp directory.
 
-(if (not (file-exists-p "/usr/share/emacs/site-lisp/notmuch"))
-    (message "Package notmuch removed but not purged.  Skipping setup.")
+(cond
+ ((not (file-exists-p "/usr/share/emacs/site-lisp/notmuch"))
+  (message "Package notmuch removed but not purged.  Skipping setup."))
+ ((not (file-exists-p (concat "/usr/share/"
+			      (symbol-name debian-emacs-flavor)
+			      "/site-lisp/notmuch")))
+  (message "Package notmuch not fully installed.  Skipping setup."))
+ (t
   (debian-pkg-add-load-path-item
-   (concat
-    "/usr/share/" (symbol-name debian-emacs-flavor) "/site-lisp/notmuch"))
+   (concat "/usr/share/"
+	   (symbol-name debian-emacs-flavor)
+	   "/site-lisp/notmuch"))
+  ))
