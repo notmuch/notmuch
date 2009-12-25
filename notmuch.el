@@ -94,8 +94,23 @@ for indentation at the beginning of the line. But notmuch will
 move past the indentation when testing this pattern, (so that the
 pattern can still test against the entire line).")
 
+(defvar notmuch-show-signature-button-format
+  "[ %d-line hidden signature. Click/Enter to show ]"
+  "String used to construct button text for hidden signatures
+
+Can use up to one integer format parameter, i.e. %d")
+
+(defvar notmuch-show-citation-button-format
+  "[ %d-line hidden citation. Click/Enter to show ]"
+  "String used to construct button text for hidden citations.
+
+Can use up to one integer format parameter, i.e. %d")
+
 (defvar notmuch-show-signature-lines-max 12
   "Maximum length of signature that will be hidden by default.")
+
+(defvar notmuch-show-citation-lines-min 4
+  "Minimum length of citation that will be hidden.")
 
 (defvar notmuch-command "notmuch"
   "Command to run the notmuch binary.")
@@ -616,54 +631,78 @@ which this thread was originally shown."
   'face 'notmuch-message-summary-face
   :supertype 'notmuch-button-invisibility-toggle-type)
 
+(defun notmuch-show-citation-regexp (depth)
+  "Build a regexp for matching citations at a given DEPTH (indent)"
+  (let ((line-regexp (format "[[:space:]]\\{%d\\}>.*\n" depth)))
+    (concat "\\(?:^" line-regexp
+	    "\\(?:[[:space:]]*\n" line-regexp
+	    "\\)?\\)+")))
+
+(defun notmuch-show-region-to-button (beg end type prefix button-text)
+  "Auxilary function to do the actual making of overlays and buttons
+
+BEG and END are buffer locations. TYPE should a string, either
+\"citation\" or \"signature\". PREFIX is some arbitrary text to
+insert before the button, probably for indentation.  BUTTON-TEXT
+is what to put on the button."
+
+;; This uses some slightly tricky conversions between strings and
+;; symbols because of the way the button code works. Note that
+;; replacing intern-soft with make-symbol will cause this to fail,
+;; since the newly created symbol has no plist.
+
+  (let ((overlay (make-overlay beg end))
+	(invis-spec (make-symbol (concat "notmuch-" type "-region")))
+	(button-type (intern-soft (concat "notmuch-button-"
+					  type "-toggle-type"))))
+    (add-to-invisibility-spec invis-spec)
+    (overlay-put overlay 'invisible invis-spec)
+    (goto-char (1+ end))
+    (save-excursion
+      (goto-char (1- beg))
+      (insert prefix)
+      (insert-button button-text
+		     'invisibility-spec invis-spec
+		     :type button-type)
+      )))
+
+
 (defun notmuch-show-markup-citations-region (beg end depth)
-  (goto-char beg)
-  (beginning-of-line)
-  (while (< (point) end)
-    (let ((beg-sub (point-marker))
-	  (indent (make-string depth ? ))
-	  (citation ">"))
-      (move-to-column depth)
-      (if (looking-at citation)
-	  (progn
-	    (while (looking-at citation)
-	      (forward-line)
-	      (move-to-column depth))
-	    (let ((overlay (make-overlay beg-sub (point)))
-                  (invis-spec (make-symbol "notmuch-citation-region")))
-              (add-to-invisibility-spec invis-spec)
-	      (overlay-put overlay 'invisible invis-spec)
-              (let ((p (point-marker))
-                    (cite-button-text
-                     (concat "["  (number-to-string (count-lines beg-sub (point)))
-                             "-line citation. Click/Enter to show.]")))
-                (goto-char (- beg-sub 1))
-                (insert (concat "\n" indent))
-                (insert-button cite-button-text
-                               'invisibility-spec invis-spec
-                               :type 'notmuch-button-citation-toggle-type)
-                (forward-line)
-              ))))
-      (move-to-column depth)
-      (if (looking-at notmuch-show-signature-regexp)
-	  (let ((sig-lines (- (count-lines beg-sub end) 1)))
-	    (if (<= sig-lines notmuch-show-signature-lines-max)
-		(progn
-                  (let ((invis-spec (make-symbol "notmuch-signature-region")))
-                    (add-to-invisibility-spec invis-spec)
-                    (overlay-put (make-overlay beg-sub end)
-                                 'invisible invis-spec)
-                  
-                    (goto-char (- beg-sub 1))
-                    (insert (concat "\n" indent))
-                    (let ((sig-button-text (concat "[" (number-to-string sig-lines)
-                                                   "-line signature. Click/Enter to show.]")))
-                      (insert-button sig-button-text 'invisibility-spec invis-spec
-                                     :type 'notmuch-button-signature-toggle-type)
-                     )
-                    (insert "\n")
-                    (goto-char end))))))
-      (forward-line))))
+  "Markup citations, and up to one signature in the given region"
+  ;; it would be nice if the untabify was not required, but
+  ;; that would require notmuch to indent with spaces.
+  (untabify beg end)
+  (let ((citation-regexp (notmuch-show-citation-regexp depth))
+	(signature-regexp (concat (format "^[[:space:]]\\{%d\\}" depth)
+				  notmuch-show-signature-regexp))
+	(indent (concat "\n" (make-string depth ? ))))
+    (goto-char beg)
+    (beginning-of-line)
+    (while (and (< (point) end)
+		(re-search-forward citation-regexp end t))
+      (let* ((cite-start (match-beginning 0))
+	     (cite-end 	(match-end 0))
+	     (cite-lines (count-lines cite-start cite-end)))
+	(if (>= cite-lines notmuch-show-citation-lines-min)
+	    (notmuch-show-region-to-button
+	     cite-start cite-end
+	     "citation"
+	     indent
+	     (format notmuch-show-citation-button-format cite-lines)
+	     ))))
+    (if (and (< (point) end)
+	     (re-search-forward signature-regexp end t))
+	(let* ((sig-start (match-beginning 0))
+	       (sig-end (match-end 0))
+	       (sig-lines (1- (count-lines sig-start end))))
+	  (if (<= sig-lines notmuch-show-signature-lines-max)
+	      (notmuch-show-region-to-button
+	       sig-start
+	       end
+	       "signature"
+	       indent
+	       (format notmuch-show-signature-button-format sig-lines)
+	       ))))))
 
 (defun notmuch-show-markup-part (beg end depth)
   (if (re-search-forward notmuch-show-part-begin-regexp nil t)
@@ -961,7 +1000,7 @@ The optional PARENT-BUFFER is the notmuch-search buffer from
 which this notmuch-show command was executed, (so that the next
 thread from that buffer can be show when done with this one).
 
-The optional QUERY-CONTEXT is a notmuch search term. Only messages from the thread 
+The optional QUERY-CONTEXT is a notmuch search term. Only messages from the thread
 matching this search term are shown if non-nil. "
   (interactive "sNotmuch show: ")
   (let ((buffer (get-buffer-create (concat "*notmuch-show-" thread-id "*"))))
