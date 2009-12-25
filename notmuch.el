@@ -95,13 +95,13 @@ move past the indentation when testing this pattern, (so that the
 pattern can still test against the entire line).")
 
 (defvar notmuch-show-signature-button-format
-  "[ %d-line hidden signature. Click/Enter to show ]"
+  "[ %d-line signature. Click/Enter to toggle visibility. ]"
   "String used to construct button text for hidden signatures
 
 Can use up to one integer format parameter, i.e. %d")
 
 (defvar notmuch-show-citation-button-format
-  "[ %d-line hidden citation. Click/Enter to show ]"
+  "[ %d more citation lines. Click/Enter to toggle visibility. ]"
   "String used to construct button text for hidden citations.
 
 Can use up to one integer format parameter, i.e. %d")
@@ -109,8 +109,11 @@ Can use up to one integer format parameter, i.e. %d")
 (defvar notmuch-show-signature-lines-max 12
   "Maximum length of signature that will be hidden by default.")
 
-(defvar notmuch-show-citation-lines-min 4
-  "Minimum length of citation that will be hidden.")
+(defvar notmuch-show-citation-lines-prefix 4
+  "Always show at least this many lines of a citation.
+
+If there is one more line, show that, otherwise collapse
+remaining lines into a button.")
 
 (defvar notmuch-command "notmuch"
   "Command to run the notmuch binary.")
@@ -683,13 +686,16 @@ is what to put on the button."
       (let* ((cite-start (match-beginning 0))
 	     (cite-end 	(match-end 0))
 	     (cite-lines (count-lines cite-start cite-end)))
-	(if (>= cite-lines notmuch-show-citation-lines-min)
-	    (notmuch-show-region-to-button
-	     cite-start cite-end
-	     "citation"
-	     indent
-	     (format notmuch-show-citation-button-format cite-lines)
-	     ))))
+	(when (> cite-lines (1+ notmuch-show-citation-lines-prefix))
+	  (goto-char cite-start)
+	  (forward-line notmuch-show-citation-lines-prefix)
+	  (notmuch-show-region-to-button
+	   (point) cite-end
+	   "citation"
+	   indent
+	   (format notmuch-show-citation-button-format
+		   (- cite-lines notmuch-show-citation-lines-prefix))
+	   ))))
     (if (and (< (point) end)
 	     (re-search-forward signature-regexp end t))
 	(let* ((sig-start (match-beginning 0))
