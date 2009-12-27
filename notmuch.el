@@ -1537,8 +1537,8 @@ Currently available key bindings:
   (save-excursion
     (beginning-of-line)
     (let ((beg (point)))
-      (forward-word)
-      (filter-buffer-substring beg (point)))))
+      (re-search-forward "\\([ \t]*[^ \t]+\\)")
+      (filter-buffer-substring (match-beginning 1) (match-end 1)))))
 
 (defun notmuch-folder-show-search (&optional folder)
   "Show a search window for the search related to the specified folder."
