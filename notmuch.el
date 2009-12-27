@@ -1447,6 +1447,7 @@ current search results AND that are tagged with the given tag."
     (define-key map "x" 'kill-this-buffer)
     (define-key map "q" 'kill-this-buffer)
     (define-key map "m" 'message-mail)
+    (define-key map "e" 'notmuch-folder-show-empty-toggle)
     (define-key map ">" 'notmuch-folder-last)
     (define-key map "<" 'notmuch-folder-first)
     (define-key map "=" 'notmuch-folder)
@@ -1523,14 +1524,32 @@ Currently available key bindings:
   (goto-char (point-max))
   (forward-line -1))
 
+(defun notmuch-folder-count (search)
+  (car (process-lines notmuch-command "count" search)))
+
+(setq notmuch-folder-show-empty t)
+
+(defun notmuch-folder-show-empty-toggle ()
+  "Toggle the listing of empty folders"
+  (interactive)
+  (setq notmuch-folder-show-empty (not notmuch-folder-show-empty))
+  (notmuch-folder))
+
 (defun notmuch-folder-add (folders)
   (if folders
-      (let ((name (car (car folders)))
+      (let* ((name (car (car folders)))
 	    (inhibit-read-only t)
-	    (search (cdr (car folders))))
-	(insert name)
-	(indent-to 16 1)
-	(call-process notmuch-command nil t nil "count" search)
+	    (search (cdr (car folders)))
+	    (count (notmuch-folder-count search)))
+	(if (or notmuch-folder-show-empty
+		(not (equal count "0")))
+	    (progn
+	      (insert name)
+	      (indent-to 16 1)
+	      (insert count)
+	      (insert "\n")
+	      )
+	  )
 	(notmuch-folder-add (cdr folders)))))
 
 (defun notmuch-folder-find-name ()
