@@ -146,6 +146,12 @@ Supported options for
 include
 .RS 4
 .TP 4
+.BR \-\-format= ( json | text )
+
+Presents the results in either JSON or plain-text (default).
+.RE
+.RS 4
+.TP 4
 .BR \-\-sort= ( newest\-first | oldest\-first )
 
 This option can be used to present results in either chronological order
@@ -194,7 +200,14 @@ matched message will be displayed.
 .RE
 
 .RS 4
-The  output format  is plain-text,  with all  text-content  MIME parts
+.TP 4
+.B \-\-format=(json|text)
+
+.RS 4
+.TP 4
+.B text
+
+The default plain-text format  has  text-content  MIME parts
 decoded. Various components in the output,
 .RB ( message ", " header ", " body ", " attachment ", and MIME " part ),
 will be delimited by easily-parsed markers. Each marker consists of a
@@ -202,6 +215,18 @@ Control-L character (ASCII decimal 12), the name of the marker, and
 then either an opening or closing brace, ('{' or '}'), to either open
 or close the component.
 
+.RE
+.RS 4
+.TP 4
+.B json
+
+Format output as Javascript Object Notation (JSON). JSON output always
+includes all messages in a matching thread; in effect
+.B \-\-format=json
+implies
+.B \-\-entire\-thread
+
+.RE
 A common use of
 .B notmuch show
 is to display a single thread of email messages. For this, use a

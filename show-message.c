@@ -26,8 +26,6 @@ static void
 show_message_part (GMimeObject *part, int *part_count,
 		   void (*show_part) (GMimeObject *part, int *part_count))
 {
-    *part_count = *part_count + 1;
-
     if (GMIME_IS_MULTIPART (part)) {
 	GMimeMultipart *multipart = GMIME_MULTIPART (part);
 	int i;
@@ -55,6 +53,8 @@ show_message_part (GMimeObject *part, int *part_count,
 		 g_type_name (G_OBJECT_TYPE (part)));
 	return;
     }
+
+    *part_count = *part_count + 1;
 
     (*show_part) (part, part_count);
 }

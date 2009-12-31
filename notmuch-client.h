@@ -123,6 +123,9 @@ notmuch_status_t
 show_message_body (const char *filename,
 		   void (*show_part) (GMimeObject *part, int *part_count));
 
+char *
+json_quote_str (const void *ctx, const char *str);
+
 /* notmuch-config.c */
 
 typedef struct _notmuch_config notmuch_config_t;

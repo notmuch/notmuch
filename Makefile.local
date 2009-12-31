@@ -18,7 +18,8 @@ notmuch_client_srcs =		\
 	notmuch-tag.c		\
 	notmuch-time.c		\
 	query-string.c		\
-	show-message.c
+	show-message.c		\
+	json.c
 
 notmuch_client_modules = $(notmuch_client_srcs:.c=.o)
 notmuch: $(notmuch_client_modules) lib/notmuch.a
