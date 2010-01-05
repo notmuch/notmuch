@@ -131,8 +131,8 @@ is_maildir (struct dirent **entries, int count)
  *         'db_mtime' call add_message to add the file to the
  *         database.
  *
- *       o For each sub-directory of path, recursively call into this
- *         same function.
+ *   o For each sub-directory of path, recursively call into this
+ *     same function.
  *
  *   o Tell the database to update its time of 'path' to 'fs_mtime'
  *
