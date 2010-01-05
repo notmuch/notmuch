@@ -63,10 +63,11 @@ typedef struct {
  *
  *	tag:	   Any tags associated with this message by the user.
  *
- *	direntry:  A colon-separated pair of values (INTEGER:STRING),
- *		   where INTEGER is the document ID of a directory
- *		   document, and STRING is the name of a file within
- *		   that directory for this mail message.
+ *	file-direntry:  A colon-separated pair of values
+ *		        (INTEGER:STRING), where INTEGER is the
+ *		        document ID of a directory document, and
+ *		        STRING is the name of a file within that
+ *		        directory for this mail message.
  *
  *    A mail document also has two values:
  *
@@ -88,22 +89,28 @@ typedef struct {
  * maintain data necessary to allow for efficient polling of mail
  * directories.
  *
- * The directory document contains the following terms:
+ * All directory documents contain one term:
  *
  *	directory:	The directory path (relative to the database path)
  *			Or the SHA1 sum of the directory path (if the
  *			path itself is too long to fit in a Xapian
  *			term).
  *
- *	parent:		The document ID of the parent directory document.
- *			Top-level directories will have a parent value of 0.
+ * And all directory documents for directories other than top-level
+ * directories also contain the following term:
  *
- * and has a single value:
+ *	directory-direntry: A colon-separated pair of values
+ *		            (INTEGER:STRING), where INTEGER is the
+ *		            document ID of the parent directory
+ *		            document, and STRING is the name of this
+ *		            directory within that parent.
+ *
+ * All directory documents have a single value:
  *
  *	TIMESTAMP:	The mtime of the directory (at last scan)
  *
  * The data portion of a directory document contains the path of the
- * directory (relative to the datbase path).
+ * directory (relative to the database path).
  */
 
 /* With these prefix values we follow the conventions published here:
@@ -122,25 +129,25 @@ typedef struct {
  */
 
 prefix_t BOOLEAN_PREFIX_INTERNAL[] = {
-    { "type", "T" },
-    { "reference", "XREFERENCE" },
-    { "replyto", "XREPLYTO" },
-    { "directory", "XDIRECTORY" },
-    { "direntry", "XDIRENTRY" },
-    { "parent", "XPARENT" },
+    { "type",			"T" },
+    { "reference",		"XREFERENCE" },
+    { "replyto",		"XREPLYTO" },
+    { "directory",		"XDIRECTORY" },
+    { "file-direntry",		"XFDIRENTRY" },
+    { "directory-direntry",	"XDDIRENTRY" },
 };
 
 prefix_t BOOLEAN_PREFIX_EXTERNAL[] = {
-    { "thread", "G" },
-    { "tag", "K" },
-    { "id", "Q" }
+    { "thread",			"G" },
+    { "tag",			"K" },
+    { "id",			"Q" }
 };
 
 prefix_t PROBABILISTIC_PREFIX[]= {
-    { "from", "XFROM" },
-    { "to", "XTO" },
-    { "attachment", "XATTACHMENT" },
-    { "subject", "XSUBJECT"}
+    { "from",			"XFROM" },
+    { "to",			"XTO" },
+    { "attachment",		"XATTACHMENT" },
+    { "subject",		"XSUBJECT"}
 };
 
 int
@@ -241,11 +248,11 @@ find_doc_ids (notmuch_database_t *notmuch,
     talloc_free (term);
 }
 
-static notmuch_private_status_t
-find_unique_doc_id (notmuch_database_t *notmuch,
-		    const char *prefix_name,
-		    const char *value,
-		    unsigned int *doc_id)
+notmuch_private_status_t
+_notmuch_database_find_unique_doc_id (notmuch_database_t *notmuch,
+				      const char *prefix_name,
+				      const char *value,
+				      unsigned int *doc_id)
 {
     Xapian::PostingIterator i, end;
 
@@ -275,26 +282,6 @@ find_document_for_doc_id (notmuch_database_t *notmuch, unsigned doc_id)
     return notmuch->xapian_db->get_document (doc_id);
 }
 
-static notmuch_private_status_t
-find_unique_document (notmuch_database_t *notmuch,
-		      const char *prefix_name,
-		      const char *value,
-		      Xapian::Document *document,
-		      unsigned int *doc_id)
-{
-    notmuch_private_status_t status;
-
-    status = find_unique_doc_id (notmuch, prefix_name, value, doc_id);
-
-    if (status) {
-	*document = Xapian::Document ();
-	return status;
-    }
-
-    *document = find_document_for_doc_id (notmuch, *doc_id);
-    return NOTMUCH_PRIVATE_STATUS_SUCCESS;
-}
-
 notmuch_message_t *
 notmuch_database_find_message (notmuch_database_t *notmuch,
 			       const char *message_id)
@@ -302,7 +289,8 @@ notmuch_database_find_message (notmuch_database_t *notmuch,
     notmuch_private_status_t status;
     unsigned int doc_id;
 
-    status = find_unique_doc_id (notmuch, "id", message_id, &doc_id);
+    status = _notmuch_database_find_unique_doc_id (notmuch, "id",
+						   message_id, &doc_id);
 
     if (status == NOTMUCH_PRIVATE_STATUS_NO_DOCUMENT_FOUND)
 	return NULL;
@@ -593,13 +581,6 @@ notmuch_database_get_path (notmuch_database_t *notmuch)
     return notmuch->path;
 }
 
-static notmuch_private_status_t
-find_directory_document (notmuch_database_t *notmuch, const char *db_path,
-			 Xapian::Document *doc, unsigned int *doc_id)
-{
-    return find_unique_document (notmuch, "directory", db_path, doc, doc_id);
-}
-
 /* We allow the user to use arbitrarily long paths for directories. But
  * we have a term-length limit. So if we exceed that, we'll use the
  * SHA-1 of the path for the database term.
@@ -608,8 +589,8 @@ find_directory_document (notmuch_database_t *notmuch, const char *db_path,
  * does not, then the caller is responsible to free() the returned
  * value.
  */
-static const char *
-directory_db_path (const char *path)
+const char *
+_notmuch_database_get_directory_db_path (const char *path)
 {
     int term_len = strlen (_find_prefix ("directory")) + strlen (path);
 
@@ -705,38 +686,25 @@ _notmuch_database_find_directory_id (notmuch_database_t *notmuch,
 				     const char *path,
 				     unsigned int *directory_id)
 {
-    notmuch_private_status_t private_status;
-    notmuch_status_t status = NOTMUCH_STATUS_SUCCESS;
-    const char *db_path;
+    notmuch_directory_t *directory;
+    notmuch_status_t status;
 
     if (path == NULL) {
 	*directory_id = 0;
 	return NOTMUCH_STATUS_SUCCESS;
     }
 
-    db_path = directory_db_path (path);
-
-    private_status = find_unique_doc_id (notmuch, "directory",
-					 db_path, directory_id);
-    if (private_status == NOTMUCH_PRIVATE_STATUS_NO_DOCUMENT_FOUND) {
-	status = notmuch_database_set_directory_mtime (notmuch,
-						       path, 0);
-	if (status)
-	    goto DONE;
-
-	private_status = find_unique_doc_id (notmuch, "directory",
-					     db_path, directory_id);
-	status = COERCE_STATUS (private_status, "_find_directory_id");
+    directory = _notmuch_directory_create (notmuch, path, &status);
+    if (status) {
+	*directory_id = -1;
+	return status;
     }
 
-  DONE:
-    if (db_path != path)
-	free ((char *) db_path);
+    *directory_id = _notmuch_directory_get_document_id (directory);
 
-    if (status)
-	*directory_id = -1;
+    notmuch_directory_destroy (directory);
 
-    return status;
+    return NOTMUCH_STATUS_SUCCESS;
 }
 
 const char *
@@ -817,101 +785,13 @@ _notmuch_database_relative_path (notmuch_database_t *notmuch,
     return relative;
 }
 
-notmuch_status_t
-notmuch_database_set_directory_mtime (notmuch_database_t *notmuch,
-				      const char *path,
-				      time_t mtime)
+notmuch_directory_t *
+notmuch_database_get_directory (notmuch_database_t *notmuch,
+				const char *path)
 {
-    Xapian::Document doc;
-    Xapian::WritableDatabase *db;
-    unsigned int doc_id;
-    notmuch_private_status_t status;
-    notmuch_status_t ret = NOTMUCH_STATUS_SUCCESS;
-    const char *parent, *db_path = NULL;
-    unsigned int parent_id;
-    void *local = talloc_new (notmuch);
+    notmuch_status_t status;
 
-    if (notmuch->mode == NOTMUCH_DATABASE_MODE_READ_ONLY) {
-	fprintf (stderr, "Attempted to update a read-only database.\n");
-	return NOTMUCH_STATUS_READONLY_DATABASE;
-    }
-
-    path = _notmuch_database_relative_path (notmuch, path);
-
-    db = static_cast <Xapian::WritableDatabase *> (notmuch->xapian_db);
-    db_path = directory_db_path (path);
-
-    try {
-	status = find_directory_document (notmuch, db_path, &doc, &doc_id);
-
-	doc.add_value (NOTMUCH_VALUE_TIMESTAMP,
-		       Xapian::sortable_serialise (mtime));
-
-	if (status == NOTMUCH_PRIVATE_STATUS_NO_DOCUMENT_FOUND) {
-	    char *term = talloc_asprintf (local, "%s%s",
-					  _find_prefix ("directory"), db_path);
-	    doc.add_term (term);
-
-	    doc.set_data (path);
-
-	    _notmuch_database_split_path (local, path, &parent, NULL);
-
-	    _notmuch_database_find_directory_id (notmuch, parent, &parent_id);
-
-	    term = talloc_asprintf (local, "%s%u",
-				    _find_prefix ("parent"),
-				    parent_id);
-	    doc.add_term (term);
-
-	    db->add_document (doc);
-	} else {
-	    db->replace_document (doc_id, doc);
-	}
-
-    } catch (const Xapian::Error &error) {
-	fprintf (stderr, "A Xapian exception occurred setting directory mtime: %s.\n",
-		 error.get_msg().c_str());
-	notmuch->exception_reported = TRUE;
-	ret = NOTMUCH_STATUS_XAPIAN_EXCEPTION;
-    }
-
-    if (db_path != path)
-	free ((char *) db_path);
-
-    talloc_free (local);
-
-    return ret;
-}
-
-time_t
-notmuch_database_get_directory_mtime (notmuch_database_t *notmuch,
-				      const char *path)
-{
-    Xapian::Document doc;
-    unsigned int doc_id;
-    notmuch_private_status_t status;
-    const char *db_path = NULL;
-    time_t ret = 0;
-
-    db_path = directory_db_path (path);
-
-    try {
-	status = find_directory_document (notmuch, db_path, &doc, &doc_id);
-
-	if (status == NOTMUCH_PRIVATE_STATUS_NO_DOCUMENT_FOUND)
-	    goto DONE;
-
-	ret =  Xapian::sortable_unserialise (doc.get_value (NOTMUCH_VALUE_TIMESTAMP));
-    } catch (Xapian::Error &error) {
-	ret = 0;
-	goto DONE;
-    }
-
-  DONE:
-    if (db_path != path)
-	free ((char *) db_path);
-
-    return ret;
+    return _notmuch_directory_create (notmuch, path, &status);
 }
 
 /* Find the thread ID to which the message with 'message_id' belongs.
@@ -1284,7 +1164,7 @@ notmuch_database_remove_message (notmuch_database_t *notmuch,
 {
     Xapian::WritableDatabase *db;
     void *local = talloc_new (notmuch);
-    const char *direntry_prefix = _find_prefix ("direntry");
+    const char *prefix = _find_prefix ("file-direntry");
     char *direntry, *term;
     Xapian::PostingIterator i, end;
     Xapian::Document document;
@@ -1302,7 +1182,7 @@ notmuch_database_remove_message (notmuch_database_t *notmuch,
     if (status)
 	return status;
 
-    term = talloc_asprintf (notmuch, "%s%s", direntry_prefix, direntry);
+    term = talloc_asprintf (notmuch, "%s%s", prefix, direntry);
 
     find_doc_ids_for_term (notmuch, term, &i, &end);
 
@@ -1314,11 +1194,11 @@ notmuch_database_remove_message (notmuch_database_t *notmuch,
 	document.remove_term (term);
 
 	j = document.termlist_begin ();
-	j.skip_to (direntry_prefix);
+	j.skip_to (prefix);
 
-	/* Was this the last direntry in the message? */
+	/* Was this the last file-direntry in the message? */
 	if (j == document.termlist_end () ||
-	    strncmp ((*j).c_str (), direntry_prefix, strlen (direntry_prefix)))
+	    strncmp ((*j).c_str (), prefix, strlen (prefix)))
 	{
 	    db->delete_document (document.get_docid ());
 	} else {

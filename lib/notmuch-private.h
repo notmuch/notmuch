@@ -161,6 +161,15 @@ _notmuch_database_split_path (void *ctx,
 			      const char **directory,
 			      const char **basename);
 
+const char *
+_notmuch_database_get_directory_db_path (const char *path);
+
+notmuch_private_status_t
+_notmuch_database_find_unique_doc_id (notmuch_database_t *notmuch,
+				      const char *prefix_name,
+				      const char *value,
+				      unsigned int *doc_id);
+
 notmuch_status_t
 _notmuch_database_find_directory_id (notmuch_database_t *database,
 				     const char *path,
@@ -176,6 +185,16 @@ _notmuch_database_filename_to_direntry (void *ctx,
 					notmuch_database_t *notmuch,
 					const char *filename,
 					char **direntry);
+
+/* directory.cc */
+
+notmuch_directory_t *
+_notmuch_directory_create (notmuch_database_t *notmuch,
+			   const char *path,
+			   notmuch_status_t *status_ret);
+
+unsigned int
+_notmuch_directory_get_document_id (notmuch_directory_t *directory);
 
 /* thread.cc */
 

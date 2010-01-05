@@ -143,10 +143,13 @@ add_files_recursive (notmuch_database_t *notmuch,
     notmuch_message_t *message = NULL;
     struct dirent **namelist = NULL;
     int num_entries;
+    notmuch_directory_t *directory;
 
     path_mtime = st->st_mtime;
 
-    path_dbtime = notmuch_database_get_directory_mtime (notmuch, path);
+    directory = notmuch_database_get_directory (notmuch, path);
+    path_dbtime = notmuch_directory_get_mtime (directory);
+
     num_entries = scandir (path, &namelist, 0, ino_cmp);
 
     if (num_entries == -1) {
@@ -277,7 +280,7 @@ add_files_recursive (notmuch_database_t *notmuch,
 	next = NULL;
     }
 
-    status = notmuch_database_set_directory_mtime (notmuch, path, path_mtime);
+    status = notmuch_directory_set_mtime (directory, path_mtime);
     if (status && ret == NOTMUCH_STATUS_SUCCESS)
 	ret = status;
 

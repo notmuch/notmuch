@@ -411,7 +411,7 @@ _notmuch_message_add_filename (notmuch_message_t *message,
     if (status)
 	return status;
 
-    _notmuch_message_add_term (message, "direntry", direntry);
+    _notmuch_message_add_term (message, "file-direntry", direntry);
 
     talloc_free (local);
 
@@ -421,7 +421,7 @@ _notmuch_message_add_filename (notmuch_message_t *message,
 const char *
 notmuch_message_get_filename (notmuch_message_t *message)
 {
-    const char *prefix = _find_prefix ("direntry");
+    const char *prefix = _find_prefix ("file-direntry");
     int prefix_len = strlen (prefix);
     Xapian::TermIterator i;
     char *direntry, *colon;

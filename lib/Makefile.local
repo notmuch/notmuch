@@ -11,6 +11,7 @@ libnotmuch_c_srcs =		\
 
 libnotmuch_cxx_srcs =		\
 	$(dir)/database.cc	\
+	$(dir)/directory.cc	\
 	$(dir)/index.cc		\
 	$(dir)/message.cc	\
 	$(dir)/query.cc		\
