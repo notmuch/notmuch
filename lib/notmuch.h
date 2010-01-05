@@ -115,7 +115,7 @@ typedef struct _notmuch_messages notmuch_messages_t;
 typedef struct _notmuch_message notmuch_message_t;
 typedef struct _notmuch_tags notmuch_tags_t;
 typedef struct _notmuch_directory notmuch_directory_t;
-typedef struct _notmuch_files notmuch_files_t;
+typedef struct _notmuch_filenames notmuch_filenames_t;
 
 /* Create a new, empty notmuch database located at 'path'.
  *
@@ -180,47 +180,19 @@ notmuch_database_close (notmuch_database_t *database);
 const char *
 notmuch_database_get_path (notmuch_database_t *database);
 
-/* Read the stored contents of a directory from the database.
+/* Retrieve a directory object from the database for 'path'.
  *
- * Here, 'dirname' should be a path relative to the path of
- * 'database' (see notmuch_database_get_path), or else should be an
- * absolute filename with initial components that match the path of
- * 'database'.
+ * Here, 'path' should be a path relative to the path of 'database'
+ * (see notmuch_database_get_path), or else should be an absolute path
+ * with initial components that match the path of 'database'.
  *
- * The stored mtime of the directory along with a list of messages
- * and directories in the database contained in 'dirname' are
- * returned in 'directory'. The entries are sorted by filename.
+ * Note: The resulting notmuch_directory_t object will represent the
+ * state as it currently exists in the database, (and will not reflect
+ * subsequent changes).
  */
-notmuch_status_t
-notmuch_database_read_directory (notmuch_database_t *database,
-				 const char *filename,
-				 notmuch_directory_t **directory);
-
-/* Return the recorded 'mtime' for the given directory
- */
-time_t
-notmuch_directory_get_mtime (notmuch_directory_t *directory);
-
-/* Return a notmuch_files_t iterator for all regular files in 'directory'.
- */
-notmuch_files_t *
-notmuch_directory_get_files (notmuch_directory_t *directory);
-
-/* Return a notmuch_files_t iterator for all sub-directories of
- * 'directory'.
- */
-notmuch_files_t *
-notmuch_directory_get_subdirs (notmuch_directory_t *directory);
-
-/* Does the given notmuch_files_t object contain any more results.
- */
-notmuch_bool_t
-notmuch_files_has_more (notmuch_files_t *files);
-
-/* Get the current filename from 'files' as a string.
- */
-const char *
-notmuch_files_get_filename (notmuch_files_t *files);
+notmuch_directory_t *
+notmuch_database_get_directory (notmuch_database_t *database,
+				const char *path);
 
 /* Add a new message to the given notmuch database.
  *
@@ -721,16 +693,6 @@ notmuch_message_get_replies (notmuch_message_t *message);
 const char *
 notmuch_message_get_filename (notmuch_message_t *message);
 
-/* Remove a filename for the email corresponding to 'message'.
- *
- * This removes the association between a filename and a message,
- * when the last filename is gone, the entire message is removed
- * from the database.
- */
-notmuch_status_t
-notmuch_message_remove_filename (notmuch_message_t *message,
-				 const char *filename);
-
 /* Message flags */
 typedef enum _notmuch_message_flag {
     NOTMUCH_MESSAGE_FLAG_MATCH,
@@ -950,6 +912,103 @@ notmuch_tags_advance (notmuch_tags_t *tags);
  */
 void
 notmuch_tags_destroy (notmuch_tags_t *tags);
+
+/* Store an mtime within the database for 'directory'.
+ *
+ * The 'directory' should be an object retrieved from the database
+ * with notmuch_database_get_directory for a particular path.
+ *
+ * The intention is for the caller to use the mtime to allow efficient
+ * identification of new messages to be added to the database. The
+ * recommended usage is as follows:
+ *
+ *   o Read the mtime of a directory from the filesystem
+ *
+ *   o Call add_message for all mail files in the directory
+ *
+ *   o Call notmuch_directory_set_mtime with the mtime read from the
+ *     filesystem.
+ *
+ * Then, when wanting to check for updates to the directory in the
+ * future, the client can call notmuch_directory_get_mtime and know
+ * that it only needs to add files if the mtime of the directory and
+ * files are newer than the stored timestamp.
+ *
+ * Note: The notmuch_directory_get_mtime function does not allow the
+ * caller to distinguish a timestamp of 0 from a non-existent
+ * timestamp. So don't store a timestamp of 0 unless you are
+ * comfortable with that.
+ *
+ * Return value:
+ *
+ * NOTMUCH_STATUS_SUCCESS: mtime successfully stored in database.
+ *
+ * NOTMUCH_STATUS_XAPIAN_EXCEPTION: A Xapian exception
+ *	occurred, mtime not stored.
+ */
+notmuch_status_t
+notmuch_directory_set_mtime (notmuch_directory_t *directory,
+			     time_t mtime);
+
+/* Get the mtime of a directory, (as previously stored with
+ * notmuch_directory_set_mtime).
+ *
+ * Returns 0 if not mtime has previously been stored for this
+ * directory.*/
+time_t
+notmuch_directory_get_mtime (notmuch_directory_t *directory);
+
+/* Get a notmuch_filenames_t iterator listing all the filenames of
+ * messages in the database within the given directory.
+ *
+ * The returned filenames will be the basename-entries only (not
+ * complete paths). */
+notmuch_filenames_t *
+notmuch_directory_get_child_files (notmuch_directory_t *directory);
+
+/* Get a notmuch_filenams_t iterator listing all the filenames of
+ * sub-directories in the database within the given directory.
+ *
+ * The returned filenames will be the basename-entries only (not
+ * complete paths). */
+notmuch_filenames_t *
+notmuch_directory_get_child_directories (notmuch_directory_t *directory);
+
+/* Destroy a notmuch_directory_t object. */
+void
+notmuch_directory_destroy (notmuch_directory_t *directory);
+
+/* Does the given notmuch_filenames_t object contain any more
+ * filenames.
+ *
+ * When this function returns TRUE, notmuch_filenames_get will return
+ * a valid string. Whereas when this function returns FALSE,
+ * notmuch_filenames_get will return NULL.
+ */
+notmuch_bool_t
+notmuch_filenames_has_more (notmuch_filenames_t *filenames);
+
+/* Get the current filename from 'filenames' as a string.
+ *
+ * Note: The returned string belongs to 'filenames' and has a lifetime
+ * identical to it (and the directory to which it ultimately belongs).
+ */
+const char *
+notmuch_filenames_get (notmuch_filenames_t *filenames);
+
+/* Advance the 'filenames' iterator to the next filename.
+ */
+void
+notmuch_filenames_advance (notmuch_filenames_t *filenames);
+
+/* Destroy a notmuch_filenames_t object.
+ *
+ * It's not strictly necessary to call this function. All memory from
+ * the notmuch_filenames_t object will be reclaimed when the
+ * containing directory object is destroyed.
+ */
+void
+notmuch_filenames_destroy (notmuch_filenames_t *filenames);
 
 NOTMUCH_END_DECLS
 
