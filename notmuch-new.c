@@ -22,8 +22,6 @@
 
 #include <unistd.h>
 
-typedef void (*add_files_callback_t) (notmuch_message_t *message);
-
 typedef struct {
     int output_is_a_tty;
     int verbose;
@@ -32,8 +30,6 @@ typedef struct {
     int processed_files;
     int added_messages;
     struct timeval tv_start;
-
-    add_files_callback_t callback;
 } add_files_state_t;
 
 static volatile sig_atomic_t do_add_files_print_progress = 0;
