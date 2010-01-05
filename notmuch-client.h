@@ -70,20 +70,6 @@
 #define STRNCMP_LITERAL(var, literal) \
     strncmp ((var), (literal), sizeof (literal) - 1)
 
-typedef void (*add_files_callback_t) (notmuch_message_t *message);
-
-typedef struct {
-    int output_is_a_tty;
-    int verbose;
-
-    int total_files;
-    int processed_files;
-    int added_messages;
-    struct timeval tv_start;
-
-    add_files_callback_t callback;
-} add_files_state_t;
-
 static inline void
 chomp_newline (char *str)
 {
@@ -129,10 +115,6 @@ notmuch_time_print_formatted_seconds (double seconds);
 
 double
 notmuch_time_elapsed (struct timeval start, struct timeval end);
-
-notmuch_status_t
-add_files (notmuch_database_t *notmuch, const char *path,
-	   add_files_state_t *state);
 
 char *
 query_string_from_args (void *ctx, int argc, char *argv[]);
