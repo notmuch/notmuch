@@ -121,20 +121,20 @@ is_maildir (struct dirent **entries, int count)
 
 /* Examine 'path' recursively as follows:
  *
- *   o Ask the filesystem for the mtime of 'path' (path_mtime)
+ *   o Ask the filesystem for the mtime of 'path' (fs_mtime)
  *
- *   o Ask the database for its timestamp of 'path' (path_dbtime)
+ *   o Ask the database for its timestamp of 'path' (db_mtime)
  *
- *   o If 'path_mtime' > 'path_dbtime'
+ *   o If 'fs_mtime' > 'db_mtime'
  *
  *       o For each regular file in 'path' with mtime newer than the
- *         'path_dbtime' call add_message to add the file to the
+ *         'db_mtime' call add_message to add the file to the
  *         database.
  *
  *       o For each sub-directory of path, recursively call into this
  *         same function.
  *
- *   o Tell the database to update its time of 'path' to 'path_mtime'
+ *   o Tell the database to update its time of 'path' to 'fs_mtime'
  *
  * The 'struct stat *st' must point to a structure that has already
  * been initialized for 'path' by calling stat().
@@ -148,17 +148,17 @@ add_files_recursive (notmuch_database_t *notmuch,
     DIR *dir = NULL;
     struct dirent *entry = NULL;
     char *next = NULL;
-    time_t path_mtime, path_dbtime;
+    time_t fs_mtime, db_mtime;
     notmuch_status_t status, ret = NOTMUCH_STATUS_SUCCESS;
     notmuch_message_t *message = NULL;
     struct dirent **namelist = NULL;
     int num_entries;
     notmuch_directory_t *directory;
 
-    path_mtime = st->st_mtime;
+    fs_mtime = st->st_mtime;
 
     directory = notmuch_database_get_directory (notmuch, path);
-    path_dbtime = notmuch_directory_get_mtime (directory);
+    db_mtime = notmuch_directory_get_mtime (directory);
 
     num_entries = scandir (path, &namelist, 0, ino_cmp);
 
@@ -180,7 +180,7 @@ add_files_recursive (notmuch_database_t *notmuch,
 	/* If this directory hasn't been modified since the last
 	 * add_files, then we only need to look further for
 	 * sub-directories. */
-	if (path_mtime <= path_dbtime && entry->d_type == DT_REG)
+	if (fs_mtime <= db_mtime && entry->d_type == DT_REG)
 	    continue;
 
 	/* Ignore special directories to avoid infinite recursion.
@@ -221,7 +221,7 @@ add_files_recursive (notmuch_database_t *notmuch,
 	if (S_ISREG (st->st_mode)) {
 	    /* If the file hasn't been modified since the last
 	     * add_files, then we need not look at it. */
-	    if (path_dbtime == 0 || st->st_mtime > path_dbtime) {
+	    if (db_mtime == 0 || st->st_mtime > db_mtime) {
 		state->processed_files++;
 
 		if (state->verbose) {
@@ -291,7 +291,7 @@ add_files_recursive (notmuch_database_t *notmuch,
     }
 
     if (! interrupted) {
-	status = notmuch_directory_set_mtime (directory, path_mtime);
+	status = notmuch_directory_set_mtime (directory, fs_mtime);
 	if (status && ret == NOTMUCH_STATUS_SUCCESS)
 	    ret = status;
     }
