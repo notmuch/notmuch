@@ -290,9 +290,11 @@ add_files_recursive (notmuch_database_t *notmuch,
 	next = NULL;
     }
 
-    status = notmuch_directory_set_mtime (directory, path_mtime);
-    if (status && ret == NOTMUCH_STATUS_SUCCESS)
-	ret = status;
+    if (! interrupted) {
+	status = notmuch_directory_set_mtime (directory, path_mtime);
+	if (status && ret == NOTMUCH_STATUS_SUCCESS)
+	    ret = status;
+    }
 
   DONE:
     if (next)
