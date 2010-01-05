@@ -127,9 +127,8 @@ is_maildir (struct dirent **entries, int count)
  *
  *   o If 'fs_mtime' > 'db_mtime'
  *
- *       o For each regular file in 'path' with mtime newer than the
- *         'db_mtime' call add_message to add the file to the
- *         database.
+ *       o For each regular file directly within 'path', call
+ *         add_message to add the file to the database.
  *
  *   o For each sub-directory of path, recursively call into this
  *     same function.
@@ -219,66 +218,62 @@ add_files_recursive (notmuch_database_t *notmuch,
 	}
 
 	if (S_ISREG (st->st_mode)) {
-	    /* If the file hasn't been modified since the last
-	     * add_files, then we need not look at it. */
-	    if (db_mtime == 0 || st->st_mtime > db_mtime) {
-		state->processed_files++;
+	    state->processed_files++;
 
-		if (state->verbose) {
-		    if (state->output_is_a_tty)
-			printf("\r\033[K");
+	    if (state->verbose) {
+		if (state->output_is_a_tty)
+		    printf("\r\033[K");
 
-		    printf ("%i/%i: %s",
-			    state->processed_files,
-			    state->total_files,
-			    next);
+		printf ("%i/%i: %s",
+			state->processed_files,
+			state->total_files,
+			next);
 
-		    putchar((state->output_is_a_tty) ? '\r' : '\n');
-		    fflush (stdout);
-		}
+		putchar((state->output_is_a_tty) ? '\r' : '\n');
+		fflush (stdout);
+	    }
 
-		status = notmuch_database_add_message (notmuch, next, &message);
-		switch (status) {
-		    /* success */
-		    case NOTMUCH_STATUS_SUCCESS:
-			state->added_messages++;
-			tag_inbox_and_unread (message);
-			break;
-		    /* Non-fatal issues (go on to next file) */
-		    case NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID:
-		        /* Stay silent on this one. */
-			break;
-		    case NOTMUCH_STATUS_FILE_NOT_EMAIL:
-			fprintf (stderr, "Note: Ignoring non-mail file: %s\n",
-				 next);
-			break;
-		    /* Fatal issues. Don't process anymore. */
-		    case NOTMUCH_STATUS_READONLY_DATABASE:
-		    case NOTMUCH_STATUS_XAPIAN_EXCEPTION:
-		    case NOTMUCH_STATUS_OUT_OF_MEMORY:
-			fprintf (stderr, "Error: %s. Halting processing.\n",
-				 notmuch_status_to_string (status));
-			ret = status;
-			goto DONE;
-		    default:
-		    case NOTMUCH_STATUS_FILE_ERROR:
-		    case NOTMUCH_STATUS_NULL_POINTER:
-		    case NOTMUCH_STATUS_TAG_TOO_LONG:
-		    case NOTMUCH_STATUS_UNBALANCED_FREEZE_THAW:
-		    case NOTMUCH_STATUS_LAST_STATUS:
-			INTERNAL_ERROR ("add_message returned unexpected value: %d",  status);
-			goto DONE;
-		}
+	    status = notmuch_database_add_message (notmuch, next, &message);
+	    switch (status) {
+	    /* success */
+	    case NOTMUCH_STATUS_SUCCESS:
+		state->added_messages++;
+		tag_inbox_and_unread (message);
+		break;
+	    /* Non-fatal issues (go on to next file) */
+	    case NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID:
+		/* Stay silent on this one. */
+		break;
+	    case NOTMUCH_STATUS_FILE_NOT_EMAIL:
+		fprintf (stderr, "Note: Ignoring non-mail file: %s\n",
+			 next);
+		break;
+	    /* Fatal issues. Don't process anymore. */
+	    case NOTMUCH_STATUS_READONLY_DATABASE:
+	    case NOTMUCH_STATUS_XAPIAN_EXCEPTION:
+	    case NOTMUCH_STATUS_OUT_OF_MEMORY:
+		fprintf (stderr, "Error: %s. Halting processing.\n",
+			 notmuch_status_to_string (status));
+		ret = status;
+		goto DONE;
+	    default:
+	    case NOTMUCH_STATUS_FILE_ERROR:
+	    case NOTMUCH_STATUS_NULL_POINTER:
+	    case NOTMUCH_STATUS_TAG_TOO_LONG:
+	    case NOTMUCH_STATUS_UNBALANCED_FREEZE_THAW:
+	    case NOTMUCH_STATUS_LAST_STATUS:
+		INTERNAL_ERROR ("add_message returned unexpected value: %d",  status);
+		goto DONE;
+	    }
 
-		if (message) {
-		    notmuch_message_destroy (message);
-		    message = NULL;
-		}
+	    if (message) {
+		notmuch_message_destroy (message);
+		message = NULL;
+	    }
 
-		if (do_add_files_print_progress) {
-		    do_add_files_print_progress = 0;
-		    add_files_print_progress (state);
-		}
+	    if (do_add_files_print_progress) {
+		do_add_files_print_progress = 0;
+		add_files_print_progress (state);
 	    }
 	} else if (S_ISDIR (st->st_mode)) {
 	    status = add_files_recursive (notmuch, next, st, state);
