@@ -57,6 +57,9 @@ typedef int notmuch_bool_t;
  * value. Instead we should map to things like DATABASE_LOCKED or
  * whatever.
  *
+ * NOTMUCH_STATUS_READONLY_DATABASE: An attempt was made to write to a
+ *	database opened in read-only mode.
+ *
  * NOTMUCH_STATUS_XAPIAN_EXCEPTION: A Xapian exception occurred
  *
  * NOTMUCH_STATUS_FILE_ERROR: An error occurred trying to read or
