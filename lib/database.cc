@@ -1201,14 +1201,16 @@ notmuch_database_remove_message (notmuch_database_t *notmuch,
 	    strncmp ((*j).c_str (), prefix, strlen (prefix)))
 	{
 	    db->delete_document (document.get_docid ());
+	    status = NOTMUCH_STATUS_SUCCESS;
 	} else {
 	    db->replace_document (document.get_docid (), document);
+	    status = NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID;
 	}
     }
 
     talloc_free (local);
 
-    return NOTMUCH_STATUS_SUCCESS;
+    return status;
 }
 
 notmuch_tags_t *
