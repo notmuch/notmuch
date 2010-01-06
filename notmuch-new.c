@@ -221,7 +221,7 @@ add_files_recursive (notmuch_database_t *notmuch,
     notmuch_filenames_t *db_files = NULL;
     notmuch_filenames_t *db_subdirs = NULL;
     struct stat st;
-    notmuch_bool_t is_maildir;
+    notmuch_bool_t is_maildir, new_directory;
 
     if (stat (path, &st)) {
 	fprintf (stderr, "Error reading directory %s: %s\n",
@@ -239,15 +239,23 @@ add_files_recursive (notmuch_database_t *notmuch,
 
     directory = notmuch_database_get_directory (notmuch, path);
     db_mtime = notmuch_directory_get_mtime (directory);
-    db_files = notmuch_directory_get_child_files (directory);
-    db_subdirs = notmuch_directory_get_child_directories (directory);
+
+    if (db_mtime == 0) {
+	new_directory = TRUE;
+	db_files = NULL;
+	db_subdirs = NULL;
+    } else {
+	new_directory = FALSE;
+	db_files = notmuch_directory_get_child_files (directory);
+	db_subdirs = notmuch_directory_get_child_directories (directory);
+    }
 
     /* If the database knows about this directory, then we sort based
      * on strcmp to match the database sorting. Otherwise, we can do
      * inode-based sorting for faster filesystem operation. */
     num_fs_entries = scandir (path, &fs_entries, 0,
-			      db_mtime ?
-			      dirent_sort_strcmp_name : dirent_sort_inode);
+			      new_directory ?
+			      dirent_sort_inode : dirent_sort_strcmp_name);
 
     if (num_fs_entries == -1) {
 	fprintf (stderr, "Error opening directory %s: %s\n",
