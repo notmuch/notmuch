@@ -239,6 +239,8 @@ add_files_recursive (notmuch_database_t *notmuch,
 
     directory = notmuch_database_get_directory (notmuch, path);
     db_mtime = notmuch_directory_get_mtime (directory);
+    db_files = notmuch_directory_get_child_files (directory);
+    db_subdirs = notmuch_directory_get_child_directories (directory);
 
     /* If the database knows about this directory, then we sort based
      * on strcmp to match the database sorting. Otherwise, we can do
@@ -294,9 +296,6 @@ add_files_recursive (notmuch_database_t *notmuch,
 	goto DONE;
 
     /* Pass 2: Scan for new files, removed files, and removed directories. */
-    db_files = notmuch_directory_get_child_files (directory);
-    db_subdirs = notmuch_directory_get_child_directories (directory);
-
     for (i = 0; i < num_fs_entries; i++)
     {
 	if (interrupted)
