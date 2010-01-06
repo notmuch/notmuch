@@ -229,10 +229,11 @@ add_files_recursive (notmuch_database_t *notmuch,
 	return NOTMUCH_STATUS_FILE_ERROR;
     }
 
-    if (! S_ISDIR (st.st_mode)) {
-	fprintf (stderr, "Error: %s is not a directory.\n", path);
-	return NOTMUCH_STATUS_FILE_ERROR;
-    }
+    /* This is not an error since we may have recursed based on a
+     * symlink to a regular file, not a directory, and we don't know
+     * that until this stat. */
+    if (! S_ISDIR (st.st_mode))
+	return NOTMUCH_STATUS_SUCCESS;
 
     fs_mtime = st.st_mtime;
 
@@ -262,7 +263,7 @@ add_files_recursive (notmuch_database_t *notmuch,
 
 	entry = fs_entries[i];
 
-	if (entry->d_type != DT_DIR)
+	if (entry->d_type != DT_DIR && entry->d_type != DT_LNK)
 	    continue;
 
 	/* Ignore special directories to avoid infinite recursion.
@@ -447,6 +448,7 @@ add_files (notmuch_database_t *notmuch,
     struct sigaction action;
     struct itimerval timerval;
     notmuch_bool_t timer_is_active = FALSE;
+    struct stat st;
 
     if (state->output_is_a_tty && ! debugger_is_active () && ! state->verbose) {
 	/* Setup our handler for SIGALRM */
@@ -464,6 +466,17 @@ add_files (notmuch_database_t *notmuch,
 	setitimer (ITIMER_REAL, &timerval, NULL);
 
 	timer_is_active = TRUE;
+    }
+
+    if (stat (path, &st)) {
+	fprintf (stderr, "Error reading directory %s: %s\n",
+		 path, strerror (errno));
+	return NOTMUCH_STATUS_FILE_ERROR;
+    }
+
+    if (! S_ISDIR (st.st_mode)) {
+	fprintf (stderr, "Error: %s is not a directory.\n", path);
+	return NOTMUCH_STATUS_FILE_ERROR;
     }
 
     status = add_files_recursive (notmuch, path, state);
