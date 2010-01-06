@@ -629,11 +629,28 @@ notmuch_new_command (void *ctx, int argc, char *argv[])
     ret = add_files (notmuch, db_path, &add_files_state);
 
     for (f = add_files_state.removed_files->head; f; f = f->next) {
-	printf ("Detected removed file: %s\n", f->filename);
+	notmuch_database_remove_message (notmuch, f->filename);
     }
 
     for (f = add_files_state.removed_directories->head; f; f = f->next) {
-	printf ("Detected removed directory: %s\n", f->filename);
+	notmuch_directory_t *directory;
+	notmuch_filenames_t *files;
+
+	directory = notmuch_database_get_directory (notmuch, f->filename);
+
+	for (files = notmuch_directory_get_child_files (directory);
+	     notmuch_filenames_has_more (files);
+	     notmuch_filenames_advance (files))
+	{
+	    char *absolute;
+
+	    absolute = talloc_asprintf (ctx, "%s/%s", f->filename,
+					notmuch_filenames_get (files));
+	    notmuch_database_remove_message (notmuch, absolute);
+	    talloc_free (absolute);
+	}
+
+	notmuch_directory_destroy (directory);
     }
 
     talloc_free (add_files_state.removed_files);
