@@ -87,9 +87,16 @@ add_files_print_progress (add_files_state_t *state)
     fflush (stdout);
 }
 
-static int ino_cmp(const struct dirent **a, const struct dirent **b)
+static int
+dirent_sort_inode (const struct dirent **a, const struct dirent **b)
 {
     return ((*a)->d_ino < (*b)->d_ino) ? -1 : 1;
+}
+
+static int
+dirent_sort_strcmp_name (const struct dirent **a, const struct dirent **b)
+{
+    return strcmp ((*a)->d_name, (*b)->d_name);
 }
 
 /* Test if the directory looks like a Maildir directory.
@@ -124,21 +131,37 @@ _entries_resemble_maildir (struct dirent **entries, int count)
 /* Examine 'path' recursively as follows:
  *
  *   o Ask the filesystem for the mtime of 'path' (fs_mtime)
- *
  *   o Ask the database for its timestamp of 'path' (db_mtime)
  *
- *   o For each sub-directory of path, recursively call into this
- *     same function.
+ *   o Ask the filesystem for files and directories within 'path'
+ *     (via scandir and stored in fs_entries)
+ *   o Ask the database for files and directories within 'path'
+ *     (db_files and db_subdirs)
  *
- *   o If 'fs_mtime' > 'db_mtime'
+ *   o Pass 1: For each directory in fs_entries, recursively call into
+ *     this same function.
  *
- *       o For each regular file directly within 'path', call
- *         add_message to add the file to the database.
+ *   o Pass 2: If 'fs_mtime' > 'db_mtime', then walk fs_entries
+ *     simultaneously with db_files and db_subdirs. Look for one of
+ *     three interesting cases:
+ *
+ *	   1. Regular file in fs_entries and not in db_files
+ *            This is a new file to add_message into the database.
+ *
+ *         2. Filename in db_files not in fs_entries.
+ *            This is a file that has been removed from the mail store.
+ *
+ *         3. Directory in db_subdirs not in fs_entries
+ *            This is a directory that has been removed from the mail store.
+ *
+ *     Note that the addition of a directory is not interesting here,
+ *     since that will have been taken care of in pass 1. Also, we
+ *     don't immediately act on file/directory removal since we must
+ *     ensure that in the case of a rename that the new filename is
+ *     added before the old filename is removed, (so that no
+ *     information is lost from the database).
  *
  *   o Tell the database to update its time of 'path' to 'fs_mtime'
- *
- * The 'struct stat *st' must point to a structure that has already
- * been initialized for 'path' by calling stat().
  */
 static notmuch_status_t
 add_files_recursive (notmuch_database_t *notmuch,
@@ -154,6 +177,8 @@ add_files_recursive (notmuch_database_t *notmuch,
     struct dirent **fs_entries = NULL;
     int i, num_fs_entries;
     notmuch_directory_t *directory;
+    notmuch_filenames_t *db_files = NULL;
+    notmuch_filenames_t *db_subdirs = NULL;
     struct stat st;
     notmuch_bool_t is_maildir;
 
@@ -173,7 +198,12 @@ add_files_recursive (notmuch_database_t *notmuch,
     directory = notmuch_database_get_directory (notmuch, path);
     db_mtime = notmuch_directory_get_mtime (directory);
 
-    num_fs_entries = scandir (path, &fs_entries, 0, ino_cmp);
+    /* If the database knows about this directory, then we sort based
+     * on strcmp to match the database sorting. Otherwise, we can do
+     * inode-based sorting for faster filesystem operation. */
+    num_fs_entries = scandir (path, &fs_entries, 0,
+			      db_mtime ?
+			      dirent_sort_strcmp_name : dirent_sort_inode);
 
     if (num_fs_entries == -1) {
 	fprintf (stderr, "Error opening directory %s: %s\n",
@@ -182,7 +212,7 @@ add_files_recursive (notmuch_database_t *notmuch,
 	goto DONE;
     }
 
-    /* First, recurse into all sub-directories. */
+    /* Pass 1: Recurse into all sub-directories. */
     is_maildir = _entries_resemble_maildir (fs_entries, num_fs_entries);
 
     for (i = 0; i < num_fs_entries; i++) {
@@ -217,21 +247,55 @@ add_files_recursive (notmuch_database_t *notmuch,
     }
 
     /* If this directory hasn't been modified since the last
-     * add_files, then we can skip the second pass where we look for
-     * new files in this directory. */
+     * "notmuch new", then we can skip the second pass entirely. */
     if (fs_mtime <= db_mtime)
 	goto DONE;
 
-    /* Second, scan the regular files in this directory. */
-    for (i = 0; i < num_fs_entries; i++) {
+    /* Pass 2: Scan for new files, removed files, and removed directories. */
+    db_files = notmuch_directory_get_child_files (directory);
+    db_subdirs = notmuch_directory_get_child_directories (directory);
+
+    for (i = 0; i < num_fs_entries; i++)
+    {
 	if (interrupted)
 	    break;
 
         entry = fs_entries[i];
 
+	/* Check if we've walked past any names in db_files or
+	 * db_subdirs. If so, these have been deleted. */
+	while (notmuch_filenames_has_more (db_files) &&
+	       strcmp (notmuch_filenames_get (db_files), entry->d_name) < 0)
+	{
+	    printf ("Detected deleted file %s/%s\n", path,
+		    notmuch_filenames_get (db_files));
+
+	    notmuch_filenames_advance (db_files);
+	}
+
+	while (notmuch_filenames_has_more (db_subdirs) &&
+	       strcmp (notmuch_filenames_get (db_subdirs), entry->d_name) <= 0)
+	{
+	    if (strcmp (notmuch_filenames_get (db_subdirs), entry->d_name) < 0)
+		printf ("Detected deleted directory %s/%s", path,
+			notmuch_filenames_get (db_subdirs));
+
+	    notmuch_filenames_advance (db_subdirs);
+	}
+
 	if (entry->d_type != DT_REG)
 	    continue;
 
+	/* Don't add a file that we've added before. */
+	if (notmuch_filenames_has_more (db_files) &&
+	    strcmp (notmuch_filenames_get (db_files), entry->d_name) == 0)
+	{
+	    notmuch_filenames_advance (db_files);
+	    continue;
+	}
+
+	/* We're not looking at a regular file that doesn't yet exist
+	 * in the database, so add it. */
 	next = talloc_asprintf (notmuch, "%s/%s", path, entry->d_name);
 
 	state->processed_files++;
@@ -311,6 +375,12 @@ add_files_recursive (notmuch_database_t *notmuch,
 	closedir (dir);
     if (fs_entries)
 	free (fs_entries);
+    if (db_subdirs)
+	notmuch_filenames_destroy (db_subdirs);
+    if (db_files)
+	notmuch_filenames_destroy (db_files);
+    if (directory)
+	notmuch_directory_destroy (directory);
 
     return ret;
 }
@@ -377,7 +447,7 @@ count_files (const char *path, int *count)
     char *next;
     struct stat st;
     struct dirent **fs_entries = NULL;
-    int num_fs_entries = scandir (path, &fs_entries, 0, ino_cmp);
+    int num_fs_entries = scandir (path, &fs_entries, 0, dirent_sort_inode);
     int i = 0;
 
     if (num_fs_entries == -1) {
