@@ -334,8 +334,27 @@ add_files_recursive (notmuch_database_t *notmuch,
 	    notmuch_filenames_advance (db_subdirs);
 	}
 
-	if (entry->d_type != DT_REG)
+	/* If we're looking at a symlink, we only want to add it if it
+	 * links to a regular file, (and not to a directory, say). */
+	if (entry->d_type == DT_LNK) {
+	    int err;
+
+	    next = talloc_asprintf (notmuch, "%s/%s", path, entry->d_name);
+	    err = stat (next, &st);
+	    talloc_free (next);
+	    next = NULL;
+
+	    /* Don't emit an error for a link pointing nowhere, since
+	     * the directory-traversal pass will have already done
+	     * that. */
+	    if (err)
+		continue;
+
+	    if (! S_ISREG (st.st_mode))
+		continue;
+	} else if (entry->d_type != DT_REG) {
 	    continue;
+	}
 
 	/* Don't add a file that we've added before. */
 	if (notmuch_filenames_has_more (db_files) &&
