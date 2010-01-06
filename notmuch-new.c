@@ -141,7 +141,6 @@ is_maildir (struct dirent **entries, int count)
 static notmuch_status_t
 add_files_recursive (notmuch_database_t *notmuch,
 		     const char *path,
-		     struct stat *st,
 		     add_files_state_t *state)
 {
     DIR *dir = NULL;
@@ -153,8 +152,20 @@ add_files_recursive (notmuch_database_t *notmuch,
     struct dirent **namelist = NULL;
     int num_entries;
     notmuch_directory_t *directory;
+    struct stat st;
 
-    fs_mtime = st->st_mtime;
+    if (stat (path, &st)) {
+	fprintf (stderr, "Error reading directory %s: %s\n",
+		 path, strerror (errno));
+	return NOTMUCH_STATUS_FILE_ERROR;
+    }
+
+    if (! S_ISDIR (st.st_mode)) {
+	fprintf (stderr, "Error: %s is not a directory.\n", path);
+	return NOTMUCH_STATUS_FILE_ERROR;
+    }
+
+    fs_mtime = st.st_mtime;
 
     directory = notmuch_database_get_directory (notmuch, path);
     db_mtime = notmuch_directory_get_mtime (directory);
@@ -199,25 +210,7 @@ add_files_recursive (notmuch_database_t *notmuch,
 
 	next = talloc_asprintf (notmuch, "%s/%s", path, entry->d_name);
 
-	if (stat (next, st)) {
-	    int err = errno;
-
-	    switch (err) {
-	    case ENOENT:
-		/* The file was removed between scandir and now... */
-	    case EPERM:
-	    case EACCES:
-		/* We can't read this file so don't add it to the cache. */
-		continue;
-	    }
-
-	    fprintf (stderr, "Error reading %s: %s\n",
-		     next, strerror (errno));
-	    ret = NOTMUCH_STATUS_FILE_ERROR;
-	    goto DONE;
-	}
-
-	if (S_ISREG (st->st_mode)) {
+	if (entry->d_type == DT_REG) {
 	    state->processed_files++;
 
 	    if (state->verbose) {
@@ -275,8 +268,8 @@ add_files_recursive (notmuch_database_t *notmuch,
 		do_add_files_print_progress = 0;
 		add_files_print_progress (state);
 	    }
-	} else if (S_ISDIR (st->st_mode)) {
-	    status = add_files_recursive (notmuch, next, st, state);
+	} else if (entry->d_type == DT_DIR) {
+	    status = add_files_recursive (notmuch, next, state);
 	    if (status && ret == NOTMUCH_STATUS_SUCCESS)
 		ret = status;
 	}
@@ -312,22 +305,10 @@ add_files (notmuch_database_t *notmuch,
 	   const char *path,
 	   add_files_state_t *state)
 {
-    struct stat st;
     notmuch_status_t status;
     struct sigaction action;
     struct itimerval timerval;
     notmuch_bool_t timer_is_active = FALSE;
-
-    if (stat (path, &st)) {
-	fprintf (stderr, "Error reading directory %s: %s\n",
-		 path, strerror (errno));
-	return NOTMUCH_STATUS_FILE_ERROR;
-    }
-
-    if (! S_ISDIR (st.st_mode)) {
-	fprintf (stderr, "Error: %s is not a directory.\n", path);
-	return NOTMUCH_STATUS_FILE_ERROR;
-    }
 
     if (state->output_is_a_tty && ! debugger_is_active () && ! state->verbose) {
 	/* Setup our handler for SIGALRM */
@@ -347,7 +328,7 @@ add_files (notmuch_database_t *notmuch,
 	timer_is_active = TRUE;
     }
 
-    status = add_files_recursive (notmuch, path, &st, state);
+    status = add_files_recursive (notmuch, path, state);
 
     if (timer_is_active) {
 	/* Now stop the timer. */
