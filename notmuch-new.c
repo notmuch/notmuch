@@ -430,6 +430,30 @@ add_files_recursive (notmuch_database_t *notmuch,
 	next = NULL;
     }
 
+    /* Now that we've walked the whole filesystem list, anything left
+     * over in the database lists has been deleted. */
+    while (notmuch_filenames_has_more (db_files))
+    {
+	char *absolute = talloc_asprintf (state->removed_files,
+					  "%s/%s", path,
+					  notmuch_filenames_get (db_files));
+
+	_filename_list_add (state->removed_files, absolute);
+
+	notmuch_filenames_advance (db_files);
+    }
+
+    while (notmuch_filenames_has_more (db_subdirs))
+    {
+	char *absolute = talloc_asprintf (state->removed_directories,
+					  "%s/%s", path,
+					  notmuch_filenames_get (db_subdirs));
+
+	_filename_list_add (state->removed_directories, absolute);
+
+	notmuch_filenames_advance (db_subdirs);
+    }
+
     if (! interrupted) {
 	status = notmuch_directory_set_mtime (directory, fs_mtime);
 	if (status && ret == NOTMUCH_STATUS_SUCCESS)
