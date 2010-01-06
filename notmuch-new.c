@@ -100,12 +100,14 @@ static int ino_cmp(const struct dirent **a, const struct dirent **b)
  * Return 1 if the directory looks like a Maildir and 0 otherwise.
  */
 static int
-is_maildir (struct dirent **entries, int count)
+_entries_resemble_maildir (struct dirent **entries, int count)
 {
     int i, found = 0;
 
     for (i = 0; i < count; i++) {
-	if (entries[i]->d_type != DT_DIR) continue;
+	if (entries[i]->d_type != DT_DIR)
+	    continue;
+
 	if (strcmp(entries[i]->d_name, "new") == 0 ||
 	    strcmp(entries[i]->d_name, "cur") == 0 ||
 	    strcmp(entries[i]->d_name, "tmp") == 0)
@@ -153,6 +155,7 @@ add_files_recursive (notmuch_database_t *notmuch,
     int i, num_fs_entries;
     notmuch_directory_t *directory;
     struct stat st;
+    notmuch_bool_t is_maildir;
 
     if (stat (path, &st)) {
 	fprintf (stderr, "Error reading directory %s: %s\n",
@@ -180,6 +183,8 @@ add_files_recursive (notmuch_database_t *notmuch,
     }
 
     /* First, recurse into all sub-directories. */
+    is_maildir = _entries_resemble_maildir (fs_entries, num_fs_entries);
+
     for (i = 0; i < num_fs_entries; i++) {
 	if (interrupted)
 	    break;
@@ -190,15 +195,14 @@ add_files_recursive (notmuch_database_t *notmuch,
 	    continue;
 
 	/* Ignore special directories to avoid infinite recursion.
-	 * Also ignore the .notmuch directory.
+	 * Also ignore the .notmuch directory and any "tmp" directory
+	 * that appears within a maildir.
 	 */
 	/* XXX: Eventually we'll want more sophistication to let the
 	 * user specify files to be ignored. */
 	if (strcmp (entry->d_name, ".") == 0 ||
 	    strcmp (entry->d_name, "..") == 0 ||
-	    (entry->d_type == DT_DIR &&
-	     (strcmp (entry->d_name, "tmp") == 0) &&
-	     is_maildir (fs_entries, num_fs_entries)) ||
+	    (is_maildir && strcmp (entry->d_name, "tmp") == 0) ||
 	    strcmp (entry->d_name, ".notmuch") ==0)
 	{
 	    continue;
