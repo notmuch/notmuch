@@ -125,13 +125,13 @@ is_maildir (struct dirent **entries, int count)
  *
  *   o Ask the database for its timestamp of 'path' (db_mtime)
  *
+ *   o For each sub-directory of path, recursively call into this
+ *     same function.
+ *
  *   o If 'fs_mtime' > 'db_mtime'
  *
  *       o For each regular file directly within 'path', call
  *         add_message to add the file to the database.
- *
- *   o For each sub-directory of path, recursively call into this
- *     same function.
  *
  *   o Tell the database to update its time of 'path' to 'fs_mtime'
  *
@@ -150,7 +150,7 @@ add_files_recursive (notmuch_database_t *notmuch,
     notmuch_status_t status, ret = NOTMUCH_STATUS_SUCCESS;
     notmuch_message_t *message = NULL;
     struct dirent **fs_entries = NULL;
-    int num_fs_entries;
+    int i, num_fs_entries;
     notmuch_directory_t *directory;
     struct stat st;
 
@@ -179,18 +179,14 @@ add_files_recursive (notmuch_database_t *notmuch,
 	goto DONE;
     }
 
-    int i=0;
-
-    while (!interrupted) {
-	if (i == num_fs_entries)
+    /* First, recurse into all sub-directories. */
+    for (i = 0; i < num_fs_entries; i++) {
+	if (interrupted)
 	    break;
 
-        entry = fs_entries[i++];
+	entry = fs_entries[i];
 
-	/* If this directory hasn't been modified since the last
-	 * add_files, then we only need to look further for
-	 * sub-directories. */
-	if (fs_mtime <= db_mtime && entry->d_type == DT_REG)
+	if (entry->d_type != DT_DIR)
 	    continue;
 
 	/* Ignore special directories to avoid infinite recursion.
@@ -209,69 +205,87 @@ add_files_recursive (notmuch_database_t *notmuch,
 	}
 
 	next = talloc_asprintf (notmuch, "%s/%s", path, entry->d_name);
+	status = add_files_recursive (notmuch, next, state);
+	if (status && ret == NOTMUCH_STATUS_SUCCESS)
+	    ret = status;
+	talloc_free (next);
+	next = NULL;
+    }
 
-	if (entry->d_type == DT_REG) {
-	    state->processed_files++;
+    /* If this directory hasn't been modified since the last
+     * add_files, then we can skip the second pass where we look for
+     * new files in this directory. */
+    if (fs_mtime <= db_mtime)
+	goto DONE;
 
-	    if (state->verbose) {
-		if (state->output_is_a_tty)
-		    printf("\r\033[K");
+    /* Second, scan the regular files in this directory. */
+    for (i = 0; i < num_fs_entries; i++) {
+	if (interrupted)
+	    break;
 
-		printf ("%i/%i: %s",
-			state->processed_files,
-			state->total_files,
-			next);
+        entry = fs_entries[i];
 
-		putchar((state->output_is_a_tty) ? '\r' : '\n');
-		fflush (stdout);
-	    }
+	if (entry->d_type != DT_REG)
+	    continue;
 
-	    status = notmuch_database_add_message (notmuch, next, &message);
-	    switch (status) {
-	    /* success */
-	    case NOTMUCH_STATUS_SUCCESS:
-		state->added_messages++;
-		tag_inbox_and_unread (message);
-		break;
-	    /* Non-fatal issues (go on to next file) */
-	    case NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID:
-		/* Stay silent on this one. */
-		break;
-	    case NOTMUCH_STATUS_FILE_NOT_EMAIL:
-		fprintf (stderr, "Note: Ignoring non-mail file: %s\n",
-			 next);
-		break;
-	    /* Fatal issues. Don't process anymore. */
-	    case NOTMUCH_STATUS_READONLY_DATABASE:
-	    case NOTMUCH_STATUS_XAPIAN_EXCEPTION:
-	    case NOTMUCH_STATUS_OUT_OF_MEMORY:
-		fprintf (stderr, "Error: %s. Halting processing.\n",
-			 notmuch_status_to_string (status));
-		ret = status;
-		goto DONE;
-	    default:
-	    case NOTMUCH_STATUS_FILE_ERROR:
-	    case NOTMUCH_STATUS_NULL_POINTER:
-	    case NOTMUCH_STATUS_TAG_TOO_LONG:
-	    case NOTMUCH_STATUS_UNBALANCED_FREEZE_THAW:
-	    case NOTMUCH_STATUS_LAST_STATUS:
-		INTERNAL_ERROR ("add_message returned unexpected value: %d",  status);
-		goto DONE;
-	    }
+	next = talloc_asprintf (notmuch, "%s/%s", path, entry->d_name);
 
-	    if (message) {
-		notmuch_message_destroy (message);
-		message = NULL;
-	    }
+	state->processed_files++;
 
-	    if (do_add_files_print_progress) {
-		do_add_files_print_progress = 0;
-		add_files_print_progress (state);
-	    }
-	} else if (entry->d_type == DT_DIR) {
-	    status = add_files_recursive (notmuch, next, state);
-	    if (status && ret == NOTMUCH_STATUS_SUCCESS)
-		ret = status;
+	if (state->verbose) {
+	    if (state->output_is_a_tty)
+		printf("\r\033[K");
+
+	    printf ("%i/%i: %s",
+		    state->processed_files,
+		    state->total_files,
+		    next);
+
+	    putchar((state->output_is_a_tty) ? '\r' : '\n');
+	    fflush (stdout);
+	}
+
+	status = notmuch_database_add_message (notmuch, next, &message);
+	switch (status) {
+	/* success */
+	case NOTMUCH_STATUS_SUCCESS:
+	    state->added_messages++;
+	    tag_inbox_and_unread (message);
+	    break;
+	/* Non-fatal issues (go on to next file) */
+	case NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID:
+	    /* Stay silent on this one. */
+	    break;
+	case NOTMUCH_STATUS_FILE_NOT_EMAIL:
+	    fprintf (stderr, "Note: Ignoring non-mail file: %s\n",
+		     next);
+	    break;
+	/* Fatal issues. Don't process anymore. */
+	case NOTMUCH_STATUS_READONLY_DATABASE:
+	case NOTMUCH_STATUS_XAPIAN_EXCEPTION:
+	case NOTMUCH_STATUS_OUT_OF_MEMORY:
+	    fprintf (stderr, "Error: %s. Halting processing.\n",
+		     notmuch_status_to_string (status));
+	    ret = status;
+	    goto DONE;
+	default:
+	case NOTMUCH_STATUS_FILE_ERROR:
+	case NOTMUCH_STATUS_NULL_POINTER:
+	case NOTMUCH_STATUS_TAG_TOO_LONG:
+	case NOTMUCH_STATUS_UNBALANCED_FREEZE_THAW:
+	case NOTMUCH_STATUS_LAST_STATUS:
+	    INTERNAL_ERROR ("add_message returned unexpected value: %d",  status);
+	    goto DONE;
+	}
+
+	if (message) {
+	    notmuch_message_destroy (message);
+	    message = NULL;
+	}
+
+	if (do_add_files_print_progress) {
+	    do_add_files_print_progress = 0;
+	    add_files_print_progress (state);
 	}
 
 	talloc_free (next);
