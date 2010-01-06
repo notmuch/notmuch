@@ -149,8 +149,8 @@ add_files_recursive (notmuch_database_t *notmuch,
     time_t fs_mtime, db_mtime;
     notmuch_status_t status, ret = NOTMUCH_STATUS_SUCCESS;
     notmuch_message_t *message = NULL;
-    struct dirent **namelist = NULL;
-    int num_entries;
+    struct dirent **fs_entries = NULL;
+    int num_fs_entries;
     notmuch_directory_t *directory;
     struct stat st;
 
@@ -170,9 +170,9 @@ add_files_recursive (notmuch_database_t *notmuch,
     directory = notmuch_database_get_directory (notmuch, path);
     db_mtime = notmuch_directory_get_mtime (directory);
 
-    num_entries = scandir (path, &namelist, 0, ino_cmp);
+    num_fs_entries = scandir (path, &fs_entries, 0, ino_cmp);
 
-    if (num_entries == -1) {
+    if (num_fs_entries == -1) {
 	fprintf (stderr, "Error opening directory %s: %s\n",
 		 path, strerror (errno));
 	ret = NOTMUCH_STATUS_FILE_ERROR;
@@ -182,10 +182,10 @@ add_files_recursive (notmuch_database_t *notmuch,
     int i=0;
 
     while (!interrupted) {
-	if (i == num_entries)
+	if (i == num_fs_entries)
 	    break;
 
-        entry= namelist[i++];
+        entry = fs_entries[i++];
 
 	/* If this directory hasn't been modified since the last
 	 * add_files, then we only need to look further for
@@ -202,7 +202,7 @@ add_files_recursive (notmuch_database_t *notmuch,
 	    strcmp (entry->d_name, "..") == 0 ||
 	    (entry->d_type == DT_DIR &&
 	     (strcmp (entry->d_name, "tmp") == 0) &&
-	     is_maildir (namelist, num_entries)) ||
+	     is_maildir (fs_entries, num_fs_entries)) ||
 	    strcmp (entry->d_name, ".notmuch") ==0)
 	{
 	    continue;
@@ -291,8 +291,8 @@ add_files_recursive (notmuch_database_t *notmuch,
 	free (entry);
     if (dir)
 	closedir (dir);
-    if (namelist)
-	free (namelist);
+    if (fs_entries)
+	free (fs_entries);
 
     return ret;
 }
@@ -358,21 +358,21 @@ count_files (const char *path, int *count)
     struct dirent *entry = NULL;
     char *next;
     struct stat st;
-    struct dirent **namelist = NULL;
-    int n_entries = scandir (path, &namelist, 0, ino_cmp);
+    struct dirent **fs_entries = NULL;
+    int num_fs_entries = scandir (path, &fs_entries, 0, ino_cmp);
     int i = 0;
 
-    if (n_entries == -1) {
+    if (num_fs_entries == -1) {
 	fprintf (stderr, "Warning: failed to open directory %s: %s\n",
 		 path, strerror (errno));
 	goto DONE;
     }
 
     while (!interrupted) {
-        if (i == n_entries)
+        if (i == num_fs_entries)
 	    break;
 
-        entry= namelist[i++];
+        entry = fs_entries[i++];
 
 	/* Ignore special directories to avoid infinite recursion.
 	 * Also ignore the .notmuch directory.
@@ -411,8 +411,8 @@ count_files (const char *path, int *count)
   DONE:
     if (entry)
 	free (entry);
-    if (namelist)
-        free (namelist);
+    if (fs_entries)
+        free (fs_entries);
 }
 
 int
