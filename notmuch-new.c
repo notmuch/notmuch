@@ -567,6 +567,8 @@ notmuch_new_command (void *ctx, int argc, char *argv[])
     char *dot_notmuch_path;
     struct sigaction action;
     _filename_node_t *f;
+    int renamed_files, removed_files;
+    notmuch_status_t status;
     int i;
 
     add_files_state.verbose = 0;
@@ -628,8 +630,14 @@ notmuch_new_command (void *ctx, int argc, char *argv[])
 
     ret = add_files (notmuch, db_path, &add_files_state);
 
+    removed_files = 0;
+    renamed_files = 0;
     for (f = add_files_state.removed_files->head; f; f = f->next) {
-	notmuch_database_remove_message (notmuch, f->filename);
+	status = notmuch_database_remove_message (notmuch, f->filename);
+	if (status == NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID)
+	    renamed_files++;
+	else
+	    removed_files++;
     }
 
     for (f = add_files_state.removed_directories->head; f; f = f->next) {
@@ -646,7 +654,11 @@ notmuch_new_command (void *ctx, int argc, char *argv[])
 
 	    absolute = talloc_asprintf (ctx, "%s/%s", f->filename,
 					notmuch_filenames_get (files));
-	    notmuch_database_remove_message (notmuch, absolute);
+	    status = notmuch_database_remove_message (notmuch, absolute);
+	    if (status == NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID)
+		renamed_files++;
+	    else
+		removed_files++;
 	    talloc_free (absolute);
 	}
 
@@ -659,6 +671,7 @@ notmuch_new_command (void *ctx, int argc, char *argv[])
     gettimeofday (&tv_now, NULL);
     elapsed = notmuch_time_elapsed (add_files_state.tv_start,
 				    tv_now);
+
     if (add_files_state.processed_files) {
 	printf ("Processed %d %s in ", add_files_state.processed_files,
 		add_files_state.processed_files == 1 ?
@@ -671,14 +684,29 @@ notmuch_new_command (void *ctx, int argc, char *argv[])
 	    printf (".                    \n");
 	}
     }
+
     if (add_files_state.added_messages) {
-	printf ("Added %d new %s to the database.\n",
+	printf ("Added %d new %s to the database.",
 		add_files_state.added_messages,
 		add_files_state.added_messages == 1 ?
 		"message" : "messages");
     } else {
-	printf ("No new mail.\n");
+	printf ("No new mail.");
     }
+
+    if (removed_files) {
+	printf (" Removed %d %s.",
+		removed_files,
+		removed_files == 1 ? "message" : "messages");
+    }
+
+    if (renamed_files) {
+	printf (" Detected %d file %s.",
+		renamed_files,
+		renamed_files == 1 ? "rename" : "renames");
+    }
+
+    printf ("\n");
 
     if (ret) {
 	printf ("\nNote: At least one error was encountered: %s\n",
