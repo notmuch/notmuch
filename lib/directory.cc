@@ -81,12 +81,18 @@ _notmuch_filenames_create (void *ctx,
 notmuch_bool_t
 notmuch_filenames_has_more (notmuch_filenames_t *filenames)
 {
+    if (filenames == NULL)
+	return NULL;
+
     return (filenames->iterator != filenames->end);
 }
 
 const char *
 notmuch_filenames_get (notmuch_filenames_t *filenames)
 {
+    if (filenames == NULL || filenames->iterator == filenames->end)
+	return NULL;
+
     if (filenames->filename == NULL) {
 	std::string term = *filenames->iterator;
 
@@ -101,6 +107,9 @@ notmuch_filenames_get (notmuch_filenames_t *filenames)
 void
 notmuch_filenames_advance (notmuch_filenames_t *filenames)
 {
+    if (filenames == NULL)
+	return;
+
     if (filenames->filename) {
 	talloc_free (filenames->filename);
 	filenames->filename = NULL;
@@ -113,6 +122,9 @@ notmuch_filenames_advance (notmuch_filenames_t *filenames)
 void
 notmuch_filenames_destroy (notmuch_filenames_t *filenames)
 {
+    if (filenames == NULL)
+	return;
+
     talloc_free (filenames);
 }
 

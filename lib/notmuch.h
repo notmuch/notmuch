@@ -996,6 +996,9 @@ notmuch_directory_destroy (notmuch_directory_t *directory);
  * When this function returns TRUE, notmuch_filenames_get will return
  * a valid string. Whereas when this function returns FALSE,
  * notmuch_filenames_get will return NULL.
+ *
+ * It is acceptable to pass NULL for 'filenames', in which case this
+ * function will always return FALSE.
  */
 notmuch_bool_t
 notmuch_filenames_has_more (notmuch_filenames_t *filenames);
@@ -1004,11 +1007,17 @@ notmuch_filenames_has_more (notmuch_filenames_t *filenames);
  *
  * Note: The returned string belongs to 'filenames' and has a lifetime
  * identical to it (and the directory to which it ultimately belongs).
+ *
+ * It is acceptable to pass NULL for 'filenames', in which case this
+ * function will always return NULL.
  */
 const char *
 notmuch_filenames_get (notmuch_filenames_t *filenames);
 
 /* Advance the 'filenames' iterator to the next filename.
+ *
+ * It is acceptable to pass NULL for 'filenames', in which case this
+ * function will do nothing.
  */
 void
 notmuch_filenames_advance (notmuch_filenames_t *filenames);
@@ -1018,6 +1027,9 @@ notmuch_filenames_advance (notmuch_filenames_t *filenames);
  * It's not strictly necessary to call this function. All memory from
  * the notmuch_filenames_t object will be reclaimed when the
  * containing directory object is destroyed.
+ *
+ * It is acceptable to pass NULL for 'filenames', in which case this
+ * function will do nothing.
  */
 void
 notmuch_filenames_destroy (notmuch_filenames_t *filenames);
