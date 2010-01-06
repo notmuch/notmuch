@@ -220,8 +220,8 @@ notmuch_database_get_directory (notmuch_database_t *database,
  * NOTMUCH_STATUS_SUCCESS: Message successfully added to database.
  *
  * NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID: Message has the same message
- *	ID as another message already in the database. Nothing added
- *	to the database.
+ *	ID as another message already in the database. The new filename
+ *	was successfully added to the message in the database.
  *
  * NOTMUCH_STATUS_FILE_ERROR: an error occurred trying to open the
  *	file, (such as permission denied, or file not found,
