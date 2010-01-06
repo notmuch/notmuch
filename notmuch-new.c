@@ -22,6 +22,16 @@
 
 #include <unistd.h>
 
+typedef struct _filename_node {
+    char *filename;
+    struct _filename_node *next;
+} _filename_node_t;
+
+typedef struct _filename_list {
+    _filename_node_t *head;
+    _filename_node_t **tail;
+} _filename_list_t;
+
 typedef struct {
     int output_is_a_tty;
     int verbose;
@@ -30,6 +40,9 @@ typedef struct {
     int processed_files;
     int added_messages;
     struct timeval tv_start;
+
+    _filename_list_t *removed_files;
+    _filename_list_t *removed_directories;
 } add_files_state_t;
 
 static volatile sig_atomic_t do_add_files_print_progress = 0;
@@ -50,6 +63,34 @@ handle_sigint (unused (int sig))
 
     ignored = write(2, msg, sizeof(msg)-1);
     interrupted = 1;
+}
+
+static _filename_list_t *
+_filename_list_create (const void *ctx)
+{
+    _filename_list_t *list;
+
+    list = talloc (ctx, _filename_list_t);
+    if (list == NULL)
+	return NULL;
+
+    list->head = NULL;
+    list->tail = &list->head;
+
+    return list;
+}
+
+static void
+_filename_list_add (_filename_list_t *list,
+		    const char *filename)
+{
+    _filename_node_t *node = talloc (list, _filename_node_t);
+
+    node->filename = talloc_strdup (list, filename);
+    node->next = NULL;
+
+    *(list->tail) = node;
+    list->tail = &node->next;
 }
 
 static void
@@ -267,8 +308,11 @@ add_files_recursive (notmuch_database_t *notmuch,
 	while (notmuch_filenames_has_more (db_files) &&
 	       strcmp (notmuch_filenames_get (db_files), entry->d_name) < 0)
 	{
-	    printf ("Detected deleted file %s/%s\n", path,
-		    notmuch_filenames_get (db_files));
+	    char *absolute = talloc_asprintf (state->removed_files,
+					      "%s/%s", path,
+					      notmuch_filenames_get (db_files));
+
+	    _filename_list_add (state->removed_files, absolute);
 
 	    notmuch_filenames_advance (db_files);
 	}
@@ -276,9 +320,15 @@ add_files_recursive (notmuch_database_t *notmuch,
 	while (notmuch_filenames_has_more (db_subdirs) &&
 	       strcmp (notmuch_filenames_get (db_subdirs), entry->d_name) <= 0)
 	{
-	    if (strcmp (notmuch_filenames_get (db_subdirs), entry->d_name) < 0)
-		printf ("Detected deleted directory %s/%s", path,
-			notmuch_filenames_get (db_subdirs));
+	    const char *filename = notmuch_filenames_get (db_subdirs);
+
+	    if (strcmp (filename, entry->d_name) < 0)
+	    {
+		char *absolute = talloc_asprintf (state->removed_directories,
+						  "%s/%s", path, filename);
+
+		_filename_list_add (state->removed_directories, absolute);
+	    }
 
 	    notmuch_filenames_advance (db_subdirs);
 	}
@@ -516,6 +566,7 @@ notmuch_new_command (void *ctx, int argc, char *argv[])
     const char *db_path;
     char *dot_notmuch_path;
     struct sigaction action;
+    _filename_node_t *f;
     int i;
 
     add_files_state.verbose = 0;
@@ -572,7 +623,21 @@ notmuch_new_command (void *ctx, int argc, char *argv[])
     add_files_state.added_messages = 0;
     gettimeofday (&add_files_state.tv_start, NULL);
 
+    add_files_state.removed_files = _filename_list_create (ctx);
+    add_files_state.removed_directories = _filename_list_create (ctx);
+
     ret = add_files (notmuch, db_path, &add_files_state);
+
+    for (f = add_files_state.removed_files->head; f; f = f->next) {
+	printf ("Detected removed file: %s\n", f->filename);
+    }
+
+    for (f = add_files_state.removed_directories->head; f; f = f->next) {
+	printf ("Detected removed directory: %s\n", f->filename);
+    }
+
+    talloc_free (add_files_state.removed_files);
+    talloc_free (add_files_state.removed_directories);
 
     gettimeofday (&tv_now, NULL);
     elapsed = notmuch_time_elapsed (add_files_state.tv_start,
