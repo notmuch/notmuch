@@ -344,7 +344,7 @@ add_files_recursive (notmuch_database_t *notmuch,
 	    continue;
 	}
 
-	/* We're not looking at a regular file that doesn't yet exist
+	/* We're now looking at a regular file that doesn't yet exist
 	 * in the database, so add it. */
 	next = talloc_asprintf (notmuch, "%s/%s", path, entry->d_name);
 
