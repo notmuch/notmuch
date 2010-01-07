@@ -57,8 +57,8 @@ typedef int notmuch_bool_t;
  * value. Instead we should map to things like DATABASE_LOCKED or
  * whatever.
  *
- * NOTMUCH_STATUS_READONLY_DATABASE: An attempt was made to write to a
- *	database opened in read-only mode.
+ * NOTMUCH_STATUS_READ_ONLY_DATABASE: An attempt was made to write to
+ *	a database opened in read-only mode.
  *
  * NOTMUCH_STATUS_XAPIAN_EXCEPTION: A Xapian exception occurred
  *
@@ -89,7 +89,7 @@ typedef int notmuch_bool_t;
 typedef enum _notmuch_status {
     NOTMUCH_STATUS_SUCCESS = 0,
     NOTMUCH_STATUS_OUT_OF_MEMORY,
-    NOTMUCH_STATUS_READONLY_DATABASE,
+    NOTMUCH_STATUS_READ_ONLY_DATABASE,
     NOTMUCH_STATUS_XAPIAN_EXCEPTION,
     NOTMUCH_STATUS_FILE_ERROR,
     NOTMUCH_STATUS_FILE_NOT_EMAIL,
@@ -230,7 +230,7 @@ notmuch_database_get_directory (notmuch_database_t *database,
  * NOTMUCH_STATUS_FILE_NOT_EMAIL: the contents of filename don't look
  *	like an email message. Nothing added to the database.
  *
- * NOTMUCH_STATUS_READONLY_DATABASE: Database was opened in read-only
+ * NOTMUCH_STATUS_READ_ONLY_DATABASE: Database was opened in read-only
  *	mode so no message can be added.
  */
 notmuch_status_t
@@ -256,7 +256,7 @@ notmuch_database_add_message (notmuch_database_t *database,
  *	the message persists in the database with at least one other
  *	filename.
  *
- * NOTMUCH_STATUS_READONLY_DATABASE: Database was opened in read-only
+ * NOTMUCH_STATUS_READ_ONLY_DATABASE: Database was opened in read-only
  *	mode so no message can be removed.
  */
 notmuch_status_t
@@ -796,7 +796,7 @@ notmuch_message_get_tags (notmuch_message_t *message);
  * NOTMUCH_STATUS_TAG_TOO_LONG: The length of 'tag' is too long
  *	(exceeds NOTMUCH_TAG_MAX)
  *
- * NOTMUCH_STATUS_READONLY_DATABASE: Database was opened in read-only
+ * NOTMUCH_STATUS_READ_ONLY_DATABASE: Database was opened in read-only
  *	mode so message cannot be modified.
  */
 notmuch_status_t
@@ -813,7 +813,7 @@ notmuch_message_add_tag (notmuch_message_t *message, const char *tag);
  * NOTMUCH_STATUS_TAG_TOO_LONG: The length of 'tag' is too long
  *	(exceeds NOTMUCH_TAG_MAX)
  *
- * NOTMUCH_STATUS_READONLY_DATABASE: Database was opened in read-only
+ * NOTMUCH_STATUS_READ_ONLY_DATABASE: Database was opened in read-only
  *	mode so message cannot be modified.
  */
 notmuch_status_t
@@ -824,7 +824,7 @@ notmuch_message_remove_tag (notmuch_message_t *message, const char *tag);
  * See notmuch_message_freeze for an example showing how to safely
  * replace tag values.
  *
- * NOTMUCH_STATUS_READONLY_DATABASE: Database was opened in read-only
+ * NOTMUCH_STATUS_READ_ONLY_DATABASE: Database was opened in read-only
  *	mode so message cannot be modified.
  */
 notmuch_status_t
@@ -867,7 +867,7 @@ notmuch_message_remove_all_tags (notmuch_message_t *message);
  *
  * NOTMUCH_STATUS_SUCCESS: Message successfully frozen.
  *
- * NOTMUCH_STATUS_READONLY_DATABASE: Database was opened in read-only
+ * NOTMUCH_STATUS_READ_ONLY_DATABASE: Database was opened in read-only
  *	mode so message cannot be modified.
  */
 notmuch_status_t
@@ -980,7 +980,7 @@ notmuch_tags_destroy (notmuch_tags_t *tags);
  * NOTMUCH_STATUS_XAPIAN_EXCEPTION: A Xapian exception
  *	occurred, mtime not stored.
  *
- * NOTMUCH_STATUS_READONLY_DATABASE: Database was opened in read-only
+ * NOTMUCH_STATUS_READ_ONLY_DATABASE: Database was opened in read-only
  *	mode so directory mtime cannot be modified.
  */
 notmuch_status_t

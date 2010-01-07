@@ -406,7 +406,7 @@ add_files_recursive (notmuch_database_t *notmuch,
 		     next);
 	    break;
 	/* Fatal issues. Don't process anymore. */
-	case NOTMUCH_STATUS_READONLY_DATABASE:
+	case NOTMUCH_STATUS_READ_ONLY_DATABASE:
 	case NOTMUCH_STATUS_XAPIAN_EXCEPTION:
 	case NOTMUCH_STATUS_OUT_OF_MEMORY:
 	    fprintf (stderr, "Error: %s. Halting processing.\n",

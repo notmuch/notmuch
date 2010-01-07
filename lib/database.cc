@@ -198,7 +198,7 @@ notmuch_status_to_string (notmuch_status_t status)
 	return "No error occurred";
     case NOTMUCH_STATUS_OUT_OF_MEMORY:
 	return "Out of memory";
-    case NOTMUCH_STATUS_READONLY_DATABASE:
+    case NOTMUCH_STATUS_READ_ONLY_DATABASE:
 	return "Attempt to write to a read-only database";
     case NOTMUCH_STATUS_XAPIAN_EXCEPTION:
 	return "A Xapian exception occurred";
@@ -480,7 +480,7 @@ _notmuch_database_ensure_writable (notmuch_database_t *notmuch)
 {
     if (notmuch->mode == NOTMUCH_DATABASE_MODE_READ_ONLY) {
 	fprintf (stderr, "Cannot write to a read-only database.\n");
-	return NOTMUCH_STATUS_READONLY_DATABASE;
+	return NOTMUCH_STATUS_READ_ONLY_DATABASE;
     }
 
     return NOTMUCH_STATUS_SUCCESS;
