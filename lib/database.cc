@@ -475,6 +475,17 @@ notmuch_database_create (const char *path)
     return notmuch;
 }
 
+notmuch_status_t
+_notmuch_database_ensure_writable (notmuch_database_t *notmuch)
+{
+    if (notmuch->mode == NOTMUCH_DATABASE_MODE_READ_ONLY) {
+	fprintf (stderr, "Cannot write to a read-only database.\n");
+	return NOTMUCH_STATUS_READONLY_DATABASE;
+    }
+
+    return NOTMUCH_STATUS_SUCCESS;
+}
+
 notmuch_database_t *
 notmuch_database_open (const char *path,
 		       notmuch_database_mode_t mode)
@@ -1034,11 +1045,13 @@ notmuch_database_add_message (notmuch_database_t *notmuch,
     if (message_ret)
 	*message_ret = NULL;
 
+    ret = _notmuch_database_ensure_writable (notmuch);
+    if (ret)
+	return ret;
+
     message_file = notmuch_message_file_open (filename);
-    if (message_file == NULL) {
-	ret = NOTMUCH_STATUS_FILE_ERROR;
-	goto DONE;
-    }
+    if (message_file == NULL)
+	return NOTMUCH_STATUS_FILE_ERROR;
 
     notmuch_message_file_restrict_headers (message_file,
 					   "date",
@@ -1173,10 +1186,9 @@ notmuch_database_remove_message (notmuch_database_t *notmuch,
     Xapian::Document document;
     notmuch_status_t status;
 
-    if (notmuch->mode == NOTMUCH_DATABASE_MODE_READ_ONLY) {
-	fprintf (stderr, "Attempted to update a read-only database.\n");
-	return NOTMUCH_STATUS_READONLY_DATABASE;
-    }
+    status = _notmuch_database_ensure_writable (notmuch);
+    if (status)
+	return status;
 
     db = static_cast <Xapian::WritableDatabase *> (notmuch->xapian_db);
 

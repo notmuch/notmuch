@@ -174,11 +174,6 @@ _notmuch_message_create_for_message_id (notmuch_database_t *notmuch,
     unsigned int doc_id;
     char *term;
 
-    if (notmuch->mode == NOTMUCH_DATABASE_MODE_READ_ONLY) {
-	*status_ret = NOTMUCH_PRIVATE_STATUS_READONLY_DATABASE;
-	return NULL;
-    }
-
     *status_ret = NOTMUCH_PRIVATE_STATUS_SUCCESS;
 
     message = notmuch_database_find_message (notmuch, message_id);
@@ -191,6 +186,9 @@ _notmuch_message_create_for_message_id (notmuch_database_t *notmuch,
 	*status_ret = NOTMUCH_PRIVATE_STATUS_OUT_OF_MEMORY;
 	return NULL;
     }
+
+    if (notmuch->mode == NOTMUCH_DATABASE_MODE_READ_ONLY)
+	INTERNAL_ERROR ("Failure to ensure database is writable.");
 
     db = static_cast<Xapian::WritableDatabase *> (notmuch->xapian_db);
     try {
@@ -706,7 +704,12 @@ _notmuch_message_remove_term (notmuch_message_t *message,
 notmuch_status_t
 notmuch_message_add_tag (notmuch_message_t *message, const char *tag)
 {
-    notmuch_private_status_t status;
+    notmuch_private_status_t private_status;
+    notmuch_status_t status;
+
+    status = _notmuch_database_ensure_writable (message->notmuch);
+    if (status)
+	return status;
 
     if (tag == NULL)
 	return NOTMUCH_STATUS_NULL_POINTER;
@@ -714,10 +717,10 @@ notmuch_message_add_tag (notmuch_message_t *message, const char *tag)
     if (strlen (tag) > NOTMUCH_TAG_MAX)
 	return NOTMUCH_STATUS_TAG_TOO_LONG;
 
-    status = _notmuch_message_add_term (message, "tag", tag);
-    if (status) {
+    private_status = _notmuch_message_add_term (message, "tag", tag);
+    if (private_status) {
 	INTERNAL_ERROR ("_notmuch_message_add_term return unexpected value: %d\n",
-			status);
+			private_status);
     }
 
     if (! message->frozen)
@@ -729,7 +732,12 @@ notmuch_message_add_tag (notmuch_message_t *message, const char *tag)
 notmuch_status_t
 notmuch_message_remove_tag (notmuch_message_t *message, const char *tag)
 {
-    notmuch_private_status_t status;
+    notmuch_private_status_t private_status;
+    notmuch_status_t status;
+
+    status = _notmuch_database_ensure_writable (message->notmuch);
+    if (status)
+	return status;
 
     if (tag == NULL)
 	return NOTMUCH_STATUS_NULL_POINTER;
@@ -737,10 +745,10 @@ notmuch_message_remove_tag (notmuch_message_t *message, const char *tag)
     if (strlen (tag) > NOTMUCH_TAG_MAX)
 	return NOTMUCH_STATUS_TAG_TOO_LONG;
 
-    status = _notmuch_message_remove_term (message, "tag", tag);
-    if (status) {
+    private_status = _notmuch_message_remove_term (message, "tag", tag);
+    if (private_status) {
 	INTERNAL_ERROR ("_notmuch_message_remove_term return unexpected value: %d\n",
-			status);
+			private_status);
     }
 
     if (! message->frozen)
@@ -749,12 +757,17 @@ notmuch_message_remove_tag (notmuch_message_t *message, const char *tag)
     return NOTMUCH_STATUS_SUCCESS;
 }
 
-void
+notmuch_status_t
 notmuch_message_remove_all_tags (notmuch_message_t *message)
 {
-    notmuch_private_status_t status;
+    notmuch_private_status_t private_status;
+    notmuch_status_t status;
     notmuch_tags_t *tags;
     const char *tag;
+
+    status = _notmuch_database_ensure_writable (message->notmuch);
+    if (status)
+	return status;
 
     for (tags = notmuch_message_get_tags (message);
 	 notmuch_tags_has_more (tags);
@@ -762,26 +775,42 @@ notmuch_message_remove_all_tags (notmuch_message_t *message)
     {
 	tag = notmuch_tags_get (tags);
 
-	status = _notmuch_message_remove_term (message, "tag", tag);
-	if (status) {
+	private_status = _notmuch_message_remove_term (message, "tag", tag);
+	if (private_status) {
 	    INTERNAL_ERROR ("_notmuch_message_remove_term return unexpected value: %d\n",
-			    status);
+			    private_status);
 	}
     }
 
     if (! message->frozen)
 	_notmuch_message_sync (message);
+
+    return NOTMUCH_STATUS_SUCCESS;
 }
 
-void
+notmuch_status_t
 notmuch_message_freeze (notmuch_message_t *message)
 {
+    notmuch_status_t status;
+
+    status = _notmuch_database_ensure_writable (message->notmuch);
+    if (status)
+	return status;
+
     message->frozen++;
+
+    return NOTMUCH_STATUS_SUCCESS;
 }
 
 notmuch_status_t
 notmuch_message_thaw (notmuch_message_t *message)
 {
+    notmuch_status_t status;
+
+    status = _notmuch_database_ensure_writable (message->notmuch);
+    if (status)
+	return status;
+
     if (message->frozen > 0) {
 	message->frozen--;
 	if (message->frozen == 0)

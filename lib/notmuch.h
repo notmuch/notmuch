@@ -229,6 +229,9 @@ notmuch_database_get_directory (notmuch_database_t *database,
  *
  * NOTMUCH_STATUS_FILE_NOT_EMAIL: the contents of filename don't look
  *	like an email message. Nothing added to the database.
+ *
+ * NOTMUCH_STATUS_READONLY_DATABASE: Database was opened in read-only
+ *	mode so no message can be added.
  */
 notmuch_status_t
 notmuch_database_add_message (notmuch_database_t *database,
@@ -252,6 +255,9 @@ notmuch_database_add_message (notmuch_database_t *database,
  * NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID: This filename was removed but
  *	the message persists in the database with at least one other
  *	filename.
+ *
+ * NOTMUCH_STATUS_READONLY_DATABASE: Database was opened in read-only
+ *	mode so no message can be removed.
  */
 notmuch_status_t
 notmuch_database_remove_message (notmuch_database_t *database,
@@ -789,6 +795,9 @@ notmuch_message_get_tags (notmuch_message_t *message);
  *
  * NOTMUCH_STATUS_TAG_TOO_LONG: The length of 'tag' is too long
  *	(exceeds NOTMUCH_TAG_MAX)
+ *
+ * NOTMUCH_STATUS_READONLY_DATABASE: Database was opened in read-only
+ *	mode so message cannot be modified.
  */
 notmuch_status_t
 notmuch_message_add_tag (notmuch_message_t *message, const char *tag);
@@ -803,6 +812,9 @@ notmuch_message_add_tag (notmuch_message_t *message, const char *tag);
  *
  * NOTMUCH_STATUS_TAG_TOO_LONG: The length of 'tag' is too long
  *	(exceeds NOTMUCH_TAG_MAX)
+ *
+ * NOTMUCH_STATUS_READONLY_DATABASE: Database was opened in read-only
+ *	mode so message cannot be modified.
  */
 notmuch_status_t
 notmuch_message_remove_tag (notmuch_message_t *message, const char *tag);
@@ -811,8 +823,11 @@ notmuch_message_remove_tag (notmuch_message_t *message, const char *tag);
  *
  * See notmuch_message_freeze for an example showing how to safely
  * replace tag values.
+ *
+ * NOTMUCH_STATUS_READONLY_DATABASE: Database was opened in read-only
+ *	mode so message cannot be modified.
  */
-void
+notmuch_status_t
 notmuch_message_remove_all_tags (notmuch_message_t *message);
 
 /* Freeze the current state of 'message' within the database.
@@ -847,8 +862,15 @@ notmuch_message_remove_all_tags (notmuch_message_t *message);
  * somehow getting interrupted. This could result in the message being
  * left with no tags if the interruption happened after
  * notmuch_message_remove_all_tags but before notmuch_message_add_tag.
+ *
+ * Return value:
+ *
+ * NOTMUCH_STATUS_SUCCESS: Message successfully frozen.
+ *
+ * NOTMUCH_STATUS_READONLY_DATABASE: Database was opened in read-only
+ *	mode so message cannot be modified.
  */
-void
+notmuch_status_t
 notmuch_message_freeze (notmuch_message_t *message);
 
 /* Thaw the current 'message', synchronizing any changes that may have
@@ -957,6 +979,9 @@ notmuch_tags_destroy (notmuch_tags_t *tags);
  *
  * NOTMUCH_STATUS_XAPIAN_EXCEPTION: A Xapian exception
  *	occurred, mtime not stored.
+ *
+ * NOTMUCH_STATUS_READONLY_DATABASE: Database was opened in read-only
+ *	mode so directory mtime cannot be modified.
  */
 notmuch_status_t
 notmuch_directory_set_mtime (notmuch_directory_t *directory,

@@ -182,11 +182,8 @@ _notmuch_directory_create (notmuch_database_t *notmuch,
 
     path = _notmuch_database_relative_path (notmuch, path);
 
-    if (notmuch->mode == NOTMUCH_DATABASE_MODE_READ_ONLY) {
-	fprintf (stderr, "Attempted to update a read-only database.\n");
-	*status_ret = NOTMUCH_STATUS_READONLY_DATABASE;
-	return NULL;
-    }
+    if (notmuch->mode == NOTMUCH_DATABASE_MODE_READ_ONLY)
+	INTERNAL_ERROR ("Failure to ensure database is writable");
 
     db = static_cast <Xapian::WritableDatabase *> (notmuch->xapian_db);
 
@@ -268,11 +265,11 @@ notmuch_directory_set_mtime (notmuch_directory_t *directory,
 {
     notmuch_database_t *notmuch = directory->notmuch;
     Xapian::WritableDatabase *db;
+    notmuch_status_t status;
 
-    if (notmuch->mode == NOTMUCH_DATABASE_MODE_READ_ONLY) {
-	fprintf (stderr, "Attempted to update a read-only database.\n");
-	return NOTMUCH_STATUS_READONLY_DATABASE;
-    }
+    status = _notmuch_database_ensure_writable (notmuch);
+    if (status)
+	return status;
 
     db = static_cast <Xapian::WritableDatabase *> (notmuch->xapian_db);
 
