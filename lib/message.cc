@@ -441,7 +441,19 @@ notmuch_message_get_filename (notmuch_message_t *message)
     if (i == message->doc.termlist_end () ||
 	strncmp (direntry, prefix, prefix_len))
     {
-	INTERNAL_ERROR ("message with no filename");
+	/* A message document created by an old version of notmuch
+	 * (prior to rename support) will have the filename in the
+	 * data of the document rather than as a file-direntry term. */
+	const char *data;
+
+	data = message->doc.get_data ().c_str ();
+
+	if (data == NULL)
+	    INTERNAL_ERROR ("message with no filename");
+
+	message->filename = talloc_strdup (message, data);
+
+	return message->filename;
     }
 
     direntry += prefix_len;
