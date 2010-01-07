@@ -723,6 +723,9 @@ _notmuch_database_get_directory_path (void *ctx,
  * database path or absolute with initial components identical to
  * database path), return a new string (with 'ctx' as the talloc
  * owner) suitable for use as a direntry term value.
+ *
+ * The necessary directory documents will be created in the database
+ * as needed.
  */
 notmuch_status_t
 _notmuch_database_filename_to_direntry (void *ctx,
