@@ -616,6 +616,49 @@ count_files (const char *path, int *count)
         free (fs_entries);
 }
 
+/* Recursively remove all filenames from the database referring to
+ * 'path' (or to any of its children). */
+static void
+_remove_directory (void *ctx,
+		   notmuch_database_t *notmuch,
+		   const char *path,
+		   int *renamed_files,
+		   int *removed_files)
+{
+    notmuch_directory_t *directory;
+    notmuch_filenames_t *files, *subdirs;
+    notmuch_status_t status;
+    char *absolute;
+
+    directory = notmuch_database_get_directory (notmuch, path);
+
+    for (files = notmuch_directory_get_child_files (directory);
+	 notmuch_filenames_has_more (files);
+	 notmuch_filenames_advance (files))
+    {
+	absolute = talloc_asprintf (ctx, "%s/%s", path,
+				    notmuch_filenames_get (files));
+	status = notmuch_database_remove_message (notmuch, absolute);
+	if (status == NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID)
+	    *renamed_files = *renamed_files + 1;
+	else
+	    *removed_files = *removed_files + 1;
+	talloc_free (absolute);
+    }
+
+    for (subdirs = notmuch_directory_get_child_directories (directory);
+	 notmuch_filenames_has_more (subdirs);
+	 notmuch_filenames_advance (subdirs))
+    {
+	absolute = talloc_asprintf (ctx, "%s/%s", path,
+				    notmuch_filenames_get (subdirs));
+	_remove_directory (ctx, notmuch, absolute, renamed_files, removed_files);
+	talloc_free (absolute);
+    }
+
+    notmuch_directory_destroy (directory);
+}
+
 int
 notmuch_new_command (void *ctx, int argc, char *argv[])
 {
@@ -704,28 +747,8 @@ notmuch_new_command (void *ctx, int argc, char *argv[])
     }
 
     for (f = add_files_state.removed_directories->head; f; f = f->next) {
-	notmuch_directory_t *directory;
-	notmuch_filenames_t *files;
-
-	directory = notmuch_database_get_directory (notmuch, f->filename);
-
-	for (files = notmuch_directory_get_child_files (directory);
-	     notmuch_filenames_has_more (files);
-	     notmuch_filenames_advance (files))
-	{
-	    char *absolute;
-
-	    absolute = talloc_asprintf (ctx, "%s/%s", f->filename,
-					notmuch_filenames_get (files));
-	    status = notmuch_database_remove_message (notmuch, absolute);
-	    if (status == NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID)
-		renamed_files++;
-	    else
-		removed_files++;
-	    talloc_free (absolute);
-	}
-
-	notmuch_directory_destroy (directory);
+	_remove_directory (ctx, notmuch, f->filename,
+			   &renamed_files, &removed_files);
     }
 
     talloc_free (add_files_state.removed_files);
