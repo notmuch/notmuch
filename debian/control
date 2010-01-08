@@ -2,7 +2,7 @@ Source: notmuch
 Section: mail
 Priority: extra
 Maintainer: Jameson Graef Rollins <jrollins@finestructure.net>
-Build-Depends: debhelper (>= 7.0), pkg-config, libxapian-dev, libgmime-2.4-dev, libtalloc-dev, libz-dev
+Build-Depends: debhelper (>= 7.0), pkg-config, libxapian-dev, libgmime-2.4-dev, libtalloc-dev, libz-dev, emacs
 Standards-Version: 3.8.3
 Homepage: http://notmuchmail.org/
 Vcs-Git: git://notmuchmail.org/git/notmuch
