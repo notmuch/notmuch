@@ -22,6 +22,8 @@
 
 #include <iostream>
 
+#include <sys/time.h>
+#include <signal.h>
 #include <xapian.h>
 
 #include <glib.h> /* g_free, GPtrArray, GHashTable */
@@ -35,7 +37,12 @@ typedef struct {
     const char *prefix;
 } prefix_t;
 
-/* Here's the current schema for our database:
+#define NOTMUCH_DATABASE_VERSION 1
+
+#define STRINGIFY(s) _SUB_STRINGIFY(s)
+#define _SUB_STRINGIFY(s) #s
+
+/* Here's the current schema for our database (for NOTMUCH_DATABASE_VERSION):
  *
  * We currently have two different types of documents: mail and directory.
  *
@@ -467,6 +474,7 @@ notmuch_database_create (const char *path)
 
     notmuch = notmuch_database_open (path,
 				     NOTMUCH_DATABASE_MODE_READ_WRITE);
+    notmuch_database_upgrade (notmuch, NULL, NULL);
 
   DONE:
     if (notmuch_path)
@@ -494,7 +502,7 @@ notmuch_database_open (const char *path,
     char *notmuch_path = NULL, *xapian_path = NULL;
     struct stat st;
     int err;
-    unsigned int i;
+    unsigned int i, version;
 
     if (asprintf (&notmuch_path, "%s/%s", path, ".notmuch") == -1) {
 	notmuch_path = NULL;
@@ -522,13 +530,42 @@ notmuch_database_open (const char *path,
     if (notmuch->path[strlen (notmuch->path) - 1] == '/')
 	notmuch->path[strlen (notmuch->path) - 1] = '\0';
 
+    notmuch->needs_upgrade = FALSE;
     notmuch->mode = mode;
     try {
 	if (mode == NOTMUCH_DATABASE_MODE_READ_WRITE) {
 	    notmuch->xapian_db = new Xapian::WritableDatabase (xapian_path,
 							       Xapian::DB_CREATE_OR_OPEN);
+	    version = notmuch_database_get_version (notmuch);
+
+	    if (version > NOTMUCH_DATABASE_VERSION) {
+		fprintf (stderr,
+			 "Error: Notmuch database at %s\n"
+			 "       has a newer database format version (%u) than supported by this\n"
+			 "       version of notmuch (%u). Refusing to open this database in\n"
+			 "       read-write mode.\n",
+			 notmuch_path, version, NOTMUCH_DATABASE_VERSION);
+		notmuch->mode = NOTMUCH_DATABASE_MODE_READ_ONLY;
+		notmuch_database_close (notmuch);
+		notmuch = NULL;
+		goto DONE;
+	    }
+
+	    if (version < NOTMUCH_DATABASE_VERSION)
+		notmuch->needs_upgrade = TRUE;
 	} else {
 	    notmuch->xapian_db = new Xapian::Database (xapian_path);
+	    version = notmuch_database_get_version (notmuch);
+	    if (version > NOTMUCH_DATABASE_VERSION)
+	    {
+		fprintf (stderr,
+			 "Warning: Notmuch database at %s\n"
+			 "         has a newer database format version (%u) than supported by this\n"
+			 "         version of notmuch (%u). Some operations may behave incorrectly,\n"
+			 "         (but the database will not be harmed since it is being opened\n"
+			 "         in read-only mode).\n",
+			 notmuch_path, version, NOTMUCH_DATABASE_VERSION);
+	    }
 	}
 	notmuch->query_parser = new Xapian::QueryParser;
 	notmuch->term_gen = new Xapian::TermGenerator;
@@ -590,6 +627,181 @@ const char *
 notmuch_database_get_path (notmuch_database_t *notmuch)
 {
     return notmuch->path;
+}
+
+unsigned int
+notmuch_database_get_version (notmuch_database_t *notmuch)
+{
+    unsigned int version;
+    string version_string;
+    const char *str;
+    char *end;
+
+    version_string = notmuch->xapian_db->get_metadata ("version");
+    if (version_string.empty ())
+	return 0;
+
+    str = version_string.c_str ();
+    if (str == NULL || *str == '\0')
+	return 0;
+
+    version = strtoul (str, &end, 10);
+    if (*end != '\0')
+	INTERNAL_ERROR ("Malformed database version: %s", str);
+
+    return version;
+}
+
+notmuch_bool_t
+notmuch_database_needs_upgrade (notmuch_database_t *notmuch)
+{
+    return notmuch->needs_upgrade;
+}
+
+static volatile sig_atomic_t do_progress_notify = 0;
+
+static void
+handle_sigalrm (unused (int signal))
+{
+    do_progress_notify = 1;
+}
+
+/* Upgrade the current database.
+ *
+ * After opening a database in read-write mode, the client should
+ * check if an upgrade is needed (notmuch_database_needs_upgrade) and
+ * if so, upgrade with this function before making any modifications.
+ *
+ * The optional progress_notify callback can be used by the caller to
+ * provide progress indication to the user. If non-NULL it will be
+ * called periodically with 'count' as the number of messages upgraded
+ * so far and 'total' the overall number of messages that will be
+ * converted.
+ */
+notmuch_status_t
+notmuch_database_upgrade (notmuch_database_t *notmuch,
+			  void (*progress_notify) (void *closure,
+						   unsigned int count,
+						   unsigned int total),
+			  void *closure)
+{
+    Xapian::WritableDatabase *db;
+    struct sigaction action;
+    struct itimerval timerval;
+    notmuch_bool_t timer_is_active = FALSE;
+    unsigned int version;
+    notmuch_status_t status;
+
+    status = _notmuch_database_ensure_writable (notmuch);
+    if (status)
+	return status;
+
+    db = static_cast <Xapian::WritableDatabase *> (notmuch->xapian_db);
+
+    version = notmuch_database_get_version (notmuch);
+
+    if (version >= NOTMUCH_DATABASE_VERSION)
+	return NOTMUCH_STATUS_SUCCESS;
+
+    if (progress_notify) {
+	/* Setup our handler for SIGALRM */
+	memset (&action, 0, sizeof (struct sigaction));
+	action.sa_handler = handle_sigalrm;
+	sigemptyset (&action.sa_mask);
+	action.sa_flags = SA_RESTART;
+	sigaction (SIGALRM, &action, NULL);
+
+	/* Then start a timer to send SIGALRM once per second. */
+	timerval.it_interval.tv_sec = 1;
+	timerval.it_interval.tv_usec = 0;
+	timerval.it_value.tv_sec = 1;
+	timerval.it_value.tv_usec = 0;
+	setitimer (ITIMER_REAL, &timerval, NULL);
+
+	timer_is_active = TRUE;
+    }
+
+    /* Before version 1, each message document had its filename in the
+     * data field. Move that into the new format by calling
+     * notmuch_message_add_filename.
+     */
+    if (version < 1) {
+	unsigned int count = 0, total;
+	notmuch_query_t *query = notmuch_query_create (notmuch, "");
+	notmuch_messages_t *messages;
+	notmuch_message_t *message;
+
+	total = notmuch_query_count_messages (query);
+
+	for (messages = notmuch_query_search_messages (query);
+	     notmuch_messages_has_more (messages);
+	     notmuch_messages_advance (messages))
+	{
+	    if (do_progress_notify)
+		progress_notify (closure, count, total);
+
+	    message = notmuch_messages_get (messages);
+
+	    _notmuch_message_upgrade_filename_storage (message);
+
+	    count++;
+	}
+    }
+
+    /* Also, before version 1 we stored directory timestamps in
+     * XTIMESTAMP documents instead of the current XDIRECTORY
+     * documents. So convert those as well. */
+    if (version < 1) {
+	Xapian::TermIterator t, t_end;
+
+	t_end = notmuch->xapian_db->allterms_end ("XTIMESTAMP");
+
+	for (t = notmuch->xapian_db->allterms_begin ("XTIMESTAMP");
+	     t != t_end;
+	     t++)
+	{
+	    Xapian::PostingIterator p, p_end;
+	    std::string term = *t;
+
+	    p_end = notmuch->xapian_db->postlist_end (term);
+
+	    for (p = notmuch->xapian_db->postlist_begin (term);
+		 p != p_end;
+		 p++)
+	    {
+		Xapian::Document document;
+		time_t mtime;
+		notmuch_directory_t *directory;
+
+		document = find_document_for_doc_id (notmuch, *p);
+		mtime = Xapian::sortable_unserialise (
+		    document.get_value (NOTMUCH_VALUE_TIMESTAMP));
+
+		directory = notmuch_database_get_directory (notmuch,
+							    term.c_str() + 10);
+		notmuch_directory_set_mtime (directory, mtime);
+		notmuch_directory_destroy (directory);
+	    }
+	}
+    }
+
+    db->set_metadata ("version", STRINGIFY (NOTMUCH_DATABASE_VERSION));
+    db->flush ();
+
+    if (timer_is_active) {
+	/* Now stop the timer. */
+	timerval.it_interval.tv_sec = 0;
+	timerval.it_interval.tv_usec = 0;
+	timerval.it_value.tv_sec = 0;
+	timerval.it_value.tv_usec = 0;
+	setitimer (ITIMER_REAL, &timerval, NULL);
+
+	/* And disable the signal handler. */
+	action.sa_handler = SIG_IGN;
+	sigaction (SIGALRM, &action, NULL);
+    }
+
+    return NOTMUCH_STATUS_SUCCESS;
 }
 
 /* We allow the user to use arbitrarily long paths for directories. But

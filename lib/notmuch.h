@@ -183,15 +183,43 @@ notmuch_database_close (notmuch_database_t *database);
 const char *
 notmuch_database_get_path (notmuch_database_t *database);
 
+/* Return the database format version of the given database. */
+unsigned int
+notmuch_database_get_version (notmuch_database_t *database);
+
+/* Does this database need to be upgraded before writing to it?
+ *
+ * If this function returns TRUE then no functions that modify the
+ * database (notmuch_database_add_message, notmuch_message_add_tag,
+ * notmuch_directory_set_mtime, etc.) will work unless the function
+ * notmuch_database_upgrade is called successfully first. */
+notmuch_bool_t
+notmuch_database_needs_upgrade (notmuch_database_t *database);
+
+/* Upgrade the current database.
+ *
+ * After opening a database in read-write mode, the client should
+ * check if an upgrade is needed (notmuch_database_needs_upgrade) and
+ * if so, upgrade with this function before making any modifications.
+ *
+ * The optional progress_notify callback can be used by the caller to
+ * provide progress indication to the user. If non-NULL it will be
+ * called periodically with 'count' as the number of messages upgraded
+ * so far and 'total' the overall number of messages that will be
+ * converted.
+ */
+notmuch_status_t
+notmuch_database_upgrade (notmuch_database_t *database,
+			  void (*progress_notify) (void *closure,
+						   unsigned int count,
+						   unsigned int total),
+			  void *closure);
+
 /* Retrieve a directory object from the database for 'path'.
  *
  * Here, 'path' should be a path relative to the path of 'database'
  * (see notmuch_database_get_path), or else should be an absolute path
  * with initial components that match the path of 'database'.
- *
- * Note: The resulting notmuch_directory_t object will represent the
- * state as it currently exists in the database, (and will not reflect
- * subsequent changes).
  */
 notmuch_directory_t *
 notmuch_database_get_directory (notmuch_database_t *database,
@@ -990,7 +1018,7 @@ notmuch_directory_set_mtime (notmuch_directory_t *directory,
 /* Get the mtime of a directory, (as previously stored with
  * notmuch_directory_set_mtime).
  *
- * Returns 0 if not mtime has previously been stored for this
+ * Returns 0 if no mtime has previously been stored for this
  * directory.*/
 time_t
 notmuch_directory_get_mtime (notmuch_directory_t *directory);

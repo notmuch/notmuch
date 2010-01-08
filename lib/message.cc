@@ -416,6 +416,24 @@ _notmuch_message_add_filename (notmuch_message_t *message,
     return NOTMUCH_STATUS_SUCCESS;
 }
 
+/* Move the filename from the data field (as it was in database format
+ * version 0) to a file-direntry term instead (as in database format
+ * version 1).
+ */
+void
+_notmuch_message_upgrade_filename_storage (notmuch_message_t *message)
+{
+    char *filename;
+
+    filename = talloc_strdup (message, message->doc.get_data ().c_str ());
+    if (filename && *filename != '\0') {
+	_notmuch_message_add_filename (message, filename);
+	message->doc.set_data ("");
+	_notmuch_message_sync (message);
+    }
+    talloc_free (filename);
+}
+
 const char *
 notmuch_message_get_filename (notmuch_message_t *message)
 {
@@ -441,7 +459,10 @@ notmuch_message_get_filename (notmuch_message_t *message)
     {
 	/* A message document created by an old version of notmuch
 	 * (prior to rename support) will have the filename in the
-	 * data of the document rather than as a file-direntry term. */
+	 * data of the document rather than as a file-direntry term.
+	 *
+	 * It would be nice to do the upgrade of the document directly
+	 * here, but the database is likely open in read-only mode. */
 	const char *data;
 
 	data = message->doc.get_data ().c_str ();
