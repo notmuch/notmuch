@@ -616,6 +616,28 @@ count_files (const char *path, int *count)
         free (fs_entries);
 }
 
+static void
+upgrade_print_progress (void *closure,
+			unsigned int count,
+			unsigned int total)
+{
+    add_files_state_t *state = closure;
+    struct timeval tv_now;
+    double elapsed_overall, rate_overall, time_remaining;
+
+    gettimeofday (&tv_now, NULL);
+
+    elapsed_overall = notmuch_time_elapsed (state->tv_start, tv_now);
+    rate_overall = count / elapsed_overall;
+    time_remaining = ((total - count) / rate_overall);
+
+    printf ("Upgraded %d of %d messages (", count, total);
+    notmuch_time_print_formatted_seconds (time_remaining);
+    printf (" remaining).      \r");
+
+    fflush (stdout);
+}
+
 /* Recursively remove all filenames from the database referring to
  * 'path' (or to any of its children). */
 static void
@@ -718,6 +740,18 @@ notmuch_new_command (void *ctx, int argc, char *argv[])
     } else {
 	notmuch = notmuch_database_open (db_path,
 					 NOTMUCH_DATABASE_MODE_READ_WRITE);
+	if (notmuch == NULL)
+	    return 1;
+
+	if (notmuch_database_needs_upgrade (notmuch)) {
+	    printf ("Welcome to a new version of notmuch! Your database will now be upgraded.\n");
+	    gettimeofday (&add_files_state.tv_start, NULL);
+	    notmuch_database_upgrade (notmuch, upgrade_print_progress,
+				      &add_files_state);
+	    printf ("Your notmuch database has now been upgraded to database format version %u.\n",
+		    notmuch_database_get_version (notmuch));
+	}
+
 	add_files_state.total_files = 0;
     }
 
