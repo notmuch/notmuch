@@ -711,13 +711,6 @@ notmuch_new_command (void *ctx, int argc, char *argv[])
 	}
     }
 
-    /* Setup our handler for SIGINT */
-    memset (&action, 0, sizeof (struct sigaction));
-    action.sa_handler = handle_sigint;
-    sigemptyset (&action.sa_mask);
-    action.sa_flags = SA_RESTART;
-    sigaction (SIGINT, &action, NULL);
-
     config = notmuch_config_open (ctx, NULL, NULL);
     if (config == NULL)
 	return 1;
@@ -757,6 +750,15 @@ notmuch_new_command (void *ctx, int argc, char *argv[])
 
     if (notmuch == NULL)
 	return 1;
+
+    /* Setup our handler for SIGINT. We do this after having
+     * potentially done a database upgrade we this interrupt handler
+     * won't support. */
+    memset (&action, 0, sizeof (struct sigaction));
+    action.sa_handler = handle_sigint;
+    sigemptyset (&action.sa_mask);
+    action.sa_flags = SA_RESTART;
+    sigaction (SIGINT, &action, NULL);
 
     talloc_free (dot_notmuch_path);
     dot_notmuch_path = NULL;
