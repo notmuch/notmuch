@@ -737,8 +737,10 @@ notmuch_database_upgrade (notmuch_database_t *notmuch,
 	     notmuch_messages_has_more (messages);
 	     notmuch_messages_advance (messages))
 	{
-	    if (do_progress_notify)
+	    if (do_progress_notify) {
 		progress_notify (closure, count, total);
+		do_progress_notify = 0;
+	    }
 
 	    message = notmuch_messages_get (messages);
 
