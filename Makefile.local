@@ -48,5 +48,10 @@ install-bash:
 	install -m0644 contrib/notmuch-completion.bash \
 		$(DESTDIR)$(bash_completion_dir)/notmuch
 
+install-zsh:
+	install -d $(DESTDIR)$(zsh_completion_dir)
+	install -m0644 contrib/notmuch-completion.zsh \
+		$(DESTDIR)$(zsh_completion_dir)/notmuch
+
 SRCS  := $(SRCS) $(notmuch_client_srcs)
 CLEAN := $(CLEAN) notmuch $(notmuch_client_modules) notmuch.elc notmuch.1.gz

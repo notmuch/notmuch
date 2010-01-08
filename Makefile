@@ -8,6 +8,7 @@ EMACS ?= emacs
 gzip = gzip
 
 bash_completion_dir = /etc/bash_completion.d
+zsh_completion_dir = /usr/share/zsh/functions/Completion/Unix
 
 all_deps = Makefile Makefile.local Makefile.config \
 		   lib/Makefile lib/Makefile.local
