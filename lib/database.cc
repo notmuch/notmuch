@@ -783,6 +783,8 @@ notmuch_database_upgrade (notmuch_database_t *notmuch,
 							    term.c_str() + 10);
 		notmuch_directory_set_mtime (directory, mtime);
 		notmuch_directory_destroy (directory);
+
+		db->delete_document (*p);
 	    }
 	}
     }
