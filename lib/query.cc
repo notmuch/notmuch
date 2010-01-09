@@ -134,6 +134,8 @@ notmuch_query_search_messages (notmuch_query_t *query)
 					 mail_query, string_query);
 	}
 
+	enquire.set_weighting_scheme (Xapian::BoolWeight());
+
 	switch (query->sort) {
 	case NOTMUCH_SORT_OLDEST_FIRST:
 	    enquire.set_sort_by_value (NOTMUCH_VALUE_TIMESTAMP, FALSE);
