@@ -192,7 +192,7 @@ _notmuch_message_create_for_message_id (notmuch_database_t *notmuch,
 
     db = static_cast<Xapian::WritableDatabase *> (notmuch->xapian_db);
     try {
-	doc.add_term (term);
+	doc.add_term (term, 0);
 	talloc_free (term);
 
 	doc.add_value (NOTMUCH_VALUE_MESSAGE_ID, message_id);
@@ -646,7 +646,7 @@ _notmuch_message_add_term (notmuch_message_t *message,
     if (strlen (term) > NOTMUCH_TERM_MAX)
 	return NOTMUCH_PRIVATE_STATUS_TERM_TOO_LONG;
 
-    message->doc.add_term (term);
+    message->doc.add_term (term, 0);
 
     talloc_free (term);
 

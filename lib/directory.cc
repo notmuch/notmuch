@@ -213,7 +213,7 @@ _notmuch_directory_create (notmuch_database_t *notmuch,
 	    Xapian::docid parent_id;
 	    char *term = talloc_asprintf (local, "%s%s",
 					  _find_prefix ("directory"), db_path);
-	    directory->doc.add_term (term);
+	    directory->doc.add_term (term, 0);
 
 	    directory->doc.set_data (path);
 
@@ -225,7 +225,7 @@ _notmuch_directory_create (notmuch_database_t *notmuch,
 		term = talloc_asprintf (local, "%s%u:%s",
 					_find_prefix ("directory-direntry"),
 					parent_id, basename);
-		directory->doc.add_term (term);
+		directory->doc.add_term (term, 0);
 	    }
 
 	    directory->doc.add_value (NOTMUCH_VALUE_TIMESTAMP,
