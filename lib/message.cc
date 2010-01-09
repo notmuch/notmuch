@@ -416,22 +416,16 @@ _notmuch_message_add_filename (notmuch_message_t *message,
     return NOTMUCH_STATUS_SUCCESS;
 }
 
-/* Move the filename from the data field (as it was in database format
- * version 0) to a file-direntry term instead (as in database format
- * version 1).
- */
-void
-_notmuch_message_upgrade_filename_storage (notmuch_message_t *message)
+char *
+_notmuch_message_talloc_copy_data (notmuch_message_t *message)
 {
-    char *filename;
+    return talloc_strdup (message, message->doc.get_data ().c_str ());
+}
 
-    filename = talloc_strdup (message, message->doc.get_data ().c_str ());
-    if (filename && *filename != '\0') {
-	_notmuch_message_add_filename (message, filename);
-	message->doc.set_data ("");
-	_notmuch_message_sync (message);
-    }
-    talloc_free (filename);
+void
+_notmuch_message_clear_data (notmuch_message_t *message)
+{
+    message->doc.set_data ("");
 }
 
 const char *

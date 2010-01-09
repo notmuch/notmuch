@@ -258,6 +258,22 @@ _notmuch_message_sync (notmuch_message_t *message);
 void
 _notmuch_message_close (notmuch_message_t *message);
 
+/* Get a copy of the data in this message document.
+ *
+ * Caller should talloc_free the result when done.
+ *
+ * This function is intended to support database upgrade and really
+ * shouldn't be used otherwise. */
+char *
+_notmuch_message_talloc_copy_data (notmuch_message_t *message);
+
+/* Clear the data in this message document.
+ *
+ * This function is intended to support database upgrade and really
+ * shouldn't be used otherwise. */
+void
+_notmuch_message_clear_data (notmuch_message_t *message);
+
 /* index.cc */
 
 notmuch_status_t

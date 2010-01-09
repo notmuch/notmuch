@@ -722,7 +722,7 @@ notmuch_database_upgrade (notmuch_database_t *notmuch,
     }
 
     /* Before version 1, each message document had its filename in the
-     * data field. Move that into the new format by calling
+     * data field. Copy that into the new format by calling
      * notmuch_message_add_filename.
      */
     if (version < 1) {
@@ -730,6 +730,7 @@ notmuch_database_upgrade (notmuch_database_t *notmuch,
 	notmuch_query_t *query = notmuch_query_create (notmuch, "");
 	notmuch_messages_t *messages;
 	notmuch_message_t *message;
+	char *filename;
 
 	total = notmuch_query_count_messages (query);
 
@@ -744,15 +745,24 @@ notmuch_database_upgrade (notmuch_database_t *notmuch,
 
 	    message = notmuch_messages_get (messages);
 
-	    _notmuch_message_upgrade_filename_storage (message);
+	    filename = _notmuch_message_talloc_copy_data (message);
+	    if (filename && *filename != '\0') {
+		_notmuch_message_add_filename (message, filename);
+		_notmuch_message_sync (message);
+	    }
+	    talloc_free (filename);
+
+	    notmuch_message_destroy (message);
 
 	    count++;
 	}
+
+	notmuch_query_destroy (query);
     }
 
     /* Also, before version 1 we stored directory timestamps in
      * XTIMESTAMP documents instead of the current XDIRECTORY
-     * documents. So convert those as well. */
+     * documents. So copy those as well. */
     if (version < 1) {
 	Xapian::TermIterator t, t_end;
 
@@ -783,14 +793,72 @@ notmuch_database_upgrade (notmuch_database_t *notmuch,
 							    term.c_str() + 10);
 		notmuch_directory_set_mtime (directory, mtime);
 		notmuch_directory_destroy (directory);
-
-		db->delete_document (*p);
 	    }
 	}
     }
 
     db->set_metadata ("version", STRINGIFY (NOTMUCH_DATABASE_VERSION));
     db->flush ();
+
+    /* Now that the upgrade is complete we can remove the old data
+     * and documents that are no longer needed. */
+    if (version < 1) {
+	unsigned int count = 0, total;
+	notmuch_query_t *query = notmuch_query_create (notmuch, "");
+	notmuch_messages_t *messages;
+	notmuch_message_t *message;
+	char *filename;
+
+	total = notmuch_query_count_messages (query);
+
+	for (messages = notmuch_query_search_messages (query);
+	     notmuch_messages_has_more (messages);
+	     notmuch_messages_advance (messages))
+	{
+	    if (do_progress_notify) {
+		progress_notify (closure, count, total);
+		do_progress_notify = 0;
+	    }
+
+	    message = notmuch_messages_get (messages);
+
+	    filename = _notmuch_message_talloc_copy_data (message);
+	    if (filename && *filename != '\0') {
+		_notmuch_message_clear_data (message);
+		_notmuch_message_sync (message);
+	    }
+	    talloc_free (filename);
+
+	    notmuch_message_destroy (message);
+
+	    count++;
+	}
+
+	notmuch_query_destroy (query);
+    }
+
+    if (version < 1) {
+	Xapian::TermIterator t, t_end;
+
+	t_end = notmuch->xapian_db->allterms_end ("XTIMESTAMP");
+
+	for (t = notmuch->xapian_db->allterms_begin ("XTIMESTAMP");
+	     t != t_end;
+	     t++)
+	{
+	    Xapian::PostingIterator p, p_end;
+	    std::string term = *t;
+
+	    p_end = notmuch->xapian_db->postlist_end (term);
+
+	    for (p = notmuch->xapian_db->postlist_begin (term);
+		 p != p_end;
+		 p++)
+	    {
+		db->delete_document (*p);
+	    }
+	}
+    }
 
     if (timer_is_active) {
 	/* Now stop the timer. */
