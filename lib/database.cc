@@ -681,8 +681,7 @@ handle_sigalrm (unused (int signal))
 notmuch_status_t
 notmuch_database_upgrade (notmuch_database_t *notmuch,
 			  void (*progress_notify) (void *closure,
-						   unsigned int count,
-						   unsigned int total),
+						   double progress),
 			  void *closure)
 {
     Xapian::WritableDatabase *db;
@@ -691,6 +690,7 @@ notmuch_database_upgrade (notmuch_database_t *notmuch,
     notmuch_bool_t timer_is_active = FALSE;
     unsigned int version;
     notmuch_status_t status;
+    unsigned int count = 0, total = 0;
 
     status = _notmuch_database_ensure_writable (notmuch);
     if (status)
@@ -726,11 +726,11 @@ notmuch_database_upgrade (notmuch_database_t *notmuch,
      * notmuch_message_add_filename.
      */
     if (version < 1) {
-	unsigned int count = 0, total;
 	notmuch_query_t *query = notmuch_query_create (notmuch, "");
 	notmuch_messages_t *messages;
 	notmuch_message_t *message;
 	char *filename;
+	Xapian::TermIterator t, t_end;
 
 	total = notmuch_query_count_messages (query);
 
@@ -739,7 +739,7 @@ notmuch_database_upgrade (notmuch_database_t *notmuch,
 	     notmuch_messages_advance (messages))
 	{
 	    if (do_progress_notify) {
-		progress_notify (closure, count, total);
+		progress_notify (closure, (double) count / total);
 		do_progress_notify = 0;
 	    }
 
@@ -758,13 +758,10 @@ notmuch_database_upgrade (notmuch_database_t *notmuch,
 	}
 
 	notmuch_query_destroy (query);
-    }
 
-    /* Also, before version 1 we stored directory timestamps in
-     * XTIMESTAMP documents instead of the current XDIRECTORY
-     * documents. So copy those as well. */
-    if (version < 1) {
-	Xapian::TermIterator t, t_end;
+	/* Also, before version 1 we stored directory timestamps in
+	 * XTIMESTAMP documents instead of the current XDIRECTORY
+	 * documents. So copy those as well. */
 
 	t_end = notmuch->xapian_db->allterms_end ("XTIMESTAMP");
 
@@ -785,6 +782,11 @@ notmuch_database_upgrade (notmuch_database_t *notmuch,
 		time_t mtime;
 		notmuch_directory_t *directory;
 
+		if (do_progress_notify) {
+		    progress_notify (closure, (double) count / total);
+		    do_progress_notify = 0;
+		}
+
 		document = find_document_for_doc_id (notmuch, *p);
 		mtime = Xapian::sortable_unserialise (
 		    document.get_value (NOTMUCH_VALUE_TIMESTAMP));
@@ -803,20 +805,17 @@ notmuch_database_upgrade (notmuch_database_t *notmuch,
     /* Now that the upgrade is complete we can remove the old data
      * and documents that are no longer needed. */
     if (version < 1) {
-	unsigned int count = 0, total;
 	notmuch_query_t *query = notmuch_query_create (notmuch, "");
 	notmuch_messages_t *messages;
 	notmuch_message_t *message;
 	char *filename;
-
-	total = notmuch_query_count_messages (query);
 
 	for (messages = notmuch_query_search_messages (query);
 	     notmuch_messages_has_more (messages);
 	     notmuch_messages_advance (messages))
 	{
 	    if (do_progress_notify) {
-		progress_notify (closure, count, total);
+		progress_notify (closure, (double) count / total);
 		do_progress_notify = 0;
 	    }
 
@@ -830,8 +829,6 @@ notmuch_database_upgrade (notmuch_database_t *notmuch,
 	    talloc_free (filename);
 
 	    notmuch_message_destroy (message);
-
-	    count++;
 	}
 
 	notmuch_query_destroy (query);
@@ -855,6 +852,11 @@ notmuch_database_upgrade (notmuch_database_t *notmuch,
 		 p != p_end;
 		 p++)
 	    {
+		if (do_progress_notify) {
+		    progress_notify (closure, (double) count / total);
+		    do_progress_notify = 0;
+		}
+
 		db->delete_document (*p);
 	    }
 	}

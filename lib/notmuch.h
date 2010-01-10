@@ -204,15 +204,14 @@ notmuch_database_needs_upgrade (notmuch_database_t *database);
  *
  * The optional progress_notify callback can be used by the caller to
  * provide progress indication to the user. If non-NULL it will be
- * called periodically with 'count' as the number of messages upgraded
- * so far and 'total' the overall number of messages that will be
- * converted.
+ * called periodically with 'progress' as a floating-point value in
+ * the range of [0.0 .. 1.0] indicating the progress made so far in
+ * the upgrade process.
  */
 notmuch_status_t
 notmuch_database_upgrade (notmuch_database_t *database,
 			  void (*progress_notify) (void *closure,
-						   unsigned int count,
-						   unsigned int total),
+						   double progress),
 			  void *closure);
 
 /* Retrieve a directory object from the database for 'path'.

@@ -618,22 +618,26 @@ count_files (const char *path, int *count)
 
 static void
 upgrade_print_progress (void *closure,
-			unsigned int count,
-			unsigned int total)
+			double progress)
 {
     add_files_state_t *state = closure;
-    struct timeval tv_now;
-    double elapsed_overall, rate_overall, time_remaining;
 
-    gettimeofday (&tv_now, NULL);
+    printf ("Upgrading database: %.2f%% complete", progress * 100.0);
 
-    elapsed_overall = notmuch_time_elapsed (state->tv_start, tv_now);
-    rate_overall = count / elapsed_overall;
-    time_remaining = ((total - count) / rate_overall);
+    if (progress > 0) {
+	struct timeval tv_now;
+	double elapsed, time_remaining;
 
-    printf ("Upgraded %d of %d messages (", count, total);
-    notmuch_time_print_formatted_seconds (time_remaining);
-    printf (" remaining).      \r");
+	gettimeofday (&tv_now, NULL);
+
+	elapsed = notmuch_time_elapsed (state->tv_start, tv_now);
+	time_remaining = (elapsed / progress) * (1.0 - progress);
+	printf (" (");
+	notmuch_time_print_formatted_seconds (time_remaining);
+	printf (" remaining)");
+    }
+
+    printf (".      \r");
 
     fflush (stdout);
 }
