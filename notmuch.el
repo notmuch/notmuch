@@ -88,15 +88,12 @@
     (define-key map "h" 'notmuch-show-toggle-current-header)
     (define-key map "-" 'notmuch-show-remove-tag)
     (define-key map "+" 'notmuch-show-add-tag)
-    (define-key map "X" 'notmuch-show-mark-read-then-archive-then-exit)
     (define-key map "x" 'notmuch-show-archive-thread-then-exit)
-    (define-key map "A" 'notmuch-show-mark-read-then-archive-thread)
     (define-key map "a" 'notmuch-show-archive-thread)
     (define-key map "p" 'notmuch-show-previous-message)
-    (define-key map "N" 'notmuch-show-mark-read-then-next-open-message)
     (define-key map "n" 'notmuch-show-next-message)
     (define-key map (kbd "DEL") 'notmuch-show-rewind)
-    (define-key map " " 'notmuch-show-advance-marking-read-and-archiving)
+    (define-key map " " 'notmuch-show-advance-and-archive)
     map)
   "Keymap for \"notmuch show\" buffers.")
 (fset 'notmuch-show-mode-map notmuch-show-mode-map)
@@ -321,40 +318,6 @@ pseudoheader summary"
 			 (cons (notmuch-show-get-message-id) nil)))
 	  (notmuch-show-set-tags (sort (set-difference tags toremove :test 'string=) 'string<))))))
 
-(defun notmuch-show-archive-thread-maybe-mark-read (markread)
-  (save-excursion
-    (goto-char (point-min))
-    (while (not (eobp))
-      (if markread
-	  (notmuch-show-remove-tag "unread" "inbox")
-	(notmuch-show-remove-tag "inbox"))
-      (if (not (eobp))
-	  (forward-char))
-      (if (not (re-search-forward notmuch-show-message-begin-regexp nil t))
-	  (goto-char (point-max)))))
-  (let ((parent-buffer notmuch-show-parent-buffer))
-    (kill-this-buffer)
-    (if parent-buffer
-	(progn
-	  (switch-to-buffer parent-buffer)
-	  (forward-line)
-	  (notmuch-search-show-thread)))))
-
-(defun notmuch-show-mark-read-then-archive-thread ()
-  "Remove unread tags from thread, then archive and show next thread.
-
-Archive each message currently shown by removing the \"unread\"
-and \"inbox\" tag from each. Then kill this buffer and show the
-next thread from the search from which this thread was originally
-shown.
-
-Note: This command is safe from any race condition of new messages
-being delivered to the same thread. It does not archive the
-entire thread, but only the messages shown in the current
-buffer."
-  (interactive)
-  (notmuch-show-archive-thread-maybe-mark-read t))
-
 (defun notmuch-show-archive-thread ()
   "Archive each message in thread, then show next thread from search.
 
@@ -367,18 +330,26 @@ being delivered to the same thread. It does not archive the
 entire thread, but only the messages shown in the current
 buffer."
   (interactive)
-  (notmuch-show-archive-thread-maybe-mark-read nil))
+  (save-excursion
+    (goto-char (point-min))
+    (while (not (eobp))
+      (notmuch-show-remove-tag "inbox")
+      (if (not (eobp))
+	  (forward-char))
+      (if (not (re-search-forward notmuch-show-message-begin-regexp nil t))
+	  (goto-char (point-max)))))
+  (let ((parent-buffer notmuch-show-parent-buffer))
+    (kill-this-buffer)
+    (if parent-buffer
+	(progn
+	  (switch-to-buffer parent-buffer)
+	  (forward-line)
+	  (notmuch-search-show-thread)))))
 
 (defun notmuch-show-archive-thread-then-exit ()
   "Archive each message in thread, then exit back to search results."
   (interactive)
   (notmuch-show-archive-thread)
-  (kill-this-buffer))
-
-(defun notmuch-show-mark-read-then-archive-then-exit ()
-  "Remove unread tags from thread, then archive and exit to search results."
-  (interactive)
-  (notmuch-show-mark-read-then-archive-thread)
   (kill-this-buffer))
 
 (defun notmuch-show-view-raw-message ()
@@ -550,7 +521,8 @@ Returns nil if already on the last message in the buffer."
     (while (point-invisible-p)
       (backward-char))
     (recenter 0)
-    nil))
+    nil)
+  (notmuch-show-mark-read))
 
 (defun notmuch-show-find-next-message ()
   "Returns the position of the next message in the buffer.
@@ -613,14 +585,8 @@ it."
       (notmuch-show-previous-message)
       (point))))
 
-(defun notmuch-show-mark-read-then-next-open-message ()
-  "Remove unread tag from this message, then advance to next open message."
-  (interactive)
-  (notmuch-show-remove-tag "unread")
-  (notmuch-show-next-open-message))
-
 (defun notmuch-show-rewind ()
-  "Backup through the thread, (reverse scrolling compared to \\[notmuch-show-advance-marking-read-and-archiving]).
+  "Backup through the thread, (reverse scrolling compared to \\[notmuch-show-advance-and-archive]).
 
 Specifically, if the beginning of the previous email is fewer
 than `window-height' lines from the current point, move to it
@@ -630,7 +596,7 @@ Otherwise, just scroll down a screenful of the current message.
 
 This command does not modify any message tags, (it does not undo
 any effects from previous calls to
-`notmuch-show-advance-marking-read-and-archiving'."
+`notmuch-show-advance-and-archive'."
   (interactive)
   (let ((previous (notmuch-show-find-previous-message)))
     (if (> (count-lines previous (point)) (- (window-height) next-screen-context-lines))
@@ -641,8 +607,8 @@ any effects from previous calls to
 	  (goto-char (window-start)))
       (notmuch-show-previous-message))))
 
-(defun notmuch-show-advance-marking-read-and-archiving ()
-  "Advance through thread, marking read and archiving.
+(defun notmuch-show-advance-and-archive ()
+  "Advance through thread and archive.
 
 This command is intended to be one of the simplest ways to
 process a thread of email. It does the following:
@@ -651,8 +617,7 @@ If the current message in the thread is not yet fully visible,
 scroll by a near screenful to read more of the message.
 
 Otherwise, (the end of the current message is already within the
-current window), remove the \"unread\" tag (if present) from the
-current message and advance to the next open message.
+current window), advance to the next open message.
 
 Finally, if there is no further message to advance to, and this
 last message is already read, then archive the entire current
@@ -665,7 +630,7 @@ which this thread was originally shown."
     (if (> next (window-end))
 	(scroll-up nil)
       (let ((last (notmuch-show-last-message-p)))
-	(notmuch-show-mark-read-then-next-open-message)
+	(notmuch-show-next-open-message)
 	(if last
 	    (notmuch-show-archive-thread))))))
 
@@ -1065,17 +1030,15 @@ pressing RET after positioning the cursor on a hidden part, (for
 which \\[notmuch-show-next-button] and \\[notmuch-show-previous-button] are helpful).
 
 Reading the thread sequentially is well-supported by pressing
-\\[notmuch-show-advance-marking-read-and-archiving]. This will scroll the current message (if necessary),
-advance to the next message, or advance to the next thread (if
-already on the last message of a thread). As each message is
-scrolled away its \"unread\" tag will be removed, and as each
-thread is scrolled away the \"inbox\" tag will be removed from
-each message in the thread.
+\\[notmuch-show-advance-and-archive]. This will
+scroll the current message (if necessary), advance to the next
+message, or advance to the next thread (if already on the last
+message of a thread).
 
 Other commands are available to read or manipulate the thread more
 selectively, (such as '\\[notmuch-show-next-message]' and '\\[notmuch-show-previous-message]' to advance to messages without
 removing any tags, and '\\[notmuch-show-archive-thread]' to archive an entire thread without
-scrolling through with \\[notmuch-show-advance-marking-read-and-archiving]).
+scrolling through with \\[notmuch-show-advance-and-archive]).
 
 You can add or remove arbitary tags from the current message with
 '\\[notmuch-show-add-tag]' or '\\[notmuch-show-remove-tag]'.
@@ -1153,10 +1116,14 @@ All currently available key bindings:
 
 ; Make show mode a bit prettier, highlighting URLs and using word wrap
 
+(defun notmuch-show-mark-read ()
+  (notmuch-show-remove-tag "unread"))
+
 (defun notmuch-show-pretty-hook ()
   (goto-address-mode 1)
   (visual-line-mode))
 
+(add-hook 'notmuch-show-hook 'notmuch-show-mark-read)
 (add-hook 'notmuch-show-hook 'notmuch-show-pretty-hook)
 (add-hook 'notmuch-search-hook
 	  (lambda()
