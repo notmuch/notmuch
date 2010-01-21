@@ -153,7 +153,7 @@ _entries_resemble_maildir (struct dirent **entries, int count)
     int i, found = 0;
 
     for (i = 0; i < count; i++) {
-	if (entries[i]->d_type != DT_DIR)
+	if (entries[i]->d_type != DT_DIR && entries[i]->d_type != DT_UNKNOWN)
 	    continue;
 
 	if (strcmp(entries[i]->d_name, "new") == 0 ||
@@ -273,7 +273,8 @@ add_files_recursive (notmuch_database_t *notmuch,
 
 	entry = fs_entries[i];
 
-	if (entry->d_type != DT_DIR && entry->d_type != DT_LNK)
+	if (entry->d_type != DT_DIR && entry->d_type != DT_LNK
+			&& entry->d_type != DT_UNKNOWN)
 	    continue;
 
 	/* Ignore special directories to avoid infinite recursion.
@@ -343,7 +344,7 @@ add_files_recursive (notmuch_database_t *notmuch,
 
 	/* If we're looking at a symlink, we only want to add it if it
 	 * links to a regular file, (and not to a directory, say). */
-	if (entry->d_type == DT_LNK) {
+	if (entry->d_type == DT_LNK || entry->d_type == DT_UNKNOWN) {
 	    int err;
 
 	    next = talloc_asprintf (notmuch, "%s/%s", path, entry->d_name);
