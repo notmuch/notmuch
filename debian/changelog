@@ -1,5 +1,6 @@
 notmuch (0.0+201001211401) unstable; urgency=low
 
+  * Upload to Debian (closes: #557354).
   * New versioning scheme.
   * Added emacs build dependency.
   * Added Vcs-Browser field to debian/control.
@@ -11,6 +12,6 @@ notmuch (0.0+201001211401) unstable; urgency=low
 
 notmuch (0.0-1) unstable; urgency=low
 
-  * New Debian package
+  * New Debian package.
 
  -- Jameson Graef Rollins <jrollins@finestructure.net>  Fri, 27 Nov 2009 13:39:09 -0500
