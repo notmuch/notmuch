@@ -9,6 +9,7 @@ notmuch (0.0+201001211401) unstable; urgency=low
   * Put debian/* under separate copyright.
   * Make Carl the maintainer.
   * Add myself to uploaders.
+  * Install the vim plugin (using vim-addons).
 
  -- martin f. krafft <madduck@debian.org>  Thu, 21 Jan 2010 14:00:54 +1300
 

@@ -1,3 +1,13 @@
 #!/usr/bin/make -f
 %:
 	dh $@
+
+override_dh_installdocs:
+	dh_installdocs
+	install -m644 vim/README debian/notmuch/usr/share/doc/notmuch/README.vim
+
+override_dh_install:
+	dh_install
+	install -m644 vim/plugin/notmuch.vim debian/notmuch/usr/share/vim/addons/plugin
+	install -m644 vim/syntax/notmuch-*.vim debian/notmuch/usr/share/vim/addons/syntax
+	install -m644 vim/notmuch.yaml debian/notmuch/usr/share/vim/registry
