@@ -6,6 +6,7 @@ Build-Depends: debhelper (>= 7.0), pkg-config, libxapian-dev, libgmime-2.4-dev, 
 Standards-Version: 3.8.3
 Homepage: http://notmuchmail.org/
 Vcs-Git: git://notmuchmail.org/git/notmuch
+Vcs-Browser: http://git.debian.org/?p=collab-maint/notmuch.git;a=summary
 Dm-Upload-Allowed: yes
 
 Package: notmuch
