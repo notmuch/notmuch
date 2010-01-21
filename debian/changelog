@@ -1,3 +1,11 @@
+notmuch (0.0+201001211401) unstable; urgency=low
+
+  * New versioning scheme.
+  * Added emacs build dependency.
+  * Added Vcs-Browser field to debian/control.
+
+ -- martin f. krafft <madduck@debian.org>  Thu, 21 Jan 2010 14:00:54 +1300
+
 notmuch (0.0-1) unstable; urgency=low
 
   * New Debian package
