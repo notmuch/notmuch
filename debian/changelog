@@ -5,6 +5,7 @@ notmuch (0.0+201001211401) unstable; urgency=low
   * Added Vcs-Browser field to debian/control.
   * Downgrade recommendation for emacs to suggestion.
   * Add vim to suggestions and enhancements.
+  * Put debian/* under separate copyright.
 
  -- martin f. krafft <madduck@debian.org>  Thu, 21 Jan 2010 14:00:54 +1300
 
