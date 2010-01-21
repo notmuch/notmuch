@@ -3,6 +3,8 @@ notmuch (0.0+201001211401) unstable; urgency=low
   * New versioning scheme.
   * Added emacs build dependency.
   * Added Vcs-Browser field to debian/control.
+  * Downgrade recommendation for emacs to suggestion.
+  * Add vim to suggestions and enhancements.
 
  -- martin f. krafft <madduck@debian.org>  Thu, 21 Jan 2010 14:00:54 +1300
 
