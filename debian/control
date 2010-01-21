@@ -2,7 +2,7 @@ Source: notmuch
 Section: mail
 Priority: extra
 Maintainer: Carl Worth <cworth@debian.org>
-Uploaders: Jameson Graef Rollins <jrollins@finestructure.net>
+Uploaders: Jameson Graef Rollins <jrollins@finestructure.net>, martin f. krafft <madduck@debian.org>
 Build-Depends: debhelper (>= 7.0), pkg-config, libxapian-dev, libgmime-2.4-dev, libtalloc-dev, libz-dev, emacs (>= 23~)
 Standards-Version: 3.8.3
 Homepage: http://notmuchmail.org/
