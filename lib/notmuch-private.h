@@ -112,14 +112,15 @@ typedef enum _notmuch_private_status {
     /* First, copy all the public status values. */
     NOTMUCH_PRIVATE_STATUS_SUCCESS = NOTMUCH_STATUS_SUCCESS,
     NOTMUCH_PRIVATE_STATUS_OUT_OF_MEMORY = NOTMUCH_STATUS_OUT_OF_MEMORY,
-    NOTMUCH_PRIVATE_STATUS_READONLY_DATABASE = NOTMUCH_STATUS_READONLY_DATABASE,
+    NOTMUCH_PRIVATE_STATUS_READ_ONLY_DATABASE = NOTMUCH_STATUS_READ_ONLY_DATABASE,
     NOTMUCH_PRIVATE_STATUS_XAPIAN_EXCEPTION = NOTMUCH_STATUS_XAPIAN_EXCEPTION,
     NOTMUCH_PRIVATE_STATUS_FILE_NOT_EMAIL = NOTMUCH_STATUS_FILE_NOT_EMAIL,
     NOTMUCH_PRIVATE_STATUS_NULL_POINTER = NOTMUCH_STATUS_NULL_POINTER,
     NOTMUCH_PRIVATE_STATUS_TAG_TOO_LONG = NOTMUCH_STATUS_TAG_TOO_LONG,
+    NOTMUCH_PRIVATE_STATUS_UNBALANCED_FREEZE_THAW = NOTMUCH_STATUS_UNBALANCED_FREEZE_THAW,
 
     /* Then add our own private values. */
-    NOTMUCH_PRIVATE_STATUS_TERM_TOO_LONG,
+    NOTMUCH_PRIVATE_STATUS_TERM_TOO_LONG = NOTMUCH_STATUS_LAST_STATUS,
     NOTMUCH_PRIVATE_STATUS_NO_DOCUMENT_FOUND,
 
     NOTMUCH_PRIVATE_STATUS_LAST_STATUS
@@ -149,6 +150,54 @@ typedef enum _notmuch_private_status {
  * _notmuch_message_add/remove_term functions. */
 const char *
 _find_prefix (const char *name);
+
+notmuch_status_t
+_notmuch_database_ensure_writable (notmuch_database_t *notmuch);
+
+const char *
+_notmuch_database_relative_path (notmuch_database_t *notmuch,
+				 const char *path);
+
+notmuch_status_t
+_notmuch_database_split_path (void *ctx,
+			      const char *path,
+			      const char **directory,
+			      const char **basename);
+
+const char *
+_notmuch_database_get_directory_db_path (const char *path);
+
+notmuch_private_status_t
+_notmuch_database_find_unique_doc_id (notmuch_database_t *notmuch,
+				      const char *prefix_name,
+				      const char *value,
+				      unsigned int *doc_id);
+
+notmuch_status_t
+_notmuch_database_find_directory_id (notmuch_database_t *database,
+				     const char *path,
+				     unsigned int *directory_id);
+
+const char *
+_notmuch_database_get_directory_path (void *ctx,
+				      notmuch_database_t *notmuch,
+				      unsigned int doc_id);
+
+notmuch_status_t
+_notmuch_database_filename_to_direntry (void *ctx,
+					notmuch_database_t *notmuch,
+					const char *filename,
+					char **direntry);
+
+/* directory.cc */
+
+notmuch_directory_t *
+_notmuch_directory_create (notmuch_database_t *notmuch,
+			   const char *path,
+			   notmuch_status_t *status_ret);
+
+unsigned int
+_notmuch_directory_get_document_id (notmuch_directory_t *directory);
 
 /* thread.cc */
 
@@ -190,7 +239,10 @@ _notmuch_message_gen_terms (notmuch_message_t *message,
 			    const char *text);
 
 void
-_notmuch_message_set_filename (notmuch_message_t *message,
+_notmuch_message_upgrade_filename_storage (notmuch_message_t *message);
+
+notmuch_status_t
+_notmuch_message_add_filename (notmuch_message_t *message,
 			       const char *filename);
 
 void
@@ -205,6 +257,22 @@ _notmuch_message_sync (notmuch_message_t *message);
 
 void
 _notmuch_message_close (notmuch_message_t *message);
+
+/* Get a copy of the data in this message document.
+ *
+ * Caller should talloc_free the result when done.
+ *
+ * This function is intended to support database upgrade and really
+ * shouldn't be used otherwise. */
+char *
+_notmuch_message_talloc_copy_data (notmuch_message_t *message);
+
+/* Clear the data in this message document.
+ *
+ * This function is intended to support database upgrade and really
+ * shouldn't be used otherwise. */
+void
+_notmuch_message_clear_data (notmuch_message_t *message);
 
 /* index.cc */
 

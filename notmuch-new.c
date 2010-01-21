@@ -22,6 +22,29 @@
 
 #include <unistd.h>
 
+typedef struct _filename_node {
+    char *filename;
+    struct _filename_node *next;
+} _filename_node_t;
+
+typedef struct _filename_list {
+    _filename_node_t *head;
+    _filename_node_t **tail;
+} _filename_list_t;
+
+typedef struct {
+    int output_is_a_tty;
+    int verbose;
+
+    int total_files;
+    int processed_files;
+    int added_messages;
+    struct timeval tv_start;
+
+    _filename_list_t *removed_files;
+    _filename_list_t *removed_directories;
+} add_files_state_t;
+
 static volatile sig_atomic_t do_add_files_print_progress = 0;
 
 static void
@@ -40,6 +63,34 @@ handle_sigint (unused (int sig))
 
     ignored = write(2, msg, sizeof(msg)-1);
     interrupted = 1;
+}
+
+static _filename_list_t *
+_filename_list_create (const void *ctx)
+{
+    _filename_list_t *list;
+
+    list = talloc (ctx, _filename_list_t);
+    if (list == NULL)
+	return NULL;
+
+    list->head = NULL;
+    list->tail = &list->head;
+
+    return list;
+}
+
+static void
+_filename_list_add (_filename_list_t *list,
+		    const char *filename)
+{
+    _filename_node_t *node = talloc (list, _filename_node_t);
+
+    node->filename = talloc_strdup (list, filename);
+    node->next = NULL;
+
+    *(list->tail) = node;
+    list->tail = &node->next;
 }
 
 static void
@@ -77,9 +128,16 @@ add_files_print_progress (add_files_state_t *state)
     fflush (stdout);
 }
 
-static int ino_cmp(const struct dirent **a, const struct dirent **b)
+static int
+dirent_sort_inode (const struct dirent **a, const struct dirent **b)
 {
     return ((*a)->d_ino < (*b)->d_ino) ? -1 : 1;
+}
+
+static int
+dirent_sort_strcmp_name (const struct dirent **a, const struct dirent **b)
+{
+    return strcmp ((*a)->d_name, (*b)->d_name);
 }
 
 /* Test if the directory looks like a Maildir directory.
@@ -90,12 +148,14 @@ static int ino_cmp(const struct dirent **a, const struct dirent **b)
  * Return 1 if the directory looks like a Maildir and 0 otherwise.
  */
 static int
-is_maildir (struct dirent **entries, int count)
+_entries_resemble_maildir (struct dirent **entries, int count)
 {
     int i, found = 0;
 
     for (i = 0; i < count; i++) {
-	if (entries[i]->d_type != DT_DIR) continue;
+	if (entries[i]->d_type != DT_DIR)
+	    continue;
+
 	if (strcmp(entries[i]->d_name, "new") == 0 ||
 	    strcmp(entries[i]->d_name, "cur") == 0 ||
 	    strcmp(entries[i]->d_name, "tmp") == 0)
@@ -111,186 +171,301 @@ is_maildir (struct dirent **entries, int count)
 
 /* Examine 'path' recursively as follows:
  *
- *   o Ask the filesystem for the mtime of 'path' (path_mtime)
+ *   o Ask the filesystem for the mtime of 'path' (fs_mtime)
+ *   o Ask the database for its timestamp of 'path' (db_mtime)
  *
- *   o Ask the database for its timestamp of 'path' (path_dbtime)
+ *   o Ask the filesystem for files and directories within 'path'
+ *     (via scandir and stored in fs_entries)
+ *   o Ask the database for files and directories within 'path'
+ *     (db_files and db_subdirs)
  *
- *   o If 'path_mtime' > 'path_dbtime'
+ *   o Pass 1: For each directory in fs_entries, recursively call into
+ *     this same function.
  *
- *       o For each regular file in 'path' with mtime newer than the
- *         'path_dbtime' call add_message to add the file to the
- *         database.
+ *   o Pass 2: If 'fs_mtime' > 'db_mtime', then walk fs_entries
+ *     simultaneously with db_files and db_subdirs. Look for one of
+ *     three interesting cases:
  *
- *       o For each sub-directory of path, recursively call into this
- *         same function.
+ *	   1. Regular file in fs_entries and not in db_files
+ *            This is a new file to add_message into the database.
  *
- *   o Tell the database to update its time of 'path' to 'path_mtime'
+ *         2. Filename in db_files not in fs_entries.
+ *            This is a file that has been removed from the mail store.
  *
- * The 'struct stat *st' must point to a structure that has already
- * been initialized for 'path' by calling stat().
+ *         3. Directory in db_subdirs not in fs_entries
+ *            This is a directory that has been removed from the mail store.
+ *
+ *     Note that the addition of a directory is not interesting here,
+ *     since that will have been taken care of in pass 1. Also, we
+ *     don't immediately act on file/directory removal since we must
+ *     ensure that in the case of a rename that the new filename is
+ *     added before the old filename is removed, (so that no
+ *     information is lost from the database).
+ *
+ *   o Tell the database to update its time of 'path' to 'fs_mtime'
  */
 static notmuch_status_t
 add_files_recursive (notmuch_database_t *notmuch,
 		     const char *path,
-		     struct stat *st,
 		     add_files_state_t *state)
 {
     DIR *dir = NULL;
     struct dirent *entry = NULL;
     char *next = NULL;
-    time_t path_mtime, path_dbtime;
+    time_t fs_mtime, db_mtime;
     notmuch_status_t status, ret = NOTMUCH_STATUS_SUCCESS;
     notmuch_message_t *message = NULL;
-    struct dirent **namelist = NULL;
-    int num_entries;
+    struct dirent **fs_entries = NULL;
+    int i, num_fs_entries;
+    notmuch_directory_t *directory;
+    notmuch_filenames_t *db_files = NULL;
+    notmuch_filenames_t *db_subdirs = NULL;
+    struct stat st;
+    notmuch_bool_t is_maildir, new_directory;
 
-    /* If we're told to, we bail out on encountering a read-only
-     * directory, (with this being a clear clue from the user to
-     * Notmuch that new mail won't be arriving there and we need not
-     * look. */
-    if (state->ignore_read_only_directories &&
-	(st->st_mode & S_IWUSR) == 0)
-    {
-	state->saw_read_only_directory = TRUE;
-	goto DONE;
+    if (stat (path, &st)) {
+	fprintf (stderr, "Error reading directory %s: %s\n",
+		 path, strerror (errno));
+	return NOTMUCH_STATUS_FILE_ERROR;
     }
 
-    path_mtime = st->st_mtime;
+    /* This is not an error since we may have recursed based on a
+     * symlink to a regular file, not a directory, and we don't know
+     * that until this stat. */
+    if (! S_ISDIR (st.st_mode))
+	return NOTMUCH_STATUS_SUCCESS;
 
-    path_dbtime = notmuch_database_get_timestamp (notmuch, path);
-    num_entries = scandir (path, &namelist, 0, ino_cmp);
+    fs_mtime = st.st_mtime;
 
-    if (num_entries == -1) {
+    directory = notmuch_database_get_directory (notmuch, path);
+    db_mtime = notmuch_directory_get_mtime (directory);
+
+    if (db_mtime == 0) {
+	new_directory = TRUE;
+	db_files = NULL;
+	db_subdirs = NULL;
+    } else {
+	new_directory = FALSE;
+	db_files = notmuch_directory_get_child_files (directory);
+	db_subdirs = notmuch_directory_get_child_directories (directory);
+    }
+
+    /* If the database knows about this directory, then we sort based
+     * on strcmp to match the database sorting. Otherwise, we can do
+     * inode-based sorting for faster filesystem operation. */
+    num_fs_entries = scandir (path, &fs_entries, 0,
+			      new_directory ?
+			      dirent_sort_inode : dirent_sort_strcmp_name);
+
+    if (num_fs_entries == -1) {
 	fprintf (stderr, "Error opening directory %s: %s\n",
 		 path, strerror (errno));
 	ret = NOTMUCH_STATUS_FILE_ERROR;
 	goto DONE;
     }
 
-    int i=0;
+    /* Pass 1: Recurse into all sub-directories. */
+    is_maildir = _entries_resemble_maildir (fs_entries, num_fs_entries);
 
-    while (!interrupted) {
-	if (i == num_entries)
+    for (i = 0; i < num_fs_entries; i++) {
+	if (interrupted)
 	    break;
 
-        entry= namelist[i++];
+	entry = fs_entries[i];
 
-	/* If this directory hasn't been modified since the last
-	 * add_files, then we only need to look further for
-	 * sub-directories. */
-	if (path_mtime <= path_dbtime && entry->d_type == DT_REG)
+	if (entry->d_type != DT_DIR && entry->d_type != DT_LNK)
 	    continue;
 
 	/* Ignore special directories to avoid infinite recursion.
-	 * Also ignore the .notmuch directory.
+	 * Also ignore the .notmuch directory and any "tmp" directory
+	 * that appears within a maildir.
 	 */
 	/* XXX: Eventually we'll want more sophistication to let the
 	 * user specify files to be ignored. */
 	if (strcmp (entry->d_name, ".") == 0 ||
 	    strcmp (entry->d_name, "..") == 0 ||
-	    (entry->d_type == DT_DIR &&
-	     (strcmp (entry->d_name, "tmp") == 0) &&
-	     is_maildir (namelist, num_entries)) ||
+	    (is_maildir && strcmp (entry->d_name, "tmp") == 0) ||
 	    strcmp (entry->d_name, ".notmuch") ==0)
 	{
 	    continue;
 	}
 
 	next = talloc_asprintf (notmuch, "%s/%s", path, entry->d_name);
+	status = add_files_recursive (notmuch, next, state);
+	if (status && ret == NOTMUCH_STATUS_SUCCESS)
+	    ret = status;
+	talloc_free (next);
+	next = NULL;
+    }
 
-	if (stat (next, st)) {
-	    int err = errno;
+    /* If this directory hasn't been modified since the last
+     * "notmuch new", then we can skip the second pass entirely. */
+    if (fs_mtime <= db_mtime)
+	goto DONE;
 
-	    switch (err) {
-	    case ENOENT:
-		/* The file was removed between scandir and now... */
-	    case EPERM:
-	    case EACCES:
-		/* We can't read this file so don't add it to the cache. */
-		continue;
+    /* Pass 2: Scan for new files, removed files, and removed directories. */
+    for (i = 0; i < num_fs_entries; i++)
+    {
+	if (interrupted)
+	    break;
+
+        entry = fs_entries[i];
+
+	/* Check if we've walked past any names in db_files or
+	 * db_subdirs. If so, these have been deleted. */
+	while (notmuch_filenames_has_more (db_files) &&
+	       strcmp (notmuch_filenames_get (db_files), entry->d_name) < 0)
+	{
+	    char *absolute = talloc_asprintf (state->removed_files,
+					      "%s/%s", path,
+					      notmuch_filenames_get (db_files));
+
+	    _filename_list_add (state->removed_files, absolute);
+
+	    notmuch_filenames_advance (db_files);
+	}
+
+	while (notmuch_filenames_has_more (db_subdirs) &&
+	       strcmp (notmuch_filenames_get (db_subdirs), entry->d_name) <= 0)
+	{
+	    const char *filename = notmuch_filenames_get (db_subdirs);
+
+	    if (strcmp (filename, entry->d_name) < 0)
+	    {
+		char *absolute = talloc_asprintf (state->removed_directories,
+						  "%s/%s", path, filename);
+
+		_filename_list_add (state->removed_directories, absolute);
 	    }
 
-	    fprintf (stderr, "Error reading %s: %s\n",
-		     next, strerror (errno));
-	    ret = NOTMUCH_STATUS_FILE_ERROR;
+	    notmuch_filenames_advance (db_subdirs);
+	}
+
+	/* If we're looking at a symlink, we only want to add it if it
+	 * links to a regular file, (and not to a directory, say). */
+	if (entry->d_type == DT_LNK) {
+	    int err;
+
+	    next = talloc_asprintf (notmuch, "%s/%s", path, entry->d_name);
+	    err = stat (next, &st);
+	    talloc_free (next);
+	    next = NULL;
+
+	    /* Don't emit an error for a link pointing nowhere, since
+	     * the directory-traversal pass will have already done
+	     * that. */
+	    if (err)
+		continue;
+
+	    if (! S_ISREG (st.st_mode))
+		continue;
+	} else if (entry->d_type != DT_REG) {
+	    continue;
+	}
+
+	/* Don't add a file that we've added before. */
+	if (notmuch_filenames_has_more (db_files) &&
+	    strcmp (notmuch_filenames_get (db_files), entry->d_name) == 0)
+	{
+	    notmuch_filenames_advance (db_files);
+	    continue;
+	}
+
+	/* We're now looking at a regular file that doesn't yet exist
+	 * in the database, so add it. */
+	next = talloc_asprintf (notmuch, "%s/%s", path, entry->d_name);
+
+	state->processed_files++;
+
+	if (state->verbose) {
+	    if (state->output_is_a_tty)
+		printf("\r\033[K");
+
+	    printf ("%i/%i: %s",
+		    state->processed_files,
+		    state->total_files,
+		    next);
+
+	    putchar((state->output_is_a_tty) ? '\r' : '\n');
+	    fflush (stdout);
+	}
+
+	status = notmuch_database_add_message (notmuch, next, &message);
+	switch (status) {
+	/* success */
+	case NOTMUCH_STATUS_SUCCESS:
+	    state->added_messages++;
+	    tag_inbox_and_unread (message);
+	    break;
+	/* Non-fatal issues (go on to next file) */
+	case NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID:
+	    /* Stay silent on this one. */
+	    break;
+	case NOTMUCH_STATUS_FILE_NOT_EMAIL:
+	    fprintf (stderr, "Note: Ignoring non-mail file: %s\n",
+		     next);
+	    break;
+	/* Fatal issues. Don't process anymore. */
+	case NOTMUCH_STATUS_READ_ONLY_DATABASE:
+	case NOTMUCH_STATUS_XAPIAN_EXCEPTION:
+	case NOTMUCH_STATUS_OUT_OF_MEMORY:
+	    fprintf (stderr, "Error: %s. Halting processing.\n",
+		     notmuch_status_to_string (status));
+	    ret = status;
+	    goto DONE;
+	default:
+	case NOTMUCH_STATUS_FILE_ERROR:
+	case NOTMUCH_STATUS_NULL_POINTER:
+	case NOTMUCH_STATUS_TAG_TOO_LONG:
+	case NOTMUCH_STATUS_UNBALANCED_FREEZE_THAW:
+	case NOTMUCH_STATUS_LAST_STATUS:
+	    INTERNAL_ERROR ("add_message returned unexpected value: %d",  status);
 	    goto DONE;
 	}
 
-	if (S_ISREG (st->st_mode)) {
-	    /* If the file hasn't been modified since the last
-	     * add_files, then we need not look at it. */
-	    if (path_dbtime == 0 || st->st_mtime > path_dbtime) {
-		state->processed_files++;
+	if (message) {
+	    notmuch_message_destroy (message);
+	    message = NULL;
+	}
 
-		if (state->verbose) {
-		    if (state->output_is_a_tty)
-			printf("\r\033[K");
-
-		    printf ("%i/%i: %s",
-			    state->processed_files,
-			    state->total_files,
-			    next);
-
-		    putchar((state->output_is_a_tty) ? '\r' : '\n');
-		    fflush (stdout);
-		}
-
-		status = notmuch_database_add_message (notmuch, next, &message);
-		switch (status) {
-		    /* success */
-		    case NOTMUCH_STATUS_SUCCESS:
-			state->added_messages++;
-			tag_inbox_and_unread (message);
-			break;
-		    /* Non-fatal issues (go on to next file) */
-		    case NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID:
-		        /* Stay silent on this one. */
-			break;
-		    case NOTMUCH_STATUS_FILE_NOT_EMAIL:
-			fprintf (stderr, "Note: Ignoring non-mail file: %s\n",
-				 next);
-			break;
-		    /* Fatal issues. Don't process anymore. */
-		    case NOTMUCH_STATUS_READONLY_DATABASE:
-		    case NOTMUCH_STATUS_XAPIAN_EXCEPTION:
-		    case NOTMUCH_STATUS_OUT_OF_MEMORY:
-			fprintf (stderr, "Error: %s. Halting processing.\n",
-				 notmuch_status_to_string (status));
-			ret = status;
-			goto DONE;
-		    default:
-		    case NOTMUCH_STATUS_FILE_ERROR:
-		    case NOTMUCH_STATUS_NULL_POINTER:
-		    case NOTMUCH_STATUS_TAG_TOO_LONG:
-		    case NOTMUCH_STATUS_UNBALANCED_FREEZE_THAW:
-		    case NOTMUCH_STATUS_LAST_STATUS:
-			INTERNAL_ERROR ("add_message returned unexpected value: %d",  status);
-			goto DONE;
-		}
-
-		if (message) {
-		    notmuch_message_destroy (message);
-		    message = NULL;
-		}
-
-		if (do_add_files_print_progress) {
-		    do_add_files_print_progress = 0;
-		    add_files_print_progress (state);
-		}
-	    }
-	} else if (S_ISDIR (st->st_mode)) {
-	    status = add_files_recursive (notmuch, next, st, state);
-	    if (status && ret == NOTMUCH_STATUS_SUCCESS)
-		ret = status;
+	if (do_add_files_print_progress) {
+	    do_add_files_print_progress = 0;
+	    add_files_print_progress (state);
 	}
 
 	talloc_free (next);
 	next = NULL;
     }
 
-    status = notmuch_database_set_timestamp (notmuch, path, path_mtime);
-    if (status && ret == NOTMUCH_STATUS_SUCCESS)
-	ret = status;
+    /* Now that we've walked the whole filesystem list, anything left
+     * over in the database lists has been deleted. */
+    while (notmuch_filenames_has_more (db_files))
+    {
+	char *absolute = talloc_asprintf (state->removed_files,
+					  "%s/%s", path,
+					  notmuch_filenames_get (db_files));
+
+	_filename_list_add (state->removed_files, absolute);
+
+	notmuch_filenames_advance (db_files);
+    }
+
+    while (notmuch_filenames_has_more (db_subdirs))
+    {
+	char *absolute = talloc_asprintf (state->removed_directories,
+					  "%s/%s", path,
+					  notmuch_filenames_get (db_subdirs));
+
+	_filename_list_add (state->removed_directories, absolute);
+
+	notmuch_filenames_advance (db_subdirs);
+    }
+
+    if (! interrupted) {
+	status = notmuch_directory_set_mtime (directory, fs_mtime);
+	if (status && ret == NOTMUCH_STATUS_SUCCESS)
+	    ret = status;
+    }
 
   DONE:
     if (next)
@@ -299,8 +474,14 @@ add_files_recursive (notmuch_database_t *notmuch,
 	free (entry);
     if (dir)
 	closedir (dir);
-    if (namelist)
-	free (namelist);
+    if (fs_entries)
+	free (fs_entries);
+    if (db_subdirs)
+	notmuch_filenames_destroy (db_subdirs);
+    if (db_files)
+	notmuch_filenames_destroy (db_files);
+    if (directory)
+	notmuch_directory_destroy (directory);
 
     return ret;
 }
@@ -308,27 +489,16 @@ add_files_recursive (notmuch_database_t *notmuch,
 /* This is the top-level entry point for add_files. It does a couple
  * of error checks, sets up the progress-printing timer and then calls
  * into the recursive function. */
-notmuch_status_t
+static notmuch_status_t
 add_files (notmuch_database_t *notmuch,
 	   const char *path,
 	   add_files_state_t *state)
 {
-    struct stat st;
     notmuch_status_t status;
     struct sigaction action;
     struct itimerval timerval;
     notmuch_bool_t timer_is_active = FALSE;
-
-    if (stat (path, &st)) {
-	fprintf (stderr, "Error reading directory %s: %s\n",
-		 path, strerror (errno));
-	return NOTMUCH_STATUS_FILE_ERROR;
-    }
-
-    if (! S_ISDIR (st.st_mode)) {
-	fprintf (stderr, "Error: %s is not a directory.\n", path);
-	return NOTMUCH_STATUS_FILE_ERROR;
-    }
+    struct stat st;
 
     if (state->output_is_a_tty && ! debugger_is_active () && ! state->verbose) {
 	/* Setup our handler for SIGALRM */
@@ -348,7 +518,18 @@ add_files (notmuch_database_t *notmuch,
 	timer_is_active = TRUE;
     }
 
-    status = add_files_recursive (notmuch, path, &st, state);
+    if (stat (path, &st)) {
+	fprintf (stderr, "Error reading directory %s: %s\n",
+		 path, strerror (errno));
+	return NOTMUCH_STATUS_FILE_ERROR;
+    }
+
+    if (! S_ISDIR (st.st_mode)) {
+	fprintf (stderr, "Error: %s is not a directory.\n", path);
+	return NOTMUCH_STATUS_FILE_ERROR;
+    }
+
+    status = add_files_recursive (notmuch, path, state);
 
     if (timer_is_active) {
 	/* Now stop the timer. */
@@ -378,21 +559,21 @@ count_files (const char *path, int *count)
     struct dirent *entry = NULL;
     char *next;
     struct stat st;
-    struct dirent **namelist = NULL;
-    int n_entries = scandir (path, &namelist, 0, ino_cmp);
+    struct dirent **fs_entries = NULL;
+    int num_fs_entries = scandir (path, &fs_entries, 0, dirent_sort_inode);
     int i = 0;
 
-    if (n_entries == -1) {
+    if (num_fs_entries == -1) {
 	fprintf (stderr, "Warning: failed to open directory %s: %s\n",
 		 path, strerror (errno));
 	goto DONE;
     }
 
     while (!interrupted) {
-        if (i == n_entries)
+        if (i == num_fs_entries)
 	    break;
 
-        entry= namelist[i++];
+        entry = fs_entries[i++];
 
 	/* Ignore special directories to avoid infinite recursion.
 	 * Also ignore the .notmuch directory.
@@ -431,8 +612,77 @@ count_files (const char *path, int *count)
   DONE:
     if (entry)
 	free (entry);
-    if (namelist)
-        free (namelist);
+    if (fs_entries)
+        free (fs_entries);
+}
+
+static void
+upgrade_print_progress (void *closure,
+			double progress)
+{
+    add_files_state_t *state = closure;
+
+    printf ("Upgrading database: %.2f%% complete", progress * 100.0);
+
+    if (progress > 0) {
+	struct timeval tv_now;
+	double elapsed, time_remaining;
+
+	gettimeofday (&tv_now, NULL);
+
+	elapsed = notmuch_time_elapsed (state->tv_start, tv_now);
+	time_remaining = (elapsed / progress) * (1.0 - progress);
+	printf (" (");
+	notmuch_time_print_formatted_seconds (time_remaining);
+	printf (" remaining)");
+    }
+
+    printf (".      \r");
+
+    fflush (stdout);
+}
+
+/* Recursively remove all filenames from the database referring to
+ * 'path' (or to any of its children). */
+static void
+_remove_directory (void *ctx,
+		   notmuch_database_t *notmuch,
+		   const char *path,
+		   int *renamed_files,
+		   int *removed_files)
+{
+    notmuch_directory_t *directory;
+    notmuch_filenames_t *files, *subdirs;
+    notmuch_status_t status;
+    char *absolute;
+
+    directory = notmuch_database_get_directory (notmuch, path);
+
+    for (files = notmuch_directory_get_child_files (directory);
+	 notmuch_filenames_has_more (files);
+	 notmuch_filenames_advance (files))
+    {
+	absolute = talloc_asprintf (ctx, "%s/%s", path,
+				    notmuch_filenames_get (files));
+	status = notmuch_database_remove_message (notmuch, absolute);
+	if (status == NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID)
+	    *renamed_files = *renamed_files + 1;
+	else
+	    *removed_files = *removed_files + 1;
+	talloc_free (absolute);
+    }
+
+    for (subdirs = notmuch_directory_get_child_directories (directory);
+	 notmuch_filenames_has_more (subdirs);
+	 notmuch_filenames_advance (subdirs))
+    {
+	absolute = talloc_asprintf (ctx, "%s/%s", path,
+				    notmuch_filenames_get (subdirs));
+	_remove_directory (ctx, notmuch, absolute, renamed_files, removed_files);
+	talloc_free (absolute);
+    }
+
+    notmuch_directory_destroy (directory);
 }
 
 int
@@ -448,6 +698,9 @@ notmuch_new_command (void *ctx, int argc, char *argv[])
     const char *db_path;
     char *dot_notmuch_path;
     struct sigaction action;
+    _filename_node_t *f;
+    int renamed_files, removed_files;
+    notmuch_status_t status;
     int i;
 
     add_files_state.verbose = 0;
@@ -461,13 +714,6 @@ notmuch_new_command (void *ctx, int argc, char *argv[])
 	    return 1;
 	}
     }
-
-    /* Setup our handler for SIGINT */
-    memset (&action, 0, sizeof (struct sigaction));
-    action.sa_handler = handle_sigint;
-    sigemptyset (&action.sa_mask);
-    action.sa_flags = SA_RESTART;
-    sigaction (SIGINT, &action, NULL);
 
     config = notmuch_config_open (ctx, NULL, NULL);
     if (config == NULL)
@@ -485,33 +731,73 @@ notmuch_new_command (void *ctx, int argc, char *argv[])
 	if (interrupted)
 	    return 1;
 
-	printf ("Found %d total files.     \n", count);
+	printf ("Found %d total files (that's not much mail).\n", count);
 	notmuch = notmuch_database_create (db_path);
-	add_files_state.ignore_read_only_directories = FALSE;
 	add_files_state.total_files = count;
     } else {
 	notmuch = notmuch_database_open (db_path,
 					 NOTMUCH_DATABASE_MODE_READ_WRITE);
-	add_files_state.ignore_read_only_directories = TRUE;
+	if (notmuch == NULL)
+	    return 1;
+
+	if (notmuch_database_needs_upgrade (notmuch)) {
+	    printf ("Welcome to a new version of notmuch! Your database will now be upgraded.\n");
+	    gettimeofday (&add_files_state.tv_start, NULL);
+	    notmuch_database_upgrade (notmuch, upgrade_print_progress,
+				      &add_files_state);
+	    printf ("Your notmuch database has now been upgraded to database format version %u.\n",
+		    notmuch_database_get_version (notmuch));
+	}
+
 	add_files_state.total_files = 0;
     }
 
     if (notmuch == NULL)
 	return 1;
 
+    /* Setup our handler for SIGINT. We do this after having
+     * potentially done a database upgrade we this interrupt handler
+     * won't support. */
+    memset (&action, 0, sizeof (struct sigaction));
+    action.sa_handler = handle_sigint;
+    sigemptyset (&action.sa_mask);
+    action.sa_flags = SA_RESTART;
+    sigaction (SIGINT, &action, NULL);
+
     talloc_free (dot_notmuch_path);
     dot_notmuch_path = NULL;
 
-    add_files_state.saw_read_only_directory = FALSE;
     add_files_state.processed_files = 0;
     add_files_state.added_messages = 0;
     gettimeofday (&add_files_state.tv_start, NULL);
 
+    add_files_state.removed_files = _filename_list_create (ctx);
+    add_files_state.removed_directories = _filename_list_create (ctx);
+
     ret = add_files (notmuch, db_path, &add_files_state);
+
+    removed_files = 0;
+    renamed_files = 0;
+    for (f = add_files_state.removed_files->head; f; f = f->next) {
+	status = notmuch_database_remove_message (notmuch, f->filename);
+	if (status == NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID)
+	    renamed_files++;
+	else
+	    removed_files++;
+    }
+
+    for (f = add_files_state.removed_directories->head; f; f = f->next) {
+	_remove_directory (ctx, notmuch, f->filename,
+			   &renamed_files, &removed_files);
+    }
+
+    talloc_free (add_files_state.removed_files);
+    talloc_free (add_files_state.removed_directories);
 
     gettimeofday (&tv_now, NULL);
     elapsed = notmuch_time_elapsed (add_files_state.tv_start,
 				    tv_now);
+
     if (add_files_state.processed_files) {
 	printf ("Processed %d %s in ", add_files_state.processed_files,
 		add_files_state.processed_files == 1 ?
@@ -524,21 +810,29 @@ notmuch_new_command (void *ctx, int argc, char *argv[])
 	    printf (".                    \n");
 	}
     }
+
     if (add_files_state.added_messages) {
-	printf ("Added %d new %s to the database (not much, really).\n",
+	printf ("Added %d new %s to the database.",
 		add_files_state.added_messages,
 		add_files_state.added_messages == 1 ?
 		"message" : "messages");
     } else {
-	printf ("No new mail---and that's not much.\n");
+	printf ("No new mail.");
     }
 
-    if (elapsed > 1 && ! add_files_state.saw_read_only_directory) {
-	printf ("\nTip: If you have any sub-directories that are archives (that is,\n"
-		"they will never receive new mail), marking these directories as\n"
-		"read-only (chmod u-w /path/to/dir) will make \"notmuch new\"\n"
-		"much more efficient (it won't even look in those directories).\n");
+    if (removed_files) {
+	printf (" Removed %d %s.",
+		removed_files,
+		removed_files == 1 ? "message" : "messages");
     }
+
+    if (renamed_files) {
+	printf (" Detected %d file %s.",
+		renamed_files,
+		renamed_files == 1 ? "rename" : "renames");
+    }
+
+    printf ("\n");
 
     if (ret) {
 	printf ("\nNote: At least one error was encountered: %s\n",

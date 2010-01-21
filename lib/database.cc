@@ -22,6 +22,8 @@
 
 #include <iostream>
 
+#include <sys/time.h>
+#include <signal.h>
 #include <xapian.h>
 
 #include <glib.h> /* g_free, GPtrArray, GHashTable */
@@ -35,9 +37,14 @@ typedef struct {
     const char *prefix;
 } prefix_t;
 
-/* Here's the current schema for our database:
+#define NOTMUCH_DATABASE_VERSION 1
+
+#define STRINGIFY(s) _SUB_STRINGIFY(s)
+#define _SUB_STRINGIFY(s) #s
+
+/* Here's the current schema for our database (for NOTMUCH_DATABASE_VERSION):
  *
- * We currently have two different types of documents: mail and timestamps.
+ * We currently have two different types of documents: mail and directory.
  *
  * Mail document
  * -------------
@@ -63,6 +70,12 @@ typedef struct {
  *
  *	tag:	   Any tags associated with this message by the user.
  *
+ *	file-direntry:  A colon-separated pair of values
+ *		        (INTEGER:STRING), where INTEGER is the
+ *		        document ID of a directory document, and
+ *		        STRING is the name of a file within that
+ *		        directory for this mail message.
+ *
  *    A mail document also has two values:
  *
  *	TIMESTAMP:	The time_t value corresponding to the message's
@@ -75,21 +88,36 @@ typedef struct {
  * user in searching. But the database doesn't really care itself
  * about any of these.
  *
- * Timestamp document
+ * The data portion of a mail document is empty.
+ *
+ * Directory document
  * ------------------
- * A timestamp document is used by a client of the notmuch library to
+ * A directory document is used by a client of the notmuch library to
  * maintain data necessary to allow for efficient polling of mail
- * directories. The notmuch library does no interpretation of
- * timestamps, but merely allows the user to store and retrieve
- * timestamps as name/value pairs.
+ * directories.
  *
- * The timestamp document is indexed with a single prefixed term:
+ * All directory documents contain one term:
  *
- *	timestamp:	The user's key value (likely a directory name)
+ *	directory:	The directory path (relative to the database path)
+ *			Or the SHA1 sum of the directory path (if the
+ *			path itself is too long to fit in a Xapian
+ *			term).
  *
- * and has a single value:
+ * And all directory documents for directories other than top-level
+ * directories also contain the following term:
  *
- *	TIMESTAMP:	The time_t value from the user.
+ *	directory-direntry: A colon-separated pair of values
+ *		            (INTEGER:STRING), where INTEGER is the
+ *		            document ID of the parent directory
+ *		            document, and STRING is the name of this
+ *		            directory within that parent.
+ *
+ * All directory documents have a single value:
+ *
+ *	TIMESTAMP:	The mtime of the directory (at last scan)
+ *
+ * The data portion of a directory document contains the path of the
+ * directory (relative to the database path).
  */
 
 /* With these prefix values we follow the conventions published here:
@@ -108,23 +136,25 @@ typedef struct {
  */
 
 prefix_t BOOLEAN_PREFIX_INTERNAL[] = {
-    { "type", "T" },
-    { "reference", "XREFERENCE" },
-    { "replyto", "XREPLYTO" },
-    { "timestamp", "XTIMESTAMP" },
+    { "type",			"T" },
+    { "reference",		"XREFERENCE" },
+    { "replyto",		"XREPLYTO" },
+    { "directory",		"XDIRECTORY" },
+    { "file-direntry",		"XFDIRENTRY" },
+    { "directory-direntry",	"XDDIRENTRY" },
 };
 
 prefix_t BOOLEAN_PREFIX_EXTERNAL[] = {
-    { "thread", "G" },
-    { "tag", "K" },
-    { "id", "Q" }
+    { "thread",			"G" },
+    { "tag",			"K" },
+    { "id",			"Q" }
 };
 
 prefix_t PROBABILISTIC_PREFIX[]= {
-    { "from", "XFROM" },
-    { "to", "XTO" },
-    { "attachment", "XATTACHMENT" },
-    { "subject", "XSUBJECT"}
+    { "from",			"XFROM" },
+    { "to",			"XTO" },
+    { "attachment",		"XATTACHMENT" },
+    { "subject",		"XSUBJECT"}
 };
 
 int
@@ -175,8 +205,8 @@ notmuch_status_to_string (notmuch_status_t status)
 	return "No error occurred";
     case NOTMUCH_STATUS_OUT_OF_MEMORY:
 	return "Out of memory";
-    case NOTMUCH_STATUS_READONLY_DATABASE:
-	return "The database is read-only";
+    case NOTMUCH_STATUS_READ_ONLY_DATABASE:
+	return "Attempt to write to a read-only database";
     case NOTMUCH_STATUS_XAPIAN_EXCEPTION:
 	return "A Xapian exception occurred";
     case NOTMUCH_STATUS_FILE_ERROR:
@@ -198,30 +228,38 @@ notmuch_status_to_string (notmuch_status_t status)
 }
 
 static void
+find_doc_ids_for_term (notmuch_database_t *notmuch,
+		       const char *term,
+		       Xapian::PostingIterator *begin,
+		       Xapian::PostingIterator *end)
+{
+    *begin = notmuch->xapian_db->postlist_begin (term);
+
+    *end = notmuch->xapian_db->postlist_end (term);
+}
+
+static void
 find_doc_ids (notmuch_database_t *notmuch,
 	      const char *prefix_name,
 	      const char *value,
 	      Xapian::PostingIterator *begin,
 	      Xapian::PostingIterator *end)
 {
-    Xapian::PostingIterator i;
     char *term;
 
     term = talloc_asprintf (notmuch, "%s%s",
 			    _find_prefix (prefix_name), value);
 
-    *begin = notmuch->xapian_db->postlist_begin (term);
-
-    *end = notmuch->xapian_db->postlist_end (term);
+    find_doc_ids_for_term (notmuch, term, begin, end);
 
     talloc_free (term);
 }
 
-static notmuch_private_status_t
-find_unique_doc_id (notmuch_database_t *notmuch,
-		    const char *prefix_name,
-		    const char *value,
-		    unsigned int *doc_id)
+notmuch_private_status_t
+_notmuch_database_find_unique_doc_id (notmuch_database_t *notmuch,
+				      const char *prefix_name,
+				      const char *value,
+				      unsigned int *doc_id)
 {
     Xapian::PostingIterator i, end;
 
@@ -230,36 +268,25 @@ find_unique_doc_id (notmuch_database_t *notmuch,
     if (i == end) {
 	*doc_id = 0;
 	return NOTMUCH_PRIVATE_STATUS_NO_DOCUMENT_FOUND;
-    } else {
-	*doc_id = *i;
-	return NOTMUCH_PRIVATE_STATUS_SUCCESS;
     }
+
+    *doc_id = *i;
+
+#if DEBUG_DATABASE_SANITY
+    i++;
+
+    if (i != end)
+	INTERNAL_ERROR ("Term %s:%s is not unique as expected.\n",
+			prefix_name, value);
+#endif
+
+    return NOTMUCH_PRIVATE_STATUS_SUCCESS;
 }
 
 static Xapian::Document
 find_document_for_doc_id (notmuch_database_t *notmuch, unsigned doc_id)
 {
     return notmuch->xapian_db->get_document (doc_id);
-}
-
-static notmuch_private_status_t
-find_unique_document (notmuch_database_t *notmuch,
-		      const char *prefix_name,
-		      const char *value,
-		      Xapian::Document *document,
-		      unsigned int *doc_id)
-{
-    notmuch_private_status_t status;
-
-    status = find_unique_doc_id (notmuch, prefix_name, value, doc_id);
-
-    if (status) {
-	*document = Xapian::Document ();
-	return status;
-    }
-
-    *document = find_document_for_doc_id (notmuch, *doc_id);
-    return NOTMUCH_PRIVATE_STATUS_SUCCESS;
 }
 
 notmuch_message_t *
@@ -269,7 +296,8 @@ notmuch_database_find_message (notmuch_database_t *notmuch,
     notmuch_private_status_t status;
     unsigned int doc_id;
 
-    status = find_unique_doc_id (notmuch, "id", message_id, &doc_id);
+    status = _notmuch_database_find_unique_doc_id (notmuch, "id",
+						   message_id, &doc_id);
 
     if (status == NOTMUCH_PRIVATE_STATUS_NO_DOCUMENT_FOUND)
 	return NULL;
@@ -446,12 +474,24 @@ notmuch_database_create (const char *path)
 
     notmuch = notmuch_database_open (path,
 				     NOTMUCH_DATABASE_MODE_READ_WRITE);
+    notmuch_database_upgrade (notmuch, NULL, NULL);
 
   DONE:
     if (notmuch_path)
 	talloc_free (notmuch_path);
 
     return notmuch;
+}
+
+notmuch_status_t
+_notmuch_database_ensure_writable (notmuch_database_t *notmuch)
+{
+    if (notmuch->mode == NOTMUCH_DATABASE_MODE_READ_ONLY) {
+	fprintf (stderr, "Cannot write to a read-only database.\n");
+	return NOTMUCH_STATUS_READ_ONLY_DATABASE;
+    }
+
+    return NOTMUCH_STATUS_SUCCESS;
 }
 
 notmuch_database_t *
@@ -462,7 +502,7 @@ notmuch_database_open (const char *path,
     char *notmuch_path = NULL, *xapian_path = NULL;
     struct stat st;
     int err;
-    unsigned int i;
+    unsigned int i, version;
 
     if (asprintf (&notmuch_path, "%s/%s", path, ".notmuch") == -1) {
 	notmuch_path = NULL;
@@ -490,13 +530,42 @@ notmuch_database_open (const char *path,
     if (notmuch->path[strlen (notmuch->path) - 1] == '/')
 	notmuch->path[strlen (notmuch->path) - 1] = '\0';
 
+    notmuch->needs_upgrade = FALSE;
     notmuch->mode = mode;
     try {
 	if (mode == NOTMUCH_DATABASE_MODE_READ_WRITE) {
 	    notmuch->xapian_db = new Xapian::WritableDatabase (xapian_path,
 							       Xapian::DB_CREATE_OR_OPEN);
+	    version = notmuch_database_get_version (notmuch);
+
+	    if (version > NOTMUCH_DATABASE_VERSION) {
+		fprintf (stderr,
+			 "Error: Notmuch database at %s\n"
+			 "       has a newer database format version (%u) than supported by this\n"
+			 "       version of notmuch (%u). Refusing to open this database in\n"
+			 "       read-write mode.\n",
+			 notmuch_path, version, NOTMUCH_DATABASE_VERSION);
+		notmuch->mode = NOTMUCH_DATABASE_MODE_READ_ONLY;
+		notmuch_database_close (notmuch);
+		notmuch = NULL;
+		goto DONE;
+	    }
+
+	    if (version < NOTMUCH_DATABASE_VERSION)
+		notmuch->needs_upgrade = TRUE;
 	} else {
 	    notmuch->xapian_db = new Xapian::Database (xapian_path);
+	    version = notmuch_database_get_version (notmuch);
+	    if (version > NOTMUCH_DATABASE_VERSION)
+	    {
+		fprintf (stderr,
+			 "Warning: Notmuch database at %s\n"
+			 "         has a newer database format version (%u) than supported by this\n"
+			 "         version of notmuch (%u). Some operations may behave incorrectly,\n"
+			 "         (but the database will not be harmed since it is being opened\n"
+			 "         in read-only mode).\n",
+			 notmuch_path, version, NOTMUCH_DATABASE_VERSION);
+	    }
 	}
 	notmuch->query_parser = new Xapian::QueryParser;
 	notmuch->term_gen = new Xapian::TermGenerator;
@@ -560,110 +629,469 @@ notmuch_database_get_path (notmuch_database_t *notmuch)
     return notmuch->path;
 }
 
-static notmuch_private_status_t
-find_timestamp_document (notmuch_database_t *notmuch, const char *db_key,
-			 Xapian::Document *doc, unsigned int *doc_id)
+unsigned int
+notmuch_database_get_version (notmuch_database_t *notmuch)
 {
-    return find_unique_document (notmuch, "timestamp", db_key, doc, doc_id);
+    unsigned int version;
+    string version_string;
+    const char *str;
+    char *end;
+
+    version_string = notmuch->xapian_db->get_metadata ("version");
+    if (version_string.empty ())
+	return 0;
+
+    str = version_string.c_str ();
+    if (str == NULL || *str == '\0')
+	return 0;
+
+    version = strtoul (str, &end, 10);
+    if (*end != '\0')
+	INTERNAL_ERROR ("Malformed database version: %s", str);
+
+    return version;
 }
 
-/* We allow the user to use arbitrarily long keys for timestamps,
- * (they're for filesystem paths after all, which have no limit we
- * know about). But we have a term-length limit. So if we exceed that,
- * we'll use the SHA-1 of the user's key as the actual key for
- * constructing a database term.
- *
- * Caution: This function returns a newly allocated string which the
- * caller should free() when finished.
- */
-static char *
-timestamp_db_key (const char *key)
+notmuch_bool_t
+notmuch_database_needs_upgrade (notmuch_database_t *notmuch)
 {
-    int term_len = strlen (_find_prefix ("timestamp")) + strlen (key);
+    return notmuch->needs_upgrade;
+}
+
+static volatile sig_atomic_t do_progress_notify = 0;
+
+static void
+handle_sigalrm (unused (int signal))
+{
+    do_progress_notify = 1;
+}
+
+/* Upgrade the current database.
+ *
+ * After opening a database in read-write mode, the client should
+ * check if an upgrade is needed (notmuch_database_needs_upgrade) and
+ * if so, upgrade with this function before making any modifications.
+ *
+ * The optional progress_notify callback can be used by the caller to
+ * provide progress indication to the user. If non-NULL it will be
+ * called periodically with 'count' as the number of messages upgraded
+ * so far and 'total' the overall number of messages that will be
+ * converted.
+ */
+notmuch_status_t
+notmuch_database_upgrade (notmuch_database_t *notmuch,
+			  void (*progress_notify) (void *closure,
+						   double progress),
+			  void *closure)
+{
+    Xapian::WritableDatabase *db;
+    struct sigaction action;
+    struct itimerval timerval;
+    notmuch_bool_t timer_is_active = FALSE;
+    unsigned int version;
+    notmuch_status_t status;
+    unsigned int count = 0, total = 0;
+
+    status = _notmuch_database_ensure_writable (notmuch);
+    if (status)
+	return status;
+
+    db = static_cast <Xapian::WritableDatabase *> (notmuch->xapian_db);
+
+    version = notmuch_database_get_version (notmuch);
+
+    if (version >= NOTMUCH_DATABASE_VERSION)
+	return NOTMUCH_STATUS_SUCCESS;
+
+    if (progress_notify) {
+	/* Setup our handler for SIGALRM */
+	memset (&action, 0, sizeof (struct sigaction));
+	action.sa_handler = handle_sigalrm;
+	sigemptyset (&action.sa_mask);
+	action.sa_flags = SA_RESTART;
+	sigaction (SIGALRM, &action, NULL);
+
+	/* Then start a timer to send SIGALRM once per second. */
+	timerval.it_interval.tv_sec = 1;
+	timerval.it_interval.tv_usec = 0;
+	timerval.it_value.tv_sec = 1;
+	timerval.it_value.tv_usec = 0;
+	setitimer (ITIMER_REAL, &timerval, NULL);
+
+	timer_is_active = TRUE;
+    }
+
+    /* Before version 1, each message document had its filename in the
+     * data field. Copy that into the new format by calling
+     * notmuch_message_add_filename.
+     */
+    if (version < 1) {
+	notmuch_query_t *query = notmuch_query_create (notmuch, "");
+	notmuch_messages_t *messages;
+	notmuch_message_t *message;
+	char *filename;
+	Xapian::TermIterator t, t_end;
+
+	total = notmuch_query_count_messages (query);
+
+	for (messages = notmuch_query_search_messages (query);
+	     notmuch_messages_has_more (messages);
+	     notmuch_messages_advance (messages))
+	{
+	    if (do_progress_notify) {
+		progress_notify (closure, (double) count / total);
+		do_progress_notify = 0;
+	    }
+
+	    message = notmuch_messages_get (messages);
+
+	    filename = _notmuch_message_talloc_copy_data (message);
+	    if (filename && *filename != '\0') {
+		_notmuch_message_add_filename (message, filename);
+		_notmuch_message_sync (message);
+	    }
+	    talloc_free (filename);
+
+	    notmuch_message_destroy (message);
+
+	    count++;
+	}
+
+	notmuch_query_destroy (query);
+
+	/* Also, before version 1 we stored directory timestamps in
+	 * XTIMESTAMP documents instead of the current XDIRECTORY
+	 * documents. So copy those as well. */
+
+	t_end = notmuch->xapian_db->allterms_end ("XTIMESTAMP");
+
+	for (t = notmuch->xapian_db->allterms_begin ("XTIMESTAMP");
+	     t != t_end;
+	     t++)
+	{
+	    Xapian::PostingIterator p, p_end;
+	    std::string term = *t;
+
+	    p_end = notmuch->xapian_db->postlist_end (term);
+
+	    for (p = notmuch->xapian_db->postlist_begin (term);
+		 p != p_end;
+		 p++)
+	    {
+		Xapian::Document document;
+		time_t mtime;
+		notmuch_directory_t *directory;
+
+		if (do_progress_notify) {
+		    progress_notify (closure, (double) count / total);
+		    do_progress_notify = 0;
+		}
+
+		document = find_document_for_doc_id (notmuch, *p);
+		mtime = Xapian::sortable_unserialise (
+		    document.get_value (NOTMUCH_VALUE_TIMESTAMP));
+
+		directory = notmuch_database_get_directory (notmuch,
+							    term.c_str() + 10);
+		notmuch_directory_set_mtime (directory, mtime);
+		notmuch_directory_destroy (directory);
+	    }
+	}
+    }
+
+    db->set_metadata ("version", STRINGIFY (NOTMUCH_DATABASE_VERSION));
+    db->flush ();
+
+    /* Now that the upgrade is complete we can remove the old data
+     * and documents that are no longer needed. */
+    if (version < 1) {
+	notmuch_query_t *query = notmuch_query_create (notmuch, "");
+	notmuch_messages_t *messages;
+	notmuch_message_t *message;
+	char *filename;
+
+	for (messages = notmuch_query_search_messages (query);
+	     notmuch_messages_has_more (messages);
+	     notmuch_messages_advance (messages))
+	{
+	    if (do_progress_notify) {
+		progress_notify (closure, (double) count / total);
+		do_progress_notify = 0;
+	    }
+
+	    message = notmuch_messages_get (messages);
+
+	    filename = _notmuch_message_talloc_copy_data (message);
+	    if (filename && *filename != '\0') {
+		_notmuch_message_clear_data (message);
+		_notmuch_message_sync (message);
+	    }
+	    talloc_free (filename);
+
+	    notmuch_message_destroy (message);
+	}
+
+	notmuch_query_destroy (query);
+    }
+
+    if (version < 1) {
+	Xapian::TermIterator t, t_end;
+
+	t_end = notmuch->xapian_db->allterms_end ("XTIMESTAMP");
+
+	for (t = notmuch->xapian_db->allterms_begin ("XTIMESTAMP");
+	     t != t_end;
+	     t++)
+	{
+	    Xapian::PostingIterator p, p_end;
+	    std::string term = *t;
+
+	    p_end = notmuch->xapian_db->postlist_end (term);
+
+	    for (p = notmuch->xapian_db->postlist_begin (term);
+		 p != p_end;
+		 p++)
+	    {
+		if (do_progress_notify) {
+		    progress_notify (closure, (double) count / total);
+		    do_progress_notify = 0;
+		}
+
+		db->delete_document (*p);
+	    }
+	}
+    }
+
+    if (timer_is_active) {
+	/* Now stop the timer. */
+	timerval.it_interval.tv_sec = 0;
+	timerval.it_interval.tv_usec = 0;
+	timerval.it_value.tv_sec = 0;
+	timerval.it_value.tv_usec = 0;
+	setitimer (ITIMER_REAL, &timerval, NULL);
+
+	/* And disable the signal handler. */
+	action.sa_handler = SIG_IGN;
+	sigaction (SIGALRM, &action, NULL);
+    }
+
+    return NOTMUCH_STATUS_SUCCESS;
+}
+
+/* We allow the user to use arbitrarily long paths for directories. But
+ * we have a term-length limit. So if we exceed that, we'll use the
+ * SHA-1 of the path for the database term.
+ *
+ * Note: This function may return the original value of 'path'. If it
+ * does not, then the caller is responsible to free() the returned
+ * value.
+ */
+const char *
+_notmuch_database_get_directory_db_path (const char *path)
+{
+    int term_len = strlen (_find_prefix ("directory")) + strlen (path);
 
     if (term_len > NOTMUCH_TERM_MAX)
-	return notmuch_sha1_of_string (key);
+	return notmuch_sha1_of_string (path);
     else
-	return strdup (key);
+	return path;
+}
+
+/* Given a path, split it into two parts: the directory part is all
+ * components except for the last, and the basename is that last
+ * component. Getting the return-value for either part is optional
+ * (the caller can pass NULL).
+ *
+ * The original 'path' can represent either a regular file or a
+ * directory---the splitting will be carried out in the same way in
+ * either case. Trailing slashes on 'path' will be ignored, and any
+ * cases of multiple '/' characters appearing in series will be
+ * treated as a single '/'.
+ *
+ * Allocation (if any) will have 'ctx' as the talloc owner. But
+ * pointers will be returned within the original path string whenever
+ * possible.
+ *
+ * Note: If 'path' is non-empty and contains no non-trailing slash,
+ * (that is, consists of a filename with no parent directory), then
+ * the directory returned will be an empty string. However, if 'path'
+ * is an empty string, then both directory and basename will be
+ * returned as NULL.
+ */
+notmuch_status_t
+_notmuch_database_split_path (void *ctx,
+			      const char *path,
+			      const char **directory,
+			      const char **basename)
+{
+    const char *slash;
+
+    if (path == NULL || *path == '\0') {
+	if (directory)
+	    *directory = NULL;
+	if (basename)
+	    *basename = NULL;
+	return NOTMUCH_STATUS_SUCCESS;
+    }
+
+    /* Find the last slash (not counting a trailing slash), if any. */
+
+    slash = path + strlen (path) - 1;
+
+    /* First, skip trailing slashes. */
+    while (slash != path) {
+	if (*slash != '/')
+	    break;
+
+	--slash;
+    }
+
+    /* Then, find a slash. */
+    while (slash != path) {
+	if (*slash == '/')
+	    break;
+
+	if (basename)
+	    *basename = slash;
+
+	--slash;
+    }
+
+    /* Finally, skip multiple slashes. */
+    while (slash != path) {
+	if (*slash != '/')
+	    break;
+
+	--slash;
+    }
+
+    if (slash == path) {
+	if (directory)
+	    *directory = talloc_strdup (ctx, "");
+	if (basename)
+	    *basename = path;
+    } else {
+	if (directory)
+	    *directory = talloc_strndup (ctx, path, slash - path + 1);
+    }
+
+    return NOTMUCH_STATUS_SUCCESS;
 }
 
 notmuch_status_t
-notmuch_database_set_timestamp (notmuch_database_t *notmuch,
-				const char *key, time_t timestamp)
+_notmuch_database_find_directory_id (notmuch_database_t *notmuch,
+				     const char *path,
+				     unsigned int *directory_id)
 {
-    Xapian::Document doc;
-    Xapian::WritableDatabase *db;
-    unsigned int doc_id;
-    notmuch_private_status_t status;
-    notmuch_status_t ret = NOTMUCH_STATUS_SUCCESS;
-    char *db_key = NULL;
+    notmuch_directory_t *directory;
+    notmuch_status_t status;
 
-    if (notmuch->mode == NOTMUCH_DATABASE_MODE_READ_ONLY) {
-	fprintf (stderr, "Attempted to update a read-only database.\n");
-	return NOTMUCH_STATUS_READONLY_DATABASE;
+    if (path == NULL) {
+	*directory_id = 0;
+	return NOTMUCH_STATUS_SUCCESS;
     }
 
-    db = static_cast <Xapian::WritableDatabase *> (notmuch->xapian_db);
-    db_key = timestamp_db_key (key);
-
-    try {
-	status = find_timestamp_document (notmuch, db_key, &doc, &doc_id);
-
-	doc.add_value (NOTMUCH_VALUE_TIMESTAMP,
-		       Xapian::sortable_serialise (timestamp));
-
-	if (status == NOTMUCH_PRIVATE_STATUS_NO_DOCUMENT_FOUND) {
-	    char *term = talloc_asprintf (NULL, "%s%s",
-					  _find_prefix ("timestamp"), db_key);
-	    doc.add_term (term);
-	    talloc_free (term);
-
-	    db->add_document (doc);
-	} else {
-	    db->replace_document (doc_id, doc);
-	}
-
-    } catch (const Xapian::Error &error) {
-	fprintf (stderr, "A Xapian exception occurred setting timestamp: %s.\n",
-		 error.get_msg().c_str());
-	notmuch->exception_reported = TRUE;
-	ret = NOTMUCH_STATUS_XAPIAN_EXCEPTION;
+    directory = _notmuch_directory_create (notmuch, path, &status);
+    if (status) {
+	*directory_id = -1;
+	return status;
     }
 
-    if (db_key)
-	free (db_key);
+    *directory_id = _notmuch_directory_get_document_id (directory);
 
-    return ret;
+    notmuch_directory_destroy (directory);
+
+    return NOTMUCH_STATUS_SUCCESS;
 }
 
-time_t
-notmuch_database_get_timestamp (notmuch_database_t *notmuch, const char *key)
+const char *
+_notmuch_database_get_directory_path (void *ctx,
+				      notmuch_database_t *notmuch,
+				      unsigned int doc_id)
 {
-    Xapian::Document doc;
-    unsigned int doc_id;
-    notmuch_private_status_t status;
-    char *db_key = NULL;
-    time_t ret = 0;
+    Xapian::Document document;
 
-    db_key = timestamp_db_key (key);
+    document = find_document_for_doc_id (notmuch, doc_id);
 
-    try {
-	status = find_timestamp_document (notmuch, db_key, &doc, &doc_id);
+    return talloc_strdup (ctx, document.get_data ().c_str ());
+}
 
-	if (status == NOTMUCH_PRIVATE_STATUS_NO_DOCUMENT_FOUND)
-	    goto DONE;
+/* Given a legal 'filename' for the database, (either relative to
+ * database path or absolute with initial components identical to
+ * database path), return a new string (with 'ctx' as the talloc
+ * owner) suitable for use as a direntry term value.
+ *
+ * The necessary directory documents will be created in the database
+ * as needed.
+ */
+notmuch_status_t
+_notmuch_database_filename_to_direntry (void *ctx,
+					notmuch_database_t *notmuch,
+					const char *filename,
+					char **direntry)
+{
+    const char *relative, *directory, *basename;
+    Xapian::docid directory_id;
+    notmuch_status_t status;
 
-	ret =  Xapian::sortable_unserialise (doc.get_value (NOTMUCH_VALUE_TIMESTAMP));
-    } catch (Xapian::Error &error) {
-	ret = 0;
-	goto DONE;
+    relative = _notmuch_database_relative_path (notmuch, filename);
+
+    status = _notmuch_database_split_path (ctx, relative,
+					   &directory, &basename);
+    if (status)
+	return status;
+
+    status = _notmuch_database_find_directory_id (notmuch, directory,
+						  &directory_id);
+    if (status)
+	return status;
+
+    *direntry = talloc_asprintf (ctx, "%u:%s", directory_id, basename);
+
+    return NOTMUCH_STATUS_SUCCESS;
+}
+
+/* Given a legal 'path' for the database, return the relative path.
+ *
+ * The return value will be a pointer to the originl path contents,
+ * and will be either the original string (if 'path' was relative) or
+ * a portion of the string (if path was absolute and begins with the
+ * database path).
+ */
+const char *
+_notmuch_database_relative_path (notmuch_database_t *notmuch,
+				 const char *path)
+{
+    const char *db_path, *relative;
+    unsigned int db_path_len;
+
+    db_path = notmuch_database_get_path (notmuch);
+    db_path_len = strlen (db_path);
+
+    relative = path;
+
+    if (*relative == '/') {
+	while (*relative == '/' && *(relative+1) == '/')
+	    relative++;
+
+	if (strncmp (relative, db_path, db_path_len) == 0)
+	{
+	    relative += db_path_len;
+	    while (*relative == '/')
+		relative++;
+	}
     }
 
-  DONE:
-    if (db_key)
-	free (db_key);
+    return relative;
+}
 
-    return ret;
+notmuch_directory_t *
+notmuch_database_get_directory (notmuch_database_t *notmuch,
+				const char *path)
+{
+    notmuch_status_t status;
+
+    return _notmuch_directory_create (notmuch, path, &status);
 }
 
 /* Find the thread ID to which the message with 'message_id' belongs.
@@ -903,11 +1331,13 @@ notmuch_database_add_message (notmuch_database_t *notmuch,
     if (message_ret)
 	*message_ret = NULL;
 
+    ret = _notmuch_database_ensure_writable (notmuch);
+    if (ret)
+	return ret;
+
     message_file = notmuch_message_file_open (filename);
-    if (message_file == NULL) {
-	ret = NOTMUCH_STATUS_FILE_ERROR;
-	goto DONE;
-    }
+    if (message_file == NULL)
+	return NOTMUCH_STATUS_FILE_ERROR;
 
     notmuch_message_file_restrict_headers (message_file,
 					   "date",
@@ -988,23 +1418,24 @@ notmuch_database_add_message (notmuch_database_t *notmuch,
 	    goto DONE;
 	}
 
+	_notmuch_message_add_filename (message, filename);
+
 	/* Is this a newly created message object? */
 	if (private_status == NOTMUCH_PRIVATE_STATUS_NO_DOCUMENT_FOUND) {
-	    _notmuch_message_set_filename (message, filename);
 	    _notmuch_message_add_term (message, "type", "mail");
+
+	    ret = _notmuch_database_link_message (notmuch, message,
+						  message_file);
+	    if (ret)
+		goto DONE;
+
+	    date = notmuch_message_file_get_header (message_file, "date");
+	    _notmuch_message_set_date (message, date);
+
+	    _notmuch_message_index_file (message, filename);
 	} else {
 	    ret = NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID;
-	    goto DONE;
 	}
-
-	ret = _notmuch_database_link_message (notmuch, message, message_file);
-	if (ret)
-	    goto DONE;
-
-	date = notmuch_message_file_get_header (message_file, "date");
-	_notmuch_message_set_date (message, date);
-
-	_notmuch_message_index_file (message, filename);
 
 	_notmuch_message_sync (message);
     } catch (const Xapian::Error &error) {
@@ -1027,6 +1458,60 @@ notmuch_database_add_message (notmuch_database_t *notmuch,
 	notmuch_message_file_close (message_file);
 
     return ret;
+}
+
+notmuch_status_t
+notmuch_database_remove_message (notmuch_database_t *notmuch,
+				 const char *filename)
+{
+    Xapian::WritableDatabase *db;
+    void *local = talloc_new (notmuch);
+    const char *prefix = _find_prefix ("file-direntry");
+    char *direntry, *term;
+    Xapian::PostingIterator i, end;
+    Xapian::Document document;
+    notmuch_status_t status;
+
+    status = _notmuch_database_ensure_writable (notmuch);
+    if (status)
+	return status;
+
+    db = static_cast <Xapian::WritableDatabase *> (notmuch->xapian_db);
+
+    status = _notmuch_database_filename_to_direntry (local, notmuch,
+						     filename, &direntry);
+    if (status)
+	return status;
+
+    term = talloc_asprintf (notmuch, "%s%s", prefix, direntry);
+
+    find_doc_ids_for_term (notmuch, term, &i, &end);
+
+    for ( ; i != end; i++) {
+	Xapian::TermIterator j;
+
+	document = find_document_for_doc_id (notmuch, *i);
+
+	document.remove_term (term);
+
+	j = document.termlist_begin ();
+	j.skip_to (prefix);
+
+	/* Was this the last file-direntry in the message? */
+	if (j == document.termlist_end () ||
+	    strncmp ((*j).c_str (), prefix, strlen (prefix)))
+	{
+	    db->delete_document (document.get_docid ());
+	    status = NOTMUCH_STATUS_SUCCESS;
+	} else {
+	    db->replace_document (document.get_docid (), document);
+	    status = NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID;
+	}
+    }
+
+    talloc_free (local);
+
+    return status;
 }
 
 notmuch_tags_t *

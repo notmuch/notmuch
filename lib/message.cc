@@ -174,11 +174,6 @@ _notmuch_message_create_for_message_id (notmuch_database_t *notmuch,
     unsigned int doc_id;
     char *term;
 
-    if (notmuch->mode == NOTMUCH_DATABASE_MODE_READ_ONLY) {
-	*status_ret = NOTMUCH_PRIVATE_STATUS_READONLY_DATABASE;
-	return NULL;
-    }
-
     *status_ret = NOTMUCH_PRIVATE_STATUS_SUCCESS;
 
     message = notmuch_database_find_message (notmuch, message_id);
@@ -192,9 +187,12 @@ _notmuch_message_create_for_message_id (notmuch_database_t *notmuch,
 	return NULL;
     }
 
+    if (notmuch->mode == NOTMUCH_DATABASE_MODE_READ_ONLY)
+	INTERNAL_ERROR ("Failure to ensure database is writable.");
+
     db = static_cast<Xapian::WritableDatabase *> (notmuch->xapian_db);
     try {
-	doc.add_term (term);
+	doc.add_term (term, 0);
 	talloc_free (term);
 
 	doc.add_value (NOTMUCH_VALUE_MESSAGE_ID, message_id);
@@ -385,20 +383,17 @@ notmuch_message_get_replies (notmuch_message_t *message)
     return _notmuch_messages_create (message->replies);
 }
 
-/* Set the filename for 'message' to 'filename'.
- *
- * XXX: We should still figure out if we think it's important to store
- * multiple filenames for email messages with identical message IDs.
+/* Add an additional 'filename' for 'message'.
  *
  * This change will not be reflected in the database until the next
  * call to _notmuch_message_set_sync. */
-void
-_notmuch_message_set_filename (notmuch_message_t *message,
+notmuch_status_t
+_notmuch_message_add_filename (notmuch_message_t *message,
 			       const char *filename)
 {
-    const char *s;
-    const char *db_path;
-    unsigned int db_path_len;
+    notmuch_status_t status;
+    void *local = talloc_new (message);
+    char *direntry;
 
     if (message->filename) {
 	talloc_free (message->filename);
@@ -408,41 +403,98 @@ _notmuch_message_set_filename (notmuch_message_t *message,
     if (filename == NULL)
 	INTERNAL_ERROR ("Message filename cannot be NULL.");
 
-    s = filename;
+    status = _notmuch_database_filename_to_direntry (local,
+						     message->notmuch,
+						     filename, &direntry);
+    if (status)
+	return status;
 
-    db_path = notmuch_database_get_path (message->notmuch);
-    db_path_len = strlen (db_path);
+    _notmuch_message_add_term (message, "file-direntry", direntry);
 
-    if (*s == '/' && strlen (s) > db_path_len
-	&& strncmp (s, db_path, db_path_len) == 0)
-    {
-	s += db_path_len;
-	while (*s == '/') s++;
+    talloc_free (local);
 
-	if (!*s)
-		INTERNAL_ERROR ("Message filename was same as db prefix.");
-    }
+    return NOTMUCH_STATUS_SUCCESS;
+}
 
-    message->doc.set_data (s);
+char *
+_notmuch_message_talloc_copy_data (notmuch_message_t *message)
+{
+    return talloc_strdup (message, message->doc.get_data ().c_str ());
+}
+
+void
+_notmuch_message_clear_data (notmuch_message_t *message)
+{
+    message->doc.set_data ("");
 }
 
 const char *
 notmuch_message_get_filename (notmuch_message_t *message)
 {
-    std::string filename_str;
-    const char *db_path;
+    const char *prefix = _find_prefix ("file-direntry");
+    int prefix_len = strlen (prefix);
+    Xapian::TermIterator i;
+    char *direntry, *colon;
+    const char *db_path, *directory, *basename;
+    unsigned int directory_id;
+    void *local = talloc_new (message);
 
     if (message->filename)
 	return message->filename;
 
-    filename_str = message->doc.get_data ();
+    i = message->doc.termlist_begin ();
+    i.skip_to (prefix);
+
+    if (i != message->doc.termlist_end ())
+	direntry = talloc_strdup (local, (*i).c_str ());
+
+    if (i == message->doc.termlist_end () ||
+	strncmp (direntry, prefix, prefix_len))
+    {
+	/* A message document created by an old version of notmuch
+	 * (prior to rename support) will have the filename in the
+	 * data of the document rather than as a file-direntry term.
+	 *
+	 * It would be nice to do the upgrade of the document directly
+	 * here, but the database is likely open in read-only mode. */
+	const char *data;
+
+	data = message->doc.get_data ().c_str ();
+
+	if (data == NULL)
+	    INTERNAL_ERROR ("message with no filename");
+
+	message->filename = talloc_strdup (message, data);
+
+	return message->filename;
+    }
+
+    direntry += prefix_len;
+
+    directory_id = strtol (direntry, &colon, 10);
+
+    if (colon == NULL || *colon != ':')
+	INTERNAL_ERROR ("malformed direntry");
+
+    basename = colon + 1;
+
+    *colon = '\0';
+
     db_path = notmuch_database_get_path (message->notmuch);
 
-    if (filename_str[0] != '/')
-	message->filename = talloc_asprintf (message, "%s/%s", db_path,
-					     filename_str.c_str ());
+    directory = _notmuch_database_get_directory_path (local,
+						      message->notmuch,
+						      directory_id);
+
+    if (strlen (directory))
+	message->filename = talloc_asprintf (message, "%s/%s/%s",
+					     db_path, directory, basename);
     else
-	message->filename = talloc_strdup (message, filename_str.c_str ());
+	message->filename = talloc_asprintf (message, "%s/%s",
+					     db_path, basename);
+    talloc_free ((void *) directory);
+
+    talloc_free (local);
 
     return message->filename;
 }
@@ -594,7 +646,7 @@ _notmuch_message_add_term (notmuch_message_t *message,
     if (strlen (term) > NOTMUCH_TERM_MAX)
 	return NOTMUCH_PRIVATE_STATUS_TERM_TOO_LONG;
 
-    message->doc.add_term (term);
+    message->doc.add_term (term, 0);
 
     talloc_free (term);
 
@@ -667,7 +719,12 @@ _notmuch_message_remove_term (notmuch_message_t *message,
 notmuch_status_t
 notmuch_message_add_tag (notmuch_message_t *message, const char *tag)
 {
-    notmuch_private_status_t status;
+    notmuch_private_status_t private_status;
+    notmuch_status_t status;
+
+    status = _notmuch_database_ensure_writable (message->notmuch);
+    if (status)
+	return status;
 
     if (tag == NULL)
 	return NOTMUCH_STATUS_NULL_POINTER;
@@ -675,10 +732,10 @@ notmuch_message_add_tag (notmuch_message_t *message, const char *tag)
     if (strlen (tag) > NOTMUCH_TAG_MAX)
 	return NOTMUCH_STATUS_TAG_TOO_LONG;
 
-    status = _notmuch_message_add_term (message, "tag", tag);
-    if (status) {
+    private_status = _notmuch_message_add_term (message, "tag", tag);
+    if (private_status) {
 	INTERNAL_ERROR ("_notmuch_message_add_term return unexpected value: %d\n",
-			status);
+			private_status);
     }
 
     if (! message->frozen)
@@ -690,7 +747,12 @@ notmuch_message_add_tag (notmuch_message_t *message, const char *tag)
 notmuch_status_t
 notmuch_message_remove_tag (notmuch_message_t *message, const char *tag)
 {
-    notmuch_private_status_t status;
+    notmuch_private_status_t private_status;
+    notmuch_status_t status;
+
+    status = _notmuch_database_ensure_writable (message->notmuch);
+    if (status)
+	return status;
 
     if (tag == NULL)
 	return NOTMUCH_STATUS_NULL_POINTER;
@@ -698,10 +760,10 @@ notmuch_message_remove_tag (notmuch_message_t *message, const char *tag)
     if (strlen (tag) > NOTMUCH_TAG_MAX)
 	return NOTMUCH_STATUS_TAG_TOO_LONG;
 
-    status = _notmuch_message_remove_term (message, "tag", tag);
-    if (status) {
+    private_status = _notmuch_message_remove_term (message, "tag", tag);
+    if (private_status) {
 	INTERNAL_ERROR ("_notmuch_message_remove_term return unexpected value: %d\n",
-			status);
+			private_status);
     }
 
     if (! message->frozen)
@@ -710,12 +772,17 @@ notmuch_message_remove_tag (notmuch_message_t *message, const char *tag)
     return NOTMUCH_STATUS_SUCCESS;
 }
 
-void
+notmuch_status_t
 notmuch_message_remove_all_tags (notmuch_message_t *message)
 {
-    notmuch_private_status_t status;
+    notmuch_private_status_t private_status;
+    notmuch_status_t status;
     notmuch_tags_t *tags;
     const char *tag;
+
+    status = _notmuch_database_ensure_writable (message->notmuch);
+    if (status)
+	return status;
 
     for (tags = notmuch_message_get_tags (message);
 	 notmuch_tags_has_more (tags);
@@ -723,26 +790,42 @@ notmuch_message_remove_all_tags (notmuch_message_t *message)
     {
 	tag = notmuch_tags_get (tags);
 
-	status = _notmuch_message_remove_term (message, "tag", tag);
-	if (status) {
+	private_status = _notmuch_message_remove_term (message, "tag", tag);
+	if (private_status) {
 	    INTERNAL_ERROR ("_notmuch_message_remove_term return unexpected value: %d\n",
-			    status);
+			    private_status);
 	}
     }
 
     if (! message->frozen)
 	_notmuch_message_sync (message);
+
+    return NOTMUCH_STATUS_SUCCESS;
 }
 
-void
+notmuch_status_t
 notmuch_message_freeze (notmuch_message_t *message)
 {
+    notmuch_status_t status;
+
+    status = _notmuch_database_ensure_writable (message->notmuch);
+    if (status)
+	return status;
+
     message->frozen++;
+
+    return NOTMUCH_STATUS_SUCCESS;
 }
 
 notmuch_status_t
 notmuch_message_thaw (notmuch_message_t *message)
 {
+    notmuch_status_t status;
+
+    status = _notmuch_database_ensure_writable (message->notmuch);
+    if (status)
+	return status;
+
     if (message->frozen > 0) {
 	message->frozen--;
 	if (message->frozen == 0)

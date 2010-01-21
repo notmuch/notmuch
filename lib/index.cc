@@ -31,7 +31,7 @@ _index_address_mailbox (notmuch_message_t *message,
 {
     InternetAddressMailbox *mailbox = INTERNET_ADDRESS_MAILBOX (address);
     const char *name, *addr;
-    void *local = talloc_new (NULL);
+    void *local = talloc_new (message);
 
     name = internet_address_get_name (address);
     addr = internet_address_mailbox_get_addr (mailbox);
@@ -123,60 +123,6 @@ skip_re_in_subject (const char *subject)
     return s;
 }
 
-/* Given a string representing the body of a message, generate terms
- * for it, (skipping quoted portions and signatures).
- *
- * This function is evil in that it modifies the string passed to it,
- * (changing some newlines into '\0').
- */
-static void
-_index_body_text (notmuch_message_t *message, char *body)
-{
-    char *line, *line_end, *next_line;
-
-    if (body == NULL)
-	return;
-
-    next_line = body;
-
-    while (1) {
-	line = next_line;
-	if (*line == '\0')
-	    break;
-
-	next_line = strchr (line, '\n');
-	if (next_line == NULL) {
-	    next_line = line + strlen (line);
-	}
-	line_end = next_line - 1;
-
-	/* Get to the next non-blank line. */
-	while (*next_line == '\n')
-	    next_line++;
-
-	/* Skip blank lines. */
-	if (line_end < line)
-	    continue;
-
-	/* Skip lines that are quotes. */
-	if (*line == '>')
-	    continue;
-
-	/* Also skip lines introducing a quote on the next line. */
-	if (*line_end == ':' && *next_line == '>')
-	    continue;
-
-	/* Finally, bail as soon as we see a signature. */
-	/* XXX: Should only do this if "near" the end of the message. */
-	if (strncmp (line, "-- ", 3) == 0)
-	    break;
-
-	*(line_end + 1) = '\0';
-
-	_notmuch_message_gen_terms (message, NULL, line);
-    }
-}
-
 /* Callback to generate terms for each mime part of a message. */
 static void
 _index_mime_part (notmuch_message_t *message,
@@ -249,9 +195,11 @@ _index_mime_part (notmuch_message_t *message,
     g_byte_array_append (byte_array, (guint8 *) "\0", 1);
     body = (char *) g_byte_array_free (byte_array, FALSE);
 
-    _index_body_text (message, body);
+    if (body) {
+	_notmuch_message_gen_terms (message, NULL, body);
 
-    free (body);
+	free (body);
+    }
 }
 
 notmuch_status_t

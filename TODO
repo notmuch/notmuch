@@ -74,6 +74,8 @@ for selecting what gets printed).
 Add a "--count-only" (or so?) option to "notmuch search" for returning
 the count of search results.
 
+Add documented syntax for searching all threads/messages.
+
 Give "notmuch restore" some progress indicator. Until we get the
 Xapian bugs fixed that are making this operation slow, we really need
 to let the user know that things are still moving.
@@ -145,6 +147,10 @@ content that is actually different in some interesting way. Perhaps
 notmuch initially sees all changes as interesting, and quickly learns
 from the user which changes are not interesting (such as the very
 common mailing-list footer).
+
+Fix notmuch_query_count_messages to share code with
+notmuch_query_search_messages rather than duplicating code. (And
+consider renaming it as well.)
 
 General
 -------

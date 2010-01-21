@@ -57,6 +57,9 @@ typedef int notmuch_bool_t;
  * value. Instead we should map to things like DATABASE_LOCKED or
  * whatever.
  *
+ * NOTMUCH_STATUS_READ_ONLY_DATABASE: An attempt was made to write to
+ *	a database opened in read-only mode.
+ *
  * NOTMUCH_STATUS_XAPIAN_EXCEPTION: A Xapian exception occurred
  *
  * NOTMUCH_STATUS_FILE_ERROR: An error occurred trying to read or
@@ -86,7 +89,7 @@ typedef int notmuch_bool_t;
 typedef enum _notmuch_status {
     NOTMUCH_STATUS_SUCCESS = 0,
     NOTMUCH_STATUS_OUT_OF_MEMORY,
-    NOTMUCH_STATUS_READONLY_DATABASE,
+    NOTMUCH_STATUS_READ_ONLY_DATABASE,
     NOTMUCH_STATUS_XAPIAN_EXCEPTION,
     NOTMUCH_STATUS_FILE_ERROR,
     NOTMUCH_STATUS_FILE_NOT_EMAIL,
@@ -114,6 +117,8 @@ typedef struct _notmuch_thread notmuch_thread_t;
 typedef struct _notmuch_messages notmuch_messages_t;
 typedef struct _notmuch_message notmuch_message_t;
 typedef struct _notmuch_tags notmuch_tags_t;
+typedef struct _notmuch_directory notmuch_directory_t;
+typedef struct _notmuch_filenames notmuch_filenames_t;
 
 /* Create a new, empty notmuch database located at 'path'.
  *
@@ -178,56 +183,46 @@ notmuch_database_close (notmuch_database_t *database);
 const char *
 notmuch_database_get_path (notmuch_database_t *database);
 
-/* Store a timestamp within the database.
+/* Return the database format version of the given database. */
+unsigned int
+notmuch_database_get_version (notmuch_database_t *database);
+
+/* Does this database need to be upgraded before writing to it?
  *
- * The Notmuch database will not interpret this key nor the timestamp
- * values at all. It will merely store them together and return the
- * timestamp when notmuch_database_get_timestamp is called with the
- * same value for 'key'.
+ * If this function returns TRUE then no functions that modify the
+ * database (notmuch_database_add_message, notmuch_message_add_tag,
+ * notmuch_directory_set_mtime, etc.) will work unless the function
+ * notmuch_database_upgrade is called successfully first. */
+notmuch_bool_t
+notmuch_database_needs_upgrade (notmuch_database_t *database);
+
+/* Upgrade the current database.
  *
- * The intention is for the caller to use the timestamp to allow
- * efficient identification of new messages to be added to the
- * database. The recommended usage is as follows:
+ * After opening a database in read-write mode, the client should
+ * check if an upgrade is needed (notmuch_database_needs_upgrade) and
+ * if so, upgrade with this function before making any modifications.
  *
- *   o Read the mtime of a directory from the filesystem
- *
- *   o Call add_message for all mail files in the directory
- *
- *   o Call notmuch_database_set_timestamp with the path of the
- *     directory as 'key' and the originally read mtime as 'value'.
- *
- * Then, when wanting to check for updates to the directory in the
- * future, the client can call notmuch_database_get_timestamp and know
- * that it only needs to add files if the mtime of the directory and
- * files are newer than the stored timestamp.
- *
- * Note: The notmuch_database_get_timestamp function does not allow
- * the caller to distinguish a timestamp of 0 from a non-existent
- * timestamp. So don't store a timestamp of 0 unless you are
- * comfortable with that.
- *
- * Return value:
- *
- * NOTMUCH_STATUS_SUCCESS: Timestamp successfully stored in database.
- *
- * NOTMUCH_STATUS_XAPIAN_EXCEPTION: A Xapian exception
- *	occurred. Timestamp not stored.
+ * The optional progress_notify callback can be used by the caller to
+ * provide progress indication to the user. If non-NULL it will be
+ * called periodically with 'progress' as a floating-point value in
+ * the range of [0.0 .. 1.0] indicating the progress made so far in
+ * the upgrade process.
  */
 notmuch_status_t
-notmuch_database_set_timestamp (notmuch_database_t *database,
-				const char *key, time_t timestamp);
+notmuch_database_upgrade (notmuch_database_t *database,
+			  void (*progress_notify) (void *closure,
+						   double progress),
+			  void *closure);
 
-/* Retrieve a timestamp from the database.
+/* Retrieve a directory object from the database for 'path'.
  *
- * Returns the timestamp value previously stored by calling
- * notmuch_database_set_timestamp with the same value for 'key'.
- *
- * Returns 0 if no timestamp is stored for 'key' or if any error
- * occurred querying the database.
+ * Here, 'path' should be a path relative to the path of 'database'
+ * (see notmuch_database_get_path), or else should be an absolute path
+ * with initial components that match the path of 'database'.
  */
-time_t
-notmuch_database_get_timestamp (notmuch_database_t *database,
-				const char *key);
+notmuch_directory_t *
+notmuch_database_get_directory (notmuch_database_t *database,
+				const char *path);
 
 /* Add a new message to the given notmuch database.
  *
@@ -252,8 +247,8 @@ notmuch_database_get_timestamp (notmuch_database_t *database,
  * NOTMUCH_STATUS_SUCCESS: Message successfully added to database.
  *
  * NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID: Message has the same message
- *	ID as another message already in the database. Nothing added
- *	to the database.
+ *	ID as another message already in the database. The new filename
+ *	was successfully added to the message in the database.
  *
  * NOTMUCH_STATUS_FILE_ERROR: an error occurred trying to open the
  *	file, (such as permission denied, or file not found,
@@ -261,11 +256,39 @@ notmuch_database_get_timestamp (notmuch_database_t *database,
  *
  * NOTMUCH_STATUS_FILE_NOT_EMAIL: the contents of filename don't look
  *	like an email message. Nothing added to the database.
+ *
+ * NOTMUCH_STATUS_READ_ONLY_DATABASE: Database was opened in read-only
+ *	mode so no message can be added.
  */
 notmuch_status_t
 notmuch_database_add_message (notmuch_database_t *database,
 			      const char *filename,
 			      notmuch_message_t **message);
+
+/* Remove a message from the given notmuch database.
+ *
+ * Note that only this particular filename association is removed from
+ * the database. If the same message (as determined by the message ID)
+ * is still available via other filenames, then the message will
+ * persist in the database for those filenames. When the last filename
+ * is removed for a particular message, the database content for that
+ * message will be entirely removed.
+ *
+ * Return value:
+ *
+ * NOTMUCH_STATUS_SUCCESS: The last filename was removed and the
+ *	message was removed from the database.
+ *
+ * NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID: This filename was removed but
+ *	the message persists in the database with at least one other
+ *	filename.
+ *
+ * NOTMUCH_STATUS_READ_ONLY_DATABASE: Database was opened in read-only
+ *	mode so no message can be removed.
+ */
+notmuch_status_t
+notmuch_database_remove_message (notmuch_database_t *database,
+				 const char *filename);
 
 /* Find a message with the given message_id.
  *
@@ -698,14 +721,20 @@ notmuch_message_get_thread_id (notmuch_message_t *message);
 notmuch_messages_t *
 notmuch_message_get_replies (notmuch_message_t *message);
 
-/* Get the filename for the email corresponding to 'message'.
+/* Get a filename for the email corresponding to 'message'.
  *
  * The returned filename is an absolute filename, (the initial
  * component will match notmuch_database_get_path() ).
  *
  * The returned string belongs to the message so should not be
  * modified or freed by the caller (nor should it be referenced after
- * the message is destroyed). */
+ * the message is destroyed).
+ *
+ * Note: If this message corresponds to multiple files in the mail
+ * store, (that is, multiple files contain identical message IDs),
+ * this function will arbitrarily return a single one of those
+ * filenames.
+ */
 const char *
 notmuch_message_get_filename (notmuch_message_t *message);
 
@@ -793,6 +822,9 @@ notmuch_message_get_tags (notmuch_message_t *message);
  *
  * NOTMUCH_STATUS_TAG_TOO_LONG: The length of 'tag' is too long
  *	(exceeds NOTMUCH_TAG_MAX)
+ *
+ * NOTMUCH_STATUS_READ_ONLY_DATABASE: Database was opened in read-only
+ *	mode so message cannot be modified.
  */
 notmuch_status_t
 notmuch_message_add_tag (notmuch_message_t *message, const char *tag);
@@ -807,6 +839,9 @@ notmuch_message_add_tag (notmuch_message_t *message, const char *tag);
  *
  * NOTMUCH_STATUS_TAG_TOO_LONG: The length of 'tag' is too long
  *	(exceeds NOTMUCH_TAG_MAX)
+ *
+ * NOTMUCH_STATUS_READ_ONLY_DATABASE: Database was opened in read-only
+ *	mode so message cannot be modified.
  */
 notmuch_status_t
 notmuch_message_remove_tag (notmuch_message_t *message, const char *tag);
@@ -815,8 +850,11 @@ notmuch_message_remove_tag (notmuch_message_t *message, const char *tag);
  *
  * See notmuch_message_freeze for an example showing how to safely
  * replace tag values.
+ *
+ * NOTMUCH_STATUS_READ_ONLY_DATABASE: Database was opened in read-only
+ *	mode so message cannot be modified.
  */
-void
+notmuch_status_t
 notmuch_message_remove_all_tags (notmuch_message_t *message);
 
 /* Freeze the current state of 'message' within the database.
@@ -851,8 +889,15 @@ notmuch_message_remove_all_tags (notmuch_message_t *message);
  * somehow getting interrupted. This could result in the message being
  * left with no tags if the interruption happened after
  * notmuch_message_remove_all_tags but before notmuch_message_add_tag.
+ *
+ * Return value:
+ *
+ * NOTMUCH_STATUS_SUCCESS: Message successfully frozen.
+ *
+ * NOTMUCH_STATUS_READ_ONLY_DATABASE: Database was opened in read-only
+ *	mode so message cannot be modified.
  */
-void
+notmuch_status_t
 notmuch_message_freeze (notmuch_message_t *message);
 
 /* Thaw the current 'message', synchronizing any changes that may have
@@ -928,6 +973,118 @@ notmuch_tags_advance (notmuch_tags_t *tags);
  */
 void
 notmuch_tags_destroy (notmuch_tags_t *tags);
+
+/* Store an mtime within the database for 'directory'.
+ *
+ * The 'directory' should be an object retrieved from the database
+ * with notmuch_database_get_directory for a particular path.
+ *
+ * The intention is for the caller to use the mtime to allow efficient
+ * identification of new messages to be added to the database. The
+ * recommended usage is as follows:
+ *
+ *   o Read the mtime of a directory from the filesystem
+ *
+ *   o Call add_message for all mail files in the directory
+ *
+ *   o Call notmuch_directory_set_mtime with the mtime read from the
+ *     filesystem.
+ *
+ * Then, when wanting to check for updates to the directory in the
+ * future, the client can call notmuch_directory_get_mtime and know
+ * that it only needs to add files if the mtime of the directory and
+ * files are newer than the stored timestamp.
+ *
+ * Note: The notmuch_directory_get_mtime function does not allow the
+ * caller to distinguish a timestamp of 0 from a non-existent
+ * timestamp. So don't store a timestamp of 0 unless you are
+ * comfortable with that.
+ *
+ * Return value:
+ *
+ * NOTMUCH_STATUS_SUCCESS: mtime successfully stored in database.
+ *
+ * NOTMUCH_STATUS_XAPIAN_EXCEPTION: A Xapian exception
+ *	occurred, mtime not stored.
+ *
+ * NOTMUCH_STATUS_READ_ONLY_DATABASE: Database was opened in read-only
+ *	mode so directory mtime cannot be modified.
+ */
+notmuch_status_t
+notmuch_directory_set_mtime (notmuch_directory_t *directory,
+			     time_t mtime);
+
+/* Get the mtime of a directory, (as previously stored with
+ * notmuch_directory_set_mtime).
+ *
+ * Returns 0 if no mtime has previously been stored for this
+ * directory.*/
+time_t
+notmuch_directory_get_mtime (notmuch_directory_t *directory);
+
+/* Get a notmuch_filenames_t iterator listing all the filenames of
+ * messages in the database within the given directory.
+ *
+ * The returned filenames will be the basename-entries only (not
+ * complete paths). */
+notmuch_filenames_t *
+notmuch_directory_get_child_files (notmuch_directory_t *directory);
+
+/* Get a notmuch_filenams_t iterator listing all the filenames of
+ * sub-directories in the database within the given directory.
+ *
+ * The returned filenames will be the basename-entries only (not
+ * complete paths). */
+notmuch_filenames_t *
+notmuch_directory_get_child_directories (notmuch_directory_t *directory);
+
+/* Destroy a notmuch_directory_t object. */
+void
+notmuch_directory_destroy (notmuch_directory_t *directory);
+
+/* Does the given notmuch_filenames_t object contain any more
+ * filenames.
+ *
+ * When this function returns TRUE, notmuch_filenames_get will return
+ * a valid string. Whereas when this function returns FALSE,
+ * notmuch_filenames_get will return NULL.
+ *
+ * It is acceptable to pass NULL for 'filenames', in which case this
+ * function will always return FALSE.
+ */
+notmuch_bool_t
+notmuch_filenames_has_more (notmuch_filenames_t *filenames);
+
+/* Get the current filename from 'filenames' as a string.
+ *
+ * Note: The returned string belongs to 'filenames' and has a lifetime
+ * identical to it (and the directory to which it ultimately belongs).
+ *
+ * It is acceptable to pass NULL for 'filenames', in which case this
+ * function will always return NULL.
+ */
+const char *
+notmuch_filenames_get (notmuch_filenames_t *filenames);
+
+/* Advance the 'filenames' iterator to the next filename.
+ *
+ * It is acceptable to pass NULL for 'filenames', in which case this
+ * function will do nothing.
+ */
+void
+notmuch_filenames_advance (notmuch_filenames_t *filenames);
+
+/* Destroy a notmuch_filenames_t object.
+ *
+ * It's not strictly necessary to call this function. All memory from
+ * the notmuch_filenames_t object will be reclaimed when the
+ * containing directory object is destroyed.
+ *
+ * It is acceptable to pass NULL for 'filenames', in which case this
+ * function will do nothing.
+ */
+void
+notmuch_filenames_destroy (notmuch_filenames_t *filenames);
 
 NOTMUCH_END_DECLS
 
