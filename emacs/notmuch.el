@@ -152,7 +152,13 @@
 	      (overlay-put (make-overlay (point) (re-search-forward ":"))
 			   'face 'message-header-name)
 	      (overlay-put (make-overlay (point) (re-search-forward ".*$"))
-			   'face 'message-header-other)))))))
+			   'face 'message-header-other))
+	  (if (looking-at "[Dd]ate:")
+             (progn
+               (overlay-put (make-overlay (point) (re-search-forward ":"))
+                            'face 'message-header-name)
+               (overlay-put (make-overlay (point) (re-search-forward ".*$"))
+                            'face 'message-header-other))))))))
 
 (defun notmuch-documentation-first-line (symbol)
   "Return the first line of the documentation string for SYMBOL."
