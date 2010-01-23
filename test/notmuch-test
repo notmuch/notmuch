@@ -1,0 +1,220 @@
+#!/bin/sh
+set -e
+
+find_notmuch_binary ()
+{
+    dir=$1
+
+    while [ -n "$dir" ]; do
+	bin=$dir/notmuch
+	if [ -x $bin ]; then
+	    echo $bin
+	    return
+	fi
+	dir=$(dirname $dir)
+	if [ "$dir" = "/" ]; then
+	    break
+	fi
+    done
+
+    echo notmuch
+}
+
+# Generate a new message in the mail directory, with
+# a unique message ID and subject.
+#
+# The filename of the message generated is available as
+# $gen_msg_filename
+gen_msg_cnt=0
+gen_msg_filename=""
+generate_message ()
+{
+    gen_msg_cnt=$((gen_msg_cnt + 1))
+    gen_msg_name=msg-$(printf "%03d" $gen_msg_cnt)
+
+    if [ "$#" = "0" ]; then
+	gen_msg_filename="${MAIL_DIR}/$gen_msg_name"
+    else
+	gen_msg_filename="${MAIL_DIR}/$1/$gen_msg_name"
+	mkdir -p $(dirname $gen_msg_filename)
+    fi
+
+cat <<EOF >$gen_msg_filename
+From: Notmuch Test Suite <test_suite@notmuchmail.org>
+To: Notmuch Test Suite <test_suite@notmuchmail.org>
+Message-Id: <msg-${gen_msg_cnt}@notmuch-test-suite>
+Subject: Test message ${gen_msg_filename}
+Date: Tue, 05 Jan 2010 15:43:57 -0800
+
+This is just a test message at ${gen_msg_filename}
+EOF
+}
+
+do_sleep ()
+{
+    sleep 1
+}
+
+TEST_DIR=$(pwd)/test.$$
+MAIL_DIR=${TEST_DIR}/mail
+export NOTMUCH_CONFIG=${TEST_DIR}/notmuch-config
+NOTMUCH=$(find_notmuch_binary $(pwd))
+
+rm -rf ${TEST_DIR}
+mkdir ${TEST_DIR}
+cd ${TEST_DIR}
+
+mkdir ${MAIL_DIR}
+
+cat <<EOF > ${NOTMUCH_CONFIG}
+[database]
+path=${MAIL_DIR}
+
+[user]
+name=Notmuch Test Suite
+primary_email=test_suite@notmuchmail.org
+EOF
+
+echo "### Testing \"notmuch new\" with no messages"
+$NOTMUCH new
+
+echo "### Testing \"notmuch new\" with 1 new message"
+do_sleep
+generate_message
+$NOTMUCH new
+
+echo "### Testing \"notmuch new\" with 2 new messages"
+do_sleep
+generate_message
+generate_message
+$NOTMUCH new
+
+echo "### Testing \"notmuch new\" with no new messages (and a non-empty database)"
+
+$NOTMUCH new
+
+echo "### Testing \"notmuch new\" with two new directories (one mail)"
+rm -rf ${MAIL_DIR}/* ${MAIL_DIR}/.notmuch
+mkdir ${MAIL_DIR}/def
+mkdir ${MAIL_DIR}/ghi
+generate_message def
+
+$NOTMUCH new
+
+echo "### Testing \"notmuch new\" with two new directories (one mail)---opposite inode order"
+
+rm -rf ${MAIL_DIR}/.notmuch
+mv ${MAIL_DIR}/ghi ${MAIL_DIR}/abc
+rm ${MAIL_DIR}/def/*
+generate_message abc
+
+$NOTMUCH new
+
+echo "### Testing \"notmuch new\" with 1 old message moved into the mail store"
+rm -rf ${MAIL_DIR}/* ${MAIL_DIR}/.notmuch
+generate_message
+tmp_msg_filename=tmp/$gen_msg_filename
+mkdir -p $(dirname $tmp_msg_filename)
+mv $gen_msg_filename $tmp_msg_filename
+do_sleep
+$NOTMUCH new > /dev/null
+do_sleep
+mv $tmp_msg_filename $gen_msg_filename
+$NOTMUCH new
+
+echo "### Testing \"notmuch new\" with 1 renamed message"
+
+do_sleep
+generate_message
+$NOTMUCH new > /dev/null
+do_sleep
+mv $gen_msg_filename ${gen_msg_filename}-renamed
+$NOTMUCH new
+
+echo "### Testing \"notmuch new\" with 1 deleted message"
+
+do_sleep
+rm ${gen_msg_filename}-renamed
+$NOTMUCH new
+
+echo "### Testing \"notmuch new\" with a new directory with 3 messages"
+
+do_sleep
+generate_message dir
+generate_message dir
+generate_message dir
+
+$NOTMUCH new
+
+echo "### Testing \"notmuch new\" with a renamed directory of 3 messages"
+
+do_sleep
+mv ${MAIL_DIR}/dir ${MAIL_DIR}/dir-renamed
+
+$NOTMUCH new
+
+echo "### Testing \"notmuch new\" with a deleted directory of 3 messages"
+
+do_sleep
+rm -rf ${MAIL_DIR}/dir-renamed
+
+$NOTMUCH new
+
+echo "### Testing \"notmuch new\" with a new directory with 3 messages (tail of list)"
+
+do_sleep
+generate_message zzz
+generate_message zzz
+generate_message zzz
+
+$NOTMUCH new
+
+echo "### Testing \"notmuch new\" with a deleted directory of 3 messages (tail of list)"
+
+do_sleep
+rm -rf ${MAIL_DIR}/zzz
+
+$NOTMUCH new
+
+echo "### Testing \"notmuch new\" with a symlink to an external directory of 1 message"
+
+rm -rf ${MAIL_DIR}/.notmuch
+mv ${MAIL_DIR} ${TEST_DIR}/actual_maildir
+
+mkdir ${MAIL_DIR}
+ln -s ${TEST_DIR}/actual_maildir ${MAIL_DIR}/symlink
+
+$NOTMUCH new
+
+echo "### Testing \"notmuch new\" with a symlink to an external file"
+do_sleep
+generate_message
+external_msg_filename=${TEST_DIR}/external/$(basename $gen_msg_filename)
+mkdir -p $(dirname $external_msg_filename)
+mv $gen_msg_filename $external_msg_filename
+ln -s $external_msg_filename $gen_msg_filename
+
+$NOTMUCH new
+
+echo "### Testing \"notmuch new\" with a two-level directory with 3 files"
+
+do_sleep
+generate_message two/levels
+generate_message two/levels
+generate_message two/levels
+
+$NOTMUCH new
+
+echo "### Testing \"notmuch new\" with deletion of two-level directory (3 files)"
+
+do_sleep
+rm -rf ${MAIL_DIR}/two
+
+$NOTMUCH new
+
+cat <<EOF
+Notmuch test suite complete.
+
+Intermediate state can be examined in:
+	${TEST_DIR}
+EOF
