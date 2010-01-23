@@ -2,8 +2,7 @@ Notmuch - thread-based email index, search and tagging.
 
 Notmuch is a system for indexing, searching, reading, and tagging
 large collections of email messages. It uses the Xapian library to
-provide fast, full-text search of very large collection of email with
-a very convenient search syntax.
+provide fast, full-text search with a convenient search syntax.
 
 Notmuch is free software, released under the GNU General Public
 License version 3 (or later).
