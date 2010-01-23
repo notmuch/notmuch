@@ -273,9 +273,19 @@ add_files_recursive (notmuch_database_t *notmuch,
 
 	entry = fs_entries[i];
 
-	if (entry->d_type != DT_DIR && entry->d_type != DT_LNK
-			&& entry->d_type != DT_UNKNOWN)
+	/* We only want to descend into directories.
+	 * But symlinks can be to directories too, of course.
+	 *
+	 * And if the filesystem doesn't tell us the file type in the
+	 * scandir results, then it might be a directory (and if not,
+	 * then we'll stat and return immediately in the next level of
+	 * recursion). */
+	if (entry->d_type != DT_DIR &&
+	    entry->d_type != DT_LNK &&
+	    entry->d_type != DT_UKNOWN)
+	{
 	    continue;
+	}
 
 	/* Ignore special directories to avoid infinite recursion.
 	 * Also ignore the .notmuch directory and any "tmp" directory
@@ -343,7 +353,13 @@ add_files_recursive (notmuch_database_t *notmuch,
 	}
 
 	/* If we're looking at a symlink, we only want to add it if it
-	 * links to a regular file, (and not to a directory, say). */
+	 * links to a regular file, (and not to a directory, say).
+	 *
+	 * Similarly, if the file is of unknown type (due to filesytem
+	 * limitations), then we also need to look closer.
+	 *
+	 * In either case, a stat does the trick.
+	 */
 	if (entry->d_type == DT_LNK || entry->d_type == DT_UNKNOWN) {
 	    int err;
 
