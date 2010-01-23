@@ -282,7 +282,7 @@ add_files_recursive (notmuch_database_t *notmuch,
 	 * recursion). */
 	if (entry->d_type != DT_DIR &&
 	    entry->d_type != DT_LNK &&
-	    entry->d_type != DT_UKNOWN)
+	    entry->d_type != DT_UNKNOWN)
 	{
 	    continue;
 	}
