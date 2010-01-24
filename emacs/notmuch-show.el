@@ -1006,8 +1006,10 @@ used."
       (erase-buffer)
       (goto-char (point-min))
       (save-excursion
-	(let* ((basic-args (list notmuch-command nil t nil "show" "--entire-thread" thread-id))
-		(args (if query-context (append basic-args (list "and (" query-context ")")) basic-args)))
+	(let* ((basic-args (list notmuch-command nil t nil "show" "--entire-thread" "\'" thread-id))
+		(args (if query-context
+			  (append basic-args (list "and (" query-context ")\'"))
+			(append basic-args (list "\'")))))
 	  (apply 'call-process args)
 	  (when (and (eq (buffer-size) 0) query-context)
 	    (apply 'call-process basic-args)))
