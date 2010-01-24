@@ -178,7 +178,7 @@ let g:notmuch_compose_imaps = {
 
 function! s:NM_cmd_folders(words)
         if len(a:words)
-                throw 'Not exapecting any arguments for folders command.'
+                throw 'Not expecting any arguments for folders command.'
         endif
         let cmd = ['count']
         let disp = []
