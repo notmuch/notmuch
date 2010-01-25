@@ -14,7 +14,7 @@ Package: notmuch
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Enhances: emacs, vim
-Suggests: emacs, vim
+Suggests: emacs, vim, vim-addon-manager
 Description: thread-based email index, search and tagging
  Notmuch is a system for indexing, searching, reading, and tagging
  large collections of email messages. It uses the Xapian library to
