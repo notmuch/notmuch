@@ -55,6 +55,23 @@ do_sleep ()
     sleep 1
 }
 
+NOTMUCH_IGNORED_OUTPUT_REGEXP='^Processed [0-9]*( total)? file|Found [0-9]* total file'
+
+execute_expecting ()
+{
+    args=$1
+    expected=$2
+
+    output=$($NOTMUCH $args | grep -v -E -e "$NOTMUCH_IGNORED_OUTPUT_REGEXP")
+    if [ "$output" = "$expected" ]; then
+	echo "	PASS"
+    else
+	echo "	FAIL"
+	echo "	Expected output: $expected"
+	echo "	Actual output:   $output"
+    fi
+}
+
 TEST_DIR=$(pwd)/test.$$
 MAIL_DIR=${TEST_DIR}/mail
 export NOTMUCH_CONFIG=${TEST_DIR}/notmuch-config
@@ -75,42 +92,42 @@ name=Notmuch Test Suite
 primary_email=test_suite@notmuchmail.org
 EOF
 
-echo "### Testing \"notmuch new\" with no messages"
-$NOTMUCH new
+printf "Testing \"notmuch new\" in several variations:\n"
+printf " No new messages...\t\t"
+execute_expecting new "No new mail."
 
-echo "### Testing \"notmuch new\" with 1 new message"
+printf " Single new message...\t\t"
 do_sleep
 generate_message
-$NOTMUCH new
+execute_expecting new "Added 1 new message to the database."
 
-echo "### Testing \"notmuch new\" with 2 new messages"
+printf " Multiple new messages...\t"
 do_sleep
 generate_message
 generate_message
-$NOTMUCH new
+execute_expecting new "Added 2 new messages to the database."
 
-echo "### Testing \"notmuch new\" with no new messages (and a non-empty database)"
+printf " No new messages (non-empty DB)... "
+execute_expecting new "No new mail."
 
-$NOTMUCH new
-
-echo "### Testing \"notmuch new\" with two new directories (one mail)"
+printf " New directories...\t\t"
 rm -rf ${MAIL_DIR}/* ${MAIL_DIR}/.notmuch
 mkdir ${MAIL_DIR}/def
 mkdir ${MAIL_DIR}/ghi
 generate_message def
 
-$NOTMUCH new
+execute_expecting new "Added 1 new message to the database."
 
-echo "### Testing \"notmuch new\" with two new directories (one mail)---opposite inode order"
+printf " Alternate inode order...\t"
 
 rm -rf ${MAIL_DIR}/.notmuch
 mv ${MAIL_DIR}/ghi ${MAIL_DIR}/abc
 rm ${MAIL_DIR}/def/*
 generate_message abc
 
-$NOTMUCH new
+execute_expecting new "Added 1 new message to the database."
 
-echo "### Testing \"notmuch new\" with 1 old message moved into the mail store"
+printf " Message moved in...\t\t"
 rm -rf ${MAIL_DIR}/* ${MAIL_DIR}/.notmuch
 generate_message
 tmp_msg_filename=tmp/$gen_msg_filename
@@ -120,63 +137,61 @@ do_sleep
 $NOTMUCH new > /dev/null
 do_sleep
 mv $tmp_msg_filename $gen_msg_filename
-$NOTMUCH new
+execute_expecting new "Added 1 new message to the database."
 
-echo "### Testing \"notmuch new\" with 1 renamed message"
+printf " Renamed message...\t\t"
 
 do_sleep
 generate_message
 $NOTMUCH new > /dev/null
 do_sleep
 mv $gen_msg_filename ${gen_msg_filename}-renamed
-$NOTMUCH new
+execute_expecting new "No new mail. Detected 1 file rename."
 
-echo "### Testing \"notmuch new\" with 1 deleted message"
+printf " Deleted message...\t\t"
 
 do_sleep
 rm ${gen_msg_filename}-renamed
-$NOTMUCH new
+execute_expecting new "No new mail. Removed 1 message."
 
-echo "### Testing \"notmuch new\" with a new directory with 3 messages"
+printf " Renamed directory...\t\t"
 
 do_sleep
 generate_message dir
 generate_message dir
 generate_message dir
 
-$NOTMUCH new
-
-echo "### Testing \"notmuch new\" with a renamed directory of 3 messages"
+$NOTMUCH new > /dev/null
 
 do_sleep
 mv ${MAIL_DIR}/dir ${MAIL_DIR}/dir-renamed
 
-$NOTMUCH new
+execute_expecting new "No new mail. Detected 3 file renames."
 
-echo "### Testing \"notmuch new\" with a deleted directory of 3 messages"
+printf " Deleted directory...\t\t"
 
 do_sleep
 rm -rf ${MAIL_DIR}/dir-renamed
 
-$NOTMUCH new
+execute_expecting new "No new mail. Removed 3 messages."
 
-echo "### Testing \"notmuch new\" with a new directory with 3 messages (tail of list)"
+printf " New directory (at end of list)... "
 
 do_sleep
 generate_message zzz
 generate_message zzz
 generate_message zzz
 
-$NOTMUCH new
+execute_expecting new "Added 3 new messages to the database."
 
-echo "### Testing \"notmuch new\" with a deleted directory of 3 messages (tail of list)"
+printf " Deleted directory (end of list)... "
 
 do_sleep
 rm -rf ${MAIL_DIR}/zzz
 
-$NOTMUCH new
+execute_expecting new "No new mail. Removed 3 messages."
 
-echo "### Testing \"notmuch new\" with a symlink to an external directory of 1 message"
+printf " New symlink to directory...\t"
 
 rm -rf ${MAIL_DIR}/.notmuch
 mv ${MAIL_DIR} ${TEST_DIR}/actual_maildir
@@ -184,9 +199,9 @@ mv ${MAIL_DIR} ${TEST_DIR}/actual_maildir
 mkdir ${MAIL_DIR}
 ln -s ${TEST_DIR}/actual_maildir ${MAIL_DIR}/symlink
 
-$NOTMUCH new
+execute_expecting new "Added 1 new message to the database."
 
-echo "### Testing \"notmuch new\" with a symlink to an external file"
+printf " New symlink to a file...\t"
 do_sleep
 generate_message
 external_msg_filename=${TEST_DIR}/external/$(basename $gen_msg_filename)
@@ -194,23 +209,23 @@ mkdir -p $(dirname $external_msg_filename)
 mv $gen_msg_filename $external_msg_filename
 ln -s $external_msg_filename $gen_msg_filename
 
-$NOTMUCH new
+execute_expecting new "Added 1 new message to the database."
 
-echo "### Testing \"notmuch new\" with a two-level directory with 3 files"
+printf " New two-level directory...\t"
 
 do_sleep
 generate_message two/levels
 generate_message two/levels
 generate_message two/levels
 
-$NOTMUCH new
+execute_expecting new "Added 3 new messages to the database."
 
-echo "### Testing \"notmuch new\" with deletion of two-level directory (3 files)"
+printf " Deleted two-level directory... "
 
 do_sleep
 rm -rf ${MAIL_DIR}/two
 
-$NOTMUCH new
+execute_expecting new "No new mail. Removed 3 messages."
 
 cat <<EOF
 Notmuch test suite complete.
