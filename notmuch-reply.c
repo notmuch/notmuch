@@ -208,18 +208,26 @@ mailing_list_munged_reply_to (notmuch_message_t *message)
 
     header = notmuch_message_get_header (message, "reply-to");
     list = internet_address_list_parse_string (header);
+
     if (internet_address_list_length (list) != 1)
 	return 0;
+
     address = internet_address_list_get_address (list, 0);
     if (INTERNET_ADDRESS_IS_GROUP (address))
 	return 0;
+
     mailbox = INTERNET_ADDRESS_MAILBOX (address);
     addr = internet_address_mailbox_get_addr (mailbox);
+
     /* Note that strcasestr() is a GNU extension, strstr() might be sufficient */
     if (strcasestr (notmuch_message_get_header (message, "to"), addr) == 0 ||
 	strcasestr (notmuch_message_get_header (message, "cc"), addr) == 0)
+    {
 	return 1;
-    return 0; }
+    }
+
+    return 0;
+}
 
 /* Augments the recipients of reply from the headers of message.
  *
@@ -271,6 +279,7 @@ add_recipients_from_message (GMimeMessage *reply,
 	if (from_addr == NULL)
 	    from_addr = addr;
     }
+
     return from_addr;
 }
 
