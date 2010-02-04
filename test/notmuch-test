@@ -34,12 +34,31 @@ find_notmuch_binary ()
 #
 #	Generate the message in directory 'directory/of/choice' within
 #	the mail store. The directory will be created if necessary.
+#
+#  [body]=text
+#
+#	Text to use as the body of the email message
+#
+#  '[from]="Some User <user@example.com>"'
+#  '[to]="Some User <user@example.com>"'
+#  '[subject]="Subject of email message"'
+#
+#	Values for email headers. If not provided, default values will
+#	be generated instead.
+#
+#  '[cc]="Some User <user@example.com>"'
+#  [in-reply-to]=<message-id>
+#
+#	Additional values for email headers. If these are not provided
+#	then the relevant headers will simply not appear in the
+#	message.
 gen_msg_cnt=0
 gen_msg_filename=""
 generate_message ()
 {
     # This is our (bash-specific) magic for doing named parameters
     local -A template="($@)"
+    local additional_headers
 
     gen_msg_cnt=$((gen_msg_cnt + 1))
     gen_msg_name=msg-$(printf "%03d" $gen_msg_cnt)
@@ -51,14 +70,41 @@ generate_message ()
 	mkdir -p $(dirname $gen_msg_filename)
     fi
 
-cat <<EOF >$gen_msg_filename
-From: Notmuch Test Suite <test_suite@notmuchmail.org>
-To: Notmuch Test Suite <test_suite@notmuchmail.org>
-Message-Id: <msg-${gen_msg_cnt}@notmuch-test-suite>
-Subject: Test message ${gen_msg_filename}
-Date: Tue, 05 Jan 2010 15:43:57 -0800
+    if [ -z "${template[body]}" ]; then
+	template[body]="This is just a test message at ${gen_msg_filename}"
+    fi
 
-This is just a test message at ${gen_msg_filename}
+    if [ -z "${template[from]}" ]; then
+	template[from]="Notmuch Test Suite <test_suite@notmuchmail.org>"
+    fi
+
+    if [ -z "${template[to]}" ]; then
+	template[to]="Notmuch Test Suite <test_suite@notmuchmail.org>"
+    fi
+
+    if [ -z "${template[subject]}" ]; then
+	template[subject]="Test message ${gen_msg_filename}"
+    fi
+
+    additional_headers=""
+    if [ ! -z "${template[cc]}" ]; then
+	additional_headers="Cc: ${template[cc]}
+${additional_headers}"
+    fi
+
+    if [ ! -z "${template[in-reply-to]}" ]; then
+	additional_headers="In-Reply-To: ${template[in-reply-to]}
+${additional_headers}"
+    fi
+
+cat <<EOF >$gen_msg_filename
+From: ${template[from]}
+To: ${template[to]}
+Message-Id: <msg-${gen_msg_cnt}@notmuch-test-suite>
+Subject: ${template[subject]}
+Date: Tue, 05 Jan 2010 15:43:57 -0800
+${additional_headers}
+${template[body]}
 EOF
 }
 
