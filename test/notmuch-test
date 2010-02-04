@@ -20,6 +20,15 @@ find_notmuch_binary ()
     echo notmuch
 }
 
+increment_mtime_amount=0
+increment_mtime ()
+{
+    dir=$1
+
+    increment_mtime_amount=$((increment_mtime_amount + 1))
+    touch -d "+${increment_mtime_amount} seconds" $dir
+}
+
 # Generate a new message in the mail directory, with
 # a unique message ID and subject.
 #
@@ -108,9 +117,8 @@ ${template[body]}
 EOF
 }
 
-do_sleep ()
-{
-    sleep 1
+    # Ensure that the mtime of the containing directory is updated
+    increment_mtime $(dirname ${gen_msg_filename})
 }
 
 NOTMUCH_IGNORED_OUTPUT_REGEXP='^Processed [0-9]*( total)? file|Found [0-9]* total file'
@@ -155,12 +163,10 @@ printf " No new messages...\t\t"
 execute_expecting new "No new mail."
 
 printf " Single new message...\t\t"
-do_sleep
 generate_message
 execute_expecting new "Added 1 new message to the database."
 
 printf " Multiple new messages...\t"
-do_sleep
 generate_message
 generate_message
 execute_expecting new "Added 2 new messages to the database."
@@ -191,51 +197,48 @@ generate_message
 tmp_msg_filename=tmp/$gen_msg_filename
 mkdir -p $(dirname $tmp_msg_filename)
 mv $gen_msg_filename $tmp_msg_filename
-do_sleep
+increment_mtime ${MAIL_DIR}
 $NOTMUCH new > /dev/null
-do_sleep
 mv $tmp_msg_filename $gen_msg_filename
+increment_mtime ${MAIL_DIR}
 execute_expecting new "Added 1 new message to the database."
 
 printf " Renamed message...\t\t"
 
-do_sleep
 generate_message
 $NOTMUCH new > /dev/null
-do_sleep
 mv $gen_msg_filename ${gen_msg_filename}-renamed
+increment_mtime ${MAIL_DIR}
 execute_expecting new "No new mail. Detected 1 file rename."
 
 printf " Deleted message...\t\t"
 
-do_sleep
 rm ${gen_msg_filename}-renamed
+increment_mtime ${MAIL_DIR}
 execute_expecting new "No new mail. Removed 1 message."
 
 printf " Renamed directory...\t\t"
 
-do_sleep
 generate_message [dir]=dir
 generate_message [dir]=dir
 generate_message [dir]=dir
 
 $NOTMUCH new > /dev/null
 
-do_sleep
 mv ${MAIL_DIR}/dir ${MAIL_DIR}/dir-renamed
+increment_mtime ${MAIL_DIR}
 
 execute_expecting new "No new mail. Detected 3 file renames."
 
 printf " Deleted directory...\t\t"
 
-do_sleep
 rm -rf ${MAIL_DIR}/dir-renamed
+increment_mtime ${MAIL_DIR}
 
 execute_expecting new "No new mail. Removed 3 messages."
 
 printf " New directory (at end of list)... "
 
-do_sleep
 generate_message [dir]=zzz
 generate_message [dir]=zzz
 generate_message [dir]=zzz
@@ -244,8 +247,8 @@ execute_expecting new "Added 3 new messages to the database."
 
 printf " Deleted directory (end of list)... "
 
-do_sleep
 rm -rf ${MAIL_DIR}/zzz
+increment_mtime ${MAIL_DIR}
 
 execute_expecting new "No new mail. Removed 3 messages."
 
@@ -260,18 +263,16 @@ ln -s ${TEST_DIR}/actual_maildir ${MAIL_DIR}/symlink
 execute_expecting new "Added 1 new message to the database."
 
 printf " New symlink to a file...\t"
-do_sleep
 generate_message
 external_msg_filename=${TEST_DIR}/external/$(basename $gen_msg_filename)
 mkdir -p $(dirname $external_msg_filename)
 mv $gen_msg_filename $external_msg_filename
 ln -s $external_msg_filename $gen_msg_filename
-
+increment_mtime ${MAIL_DIR}
 execute_expecting new "Added 1 new message to the database."
 
 printf " New two-level directory...\t"
 
-do_sleep
 generate_message [dir]=two/levels
 generate_message [dir]=two/levels
 generate_message [dir]=two/levels
@@ -280,8 +281,8 @@ execute_expecting new "Added 3 new messages to the database."
 
 printf " Deleted two-level directory... "
 
-do_sleep
 rm -rf ${MAIL_DIR}/two
+increment_mtime ${MAIL_DIR}
 
 execute_expecting new "No new mail. Removed 3 messages."
 
