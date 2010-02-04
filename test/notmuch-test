@@ -32,8 +32,9 @@ increment_mtime ()
 # Generate a new message in the mail directory, with
 # a unique message ID and subject.
 #
-# The filename of the message generated is available as
-# $gen_msg_filename
+# After this function returns, the filename of the generated message
+# is available as $gen_msg_filename and the message ID is available as
+# $gen_msg_id .
 #
 # This function supports named parameters with the bash syntax for
 # assigning a value to an associative array ([name]=value). The
@@ -51,6 +52,7 @@ increment_mtime ()
 #  '[from]="Some User <user@example.com>"'
 #  '[to]="Some User <user@example.com>"'
 #  '[subject]="Subject of email message"'
+#  '[date]="RFC 822 Date"'
 #
 #	Values for email headers. If not provided, default values will
 #	be generated instead.
@@ -63,6 +65,7 @@ increment_mtime ()
 #	message.
 gen_msg_cnt=0
 gen_msg_filename=""
+gen_msg_id=""
 generate_message ()
 {
     # This is our (bash-specific) magic for doing named parameters
@@ -71,6 +74,7 @@ generate_message ()
 
     gen_msg_cnt=$((gen_msg_cnt + 1))
     gen_msg_name=msg-$(printf "%03d" $gen_msg_cnt)
+    gen_msg_id="${gen_msg_name}@notmuch-test-suite"
 
     if [ -z "${template[dir]}" ]; then
 	gen_msg_filename="${MAIL_DIR}/$gen_msg_name"
@@ -95,6 +99,10 @@ generate_message ()
 	template[subject]="Test message ${gen_msg_filename}"
     fi
 
+    if [ -z "${template[date]}" ]; then
+	template[date]="Tue, 05 Jan 2010 15:43:57 -0800"
+    fi
+
     additional_headers=""
     if [ ! -z "${template[cc]}" ]; then
 	additional_headers="Cc: ${template[cc]}
@@ -109,13 +117,12 @@ ${additional_headers}"
 cat <<EOF >$gen_msg_filename
 From: ${template[from]}
 To: ${template[to]}
-Message-Id: <msg-${gen_msg_cnt}@notmuch-test-suite>
+Message-Id: <${gen_msg_id}>
 Subject: ${template[subject]}
-Date: Tue, 05 Jan 2010 15:43:57 -0800
+Date: ${template[date]}
 ${additional_headers}
 ${template[body]}
 EOF
-}
 
     # Ensure that the mtime of the containing directory is updated
     increment_mtime $(dirname ${gen_msg_filename})
@@ -285,6 +292,26 @@ rm -rf ${MAIL_DIR}/two
 increment_mtime ${MAIL_DIR}
 
 execute_expecting new "No new mail. Removed 3 messages."
+
+printf "\nTesting \"notmuch reply\" in several variations:\n"
+
+printf " Basic reply...\t\t\t"
+generate_message '[from]="Sender <sender@example.com>"' \
+                 [to]=test_suite@notmuchmail.org \
+                 [subject]=notmuch-reply-test \
+                 '[date]="Tue, 05 Jan 2010 15:43:56 -0800"' \
+                 [body]=notmuch-reply-test    
+
+$NOTMUCH new > /dev/null
+execute_expecting "reply id:${gen_msg_id}" "From: Notmuch Test Suite <test_suite@notmuchmail.org>
+Subject: Re: notmuch-reply-test
+To: Sender <sender@example.com>
+Bcc: test_suite@notmuchmail.org
+In-Reply-To: <${gen_msg_id}>
+References:  <${gen_msg_id}>
+
+On Tue, 05 Jan 2010 15:43:56 -0800, Sender <sender@example.com> wrote:
+> notmuch-reply-test"
 
 cat <<EOF
 Notmuch test suite complete.
