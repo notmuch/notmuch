@@ -220,8 +220,8 @@ mailing_list_munged_reply_to (notmuch_message_t *message)
     addr = internet_address_mailbox_get_addr (mailbox);
 
     /* Note that strcasestr() is a GNU extension, strstr() might be sufficient */
-    if (strcasestr (notmuch_message_get_header (message, "to"), addr) == 0 ||
-	strcasestr (notmuch_message_get_header (message, "cc"), addr) == 0)
+    if (strcasestr (notmuch_message_get_header (message, "to"), addr) != 0 ||
+	strcasestr (notmuch_message_get_header (message, "cc"), addr) != 0)
     {
 	return 1;
     }
