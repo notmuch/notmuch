@@ -320,6 +320,24 @@ References:  <${gen_msg_id}>
 On Tue, 05 Jan 2010 15:43:56 -0800, Sender <sender@example.com> wrote:
 > basic reply test"
 
+printf " Multiple recipients...\t\t"
+generate_message '[from]="Sender <sender@example.com>"' \
+                 '[to]="test_suite@notmuchmail.org, Someone Else <someone@example.com>"' \
+                 [subject]=notmuch-reply-test \
+                 '[date]="Tue, 05 Jan 2010 15:43:56 -0800"' \
+                 '[body]="Multiple recipients"'
+
+$NOTMUCH new > /dev/null
+execute_expecting "reply id:${gen_msg_id}" "From: Notmuch Test Suite <test_suite@notmuchmail.org>
+Subject: Re: notmuch-reply-test
+To: Sender <sender@example.com>, Someone Else <someone@example.com>
+Bcc: test_suite@notmuchmail.org
+In-Reply-To: <${gen_msg_id}>
+References:  <${gen_msg_id}>
+
+On Tue, 05 Jan 2010 15:43:56 -0800, Sender <sender@example.com> wrote:
+> Multiple recipients"
+
 printf " Reply with CC...\t\t"
 generate_message '[from]="Sender <sender@example.com>"' \
                  [to]=test_suite@notmuchmail.org \
