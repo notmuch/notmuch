@@ -58,6 +58,7 @@ increment_mtime ()
 #	be generated instead.
 #
 #  '[cc]="Some User <user@example.com>"'
+#  [reply-to]=some-address
 #  [in-reply-to]=<message-id>
 #
 #	Additional values for email headers. If these are not provided
@@ -104,13 +105,18 @@ generate_message ()
     fi
 
     additional_headers=""
-    if [ ! -z "${template[cc]}" ]; then
-	additional_headers="Cc: ${template[cc]}
+    if [ ! -z "${template[reply-to]}" ]; then
+	additional_headers="Reply-To: ${template[reply-to]}
 ${additional_headers}"
     fi
 
     if [ ! -z "${template[in-reply-to]}" ]; then
 	additional_headers="In-Reply-To: ${template[in-reply-to]}
+${additional_headers}"
+    fi
+
+    if [ ! -z "${template[cc]}" ]; then
+	additional_headers="Cc: ${template[cc]}
 ${additional_headers}"
     fi
 
@@ -301,7 +307,7 @@ generate_message '[from]="Sender <sender@example.com>"' \
                  [to]=test_suite@notmuchmail.org \
                  [subject]=notmuch-reply-test \
                  '[date]="Tue, 05 Jan 2010 15:43:56 -0800"' \
-                 [body]=notmuch-reply-test    
+                 '[body]="basic reply test"'
 
 $NOTMUCH new > /dev/null
 execute_expecting "reply id:${gen_msg_id}" "From: Notmuch Test Suite <test_suite@notmuchmail.org>
@@ -312,14 +318,14 @@ In-Reply-To: <${gen_msg_id}>
 References:  <${gen_msg_id}>
 
 On Tue, 05 Jan 2010 15:43:56 -0800, Sender <sender@example.com> wrote:
-> notmuch-reply-test"
+> basic reply test"
 
-printf " Reply from alternate address...\t"
+printf " Reply from alternate address..."
 generate_message '[from]="Sender <sender@example.com>"' \
                  [to]=test_suite_other@notmuchmail.org \
                  [subject]=notmuch-reply-test \
                  '[date]="Tue, 05 Jan 2010 15:43:56 -0800"' \
-                 [body]=notmuch-reply-test    
+                 '[body]="reply from alternate address"'
 
 $NOTMUCH new > /dev/null
 execute_expecting "reply id:${gen_msg_id}" "From: Notmuch Test Suite <test_suite_other@notmuchmail.org>
@@ -330,7 +336,26 @@ In-Reply-To: <${gen_msg_id}>
 References:  <${gen_msg_id}>
 
 On Tue, 05 Jan 2010 15:43:56 -0800, Sender <sender@example.com> wrote:
-> notmuch-reply-test"
+> reply from alternate address"
+
+printf " Support for Reply-To...\t"
+generate_message '[from]="Sender <sender@example.com>"' \
+                 [to]=test_suite@notmuchmail.org \
+                 [subject]=notmuch-reply-test \
+                 '[date]="Tue, 05 Jan 2010 15:43:56 -0800"' \
+                 '[body]="support for reply-to"' \
+                 '[reply-to]="Sender <elsewhere@example.com>"'
+
+$NOTMUCH new > /dev/null
+execute_expecting "reply id:${gen_msg_id}" "From: Notmuch Test Suite <test_suite@notmuchmail.org>
+Subject: Re: notmuch-reply-test
+To: Sender <elsewhere@example.com>
+Bcc: test_suite@notmuchmail.org
+In-Reply-To: <${gen_msg_id}>
+References:  <${gen_msg_id}>
+
+On Tue, 05 Jan 2010 15:43:56 -0800, Sender <sender@example.com> wrote:
+> support for reply-to"
 
 cat <<EOF
 Notmuch test suite complete.
