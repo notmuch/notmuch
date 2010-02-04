@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 set -e
 
 find_notmuch_binary ()
@@ -25,17 +25,29 @@ find_notmuch_binary ()
 #
 # The filename of the message generated is available as
 # $gen_msg_filename
+#
+# This function supports named parameters with the bash syntax for
+# assigning a value to an associative array ([name]=value). The
+# supported parameters are:
+#
+#  [dir]=directory/of/choice
+#
+#	Generate the message in directory 'directory/of/choice' within
+#	the mail store. The directory will be created if necessary.
 gen_msg_cnt=0
 gen_msg_filename=""
 generate_message ()
 {
+    # This is our (bash-specific) magic for doing named parameters
+    local -A template="($@)"
+
     gen_msg_cnt=$((gen_msg_cnt + 1))
     gen_msg_name=msg-$(printf "%03d" $gen_msg_cnt)
 
-    if [ "$#" = "0" ]; then
+    if [ -z "${template[dir]}" ]; then
 	gen_msg_filename="${MAIL_DIR}/$gen_msg_name"
     else
-	gen_msg_filename="${MAIL_DIR}/$1/$gen_msg_name"
+	gen_msg_filename="${MAIL_DIR}/${template[dir]}/$gen_msg_name"
 	mkdir -p $(dirname $gen_msg_filename)
     fi
 
@@ -114,7 +126,7 @@ printf " New directories...\t\t"
 rm -rf ${MAIL_DIR}/* ${MAIL_DIR}/.notmuch
 mkdir ${MAIL_DIR}/def
 mkdir ${MAIL_DIR}/ghi
-generate_message def
+generate_message [dir]=def
 
 execute_expecting new "Added 1 new message to the database."
 
@@ -123,7 +135,7 @@ printf " Alternate inode order...\t"
 rm -rf ${MAIL_DIR}/.notmuch
 mv ${MAIL_DIR}/ghi ${MAIL_DIR}/abc
 rm ${MAIL_DIR}/def/*
-generate_message abc
+generate_message [dir]=abc
 
 execute_expecting new "Added 1 new message to the database."
 
@@ -157,9 +169,9 @@ execute_expecting new "No new mail. Removed 1 message."
 printf " Renamed directory...\t\t"
 
 do_sleep
-generate_message dir
-generate_message dir
-generate_message dir
+generate_message [dir]=dir
+generate_message [dir]=dir
+generate_message [dir]=dir
 
 $NOTMUCH new > /dev/null
 
@@ -178,9 +190,9 @@ execute_expecting new "No new mail. Removed 3 messages."
 printf " New directory (at end of list)... "
 
 do_sleep
-generate_message zzz
-generate_message zzz
-generate_message zzz
+generate_message [dir]=zzz
+generate_message [dir]=zzz
+generate_message [dir]=zzz
 
 execute_expecting new "Added 3 new messages to the database."
 
@@ -214,9 +226,9 @@ execute_expecting new "Added 1 new message to the database."
 printf " New two-level directory...\t"
 
 do_sleep
-generate_message two/levels
-generate_message two/levels
-generate_message two/levels
+generate_message [dir]=two/levels
+generate_message [dir]=two/levels
+generate_message [dir]=two/levels
 
 execute_expecting new "Added 3 new messages to the database."
 
