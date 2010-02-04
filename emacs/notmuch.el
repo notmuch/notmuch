@@ -526,6 +526,35 @@ This function advances the next thread when finished."
 		       notmuch-search-target-line)
 		  (goto-line notmuch-search-target-line)))))))
 
+(defcustom notmuch-search-line-faces nil
+  "Tag/face mapping for line highlighting in notmuch-search.
+
+Here is an example of how to color search results based on tags.
+(the following text would be placed in your ~/.emacs file):
+
+(setq notmuch-search-line-faces '((\"delete\" . '(:foreground \"red\"))
+                                 (\"unread\" . '(:foreground \"green\"))))
+
+Order matters: for lines with multiple tags, the the first
+matching will be applied."
+  :type '(alist :key-type (string) :value-type (list))
+  :group 'notmuch)
+
+(defun notmuch-search-color-line (start end line-tag-list)
+  "Colorize lines in notmuch-show based on tags"
+  (if notmuch-search-line-faces
+      (let ((overlay (make-overlay start end))
+	    (tags-faces (copy-alist notmuch-search-line-faces)))
+	(while tags-faces
+	  (let* ((tag-face (car tags-faces))
+		 (tag (car tag-face))
+		 (face (cdr tag-face)))
+	    (cond ((member tag line-tag-list)
+		   (overlay-put overlay 'face face)
+		   (setq tags-faces nil))
+		  (t
+		   (setq tags-faces (cdr tags-faces)))))))))
+
 (defun notmuch-search-process-filter (proc string)
   "Process and filter the output of \"notmuch search\""
   (let ((buffer (process-buffer proc))
@@ -544,13 +573,15 @@ This function advances the next thread when finished."
 			   (authors (match-string 4 string))
 			   (authors-length (length authors))
 			   (subject (match-string 5 string))
-			   (tags (match-string 6 string)))
+			   (tags (match-string 6 string))
+			   (tag-list (if tags (save-match-data (split-string tags)))))
 		      (if (> authors-length notmuch-search-authors-width)
 			  (set 'authors (concat (substring authors 0 (- notmuch-search-authors-width 3)) "...")))
 		      (goto-char (point-max))
 		      (let ((beg (point-marker))
 			    (format-string (format "%%s %%-7s %%-%ds %%s (%%s)\n" notmuch-search-authors-width)))
 			(insert (format format-string date count authors subject tags))
+			(notmuch-search-color-line beg (point-marker) tag-list)
 			(put-text-property beg (point-marker) 'notmuch-search-thread-id thread-id)
 			(put-text-property beg (point-marker) 'notmuch-search-authors authors)
 			(put-text-property beg (point-marker) 'notmuch-search-subject subject)
