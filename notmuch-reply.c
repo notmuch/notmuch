@@ -207,6 +207,9 @@ mailing_list_munged_reply_to (notmuch_message_t *message)
     InternetAddressMailbox *mailbox;
 
     header = notmuch_message_get_header (message, "reply-to");
+    if (*header == '\0')
+	return 0;
+
     list = internet_address_list_parse_string (header);
 
     if (internet_address_list_length (list) != 1)
