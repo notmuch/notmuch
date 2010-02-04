@@ -188,18 +188,11 @@ add_recipients_for_string (GMimeMessage *message,
     return add_recipients_for_address_list (message, config, type, list);
 }
 
-/* Some mailing lists munge the Reply-To header despite it being A Bad
- * Thing, see http://www.unicom.com/pw/reply-to-harmful.html
- *
- * This function detects such munging so that reasonable headers can be
- * generated anyway.  Returns 1 if munged, else 0.
- *
- * The current logic is fairly naive, Reply-To is diagnosed as munged if
- * it contains exactly one address, and this address is also present in
- * the To or Cc fields.
+/* Does the address in the Reply-To header of 'message' already appear
+ * in either the 'To' or 'Cc' header of the message?
  */
 static int
-mailing_list_munged_reply_to (notmuch_message_t *message)
+reply_to_header_is_redundant (notmuch_message_t *message)
 {
     const char *header, *addr;
     InternetAddressList *list;
@@ -254,14 +247,18 @@ add_recipients_from_message (GMimeMessage *reply,
     const char *from_addr = NULL;
     unsigned int i;
 
-    /* When we have detected Reply-To munging, we ignore the Reply-To
-     * field (because it appears in the To or Cc headers) and use the
-     * From header so that person will get pinged and will actually
-     * receive the response if not subscribed to the list.  Note that
-     * under no circumstances does this fail to reply to the address in
-     * the Reply-To header.
+    /* Some mailing lists munge the Reply-To header despite it being A Bad
+     * Thing, see http://www.unicom.com/pw/reply-to-harmful.html
+     *
+     * The munging is easy to detect, because it results in a
+     * redundant reply-to header, (with an address that already exists
+     * in either To or Cc). So in this case, we ignore the Reply-To
+     * field and use the From header. Thie ensures the original sender
+     * will get the reply even if not subscribed to the list. Note
+     * that the address in the Reply-To header will always appear in
+     * the reply.
      */
-    if (mailing_list_munged_reply_to (message)) {
+    if (reply_to_header_is_redundant (message)) {
 	reply_to_map[0].header = "from";
 	reply_to_map[0].fallback = NULL;
     }
