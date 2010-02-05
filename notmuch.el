@@ -581,7 +581,7 @@ which this thread was originally shown."
   (redisplay t))
 
 (defun notmuch-show-toggle-current-body ()
-  "Toggle the current message body."
+  "Toggle the display of the current message body."
   (interactive)
   (save-excursion
     (notmuch-show-move-to-current-message-summary-line)
@@ -591,6 +591,7 @@ which this thread was originally shown."
   )
 
 (defun notmuch-show-toggle-current-header ()
+  "Toggle the display of the current message header."
   (interactive)
   (save-excursion
     (notmuch-show-move-to-current-message-summary-line)
