@@ -146,13 +146,13 @@ add_message ()
 }
 
 NOTMUCH_IGNORED_OUTPUT_REGEXP='^Processed [0-9]*( total)? file|Found [0-9]* total file'
-
+NOTMUCH_THREAD_ID_SQUELCH='s/thread:................................/thread:XXX/'
 execute_expecting ()
 {
     args=$1
     expected=$2
 
-    output=$($NOTMUCH $args | grep -v -E -e "$NOTMUCH_IGNORED_OUTPUT_REGEXP")
+    output=$($NOTMUCH $args | grep -v -E -e "$NOTMUCH_IGNORED_OUTPUT_REGEXP" | sed -e "$NOTMUCH_THREAD_ID_SQUELCH" || true)
     if [ "$output" = "$expected" ]; then
 	echo "	PASS"
     else
@@ -310,6 +310,62 @@ rm -rf ${MAIL_DIR}/two
 increment_mtime ${MAIL_DIR}
 
 execute_expecting new "No new mail. Removed 3 messages."
+
+printf "\nTesting \"notmuch search\" in several variations:\n"
+
+printf " Search body...\t\t"
+add_message '[subject]="body search"' '[date]="Sat, 01 Jan 2000 12:00:00 -0000"' [body]=bodysearchtest
+execute_expecting "search bodysearchtest" "thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; body search (inbox unread)"
+
+printf " Search by from:...\t\t"
+add_message '[subject]="search by from"' '[date]="Sat, 01 Jan 2000 12:00:00 -0000"' [from]=searchbyfrom
+execute_expecting "search from:searchbyfrom" "thread:XXX   2000-01-01 [1/1] searchbyfrom; search by from (inbox unread)"
+
+printf " Search by to:...\t\t"
+add_message '[subject]="search by to"' '[date]="Sat, 01 Jan 2000 12:00:00 -0000"' [to]=searchbyto
+execute_expecting "search to:searchbyto" "thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; search by to (inbox unread)"
+
+printf " Search by subject:...\t\t"
+add_message [subject]=subjectsearchtest '[date]="Sat, 01 Jan 2000 12:00:00 -0000"'
+execute_expecting "search subject:subjectsearchtest" "thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; subjectsearchtest (inbox unread)"
+
+printf " Search by id:...\t\t"
+add_message '[subject]="search by id"' '[date]="Sat, 01 Jan 2000 12:00:00 -0000"'
+execute_expecting "search id:${gen_msg_id}" "thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; search by id (inbox unread)"
+
+printf " Search by tag:...\t\t"
+add_message '[subject]="search by tag"' '[date]="Sat, 01 Jan 2000 12:00:00 -0000"'
+$NOTMUCH tag +searchbytag id:${gen_msg_id}
+execute_expecting "search tag:searchbytag" "thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; search by tag (inbox searchbytag unread)"
+
+printf " Search by thread:...\t\t"
+add_message '[subject]="search by thread"' '[date]="Sat, 01 Jan 2000 12:00:00 -0000"'
+thread_id=$($NOTMUCH search id:${gen_msg_id} | sed -e 's/thread:\([a-f0-9]*\).*/\1/')
+execute_expecting "search thread:${thread_id}" "thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; search by thread (inbox unread)"
+
+printf " Search body (phrase)...\t"
+add_message '[subject]="body search (phrase)"' '[date]="Sat, 01 Jan 2000 12:00:00 -0000"' '[body]="body search (phrase)"'
+execute_expecting "search 'body search (phrase)'" "thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; body search (phrase) (inbox unread)"
+
+printf " Search by from: (address)...\t"
+add_message '[subject]="search by from (address)"' '[date]="Sat, 01 Jan 2000 12:00:00 -0000"' [from]=searchbyfrom@example.com
+execute_expecting "search from:searchbyfrom@example.com" "thread:XXX   2000-01-01 [1/1] searchbyfrom@example.com; search by from (address) (inbox unread)"
+
+printf " Search by from: (name)...\t"
+add_message '[subject]="search by from (name)"' '[date]="Sat, 01 Jan 2000 12:00:00 -0000"' '[from]="Search By From Name <test@example.com>"'
+execute_expecting "search from:'Search By From Name'" "thread:XXX   2000-01-01 [1/1] Search By From Name; search by from (name) (inbox unread)"
+
+printf " Search by to: (address)...\t"
+add_message '[subject]="search by to (address)"' '[date]="Sat, 01 Jan 2000 12:00:00 -0000"' [to]=searchbyto@example.com
+execute_expecting "search to:searchbyto@example.com" "thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; search by to (address) (inbox unread)"
+
+printf " Search by to: (name)...\t"
+add_message '[subject]="search by to (name)"' '[date]="Sat, 01 Jan 2000 12:00:00 -0000"' '[to]="Search By To Name <test@example.com>"'
+execute_expecting "search to:'Search By To Name'" "thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; search by to (name) (inbox unread)"
+
+printf " Search by subject: (phrase)..."
+add_message '[subject]="subject search test (phrase)"' '[date]="Sat, 01 Jan 2000 12:00:00 -0000"'
+execute_expecting "search subject:'subject search test (phrase)'" "thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; subject search test (phrase) (inbox unread)"
 
 printf "\nTesting \"notmuch reply\" in several variations:\n"
 
