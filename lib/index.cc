@@ -20,8 +20,233 @@
 #include "notmuch-private.h"
 
 #include <gmime/gmime.h>
+#include <gmime/gmime-filter.h>
 
 #include <xapian.h>
+
+/* Oh, how I wish that gobject didn't require so much noisy boilerplate! */
+#define NOTMUCH_TYPE_FILTER_DISCARD_UUENCODE            (notmuch_filter_discard_uuencode_get_type ())
+#define NOTMUCH_FILTER_DISCARD_UUENCODE(obj)            (G_TYPE_CHECK_INSTANCE_CAST ((obj), NOTMUCH_TYPE_FILTER_DISCARD_UUENCODE, NotmuchFilterDiscardUuencode))
+#define NOTMUCH_FILTER_DISCARD_UUENCODE_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST ((klass), NOTMUCH_TYPE_FILTER_DISCARD_UUENCODE, NotmuchFilterDiscardUuencodeClass))
+#define NOTMUCH_IS_FILTER_DISCARD_UUENCODE(obj)         (G_TYPE_CHECK_INSTANCE_TYPE ((obj), NOTMUCH_TYPE_FILTER_DISCARD_UUENCODE))
+#define NOTMUCH_IS_FILTER_DISCARD_UUENCODE_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), NOTMUCH_TYPE_FILTER_DISCARD_UUENCODE))
+#define NOTMUCH_FILTER_DISCARD_UUENCODE_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS ((obj), NOTMUCH_TYPE_FILTER_DISCARD_UUENCODE, NotmuchFilterDiscardUuencodeClass))
+
+typedef struct _NotmuchFilterDiscardUuencode NotmuchFilterDiscardUuencode;
+typedef struct _NotmuchFilterDiscardUuencodeClass NotmuchFilterDiscardUuencodeClass;
+
+/**
+ * NotmuchFilterDiscardUuencode:
+ *
+ * @parent_object: parent #GMimeFilter
+ * @encode: encoding vs decoding
+ * @state: State of the parser
+ *
+ * A filter to discard uuencoded portions of an email.
+ *
+ * A uuencoded portion is identified as beginning with a line
+ * matching:
+ *
+ *	begin [0-7][0-7][0-7] .*
+ *
+ * After that detection, and beginning with the following line,
+ * characters will be discarded as long as the first character of each
+ * line begins with M and subsequent characters on the line are within
+ * the range of ASCII characters from ' ' to '`'.
+ *
+ * This is not a perfect UUencode filter. It's possible to have a
+ * message that will legitimately match that pattern, (so that some
+ * legitimate content is discarded). And for most UUencoded files, the
+ * final line of encoded data (the line not starting with M) will be
+ * indexed.
+ **/
+struct _NotmuchFilterDiscardUuencode {
+    GMimeFilter parent_object;
+    int state;
+};
+
+struct _NotmuchFilterDiscardUuencodeClass {
+    GMimeFilterClass parent_class;
+};
+
+GType notmuch_filter_discard_uuencode_get_type (void);
+
+GMimeFilter *notmuch_filter_discard_uuencode_new (void);
+
+static void notmuch_filter_discard_uuencode_class_init (NotmuchFilterDiscardUuencodeClass *klass);
+static void notmuch_filter_discard_uuencode_init (NotmuchFilterDiscardUuencode *filter, NotmuchFilterDiscardUuencodeClass *klass);
+static void notmuch_filter_discard_uuencode_finalize (GObject *object);
+
+static GMimeFilter *filter_copy (GMimeFilter *filter);
+static void filter_filter (GMimeFilter *filter, char *in, size_t len, size_t prespace,
+			   char **out, size_t *outlen, size_t *outprespace);
+static void filter_complete (GMimeFilter *filter, char *in, size_t len, size_t prespace,
+			     char **out, size_t *outlen, size_t *outprespace);
+static void filter_reset (GMimeFilter *filter);
+
+
+static GMimeFilterClass *parent_class = NULL;
+
+GType
+notmuch_filter_discard_uuencode_get_type (void)
+{
+    static GType type = 0;
+
+    if (!type) {
+	static const GTypeInfo info = {
+	    sizeof (NotmuchFilterDiscardUuencodeClass),
+	    NULL, /* base_class_init */
+	    NULL, /* base_class_finalize */
+	    (GClassInitFunc) notmuch_filter_discard_uuencode_class_init,
+	    NULL, /* class_finalize */
+	    NULL, /* class_data */
+	    sizeof (NotmuchFilterDiscardUuencode),
+	    0,    /* n_preallocs */
+	    (GInstanceInitFunc) notmuch_filter_discard_uuencode_init,
+	    NULL	/* value_table */
+	};
+
+	type = g_type_register_static (GMIME_TYPE_FILTER, "NotmuchFilterDiscardUuencode", &info, (GTypeFlags) 0);
+    }
+
+    return type;
+}
+
+static void
+notmuch_filter_discard_uuencode_class_init (NotmuchFilterDiscardUuencodeClass *klass)
+{
+    GObjectClass *object_class = G_OBJECT_CLASS (klass);
+    GMimeFilterClass *filter_class = GMIME_FILTER_CLASS (klass);
+
+    parent_class = (GMimeFilterClass *) g_type_class_ref (GMIME_TYPE_FILTER);
+
+    object_class->finalize = notmuch_filter_discard_uuencode_finalize;
+
+    filter_class->copy = filter_copy;
+    filter_class->filter = filter_filter;
+    filter_class->complete = filter_complete;
+    filter_class->reset = filter_reset;
+}
+
+static void
+notmuch_filter_discard_uuencode_init (NotmuchFilterDiscardUuencode *filter, NotmuchFilterDiscardUuencodeClass *klass)
+{
+    (void) klass;
+    filter->state = 0;
+}
+
+static void
+notmuch_filter_discard_uuencode_finalize (GObject *object)
+{
+    G_OBJECT_CLASS (parent_class)->finalize (object);
+}
+
+static GMimeFilter *
+filter_copy (GMimeFilter *gmime_filter)
+{
+    (void) gmime_filter;
+    return notmuch_filter_discard_uuencode_new ();
+}
+
+static void
+filter_filter (GMimeFilter *gmime_filter, char *inbuf, size_t inlen, size_t prespace,
+	       char **outbuf, size_t *outlen, size_t *outprespace)
+{
+    NotmuchFilterDiscardUuencode *filter = (NotmuchFilterDiscardUuencode *) gmime_filter;
+    register const char *inptr = inbuf;
+    const char *inend = inbuf + inlen;
+    char *outptr;
+
+    (void) prespace;
+
+    /* Simple, linear state-transition diagram for our filter.
+     *
+     * If the character being processed is within the range of [a, b]
+     * for the current state then we transition next_if_match
+     * state. If not, we transition to the next_if_not_match state.
+     *
+     * The final two states are special in that they are the states in
+     * which we discard data. */
+    static const struct {
+	int state;
+	int a;
+	int b;
+	int next_if_match;
+	int next_if_not_match;
+    } states[] = {
+	{0,  'b',  'b',  1,  0},
+	{1,  'e',  'e',  2,  0},
+	{2,  'g',  'g',  3,  0},
+	{3,  'i',  'i',  4,  0},
+	{4,  'n',  'n',  5,  0},
+	{5,  ' ',  ' ',  6,  0},
+	{6,  '0',  '7',  7,  0},
+	{7,  '0',  '7',  8,  0},
+	{8,  '0',  '7',  9,  0},
+	{9,  ' ',  ' ',  10, 0},
+	{10, '\n', '\n', 11, 10},
+	{11, 'M',  'M',  12, 0},
+	{12, ' ',  '`',  12, 11}  
+    };
+    int next;
+
+    g_mime_filter_set_size (gmime_filter, inlen, FALSE);
+    outptr = gmime_filter->outbuf;
+
+    while (inptr < inend) {
+	if (*inptr >= states[filter->state].a &&
+	    *inptr <= states[filter->state].b)
+	{
+	    next = states[filter->state].next_if_match;
+	}
+	else
+	{
+	    next = states[filter->state].next_if_not_match;
+	}
+
+	if (filter->state < 11)
+	    *outptr++ = *inptr;
+
+	filter->state = next;
+	inptr++;
+    }
+
+    *outlen = outptr - gmime_filter->outbuf;
+    *outprespace = gmime_filter->outpre;
+    *outbuf = gmime_filter->outbuf;
+}
+
+static void
+filter_complete (GMimeFilter *filter, char *inbuf, size_t inlen, size_t prespace,
+		 char **outbuf, size_t *outlen, size_t *outprespace)
+{
+    if (inbuf && inlen)
+	filter_filter (filter, inbuf, inlen, prespace, outbuf, outlen, outprespace);
+}
+
+static void
+filter_reset (GMimeFilter *gmime_filter)
+{
+    NotmuchFilterDiscardUuencode *filter = (NotmuchFilterDiscardUuencode *) gmime_filter;
+
+    filter->state = 0;
+}
+
+/**
+ * notmuch_filter_discard_uuencode_new:
+ *
+ * Returns: a new #NotmuchFilterDiscardUuencode filter.
+ **/
+GMimeFilter *
+notmuch_filter_discard_uuencode_new (void)
+{
+    NotmuchFilterDiscardUuencode *filter;
+
+    filter = (NotmuchFilterDiscardUuencode *) g_object_newv (NOTMUCH_TYPE_FILTER_DISCARD_UUENCODE, 0, NULL);
+    filter->state = 0;
+
+    return (GMimeFilter *) filter;
+}
 
 /* We're finally down to a single (NAME + address) email "mailbox". */
 static void
@@ -128,7 +353,8 @@ static void
 _index_mime_part (notmuch_message_t *message,
 		  GMimeObject *part)
 {
-    GMimeStream *stream;
+    GMimeStream *stream, *filter;
+    GMimeFilter *discard_uuencode_filter;
     GMimeDataWrapper *wrapper;
     GByteArray *byte_array;
     GMimeContentDisposition *disposition;
@@ -186,11 +412,20 @@ _index_mime_part (notmuch_message_t *message,
 
     stream = g_mime_stream_mem_new_with_byte_array (byte_array);
     g_mime_stream_mem_set_owner (GMIME_STREAM_MEM (stream), FALSE);
+
+    filter = g_mime_stream_filter_new (stream);
+    discard_uuencode_filter = notmuch_filter_discard_uuencode_new ();
+
+    g_mime_stream_filter_add (GMIME_STREAM_FILTER (filter),
+			      discard_uuencode_filter);
+
     wrapper = g_mime_part_get_content_object (GMIME_PART (part));
     if (wrapper)
-	g_mime_data_wrapper_write_to_stream (wrapper, stream);
+	g_mime_data_wrapper_write_to_stream (wrapper, filter);
 
     g_object_unref (stream);
+    g_object_unref (filter);
+    g_object_unref (discard_uuencode_filter);
 
     g_byte_array_append (byte_array, (guint8 *) "\0", 1);
     body = (char *) g_byte_array_free (byte_array, FALSE);
