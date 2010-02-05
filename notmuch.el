@@ -595,7 +595,7 @@ which this thread was originally shown."
   (interactive)
   (save-excursion
     (notmuch-show-move-to-current-message-summary-line)
-    (next-line)
+    (forward-line)
     (unless (button-at (point))
       (notmuch-show-next-button))
     (push-button))
