@@ -24,14 +24,8 @@
 
 #include <xapian.h>
 
-/* Oh, how I wish that gobject didn't require so much noisy boilerplate! */
-#define NOTMUCH_TYPE_FILTER_DISCARD_UUENCODE            (notmuch_filter_discard_uuencode_get_type ())
-#define NOTMUCH_FILTER_DISCARD_UUENCODE(obj)            (G_TYPE_CHECK_INSTANCE_CAST ((obj), NOTMUCH_TYPE_FILTER_DISCARD_UUENCODE, NotmuchFilterDiscardUuencode))
-#define NOTMUCH_FILTER_DISCARD_UUENCODE_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST ((klass), NOTMUCH_TYPE_FILTER_DISCARD_UUENCODE, NotmuchFilterDiscardUuencodeClass))
-#define NOTMUCH_IS_FILTER_DISCARD_UUENCODE(obj)         (G_TYPE_CHECK_INSTANCE_TYPE ((obj), NOTMUCH_TYPE_FILTER_DISCARD_UUENCODE))
-#define NOTMUCH_IS_FILTER_DISCARD_UUENCODE_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), NOTMUCH_TYPE_FILTER_DISCARD_UUENCODE))
-#define NOTMUCH_FILTER_DISCARD_UUENCODE_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS ((obj), NOTMUCH_TYPE_FILTER_DISCARD_UUENCODE, NotmuchFilterDiscardUuencodeClass))
-
+/* Oh, how I wish that gobject didn't require so much noisy boilerplate!
+ * (Though I have at least eliminated some of the stock set...) */
 typedef struct _NotmuchFilterDiscardUuencode NotmuchFilterDiscardUuencode;
 typedef struct _NotmuchFilterDiscardUuencodeClass NotmuchFilterDiscardUuencodeClass;
 
@@ -69,12 +63,8 @@ struct _NotmuchFilterDiscardUuencodeClass {
     GMimeFilterClass parent_class;
 };
 
-GType notmuch_filter_discard_uuencode_get_type (void);
-
 GMimeFilter *notmuch_filter_discard_uuencode_new (void);
 
-static void notmuch_filter_discard_uuencode_class_init (NotmuchFilterDiscardUuencodeClass *klass);
-static void notmuch_filter_discard_uuencode_init (NotmuchFilterDiscardUuencode *filter, NotmuchFilterDiscardUuencodeClass *klass);
 static void notmuch_filter_discard_uuencode_finalize (GObject *object);
 
 static GMimeFilter *filter_copy (GMimeFilter *filter);
@@ -86,31 +76,6 @@ static void filter_reset (GMimeFilter *filter);
 
 
 static GMimeFilterClass *parent_class = NULL;
-
-GType
-notmuch_filter_discard_uuencode_get_type (void)
-{
-    static GType type = 0;
-
-    if (!type) {
-	static const GTypeInfo info = {
-	    sizeof (NotmuchFilterDiscardUuencodeClass),
-	    NULL, /* base_class_init */
-	    NULL, /* base_class_finalize */
-	    (GClassInitFunc) notmuch_filter_discard_uuencode_class_init,
-	    NULL, /* class_finalize */
-	    NULL, /* class_data */
-	    sizeof (NotmuchFilterDiscardUuencode),
-	    0,    /* n_preallocs */
-	    (GInstanceInitFunc) notmuch_filter_discard_uuencode_init,
-	    NULL	/* value_table */
-	};
-
-	type = g_type_register_static (GMIME_TYPE_FILTER, "NotmuchFilterDiscardUuencode", &info, (GTypeFlags) 0);
-    }
-
-    return type;
-}
 
 static void
 notmuch_filter_discard_uuencode_class_init (NotmuchFilterDiscardUuencodeClass *klass)
@@ -126,13 +91,6 @@ notmuch_filter_discard_uuencode_class_init (NotmuchFilterDiscardUuencodeClass *k
     filter_class->filter = filter_filter;
     filter_class->complete = filter_complete;
     filter_class->reset = filter_reset;
-}
-
-static void
-notmuch_filter_discard_uuencode_init (NotmuchFilterDiscardUuencode *filter, NotmuchFilterDiscardUuencodeClass *klass)
-{
-    (void) klass;
-    filter->state = 0;
 }
 
 static void
@@ -240,9 +198,27 @@ filter_reset (GMimeFilter *gmime_filter)
 GMimeFilter *
 notmuch_filter_discard_uuencode_new (void)
 {
+    static GType type = 0;
     NotmuchFilterDiscardUuencode *filter;
 
-    filter = (NotmuchFilterDiscardUuencode *) g_object_newv (NOTMUCH_TYPE_FILTER_DISCARD_UUENCODE, 0, NULL);
+    if (!type) {
+	static const GTypeInfo info = {
+	    sizeof (NotmuchFilterDiscardUuencodeClass),
+	    NULL, /* base_class_init */
+	    NULL, /* base_class_finalize */
+	    (GClassInitFunc) notmuch_filter_discard_uuencode_class_init,
+	    NULL, /* class_finalize */
+	    NULL, /* class_data */
+	    sizeof (NotmuchFilterDiscardUuencode),
+	    0,    /* n_preallocs */
+	    NULL, /* instance_init */
+	    NULL  /* value_table */
+	};
+
+	type = g_type_register_static (GMIME_TYPE_FILTER, "NotmuchFilterDiscardUuencode", &info, (GTypeFlags) 0);
+    }
+
+    filter = (NotmuchFilterDiscardUuencode *) g_object_newv (type, 0, NULL);
     filter->state = 0;
 
     return (GMimeFilter *) filter;
