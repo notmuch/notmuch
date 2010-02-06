@@ -864,7 +864,7 @@ notmuch_message_remove_all_tags (notmuch_message_t *message);
  * notmuch_message_remove_all_tags), will not be committed to the
  * database until the message is thawed with notmuch_message_thaw.
  *
- * Multiple calls to freeze/thaw are valid and these calls with
+ * Multiple calls to freeze/thaw are valid and these calls will
  * "stack". That is there must be as many calls to thaw as to freeze
  * before a message is actually thawed.
  *
@@ -882,7 +882,7 @@ notmuch_message_remove_all_tags (notmuch_message_t *message);
  *    notmuch_message_thaw (message);
  *
  * With freeze/thaw used like this, the message in the database is
- * guaranteed to have either the full set of original tag value, or
+ * guaranteed to have either the full set of original tag values, or
  * the full set of new tag values, but nothing in between.
  *
  * Imagine the example above without freeze/thaw and the operation
