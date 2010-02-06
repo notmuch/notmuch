@@ -63,9 +63,11 @@ notmuch_restore_command (unused (void *ctx), int argc, char *argv[])
 
     while ((line_len = getline (&line, &line_size, input)) != -1) {
 	regmatch_t match[3];
-	char *message_id, *tags, *tag, *next;
-	notmuch_message_t *message;
+	char *message_id, *file_tags, *tag, *next;
+	notmuch_message_t *message = NULL;
 	notmuch_status_t status;
+	notmuch_tags_t *db_tags;
+	char *db_tags_str;
 
 	chomp_newline (line);
 
@@ -79,8 +81,8 @@ notmuch_restore_command (unused (void *ctx), int argc, char *argv[])
 
 	message_id = xstrndup (line + match[1].rm_so,
 			       match[1].rm_eo - match[1].rm_so);
-	tags = xstrndup (line + match[2].rm_so,
-			 match[2].rm_eo - match[2].rm_so);
+	file_tags = xstrndup (line + match[2].rm_so,
+			      match[2].rm_eo - match[2].rm_so);
 
 	message = notmuch_database_find_message (notmuch, message_id);
 	if (message == NULL) {
@@ -89,11 +91,30 @@ notmuch_restore_command (unused (void *ctx), int argc, char *argv[])
 	    goto NEXT_LINE;
 	}
 
-	notmuch_message_freeze (message);
+	db_tags_str = NULL;
+	for (db_tags = notmuch_message_get_tags (message);
+	     notmuch_tags_has_more (db_tags);
+	     notmuch_tags_advance (db_tags))
+	{
+	    const char *tag = notmuch_tags_get (db_tags);
 
+	    if (db_tags_str)
+		db_tags_str = talloc_asprintf_append (db_tags_str, " %s", tag);
+	    else
+		db_tags_str = talloc_strdup (message, tag);
+	}
+
+	if (((file_tags == NULL || *file_tags == '\0') &&
+	     (db_tags_str == NULL || *db_tags_str == '\0')) ||
+	    (file_tags && db_tags_str && strcmp (file_tags, db_tags_str) == 0))
+	{
+	    goto NEXT_LINE;
+	}
+
+	notmuch_message_freeze (message);
 	notmuch_message_remove_all_tags (message);
 
-	next = tags;
+	next = file_tags;
 	while (next) {
 	    tag = strsep (&next, " ");
 	    if (*tag == '\0')
@@ -109,10 +130,13 @@ notmuch_restore_command (unused (void *ctx), int argc, char *argv[])
 	}
 
 	notmuch_message_thaw (message);
-	notmuch_message_destroy (message);
+
       NEXT_LINE:
+	if (message)
+	    notmuch_message_destroy (message);
+	message = NULL;
 	free (message_id);
-	free (tags);
+	free (file_tags);
     }
 
     regfree (&regex);
