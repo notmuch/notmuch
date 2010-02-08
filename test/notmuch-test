@@ -146,7 +146,7 @@ add_message ()
 }
 
 NOTMUCH_IGNORED_OUTPUT_REGEXP='^Processed [0-9]*( total)? file|Found [0-9]* total file'
-NOTMUCH_THREAD_ID_SQUELCH='s/thread:................................/thread:XXX/'
+NOTMUCH_THREAD_ID_SQUELCH='s/thread:................/thread:XXX/'
 execute_expecting ()
 {
     args=$1

@@ -27,14 +27,19 @@
 
 struct _notmuch_database {
     notmuch_bool_t exception_reported;
+
     char *path;
+
+    notmuch_bool_t needs_upgrade;
     notmuch_database_mode_t mode;
     Xapian::Database *xapian_db;
+
+    uint64_t last_thread_id;
+
     Xapian::QueryParser *query_parser;
     Xapian::TermGenerator *term_gen;
     Xapian::ValueRangeProcessor *value_range_processor;
 
-    notmuch_bool_t needs_upgrade;
 };
 
 /* Convert tags from Xapian internal format to notmuch format.

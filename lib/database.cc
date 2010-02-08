@@ -533,6 +533,8 @@ notmuch_database_open (const char *path,
     notmuch->needs_upgrade = FALSE;
     notmuch->mode = mode;
     try {
+	string last_thread_id;
+
 	if (mode == NOTMUCH_DATABASE_MODE_READ_WRITE) {
 	    notmuch->xapian_db = new Xapian::WritableDatabase (xapian_path,
 							       Xapian::DB_CREATE_OR_OPEN);
@@ -567,6 +569,20 @@ notmuch_database_open (const char *path,
 			 notmuch_path, version, NOTMUCH_DATABASE_VERSION);
 	    }
 	}
+
+	last_thread_id = notmuch->xapian_db->get_metadata ("last_thread_id");
+	if (last_thread_id.empty ()) {
+	    notmuch->last_thread_id = 0;
+	} else {
+	    const char *str;
+	    char *end;
+
+	    str = last_thread_id.c_str ();
+	    notmuch->last_thread_id = strtoull (str, &end, 16);
+	    if (*end != '\0')
+		INTERNAL_ERROR ("Malformed database last_thread_id: %s", str);
+	}
+
 	notmuch->query_parser = new Xapian::QueryParser;
 	notmuch->term_gen = new Xapian::TermGenerator;
 	notmuch->term_gen->set_stemmer (Xapian::Stem ("english"));
@@ -1278,14 +1294,38 @@ _notmuch_database_link_message_to_children (notmuch_database_t *notmuch,
     return ret;
 }
 
+static const char *
+_notmuch_database_generate_thread_id (notmuch_database_t *notmuch)
+{
+    /* 16 bytes (+ terminator) for hexadecimal representation of
+     * a 64-bit integer. */
+    static char thread_id[17];
+    Xapian::WritableDatabase *db;
+
+    db = static_cast <Xapian::WritableDatabase *> (notmuch->xapian_db);
+
+    notmuch->last_thread_id++;
+
+    sprintf (thread_id, "%016llx", notmuch->last_thread_id);
+
+    db->set_metadata ("last_thread_id", thread_id);
+
+    return thread_id;
+}
+
 /* Given a (mostly empty) 'message' and its corresponding
  * 'message_file' link it to existing threads in the database.
  *
  * We first look at 'message_file' and its link-relevant headers
  * (References and In-Reply-To) for message IDs. We also look in the
- * database for existing message that reference 'message'.
+ * database for existing message that reference 'message'. In either
+ * case, we will assign to the current message the first thread_id
+ * found (through either parent or child). We will also merge any
+ * existing, distinct threads where this message belongs to both,
+ * (which is not uncommon when mesages are processed out of order).
  *
- * The end result is to call _notmuch_message_ensure_thread_id which
+ * Finally, if not thread ID has been found through parent or child,
+ * we call _notmuch_message_generate_thread_id to generate a new
  * generates a new thread ID if the message doesn't connect to any
  * existing threads.
  */
@@ -1308,8 +1348,12 @@ _notmuch_database_link_message (notmuch_database_t *notmuch,
     if (status)
 	return status;
 
-    if (thread_id == NULL)
-	_notmuch_message_ensure_thread_id (message);
+    /* If not part of any existing thread, generate a new thread ID. */
+    if (thread_id == NULL) {
+	thread_id = _notmuch_database_generate_thread_id (notmuch);
+
+	_notmuch_message_add_term (message, "thread", thread_id);
+    }
 
     return NOTMUCH_STATUS_SUCCESS;
 }
