@@ -38,6 +38,8 @@ Add support to "mute" a thread (add a "muted" tag and then don't
 display threads in searches by default where any message of the thread
 has the "muted" tag).
 
+Fix i-search to open up invisible citations as necessary.
+
 Portability
 -----------
 Fix configure script to test each compiler warning we want to use.
@@ -151,6 +153,25 @@ common mailing-list footer).
 Fix notmuch_query_count_messages to share code with
 notmuch_query_search_messages rather than duplicating code. (And
 consider renaming it as well.)
+
+Provide a mechanism for doing automatic address completion based on
+notmuch searches. Here was one proposal made in IRC:
+
+	<cworth> I guess all it would really have to be would be a way
+	         to configure a series of searches to try in turn,
+	         (presenting ambiguities at a given single level, and
+	         advancing to the next level only if one level
+	         returned no matches).
+	<cworth> So then I might have a series that looks like this:
+	<cworth> notmuch search --output=address_from tag:address_book_alias
+	<cworth> notmuch search --output=address_to tag:sent
+	<cworth> notmuch search --output=address_from
+	<cworth> I think I might like that quite a bit.
+	<cworth> And then we have a story for an address book for
+	         non-emacs users.
+
+Provide a ~me Xapian synonym for all of the user's configured email
+addresses.
 
 General
 -------
