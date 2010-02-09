@@ -21,6 +21,15 @@
 #ifndef NOTMUCH_DATABASE_PRIVATE_H
 #define NOTMUCH_DATABASE_PRIVATE_H
 
+/* According to WG14/N1124, a C++ implementation won't provide us a
+ * macro like PRIx64 (which gives a printf format string for
+ * formatting a uint64_t as hexadecimal) unless we define
+ * __STDC_FORMAT_MACROS before including inttypes.h. That's annoying,
+ * but there it is.
+ */
+#define __STDC_FORMAT_MACROS
+#include <inttypes.h>
+
 #include "notmuch-private.h"
 
 #include <xapian.h>

@@ -1306,7 +1306,7 @@ _notmuch_database_generate_thread_id (notmuch_database_t *notmuch)
 
     notmuch->last_thread_id++;
 
-    sprintf (thread_id, "%016llx", notmuch->last_thread_id);
+    sprintf (thread_id, "%016" PRIx64, notmuch->last_thread_id);
 
     db->set_metadata ("last_thread_id", thread_id);
 
