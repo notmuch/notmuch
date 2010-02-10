@@ -327,7 +327,22 @@ buffer."
   "Use external viewers to view all attachments from the current message."
   (interactive)
   (with-current-notmuch-show-message
-   (mm-display-parts (mm-dissect-buffer))))
+   ; We ovverride the mm-inline-media-tests to indicate which message
+   ; parts are already sufficiently handled by the original
+   ; presentation of the message in notmuch-show mode. These parts
+   ; will be inserted directly into the temporary buffer of
+   ; with-current-notmuch-show-message and silently discarded.
+   ;
+   ; Any MIME part not explicitly mentioned here will be handled by an
+   ; external viewer as configured in the various mailcap files.
+   (let ((mm-inline-media-tests '(
+				  ("text/.*" ignore identity)
+				  ("application/pgp-signature" ignore identity)
+				  ("multipart/alternative" ignore identity)
+				  ("multipart/mixed" ignore identity)
+				  ("multipart/related" ignore identity)
+				 )))
+     (mm-display-parts (mm-dissect-buffer)))))
 
 (defun notmuch-foreach-mime-part (function mm-handle)
   (cond ((stringp (car mm-handle))
