@@ -321,7 +321,7 @@ buffer."
          (with-current-buffer buf
            (insert-file-contents filename nil nil nil t)
            ,@body)
-        (kill-buffer buf)))))
+	 (kill-buffer buf)))))
 
 (defun notmuch-show-view-all-mime-parts ()
   "Use external viewers to view all attachments from the current message."
