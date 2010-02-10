@@ -752,7 +752,8 @@ is what to put on the button."
               ; determine whether we've left the current message.
               (if (re-search-forward notmuch-show-part-begin-regexp nil t)
                   (beginning-of-line)))))
-        (goto-char end))))
+        (goto-char end))
+    (goto-char end)))
 
 (defun notmuch-show-markup-parts-region (beg end depth)
   (save-excursion
