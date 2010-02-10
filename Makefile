@@ -38,6 +38,7 @@ include Makefile.config
 
 include lib/Makefile.local
 include compat/Makefile.local
+include emacs/Makefile.local
 include Makefile.local
 
 # The user has not set any verbosity, default to quiet mode and inform the

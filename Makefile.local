@@ -1,5 +1,3 @@
-emacs: notmuch.elc
-
 notmuch_client_srcs =		\
 	$(notmuch_compat_srcs)	\
 	debugger.c		\
@@ -35,14 +33,6 @@ install: all notmuch.1.gz
 	done ;
 	install notmuch $(DESTDIR)$(prefix)/bin/
 	install -m0644 notmuch.1.gz $(DESTDIR)$(prefix)/share/man/man1/
-
-install-emacs: install emacs
-	for d in $(DESTDIR)/$(emacs_lispdir) ; \
-	do \
-		install -d $$d ; \
-	done ;
-	install -m0644 notmuch.el $(DESTDIR)$(emacs_lispdir)
-	install -m0644 notmuch.elc $(DESTDIR)$(emacs_lispdir)
 
 install-desktop:
 	install -d $(DESTDIR)$(desktop_dir)

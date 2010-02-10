@@ -1,0 +1,19 @@
+dir=emacs
+emacs_sources=                 \
+	$(dir)/notmuch.el
+
+emacs_bytecode=$(subst .el,.elc,$(emacs_sources))
+
+emacs: $(emacs_bytecode)
+
+install-emacs: install emacs
+	for d in $(DESTDIR)/$(emacs_lispdir) ; \
+	do \
+		install -d $$d ; \
+	done ;
+	for f in $(emacs_sources) $(emacs_bytecode); \
+	do \
+		install -m0644 $$f $(DESTDIR)$(emacs_lispdir) ;\
+	done;
+
+CLEAN := $(CLEAN) $(emacs_bytecode)
