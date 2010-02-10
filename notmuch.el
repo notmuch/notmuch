@@ -133,6 +133,8 @@ remaining lines into a button.")
 (defvar notmuch-show-id-regexp "\\(id:[^ ]*\\)")
 (defvar notmuch-show-depth-match-regexp " depth:\\([0-9]*\\).*match:\\([01]\\) ")
 (defvar notmuch-show-filename-regexp "filename:\\(.*\\)$")
+(defvar notmuch-show-contentype-regexp "Content-type: \\(.*\\)")
+
 (defvar notmuch-show-tags-regexp "(\\([^)]*\\))$")
 
 (defvar notmuch-show-parent-buffer nil)
@@ -713,20 +715,44 @@ is what to put on the button."
 (defun notmuch-show-markup-part (beg end depth)
   (if (re-search-forward notmuch-show-part-begin-regexp nil t)
       (progn
-	(forward-line)
-	(let ((beg (point-marker)))
-	  (re-search-forward notmuch-show-part-end-regexp)
-	  (let ((end (copy-marker (match-beginning 0))))
-	    (goto-char end)
-	    (if (not (bolp))
-		(insert "\n"))
-	    (indent-rigidly beg end depth)
-	    (notmuch-show-markup-citations-region beg end depth)
-	    ; Advance to the next part (if any) (so the outer loop can
-	    ; determine whether we've left the current message.
-	    (if (re-search-forward notmuch-show-part-begin-regexp nil t)
-		(beginning-of-line)))))
-    (goto-char end)))
+        (let (mime-message mime-type)
+          (save-excursion
+            (re-search-forward notmuch-show-contentype-regexp end t)
+            (setq mime-type (car (split-string (buffer-substring 
+                                                (match-beginning 1) (match-end 1))))))
+
+          (if (equal mime-type "text/html")
+              (let ((filename (notmuch-show-get-filename)))
+                (with-temp-buffer
+                  (insert-file-contents filename nil nil nil t)
+                  (setq mime-message (mm-dissect-buffer)))))
+          (forward-line)
+          (let ((beg (point-marker)))
+            (re-search-forward notmuch-show-part-end-regexp)
+            (let ((end (copy-marker (match-beginning 0))))
+              (goto-char end)
+              (if (not (bolp))
+                  (insert "\n"))
+              (indent-rigidly beg end depth)
+              (if (not (eq mime-message nil))
+                  (save-excursion
+                    (goto-char beg)
+                    (forward-line -1)
+                    (let ((handle-type (mm-handle-type mime-message))
+                          mime-type)
+                      (if (sequencep (car handle-type))
+                          (setq mime-type (car handle-type))
+                        (setq mime-type (car (car (cdr handle-type))))
+                        )
+                      (if (equal mime-type "text/html")
+                          (mm-display-part mime-message))))
+                )
+              (notmuch-show-markup-citations-region beg end depth)
+              ; Advance to the next part (if any) (so the outer loop can
+              ; determine whether we've left the current message.
+              (if (re-search-forward notmuch-show-part-begin-regexp nil t)
+                  (beginning-of-line)))))
+        (goto-char end))))
 
 (defun notmuch-show-markup-parts-region (beg end depth)
   (save-excursion
