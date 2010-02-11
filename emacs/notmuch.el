@@ -268,6 +268,7 @@ For a mouse binding, return nil."
     (define-key map "-" 'notmuch-search-remove-tag)
     (define-key map "+" 'notmuch-search-add-tag)
     (define-key map (kbd "RET") 'notmuch-search-show-thread)
+    (define-key map "F" 'notmuch-folder)
     map)
   "Keymap for \"notmuch search\" buffers.")
 (fset 'notmuch-search-mode-map notmuch-search-mode-map)
