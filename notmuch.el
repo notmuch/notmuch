@@ -225,6 +225,30 @@ Unlike builtin `previous-line' this version accepts no arguments."
     (re-search-forward notmuch-show-tags-regexp)
     (split-string (buffer-substring (match-beginning 1) (match-end 1)))))
 
+(defun notmuch-show-get-header ()
+  "Retrieve and parse the header from the current message. Returns an alist with of (header . value)
+where header is a symbol and value is a string.  The summary from notmuch-show is returned as the
+pseudoheader summary"
+  (require 'mailheader)
+  (save-excursion
+    (beginning-of-line)
+    (if (not (looking-at notmuch-show-message-begin-regexp))
+	(re-search-backward notmuch-show-message-begin-regexp))
+    (re-search-forward (concat notmuch-show-header-begin-regexp "\n[[:space:]]*\\(.*\\)\n"))
+    (let* ((summary (buffer-substring-no-properties (match-beginning 1) (match-end 1)))
+	  (beg (point)))
+      (re-search-forward notmuch-show-header-end-regexp)
+      (let ((text (buffer-substring beg (match-beginning 0))))
+	(with-temp-buffer
+	  (insert text)
+	  (goto-char (point-min))
+	  (while (looking-at "\\([[:space:]]*\\)[A-Za-z][-A-Za-z0-9]*:")
+	    (delete-region (match-beginning 1) (match-end 1))
+	    (forward-line)
+	    )
+	  (goto-char (point-min))
+	  (cons (cons 'summary summary) (mail-header-extract-no-properties)))))))
+
 (defun notmuch-show-add-tag (&rest toadd)
   "Add a tag to the current message."
   (interactive
