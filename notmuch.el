@@ -1000,8 +1000,12 @@ For a mouse binding, return nil."
     (if (mouse-event-p key)
 	nil
       (if (keymapp action)
-	  (let ((substitute (apply-partially 'notmuch-substitute-one-command-key-with-prefix (notmuch-prefix-key-description key))))
-	    (mapconcat substitute (cdr action) "\n"))
+	  (let ((substitute (apply-partially 'notmuch-substitute-one-command-key-with-prefix (notmuch-prefix-key-description key)))
+		(as-list))
+	    (map-keymap (lambda (a b)
+			  (push (cons a b) as-list))
+			action)
+	    (mapconcat substitute as-list "\n"))
 	(concat prefix (format-kbd-macro (vector key))
 		"\t"
 		(notmuch-documentation-first-line action))))))
