@@ -225,6 +225,38 @@ Unlike builtin `previous-line' this version accepts no arguments."
     (re-search-forward notmuch-show-tags-regexp)
     (split-string (buffer-substring (match-beginning 1) (match-end 1)))))
 
+(defun notmuch-show-get-bcc ()
+  "Return BCC address(es) of current message"
+  (notmuch-show-get-header-field 'bcc))
+
+(defun notmuch-show-get-cc ()
+  "Return CC address(es) of current message"
+  (notmuch-show-get-header-field 'cc))
+
+(defun notmuch-show-get-date ()
+  "Return Date of current message"
+  (notmuch-show-get-header-field 'date))
+
+(defun notmuch-show-get-from ()
+  "Return From address of current message"
+  (notmuch-show-get-header-field 'from))
+
+(defun notmuch-show-get-subject ()
+  "Return Subject of current message"
+  (notmuch-show-get-header-field 'subject))
+
+(defun notmuch-show-get-to ()
+  "Return To address(es) of current message"
+  (notmuch-show-get-header-field 'to))
+
+(defun notmuch-show-get-header-field (name)
+  "Retrieve the header field NAME from the current message.
+NAME should be a symbol, in lower case, as returned by
+mail-header-extract-no-properties"
+  (let* ((result (assoc name (notmuch-show-get-header)))
+        (val (and result (cdr result))))
+    val))
+
 (defun notmuch-show-get-header ()
   "Retrieve and parse the header from the current message. Returns an alist with of (header . value)
 where header is a symbol and value is a string.  The summary from notmuch-show is returned as the
