@@ -51,6 +51,22 @@
 (require 'mm-view)
 (require 'message)
 
+(defvar notmuch-show-stash-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map "c" 'notmuch-show-stash-cc)
+    (define-key map "d" 'notmuch-show-stash-date)
+    (define-key map "F" 'notmuch-show-stash-filename)
+    (define-key map "f" 'notmuch-show-stash-from)
+    (define-key map "m" 'notmuch-show-stash-message-id)
+    (define-key map "s" 'notmuch-show-stash-subject)
+    (define-key map "T" 'notmuch-show-stash-tags)
+    (define-key map "t" 'notmuch-show-stash-to)
+    map)
+  "Submap for stash commands"
+  )
+
+(fset 'notmuch-show-stash-map notmuch-show-stash-map)
+
 (defvar notmuch-show-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map "?" 'notmuch-help)
@@ -80,6 +96,7 @@
     (define-key map "n" 'notmuch-show-next-message)
     (define-key map (kbd "DEL") 'notmuch-show-rewind)
     (define-key map " " 'notmuch-show-advance-marking-read-and-archiving)
+    (define-key map "z" 'notmuch-show-stash-map)
     map)
   "Keymap for \"notmuch show\" buffers.")
 (fset 'notmuch-show-mode-map notmuch-show-mode-map)
@@ -1089,6 +1106,50 @@ All currently available key bindings:
   :type 'hook
   :options '(hl-line-mode)
   :group 'notmuch)
+
+(defun notmuch-show-do-stash (text)
+    (kill-new text)
+    (message (concat "Saved: " text)))
+
+(defun notmuch-show-stash-cc ()
+  "Copy CC field of current message to kill-ring."
+  (interactive)
+  (notmuch-show-do-stash (notmuch-show-get-cc)))
+
+(defun notmuch-show-stash-date ()
+  "Copy date of current message to kill-ring."
+  (interactive)
+  (notmuch-show-do-stash (notmuch-show-get-date)))
+
+(defun notmuch-show-stash-filename ()
+  "Copy filename of current message to kill-ring."
+  (interactive)
+  (notmuch-show-do-stash (notmuch-show-get-filename)))
+
+(defun notmuch-show-stash-from ()
+  "Copy From address of current message to kill-ring."
+  (interactive)
+  (notmuch-show-do-stash (notmuch-show-get-from)))
+
+(defun notmuch-show-stash-message-id ()
+  "Copy message-id of current message to kill-ring."
+  (interactive)
+  (notmuch-show-do-stash (notmuch-show-get-message-id)))
+
+(defun notmuch-show-stash-subject ()
+  "Copy Subject field of current message to kill-ring."
+  (interactive)
+  (notmuch-show-do-stash (notmuch-show-get-subject)))
+
+(defun notmuch-show-stash-tags ()
+  "Copy tags of current message to kill-ring as a comma separated list."
+  (interactive)
+  (notmuch-show-do-stash (mapconcat 'identity (notmuch-show-get-tags) ",")))
+
+(defun notmuch-show-stash-to ()
+  "Copy To address of current message to kill-ring."
+  (interactive)
+  (notmuch-show-do-stash (notmuch-show-get-to)))
 
 ; Make show mode a bit prettier, highlighting URLs and using word wrap
 
