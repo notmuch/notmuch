@@ -679,6 +679,7 @@ is what to put on the button."
       (let* ((cite-start (match-beginning 0))
 	     (cite-end 	(match-end 0))
 	     (cite-lines (count-lines cite-start cite-end)))
+	(overlay-put (make-overlay cite-start cite-end) 'face 'message-cited-text-face)
 	(when (> cite-lines (1+ notmuch-show-citation-lines-prefix))
 	  (goto-char cite-start)
 	  (forward-line notmuch-show-citation-lines-prefix)
@@ -695,13 +696,15 @@ is what to put on the button."
 	       (sig-end (match-end 0))
 	       (sig-lines (1- (count-lines sig-start end))))
 	  (if (<= sig-lines notmuch-show-signature-lines-max)
-	      (notmuch-show-region-to-button
-	       sig-start
-	       end
-	       "signature"
-	       indent
-	       (format notmuch-show-signature-button-format sig-lines)
-	       ))))))
+	      (progn
+		(overlay-put (make-overlay sig-start end) 'face 'message-cited-text-face)
+		(notmuch-show-region-to-button
+		 sig-start
+		 end
+		 "signature"
+		 indent
+		 (format notmuch-show-signature-button-format sig-lines)
+		 )))))))
 
 (defun notmuch-show-markup-part (beg end depth)
   (if (re-search-forward notmuch-show-part-begin-regexp nil t)
