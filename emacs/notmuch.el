@@ -396,17 +396,40 @@ Complete list of currently available key bindings:
   (set (make-local-variable 'font-lock-defaults)
          '(notmuch-search-font-lock-keywords t)))
 
+(defun notmuch-search-properties-in-region (property beg end)
+  (save-excursion
+    (let ((output nil)
+	  (last-line (line-number-at-pos end)))
+      (goto-char beg)
+      (beginning-of-line)
+      (while (<= (line-number-at-pos) last-line)
+	(setq output (cons (get-text-property (point) property) output))
+	(forward-line 1))
+      output)))
+
 (defun notmuch-search-find-thread-id ()
   "Return the thread for the current thread"
   (get-text-property (point) 'notmuch-search-thread-id))
+
+(defun notmuch-search-find-thread-id-region (beg end)
+  "Return a list of threads for the current region"
+  (notmuch-search-properties-in-region 'notmuch-search-thread-id beg end))
 
 (defun notmuch-search-find-authors ()
   "Return the authors for the current thread"
   (get-text-property (point) 'notmuch-search-authors))
 
+(defun notmuch-search-find-authors-region (beg end)
+  "Return a list of authors for the current region"
+  (notmuch-search-properties-in-region 'notmuch-search-authors beg end))
+
 (defun notmuch-search-find-subject ()
   "Return the subject for the current thread"
   (get-text-property (point) 'notmuch-search-subject))
+
+(defun notmuch-search-find-subject-region (beg end)
+  "Return a list of authors for the current region"
+  (notmuch-search-properties-in-region 'notmuch-search-subject beg end))
 
 (defun notmuch-search-show-thread ()
   "Display the currently selected thread."
@@ -471,31 +494,85 @@ and will also appear in a buffer named \"*Notmuch errors*\"."
       (let ((end (- (point) 1)))
 	(split-string (buffer-substring beg end))))))
 
-(defun notmuch-search-add-tag (tag)
-  "Add a tag to the currently selected thread.
+(defun notmuch-search-get-tags-region (beg end)
+  (save-excursion
+    (let ((output nil)
+	  (last-line (line-number-at-pos end)))
+      (goto-char beg)
+      (while (<= (line-number-at-pos) last-line)
+	(setq output (append output (notmuch-search-get-tags)))
+	(forward-line 1))
+      output)))
 
-The tag is added to messages in the currently selected thread
-which match the current search terms."
-  (interactive
-   (list (notmuch-select-tag-with-completion "Tag to add: ")))
+(defun notmuch-search-add-tag-thread (tag)
   (notmuch-call-notmuch-process "tag" (concat "+" tag) (notmuch-search-find-thread-id))
   (notmuch-search-set-tags (delete-dups (sort (cons tag (notmuch-search-get-tags)) 'string<))))
 
-(defun notmuch-search-remove-tag (tag)
-  "Remove a tag from the currently selected thread.
+(defun notmuch-search-add-tag-region (tag beg end)
+  (let ((search-id-string (mapconcat 'identity (notmuch-search-find-thread-id-region beg end) " or ")))
+    (notmuch-call-notmuch-process "tag" (concat "+" tag) search-id-string)
+    (save-excursion
+      (let ((last-line (line-number-at-pos end)))
+	(goto-char beg)
+	(while (<= (line-number-at-pos) last-line)
+	  (notmuch-search-set-tags (delete-dups (sort (cons tag (notmuch-search-get-tags)) 'string<)))
+	  (forward-line))))))
 
-The tag is removed from all messages in the currently selected thread."
-  (interactive
-   (list (notmuch-select-tag-with-completion "Tag to remove: " (notmuch-search-find-thread-id))))
+(defun notmuch-search-remove-tag-thread (tag)
   (notmuch-call-notmuch-process "tag" (concat "-" tag) (notmuch-search-find-thread-id))
   (notmuch-search-set-tags (delete tag (notmuch-search-get-tags))))
+
+(defun notmuch-search-remove-tag-region (tag beg end)
+  (let ((search-id-string (mapconcat 'identity (notmuch-search-find-thread-id-region beg end) " or ")))
+    (notmuch-call-notmuch-process "tag" (concat "-" tag) search-id-string)
+    (save-excursion
+      (let ((last-line (line-number-at-pos end)))
+	(goto-char beg)
+	(while (<= (line-number-at-pos) last-line)
+	  (notmuch-search-set-tags (delete tag (notmuch-search-get-tags)))
+	  (forward-line))))))
+
+
+(defun notmuch-search-add-tag (tag)
+  "Add a tag to the currently selected thread or region.
+
+The tag is added to messages in the currently selected thread or
+region which match the current search terms."
+  (interactive
+   (list (notmuch-select-tag-with-completion "Tag to add: ")))
+  (save-excursion
+    (if (region-active-p)
+	(let* ((beg (region-beginning))
+	       (end (region-end)))
+	  (notmuch-search-add-tag-region tag beg end))
+      (notmuch-search-add-tag-thread tag))))
+
+(defun notmuch-search-remove-tag (tag)
+  "Remove a tag from the currently selected thread or region.
+
+The tag is removed from all messages in the currently selected thread
+or region which match the current search terms."
+  (interactive
+   (list (notmuch-select-tag-with-completion
+	  "Tag to remove: "
+	  (if (region-active-p)
+	      (mapconcat 'identity
+			 (notmuch-search-find-thread-id-region (region-beginning) (region-end))
+			 " ")
+	    (notmuch-search-find-thread-id)))))
+  (save-excursion
+    (if (region-active-p)
+	(let* ((beg (region-beginning))
+	       (end (region-end)))
+	  (notmuch-search-remove-tag-region tag beg end))
+      (notmuch-search-remove-tag-thread tag))))
 
 (defun notmuch-search-archive-thread ()
   "Archive the currently selected thread (remove its \"inbox\" tag).
 
 This function advances the next thread when finished."
   (interactive)
-  (notmuch-search-remove-tag "inbox")
+  (notmuch-search-remove-tag-thread "inbox")
   (forward-line))
 
 (defun notmuch-search-process-sentinel (proc msg)
