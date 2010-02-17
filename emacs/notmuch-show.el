@@ -111,10 +111,20 @@ Can use up to one integer format parameter, i.e. %d")
   "Maximum length of signature that will be hidden by default.")
 
 (defvar notmuch-show-citation-lines-prefix 4
-  "Always show at least this many lines of a citation.
+  "Always show at least this many lines at the start of a citation.
 
-If there is one more line, show that, otherwise collapse
-remaining lines into a button.")
+If there is one more line than the sum of
+`notmuch-show-citation-lines-prefix' and
+`notmuch-show-citation-lines-suffix', show that, otherwise
+collapse remaining lines into a button.")
+
+(defvar notmuch-show-citation-lines-suffix 0
+  "Always show at least this many lines at the end of a citation.
+
+If there is one more line than the sum of
+`notmuch-show-citation-lines-prefix' and
+`notmuch-show-citation-lines-suffix', show that, otherwise
+collapse remaining lines into a button.")
 
 (defvar notmuch-show-message-begin-regexp    "\fmessage{")
 (defvar notmuch-show-message-end-regexp      "\fmessage}")
@@ -680,16 +690,19 @@ is what to put on the button."
 	     (cite-end 	(match-end 0))
 	     (cite-lines (count-lines cite-start cite-end)))
 	(overlay-put (make-overlay cite-start cite-end) 'face 'message-cited-text-face)
-	(when (> cite-lines (1+ notmuch-show-citation-lines-prefix))
+	(when (> cite-lines (1+ (+ notmuch-show-citation-lines-prefix notmuch-show-citation-lines-suffix)))
 	  (goto-char cite-start)
 	  (forward-line notmuch-show-citation-lines-prefix)
-	  (notmuch-show-region-to-button
-	   (point) cite-end
-	   "citation"
-	   indent
-	   (format notmuch-show-citation-button-format
-		   (- cite-lines notmuch-show-citation-lines-prefix))
-	   ))))
+	  (let ((hidden-start (point)))
+	    (goto-char cite-end)
+	    (forward-line (- notmuch-show-citation-lines-suffix))
+	    (notmuch-show-region-to-button
+	     hidden-start (point)
+	     "citation"
+	     indent
+	     (format notmuch-show-citation-button-format
+		     (- cite-lines notmuch-show-citation-lines-prefix notmuch-show-citation-lines-suffix))
+	     )))))
     (if (and (< (point) end)
 	     (re-search-forward signature-regexp end t))
 	(let* ((sig-start (match-beginning 0))
