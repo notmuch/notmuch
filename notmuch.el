@@ -733,7 +733,7 @@ is what to put on the button."
         (let (mime-message mime-type)
           (save-excursion
             (re-search-forward notmuch-show-contentype-regexp end t)
-            (setq mime-type (car (split-string (buffer-substring 
+            (setq mime-type (car (split-string (buffer-substring
                                                 (match-beginning 1) (match-end 1))))))
 
           (if (equal mime-type "text/html")
