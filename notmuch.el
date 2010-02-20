@@ -1132,7 +1132,7 @@ All currently available key bindings:
   (notmuch-show-do-stash (notmuch-show-get-from)))
 
 (defun notmuch-show-stash-message-id ()
-  "Copy message-id of current message to kill-ring."
+  "Copy message ID of current message to kill-ring."
   (interactive)
   (notmuch-show-do-stash (notmuch-show-get-message-id)))
 
