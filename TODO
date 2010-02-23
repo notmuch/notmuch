@@ -52,6 +52,8 @@ and *then* --max-threads), and also complete value for --sort=
 
 notmuch command-line tool
 -------------------------
+Fix the --format=json option to not imply --entire-thread.
+
 Implement "notmuch search --exclude-threads=<search-terms>" to allow
 for excluding muted threads, (and any other negative, thread-based
 filtering that the user wants to do).
