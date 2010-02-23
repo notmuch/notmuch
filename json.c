@@ -1,5 +1,6 @@
 /* notmuch - Not much of an email program, (just index and search)
  *
+ * Copyright © 2009 Dave Gamble
  * Copyright © 2009 Scott Robinson
  *
  * This program is free software: you can redistribute it and/or modify
@@ -15,17 +16,37 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see http://www.gnu.org/licenses/ .
  *
- * Authors: Scott Robinson <scott@quadhome.com>
+ * Authors: Dave Gamble
+ *          Scott Robinson <scott@quadhome.com>
  *
  */
 
 #include "notmuch-client.h"
 
-/*
- * json_quote_str derived from cJSON's print_string_ptr,
+/* This function was derived from the print_string_ptr function of
+ * cJSON (http://cjson.sourceforge.net/) and is used by permission of
+ * the following license:
+ *
  * Copyright (c) 2009 Dave Gamble
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
  */
-
 char *
 json_quote_str(const void *ctx, const char *str)
 {
