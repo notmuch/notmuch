@@ -64,11 +64,11 @@ option (or similar) to "notmuch show".)
 Teach "notmuch search" to return many different kinds of results. Some
 ideas:
 
-	notmuch search --for threads	# Default if no --for is given
-	notmuch search --for messages
-	notmuch search --for tags
-	notmuch search --for addresses
-	notmuch search --for terms
+	notmuch search --output=threads	# Default if no --output is given
+	notmuch search --output=messages
+	notmuch search --output=tags
+	notmuch search --output=addresses
+	notmuch search --output=terms
 
 Add a "--format" option to "notmuch search", (something printf-like
 for selecting what gets printed).
