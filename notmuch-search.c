@@ -24,7 +24,7 @@ typedef struct search_format {
     const char *results_start;
     const char *thread_start;
     void (*thread) (const void *ctx,
-		    const char *id,
+		    const char *thread_id,
 		    const time_t date,
 		    const int matched,
 		    const int total,
@@ -41,7 +41,7 @@ typedef struct search_format {
 
 static void
 format_thread_text (const void *ctx,
-		    const char *id,
+		    const char *thread_id,
 		    const time_t date,
 		    const int matched,
 		    const int total,
@@ -60,7 +60,7 @@ static const search_format_t format_text = {
 
 static void
 format_thread_json (const void *ctx,
-		    const char *id,
+		    const char *thread_id,
 		    const time_t date,
 		    const int matched,
 		    const int total,
@@ -79,7 +79,7 @@ static const search_format_t format_json = {
 
 static void
 format_thread_text (const void *ctx,
-		    const char *id,
+		    const char *thread_id,
 		    const time_t date,
 		    const int matched,
 		    const int total,
@@ -87,7 +87,7 @@ format_thread_text (const void *ctx,
 		    const char *subject)
 {
     printf ("thread:%s %12s [%d/%d] %s; %s",
-	    id,
+	    thread_id,
 	    notmuch_time_relative_date (ctx, date),
 	    matched,
 	    total,
@@ -97,7 +97,7 @@ format_thread_text (const void *ctx,
 
 static void
 format_thread_json (const void *ctx,
-		    const char *id,
+		    const char *thread_id,
 		    const time_t date,
 		    const int matched,
 		    const int total,
@@ -110,18 +110,18 @@ format_thread_json (const void *ctx,
 
     tm = gmtime (&date);
     if (tm == NULL)
-	INTERNAL_ERROR ("gmtime failed on thread %s.", id);
+	INTERNAL_ERROR ("gmtime failed on thread %s.", thread_id);
 
     if (strftime (timestamp, sizeof (timestamp), "%s", tm) == 0)
-	INTERNAL_ERROR ("strftime failed on thread %s.", id);
+	INTERNAL_ERROR ("strftime failed on thread %s.", thread_id);
 
-    printf ("\"id\": %s,\n"
+    printf ("\"thread\": %s,\n"
 	    "\"timestamp\": %s,\n"
 	    "\"matched\": %d,\n"
 	    "\"total\": %d,\n"
 	    "\"authors\": %s,\n"
 	    "\"subject\": %s,\n",
-	    json_quote_str (ctx_quote, id),
+	    json_quote_str (ctx_quote, thread_id),
 	    timestamp,
 	    matched,
 	    total,
