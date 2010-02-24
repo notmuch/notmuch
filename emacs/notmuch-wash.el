@@ -35,6 +35,9 @@
   "\\(^[[:space:]]*>.*\n\\)+"
   "Pattern to match citation lines.")
 
+(defvar notmuch-wash-original-regexp "^\\(--+\s?[oO]riginal [mM]essage\s?--+\\)$"
+  "Pattern to match a line that separates original message from reply in top-posted message.")
+
 (defvar notmuch-wash-button-signature-hidden-format
   "[ %d-line signature. Click/Enter to show. ]"
   "String used to construct button text for hidden signatures.
@@ -52,6 +55,16 @@ Can use up to one integer format parameter, i.e. %d")
 
 (defvar notmuch-wash-button-citation-visible-format
   "[ %d more citation lines. Click/Enter to hide. ]"
+  "String used to construct button text for visible citations.
+Can use up to one integer format parameter, i.e. %d")
+
+(defvar notmuch-wash-button-original-hidden-format
+  "[ %d-line hidden original message. Click/Enter to show. ]"
+  "String used to construct button text for hidden citations.
+Can use up to one integer format parameter, i.e. %d")
+
+(defvar notmuch-wash-button-original-visible-format
+  "[ %d-line original message. Click/Enter to hide. ]"
   "String used to construct button text for visible citations.
 Can use up to one integer format parameter, i.e. %d")
 
@@ -106,6 +119,10 @@ collapse the remaining lines into a button.")
   'help-echo "mouse-1, RET: Show signature"
   :supertype 'notmuch-wash-button-invisibility-toggle-type)
 
+(define-button-type 'notmuch-wash-button-original-toggle-type
+  'help-echo "mouse-1, RET: Show original message"
+  :supertype 'notmuch-wash-button-invisibility-toggle-type)
+
 (defun notmuch-wash-region-isearch-show (overlay)
   (remove-from-invisibility-spec (overlay-get overlay 'invisible)))
 
@@ -151,6 +168,13 @@ insert before the button, probably for indentation."
   "Excerpt citations and up to one signature."
   (goto-char (point-min))
   (beginning-of-line)
+  (if (and (< (point) (point-max))
+	   (re-search-forward notmuch-wash-original-regexp nil t))
+      (let* ((msg-start (match-beginning 0))
+	     (msg-end (point-max))
+	     (msg-lines (count-lines msg-start msg-end)))
+	(notmuch-wash-region-to-button
+	 msg-start msg-end "original" "\n")))
   (while (and (< (point) (point-max))
 	      (re-search-forward notmuch-wash-citation-regexp nil t))
     (let* ((cite-start (match-beginning 0))
