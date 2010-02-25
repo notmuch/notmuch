@@ -503,14 +503,13 @@ by searching backward)."
       (setq btn (previous-button (button-start btn))))
     (not (invisible-p (button-get btn 'invisibility-spec)))))
 
-(defun notmuch-show-next-message ()
+(defun notmuch-show-next-message-without-marking-read ()
   "Advance to the beginning of the next message in the buffer.
 
 Moves to the last visible character of the current message if
 already on the last message in the buffer.
 
 Returns nil if already on the last message in the buffer."
-  (interactive)
   (notmuch-show-move-to-current-message-summary-line)
   (if (re-search-forward notmuch-show-message-begin-regexp nil t)
       (progn
@@ -521,7 +520,18 @@ Returns nil if already on the last message in the buffer."
     (while (point-invisible-p)
       (backward-char))
     (recenter 0)
-    nil)
+    nil))
+
+(defun notmuch-show-next-message ()
+  "Advance to the beginning of the next message in the buffer.
+and remove the unread tag from that message.
+
+Moves to the last visible character of the current message if
+already on the last message in the buffer.
+
+Returns nil if already on the last message in the buffer."
+  (interactive)
+  (notmuch-show-next-message-without-marking-read)
   (notmuch-show-mark-read))
 
 (defun notmuch-show-find-next-message ()
@@ -534,7 +544,7 @@ message if already within the last message in the buffer."
   ; Looks like we have to use both.
   (save-excursion
     (save-window-excursion
-      (notmuch-show-next-message)
+      (notmuch-show-next-message-without-marking-read)
       (point))))
 
 (defun notmuch-show-next-unread-message ()
@@ -542,17 +552,19 @@ message if already within the last message in the buffer."
 
 Moves to the last visible character of the current message if
 there are no more unread messages past the current point."
-  (notmuch-show-next-message)
+  (notmuch-show-next-message-without-marking-read)
   (while (and (not (notmuch-show-last-message-p))
 	      (not (notmuch-show-message-unread-p)))
-    (notmuch-show-next-message))
+    (notmuch-show-next-message-without-marking-read))
   (if (not (notmuch-show-message-unread-p))
-      (notmuch-show-next-message)))
+      (notmuch-show-next-message-without-marking-read))
+  (notmuch-show-mark-read))
 
 (defun notmuch-show-next-open-message ()
   "Advance to the next open message (that is, body is not invisible)."
-  (while (and (notmuch-show-next-message)
-	      (not (notmuch-show-message-open-p)))))
+  (while (and (notmuch-show-next-message-without-marking-read)
+	      (not (notmuch-show-message-open-p))))
+  (notmuch-show-mark-read))
 
 (defun notmuch-show-previous-message ()
   "Backup to the beginning of the previous message in the buffer.
