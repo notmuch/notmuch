@@ -1,8 +1,12 @@
 notmuch (0.0+201001211402) UNRELEASED; urgency=low
 
+  [ martin f. krafft ]
   * Add suggestion to vim-addon-manager.
 
- -- martin f. krafft <madduck@debian.org>  Tue, 26 Jan 2010 09:52:29 +1300
+  [ Carl Worth ]
+  * Improve package description (closes: #566282).
+
+ -- Carl Worth <cworth@debian.org>  Thu, 25 Feb 2010 11:16:19 -0800
 
 notmuch (0.0+201001211401) unstable; urgency=low
 

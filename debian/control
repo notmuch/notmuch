@@ -17,6 +17,6 @@ Enhances: emacs, vim
 Suggests: emacs, vim, vim-addon-manager
 Description: thread-based email index, search and tagging
  Notmuch is a system for indexing, searching, reading, and tagging
- large collections of email messages. It uses the Xapian library to
- provide fast, full-text search of very large collection of email with
- a very convenient search syntax.
+ large collections of email messages in maildir or mh format. It uses
+ the Xapian library to provide fast, full-text search with a very
+ convenient search syntax.
