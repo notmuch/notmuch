@@ -90,8 +90,10 @@
     (define-key map "+" 'notmuch-show-add-tag)
     (define-key map "x" 'notmuch-show-archive-thread-then-exit)
     (define-key map "a" 'notmuch-show-archive-thread)
-    (define-key map "p" 'notmuch-show-previous-message)
-    (define-key map "n" 'notmuch-show-next-message)
+    (define-key map "P" 'notmuch-show-previous-message)
+    (define-key map "N" 'notmuch-show-next-message)
+    (define-key map "p" 'notmuch-show-previous-open-message)
+    (define-key map "n" 'notmuch-show-next-open-message)
     (define-key map (kbd "DEL") 'notmuch-show-rewind)
     (define-key map " " 'notmuch-show-advance-and-archive)
     map)
@@ -523,7 +525,7 @@ Returns nil if already on the last message in the buffer."
     nil))
 
 (defun notmuch-show-next-message ()
-  "Advance to the beginning of the next message in the buffer.
+  "Advance to the next message (whether open or closed)
 and remove the unread tag from that message.
 
 Moves to the last visible character of the current message if
@@ -548,7 +550,7 @@ message if already within the last message in the buffer."
       (point))))
 
 (defun notmuch-show-next-unread-message ()
-  "Advance to the beginning of the next unread message in the buffer.
+  "Advance to the next unread message.
 
 Moves to the last visible character of the current message if
 there are no more unread messages past the current point."
@@ -561,17 +563,22 @@ there are no more unread messages past the current point."
   (notmuch-show-mark-read))
 
 (defun notmuch-show-next-open-message ()
-  "Advance to the next open message (that is, body is not invisible)."
+  "Advance to the next open message (that is, body is visible).
+
+Moves to the last visible character of the final message in the buffer
+if there are no more open messages."
+  (interactive)
   (while (and (notmuch-show-next-message-without-marking-read)
 	      (not (notmuch-show-message-open-p))))
   (notmuch-show-mark-read))
 
-(defun notmuch-show-previous-message ()
+(defun notmuch-show-previous-message-without-marking-read ()
   "Backup to the beginning of the previous message in the buffer.
 
 If within a message rather than at the beginning of it, then
-simply move to the beginning of the current message."
-  (interactive)
+simply move to the beginning of the current message.
+
+Returns nil if already on the first message in the buffer."
   (let ((start (point)))
     (notmuch-show-move-to-current-message-summary-line)
     (if (not (< (point) start))
@@ -580,8 +587,22 @@ simply move to the beginning of the current message."
 	  (re-search-backward notmuch-show-message-begin-regexp nil t)
 	  (re-search-backward notmuch-show-message-begin-regexp nil t)
 	  (notmuch-show-move-to-current-message-summary-line)
-	  ))
-    (recenter 0)))
+	  (recenter 0)
+	  (if (= (point) start)
+	      nil
+	    t))
+      (recenter 0)
+      (nil))))
+
+(defun notmuch-show-previous-message ()
+  "Backup to the previous message (whether open or closed)
+and remove the unread tag from that message.
+
+If within a message rather than at the beginning of it, then
+simply move to the beginning of the current message."
+  (interactive)
+  (notmuch-show-previous-message-without-marking-read)
+  (notmuch-show-mark-read))
 
 (defun notmuch-show-find-previous-message ()
   "Returns the position of the previous message in the buffer.
@@ -594,8 +615,18 @@ it."
   ; Looks like we have to use both.
   (save-excursion
     (save-window-excursion
-      (notmuch-show-previous-message)
+      (notmuch-show-previous-message-without-marking-read)
       (point))))
+
+(defun notmuch-show-previous-open-message ()
+  "Backup to previous open message (that is, body is visible).
+
+Moves to the first message in the buffer if there are no previous
+open messages."
+  (interactive)
+  (while (and (notmuch-show-previous-message-without-marking-read)
+	      (not (notmuch-show-message-open-p))))
+  (notmuch-show-mark-read))
 
 (defun notmuch-show-rewind ()
   "Backup through the thread, (reverse scrolling compared to \\[notmuch-show-advance-and-archive]).
