@@ -828,8 +828,8 @@ is what to put on the button."
 
 (defun notmuch-show-markup-body (depth match btn)
   "Markup a message body, (indenting, buttonizing citations,
-etc.), and conditionally hiding the body itself if the message
-has been read and does not match the current search.
+etc.), and hiding the body itself if the message does not match
+the current search.
 
 DEPTH specifies the depth at which this message appears in the
 tree of the current thread, (the top-level messages have depth 0
@@ -850,7 +850,7 @@ before the delimiter marking the beginning of the body."
         (overlay-put (make-overlay beg end)
                      'invisible invis-spec)
         (button-put btn 'invisibility-spec invis-spec)
-        (if (not (or (notmuch-show-message-unread-p) match))
+        (if (not match)
             (add-to-invisibility-spec invis-spec)))
       (set-marker beg nil)
       (set-marker end nil)
