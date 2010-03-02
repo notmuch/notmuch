@@ -336,6 +336,11 @@ _index_mime_part (notmuch_message_t *message,
     GMimeContentDisposition *disposition;
     char *body;
 
+    if (! part) {
+	fprintf (stderr, "Warning: Not indexing empty mime part.\n");
+	return;
+    }
+
     if (GMIME_IS_MULTIPART (part)) {
 	GMimeMultipart *multipart = GMIME_MULTIPART (part);
 	int i;
