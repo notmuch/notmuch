@@ -22,6 +22,7 @@
 
 #include "notmuch-client.h"
 #include "gmime-filter-reply.h"
+#include "gmime-filter-headers.h"
 
 static void
 reply_part_content (GMimeObject *part)
@@ -49,6 +50,25 @@ reply_part_content (GMimeObject *part)
 	g_object_unref(stream_filter);
     if (stream_stdout)
 	g_object_unref(stream_stdout);
+}
+
+static void
+show_reply_headers (GMimeMessage *message)
+{
+    GMimeStream *stream_stdout = NULL, *stream_filter = NULL;
+
+    stream_stdout = g_mime_stream_file_new (stdout);
+    if (stream_stdout) {
+	g_mime_stream_file_set_owner (GMIME_STREAM_FILE (stream_stdout), FALSE);
+	stream_filter = g_mime_stream_filter_new(stream_stdout);
+	if (stream_filter) {
+		g_mime_stream_filter_add(GMIME_STREAM_FILTER(stream_filter),
+					 g_mime_filter_headers_new());
+		g_mime_object_write_to_stream(GMIME_OBJECT(message), stream_filter);
+		g_object_unref(stream_filter);
+	}
+	g_object_unref(stream_stdout);
+    }
 }
 
 static void
@@ -352,7 +372,6 @@ notmuch_reply_format_default(void *ctx, notmuch_config_t *config, notmuch_query_
     notmuch_message_t *message;
     const char *subject, *from_addr = NULL;
     const char *in_reply_to, *orig_references, *references;
-    char *reply_headers;
 
     for (messages = notmuch_query_search_messages (query);
 	 notmuch_messages_valid (messages);
@@ -368,7 +387,6 @@ notmuch_reply_format_default(void *ctx, notmuch_config_t *config, notmuch_query_
 	}
 
 	subject = notmuch_message_get_header (message, "subject");
-
 	if (strncasecmp (subject, "Re:", 3))
 	    subject = talloc_asprintf (ctx, "Re: %s", subject);
 	g_mime_message_set_subject (reply, subject);
@@ -404,9 +422,7 @@ notmuch_reply_format_default(void *ctx, notmuch_config_t *config, notmuch_query_
 	g_mime_object_set_header (GMIME_OBJECT (reply),
 				  "References", references);
 
-	reply_headers = g_mime_object_to_string (GMIME_OBJECT (reply));
-	printf ("%s", reply_headers);
-	free (reply_headers);
+	show_reply_headers (reply);
 
 	g_object_unref (G_OBJECT (reply));
 	reply = NULL;
