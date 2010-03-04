@@ -63,7 +63,7 @@ json_quote_chararray(const void *ctx, const char *str, const size_t len)
     for (loop = 0, required = 0, ptr = str;
 	 loop < len;
 	 loop++, required++, ptr++) {
-	if (*ptr < 32 || *ptr == '\"' || *ptr == '\\')
+	if ((unsigned char)(*ptr) < 32 || *ptr == '\"' || *ptr == '\\')
 	    required++;
     }
 
@@ -80,7 +80,7 @@ json_quote_chararray(const void *ctx, const char *str, const size_t len)
 
     *ptr2++ = '\"';
     for (loop = 0; loop < len; loop++) {
-	    if (*ptr > 31 && *ptr != '\"' && *ptr != '\\') {
+	if ((unsigned char)(*ptr) > 31 && *ptr != '\"' && *ptr != '\\') {
 		*ptr2++ = *ptr++;
 	    } else {
 		*ptr2++ = '\\';
