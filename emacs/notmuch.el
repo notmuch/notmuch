@@ -411,9 +411,19 @@ Complete list of currently available key bindings:
 (defun notmuch-search-show-thread ()
   "Display the currently selected thread."
   (interactive)
-  (let ((thread-id (notmuch-search-find-thread-id)))
+  (let ((thread-id (notmuch-search-find-thread-id))
+	(subject (notmuch-search-find-subject))
+	buffer-name)
+    (when (string-match "^[ \t]*$" subject)
+      (setq subject "[No Subject]"))
+    (setq buffer-name (concat "*"
+			      (truncate-string-to-width subject 32 nil nil t)
+			      "*"))
     (if (> (length thread-id) 0)
-	(notmuch-show thread-id (current-buffer) notmuch-search-query-string)
+	(notmuch-show thread-id
+		      (current-buffer)
+		      notmuch-search-query-string
+		      buffer-name)
       (error "End of search results"))))
 
 (defun notmuch-search-reply-to-thread ()

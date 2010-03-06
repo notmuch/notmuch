@@ -959,7 +959,7 @@ All currently available key bindings:
 	  (lambda()
 	    (hl-line-mode 1) ))
 
-(defun notmuch-show (thread-id &optional parent-buffer query-context)
+(defun notmuch-show (thread-id &optional parent-buffer query-context buffer-name)
   "Run \"notmuch show\" with the given thread ID and display results.
 
 The optional PARENT-BUFFER is the notmuch-search buffer from
@@ -967,9 +967,14 @@ which this notmuch-show command was executed, (so that the next
 thread from that buffer can be show when done with this one).
 
 The optional QUERY-CONTEXT is a notmuch search term. Only messages from the thread
-matching this search term are shown if non-nil. "
+matching this search term are shown if non-nil.
+
+The optional BUFFER-NAME provides the neame of the buffer in which the message thread is shown. If it is nil (which occurs when the command is called interactively) the argument to the function is used. "
   (interactive "sNotmuch show: ")
-  (let ((buffer (get-buffer-create (concat "*notmuch-show-" thread-id "*"))))
+  (when (null buffer-name)
+    (setq buffer-name (concat "*notmuch-" thread-id "*")))
+  (let* ((thread-buffer-name (generate-new-buffer-name buffer-name))
+	 (buffer (get-buffer-create thread-buffer-name)))
     (switch-to-buffer buffer)
     (notmuch-show-mode)
     (set (make-local-variable 'notmuch-show-parent-buffer) parent-buffer)
