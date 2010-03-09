@@ -1442,8 +1442,7 @@ which match the current search terms."
 (defun notmuch-search-remove-tag (tag)
   "Remove a tag from the currently selected thread.
 
-The tag is removed from messages in the currently selected thread
-which match the current search terms."
+The tag is removed from all messages in the currently selected thread."
   (interactive
    (list (notmuch-select-tag-with-completion "Tag to remove: " (notmuch-search-find-thread-id))))
   (notmuch-call-notmuch-process "tag" (concat "-" tag) (notmuch-search-find-thread-id))
