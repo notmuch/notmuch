@@ -4,8 +4,6 @@ Fix the things that are causing the most pain to new users
 
 2. Allow an easy way to get tags from directory names (if the user has them)
 
-3. Fix Xapian defect #250 so tagging is fast.
-
 Emacs interface (notmuch.el)
 ----------------------------
 Enhance '+' and '-' in the search view to operate on an entire region
@@ -16,13 +14,8 @@ the entire buffer.
 
 Add a global keybinding table for notmuch, and then view-specific
 tables that add to it.
-
-Add a command to archive all threads in a search view.
 	
 Add a '|' binding from the search view.
-
-When a thread has been entirely read, start out by closing all
-messages except those that matched the search terms.
 
 Add support for choosing from one of the user's configured email
 addresses for the From line.
@@ -61,7 +54,9 @@ filtering that the user wants to do).
 Fix "notmuch show" so that the UI doesn't fail to show a thread that
 is visible in a search buffer, but happens to no longer match the
 current search. (Perhaps add a --matching=<secondary-search-terms>
-option (or similar) to "notmuch show".)
+option (or similar) to "notmuch show".) For now, this is being worked
+around in the emacs interface by noticing that "notmuch show" returns
+nothing and re-rerunning the command without the extra arguments.
 
 Teach "notmuch search" to return many different kinds of results. Some
 ideas:
@@ -78,11 +73,7 @@ for selecting what gets printed).
 Add a "--count-only" (or so?) option to "notmuch search" for returning
 the count of search results.
 
-Add documented syntax for searching all threads/messages.
-
-Give "notmuch restore" some progress indicator. Until we get the
-Xapian bugs fixed that are making this operation slow, we really need
-to let the user know that things are still moving.
+Give "notmuch restore" some progress indicator.
 
 Fix "notmuch restore" to operate in a single pass much like "notmuch
 dump" does, rather than doing N searches into the database, each
@@ -91,33 +82,11 @@ matching 1/N messages.
 Add a "-f <filename>" option to select an alternate configuration
 file.
 
-Fix notmuch.c to call add_timestamp/get_timestamp with path names
-relative to the database path. (Otherwise, moving the database to a
-new directory will result in notmuch creating new timestamp documents
-and leaving stale ones behind.)
-
-Fix notmuch.c to use a DIR prefix for directory timestamps, (the idea
-being that it can then add other non-directory timestamps such as for
-noting how far back in the past mail has been indexed, and whether it
-needs to re-tag messages based on a theoretical "auto-tags"
-configuration file).
-
-Make "notmuch new" notice when a mail directory has gone more than a
-month without receiving new mail and use that to trigger the printing
-of the note that the user might want to mark the directory read-only.
-
-Also make "notmuch new" optionally able to just mark those month-old
-directories read-only on its own. (Could conflict with low-volume
-lists such as announce lists if they are setup to deliver to their own
-maildirs.)
-
 Allow configuration for filename patterns that should be ignored when
 indexing.
 
 notmuch library
 ---------------
-Index content from citations, please.
-
 Provide a sane syntax for date ranges. First, we don't want to require
 both endpoints to be specified. For example it would be nice to be
 able to say things like "since:2009-01-1" or "until:2009-01-1" and
@@ -130,9 +99,6 @@ class.
 Make failure to read a file (such as a permissions problem) a warning
 rather than an error (should be similar to the existing warning for a
 non-mail file).
-
-Add support for files that are moved or deleted (which obviously need
-to be handled differently).
 
 Actually compile and install a libnotmuch shared library.
 
@@ -179,56 +145,7 @@ General
 -------
 Audit everything for dealing with out-of-memory (and drop xutil.c).
 
-Write a test suite.
-
 Achieve 100% test coverage with the test suite.
 
 Investigate why the notmuch database is slightly larger than the sup
 database for the same corpus of email.
-
-Xapian
-------
-Fix defect #250
-
-	replace_document should make minimal changes to database file
-	http://trac.xapian.org/ticket/250
-
-	It looks like it's going to be easy to fix. Here's the file to
-	change:
-
-		xapian-core/backends/flint/flint_database.cc
-
-	And look for:
-
-	  // FIXME - in the case where there is overlap between the new
-	  // termlist and the old termlist, it would be better to compare the
-	  // two lists, and make the minimum set of modifications required.
-	  // This would lead to smaller changesets for replication, and
-	  // probably be faster overall
-
-	So I think this might be as easy as just walking over two
-	sorted lists looking for differences.
-
-	Note that this is in the currently default "flint" backend,
-	but the Xapian folks are probably more interested in fixing
-	the in-development "chert" backend. So the patch to get
-	upstreamed there will probably also fix:
-
-		xapian-core/backends/chert/chert_database.cc
-
-	(I'm hoping the fix will be the same---an identical comment
-	exists there.)
-
-	Also, if you want to experiment with the chert backend,
-	compile current Xapian source and run notmuch with
-	XAPIAN_PREFER_CHERT=1. I haven't tried that yet, but there are
-	claims that a chert database can be 40% smaller than an
-	equivalent flint database.
-
-Report this bug:
-
-	"tag:foo and tag:bar and -tag:deleted" goes insane
-
-	This seems to be triggered by a Boolean operator next to a
-	token starting with a non-word character---suddenly all the
-	Boolean operators get treated as literal tokens)
