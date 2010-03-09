@@ -160,7 +160,7 @@ format_headers_text (const void *ctx, notmuch_message_t *message)
     for (i = 0; i < ARRAY_SIZE (headers); i++) {
 	name = headers[i];
 	value = notmuch_message_get_header (message, name);
-	if (value)
+	if (value && strlen (value))
 	    printf ("%s: %s\n", name, value);
     }
 }
