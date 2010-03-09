@@ -647,7 +647,13 @@ any effects from previous calls to
 	  (condition-case nil
 	      (scroll-down nil)
 	    ((beginning-of-buffer) nil))
-	  (goto-char (window-start)))
+	  (goto-char (window-start))
+	  ; Because count-lines counts invivisible lines, we may have
+	  ; scrolled to far. If so., notice this and fix it up.
+	  (if (< (point) previous)
+	      (progn
+		(goto-char previous)
+		(recenter 0))))
       (notmuch-show-previous-message))))
 
 (defun notmuch-show-advance-and-archive ()
