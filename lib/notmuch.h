@@ -467,6 +467,11 @@ notmuch_threads_get (notmuch_threads_t *threads);
 
 /* Move the 'threads' iterator to the next thread.
  *
+ * If 'threads' is already pointing at the last thread then the
+ * iterator will be moved to a point just beyond that last thread,
+ * (where notmuch_threads_valid will return FALSE and
+ * notmuch_threads_get will return NULL).
+ *
  * See the documentation of notmuch_query_search_threads for example
  * code showing how to iterate over a notmuch_threads_t object.
  */
@@ -640,6 +645,11 @@ notmuch_message_t *
 notmuch_messages_get (notmuch_messages_t *messages);
 
 /* Move the 'messages' iterator to the next message.
+ *
+ * If 'messages' is already pointing at the last message then the
+ * iterator will be moved to a point just beyond that last message,
+ * (where notmuch_messages_valid will return FALSE and
+ * notmuch_messages_get will return NULL).
  *
  * See the documentation of notmuch_query_search_messages for example
  * code showing how to iterate over a notmuch_messages_t object.
@@ -957,6 +967,11 @@ notmuch_tags_get (notmuch_tags_t *tags);
 
 /* Move the 'tags' iterator to the next tag.
  *
+ * If 'tags' is already pointing at the last tag then the iterator
+ * will be moved to a point just beyond that last tag, (where
+ * notmuch_tags_valid will return FALSE and notmuch_tags_get will
+ * return NULL).
+ *
  * See the documentation of notmuch_message_get_tags for example code
  * showing how to iterate over a notmuch_tags_t object.
  */
@@ -1064,6 +1079,11 @@ const char *
 notmuch_filenames_get (notmuch_filenames_t *filenames);
 
 /* Move the 'filenames' iterator to the next filename.
+ *
+ * If 'filenames' is already pointing at the last filename then the
+ * iterator will be moved to a point just beyond that last filename,
+ * (where notmuch_filenames_valid will return FALSE and
+ * notmuch_filenames_get will return NULL).
  *
  * It is acceptable to pass NULL for 'filenames', in which case this
  * function will do nothing.
