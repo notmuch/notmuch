@@ -33,6 +33,39 @@ has the "muted" tag).
 
 Fix i-search to open up invisible citations as necessary.
 
+Emacs saved-search interface
+----------------------------
+Here's a proposal Carl wrote (id:87einafy4u.fsf@yoom.home.cworth.org):
+
+  So what I'm imagining for the default notmuch view is something like
+  this:
+
+          Welcome to notmuch.
+
+              Notmuch search: _________________________________________
+
+          Saved searches:
+
+              55,342      All messages
+                  22      Inbox
+
+          Recent searches:
+
+                   1      from:"someone special" and tag:unread
+                  34      tag:notmuch and tag:todo
+
+          Click (or press Enter) on any search to see the results.
+          Right-click (or press Space) on any recent search to save it.
+
+  So the "saved searches" portion of the view is basically just what
+  notmuch-folder displays now. Above that there's an obvious place to
+  start a new search, (in a slightly more "web-browser-like" way than the
+  typical mini-buffer approach).
+
+  All recent searches appear in the list at the bottom automatically, and
+  there's the documented mechanism for saving a search, (giving it a name
+  and having it appear above).
+
 Portability
 -----------
 Fix configure script to test each compiler warning we want to use.
