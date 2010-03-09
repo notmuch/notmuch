@@ -9,10 +9,14 @@ sequence of:
 	make
 	sudo make install
 
-You can even skip the configure step if all of the dependencies of
-Notmuch are satisfied. If they are not, the configure script will
-notice that and provide instructions on where to obtain the necessary
-dependencies.
+In fact, if you don't plan to pass any arguments to the configure
+script, then you can skip that step and just start with "make", (which
+will call configure for you). See this command:
+
+	./configure --help
+
+for detailed documentation of the things you can control at the
+configure stage.
 
 notmuch.el installation
 -----------------------
