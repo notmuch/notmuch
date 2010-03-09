@@ -68,16 +68,19 @@ which are each described below:
 
 	Talloc is available from http://talloc.samba.org/
 
-On a modern, package-based operating system such as Debian, you can
-install all of the dependencies with the following simple command
-line:
+On a modern, package-based operating system you can install all of the
+dependencies with a simple simple command line. For example:
+
+  For Debian and similar:
 
         sudo apt-get install libxapian-dev libgmime-2.4-dev libtalloc-dev
 
-On other systems, a similar command can be used, but the details of
-the package names may be different, (such as "devel" in place of
-"dev").
+  For Fedora and similar:
 
+	sudo yum install xapian-core-devel gmime-devel libtalloc-devel
+
+On other systems, a similar command can be used, but the details of
+the package names may be different.
 
 	
 
