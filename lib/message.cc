@@ -427,7 +427,7 @@ notmuch_message_get_filename (notmuch_message_t *message)
     const char *prefix = _find_prefix ("file-direntry");
     int prefix_len = strlen (prefix);
     Xapian::TermIterator i;
-    char *direntry, *colon;
+    char *colon, *direntry = NULL;
     const char *db_path, *directory, *basename;
     unsigned int directory_id;
     void *local = talloc_new (message);
