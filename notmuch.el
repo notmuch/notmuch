@@ -1246,6 +1246,8 @@ matching this search term are shown if non-nil. "
 (fset 'notmuch-search-mode-map notmuch-search-mode-map)
 
 (defvar notmuch-search-query-string)
+(defvar notmuch-search-target-thread)
+(defvar notmuch-search-target-position)
 (defvar notmuch-search-oldest-first t
   "Show the oldest mail first in the search-mode")
 
@@ -1346,6 +1348,8 @@ Complete list of currently available key bindings:
   (kill-all-local-variables)
   (make-local-variable 'notmuch-search-query-string)
   (make-local-variable 'notmuch-search-oldest-first)
+  (make-local-variable 'notmuch-search-target-thread)
+  (make-local-variable 'notmuch-search-target-position)
   (set (make-local-variable 'scroll-preserve-screen-position) t)
   (add-to-invisibility-spec 'notmuch-search)
   (use-local-map notmuch-search-mode-map)
@@ -1460,12 +1464,14 @@ This function advances the next thread when finished."
   "Add a message to let user know when \"notmuch search\" exits"
   (let ((buffer (process-buffer proc))
 	(status (process-status proc))
-	(exit-status (process-exit-status proc)))
+	(exit-status (process-exit-status proc))
+	(never-found-target-thread nil))
     (if (memq status '(exit signal))
 	(if (buffer-live-p buffer)
 	    (with-current-buffer buffer
 	      (save-excursion
-		(let ((inhibit-read-only t))
+		(let ((inhibit-read-only t)
+		      (atbob (bobp)))
 		  (goto-char (point-max))
 		  (if (eq status 'signal)
 		      (insert "Incomplete search results (search process was killed).\n"))
@@ -1474,11 +1480,17 @@ This function advances the next thread when finished."
 			(insert "End of search results.")
 			(if (not (= exit-status 0))
 			    (insert (format " (process returned %d)" exit-status)))
-			(insert "\n"))))))))))
+			(insert "\n")
+			(if (and atbob
+				 notmuch-search-target-thread)
+			    (set 'never-found-target-thread t))))))
+	      (if never-found-target-thread
+		  (goto-char notmuch-search-target-position)))))))
 
 (defun notmuch-search-process-filter (proc string)
   "Process and filter the output of \"notmuch search\""
-  (let ((buffer (process-buffer proc)))
+  (let ((buffer (process-buffer proc))
+	(found-target nil))
     (if (buffer-live-p buffer)
 	(with-current-buffer buffer
 	  (save-excursion
@@ -1501,9 +1513,16 @@ This function advances the next thread when finished."
 			(insert (format "%s %-7s %-40s %s (%s)\n" date count authors subject tags))
 			(put-text-property beg (point-marker) 'notmuch-search-thread-id thread-id)
 			(put-text-property beg (point-marker) 'notmuch-search-authors authors)
-			(put-text-property beg (point-marker) 'notmuch-search-subject subject))
+			(put-text-property beg (point-marker) 'notmuch-search-subject subject)
+			(if (and notmuch-search-target-thread
+				 (string= thread-id notmuch-search-target-thread))
+			    (progn
+			      (set 'found-target beg)
+			      (set 'notmuch-search-target-thread nil))))
 		      (set 'line (match-end 0)))
-		  (set 'more nil))))))
+		  (set 'more nil)))))
+	  (if found-target
+	      (goto-char found-target)))
       (delete-process proc))))
 
 (defun notmuch-search-operate-all (action)
@@ -1530,14 +1549,27 @@ characters as well as `_.+-'.
 	   (append action-split (list notmuch-search-query-string) nil))))
 
 ;;;###autoload
-(defun notmuch-search (query &optional oldest-first)
-  "Run \"notmuch search\" with the given query string and display results."
+(defun notmuch-search (query &optional oldest-first target-thread target-position)
+  "Run \"notmuch search\" with the given query string and display results.
+
+The optional parameters are used as follows:
+
+  oldest-first: A Boolean controlling the sort order of returned threads
+  target-thread: A thread ID (with the thread: prefix) that will be made
+                 current if it appears in the search results.
+  saved-position: If the search results complete, and the target thread is
+                  not found in the results, and the point is still at the
+                  beginning of the buffer, then the point will be moved to
+                  the saved position.
+"
   (interactive "sNotmuch search: ")
   (let ((buffer (get-buffer-create (concat "*notmuch-search-" query "*"))))
     (switch-to-buffer buffer)
     (notmuch-search-mode)
     (set 'notmuch-search-query-string query)
     (set 'notmuch-search-oldest-first oldest-first)
+    (set 'notmuch-search-target-thread target-thread)
+    (set 'notmuch-search-target-position target-position)
     (let ((proc (get-buffer-process (current-buffer)))
 	  (inhibit-read-only t))
       (if proc
@@ -1568,11 +1600,9 @@ same relative position within the new buffer."
 	(thread (notmuch-search-find-thread-id))
 	(query notmuch-search-query-string))
     (kill-this-buffer)
-    (notmuch-search query oldest-first)
+    (notmuch-search query oldest-first thread here)
     (goto-char (point-min))
-    (if (re-search-forward (concat "^" thread) nil t)
-	(beginning-of-line)
-      (goto-char here))))
+    ))
 
 (defun notmuch-search-toggle-order ()
   "Toggle the current search order.
