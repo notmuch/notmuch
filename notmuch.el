@@ -592,7 +592,7 @@ Returns nil if already on the first message in the buffer."
 	      nil
 	    t))
       (recenter 0)
-      (nil))))
+      nil)))
 
 (defun notmuch-show-previous-message ()
   "Backup to the previous message (whether open or closed)
