@@ -79,7 +79,7 @@ _notmuch_filenames_create (void *ctx,
 }
 
 notmuch_bool_t
-notmuch_filenames_has_more (notmuch_filenames_t *filenames)
+notmuch_filenames_valid (notmuch_filenames_t *filenames)
 {
     if (filenames == NULL)
 	return NULL;
@@ -105,7 +105,7 @@ notmuch_filenames_get (notmuch_filenames_t *filenames)
 }
 
 void
-notmuch_filenames_advance (notmuch_filenames_t *filenames)
+notmuch_filenames_move_to_next (notmuch_filenames_t *filenames)
 {
     if (filenames == NULL)
 	return;

@@ -119,8 +119,8 @@ _thread_add_message (notmuch_thread_t *thread,
     }
 
     for (tags = notmuch_message_get_tags (message);
-	 notmuch_tags_has_more (tags);
-	 notmuch_tags_advance (tags))
+	 notmuch_tags_valid (tags);
+	 notmuch_tags_move_to_next (tags))
     {
 	tag = notmuch_tags_get (tags);
 	g_hash_table_insert (thread->tags, xstrdup (tag), NULL);
@@ -269,8 +269,8 @@ _notmuch_thread_create (void *ctx,
     notmuch_query_set_sort (thread_id_query, NOTMUCH_SORT_OLDEST_FIRST);
 
     for (messages = notmuch_query_search_messages (thread_id_query);
-	 notmuch_messages_has_more (messages);
-	 notmuch_messages_advance (messages))
+	 notmuch_messages_valid (messages);
+	 notmuch_messages_move_to_next (messages))
     {
 	message = notmuch_messages_get (messages);
 	_thread_add_message (thread, message);
@@ -280,8 +280,8 @@ _notmuch_thread_create (void *ctx,
     notmuch_query_destroy (thread_id_query);
 
     for (messages = notmuch_query_search_messages (matched_query);
-	 notmuch_messages_has_more (messages);
-	 notmuch_messages_advance (messages))
+	 notmuch_messages_valid (messages);
+	 notmuch_messages_move_to_next (messages))
     {
 	message = notmuch_messages_get (messages);
 	_thread_add_matched_message (thread, message);

@@ -382,13 +382,13 @@ _notmuch_messages_create (notmuch_message_list_t *list);
 /* query.cc */
 
 notmuch_bool_t
-_notmuch_mset_messages_has_more (notmuch_messages_t *messages);
+_notmuch_mset_messages_valid (notmuch_messages_t *messages);
 
 notmuch_message_t *
 _notmuch_mset_messages_get (notmuch_messages_t *messages);
 
 void
-_notmuch_mset_messages_advance (notmuch_messages_t *messages);
+_notmuch_mset_messages_move_to_next (notmuch_messages_t *messages);
 
 /* message.cc */
 

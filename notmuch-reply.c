@@ -293,8 +293,8 @@ notmuch_reply_format_default(void *ctx, notmuch_config_t *config, notmuch_query_
     char *reply_headers;
 
     for (messages = notmuch_query_search_messages (query);
-	 notmuch_messages_has_more (messages);
-	 notmuch_messages_advance (messages))
+	 notmuch_messages_valid (messages);
+	 notmuch_messages_move_to_next (messages))
     {
 	message = notmuch_messages_get (messages);
 
@@ -368,8 +368,8 @@ notmuch_reply_format_headers_only(void *ctx, notmuch_config_t *config, notmuch_q
     char *reply_headers;
 
     for (messages = notmuch_query_search_messages (query);
-	 notmuch_messages_has_more (messages);
-	 notmuch_messages_advance (messages))
+	 notmuch_messages_valid (messages);
+	 notmuch_messages_move_to_next (messages))
     {
 	message = notmuch_messages_get (messages);
 

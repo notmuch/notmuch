@@ -59,8 +59,8 @@ notmuch_dump_command (unused (void *ctx), int argc, char *argv[])
     }
 
     for (messages = notmuch_query_search_messages (query);
-	 notmuch_messages_has_more (messages);
-	 notmuch_messages_advance (messages))
+	 notmuch_messages_valid (messages);
+	 notmuch_messages_move_to_next (messages))
     {
 	int first = 1;
 	message = notmuch_messages_get (messages);
@@ -69,8 +69,8 @@ notmuch_dump_command (unused (void *ctx), int argc, char *argv[])
 		 "%s (", notmuch_message_get_message_id (message));
 
 	for (tags = notmuch_message_get_tags (message);
-	     notmuch_tags_has_more (tags);
-	     notmuch_tags_advance (tags))
+	     notmuch_tags_valid (tags);
+	     notmuch_tags_move_to_next (tags))
 	{
 	    if (! first)
 		fprintf (output, " ");

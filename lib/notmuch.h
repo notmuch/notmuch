@@ -364,8 +364,8 @@ notmuch_query_set_sort (notmuch_query_t *query, notmuch_sort_t sort);
  *     query = notmuch_query_create (database, query_string);
  *
  *     for (threads = notmuch_query_search_threads (query);
- *          notmuch_threads_has_more (threads);
- *          notmuch_threads_advance (threads))
+ *          notmuch_threads_valid (threads);
+ *          notmuch_threads_move_to_next (threads))
  *     {
  *         thread = notmuch_threads_get (threads);
  *         ....
@@ -403,8 +403,8 @@ notmuch_query_search_threads (notmuch_query_t *query);
  *     query = notmuch_query_create (database, query_string);
  *
  *     for (messages = notmuch_query_search_messages (query);
- *          notmuch_messages_has_more (messages);
- *          notmuch_messages_advance (messages))
+ *          notmuch_messages_valid (messages);
+ *          notmuch_messages_move_to_next (messages))
  *     {
  *         message = notmuch_messages_get (messages);
  *         ....
@@ -439,18 +439,17 @@ notmuch_query_search_messages (notmuch_query_t *query);
 void
 notmuch_query_destroy (notmuch_query_t *query);
 
-/* Does the given notmuch_threads_t object contain any more
- * results.
+/* Is the given 'threads' iterator pointing at a valid thread.
  *
- * When this function returns TRUE, notmuch_threads_get will
- * return a valid object. Whereas when this function returns FALSE,
+ * When this function returns TRUE, notmuch_threads_get will return a
+ * valid object. Whereas when this function returns FALSE,
  * notmuch_threads_get will return NULL.
  *
  * See the documentation of notmuch_query_search_threads for example
  * code showing how to iterate over a notmuch_threads_t object.
  */
 notmuch_bool_t
-notmuch_threads_has_more (notmuch_threads_t *threads);
+notmuch_threads_valid (notmuch_threads_t *threads);
 
 /* Get the current thread from 'threads' as a notmuch_thread_t.
  *
@@ -466,13 +465,13 @@ notmuch_threads_has_more (notmuch_threads_t *threads);
 notmuch_thread_t *
 notmuch_threads_get (notmuch_threads_t *threads);
 
-/* Advance the 'threads' iterator to the next thread.
+/* Move the 'threads' iterator to the next thread.
  *
  * See the documentation of notmuch_query_search_threads for example
  * code showing how to iterate over a notmuch_threads_t object.
  */
 void
-notmuch_threads_advance (notmuch_threads_t *threads);
+notmuch_threads_move_to_next (notmuch_threads_t *threads);
 
 /* Destroy a notmuch_threads_t object.
  *
@@ -593,8 +592,8 @@ notmuch_thread_get_newest_date (notmuch_thread_t *thread);
  *     thread = notmuch_threads_get (threads);
  *
  *     for (tags = notmuch_thread_get_tags (thread);
- *          notmuch_tags_has_more (tags);
- *          notmuch_result_advance (tags))
+ *          notmuch_tags_valid (tags);
+ *          notmuch_result_move_to_next (tags))
  *     {
  *         tag = notmuch_tags_get (tags);
  *         ....
@@ -614,8 +613,7 @@ notmuch_thread_get_tags (notmuch_thread_t *thread);
 void
 notmuch_thread_destroy (notmuch_thread_t *thread);
 
-/* Does the given notmuch_messages_t object contain any more
- * messages.
+/* Is the given 'messages' iterator pointing at a valid message.
  *
  * When this function returns TRUE, notmuch_messages_get will return a
  * valid object. Whereas when this function returns FALSE,
@@ -625,7 +623,7 @@ notmuch_thread_destroy (notmuch_thread_t *thread);
  * code showing how to iterate over a notmuch_messages_t object.
  */
 notmuch_bool_t
-notmuch_messages_has_more (notmuch_messages_t *messages);
+notmuch_messages_valid (notmuch_messages_t *messages);
 
 /* Get the current message from 'messages' as a notmuch_message_t.
  *
@@ -641,13 +639,13 @@ notmuch_messages_has_more (notmuch_messages_t *messages);
 notmuch_message_t *
 notmuch_messages_get (notmuch_messages_t *messages);
 
-/* Advance the 'messages' iterator to the next result.
+/* Move the 'messages' iterator to the next message.
  *
  * See the documentation of notmuch_query_search_messages for example
  * code showing how to iterate over a notmuch_messages_t object.
  */
 void
-notmuch_messages_advance (notmuch_messages_t *messages);
+notmuch_messages_move_to_next (notmuch_messages_t *messages);
 
 /* Destroy a notmuch_messages_t object.
  *
@@ -715,7 +713,7 @@ notmuch_message_get_thread_id (notmuch_message_t *message);
  * will return NULL.
  *
  * If there are no replies to 'message', this function will return
- * NULL. (Note that notmuch_messages_has_more will accept that NULL
+ * NULL. (Note that notmuch_messages_valid will accept that NULL
  * value as legitimate, and simply return FALSE for it.)
  */
 notmuch_messages_t *
@@ -792,8 +790,8 @@ notmuch_message_get_header (notmuch_message_t *message, const char *header);
  *     message = notmuch_database_find_message (database, message_id);
  *
  *     for (tags = notmuch_message_get_tags (message);
- *          notmuch_tags_has_more (tags);
- *          notmuch_result_advance (tags))
+ *          notmuch_tags_valid (tags);
+ *          notmuch_result_move_to_next (tags))
  *     {
  *         tag = notmuch_tags_get (tags);
  *         ....
@@ -934,7 +932,7 @@ notmuch_message_thaw (notmuch_message_t *message);
 void
 notmuch_message_destroy (notmuch_message_t *message);
 
-/* Does the given notmuch_tags_t object contain any more tags.
+/* Is the given 'tags' iterator pointing at a valid tag.
  *
  * When this function returns TRUE, notmuch_tags_get will return a
  * valid string. Whereas when this function returns FALSE,
@@ -944,7 +942,7 @@ notmuch_message_destroy (notmuch_message_t *message);
  * showing how to iterate over a notmuch_tags_t object.
  */
 notmuch_bool_t
-notmuch_tags_has_more (notmuch_tags_t *tags);
+notmuch_tags_valid (notmuch_tags_t *tags);
 
 /* Get the current tag from 'tags' as a string.
  *
@@ -957,13 +955,13 @@ notmuch_tags_has_more (notmuch_tags_t *tags);
 const char *
 notmuch_tags_get (notmuch_tags_t *tags);
 
-/* Advance the 'tags' iterator to the next tag.
+/* Move the 'tags' iterator to the next tag.
  *
  * See the documentation of notmuch_message_get_tags for example code
  * showing how to iterate over a notmuch_tags_t object.
  */
 void
-notmuch_tags_advance (notmuch_tags_t *tags);
+notmuch_tags_move_to_next (notmuch_tags_t *tags);
 
 /* Destroy a notmuch_tags_t object.
  *
@@ -1042,8 +1040,7 @@ notmuch_directory_get_child_directories (notmuch_directory_t *directory);
 void
 notmuch_directory_destroy (notmuch_directory_t *directory);
 
-/* Does the given notmuch_filenames_t object contain any more
- * filenames.
+/* Is the given 'filenames' iterator pointing at a valid filename.
  *
  * When this function returns TRUE, notmuch_filenames_get will return
  * a valid string. Whereas when this function returns FALSE,
@@ -1053,7 +1050,7 @@ notmuch_directory_destroy (notmuch_directory_t *directory);
  * function will always return FALSE.
  */
 notmuch_bool_t
-notmuch_filenames_has_more (notmuch_filenames_t *filenames);
+notmuch_filenames_valid (notmuch_filenames_t *filenames);
 
 /* Get the current filename from 'filenames' as a string.
  *
@@ -1066,13 +1063,13 @@ notmuch_filenames_has_more (notmuch_filenames_t *filenames);
 const char *
 notmuch_filenames_get (notmuch_filenames_t *filenames);
 
-/* Advance the 'filenames' iterator to the next filename.
+/* Move the 'filenames' iterator to the next filename.
  *
  * It is acceptable to pass NULL for 'filenames', in which case this
  * function will do nothing.
  */
 void
-notmuch_filenames_advance (notmuch_filenames_t *filenames);
+notmuch_filenames_move_to_next (notmuch_filenames_t *filenames);
 
 /* Destroy a notmuch_filenames_t object.
  *

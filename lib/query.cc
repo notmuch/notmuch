@@ -170,7 +170,7 @@ notmuch_query_search_messages (notmuch_query_t *query)
 }
 
 notmuch_bool_t
-_notmuch_mset_messages_has_more (notmuch_messages_t *messages)
+_notmuch_mset_messages_valid (notmuch_messages_t *messages)
 {
     notmuch_mset_messages_t *mset_messages;
 
@@ -189,7 +189,7 @@ _notmuch_mset_messages_get (notmuch_messages_t *messages)
 
     mset_messages = (notmuch_mset_messages_t *) messages;
 
-    if (! _notmuch_mset_messages_has_more (&mset_messages->base))
+    if (! _notmuch_mset_messages_valid (&mset_messages->base))
 	return NULL;
 
     doc_id = *mset_messages->iterator;
@@ -208,7 +208,7 @@ _notmuch_mset_messages_get (notmuch_messages_t *messages)
 }
 
 void
-_notmuch_mset_messages_advance (notmuch_messages_t *messages)
+_notmuch_mset_messages_move_to_next (notmuch_messages_t *messages)
 {
     notmuch_mset_messages_t *mset_messages;
 
@@ -258,14 +258,14 @@ notmuch_query_destroy (notmuch_query_t *query)
 }
 
 notmuch_bool_t
-notmuch_threads_has_more (notmuch_threads_t *threads)
+notmuch_threads_valid (notmuch_threads_t *threads)
 {
     notmuch_message_t *message;
 
     if (threads->thread_id)
 	return TRUE;
 
-    while (notmuch_messages_has_more (threads->messages))
+    while (notmuch_messages_valid (threads->messages))
     {
 	message = notmuch_messages_get (threads->messages);
 
@@ -277,11 +277,11 @@ notmuch_threads_has_more (notmuch_threads_t *threads)
 	{
 	    g_hash_table_insert (threads->threads,
 				 xstrdup (threads->thread_id), NULL);
-	    notmuch_messages_advance (threads->messages);
+	    notmuch_messages_move_to_next (threads->messages);
 	    return TRUE;
 	}
 
-	notmuch_messages_advance (threads->messages);
+	notmuch_messages_move_to_next (threads->messages);
     }
 
     threads->thread_id = NULL;
@@ -291,7 +291,7 @@ notmuch_threads_has_more (notmuch_threads_t *threads)
 notmuch_thread_t *
 notmuch_threads_get (notmuch_threads_t *threads)
 {
-    if (! notmuch_threads_has_more (threads))
+    if (! notmuch_threads_valid (threads))
 	return NULL;
 
     return _notmuch_thread_create (threads->query,
@@ -301,7 +301,7 @@ notmuch_threads_get (notmuch_threads_t *threads)
 }
 
 void
-notmuch_threads_advance (notmuch_threads_t *threads)
+notmuch_threads_move_to_next (notmuch_threads_t *threads)
 {
     threads->thread_id = NULL;
 }

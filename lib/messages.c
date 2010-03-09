@@ -102,13 +102,13 @@ _notmuch_messages_create (notmuch_message_list_t *list)
  *	   anyway. *sigh*
  */
 notmuch_bool_t
-notmuch_messages_has_more (notmuch_messages_t *messages)
+notmuch_messages_valid (notmuch_messages_t *messages)
 {
     if (messages == NULL)
 	return FALSE;
 
     if (! messages->is_of_list_type)
-	return _notmuch_mset_messages_has_more (messages);
+	return _notmuch_mset_messages_valid (messages);
 
     return (messages->iterator != NULL);
 }
@@ -126,10 +126,10 @@ notmuch_messages_get (notmuch_messages_t *messages)
 }
 
 void
-notmuch_messages_advance (notmuch_messages_t *messages)
+notmuch_messages_move_to_next (notmuch_messages_t *messages)
 {
     if (! messages->is_of_list_type)
-	return _notmuch_mset_messages_advance (messages);
+	return _notmuch_mset_messages_move_to_next (messages);
 
     if (messages->iterator == NULL)
 	return;
@@ -162,11 +162,11 @@ notmuch_messages_collect_tags (notmuch_messages_t *messages)
 	msg_tags = notmuch_message_get_tags (msg);
 	while ((tag = notmuch_tags_get (msg_tags))) {
 	    g_hash_table_insert (htable, xstrdup (tag), NULL);
-	    notmuch_tags_advance (msg_tags);
+	    notmuch_tags_move_to_next (msg_tags);
 	}
 	notmuch_tags_destroy (msg_tags);
 	notmuch_message_destroy (msg);
-	notmuch_messages_advance (messages);
+	notmuch_messages_move_to_next (messages);
     }
 
     keys = g_hash_table_get_keys (htable);

@@ -77,7 +77,8 @@ _notmuch_tags_add_tag (notmuch_tags_t *tags, const char *tag)
  *
  * The internal creator of 'tags' should call this function before
  * returning 'tags' to the user to call the public functions such as
- * notmuch_tags_has_more, notmuch_tags_get, and notmuch_tags_advance. */
+ * notmuch_tags_valid, notmuch_tags_get, and
+ * notmuch_tags_move_to_next. */
 void
 _notmuch_tags_prepare_iterator (notmuch_tags_t *tags)
 {
@@ -89,7 +90,7 @@ _notmuch_tags_prepare_iterator (notmuch_tags_t *tags)
 }
 
 notmuch_bool_t
-notmuch_tags_has_more (notmuch_tags_t *tags)
+notmuch_tags_valid (notmuch_tags_t *tags)
 {
     return tags->iterator != NULL;
 }
@@ -104,7 +105,7 @@ notmuch_tags_get (notmuch_tags_t *tags)
 }
 
 void
-notmuch_tags_advance (notmuch_tags_t *tags)
+notmuch_tags_move_to_next (notmuch_tags_t *tags)
 {
     if (tags->iterator == NULL)
 	return;

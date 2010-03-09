@@ -146,8 +146,8 @@ do_search_threads (const void *ctx,
     fputs (format->results_start, stdout);
 
     for (threads = notmuch_query_search_threads (query);
-	 notmuch_threads_has_more (threads);
-	 notmuch_threads_advance (threads))
+	 notmuch_threads_valid (threads);
+	 notmuch_threads_move_to_next (threads))
     {
 	int first_tag = 1;
 
@@ -174,8 +174,8 @@ do_search_threads (const void *ctx,
 	fputs (format->tag_start, stdout);
 
 	for (tags = notmuch_thread_get_tags (thread);
-	     notmuch_tags_has_more (tags);
-	     notmuch_tags_advance (tags))
+	     notmuch_tags_valid (tags);
+	     notmuch_tags_move_to_next (tags))
 	{
 	    if (! first_tag)
 		fputs (format->tag_sep, stdout);

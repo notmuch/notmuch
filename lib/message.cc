@@ -739,8 +739,8 @@ notmuch_message_remove_all_tags (notmuch_message_t *message)
 	return status;
 
     for (tags = notmuch_message_get_tags (message);
-	 notmuch_tags_has_more (tags);
-	 notmuch_tags_advance (tags))
+	 notmuch_tags_valid (tags);
+	 notmuch_tags_move_to_next (tags))
     {
 	tag = notmuch_tags_get (tags);
 

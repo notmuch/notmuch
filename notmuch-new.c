@@ -324,7 +324,7 @@ add_files_recursive (notmuch_database_t *notmuch,
 
 	/* Check if we've walked past any names in db_files or
 	 * db_subdirs. If so, these have been deleted. */
-	while (notmuch_filenames_has_more (db_files) &&
+	while (notmuch_filenames_valid (db_files) &&
 	       strcmp (notmuch_filenames_get (db_files), entry->d_name) < 0)
 	{
 	    char *absolute = talloc_asprintf (state->removed_files,
@@ -333,10 +333,10 @@ add_files_recursive (notmuch_database_t *notmuch,
 
 	    _filename_list_add (state->removed_files, absolute);
 
-	    notmuch_filenames_advance (db_files);
+	    notmuch_filenames_move_to_next (db_files);
 	}
 
-	while (notmuch_filenames_has_more (db_subdirs) &&
+	while (notmuch_filenames_valid (db_subdirs) &&
 	       strcmp (notmuch_filenames_get (db_subdirs), entry->d_name) <= 0)
 	{
 	    const char *filename = notmuch_filenames_get (db_subdirs);
@@ -349,7 +349,7 @@ add_files_recursive (notmuch_database_t *notmuch,
 		_filename_list_add (state->removed_directories, absolute);
 	    }
 
-	    notmuch_filenames_advance (db_subdirs);
+	    notmuch_filenames_move_to_next (db_subdirs);
 	}
 
 	/* If we're looking at a symlink, we only want to add it if it
@@ -381,10 +381,10 @@ add_files_recursive (notmuch_database_t *notmuch,
 	}
 
 	/* Don't add a file that we've added before. */
-	if (notmuch_filenames_has_more (db_files) &&
+	if (notmuch_filenames_valid (db_files) &&
 	    strcmp (notmuch_filenames_get (db_files), entry->d_name) == 0)
 	{
-	    notmuch_filenames_advance (db_files);
+	    notmuch_filenames_move_to_next (db_files);
 	    continue;
 	}
 
@@ -456,7 +456,7 @@ add_files_recursive (notmuch_database_t *notmuch,
 
     /* Now that we've walked the whole filesystem list, anything left
      * over in the database lists has been deleted. */
-    while (notmuch_filenames_has_more (db_files))
+    while (notmuch_filenames_valid (db_files))
     {
 	char *absolute = talloc_asprintf (state->removed_files,
 					  "%s/%s", path,
@@ -464,10 +464,10 @@ add_files_recursive (notmuch_database_t *notmuch,
 
 	_filename_list_add (state->removed_files, absolute);
 
-	notmuch_filenames_advance (db_files);
+	notmuch_filenames_move_to_next (db_files);
     }
 
-    while (notmuch_filenames_has_more (db_subdirs))
+    while (notmuch_filenames_valid (db_subdirs))
     {
 	char *absolute = talloc_asprintf (state->removed_directories,
 					  "%s/%s", path,
@@ -475,7 +475,7 @@ add_files_recursive (notmuch_database_t *notmuch,
 
 	_filename_list_add (state->removed_directories, absolute);
 
-	notmuch_filenames_advance (db_subdirs);
+	notmuch_filenames_move_to_next (db_subdirs);
     }
 
     if (! interrupted) {
@@ -676,8 +676,8 @@ _remove_directory (void *ctx,
     directory = notmuch_database_get_directory (notmuch, path);
 
     for (files = notmuch_directory_get_child_files (directory);
-	 notmuch_filenames_has_more (files);
-	 notmuch_filenames_advance (files))
+	 notmuch_filenames_valid (files);
+	 notmuch_filenames_move_to_next (files))
     {
 	absolute = talloc_asprintf (ctx, "%s/%s", path,
 				    notmuch_filenames_get (files));
@@ -690,8 +690,8 @@ _remove_directory (void *ctx,
     }
 
     for (subdirs = notmuch_directory_get_child_directories (directory);
-	 notmuch_filenames_has_more (subdirs);
-	 notmuch_filenames_advance (subdirs))
+	 notmuch_filenames_valid (subdirs);
+	 notmuch_filenames_move_to_next (subdirs))
     {
 	absolute = talloc_asprintf (ctx, "%s/%s", path,
 				    notmuch_filenames_get (subdirs));

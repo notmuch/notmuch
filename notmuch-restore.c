@@ -93,8 +93,8 @@ notmuch_restore_command (unused (void *ctx), int argc, char *argv[])
 
 	db_tags_str = NULL;
 	for (db_tags = notmuch_message_get_tags (message);
-	     notmuch_tags_has_more (db_tags);
-	     notmuch_tags_advance (db_tags))
+	     notmuch_tags_valid (db_tags);
+	     notmuch_tags_move_to_next (db_tags))
 	{
 	    const char *tag = notmuch_tags_get (db_tags);
 

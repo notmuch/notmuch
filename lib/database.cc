@@ -751,8 +751,8 @@ notmuch_database_upgrade (notmuch_database_t *notmuch,
 	total = notmuch_query_count_messages (query);
 
 	for (messages = notmuch_query_search_messages (query);
-	     notmuch_messages_has_more (messages);
-	     notmuch_messages_advance (messages))
+	     notmuch_messages_valid (messages);
+	     notmuch_messages_move_to_next (messages))
 	{
 	    if (do_progress_notify) {
 		progress_notify (closure, (double) count / total);
@@ -827,8 +827,8 @@ notmuch_database_upgrade (notmuch_database_t *notmuch,
 	char *filename;
 
 	for (messages = notmuch_query_search_messages (query);
-	     notmuch_messages_has_more (messages);
-	     notmuch_messages_advance (messages))
+	     notmuch_messages_valid (messages);
+	     notmuch_messages_move_to_next (messages))
 	{
 	    if (do_progress_notify) {
 		progress_notify (closure, (double) count / total);

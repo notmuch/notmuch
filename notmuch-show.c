@@ -90,8 +90,8 @@ _get_tags_as_string (const void *ctx, notmuch_message_t *message)
 	return NULL;
 
     for (tags = notmuch_message_get_tags (message);
-	 notmuch_tags_has_more (tags);
-	 notmuch_tags_advance (tags))
+	 notmuch_tags_valid (tags);
+	 notmuch_tags_move_to_next (tags))
     {
 	tag = notmuch_tags_get (tags);
 
@@ -355,8 +355,8 @@ show_messages (void *ctx, const show_format_t *format, notmuch_messages_t *messa
     fputs (format->message_set_start, stdout);
 
     for (;
-	 notmuch_messages_has_more (messages);
-	 notmuch_messages_advance (messages))
+	 notmuch_messages_valid (messages);
+	 notmuch_messages_move_to_next (messages))
     {
 	if (!first_set)
 	    fputs (format->message_set_sep, stdout);
@@ -460,8 +460,8 @@ notmuch_show_command (void *ctx, unused (int argc), unused (char *argv[]))
     fputs (format->message_set_start, stdout);
 
     for (threads = notmuch_query_search_threads (query);
-	 notmuch_threads_has_more (threads);
-	 notmuch_threads_advance (threads))
+	 notmuch_threads_valid (threads);
+	 notmuch_threads_move_to_next (threads))
     {
 	thread = notmuch_threads_get (threads);
 

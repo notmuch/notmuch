@@ -28,7 +28,7 @@ print_tags (notmuch_tags_t *tags)
 
     while ((t = notmuch_tags_get (tags))) {
 	printf ("%s\n", t);
-	notmuch_tags_advance (tags);
+	notmuch_tags_move_to_next (tags);
     }
 }
 
