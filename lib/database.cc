@@ -147,6 +147,7 @@ prefix_t BOOLEAN_PREFIX_INTERNAL[] = {
 prefix_t BOOLEAN_PREFIX_EXTERNAL[] = {
     { "thread",			"G" },
     { "tag",			"K" },
+    { "is",			"K" },
     { "id",			"Q" }
 };
 
