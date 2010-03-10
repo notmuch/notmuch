@@ -26,7 +26,7 @@ notmuch: $(notmuch_client_modules) lib/notmuch.a
 notmuch.1.gz: notmuch.1
 	$(call quiet,gzip) --stdout $^ > $@
 
-install: all-without-message notmuch.1.gz
+install: all notmuch.1.gz
 	for d in $(DESTDIR)$(prefix)/bin/ $(DESTDIR)$(prefix)/share/man/man1 ; \
 	do \
 		install -d $$d ; \
