@@ -1,4 +1,4 @@
-dir=compat
+dir := compat
 extra_cflags += -I$(dir)
 
 notmuch_compat_srcs =

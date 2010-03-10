@@ -1,4 +1,4 @@
-dir=lib
+dir := lib
 extra_cflags += -I$(dir)
 
 libnotmuch_c_srcs =		\

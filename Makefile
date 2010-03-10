@@ -10,9 +10,6 @@ gzip = gzip
 bash_completion_dir = /etc/bash_completion.d
 zsh_completion_dir = /usr/share/zsh/functions/Completion/Unix
 
-global_deps = Makefile Makefile.local Makefile.config \
-		   lib/Makefile lib/Makefile.local
-
 extra_cflags :=
 extra_cxxflags :=
 
@@ -44,12 +41,12 @@ Makefile.config: configure
 	@echo ""
 	./configure
 
-include Makefile.config
+subdirs = compat emacs lib
 
-include lib/Makefile.local
-include compat/Makefile.local
-include emacs/Makefile.local
-include Makefile.local
+global_deps = Makefile Makefile.config Makefile.local \
+	$(subdirs:%=%/Makefile) $(subdirs:%=%/Makefile.local)
+
+include Makefile.config Makefile.local $(subdirs:%=%/Makefile.local)
 
 # The user has not set any verbosity, default to quiet mode and inform the
 # user how to enable verbose compiles.

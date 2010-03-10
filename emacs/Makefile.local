@@ -1,8 +1,7 @@
-dir=emacs
-emacs_sources=                 \
-	$(dir)/notmuch.el
+dir := emacs
+emacs_sources := $(dir)/notmuch.el
 
-emacs_bytecode=$(subst .el,.elc,$(emacs_sources))
+emacs_bytecode := $(subst .el,.elc,$(emacs_sources))
 
 emacs: $(emacs_bytecode)
 
