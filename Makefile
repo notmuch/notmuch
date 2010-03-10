@@ -10,7 +10,7 @@ gzip = gzip
 bash_completion_dir = /etc/bash_completion.d
 zsh_completion_dir = /usr/share/zsh/functions/Completion/Unix
 
-all_deps = Makefile Makefile.local Makefile.config \
+global_deps = Makefile Makefile.local Makefile.config \
 		   lib/Makefile lib/Makefile.local
 
 extra_cflags :=
@@ -54,22 +54,22 @@ endif
 # Otherwise, print the full command line.
 quiet ?= $($1)
 
-%.o: %.cc $(all_deps)
+%.o: %.cc $(global_deps)
 	$(call quiet,CXX,$(CXXFLAGS)) -c $(FINAL_CXXFLAGS) $< -o $@
 
-%.o: %.c $(all_deps)
+%.o: %.c $(global_deps)
 	$(call quiet,CC,$(CFLAGS)) -c $(FINAL_CFLAGS) $< -o $@
 
 %.elc: %.el
 	$(call quiet,EMACS) -batch -f batch-byte-compile $<
 
-.deps/%.d: %.c $(all_deps)
+.deps/%.d: %.c $(global_deps)
 	@set -e; rm -f $@; mkdir -p $$(dirname $@) ; \
 	$(CC) -M $(CPPFLAGS) $(FINAL_CFLAGS) $< > $@.$$$$ 2>/dev/null ; \
 	sed 's,'$$(basename $*)'\.o[ :]*,$*.o $@ : ,g' < $@.$$$$ > $@; \
 	rm -f $@.$$$$
 
-.deps/%.d: %.cc $(all_deps)
+.deps/%.d: %.cc $(global_deps)
 	@set -e; rm -f $@; mkdir -p $$(dirname $@) ; \
 	$(CXX) -M $(CPPFLAGS) $(FINAL_CXXFLAGS) $< > $@.$$$$ 2>/dev/null ; \
 	sed 's,'$$(basename $*)'\.o[ :]*,$*.o $@ : ,g' < $@.$$$$ > $@; \
