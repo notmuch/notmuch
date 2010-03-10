@@ -15,5 +15,14 @@ install-emacs: install emacs
 	do \
 		install -m0644 $$f $(DESTDIR)$(emacs_lispdir) ;\
 	done;
+	@echo ""
+	@echo "The notmuch emacs client is now installed."
+	@echo ""
+	@echo "To run this, each user should add the following line to the ~/.emacs file:"
+	@echo ""
+	@echo "	(require 'notmuch)"
+	@echo ""
+	@echo "And should then run \"M-x notmuch\" from within emacs or run \"emacs -f notmuch\""
+	@echo ""
 
 CLEAN := $(CLEAN) $(emacs_bytecode)
