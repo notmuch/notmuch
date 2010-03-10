@@ -1247,7 +1247,7 @@ matching this search term are shown if non-nil. "
 
 (defvar notmuch-search-query-string)
 (defvar notmuch-search-target-thread)
-(defvar notmuch-search-target-position)
+(defvar notmuch-search-target-line)
 (defvar notmuch-search-oldest-first t
   "Show the oldest mail first in the search-mode")
 
@@ -1349,7 +1349,7 @@ Complete list of currently available key bindings:
   (make-local-variable 'notmuch-search-query-string)
   (make-local-variable 'notmuch-search-oldest-first)
   (make-local-variable 'notmuch-search-target-thread)
-  (make-local-variable 'notmuch-search-target-position)
+  (make-local-variable 'notmuch-search-target-line)
   (set (make-local-variable 'scroll-preserve-screen-position) t)
   (add-to-invisibility-spec 'notmuch-search)
   (use-local-map notmuch-search-mode-map)
@@ -1484,8 +1484,9 @@ This function advances the next thread when finished."
 			(if (and atbob
 				 notmuch-search-target-thread)
 			    (set 'never-found-target-thread t))))))
-	      (if never-found-target-thread
-		  (goto-char notmuch-search-target-position)))))))
+	      (if (and never-found-target-thread
+		       notmuch-search-target-line)
+		  (goto-line notmuch-search-target-line)))))))
 
 (defun notmuch-search-process-filter (proc string)
   "Process and filter the output of \"notmuch search\""
@@ -1549,7 +1550,7 @@ characters as well as `_.+-'.
 	   (append action-split (list notmuch-search-query-string) nil))))
 
 ;;;###autoload
-(defun notmuch-search (query &optional oldest-first target-thread target-position)
+(defun notmuch-search (query &optional oldest-first target-thread target-line)
   "Run \"notmuch search\" with the given query string and display results.
 
 The optional parameters are used as follows:
@@ -1557,11 +1558,8 @@ The optional parameters are used as follows:
   oldest-first: A Boolean controlling the sort order of returned threads
   target-thread: A thread ID (with the thread: prefix) that will be made
                  current if it appears in the search results.
-  saved-position: If the search results complete, and the target thread is
-                  not found in the results, and the point is still at the
-                  beginning of the buffer, then the point will be moved to
-                  the saved position.
-"
+  target-line: The line number to move to if the target thread does not
+               appear in the search results."
   (interactive "sNotmuch search: ")
   (let ((buffer (get-buffer-create (concat "*notmuch-search-" query "*"))))
     (switch-to-buffer buffer)
@@ -1569,7 +1567,7 @@ The optional parameters are used as follows:
     (set 'notmuch-search-query-string query)
     (set 'notmuch-search-oldest-first oldest-first)
     (set 'notmuch-search-target-thread target-thread)
-    (set 'notmuch-search-target-position target-position)
+    (set 'notmuch-search-target-line target-line)
     (let ((proc (get-buffer-process (current-buffer)))
 	  (inhibit-read-only t))
       (if proc
@@ -1595,12 +1593,12 @@ the new search results, then point will be placed on the same
 thread. Otherwise, point will be moved to attempt to be in the
 same relative position within the new buffer."
   (interactive)
-  (let ((here (point))
+  (let ((target-line (line-number-at-pos))
 	(oldest-first notmuch-search-oldest-first)
-	(thread (notmuch-search-find-thread-id))
+	(target-thread (notmuch-search-find-thread-id))
 	(query notmuch-search-query-string))
     (kill-this-buffer)
-    (notmuch-search query oldest-first thread here)
+    (notmuch-search query oldest-first target-thread target-line)
     (goto-char (point-min))
     ))
 
