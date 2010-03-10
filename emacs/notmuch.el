@@ -1482,7 +1482,7 @@ This function advances the next thread when finished."
 			    (insert (format " (process returned %d)" exit-status)))
 			(insert "\n")
 			(if (and atbob
-				 notmuch-search-target-thread)
+				 (not (string= notmuch-search-target-thread "found")))
 			    (set 'never-found-target-thread t))))))
 	      (if (and never-found-target-thread
 		       notmuch-search-target-line)
@@ -1515,11 +1515,10 @@ This function advances the next thread when finished."
 			(put-text-property beg (point-marker) 'notmuch-search-thread-id thread-id)
 			(put-text-property beg (point-marker) 'notmuch-search-authors authors)
 			(put-text-property beg (point-marker) 'notmuch-search-subject subject)
-			(if (and notmuch-search-target-thread
-				 (string= thread-id notmuch-search-target-thread))
+			(if (string= thread-id notmuch-search-target-thread)
 			    (progn
 			      (set 'found-target beg)
-			      (set 'notmuch-search-target-thread nil))))
+			      (set 'notmuch-search-target-thread "found"))))
 		      (set 'line (match-end 0)))
 		  (set 'more nil)))))
 	  (if found-target
