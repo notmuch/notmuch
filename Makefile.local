@@ -33,6 +33,15 @@ install: all-without-message notmuch.1.gz
 	done ;
 	install notmuch $(DESTDIR)$(prefix)/bin/
 	install -m0644 notmuch.1.gz $(DESTDIR)$(prefix)/share/man/man1/
+	@echo ""
+	@echo "Notmuch is now installed."
+	@echo ""
+	@echo "You may now want to install additional components to support using notmuch"
+	@echo "together with other software packages:"
+	@echo ""
+	@echo "	make install-emacs"
+	@echo "	make install-bash"
+	@echo "	make install-zsh"
 
 install-desktop:
 	install -d $(DESTDIR)$(desktop_dir)
