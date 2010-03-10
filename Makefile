@@ -21,7 +21,17 @@ FINAL_CFLAGS = $(CFLAGS) $(WARN_CFLAGS) $(CONFIGURE_CFLAGS) $(extra_cflags)
 FINAL_CXXFLAGS = $(CXXFLAGS) $(WARN_CXXFLAGS) $(CONFIGURE_CXXFLAGS) $(extra_cflags) $(extra_cxxflags)
 FINAL_LDFLAGS = $(LDFLAGS) $(CONFIGURE_LDFLAGS)
 
-all: notmuch notmuch.1.gz
+all: all-without-message
+	@echo ""
+	@echo "Compilation of notmuch is now complete. You can install notmuch with:"
+	@echo ""
+	@echo "	make install"
+	@echo ""
+	@echo "Note that depending on the prefix to which you are installing"
+	@echo "you may need root permission (such as \"sudo make install\")."
+	@echo "See \"./configure --help\" for help on setting an alternate prefix."
+
+all-without-message: notmuch notmuch.1.gz
 
 # Before including any other Makefile fragments, get settings from the
 # output of configure
