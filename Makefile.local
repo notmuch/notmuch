@@ -33,6 +33,7 @@ install: all notmuch.1.gz
 	done ;
 	install notmuch $(DESTDIR)$(prefix)/bin/
 	install -m0644 notmuch.1.gz $(DESTDIR)$(prefix)/share/man/man1/
+ifeq ($(MAKECMDGOALS), install)
 	@echo ""
 	@echo "Notmuch is now installed."
 	@echo ""
@@ -42,6 +43,8 @@ install: all notmuch.1.gz
 	@echo "	make install-emacs"
 	@echo "	make install-bash"
 	@echo "	make install-zsh"
+	@echo ""
+endif
 
 install-desktop:
 	install -d $(DESTDIR)$(desktop_dir)
