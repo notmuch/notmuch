@@ -2,7 +2,7 @@ WARN_CXXFLAGS=-Wall -Wextra -Wwrite-strings -Wswitch-enum
 WARN_CFLAGS=$(WARN_CXXFLAGS) -Wmissing-declarations
 
 # Additional programs that are used during the compilation process.
-EMACS ?= emacs
+EMACS ?= emacs --quick
 # Lowercase to avoid clash with GZIP environment variable for passing
 # arguments to gzip.
 gzip = gzip
