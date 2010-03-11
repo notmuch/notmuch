@@ -136,13 +136,24 @@ format_message_text (unused (const void *ctx), notmuch_message_t *message, int i
 static void
 format_message_json (const void *ctx, notmuch_message_t *message, unused (int indent))
 {
+    notmuch_tags_t *tags;
+    int first = 1;
     void *ctx_quote = talloc_new (ctx);
 
-    printf ("\"id\": %s, \"match\": %s, \"filename\": %s",
+    printf ("\"id\": %s, \"match\": %s, \"filename\": %s, \"tags\": [",
 	    json_quote_str (ctx_quote, notmuch_message_get_message_id (message)),
 	    notmuch_message_get_flag (message, NOTMUCH_MESSAGE_FLAG_MATCH) ? "true" : "false",
 	    json_quote_str (ctx_quote, notmuch_message_get_filename (message)));
 
+    for (tags = notmuch_message_get_tags (message);
+	 notmuch_tags_valid (tags);
+	 notmuch_tags_move_to_next (tags))
+    {
+         printf("%s%s", first ? "" : ",",
+               json_quote_str (ctx_quote, notmuch_tags_get (tags)));
+         first = 0;
+    }
+    printf("]");
     talloc_free (ctx_quote);
 }
 
