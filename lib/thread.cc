@@ -278,7 +278,6 @@ _notmuch_thread_create (void *ctx,
     }
 
     notmuch_query_destroy (thread_id_query);
-
     for (messages = notmuch_query_search_messages (matched_query);
 	 notmuch_messages_valid (messages);
 	 notmuch_messages_move_to_next (messages))

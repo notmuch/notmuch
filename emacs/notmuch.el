@@ -1213,7 +1213,7 @@ matching this search term are shown if non-nil. "
 	  (notmuch-show-next-open-message))
       )))
 
-(defvar notmuch-search-authors-width 40
+(defvar notmuch-search-authors-width 20
   "Number of columns to use to display authors in a notmuch-search buffer.")
 
 (defvar notmuch-search-mode-map
@@ -1507,11 +1507,12 @@ This function advances the next thread when finished."
 			   (authors-length (length authors))
 			   (subject (match-string 5 string))
 			   (tags (match-string 6 string)))
-		      (if (> authors-length 40)
-			  (set 'authors (concat (substring authors 0 (- 40 3)) "...")))
+		      (if (> authors-length notmuch-search-authors-width)
+			  (set 'authors (concat (substring authors 0 (- notmuch-search-authors-width 3)) "...")))
 		      (goto-char (point-max))
-		      (let ((beg (point-marker)))
-			(insert (format "%s %-7s %-40s %s (%s)\n" date count authors subject tags))
+		      (let ((beg (point-marker))
+			    (format-string (format "%%s %%-7s %%-%ds %%s (%%s)\n" notmuch-search-authors-width)))
+			(insert (format format-string date count authors subject tags))
 			(put-text-property beg (point-marker) 'notmuch-search-thread-id thread-id)
 			(put-text-property beg (point-marker) 'notmuch-search-authors authors)
 			(put-text-property beg (point-marker) 'notmuch-search-subject subject)
