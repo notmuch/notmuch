@@ -345,6 +345,7 @@ execute_expecting "search thread:${thread_id}" "thread:XXX   2000-01-01 [1/1] No
 
 printf " Search body (phrase)...\t"
 add_message '[subject]="body search (phrase)"' '[date]="Sat, 01 Jan 2000 12:00:00 -0000"' '[body]="body search (phrase)"'
+add_message '[subject]="negative result"' '[date]="Sat, 01 Jan 2000 12:00:00 -0000"' '[body]="This phrase should not match the body search"'
 execute_expecting "search 'body search (phrase)'" "thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; body search (phrase) (inbox unread)"
 
 printf " Search by from: (address)...\t"
@@ -365,6 +366,7 @@ execute_expecting "search to:'Search By To Name'" "thread:XXX   2000-01-01 [1/1]
 
 printf " Search by subject: (phrase)...\t"
 add_message '[subject]="subject search test (phrase)"' '[date]="Sat, 01 Jan 2000 12:00:00 -0000"'
+add_message '[subject]="this phrase should not match the subject search test"' '[date]="Sat, 01 Jan 2000 12:00:00 -0000"'
 execute_expecting "search subject:'subject search test (phrase)'" "thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; subject search test (phrase) (inbox unread)"
 
 printf "\nTesting \"notmuch reply\" in several variations:\n"
