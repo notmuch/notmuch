@@ -174,11 +174,21 @@ notmuch searches. Here was one proposal made in IRC:
 Provide a ~me Xapian synonym for all of the user's configured email
 addresses.
 
+Test suite
+----------
+Achieve 100% test coverage with the test suite.
+
+Modularize test suite (to be able to run individual tests).
+
+Summarize test results at the end.
+
+Fix the insane quoting nightmare of the test suite, (and once we do
+that we can actually test the implicit-phrase search feature such as
+"notmuch search 'body search (phrase)'"
+
 General
 -------
 Audit everything for dealing with out-of-memory (and drop xutil.c).
-
-Achieve 100% test coverage with the test suite.
 
 Investigate why the notmuch database is slightly larger than the sup
 database for the same corpus of email.
