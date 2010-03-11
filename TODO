@@ -120,6 +120,9 @@ indexing.
 
 notmuch library
 ---------------
+Add an interface to accept a "key" and a byte stream, rather than a
+filename.
+
 Provide a sane syntax for date ranges. First, we don't want to require
 both endpoints to be specified. For example it would be nice to be
 able to say things like "since:2009-01-1" or "until:2009-01-1" and
