@@ -37,6 +37,12 @@ static const char database_config_comment[] =
     " Notmuch will store its database within a sub-directory of the path\n"
     " configured here named \".notmuch\".\n";
 
+static const char messages_config_comment[] =
+    " Messages configuration\n"
+    "\n"
+    " The only value supported here is 'new_tags' which lists the tags that\n"
+    " should be applied to new messages.\n";
+
 static const char user_config_comment[] =
     " User configuration\n"
     "\n"
@@ -62,6 +68,8 @@ struct _notmuch_config {
     char *user_primary_email;
     char **user_other_email;
     size_t user_other_email_length;
+    char **new_tags;
+    size_t new_tags_length;
 };
 
 static int
@@ -169,6 +177,7 @@ notmuch_config_open (void *ctx,
 {
     GError *error = NULL;
     int is_new = 0;
+    size_t tmp;
     char *notmuch_config_env = NULL;
 
     if (is_new_ret)
@@ -198,6 +207,8 @@ notmuch_config_open (void *ctx,
     config->user_primary_email = NULL;
     config->user_other_email = NULL;
     config->user_other_email_length = 0;
+    config->new_tags = NULL;
+    config->new_tags_length = 0;
 
     if (! g_key_file_load_from_file (config->key_file,
 				     config->filename,
@@ -267,6 +278,11 @@ notmuch_config_open (void *ctx,
 	}
     }
 
+    if (notmuch_config_get_new_tags (config, &tmp) == NULL) {
+        const char *tags[] = { "unread", "inbox" };
+	notmuch_config_set_new_tags (config, tags, 2);
+    }
+
     /* When we create a new configuration file here, we  add some
      * comments to help the user understand what can be done. */
     if (is_new) {
@@ -274,6 +290,8 @@ notmuch_config_open (void *ctx,
 				toplevel_config_comment, NULL);
 	g_key_file_set_comment (config->key_file, "database", NULL,
 				database_config_comment, NULL);
+	g_key_file_set_comment (config->key_file, "messages", NULL,
+				messages_config_comment, NULL);
 	g_key_file_set_comment (config->key_file, "user", NULL,
 				user_config_comment, NULL);
     }
@@ -455,3 +473,48 @@ notmuch_config_set_user_other_email (notmuch_config_t *config,
     talloc_free (config->user_other_email);
     config->user_other_email = NULL;
 }
+
+char **
+notmuch_config_get_new_tags (notmuch_config_t *config,
+			     size_t *length)
+{
+    char **tags;
+    size_t tags_length;
+    unsigned int i;
+
+    if (config->new_tags == NULL) {
+	tags = g_key_file_get_string_list (config->key_file,
+					   "messages", "new_tags",
+					   &tags_length, NULL);
+	if (tags) {
+	    config->new_tags = talloc_size (config,
+					    sizeof (char *) *
+					    (tags_length + 1));
+	    for (i = 0; i < tags_length; i++)
+		config->new_tags[i] = talloc_strdup (config->new_tags,
+						     tags[i]);
+	    config->new_tags[i] = NULL;
+
+	    g_strfreev (tags);
+
+	    config->new_tags_length = tags_length;
+	}
+    }
+
+    *length = config->new_tags_length;
+    return config->new_tags;
+}
+
+void
+notmuch_config_set_new_tags (notmuch_config_t *config,
+			     const char *new_tags[],
+			     size_t length)
+{
+    g_key_file_set_string_list (config->key_file,
+				"messages", "new_tags",
+				new_tags, length);
+
+    talloc_free (config->new_tags);
+    config->new_tags = NULL;
+}
+

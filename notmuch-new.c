@@ -35,6 +35,8 @@ typedef struct _filename_list {
 typedef struct {
     int output_is_a_tty;
     int verbose;
+    char **new_tags;
+    size_t new_tags_length;
 
     int total_files;
     int processed_files;
@@ -91,13 +93,6 @@ _filename_list_add (_filename_list_t *list,
 
     *(list->tail) = node;
     list->tail = &node->next;
-}
-
-static void
-tag_inbox_and_unread (notmuch_message_t *message)
-{
-    notmuch_message_add_tag (message, "inbox");
-    notmuch_message_add_tag (message, "unread");
 }
 
 static void
@@ -222,6 +217,7 @@ add_files_recursive (notmuch_database_t *notmuch,
     notmuch_filenames_t *db_subdirs = NULL;
     struct stat st;
     notmuch_bool_t is_maildir, new_directory;
+    const char **tag;
 
     if (stat (path, &st)) {
 	fprintf (stderr, "Error reading directory %s: %s\n",
@@ -412,7 +408,8 @@ add_files_recursive (notmuch_database_t *notmuch,
 	/* success */
 	case NOTMUCH_STATUS_SUCCESS:
 	    state->added_messages++;
-	    tag_inbox_and_unread (message);
+	    for (tag=state->new_tags; *tag != NULL; tag++)
+	        notmuch_message_add_tag (message, *tag);
 	    break;
 	/* Non-fatal issues (go on to next file) */
 	case NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID:
@@ -739,6 +736,7 @@ notmuch_new_command (void *ctx, int argc, char *argv[])
     if (config == NULL)
 	return 1;
 
+    add_files_state.new_tags = notmuch_config_get_new_tags (config, &add_files_state.new_tags_length);
     db_path = notmuch_config_get_database_path (config);
 
     dot_notmuch_path = talloc_asprintf (ctx, "%s/%s", db_path, ".notmuch");
