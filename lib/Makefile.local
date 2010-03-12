@@ -18,9 +18,12 @@ libnotmuch_cxx_srcs =		\
 	$(dir)/thread.cc
 
 libnotmuch_modules = $(libnotmuch_c_srcs:.c=.o) $(libnotmuch_cxx_srcs:.cc=.o)
-$(dir)/libnotmuch.so : $(libnotmuch_modules)
+
+$(dir)/$(SONAME) : $(libnotmuch_modules)
 	$(call quiet,CXX,$(LDFLAGS)) $^ $(FINAL_LDFLAGS) -shared -Wl,-soname=$(SONAME) -o $@
-	ln -sf $(SONAME) $@
+
+$(dir)/libnotmuch.so: $(dir)/$(SONAME)
+	ln -fs $(SONAME) $@
 
 SRCS  := $(SRCS) $(libnotmuch_c_srcs) $(libnotmuch_cxx_srcs)
-CLEAN := $(CLEAN) $(libnotmuch_modules) $(dir)/libnotmuch.so *.so
+CLEAN := $(CLEAN) $(libnotmuch_modules) $(dir)/$(SONAME) $(dir)/libnotmuch.so *.so
