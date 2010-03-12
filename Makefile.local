@@ -27,15 +27,15 @@ notmuch.1.gz: notmuch.1
 	$(call quiet,gzip) --stdout $^ > $@
 
 install: all notmuch.1.gz
-	for d in $(DESTDIR)$(prefix)/bin/ $(DESTDIR)$(prefix)/lib/ \
+	for d in $(DESTDIR)$(prefix)/bin/ $(DESTDIR)$(libdir)/ \
 		$(DESTDIR)$(prefix)/include/ $(DESTDIR)$(prefix)/share/man/man1 ; \
 	do \
 		install -d $$d ; \
 	done ;
 	install notmuch $(DESTDIR)$(prefix)/bin/
-	install lib/$(SONAME) $(DESTDIR)$(prefix)/lib/
+	install lib/$(SONAME) $(DESTDIR)$(libdir)/
 	install lib/notmuch.h $(DESTDIR)$(prefix)/include/
-	ln -sf $(SONAME) $(DESTDIR)$(prefix)/lib/libnotmuch.so
+	ln -sf $(SONAME) $(DESTDIR)$(libdir)/libnotmuch.so
 	install -m0644 notmuch.1.gz $(DESTDIR)$(prefix)/share/man/man1/
 ifeq ($(MAKECMDGOALS), install)
 	@echo ""
