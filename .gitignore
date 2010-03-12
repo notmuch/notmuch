@@ -5,6 +5,7 @@ tags
 .deps
 notmuch
 notmuch.1.gz
+libnotmuch.so*
 *.[ao]
 *~
 .*.swp

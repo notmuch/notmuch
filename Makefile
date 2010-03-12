@@ -1,3 +1,4 @@
+SONAME = libnotmuch.so.1
 WARN_CXXFLAGS=-Wall -Wextra -Wwrite-strings -Wswitch-enum
 WARN_CFLAGS=$(WARN_CXXFLAGS) -Wmissing-declarations
 

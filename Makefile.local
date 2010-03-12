@@ -20,18 +20,22 @@ notmuch_client_srcs =		\
 	json.c
 
 notmuch_client_modules = $(notmuch_client_srcs:.c=.o)
-notmuch: $(notmuch_client_modules) lib/notmuch.a
-	$(call quiet,CXX,$(LDFLAGS)) $^ $(FINAL_LDFLAGS) -o $@
+notmuch: $(notmuch_client_modules) lib/libnotmuch.so
+	$(call quiet,CC,$(LDFLAGS)) -Llib -lnotmuch $(filter-out lib/libnotmuch.so,$^) $(FINAL_LDFLAGS) -o $@
 
 notmuch.1.gz: notmuch.1
 	$(call quiet,gzip) --stdout $^ > $@
 
 install: all notmuch.1.gz
-	for d in $(DESTDIR)$(prefix)/bin/ $(DESTDIR)$(prefix)/share/man/man1 ; \
+	for d in $(DESTDIR)$(prefix)/bin/ $(DESTDIR)$(prefix)/lib/ \
+		$(DESTDIR)$(prefix)/include/ $(DESTDIR)$(prefix)/share/man/man1 ; \
 	do \
 		install -d $$d ; \
 	done ;
 	install notmuch $(DESTDIR)$(prefix)/bin/
+	install lib/$(SONAME) $(DESTDIR)$(prefix)/lib/
+	install lib/notmuch.h $(DESTDIR)$(prefix)/include/
+	ln -sf $(SONAME) $(DESTDIR)$(prefix)/lib/libnotmuch.so
 	install -m0644 notmuch.1.gz $(DESTDIR)$(prefix)/share/man/man1/
 ifeq ($(MAKECMDGOALS), install)
 	@echo ""

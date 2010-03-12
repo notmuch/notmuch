@@ -1,5 +1,5 @@
 dir := lib
-extra_cflags += -I$(dir)
+extra_cflags += -I$(dir) -fPIC
 
 libnotmuch_c_srcs =		\
 	$(dir)/libsha1.c	\
@@ -18,8 +18,9 @@ libnotmuch_cxx_srcs =		\
 	$(dir)/thread.cc
 
 libnotmuch_modules = $(libnotmuch_c_srcs:.c=.o) $(libnotmuch_cxx_srcs:.cc=.o)
-$(dir)/notmuch.a: $(libnotmuch_modules)
-	$(call quiet,AR) rcs $@ $^
+$(dir)/libnotmuch.so : $(libnotmuch_modules)
+	$(call quiet,CXX,$(LDFLAGS)) $^ $(FINAL_LDFLAGS) -shared -Wl,-soname=$(SONAME) -o $@
+	ln -sf $(SONAME) $@
 
 SRCS  := $(SRCS) $(libnotmuch_c_srcs) $(libnotmuch_cxx_srcs)
-CLEAN := $(CLEAN) $(libnotmuch_modules) $(dir)/notmuch.a
+CLEAN := $(CLEAN) $(libnotmuch_modules) $(dir)/libnotmuch.so *.so
