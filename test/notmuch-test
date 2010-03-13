@@ -64,6 +64,10 @@ increment_mtime ()
 #	Additional values for email headers. If these are not provided
 #	then the relevant headers will simply not appear in the
 #	message.
+#
+#  '[id]=<message-id>'
+#
+#	Controls the message-id of the created message.
 gen_msg_cnt=0
 gen_msg_filename=""
 gen_msg_id=""
@@ -73,9 +77,14 @@ generate_message ()
     local -A template="($@)"
     local additional_headers
 
-    gen_msg_cnt=$((gen_msg_cnt + 1))
-    gen_msg_name=msg-$(printf "%03d" $gen_msg_cnt)
-    gen_msg_id="${gen_msg_name}@notmuch-test-suite"
+    if [ -z "${template[id]}" ]; then
+	gen_msg_cnt=$((gen_msg_cnt + 1))
+	gen_msg_name=msg-$(printf "%03d" $gen_msg_cnt)
+	gen_msg_id="${gen_msg_name}@notmuch-test-suite"
+    else
+	gen_msg_name="msg-${template[id]}"
+	gen_msg_id="${template[id]}"
+    fi
 
     if [ -z "${template[dir]}" ]; then
 	gen_msg_filename="${MAIL_DIR}/$gen_msg_name"
@@ -535,6 +544,23 @@ fi
 printf " Restore with nothing to do...\t"
 $NOTMUCH restore dump.expected
 echo "	PASS"
+
+printf "\nTesting threading when messages received out of order:\n"
+printf " Adding initial child message...\t\t"
+generate_message [body]=foo '[in-reply-to]=\<parent-id\>' [subject]=brokenthreadtest '[date]="Sat, 01 Jan 2000 12:00:00 -0000"'
+execute_expecting new "Added 1 new message to the database."
+printf " Searching returns the message...\t\t"
+execute_expecting "search foo" "thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; brokenthreadtest (inbox unread)"
+printf " Adding second child message...\t\t\t"
+generate_message [body]=foo '[in-reply-to]=\<parent-id\>' [subject]=brokenthreadtest '[date]="Sat, 01 Jan 2000 12:00:00 -0000"'
+execute_expecting new "Added 1 new message to the database."
+printf " Searching returns both messages in one thread..."
+execute_expecting "search foo" "thread:XXX   2000-01-01 [2/2] Notmuch Test Suite; brokenthreadtest (inbox unread)"
+printf " Adding parent message...\t\t\t"
+generate_message [body]=foo [id]=parent-id [subject]=brokenthreadtest '[date]="Sat, 01 Jan 2000 12:00:00 -0000"'
+execute_expecting new "Added 1 new message to the database."
+printf " Searching returns all three messages in one thread..."
+execute_expecting "search foo" "thread:XXX   2000-01-01 [3/3] Notmuch Test Suite; brokenthreadtest (inbox unread)"
 
 cat <<EOF
 Notmuch test suite complete.
