@@ -1111,6 +1111,31 @@ notmuch_database_get_directory (notmuch_database_t *notmuch,
     return _notmuch_directory_create (notmuch, path, &status);
 }
 
+static const char *
+_notmuch_database_generate_thread_id (notmuch_database_t *notmuch)
+{
+    /* 16 bytes (+ terminator) for hexadecimal representation of
+     * a 64-bit integer. */
+    static char thread_id[17];
+    Xapian::WritableDatabase *db;
+
+    db = static_cast <Xapian::WritableDatabase *> (notmuch->xapian_db);
+
+    notmuch->last_thread_id++;
+
+    sprintf (thread_id, "%016" PRIx64, notmuch->last_thread_id);
+
+    db->set_metadata ("last_thread_id", thread_id);
+
+    return thread_id;
+}
+
+static char *
+_get_metadata_thread_id_key (void *ctx, const char *message_id)
+{
+    return talloc_asprintf (ctx, "thread_id_%s", message_id);
+}
+
 /* Find the thread ID to which the message with 'message_id' belongs.
  *
  * Returns NULL if no message with message ID 'message_id' is in the
@@ -1127,8 +1152,25 @@ _resolve_message_id_to_thread_id (notmuch_database_t *notmuch,
     const char *ret = NULL;
 
     message = notmuch_database_find_message (notmuch, message_id);
-    if (message == NULL)
-	goto DONE;
+    /* If we haven't seen that message yet then check if we have already
+     * generated a dummy id for it and stored it in the metadata.
+     * If not then we generate a new thread id.
+     * This ensures that we can thread messages even when we haven't received
+     * the root (yet?)
+     */
+    if (message == NULL) {
+        Xapian::WritableDatabase *db = static_cast <Xapian::WritableDatabase *> (notmuch->xapian_db);
+        char * metadata_key = _get_metadata_thread_id_key (ctx, message_id);
+        string thread_id = notmuch->xapian_db->get_metadata(metadata_key);
+        if (thread_id.empty()) {
+            ret = _notmuch_database_generate_thread_id(notmuch);
+            db->set_metadata(metadata_key, ret);
+        } else {
+            ret = thread_id.c_str();
+        }
+        talloc_free (metadata_key);
+        goto DONE;
+    }
 
     ret = talloc_steal (ctx, notmuch_message_get_thread_id (message));
 
@@ -1295,25 +1337,6 @@ _notmuch_database_link_message_to_children (notmuch_database_t *notmuch,
     return ret;
 }
 
-static const char *
-_notmuch_database_generate_thread_id (notmuch_database_t *notmuch)
-{
-    /* 16 bytes (+ terminator) for hexadecimal representation of
-     * a 64-bit integer. */
-    static char thread_id[17];
-    Xapian::WritableDatabase *db;
-
-    db = static_cast <Xapian::WritableDatabase *> (notmuch->xapian_db);
-
-    notmuch->last_thread_id++;
-
-    sprintf (thread_id, "%016" PRIx64, notmuch->last_thread_id);
-
-    db->set_metadata ("last_thread_id", thread_id);
-
-    return thread_id;
-}
-
 /* Given a (mostly empty) 'message' and its corresponding
  * 'message_file' link it to existing threads in the database.
  *
@@ -1337,6 +1360,19 @@ _notmuch_database_link_message (notmuch_database_t *notmuch,
 {
     notmuch_status_t status;
     const char *thread_id = NULL;
+    char *metadata_key = _get_metadata_thread_id_key (message,
+            notmuch_message_get_message_id (message));
+    /* Check if we have already seen related messages to this one.
+     * If we have then use the thread_id that we stored at that time.
+     */
+    string stored_id = notmuch->xapian_db->get_metadata (metadata_key);
+    if (!stored_id.empty()) {
+        Xapian::WritableDatabase *db = static_cast <Xapian::WritableDatabase *> (notmuch->xapian_db);
+        db->set_metadata (metadata_key, "");
+        thread_id = stored_id.c_str();
+        _notmuch_message_add_term (message, "thread", thread_id);
+    }
+    talloc_free (metadata_key);
 
     status = _notmuch_database_link_message_to_parents (notmuch, message,
 							message_file,
