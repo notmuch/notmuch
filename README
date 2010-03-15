@@ -1,0 +1,18 @@
+>>>from cnotmuch import notmuch
+>>>db = notmuch.Database("/home/spaetz/mail")
+>>>db.get_path()
+>>>tags = db.get_all_tags()
+>>>for tag in tags: 
+>>>  print tag
+
+#---------------------------------------------
+
+>>>db = notmuch.Database("/home/spaetz/mailHAHA")
+NotmuchError: Could not open the specified database
+
+#---------------------------------------------
+
+>>>tags = notmuch.Database("/home/spaetz/mail").get_all_tags()
+>>>del(tags)
+Freeing the Tags now
+Freeing the database now
