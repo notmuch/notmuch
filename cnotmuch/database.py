@@ -123,7 +123,14 @@ class Tags(object):
     def __init__(self, tags_p, db=None):
         """ Is passed the db these tags are derived from, and saves a
         reference to it, so we can automatically delete the db object
-        once all derived objects are dead."""
+        once all derived objects are dead.
+
+        Tags() provides an iterator over all contained tags. However, you will
+        only be able to iterate over the Tags once, because the underlying C
+        function only allows iterating once.
+        #TODO: make the iterator work more than once and cache the tags in 
+               the Python object.
+        """
         self._tags = tags_p
         self._db = db
         print "inited tags with %d %s" %(tags_p, str(db))
@@ -137,6 +144,8 @@ class Tags(object):
             raise StopIteration
         nmlib.notmuch_tags_move_to_next(self._tags)
         if not nmlib.notmuch_tags_valid(self._tags):
+            print("Freeing the Tags now")
+            nmlib.notmuch_tags_destroy (self._tags)
             raise StopIteration
         return Tags._get (self._tags)
 
