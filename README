@@ -1,9 +1,15 @@
 >>>from cnotmuch import notmuch
 >>>db = notmuch.Database("/home/spaetz/mail")
->>>db.get_path()
+db.get_path()
+'/home/spaetz/mail'
 >>>tags = db.get_all_tags()
+inited tags with 44762960 'Notmuch DB /home/spaetz/mail'
 >>>for tag in tags: 
 >>>  print tag
+inbox
+...
+maildir::draft
+Freeing the Tags now
 
 #---------------------------------------------
 
