@@ -122,7 +122,7 @@ if __name__ == '__main__':
       logging.debug("show "+querystr)
       m = Query(db,querystr).search_messages()
       for msg in m:
-         print("%s" % (msg))
+         print(msg.format_as_text())
 
    elif sys.argv[1] == 'new':
        #TODO: handle --verbose

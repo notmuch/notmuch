@@ -1,7 +1,8 @@
 import ctypes
-from ctypes import c_int, c_char_p, c_void_p
+from ctypes import c_int, c_char_p, c_void_p, c_uint64
 from cnotmuch.globals import nmlib, STATUS, NotmuchError
 import logging
+from datetime import date
 
 class Database(object):
     """ Wrapper around a notmuch_database_t
@@ -387,6 +388,12 @@ class Message(object):
     _get_tags = nmlib.notmuch_message_get_tags
     _get_tags.restype = c_void_p
 
+    _get_date = nmlib.notmuch_message_get_date
+    _get_date.restype = c_uint64
+
+    _get_header = nmlib.notmuch_message_get_header
+    _get_header.restype = c_char_p
+
     def __init__(self, msg_p, parent=None):
         """
         msg_p is a pointer to an notmuch_message_t Structure. If it is None,
@@ -413,6 +420,28 @@ class Message(object):
             raise NotmuchError(STATUS.NOT_INITIALIZED)
         return Message._get_message_id(self._msg)
 
+    def get_date(self):
+        """returns time_t of the message date
+
+        For the original textual representation of the Date header from the
+        message call notmuch_message_get_header() with a header value of
+        "date".
+        Raises NotmuchError(STATUS.NOT_INITIALIZED) if not inited
+        """
+        if self._msg is None:
+            raise NotmuchError(STATUS.NOT_INITIALIZED)
+        return Message._get_date(self._msg)
+
+    def get_header(self, header):
+        """ TODO document me"""
+        if self._msg is None:
+            raise NotmuchError(STATUS.NOT_INITIALIZED)
+
+        #Returns NULL if any error occurs.
+        header = Message._get_header (self._msg, header)
+        if header == None:
+            raise NotmuchError(STATUS.NULL_POINTER)
+        return header
 
     def get_filename(self):
         """ return the msg filename
@@ -439,8 +468,15 @@ class Message(object):
 
     def __str__(self):
         """A message() is represented by a 1-line summary"""
-        tags = str(self.get_tags())
-        return "TODO: FIXME Sebastian Krzyszkowiak <seba.dos1@gmail.com> (2009-08-27) (%s)" % (tags)
+        msg = {}
+        msg['from'] = self.get_header('from')
+        msg['tags'] = str(self.get_tags())
+        msg['date'] = date.fromtimestamp(self.get_date())
+        return "%(from)s (%(date)s) (%(tags)s)" % (msg)
+
+    def format_as_text(self):
+        """ Output like notmuch show """
+        return str(self)
 
     def __del__(self):
         """Close and free the notmuch Message"""
