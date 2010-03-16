@@ -1,18 +1,27 @@
-.. notmuch documentation master file, created by
+.. cnotmuch documentation master file, created by
    sphinx-quickstart on Tue Feb  2 10:00:47 2010.
 
-.. currentmodule:: notmuch.notmuch
+.. currentmodule:: cnotmuch.notmuch
 
 Welcome to notmuch's documentation!
 ===================================
 
-The :mod:`notmuch` module provides an interface to the `notmuch <http://notmuchmail.org>`_ functionality. The main work horse of this module is the class :class:`Notmuch` with important other classes representing a :class:`Thread` and a single :class:`Message`.
+The :mod:`cnotmuch` module provides an interface to the `notmuch <http://notmuchmail.org>`_ functionality, directly interfacing to a shared notmuch library.
+The classes :class:`Database`, :class:`Query` provide most of the core functionality, returning :class:`Messages` and :class:`Tags`.
 
 .. moduleauthor:: Sebastian Spaeth <Sebastian@SSpaeth.de>
 
-:License: This module is covered under the GNU GPL v2 (or later).
+:License: This module is covered under the GNU GPL v3 (or later).
 
-This page contains the main API overview. More information on specific topics can be found on the following pages:
+This page contains the main API overview. More information on specific topics can be found on the following pages: (none here yet)
+
+Notmuch can be imported as:
+
+ from cnotmuch import notmuch
+
+or:
+
+ from cnotmuch.notmuch import Query,Database
 
 .. toctree::
    :maxdepth: 1
@@ -22,24 +31,38 @@ This page contains the main API overview. More information on specific topics ca
 :mod:`notmuch` -- The Notmuch interface
 =============================================
 
-:class:`Message` -- A single email message
-------------------------------------
+Document from cnotmuch.globals import nmlib,STATUS,NotmuchError
 
-.. autoclass:: Message
+:class:`Database` -- The underlying notmuch database
+-----------------------------------------------------
+
+.. autoclass:: Database
    :members:
 
-:class:`Thread` -- Represents a message thread
+:class:`Query` -- Represents a notmuch Query
 -----------------------------------------------
 
-.. autoclass:: Thread
+.. autoclass:: Query
    :members:
 
    .. note:: A Thread is what a call to notmuch.show() will return, containing a bunch of :class:`Message`\ s.
 
-:class:`Notmuch` -- A notmuch call
-------------------------------------
+:class:`Messages` -- A bunch of messages
+----------------------------------------
 
-.. autoclass:: Notmuch
+.. autoclass:: Messages
+   :members:
+
+:class:`Message` -- A single message
+----------------------------------------
+
+.. autoclass:: Message
+   :members:
+
+:class:`Tags` -- A bunch of notmuch tags
+----------------------------------------
+
+.. autoclass:: Tags
    :members:
 
    .. data: '__notmuchcmd__'
