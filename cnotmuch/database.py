@@ -142,6 +142,15 @@ class Database(object):
         """Returns a pointer to the current notmuch_database_t or None"""
         return self._db
 
+#------------------------------------------------------------------------------
+class Query(object):
+    """ Wrapper around a notmuch_query_t
+
+    Do note that as soon as we tear down this object, all derived
+    threads, and messages will be freed as well.
+    """
+    def __init__(self, db, querystr):
+        pass
 
 #------------------------------------------------------------------------------
 class Tags(object):
