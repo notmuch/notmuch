@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 """This is a notmuch implementation in python. It's goal is to allow running the test suite on the cnotmuch python bindings."""
-import sys, os
+import sys, os, re, logging
 from cnotmuch.notmuch import Database, Query
+PREFIX=re.compile('(\w+):(.*$)')
 #TODO Handle variable: NOTMUCH-CONFIG
 
 #-------------------------------------------------------------------------
@@ -83,6 +84,18 @@ And don't forget to run "notmuch new" whenever new mail arrives.
 Have fun, and may your inbox never have much mail.
 """
 #-------------------------------------------------------------------------
+def quote_query_line(argv):
+   #mangle arguments wrapping terms with spaces in quotes
+   for i in xrange(0,len(argv)):
+      if argv[i].find(' ') >= 0:
+         #if we use prefix:termWithSpaces, put quotes around term
+         m = PREFIX.match(argv[i])
+         if m:
+            argv[i] = '%s:"%s"' % (m.group(1), m.group(2))
+         else:
+            argv[i] = '"'+argv[i]+'"'
+   return ' '.join(argv)
+
 if __name__ == '__main__':
 
    # Handle command line options
@@ -104,9 +117,15 @@ if __name__ == '__main__':
 
    elif sys.argv[1] == 'search-tags':
       if len(sys.argv) == 2:
+         #no further search term
          print("\n".join(Database().get_all_tags()))
-
-      else: print "Not implemented"
+      else:
+         #mangle arguments wrapping terms with spaces in quotes
+         querystr = quote_query_line(sys.argv[2:])
+         logging.debug("search-term "+querystr)
+         db = Database()
+         m  = Query(db,querystr).search_messages()
+         print("\n".join([t for t in m.collect_tags()]))
 
    else:
        # unknown command

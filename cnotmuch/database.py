@@ -268,6 +268,9 @@ class Messages(object):
     _get = nmlib.notmuch_messages_get
     _get.restype = c_void_p
 
+    _collect_tags = nmlib.notmuch_messages_collect_tags
+    _collect_tags.restype = c_void_p
+
     def __init__(self, msgs_p, parent=None):
         """
         msg_p is a pointer to an notmuch_messages_t Structure. If it is None,
@@ -290,7 +293,26 @@ class Messages(object):
         #store parent, so we keep them alive as long as self  is alive
         self._parent = parent
         logging.debug("Inited Messages derived from %s" %(str(parent)))
-    
+
+    def collect_tags(self):
+        """ return the Tags() belonging to the messages
+        
+        Do note that collect_tags will iterate over the messages and
+        therefore will not allow further iterationsl
+        Raises NotmuchError(STATUS.NOT_INITIALIZED) if not inited
+        """
+        if self._msgs is None:
+            raise NotmuchError(STATUS.NOT_INITIALIZED)
+
+        # collect all tags (returns NULL on error)
+        tags_p = Messages._collect_tags (self._msgs)
+        #reset _msgs as we iterated over it and can do so only once
+        self._msgs = None
+
+        if tags_p == None:
+            raise NotmuchError(STATUS.NULL_POINTER)
+        return Tags(tags_p, self)
+
     def __iter__(self):
         """ Make Messages an iterator """
         return self
