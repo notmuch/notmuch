@@ -1,11 +1,8 @@
 #!/usr/bin/env python
 """This is a notmuch implementation in python. It's goal is to allow running the test suite on the cnotmuch python bindings."""
-import sys
-
-def init_notmuch():
-   import os
-   from cnotmuch import notmuch
-   #TODO Handle variable: NOTMUCH-CONFIG
+import sys, os
+from cnotmuch.notmuch import Database, Query
+#TODO Handle variable: NOTMUCH-CONFIG
 
 #-------------------------------------------------------------------------
 HELPTEXT="""The notmuch mail system.
@@ -104,6 +101,13 @@ if __name__ == '__main__':
    elif sys.argv[1] == 'new':
        #TODO: handle --verbose
        print "Not implemented."
+
+   elif sys.argv[1] == 'search-tags':
+      if len(sys.argv) == 2:
+         print("\n".join(Database().get_all_tags()))
+
+      else: print "Not implemented"
+
    else:
        # unknown command
        print "Error: Unknown command '%s' (see \"notmuch help\")" % sys.argv[1]

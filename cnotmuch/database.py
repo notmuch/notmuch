@@ -1,7 +1,7 @@
 import ctypes
 from ctypes import c_int, c_char_p, c_void_p
 from cnotmuch.globals import nmlib, STATUS, NotmuchError
-
+import logging
 
 class Database(object):
     """ Wrapper around a notmuch_database_t
@@ -121,7 +121,7 @@ class Database(object):
     def __del__(self):
         """Close and free the notmuch database if needed"""
         if self._db is not None:
-            print("Freeing the database now")
+            logging.debug("Freeing the database now")
             nmlib.notmuch_database_close(self._db)
 
     def _get_user_default_db(self):
@@ -204,7 +204,7 @@ class Query(object):
     def __del__(self):
         """Close and free the Query"""
         if self._query is not None:
-            print("Freeing the Query now")
+            logging.debug("Freeing the Query now")
             nmlib.notmuch_query_destroy (self._query)
 
 #------------------------------------------------------------------------------
@@ -235,7 +235,7 @@ class Tags(object):
 
         self._tags = tags_p
         self._db = db
-        print "Inited Tags derived from %s" %(str(db))
+        logging.debug("Inited Tags derived from %s" %(str(db)))
     
     def __iter__(self):
         """ Make Tags an iterator """
@@ -253,7 +253,7 @@ class Tags(object):
     def __del__(self):
         """Close and free the notmuch tags"""
         if self._tags is not None:
-            print("Freeing the Tags now")
+            logging.debug("Freeing the Tags now")
             nmlib.notmuch_tags_destroy (self._tags)
 
 
@@ -286,7 +286,7 @@ class Messages(object):
         self._msgs = msgs_p
         #store parent, so we keep them alive as long as self  is alive
         self._parent = parent
-        print "Inited Messages derived from %s" %(str(parent))
+        logging.debug("Inited Messages derived from %s" %(str(parent)))
     
     def __iter__(self):
         """ Make Messages an iterator """
@@ -305,7 +305,7 @@ class Messages(object):
     def __del__(self):
         """Close and free the notmuch Messages"""
         if self._msgs is not None:
-            print("Freeing the Messages now")
+            logging.debug("Freeing the Messages now")
             nmlib.notmuch_messages_destroy (self._msgs)
 
 
@@ -338,7 +338,7 @@ class Message(object):
         self._msg = msg_p
         #keep reference to parent, so we keep it alive
         self._parent = parent
-        print "Inited Message derived from %s" %(str(parent))
+        logging.debug("Inited Message derived from %s" %(str(parent)))
 
 
     def get_message_id(self):
@@ -377,5 +377,5 @@ class Message(object):
     def __del__(self):
         """Close and free the notmuch Message"""
         if self._msg is not None:
-            print("Freeing the Message now")
+            logging.debug("Freeing the Message now")
             nmlib.notmuch_message_destroy (self._msg)
