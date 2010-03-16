@@ -14,7 +14,7 @@ class STATUS(object):
   NULL_POINTER = 7
   TAG_TOO_LONG = 8
   UNBALANCED_FREEZE_THAW = 9
-  LAST_STATUS = 10
+  NOT_INITIALIZED = 10
 
   """Get a string representation of a notmuch_status_t value."""
   status2str = nmlib.notmuch_status_to_string
@@ -26,6 +26,9 @@ class STATUS(object):
 
   def __str__(self):
       """Get a string representation of a notmuch_status_t value."""   
+      # define strings for custom error messages
+      if self._status == STATUS.NOT_INITIALIZED:
+        return "Operation on uninitialized DB/MSG/THREAD impossible."
       return str(STATUS.status2str(self._status))
 
 class NotmuchError(Exception):

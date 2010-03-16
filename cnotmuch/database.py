@@ -24,47 +24,57 @@ class Database(object):
     _open = nmlib.notmuch_database_open 
     _open.restype = c_void_p
 
+    """ notmuch_database_find_message """
+    _find_message = nmlib.notmuch_database_find_message
+    _find_message.restype = c_void_p
+
     """notmuch_database_get_all_tags (notmuch_database_t *database)"""
     _get_all_tags = nmlib.notmuch_database_get_all_tags
     _get_all_tags.restype = c_void_p
 
-    class notmuch_database_t(ctypes.Structure):
-        """the opaque database that is returned by functions."""
-        pass
+    """ notmuch_database_create(const char *path):"""
+    _create = nmlib.notmuch_database_create
+    _create.restype = c_void_p
 
     def __init__(self, path=None, create=False, status= MODE_READ_ONLY):
-        """ Open or create a notmuch database"""
-        self._db = None
-        if create == False:
-            self.open(path, status)
-        else:
-            #TODO: implement
-            raise NotmuchError(message="Not implemented yet")
-
-    #TODO: make a proper function
-    create=nmlib.notmuch_database_create
-    """ notmuch_database_create(const char *path):"""
-
-    def open(self, path=None, status= MODE_READ_ONLY): 
-        """calls notmuch_database_open
+        """ Open or create a notmuch database
 
         If path is None, we will try to read a users notmuch configuration and
         use his default database.
+        Throws a NotmuchError in case of failure.
+        """
+        self._db = None
+        if path is None:
+            # no path specified. use a user's default database
+            if Database._std_db_path is None:
+                #the following line throws a NotmuchError if it fails
+                Database._std_db_path = self._get_user_default_db()
+            path = Database._std_db_path
+
+        if create == False:
+            self.open(path, status)
+        else:
+            self.create(path, status)
+
+    def create(self, path, status=MODE_READ_ONLY):
+        """ notmuch_database_create(const char *path)
+
         :returns: Raises :exc:`notmuch.NotmuchError` in case
                   of any failure (after printing an error message on stderr).
         """
-        if path is None:
-            if Database._std_db_path is None:
-                from ConfigParser import SafeConfigParser
-                import os.path
-                config = SafeConfigParser()
-                config.read(os.path.expanduser('~/.notmuch-config'))
-                if not config.has_option('database','path'):
-                    raise NotmuchError(message=
-                              "No DB path specified and no user default found")
-                Database._std_db_path=config.get('database','path')
-            path = Database._std_db_path
+        res = Database._create(path, status)
 
+        if res is None:
+            raise NotmuchError(
+                message="Could not create the specified database")
+        self._db = res
+
+    def open(self, path, status= MODE_READ_ONLY): 
+        """calls notmuch_database_open
+
+        :returns: Raises :exc:`notmuch.NotmuchError` in case
+                  of any failure (after printing an error message on stderr).
+        """
         res = Database._open(path, status)
 
         if res is None:
@@ -76,12 +86,20 @@ class Database(object):
         """notmuch_database_get_path (notmuch_database_t *database);  """
         return Database._get_path(self._db)
 
-    #TODO:implement
-    #If no message is found with the given message_id or if an
-    #out-of-memory situation occurs, this function returns NULL.
-    #notmuch_message_t *
-    #notmuch_database_find_message (notmuch_database_t *database,
-    #                               const char *message_id);
+    def find_message(self, msgid):
+        """notmuch_database_find_message
+        :param msgid: The message id
+        :ptype msgid: string
+
+        :returns: Message() or None if no message is found or if an
+                  out-of-memory situation occurs.
+        """
+        if self._db is None:
+            raise NotmuchError(STATUS.NOT_INITIALIZED)
+        msg_p = Database._find_message(self._db, msgid)
+        if msg_p is None:
+            return None
+        return Message(msg_p, self)
 
     def get_all_tags(self):
         """Return a Tags() object (list of all tags found in the database)
@@ -89,6 +107,9 @@ class Database(object):
         :returns: Tags() object or raises :exc:`NotmuchError` with 
                   STATUS.NULL_POINTER on error
         """
+        if self._db is None:
+            raise NotmuchError(STATUS.NOT_INITIALIZED)
+
         tags_p = Database._get_all_tags (self._db)
         if tags_p == None:
             raise NotmuchError(STATUS.NULL_POINTER)
@@ -102,6 +123,19 @@ class Database(object):
         if self._db is not None:
             print("Freeing the database now")
             nmlib.notmuch_database_close(self._db)
+
+    def _get_user_default_db(self):
+        """ Reads a user's notmuch config and returns his db location
+
+        Throws a NotmuchError if it cannot find it"""
+        from ConfigParser import SafeConfigParser
+        import os.path
+        config = SafeConfigParser()
+        config.read(os.path.expanduser('~/.notmuch-config'))
+        if not config.has_option('database','path'):
+            raise NotmuchError(message=
+                               "No DB path specified and no user default found")
+        return config.get('database','path')
 
     @property
     def db_p(self):
@@ -121,7 +155,11 @@ class Tags(object):
     _get.restype = c_char_p
 
     def __init__(self, tags_p, db=None):
-        """ Is passed the db these tags are derived from, and saves a
+        """
+        msg_p is a pointer to an notmuch_message_t Structure. If it is None,
+        we will raise an NotmuchError(STATUS.NULL_POINTER).
+
+        Is passed the db these tags are derived from, and saves a
         reference to it, so we can automatically delete the db object
         once all derived objects are dead.
 
@@ -131,9 +169,12 @@ class Tags(object):
         #TODO: make the iterator work more than once and cache the tags in 
                the Python object.
         """
+        if tags_p is None:
+            NotmuchError(STATUS.NULL_POINTER)
+
         self._tags = tags_p
         self._db = db
-        print "inited tags with %d %s" %(tags_p, str(db))
+        print "Inited Tags derived from %s" %(str(db))
     
     def __iter__(self):
         """ Make Tags an iterator """
@@ -154,3 +195,73 @@ class Tags(object):
         if self._tags is not None:
             print("Freeing the Tags now")
             nmlib.notmuch_tags_destroy (self._tags)
+
+#------------------------------------------------------------------------------
+class Message(object):
+    """Wrapper around notmuch_message_t"""
+
+    """notmuch_message_get_filename (notmuch_message_t *message)"""
+    _get_filename = nmlib.notmuch_message_get_filename
+    _get_filename.restype = c_char_p 
+    """notmuch_message_get_message_id (notmuch_message_t *message)"""
+    _get_message_id = nmlib.notmuch_message_get_message_id
+    _get_message_id.restype = c_char_p 
+
+    """notmuch_message_get_tags (notmuch_message_t *message)"""
+    _get_tags = nmlib.notmuch_message_get_tags
+    _get_tags.restype = c_void_p
+
+    def __init__(self, msg_p, parent=None):
+        """
+        msg_p is a pointer to an notmuch_message_t Structure. If it is None,
+        we will raise an NotmuchError(STATUS.NULL_POINTER).
+
+        Is a 'parent' object is passed which this message is derived from,
+        we save a reference to it, so we can automatically delete the parent
+        object once all derived objects are dead.
+        """
+        if msg_p is None:
+            NotmuchError(STATUS.NULL_POINTER)
+        self._msg = msg_p
+        self._parent = parent
+        print "Inited Message derived from %s" %(str(parent))
+
+
+    def get_message_id(self):
+        """ return the msg id
+        
+        Raises NotmuchError(STATUS.NOT_INITIALIZED) if not inited
+        """
+        if self._msg is None:
+            raise NotmuchError(STATUS.NOT_INITIALIZED)
+        return Message._get_message_id(self._msg)
+
+
+    def get_filename(self):
+        """ return the msg filename
+        
+        Raises NotmuchError(STATUS.NOT_INITIALIZED) if not inited
+        """
+        if self._msg is None:
+            raise NotmuchError(STATUS.NOT_INITIALIZED)
+        return Message._get_filename(self._msg)
+
+    def get_tags(self):
+        """ return the msg tags
+        
+        Raises NotmuchError(STATUS.NOT_INITIALIZED) if not inited
+        Raises NotmuchError(STATUS.NULL_POINTER) on error.
+        """
+        if self._msg is None:
+            raise NotmuchError(STATUS.NOT_INITIALIZED)
+
+        tags_p = Message._get_tags(self._msg)
+        if tags_p == None:
+            raise NotmuchError(STATUS.NULL_POINTER)
+        return Tags(tags_p, self)
+
+    def __del__(self):
+        """Close and free the notmuch Message"""
+        if self._msg is not None:
+            print("Freeing the Message now")
+            nmlib.notmuch_message_destroy (self._msg)
