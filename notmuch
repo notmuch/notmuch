@@ -111,6 +111,19 @@ if __name__ == '__main__':
        if len(sys.argv) == 2: print HELPTEXT
        else: print "Not implemented"
 
+   elif sys.argv[1] == 'show':
+      db = Database()
+      if len(sys.argv) == 2:
+         #no further search term
+         querystr=''
+      else:
+         #mangle arguments wrapping terms with spaces in quotes
+         querystr = quote_query_line(sys.argv[2:])
+      logging.debug("show "+querystr)
+      m = Query(db,querystr).search_messages()
+      for msg in m:
+         print("%s" % (msg))
+
    elif sys.argv[1] == 'new':
        #TODO: handle --verbose
        print "Not implemented."
@@ -155,27 +168,8 @@ if __name__ == '__main__':
    #TODO: implement
    """
 search	[options...] <search-terms> [...]
-
-	Search for messages matching the given search terms.
-
 show	<search-terms> [...]
-
-	Show all messages matching the search terms.
-
 reply	[options...] <search-terms> [...]
-
-	Construct a reply template for a set of messages.
-
 tag	+<tag>|-<tag> [...] [--] <search-terms> [...]
-
-	Add/remove tags for all messages matching the search terms.
-
-dump	[<filename>]
-
-	Create a plain-text dump of the tags for each message.
-
 restore	<filename>
-	search-tags	[<search-terms> [...] ]
-
-		List all tags found in the database or matching messages.
    """

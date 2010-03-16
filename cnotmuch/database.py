@@ -225,12 +225,12 @@ class Tags(object):
     _get = nmlib.notmuch_tags_get
     _get.restype = c_char_p
 
-    def __init__(self, tags_p, db=None):
+    def __init__(self, tags_p, parent=None):
         """
         msg_p is a pointer to an notmuch_message_t Structure. If it is None,
         we will raise an NotmuchError(STATUS.NULL_POINTER).
 
-        Is passed the db these tags are derived from, and saves a
+        Is passed the parent these tags are derived from, and saves a
         reference to it, so we can automatically delete the db object
         once all derived objects are dead.
 
@@ -244,8 +244,9 @@ class Tags(object):
             NotmuchError(STATUS.NULL_POINTER)
 
         self._tags = tags_p
-        self._db = db
-        logging.debug("Inited Tags derived from %s" %(str(db)))
+        #save reference to parent object so we keep it alive
+        self._parent = parent
+        logging.debug("Inited Tags derived from %s" %(repr(parent)))
     
     def __iter__(self):
         """ Make Tags an iterator """
@@ -435,6 +436,11 @@ class Message(object):
         if tags_p == None:
             raise NotmuchError(STATUS.NULL_POINTER)
         return Tags(tags_p, self)
+
+    def __str__(self):
+        """A message() is represented by a 1-line summary"""
+        tags = str(self.get_tags())
+        return "TODO: FIXME Sebastian Krzyszkowiak <seba.dos1@gmail.com> (2009-08-27) (%s)" % (tags)
 
     def __del__(self):
         """Close and free the notmuch Message"""
