@@ -115,6 +115,17 @@ if __name__ == '__main__':
        #TODO: handle --verbose
        print "Not implemented."
 
+   elif sys.argv[1] == 'count':
+      db = Database()
+      if len(sys.argv) == 2:
+         #no further search term
+         querystr=''
+      else:
+         #mangle arguments wrapping terms with spaces in quotes
+         querystr = quote_query_line(sys.argv[2:])
+      logging.debug("count "+querystr)
+      print(len(Query(db,querystr).search_messages()))
+
    elif sys.argv[1] == 'search-tags':
       if len(sys.argv) == 2:
          #no further search term

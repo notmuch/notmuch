@@ -329,6 +329,24 @@ class Messages(object):
         nmlib.notmuch_messages_move_to_next(self._msgs)
         return msg
 
+    def __len__(self):
+        """ Returns the number of contained messages
+
+        :note: As this iterates over the messages, we will not be able to 
+               iterate over them again (as in retrieve them)!
+        """
+        if self._msgs is None:
+            raise NotmuchError(STATUS.NOT_INITIALIZED)
+
+        i=0
+        while nmlib.notmuch_messages_valid(self._msgs):
+            nmlib.notmuch_messages_move_to_next(self._msgs)
+            i += 1
+        self._msgs = None
+        return i
+
+
+
     def __del__(self):
         """Close and free the notmuch Messages"""
         if self._msgs is not None:
