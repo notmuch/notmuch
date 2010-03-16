@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 """This is a notmuch implementation in python. It's goal is to allow running the test suite on the cnotmuch python bindings."""
 import sys
+from cnotmuch import notmuch
+
 #-------------------------------------------------------------------------
 HELPTEXT="""The notmuch mail system.
 
@@ -53,7 +55,7 @@ Where <command> and [args...] are as follows:
 Use "notmuch help <command>" for more details on each command.
 And "notmuch help search-terms" for the common search-terms syntax.
 """
-
+#-------------------------------------------------------------------------
 #TODO: replace the dynamic pieces
 USAGE="""Notmuch is configured and appears to have a database. Excellent!
 
@@ -95,17 +97,16 @@ if __name__ == '__main__':
        if len(sys.argv) == 2: print HELPTEXT
        else: print "Not implemented"
 
+   elif sys.argv[1] == 'new':
+       #TODO: handle --verbose
+       print "Not implemented."
    else:
        # unknown command
        print "Error: Unknown command '%s' (see \"notmuch help\")" % sys.argv[1]
 
 
    #TODO: implement
-   """	
-new	[--verbose]
-
-	Find and import new messages to the notmuch database.
-
+   """
 search	[options...] <search-terms> [...]
 
 	Search for messages matching the given search terms.
