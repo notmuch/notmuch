@@ -1,6 +1,6 @@
 import ctypes
 from ctypes import c_int, c_char_p
-from database import Database,Tags
+from database import Database,Tags,Query
 from cnotmuch.globals import nmlib,STATUS,NotmuchError
 
 # 114 typedef struct _notmuch_query notmuch_query_t;

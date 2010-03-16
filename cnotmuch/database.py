@@ -149,8 +149,63 @@ class Query(object):
     Do note that as soon as we tear down this object, all derived
     threads, and messages will be freed as well.
     """
+    # constants
+    SORT_OLDEST_FIRST = 0
+    SORT_NEWEST_FIRST = 1
+    SORT_MESSAGE_ID = 2
+
+    """notmuch_query_create"""
+    _create = nmlib.notmuch_query_create
+    _create.restype = c_void_p
+
+    """notmuch_query_search_messages"""
+    _search_messages = nmlib.notmuch_query_search_messages
+    _search_messages.restype = c_void_p
+
     def __init__(self, db, querystr):
-        pass
+        """TODO: document"""
+        self._db = None
+        self._query = None
+        self.create(db, querystr)
+
+    def create(self, db, querystr):
+        """db is a Database() and querystr a string
+
+        raises NotmuchError STATUS.NOT_INITIALIZED if db is not inited and
+        STATUS.NULL_POINTER if the query creation failed (too little memory)
+        """
+        if db.db_p is None:
+            raise NotmuchError(STATUS.NOT_INITIALIZED)            
+        # create reference to parent db to keep it alive
+        self._db = db
+        
+        # create query, return None if too little mem available
+        query_p = Query._create(db.db_p, querystr)
+        if query_p is None:
+            NotmuchError(STATUS.NULL_POINTER)
+        self._query = query_p
+
+
+    def search_messages(self):
+        """notmuch_query_search_messages
+        Returns Messages() or a raises a NotmuchError()
+        """
+        if self._query is None:
+            raise NotmuchError(STATUS.NOT_INITIALIZED)            
+
+        msgs_p = Query._search_messages(self._query)
+
+        if msgs_p is None:
+            NotmuchError(STATUS.NULL_POINTER)
+
+        return Messages(msgs_p,self)
+
+
+    def __del__(self):
+        """Close and free the Query"""
+        if self._query is not None:
+            print("Freeing the Query now")
+            nmlib.notmuch_query_destroy (self._query)
 
 #------------------------------------------------------------------------------
 class Tags(object):
@@ -184,11 +239,11 @@ class Tags(object):
     
     def __iter__(self):
         """ Make Tags an iterator """
+        if self._tags is None:
+            raise NotmuchError(STATUS.NOT_INITIALIZED)
         return self
 
     def next(self):
-        if self._tags is None:
-            raise StopIteration
         nmlib.notmuch_tags_move_to_next(self._tags)
         if not nmlib.notmuch_tags_valid(self._tags):
             print("Freeing the Tags now")
@@ -201,6 +256,61 @@ class Tags(object):
         if self._tags is not None:
             print("Freeing the Tags now")
             nmlib.notmuch_tags_destroy (self._tags)
+
+
+#------------------------------------------------------------------------------
+class Messages(object):
+    """Wrapper around notmuch_messages_t"""
+
+    #notmuch_tags_get
+    _get = nmlib.notmuch_messages_get
+    _get.restype = c_void_p
+
+    def __init__(self, msgs_p, parent=None):
+        """
+        msg_p is a pointer to an notmuch_messages_t Structure. If it is None,
+        we will raise an NotmuchError(STATUS.NULL_POINTER).
+
+        If passed the parent query this Messages() is derived from, it saves a
+        reference to it, so we can automatically delete the parent query object
+        once all derived objects are dead.
+
+        Messages() provides an iterator over all contained Message()s.
+        However, you will only be able to iterate over it once,
+        because the underlying C function only allows iterating once.
+        #TODO: make the iterator work more than once and cache the tags in 
+               the Python object.
+        """
+        if msgs_p is None:
+            NotmuchError(STATUS.NULL_POINTER)
+
+        self._msgs = msgs_p
+        #store parent, so we keep them alive as long as self  is alive
+        self._parent = parent
+        print "Inited Messages derived from %s" %(str(parent))
+    
+    def __iter__(self):
+        """ Make Messages an iterator """
+        return self
+
+    def next(self):
+        if self._msgs is None:
+            raise NotmuchError(STATUS.NOT_INITIALIZED)
+
+        nmlib.notmuch_messages_move_to_next(self._msgs)
+        if not nmlib.notmuch_messages_valid(self._msgs):
+            print("Freeing the Messages now")
+            nmlib.notmuch_messages_destroy (self._msgs)
+            self._msgs = None
+            raise StopIteration
+        return Message(Messages._get (self._msgs), self)
+
+    def __del__(self):
+        """Close and free the notmuch Messages"""
+        if self._msgs is not None:
+            print("Freeing the Messages now")
+            nmlib.notmuch_messages_destroy (self._msgs)
+
 
 #------------------------------------------------------------------------------
 class Message(object):
