@@ -1,7 +1,11 @@
 #!/usr/bin/env python
 """This is a notmuch implementation in python. It's goal is to allow running the test suite on the cnotmuch python bindings."""
 import sys
-from cnotmuch import notmuch
+
+def init_notmuch():
+   import os
+   from cnotmuch import notmuch
+   #TODO Handle variable: NOTMUCH-CONFIG
 
 #-------------------------------------------------------------------------
 HELPTEXT="""The notmuch mail system.
