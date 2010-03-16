@@ -239,16 +239,19 @@ class Tags(object):
     
     def __iter__(self):
         """ Make Tags an iterator """
-        if self._tags is None:
-            raise NotmuchError(STATUS.NOT_INITIALIZED)
         return self
 
     def next(self):
-        nmlib.notmuch_tags_move_to_next(self._tags)
+        if self._tags is None:
+            raise NotmuchError(STATUS.NOT_INITIALIZED)
+
         if not nmlib.notmuch_tags_valid(self._tags):
             self._tags = None
             raise StopIteration
-        return Tags._get (self._tags)
+
+        tag = Tags._get (self._tags)
+        nmlib.notmuch_tags_move_to_next(self._tags)
+        return tag
 
     def __del__(self):
         """Close and free the notmuch tags"""
@@ -296,11 +299,13 @@ class Messages(object):
         if self._msgs is None:
             raise NotmuchError(STATUS.NOT_INITIALIZED)
 
-        nmlib.notmuch_messages_move_to_next(self._msgs)
         if not nmlib.notmuch_messages_valid(self._msgs):
             self._msgs = None
             raise StopIteration
-        return Message(Messages._get (self._msgs), self)
+
+        msg = Message(Messages._get (self._msgs), self)
+        nmlib.notmuch_messages_move_to_next(self._msgs)
+        return msg
 
     def __del__(self):
         """Close and free the notmuch Messages"""
