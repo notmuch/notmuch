@@ -135,8 +135,16 @@ if __name__ == '__main__':
          querystr = quote_query_line(sys.argv[2:])
          logging.debug("search-term "+querystr)
          db = Database()
-         m  = Query(db,querystr).search_messages()
+         q  = Query(db,querystr)
+         #TODO: notmuch_query_set_sort (query, NOTMUCH_SORT_MESSAGE_ID);
+         m = q.search_messages()
          print("\n".join([t for t in m.collect_tags()]))
+
+   elif sys.argv[1] == 'dump':
+      db = Database()
+      msgs = Query(db,'').search_messages()
+      for msg in msgs:
+         print("%s (%s)" % (msg.get_message_id(), msg.get_tags()))
 
    else:
        # unknown command
@@ -152,10 +160,6 @@ search	[options...] <search-terms> [...]
 show	<search-terms> [...]
 
 	Show all messages matching the search terms.
-
-count	<search-terms> [...]
-
-	Count messages matching the search terms.
 
 reply	[options...] <search-terms> [...]
 

@@ -253,6 +253,13 @@ class Tags(object):
         nmlib.notmuch_tags_move_to_next(self._tags)
         return tag
 
+    def __str__(self):
+        """str() of Tags() is a space separated list of tags
+
+        This iterates over the list of Tags and will therefore 'exhaust' Tags()
+        """
+        return " ".join(self)
+
     def __del__(self):
         """Close and free the notmuch tags"""
         if self._tags is not None:
