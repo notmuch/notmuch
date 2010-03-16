@@ -155,9 +155,6 @@ class Query(object):
 #------------------------------------------------------------------------------
 class Tags(object):
     """Wrapper around notmuch_tags_t"""
-    class notmuch_tags_t(ctypes.Structure):
-        """the opaque tags struct that is returned by functions."""
-        pass
 
     #notmuch_tags_get
     _get = nmlib.notmuch_tags_get
