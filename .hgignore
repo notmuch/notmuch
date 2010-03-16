@@ -1,2 +1,4 @@
 .*\.pyc$
 ~$
+^docs/html
+^docs/build
