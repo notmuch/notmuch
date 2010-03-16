@@ -185,6 +185,16 @@ class Query(object):
             NotmuchError(STATUS.NULL_POINTER)
         self._query = query_p
 
+    def set_sort(self, sort):
+        """notmuch_query_set_sort
+
+        :param sort: one of Query.SORT_OLDEST_FIRST|SORT_NEWEST_FIRST|SORT_MESSAGE_ID
+        :returns: Nothing, but raises NotmuchError if query is not inited
+        """
+        if self._query is None:
+            raise NotmuchError(STATUS.NOT_INITIALIZED)
+
+        nmlib.notmuch_query_set_sort(self._query, sort)
 
     def search_messages(self):
         """notmuch_query_search_messages

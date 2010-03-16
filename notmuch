@@ -135,15 +135,16 @@ if __name__ == '__main__':
          querystr = quote_query_line(sys.argv[2:])
          logging.debug("search-term "+querystr)
          db = Database()
-         q  = Query(db,querystr)
-         #TODO: notmuch_query_set_sort (query, NOTMUCH_SORT_MESSAGE_ID);
-         m = q.search_messages()
+         m  = Query(db,querystr).search_messages()
          print("\n".join([t for t in m.collect_tags()]))
 
    elif sys.argv[1] == 'dump':
+      #TODO: implement "dump <filename>"
       db = Database()
-      msgs = Query(db,'').search_messages()
-      for msg in msgs:
+      q = Query(db,'')
+      q.set_sort(Query.SORT_MESSAGE_ID)
+      m = q.search_messages()
+      for msg in m:
          print("%s (%s)" % (msg.get_message_id(), msg.get_tags()))
 
    else:
