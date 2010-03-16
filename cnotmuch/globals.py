@@ -1,7 +1,14 @@
 from ctypes import CDLL, c_char_p, c_int
+from ctypes.util import find_library
+
+#-----------------------------------------------------------------------------
 #package-global instance of the notmuch library
 #TODO: lazy load this on first access?
-nmlib = CDLL('/usr/local/lib/libnotmuch.so')
+so = find_library('notmuch')
+if so is None:
+  raise ImportError("Could not find shared 'notmuch' library.")
+nmlib = CDLL(so)
+#-----------------------------------------------------------------------------
 
 class STATUS(object):
   SUCCESS = 0
