@@ -246,8 +246,7 @@ class Tags(object):
     def next(self):
         nmlib.notmuch_tags_move_to_next(self._tags)
         if not nmlib.notmuch_tags_valid(self._tags):
-            print("Freeing the Tags now")
-            nmlib.notmuch_tags_destroy (self._tags)
+            self._tags = None
             raise StopIteration
         return Tags._get (self._tags)
 
@@ -299,8 +298,6 @@ class Messages(object):
 
         nmlib.notmuch_messages_move_to_next(self._msgs)
         if not nmlib.notmuch_messages_valid(self._msgs):
-            print("Freeing the Messages now")
-            nmlib.notmuch_messages_destroy (self._msgs)
             self._msgs = None
             raise StopIteration
         return Message(Messages._get (self._msgs), self)
@@ -339,6 +336,7 @@ class Message(object):
         if msg_p is None:
             NotmuchError(STATUS.NULL_POINTER)
         self._msg = msg_p
+        #keep reference to parent, so we keep it alive
         self._parent = parent
         print "Inited Message derived from %s" %(str(parent))
 
