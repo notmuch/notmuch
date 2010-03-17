@@ -714,8 +714,12 @@ class Message(object):
     def remove_tag(self, tag):
         """Removes a tag from the given message
 
+        If the message has no such tag, this is a non-operation and
+        will report success anyway.
+
         :param tag: String with a 'tag' to be removed.
-        :returns: STATUS.SUCCESS if the tag was successfully removed.
+        :returns: STATUS.SUCCESS if the tag was successfully removed or if 
+                  the message had no such tag.
                   Raises an exception otherwise.
         :exception: :exc:`NotmuchError`. They have the following meaning:
 

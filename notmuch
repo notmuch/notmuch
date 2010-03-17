@@ -100,17 +100,18 @@ if __name__ == '__main__':
 
    # Handle command line options
    # No option 
+   #-------------------------------------
    if len(sys.argv) == 1:
       print USAGE
-
+   #-------------------------------------
    elif sys.argv[1] == 'setup':
        """ Interactively setup notmuch for first use. """
        print "Not implemented."
-
+   #-------------------------------------
    elif sys.argv[1] == 'help':
        if len(sys.argv) == 2: print HELPTEXT
        else: print "Not implemented"
-
+   #-------------------------------------
    elif sys.argv[1] == 'show':
       db = Database()
       if len(sys.argv) == 2:
@@ -123,11 +124,11 @@ if __name__ == '__main__':
       m = Query(db,querystr).search_messages()
       for msg in m:
          print(msg.format_as_text())
-
+   #-------------------------------------
    elif sys.argv[1] == 'new':
        #TODO: handle --verbose
        print "Not implemented."
-
+   #-------------------------------------
    elif sys.argv[1] == 'count':
       db = Database()
       if len(sys.argv) == 2:
@@ -138,7 +139,30 @@ if __name__ == '__main__':
          querystr = quote_query_line(sys.argv[2:])
       logging.debug("count "+querystr)
       print(len(Query(db,querystr).search_messages()))
-
+   #-------------------------------------
+   elif sys.argv[1] == 'tag':
+      #build lists of tags to be added and removed
+      add, remove = [], []
+      while not sys.argv[2]=='--' and \
+            (sys.argv[2].startswith('+') or sys.argv[2].startswith('-')):
+         if sys.argv[2].startswith('+'):
+            #append to add list without initial +
+            add.append(sys.argv.pop(2)[1:])
+         else:
+            #append to remove list without initial -
+            remove.append(sys.argv.pop(2)[1:])
+      #skip eventual '--'
+      if sys.argv[2]=='--': sys.argv.pop(2)
+      #the rest is search terms
+      querystr = quote_query_line(sys.argv[2:])
+      logging.warning("tag search-term "+querystr)
+      db = Database(mode=Database.MODE.READ_WRITE)
+      m  = Query(db,querystr).search_messages()
+      for msg in m:
+         #actually add and remove all tags
+         map(msg.add_tag, add)
+         map(msg.remove_tag, remove)
+   #-------------------------------------
    elif sys.argv[1] == 'search-tags':
       if len(sys.argv) == 2:
          #no further search term
@@ -150,7 +174,7 @@ if __name__ == '__main__':
          db = Database()
          m  = Query(db,querystr).search_messages()
          print("\n".join([t for t in m.collect_tags()]))
-
+   #-------------------------------------
    elif sys.argv[1] == 'dump':
       #TODO: implement "dump <filename>"
       db = Database()
@@ -159,7 +183,7 @@ if __name__ == '__main__':
       m = q.search_messages()
       for msg in m:
          print("%s (%s)" % (msg.get_message_id(), msg.get_tags()))
-
+   #-------------------------------------
    else:
        # unknown command
        print "Error: Unknown command '%s' (see \"notmuch help\")" % sys.argv[1]
@@ -167,9 +191,10 @@ if __name__ == '__main__':
 
    #TODO: implement
    """
+setup
+new
 search	[options...] <search-terms> [...]
 show	<search-terms> [...]
 reply	[options...] <search-terms> [...]
-tag	+<tag>|-<tag> [...] [--] <search-terms> [...]
 restore	<filename>
    """
