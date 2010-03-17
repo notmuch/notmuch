@@ -9,34 +9,45 @@ if so is None:
   raise ImportError("Could not find shared 'notmuch' library.")
 nmlib = CDLL(so)
 #-----------------------------------------------------------------------------
+class Enum(object):
+  """Provides ENUMS as "code=Enum(['a','b','c'])" where code.a=0 etc..."""
+  def __init__(self, names):
+    for number, name in enumerate(names):
+      setattr(self, name, number)
 
-class STATUS(object):
-  SUCCESS = 0
-  OUT_OF_MEMORY = 1
-  READ_ONLY_DATABASE = 2
-  XAPIAN_EXCEPTION = 3
-  FILE_ERROR = 4
-  FILE_NOT_EMAIL = 5
-  DUPLICATE_MESSAGE_ID = 6
-  NULL_POINTER = 7
-  TAG_TOO_LONG = 8
-  UNBALANCED_FREEZE_THAW = 9
-  NOT_INITIALIZED = 10
+#-----------------------------------------------------------------------------
+class Status(Enum):
+    """Enum with a string representation of a notmuch_status_t value."""
+    __name__="foo"
+    _status2str = nmlib.notmuch_status_to_string
+    _status2str.restype = c_char_p
+    _status2str.argtypes = [c_int]
 
-  """Get a string representation of a notmuch_status_t value."""
-  status2str = nmlib.notmuch_status_to_string
-  status2str.restype = c_char_p
-  status2str.argtypes = [c_int]
+    def __init__(self, statuslist):
+        """It is initialized with a list of strings that are available as
+        Status().string1 - Status().stringn attributes.
+        """
+        super(Status, self).__init__(statuslist)
 
-  def __init__(self, status):
-      self._status = status
+    def status2str(self, status):
+        """Get a string representation of a notmuch_status_t value."""   
+        # define strings for custom error messages
+        if status == STATUS.NOT_INITIALIZED:
+          return "Operation on uninitialized object impossible."
+        return str(Status._status2str(status))
 
-  def __str__(self):
-      """Get a string representation of a notmuch_status_t value."""   
-      # define strings for custom error messages
-      if self._status == STATUS.NOT_INITIALIZED:
-        return "Operation on uninitialized DB/MSG/THREAD impossible."
-      return str(STATUS.status2str(self._status))
+STATUS = Status(['SUCCESS',
+  'OUT_OF_MEMORY',
+  'READ_ONLY_DATABASE',
+  'XAPIAN_EXCEPTION',
+  'FILE_ERROR',
+  'FILE_NOT_EMAIL',
+  'DUPLICATE_MESSAGE_ID',
+  'NULL_POINTER',
+  'TAG_TOO_LONG',
+  'UNBALANCED_FREEZE_THAW',
+  'NOT_INITIALIZED'])
+
 
 class NotmuchError(Exception):
     def __init__(self, status=None, message=None):
@@ -45,4 +56,5 @@ class NotmuchError(Exception):
 
     def __str__(self):
         if self.args[0] is not None: return self.args[0]
-        else: return str(STATUS(self.args[1]))
+        else: return STATUS.status2str(self.args[1])
+

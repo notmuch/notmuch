@@ -1,6 +1,6 @@
 import ctypes
 from ctypes import c_int, c_char_p, c_void_p, c_uint64
-from cnotmuch.globals import nmlib, STATUS, NotmuchError
+from cnotmuch.globals import nmlib, STATUS, NotmuchError, Enum
 import logging
 from datetime import date
 
@@ -10,9 +10,8 @@ class Database(object):
     Do note that as soon as we tear down this object, all derived queries,
     threads, and messages will be freed as well.
     """
-    #constants
-    MODE_READ_ONLY = 0
-    MODE_READ_WRITE = 1
+    MODE = Enum(['READ_ONLY','READ_WRITE'])
+    """Constants: Mode in which to open the database"""
 
     _std_db_path = None
     """Class attribute of users default database"""
