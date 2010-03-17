@@ -155,7 +155,7 @@ if __name__ == '__main__':
       #TODO: implement "dump <filename>"
       db = Database()
       q = Query(db,'')
-      q.set_sort(Query.SORT_MESSAGE_ID)
+      q.set_sort(Query.SORT.MESSAGE_ID)
       m = q.search_messages()
       for msg in m:
          print("%s (%s)" % (msg.get_message_id(), msg.get_tags()))
