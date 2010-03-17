@@ -1,15 +1,33 @@
+cnotmuch -- The python interface to notmuch.so
+==============================================
+To create the documentation with sphinx installed, go to the docs directory and
+"make html". A static version of the documentation is available at:
+
+http://spaetz.bitbucket.org
+
+All code is available under the GNU GPLv3+ (see docs/COPYING) unless specified otherwise.
+
+Usage
+-----
+For more examples of how to use the cnotmuch interface, have a look at the
+notmuch "binary" and the generated documentation.
+
+Example session:
 >>>from cnotmuch import notmuch
 >>>db = notmuch.Database("/home/spaetz/mail")
 db.get_path()
 '/home/spaetz/mail'
 >>>tags = db.get_all_tags()
-inited tags with 44762960 'Notmuch DB /home/spaetz/mail'
 >>>for tag in tags: 
 >>>  print tag
 inbox
 ...
 maildir::draft
-Freeing the Tags now
+#---------------------------------------------
+
+q = notmuch.Query(db,'from:Sebastian')
+count = len(q.search_messages())
+1300
 
 #---------------------------------------------
 
@@ -20,5 +38,3 @@ NotmuchError: Could not open the specified database
 
 >>>tags = notmuch.Database("/home/spaetz/mail").get_all_tags()
 >>>del(tags)
-Freeing the Tags now
-Freeing the database now
