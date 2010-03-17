@@ -5,16 +5,39 @@ import logging
 from datetime import date
 
 class Database(object):
-    """ Wrapper around a notmuch_database_t
+    """Represents a notmuch database (wraps notmuch_database_t)
 
-    Do note that as soon as we tear down this object, all derived queries,
-    threads, and messages will be freed as well.
+    .. note:: Do note that as soon as we tear down this object, all underlying 
+           derived objects such as queries, threads, messages, tags etc will 
+           be freed by the underlying library as well. Accessing these objects
+           will lead to segfaults and other unexpected behavior.
+
+           We implement reference counting, so that parent objects can be 
+           automatically freed when they are not needed anymore, for example::
+
+            db = Database('path',create=True)
+            msgs = Query(db,'from:myself').search_messages()
+
+           This returns a :class:`Messages` which internally contains
+           a reference to the parent :class:`Query` object. Otherwise
+           the Query() would be immediately freed, taking our *msgs*
+           down with it.
+
+           In this case, the above Query() object will be
+           automatically freed whenever we delete all derived objects,
+           ie in our case: `del (msgs)` would also delete the parent
+           Query (but not the parent Database() as that is still
+           referenced from the variable *db* in which it is stored.
+
+           Pretty much the same is valid for all other objects in the hierarchy,
+           such as :class:`Query`, :class:`Messages`, :class:`Message`,
+           and :class:`Tags`.
     """
     MODE = Enum(['READ_ONLY','READ_WRITE'])
     """Constants: Mode in which to open the database"""
 
     _std_db_path = None
-    """Class attribute of users default database"""
+    """Class attribute to cache user's default database"""
 
     """notmuch_database_get_path (notmuch_database_t *database)"""
     _get_path = nmlib.notmuch_database_get_path
@@ -36,12 +59,24 @@ class Database(object):
     _create = nmlib.notmuch_database_create
     _create.restype = c_void_p
 
-    def __init__(self, path=None, create=False, status= MODE_READ_ONLY):
-        """ Open or create a notmuch database
+    def __init__(self, path=None, create=False, mode= MODE.READ_ONLY):
+        """If *path* is *None*, we will try to read a users notmuch
+        configuration and use his default database. If *create* is `True`,
+        the database will always be created in
+        :attr:`MODE.READ_WRITE` mode as creating an empty
+        database for reading only does not make a great deal of sense.
 
-        If path is None, we will try to read a users notmuch configuration and
-        use his default database.
-        Throws a NotmuchError in case of failure.
+        :param path:   Directory to open/create the database in (see
+                       above for behavior if `None`)
+        :type path:    `str` or `None`
+        :param create: False to open an existing, True to create a new
+                       database.  
+        :type create:  bool
+        :param mdoe:   Mode to open a database in. Always 
+                       :attr:`MODE`.READ_WRITE when creating a new one.
+        :type mode:    :attr:`MODE`
+        :returns:      Nothing
+        :exception:    :exc:`NotmuchError` in case of failure.
         """
         self._db = None
         if path is None:
@@ -54,27 +89,40 @@ class Database(object):
         if create == False:
             self.open(path, status)
         else:
-            self.create(path, status)
+            self.create(path)
 
-    def create(self, path, status=MODE_READ_ONLY):
-        """ notmuch_database_create(const char *path)
+    def create(self, path):
+        """Creates a new notmuch database
 
-        :returns: Raises :exc:`notmuch.NotmuchError` in case
-                  of any failure (after printing an error message on stderr).
+        This function wraps *notmuch_database_create(...)* and creates
+        a new notmuch database at *path*. It will always return a database in
+        :attr:`MODE`.READ_WRITE mode as creating an empty database 
+        for reading only does not make a great deal of sense.
+
+        :param path: A directory in which we should create the database.
+        :type path: str
+        :returns: Nothing
+        :exception: :exc:`NotmuchError` in case of any failure
+                    (after printing an error message on stderr).
         """
-        res = Database._create(path, status)
+        if self._db is not None:
+            raise NotmuchError(
+            message="Cannot create db, this Database() already has an open one.")
+
+        res = Database._create(path, MODE.READ_WRITE)
 
         if res is None:
             raise NotmuchError(
                 message="Could not create the specified database")
         self._db = res
 
-    def open(self, path, status= MODE_READ_ONLY): 
+    def open(self, path, status= MODE.READ_ONLY): 
         """calls notmuch_database_open
 
         :returns: Raises :exc:`notmuch.NotmuchError` in case
                   of any failure (after printing an error message on stderr).
         """
+
         res = Database._open(path, status)
 
         if res is None:
@@ -88,11 +136,13 @@ class Database(object):
 
     def find_message(self, msgid):
         """notmuch_database_find_message
-        :param msgid: The message id
-        :ptype msgid: string
 
-        :returns: Message() or None if no message is found or if an
+        :param msgid: The message id
+        :type msgid: string
+        :returns: :class:`Message` or `None` if no message is found or if an
                   out-of-memory situation occurs.
+        :exception: :exc:`NotmuchError` with STATUS.NOT_INITIALIZED if
+                  the database was not intitialized.
         """
         if self._db is None:
             raise NotmuchError(STATUS.NOT_INITIALIZED)
@@ -102,9 +152,9 @@ class Database(object):
         return Message(msg_p, self)
 
     def get_all_tags(self):
-        """Return a Tags() object (list of all tags found in the database)
+        """Returns :class:`Tags` with a list of all tags found in the database
 
-        :returns: Tags() object or raises :exc:`NotmuchError` with 
+        :returns: :class:`Tags` object or raises :exc:`NotmuchError` with 
                   STATUS.NULL_POINTER on error
         """
         if self._db is None:
@@ -139,7 +189,9 @@ class Database(object):
 
     @property
     def db_p(self):
-        """Returns a pointer to the current notmuch_database_t or None"""
+        """Property returning a pointer to the notmuch_database_t or `None`.
+
+        This should normally not be needed by a user."""
         return self._db
 
 #------------------------------------------------------------------------------

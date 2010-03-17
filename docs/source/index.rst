@@ -31,21 +31,41 @@ or:
 :mod:`notmuch` -- The Notmuch interface
 =============================================
 
-Document from cnotmuch.globals import nmlib,STATUS,NotmuchError
+Document from cnotmuch.globals import nmlib,STATUS
 
 :class:`Database` -- The underlying notmuch database
 -----------------------------------------------------
 
-.. autoclass:: Database
-   :members:
+.. autoclass:: Database([path=None[, create=False[, mode=MODE.READ_ONLY]]])
+
+   .. automethod:: create
+
+   .. automethod:: open(path, status=MODE.READ_ONLY)
+
+   .. automethod:: get_path
+
+   .. automethod:: find_message
+
+   .. automethod:: get_all_tags
+
+
+   .. attribute:: Database.MODE
+
+     Defines constants that are used as the mode in which to open a database.
+
+     READ_ONLY
+       Open the database in read-only mode
+
+     READ_WRITE
+       Open the database in read-write mode
+
+   .. autoattribute:: db_p
 
 :class:`Query` -- Represents a notmuch Query
 -----------------------------------------------
 
 .. autoclass:: Query
    :members:
-
-   .. note:: A Thread is what a call to notmuch.show() will return, containing a bunch of :class:`Message`\ s.
 
 :class:`Messages` -- A bunch of messages
 ----------------------------------------
@@ -75,6 +95,11 @@ Document from cnotmuch.globals import nmlib,STATUS,NotmuchError
    :members:
 
    This execption inherits directly from :exc:`Exception` and is raised on errors during the notmuch execution.
+
+:class:`STATUS` -- Notmuch operation return status
+--------------------------------------------------
+.. autoclass:: STATUS
+   :members:
 
 Indices and tables
 ==================
