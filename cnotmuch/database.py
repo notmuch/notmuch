@@ -181,7 +181,7 @@ class Database(object):
 
     @property
     def db_p(self):
-        """Property returning a pointer to the notmuch_database_t or `None`.
+        """Property returning a pointer to the notmuch_database_t or `None`
 
         This should normally not be needed by a user."""
         return self._db
@@ -196,7 +196,7 @@ class Query(object):
     Technically, it wraps the underlying *notmuch_query_t* struct.
 
     .. note:: Do remember that as soon as we tear down this object,
-           all underlying derived objects such as queries, threads,
+           all underlying derived objects such as threads,
            messages, tags etc will be freed by the underlying library
            as well. Accessing these objects will lead to segfaults and
            other unexpected behavior. See above for more details.
@@ -268,8 +268,8 @@ class Query(object):
         nmlib.notmuch_query_set_sort(self._query, sort)
 
     def search_messages(self):
-        """Filter messages according to query and return
-        :class:`Messages` in the defined sort order.
+        """Filter messages according to the query and return
+        :class:`Messages` in the defined sort order
 
         Technically, it wraps the underlying
         *notmuch_query_search_messages* function.
@@ -551,7 +551,10 @@ class Messages(object):
 
 #------------------------------------------------------------------------------
 class Message(object):
-    """Wrapper around notmuch_message_t"""
+    """Represents a single Email message
+
+    Technically, this wraps the underlying *notmuch_message_t* structure.
+    """
 
     """notmuch_message_get_filename (notmuch_message_t *message)"""
     _get_filename = nmlib.notmuch_message_get_filename
@@ -572,12 +575,13 @@ class Message(object):
 
     def __init__(self, msg_p, parent=None):
         """
-        msg_p is a pointer to an notmuch_message_t Structure. If it is None,
-        we will raise an NotmuchError(STATUS.NULL_POINTER).
-
-        Is a 'parent' object is passed which this message is derived from,
-        we save a reference to it, so we can automatically delete the parent
-        object once all derived objects are dead.
+        :param msg_p: A pointer to an internal notmuch_message_t
+            Structure.  If it is `None`, we will raise an :exc:`NotmuchError`
+            STATUS.NULL_POINTER.
+        :param parent: A 'parent' object is passed which this message is
+              derived from. We save a reference to it, so we can
+              automatically delete the parent object once all derived
+              objects are dead.
         """
         if msg_p is None:
             NotmuchError(STATUS.NULL_POINTER)
@@ -588,28 +592,50 @@ class Message(object):
 
 
     def get_message_id(self):
-        """ return the msg id
+        """Return the message ID
         
-        Raises NotmuchError(STATUS.NOT_INITIALIZED) if not inited
+        :returns: String with a message ID
+        :exception: :exc:`NotmuchError` STATUS.NOT_INITIALIZED if the message 
+                    is not initialized.
         """
         if self._msg is None:
             raise NotmuchError(STATUS.NOT_INITIALIZED)
         return Message._get_message_id(self._msg)
 
     def get_date(self):
-        """returns time_t of the message date
+        """Returns time_t of the message date
 
         For the original textual representation of the Date header from the
         message call notmuch_message_get_header() with a header value of
         "date".
-        Raises NotmuchError(STATUS.NOT_INITIALIZED) if not inited
+
+        :returns: a time_t timestamp
+        :rtype: c_unit64
+        :exception: :exc:`NotmuchError` STATUS.NOT_INITIALIZED if the message 
+                    is not initialized.
         """
         if self._msg is None:
             raise NotmuchError(STATUS.NOT_INITIALIZED)
         return Message._get_date(self._msg)
 
     def get_header(self, header):
-        """ TODO document me"""
+        """Returns a message header
+        
+        This returns any message header that is stored in the notmuch database.
+        This is only a selected subset of headers, which is currently:
+
+          TODO: add stored headers
+
+        :param header: The name of the header to be retrieved.
+                       It is not case-sensitive (TODO: confirm).
+        :type header: str
+        :returns: The header value as string
+        :exception: :exc:`NotmuchError`
+
+                    * STATUS.NOT_INITIALIZED if the message 
+                      is not initialized.
+                    * STATUS.NULL_POINTER, if no header was found
+        """
         if self._msg is None:
             raise NotmuchError(STATUS.NOT_INITIALIZED)
 
@@ -620,19 +646,26 @@ class Message(object):
         return header
 
     def get_filename(self):
-        """ return the msg filename
-        
-        Raises NotmuchError(STATUS.NOT_INITIALIZED) if not inited
+        """Return the file path of the message file
+
+        :returns: Absolute file path & name of the message file
+        :exception: :exc:`NotmuchError` STATUS.NOT_INITIALIZED if the message 
+              is not initialized.
         """
         if self._msg is None:
             raise NotmuchError(STATUS.NOT_INITIALIZED)
         return Message._get_filename(self._msg)
 
     def get_tags(self):
-        """ return the msg tags
-        
-        Raises NotmuchError(STATUS.NOT_INITIALIZED) if not inited
-        Raises NotmuchError(STATUS.NULL_POINTER) on error.
+        """ Return the message tags
+
+        :returns: Message tags
+        :rtype: :class:`Tags`
+        :exception: :exc:`NotmuchError`
+
+                      * STATUS.NOT_INITIALIZED if the message 
+                        is not initialized.
+                      * STATUS.NULL_POINTER, on error
         """
         if self._msg is None:
             raise NotmuchError(STATUS.NOT_INITIALIZED)
@@ -641,6 +674,73 @@ class Message(object):
         if tags_p == None:
             raise NotmuchError(STATUS.NULL_POINTER)
         return Tags(tags_p, self)
+
+    def add_tag(self, tag):
+        """Add a tag to the given message
+
+        Adds a tag to the current message. The maximal tag length is defined in
+        the notmuch library and is currently 200 bytes.
+
+        :param tag: String with a 'tag' to be added.
+        :returns: STATUS.SUCCESS if the tag was successfully added.
+                  Raises an exception otherwise.
+        :exception: :exc:`NotmuchError`. They have the following meaning:
+
+                  STATUS.NULL_POINTER
+                    The 'tag' argument is NULL
+
+                  STATUS.TAG_TOO_LONG
+                    The length of 'tag' is too long 
+                    (exceeds Message.NOTMUCH_TAG_MAX)
+
+                  STATUS.READ_ONLY_DATABASE
+                    Database was opened in read-only mode so message cannot be 
+                    modified.
+
+                  STATUS.NOT_INITIALIZED
+                     The message has not been initialized.
+       """
+        if self._msg is None:
+            raise NotmuchError(STATUS.NOT_INITIALIZED)
+
+        status = nmlib.notmuch_message_add_tag (self._msg, tag)
+
+        if STATUS.SUCCESS == status:
+            # return on success
+            return status
+
+        raise NotmuchError(status)
+
+    def remove_tag(self, tag):
+        """Removes a tag from the given message
+
+        :param tag: String with a 'tag' to be removed.
+        :returns: STATUS.SUCCESS if the tag was successfully removed.
+                  Raises an exception otherwise.
+        :exception: :exc:`NotmuchError`. They have the following meaning:
+
+                   STATUS.NULL_POINTER
+                     The 'tag' argument is NULL
+                   NOTMUCH_STATUS_TAG_TOO_LONG
+                     The length of 'tag' is too long
+                     (exceeds NOTMUCH_TAG_MAX)
+                   NOTMUCH_STATUS_READ_ONLY_DATABASE
+                     Database was opened in read-only mode so message cannot 
+                     be modified.
+                   STATUS.NOT_INITIALIZED
+                     The message has not been initialized.
+
+        """
+        if self._msg is None:
+            raise NotmuchError(STATUS.NOT_INITIALIZED)
+
+        status = nmlib.notmuch_message_remove_tag(self._msg, tag)
+
+        if STATUS.SUCCESS == status:
+            # return on success
+            return status
+
+        raise NotmuchError(status)
 
     def __str__(self):
         """A message() is represented by a 1-line summary"""
@@ -651,7 +751,7 @@ class Message(object):
         return "%(from)s (%(date)s) (%(tags)s)" % (msg)
 
     def format_as_text(self):
-        """ Output like notmuch show """
+        """Output like notmuch show (Not implemented)"""
         return str(self)
 
     def __del__(self):

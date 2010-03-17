@@ -25,9 +25,9 @@ Many of its objects use python's logging module to log some output at DEBUG leve
 
     In this case, the above Query() object will be automatically freed
     whenever we delete all derived objects, ie in our case:
-    `del(msgs)` would also delete the parent Query (but not the parent
-    Database() as that is still referenced from the variable *db* in
-    which it is stored.
+    `del(msgs)` would also delete the parent Query. It would not
+    delete the parent Database() though, as that is still referenced
+    from the variable *db* in which it is stored.
 
     Pretty much the same is valid for all other objects in the
     hierarchy, such as :class:`Query`, :class:`Messages`,

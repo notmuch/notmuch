@@ -99,7 +99,24 @@ or::
 ----------------------------------------
 
 .. autoclass:: Message
-   :members:
+
+   .. automethod:: get_message_id
+
+   .. automethod:: get_date
+
+   .. automethod:: get_header
+
+   .. automethod:: get_filename
+
+   .. automethod:: get_tags
+
+   .. automethod:: remove_tag
+
+   .. automethod:: add_tag
+
+   .. automethod:: format_as_text
+
+   .. automethod:: __str__
 
 :class:`Tags` -- Notmuch tags
 -----------------------------
