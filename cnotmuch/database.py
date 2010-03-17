@@ -7,31 +7,11 @@ from datetime import date
 class Database(object):
     """Represents a notmuch database (wraps notmuch_database_t)
 
-    .. note:: Do note that as soon as we tear down this object, all underlying 
-           derived objects such as queries, threads, messages, tags etc will 
-           be freed by the underlying library as well. Accessing these objects
-           will lead to segfaults and other unexpected behavior.
-
-           We implement reference counting, so that parent objects can be 
-           automatically freed when they are not needed anymore, for example::
-
-            db = Database('path',create=True)
-            msgs = Query(db,'from:myself').search_messages()
-
-           This returns a :class:`Messages` which internally contains
-           a reference to the parent :class:`Query` object. Otherwise
-           the Query() would be immediately freed, taking our *msgs*
-           down with it.
-
-           In this case, the above Query() object will be
-           automatically freed whenever we delete all derived objects,
-           ie in our case: `del (msgs)` would also delete the parent
-           Query (but not the parent Database() as that is still
-           referenced from the variable *db* in which it is stored.
-
-           Pretty much the same is valid for all other objects in the hierarchy,
-           such as :class:`Query`, :class:`Messages`, :class:`Message`,
-           and :class:`Tags`.
+    .. note:: Do remember that as soon as we tear down this object,
+           all underlying derived objects such as queries, threads,
+           messages, tags etc will be freed by the underlying library
+           as well. Accessing these objects will lead to segfaults and
+           other unexpected behavior. See above for more details.
     """
     MODE = Enum(['READ_ONLY','READ_WRITE'])
     """Constants: Mode in which to open the database"""
@@ -63,8 +43,7 @@ class Database(object):
         """If *path* is *None*, we will try to read a users notmuch
         configuration and use his default database. If *create* is `True`,
         the database will always be created in
-        :attr:`MODE.READ_WRITE` mode as creating an empty
-        database for reading only does not make a great deal of sense.
+        :attr:`MODE`.READ_WRITE mode.
 
         :param path:   Directory to open/create the database in (see
                        above for behavior if `None`)
@@ -72,7 +51,7 @@ class Database(object):
         :param create: False to open an existing, True to create a new
                        database.  
         :type create:  bool
-        :param mdoe:   Mode to open a database in. Always 
+        :param mode:   Mode to open a database in. Always 
                        :attr:`MODE`.READ_WRITE when creating a new one.
         :type mode:    :attr:`MODE`
         :returns:      Nothing
@@ -87,17 +66,19 @@ class Database(object):
             path = Database._std_db_path
 
         if create == False:
-            self.open(path, status)
+            self.open(path, mode)
         else:
             self.create(path)
 
     def create(self, path):
         """Creates a new notmuch database
 
-        This function wraps *notmuch_database_create(...)* and creates
-        a new notmuch database at *path*. It will always return a database in
-        :attr:`MODE`.READ_WRITE mode as creating an empty database 
-        for reading only does not make a great deal of sense.
+        This function is used by __init__() usually does not need
+        to be called directly. It wraps the underlying
+        *notmuch_database_create* function and creates a new notmuch
+        database at *path*. It will always return a database in
+        :attr:`MODE`.READ_WRITE mode as creating an empty database for
+        reading only does not make a great deal of sense.
 
         :param path: A directory in which we should create the database.
         :type path: str
@@ -116,14 +97,21 @@ class Database(object):
                 message="Could not create the specified database")
         self._db = res
 
-    def open(self, path, status= MODE.READ_ONLY): 
-        """calls notmuch_database_open
+    def open(self, path, mode= MODE.READ_ONLY): 
+        """Opens an existing database
 
-        :returns: Raises :exc:`notmuch.NotmuchError` in case
-                  of any failure (after printing an error message on stderr).
+        This function is used by __init__() usually does not need
+        to be called directly. It wraps the underlying
+        *notmuch_database_open* function.
+
+        :param status: Open the database in read-only or read-write mode
+        :type status:  :attr:`MODE` 
+        :returns: Nothing
+        :exception: Raises :exc:`notmuch.NotmuchError` in case
+                    of any failure (after printing an error message on stderr).
         """
 
-        res = Database._open(path, status)
+        res = Database._open(path, mode)
 
         if res is None:
             raise NotmuchError(
@@ -131,11 +119,15 @@ class Database(object):
         self._db = res
 
     def get_path(self):
-        """notmuch_database_get_path (notmuch_database_t *database);  """
+        """Returns the file path of an open database
+
+        Wraps notmuch_database_get_path"""
         return Database._get_path(self._db)
 
     def find_message(self, msgid):
-        """notmuch_database_find_message
+        """Returns a :class:`Message` as identified by its message ID
+
+        wraps *notmuch_database_find_message*
 
         :param msgid: The message id
         :type msgid: string

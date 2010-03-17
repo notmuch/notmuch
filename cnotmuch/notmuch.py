@@ -1,12 +1,42 @@
+"""The :mod:`notmuch` module provides most of the functionality that a user is likely to need.
+
+.. note:: The underlying notmuch library is build on a hierarchical
+    memory allocator called talloc. All objects derive from a
+    top-level :class:`Database` object.
+    
+    This means that as soon as an object is deleted, all underlying
+    derived objects such as Queries, Messages, Message, and Tags will
+    be freed by the underlying library as well. Accessing these
+    objects will then lead to segfaults and other unexpected behavior.
+
+    We implement reference counting, so that parent objects can be
+    automatically freed when they are not needed anymore. For
+    example::
+
+            db = Database('path',create=True)
+            msgs = Query(db,'from:myself').search_messages()
+
+    This returns a :class:`Messages` which internally contains a
+    reference to its parent :class:`Query` object. Otherwise the
+    Query() would be immediately freed, taking our *msgs* down with
+    it.
+
+    In this case, the above Query() object will be automatically freed
+    whenever we delete all derived objects, ie in our case:
+    `del(msgs)` would also delete the parent Query (but not the parent
+    Database() as that is still referenced from the variable *db* in
+    which it is stored.
+
+    Pretty much the same is valid for all other objects in the
+    hierarchy, such as :class:`Query`, :class:`Messages`,
+    :class:`Message`, and :class:`Tags`.
+
+"""
 import ctypes
 from ctypes import c_int, c_char_p
 from database import Database,Tags,Query,Messages,Message,Tags
 from cnotmuch.globals import nmlib,STATUS,NotmuchError
+__LICENSE__="GPL v3+"
+__VERSION__=0.1
+__AUTHOR__ ="Sebastian Spaeth <Sebastian@SSpaeth.de>"
 
-# 114 typedef struct _notmuch_query notmuch_query_t;
-# 115 typedef struct _notmuch_threads notmuch_threads_t;
-# 116 typedef struct _notmuch_thread notmuch_thread_t;
-# 117 typedef struct _notmuch_messages notmuch_messages_t;
-# 118 typedef struct _notmuch_message notmuch_message_t;
-# 120 typedef struct _notmuch_directory notmuch_directory_t;
-# 121 typedef struct _notmuch_filenames notmuch_filenames_t;

@@ -1,13 +1,13 @@
 .. cnotmuch documentation master file, created by
    sphinx-quickstart on Tue Feb  2 10:00:47 2010.
 
-.. currentmodule:: cnotmuch.notmuch
+.. currentmodule:: cnotmuch
 
-Welcome to notmuch's documentation!
-===================================
+Welcome to :mod:`cnotmuch`'s documentation
+===========================================
 
 The :mod:`cnotmuch` module provides an interface to the `notmuch <http://notmuchmail.org>`_ functionality, directly interfacing to a shared notmuch library.
-The classes :class:`Database`, :class:`Query` provide most of the core functionality, returning :class:`Messages` and :class:`Tags`.
+The classes :class:`notmuch.Database`, :class:`notmuch.Query` provide most of the core functionality, returning :class:`notmuch.Messages` and :class:`notmuch.Tags`.
 
 .. moduleauthor:: Sebastian Spaeth <Sebastian@SSpaeth.de>
 
@@ -15,11 +15,11 @@ The classes :class:`Database`, :class:`Query` provide most of the core functiona
 
 This page contains the main API overview. More information on specific topics can be found on the following pages: (none here yet)
 
-Notmuch can be imported as:
+Notmuch can be imported as::
 
  from cnotmuch import notmuch
 
-or:
+or::
 
  from cnotmuch.notmuch import Query,Database
 
@@ -27,11 +27,12 @@ or:
    :maxdepth: 1
 
 
-
 :mod:`notmuch` -- The Notmuch interface
 =============================================
 
-Document from cnotmuch.globals import nmlib,STATUS
+.. automodule:: cnotmuch.notmuch
+
+:todo: Document nmlib,STATUS
 
 :class:`Database` -- The underlying notmuch database
 -----------------------------------------------------
@@ -53,10 +54,10 @@ Document from cnotmuch.globals import nmlib,STATUS
 
      Defines constants that are used as the mode in which to open a database.
 
-     READ_ONLY
+     MODE.READ_ONLY
        Open the database in read-only mode
 
-     READ_WRITE
+     MODE.READ_WRITE
        Open the database in read-write mode
 
    .. autoattribute:: db_p
