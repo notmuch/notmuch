@@ -62,17 +62,38 @@ or::
 
    .. autoattribute:: db_p
 
-:class:`Query` -- Represents a notmuch Query
+:class:`Query` -- A search query
 -----------------------------------------------
 
 .. autoclass:: Query
-   :members:
+
+   .. automethod:: create
+
+   .. attribute:: Query.SORT
+
+     Defines constants that are used as the mode in which to open a database.
+
+     SORT.OLDEST_FIRST
+       Sort by message date, oldest first.
+
+     SORT.NEWEST_FIRST
+       Sort by message date, newest first.
+
+     SORT.MESSAGE_ID
+       Sort by email message ID
+
+   .. automethod:: set_sort
+
+   .. automethod:: search_messages
 
 :class:`Messages` -- A bunch of messages
 ----------------------------------------
 
 .. autoclass:: Messages
-   :members:
+
+   .. automethod:: collect_tags
+
+   .. automethod:: __len__
 
 :class:`Message` -- A single message
 ----------------------------------------
@@ -80,15 +101,15 @@ or::
 .. autoclass:: Message
    :members:
 
-:class:`Tags` -- A bunch of notmuch tags
-----------------------------------------
+:class:`Tags` -- Notmuch tags
+-----------------------------
 
 .. autoclass:: Tags
    :members:
 
-   .. data: '__notmuchcmd__'
+   .. automethod:: __len__
 
-      This is the actual binary that will be executed in order to run a notmuch command. This is set to *notmuch* and should usually not be changed.
+   .. automethod:: __str__
 
 :exc:`NotmuchError` -- A Notmuch execution error
 ------------------------------------------------

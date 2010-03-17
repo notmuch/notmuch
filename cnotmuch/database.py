@@ -48,10 +48,10 @@ class Database(object):
         :param path:   Directory to open/create the database in (see
                        above for behavior if `None`)
         :type path:    `str` or `None`
-        :param create: False to open an existing, True to create a new
+        :param create: Pass `False` to open an existing, `True` to create a new
                        database.  
         :type create:  bool
-        :param mode:   Mode to open a database in. Always 
+        :param mode:   Mode to open a database in. Is always 
                        :attr:`MODE`.READ_WRITE when creating a new one.
         :type mode:    :attr:`MODE`
         :returns:      Nothing
@@ -73,7 +73,7 @@ class Database(object):
     def create(self, path):
         """Creates a new notmuch database
 
-        This function is used by __init__() usually does not need
+        This function is used by __init__() and usually does not need
         to be called directly. It wraps the underlying
         *notmuch_database_create* function and creates a new notmuch
         database at *path*. It will always return a database in
@@ -100,14 +100,14 @@ class Database(object):
     def open(self, path, mode= MODE.READ_ONLY): 
         """Opens an existing database
 
-        This function is used by __init__() usually does not need
+        This function is used by __init__() and usually does not need
         to be called directly. It wraps the underlying
         *notmuch_database_open* function.
 
         :param status: Open the database in read-only or read-write mode
         :type status:  :attr:`MODE` 
         :returns: Nothing
-        :exception: Raises :exc:`notmuch.NotmuchError` in case
+        :exception: Raises :exc:`NotmuchError` in case
                     of any failure (after printing an error message on stderr).
         """
 
@@ -127,9 +127,9 @@ class Database(object):
     def find_message(self, msgid):
         """Returns a :class:`Message` as identified by its message ID
 
-        wraps *notmuch_database_find_message*
+        Wraps the underlying *notmuch_database_find_message* function.
 
-        :param msgid: The message id
+        :param msgid: The message ID
         :type msgid: string
         :returns: :class:`Message` or `None` if no message is found or if an
                   out-of-memory situation occurs.
@@ -146,8 +146,8 @@ class Database(object):
     def get_all_tags(self):
         """Returns :class:`Tags` with a list of all tags found in the database
 
-        :returns: :class:`Tags` object or raises :exc:`NotmuchError` with 
-                  STATUS.NULL_POINTER on error
+        :returns: :class:`Tags`
+        :execption: :exc:`NotmuchError` with STATUS.NULL_POINTER on error
         """
         if self._db is None:
             raise NotmuchError(STATUS.NOT_INITIALIZED)
@@ -188,15 +188,22 @@ class Database(object):
 
 #------------------------------------------------------------------------------
 class Query(object):
-    """ Wrapper around a notmuch_query_t
+    """ Represents a search query on an opened :class:`Database`.
 
-    Do note that as soon as we tear down this object, all derived
-    threads, and messages will be freed as well.
+    A query selects and filters a subset of messages from the notmuch
+    database we derive from.
+
+    Technically, it wraps the underlying *notmuch_query_t* struct.
+
+    .. note:: Do remember that as soon as we tear down this object,
+           all underlying derived objects such as queries, threads,
+           messages, tags etc will be freed by the underlying library
+           as well. Accessing these objects will lead to segfaults and
+           other unexpected behavior. See above for more details.
     """
     # constants
-    SORT_OLDEST_FIRST = 0
-    SORT_NEWEST_FIRST = 1
-    SORT_MESSAGE_ID = 2
+    SORT = Enum(['OLDEST_FIRST','NEWEST_FIRST','MESSAGE_ID'])
+    """Constants: Sort order in which to return results"""
 
     """notmuch_query_create"""
     _create = nmlib.notmuch_query_create
@@ -207,16 +214,32 @@ class Query(object):
     _search_messages.restype = c_void_p
 
     def __init__(self, db, querystr):
-        """TODO: document"""
+        """
+        :param db: An open database which we derive the Query from.
+        :type db: :class:`Database`
+        :param querystr: The query string for the message.
+        :type querystr: str
+        """
         self._db = None
         self._query = None
         self.create(db, querystr)
 
     def create(self, db, querystr):
-        """db is a Database() and querystr a string
+        """Creates a new query derived from a Database.
 
-        raises NotmuchError STATUS.NOT_INITIALIZED if db is not inited and
-        STATUS.NULL_POINTER if the query creation failed (too little memory)
+        This function is utilized by __init__() and usually does not need to 
+        be called directly.
+
+        :param db: Database to create the query from.
+        :type db: :class:`Database`
+        :param querystr: The query string
+        :type querystr: str
+        :returns: Nothing
+        :exception: :exc:`NotmuchError`
+
+                      * STATUS.NOT_INITIALIZED if db is not inited
+                      * STATUS.NULL_POINTER if the query creation failed 
+                        (too little memory)
         """
         if db.db_p is None:
             raise NotmuchError(STATUS.NOT_INITIALIZED)            
@@ -230,10 +253,14 @@ class Query(object):
         self._query = query_p
 
     def set_sort(self, sort):
-        """notmuch_query_set_sort
+        """Set the sort order future results will be delivered in
 
-        :param sort: one of Query.SORT_OLDEST_FIRST|SORT_NEWEST_FIRST|SORT_MESSAGE_ID
-        :returns: Nothing, but raises NotmuchError if query is not inited
+        Wraps the underlying *notmuch_query_set_sort* function.
+
+        :param sort: Sort order (see :attr:`Query.SORT`)
+        :returns: Nothing
+        :exception: :exc:`NotmuchError` STATUS.NOT_INITIALIZED if query has not 
+                    been initialized.
         """
         if self._query is None:
             raise NotmuchError(STATUS.NOT_INITIALIZED)
@@ -241,8 +268,17 @@ class Query(object):
         nmlib.notmuch_query_set_sort(self._query, sort)
 
     def search_messages(self):
-        """notmuch_query_search_messages
-        Returns Messages() or a raises a NotmuchError()
+        """Filter messages according to query and return
+        :class:`Messages` in the defined sort order.
+
+        Technically, it wraps the underlying
+        *notmuch_query_search_messages* function.
+
+        :returns: :class:`Messages`
+        :exception: :exc:`NotmuchError`
+
+                      * STATUS.NOT_INITIALIZED if query is not inited
+                      * STATUS.NULL_POINTER if search_messages failed 
         """
         if self._query is None:
             raise NotmuchError(STATUS.NOT_INITIALIZED)            
@@ -263,7 +299,30 @@ class Query(object):
 
 #------------------------------------------------------------------------------
 class Tags(object):
-    """Wrapper around notmuch_tags_t"""
+    """Represents a list of notmuch tags
+
+    This object provides an iterator over a list of notmuch tags. Do
+    note that the underlying library only provides a one-time iterator
+    (it cannot reset the iterator to the start). Thus iterating over
+    the function will "exhaust" the list of tags, and a subsequent
+    iteration attempt will raise a :exc:`NotmuchError`
+    STATUS.NOT_INITIALIZED. Also note, that any function that uses
+    iteration (nearly all) will also exhaust the tags. So both::
+
+      for tag in tags: print tag 
+
+    as well as::
+
+       number_of_tags = len(tags)
+
+    and even a simple::
+
+       #str() iterates over all tags to construct a space separated list
+       print(str(tags))
+
+    will "exhaust" the Tags. If you need to re-iterate over a list of
+    tags you will need to retrieve a new :class:`Tags` object.
+    """
 
     #notmuch_tags_get
     _get = nmlib.notmuch_tags_get
@@ -271,18 +330,20 @@ class Tags(object):
 
     def __init__(self, tags_p, parent=None):
         """
-        msg_p is a pointer to an notmuch_message_t Structure. If it is None,
-        we will raise an NotmuchError(STATUS.NULL_POINTER).
-
-        Is passed the parent these tags are derived from, and saves a
-        reference to it, so we can automatically delete the db object
-        once all derived objects are dead.
-
-        Tags() provides an iterator over all contained tags. However, you will
-        only be able to iterate over the Tags once, because the underlying C
-        function only allows iterating once.
-        #TODO: make the iterator work more than once and cache the tags in 
-               the Python object.
+        :param tags_p: A pointer to an underlying *notmuch_tags_t*
+             structure. These are not publically exposed, so a user
+             will almost never instantiate a :class:`Tags` object
+             herself. They are usually handed back as a result,
+             e.g. in :meth:`Database.get_all_tags`.  *tags_p* must be
+             valid, we will raise an :exc:`NotmuchError`
+             (STATUS.NULL_POINTER) if it is `None`.
+        :type tags_p: :class:`ctypes.c_void_p`
+        :param parent: The parent object (ie :class:`Database` or 
+             :class:`Message` these tags are derived from, and saves a
+             reference to it, so we can automatically delete the db object
+             once all derived objects are dead.
+        :TODO: Make the iterator optionally work more than once by
+               cache the tags in the Python object(?)
         """
         if tags_p is None:
             NotmuchError(STATUS.NULL_POINTER)
@@ -308,10 +369,33 @@ class Tags(object):
         nmlib.notmuch_tags_move_to_next(self._tags)
         return tag
 
-    def __str__(self):
-        """str() of Tags() is a space separated list of tags
+    def __len__(self):
+        """len(:class:`Tags`) returns the number of contained tags
 
-        This iterates over the list of Tags and will therefore 'exhaust' Tags()
+        .. note:: As this iterates over the tags, we will not be able
+               to iterate over them again (as in retrieve them)! If
+               the tags have been exhausted already, this will raise a
+               :exc:`NotmuchError` STATUS.NOT_INITIALIZED on
+               subsequent attempts.
+        """
+        if self._tags is None:
+            raise NotmuchError(STATUS.NOT_INITIALIZED)
+
+        i=0
+        while nmlib.notmuch_tags_valid(self._msgs):
+            nmlib.notmuch_tags_move_to_next(self._msgs)
+            i += 1
+        self._tags = None
+        return i
+
+    def __str__(self):
+        """The str() representation of Tags() is a space separated list of tags
+
+        .. note:: As this iterates over the tags, we will not be able
+               to iterate over them again (as in retrieve them)! If
+               the tags have been exhausted already, this will raise a
+               :exc:`NotmuchError` STATUS.NOT_INITIALIZED on
+               subsequent attempts.
         """
         return " ".join(self)
 
@@ -324,7 +408,52 @@ class Tags(object):
 
 #------------------------------------------------------------------------------
 class Messages(object):
-    """Wrapper around notmuch_messages_t"""
+    """Represents a list of notmuch messages
+
+    This object provides an iterator over a list of notmuch messages
+    (Technically, it provides a wrapper for the underlying
+    *notmuch_messages_t* structure). Do note that the underlying
+    library only provides a one-time iterator (it cannot reset the
+    iterator to the start). Thus iterating over the function will
+    "exhaust" the list of messages, and a subsequent iteration attempt
+    will raise a :exc:`NotmuchError` STATUS.NOT_INITIALIZED. Also
+    note, that any function that uses iteration will also
+    exhaust the messages. So both::
+
+      for msg in msgs: print msg 
+
+    as well as::
+
+       number_of_msgs = len(msgs)
+
+    will "exhaust" the Messages. If you need to re-iterate over a list of
+    messages you will need to retrieve a new :class:`Messages` object.
+
+    Things are not as bad as it seems though, you can store and reuse
+    the single Message objects as often as you want as long as you
+    keep the parent Messages object around. (Recall that due to
+    hierarchical memory allocation, all derived Message objects will
+    be invalid when we delete the parent Messages() object, even if it
+    was already "exhausted".) So this works::
+
+      db   = Database()
+      msgs = Query(db,'').search_messages() #get a Messages() object
+      msglist = []
+      for m in msgs:
+         msglist.append(m)
+
+      # msgs is "exhausted" now and even len(msgs) will raise an exception.
+      # However it will be kept around until all retrieved Message() objects are
+      # also deleted. If you did e.g. an explicit del(msgs) here, the 
+      # following lines would fail.
+      
+      # You can reiterate over *msglist* however as often as you want. 
+      # It is simply a list with Message objects.
+
+      print (msglist[0].get_filename())
+      print (msglist[1].get_filename())
+      print (msglist[0].get_message_id())
+    """
 
     #notmuch_tags_get
     _get = nmlib.notmuch_messages_get
@@ -335,18 +464,20 @@ class Messages(object):
 
     def __init__(self, msgs_p, parent=None):
         """
-        msg_p is a pointer to an notmuch_messages_t Structure. If it is None,
-        we will raise an NotmuchError(STATUS.NULL_POINTER).
-
-        If passed the parent query this Messages() is derived from, it saves a
-        reference to it, so we can automatically delete the parent query object
-        once all derived objects are dead.
-
-        Messages() provides an iterator over all contained Message()s.
-        However, you will only be able to iterate over it once,
-        because the underlying C function only allows iterating once.
-        #TODO: make the iterator work more than once and cache the tags in 
-               the Python object.
+        :param msgs_p:  A pointer to an underlying *notmuch_messages_t*
+             structure. These are not publically exposed, so a user
+             will almost never instantiate a :class:`Messages` object
+             herself. They are usually handed back as a result,
+             e.g. in :meth:`Query.search_messages`.  *msgs_p* must be
+             valid, we will raise an :exc:`NotmuchError`
+             (STATUS.NULL_POINTER) if it is `None`.
+        :type msgs_p: :class:`ctypes.c_void_p`
+        :param parent: The parent object
+             (ie :class:`Query`) these tags are derived from. It saves
+             a reference to it, so we can automatically delete the db
+             object once all derived objects are dead.
+        :TODO: Make the iterator work more than once and cache the tags in 
+               the Python object.(?)
         """
         if msgs_p is None:
             NotmuchError(STATUS.NULL_POINTER)
@@ -357,11 +488,13 @@ class Messages(object):
         logging.debug("Inited Messages derived from %s" %(str(parent)))
 
     def collect_tags(self):
-        """ return the Tags() belonging to the messages
-        
-        Do note that collect_tags will iterate over the messages and
-        therefore will not allow further iterationsl
-        Raises NotmuchError(STATUS.NOT_INITIALIZED) if not inited
+        """Return the unique :class:`Tags` in the contained messages
+
+        :returns: :class:`Tags`
+        :exceptions: :exc:`NotmuchError` STATUS.NOT_INITIALIZED if not inited
+
+        .. note:: :meth:`collect_tags` will iterate over the messages and
+          therefore will not allow further iterations.
         """
         if self._msgs is None:
             raise NotmuchError(STATUS.NOT_INITIALIZED)
@@ -392,9 +525,9 @@ class Messages(object):
         return msg
 
     def __len__(self):
-        """ Returns the number of contained messages
+        """len(:class:`Messages`) returns the number of contained messages
 
-        :note: As this iterates over the messages, we will not be able to 
+        .. note:: As this iterates over the messages, we will not be able to 
                iterate over them again (as in retrieve them)!
         """
         if self._msgs is None:

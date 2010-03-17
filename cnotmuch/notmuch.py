@@ -1,5 +1,7 @@
 """The :mod:`notmuch` module provides most of the functionality that a user is likely to need.
 
+Many of its objects use python's logging module to log some output at DEBUG level.
+
 .. note:: The underlying notmuch library is build on a hierarchical
     memory allocator called talloc. All objects derive from a
     top-level :class:`Database` object.
