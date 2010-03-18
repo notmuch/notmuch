@@ -96,7 +96,11 @@ or::
 
    .. automethod:: set_sort
 
+   .. automethod:: search_threads
+
    .. automethod:: search_messages
+
+   .. automethod:: count_messages
 
 :class:`Messages` -- A bunch of messages
 ----------------------------------------
@@ -114,17 +118,31 @@ or::
 
    .. automethod:: get_message_id
 
+   .. automethod:: get_thread_id
+
+   .. automethod:: get_replies
+
+   .. automethod:: get_filename
+
+   .. automethod:: get_flag
+
+   .. automethod:: set_flag
+   
    .. automethod:: get_date
 
    .. automethod:: get_header
-
-   .. automethod:: get_filename
 
    .. automethod:: get_tags
 
    .. automethod:: remove_tag
 
    .. automethod:: add_tag
+
+   .. automethod:: remove_all_tags
+
+   .. automethod:: freeze
+
+   .. automethod:: thaw
 
    .. automethod:: format_as_text
 
@@ -140,6 +158,26 @@ or::
 
    .. automethod:: __str__
 
+:class:`Threads` -- Threads iterator
+------------------------------------
+
+To be implemented
+
+:class:`Thread` -- A single thread
+------------------------------------
+
+To be implemented
+
+:class:`Filenames` -- An iterator over filenames
+------------------------------------------------
+
+To be implemented
+
+:class:`Directoy` -- A directory entry in the database
+------------------------------------------------------
+
+To be implemented
+
 :exc:`NotmuchError` -- A Notmuch execution error
 ------------------------------------------------
 .. autoexception:: NotmuchError
@@ -150,7 +188,8 @@ or::
 :class:`STATUS` -- Notmuch operation return status
 --------------------------------------------------
 .. autoclass:: STATUS
-   :members:
+
+   To be documented
 
 Indices and tables
 ==================
