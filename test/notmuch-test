@@ -1,0 +1,542 @@
+#!/bin/bash
+set -e
+
+find_notmuch_binary ()
+{
+    dir=$1
+
+    while [ -n "$dir" ]; do
+	bin=$dir/notmuch
+	if [ -x $bin ]; then
+	    echo $bin
+	    return
+	fi
+	dir=$(dirname $dir)
+	if [ "$dir" = "/" ]; then
+	    break
+	fi
+    done
+
+    echo notmuch
+}
+
+increment_mtime_amount=0
+increment_mtime ()
+{
+    dir=$1
+
+    increment_mtime_amount=$((increment_mtime_amount + 1))
+    touch -d "+${increment_mtime_amount} seconds" $dir
+}
+
+# Generate a new message in the mail directory, with a unique message
+# ID and subject. The message is not added to the index.
+#
+# After this function returns, the filename of the generated message
+# is available as $gen_msg_filename and the message ID is available as
+# $gen_msg_id .
+#
+# This function supports named parameters with the bash syntax for
+# assigning a value to an associative array ([name]=value). The
+# supported parameters are:
+#
+#  [dir]=directory/of/choice
+#
+#	Generate the message in directory 'directory/of/choice' within
+#	the mail store. The directory will be created if necessary.
+#
+#  [body]=text
+#
+#	Text to use as the body of the email message
+#
+#  '[from]="Some User <user@example.com>"'
+#  '[to]="Some User <user@example.com>"'
+#  '[subject]="Subject of email message"'
+#  '[date]="RFC 822 Date"'
+#
+#	Values for email headers. If not provided, default values will
+#	be generated instead.
+#
+#  '[cc]="Some User <user@example.com>"'
+#  [reply-to]=some-address
+#  [in-reply-to]=<message-id>
+#
+#	Additional values for email headers. If these are not provided
+#	then the relevant headers will simply not appear in the
+#	message.
+gen_msg_cnt=0
+gen_msg_filename=""
+gen_msg_id=""
+generate_message ()
+{
+    # This is our (bash-specific) magic for doing named parameters
+    local -A template="($@)"
+    local additional_headers
+
+    gen_msg_cnt=$((gen_msg_cnt + 1))
+    gen_msg_name=msg-$(printf "%03d" $gen_msg_cnt)
+    gen_msg_id="${gen_msg_name}@notmuch-test-suite"
+
+    if [ -z "${template[dir]}" ]; then
+	gen_msg_filename="${MAIL_DIR}/$gen_msg_name"
+    else
+	gen_msg_filename="${MAIL_DIR}/${template[dir]}/$gen_msg_name"
+	mkdir -p $(dirname $gen_msg_filename)
+    fi
+
+    if [ -z "${template[body]}" ]; then
+	template[body]="This is just a test message at ${gen_msg_filename}"
+    fi
+
+    if [ -z "${template[from]}" ]; then
+	template[from]="Notmuch Test Suite <test_suite@notmuchmail.org>"
+    fi
+
+    if [ -z "${template[to]}" ]; then
+	template[to]="Notmuch Test Suite <test_suite@notmuchmail.org>"
+    fi
+
+    if [ -z "${template[subject]}" ]; then
+	template[subject]="Test message ${gen_msg_filename}"
+    fi
+
+    if [ -z "${template[date]}" ]; then
+	template[date]="Tue, 05 Jan 2010 15:43:57 -0800"
+    fi
+
+    additional_headers=""
+    if [ ! -z "${template[reply-to]}" ]; then
+	additional_headers="Reply-To: ${template[reply-to]}
+${additional_headers}"
+    fi
+
+    if [ ! -z "${template[in-reply-to]}" ]; then
+	additional_headers="In-Reply-To: ${template[in-reply-to]}
+${additional_headers}"
+    fi
+
+    if [ ! -z "${template[cc]}" ]; then
+	additional_headers="Cc: ${template[cc]}
+${additional_headers}"
+    fi
+
+cat <<EOF >$gen_msg_filename
+From: ${template[from]}
+To: ${template[to]}
+Message-Id: <${gen_msg_id}>
+Subject: ${template[subject]}
+Date: ${template[date]}
+${additional_headers}
+${template[body]}
+EOF
+
+    # Ensure that the mtime of the containing directory is updated
+    increment_mtime $(dirname ${gen_msg_filename})
+}
+
+# Generate a new message and add it to the index.
+#
+# All of the arguments and return values supported by generate_message
+# are alos supported here, so see that function for details.
+add_message ()
+{
+    generate_message "$@"
+
+    $NOTMUCH new > /dev/null
+}
+
+NOTMUCH_IGNORED_OUTPUT_REGEXP='^Processed [0-9]*( total)? file|Found [0-9]* total file'
+NOTMUCH_THREAD_ID_SQUELCH='s/thread:................/thread:XXX/'
+execute_expecting ()
+{
+    args=$1
+    expected=$2
+
+    output=$($NOTMUCH $args | grep -v -E -e "$NOTMUCH_IGNORED_OUTPUT_REGEXP" | sed -e "$NOTMUCH_THREAD_ID_SQUELCH" || true)
+    if [ "$output" = "$expected" ]; then
+	echo "	PASS"
+    else
+	echo "	FAIL"
+	echo "	Expected output: $expected"
+	echo "	Actual output:   $output"
+    fi
+}
+
+TEST_DIR=$(pwd)/test.$$
+MAIL_DIR=${TEST_DIR}/mail
+export NOTMUCH_CONFIG=${TEST_DIR}/notmuch-config
+NOTMUCH=$(find_notmuch_binary $(pwd))
+
+rm -rf ${TEST_DIR}
+mkdir ${TEST_DIR}
+cd ${TEST_DIR}
+
+mkdir ${MAIL_DIR}
+
+cat <<EOF > ${NOTMUCH_CONFIG}
+[database]
+path=${MAIL_DIR}
+
+[user]
+name=Notmuch Test Suite
+primary_email=test_suite@notmuchmail.org
+other_email=test_suite_other@notmuchmail.org
+EOF
+
+printf "Testing \"notmuch new\" in several variations:\n"
+printf " No new messages...\t\t"
+execute_expecting new "No new mail."
+
+printf " Single new message...\t\t"
+generate_message
+execute_expecting new "Added 1 new message to the database."
+
+printf " Multiple new messages...\t"
+generate_message
+generate_message
+execute_expecting new "Added 2 new messages to the database."
+
+printf " No new messages (non-empty DB)... "
+execute_expecting new "No new mail."
+
+printf " New directories...\t\t"
+rm -rf ${MAIL_DIR}/* ${MAIL_DIR}/.notmuch
+mkdir ${MAIL_DIR}/def
+mkdir ${MAIL_DIR}/ghi
+generate_message [dir]=def
+
+execute_expecting new "Added 1 new message to the database."
+
+printf " Alternate inode order...\t"
+
+rm -rf ${MAIL_DIR}/.notmuch
+mv ${MAIL_DIR}/ghi ${MAIL_DIR}/abc
+rm ${MAIL_DIR}/def/*
+generate_message [dir]=abc
+
+execute_expecting new "Added 1 new message to the database."
+
+printf " Message moved in...\t\t"
+rm -rf ${MAIL_DIR}/* ${MAIL_DIR}/.notmuch
+generate_message
+tmp_msg_filename=tmp/$gen_msg_filename
+mkdir -p $(dirname $tmp_msg_filename)
+mv $gen_msg_filename $tmp_msg_filename
+increment_mtime ${MAIL_DIR}
+$NOTMUCH new > /dev/null
+mv $tmp_msg_filename $gen_msg_filename
+increment_mtime ${MAIL_DIR}
+execute_expecting new "Added 1 new message to the database."
+
+printf " Renamed message...\t\t"
+
+generate_message
+$NOTMUCH new > /dev/null
+mv $gen_msg_filename ${gen_msg_filename}-renamed
+increment_mtime ${MAIL_DIR}
+execute_expecting new "No new mail. Detected 1 file rename."
+
+printf " Deleted message...\t\t"
+
+rm ${gen_msg_filename}-renamed
+increment_mtime ${MAIL_DIR}
+execute_expecting new "No new mail. Removed 1 message."
+
+printf " Renamed directory...\t\t"
+
+generate_message [dir]=dir
+generate_message [dir]=dir
+generate_message [dir]=dir
+
+$NOTMUCH new > /dev/null
+
+mv ${MAIL_DIR}/dir ${MAIL_DIR}/dir-renamed
+increment_mtime ${MAIL_DIR}
+
+execute_expecting new "No new mail. Detected 3 file renames."
+
+printf " Deleted directory...\t\t"
+
+rm -rf ${MAIL_DIR}/dir-renamed
+increment_mtime ${MAIL_DIR}
+
+execute_expecting new "No new mail. Removed 3 messages."
+
+printf " New directory (at end of list)... "
+
+generate_message [dir]=zzz
+generate_message [dir]=zzz
+generate_message [dir]=zzz
+
+execute_expecting new "Added 3 new messages to the database."
+
+printf " Deleted directory (end of list)... "
+
+rm -rf ${MAIL_DIR}/zzz
+increment_mtime ${MAIL_DIR}
+
+execute_expecting new "No new mail. Removed 3 messages."
+
+printf " New symlink to directory...\t"
+
+rm -rf ${MAIL_DIR}/.notmuch
+mv ${MAIL_DIR} ${TEST_DIR}/actual_maildir
+
+mkdir ${MAIL_DIR}
+ln -s ${TEST_DIR}/actual_maildir ${MAIL_DIR}/symlink
+
+execute_expecting new "Added 1 new message to the database."
+
+printf " New symlink to a file...\t"
+generate_message
+external_msg_filename=${TEST_DIR}/external/$(basename $gen_msg_filename)
+mkdir -p $(dirname $external_msg_filename)
+mv $gen_msg_filename $external_msg_filename
+ln -s $external_msg_filename $gen_msg_filename
+increment_mtime ${MAIL_DIR}
+execute_expecting new "Added 1 new message to the database."
+
+printf " New two-level directory...\t"
+
+generate_message [dir]=two/levels
+generate_message [dir]=two/levels
+generate_message [dir]=two/levels
+
+execute_expecting new "Added 3 new messages to the database."
+
+printf " Deleted two-level directory... "
+
+rm -rf ${MAIL_DIR}/two
+increment_mtime ${MAIL_DIR}
+
+execute_expecting new "No new mail. Removed 3 messages."
+
+printf "\nTesting \"notmuch search\" in several variations:\n"
+
+printf " Search body...\t\t\t"
+add_message '[subject]="body search"' '[date]="Sat, 01 Jan 2000 12:00:00 -0000"' [body]=bodysearchtest
+execute_expecting "search bodysearchtest" "thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; body search (inbox unread)"
+
+printf " Search by from:...\t\t"
+add_message '[subject]="search by from"' '[date]="Sat, 01 Jan 2000 12:00:00 -0000"' [from]=searchbyfrom
+execute_expecting "search from:searchbyfrom" "thread:XXX   2000-01-01 [1/1] searchbyfrom; search by from (inbox unread)"
+
+printf " Search by to:...\t\t"
+add_message '[subject]="search by to"' '[date]="Sat, 01 Jan 2000 12:00:00 -0000"' [to]=searchbyto
+execute_expecting "search to:searchbyto" "thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; search by to (inbox unread)"
+
+printf " Search by subject:...\t\t"
+add_message [subject]=subjectsearchtest '[date]="Sat, 01 Jan 2000 12:00:00 -0000"'
+execute_expecting "search subject:subjectsearchtest" "thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; subjectsearchtest (inbox unread)"
+
+printf " Search by id:...\t\t"
+add_message '[subject]="search by id"' '[date]="Sat, 01 Jan 2000 12:00:00 -0000"'
+execute_expecting "search id:${gen_msg_id}" "thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; search by id (inbox unread)"
+
+printf " Search by tag:...\t\t"
+add_message '[subject]="search by tag"' '[date]="Sat, 01 Jan 2000 12:00:00 -0000"'
+$NOTMUCH tag +searchbytag id:${gen_msg_id}
+execute_expecting "search tag:searchbytag" "thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; search by tag (inbox searchbytag unread)"
+
+printf " Search by thread:...\t\t"
+add_message '[subject]="search by thread"' '[date]="Sat, 01 Jan 2000 12:00:00 -0000"'
+thread_id=$($NOTMUCH search id:${gen_msg_id} | sed -e 's/thread:\([a-f0-9]*\).*/\1/')
+execute_expecting "search thread:${thread_id}" "thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; search by thread (inbox unread)"
+
+printf " Search body (phrase)...\t"
+add_message '[subject]="body search (phrase)"' '[date]="Sat, 01 Jan 2000 12:00:00 -0000"' '[body]="body search (phrase)"'
+execute_expecting "search 'body search (phrase)'" "thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; body search (phrase) (inbox unread)"
+
+printf " Search by from: (address)...\t"
+add_message '[subject]="search by from (address)"' '[date]="Sat, 01 Jan 2000 12:00:00 -0000"' [from]=searchbyfrom@example.com
+execute_expecting "search from:searchbyfrom@example.com" "thread:XXX   2000-01-01 [1/1] searchbyfrom@example.com; search by from (address) (inbox unread)"
+
+printf " Search by from: (name)...\t"
+add_message '[subject]="search by from (name)"' '[date]="Sat, 01 Jan 2000 12:00:00 -0000"' '[from]="Search By From Name <test@example.com>"'
+execute_expecting "search from:'Search By From Name'" "thread:XXX   2000-01-01 [1/1] Search By From Name; search by from (name) (inbox unread)"
+
+printf " Search by to: (address)...\t"
+add_message '[subject]="search by to (address)"' '[date]="Sat, 01 Jan 2000 12:00:00 -0000"' [to]=searchbyto@example.com
+execute_expecting "search to:searchbyto@example.com" "thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; search by to (address) (inbox unread)"
+
+printf " Search by to: (name)...\t"
+add_message '[subject]="search by to (name)"' '[date]="Sat, 01 Jan 2000 12:00:00 -0000"' '[to]="Search By To Name <test@example.com>"'
+execute_expecting "search to:'Search By To Name'" "thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; search by to (name) (inbox unread)"
+
+printf " Search by subject: (phrase)...\t"
+add_message '[subject]="subject search test (phrase)"' '[date]="Sat, 01 Jan 2000 12:00:00 -0000"'
+execute_expecting "search subject:'subject search test (phrase)'" "thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; subject search test (phrase) (inbox unread)"
+
+printf "\nTesting \"notmuch reply\" in several variations:\n"
+
+printf " Basic reply...\t\t\t"
+add_message '[from]="Sender <sender@example.com>"' \
+             [to]=test_suite@notmuchmail.org \
+             [subject]=notmuch-reply-test \
+            '[date]="Tue, 05 Jan 2010 15:43:56 -0800"' \
+            '[body]="basic reply test"'
+
+execute_expecting "reply id:${gen_msg_id}" "From: Notmuch Test Suite <test_suite@notmuchmail.org>
+Subject: Re: notmuch-reply-test
+To: Sender <sender@example.com>
+Bcc: test_suite@notmuchmail.org
+In-Reply-To: <${gen_msg_id}>
+References:  <${gen_msg_id}>
+
+On Tue, 05 Jan 2010 15:43:56 -0800, Sender <sender@example.com> wrote:
+> basic reply test"
+
+printf " Multiple recipients...\t\t"
+add_message '[from]="Sender <sender@example.com>"' \
+            '[to]="test_suite@notmuchmail.org, Someone Else <someone@example.com>"' \
+             [subject]=notmuch-reply-test \
+            '[date]="Tue, 05 Jan 2010 15:43:56 -0800"' \
+            '[body]="Multiple recipients"'
+
+execute_expecting "reply id:${gen_msg_id}" "From: Notmuch Test Suite <test_suite@notmuchmail.org>
+Subject: Re: notmuch-reply-test
+To: Sender <sender@example.com>, Someone Else <someone@example.com>
+Bcc: test_suite@notmuchmail.org
+In-Reply-To: <${gen_msg_id}>
+References:  <${gen_msg_id}>
+
+On Tue, 05 Jan 2010 15:43:56 -0800, Sender <sender@example.com> wrote:
+> Multiple recipients"
+
+printf " Reply with CC...\t\t"
+add_message '[from]="Sender <sender@example.com>"' \
+             [to]=test_suite@notmuchmail.org \
+            '[cc]="Other Parties <cc@example.com>"' \
+             [subject]=notmuch-reply-test \
+            '[date]="Tue, 05 Jan 2010 15:43:56 -0800"' \
+            '[body]="reply with CC"'
+
+execute_expecting "reply id:${gen_msg_id}" "From: Notmuch Test Suite <test_suite@notmuchmail.org>
+Subject: Re: notmuch-reply-test
+To: Sender <sender@example.com>
+Cc: Other Parties <cc@example.com>
+Bcc: test_suite@notmuchmail.org
+In-Reply-To: <${gen_msg_id}>
+References:  <${gen_msg_id}>
+
+On Tue, 05 Jan 2010 15:43:56 -0800, Sender <sender@example.com> wrote:
+> reply with CC"
+
+printf " Reply from alternate address..."
+add_message '[from]="Sender <sender@example.com>"' \
+             [to]=test_suite_other@notmuchmail.org \
+             [subject]=notmuch-reply-test \
+            '[date]="Tue, 05 Jan 2010 15:43:56 -0800"' \
+            '[body]="reply from alternate address"'
+
+execute_expecting "reply id:${gen_msg_id}" "From: Notmuch Test Suite <test_suite_other@notmuchmail.org>
+Subject: Re: notmuch-reply-test
+To: Sender <sender@example.com>
+Bcc: test_suite@notmuchmail.org
+In-Reply-To: <${gen_msg_id}>
+References:  <${gen_msg_id}>
+
+On Tue, 05 Jan 2010 15:43:56 -0800, Sender <sender@example.com> wrote:
+> reply from alternate address"
+
+printf " Support for Reply-To...\t"
+add_message '[from]="Sender <sender@example.com>"' \
+             [to]=test_suite@notmuchmail.org \
+             [subject]=notmuch-reply-test \
+            '[date]="Tue, 05 Jan 2010 15:43:56 -0800"' \
+            '[body]="support for reply-to"' \
+            '[reply-to]="Sender <elsewhere@example.com>"'
+
+execute_expecting "reply id:${gen_msg_id}" "From: Notmuch Test Suite <test_suite@notmuchmail.org>
+Subject: Re: notmuch-reply-test
+To: Sender <elsewhere@example.com>
+Bcc: test_suite@notmuchmail.org
+In-Reply-To: <${gen_msg_id}>
+References:  <${gen_msg_id}>
+
+On Tue, 05 Jan 2010 15:43:56 -0800, Sender <sender@example.com> wrote:
+> support for reply-to"
+
+printf " Un-munging Reply-To...\t\t"
+add_message '[from]="Sender <sender@example.com>"' \
+            '[to]="Some List <list@example.com>"' \
+             [subject]=notmuch-reply-test \
+            '[date]="Tue, 05 Jan 2010 15:43:56 -0800"' \
+            '[body]="Un-munging Reply-To"' \
+            '[reply-to]="Evil Munging List <list@example.com>"'
+
+execute_expecting "reply id:${gen_msg_id}" "From: Notmuch Test Suite <test_suite@notmuchmail.org>
+Subject: Re: notmuch-reply-test
+To: Sender <sender@example.com>, Some List <list@example.com>
+Bcc: test_suite@notmuchmail.org
+In-Reply-To: <${gen_msg_id}>
+References:  <${gen_msg_id}>
+
+On Tue, 05 Jan 2010 15:43:56 -0800, Sender <sender@example.com> wrote:
+> Un-munging Reply-To"
+
+printf "\nTesting handling of uuencoded data:\n"
+
+add_message [subject]=uuencodetest '[date]="Sat, 01 Jan 2000 12:00:00 -0000"' \
+'[body]="This message is used to ensure that notmuch correctly handles a
+message containing a block of uuencoded data. First, we have a marker
+this content beforeuudata . Then we beging the uunencoded data itself:
+
+begin 644 bogus-uuencoded-data
+M0123456789012345678901234567890123456789012345678901234567890
+MOBVIOUSLY, THIS IS NOT ANY SORT OF USEFUL UUNECODED DATA.    
+MINSTEAD THIS IS JUST A WAY TO ENSURE THAT THIS BLOCK OF DATA 
+MIS CORRECTLY IGNORED WHEN NOTMUCH CREATES ITS INDEX. SO WE   
+MINCLUDE A DURINGUUDATA MARKER THAT SHOULD NOT RESULT IN ANY  
+MSEARCH RESULT.                                               
+\`
+end
+
+Finally, we have our afteruudata marker as well."'
+
+printf " Ensure content before uu data is indexed..."
+execute_expecting "search beforeuudata" "thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; uuencodetest (inbox unread)"
+printf " Ensure uu data is not indexed...\t"
+execute_expecting "search DURINGUUDATA" ""
+printf " Ensure content after uu data is indexed..."
+execute_expecting "search afteruudata" "thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; uuencodetest (inbox unread)"
+
+printf "\nTesting \"notmuch dump\" and \"notmuch restore\":\n"
+
+printf " Dumping all tags...\t\t"
+$NOTMUCH dump dump.expected
+echo "	PASS"
+
+printf " Clearing all tags...\t\t"
+sed -e 's/(\([^(]*\))$/()/' < dump.expected > clear.expected
+$NOTMUCH restore clear.expected
+$NOTMUCH dump clear.actual
+if diff clear.expected clear.actual > /dev/null; then
+    echo "	PASS"
+else
+    echo "	FAIL"
+    echo "	Expected output: See file clear.expected"
+    echo "	Actual output:   See file clear.actual"
+fi
+
+printf " Restoring original tags...\t"
+$NOTMUCH restore dump.expected
+$NOTMUCH dump dump.actual
+if diff dump.expected dump.actual > /dev/null; then
+    echo "	PASS"
+else
+    echo "	FAIL"
+    echo "	Expected output: See file dump.expected"
+    echo "	Actual output:   See file dump.actual"
+fi
+
+printf " Restore with nothing to do...\t"
+$NOTMUCH restore dump.expected
+echo "	PASS"
+
+cat <<EOF
+Notmuch test suite complete.
+
+Intermediate state can be examined in:
+	${TEST_DIR}
+EOF
