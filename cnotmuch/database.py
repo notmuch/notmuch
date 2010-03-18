@@ -143,8 +143,8 @@ class Database(object):
     def needs_upgrade(self):
         """Does this database need to be upgraded before writing to it?
 
-        If this function returns TRUE then no functions that modify the
-        database (:meth:`Database.add_message`, :meth:`Database.add_tag`,
+        If this function returns True then no functions that modify the
+        database (:meth:`add_message`, :meth:`add_tag`,
         :meth:`Directory.set_mtime`, etc.) will work unless :meth:`upgrade` 
         is called successfully first.
 
@@ -721,15 +721,12 @@ class Message(object):
 
                   STATUS.NULL_POINTER
                     The 'tag' argument is NULL
-
                   STATUS.TAG_TOO_LONG
                     The length of 'tag' is too long 
                     (exceeds Message.NOTMUCH_TAG_MAX)
-
                   STATUS.READ_ONLY_DATABASE
                     Database was opened in read-only mode so message cannot be 
                     modified.
-
                   STATUS.NOT_INITIALIZED
                      The message has not been initialized.
        """
@@ -758,15 +755,14 @@ class Message(object):
 
                    STATUS.NULL_POINTER
                      The 'tag' argument is NULL
-                   NOTMUCH_STATUS_TAG_TOO_LONG
+                   STATUS.TAG_TOO_LONG
                      The length of 'tag' is too long
                      (exceeds NOTMUCH_TAG_MAX)
-                   NOTMUCH_STATUS_READ_ONLY_DATABASE
+                   STATUS.READ_ONLY_DATABASE
                      Database was opened in read-only mode so message cannot 
                      be modified.
                    STATUS.NOT_INITIALIZED
                      The message has not been initialized.
-
         """
         if self._msg is None:
             raise NotmuchError(STATUS.NOT_INITIALIZED)
@@ -779,6 +775,120 @@ class Message(object):
 
         raise NotmuchError(status)
 
+    def remove_all_tags(self):
+        """Removes all tags from the given message.
+
+        See :meth:`freeze` for an example showing how to safely
+        replace tag values.
+
+        :returns: STATUS.SUCCESS if the tags were successfully removed.
+                  Raises an exception otherwise.
+        :exception: :exc:`NotmuchError`. They have the following meaning:
+
+                   STATUS.READ_ONLY_DATABASE
+                     Database was opened in read-only mode so message cannot 
+                     be modified.
+                   STATUS.NOT_INITIALIZED
+                     The message has not been initialized.
+        """
+        if self._msg is None:
+            raise NotmuchError(STATUS.NOT_INITIALIZED)
+ 
+        status = nmlib.notmuch_message_remove_all_tags(self._msg)
+
+        if STATUS.SUCCESS == status:
+            # return on success
+            return status
+
+        raise NotmuchError(status)
+
+    def freeze(self):
+        """Freezes the current state of 'message' within the database
+
+        This means that changes to the message state, (via :meth:`add_tag`, 
+        :meth:`remove_tag`, and :meth:`remove_all_tags`), will not be 
+        committed to the database until the message is :meth:`thaw`ed.
+
+        Multiple calls to freeze/thaw are valid and these calls will
+        "stack". That is there must be as many calls to thaw as to freeze
+        before a message is actually thawed.
+
+        The ability to do freeze/thaw allows for safe transactions to
+        change tag values. For example, explicitly setting a message to
+        have a given set of tags might look like this::
+
+          msg.freeze()
+          msg.remove_all_tags()
+          for tag in new_tags:
+              msg.add_tag(tag)
+          msg.thaw()
+
+        With freeze/thaw used like this, the message in the database is
+        guaranteed to have either the full set of original tag values, or
+        the full set of new tag values, but nothing in between.
+
+        Imagine the example above without freeze/thaw and the operation
+        somehow getting interrupted. This could result in the message being
+        left with no tags if the interruption happened after
+        :meth:`remove_all_tags` but before :meth:`add_tag`.
+
+        :returns: STATUS.SUCCESS if the message was successfully frozen.
+                  Raises an exception otherwise.
+        :exception: :exc:`NotmuchError`. They have the following meaning:
+
+                   STATUS.READ_ONLY_DATABASE
+                     Database was opened in read-only mode so message cannot 
+                     be modified.
+                   STATUS.NOT_INITIALIZED
+                     The message has not been initialized.
+        """
+        if self._msg is None:
+            raise NotmuchError(STATUS.NOT_INITIALIZED)
+ 
+        status = nmlib.notmuch_message_freeze(self._msg)
+
+        if STATUS.SUCCESS == status:
+            # return on success
+            return status
+
+        raise NotmuchError(status)
+
+    def thaw(self):
+        """Thaws the current 'message'
+
+        Thaw the current 'message', synchronizing any changes that may have 
+        occurred while 'message' was frozen into the notmuch database.
+
+        See :meth:`freeze` for an example of how to use this
+        function to safely provide tag changes.
+
+        Multiple calls to freeze/thaw are valid and these calls with
+        "stack". That is there must be as many calls to thaw as to freeze
+        before a message is actually thawed.
+
+        :returns: STATUS.SUCCESS if the message was successfully frozen.
+                  Raises an exception otherwise.
+        :exception: :exc:`NotmuchError`. They have the following meaning:
+
+                   STATUS.UNBALANCED_FREEZE_THAW
+                     An attempt was made to thaw an unfrozen message. 
+                     That is, there have been an unbalanced number of calls 
+                     to :meth:`freeze` and :meth:`thaw`.
+                   STATUS.NOT_INITIALIZED
+                     The message has not been initialized.
+        """
+        if self._msg is None:
+            raise NotmuchError(STATUS.NOT_INITIALIZED)
+ 
+        status = nmlib.notmuch_message_thaw(self._msg)
+
+        if STATUS.SUCCESS == status:
+            # return on success
+            return status
+
+        raise NotmuchError(status)
+
+    
     def __str__(self):
         """A message() is represented by a 1-line summary"""
         msg = {}
