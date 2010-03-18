@@ -45,6 +45,18 @@ or::
 
    .. automethod:: get_path
 
+   .. automethod:: get_version
+
+   .. automethod:: needs_upgrade
+
+   .. automethod:: upgrade
+
+   .. automethod:: get_directory
+
+   .. automethod:: add_message
+
+   .. automethod:: remove_message
+
    .. automethod:: find_message
 
    .. automethod:: get_all_tags

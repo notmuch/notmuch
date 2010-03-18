@@ -1,5 +1,5 @@
 import ctypes
-from ctypes import c_int, c_char_p, c_void_p, c_uint64
+from ctypes import c_int, c_char_p, c_void_p, c_uint, c_uint64, c_bool
 from cnotmuch.globals import nmlib, STATUS, NotmuchError, Enum
 import logging
 from datetime import date
@@ -22,6 +22,10 @@ class Database(object):
     """notmuch_database_get_path (notmuch_database_t *database)"""
     _get_path = nmlib.notmuch_database_get_path
     _get_path.restype = c_char_p
+
+    """notmuch_database_get_version"""
+    _get_version = nmlib.notmuch_database_get_version
+    _get_version.restype = c_uint
 
     """notmuch_database_open (const char *path, notmuch_database_mode_t mode)"""
     _open = nmlib.notmuch_database_open 
@@ -123,6 +127,35 @@ class Database(object):
 
         Wraps notmuch_database_get_path"""
         return Database._get_path(self._db)
+
+    def get_version(self):
+        """Returns the database format version
+
+        :returns: The database version as positive integer
+        :exception: :exc:`NotmuchError` with STATUS.NOT_INITIALIZED if
+                    the database was not intitialized.
+        """
+        if self._db is None:
+            raise NotmuchError(STATUS.NOT_INITIALIZED)
+
+        return Database._get_version (self._db)
+
+    def needs_upgrade(self):
+        """Does this database need to be upgraded before writing to it?
+
+        If this function returns TRUE then no functions that modify the
+        database (:meth:`Database.add_message`, :meth:`Database.add_tag`,
+        :meth:`Directory.set_mtime`, etc.) will work unless :meth:`upgrade` 
+        is called successfully first.
+
+        :returns: `True` or `False`
+        :exception: :exc:`NotmuchError` with STATUS.NOT_INITIALIZED if
+                    the database was not intitialized.
+        """
+        if self._db is None:
+            raise NotmuchError(STATUS.NOT_INITIALIZED)
+
+        return notmuch_database_needs_upgrade(self.db) 
 
     def find_message(self, msgid):
         """Returns a :class:`Message` as identified by its message ID
