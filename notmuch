@@ -6,6 +6,7 @@ notmuch configuration (e.g. the database path)
 
 This code is licensed under the GNU GPL v3+."""
 import sys, os, re, logging
+from subprocess import call
 from cnotmuch.notmuch import Database, Query
 PREFIX=re.compile('(\w+):(.*$)')
 #TODO Handle variable: NOTMUCH-CONFIG
@@ -113,6 +114,11 @@ if __name__ == '__main__':
        """ Interactively setup notmuch for first use. """
        print "Not implemented."
    #-------------------------------------
+   elif sys.argv[1] == 'new':
+       """ Interactively setup notmuch for first use. """
+       #print "Not implemented. We cheat by calling the proper notmuch"
+       call(['notmuch new'],shell=True)
+   #-------------------------------------
    elif sys.argv[1] == 'help':
        if len(sys.argv) == 2: print HELPTEXT
        else: print "Not implemented"
@@ -182,12 +188,16 @@ if __name__ == '__main__':
    #-------------------------------------
    elif sys.argv[1] == 'dump':
       #TODO: implement "dump <filename>"
+      if len(sys.argv) == 2:
+         f = sys.stdout
+      else:
+         f = open(sys.argv[2],"w")
       db = Database()
       q = Query(db,'')
       q.set_sort(Query.SORT.MESSAGE_ID)
       m = q.search_messages()
       for msg in m:
-         print("%s (%s)" % (msg.get_message_id(), msg.get_tags()))
+         f.write("%s (%s)\n" % (msg.get_message_id(), msg.get_tags()))
    #-------------------------------------
    else:
        # unknown command
