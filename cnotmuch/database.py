@@ -1,4 +1,4 @@
-import ctypes
+import ctypes, os
 from ctypes import c_int, c_char_p, c_void_p, c_uint, c_uint64, c_bool
 from cnotmuch.globals import nmlib, STATUS, NotmuchError, Enum
 import logging
@@ -13,11 +13,11 @@ class Database(object):
            as well. Accessing these objects will lead to segfaults and
            other unexpected behavior. See above for more details.
     """
-    MODE = Enum(['READ_ONLY','READ_WRITE'])
-    """Constants: Mode in which to open the database"""
-
     _std_db_path = None
     """Class attribute to cache user's default database"""
+
+    MODE = Enum(['READ_ONLY','READ_WRITE'])
+    """Constants: Mode in which to open the database"""
 
     """notmuch_database_get_path (notmuch_database_t *database)"""
     _get_path = nmlib.notmuch_database_get_path
@@ -43,11 +43,14 @@ class Database(object):
     _create = nmlib.notmuch_database_create
     _create.restype = c_void_p
 
-    def __init__(self, path=None, create=False, mode= MODE.READ_ONLY):
-        """If *path* is *None*, we will try to read a users notmuch
-        configuration and use his default database. If *create* is `True`,
-        the database will always be created in
-        :attr:`MODE`.READ_WRITE mode.
+    def __init__(self, path=None, create=False, mode= 0):
+        """If *path* is *None*, we will try to read a users notmuch 
+        configuration and use his configured database. The location of the 
+        configuration file can be specified through the environment variable
+        *NOTMUCH_CONFIG*, falling back to the default `~/.notmuch-config`.
+
+        If *create* is `True`, the database will always be created in
+        :attr:`MODE`.READ_WRITE mode. Default mode for opening is READ_ONLY.
 
         :param path:   Directory to open/create the database in (see
                        above for behavior if `None`)
@@ -94,14 +97,14 @@ class Database(object):
             raise NotmuchError(
             message="Cannot create db, this Database() already has an open one.")
 
-        res = Database._create(path, MODE.READ_WRITE)
+        res = Database._create(path, Database.MODE.READ_WRITE)
 
         if res is None:
             raise NotmuchError(
                 message="Could not create the specified database")
         self._db = res
 
-    def open(self, path, mode= MODE.READ_ONLY): 
+    def open(self, path, mode= 0): 
         """Opens an existing database
 
         This function is used by __init__() and usually does not need
@@ -204,9 +207,10 @@ class Database(object):
 
         Throws a NotmuchError if it cannot find it"""
         from ConfigParser import SafeConfigParser
-        import os.path
         config = SafeConfigParser()
-        config.read(os.path.expanduser('~/.notmuch-config'))
+        conf_f = os.getenv('NOTMUCH_CONFIG',
+                           os.path.expanduser('~/.notmuch-config'))
+        config.read(conf_f)
         if not config.has_option('database','path'):
             raise NotmuchError(message=
                                "No DB path specified and no user default found")
