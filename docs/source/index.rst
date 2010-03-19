@@ -61,6 +61,7 @@ or::
 
    .. automethod:: get_all_tags
 
+   .. automethod:: create_query
 
    .. attribute:: Database.MODE
 

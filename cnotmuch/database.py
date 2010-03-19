@@ -293,6 +293,28 @@ class Database(object):
             raise NotmuchError(STATUS.NULL_POINTER)
         return Tags(tags_p, self)
 
+    def create_query(self, querystring):
+        """Returns a :class:`Query` derived from this database
+
+        This is a shorthand method for doing::
+          # short version
+          # Automatically frees the Database() when 'q' is deleted
+
+          q  = Database(dbpath).create_query('from:"Biene Maja"')
+
+          # long version, which is functionally equivalent but will keep the
+          # Database in the 'db' variable around after we delete 'q':
+
+          db = Database(dbpath)
+          q  = Query(db,'from:"Biene Maja"')
+
+        This function is a python extension and not in the underlying C API.
+        """
+        # Raise a NotmuchError if not initialized
+        self._verify_initialized_db()
+
+        return Query(self._db, querystring)
+
     def __repr__(self):
         return "'Notmuch DB " + self.get_path() + "'"
 
