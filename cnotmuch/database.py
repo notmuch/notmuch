@@ -227,14 +227,16 @@ class Database(object):
 
     @property
     def db_p(self):
-        """Property returning a pointer to the notmuch_database_t or `None`
+        """Property returning a pointer to `notmuch_database_t` or `None`
 
-        This should normally not be needed by a user."""
+        This should normally not be needed by a user (and is not yet
+        guaranteed to remain stable in future versions).
+        """
         return self._db
 
 #------------------------------------------------------------------------------
 class Query(object):
-    """ Represents a search query on an opened :class:`Database`.
+    """Represents a search query on an opened :class:`Database`.
 
     A query selects and filters a subset of messages from the notmuch
     database we derive from.
@@ -276,7 +278,7 @@ class Query(object):
         self.create(db, querystr)
 
     def create(self, db, querystr):
-        """Creates a new query derived from a Database.
+        """Creates a new query derived from a Database
 
         This function is utilized by __init__() and usually does not need to 
         be called directly.
