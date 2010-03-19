@@ -77,6 +77,11 @@ class Database(object):
         else:
             self.create(path)
 
+    def _verify_initialized_db(self):
+        """Raises a NotmuchError in case self._db is still None"""
+        if self._db is None:
+            raise NotmuchError(STATUS.NOT_INITIALIZED)            
+
     def create(self, path):
         """Creates a new notmuch database
 
@@ -129,6 +134,9 @@ class Database(object):
         """Returns the file path of an open database
 
         Wraps notmuch_database_get_path"""
+        # Raise a NotmuchError if not initialized
+        self._verify_initialized_db()
+
         return Database._get_path(self._db)
 
     def get_version(self):
@@ -138,8 +146,8 @@ class Database(object):
         :exception: :exc:`NotmuchError` with STATUS.NOT_INITIALIZED if
                     the database was not intitialized.
         """
-        if self._db is None:
-            raise NotmuchError(STATUS.NOT_INITIALIZED)
+        # Raise a NotmuchError if not initialized
+        self._verify_initialized_db()
 
         return Database._get_version (self._db)
 
@@ -155,8 +163,8 @@ class Database(object):
         :exception: :exc:`NotmuchError` with STATUS.NOT_INITIALIZED if
                     the database was not intitialized.
         """
-        if self._db is None:
-            raise NotmuchError(STATUS.NOT_INITIALIZED)
+        # Raise a NotmuchError if not initialized
+        self._verify_initialized_db()
 
         return notmuch_database_needs_upgrade(self.db) 
 
@@ -172,8 +180,9 @@ class Database(object):
         :exception: :exc:`NotmuchError` with STATUS.NOT_INITIALIZED if
                   the database was not intitialized.
         """
-        if self._db is None:
-            raise NotmuchError(STATUS.NOT_INITIALIZED)
+        # Raise a NotmuchError if not initialized
+        self._verify_initialized_db()
+
         msg_p = Database._find_message(self._db, msgid)
         if msg_p is None:
             return None
@@ -185,8 +194,8 @@ class Database(object):
         :returns: :class:`Tags`
         :execption: :exc:`NotmuchError` with STATUS.NULL_POINTER on error
         """
-        if self._db is None:
-            raise NotmuchError(STATUS.NOT_INITIALIZED)
+        # Raise a NotmuchError if not initialized
+        self._verify_initialized_db()
 
         tags_p = Database._get_all_tags (self._db)
         if tags_p == None:
