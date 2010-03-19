@@ -297,6 +297,7 @@ class Database(object):
         """Returns a :class:`Query` derived from this database
 
         This is a shorthand method for doing::
+
           # short version
           # Automatically frees the Database() when 'q' is deleted
 
