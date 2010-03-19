@@ -5,6 +5,7 @@ This "binary" honors the NOTMUCH_CONFIG environmen variable for reading a user's
 notmuch configuration (e.g. the database path)
 
 This code is licensed under the GNU GPL v3+."""
+from __future__ import with_statement # This isn't required in Python 2.6
 import sys, os, re, logging
 from subprocess import call
 from cnotmuch.notmuch import Database, Query
@@ -167,7 +168,7 @@ if __name__ == '__main__':
       if sys.argv[2]=='--': sys.argv.pop(2)
       #the rest is search terms
       querystr = quote_query_line(sys.argv[2:])
-      logging.warning("tag search-term "+querystr)
+      logging.debug("tag search-term "+querystr)
       db = Database(mode=Database.MODE.READ_WRITE)
       m  = Query(db,querystr).search_messages()
       for msg in m:
@@ -199,6 +200,45 @@ if __name__ == '__main__':
       m = q.search_messages()
       for msg in m:
          f.write("%s (%s)\n" % (msg.get_message_id(), msg.get_tags()))
+   #-------------------------------------
+   elif sys.argv[1] == 'restore':
+      import re
+      if len(sys.argv) == 2:
+         print("No filename given. Reading dump from stdin.")
+         f = sys.stdin
+      else:
+         f = open(sys.argv[2],"r")
+      #split the msg id and the tags
+      MSGID_TAGS = re.compile("(\S+)\s\((.*)\)$")
+      db = Database(mode=Database.MODE.READ_WRITE)
+
+      #read each line of the dump file
+      for line in f:
+         m = MSGID_TAGS.match(line)
+         if not m:
+            sys.stderr.write("Warning: Ignoring invalid input line: %s" % 
+                             line)
+            continue
+         # split line in components and fetch message
+         msg_id = m.group(1)
+         new_tags= set(m.group(2).split())
+         msg    = db.find_message(msg_id)
+
+         if msg == None:
+            sys.stderr.write(
+               "Warning: Cannot apply tags to missing message: %s\n" % id)
+            continue
+
+         #do nothing if the old set of tags is the same as the new one
+         old_tags = set(msg.get_tags())
+         if old_tags == new_tags: continue
+
+         #set the new tags
+         msg.freeze()
+         msg.remove_all_tags()
+         for tag in new_tags: msg.add_tag(tag)
+         msg.thaw()
+            
    #-------------------------------------
    else:
        # unknown command
