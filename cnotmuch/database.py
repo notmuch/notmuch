@@ -250,6 +250,11 @@ class Query(object):
     _search_messages = nmlib.notmuch_query_search_messages
     _search_messages.restype = c_void_p
 
+
+    """notmuch_query_count_messages"""
+    _count_messages = _nmlib.notmuch_query_count_messages
+    _count_messages.restype = c_uint
+
     def __init__(self, db, querystr):
         """
         :param db: An open database which we derive the Query from.
@@ -327,6 +332,24 @@ class Query(object):
 
         return Messages(msgs_p,self)
 
+    def count_messages(self):
+        """Estimate the number of messages matching the query
+
+        This function performs a search and returns Xapian's best
+        guess as to the number of matching messages. It is somewhat
+        faster than performing :meth:`search_messages` and counting
+        the result with `len()`. Technically, it wraps the underlying
+        *notmuch_query_count_messages* function.
+
+        :returns: :class:`Messages`
+        :exception: :exc:`NotmuchError`
+
+                      * STATUS.NOT_INITIALIZED if query is not inited
+        """
+        if self._query is None:
+            raise NotmuchError(STATUS.NOT_INITIALIZED)            
+
+        return Query._count_messages(self._query)
 
     def __del__(self):
         """Close and free the Query"""
