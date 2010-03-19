@@ -149,7 +149,8 @@ if __name__ == '__main__':
          #mangle arguments wrapping terms with spaces in quotes
          querystr = quote_query_line(sys.argv[2:])
       logging.debug("count "+querystr)
-      print(len(Query(db,querystr).search_messages()))
+      print(Query(db,querystr).count_messages())
+      
    #-------------------------------------
    elif sys.argv[1] == 'tag':
       #build lists of tags to be added and removed
