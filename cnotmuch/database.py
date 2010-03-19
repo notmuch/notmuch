@@ -714,7 +714,13 @@ class Messages(object):
         """len(:class:`Messages`) returns the number of contained messages
 
         .. note:: As this iterates over the messages, we will not be able to 
-               iterate over them again (as in retrieve them)!
+               iterate over them again! So this will fail::
+
+                 #THIS FAILS
+                 msgs = Database().create_query('').search_message()
+                 if len(msgs) > 0:              #this 'exhausts' msgs
+                     # next line raises NotmuchError(STATUS.NOT_INITIALIZED)!!!
+                     for msg in msgs: print msg
         """
         if self._msgs is None:
             raise NotmuchError(STATUS.NOT_INITIALIZED)
@@ -753,6 +759,10 @@ class Message(object):
     """notmuch_message_get_thread_id"""
     _get_thread_id = nmlib.notmuch_message_get_thread_id
     _get_thread_id.restype = c_char_p
+
+    """notmuch_message_get_replies"""
+    _get_replies = nmlib.notmuch_message_get_replies
+    _get_replies.restype = c_void_p
 
     """notmuch_message_get_tags (notmuch_message_t *message)"""
     _get_tags = nmlib.notmuch_message_get_tags
@@ -810,6 +820,33 @@ class Message(object):
             raise NotmuchError(STATUS.NOT_INITIALIZED)
 
         return Message._get_thread_id (self._msg);
+
+    def get_replies(self):
+        """Gets all direct replies to this message as :class:`Messages` iterator
+
+        .. note:: This call only makes sense if 'message' was
+          ultimately obtained from a :class:`Thread` object, (such as
+          by coming directly from the result of calling
+          :meth:`Thread.get_toplevel_messages` or by any number of
+          subsequent calls to :meth:`get_replies`). If this message was
+          obtained through some non-thread means, (such as by a call
+          to :meth:`Query.search_messages`), then this function will
+          return `None`.
+
+        :returns: :class:`Messages` or `None` if there are no replies to 
+            this message.
+        :exception: :exc:`NotmuchError` STATUS.NOT_INITIALIZED if the message 
+                    is not initialized.
+        """
+        if self._msg is None:
+            raise NotmuchError(STATUS.NOT_INITIALIZED)
+
+        msgs_p = Message._get_replies(self._msg);
+
+        if msgs_p is None:
+            return None
+
+        return Messages(msgs_p,self)
 
     def get_date(self):
         """Returns time_t of the message date
@@ -1071,7 +1108,9 @@ class Message(object):
         msg['from'] = self.get_header('from')
         msg['tags'] = str(self.get_tags())
         msg['date'] = date.fromtimestamp(self.get_date())
-        return "%(from)s (%(date)s) (%(tags)s)" % (msg)
+        replies = self.get_replies()
+        msg['replies'] = len(replies) if replies is not None else -1
+        return "%(from)s (%(date)s) (%(tags)s) (%(replies)d) replies" % (msg)
 
     def format_as_text(self):
         """Output like notmuch show (Not implemented)"""
