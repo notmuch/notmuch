@@ -2,3 +2,4 @@
 ~$
 ^docs/html
 ^docs/build
+^test/test
