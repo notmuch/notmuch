@@ -1,5 +1,5 @@
 import ctypes, os
-from ctypes import c_int, c_char_p, c_void_p, c_uint, c_uint64, c_bool
+from ctypes import c_int, c_char_p, c_void_p, c_uint, c_uint64, c_bool, byref
 from cnotmuch.globals import nmlib, STATUS, NotmuchError, Enum
 import logging
 from datetime import date
@@ -167,6 +167,97 @@ class Database(object):
         self._verify_initialized_db()
 
         return notmuch_database_needs_upgrade(self.db) 
+
+    def add_message(self, filename):
+        """Adds a new message to the database
+
+        `filename` should be a path relative to the path of the open
+        database (see :meth:`get_path`), or else should be an absolute
+        filename with initial components that match the path of the
+        database.
+
+        The file should be a single mail message (not a multi-message mbox)
+        that is expected to remain at its current location, since the
+        notmuch database will reference the filename, and will not copy the
+        entire contents of the file.
+
+        :returns: On success, we return 
+
+           1) a :class:`Message` object that can be used for things
+              such as adding tags to the just-added message.
+           2) one of the following STATUS values:
+
+              STATUS.SUCCESS
+                  Message successfully added to database.
+              STATUS.DUPLICATE_MESSAGE_ID
+                  Message has the same message ID as another message already
+                  in the database. The new filename was successfully added
+                  to the message in the database.
+
+        :rtype:   2-tuple(:class:`Message`, STATUS)
+
+        :exception: Raises a :exc:`NotmuchError` with the following meaning.
+              If such an exception occurs, nothing was added to the database.
+
+              STATUS.FILE_ERROR
+                      An error occurred trying to open the file, (such as 
+                      permission denied, or file not found, etc.).
+              STATUS.FILE_NOT_EMAIL
+                      The contents of filename don't look like an email message.
+              STATUS.READ_ONLY_DATABASE
+                      Database was opened in read-only mode so no message can
+                      be added.
+              STATUS.NOT_INITIALIZED
+                      The database has not been initialized.
+        """
+        # Raise a NotmuchError if not initialized
+        self._verify_initialized_db()
+
+        msg_p = c_void_p()
+        status = nmlib.notmuch_database_add_message(self._db,
+                                                  filename,
+                                                  byref(msg_p))
+ 
+        if not status in [STATUS.SUCCESS,STATUS.DUPLICATE_MESSAGE_ID]:
+            raise NotmuchError(status)
+
+        #construct Message() and return
+        msg = Message(msg_p, self)
+        return (msg, status)
+
+    def remove_message(self, filename):
+        """Removes a message from the given notmuch database
+
+        Note that only this particular filename association is removed from
+        the database. If the same message (as determined by the message ID)
+        is still available via other filenames, then the message will
+        persist in the database for those filenames. When the last filename
+        is removed for a particular message, the database content for that
+        message will be entirely removed.
+
+        :returns: A STATUS.* value with the following meaning:
+
+             STATUS.SUCCESS
+               The last filename was removed and the message was removed 
+               from the database.
+             STATUS.DUPLICATE_MESSAGE_ID
+               This filename was removed but the message persists in the 
+               database with at least one other filename.
+
+        :exception: Raises a :exc:`NotmuchError` with the following meaning.
+             If such an exception occurs, nothing was removed from the database.
+
+             STATUS.READ_ONLY_DATABASE
+               Database was opened in read-only mode so no message can be 
+               removed.
+             STATUS.NOT_INITIALIZED
+               The database has not been initialized.
+        """
+        # Raise a NotmuchError if not initialized
+        self._verify_initialized_db()
+
+        status = nmlib.notmuch_database_remove_message(self._db,
+                                                       filename)
 
     def find_message(self, msgid):
         """Returns a :class:`Message` as identified by its message ID
