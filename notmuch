@@ -235,7 +235,8 @@ if __name__ == '__main__':
 
          #set the new tags
          msg.freeze()
-         msg.remove_all_tags()
+         #only remove tags if the new ones are not a superset anyway
+         if not (new_tags > old_tags): msg.remove_all_tags()
          for tag in new_tags: msg.add_tag(tag)
          msg.thaw()
             
