@@ -620,9 +620,14 @@ class Message(object):
     """notmuch_message_get_filename (notmuch_message_t *message)"""
     _get_filename = nmlib.notmuch_message_get_filename
     _get_filename.restype = c_char_p 
+
     """notmuch_message_get_message_id (notmuch_message_t *message)"""
     _get_message_id = nmlib.notmuch_message_get_message_id
     _get_message_id.restype = c_char_p 
+
+    """notmuch_message_get_thread_id"""
+    _get_thread_id = nmlib.notmuch_message_get_thread_id
+    _get_thread_id.restype = c_char_p
 
     """notmuch_message_get_tags (notmuch_message_t *message)"""
     _get_tags = nmlib.notmuch_message_get_tags
@@ -653,7 +658,7 @@ class Message(object):
 
 
     def get_message_id(self):
-        """Return the message ID
+        """Returns the message ID
         
         :returns: String with a message ID
         :exception: :exc:`NotmuchError` STATUS.NOT_INITIALIZED if the message 
@@ -662,6 +667,24 @@ class Message(object):
         if self._msg is None:
             raise NotmuchError(STATUS.NOT_INITIALIZED)
         return Message._get_message_id(self._msg)
+
+    def get_thread_id(self):
+        """Returns the thread ID
+
+        The returned string belongs to 'message' will only be valid for as 
+        long as the message is valid.
+
+        This function will not return None since Notmuch ensures that every
+        message belongs to a single thread.
+
+        :returns: String with a thread ID
+        :exception: :exc:`NotmuchError` STATUS.NOT_INITIALIZED if the message 
+                    is not initialized.
+        """
+        if self._msg is None:
+            raise NotmuchError(STATUS.NOT_INITIALIZED)
+
+        return Message._get_thread_id (self._msg);
 
     def get_date(self):
         """Returns time_t of the message date
