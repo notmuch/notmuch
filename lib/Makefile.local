@@ -1,3 +1,5 @@
+# -*- makefile -*-
+
 # The major version of the library interface. This will control the soname.
 # As such, this number must be incremented for any incompatible change to
 # the library interface, (such as the deletion of an API or a major

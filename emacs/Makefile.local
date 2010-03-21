@@ -1,3 +1,5 @@
+# -*- makefile -*-
+
 dir := emacs
 emacs_sources := $(dir)/notmuch.el
 

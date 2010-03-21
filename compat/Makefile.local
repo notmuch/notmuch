@@ -1,3 +1,5 @@
+# -*- makefile -*-
+
 dir := compat
 extra_cflags += -I$(dir)
 

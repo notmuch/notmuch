@@ -1,3 +1,5 @@
+# -*- makefile -*-
+
 # Here's the (hopefully simple) versioning scheme.
 #
 # Releases of notmuch have a two-digit version (0.1, 0.2, etc.). We
