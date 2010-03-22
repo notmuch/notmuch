@@ -917,8 +917,8 @@ All currently available key bindings:
   :group 'notmuch)
 
 (defun notmuch-show-do-stash (text)
-    (kill-new text)
-    (message (concat "Saved: " text)))
+  (kill-new text)
+  (message "Saved: %s" text))
 
 (defun notmuch-show-stash-cc ()
   "Copy CC field of current message to kill-ring."
