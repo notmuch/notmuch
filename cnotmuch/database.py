@@ -314,7 +314,7 @@ class Database(object):
         # Raise a NotmuchError if not initialized
         self._verify_initialized_db()
 
-        return Query(self._db, querystring)
+        return Query(self, querystring)
 
     def __repr__(self):
         return "'Notmuch DB " + self.get_path() + "'"
