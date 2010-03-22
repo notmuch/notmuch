@@ -27,51 +27,13 @@
 
 (require 'notmuch-lib)
 (require 'notmuch-query)
+(require 'notmuch-wash)
 
 (declare-function notmuch-call-notmuch-process "notmuch" (&rest args))
 (declare-function notmuch-reply "notmuch" (query-string))
 (declare-function notmuch-fontify-headers "notmuch" nil)
 (declare-function notmuch-select-tag-with-completion "notmuch" (prompt &rest search-terms))
 (declare-function notmuch-search-show-thread "notmuch" nil)
-
-(defvar notmuch-show-citation-regexp
-  "\\(?:^[[:space:]]>.*\n\\(?:[[:space:]]*\n[[:space:]]>.*\n\\)?\\)+"
-  "Pattern to match citation lines.")
-
-(defvar notmuch-show-signature-regexp
-  "^\\(-- ?\\|_+\\)$"
-  "Pattern to match a line that separates content from signature.")
-
-(defvar notmuch-show-signature-button-format
-  "[ %d-line signature. Click/Enter to toggle visibility. ]"
-  "String used to construct button text for hidden signatures
-
-Can use up to one integer format parameter, i.e. %d")
-
-(defvar notmuch-show-citation-button-format
-  "[ %d more citation lines. Click/Enter to toggle visibility. ]"
-  "String used to construct button text for hidden citations.
-
-Can use up to one integer format parameter, i.e. %d")
-
-(defvar notmuch-show-signature-lines-max 12
-  "Maximum length of signature that will be hidden by default.")
-
-(defvar notmuch-show-citation-lines-prefix 3
-  "Always show at least this many lines at the start of a citation.
-
-If there is one more line than the sum of
-`notmuch-show-citation-lines-prefix' and
-`notmuch-show-citation-lines-suffix', show that, otherwise
-collapse remaining lines into a button.")
-
-(defvar notmuch-show-citation-lines-suffix 3
-  "Always show at least this many lines at the end of a citation.
-
-If there is one more line than the sum of
-`notmuch-show-citation-lines-prefix' and
-`notmuch-show-citation-lines-suffix', show that, otherwise
-collapse remaining lines into a button.")
 
 (defvar notmuch-show-headers '("Subject" "To" "Cc" "From" "Date")
   "Headers that should be shown in a message, in this order. Note
@@ -86,59 +48,12 @@ collapsed will change.")
   "A list of functions called after populating a
 `notmuch-show' buffer.")
 
+(defvar notmuch-show-insert-text/plain-hook '(notmuch-wash-text/plain-citations)
+  "A list of functions called to clean up text/plain body parts.")
+
 (defun notmuch-show-pretty-hook ()
   (goto-address-mode 1)
   (visual-line-mode))
-
-(defun notmuch-toggle-invisible-action (cite-button)
-  (let ((invis-spec (button-get cite-button 'invisibility-spec)))
-        (if (invisible-p invis-spec)
-            (remove-from-invisibility-spec invis-spec)
-          (add-to-invisibility-spec invis-spec)
-          ))
-  (force-window-update)
-  (redisplay t))
-
-(define-button-type 'notmuch-button-invisibility-toggle-type
-  'action 'notmuch-toggle-invisible-action
-  'follow-link t
-  'face 'font-lock-comment-face)
-(define-button-type 'notmuch-button-citation-toggle-type
-  'help-echo "mouse-1, RET: Show citation"
-  :supertype 'notmuch-button-invisibility-toggle-type)
-(define-button-type 'notmuch-button-signature-toggle-type
-  'help-echo "mouse-1, RET: Show signature"
-  :supertype 'notmuch-button-invisibility-toggle-type)
-(define-button-type 'notmuch-button-headers-toggle-type
-  'help-echo "mouse-1, RET: Show headers"
-  :supertype 'notmuch-button-invisibility-toggle-type)
-
-(defun notmuch-show-region-to-button (beg end type prefix button-text)
-  "Auxilary function to do the actual making of overlays and buttons
-
-BEG and END are buffer locations. TYPE should a string, either
-\"citation\" or \"signature\". PREFIX is some arbitrary text to
-insert before the button, probably for indentation.  BUTTON-TEXT
-is what to put on the button."
-
-;; This uses some slightly tricky conversions between strings and
-;; symbols because of the way the button code works. Note that
-;; replacing intern-soft with make-symbol will cause this to fail,
-;; since the newly created symbol has no plist.
-
-  (let ((overlay (make-overlay beg end))
-	(invis-spec (make-symbol (concat "notmuch-" type "-region")))
-	(button-type (intern-soft (concat "notmuch-button-"
-					  type "-toggle-type"))))
-    (add-to-invisibility-spec invis-spec)
-    (overlay-put overlay 'invisible invis-spec)
-    (goto-char (1+ end))
-    (save-excursion
-      (goto-char (1- beg))
-      (insert prefix)
-      (insert-button button-text
-		     'invisibility-spec invis-spec
-		     :type button-type))))
 
 (defmacro with-current-notmuch-show-message (&rest body)
   "Evaluate body with current buffer set to the text of current message"
@@ -296,49 +211,13 @@ message at DEPTH in the current thread."
 
 ;; Functions handling particular MIME parts.
 
-(defun notmuch-show-markup-citations ()
-  "Markup citations, and up to one signature in the buffer."
-  (let ((depth 0)
-	(indent "\n"))
-    (goto-char (point-min))
-    (beginning-of-line)
-    (while (and (< (point) (point-max))
-		(re-search-forward notmuch-show-citation-regexp nil t))
-      (let* ((cite-start (match-beginning 0))
-	     (cite-end (match-end 0))
-	     (cite-lines (count-lines cite-start cite-end)))
-	(when (> cite-lines (1+ notmuch-show-citation-lines-prefix))
-	  (goto-char cite-start)
-	  (forward-line notmuch-show-citation-lines-prefix)
-	  (let ((hidden-start (point-marker)))
-	    (goto-char cite-end)
-	    (notmuch-show-region-to-button
-	     hidden-start (point-marker)
-	     "citation" indent
-	     (format notmuch-show-citation-button-format
-		     (- cite-lines notmuch-show-citation-lines-prefix)))))))
-    (if (and (not (eobp))
-	     (re-search-forward notmuch-show-signature-regexp nil t))
-	(let* ((sig-start (match-beginning 0))
-	       (sig-end (match-end 0))
-	       (sig-lines (1- (count-lines sig-start (point-max)))))
-	  (if (<= sig-lines notmuch-show-signature-lines-max)
-	      (let ((sig-start-marker (make-marker))
-		    (sig-end-marker (make-marker)))
-		(set-marker sig-start-marker sig-start)
-		(set-marker sig-end-marker (point-max))
-		(notmuch-show-region-to-button
-		 sig-start-marker sig-end-marker
-		 "signature" indent
-		 (format notmuch-show-signature-button-format sig-lines))))))))
-
 (defun notmuch-show-insert-part-text/plain (part content-type depth)
   (let ((start (point)))
     (insert (plist-get part :content))
     (save-excursion
       (save-restriction
 	(narrow-to-region start (point-max))
-	(notmuch-show-markup-citations))))
+	(run-hook-with-args 'notmuch-show-insert-text/plain-hook depth))))
   t)
 
 (defun notmuch-show-insert-part-text/* (part content-type depth)
