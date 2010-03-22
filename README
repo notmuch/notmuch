@@ -1,11 +1,25 @@
 cnotmuch -- The python interface to notmuch.so
 ==============================================
-To create the documentation with sphinx installed, go to the docs directory and
+
+This module makes the functionality of the notmuch library
+(`http://notmuchmail.org`_) available to python. Successful import of
+this modul depends on a libnotmuch.so|dll being available on the
+user's system.
+
+If you have downloaded the full source tarball, you can create the
+documentation with sphinx installed, go to the docs directory and
 "make html". A static version of the documentation is available at:
 
-http://spaetz.bitbucket.org
+`http://spaetz.bitbucket.org`_
 
+The current source code is being hosted at
+http://bitbucket.org/spaetz/cnotmuch which also provides an issue
+tracker, and release downloads. This package is tracked by the python
+package index repository at `http://pypi.python.org/pypi/cnotmuch`_ and can thus be installed on a user's computer easily via "sudo easy_install cnotmuch" (you will still need to install the notmuch shared library separately as it is not included in this package).
+
+The original source has been provided by (c)Sebastian Spaeth, 2010.
 All code is available under the GNU GPLv3+ (see docs/COPYING) unless specified otherwise.
+
 
 Usage
 -----

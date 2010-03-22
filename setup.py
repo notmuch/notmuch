@@ -1,14 +1,14 @@
 #!/usr/bin/env python
 
 from distutils.core import setup
-
+from cnotmuch.notmuch import __VERSION__
 setup(name='cnotmuch',
-      version='0.1',
-      description='Python binding og the notmuch mail search and indexing library.',
+      version=__VERSION__,
+      description='Python binding of the notmuch mail search and indexing library.',
       author='Sebastian Spaeth',
       author_email='Sebastian@SSpaeth.de',
       url='http://bitbucket.org/spaetz/cnotmuch/',
-      download_url='http://bitbucket.org/spaetz/cnotmuch/get/v0.1.tar.gz',
+      download_url='http://bitbucket.org/spaetz/cnotmuch/get/v'+__VERSION__+'.tar.gz',
       packages=['cnotmuch'],
       keywords = ["library", "email"],
       long_description="""The cnotmuch  module provides an interface to the `notmuch <http://notmuchmail.org>`_ functionality, directly interfacing with a shared notmuch library. Notmuch provides a maildatabase that allows for extremely quick searching and filtering of your email according to various criteria.

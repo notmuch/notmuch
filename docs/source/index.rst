@@ -13,7 +13,7 @@ The classes :class:`notmuch.Database`, :class:`notmuch.Query` provide most of th
 
 :License: This module is covered under the GNU GPL v3 (or later).
 
-This page contains the main API overview. More information on specific topics can be found on the following pages: (none here yet)
+This page contains the main API overview of cnotmuch |release|. More information on specific topics can be found on the following pages: (none here yet)
 
 Notmuch can be imported as::
 
