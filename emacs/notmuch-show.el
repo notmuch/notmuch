@@ -202,17 +202,24 @@ message at DEPTH in the current thread."
 	(narrow-to-region start (point-max))
 	(run-hooks 'notmuch-show-markup-headers-hook)))))
 
-(defun notmuch-show-insert-part-header (content-type)
+(defun notmuch-show-insert-part-header (content-type &optional name)
   (let ((start (point)))
     ;; XXX dme: Make this a more useful button (save the part, display
     ;; external, etc.)
-    (insert "[ Part of type " content-type ". ]\n")
+    (insert "[ Part of type "
+	    content-type
+	    (if name (concat " named " name) "")
+	    ". ]\n")
     (overlay-put (make-overlay start (point)) 'face 'bold)))
 
 ;; Functions handling particular MIME parts.
 
-(defun notmuch-show-insert-part-text/plain (part content-type depth)
+(defun notmuch-show-insert-part-text/plain (part content-type nth depth)
   (let ((start (point)))
+    ;; If this text/plain part is not the first part in the message,
+    ;; insert a header to make this clear.
+    (if (> nth 1)
+	(notmuch-show-insert-part-header content-type (plist-get part :filename)))
     (insert (plist-get part :content))
     (save-excursion
       (save-restriction
@@ -220,16 +227,16 @@ message at DEPTH in the current thread."
 	(run-hook-with-args 'notmuch-show-insert-text/plain-hook depth))))
   t)
 
-(defun notmuch-show-insert-part-text/* (part content-type depth)
+(defun notmuch-show-insert-part-text/* (part content-type nth depth)
   ;; Handle all text types other than text/html.
   (if (string-equal "text/html" content-type)
       nil
-    (notmuch-show-insert-part-header content-type)
+    (notmuch-show-insert-part-header content-type (plist-get part :filename))
     (insert (plist-get part :content))
     t))
 
-(defun notmuch-show-insert-part-*/* (part content-type depth)
-  (notmuch-show-insert-part-header content-type)
+(defun notmuch-show-insert-part-*/* (part content-type nth depth)
+  (notmuch-show-insert-part-header content-type (plist-get part :filename))
   t)
 
 ;; Functions for determining how to handle MIME parts.
@@ -257,11 +264,12 @@ message at DEPTH in the current thread."
 (defun notmuch-show-insert-bodypart (part depth)
   "Insert the body part PART at depth DEPTH in the current thread."
   (let* ((content-type (downcase (plist-get part :content-type)))
-	 (handlers (notmuch-show-handlers-for content-type)))
+	 (handlers (notmuch-show-handlers-for content-type))
+	 (nth (plist-get part :id)))
     ;; Run the content handlers until one of them returns a non-nil
     ;; value.
     (while (and handlers
-		(not (funcall (car handlers) part content-type depth)))
+		(not (funcall (car handlers) part content-type nth depth)))
       (setq handlers (cdr handlers))))
   ;; Ensure that the part ends with a carriage return.
   (if (not (bolp))
