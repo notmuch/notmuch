@@ -25,6 +25,7 @@
 (require 'mm-view)
 (require 'message)
 (require 'mm-decode)
+(require 'mailcap)
 
 (require 'notmuch-lib)
 (require 'notmuch-query)
@@ -203,14 +204,17 @@ message at DEPTH in the current thread."
 	(narrow-to-region start (point-max))
 	(run-hooks 'notmuch-show-markup-headers-hook)))))
 
-(defun notmuch-show-insert-part-header (content-type &optional name)
+(defun notmuch-show-insert-part-header (content-type declared-type &optional name)
   (let ((start (point)))
     ;; XXX dme: Make this a more useful button (save the part, display
     ;; external, etc.)
-    (insert "[ Part of type "
-	    content-type
-	    (if name (concat " named " name) "")
-	    ". ]\n")
+    (insert "[ "
+	    (if name (concat name ": ") "")
+	    declared-type
+	    (if (not (string-equal declared-type content-type))
+		(concat " (as " content-type ")")
+	      "")
+	    " ]\n")
     (overlay-put (make-overlay start (point)) 'face 'bold)))
 
 ;; Functions handling particular MIME parts.
@@ -233,12 +237,12 @@ message at DEPTH in the current thread."
 	  t)))
   nil)
 
-(defun notmuch-show-insert-part-text/plain (part content-type nth depth)
+(defun notmuch-show-insert-part-text/plain (part content-type nth depth declared-type)
   (let ((start (point)))
     ;; If this text/plain part is not the first part in the message,
     ;; insert a header to make this clear.
     (if (> nth 1)
-	(notmuch-show-insert-part-header content-type (plist-get part :filename)))
+	(notmuch-show-insert-part-header declared-type content-type (plist-get part :filename)))
     (insert (plist-get part :content))
     (save-excursion
       (save-restriction
@@ -246,8 +250,24 @@ message at DEPTH in the current thread."
 	(run-hook-with-args 'notmuch-show-insert-text/plain-hook depth))))
   t)
 
-(defun notmuch-show-insert-part-*/* (part content-type nth depth)
-  (notmuch-show-insert-part-header content-type (plist-get part :filename))
+(defun notmuch-show-insert-part-application/octet-stream (part content-type nth depth declared-type)
+  ;; If we can deduce a MIME type from the filename of the attachment,
+  ;; do so and pass it on to the handler for that type.
+  (if (plist-get part :filename)
+      (let ((extension (file-name-extension (plist-get part :filename)))
+	    mime-type)
+	(if extension
+	    (progn
+	      (mailcap-parse-mimetypes)
+	      (setq mime-type (mailcap-extension-to-mime extension))
+	      (if (and mime-type
+		       (not (string-equal mime-type "application/octet-stream")))
+		  (notmuch-show-insert-bodypart-internal msg part mime-type nth depth content-type)
+		nil))
+	  nil))))
+
+(defun notmuch-show-insert-part-*/* (part content-type nth depth declared-type)
+  (notmuch-show-insert-part-header content-type declared-type (plist-get part :filename))
   ;; If we have the content for the part, attempt to inline it.
   (if (plist-get part :content)
       (notmuch-show-mm-display-part-inline part content-type))
@@ -275,16 +295,20 @@ message at DEPTH in the current thread."
 
 ;; 
 
-(defun notmuch-show-insert-bodypart (part depth)
-  "Insert the body part PART at depth DEPTH in the current thread."
-  (let* ((content-type (downcase (plist-get part :content-type)))
-	 (handlers (notmuch-show-handlers-for content-type))
-	 (nth (plist-get part :id)))
+(defun notmuch-show-insert-bodypart-internal (part content-type nth depth declared-type)
+  (let ((handlers (notmuch-show-handlers-for content-type)))
     ;; Run the content handlers until one of them returns a non-nil
     ;; value.
     (while (and handlers
-		(not (funcall (car handlers) part content-type nth depth)))
+		(not (funcall (car handlers) part content-type nth depth declared-type)))
       (setq handlers (cdr handlers))))
+  t)
+
+(defun notmuch-show-insert-bodypart (part depth)
+  "Insert the body part PART at depth DEPTH in the current thread."
+  (let ((content-type (downcase (plist-get part :content-type)))
+	(nth (plist-get part :id)))
+    (notmuch-show-insert-bodypart-internal part content-type nth depth content-type))
   ;; Ensure that the part ends with a carriage return.
   (if (not (bolp))
       (insert "\n"))
