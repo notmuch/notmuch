@@ -24,6 +24,7 @@
 (require 'cl)
 (require 'mm-view)
 (require 'message)
+(require 'mm-decode)
 
 (require 'notmuch-lib)
 (require 'notmuch-query)
@@ -214,6 +215,24 @@ message at DEPTH in the current thread."
 
 ;; Functions handling particular MIME parts.
 
+(defun notmuch-show-mm-display-part-inline (part content-type)
+  "Use the mm-decode/mm-view functions to display a part inline, if possible."
+  (let ((handle (mm-make-handle nil (list content-type))))
+    (if (and (mm-inlinable-p handle)
+	     (mm-inlined-p handle))
+	(progn
+	  (insert (with-temp-buffer
+		    (let ((display-buffer (current-buffer)))
+		      (with-temp-buffer
+			(let ((work-buffer (current-buffer)))
+			  (insert (plist-get part :content))
+			  (set-buffer display-buffer)
+			  (mm-display-part (mm-make-handle work-buffer
+							   (list content-type)))
+			  (buffer-string))))))
+	  t)))
+  nil)
+
 (defun notmuch-show-insert-part-text/plain (part content-type nth depth)
   (let ((start (point)))
     ;; If this text/plain part is not the first part in the message,
@@ -227,16 +246,11 @@ message at DEPTH in the current thread."
 	(run-hook-with-args 'notmuch-show-insert-text/plain-hook depth))))
   t)
 
-(defun notmuch-show-insert-part-text/* (part content-type nth depth)
-  ;; Handle all text types other than text/html.
-  (if (string-equal "text/html" content-type)
-      nil
-    (notmuch-show-insert-part-header content-type (plist-get part :filename))
-    (insert (plist-get part :content))
-    t))
-
 (defun notmuch-show-insert-part-*/* (part content-type nth depth)
   (notmuch-show-insert-part-header content-type (plist-get part :filename))
+  ;; If we have the content for the part, attempt to inline it.
+  (if (plist-get part :content)
+      (notmuch-show-mm-display-part-inline part content-type))
   t)
 
 ;; Functions for determining how to handle MIME parts.
