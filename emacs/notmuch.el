@@ -1359,7 +1359,7 @@ Complete list of currently available key bindings:
   (setq buffer-read-only t)
   (if (not notmuch-tag-face-alist)
       (add-to-list 'notmuch-search-font-lock-keywords (list
-		"(\\([^)]*\\))$" '(1  'notmuch-tag-face)))
+		"(\\([^()]*\\))$" '(1  'notmuch-tag-face)))
     (let ((notmuch-search-tags (mapcar 'car notmuch-tag-face-alist)))
       (loop for notmuch-search-tag  in notmuch-search-tags
 	    do (add-to-list 'notmuch-search-font-lock-keywords (list
