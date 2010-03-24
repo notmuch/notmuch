@@ -106,13 +106,13 @@ def quote_query_line(argv):
 if __name__ == '__main__':
 
    # Handle command line options
-   # No option 
    #-------------------------------------
+   # No option given, print USAGE and exit
    if len(sys.argv) == 1:
       print USAGE
    #-------------------------------------
    elif sys.argv[1] == 'setup':
-       """ Interactively setup notmuch for first use. """
+       """Interactively setup notmuch for first use."""
        print "Not implemented."
    #-------------------------------------
    elif sys.argv[1] == 'new':
@@ -123,6 +123,19 @@ if __name__ == '__main__':
    elif sys.argv[1] == 'help':
        if len(sys.argv) == 2: print HELPTEXT
        else: print "Not implemented"
+   #-------------------------------------
+   elif sys.argv[1] == 'search':
+      db = Database()
+      if len(sys.argv) == 2:
+         #no further search term
+         querystr=''
+      else:
+         #mangle arguments wrapping terms with spaces in quotes
+         querystr = quote_query_line(sys.argv[2:])
+      logging.debug("search "+querystr)
+      t = Query(db,querystr).search_threads()
+      for thread in t:
+         print(str(thread))
    #-------------------------------------
    elif sys.argv[1] == 'show':
       db = Database()
@@ -136,10 +149,6 @@ if __name__ == '__main__':
       m = Query(db,querystr).search_messages()
       for msg in m:
          print(msg.format_as_text())
-   #-------------------------------------
-   elif sys.argv[1] == 'new':
-       #TODO: handle --verbose
-       print "Not implemented."
    #-------------------------------------
    elif sys.argv[1] == 'count':
       if len(sys.argv) == 2:
