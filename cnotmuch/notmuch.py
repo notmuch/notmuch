@@ -35,5 +35,5 @@
 from database import Database, Query
 from cnotmuch.globals import nmlib, STATUS, NotmuchError
 __LICENSE__="GPL v3+"
-__VERSION__='0.1.1'
+__VERSION__='0.2.0'
 __AUTHOR__ ='Sebastian Spaeth <Sebastian@SSpaeth.de>'
