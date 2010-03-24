@@ -7,7 +7,7 @@ Welcome to :mod:`cnotmuch`'s documentation
 ===========================================
 
 The :mod:`cnotmuch` module provides an interface to the `notmuch <http://notmuchmail.org>`_ functionality, directly interfacing to a shared notmuch library.
-The classes :class:`notmuch.Database`, :class:`notmuch.Query` provide most of the core functionality, returning :class:`notmuch.Messages` and :class:`notmuch.Tags`.
+The classes :class:`notmuch.Database`, :class:`notmuch.Query` provide most of the core functionality, returning :class:`notmuch.Threads`, :class:`notmuch.Messages` and :class:`notmuch.Tags`.
 
 .. moduleauthor:: Sebastian Spaeth <Sebastian@SSpaeth.de>
 
@@ -115,6 +115,9 @@ More information on specific topics can be found on the following pages:
 
    .. automethod:: count_messages
 
+.. #############################################
+.. currentmodule:: cnotmuch.message
+
 :class:`Messages` -- A bunch of messages
 ----------------------------------------
 
@@ -161,6 +164,9 @@ More information on specific topics can be found on the following pages:
 
    .. automethod:: __str__
 
+.. #############################################
+.. currentmodule:: cnotmuch.tag
+
 :class:`Tags` -- Notmuch tags
 -----------------------------
 
@@ -172,7 +178,7 @@ More information on specific topics can be found on the following pages:
    .. automethod:: __str__
 
 
-.. -----------------------------------------------------------------
+.. #############################################
 .. currentmodule:: cnotmuch.thread
 
 :class:`Threads` -- Threads iterator
@@ -208,6 +214,9 @@ More information on specific topics can be found on the following pages:
   .. automethod:: get_tags
 
   .. automethod:: __str__
+
+.. #############################################
+.. currentmodule:: cnotmuch.notmuch
 
 :class:`Filenames` -- An iterator over filenames
 ------------------------------------------------

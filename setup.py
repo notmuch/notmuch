@@ -13,7 +13,7 @@ setup(name='cnotmuch',
       keywords = ["library", "email"],
       long_description="""The cnotmuch  module provides an interface to the `notmuch <http://notmuchmail.org>`_ functionality, directly interfacing with a shared notmuch library. Notmuch provides a maildatabase that allows for extremely quick searching and filtering of your email according to various criteria.
 
-The documentation for the latest cnotmuch release can be `viewed online <http://spaetz.bitbucket.org/>`_.
+The documentation for the latest cnotmuch release can be `viewed online <http://packages.python.org/cnotmuch>`_.
 
 The classes notmuch.Database, notmuch.Query  provide most of the core functionality, returning notmuch.Messages and notmuch.Tags.
 """,

@@ -13,6 +13,27 @@ PREFIX=re.compile('(\w+):(.*$)')
 #TODO Handle variable: NOTMUCH-CONFIG
 
 #-------------------------------------------------------------------------
+def get_user_email_addresses():
+        """ Reads a user's notmuch config and returns his email addresses as list (name, primary_address, other_address1,...)"""
+        import email.utils
+        from ConfigParser import SafeConfigParser
+        config = SafeConfigParser()
+        conf_f = os.getenv('NOTMUCH_CONFIG',
+                           os.path.expanduser('~/.notmuch-config'))
+        config.read(conf_f)
+        if not config.has_option('user','name'): name = ""
+        else:name = config.get('user','name')
+
+        if not config.has_option('user','primary_email'): mail = ""
+        else:mail = config.get('user','primary_email')
+
+        if not config.has_option('user','other_email'): other = []
+        else:other = config.get('user','other_email').rstrip(';').split(';')
+
+        other.insert(0, mail)
+        other.insert(0, name)
+        return other
+#-------------------------------------------------------------------------
 HELPTEXT="""The notmuch mail system.
 
 Usage: notmuch <command> [args...]
@@ -91,6 +112,145 @@ And don't forget to run "notmuch new" whenever new mail arrives.
 Have fun, and may your inbox never have much mail.
 """
 #-------------------------------------------------------------------------
+def quote_reply(oldbody ,date, from_address):
+   """Transform a mail body into a quote text starting with On blah, x wrote:
+   :param body: a str with a mail body
+   :returns: The new payload of the email.message()
+   """
+   from cStringIO import StringIO
+
+   #we get handed a string, wrap it in a file-like object
+   oldbody = StringIO(oldbody)
+   newbody = StringIO()
+
+   newbody.write("On %s, %s wrote:\n" % (date, from_address))
+
+   for line in oldbody:
+      newbody.write("> " + line)
+
+   return newbody.getvalue()
+    
+def format_reply(msgs):
+   """Gets handed Messages() and displays the reply to them"""
+   import email
+
+   for msg in msgs:
+      f = open(msg.get_filename(),"r")
+      reply = email.message_from_file(f)
+
+      #handle the easy non-multipart case:
+      if not reply.is_multipart():
+         reply.set_payload(quote_reply(reply.get_payload(),
+                                       reply['date'],reply['from']))
+      else:
+         #handle the tricky multipart case
+         deleted = ""
+         """A string describing which nontext attachements have been deleted"""
+         delpayloads = []
+         """A list of payload indices to be deleted"""
+
+         payloads = reply.get_payload()
+
+         for i, part in enumerate(payloads):
+
+            mime_main = part.get_content_maintype()
+            if mime_main not in ['multipart', 'message', 'text']:
+               deleted += "Non-text part: %s\n" % (part.get_content_type())
+               payloads[i].set_payload("Non-text part: %s" % (part.get_content_type()))
+               payloads[i].set_type('text/plain')
+               delpayloads.append(i)
+            else:
+               # payloads[i].set_payload("Text part: %s" % (part.get_content_type()))
+               payloads[i].set_payload(quote_reply(payloads[i].get_payload(),reply['date'],reply['from']))
+
+
+         # Delete those payloads that we don't need anymore
+         for i in reversed(sorted(delpayloads)):
+            del payloads[i]
+
+      #Back to single- and multipart handling
+
+      my_addresses = get_user_email_addresses()
+      used_address = None
+      # filter our email addresses from all to: cc: and bcc: fields
+      # if we find one of "my" addresses being used, 
+      # it is stored in used_address
+      for header in ['To', 'CC', 'Bcc']:
+         if not header in reply:
+            #only handle fields that exist
+            continue
+         addresses = email.utils.getaddresses(reply.get_all(header,[]))
+         purged_addr = []
+         for name, mail in addresses:
+            if mail in my_addresses[1:]:
+               used_address = email.utils.formataddr((my_addresses[0],mail))
+            else:
+               purged_addr.append(email.utils.formataddr((name,mail)))
+
+         if len(purged_addr):
+            reply.replace_header(header, ", ".join(purged_addr))
+         else: 
+            #we deleted all addresses, delete the header
+            del reply[header]
+
+      # Use our primary email address to the From
+      # (save original from line, we still need it)
+      orig_from = reply['From']
+      del reply['From']
+      reply['From'] = used_address if used_address \
+          else email.utils.formataddr((my_addresses[0],my_addresses[1]))
+      
+      #reinsert the Subject after the From
+      orig_subject = reply['Subject']
+      del reply['Subject']
+      reply['Subject'] = 'Re: ' + orig_subject
+
+      # Calculate our new To: field
+      new_to = orig_from
+      # add all remaining original 'To' addresses
+      if 'To' in reply:
+         new_to += ", " + reply['To']
+      del reply['To']
+      reply.add_header('To', new_to)
+
+      # Add our primary email address to the BCC
+      new_bcc = my_addresses[1]
+      if reply.has_key('Bcc'):
+         new_bcc += ', '  + reply['Bcc']
+         del reply['Bcc']
+      reply['Bcc'] = new_bcc
+
+      # Set replies 'In-Reply-To' header to original's Message-ID
+      if reply.has_key('Message-ID') :
+         del reply['In-Reply-To']
+         reply['In-Reply-To'] = reply['Message-ID']
+
+      #Add original's Message-ID to replies 'References' header.
+      if reply.has_key('References'):
+         ref = reply['References'] + ' ' +reply['Message-ID']
+      else:
+         ref = reply['Message-ID']
+      del reply['References']
+      reply['References'] = ref
+      
+      # Delete the original Message-ID.
+      del(reply['Message-ID'])
+
+      # filter all existing headers but a few and delete them from 'reply'
+      delheaders = filter(lambda x: x not in ['From','To','Subject','CC','Bcc',
+                                              'In-Reply-To', 'References',
+                                              'Content-Type'],reply.keys())
+      map(reply.__delitem__, delheaders)
+
+      """
+From: Sebastian Spaeth <Sebastian@SSpaeth.de>
+Subject: Re: Template =?iso-8859-1?b?Zvxy?= das Kochrezept
+In-Reply-To: <4A6D55F9.6040405@SSpaeth.de>
+References:  <4A6D55F9.6040405@SSpaeth.de>
+      """
+   #return without Unixfrom
+   return reply.as_string(False)
+#-------------------------------------------------------------------------
 def quote_query_line(argv):
    #mangle arguments wrapping terms with spaces in quotes
    for i in xrange(0,len(argv)):
@@ -149,6 +309,21 @@ if __name__ == '__main__':
       m = Query(db,querystr).search_messages()
       for msg in m:
          print(msg.format_as_text())
+
+   #-------------------------------------
+   elif sys.argv[1] == 'reply':
+      db = Database()
+      if len(sys.argv) == 2:
+         #no search term. abort
+         print("Error: notmuch reply requires at least one search term.")
+         sys.exit()
+
+      #mangle arguments wrapping terms with spaces in quotes
+      querystr = quote_query_line(sys.argv[2:])
+      logging.debug("reply "+querystr)
+      msgs = Query(db,querystr).search_messages()
+      print (format_reply(msgs))
+
    #-------------------------------------
    elif sys.argv[1] == 'count':
       if len(sys.argv) == 2:
@@ -257,7 +432,6 @@ if __name__ == '__main__':
    """
 setup
 new
-search	[options...] <search-terms> [...]
 show	<search-terms> [...]
 reply	[options...] <search-terms> [...]
 restore	<filename>
