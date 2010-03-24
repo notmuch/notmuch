@@ -353,6 +353,32 @@ So if you've previously been using sup for mail, then the
 .B "notmuch restore"
 command provides you a way to import all of your tags (or labels as
 sup calls them).
+.RE
+
+The
+.B part
+command can used to output a single part of a multi-part MIME message.
+
+.RS 4
+.TP 4
+.BR part " --part=<part-number> <search-term>..."
+
+Output a single MIME part of a message.
+
+A single decoded MIME part, with no encoding or framing, is output to
+stdout. The search terms must match only a single message, otherwise
+this command will fail.
+
+The part number should match the part "id" field output by the
+"--format=json" option of "notmuch show". If the message specified by
+the search terms does not include a part with the specified "id" there
+will be no output.
+
+See the
+.B "SEARCH SYNTAX"
+section below for details of the supported syntax for <search-terms>.
+.RE
+
 .SH SEARCH SYNTAX
 Several notmuch commands accept a common syntax for search terms.
 
