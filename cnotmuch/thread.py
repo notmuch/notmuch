@@ -1,6 +1,7 @@
 from ctypes import c_char_p, c_void_p, c_uint64
-from cnotmuch.globals import nmlib, STATUS, NotmuchError, Enum
-from cnotmuch.tags import Tags
+from cnotmuch.globals import nmlib, STATUS, NotmuchError
+from cnotmuch.message import Messages
+from cnotmuch.tag import Tags
 from datetime import date
 
 #------------------------------------------------------------------------------
@@ -144,6 +145,10 @@ class Thread(object):
     _get_subject = nmlib.notmuch_thread_get_subject
     _get_subject.restype = c_char_p
 
+    """notmuch_thread_get_toplevel_messages"""
+    _get_toplevel_messages = nmlib.notmuch_thread_get_toplevel_messages
+    _get_toplevel_messages.restype = c_void_p
+
     _get_newest_date = nmlib.notmuch_thread_get_newest_date
     _get_newest_date.restype = c_uint64
 
@@ -203,7 +208,34 @@ class Thread(object):
         return nmlib.notmuch_thread_get_total_messages(self._thread)
 
 
-    ###TODO: notmuch_messages_t * notmuch_thread_get_toplevel_messages (notmuch_thread_t *thread);
+    def get_toplevel_messages(self):
+        """Returns a :class:`Messages` iterator for the top-level messages in
+           'thread'
+
+           This iterator will not necessarily iterate over all of the messages
+           in the thread. It will only iterate over the messages in the thread
+           which are not replies to other messages in the thread.
+ 
+           To iterate over all messages in the thread, the caller will need to
+           iterate over the result of :meth:`Message.get_replies` for each
+           top-level message (and do that recursively for the resulting
+           messages, etc.).
+
+        :returns: :class:`Messages`
+        :exception: :exc:`NotmuchError`
+
+                      * STATUS.NOT_INITIALIZED if query is not inited
+                      * STATUS.NULL_POINTER if search_messages failed 
+        """
+        if self._thread is None:
+            raise NotmuchError(STATUS.NOT_INITIALIZED)
+
+        msgs_p = Thread._get_toplevel_messages(self._thread)
+
+        if msgs_p is None:
+            NotmuchError(STATUS.NULL_POINTER)
+
+        return Messages(msgs_p,self)
 
     def get_matched_messages(self):
         """Returns the number of messages in 'thread' that matched the query
