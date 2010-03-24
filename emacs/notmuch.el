@@ -234,7 +234,7 @@ For a mouse binding, return nil."
   "Notmuch mail reader for Emacs."
   :group 'mail)
 
-(defcustom notmuch-search-hook nil
+(defcustom notmuch-search-hook '(hl-line-mode)
   "List of functions to call when notmuch displays the search results."
   :type 'hook
   :options '(hl-line-mode)
