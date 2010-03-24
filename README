@@ -6,9 +6,11 @@ This module makes the functionality of the notmuch library
 this modul depends on a libnotmuch.so|dll being available on the
 user's system.
 
-If you have downloaded the full source tarball, you can create the
-documentation with sphinx installed, go to the docs directory and
-"make html". A static version of the documentation is available at:
+If you have downloaded the full source tarball (available from
+bitbucket.org, the source distribution and binary distribution come
+without the documentation), you can create the documentation with
+sphinx installed, go to the docs directory and "make html". A static
+version of the documentation is available at:
 
 `http://spaetz.bitbucket.org`_
 
@@ -19,6 +21,24 @@ package index repository at `http://pypi.python.org/pypi/cnotmuch`_ and can thus
 
 The original source has been provided by (c)Sebastian Spaeth, 2010.
 All code is available under the GNU GPLv3+ (see docs/COPYING) unless specified otherwise.
+
+
+INSTALLATION & DEINSTALL
+------------------------
+
+cnotmuch is available on pypi.python.org. This means you can do
+"easy_install cnotmuch" on your linux box and it will get installed
+into:
+
+/usr/local/lib/python2.x/dist-packages/
+
+For uninstalling, you'll need to remove the "cnotmuch-0.1-py2.x.egg"
+directory and delete one entry in the "easy-install.pth" file in that
+directory.
+
+It needs to have a libnotmuch.so or libnotmuch.so.1 available in some
+library folder or will raise an exception when loading.
+"OSError: libnotmuch.so.1: cannot open shared object file: No such file or directory"
 
 
 Usage

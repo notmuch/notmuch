@@ -13,7 +13,7 @@ The classes :class:`notmuch.Database`, :class:`notmuch.Query` provide most of th
 
 :License: This module is covered under the GNU GPL v3 (or later).
 
-This page contains the main API overview of cnotmuch |release|. More information on specific topics can be found on the following pages: (none here yet)
+This page contains the main API overview of cnotmuch |release|. 
 
 Notmuch can be imported as::
 
@@ -23,9 +23,12 @@ or::
 
  from cnotmuch.notmuch import Query,Database
 
+More information on specific topics can be found on the following pages:
+
 .. toctree::
    :maxdepth: 1
 
+   notmuch   
 
 :mod:`notmuch` -- The Notmuch interface
 =============================================
@@ -63,6 +66,9 @@ or::
 
    .. automethod:: create_query
 
+   .. note:: :meth:`create_query` was broken in release
+             0.1 and is fixed since 0.1.1.
+
    .. attribute:: Database.MODE
 
      Defines constants that are used as the mode in which to open a database.
@@ -96,6 +102,12 @@ or::
        Sort by email message ID
 
    .. automethod:: set_sort
+
+   .. attribute::  sort
+
+      Instance attribute :attr:`sort` contains the sort order (see
+      :attr:`Query.SORT`) if explicitely specified via
+      :meth:`set_sort`. By default it is set to `None`.
 
    .. automethod:: search_threads
 
@@ -159,15 +171,43 @@ or::
 
    .. automethod:: __str__
 
+
+.. -----------------------------------------------------------------
+.. currentmodule:: cnotmuch.thread
+
 :class:`Threads` -- Threads iterator
 ------------------------------------
 
-To be implemented
+.. autoclass:: Threads
+
+   .. automethod:: __len__
+
+   .. automethod:: __str__
 
 :class:`Thread` -- A single thread
 ------------------------------------
 
-To be implemented
+.. autoclass:: Thread
+
+  .. automethod:: get_thread_id
+
+  .. automethod:: get_total_messages
+
+  .. automethod:: get_toplevel_messages
+
+  .. automethod:: get_matched_messages
+
+  .. automethod:: get_authors
+
+  .. automethod:: get_subject
+
+  .. automethod:: get_oldest_date
+
+  .. automethod:: get_newest_date
+
+  .. automethod:: get_tags
+
+  .. automethod:: __str__
 
 :class:`Filenames` -- An iterator over filenames
 ------------------------------------------------
