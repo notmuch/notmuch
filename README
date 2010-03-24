@@ -12,7 +12,7 @@ without the documentation), you can create the documentation with
 sphinx installed, go to the docs directory and "make html". A static
 version of the documentation is available at:
 
-`http://spaetz.bitbucket.org`_
+http://packages.python.org/cnotmuch/
 
 The current source code is being hosted at
 http://bitbucket.org/spaetz/cnotmuch which also provides an issue
@@ -72,3 +72,10 @@ NotmuchError: Could not open the specified database
 
 >>>tags = notmuch.Database("/home/spaetz/mail").get_all_tags()
 >>>del(tags)
+
+
+Changelog
+---------
+0.1   First public release
+0.1.1 Fixed Database.create_query()
+0.2.0 Implemented Thread() and Threads() methods
