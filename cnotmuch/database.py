@@ -1,6 +1,8 @@
 import ctypes, os
 from ctypes import c_int, c_char_p, c_void_p, c_uint, c_uint64, c_bool, byref
 from cnotmuch.globals import nmlib, STATUS, NotmuchError, Enum
+from cnotmuch.thread import Thread, Threads
+from cnotmuch.tags import Tags
 import logging
 from datetime import date
 
@@ -355,6 +357,10 @@ class Query(object):
     A query selects and filters a subset of messages from the notmuch
     database we derive from.
 
+    Query() provides an instance attribute :attr:`sort`, which
+    contains the sort order (if specified via :meth:`set_sort`) or
+    `None`.
+
     Technically, it wraps the underlying *notmuch_query_t* struct.
 
     .. note:: Do remember that as soon as we tear down this object,
@@ -370,6 +376,10 @@ class Query(object):
     """notmuch_query_create"""
     _create = nmlib.notmuch_query_create
     _create.restype = c_void_p
+
+    """notmuch_query_search_threads"""
+    _search_threads = nmlib.notmuch_query_search_threads
+    _search_threads.restype = c_void_p
 
     """notmuch_query_search_messages"""
     _search_messages = nmlib.notmuch_query_search_messages
@@ -389,6 +399,7 @@ class Query(object):
         """
         self._db = None
         self._query = None
+        self.sort = None
         self.create(db, querystr)
 
     def create(self, db, querystr):
@@ -432,7 +443,34 @@ class Query(object):
         if self._query is None:
             raise NotmuchError(STATUS.NOT_INITIALIZED)
 
+        self.sort = sort
         nmlib.notmuch_query_set_sort(self._query, sort)
+
+    def search_threads(self):
+        """Execute a query for threads
+
+        Execute a query for threads, returning a :class:`Threads` iterator.
+        The returned threads are owned by the query and as such, will only be 
+        valid until the Query is deleted.
+
+        Technically, it wraps the underlying
+        *notmuch_query_search_threads* function.
+
+        :returns: :class:`Threads`
+        :exception: :exc:`NotmuchError`
+
+                      * STATUS.NOT_INITIALIZED if query is not inited
+                      * STATUS.NULL_POINTER if search_messages failed 
+        """
+        if self._query is None:
+            raise NotmuchError(STATUS.NOT_INITIALIZED)            
+
+        threads_p = Query._search_threads(self._query)
+
+        if threads_p is None:
+            NotmuchError(STATUS.NULL_POINTER)
+
+        return Threads(threads_p,self)
 
     def search_messages(self):
         """Filter messages according to the query and return
@@ -482,115 +520,6 @@ class Query(object):
         if self._query is not None:
             logging.debug("Freeing the Query now")
             nmlib.notmuch_query_destroy (self._query)
-
-#------------------------------------------------------------------------------
-class Tags(object):
-    """Represents a list of notmuch tags
-
-    This object provides an iterator over a list of notmuch tags. Do
-    note that the underlying library only provides a one-time iterator
-    (it cannot reset the iterator to the start). Thus iterating over
-    the function will "exhaust" the list of tags, and a subsequent
-    iteration attempt will raise a :exc:`NotmuchError`
-    STATUS.NOT_INITIALIZED. Also note, that any function that uses
-    iteration (nearly all) will also exhaust the tags. So both::
-
-      for tag in tags: print tag 
-
-    as well as::
-
-       number_of_tags = len(tags)
-
-    and even a simple::
-
-       #str() iterates over all tags to construct a space separated list
-       print(str(tags))
-
-    will "exhaust" the Tags. If you need to re-iterate over a list of
-    tags you will need to retrieve a new :class:`Tags` object.
-    """
-
-    #notmuch_tags_get
-    _get = nmlib.notmuch_tags_get
-    _get.restype = c_char_p
-
-    def __init__(self, tags_p, parent=None):
-        """
-        :param tags_p: A pointer to an underlying *notmuch_tags_t*
-             structure. These are not publically exposed, so a user
-             will almost never instantiate a :class:`Tags` object
-             herself. They are usually handed back as a result,
-             e.g. in :meth:`Database.get_all_tags`.  *tags_p* must be
-             valid, we will raise an :exc:`NotmuchError`
-             (STATUS.NULL_POINTER) if it is `None`.
-        :type tags_p: :class:`ctypes.c_void_p`
-        :param parent: The parent object (ie :class:`Database` or 
-             :class:`Message` these tags are derived from, and saves a
-             reference to it, so we can automatically delete the db object
-             once all derived objects are dead.
-        :TODO: Make the iterator optionally work more than once by
-               cache the tags in the Python object(?)
-        """
-        if tags_p is None:
-            NotmuchError(STATUS.NULL_POINTER)
-
-        self._tags = tags_p
-        #save reference to parent object so we keep it alive
-        self._parent = parent
-        logging.debug("Inited Tags derived from %s" %(repr(parent)))
-    
-    def __iter__(self):
-        """ Make Tags an iterator """
-        return self
-
-    def next(self):
-        if self._tags is None:
-            raise NotmuchError(STATUS.NOT_INITIALIZED)
-
-        if not nmlib.notmuch_tags_valid(self._tags):
-            self._tags = None
-            raise StopIteration
-
-        tag = Tags._get (self._tags)
-        nmlib.notmuch_tags_move_to_next(self._tags)
-        return tag
-
-    def __len__(self):
-        """len(:class:`Tags`) returns the number of contained tags
-
-        .. note:: As this iterates over the tags, we will not be able
-               to iterate over them again (as in retrieve them)! If
-               the tags have been exhausted already, this will raise a
-               :exc:`NotmuchError` STATUS.NOT_INITIALIZED on
-               subsequent attempts.
-        """
-        if self._tags is None:
-            raise NotmuchError(STATUS.NOT_INITIALIZED)
-
-        i=0
-        while nmlib.notmuch_tags_valid(self._msgs):
-            nmlib.notmuch_tags_move_to_next(self._msgs)
-            i += 1
-        self._tags = None
-        return i
-
-    def __str__(self):
-        """The str() representation of Tags() is a space separated list of tags
-
-        .. note:: As this iterates over the tags, we will not be able
-               to iterate over them again (as in retrieve them)! If
-               the tags have been exhausted already, this will raise a
-               :exc:`NotmuchError` STATUS.NOT_INITIALIZED on
-               subsequent attempts.
-        """
-        return " ".join(self)
-
-    def __del__(self):
-        """Close and free the notmuch tags"""
-        if self._tags is not None:
-            logging.debug("Freeing the Tags now")
-            nmlib.notmuch_tags_destroy (self._tags)
-
 
 #------------------------------------------------------------------------------
 class Messages(object):
@@ -721,6 +650,12 @@ class Messages(object):
                  if len(msgs) > 0:              #this 'exhausts' msgs
                      # next line raises NotmuchError(STATUS.NOT_INITIALIZED)!!!
                      for msg in msgs: print msg
+
+               Most of the time, using the
+               :meth:`Query.count_messages` is therefore more
+               appropriate (and much faster). While not guaranteeing
+               that it will return the exact same number than len(),
+               in my tests it effectively always did so.
         """
         if self._msgs is None:
             raise NotmuchError(STATUS.NOT_INITIALIZED)
@@ -855,7 +790,7 @@ class Message(object):
         message call notmuch_message_get_header() with a header value of
         "date".
 
-        :returns: a time_t timestamp
+        :returns: A time_t timestamp.
         :rtype: c_unit64
         :exception: :exc:`NotmuchError` STATUS.NOT_INITIALIZED if the message 
                     is not initialized.
@@ -892,7 +827,7 @@ class Message(object):
         return header
 
     def get_filename(self):
-        """Return the file path of the message file
+        """Returns the file path of the message file
 
         :returns: Absolute file path & name of the message file
         :exception: :exc:`NotmuchError` STATUS.NOT_INITIALIZED if the message 
@@ -903,10 +838,9 @@ class Message(object):
         return Message._get_filename(self._msg)
 
     def get_tags(self):
-        """ Return the message tags
+        """Returns the message tags
 
-        :returns: Message tags
-        :rtype: :class:`Tags`
+        :returns: A :class:`Tags` iterator.
         :exception: :exc:`NotmuchError`
 
                       * STATUS.NOT_INITIALIZED if the message 
@@ -922,7 +856,7 @@ class Message(object):
         return Tags(tags_p, self)
 
     def add_tag(self, tag):
-        """Add a tag to the given message
+        """Adds a tag to the given message
 
         Adds a tag to the current message. The maximal tag length is defined in
         the notmuch library and is currently 200 bytes.

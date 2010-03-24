@@ -34,10 +34,8 @@ Many of its objects use python's logging module to log some output at DEBUG leve
     :class:`Message`, and :class:`Tags`.
 
 """
-import ctypes
-from ctypes import c_int, c_char_p
-from database import Database,Tags,Query,Messages,Message,Tags
-from cnotmuch.globals import nmlib,STATUS,NotmuchError
+from database import Database, Query
+from cnotmuch.globals import nmlib, STATUS, NotmuchError
 __LICENSE__="GPL v3+"
 __VERSION__='0.1.1'
 __AUTHOR__ ='Sebastian Spaeth <Sebastian@SSpaeth.de>'
