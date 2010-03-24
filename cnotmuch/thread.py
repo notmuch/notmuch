@@ -1,4 +1,4 @@
-from ctypes import c_char_p, c_void_p, c_uint64
+from ctypes import c_char_p, c_void_p, c_int64
 from cnotmuch.globals import nmlib, STATUS, NotmuchError
 from cnotmuch.message import Messages
 from cnotmuch.tag import Tags
@@ -150,10 +150,10 @@ class Thread(object):
     _get_toplevel_messages.restype = c_void_p
 
     _get_newest_date = nmlib.notmuch_thread_get_newest_date
-    _get_newest_date.restype = c_uint64
+    _get_newest_date.restype = c_int64
 
     _get_oldest_date = nmlib.notmuch_thread_get_oldest_date
-    _get_oldest_date.restype = c_uint64
+    _get_oldest_date.restype = c_int64
 
     """notmuch_thread_get_tags"""
     _get_tags = nmlib.notmuch_thread_get_tags

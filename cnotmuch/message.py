@@ -1,4 +1,4 @@
-from ctypes import c_char_p, c_void_p, c_uint64
+from ctypes import c_char_p, c_void_p, c_int64
 from datetime import date
 from cnotmuch.globals import nmlib, STATUS, NotmuchError
 from cnotmuch.tag import Tags
@@ -183,7 +183,7 @@ class Message(object):
     _get_tags.restype = c_void_p
 
     _get_date = nmlib.notmuch_message_get_date
-    _get_date.restype = c_uint64
+    _get_date.restype = c_int64
 
     _get_header = nmlib.notmuch_message_get_header
     _get_header.restype = c_char_p
