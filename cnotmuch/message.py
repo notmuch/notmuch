@@ -627,7 +627,7 @@ class Message(object):
 
     def is_match(self):
         """(Not implemented)"""
-        return self.get_flag(self.FLAG.MATCH)
+        return self.get_flag(Message.FLAG.MATCH)
 
     def __str__(self):
         """A message() is represented by a 1-line summary"""
@@ -716,9 +716,8 @@ class Message(object):
         easy to change to a new format when the format changes."""
 
         format = self.format_message_internal()
-        output = "\n\fmessage{ id:%s depth:%d filename:%s" % (format["id"],
-                                                              indent,
-                                                              format["filename"])
+        output = "\n\fmessage{ id:%s depth:%d match:%d filename:%s" \
+                 % (format['id'], indent, format['match'], format['filename'])
         output += "\n\fheader{"
 
         #Todo: this date is supposed to be cleaned up, as in the index.
