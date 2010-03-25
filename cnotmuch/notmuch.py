@@ -33,8 +33,8 @@
 
 """
 from database import Database, Query
-from message import Messages
-from thread import Threads
+from message import Messages, Message
+from thread import Threads, Thread
 from tag import Tags
 from cnotmuch.globals import nmlib, STATUS, NotmuchError
 __LICENSE__="GPL v3+"

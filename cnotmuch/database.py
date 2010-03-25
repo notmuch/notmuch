@@ -1,4 +1,4 @@
-import ctypes, os
+import os
 from ctypes import c_int, c_char_p, c_void_p, c_uint, byref
 from cnotmuch.globals import nmlib, STATUS, NotmuchError, Enum
 from cnotmuch.thread import Threads
@@ -450,6 +450,10 @@ class Query(object):
         Execute a query for threads, returning a :class:`Threads` iterator.
         The returned threads are owned by the query and as such, will only be 
         valid until the Query is deleted.
+
+        The method sets :attr:`Message.FLAG`\.MATCH for those messages that
+        match the query. The method :meth:`Message.get_flag` allows us
+        to get the value of this flag.
 
         Technically, it wraps the underlying
         *notmuch_query_search_threads* function.

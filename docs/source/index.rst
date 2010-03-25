@@ -140,7 +140,15 @@ More information on specific topics can be found on the following pages:
 
    .. automethod:: get_filename
 
-   .. automethod:: get_flag
+   .. attribute:: FLAG
+
+        FLAG.MATCH 
+          This flag is automatically set by a
+	  Query.search_threads on those messages that match the
+	  query. This allows us to distinguish matches from the rest
+	  of the messages in that thread.
+
+  .. automethod:: get_flag
 
    .. automethod:: set_flag
    

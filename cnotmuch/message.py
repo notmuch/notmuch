@@ -1,6 +1,6 @@
-from ctypes import c_char_p, c_void_p, c_long
+from ctypes import c_char_p, c_void_p, c_long, c_bool
 from datetime import date
-from cnotmuch.globals import nmlib, STATUS, NotmuchError
+from cnotmuch.globals import nmlib, STATUS, NotmuchError, Enum
 from cnotmuch.tag import Tags
 #------------------------------------------------------------------------------
 class Messages(object):
@@ -166,6 +166,10 @@ class Message(object):
     _get_filename = nmlib.notmuch_message_get_filename
     _get_filename.restype = c_char_p 
 
+    """notmuch_message_get_flag"""
+    _get_flag = nmlib.notmuch_message_get_flag
+    _get_flag.restype = c_bool
+
     """notmuch_message_get_message_id (notmuch_message_t *message)"""
     _get_message_id = nmlib.notmuch_message_get_message_id
     _get_message_id.restype = c_char_p 
@@ -187,6 +191,9 @@ class Message(object):
 
     _get_header = nmlib.notmuch_message_get_header
     _get_header.restype = c_char_p
+
+    #Constants: Flags that can be set/get with set_flag
+    FLAG = Enum(['MATCH'])
 
     def __init__(self, msg_p, parent=None):
         """
@@ -314,6 +321,38 @@ class Message(object):
         if self._msg is None:
             raise NotmuchError(STATUS.NOT_INITIALIZED)
         return Message._get_filename(self._msg)
+
+    def get_flag(self, flag):
+        """Checks whether a specific flag is set for this message
+
+        The method :meth:`Query.search_threads` sets
+        *Message.FLAG.MATCH* for those messages that match the
+        query. This method allows us to get the value of this flag.
+
+        :param flag: One of the :attr:`Message.FLAG` values (currently only 
+                     *Message.FLAG.MATCH*
+        :returns: A bool, indicating whether the flag is set.
+        :exception: :exc:`NotmuchError` STATUS.NOT_INITIALIZED if the message 
+              is not initialized.
+        """
+        if self._msg is None:
+            raise NotmuchError(STATUS.NOT_INITIALIZED)
+        return Message._get_flag(self._msg, flag)
+
+    def set_flag(self, flag, value):
+        """Sets/Unsets a specific flag for this message
+
+        :param flag: One of the :attr:`Message.FLAG` values (currently only 
+                     *Message.FLAG.MATCH*
+        :param value: A bool indicating whether to set or unset the flag.
+
+        :returns: Nothing
+        :exception: :exc:`NotmuchError` STATUS.NOT_INITIALIZED if the message 
+              is not initialized.
+        """
+        if self._msg is None:
+            raise NotmuchError(STATUS.NOT_INITIALIZED)
+        nmlib.notmuch_message_set_flag(self._msg, flag, value)
 
     def get_tags(self):
         """Returns the message tags
