@@ -172,14 +172,19 @@ class Messages(object):
         self._msgs = None
         return i
 
-
-
     def __del__(self):
         """Close and free the notmuch Messages"""
         if self._msgs is not None:
             nmlib.notmuch_messages_destroy (self._msgs)
 
-    def show_messages(self, format, indent=0, entire_thread=True):
+    def print_messages(self, format, indent=0, entire_thread=False):
+        """Outputs messages as needed for 'notmuch show' to sys.stdout
+
+        :param format: A string of either 'text' or 'json'.
+        :param indent: A number indicating the reply depth of these messages.
+        :param entire_thread: A bool, indicating whether we want to output 
+                       whole threads or only the matching messages.
+        """
         if format.lower() == "text":
             set_start = ""
             set_end = ""
@@ -195,6 +200,7 @@ class Messages(object):
 
         sys.stdout.write(set_start)
 
+        # iterate through all toplevel messages in this thread
         for msg in self:
             # if not msg:
             #     break 
@@ -221,8 +227,7 @@ class Messages(object):
             #     break
             if not replies is None:
                 sys.stdout.write(set_sep)
-                replies.show_messages(format, next_indent, entire_thread)
-
+                replies.print_messages(format, next_indent, entire_thread)
 
             sys.stdout.write(set_end)
         sys.stdout.write(set_end)
@@ -720,12 +725,11 @@ class Message(object):
                  % (format['id'], indent, format['match'], format['filename'])
         output += "\n\fheader{"
 
-        #Todo: this date is supposed to be cleaned up, as in the index.
+        #Todo: this date is supposed to be prettified, as in the index.
         output += "\n%s (%s) (" % (format["headers"]["from"],
                                    format["headers"]["date"])
         output += ", ".join(format["tags"])
         output += ")\n"
-
 
         output += "\nSubject: %s" % format["headers"]["subject"]
         output += "\nFrom: %s" % format["headers"]["from"]
@@ -762,7 +766,6 @@ class Message(object):
         output += "\n\fmessage}\n"
 
         return output
-
 
     def __del__(self):
         """Close and free the notmuch Message"""

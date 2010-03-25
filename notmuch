@@ -302,24 +302,31 @@ if __name__ == '__main__':
          print(str(thread))
    #-------------------------------------
    elif sys.argv[1] == 'show':
+      entire_thread = False
       db = Database()
       out_format="text"
-      if len(sys.argv) == 2:
-         #no further search term
-         querystr=''
-      elif sys.argv[2].startswith("--format="):
-         out_format = sys.argv[2].split("=")[1].strip()
+      querystr=''
+      first_search_term = None
 
-         if not out_format in ("json", "text"):
-            raise Exception("unknown format")
+      #ugly homegrown option parsing
+      #TODO: use OptionParser
+      for (i, arg) in enumerate(sys.argv[1:]):
+	  if arg == '--entire-thread':
+              entire_thread = True
+	  elif arg.startswith("--format="):
+              out_format = arg.split("=")[1]
+	      if out_format == 'json':
+                  #for compatibility use --entire-thread for json
+                  entire_thread = True
+              if not out_format in ("json", "text"):
+                  raise Exception("unknown format")
+	  elif not arg.startswith('--'):
+              #save the position of the first sys.argv that is a search term
+              first_search_term = i+1
 
-         if len(sys.argv) == 3:
-            querystr = ''
-         else:
-            querystr = quote_query_line(sys.argv[3:])
-      else:
-         #mangle arguments wrapping terms with spaces in quotes
-         querystr = quote_query_line(sys.argv[2:])
+      if first_search_term:
+          #mangle arguments wrapping terms with spaces in quotes
+          querystr = quote_query_line(sys.argv[first_search_term:])
 
       logging.debug("show "+querystr)
       t = Query(db,querystr).search_threads()
@@ -337,7 +344,7 @@ if __name__ == '__main__':
 
          first_toplevel = False
 
-         msgs.show_messages(out_format, 0, True)
+         msgs.print_messages(out_format, 0, True)
 
       if out_format.lower() == "json":
          sys.stdout.write("]")
