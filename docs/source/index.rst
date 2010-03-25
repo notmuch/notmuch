@@ -1,13 +1,13 @@
 .. cnotmuch documentation master file, created by
    sphinx-quickstart on Tue Feb  2 10:00:47 2010.
 
-.. currentmodule:: cnotmuch
+.. currentmodule:: cnotmuch.notmuch
 
 Welcome to :mod:`cnotmuch`'s documentation
 ===========================================
 
 The :mod:`cnotmuch` module provides an interface to the `notmuch <http://notmuchmail.org>`_ functionality, directly interfacing to a shared notmuch library.
-The classes :class:`notmuch.Database`, :class:`notmuch.Query` provide most of the core functionality, returning :class:`notmuch.Threads`, :class:`notmuch.Messages` and :class:`notmuch.Tags`.
+Within :mod:`cnotmuch.notmuch`, the classes :class:`Database`, :class:`Query` provide most of the core functionality, returning :class:`Threads`, :class:`Messages` and :class:`Tags`.
 
 .. moduleauthor:: Sebastian Spaeth <Sebastian@SSpaeth.de>
 
@@ -30,17 +30,17 @@ More information on specific topics can be found on the following pages:
 
    notmuch   
 
-:mod:`notmuch` -- The Notmuch interface
-=============================================
+:mod:`cnotmuch.notmuch` -- The Notmuch interface
+=================================================
 
 .. automodule:: cnotmuch.notmuch
 
 :todo: Document nmlib,STATUS
 
-:class:`Database` -- The underlying notmuch database
------------------------------------------------------
+:class:`cnotmuch.notmuch.Database` -- The underlying notmuch database
+---------------------------------------------------------------------
 
-.. autoclass:: Database([path=None[, create=False[, mode=MODE.READ_ONLY]]])
+.. autoclass:: cnotmuch.notmuch.Database([path=None[, create=False[, mode=MODE.READ_ONLY]]])
 
    .. automethod:: create
 
@@ -81,10 +81,10 @@ More information on specific topics can be found on the following pages:
 
    .. autoattribute:: db_p
 
-:class:`Query` -- A search query
------------------------------------------------
+:class:`cnotmuch.notmuch.Query` -- A search query
+-------------------------------------------------
 
-.. autoclass:: Query
+.. autoclass:: cnotmuch.notmuch.Query
 
    .. automethod:: create
 
@@ -115,8 +115,6 @@ More information on specific topics can be found on the following pages:
 
    .. automethod:: count_messages
 
-.. #############################################
-.. currentmodule:: cnotmuch.message
 
 :class:`Messages` -- A bunch of messages
 ----------------------------------------
@@ -172,8 +170,6 @@ More information on specific topics can be found on the following pages:
 
    .. automethod:: __str__
 
-.. #############################################
-.. currentmodule:: cnotmuch.tag
 
 :class:`Tags` -- Notmuch tags
 -----------------------------
@@ -186,13 +182,10 @@ More information on specific topics can be found on the following pages:
    .. automethod:: __str__
 
 
-.. #############################################
-.. currentmodule:: cnotmuch.thread
+:class:`cnotmuch.notmuch.Threads` -- Threads iterator
+-----------------------------------------------------
 
-:class:`Threads` -- Threads iterator
-------------------------------------
-
-.. autoclass:: Threads
+.. autoclass:: cnotmuch.notmuch.Threads
 
    .. automethod:: __len__
 
@@ -223,18 +216,30 @@ More information on specific topics can be found on the following pages:
 
   .. automethod:: __str__
 
-.. #############################################
-.. currentmodule:: cnotmuch.notmuch
 
 :class:`Filenames` -- An iterator over filenames
 ------------------------------------------------
 
-To be implemented
+.. autoclass:: cnotmuch.database.Filenames
 
-:class:`Directoy` -- A directory entry in the database
-------------------------------------------------------
+   .. automethod:: cnotmuch.database.Filenames.__len__
 
-To be implemented
+:class:`cnotmuch.database.Directoy` -- A directory entry in the database
+------------------------------------------------------------------------
+
+.. autoclass:: cnotmuch.database.Directory
+
+   .. automethod:: cnotmuch.database.Directory.get_child_files
+
+   .. automethod:: cnotmuch.database.Directory.get_child_directories
+
+   .. automethod:: cnotmuch.database.Directory.get_mtime
+
+   .. automethod:: cnotmuch.database.Directory.set_mtime
+
+   .. autoattribute:: cnotmuch.database.Directory.mtime
+
+   .. autoattribute:: cnotmuch.database.Directory.path
 
 :exc:`NotmuchError` -- A Notmuch execution error
 ------------------------------------------------
@@ -245,9 +250,23 @@ To be implemented
 
 :class:`STATUS` -- Notmuch operation return status
 --------------------------------------------------
-.. autoclass:: STATUS
 
-   To be documented
+.. data:: STATUS
+
+  STATUS is a class, whose attributes provide constants that serve as return indicators for notmuch functions. Currently the following ones are defined. For possible return values and specific meaning for each method, see the method description.
+
+  * SUCCESS
+  * OUT_OF_MEMORY
+  * READ_ONLY_DATABASE
+  * XAPIAN_EXCEPTION
+  * FILE_ERROR
+  * FILE_NOT_EMAIL
+  * DUPLICATE_MESSAGE_ID
+  * NULL_POINTER
+  * TAG_TOO_LONG
+  * UNBALANCED_FREEZE_THAW
+  * NOT_INITIALIZED
+
 
 Indices and tables
 ==================

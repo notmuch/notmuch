@@ -24,7 +24,7 @@ class Database(object):
     _get_directory = nmlib.notmuch_database_get_directory
     _get_directory.restype = c_void_p
 
-    """notmuch_database_get_path (notmuch_database_t *database)"""
+    """notmuch_database_get_path"""
     _get_path = nmlib.notmuch_database_get_path
     _get_path.restype = c_char_p
 
@@ -32,7 +32,7 @@ class Database(object):
     _get_version = nmlib.notmuch_database_get_version
     _get_version.restype = c_uint
 
-    """notmuch_database_open (const char *path, notmuch_database_mode_t mode)"""
+    """notmuch_database_open"""
     _open = nmlib.notmuch_database_open 
     _open.restype = c_void_p
 
@@ -40,20 +40,20 @@ class Database(object):
     _upgrade = nmlib.notmuch_database_upgrade
     _upgrade.argtypes = [c_void_p, c_void_p, c_void_p]
 
-    """ notmuch_database_find_message """
+    """ notmuch_database_find_message"""
     _find_message = nmlib.notmuch_database_find_message
     _find_message.restype = c_void_p
 
-    """notmuch_database_get_all_tags (notmuch_database_t *database)"""
+    """notmuch_database_get_all_tags"""
     _get_all_tags = nmlib.notmuch_database_get_all_tags
     _get_all_tags.restype = c_void_p
 
-    """ notmuch_database_create(const char *path):"""
+    """notmuch_database_create"""
     _create = nmlib.notmuch_database_create
     _create.restype = c_void_p
 
     def __init__(self, path=None, create=False, mode= 0):
-        """If *path* is *None*, we will try to read a users notmuch 
+        """If *path* is `None`, we will try to read a users notmuch 
         configuration and use his configured database. The location of the 
         configuration file can be specified through the environment variable
         *NOTMUCH_CONFIG*, falling back to the default `~/.notmuch-config`.
@@ -97,8 +97,8 @@ class Database(object):
         This function is used by __init__() and usually does not need
         to be called directly. It wraps the underlying
         *notmuch_database_create* function and creates a new notmuch
-        database at *path*. It will always return a database in
-        :attr:`MODE`.READ_WRITE mode as creating an empty database for
+        database at *path*. It will always return a database in :attr:`MODE`
+        .READ_WRITE mode as creating an empty database for
         reading only does not make a great deal of sense.
 
         :param path: A directory in which we should create the database.
@@ -142,7 +142,7 @@ class Database(object):
     def get_path(self):
         """Returns the file path of an open database
 
-        Wraps notmuch_database_get_path"""
+        Wraps *notmuch_database_get_path*."""
         # Raise a NotmuchError if not initialized
         self._verify_initialized_db()
 
@@ -163,10 +163,10 @@ class Database(object):
     def needs_upgrade(self):
         """Does this database need to be upgraded before writing to it?
 
-        If this function returns True then no functions that modify the
-        database (:meth:`add_message`, :meth:`add_tag`,
-        :meth:`Directory.set_mtime`, etc.) will work unless :meth:`upgrade` 
-        is called successfully first.
+        If this function returns `True` then no functions that modify the
+        database (:meth:`add_message`,
+        :meth:`Message.add_tag`, :meth:`Directory.set_mtime`,
+        etc.) will work unless :meth:`upgrade` is called successfully first.
 
         :returns: `True` or `False`
         :exception: :exc:`NotmuchError` with STATUS.NOT_INITIALIZED if
@@ -187,9 +187,10 @@ class Database(object):
         NOT IMPLEMENTED: The optional progress_notify callback can be
         used by the caller to provide progress indication to the
         user. If non-NULL it will be called periodically with
-        'progress' as a floating-point value in the range of [0.0
-        .. 1.0] indicating the progress made so far in the upgrade
-        process.
+        'progress' as a floating-point value in the range of [0.0..1.0] 
+        indicating the progress made so far in the upgrade process.
+
+        :TODO: catch exceptions, document return values and etc...
         """
         # Raise a NotmuchError if not initialized
         self._verify_initialized_db()
@@ -207,9 +208,8 @@ class Database(object):
            program if this method is used on a read-only database!
 
         :param path: A str containing the path relative to the path of database
-        (see :meth:`get_path`), or else should be an absolute path
-        with initial components that match the path of 'database'.
-
+              (see :meth:`get_path`), or else should be an absolute path
+              with initial components that match the path of 'database'.
         :returns: :class:`Directory` or raises an exception.
         :exception: :exc:`NotmuchError`
 
@@ -308,7 +308,7 @@ class Database(object):
         is removed for a particular message, the database content for that
         message will be entirely removed.
 
-        :returns: A STATUS.* value with the following meaning:
+        :returns: A STATUS value with the following meaning:
 
              STATUS.SUCCESS
                The last filename was removed and the message was removed 
@@ -636,7 +636,7 @@ class Directory(object):
         :param path:   The absolute path of the directory object.
         :param dir_p:  The pointer to an internal notmuch_directory_t object.
         :param parent: The object this Directory is derived from
-                       (usually a Database()). We do not directly use
+                       (usually a :class:`Database`). We do not directly use
                        this, but store a reference to it as long as
                        this Directory object lives. This keeps the
                        parent object alive.
@@ -710,10 +710,12 @@ class Directory(object):
 
         return Directory._get_mtime (self._dir_p)
 
-
     # Make mtime attribute a property of Directory()
     mtime = property(get_mtime, set_mtime, doc="""Property that allows getting
-                     and setting of the Directory *mtime*""")
+                     and setting of the Directory *mtime* (read-write)
+
+                     See :meth:`get_mtime` and :meth:`set_mtime` for usage and 
+                     possible exceptions.""")
 
     def get_child_files(self):
         """Gets a Filenames iterator listing all the filenames of
@@ -729,7 +731,7 @@ class Directory(object):
         return Filenames(files_p, self)
 
     def get_child_directories(self):
-        """Gets a Filenams iterator listing all the filenames of
+        """Gets a :class:`Filenames` iterator listing all the filenames of
         sub-directories in the database within the given directory
         
         The returned filenames will be the basename-entries only (not
@@ -743,7 +745,7 @@ class Directory(object):
 
     @property
     def path(self):
-        """Returns the absolute path of this Directory"""
+        """Returns the absolute path of this Directory (read-only)"""
         return self._path
 
     def __repr__(self):
@@ -757,7 +759,7 @@ class Directory(object):
 
 #------------------------------------------------------------------------------
 class Filenames(object):
-    """An iterator over File- or Directory names that are stored in the notmuch database
+    """An iterator over File- or Directory names that are stored in the database
     """
 
     #notmuch_filenames_get
