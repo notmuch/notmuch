@@ -79,3 +79,4 @@ Changelog
 0.1   First public release
 0.1.1 Fixed Database.create_query()
 0.2.0 Implemented Thread() and Threads() methods
+0.2.1 Implemented the remaining API methods, notably Directory() and Filenames()
