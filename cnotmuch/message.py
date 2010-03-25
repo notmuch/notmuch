@@ -2,6 +2,13 @@ from ctypes import c_char_p, c_void_p, c_long, c_bool
 from datetime import date
 from cnotmuch.globals import nmlib, STATUS, NotmuchError, Enum
 from cnotmuch.tag import Tags
+import sys
+import email
+import types
+try:
+    import simplejson as json
+except ImportError:
+    import json
 #------------------------------------------------------------------------------
 class Messages(object):
     """Represents a list of notmuch messages
@@ -154,6 +161,53 @@ class Messages(object):
         if self._msgs is not None:
             nmlib.notmuch_messages_destroy (self._msgs)
 
+    def show_messages(self, format, indent=0, entire_thread=True):
+        if format.lower() == "text":
+            set_start = ""
+            set_end = ""
+            set_sep = ""
+        elif format.lower() == "json":
+            set_start = "["
+            set_end = "]"
+            set_sep = ", "
+        else:
+            raise Exception
+
+        first_set = True
+
+        sys.stdout.write(set_start)
+
+        for msg in self:
+            # if not msg:
+            #     break 
+            if not first_set:
+                sys.stdout.write(set_sep)
+            first_set = False
+
+            sys.stdout.write(set_start)
+            match = msg.is_match()
+            next_indent = indent
+
+            if (match or entire_thread):
+                if format.lower() == "text":
+                    sys.stdout.write(msg.format_message_as_text(indent))
+                elif format.lower() == "json":
+                    sys.stdout.write(msg.format_message_as_json(indent))
+                else:
+                    raise NotmuchError
+                next_indent = indent + 1
+
+
+            replies = msg.get_replies()
+            # if isinstance(replies, types.NoneType):
+            #     break
+            if not replies is None:
+                sys.stdout.write(set_sep)
+                replies.show_messages(format, next_indent, entire_thread)
+
+
+            sys.stdout.write(set_end)
+        sys.stdout.write(set_end)
 
 #------------------------------------------------------------------------------
 class Message(object):
@@ -552,7 +606,11 @@ class Message(object):
 
         raise NotmuchError(status)
 
-    
+
+    def is_match(self):
+        """(Not implemented)"""
+        return self.get_flag(self.FLAG.MATCH)
+
     def __str__(self):
         """A message() is represented by a 1-line summary"""
         msg = {}
@@ -563,9 +621,131 @@ class Message(object):
         msg['replies'] = len(replies) if replies is not None else -1
         return "%(from)s (%(date)s) (%(tags)s) (%(replies)d) replies" % (msg)
 
-    def format_as_text(self):
-        """Output like notmuch show (Not implemented)"""
-        return str(self)
+
+    def get_message_parts(self):
+        """Output like notmuch show"""
+        fp = open(self.get_filename())
+        email_msg = email.message_from_file(fp)
+        fp.close()
+
+        # A subfunction to recursively unpack the message parts into a
+        # list.
+        def msg_unpacker_gen(msg):
+            if not msg.is_multipart():
+                yield msg
+            else:
+                for part in msg.get_payload():
+                    for subpart in msg_unpacker_gen(part):
+                        yield subpart
+
+        return list(msg_unpacker_gen(email_msg))
+
+    def format_message_internal(self):
+        """Create an internal representation of the message parts,
+        which can easily be output to json, text, or another output
+        format. The argument match tells whether this matched a
+        query."""
+        output = {}
+        output["id"] = self.get_message_id()
+        output["match"] = self.is_match()
+        output["filename"] = self.get_filename()
+        output["tags"] = list(self.get_tags())
+
+        headers = {}
+        for h in ["subject", "from", "to", "cc", "bcc", "date"]:
+            headers[h] = self.get_header(h)
+        output["headers"] = headers
+
+        body = []
+        parts = self.get_message_parts()
+        for i in xrange(len(parts)):
+            msg = parts[i]
+            part_dict = {}
+            part_dict["id"] = i + 1
+            # We'll be using this is a lot, so let's just get it once.
+            cont_type = msg.get_content_type()
+            part_dict["content_type"] = cont_type
+            # NOTE:
+            # Now we emulate the current behaviour, where it ignores
+            # the html if there's a text representation. 
+            #
+            # This is being worked on, but it will be easier to fix
+            # here in the future than to end up with another
+            # incompatible solution.
+            disposition = msg["Content-Disposition"]
+            if disposition:
+                if disposition.lower().startswith("attachment"):
+                    part_dict["filename"] = msg.get_filename()
+            else:
+                if cont_type.lower() == "text/plain":
+                    part_dict["content"] = msg.get_payload()
+                elif (cont_type.lower() == "text/html" and 
+                      i == 0):
+                    part_dict["content"] = msg.get_payload()
+            body.append(part_dict)
+        output["body"] = body
+
+        return output
+
+    def format_message_as_json(self, indent=0):
+        """Outputs the message as json. This is essentially the same
+        as python's dict format, but we run it through, just so we
+        don't have to worry about the details."""
+        return json.dumps(self.format_message_internal())
+
+    def format_message_as_text(self, indent=0):
+        """Outputs it in the old-fashioned notmuch text form. Will be
+        easy to change to a new format when the format changes."""
+
+        format = self.format_message_internal()
+        output = "\n\fmessage{ id:%s depth:%d filename:%s" % (format["id"],
+                                                              indent,
+                                                              format["filename"])
+        output += "\n\fheader{"
+
+        #Todo: this date is supposed to be cleaned up, as in the index.
+        output += "\n%s (%s) (" % (format["headers"]["from"],
+                                   format["headers"]["date"])
+        output += ", ".join(format["tags"])
+        output += ")\n"
+
+
+        output += "\nSubject: %s" % format["headers"]["subject"]
+        output += "\nFrom: %s" % format["headers"]["from"]
+        output += "\nTo: %s" % format["headers"]["to"]
+        if format["headers"]["cc"]:
+            output += "\nCc: %s" % format["headers"]["cc"]
+        if format["headers"]["bcc"]:
+            output += "\nBcc: %s" % format["headers"]["bcc"]
+        output += "\nDate: %s" % format["headers"]["date"]
+        output += "\nheader}\f"
+
+        output += "\n\fbody{"
+
+        parts = format["body"]
+        parts.sort(key=lambda(p): p["id"])
+        for p in parts:
+            if not p.has_key("filename"):
+                output += "\n\fpart{ "
+                output += "ID: %d, Content-type:%s\n" % (p["id"], 
+                                                         p["content_type"])
+                if p.has_key("content"):
+                    output += "\n%s\n" % p["content"]
+                else:
+                    output += "Non-text part: %s\n" % p["content_type"]
+                    output += "\n\fpart}"                    
+            else:
+                output += "\n\fattachment{ "
+                output += "ID: %d, Content-type:%s\n" % (p["id"], 
+                                                         p["content_type"])
+                output += "Attachment: %s\n" % p["filename"]
+                output += "\n\fattachment}\n"
+
+        output += "\n\fbody}\n"
+        output += "\n\fmessage}\n"
+
+        return output
+
 
     def __del__(self):
         """Close and free the notmuch Message"""
