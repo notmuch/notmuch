@@ -36,6 +36,10 @@ class Database(object):
     _open = nmlib.notmuch_database_open 
     _open.restype = c_void_p
 
+    """notmuch_database_upgrade"""
+    _upgrade = nmlib.notmuch_database_upgrade
+    _upgrade.argtypes = [c_void_p, c_void_p, c_void_p]
+
     """ notmuch_database_find_message """
     _find_message = nmlib.notmuch_database_find_message
     _find_message.restype = c_void_p
@@ -172,6 +176,27 @@ class Database(object):
         self._verify_initialized_db()
 
         return notmuch_database_needs_upgrade(self._db) 
+
+    def upgrade(self):
+        """Upgrades the current database
+
+        After opening a database in read-write mode, the client should
+        check if an upgrade is needed (notmuch_database_needs_upgrade) and
+        if so, upgrade with this function before making any modifications.
+
+        NOT IMPLEMENTED: The optional progress_notify callback can be
+        used by the caller to provide progress indication to the
+        user. If non-NULL it will be called periodically with
+        'progress' as a floating-point value in the range of [0.0
+        .. 1.0] indicating the progress made so far in the upgrade
+        process.
+        """
+        # Raise a NotmuchError if not initialized
+        self._verify_initialized_db()
+
+        status = Database._upgrade (self._db, None, None)
+        #TODO: catch exceptions, document return values and etc
+        return status
 
     def get_directory(self, path):
         """Returns a :class:`Directory` of path, 
