@@ -1,10 +1,14 @@
 #!/usr/bin/env python
-"""This is a notmuch implementation in python. It's goal is to allow running the test suite on the cnotmuch python bindings.
+"""This is a notmuch implementation in python. 
+It's goal is to allow running the test suite on the cnotmuch python bindings.
 
 This "binary" honors the NOTMUCH_CONFIG environmen variable for reading a user's
-notmuch configuration (e.g. the database path)
+notmuch configuration (e.g. the database path).
 
-This code is licensed under the GNU GPL v3+."""
+   (c) 2010 by Sebastian Spaeth <Sebastian@SSpaeth.de>
+               Jesse Rosenthal <jrosenthal@jhu.edu>
+   This code is licensed under the GNU GPL v3+.
+"""
 from __future__ import with_statement # This isn't required in Python 2.6
 import sys, os, re, logging
 from subprocess import call
@@ -299,16 +303,45 @@ if __name__ == '__main__':
    #-------------------------------------
    elif sys.argv[1] == 'show':
       db = Database()
+      out_format="text"
       if len(sys.argv) == 2:
          #no further search term
          querystr=''
+      elif sys.argv[2].startswith("--format="):
+         out_format = sys.argv[2].split("=")[1].strip()
+
+         if not out_format in ("json", "text"):
+            raise Exception("unknown format")
+
+         if len(sys.argv) == 3:
+            querystr = ''
+         else:
+            querystr = quote_query_line(sys.argv[3:])
       else:
          #mangle arguments wrapping terms with spaces in quotes
          querystr = quote_query_line(sys.argv[2:])
+
       logging.debug("show "+querystr)
-      m = Query(db,querystr).search_messages()
-      for msg in m:
-         print(msg.format_as_text())
+      t = Query(db,querystr).search_threads()
+
+      first_toplevel=True
+      if out_format.lower()=="json":
+         sys.stdout.write("[")
+
+      for thrd in t:
+         msgs = thrd.get_toplevel_messages()
+
+         if not first_toplevel:
+            if format.lower()=="json":
+               sys.stdout.write(", ")
+
+         first_toplevel = False
+
+         msgs.show_messages(out_format, 0, True)
+
+      if out_format.lower() == "json":
+         sys.stdout.write("]")
+      sys.stdout.write("\n")
 
    #-------------------------------------
    elif sys.argv[1] == 'reply':
