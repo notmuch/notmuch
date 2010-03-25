@@ -593,6 +593,10 @@ class Directory(object):
     _set_mtime = nmlib.notmuch_directory_set_mtime
     _set_mtime.argtypes = [c_char_p, c_long]
 
+    """notmuch_directory_get_child_files"""
+    _get_child_files = nmlib.notmuch_directory_get_child_files
+    _get_child_files.restype = c_void_p
+
     """notmuch_directory_get_child_directories"""
     _get_child_directories = nmlib.notmuch_directory_get_child_directories
     _get_child_directories.restype = c_void_p
@@ -612,7 +616,6 @@ class Directory(object):
                        this Directory object lives. This keeps the
                        parent object alive.
         """
-        #TODO, sanity checking that the path is really absolute?
         self._path = path
         self._dir_p = dir_p
         self._parent = parent
@@ -688,14 +691,17 @@ class Directory(object):
                      and setting of the Directory *mtime*""")
 
     def get_child_files(self):
-       """Gets a Filenames iterator listing all the filenames of
-       messages in the database within the given directory.
+        """Gets a Filenames iterator listing all the filenames of
+        messages in the database within the given directory.
  
-       The returned filenames will be the basename-entries only (not
-       complete paths.
-       """
-       pass
-       #notmuch_filenames_t * notmuch_directory_get_child_files (notmuch_directory_t *directory);
+        The returned filenames will be the basename-entries only (not
+        complete paths.
+        """
+        #Raise a NotmuchError(STATUS.NOT_INITIALIZED) if self._dir_p is None
+        self._verify_dir_initialized()
+
+        files_p = Directory._get_child_files(self._dir_p)
+        return Filenames(files_p, self)
 
     def get_child_directories(self):
         """Gets a Filenams iterator listing all the filenames of
@@ -704,8 +710,11 @@ class Directory(object):
         The returned filenames will be the basename-entries only (not
         complete paths.
         """
-        #notmuch_filenames_t * notmuch_directory_get_child_directories (notmuch_directory_t *directory);
-        pass
+        #Raise a NotmuchError(STATUS.NOT_INITIALIZED) if self._dir_p is None
+        self._verify_dir_initialized()
+
+        files_p = Directory._get_child_directories(self._dir_p)
+        return Filenames(files_p, self)
 
     @property
     def path(self):
@@ -720,3 +729,67 @@ class Directory(object):
         """Close and free the Directory"""
         if self._dir_p is not None:
             nmlib.notmuch_directory_destroy(self._dir_p)
+
+#------------------------------------------------------------------------------
+class Filenames(object):
+    """An iterator over File- or Directory names that are stored in the notmuch database
+    """
+
+    #notmuch_filenames_get
+    _get = nmlib.notmuch_filenames_get
+    _get.restype = c_char_p
+
+    def __init__(self, files_p, parent):
+        """
+        :param files_p: The pointer to an internal notmuch_filenames_t object.
+        :param parent: The object this Directory is derived from
+                       (usually a Directory()). We do not directly use
+                       this, but store a reference to it as long as
+                       this Directory object lives. This keeps the
+                       parent object alive.
+        """
+        self._files_p = files_p
+        self._parent = parent
+
+    def __iter__(self):
+        """ Make Filenames an iterator """
+        return self
+
+    def next(self):
+        if self._files_p is None:
+            raise NotmuchError(STATUS.NOT_INITIALIZED)
+
+        if not nmlib.notmuch_filenames_valid(self._files_p):
+            self._files_p = None
+            raise StopIteration
+
+        file = Filenames._get (self._files_p)
+        nmlib.notmuch_filenames_move_to_next(self._files_p)
+        return file
+
+    def __len__(self):
+        """len(:class:`Filenames`) returns the number of contained files
+
+        .. note:: As this iterates over the files, we will not be able to 
+               iterate over them again! So this will fail::
+
+                 #THIS FAILS
+                 files = Database().get_directory('').get_child_files()
+                 if len(files) > 0:              #this 'exhausts' msgs
+                     # next line raises NotmuchError(STATUS.NOT_INITIALIZED)!!!
+                     for file in files: print file
+        """
+        if self._files_p is None:
+            raise NotmuchError(STATUS.NOT_INITIALIZED)
+
+        i=0
+        while nmlib.notmuch_filenames_valid(self._files_p):
+            nmlib.notmuch_filenames_move_to_next(self._files_p)
+            i += 1
+        self._files_p = None
+        return i
+
+    def __del__(self):
+        """Close and free Filenames"""
+        if self._files_p is not None:
+            nmlib.notmuch_filenames_destroy(self._files_p)
