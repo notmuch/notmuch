@@ -1,5 +1,5 @@
 import os
-from ctypes import c_int, c_char_p, c_void_p, c_uint, byref
+from ctypes import c_int, c_char_p, c_void_p, c_uint, c_long, byref
 from cnotmuch.globals import nmlib, STATUS, NotmuchError, Enum
 from cnotmuch.thread import Threads
 from cnotmuch.message import Messages
@@ -19,6 +19,10 @@ class Database(object):
 
     MODE = Enum(['READ_ONLY','READ_WRITE'])
     """Constants: Mode in which to open the database"""
+
+    """notmuch_database_get_directory"""
+    _get_directory = nmlib.notmuch_database_get_directory
+    _get_directory.restype = c_void_p
 
     """notmuch_database_get_path (notmuch_database_t *database)"""
     _get_path = nmlib.notmuch_database_get_path
@@ -167,7 +171,50 @@ class Database(object):
         # Raise a NotmuchError if not initialized
         self._verify_initialized_db()
 
-        return notmuch_database_needs_upgrade(self.db) 
+        return notmuch_database_needs_upgrade(self._db) 
+
+    def get_directory(self, path):
+        """Returns a :class:`Directory` of path, 
+        (creating it if it does not exist(?))
+
+        .. warning:: This call needs a writeable database in 
+           Database.MODE.READ_WRITE mode. The underlying library will exit the
+           program if this method is used on a read-only database!
+
+        :param path: A str containing the path relative to the path of database
+        (see :meth:`get_path`), or else should be an absolute path
+        with initial components that match the path of 'database'.
+
+        :returns: :class:`Directory` or raises an exception.
+        :exception: :exc:`NotmuchError`
+
+                  STATUS.NOT_INITIALIZED 
+                    If the database was not intitialized.
+
+                  STATUS.FILE_ERROR
+                    If path is not relative database or absolute with initial 
+                    components same as database.
+
+        """
+        # Raise a NotmuchError if not initialized
+        self._verify_initialized_db()
+
+        # sanity checking if path is valid, and make path absolute
+        if path[0] == os.sep:
+            # we got an absolute path
+            if not path.startswith(self.get_path()):
+                # but its initial components are not equal to the db path
+                raise NotmuchError(STATUS.FILE_ERROR, 
+                                   message="Database().get_directory() called with a wrong absolute path.")
+            abs_dirpath = path
+        else:
+            #we got a relative path, make it absolute
+            abs_dirpath = os.path.abspath(os.path.join(self.get_path(),path))
+
+        dir_p = Database._get_directory(self._db, path);
+
+        # return the Directory, init it with the absolute path
+        return Directory(abs_dirpath, dir_p, self)
 
     def add_message(self, filename):
         """Adds a new message to the database
@@ -521,3 +568,155 @@ class Query(object):
         """Close and free the Query"""
         if self._query is not None:
             nmlib.notmuch_query_destroy (self._query)
+
+
+#------------------------------------------------------------------------------
+class Directory(object):
+    """Represents a directory entry in the notmuch directory
+
+    Modifying attributes of this object will modify the
+    database, not the real directory attributes.
+
+    The Directory object is usually derived from another object
+    e.g. via :meth:`Database.get_directory`, and will automatically be
+    become invalid whenever that parent is deleted. You should
+    therefore initialized this object handing it a reference to the
+    parent, preventing the parent from automatically being garbage
+    collected.
+    """
+
+    """notmuch_directory_get_mtime"""
+    _get_mtime = nmlib.notmuch_directory_get_mtime
+    _get_mtime.restype = c_long
+
+    """notmuch_directory_set_mtime"""
+    _set_mtime = nmlib.notmuch_directory_set_mtime
+    _set_mtime.argtypes = [c_char_p, c_long]
+
+    """notmuch_directory_get_child_directories"""
+    _get_child_directories = nmlib.notmuch_directory_get_child_directories
+    _get_child_directories.restype = c_void_p
+
+    def _verify_dir_initialized(self):
+        """Raises a NotmuchError(STATUS.NOT_INITIALIZED) if the dir_p is None"""
+        if self._dir_p is None:
+            raise NotmuchError(STATUS.NOT_INITIALIZED)            
+
+    def __init__(self, path, dir_p, parent):
+        """
+        :param path:   The absolute path of the directory object.
+        :param dir_p:  The pointer to an internal notmuch_directory_t object.
+        :param parent: The object this Directory is derived from
+                       (usually a Database()). We do not directly use
+                       this, but store a reference to it as long as
+                       this Directory object lives. This keeps the
+                       parent object alive.
+        """
+        #TODO, sanity checking that the path is really absolute?
+        self._path = path
+        self._dir_p = dir_p
+        self._parent = parent
+
+
+    def set_mtime (self, mtime):
+        """Sets the mtime value of this directory in the database
+
+        The intention is for the caller to use the mtime to allow efficient
+        identification of new messages to be added to the database. The
+        recommended usage is as follows:
+
+        * Read the mtime of a directory from the filesystem
+ 
+        * Call :meth:`Database.add_message` for all mail files in
+          the directory
+
+        * Call notmuch_directory_set_mtime with the mtime read from the 
+          filesystem.  Then, when wanting to check for updates to the
+          directory in the future, the client can call :meth:`get_mtime`
+          and know that it only needs to add files if the mtime of the 
+          directory and files are newer than the stored timestamp.
+
+          .. note:: :meth:`get_mtime` function does not allow the caller 
+                 to distinguish a timestamp of 0 from a non-existent
+                 timestamp. So don't store a timestamp of 0 unless you are
+                 comfortable with that.  
+
+          :param mtime: A (time_t) timestamp 
+          :returns: Nothing on success, raising an exception on failure.
+          :exception: :exc:`NotmuchError`:
+
+                        STATUS.XAPIAN_EXCEPTION
+                          A Xapian exception occurred, mtime not stored.
+                        STATUS.READ_ONLY_DATABASE
+                          Database was opened in read-only mode so directory 
+                          mtime cannot be modified.
+                        STATUS.NOT_INITIALIZED
+                          The directory has not been initialized
+        """
+        #Raise a NotmuchError(STATUS.NOT_INITIALIZED) if the dir_p is None
+        self._verify_dir_initialized()
+
+        #TODO: make sure, we convert the mtime parameter to a 'c_long'
+        status = Directory._set_mtime(self._dir_p, mtime)
+
+        #return on success
+        if status == STATUS.SUCCESS:
+            return
+        #fail with Exception otherwise
+        raise NotmuchError(status)
+
+    def get_mtime (self):
+        """Gets the mtime value of this directory in the database
+
+        Retrieves a previously stored mtime for this directory.
+
+        :param mtime: A (time_t) timestamp 
+        :returns: Nothing on success, raising an exception on failure.
+        :exception: :exc:`NotmuchError`:
+
+                        STATUS.NOT_INITIALIZED
+                          The directory has not been initialized
+        """
+        #Raise a NotmuchError(STATUS.NOT_INITIALIZED) if self.dir_p is None
+        self._verify_dir_initialized()
+
+        return Directory._get_mtime (self._dir_p)
+
+
+    # Make mtime attribute a property of Directory()
+    mtime = property(get_mtime, set_mtime, doc="""Property that allows getting
+                     and setting of the Directory *mtime*""")
+
+    def get_child_files(self):
+       """Gets a Filenames iterator listing all the filenames of
+       messages in the database within the given directory.
+ 
+       The returned filenames will be the basename-entries only (not
+       complete paths.
+       """
+       pass
+       #notmuch_filenames_t * notmuch_directory_get_child_files (notmuch_directory_t *directory);
+
+    def get_child_directories(self):
+        """Gets a Filenams iterator listing all the filenames of
+        sub-directories in the database within the given directory
+        
+        The returned filenames will be the basename-entries only (not
+        complete paths.
+        """
+        #notmuch_filenames_t * notmuch_directory_get_child_directories (notmuch_directory_t *directory);
+        pass
+
+    @property
+    def path(self):
+        """Returns the absolute path of this Directory"""
+        return self._path
+
+    def __repr__(self):
+        """Object representation"""
+        return "<cnotmuch Directory object '%s'>" % self._path
+
+    def __del__(self):
+        """Close and free the Directory"""
+        if self._dir_p is not None:
+            nmlib.notmuch_directory_destroy(self._dir_p)
