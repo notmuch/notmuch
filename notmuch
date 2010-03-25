@@ -339,7 +339,7 @@ if __name__ == '__main__':
          msgs = thrd.get_toplevel_messages()
 
          if not first_toplevel:
-            if format.lower()=="json":
+            if out_format.lower()=="json":
                sys.stdout.write(", ")
 
          first_toplevel = False
