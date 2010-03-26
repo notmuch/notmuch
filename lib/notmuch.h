@@ -156,7 +156,7 @@ typedef enum {
  * (not necessarily by this process), by calling
  * notmuch_database_create with 'path'. By default the database should be
  * opened for reading only. In order to write to the database you need to
- * pass the NOTMUCH_DATABASE_MODE_WRITABLE mode.
+ * pass the NOTMUCH_DATABASE_MODE_READ_WRITE mode.
  *
  * An existing notmuch database can be identified by the presence of a
  * directory named ".notmuch" below 'path'.
