@@ -721,7 +721,7 @@ class Message(object):
         easy to change to a new format when the format changes."""
 
         format = self.format_message_internal()
-        output = "\n\fmessage{ id:%s depth:%d match:%d filename:%s" \
+        output = "\fmessage{ id:%s depth:%d match:%d filename:%s" \
                  % (format['id'], indent, format['match'], format['filename'])
         output += "\n\fheader{"
 
@@ -729,7 +729,7 @@ class Message(object):
         output += "\n%s (%s) (" % (format["headers"]["from"],
                                    format["headers"]["date"])
         output += ", ".join(format["tags"])
-        output += ")\n"
+        output += ")"
 
         output += "\nSubject: %s" % format["headers"]["subject"]
         output += "\nFrom: %s" % format["headers"]["from"]
@@ -739,7 +739,7 @@ class Message(object):
         if format["headers"]["bcc"]:
             output += "\nBcc: %s" % format["headers"]["bcc"]
         output += "\nDate: %s" % format["headers"]["date"]
-        output += "\nheader}\f"
+        output += "\n\fheader}"
 
         output += "\n\fbody{"
 
@@ -748,7 +748,7 @@ class Message(object):
         for p in parts:
             if not p.has_key("filename"):
                 output += "\n\fpart{ "
-                output += "ID: %d, Content-type:%s\n" % (p["id"], 
+                output += "ID: %d, Content-type: %s\n" % (p["id"], 
                                                          p["content_type"])
                 if p.has_key("content"):
                     output += "\n%s\n" % p["content"]
@@ -763,7 +763,7 @@ class Message(object):
                 output += "\n\fattachment}\n"
 
         output += "\n\fbody}\n"
-        output += "\n\fmessage}\n"
+        output += "\n\fmessage}"
 
         return output
 

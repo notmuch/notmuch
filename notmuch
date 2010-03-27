@@ -290,16 +290,34 @@ if __name__ == '__main__':
    #-------------------------------------
    elif sys.argv[1] == 'search':
       db = Database()
-      if len(sys.argv) == 2:
-         #no further search term
-         querystr=''
-      else:
-         #mangle arguments wrapping terms with spaces in quotes
-         querystr = quote_query_line(sys.argv[2:])
+      query_string = ''
+      sort_order="newest-first"
+      first_search_term = None
+      for (i, arg) in enumerate(sys.argv[1:]):
+	  if arg.startswith('--sort='):
+	     sort_order=arg.split("=")[1]
+	     if not sort_order in ("oldest-first", "newest-first"):
+		raise Exception("unknown sort order")
+	  elif not arg.startswith('--'):
+              #save the position of the first sys.argv that is a search term
+              first_search_term = i+1
+
+      if first_search_term:
+          #mangle arguments wrapping terms with spaces in quotes
+          querystr = quote_query_line(sys.argv[first_search_term:])
+
+      
       logging.debug("search "+querystr)
-      t = Query(db,querystr).search_threads()
+      qry = Query(db,querystr)
+      if sort_order == "oldest-first":
+	 qry.set_sort(Query.SORT.OLDEST_FIRST)
+      else:
+	 qry.set_sort(Query.SORT.NEWEST_FIRST)
+      t = qry.search_threads()
+
       for thread in t:
-         print(str(thread))
+	 print(str(thread))
+
    #-------------------------------------
    elif sys.argv[1] == 'show':
       entire_thread = False
@@ -344,7 +362,7 @@ if __name__ == '__main__':
 
          first_toplevel = False
 
-         msgs.print_messages(out_format, 0, True)
+         msgs.print_messages(out_format, 0, entire_thread)
 
       if out_format.lower() == "json":
          sys.stdout.write("]")
