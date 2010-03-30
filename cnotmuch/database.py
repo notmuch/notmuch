@@ -2,7 +2,7 @@ import os
 from ctypes import c_int, c_char_p, c_void_p, c_uint, c_long, byref
 from cnotmuch.globals import nmlib, STATUS, NotmuchError, Enum
 from cnotmuch.thread import Threads
-from cnotmuch.message import Messages
+from cnotmuch.message import Messages, Message
 from cnotmuch.tag import Tags
 
 class Database(object):
