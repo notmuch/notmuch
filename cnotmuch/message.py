@@ -727,19 +727,19 @@ class Message(object):
         output += "\n\fheader{"
 
         #Todo: this date is supposed to be prettified, as in the index.
-        output += "\n%s (%s) (" % (format["headers"]["from"],
-                                   format["headers"]["date"])
+        output += "\n%s (%s) (" % (format["headers"]["From"],
+                                   format["headers"]["Date"])
         output += ", ".join(format["tags"])
         output += ")"
 
-        output += "\nSubject: %s" % format["headers"]["subject"]
-        output += "\nFrom: %s" % format["headers"]["from"]
-        output += "\nTo: %s" % format["headers"]["to"]
-        if format["headers"]["cc"]:
-            output += "\nCc: %s" % format["headers"]["cc"]
-        if format["headers"]["bcc"]:
-            output += "\nBcc: %s" % format["headers"]["bcc"]
-        output += "\nDate: %s" % format["headers"]["date"]
+        output += "\nSubject: %s" % format["headers"]["Subject"]
+        output += "\nFrom: %s" % format["headers"]["From"]
+        output += "\nTo: %s" % format["headers"]["To"]
+        if format["headers"]["Cc"]:
+            output += "\nCc: %s" % format["headers"]["Cc"]
+        if format["headers"]["Bcc"]:
+            output += "\nBcc: %s" % format["headers"]["Bcc"]
+        output += "\nDate: %s" % format["headers"]["Date"]
         output += "\n\fheader}"
 
         output += "\n\fbody{"
@@ -750,16 +750,16 @@ class Message(object):
             if not p.has_key("filename"):
                 output += "\n\fpart{ "
                 output += "ID: %d, Content-type: %s\n" % (p["id"], 
-                                                         p["content_type"])
+                                                         p["content-type"])
                 if p.has_key("content"):
                     output += "\n%s\n" % p["content"]
                 else:
-                    output += "Non-text part: %s\n" % p["content_type"]
+                    output += "Non-text part: %s\n" % p["content-type"]
                     output += "\n\fpart}"                    
             else:
                 output += "\n\fattachment{ "
                 output += "ID: %d, Content-type:%s\n" % (p["id"], 
-                                                         p["content_type"])
+                                                         p["content-type"])
                 output += "Attachment: %s\n" % p["filename"]
                 output += "\n\fattachment}\n"
 
