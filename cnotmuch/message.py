@@ -705,7 +705,7 @@ class Message(object):
                 elif (cont_type.lower() == "text/html" and 
                       i == 0):
                     part_dict["content"] = msg.get_payload()
-        body.append(part_dict)
+            body.append(part_dict)
 
         output["body"] = body
 
