@@ -74,6 +74,11 @@ NotmuchError: Could not open the specified database
 >>>del(tags)
 
 
+Building for a Debian package
+------------------------------
+dpkg-buildpackage -i"\.hg|\/build"
+
+
 Changelog
 ---------
 0.1   First public release
