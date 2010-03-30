@@ -288,6 +288,43 @@ if __name__ == '__main__':
        if len(sys.argv) == 2: print HELPTEXT
        else: print "Not implemented"
    #-------------------------------------
+   elif sys.argv[1] == 'part':
+      db = Database()
+      query_string = ''
+      part_num=0
+      first_search_term = None
+      for (i, arg) in enumerate(sys.argv[1:]):
+	  if arg.startswith('--part='):
+	     part_num_str=arg.split("=")[1]
+	     try:
+		part_num = int(part_num_str)
+	     except ValueError:
+		# just emulating behavior
+		sys.exit()
+	  elif not arg.startswith('--'):
+              #save the position of the first sys.argv that is a search term
+              first_search_term = i+1
+
+      if first_search_term:
+          #mangle arguments wrapping terms with spaces in quotes
+          querystr = quote_query_line(sys.argv[first_search_term:])
+
+      
+      logging.debug("part "+querystr)
+      qry = Query(db,querystr)
+      msgs = qry.search_messages()
+      msg_list = []
+      for m in msgs:
+	 msg_list.append(m)
+	 
+      if len(msg_list) == 0:
+	 sys.exit()
+      elif len(msg_list) > 1:
+	 raise Exception("search term did not match precisely one message")
+      else:
+	 msg = msg_list[0]
+	 print(msg.get_part(part_num))
+   #-------------------------------------
    elif sys.argv[1] == 'search':
       db = Database()
       query_string = ''

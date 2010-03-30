@@ -220,8 +220,8 @@ class Messages(object):
                 else:
                     raise NotmuchError
                 next_indent = indent + 1
-
-
+                
+            #sys.stdout.write(set_end)
             replies = msg.get_replies()
             # if isinstance(replies, types.NoneType):
             #     break
@@ -653,15 +653,28 @@ class Message(object):
 
         # A subfunction to recursively unpack the message parts into a
         # list.
-        def msg_unpacker_gen(msg):
+        # def msg_unpacker_gen(msg):
+        #     if not msg.is_multipart():
+        #         yield msg
+        #     else:
+        #         for part in msg.get_payload():
+        #             for subpart in msg_unpacker_gen(part):
+        #                 yield subpart
+        #
+        # return list(msg_unpacker_gen(email_msg))
+        out = []
+        for msg in email_msg.walk():
             if not msg.is_multipart():
-                yield msg
-            else:
-                for part in msg.get_payload():
-                    for subpart in msg_unpacker_gen(part):
-                        yield subpart
+                out.append(msg)
+        return out
 
-        return list(msg_unpacker_gen(email_msg))
+    def get_part(self, num):
+        parts = self.get_message_parts()
+        if (num <= 0 or num > len(parts)):
+            return ""
+        else:
+            out_part = parts[(num - 1)]
+            return out_part.get_payload(decode=True)
 
     def format_message_internal(self):
         """Create an internal representation of the message parts,
@@ -675,7 +688,7 @@ class Message(object):
         output["tags"] = list(self.get_tags())
 
         headers = {}
-        for h in ["subject", "from", "to", "cc", "bcc", "date"]:
+        for h in ["Subject", "From", "To", "Cc", "Bcc", "Date"]:
             headers[h] = self.get_header(h)
         output["headers"] = headers
 
@@ -687,7 +700,7 @@ class Message(object):
             part_dict["id"] = i + 1
             # We'll be using this is a lot, so let's just get it once.
             cont_type = msg.get_content_type()
-            part_dict["content_type"] = cont_type
+            part_dict["content-type"] = cont_type
             # NOTE:
             # Now we emulate the current behaviour, where it ignores
             # the html if there's a text representation. 
@@ -696,16 +709,16 @@ class Message(object):
             # here in the future than to end up with another
             # incompatible solution.
             disposition = msg["Content-Disposition"]
-            if disposition:
-                if disposition.lower().startswith("attachment"):
-                    part_dict["filename"] = msg.get_filename()
+            if disposition and disposition.lower().startswith("attachment"):
+                part_dict["filename"] = msg.get_filename()
             else:
                 if cont_type.lower() == "text/plain":
                     part_dict["content"] = msg.get_payload()
                 elif (cont_type.lower() == "text/html" and 
                       i == 0):
                     part_dict["content"] = msg.get_payload()
-            body.append(part_dict)
+        body.append(part_dict)
+
         output["body"] = body
 
         return output
