@@ -1,0 +1,42 @@
+This package was debianized by:
+
+    Sebastian Spaeth <Sebastian@SSpaeth.de> on Tue, 30 Mar 2010 10:02:22 +0200
+
+It was downloaded from:
+
+    http://pypi.python.org/packages/source/c/cnotmuch/cnotmuch-0.2.1.tar.gz
+
+Upstream Author(s):
+
+    Sebastian Spaeth <Sebastian@SSpaeth.de>
+
+Copyright:
+
+    Copyright (C) 2010 Sebastian Spaeth <Sebastian@SSpaeth.de>
+
+License:
+
+    This package is free software; you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation; either version 2 of the License, or
+    (at your option) any later version.
+
+    This package is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this package; if not, write to the Free Software
+    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
+
+On Debian systems, the complete text of the GNU General
+Public License version 2 can be found in `/usr/share/common-licenses/GPL-2'.
+
+The Debian packaging is:
+
+    Copyright (C) 2010 Sebastian Spaeth <Sebastian@SSpaeth.de>
+
+and is licensed under the GPL version 3, 
+see `/usr/share/common-licenses/GPL-3'.
+

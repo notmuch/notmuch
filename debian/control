@@ -1,0 +1,18 @@
+Source: cnotmuch
+Section: python
+Priority: extra
+Maintainer: Sebastian Spaeth <Sebastian@SSpaeth.de>
+Build-Depends: debhelper (>= 7.3.0), python-support (>= 0.5.3)
+Build-Depends-Indep: python (>= 2.5), python-support
+Standards-Version: 3.8.1
+Homepage: http://pypi.python.org/pypi/cnotmuch
+
+Package: cnotmuch
+Architecture: all
+XB-Python-Version: ${python:Versions}
+Depends: ${misc:Depends},${python:Depends}, notmuch (> 0.0+201001211401)
+Description: Interface to the notmuch mail search and index library
+ The cnotmuch module provides an interface to the notmuch functionality,
+ directly interfacing with a shared notmuch library. 
+ Notmuch provides a maildatabase that allows for extremely quick searching and
+ filtering of your email according to various criteria.
