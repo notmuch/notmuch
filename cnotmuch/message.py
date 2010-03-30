@@ -16,7 +16,7 @@
 #    (C) Copyright 2010 Sebastian Spaeth <Sebastian@SSpaeth.de>
 #                       Jesse Rosenthal <jrosenthal@jhu.edu>
         
-from ctypes import c_char_p, c_void_p, c_long, c_bool
+from ctypes import c_char_p, c_void_p, c_long, c_uint
 from datetime import date
 from cnotmuch.globals import nmlib, STATUS, NotmuchError, Enum
 from cnotmuch.tag import Tags
@@ -243,7 +243,7 @@ class Message(object):
 
     """notmuch_message_get_flag"""
     _get_flag = nmlib.notmuch_message_get_flag
-    _get_flag.restype = c_bool
+    _get_flag.restype = c_uint
 
     """notmuch_message_get_message_id (notmuch_message_t *message)"""
     _get_message_id = nmlib.notmuch_message_get_message_id
@@ -406,7 +406,7 @@ class Message(object):
 
         :param flag: One of the :attr:`Message.FLAG` values (currently only 
                      *Message.FLAG.MATCH*
-        :returns: A bool, indicating whether the flag is set.
+        :returns: An unsigned int (0/1), indicating whether the flag is set.
         :exception: :exc:`NotmuchError` STATUS.NOT_INITIALIZED if the message 
               is not initialized.
         """
