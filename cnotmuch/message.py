@@ -220,8 +220,8 @@ class Messages(object):
                 else:
                     raise NotmuchError
                 next_indent = indent + 1
-                
-            #sys.stdout.write(set_end)
+
+
             replies = msg.get_replies()
             # if isinstance(replies, types.NoneType):
             #     break
