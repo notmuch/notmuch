@@ -454,6 +454,9 @@ add_files_recursive (notmuch_database_t *notmuch,
 	next = NULL;
     }
 
+    if (interrupted)
+	goto DONE;
+
     /* Now that we've walked the whole filesystem list, anything left
      * over in the database lists has been deleted. */
     while (notmuch_filenames_valid (db_files))
