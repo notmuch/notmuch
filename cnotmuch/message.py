@@ -221,10 +221,8 @@ class Messages(object):
                     raise NotmuchError
                 next_indent = indent + 1
 
-
+            # get replies and print them also out (if there are any)
             replies = msg.get_replies()
-            # if isinstance(replies, types.NoneType):
-            #     break
             if not replies is None:
                 sys.stdout.write(set_sep)
                 replies.print_messages(format, next_indent, entire_thread)
@@ -651,17 +649,6 @@ class Message(object):
         email_msg = email.message_from_file(fp)
         fp.close()
 
-        # A subfunction to recursively unpack the message parts into a
-        # list.
-        # def msg_unpacker_gen(msg):
-        #     if not msg.is_multipart():
-        #         yield msg
-        #     else:
-        #         for part in msg.get_payload():
-        #             for subpart in msg_unpacker_gen(part):
-        #                 yield subpart
-        #
-        # return list(msg_unpacker_gen(email_msg))
         out = []
         for msg in email_msg.walk():
             if not msg.is_multipart():
@@ -669,6 +656,7 @@ class Message(object):
         return out
 
     def get_part(self, num):
+        """Returns the nth message body part"""
         parts = self.get_message_parts()
         if (num <= 0 or num > len(parts)):
             return ""
