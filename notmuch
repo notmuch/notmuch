@@ -10,35 +10,337 @@ notmuch configuration (e.g. the database path).
    This code is licensed under the GNU GPL v3+.
 """
 from __future__ import with_statement # This isn't required in Python 2.6
-import sys, os, re, logging
-from subprocess import call
-from cnotmuch.notmuch import Database, Query
+import sys, os, re, stat
+from cnotmuch.notmuch import Database, Query, NotmuchError, STATUS
 PREFIX=re.compile('(\w+):(.*$)')
-#TODO Handle variable: NOTMUCH-CONFIG
+#-------------------------------------------------------------------------
+def quote_query_line(argv):
+   #mangle arguments wrapping terms with spaces in quotes
+   for i in xrange(0,len(argv)):
+      if argv[i].find(' ') >= 0:
+         #if we use prefix:termWithSpaces, put quotes around term
+         m = PREFIX.match(argv[i])
+         if m:
+            argv[i] = '%s:"%s"' % (m.group(1), m.group(2))
+         else:
+            argv[i] = '"'+argv[i]+'"'
+   return ' '.join(argv)
 
 #-------------------------------------------------------------------------
-def get_user_email_addresses():
-        """ Reads a user's notmuch config and returns his email addresses as list (name, primary_address, other_address1,...)"""
+class Notmuch:
+
+    def __init__(self):
+        self._config = None
+
+    def cmd_usage(self):
+       """Print the usage text and exits"""
+       data={}
+       names = self.get_user_email_addresses()
+       data['fullname']   =names[0] if names[0] else 'My Name'
+       data['mailaddress']=names[1] if names[1] else 'My@email.address'
+       print (Notmuch.USAGE % data)
+
+    def cmd_new(self):
+        """Run 'notmuch new'"""
+        #get the database directory
+        db = Database(mode=Database.MODE.READ_WRITE)
+        path = db.get_path()
+
+        (added, moved, removed) = self._add_new_files_recursively(path, db)
+        print (added, moved, removed)
+
+    def cmd_help(self, subcmd=None):
+       """Print help text for 'notmuch help'"""
+       if len(subcmd) > 1:
+          print "Help for specific commands not implemented"
+          return
+
+       print (Notmuch.HELPTEXT)
+
+    def _get_user_notmuch_config(self):
+        """Returns the ConfigParser of the user's notmuch-config"""
+	# return the cached config parser if we read it already
+	if self._config is not None:
+	    return self._config
+
+	from ConfigParser import SafeConfigParser
+	config = SafeConfigParser()
+	conf_f = os.getenv('NOTMUCH_CONFIG',
+			   os.path.expanduser('~/.notmuch-config'))
+	config.read(conf_f)
+	self._config = config
+	return config
+
+    def _add_new_files_recursively(self, path, db):
+        """:returns: (added, moved, removed)"""
+        print "Enter add new files with path %s" % path
+        (added, moved, removed) = (0,)*3
+
+        try:
+           #get the Directory() object for this path
+           db_dir = db.get_directory(path)
+        except NotmuchError:
+           #Occurs if we have wrong absolute paths in the db, for example
+           return (0,0,0)
+
+
+        #for folder in subdirs:
+        #   (new_added, new_moved, new_removed) = \
+        #           self._add_new_files_recursively(
+        #                  os.path.join(db_dir.path, folder), db)
+        #   added += new_added
+        #   moved += new_moved
+        #   removed += new_removed
+
+        #TODO, retrieve dir mtime here and store it later
+        #as long as Filenames() does not allow multiple iteration, we need to
+        #use this kludgy way to get a sorted list of filenames
+        #db_files is a list of subdirectories and filenames in this folder
+        db_files = set()
+        db_folders = set()
+        for subdir in db_dir.get_child_directories():
+           db_folders.add(os.path.normpath(subdir))
+        for file in db_dir.get_child_files():
+           db_files.add(file)
+
+        fs_files = set(os.listdir(db_dir.path))
+
+        #list of folders in both db and fs. Just descend into dirs
+        for fs_file in (fs_files | db_folders):
+           absfile = os.path.normpath(os.path.join(db_dir.path, fs_file))
+           if os.path.isdir(absfile):
+              #This is a directory
+              if fs_file in ['.notmuch','tmp','.']:
+                 continue
+              self._add_new_files_recursively(absfile, db)
+           # we are not interested in anything but directories here
+
+        #list of files and folders in the fs, but not the db
+        for fs_file in (fs_files - db_files):
+           absfile = os.path.normpath(os.path.join(db_dir.path, fs_file))
+           statinfo = os.stat(absfile)
+
+           if stat.S_ISDIR(statinfo.st_mode):
+              #This is a directory
+              if fs_file in ['.notmuch','.']:
+                 continue
+              print "descending into %s" % absfile
+              #self._add_new_files_recursively(absfile, db)
+           elif stat.S_ISLNK(statinfo.st_mode):
+              print ("%s is a symbolic link (%d)" % (absfile, statinfo.st_mode))
+           else:
+              print "This file needs to be added %s" % (absfile)
+              #TODO
+              #(msg, status) = db.add_message(os.path.join(db_dir.path, db_file))
+              #if status == STATUS.DUPLICATE_MESSAGE_ID:
+           #   #This message was already in the database, continue with next one
+           #   continue
+
+        #list of files and folders in the database, but not the filesystem
+        for db_file in (db_files - fs_files):
+           absfile = os.path.normpath(os.path.join(db_dir.path, db_file))
+           statinfo = os.stat(absfile)
+
+           if stat.S_ISDIR(statinfo.st_mode):
+              #This is a directory
+              if db_file in ['.notmuch', '.']:
+                 continue
+              print "descending into %s" % absfile
+              self._add_new_files_recursively(absfile, db)
+              #TODO, is there no way to REMOVE a directory entry from the db?
+           else:
+              #remove a mail message from the db
+              print ("%s is not on the fs anymore. Delete" % absfile)
+              status = db.remove_message(absfile)
+              if status == STATUS.SUCCESS:
+                 # we just deleted the last reference, so this was a remove
+                 removed += 1
+              elif status == STATUS.DUPLICATE_MESSAGE_ID:
+                 # The filename exists already somewhere else, so this is a move
+                 moved += 1
+              else: 
+                 print "This must not happen. %s " % (absfile)
+                 sys.exit(1)
+
+        return (added, moved, removed)
+        #Read the mtime of a directory from the filesystem
+        #
+        #* Call :meth:`Database.add_message` for all mail files in
+        #  the directory
+
+        #* Call notmuch_directory_set_mtime with the mtime read from the 
+        #  filesystem.  Then, when wanting to check for updates to the
+        #  directory in the future, the client can call :meth:`get_mtime`
+        #  and know that it only needs to add files if the mtime of the 
+        #  directory and files are newer than the stored timestamp.
+
+    def get_user_email_addresses(self):
+        """ Reads a user's notmuch config and returns his email addresses as
+	list (name, primary_address, other_address1,...)"""
         import email.utils
-        from ConfigParser import SafeConfigParser
-        config = SafeConfigParser()
-        conf_f = os.getenv('NOTMUCH_CONFIG',
-                           os.path.expanduser('~/.notmuch-config'))
-        config.read(conf_f)
-        if not config.has_option('user','name'): name = ""
-        else:name = config.get('user','name')
 
-        if not config.has_option('user','primary_email'): mail = ""
-        else:mail = config.get('user','primary_email')
+	#read the config file
+	config = self._get_user_notmuch_config()
 
-        if not config.has_option('user','other_email'): other = []
-        else:other = config.get('user','other_email').rstrip(';').split(';')
+	if not config.has_option('user','name'): name = ""
+	else:name = config.get('user','name')
 
-        other.insert(0, mail)
-        other.insert(0, name)
-        return other
-#-------------------------------------------------------------------------
-HELPTEXT="""The notmuch mail system.
+	if not config.has_option('user','primary_email'): mail = ""
+	else:mail = config.get('user','primary_email')
+
+	if not config.has_option('user','other_email'): other = []
+	else:other = config.get('user','other_email').rstrip(';').split(';')
+
+	other.insert(0, mail)
+	other.insert(0, name)
+	return other
+
+    def quote_msg_body(self, oldbody ,date, from_address):
+        """Transform a mail body into a quoted text, 
+        starting with On blah, x wrote:
+
+        :param body: a str with a mail body
+        :returns: The new payload of the email.message()
+        """
+        from cStringIO import StringIO
+
+        #we get handed a string, wrap it in a file-like object
+        oldbody = StringIO(oldbody)
+        newbody = StringIO()
+
+        newbody.write("On %s, %s wrote:\n" % (date, from_address))
+
+        for line in oldbody:
+           newbody.write("> " + line)
+
+        return newbody.getvalue()
+
+    def format_reply(self, msgs):
+        """Gets handed Messages() and displays the reply to them
+
+        This is pretty ugly and hacky. It tries to mimic the "real"
+        notmuch output as much as it can to pass the test suite. It
+        could deserve a healthy bit of love.  It is also buggy because
+        it returns after the first message it has handled."""
+        import email
+
+        for msg in msgs:
+           f = open(msg.get_filename(),"r")
+           reply = email.message_from_file(f)
+
+           #handle the easy non-multipart case:
+           if not reply.is_multipart():
+              reply.set_payload(self.quote_msg_body(reply.get_payload(),
+                                                   reply['date'],reply['from']))
+           else:
+              #handle the tricky multipart case
+              deleted = ""
+              """A string describing which nontext attachements that
+                 have been deleted"""
+              delpayloads = []
+              """A list of payload indices to be deleted"""
+
+              payloads = reply.get_payload()
+
+              for i, part in enumerate(payloads):
+
+                 mime_main = part.get_content_maintype()
+                 if mime_main not in ['multipart', 'message', 'text']:
+                    deleted += "Non-text part: %s\n" % (part.get_content_type())
+                    payloads[i].set_payload("Non-text part: %s" % (part.get_content_type()))
+                    payloads[i].set_type('text/plain')
+                    delpayloads.append(i)
+                 elif mime_main == 'text':
+                    payloads[i].set_payload(self.quote_msg_body(payloads[i].get_payload(),reply['date'],reply['from']))
+                 else:
+                    #TODO handle deeply nested multipart messages
+                    sys.stderr.write ("FIXME: Ignoring multipart part. Handle me\n")
+
+              # Delete those payloads that we don't need anymore
+              for i in reversed(sorted(delpayloads)):
+                 del payloads[i]
+
+        #Back to single- and multipart handling
+        my_addresses = self.get_user_email_addresses()
+        used_address = None
+        # filter our email addresses from all to: cc: and bcc: fields
+        # if we find one of "my" addresses being used, 
+        # it is stored in used_address
+        for header in ['To', 'CC', 'Bcc']:
+           if not header in reply:
+              #only handle fields that exist
+              continue
+           addresses = email.utils.getaddresses(reply.get_all(header,[]))
+           purged_addr = []
+           for name, mail in addresses:
+              if mail in my_addresses[1:]:
+                 used_address = email.utils.formataddr((my_addresses[0],mail))
+              else:
+                 purged_addr.append(email.utils.formataddr((name,mail)))
+
+           if len(purged_addr):
+              reply.replace_header(header, ", ".join(purged_addr))
+           else: 
+              #we deleted all addresses, delete the header
+              del reply[header]
+
+        # Use our primary email address to the From
+        # (save original from line, we still need it)
+        orig_from = reply['From']
+        del reply['From']
+        reply['From'] = used_address if used_address \
+            else email.utils.formataddr((my_addresses[0],my_addresses[1]))
+      
+        #reinsert the Subject after the From
+        orig_subject = reply['Subject']
+        del reply['Subject']
+        reply['Subject'] = 'Re: ' + orig_subject
+
+        # Calculate our new To: field
+        new_to = orig_from
+        # add all remaining original 'To' addresses
+        if 'To' in reply:
+           new_to += ", " + reply['To']
+        del reply['To']
+        reply.add_header('To', new_to)
+
+        # Add our primary email address to the BCC
+        new_bcc = my_addresses[1]
+        if reply.has_key('Bcc'):
+           new_bcc += ', '  + reply['Bcc']
+           del reply['Bcc']
+        reply['Bcc'] = new_bcc
+
+        # Set replies 'In-Reply-To' header to original's Message-ID
+        if reply.has_key('Message-ID') :
+           del reply['In-Reply-To']
+           reply['In-Reply-To'] = reply['Message-ID']
+
+        #Add original's Message-ID to replies 'References' header.
+        if reply.has_key('References'):
+           ref = reply['References'] + ' ' +reply['Message-ID']
+        else:
+           ref = reply['Message-ID']
+        del reply['References']
+        reply['References'] = ref
+      
+        # Delete the original Message-ID.
+        del(reply['Message-ID'])
+
+        # filter all existing headers but a few and delete them from 'reply'
+        delheaders = filter(lambda x: x not in ['From','To','Subject','CC',
+                                                'Bcc','In-Reply-To',
+                                                'References','Content-Type'],
+                            reply.keys())
+        map(reply.__delitem__, delheaders)
+
+        # TODO: OUCH, we return after the first msg we have handled rather than
+        # handle all of them
+        #return resulting message without Unixfrom
+        return reply.as_string(False)
+
+
+    HELPTEXT="""The notmuch mail system.
 
 Usage: notmuch <command> [args...]
 
@@ -89,18 +391,17 @@ Where <command> and [args...] are as follows:
 Use "notmuch help <command>" for more details on each command.
 And "notmuch help search-terms" for the common search-terms syntax.
 """
-#-------------------------------------------------------------------------
-#TODO: replace the dynamic pieces
-USAGE="""Notmuch is configured and appears to have a database. Excellent!
+
+    USAGE="""Notmuch is configured and appears to have a database. Excellent!
 
 At this point you can start exploring the functionality of notmuch by
 using commands such as:
 
 	notmuch search tag:inbox
 
-	notmuch search to:"Sebastian Spaeth"
+	notmuch search to:"%(fullname)s"
 
-	notmuch search from:"Sebastian@SSpaeth.de"
+	notmuch search from:"%(mailaddress)s"
 
 	notmuch search subject:"my favorite things"
 
@@ -115,178 +416,28 @@ And don't forget to run "notmuch new" whenever new mail arrives.
 
 Have fun, and may your inbox never have much mail.
 """
+
+# MAIN
 #-------------------------------------------------------------------------
-def quote_reply(oldbody ,date, from_address):
-   """Transform a mail body into a quote text starting with On blah, x wrote:
-   :param body: a str with a mail body
-   :returns: The new payload of the email.message()
-   """
-   from cStringIO import StringIO
-
-   #we get handed a string, wrap it in a file-like object
-   oldbody = StringIO(oldbody)
-   newbody = StringIO()
-
-   newbody.write("On %s, %s wrote:\n" % (date, from_address))
-
-   for line in oldbody:
-      newbody.write("> " + line)
-
-   return newbody.getvalue()
-    
-def format_reply(msgs):
-   """Gets handed Messages() and displays the reply to them"""
-   import email
-
-   for msg in msgs:
-      f = open(msg.get_filename(),"r")
-      reply = email.message_from_file(f)
-
-      #handle the easy non-multipart case:
-      if not reply.is_multipart():
-         reply.set_payload(quote_reply(reply.get_payload(),
-                                       reply['date'],reply['from']))
-      else:
-         #handle the tricky multipart case
-         deleted = ""
-         """A string describing which nontext attachements have been deleted"""
-         delpayloads = []
-         """A list of payload indices to be deleted"""
-
-         payloads = reply.get_payload()
-
-         for i, part in enumerate(payloads):
-
-            mime_main = part.get_content_maintype()
-            if mime_main not in ['multipart', 'message', 'text']:
-               deleted += "Non-text part: %s\n" % (part.get_content_type())
-               payloads[i].set_payload("Non-text part: %s" % (part.get_content_type()))
-               payloads[i].set_type('text/plain')
-               delpayloads.append(i)
-            else:
-               # payloads[i].set_payload("Text part: %s" % (part.get_content_type()))
-               payloads[i].set_payload(quote_reply(payloads[i].get_payload(),reply['date'],reply['from']))
-
-
-         # Delete those payloads that we don't need anymore
-         for i in reversed(sorted(delpayloads)):
-            del payloads[i]
-
-      #Back to single- and multipart handling
-
-      my_addresses = get_user_email_addresses()
-      used_address = None
-      # filter our email addresses from all to: cc: and bcc: fields
-      # if we find one of "my" addresses being used, 
-      # it is stored in used_address
-      for header in ['To', 'CC', 'Bcc']:
-         if not header in reply:
-            #only handle fields that exist
-            continue
-         addresses = email.utils.getaddresses(reply.get_all(header,[]))
-         purged_addr = []
-         for name, mail in addresses:
-            if mail in my_addresses[1:]:
-               used_address = email.utils.formataddr((my_addresses[0],mail))
-            else:
-               purged_addr.append(email.utils.formataddr((name,mail)))
-
-         if len(purged_addr):
-            reply.replace_header(header, ", ".join(purged_addr))
-         else: 
-            #we deleted all addresses, delete the header
-            del reply[header]
-
-      # Use our primary email address to the From
-      # (save original from line, we still need it)
-      orig_from = reply['From']
-      del reply['From']
-      reply['From'] = used_address if used_address \
-          else email.utils.formataddr((my_addresses[0],my_addresses[1]))
-      
-      #reinsert the Subject after the From
-      orig_subject = reply['Subject']
-      del reply['Subject']
-      reply['Subject'] = 'Re: ' + orig_subject
-
-      # Calculate our new To: field
-      new_to = orig_from
-      # add all remaining original 'To' addresses
-      if 'To' in reply:
-         new_to += ", " + reply['To']
-      del reply['To']
-      reply.add_header('To', new_to)
-
-      # Add our primary email address to the BCC
-      new_bcc = my_addresses[1]
-      if reply.has_key('Bcc'):
-         new_bcc += ', '  + reply['Bcc']
-         del reply['Bcc']
-      reply['Bcc'] = new_bcc
-
-      # Set replies 'In-Reply-To' header to original's Message-ID
-      if reply.has_key('Message-ID') :
-         del reply['In-Reply-To']
-         reply['In-Reply-To'] = reply['Message-ID']
-
-      #Add original's Message-ID to replies 'References' header.
-      if reply.has_key('References'):
-         ref = reply['References'] + ' ' +reply['Message-ID']
-      else:
-         ref = reply['Message-ID']
-      del reply['References']
-      reply['References'] = ref
-      
-      # Delete the original Message-ID.
-      del(reply['Message-ID'])
-
-      # filter all existing headers but a few and delete them from 'reply'
-      delheaders = filter(lambda x: x not in ['From','To','Subject','CC','Bcc',
-                                              'In-Reply-To', 'References',
-                                              'Content-Type'],reply.keys())
-      map(reply.__delitem__, delheaders)
-
-      """
-From: Sebastian Spaeth <Sebastian@SSpaeth.de>
-Subject: Re: Template =?iso-8859-1?b?Zvxy?= das Kochrezept
-In-Reply-To: <4A6D55F9.6040405@SSpaeth.de>
-References:  <4A6D55F9.6040405@SSpaeth.de>
-      """
-   #return without Unixfrom
-   return reply.as_string(False)
-#-------------------------------------------------------------------------
-def quote_query_line(argv):
-   #mangle arguments wrapping terms with spaces in quotes
-   for i in xrange(0,len(argv)):
-      if argv[i].find(' ') >= 0:
-         #if we use prefix:termWithSpaces, put quotes around term
-         m = PREFIX.match(argv[i])
-         if m:
-            argv[i] = '%s:"%s"' % (m.group(1), m.group(2))
-         else:
-            argv[i] = '"'+argv[i]+'"'
-   return ' '.join(argv)
-
 if __name__ == '__main__':
 
    # Handle command line options
    #-------------------------------------
    # No option given, print USAGE and exit
    if len(sys.argv) == 1:
-      print USAGE
+      Notmuch().cmd_usage()
    #-------------------------------------
    elif sys.argv[1] == 'setup':
        """Interactively setup notmuch for first use."""
        print "Not implemented."
    #-------------------------------------
    elif sys.argv[1] == 'new':
-       """ Interactively setup notmuch for first use. """
-       #print "Not implemented. We cheat by calling the proper notmuch"
-       call(['notmuch new'],shell=True)
+       """Check for new and removed messages."""
+       Notmuch().cmd_new()
    #-------------------------------------
    elif sys.argv[1] == 'help':
-       if len(sys.argv) == 2: print HELPTEXT
-       else: print "Not implemented"
+      """Print the help text"""
+      Notmuch().cmd_help(sys.argv[1:])
    #-------------------------------------
    elif sys.argv[1] == 'part':
       db = Database()
@@ -308,9 +459,7 @@ if __name__ == '__main__':
       if first_search_term:
           #mangle arguments wrapping terms with spaces in quotes
           querystr = quote_query_line(sys.argv[first_search_term:])
-
       
-      logging.debug("part "+querystr)
       qry = Query(db,querystr)
       msgs = qry.search_messages()
       msg_list = []
@@ -343,8 +492,6 @@ if __name__ == '__main__':
           #mangle arguments wrapping terms with spaces in quotes
           querystr = quote_query_line(sys.argv[first_search_term:])
 
-      
-      logging.debug("search "+querystr)
       qry = Query(db,querystr)
       if sort_order == "oldest-first":
 	 qry.set_sort(Query.SORT.OLDEST_FIRST)
@@ -383,7 +530,6 @@ if __name__ == '__main__':
           #mangle arguments wrapping terms with spaces in quotes
           querystr = quote_query_line(sys.argv[first_search_term:])
 
-      logging.debug("show "+querystr)
       t = Query(db,querystr).search_threads()
 
       first_toplevel=True
@@ -415,9 +561,8 @@ if __name__ == '__main__':
 
       #mangle arguments wrapping terms with spaces in quotes
       querystr = quote_query_line(sys.argv[2:])
-      logging.debug("reply "+querystr)
       msgs = Query(db,querystr).search_messages()
-      print (format_reply(msgs))
+      print (Notmuch().format_reply(msgs))
 
    #-------------------------------------
    elif sys.argv[1] == 'count':
@@ -445,7 +590,6 @@ if __name__ == '__main__':
       if sys.argv[2]=='--': sys.argv.pop(2)
       #the rest is search terms
       querystr = quote_query_line(sys.argv[2:])
-      logging.debug("tag search-term "+querystr)
       db = Database(mode=Database.MODE.READ_WRITE)
       m  = Query(db,querystr).search_messages()
       for msg in m:
@@ -460,7 +604,6 @@ if __name__ == '__main__':
       else:
          #mangle arguments wrapping terms with spaces in quotes
          querystr = quote_query_line(sys.argv[2:])
-         logging.debug("search-term "+querystr)
          db = Database()
          m  = Query(db,querystr).search_messages()
          print("\n".join([t for t in m.collect_tags()]))
