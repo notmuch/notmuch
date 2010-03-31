@@ -329,7 +329,7 @@ class Database(object):
         # Raise a NotmuchError if not initialized
         self._verify_initialized_db()
 
-        status = nmlib.notmuch_database_remove_message(self._db,
+        return nmlib.notmuch_database_remove_message(self._db,
                                                        filename)
 
     def find_message(self, msgid):
