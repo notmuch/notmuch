@@ -85,13 +85,7 @@ class Notmuch:
 
 
         #for folder in subdirs:
-        #   (new_added, new_moved, new_removed) = \
-        #           self._add_new_files_recursively(
-        #                  os.path.join(db_dir.path, folder), db)
-        #   added += new_added
-        #   moved += new_moved
-        #   removed += new_removed
-
+        
         #TODO, retrieve dir mtime here and store it later
         #as long as Filenames() does not allow multiple iteration, we need to
         #use this kludgy way to get a sorted list of filenames
@@ -99,68 +93,86 @@ class Notmuch:
         db_files = set()
         db_folders = set()
         for subdir in db_dir.get_child_directories():
-           db_folders.add(os.path.normpath(subdir))
+           db_folders.add(subdir)
         for file in db_dir.get_child_files():
            db_files.add(file)
 
         fs_files = set(os.listdir(db_dir.path))
 
-        #list of folders in both db and fs. Just descend into dirs
-        for fs_file in (fs_files | db_folders):
+        #list of files (and folders) on the fs, but not the db
+        for fs_file in ((fs_files - db_files) - db_folders):
            absfile = os.path.normpath(os.path.join(db_dir.path, fs_file))
-           if os.path.isdir(absfile):
+           statinfo = os.stat(absfile)
+
+           if stat.S_ISDIR(statinfo.st_mode):
               #This is a directory
               if fs_file in ['.notmuch','tmp','.']:
                  continue
-              self._add_new_files_recursively(absfile, db)
-           # we are not interested in anything but directories here
+              print "%s %s" % (fs_file, db_folders)
+              print "Directory not in db yet. Descending into %s" % absfile
+              (new_added, new_moved, new_removed) = \
+                  self._add_new_files_recursively(absfile, db)
+              added += new_added
+              moved += new_moved
+              removed += new_removed
 
-        #list of files and folders in the fs, but not the db
-        for fs_file in (fs_files - db_files):
-           absfile = os.path.normpath(os.path.join(db_dir.path, fs_file))
-           statinfo = os.stat(absfile)
-
-           if stat.S_ISDIR(statinfo.st_mode):
-              #This is a directory
-              if fs_file in ['.notmuch','.']:
-                 continue
-              print "descending into %s" % absfile
-              #self._add_new_files_recursively(absfile, db)
            elif stat.S_ISLNK(statinfo.st_mode):
-              print ("%s is a symbolic link (%d)" % (absfile, statinfo.st_mode))
+              print ("%s is a symbolic link (%d). FIXME!!!" % (absfile, statinfo.st_mode))
+              sys.exit()
            else:
+              #This is a regular file, not in the db yet. Add it.
               print "This file needs to be added %s" % (absfile)
-              #TODO
-              #(msg, status) = db.add_message(os.path.join(db_dir.path, db_file))
-              #if status == STATUS.DUPLICATE_MESSAGE_ID:
-           #   #This message was already in the database, continue with next one
-           #   continue
+              (msg, status) = db.add_message(absfile)
+              # We increases 'added', even on dupe messages. If it is a moved
+              # message, we will deduct it later and increase 'moved' instead
+              added += 1
 
-        #list of files and folders in the database, but not the filesystem
+              if status == STATUS.DUPLICATE_MESSAGE_ID:
+                 #This message was already in the database
+                 print "Added msg was in the db"
+              else:
+                 print "New message."
+
+        # Finally a list of files (not folders) in the database,
+        # but not the filesystem
         for db_file in (db_files - fs_files):
            absfile = os.path.normpath(os.path.join(db_dir.path, db_file))
-           statinfo = os.stat(absfile)
 
-           if stat.S_ISDIR(statinfo.st_mode):
-              #This is a directory
-              if db_file in ['.notmuch', '.']:
+           #remove a mail message from the db
+           print ("%s is not on the fs anymore. Delete" % absfile)
+           status = db.remove_message(absfile)
+           if status == STATUS.SUCCESS:
+              # we just deleted the last reference, so this was a remove
+              removed += 1
+              sys.stderr.write("SUCCESS %d %s %s.\n" % (status, STATUS.status2str(status), absfile))
+           elif status == STATUS.DUPLICATE_MESSAGE_ID:
+              # The filename exists already somewhere else, so this is a move
+              moved += 1
+              added -= 1
+              sys.stderr.write("DUPE %d %s %s.\n" % (status, STATUS.status2str(status), absfile))
+           else: 
+              #This should not occur
+              sys.stderr.write("This should not occur %d %s %s.\n" % (status, STATUS.status2str(status), absfile))
+
+        #list of folders in the filesystem. Just descend into dirs
+        for fs_file in fs_files:
+           absfile = os.path.normpath(os.path.join(db_dir.path, fs_file))
+           if os.path.isdir(absfile):
+              #This is a directory.
+              # Remove it from the db_folder list. All remaining db_folders
+              # at the end will be not present on the file system.
+              db_folders.remove(fs_file)
+              if fs_file in ['.notmuch','tmp','.']:
                  continue
-              print "descending into %s" % absfile
-              self._add_new_files_recursively(absfile, db)
-              #TODO, is there no way to REMOVE a directory entry from the db?
-           else:
-              #remove a mail message from the db
-              print ("%s is not on the fs anymore. Delete" % absfile)
-              status = db.remove_message(absfile)
-              if status == STATUS.SUCCESS:
-                 # we just deleted the last reference, so this was a remove
-                 removed += 1
-              elif status == STATUS.DUPLICATE_MESSAGE_ID:
-                 # The filename exists already somewhere else, so this is a move
-                 moved += 1
-              else: 
-                 print "This must not happen. %s " % (absfile)
-                 sys.exit(1)
+              (new_added, new_moved, new_removed) = \
+                  self._add_new_files_recursively(absfile, db)
+              added += new_added
+              moved += new_moved
+              removed += new_removed
+
+           # we are not interested in anything but directories here
+           #TODO: All remaining elements of db_folders are not in the filesystem
+           #delete those
 
         return (added, moved, removed)
         #Read the mtime of a directory from the filesystem

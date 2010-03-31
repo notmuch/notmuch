@@ -29,6 +29,7 @@ class Status(Enum):
         """
         super(Status, self).__init__(statuslist)
 
+    @classmethod
     def status2str(self, status):
         """Get a string representation of a notmuch_status_t value."""   
         # define strings for custom error messages
