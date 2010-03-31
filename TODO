@@ -33,6 +33,9 @@ has the "muted" tag).
 
 Fix i-search to open up invisible citations as necessary.
 
+Make '=' count from the end rather than from the beginning if more
+than half-way through the buffer.
+
 Emacs saved-search interface
 ----------------------------
 Here's a proposal Carl wrote (id:87einafy4u.fsf@yoom.home.cworth.org):
