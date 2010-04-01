@@ -105,11 +105,10 @@ notmuch.1.gz: notmuch.1
 	$(call quiet,gzip) --stdout $^ > $@
 
 install: all notmuch.1.gz
-	for d in $(DESTDIR)$(prefix)/bin/ $(DESTDIR)$(libdir)/ \
-		$(DESTDIR)$(prefix)/include/ $(DESTDIR)$(prefix)/share/man/man1 ; \
-	do \
-		install -d $$d ; \
-	done ;
+	install -d $(DESTDIR)$(prefix)/bin/
+	install -d $(DESTDIR)$(libdir)/
+	install -d $(DESTDIR)$(prefix)/include/
+	install -d $(DESTDIR)$(prefix)/share/man/man1
 	install notmuch $(DESTDIR)$(prefix)/bin/
 	install -m0644 notmuch.1.gz $(DESTDIR)$(prefix)/share/man/man1/
 ifeq ($(MAKECMDGOALS), install)

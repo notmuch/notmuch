@@ -6,14 +6,8 @@ emacs_bytecode := $(subst .el,.elc,$(emacs_sources))
 emacs: $(emacs_bytecode)
 
 install-emacs: install emacs
-	for d in $(DESTDIR)/$(emacs_lispdir) ; \
-	do \
-		install -d $$d ; \
-	done ;
-	for f in $(emacs_sources) $(emacs_bytecode); \
-	do \
-		install -m0644 $$f $(DESTDIR)$(emacs_lispdir) ;\
-	done;
+	install -d $(DESTDIR)/$(emacs_lispdir)
+	install -m0644 $(emacs_sources) $(emacs_bytecode) $(DESTDIR)$(emacs_lispdir)
 	@echo ""
 	@echo "The notmuch emacs client is now installed."
 	@echo ""
