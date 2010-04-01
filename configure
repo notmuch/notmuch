@@ -286,10 +286,10 @@ gzip = gzip
 MKDIR = install -d
 
 # Command to install an executable
-INSTBIN = install
+INSTALL-BIN = install
 
 # Command to install a non-executable file (documentation, etc.)
-INSTDATA = install -m0644
+INSTALL-DATA = install -m0644
 
 # Command to create a symbolic link
 SYMLINK = ln -sf
