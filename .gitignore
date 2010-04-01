@@ -5,6 +5,7 @@ tags
 *cscope*
 .deps
 notmuch
+notmuch-shared
 notmuch.1.gz
 libnotmuch.so*
 *.[ao]
