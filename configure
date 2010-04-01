@@ -298,19 +298,19 @@ WARN_CFLAGS=\$(WARN_CXXFLAGS) -Wmissing-declarations
 prefix = ${PREFIX}
 
 # The directory to which notmuch libraries should be installed
-libdir = ${LIBDIR:=$PREFIX/lib}
+libdir = ${LIBDIR:=\$(prefix)/lib}
 
 # The directory to which emacs lisp files should be installed
 emacs_lispdir=${emacs_lispdir}
 
 # The directory to which desktop files should be installed
-desktop_dir = \${prefix}/share/applications
+desktop_dir = \$(prefix)/share/applications
 
 # The directory to which bash completions files should be installed
 bash_completion_dir = /etc/bash_completion.d
 
 # The directory to which zsh completions files should be installed
-zsh_completion_dir = ${PREFIX}/share/zsh/functions/Completion/Unix
+zsh_completion_dir = \$(prefix)/share/zsh/functions/Completion/Unix
 
 # Whether the getline function is available (if not, then notmuch will
 # build its own version)
