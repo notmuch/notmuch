@@ -219,38 +219,35 @@ message at DEPTH in the current thread."
 
 ;; Functions handling particular MIME parts.
 
-(defun notmuch-show-mm-display-part-inline (part content-type)
-  "Use the mm-decode/mm-view functions to display a part inline, if possible."
-  (let ((handle (mm-make-handle nil (list content-type))))
-    (if (and (mm-inlinable-p handle)
-	     (mm-inlined-p handle))
-	(progn
-	  (insert (with-temp-buffer
-		    (let ((display-buffer (current-buffer)))
-		      (with-temp-buffer
-			(let ((work-buffer (current-buffer)))
-			  (insert (plist-get part :content))
-			  (set-buffer display-buffer)
-			  (mm-display-part (mm-make-handle work-buffer
-							   (list content-type)))
-			  (buffer-string))))))
-	  t)))
-  nil)
+(defun notmuch-show-mm-display-part-inline (msg part content-type content)
+  "Use the mm-decode/mm-view functions to display a part in the
+current buffer, if possible."
+  (let ((display-buffer (current-buffer)))
+    (with-temp-buffer
+      (insert content)
+      (let ((handle (mm-make-handle (current-buffer) (list content-type))))
+	(set-buffer display-buffer)
+	(if (and (mm-inlinable-p handle)
+		 (mm-inlined-p handle))
+	    (progn
+	      (mm-display-part handle)
+	      t)
+	  nil)))))
 
-(defun notmuch-show-insert-part-text/plain (part content-type nth depth declared-type)
+(defun notmuch-show-insert-part-text/plain (msg part content-type nth depth declared-type)
   (let ((start (point)))
     ;; If this text/plain part is not the first part in the message,
     ;; insert a header to make this clear.
     (if (> nth 1)
 	(notmuch-show-insert-part-header declared-type content-type (plist-get part :filename)))
-    (insert (plist-get part :content))
+    (insert (notmuch-show-get-bodypart-content msg part nth))
     (save-excursion
       (save-restriction
 	(narrow-to-region start (point-max))
 	(run-hook-with-args 'notmuch-show-insert-text/plain-hook depth))))
   t)
 
-(defun notmuch-show-insert-part-application/octet-stream (part content-type nth depth declared-type)
+(defun notmuch-show-insert-part-application/octet-stream (msg part content-type nth depth declared-type)
   ;; If we can deduce a MIME type from the filename of the attachment,
   ;; do so and pass it on to the handler for that type.
   (if (plist-get part :filename)
@@ -266,11 +263,12 @@ message at DEPTH in the current thread."
 		nil))
 	  nil))))
 
-(defun notmuch-show-insert-part-*/* (part content-type nth depth declared-type)
+(defun notmuch-show-insert-part-*/* (msg part content-type nth depth declared-type)
+  ;; This handler _must_ succeed - it is the handler of last resort.
   (notmuch-show-insert-part-header content-type declared-type (plist-get part :filename))
-  ;; If we have the content for the part, attempt to inline it.
-  (if (plist-get part :content)
-      (notmuch-show-mm-display-part-inline part content-type))
+  (let ((content (notmuch-show-get-bodypart-content msg part nth)))
+    (if content
+	(notmuch-show-mm-display-part-inline msg part content-type content)))
   t)
 
 ;; Functions for determining how to handle MIME parts.
@@ -293,30 +291,46 @@ message at DEPTH in the current thread."
 		(intern (concat "notmuch-show-insert-part-" content-type))))
     result))
 
+;; Helper for parts which are generally not included in the default
+;; JSON output.
+
+(defun notmuch-show-get-bodypart-internal (message-id part-number)
+  (with-temp-buffer
+    (let ((coding-system-for-read 'no-conversion))
+      (call-process notmuch-command nil t nil
+		    "part" (format "--part=%s" part-number) message-id)
+      (buffer-string))))
+
+(defun notmuch-show-get-bodypart-content (msg part nth)
+  (or (plist-get part :content)
+      (notmuch-show-get-bodypart-internal (concat "id:" (plist-get msg :id)) nth)))
+
 ;; 
 
-(defun notmuch-show-insert-bodypart-internal (part content-type nth depth declared-type)
+(defun notmuch-show-insert-bodypart-internal (msg part content-type nth depth declared-type)
   (let ((handlers (notmuch-show-handlers-for content-type)))
     ;; Run the content handlers until one of them returns a non-nil
     ;; value.
     (while (and handlers
-		(not (funcall (car handlers) part content-type nth depth declared-type)))
+		(not (funcall (car handlers) msg part content-type nth depth declared-type)))
       (setq handlers (cdr handlers))))
   t)
 
-(defun notmuch-show-insert-bodypart (part depth)
+(defun notmuch-show-insert-bodypart (msg part depth)
   "Insert the body part PART at depth DEPTH in the current thread."
   (let ((content-type (downcase (plist-get part :content-type)))
 	(nth (plist-get part :id)))
-    (notmuch-show-insert-bodypart-internal part content-type nth depth content-type))
+    (notmuch-show-insert-bodypart-internal msg part content-type nth depth content-type))
+  ;; Some of the body part handlers leave point somewhere up in the
+  ;; part, so we make sure that we're down at the end.
+  (goto-char (point-max))
   ;; Ensure that the part ends with a carriage return.
   (if (not (bolp))
-      (insert "\n"))
-  )
+      (insert "\n")))
 
-(defun notmuch-show-insert-body (body depth)
+(defun notmuch-show-insert-body (msg body depth)
   "Insert the body BODY at depth DEPTH in the current thread."
-  (mapc '(lambda (part) (notmuch-show-insert-bodypart part depth)) body))
+  (mapc '(lambda (part) (notmuch-show-insert-bodypart msg part depth)) body))
 
 (defun notmuch-show-make-symbol (type)
   (make-symbol (concat "notmuch-show-" type)))
@@ -355,7 +369,7 @@ message at DEPTH in the current thread."
     (setq headers-end (point-marker))
 
     (setq body-start (point-marker))
-    (notmuch-show-insert-body (plist-get msg :body) depth)
+    (notmuch-show-insert-body msg (plist-get msg :body) depth)
     ;; Ensure that the body ends with a newline.
     (if (not (bolp))
 	(insert "\n"))
