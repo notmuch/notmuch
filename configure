@@ -282,6 +282,18 @@ EMACS = emacs --quick
 # Command to execute gzip from Makefiles
 gzip = gzip
 
+# Command to create a directory
+MKDIR = install -d
+
+# Command to install an executable
+INSTBIN = install
+
+# Command to install a non-executable file (documentation, etc.)
+INSTDATA = install -m0644
+
+# Command to create a symbolic link
+SYMLINK = ln -sf
+
 # Default FLAGS for C compiler (can be overridden by user such as "make CFLAGS=-g")
 CFLAGS = ${CFLAGS}
 

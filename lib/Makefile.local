@@ -25,15 +25,15 @@ $(dir)/$(SONAME) : $(libnotmuch_modules)
 	$(call quiet,CXX,$(LDFLAGS)) $^ $(FINAL_LDFLAGS) -shared -Wl,-soname=$(SONAME) -o $@
 
 $(dir)/libnotmuch.so: $(dir)/$(SONAME)
-	ln -fs $(SONAME) $@
+	$(call quiet_symlink, $(SONAME) $@)
 
 install: install-$(dir)
 
 install-$(dir):
-	install -d $(DESTDIR)$(libdir)/
-	install $(dir)/$(SONAME) $(DESTDIR)$(libdir)/
-	install $(dir)/notmuch.h $(DESTDIR)$(prefix)/include/
-	ln -sf $(SONAME) $(DESTDIR)$(libdir)/libnotmuch.so
+	$(call quiet_mkdir, $(DESTDIR)$(libdir)/)
+	$(call quiet_install_data, $(dir)/$(SONAME) $(DESTDIR)$(libdir)/)
+	$(call quiet_install_data, $(dir)/notmuch.h $(DESTDIR)$(prefix)/include/)
+	$(call quiet_symlink, $(SONAME) $(DESTDIR)$(libdir)/libnotmuch.so)
 
 SRCS  := $(SRCS) $(libnotmuch_c_srcs) $(libnotmuch_cxx_srcs)
 CLEAN := $(CLEAN) $(libnotmuch_modules) $(dir)/$(SONAME) $(dir)/libnotmuch.so *.so

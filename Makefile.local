@@ -39,13 +39,21 @@ endif
 ifeq ($(V),)
 quiet_DOC := "Use \"$(MAKE) V=1\" to see the verbose compile lines.\n"
 quiet = @printf $(quiet_DOC)$(eval quiet_DOC:=)"  $1 $2	$@\n"; $($1)
+quiet_args = @printf $(quiet_DOC)$(eval quiet_DOC:=)"  $1		$2\n"; $($1) $2
 endif
 # The user has explicitly enabled quiet compilation.
 ifeq ($(V),0)
 quiet = @printf "  $1 $2	$@\n"; $($1)
+quiet_args = @printf "  $1		$2\n"; $($1) $2
 endif
 # Otherwise, print the full command line.
 quiet ?= $($1)
+quiet_args ?= $($1) $2
+
+quiet_mkdir = $(call quiet_args,MKDIR,$1)
+quiet_install_bin = $(call quiet_args,INSTBIN,$1)
+quiet_install_data = $(call quiet_args,INSTDATA,$1)
+quiet_symlink = $(call quiet_args,SYMLINK,$1)
 
 %.o: %.cc $(global_deps)
 	$(call quiet,CXX,$(CXXFLAGS)) -c $(FINAL_CXXFLAGS) $< -o $@
@@ -105,12 +113,12 @@ notmuch.1.gz: notmuch.1
 	$(call quiet,gzip) --stdout $^ > $@
 
 install: all notmuch.1.gz
-	install -d $(DESTDIR)$(prefix)/bin/
-	install -d $(DESTDIR)$(libdir)/
-	install -d $(DESTDIR)$(prefix)/include/
-	install -d $(DESTDIR)$(prefix)/share/man/man1
-	install notmuch $(DESTDIR)$(prefix)/bin/
-	install -m0644 notmuch.1.gz $(DESTDIR)$(prefix)/share/man/man1/
+	$(call quiet_mkdir, $(DESTDIR)$(prefix)/bin/)
+	$(call quiet_mkdir, $(DESTDIR)$(libdir)/)
+	$(call quiet_mkdir, $(DESTDIR)$(prefix)/include/)
+	$(call quiet_mkdir, $(DESTDIR)$(prefix)/share/man/man1)
+	$(call quiet_install_bin, notmuch $(DESTDIR)$(prefix)/bin/)
+	$(call quiet_install_data, notmuch.1.gz $(DESTDIR)$(prefix)/share/man/man1/)
 ifeq ($(MAKECMDGOALS), install)
 	@echo ""
 	@echo "Notmuch is now installed."
@@ -125,18 +133,16 @@ ifeq ($(MAKECMDGOALS), install)
 endif
 
 install-desktop:
-	install -d $(DESTDIR)$(desktop_dir)
+	$(call quiet,MKDIR) $(DESTDIR)$(desktop_dir)
 	desktop-file-install --mode 0644 --dir $(DESTDIR)$(desktop_dir) notmuch.desktop
 
 install-bash:
-	install -d $(DESTDIR)$(bash_completion_dir)
-	install -m0644 contrib/notmuch-completion.bash \
-		$(DESTDIR)$(bash_completion_dir)/notmuch
+	$(call quiet-mkdir, $(DESTDIR)$(bash_completion_dir))
+	$(call quiet_install_data, contrib/notmuch-completion.bash $(DESTDIR)$(bash_completion_dir)/notmuch)
 
 install-zsh:
-	install -d $(DESTDIR)$(zsh_completion_dir)
-	install -m0644 contrib/notmuch-completion.zsh \
-		$(DESTDIR)$(zsh_completion_dir)/notmuch
+	$(call quiet_mkdir, $(DESTDIR)$(zsh_completion_dir))
+	$(call quiet_install_data, contrib/notmuch-completion.zsh $(DESTDIR)$(zsh_completion_dir)/notmuch)
 
 SRCS  := $(SRCS) $(notmuch_client_srcs)
 CLEAN := $(CLEAN) notmuch $(notmuch_client_modules) notmuch.elc notmuch.1.gz
