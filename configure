@@ -53,7 +53,7 @@ command line.
 	--libdir=LIBDIR	Install libraries in LIBDIR [$LIBDIR]
 
 By default, "make install" will install the resulting program to
-$PREFIX/bin, documentation to $PREFIX/share, etc. You can
+$PREFIX/bin, documentation to $PREFIX/man, etc. You can
 specify an installation prefix other than $PREFIX using
 --prefix, for instance:
 
