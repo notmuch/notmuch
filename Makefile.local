@@ -22,7 +22,7 @@ FINAL_CFLAGS = $(CFLAGS) $(WARN_CFLAGS) $(CONFIGURE_CFLAGS) $(extra_cflags)
 FINAL_CXXFLAGS = $(CXXFLAGS) $(WARN_CXXFLAGS) $(CONFIGURE_CXXFLAGS) $(extra_cflags) $(extra_cxxflags)
 FINAL_LDFLAGS = $(LDFLAGS) $(CONFIGURE_LDFLAGS)
 
-all: notmuch notmuch.1.gz
+all: notmuch notmuch-shared notmuch.1.gz
 ifeq ($(MAKECMDGOALS),)
 	@echo ""
 	@echo "Compilation of notmuch is now complete. You can install notmuch with:"
@@ -106,7 +106,11 @@ notmuch_client_srcs =		\
 	json.c
 
 notmuch_client_modules = $(notmuch_client_srcs:.c=.o)
-notmuch: $(notmuch_client_modules) lib/libnotmuch.so
+
+notmuch: $(notmuch_client_modules) lib/libnotmuch.a
+	$(call quiet,CC,$(LDFLAGS)) $^ $(FINAL_LDFLAGS) -o $@
+
+notmuch-shared: $(notmuch_client_modules) lib/libnotmuch.so
 	$(call quiet,CC,$(LDFLAGS)) -Llib -lnotmuch $(notmuch_client_modules) $(FINAL_LDFLAGS) -o $@
 
 notmuch.1.gz: notmuch.1
@@ -117,7 +121,7 @@ install: all notmuch.1.gz
 	$(call quiet_mkdir, $(DESTDIR)$(libdir)/)
 	$(call quiet_mkdir, $(DESTDIR)$(prefix)/include/)
 	$(call quiet_mkdir, $(DESTDIR)$(prefix)/share/man/man1)
-	$(call quiet_install_bin, notmuch $(DESTDIR)$(prefix)/bin/)
+	$(call quiet_install_bin, notmuch-shared $(DESTDIR)$(prefix)/bin/notmuch)
 	$(call quiet_install_data, notmuch.1.gz $(DESTDIR)$(prefix)/share/man/man1/)
 ifeq ($(MAKECMDGOALS), install)
 	@echo ""
@@ -145,4 +149,4 @@ install-zsh:
 	$(call quiet_install_data, contrib/notmuch-completion.zsh $(DESTDIR)$(zsh_completion_dir)/notmuch)
 
 SRCS  := $(SRCS) $(notmuch_client_srcs)
-CLEAN := $(CLEAN) notmuch $(notmuch_client_modules) notmuch.elc notmuch.1.gz
+CLEAN := $(CLEAN) notmuch notmuch-shared $(notmuch_client_modules) notmuch.elc notmuch.1.gz
