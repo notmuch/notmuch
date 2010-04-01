@@ -107,7 +107,7 @@ notmuch_client_srcs =		\
 
 notmuch_client_modules = $(notmuch_client_srcs:.c=.o)
 notmuch: $(notmuch_client_modules) lib/libnotmuch.so
-	$(call quiet,CC,$(LDFLAGS)) -Llib -lnotmuch $(filter-out lib/libnotmuch.so,$^) $(FINAL_LDFLAGS) -o $@
+	$(call quiet,CC,$(LDFLAGS)) -Llib -lnotmuch $(notmuch_client_modules) $(FINAL_LDFLAGS) -o $@
 
 notmuch.1.gz: notmuch.1
 	$(call quiet,gzip) --stdout $^ > $@

@@ -1,4 +1,21 @@
-SONAME = libnotmuch.so.1
+# The major version of the library interface. This will control the soname.
+# As such, this number must be incremented for any incompatible change to
+# the library interface, (such as the deletion of an API or a major
+# semantic change that breaks formerly functioning code).
+LIBNOTMUCH_VERSION_MAJOR = 1
+
+# The minor version of the library interface. This should be incremented at
+# the time of release for any additions to the library interface.
+LIBNOTMUCH_VERSION_MINOR = 0
+
+# The release version the library interface. This should be incremented at
+# the time of release if there have been no changes to the interface, (but
+# simply compatible changes to the implementation).
+LIBNOTMUCH_VERSION_RELEASE = 0
+
+LINKER_NAME = libnotmuch.so
+SONAME = $(LINKER_NAME).$(LIBNOTMUCH_VERSION_MAJOR)
+LIBNAME = $(SONAME).$(LIBNOTMUCH_VERSION_MINOR).$(LIBNOTMUCH_VERSION_RELEASE)
 
 dir := lib
 extra_cflags += -I$(dir) -fPIC
@@ -21,19 +38,23 @@ libnotmuch_cxx_srcs =		\
 
 libnotmuch_modules = $(libnotmuch_c_srcs:.c=.o) $(libnotmuch_cxx_srcs:.cc=.o)
 
-$(dir)/$(SONAME) : $(libnotmuch_modules)
+$(dir)/$(LIBNAME) : $(libnotmuch_modules)
 	$(call quiet,CXX,$(LDFLAGS)) $^ $(FINAL_LDFLAGS) -shared -Wl,-soname=$(SONAME) -o $@
 
-$(dir)/libnotmuch.so: $(dir)/$(SONAME)
-	$(call quiet_symlink, $(SONAME) $@)
+$(dir)/$(SONAME): $(dir)/$(LIBNAME)
+	$(call quiet_symlink, $(LIBNAME) $@)
+
+$(dir)/$(LINKER_NAME): $(dir)/$(SONAME)
+	$(call quiet_symlink, $(LIBNAME) $@)
 
 install: install-$(dir)
 
 install-$(dir):
 	$(call quiet_mkdir, $(DESTDIR)$(libdir)/)
-	$(call quiet_install_data, $(dir)/$(SONAME) $(DESTDIR)$(libdir)/)
+	$(call quiet_install_data, $(dir)/$(LIBNAME) $(DESTDIR)$(libdir)/)
+	$(call quiet_symlink, $(LIBNAME) $(DESTDIR)$(libdir)/$(SONAME))
+	$(call quiet_symlink, $(LIBNAME) $(DESTDIR)$(libdir)/$(LINKER_NAME))
 	$(call quiet_install_data, $(dir)/notmuch.h $(DESTDIR)$(prefix)/include/)
-	$(call quiet_symlink, $(SONAME) $(DESTDIR)$(libdir)/libnotmuch.so)
 
 SRCS  := $(SRCS) $(libnotmuch_c_srcs) $(libnotmuch_cxx_srcs)
-CLEAN := $(CLEAN) $(libnotmuch_modules) $(dir)/$(SONAME) $(dir)/libnotmuch.so *.so
+CLEAN := $(CLEAN) $(libnotmuch_modules) $(dir)/$(SONAME) $(dir)/$(LINKER_NAME) $(dir)$(LIBNAME)
