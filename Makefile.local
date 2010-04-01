@@ -12,10 +12,6 @@ Makefile.config: configure
 	@echo ""
 	./configure
 
-SONAME = libnotmuch.so.1
-WARN_CXXFLAGS=-Wall -Wextra -Wwrite-strings -Wswitch-enum
-WARN_CFLAGS=$(WARN_CXXFLAGS) -Wmissing-declarations
-
 # Sub-directory Makefile.local fragments can append to these variables
 # to have directory-specific cflags as necessary.
 extra_cflags :=
@@ -25,15 +21,6 @@ extra_cxxflags :=
 FINAL_CFLAGS = $(CFLAGS) $(WARN_CFLAGS) $(CONFIGURE_CFLAGS) $(extra_cflags)
 FINAL_CXXFLAGS = $(CXXFLAGS) $(WARN_CXXFLAGS) $(CONFIGURE_CXXFLAGS) $(extra_cflags) $(extra_cxxflags)
 FINAL_LDFLAGS = $(LDFLAGS) $(CONFIGURE_LDFLAGS)
-
-# Additional programs that are used during the compilation process.
-EMACS ?= emacs --quick
-# Lowercase to avoid clash with GZIP environment variable for passing
-# arguments to gzip.
-gzip = gzip
-
-bash_completion_dir = /etc/bash_completion.d
-zsh_completion_dir = /usr/share/zsh/functions/Completion/Unix
 
 all: notmuch notmuch.1.gz
 ifeq ($(MAKECMDGOALS),)
@@ -116,6 +103,8 @@ notmuch: $(notmuch_client_modules) lib/libnotmuch.so
 
 notmuch.1.gz: notmuch.1
 	$(call quiet,gzip) --stdout $^ > $@
+
+SONAME = libnotmuch.so.1
 
 install: all notmuch.1.gz
 	for d in $(DESTDIR)$(prefix)/bin/ $(DESTDIR)$(libdir)/ \

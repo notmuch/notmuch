@@ -8,6 +8,13 @@ CFLAGS=${CFLAGS:--O2}
 CXXFLAGS=${CXXFLAGS:-\$(CFLAGS)}
 XAPIAN_CONFIG=${XAPIAN_CONFIG:-xapian-config-1.1 xapian-config}
 
+# We don't allow the EMACS or GZIP Makefile variables inherit values
+# from the environment as we do with CC and CXX above. The reason is
+# that these names as environment variables have existing uses other
+# than the program name that we want. (EMACS is set to 't' when a
+# shell is running within emacs and GZIP specifies arguments to pass
+# on the gzip command line).
+
 # Set the defaults for values the user can specify with command-line
 # options.
 PREFIX=/usr/local
@@ -269,11 +276,23 @@ CC = ${CC}
 # The C++ compiler to use
 CXX = ${CXX}
 
+# Command to execute emacs from Makefiles
+EMACS = emacs --quick
+
+# Command to execute gzip from Makefiles
+gzip = gzip
+
 # Default FLAGS for C compiler (can be overridden by user such as "make CFLAGS=-g")
 CFLAGS = ${CFLAGS}
 
 # Default FLAGS for C++ compiler (can be overridden by user such as "make CXXFLAGS=-g")
 CXXFLAGS = ${CXXFLAGS}
+
+# Flags to enable warnings when using the C++ compiler
+WARN_CXXFLAGS=-Wall -Wextra -Wwrite-strings -Wswitch-enum
+
+# Flags to enable warnings when using the C compiler
+WARN_CFLAGS=\$(WARN_CXXFLAGS) -Wmissing-declarations
 
 # The prefix to which notmuch should be installed
 prefix = ${PREFIX}
@@ -286,6 +305,12 @@ emacs_lispdir=${emacs_lispdir}
 
 # The directory to which desktop files should be installed
 desktop_dir = \${prefix}/share/applications
+
+# The directory to which bash completions files should be installed
+bash_completion_dir = /etc/bash_completion.d
+
+# The directory to which zsh completions files should be installed
+zsh_completion_dir = ${PREFIX}/share/zsh/functions/Completion/Unix
 
 # Whether the getline function is available (if not, then notmuch will
 # build its own version)
