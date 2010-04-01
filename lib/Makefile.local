@@ -1,3 +1,5 @@
+SONAME = libnotmuch.so.1
+
 dir := lib
 extra_cflags += -I$(dir) -fPIC
 
@@ -24,6 +26,14 @@ $(dir)/$(SONAME) : $(libnotmuch_modules)
 
 $(dir)/libnotmuch.so: $(dir)/$(SONAME)
 	ln -fs $(SONAME) $@
+
+install: install-$(dir)
+
+install-$(dir):
+	install -d $(DESTDIR)$(libdir)/
+	install $(dir)/$(SONAME) $(DESTDIR)$(libdir)/
+	install $(dir)/notmuch.h $(DESTDIR)$(prefix)/include/
+	ln -sf $(SONAME) $(DESTDIR)$(libdir)/libnotmuch.so
 
 SRCS  := $(SRCS) $(libnotmuch_c_srcs) $(libnotmuch_cxx_srcs)
 CLEAN := $(CLEAN) $(libnotmuch_modules) $(dir)/$(SONAME) $(dir)/libnotmuch.so *.so

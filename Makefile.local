@@ -104,8 +104,6 @@ notmuch: $(notmuch_client_modules) lib/libnotmuch.so
 notmuch.1.gz: notmuch.1
 	$(call quiet,gzip) --stdout $^ > $@
 
-SONAME = libnotmuch.so.1
-
 install: all notmuch.1.gz
 	for d in $(DESTDIR)$(prefix)/bin/ $(DESTDIR)$(libdir)/ \
 		$(DESTDIR)$(prefix)/include/ $(DESTDIR)$(prefix)/share/man/man1 ; \
@@ -113,9 +111,6 @@ install: all notmuch.1.gz
 		install -d $$d ; \
 	done ;
 	install notmuch $(DESTDIR)$(prefix)/bin/
-	install lib/$(SONAME) $(DESTDIR)$(libdir)/
-	install lib/notmuch.h $(DESTDIR)$(prefix)/include/
-	ln -sf $(SONAME) $(DESTDIR)$(libdir)/libnotmuch.so
 	install -m0644 notmuch.1.gz $(DESTDIR)$(prefix)/share/man/man1/
 ifeq ($(MAKECMDGOALS), install)
 	@echo ""
