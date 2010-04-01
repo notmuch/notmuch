@@ -42,7 +42,7 @@ quiet = @printf $(quiet_DOC)$(eval quiet_DOC:=)"  $1 $2	$@\n"; $($1)
 endif
 # The user has explicitly enabled quiet compilation.
 ifeq ($(V),0)
-quiet = @printf "  $1	$@\n"; $($1)
+quiet = @printf "  $1 $2	$@\n"; $($1)
 endif
 # Otherwise, print the full command line.
 quiet ?= $($1)
