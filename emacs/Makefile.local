@@ -1,7 +1,10 @@
 # -*- makefile -*-
 
 dir := emacs
-emacs_sources := $(dir)/notmuch.el
+emacs_sources := \
+	$(dir)/notmuch-lib.el \
+	$(dir)/notmuch.el \
+	$(dir)/notmuch-show.el
 
 emacs_bytecode := $(subst .el,.elc,$(emacs_sources))
 
