@@ -54,6 +54,7 @@ install-$(dir):
 	$(call quiet_install_data, $(dir)/$(LIBNAME) $(DESTDIR)$(libdir)/)
 	$(call quiet_symlink, $(LIBNAME) $(DESTDIR)$(libdir)/$(SONAME))
 	$(call quiet_symlink, $(LIBNAME) $(DESTDIR)$(libdir)/$(LINKER_NAME))
+	$(call quiet_mkdir, $(DESTDIR)$(prefix)/include/)
 	$(call quiet_install_data, $(dir)/notmuch.h $(DESTDIR)$(prefix)/include/)
 
 SRCS  := $(SRCS) $(libnotmuch_c_srcs) $(libnotmuch_cxx_srcs)
