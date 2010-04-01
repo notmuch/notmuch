@@ -78,7 +78,7 @@ quiet_symlink = $(call quiet_args,SYMLINK,$1)
 	$(call quiet,CC,$(CFLAGS)) -c $(FINAL_CFLAGS) $< -o $@
 
 %.elc: %.el
-	$(call quiet,EMACS) -batch -f batch-byte-compile $<
+	$(call quiet,EMACS) --directory emacs -batch -f batch-byte-compile $<
 
 .deps/%.d: %.c $(global_deps)
 	@set -e; rm -f $@; mkdir -p $$(dirname $@) ; \
