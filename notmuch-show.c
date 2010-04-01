@@ -236,9 +236,6 @@ format_part_text (GMimeObject *part, int *part_count)
 {
     GMimeContentDisposition *disposition;
     GMimeContentType *content_type;
-    GMimeStream *stream_stdout = g_mime_stream_file_new (stdout);
-
-    g_mime_stream_file_set_owner (GMIME_STREAM_FILE (stream_stdout), FALSE);
 
     disposition = g_mime_object_get_content_disposition (part);
     if (disposition &&
@@ -256,13 +253,13 @@ format_part_text (GMimeObject *part, int *part_count)
 	if (g_mime_content_type_is_type (content_type, "text", "*") &&
 	    !g_mime_content_type_is_type (content_type, "text", "html"))
 	{
+	    GMimeStream *stream_stdout = g_mime_stream_file_new (stdout);
+	    g_mime_stream_file_set_owner (GMIME_STREAM_FILE (stream_stdout), FALSE);
 	    show_part_content (part, stream_stdout);
+	    g_object_unref(stream_stdout);
 	}
 
 	printf ("\fattachment}\n");
-
-	if (stream_stdout)
-	    g_object_unref(stream_stdout);
 
 	return;
     }
@@ -276,7 +273,10 @@ format_part_text (GMimeObject *part, int *part_count)
     if (g_mime_content_type_is_type (content_type, "text", "*") &&
 	!g_mime_content_type_is_type (content_type, "text", "html"))
     {
+	GMimeStream *stream_stdout = g_mime_stream_file_new (stdout);
+	g_mime_stream_file_set_owner (GMIME_STREAM_FILE (stream_stdout), FALSE);
 	show_part_content (part, stream_stdout);
+	g_object_unref(stream_stdout);
     }
     else
     {
@@ -285,9 +285,6 @@ format_part_text (GMimeObject *part, int *part_count)
     }
 
     printf ("\fpart}\n");
-
-    if (stream_stdout)
-	g_object_unref(stream_stdout);
 }
 
 static void
