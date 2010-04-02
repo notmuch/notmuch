@@ -124,7 +124,7 @@ command_t commands[] = {
       "\t\tthe setup command has not previously been completed." },
     { "new", notmuch_new_command,
       "[--verbose]",
-      "\t\tFind and import new messages to the notmuch database.",
+      "Find and import new messages to the notmuch database.",
       "\t\tScans all sub-directories of the mail directory, performing\n"
       "\t\tfull-text indexing on new messages that are found. Each new\n"
       "\t\tmessage will be tagged as both \"inbox\" and \"unread\".\n"
@@ -150,7 +150,7 @@ command_t commands[] = {
       "\t\tnot previously been run." },
     { "search", notmuch_search_command,
       "[options...] <search-terms> [...]",
-      "\t\tSearch for messages matching the given search terms.",
+      "Search for messages matching the given search terms.",
       "\t\tNote that the individual mail messages will be matched\n"
       "\t\tagainst the search terms, but the results will be the\n"
       "\t\tthreads (one per line) containing the matched messages.\n"
@@ -172,7 +172,7 @@ command_t commands[] = {
       "\t\tterms syntax." },
     { "show", notmuch_show_command,
       "<search-terms> [...]",
-      "\t\tShow all messages matching the search terms.",
+      "Show all messages matching the search terms.",
       "\t\tThe messages are grouped and sorted based on the threading\n"
       "\t\t(all replies to a particular message appear immediately\n"
       "\t\tafter that message in date order).\n"
@@ -213,7 +213,7 @@ command_t commands[] = {
       "\t\tterms syntax." },
     { "count", notmuch_count_command,
       "<search-terms> [...]",
-      "\t\tCount messages matching the search terms.",
+      "Count messages matching the search terms.",
       "\t\tThe number of matching messages is output to stdout.\n"
       "\n"
       "\t\tA common use of \"notmuch count\" is to display the count\n"
@@ -224,7 +224,7 @@ command_t commands[] = {
       "\t\tterms syntax." },
     { "reply", notmuch_reply_command,
       "[options...] <search-terms> [...]",
-      "\t\tConstruct a reply template for a set of messages.",
+      "Construct a reply template for a set of messages.",
       "\t\tConstructs a new message as a reply to a set of existing\n"
       "\t\tmessages. The Reply-To: header (if any, otherwise From:) is\n"
       "\t\tused for the To: address. The To: and Cc: headers are copied,\n"
@@ -252,7 +252,7 @@ command_t commands[] = {
       "\t\tterms syntax." },
     { "tag", notmuch_tag_command,
       "+<tag>|-<tag> [...] [--] <search-terms> [...]",
-      "\t\tAdd/remove tags for all messages matching the search terms.",
+      "Add/remove tags for all messages matching the search terms.",
       "\t\tThe search terms are handled exactly as in 'search' so one\n"
       "\t\tcan use that command first to see what will be modified.\n"
       "\n"
@@ -270,7 +270,7 @@ command_t commands[] = {
       "\t\tterms syntax." },
     { "dump", notmuch_dump_command,
       "[<filename>]",
-      "\t\tCreate a plain-text dump of the tags for each message.",
+      "Create a plain-text dump of the tags for each message.",
       "\t\tOutput is to the given filename, if any, or to stdout.\n"
       "\t\tThese tags are the only data in the notmuch database\n"
       "\t\tthat can't be recreated from the messages themselves.\n"
@@ -279,7 +279,7 @@ command_t commands[] = {
       "\t\tincremental backup than the native database files.)" },
     { "restore", notmuch_restore_command,
       "<filename>",
-      "\t\tRestore the tags from the given dump file (see 'dump').",
+      "Restore the tags from the given dump file (see 'dump').",
       "\t\tNote: The dump file format is specifically chosen to be\n"
       "\t\tcompatible with the format of files produced by sup-dump.\n"
       "\t\tSo if you've previously been using sup for mail, then the\n"
@@ -287,7 +287,7 @@ command_t commands[] = {
       "\t\tall of your tags (or labels as sup calls them)." },
     { "search-tags", notmuch_search_tags_command,
       "[<search-terms> [...] ]",
-      "\t\tList all tags found in the database or matching messages.",
+      "List all tags found in the database or matching messages.",
       "\t\tRun this command without any search-term(s) to obtain a list\n"
       "\t\tof all tags found in the database. If you provide one or more\n"
       "\t\tsearch-terms as argument(s) then the resulting list will\n"
@@ -296,7 +296,7 @@ command_t commands[] = {
       "\t\tIn both cases the list will be alphabetically sorted." },
     { "help", notmuch_help_command,
       "[<command>]",
-      "\t\tThis message, or more detailed help for the named command.",
+      "This message, or more detailed help for the named command.",
       "\t\tExcept in this case, where there's not much more detailed\n"
       "\t\thelp available." }
 };
@@ -312,23 +312,20 @@ usage (FILE *out)
 	     "       notmuch --version\n"
 	     "       notmuch <command> [args...]\n");
     fprintf (out, "\n");
-    fprintf (out, "Where <command> and [args...] are as follows:\n");
+    fprintf (out, "The available commands are as follows:\n");
     fprintf (out, "\n");
 
     for (i = 0; i < ARRAY_SIZE (commands); i++) {
 	command = &commands[i];
 
-	if (command->arguments)
-	    fprintf (out, "\t%s\t%s\n\n%s\n\n",
-		     command->name, command->arguments, command->summary);
-	else
-	    fprintf (out, "\t%s\t%s\n\n",
-		     command->name, command->summary);
+	fprintf (out, "  %-11s  %s\n",
+		 command->name, command->summary);
     }
 
+    fprintf (out, "\n");
     fprintf (out,
-    "Use \"notmuch help <command>\" for more details on each command.\n"
-    "And \"notmuch help search-terms\" for the common search-terms syntax.\n\n");
+    "Use \"notmuch help <command>\" for more details on each command\n"
+    "and \"notmuch help search-terms\" for the common search-terms syntax.\n\n");
 }
 
 static int
@@ -349,7 +346,7 @@ notmuch_help_command (unused (void *ctx), int argc, char *argv[])
 	if (strcmp (argv[0], command->name) == 0) {
 	    printf ("Help for \"notmuch %s\":\n\n", argv[0]);
 	    if (command->arguments)
-		printf ("\t%s\t%s\n\n%s\n\n%s\n\n",
+		printf ("\t%s\t%s\n\n\t\t%s\n\n%s\n\n",
 			command->name, command->arguments,
 			command->summary, command->documentation);
 	    else
