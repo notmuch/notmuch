@@ -307,7 +307,9 @@ usage (FILE *out)
     command_t *command;
     unsigned int i;
 
-    fprintf (out, "Usage: notmuch <command> [args...]\n");
+    fprintf (out,
+	     "Usage: notmuch --help\n"
+	     "       notmuch <command> [args...]\n");
     fprintf (out, "\n");
     fprintf (out, "Where <command> and [args...] are as follows:\n");
     fprintf (out, "\n");
@@ -456,6 +458,9 @@ main (int argc, char *argv[])
 
     if (argc == 1)
 	return notmuch (local);
+
+    if (STRNCMP_LITERAL (argv[1], "--help") == 0)
+	return notmuch_help_command (NULL, 0, NULL);
 
     for (i = 0; i < ARRAY_SIZE (commands); i++) {
 	command = &commands[i];
