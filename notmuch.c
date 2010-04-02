@@ -294,6 +294,17 @@ command_t commands[] = {
       "\tcontain tags only from messages that match the search-term(s).\n"
       "\n"
       "\tIn both cases the list will be alphabetically sorted." },
+    { "part", notmuch_part_command,
+      "--part=<num> <search-terms>",
+      "Output a single MIME part of a message.",
+      "\tA single decoded MIME part, with no encoding or framing,\n"
+      "\tis output to stdout. The search terms must match only a single\n"
+      "\tmessage, otherwise this command will fail.\n"
+      "\n"
+      "\tThe part number should match the part \"id\" field output\n"
+      "\tby the \"--format=json\" option of \"notmuch show\". If the\n"
+      "\tmessage specified by the search terms does not include a\n"
+      "\tpart with the specified \"id\" there will be no output." },
     { "help", notmuch_help_command,
       "[<command>]",
       "This message, or more detailed help for the named command.",

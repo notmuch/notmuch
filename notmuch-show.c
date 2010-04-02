@@ -139,11 +139,17 @@ format_message_json (const void *ctx, notmuch_message_t *message, unused (int in
     notmuch_tags_t *tags;
     int first = 1;
     void *ctx_quote = talloc_new (ctx);
+    time_t date;
+    const char *relative_date;
 
-    printf ("\"id\": %s, \"match\": %s, \"filename\": %s, \"tags\": [",
+    date = notmuch_message_get_date (message);
+    relative_date = notmuch_time_relative_date (ctx, date);
+
+    printf ("\"id\": %s, \"match\": %s, \"filename\": %s, \"date_unix\": %ld, \"date_relative\": \"%s\", \"tags\": [",
 	    json_quote_str (ctx_quote, notmuch_message_get_message_id (message)),
 	    notmuch_message_get_flag (message, NOTMUCH_MESSAGE_FLAG_MATCH) ? "true" : "false",
-	    json_quote_str (ctx_quote, notmuch_message_get_filename (message)));
+	    json_quote_str (ctx_quote, notmuch_message_get_filename (message)),
+	    date, relative_date);
 
     for (tags = notmuch_message_get_tags (message);
 	 notmuch_tags_valid (tags);
@@ -495,4 +501,79 @@ notmuch_show_command (void *ctx, unused (int argc), unused (char *argv[]))
     notmuch_database_close (notmuch);
 
     return 0;
+}
+
+int
+notmuch_part_command (void *ctx, unused (int argc), unused (char *argv[]))
+{
+	notmuch_config_t *config;
+	notmuch_database_t *notmuch;
+	notmuch_query_t *query;
+	notmuch_messages_t *messages;
+	notmuch_message_t *message;
+	char *query_string;
+	int i;
+	int part = 0;
+
+	for (i = 0; i < argc && argv[i][0] == '-'; i++) {
+		if (strcmp (argv[i], "--") == 0) {
+			i++;
+			break;
+		}
+		if (STRNCMP_LITERAL (argv[i], "--part=") == 0) {
+			part = atoi(argv[i] + sizeof ("--part=") - 1);
+		} else {
+			fprintf (stderr, "Unrecognized option: %s\n", argv[i]);
+			return 1;
+		}
+	}
+
+	argc -= i;
+	argv += i;
+
+	config = notmuch_config_open (ctx, NULL, NULL);
+	if (config == NULL)
+		return 1;
+
+	query_string = query_string_from_args (ctx, argc, argv);
+	if (query_string == NULL) {
+		fprintf (stderr, "Out of memory\n");
+		return 1;
+	}
+
+	if (*query_string == '\0') {
+		fprintf (stderr, "Error: notmuch part requires at least one search term.\n");
+		return 1;
+	}
+
+	notmuch = notmuch_database_open (notmuch_config_get_database_path (config),
+					 NOTMUCH_DATABASE_MODE_READ_ONLY);
+	if (notmuch == NULL)
+		return 1;
+
+	query = notmuch_query_create (notmuch, query_string);
+	if (query == NULL) {
+		fprintf (stderr, "Out of memory\n");
+		return 1;
+	}
+
+	if (notmuch_query_count_messages (query) != 1) {
+		fprintf (stderr, "Error: search term did not match precisely one message.\n");
+		return 1;
+	}
+
+	messages = notmuch_query_search_messages (query);
+	message = notmuch_messages_get (messages);
+
+	if (message == NULL) {
+		fprintf (stderr, "Error: cannot find matching message.\n");
+		return 1;
+	}
+
+	show_one_part (notmuch_message_get_filename (message), part);
+
+	notmuch_query_destroy (query);
+	notmuch_database_close (notmuch);
+
+	return 0;
 }

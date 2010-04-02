@@ -110,6 +110,9 @@ notmuch_tag_command (void *ctx, int argc, char *argv[]);
 int
 notmuch_search_tags_command (void *ctx, int argc, char *argv[]);
 
+int
+notmuch_part_command (void *ctx, int argc, char *argv[]);
+
 const char *
 notmuch_time_relative_date (const void *ctx, time_t then);
 
@@ -125,6 +128,9 @@ query_string_from_args (void *ctx, int argc, char *argv[]);
 notmuch_status_t
 show_message_body (const char *filename,
 		   void (*show_part) (GMimeObject *part, int *part_count));
+
+notmuch_status_t
+show_one_part (const char *filename, int part);
 
 char *
 json_quote_str (const void *ctx, const char *str);
