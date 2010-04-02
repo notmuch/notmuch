@@ -1,3 +1,15 @@
+# Here's the (hopefully simple) versioning scheme.
+#
+# Releases of notmuch have a two-digit version (0.1, 0.2, etc.). We
+# increment the second digit for each release and increment the first
+# digit when we reach particularly major milestones of usability.
+#
+# Between releases, (such as when compiling notmuch from the git
+# repository), we add a third digit, (0.1.1, 0.1.2, etc.), and
+# increment it occasionally, (such as after a big batch of commits are
+# merged.
+NOTMUCH_VERSION=0.1
+
 # Get settings from the output of configure by running it to generate
 # Makefile.config if it doesn't exist yet. And add Makefile.config to
 # our global dependency list.
@@ -18,7 +30,7 @@ extra_cflags :=
 extra_cxxflags :=
 
 # Smash together user's values with our extra values
-FINAL_CFLAGS = $(CFLAGS) $(WARN_CFLAGS) $(CONFIGURE_CFLAGS) $(extra_cflags)
+FINAL_CFLAGS = -DNOTMUCH_VERSION=$(NOTMUCH_VERSION) $(CFLAGS) $(WARN_CFLAGS) $(CONFIGURE_CFLAGS) $(extra_cflags)
 FINAL_CXXFLAGS = $(CXXFLAGS) $(WARN_CXXFLAGS) $(CONFIGURE_CXXFLAGS) $(extra_cflags) $(extra_cxxflags)
 FINAL_LDFLAGS = $(LDFLAGS) $(CONFIGURE_LDFLAGS)
 

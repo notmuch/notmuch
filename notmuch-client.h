@@ -51,6 +51,9 @@
 
 #define unused(x) x __attribute__ ((unused))
 
+#define STRINGIFY(s) STRINGIFY_(s)
+#define STRINGIFY_(s) #s
+
 /* There's no point in continuing when we've detected that we've done
  * something wrong internally (as opposed to the user passing in a
  * bogus value).

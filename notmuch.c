@@ -309,6 +309,7 @@ usage (FILE *out)
 
     fprintf (out,
 	     "Usage: notmuch --help\n"
+	     "       notmuch --version\n"
 	     "       notmuch <command> [args...]\n");
     fprintf (out, "\n");
     fprintf (out, "Where <command> and [args...] are as follows:\n");
@@ -461,6 +462,11 @@ main (int argc, char *argv[])
 
     if (STRNCMP_LITERAL (argv[1], "--help") == 0)
 	return notmuch_help_command (NULL, 0, NULL);
+
+    if (STRNCMP_LITERAL (argv[1], "--version") == 0) {
+	printf ("notmuch version " STRINGIFY(NOTMUCH_VERSION) "\n");
+	return 0;
+    }
 
     for (i = 0; i < ARRAY_SIZE (commands); i++) {
 	command = &commands[i];
