@@ -36,6 +36,8 @@ FINAL_LDFLAGS = $(LDFLAGS) $(CONFIGURE_LDFLAGS)
 
 all: notmuch notmuch-shared notmuch.1.gz
 ifeq ($(MAKECMDGOALS),)
+ifeq ($(shell cat .first-build-message),)
+	@NOTMUCH_FIRST_BUILD=1 $(MAKE) --no-print-directory all
 	@echo ""
 	@echo "Compilation of notmuch is now complete. You can install notmuch with:"
 	@echo ""
@@ -44,6 +46,8 @@ ifeq ($(MAKECMDGOALS),)
 	@echo "Note that depending on the prefix to which you are installing"
 	@echo "you may need root permission (such as \"sudo make install\")."
 	@echo "See \"./configure --help\" for help on setting an alternate prefix."
+	@echo Printed > .first-build-message
+endif
 endif
 
 # The user has not set any verbosity, default to quiet mode and inform the
