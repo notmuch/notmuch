@@ -1733,7 +1733,8 @@ Currently available key bindings:
 (defun notmuch-folder-count (search)
   (car (process-lines notmuch-command "count" search)))
 
-(setq notmuch-folder-show-empty t)
+(defvar notmuch-folder-show-empty t
+  "Whether `notmuch-folder-mode' should display empty folders.")
 
 (defun notmuch-folder-show-empty-toggle ()
   "Toggle the listing of empty folders"
