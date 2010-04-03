@@ -121,6 +121,13 @@ file.
 Allow configuration for filename patterns that should be ignored when
 indexing.
 
+Replace the "notmuch part --part=id" command with "notmuch show
+--part=id", (David Edmonson wants to rewrite some of "notmuch show" to
+provide more MIME-structure information in its output first).
+
+Replace the "notmuch search-tags" command with "notmuch search
+--output=tags".
+
 notmuch library
 ---------------
 Add an interface to accept a "key" and a byte stream, rather than a
