@@ -9,8 +9,10 @@ emacs_sources := \
 
 emacs_bytecode := $(subst .el,.elc,$(emacs_sources))
 
+.PHONY: emacs
 emacs: $(emacs_bytecode)
 
+.PHONY: install-emacs
 install-emacs: install emacs
 	$(call quiet_mkdir, $(DESTDIR)/$(emacs_lispdir))
 	$(call quiet_install_data, $(emacs_sources) $(emacs_bytecode) $(DESTDIR)$(emacs_lispdir))

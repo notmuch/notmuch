@@ -36,6 +36,7 @@ FINAL_CFLAGS = -DNOTMUCH_VERSION=$(NOTMUCH_VERSION) $(CFLAGS) $(WARN_CFLAGS) $(C
 FINAL_CXXFLAGS = $(CXXFLAGS) $(WARN_CXXFLAGS) $(CONFIGURE_CXXFLAGS) $(extra_cflags) $(extra_cxxflags)
 FINAL_LDFLAGS = $(LDFLAGS) $(CONFIGURE_LDFLAGS)
 
+.PHONY: all
 all: notmuch notmuch-shared notmuch.1.gz
 ifeq ($(MAKECMDGOALS),)
 ifeq ($(shell cat .first-build-message),)
@@ -134,6 +135,7 @@ notmuch-shared: $(notmuch_client_modules) lib/libnotmuch.so
 notmuch.1.gz: notmuch.1
 	$(call quiet,gzip) --stdout $^ > $@
 
+.PHONY: install
 install: all notmuch.1.gz
 	$(call quiet_mkdir, $(DESTDIR)$(prefix)/bin/)
 	$(call quiet_mkdir, $(DESTDIR)$(libdir)/)
@@ -154,14 +156,17 @@ ifeq ($(MAKECMDGOALS), install)
 	@echo ""
 endif
 
+.PHONY: install-desktop
 install-desktop:
 	$(call quiet,MKDIR) $(DESTDIR)$(desktop_dir)
 	desktop-file-install --mode 0644 --dir $(DESTDIR)$(desktop_dir) notmuch.desktop
 
+.PHONY: install-bash
 install-bash:
 	$(call quiet-mkdir, $(DESTDIR)$(bash_completion_dir))
 	$(call quiet_install_data, contrib/notmuch-completion.bash $(DESTDIR)$(bash_completion_dir)/notmuch)
 
+.PHONY: install-zsh
 install-zsh:
 	$(call quiet_mkdir, $(DESTDIR)$(zsh_completion_dir))
 	$(call quiet_install_data, contrib/notmuch-completion.zsh $(DESTDIR)$(zsh_completion_dir)/notmuch)
