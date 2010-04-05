@@ -12,6 +12,11 @@
 # merged.
 NOTMUCH_VERSION=0.1
 
+RELEASE_HOST=notmuchmail.org
+RELEASE_DIR=/srv/notmuchmail.org/www/releases
+VERSIONED_PACKAGE=notmuch-$(NOTMUCH_VERSION)
+TAR_FILE=$(VERSIONED_PACKAGE).tar.gz
+
 # Get settings from the output of configure by running it to generate
 # Makefile.config if it doesn't exist yet. And add Makefile.config to
 # our global dependency list.
@@ -55,8 +60,28 @@ endif
 
 .PHONY: dist
 dist:
-	git archive --format=tar --prefix=notmuch-$(NOTMUCH_VERSION)/ HEAD | gzip > notmuch-$(NOTMUCH_VERSION).tar.gz
-	@echo "Source is ready for release in notmuch-$(NOTMUCH_VERSION).tar.gz"
+	git archive --format=tar --prefix=$(VERSIONED_PACKAGE)/ HEAD | gzip > $(TAR_FILE)
+	@echo "Source is ready for release in $(TAR_FILE)"
+
+.PHONY: release
+release: release-verify-newer
+
+.PHONY: release-verify-version
+release-verify-version:
+	@echo -n "Checking that $(NOTMUCH_VERSION) is a two-component version..."
+	@if echo $(NOTMUCH_VERSION) | grep -q -v -x '[0-9]*\.[0-9]*'; then \
+		(echo "Ouch." && \
+	         echo "Before releasing the notmuch version should be a two-component value." && false);\
+	 else :; fi
+	@echo "Good."
+
+.PHONY: release-verify-newer
+release-verify-newer: release-verify-version
+	@echo -n "Checking that no $(NOTMUCH_VERSION) release already exists..."
+	@ssh $(RELEASE_HOST) test ! -e $(RELEASE_DIR)/$(TAR_FILE) \
+		|| (echo "Ouch." && echo "Found: $(RELEASE_HOST):$(RELEASE_DIR)/$(TAR_FILE)" \
+		&& echo "Refusing to replace an existing release." && false)
+	@echo "Good."
 
 # The user has not set any verbosity, default to quiet mode and inform the
 # user how to enable verbose compiles.
