@@ -60,6 +60,7 @@ Here are the steps to follow to create a new notmuch release:
 	  the tag with your GPG key (asks for your GPG password, and you
 	  may need to set GIT_COMMITTER_NAME and GIT_COMMITTER_EMAIL to match
 	  your public-key's setting or this fails.)
+	* Push that tag
 	* Provide some text for the release announcement (see below).
 	  If for some reason you lost this message, "make release-publish-message"
 	  prints it for you.

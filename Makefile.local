@@ -81,6 +81,7 @@ release: release-verify-newer $(TAR_FILE) $(SHA1_FILE) $(GPG_FILE)
 	mv $(TAR_FILE) $(SHA1_FILE) $(GPG_FILE) releases
 	ssh $(RELEASE_HOST) "rm -f $(RELEASE_DIR)/LATEST-$(PACKAGE)-[0-9]* && ln -s $(TAR_FILE) $(RELEASE_DIR)/LATEST-$(PACKAGE)-$(VERSION)"
 	git tag -s -m "$(PACKAGE) $(VERSION) release" $(VERSION)
+	git push origin $(VERSION)
 
 .PHONY: release-verify-version
 release-verify-version:
