@@ -47,29 +47,39 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
+
 char *
-json_quote_str(const void *ctx, const char *str)
+json_quote_chararray(const void *ctx, const char *str, const size_t len)
 {
     const char *ptr;
     char *ptr2;
     char *out;
-    int len = 0;
+    size_t loop;
+    size_t required;
 
-    if (!str)
-	return NULL;
+    if (len == 0)
+	return (char *)"\"\"";
 
-    for (ptr = str; *ptr; len++, ptr++) {
+    for (loop = 0, required = 0, ptr = str;
+	 loop < len;
+	 loop++, required++, ptr++) {
 	if (*ptr < 32 || *ptr == '\"' || *ptr == '\\')
-	    len++;
+	    required++;
     }
 
-    out = talloc_array (ctx, char, len + 3);
+    /*
+     * + 3 for:
+     * - leading quotation mark,
+     * - trailing quotation mark,
+     * - trailing NULL.
+     */
+    out = talloc_array (ctx, char, required + 3);
 
     ptr = str;
     ptr2 = out;
 
     *ptr2++ = '\"';
-    while (*ptr) {
+    for (loop = 0; loop < len; loop++) {
 	    if (*ptr > 31 && *ptr != '\"' && *ptr != '\\') {
 		*ptr2++ = *ptr++;
 	    } else {
@@ -90,4 +100,10 @@ json_quote_str(const void *ctx, const char *str)
     *ptr2++ = '\0';
 
     return out;
+}
+
+char *
+json_quote_str(const void *ctx, const char *str)
+{
+    return (json_quote_chararray (ctx, str, strlen (str)));
 }

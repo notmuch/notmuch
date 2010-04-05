@@ -326,7 +326,7 @@ format_part_json (GMimeObject *part, int *part_count)
 	show_part_content (part, stream_memory);
 	part_content = g_mime_stream_mem_get_byte_array (GMIME_STREAM_MEM (stream_memory));
 
-	printf (", \"content\": %s", json_quote_str (ctx, (char *) part_content->data));
+	printf (", \"content\": %s", json_quote_chararray (ctx, (char *) part_content->data, part_content->len));
     }
 
     fputs ("}", stdout);

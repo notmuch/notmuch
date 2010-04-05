@@ -133,6 +133,9 @@ notmuch_status_t
 show_one_part (const char *filename, int part);
 
 char *
+json_quote_chararray (const void *ctx, const char *str, const size_t len);
+
+char *
 json_quote_str (const void *ctx, const char *str);
 
 /* notmuch-config.c */
