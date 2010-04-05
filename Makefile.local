@@ -53,6 +53,11 @@ ifeq ($(shell cat .first-build-message),)
 endif
 endif
 
+.PHONY: dist
+dist:
+	git archive --format=tar --prefix=notmuch-$(NOTMUCH_VERSION)/ HEAD | gzip > notmuch-$(NOTMUCH_VERSION).tar.gz
+	@echo "Source is ready for release in notmuch-$(NOTMUCH_VERSION).tar.gz"
+
 # The user has not set any verbosity, default to quiet mode and inform the
 # user how to enable verbose compiles.
 ifeq ($(V),)
