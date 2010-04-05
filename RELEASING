@@ -62,8 +62,8 @@ Here are the steps to follow to create a new notmuch release:
 	  your public-key's setting or this fails.)
 	* Push that tag
 	* Provide some text for the release announcement (see below).
-	  If for some reason you lost this message, "make release-publish-message"
-	  prints it for you.
+	  If for some reason you lose this message, "make release-message"
+	  prints it again for you.
 
 7) Increment the notmuch version by adding a .1 micro number, commit, and push.
 

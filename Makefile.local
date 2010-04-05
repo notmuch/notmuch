@@ -15,6 +15,7 @@ VERSION=0.1.1
 
 RELEASE_HOST=notmuchmail.org
 RELEASE_DIR=/srv/notmuchmail.org/www/releases
+RELEASE_URL=http://notmuchmail.org/releases
 TAR_FILE=$(PACKAGE)-$(VERSION).tar.gz
 SHA1_FILE=$(TAR_FILE).sha1
 GPG_FILE=$(SHA1_FILE).asc
@@ -74,14 +75,41 @@ $(GPG_FILE): $(SHA1_FILE)
 .PHONY: dist
 dist: $(TAR_FILE)
 
+# We invoke make recursively only to force ordering of our phony
+# targets in the case of parallel invocation of make (-j).
 .PHONY: release
-release: release-verify-newer $(TAR_FILE) $(SHA1_FILE) $(GPG_FILE)
+release: release-verify-newer
+	$(MAKE) release-upload
+	$(MAKE) release-message
+
+.PHONY: release-upload
+release-upload: $(TAR_FILE) $(SHA1_FILE) $(GPG_FILE)
 	mkdir -p releases
 	scp $(TAR_FILE) $(SHA1_FILE) $(GPG_FILE) $(RELEASE_HOST):$(RELEASE_DIR)
 	mv $(TAR_FILE) $(SHA1_FILE) $(GPG_FILE) releases
 	ssh $(RELEASE_HOST) "rm -f $(RELEASE_DIR)/LATEST-$(PACKAGE)-[0-9]* && ln -s $(TAR_FILE) $(RELEASE_DIR)/LATEST-$(PACKAGE)-$(VERSION)"
 	git tag -s -m "$(PACKAGE) $(VERSION) release" $(VERSION)
 	git push origin $(VERSION)
+
+.PHONY: release-message
+release-message:
+	@echo "Please send a release announcement as follows:"
+	@echo ""
+	@echo "To: notmuch@notmuchmail.org"
+	@echo "Subject: $(PACKAGE) release $(VERSION) now available"
+	@echo ""
+	@echo "Where to obtain $(PACKAGE) $(VERSION)"
+	@echo "==========================="
+	@echo "  $(RELEASE_URL)/$(TAR_FILE)"
+	@echo ""
+	@echo "Which can be verified with:"
+	@echo ""
+	@echo "  $(RELEASE_URL)/$(SHA1_FILE)"
+	@echo -n "  "
+	@cat releases/$(SHA1_FILE)
+	@echo ""
+	@echo "  $(RELEASE_URL)/$(GPG_FILE)"
+	@echo "  (signed by `getent passwd "$$USER" | cut -d: -f 5 | cut -d, -f 1`)"
 
 .PHONY: release-verify-version
 release-verify-version:
