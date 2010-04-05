@@ -4,6 +4,13 @@
 # As such, this number must be incremented for any incompatible change to
 # the library interface, (such as the deletion of an API or a major
 # semantic change that breaks formerly functioning code).
+#
+# Note: We don't currently have plans to increment this at this time.
+# If we *do* want to make an incompatible change to the library
+# interface, we'll have to decide whether to increment this (creating
+# a new soname) or to introduce symbol versioning to be able to
+# provide support for both old and new interfaces without having to
+# increment this.
 LIBNOTMUCH_VERSION_MAJOR = 1
 
 # The minor version of the library interface. This should be incremented at

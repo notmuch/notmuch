@@ -1,0 +1,13 @@
+Notmuch 0.1 (2010-04-05)
+========================
+This is the first release of the notmuch mail system.
+
+It includes the libnotmuch library, the notmuch command-line
+interface, and an emacs-based interface to notmuch.
+
+Note: Notmuch will work best with Xapian 1.0.18 (or later) or Xapian
+1.1.4 (or later). Previous versions of Xapian (whether 1.0 or 1.1) had
+a performance bug that made notmuch very slow when modifying
+tags. This would cause distracting pauses when reading mail while
+notmuch would wait for Xapian when removing the "inbox" and "unread"
+tags from messages in a thread.
