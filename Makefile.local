@@ -10,7 +10,7 @@
 # repository), we add a third digit, (0.1.1, 0.1.2, etc.), and
 # increment it occasionally, (such as after a big batch of commits are
 # merged.
-NOTMUCH_VERSION=0.1
+NOTMUCH_VERSION=0.1.1
 
 # Get settings from the output of configure by running it to generate
 # Makefile.config if it doesn't exist yet. And add Makefile.config to
