@@ -3,17 +3,17 @@ from ctypes.util import find_library
 
 #-----------------------------------------------------------------------------
 #package-global instance of the notmuch library
-#TODO: lazy load this on first access?
-so = find_library('notmuch')
-if so is None:
-  raise ImportError("Could not find shared 'notmuch' library.")
-nmlib = CDLL(so)
+try:
+    nmlib = CDLL("libnotmuch.so.1")
+except:
+    raise ImportError("Could not find shared 'notmuch' library.")
+
 #-----------------------------------------------------------------------------
 class Enum(object):
-  """Provides ENUMS as "code=Enum(['a','b','c'])" where code.a=0 etc..."""
-  def __init__(self, names):
-    for number, name in enumerate(names):
-      setattr(self, name, number)
+    """Provides ENUMS as "code=Enum(['a','b','c'])" where code.a=0 etc..."""
+    def __init__(self, names):
+        for number, name in enumerate(names):
+            setattr(self, name, number)
 
 #-----------------------------------------------------------------------------
 class Status(Enum):
