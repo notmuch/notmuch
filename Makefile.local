@@ -10,12 +10,14 @@
 # repository), we add a third digit, (0.1.1, 0.1.2, etc.), and
 # increment it occasionally, (such as after a big batch of commits are
 # merged.
-NOTMUCH_VERSION=0.1
+PACKAGE=notmuch
+VERSION=0.1
 
 RELEASE_HOST=notmuchmail.org
 RELEASE_DIR=/srv/notmuchmail.org/www/releases
-VERSIONED_PACKAGE=notmuch-$(NOTMUCH_VERSION)
-TAR_FILE=$(VERSIONED_PACKAGE).tar.gz
+TAR_FILE=$(PACKAGE)-$(VERSION).tar.gz
+SHA1_FILE=$(TAR_FILE).sha1
+GPG_FILE=$(SHA1_FILE).asc
 
 # Get settings from the output of configure by running it to generate
 # Makefile.config if it doesn't exist yet. And add Makefile.config to
@@ -37,7 +39,7 @@ extra_cflags :=
 extra_cxxflags :=
 
 # Smash together user's values with our extra values
-FINAL_CFLAGS = -DNOTMUCH_VERSION=$(NOTMUCH_VERSION) $(CFLAGS) $(WARN_CFLAGS) $(CONFIGURE_CFLAGS) $(extra_cflags)
+FINAL_CFLAGS = -DNOTMUCH_VERSION=$(VERSION) $(CFLAGS) $(WARN_CFLAGS) $(CONFIGURE_CFLAGS) $(extra_cflags)
 FINAL_CXXFLAGS = $(CXXFLAGS) $(WARN_CXXFLAGS) $(CONFIGURE_CXXFLAGS) $(extra_cflags) $(extra_cxxflags)
 FINAL_LDFLAGS = $(LDFLAGS) $(CONFIGURE_LDFLAGS)
 
@@ -58,18 +60,32 @@ ifeq ($(shell cat .first-build-message),)
 endif
 endif
 
-.PHONY: dist
-dist:
-	git archive --format=tar --prefix=$(VERSIONED_PACKAGE)/ HEAD | gzip > $(TAR_FILE)
+$(TAR_FILE):
+	git archive --format=tar --prefix=$(PACKAGE)-$(VERSION)/ HEAD | gzip > $(TAR_FILE)
 	@echo "Source is ready for release in $(TAR_FILE)"
 
+$(SHA1_FILE): $(TAR_FILE)
+	sha1sum $^ > $@
+
+$(GPG_FILE): $(SHA1_FILE)
+	@echo "Please enter your GPG password to sign the checksum."
+	gpg --armor --sign $^ 
+
+.PHONY: dist
+dist: $(TAR_FILE)
+
 .PHONY: release
-release: release-verify-newer
+release: release-verify-newer $(TAR_FILE) $(SHA1_FILE) $(GPG_FILE)
+	mkdir -p releases
+	scp $(TAR_FILE) $(SHA1_FILE) $(GPG_FILE) $(RELEASE_HOST):$(RELEASE_DIR)
+	mv $(TAR_FILE) $(SHA1_FILE) $(GPG_FILE) releases
+	ssh $(RELEASE_HOST) "rm -f $(RELEASE_DIR)/LATEST-$(PACKAGE)-[0-9]* && ln -s $(TAR_FILE) $(RELEASE_DIR)/LATEST-$(PACKAGE)-$(VERSION)"
+	git tag -s -m "$(PACKAGE) $(VERSION) release" $(VERSION)
 
 .PHONY: release-verify-version
 release-verify-version:
-	@echo -n "Checking that $(NOTMUCH_VERSION) is a two-component version..."
-	@if echo $(NOTMUCH_VERSION) | grep -q -v -x '[0-9]*\.[0-9]*'; then \
+	@echo -n "Checking that $(VERSION) is a two-component version..."
+	@if echo $(VERSION) | grep -q -v -x '[0-9]*\.[0-9]*'; then \
 		(echo "Ouch." && \
 	         echo "Before releasing the notmuch version should be a two-component value." && false);\
 	 else :; fi
@@ -77,7 +93,7 @@ release-verify-version:
 
 .PHONY: release-verify-newer
 release-verify-newer: release-verify-version
-	@echo -n "Checking that no $(NOTMUCH_VERSION) release already exists..."
+	@echo -n "Checking that no $(VERSION) release already exists..."
 	@ssh $(RELEASE_HOST) test ! -e $(RELEASE_DIR)/$(TAR_FILE) \
 		|| (echo "Ouch." && echo "Found: $(RELEASE_HOST):$(RELEASE_DIR)/$(TAR_FILE)" \
 		&& echo "Refusing to replace an existing release." && false)
