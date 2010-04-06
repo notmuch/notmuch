@@ -80,7 +80,11 @@ dist: $(TAR_FILE)
 .PHONY: release
 release: release-verify-newer
 	$(MAKE) release-upload
+	@echo "Please send a release announcement as follows:"
+	@echo ""
 	$(MAKE) release-message
+	$(MAKE) release-message > $(PACKAGE)-$(VERSION).announce
+	@echo "(This message is also available in $(PACKAGE)-$(VERSION).announce"
 
 .PHONY: release-upload
 release-upload: $(TAR_FILE) $(SHA1_FILE) $(GPG_FILE)
@@ -93,12 +97,10 @@ release-upload: $(TAR_FILE) $(SHA1_FILE) $(GPG_FILE)
 
 .PHONY: release-message
 release-message:
-	@echo "Please send a release announcement as follows:"
-	@echo ""
 	@echo "To: notmuch@notmuchmail.org"
 	@echo "Subject: $(PACKAGE) release $(VERSION) now available"
 	@echo ""
-	@echo "Where to obtain $(PACKAGE) $(VERSION)"
+	@echo "Where to obtain notmuch $(VERSION)"
 	@echo "==========================="
 	@echo "  $(RELEASE_URL)/$(TAR_FILE)"
 	@echo ""
@@ -110,6 +112,20 @@ release-message:
 	@echo ""
 	@echo "  $(RELEASE_URL)/$(GPG_FILE)"
 	@echo "  (signed by `getent passwd "$$USER" | cut -d: -f 5 | cut -d, -f 1`)"
+	@echo ""
+	@echo "What's new in notmuch $(VERSION)"
+	@echo "========================="
+	@sed -ne '/^[Nn]otmuch 0.1/{n;n;b NEWS}; d; :NEWS /^===/q; {p;n;b NEWS}' < NEWS | head -n -2
+	@echo ""
+	@echo "What is notmuch"
+	@echo "==============="
+	@echo "Notmuch is a system for indexing, searching, reading, and tagging"
+	@echo "large collections of email messages in maildir or mh format. It uses"
+	@echo "the Xapian library to provide fast, full-text search with a convenient"
+	@echo "search syntax."
+	@echo ""
+	@echo "For more about notmuch, see http://notmuchmail.org"
+
 
 .PHONY: release-verify-version
 release-verify-version:
