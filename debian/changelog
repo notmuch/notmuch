@@ -1,12 +1,14 @@
-notmuch (0.0+201001211402) UNRELEASED; urgency=low
+notmuch (0.1-1) unstable; urgency=low
 
   [ martin f. krafft ]
   * Add suggestion to vim-addon-manager.
 
   [ Carl Worth ]
   * Improve package description (closes: #566282).
+  * New upstream version (0.1) (closes: #576647).
+  * New versioning to track upstream version scheme.
 
- -- Carl Worth <cworth@debian.org>  Thu, 25 Feb 2010 11:16:19 -0800
+ -- Carl Worth <cworth@debian.org>  Tue, 06 Apr 2010 14:08:19 -0700
 
 notmuch (0.0+201001211401) unstable; urgency=low
 
