@@ -66,8 +66,8 @@ install-$(dir):
 	install -m0644 $(dir)/$(LIBNAME) $(DESTDIR)$(libdir)/
 	ln -sf $(LIBNAME) $(DESTDIR)$(libdir)/$(SONAME)
 	ln -sf $(LIBNAME) $(DESTDIR)$(libdir)/$(LINKER_NAME)
-	mkdir -p $(DESTDIR)$(prefix)/include/
-	install -m0644 $(dir)/notmuch.h $(DESTDIR)$(prefix)/include/
+	mkdir -p $(DESTDIR)$(includedir)
+	install -m0644 $(dir)/notmuch.h $(DESTDIR)$(includedir)/
 
 SRCS  := $(SRCS) $(libnotmuch_c_srcs) $(libnotmuch_cxx_srcs)
 CLEAN := $(CLEAN) $(libnotmuch_modules) $(dir)/$(SONAME) $(dir)/$(LINKER_NAME) $(dir)$(LIBNAME) libnotmuch.a

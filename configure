@@ -67,7 +67,8 @@ specify an installation prefix other than $PREFIX using
 
 Fine tuning of some installation directories is available:
 
-	--libdir=DIR	Install libraries in LIBDIR [PREFIX/lib]
+	--libdir=DIR		Install libraries to DIR [PREFIX/lib]
+	--includedir=DIR	Install header files to DIR [PREFIX/include]
 
 Additional options are accepted for compatibility with other
 configure-script calling conventions, but don't do anything yet:
@@ -86,6 +87,8 @@ for option; do
 	PREFIX="${option#*=}"
     elif [ "${option%%=*}" = '--libdir' ] ; then
 	LIBDIR="${option#*=}"
+    elif [ "${option%%=*}" = '--includedir' ] ; then
+	INCLUDEDIR="${option#*=}"
     elif [ "${option%%=*}" = '--build' ] ; then
 	build_option="${option#*=}"
 	case ${build_option} in
@@ -324,8 +327,11 @@ WARN_CFLAGS=\$(WARN_CXXFLAGS) -Wmissing-declarations
 # The prefix to which notmuch should be installed
 prefix = ${PREFIX}
 
-# The directory to which notmuch libraries should be installed
+# The directory to which libraries should be installed
 libdir = ${LIBDIR:=\$(prefix)/lib}
+
+# The directory to which header files should be installed
+includedir = ${INCLUDEDIR:=\$(prefix)/lib}
 
 # The directory to which emacs lisp files should be installed
 emacs_lispdir=${emacs_lispdir}
