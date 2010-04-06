@@ -69,6 +69,7 @@ Fine tuning of some installation directories is available:
 
 	--libdir=DIR		Install libraries to DIR [PREFIX/lib]
 	--includedir=DIR	Install header files to DIR [PREFIX/include]
+	--mandir=DIR		Install man pages to DIR [PREFIX/share/man]
 
 Additional options are accepted for compatibility with other
 configure-script calling conventions, but don't do anything yet:
@@ -89,6 +90,8 @@ for option; do
 	LIBDIR="${option#*=}"
     elif [ "${option%%=*}" = '--includedir' ] ; then
 	INCLUDEDIR="${option#*=}"
+    elif [ "${option%%=*}" = '--mandir' ] ; then
+	MANDIR="${option#*=}"
     elif [ "${option%%=*}" = '--build' ] ; then
 	build_option="${option#*=}"
 	case ${build_option} in
@@ -332,6 +335,9 @@ libdir = ${LIBDIR:=\$(prefix)/lib}
 
 # The directory to which header files should be installed
 includedir = ${INCLUDEDIR:=\$(prefix)/lib}
+
+# The directory to which man pages should be installed
+mandir = ${MANDIR:=\$(prefix)/share/man}
 
 # The directory to which emacs lisp files should be installed
 emacs_lispdir=${emacs_lispdir}

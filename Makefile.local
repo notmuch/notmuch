@@ -172,8 +172,8 @@ notmuch.1.gz: notmuch.1
 
 .PHONY: install
 install: all notmuch.1.gz
-	mkdir -p $(DESTDIR)$(prefix)/share/man/man1
-	install -m0644 notmuch.1.gz $(DESTDIR)$(prefix)/share/man/man1/
+	mkdir -p $(DESTDIR)$(mandir)/man1
+	install -m0644 notmuch.1.gz $(DESTDIR)$(mandir)/man1/
 	mkdir -p $(DESTDIR)$(prefix)/bin/
 	install notmuch-shared $(DESTDIR)$(prefix)/bin/notmuch
 ifeq ($(MAKECMDGOALS), install)
