@@ -175,6 +175,15 @@ else
     emacs_lispdir='$(prefix)/share/emacs/site-lisp'
 fi
 
+printf "Checking if emacs is available... "
+if emacs --quick --batch > /dev/null 2>&1; then
+    printf "Yes.\n"
+    have_emacs=1
+else
+    printf "No (so will not byte-compile emacs code)\n"
+    have_emacs=0
+fi
+
 if [ $errors -gt 0 ]; then
     cat <<EOF
 
@@ -299,6 +308,9 @@ libdir = ${LIBDIR:=\$(prefix)/lib}
 
 # The directory to which emacs lisp files should be installed
 emacs_lispdir=${emacs_lispdir}
+
+# Whether there's an emacs binary available for byte-compiling
+HAVE_EMACS = ${have_emacs}
 
 # The directory to which desktop files should be installed
 desktop_dir = \$(prefix)/share/applications

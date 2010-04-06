@@ -118,9 +118,6 @@ quiet ?= $($(shell echo $1 | sed -e s'/ .*//'))
 %.o: %.c $(global_deps)
 	$(call quiet,CC $(CFLAGS)) -c $(FINAL_CFLAGS) $< -o $@
 
-%.elc: %.el
-	$(call quiet,EMACS) --directory emacs -batch -f batch-byte-compile $<
-
 .deps/%.d: %.c $(global_deps)
 	@set -e; rm -f $@; mkdir -p $$(dirname $@) ; \
 	$(CC) -M $(CPPFLAGS) $(FINAL_CFLAGS) $< > $@.$$$$ 2>/dev/null ; \
@@ -183,12 +180,17 @@ install: all notmuch.1.gz
 	install -m0644 notmuch.1.gz $(DESTDIR)$(prefix)/share/man/man1/
 ifeq ($(MAKECMDGOALS), install)
 	@echo ""
-	@echo "Notmuch is now installed."
+	@echo "Notmuch is now installed to $(DESTDIR)$(prefix)"
+	@echo ""
+	@echo "To run notmuch from emacs, each user should add the following line to ~/.emacs:"
+	@echo ""
+	@echo "	(require 'notmuch)"
+	@echo ""
+	@echo "And should then run \"M-x notmuch\" from within emacs or run \"emacs -f notmuch\""
 	@echo ""
 	@echo "You may now want to install additional components to support using notmuch"
 	@echo "together with other software packages:"
 	@echo ""
-	@echo "	make install-emacs"
 	@echo "	make install-bash"
 	@echo "	make install-zsh"
 	@echo ""

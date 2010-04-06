@@ -9,21 +9,21 @@ emacs_sources := \
 
 emacs_bytecode := $(subst .el,.elc,$(emacs_sources))
 
-.PHONY: emacs
-emacs: $(emacs_bytecode)
+%.elc: %.el
+	$(call quiet,EMACS) --directory emacs -batch -f batch-byte-compile $<
+
+ifeq ($(HAVE_EMACS),1)
+all: $(emacs_bytecode)
+endif
+
+install: install-emacs
 
 .PHONY: install-emacs
-install-emacs: install emacs
+install-emacs:
 	mkdir -p $(DESTDIR)/$(emacs_lispdir)
-	install -m0644 $(emacs_sources) $(emacs_bytecode) $(DESTDIR)$(emacs_lispdir)
-	@echo ""
-	@echo "The notmuch emacs client is now installed."
-	@echo ""
-	@echo "To run this, each user should add the following line to the ~/.emacs file:"
-	@echo ""
-	@echo "	(require 'notmuch)"
-	@echo ""
-	@echo "And should then run \"M-x notmuch\" from within emacs or run \"emacs -f notmuch\""
-	@echo ""
+	install -m0644 $(emacs_sources) $(DESTDIR)$(emacs_lispdir)
+ifeq ($(HAVE_EMACS),1)
+	install -m0644 $(emacs_bytecode) $(DESTDIR)$(emacs_lispdir)
+endif
 
 CLEAN := $(CLEAN) $(emacs_bytecode)
