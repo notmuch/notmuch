@@ -12,3 +12,4 @@ libnotmuch.so*
 *~
 .*.swp
 *.elc
+releases
