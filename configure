@@ -70,6 +70,7 @@ Fine tuning of some installation directories is available:
 	--libdir=DIR		Install libraries to DIR [PREFIX/lib]
 	--includedir=DIR	Install header files to DIR [PREFIX/include]
 	--mandir=DIR		Install man pages to DIR [PREFIX/share/man]
+	--sysconfdir=DIR	Read-only single-machine data [PREFIX/etc]
 
 Additional options are accepted for compatibility with other
 configure-script calling conventions, but don't do anything yet:
@@ -92,6 +93,8 @@ for option; do
 	INCLUDEDIR="${option#*=}"
     elif [ "${option%%=*}" = '--mandir' ] ; then
 	MANDIR="${option#*=}"
+    elif [ "${option%%=*}" = '--sysconfdir' ] ; then
+	SYSCONFDIR="${option#*=}"
     elif [ "${option%%=*}" = '--build' ] ; then
 	build_option="${option#*=}"
 	case ${build_option} in
@@ -339,6 +342,9 @@ includedir = ${INCLUDEDIR:=\$(prefix)/lib}
 # The directory to which man pages should be installed
 mandir = ${MANDIR:=\$(prefix)/share/man}
 
+# The directory to which read-only (configuration) filesshould be installed
+sysconfdir = ${SYSCONFDIR:=\$(prefix)/etc}
+
 # The directory to which emacs lisp files should be installed
 emacs_lispdir=${emacs_lispdir}
 
@@ -349,7 +355,7 @@ HAVE_EMACS = ${have_emacs}
 desktop_dir = \$(prefix)/share/applications
 
 # The directory to which bash completions files should be installed
-bash_completion_dir = /etc/bash_completion.d
+bash_completion_dir = \$(sysconfdir)/bash_completion.d
 
 # The directory to which zsh completions files should be installed
 zsh_completion_dir = \$(prefix)/share/zsh/functions/Completion/Unix
