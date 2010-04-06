@@ -138,6 +138,11 @@ DEPS := $(DEPS:%.cc=.deps/%.d)
 clean:
 	rm -f $(CLEAN); rm -rf .deps
 
+# We don't (yet) have any distributed files not in the upstream repository.
+# So distclean is currently identical to clean.
+.PHONY: distclean
+distclean: clean
+
 notmuch_client_srcs =		\
 	$(notmuch_compat_srcs)	\
 	debugger.c		\
