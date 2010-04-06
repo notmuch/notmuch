@@ -250,7 +250,7 @@ EOF
 fi
 
 printf "Checking for getline... "
-if ${CC} -o config/have_getline config/have_getline.c > /dev/null 2>&1
+if ${CC} -o compat/have_getline compat/have_getline.c > /dev/null 2>&1
 then
     printf "Yes.\n"
     have_getline=1
@@ -258,7 +258,7 @@ else
     printf "No (will use our own instead).\n"
     have_getline=0
 fi
-rm -f config/have_getline
+rm -f compat/have_getline
 
 cat <<EOF
 

@@ -1,5 +1,0 @@
-notmuch/config
-
-This directory consists of small programs used by the notmuch
-configure script to test for the availability of certain system
-features, (library functions, etc.).
