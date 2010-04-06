@@ -174,10 +174,6 @@ notmuch.1.gz: notmuch.1
 install: all notmuch.1.gz
 	mkdir -p $(DESTDIR)$(prefix)/share/man/man1
 	install -m0644 notmuch.1.gz $(DESTDIR)$(prefix)/share/man/man1/
-	mkdir -p $(DESTDIR)$(bash_completion_dir)
-	install -m0644 contrib/notmuch-completion.bash $(DESTDIR)$(bash_completion_dir)/notmuch
-	mkdir -p $(DESTDIR)$(zsh_completion_dir)
-	install -m0644 contrib/notmuch-completion.zsh $(DESTDIR)$(zsh_completion_dir)/notmuch
 	mkdir -p $(DESTDIR)$(prefix)/bin/
 	install notmuch-shared $(DESTDIR)$(prefix)/bin/notmuch
 ifeq ($(MAKECMDGOALS), install)
