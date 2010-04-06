@@ -103,7 +103,7 @@ for option; do
 	build_vendor=${build_option%%-*}
 	build_os=${build_option#*-}
     else
-	echo "Unrecognized option: ${option}."
+	echo "Unrecognized option: ${option}"
 	echo "See:"
 	echo "	$0 --help"
 	echo ""
