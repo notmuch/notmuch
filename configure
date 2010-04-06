@@ -71,6 +71,7 @@ Fine tuning of some installation directories is available:
 	--includedir=DIR	Install header files to DIR [PREFIX/include]
 	--mandir=DIR		Install man pages to DIR [PREFIX/share/man]
 	--sysconfdir=DIR	Read-only single-machine data [PREFIX/etc]
+	--emacslispdir=DIR	Elisp [PREFIX/share/emacs/site-lisp/notmuch]
 
 Additional options are accepted for compatibility with other
 configure-script calling conventions, but don't do anything yet:
@@ -100,6 +101,8 @@ for option; do
 	MANDIR="${option#*=}"
     elif [ "${option%%=*}" = '--sysconfdir' ] ; then
 	SYSCONFDIR="${option#*=}"
+    elif [ "${option%%=*}" = '--emacslispdir' ] ; then
+	EMACSLISPDIR="${option#*=}"
     elif [ "${option%%=*}" = '--build' ] ; then
 	build_option="${option#*=}"
 	case ${build_option} in
@@ -214,10 +217,12 @@ else
     have_valgrind=0
 fi
 
-if pkg-config --modversion emacs > /dev/null 2>&1; then
-    emacs_lispdir=$(pkg-config emacs --variable sitepkglispdir)
-else
-    emacs_lispdir='$(prefix)/share/emacs/site-lisp'
+if [ -z "${EMACSLISPDIR}" ]; then
+    if pkg-config --modversion emacs > /dev/null 2>&1; then
+	EMACSLISPDIR=$(pkg-config emacs --variable sitepkglispdir)/notmuch
+    else
+	EMACSLISPDIR='$(prefix)/share/emacs/site-lisp/notmuch'
+    fi
 fi
 
 printf "Checking if emacs is available... "
@@ -361,7 +366,7 @@ mandir = ${MANDIR:=\$(prefix)/share/man}
 sysconfdir = ${SYSCONFDIR:=\$(prefix)/etc}
 
 # The directory to which emacs lisp files should be installed
-emacs_lispdir=${emacs_lispdir}
+emacslispdir=${EMACSLISPDIR}
 
 # Whether there's an emacs binary available for byte-compiling
 HAVE_EMACS = ${have_emacs}

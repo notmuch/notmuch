@@ -20,10 +20,10 @@ install: install-emacs
 
 .PHONY: install-emacs
 install-emacs:
-	mkdir -p $(DESTDIR)/$(emacs_lispdir)
-	install -m0644 $(emacs_sources) $(DESTDIR)$(emacs_lispdir)
+	mkdir -p $(DESTDIR)$(emacslispdir)
+	install -m0644 $(emacs_sources) $(DESTDIR)$(emacslispdir)
 ifeq ($(HAVE_EMACS),1)
-	install -m0644 $(emacs_bytecode) $(DESTDIR)$(emacs_lispdir)
+	install -m0644 $(emacs_bytecode) $(DESTDIR)$(emacslispdir)
 endif
 
 CLEAN := $(CLEAN) $(emacs_bytecode)
