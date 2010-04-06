@@ -69,6 +69,11 @@ Fine tuning of some installation directories is available:
 
 	--libdir=DIR	Install libraries in LIBDIR [PREFIX/lib]
 
+Additional options are accepted for compatibility with other
+configure-script calling conventions, but don't do anything yet:
+
+	--build=<cpu>-<vendor>-<os>	Currently ignored
+
 EOF
 }
 
@@ -81,6 +86,22 @@ for option; do
 	PREFIX="${option#*=}"
     elif [ "${option%%=*}" = '--libdir' ] ; then
 	LIBDIR="${option#*=}"
+    elif [ "${option%%=*}" = '--build' ] ; then
+	build_option="${option#*=}"
+	case ${build_option} in
+	    *-*-*) ;;
+	    *)
+		echo "Unrecognized value for --build option: ${build_option}"
+		echo "Should be: <cpu>-<vendor>-<os>"
+		echo "See:"
+		echo "	$0 --help"
+		echo ""
+		exit 1
+	esac
+	build_cpu=${build_option%%-*}
+	build_option=${build_option#*-}
+	build_vendor=${build_option%%-*}
+	build_os=${build_option#*-}
     else
 	echo "Unrecognized option: ${option}."
 	echo "See:"
