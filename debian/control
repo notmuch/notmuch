@@ -1,0 +1,22 @@
+Source: notmuch
+Section: mail
+Priority: extra
+Maintainer: Carl Worth <cworth@debian.org>
+Uploaders: Jameson Graef Rollins <jrollins@finestructure.net>, martin f. krafft <madduck@debian.org>
+Build-Depends: debhelper (>= 7.0.50~), pkg-config, libxapian-dev, libgmime-2.4-dev, libtalloc-dev, libz-dev, emacs (>= 23~)
+Standards-Version: 3.8.3
+Homepage: http://notmuchmail.org/
+Vcs-Git: git://notmuchmail.org/git/notmuch
+Vcs-Browser: http://git.debian.org/?p=collab-maint/notmuch.git;a=summary
+Dm-Upload-Allowed: yes
+
+Package: notmuch
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Enhances: emacs, vim
+Suggests: emacs, vim, vim-addon-manager
+Description: thread-based email index, search and tagging
+ Notmuch is a system for indexing, searching, reading, and tagging
+ large collections of email messages in maildir or mh format. It uses
+ the Xapian library to provide fast, full-text search with a very
+ convenient search syntax.

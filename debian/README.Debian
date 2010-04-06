@@ -1,0 +1,6 @@
+notmuch for Debian
+==================
+
+To use the vim plugin, please install it using vim-addons(1)
+
+ -- martin f. krafft <madduck@debian.org>  Thu, 21 Jan 2010 14:50:19 +1300

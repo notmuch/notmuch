@@ -1,0 +1,30 @@
+notmuch (0.0+201001211402) UNRELEASED; urgency=low
+
+  [ martin f. krafft ]
+  * Add suggestion to vim-addon-manager.
+
+  [ Carl Worth ]
+  * Improve package description (closes: #566282).
+
+ -- Carl Worth <cworth@debian.org>  Thu, 25 Feb 2010 11:16:19 -0800
+
+notmuch (0.0+201001211401) unstable; urgency=low
+
+  * Upload to Debian (closes: #557354).
+  * New versioning scheme.
+  * Added emacs build dependency.
+  * Added Vcs-Browser field to debian/control.
+  * Downgrade recommendation for emacs to suggestion.
+  * Add vim to suggestions and enhancements.
+  * Put debian/* under separate copyright.
+  * Make Carl the maintainer.
+  * Add myself to uploaders.
+  * Install the vim plugin (using vim-addons).
+
+ -- martin f. krafft <madduck@debian.org>  Thu, 21 Jan 2010 14:00:54 +1300
+
+notmuch (0.0-1) unstable; urgency=low
+
+  * New Debian package.
+
+ -- Jameson Graef Rollins <jrollins@finestructure.net>  Fri, 27 Nov 2009 13:39:09 -0500

@@ -1,0 +1,8 @@
+addon: notmuch
+description: "notmuch mail user interface"
+files:
+  - plugin/notmuch.vim
+  - syntax/notmuch-compose.vim
+  - syntax/notmuch-folders.vim
+  - syntax/notmuch-search.vim
+  - syntax/notmuch-show.vim
