@@ -236,7 +236,7 @@ _notmuch_thread_create (void *ctx,
 	return NULL;
 
     matched_query = notmuch_query_create (notmuch, matched_query_string);
-    if (unlikely (thread_id_query == NULL))
+    if (unlikely (matched_query == NULL))
 	return NULL;
 
     thread = talloc (ctx, notmuch_thread_t);
