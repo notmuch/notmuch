@@ -28,12 +28,14 @@ install -m 755 -d ${ELCDIR}
 cd ${ELDIR}
 FILES=`echo *.el`
 cd ${ELCDIR}
-ln -sf ${ELDIR}/${FILES} ${ELCDIR}
+for file in ${FILES}; do
+	ln -sf ${ELDIR}/${file} .
+done
 
 cat << EOF > path.el
 (setq load-path (cons "." load-path) byte-compile-warnings nil)
 EOF
 ${FLAVOR} ${FLAGS} ${FILES}
-rm -f path.el
+rm -f *.el
 
 exit 0
