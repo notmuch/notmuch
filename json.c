@@ -105,5 +105,8 @@ json_quote_chararray(const void *ctx, const char *str, const size_t len)
 char *
 json_quote_str(const void *ctx, const char *str)
 {
+    if (str == NULL)
+	str = "";
+
     return (json_quote_chararray (ctx, str, strlen (str)));
 }
