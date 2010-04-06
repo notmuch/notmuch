@@ -76,6 +76,11 @@ Additional options are accepted for compatibility with other
 configure-script calling conventions, but don't do anything yet:
 
 	--build=<cpu>-<vendor>-<os>	Currently ignored
+	--infodir=DIR			Currently ignored
+	--localstatedir=DIR		Currently ignored
+	--libexecdir=DIR		Currently ignored
+	--disable-maintainer-mode	Currently ignored
+	--disable-dependency-tracking	Currently ignored
 
 EOF
 }
@@ -111,6 +116,16 @@ for option; do
 	build_option=${build_option#*-}
 	build_vendor=${build_option%%-*}
 	build_os=${build_option#*-}
+    elif [ "${option%%=*}" = '--infodir' ] ; then
+	true
+    elif [ "${option%%=*}" = '--localstatedir' ] ; then
+	true
+    elif [ "${option%%=*}" = '--libexecdir' ] ; then
+	true
+    elif [ "${option}" = '--disable-maintainer-mode' ] ; then
+	true
+    elif [ "${option}" = '--disable-dependency-tracking' ] ; then
+	true
     else
 	echo "Unrecognized option: ${option}"
 	echo "See:"
