@@ -318,9 +318,15 @@ notmuch_message_file_get_header (notmuch_message_file_t *message,
 	    match = (strcasecmp (header, header_desired) == 0);
 
 	decoded_value = g_mime_utils_header_decode_text (message->value.str);
-
-	g_hash_table_insert (message->headers, header, decoded_value);
-
+	if (g_hash_table_lookup (message->headers, header) == NULL) {
+	    /* Only insert if we don't have a value for this header, yet.
+	     * This way we always return the FIRST instance of any header
+	     * we search for
+	     * FIXME: we should be returning ALL instances of a header
+	     *        or at least provide a way to iterate over them
+	     */
+	    g_hash_table_insert (message->headers, header, decoded_value);
+	}
 	if (match)
 	    return decoded_value;
     }
