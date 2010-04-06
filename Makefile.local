@@ -103,28 +103,20 @@ release-verify-newer: release-verify-version
 # user how to enable verbose compiles.
 ifeq ($(V),)
 quiet_DOC := "Use \"$(MAKE) V=1\" to see the verbose compile lines.\n"
-quiet = @printf $(quiet_DOC)$(eval quiet_DOC:=)"  %12s $@\n" "$1 $2"; $($1)
-quiet_args = @printf $(quiet_DOC)$(eval quiet_DOC:=)"  %12s$2\n" $1; $($1) $2
+quiet = @printf $(quiet_DOC)$(eval quiet_DOC:=)"$1 $@\n"; $($(shell echo $1 | sed -e s'/ .*//'))
 endif
 # The user has explicitly enabled quiet compilation.
 ifeq ($(V),0)
-quiet = @printf "  %12s $@\n" "$1 $2"; $($1)
-quiet_args = @printf "  %12s$2\n" $1; $($1) $2
+quiet = @printf "$1 $@\n"; $($(shell echo $1 | sed -e s'/ .*//'))
 endif
 # Otherwise, print the full command line.
-quiet ?= $($1)
-quiet_args ?= $($1) $2
-
-quiet_mkdir = $(call quiet_args,MKDIR,$1)
-quiet_install_bin = $(call quiet_args,INSTALL-BIN,$1)
-quiet_install_data = $(call quiet_args,INSTALL-DATA,$1)
-quiet_symlink = $(call quiet_args,SYMLINK,$1)
+quiet ?= $($(shell echo $1 | sed -e s'/ .*//'))
 
 %.o: %.cc $(global_deps)
-	$(call quiet,CXX,$(CXXFLAGS)) -c $(FINAL_CXXFLAGS) $< -o $@
+	$(call quiet,CXX $(CXXFLAGS)) -c $(FINAL_CXXFLAGS) $< -o $@
 
 %.o: %.c $(global_deps)
-	$(call quiet,CC,$(CFLAGS)) -c $(FINAL_CFLAGS) $< -o $@
+	$(call quiet,CC $(CFLAGS)) -c $(FINAL_CFLAGS) $< -o $@
 
 %.elc: %.el
 	$(call quiet,EMACS) --directory emacs -batch -f batch-byte-compile $<
@@ -173,22 +165,22 @@ notmuch_client_srcs =		\
 notmuch_client_modules = $(notmuch_client_srcs:.c=.o)
 
 notmuch: $(notmuch_client_modules) lib/libnotmuch.a
-	$(call quiet,CC,$(LDFLAGS)) $^ $(FINAL_LDFLAGS) -o $@
+	$(call quiet,CC $(CFLAGS)) $^ $(FINAL_LDFLAGS) -o $@
 
 notmuch-shared: $(notmuch_client_modules) lib/libnotmuch.so
-	$(call quiet,CC,$(LDFLAGS)) -Llib -lnotmuch $(notmuch_client_modules) $(FINAL_LDFLAGS) -o $@
+	$(call quiet,CC $(CFLAGS)) -Llib -lnotmuch $(notmuch_client_modules) $(FINAL_LDFLAGS) -o $@
 
 notmuch.1.gz: notmuch.1
-	$(call quiet,gzip) --stdout $^ > $@
+	gzip --stdout $^ > $@
 
 .PHONY: install
 install: all notmuch.1.gz
-	$(call quiet_mkdir, $(DESTDIR)$(prefix)/bin/)
-	$(call quiet_mkdir, $(DESTDIR)$(libdir)/)
-	$(call quiet_mkdir, $(DESTDIR)$(prefix)/include/)
-	$(call quiet_mkdir, $(DESTDIR)$(prefix)/share/man/man1)
-	$(call quiet_install_bin, notmuch-shared $(DESTDIR)$(prefix)/bin/notmuch)
-	$(call quiet_install_data, notmuch.1.gz $(DESTDIR)$(prefix)/share/man/man1/)
+	mkdir -p $(DESTDIR)$(prefix)/bin/
+	mkdir -p $(DESTDIR)$(libdir)/
+	mkdir -p $(DESTDIR)$(prefix)/include/
+	mkdir -p $(DESTDIR)$(prefix)/share/man/man1
+	install notmuch-shared $(DESTDIR)$(prefix)/bin/notmuch
+	install -m0644 notmuch.1.gz $(DESTDIR)$(prefix)/share/man/man1/
 ifeq ($(MAKECMDGOALS), install)
 	@echo ""
 	@echo "Notmuch is now installed."
@@ -204,18 +196,18 @@ endif
 
 .PHONY: install-desktop
 install-desktop:
-	$(call quiet,MKDIR) $(DESTDIR)$(desktop_dir)
+	mkdir -p $(DESTDIR)$(desktop_dir)
 	desktop-file-install --mode 0644 --dir $(DESTDIR)$(desktop_dir) notmuch.desktop
 
 .PHONY: install-bash
 install-bash:
-	$(call quiet-mkdir, $(DESTDIR)$(bash_completion_dir))
-	$(call quiet_install_data, contrib/notmuch-completion.bash $(DESTDIR)$(bash_completion_dir)/notmuch)
+	mkdir -p $(DESTDIR)$(bash_completion_dir)
+	install -m0644 contrib/notmuch-completion.bash $(DESTDIR)$(bash_completion_dir)/notmuch
 
 .PHONY: install-zsh
 install-zsh:
-	$(call quiet_mkdir, $(DESTDIR)$(zsh_completion_dir))
-	$(call quiet_install_data, contrib/notmuch-completion.zsh $(DESTDIR)$(zsh_completion_dir)/notmuch)
+	mkdir -p $(DESTDIR)$(zsh_completion_dir)
+	install -m0644 contrib/notmuch-completion.zsh $(DESTDIR)$(zsh_completion_dir)/notmuch
 
 SRCS  := $(SRCS) $(notmuch_client_srcs)
 CLEAN := $(CLEAN) notmuch notmuch-shared $(notmuch_client_modules) notmuch.elc notmuch.1.gz

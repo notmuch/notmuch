@@ -51,23 +51,23 @@ $(dir)/libnotmuch.a: $(libnotmuch_modules)
 	$(call quiet,AR) rcs $@ $^
 
 $(dir)/$(LIBNAME): $(libnotmuch_modules)
-	$(call quiet,CXX,$(LDFLAGS)) $^ $(FINAL_LDFLAGS) -shared -Wl,-soname=$(SONAME) -o $@
+	$(call quiet,CXX $(CXXFLAGS)) $^ $(FINAL_LDFLAGS) -shared -Wl,-soname=$(SONAME) -o $@
 
 $(dir)/$(SONAME): $(dir)/$(LIBNAME)
-	$(call quiet_symlink, $(LIBNAME) $@)
+	ln -sf $(LIBNAME) $@
 
 $(dir)/$(LINKER_NAME): $(dir)/$(SONAME)
-	$(call quiet_symlink, $(LIBNAME) $@)
+	ln -sf $(LIBNAME) $@
 
 install: install-$(dir)
 
 install-$(dir):
-	$(call quiet_mkdir, $(DESTDIR)$(libdir)/)
-	$(call quiet_install_data, $(dir)/$(LIBNAME) $(DESTDIR)$(libdir)/)
-	$(call quiet_symlink, $(LIBNAME) $(DESTDIR)$(libdir)/$(SONAME))
-	$(call quiet_symlink, $(LIBNAME) $(DESTDIR)$(libdir)/$(LINKER_NAME))
-	$(call quiet_mkdir, $(DESTDIR)$(prefix)/include/)
-	$(call quiet_install_data, $(dir)/notmuch.h $(DESTDIR)$(prefix)/include/)
+	mkdir -p $(DESTDIR)$(libdir)/
+	install -m0644 $(dir)/$(LIBNAME) $(DESTDIR)$(libdir)/
+	ln -sf $(LIBNAME) $(DESTDIR)$(libdir)/$(SONAME)
+	ln -sf $(LIBNAME) $(DESTDIR)$(libdir)/$(LINKER_NAME)
+	mkdir -p $(DESTDIR)$(prefix)/include/
+	install -m0644 $(dir)/notmuch.h $(DESTDIR)$(prefix)/include/
 
 SRCS  := $(SRCS) $(libnotmuch_c_srcs) $(libnotmuch_cxx_srcs)
 CLEAN := $(CLEAN) $(libnotmuch_modules) $(dir)/$(SONAME) $(dir)/$(LINKER_NAME) $(dir)$(LIBNAME) libnotmuch.a
