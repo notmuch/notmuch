@@ -282,9 +282,8 @@ add_recipients_from_message (GMimeMessage *reply,
     return from_addr;
 }
 
-
 static const char *
-guess_from_received_header(notmuch_config_t *config, notmuch_message_t *message)
+guess_from_received_header (notmuch_config_t *config, notmuch_message_t *message)
 {
     const char *received,*primary;
     char **other;
@@ -295,34 +294,37 @@ guess_from_received_header(notmuch_config_t *config, notmuch_message_t *message)
     size_t i,other_len;
 
     received = notmuch_message_get_header (message, "received");
-    by = strstr(received," by ");
+    by = strstr (received, " by ");
     if (by && *(by+4)) {
 	/* we know that there are 4 characters after by - either the 4th one
 	 * is '\0' (broken header) or it is the first letter of the hostname 
 	 * that last received this email - which we'll use to guess the right
 	 * from email address
 	 */
-	mta = strdup(by+4);
+	mta = strdup (by+4);
 	if (mta == NULL)
 	    return NULL;
+
 	/* After the MTA comes its IP address (or HELO response) in parenthesis.
 	 * so let's terminate the string there
 	 */
-	if ((ptr = strchr(mta,'(')) == NULL) {
+	if ((ptr = strchr (mta, '(')) == NULL) {
 	    free (mta);
 	    return NULL;
 	}
 	*ptr = '\0';
+
 	/* Now extract the last two components of the MTA host name
 	 * as domain and tld
 	 */
 	token = mta;
-	while ((ptr = strsep(&token,delim)) != NULL) {
+	while ((ptr = strsep (&token, delim)) != NULL) {
 	    if (*ptr == '\0')
 		continue;
 	    domain = tld;
 	    tld = ptr;
 	}
+
 	if (domain) {
 	    /* recombine domain and tld and look for it among the configured
 	     * email addresses
@@ -330,18 +332,20 @@ guess_from_received_header(notmuch_config_t *config, notmuch_message_t *message)
 	    *(tld-1) = '.';
 	    primary = notmuch_config_get_user_primary_email (config);
 	    if (strcasestr (primary, domain)) {
-		free(mta);
+		free (mta);
 		return primary;
 	    }
 	    other = notmuch_config_get_user_other_email (config, &other_len);
 	    for (i = 0; i < other_len; i++)
 		if (strcasestr (other[i], domain)) {
-		    free(mta);
+		    free (mta);
 		    return other[i];
 		}
 	}
-	free(mta);
+
+	free (mta);
     }
+
     return NULL;
 }
 
@@ -375,7 +379,7 @@ notmuch_reply_format_default(void *ctx, notmuch_config_t *config, notmuch_query_
 	g_mime_message_set_subject (reply, subject);
 
 	from_addr = add_recipients_from_message (reply, config, message);
-	
+
 	if (from_addr == NULL) {
 	    from_addr = guess_from_received_header (config, message);
 	    if (from_addr == NULL) {
