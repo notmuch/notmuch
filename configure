@@ -71,7 +71,7 @@ Fine tuning of some installation directories is available:
 	--includedir=DIR	Install header files to DIR [PREFIX/include]
 	--mandir=DIR		Install man pages to DIR [PREFIX/share/man]
 	--sysconfdir=DIR	Read-only single-machine data [PREFIX/etc]
-	--emacslispdir=DIR	Elisp [PREFIX/share/emacs/site-lisp/notmuch]
+	--emacslispdir=DIR	Emacs code [PREFIX/share/emacs/site-lisp]
 
 Additional options are accepted for compatibility with other
 configure-script calling conventions, but don't do anything yet:
@@ -219,9 +219,9 @@ fi
 
 if [ -z "${EMACSLISPDIR}" ]; then
     if pkg-config --modversion emacs > /dev/null 2>&1; then
-	EMACSLISPDIR=$(pkg-config emacs --variable sitepkglispdir)/notmuch
+	EMACSLISPDIR=$(pkg-config emacs --variable sitepkglispdir)
     else
-	EMACSLISPDIR='$(prefix)/share/emacs/site-lisp/notmuch'
+	EMACSLISPDIR='$(prefix)/share/emacs/site-lisp'
     fi
 fi
 
