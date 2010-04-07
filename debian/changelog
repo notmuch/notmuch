@@ -8,8 +8,9 @@ notmuch (0.1-1) unstable; urgency=low
   * New upstream version (0.1) (closes: #576647).
   * New versioning to track upstream version scheme.
   * Split packaging into notmuch, libnotmuch1, and libnotmuch-dev.
+  * Update to advertise conformance with policy 3.8.4 (no changes).
 
- -- Carl Worth <cworth@debian.org>  Tue, 06 Apr 2010 18:07:08 -0700
+ -- Carl Worth <cworth@debian.org>  Tue, 06 Apr 2010 18:08:28 -0700
 
 notmuch (0.0+201001211401) unstable; urgency=low
 
