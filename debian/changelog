@@ -1,0 +1,35 @@
+notmuch (0.1-1) unstable; urgency=low
+
+  [ martin f. krafft ]
+  * Add suggestion to vim-addon-manager.
+
+  [ Carl Worth ]
+  * Improve package description (closes: #566282).
+  * New upstream version (0.1) (closes: #576647).
+  * New versioning to track upstream version scheme.
+  * Split packaging into notmuch, libnotmuch1, and libnotmuch-dev.
+  * Update to advertise conformance with policy 3.8.4 (no changes).
+  * Add a debian/watch file to notice upstream tar files.
+
+ -- Carl Worth <cworth@debian.org>  Tue, 06 Apr 2010 18:27:49 -0700
+
+notmuch (0.0+201001211401) unstable; urgency=low
+
+  * Upload to Debian (closes: #557354).
+  * New versioning scheme.
+  * Added emacs build dependency.
+  * Added Vcs-Browser field to debian/control.
+  * Downgrade recommendation for emacs to suggestion.
+  * Add vim to suggestions and enhancements.
+  * Put debian/* under separate copyright.
+  * Make Carl the maintainer.
+  * Add myself to uploaders.
+  * Install the vim plugin (using vim-addons).
+
+ -- martin f. krafft <madduck@debian.org>  Thu, 21 Jan 2010 14:00:54 +1300
+
+notmuch (0.0-1) unstable; urgency=low
+
+  * New Debian package.
+
+ -- Jameson Graef Rollins <jrollins@finestructure.net>  Fri, 27 Nov 2009 13:39:09 -0500

@@ -1,0 +1,10 @@
+notmuch completion
+
+This directory contains support for various shells to automatically
+complete partially entered notmuch command lines.
+
+notmuch-completion.bash	Command-line completion for the bash shell
+
+notmuch-completion.tcsh	Command-line completion for the tcsh shell
+
+notmuch-completion.zsh	Command-line completion for the zsh shell

@@ -67,7 +67,21 @@ specify an installation prefix other than $PREFIX using
 
 Fine tuning of some installation directories is available:
 
-	--libdir=DIR	Install libraries in LIBDIR [PREFIX/lib]
+	--libdir=DIR		Install libraries to DIR [PREFIX/lib]
+	--includedir=DIR	Install header files to DIR [PREFIX/include]
+	--mandir=DIR		Install man pages to DIR [PREFIX/share/man]
+	--sysconfdir=DIR	Read-only single-machine data [PREFIX/etc]
+	--emacslispdir=DIR	Elisp [PREFIX/share/emacs/site-lisp/notmuch]
+
+Additional options are accepted for compatibility with other
+configure-script calling conventions, but don't do anything yet:
+
+	--build=<cpu>-<vendor>-<os>	Currently ignored
+	--infodir=DIR			Currently ignored
+	--localstatedir=DIR		Currently ignored
+	--libexecdir=DIR		Currently ignored
+	--disable-maintainer-mode	Currently ignored
+	--disable-dependency-tracking	Currently ignored
 
 EOF
 }
@@ -81,8 +95,42 @@ for option; do
 	PREFIX="${option#*=}"
     elif [ "${option%%=*}" = '--libdir' ] ; then
 	LIBDIR="${option#*=}"
+    elif [ "${option%%=*}" = '--includedir' ] ; then
+	INCLUDEDIR="${option#*=}"
+    elif [ "${option%%=*}" = '--mandir' ] ; then
+	MANDIR="${option#*=}"
+    elif [ "${option%%=*}" = '--sysconfdir' ] ; then
+	SYSCONFDIR="${option#*=}"
+    elif [ "${option%%=*}" = '--emacslispdir' ] ; then
+	EMACSLISPDIR="${option#*=}"
+    elif [ "${option%%=*}" = '--build' ] ; then
+	build_option="${option#*=}"
+	case ${build_option} in
+	    *-*-*) ;;
+	    *)
+		echo "Unrecognized value for --build option: ${build_option}"
+		echo "Should be: <cpu>-<vendor>-<os>"
+		echo "See:"
+		echo "	$0 --help"
+		echo ""
+		exit 1
+	esac
+	build_cpu=${build_option%%-*}
+	build_option=${build_option#*-}
+	build_vendor=${build_option%%-*}
+	build_os=${build_option#*-}
+    elif [ "${option%%=*}" = '--infodir' ] ; then
+	true
+    elif [ "${option%%=*}" = '--localstatedir' ] ; then
+	true
+    elif [ "${option%%=*}" = '--libexecdir' ] ; then
+	true
+    elif [ "${option}" = '--disable-maintainer-mode' ] ; then
+	true
+    elif [ "${option}" = '--disable-dependency-tracking' ] ; then
+	true
     else
-	echo "Unrecognized option: ${option}."
+	echo "Unrecognized option: ${option}"
 	echo "See:"
 	echo "	$0 --help"
 	echo ""
@@ -169,10 +217,21 @@ else
     have_valgrind=0
 fi
 
-if pkg-config --modversion emacs > /dev/null 2>&1; then
-    emacs_lispdir=$(pkg-config emacs --variable sitepkglispdir)
+if [ -z "${EMACSLISPDIR}" ]; then
+    if pkg-config --modversion emacs > /dev/null 2>&1; then
+	EMACSLISPDIR=$(pkg-config emacs --variable sitepkglispdir)/notmuch
+    else
+	EMACSLISPDIR='$(prefix)/share/emacs/site-lisp/notmuch'
+    fi
+fi
+
+printf "Checking if emacs is available... "
+if emacs --quick --batch > /dev/null 2>&1; then
+    printf "Yes.\n"
+    have_emacs=1
 else
-    emacs_lispdir='$(prefix)/share/emacs/site-lisp'
+    printf "No (so will not byte-compile emacs code)\n"
+    have_emacs=0
 fi
 
 if [ $errors -gt 0 ]; then
@@ -241,7 +300,7 @@ EOF
 fi
 
 printf "Checking for getline... "
-if ${CC} -o config/have_getline config/have_getline.c > /dev/null 2>&1
+if ${CC} -o compat/have_getline compat/have_getline.c > /dev/null 2>&1
 then
     printf "Yes.\n"
     have_getline=1
@@ -249,7 +308,7 @@ else
     printf "No (will use our own instead).\n"
     have_getline=0
 fi
-rm -f config/have_getline
+rm -f compat/have_getline
 
 cat <<EOF
 
@@ -279,21 +338,6 @@ CXX = ${CXX}
 # Command to execute emacs from Makefiles
 EMACS = emacs --quick
 
-# Command to execute gzip from Makefiles
-gzip = gzip
-
-# Command to create a directory
-MKDIR = install -d
-
-# Command to install an executable
-INSTALL-BIN = install
-
-# Command to install a non-executable file (documentation, etc.)
-INSTALL-DATA = install -m0644
-
-# Command to create a symbolic link
-SYMLINK = ln -sf
-
 # Default FLAGS for C compiler (can be overridden by user such as "make CFLAGS=-g")
 CFLAGS = ${CFLAGS}
 
@@ -309,17 +353,29 @@ WARN_CFLAGS=\$(WARN_CXXFLAGS) -Wmissing-declarations
 # The prefix to which notmuch should be installed
 prefix = ${PREFIX}
 
-# The directory to which notmuch libraries should be installed
+# The directory to which libraries should be installed
 libdir = ${LIBDIR:=\$(prefix)/lib}
 
+# The directory to which header files should be installed
+includedir = ${INCLUDEDIR:=\$(prefix)/lib}
+
+# The directory to which man pages should be installed
+mandir = ${MANDIR:=\$(prefix)/share/man}
+
+# The directory to which read-only (configuration) filesshould be installed
+sysconfdir = ${SYSCONFDIR:=\$(prefix)/etc}
+
 # The directory to which emacs lisp files should be installed
-emacs_lispdir=${emacs_lispdir}
+emacslispdir=${EMACSLISPDIR}
+
+# Whether there's an emacs binary available for byte-compiling
+HAVE_EMACS = ${have_emacs}
 
 # The directory to which desktop files should be installed
 desktop_dir = \$(prefix)/share/applications
 
 # The directory to which bash completions files should be installed
-bash_completion_dir = /etc/bash_completion.d
+bash_completion_dir = \$(sysconfdir)/bash_completion.d
 
 # The directory to which zsh completions files should be installed
 zsh_completion_dir = \$(prefix)/share/zsh/functions/Completion/Unix

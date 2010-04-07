@@ -3,7 +3,7 @@
 all:
 
 # List all subdirectories here. Each contains its own Makefile.local
-subdirs = compat emacs lib
+subdirs = compat completion emacs lib
 
 # We make all targets depend on the Makefiles themselves.
 global_deps = Makefile Makefile.local \
