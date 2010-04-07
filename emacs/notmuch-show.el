@@ -966,10 +966,14 @@ The optional PARENT-BUFFER is the notmuch-search buffer from
 which this notmuch-show command was executed, (so that the next
 thread from that buffer can be show when done with this one).
 
-The optional QUERY-CONTEXT is a notmuch search term. Only messages from the thread
-matching this search term are shown if non-nil.
+The optional QUERY-CONTEXT is a notmuch search term. Only
+messages from the thread matching this search term are shown if
+non-nil.
 
-The optional BUFFER-NAME provides the neame of the buffer in which the message thread is shown. If it is nil (which occurs when the command is called interactively) the argument to the function is used. "
+The optional BUFFER-NAME provides the name of the buffer in which
+the message thread is shown. If it is nil (which occurs when the
+command is called interactively) the argument to the function is
+used."
   (interactive "sNotmuch show: ")
   (when (null buffer-name)
     (setq buffer-name (concat "*notmuch-" thread-id "*")))
