@@ -256,12 +256,12 @@ takes an existing set of messages and constructs a suitable mail
 template. The Reply-to header (if any, otherwise From:) is used for
 the To: address. Vales from the To: and Cc: headers are copied, but
 not including any of the current user's email addresses (as configured
-in primary_mail or other_email in the .notmuch-config file) in the
+in primary_mail or other_email in the .notmuch\-config file) in the
 recipient list
 
 It also builds a suitable new subject, including Re: at the front (if
 not already present), and adding the message IDs of the messages being
-replied to to the References list and setting the In-Reply-To: field
+replied to to the References list and setting the In\-Reply\-To: field
 correctly.
 
 Finally, the original contents of the emails are quoted by prefixing
@@ -280,8 +280,8 @@ include
 .BR default
 Includes subject and quoted message body.
 .TP
-.BR headers-only
-Only produces In-Reply-To, References, To, Cc, and Bcc headers.
+.BR headers\-only
+Only produces In\-Reply\-To, References, To, Cc, and Bcc headers.
 .RE
 
 See the
@@ -305,18 +305,18 @@ contents.
 
 .RS 4
 .TP 4
-.BR tag " +<tag>|-<tag> [...] [--] <search-term>..."
+.BR tag " +<tag>|\-<tag> [...] [\-\-] <search-term>..."
 
 Add/remove tags for all messages matching the search terms.
 
-Tags prefixed by '+' are added while those prefixed by '-' are
+Tags prefixed by '+' are added while those prefixed by '\-' are
 removed. For each message, tag removal is performed before tag
 addition.
 
 The beginning of <search-terms> is recognized by the first
-argument that begins with neither '+' nor '-'. Support for
-an initial search term beginning with '+' or '-' is provided
-by allowing the user to specify a "--" argument to separate
+argument that begins with neither '+' nor '\-'. Support for
+an initial search term beginning with '+' or '\-' is provided
+by allowing the user to specify a "\-\-" argument to separate
 the tags from the search terms.
 
 See the
@@ -361,7 +361,7 @@ command can used to output a single part of a multi-part MIME message.
 
 .RS 4
 .TP 4
-.BR part " --part=<part-number> <search-term>..."
+.BR part " \-\-part=<part-number> <search-term>..."
 
 Output a single MIME part of a message.
 
@@ -370,7 +370,7 @@ stdout. The search terms must match only a single message, otherwise
 this command will fail.
 
 The part number should match the part "id" field output by the
-"--format=json" option of "notmuch show". If the message specified by
+"\-\-format=json" option of "notmuch show". If the message specified by
 the search terms does not include a part with the specified "id" there
 will be no output.
 
@@ -438,7 +438,7 @@ as well as any other tag values added manually with
 
 For
 .BR id: ,
-message ID values are the literal contents of the Message-ID: header
+message ID values are the literal contents of the Message\-ID: header
 of email messages, but without the '<', '>' delimiters.
 
 The
@@ -467,21 +467,21 @@ particular time range, (based on the Date: header) with a syntax of:
 	<intial-timestamp>..<final-timestamp>
 
 Each timestamp is a number representing the number of seconds since
-1970-01-01 00:00:00 UTC. This is not the most convenient means of
+1970\-01\-01 00:00:00 UTC. This is not the most convenient means of
 expressing date ranges, but until notmuch is fixed to accept a more
 convenient form, one can use the date program to construct
 timestamps. For example, with the bash shell the folowing syntax would
-specify a date range to return messages from 2009-10-01 until the
+specify a date range to return messages from 2009\-10\-01 until the
 current time:
 
-	$(date +%s -d 2009-10-01)..$(date +%s)
+	$(date +%s \-d 2009\-10\-01)..$(date +%s)
 .SH ENVIRONMENT
 The following environment variables can be used to control the
 behavior of notmuch.
 .TP
 .B NOTMUCH_CONFIG
 Specifies the location of the notmuch configuration file. Notmuch will
-use ${HOME}/.notmuch-config if this variable is not set.
+use ${HOME}/.notmuch\-config if this variable is not set.
 .SH SEE ALSO
 The emacs-based interface to notmuch (available as
 .B notmuch.el
