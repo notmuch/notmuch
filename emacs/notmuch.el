@@ -532,12 +532,11 @@ and will also appear in a buffer named \"*Notmuch errors*\"."
 	  (notmuch-search-set-tags (delete tag (notmuch-search-get-tags)))
 	  (forward-line))))))
 
-
 (defun notmuch-search-add-tag (tag)
   "Add a tag to the currently selected thread or region.
 
-The tag is added to messages in the currently selected thread or
-region which match the current search terms."
+The tag is added to all messages in the currently selected thread
+or threads in the current region."
   (interactive
    (list (notmuch-select-tag-with-completion "Tag to add: ")))
   (save-excursion
@@ -550,8 +549,8 @@ region which match the current search terms."
 (defun notmuch-search-remove-tag (tag)
   "Remove a tag from the currently selected thread or region.
 
-The tag is removed from all messages in the currently selected thread
-or region which match the current search terms."
+The tag is removed from all messages in the currently selected
+thread or threads in the current region."
   (interactive
    (list (notmuch-select-tag-with-completion
 	  "Tag to remove: "
