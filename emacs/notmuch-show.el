@@ -110,7 +110,7 @@ Can use up to one integer format parameter, i.e. %d")
 (defvar notmuch-show-signature-lines-max 12
   "Maximum length of signature that will be hidden by default.")
 
-(defvar notmuch-show-citation-lines-prefix 4
+(defvar notmuch-show-citation-lines-prefix 3
   "Always show at least this many lines at the start of a citation.
 
 If there is one more line than the sum of
@@ -118,7 +118,7 @@ If there is one more line than the sum of
 `notmuch-show-citation-lines-suffix', show that, otherwise
 collapse remaining lines into a button.")
 
-(defvar notmuch-show-citation-lines-suffix 0
+(defvar notmuch-show-citation-lines-suffix 3
   "Always show at least this many lines at the end of a citation.
 
 If there is one more line than the sum of
