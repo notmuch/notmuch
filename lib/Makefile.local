@@ -51,7 +51,7 @@ $(dir)/libnotmuch.a: $(libnotmuch_modules)
 	$(call quiet,AR) rcs $@ $^
 
 $(dir)/$(LIBNAME): $(libnotmuch_modules)
-	$(call quiet,CXX $(CXXFLAGS)) $^ $(FINAL_LDFLAGS) -shared -Wl,-soname=$(SONAME) -o $@
+	$(call quiet,CXX $(CXXFLAGS)) $^ $(FINAL_LIBNOTMUCH_LDFLAGS) -shared -Wl,-soname=$(SONAME) -o $@
 
 $(dir)/$(SONAME): $(dir)/$(LIBNAME)
 	ln -sf $(LIBNAME) $@

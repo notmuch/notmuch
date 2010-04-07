@@ -41,7 +41,8 @@ extra_cxxflags :=
 # Smash together user's values with our extra values
 FINAL_CFLAGS = -DNOTMUCH_VERSION=$(VERSION) $(CFLAGS) $(WARN_CFLAGS) $(CONFIGURE_CFLAGS) $(extra_cflags)
 FINAL_CXXFLAGS = $(CXXFLAGS) $(WARN_CXXFLAGS) $(CONFIGURE_CXXFLAGS) $(extra_cflags) $(extra_cxxflags)
-FINAL_LDFLAGS = $(LDFLAGS) $(CONFIGURE_LDFLAGS)
+FINAL_NOTMUCH_LDFLAGS = $(LDFLAGS) -Llib -lnotmuch
+FINAL_LIBNOTMUCH_LDFLAGS = $(LDFLAGS) $(CONFIGURE_LDFLAGS)
 
 .PHONY: all
 all: notmuch notmuch-shared notmuch.1.gz
@@ -167,10 +168,10 @@ notmuch_client_srcs =		\
 notmuch_client_modules = $(notmuch_client_srcs:.c=.o)
 
 notmuch: $(notmuch_client_modules) lib/libnotmuch.a
-	$(call quiet,CC $(CFLAGS)) $^ $(FINAL_LDFLAGS) -o $@
+	$(call quiet,CC $(CFLAGS)) $^ $(FINAL_LIBNOTMUCH_LDFLAGS) -o $@
 
 notmuch-shared: $(notmuch_client_modules) lib/libnotmuch.so
-	$(call quiet,CC $(CFLAGS)) -Llib -lnotmuch $(notmuch_client_modules) $(FINAL_LDFLAGS) -o $@
+	$(call quiet,CC $(CFLAGS)) $(notmuch_client_modules) $(FINAL_NOTMUCH_LDFLAGS) -o $@
 
 notmuch.1.gz: notmuch.1
 	gzip --stdout $^ > $@
