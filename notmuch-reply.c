@@ -383,7 +383,7 @@ notmuch_reply_format_default(void *ctx, notmuch_config_t *config, notmuch_query_
 	if (from_addr == NULL)
 	    from_addr = guess_from_received_header (config, message);
 
-	if (from_addr == NULL) {
+	if (from_addr == NULL)
 	    from_addr = notmuch_config_get_user_primary_email (config);
 
 	from_addr = talloc_asprintf (ctx, "%s <%s>",
