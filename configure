@@ -357,7 +357,7 @@ prefix = ${PREFIX}
 libdir = ${LIBDIR:=\$(prefix)/lib}
 
 # The directory to which header files should be installed
-includedir = ${INCLUDEDIR:=\$(prefix)/lib}
+includedir = ${INCLUDEDIR:=\$(prefix)/include}
 
 # The directory to which man pages should be installed
 mandir = ${MANDIR:=\$(prefix)/share/man}
