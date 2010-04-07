@@ -199,6 +199,9 @@ Fix the insane quoting nightmare of the test suite, (and once we do
 that we can actually test the implicit-phrase search feature such as
 "notmuch search 'body search (phrase)'"
 
+Test "notmuch reply" choosing the correct email address from the
+Received header when no configured email address appears in To or Cc.
+
 General
 -------
 Audit everything for dealing with out-of-memory (and drop xutil.c).
