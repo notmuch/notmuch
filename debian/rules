@@ -3,7 +3,7 @@
 	dh $@
 
 override_dh_auto_configure:
-	dh_auto-configure --emacslispdir=/usr/share/emacs/site-lisp/notmuch
+	dh_auto_configure -- --emacslispdir=/usr/share/emacs/site-lisp/notmuch
 
 override_dh_installdocs:
 	dh_installdocs
