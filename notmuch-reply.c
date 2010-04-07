@@ -296,28 +296,23 @@ guess_from_received_header (notmuch_config_t *config, notmuch_message_t *message
     received = notmuch_message_get_header (message, "received");
     by = strstr (received, " by ");
     if (by && *(by+4)) {
-	/* we know that there are 4 characters after by - either the 4th one
-	 * is '\0' (broken header) or it is the first letter of the hostname 
-	 * that last received this email - which we'll use to guess the right
-	 * from email address
+	/* sadly, the format of Received: headers is a bit inconsistent,
+	 * depending on the MTA used. So we try to extract just the MTA
+	 * here by removing leading whitespace and assuming that the MTA
+	 * name ends at the next whitespace
+	 * we test for *(by+4) to be non-'\0' to make sure there's something
+	 * there at all - and then assume that the first whitespace delimited
+	 * token that follows is the last receiving server
 	 */
 	mta = strdup (by+4);
 	if (mta == NULL)
 	    return NULL;
-
-	/* After the MTA comes its IP address (or HELO response) in parenthesis.
-	 * so let's terminate the string there
-	 */
-	if ((ptr = strchr (mta, '(')) == NULL) {
-	    free (mta);
+	token = strtok(mta," \t");
+	if (token == NULL)
 	    return NULL;
-	}
-	*ptr = '\0';
-
 	/* Now extract the last two components of the MTA host name
 	 * as domain and tld
 	 */
-	token = mta;
 	while ((ptr = strsep (&token, delim)) != NULL) {
 	    if (*ptr == '\0')
 		continue;
