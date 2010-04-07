@@ -28,7 +28,7 @@ Package: libnotmuch1
 Section: libs
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
-Description: thread-based email index, search and tagging
+Description: thread-based email index, search and tagging (runtime)
  Notmuch is a system for indexing, searching, reading, and tagging
  large collections of email messages in maildir or mh format. It uses
  the Xapian library to provide fast, full-text search with a very
@@ -41,7 +41,7 @@ Package: libnotmuch-dev
 Section: libdevel
 Architecture: any
 Depends: ${misc:Depends}, libnotmuch1 (= ${binary:Version})
-Description: thread-based email index, search and tagging
+Description: thread-based email index, search and tagging (development)
  Notmuch is a system for indexing, searching, reading, and tagging
  large collections of email messages in maildir or mh format. It uses
  the Xapian library to provide fast, full-text search with a very
