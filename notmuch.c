@@ -220,6 +220,10 @@ command_t commands[] = {
       "\tof messages matching both a specific tag and either inbox\n"
       "\tor unread\n"
       "\n"
+      "\tIf no parameters are given, or the special search terms '' or\n"
+      "\t'*' are given, it will display the total number of messages in\n"
+      "\tthe database.\n"
+      "\n"
       "\tSee \"notmuch help search-terms\" for details of the search\n"
       "\t\tterms syntax." },
     { "reply", notmuch_reply_command,
