@@ -7,11 +7,10 @@
 # digit when we reach particularly major milestones of usability.
 #
 # Between releases, (such as when compiling notmuch from the git
-# repository), we add a third digit, (0.1.1, 0.1.2, etc.), and
-# increment it occasionally, (such as after a big batch of commits are
-# merged.
+# repository), we let git to append identification of the actual
+# commit.
 PACKAGE=notmuch
-VERSION=0.1.1
+VERSION:=$(shell if [ -f version ]; then cat version; else git describe --match '[0-9].[0-9]*'; fi)
 
 RELEASE_HOST=notmuchmail.org
 RELEASE_DIR=/srv/notmuchmail.org/www/releases
@@ -63,7 +62,11 @@ endif
 endif
 
 $(TAR_FILE):
-	git archive --format=tar --prefix=$(PACKAGE)-$(VERSION)/ HEAD | gzip > $(TAR_FILE)
+	git archive --format=tar --prefix=$(PACKAGE)-$(VERSION)/ HEAD > $(TAR_FILE).tmp
+	echo $(VERSION) > version
+	tar --append -f $(TAR_FILE).tmp --transform s_^_$(PACKAGE)-$(VERSION)/_ version
+	rm version
+	gzip < $(TAR_FILE).tmp > $(TAR_FILE)
 	@echo "Source is ready for release in $(TAR_FILE)"
 
 $(SHA1_FILE): $(TAR_FILE)
