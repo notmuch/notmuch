@@ -224,6 +224,7 @@ For a mouse binding, return nil."
     (define-key map "s" 'notmuch-search)
     (define-key map "o" 'notmuch-search-toggle-order)
     (define-key map "=" 'notmuch-search-refresh-view)
+    (define-key map "G" 'notmuch-poll-and-search-refresh-view)
     (define-key map "t" 'notmuch-search-filter-by-tag)
     (define-key map "f" 'notmuch-search-filter)
     (define-key map [mouse-1] 'notmuch-search-show-thread)
@@ -744,6 +745,17 @@ same relative position within the new buffer."
     (goto-char (point-min))
     ))
 
+(defun notmuch-poll-and-search-refresh-view ()
+  "Run external script to import mail and refresh the current view.
+
+Checks if the variable 'notmuch-external-refresh-script is defined
+and runs the external program defined it provides. Then calls
+notmuch-search-refresh-view to refresh the current view."
+  (interactive)
+  (if (boundp 'notmuch-external-refresh-script)
+      (call-process notmuch-external-refresh-script nil nil))
+  (notmuch-search-refresh-view))
+
 (defun notmuch-search-toggle-order ()
   "Toggle the current search order.
 
@@ -802,6 +814,7 @@ current search results AND that are tagged with the given tag."
     (define-key map ">" 'notmuch-folder-last)
     (define-key map "<" 'notmuch-folder-first)
     (define-key map "=" 'notmuch-folder)
+    (define-key map "G" 'notmuch-poll-and-folder)
     (define-key map "s" 'notmuch-search)
     (define-key map [mouse-1] 'notmuch-folder-show-search)
     (define-key map (kbd "RET") 'notmuch-folder-show-search)
@@ -914,6 +927,17 @@ Currently available key bindings:
   (let ((search (assoc folder notmuch-folders)))
     (if search
 	(notmuch-search (cdr search) notmuch-search-oldest-first))))
+
+(defun notmuch-poll-and-folder ()
+  "Run external script to import mail and refresh the folder view.
+
+Checks if the variable 'notmuch-external-refresh-script is defined
+and runs the external program defined it provides. Then calls
+notmuch-folder to refresh the current view."
+  (interactive)
+  (if (boundp 'notmuch-external-refresh-script)
+      (call-process notmuch-external-refresh-script nil nil))
+  (notmuch-folder))
 
 ;;;###autoload
 (defun notmuch-folder ()
