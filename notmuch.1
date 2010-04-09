@@ -126,7 +126,7 @@ syntax. See the
 section below for more details on the supported syntax.
 
 The
-.BR search " and "show
+.BR search ", " show " and " count
 commands are used to query the email database.
 .RS 4
 .TP 4
@@ -238,6 +238,16 @@ command.
 See the
 .B "SEARCH SYNTAX"
 section below for details of the supported syntax for <search-terms>.
+.RE
+.TP
+.BR count " <search-term>..."
+
+Count messages matching the search terms.
+
+The number of matching messages is output to stdout.
+
+With no search terms, a count of all messages in the database will be
+displayed.
 .RE
 .RE
 
