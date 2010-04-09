@@ -125,7 +125,9 @@ notmuch_query_search_messages (notmuch_query_t *query)
 			      Xapian::QueryParser::FLAG_WILDCARD |
 			      Xapian::QueryParser::FLAG_PURE_NOT);
 
-	if (strcmp (query_string, "") == 0) {
+	if (strcmp (query_string, "") == 0 ||
+	    strcmp (query_string, "*") == 0)
+	{
 	    final_query = mail_query;
 	} else {
 	    string_query = notmuch->query_parser->
@@ -333,7 +335,9 @@ notmuch_query_count_messages (notmuch_query_t *query)
 			      Xapian::QueryParser::FLAG_WILDCARD |
 			      Xapian::QueryParser::FLAG_PURE_NOT);
 
-	if (strcmp (query_string, "") == 0) {
+	if (strcmp (query_string, "") == 0 ||
+	    strcmp (query_string, "*") == 0)
+	{
 	    final_query = mail_query;
 	} else {
 	    string_query = notmuch->query_parser->

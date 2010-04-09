@@ -325,7 +325,8 @@ notmuch_database_get_all_tags (notmuch_database_t *db);
  *
  * http://xapian.org/docs/queryparser.html
  *
- * As a special case, passing a length-zero string, (that is ""), will
+ * As a special case, passing either a length-zero string, (that is ""),
+ * or a string consisting of a single asterisk (that is "*"), will
  * result in a query that returns all messages in the database.
  *
  * See notmuch_query_set_sort for controlling the order of results.
