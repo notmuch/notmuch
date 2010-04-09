@@ -90,7 +90,8 @@ notmuch_count_command (void *ctx, int argc, char *argv[])
 	fprintf (stderr, "Out of memory.\n");
 	return 1;
     }
-    if (*query_str == '\0' || (*query_str == '*' && *(query_str+1) == '\0')) {
+
+    if (*query_str == '\0') {
 	query_str = talloc_strdup (ctx, "");
     }
 
