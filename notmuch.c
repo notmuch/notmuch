@@ -219,10 +219,6 @@ command_t commands[] = {
       "Count messages matching the search terms.",
       "\tThe number of matching messages is output to stdout.\n"
       "\n"
-      "\tA common use of \"notmuch count\" is to display the count\n"
-      "\tof messages matching both a specific tag and either inbox\n"
-      "\tor unread\n"
-      "\n"
       "\tWith no search terms, a count of all messages in the database\n"
       "\twill be displayed.\n"
       "\n"
