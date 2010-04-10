@@ -37,15 +37,10 @@ Here are the steps to follow to create a new notmuch release:
 
 	Commit this change.
 
-5) Increment the notmuch version in Makefile.local
+5) Run "make VERSION=X.Y release" which will perform the following steps:
 
-	For most releases we'll just increment the minor number. For
-	major milestones of usability we'll increment the major
-	number.
-
-	Commit this change.
-
-6) Run "make release" which will perform the following steps:
+   For the X.Y version, we'll generally just increment Y. But for
+   major milestones of usability we're increment X as well.
 
 	* Check that the notmuch version consists of only two components
 	* Check that no release exists with the current version
@@ -62,11 +57,11 @@ Here are the steps to follow to create a new notmuch release:
 	  your public-key's setting or this fails.)
 	* Push that tag
 	* Provide some text for the release announcement (see below).
-	  If for some reason you lose this message, "make release-message"
-	  prints it again for you.
 
-7) Increment the notmuch version by adding a .1 micro number, commit, and push.
+6) Increment the notmuch version by adding a .1 micro number, commit, and push.
 
-8) Send a message to notmuch@notmuchmail.org to announce the release.
+7) Send a message to notmuch@notmuchmail.org to announce the release.
 
-	Use the text from the new entry to NEWS.
+	Use the text provided from "make release" above, (if for some
+	reason you lose this message, "make release-message" prints
+	it again for you.
