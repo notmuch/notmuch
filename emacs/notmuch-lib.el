@@ -24,17 +24,6 @@
 (defvar notmuch-command "notmuch"
   "Command to run the notmuch binary.")
 
-(declare-function notmuch-toggle-invisible-action "notmuch" (cite-button))
-
-(define-button-type 'notmuch-button-invisibility-toggle-type
-  'action 'notmuch-toggle-invisible-action
-  'follow-link t
-  'face 'font-lock-comment-face)
-
-(define-button-type 'notmuch-button-headers-toggle-type
-  'help-echo "mouse-1, RET: Show headers"
-  :supertype 'notmuch-button-invisibility-toggle-type)
-
 ;; XXX: This should be a generic function in emacs somewhere, not
 ;; here.
 (defun point-invisible-p ()

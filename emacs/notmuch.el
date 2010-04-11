@@ -108,58 +108,6 @@
 	(forward-line)))
   (message-mode))
 
-(defun notmuch-toggle-invisible-action (cite-button)
-  (let ((invis-spec (button-get cite-button 'invisibility-spec)))
-        (if (invisible-p invis-spec)
-            (remove-from-invisibility-spec invis-spec)
-          (add-to-invisibility-spec invis-spec)
-          ))
-  (force-window-update)
-  (redisplay t))
-
-(define-button-type 'notmuch-button-citation-toggle-type 'help-echo "mouse-1, RET: Show citation"
-  :supertype 'notmuch-button-invisibility-toggle-type)
-(define-button-type 'notmuch-button-signature-toggle-type 'help-echo "mouse-1, RET: Show signature"
-  :supertype 'notmuch-button-invisibility-toggle-type)
-(define-button-type 'notmuch-button-body-toggle-type
-  'help-echo "mouse-1, RET: Show message"
-  'face 'notmuch-message-summary-face
-  :supertype 'notmuch-button-invisibility-toggle-type)
-
-(defun notmuch-fontify-headers ()
-  (while (looking-at "[[:space:]]")
-    (forward-char))
-  (if (looking-at "[Tt]o:")
-      (progn
-	(overlay-put (make-overlay (point) (re-search-forward ":"))
-		     'face 'message-header-name)
-	(overlay-put (make-overlay (point) (re-search-forward ".*$"))
-		     'face 'message-header-to))
-    (if (looking-at "[B]?[Cc][Cc]:")
-	(progn
-	  (overlay-put (make-overlay (point) (re-search-forward ":"))
-		       'face 'message-header-name)
-	  (overlay-put (make-overlay (point) (re-search-forward ".*$"))
-		       'face 'message-header-cc))
-      (if (looking-at "[Ss]ubject:")
-	  (progn
-	    (overlay-put (make-overlay (point) (re-search-forward ":"))
-			 'face 'message-header-name)
-	    (overlay-put (make-overlay (point) (re-search-forward ".*$"))
-			 'face 'message-header-subject))
-	(if (looking-at "[Ff]rom:")
-	    (progn
-	      (overlay-put (make-overlay (point) (re-search-forward ":"))
-			   'face 'message-header-name)
-	      (overlay-put (make-overlay (point) (re-search-forward ".*$"))
-			   'face 'message-header-other))
-	  (if (looking-at "[Dd]ate:")
-             (progn
-               (overlay-put (make-overlay (point) (re-search-forward ":"))
-                            'face 'message-header-name)
-               (overlay-put (make-overlay (point) (re-search-forward ".*$"))
-                            'face 'message-header-other))))))))
-
 (defun notmuch-documentation-first-line (symbol)
   "Return the first line of the documentation string for SYMBOL."
   (let ((doc (documentation symbol)))
@@ -435,18 +383,19 @@ Complete list of currently available key bindings:
   "Display the currently selected thread."
   (interactive)
   (let ((thread-id (notmuch-search-find-thread-id))
-	(subject (notmuch-search-find-subject))
-	buffer-name)
-    (when (string-match "^[ \t]*$" subject)
-      (setq subject "[No Subject]"))
-    (setq buffer-name (concat "*"
-			      (truncate-string-to-width subject 32 nil nil t)
-			      "*"))
+	(subject (notmuch-search-find-subject)))
     (if (> (length thread-id) 0)
 	(notmuch-show thread-id
 		      (current-buffer)
 		      notmuch-search-query-string
-		      buffer-name)
+		      ;; name the buffer based on notmuch-search-find-subject
+		      (if (string-match "^[ \t]*$" subject)
+			  "[No Subject]"
+			(truncate-string-to-width
+			 (concat "*"
+				 (truncate-string-to-width subject 32 nil nil t)
+				 "*")
+			 32 nil nil t)))
       (error "End of search results"))))
 
 (defun notmuch-search-reply-to-thread ()
