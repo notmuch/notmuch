@@ -199,7 +199,7 @@ notmuch_client_modules = $(notmuch_client_srcs:.c=.o)
 notmuch: $(notmuch_client_modules) lib/libnotmuch.a
 	$(call quiet,CXX $(CFLAGS)) $^ $(FINAL_LIBNOTMUCH_LDFLAGS) -o $@
 
-notmuch-shared: $(notmuch_client_modules) lib/libnotmuch.so
+notmuch-shared: $(notmuch_client_modules) lib/$(LINKER_NAME)
 	$(call quiet,CXX $(CFLAGS)) $(notmuch_client_modules) $(FINAL_NOTMUCH_LDFLAGS) -o $@
 
 notmuch.1.gz: notmuch.1

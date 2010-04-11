@@ -234,6 +234,15 @@ else
     have_emacs=0
 fi
 
+printf "Checking for Mac OS X (for shared library)... "
+if [ `uname` = "Darwin" ] ; then
+    printf "Yes.\n"
+    mac_os_x=1
+else
+    printf "No.\n"
+    mac_os_x=0
+fi
+
 if [ $errors -gt 0 ]; then
     cat <<EOF
 
@@ -398,6 +407,10 @@ HAVE_GETLINE = ${have_getline}
 # Whether the strcasestr function is available (if not, then notmuch will
 # build its own version)
 HAVE_STRCASESTR = ${have_strcasestr}
+
+# Whether we are building on OS X.  This will affect how we build the
+# shared library.
+MAC_OS_X = ${mac_os_x}
 
 # Flags needed to compile and link against Xapian
 XAPIAN_CXXFLAGS = ${xapian_cxxflags}
