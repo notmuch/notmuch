@@ -9,6 +9,13 @@ subdirs = compat completion emacs lib
 global_deps = Makefile Makefile.local \
 	$(subdirs:%=%/Makefile) $(subdirs:%=%/Makefile.local)
 
+# Sub-directory Makefile.local fragments can append to these variables
+# to have directory-specific cflags as necessary.
+
+extra_cflags :=
+extra_cxxflags :=
+
 # Finally, include all of the Makefile.local fragments where all the
 # real work is done.
-include Makefile.local $(subdirs:%=%/Makefile.local)
+
+include $(subdirs:%=%/Makefile.local) Makefile.local

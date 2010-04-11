@@ -33,11 +33,6 @@ Makefile.config: configure
 	@echo ""
 	./configure
 
-# Sub-directory Makefile.local fragments can append to these variables
-# to have directory-specific cflags as necessary.
-extra_cflags :=
-extra_cxxflags :=
-
 # Smash together user's values with our extra values
 FINAL_CFLAGS = -DNOTMUCH_VERSION=$(VERSION) $(CFLAGS) $(WARN_CFLAGS) $(CONFIGURE_CFLAGS) $(extra_cflags)
 FINAL_CXXFLAGS = $(CXXFLAGS) $(WARN_CXXFLAGS) $(CONFIGURE_CXXFLAGS) $(extra_cflags) $(extra_cxxflags)

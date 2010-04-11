@@ -3,7 +3,7 @@
 dir := compat
 extra_cflags += -I$(dir)
 
-notmuch_compat_srcs =
+notmuch_compat_srcs :=
 
 ifneq ($(HAVE_GETLINE),1)
 notmuch_compat_srcs += $(dir)/getline.c $(dir)/getdelim.c
