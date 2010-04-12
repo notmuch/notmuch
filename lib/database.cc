@@ -1348,18 +1348,27 @@ _notmuch_database_link_message_to_children (notmuch_database_t *notmuch,
 /* Given a (mostly empty) 'message' and its corresponding
  * 'message_file' link it to existing threads in the database.
  *
- * We first look at 'message_file' and its link-relevant headers
- * (References and In-Reply-To) for message IDs. We also look in the
- * database for existing message that reference 'message'. In either
- * case, we will assign to the current message the first thread_id
+ * The first check is in the metadata of the database to see if we
+ * have pre-allocated a thread_id in advance for this message, (which
+ * would have happened if a message was previously added that
+ * referenced this one).
+ *
+ * Second, we look at 'message_file' and its link-relevant headers
+ * (References and In-Reply-To) for message IDs.
+ *
+ * Finally, we look in the database for existing message that
+ * reference 'message'.
+ *
+ * In all cases, we assign to the current message the first thread_id
  * found (through either parent or child). We will also merge any
  * existing, distinct threads where this message belongs to both,
  * (which is not uncommon when mesages are processed out of order).
  *
- * Finally, if not thread ID has been found through parent or child,
- * we call _notmuch_message_generate_thread_id to generate a new
- * generates a new thread ID if the message doesn't connect to any
- * existing threads.
+ * Finally, if no thread ID has been found through parent or child, we
+ * call _notmuch_message_generate_thread_id to generate a new thread
+ * ID. This should only happen for new, top-level messages, (no
+ * References or In-Reply-To header in this message, and no previously
+ * added message refers to this message).
  */
 static notmuch_status_t
 _notmuch_database_link_message (notmuch_database_t *notmuch,
