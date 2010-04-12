@@ -1138,10 +1138,13 @@ _get_metadata_thread_id_key (void *ctx, const char *message_id)
 
 /* Find the thread ID to which the message with 'message_id' belongs.
  *
- * Returns NULL if no message with message ID 'message_id' is in the
- * database.
+ * Always returns a newly talloced string belonging to 'ctx'.
  *
- * Otherwise, returns a newly talloced string belonging to 'ctx'.
+ * Note: If there is no message in the database with the given
+ * 'message_id' then a new thread_id will be allocated for this
+ * message and stored in the database metadata, (where this same
+ * thread ID can be looked up if the message is added to the database
+ * later).
  */
 static const char *
 _resolve_message_id_to_thread_id (notmuch_database_t *notmuch,
