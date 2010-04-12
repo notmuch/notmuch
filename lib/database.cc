@@ -1313,14 +1313,15 @@ _notmuch_database_link_message_to_parents (notmuch_database_t *notmuch,
 	const char *parent_thread_id;
 
 	parent_message_id = (char *) l->data;
+
+	_notmuch_message_add_term (message, "reference",
+				   parent_message_id);
+
 	parent_thread_id = _resolve_message_id_to_thread_id (notmuch,
 							     message,
 							     parent_message_id);
 
-	if (parent_thread_id == NULL) {
-	    _notmuch_message_add_term (message, "reference",
-				       parent_message_id);
-	} else {
+	if (parent_thread_id != NULL) {
 	    if (*thread_id == NULL) {
 		*thread_id = talloc_strdup (message, parent_thread_id);
 		_notmuch_message_add_term (message, "thread", *thread_id);
