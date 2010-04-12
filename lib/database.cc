@@ -44,7 +44,8 @@ typedef struct {
 
 /* Here's the current schema for our database (for NOTMUCH_DATABASE_VERSION):
  *
- * We currently have two different types of documents: mail and directory.
+ * We currently have two different types of documents (mail and
+ * directory) and also some metadata.
  *
  * Mail document
  * -------------
@@ -118,6 +119,49 @@ typedef struct {
  *
  * The data portion of a directory document contains the path of the
  * directory (relative to the database path).
+ *
+ * Database metadata
+ * -----------------
+ * Xapian allows us to store arbitrary name-value pairs as
+ * "metadata". We currently use the following metadata names with the
+ * given meanings:
+ *
+ *	version		The database schema version, (which is distinct
+ *			from both the notmuch package version (see
+ *			notmuch --version) and the libnotmuch library
+ *			version. The version is stored as an base-10
+ *			ASCII integer. The initial database version
+ *			was 1, (though a schema existed before that
+ *			were no "version" database value existed at
+ *			all). Succesive versions are allocated as
+ *			changes are made to the database (such as by
+ *			indexing new fields).
+ *
+ *	last_thread_id	The last thread ID generated. This is stored
+ *			as a 16-byte hexadecimal ASCII representation
+ *			of a 64-bit unsigned integer. The first ID
+ *			generated is 1 and the value will be
+ *			incremented for each thread ID.
+ *
+ *	thread_id_*	A pre-allocated thread ID for a particular
+ *			message. This is actually an arbitarily large
+ *			family of metadata name. Any particular name
+ *			is formed by concatenating "thread_id_" with a
+ *			message ID. The value stored is a thread ID.
+ *
+ *			These thread ID metadata values are stored
+ *			whenever a message references a parent message
+ *			that does not yet exist in the database. A
+ *			thread ID will be allocated and stored, and if
+ *			the message is later added, the stored thread
+ *			ID will be used (and the metadata value will
+ *			be cleared).
+ *
+ *			Even before a message is added, it's
+ *			pre-allocated thread ID is useful so that all
+ *			descendant messages that reference this common
+ *			parent can be recognized as belonging to the
+ *			same thread.
  */
 
 /* With these prefix values we follow the conventions published here:
