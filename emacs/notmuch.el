@@ -54,6 +54,24 @@
 (require 'notmuch-lib)
 (require 'notmuch-show)
 
+(defcustom notmuch-search-authors-width 20
+  "Number of columns to use to display authors in a notmuch-search buffer."
+  :type 'integer)
+
+(defcustom notmuch-search-result-format
+  `(("date" . "%s ")
+    ("count" . "%-7s ")
+    ("authors" . ,(format "%%-%ds " notmuch-search-authors-width))
+    ("subject" . "%s ")
+    ("tags" . "(%s)"))
+  "Search result formating. Supported fields are:
+	date, count, authors, subject, tags
+For example:
+	(setq notmuch-search-result-format \(\(\"authors\" . \"%-40s\"\)
+					     \(\"subject\" . \"%s\"\)\)\)"
+  :type '(alist :key-type (string) :value-type (string))
+  :group 'notmuch)
+
 (defun notmuch-select-tag-with-completion (prompt &rest search-terms)
   (let ((tag-list
 	 (with-output-to-string
@@ -188,9 +206,6 @@ For a mouse binding, return nil."
   :options '(hl-line-mode)
   :group 'notmuch)
 
-(defvar notmuch-search-authors-width 20
-  "Number of columns to use to display authors in a notmuch-search buffer.")
-
 (defvar notmuch-search-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map "?" 'notmuch-help)
@@ -289,11 +304,6 @@ For a mouse binding, return nil."
   "Notmuch search mode face used to highligh tags."
   :group 'notmuch)
 
-(defvar notmuch-tag-face-alist nil
-  "List containing the tag list that need to be highlighed")
-
-(defvar notmuch-search-font-lock-keywords  nil)
-
 ;;;###autoload
 (defun notmuch-search-mode ()
   "Major mode displaying results of a notmuch search.
@@ -331,17 +341,7 @@ Complete list of currently available key bindings:
   (setq truncate-lines t)
   (setq major-mode 'notmuch-search-mode
 	mode-name "notmuch-search")
-  (setq buffer-read-only t)
-  (if (not notmuch-tag-face-alist)
-      (add-to-list 'notmuch-search-font-lock-keywords (list
-		"(\\([^()]*\\))$" '(1  'notmuch-tag-face)))
-    (let ((notmuch-search-tags (mapcar 'car notmuch-tag-face-alist)))
-      (loop for notmuch-search-tag  in notmuch-search-tags
-	    do (add-to-list 'notmuch-search-font-lock-keywords (list
-			(concat "([^)]*\\(" notmuch-search-tag "\\)[^)]*)$")
-			`(1  ,(cdr (assoc notmuch-search-tag notmuch-tag-face-alist))))))))
-  (set (make-local-variable 'font-lock-defaults)
-         '(notmuch-search-font-lock-keywords t)))
+  (setq buffer-read-only t))
 
 (defun notmuch-search-properties-in-region (property beg end)
   (save-excursion
@@ -432,7 +432,8 @@ and will also appear in a buffer named \"*Notmuch errors*\"."
       (backward-char)
       (let ((end (point)))
 	(delete-region beg end)
-	(insert (mapconcat  'identity tags " "))))))
+	(insert (propertize (mapconcat  'identity tags " ")
+			    'font-lock-face 'notmuch-tag-face))))))
 
 (defun notmuch-search-get-tags ()
   (save-excursion
@@ -581,6 +582,26 @@ matching will be applied."
 		  (t
 		   (setq tags-faces (cdr tags-faces)))))))))
 
+(defun notmuch-search-insert-field (field date count authors subject tags)
+  (cond
+   ((string-equal field "date")
+    (insert (format (cdr (assoc field notmuch-search-result-format)) date)))
+   ((string-equal field "count")
+    (insert (format (cdr (assoc field notmuch-search-result-format)) count)))
+   ((string-equal field "authors")
+    (insert (format (cdr (assoc field notmuch-search-result-format)) authors)))
+   ((string-equal field "subject")
+    (insert (format (cdr (assoc field notmuch-search-result-format)) subject)))
+   ((string-equal field "tags")
+    (insert (concat "(" (propertize tags 'font-lock-face 'notmuch-tag-face) ")")))))
+
+(defun notmuch-search-show-result (date count authors subject tags)
+  (let ((fields) (field))
+    (setq fields (mapcar 'car notmuch-search-result-format))
+    (loop for field in fields
+	  do (notmuch-search-insert-field field date count authors subject tags)))
+  (insert "\n"))
+
 (defun notmuch-search-process-filter (proc string)
   "Process and filter the output of \"notmuch search\""
   (let ((buffer (process-buffer proc))
@@ -604,9 +625,8 @@ matching will be applied."
 		      (if (> authors-length notmuch-search-authors-width)
 			  (set 'authors (concat (substring authors 0 (- notmuch-search-authors-width 3)) "...")))
 		      (goto-char (point-max))
-		      (let ((beg (point-marker))
-			    (format-string (format "%%s %%-7s %%-%ds %%s (%%s)\n" notmuch-search-authors-width)))
-			(insert (format format-string date count authors subject tags))
+		      (let ((beg (point-marker)))
+			(notmuch-search-show-result date count authors subject tags)
 			(notmuch-search-color-line beg (point-marker) tag-list)
 			(put-text-property beg (point-marker) 'notmuch-search-thread-id thread-id)
 			(put-text-property beg (point-marker) 'notmuch-search-authors authors)
