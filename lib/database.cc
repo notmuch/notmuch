@@ -1152,36 +1152,41 @@ _resolve_message_id_to_thread_id (notmuch_database_t *notmuch,
 				  const char *message_id)
 {
     notmuch_message_t *message;
-    const char *ret = NULL;
+    string thread_id_string;
+    const char *thread_id;
+    char *metadata_key;
+    Xapian::WritableDatabase *db;
 
     message = notmuch_database_find_message (notmuch, message_id);
-    /* If we haven't seen that message yet then check if we have already
-     * generated a dummy id for it and stored it in the metadata.
-     * If not then we generate a new thread id.
-     * This ensures that we can thread messages even when we haven't received
-     * the root (yet?)
-     */
-    if (message == NULL) {
-        Xapian::WritableDatabase *db = static_cast <Xapian::WritableDatabase *> (notmuch->xapian_db);
-        char * metadata_key = _get_metadata_thread_id_key (ctx, message_id);
-        string thread_id = notmuch->xapian_db->get_metadata(metadata_key);
-        if (thread_id.empty()) {
-            ret = _notmuch_database_generate_thread_id(notmuch);
-            db->set_metadata(metadata_key, ret);
-        } else {
-            ret = thread_id.c_str();
-        }
-        talloc_free (metadata_key);
-        goto DONE;
-    }
 
-    ret = talloc_steal (ctx, notmuch_message_get_thread_id (message));
+    if (message) {
+	thread_id = talloc_steal (ctx, notmuch_message_get_thread_id (message));
 
-  DONE:
-    if (message)
 	notmuch_message_destroy (message);
 
-    return ret;
+	return thread_id;
+    }
+
+    /* Message has not been seen yet.
+     *
+     * We may have seen a reference to it already, in which case, we
+     * can return the thread ID stored in the metadata. Otherwise, we
+     * generate a new thread ID and store it there.
+     */
+    db = static_cast <Xapian::WritableDatabase *> (notmuch->xapian_db);
+    metadata_key = _get_metadata_thread_id_key (ctx, message_id);
+    thread_id_string = notmuch->xapian_db->get_metadata (metadata_key);
+
+    if (thread_id_string.empty()) {
+	thread_id = _notmuch_database_generate_thread_id (notmuch);
+	db->set_metadata (metadata_key, thread_id);
+    } else {
+	thread_id = thread_id_string.c_str();
+    }
+
+    talloc_free (metadata_key);
+
+    return thread_id;
 }
 
 static notmuch_status_t
