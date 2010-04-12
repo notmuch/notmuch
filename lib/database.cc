@@ -1321,15 +1321,13 @@ _notmuch_database_link_message_to_parents (notmuch_database_t *notmuch,
 							     message,
 							     parent_message_id);
 
-	if (parent_thread_id != NULL) {
-	    if (*thread_id == NULL) {
-		*thread_id = talloc_strdup (message, parent_thread_id);
-		_notmuch_message_add_term (message, "thread", *thread_id);
-	    } else if (strcmp (*thread_id, parent_thread_id)) {
-		ret = _merge_threads (notmuch, *thread_id, parent_thread_id);
-		if (ret)
-		    goto DONE;
-	    }
+	if (*thread_id == NULL) {
+	    *thread_id = talloc_strdup (message, parent_thread_id);
+	    _notmuch_message_add_term (message, "thread", *thread_id);
+	} else if (strcmp (*thread_id, parent_thread_id)) {
+	    ret = _merge_threads (notmuch, *thread_id, parent_thread_id);
+	    if (ret)
+		goto DONE;
 	}
     }
 
