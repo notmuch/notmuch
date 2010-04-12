@@ -1376,17 +1376,27 @@ _notmuch_database_link_message (notmuch_database_t *notmuch,
 				notmuch_message_file_t *message_file)
 {
     notmuch_status_t status;
-    const char *thread_id = NULL;
-    char *metadata_key = _get_metadata_thread_id_key (message,
-            notmuch_message_get_message_id (message));
+    const char *message_id, *thread_id = NULL;
+    char *metadata_key;
+    string stored_id;
+
+    message_id = notmuch_message_get_message_id (message);
+    metadata_key = _get_metadata_thread_id_key (message, message_id);
+
     /* Check if we have already seen related messages to this one.
      * If we have then use the thread_id that we stored at that time.
      */
-    string stored_id = notmuch->xapian_db->get_metadata (metadata_key);
-    if (!stored_id.empty()) {
-        Xapian::WritableDatabase *db = static_cast <Xapian::WritableDatabase *> (notmuch->xapian_db);
+    stored_id = notmuch->xapian_db->get_metadata (metadata_key);
+    if (! stored_id.empty()) {
+        Xapian::WritableDatabase *db;
+
+	db = static_cast <Xapian::WritableDatabase *> (notmuch->xapian_db);
+
+	/* Clear the metadata for this message ID. We don't need it
+	 * anymore. */
         db->set_metadata (metadata_key, "");
         thread_id = stored_id.c_str();
+
         _notmuch_message_add_term (message, "thread", thread_id);
     }
     talloc_free (metadata_key);
