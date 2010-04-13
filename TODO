@@ -36,6 +36,15 @@ Fix i-search to open up invisible citations as necessary.
 Make '=' count from the end rather than from the beginning if more
 than half-way through the buffer.
 
+Fix to automatically wrap long headers (for RFC compliance) before
+sending. This should probably just be fixed in message-mode itself,
+(but perhaps we can have a notmuch-message-mode that layers this on
+top).
+
+Implement Fcc and use it for all messages, (whether a new composition,
+a reply, or a forward). This again may require a notmuch-message-mode
+that extends message-mode.
+
 Emacs saved-search interface
 ----------------------------
 Here's a proposal Carl wrote (id:87einafy4u.fsf@yoom.home.cworth.org):
@@ -137,6 +146,10 @@ Fix to avoid this ugly message:
   filing an upstream bug against GMime, and then silencing the
   notmuch-generated portion of the warning (so that once GMime is
   fixed, this is all silent).
+
+Simplify notmuch-reply to simply print the headers (we have the
+original values) rather than calling GMime (which encodes) and adding
+the confusing gmime-filter-headers.c code (which decodes).
 
 notmuch library
 ---------------
