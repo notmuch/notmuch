@@ -507,8 +507,7 @@ and will also appear in a buffer named \"*Notmuch errors*\"."
       output)))
 
 (defun notmuch-search-add-tag-thread (tag)
-  (notmuch-call-notmuch-process "tag" (concat "+" tag) (notmuch-search-find-thread-id))
-  (notmuch-search-set-tags (delete-dups (sort (cons tag (notmuch-search-get-tags)) 'string<))))
+  (notmuch-search-add-tag-region tag (point) (point)))
 
 (defun notmuch-search-add-tag-region (tag beg end)
   (let ((search-id-string (mapconcat 'identity (notmuch-search-find-thread-id-region beg end) " or ")))
@@ -522,8 +521,7 @@ and will also appear in a buffer named \"*Notmuch errors*\"."
 	  (forward-line))))))
 
 (defun notmuch-search-remove-tag-thread (tag)
-  (notmuch-call-notmuch-process "tag" (concat "-" tag) (notmuch-search-find-thread-id))
-  (notmuch-search-set-tags (delete tag (notmuch-search-get-tags))))
+  (notmuch-search-remove-tag-region tag (point) (point)))
 
 (defun notmuch-search-remove-tag-region (tag beg end)
   (let ((search-id-string (mapconcat 'identity (notmuch-search-find-thread-id-region beg end) " or ")))
