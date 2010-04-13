@@ -38,4 +38,8 @@ getdelim (char **lineptr, size_t *n, int delimiter, FILE *fp);
 
 #endif /* !HAVE_GETLINE */
 
+#if !HAVE_STRCASESTR
+char* strcasestr(const char *haystack, const char *needle);
+#endif /* !HAVE_STRCASESTR */
+
 #endif /* NOTMUCH_COMPAT_H */

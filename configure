@@ -310,6 +310,17 @@ else
 fi
 rm -f compat/have_getline
 
+printf "Checking for strcasestr... "
+if ${CC} -o compat/have_strcasestr compat/have_strcasestr.c > /dev/null 2>&1
+then
+    printf "Yes.\n"
+    have_strcasestr=1
+else
+    printf "No (will use our own instead).\n"
+    have_strcasestr=0
+fi
+rm -f compat/have_strcasestr
+
 cat <<EOF
 
 All required packages were found. You may now run the following
@@ -384,6 +395,10 @@ zsh_completion_dir = \$(prefix)/share/zsh/functions/Completion/Unix
 # build its own version)
 HAVE_GETLINE = ${have_getline}
 
+# Whether the strcasestr function is available (if not, then notmuch will
+# build its own version)
+HAVE_STRCASESTR = ${have_strcasestr}
+
 # Flags needed to compile and link against Xapian
 XAPIAN_CXXFLAGS = ${xapian_cxxflags}
 XAPIAN_LDFLAGS = ${xapian_ldflags}
@@ -405,9 +420,10 @@ VALGRIND_CFLAGS = ${valgrind_cflags}
 # Combined flags for compiling and linking against all of the above
 CONFIGURE_CFLAGS = -DHAVE_GETLINE=\$(HAVE_GETLINE) \$(GMIME_CFLAGS)      \\
 		   \$(TALLOC_CFLAGS) -DHAVE_VALGRIND=\$(HAVE_VALGRIND)   \\
-		   \$(VALGRIND_CFLAGS)
+		   \$(VALGRIND_CFLAGS) -DHAVE_STRCASESTR=\$(HAVE_STRCASESTR)
 CONFIGURE_CXXFLAGS = -DHAVE_GETLINE=\$(HAVE_GETLINE) \$(GMIME_CFLAGS)    \\
 		     \$(TALLOC_CFLAGS) -DHAVE_VALGRIND=\$(HAVE_VALGRIND) \\
-		     \$(VALGRIND_CFLAGS) \$(XAPIAN_CXXFLAGS)
+		     \$(VALGRIND_CFLAGS) \$(XAPIAN_CXXFLAGS)             \\
+                     -DHAVE_STRCASESTR=\$(HAVE_STRCASESTR)
 CONFIGURE_LDFLAGS =  \$(GMIME_LDFLAGS) \$(TALLOC_LDFLAGS) \$(XAPIAN_LDFLAGS)
 EOF

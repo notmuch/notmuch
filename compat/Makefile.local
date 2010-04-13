@@ -8,3 +8,7 @@ notmuch_compat_srcs :=
 ifneq ($(HAVE_GETLINE),1)
 notmuch_compat_srcs += $(dir)/getline.c $(dir)/getdelim.c
 endif
+
+ifneq ($(HAVE_STRCASESTR),1)
+notmuch_compat_srcs += $(dir)/strcasestr.c
+endif
