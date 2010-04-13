@@ -204,6 +204,8 @@ re-index these for existing messages at the next database upgrade).
 
 Test suite
 ----------
+Start testing --format=json.
+
 Achieve 100% test coverage with the test suite.
 
 Modularize test suite (to be able to run individual tests).
