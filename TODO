@@ -152,8 +152,6 @@ Fix to use the *last* Message-ID header if multiple such headers are
 encountered, (I noticed this is one thing that kept me from seeing the
 same message-ID values as sup).
 
-Add support for the user to specify custom headers to be indexed.
-
 Add support for configuring "virtual tags" which are a tuple of
 (tag-name, search-specification). The database is responsible for
 ensuring that the virtual tag is always consistent.
@@ -186,6 +184,23 @@ notmuch searches. Here was one proposal made in IRC:
 
 Provide a ~me Xapian synonym for all of the user's configured email
 addresses.
+
+Database changes
+----------------
+Store a reference term for every message-id that appears in
+References. We just started doing this for newly-added documents, but
+at the next convenient database-schema upgrade, we should go back and
+fix old messages to be consistent.
+
+Start indexing the List-Id header, (and re-index this header for
+existing messages at the next database upgrade).
+
+Start indexing the message file's directory ana make it available for
+search as "folder:" (and re-index this value for existing messages at
+the next database upgrade).
+
+Add support for the user to specify custom headers to be indexed (and
+re-index these for existing messages at the next database upgrade).
 
 Test suite
 ----------
