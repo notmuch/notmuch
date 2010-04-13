@@ -399,10 +399,11 @@ Complete list of currently available key bindings:
 (defun notmuch-search-properties-in-region (property beg end)
   (save-excursion
     (let ((output nil)
-	  (last-line (line-number-at-pos end)))
+	  (last-line (line-number-at-pos end))
+	  (max-line (- (line-number-at-pos (point-max)) 2)))
       (goto-char beg)
       (beginning-of-line)
-      (while (<= (line-number-at-pos) last-line)
+      (while (<= (line-number-at-pos) (min last-line max-line))
 	(setq output (cons (get-text-property (point) property) output))
 	(forward-line 1))
       output)))
@@ -497,9 +498,10 @@ and will also appear in a buffer named \"*Notmuch errors*\"."
 (defun notmuch-search-get-tags-region (beg end)
   (save-excursion
     (let ((output nil)
-	  (last-line (line-number-at-pos end)))
+	  (last-line (line-number-at-pos end))
+	  (max-line (- (line-number-at-pos (point-max)) 2)))
       (goto-char beg)
-      (while (<= (line-number-at-pos) last-line)
+      (while (<= (line-number-at-pos) (min last-line max-line))
 	(setq output (append output (notmuch-search-get-tags)))
 	(forward-line 1))
       output)))
@@ -512,9 +514,10 @@ and will also appear in a buffer named \"*Notmuch errors*\"."
   (let ((search-id-string (mapconcat 'identity (notmuch-search-find-thread-id-region beg end) " or ")))
     (notmuch-call-notmuch-process "tag" (concat "+" tag) search-id-string)
     (save-excursion
-      (let ((last-line (line-number-at-pos end)))
+      (let ((last-line (line-number-at-pos end))
+	    (max-line (- (line-number-at-pos (point-max)) 2)))
 	(goto-char beg)
-	(while (<= (line-number-at-pos) last-line)
+	(while (<= (line-number-at-pos) (min last-line max-line))
 	  (notmuch-search-set-tags (delete-dups (sort (cons tag (notmuch-search-get-tags)) 'string<)))
 	  (forward-line))))))
 
@@ -526,9 +529,10 @@ and will also appear in a buffer named \"*Notmuch errors*\"."
   (let ((search-id-string (mapconcat 'identity (notmuch-search-find-thread-id-region beg end) " or ")))
     (notmuch-call-notmuch-process "tag" (concat "-" tag) search-id-string)
     (save-excursion
-      (let ((last-line (line-number-at-pos end)))
+      (let ((last-line (line-number-at-pos end))
+	    (max-line (- (line-number-at-pos (point-max)) 2)))
 	(goto-char beg)
-	(while (<= (line-number-at-pos) last-line)
+	(while (<= (line-number-at-pos) (min last-line max-line))
 	  (notmuch-search-set-tags (delete tag (notmuch-search-get-tags)))
 	  (forward-line))))))
 
