@@ -186,10 +186,9 @@ NOTMUCH_NEW ()
     $NOTMUCH new | grep -v -E -e '^Processed [0-9]*( total)? file|Found [0-9]* total file'
 }
 
-NOTMUCH_SEARCH_THREAD_ID_SQUELCH='s/thread:................/thread:XXX/'
 notmuch_search_sanitize ()
 {
-    sed -e "$NOTMUCH_SEARCH_THREAD_ID_SQUELCH"
+    sed -r -e 's/("?thread"?: ?)("?)................("?)/\1\2XXX\3/'
 }
 
 NOTMUCH_SHOW_FILENAME_SQUELCH='s,filename:.*/mail,filename:/XXX/mail,'
@@ -449,6 +448,48 @@ thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; search by to (address) (inbox 
 thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; search by to (name) (inbox unread)
 thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; subject search test (phrase) (inbox unread)
 thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; this phrase should not match the subject search test (inbox unread)"
+
+printf " Show message: json...\t\t\t\t"
+add_message '[subject]="json-show-subject"' '[date]="Sat, 01 Jan 2000 12:00:00 -0000"' '[body]="json-show-message"'
+output=$($NOTMUCH show --format=json 'json-show-message')
+pass_if_equal "$output" '[[[{"id": "'${gen_msg_id}'", "match": true, "filename": "'${gen_msg_filename}'", "timestamp": 946728000, "date_relative": "2000-01-01", "tags": ["inbox","unread"], "headers": {"Subject": "json-show-subject", "From": "Notmuch Test Suite <test_suite@notmuchmail.org>", "To": "Notmuch Test Suite <test_suite@notmuchmail.org>", "Cc": "", "Bcc": "", "Date": "Sat, 01 Jan 2000 12:00:00 -0000"}, "body": [{"id": 1, "content-type": "text/plain", "content": "json-show-message\n"}]}, []]]]'
+
+printf " Search message: json...\t\t\t"
+add_message '[subject]="json-search-subject"' '[date]="Sat, 01 Jan 2000 12:00:00 -0000"' '[body]="json-search-message"'
+output=$($NOTMUCH search --format=json 'json-search-message' | notmuch_search_sanitize)
+pass_if_equal "$output" '[{"thread": "XXX",
+"timestamp": 946728000,
+"matched": 1,
+"total": 1,
+"authors": "Notmuch Test Suite",
+"subject": "json-search-subject",
+"tags": ["inbox", "unread"]}]'
+
+printf " Search by subject (utf-8):...\t\t\t"
+add_message [subject]=utf8-sübjéct '[date]="Sat, 01 Jan 2000 12:00:00 -0000"'
+output=$($NOTMUCH search subject:utf8-sübjéct | notmuch_search_sanitize)
+pass_if_equal "$output" "thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; utf8-sübjéct (inbox unread)"
+
+printf " Search body (utf-8):...\t\t\t"
+add_message '[subject]="utf8-message-body-subject"' '[date]="Sat, 01 Jan 2000 12:00:00 -0000"' '[body]="message body utf8: bödý"'
+output=$($NOTMUCH search 'bödý' | notmuch_search_sanitize)
+pass_if_equal "$output" "thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; utf8-message-body-subject (inbox unread)"
+
+printf " Show message: json, utf-8...\t\t\t"
+add_message '[subject]="json-show-utf8-body-sübjéct"' '[date]="Sat, 01 Jan 2000 12:00:00 -0000"' '[body]="jsön-show-méssage"'
+output=$($NOTMUCH show --format=json 'jsön-show-méssage')
+pass_if_equal "$output" '[[[{"id": "'${gen_msg_id}'", "match": true, "filename": "'${gen_msg_filename}'", "timestamp": 946728000, "date_relative": "2000-01-01", "tags": ["inbox","unread"], "headers": {"Subject": "json-show-utf8-body-sübjéct", "From": "Notmuch Test Suite <test_suite@notmuchmail.org>", "To": "Notmuch Test Suite <test_suite@notmuchmail.org>", "Cc": "", "Bcc": "", "Date": "Sat, 01 Jan 2000 12:00:00 -0000"}, "body": [{"id": 1, "content-type": "text/plain", "content": "jsön-show-méssage\n"}]}, []]]]'
+
+printf " Search message: json, utf-8...\t\t\t"
+add_message '[subject]="json-search-utf8-body-sübjéct"' '[date]="Sat, 01 Jan 2000 12:00:00 -0000"' '[body]="jsön-search-méssage"'
+output=$($NOTMUCH search --format=json 'jsön-search-méssage' | notmuch_search_sanitize)
+pass_if_equal "$output" '[{"thread": "XXX",
+"timestamp": 946728000,
+"matched": 1,
+"total": 1,
+"authors": "Notmuch Test Suite",
+"subject": "json-search-utf8-body-sübjéct",
+"tags": ["inbox", "unread"]}]'
 
 printf "\nTesting naming of threads with changing subject:\n"
 add_message '[subject]="thread-naming: Initial thread subject"' \
