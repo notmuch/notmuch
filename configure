@@ -238,9 +238,11 @@ printf "Checking for Mac OS X (for shared library)... "
 if [ `uname` = "Darwin" ] ; then
     printf "Yes.\n"
     mac_os_x=1
+    linker_resolves_library_dependencies = 0
 else
     printf "No.\n"
     mac_os_x=0
+    linker_resolves_library_dependencies = 1
 fi
 
 if [ $errors -gt 0 ]; then
@@ -411,6 +413,11 @@ HAVE_STRCASESTR = ${have_strcasestr}
 # Whether we are building on OS X.  This will affect how we build the
 # shared library.
 MAC_OS_X = ${mac_os_x}
+
+# Whether the linker will automatically resolve the dependency of one
+# library on another (if not, then linking a binary requires linking
+# directly against both)
+LINKER_RESOLVES_LIBRARY_DEPENDENCIES = ${linker_resolves_library_dependencies}
 
 # Flags needed to compile and link against Xapian
 XAPIAN_CXXFLAGS = ${xapian_cxxflags}
