@@ -28,13 +28,13 @@ LIBRARY_SUFFIX = dylib
 LINKER_NAME = libnotmuch.$(LIBRARY_SUFFIX)
 SONAME = libnotmuch.$(LIBNOTMUCH_VERSION_MAJOR).$(LIBRARY_SUFFIX)
 LIBNAME = libnotmuch.$(LIBNOTMUCH_VERSION_MAJOR).$(LIBNOTMUCH_VERSION_MINOR).$(LIBNOTMUCH_VERSION_RELEASE).$(LIBRARY_SUFFIX)
-LIBRARY_LINK_FLAG = -Wl,-dylib_install_name -Wl,$(SONAME)
+LIBRARY_LINK_FLAG = -dynamiclib -install_name $(SONAME)
 else
 LIBRARY_SUFFIX = so
 LINKER_NAME = libnotmuch.$(LIBRARY_SUFFIX)
 SONAME = $(LINKER_NAME).$(LIBNOTMUCH_VERSION_MAJOR)
 LIBNAME = $(SONAME).$(LIBNOTMUCH_VERSION_MINOR).$(LIBNOTMUCH_VERSION_RELEASE)
-LIBRARY_LINK_FLAG = -Wl,-soname=$(SONAME)
+LIBRARY_LINK_FLAG = -shared -Wl,-soname=$(SONAME)
 endif
 
 dir := lib
@@ -63,7 +63,7 @@ $(dir)/libnotmuch.a: $(libnotmuch_modules)
 	$(call quiet,AR) rcs $@ $^
 
 $(dir)/$(LIBNAME): $(libnotmuch_modules)
-	$(call quiet,CXX $(CXXFLAGS)) $^ $(FINAL_LIBNOTMUCH_LDFLAGS) -shared $(LIBRARY_LINK_FLAG) -o $@
+	$(call quiet,CXX $(CXXFLAGS)) $^ $(FINAL_LIBNOTMUCH_LDFLAGS) $(LIBRARY_LINK_FLAG) -o $@
 
 $(dir)/$(SONAME): $(dir)/$(LIBNAME)
 	ln -sf $(LIBNAME) $@
