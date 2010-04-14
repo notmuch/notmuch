@@ -6,7 +6,7 @@ all:
 subdirs = compat completion emacs lib
 
 # We make all targets depend on the Makefiles themselves.
-global_deps = Makefile Makefile.local \
+global_deps = Makefile Makefile.config Makefile.local \
 	$(subdirs:%=%/Makefile) $(subdirs:%=%/Makefile.local)
 
 # Sub-directory Makefile.local fragments can append to these variables
@@ -14,6 +14,19 @@ global_deps = Makefile Makefile.local \
 
 extra_cflags :=
 extra_cxxflags :=
+
+# Get settings from the output of configure by running it to generate
+# Makefile.config if it doesn't exist yet. And add Makefile.config to
+# our global dependency list.
+include Makefile.config
+Makefile.config: configure
+	@echo ""
+	@echo "Note: Calling ./configure with no command-line arguments. This is often fine,"
+	@echo "      but if you want to specify any arguments (such as an alternate prefix"
+	@echo "      into which to install), call ./configure explicitly and then make again."
+	@echo "      See \"./configure --help\" for more details."
+	@echo ""
+	./configure
 
 # Finally, include all of the Makefile.local fragments where all the
 # real work is done.
