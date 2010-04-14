@@ -30,6 +30,7 @@ dir := lib
 extra_cflags += -I$(dir) -fPIC
 
 libnotmuch_c_srcs =		\
+	$(notmuch_compat_srcs)	\
 	$(dir)/libsha1.c	\
 	$(dir)/message-file.c	\
 	$(dir)/messages.c	\
