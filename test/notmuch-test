@@ -583,34 +583,22 @@ printf "\nTesting \"notmuch dump\" and \"notmuch restore\":\n"
 
 printf " Dumping all tags...\t\t\t\t"
 $NOTMUCH dump dump.expected
-echo "	PASS"
+pass_if_equal "$?" "0"
 
 printf " Clearing all tags...\t\t\t\t"
 sed -e 's/(\([^(]*\))$/()/' < dump.expected > clear.expected
 $NOTMUCH restore clear.expected
 $NOTMUCH dump clear.actual
-if diff clear.expected clear.actual > /dev/null; then
-    echo "	PASS"
-else
-    echo "	FAIL"
-    echo "	Expected output: See file clear.expected"
-    echo "	Actual output:   See file clear.actual"
-fi
+pass_if_equal "$(< clear.actual)" "$(< clear.expected)"
 
 printf " Restoring original tags...\t\t\t"
 $NOTMUCH restore dump.expected
 $NOTMUCH dump dump.actual
-if diff dump.expected dump.actual > /dev/null; then
-    echo "	PASS"
-else
-    echo "	FAIL"
-    echo "	Expected output: See file dump.expected"
-    echo "	Actual output:   See file dump.actual"
-fi
+pass_if_equal "$(< dump.actual)" "$(< dump.expected)"
 
 printf " Restore with nothing to do...\t\t\t"
 $NOTMUCH restore dump.expected
-echo "	PASS"
+pass_if_equal "$?" "0"
 
 printf "\nTesting threading when messages received out of order:\n"
 printf " Adding initial child message...\t\t"
