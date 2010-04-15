@@ -201,26 +201,26 @@ other_email=test_suite_other@notmuchmail.org
 EOF
 
 printf "Testing \"notmuch new\" in several variations:\n"
-printf " No new messages...\t\t"
+printf " No new messages...\t\t\t\t"
 output=$(NOTMUCH_NEW)
 pass_if_equal "$output" "No new mail."
 
-printf " Single new message...\t\t"
+printf " Single new message...\t\t\t\t"
 generate_message
 output=$(NOTMUCH_NEW)
 pass_if_equal "$output" "Added 1 new message to the database."
 
-printf " Multiple new messages...\t"
+printf " Multiple new messages...\t\t\t"
 generate_message
 generate_message
 output=$(NOTMUCH_NEW)
 pass_if_equal "$output" "Added 2 new messages to the database."
 
-printf " No new messages (non-empty DB)... "
+printf " No new messages (non-empty DB)...\t\t"
 output=$(NOTMUCH_NEW)
 pass_if_equal "$output" "No new mail."
 
-printf " New directories...\t\t"
+printf " New directories...\t\t\t\t"
 rm -rf ${MAIL_DIR}/* ${MAIL_DIR}/.notmuch
 mkdir ${MAIL_DIR}/def
 mkdir ${MAIL_DIR}/ghi
@@ -229,7 +229,7 @@ generate_message [dir]=def
 output=$(NOTMUCH_NEW)
 pass_if_equal "$output" "Added 1 new message to the database."
 
-printf " Alternate inode order...\t"
+printf " Alternate inode order...\t\t\t"
 
 rm -rf ${MAIL_DIR}/.notmuch
 mv ${MAIL_DIR}/ghi ${MAIL_DIR}/abc
@@ -239,7 +239,7 @@ generate_message [dir]=abc
 output=$(NOTMUCH_NEW)
 pass_if_equal "$output" "Added 1 new message to the database."
 
-printf " Message moved in...\t\t"
+printf " Message moved in...\t\t\t\t"
 rm -rf ${MAIL_DIR}/* ${MAIL_DIR}/.notmuch
 generate_message
 tmp_msg_filename=tmp/$gen_msg_filename
@@ -252,7 +252,7 @@ increment_mtime ${MAIL_DIR}
 output=$(NOTMUCH_NEW)
 pass_if_equal "$output" "Added 1 new message to the database."
 
-printf " Renamed message...\t\t"
+printf " Renamed message...\t\t\t\t"
 
 generate_message
 $NOTMUCH new > /dev/null
@@ -261,14 +261,14 @@ increment_mtime ${MAIL_DIR}
 output=$(NOTMUCH_NEW)
 pass_if_equal "$output" "No new mail. Detected 1 file rename."
 
-printf " Deleted message...\t\t"
+printf " Deleted message...\t\t\t\t"
 
 rm ${gen_msg_filename}-renamed
 increment_mtime ${MAIL_DIR}
 output=$(NOTMUCH_NEW)
 pass_if_equal "$output" "No new mail. Removed 1 message."
 
-printf " Renamed directory...\t\t"
+printf " Renamed directory...\t\t\t\t"
 
 generate_message [dir]=dir
 generate_message [dir]=dir
@@ -282,7 +282,7 @@ increment_mtime ${MAIL_DIR}
 output=$(NOTMUCH_NEW)
 pass_if_equal "$output" "No new mail. Detected 3 file renames."
 
-printf " Deleted directory...\t\t"
+printf " Deleted directory...\t\t\t\t"
 
 rm -rf ${MAIL_DIR}/dir-renamed
 increment_mtime ${MAIL_DIR}
@@ -290,7 +290,7 @@ increment_mtime ${MAIL_DIR}
 output=$(NOTMUCH_NEW)
 pass_if_equal "$output" "No new mail. Removed 3 messages."
 
-printf " New directory (at end of list)... "
+printf " New directory (at end of list)...\t\t"
 
 generate_message [dir]=zzz
 generate_message [dir]=zzz
@@ -299,7 +299,7 @@ generate_message [dir]=zzz
 output=$(NOTMUCH_NEW)
 pass_if_equal "$output" "Added 3 new messages to the database."
 
-printf " Deleted directory (end of list)... "
+printf " Deleted directory (end of list)...\t\t"
 
 rm -rf ${MAIL_DIR}/zzz
 increment_mtime ${MAIL_DIR}
@@ -307,7 +307,7 @@ increment_mtime ${MAIL_DIR}
 output=$(NOTMUCH_NEW)
 pass_if_equal "$output" "No new mail. Removed 3 messages."
 
-printf " New symlink to directory...\t"
+printf " New symlink to directory...\t\t\t"
 
 rm -rf ${MAIL_DIR}/.notmuch
 mv ${MAIL_DIR} ${TEST_DIR}/actual_maildir
@@ -318,7 +318,7 @@ ln -s ${TEST_DIR}/actual_maildir ${MAIL_DIR}/symlink
 output=$(NOTMUCH_NEW)
 pass_if_equal "$output" "Added 1 new message to the database."
 
-printf " New symlink to a file...\t"
+printf " New symlink to a file...\t\t\t"
 generate_message
 external_msg_filename=${TEST_DIR}/external/$(basename $gen_msg_filename)
 mkdir -p $(dirname $external_msg_filename)
@@ -328,7 +328,7 @@ increment_mtime ${MAIL_DIR}
 output=$(NOTMUCH_NEW)
 pass_if_equal "$output" "Added 1 new message to the database."
 
-printf " New two-level directory...\t"
+printf " New two-level directory...\t\t\t"
 
 generate_message [dir]=two/levels
 generate_message [dir]=two/levels
@@ -337,7 +337,7 @@ generate_message [dir]=two/levels
 output=$(NOTMUCH_NEW)
 pass_if_equal "$output" "Added 3 new messages to the database."
 
-printf " Deleted two-level directory... "
+printf " Deleted two-level directory...\t\t\t"
 
 rm -rf ${MAIL_DIR}/two
 increment_mtime ${MAIL_DIR}
@@ -347,76 +347,76 @@ pass_if_equal "$output" "No new mail. Removed 3 messages."
 
 printf "\nTesting \"notmuch search\" in several variations:\n"
 
-printf " Search body...\t\t\t"
+printf " Search body...\t\t\t\t\t"
 add_message '[subject]="body search"' '[date]="Sat, 01 Jan 2000 12:00:00 -0000"' [body]=bodysearchtest
 output=$($NOTMUCH search bodysearchtest | notmuch_search_sanitize)
 pass_if_equal "$output" "thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; body search (inbox unread)"
 
-printf " Search by from:...\t\t"
+printf " Search by from:...\t\t\t\t"
 add_message '[subject]="search by from"' '[date]="Sat, 01 Jan 2000 12:00:00 -0000"' [from]=searchbyfrom
 output=$($NOTMUCH search from:searchbyfrom | notmuch_search_sanitize)
 pass_if_equal "$output" "thread:XXX   2000-01-01 [1/1] searchbyfrom; search by from (inbox unread)"
 
-printf " Search by to:...\t\t"
+printf " Search by to:...\t\t\t\t"
 add_message '[subject]="search by to"' '[date]="Sat, 01 Jan 2000 12:00:00 -0000"' [to]=searchbyto
 output=$($NOTMUCH search to:searchbyto | notmuch_search_sanitize)
 pass_if_equal "$output" "thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; search by to (inbox unread)"
 
-printf " Search by subject:...\t\t"
+printf " Search by subject:...\t\t\t\t"
 add_message [subject]=subjectsearchtest '[date]="Sat, 01 Jan 2000 12:00:00 -0000"'
 output=$($NOTMUCH search subject:subjectsearchtest | notmuch_search_sanitize)
 pass_if_equal "$output" "thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; subjectsearchtest (inbox unread)"
 
-printf " Search by id:...\t\t"
+printf " Search by id:...\t\t\t\t"
 add_message '[subject]="search by id"' '[date]="Sat, 01 Jan 2000 12:00:00 -0000"'
 output=$($NOTMUCH search id:${gen_msg_id} | notmuch_search_sanitize)
 pass_if_equal "$output" "thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; search by id (inbox unread)"
 
-printf " Search by tag:...\t\t"
+printf " Search by tag:...\t\t\t\t"
 add_message '[subject]="search by tag"' '[date]="Sat, 01 Jan 2000 12:00:00 -0000"'
 $NOTMUCH tag +searchbytag id:${gen_msg_id}
 output=$($NOTMUCH search tag:searchbytag | notmuch_search_sanitize)
 pass_if_equal "$output" "thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; search by tag (inbox searchbytag unread)"
 
-printf " Search by thread:...\t\t"
+printf " Search by thread:...\t\t\t\t"
 add_message '[subject]="search by thread"' '[date]="Sat, 01 Jan 2000 12:00:00 -0000"'
 thread_id=$($NOTMUCH search id:${gen_msg_id} | sed -e 's/thread:\([a-f0-9]*\).*/\1/')
 output=$($NOTMUCH search thread:${thread_id} | notmuch_search_sanitize)
 pass_if_equal "$output" "thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; search by thread (inbox unread)"
 
-printf " Search body (phrase)...\t"
+printf " Search body (phrase)...\t\t\t"
 add_message '[subject]="body search (phrase)"' '[date]="Sat, 01 Jan 2000 12:00:00 -0000"' '[body]="body search (phrase)"'
 add_message '[subject]="negative result"' '[date]="Sat, 01 Jan 2000 12:00:00 -0000"' '[body]="This phrase should not match the body search"'
 output=$($NOTMUCH search '\"body search (phrase)\"' | notmuch_search_sanitize)
 pass_if_equal "$output" "thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; body search (phrase) (inbox unread)"
 
-printf " Search by from: (address)...\t"
+printf " Search by from: (address)...\t\t\t"
 add_message '[subject]="search by from (address)"' '[date]="Sat, 01 Jan 2000 12:00:00 -0000"' [from]=searchbyfrom@example.com
 output=$($NOTMUCH search from:searchbyfrom@example.com | notmuch_search_sanitize)
 pass_if_equal "$output" "thread:XXX   2000-01-01 [1/1] searchbyfrom@example.com; search by from (address) (inbox unread)"
 
-printf " Search by from: (name)...\t"
+printf " Search by from: (name)...\t\t\t"
 add_message '[subject]="search by from (name)"' '[date]="Sat, 01 Jan 2000 12:00:00 -0000"' '[from]="Search By From Name <test@example.com>"'
 output=$($NOTMUCH search from:'Search By From Name' | notmuch_search_sanitize)
 pass_if_equal "$output" "thread:XXX   2000-01-01 [1/1] Search By From Name; search by from (name) (inbox unread)"
 
-printf " Search by to: (address)...\t"
+printf " Search by to: (address)...\t\t\t"
 add_message '[subject]="search by to (address)"' '[date]="Sat, 01 Jan 2000 12:00:00 -0000"' [to]=searchbyto@example.com
 output=$($NOTMUCH search to:searchbyto@example.com | notmuch_search_sanitize)
 pass_if_equal "$output" "thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; search by to (address) (inbox unread)"
 
-printf " Search by to: (name)...\t"
+printf " Search by to: (name)...\t\t\t"
 add_message '[subject]="search by to (name)"' '[date]="Sat, 01 Jan 2000 12:00:00 -0000"' '[to]="Search By To Name <test@example.com>"'
 output=$($NOTMUCH search to:'Search By To Name' | notmuch_search_sanitize)
 pass_if_equal "$output" "thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; search by to (name) (inbox unread)"
 
-printf " Search by subject: (phrase)...\t"
+printf " Search by subject: (phrase)...\t\t\t"
 add_message '[subject]="subject search test (phrase)"' '[date]="Sat, 01 Jan 2000 12:00:00 -0000"'
 add_message '[subject]="this phrase should not match the subject search test"' '[date]="Sat, 01 Jan 2000 12:00:00 -0000"'
 output=$($NOTMUCH search 'subject:\"subject search test (phrase)\"' | notmuch_search_sanitize)
 pass_if_equal "$output" "thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; subject search test (phrase) (inbox unread)"
 
-printf " Search for all messages (\"*\"):..."
+printf " Search for all messages (\"*\"):...\t\t"
 output=$($NOTMUCH search '*' | notmuch_search_sanitize)
 pass_if_equal "$output" "thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; Test message #6 (inbox unread)
 thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; Test message #14 (inbox unread)
@@ -438,7 +438,7 @@ thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; this phrase should not match t
 
 printf "\nTesting \"notmuch reply\" in several variations:\n"
 
-printf " Basic reply...\t\t\t"
+printf " Basic reply...\t\t\t\t\t"
 add_message '[from]="Sender <sender@example.com>"' \
              [to]=test_suite@notmuchmail.org \
              [subject]=notmuch-reply-test \
@@ -456,7 +456,7 @@ References: <${gen_msg_id}>
 On Tue, 05 Jan 2010 15:43:56 -0800, Sender <sender@example.com> wrote:
 > basic reply test"
 
-printf " Multiple recipients...\t\t"
+printf " Multiple recipients...\t\t\t\t"
 add_message '[from]="Sender <sender@example.com>"' \
             '[to]="test_suite@notmuchmail.org, Someone Else <someone@example.com>"' \
              [subject]=notmuch-reply-test \
@@ -474,7 +474,7 @@ References: <${gen_msg_id}>
 On Tue, 05 Jan 2010 15:43:56 -0800, Sender <sender@example.com> wrote:
 > Multiple recipients"
 
-printf " Reply with CC...\t\t"
+printf " Reply with CC...\t\t\t\t"
 add_message '[from]="Sender <sender@example.com>"' \
              [to]=test_suite@notmuchmail.org \
             '[cc]="Other Parties <cc@example.com>"' \
@@ -494,7 +494,7 @@ References: <${gen_msg_id}>
 On Tue, 05 Jan 2010 15:43:56 -0800, Sender <sender@example.com> wrote:
 > reply with CC"
 
-printf " Reply from alternate address..."
+printf " Reply from alternate address...\t\t"
 add_message '[from]="Sender <sender@example.com>"' \
              [to]=test_suite_other@notmuchmail.org \
              [subject]=notmuch-reply-test \
@@ -512,7 +512,7 @@ References: <${gen_msg_id}>
 On Tue, 05 Jan 2010 15:43:56 -0800, Sender <sender@example.com> wrote:
 > reply from alternate address"
 
-printf " Support for Reply-To...\t"
+printf " Support for Reply-To...\t\t\t"
 add_message '[from]="Sender <sender@example.com>"' \
              [to]=test_suite@notmuchmail.org \
              [subject]=notmuch-reply-test \
@@ -531,7 +531,7 @@ References: <${gen_msg_id}>
 On Tue, 05 Jan 2010 15:43:56 -0800, Sender <sender@example.com> wrote:
 > support for reply-to"
 
-printf " Un-munging Reply-To...\t\t"
+printf " Un-munging Reply-To...\t\t\t\t"
 add_message '[from]="Sender <sender@example.com>"' \
             '[to]="Some List <list@example.com>"' \
              [subject]=notmuch-reply-test \
@@ -569,23 +569,23 @@ end
 
 Finally, we have our afteruudata marker as well."'
 
-printf " Ensure content before uu data is indexed..."
+printf " Ensure content before uu data is indexed...\t"
 output=$($NOTMUCH search beforeuudata | notmuch_search_sanitize)
 pass_if_equal "$output" "thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; uuencodetest (inbox unread)"
-printf " Ensure uu data is not indexed...\t"
+printf " Ensure uu data is not indexed...\t\t"
 output=$($NOTMUCH search DURINGUUDATA | notmuch_search_sanitize)
 pass_if_equal "$output" ""
-printf " Ensure content after uu data is indexed..."
+printf " Ensure content after uu data is indexed...\t"
 output=$($NOTMUCH search afteruudata | notmuch_search_sanitize)
 pass_if_equal "$output" "thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; uuencodetest (inbox unread)"
 
 printf "\nTesting \"notmuch dump\" and \"notmuch restore\":\n"
 
-printf " Dumping all tags...\t\t"
+printf " Dumping all tags...\t\t\t\t"
 $NOTMUCH dump dump.expected
 echo "	PASS"
 
-printf " Clearing all tags...\t\t"
+printf " Clearing all tags...\t\t\t\t"
 sed -e 's/(\([^(]*\))$/()/' < dump.expected > clear.expected
 $NOTMUCH restore clear.expected
 $NOTMUCH dump clear.actual
@@ -597,7 +597,7 @@ else
     echo "	Actual output:   See file clear.actual"
 fi
 
-printf " Restoring original tags...\t"
+printf " Restoring original tags...\t\t\t"
 $NOTMUCH restore dump.expected
 $NOTMUCH dump dump.actual
 if diff dump.expected dump.actual > /dev/null; then
@@ -608,7 +608,7 @@ else
     echo "	Actual output:   See file dump.actual"
 fi
 
-printf " Restore with nothing to do...\t"
+printf " Restore with nothing to do...\t\t\t"
 $NOTMUCH restore dump.expected
 echo "	PASS"
 
