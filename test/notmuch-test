@@ -154,10 +154,15 @@ add_message ()
     $NOTMUCH new > /dev/null
 }
 
+tests=0
+test_failures=0
+
 pass_if_equal ()
 {
     output=$1
     expected=$2
+
+    tests=$((tests + 1))
 
     if [ "$output" = "$expected" ]; then
 	echo "	PASS"
@@ -165,6 +170,7 @@ pass_if_equal ()
 	echo "	FAIL"
 	echo "	Expected output: $expected"
 	echo "	Actual output:   $output"
+	test_failures=$((test_failures + 1))
     fi
 }
 
@@ -623,9 +629,17 @@ printf " Searching returns all three messages in one thread..."
 output=$($NOTMUCH search foo | notmuch_search_sanitize)
 pass_if_equal "$output" "thread:XXX   2000-01-01 [3/3] Notmuch Test Suite; brokenthreadtest (inbox unread)"
 
-cat <<EOF
-Notmuch test suite complete.
+echo ""
+echo "Notmuch test suite complete."
 
-Intermediate state can be examined in:
-	${TEST_DIR}
-EOF
+if [ "$test_failures" = "0" ]; then
+    echo "All $tests tests passed."
+    rm -rf ${TEST_DIR}
+else
+    echo "$test_failures/$tests tests failed. The failures can be investigated in:"
+    echo "${TEST_DIR}"
+fi
+
+echo ""
+
+exit $test_failures
