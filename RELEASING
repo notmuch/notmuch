@@ -10,18 +10,7 @@ Here are the steps to follow to create a new notmuch release:
 	not mentioned there. If so, pleas add them, (and ask the
 	authors of the commits to update NEWS in the future).
 
-3) Verify that the notmuch test suite passes.
-
-	Currently this is by running:
-
-		./test/notmuch-test
-
-	And manually verifying that every test says PASS. We plan to
-	fix this to automatically check the results and even to
-	automatically run the test suite as part of a Makefile target
-	described below.
-
-4) Increment the libnotmuch library version in lib/Makefile.local
+3) Increment the libnotmuch library version in lib/Makefile.local
 
 	See the instructions there for how to increment it. The
 	command below can be useful for inspecting header-file changes
@@ -37,11 +26,13 @@ Here are the steps to follow to create a new notmuch release:
 
 	Commit this change.
 
-5) Run "make VERSION=X.Y release" which will perform the following steps:
+4) Run "make VERSION=X.Y release" which will perform the following steps:
 
    For the X.Y version, we'll generally just increment Y. But for
    major milestones of usability we're increment X as well.
 
+	* Compile the current notmuch code (aborting release if it fails)
+	* Run the notmuch test suite (aborting release if it fails)
 	* Check that the notmuch version consists of only two components
 	* Check that no release exists with the current version
 	* Verify that "make dist" completes successfully
@@ -58,9 +49,9 @@ Here are the steps to follow to create a new notmuch release:
 	* Push that tag
 	* Provide some text for the release announcement (see below).
 
-6) Increment the notmuch version by adding a .1 micro number, commit, and push.
+5) Increment the notmuch version by adding a .1 micro number, commit, and push.
 
-7) Send a message to notmuch@notmuchmail.org to announce the release.
+6) Send a message to notmuch@notmuchmail.org to announce the release.
 
 	Use the text provided from "make release" above, (if for some
 	reason you lose this message, "make release-message" prints
