@@ -94,7 +94,7 @@ generate_message ()
     fi
 
     if [ -z "${template[body]}" ]; then
-	template[body]="This is just a test message at ${gen_msg_filename}"
+	template[body]="This is just test message (#${gen_msg_cnt})"
     fi
 
     if [ -z "${template[from]}" ]; then
@@ -106,7 +106,7 @@ generate_message ()
     fi
 
     if [ -z "${template[subject]}" ]; then
-	template[subject]="Test message ${gen_msg_filename}"
+	template[subject]="Test message #${gen_msg_cnt}"
     fi
 
     if [ -z "${template[date]}" ]; then
