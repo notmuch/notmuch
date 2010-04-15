@@ -212,31 +212,50 @@ _notmuch_thread_create (void *ctx,
 			const char *query_string)
 {
     notmuch_thread_t *thread;
-    const char *thread_id_query_string, *matched_query_string;
-    notmuch_query_t *thread_id_query, *matched_query;
+    const char *thread_id_query_string;
+    notmuch_query_t *thread_id_query;
+
     notmuch_messages_t *messages;
     notmuch_message_t *message;
+    notmuch_bool_t matched_is_subset_of_thread;
 
     thread_id_query_string = talloc_asprintf (ctx, "thread:%s", thread_id);
     if (unlikely (query_string == NULL))
 	return NULL;
 
-    /* XXX: We could be a bit more efficient here if
-     * thread_id_query_string is identical to query_string, (then we
-     * could get by with just one database search instead of two). */
-
-    matched_query_string = talloc_asprintf (ctx, "%s AND (%s)",
-					    thread_id_query_string,
-					    query_string);
-    if (unlikely (matched_query_string == NULL))
-	return NULL;
+    /* Under normal circumstances we need to do two database
+     * queries. One is for the thread itself (thread_id_query_string)
+     * and the second is to determine which messages in that thread
+     * match the original query (matched_query_string).
+     *
+     * But under two circumstances, we use only the
+     * thread_id_query_string:
+     *
+     *	1. If the original query_string *is* just the thread
+     *	   specification.
+     *
+     *  2. If the original query_string matches all messages ("" or
+     *     "*").
+     *
+     * In either of these cases, we can be more efficient by running
+     * just the thread_id query (since we know all messages in the
+     * thread will match the query_string).
+     *
+     * Beyond the performance advantage, in the second case, it's
+     * important to not try to create a concatenated query because our
+     * parser handles "" and "*" as special cases and will not do the
+     * right thing with a query string of "* and thread:<foo>".
+     **/
+    matched_is_subset_of_thread = 1;
+    if (strcmp (query_string, thread_id_query_string) == 0 ||
+	strcmp (query_string, "") == 0 ||
+	strcmp (query_string, "*") == 0)
+    {
+	matched_is_subset_of_thread = 0;
+    }
 
     thread_id_query = notmuch_query_create (notmuch, thread_id_query_string);
     if (unlikely (thread_id_query == NULL))
-	return NULL;
-
-    matched_query = notmuch_query_create (notmuch, matched_query_string);
-    if (unlikely (matched_query == NULL))
 	return NULL;
 
     thread = talloc (ctx, notmuch_thread_t);
@@ -273,21 +292,43 @@ _notmuch_thread_create (void *ctx,
 	 notmuch_messages_move_to_next (messages))
     {
 	message = notmuch_messages_get (messages);
+
 	_thread_add_message (thread, message);
+
+	if (! matched_is_subset_of_thread)
+	    _thread_add_matched_message (thread, message);
+
 	_notmuch_message_close (message);
     }
 
     notmuch_query_destroy (thread_id_query);
-    for (messages = notmuch_query_search_messages (matched_query);
-	 notmuch_messages_valid (messages);
-	 notmuch_messages_move_to_next (messages))
-    {
-	message = notmuch_messages_get (messages);
-	_thread_add_matched_message (thread, message);
-	_notmuch_message_close (message);
-    }
 
-    notmuch_query_destroy (matched_query);
+    if (matched_is_subset_of_thread)
+    {
+	const char *matched_query_string;
+	notmuch_query_t *matched_query;
+
+	matched_query_string = talloc_asprintf (ctx, "%s AND (%s)",
+						thread_id_query_string,
+						query_string);
+	if (unlikely (matched_query_string == NULL))
+	    return NULL;
+
+	matched_query = notmuch_query_create (notmuch, matched_query_string);
+	if (unlikely (matched_query == NULL))
+	    return NULL;
+
+	for (messages = notmuch_query_search_messages (matched_query);
+	     notmuch_messages_valid (messages);
+	     notmuch_messages_move_to_next (messages))
+	{
+	    message = notmuch_messages_get (messages);
+	    _thread_add_matched_message (thread, message);
+	    _notmuch_message_close (message);
+	}
+
+	notmuch_query_destroy (matched_query);
+    }
 
     _resolve_thread_relationships (thread);
 
