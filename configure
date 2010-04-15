@@ -188,6 +188,11 @@ if pkg-config --modversion gmime-2.4 > /dev/null 2>&1; then
     have_gmime=1
     gmime_cflags=$(pkg-config --cflags gmime-2.4)
     gmime_ldflags=$(pkg-config --libs gmime-2.4)
+elif pkg-config --modversion gmime-2.6 > /dev/null 2>&1; then
+    printf "Yes.\n"
+    have_gmime=1
+    gmime_cflags=$(pkg-config --cflags gmime-2.6)
+    gmime_ldflags=$(pkg-config --libs gmime-2.6)
 else
     printf "No.\n"
     have_gmime=0
