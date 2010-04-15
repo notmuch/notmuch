@@ -45,6 +45,17 @@ Implement Fcc and use it for all messages, (whether a new composition,
 a reply, or a forward). This again may require a notmuch-message-mode
 that extends message-mode.
 
+Stop hiding the headers so much in the thread-view mode.
+
+Allow opening a message in thread-view mode by clicking on either
+line.
+
+Automatically open a message when navigating to it with N or P.
+
+Change 'a' command in thread-view mode to only archive open messages.
+
+Add a binding to open all closed messages.
+
 Emacs saved-search interface
 ----------------------------
 Here's a proposal Carl wrote (id:87einafy4u.fsf@yoom.home.cworth.org):
