@@ -416,6 +416,26 @@ add_message '[subject]="this phrase should not match the subject search test"' '
 output=$($NOTMUCH search 'subject:\"subject search test (phrase)\"' | notmuch_search_sanitize)
 pass_if_equal "$output" "thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; subject search test (phrase) (inbox unread)"
 
+printf " Search for all messages (\"*\"):..."
+output=$($NOTMUCH search '*' | notmuch_search_sanitize)
+pass_if_equal "$output" "thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; Test message #6 (inbox unread)
+thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; Test message #14 (inbox unread)
+thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; body search (inbox unread)
+thread:XXX   2000-01-01 [1/1] searchbyfrom; search by from (inbox unread)
+thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; search by to (inbox unread)
+thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; subjectsearchtest (inbox unread)
+thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; search by id (inbox unread)
+thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; search by tag (inbox searchbytag unread)
+thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; search by thread (inbox unread)
+thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; body search (phrase) (inbox unread)
+thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; negative result (inbox unread)
+thread:XXX   2000-01-01 [1/1] searchbyfrom@example.com; search by from (address) (inbox unread)
+thread:XXX   2000-01-01 [1/1] Search By From Name; search by from (name) (inbox unread)
+thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; search by to (address) (inbox unread)
+thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; search by to (name) (inbox unread)
+thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; subject search test (phrase) (inbox unread)
+thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; this phrase should not match the subject search test (inbox unread)"
+
 printf "\nTesting \"notmuch reply\" in several variations:\n"
 
 printf " Basic reply...\t\t\t"
