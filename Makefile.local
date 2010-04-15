@@ -69,14 +69,14 @@ dist: $(TAR_FILE)
 # We invoke make recursively only to force ordering of our phony
 # targets in the case of parallel invocation of make (-j).
 .PHONY: release
-release:
-	$(MAKE) verify-newer
+release: verify-version
 	$(MAKE) test
 	$(MAKE) $(GPG_FILE)
-	mkdir -p releases
+	$(MAKE) verify-newer
 	scp $(TAR_FILE) $(SHA1_FILE) $(GPG_FILE) $(RELEASE_HOST):$(RELEASE_DIR)
-	mv $(TAR_FILE) $(SHA1_FILE) $(GPG_FILE) releases
 	ssh $(RELEASE_HOST) "rm -f $(RELEASE_DIR)/LATEST-$(PACKAGE)-[0-9]* && ln -s $(TAR_FILE) $(RELEASE_DIR)/LATEST-$(PACKAGE)-$(VERSION)"
+	mkdir -p releases
+	mv $(TAR_FILE) $(SHA1_FILE) $(GPG_FILE) releases
 	git tag -s -m "$(PACKAGE) $(VERSION) release" $(VERSION)
 	git push origin $(VERSION)
 	@echo "Please send a release announcement as follows:"
@@ -127,7 +127,7 @@ verify-version:
 	@echo "Good."
 
 .PHONY: verify-newer
-verify-newer: verify-version
+verify-newer:
 	@echo -n "Checking that no $(VERSION) release already exists..."
 	@ssh $(RELEASE_HOST) test ! -e $(RELEASE_DIR)/$(TAR_FILE) \
 		|| (echo "Ouch." && echo "Found: $(RELEASE_HOST):$(RELEASE_DIR)/$(TAR_FILE)" \
