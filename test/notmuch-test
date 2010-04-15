@@ -154,14 +154,11 @@ add_message ()
     $NOTMUCH new > /dev/null
 }
 
-NOTMUCH_IGNORED_OUTPUT_REGEXP='^Processed [0-9]*( total)? file|Found [0-9]* total file'
-NOTMUCH_THREAD_ID_SQUELCH='s/thread:................/thread:XXX/'
-execute_expecting ()
+pass_if_equal ()
 {
-    args=$1
+    output=$1
     expected=$2
 
-    output=$($NOTMUCH $args | grep -v -E -e "$NOTMUCH_IGNORED_OUTPUT_REGEXP" | sed -e "$NOTMUCH_THREAD_ID_SQUELCH" || true)
     if [ "$output" = "$expected" ]; then
 	echo "	PASS"
     else
@@ -175,6 +172,17 @@ TEST_DIR=$(pwd)/test.$$
 MAIL_DIR=${TEST_DIR}/mail
 export NOTMUCH_CONFIG=${TEST_DIR}/notmuch-config
 NOTMUCH=$(find_notmuch_binary $(pwd))
+
+NOTMUCH_NEW ()
+{
+    $NOTMUCH new | grep -v -E -e '^Processed [0-9]*( total)? file|Found [0-9]* total file'
+}
+
+NOTMUCH_SEARCH_THREAD_ID_SQUELCH='s/thread:................/thread:XXX/'
+notmuch_search_sanitize ()
+{
+    sed -e "$NOTMUCH_SEARCH_THREAD_ID_SQUELCH"
+}
 
 rm -rf ${TEST_DIR}
 mkdir ${TEST_DIR}
@@ -194,19 +202,23 @@ EOF
 
 printf "Testing \"notmuch new\" in several variations:\n"
 printf " No new messages...\t\t"
-execute_expecting new "No new mail."
+output=$(NOTMUCH_NEW)
+pass_if_equal "$output" "No new mail."
 
 printf " Single new message...\t\t"
 generate_message
-execute_expecting new "Added 1 new message to the database."
+output=$(NOTMUCH_NEW)
+pass_if_equal "$output" "Added 1 new message to the database."
 
 printf " Multiple new messages...\t"
 generate_message
 generate_message
-execute_expecting new "Added 2 new messages to the database."
+output=$(NOTMUCH_NEW)
+pass_if_equal "$output" "Added 2 new messages to the database."
 
 printf " No new messages (non-empty DB)... "
-execute_expecting new "No new mail."
+output=$(NOTMUCH_NEW)
+pass_if_equal "$output" "No new mail."
 
 printf " New directories...\t\t"
 rm -rf ${MAIL_DIR}/* ${MAIL_DIR}/.notmuch
@@ -214,7 +226,8 @@ mkdir ${MAIL_DIR}/def
 mkdir ${MAIL_DIR}/ghi
 generate_message [dir]=def
 
-execute_expecting new "Added 1 new message to the database."
+output=$(NOTMUCH_NEW)
+pass_if_equal "$output" "Added 1 new message to the database."
 
 printf " Alternate inode order...\t"
 
@@ -223,7 +236,8 @@ mv ${MAIL_DIR}/ghi ${MAIL_DIR}/abc
 rm ${MAIL_DIR}/def/*
 generate_message [dir]=abc
 
-execute_expecting new "Added 1 new message to the database."
+output=$(NOTMUCH_NEW)
+pass_if_equal "$output" "Added 1 new message to the database."
 
 printf " Message moved in...\t\t"
 rm -rf ${MAIL_DIR}/* ${MAIL_DIR}/.notmuch
@@ -235,7 +249,8 @@ increment_mtime ${MAIL_DIR}
 $NOTMUCH new > /dev/null
 mv $tmp_msg_filename $gen_msg_filename
 increment_mtime ${MAIL_DIR}
-execute_expecting new "Added 1 new message to the database."
+output=$(NOTMUCH_NEW)
+pass_if_equal "$output" "Added 1 new message to the database."
 
 printf " Renamed message...\t\t"
 
@@ -243,13 +258,15 @@ generate_message
 $NOTMUCH new > /dev/null
 mv $gen_msg_filename ${gen_msg_filename}-renamed
 increment_mtime ${MAIL_DIR}
-execute_expecting new "No new mail. Detected 1 file rename."
+output=$(NOTMUCH_NEW)
+pass_if_equal "$output" "No new mail. Detected 1 file rename."
 
 printf " Deleted message...\t\t"
 
 rm ${gen_msg_filename}-renamed
 increment_mtime ${MAIL_DIR}
-execute_expecting new "No new mail. Removed 1 message."
+output=$(NOTMUCH_NEW)
+pass_if_equal "$output" "No new mail. Removed 1 message."
 
 printf " Renamed directory...\t\t"
 
@@ -262,14 +279,16 @@ $NOTMUCH new > /dev/null
 mv ${MAIL_DIR}/dir ${MAIL_DIR}/dir-renamed
 increment_mtime ${MAIL_DIR}
 
-execute_expecting new "No new mail. Detected 3 file renames."
+output=$(NOTMUCH_NEW)
+pass_if_equal "$output" "No new mail. Detected 3 file renames."
 
 printf " Deleted directory...\t\t"
 
 rm -rf ${MAIL_DIR}/dir-renamed
 increment_mtime ${MAIL_DIR}
 
-execute_expecting new "No new mail. Removed 3 messages."
+output=$(NOTMUCH_NEW)
+pass_if_equal "$output" "No new mail. Removed 3 messages."
 
 printf " New directory (at end of list)... "
 
@@ -277,14 +296,16 @@ generate_message [dir]=zzz
 generate_message [dir]=zzz
 generate_message [dir]=zzz
 
-execute_expecting new "Added 3 new messages to the database."
+output=$(NOTMUCH_NEW)
+pass_if_equal "$output" "Added 3 new messages to the database."
 
 printf " Deleted directory (end of list)... "
 
 rm -rf ${MAIL_DIR}/zzz
 increment_mtime ${MAIL_DIR}
 
-execute_expecting new "No new mail. Removed 3 messages."
+output=$(NOTMUCH_NEW)
+pass_if_equal "$output" "No new mail. Removed 3 messages."
 
 printf " New symlink to directory...\t"
 
@@ -294,7 +315,8 @@ mv ${MAIL_DIR} ${TEST_DIR}/actual_maildir
 mkdir ${MAIL_DIR}
 ln -s ${TEST_DIR}/actual_maildir ${MAIL_DIR}/symlink
 
-execute_expecting new "Added 1 new message to the database."
+output=$(NOTMUCH_NEW)
+pass_if_equal "$output" "Added 1 new message to the database."
 
 printf " New symlink to a file...\t"
 generate_message
@@ -303,7 +325,8 @@ mkdir -p $(dirname $external_msg_filename)
 mv $gen_msg_filename $external_msg_filename
 ln -s $external_msg_filename $gen_msg_filename
 increment_mtime ${MAIL_DIR}
-execute_expecting new "Added 1 new message to the database."
+output=$(NOTMUCH_NEW)
+pass_if_equal "$output" "Added 1 new message to the database."
 
 printf " New two-level directory...\t"
 
@@ -311,72 +334,87 @@ generate_message [dir]=two/levels
 generate_message [dir]=two/levels
 generate_message [dir]=two/levels
 
-execute_expecting new "Added 3 new messages to the database."
+output=$(NOTMUCH_NEW)
+pass_if_equal "$output" "Added 3 new messages to the database."
 
 printf " Deleted two-level directory... "
 
 rm -rf ${MAIL_DIR}/two
 increment_mtime ${MAIL_DIR}
 
-execute_expecting new "No new mail. Removed 3 messages."
+output=$(NOTMUCH_NEW)
+pass_if_equal "$output" "No new mail. Removed 3 messages."
 
 printf "\nTesting \"notmuch search\" in several variations:\n"
 
 printf " Search body...\t\t\t"
 add_message '[subject]="body search"' '[date]="Sat, 01 Jan 2000 12:00:00 -0000"' [body]=bodysearchtest
-execute_expecting "search bodysearchtest" "thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; body search (inbox unread)"
+output=$($NOTMUCH search bodysearchtest | notmuch_search_sanitize)
+pass_if_equal "$output" "thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; body search (inbox unread)"
 
 printf " Search by from:...\t\t"
 add_message '[subject]="search by from"' '[date]="Sat, 01 Jan 2000 12:00:00 -0000"' [from]=searchbyfrom
-execute_expecting "search from:searchbyfrom" "thread:XXX   2000-01-01 [1/1] searchbyfrom; search by from (inbox unread)"
+output=$($NOTMUCH search from:searchbyfrom | notmuch_search_sanitize)
+pass_if_equal "$output" "thread:XXX   2000-01-01 [1/1] searchbyfrom; search by from (inbox unread)"
 
 printf " Search by to:...\t\t"
 add_message '[subject]="search by to"' '[date]="Sat, 01 Jan 2000 12:00:00 -0000"' [to]=searchbyto
-execute_expecting "search to:searchbyto" "thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; search by to (inbox unread)"
+output=$($NOTMUCH search to:searchbyto | notmuch_search_sanitize)
+pass_if_equal "$output" "thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; search by to (inbox unread)"
 
 printf " Search by subject:...\t\t"
 add_message [subject]=subjectsearchtest '[date]="Sat, 01 Jan 2000 12:00:00 -0000"'
-execute_expecting "search subject:subjectsearchtest" "thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; subjectsearchtest (inbox unread)"
+output=$($NOTMUCH search subject:subjectsearchtest | notmuch_search_sanitize)
+pass_if_equal "$output" "thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; subjectsearchtest (inbox unread)"
 
 printf " Search by id:...\t\t"
 add_message '[subject]="search by id"' '[date]="Sat, 01 Jan 2000 12:00:00 -0000"'
-execute_expecting "search id:${gen_msg_id}" "thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; search by id (inbox unread)"
+output=$($NOTMUCH search id:${gen_msg_id} | notmuch_search_sanitize)
+pass_if_equal "$output" "thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; search by id (inbox unread)"
 
 printf " Search by tag:...\t\t"
 add_message '[subject]="search by tag"' '[date]="Sat, 01 Jan 2000 12:00:00 -0000"'
 $NOTMUCH tag +searchbytag id:${gen_msg_id}
-execute_expecting "search tag:searchbytag" "thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; search by tag (inbox searchbytag unread)"
+output=$($NOTMUCH search tag:searchbytag | notmuch_search_sanitize)
+pass_if_equal "$output" "thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; search by tag (inbox searchbytag unread)"
 
 printf " Search by thread:...\t\t"
 add_message '[subject]="search by thread"' '[date]="Sat, 01 Jan 2000 12:00:00 -0000"'
 thread_id=$($NOTMUCH search id:${gen_msg_id} | sed -e 's/thread:\([a-f0-9]*\).*/\1/')
-execute_expecting "search thread:${thread_id}" "thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; search by thread (inbox unread)"
+output=$($NOTMUCH search thread:${thread_id} | notmuch_search_sanitize)
+pass_if_equal "$output" "thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; search by thread (inbox unread)"
 
 printf " Search body (phrase)...\t"
 add_message '[subject]="body search (phrase)"' '[date]="Sat, 01 Jan 2000 12:00:00 -0000"' '[body]="body search (phrase)"'
 add_message '[subject]="negative result"' '[date]="Sat, 01 Jan 2000 12:00:00 -0000"' '[body]="This phrase should not match the body search"'
-execute_expecting "search '\"body search (phrase)\"'" "thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; body search (phrase) (inbox unread)"
+output=$($NOTMUCH search '\"body search (phrase)\"' | notmuch_search_sanitize)
+pass_if_equal "$output" "thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; body search (phrase) (inbox unread)"
 
 printf " Search by from: (address)...\t"
 add_message '[subject]="search by from (address)"' '[date]="Sat, 01 Jan 2000 12:00:00 -0000"' [from]=searchbyfrom@example.com
-execute_expecting "search from:searchbyfrom@example.com" "thread:XXX   2000-01-01 [1/1] searchbyfrom@example.com; search by from (address) (inbox unread)"
+output=$($NOTMUCH search from:searchbyfrom@example.com | notmuch_search_sanitize)
+pass_if_equal "$output" "thread:XXX   2000-01-01 [1/1] searchbyfrom@example.com; search by from (address) (inbox unread)"
 
 printf " Search by from: (name)...\t"
 add_message '[subject]="search by from (name)"' '[date]="Sat, 01 Jan 2000 12:00:00 -0000"' '[from]="Search By From Name <test@example.com>"'
-execute_expecting "search from:'Search By From Name'" "thread:XXX   2000-01-01 [1/1] Search By From Name; search by from (name) (inbox unread)"
+output=$($NOTMUCH search from:'Search By From Name' | notmuch_search_sanitize)
+pass_if_equal "$output" "thread:XXX   2000-01-01 [1/1] Search By From Name; search by from (name) (inbox unread)"
 
 printf " Search by to: (address)...\t"
 add_message '[subject]="search by to (address)"' '[date]="Sat, 01 Jan 2000 12:00:00 -0000"' [to]=searchbyto@example.com
-execute_expecting "search to:searchbyto@example.com" "thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; search by to (address) (inbox unread)"
+output=$($NOTMUCH search to:searchbyto@example.com | notmuch_search_sanitize)
+pass_if_equal "$output" "thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; search by to (address) (inbox unread)"
 
 printf " Search by to: (name)...\t"
 add_message '[subject]="search by to (name)"' '[date]="Sat, 01 Jan 2000 12:00:00 -0000"' '[to]="Search By To Name <test@example.com>"'
-execute_expecting "search to:'Search By To Name'" "thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; search by to (name) (inbox unread)"
+output=$($NOTMUCH search to:'Search By To Name' | notmuch_search_sanitize)
+pass_if_equal "$output" "thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; search by to (name) (inbox unread)"
 
 printf " Search by subject: (phrase)...\t"
 add_message '[subject]="subject search test (phrase)"' '[date]="Sat, 01 Jan 2000 12:00:00 -0000"'
 add_message '[subject]="this phrase should not match the subject search test"' '[date]="Sat, 01 Jan 2000 12:00:00 -0000"'
-execute_expecting "search 'subject:\"subject search test (phrase)\"'" "thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; subject search test (phrase) (inbox unread)"
+output=$($NOTMUCH search 'subject:\"subject search test (phrase)\"' | notmuch_search_sanitize)
+pass_if_equal "$output" "thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; subject search test (phrase) (inbox unread)"
 
 printf "\nTesting \"notmuch reply\" in several variations:\n"
 
@@ -387,7 +425,8 @@ add_message '[from]="Sender <sender@example.com>"' \
             '[date]="Tue, 05 Jan 2010 15:43:56 -0800"' \
             '[body]="basic reply test"'
 
-execute_expecting "reply id:${gen_msg_id}" "From: Notmuch Test Suite <test_suite@notmuchmail.org>
+output=$($NOTMUCH reply id:${gen_msg_id})
+pass_if_equal "$output" "From: Notmuch Test Suite <test_suite@notmuchmail.org>
 Subject: Re: notmuch-reply-test
 To: Sender <sender@example.com>
 Bcc: test_suite@notmuchmail.org
@@ -404,7 +443,8 @@ add_message '[from]="Sender <sender@example.com>"' \
             '[date]="Tue, 05 Jan 2010 15:43:56 -0800"' \
             '[body]="Multiple recipients"'
 
-execute_expecting "reply id:${gen_msg_id}" "From: Notmuch Test Suite <test_suite@notmuchmail.org>
+output=$($NOTMUCH reply id:${gen_msg_id})
+pass_if_equal "$output" "From: Notmuch Test Suite <test_suite@notmuchmail.org>
 Subject: Re: notmuch-reply-test
 To: Sender <sender@example.com>, Someone Else <someone@example.com>
 Bcc: test_suite@notmuchmail.org
@@ -422,7 +462,8 @@ add_message '[from]="Sender <sender@example.com>"' \
             '[date]="Tue, 05 Jan 2010 15:43:56 -0800"' \
             '[body]="reply with CC"'
 
-execute_expecting "reply id:${gen_msg_id}" "From: Notmuch Test Suite <test_suite@notmuchmail.org>
+output=$($NOTMUCH reply id:${gen_msg_id})
+pass_if_equal "$output" "From: Notmuch Test Suite <test_suite@notmuchmail.org>
 Subject: Re: notmuch-reply-test
 To: Sender <sender@example.com>
 Cc: Other Parties <cc@example.com>
@@ -440,7 +481,8 @@ add_message '[from]="Sender <sender@example.com>"' \
             '[date]="Tue, 05 Jan 2010 15:43:56 -0800"' \
             '[body]="reply from alternate address"'
 
-execute_expecting "reply id:${gen_msg_id}" "From: Notmuch Test Suite <test_suite_other@notmuchmail.org>
+output=$($NOTMUCH reply id:${gen_msg_id})
+pass_if_equal "$output" "From: Notmuch Test Suite <test_suite_other@notmuchmail.org>
 Subject: Re: notmuch-reply-test
 To: Sender <sender@example.com>
 Bcc: test_suite@notmuchmail.org
@@ -458,7 +500,8 @@ add_message '[from]="Sender <sender@example.com>"' \
             '[body]="support for reply-to"' \
             '[reply-to]="Sender <elsewhere@example.com>"'
 
-execute_expecting "reply id:${gen_msg_id}" "From: Notmuch Test Suite <test_suite@notmuchmail.org>
+output=$($NOTMUCH reply id:${gen_msg_id})
+pass_if_equal "$output" "From: Notmuch Test Suite <test_suite@notmuchmail.org>
 Subject: Re: notmuch-reply-test
 To: Sender <elsewhere@example.com>
 Bcc: test_suite@notmuchmail.org
@@ -476,7 +519,8 @@ add_message '[from]="Sender <sender@example.com>"' \
             '[body]="Un-munging Reply-To"' \
             '[reply-to]="Evil Munging List <list@example.com>"'
 
-execute_expecting "reply id:${gen_msg_id}" "From: Notmuch Test Suite <test_suite@notmuchmail.org>
+output=$($NOTMUCH reply id:${gen_msg_id})
+pass_if_equal "$output" "From: Notmuch Test Suite <test_suite@notmuchmail.org>
 Subject: Re: notmuch-reply-test
 To: Sender <sender@example.com>, Some List <list@example.com>
 Bcc: test_suite@notmuchmail.org
@@ -506,11 +550,14 @@ end
 Finally, we have our afteruudata marker as well."'
 
 printf " Ensure content before uu data is indexed..."
-execute_expecting "search beforeuudata" "thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; uuencodetest (inbox unread)"
+output=$($NOTMUCH search beforeuudata | notmuch_search_sanitize)
+pass_if_equal "$output" "thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; uuencodetest (inbox unread)"
 printf " Ensure uu data is not indexed...\t"
-execute_expecting "search DURINGUUDATA" ""
+output=$($NOTMUCH search DURINGUUDATA | notmuch_search_sanitize)
+pass_if_equal "$output" ""
 printf " Ensure content after uu data is indexed..."
-execute_expecting "search afteruudata" "thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; uuencodetest (inbox unread)"
+output=$($NOTMUCH search afteruudata | notmuch_search_sanitize)
+pass_if_equal "$output" "thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; uuencodetest (inbox unread)"
 
 printf "\nTesting \"notmuch dump\" and \"notmuch restore\":\n"
 
@@ -548,19 +595,25 @@ echo "	PASS"
 printf "\nTesting threading when messages received out of order:\n"
 printf " Adding initial child message...\t\t"
 generate_message [body]=foo '[in-reply-to]=\<parent-id\>' [subject]=brokenthreadtest '[date]="Sat, 01 Jan 2000 12:00:00 -0000"'
-execute_expecting new "Added 1 new message to the database."
+output=$(NOTMUCH_NEW)
+pass_if_equal "$output" "Added 1 new message to the database."
 printf " Searching returns the message...\t\t"
-execute_expecting "search foo" "thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; brokenthreadtest (inbox unread)"
+output=$($NOTMUCH search foo | notmuch_search_sanitize)
+pass_if_equal "$output" "thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; brokenthreadtest (inbox unread)"
 printf " Adding second child message...\t\t\t"
 generate_message [body]=foo '[in-reply-to]=\<parent-id\>' [subject]=brokenthreadtest '[date]="Sat, 01 Jan 2000 12:00:00 -0000"'
-execute_expecting new "Added 1 new message to the database."
+output=$(NOTMUCH_NEW)
+pass_if_equal "$output" "Added 1 new message to the database."
 printf " Searching returns both messages in one thread..."
-execute_expecting "search foo" "thread:XXX   2000-01-01 [2/2] Notmuch Test Suite; brokenthreadtest (inbox unread)"
+output=$($NOTMUCH search foo | notmuch_search_sanitize)
+pass_if_equal "$output" "thread:XXX   2000-01-01 [2/2] Notmuch Test Suite; brokenthreadtest (inbox unread)"
 printf " Adding parent message...\t\t\t"
 generate_message [body]=foo [id]=parent-id [subject]=brokenthreadtest '[date]="Sat, 01 Jan 2000 12:00:00 -0000"'
-execute_expecting new "Added 1 new message to the database."
+output=$(NOTMUCH_NEW)
+pass_if_equal "$output" "Added 1 new message to the database."
 printf " Searching returns all three messages in one thread..."
-execute_expecting "search foo" "thread:XXX   2000-01-01 [3/3] Notmuch Test Suite; brokenthreadtest (inbox unread)"
+output=$($NOTMUCH search foo | notmuch_search_sanitize)
+pass_if_equal "$output" "thread:XXX   2000-01-01 [3/3] Notmuch Test Suite; brokenthreadtest (inbox unread)"
 
 cat <<EOF
 Notmuch test suite complete.
