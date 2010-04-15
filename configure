@@ -238,11 +238,11 @@ printf "Checking for Mac OS X (for shared library)... "
 if [ `uname` = "Darwin" ] ; then
     printf "Yes.\n"
     mac_os_x=1
-    linker_resolves_library_dependencies = 0
+    linker_resolves_library_dependencies=0
 else
     printf "No.\n"
     mac_os_x=0
-    linker_resolves_library_dependencies = 1
+    linker_resolves_library_dependencies=1
 fi
 
 if [ $errors -gt 0 ]; then
