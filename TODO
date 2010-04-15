@@ -208,6 +208,32 @@ notmuch searches. Here was one proposal made in IRC:
 Provide a ~me Xapian synonym for all of the user's configured email
 addresses.
 
+Search syntax
+-------------
+Implement support for "tag:*" to expand to all tags.
+
+Fix "notmuch search to:" to be less confusing. Many users expect this
+to search for all messages with a To: header, but it instead searches
+for all messages with the word "to". If we don't provide the first
+behavior, perhaps we should exit on an error when a configured prefix
+is provided with no value?
+
+Support "*" in all cases and not just as a special case. That is, "* "
+should also work, as well as "* and tag:inbox".
+
+Implement a syntax for requesting set-theoertic operations on results
+of multiple searches. For example, I would like to do:
+
+	"tag:inbox" SET-SUBTRACT "tag:muted"
+
+    as well as:
+
+	"tag:notmuch and <date-range>" SET-INTERSECT
+	"tag:notmuch and not (tag:merged or tag:postponed)"
+
+    See id:3wdpr282yz2.fsf@testarossa.amd.com for more details on the
+    use cases of the above.
+
 Database changes
 ----------------
 Store a reference term for every message-id that appears in
