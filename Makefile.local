@@ -105,7 +105,7 @@ release-message:
 	@echo ""
 	@echo "What's new in notmuch $(VERSION)"
 	@echo "========================="
-	@sed -ne '/^[Nn]otmuch 0.1/{n;n;b NEWS}; d; :NEWS /^===/q; {p;n;b NEWS}' < NEWS | head -n -2
+	@sed -ne '/^[Nn]otmuch $(VERSION)/{n;n;b NEWS}; d; :NEWS /^===/q; {p;n;b NEWS}' < NEWS | head -n -2
 	@echo ""
 	@echo "What is notmuch"
 	@echo "==============="
