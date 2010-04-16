@@ -32,8 +32,10 @@ GPG_FILE=$(SHA1_FILE).asc
 FINAL_CFLAGS = -DNOTMUCH_VERSION=$(VERSION) $(CFLAGS) $(WARN_CFLAGS) $(CONFIGURE_CFLAGS) $(extra_cflags)
 FINAL_CXXFLAGS = $(CXXFLAGS) $(WARN_CXXFLAGS) $(CONFIGURE_CXXFLAGS) $(extra_cflags) $(extra_cxxflags)
 FINAL_NOTMUCH_LDFLAGS = $(LDFLAGS) -Llib -lnotmuch
+FINAL_NOTMUCH_LINKER = CC
 ifneq ($(LINKER_RESOLVES_LIBRARY_DEPENDENCIES),1)
 FINAL_NOTMUCH_LDFLAGS += $(CONFIGURE_LDFLAGS)
+FINAL_NOTMUCH_LINKER = CXX
 endif
 FINAL_LIBNOTMUCH_LDFLAGS = $(LDFLAGS) $(CONFIGURE_LDFLAGS)
 
@@ -235,7 +237,7 @@ notmuch: $(notmuch_client_modules) lib/libnotmuch.a
 	$(call quiet,CXX $(CFLAGS)) $^ $(FINAL_LIBNOTMUCH_LDFLAGS) -o $@
 
 notmuch-shared: $(notmuch_client_modules) lib/$(LINKER_NAME)
-	$(call quiet,CXX $(CFLAGS)) $(notmuch_client_modules) $(FINAL_NOTMUCH_LDFLAGS) -o $@
+	$(call quiet,$(FINAL_NOTMUCH_LINKER) $(CFLAGS)) $(notmuch_client_modules) $(FINAL_NOTMUCH_LDFLAGS) -o $@
 
 notmuch.1.gz: notmuch.1
 	gzip --stdout $^ > $@
