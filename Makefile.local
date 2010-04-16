@@ -79,11 +79,8 @@ release: verify-no-dirty-code
 	mv $(TAR_FILE) $(SHA1_FILE) $(GPG_FILE) releases
 	git tag -s -m "$(PACKAGE) $(VERSION) release" $(VERSION)
 	git push origin $(VERSION)
-	@echo "Please send a release announcement as follows:"
-	@echo ""
-	$(MAKE) release-message
 	$(MAKE) release-message > $(PACKAGE)-$(VERSION).announce
-	@echo "(This message is also available in $(PACKAGE)-$(VERSION).announce"
+	@echo "Please send a release announcement using $(PACKAGE)-$(VERSION).announce as a template."
 
 .PHONY: release-message
 release-message:
