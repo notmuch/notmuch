@@ -10,10 +10,14 @@
 # repository), we let git append identification of the actual commit.
 PACKAGE=notmuch
 
+IS_GIT=$(shell if [ -d .git ] ; then echo yes ; else echo no; fi)
+
 VERSION:=$(shell cat version)
 ifneq ($(MAKECMDGOALS),release)
 ifneq ($(MAKECMDGOALS),release-message)
-VERSION:=$(shell if git describe > /dev/null 2>&1; then git describe --match '[0-9.]*'; else cat version; fi)
+ifeq ($(IS_GIT),yes)
+VERSION:=$(shell git describe --match '[0-9.]*')
+endif
 endif
 endif
 
@@ -60,10 +64,7 @@ $(TAR_FILE):
 	tar --append -f $(TAR_FILE).tmp --transform s_^_$(PACKAGE)-$(VERSION)/_  --transform 's_.tmp$$__' version.tmp
 	rm version.tmp
 	gzip < $(TAR_FILE).tmp > $(TAR_FILE)
-
-.PHONY: snapshot
-snapshot: $(TAR_FILE)
-	@echo "Snapshot created as $(TAR_FILE)"
+	@echo "Source is ready for release in $(TAR_FILE)"
 
 $(SHA1_FILE): $(TAR_FILE)
 	sha1sum $^ > $@
@@ -129,6 +130,7 @@ release-message:
 
 .PHONY: verify-no-dirty-code
 verify-no-dirty-code: verify-version
+ifeq ($(IS_GIT),yes)
 	@printf "Checking that source tree is clean..."
 ifneq ($(shell git ls-files -m),)
 	@echo "No"
@@ -141,6 +143,7 @@ ifneq ($(shell git ls-files -m),)
 	@false
 else
 	@echo "Good"
+endif
 endif
 
 .PHONY: verify-version
