@@ -1,3 +1,140 @@
+Notmuch 0.2 (2010-04-16)
+========================
+This is the second release of the notmuch mail system, with actual
+detailed release notes this time!
+
+This release consists of a number of minor new features that make
+notmuch more pleasant to use, and a few fairly major bug fixes.
+
+We didn't quite hit our release target of "about a week" from the 0.1
+release, (0.2 is happening 11 days after 0.1), but we hope to do
+better for next week. Look forward to some major features coming to
+notmuch in subsequent releases.
+
+-Carl
+
+General features
+----------------
+Better guessing of From: header.
+
+  Notmuch now tries harder to guess which configured address should be
+  used as the From: line in a "notmuch reply". It will examine the
+  Received: headers if it fails to find any configured address in To:
+  or Cc:. This allows it to often choose the correct address even when
+  replying to a message sent to a mailing list, and not directly to a
+  configured address.
+
+Make "notmuch count" with no arguments count all messages
+
+  Previously, it was hard to construct a search term that was
+  guaranteed to match all messages.
+
+Provide a new special-case search term of "*" to match all messages.
+
+  This can be used in any command accepting a search term, such as
+  "notmuch search '*'". Note that you'll want to take care that the
+  shell doesn't expand * against the current files. And note that the
+  support for "*" is a special case. It's only meaningful as a single
+  search term and loses its special meaning when combined with any
+  other search terms.
+
+Automatically detect thread connections even when a parent message is
+missing.
+
+  Previously, if two or more message were received with a common
+  parent, but that parent was not received, then these messages would
+  not be recognized as belonging to the same thread. This is now fixed
+  so that such messages are properly connected in a thread.
+
+General bug fixes
+-----------------
+Fix potential data loss in "notmuch new" with SIGINT
+
+  One code path in "notmuch new" was not properly handling
+  SIGINT. Previously, this could lead to messages being removed from
+  the database (and their tags being lost) if the user pressed
+  Control-C while "notmuch new" was working.
+
+Fix segfault when a message includes a MIME part that is empty.
+
+Fix handling of non-ASCII characters with --format=json
+
+  Previously, characters outside the range of 7-bit ASCII were
+  silently dropped from the JSON output. This led to corrupted display
+  of utf-8 content in the upcoming notmuch web-based frontends.
+
+Fix headers to be properly decoded in "notmuch reply"
+
+  Previously, the user might see:
+
+	Subject: Re: =?iso-8859-2?q?Rozlu=E8ka?=
+
+  rather than:
+
+	Subject: Re: Rozlučka
+
+  The former text is properly encoded to be RFC-compliant SMTP, will
+  be sent correctly, and will be properly decoded by the
+  recipient. But the user trying to edit the reply would likely be
+  unable to read or edit that field in its encoded form.
+
+Emacs client features
+---------------------
+Show the last few lines of citations as well as the first few lines.
+
+  It's often the case that the last sentence of a citation is what is
+  being replied to directly, so the last few lines are often much more
+  important. The number of lines shown at the beginning and end of any
+  citation can be configured, (notmuch-show-citation-lines-prefix and
+  notmuch-show-citation-lines-suffix).
+
+The '+' and '-' commands in the search view can now add and remove
+tags by region.
+
+  Selective bulk tagging is now possible by selecting a region of
+  threads and then using either the '+' or '-' keybindings. Bulk
+  tagging is still available for all threads matching the current
+  search with th '*' binding.
+
+More meaningful buffer names for thread-view buffers.
+
+  Notmuch now uses the Subject of the thread as the buffer
+  name. Previously it was using the thread ID, which is a meaningless
+  number to the user.
+
+Provide for customized colors of threads in search view based on tags.
+
+  See the documentation of notmuch-search-line-faces, (or us "M-x
+  customize" and browse to the "notmuch" group within "Applications"
+  and "Mail"), for details on how to configure this colorization.
+
+Build-system features
+---------------------
+Add support to properly build libnotmuch on Darwin systems (OS X).
+
+Add support to configure for many standard options.
+
+  We include actual support for:
+
+	--includedir --mandir --sysconfdir
+
+  And accept and silently ignore several more:
+
+	--build --infodir --libexecdir --localstatedir
+	--disable-maintainer-mode --disable-dependency-tracking
+
+Install emacs client in "make install" rather than requiring a
+separate "make install-emacs".
+
+Automatically compute versions numbers between releases.
+
+  This support uses the git-describe notation, so a version such as
+  0.1-144-g43cbbfc indicates a version that is 144 commits since the
+  0.1 release and is available as git commit "43cbbfc".
+
+Add a new "make test" target to run the test suite and actually verify
+its results.
+
 Notmuch 0.1 (2010-04-05)
 ========================
 This is the first release of the notmuch mail system.
