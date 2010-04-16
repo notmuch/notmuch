@@ -42,7 +42,7 @@ FINAL_LIBNOTMUCH_LDFLAGS = $(LDFLAGS) $(CONFIGURE_LDFLAGS)
 .PHONY: all
 all: notmuch notmuch-shared notmuch.1.gz
 ifeq ($(MAKECMDGOALS),)
-ifeq ($(shell cat .first-build-message),)
+ifeq ($(shell cat .first-build-message 2>/dev/null),)
 	@NOTMUCH_FIRST_BUILD=1 $(MAKE) --no-print-directory all
 	@echo ""
 	@echo "Compilation of notmuch is now complete. You can install notmuch with:"
