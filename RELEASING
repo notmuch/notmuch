@@ -35,7 +35,27 @@ repository. From here, there are just a few steps to release:
 
 	Commit this change, if any.
 
-3) Create an entry for the new release in debian/changelog
+3) Upgrade the version in the file "version"
+
+	The scheme for the release number is as follows:
+
+	A major milestone in usability causes an increase in the major
+	number, yielding a two-component version with a minor number
+	of 0, (such as "1.0" or "2.0").
+
+	Otherwise, releases with changes in features cause an increase
+	in the minor number, yielding a two-component version, (such
+	as "1.1" or "1.2").
+
+	Finally, releases that do not change "features" but are merely
+	bug fixes either add increase the micro number or add it
+	(starting at ".1" if not present). So a bug-fix release from
+	"1.0" would be "1.0.1" and a subsequent bug-fix release would
+	be "1.0.2" etc.
+
+	Commit this change.
+
+4) Create an entry for the new release in debian/changelog
 
 	The syntax of this file is tightly restricted, but the
 	available emacs mode (see the dpkg-dev-el package helps).  The
@@ -47,14 +67,11 @@ repository. From here, there are just a few steps to release:
 
 	XXX: It would be great if this step were automated as part of
 	release, (taking entries from NEWS and the version from the
-	VERSION, and creating a new commit).
+	version file, and creating a new commit, etc.)
 
-4) Run "make VERSION=X.Y release" which will perform the following steps:
+5) Run "make release" which will perform the following steps:
 
-   For the X.Y version, we'll generally just increment Y. But for
-   major milestones of usability we're increment X as well.
-
-	* Ensure that the caller passed VERSION=X.Y
+	* Ensure that the version consists only of digits and periods
 	* Verify that the source tree is clean
 	* Compile the current notmuch code (aborting release if it fails)
 	* Run the notmuch test suite (aborting release if it fails)
@@ -72,7 +89,7 @@ repository. From here, there are just a few steps to release:
 	* Push that tag
 	* Provide some text for the release announcement (see below).
 
-5) Send a message to notmuch@notmuchmail.org to announce the release.
+6) Send a message to notmuch@notmuchmail.org to announce the release.
 
 	Use the text provided from "make release" above, (if for some
 	reason you lose this message, "make release-message" prints
