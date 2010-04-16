@@ -72,6 +72,7 @@ repository. From here, there are just a few steps to release:
 5) Run "make release" which will perform the following steps:
 
 	* Ensure that the version consists only of digits and periods
+	* Ensure that version and debian/changelog have the same version
 	* Verify that the source tree is clean
 	* Compile the current notmuch code (aborting release if it fails)
 	* Run the notmuch test suite (aborting release if it fails)

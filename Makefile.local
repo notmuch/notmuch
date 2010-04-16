@@ -86,7 +86,7 @@ dist: $(TAR_FILE)
 # are part of the release and need to take the version from the
 # version file).
 .PHONY: release
-release: verify-no-dirty-code
+release: verify-source-tree-and-version
 	$(MAKE) VERSION=$(VERSION) verify-newer
 	$(MAKE) VERSION=$(VERSION) test
 	$(MAKE) VERSION=$(VERSION) $(GPG_FILE)
@@ -130,8 +130,14 @@ release-message:
 	@echo ""
 	@echo "For more about notmuch, see http://notmuchmail.org"
 
+# This is a chain of dependencies rather than a simple list simply to
+# avoid the messages getting interleaved in the case of a parallel
+# make invocation.
+.PHONY: verify-source-tree-and-version
+verify-source-tree-and-version: verify-no-dirty-code
+
 .PHONY: verify-no-dirty-code
-verify-no-dirty-code: verify-version
+verify-no-dirty-code: verify-version-debian
 ifeq ($(IS_GIT),yes)
 	@printf "Checking that source tree is clean..."
 ifneq ($(shell git ls-files -m),)
@@ -148,8 +154,17 @@ else
 endif
 endif
 
-.PHONY: verify-version
-verify-version:
+.PHONY: verify-version-debian
+verify-version-debian: verify-version-components
+	@echo -n "Checking that Debian package version is $(VERSION)..."
+	@if [ "$(VERSION)" != $$(dpkg-parsechangelog | grep ^Version | awk '{print $$2}') ] ; then \
+		(echo "No." && \
+		 echo "Please edit version and debian/changelog to have consistent versions." && false) \
+	 fi
+	@echo "Good."
+
+.PHONY: verify-version-components
+verify-version-components:
 	@echo -n "Checking that $(VERSION) consists only of digits and periods..."
 	@if echo $(VERSION) | grep -q -v -x '[0-9.]*'; then \
 		(echo "No." && \
