@@ -35,7 +35,21 @@ repository. From here, there are just a few steps to release:
 
 	Commit this change, if any.
 
-3) Run "make VERSION=X.Y release" which will perform the following steps:
+3) Create an entry for the new release in debian/changelog
+
+	The syntax of this file is tightly restricted, but the
+	available emacs mode (see the dpkg-dev-el package helps).  The
+	entries here will be the Debian-relevant single-line
+	description of changes from the NEWS entry. And the version
+	must match the version in the next step.
+
+	Commit this change.
+
+	XXX: It would be great if this step were automated as part of
+	release, (taking entries from NEWS and the version from the
+	VERSION, and creating a new commit).
+
+4) Run "make VERSION=X.Y release" which will perform the following steps:
 
    For the X.Y version, we'll generally just increment Y. But for
    major milestones of usability we're increment X as well.
@@ -58,7 +72,7 @@ repository. From here, there are just a few steps to release:
 	* Push that tag
 	* Provide some text for the release announcement (see below).
 
-4) Send a message to notmuch@notmuchmail.org to announce the release.
+5) Send a message to notmuch@notmuchmail.org to announce the release.
 
 	Use the text provided from "make release" above, (if for some
 	reason you lose this message, "make release-message" prints
