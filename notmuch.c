@@ -474,7 +474,7 @@ main (int argc, char *argv[])
 	return notmuch_help_command (NULL, 0, NULL);
 
     if (STRNCMP_LITERAL (argv[1], "--version") == 0) {
-	printf ("notmuch version " STRINGIFY(NOTMUCH_VERSION) "\n");
+	printf ("notmuch " STRINGIFY(NOTMUCH_VERSION) "\n");
 	return 0;
     }
 
