@@ -13,3 +13,4 @@ libnotmuch.so*
 .*.swp
 *.elc
 releases
+debian-build

@@ -1,4 +1,11 @@
 #!/usr/bin/make -f
+
+# This target invoked by git-buildpackage using a clean hook, see gbp.conf
+prebuild:
+	git-dch --release --new-version=$(VERSION)
+	git commit -n debian/changelog \
+		-m "Automatically update debian/changelog for $(VERSION)"
+
 %:
 	dh $@
 
