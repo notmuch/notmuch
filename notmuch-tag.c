@@ -107,6 +107,9 @@ notmuch_tag_command (void *ctx, unused (int argc), unused (char *argv[]))
 	return 1;
     }
 
+    /* tagging is not interested in any special sort order */
+    notmuch_query_set_sort (query, NOTMUCH_SORT_UNSORTED);
+
     for (messages = notmuch_query_search_messages (query);
 	 notmuch_messages_valid (messages) && !interrupted;
 	 notmuch_messages_move_to_next (messages))
