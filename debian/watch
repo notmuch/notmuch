@@ -1,4 +1,0 @@
-version=3
-
-# Notmuch releases appear here
-http://www.notmuchmail.org/releases/notmuch-(.*)\.tar\.gz
