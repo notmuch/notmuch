@@ -69,7 +69,7 @@ dist: $(TAR_FILE)
 # We invoke make recursively only to force ordering of our phony
 # targets in the case of parallel invocation of make (-j).
 .PHONY: release
-release: verify-version
+release: verify-no-dirty-code
 	$(MAKE) test
 	$(MAKE) $(GPG_FILE)
 	$(MAKE) verify-newer
@@ -116,6 +116,21 @@ release-message:
 	@echo ""
 	@echo "For more about notmuch, see http://notmuchmail.org"
 
+.PHONY: verify-no-dirty-code
+verify-no-dirty-code: verify-version
+	@printf "Checking that source tree is clean..."
+ifneq ($(shell git ls-files -m),)
+	@echo "No"
+	@echo "The following files have been modified since the most recent git commit:"
+	@echo ""
+	@git ls-files -m
+	@echo ""
+	@echo "The release will be made from the committed state, but perhaps you meant"
+	@echo "to commit this code first? Please clean this up to make it more clear."
+	@false
+else
+	@echo "Good"
+endif
 
 .PHONY: verify-version
 verify-version:

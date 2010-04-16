@@ -37,17 +37,17 @@ repository. From here, there are just a few steps to release:
    For the X.Y version, we'll generally just increment Y. But for
    major milestones of usability we're increment X as well.
 
+	* Ensure that the caller passed VERSION=X.Y
+	* Verify that the source tree is clean
 	* Compile the current notmuch code (aborting release if it fails)
 	* Run the notmuch test suite (aborting release if it fails)
-	* Check that the notmuch version consists of only two components
-	* Check that no release exists with the current version
-	* Verify that "make dist" completes successfully
 	* Generate the final tar file
-	* Generate an sha1sum file
+	* Generate a .sha1 sum file for the tar file
 	* Sign the sha1sum using your GPG setup (asks for your GPG password)
+	* Check that no release exists with the current version
 	* scp the three files to appear on http://notmuchmail.org/releases
-	* Place local copies of the three files in the releases directory
 	* Create a LATEST-notmuch-version file (after deleting any old one)
+	* Place local copies of the three files in the releases directory
 	* Tag the entire source tree with a tag of the form X.Y.Z, and sign
 	  the tag with your GPG key (asks for your GPG password, and you
 	  may need to set GIT_COMMITTER_NAME and GIT_COMMITTER_EMAIL to match
