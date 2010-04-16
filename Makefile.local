@@ -9,7 +9,7 @@
 # Between releases, (such as when compiling notmuch from the git
 # repository), we let git append identification of the actual commit.
 PACKAGE=notmuch
-VERSION:=$(shell if [ -f version ]; then cat version; else git describe --match '[0-9].[0-9]*'; fi)
+VERSION:=$(shell if [ -f version ]; then cat version; else git describe --match '[0-9.]*'; fi)
 
 RELEASE_HOST=notmuchmail.org
 RELEASE_DIR=/srv/notmuchmail.org/www/releases
@@ -119,10 +119,14 @@ release-message:
 
 .PHONY: verify-version
 verify-version:
-	@echo -n "Checking that $(VERSION) is a two-component version..."
-	@if echo $(VERSION) | grep -q -v -x '[0-9]*\.[0-9]*'; then \
-		(echo "Ouch." && \
-	         echo "Before releasing the notmuch version should be a two-component value." && false);\
+	@echo -n "Checking that $(VERSION) consists only of digits and periods..."
+	@if echo $(VERSION) | grep -q -v -x '[0-9.]*'; then \
+		(echo "No." && \
+	         echo "Remember: You need to use:" && \
+	         echo "" && \
+	         echo "	make VERSION=X.Y release" && \
+	         echo "" && \
+	         echo "to release notmuch." && false); \
 	 else :; fi
 	@echo "Good."
 
