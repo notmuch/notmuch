@@ -81,9 +81,9 @@ dist: $(TAR_FILE)
 # version file).
 .PHONY: release
 release: verify-no-dirty-code
+	$(MAKE) VERSION=$(VERSION) verify-newer
 	$(MAKE) VERSION=$(VERSION) test
 	$(MAKE) VERSION=$(VERSION) $(GPG_FILE)
-	$(MAKE) VERSION=$(VERSION) verify-newer
 	scp $(TAR_FILE) $(SHA1_FILE) $(GPG_FILE) $(RELEASE_HOST):$(RELEASE_DIR)
 	ssh $(RELEASE_HOST) "rm -f $(RELEASE_DIR)/LATEST-$(PACKAGE)-[0-9]* && ln -s $(TAR_FILE) $(RELEASE_DIR)/LATEST-$(PACKAGE)-$(VERSION)"
 	mkdir -p releases
@@ -145,11 +145,7 @@ verify-version:
 	@echo -n "Checking that $(VERSION) consists only of digits and periods..."
 	@if echo $(VERSION) | grep -q -v -x '[0-9.]*'; then \
 		(echo "No." && \
-	         echo "Remember: You need to use:" && \
-	         echo "" && \
-	         echo "	make VERSION=X.Y release" && \
-	         echo "" && \
-	         echo "to release notmuch." && false); \
+	         echo "Please follow the instructions in RELEASING to choose a version" && false) \
 	 else :; fi
 	@echo "Good."
 
@@ -158,7 +154,8 @@ verify-newer:
 	@echo -n "Checking that no $(VERSION) release already exists..."
 	@ssh $(RELEASE_HOST) test ! -e $(RELEASE_DIR)/$(TAR_FILE) \
 		|| (echo "Ouch." && echo "Found: $(RELEASE_HOST):$(RELEASE_DIR)/$(TAR_FILE)" \
-		&& echo "Refusing to replace an existing release." && false)
+		&& echo "Refusing to replace an existing release." \
+		&& echo "Don't forget to update \"version\" as described in RELEASING before release." && false)
 	@echo "Good."
 
 # The user has not set any verbosity, default to quiet mode and inform the
