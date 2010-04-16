@@ -60,7 +60,10 @@ $(TAR_FILE):
 	tar --append -f $(TAR_FILE).tmp --transform s_^_$(PACKAGE)-$(VERSION)/_  --transform 's_.tmp$$__' version.tmp
 	rm version.tmp
 	gzip < $(TAR_FILE).tmp > $(TAR_FILE)
-	@echo "Source is ready for release in $(TAR_FILE)"
+
+.PHONY: snapshot
+snapshot: $(TAR_FILE)
+	@echo "Snapshot created as $(TAR_FILE)"
 
 $(SHA1_FILE): $(TAR_FILE)
 	sha1sum $^ > $@
