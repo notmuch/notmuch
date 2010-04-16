@@ -219,6 +219,12 @@ notmuch searches. Here was one proposal made in IRC:
 Provide a ~me Xapian synonym for all of the user's configured email
 addresses.
 
+Add symbol hiding so that we don't risk leaking any private symbols
+into the shared-library interface.
+
+Audit all libnotmuch entry points to ensure that all Xapian calls are
+wrapped in a try/catch block.
+
 Search syntax
 -------------
 Implement support for "tag:*" to expand to all tags.
