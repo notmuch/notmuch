@@ -89,11 +89,17 @@ dist: $(TAR_FILE)
 release: verify-source-tree-and-version
 	$(MAKE) VERSION=$(VERSION) verify-newer
 	$(MAKE) VERSION=$(VERSION) test
+	rm -rf ./debian-build
+	git-buildpackage
+	cp debian-build/notmuch_$(VERSION).tar.gz notmuch-$(VERSION).tar.gz
 	$(MAKE) VERSION=$(VERSION) $(GPG_FILE)
 	scp $(TAR_FILE) $(SHA1_FILE) $(GPG_FILE) $(RELEASE_HOST):$(RELEASE_DIR)
 	ssh $(RELEASE_HOST) "rm -f $(RELEASE_DIR)/LATEST-$(PACKAGE)-[0-9]* && ln -s $(TAR_FILE) $(RELEASE_DIR)/LATEST-$(PACKAGE)-$(VERSION)"
 	mkdir -p releases
 	mv $(TAR_FILE) $(SHA1_FILE) $(GPG_FILE) releases
+	(cd debian-build; dput *.changes)
+	mv debian-build/* releases
+	rmdir debian-build
 	git tag -s -m "$(PACKAGE) $(VERSION) release" $(VERSION)
 	git push origin $(VERSION)
 	$(MAKE) VERSION=$(VERSION) release-message > $(PACKAGE)-$(VERSION).announce

@@ -69,20 +69,28 @@ repository. From here, there are just a few steps to release:
 	release, (taking entries from NEWS and the version from the
 	version file, and creating a new commit, etc.)
 
-5) Run "make release" which will perform the following steps:
+5) Run "make release" which will perform the following steps.
+
+   Note: If any problem occurs during the process, (such as a lintian
+   warning that you decide should be fixed), you can abort at the
+   prompt for your GPG passphrase and nothing will have been uploaded
+   yet.
 
 	* Ensure that the version consists only of digits and periods
 	* Ensure that version and debian/changelog have the same version
 	* Verify that the source tree is clean
 	* Compile the current notmuch code (aborting release if it fails)
 	* Run the notmuch test suite (aborting release if it fails)
-	* Generate the final tar file
+	* Compile a Debian package
+	* Copy the tar file from what was made for Debian package
 	* Generate a .sha1 sum file for the tar file
 	* Sign the sha1sum using your GPG setup (asks for your GPG password)
 	* Check that no release exists with the current version
 	* scp the three files to appear on http://notmuchmail.org/releases
 	* Create a LATEST-notmuch-version file (after deleting any old one)
-	* Place local copies of the three files in the releases directory
+	* Place local copies of the tar, sha1, and gpg files into releases
+	* Upload the Debian package
+	* Place a local copy of the Debian package files in releases
 	* Tag the entire source tree with a tag of the form X.Y.Z, and sign
 	  the tag with your GPG key (asks for your GPG password, and you
 	  may need to set GIT_COMMITTER_NAME and GIT_COMMITTER_EMAIL to match
