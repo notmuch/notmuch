@@ -1,3 +1,20 @@
+notmuch (0.2) unstable; urgency=low
+
+  * Better guessing of From: header.
+  * Make "notmuch count" with no arguments count all messages
+  * Provide a new special-case search term of "*" to match all messages.
+  * Detect thread connections when a parent message is missing.
+  * Fix potential data loss in "notmuch new" with SIGINT
+  * Fix segfault when a message includes a MIME part that is empty.
+  * Fix handling of non-ASCII characters with --format=json
+  * Fix headers to be properly decoded in "notmuch reply"
+  * emacs: Show the last few lines of citations as well as the first few lines.
+  * emacs: The '+' and '-' commands can now add and remove tags by region.
+  * emacs: More meaningful buffer names for thread-view buffers. 
+  * emacs: Customized colors of threads in search view based on tags.
+
+ -- Carl Worth <cworth@debian.org>  Fri, 16 Apr 2010 10:20:23 -0700
+
 notmuch (0.1-1) unstable; urgency=low
 
   [ martin f. krafft ]
