@@ -9,7 +9,13 @@
 # Between releases, (such as when compiling notmuch from the git
 # repository), we let git append identification of the actual commit.
 PACKAGE=notmuch
-VERSION:=$(shell if [ -f version ]; then cat version; else git describe --match '[0-9.]*'; fi)
+
+VERSION:=$(shell cat version)
+ifneq ($(MAKECMDGOALS),release)
+ifneq ($(MAKECMDGOALS),release-message)
+VERSION:=$(shell if git describe > /dev/null 2>&1; then git describe --match '[0-9.]*'; else cat version; fi)
+endif
+endif
 
 RELEASE_HOST=notmuchmail.org
 RELEASE_DIR=/srv/notmuchmail.org/www/releases
@@ -50,9 +56,9 @@ test: all
 
 $(TAR_FILE):
 	git archive --format=tar --prefix=$(PACKAGE)-$(VERSION)/ HEAD > $(TAR_FILE).tmp
-	echo $(VERSION) > version
-	tar --append -f $(TAR_FILE).tmp --transform s_^_$(PACKAGE)-$(VERSION)/_ version
-	rm version
+	echo $(VERSION) > version.tmp
+	tar --append -f $(TAR_FILE).tmp --transform s_^_$(PACKAGE)-$(VERSION)/_  --transform 's_.tmp$$__' version.tmp
+	rm version.tmp
 	gzip < $(TAR_FILE).tmp > $(TAR_FILE)
 	@echo "Source is ready for release in $(TAR_FILE)"
 
@@ -68,18 +74,23 @@ dist: $(TAR_FILE)
 
 # We invoke make recursively only to force ordering of our phony
 # targets in the case of parallel invocation of make (-j).
+#
+# We carefully ensure that our VERSION variable is passed down to any
+# sub-ordinate make invocations (which won't otherwhise know that they
+# are part of the release and need to take the version from the
+# version file).
 .PHONY: release
 release: verify-no-dirty-code
-	$(MAKE) test
-	$(MAKE) $(GPG_FILE)
-	$(MAKE) verify-newer
+	$(MAKE) VERSION=$(VERSION) test
+	$(MAKE) VERSION=$(VERSION) $(GPG_FILE)
+	$(MAKE) VERSION=$(VERSION) verify-newer
 	scp $(TAR_FILE) $(SHA1_FILE) $(GPG_FILE) $(RELEASE_HOST):$(RELEASE_DIR)
 	ssh $(RELEASE_HOST) "rm -f $(RELEASE_DIR)/LATEST-$(PACKAGE)-[0-9]* && ln -s $(TAR_FILE) $(RELEASE_DIR)/LATEST-$(PACKAGE)-$(VERSION)"
 	mkdir -p releases
 	mv $(TAR_FILE) $(SHA1_FILE) $(GPG_FILE) releases
 	git tag -s -m "$(PACKAGE) $(VERSION) release" $(VERSION)
 	git push origin $(VERSION)
-	$(MAKE) release-message > $(PACKAGE)-$(VERSION).announce
+	$(MAKE) VERSION=$(VERSION) release-message > $(PACKAGE)-$(VERSION).announce
 	@echo "Please send a release announcement using $(PACKAGE)-$(VERSION).announce as a template."
 
 .PHONY: release-message
