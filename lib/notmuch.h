@@ -346,7 +346,8 @@ notmuch_query_create (notmuch_database_t *database,
 typedef enum {
     NOTMUCH_SORT_OLDEST_FIRST,
     NOTMUCH_SORT_NEWEST_FIRST,
-    NOTMUCH_SORT_MESSAGE_ID
+    NOTMUCH_SORT_MESSAGE_ID,
+    NOTMUCH_SORT_UNSORTED
 } notmuch_sort_t;
 
 /* Specify the sorting desired for this query. */

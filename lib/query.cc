@@ -148,6 +148,8 @@ notmuch_query_search_messages (notmuch_query_t *query)
 	case NOTMUCH_SORT_MESSAGE_ID:
 	    enquire.set_sort_by_value (NOTMUCH_VALUE_MESSAGE_ID, FALSE);
 	    break;
+        case NOTMUCH_SORT_UNSORTED:
+	    break;
 	}
 
 #if DEBUG_QUERY
