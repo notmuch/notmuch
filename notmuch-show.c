@@ -145,7 +145,7 @@ format_message_json (const void *ctx, notmuch_message_t *message, unused (int in
     date = notmuch_message_get_date (message);
     relative_date = notmuch_time_relative_date (ctx, date);
 
-    printf ("\"id\": %s, \"match\": %s, \"filename\": %s, \"date_unix\": %ld, \"date_relative\": \"%s\", \"tags\": [",
+    printf ("\"id\": %s, \"match\": %s, \"filename\": %s, \"timestamp\": %ld, \"date_relative\": \"%s\", \"tags\": [",
 	    json_quote_str (ctx_quote, notmuch_message_get_message_id (message)),
 	    notmuch_message_get_flag (message, NOTMUCH_MESSAGE_FLAG_MATCH) ? "true" : "false",
 	    json_quote_str (ctx_quote, notmuch_message_get_filename (message)),
