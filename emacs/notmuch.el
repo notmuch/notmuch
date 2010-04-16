@@ -773,8 +773,12 @@ search."
 Runs a new search matching only messages that match both the
 current search results AND the additional query string provided."
   (interactive "sFilter search: ")
-  (let ((grouped-query (if (string-match-p notmuch-search-disjunctive-regexp query) (concat "( " query " )") query)))
-    (notmuch-search (concat notmuch-search-query-string " and " grouped-query) notmuch-search-oldest-first)))
+  (let ((grouped-query (if (string-match-p notmuch-search-disjunctive-regexp query)
+			   (concat "( " query " )")
+			 query)))
+    (notmuch-search (if (string= notmuch-search-query-string "*")
+			grouped-query
+		      (concat notmuch-search-query-string " and " grouped-query)) notmuch-search-oldest-first)))
 
 (defun notmuch-search-filter-by-tag (tag)
   "Filter the current search results based on a single tag.
