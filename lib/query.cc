@@ -299,7 +299,8 @@ notmuch_threads_get (notmuch_threads_t *threads)
     return _notmuch_thread_create (threads->query,
 				   threads->query->notmuch,
 				   threads->thread_id,
-				   threads->query->query_string);
+				   threads->query->query_string,
+				   threads->query->sort);
 }
 
 void

@@ -129,7 +129,8 @@ _thread_add_message (notmuch_thread_t *thread,
 
 static void
 _thread_add_matched_message (notmuch_thread_t *thread,
-			     notmuch_message_t *message)
+			     notmuch_message_t *message,
+			     notmuch_sort_t sort)
 {
     time_t date;
     notmuch_message_t *hashed_message;
@@ -141,6 +142,28 @@ _thread_add_matched_message (notmuch_thread_t *thread,
 
     if (date > thread->newest || ! thread->matched_messages)
 	thread->newest = date;
+
+    const char *subject;
+    const char *cleaned_subject;
+
+    subject = notmuch_message_get_header (message, "subject");
+
+    if ((strncasecmp (subject, "Re: ", 4) == 0) ||
+	(strncasecmp (subject, "Aw: ", 4) == 0) ||
+	(strncasecmp (subject, "Vs: ", 4) == 0) ||
+	(strncasecmp (subject, "Sv: ", 4) == 0)) {
+
+	cleaned_subject = talloc_strndup (thread,
+					  subject + 4,
+					  strlen(subject) - 4);
+    } else {
+	cleaned_subject = talloc_strdup (thread, subject);
+    }
+
+    if ((sort == NOTMUCH_SORT_OLDEST_FIRST && date <= thread->newest) ||
+	(sort != NOTMUCH_SORT_OLDEST_FIRST && date == thread->newest)) {
+	thread->subject = talloc_strdup (thread, cleaned_subject);
+    }
 
     thread->matched_messages++;
 
@@ -209,7 +232,8 @@ notmuch_thread_t *
 _notmuch_thread_create (void *ctx,
 			notmuch_database_t *notmuch,
 			const char *thread_id,
-			const char *query_string)
+			const char *query_string,
+			notmuch_sort_t sort)
 {
     notmuch_thread_t *thread;
     const char *thread_id_query_string;
@@ -296,7 +320,7 @@ _notmuch_thread_create (void *ctx,
 	_thread_add_message (thread, message);
 
 	if (! matched_is_subset_of_thread)
-	    _thread_add_matched_message (thread, message);
+	    _thread_add_matched_message (thread, message, sort);
 
 	_notmuch_message_close (message);
     }
@@ -323,7 +347,7 @@ _notmuch_thread_create (void *ctx,
 	     notmuch_messages_move_to_next (messages))
 	{
 	    message = notmuch_messages_get (messages);
-	    _thread_add_matched_message (thread, message);
+	    _thread_add_matched_message (thread, message, sort);
 	    _notmuch_message_close (message);
 	}
 

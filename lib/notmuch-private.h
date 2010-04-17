@@ -205,7 +205,8 @@ notmuch_thread_t *
 _notmuch_thread_create (void *ctx,
 			notmuch_database_t *notmuch,
 			const char *thread_id,
-			const char *query_string);
+			const char *query_string,
+			notmuch_sort_t sort);
 
 /* message.cc */
 
