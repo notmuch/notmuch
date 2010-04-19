@@ -21,8 +21,8 @@ Copyright 2010 Sebastian Spaeth <Sebastian@SSpaeth.de>'
         
 from ctypes import c_char_p, c_void_p, c_long, c_uint
 from datetime import date
-from cnotmuch.globals import nmlib, STATUS, NotmuchError, Enum
-from cnotmuch.tag import Tags
+from notmuch.globals import nmlib, STATUS, NotmuchError, Enum
+from notmuch.tag import Tags
 import sys
 import email
 import types

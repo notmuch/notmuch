@@ -18,9 +18,9 @@ Copyright 2010 Sebastian Spaeth <Sebastian@SSpaeth.de>'
 """
 
 from ctypes import c_char_p, c_void_p, c_long
-from cnotmuch.globals import nmlib, STATUS, NotmuchError
-from cnotmuch.message import Messages
-from cnotmuch.tag import Tags
+from notmuch.globals import nmlib, STATUS, NotmuchError
+from notmuch.message import Messages
+from notmuch.tag import Tags
 from datetime import date
 
 #------------------------------------------------------------------------------

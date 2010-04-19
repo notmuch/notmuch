@@ -17,7 +17,7 @@ along with notmuch.  If not, see <http://www.gnu.org/licenses/>.
 Copyright 2010 Sebastian Spaeth <Sebastian@SSpaeth.de>'
 """
 from ctypes import c_char_p
-from cnotmuch.globals import nmlib, STATUS, NotmuchError
+from notmuch.globals import nmlib, STATUS, NotmuchError
 
 #------------------------------------------------------------------------------
 class Tags(object):

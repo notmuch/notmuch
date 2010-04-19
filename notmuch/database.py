@@ -19,10 +19,10 @@ Copyright 2010 Sebastian Spaeth <Sebastian@SSpaeth.de>'
 
 import os
 from ctypes import c_int, c_char_p, c_void_p, c_uint, c_long, byref
-from cnotmuch.globals import nmlib, STATUS, NotmuchError, Enum
-from cnotmuch.thread import Threads
-from cnotmuch.message import Messages, Message
-from cnotmuch.tag import Tags
+from notmuch.globals import nmlib, STATUS, NotmuchError, Enum
+from notmuch.thread import Threads
+from notmuch.message import Messages, Message
+from notmuch.tag import Tags
 
 class Database(object):
     """Represents a notmuch database (wraps notmuch_database_t)
@@ -769,7 +769,7 @@ class Directory(object):
 
     def __repr__(self):
         """Object representation"""
-        return "<cnotmuch Directory object '%s'>" % self._path
+        return "<notmuch Directory object '%s'>" % self._path
 
     def __del__(self):
         """Close and free the Directory"""

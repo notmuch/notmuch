@@ -55,7 +55,7 @@ from database import Database, Query
 from message import Messages, Message
 from thread import Threads, Thread
 from tag import Tags
-from cnotmuch.globals import nmlib, STATUS, NotmuchError
+from notmuch.globals import nmlib, STATUS, NotmuchError
 __LICENSE__="GPL v3+"
 __VERSION__='0.2.2'
 __AUTHOR__ ='Sebastian Spaeth <Sebastian@SSpaeth.de>'
