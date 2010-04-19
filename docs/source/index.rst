@@ -1,27 +1,27 @@
-.. cnotmuch documentation master file, created by
+.. notmuch documentation master file, created by
    sphinx-quickstart on Tue Feb  2 10:00:47 2010.
 
-.. currentmodule:: cnotmuch.notmuch
+.. currentmodule:: notmuch
 
-Welcome to :mod:`cnotmuch`'s documentation
+Welcome to :mod:`notmuch`'s documentation
 ===========================================
 
-The :mod:`cnotmuch` module provides an interface to the `notmuch <http://notmuchmail.org>`_ functionality, directly interfacing to a shared notmuch library.
-Within :mod:`cnotmuch.notmuch`, the classes :class:`Database`, :class:`Query` provide most of the core functionality, returning :class:`Threads`, :class:`Messages` and :class:`Tags`.
+The :mod:`notmuch` module provides an interface to the `notmuch <http://notmuchmail.org>`_ functionality, directly interfacing to a shared notmuch library.
+Within :mod:`notmuch`, the classes :class:`Database`, :class:`Query` provide most of the core functionality, returning :class:`Threads`, :class:`Messages` and :class:`Tags`.
 
 .. moduleauthor:: Sebastian Spaeth <Sebastian@SSpaeth.de>
 
 :License: This module is covered under the GNU GPL v3 (or later).
 
-This page contains the main API overview of cnotmuch |release|. 
+This page contains the main API overview of notmuch |release|. 
 
 Notmuch can be imported as::
 
- from cnotmuch import notmuch
+ import notmuch
 
 or::
 
- from cnotmuch.notmuch import Query,Database
+ from notmuch import Query,Database
 
 More information on specific topics can be found on the following pages:
 
@@ -30,17 +30,17 @@ More information on specific topics can be found on the following pages:
 
    notmuch   
 
-:mod:`cnotmuch.notmuch` -- The Notmuch interface
+:mod:`notmuch` -- The Notmuch interface
 =================================================
 
-.. automodule:: cnotmuch.notmuch
+.. automodule:: notmuch
 
 :todo: Document nmlib,STATUS
 
-:class:`cnotmuch.notmuch.Database` -- The underlying notmuch database
+:class:`notmuch.Database` -- The underlying notmuch database
 ---------------------------------------------------------------------
 
-.. autoclass:: cnotmuch.notmuch.Database([path=None[, create=False[, mode=MODE.READ_ONLY]]])
+.. autoclass:: notmuch.Database([path=None[, create=False[, mode=MODE.READ_ONLY]]])
 
    .. automethod:: create
 
@@ -81,10 +81,10 @@ More information on specific topics can be found on the following pages:
 
    .. autoattribute:: db_p
 
-:class:`cnotmuch.notmuch.Query` -- A search query
+:class:`notmuch.Query` -- A search query
 -------------------------------------------------
 
-.. autoclass:: cnotmuch.notmuch.Query
+.. autoclass:: notmuch.Query
 
    .. automethod:: create
 
@@ -182,10 +182,10 @@ More information on specific topics can be found on the following pages:
    .. automethod:: __str__
 
 
-:class:`cnotmuch.notmuch.Threads` -- Threads iterator
+:class:`notmuch.Threads` -- Threads iterator
 -----------------------------------------------------
 
-.. autoclass:: cnotmuch.notmuch.Threads
+.. autoclass:: notmuch.Threads
 
    .. automethod:: __len__
 
@@ -220,26 +220,26 @@ More information on specific topics can be found on the following pages:
 :class:`Filenames` -- An iterator over filenames
 ------------------------------------------------
 
-.. autoclass:: cnotmuch.database.Filenames
+.. autoclass:: notmuch.database.Filenames
 
-   .. automethod:: cnotmuch.database.Filenames.__len__
+   .. automethod:: notmuch.database.Filenames.__len__
 
-:class:`cnotmuch.database.Directoy` -- A directory entry in the database
+:class:`notmuch.database.Directoy` -- A directory entry in the database
 ------------------------------------------------------------------------
 
-.. autoclass:: cnotmuch.database.Directory
+.. autoclass:: notmuch.database.Directory
 
-   .. automethod:: cnotmuch.database.Directory.get_child_files
+   .. automethod:: notmuch.database.Directory.get_child_files
 
-   .. automethod:: cnotmuch.database.Directory.get_child_directories
+   .. automethod:: notmuch.database.Directory.get_child_directories
 
-   .. automethod:: cnotmuch.database.Directory.get_mtime
+   .. automethod:: notmuch.database.Directory.get_mtime
 
-   .. automethod:: cnotmuch.database.Directory.set_mtime
+   .. automethod:: notmuch.database.Directory.set_mtime
 
-   .. autoattribute:: cnotmuch.database.Directory.mtime
+   .. autoattribute:: notmuch.database.Directory.mtime
 
-   .. autoattribute:: cnotmuch.database.Directory.path
+   .. autoattribute:: notmuch.database.Directory.path
 
 :exc:`NotmuchError` -- A Notmuch execution error
 ------------------------------------------------

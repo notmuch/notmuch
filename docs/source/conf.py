@@ -18,7 +18,7 @@ import sys, os
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 sys.path.insert(0,os.path.abspath('../..'))
 
-from cnotmuch.notmuch import __VERSION__,__AUTHOR__
+from notmuch import __VERSION__,__AUTHOR__
 # -- General configuration -----------------------------------------------------
 
 # Add any Sphinx extension module names here, as strings. They can be extensions
