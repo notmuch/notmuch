@@ -665,6 +665,27 @@ characters as well as `_.+-'.
     (apply 'notmuch-call-notmuch-process "tag"
 	   (append action-split (list notmuch-search-query-string) nil))))
 
+(defun notmuch-search-buffer-title (query)
+  "Returns the title for a buffer with notmuch search results."
+  (let* ((folder (rassoc-if (lambda (key)
+			      (string-match (concat "^" (regexp-quote key))
+					    query))
+			    notmuch-folders))
+	 (folder-name (car folder))
+	 (folder-query (cdr folder)))
+    (cond ((and folder (equal folder-query query))
+	   ;; Query is the same as folder search (ignoring case)
+	   (concat "*notmuch-folder-" folder-name "*"))
+	  (folder
+	   (concat "*notmuch-search-"
+		   (replace-regexp-in-string (concat "^" (regexp-quote folder-query))
+					     (concat "[ " folder-name " ]")
+					     query)
+		   "*"))
+	  (t
+	   (concat "*notmuch-search-" query "*"))
+	  )))
+
 ;;;###autoload
 (defun notmuch-search (query &optional oldest-first target-thread target-line)
   "Run \"notmuch search\" with the given query string and display results.
@@ -677,7 +698,7 @@ The optional parameters are used as follows:
   target-line: The line number to move to if the target thread does not
                appear in the search results."
   (interactive "sNotmuch search: ")
-  (let ((buffer (get-buffer-create (concat "*notmuch-search-" query "*"))))
+  (let ((buffer (get-buffer-create (notmuch-search-buffer-title query))))
     (switch-to-buffer buffer)
     (notmuch-search-mode)
     (set 'notmuch-search-query-string query)
