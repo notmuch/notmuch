@@ -1,4 +1,4 @@
-cnotmuch -- The python interface to notmuch.so
+notmuch -- The python interface to notmuch.so
 ==============================================
 
 This module makes the functionality of the notmuch library
@@ -6,11 +6,9 @@ This module makes the functionality of the notmuch library
 this modul depends on a libnotmuch.so|dll being available on the
 user's system.
 
-If you have downloaded the full source tarball (available from
-bitbucket.org, the source distribution and binary distribution come
-without the documentation), you can create the documentation with
-sphinx installed, go to the docs directory and "make html". A static
-version of the documentation is available at:
+If you have downloaded the full source tarball, you can create the
+documentation with sphinx installed, go to the docs directory and
+"make html". A static version of the documentation is available at:
 
 http://packages.python.org/cnotmuch/
 
@@ -47,7 +45,7 @@ For more examples of how to use the cnotmuch interface, have a look at the
 notmuch "binary" and the generated documentation.
 
 Example session:
->>>from cnotmuch import notmuch
+>>>import notmuch
 >>>db = notmuch.Database("/home/spaetz/mail")
 db.get_path()
 '/home/spaetz/mail'
@@ -85,3 +83,5 @@ Changelog
 0.1.1 Fixed Database.create_query()
 0.2.0 Implemented Thread() and Threads() methods
 0.2.1 Implemented the remaining API methods, notably Directory() and Filenames()
+0.2.2 Bug fixes
+0.3.0 Incorporated in the notmuchmail.org git repository
