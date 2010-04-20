@@ -57,9 +57,6 @@ json_quote_chararray(const void *ctx, const char *str, const size_t len)
     size_t loop;
     size_t required;
 
-    if (len == 0)
-	return (char *)"\"\"";
-
     for (loop = 0, required = 0, ptr = str;
 	 loop < len;
 	 loop++, required++, ptr++) {
