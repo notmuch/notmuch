@@ -146,7 +146,7 @@ EOF
 # Generate a new message and add it to the index.
 #
 # All of the arguments and return values supported by generate_message
-# are alos supported here, so see that function for details.
+# are also supported here, so see that function for details.
 add_message ()
 {
     generate_message "$@"
@@ -441,6 +441,68 @@ thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; search by to (address) (inbox 
 thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; search by to (name) (inbox unread)
 thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; subject search test (phrase) (inbox unread)
 thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; this phrase should not match the subject search test (inbox unread)"
+
+printf "\nTesting naming of threads with changing subject:\n"
+add_message '[subject]="thread-naming: Initial thread subject"' \
+            '[date]="Fri, 05 Jan 2001 15:43:56 -0800"'
+parent=${gen_msg_id}
+add_message '[subject]="thread-naming: Older changed subject"' \
+            '[date]="Sat, 06 Jan 2001 15:43:56 -0800"' \
+            "[in-reply-to]=\<$parent\>"
+add_message '[subject]="thread-naming: Newer changed subject"' \
+            '[date]="Sun, 07 Jan 2001 15:43:56 -0800"' \
+            "[in-reply-to]=\<$parent\>"
+add_message '[subject]="thread-naming: Final thread subject"' \
+            '[date]="Mon, 08 Jan 2001 15:43:56 -0800"' \
+            "[in-reply-to]=\<$parent\>"
+final=${gen_msg_id}
+
+printf " Initial thread name (oldest-first search)...\t"
+output=$($NOTMUCH search --sort=oldest-first thread-naming and tag:inbox | notmuch_search_sanitize)
+pass_if_equal "$output" "thread:XXX   2001-01-05 [4/4] Notmuch Test Suite; thread-naming: Initial thread subject (inbox unread)"
+
+printf " Initial thread name (newest-first search)...\t"
+output=$($NOTMUCH search --sort=newest-first thread-naming and tag:inbox | notmuch_search_sanitize)
+pass_if_equal "$output" "thread:XXX   2001-01-08 [4/4] Notmuch Test Suite; thread-naming: Final thread subject (inbox unread)"
+
+# Remove oldest and newest messages from search results
+$NOTMUCH tag -inbox id:$parent or id:$final
+
+printf " Changed thread name (oldest-first search)...\t"
+output=$($NOTMUCH search --sort=oldest-first thread-naming and tag:inbox | notmuch_search_sanitize)
+pass_if_equal "$output" "thread:XXX   2001-01-06 [2/4] Notmuch Test Suite; thread-naming: Older changed subject (inbox unread)"
+
+printf " Changed thread name (newest-first search)...\t"
+output=$($NOTMUCH search --sort=newest-first thread-naming and tag:inbox | notmuch_search_sanitize)
+pass_if_equal "$output" "thread:XXX   2001-01-07 [2/4] Notmuch Test Suite; thread-naming: Newer changed subject (inbox unread)"
+
+printf " Ignore added reply prefix (Re:)...\t\t"
+add_message '[subject]="Re: thread-naming: Initial thread subject"' \
+            '[date]="Tue, 09 Jan 2001 15:43:45 -0800"' \
+            "[in-reply-to]=\<$parent\>"
+output=$($NOTMUCH search --sort=newest-first thread-naming and tag:inbox | notmuch_search_sanitize)
+pass_if_equal "$output" "thread:XXX   2001-01-09 [3/5] Notmuch Test Suite; thread-naming: Initial thread subject (inbox unread)"
+
+printf " Ignore added reply prefix (Aw:)...\t\t"
+add_message '[subject]="Aw: thread-naming: Initial thread subject"' \
+            '[date]="Wed, 10 Jan 2001 15:43:45 -0800"' \
+            "[in-reply-to]=\<$parent\>"
+output=$($NOTMUCH search --sort=newest-first thread-naming and tag:inbox | notmuch_search_sanitize)
+pass_if_equal "$output" "thread:XXX   2001-01-10 [4/6] Notmuch Test Suite; thread-naming: Initial thread subject (inbox unread)"
+
+printf " Ignore added reply prefix (Vs:)...\t\t"
+add_message '[subject]="Vs: thread-naming: Initial thread subject"' \
+            '[date]="Thu, 11 Jan 2001 15:43:45 -0800"' \
+            "[in-reply-to]=\<$parent\>"
+output=$($NOTMUCH search --sort=newest-first thread-naming and tag:inbox | notmuch_search_sanitize)
+pass_if_equal "$output" "thread:XXX   2001-01-11 [5/7] Notmuch Test Suite; thread-naming: Initial thread subject (inbox unread)"
+
+printf " Ignore added reply prefix (Sv:)...\t\t"
+add_message '[subject]="Sv: thread-naming: Initial thread subject"' \
+            '[date]="Fri, 12 Jan 2001 15:43:45 -0800"' \
+            "[in-reply-to]=\<$parent\>"
+output=$($NOTMUCH search --sort=newest-first thread-naming and tag:inbox | notmuch_search_sanitize)
+pass_if_equal "$output" "thread:XXX   2001-01-12 [6/8] Notmuch Test Suite; thread-naming: Initial thread subject (inbox unread)"
 
 printf "\nTesting \"notmuch reply\" in several variations:\n"
 
