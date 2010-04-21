@@ -204,20 +204,39 @@ message at DEPTH in the current thread."
 	(narrow-to-region start (point-max))
 	(run-hooks 'notmuch-show-markup-headers-hook)))))
 
-(defun notmuch-show-insert-part-header (content-type declared-type &optional name)
-  (let ((start (point)))
-    ;; XXX dme: Make this a more useful button (save the part, display
-    ;; external, etc.)
-    (insert "[ "
-	    (if name (concat name ": ") "")
-	    declared-type
-	    (if (not (string-equal declared-type content-type))
-		(concat " (as " content-type ")")
-	      "")
-	    " ]\n")
-    (overlay-put (make-overlay start (point)) 'face 'bold)))
+(define-button-type 'notmuch-show-part-button-type
+  'action 'notmuch-show-part-button-action
+  'follow-link t
+  'face 'message-mml)
+
+(defun notmuch-show-insert-part-header (nth content-type declared-type &optional name)
+  (insert-button
+   (concat "[ "
+	   (if name (concat name ": ") "")
+	   declared-type
+	   (if (not (string-equal declared-type content-type))
+	       (concat " (as " content-type ")")
+	     "")
+	   " ]\n")
+   :type 'notmuch-show-part-button-type
+   :notmuch-part nth
+   :notmuch-filename name))
 
 ;; Functions handling particular MIME parts.
+
+(defun notmuch-show-save-part (message-id nth &optional filename)
+  (with-temp-buffer
+    ;; Always acquires the part via `notmuch part', even if it is
+    ;; available in the JSON output.
+    (insert (notmuch-show-get-bodypart-internal message-id nth))
+    (let ((file (read-file-name
+		 "Filename to save as: "
+		 (or mailcap-download-directory "~/")
+		 nil nil
+		 filename))
+	  (require-final-newline nil)
+          (coding-system-for-write 'no-conversion))
+      (write-region (point-min) (point-max) file))))
 
 (defun notmuch-show-mm-display-part-inline (msg part content-type content)
   "Use the mm-decode/mm-view functions to display a part in the
@@ -239,7 +258,7 @@ current buffer, if possible."
     ;; If this text/plain part is not the first part in the message,
     ;; insert a header to make this clear.
     (if (> nth 1)
-	(notmuch-show-insert-part-header declared-type content-type (plist-get part :filename)))
+	(notmuch-show-insert-part-header nth declared-type content-type (plist-get part :filename)))
     (insert (notmuch-show-get-bodypart-content msg part nth))
     (save-excursion
       (save-restriction
@@ -265,7 +284,7 @@ current buffer, if possible."
 
 (defun notmuch-show-insert-part-*/* (msg part content-type nth depth declared-type)
   ;; This handler _must_ succeed - it is the handler of last resort.
-  (notmuch-show-insert-part-header content-type declared-type (plist-get part :filename))
+  (notmuch-show-insert-part-header nth content-type declared-type (plist-get part :filename))
   (let ((content (notmuch-show-get-bodypart-content msg part nth)))
     (if content
 	(notmuch-show-mm-display-part-inline msg part content-type content)))
@@ -968,6 +987,15 @@ buffer."
   "Copy To address of current message to kill-ring."
   (interactive)
   (notmuch-show-do-stash (notmuch-show-get-to)))
+
+;; Commands typically bound to buttons.
+
+(defun notmuch-show-part-button-action (button)
+  (let ((nth (button-get button :notmuch-part)))
+    (if nth
+	(notmuch-show-save-part (notmuch-show-get-message-id) nth
+				(button-get button :notmuch-filename))
+      (message "Not a valid part (is it a fake part?)."))))
 
 ;;
 
