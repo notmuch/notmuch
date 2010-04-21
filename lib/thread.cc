@@ -299,7 +299,7 @@ _notmuch_thread_create (void *ctx,
     thread->oldest = 0;
     thread->newest = 0;
 
-    notmuch_query_set_sort (thread_id_query, NOTMUCH_SORT_OLDEST_FIRST);
+    notmuch_query_set_sort (thread_id_query, sort);
 
     for (messages = notmuch_query_search_messages (thread_id_query);
 	 notmuch_messages_valid (messages);
@@ -331,6 +331,8 @@ _notmuch_thread_create (void *ctx,
 	matched_query = notmuch_query_create (notmuch, matched_query_string);
 	if (unlikely (matched_query == NULL))
 	    return NULL;
+
+	notmuch_query_set_sort (matched_query, sort);
 
 	for (messages = notmuch_query_search_messages (matched_query);
 	     notmuch_messages_valid (messages);
