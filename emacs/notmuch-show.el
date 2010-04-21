@@ -460,8 +460,6 @@ message at DEPTH in the current thread."
 
     ;; Headers are hidden by default.
     (notmuch-show-headers-visible msg nil)
-    ;; Bodies are visible by default.
-    (notmuch-show-body-visible msg t)
 
     ;; Message visibility depends on whether it matched the search
     ;; criteria.
@@ -559,7 +557,6 @@ function is used. "
 	(define-key map "V" 'notmuch-show-view-raw-message)
 	(define-key map "v" 'notmuch-show-view-all-mime-parts)
 	(define-key map "c" 'notmuch-show-stash-map)
-	(define-key map "b" 'notmuch-show-toggle-body)
 	(define-key map "h" 'notmuch-show-toggle-headers)
 	(define-key map "-" 'notmuch-show-remove-tag)
 	(define-key map "+" 'notmuch-show-add-tag)
@@ -678,13 +675,11 @@ All currently available key bindings:
 
 (defun notmuch-show-message-visible (props visible-p)
   (if visible-p
-      ;; If we're making the message visible then the visibility of
-      ;; the constituent elements depends on their own properties, not
-      ;; that of the message as a whole.
-      (let ((headers-visible (plist-get props :headers-visible))
-	    (body-visible (plist-get props :body-visible)))
+      ;; When making the message visible, the headers may or not be
+      ;; visible. So we check that property separately.
+      (let ((headers-visible (plist-get props :headers-visible)))
 	(notmuch-show-element-visible props headers-visible :headers-invis-spec)
-	(notmuch-show-element-visible props body-visible :body-invis-spec))
+	(notmuch-show-element-visible props t :body-invis-spec))
     (notmuch-show-element-visible props nil :headers-invis-spec)
     (notmuch-show-element-visible props nil :body-invis-spec))
 
@@ -694,11 +689,6 @@ All currently available key bindings:
   (if (plist-get props :message-visible)
       (notmuch-show-element-visible props visible-p :headers-invis-spec))
   (notmuch-show-set-prop :headers-visible visible-p props))
-
-(defun notmuch-show-body-visible (props visible-p)
-  (if (plist-get props :message-visible)
-      (notmuch-show-element-visible props visible-p :body-invis-spec))
-  (notmuch-show-set-prop :body-visible visible-p))
 
 ;; Functions for setting and getting attributes of the current
 ;; message.
@@ -766,10 +756,6 @@ All currently available key bindings:
 (defun notmuch-show-message-visible-p ()
   "Is the current message visible?"
   (notmuch-show-get-prop :message-visible))
-
-(defun notmuch-show-body-visible-p ()
-  "Is the body of the current message visible?"
-  (notmuch-show-get-prop :body-visible))
 
 (defun notmuch-show-headers-visible-p ()
   "Are the headers of the current message visible?"
@@ -945,15 +931,6 @@ to stdout or stderr will appear in the *Messages* buffer."
     (notmuch-show-headers-visible
      props
      (not (plist-get props :headers-visible))))
-  (force-window-update))
-
-(defun notmuch-show-toggle-body ()
-  "Toggle the visibility of the current message body."
-  (interactive)
-  (let ((props (notmuch-show-get-message-properties)))
-    (notmuch-show-body-visible
-     props
-     (not (plist-get props :body-visible))))
   (force-window-update))
 
 (defun notmuch-show-toggle-message ()
