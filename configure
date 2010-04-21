@@ -170,7 +170,7 @@ printf "Checking for Xapian development files... "
 have_xapian=0
 for xapian_config in ${XAPIAN_CONFIG}; do
     if ${xapian_config} --version > /dev/null 2>&1; then
-	printf "Yes.\n"
+	printf "Yes (%s).\n" $(${xapian_config} --version | sed -e 's/.* //')
 	have_xapian=1
 	xapian_cxxflags=$(${xapian_config} --cxxflags)
 	xapian_ldflags=$(${xapian_config} --libs)
