@@ -186,7 +186,6 @@ notmuch_config_open (void *ctx,
 	config->filename = talloc_strdup (config, filename);
     } else if ((notmuch_config_env = getenv ("NOTMUCH_CONFIG"))) {
 	config->filename = talloc_strdup (config, notmuch_config_env);
-	notmuch_config_env = NULL;
     } else {
 	config->filename = talloc_asprintf (config, "%s/.notmuch-config",
 					    getenv ("HOME"));
@@ -206,8 +205,12 @@ notmuch_config_open (void *ctx,
 				     &error))
     {
 	/* We are capable of dealing with a non-existent configuration
-	 * file, so be silent about that. */
-	if (!(error->domain == G_FILE_ERROR &&
+	 * file, so be silent about that (unless the user had set a
+	 * non-default configuration file with the NOTMUCH_CONFIG
+	 * variable)
+	 */
+	if (notmuch_config_env ||
+	    !(error->domain == G_FILE_ERROR &&
 	      error->code == G_FILE_ERROR_NOENT))
 	{
 	    fprintf (stderr, "Error reading configuration file %s: %s\n",
