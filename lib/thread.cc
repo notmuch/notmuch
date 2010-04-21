@@ -112,12 +112,6 @@ _thread_add_message (notmuch_thread_t *thread,
 	g_object_unref (G_OBJECT (list));
     }
 
-    if (! thread->subject) {
-	const char *subject;
-	subject = notmuch_message_get_header (message, "subject");
-	thread->subject = talloc_strdup (thread, subject);
-    }
-
     for (tags = notmuch_message_get_tags (message);
 	 notmuch_tags_valid (tags);
 	 notmuch_tags_move_to_next (tags))
@@ -143,26 +137,22 @@ _thread_add_matched_message (notmuch_thread_t *thread,
     if (date > thread->newest || ! thread->matched_messages)
 	thread->newest = date;
 
-    const char *subject;
-    const char *cleaned_subject;
+    if (! thread->subject) {
+	const char *subject;
 
-    subject = notmuch_message_get_header (message, "subject");
+	subject = notmuch_message_get_header (message, "subject");
 
-    if ((strncasecmp (subject, "Re: ", 4) == 0) ||
-	(strncasecmp (subject, "Aw: ", 4) == 0) ||
-	(strncasecmp (subject, "Vs: ", 4) == 0) ||
-	(strncasecmp (subject, "Sv: ", 4) == 0)) {
-
-	cleaned_subject = talloc_strndup (thread,
-					  subject + 4,
-					  strlen(subject) - 4);
-    } else {
-	cleaned_subject = talloc_strdup (thread, subject);
-    }
-
-    if ((sort == NOTMUCH_SORT_OLDEST_FIRST && date <= thread->newest) ||
-	(sort != NOTMUCH_SORT_OLDEST_FIRST && date == thread->newest)) {
-	thread->subject = talloc_strdup (thread, cleaned_subject);
+	if ((strncasecmp (subject, "Re: ", 4) == 0) ||
+	    (strncasecmp (subject, "Aw: ", 4) == 0) ||
+	    (strncasecmp (subject, "Vs: ", 4) == 0) ||
+	    (strncasecmp (subject, "Sv: ", 4) == 0))
+	{
+	    thread->subject = talloc_strdup (thread, subject + 4);
+	}
+	else
+	{
+	    thread->subject = talloc_strdup (thread, subject);
+	}
     }
 
     thread->matched_messages++;
