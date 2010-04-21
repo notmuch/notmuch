@@ -878,6 +878,7 @@ output=$($NOTMUCH reply id:${gen_msg_id})
 pass_if_equal "$output" "From: Notmuch Test Suite <test_suite@notmuchmail.org>
 Subject: Re: notmuch-reply-test
 To: Sender <sender@example.com>, mailinglist@notmuchmail.org
+Bcc: test_suite@notmuchmail.org
 In-Reply-To: <${gen_msg_id}>
 References: <${gen_msg_id}>
 
@@ -896,6 +897,7 @@ output=$($NOTMUCH reply id:${gen_msg_id})
 pass_if_equal "$output" "From: Notmuch Test Suite <test_suite_other@notmuchmail.org>
 Subject: Re: notmuch-reply-test
 To: Sender <sender@example.com>, mailinglist@notmuchmail.org
+Bcc: test_suite@notmuchmail.org
 In-Reply-To: <${gen_msg_id}>
 References: <${gen_msg_id}>
 
@@ -914,6 +916,7 @@ output=$($NOTMUCH reply id:${gen_msg_id})
 pass_if_equal "$output" "From: Notmuch Test Suite <test_suite_other@notmuchmail.org>
 Subject: Re: notmuch-reply-test
 To: Sender <sender@example.com>, mailinglist@notmuchmail.org
+Bcc: test_suite@notmuchmail.org
 In-Reply-To: <${gen_msg_id}>
 References: <${gen_msg_id}>
 
@@ -934,6 +937,7 @@ output=$($NOTMUCH reply id:${gen_msg_id})
 pass_if_equal "$output" "From: Notmuch Test Suite <test_suite_other@notmuchmail.org>
 Subject: Re: notmuch-reply-test
 To: Sender <sender@example.com>, mailinglist@notmuchmail.org
+Bcc: test_suite@notmuchmail.org
 In-Reply-To: <${gen_msg_id}>
 References: <${gen_msg_id}>
 
@@ -954,6 +958,7 @@ output=$($NOTMUCH reply id:${gen_msg_id})
 pass_if_equal "$output" "From: Notmuch Test Suite <test_suite@otherdomain.org>
 Subject: Re: notmuch-reply-test
 To: Sender <sender@example.com>, mailinglist@notmuchmail.org
+Bcc: test_suite@notmuchmail.org
 In-Reply-To: <${gen_msg_id}>
 References: <${gen_msg_id}>
 
