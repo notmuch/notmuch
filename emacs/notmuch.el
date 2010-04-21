@@ -56,7 +56,8 @@
 
 (defcustom notmuch-search-authors-width 20
   "Number of columns to use to display authors in a notmuch-search buffer."
-  :type 'integer)
+  :type 'integer
+  :group 'notmuch)
 
 (defcustom notmuch-search-result-format
   `(("date" . "%s ")
