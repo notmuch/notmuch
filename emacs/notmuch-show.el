@@ -406,7 +406,7 @@ message at DEPTH in the current thread."
 	headers-start headers-end
 	body-start body-end
 	(headers-invis-spec (notmuch-show-make-symbol "header"))
-	(body-invis-spec (notmuch-show-make-symbol "body")))
+	(message-invis-spec (notmuch-show-make-symbol "message")))
 
     (setq message-start (point-marker))
 
@@ -449,8 +449,8 @@ message at DEPTH in the current thread."
     (plist-put msg :headers-invis-spec headers-invis-spec)
     (overlay-put (make-overlay headers-start headers-end) 'invisible headers-invis-spec)
 
-    (plist-put msg :body-invis-spec body-invis-spec)
-    (overlay-put (make-overlay body-start body-end) 'invisible body-invis-spec)
+    (plist-put msg :message-invis-spec message-invis-spec)
+    (overlay-put (make-overlay body-start body-end) 'invisible message-invis-spec)
 
     ;; Save the properties for this message. Currently this saves the
     ;; entire message (augmented it with other stuff), which seems
@@ -679,9 +679,9 @@ All currently available key bindings:
       ;; visible. So we check that property separately.
       (let ((headers-visible (plist-get props :headers-visible)))
 	(notmuch-show-element-visible props headers-visible :headers-invis-spec)
-	(notmuch-show-element-visible props t :body-invis-spec))
+	(notmuch-show-element-visible props t :message-invis-spec))
     (notmuch-show-element-visible props nil :headers-invis-spec)
-    (notmuch-show-element-visible props nil :body-invis-spec))
+    (notmuch-show-element-visible props nil :message-invis-spec))
 
   (notmuch-show-set-prop :message-visible visible-p props))
 
