@@ -205,7 +205,7 @@ command_t commands[] = {
       "\n"
       "\t\tFormat output as Javascript Object Notation (JSON).\n"
       "\t\tJSON output always includes all messages in a matching,\n"
-      "\t\tthread i.e. '--output=json' implies '--entire-thread'\n"
+      "\t\tthread i.e. '--format=json' implies '--entire-thread'\n"
       "\n"
       "\tA common use of \"notmuch show\" is to display a single\n"
       "\tthread of email messages. For this, use a search term of\n"
