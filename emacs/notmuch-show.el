@@ -526,6 +526,7 @@ function is used. "
 	(define-key map "p" 'notmuch-show-previous-open-message)
 	(define-key map (kbd "DEL") 'notmuch-show-rewind)
 	(define-key map " " 'notmuch-show-advance-and-archive)
+	(define-key map (kbd "M-RET") 'notmuch-show-toggle-all)
 	(define-key map (kbd "RET") 'notmuch-show-toggle-message)
 	map)
       "Keymap for \"notmuch show\" buffers.")
@@ -904,6 +905,18 @@ to stdout or stderr will appear in the *Messages* buffer."
     (notmuch-show-message-visible
      props
      (not (plist-get props :message-visible))))
+  (force-window-update))
+
+(defun notmuch-show-toggle-all ()
+  "Change the visibility all of the messages in the current
+thread. By default make all of the messages visible. With a
+prefix argument, make them all not visible."
+  (interactive)
+  (save-excursion
+    (goto-char (point-min))
+    (loop do (notmuch-show-message-visible (notmuch-show-get-message-properties)
+					   (not current-prefix-arg))
+	  until (not (notmuch-show-goto-message-next))))
   (force-window-update))
 
 (defun notmuch-show-next-button ()
