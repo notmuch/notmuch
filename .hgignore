@@ -1,0 +1,8 @@
+.*\.pyc$
+~$
+^MANIFEST
+^docs/html
+^docs/build
+^test/test
+^dist
+^build
