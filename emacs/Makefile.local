@@ -6,7 +6,11 @@ emacs_sources := \
 	$(dir)/notmuch.el \
 	$(dir)/notmuch-query.el \
 	$(dir)/notmuch-show.el \
-	$(dir)/notmuch-wash.el
+	$(dir)/notmuch-wash.el \
+	$(dir)/notmuch-hello.el
+
+emacs_images := \
+	$(dir)/notmuch-logo.png
 
 emacs_bytecode := $(subst .el,.elc,$(emacs_sources))
 
@@ -26,5 +30,6 @@ install-emacs:
 ifeq ($(HAVE_EMACS),1)
 	install -m0644 $(emacs_bytecode) $(DESTDIR)$(emacslispdir)
 endif
+	install -m0644 $(emacs_images) $(DESTDIR)$(emacslispdir)
 
 CLEAN := $(CLEAN) $(emacs_bytecode)

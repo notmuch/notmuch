@@ -192,10 +192,6 @@ For a mouse binding, return nil."
       (set-buffer-modified-p nil)
       (view-buffer (current-buffer) 'kill-buffer-if-not-modified))))
 
-(defgroup notmuch nil
-  "Notmuch mail reader for Emacs."
-  :group 'mail)
-
 (defcustom notmuch-search-hook '(hl-line-mode)
   "List of functions to call when notmuch displays the search results."
   :type 'hook
@@ -205,8 +201,8 @@ For a mouse binding, return nil."
 (defvar notmuch-search-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map "?" 'notmuch-help)
-    (define-key map "q" 'kill-this-buffer)
-    (define-key map "x" 'kill-this-buffer)
+    (define-key map "q" 'notmuch-search-quit)
+    (define-key map "x" 'notmuch-search-quit)
     (define-key map (kbd "<DEL>") 'notmuch-search-scroll-down)
     (define-key map "b" 'notmuch-search-scroll-down)
     (define-key map " " 'notmuch-search-scroll-up)
@@ -239,6 +235,14 @@ For a mouse binding, return nil."
   "Show the oldest mail first in the search-mode")
 
 (defvar notmuch-search-disjunctive-regexp      "\\<[oO][rR]\\>")
+
+(defun notmuch-search-quit ()
+  "Exit the search buffer, calling any defined continuation function."
+  (interactive)
+  (let ((continuation notmuch-search-continuation))
+    (kill-this-buffer)
+    (when continuation
+      (funcall continuation))))
 
 (defun notmuch-search-scroll-up ()
   "Move forward through search results by one window's worth."
@@ -332,6 +336,7 @@ Complete list of currently available key bindings:
   (make-local-variable 'notmuch-search-oldest-first)
   (make-local-variable 'notmuch-search-target-thread)
   (make-local-variable 'notmuch-search-target-line)
+  (set (make-local-variable 'notmuch-search-continuation) nil)
   (set (make-local-variable 'scroll-preserve-screen-position) t)
   (add-to-invisibility-spec 'notmuch-search)
   (use-local-map notmuch-search-mode-map)
@@ -689,7 +694,7 @@ characters as well as `_.+-'.
 	  )))
 
 ;;;###autoload
-(defun notmuch-search (query &optional oldest-first target-thread target-line)
+(defun notmuch-search (query &optional oldest-first target-thread target-line continuation)
   "Run \"notmuch search\" with the given query string and display results.
 
 The optional parameters are used as follows:
@@ -707,6 +712,7 @@ The optional parameters are used as follows:
     (set 'notmuch-search-oldest-first oldest-first)
     (set 'notmuch-search-target-thread target-thread)
     (set 'notmuch-search-target-line target-line)
+    (set 'notmuch-search-continuation continuation)
     (let ((proc (get-buffer-process (current-buffer)))
 	  (inhibit-read-only t))
       (if proc
@@ -735,11 +741,11 @@ same relative position within the new buffer."
   (let ((target-line (line-number-at-pos))
 	(oldest-first notmuch-search-oldest-first)
 	(target-thread (notmuch-search-find-thread-id))
-	(query notmuch-search-query-string))
+	(query notmuch-search-query-string)
+	(continuation notmuch-search-continuation))
     (kill-this-buffer)
-    (notmuch-search query oldest-first target-thread target-line)
-    (goto-char (point-min))
-    ))
+    (notmuch-search query oldest-first target-thread target-line continuation)
+    (goto-char (point-min))))
 
 (defcustom notmuch-poll-script ""
   "An external script to incorporate new mail into the notmuch database.

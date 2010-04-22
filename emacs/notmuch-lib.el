@@ -24,6 +24,15 @@
 (defvar notmuch-command "notmuch"
   "Command to run the notmuch binary.")
 
+(defgroup notmuch nil
+  "Notmuch mail reader for Emacs."
+  :group 'mail)
+
+(defcustom notmuch-folders '(("inbox" . "tag:inbox") ("unread" . "tag:unread"))
+  "List of searches for the notmuch folder view"
+  :type '(alist :key-type (string) :value-type (string))
+  :group 'notmuch)
+
 ;; XXX: This should be a generic function in emacs somewhere, not
 ;; here.
 (defun point-invisible-p ()
