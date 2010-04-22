@@ -224,7 +224,7 @@ For a mouse binding, return nil."
     (define-key map "s" 'notmuch-search)
     (define-key map "o" 'notmuch-search-toggle-order)
     (define-key map "=" 'notmuch-search-refresh-view)
-    (define-key map "G" 'notmuch-poll-and-search-refresh-view)
+    (define-key map "G" 'notmuch-search-poll-and-refresh-view)
     (define-key map "t" 'notmuch-search-filter-by-tag)
     (define-key map "f" 'notmuch-search-filter)
     (define-key map [mouse-1] 'notmuch-search-show-thread)
@@ -745,7 +745,7 @@ same relative position within the new buffer."
     (goto-char (point-min))
     ))
 
-(defun notmuch-poll-and-search-refresh-view ()
+(defun notmuch-search-poll-and-refresh-view ()
   "Run external script to import mail and refresh the current view.
 
 Checks if the variable 'notmuch-external-refresh-script is defined
@@ -814,7 +814,7 @@ current search results AND that are tagged with the given tag."
     (define-key map ">" 'notmuch-folder-last)
     (define-key map "<" 'notmuch-folder-first)
     (define-key map "=" 'notmuch-folder)
-    (define-key map "G" 'notmuch-poll-and-folder)
+    (define-key map "G" 'notmuch-folder-poll-and-refresh-view)
     (define-key map "s" 'notmuch-search)
     (define-key map [mouse-1] 'notmuch-folder-show-search)
     (define-key map (kbd "RET") 'notmuch-folder-show-search)
@@ -928,7 +928,7 @@ Currently available key bindings:
     (if search
 	(notmuch-search (cdr search) notmuch-search-oldest-first))))
 
-(defun notmuch-poll-and-folder ()
+(defun notmuch-folder-poll-and-refresh-view ()
   "Run external script to import mail and refresh the folder view.
 
 Checks if the variable 'notmuch-external-refresh-script is defined
