@@ -168,8 +168,10 @@ pass_if_equal ()
 	echo "	PASS"
     else
 	echo "	FAIL"
-	echo "	Expected output: $expected"
-	echo "	Actual output:   $output"
+	testname=test-$(printf "%03d" $tests)
+	echo "$expected" > $testname.expected
+	echo "$output" > $testname.output
+	diff -u $testname.expected $testname.output || true
 	test_failures=$((test_failures + 1))
     fi
 }
