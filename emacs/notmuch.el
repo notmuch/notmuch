@@ -745,15 +745,33 @@ same relative position within the new buffer."
     (goto-char (point-min))
     ))
 
-(defun notmuch-search-poll-and-refresh-view ()
-  "Run external script to import mail and refresh the current view.
+(defcustom notmuch-poll-script ""
+  "An external script to incorporate new mail into the notmuch database.
 
-Checks if the variable 'notmuch-external-refresh-script is defined
-and runs the external program defined it provides. Then calls
-notmuch-search-refresh-view to refresh the current view."
+If this variable is non empty, then it should name a script to be
+invoked by `notmuch-search-poll-and-refresh-view' and
+`notmuch-folder-poll-and-refresh-view' (each have a default
+keybinding of 'G'). The script could do any of the following
+depending on the user's needs:
+
+1. Invoke a program to transfer mail to the local mail store
+2. Invoke \"notmuch new\" to incorporate the new mail
+3. Invoke one or more \"notmuch tag\" commands to classify the mail"
+  :type 'string
+  :group 'notmuch)
+
+(defun notmuch-poll ()
+  "Run external script to import mail.
+
+Invokes `notmuch-poll-script' if it is not set to an empty string."
   (interactive)
-  (if (boundp 'notmuch-external-refresh-script)
-      (call-process notmuch-external-refresh-script nil nil))
+  (if (not (string= notmuch-poll-script ""))
+      (call-process notmuch-poll-script nil nil)))
+
+(defun notmuch-search-poll-and-refresh-view ()
+  "Invoke `notmuch-poll' to import mail, then refresh the current view."
+  (interactive)
+  (notmuch-poll)
   (notmuch-search-refresh-view))
 
 (defun notmuch-search-toggle-order ()
@@ -929,14 +947,9 @@ Currently available key bindings:
 	(notmuch-search (cdr search) notmuch-search-oldest-first))))
 
 (defun notmuch-folder-poll-and-refresh-view ()
-  "Run external script to import mail and refresh the folder view.
-
-Checks if the variable 'notmuch-external-refresh-script is defined
-and runs the external program defined it provides. Then calls
-notmuch-folder to refresh the current view."
+  "Invoke `notmuch-poll' to import mail, then refresh the folder view."
   (interactive)
-  (if (boundp 'notmuch-external-refresh-script)
-      (call-process notmuch-external-refresh-script nil nil))
+  (notmuch-poll)
   (notmuch-folder))
 
 ;;;###autoload
