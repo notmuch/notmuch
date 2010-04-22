@@ -123,8 +123,7 @@ _thread_add_message (notmuch_thread_t *thread,
 
 static void
 _thread_add_matched_message (notmuch_thread_t *thread,
-			     notmuch_message_t *message,
-			     notmuch_sort_t sort)
+			     notmuch_message_t *message)
 {
     time_t date;
     notmuch_message_t *hashed_message;
@@ -310,7 +309,7 @@ _notmuch_thread_create (void *ctx,
 	_thread_add_message (thread, message);
 
 	if (! matched_is_subset_of_thread)
-	    _thread_add_matched_message (thread, message, sort);
+	    _thread_add_matched_message (thread, message);
 
 	_notmuch_message_close (message);
     }
@@ -339,7 +338,7 @@ _notmuch_thread_create (void *ctx,
 	     notmuch_messages_move_to_next (messages))
 	{
 	    message = notmuch_messages_get (messages);
-	    _thread_add_matched_message (thread, message, sort);
+	    _thread_add_matched_message (thread, message);
 	    _notmuch_message_close (message);
 	}
 
