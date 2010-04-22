@@ -30,9 +30,9 @@
 (require 'notmuch-lib)
 (require 'notmuch-query)
 (require 'notmuch-wash)
+(require 'notmuch-mua)
 
 (declare-function notmuch-call-notmuch-process "notmuch" (&rest args))
-(declare-function notmuch-reply "notmuch" (query-string))
 (declare-function notmuch-fontify-headers "notmuch" nil)
 (declare-function notmuch-select-tag-with-completion "notmuch" (prompt &rest search-terms))
 (declare-function notmuch-search-show-thread "notmuch" nil)
@@ -507,7 +507,7 @@ function is used. "
 	(define-key map (kbd "M-TAB") 'notmuch-show-previous-button)
 	(define-key map (kbd "TAB") 'notmuch-show-next-button)
 	(define-key map "s" 'notmuch-search)
-	(define-key map "m" 'message-mail)
+	(define-key map "m" 'notmuch-mua-mail)
 	(define-key map "f" 'notmuch-show-forward-message)
 	(define-key map "r" 'notmuch-show-reply)
 	(define-key map "|" 'notmuch-show-pipe-message)
@@ -804,20 +804,22 @@ any effects from previous calls to
 (defun notmuch-show-reply ()
   "Reply to the current message."
   (interactive)
-  (notmuch-reply (notmuch-show-get-message-id)))
+  (notmuch-mua-reply (notmuch-show-get-message-id)))
 
 (defun notmuch-show-forward-message ()
   "Forward the current message."
   (interactive)
   (with-current-notmuch-show-message
-   (message-forward)))
+   (notmuch-mua-forward-message)))
 
 (defun notmuch-show-next-message ()
   "Show the next message."
   (interactive)
-  (notmuch-show-goto-message-next)
-  (notmuch-show-mark-read)
-  (notmuch-show-message-adjust))
+  (if (notmuch-show-goto-message-next)
+      (progn
+	(notmuch-show-mark-read)
+	(notmuch-show-message-adjust))
+    (goto-char (point-max))))
 
 (defun notmuch-show-previous-message ()
   "Show the previous message."
@@ -829,10 +831,14 @@ any effects from previous calls to
 (defun notmuch-show-next-open-message ()
   "Show the next message."
   (interactive)
-  (while (and (notmuch-show-goto-message-next)
-	      (not (notmuch-show-message-visible-p))))
-  (notmuch-show-mark-read)
-  (notmuch-show-message-adjust))
+  (let (r)
+    (while (and (setq r (notmuch-show-goto-message-next))
+		(not (notmuch-show-message-visible-p))))
+    (if r
+	(progn
+	  (notmuch-show-mark-read)
+	  (notmuch-show-message-adjust))
+      (goto-char (point-max)))))
 
 (defun notmuch-show-previous-open-message ()
   "Show the previous message."
