@@ -192,6 +192,12 @@ notmuch_search_sanitize ()
     sed -e "$NOTMUCH_SEARCH_THREAD_ID_SQUELCH"
 }
 
+NOTMUCH_SHOW_FILENAME_SQUELCH='s,filename:.*/mail,filename:/XXX/mail,'
+notmuch_show_sanitize ()
+{
+    sed -e "$NOTMUCH_SHOW_FILENAME_SQUELCH"
+}
+
 rm -rf ${TEST_DIR}
 mkdir ${TEST_DIR}
 cd ${TEST_DIR}
@@ -505,6 +511,121 @@ add_message '[subject]="Sv: thread-naming: Initial thread subject"' \
             "[in-reply-to]=\<$parent\>"
 output=$($NOTMUCH search --sort=newest-first thread-naming and tag:inbox | notmuch_search_sanitize)
 pass_if_equal "$output" "thread:XXX   2001-01-12 [6/8] Notmuch Test Suite; thread-naming: Initial thread subject (inbox unread)"
+
+printf " Test order of messages in \"notmuch show\"\t"
+output=$($NOTMUCH show thread-naming | notmuch_show_sanitize)
+pass_if_equal "$output" "message{ id:msg-033@notmuch-test-suite depth:0 match:1 filename:/XXX/mail/msg-033
+header{
+Notmuch Test Suite <test_suite@notmuchmail.org> (2001-01-05) (unread)
+Subject: thread-naming: Initial thread subject
+From: Notmuch Test Suite <test_suite@notmuchmail.org>
+To: Notmuch Test Suite <test_suite@notmuchmail.org>
+Date: Fri, 05 Jan 2001 15:43:56 -0800
+header}
+body{
+part{ ID: 1, Content-type: text/plain
+This is just a test message (#33)
+part}
+body}
+message}
+message{ id:msg-034@notmuch-test-suite depth:1 match:1 filename:/XXX/mail/msg-034
+header{
+Notmuch Test Suite <test_suite@notmuchmail.org> (2001-01-06) (inbox unread)
+Subject: thread-naming: Older changed subject
+From: Notmuch Test Suite <test_suite@notmuchmail.org>
+To: Notmuch Test Suite <test_suite@notmuchmail.org>
+Date: Sat, 06 Jan 2001 15:43:56 -0800
+header}
+body{
+part{ ID: 1, Content-type: text/plain
+This is just a test message (#34)
+part}
+body}
+message}
+message{ id:msg-035@notmuch-test-suite depth:1 match:1 filename:/XXX/mail/msg-035
+header{
+Notmuch Test Suite <test_suite@notmuchmail.org> (2001-01-07) (inbox unread)
+Subject: thread-naming: Newer changed subject
+From: Notmuch Test Suite <test_suite@notmuchmail.org>
+To: Notmuch Test Suite <test_suite@notmuchmail.org>
+Date: Sun, 07 Jan 2001 15:43:56 -0800
+header}
+body{
+part{ ID: 1, Content-type: text/plain
+This is just a test message (#35)
+part}
+body}
+message}
+message{ id:msg-036@notmuch-test-suite depth:1 match:1 filename:/XXX/mail/msg-036
+header{
+Notmuch Test Suite <test_suite@notmuchmail.org> (2001-01-08) (unread)
+Subject: thread-naming: Final thread subject
+From: Notmuch Test Suite <test_suite@notmuchmail.org>
+To: Notmuch Test Suite <test_suite@notmuchmail.org>
+Date: Mon, 08 Jan 2001 15:43:56 -0800
+header}
+body{
+part{ ID: 1, Content-type: text/plain
+This is just a test message (#36)
+part}
+body}
+message}
+message{ id:msg-037@notmuch-test-suite depth:1 match:1 filename:/XXX/mail/msg-037
+header{
+Notmuch Test Suite <test_suite@notmuchmail.org> (2001-01-09) (inbox unread)
+Subject: Re: thread-naming: Initial thread subject
+From: Notmuch Test Suite <test_suite@notmuchmail.org>
+To: Notmuch Test Suite <test_suite@notmuchmail.org>
+Date: Tue, 09 Jan 2001 15:43:45 -0800
+header}
+body{
+part{ ID: 1, Content-type: text/plain
+This is just a test message (#37)
+part}
+body}
+message}
+message{ id:msg-038@notmuch-test-suite depth:1 match:1 filename:/XXX/mail/msg-038
+header{
+Notmuch Test Suite <test_suite@notmuchmail.org> (2001-01-10) (inbox unread)
+Subject: Aw: thread-naming: Initial thread subject
+From: Notmuch Test Suite <test_suite@notmuchmail.org>
+To: Notmuch Test Suite <test_suite@notmuchmail.org>
+Date: Wed, 10 Jan 2001 15:43:45 -0800
+header}
+body{
+part{ ID: 1, Content-type: text/plain
+This is just a test message (#38)
+part}
+body}
+message}
+message{ id:msg-039@notmuch-test-suite depth:1 match:1 filename:/XXX/mail/msg-039
+header{
+Notmuch Test Suite <test_suite@notmuchmail.org> (2001-01-11) (inbox unread)
+Subject: Vs: thread-naming: Initial thread subject
+From: Notmuch Test Suite <test_suite@notmuchmail.org>
+To: Notmuch Test Suite <test_suite@notmuchmail.org>
+Date: Thu, 11 Jan 2001 15:43:45 -0800
+header}
+body{
+part{ ID: 1, Content-type: text/plain
+This is just a test message (#39)
+part}
+body}
+message}
+message{ id:msg-040@notmuch-test-suite depth:1 match:1 filename:/XXX/mail/msg-040
+header{
+Notmuch Test Suite <test_suite@notmuchmail.org> (2001-01-12) (inbox unread)
+Subject: Sv: thread-naming: Initial thread subject
+From: Notmuch Test Suite <test_suite@notmuchmail.org>
+To: Notmuch Test Suite <test_suite@notmuchmail.org>
+Date: Fri, 12 Jan 2001 15:43:45 -0800
+header}
+body{
+part{ ID: 1, Content-type: text/plain
+This is just a test message (#40)
+part}
+body}
+message}"
 
 printf "\nTesting \"notmuch reply\" in several variations:\n"
 
