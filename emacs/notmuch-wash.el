@@ -1,6 +1,7 @@
 ;; notmuch-wash.el --- cleaning up message bodies
 ;;
 ;; Copyright © Carl Worth
+;; Copyright © David Edmondson
 ;;
 ;; This file is part of Notmuch.
 ;;
@@ -18,6 +19,11 @@
 ;; along with Notmuch.  If not, see <http://www.gnu.org/licenses/>.
 ;;
 ;; Authors: Carl Worth <cworth@cworth.org>
+;;          David Edmondson <dme@dme.org>
+
+(require 'coolj)
+
+;;
 
 (defvar notmuch-wash-signature-regexp
   "^\\(-- ?\\|_+\\)$"
@@ -108,7 +114,7 @@ is what to put on the button."
 		     'invisibility-spec invis-spec
 		     :type button-type))))
 
-(defun notmuch-wash-text/plain-citations (depth)
+(defun notmuch-wash-markup-citations (depth)
   "Markup citations, and up to one signature in the buffer."
   (goto-char (point-min))
   (beginning-of-line)
@@ -148,6 +154,70 @@ is what to put on the button."
 	       sig-start-marker sig-end-marker
 	       "signature" "\n"
 	       (format notmuch-wash-signature-button-format sig-lines)))))))
+
+;;
+
+(defun notmuch-wash-compress-blanks (depth)
+  "Compress successive blank lines into one blank line. Remove
+any leading or trailing blank lines."
+
+  ;; Algorithm derived from `article-strip-multiple-blank-lines' in
+  ;; `gnus-art.el'.
+
+  ;; Make all blank lines empty.
+  (goto-char (point-min))
+  (while (re-search-forward "^[[:space:]\t]+$" nil t)
+    (replace-match "" nil t))
+
+  ;; Replace multiple empty lines with a single empty line.
+  (goto-char (point-min))
+  (while (re-search-forward "^\n\\(\n+\\)" nil t)
+    (delete-region (match-beginning 1) (match-end 1)))
+
+  ;; Remove a leading blank line.
+  (goto-char (point-min))
+  (if (looking-at "\n")
+      (delete-region (match-beginning 0) (match-end 0)))
+
+  ;; Remove a trailing blank line.
+  (goto-char (point-max))
+  (if (looking-at "\n")
+      (delete-region (match-beginning 0) (match-end 0))))
+
+;;
+
+(defun notmuch-wash-tidy-citations (depth)
+  "Clean up citations."
+
+  ;; Remove lines of repeated citation leaders with no other content.
+  (goto-char (point-min))
+  (while (re-search-forward "\\(^>[> ]*\n\\)\\{2,\\}" nil t)
+    (replace-match "\\1"))
+
+  ;; Remove citation leaders standing alone before a block of cited
+  ;; text.
+  (goto-char (point-min))
+  (while (re-search-forward "\\(\n\\|^[^>].*\\)\n\\(^>[> ]*\n\\)" nil t)
+    (replace-match "\\1\n"))
+
+  ;; Remove citation trailers standing alone after a block of cited
+  ;; text.
+  (goto-char (point-min))
+  (while (re-search-forward "\\(^>[> ]*\n\\)\\(^$\\|^[^>].*\\)" nil t)
+    (replace-match "\\2"))
+
+  ;; Remove blank lines between "Bill wrote:" and the citation.
+  (goto-char (point-min))
+  (while (re-search-forward "^\\([^>].*\\):\n\n>" nil t)
+    (replace-match "\\1:\n>")))
+
+;;
+
+(defun notmuch-wash-wrap-long-lines (depth)
+  "Wrap text in the region whilst maintaining the correct prefix."
+  (let ((coolj-wrap-follows-window-size nil)
+	(fill-column (- (window-width) depth)))
+    (coolj-wrap-region (point-min) (point-max))))
 
 ;;
 
