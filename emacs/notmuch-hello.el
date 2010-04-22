@@ -25,6 +25,7 @@
 
 (require 'notmuch-lib)
 (require 'notmuch)
+(require 'notmuch-mua)
 
 (declare-function notmuch-search "notmuch" (query &optional oldest-first target-thread target-line continuation))
 (declare-function notmuch-folder-count "notmuch" (search))
@@ -335,6 +336,7 @@ diagonal."
 
   (use-local-map widget-keymap)
   (local-set-key "=" 'notmuch-hello-update)
+  (local-set-key "m" 'notmuch-mua-mail)
   (local-set-key "q" '(lambda () (interactive) (kill-buffer (current-buffer))))
   (local-set-key "s" 'notmuch-hello-goto-search)
   (local-set-key "v" '(lambda () (interactive)

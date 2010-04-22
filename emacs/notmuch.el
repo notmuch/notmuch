@@ -53,6 +53,7 @@
 
 (require 'notmuch-lib)
 (require 'notmuch-show)
+(require 'notmuch-mua)
 
 (defcustom notmuch-search-result-format
   `(("date" . "%s ")
@@ -110,17 +111,6 @@ For example:
                  (concat "Save '" (cdr (assq 'filename disposition)) "' ")))
             (mm-save-part p))))
    mm-handle))
-
-(defun notmuch-reply (query-string)
-  (switch-to-buffer (generate-new-buffer "notmuch-draft"))
-  (call-process notmuch-command nil t nil "reply" query-string)
-  (message-insert-signature)
-  (goto-char (point-min))
-  (if (re-search-forward "^$" nil t)
-      (progn
-	(insert "--text follows this line--")
-	(forward-line)))
-  (message-mode))
 
 (defun notmuch-documentation-first-line (symbol)
   "Return the first line of the documentation string for SYMBOL."
@@ -211,7 +201,7 @@ For a mouse binding, return nil."
     (define-key map "p" 'notmuch-search-previous-thread)
     (define-key map "n" 'notmuch-search-next-thread)
     (define-key map "r" 'notmuch-search-reply-to-thread)
-    (define-key map "m" 'message-mail)
+    (define-key map "m" 'notmuch-mua-mail)
     (define-key map "s" 'notmuch-search)
     (define-key map "o" 'notmuch-search-toggle-order)
     (define-key map "=" 'notmuch-search-refresh-view)
@@ -405,7 +395,7 @@ Complete list of currently available key bindings:
   "Begin composing a reply to the entire current thread in a new buffer."
   (interactive)
   (let ((message-id (notmuch-search-find-thread-id)))
-    (notmuch-reply message-id)))
+    (notmuch-mua-reply message-id)))
 
 (defun notmuch-call-notmuch-process (&rest args)
   "Synchronously invoke \"notmuch\" with the given list of arguments.
@@ -823,14 +813,14 @@ current search results AND that are tagged with the given tag."
   (interactive)
   (notmuch-search "tag:inbox" notmuch-search-oldest-first))
 
-(setq mail-user-agent 'message-user-agent)
+(setq mail-user-agent 'notmuch-user-agent)
 
 (defvar notmuch-folder-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map "?" 'notmuch-help)
     (define-key map "x" 'kill-this-buffer)
     (define-key map "q" 'kill-this-buffer)
-    (define-key map "m" 'message-mail)
+    (define-key map "m" 'notmuch-mua-mail)
     (define-key map "e" 'notmuch-folder-show-empty-toggle)
     (define-key map ">" 'notmuch-folder-last)
     (define-key map "<" 'notmuch-folder-first)

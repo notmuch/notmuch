@@ -33,6 +33,22 @@
   :type '(alist :key-type (string) :value-type (string))
   :group 'notmuch)
 
+;;
+
+(defun notmuch-version ()
+  "Return a string with the notmuch version number."
+  (let ((long-string
+	 ;; Trim off the trailing newline.
+	 (substring (shell-command-to-string
+		     (concat notmuch-command " --version"))
+		    0 -1)))
+    (if (string-match "^notmuch\\( version\\)? \\(.*\\)$"
+		      long-string)
+	(match-string 2 long-string)
+      "unknown")))
+
+;;
+
 ;; XXX: This should be a generic function in emacs somewhere, not
 ;; here.
 (defun point-invisible-p ()
