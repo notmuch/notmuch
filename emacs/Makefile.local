@@ -7,7 +7,8 @@ emacs_sources := \
 	$(dir)/notmuch-query.el \
 	$(dir)/notmuch-show.el \
 	$(dir)/notmuch-wash.el \
-	$(dir)/notmuch-hello.el
+	$(dir)/notmuch-hello.el \
+	$(dir)/notmuch-mua.el
 
 emacs_images := \
 	$(dir)/notmuch-logo.png
