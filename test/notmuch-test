@@ -1,6 +1,8 @@
 #!/bin/bash
 set -e
 
+export TZ=UTC+8
+
 find_notmuch_binary ()
 {
     dir=$1
