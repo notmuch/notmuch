@@ -104,8 +104,6 @@ format_thread_json (const void *ctx,
 		    const char *authors,
 		    const char *subject)
 {
-    struct tm *tm;
-    char timestamp[40];
     void *ctx_quote = talloc_new (ctx);
 
     printf ("\"thread\": %s,\n"
