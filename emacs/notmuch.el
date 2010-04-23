@@ -54,15 +54,10 @@
 (require 'notmuch-lib)
 (require 'notmuch-show)
 
-(defcustom notmuch-search-authors-width 20
-  "Number of columns to use to display authors in a notmuch-search buffer."
-  :type 'integer
-  :group 'notmuch)
-
 (defcustom notmuch-search-result-format
   `(("date" . "%s ")
     ("count" . "%-7s ")
-    ("authors" . ,(format "%%-%ds " notmuch-search-authors-width))
+    ("authors" . "%-20s ")
     ("subject" . "%s ")
     ("tags" . "(%s)"))
   "Search result formating. Supported fields are:
@@ -591,7 +586,11 @@ matching will be applied."
    ((string-equal field "count")
     (insert (format (cdr (assoc field notmuch-search-result-format)) count)))
    ((string-equal field "authors")
-    (insert (format (cdr (assoc field notmuch-search-result-format)) authors)))
+    (insert (let ((sample (format (cdr (assoc field notmuch-search-result-format)) "")))
+	      (if (> (length authors)
+		     (length sample))
+		  (concat (substring authors 0 (- (length sample) 4)) "... ")
+		(format (cdr (assoc field notmuch-search-result-format)) authors)))))
    ((string-equal field "subject")
     (insert (format (cdr (assoc field notmuch-search-result-format)) subject)))
    ((string-equal field "tags")
@@ -620,12 +619,9 @@ matching will be applied."
 			   (date (match-string 2 string))
 			   (count (match-string 3 string))
 			   (authors (match-string 4 string))
-			   (authors-length (length authors))
 			   (subject (match-string 5 string))
 			   (tags (match-string 6 string))
 			   (tag-list (if tags (save-match-data (split-string tags)))))
-		      (if (> authors-length notmuch-search-authors-width)
-			  (set 'authors (concat (substring authors 0 (- notmuch-search-authors-width 3)) "...")))
 		      (goto-char (point-max))
 		      (let ((beg (point-marker)))
 			(notmuch-search-show-result date count authors subject tags)
