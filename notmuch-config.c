@@ -37,13 +37,13 @@ static const char database_config_comment[] =
     " Notmuch will store its database within a sub-directory of the path\n"
     " configured here named \".notmuch\".\n";
 
-static const char messages_config_comment[] =
-    " Messages configuration\n"
+static const char new_config_comment[] =
+    " Configuration for \"notmuch new\"\n"
     "\n"
     " The following options are supported here:\n"
     "\n"
-    "\tnew_tags	A list (separated by ';') of the tags that will be\n"
-    "\t		added to all messages incorporated by \"notmuch new\".\n";
+    "\ttags	A list (separated by ';') of the tags that will be\n"
+    "\t	added to all messages incorporated by \"notmuch new\".\n";
 
 static const char user_config_comment[] =
     " User configuration\n"
@@ -182,7 +182,7 @@ notmuch_config_open (void *ctx,
     size_t tmp;
     char *notmuch_config_env = NULL;
     int file_had_database_group;
-    int file_had_messages_group;
+    int file_had_new_group;
     int file_had_user_group;
 
     if (is_new_ret)
@@ -252,8 +252,7 @@ notmuch_config_open (void *ctx,
      */
     file_had_database_group = g_key_file_has_group (config->key_file,
 						    "database");
-    file_had_messages_group = g_key_file_has_group (config->key_file,
-						    "messages");
+    file_had_new_group = g_key_file_has_group (config->key_file, "new");
     file_had_user_group = g_key_file_has_group (config->key_file, "user");
 
 
@@ -320,10 +319,10 @@ notmuch_config_open (void *ctx,
 				database_config_comment, NULL);
     }
 
-    if (! file_had_messages_group)
+    if (! file_had_new_group)
     {
-	g_key_file_set_comment (config->key_file, "messages", NULL,
-				messages_config_comment, NULL);
+	g_key_file_set_comment (config->key_file, "new", NULL,
+				new_config_comment, NULL);
     }
 
     if (! file_had_user_group)
@@ -520,7 +519,7 @@ notmuch_config_get_new_tags (notmuch_config_t *config,
 
     if (config->new_tags == NULL) {
 	tags = g_key_file_get_string_list (config->key_file,
-					   "messages", "new_tags",
+					   "new", "tags",
 					   &tags_length, NULL);
 	if (tags) {
 	    config->new_tags = talloc_size (config,
@@ -547,7 +546,7 @@ notmuch_config_set_new_tags (notmuch_config_t *config,
 			     size_t length)
 {
     g_key_file_set_string_list (config->key_file,
-				"messages", "new_tags",
+				"new", "tags",
 				new_tags, length);
 
     talloc_free (config->new_tags);
