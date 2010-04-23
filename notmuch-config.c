@@ -68,7 +68,7 @@ struct _notmuch_config {
     char *user_primary_email;
     char **user_other_email;
     size_t user_other_email_length;
-    char **new_tags;
+    const char **new_tags;
     size_t new_tags_length;
 };
 
@@ -474,7 +474,7 @@ notmuch_config_set_user_other_email (notmuch_config_t *config,
     config->user_other_email = NULL;
 }
 
-char **
+const char **
 notmuch_config_get_new_tags (notmuch_config_t *config,
 			     size_t *length)
 {

@@ -183,7 +183,7 @@ notmuch_config_set_user_other_email (notmuch_config_t *config,
 				     const char *other_email[],
 				     size_t length);
 
-char **
+const char **
 notmuch_config_get_new_tags (notmuch_config_t *config,
 			     size_t *length);
 void

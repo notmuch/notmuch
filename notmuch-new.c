@@ -35,7 +35,7 @@ typedef struct _filename_list {
 typedef struct {
     int output_is_a_tty;
     int verbose;
-    char **new_tags;
+    const char **new_tags;
     size_t new_tags_length;
 
     int total_files;
