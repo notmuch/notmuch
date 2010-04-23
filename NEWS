@@ -1,3 +1,11 @@
+Even Better guessing of From: header.
+
+  Notmuch now looks at a number of headers when trying to figure out
+  the best From: header to use in a reply. First it checks whether one
+  of the user's emails is in To: or Cc:, then it checks Envelope-To:
+  and X-Original-To: headers, then it analyses the Received headers
+  checking for a Received: by .. from .. for user@add.res clause. And
+  finally it matches domains in the received path.
 
 Visualization of author names that match a search
 
@@ -7,6 +15,16 @@ Visualization of author names that match a search
   matching and first non-matching author. This is especially useful in
   a search that includes tag:unread. Now the authors of the unread
   messages in the thread are listed first.
+
+Provide 'G' key binding to trigger mail refresh
+
+  The 'G' key works wherever '=' works. Before refreshing the screen
+  it calls an external program that can be used to poll email servers,
+  run notmuch new and setup specific tags for the new emails. The
+  script to be called can be customized with. Use the customize screen
+  to set the notmuch-poll-script variable to the program that you want
+  to execute when pressing 'G'. Note that this is synchronous - emacs
+  will wait until this program finishes.
 
 Notmuch 0.2 (2010-04-16)
 ========================
