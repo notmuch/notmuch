@@ -26,7 +26,7 @@
 (require 'notmuch-lib)
 (require 'notmuch)
 
-(declare-function notmuch-search "notmuch" (query &optional oldest-first target-thread target-line))
+(declare-function notmuch-search "notmuch" (query &optional oldest-first target-thread target-line continuation))
 (declare-function notmuch-folder-count "notmuch" (search))
 
 (defcustom notmuch-hello-recent-searches-max 10

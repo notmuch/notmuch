@@ -233,6 +233,7 @@ For a mouse binding, return nil."
 (defvar notmuch-search-target-line)
 (defvar notmuch-search-oldest-first t
   "Show the oldest mail first in the search-mode")
+(defvar notmuch-search-continuation)
 
 (defvar notmuch-search-disjunctive-regexp      "\\<[oO][rR]\\>")
 
