@@ -449,6 +449,13 @@ thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; search by to (name) (inbox unr
 thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; subject search test (phrase) (inbox unread)
 thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; this phrase should not match the subject search test (inbox unread)"
 
+printf " Search body (utf-8):...\t\t\t"
+add_message '[subject]="utf8-message-body-subject"' '[date]="Sat, 01 Jan 2000 12:00:00 -0000"' '[body]="message body utf8: bödý"'
+output=$($NOTMUCH search 'bödý' | notmuch_search_sanitize)
+pass_if_equal "$output" "thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; utf8-message-body-subject (inbox unread)"
+
+printf "\nTesting --format=json output:\n"
+
 printf " Show message: json...\t\t\t\t"
 add_message '[subject]="json-show-subject"' '[date]="Sat, 01 Jan 2000 12:00:00 -0000"' '[body]="json-show-message"'
 output=$($NOTMUCH show --format=json 'json-show-message')
@@ -469,11 +476,6 @@ printf " Search by subject (utf-8):...\t\t\t"
 add_message [subject]=utf8-sübjéct '[date]="Sat, 01 Jan 2000 12:00:00 -0000"'
 output=$($NOTMUCH search subject:utf8-sübjéct | notmuch_search_sanitize)
 pass_if_equal "$output" "thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; utf8-sübjéct (inbox unread)"
-
-printf " Search body (utf-8):...\t\t\t"
-add_message '[subject]="utf8-message-body-subject"' '[date]="Sat, 01 Jan 2000 12:00:00 -0000"' '[body]="message body utf8: bödý"'
-output=$($NOTMUCH search 'bödý' | notmuch_search_sanitize)
-pass_if_equal "$output" "thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; utf8-message-body-subject (inbox unread)"
 
 printf " Show message: json, utf-8...\t\t\t"
 add_message '[subject]="json-show-utf8-body-sübjéct"' '[date]="Sat, 01 Jan 2000 12:00:00 -0000"' '[body]="jsön-show-méssage"'
