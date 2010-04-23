@@ -77,6 +77,9 @@ collapse the remaining lines into a button.")
   'help-echo "mouse-1, RET: Show signature"
   :supertype 'notmuch-wash-button-invisibility-toggle-type)
 
+(defun notmuch-wash-region-isearch-show (overlay)
+  (remove-from-invisibility-spec (overlay-get overlay 'invisible)))
+
 (defun notmuch-wash-region-to-button (beg end type prefix button-text)
   "Auxilary function to do the actual making of overlays and buttons
 
@@ -96,6 +99,7 @@ is what to put on the button."
 					  type "-toggle-type"))))
     (add-to-invisibility-spec invis-spec)
     (overlay-put overlay 'invisible invis-spec)
+    (overlay-put overlay 'isearch-open-invisible #'notmuch-wash-region-isearch-show)
     (goto-char (1+ end))
     (save-excursion
       (goto-char (1- beg))
