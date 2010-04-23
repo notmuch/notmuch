@@ -40,8 +40,10 @@ static const char database_config_comment[] =
 static const char messages_config_comment[] =
     " Messages configuration\n"
     "\n"
-    " The only value supported here is 'new_tags' which lists the tags that\n"
-    " should be applied to new messages.\n";
+    " The following options are supported here:\n"
+    "\n"
+    "\tnew_tags	A list (separated by ';') of the tags that will be\n"
+    "\t		added to all messages incorporated by \"notmuch new\".\n";
 
 static const char user_config_comment[] =
     " User configuration\n"
