@@ -108,21 +108,14 @@ format_thread_json (const void *ctx,
     char timestamp[40];
     void *ctx_quote = talloc_new (ctx);
 
-    tm = gmtime (&date);
-    if (tm == NULL)
-	INTERNAL_ERROR ("gmtime failed on thread %s.", thread_id);
-
-    if (strftime (timestamp, sizeof (timestamp), "%s", tm) == 0)
-	INTERNAL_ERROR ("strftime failed on thread %s.", thread_id);
-
     printf ("\"thread\": %s,\n"
-	    "\"timestamp\": %s,\n"
+	    "\"timestamp\": %ld,\n"
 	    "\"matched\": %d,\n"
 	    "\"total\": %d,\n"
 	    "\"authors\": %s,\n"
 	    "\"subject\": %s,\n",
 	    json_quote_str (ctx_quote, thread_id),
-	    timestamp,
+	    date,
 	    matched,
 	    total,
 	    json_quote_str (ctx_quote, authors),
