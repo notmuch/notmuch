@@ -179,6 +179,9 @@ notmuch_config_open (void *ctx,
     int is_new = 0;
     size_t tmp;
     char *notmuch_config_env = NULL;
+    int file_had_database_group;
+    int file_had_messages_group;
+    int file_had_user_group;
 
     if (is_new_ret)
 	*is_new_ret = 0;
@@ -235,6 +238,23 @@ notmuch_config_open (void *ctx,
 	is_new = 1;
     }
 
+    /* Whenever we know of configuration sections that don't appear in
+     * the configuration file, we add some comments to help the user
+     * understand what can be done.
+     *
+     * It would be convenient to just add those comments now, but
+     * apparently g_key_file will clear any comments when keys are
+     * added later that create the groups. So we have to check for the
+     * groups now, but add the comments only after setting all of our
+     * values.
+     */
+    file_had_database_group = g_key_file_has_group (config->key_file,
+						    "database");
+    file_had_messages_group = g_key_file_has_group (config->key_file,
+						    "messages");
+    file_had_user_group = g_key_file_has_group (config->key_file, "user");
+
+
     if (notmuch_config_get_database_path (config) == NULL) {
 	char *path = talloc_asprintf (config, "%s/mail",
 				      getenv ("HOME"));
@@ -283,15 +303,29 @@ notmuch_config_open (void *ctx,
 	notmuch_config_set_new_tags (config, tags, 2);
     }
 
-    /* When we create a new configuration file here, we  add some
-     * comments to help the user understand what can be done. */
-    if (is_new) {
+    /* Whenever we know of configuration sections that don't appear in
+     * the configuration file, we add some comments to help the user
+     * understand what can be done. */
+    if (is_new)
+    {
 	g_key_file_set_comment (config->key_file, NULL, NULL,
 				toplevel_config_comment, NULL);
+    }
+
+    if (! file_had_database_group)
+    {
 	g_key_file_set_comment (config->key_file, "database", NULL,
 				database_config_comment, NULL);
+    }
+
+    if (! file_had_messages_group)
+    {
 	g_key_file_set_comment (config->key_file, "messages", NULL,
 				messages_config_comment, NULL);
+    }
+
+    if (! file_had_user_group)
+    {
 	g_key_file_set_comment (config->key_file, "user", NULL,
 				user_config_comment, NULL);
     }
