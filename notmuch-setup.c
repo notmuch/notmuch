@@ -99,6 +99,8 @@ notmuch_setup_command (unused (void *ctx),
     GPtrArray *other_emails;
     unsigned int i;
     int is_new;
+    const char **new_tags;
+    size_t new_tags_len;
 
 #define prompt(format, ...)					\
     do {							\
@@ -157,6 +159,40 @@ notmuch_setup_command (unused (void *ctx),
 
 	absolute_path = make_path_absolute (ctx, response);
 	notmuch_config_set_database_path (config, absolute_path);
+    }
+
+    new_tags = notmuch_config_get_new_tags (config, &new_tags_len);
+
+    printf ("Tags to apply to all new messages (separated by spaces) [");
+
+    for (i = 0; i < new_tags_len; i++) {
+	if (i != 0)
+	    printf (" ");
+	printf ("%s", new_tags[i]);
+    }
+
+    prompt ("]: ");
+
+    if (strlen (response)) {
+	GPtrArray *tags = g_ptr_array_new ();
+	char *tag = response;
+	char *space;
+
+	while (tag && *tag) {
+	    space = strchr (tag, ' ');
+	    if (space)
+		g_ptr_array_add (tags, talloc_strndup (ctx, tag, space - tag));
+	    else
+		g_ptr_array_add (tags, talloc_strdup (ctx, tag));
+	    tag = space;
+	    while (tag && *tag == ' ')
+		tag++;
+	}
+
+	notmuch_config_set_new_tags (config, (const char **) tags->pdata,
+				     tags->len);
+
+	g_ptr_array_free (tags, TRUE);
     }
 
     if (! notmuch_config_save (config)) {
