@@ -470,8 +470,8 @@ function is used. "
     (save-excursion
       (let* ((basic-args (list thread-id))
 	     (args (if query-context
-		       (append (list "\"") basic-args (list "and (" query-context ")\""))
-		     (append (list "\"") basic-args (list "\"")))))
+		       (append (list "\'") basic-args (list "and (" query-context ")\'"))
+		     (append (list "\'") basic-args (list "\'")))))
 	(notmuch-show-insert-forest (notmuch-query-get-threads args))
 	;; If the query context reduced the results to nothing, run
 	;; the basic query.
