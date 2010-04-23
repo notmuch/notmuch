@@ -459,7 +459,7 @@ class Query(object):
            other unexpected behavior. See above for more details.
     """
     # constants
-    SORT = Enum(['OLDEST_FIRST','NEWEST_FIRST','MESSAGE_ID'])
+    SORT = Enum(['OLDEST_FIRST','NEWEST_FIRST','MESSAGE_ID', 'UNSORTED'])
     """Constants: Sort order in which to return results"""
 
     """notmuch_query_create"""

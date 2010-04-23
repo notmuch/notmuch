@@ -99,7 +99,11 @@ More information on specific topics can be found on the following pages:
        Sort by message date, newest first.
 
      SORT.MESSAGE_ID
-       Sort by email message ID
+       Sort by email message ID.
+
+     SORT.UNSORTED
+       Do not apply a special sort order (returns results in document id     
+       order). 
 
    .. automethod:: set_sort
 
