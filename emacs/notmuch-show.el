@@ -42,6 +42,11 @@
 that if this order is changed the headers shown when a message is
 collapsed will change.")
 
+(defcustom notmuch-show-headers-visible nil
+  "Should the headers be visible by default?"
+  :group 'notmuch
+  :type 'boolean)
+
 (defvar notmuch-show-markup-headers-hook '(notmuch-show-colour-headers)
   "A list of functions called to decorate the headers listed in
 `notmuch-show-headers'.")
@@ -416,8 +421,8 @@ current buffer, if possible."
     ;; the content).
     (notmuch-show-set-message-properties msg)
 
-    ;; Headers are hidden by default.
-    (notmuch-show-headers-visible msg nil)
+    ;; Set header visibility.
+    (notmuch-show-headers-visible msg notmuch-show-headers-visible)
 
     ;; Message visibility depends on whether it matched the search
     ;; criteria.
