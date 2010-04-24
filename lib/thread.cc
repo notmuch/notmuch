@@ -32,6 +32,7 @@ struct _notmuch_thread {
     char *subject;
     GHashTable *authors_hash;
     char *authors;
+    char *nonmatched_authors;
     GHashTable *tags;
 
     notmuch_message_list_t *message_list;
@@ -73,6 +74,79 @@ _thread_add_author (notmuch_thread_t *thread,
 	thread->authors = talloc_strdup (thread, author);
 }
 
+/*
+ * move authors of matched messages in the thread to
+ * the front of the authors list, but keep them in
+ * existing order within their group
+ */
+static void
+_thread_move_matched_author (notmuch_thread_t *thread,
+			     const char *author)
+{
+    char *authors_copy;
+    char *current_author;
+    char *last_pipe,*next_pipe;
+    int idx,nm_start,author_len,authors_len;
+
+    if (thread->authors == NULL || author == NULL)
+	return;
+    if (thread->nonmatched_authors == NULL)
+	thread->nonmatched_authors = thread->authors;
+    author_len = strlen(author);
+    authors_len = strlen(thread->authors);
+    if (author_len == authors_len) {
+	/* just one author */
+	thread->nonmatched_authors += author_len;
+	return;
+    }
+    current_author = strcasestr(thread->authors, author);
+    if (current_author == NULL)
+	return;
+    /* how far inside the nonmatched authors is our author? */
+    idx = current_author - thread->nonmatched_authors;
+    if (idx < 0) {
+	/* already among matched authors */
+	return;
+    }
+    /* are there any authors in the list after our author? */
+    if (thread->nonmatched_authors + author_len < thread->authors + authors_len) {
+	/* we have to make changes, so let's get a temp copy */
+	authors_copy = talloc_strdup(thread,thread->authors);
+	/* nm_start is the offset into where the non-matched authors start */
+	nm_start = thread->nonmatched_authors - thread->authors;
+	/* copy this author and add the "| " - the if clause above tells us there's more */
+	strncpy(thread->nonmatched_authors,author,author_len);
+	strncpy(thread->nonmatched_authors+author_len,"| ",2);
+	thread->nonmatched_authors += author_len+2;
+	if (idx > 0) {
+	  /* we are actually moving authors around, not just changing the separator
+	   * first copy the authors that came BEFORE our author */
+	  strncpy(thread->nonmatched_authors, authors_copy+nm_start, idx-2);
+	  /* finally, if there are authors AFTER our author, copy those */
+	  if(author_len+nm_start+idx < authors_len) {
+	    strncpy(thread->nonmatched_authors + idx - 2,", ",2);
+	    strncpy(thread->nonmatched_authors + idx, authors_copy+nm_start + idx + author_len + 2,
+		    authors_len - (nm_start + idx + author_len + 2));
+	  }
+	}
+	/* finally let's make sure there's just one '|' in the authors string */
+	last_pipe = strchr(thread->authors,'|');
+	while (last_pipe) {
+	    next_pipe = strchr(last_pipe+1,'|');
+	    if (next_pipe)
+		*last_pipe = ',';
+	    last_pipe = next_pipe;
+	}
+    } else {
+	thread->nonmatched_authors += author_len;
+	/* so now all authors are matched - let's remove the '|' */
+	last_pipe = strchr(thread->authors,'|');
+	if (last_pipe)
+	    *last_pipe = ',';
+    }
+    return;
+}
+
 /* Add 'message' as a message that belongs to 'thread'.
  *
  * The 'thread' will talloc_steal the 'message' and hold onto a
@@ -110,6 +184,7 @@ _thread_add_message (notmuch_thread_t *thread,
 		author = internet_address_mailbox_get_addr (mailbox);
 	    }
 	    _thread_add_author (thread, author);
+	    notmuch_message_set_author (message, author);
 	}
 	g_object_unref (G_OBJECT (list));
     }
@@ -182,6 +257,7 @@ _thread_add_matched_message (notmuch_thread_t *thread,
 	notmuch_message_set_flag (hashed_message,
 				  NOTMUCH_MESSAGE_FLAG_MATCH, 1);
     }
+    _thread_move_matched_author (thread,notmuch_message_get_author(hashed_message));
 
     if ((sort == NOTMUCH_SORT_OLDEST_FIRST && date <= thread->newest) ||
 	(sort != NOTMUCH_SORT_OLDEST_FIRST && date == thread->newest))
@@ -309,6 +385,7 @@ _notmuch_thread_create (void *ctx,
     thread->authors_hash = g_hash_table_new_full (g_str_hash, g_str_equal,
 						  free, NULL);
     thread->authors = NULL;
+    thread->nonmatched_authors = NULL;
     thread->tags = g_hash_table_new_full (g_str_hash, g_str_equal,
 					  free, NULL);
 
