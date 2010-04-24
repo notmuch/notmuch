@@ -201,6 +201,9 @@ add_recipients_for_string (GMimeMessage *message,
 {
     InternetAddressList *list;
 
+    if (recipients == NULL)
+	return NULL;
+
     list = internet_address_list_parse_string (recipients);
     if (list == NULL)
 	return NULL;
@@ -214,16 +217,16 @@ add_recipients_for_string (GMimeMessage *message,
 static int
 reply_to_header_is_redundant (notmuch_message_t *message)
 {
-    const char *header, *addr;
+    const char *reply_to, *to, *cc, *addr;
     InternetAddressList *list;
     InternetAddress *address;
     InternetAddressMailbox *mailbox;
 
-    header = notmuch_message_get_header (message, "reply-to");
-    if (*header == '\0')
+    reply_to = notmuch_message_get_header (message, "reply-to");
+    if (reply_to == NULL || *reply_to == '\0')
 	return 0;
 
-    list = internet_address_list_parse_string (header);
+    list = internet_address_list_parse_string (reply_to);
 
     if (internet_address_list_length (list) != 1)
 	return 0;
@@ -235,8 +238,11 @@ reply_to_header_is_redundant (notmuch_message_t *message)
     mailbox = INTERNET_ADDRESS_MAILBOX (address);
     addr = internet_address_mailbox_get_addr (mailbox);
 
-    if (strstr (notmuch_message_get_header (message, "to"), addr) != 0 ||
-	strstr (notmuch_message_get_header (message, "cc"), addr) != 0)
+    to = notmuch_message_get_header (message, "to");
+    cc = notmuch_message_get_header (message, "cc");
+
+    if ((to && strstr (to, addr) != 0) ||
+	(cc && strstr (cc, addr) != 0))
     {
 	return 1;
     }
@@ -314,6 +320,9 @@ guess_from_received_header (notmuch_config_t *config, notmuch_message_t *message
     size_t i,other_len;
 
     received = notmuch_message_get_header (message, "received");
+    if (received == NULL)
+	return NULL;
+
     by = strstr (received, " by ");
     if (by && *(by+4)) {
 	/* sadly, the format of Received: headers is a bit inconsistent,
@@ -387,9 +396,11 @@ notmuch_reply_format_default(void *ctx, notmuch_config_t *config, notmuch_query_
 	}
 
 	subject = notmuch_message_get_header (message, "subject");
-	if (strncasecmp (subject, "Re:", 3))
-	    subject = talloc_asprintf (ctx, "Re: %s", subject);
-	g_mime_message_set_subject (reply, subject);
+	if (subject) {
+	    if (strncasecmp (subject, "Re:", 3))
+		subject = talloc_asprintf (ctx, "Re: %s", subject);
+	    g_mime_message_set_subject (reply, subject);
+	}
 
 	from_addr = add_recipients_from_message (reply, config, message);
 
