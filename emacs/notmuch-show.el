@@ -42,7 +42,7 @@
 that if this order is changed the headers shown when a message is
 collapsed will change.")
 
-(defcustom notmuch-show-headers-visible nil
+(defcustom notmuch-show-headers-visible t
   "Should the headers be visible by default?"
   :group 'notmuch
   :type 'boolean)
