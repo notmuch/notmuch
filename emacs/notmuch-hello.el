@@ -60,7 +60,7 @@
   :type 'color
   :group 'notmuch)
 
-(defcustom notmuch-hello-jump-to-search nil
+(defcustom notmuch-hello-jump-to-search t
   "Whether `notmuch-hello' should always jump to the search
 field."
   :type 'boolean
