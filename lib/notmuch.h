@@ -506,6 +506,9 @@ notmuch_threads_destroy (notmuch_threads_t *threads);
  *
  * This function performs a search and returns Xapian's best
  * guess as to number of matching messages.
+ *
+ * If a Xapian exception occurs, this function may return 0 (after
+ * printing a message).
  */
 unsigned
 notmuch_query_count_messages (notmuch_query_t *query);
