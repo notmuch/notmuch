@@ -37,13 +37,24 @@
 (declare-function notmuch-select-tag-with-completion "notmuch" (prompt &rest search-terms))
 (declare-function notmuch-search-show-thread "notmuch" nil)
 
-(defvar notmuch-show-headers '("Subject" "To" "Cc" "From" "Date")
-  "Headers that should be shown in a message, in this order. Note
-that if this order is changed the headers shown when a message is
-collapsed will change.")
+(defcustom notmuch-show-headers '("Subject" "To" "Cc" "From" "Date")
+  "Headers that should be shown in a message, in this order.
+
+For an open message, all of these headers will be made visible
+according to `notmuch-show-headers-visible' or can be toggled
+with `notmuch-show-toggle-headers'. For a closed message, only
+the first header in the list will be visible."
+  :group 'notmuch
+  :type '(repeat string))
 
 (defcustom notmuch-show-headers-visible t
-  "Should the headers be visible by default?"
+  "Should the headers be visible by default?
+
+If this value is non-nil, then all of the headers defined in
+`notmuch-show-headers' will be visible by default in the display
+of each message. Otherwise, these headers will be hidden and
+`notmuch-show-toggle-headers' can be used to make the visible for
+any given message."
   :group 'notmuch
   :type 'boolean)
 
