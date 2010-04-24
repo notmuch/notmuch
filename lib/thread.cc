@@ -128,21 +128,9 @@ _thread_add_message (notmuch_thread_t *thread,
 }
 
 static void
-_thread_add_matched_message (notmuch_thread_t *thread,
-			     notmuch_message_t *message,
-			     notmuch_sort_t sort)
+_thread_set_subject_from_message (notmuch_thread_t *thread,
+				  notmuch_message_t *message)
 {
-    time_t date;
-    notmuch_message_t *hashed_message;
-
-    date = notmuch_message_get_date (message);
-
-    if (date < thread->oldest || ! thread->matched_messages)
-	thread->oldest = date;
-
-    if (date > thread->newest || ! thread->matched_messages)
-	thread->newest = date;
-
     const char *subject;
     const char *cleaned_subject;
 
@@ -160,10 +148,27 @@ _thread_add_matched_message (notmuch_thread_t *thread,
 	cleaned_subject = talloc_strdup (thread, subject);
     }
 
-    if ((sort == NOTMUCH_SORT_OLDEST_FIRST && date <= thread->newest) ||
-	(sort != NOTMUCH_SORT_OLDEST_FIRST && date == thread->newest)) {
-	thread->subject = talloc_strdup (thread, cleaned_subject);
-    }
+    if (thread->subject)
+	talloc_free (thread->subject);
+
+    thread->subject = talloc_strdup (thread, cleaned_subject);
+}
+
+static void
+_thread_add_matched_message (notmuch_thread_t *thread,
+			     notmuch_message_t *message,
+			     notmuch_sort_t sort)
+{
+    time_t date;
+    notmuch_message_t *hashed_message;
+
+    date = notmuch_message_get_date (message);
+
+    if (date < thread->oldest || ! thread->matched_messages)
+	thread->oldest = date;
+
+    if (date > thread->newest || ! thread->matched_messages)
+	thread->newest = date;
 
     thread->matched_messages++;
 
@@ -172,6 +177,12 @@ _thread_add_matched_message (notmuch_thread_t *thread,
 			    (void **) &hashed_message)) {
 	notmuch_message_set_flag (hashed_message,
 				  NOTMUCH_MESSAGE_FLAG_MATCH, 1);
+    }
+
+    if ((sort == NOTMUCH_SORT_OLDEST_FIRST && date <= thread->newest) ||
+	(sort != NOTMUCH_SORT_OLDEST_FIRST && date == thread->newest))
+    {
+	_thread_set_subject_from_message (thread, message);
     }
 }
 
