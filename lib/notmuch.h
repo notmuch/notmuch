@@ -439,6 +439,8 @@ notmuch_query_search_threads (notmuch_query_t *query);
  * notmuch_messages_t object. (For consistency, we do provide a
  * notmuch_messages_destroy function, but there's no good
  * reason to call it if the query is about to be destroyed).
+ *
+ * If a Xapian exception occurs this function will return NULL.
  */
 notmuch_messages_t *
 notmuch_query_search_messages (notmuch_query_t *query);

@@ -163,14 +163,16 @@ notmuch_query_search_messages (notmuch_query_t *query)
 	messages->iterator = mset.begin ();
 	messages->iterator_end = mset.end ();
 
+	return &messages->base;
+
     } catch (const Xapian::Error &error) {
 	fprintf (stderr, "A Xapian exception occurred performing query: %s\n",
 		 error.get_msg().c_str());
 	fprintf (stderr, "Query string was: %s\n", query->query_string);
 	notmuch->exception_reported = TRUE;
+	talloc_free (messages);
+	return NULL;
     }
-
-    return &messages->base;
 }
 
 notmuch_bool_t
