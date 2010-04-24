@@ -84,7 +84,7 @@ _thread_add_message (notmuch_thread_t *thread,
 {
     notmuch_tags_t *tags;
     const char *tag;
-    InternetAddressList *list;
+    InternetAddressList *list = NULL;
     InternetAddress *address;
     const char *from, *author;
 
@@ -97,7 +97,9 @@ _thread_add_message (notmuch_thread_t *thread,
 			 message);
 
     from = notmuch_message_get_header (message, "from");
-    list = internet_address_list_parse_string (from);
+    if (from)
+	list = internet_address_list_parse_string (from);
+
     if (list) {
 	address = internet_address_list_get_address (list, 0);
 	if (address) {
@@ -115,7 +117,7 @@ _thread_add_message (notmuch_thread_t *thread,
     if (! thread->subject) {
 	const char *subject;
 	subject = notmuch_message_get_header (message, "subject");
-	thread->subject = talloc_strdup (thread, subject);
+	thread->subject = talloc_strdup (thread, subject ? subject : "");
     }
 
     for (tags = notmuch_message_get_tags (message);
@@ -135,6 +137,8 @@ _thread_set_subject_from_message (notmuch_thread_t *thread,
     const char *cleaned_subject;
 
     subject = notmuch_message_get_header (message, "subject");
+    if (! subject)
+	return;
 
     if ((strncasecmp (subject, "Re: ", 4) == 0) ||
 	(strncasecmp (subject, "Aw: ", 4) == 0) ||
