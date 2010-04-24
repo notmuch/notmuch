@@ -341,13 +341,20 @@ notmuch_database_find_message (notmuch_database_t *notmuch,
     notmuch_private_status_t status;
     unsigned int doc_id;
 
-    status = _notmuch_database_find_unique_doc_id (notmuch, "id",
-						   message_id, &doc_id);
+    try {
+	status = _notmuch_database_find_unique_doc_id (notmuch, "id",
+						       message_id, &doc_id);
 
-    if (status == NOTMUCH_PRIVATE_STATUS_NO_DOCUMENT_FOUND)
+	if (status == NOTMUCH_PRIVATE_STATUS_NO_DOCUMENT_FOUND)
+	    return NULL;
+
+	return _notmuch_message_create (notmuch, notmuch, doc_id, NULL);
+    } catch (const Xapian::Error &error) {
+	fprintf (stderr, "A Xapian exception occurred finding message: %s.\n",
+		 error.get_msg().c_str());
+	notmuch->exception_reported = TRUE;
 	return NULL;
-
-    return _notmuch_message_create (notmuch, notmuch, doc_id, NULL);
+    }
 }
 
 /* Advance 'str' past any whitespace or RFC 822 comments. A comment is
@@ -1152,7 +1159,14 @@ notmuch_database_get_directory (notmuch_database_t *notmuch,
 {
     notmuch_status_t status;
 
-    return _notmuch_directory_create (notmuch, path, &status);
+    try {
+	return _notmuch_directory_create (notmuch, path, &status);
+    } catch (const Xapian::Error &error) {
+	fprintf (stderr, "A Xapian exception occurred getting directory: %s.\n",
+		 error.get_msg().c_str());
+	notmuch->exception_reported = TRUE;
+	return NULL;
+    }
 }
 
 static const char *
@@ -1591,7 +1605,7 @@ notmuch_database_add_message (notmuch_database_t *notmuch,
 	_notmuch_message_sync (message);
     } catch (const Xapian::Error &error) {
 	fprintf (stderr, "A Xapian exception occurred adding message: %s.\n",
-		 error.get_description().c_str());
+		 error.get_msg().c_str());
 	notmuch->exception_reported = TRUE;
 	ret = NOTMUCH_STATUS_XAPIAN_EXCEPTION;
 	goto DONE;
@@ -1616,7 +1630,7 @@ notmuch_database_remove_message (notmuch_database_t *notmuch,
 				 const char *filename)
 {
     Xapian::WritableDatabase *db;
-    void *local = talloc_new (notmuch);
+    void *local;
     const char *prefix = _find_prefix ("file-direntry");
     char *direntry, *term;
     Xapian::PostingIterator i, end;
@@ -1627,37 +1641,47 @@ notmuch_database_remove_message (notmuch_database_t *notmuch,
     if (status)
 	return status;
 
+    local = talloc_new (notmuch);
+
     db = static_cast <Xapian::WritableDatabase *> (notmuch->xapian_db);
 
-    status = _notmuch_database_filename_to_direntry (local, notmuch,
-						     filename, &direntry);
-    if (status)
-	return status;
+    try {
 
-    term = talloc_asprintf (notmuch, "%s%s", prefix, direntry);
+	status = _notmuch_database_filename_to_direntry (local, notmuch,
+							 filename, &direntry);
+	if (status)
+	    return status;
 
-    find_doc_ids_for_term (notmuch, term, &i, &end);
+	term = talloc_asprintf (notmuch, "%s%s", prefix, direntry);
 
-    for ( ; i != end; i++) {
-	Xapian::TermIterator j;
+	find_doc_ids_for_term (notmuch, term, &i, &end);
 
-	document = find_document_for_doc_id (notmuch, *i);
+	for ( ; i != end; i++) {
+	    Xapian::TermIterator j;
 
-	document.remove_term (term);
+	    document = find_document_for_doc_id (notmuch, *i);
 
-	j = document.termlist_begin ();
-	j.skip_to (prefix);
+	    document.remove_term (term);
 
-	/* Was this the last file-direntry in the message? */
-	if (j == document.termlist_end () ||
-	    strncmp ((*j).c_str (), prefix, strlen (prefix)))
-	{
-	    db->delete_document (document.get_docid ());
-	    status = NOTMUCH_STATUS_SUCCESS;
-	} else {
-	    db->replace_document (document.get_docid (), document);
-	    status = NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID;
+	    j = document.termlist_begin ();
+	    j.skip_to (prefix);
+
+	    /* Was this the last file-direntry in the message? */
+	    if (j == document.termlist_end () ||
+		strncmp ((*j).c_str (), prefix, strlen (prefix)))
+	    {
+		db->delete_document (document.get_docid ());
+		status = NOTMUCH_STATUS_SUCCESS;
+	    } else {
+		db->replace_document (document.get_docid (), document);
+		status = NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID;
+	    }
 	}
+    } catch (const Xapian::Error &error) {
+	fprintf (stderr, "Error: A Xapian exception occurred removing message: %s\n",
+		 error.get_msg().c_str());
+	notmuch->exception_reported = TRUE;
+	status = NOTMUCH_STATUS_XAPIAN_EXCEPTION;
     }
 
     talloc_free (local);
@@ -1703,7 +1727,15 @@ notmuch_tags_t *
 notmuch_database_get_all_tags (notmuch_database_t *db)
 {
     Xapian::TermIterator i, end;
-    i = db->xapian_db->allterms_begin();
-    end = db->xapian_db->allterms_end();
-    return _notmuch_convert_tags(db, i, end);
+
+    try {
+	i = db->xapian_db->allterms_begin();
+	end = db->xapian_db->allterms_end();
+	return _notmuch_convert_tags(db, i, end);
+    } catch (const Xapian::Error &error) {
+	fprintf (stderr, "A Xapian exception occurred getting tags: %s.\n",
+		 error.get_msg().c_str());
+	db->exception_reported = TRUE;
+	return NULL;
+    }
 }

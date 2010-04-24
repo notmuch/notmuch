@@ -219,6 +219,8 @@ notmuch_database_upgrade (notmuch_database_t *database,
  * Here, 'path' should be a path relative to the path of 'database'
  * (see notmuch_database_get_path), or else should be an absolute path
  * with initial components that match the path of 'database'.
+ *
+ * Can return NULL if a Xapian exception occurs.
  */
 notmuch_directory_t *
 notmuch_database_get_directory (notmuch_database_t *database,
@@ -245,6 +247,9 @@ notmuch_database_get_directory (notmuch_database_t *database,
  * Return value:
  *
  * NOTMUCH_STATUS_SUCCESS: Message successfully added to database.
+ *
+ * NOTMUCH_STATUS_XAPIAN_EXCEPTION: A Xapian exception occurred,
+ *	message not added.
  *
  * NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID: Message has the same message
  *	ID as another message already in the database. The new
@@ -280,6 +285,9 @@ notmuch_database_add_message (notmuch_database_t *database,
  * NOTMUCH_STATUS_SUCCESS: The last filename was removed and the
  *	message was removed from the database.
  *
+ * NOTMUCH_STATUS_XAPIAN_EXCEPTION: A Xapian exception occurred,
+ *	message not removed.
+ *
  * NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID: This filename was removed but
  *	the message persists in the database with at least one other
  *	filename.
@@ -297,8 +305,11 @@ notmuch_database_remove_message (notmuch_database_t *database,
  * a new notmuch_message_t object is returned. The caller should call
  * notmuch_message_destroy when done with the message.
  *
- * If no message is found with the given message_id or if an
- * out-of-memory situation occurs, this function returns NULL.
+ * This function returns NULL in the following situations:
+ *
+ *	* No message is found with the given message_id
+ *	* An out-of-memory situation occurs
+ *	* A Xapian exception occurs
  */
 notmuch_message_t *
 notmuch_database_find_message (notmuch_database_t *database,
