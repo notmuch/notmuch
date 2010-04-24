@@ -1,3 +1,13 @@
+
+Visualization of author names that match a search
+
+  When notmuch displays threads as the result of a search, it now
+  lists the authors that match the search before listing the other
+  authors in the thread. It inserts a pipe '|' symbol between the last
+  matching and first non-matching author. This is especially useful in
+  a search that includes tag:unread. Now the authors of the unread
+  messages in the thread are listed first.
+
 Notmuch 0.2 (2010-04-16)
 ========================
 This is the second release of the notmuch mail system, with actual
