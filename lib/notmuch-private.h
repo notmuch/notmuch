@@ -275,6 +275,16 @@ _notmuch_message_talloc_copy_data (notmuch_message_t *message);
 void
 _notmuch_message_clear_data (notmuch_message_t *message);
 
+/* Set the author member of 'message' - this is the representation used
+ * when displaying the message */
+void
+notmuch_message_set_author (notmuch_message_t *message, const char *author);
+
+/* Get the author member of 'message' */
+const char *
+notmuch_message_get_author (notmuch_message_t *message);
+
+
 /* index.cc */
 
 notmuch_status_t

@@ -35,6 +35,7 @@ struct _notmuch_message {
     char *thread_id;
     char *in_reply_to;
     char *filename;
+    char *author;
     notmuch_message_file_t *message_file;
     notmuch_message_list_t *replies;
     unsigned long flags;
@@ -110,6 +111,7 @@ _notmuch_message_create (const void *talloc_owner,
     message->in_reply_to = NULL;
     message->filename = NULL;
     message->message_file = NULL;
+    message->author = NULL;
 
     message->replies = _notmuch_message_list_create (message);
     if (unlikely (message->replies == NULL)) {
@@ -531,6 +533,22 @@ notmuch_message_get_tags (notmuch_message_t *message)
     i = message->doc.termlist_begin();
     end = message->doc.termlist_end();
     return _notmuch_convert_tags(message, i, end);
+}
+
+const char *
+notmuch_message_get_author (notmuch_message_t *message)
+{
+    return message->author;
+}
+
+void
+notmuch_message_set_author (notmuch_message_t *message,
+			    const char *author)
+{
+    if (message->author)
+	talloc_free(message->author);
+    message->author = talloc_strdup(message, author);
+    return;
 }
 
 void
