@@ -77,7 +77,9 @@ Additional options are accepted for compatibility with other
 configure-script calling conventions, but don't do anything yet:
 
 	--build=<cpu>-<vendor>-<os>	Currently ignored
+	--host=<cpu>-<vendor>-<os>	Currently ignored
 	--infodir=DIR			Currently ignored
+	--datadir=DIR			Currently ignored
 	--localstatedir=DIR		Currently ignored
 	--libexecdir=DIR		Currently ignored
 	--disable-maintainer-mode	Currently ignored
@@ -119,7 +121,25 @@ for option; do
 	build_option=${build_option#*-}
 	build_vendor=${build_option%%-*}
 	build_os=${build_option#*-}
+    elif [ "${option%%=*}" = '--host' ] ; then
+	host_option="${option#*=}"
+	case ${host_option} in
+	    *-*-*) ;;
+	    *)
+		echo "Unrecognized value for --host option: ${host_option}"
+		echo "Should be: <cpu>-<vendor>-<os>"
+		echo "See:"
+		echo "	$0 --help"
+		echo ""
+		exit 1
+	esac
+	host_cpu=${host_option%%-*}
+	host_option=${host_option#*-}
+	host_vendor=${host_option%%-*}
+	host_os=${host_option#*-}
     elif [ "${option%%=*}" = '--infodir' ] ; then
+	true
+    elif [ "${option%%=*}" = '--datadir' ] ; then
 	true
     elif [ "${option%%=*}" = '--localstatedir' ] ; then
 	true
