@@ -871,6 +871,33 @@ printf " Searching returns all three messages in one thread..."
 output=$($NOTMUCH search foo | notmuch_search_sanitize)
 pass_if_equal "$output" "thread:XXX   2000-01-01 [3/3] Notmuch Test Suite; brokenthreadtest (inbox unread)"
 
+printf "\nTesting author reordering;\n"
+printf " Adding parent message...\t\t\t"
+generate_message [body]=findme [id]=new-parent-id [subject]=author-reorder-threadtest '[from]="User <user@example.com>"' '[date]="Sat, 01 Jan 2000 12:00:00 -0000"'
+output=$(NOTMUCH_NEW)
+pass_if_equal "$output" "Added 1 new message to the database."
+printf " Adding initial child message...\t\t"
+generate_message [body]=findme '[in-reply-to]=\<new-parent-id\>' [subject]=author-reorder-threadtest '[from]="User1 <user1@example.com>"' '[date]="Sat, 01 Jan 2000 12:00:00 -0000"'
+output=$(NOTMUCH_NEW)
+pass_if_equal "$output" "Added 1 new message to the database."
+printf " Adding second child message...\t\t\t"
+generate_message [body]=findme '[in-reply-to]=\<new-parent-id\>' [subject]=author-reorder-threadtest '[from]="User2 <user2@example.com>"' '[date]="Sat, 01 Jan 2000 12:00:00 -0000"'
+output=$(NOTMUCH_NEW)
+pass_if_equal "$output" "Added 1 new message to the database."
+printf " Searching when all three messages match...\t"
+output=$($NOTMUCH search findme | notmuch_search_sanitize)
+pass_if_equal "$output" "thread:XXX   2000-01-01 [3/3] User, User1, User2; author-reorder-threadtest (inbox unread)"
+printf " Searching when two messages match...\t\t"
+output=$($NOTMUCH search User1 or User2 | notmuch_search_sanitize)
+pass_if_equal "$output" "thread:XXX   2000-01-01 [2/3] User1, User2| User; author-reorder-threadtest (inbox unread)"
+printf " Searching when only one message matches...\t"
+output=$($NOTMUCH search User2 | notmuch_search_sanitize)
+pass_if_equal "$output" "thread:XXX   2000-01-01 [1/3] User2| User, User1; author-reorder-threadtest (inbox unread)"
+printf " Searching when only first message matches...\t"
+output=$($NOTMUCH search User | notmuch_search_sanitize)
+pass_if_equal "$output" "thread:XXX   2000-01-01 [1/3] User| User1, User2; author-reorder-threadtest (inbox unread)"
+
+printf "\nTesting From line heuristics;\n"
 printf " Magic from guessing (nothing to go on)...\t"
 add_message '[from]="Sender <sender@example.com>"' \
              [to]=mailinglist@notmuchmail.org \
@@ -968,7 +995,6 @@ References: <${gen_msg_id}>
 
 On Tue, 05 Jan 2010 15:43:56 -0800, Sender <sender@example.com> wrote:
 > from guessing test"
-
 
 echo ""
 echo "Notmuch test suite complete."
