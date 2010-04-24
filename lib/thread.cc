@@ -147,6 +147,51 @@ _thread_move_matched_author (notmuch_thread_t *thread,
     return;
 }
 
+/* clean up the uggly "Lastname, Firstname" format that some mail systems
+ * (most notably, Exchange) are creating to be "Firstname Lastname"
+ * To make sure that we don't change other potential situations where a
+ * comma is in the name, we check that we match one of these patterns
+ * "Last, First" <first.last@company.com>
+ * "Last, First MI" <first.mi.last@company.com>
+ */
+char *
+_thread_cleanup_author (notmuch_thread_t *thread,
+			const char *author, const char *from)
+{
+    char *clean_author,*test_author;
+    const char *comma;
+    char *blank;
+    int fname,lname;
+
+    clean_author = talloc_strdup(thread, author);
+    if (clean_author == NULL)
+	return NULL;
+    comma = strchr(author,',');
+    if (comma) {
+	/* let's assemble what we think is the correct name */
+	lname = comma - author;
+	fname = strlen(author) - lname - 2;
+	strncpy(clean_author, comma + 2, fname);
+	*(clean_author+fname) = ' ';
+	strncpy(clean_author + fname + 1, author, lname);
+	*(clean_author+fname+1+lname) = '\0';
+	/* make a temporary copy and see if it matches the email */
+	test_author = talloc_strdup(thread,clean_author);
+
+	blank=strchr(test_author,' ');
+	while (blank != NULL) {
+	    *blank = '.';
+	    blank=strchr(test_author,' ');
+	}
+	if (strcasestr(from, test_author) == NULL)
+	    /* we didn't identify this as part of the email address
+	    * so let's punt and return the original author */
+	    strcpy (clean_author, author);
+
+    }
+    return clean_author;
+}
+
 /* Add 'message' as a message that belongs to 'thread'.
  *
  * The 'thread' will talloc_steal the 'message' and hold onto a
@@ -161,6 +206,7 @@ _thread_add_message (notmuch_thread_t *thread,
     InternetAddressList *list = NULL;
     InternetAddress *address;
     const char *from, *author;
+    char *clean_author;
 
     _notmuch_message_list_add_message (thread->message_list,
 				       talloc_steal (thread, message));
@@ -183,8 +229,9 @@ _thread_add_message (notmuch_thread_t *thread,
 		mailbox = INTERNET_ADDRESS_MAILBOX (address);
 		author = internet_address_mailbox_get_addr (mailbox);
 	    }
-	    _thread_add_author (thread, author);
-	    notmuch_message_set_author (message, author);
+	    clean_author = _thread_cleanup_author (thread, author, from);
+	    _thread_add_author (thread, clean_author);
+	    notmuch_message_set_author (message, clean_author);
 	}
 	g_object_unref (G_OBJECT (list));
     }
