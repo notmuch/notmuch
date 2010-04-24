@@ -37,21 +37,21 @@
 (declare-function notmuch-select-tag-with-completion "notmuch" (prompt &rest search-terms))
 (declare-function notmuch-search-show-thread "notmuch" nil)
 
-(defcustom notmuch-show-headers '("Subject" "To" "Cc" "Date")
+(defcustom notmuch-message-headers '("Subject" "To" "Cc" "Date")
   "Headers that should be shown in a message, in this order.
 
 For an open message, all of these headers will be made visible
-according to `notmuch-show-headers-visible' or can be toggled
+according to `notmuch-message-headers-visible' or can be toggled
 with `notmuch-show-toggle-headers'. For a closed message, only
 the first header in the list will be visible."
   :group 'notmuch
   :type '(repeat string))
 
-(defcustom notmuch-show-headers-visible t
+(defcustom notmuch-message-headers-visible t
   "Should the headers be visible by default?
 
 If this value is non-nil, then all of the headers defined in
-`notmuch-show-headers' will be visible by default in the display
+`notmuch-message-headers' will be visible by default in the display
 of each message. Otherwise, these headers will be hidden and
 `notmuch-show-toggle-headers' can be used to make the visible for
 any given message."
@@ -60,7 +60,7 @@ any given message."
 
 (defvar notmuch-show-markup-headers-hook '(notmuch-show-colour-headers)
   "A list of functions called to decorate the headers listed in
-`notmuch-show-headers'.")
+`notmuch-message-headers'.")
 
 (defvar notmuch-show-hook '(notmuch-show-pretty-hook)
   "A list of functions called after populating a
@@ -214,7 +214,7 @@ message at DEPTH in the current thread."
 	       (if (and header-value
 			(not (string-equal "" header-value)))
 		   (notmuch-show-insert-header header header-value))))
-	  notmuch-show-headers)
+	  notmuch-message-headers)
     (save-excursion
       (save-restriction
 	(narrow-to-region start (point-max))
@@ -433,7 +433,7 @@ current buffer, if possible."
     (notmuch-show-set-message-properties msg)
 
     ;; Set header visibility.
-    (notmuch-show-headers-visible msg notmuch-show-headers-visible)
+    (notmuch-show-headers-visible msg notmuch-message-headers-visible)
 
     ;; Message visibility depends on whether it matched the search
     ;; criteria.
