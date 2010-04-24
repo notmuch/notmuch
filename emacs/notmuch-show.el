@@ -37,7 +37,7 @@
 (declare-function notmuch-select-tag-with-completion "notmuch" (prompt &rest search-terms))
 (declare-function notmuch-search-show-thread "notmuch" nil)
 
-(defcustom notmuch-show-headers '("Subject" "To" "Cc" "From" "Date")
+(defcustom notmuch-show-headers '("Subject" "To" "Cc" "Date")
   "Headers that should be shown in a message, in this order.
 
 For an open message, all of these headers will be made visible
