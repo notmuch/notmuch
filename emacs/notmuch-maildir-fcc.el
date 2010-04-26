@@ -52,7 +52,7 @@
 (defun notmuch-maildir-fcc-make-uniq-maildir-id ()
    (let* ((ct (current-time))
 	  (timeid (+ (* (car ct) 65536) (cadr ct)))
-	  (microseconds (caddr ct))
+	  (microseconds (car (cdr (cdr ct))))
 	  (hostname (notmuch-maildir-fcc-host-fixer system-name)))
      (setq notmuch-maildir-fcc-count (+ notmuch-maildir-fcc-count 1))
      (format "%d.%d_%d_%d.%s"
@@ -97,7 +97,7 @@ non-nil, it will write it to cur/, and mark it as read. It should
 return t if successful, and nil otherwise."
   (let ((orig-buffer (buffer-name)))
     (with-temp-buffer
-      (insert-buffer orig-buffer)
+      (insert-buffer-substring orig-buffer)
       (catch 'link-error
 	(let ((msg-id (notmuch-maildir-fcc-save-buffer-to-tmp destdir)))
 	  (when msg-id
