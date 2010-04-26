@@ -266,20 +266,26 @@ diagonal."
 		   "clear")
     (widget-insert "\n\n")
     (let ((start (point))
-	  (key 0))
+	  (nth 0))
       (mapc '(lambda (search)
-	       (widget-insert (format "%2d: " key))
-	       (let ((widget-symbol (intern (format "notmuch-hello-search-%d" key))))
+	       (let ((widget-symbol (intern (format "notmuch-hello-search-%d" nth))))
 		 (set widget-symbol
 		      (widget-create 'editable-field
-				     ;; Leave some space at the start
-				     ;; and end of the search boxes. 4
-				     ;; for the accelerator key. 1 for
-				     ;; the space before the `save'
-				     ;; button. 6 for the `save'
-				     ;; button.
-				     :size (max 8 (- (window-width) (* 2 notmuch-hello-indent)
-						     4 1 6))
+				     ;; Don't let the search boxes be
+				     ;; less than 8 characters wide.
+				     :size (max 8
+						(- (window-width)
+						   ;; Leave some space
+						   ;; at the start and
+						   ;; end of the
+						   ;; boxes.
+						   (* 2 notmuch-hello-indent)
+						   ;; 1 for the space
+						   ;; before the
+						   ;; `[save]' button. 6
+						   ;; for the `[save]'
+						   ;; button.
+						   1 6))
 				     :action (lambda (widget &rest ignore)
 					       (notmuch-hello-search (widget-value widget)))
 				     search))
@@ -290,7 +296,7 @@ diagonal."
 				:notmuch-saved-search-widget widget-symbol
 				"save"))
 	       (widget-insert "\n")
-	       (setq key (1+ key)))
+	       (setq nth (1+ nth)))
 	    notmuch-hello-recent-searches)
       (indent-rigidly start (point) notmuch-hello-indent)))
 
@@ -329,12 +335,6 @@ diagonal."
     (widget-insert "Type a search query and hit RET to view matching threads.\n")
     (when notmuch-hello-recent-searches
       (widget-insert "Hit RET to re-submit a previous search. Edit it first if you like.\n")
-      (let ((searches (length notmuch-hello-recent-searches)))
-	(widget-insert
-	 (if (eq 1 searches)
-	     "Key 0 acts as an accelerator for the previous query.\n"
-	   (format "Keys 0-%d act as accelerators for the previous queries.\n"
-		   (- searches 1)))))
       (widget-insert "Save recent searches with the `save' button.\n"))
     (when notmuch-hello-saved-searches
       (widget-insert "Edit saved searches with the `edit' button.\n"))
@@ -351,14 +351,6 @@ diagonal."
   (local-set-key "v" '(lambda () (interactive)
 			(message "notmuch version %s" (notmuch-version))))
 
-  (loop for key from 0 to (- (length notmuch-hello-recent-searches) 1)
-	do (let ((widget-symbol (intern (format "notmuch-hello-search-%d" key))))
-	     (local-set-key (number-to-string key)
-			    `(lambda ()
-			       (interactive)
-			       (notmuch-search (widget-value ,widget-symbol)
-					       notmuch-search-oldest-first
-					       nil nil #'notmuch-hello-search-continuation)))))
   (widget-setup)
 
   (if notmuch-hello-jump-to-search
