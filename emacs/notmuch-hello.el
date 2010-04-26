@@ -55,9 +55,14 @@
   :type 'boolean
   :group 'notmuch)
 
-(defcustom notmuch-hello-logo-background "#5f5f5f"
+(defface notmuch-hello-logo-background
+  '((((class color)
+      (background dark))
+     (:background "#5f5f5f"))
+    (((class color)
+      (background light))
+     (:background "white")))
   "Background colour for the notmuch logo."
-  :type 'color
   :group 'notmuch)
 
 (defcustom notmuch-hello-jump-to-search t
@@ -209,12 +214,16 @@ diagonal."
 
   (when notmuch-hello-show-logo
     (let ((image notmuch-hello-logo))
-      ;; dme: Sorry, I don't know any other way to achieve this :-( The
-      ;; notmuch logo uses transparency. That works out badly when
-      ;; inserting the image into an emacs buffer, so force the
-      ;; background colour of the image.
-      (setq image (cons 'image (append (cdr image)
-				       `(:background ,notmuch-hello-logo-background))))
+      ;; The notmuch logo uses transparency. That can display poorly
+      ;; when inserting the image into an emacs buffer (black logo on
+      ;; a black background), so force the background colour of the
+      ;; image. We use a face to represent the colour so that
+      ;; `defface' can be used to declare the different possible
+      ;; colours, which depend on whether the frame has a light or
+      ;; dark background.
+      (setq image (cons 'image
+			(append (cdr image)
+				(list :background (face-background 'notmuch-hello-logo-background)))))
       (insert-image image))
     (widget-insert "  "))
 
