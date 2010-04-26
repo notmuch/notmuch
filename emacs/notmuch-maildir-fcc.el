@@ -111,8 +111,8 @@ if successful, nil if not."
 	   (write-file (concat destdir "/tmp/" msg-id))
 	   msg-id)
 	  (t
-	   (message (format "Can't write to %s. Not a maildir."
-		     destdir))
+	   (error (format "Can't write to %s. Not a maildir."
+			  destdir))
 	   nil))))
 
 (defun notmuch-maildir-fcc-move-tmp-to-new (destdir msg-id)
