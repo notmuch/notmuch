@@ -53,9 +53,11 @@ line."
 	 (orig (buffer-substring-no-properties beg end))
 	 (completion-ignore-case t)
 	 (options (notmuch-address-options orig))
-	 (chosen (if (eq (length options) 1)
+	 (num-options (length options))
+	 (chosen (if (eq num-options 1)
 		     (car options)
-		   (completing-read "Address: " (cdr options) nil nil (car options)
+		   (completing-read (format "Address (%s matches): " num-options)
+				    (cdr options) nil nil (car options)
 				    'notmuch-address-history))))
     (when chosen
       (push chosen notmuch-address-history)
