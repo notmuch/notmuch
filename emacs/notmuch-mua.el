@@ -111,6 +111,7 @@
 
   (message-mail to subject other-headers continue
 		switch-function yank-action send-actions)
+  (message-sort-headers)
   (message-hide-headers))
 
 (defun notmuch-mua-send-and-exit (&optional arg)
