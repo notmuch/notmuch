@@ -54,6 +54,7 @@
 (require 'notmuch-lib)
 (require 'notmuch-show)
 (require 'notmuch-mua)
+(require 'notmuch-hello)
 
 (defcustom notmuch-search-result-format
   `(("date" . "%s ")
@@ -221,8 +222,6 @@ For a mouse binding, return nil."
 (defvar notmuch-search-query-string)
 (defvar notmuch-search-target-thread)
 (defvar notmuch-search-target-line)
-(defvar notmuch-search-oldest-first t
-  "Show the oldest mail first in the search-mode")
 (defvar notmuch-search-continuation)
 
 (defvar notmuch-search-disjunctive-regexp      "\\<[oO][rR]\\>")
@@ -811,9 +810,9 @@ current search results AND that are tagged with the given tag."
 
 ;;;###autoload
 (defun notmuch ()
-  "Run notmuch to display all mail with tag of 'inbox'"
+  "Run notmuch and display saved searches, known tags, etc."
   (interactive)
-  (notmuch-search "tag:inbox" notmuch-search-oldest-first))
+  (notmuch-hello))
 
 (setq mail-user-agent 'notmuch-user-agent)
 

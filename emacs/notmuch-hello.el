@@ -24,7 +24,6 @@
 (require 'cl)
 
 (require 'notmuch-lib)
-(require 'notmuch)
 (require 'notmuch-mua)
 
 (declare-function notmuch-search "notmuch" (query &optional oldest-first target-thread target-line continuation))

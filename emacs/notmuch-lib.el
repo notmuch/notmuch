@@ -33,6 +33,11 @@
   :type '(alist :key-type (string) :value-type (string))
   :group 'notmuch)
 
+(defcustom notmuch-search-oldest-first t
+  "Show the oldest mail first when searching."
+  :type 'boolean
+  :group 'notmuch)
+
 ;;
 
 (defun notmuch-version ()
