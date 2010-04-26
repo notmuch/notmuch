@@ -98,11 +98,16 @@ list."
 			      collect header)))
     (message-sort-headers)
     (message-hide-headers)
+    ;; insert the message body - but put it in front of the signature
+    ;; if one is present
     (goto-char (point-max))
+    (if (re-search-backward "-- " nil t)
+	  (forward-line -1)
+      (goto-char (point-max)))
     (insert body))
-    (set-buffer-modified-p nil)
+  (set-buffer-modified-p nil)
 
-    (message-goto-body))
+  (message-goto-body))
 
 (defun notmuch-mua-forward-message ()
   (message-forward)
