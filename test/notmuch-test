@@ -1,6 +1,10 @@
 #!/bin/bash
 set -e
 
+# Messages contain time/date values with time zone and notmuch
+# displays them converted to the local time zone. We need to set fixed
+# timezone here so that the output of the tests is always the same
+# without regard to the time zone of where the test suite is run.
 export TZ=UTC+8
 
 find_notmuch_binary ()
