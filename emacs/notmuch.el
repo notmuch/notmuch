@@ -659,11 +659,6 @@ characters as well as `_.+-'.
     (apply 'notmuch-call-notmuch-process "tag"
 	   (append action-split (list notmuch-search-query-string) nil))))
 
-(defcustom notmuch-folders (quote (("inbox" . "tag:inbox") ("unread" . "tag:unread")))
-  "List of searches for the notmuch folder view"
-  :type '(alist :key-type (string) :value-type (string))
-  :group 'notmuch)
-
 (defun notmuch-search-buffer-title (query)
   "Returns the title for a buffer with notmuch search results."
   (let* ((folder (rassoc-if (lambda (key)
