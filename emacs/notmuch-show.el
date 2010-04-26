@@ -399,6 +399,22 @@ current buffer, if possible."
 	(headers-invis-spec (notmuch-show-make-symbol "header"))
 	(message-invis-spec (notmuch-show-make-symbol "message")))
 
+    ;; Set `buffer-invisibility-spec' to `nil' (a list), otherwise
+    ;; removing items from `buffer-invisibility-spec' (which is what
+    ;; `notmuch-show-headers-visible' and
+    ;; `notmuch-show-message-visible' do) is a no-op and has no
+    ;; effect. This caused threads with only matching messages to have
+    ;; those messages hidden initially because
+    ;; `buffer-invisibility-spec' stayed `t'.
+    ;;
+    ;; This needs to be set here (rather than just above the call to
+    ;; `notmuch-show-headers-visible') because some of the part
+    ;; rendering or body washing functions
+    ;; (e.g. `notmuch-wash-text/plain-citations') manipulate
+    ;; `buffer-invisibility-spec').
+    (when (eq buffer-invisibility-spec t)
+      (setq buffer-invisibility-spec nil))
+
     (setq message-start (point-marker))
 
     (notmuch-show-insert-headerline headers
