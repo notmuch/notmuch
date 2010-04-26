@@ -28,18 +28,18 @@
 ;;
 ;;     (setq message-fcc-handler-function
 ;;          '(lambda (destdir)
-;;	     (jkr/maildir-write-buffer-to-maildir destdir t)))
+;;	     (notmuch-maildir-fcc-write-buffer-to-maildir destdir t)))
 ;;
 ;; if you want Fcc'd messages to be marked as new:
 ;;
 ;;     (setq message-fcc-handler-function
 ;;          '(lambda (destdir)
-;;	     (jkr/maildir-write-buffer-to-maildir destdir nil)))
+;;	     (notmuch-maildir-fcc-write-buffer-to-maildir destdir nil)))
 
 
-(defvar jkr/maildir-count 0)
+(defvar notmuch-maildir-fcc-count 0)
 
-(defun jkr/maildir-host-fixer (hostname)
+(defun notmuch-maildir-fcc-host-fixer (hostname)
   (replace-regexp-in-string "/\\|:"
 			    '(lambda (s)
 			         (cond ((string-equal s "/") "\\057")
@@ -49,31 +49,31 @@
 			    t
 			    t))
 
-(defun jkr/maildir-make-uniq-maildir-id ()
+(defun notmuch-maildir-fcc-make-uniq-maildir-id ()
    (let* ((ct (current-time))
 	  (timeid (+ (* (car ct) 65536) (cadr ct)))
 	  (microseconds (caddr ct))
-	  (hostname (jkr/maildir-host-fixer system-name)))
-     (setq jkr/maildir-count (+ jkr/maildir-count 1))
+	  (hostname (notmuch-maildir-fcc-host-fixer system-name)))
+     (setq notmuch-maildir-fcc-count (+ notmuch-maildir-fcc-count 1))
      (format "%d.%d_%d_%d.%s"
 	     timeid
 	     (emacs-pid)
 	     microseconds
-	     jkr/maildir-count
+	     notmuch-maildir-fcc-count
 	     hostname)))
 
-(defun jkr/maildir-dir-is-maildir-p (dir)
+(defun notmuch-maildir-fcc-dir-is-maildir-p (dir)
   (and (file-exists-p (concat dir "/cur/"))
        (file-exists-p (concat dir "/new/"))
        (file-exists-p (concat dir "/tmp/"))))
 
-(defun jkr/maildir-save-buffer-to-tmp (destdir)
+(defun notmuch-maildir-fcc-save-buffer-to-tmp (destdir)
   "Returns the msg id of the message written to the temp directory
 if successful, nil if not."
-  (let ((msg-id (jkr/maildir-make-uniq-maildir-id)))
+  (let ((msg-id (notmuch-maildir-fcc-make-uniq-maildir-id)))
     (while (file-exists-p (concat destdir "/tmp/" msg-id))
-      (setq msg-id (jkr/maildir-make-uniq-maildir-id)))
-    (cond ((jkr/maildir-dir-is-maildir-p destdir)
+      (setq msg-id (notmuch-maildir-fcc-make-uniq-maildir-id)))
+    (cond ((notmuch-maildir-fcc-dir-is-maildir-p destdir)
 	   (write-file (concat destdir "/tmp/" msg-id))
 	   msg-id)
 	  (t
@@ -81,17 +81,17 @@ if successful, nil if not."
 		     destdir))
 	   nil))))
 
-(defun jkr/maildir-move-tmp-to-new (destdir msg-id)
+(defun notmuch-maildir-fcc-move-tmp-to-new (destdir msg-id)
   (add-name-to-file
    (concat destdir "/tmp/" msg-id)
    (concat destdir "/new/" msg-id ":2,")))
 
-(defun jkr/maildir-move-tmp-to-cur (destdir msg-id &optional mark-seen)
+(defun notmuch-maildir-fcc-move-tmp-to-cur (destdir msg-id &optional mark-seen)
   (add-name-to-file
    (concat destdir "/tmp/" msg-id)
    (concat destdir "/cur/" msg-id ":2," (when mark-seen "S"))))
 
-(defun jkr/maildir-write-buffer-to-maildir (destdir &optional mark-seen)
+(defun notmuch-maildir-fcc-write-buffer-to-maildir (destdir &optional mark-seen)
   "Writes the current buffer to maildir destdir. If mark-seen is
 non-nil, it will write it to cur/, and mark it as read. It should
 return t if successful, and nil otherwise."
@@ -99,17 +99,19 @@ return t if successful, and nil otherwise."
     (with-temp-buffer
       (insert-buffer orig-buffer)
       (catch 'link-error
-	(let ((msg-id (jkr/maildir-save-buffer-to-tmp destdir)))
+	(let ((msg-id (notmuch-maildir-fcc-save-buffer-to-tmp destdir)))
 	  (when msg-id
 	    (cond (mark-seen
 		   (condition-case err
-		       (jkr/maildir-move-tmp-to-cur destdir msg-id t)
+		       (notmuch-maildir-fcc-move-tmp-to-cur destdir msg-id t)
 		     (file-already-exists
 		      (throw 'link-error nil))))
 		  (t
 		   (condition-case err
-		       (jkr/maildir-move-tmp-to-new destdir msg-id)
+		       (notmuch-maildir-fcc-move-tmp-to-new destdir msg-id)
 		     (file-already-exists
 		      (throw 'link-error nil))))))
 	  (delete-file (concat destdir "/tmp/" msg-id))))
       t)))
+
+(provide 'notmuch-maildir-fcc)
