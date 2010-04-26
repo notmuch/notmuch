@@ -56,6 +56,9 @@ Change 'a' command in thread-view mode to only archive open messages.
 
 Add a binding to open all closed messages.
 
+Make all authors and subjects available to isearch, (hidden by default
+but with magic expansion while isearching).
+
 Emacs saved-search interface
 ----------------------------
 Here's a proposal Carl wrote (id:87einafy4u.fsf@yoom.home.cworth.org):
