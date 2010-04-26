@@ -59,6 +59,22 @@ Add a binding to open all closed messages.
 Make all authors and subjects available to isearch, (hidden by default
 but with magic expansion while isearching).
 
+Fix notmuch-hello as follows:
+
+	1. Change the "notmuch" and message count in the welcome sentence to
+	   not be buttons.
+
+	2. Put the saved searches (if any) before the search bar.
+
+	3. When `notmuch-hello' (or even `notmuch' when it gets its new name)
+	   is invoked directly, move to the first button, (go to point-min and
+	   then call widget-forward). That is, if the user has any saved
+	   searches, then point will be on the first one. If the user has no
+	   saved searches, then point will be on the search bar.
+
+	4. Fix refresh of notmuch-hello to leave point in the same logical
+	   place, (the same saved-search widget at least).
+
 Emacs saved-search interface
 ----------------------------
 Here's a proposal Carl wrote (id:87einafy4u.fsf@yoom.home.cworth.org):
