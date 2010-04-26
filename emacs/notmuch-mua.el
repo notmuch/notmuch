@@ -41,6 +41,12 @@
 	     notmuch-mua-user-agent-notmuch
 	     notmuch-mua-user-agent-emacs))
 
+(defcustom notmuch-mua-hidden-headers '("^User-Agent:")
+  "Headers that are added to the `message-mode' hidden headers
+list."
+  :group 'notmuch
+  :type '(repeat string))
+
 ;;
 
 (defun notmuch-mua-user-agent-full ()
@@ -56,6 +62,13 @@
 (defun notmuch-mua-user-agent-emacs ()
   "Generate a `User-Agent:' string suitable for notmuch."
   (concat "Emacs/" emacs-version " (" system-configuration ")"))
+
+(defun notmuch-mua-add-more-hidden-headers ()
+  "Add some headers to the list that are hidden by default."
+  (mapc (lambda (header)
+	  (when (not (member header 'message-hidden-headers))
+	    (push header message-hidden-headers)))
+	notmuch-mua-hidden-headers))
 
 (defun notmuch-mua-reply (query-string)
   (let (headers body)
@@ -133,6 +146,10 @@ simply runs the corresponding `message-mode' hook functions."
 (define-mail-user-agent 'notmuch-user-agent
   'notmuch-mua-mail 'notmuch-mua-send-and-exit
   'notmuch-mua-kill-buffer 'notmuch-mua-send-hook)
+
+;; Add some more headers to the list that `message-mode' hides when
+;; composing a message.
+(notmuch-mua-add-more-hidden-headers)
 
 ;;
 
