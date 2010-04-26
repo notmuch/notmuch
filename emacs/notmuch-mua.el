@@ -98,21 +98,24 @@ list."
 			      collect header)))
     (message-sort-headers)
     (message-hide-headers)
-    (save-excursion
-      (goto-char (point-max))
-      (insert body))
-    (set-buffer-modified-p nil)))
+    (goto-char (point-max))
+    (insert body))
+    (set-buffer-modified-p nil)
+
+    (message-goto-body))
 
 (defun notmuch-mua-forward-message ()
   (message-forward)
-  (save-excursion
-    (when notmuch-mua-user-agent-function
-      (let ((user-agent (funcall notmuch-mua-user-agent-function)))
-	(when (not (string= "" user-agent))
-	  (message-add-header (format "User-Agent: %s" user-agent)))))
-    (message-sort-headers)
-    (message-hide-headers))
-  (set-buffer-modified-p nil))
+
+  (when notmuch-mua-user-agent-function
+    (let ((user-agent (funcall notmuch-mua-user-agent-function)))
+      (when (not (string= "" user-agent))
+	(message-add-header (format "User-Agent: %s" user-agent)))))
+  (message-sort-headers)
+  (message-hide-headers)
+  (set-buffer-modified-p nil)
+
+  (message-goto-to))
 
 (defun notmuch-mua-mail (&optional to subject other-headers continue
 				   switch-function yank-action send-actions)
@@ -126,7 +129,10 @@ list."
   (message-mail to subject other-headers continue
 		switch-function yank-action send-actions)
   (message-sort-headers)
-  (message-hide-headers))
+  (message-hide-headers)
+  (set-buffer-modified-p nil)
+
+  (message-goto-to))
 
 (defun notmuch-mua-send-and-exit (&optional arg)
   (interactive "P")
