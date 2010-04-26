@@ -9,8 +9,7 @@ emacs_sources := \
 	$(dir)/notmuch-wash.el \
 	$(dir)/notmuch-hello.el \
 	$(dir)/notmuch-mua.el \
-	$(dir)/notmuch-address.el \
-	$(dir)/coolj.el
+	$(dir)/notmuch-address.el
 
 emacs_images := \
 	$(dir)/notmuch-logo.png

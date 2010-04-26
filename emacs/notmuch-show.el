@@ -62,33 +62,16 @@ any given message."
   "A list of functions called to decorate the headers listed in
 `notmuch-message-headers'.")
 
-(defcustom notmuch-show-hook '(notmuch-show-pretty-hook)
+(defvar notmuch-show-hook '(notmuch-show-pretty-hook)
   "A list of functions called after populating a
-`notmuch-show' buffer."
-  :group 'notmuch
-  :type 'hook
-  :options '(notmuch-show-pretty-hook
-	     notmuch-show-turn-off-word-wrap))
+`notmuch-show' buffer.")
 
-(defcustom notmuch-show-insert-text/plain-hook
-  '(notmuch-wash-tidy-citations
-    notmuch-wash-compress-blanks
-    notmuch-wash-markup-citations)
-  "A list of functions called to clean up text/plain body parts."
-  :group 'notmuch
-  :type 'hook
-  :options '(notmuch-wash-wrap-long-lines
-	     notmuch-wash-tidy-citations
-	     notmuch-wash-compress-blanks
-	     notmuch-wash-markup-citations))
+(defvar notmuch-show-insert-text/plain-hook '(notmuch-wash-text/plain-citations)
+  "A list of functions called to clean up text/plain body parts.")
 
 (defun notmuch-show-pretty-hook ()
   (goto-address-mode 1)
   (visual-line-mode))
-
-(defun notmuch-show-turn-off-word-wrap ()
-  ;; `toggle-word-wrap' outputs a message, which is distracting.
-  (setq word-wrap nil))
 
 (defmacro with-current-notmuch-show-message (&rest body)
   "Evaluate body with current buffer set to the text of current message"
