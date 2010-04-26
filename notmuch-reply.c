@@ -311,36 +311,100 @@ add_recipients_from_message (GMimeMessage *reply,
 static const char *
 guess_from_received_header (notmuch_config_t *config, notmuch_message_t *message)
 {
-    const char *received,*primary;
-    char **other;
-    char *by,*mta,*ptr,*token;
+    const char *received,*primary,*by;
+    char **other,*tohdr;
+    char *mta,*ptr,*token;
     char *domain=NULL;
     char *tld=NULL;
     const char *delim=". \t";
     size_t i,other_len;
 
+    const char *to_headers[] = {"Envelope-to", "X-Original-To"};
+
+    primary = notmuch_config_get_user_primary_email (config);
+    other = notmuch_config_get_user_other_email (config, &other_len);
+
+    /* sadly, there is no standard way to find out to which email
+     * address a mail was delivered - what is in the headers depends
+     * on the MTAs used along the way. So we are trying a number of
+     * heuristics which hopefully will answer this question.
+
+     * We only got here if none of the users email addresses are in
+     * the To: or Cc: header. From here we try the following in order:
+     * 1) check for an Envelope-to: header
+     * 2) check for an X-Original-To: header
+     * 3) check for a (for <email@add.res>) clause in Received: headers
+     * 4) check for the domain part of known email addresses in the
+     *    'by' part of Received headers
+     * If none of these work, we give up and return NULL
+     */
+    for (i = 0; i < sizeof(to_headers)/sizeof(*to_headers); i++) {
+	tohdr = xstrdup(notmuch_message_get_header (message, to_headers[i]));
+	if (tohdr && *tohdr) {
+	    /* tohdr is potentialy a list of email addresses, so here we
+	     * check if one of the email addresses is a substring of tohdr
+	     */
+	    if (strcasestr(tohdr, primary)) {
+		free(tohdr);
+		return primary;
+	    }
+	    for (i = 0; i < other_len; i++)
+		if (strcasestr (tohdr, other[i])) {
+		    free(tohdr);
+		    return other[i];
+		}
+	    free(tohdr);
+	}
+    }
+
+    /* We get the concatenated Received: headers and search from the
+     * front (last Received: header added) and try to extract from
+     * them indications to which email address this message was
+     * delivered.
+     * The Received: header is special in our get_header function
+     * and is always concated.
+     */
     received = notmuch_message_get_header (message, "received");
     if (received == NULL)
 	return NULL;
 
-    by = strstr (received, " by ");
-    if (by && *(by+4)) {
-	/* sadly, the format of Received: headers is a bit inconsistent,
-	 * depending on the MTA used. So we try to extract just the MTA
-	 * here by removing leading whitespace and assuming that the MTA
-	 * name ends at the next whitespace
-	 * we test for *(by+4) to be non-'\0' to make sure there's something
-	 * there at all - and then assume that the first whitespace delimited
-	 * token that follows is the last receiving server
+    /* First we look for a " for <email@add.res>" in the received
+     * header
+     */
+    ptr = strstr (received, " for ");
+    if (ptr) {
+	/* the text following is potentialy a list of email addresses,
+	 * so again we check if one of the email addresses is a
+	 * substring of ptr
 	 */
-	mta = strdup (by+4);
-	if (mta == NULL)
-	    return NULL;
+	if (strcasestr(ptr, primary)) {
+	    return primary;
+	}
+	for (i = 0; i < other_len; i++)
+	    if (strcasestr (ptr, other[i])) {
+		return other[i];
+	    }
+    }
+    /* Finally, we parse all the " by MTA ..." headers to guess the
+     * email address that this was originally delivered to.
+     * We extract just the MTA here by removing leading whitespace and
+     * assuming that the MTA name ends at the next whitespace.
+     * We test for *(by+4) to be non-'\0' to make sure there's
+     * something there at all - and then assume that the first
+     * whitespace delimited token that follows is the receiving
+     * system in this step of the receive chain
+     */
+    by = received;
+    while((by = strstr (by, " by ")) != NULL) {
+	by += 4;
+	if (*by == '\0')
+	    break;
+	mta = xstrdup (by);
 	token = strtok(mta," \t");
 	if (token == NULL)
-	    return NULL;
+	    break;
 	/* Now extract the last two components of the MTA host name
-	 * as domain and tld
+	 * as domain and tld.
 	 */
 	while ((ptr = strsep (&token, delim)) != NULL) {
 	    if (*ptr == '\0')
@@ -350,23 +414,24 @@ guess_from_received_header (notmuch_config_t *config, notmuch_message_t *message
 	}
 
 	if (domain) {
-	    /* recombine domain and tld and look for it among the configured
-	     * email addresses
+	    /* Recombine domain and tld and look for it among the configured
+	     * email addresses.
+	     * This time we have a known domain name and nothing else - so
+	     * the test is the other way around: we check if this is a
+	     * substring of one of the email addresses.
 	     */
 	    *(tld-1) = '.';
-	    primary = notmuch_config_get_user_primary_email (config);
-	    if (strcasestr (primary, domain)) {
-		free (mta);
-		return primary;
-	    }
-	    other = notmuch_config_get_user_other_email (config, &other_len);
-	    for (i = 0; i < other_len; i++)
-		if (strcasestr (other[i], domain)) {
-		    free (mta);
-		    return other[i];
-		}
-	}
 
+	    if (strcasestr(primary, domain)) {
+		free(mta);
+	    return primary;
+	}
+	for (i = 0; i < other_len; i++)
+	    if (strcasestr (other[i],domain)) {
+		free(mta);
+		return other[i];
+	    }
+	}
 	free (mta);
     }
 
