@@ -12,39 +12,73 @@
 ;; along with GNU Emacs; see the file COPYING.  If not, write to the
 ;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
 ;; Boston, MA 02110-1301, USA.
+;;
+;; To use this as the fcc handler for message-mode,
+;; customize the notmuch-fcc-dirs variable
 
-;; Commentary:
-;;
-;; This is the beginning of a solution for storing sent mail in a
-;; maildir in emacs message mode, presented because some people might
-;; find it useful. It is *not* fully tested, it *may* overwrite files,
-;; and any directories you point this at may no longer be there
-;; afterwards. Use at your own risk.
-;;
-;; To use this as the fcc handler for message-mode, put
-;; one of the following in your init file:
-;;
-;; if you want Fcc'd messages to be marked as read:
-;;
-;;     (setq message-fcc-handler-function
-;;          '(lambda (destdir)
-;;	     (notmuch-maildir-fcc-write-buffer-to-maildir destdir t)))
-;;
-;; if you want Fcc'd messages to be marked as new:
-;;
-;;     (setq message-fcc-handler-function
-;;          '(lambda (destdir)
-;;	     (notmuch-maildir-fcc-write-buffer-to-maildir destdir nil)))
-
+(require 'message)
 
 (defvar notmuch-maildir-fcc-count 0)
+
+(defcustom notmuch-fcc-dirs nil
+ "If set to non-nil, this will cause message mode to file (fcc) your mail in the specified directory, depending on your From address.
+
+ The first entry (a list) is used as a default fallback
+ when nothing matches. So in the easiest case notmuch-fcc-dirs is
+ just something like ((\"INBOX.Sent\"))
+
+ If you need a more fancy setup, where you want different Outboxes depending
+ on your From address, you use something like this:
+
+     (   (\"defaultinbox\")
+         (\"Sebastian Spaeth <Sebastian@SSpaeth.de>\" . \"privat\")
+         (\"Sebastian Spaeth <SSpaeth@ethz.ch>\" . \"uni\")
+     )
+
+ This will constructs a path, concatenating the content of the
+ variable 'message-directory' (a message mode variable
+ customizable via m-x
+ customize-variable<RET>message-directory<RET>) and the second
+ part in the alist."
+ :require 'notmuch-fcc-initialization
+ :group 'notmuch
+)
+
+(defun notmuch-fcc-initialization ()
+  "If notmuch-fcc-directories is set,
+   hook them into the message-fcc-handler-function"
+(if (not (eq notmuch-fcc-dirs nil)) (progn
+    ;Set up the message-fcc-handler to move mails to the maildir in Fcc
+    ;The parameter is hardcoded to mark messages as "seen"
+    (setq message-fcc-handler-function
+          '(lambda (destdir)
+             (notmuch-maildir-fcc-write-buffer-to-maildir destdir t)))
+    ;add a hook to actually insert the Fcc header when sending
+    ;(preferrably we would use message-header-setup-up, but notmuch-reply
+    ; munges headers after that is run, so it won't work for replies within
+    ; notmuch)
+    (add-hook 'message-send-hook 'notmuch-fcc-header-setup))))
+
+(defun notmuch-fcc-header-setup ()
+  "Can be added to message-send-hook and will set the FCC header
+      based on the values of notmuch-fcc-directories (see the
+      variable customization there for examples). It uses the
+      first entry as default fallback if no From address
+      matches."
+  ; only do something if notmuch-fcc-dirs is set
+  (if notmuch-fcc-dirs
+   (let ((subdir
+          (cdr (assoc-string (message-fetch-field "from") notmuch-fcc-dirs t))))
+     (if (eq subdir nil) (setq subdir (car (car notmuch-fcc-dirs))))
+     (message-remove-header "Fcc")
+     (message-add-header (concat "Fcc: " message-directory subdir)))))
 
 (defun notmuch-maildir-fcc-host-fixer (hostname)
   (replace-regexp-in-string "/\\|:"
 			    '(lambda (s)
-			         (cond ((string-equal s "/") "\\057")
-				       ((string-equal s ":") "\\072")
-				       (t s)))
+                               (cond ((string-equal s "/") "\\057")
+                                     ((string-equal s ":") "\\072")
+                                     (t s)))
 			    hostname
 			    t
 			    t))
@@ -114,4 +148,5 @@ return t if successful, and nil otherwise."
 	  (delete-file (concat destdir "/tmp/" msg-id))))
       t)))
 
+(notmuch-fcc-initialization)
 (provide 'notmuch-maildir-fcc)
