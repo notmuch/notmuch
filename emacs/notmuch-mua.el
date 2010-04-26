@@ -23,6 +23,7 @@
 (require 'message)
 
 (require 'notmuch-lib)
+(require 'notmuch-address)
 
 ;;
 
