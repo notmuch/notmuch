@@ -72,12 +72,16 @@
 	      (setq headers (mail-header-extract)))))
       (forward-line 1)
       (setq body (buffer-substring (point) (point-max))))
-    (notmuch-mua-mail (mail-header 'to headers)
-		      (mail-header 'subject headers)
-		      (loop for header in headers
-			    if (not (or (eq 'to (car header))
-					(eq 'subject (car header))))
-			    collect header))
+    (let
+	;; Overlay the composition window on that being used to read
+	;; the original message.
+	((same-window-regexps '("\\*mail .*")))
+      (notmuch-mua-mail (mail-header 'to headers)
+			(mail-header 'subject headers)
+			(loop for header in headers
+			      if (not (or (eq 'to (car header))
+					  (eq 'subject (car header))))
+			      collect header)))
     (message-sort-headers)
     (message-hide-headers)
     (save-excursion
