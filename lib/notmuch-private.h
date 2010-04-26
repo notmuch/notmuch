@@ -344,6 +344,9 @@ notmuch_message_file_restrict_headersv (notmuch_message_file_t *message,
  *
  * The header name is case insensitive.
  *
+ * The Received: header is special - for it all Received: headers in
+ * the message are concatenated
+ *
  * The returned value is owned by the notmuch message and is valid
  * only until the message is closed. The caller should copy it if
  * needing to modify the value or to hold onto it for longer.
