@@ -62,16 +62,19 @@ any given message."
   "A list of functions called to decorate the headers listed in
 `notmuch-message-headers'.")
 
-(defvar notmuch-show-hook '(notmuch-show-pretty-hook)
-  "A list of functions called after populating a
-`notmuch-show' buffer.")
+(defcustom notmuch-show-hook nil
+  "Functions called after populating a `notmuch-show' buffer."
+  :group 'notmuch
+  :type 'hook)
 
-(defvar notmuch-show-insert-text/plain-hook '(notmuch-wash-text/plain-citations)
-  "A list of functions called to clean up text/plain body parts.")
-
-(defun notmuch-show-pretty-hook ()
-  (goto-address-mode 1)
-  (visual-line-mode))
+(defcustom notmuch-show-insert-text/plain-hook '(notmuch-wash-excerpt-citations)
+  "Functions used to improve the display of text/plain parts."
+  :group 'notmuch
+  :type 'hook
+  :options '(notmuch-wash-wrap-long-lines
+	     notmuch-wash-tidy-citations
+	     notmuch-wash-elide-blank-lines
+	     notmuch-wash-excerpt-citations))
 
 (defmacro with-current-notmuch-show-message (&rest body)
   "Evaluate body with current buffer set to the text of current message"
@@ -511,6 +514,13 @@ function is used. "
 		   query-context)
 	  (notmuch-show-insert-forest
 	   (notmuch-query-get-threads basic-args))))
+
+      ;; Enable buttonisation of URLs and email addresses in the
+      ;; buffer.
+      (goto-address-mode t)
+      ;; Act on visual lines rather than logical lines.
+      (visual-line-mode t)
+
       (run-hooks 'notmuch-show-hook))
 
     ;; Move straight to the first open message
