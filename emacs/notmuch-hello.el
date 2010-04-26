@@ -77,7 +77,7 @@ field."
 (defvar notmuch-hello-recent-searches nil)
 
 (defun notmuch-hello-remember-search (search)
-  (if (not (memq search notmuch-hello-recent-searches))
+  (if (not (member search notmuch-hello-recent-searches))
       (push search notmuch-hello-recent-searches))
   (if (> (length notmuch-hello-recent-searches)
 	 notmuch-hello-recent-searches-max)
