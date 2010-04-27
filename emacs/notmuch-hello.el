@@ -148,8 +148,9 @@ diagonal."
 (defun notmuch-hello-insert-tags (tag-alist widest target)
   (let* ((tags-per-line (max 1
 			     (/ (- (window-width) notmuch-hello-indent)
-				;; Count is 7 wide, 1 for the space
-				;; after the name.
+				;; Count is 7 wide (6 digits plus
+				;; space), 1 for the space after the
+				;; name.
 				(+ 7 1 widest))))
 	 (count 0)
 	 (reordered-list (notmuch-hello-reflect tag-alist tags-per-line))
@@ -159,21 +160,30 @@ diagonal."
 	 (found-target-pos nil))
     ;; dme: It feels as though there should be a better way to
     ;; implement this loop than using an incrementing counter.
-    (loop for elem in reordered-list
-	  do (progn
-	       ;; (not elem) indicates an empty slot in the matrix.
-	       (when elem
-		 (widget-insert (format "%6s " (notmuch-saved-search-count (cdr elem))))
-		 (if (string= (format "%s " (car elem)) target)
-		     (setq found-target-pos (point-marker)))
-		 (widget-create 'push-button
-				:notify #'notmuch-hello-widget-search
-				:notmuch-search-terms (cdr elem)
-				(format "%s " (car elem)))
-		 (insert (make-string (1+ (- widest (length (car elem)))) ? )))
-	       (setq count (1+ count))
-	       (if (eq (% count tags-per-line) 0)
-		   (widget-insert "\n"))))
+    (mapc (lambda (elem)
+	    ;; (not elem) indicates an empty slot in the matrix.
+	    (when elem
+	      (let* ((name (car elem))
+		     (query (cdr elem))
+		     (formatted-name (format "%s " name)))
+		(widget-insert (format "%6s " (notmuch-saved-search-count query)))
+		(if (string= formatted-name target)
+		    (setq found-target-pos (point-marker)))
+		(widget-create 'push-button
+			       :notify #'notmuch-hello-widget-search
+			       :notmuch-search-terms query
+			       formatted-name)
+		;; Insert enough space to consume the rest of the
+		;; column.  Because the button for the name is `(1+
+		;; (length name))' long (due to the trailing space) we
+		;; can just insert `(- widest (length name))' spaces -
+		;; the column separator is included in the button if
+		;; `(equal widest (length name)'.
+		(widget-insert (make-string (- widest (length name)) ? )))
+	      (setq count (1+ count))
+	      (if (eq (% count tags-per-line) 0)
+		  (widget-insert "\n"))))
+	  reordered-list)
 
     ;; If the last line was not full (and hence did not include a
     ;; carriage return), insert one now.
