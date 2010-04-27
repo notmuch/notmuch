@@ -29,6 +29,9 @@
 (declare-function notmuch-search "notmuch" (query &optional oldest-first target-thread target-line continuation))
 (declare-function notmuch-folder-count "notmuch" (search))
 
+(defvar notmuch-hello-search-bar-marker nil
+  "The position of the search bar within the notmuch-hello buffer.")
+
 (defcustom notmuch-hello-recent-searches-max 10
   "The number of recent searches to store and display."
   :type 'integer
@@ -179,10 +182,9 @@ diagonal."
     found-target-pos))
 
 (defun notmuch-hello-goto-search ()
-  "Put point inside the `search' widget, which we know is first."
+  "Put point inside the `search' widget."
   (interactive)
-  (goto-char (point-min))
-  (widget-forward 3))
+  (goto-char notmuch-hello-search-bar-marker))
 
 (defimage notmuch-hello-logo ((:type png :file "notmuch-logo.png")))
 
@@ -278,6 +280,7 @@ diagonal."
 
       (let ((start (point)))
 	(widget-insert "\nSearch: ")
+	(setq notmuch-hello-search-bar-marker (point-marker))
 	(widget-create 'editable-field
 		       ;; Leave some space at the start and end of the
 		       ;; search boxes.
