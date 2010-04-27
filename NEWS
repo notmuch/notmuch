@@ -24,9 +24,9 @@ Even Better guessing of From: header for "notmuch reply"
 
   Notmuch now looks at a number of headers when trying to figure out
   the best From: header to use in a reply. This is helpful if you have
-  several configured email addreses, and you also subsribe to various
+  several configured email addresses, and you also subscribe to various
   mailing lists with different addresses, (so that mails you are
-  replying to won't always include your subsribed address in the To:
+  replying to won't always include your subscribed address in the To:
   header).
 
 Indication of author names that match a search
@@ -80,7 +80,7 @@ An entirely new initial view for notmuch, (friendly yet powerful)
 
 	The "t" means to sort the messages in an "oldest first" order,
 	(as notmuch would do previously by default). You can also
-	leave that off to have your seach results in "newest first"
+	leave that off to have your search results in "newest first"
 	order.
 
 Full-featured "customize" support for configuring notmuch
@@ -91,7 +91,7 @@ Full-featured "customize" support for configuring notmuch
 
   You can get to this mode by starting at the main "Customize" menu in
   emacs, then browsing through "Applications", "Mail", and
-  "Notmuch". Or you can go straignt to "M-x customize-group"
+  "Notmuch". Or you can go straight to "M-x customize-group"
   "notmuch".
 
   Once you're at the customize screen, you'll see a list of documented
@@ -116,13 +116,13 @@ Support for doing tab-completion of email addresses
 
   Install that program as notmuch-addresses on your PATH, and then
   hitting TAB on a partial email address or name within the To: or Cc:
-  line of an email messsage will provide matching completions.
+  line of an email message will provide matching completions.
 
 Support for file-based (Fcc) delivery of sent messages to mail store
 
   This isn't yet enabled by default. To enable this, one will have to
   set the "Notmuch Fcc Dirs" setting within the notmuch customize
-  screen, (see its docuementation there for details). We anticipate
+  screen, (see its documentation there for details). We anticipate
   making this automatic in a future release.
 
 New 'G' key binding to trigger mail refresh (G == "Get new mail")
@@ -153,7 +153,7 @@ Better handling of HTML messages and MIME attachments (inline images!)
   other representation.
 
   Each attachment now has its own button so that attachments can be
-  saved indivisdually (the 'w' key is still available to save all
+  saved individually (the 'w' key is still available to save all
   attachments).
 
 Customizable support for tidying of text/plain message content
@@ -168,7 +168,7 @@ Customizable support for tidying of text/plain message content
 
 New support for searchable citations (even when hidden)
 
-  When portions of overly-long citations are hiddent, the contents of
+  When portions of overly-long citations are hidden, the contents of
   these citations will still be available for emacs' standard
   "incremental search" functions. When the search matches any portion
   of a hidden citation, the citation will become visible temporarily
@@ -185,7 +185,7 @@ More flexible handling of header visibility
 
   For users that don't want to see some subset of those headers, the
   new "Notmuch Message Headers" variable can be customized to list
-  only those headers that should be present in the disply of a message.
+  only those headers that should be present in the display of a message.
 
 The Return key now toggles message visibility anywhere
 
@@ -205,7 +205,7 @@ New keybinding (M-Ret) to open all collapsed messages in a thread.
 
 New library feature
 -------------------
-Provide a new NOTMUCH_SORT_UNSORTED value for queriesl
+Provide a new NOTMUCH_SORT_UNSORTED value for queries
 
   This can be somewhat faster when sorting simply isn't desired. For
   example when collecting a set of messages that will all be
