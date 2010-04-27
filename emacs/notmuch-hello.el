@@ -198,6 +198,12 @@ diagonal."
   (interactive)
   (notmuch-hello no-display))
 
+(defun notmuch-hello-poll-and-update ()
+  "Invoke `notmuch-poll' to import mail, then refresh the current view."
+  (interactive)
+  (notmuch-poll)
+  (notmuch-hello-update))
+
 (defun notmuch-hello (&optional no-display)
   (interactive)
 
@@ -386,6 +392,7 @@ diagonal."
 
       (use-local-map widget-keymap)
       (local-set-key "=" 'notmuch-hello-update)
+      (local-set-key "G" 'notmuch-hello-poll-and-update)
       (local-set-key "m" 'notmuch-mua-mail)
       (local-set-key "q" '(lambda () (interactive) (kill-buffer (current-buffer))))
       (local-set-key "s" 'notmuch-hello-goto-search)
