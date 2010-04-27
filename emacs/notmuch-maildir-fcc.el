@@ -71,8 +71,8 @@
           (cdr (assoc-string (message-fetch-field "from") notmuch-fcc-dirs t))))
      (if (eq subdir nil) (setq subdir (car (car notmuch-fcc-dirs))))
      (unless (message-fetch-field "fcc")
-       (message-add-header (concat "Fcc: " 
-				   (file-name-as-directory message-directory) 
+       (message-add-header (concat "Fcc: "
+				   (file-name-as-directory message-directory)
 				   subdir)))
      (let ((fcc-header (message-fetch-field "fcc")))
      (unless (notmuch-maildir-fcc-dir-is-maildir-p fcc-header)
@@ -83,7 +83,7 @@
 	      (notmuch-maildir-fcc-create-maildir fcc-header))
 	     (t
 	      (error "Not sending message."))))))))
-	      
+
 (defun notmuch-maildir-fcc-host-fixer (hostname)
   (replace-regexp-in-string "/\\|:"
 			    '(lambda (s)
@@ -121,8 +121,6 @@
 	 (error "%s is a file. Can't creat maildir." path))
 	(t
 	 (error "I don't know how to create a maildir here"))))
-	 
-  
 
 (defun notmuch-maildir-fcc-save-buffer-to-tmp (destdir)
   "Returns the msg id of the message written to the temp directory
