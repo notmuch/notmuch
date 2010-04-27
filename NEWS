@@ -34,6 +34,13 @@ Automatically tag messages as "replied" when sending a reply
   automatically remove that tag when replying. See "Notmuch Message
   Mark Replied" in the notmuch customize interface.
 
+Build fix
+---------
+Fix build on OpenSolaris (at least) due to missing 'extern "C"' block.
+
+  Without this, the C++ sources could not find strcasestr and the
+  final linking of notmuch would fail.
+
 Notmuch 0.3 (2010-04-27)
 ========================
 New command-line features
