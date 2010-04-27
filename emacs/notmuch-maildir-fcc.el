@@ -71,7 +71,9 @@
           (cdr (assoc-string (message-fetch-field "from") notmuch-fcc-dirs t))))
      (if (eq subdir nil) (setq subdir (car (car notmuch-fcc-dirs))))
      (unless (message-fetch-field "fcc")
-       (message-add-header (concat "Fcc: " message-directory subdir)))
+       (message-add-header (concat "Fcc: " 
+				   (file-name-as-directory message-directory) 
+				   subdir)))
      (let ((fcc-header (message-fetch-field "fcc")))
      (unless (notmuch-maildir-fcc-dir-is-maildir-p fcc-header)
        (cond ((not (file-writable-p fcc-header))
