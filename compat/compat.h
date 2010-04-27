@@ -26,6 +26,10 @@
 #ifndef NOTMUCH_COMPAT_H
 #define NOTMUCH_COMPAT_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #if !HAVE_GETLINE
 #include <stdio.h>
 #include <unistd.h>
@@ -41,5 +45,9 @@ getdelim (char **lineptr, size_t *n, int delimiter, FILE *fp);
 #if !HAVE_STRCASESTR
 char* strcasestr(const char *haystack, const char *needle);
 #endif /* !HAVE_STRCASESTR */
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* NOTMUCH_COMPAT_H */
