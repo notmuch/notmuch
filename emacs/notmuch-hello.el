@@ -272,9 +272,10 @@ diagonal."
 				 (customize-variable 'notmuch-hello-saved-searches))
 		       "edit")
 	(widget-insert "\n\n")
+	(setq final-target-pos (point-marker))
 	(let ((start (point)))
 	  (setq found-target-pos (notmuch-hello-insert-tags saved-alist widest target))
-	  (if (not final-target-pos)
+	  (if found-target-pos
 	      (setq final-target-pos found-target-pos))
 	  (indent-rigidly start (point) notmuch-hello-indent)))
 
@@ -365,11 +366,9 @@ diagonal."
 
     (widget-setup)
 
-    (if final-target-pos
-	(goto-char final-target-pos)
-      (progn
-	(goto-char (point-min))
-	(widget-forward 1)))))
+    (goto-char final-target-pos)
+    (if (not (widget-at))
+	(widget-forward 1))))
 
 ;;
 
