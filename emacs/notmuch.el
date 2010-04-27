@@ -56,6 +56,7 @@
 (require 'notmuch-mua)
 (require 'notmuch-hello)
 (require 'notmuch-maildir-fcc)
+(require 'notmuch-message)
 
 (defcustom notmuch-search-result-format
   `(("date" . "%s ")
