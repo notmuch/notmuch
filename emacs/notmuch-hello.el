@@ -118,23 +118,24 @@
   (+ (/ dividend divisor)
      (if (> (% dividend divisor) 0) 1 0)))
 
-(defun notmuch-hello-reflect (list width)
-  "Reflect a `width' wide matrix represented by `list' along the
+(defun notmuch-hello-reflect-generate-row (ncols nrows row list)
+  (let ((len (length list)))
+    (loop for col from 0 to (- ncols 1)
+	  collect (let ((offset (+ (* nrows col) row)))
+		    (if (< offset len)
+			(nth offset list)
+		      ;; Don't forget to insert an empty slot in the
+		      ;; output matrix if there is no corresponding
+		      ;; value in the input matrix.
+		      nil)))))
+
+(defun notmuch-hello-reflect (list ncols)
+  "Reflect a `ncols' wide matrix represented by `list' along the
 diagonal."
   ;; Not very lispy...
-  (let* ((len (length list))
-	 (nrows (notmuch-hello-roundup len width)))
+  (let ((nrows (notmuch-hello-roundup (length list) ncols)))
     (loop for row from 0 to (- nrows 1)
-	  append (loop for col from 0 to (- width 1)
-		       ;; How could we calculate the offset just once
-		       ;; per inner-loop?
-		       if (< (+ (* nrows col) row) len)
-		       collect (nth (+ (* nrows col) row) list)
-		       else
-		       ;; Don't forget to insert an empty slot in the
-		       ;; output matrix if there is no corresponding
-		       ;; value in the input matrix.
-		       collect nil))))
+	  append (notmuch-hello-reflect-generate-row ncols nrows row list))))
 
 (defun notmuch-hello-widget-search (widget &rest ignore)
   (notmuch-search (widget-get widget
@@ -179,10 +180,10 @@ diagonal."
 		;; can just insert `(- widest (length name))' spaces -
 		;; the column separator is included in the button if
 		;; `(equal widest (length name)'.
-		(widget-insert (make-string (- widest (length name)) ? )))
-	      (setq count (1+ count))
-	      (if (eq (% count tags-per-line) 0)
-		  (widget-insert "\n"))))
+		(widget-insert (make-string (- widest (length name)) ? ))))
+	    (setq count (1+ count))
+	    (if (eq (% count tags-per-line) 0)
+		(widget-insert "\n")))
 	  reordered-list)
 
     ;; If the last line was not full (and hence did not include a
