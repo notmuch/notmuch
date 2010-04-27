@@ -72,10 +72,16 @@
      (if (eq subdir nil) (setq subdir (car (car notmuch-fcc-dirs))))
      (unless (message-fetch-field "fcc")
        (message-add-header (concat "Fcc: " message-directory subdir)))
-     (unless (notmuch-maildir-fcc-dir-is-maildir-p 
-	      (message-fetch-field "fcc"))
-       (error (format "%s is not a maildir." (message-fetch-field "fcc")))))))
-
+     (let ((fcc-header (message-fetch-field "fcc")))
+     (unless (notmuch-maildir-fcc-dir-is-maildir-p fcc-header)
+       (cond ((not (file-writable-p fcc-header))
+	      (error (format "%s is not a maildir, but you don't have permission to create one." fcc-header)))
+	     ((y-or-n-p (format "%s is not a maildir. Create it? "
+				 fcc-header))
+	      (notmuch-maildir-fcc-create-maildir fcc-header))
+	     (t
+	      (error "Not sending message."))))))))
+	      
 (defun notmuch-maildir-fcc-host-fixer (hostname)
   (replace-regexp-in-string "/\\|:"
 			    '(lambda (s)
@@ -103,6 +109,18 @@
   (and (file-exists-p (concat dir "/cur/"))
        (file-exists-p (concat dir "/new/"))
        (file-exists-p (concat dir "/tmp/"))))
+
+(defun notmuch-maildir-fcc-create-maildir (path)
+  (cond ((or (not (file-exists-p path)) (file-directory-p path))
+	 (make-directory (concat path "/cur/") t)
+	 (make-directory (concat path "/new/") t)
+	 (make-directory (concat path "/tmp/") t))
+	((file-regular-p path)
+	 (error "%s is a file. Can't creat maildir." path))
+	(t
+	 (error "I don't know how to create a maildir here"))))
+	 
+  
 
 (defun notmuch-maildir-fcc-save-buffer-to-tmp (destdir)
   "Returns the msg id of the message written to the temp directory
