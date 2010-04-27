@@ -897,7 +897,7 @@ printf " Searching when only first message matches...\t"
 output=$($NOTMUCH search User | notmuch_search_sanitize)
 pass_if_equal "$output" "thread:XXX   2000-01-01 [1/3] User| User1, User2; author-reorder-threadtest (inbox unread)"
 
-printf "\nTesting From line heuristics;\n"
+printf "\nTesting From line heuristics (with multiple configured addresses):\n"
 printf " Magic from guessing (nothing to go on)...\t"
 add_message '[from]="Sender <sender@example.com>"' \
              [to]=mailinglist@notmuchmail.org \
@@ -987,6 +987,108 @@ add_message '[from]="Sender <sender@example.com>"' \
 
 output=$($NOTMUCH reply id:${gen_msg_id})
 pass_if_equal "$output" "From: Notmuch Test Suite <test_suite@otherdomain.org>
+Subject: Re: notmuch-reply-test
+To: Sender <sender@example.com>, mailinglist@notmuchmail.org
+Bcc: test_suite@notmuchmail.org
+In-Reply-To: <${gen_msg_id}>
+References: <${gen_msg_id}>
+
+On Tue, 05 Jan 2010 15:43:56 -0800, Sender <sender@example.com> wrote:
+> from guessing test"
+
+
+printf "\nTesting From line heuristics (with single configured address):\n"
+sed -i -e 's/^other_email.*//' ${NOTMUCH_CONFIG}
+
+printf " Magic from guessing (nothing to go on)...\t"
+add_message '[from]="Sender <sender@example.com>"' \
+             [to]=mailinglist@notmuchmail.org \
+             [subject]=notmuch-reply-test \
+            '[date]="Tue, 05 Jan 2010 15:43:56 -0800"' \
+            '[body]="from guessing test"'
+
+output=$($NOTMUCH reply id:${gen_msg_id})
+pass_if_equal "$output" "From: Notmuch Test Suite <test_suite@notmuchmail.org>
+Subject: Re: notmuch-reply-test
+To: Sender <sender@example.com>, mailinglist@notmuchmail.org
+Bcc: test_suite@notmuchmail.org
+In-Reply-To: <${gen_msg_id}>
+References: <${gen_msg_id}>
+
+On Tue, 05 Jan 2010 15:43:56 -0800, Sender <sender@example.com> wrote:
+> from guessing test"
+
+printf " Magic from guessing (Envelope-to:)...\t\t"
+add_message '[from]="Sender <sender@example.com>"' \
+             [to]=mailinglist@notmuchmail.org \
+             [subject]=notmuch-reply-test \
+            '[header]="Envelope-To: test_suite_other@notmuchmail.org"' \
+            '[date]="Tue, 05 Jan 2010 15:43:56 -0800"' \
+            '[body]="from guessing test"'
+
+output=$($NOTMUCH reply id:${gen_msg_id})
+pass_if_equal "$output" "From: Notmuch Test Suite <test_suite@notmuchmail.org>
+Subject: Re: notmuch-reply-test
+To: Sender <sender@example.com>, mailinglist@notmuchmail.org
+Bcc: test_suite@notmuchmail.org
+In-Reply-To: <${gen_msg_id}>
+References: <${gen_msg_id}>
+
+On Tue, 05 Jan 2010 15:43:56 -0800, Sender <sender@example.com> wrote:
+> from guessing test"
+
+printf " Magic from guessing (X-Original-To:)...\t"
+add_message '[from]="Sender <sender@example.com>"' \
+             [to]=mailinglist@notmuchmail.org \
+             [subject]=notmuch-reply-test \
+            '[header]="X-Original-To: test_suite_other@notmuchmail.org"' \
+            '[date]="Tue, 05 Jan 2010 15:43:56 -0800"' \
+            '[body]="from guessing test"'
+
+output=$($NOTMUCH reply id:${gen_msg_id})
+pass_if_equal "$output" "From: Notmuch Test Suite <test_suite@notmuchmail.org>
+Subject: Re: notmuch-reply-test
+To: Sender <sender@example.com>, mailinglist@notmuchmail.org
+Bcc: test_suite@notmuchmail.org
+In-Reply-To: <${gen_msg_id}>
+References: <${gen_msg_id}>
+
+On Tue, 05 Jan 2010 15:43:56 -0800, Sender <sender@example.com> wrote:
+> from guessing test"
+
+printf " Magic from guessing (Received: .. for ..)...\t"
+add_message '[from]="Sender <sender@example.com>"' \
+             [to]=mailinglist@notmuchmail.org \
+             [subject]=notmuch-reply-test \
+            '[header]="Received: from mail.example.com (mail.example.com [1.1.1.1])\
+        by mail.notmuchmail.org (some MTA) with ESMTP id 12345678\
+        for <test_suite_other@notmuchmail.org>; Sat, 10 Apr 2010 07:54:51 -0400 (EDT)"' \
+            '[date]="Tue, 05 Jan 2010 15:43:56 -0800"' \
+            '[body]="from guessing test"'
+
+output=$($NOTMUCH reply id:${gen_msg_id})
+pass_if_equal "$output" "From: Notmuch Test Suite <test_suite@notmuchmail.org>
+Subject: Re: notmuch-reply-test
+To: Sender <sender@example.com>, mailinglist@notmuchmail.org
+Bcc: test_suite@notmuchmail.org
+In-Reply-To: <${gen_msg_id}>
+References: <${gen_msg_id}>
+
+On Tue, 05 Jan 2010 15:43:56 -0800, Sender <sender@example.com> wrote:
+> from guessing test"
+
+printf " Magic from guessing (Received: domain)...\t"
+add_message '[from]="Sender <sender@example.com>"' \
+             [to]=mailinglist@notmuchmail.org \
+             [subject]=notmuch-reply-test \
+            '[header]="Received: from mail.example.com (mail.example.com [1.1.1.1])\
+        by mail.otherdomain.org (some MTA) with ESMTP id 12345678\
+        Sat, 10 Apr 2010 07:54:51 -0400 (EDT)"' \
+            '[date]="Tue, 05 Jan 2010 15:43:56 -0800"' \
+            '[body]="from guessing test"'
+
+output=$($NOTMUCH reply id:${gen_msg_id})
+pass_if_equal "$output" "From: Notmuch Test Suite <test_suite@notmuchmail.org>
 Subject: Re: notmuch-reply-test
 To: Sender <sender@example.com>, mailinglist@notmuchmail.org
 Bcc: test_suite@notmuchmail.org
