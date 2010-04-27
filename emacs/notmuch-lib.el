@@ -28,11 +28,6 @@
   "Notmuch mail reader for Emacs."
   :group 'mail)
 
-(defcustom notmuch-folders '(("inbox" . "tag:inbox") ("unread" . "tag:unread"))
-  "List of searches for the notmuch folder view"
-  :type '(alist :key-type (string) :value-type (string))
-  :group 'notmuch)
-
 (defcustom notmuch-search-oldest-first t
   "Show the oldest mail first when searching."
   :type 'boolean
@@ -44,6 +39,9 @@
   "A list of saved searches to display."
   :type '(alist :key-type string :value-type string)
   :group 'notmuch)
+
+(defvar notmuch-folders nil
+  "Deprecated name for what is now known as `notmuch-saved-searches'.")
 
 (defun notmuch-saved-searches ()
   "Common function for querying the notmuch-saved-searches variable.

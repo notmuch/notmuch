@@ -399,6 +399,12 @@ diagonal."
       (if (not (widget-at))
 	  (widget-forward 1)))))
 
+;;;###autoload
+(defun notmuch-folder ()
+  "Deprecated function for invoking notmuch---calling `notmuch' is preferred now."
+  (interactive)
+  (notmuch-hello))
+
 ;;
 
 (provide 'notmuch-hello)
