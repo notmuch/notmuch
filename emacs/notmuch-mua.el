@@ -101,7 +101,7 @@ list."
     ;; insert the message body - but put it in front of the signature
     ;; if one is present
     (goto-char (point-max))
-    (if (re-search-backward "-- " nil t)
+    (if (re-search-backward message-signature-separator nil t)
 	  (forward-line -1)
       (goto-char (point-max)))
     (insert body))
