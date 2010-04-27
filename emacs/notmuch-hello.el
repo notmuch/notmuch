@@ -174,7 +174,7 @@ diagonal."
 				:notify #'notmuch-hello-widget-search
 				:notmuch-search-terms (cdr elem)
 				(format "%s " (car elem)))
-		 (insert (make-string (1- (- widest (length (car elem)))) ? )))
+		 (insert (make-string (1+ (- widest (length (car elem)))) ? )))
 	       (setq count (1+ count))
 	       (if (eq (% count tags-per-line) 0)
 		   (widget-insert "\n"))))
