@@ -32,32 +32,30 @@
 (defvar notmuch-hello-search-bar-marker nil
   "The position of the search bar within the notmuch-hello buffer.")
 
-(defcustom notmuch-hello-recent-searches-max 10
+(defcustom notmuch-recent-searches-max 10
   "The number of recent searches to store and display."
   :type 'integer
   :group 'notmuch)
 
-(defcustom notmuch-hello-show-empty-saved-searches nil
+(defcustom notmuch-show-empty-saved-searches nil
   "Should saved searches with no messages be listed?"
   :type 'boolean
   :group 'notmuch)
 
-(defcustom notmuch-hello-indent 4
-  "How much to indent non-headers."
-  :type 'integer
-  :group 'notmuch)
+(defvar notmuch-hello-indent 4
+  "How much to indent non-headers.")
 
-(defcustom notmuch-hello-saved-searches notmuch-folders
+(defcustom notmuch-saved-searches notmuch-folders
   "A list of saved searches to display."
   :type '(alist :key-type string :value-type string)
   :group 'notmuch)
 
-(defcustom notmuch-hello-show-logo t
+(defcustom notmuch-show-logo t
   "Should the notmuch logo be shown?"
   :type 'boolean
   :group 'notmuch)
 
-(defcustom notmuch-hello-show-tags nil
+(defcustom notmuch-show-all-tags-list nil
   "Should all tags be shown in the notmuch-hello view?"
   :type 'boolean
   :group 'notmuch)
@@ -81,7 +79,7 @@
   (if (not (member search notmuch-hello-recent-searches))
       (push search notmuch-hello-recent-searches))
   (if (> (length notmuch-hello-recent-searches)
-	 notmuch-hello-recent-searches-max)
+	 notmuch-recent-searches-max)
       (setq notmuch-hello-recent-searches (butlast notmuch-hello-recent-searches))))
 
 (defun notmuch-hello-trim (search)
@@ -101,17 +99,17 @@
 		 (symbol-value
 		  (widget-get widget :notmuch-saved-search-widget))))
 	(name (completing-read "Name for saved search: "
-			       notmuch-hello-saved-searches)))
+			       notmuch-saved-searches)))
     ;; If an existing saved search with this name exists, remove it.
-    (setq notmuch-hello-saved-searches
-	  (loop for elem in notmuch-hello-saved-searches
+    (setq notmuch-saved-searches
+	  (loop for elem in notmuch-saved-searches
 		if (not (equal name
 			       (car elem)))
 		collect elem))
     ;; Add the new one.
-    (customize-save-variable 'notmuch-hello-saved-searches
+    (customize-save-variable 'notmuch-saved-searches
 			     (push (cons name search)
-				   notmuch-hello-saved-searches))
+				   notmuch-saved-searches))
     (message "Saved '%s' as '%s'." search name)
     (notmuch-hello-update)))
 
@@ -224,7 +222,7 @@ diagonal."
       (mapc 'delete-overlay (car all))
       (mapc 'delete-overlay (cdr all)))
 
-    (when notmuch-hello-show-logo
+    (when notmuch-show-logo
       (let ((image notmuch-hello-logo))
 	;; The notmuch logo uses transparency. That can display poorly
 	;; when inserting the image into an emacs buffer (black logo on
@@ -261,9 +259,9 @@ diagonal."
 	  (final-target-pos nil))
       (let* ((saved-alist
 	      ;; Filter out empty saved seaches if required.
-	      (if notmuch-hello-show-empty-saved-searches
-		  notmuch-hello-saved-searches
-		(loop for elem in notmuch-hello-saved-searches
+	      (if notmuch-show-empty-saved-searches
+		  notmuch-saved-searches
+		(loop for elem in notmuch-saved-searches
 		      if (> (string-to-number (notmuch-folder-count (cdr elem))) 0)
 		      collect elem)))
 	     (saved-widest (notmuch-hello-longest-label saved-alist))
@@ -276,7 +274,7 @@ diagonal."
 	  (widget-insert "Saved searches: ")
 	  (widget-create 'push-button
 			 :notify (lambda (&rest ignore)
-				   (customize-variable 'notmuch-hello-saved-searches))
+				   (customize-variable 'notmuch-saved-searches))
 			 "edit")
 	  (widget-insert "\n\n")
 	  (setq final-target-pos (point-marker))
@@ -343,12 +341,12 @@ diagonal."
 	    (indent-rigidly start (point) notmuch-hello-indent)))
 
 	(when alltags-alist
-	  (if notmuch-hello-show-tags
+	  (if notmuch-show-all-tags-list
 	      (progn
 		(widget-insert "\nAll tags: ")
 		(widget-create 'push-button
 			       :notify (lambda (widget &rest ignore)
-					 (setq notmuch-hello-show-tags nil)
+					 (setq notmuch-show-all-tags-list nil)
 					 (notmuch-hello-update))
 			       "hide")
 		(widget-insert "\n\n")
@@ -360,7 +358,7 @@ diagonal."
 	    (widget-insert "\n")
 	    (widget-create 'push-button
 			   :notify (lambda (widget &rest ignore)
-				     (setq notmuch-hello-show-tags t)
+				     (setq notmuch-show-all-tags-list t)
 				     (notmuch-hello-update))
 			   "Show all tags"))))
 
@@ -370,7 +368,7 @@ diagonal."
 	(when notmuch-hello-recent-searches
 	  (widget-insert "Hit RET to re-submit a previous search. Edit it first if you like.\n")
 	  (widget-insert "Save recent searches with the `save' button.\n"))
-	(when notmuch-hello-saved-searches
+	(when notmuch-saved-searches
 	  (widget-insert "Edit saved searches with the `edit' button.\n"))
 	(widget-insert "Hit RET or click on a saved search or tag name to view matching threads.\n")
 	(widget-insert "`=' refreshes this screen. `s' jumps to the search box. `q' to quit.\n")
