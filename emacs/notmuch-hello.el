@@ -142,6 +142,9 @@ diagonal."
 		  notmuch-search-oldest-first
 		  nil nil #'notmuch-hello-search-continuation))
 
+(defun notmuch-saved-search-count (search)
+  (car (process-lines notmuch-command "count" search)))
+
 (defun notmuch-hello-insert-tags (tag-alist widest target)
   (let* ((tags-per-line (max 1
 			     (/ (- (window-width) notmuch-hello-indent)
@@ -160,7 +163,7 @@ diagonal."
 	  do (progn
 	       ;; (not elem) indicates an empty slot in the matrix.
 	       (when elem
-		 (widget-insert (format "%6s " (notmuch-folder-count (cdr elem))))
+		 (widget-insert (format "%6s " (notmuch-saved-search-count (cdr elem))))
 		 (if (string= (format "%s " (car elem)) target)
 		     (setq found-target-pos (point-marker)))
 		 (widget-create 'push-button
@@ -268,7 +271,7 @@ diagonal."
 	      (if notmuch-show-empty-saved-searches
 		  notmuch-saved-searches
 		(loop for elem in notmuch-saved-searches
-		      if (> (string-to-number (notmuch-folder-count (cdr elem))) 0)
+		      if (> (string-to-number (notmuch-saved-search-count (cdr elem))) 0)
 		      collect elem)))
 	     (saved-widest (notmuch-hello-longest-label saved-alist))
 	     (alltags-alist (mapcar '(lambda (tag) (cons tag (concat "tag:" tag)))
