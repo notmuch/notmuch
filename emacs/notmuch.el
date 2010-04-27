@@ -663,7 +663,7 @@ characters as well as `_.+-'.
 (defun notmuch-search-buffer-title (query)
   "Returns the title for a buffer with notmuch search results."
   (let* ((folder (rassoc-if (lambda (key)
-			      (string-match (concat "^" (regexp-quote key))
+			      (string-match (concat "^" (regexp-quote key) "$")
 					    query))
 			    (notmuch-saved-searches)))
 	 (folder-name (car folder))
