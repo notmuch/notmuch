@@ -147,7 +147,7 @@ diagonal."
 		  notmuch-search-oldest-first
 		  nil nil #'notmuch-hello-search-continuation))
 
-(defun notmuch-hello-insert-tags (tag-alist widest)
+(defun notmuch-hello-insert-tags (tag-alist widest target)
   (let* ((tags-per-line (max 1
 			     (/ (- (window-width) notmuch-hello-indent)
 				;; Count is 7 wide, 1 for the space
@@ -157,7 +157,8 @@ diagonal."
 	 (reordered-list (notmuch-hello-reflect tag-alist tags-per-line))
 	 ;; Hack the display of the buttons used.
 	 (widget-push-button-prefix "")
-	 (widget-push-button-suffix ""))
+	 (widget-push-button-suffix "")
+	 (found-target-pos nil))
     ;; dme: It feels as though there should be a better way to
     ;; implement this loop than using an incrementing counter.
     (loop for elem in reordered-list
@@ -165,6 +166,9 @@ diagonal."
 	       ;; (not elem) indicates an empty slot in the matrix.
 	       (when elem
 		 (widget-insert (format "%6s " (notmuch-folder-count (cdr elem))))
+		 (if (string= (car elem) target)
+		     (progn
+		       (setq found-target-pos (point-marker))))
 		 (widget-create 'push-button
 				:notify #'notmuch-hello-widget-search
 				:notmuch-search-terms (cdr elem)
@@ -177,7 +181,8 @@ diagonal."
     ;; If the last line was not full (and hence did not include a
     ;; carriage return), insert one now.
     (if (not (eq (% count tags-per-line) 0))
-	(widget-insert "\n"))))
+	(widget-insert "\n"))
+    found-target-pos))
 
 (defun notmuch-hello-goto-search ()
   "Put point inside the `search' widget, which we know is first."
@@ -193,9 +198,14 @@ diagonal."
 (defun notmuch-hello-update (&optional no-display)
   ;; Lazy - rebuild everything.
   (interactive)
-  (notmuch-hello no-display))
+  (let ((target (if (widget-at)
+		   (widget-value (widget-at))
+		 (progn
+		   (widget-forward 1)
+		   (widget-value (widget-at))))))
+    (notmuch-hello no-display target)))
 
-(defun notmuch-hello (&optional no-display)
+(defun notmuch-hello (&optional no-display target)
   (interactive)
 
   (if no-display
@@ -299,62 +309,70 @@ diagonal."
 	    notmuch-hello-recent-searches)
       (indent-rigidly start (point) notmuch-hello-indent)))
 
-  (let* ((saved-alist
-	  ;; Filter out empty saved seaches if required.
-	  (if notmuch-hello-show-empty-saved-searches
-	      notmuch-hello-saved-searches
-	    (loop for elem in notmuch-hello-saved-searches
-		  if (> (string-to-number (notmuch-folder-count (cdr elem))) 0)
-		  collect elem)))
-	 (saved-widest (notmuch-hello-longest-label saved-alist))
-	 (alltags-alist (mapcar '(lambda (tag) (cons tag (concat "tag:" tag)))
-				(process-lines notmuch-command "search-tags")))
-	 (alltags-widest (notmuch-hello-longest-label alltags-alist))
-	 (widest (max saved-widest alltags-widest)))
+  (let ((found-target-pos nil)
+	(final-target-pos nil))
+    (let* ((saved-alist
+	    ;; Filter out empty saved seaches if required.
+	    (if notmuch-hello-show-empty-saved-searches
+		notmuch-hello-saved-searches
+	      (loop for elem in notmuch-hello-saved-searches
+		    if (> (string-to-number (notmuch-folder-count (cdr elem))) 0)
+		    collect elem)))
+	   (saved-widest (notmuch-hello-longest-label saved-alist))
+	   (alltags-alist (mapcar '(lambda (tag) (cons tag (concat "tag:" tag)))
+				  (process-lines notmuch-command "search-tags")))
+	   (alltags-widest (notmuch-hello-longest-label alltags-alist))
+	   (widest (max saved-widest alltags-widest)))
 
-    (when saved-alist
-      (widget-insert "\nSaved searches: ")
-      (widget-create 'push-button
-		     :notify (lambda (&rest ignore)
-			       (customize-variable 'notmuch-hello-saved-searches))
-		     "edit")
+      (when saved-alist
+	(widget-insert "\nSaved searches: ")
+	(widget-create 'push-button
+		       :notify (lambda (&rest ignore)
+				 (customize-variable 'notmuch-hello-saved-searches))
+		       "edit")
+	(widget-insert "\n\n")
+	(let ((start (point)))
+	  (setq found-target-pos (notmuch-hello-insert-tags saved-alist widest target))
+	  (if (not final-target-pos)
+	      (setq final-target-pos found-target-pos))
+	  (indent-rigidly start (point) notmuch-hello-indent)))
+
+      (when alltags-alist
+	(widget-insert "\nAll tags:\n\n")
+	(let ((start (point)))
+	  (setq found-target-pos (notmuch-hello-insert-tags alltags-alist widest target))
+	  (if (not final-target-pos)
+	      (setq final-target-pos found-target-pos))
+	  (indent-rigidly start (point) notmuch-hello-indent))))
+
+    (let ((start (point)))
       (widget-insert "\n\n")
-      (let ((start (point)))
-	(notmuch-hello-insert-tags saved-alist widest)
-	(indent-rigidly start (point) notmuch-hello-indent)))
+      (widget-insert "Type a search query and hit RET to view matching threads.\n")
+      (when notmuch-hello-recent-searches
+	(widget-insert "Hit RET to re-submit a previous search. Edit it first if you like.\n")
+	(widget-insert "Save recent searches with the `save' button.\n"))
+      (when notmuch-hello-saved-searches
+	(widget-insert "Edit saved searches with the `edit' button.\n"))
+      (widget-insert "Hit RET or click on a saved search or tag name to view matching threads.\n")
+      (widget-insert "`=' refreshes this screen. `s' jumps to the search box. `q' to quit.\n")
+      (let ((fill-column (- (window-width) notmuch-hello-indent)))
+	(center-region start (point))))
 
-    (when alltags-alist
-      (widget-insert "\nAll tags:\n\n")
-      (let ((start (point)))
-	(notmuch-hello-insert-tags alltags-alist widest)
-	(indent-rigidly start (point) notmuch-hello-indent))))
+    (use-local-map widget-keymap)
+    (local-set-key "=" 'notmuch-hello-update)
+    (local-set-key "m" 'notmuch-mua-mail)
+    (local-set-key "q" '(lambda () (interactive) (kill-buffer (current-buffer))))
+    (local-set-key "s" 'notmuch-hello-goto-search)
+    (local-set-key "v" '(lambda () (interactive)
+			  (message "notmuch version %s" (notmuch-version))))
 
-  (let ((start (point)))
-    (widget-insert "\n\n")
-    (widget-insert "Type a search query and hit RET to view matching threads.\n")
-    (when notmuch-hello-recent-searches
-      (widget-insert "Hit RET to re-submit a previous search. Edit it first if you like.\n")
-      (widget-insert "Save recent searches with the `save' button.\n"))
-    (when notmuch-hello-saved-searches
-      (widget-insert "Edit saved searches with the `edit' button.\n"))
-    (widget-insert "Hit RET or click on a saved search or tag name to view matching threads.\n")
-    (widget-insert "`=' refreshes this screen. `s' jumps to the search box. `q' to quit.\n")
-    (let ((fill-column (- (window-width) notmuch-hello-indent)))
-      (center-region start (point))))
+    (widget-setup)
 
-  (use-local-map widget-keymap)
-  (local-set-key "=" 'notmuch-hello-update)
-  (local-set-key "m" 'notmuch-mua-mail)
-  (local-set-key "q" '(lambda () (interactive) (kill-buffer (current-buffer))))
-  (local-set-key "s" 'notmuch-hello-goto-search)
-  (local-set-key "v" '(lambda () (interactive)
-			(message "notmuch version %s" (notmuch-version))))
-
-  (widget-setup)
-
-  (if notmuch-hello-jump-to-search
-      (notmuch-hello-goto-search)
-    (goto-char (point-min))))
+    (if final-target-pos
+	(goto-char final-target-pos)
+      (if notmuch-hello-jump-to-search
+	  (notmuch-hello-goto-search)
+	(goto-char (point-min))))))
 
 ;;
 
