@@ -57,6 +57,11 @@
   :type 'boolean
   :group 'notmuch)
 
+(defcustom notmuch-hello-show-tags nil
+  "Should all tags be shown in the notmuch-hello view?"
+  :type 'boolean
+  :group 'notmuch)
+
 (defface notmuch-hello-logo-background
   '((((class color)
       (background dark))
@@ -339,12 +344,26 @@ diagonal."
 	    (indent-rigidly start (point) notmuch-hello-indent)))
 
 	(when alltags-alist
-	  (widget-insert "\nAll tags:\n\n")
-	  (let ((start (point)))
-	    (setq found-target-pos (notmuch-hello-insert-tags alltags-alist widest target))
-	    (if (not final-target-pos)
-		(setq final-target-pos found-target-pos))
-	    (indent-rigidly start (point) notmuch-hello-indent))))
+	  (if notmuch-hello-show-tags
+	      (progn
+		(widget-insert "\nAll tags: ")
+		(widget-create 'push-button
+			       :notify (lambda (widget &rest ignore)
+					 (setq notmuch-hello-show-tags nil)
+					 (notmuch-hello-update))
+			       "hide")
+		(widget-insert "\n\n")
+		(let ((start (point)))
+		  (setq found-target-pos (notmuch-hello-insert-tags alltags-alist widest target))
+		  (if (not final-target-pos)
+		      (setq final-target-pos found-target-pos))
+		  (indent-rigidly start (point) notmuch-hello-indent)))
+	    (widget-insert "\n")
+	    (widget-create 'push-button
+			   :notify (lambda (widget &rest ignore)
+				     (setq notmuch-hello-show-tags t)
+				     (notmuch-hello-update))
+			   "Show all tags"))))
 
       (let ((start (point)))
 	(widget-insert "\n\n")
