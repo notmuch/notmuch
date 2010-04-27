@@ -193,7 +193,7 @@ diagonal."
 (defimage notmuch-hello-logo ((:type png :file "notmuch-logo.png")))
 
 (defun notmuch-hello-search-continuation()
-  (notmuch-hello t))
+  (notmuch-hello-update t))
 
 (defun notmuch-hello-update (&optional no-display)
   ;; Lazy - rebuild everything.
