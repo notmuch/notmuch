@@ -248,61 +248,6 @@ diagonal."
 		   (car (process-lines notmuch-command "count")))
     (widget-insert " messages (that's not much mail).\n\n"))
 
-  (let ((start (point)))
-    (widget-insert "Search: ")
-    (widget-create 'editable-field
-		   ;; Leave some space at the start and end of the
-		   ;; search boxes.
-		   :size (max 8 (- (window-width) (* 2 notmuch-hello-indent)
-				   (length "Search: ")))
-		   :action (lambda (widget &rest ignore)
-			     (notmuch-hello-search (widget-value widget))))
-    (widget-insert "\n")
-    (indent-rigidly start (point) notmuch-hello-indent))
-
-  (when notmuch-hello-recent-searches
-    (widget-insert "\nRecent searches: ")
-    (widget-create 'push-button
-		   :notify (lambda (&rest ignore)
-			     (setq notmuch-hello-recent-searches nil)
-			     (notmuch-hello-update))
-		   "clear")
-    (widget-insert "\n\n")
-    (let ((start (point))
-	  (nth 0))
-      (mapc '(lambda (search)
-	       (let ((widget-symbol (intern (format "notmuch-hello-search-%d" nth))))
-		 (set widget-symbol
-		      (widget-create 'editable-field
-				     ;; Don't let the search boxes be
-				     ;; less than 8 characters wide.
-				     :size (max 8
-						(- (window-width)
-						   ;; Leave some space
-						   ;; at the start and
-						   ;; end of the
-						   ;; boxes.
-						   (* 2 notmuch-hello-indent)
-						   ;; 1 for the space
-						   ;; before the
-						   ;; `[save]' button. 6
-						   ;; for the `[save]'
-						   ;; button.
-						   1 6))
-				     :action (lambda (widget &rest ignore)
-					       (notmuch-hello-search (widget-value widget)))
-				     search))
-		 (widget-insert " ")
-		 (widget-create 'push-button
-				:notify (lambda (widget &rest ignore)
-					  (notmuch-hello-add-saved-search widget))
-				:notmuch-saved-search-widget widget-symbol
-				"save"))
-	       (widget-insert "\n")
-	       (setq nth (1+ nth)))
-	    notmuch-hello-recent-searches)
-      (indent-rigidly start (point) notmuch-hello-indent)))
-
   (let ((found-target-pos nil)
 	(final-target-pos nil))
     (let* ((saved-alist
@@ -319,7 +264,7 @@ diagonal."
 	   (widest (max saved-widest alltags-widest)))
 
       (when saved-alist
-	(widget-insert "\nSaved searches: ")
+	(widget-insert "Saved searches: ")
 	(widget-create 'push-button
 		       :notify (lambda (&rest ignore)
 				 (customize-variable 'notmuch-hello-saved-searches))
@@ -329,6 +274,61 @@ diagonal."
 	  (setq found-target-pos (notmuch-hello-insert-tags saved-alist widest target))
 	  (if (not final-target-pos)
 	      (setq final-target-pos found-target-pos))
+	  (indent-rigidly start (point) notmuch-hello-indent)))
+
+      (let ((start (point)))
+	(widget-insert "\nSearch: ")
+	(widget-create 'editable-field
+		       ;; Leave some space at the start and end of the
+		       ;; search boxes.
+		       :size (max 8 (- (window-width) (* 2 notmuch-hello-indent)
+				       (length "Search: ")))
+		       :action (lambda (widget &rest ignore)
+				 (notmuch-hello-search (widget-value widget))))
+	(widget-insert "\n")
+	(indent-rigidly start (point) notmuch-hello-indent))
+
+      (when notmuch-hello-recent-searches
+	(widget-insert "\nRecent searches: ")
+	(widget-create 'push-button
+		       :notify (lambda (&rest ignore)
+				 (setq notmuch-hello-recent-searches nil)
+				 (notmuch-hello-update))
+		       "clear")
+	(widget-insert "\n\n")
+	(let ((start (point))
+	      (nth 0))
+	  (mapc '(lambda (search)
+		   (let ((widget-symbol (intern (format "notmuch-hello-search-%d" nth))))
+		     (set widget-symbol
+			  (widget-create 'editable-field
+					 ;; Don't let the search boxes be
+					 ;; less than 8 characters wide.
+					 :size (max 8
+						    (- (window-width)
+						       ;; Leave some space
+						       ;; at the start and
+						       ;; end of the
+						       ;; boxes.
+						       (* 2 notmuch-hello-indent)
+						       ;; 1 for the space
+						       ;; before the
+						       ;; `[save]' button. 6
+						       ;; for the `[save]'
+						       ;; button.
+						       1 6))
+					 :action (lambda (widget &rest ignore)
+						   (notmuch-hello-search (widget-value widget)))
+					 search))
+		     (widget-insert " ")
+		     (widget-create 'push-button
+				    :notify (lambda (widget &rest ignore)
+					      (notmuch-hello-add-saved-search widget))
+				    :notmuch-saved-search-widget widget-symbol
+				    "save"))
+		   (widget-insert "\n")
+		   (setq nth (1+ nth)))
+		notmuch-hello-recent-searches)
 	  (indent-rigidly start (point) notmuch-hello-indent)))
 
       (when alltags-alist
