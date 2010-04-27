@@ -1,3 +1,29 @@
+notmuch (0.3) unstable; urgency=low
+
+  * User-configurable tags for new messages
+  * Threads search results named based on subjects that match search
+  * Faster operation of "notmuch tag" (avoid unneeded sorting)
+  * Even Better guessing of From: header for "notmuch reply"
+  * Indication of author names that match a search
+  * emacs: An entirely new initial view for notmuch, (friendly yet powerful)
+  * emacs: Full-featured "customize" support for configuring notmuch
+  * emacs: Support for doing tab-completion of email addresses
+  * emacs: Support for file-based (Fcc) delivery of sent messages
+  * emacs: New 'G' key binding to trigger mail refresh (G == "Get new mail")
+  * emacs: Implement emacs message display with the JSON output from notmuch
+  * emacs: Better handling of HTML/MIME attachments (inline images!)
+  * emacs: Customizable support for tidying of text/plain message content
+  * emacs: New support for searchable citations (even when hidden)
+  * emacs: More flexible handling of header visibility
+  * emacs: The Return key now toggles message visibility anywhere
+  * emacs: Customizable formatting of search results
+  * emacs: Generate nicer names for search buffers when using a saved search.
+  * emacs: Add a notmuch User-Agent header when sending mail from notmuch/emacs
+  * emacs: New keybinding (M-Ret) to open all collapsed messages in a thread
+  * libnotmuch1: Provide a new NOTMUCH_SORT_UNSORTED value for queries
+
+ -- Carl Worth <cworth@cworth.org>  Tue, 27 Apr 2010 02:07:29 -0700
+
 notmuch (0.2) unstable; urgency=low
 
   * Better guessing of From: header.

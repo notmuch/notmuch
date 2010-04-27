@@ -58,8 +58,8 @@ repository. From here, there are just a few steps to release:
 4) Create an entry for the new release in debian/changelog
 
 	The syntax of this file is tightly restricted, but the
-	available emacs mode (see the dpkg-dev-el package helps).  The
-	entries here will be the Debian-relevant single-line
+	available emacs mode (see the dpkg-dev-el package) helps.
+	The entries here will be the Debian-relevant single-line
 	description of changes from the NEWS entry. And the version
 	must match the version in the next step.
 
