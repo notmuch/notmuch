@@ -156,11 +156,19 @@ _thread_cleanup_author (notmuch_thread_t *thread,
     char *blank;
     int fname,lname;
 
+    if (author == NULL)
+	return NULL;
     clean_author = talloc_strdup(thread, author);
     if (clean_author == NULL)
 	return NULL;
+    /* check if there's a comma in the name and that there's a
+     * component of the name behind it (so the name doesn't end with
+     * the comma - in which case the string that strchr finds is just
+     * one character long ",\0").
+     * Otherwise just return the copy of the original author name that
+     * we just made*/
     comma = strchr(author,',');
-    if (comma) {
+    if (comma && strlen(comma) > 1) {
 	/* let's assemble what we think is the correct name */
 	lname = comma - author;
 	fname = strlen(author) - lname - 2;
@@ -180,7 +188,6 @@ _thread_cleanup_author (notmuch_thread_t *thread,
 	    /* we didn't identify this as part of the email address
 	    * so let's punt and return the original author */
 	    strcpy (clean_author, author);
-
     }
     return clean_author;
 }
