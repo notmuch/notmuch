@@ -31,8 +31,10 @@ struct _notmuch_thread {
     char *thread_id;
     char *subject;
     GHashTable *authors_hash;
+    GPtrArray *authors_array;
+    GHashTable *matched_authors_hash;
+    int has_non_matched_authors;
     char *authors;
-    char *nonmatched_authors;
     GHashTable *tags;
 
     notmuch_message_list_t *message_list;
@@ -47,16 +49,26 @@ static int
 _notmuch_thread_destructor (notmuch_thread_t *thread)
 {
     g_hash_table_unref (thread->authors_hash);
+    g_hash_table_unref (thread->matched_authors_hash);
     g_hash_table_unref (thread->tags);
     g_hash_table_unref (thread->message_hash);
+
+    if (thread->authors_array) {
+	g_ptr_array_free (thread->authors_array, TRUE);
+	thread->authors_array = NULL;
+    }
 
     return 0;
 }
 
+/* Add each author of the thread to the thread's authors_hash and the
+ * thread's authors_array. */
 static void
 _thread_add_author (notmuch_thread_t *thread,
 		    const char *author)
 {
+    char *author_copy;
+
     if (author == NULL)
 	return;
 
@@ -64,87 +76,68 @@ _thread_add_author (notmuch_thread_t *thread,
 				      author, NULL, NULL))
 	return;
 
-    g_hash_table_insert (thread->authors_hash, xstrdup (author), NULL);
+    author_copy = talloc_strdup (thread, author);
+
+    g_hash_table_insert (thread->authors_hash, author_copy, NULL);
+
+    g_ptr_array_add (thread->authors_array, author_copy);
+}
+
+/* Add each matched author of the thread to the thread's
+ * matched_authors_hash and to the thread's authors string. */
+static void
+_thread_add_matched_author (notmuch_thread_t *thread,
+			    const char *author)
+{
+    char *author_copy;
+
+    if (author == NULL)
+	return;
+
+    if (g_hash_table_lookup_extended (thread->matched_authors_hash,
+				      author, NULL, NULL))
+	return;
+
+    author_copy = talloc_strdup (thread, author);
+
+    g_hash_table_insert (thread->matched_authors_hash, author_copy, NULL);
 
     if (thread->authors)
 	thread->authors = talloc_asprintf (thread, "%s, %s",
 					   thread->authors,
 					   author);
     else
-	thread->authors = talloc_strdup (thread, author);
+	thread->authors = author_copy;
 }
 
-/*
- * move authors of matched messages in the thread to
- * the front of the authors list, but keep them in
- * existing order within their group
- */
+/* Copy any authors from the authors array that were not also matched
+ * authors onto the end of the thread's authors string.
+ * We use a '|' to separate matched and unmatched authors. */
 static void
-_thread_move_matched_author (notmuch_thread_t *thread,
-			     const char *author)
+_complete_thread_authors (notmuch_thread_t *thread)
 {
-    char *authors_copy;
-    char *current_author;
-    char *last_pipe,*next_pipe;
-    int idx,nm_start,author_len,authors_len;
+    unsigned int i;
+    char *author;
 
-    if (thread->authors == NULL || author == NULL)
-	return;
-    if (thread->nonmatched_authors == NULL)
-	thread->nonmatched_authors = thread->authors;
-    author_len = strlen(author);
-    authors_len = strlen(thread->authors);
-    if (author_len == authors_len) {
-	/* just one author */
-	thread->nonmatched_authors += author_len;
-	return;
-    }
-    current_author = strcasestr(thread->authors, author);
-    if (current_author == NULL)
-	return;
-    /* how far inside the nonmatched authors is our author? */
-    idx = current_author - thread->nonmatched_authors;
-    if (idx < 0) {
-	/* already among matched authors */
-	return;
-    }
-    /* are there any authors in the list after our author? */
-    if (thread->nonmatched_authors + author_len < thread->authors + authors_len) {
-	/* we have to make changes, so let's get a temp copy */
-	authors_copy = talloc_strdup(thread,thread->authors);
-	/* nm_start is the offset into where the non-matched authors start */
-	nm_start = thread->nonmatched_authors - thread->authors;
-	/* copy this author and add the "| " - the if clause above tells us there's more */
-	strncpy(thread->nonmatched_authors,author,author_len);
-	strncpy(thread->nonmatched_authors+author_len,"| ",2);
-	thread->nonmatched_authors += author_len+2;
-	if (idx > 0) {
-	  /* we are actually moving authors around, not just changing the separator
-	   * first copy the authors that came BEFORE our author */
-	  strncpy(thread->nonmatched_authors, authors_copy+nm_start, idx-2);
-	  /* finally, if there are authors AFTER our author, copy those */
-	  if(author_len+nm_start+idx < authors_len) {
-	    strncpy(thread->nonmatched_authors + idx - 2,", ",2);
-	    strncpy(thread->nonmatched_authors + idx, authors_copy+nm_start + idx + author_len + 2,
-		    authors_len - (nm_start + idx + author_len + 2));
-	  }
+    for (i = 0; i < thread->authors_array->len; i++) {
+	author = (char *) g_ptr_array_index (thread->authors_array, i);
+	if (g_hash_table_lookup_extended (thread->matched_authors_hash,
+					  author, NULL, NULL))
+	    continue;
+	if (thread->has_non_matched_authors) {
+	    thread->authors = talloc_asprintf (thread, "%s, %s",
+					       thread->authors,
+					       author);
+	} else {
+	    thread->authors = talloc_asprintf (thread, "%s| %s",
+					       thread->authors,
+					       author);
+	    thread->has_non_matched_authors = 1;
 	}
-	/* finally let's make sure there's just one '|' in the authors string */
-	last_pipe = strchr(thread->authors,'|');
-	while (last_pipe) {
-	    next_pipe = strchr(last_pipe+1,'|');
-	    if (next_pipe)
-		*last_pipe = ',';
-	    last_pipe = next_pipe;
-	}
-    } else {
-	thread->nonmatched_authors += author_len;
-	/* so now all authors are matched - let's remove the '|' */
-	last_pipe = strchr(thread->authors,'|');
-	if (last_pipe)
-	    *last_pipe = ',';
     }
-    return;
+
+    g_ptr_array_free (thread->authors_array, TRUE);
+    thread->authors_array = NULL;
 }
 
 /* clean up the uggly "Lastname, Firstname" format that some mail systems
@@ -304,7 +297,8 @@ _thread_add_matched_message (notmuch_thread_t *thread,
 	notmuch_message_set_flag (hashed_message,
 				  NOTMUCH_MESSAGE_FLAG_MATCH, 1);
     }
-    _thread_move_matched_author (thread,notmuch_message_get_author(hashed_message));
+
+    _thread_add_matched_author (thread, notmuch_message_get_author (hashed_message));
 
     if ((sort == NOTMUCH_SORT_OLDEST_FIRST && date <= thread->newest) ||
 	(sort != NOTMUCH_SORT_OLDEST_FIRST && date == thread->newest))
@@ -430,9 +424,13 @@ _notmuch_thread_create (void *ctx,
     thread->thread_id = talloc_strdup (thread, thread_id);
     thread->subject = NULL;
     thread->authors_hash = g_hash_table_new_full (g_str_hash, g_str_equal,
-						  free, NULL);
+						  NULL, NULL);
+    thread->authors_array = g_ptr_array_new ();
+    thread->matched_authors_hash = g_hash_table_new_full (g_str_hash,
+							  g_str_equal,
+							  NULL, NULL);
     thread->authors = NULL;
-    thread->nonmatched_authors = NULL;
+    thread->has_non_matched_authors = 0;
     thread->tags = g_hash_table_new_full (g_str_hash, g_str_equal,
 					  free, NULL);
 
@@ -492,6 +490,8 @@ _notmuch_thread_create (void *ctx,
 
 	notmuch_query_destroy (matched_query);
     }
+
+    _complete_thread_authors (thread);
 
     _resolve_thread_relationships (thread);
 
