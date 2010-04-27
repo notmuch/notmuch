@@ -47,7 +47,6 @@
 (defun notmuch-fcc-initialization ()
   "If notmuch-fcc-directories is set,
    hook them into the message-fcc-handler-function"
-(if (not (eq notmuch-fcc-dirs nil)) (progn
     ;Set up the message-fcc-handler to move mails to the maildir in Fcc
     ;The parameter is hardcoded to mark messages as "seen"
     (setq message-fcc-handler-function
@@ -57,7 +56,7 @@
     ;(preferrably we would use message-header-setup-up, but notmuch-reply
     ; munges headers after that is run, so it won't work for replies within
     ; notmuch)
-    (add-hook 'message-send-hook 'notmuch-fcc-header-setup))))
+    (add-hook 'message-send-hook 'notmuch-fcc-header-setup))
 
 (defun notmuch-fcc-header-setup ()
   "Can be added to message-send-hook and will set the FCC header
