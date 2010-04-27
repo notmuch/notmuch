@@ -168,14 +168,13 @@ diagonal."
 	       ;; (not elem) indicates an empty slot in the matrix.
 	       (when elem
 		 (widget-insert (format "%6s " (notmuch-folder-count (cdr elem))))
-		 (if (string= (car elem) target)
-		     (progn
-		       (setq found-target-pos (point-marker))))
+		 (if (string= (format "%s " (car elem)) target)
+		     (setq found-target-pos (point-marker)))
 		 (widget-create 'push-button
 				:notify #'notmuch-hello-widget-search
 				:notmuch-search-terms (cdr elem)
-				(car elem))
-		 (insert (make-string (- widest (length (car elem))) ? )))
+				(format "%s " (car elem)))
+		 (insert (make-string (1- (- widest (length (car elem)))) ? )))
 	       (setq count (1+ count))
 	       (if (eq (% count tags-per-line) 0)
 		   (widget-insert "\n"))))
