@@ -1,3 +1,28 @@
+Notmuch 0.3.1 (2010-04-27)
+==========================
+General bug fix
+---------------
+Fix an infinite loop in "notmuch reply"
+
+  This bug could be triggered by replying to a message where the
+  user's primary email address did not appear in the To: header and
+  the user had not configured any secondary email addresses. The bug
+  was a simple re-use of the same iterator variable in nested loops.
+
+Emacs bug fixes
+---------------
+Fix calculations for line wrapping in the primary "notmuch" view.
+
+Fix Fcc support to prompt to create a directory if the specified Fcc
+directory does not exist.
+
+Build fix
+---------
+Fix build on OpenSolaris (at least) due to missing 'extern "C"' block.
+
+  Without this, the C++ sources could not find strcasestr and the
+  final linking of notmuch would fail.
+
 Notmuch 0.3 (2010-04-27)
 ========================
 New command-line features
@@ -147,7 +172,7 @@ Better handling of HTML messages and MIME attachments (inline images!)
   inline. This includes inline viewing of image attachments, (provided
   the window is large enough to fit the image at its natural size).
 
-  Much more robust handling of HTML messages. Currently both text/plan
+  Much more robust handling of HTML messages. Currently both text/plain
   and text/html alternates will be rendered next to each other. In a
   future release, users will be able to decide to see only one or the
   other representation.
