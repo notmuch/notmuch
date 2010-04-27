@@ -22,7 +22,7 @@ notmuch (0.3) unstable; urgency=low
   * emacs: New keybinding (M-Ret) to open all collapsed messages in a thread
   * libnotmuch1: Provide a new NOTMUCH_SORT_UNSORTED value for queries
 
- -- Carl Worth <cworth@cworth.org>  Tue, 27 Apr 2010 02:07:29 -0700
+ -- Carl Worth <cworth@debian.org>  Tue, 27 Apr 2010 02:07:29 -0700
 
 notmuch (0.2) unstable; urgency=low
 
