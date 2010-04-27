@@ -194,181 +194,184 @@ diagonal."
 (defun notmuch-hello-update (&optional no-display)
   ;; Lazy - rebuild everything.
   (interactive)
-  (let ((target (if (widget-at)
-		   (widget-value (widget-at))
-		 (progn
-		   (widget-forward 1)
-		   (widget-value (widget-at))))))
-    (notmuch-hello no-display target)))
+  (notmuch-hello no-display))
 
-(defun notmuch-hello (&optional no-display target)
+(defun notmuch-hello (&optional no-display)
   (interactive)
 
   (if no-display
       (set-buffer "*notmuch-hello*")
     (switch-to-buffer "*notmuch-hello*"))
 
-  (kill-all-local-variables)
-  (let ((inhibit-read-only t))
-    (erase-buffer))
+  (let ((target (if (widget-at)
+		   (widget-value (widget-at))
+		 (condition-case nil
+		     (progn
+		       (widget-forward 1)
+		       (widget-value (widget-at)))
+		   (error nil)))))
 
-  (let ((all (overlay-lists)))
-    ;; Delete all the overlays.
-    (mapc 'delete-overlay (car all))
-    (mapc 'delete-overlay (cdr all)))
+    (kill-all-local-variables)
+    (let ((inhibit-read-only t))
+      (erase-buffer))
 
-  (when notmuch-hello-show-logo
-    (let ((image notmuch-hello-logo))
-      ;; The notmuch logo uses transparency. That can display poorly
-      ;; when inserting the image into an emacs buffer (black logo on
-      ;; a black background), so force the background colour of the
-      ;; image. We use a face to represent the colour so that
-      ;; `defface' can be used to declare the different possible
-      ;; colours, which depend on whether the frame has a light or
-      ;; dark background.
-      (setq image (cons 'image
-			(append (cdr image)
-				(list :background (face-background 'notmuch-hello-logo-background)))))
-      (insert-image image))
-    (widget-insert "  "))
+    (let ((all (overlay-lists)))
+      ;; Delete all the overlays.
+      (mapc 'delete-overlay (car all))
+      (mapc 'delete-overlay (cdr all)))
 
-  (widget-insert "Welcome to ")
-  ;; Hack the display of the links used.
-  (let ((widget-link-prefix "")
-	(widget-link-suffix ""))
-    (widget-create 'link
-		   :notify (lambda (&rest ignore)
-			     (browse-url notmuch-hello-url))
-		   :help-echo "Visit the notmuch website."
-		   "notmuch")
-    (widget-insert ". ")
-    (widget-insert "You have ")
-    (widget-create 'link
-		   :notify (lambda (&rest ignore)
-			     (notmuch-hello-update))
-		   :help-echo "Refresh"
-		   (car (process-lines notmuch-command "count")))
-    (widget-insert " messages (that's not much mail).\n\n"))
+    (when notmuch-hello-show-logo
+      (let ((image notmuch-hello-logo))
+	;; The notmuch logo uses transparency. That can display poorly
+	;; when inserting the image into an emacs buffer (black logo on
+	;; a black background), so force the background colour of the
+	;; image. We use a face to represent the colour so that
+	;; `defface' can be used to declare the different possible
+	;; colours, which depend on whether the frame has a light or
+	;; dark background.
+	(setq image (cons 'image
+			  (append (cdr image)
+				  (list :background (face-background 'notmuch-hello-logo-background)))))
+	(insert-image image))
+      (widget-insert "  "))
 
-  (let ((found-target-pos nil)
-	(final-target-pos nil))
-    (let* ((saved-alist
-	    ;; Filter out empty saved seaches if required.
-	    (if notmuch-hello-show-empty-saved-searches
-		notmuch-hello-saved-searches
-	      (loop for elem in notmuch-hello-saved-searches
-		    if (> (string-to-number (notmuch-folder-count (cdr elem))) 0)
-		    collect elem)))
-	   (saved-widest (notmuch-hello-longest-label saved-alist))
-	   (alltags-alist (mapcar '(lambda (tag) (cons tag (concat "tag:" tag)))
-				  (process-lines notmuch-command "search-tags")))
-	   (alltags-widest (notmuch-hello-longest-label alltags-alist))
-	   (widest (max saved-widest alltags-widest)))
+    (widget-insert "Welcome to ")
+    ;; Hack the display of the links used.
+    (let ((widget-link-prefix "")
+	  (widget-link-suffix ""))
+      (widget-create 'link
+		     :notify (lambda (&rest ignore)
+			       (browse-url notmuch-hello-url))
+		     :help-echo "Visit the notmuch website."
+		     "notmuch")
+      (widget-insert ". ")
+      (widget-insert "You have ")
+      (widget-create 'link
+		     :notify (lambda (&rest ignore)
+			       (notmuch-hello-update))
+		     :help-echo "Refresh"
+		     (car (process-lines notmuch-command "count")))
+      (widget-insert " messages (that's not much mail).\n\n"))
 
-      (when saved-alist
-	(widget-insert "Saved searches: ")
-	(widget-create 'push-button
-		       :notify (lambda (&rest ignore)
-				 (customize-variable 'notmuch-hello-saved-searches))
-		       "edit")
-	(widget-insert "\n\n")
-	(setq final-target-pos (point-marker))
+    (let ((found-target-pos nil)
+	  (final-target-pos nil))
+      (let* ((saved-alist
+	      ;; Filter out empty saved seaches if required.
+	      (if notmuch-hello-show-empty-saved-searches
+		  notmuch-hello-saved-searches
+		(loop for elem in notmuch-hello-saved-searches
+		      if (> (string-to-number (notmuch-folder-count (cdr elem))) 0)
+		      collect elem)))
+	     (saved-widest (notmuch-hello-longest-label saved-alist))
+	     (alltags-alist (mapcar '(lambda (tag) (cons tag (concat "tag:" tag)))
+				    (process-lines notmuch-command "search-tags")))
+	     (alltags-widest (notmuch-hello-longest-label alltags-alist))
+	     (widest (max saved-widest alltags-widest)))
+
+	(when saved-alist
+	  (widget-insert "Saved searches: ")
+	  (widget-create 'push-button
+			 :notify (lambda (&rest ignore)
+				   (customize-variable 'notmuch-hello-saved-searches))
+			 "edit")
+	  (widget-insert "\n\n")
+	  (setq final-target-pos (point-marker))
+	  (let ((start (point)))
+	    (setq found-target-pos (notmuch-hello-insert-tags saved-alist widest target))
+	    (if found-target-pos
+		(setq final-target-pos found-target-pos))
+	    (indent-rigidly start (point) notmuch-hello-indent)))
+
 	(let ((start (point)))
-	  (setq found-target-pos (notmuch-hello-insert-tags saved-alist widest target))
-	  (if found-target-pos
-	      (setq final-target-pos found-target-pos))
-	  (indent-rigidly start (point) notmuch-hello-indent)))
+	  (widget-insert "\nSearch: ")
+	  (setq notmuch-hello-search-bar-marker (point-marker))
+	  (widget-create 'editable-field
+			 ;; Leave some space at the start and end of the
+			 ;; search boxes.
+			 :size (max 8 (- (window-width) (* 2 notmuch-hello-indent)
+					 (length "Search: ")))
+			 :action (lambda (widget &rest ignore)
+				   (notmuch-hello-search (widget-value widget))))
+	  (widget-insert "\n")
+	  (indent-rigidly start (point) notmuch-hello-indent))
+
+	(when notmuch-hello-recent-searches
+	  (widget-insert "\nRecent searches: ")
+	  (widget-create 'push-button
+			 :notify (lambda (&rest ignore)
+				   (setq notmuch-hello-recent-searches nil)
+				   (notmuch-hello-update))
+			 "clear")
+	  (widget-insert "\n\n")
+	  (let ((start (point))
+		(nth 0))
+	    (mapc '(lambda (search)
+		     (let ((widget-symbol (intern (format "notmuch-hello-search-%d" nth))))
+		       (set widget-symbol
+			    (widget-create 'editable-field
+				       ;; Don't let the search boxes be
+				       ;; less than 8 characters wide.
+				       :size (max 8
+						  (- (window-width)
+						     ;; Leave some space
+						     ;; at the start and
+						     ;; end of the
+						     ;; boxes.
+						     (* 2 notmuch-hello-indent)
+						     ;; 1 for the space
+						     ;; before the
+						     ;; `[save]' button. 6
+						     ;; for the `[save]'
+						     ;; button.
+						     1 6))
+				       :action (lambda (widget &rest ignore)
+						 (notmuch-hello-search (widget-value widget)))
+				       search))
+		       (widget-insert " ")
+		       (widget-create 'push-button
+				      :notify (lambda (widget &rest ignore)
+						(notmuch-hello-add-saved-search widget))
+				      :notmuch-saved-search-widget widget-symbol
+				      "save"))
+		     (widget-insert "\n")
+		     (setq nth (1+ nth)))
+		  notmuch-hello-recent-searches)
+	    (indent-rigidly start (point) notmuch-hello-indent)))
+
+	(when alltags-alist
+	  (widget-insert "\nAll tags:\n\n")
+	  (let ((start (point)))
+	    (setq found-target-pos (notmuch-hello-insert-tags alltags-alist widest target))
+	    (if (not final-target-pos)
+		(setq final-target-pos found-target-pos))
+	    (indent-rigidly start (point) notmuch-hello-indent))))
 
       (let ((start (point)))
-	(widget-insert "\nSearch: ")
-	(setq notmuch-hello-search-bar-marker (point-marker))
-	(widget-create 'editable-field
-		       ;; Leave some space at the start and end of the
-		       ;; search boxes.
-		       :size (max 8 (- (window-width) (* 2 notmuch-hello-indent)
-				       (length "Search: ")))
-		       :action (lambda (widget &rest ignore)
-				 (notmuch-hello-search (widget-value widget))))
-	(widget-insert "\n")
-	(indent-rigidly start (point) notmuch-hello-indent))
-
-      (when notmuch-hello-recent-searches
-	(widget-insert "\nRecent searches: ")
-	(widget-create 'push-button
-		       :notify (lambda (&rest ignore)
-				 (setq notmuch-hello-recent-searches nil)
-				 (notmuch-hello-update))
-		       "clear")
 	(widget-insert "\n\n")
-	(let ((start (point))
-	      (nth 0))
-	  (mapc '(lambda (search)
-		   (let ((widget-symbol (intern (format "notmuch-hello-search-%d" nth))))
-		     (set widget-symbol
-			  (widget-create 'editable-field
-					 ;; Don't let the search boxes be
-					 ;; less than 8 characters wide.
-					 :size (max 8
-						    (- (window-width)
-						       ;; Leave some space
-						       ;; at the start and
-						       ;; end of the
-						       ;; boxes.
-						       (* 2 notmuch-hello-indent)
-						       ;; 1 for the space
-						       ;; before the
-						       ;; `[save]' button. 6
-						       ;; for the `[save]'
-						       ;; button.
-						       1 6))
-					 :action (lambda (widget &rest ignore)
-						   (notmuch-hello-search (widget-value widget)))
-					 search))
-		     (widget-insert " ")
-		     (widget-create 'push-button
-				    :notify (lambda (widget &rest ignore)
-					      (notmuch-hello-add-saved-search widget))
-				    :notmuch-saved-search-widget widget-symbol
-				    "save"))
-		   (widget-insert "\n")
-		   (setq nth (1+ nth)))
-		notmuch-hello-recent-searches)
-	  (indent-rigidly start (point) notmuch-hello-indent)))
+	(widget-insert "Type a search query and hit RET to view matching threads.\n")
+	(when notmuch-hello-recent-searches
+	  (widget-insert "Hit RET to re-submit a previous search. Edit it first if you like.\n")
+	  (widget-insert "Save recent searches with the `save' button.\n"))
+	(when notmuch-hello-saved-searches
+	  (widget-insert "Edit saved searches with the `edit' button.\n"))
+	(widget-insert "Hit RET or click on a saved search or tag name to view matching threads.\n")
+	(widget-insert "`=' refreshes this screen. `s' jumps to the search box. `q' to quit.\n")
+	(let ((fill-column (- (window-width) notmuch-hello-indent)))
+	  (center-region start (point))))
 
-      (when alltags-alist
-	(widget-insert "\nAll tags:\n\n")
-	(let ((start (point)))
-	  (setq found-target-pos (notmuch-hello-insert-tags alltags-alist widest target))
-	  (if (not final-target-pos)
-	      (setq final-target-pos found-target-pos))
-	  (indent-rigidly start (point) notmuch-hello-indent))))
+      (use-local-map widget-keymap)
+      (local-set-key "=" 'notmuch-hello-update)
+      (local-set-key "m" 'notmuch-mua-mail)
+      (local-set-key "q" '(lambda () (interactive) (kill-buffer (current-buffer))))
+      (local-set-key "s" 'notmuch-hello-goto-search)
+      (local-set-key "v" '(lambda () (interactive)
+			    (message "notmuch version %s" (notmuch-version))))
 
-    (let ((start (point)))
-      (widget-insert "\n\n")
-      (widget-insert "Type a search query and hit RET to view matching threads.\n")
-      (when notmuch-hello-recent-searches
-	(widget-insert "Hit RET to re-submit a previous search. Edit it first if you like.\n")
-	(widget-insert "Save recent searches with the `save' button.\n"))
-      (when notmuch-hello-saved-searches
-	(widget-insert "Edit saved searches with the `edit' button.\n"))
-      (widget-insert "Hit RET or click on a saved search or tag name to view matching threads.\n")
-      (widget-insert "`=' refreshes this screen. `s' jumps to the search box. `q' to quit.\n")
-      (let ((fill-column (- (window-width) notmuch-hello-indent)))
-	(center-region start (point))))
+      (widget-setup)
 
-    (use-local-map widget-keymap)
-    (local-set-key "=" 'notmuch-hello-update)
-    (local-set-key "m" 'notmuch-mua-mail)
-    (local-set-key "q" '(lambda () (interactive) (kill-buffer (current-buffer))))
-    (local-set-key "s" 'notmuch-hello-goto-search)
-    (local-set-key "v" '(lambda () (interactive)
-			  (message "notmuch version %s" (notmuch-version))))
-
-    (widget-setup)
-
-    (goto-char final-target-pos)
-    (if (not (widget-at))
-	(widget-forward 1))))
+      (goto-char final-target-pos)
+      (if (not (widget-at))
+	  (widget-forward 1)))))
 
 ;;
 
