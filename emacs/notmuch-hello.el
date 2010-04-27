@@ -64,7 +64,7 @@
   "Background colour for the notmuch logo."
   :group 'notmuch)
 
-(defcustom notmuch-hello-jump-to-search t
+(defcustom notmuch-hello-jump-to-search nil
   "Whether `notmuch-hello' should always jump to the search
 field."
   :type 'boolean
