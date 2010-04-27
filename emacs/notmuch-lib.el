@@ -40,8 +40,6 @@
 
 ;;
 
-(declare-function notmuch-poll ())
-
 (defun notmuch-version ()
   "Return a string with the notmuch version number."
   (let ((long-string

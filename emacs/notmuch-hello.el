@@ -27,7 +27,7 @@
 (require 'notmuch-mua)
 
 (declare-function notmuch-search "notmuch" (query &optional oldest-first target-thread target-line continuation))
-(declare-function notmuch-folder-count "notmuch" (search))
+(declare-function notmuch-poll "notmuch" ())
 
 (defvar notmuch-hello-search-bar-marker nil
   "The position of the search bar within the notmuch-hello buffer.")
