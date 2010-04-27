@@ -64,12 +64,6 @@
   "Background colour for the notmuch logo."
   :group 'notmuch)
 
-(defcustom notmuch-hello-jump-to-search nil
-  "Whether `notmuch-hello' should always jump to the search
-field."
-  :type 'boolean
-  :group 'notmuch)
-
 (defvar notmuch-hello-url "http://notmuchmail.org"
   "The `notmuch' web site.")
 
@@ -370,9 +364,9 @@ diagonal."
 
     (if final-target-pos
 	(goto-char final-target-pos)
-      (if notmuch-hello-jump-to-search
-	  (notmuch-hello-goto-search)
-	(goto-char (point-min))))))
+      (progn
+	(goto-char (point-min))
+	(widget-forward 1)))))
 
 ;;
 
