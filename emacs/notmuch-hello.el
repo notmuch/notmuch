@@ -284,8 +284,9 @@ diagonal."
 		      if (> (string-to-number (notmuch-saved-search-count (cdr elem))) 0)
 		      collect elem)))
 	     (saved-widest (notmuch-hello-longest-label saved-alist))
-	     (alltags-alist (mapcar '(lambda (tag) (cons tag (concat "tag:" tag)))
-				    (process-lines notmuch-command "search-tags")))
+	     (alltags-alist (if notmuch-show-all-tags-list
+				(mapcar '(lambda (tag) (cons tag (concat "tag:" tag)))
+					(process-lines notmuch-command "search-tags"))))
 	     (alltags-widest (notmuch-hello-longest-label alltags-alist))
 	     (widest (max saved-widest alltags-widest)))
 
@@ -360,26 +361,27 @@ diagonal."
 	    (indent-rigidly start (point) notmuch-hello-indent)))
 
 	(when alltags-alist
-	  (if notmuch-show-all-tags-list
-	      (progn
-		(widget-insert "\nAll tags: ")
-		(widget-create 'push-button
-			       :notify (lambda (widget &rest ignore)
-					 (setq notmuch-show-all-tags-list nil)
-					 (notmuch-hello-update))
-			       "hide")
-		(widget-insert "\n\n")
-		(let ((start (point)))
-		  (setq found-target-pos (notmuch-hello-insert-tags alltags-alist widest target))
-		  (if (not final-target-pos)
-		      (setq final-target-pos found-target-pos))
-		  (indent-rigidly start (point) notmuch-hello-indent)))
-	    (widget-insert "\n")
+	  (widget-insert "\nAll tags: ")
+	  (widget-create 'push-button
+			 :notify (lambda (widget &rest ignore)
+				   (setq notmuch-show-all-tags-list nil)
+				   (notmuch-hello-update))
+			 "hide")
+	  (widget-insert "\n\n")
+	  (let ((start (point)))
+	    (setq found-target-pos (notmuch-hello-insert-tags alltags-alist widest target))
+	    (if (not final-target-pos)
+		(setq final-target-pos found-target-pos))
+	    (indent-rigidly start (point) notmuch-hello-indent)))
+
+	(widget-insert "\n")
+
+	(if (not notmuch-show-all-tags-list)
 	    (widget-create 'push-button
 			   :notify (lambda (widget &rest ignore)
 				     (setq notmuch-show-all-tags-list t)
 				     (notmuch-hello-update))
-			   "Show all tags"))))
+			   "Show all tags")))
 
       (let ((start (point)))
 	(widget-insert "\n\n")
