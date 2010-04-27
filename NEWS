@@ -2,6 +2,12 @@ Notmuch 0.3.1 (2010-04-27)
 ==========================
 General bug fix
 ---------------
+Fix a potential SEGV in "notmuch search"
+
+  This bug could be triggered by an author name ending in a ','.
+  Admittedly - that's almost certainly a spam email. Still needs
+  to be handled correctly.
+
 Fix an infinite loop in "notmuch reply"
 
   This bug could be triggered by replying to a message where the
