@@ -662,19 +662,19 @@ characters as well as `_.+-'.
 
 (defun notmuch-search-buffer-title (query)
   "Returns the title for a buffer with notmuch search results."
-  (let* ((folder (rassoc-if (lambda (key)
-			      (string-match (concat "^" (regexp-quote key) "$")
-					    query))
-			    (notmuch-saved-searches)))
-	 (folder-name (car folder))
-	 (folder-query (cdr folder)))
-    (cond ((and folder (equal folder-query query))
-	   ;; Query is the same as folder search (ignoring case)
-	   (concat "*notmuch-folder-" folder-name "*"))
-	  (folder
+  (let* ((saved-search (rassoc-if (lambda (key)
+				    (string-match (concat "^" (regexp-quote key) "$")
+						  query))
+				  (notmuch-saved-searches)))
+	 (saved-search-name (car saved-search))
+	 (saved-search-query (cdr saved-search)))
+    (cond ((and saved-search (equal saved-search-query query))
+	   ;; Query is the same as saved search (ignoring case)
+	   (concat "*notmuch-saved-search-" saved-search-name "*"))
+	  (saved-search
 	   (concat "*notmuch-search-"
-		   (replace-regexp-in-string (concat "^" (regexp-quote folder-query))
-					     (concat "[ " folder-name " ]")
+		   (replace-regexp-in-string (concat "^" (regexp-quote saved-search-query))
+					     (concat "[ " saved-search-name " ]")
 					     query)
 		   "*"))
 	  (t
