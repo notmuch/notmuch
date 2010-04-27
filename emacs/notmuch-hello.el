@@ -148,8 +148,7 @@ diagonal."
 		  nil nil #'notmuch-hello-search-continuation))
 
 (defun notmuch-hello-insert-tags (tag-alist widest)
-  (let* ((tag-format-string (format "%%-%ds " widest))
-	 (tags-per-line (max 1
+  (let* ((tags-per-line (max 1
 			     (/ (- (window-width) notmuch-hello-indent)
 				;; Count is 7 wide, 1 for the space
 				;; after the name.
@@ -169,7 +168,8 @@ diagonal."
 		 (widget-create 'push-button
 				:notify #'notmuch-hello-widget-search
 				:notmuch-search-terms (cdr elem)
-				(format tag-format-string (car elem))))
+				(car elem))
+		 (insert (make-string (- widest (length (car elem))) ? )))
 	       (setq count (1+ count))
 	       (if (eq (% count tags-per-line) 0)
 		   (widget-insert "\n"))))
