@@ -1,13 +1,38 @@
-Auto-tagging replied messages
+Notmuch 0.3.1 (2010-04-27)
+==========================
+General bug fix
+---------------
+Fix an infinite loop in "notmuch reply"
 
-  Add functionality for auto-tagging messages when they are replied
-  to. The tags (which can be either added or removed) can be
-  customized with the customization variable
-  `notmuch-message-replied-tags': a list of strings. Any string
-  prefaced with a "-" will be removed; any string prefaced with a "+"
-  (or neither "+" nor "-") will be added. The default is for all
-  replied messages to be marked "replied"
+  This bug could be triggered by replying to a message where the
+  user's primary email address did not appear in the To: header and
+  the user had not configured any secondary email addresses. The bug
+  was a simple re-use of the same iterator variable in nested loops.
 
+Emacs bug fixes
+---------------
+Fix calculations for line wrapping in the primary "notmuch" view.
+
+Fix Fcc support to prompt to create a directory if the specified Fcc
+directory does not exist.
+
+New emacs features
+------------------
+Add a new, optional hook for detecting inline patches
+
+  This hook is disabled by default but can be enabled with a checkbox
+  under ""Notmuch Show Insert Text/Plain Hook" in the notmuch
+  customize interface. It allows for inline patches to be detected and
+  treated as if they were attachments, (with context-sensitive
+  highlighting).
+
+Automatically tag messages as "replied" when sending a reply
+
+  This feature adds a "replied" tag by default, but can easily be
+  customized to add or remove other tags as well. For example, a user
+  might use a tag of "needs-reply" and can configure this feature to
+  automatically remove that tag when replying. See "Notmuch Message
+  Mark Replied" in the notmuch customize interface.
 
 Notmuch 0.3 (2010-04-27)
 ========================
@@ -158,7 +183,7 @@ Better handling of HTML messages and MIME attachments (inline images!)
   inline. This includes inline viewing of image attachments, (provided
   the window is large enough to fit the image at its natural size).
 
-  Much more robust handling of HTML messages. Currently both text/plan
+  Much more robust handling of HTML messages. Currently both text/plain
   and text/html alternates will be rendered next to each other. In a
   future release, users will be able to decide to see only one or the
   other representation.
