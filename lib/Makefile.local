@@ -15,7 +15,7 @@ LIBNOTMUCH_VERSION_MAJOR = 1
 
 # The minor version of the library interface. This should be incremented at
 # the time of release for any additions to the library interface.
-LIBNOTMUCH_VERSION_MINOR = 0
+LIBNOTMUCH_VERSION_MINOR = 1
 
 # The release version the library interface. This should be incremented at
 # the time of release if there have been no changes to the interface, (but
