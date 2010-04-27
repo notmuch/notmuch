@@ -1,21 +1,3 @@
-Notmuch 0.3.1 (2010-04-27)
-==========================
-General bug fix
----------------
-Fix an infinite loop in "notmuch reply"
-
-  This bug could be triggered by replying to a message where the
-  user's primary email address did not appear in the To: header and
-  the user had not configured any secondary email addresses. The bug
-  was a simple re-use of the same iterator variable in nested loops.
-
-Emacs bug fixes
----------------
-Fix calculations for line wrapping in the primary "notmuch" view.
-
-Fix Fcc support to prompt to create a directory if the specified Fcc
-directory does not exist.
-
 New emacs features
 ------------------
 Add a new, optional hook for detecting inline patches
@@ -33,6 +15,24 @@ Automatically tag messages as "replied" when sending a reply
   might use a tag of "needs-reply" and can configure this feature to
   automatically remove that tag when replying. See "Notmuch Message
   Mark Replied" in the notmuch customize interface.
+
+Notmuch 0.3.1 (2010-04-27)
+==========================
+General bug fix
+---------------
+Fix an infinite loop in "notmuch reply"
+
+  This bug could be triggered by replying to a message where the
+  user's primary email address did not appear in the To: header and
+  the user had not configured any secondary email addresses. The bug
+  was a simple re-use of the same iterator variable in nested loops.
+
+Emacs bug fixes
+---------------
+Fix calculations for line wrapping in the primary "notmuch" view.
+
+Fix Fcc support to prompt to create a directory if the specified Fcc
+directory does not exist.
 
 Build fix
 ---------
