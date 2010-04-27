@@ -45,7 +45,7 @@
 (defvar notmuch-hello-indent 4
   "How much to indent non-headers.")
 
-(defcustom notmuch-saved-searches notmuch-folders
+(defcustom notmuch-saved-searches nil
   "A list of saved searches to display."
   :type '(alist :key-type string :value-type string)
   :group 'notmuch)
@@ -200,6 +200,15 @@ diagonal."
 
 (defun notmuch-hello (&optional no-display)
   (interactive)
+
+  ;; Provide support for the deprecated name of this variable
+  (if (not notmuch-saved-searches)
+      (setq notmuch-saved-searches notmuch-folders))
+
+  ;; And set a default if neither has been set by the user
+  (if (not notmuch-saved-searches)
+      (setq notmuch-saved-searches '(("inbox" . "tag:inbox")
+				     ("unread" . "tag:unread"))))
 
   (if no-display
       (set-buffer "*notmuch-hello*")
