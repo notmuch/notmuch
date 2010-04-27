@@ -1,13 +1,35 @@
-Even Better guessing of From: header.
+Notmuch 0.3 (2010-04-27)
+========================
+New command-line features
+-------------------------
+User-configurable tags for new messages
+
+  A new "new.tags" option is available in the configuration file to
+  determine which tags are applied to new messages. Run "notmuch
+  setup" to generate new documentation within ~/.notmuch-config on how
+  to specify this value.
+
+Threads search results named based on subjects that match search
+
+  This means that when new mails arrived to a thread you've previously
+  read, and the new mails have a new subject, you will see that
+  subject in the search results rather than the old subject.
+
+Faster operation of "notmuch tag" (avoid unneeded sorting)
+
+  Since the user just wants to tag all matching messages, we can make
+  things perform a bit faster by avoiding the sort.
+
+Even Better guessing of From: header for "notmuch reply"
 
   Notmuch now looks at a number of headers when trying to figure out
-  the best From: header to use in a reply. First it checks whether one
-  of the user's emails is in To: or Cc:, then it checks Envelope-To:
-  and X-Original-To: headers, then it analyses the Received headers
-  checking for a Received: by .. from .. for user@add.res clause. And
-  finally it matches domains in the received path.
+  the best From: header to use in a reply. This is helpful if you have
+  several configured email addreses, and you also subsribe to various
+  mailing lists with different addresses, (so that mails you are
+  replying to won't always include your subsribed address in the To:
+  header).
 
-Visualization of author names that match a search
+Indication of author names that match a search
 
   When notmuch displays threads as the result of a search, it now
   lists the authors that match the search before listing the other
@@ -16,15 +38,201 @@ Visualization of author names that match a search
   a search that includes tag:unread. Now the authors of the unread
   messages in the thread are listed first.
 
-Provide 'G' key binding to trigger mail refresh
+New: Python bindings
+--------------------
+Sebastian Spaeth has contributed his python bindings for the notmuch
+library to the central repository. These bindings were previously
+known as "cnotmuch" within python but have now been renamed to be
+accessible with a simple, and more official-looking "import notmuch".
+
+The bindings have already proven very useful as people proficient in
+python have been able to easily develop programs to do notmuch-based
+searches for email-address completion, maildir-flag synchronization,
+and other tasks.
+
+These bindings are available within the bindings/python directory, but
+are not yet integrated into the top-level Makefiles, nor the top-level
+package-building scripts. Improvements are welcome.
+
+Emacs interface improvements
+----------------------------
+An entirely new initial view for notmuch, (friendly yet powerful)
+
+  Some of us call the new view "notmuch hello" but you can get at it
+  by simply calling "emacs -f notmuch". The new view provides a search
+  bar where new searches can be performed. It also displays a list of
+  recent searches, along with a button to save any of these, giving it
+  a new name as a "saved search". Many people find these "saved
+  searches" one of the most convenient ways of organizing their mail,
+  (providing all of the features of "folders" in other mail clients,
+  but without any of the disadvantages).
+
+  Finally, this view can also optionally display all of the tags that
+  exist in the database, along with a count for each tag, and a custom
+  search of messages with that tag that's simply a click (or keypress)
+  away.
+
+  Note: For users that liked the original mode of "emacs -f notmuch"
+	immediately displaying a particular search result, we
+	recommend instead running something like:
+
+		emacs --eval '(notmuch search "tag:inbox" t)'
+
+	The "t" means to sort the messages in an "oldest first" order,
+	(as notmuch would do previously by default). You can also
+	leave that off to have your seach results in "newest first"
+	order.
+
+Full-featured "customize" support for configuring notmuch
+
+  Notmuch now plugs in well to the emacs "customize" mode to make it
+  much simpler to find things about the notmuch interface that can be
+  tweaked by the user.
+
+  You can get to this mode by starting at the main "Customize" menu in
+  emacs, then browsing through "Applications", "Mail", and
+  "Notmuch". Or you can go straignt to "M-x customize-group"
+  "notmuch".
+
+  Once you're at the customize screen, you'll see a list of documented
+  options that can be manipulated along with checkboxes, drop-down
+  selectors, and text-entry boxes for configuring the various
+  settings.
+
+Support for doing tab-completion of email addresses
+
+  This support currently relies on an external program,
+  (notmuch-addresses), that is not yet shipped with notmuch
+  itself. But multiple, suitable implementations of this program have
+  already been written that generate address completions by doing
+  notmuch searches of your email collection. For example, providing
+  first those addresses that you have composed messages to in the
+  past, etc.
+
+  One such program (implemented in python with the python bindings to
+  notmuch) is available via:
+
+	git clone  http://jkr.acm.jhu.edu/git/notmuch_addresses.git
+
+  Install that program as notmuch-addresses on your PATH, and then
+  hitting TAB on a partial email address or name within the To: or Cc:
+  line of an email messsage will provide matching completions.
+
+Support for file-based (Fcc) delivery of sent messages to mail store
+
+  This isn't yet enabled by default. To enable this, one will have to
+  set the "Notmuch Fcc Dirs" setting within the notmuch customize
+  screen, (see its docuementation there for details). We anticipate
+  making this automatic in a future release.
+
+New 'G' key binding to trigger mail refresh (G == "Get new mail")
 
   The 'G' key works wherever '=' works. Before refreshing the screen
   it calls an external program that can be used to poll email servers,
   run notmuch new and setup specific tags for the new emails. The
-  script to be called can be customized with. Use the customize screen
-  to set the notmuch-poll-script variable to the program that you want
-  to execute when pressing 'G'. Note that this is synchronous - emacs
-  will wait until this program finishes.
+  script to be called should be configured with the "Notmuch Poll
+  Script" setting in the customize interface. This script will
+  typically invoke "notmuch new" and then perhaps several "notmuch
+  tag" commands.
+
+Implement emacs message display with the JSON output from notmuch.
+
+  This is much more robust than the previous implementation, (where
+  some HTML mails and mail quoting the notmuch code with the delimiter
+  characters in it would cause the parser to fall over).
+
+Better handling of HTML messages and MIME attachments (inline images!)
+
+  Allow for any MIME parts that emacs can display to be displayed
+  inline. This includes inline viewing of image attachments, (provided
+  the window is large enough to fit the image at its natural size).
+
+  Much more robust handling of HTML messages. Currently both text/plan
+  and text/html alternates will be rendered next to each other. In a
+  future release, users will be able to decide to see only one or the
+  other representation.
+
+  Each attachment now has its own button so that attachments can be
+  saved indivisdually (the 'w' key is still available to save all
+  attachments).
+
+Customizable support for tidying of text/plain message content
+
+  Many new functions are available for tidying up message
+  content. These include options such as wrapping long lines,
+  compressing duplicate blank lines, etc.
+
+  Most of these are disabled by default, but can easily be enabled by
+  clicking the available check boxes under the "Notmuch Show Insert
+  Text/Plain Hook" within the notmuch customize screen.
+
+New support for searchable citations (even when hidden)
+
+  When portions of overly-long citations are hiddent, the contents of
+  these citations will still be available for emacs' standard
+  "incremental search" functions. When the search matches any portion
+  of a hidden citation, the citation will become visible temporarily
+  to display the search result.
+
+More flexible handling of header visibility
+
+  As an answer to complaints from many users, the To, Cc, and Date
+  headers of messages are no longer hidden by default. For those users
+  that liked that these were hidden, a new "Notmuch Messages Headers
+  Visible" option in the customize interface can be set to nil. The
+  visibility of headers can still be toggled on a per-message basis
+  with the 'h' keybinding.
+
+  For users that don't want to see some subset of those headers, the
+  new "Notmuch Message Headers" variable can be customized to list
+  only those headers that should be present in the disply of a message.
+
+The Return key now toggles message visibility anywhere
+
+  Previously this worked only on the first summary-line of a message.
+
+Customizable formatting of search results
+
+  The user can easily customize the order, width, and formatting of
+  the various fields in a "notmuch search" buffer. See the "Notmuch
+  Search Result Format" section of the customize interface.
+
+Generate nicer names for search buffers when using a saved search.
+
+Add a notmuch User-Agent header when sending mail from notmuch/emacs.
+
+New keybinding (M-Ret) to open all collapsed messages in a thread.
+
+New library feature
+-------------------
+Provide a new NOTMUCH_SORT_UNSORTED value for queriesl
+
+  This can be somewhat faster when sorting simply isn't desired. For
+  example when collecting a set of messages that will all be
+  manipulated identically, (adding a tag, removing a tag, deleting the
+  messages), then there's no advantage to sorting the messages by
+  date.
+
+Build fixes
+-----------
+Fix to compile against GMime 2.6
+
+  Previously notmuch insisted on being able to find GMime 2.4, (even
+  though GMime 2.6 would have worked all along).
+
+Fix configure script to accept (and ignore) various standard options.
+
+  For example, those that the gentoo build scripts expect configure to
+  accept are now all accepted.
+
+Test suite
+----------
+A large number of new tests for the many new features.
+
+Better display of output from failed tests.
+
+  Now shows failures with diff rather than forcing the user to gaze at
+  complete actual and expected output looking for deviation.
 
 Notmuch 0.2 (2010-04-16)
 ========================
