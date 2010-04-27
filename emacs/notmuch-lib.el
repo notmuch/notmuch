@@ -40,6 +40,24 @@
 
 ;;
 
+(defcustom notmuch-saved-searches nil
+  "A list of saved searches to display."
+  :type '(alist :key-type string :value-type string)
+  :group 'notmuch)
+
+(defun notmuch-saved-searches ()
+  "Common function for querying the notmuch-saved-searches variable.
+
+We do this as a function to support the old name of the
+variable (`notmuch-folders') as well as for the default value if
+the user hasn't set this variable with the old or new value."
+  (if notmuch-saved-searches
+      notmuch-saved-searches
+    (if notmuch-folders
+	notmuch-folders
+      '(("inbox" . "tag:inbox")
+	("unread" . "tag:unread")))))
+
 (defun notmuch-version ()
   "Return a string with the notmuch version number."
   (let ((long-string

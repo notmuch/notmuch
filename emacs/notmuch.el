@@ -665,7 +665,7 @@ characters as well as `_.+-'.
   (let* ((folder (rassoc-if (lambda (key)
 			      (string-match (concat "^" (regexp-quote key))
 					    query))
-			    notmuch-folders))
+			    (notmuch-saved-searches)))
 	 (folder-name (car folder))
 	 (folder-query (cdr folder)))
     (cond ((and folder (equal folder-query query))
