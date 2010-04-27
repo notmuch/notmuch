@@ -1,3 +1,14 @@
+Auto-tagging replied messages
+
+  Add functionality for auto-tagging messages when they are replied
+  to. The tags (which can be either added or removed) can be
+  customized with the customization variable
+  `notmuch-message-replied-tags': a list of strings. Any string
+  prefaced with a "-" will be removed; any string prefaced with a "+"
+  (or neither "+" nor "-") will be added. The default is for all
+  replied messages to be marked "replied"
+
+
 Notmuch 0.3 (2010-04-27)
 ========================
 New command-line features
