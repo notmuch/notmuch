@@ -70,8 +70,11 @@
    (let ((subdir
           (cdr (assoc-string (message-fetch-field "from") notmuch-fcc-dirs t))))
      (if (eq subdir nil) (setq subdir (car (car notmuch-fcc-dirs))))
-     (message-remove-header "Fcc")
-     (message-add-header (concat "Fcc: " message-directory subdir)))))
+     (unless (message-fetch-field "fcc")
+       (message-add-header (concat "Fcc: " message-directory subdir)))
+     (unless (notmuch-maildir-fcc-dir-is-maildir-p 
+	      (message-fetch-field "fcc"))
+       (error (format "%s is not a maildir." (message-fetch-field "fcc")))))))
 
 (defun notmuch-maildir-fcc-host-fixer (hostname)
   (replace-regexp-in-string "/\\|:"
