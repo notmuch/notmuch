@@ -71,7 +71,8 @@ any given message."
   "Functions used to improve the display of text/plain parts."
   :group 'notmuch
   :type 'hook
-  :options '(notmuch-wash-wrap-long-lines
+  :options '(notmuch-wash-convert-inline-patch-to-part
+	     notmuch-wash-wrap-long-lines
 	     notmuch-wash-tidy-citations
 	     notmuch-wash-elide-blank-lines
 	     notmuch-wash-excerpt-citations))

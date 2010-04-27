@@ -23,6 +23,8 @@
 
 (require 'coolj)
 
+(declare-function notmuch-show-insert-bodypart "notmuch-show" (msg part depth)
+
 ;;
 
 (defvar notmuch-wash-signature-regexp
@@ -228,6 +230,42 @@ When doing so, maintaining citation leaders in the wrapped text."
 			;; `word-wrap'.
 			2)))
     (coolj-wrap-region (point-min) (point-max))))
+
+;;
+
+(require 'diff-mode)
+
+(defvar diff-file-header-re) ; From `diff-mode.el'.
+
+(defun notmuch-wash-convert-inline-patch-to-part (depth)
+  "Convert an inline patch into a fake 'text/x-diff' attachment.
+
+Given that this function guesses whether a buffer includes a
+patch and then guesses the extent of the patch, there is scope
+for error."
+
+  (goto-char (point-min))
+  (if (re-search-forward diff-file-header-re nil t)
+      (progn
+	(beginning-of-line -1)
+	(let ((patch-start (point))
+	      (patch-end (point-max))
+	      part)
+	  (goto-char patch-start)
+	  (if (or
+	       ;; Patch ends with signature.
+	       (re-search-forward notmuch-wash-signature-regexp nil t)
+	       ;; Patch ends with bugtraq comment.
+	       (re-search-forward "^\\*\\*\\* " nil t))
+	      (setq patch-end (match-beginning 0)))
+	  (save-restriction
+	    (narrow-to-region patch-start patch-end)
+	    (setq part (plist-put part :content-type "text/x-diff"))
+	    (setq part (plist-put part :content (buffer-string)))
+	    (setq part (plist-put part :id -1))
+	    (setq part (plist-put part :filename "inline patch"))
+	    (delete-region (point-min) (point-max))
+	    (notmuch-show-insert-bodypart nil part depth))))))
 
 ;;
 
