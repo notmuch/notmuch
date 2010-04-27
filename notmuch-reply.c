@@ -317,7 +317,7 @@ guess_from_received_header (notmuch_config_t *config, notmuch_message_t *message
     char *domain=NULL;
     char *tld=NULL;
     const char *delim=". \t";
-    size_t i,other_len;
+    size_t i,j,other_len;
 
     const char *to_headers[] = {"Envelope-to", "X-Original-To"};
 
@@ -348,10 +348,10 @@ guess_from_received_header (notmuch_config_t *config, notmuch_message_t *message
 		free(tohdr);
 		return primary;
 	    }
-	    for (i = 0; i < other_len; i++)
-		if (strcasestr (tohdr, other[i])) {
+	    for (j = 0; j < other_len; j++)
+		if (strcasestr (tohdr, other[j])) {
 		    free(tohdr);
-		    return other[i];
+		    return other[j];
 		}
 	    free(tohdr);
 	}
