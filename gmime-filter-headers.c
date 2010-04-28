@@ -169,7 +169,7 @@ filter_filter (GMimeFilter *filter, char *inbuf, size_t inlen, size_t prespace,
 		headers->lineptr = headers->line = malloc (headers->line_size);
 	}
 	lineptr = headers->lineptr;
-	lineend = headers->line + headers->line_size;
+	lineend = headers->line + headers->line_size - 1;
 	if (lineptr == NULL)
 		return;
 	outptr = filter->outbuf;
@@ -185,8 +185,8 @@ filter_filter (GMimeFilter *filter, char *inbuf, size_t inlen, size_t prespace,
 		if (lineptr == lineend) {
 			headers->line_size *= 2;
 			headers->line = xrealloc (headers->line, headers->line_size);
-			lineptr = headers->line + headers->line_size / 2;
-			lineend = headers->line + headers->line_size;
+			lineptr = headers->line + (headers->line_size / 2) - 1;
+			lineend = headers->line + headers->line_size - 1;
 		}
 
 		if (headers->saw_nl && *inptr != ' ' && *inptr != '\t') {
