@@ -1,3 +1,12 @@
+notmuch (0.3.1) unstable; urgency=low
+
+  * Fix an infinite loop in "notmuch reply"
+  * Fix a potential SEGV in "notmuch search"
+  * emacs: Fix calculations for line wrapping in the "notmuch" view.
+  * emacs: Fix Fcc support to prompt to create a directory if necessary
+
+ -- Carl Worth <cworth@debian.org>  Tue, 27 Apr 2010 17:02:07 -0700
+
 notmuch (0.3) unstable; urgency=low
 
   * User-configurable tags for new messages
