@@ -273,7 +273,7 @@ diagonal."
 			       (notmuch-hello-update))
 		     :help-echo "Refresh"
 		     (car (process-lines notmuch-command "count")))
-      (widget-insert " messages (that's not much mail).\n\n"))
+      (widget-insert " messages (that's not much mail).\n"))
 
     (let ((found-target-pos nil)
 	  (final-target-pos nil))
@@ -292,7 +292,7 @@ diagonal."
 	     (widest (max saved-widest alltags-widest)))
 
 	(when saved-alist
-	  (widget-insert "Saved searches: ")
+	  (widget-insert "\nSaved searches: ")
 	  (widget-create 'push-button
 			 :notify (lambda (&rest ignore)
 				   (customize-variable 'notmuch-saved-searches))
@@ -305,18 +305,16 @@ diagonal."
 		(setq final-target-pos found-target-pos))
 	    (indent-rigidly start (point) notmuch-hello-indent)))
 
-	(let ((start (point)))
-	  (widget-insert "\nSearch: ")
-	  (setq notmuch-hello-search-bar-marker (point-marker))
-	  (widget-create 'editable-field
-			 ;; Leave some space at the start and end of the
-			 ;; search boxes.
-			 :size (max 8 (- (window-width) (* 2 notmuch-hello-indent)
-					 (length "Search: ")))
-			 :action (lambda (widget &rest ignore)
-				   (notmuch-hello-search (widget-value widget))))
-	  (widget-insert "\n")
-	  (indent-rigidly start (point) notmuch-hello-indent))
+	(widget-insert "\nSearch: ")
+	(setq notmuch-hello-search-bar-marker (point-marker))
+	(widget-create 'editable-field
+		       ;; Leave some space at the start and end of the
+		       ;; search boxes.
+		       :size (max 8 (- (window-width) notmuch-hello-indent
+				       (length "Search: ")))
+		       :action (lambda (widget &rest ignore)
+				 (notmuch-hello-search (widget-value widget))))
+	(widget-insert "\n")
 
 	(when notmuch-hello-recent-searches
 	  (widget-insert "\nRecent searches: ")
@@ -408,9 +406,13 @@ diagonal."
 
       (widget-setup)
 
-      (goto-char final-target-pos)
-      (if (not (widget-at))
-	  (widget-forward 1)))))
+      (when final-target-pos
+	(goto-char final-target-pos)
+	(unless (widget-at)
+	  (widget-forward 1)))
+
+      (unless (widget-at)
+	(notmuch-hello-goto-search)))))
 
 ;;;###autoload
 (defun notmuch-folder ()
