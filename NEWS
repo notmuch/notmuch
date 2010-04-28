@@ -16,6 +16,17 @@ Automatically tag messages as "replied" when sending a reply
   automatically remove that tag when replying. See "Notmuch Message
   Mark Replied" in the notmuch customize interface.
 
+Emacs mail improvements
+-----------------------
+
+Easier way to define a fcc directory
+    
+  In the common case that a user only has one FCC (save outgoing mail
+  in the Mail directory, it is now possible to simply configure a
+  string such as "Sent" in the notmuch-fcc-dirs variable. More complex
+  options, depending on a users email address, are possible and
+  described in the variable customization help text.
+    
 Notmuch 0.3.1 (2010-04-27)
 ==========================
 General bug fixes
