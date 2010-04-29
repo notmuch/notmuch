@@ -438,7 +438,7 @@ and will also appear in a buffer named \"*Notmuch errors*\"."
       (let ((end (point)))
 	(delete-region beg end)
 	(insert (propertize (mapconcat  'identity tags " ")
-			    'font-lock-face 'notmuch-tag-face))))))
+			    'face 'notmuch-tag-face))))))
 
 (defun notmuch-search-get-tags ()
   (save-excursion
