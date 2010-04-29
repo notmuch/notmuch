@@ -285,16 +285,24 @@ For a mouse binding, return nil."
  "Face for the single-line message summary in notmuch-show-mode."
  :group 'notmuch)
 
-(defface notmuch-tag-face
-  '((((class color)
-      (background dark))
-     (:foreground "OliveDrab1"))
-    (((class color)
-      (background light))
-     (:foreground "navy blue" :bold t))
-    (t
-     (:bold t)))
-  "Notmuch search mode face used to highligh tags."
+(defface notmuch-search-date
+  '((t :inherit default))
+  "Face used in search mode for dates."
+  :group 'notmuch)
+
+(defface notmuch-search-count
+  '((t :inherit default))
+  "Face used in search mode for the count matching the query."
+  :group 'notmuch)
+
+(defface notmuch-search-subject
+  '((t :inherit default))
+  "Face used in search mode for subjects."
+  :group 'notmuch)
+
+(defface notmuch-search-matching-authors
+  '((t :inherit default))
+  "Face used in search mode for authors matching the query."
   :group 'notmuch)
 
 (defface notmuch-search-non-matching-authors
@@ -304,8 +312,21 @@ For a mouse binding, return nil."
     (((class color)
       (background light))
      (:foreground "grey60"))
-    (t (:italic t)))
+    (t
+     (:italic t)))
   "Face used in search mode for authors not matching the query."
+  :group 'notmuch)
+
+(defface notmuch-tag-face
+  '((((class color)
+      (background dark))
+     (:foreground "OliveDrab1"))
+    (((class color)
+      (background light))
+     (:foreground "navy blue" :bold t))
+    (t
+     (:bold t)))
+  "Face used in search mode face for tags."
   :group 'notmuch)
 
 ;;;###autoload
@@ -599,21 +620,27 @@ matching will be applied."
 	    ;; `notmuch-search-process-filter'.
 	    (save-match-data
 	      (if (string-match "\\(.*\\)|\\(..*\\)" truncated-string)
-		  (concat (match-string 1 truncated-string) ","
+		  (concat (propertize (concat (match-string 1 truncated-string) ",")
+				      'face 'notmuch-search-matching-authors)
 			  (propertize (match-string 2 truncated-string)
 				      'face 'notmuch-search-non-matching-authors))
-		truncated-string)))))
+		(propertize truncated-string 'face 'notmuch-search-matching-authors))))))
 
 (defun notmuch-search-insert-field (field date count authors subject tags)
   (cond
    ((string-equal field "date")
-    (insert (format (cdr (assoc field notmuch-search-result-format)) date)))
+    (insert (propertize (format (cdr (assoc field notmuch-search-result-format)) date)
+			'face 'notmuch-search-date)))
    ((string-equal field "count")
-    (insert (format (cdr (assoc field notmuch-search-result-format)) count)))
+    (insert (propertize (format (cdr (assoc field notmuch-search-result-format)) count)
+			'face 'notmuch-search-count)))
+   ((string-equal field "subject")
+    (insert (propertize (format (cdr (assoc field notmuch-search-result-format)) subject)
+			'face 'notmuch-search-subject)))
+
    ((string-equal field "authors")
     (notmuch-search-insert-authors (cdr (assoc field notmuch-search-result-format)) authors))
-   ((string-equal field "subject")
-    (insert (format (cdr (assoc field notmuch-search-result-format)) subject)))
+
    ((string-equal field "tags")
     (insert (concat "(" (propertize tags 'font-lock-face 'notmuch-tag-face) ")")))))
 
