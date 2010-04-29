@@ -65,6 +65,32 @@
   "Background colour for the notmuch logo."
   :group 'notmuch)
 
+(defcustom notmuch-column-control t
+  "Controls the number of columns for saved searches/tags in notmuch view.
+
+This variable has three potential sets of values:
+
+- t: automatically calculate the number of columns possible based
+  on the tags to be shown and the window width,
+- an integer: a lower bound on the number of characters that will
+  be used to display each column,
+- a float: a fraction of the window width that is the lower bound
+  on the number of characters that should be used for each
+  column.
+
+So:
+- if you would like two columns of tags, set this to 0.5.
+- if you would like a single column of tags, set this to 1.0.
+- if you would like tags to be 30 characters wide, set this to
+  30.
+- if you don't want to worry about all of this nonsense, leave
+  this set to `t'."
+  :group 'notmuch
+  :type '(choice
+	  (const :tag "Automatically calculated" t)
+	  (integer :tag "Number of characters")
+	  (float :tag "Fraction of window")))
+
 (defvar notmuch-hello-url "http://notmuchmail.org"
   "The `notmuch' web site.")
 
@@ -146,13 +172,38 @@ diagonal."
 (defun notmuch-saved-search-count (search)
   (car (process-lines notmuch-command "count" search)))
 
+(defun notmuch-hello-tags-per-line (widest)
+  "Determine how many tags to show per line and how wide they
+should be. Returns a cons cell `(tags-per-line width)'."
+  (let ((tags-per-line
+	 (cond
+	  ((integerp notmuch-column-control)
+	   (max 1
+		(/ (- (window-width) notmuch-hello-indent)
+		   ;; Count is 7 wide (6 digits plus space), 1 for the space
+		   ;; after the name.
+		   (+ 7 1 (max notmuch-column-control widest)))))
+
+	  ((floatp notmuch-column-control)
+	   (let* ((available-width (- (window-width) notmuch-hello-indent))
+		  (proposed-width (max (* available-width notmuch-column-control) widest)))
+	     (floor available-width proposed-width)))
+
+	  (t
+	   (max 1
+		(/ (- (window-width) notmuch-hello-indent)
+		   ;; Count is 7 wide (6 digits plus space), 1 for the space
+		   ;; after the name.
+		   (+ 7 1 widest)))))))
+
+    (cons tags-per-line (/ (- (window-width) notmuch-hello-indent
+			      (* tags-per-line (+ 7 1)))
+			   tags-per-line))))
+
 (defun notmuch-hello-insert-tags (tag-alist widest target)
-  (let* ((tags-per-line (max 1
-			     (/ (- (window-width) notmuch-hello-indent)
-				;; Count is 7 wide (6 digits plus
-				;; space), 1 for the space after the
-				;; name.
-				(+ 7 1 widest))))
+  (let* ((tags-and-width (notmuch-hello-tags-per-line widest))
+	 (tags-per-line (car tags-and-width))
+	 (widest (cdr tags-and-width))
 	 (count 0)
 	 (reordered-list (notmuch-hello-reflect tag-alist tags-per-line))
 	 ;; Hack the display of the buttons used.
