@@ -19,9 +19,9 @@
 ;;
 ;; Authors: David Edmondson <dme@dme.org>
 
+(eval-when-compile (require 'cl))
 (require 'widget)
 (require 'wid-edit) ; For `widget-forward'.
-(require 'cl)
 
 (require 'notmuch-lib)
 (require 'notmuch-mua)

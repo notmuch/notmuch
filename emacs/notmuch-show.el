@@ -21,7 +21,7 @@
 ;; Authors: Carl Worth <cworth@cworth.org>
 ;;          David Edmondson <dme@dme.org>
 
-(require 'cl)
+(eval-when-compile (require 'cl))
 (require 'mm-view)
 (require 'message)
 (require 'mm-decode)
@@ -942,29 +942,55 @@ than only the current message."
 	    (concat command " < " (shell-quote-argument (notmuch-show-get-filename)))))
     (start-process-shell-command "notmuch-pipe-command" "*notmuch-pipe*" shell-command)))
 
+(defun notmuch-show-add-tags-worker (current-tags add-tags)
+  "Add to `current-tags' with any tags from `add-tags' not
+currently present and return the result."
+  (let ((result-tags (copy-seq current-tags)))
+    (mapc (lambda (add-tag)
+	    (unless (member add-tag current-tags)
+	      (setq result-tags (push add-tag result-tags))))
+	    add-tags)
+    (sort result-tags 'string<)))
+
+(defun notmuch-show-del-tags-worker (current-tags del-tags)
+  "Remove any tags in `del-tags' from `current-tags' and return
+the result."
+  (let ((result-tags (copy-seq current-tags)))
+    (mapc (lambda (del-tag)
+	    (setq result-tags (delete del-tag result-tags)))
+	  del-tags)
+    result-tags))
+
 (defun notmuch-show-add-tag (&rest toadd)
   "Add a tag to the current message."
   (interactive
    (list (notmuch-select-tag-with-completion "Tag to add: ")))
-  (apply 'notmuch-call-notmuch-process
-	 (append (cons "tag"
-		       (mapcar (lambda (s) (concat "+" s)) toadd))
-		 (cons (notmuch-show-get-message-id) nil)))
-  (notmuch-show-set-tags (sort (union toadd (notmuch-show-get-tags) :test 'string=) 'string<)))
+
+  (let* ((current-tags (notmuch-show-get-tags))
+	 (new-tags (notmuch-show-add-tags-worker current-tags toadd)))
+
+    (unless (equal current-tags new-tags)
+      (apply 'notmuch-call-notmuch-process
+	     (append (cons "tag"
+			   (mapcar (lambda (s) (concat "+" s)) toadd))
+		     (cons (notmuch-show-get-message-id) nil)))
+      (notmuch-show-set-tags new-tags))))
 
 (defun notmuch-show-remove-tag (&rest toremove)
   "Remove a tag from the current message."
   (interactive
    (list (notmuch-select-tag-with-completion
 	  "Tag to remove: " (notmuch-show-get-message-id))))
-  (let ((tags (notmuch-show-get-tags)))
-    (if (intersection tags toremove :test 'string=)
-	(progn
-	  (apply 'notmuch-call-notmuch-process
-		 (append (cons "tag"
-			       (mapcar (lambda (s) (concat "-" s)) toremove))
-			 (cons (notmuch-show-get-message-id) nil)))
-	  (notmuch-show-set-tags (sort (set-difference tags toremove :test 'string=) 'string<))))))
+
+  (let* ((current-tags (notmuch-show-get-tags))
+	 (new-tags (notmuch-show-del-tags-worker current-tags toremove)))
+
+    (unless (equal current-tags new-tags)
+      (apply 'notmuch-call-notmuch-process
+	     (append (cons "tag"
+			   (mapcar (lambda (s) (concat "-" s)) toremove))
+		     (cons (notmuch-show-get-message-id) nil)))
+      (notmuch-show-set-tags new-tags))))
 
 (defun notmuch-show-toggle-headers ()
   "Toggle the visibility of the current message headers."

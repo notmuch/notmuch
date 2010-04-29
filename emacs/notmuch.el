@@ -47,7 +47,7 @@
 ; kudos: Notmuch list <notmuch@notmuchmail.org> (subscription is not
 ; required, but is available from http://notmuchmail.org).
 
-(require 'cl)
+(eval-when-compile (require 'cl))
 (require 'mm-view)
 (require 'message)
 
@@ -741,10 +741,16 @@ characters as well as `_.+-'.
 
 (defun notmuch-search-buffer-title (query)
   "Returns the title for a buffer with notmuch search results."
-  (let* ((saved-search (rassoc-if (lambda (key)
-				    (string-match (concat "^" (regexp-quote key))
-						  query))
-				  (reverse (notmuch-saved-searches))))
+  (let* ((saved-search
+	  (let (longest
+		(longest-length 0))
+	    (loop for tuple in notmuch-saved-searches
+		  if (let ((quoted-query (regexp-quote (cdr tuple))))
+		       (and (string-match (concat "^" quoted-query) query)
+			    (> (length (match-string 0 query))
+			       longest-length)))
+		  do (setq longest tuple))
+	    longest))
 	 (saved-search-name (car saved-search))
 	 (saved-search-query (cdr saved-search)))
     (cond ((and saved-search (equal saved-search-query query))
