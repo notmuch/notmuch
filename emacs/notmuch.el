@@ -297,6 +297,17 @@ For a mouse binding, return nil."
   "Notmuch search mode face used to highligh tags."
   :group 'notmuch)
 
+(defface notmuch-search-non-matching-authors
+  '((((class color)
+      (background dark))
+     (:foreground "grey30"))
+    (((class color)
+      (background light))
+     (:foreground "grey60"))
+    (t (:italic t)))
+  "Face used in search mode for authors not matching the query."
+  :group 'notmuch)
+
 ;;;###autoload
 (defun notmuch-search-mode ()
   "Major mode displaying results of a notmuch search.
@@ -576,6 +587,23 @@ matching will be applied."
 		  (t
 		   (setq tags-faces (cdr tags-faces)))))))))
 
+(defun notmuch-search-insert-authors (format-string authors)
+  (insert (let* ((formatted-sample (format format-string ""))
+		 (formatted-authors (format format-string authors))
+		 (truncated-string
+		  (if (> (length formatted-authors)
+			 (length formatted-sample))
+		      (concat (substring authors 0 (- (length formatted-sample) 4)) "... ")
+		    formatted-authors)))
+	    ;; Need to save the match data to avoid interfering with
+	    ;; `notmuch-search-process-filter'.
+	    (save-match-data
+	      (if (string-match "\\(.*\\)|\\(..*\\)" truncated-string)
+		  (concat (match-string 1 truncated-string) ","
+			  (propertize (match-string 2 truncated-string)
+				      'face 'notmuch-search-non-matching-authors))
+		truncated-string)))))
+
 (defun notmuch-search-insert-field (field date count authors subject tags)
   (cond
    ((string-equal field "date")
@@ -583,13 +611,7 @@ matching will be applied."
    ((string-equal field "count")
     (insert (format (cdr (assoc field notmuch-search-result-format)) count)))
    ((string-equal field "authors")
-    (insert (let* ((format-string (cdr (assoc field notmuch-search-result-format)))
-		   (formatted-sample (format format-string ""))
-		   (formatted-authors (format format-string authors)))
-	      (if (> (length formatted-authors)
-		     (length formatted-sample))
-		  (concat (substring authors 0 (- (length formatted-sample) 4)) "... ")
-		formatted-authors))))
+    (notmuch-search-insert-authors (cdr (assoc field notmuch-search-result-format)) authors))
    ((string-equal field "subject")
     (insert (format (cdr (assoc field notmuch-search-result-format)) subject)))
    ((string-equal field "tags")
