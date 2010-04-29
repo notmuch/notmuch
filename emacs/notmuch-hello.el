@@ -448,6 +448,7 @@ should be. Returns a cons cell `(tags-per-line width)'."
 
       (use-local-map widget-keymap)
       (local-set-key "=" 'notmuch-hello-update)
+      (local-set-key (kbd "<C-tab>") 'widget-backward)
       (local-set-key "G" 'notmuch-hello-poll-and-update)
       (local-set-key "m" 'notmuch-mua-mail)
       (local-set-key "q" '(lambda () (interactive) (kill-buffer (current-buffer))))
