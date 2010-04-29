@@ -19,7 +19,6 @@
 ;;
 ;; Authors: David Edmondson <dme@dme.org>
 
-(require 'cl)
 (require 'message)
 
 (require 'notmuch-lib)
@@ -92,12 +91,7 @@ list."
 	((same-window-regexps '("\\*mail .*")))
       (notmuch-mua-mail (mail-header 'to headers)
 			(mail-header 'subject headers)
-			(loop for header in headers
-			      if (not (or (eq 'to (car header))
-					  (eq 'subject (car header))))
-			      collect header)))
-    (message-sort-headers)
-    (message-hide-headers)
+			(message-headers-to-generate headers t '(to subject))))
     ;; insert the message body - but put it in front of the signature
     ;; if one is present
     (goto-char (point-max))
