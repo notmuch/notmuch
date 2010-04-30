@@ -139,11 +139,6 @@ So:
 	    maximize (length (car elem)))
       0))
 
-(defun notmuch-hello-roundup (dividend divisor)
-  "Return the rounded up value of dividing `dividend' by `divisor'."
-  (+ (/ dividend divisor)
-     (if (> (% dividend divisor) 0) 1 0)))
-
 (defun notmuch-hello-reflect-generate-row (ncols nrows row list)
   (let ((len (length list)))
     (loop for col from 0 to (- ncols 1)
@@ -159,7 +154,7 @@ So:
   "Reflect a `ncols' wide matrix represented by `list' along the
 diagonal."
   ;; Not very lispy...
-  (let ((nrows (notmuch-hello-roundup (length list) ncols)))
+  (let ((nrows (ceiling (length list) ncols)))
     (loop for row from 0 to (- nrows 1)
 	  append (notmuch-hello-reflect-generate-row ncols nrows row list))))
 
