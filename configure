@@ -258,15 +258,26 @@ else
     have_emacs=0
 fi
 
-printf "Checking for Mac OS X (for shared library)... "
+printf "Checking which platform we are on... "
 if [ `uname` = "Darwin" ] ; then
-    printf "Yes.\n"
-    mac_os_x=1
+    printf "Mac OS X.\n"
+    platform=MACOSX
     linker_resolves_library_dependencies=0
-else
-    printf "No.\n"
-    mac_os_x=0
+elif [ `uname` = "SunOS" ] ; then
+    printf "Solaris.\n"
+    platform=SOLARIS
+    linker_resolves_library_dependencies=0
+elif [ `uname` = "Linux" ] ; then
+    printf "Linux\n"
+    platform=LINUX
     linker_resolves_library_dependencies=1
+else
+    printf "Unknown.\n"
+    cat <<EOF
+
+*** Warning: Unknown platform. Notmuch might or might not build correctly.
+
+EOF
 fi
 
 if [ $errors -gt 0 ]; then
@@ -437,9 +448,8 @@ HAVE_GETLINE = ${have_getline}
 # build its own version)
 HAVE_STRCASESTR = ${have_strcasestr}
 
-# Whether we are building on OS X.  This will affect how we build the
-# shared library.
-MAC_OS_X = ${mac_os_x}
+# Supported platforms (so far) are: LINUX, MACOSX, SOLARIS
+PLATFORM = ${platform}
 
 # Whether the linker will automatically resolve the dependency of one
 # library on another (if not, then linking a binary requires linking

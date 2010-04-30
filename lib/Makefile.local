@@ -22,7 +22,7 @@ LIBNOTMUCH_VERSION_MINOR = 1
 # simply compatible changes to the implementation).
 LIBNOTMUCH_VERSION_RELEASE = 0
 
-ifeq ($(MAC_OS_X),1)
+ifeq ($(PLATFORM),MACOSX)
 LIBRARY_SUFFIX = dylib
 # On OS X, library version numbers go before suffix.
 LINKER_NAME = libnotmuch.$(LIBRARY_SUFFIX)
