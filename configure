@@ -6,6 +6,7 @@ CC=${CC:-gcc}
 CXX=${CXX:-g++}
 CFLAGS=${CFLAGS:--O2}
 CXXFLAGS=${CXXFLAGS:-\$(CFLAGS)}
+LDFLAGS=${LDFLAGS:-}
 XAPIAN_CONFIG=${XAPIAN_CONFIG:-xapian-config-1.1 xapian-config}
 
 # We don't allow the EMACS or GZIP Makefile variables inherit values
@@ -388,6 +389,9 @@ CFLAGS = ${CFLAGS}
 
 # Default FLAGS for C++ compiler (can be overridden by user such as "make CXXFLAGS=-g")
 CXXFLAGS = ${CXXFLAGS}
+
+# Default FLAGS for the linker (can be overridden by user such as "make LDFLAGS=-znow")
+LDFLAGS = ${LDFLAGS}
 
 # Flags to enable warnings when using the C++ compiler
 WARN_CXXFLAGS=-Wall -Wextra -Wwrite-strings -Wswitch-enum
