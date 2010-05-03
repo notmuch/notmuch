@@ -259,6 +259,36 @@ should be. Returns a cons cell `(tags-per-line width)'."
   (notmuch-poll)
   (notmuch-hello-update))
 
+
+(defvar notmuch-hello-mode-map
+  (let ((map (copy-keymap widget-keymap)))
+    (define-key map "v" '(lambda () "Display the notmuch version" (interactive)
+                           (message "notmuch version %s" (notmuch-version))))
+    (define-key map "?" 'notmuch-help)
+    (define-key map "q" 'kill-this-buffer)
+    (define-key map "=" 'notmuch-hello-update)
+    (define-key map "G" 'notmuch-hello-poll-and-update)
+    (define-key map (kbd "<C-tab>") 'widget-backward)
+    (define-key map "m" 'notmuch-mua-mail)
+    (define-key map "s" 'notmuch-hello-goto-search)
+    map)
+  "Keymap for \"notmuch hello\" buffers.")
+(fset 'notmuch-hello-mode-map notmuch-hello-mode-map)
+
+(defun notmuch-hello-mode ()
+ "Major mode for convenient notmuch navigation. This is your entry portal into notmuch.
+
+Complete list of currently available key bindings:
+
+\\{notmuch-hello-mode-map}"
+ (interactive)
+ (kill-all-local-variables)
+ (use-local-map notmuch-hello-mode-map)
+ (setq major-mode 'notmuch-hello-mode
+       mode-name "notmuch-hello")
+ ;;(setq buffer-read-only t)
+)
+
 (defun notmuch-hello (&optional no-display)
   (interactive)
 
@@ -282,6 +312,9 @@ should be. Returns a cons cell `(tags-per-line width)'."
     (kill-all-local-variables)
     (let ((inhibit-read-only t))
       (erase-buffer))
+
+    (unless (eq major-mode 'notmuch-hello-mode)
+      (notmuch-hello-mode))
 
     (let ((all (overlay-lists)))
       ;; Delete all the overlays.
@@ -440,16 +473,6 @@ should be. Returns a cons cell `(tags-per-line width)'."
 	(widget-insert "`=' refreshes this screen. `s' jumps to the search box. `q' to quit.\n")
 	(let ((fill-column (- (window-width) notmuch-hello-indent)))
 	  (center-region start (point))))
-
-      (use-local-map widget-keymap)
-      (local-set-key "=" 'notmuch-hello-update)
-      (local-set-key (kbd "<C-tab>") 'widget-backward)
-      (local-set-key "G" 'notmuch-hello-poll-and-update)
-      (local-set-key "m" 'notmuch-mua-mail)
-      (local-set-key "q" '(lambda () (interactive) (kill-buffer (current-buffer))))
-      (local-set-key "s" 'notmuch-hello-goto-search)
-      (local-set-key "v" '(lambda () (interactive)
-			    (message "notmuch version %s" (notmuch-version))))
 
       (widget-setup)
 
