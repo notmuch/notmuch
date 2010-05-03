@@ -75,6 +75,9 @@ Fix notmuch-hello as follows:
 	4. Fix refresh of notmuch-hello to leave point in the same logical
 	   place, (the same saved-search widget at least).
 
+Change the 'a'rchive command in the thread view to only archive open
+messages.
+
 Emacs saved-search interface
 ----------------------------
 Here's a proposal Carl wrote (id:87einafy4u.fsf@yoom.home.cworth.org):
