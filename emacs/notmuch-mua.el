@@ -118,6 +118,7 @@ list."
 
 (defun notmuch-mua-mail (&optional to subject other-headers continue
 				   switch-function yank-action send-actions)
+  "Invoke the notmuch mail composition window."
   (interactive)
 
   (when notmuch-mua-user-agent-function
