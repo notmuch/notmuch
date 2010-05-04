@@ -91,6 +91,13 @@ So:
 	  (integer :tag "Number of characters")
 	  (float :tag "Fraction of window")))
 
+(defcustom notmuch-decimal-separator ","
+  "The string used as a decimal separator.
+
+Typically \",\" in the US and UK and \".\" in Europe."
+  :group 'notmuch
+  :type 'string)
+
 (defvar notmuch-hello-url "http://notmuchmail.org"
   "The `notmuch' web site.")
 
@@ -102,6 +109,17 @@ So:
   (if (> (length notmuch-hello-recent-searches)
 	 notmuch-recent-searches-max)
       (setq notmuch-hello-recent-searches (butlast notmuch-hello-recent-searches))))
+
+(defun notmuch-hello-nice-number (n)
+  (let (result)
+    (while (> n 0)
+      (push (% n 1000) result)
+      (setq n (/ n 1000)))
+    (apply #'concat
+     (number-to-string (car result))
+     (mapcar (lambda (elem)
+	      (format "%s%03d" notmuch-decimal-separator elem))
+	     (cdr result)))))
 
 (defun notmuch-hello-trim (search)
   "Trim whitespace."
@@ -175,9 +193,9 @@ should be. Returns a cons cell `(tags-per-line width)'."
 	  ((integerp notmuch-column-control)
 	   (max 1
 		(/ (- (window-width) notmuch-hello-indent)
-		   ;; Count is 7 wide (6 digits plus space), 1 for the space
+		   ;; Count is 9 wide (8 digits plus space), 1 for the space
 		   ;; after the name.
-		   (+ 7 1 (max notmuch-column-control widest)))))
+		   (+ 9 1 (max notmuch-column-control widest)))))
 
 	  ((floatp notmuch-column-control)
 	   (let* ((available-width (- (window-width) notmuch-hello-indent))
@@ -187,12 +205,15 @@ should be. Returns a cons cell `(tags-per-line width)'."
 	  (t
 	   (max 1
 		(/ (- (window-width) notmuch-hello-indent)
-		   ;; Count is 7 wide (6 digits plus space), 1 for the space
+		   ;; Count is 9 wide (8 digits plus space), 1 for the space
 		   ;; after the name.
-		   (+ 7 1 widest)))))))
+		   (+ 9 1 widest)))))))
 
     (cons tags-per-line (/ (- (window-width) notmuch-hello-indent
-			      (* tags-per-line (+ 7 1)))
+			      ;; Count is 9 wide (8 digits plus
+			      ;; space), 1 for the space after the
+			      ;; name.
+			      (* tags-per-line (+ 9 1)))
 			   tags-per-line))))
 
 (defun notmuch-hello-insert-tags (tag-alist widest target)
@@ -213,7 +234,9 @@ should be. Returns a cons cell `(tags-per-line width)'."
 	      (let* ((name (car elem))
 		     (query (cdr elem))
 		     (formatted-name (format "%s " name)))
-		(widget-insert (format "%6s " (notmuch-saved-search-count query)))
+		(widget-insert (format "%8s "
+				       (notmuch-hello-nice-number
+					(string-to-number (notmuch-saved-search-count query)))))
 		(if (string= formatted-name target)
 		    (setq found-target-pos (point-marker)))
 		(widget-create 'push-button
@@ -353,7 +376,8 @@ Complete list of currently available key bindings:
 		     :notify (lambda (&rest ignore)
 			       (notmuch-hello-update))
 		     :help-echo "Refresh"
-		     (car (process-lines notmuch-command "count")))
+		     (notmuch-hello-nice-number
+		      (string-to-number (car (process-lines notmuch-command "count")))))
       (widget-insert " messages (that's not much mail).\n"))
 
     (let ((found-target-pos nil)
