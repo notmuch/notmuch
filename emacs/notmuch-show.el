@@ -236,7 +236,7 @@ message at DEPTH in the current thread."
   'follow-link t
   'face 'message-mml)
 
-(defun notmuch-show-insert-part-header (nth content-type declared-type &optional name)
+(defun notmuch-show-insert-part-header (nth content-type declared-type &optional name comment)
   (insert-button
    (concat "[ "
 	   (if name (concat name ": ") "")
@@ -244,6 +244,7 @@ message at DEPTH in the current thread."
 	   (if (not (string-equal declared-type content-type))
 	       (concat " (as " content-type ")")
 	     "")
+	   (or comment "")
 	   " ]\n")
    :type 'notmuch-show-part-button-type
    :notmuch-part nth
@@ -280,19 +281,40 @@ current buffer, if possible."
 	      t)
 	  nil)))))
 
+(defvar notmuch-show-multipart/alternative-discouraged
+  '(
+    ;; Avoid HTML parts.
+    "text/html"
+    ;; multipart/related usually contain a text/html part and some associated graphics.
+    "multipart/related"
+    ))
+
+(defun notmuch-show-multipart/*-to-list (part)
+  (mapcar '(lambda (inner-part) (plist-get inner-part :content-type))
+	  (plist-get part :content)))
+
+(defun notmuch-show-multipart/alternative-choose (types)
+  ;; Based on `mm-preferred-alternative-precedence'.
+  (let ((seq types))
+    (dolist (pref (reverse notmuch-show-multipart/alternative-discouraged))
+      (dolist (elem (copy-sequence seq))
+	(when (string-match pref elem)
+	  (setq seq (nconc (delete elem seq) (list elem))))))
+    seq))
+
 (defun notmuch-show-insert-part-multipart/alternative (msg part content-type nth depth declared-type)
-  (let ((inner-parts (plist-get part :content)))
-    (notmuch-show-insert-part-header nth declared-type content-type nil)
-    ;; In most cases, multipart/alternative is used to provide both
-    ;; text/plain and text/html (or multipart/related with text/html
-    ;; and image/*) parts. We might allow the user to express a
-    ;; preference about which part to show, but for the moment we just
-    ;; choose the first. This is usually the text/plain part.
-    (notmuch-show-insert-bodypart msg (car inner-parts) depth)
+  (notmuch-show-insert-part-header nth declared-type content-type nil)
+  (let ((chosen-type (car (notmuch-show-multipart/alternative-choose (notmuch-show-multipart/*-to-list part))))
+	(inner-parts (plist-get part :content)))
+    ;; This inserts all parts of the chosen type rather than just one,
+    ;; but it's not clear that this is the wrong thing to do - which
+    ;; should be chosen if there are more than one that match?
     (mapc (lambda (inner-part)
-	    (let ((inner-type (concat (plist-get inner-part :content-type) " (not shown)")))
-	      (notmuch-show-insert-part-header (plist-get inner-part :id) inner-type inner-type nil)))
-	  (cdr inner-parts)))
+	    (let ((inner-type (plist-get inner-part :content-type)))
+	      (if (string= chosen-type inner-type)
+		  (notmuch-show-insert-bodypart msg inner-part depth)
+		(notmuch-show-insert-part-header (plist-get inner-part :id) inner-type inner-type nil " (not shown)"))))
+	  inner-parts))
   t)
 
 (defun notmuch-show-insert-part-multipart/* (msg part content-type nth depth declared-type)
