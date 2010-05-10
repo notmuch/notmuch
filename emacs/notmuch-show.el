@@ -82,6 +82,12 @@ any given message."
 	     notmuch-wash-elide-blank-lines
 	     notmuch-wash-excerpt-citations))
 
+(defcustom notmuch-show-indent-multipart nil
+  "Should the sub-parts of a multipart/* part be indented?"
+  ;; dme: Not sure which is a good default.
+  :group 'notmuch
+  :type 'boolean)
+
 (defmacro with-current-notmuch-show-message (&rest body)
   "Evaluate body with current buffer set to the text of current message"
   `(save-excursion
@@ -305,7 +311,8 @@ current buffer, if possible."
 (defun notmuch-show-insert-part-multipart/alternative (msg part content-type nth depth declared-type)
   (notmuch-show-insert-part-header nth declared-type content-type nil)
   (let ((chosen-type (car (notmuch-show-multipart/alternative-choose (notmuch-show-multipart/*-to-list part))))
-	(inner-parts (plist-get part :content)))
+	(inner-parts (plist-get part :content))
+	(start (point)))
     ;; This inserts all parts of the chosen type rather than just one,
     ;; but it's not clear that this is the wrong thing to do - which
     ;; should be chosen if there are more than one that match?
@@ -314,16 +321,23 @@ current buffer, if possible."
 	      (if (string= chosen-type inner-type)
 		  (notmuch-show-insert-bodypart msg inner-part depth)
 		(notmuch-show-insert-part-header (plist-get inner-part :id) inner-type inner-type nil " (not shown)"))))
-	  inner-parts))
+	  inner-parts)
+
+    (when notmuch-show-indent-multipart
+      (indent-rigidly start (point) 1)))
   t)
 
 (defun notmuch-show-insert-part-multipart/* (msg part content-type nth depth declared-type)
-  (let ((inner-parts (plist-get part :content)))
-    (notmuch-show-insert-part-header nth declared-type content-type nil)
+  (notmuch-show-insert-part-header nth declared-type content-type nil)
+  (let ((inner-parts (plist-get part :content))
+	(start (point)))
     ;; Show all of the parts.
     (mapc (lambda (inner-part)
 	    (notmuch-show-insert-bodypart msg inner-part depth))
-	  inner-parts))
+	  inner-parts)
+
+    (when notmuch-show-indent-multipart
+      (indent-rigidly start (point) 1)))
   t)
 
 (defun notmuch-show-insert-part-message/rfc822 (msg part content-type nth depth declared-type)
