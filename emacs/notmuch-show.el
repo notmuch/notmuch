@@ -548,6 +548,7 @@ function is used. "
 	(define-key map "?" 'notmuch-help)
 	(define-key map "q" 'kill-this-buffer)
 	(define-key map (kbd "M-TAB") 'notmuch-show-previous-button)
+	(define-key map (kbd "<backtab>") 'notmuch-show-previous-button)
 	(define-key map (kbd "TAB") 'notmuch-show-next-button)
 	(define-key map "s" 'notmuch-search)
 	(define-key map "m" 'notmuch-mua-mail)
