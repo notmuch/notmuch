@@ -26,6 +26,7 @@
 (require 'message)
 (require 'mm-decode)
 (require 'mailcap)
+(require 'icalendar)
 
 (require 'notmuch-lib)
 (require 'notmuch-query)
@@ -369,6 +370,24 @@ current buffer, if possible."
       (save-restriction
 	(narrow-to-region start (point-max))
 	(run-hook-with-args 'notmuch-show-insert-text/plain-hook depth))))
+  t)
+
+(defun notmuch-show-insert-part-text/x-vcalendar (msg part content-type nth depth declared-type)
+  (notmuch-show-insert-part-header nth declared-type content-type (plist-get part :filename))
+  (insert (with-temp-buffer
+	    (insert (notmuch-show-get-bodypart-content msg part nth))
+	    (goto-char (point-min))
+	    (let ((file (make-temp-file "notmuch-ical"))
+		  result)
+	      (icalendar--convert-ical-to-diary
+	       (icalendar--read-element nil nil)
+	       file t)
+	      (set-buffer (get-file-buffer file))
+	      (setq result (buffer-substring (point-min) (point-max)))
+	      (set-buffer-modified-p nil)
+	      (kill-buffer (current-buffer))
+	      (delete-file file)
+	      result)))
   t)
 
 (defun notmuch-show-insert-part-application/octet-stream (msg part content-type nth depth declared-type)
