@@ -358,8 +358,14 @@ class Database(object):
 
         :param msgid: The message ID
         :type msgid: string
-        :returns: :class:`Message` or `None` if no message is found or if an
-                  out-of-memory situation occurs.
+        :returns: :class:`Message` or `None` if no message is found or
+                  if any xapian exception or out-of-memory situation
+                  occurs. Do note that Xapian Exceptions include
+                  "Database modified" situations, e.g. when the
+                  notmuch database has been modified by
+                  another program in the meantime. A return value of 
+                  `None` is therefore no guarantee that the message 
+                  does not exist.
         :exception: :exc:`NotmuchError` with STATUS.NOT_INITIALIZED if
                   the database was not intitialized.
         """
