@@ -335,6 +335,85 @@ current buffer, if possible."
       (indent-rigidly start (point) 1)))
   t)
 
+(defun notmuch-show-setup-w3m ()
+  "Instruct w3m how to retrieve content from a \"related\" part of a message."
+  (interactive)
+  (if (boundp 'w3m-cid-retrieve-function-alist)
+    (unless (assq 'notmuch-show-mode w3m-cid-retrieve-function-alist)
+      (push (cons 'notmuch-show-mode 'notmuch-show-w3m-cid-retrieve)
+	    w3m-cid-retrieve-function-alist)))
+  (setq mm-inline-text-html-with-images t))
+
+(defvar w3m-current-buffer) ;; From `w3m.el'.
+(defvar notmuch-show-w3m-cid-store nil)
+(make-variable-buffer-local 'notmuch-show-w3m-cid-store)
+
+(defun notmuch-show-w3m-cid-store-internal (content-id
+					    message-id
+					    part-number
+					    content-type
+					    content)
+  (push (list content-id
+	      message-id
+	      part-number
+	      content-type
+	      content)
+	notmuch-show-w3m-cid-store))
+
+(defun notmuch-show-w3m-cid-store (msg part)
+  (let ((content-id (plist-get part :content-id)))
+    (when content-id
+      (notmuch-show-w3m-cid-store-internal (concat "cid:" content-id)
+					   (plist-get msg :id)
+					   (plist-get part :id)
+					   (plist-get part :content-type)
+					   nil))))
+
+(defun notmuch-show-w3m-cid-retrieve (url &rest args)
+  (let ((matching-part (with-current-buffer w3m-current-buffer
+			 (assoc url notmuch-show-w3m-cid-store))))
+    (if matching-part
+	(let ((message-id (nth 1 matching-part))
+	      (part-number (nth 2 matching-part))
+	      (content-type (nth 3 matching-part))
+	      (content (nth 4 matching-part)))
+	  ;; If we don't already have the content, get it and cache
+	  ;; it, as some messages reference the same cid: part many
+	  ;; times (hundreds!), which results in many calls to
+	  ;; `notmuch part'.
+	  (unless content
+	    (setq content (notmuch-show-get-bodypart-internal (concat "id:" message-id)
+							      part-number))
+	    (with-current-buffer w3m-current-buffer
+	      (notmuch-show-w3m-cid-store-internal url
+						   message-id
+						   part-number
+						   content-type
+						   content)))
+	  (insert content)
+	  content-type)
+      nil)))
+
+(defun notmuch-show-insert-part-multipart/related (msg part content-type nth depth declared-type)
+  (notmuch-show-insert-part-header nth declared-type content-type nil)
+  (let ((inner-parts (plist-get part :content))
+	(start (point)))
+
+    ;; We assume that the first part is text/html and the remainder
+    ;; things that it references.
+
+    ;; Stash the non-primary parts.
+    (mapc (lambda (part)
+	    (notmuch-show-w3m-cid-store msg part))
+	  (cdr inner-parts))
+
+    ;; Render the primary part.
+    (notmuch-show-insert-bodypart msg (car inner-parts) depth)
+
+    (when notmuch-show-indent-multipart
+      (indent-rigidly start (point) 1)))
+  t)
+
 (defun notmuch-show-insert-part-multipart/* (msg part content-type nth depth declared-type)
   (notmuch-show-insert-part-header nth declared-type content-type nil)
   (let ((inner-parts (plist-get part :content))
