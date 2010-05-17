@@ -458,6 +458,7 @@ format_part_json (GMimeObject *part, int *part_count, int first)
     void *ctx = talloc_new (NULL);
     GMimeStream *stream_memory = g_mime_stream_mem_new ();
     GByteArray *part_content;
+    const char *cid;
 
     content_type = g_mime_object_get_content_type (GMIME_OBJECT (part));
 
@@ -467,6 +468,11 @@ format_part_json (GMimeObject *part, int *part_count, int first)
     printf ("{\"id\": %d, \"content-type\": %s",
 	    *part_count,
 	    json_quote_str (ctx, g_mime_content_type_to_string (content_type)));
+
+    cid = g_mime_object_get_content_id (part);
+    if (cid != NULL)
+	    printf(", \"content-id\": %s",
+		   json_quote_str (ctx, cid));
 
     disposition = g_mime_object_get_content_disposition (part);
     if (disposition &&
