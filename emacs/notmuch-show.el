@@ -83,6 +83,12 @@ any given message."
 	     notmuch-wash-elide-blank-lines
 	     notmuch-wash-excerpt-citations))
 
+;; Mostly useful for debugging.
+(defcustom notmuch-show-all-multipart/alternative-parts nil
+  "Should all parts of multipart/alternative parts be shown?"
+  :group 'notmuch
+  :type 'boolean)
+
 (defcustom notmuch-show-indent-multipart nil
   "Should the sub-parts of a multipart/* part be indented?"
   ;; dme: Not sure which is a good default.
@@ -319,7 +325,8 @@ current buffer, if possible."
     ;; should be chosen if there are more than one that match?
     (mapc (lambda (inner-part)
 	    (let ((inner-type (plist-get inner-part :content-type)))
-	      (if (string= chosen-type inner-type)
+	      (if (or notmuch-show-all-multipart/alternative-parts
+		      (string= chosen-type inner-type))
 		  (notmuch-show-insert-bodypart msg inner-part depth)
 		(notmuch-show-insert-part-header (plist-get inner-part :id) inner-type inner-type nil " (not shown)"))))
 	  inner-parts)
