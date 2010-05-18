@@ -64,6 +64,11 @@ any given message."
   :group 'notmuch
   :type 'boolean)
 
+(defcustom notmuch-show-always-show-subject t
+  "Should a collapsed message show the `Subject:' line?"
+  :group 'notmuch
+  :type 'boolean)
+
 (defvar notmuch-show-markup-headers-hook '(notmuch-show-colour-headers)
   "A list of functions called to decorate the headers listed in
 `notmuch-message-headers'.")
@@ -621,8 +626,9 @@ current buffer, if possible."
       ;; If the subject of this message is the same as that of the
       ;; previous message, don't display it when this message is
       ;; collapsed.
-      (when (not (string= notmuch-show-previous-subject
-			  bare-subject))
+      (when (or notmuch-show-always-show-subject
+                (not (string= notmuch-show-previous-subject
+                              bare-subject)))
 	(forward-line 1))
       (setq headers-start (point-marker)))
     (setq headers-end (point-marker))
