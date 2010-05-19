@@ -608,23 +608,52 @@ matching will be applied."
 		  (t
 		   (setq tags-faces (cdr tags-faces)))))))))
 
+(defun notmuch-search-isearch-authors-show (overlay)
+  (remove-from-invisibility-spec (cons (overlay-get overlay 'invisible) t)))
+
 (defun notmuch-search-insert-authors (format-string authors)
-  (insert (let* ((formatted-sample (format format-string ""))
-		 (formatted-authors (format format-string authors))
-		 (truncated-string
-		  (if (> (length formatted-authors)
-			 (length formatted-sample))
-		      (concat (substring authors 0 (- (length formatted-sample) 4)) "... ")
-		    formatted-authors)))
-	    ;; Need to save the match data to avoid interfering with
-	    ;; `notmuch-search-process-filter'.
-	    (save-match-data
-	      (if (string-match "\\(.*\\)|\\(..*\\)" truncated-string)
-		  (concat (propertize (concat (match-string 1 truncated-string) ",")
-				      'face 'notmuch-search-matching-authors)
-			  (propertize (match-string 2 truncated-string)
-				      'face 'notmuch-search-non-matching-authors))
-		(propertize truncated-string 'face 'notmuch-search-matching-authors))))))
+  (let* ((propertized-authors
+	  ;; Need to save the match data to avoid interfering with
+	  ;; `notmuch-search-process-filter'.
+	  (save-match-data
+	    ;; Authors that don't match the search query are shown in a
+	    ;; different font.
+	    (if (string-match "\\(.*\\)|\\(..*\\)" authors)
+		(concat (propertize (concat (match-string 1 authors) ",")
+				    'face 'notmuch-search-matching-authors)
+			(propertize (match-string 2 authors)
+				    'face 'notmuch-search-non-matching-authors))
+	      (propertize authors 'face 'notmuch-search-matching-authors))))
+
+	 (formatted-sample (format format-string ""))
+	 (formatted-authors (format format-string propertized-authors))
+	 visible-string invisible-string)
+
+    ;; Determine the part of the authors that will be visible by
+    ;; default.
+    (if (> (length formatted-authors)
+	   (length formatted-sample))
+	;; 4 is `(length "... ")'.
+	(let ((visible-length (- (length formatted-sample) 4)))
+	  (setq visible-string (substring propertized-authors 0 visible-length)
+		invisible-string (substring propertized-authors visible-length)))
+      (setq visible-string formatted-authors
+	    invisible-string nil))
+
+    ;; Insert both the visible and invisible author strings.
+    (insert visible-string)
+    (when invisible-string
+      (let ((start (point))
+	    (invis-spec (make-symbol "notmuch-search-authors"))
+	    overlay)
+	(insert invisible-string)
+	;; Using a cons-cell here causes an ellipsis to be inserted
+	;; instead of the invisible text.
+	(add-to-invisibility-spec (cons invis-spec t))
+	(setq overlay (make-overlay start (point)))
+	(overlay-put overlay 'invisible invis-spec)
+	(overlay-put overlay 'isearch-open-invisible #'notmuch-search-isearch-authors-show)
+	(insert " ")))))
 
 (defun notmuch-search-insert-field (field date count authors subject tags)
   (cond
