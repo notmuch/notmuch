@@ -58,6 +58,11 @@ any given message."
   :group 'notmuch
   :type 'boolean)
 
+(defcustom notmuch-show-relative-dates t
+  "Display relative dates in the message summary line."
+  :group 'notmuch
+  :type 'boolean)
+
 (defvar notmuch-show-markup-headers-hook '(notmuch-show-colour-headers)
   "A list of functions called to decorate the headers listed in
 `notmuch-message-headers'.")
@@ -405,7 +410,9 @@ current buffer, if possible."
     (setq message-start (point-marker))
 
     (notmuch-show-insert-headerline headers
-				    (or (plist-get msg :date_relative)
+				    (or (if notmuch-show-relative-dates
+					    (plist-get msg :date_relative)
+					  nil)
 					(plist-get headers :Date))
 				    (plist-get msg :tags) depth)
 
