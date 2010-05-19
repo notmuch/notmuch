@@ -583,10 +583,10 @@ This function advances the next thread when finished."
   "Tag/face mapping for line highlighting in notmuch-search.
 
 Here is an example of how to color search results based on tags.
-(the following text would be placed in your ~/.emacs file):
+ (the following text would be placed in your ~/.emacs file):
 
-(setq notmuch-search-line-faces '((\"delete\" . '(:foreground \"red\"))
-                                 (\"unread\" . '(:foreground \"green\"))))
+ (setq notmuch-search-line-faces '((\"delete\" . '(:foreground \"red\"))
+                                   (\"unread\" . '(:foreground \"green\"))))
 
 Order matters: for lines with multiple tags, the the first
 matching will be applied."
