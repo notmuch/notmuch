@@ -194,7 +194,8 @@ any given message."
     (if (re-search-forward "(\\([^()]*\\))$" (line-end-position) t)
 	(let ((inhibit-read-only t))
 	  (replace-match (concat "("
-				 (mapconcat 'identity tags " ")
+				 (propertize (mapconcat 'identity tags " ")
+					     'face 'notmuch-tag-face)
 				 ")"))))))
 
 (defun notmuch-show-insert-headerline (headers date tags depth)
@@ -206,7 +207,8 @@ message at DEPTH in the current thread."
 	    " ("
 	    date
 	    ") ("
-	    (mapconcat 'identity tags " ")
+	    (propertize (mapconcat 'identity tags " ")
+			'face 'notmuch-tag-face)
 	    ")\n")
     (overlay-put (make-overlay start (point)) 'face 'notmuch-message-summary-face)))
 
