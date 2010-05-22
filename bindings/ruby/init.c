@@ -1,0 +1,272 @@
+/* The Ruby interface to the notmuch mail library
+ *
+ * Copyright © 2010 Ali Polatel
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see http://www.gnu.org/licenses/ .
+ *
+ * Author: Ali Polatel <alip@exherbo.org>
+ */
+
+#include "defs.h"
+
+/*
+ * Document-module: Notmuch
+ *
+ * == Summary
+ *
+ * Ruby extension to the <tt>notmuch</tt> mail library.
+ *
+ * == Constants
+ *
+ * - Notmuch::MODE_READ_ONLY
+ *
+ *   Open the database in read only mode.
+ *
+ * - Notmuch::MODE_READ_WRITE
+ *
+ *   Open the database in read write mode.
+ *
+ * - Notmuch::TAG_MAX
+ *
+ *   Maximum allowed length of a tag
+ */
+
+/*
+ * Document-class: Notmuch::Database
+ *
+ * Notmuch database interaction
+ */
+
+/*
+ * Document-class: Notmuch::Directory
+ *
+ * Notmuch directory
+ */
+
+/*
+ * Document-class: Notmuch::FileNames
+ *
+ * Notmuch file names
+ */
+
+/*
+ * Document-class: Notmuch::Query
+ *
+ * Notmuch query
+ */
+
+/*
+ * Document-class: Notmuch::Threads
+ *
+ * Notmuch threads
+ */
+
+/*
+ * Document-class: Notmuch::Messages
+ *
+ * Notmuch messages
+ */
+
+/*
+ * Document-class: Notmuch::Thread
+ *
+ * Notmuch thread
+ */
+
+/*
+ * Document-class: Notmuch::Message
+ *
+ * Notmuch message
+ */
+
+/*
+ * Document-class: Notmuch::Tags
+ *
+ * Notmuch tags
+ */
+
+/*
+ * Document-class: Notmuch::BaseError
+ *
+ * Base class for all notmuch exceptions
+ */
+
+/*
+ * Document-class: Notmuch::DatabaseError
+ *
+ * Raised when the database can't be created or opened.
+ */
+
+/*
+ * Document-class: Notmuch::MemoryError
+ *
+ * Raised when notmuch is out of memory
+ */
+
+/*
+ * Document-class: Notmuch::ReadOnlyError
+ *
+ * Raised when an attempt was made to write to a database opened in read-only
+ * mode.
+ */
+
+/*
+ * Document-class: Notmuch::XapianError
+ *
+ * Raised when a Xapian exception occurs
+ */
+
+/*
+ * Document-class: Notmuch::FileError
+ *
+ * Raised when an error occurs trying to read or write to a file.
+ */
+
+/*
+ * Document-class: Notmuch::FileNotEmailError
+ *
+ * Raised when a file is presented that doesn't appear to be an email message.
+ */
+
+/*
+ * Document-class: Notmuch::NullPointerError
+ *
+ * Raised when the user erroneously passes a +NULL+ pointer to a notmuch
+ * function.
+ */
+
+/*
+ * Document-class: Notmuch::TagTooLongError
+ *
+ * Raised when a tag value is too long (exceeds Notmuch::TAG_MAX)
+ */
+
+/*
+ * Document-class: Notmuch::UnbalancedFreezeThawError
+ *
+ * Raised when the notmuch_message_thaw function has been called more times
+ * than notmuch_message_freeze.
+ */
+
+#define RDOC_HATE 1
+
+void
+Init_notmuch(void)
+{
+    VALUE mod;
+
+    ID_call = rb_intern("call");
+    ID_db_create = rb_intern("create");
+    ID_db_mode = rb_intern("mode");
+
+    mod = rb_define_module("Notmuch");
+
+    rb_define_const(mod, "MODE_READ_ONLY", INT2FIX(NOTMUCH_DATABASE_MODE_READ_ONLY));
+    rb_define_const(mod, "MODE_READ_WRITE", INT2FIX(NOTMUCH_DATABASE_MODE_READ_WRITE));
+    rb_define_const(mod, "SORT_OLDEST_FIRST", INT2FIX(NOTMUCH_SORT_OLDEST_FIRST));
+    rb_define_const(mod, "SORT_NEWEST_FIRST", INT2FIX(NOTMUCH_SORT_NEWEST_FIRST));
+    rb_define_const(mod, "SORT_MESSAGE_ID", INT2FIX(NOTMUCH_SORT_MESSAGE_ID));
+    rb_define_const(mod, "SORT_UNSORTED", INT2FIX(NOTMUCH_SORT_UNSORTED));
+    rb_define_const(mod, "MESSAGE_FLAG_MATCH", INT2FIX(NOTMUCH_MESSAGE_FLAG_MATCH));
+    rb_define_const(mod, "TAG_MAX", INT2FIX(NOTMUCH_TAG_MAX));
+
+    notmuch_rb_eBaseError = rb_define_class_under(mod, "BaseError", rb_eStandardError);
+    notmuch_rb_eDatabaseError = rb_define_class_under(mod, "DatabaseError", notmuch_rb_eBaseError);
+    notmuch_rb_eMemoryError = rb_define_class_under(mod, "MemoryError", notmuch_rb_eBaseError);
+    notmuch_rb_eReadOnlyError = rb_define_class_under(mod, "ReadOnlyError", notmuch_rb_eBaseError);
+    notmuch_rb_eXapianError = rb_define_class_under(mod, "XapianError", notmuch_rb_eBaseError);
+    notmuch_rb_eFileError = rb_define_class_under(mod, "FileError", notmuch_rb_eBaseError);
+    notmuch_rb_eFileNotEmailError = rb_define_class_under(mod, "FileNotEmailError", notmuch_rb_eBaseError);
+    notmuch_rb_eNullPointerError = rb_define_class_under(mod, "NullPointerError", notmuch_rb_eBaseError);
+    notmuch_rb_eTagTooLongError = rb_define_class_under(mod, "TagTooLongError", notmuch_rb_eBaseError);
+    notmuch_rb_eUnbalancedFreezeThawError = rb_define_class_under(mod, "UnbalancedFreezeThawError",
+            notmuch_rb_eBaseError);
+
+    notmuch_rb_cDatabase = rb_define_class_under(mod, "Database", rb_cObject);
+    rb_define_singleton_method(notmuch_rb_cDatabase, "new", notmuch_rb_database_new, -1);
+    rb_define_method(notmuch_rb_cDatabase, "close", notmuch_rb_database_close, 0);
+    rb_define_method(notmuch_rb_cDatabase, "path", notmuch_rb_database_path, 0);
+    rb_define_method(notmuch_rb_cDatabase, "version", notmuch_rb_database_version, 0);
+    rb_define_method(notmuch_rb_cDatabase, "needs_upgrade?", notmuch_rb_database_needs_upgrade, 0);
+    rb_define_method(notmuch_rb_cDatabase, "upgrade!", notmuch_rb_database_upgrade, 0);
+    rb_define_method(notmuch_rb_cDatabase, "get_directory", notmuch_rb_database_get_directory, 1);
+    rb_define_method(notmuch_rb_cDatabase, "add_message", notmuch_rb_database_add_message, 1);
+    rb_define_method(notmuch_rb_cDatabase, "remove_message", notmuch_rb_database_remove_message, 1);
+    rb_define_method(notmuch_rb_cDatabase, "query", notmuch_rb_database_query_create, 1);
+
+    notmuch_rb_cDirectory = rb_define_class_under(mod, "Directory", rb_cObject);
+    rb_undef_method(notmuch_rb_cDirectory, "initialize");
+    rb_define_method(notmuch_rb_cDirectory, "mtime", notmuch_rb_directory_get_mtime, 0);
+    rb_define_method(notmuch_rb_cDirectory, "mtime=", notmuch_rb_directory_set_mtime, 1);
+    rb_define_method(notmuch_rb_cDirectory, "child_files", notmuch_rb_directory_get_child_files, 0);
+    rb_define_method(notmuch_rb_cDirectory, "child_directories", notmuch_rb_directory_get_child_directories, 0);
+
+    notmuch_rb_cFileNames = rb_define_class_under(mod, "FileNames", rb_cObject);
+    rb_undef_method(notmuch_rb_cFileNames, "initialize");
+    rb_define_method(notmuch_rb_cFileNames, "each", notmuch_rb_filenames_each, 0);
+    rb_include_module(notmuch_rb_cFileNames, rb_mEnumerable);
+
+    notmuch_rb_cQuery = rb_define_class_under(mod, "Query", rb_cObject);
+    rb_undef_method(notmuch_rb_cQuery, "initialize");
+    rb_define_method(notmuch_rb_cQuery, "sort=", notmuch_rb_query_set_sort, 1);
+    rb_define_method(notmuch_rb_cQuery, "search_threads", notmuch_rb_query_search_threads, 0);
+    rb_define_method(notmuch_rb_cQuery, "search_messages", notmuch_rb_query_search_messages, 0);
+
+    notmuch_rb_cThreads = rb_define_class_under(mod, "Threads", rb_cObject);
+    rb_undef_method(notmuch_rb_cThreads, "initialize");
+    rb_define_method(notmuch_rb_cThreads, "each", notmuch_rb_threads_each, 0);
+    rb_include_module(notmuch_rb_cThreads, rb_mEnumerable);
+
+    notmuch_rb_cMessages = rb_define_class_under(mod, "Messages", rb_cObject);
+    rb_undef_method(notmuch_rb_cMessages, "initialize");
+    rb_define_method(notmuch_rb_cMessages, "each", notmuch_rb_messages_each, 0);
+    rb_define_method(notmuch_rb_cMessages, "tags", notmuch_rb_messages_collect_tags, 0);
+    rb_include_module(notmuch_rb_cMessages, rb_mEnumerable);
+
+    notmuch_rb_cThread = rb_define_class_under(mod, "Thread", rb_cObject);
+    rb_undef_method(notmuch_rb_cThread, "initialize");
+    rb_define_method(notmuch_rb_cThread, "thread_id", notmuch_rb_thread_get_thread_id, 0);
+    rb_define_method(notmuch_rb_cThread, "total_messages", notmuch_rb_thread_get_total_messages, 0);
+    rb_define_method(notmuch_rb_cThread, "toplevel_messages", notmuch_rb_thread_get_toplevel_messages, 0);
+    rb_define_method(notmuch_rb_cThread, "matched_messages", notmuch_rb_thread_get_matched_messages, 0);
+    rb_define_method(notmuch_rb_cThread, "authors", notmuch_rb_thread_get_authors, 0);
+    rb_define_method(notmuch_rb_cThread, "subject", notmuch_rb_thread_get_subject, 0);
+    rb_define_method(notmuch_rb_cThread, "oldest_date", notmuch_rb_thread_get_oldest_date, 0);
+    rb_define_method(notmuch_rb_cThread, "newest_date", notmuch_rb_thread_get_newest_date, 0);
+    rb_define_method(notmuch_rb_cThread, "tags", notmuch_rb_thread_get_tags, 0);
+
+    notmuch_rb_cMessage = rb_define_class_under(mod, "Message", rb_cObject);
+    rb_undef_method(notmuch_rb_cMessage, "initialize");
+    rb_define_method(notmuch_rb_cMessage, "message_id", notmuch_rb_message_get_message_id, 0);
+    rb_define_method(notmuch_rb_cMessage, "thread_id", notmuch_rb_message_get_thread_id, 0);
+    rb_define_method(notmuch_rb_cMessage, "replies", notmuch_rb_message_get_replies, 0);
+    rb_define_method(notmuch_rb_cMessage, "filename", notmuch_rb_message_get_filename, 0);
+    rb_define_method(notmuch_rb_cMessage, "get_flag", notmuch_rb_message_get_flag, 1);
+    rb_define_method(notmuch_rb_cMessage, "set_flag", notmuch_rb_message_set_flag, 2);
+    rb_define_method(notmuch_rb_cMessage, "date", notmuch_rb_message_get_date, 0);
+    rb_define_method(notmuch_rb_cMessage, "header", notmuch_rb_message_get_header, 1);
+    rb_define_alias(notmuch_rb_cMessage, "[]", "header");
+    rb_define_method(notmuch_rb_cMessage, "tags", notmuch_rb_message_get_tags, 0);
+    rb_define_method(notmuch_rb_cMessage, "add_tag", notmuch_rb_message_add_tag, 1);
+    rb_define_alias(notmuch_rb_cMessage, "<<", "add_tag");
+    rb_define_method(notmuch_rb_cMessage, "remove_tag", notmuch_rb_message_remove_tag, 1);
+    rb_define_method(notmuch_rb_cMessage, "remove_all_tags", notmuch_rb_message_remove_all_tags, 0);
+    rb_define_method(notmuch_rb_cMessage, "freeze", notmuch_rb_message_freeze, 0);
+    rb_define_method(notmuch_rb_cMessage, "thaw", notmuch_rb_message_thaw, 0);
+
+    notmuch_rb_cTags = rb_define_class_under(mod, "Tags", rb_cObject);
+    rb_undef_method(notmuch_rb_cTags, "initialize");
+    rb_define_method(notmuch_rb_cTags, "each", notmuch_rb_tags_each, 0);
+    rb_include_module(notmuch_rb_cTags, rb_mEnumerable);
+}
