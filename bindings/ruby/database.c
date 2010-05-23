@@ -156,7 +156,7 @@ notmuch_rb_upgrade_notify(void *closure, double progress)
 }
 
 /*
- * call-seq: DB.upgrade [{|progress| block }] => nil
+ * call-seq: DB.upgrade! [{|progress| block }] => nil
  *
  * Upgrade the database.
  *
