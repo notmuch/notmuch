@@ -39,7 +39,7 @@ _notmuch_rb_message_db(notmuch_rb_message_t *message)
         db = _notmuch_rb_messages_db(messages);
     }
     else
-        rb_bug("message's parent is neither database nor messages");
+        db = NULL;
 
     return db;
 }
@@ -68,7 +68,7 @@ _notmuch_rb_messages_db(notmuch_rb_messages_t *messages)
         db = _notmuch_rb_message_db(message);
     }
     else
-        rb_bug("messages' parent is neither query nor thread nor message");
+        db = NULL;
 
     return db;
 }
@@ -107,9 +107,12 @@ notmuch_rb_directory_free(notmuch_rb_directory_t *dir)
 {
     notmuch_rb_database_t *db;
 
-    Data_Get_Struct(dir->db, notmuch_rb_database_t, db);
+    if (rb_obj_is_instance_of(dir->db, notmuch_rb_cDatabase))
+        Data_Get_Struct(dir->db, notmuch_rb_database_t, db);
+    else
+        db = NULL;
 
-    if (db->nm_db && dir->nm_dir)
+    if (db && db->nm_db && dir->nm_dir)
         notmuch_directory_destroy(dir->nm_dir);
 
     free(dir);
@@ -127,10 +130,17 @@ notmuch_rb_filenames_free(notmuch_rb_filenames_t *flist)
     notmuch_rb_directory_t *dir;
     notmuch_rb_database_t *db;
 
-    Data_Get_Struct(flist->dir, notmuch_rb_directory_t, dir);
-    Data_Get_Struct(dir->db, notmuch_rb_database_t, db);
+    if (rb_obj_is_instance_of(flist->dir, notmuch_rb_cDirectory)) {
+        Data_Get_Struct(flist->dir, notmuch_rb_directory_t, dir);
+        if (rb_obj_is_instance_of(dir->db, notmuch_rb_cDatabase))
+           Data_Get_Struct(dir->db, notmuch_rb_database_t, db);
+        else
+            db = NULL;
+    }
+    else
+        db = NULL;
 
-    if (db->nm_db && flist->nm_flist)
+    if (db && db->nm_db && flist->nm_flist)
         notmuch_filenames_destroy(flist->nm_flist);
 
     free(flist);
@@ -147,9 +157,12 @@ notmuch_rb_query_free(notmuch_rb_query_t *query)
 {
     notmuch_rb_database_t *db;
 
-    Data_Get_Struct(query->db, notmuch_rb_database_t, db);
+    if (rb_obj_is_instance_of(query->db, notmuch_rb_cDatabase))
+        Data_Get_Struct(query->db, notmuch_rb_database_t, db);
+    else
+        db = NULL;
 
-    if (db->nm_db && query->nm_query)
+    if (db && db->nm_db && query->nm_query)
         notmuch_query_destroy(query->nm_query);
 
     free(query);
@@ -167,10 +180,17 @@ notmuch_rb_threads_free(notmuch_rb_threads_t *threads)
     notmuch_rb_query_t *query;
     notmuch_rb_database_t *db;
 
-    Data_Get_Struct(threads->query, notmuch_rb_query_t, query);
-    Data_Get_Struct(query->db, notmuch_rb_database_t, db);
+    if (rb_obj_is_instance_of(threads->query, notmuch_rb_cQuery)) {
+        Data_Get_Struct(threads->query, notmuch_rb_query_t, query);
+        if (rb_obj_is_instance_of(query->db, notmuch_rb_cDatabase))
+            Data_Get_Struct(query->db, notmuch_rb_database_t, db);
+        else
+            db = NULL;
+    }
+    else
+        db = NULL;
 
-    if (db->nm_db && threads->nm_threads)
+    if (db && db->nm_db && threads->nm_threads)
         notmuch_threads_destroy(threads->nm_threads);
 
     free(threads);
@@ -189,7 +209,7 @@ notmuch_rb_messages_free(notmuch_rb_messages_t *messages)
 
     db = _notmuch_rb_messages_db(messages);
 
-    if (db->nm_db && messages->nm_messages)
+    if (db && db->nm_db && messages->nm_messages)
         notmuch_messages_destroy(messages->nm_messages);
 
     free(messages);
@@ -208,7 +228,7 @@ notmuch_rb_thread_free(notmuch_rb_thread_t *thread)
 
     db = _notmuch_rb_thread_db(thread);
 
-    if (db->nm_db && thread->nm_thread)
+    if (db && db->nm_db && thread->nm_thread)
         notmuch_thread_destroy(thread->nm_thread);
 
     free(thread);
@@ -226,7 +246,7 @@ notmuch_rb_message_free(notmuch_rb_message_t *message)
     notmuch_rb_database_t *db;
 
     db = _notmuch_rb_message_db(message);
-    if (db->nm_db && message->nm_message)
+    if (db && db->nm_db && message->nm_message)
         notmuch_message_destroy(message->nm_message);
 
     free(message);
@@ -259,9 +279,9 @@ notmuch_rb_tags_free(notmuch_rb_tags_t *tags)
         db = _notmuch_rb_messages_db(messages);
     }
     else
-        rb_bug("tags' parent is neither thread nor message nor messages");
+        return;
 
-    if (db->nm_db && tags->nm_tags)
+    if (db && db->nm_db && tags->nm_tags)
         notmuch_tags_destroy(tags->nm_tags);
 
     free(tags);
