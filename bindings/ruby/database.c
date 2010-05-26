@@ -33,6 +33,7 @@ notmuch_rb_database_new(int argc, VALUE *argv, VALUE klass)
     const char *path;
     int create, mode;
     notmuch_database_t *db;
+    VALUE pathv, hashv;
     VALUE modev;
 
 #if !defined(RSTRING_PTR)
@@ -40,16 +41,15 @@ notmuch_rb_database_new(int argc, VALUE *argv, VALUE klass)
 #endif /* !defined(RSTRING_PTR) */
 
     /* Check arguments */
-    if (argc < 1 || argc > 2)
-        rb_raise(rb_eTypeError, "Wrong number of arguments");
+    rb_scan_args(argc, argv, "11", &pathv, &hashv);
 
-    SafeStringValue(argv[0]);
-    path = RSTRING_PTR(argv[0]);
+    SafeStringValue(pathv);
+    path = RSTRING_PTR(pathv);
 
-    if (argc == 2) {
-        Check_Type(argv[1], T_HASH);
-        create = RTEST(rb_hash_aref(argv[1], ID2SYM(ID_db_create)));
-        modev = rb_hash_aref(argv[1], ID2SYM(ID_db_mode));
+    if (!NIL_P(hashv)) {
+        Check_Type(hashv, T_HASH);
+        create = RTEST(rb_hash_aref(hashv, ID2SYM(ID_db_create)));
+        modev = rb_hash_aref(hashv, ID2SYM(ID_db_mode));
         if (NIL_P(modev))
             mode = NOTMUCH_DATABASE_MODE_READ_ONLY;
         else if (!FIXNUM_P(modev))
@@ -72,7 +72,7 @@ notmuch_rb_database_new(int argc, VALUE *argv, VALUE klass)
 
     db = create ? notmuch_database_create(path) : notmuch_database_open(path, mode);
     if (!db)
-        rb_raise(notmuch_rb_eDatabaseError, "failed to open database");
+        rb_raise(notmuch_rb_eDatabaseError, "Failed to open database");
 
     return Data_Wrap_Struct(klass, NULL, NULL, db);
 }
