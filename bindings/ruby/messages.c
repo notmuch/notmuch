@@ -20,6 +20,23 @@
 
 #include "defs.h"
 
+/*
+ * call-seq: MESSAGES.destroy => nil
+ *
+ * Destroys the messages, freeing all resources allocated for it.
+ */
+VALUE
+notmuch_rb_messages_destroy(VALUE self)
+{
+    notmuch_messages_t *fnames;
+
+    Data_Get_Struct(self, notmuch_messages_t, fnames);
+
+    notmuch_messages_destroy(fnames);
+
+    return Qnil;
+}
+
 /* call-seq: MESSAGES.each {|item| block } => MESSAGES
  *
  * Calls +block+ once for each message in +self+, passing that element as a
@@ -28,22 +45,16 @@
 VALUE
 notmuch_rb_messages_each(VALUE self)
 {
-    notmuch_rb_message_t *message;
-    notmuch_rb_messages_t *messages;
-    VALUE messagev;
+    notmuch_message_t *message;
+    notmuch_messages_t *messages;
 
-    Data_Get_Struct(self, notmuch_rb_messages_t, messages);
-    if (!messages->nm_messages)
+    Data_Get_Struct(self, notmuch_messages_t, messages);
+    if (!messages)
         return self;
 
-    for (; notmuch_messages_valid(messages->nm_messages);
-            notmuch_messages_move_to_next(messages->nm_messages))
-    {
-        messagev = Data_Make_Struct(notmuch_rb_cMessage, notmuch_rb_message_t,
-                notmuch_rb_message_mark, notmuch_rb_message_free, message);
-        message->nm_message = notmuch_messages_get(messages->nm_messages);
-        message->parent = self;
-        rb_yield(messagev);
+    for (; notmuch_messages_valid(messages); notmuch_messages_move_to_next(messages)) {
+        message = notmuch_messages_get(messages);
+        rb_yield(Data_Wrap_Struct(notmuch_rb_cMessage, NULL, NULL, message));
     }
 
     return self;
@@ -57,18 +68,14 @@ notmuch_rb_messages_each(VALUE self)
 VALUE
 notmuch_rb_messages_collect_tags(VALUE self)
 {
-    notmuch_rb_tags_t *tags;
-    notmuch_rb_messages_t *messages;
-    VALUE tagsv;
+    notmuch_tags_t *tags;
+    notmuch_messages_t *messages;
 
-    Data_Get_Struct(self, notmuch_rb_messages_t, messages);
+    Data_Get_Struct(self, notmuch_messages_t, messages);
 
-    tagsv = Data_Make_Struct(notmuch_rb_cTags, notmuch_rb_tags_t,
-            notmuch_rb_tags_mark, notmuch_rb_tags_free, tags);
-    tags->nm_tags = notmuch_messages_collect_tags(messages->nm_messages);
-    tags->parent = self;
-    if (!tags->nm_tags)
-        rb_raise(notmuch_rb_eMemoryError, "out of memory");
+    tags = notmuch_messages_collect_tags(messages);
+    if (!tags)
+        rb_raise(notmuch_rb_eMemoryError, "Out of memory");
 
-    return tagsv;
+    return Data_Wrap_Struct(notmuch_rb_cTags, NULL, NULL, tags);
 }

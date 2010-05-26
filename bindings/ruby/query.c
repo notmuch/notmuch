@@ -21,6 +21,23 @@
 #include "defs.h"
 
 /*
+ * call-seq: QUERY.destroy => nil
+ *
+ * Destroys the query, freeing all resources allocated for it.
+ */
+VALUE
+notmuch_rb_query_destroy(VALUE self)
+{
+    notmuch_query_t *query;
+
+    Data_Get_Struct(self, notmuch_query_t, query);
+
+    notmuch_query_destroy(query);
+
+    return Qnil;
+}
+
+/*
  * call-seq: QUERY.sort=(fixnum) => nil
  *
  * Set sort type of the +QUERY+
@@ -28,14 +45,15 @@
 VALUE
 notmuch_rb_query_set_sort(VALUE self, VALUE sortv)
 {
-    notmuch_rb_query_t *query;
+    notmuch_query_t *query;
 
-    Data_Get_Struct(self, notmuch_rb_query_t, query);
+    Data_Get_Struct(self, notmuch_query_t, query);
 
     if (!FIXNUM_P(sortv))
         rb_raise(rb_eTypeError, "Not a fixnum");
 
-    notmuch_query_set_sort(query->nm_query, FIX2UINT(sortv));
+    notmuch_query_set_sort(query, FIX2UINT(sortv));
+
     return Qnil;
 }
 
@@ -47,20 +65,16 @@ notmuch_rb_query_set_sort(VALUE self, VALUE sortv)
 VALUE
 notmuch_rb_query_search_threads(VALUE self)
 {
-    notmuch_rb_query_t *query;
-    notmuch_rb_threads_t *threads;
-    VALUE threadsv;
+    notmuch_query_t *query;
+    notmuch_threads_t *threads;
 
-    Data_Get_Struct(self, notmuch_rb_query_t, query);
+    Data_Get_Struct(self, notmuch_query_t, query);
 
-    threadsv = Data_Make_Struct(notmuch_rb_cThreads, notmuch_rb_threads_t,
-            notmuch_rb_threads_mark, notmuch_rb_threads_free, threads);
-    threads->nm_threads = notmuch_query_search_threads(query->nm_query);
-    threads->query = self;
-    if (!threads->nm_threads)
-        rb_raise(notmuch_rb_eMemoryError, "out of memory");
+    threads = notmuch_query_search_threads(query);
+    if (!threads)
+        rb_raise(notmuch_rb_eMemoryError, "Out of memory");
 
-    return threadsv;
+    return Data_Wrap_Struct(notmuch_rb_cThreads, NULL, NULL, threads);
 }
 
 /*
@@ -71,18 +85,14 @@ notmuch_rb_query_search_threads(VALUE self)
 VALUE
 notmuch_rb_query_search_messages(VALUE self)
 {
-    notmuch_rb_query_t *query;
-    notmuch_rb_messages_t *messages;
-    VALUE messagesv;
+    notmuch_query_t *query;
+    notmuch_messages_t *messages;
 
-    Data_Get_Struct(self, notmuch_rb_query_t, query);
+    Data_Get_Struct(self, notmuch_query_t, query);
 
-    messagesv = Data_Make_Struct(notmuch_rb_cMessages, notmuch_rb_messages_t,
-            notmuch_rb_messages_mark, notmuch_rb_messages_free, messages);
-    messages->nm_messages = notmuch_query_search_messages(query->nm_query);
-    messages->parent = self;
-    if (!messages->nm_messages)
-        rb_raise(notmuch_rb_eMemoryError, "out of memory");
+    messages = notmuch_query_search_messages(query);
+    if (!messages)
+        rb_raise(notmuch_rb_eMemoryError, "Out of memory");
 
-    return messagesv;
+    return Data_Wrap_Struct(notmuch_rb_cMessages, NULL, NULL, messages);
 }

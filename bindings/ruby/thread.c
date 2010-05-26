@@ -21,6 +21,23 @@
 #include "defs.h"
 
 /*
+ * call-seq: THREAD.destroy => nil
+ *
+ * Destroys the thread, freeing all resources allocated for it.
+ */
+VALUE
+notmuch_rb_thread_destroy(VALUE self)
+{
+    notmuch_thread_t *thread;
+
+    Data_Get_Struct(self, notmuch_thread_t, thread);
+
+    notmuch_thread_destroy(thread);
+
+    return Qnil;
+}
+
+/*
  * call-seq: THREAD.thread_id => String
  *
  * Returns the thread id
@@ -29,12 +46,13 @@ VALUE
 notmuch_rb_thread_get_thread_id(VALUE self)
 {
     const char *tid;
-    notmuch_rb_thread_t *thread;
+    notmuch_thread_t *thread;
 
-    Data_Get_Struct(self, notmuch_rb_thread_t, thread);
+    Data_Get_Struct(self, notmuch_thread_t, thread);
 
-    tid = notmuch_thread_get_thread_id(thread->nm_thread);
-    return tid ? rb_str_new2(tid) : Qnil;
+    tid = notmuch_thread_get_thread_id(thread);
+
+    return rb_str_new2(tid);
 }
 
 /*
@@ -45,11 +63,11 @@ notmuch_rb_thread_get_thread_id(VALUE self)
 VALUE
 notmuch_rb_thread_get_total_messages(VALUE self)
 {
-    notmuch_rb_thread_t *thread;
+    notmuch_thread_t *thread;
 
-    Data_Get_Struct(self, notmuch_rb_thread_t, thread);
+    Data_Get_Struct(self, notmuch_thread_t, thread);
 
-    return INT2FIX(notmuch_thread_get_total_messages(thread->nm_thread));
+    return INT2FIX(notmuch_thread_get_total_messages(thread));
 }
 
 /*
@@ -60,20 +78,16 @@ notmuch_rb_thread_get_total_messages(VALUE self)
 VALUE
 notmuch_rb_thread_get_toplevel_messages(VALUE self)
 {
-    notmuch_rb_messages_t *messages;
-    notmuch_rb_thread_t *thread;
-    VALUE messagesv;
+    notmuch_messages_t *messages;
+    notmuch_thread_t *thread;
 
-    Data_Get_Struct(self, notmuch_rb_thread_t, thread);
+    Data_Get_Struct(self, notmuch_thread_t, thread);
 
-    messagesv = Data_Make_Struct(notmuch_rb_cMessages, notmuch_rb_messages_t,
-            notmuch_rb_messages_mark, notmuch_rb_messages_free, messages);
-    messages->nm_messages = notmuch_thread_get_toplevel_messages(thread->nm_thread);
-    messages->parent = self;
-    if (!messages->nm_messages)
-        rb_raise(notmuch_rb_eMemoryError, "out of memory");
+    messages = notmuch_thread_get_toplevel_messages(thread);
+    if (!messages)
+        rb_raise(notmuch_rb_eMemoryError, "Out of memory");
 
-    return messagesv;
+    return Data_Wrap_Struct(notmuch_rb_cMessages, NULL, NULL, messages);
 }
 
 /*
@@ -84,11 +98,11 @@ notmuch_rb_thread_get_toplevel_messages(VALUE self)
 VALUE
 notmuch_rb_thread_get_matched_messages(VALUE self)
 {
-    notmuch_rb_thread_t *thread;
+    notmuch_thread_t *thread;
 
-    Data_Get_Struct(self, notmuch_rb_thread_t, thread);
+    Data_Get_Struct(self, notmuch_thread_t, thread);
 
-    return INT2FIX(notmuch_thread_get_matched_messages(thread->nm_thread));
+    return INT2FIX(notmuch_thread_get_matched_messages(thread));
 }
 
 /*
@@ -100,12 +114,13 @@ VALUE
 notmuch_rb_thread_get_authors(VALUE self)
 {
     const char *authors;
-    notmuch_rb_thread_t *thread;
+    notmuch_thread_t *thread;
 
-    Data_Get_Struct(self, notmuch_rb_thread_t, thread);
+    Data_Get_Struct(self, notmuch_thread_t, thread);
 
-    authors = notmuch_thread_get_authors(thread->nm_thread);
-    return authors ? rb_str_new2(authors) : Qnil;
+    authors = notmuch_thread_get_authors(thread);
+
+    return rb_str_new2(authors);
 }
 
 /*
@@ -117,12 +132,13 @@ VALUE
 notmuch_rb_thread_get_subject(VALUE self)
 {
     const char *subject;
-    notmuch_rb_thread_t *thread;
+    notmuch_thread_t *thread;
 
-    Data_Get_Struct(self, notmuch_rb_thread_t, thread);
+    Data_Get_Struct(self, notmuch_thread_t, thread);
 
-    subject = notmuch_thread_get_subject(thread->nm_thread);
-    return subject ? rb_str_new2(subject) : Qnil;
+    subject = notmuch_thread_get_subject(thread);
+
+    return rb_str_new2(subject);
 }
 
 /*
@@ -133,11 +149,11 @@ notmuch_rb_thread_get_subject(VALUE self)
 VALUE
 notmuch_rb_thread_get_oldest_date(VALUE self)
 {
-    notmuch_rb_thread_t *thread;
+    notmuch_thread_t *thread;
 
-    Data_Get_Struct(self, notmuch_rb_thread_t, thread);
+    Data_Get_Struct(self, notmuch_thread_t, thread);
 
-    return UINT2NUM(notmuch_thread_get_oldest_date(thread->nm_thread));
+    return UINT2NUM(notmuch_thread_get_oldest_date(thread));
 }
 
 /*
@@ -148,11 +164,11 @@ notmuch_rb_thread_get_oldest_date(VALUE self)
 VALUE
 notmuch_rb_thread_get_newest_date(VALUE self)
 {
-    notmuch_rb_thread_t *thread;
+    notmuch_thread_t *thread;
 
-    Data_Get_Struct(self, notmuch_rb_thread_t, thread);
+    Data_Get_Struct(self, notmuch_thread_t, thread);
 
-    return UINT2NUM(notmuch_thread_get_newest_date(thread->nm_thread));
+    return UINT2NUM(notmuch_thread_get_newest_date(thread));
 }
 
 /*
@@ -163,18 +179,14 @@ notmuch_rb_thread_get_newest_date(VALUE self)
 VALUE
 notmuch_rb_thread_get_tags(VALUE self)
 {
-    notmuch_rb_thread_t *thread;
-    notmuch_rb_tags_t *tags;
-    VALUE tagsv;
+    notmuch_thread_t *thread;
+    notmuch_tags_t *tags;
 
-    Data_Get_Struct(self, notmuch_rb_thread_t, thread);
+    Data_Get_Struct(self, notmuch_thread_t, thread);
 
-    tagsv = Data_Make_Struct(notmuch_rb_cTags, notmuch_rb_tags_t,
-            notmuch_rb_tags_mark, notmuch_rb_tags_free, tags);
-    tags->nm_tags = notmuch_thread_get_tags(thread->nm_thread);
-    tags->parent = self;
-    if (!tags->nm_tags)
-        rb_raise(notmuch_rb_eMemoryError, "out of memory");
+    tags = notmuch_thread_get_tags(thread);
+    if (!tags)
+        rb_raise(notmuch_rb_eMemoryError, "Out of memory");
 
-    return tagsv;
+    return Data_Wrap_Struct(notmuch_rb_cTags, NULL, NULL, tags);
 }

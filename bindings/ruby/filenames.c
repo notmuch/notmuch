@@ -21,6 +21,23 @@
 #include "defs.h"
 
 /*
+ * call-seq: FILENAMES.destroy => nil
+ *
+ * Destroys the filenames, freeing all resources allocated for it.
+ */
+VALUE
+notmuch_rb_filenames_destroy(VALUE self)
+{
+    notmuch_filenames_t *fnames;
+
+    Data_Get_Struct(self, notmuch_filenames_t, fnames);
+
+    notmuch_filenames_destroy(fnames);
+
+    return Qnil;
+}
+
+/*
  * call-seq: FILENAMES.each {|item| block } => FILENAMES
  *
  * Calls +block+ once for each element in +self+, passing that element as a
@@ -29,15 +46,14 @@
 VALUE
 notmuch_rb_filenames_each(VALUE self)
 {
-    notmuch_rb_filenames_t *flist;
+    notmuch_filenames_t *fnames;
 
-    Data_Get_Struct(self, notmuch_rb_filenames_t, flist);
-    if (!flist->nm_flist)
+    Data_Get_Struct(self, notmuch_filenames_t, fnames);
+    if (!fnames)
         return self;
 
-    for (; notmuch_filenames_valid(flist->nm_flist);
-            notmuch_filenames_move_to_next(flist->nm_flist))
-        rb_yield(rb_str_new2(notmuch_filenames_get(flist->nm_flist)));
+    for (; notmuch_filenames_valid(fnames); notmuch_filenames_move_to_next(fnames))
+        rb_yield(rb_str_new2(notmuch_filenames_get(fnames)));
 
     return self;
 }

@@ -21,6 +21,23 @@
 #include "defs.h"
 
 /*
+ * call-seq: DIR.destroy => nil
+ *
+ * Destroys the directory, freeing all resources allocated for it.
+ */
+VALUE
+notmuch_rb_directory_destroy(VALUE self)
+{
+    notmuch_directory_t *dir;
+
+    Data_Get_Struct(self, notmuch_directory_t, dir);
+
+    notmuch_directory_destroy(dir);
+
+    return Qnil;
+}
+
+/*
  * call-seq: DIR.mtime => fixnum
  *
  * Returns the mtime of the directory or +0+ if no mtime has been previously
@@ -29,11 +46,11 @@
 VALUE
 notmuch_rb_directory_get_mtime(VALUE self)
 {
-    notmuch_rb_directory_t *dir;
+    notmuch_directory_t *dir;
 
-    Data_Get_Struct(self, notmuch_rb_directory_t, dir);
+    Data_Get_Struct(self, notmuch_directory_t, dir);
 
-    return UINT2NUM(notmuch_directory_get_mtime(dir->nm_dir));
+    return UINT2NUM(notmuch_directory_get_mtime(dir));
 }
 
 /*
@@ -45,15 +62,16 @@ VALUE
 notmuch_rb_directory_set_mtime(VALUE self, VALUE mtimev)
 {
     notmuch_status_t ret;
-    notmuch_rb_directory_t *dir;
+    notmuch_directory_t *dir;
 
-    Data_Get_Struct(self, notmuch_rb_directory_t, dir);
+    Data_Get_Struct(self, notmuch_directory_t, dir);
 
     if (!FIXNUM_P(mtimev))
         rb_raise(rb_eTypeError, "First argument not a fixnum");
 
-    ret = notmuch_directory_set_mtime(dir->nm_dir, FIX2UINT(mtimev));
+    ret = notmuch_directory_set_mtime(dir, FIX2UINT(mtimev));
     notmuch_rb_status_raise(ret);
+
     return Qtrue;
 }
 
@@ -66,18 +84,14 @@ notmuch_rb_directory_set_mtime(VALUE self, VALUE mtimev)
 VALUE
 notmuch_rb_directory_get_child_files(VALUE self)
 {
-    notmuch_rb_directory_t *dir;
-    notmuch_rb_filenames_t *flist;
-    VALUE flistv;
+    notmuch_directory_t *dir;
+    notmuch_filenames_t *fnames;
 
-    Data_Get_Struct(self, notmuch_rb_directory_t, dir);
+    Data_Get_Struct(self, notmuch_directory_t, dir);
 
-    flistv = Data_Make_Struct(notmuch_rb_cFileNames, notmuch_rb_filenames_t,
-            notmuch_rb_filenames_mark, notmuch_rb_filenames_free, flist);
-    flist->dir = self;
-    flist->nm_flist = notmuch_directory_get_child_files(dir->nm_dir);
+    fnames = notmuch_directory_get_child_files(dir);
 
-    return flistv;
+    return Data_Wrap_Struct(notmuch_rb_cFileNames, NULL, NULL, fnames);
 }
 
 /*
@@ -89,16 +103,12 @@ notmuch_rb_directory_get_child_files(VALUE self)
 VALUE
 notmuch_rb_directory_get_child_directories(VALUE self)
 {
-    notmuch_rb_directory_t *dir;
-    notmuch_rb_filenames_t *flist;
-    VALUE flistv;
+    notmuch_directory_t *dir;
+    notmuch_filenames_t *fnames;
 
-    Data_Get_Struct(self, notmuch_rb_directory_t, dir);
+    Data_Get_Struct(self, notmuch_directory_t, dir);
 
-    flistv = Data_Make_Struct(notmuch_rb_cFileNames, notmuch_rb_filenames_t,
-            notmuch_rb_filenames_mark, notmuch_rb_filenames_free, flist);
-    flist->dir = self;
-    flist->nm_flist = notmuch_directory_get_child_directories(dir->nm_dir);
+    fnames = notmuch_directory_get_child_directories(dir);
 
-    return flistv;
+    return Data_Wrap_Struct(notmuch_rb_cFileNames, NULL, NULL, fnames);
 }

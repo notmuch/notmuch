@@ -21,6 +21,23 @@
 #include "defs.h"
 
 /*
+ * call-seq: MESSAGE.destroy => nil
+ *
+ * Destroys the message, freeing all resources allocated for it.
+ */
+VALUE
+notmuch_rb_message_destroy(VALUE self)
+{
+    notmuch_message_t *message;
+
+    Data_Get_Struct(self, notmuch_message_t, message);
+
+    notmuch_message_destroy(message);
+
+    return Qnil;
+}
+
+/*
  * call-seq: MESSAGE.message_id => String
  *
  * Get the message ID of 'message'.
@@ -29,12 +46,13 @@ VALUE
 notmuch_rb_message_get_message_id(VALUE self)
 {
     const char *msgid;
-    notmuch_rb_message_t *message;
+    notmuch_message_t *message;
 
-    Data_Get_Struct(self, notmuch_rb_message_t, message);
+    Data_Get_Struct(self, notmuch_message_t, message);
 
-    msgid = notmuch_message_get_message_id(message->nm_message);
-    return msgid ? rb_str_new2(msgid) : Qnil;
+    msgid = notmuch_message_get_message_id(message);
+
+    return rb_str_new2(msgid);
 }
 
 /*
@@ -46,12 +64,13 @@ VALUE
 notmuch_rb_message_get_thread_id(VALUE self)
 {
     const char *tid;
-    notmuch_rb_message_t *message;
+    notmuch_message_t *message;
 
-    Data_Get_Struct(self, notmuch_rb_message_t, message);
+    Data_Get_Struct(self, notmuch_message_t, message);
 
-    tid = notmuch_message_get_thread_id(message->nm_message);
-    return tid ? rb_str_new2(tid) : Qnil;
+    tid = notmuch_message_get_thread_id(message);
+
+    return rb_str_new2(tid);
 }
 
 /*
@@ -62,18 +81,14 @@ notmuch_rb_message_get_thread_id(VALUE self)
 VALUE
 notmuch_rb_message_get_replies(VALUE self)
 {
-    notmuch_rb_messages_t *messages;
-    notmuch_rb_message_t *message;
-    VALUE messagesv;
+    notmuch_messages_t *messages;
+    notmuch_message_t *message;
 
-    Data_Get_Struct(self, notmuch_rb_message_t, message);
+    Data_Get_Struct(self, notmuch_message_t, message);
 
-    messagesv = Data_Make_Struct(notmuch_rb_cMessages, notmuch_rb_messages_t,
-            notmuch_rb_messages_mark, notmuch_rb_messages_free, messages);
-    messages->nm_messages = notmuch_message_get_replies(message->nm_message);
-    messages->parent = self;
+    messages = notmuch_message_get_replies(message);
 
-    return messages->nm_messages ? messagesv : Qnil;
+    return Data_Wrap_Struct(notmuch_rb_cMessages, NULL, NULL, messages);
 }
 
 /*
@@ -85,12 +100,13 @@ VALUE
 notmuch_rb_message_get_filename(VALUE self)
 {
     const char *fname;
-    notmuch_rb_message_t *message;
+    notmuch_message_t *message;
 
-    Data_Get_Struct(self, notmuch_rb_message_t, message);
+    Data_Get_Struct(self, notmuch_message_t, message);
 
-    fname = notmuch_message_get_filename(message->nm_message);
-    return fname ? rb_str_new2(fname) : Qnil;
+    fname = notmuch_message_get_filename(message);
+
+    return rb_str_new2(fname);
 }
 
 /*
@@ -101,14 +117,14 @@ notmuch_rb_message_get_filename(VALUE self)
 VALUE
 notmuch_rb_message_get_flag(VALUE self, VALUE flagv)
 {
-    notmuch_rb_message_t *message;
+    notmuch_message_t *message;
 
-    Data_Get_Struct(self, notmuch_rb_message_t, message);
+    Data_Get_Struct(self, notmuch_message_t, message);
 
     if (!FIXNUM_P(flagv))
         rb_raise(rb_eTypeError, "Flag not a Fixnum");
 
-    return notmuch_message_get_flag(message->nm_message, FIX2INT(flagv)) ? Qtrue : Qfalse;
+    return notmuch_message_get_flag(message, FIX2INT(flagv)) ? Qtrue : Qfalse;
 }
 
 /*
@@ -119,14 +135,15 @@ notmuch_rb_message_get_flag(VALUE self, VALUE flagv)
 VALUE
 notmuch_rb_message_set_flag(VALUE self, VALUE flagv, VALUE valuev)
 {
-    notmuch_rb_message_t *message;
+    notmuch_message_t *message;
 
-    Data_Get_Struct(self, notmuch_rb_message_t, message);
+    Data_Get_Struct(self, notmuch_message_t, message);
 
     if (!FIXNUM_P(flagv))
         rb_raise(rb_eTypeError, "Flag not a Fixnum");
 
-    notmuch_message_set_flag(message->nm_message, FIX2INT(flagv), RTEST(valuev));
+    notmuch_message_set_flag(message, FIX2INT(flagv), RTEST(valuev));
+
     return Qnil;
 }
 
@@ -138,11 +155,11 @@ notmuch_rb_message_set_flag(VALUE self, VALUE flagv, VALUE valuev)
 VALUE
 notmuch_rb_message_get_date(VALUE self)
 {
-    notmuch_rb_message_t *message;
+    notmuch_message_t *message;
 
-    Data_Get_Struct(self, notmuch_rb_message_t, message);
+    Data_Get_Struct(self, notmuch_message_t, message);
 
-    return UINT2NUM(notmuch_message_get_date(message->nm_message));
+    return UINT2NUM(notmuch_message_get_date(message));
 }
 
 /*
@@ -154,9 +171,9 @@ VALUE
 notmuch_rb_message_get_header(VALUE self, VALUE headerv)
 {
     const char *header, *value;
-    notmuch_rb_message_t *message;
+    notmuch_message_t *message;
 
-    Data_Get_Struct(self, notmuch_rb_message_t, message);
+    Data_Get_Struct(self, notmuch_message_t, message);
 
 #if !defined(RSTRING_PTR)
 #define RSTRING_PTR(v) (RSTRING((v))->ptr)
@@ -165,9 +182,9 @@ notmuch_rb_message_get_header(VALUE self, VALUE headerv)
     SafeStringValue(headerv);
     header = RSTRING_PTR(headerv);
 
-    value = notmuch_message_get_header(message->nm_message, header);
+    value = notmuch_message_get_header(message, header);
     if (!value)
-        rb_raise(notmuch_rb_eMemoryError, "out of memory");
+        rb_raise(notmuch_rb_eMemoryError, "Out of memory");
 
     return rb_str_new2(value);
 }
@@ -180,20 +197,16 @@ notmuch_rb_message_get_header(VALUE self, VALUE headerv)
 VALUE
 notmuch_rb_message_get_tags(VALUE self)
 {
-    notmuch_rb_message_t *message;
-    notmuch_rb_tags_t *tags;
-    VALUE tagsv;
+    notmuch_message_t *message;
+    notmuch_tags_t *tags;
 
-    Data_Get_Struct(self, notmuch_rb_message_t, message);
+    Data_Get_Struct(self, notmuch_message_t, message);
 
-    tagsv = Data_Make_Struct(notmuch_rb_cTags, notmuch_rb_tags_t,
-            notmuch_rb_tags_mark, notmuch_rb_tags_free, tags);
-    tags->nm_tags = notmuch_message_get_tags(message->nm_message);
-    tags->parent = self;
-    if (!tags->nm_tags)
-        rb_raise(notmuch_rb_eMemoryError, "out of memory");
+    tags = notmuch_message_get_tags(message);
+    if (!tags)
+        rb_raise(notmuch_rb_eMemoryError, "Out of memory");
 
-    return tagsv;
+    return Data_Wrap_Struct(notmuch_rb_cTags, NULL, NULL, tags);
 }
 
 /*
@@ -206,9 +219,9 @@ notmuch_rb_message_add_tag(VALUE self, VALUE tagv)
 {
     const char *tag;
     notmuch_status_t ret;
-    notmuch_rb_message_t *message;
+    notmuch_message_t *message;
 
-    Data_Get_Struct(self, notmuch_rb_message_t, message);
+    Data_Get_Struct(self, notmuch_message_t, message);
 
 #if !defined(RSTRING_PTR)
 #define RSTRING_PTR(v) (RSTRING((v))->ptr)
@@ -217,8 +230,9 @@ notmuch_rb_message_add_tag(VALUE self, VALUE tagv)
     SafeStringValue(tagv);
     tag = RSTRING_PTR(tagv);
 
-    ret = notmuch_message_add_tag(message->nm_message, tag);
+    ret = notmuch_message_add_tag(message, tag);
     notmuch_rb_status_raise(ret);
+
     return Qtrue;
 }
 
@@ -232,9 +246,9 @@ notmuch_rb_message_remove_tag(VALUE self, VALUE tagv)
 {
     const char *tag;
     notmuch_status_t ret;
-    notmuch_rb_message_t *message;
+    notmuch_message_t *message;
 
-    Data_Get_Struct(self, notmuch_rb_message_t, message);
+    Data_Get_Struct(self, notmuch_message_t, message);
 
 #if !defined(RSTRING_PTR)
 #define RSTRING_PTR(v) (RSTRING((v))->ptr)
@@ -243,8 +257,9 @@ notmuch_rb_message_remove_tag(VALUE self, VALUE tagv)
     SafeStringValue(tagv);
     tag = RSTRING_PTR(tagv);
 
-    ret = notmuch_message_remove_tag(message->nm_message, tag);
+    ret = notmuch_message_remove_tag(message, tag);
     notmuch_rb_status_raise(ret);
+
     return Qtrue;
 }
 
@@ -257,12 +272,13 @@ VALUE
 notmuch_rb_message_remove_all_tags(VALUE self)
 {
     notmuch_status_t ret;
-    notmuch_rb_message_t *message;
+    notmuch_message_t *message;
 
-    Data_Get_Struct(self, notmuch_rb_message_t, message);
+    Data_Get_Struct(self, notmuch_message_t, message);
 
-    ret = notmuch_message_remove_all_tags(message->nm_message);
+    ret = notmuch_message_remove_all_tags(message);
     notmuch_rb_status_raise(ret);
+
     return Qtrue;
 }
 
@@ -275,12 +291,13 @@ VALUE
 notmuch_rb_message_freeze(VALUE self)
 {
     notmuch_status_t ret;
-    notmuch_rb_message_t *message;
+    notmuch_message_t *message;
 
-    Data_Get_Struct(self, notmuch_rb_message_t, message);
+    Data_Get_Struct(self, notmuch_message_t, message);
 
-    ret = notmuch_message_freeze(message->nm_message);
+    ret = notmuch_message_freeze(message);
     notmuch_rb_status_raise(ret);
+
     return Qtrue;
 }
 
@@ -293,11 +310,12 @@ VALUE
 notmuch_rb_message_thaw(VALUE self)
 {
     notmuch_status_t ret;
-    notmuch_rb_message_t *message;
+    notmuch_message_t *message;
 
-    Data_Get_Struct(self, notmuch_rb_message_t, message);
+    Data_Get_Struct(self, notmuch_message_t, message);
 
-    ret = notmuch_message_thaw(message->nm_message);
+    ret = notmuch_message_thaw(message);
     notmuch_rb_status_raise(ret);
+
     return Qtrue;
 }

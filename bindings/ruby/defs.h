@@ -49,105 +49,9 @@ ID ID_call;
 ID ID_db_create;
 ID ID_db_mode;
 
-typedef struct {
-    notmuch_database_t *nm_db;
-} notmuch_rb_database_t;
-
-typedef struct {
-    notmuch_directory_t *nm_dir;
-    VALUE db;
-} notmuch_rb_directory_t;
-
-typedef struct {
-    notmuch_filenames_t *nm_flist;
-    VALUE dir;
-} notmuch_rb_filenames_t;
-
-typedef struct {
-    notmuch_query_t *nm_query;
-    VALUE db;
-} notmuch_rb_query_t;
-
-typedef struct {
-    notmuch_threads_t *nm_threads;
-    VALUE query;
-} notmuch_rb_threads_t;
-
-typedef struct {
-    notmuch_messages_t *nm_messages;
-    VALUE parent;
-} notmuch_rb_messages_t;
-
-typedef struct {
-    notmuch_thread_t *nm_thread;
-    VALUE threads;
-} notmuch_rb_thread_t;
-
-typedef struct {
-    notmuch_message_t *nm_message;
-    VALUE parent;
-} notmuch_rb_message_t;
-
-typedef struct {
-    notmuch_tags_t *nm_tags;
-    VALUE parent;
-} notmuch_rb_tags_t;
-
 /* status.c */
 void
 notmuch_rb_status_raise(notmuch_status_t status);
-
-/* gc.c */
-void
-notmuch_rb_database_free(notmuch_rb_database_t *db);
-
-void
-notmuch_rb_directory_mark(notmuch_rb_directory_t *dir);
-
-void
-notmuch_rb_directory_free(notmuch_rb_directory_t *dir);
-
-void
-notmuch_rb_filenames_mark(notmuch_rb_filenames_t *flist);
-
-void
-notmuch_rb_filenames_free(notmuch_rb_filenames_t *flist);
-
-void
-notmuch_rb_query_mark(notmuch_rb_query_t *query);
-
-void
-notmuch_rb_query_free(notmuch_rb_query_t *query);
-
-void
-notmuch_rb_threads_mark(notmuch_rb_threads_t *threads);
-
-void
-notmuch_rb_threads_free(notmuch_rb_threads_t *threads);
-
-void
-notmuch_rb_messages_mark(notmuch_rb_messages_t *messages);
-
-void
-notmuch_rb_messages_free(notmuch_rb_messages_t *messages);
-
-void
-notmuch_rb_thread_mark(notmuch_rb_thread_t *thread);
-
-void
-notmuch_rb_thread_free(notmuch_rb_thread_t *thread);
-
-void
-notmuch_rb_message_mark(notmuch_rb_message_t *message);
-
-void
-notmuch_rb_message_free(notmuch_rb_message_t *message);
-
-void
-notmuch_rb_tags_mark(notmuch_rb_tags_t *tags);
-
-void
-notmuch_rb_tags_free(notmuch_rb_tags_t *tags);
 
 /* database.c */
 VALUE
@@ -182,6 +86,9 @@ notmuch_rb_database_query_create(VALUE self, VALUE qstrv);
 
 /* directory.c */
 VALUE
+notmuch_rb_directory_destroy(VALUE self);
+
+VALUE
 notmuch_rb_directory_get_mtime(VALUE self);
 
 VALUE
@@ -195,9 +102,15 @@ notmuch_rb_directory_get_child_directories(VALUE self);
 
 /* filenames.c */
 VALUE
+notmuch_rb_filenames_destroy(VALUE self);
+
+VALUE
 notmuch_rb_filenames_each(VALUE self);
 
 /* query.c */
+VALUE
+notmuch_rb_query_destroy(VALUE self);
+
 VALUE
 notmuch_rb_query_set_sort(VALUE self, VALUE sortv);
 
@@ -209,9 +122,15 @@ notmuch_rb_query_search_messages(VALUE self);
 
 /* threads.c */
 VALUE
+notmuch_rb_threads_destroy(VALUE self);
+
+VALUE
 notmuch_rb_threads_each(VALUE self);
 
 /* messages.c */
+VALUE
+notmuch_rb_messages_destroy(VALUE self);
+
 VALUE
 notmuch_rb_messages_each(VALUE self);
 
@@ -219,6 +138,9 @@ VALUE
 notmuch_rb_messages_collect_tags(VALUE self);
 
 /* thread.c */
+VALUE
+notmuch_rb_thread_destroy(VALUE self);
+
 VALUE
 notmuch_rb_thread_get_thread_id(VALUE self);
 
@@ -247,6 +169,9 @@ VALUE
 notmuch_rb_thread_get_tags(VALUE self);
 
 /* message.c */
+VALUE
+notmuch_rb_message_destroy(VALUE self);
+
 VALUE
 notmuch_rb_message_get_message_id(VALUE self);
 
@@ -290,6 +215,9 @@ VALUE
 notmuch_rb_message_thaw(VALUE self);
 
 /* tags.c */
+VALUE
+notmuch_rb_tags_destroy(VALUE self);
+
 VALUE
 notmuch_rb_tags_each(VALUE self);
 

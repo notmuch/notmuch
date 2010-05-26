@@ -21,6 +21,23 @@
 #include "defs.h"
 
 /*
+ * call-seq: tags.destroy => nil
+ *
+ * Destroys the tags, freeing all resources allocated for it.
+ */
+VALUE
+notmuch_rb_tags_destroy(VALUE self)
+{
+    notmuch_tags_t *tags;
+
+    Data_Get_Struct(self, notmuch_tags_t, tags);
+
+    notmuch_tags_destroy(tags);
+
+    return Qnil;
+}
+
+/*
  * call-seq: TAGS.each {|item| block } => TAGS
  *
  * Calls +block+ once for each element in +self+, passing that element as a
@@ -30,16 +47,15 @@ VALUE
 notmuch_rb_tags_each(VALUE self)
 {
     const char *tag;
-    notmuch_rb_tags_t *tags;
+    notmuch_tags_t *tags;
 
-    Data_Get_Struct(self, notmuch_rb_tags_t, tags);
-    if (!tags->nm_tags)
+    Data_Get_Struct(self, notmuch_tags_t, tags);
+    if (!tags)
         return self;
 
-    for (; notmuch_tags_valid(tags->nm_tags);
-            notmuch_tags_move_to_next(tags->nm_tags)) {
-        tag = notmuch_tags_get(tags->nm_tags);
-        rb_yield(tag ? rb_str_new2(tag) : Qnil);
+    for (; notmuch_tags_valid(tags); notmuch_tags_move_to_next(tags)) {
+        tag = notmuch_tags_get(tags);
+        rb_yield(rb_str_new2(tag));
     }
 
     return self;
