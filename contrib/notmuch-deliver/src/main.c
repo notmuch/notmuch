@@ -261,6 +261,7 @@ save_database(notmuch_database_t *db, const char *path, char **default_tags)
 	case NOTMUCH_STATUS_SUCCESS:
 		break;
 	case NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID:
+		g_debug("Message is a duplicate, not adding tags");
 		return 0;
 	default:
 		g_warning("Failed to add `%s' to notmuch database: %s",
@@ -364,6 +365,7 @@ main(int argc, char **argv)
 	g_free(maildir);
 
 	if ((ret = save_database(db, mail, conf_tags)) != 0 && opt_fatal) {
+		g_warning("Unlinking `%s'", mail);
 		unlink(mail);
 		return ret;
 	}
