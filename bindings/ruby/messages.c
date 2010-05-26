@@ -28,11 +28,12 @@
 VALUE
 notmuch_rb_messages_destroy(VALUE self)
 {
-    notmuch_messages_t *fnames;
+    notmuch_messages_t *messages;
 
-    Data_Get_Struct(self, notmuch_messages_t, fnames);
+    Data_Get_Notmuch_Messages(self, messages);
 
-    notmuch_messages_destroy(fnames);
+    notmuch_messages_destroy(messages);
+    DATA_PTR(self) = NULL;
 
     return Qnil;
 }
@@ -48,9 +49,7 @@ notmuch_rb_messages_each(VALUE self)
     notmuch_message_t *message;
     notmuch_messages_t *messages;
 
-    Data_Get_Struct(self, notmuch_messages_t, messages);
-    if (!messages)
-        return self;
+    Data_Get_Notmuch_Messages(self, messages);
 
     for (; notmuch_messages_valid(messages); notmuch_messages_move_to_next(messages)) {
         message = notmuch_messages_get(messages);
@@ -71,7 +70,7 @@ notmuch_rb_messages_collect_tags(VALUE self)
     notmuch_tags_t *tags;
     notmuch_messages_t *messages;
 
-    Data_Get_Struct(self, notmuch_messages_t, messages);
+    Data_Get_Notmuch_Messages(self, messages);
 
     tags = notmuch_messages_collect_tags(messages);
     if (!tags)

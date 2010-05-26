@@ -30,9 +30,10 @@ notmuch_rb_query_destroy(VALUE self)
 {
     notmuch_query_t *query;
 
-    Data_Get_Struct(self, notmuch_query_t, query);
+    Data_Get_Notmuch_Query(self, query);
 
     notmuch_query_destroy(query);
+    DATA_PTR(self) = NULL;
 
     return Qnil;
 }
@@ -47,10 +48,10 @@ notmuch_rb_query_set_sort(VALUE self, VALUE sortv)
 {
     notmuch_query_t *query;
 
-    Data_Get_Struct(self, notmuch_query_t, query);
+    Data_Get_Notmuch_Query(self, query);
 
     if (!FIXNUM_P(sortv))
-        rb_raise(rb_eTypeError, "Not a fixnum");
+        rb_raise(rb_eTypeError, "Not a Fixnum");
 
     notmuch_query_set_sort(query, FIX2UINT(sortv));
 
@@ -68,7 +69,7 @@ notmuch_rb_query_search_threads(VALUE self)
     notmuch_query_t *query;
     notmuch_threads_t *threads;
 
-    Data_Get_Struct(self, notmuch_query_t, query);
+    Data_Get_Notmuch_Query(self, query);
 
     threads = notmuch_query_search_threads(query);
     if (!threads)
@@ -88,7 +89,7 @@ notmuch_rb_query_search_messages(VALUE self)
     notmuch_query_t *query;
     notmuch_messages_t *messages;
 
-    Data_Get_Struct(self, notmuch_query_t, query);
+    Data_Get_Notmuch_Query(self, query);
 
     messages = notmuch_query_search_messages(query);
     if (!messages)

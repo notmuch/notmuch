@@ -33,10 +33,10 @@ notmuch_rb_threads_destroy(VALUE self)
     Data_Get_Struct(self, notmuch_threads_t, threads);
 
     notmuch_threads_destroy(threads);
+    DATA_PTR(self) = NULL;
 
     return Qnil;
 }
-
 
 /* call-seq: THREADS.each {|item| block } => THREADS
  *
@@ -49,9 +49,7 @@ notmuch_rb_threads_each(VALUE self)
     notmuch_thread_t *thread;
     notmuch_threads_t *threads;
 
-    Data_Get_Struct(self, notmuch_threads_t, threads);
-    if (!threads)
-        return self;
+    Data_Get_Notmuch_Threads(self, threads);
 
     for (; notmuch_threads_valid(threads); notmuch_threads_move_to_next(threads)) {
         thread = notmuch_threads_get(threads);

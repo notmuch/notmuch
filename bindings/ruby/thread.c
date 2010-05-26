@@ -30,9 +30,10 @@ notmuch_rb_thread_destroy(VALUE self)
 {
     notmuch_thread_t *thread;
 
-    Data_Get_Struct(self, notmuch_thread_t, thread);
+    Data_Get_Notmuch_Thread(self, thread);
 
     notmuch_thread_destroy(thread);
+    DATA_PTR(self) = NULL;
 
     return Qnil;
 }
@@ -48,7 +49,7 @@ notmuch_rb_thread_get_thread_id(VALUE self)
     const char *tid;
     notmuch_thread_t *thread;
 
-    Data_Get_Struct(self, notmuch_thread_t, thread);
+    Data_Get_Notmuch_Thread(self, thread);
 
     tid = notmuch_thread_get_thread_id(thread);
 
@@ -65,7 +66,7 @@ notmuch_rb_thread_get_total_messages(VALUE self)
 {
     notmuch_thread_t *thread;
 
-    Data_Get_Struct(self, notmuch_thread_t, thread);
+    Data_Get_Notmuch_Thread(self, thread);
 
     return INT2FIX(notmuch_thread_get_total_messages(thread));
 }
@@ -81,7 +82,7 @@ notmuch_rb_thread_get_toplevel_messages(VALUE self)
     notmuch_messages_t *messages;
     notmuch_thread_t *thread;
 
-    Data_Get_Struct(self, notmuch_thread_t, thread);
+    Data_Get_Notmuch_Thread(self, thread);
 
     messages = notmuch_thread_get_toplevel_messages(thread);
     if (!messages)
@@ -100,7 +101,7 @@ notmuch_rb_thread_get_matched_messages(VALUE self)
 {
     notmuch_thread_t *thread;
 
-    Data_Get_Struct(self, notmuch_thread_t, thread);
+    Data_Get_Notmuch_Thread(self, thread);
 
     return INT2FIX(notmuch_thread_get_matched_messages(thread));
 }
@@ -116,7 +117,7 @@ notmuch_rb_thread_get_authors(VALUE self)
     const char *authors;
     notmuch_thread_t *thread;
 
-    Data_Get_Struct(self, notmuch_thread_t, thread);
+    Data_Get_Notmuch_Thread(self, thread);
 
     authors = notmuch_thread_get_authors(thread);
 
@@ -134,7 +135,7 @@ notmuch_rb_thread_get_subject(VALUE self)
     const char *subject;
     notmuch_thread_t *thread;
 
-    Data_Get_Struct(self, notmuch_thread_t, thread);
+    Data_Get_Notmuch_Thread(self, thread);
 
     subject = notmuch_thread_get_subject(thread);
 
@@ -151,7 +152,7 @@ notmuch_rb_thread_get_oldest_date(VALUE self)
 {
     notmuch_thread_t *thread;
 
-    Data_Get_Struct(self, notmuch_thread_t, thread);
+    Data_Get_Notmuch_Thread(self, thread);
 
     return UINT2NUM(notmuch_thread_get_oldest_date(thread));
 }
@@ -166,7 +167,7 @@ notmuch_rb_thread_get_newest_date(VALUE self)
 {
     notmuch_thread_t *thread;
 
-    Data_Get_Struct(self, notmuch_thread_t, thread);
+    Data_Get_Notmuch_Thread(self, thread);
 
     return UINT2NUM(notmuch_thread_get_newest_date(thread));
 }
@@ -182,7 +183,7 @@ notmuch_rb_thread_get_tags(VALUE self)
     notmuch_thread_t *thread;
     notmuch_tags_t *tags;
 
-    Data_Get_Struct(self, notmuch_thread_t, thread);
+    Data_Get_Notmuch_Thread(self, thread);
 
     tags = notmuch_thread_get_tags(thread);
     if (!tags)

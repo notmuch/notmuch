@@ -21,7 +21,7 @@
 #include "defs.h"
 
 /*
- * call-seq: tags.destroy => nil
+ * call-seq: TAGS.destroy => nil
  *
  * Destroys the tags, freeing all resources allocated for it.
  */
@@ -30,9 +30,10 @@ notmuch_rb_tags_destroy(VALUE self)
 {
     notmuch_tags_t *tags;
 
-    Data_Get_Struct(self, notmuch_tags_t, tags);
+    Data_Get_Notmuch_Tags(self, tags);
 
     notmuch_tags_destroy(tags);
+    DATA_PTR(self) = NULL;
 
     return Qnil;
 }
@@ -49,9 +50,7 @@ notmuch_rb_tags_each(VALUE self)
     const char *tag;
     notmuch_tags_t *tags;
 
-    Data_Get_Struct(self, notmuch_tags_t, tags);
-    if (!tags)
-        return self;
+    Data_Get_Notmuch_Tags(self, tags);
 
     for (; notmuch_tags_valid(tags); notmuch_tags_move_to_next(tags)) {
         tag = notmuch_tags_get(tags);

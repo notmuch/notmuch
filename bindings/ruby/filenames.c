@@ -30,9 +30,10 @@ notmuch_rb_filenames_destroy(VALUE self)
 {
     notmuch_filenames_t *fnames;
 
-    Data_Get_Struct(self, notmuch_filenames_t, fnames);
+    Data_Get_Notmuch_FileNames(self, fnames);
 
     notmuch_filenames_destroy(fnames);
+    DATA_PTR(self) = NULL;
 
     return Qnil;
 }
@@ -48,9 +49,7 @@ notmuch_rb_filenames_each(VALUE self)
 {
     notmuch_filenames_t *fnames;
 
-    Data_Get_Struct(self, notmuch_filenames_t, fnames);
-    if (!fnames)
-        return self;
+    Data_Get_Notmuch_FileNames(self, fnames);
 
     for (; notmuch_filenames_valid(fnames); notmuch_filenames_move_to_next(fnames))
         rb_yield(rb_str_new2(notmuch_filenames_get(fnames)));

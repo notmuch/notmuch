@@ -30,9 +30,10 @@ notmuch_rb_message_destroy(VALUE self)
 {
     notmuch_message_t *message;
 
-    Data_Get_Struct(self, notmuch_message_t, message);
+    Data_Get_Notmuch_Message(self, message);
 
     notmuch_message_destroy(message);
+    DATA_PTR(self) = NULL;
 
     return Qnil;
 }
@@ -48,7 +49,7 @@ notmuch_rb_message_get_message_id(VALUE self)
     const char *msgid;
     notmuch_message_t *message;
 
-    Data_Get_Struct(self, notmuch_message_t, message);
+    Data_Get_Notmuch_Message(self, message);
 
     msgid = notmuch_message_get_message_id(message);
 
@@ -66,7 +67,7 @@ notmuch_rb_message_get_thread_id(VALUE self)
     const char *tid;
     notmuch_message_t *message;
 
-    Data_Get_Struct(self, notmuch_message_t, message);
+    Data_Get_Notmuch_Message(self, message);
 
     tid = notmuch_message_get_thread_id(message);
 
@@ -84,7 +85,7 @@ notmuch_rb_message_get_replies(VALUE self)
     notmuch_messages_t *messages;
     notmuch_message_t *message;
 
-    Data_Get_Struct(self, notmuch_message_t, message);
+    Data_Get_Notmuch_Message(self, message);
 
     messages = notmuch_message_get_replies(message);
 
@@ -102,7 +103,7 @@ notmuch_rb_message_get_filename(VALUE self)
     const char *fname;
     notmuch_message_t *message;
 
-    Data_Get_Struct(self, notmuch_message_t, message);
+    Data_Get_Notmuch_Message(self, message);
 
     fname = notmuch_message_get_filename(message);
 
@@ -119,7 +120,7 @@ notmuch_rb_message_get_flag(VALUE self, VALUE flagv)
 {
     notmuch_message_t *message;
 
-    Data_Get_Struct(self, notmuch_message_t, message);
+    Data_Get_Notmuch_Message(self, message);
 
     if (!FIXNUM_P(flagv))
         rb_raise(rb_eTypeError, "Flag not a Fixnum");
@@ -137,7 +138,7 @@ notmuch_rb_message_set_flag(VALUE self, VALUE flagv, VALUE valuev)
 {
     notmuch_message_t *message;
 
-    Data_Get_Struct(self, notmuch_message_t, message);
+    Data_Get_Notmuch_Message(self, message);
 
     if (!FIXNUM_P(flagv))
         rb_raise(rb_eTypeError, "Flag not a Fixnum");
@@ -157,7 +158,7 @@ notmuch_rb_message_get_date(VALUE self)
 {
     notmuch_message_t *message;
 
-    Data_Get_Struct(self, notmuch_message_t, message);
+    Data_Get_Notmuch_Message(self, message);
 
     return UINT2NUM(notmuch_message_get_date(message));
 }
@@ -173,7 +174,7 @@ notmuch_rb_message_get_header(VALUE self, VALUE headerv)
     const char *header, *value;
     notmuch_message_t *message;
 
-    Data_Get_Struct(self, notmuch_message_t, message);
+    Data_Get_Notmuch_Message(self, message);
 
 #if !defined(RSTRING_PTR)
 #define RSTRING_PTR(v) (RSTRING((v))->ptr)
@@ -200,7 +201,7 @@ notmuch_rb_message_get_tags(VALUE self)
     notmuch_message_t *message;
     notmuch_tags_t *tags;
 
-    Data_Get_Struct(self, notmuch_message_t, message);
+    Data_Get_Notmuch_Message(self, message);
 
     tags = notmuch_message_get_tags(message);
     if (!tags)
@@ -221,7 +222,7 @@ notmuch_rb_message_add_tag(VALUE self, VALUE tagv)
     notmuch_status_t ret;
     notmuch_message_t *message;
 
-    Data_Get_Struct(self, notmuch_message_t, message);
+    Data_Get_Notmuch_Message(self, message);
 
 #if !defined(RSTRING_PTR)
 #define RSTRING_PTR(v) (RSTRING((v))->ptr)
@@ -248,7 +249,7 @@ notmuch_rb_message_remove_tag(VALUE self, VALUE tagv)
     notmuch_status_t ret;
     notmuch_message_t *message;
 
-    Data_Get_Struct(self, notmuch_message_t, message);
+    Data_Get_Notmuch_Message(self, message);
 
 #if !defined(RSTRING_PTR)
 #define RSTRING_PTR(v) (RSTRING((v))->ptr)
@@ -274,7 +275,7 @@ notmuch_rb_message_remove_all_tags(VALUE self)
     notmuch_status_t ret;
     notmuch_message_t *message;
 
-    Data_Get_Struct(self, notmuch_message_t, message);
+    Data_Get_Notmuch_Message(self, message);
 
     ret = notmuch_message_remove_all_tags(message);
     notmuch_rb_status_raise(ret);
@@ -293,7 +294,7 @@ notmuch_rb_message_freeze(VALUE self)
     notmuch_status_t ret;
     notmuch_message_t *message;
 
-    Data_Get_Struct(self, notmuch_message_t, message);
+    Data_Get_Notmuch_Message(self, message);
 
     ret = notmuch_message_freeze(message);
     notmuch_rb_status_raise(ret);
@@ -312,7 +313,7 @@ notmuch_rb_message_thaw(VALUE self)
     notmuch_status_t ret;
     notmuch_message_t *message;
 
-    Data_Get_Struct(self, notmuch_message_t, message);
+    Data_Get_Notmuch_Message(self, message);
 
     ret = notmuch_message_thaw(message);
     notmuch_rb_status_raise(ret);

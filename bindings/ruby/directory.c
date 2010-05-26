@@ -33,6 +33,7 @@ notmuch_rb_directory_destroy(VALUE self)
     Data_Get_Struct(self, notmuch_directory_t, dir);
 
     notmuch_directory_destroy(dir);
+    DATA_PTR(self) = NULL;
 
     return Qnil;
 }
@@ -48,7 +49,7 @@ notmuch_rb_directory_get_mtime(VALUE self)
 {
     notmuch_directory_t *dir;
 
-    Data_Get_Struct(self, notmuch_directory_t, dir);
+    Data_Get_Notmuch_Directory(self, dir);
 
     return UINT2NUM(notmuch_directory_get_mtime(dir));
 }
@@ -64,7 +65,7 @@ notmuch_rb_directory_set_mtime(VALUE self, VALUE mtimev)
     notmuch_status_t ret;
     notmuch_directory_t *dir;
 
-    Data_Get_Struct(self, notmuch_directory_t, dir);
+    Data_Get_Notmuch_Directory(self, dir);
 
     if (!FIXNUM_P(mtimev))
         rb_raise(rb_eTypeError, "First argument not a fixnum");
@@ -87,7 +88,7 @@ notmuch_rb_directory_get_child_files(VALUE self)
     notmuch_directory_t *dir;
     notmuch_filenames_t *fnames;
 
-    Data_Get_Struct(self, notmuch_directory_t, dir);
+    Data_Get_Notmuch_Directory(self, dir);
 
     fnames = notmuch_directory_get_child_files(dir);
 
@@ -106,7 +107,7 @@ notmuch_rb_directory_get_child_directories(VALUE self)
     notmuch_directory_t *dir;
     notmuch_filenames_t *fnames;
 
-    Data_Get_Struct(self, notmuch_directory_t, dir);
+    Data_Get_Notmuch_Directory(self, dir);
 
     fnames = notmuch_directory_get_child_directories(dir);
 
