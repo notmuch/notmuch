@@ -25,7 +25,7 @@ Here's a simple example for [maildrop](http://www.courier-mta.org/maildrop/):
     }
 
     # Deliver the rest to $MAILDIR, adding personal tag
-    to "|deliver-notmuch.rb -t personal"
+    to "|notmuch-deliver -t personal"
 
 ## Requirements
 - [notmuch](http://notmuchmail.org) shared library
