@@ -292,8 +292,8 @@ main(int argc, char **argv)
 	g_option_context_set_description(ctx,
 		"\nConfiguration:\n"
 		"  "PACKAGE" uses notmuch's configuration file to determine database path and\n"
-		"initial tags to add to new messages. You may set NOTMUCH_CONFIG environment\n"
-		"variable to specify an alternative configuration file.\n"
+		"  initial tags to add to new messages. You may set NOTMUCH_CONFIG environment\n"
+		"  variable to specify an alternative configuration file.\n"
 		"\nExit codes:\n"
 		"  0   => Successful run\n"
 		"  64  => Usage error\n"
@@ -303,7 +303,7 @@ main(int argc, char **argv)
 		"         (failed to read from standard input)\n"
 		"         (failed to write to temporary file)\n"
 		"  76  => Failed to open/create maildir\n"
-		"  78  => Configuration error (wrt .notmuch-config\n");
+		"  78  => Configuration error (wrt .notmuch-config)\n");
 
 	g_log_set_default_handler(log_handler, NULL);
 
