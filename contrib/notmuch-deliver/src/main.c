@@ -194,7 +194,7 @@ static int
 save_readwrite(int fdin, int fdout)
 {
 	int ret, written;
-	char buf[4096], p;
+	char buf[4096], *p;
 
 	for (;;) {
 		ret = read(fdin, buf, 4096);
