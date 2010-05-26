@@ -67,7 +67,7 @@ AC_STRUCT_TM
 dnl }}}
 
 dnl {{{ Check for library functions
-AC_CHECK_FUNCS([setgroups initgroups symlink readlink strcasecmp utime utimes])
+AC_CHECK_FUNCS([setgroups initgroups symlink readlink strcasecmp utime utimes splice])
 dnl }}}
 
 dnl {{{ gethostname()

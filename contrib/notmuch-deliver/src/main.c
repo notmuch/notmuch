@@ -26,7 +26,12 @@
 #include <errno.h>
 #include <stdio.h>
 #include <string.h>
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif
+#ifdef HAVE_SPLICE
+#include <fcntl.h>
+#endif
 
 #ifdef HAVE_SYSEXITS_H
 #include <sysexits.h>
@@ -136,11 +141,96 @@ load_keyfile(const gchar *path, gchar **db_path, gchar ***tags)
 	return TRUE;
 }
 
+#ifdef HAVE_SPLICE
+static int
+save_splice(int fdin, int fdout)
+{
+	int ret, written, pfd[2];
+
+	if (pipe(pfd) < 0) {
+		g_critical("Failed to create pipe: %s", g_strerror(errno));
+		return EX_IOERR;
+	}
+
+	for (;;) {
+		ret = splice(fdin, NULL, pfd[1], NULL, 4096, 0);
+		if (!ret)
+			break;
+		if (ret < 0) {
+			g_critical("Splicing data from standard input failed: %s",
+				g_strerror(errno));
+			close(pfd[0]);
+			close(pfd[1]);
+			return EX_IOERR;
+		}
+
+		do {
+			written = splice(pfd[0], NULL, fdout, NULL, ret, 0);
+			if (!written) {
+				g_critical("Splicing data to temporary file failed: %s",
+					g_strerror(errno));
+				close(pfd[0]);
+				close(pfd[1]);
+				return EX_IOERR;
+			}
+			if (written < 0) {
+				g_critical("Splicing data to temporary file failed: %s",
+					g_strerror(errno));
+				close(pfd[0]);
+				close(pfd[1]);
+				return EX_IOERR;
+			}
+			ret -= written;
+		} while (ret);
+	}
+
+	close(pfd[0]);
+	close(pfd[1]);
+	return 0;
+}
+#endif /* HAVE_SPLICE */
+
+static int
+save_readwrite(int fdin, int fdout)
+{
+	int ret, written;
+	char buf[4096], p;
+
+	for (;;) {
+		ret = read(fdin, buf, 4096);
+		if (!ret)
+			break;
+		if (ret < 0) {
+			if (errno == EINTR)
+				continue;
+			g_critical("Reading from standard input failed: %s",
+				g_strerror(errno));
+			return EX_IOERR;
+		}
+		p = buf;
+		do {
+			written = write(fdout, p, ret);
+			if (!written)
+				return EX_IOERR;
+			if (written < 0) {
+				if (errno == EINTR)
+					continue;
+				g_critical("Writing to temporary file failed: %s",
+					g_strerror(errno));
+				return EX_IOERR;
+			}
+			p += written;
+			ret -= written;
+		} while (ret);
+	}
+
+	return 0;
+}
+
 static int
 save_maildir(int fdin, const char *dir, int auto_create, char **path)
 {
-	int fd, ret, written;
-	char buf[4096], *p;
+	int fdout, ret;
 	struct maildir_tmpcreate_info info;
 
 	maildir_tmpcreate_init(&info);
@@ -148,7 +238,7 @@ save_maildir(int fdin, const char *dir, int auto_create, char **path)
 	info.maildir = dir;
 	info.doordie = 1;
 
-	while ((fd = maildir_tmpcreate_fd(&info)) < 0)
+	while ((fdout = maildir_tmpcreate_fd(&info)) < 0)
 	{
 		if (errno == ENOENT && auto_create && maildir_mkdir(dir) == 0)
 		{
@@ -162,34 +252,17 @@ save_maildir(int fdin, const char *dir, int auto_create, char **path)
 	}
 
 	g_debug("Reading from standard input and writing to `%s'", info.tmpname);
-	for (;;) {
-		ret = read(fdin, buf, 4096);
-		if (!ret)
-			break;
-		if (ret < 0) {
-			if (errno == EINTR)
-				continue;
-			g_critical("Reading from standard input failed: %s", g_strerror(errno));
-			goto fail;
-		}
-		p = buf;
-		do {
-			written = write(fd, p, ret);
-			if (!written)
-				goto fail;
-			if (written < 0) {
-				if (errno == EINTR)
-					continue;
-				g_critical("Writing to temporary file `%s' failed: %s",
-					info.tmpname, g_strerror(errno));
-				goto fail;
-			}
-			p += written;
-			ret -= written;
-		} while (ret);
-	}
+#ifdef HAVE_SPLICE
+	ret = g_getenv("NOTMUCH_DELIVER_NO_SPLICE")
+		? save_readwrite(fdin, fdout)
+		: save_splice(fdin, fdout);
+#else
+	ret = save_readwrite(fdin, fdout);
+#endif /* HAVE_SPLICE */
+	if (ret)
+		goto fail;
 
-	close(fd);
+	close(fdout);
 	g_debug("Moving `%s' to `%s'", info.tmpname, info.newname);
 	if (maildir_movetmpnew(info.tmpname, info.newname)) {
 		g_critical("Moving `%s' to `%s' failed: %s",
@@ -295,6 +368,9 @@ main(int argc, char **argv)
 		"  "PACKAGE" uses notmuch's configuration file to determine database path and\n"
 		"  initial tags to add to new messages. You may set NOTMUCH_CONFIG environment\n"
 		"  variable to specify an alternative configuration file.\n"
+		"\nEnvironment:\n"
+		"  NOTMUCH_CONFIG: Path to notmuch configuration file\n"
+		"  NOTMUCH_DELIVER_NO_SPLICE: Don't use splice() even if it's available\n"
 		"\nExit codes:\n"
 		"  0   => Successful run\n"
 		"  64  => Usage error\n"
