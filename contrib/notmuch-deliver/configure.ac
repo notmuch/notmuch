@@ -113,6 +113,35 @@ WANTED_CFLAGS="-Wall -W -Wextra -Wvla -Wformat=2 -Wformat-security -Wformat-nonl
 for flag in $WANTED_CFLAGS ; do
 	AX_CHECK_COMPILER_FLAGS([$flag], [NOTMUCH_DELIVER_CFLAGS="$NOTMUCH_DELIVER_CFLAGS $flag"],)
 done
+dnl }}}
+
+dnl {{{ Profiling
+AC_MSG_CHECKING([whether gprof symbols are wanted])
+AC_ARG_ENABLE([gprof],
+			  [AS_HELP_STRING([--enable-gprof],
+							  [Add gprof symbols (-pg) (for debugging)])],
+			  PROFILE="$enableval",
+			  PROFILE="no")
+AC_MSG_RESULT([$PROFILE])
+if test x"$PROFILE" = x"yes" ; then
+	AX_CHECK_COMPILER_FLAGS([-pg],, AC_MSG_ERROR([Your compiler doesn't support -pg flag]))
+	NOTMUCH_DELIVER_CFLAGS="$NOTMUCH_DELIVER_CFLAGS -pg"
+	LDFLAGS="$LDFLAGS -pg"
+fi
+AC_MSG_CHECKING([whether coverage testing should be enabled])
+AC_ARG_ENABLE([gcov],
+			  [AS_HELP_STRING([--enable-gcov],
+							  [add gcov support (for debugging)])],
+			  COVERAGE="$enableval",
+			  COVERAGE="no")
+AC_MSG_RESULT([$COVERAGE])
+if test x"$COVERAGE" = x"yes" ; then
+	AX_CHECK_COMPILER_FLAGS([-fprofile-arcs],,
+							AC_MSG_ERROR([Your compiler doesn't support -fprofile-arcs flag]))
+	AX_CHECK_COMPILER_FLAGS([-ftest-coverage],,
+							AC_MSG_ERROR([Your compiler doesn't support -ftest-coverage flag]))
+	NOTMUCH_DELIVER_CFLAGS="$NOTMUCH_DELIVER_CFLAGS -fprofile-arcs -ftest-coverage"
+fi
 AC_SUBST([NOTMUCH_DELIVER_CFLAGS])
 dnl }}}
 
