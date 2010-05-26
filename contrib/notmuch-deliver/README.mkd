@@ -1,0 +1,49 @@
+## About
+`notmuch-deliver` is a [maildir](http://cr.yp.to/proto/maildir.html) delivery
+tool.
+
+## Overview
+`notmuch-deliver` is a [maildir](http://cr.yp.to/proto/maildir.html) delivery
+tool for [notmuch](http://notmuchmail.org) mail indexer. It reads from standard
+input, delivers the mail to the specified maildir and adds it to the notmuch
+database. This is meant as a convenient alternative to running `notmuch new`
+after mail delivery.
+
+## Usage
+Here's a simple example for [maildrop](http://www.courier-mta.org/maildrop/):
+
+    # Deliver local mail to $MAILDIR/.Local and add local tag.
+    if (/^From: root/:h)
+    {
+      to "|notmuch-deliver -f -t local Local"
+    }
+
+    # Deliver lkml mail to $MAILDIR/.Lkml, add lkml tag and remove inbox tag.
+    if (/^List-Id: linux-kernel@vger.kernel.org/:h)
+    {
+      to "|notmuch-deliver -f -t lkml -r inbox Lkml"
+    }
+
+    # Deliver the rest to $MAILDIR, adding personal tag
+    to "|deliver-notmuch.rb -t personal"
+
+## Requirements
+- [notmuch](http://notmuchmail.org) shared library
+- [GLib](http://library.gnome.org/devel/glib/)-2.16 or newer
+
+## Contribute
+Clone [git://github.com/alip/notmuch-deliver.git](git://github.com/alip/notmuch-deliver.git).  
+Format patches are preferred. Either send a mail to me or poke me on IRC.  
+My personal e-mail address is [alip@exherbo.org](mailto:alip@exherbo.org).  
+I'm available on IRC as `alip` on [Freenode](http://freenode.net) and [OFTC](http://www.oftc.net).
+
+## License
+This program is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License as published by the Free Software
+Foundation, version 2 of the License.
+
+This program is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+PARTICULAR PURPOSE. See the GNU General Public License for more details.
+
+<!-- vim: set ft=mkd spell spelllang=en sw=4 sts=4 et : -->
