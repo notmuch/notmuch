@@ -42,10 +42,12 @@ which are each described below:
 
 	Xapian is available from http://xapian.org
 
-	After installing Xapian, please ensure that you have a command
-	named "xapian-config" on your $PATH as notmuch expects. (At
-	least one notmuch user found that Xapian installed the config
-	program to /usr/local/bin/xapian-config-1.1 ).
+	Note: Notmuch will work best with Xapian 1.0.18 (or later) or
+	Xapian 1.1.4 (or later). Previous versions of Xapian (whether
+	1.0 or 1.1) had a performance bug that made notmuch very slow
+	when modifying tags. This would cause distracting pauses when
+	reading mail while notmuch would wait for Xapian when removing
+	the "inbox" and "unread" tags from messages in a thread.
 
 	GMime 2.4
 	---------
