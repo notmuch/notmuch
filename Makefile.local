@@ -273,11 +273,20 @@ ifeq ($(MAKECMDGOALS), install)
 	@echo ""
 	@echo "Notmuch is now installed to $(DESTDIR)$(prefix)"
 	@echo ""
-	@echo "To run notmuch from emacs, each user should add the following line to ~/.emacs:"
+	@echo "New users should simply run \"notmuch\" to be guided"
+	@echo "through the process of configuring notmuch and creating"
+	@echo "a database of existing email messages. The \"notmuch\""
+	@echo "command will also offer some sample search commands."
+	@echo ""
+	@echo "Beyond the command-line interface, notmuch also offers"
+	@echo "a full-featured interface for reading and writing mail"
+	@echo "within emacs. To use this, each user should add the"
+	@echo "following line to the ~/.emacs file:"
 	@echo ""
 	@echo "	(require 'notmuch)"
 	@echo ""
-	@echo "And should then run \"M-x notmuch\" from within emacs or run \"emacs -f notmuch\""
+	@echo "And then run emacs as \"emacs -f notmuch\" or invoke"
+	@echo "the command \"M-x notmuch\" from within emacs."
 endif
 
 .PHONY: install-desktop
