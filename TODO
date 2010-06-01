@@ -247,6 +247,11 @@ into the shared-library interface.
 Audit all libnotmuch entry points to ensure that all Xapian calls are
 wrapped in a try/catch block.
 
+Fix the "count" functionality to be exact as Olly explained in IRC:
+
+	ojwb> cworth: if you set the check_at_least parameter to the
+	database size, get_matches_estimated() will be exact
+
 Search syntax
 -------------
 Implement support for "tag:*" to expand to all tags.
