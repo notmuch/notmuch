@@ -57,35 +57,12 @@ _notmuch_message_destructor (notmuch_message_t *message)
     return 0;
 }
 
-/* Create a new notmuch_message_t object for an existing document in
- * the database.
- *
- * Here, 'talloc owner' is an optional talloc context to which the new
- * message will belong. This allows for the caller to not bother
- * calling notmuch_message_destroy on the message, and no that all
- * memory will be reclaimed with 'talloc_owner' is free. The caller
- * still can call notmuch_message_destroy when finished with the
- * message if desired.
- *
- * The 'talloc_owner' argument can also be NULL, in which case the
- * caller *is* responsible for calling notmuch_message_destroy.
- *
- * If no document exists in the database with document ID of 'doc_id'
- * then this function returns NULL and optionally sets *status to
- * NOTMUCH_PRIVATE_STATUS_NO_DOCUMENT_FOUND.
- *
- * This function can also fail to due lack of available memory,
- * returning NULL and optionally setting *status to
- * NOTMUCH_PRIVATE_STATUS_OUT_OF_MEMORY.
- *
- * The caller can pass NULL for status if uninterested in
- * distinguishing these two cases.
- */
-notmuch_message_t *
-_notmuch_message_create (const void *talloc_owner,
-			 notmuch_database_t *notmuch,
-			 unsigned int doc_id,
-			 notmuch_private_status_t *status)
+static notmuch_message_t *
+_notmuch_message_create_for_document (const void *talloc_owner,
+				      notmuch_database_t *notmuch,
+				      unsigned int doc_id,
+				      Xapian::Document doc,
+				      notmuch_private_status_t *status)
 {
     notmuch_message_t *message;
 
@@ -130,16 +107,53 @@ _notmuch_message_create (const void *talloc_owner,
 
     talloc_set_destructor (message, _notmuch_message_destructor);
 
+    message->doc = doc;
+
+    return message;
+}
+
+/* Create a new notmuch_message_t object for an existing document in
+ * the database.
+ *
+ * Here, 'talloc owner' is an optional talloc context to which the new
+ * message will belong. This allows for the caller to not bother
+ * calling notmuch_message_destroy on the message, and no that all
+ * memory will be reclaimed with 'talloc_owner' is free. The caller
+ * still can call notmuch_message_destroy when finished with the
+ * message if desired.
+ *
+ * The 'talloc_owner' argument can also be NULL, in which case the
+ * caller *is* responsible for calling notmuch_message_destroy.
+ *
+ * If no document exists in the database with document ID of 'doc_id'
+ * then this function returns NULL and optionally sets *status to
+ * NOTMUCH_PRIVATE_STATUS_NO_DOCUMENT_FOUND.
+ *
+ * This function can also fail to due lack of available memory,
+ * returning NULL and optionally setting *status to
+ * NOTMUCH_PRIVATE_STATUS_OUT_OF_MEMORY.
+ *
+ * The caller can pass NULL for status if uninterested in
+ * distinguishing these two cases.
+ */
+notmuch_message_t *
+_notmuch_message_create (const void *talloc_owner,
+			 notmuch_database_t *notmuch,
+			 unsigned int doc_id,
+			 notmuch_private_status_t *status)
+{
+    Xapian::Document doc;
+
     try {
-	message->doc = notmuch->xapian_db->get_document (doc_id);
+	doc = notmuch->xapian_db->get_document (doc_id);
     } catch (const Xapian::DocNotFoundError &error) {
-	talloc_free (message);
 	if (status)
 	    *status = NOTMUCH_PRIVATE_STATUS_NO_DOCUMENT_FOUND;
 	return NULL;
     }
 
-    return message;
+    return _notmuch_message_create_for_document (talloc_owner, notmuch,
+						 doc_id, doc, status);
 }
 
 /* Create a new notmuch_message_t object for a specific message ID,
@@ -148,11 +162,24 @@ _notmuch_message_create (const void *talloc_owner,
  * The 'notmuch' database will be the talloc owner of the returned
  * message.
  *
- * If there is already a document with message ID 'message_id' in the
- * database, then the returned message can be used to query/modify the
- * document. Otherwise, a new document will be inserted into the
- * database before this function returns, (and *status will be set
- * to NOTMUCH_PRIVATE_STATUS_NO_DOCUMENT_FOUND).
+ * This function returns a valid notmuch_message_t whether or not
+ * there is already a document in the database with the given message
+ * ID. These two cases can be distinguished by the value of *status:
+ *
+ *
+ *   NOTMUCH_PRIVATE_STATUS_SUCCESS:
+ *
+ *     There is already a document with message ID 'message_id' in the
+ *     database. The returned message can be used to query/modify the
+ *     document.
+ *   NOTMUCH_PRIVATE_STATUS_NO_DOCUMENT_FOUND:
+ *
+ *     No document with 'message_id' exists in the database. The
+ *     returned message contains a newly created document (not yet
+ *     added to the database) and a document ID that is known not to
+ *     exist in the database. The caller can modify the message, and a
+ *     call to _notmuch_message_sync will add * the document to the
+ *     database.
  *
  * If an error occurs, this function will return NULL and *status
  * will be set as appropriate. (The status pointer argument must
@@ -192,7 +219,7 @@ _notmuch_message_create_for_message_id (notmuch_database_t *notmuch,
 
 	doc.add_value (NOTMUCH_VALUE_MESSAGE_ID, message_id);
 
-	doc_id = db->add_document (doc);
+	doc_id = _notmuch_database_generate_doc_id (notmuch);
     } catch (const Xapian::Error &error) {
 	fprintf (stderr, "A Xapian exception occurred creating message: %s\n",
 		 error.get_msg().c_str());
@@ -201,8 +228,8 @@ _notmuch_message_create_for_message_id (notmuch_database_t *notmuch,
 	return NULL;
     }
 
-    message = _notmuch_message_create (notmuch, notmuch,
-				       doc_id, status_ret);
+    message = _notmuch_message_create_for_document (notmuch, notmuch,
+						    doc_id, doc, status_ret);
 
     /* We want to inform the caller that we had to create a new
      * document. */

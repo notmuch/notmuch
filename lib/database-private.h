@@ -43,6 +43,7 @@ struct _notmuch_database {
     notmuch_database_mode_t mode;
     Xapian::Database *xapian_db;
 
+    unsigned int last_doc_id;
     uint64_t last_thread_id;
 
     Xapian::QueryParser *query_parser;

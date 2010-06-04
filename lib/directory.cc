@@ -231,7 +231,8 @@ _notmuch_directory_create (notmuch_database_t *notmuch,
 	    directory->doc.add_value (NOTMUCH_VALUE_TIMESTAMP,
 				      Xapian::sortable_serialise (0));
 
-	    directory->document_id = db->add_document (directory->doc);
+	    directory->document_id = _notmuch_database_generate_doc_id (notmuch);
+	    db->replace_document (directory->document_id, directory->doc);
 	    talloc_free (local);
 	}
 

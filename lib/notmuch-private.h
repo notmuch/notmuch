@@ -167,6 +167,9 @@ _notmuch_database_split_path (void *ctx,
 const char *
 _notmuch_database_get_directory_db_path (const char *path);
 
+unsigned int
+_notmuch_database_generate_doc_id (notmuch_database_t *notmuch);
+
 notmuch_private_status_t
 _notmuch_database_find_unique_doc_id (notmuch_database_t *notmuch,
 				      const char *prefix_name,

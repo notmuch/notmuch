@@ -622,6 +622,7 @@ notmuch_database_open (const char *path,
 	    }
 	}
 
+	notmuch->last_doc_id = notmuch->xapian_db->get_lastdocid ();
 	last_thread_id = notmuch->xapian_db->get_metadata ("last_thread_id");
 	if (last_thread_id.empty ()) {
 	    notmuch->last_thread_id = 0;
@@ -1167,6 +1168,31 @@ notmuch_database_get_directory (notmuch_database_t *notmuch,
 	notmuch->exception_reported = TRUE;
 	return NULL;
     }
+}
+
+/* Allocate a document ID that satisfies the following criteria:
+ *
+ * 1. The ID does not exist for any document in the Xapian database
+ *
+ * 2. The ID was not previously returned from this function
+ *
+ * 3. The ID is the smallest integer satisfying (1) and (2)
+ *
+ * This function will trigger an internal error if these constraints
+ * cannot all be satisfied, (that is, the pool of available document
+ * IDs has been exhausted).
+ */
+unsigned int
+_notmuch_database_generate_doc_id (notmuch_database_t *notmuch)
+{
+    assert (notmuch->last_doc_id >= notmuch->xapian_db->get_lastdocid ());
+
+    notmuch->last_doc_id++;
+
+    if (notmuch->last_doc_id == 0)
+	INTERNAL_ERROR ("Xapian document IDs are exhausted.\n");	
+
+    return notmuch->last_doc_id;
 }
 
 static const char *
