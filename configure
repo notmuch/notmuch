@@ -1,5 +1,13 @@
 #! /bin/sh
 
+# Removing space from IFS makes it much easier to support filenames
+# with spaces. See http://www.dwheeler.com/essays/filenames-in-shell.html
+# for gory details.
+IFS="$(printf '\n\t')"
+
+# Since we don't have space in IFS we use tab to separate things in lists
+tab="$(printf '\t')"
+
 # Set several defaults (optionally specified by the user in
 # environemnt variables)
 CC=${CC:-gcc}
@@ -7,7 +15,7 @@ CXX=${CXX:-g++}
 CFLAGS=${CFLAGS:--O2}
 CXXFLAGS=${CXXFLAGS:-\$(CFLAGS)}
 LDFLAGS=${LDFLAGS:-}
-XAPIAN_CONFIG=${XAPIAN_CONFIG:-xapian-config-1.1 xapian-config}
+XAPIAN_CONFIG=${XAPIAN_CONFIG:-xapian-config-1.1${tab}xapian-config}
 
 # We don't allow the EMACS or GZIP Makefile variables inherit values
 # from the environment as we do with CC and CXX above. The reason is
