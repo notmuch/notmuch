@@ -66,13 +66,14 @@ increment_mtime ()
 #  '[cc]="Some User <user@example.com>"'
 #  [reply-to]=some-address
 #  [in-reply-to]=<message-id>
+#  [references]=<message-id>
 #  '[header]=full header line, including keyword'
 #
 #	Additional values for email headers. If these are not provided
 #	then the relevant headers will simply not appear in the
 #	message.
 #
-#  '[id]=<message-id>'
+#  '[id]=message-id'
 #
 #	Controls the message-id of the created message.
 gen_msg_cnt=0
@@ -138,6 +139,11 @@ ${additional_headers}"
 
     if [ ! -z "${template[cc]}" ]; then
 	additional_headers="Cc: ${template[cc]}
+${additional_headers}"
+    fi
+
+    if [ ! -z "${template[references]}" ]; then
+	additional_headers="References: ${template[references]}
 ${additional_headers}"
     fi
 
