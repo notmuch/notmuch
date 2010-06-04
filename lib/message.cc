@@ -381,7 +381,7 @@ notmuch_message_get_replies (notmuch_message_t *message)
 /* Add an additional 'filename' for 'message'.
  *
  * This change will not be reflected in the database until the next
- * call to _notmuch_message_set_sync. */
+ * call to _notmuch_message_sync. */
 notmuch_status_t
 _notmuch_message_add_filename (notmuch_message_t *message,
 			       const char *filename)
@@ -600,7 +600,7 @@ _notmuch_message_close (notmuch_message_t *message)
  * names to prefix values.
  *
  * This change will not be reflected in the database until the next
- * call to _notmuch_message_set_sync. */
+ * call to _notmuch_message_sync. */
 notmuch_private_status_t
 _notmuch_message_add_term (notmuch_message_t *message,
 			   const char *prefix_name,
@@ -657,7 +657,7 @@ _notmuch_message_gen_terms (notmuch_message_t *message,
  * names to prefix values.
  *
  * This change will not be reflected in the database until the next
- * call to _notmuch_message_set_sync. */
+ * call to _notmuch_message_sync. */
 notmuch_private_status_t
 _notmuch_message_remove_term (notmuch_message_t *message,
 			      const char *prefix_name,
