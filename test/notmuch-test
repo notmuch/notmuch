@@ -85,12 +85,12 @@ generate_message ()
     local -A template="($@)"
     local additional_headers
 
+    gen_msg_cnt=$((gen_msg_cnt + 1))
+    gen_msg_name=msg-$(printf "%03d" $gen_msg_cnt)
+
     if [ -z "${template[id]}" ]; then
-	gen_msg_cnt=$((gen_msg_cnt + 1))
-	gen_msg_name=msg-$(printf "%03d" $gen_msg_cnt)
 	gen_msg_id="${gen_msg_name}@notmuch-test-suite"
     else
-	gen_msg_name="msg-${template[id]}"
 	gen_msg_id="${template[id]}"
     fi
 
