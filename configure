@@ -167,6 +167,12 @@ for option; do
     fi
 done
 
+# We set this value early, (rather than just while printing the
+# Makefile.config file later like most values), because we need to
+# actually investigate this value compared to the ldconfig_paths value
+# below.
+libdir_expanded=${LIBDIR:-${PREFIX}/lib}
+
 cat <<EOF
 Welcome to Notmuch, a system for indexing, searching and tagging your email.
 
@@ -266,6 +272,8 @@ else
     have_emacs=0
 fi
 
+libdir_in_ldconfig=0
+
 printf "Checking which platform we are on... "
 if [ `uname` = "Darwin" ] ; then
     printf "Mac OS X.\n"
@@ -279,6 +287,13 @@ elif [ `uname` = "Linux" ] ; then
     printf "Linux\n"
     platform=LINUX
     linker_resolves_library_dependencies=1
+    ldconfig_paths=$(/sbin/ldconfig -N -X -v 2>/dev/null | sed -n -e 's,^\(/.*\):\( (.*)\)\?$,\1,p')
+    for path in $ldconfig_paths; do
+	echo "Checking $path compared to $libdir_expanded"
+	if [ "$path" = "$libdir_expanded" ]; then
+	    libdir_in_ldconfig=1
+	fi
+    done
 else
     printf "Unknown.\n"
     cat <<EOF
@@ -419,10 +434,17 @@ WARN_CXXFLAGS=-Wall -Wextra -Wwrite-strings -Wswitch-enum
 WARN_CFLAGS=\$(WARN_CXXFLAGS) -Wmissing-declarations
 
 # The prefix to which notmuch should be installed
+# Note: If you change this value here, be sure to ensure that the
+# LIBDIR_IN_LDCONFIG value below is still set correctly.
 prefix = ${PREFIX}
 
 # The directory to which libraries should be installed
+# Note: If you change this value here, be sure to ensure that the
+# LIBDIR_IN_LDCONFIG value below is still set correctly.
 libdir = ${LIBDIR:=\$(prefix)/lib}
+
+# Whether libdir is in a path configured into ldconfig
+LIBDIR_IN_LDCONFIG = ${libdir_in_ldconfig}
 
 # The directory to which header files should be installed
 includedir = ${INCLUDEDIR:=\$(prefix)/include}
