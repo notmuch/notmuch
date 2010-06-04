@@ -57,8 +57,12 @@ typedef struct {
  *
  *	type:	mail
  *
- *	id:	Unique ID of mail, (from Message-ID header or generated
- *		as "notmuch-sha1-<sha1_sum_of_entire_file>.
+ *	id:	Unique ID of mail. This is from the Message-ID header
+ *		if present and not too long (see NOTMUCH_MESSAGE_ID_MAX).
+ *		If it's present and too long, then we use
+ *		"notmuch-sha1-<sha1_sum_of_message_id>".
+ *              If this header is not present, we use
+ *		"notmuch-sha1-<sha1_sum_of_entire_file>".
  *
  *	thread:	The ID of the thread to which the mail belongs
  *
@@ -145,9 +149,11 @@ typedef struct {
  *
  *	thread_id_*	A pre-allocated thread ID for a particular
  *			message. This is actually an arbitarily large
- *			family of metadata name. Any particular name
- *			is formed by concatenating "thread_id_" with a
- *			message ID. The value stored is a thread ID.
+ *			family of metadata name. Any particular name is
+ *			formed by concatenating "thread_id_" with a message
+ *			ID (or the SHA1 sum of a message ID if it is very
+ *			long---see description of 'id' in the mail
+ *			document). The value stored is a thread ID.
  *
  *			These thread ID metadata values are stored
  *			whenever a message references a parent message
@@ -334,12 +340,32 @@ find_document_for_doc_id (notmuch_database_t *notmuch, unsigned doc_id)
     return notmuch->xapian_db->get_document (doc_id);
 }
 
+/* Generate a compressed version of 'message_id' of the form:
+ *
+ *	notmuch-sha1-<sha1_sum_of_message_id>
+ */
+static char *
+_message_id_compressed (void *ctx, const char *message_id)
+{
+    char *sha1, *compressed;
+
+    sha1 = notmuch_sha1_of_string (message_id);
+
+    compressed = talloc_asprintf (ctx, "notmuch-sha1-%s", sha1);
+    free (sha1);
+
+    return compressed;
+}
+
 notmuch_message_t *
 notmuch_database_find_message (notmuch_database_t *notmuch,
 			       const char *message_id)
 {
     notmuch_private_status_t status;
     unsigned int doc_id;
+
+    if (strlen (message_id) > NOTMUCH_MESSAGE_ID_MAX)
+	message_id = _message_id_compressed (notmuch, message_id);
 
     try {
 	status = _notmuch_database_find_unique_doc_id (notmuch, "id",
@@ -1217,7 +1243,11 @@ _notmuch_database_generate_thread_id (notmuch_database_t *notmuch)
 static char *
 _get_metadata_thread_id_key (void *ctx, const char *message_id)
 {
-    return talloc_asprintf (ctx, "thread_id_%s", message_id);
+    if (strlen (message_id) > NOTMUCH_MESSAGE_ID_MAX)
+	message_id = _message_id_compressed (ctx, message_id);
+
+    return talloc_asprintf (ctx, NOTMUCH_METADATA_THREAD_ID_PREFIX "%s",
+			    message_id);
 }
 
 /* Find the thread ID to which the message with 'message_id' belongs.
@@ -1570,10 +1600,12 @@ notmuch_database_add_message (notmuch_database_t *notmuch,
 	    if (message_id == NULL)
 		message_id = talloc_strdup (message_file, header);
 
-	    /* Reject a Message ID that's too long. */
-	    if (message_id && strlen (message_id) + 1 > NOTMUCH_TERM_MAX) {
+	    /* If a message ID is too long, substitute its sha1 instead. */
+	    if (message_id && strlen (message_id) > NOTMUCH_MESSAGE_ID_MAX) {
+		char *compressed = _message_id_compressed (message_file,
+							   message_id);
 		talloc_free (message_id);
-		message_id = NULL;
+		message_id = compressed;
 	    }
 	}
 

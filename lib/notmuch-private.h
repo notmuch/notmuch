@@ -108,6 +108,16 @@ typedef enum {
  * programmatically. */
 #define NOTMUCH_TERM_MAX 245
 
+#define NOTMUCH_METADATA_THREAD_ID_PREFIX "thread_id_"
+
+/* For message IDs we have to be even more restrictive. Beyond fitting
+ * into the term limit, we also use message IDs to construct
+ * metadata-key values. And the documentation says that these should
+ * be restricted to about 200 characters. (The actual limit for the
+ * chert backend at least is 252.)
+ */
+#define NOTMUCH_MESSAGE_ID_MAX (200 - sizeof (NOTMUCH_METADATA_THREAD_ID_PREFIX))
+
 typedef enum _notmuch_private_status {
     /* First, copy all the public status values. */
     NOTMUCH_PRIVATE_STATUS_SUCCESS = NOTMUCH_STATUS_SUCCESS,
