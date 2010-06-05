@@ -1,24 +1,12 @@
-" notmuch search mode syntax file
+syntax region nmSearch		start=/^/ end=/$/		oneline contains=nmSearchDate
+syntax match nmSearchDate	/^.\{-13}/			contained nextgroup=nmSearchNum
+syntax match nmSearchNum	/.\{-4}/			contained nextgroup=nmSearchFrom
+syntax match nmSearchFrom	/.\{-21}/			contained nextgroup=nmSearchSubject
+syntax match nmSearchSubject	/.\{0,}\(([^()]\+)$\)\@=/	contained nextgroup=nmSearchTags
+syntax match nmSearchTags	/.\+$/				contained
 
-" TODO: I cannot figure out why nmSearchTags is not matching anything :(
-
-syntax region nmSearchDate      start='^' end='\%13v'      oneline
-syntax region nmSearchCountAndFrom start='\%14v\[' end='|' oneline contains=nmSearchCount,nmSearchFrom
-syntax region nmSearchCount     start='\[' end='\]'        oneline contained contains=nmSearchCountZero,nmSearchCountSome,nmSearchCountAll
-syntax region nmSearchFrom      start='\]\@<=' end='|'     oneline contained
-syntax match  nmSearchCountZero '0/\(\d\+\)'               contained
-syntax match  nmSearchCountSome '\([1-9]\d*\)/\(\d\+\)'    contained
-syntax match  nmSearchCountAll  '\(\d\+\)/\1'              contained
-syntax match  nmSearchSquareBracketText '\(\[\w\+\]\)'
-syntax match  nmSearchTags      /([^)]\+)$/
-
-highlight link nmSearchDate      Statement
-"highlight link nmSearchCount     Comment
-highlight link nmSearchCountZero Function
-highlight link nmSearchCountSome Special
-highlight link nmSearchCountAll  Type
-highlight link nmSearchFrom      Include
-highlight link nmSearchSquareBracketText Special
-highlight link nmSearchTags      String
-
-highlight CursorLine term=reverse cterm=reverse gui=reverse
+highlight link nmSearchDate	Statement
+highlight link nmSearchNum	Type
+highlight link nmSearchFrom	Include
+highlight link nmSearchSubject	Normal
+highlight link nmSearchTags	String
