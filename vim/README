@@ -10,11 +10,6 @@ Dependencies:
     mailx:
         To send mail, notmuch.vim uses the UNIX mailx command.
 
-    git-diff:
-        The vim interface makes use of the git-diff.vim syntax file
-        which is available from
-            http://github.com/motemen/git-vim/blob/master/syntax/git-diff.vim
-
 
 To install:
         make install
