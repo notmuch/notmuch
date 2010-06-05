@@ -306,7 +306,6 @@ function! s:NM_search_edit()
 endfunction
 
 function! s:NM_search_archive_thread()
-        call <SID>NM_add_remove_tags_on_screen('', '-', ['inbox'])
         call <SID>NM_add_remove_tags([], '-', ['inbox'])
         norm j
 endfunction
@@ -399,7 +398,6 @@ function! s:NM_search_add_remove_tags(prompt, prefix, intags)
                 let tags = a:intags
         endif
         call <SID>NM_add_remove_tags([], a:prefix, tags)
-        call <SID>NM_add_remove_tags_on_screen('', a:prefix, tags)
 endfunction
 
 " --- implement show screen {{{1
@@ -569,7 +567,6 @@ function! s:NM_show_advance_marking_read_and_archiving()
 
         " if entire message fits on the screen, read/archive it, move to the next one
         if msg_top['id'] != msg_bot['id'] || msg_top['end'] <= vis_bot
-                call <SID>NM_add_remove_tags_on_screen(msg_top['start'], '-', advance_tags)
                 exec printf('norm %dG', vis_top)
                 call <SID>NM_show_next(0, 1)
                 if has_key(msg_top,'match') && msg_top['match'] != '0'
@@ -1323,20 +1320,6 @@ function! s:NM_add_remove_tags(filter, prefix, tags)
         call extend(args, filter)
         " TODO: handle errors
         call <SID>NM_run(args)
-endfunction
-
-function! s:NM_add_remove_tags_on_screen(online, prefix, tags)
-        setlocal modifiable
-        if a:prefix == '-'
-                for tagname in a:tags
-                        exec printf('silent! %ss/(\([^)]*\)\<%s\>\([^)]*\))$/(\1\2)/', string(a:online), tagname)
-                endfor
-        else
-                for tagname in a:tags
-                        exec printf('silent! %ss/(\([^)]*\))$/(\1 %s)/', string(a:online), tagname)
-                endfor
-        endif
-        setlocal nomodifiable
 endfunction
 
 " --- process and set the defaults {{{1
