@@ -556,6 +556,7 @@ function is used. "
       (let ((map (make-sparse-keymap)))
 	(define-key map "?" 'notmuch-help)
 	(define-key map "q" 'kill-this-buffer)
+	(define-key map (kbd "<C-tab>") 'widget-backward)
 	(define-key map (kbd "M-TAB") 'notmuch-show-previous-button)
 	(define-key map (kbd "<backtab>") 'notmuch-show-previous-button)
 	(define-key map (kbd "TAB") 'notmuch-show-next-button)
