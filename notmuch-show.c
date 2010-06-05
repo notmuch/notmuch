@@ -225,9 +225,15 @@ show_part_content (GMimeObject *part, GMimeStream *stream_out)
 	g_mime_stream_filter_add(GMIME_STREAM_FILTER(stream_filter),
 				 g_mime_filter_crlf_new(FALSE, FALSE));
         if (charset) {
-          g_mime_stream_filter_add(GMIME_STREAM_FILTER(stream_filter),
-                                   g_mime_filter_charset_new(charset, "UTF-8"));
-        }
+	    GMimeFilter *charset_filter;
+	    charset_filter = g_mime_filter_charset_new(charset, "UTF-8");
+	    /* This result can be NULL for things like "unknown-8bit".
+	     * Don't set a NULL filter as that makes GMime print
+	     * annoying assertion-failure messages on stderr. */
+	    if (charset_filter)
+		g_mime_stream_filter_add(GMIME_STREAM_FILTER(stream_filter),
+					 charset_filter);
+	}
     }
 
     wrapper = g_mime_part_get_content_object (GMIME_PART (part));

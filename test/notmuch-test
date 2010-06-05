@@ -67,6 +67,7 @@ increment_mtime ()
 #  [reply-to]=some-address
 #  [in-reply-to]=<message-id>
 #  [references]=<message-id>
+#  [content-type]=content-type-specification
 #  '[header]=full header line, including keyword'
 #
 #	Additional values for email headers. If these are not provided
@@ -144,6 +145,11 @@ ${additional_headers}"
 
     if [ ! -z "${template[references]}" ]; then
 	additional_headers="References: ${template[references]}
+${additional_headers}"
+    fi
+
+    if [ ! -z "${template[content-type]}" ]; then
+	additional_headers="Content-Type: ${template[content-type]}
 ${additional_headers}"
     fi
 
@@ -1146,6 +1152,27 @@ printf " Ensure all messages were threaded together...\t"
 
 output=$($NOTMUCH search 'subject:"a ridiculously-long message ID"' | notmuch_search_sanitize)
 pass_if_equal "$output" "thread:XXX   2001-01-05 [1/3] Notmuch Test Suite; A ridiculously-long message ID (inbox unread)"
+
+printf "\nTesting encoding issues...\n"
+printf " Message with text of unknown charset...\t"
+add_message '[content-type]="text/plain; charset=unknown-8bit"' \
+            '[body]=irrelevant'
+
+output=$($NOTMUCH show id:${gen_msg_id} 2>&1 | notmuch_show_sanitize)
+pass_if_equal "$output" "message{ id:msg-074@notmuch-test-suite depth:0 match:1 filename:/XXX/mail/msg-074
+header{
+Notmuch Test Suite <test_suite@notmuchmail.org> (2001-01-05) (inbox unread)
+Subject: Test message #74
+From: Notmuch Test Suite <test_suite@notmuchmail.org>
+To: Notmuch Test Suite <test_suite@notmuchmail.org>
+Date: Tue, 05 Jan 2001 15:43:57 -0800
+header}
+body{
+part{ ID: 1, Content-type: text/plain
+irrelevant
+part}
+body}
+message}"
 
 echo ""
 echo "Notmuch test suite complete."
