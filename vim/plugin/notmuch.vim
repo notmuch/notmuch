@@ -243,26 +243,23 @@ function! s:NM_cmd_search(words)
         let b:nm_raw_lines = lines
         let b:nm_search_words = a:words
 
-        call <SID>NM_cmd_search_mksyntax()
         call <SID>NM_set_map('n', g:notmuch_search_maps)
         setlocal cursorline
         setlocal nowrap
 endfunction
 function! s:NM_cmd_search_fmtline(line)
-        let m = matchlist(a:line, '^\(thread:\S\+\)\s\([^]]\+\]\) \([^;]\+\); \(.*\) (\([^(]*\))$')
+        let m = matchlist(a:line, '^\(thread:\S\+\)\s\(.\{12\}\) \[\(\d\+\)/\d\+\] \([^;]\+\); \%(\[[^\[]\+\] \)*\(.*\) (\([^(]*\))$')
         if !len(m)
                 return 'ERROR PARSING: ' . a:line
         endif
         let max = g:notmuch_search_from_column_width
-        let from = m[3]
-        if strlen(from) >= max
-                let from = substitute(m[3][0:max-4], '[^A-Za-z1-9_]*$', '', '') . '...'
-        endif
-        return printf('%-20s %-20s | %s (%s)', m[2], from, m[4], m[5])
-endfunction
-function! s:NM_cmd_search_mksyntax()
-        syntax clear nmSearchFrom
-        exec printf('syntax match nmSearchFrom /\(\] \)\@<=.\{%d\}/ oneline contained', g:notmuch_search_from_column_width)
+        let flist = []
+        for at in split(m[4], ", ")
+                let p = min([stridx(at, "."), stridx(at, "@")])
+                call insert(flist, tolower(at[0:p - 1]))
+        endfor
+        let from = join(flist, ", ")
+        return printf("%-12s %3s %-20.20s | %s (%s)", m[2], m[3], from, m[5], m[6])
 endfunction
 
 " --- --- search screen action functions {{{2
