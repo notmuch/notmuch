@@ -1186,13 +1186,16 @@ function! s:NM_run(args)
         call map(words, 's:NM_shell_escape(v:val)')
         let cmd = g:notmuch_cmd . ' ' . join(words) . '< /dev/null'
 
-        let start = reltime()
-        let out = system(cmd)
-        let err = v:shell_error
-        let delta = reltime(start)
-
         if exists('g:notmuch_debug') && g:notmuch_debug
+                let start = reltime()
+                let out = system(cmd)
+                let err = v:shell_error
+                let delta = reltime(start)
+
                 echo printf('[%s] {%s} %s', reltimestr(delta), string(err), string(cmd))
+        else
+                let out = system(cmd)
+                let err = v:shell_error
         endif
 
         if err
