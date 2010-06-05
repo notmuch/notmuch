@@ -275,15 +275,16 @@ fi
 libdir_in_ldconfig=0
 
 printf "Checking which platform we are on... "
-if [ `uname` = "Darwin" ] ; then
+uname=`uname`
+if [ $uname = "Darwin" ] ; then
     printf "Mac OS X.\n"
     platform=MACOSX
     linker_resolves_library_dependencies=0
-elif [ `uname` = "SunOS" ] ; then
+elif [ $uname = "SunOS" ] ; then
     printf "Solaris.\n"
     platform=SOLARIS
     linker_resolves_library_dependencies=0
-elif [ `uname` = "Linux" ] ; then
+elif [ $uname = "Linux" ] ; then
     printf "Linux\n"
     platform=LINUX
     linker_resolves_library_dependencies=1
