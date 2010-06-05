@@ -496,7 +496,8 @@ function! s:NM_show_archive_thread()
 endfunction
 
 function! s:NM_show_mark_read_then_archive_thread()
-        echo 'not implemented'
+        call <SID>NM_add_remove_tags(b:nm_search_words, '-', ['unread', 'inbox'])
+        call <SID>NM_show_next_thread()
 endfunction
 
 function! s:NM_show_mark_read_then_next_open_message()
