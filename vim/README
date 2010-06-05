@@ -7,8 +7,8 @@ Dependencies:
     notmuch:
         Naturally, it expects you have notmuch installed and configured.
 
-    mail:
-        To send mail, notmuch.vim uses the UNIX mail command.
+    mailx:
+        To send mail, notmuch.vim uses the UNIX mailx command.
 
     git-diff:
         The vim interface makes use of the git-diff.vim syntax file

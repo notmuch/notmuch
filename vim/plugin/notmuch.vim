@@ -941,71 +941,20 @@ function! s:NM_compose_send()
         let fname = expand('%')
         let lnum = 1
         let line = getline(lnum)
-        let hdrs = {}
         let lst_hdr = ''
         while match(line, '^$') == -1
-                if match(line, '^Notmuch-Help:') != -1
-                        " skip it
-                elseif strlen(lst_hdr) && match(line, '^\s') != -1
-                        let hdrs[lst_hdr][-1] = hdrs[lst_hdr][-1] . substitute(line, '^\s*', ' ', '')
-                else
-                        let m = matchlist(line, '^\(\w[^:]*\):\s*\(.*\)\s*$')
-                        if !len(m)
-                                cursor(lnum, 0)
-                                throw printf('Eeek! invalid header on line %d', lnum)
-                        endif
-                        let key = substitute(m[1], '\<\w', '\U&', 'g')
-                        if strlen(m[2])
-                                if !has_key(hdrs, key)
-                                        let hdrs[key] = []
-                                endif
-                                call add(hdrs[key], m[2])
-                        endif
-                        let lst_hdr = key
+                if match(line, '^Notmuch-Help:') == -1
+                        let hdr_starts = lnum - 1
+                        break
                 endif
                 let lnum = lnum + 1
                 let line = getline(lnum)
         endwhile
-        let body_starts = lnum
 
-        "[-a header] [-b bcc-addr] [-c cc-addr] [-s subject] to-addr
-        let cmd = ['mail']
-        let tos = []
-        for [key, vals] in items(hdrs)
-                if key == 'To'
-                        call extend(tos, vals)
-                elseif key == 'Bcc'
-                        for adr in vals
-                                call add(cmd, '-b')
-                                call add(cmd, adr)
-                        endfor
-                elseif key == 'Cc'
-                        for adr in vals
-                                call add(cmd, '-c')
-                                call add(cmd, adr)
-                        endfor
-                elseif key == 'Subject'
-                        for txt in vals
-                                call add(cmd, '-s')
-                                call add(cmd, txt)
-                        endfor
-                else
-                        for val in vals
-                                call add(cmd, '-a')
-                                call add(cmd, key . ': ' . val)
-                        endfor
-                endif
-        endfor
-        call extend(cmd, tos)
-
-        " TODO: make sure we have at least one target
-        " TODO: ask about empty jubject, etc
-
-        exec printf('0,%dd', body_starts)
+        exec printf(':0,%dd', hdr_starts)
         write
 
-        call map(cmd, 's:NM_shell_escape(v:val)')
-        let cmdtxt = join(cmd) . '< ' . fname
+        let cmdtxt = 'mailx -t < ' . fname
         let out = system(cmdtxt)
         let err = v:shell_error
         if err
