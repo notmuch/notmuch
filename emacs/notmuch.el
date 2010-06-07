@@ -585,28 +585,33 @@ This function advances the next thread when finished."
 Here is an example of how to color search results based on tags.
  (the following text would be placed in your ~/.emacs file):
 
- (setq notmuch-search-line-faces '((\"delete\" . '(:foreground \"red\"))
+ (setq notmuch-search-line-faces '((\"delete\" . '(:foreground \"red\"
+						   :background \"blue\"))
                                    (\"unread\" . '(:foreground \"green\"))))
 
-Order matters: for lines with multiple tags, the the first
-matching will be applied."
+The attributes defined for matching tags are merged, with later
+attributes overriding earlier. A message having both \"delete\"
+and \"unread\" tags with the above settings would have a green
+foreground and blue background."
   :type '(alist :key-type (string) :value-type (list))
   :group 'notmuch)
 
 (defun notmuch-search-color-line (start end line-tag-list)
-  "Colorize lines in notmuch-show based on tags"
-  (if notmuch-search-line-faces
-      (let ((overlay (make-overlay start end))
-	    (tags-faces (copy-alist notmuch-search-line-faces)))
-	(while tags-faces
-	  (let* ((tag-face (car tags-faces))
-		 (tag (car tag-face))
-		 (face (cdr tag-face)))
-	    (cond ((member tag line-tag-list)
-		   (overlay-put overlay 'face face)
-		   (setq tags-faces nil))
-		  (t
-		   (setq tags-faces (cdr tags-faces)))))))))
+  "Colorize lines in `notmuch-show' based on tags."
+  ;; Create the overlay only if the message has tags which match one
+  ;; of those specified in `notmuch-search-line-faces'.
+  (let (overlay)
+    (mapc '(lambda (elem)
+	     (let ((tag (car elem))
+		   (attributes (cdr elem)))
+	       (when (member tag line-tag-list)
+		 (when (not overlay)
+		   (setq overlay (make-overlay start end)))
+		 ;; Merge the specified properties with any already
+		 ;; applied from an earlier match.
+		 (overlay-put overlay 'face
+			      (append (overlay-get overlay 'face) attributes)))))
+	  notmuch-search-line-faces)))
 
 (defun notmuch-search-isearch-authors-show (overlay)
   (remove-from-invisibility-spec (cons (overlay-get overlay 'invisible) t)))
