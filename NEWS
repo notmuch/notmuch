@@ -1,3 +1,14 @@
+New command-line features
+-------------------------
+notmuch show --format=mbox <search-specification>
+
+  This new option allows for the messages matching a search
+  specification to be presented as an mbox. Specifically the "mboxrd"
+  format is used which allows for reversible quoting of lines
+  beginning with "From ". A reader should remove a single '>' from the
+  beginning of all lines beginning with one or more '>' characters
+  followed by the 5 characters "From ".
+
 New emacs features
 ------------------
 Add a new, optional hook for detecting inline patches
@@ -18,7 +29,6 @@ Automatically tag messages as "replied" when sending a reply
 
 Emacs mail improvements
 -----------------------
-
 Easier way to define a fcc directory
     
   In the common case that a user only has one FCC (save outgoing mail
