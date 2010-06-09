@@ -77,6 +77,20 @@ static const show_format_t format_json = {
     "]"
 };
 
+static void
+format_message_mbox (const void *ctx,
+		     notmuch_message_t *message,
+		     unused (int indent));
+
+static const show_format_t format_mbox = {
+    "",
+        "", format_message_mbox,
+            "", NULL, "",
+            "", NULL, "",
+        "", "",
+    ""
+};
+
 static const char *
 _get_tags_as_string (const void *ctx, notmuch_message_t *message)
 {
@@ -161,6 +175,112 @@ format_message_json (const void *ctx, notmuch_message_t *message, unused (int in
     }
     printf("]");
     talloc_free (ctx_quote);
+}
+
+/* Extract just the email address from the contents of a From:
+ * header. */
+static const char *
+_extract_email_address (const void *ctx, const char *from)
+{
+    InternetAddressList *addresses;
+    InternetAddress *address;
+    InternetAddressMailbox *mailbox;
+    const char *email = "MAILER-DAEMON";
+
+    addresses = internet_address_list_parse_string (from);
+
+    /* Bail if there is no address here. */
+    if (addresses == NULL || internet_address_list_length (addresses) < 1)
+	goto DONE;
+
+    /* Otherwise, just use the first address. */
+    address = internet_address_list_get_address (addresses, 0);
+
+    /* The From header should never contain an address group rather
+     * than a mailbox. So bail if it does. */
+    if (! INTERNET_ADDRESS_IS_MAILBOX (address))
+	goto DONE;
+
+    mailbox = INTERNET_ADDRESS_MAILBOX (address);
+    email = internet_address_mailbox_get_addr (mailbox);
+    email = talloc_strdup (ctx, email);
+
+  DONE:
+    /* XXX: How to free addresses here? */
+    return email;
+   }
+
+/* Return 1 if 'line' is an mbox From_ line---that is, a line
+ * beginning with zero or more '>' characters followed by the
+ * characters 'F', 'r', 'o', 'm', and space.
+ *
+ * Any characters at all may appear after that in the line.
+ */
+static int
+_is_from_line (const char *line)
+{
+    const char *s = line;
+
+    if (line == NULL)
+	return 0;
+
+    while (*s == '>')
+	s++;
+
+    if (STRNCMP_LITERAL (s, "From ") == 0)
+	return 1;
+    else
+	return 0;
+}
+
+/* Print a message in "mboxrd" format as documented, for example,
+ * here:
+ *
+ * http://qmail.org/qmail-manual-html/man5/mbox.html
+ */
+static void
+format_message_mbox (const void *ctx,
+		     notmuch_message_t *message,
+		     unused (int indent))
+{
+    const char *filename;
+    FILE *file;
+    const char *from;
+
+    time_t date;
+    struct tm date_gmtime;
+    char date_asctime[26];
+
+    char *line = NULL;
+    size_t line_size;
+    ssize_t line_len;
+
+    filename = notmuch_message_get_filename (message);
+    file = fopen (filename, "r");
+    if (file == NULL) {
+	fprintf (stderr, "Failed to open %s: %s\n",
+		 filename, strerror (errno));
+	return;
+    }
+
+    from = notmuch_message_get_header (message, "from");
+    from = _extract_email_address (ctx, from);
+
+    date = notmuch_message_get_date (message);
+    gmtime_r (&date, &date_gmtime);
+    asctime_r (&date_gmtime, date_asctime);
+
+    printf ("From %s %s", from, date_asctime);
+
+    while ((line_len = getline (&line, &line_size, file)) != -1 ) {
+	if (_is_from_line (line))
+	    putchar ('>');
+	printf ("%s", line);
+    }
+
+    printf ("\n");
+
+    fclose (file);
 }
 
 static void
@@ -436,6 +556,8 @@ notmuch_show_command (void *ctx, unused (int argc), unused (char *argv[]))
 	    } else if (strcmp (opt, "json") == 0) {
 		format = &format_json;
 		entire_thread = 1;
+	    } else if (strcmp (opt, "mbox") == 0) {
+		format = &format_mbox;
 	    } else {
 		fprintf (stderr, "Invalid value for --format: %s\n", opt);
 		return 1;
