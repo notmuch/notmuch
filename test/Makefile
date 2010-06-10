@@ -6,6 +6,7 @@
 -include ../config.mak
 
 #GIT_TEST_OPTS=--verbose --debug
+SHELL=/bin/bash
 SHELL_PATH ?= $(SHELL)
 TAR ?= $(TAR)
 RM ?= rm -f

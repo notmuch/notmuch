@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #
 # Copyright (c) 2005 Junio C Hamano
 #
@@ -41,40 +41,6 @@ PAGER=cat
 TZ=UTC
 TERM=dumb
 export LANG LC_ALL PAGER TERM TZ
-EDITOR=:
-unset VISUAL
-unset GIT_EDITOR
-unset AUTHOR_DATE
-unset AUTHOR_EMAIL
-unset AUTHOR_NAME
-unset COMMIT_AUTHOR_EMAIL
-unset COMMIT_AUTHOR_NAME
-unset EMAIL
-unset GIT_ALTERNATE_OBJECT_DIRECTORIES
-unset GIT_AUTHOR_DATE
-GIT_AUTHOR_EMAIL=author@example.com
-GIT_AUTHOR_NAME='A U Thor'
-unset GIT_COMMITTER_DATE
-GIT_COMMITTER_EMAIL=committer@example.com
-GIT_COMMITTER_NAME='C O Mitter'
-unset GIT_DIFF_OPTS
-unset GIT_DIR
-unset GIT_WORK_TREE
-unset GIT_EXTERNAL_DIFF
-unset GIT_INDEX_FILE
-unset GIT_OBJECT_DIRECTORY
-unset GIT_CEILING_DIRECTORIES
-unset SHA1_FILE_DIRECTORIES
-unset SHA1_FILE_DIRECTORY
-unset GIT_NOTES_REF
-unset GIT_NOTES_DISPLAY_REF
-unset GIT_NOTES_REWRITE_REF
-unset GIT_NOTES_REWRITE_MODE
-GIT_MERGE_VERBOSITY=5
-export GIT_MERGE_VERBOSITY
-export GIT_AUTHOR_EMAIL GIT_AUTHOR_NAME
-export GIT_COMMITTER_EMAIL GIT_COMMITTER_NAME
-export EDITOR
 GIT_TEST_CMP=${GIT_TEST_CMP:-diff -u}
 
 # Protect ourselves from common misconfiguration to export
@@ -97,6 +63,9 @@ esac
 # A regexp to match 5 and 40 hexdigits
 _x05='[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]'
 _x40="$_x05$_x05$_x05$_x05$_x05$_x05$_x05$_x05"
+
+_x04='[0-9a-f][0-9a-f][0-9a-f][0-9a-f]'
+_x32="$_x04$_x04$_x04$_x04$_x04$_x04$_x04$_x04"
 
 # Each test should start with something like this, after copyright notices:
 #
@@ -221,22 +190,6 @@ die () {
 GIT_EXIT_OK=
 trap 'die' EXIT
 
-# The semantics of the editor variables are that of invoking
-# sh -c "$EDITOR \"$@\"" files ...
-#
-# If our trash directory contains shell metacharacters, they will be
-# interpreted if we just set $EDITOR directly, so do a little dance with
-# environment variables to work around this.
-#
-# In particular, quoting isn't enough, as the path may contain the same quote
-# that we're using.
-test_set_editor () {
-	FAKE_EDITOR="$1"
-	export FAKE_EDITOR
-	EDITOR='"$FAKE_EDITOR"'
-	export EDITOR
-}
-
 test_decode_color () {
 	sed	-e 's/.\[1m/<WHITE>/g' \
 		-e 's/.\[31m/<RED>/g' \
@@ -264,51 +217,204 @@ remove_cr () {
 	tr '\015' Q | sed -e 's/Q$//'
 }
 
-test_tick () {
-	if test -z "${test_tick+set}"
-	then
-		test_tick=1112911993
-	else
-		test_tick=$(($test_tick + 60))
-	fi
-	GIT_COMMITTER_DATE="$test_tick -0700"
-	GIT_AUTHOR_DATE="$test_tick -0700"
-	export GIT_COMMITTER_DATE GIT_AUTHOR_DATE
+# Notmuch helper functions
+increment_mtime_amount=0
+increment_mtime ()
+{
+    dir=$1
+
+    increment_mtime_amount=$((increment_mtime_amount + 1))
+    touch -d "+${increment_mtime_amount} seconds" $dir
 }
 
-# Call test_commit with the arguments "<message> [<file> [<contents>]]"
+# Generate a new message in the mail directory, with a unique message
+# ID and subject. The message is not added to the index.
 #
-# This will commit a file with the given contents and the given commit
-# message.  It will also add a tag with <message> as name.
+# After this function returns, the filename of the generated message
+# is available as $gen_msg_filename and the message ID is available as
+# $gen_msg_id .
 #
-# Both <file> and <contents> default to <message>.
+# This function supports named parameters with the bash syntax for
+# assigning a value to an associative array ([name]=value). The
+# supported parameters are:
+#
+#  [dir]=directory/of/choice
+#
+#	Generate the message in directory 'directory/of/choice' within
+#	the mail store. The directory will be created if necessary.
+#
+#  [body]=text
+#
+#	Text to use as the body of the email message
+#
+#  '[from]="Some User <user@example.com>"'
+#  '[to]="Some User <user@example.com>"'
+#  '[subject]="Subject of email message"'
+#  '[date]="RFC 822 Date"'
+#
+#	Values for email headers. If not provided, default values will
+#	be generated instead.
+#
+#  '[cc]="Some User <user@example.com>"'
+#  [reply-to]=some-address
+#  [in-reply-to]=<message-id>
+#  [references]=<message-id>
+#  [content-type]=content-type-specification
+#  '[header]=full header line, including keyword'
+#
+#	Additional values for email headers. If these are not provided
+#	then the relevant headers will simply not appear in the
+#	message.
+#
+#  '[id]=message-id'
+#
+#	Controls the message-id of the created message.
+gen_msg_cnt=0
+gen_msg_filename=""
+gen_msg_id=""
+generate_message ()
+{
+    # This is our (bash-specific) magic for doing named parameters
+    local -A template="($@)"
+    local additional_headers
 
-test_commit () {
-	file=${2:-"$1.t"}
-	echo "${3-$1}" > "$file" &&
-	git add "$file" &&
-	test_tick &&
-	git commit -m "$1" &&
-	git tag "$1"
+    gen_msg_cnt=$((gen_msg_cnt + 1))
+    gen_msg_name=msg-$(printf "%03d" $gen_msg_cnt)
+
+    if [ -z "${template[id]}" ]; then
+	gen_msg_id="${gen_msg_name}@notmuch-test-suite"
+    else
+	gen_msg_id="${template[id]}"
+    fi
+
+    if [ -z "${template[dir]}" ]; then
+	gen_msg_filename="${MAIL_DIR}/$gen_msg_name"
+    else
+	gen_msg_filename="${MAIL_DIR}/${template[dir]}/$gen_msg_name"
+	mkdir -p $(dirname $gen_msg_filename)
+    fi
+
+    if [ -z "${template[body]}" ]; then
+	template[body]="This is just a test message (#${gen_msg_cnt})"
+    fi
+
+    if [ -z "${template[from]}" ]; then
+	template[from]="Notmuch Test Suite <test_suite@notmuchmail.org>"
+    fi
+
+    if [ -z "${template[to]}" ]; then
+	template[to]="Notmuch Test Suite <test_suite@notmuchmail.org>"
+    fi
+
+    if [ -z "${template[subject]}" ]; then
+	template[subject]="Test message #${gen_msg_cnt}"
+    fi
+
+    if [ -z "${template[date]}" ]; then
+	template[date]="Tue, 05 Jan 2001 15:43:57 -0800"
+    fi
+
+    additional_headers=""
+    if [ ! -z "${template[header]}" ]; then
+	additional_headers="${template[header]}
+${additional_headers}"
+    fi
+
+    if [ ! -z "${template[reply-to]}" ]; then
+	additional_headers="Reply-To: ${template[reply-to]}
+${additional_headers}"
+    fi
+
+    if [ ! -z "${template[in-reply-to]}" ]; then
+	additional_headers="In-Reply-To: ${template[in-reply-to]}
+${additional_headers}"
+    fi
+
+    if [ ! -z "${template[cc]}" ]; then
+	additional_headers="Cc: ${template[cc]}
+${additional_headers}"
+    fi
+
+    if [ ! -z "${template[references]}" ]; then
+	additional_headers="References: ${template[references]}
+${additional_headers}"
+    fi
+
+    if [ ! -z "${template[content-type]}" ]; then
+	additional_headers="Content-Type: ${template[content-type]}
+${additional_headers}"
+    fi
+
+
+cat <<EOF >$gen_msg_filename
+From: ${template[from]}
+To: ${template[to]}
+Message-Id: <${gen_msg_id}>
+Subject: ${template[subject]}
+Date: ${template[date]}
+${additional_headers}
+${template[body]}
+EOF
+
+    # Ensure that the mtime of the containing directory is updated
+    increment_mtime $(dirname ${gen_msg_filename})
 }
 
-# Call test_merge with the arguments "<message> <commit>", where <commit>
-# can be a tag pointing to the commit-to-merge.
+# Generate a new message and add it to the index.
+#
+# All of the arguments and return values supported by generate_message
+# are also supported here, so see that function for details.
+add_message ()
+{
+    generate_message "$@"
 
-test_merge () {
-	test_tick &&
-	git merge -m "$1" "$2" &&
-	git tag "$1"
+    $NOTMUCH new > /dev/null
 }
 
-# This function helps systems where core.filemode=false is set.
-# Use it instead of plain 'chmod +x' to set or unset the executable bit
-# of a file in the working directory and add it to the index.
+tests=0
+test_failures=0
 
-test_chmod () {
-	chmod "$@" &&
-	git update-index --add "--chmod=$@"
+pass_if_equal ()
+{
+    output=$1
+    expected=$2
+
+    tests=$((tests + 1))
+
+    if [ "$output" = "$expected" ]; then
+	echo "	PASS"
+    else
+	echo "	FAIL"
+	testname=test-$(printf "%03d" $tests)
+	echo "$expected" > $testname.expected
+	echo "$output" > $testname.output
+	diff -u $testname.expected $testname.output || true
+	test_failures=$((test_failures + 1))
+    fi
 }
+
+TEST_DIR=$(pwd)/test.$$
+MAIL_DIR=${TEST_DIR}/mail
+export NOTMUCH_CONFIG=${TEST_DIR}/notmuch-config
+NOTMUCH=$(find_notmuch_binary $(pwd))
+
+NOTMUCH_NEW ()
+{
+    $NOTMUCH new | grep -v -E -e '^Processed [0-9]*( total)? file|Found [0-9]* total file'
+}
+
+notmuch_search_sanitize ()
+{
+    sed -r -e 's/("?thread"?: ?)("?)................("?)/\1\2XXX\3/'
+}
+
+NOTMUCH_SHOW_FILENAME_SQUELCH='s,filename:.*/mail,filename:/XXX/mail,'
+notmuch_show_sanitize ()
+{
+    sed -e "$NOTMUCH_SHOW_FILENAME_SQUELCH"
+}
+
+# End of notmuch helper functions
 
 # Use test_set_prereq to tell that a particular prerequisite is available.
 # The prerequisite can later be checked for in two ways:
@@ -572,21 +678,6 @@ test_when_finished () {
 		} && (exit \"\$eval_ret\"); eval_ret=\$?; $test_cleanup"
 }
 
-# Most tests can use the created repository, but some may need to create more.
-# Usage: test_create_repo <directory>
-test_create_repo () {
-	test "$#" = 1 ||
-	error "bug in the test script: not 1 parameter to test-create-repo"
-	owd=`pwd`
-	repo="$1"
-	mkdir -p "$repo"
-	cd "$repo" || error "Cannot setup test environment"
-	"$GIT_EXEC_PATH/git-init" "--template=$TEST_DIRECTORY/../templates/blt/" >&3 2>&4 ||
-	error "cannot run git init -- have you built things yet?"
-	mv .git/hooks .git/hooks-disabled
-	cd "$owd"
-}
-
 test_done () {
 	GIT_EXIT_OK=t
 	test_results_dir="$TEST_DIRECTORY/test-results"
@@ -628,9 +719,27 @@ test_done () {
 	esac
 }
 
+find_notmuch_path ()
+{
+    dir="$1"
+
+    while [ -n "$dir" ]; do
+	bin="$dir/notmuch"
+	if [ -x "$bin" ]; then
+	    echo "$dir"
+	    return
+	fi
+	dir="$(dirname "$dir")"
+	if [ "$dir" = "/" ]; then
+	    break
+	fi
+    done
+}
+
 # Test the binaries we have just built.  The tests are kept in
-# t/ subdirectory and are run in 'trash directory' subdirectory.
+# test/ subdirectory and are run in 'trash directory' subdirectory.
 TEST_DIRECTORY=$(pwd)
+# FIXME: Only the normal case bellow is updated to notmuch
 if test -n "$valgrind"
 then
 	make_symlink () {
@@ -699,48 +808,11 @@ elif test -n "$GIT_TEST_INSTALLED" ; then
 	error "Cannot run git from $GIT_TEST_INSTALLED."
 	PATH=$GIT_TEST_INSTALLED:$TEST_DIRECTORY/..:$PATH
 	GIT_EXEC_PATH=${GIT_TEST_EXEC_PATH:-$GIT_EXEC_PATH}
-else # normal case, use ../bin-wrappers only unless $with_dashes:
-	git_bin_dir="$TEST_DIRECTORY/../bin-wrappers"
-	if ! test -x "$git_bin_dir/git" ; then
-		if test -z "$with_dashes" ; then
-			say "$git_bin_dir/git is not executable; using GIT_EXEC_PATH"
-		fi
-		with_dashes=t
-	fi
-	PATH="$git_bin_dir:$PATH"
-	GIT_EXEC_PATH=$TEST_DIRECTORY/..
-	if test -n "$with_dashes" ; then
-		PATH="$TEST_DIRECTORY/..:$PATH"
-	fi
+else # normal case
+	notmuch_path=`find_notmuch_path "$TEST_DIRECTORY"`
+	test -n "$notmuch_path" && PATH="$notmuch_path:$PATH"
 fi
-GIT_TEMPLATE_DIR=$(pwd)/../templates/blt
-unset GIT_CONFIG
-GIT_CONFIG_NOSYSTEM=1
-GIT_CONFIG_NOGLOBAL=1
-export PATH GIT_EXEC_PATH GIT_TEMPLATE_DIR GIT_CONFIG_NOSYSTEM GIT_CONFIG_NOGLOBAL
-
-. ../GIT-BUILD-OPTIONS
-
-GITPERLLIB=$(pwd)/../perl/blib/lib:$(pwd)/../perl/blib/arch/auto/Git
-export GITPERLLIB
-test -d ../templates/blt || {
-	error "You haven't built things yet, have you?"
-}
-
-if test -z "$GIT_TEST_INSTALLED" && test -z "$NO_PYTHON"
-then
-	GITPYTHONLIB="$(pwd)/../git_remote_helpers/build/lib"
-	export GITPYTHONLIB
-	test -d ../git_remote_helpers/build || {
-		error "You haven't built git_remote_helpers yet, have you?"
-	}
-fi
-
-if ! test -x ../test-chmtime; then
-	echo >&2 'You need to build test-chmtime:'
-	echo >&2 'Run "make test-chmtime" in the source (toplevel) directory'
-	exit 1
-fi
+export PATH
 
 # Test repository
 test="trash directory.$(basename "$0" .sh)"
@@ -756,10 +828,26 @@ rm -fr "$test" || {
 	exit 1
 }
 
-test_create_repo "$test"
+MAIL_DIR="${TRASH_DIRECTORY}/mail"
+export NOTMUCH_CONFIG="${TRASH_DIRECTORY}/notmuch-config"
+
+mkdir -p "${test}"
+mkdir "$MAIL_DIR"
+
+cat <<EOF >"${NOTMUCH_CONFIG}"
+[database]
+path=${MAIL_DIR}
+
+[user]
+name=Notmuch Test Suite
+primary_email=test_suite@notmuchmail.org
+other_email=test_suite_other@notmuchmail.org;test_suite@otherdomain.org
+EOF
+
+
 # Use -P to resolve symlinks in our working directory so that the cwd
 # in subprocesses like git equals our $PWD (for pathname comparisons).
-cd -P "$test" || exit 1
+cd -P "$test" || error "Cannot setup test environment"
 
 this_test=${0##*/}
 this_test=${this_test%%-*}
