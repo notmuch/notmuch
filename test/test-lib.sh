@@ -221,10 +221,10 @@ remove_cr () {
 increment_mtime_amount=0
 increment_mtime ()
 {
-    dir=$1
+    dir="$1"
 
     increment_mtime_amount=$((increment_mtime_amount + 1))
-    touch -d "+${increment_mtime_amount} seconds" $dir
+    touch -d "+${increment_mtime_amount} seconds" "$dir"
 }
 
 # Generate a new message in the mail directory, with a unique message
@@ -291,7 +291,7 @@ generate_message ()
 	gen_msg_filename="${MAIL_DIR}/$gen_msg_name"
     else
 	gen_msg_filename="${MAIL_DIR}/${template[dir]}/$gen_msg_name"
-	mkdir -p $(dirname $gen_msg_filename)
+	mkdir -p "$(dirname "$gen_msg_filename")"
     fi
 
     if [ -z "${template[body]}" ]; then
@@ -346,7 +346,7 @@ ${additional_headers}"
     fi
 
 
-cat <<EOF >$gen_msg_filename
+cat <<EOF >"$gen_msg_filename"
 From: ${template[from]}
 To: ${template[to]}
 Message-Id: <${gen_msg_id}>
@@ -357,7 +357,7 @@ ${template[body]}
 EOF
 
     # Ensure that the mtime of the containing directory is updated
-    increment_mtime $(dirname ${gen_msg_filename})
+    increment_mtime "$(dirname "${gen_msg_filename}")"
 }
 
 # Generate a new message and add it to the index.
@@ -366,41 +366,34 @@ EOF
 # are also supported here, so see that function for details.
 add_message ()
 {
-    generate_message "$@"
-
-    $NOTMUCH new > /dev/null
+    generate_message "$@" &&
+    notmuch new > /dev/null
 }
-
-tests=0
-test_failures=0
 
 pass_if_equal ()
 {
     output=$1
     expected=$2
 
-    tests=$((tests + 1))
-
     if [ "$output" = "$expected" ]; then
-	echo "	PASS"
+	true
     else
-	echo "	FAIL"
-	testname=test-$(printf "%03d" $tests)
+	testname=$this_test.$test_count
 	echo "$expected" > $testname.expected
 	echo "$output" > $testname.output
-	diff -u $testname.expected $testname.output || true
-	test_failures=$((test_failures + 1))
+	diff -u $testname.expected $testname.output
+	false
     fi
 }
 
 TEST_DIR=$(pwd)/test.$$
 MAIL_DIR=${TEST_DIR}/mail
 export NOTMUCH_CONFIG=${TEST_DIR}/notmuch-config
-NOTMUCH=$(find_notmuch_binary $(pwd))
+NOTMUCH=notmuch
 
 NOTMUCH_NEW ()
 {
-    $NOTMUCH new | grep -v -E -e '^Processed [0-9]*( total)? file|Found [0-9]* total file'
+    notmuch new | grep -v -E -e '^Processed [0-9]*( total)? file|Found [0-9]* total file'
 }
 
 notmuch_search_sanitize ()
