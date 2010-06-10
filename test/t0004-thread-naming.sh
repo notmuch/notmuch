@@ -3,17 +3,17 @@ test_description="naming of threads with changing subject"
 . ./test-lib.sh
 test_expect_success 'Generate some messages' '
 add_message "[subject]=\"thread-naming: Initial thread subject\"" \
-            "[date]=\"Fri, 05 Jan 2001 15:43:56 -0800\"" &&
+            "[date]=\"Fri, 05 Jan 2001 15:43:56 -0000\"" &&
 first=${gen_msg_cnt} &&
 parent=${gen_msg_id} &&
 add_message "[subject]=\"thread-naming: Older changed subject\"" \
-            "[date]=\"Sat, 06 Jan 2001 15:43:56 -0800\"" \
+            "[date]=\"Sat, 06 Jan 2001 15:43:56 -0000\"" \
             "[in-reply-to]=\<$parent\>" &&
 add_message "[subject]=\"thread-naming: Newer changed subject\"" \
-            "[date]=\"Sun, 07 Jan 2001 15:43:56 -0800\"" \
+            "[date]=\"Sun, 07 Jan 2001 15:43:56 -0000\"" \
             "[in-reply-to]=\<$parent\>" &&
 add_message "[subject]=\"thread-naming: Final thread subject\"" \
-            "[date]=\"Mon, 08 Jan 2001 15:43:56 -0800\"" \
+            "[date]=\"Mon, 08 Jan 2001 15:43:56 -0000\"" \
             "[in-reply-to]=\<$parent\>" &&
 final=${gen_msg_id}
 
@@ -43,7 +43,7 @@ pass_if_equal "$output" "thread:XXX   2001-01-07 [2/4] Notmuch Test Suite; threa
 '
 test_expect_success "Ignore added reply prefix (Re:)" '
 add_message "[subject]=\"Re: thread-naming: Initial thread subject\"" \
-            "[date]=\"Tue, 09 Jan 2001 15:43:45 -0800\"" \
+            "[date]=\"Tue, 09 Jan 2001 15:43:45 -0000\"" \
             "[in-reply-to]=\<$parent\>" &&
 output=$($NOTMUCH search --sort=newest-first thread-naming and tag:inbox | notmuch_search_sanitize) &&
 pass_if_equal "$output" "thread:XXX   2001-01-09 [3/5] Notmuch Test Suite; thread-naming: Initial thread subject (inbox unread)"
@@ -51,7 +51,7 @@ pass_if_equal "$output" "thread:XXX   2001-01-09 [3/5] Notmuch Test Suite; threa
 '
 test_expect_success "Ignore added reply prefix (Aw:)" '
 add_message "[subject]=\"Aw: thread-naming: Initial thread subject\"" \
-            "[date]=\"Wed, 10 Jan 2001 15:43:45 -0800\"" \
+            "[date]=\"Wed, 10 Jan 2001 15:43:45 -0000\"" \
             "[in-reply-to]=\<$parent\>" &&
 output=$($NOTMUCH search --sort=newest-first thread-naming and tag:inbox | notmuch_search_sanitize) &&
 pass_if_equal "$output" "thread:XXX   2001-01-10 [4/6] Notmuch Test Suite; thread-naming: Initial thread subject (inbox unread)"
@@ -59,7 +59,7 @@ pass_if_equal "$output" "thread:XXX   2001-01-10 [4/6] Notmuch Test Suite; threa
 '
 test_expect_success "Ignore added reply prefix (Vs:)" '
 add_message "[subject]=\"Vs: thread-naming: Initial thread subject\"" \
-            "[date]=\"Thu, 11 Jan 2001 15:43:45 -0800\"" \
+            "[date]=\"Thu, 11 Jan 2001 15:43:45 -0000\"" \
             "[in-reply-to]=\<$parent\>" &&
 output=$($NOTMUCH search --sort=newest-first thread-naming and tag:inbox | notmuch_search_sanitize) &&
 pass_if_equal "$output" "thread:XXX   2001-01-11 [5/7] Notmuch Test Suite; thread-naming: Initial thread subject (inbox unread)"
@@ -67,7 +67,7 @@ pass_if_equal "$output" "thread:XXX   2001-01-11 [5/7] Notmuch Test Suite; threa
 '
 test_expect_success "Ignore added reply prefix (Sv:)" '
 add_message "[subject]=\"Sv: thread-naming: Initial thread subject\"" \
-            "[date]=\"Fri, 12 Jan 2001 15:43:45 -0800\"" \
+            "[date]=\"Fri, 12 Jan 2001 15:43:45 -0000\"" \
             "[in-reply-to]=\<$parent\>" &&
 output=$($NOTMUCH search --sort=newest-first thread-naming and tag:inbox | notmuch_search_sanitize) &&
 pass_if_equal "$output" "thread:XXX   2001-01-12 [6/8] Notmuch Test Suite; thread-naming: Initial thread subject (inbox unread)"
@@ -81,7 +81,7 @@ Notmuch Test Suite <test_suite@notmuchmail.org> (2001-01-05) (unread)
 Subject: thread-naming: Initial thread subject
 From: Notmuch Test Suite <test_suite@notmuchmail.org>
 To: Notmuch Test Suite <test_suite@notmuchmail.org>
-Date: Fri, 05 Jan 2001 15:43:56 -0800
+Date: Fri, 05 Jan 2001 15:43:56 -0000
 header}
 body{
 part{ ID: 1, Content-type: text/plain
@@ -95,7 +95,7 @@ Notmuch Test Suite <test_suite@notmuchmail.org> (2001-01-06) (inbox unread)
 Subject: thread-naming: Older changed subject
 From: Notmuch Test Suite <test_suite@notmuchmail.org>
 To: Notmuch Test Suite <test_suite@notmuchmail.org>
-Date: Sat, 06 Jan 2001 15:43:56 -0800
+Date: Sat, 06 Jan 2001 15:43:56 -0000
 header}
 body{
 part{ ID: 1, Content-type: text/plain
@@ -109,7 +109,7 @@ Notmuch Test Suite <test_suite@notmuchmail.org> (2001-01-07) (inbox unread)
 Subject: thread-naming: Newer changed subject
 From: Notmuch Test Suite <test_suite@notmuchmail.org>
 To: Notmuch Test Suite <test_suite@notmuchmail.org>
-Date: Sun, 07 Jan 2001 15:43:56 -0800
+Date: Sun, 07 Jan 2001 15:43:56 -0000
 header}
 body{
 part{ ID: 1, Content-type: text/plain
@@ -123,7 +123,7 @@ Notmuch Test Suite <test_suite@notmuchmail.org> (2001-01-08) (unread)
 Subject: thread-naming: Final thread subject
 From: Notmuch Test Suite <test_suite@notmuchmail.org>
 To: Notmuch Test Suite <test_suite@notmuchmail.org>
-Date: Mon, 08 Jan 2001 15:43:56 -0800
+Date: Mon, 08 Jan 2001 15:43:56 -0000
 header}
 body{
 part{ ID: 1, Content-type: text/plain
@@ -137,7 +137,7 @@ Notmuch Test Suite <test_suite@notmuchmail.org> (2001-01-09) (inbox unread)
 Subject: Re: thread-naming: Initial thread subject
 From: Notmuch Test Suite <test_suite@notmuchmail.org>
 To: Notmuch Test Suite <test_suite@notmuchmail.org>
-Date: Tue, 09 Jan 2001 15:43:45 -0800
+Date: Tue, 09 Jan 2001 15:43:45 -0000
 header}
 body{
 part{ ID: 1, Content-type: text/plain
@@ -151,7 +151,7 @@ Notmuch Test Suite <test_suite@notmuchmail.org> (2001-01-10) (inbox unread)
 Subject: Aw: thread-naming: Initial thread subject
 From: Notmuch Test Suite <test_suite@notmuchmail.org>
 To: Notmuch Test Suite <test_suite@notmuchmail.org>
-Date: Wed, 10 Jan 2001 15:43:45 -0800
+Date: Wed, 10 Jan 2001 15:43:45 -0000
 header}
 body{
 part{ ID: 1, Content-type: text/plain
@@ -165,7 +165,7 @@ Notmuch Test Suite <test_suite@notmuchmail.org> (2001-01-11) (inbox unread)
 Subject: Vs: thread-naming: Initial thread subject
 From: Notmuch Test Suite <test_suite@notmuchmail.org>
 To: Notmuch Test Suite <test_suite@notmuchmail.org>
-Date: Thu, 11 Jan 2001 15:43:45 -0800
+Date: Thu, 11 Jan 2001 15:43:45 -0000
 header}
 body{
 part{ ID: 1, Content-type: text/plain
@@ -179,7 +179,7 @@ Notmuch Test Suite <test_suite@notmuchmail.org> (2001-01-12) (inbox unread)
 Subject: Sv: thread-naming: Initial thread subject
 From: Notmuch Test Suite <test_suite@notmuchmail.org>
 To: Notmuch Test Suite <test_suite@notmuchmail.org>
-Date: Fri, 12 Jan 2001 15:43:45 -0800
+Date: Fri, 12 Jan 2001 15:43:45 -0000
 header}
 body{
 part{ ID: 1, Content-type: text/plain
