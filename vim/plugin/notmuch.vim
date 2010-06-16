@@ -25,6 +25,7 @@
 
 let s:notmuch_defaults = {
         \ 'g:notmuch_cmd':                           'notmuch'                    ,
+        \ 'g:notmuch_sendmail':                      'sendmail'                   ,
         \ 'g:notmuch_debug':                         0                            ,
         \
         \ 'g:notmuch_search_newest_first':           1                            ,
@@ -949,18 +950,19 @@ function! s:NM_compose_send()
         let line = getline(lnum)
         let lst_hdr = ''
         while match(line, '^$') == -1
-                if match(line, '^Notmuch-Help:') == -1
+                if !exists("hdr_starts") && match(line, '^Notmuch-Help:') == -1
                         let hdr_starts = lnum - 1
-                        break
                 endif
                 let lnum = lnum + 1
                 let line = getline(lnum)
         endwhile
+        let body_starts = lnum - 1
 
+        call append(body_starts, 'Date: ' . strftime('%a, %d %b %Y %H:%M:%S %z'))
         exec printf(':0,%dd', hdr_starts)
         write
 
-        let cmdtxt = 'mailx -t < ' . fname
+        let cmdtxt = g:notmuch_sendmail . ' -t < ' . fname
         let out = system(cmdtxt)
         let err = v:shell_error
         if err
