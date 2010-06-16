@@ -149,6 +149,7 @@ let g:notmuch_show_maps = {
         \ 'h':          ':call <SID>NM_show_fold_toggle(''h'', ''hdr'', !g:notmuch_show_fold_headers)<CR>',
         \ 'i':          ':call <SID>NM_show_fold_toggle(''s'', ''sig'', !g:notmuch_show_fold_signatures)<CR>',
         \
+        \ 'I':          ':call <SID>NM_show_mark_read_thread()<CR>',
         \ 'a':          ':call <SID>NM_show_archive_thread()<CR>',
         \ 'A':          ':call <SID>NM_show_mark_read_then_archive_thread()<CR>',
         \ 'N':          ':call <SID>NM_show_mark_read_then_next_open_message()<CR>',
@@ -494,6 +495,11 @@ function! s:NM_show_next_thread()
         else
                 echo 'No more messages.'
         endif
+endfunction
+
+function! s:NM_show_mark_read_thread()
+        call <SID>NM_tag(b:nm_search_words, ['-unread'])
+        call <SID>NM_show_next_thread()
 endfunction
 
 function! s:NM_show_archive_thread()
