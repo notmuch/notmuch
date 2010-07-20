@@ -151,26 +151,33 @@ get_username_from_passwd_file (void *ctx)
  * etc.), this function will print a message to stderr and return
  * NULL.
  *
- * Note: It is *not* an error if the specified configuration file does
- * not exist. In this case, a default configuration will be created
- * and returned. Subsequently calling notmuch_config_save will cause
- * the configuration to be written to the filename specified at the
- * time of notmuch_config_open.
+ * FILE NOT FOUND: When the specified configuration file (whether from
+ * 'filename' or the $NOTMUCH_CONFIG environment variable) does not
+ * exist, the behavior of this function depends on the 'is_new_ret'
+ * variable.
  *
- * The default configuration settings are determined as follows:
+ *	If is_new_ret is NULL, then a "file not found" message will be
+ *	printed to stderr and NULL will be returned.
+
+ *	If is_new_ret is non-NULL then a default configuration will be
+ *	returned and *is_new_ret will be set to 1 on return so that
+ *	the caller can recognize this case.
  *
- *	database_path:		$HOME/mail
+ * 	These default configuration settings are determined as
+ * 	follows:
  *
- *	user_name:		From /etc/passwd
+ *		database_path:		$HOME/mail
  *
- *	user_primary_mail: 	$EMAIL variable if set, otherwise
- *				constructed from the username and
- *				hostname of the current machine.
+ *		user_name:		From /etc/passwd
  *
- *	user_other_email:	Not set.
+ *		user_primary_mail: 	$EMAIL variable if set, otherwise
+ *					constructed from the username and
+ *					hostname of the current machine.
  *
- * The default configuration also contains comments to guide the user
- * in editing the file directly.
+ *		user_other_email:	Not set.
+ *
+ *	The default configuration also contains comments to guide the
+ *	user in editing the file directly.
  */
 notmuch_config_t *
 notmuch_config_open (void *ctx,
@@ -220,14 +227,19 @@ notmuch_config_open (void *ctx,
 				     G_KEY_FILE_KEEP_COMMENTS,
 				     &error))
     {
-	/* We are capable of dealing with a non-existent configuration
-	 * file, so be silent about that (unless the user had set a
-	 * non-default configuration file with the NOTMUCH_CONFIG
-	 * variable)
+	/* If the caller passed a non-NULL value for is_new_ret, then
+	 * the caller is prepared for a default configuration file in
+	 * the case of FILE NOT FOUND. Otherwise, any read failure is
+	 * an error.
 	 */
-	if (notmuch_config_env ||
-	    !(error->domain == G_FILE_ERROR &&
-	      error->code == G_FILE_ERROR_NOENT))
+	if (is_new_ret &&
+	    error->domain == G_FILE_ERROR &&
+	    error->code == G_FILE_ERROR_NOENT)
+	{
+	    g_error_free (error);
+	    is_new = 1;
+	}
+	else
 	{
 	    fprintf (stderr, "Error reading configuration file %s: %s\n",
 		     config->filename, error->message);
@@ -235,9 +247,6 @@ notmuch_config_open (void *ctx,
 	    g_error_free (error);
 	    return NULL;
 	}
-
-	g_error_free (error);
-	is_new = 1;
     }
 
     /* Whenever we know of configuration sections that don't appear in
