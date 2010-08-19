@@ -597,21 +597,17 @@ By default, various components of email messages, (citations,
 signatures, already-read messages), are hidden. You can make
 these parts visible by clicking with the mouse button or by
 pressing RET after positioning the cursor on a hidden part, (for
-which \\[notmuch-show-next-button] and
-\\[notmuch-show-previous-button] are helpful).
+which \\[notmuch-show-next-button] and \\[notmuch-show-previous-button] are helpful).
 
 Reading the thread sequentially is well-supported by pressing
-\\[notmuch-show-advance-and-archive]. This will scroll the
-current message (if necessary), advance to the next message, or
-advance to the next thread (if already on the last message of a
-thread).
+\\[notmuch-show-advance-and-archive]. This will scroll the current message (if necessary), advance
+to the next message, or advance to the next thread (if already on
+the last message of a thread).
 
 Other commands are available to read or manipulate the thread
-more selectively, (such as '\\[notmuch-show-next-message]' and
-'\\[notmuch-show-previous-message]' to advance to messages
-without removing any tags, and '\\[notmuch-show-archive-thread]'
-to archive an entire thread without scrolling through with
-\\[notmuch-show-advance-and-archive]).
+more selectively, (such as '\\[notmuch-show-next-message]' and '\\[notmuch-show-previous-message]' to advance to messages
+without removing any tags, and '\\[notmuch-show-archive-thread]' to archive an entire thread
+without scrolling through with \\[notmuch-show-advance-and-archive]).
 
 You can add or remove arbitary tags from the current message with
 '\\[notmuch-show-add-tag]' or '\\[notmuch-show-remove-tag]'.
