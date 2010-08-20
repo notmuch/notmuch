@@ -201,13 +201,13 @@ matched message will be displayed.
 
 .RS 4
 .TP 4
-.B \-\-format=(json|text)
+.B \-\-format=(text|json|mbox)
 
 .RS 4
 .TP 4
 .B text
 
-The default plain-text format  has  text-content  MIME parts
+The default plain-text format has all text-content MIME parts
 decoded. Various components in the output,
 .RB ( message ", " header ", " body ", " attachment ", and MIME " part ),
 will be delimited by easily-parsed markers. Each marker consists of a
@@ -220,11 +220,26 @@ or close the component.
 .TP 4
 .B json
 
-Format output as Javascript Object Notation (JSON). JSON output always
-includes all messages in a matching thread; in effect
+The output is formatted with Javascript Object Notation (JSON). This
+format is more robust than the text format for automated
+processing. JSON output always includes all messages in a matching
+thread; in effect
 .B \-\-format=json
 implies
 .B \-\-entire\-thread
+
+.RE
+.RS 4
+.TP 4
+.B mbox
+
+All matching messages are output in the traditional, Unix mbox format
+with each message being prefixed by a line beginning with "From " and
+a blank line separating each message. Lines in the message content
+beginning with "From " (preceded by zero or more '>' characters) have
+an additional '>' character added. This reversible escaping
+is termed "mboxrd" format and described in detail here:
+http://homepage.ntlworld.com/jonathan.deboynepollard/FGA/mail-mbox-formats.html
 
 .RE
 A common use of
