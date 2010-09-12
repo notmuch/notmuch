@@ -68,7 +68,7 @@
           '(lambda (destdir)
              (notmuch-maildir-fcc-write-buffer-to-maildir destdir t)))
     ;;add a hook to actually insert the Fcc header when sending
-    (add-hook 'message-send-hook 'notmuch-fcc-header-setup))
+    (add-hook 'message-header-setup-hook 'notmuch-fcc-header-setup))
 
 (defun notmuch-fcc-header-setup ()
   "Adds an appropriate fcc header to the current mail buffer
