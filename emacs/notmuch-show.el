@@ -774,6 +774,22 @@ All currently available key bindings:
   "Mark the current message as read."
   (notmuch-show-remove-tag "unread"))
 
+;; Functions for getting attributes of several messages in the current
+;; thread.
+
+(defun notmuch-show-get-message-ids-for-open-messages ()
+  "Return a list of all message IDs for open messages in the current thread."
+  (save-excursion
+    (let (message-ids done)
+      (goto-char (point-min))
+      (while (not done)
+	(if (notmuch-show-message-visible-p)
+	    (setq message-ids (append message-ids (list (notmuch-show-get-message-id)))))
+	(setq done (not (notmuch-show-goto-message-next)))
+	)
+      message-ids
+      )))
+
 ;; Commands typically bound to keys.
 
 (defun notmuch-show-advance-and-archive ()
@@ -904,16 +920,27 @@ any effects from previous calls to
   (interactive)
   (view-file (notmuch-show-get-filename)))
 
-(defun notmuch-show-pipe-message (command)
-  "Pipe the contents of the current message to the given command.
+(defun notmuch-show-pipe-message (entire-thread command)
+  "Pipe the contents of the current message (or thread) to the given command.
 
 The given command will be executed with the raw contents of the
 current email message as stdin. Anything printed by the command
-to stdout or stderr will appear in the *Messages* buffer."
-  (interactive "sPipe message to command: ")
-  (apply 'start-process-shell-command "notmuch-pipe-command" "*notmuch-pipe*"
-	 (list command " < "
-	       (shell-quote-argument (notmuch-show-get-filename)))))
+to stdout or stderr will appear in the *Messages* buffer.
+
+When invoked with a prefix argument, the command will receive all
+open messages in the current thread (formatted as an mbox) rather
+than only the current message."
+  (interactive "P\nsPipe message to command: ")
+  (let (shell-command)
+    (if entire-thread
+	(setq shell-command 
+	      (concat "notmuch show --format=mbox "
+		      (shell-quote-argument
+		       (mapconcat 'identity (notmuch-show-get-message-ids-for-open-messages) " OR "))
+		      " | " command))
+      (setq shell-command
+	    (concat command " < " (shell-quote-argument (notmuch-show-get-filename)))))
+    (start-process-shell-command "notmuch-pipe-command" "*notmuch-pipe*" shell-command)))
 
 (defun notmuch-show-add-tag (&rest toadd)
   "Add a tag to the current message."
