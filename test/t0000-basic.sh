@@ -3,7 +3,7 @@
 # Copyright (c) 2005 Junio C Hamano
 #
 
-test_description='Tests the test framework itself.'
+test_description='the test framework itself.'
 
 ################################################################
 # It appears that people try to run tests without building...

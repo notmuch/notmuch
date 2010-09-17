@@ -130,16 +130,17 @@ if test -n "$color"; then
 			*) test -n "$quiet" && return;;
 		esac
 		shift
-		printf "* %s" "$*"
+		printf " "
+                printf "$@"
 		tput sgr0
-		echo
 		)
 	}
 else
 	say_color() {
 		test -z "$1" && test -n "$quiet" && return
 		shift
-		echo "* $*"
+		printf " "
+                printf "$@"
 	}
 fi
 
@@ -158,9 +159,11 @@ error "Test script did not set test_description."
 
 if test "$help" = "t"
 then
-	echo "$test_description"
+	echo "Tests ${test_description}"
 	exit 0
 fi
+
+echo "Testing ${test_description}"
 
 exec 5>&1
 if test "$verbose" = "t"
@@ -439,12 +442,14 @@ test_have_prereq () {
 
 test_ok_ () {
 	test_success=$(($test_success + 1))
-	say_color "" "  ok $test_count: $@"
+	say_color pass "%-6s" "PASS"
+	echo " $@"
 }
 
 test_failure_ () {
 	test_failure=$(($test_failure + 1))
-	say_color error "FAIL $test_count: $1"
+	say_color error "%-6s" "FAIL"
+	echo " $1"
 	shift
 	echo "$@" | sed -e 's/^/	/'
 	test "$immediate" = "" || { GIT_EXIT_OK=t; exit 1; }
@@ -452,12 +457,14 @@ test_failure_ () {
 
 test_known_broken_ok_ () {
 	test_fixed=$(($test_fixed+1))
-	say_color "" "  FIXED $test_count: $@"
+	say_color pass "%-6s" "FIXED"
+	echo " $@"
 }
 
 test_known_broken_failure_ () {
 	test_broken=$(($test_broken+1))
-	say_color skip "  still broken $test_count: $@"
+	say_color pass "%-6s" "BROKEN"
+	echo " $@"
 }
 
 test_debug () {
@@ -490,7 +497,8 @@ test_skip () {
 	case "$to_skip" in
 	t)
 		say_color skip >&3 "skipping test: $@"
-		say_color skip "skip $test_count: $1"
+		say_color skip "%-6s" "SKIP"
+		echo " $1"
 		: true
 		;;
 	*)
@@ -684,32 +692,14 @@ test_done () {
 	echo "failed $test_failure" >> $test_results_path
 	echo "" >> $test_results_path
 
-	if test "$test_fixed" != 0
-	then
-		say_color pass "fixed $test_fixed known breakage(s)"
-	fi
-	if test "$test_broken" != 0
-	then
-		say_color error "still have $test_broken known breakage(s)"
-		msg="remaining $(($test_count-$test_broken)) test(s)"
+	echo
+
+	if [ "$test_failure" = "0" ]; then
+	    rm -rf "$remove_tmp"
+	    exit 0
 	else
-		msg="$test_count test(s)"
+	    exit 1
 	fi
-	case "$test_failure" in
-	0)
-		say_color pass "passed all $msg"
-
-		test -d "$remove_trash" &&
-		cd "$(dirname "$remove_trash")" &&
-		rm -rf "$(basename "$remove_trash")"
-
-		exit 0 ;;
-
-	*)
-		say_color error "failed $test_failure among $msg"
-		exit 1 ;;
-
-	esac
 }
 
 find_notmuch_path ()
@@ -808,21 +798,21 @@ fi
 export PATH
 
 # Test repository
-test="trash directory.$(basename "$0" .sh)"
+test="tmp.$(basename "$0" .sh)"
 test -n "$root" && test="$root/$test"
 case "$test" in
-/*) TRASH_DIRECTORY="$test" ;;
- *) TRASH_DIRECTORY="$TEST_DIRECTORY/$test" ;;
+/*) TMP_DIRECTORY="$test" ;;
+ *) TMP_DIRECTORY="$TEST_DIRECTORY/$test" ;;
 esac
-test ! -z "$debug" || remove_trash=$TRASH_DIRECTORY
+test ! -z "$debug" || remove_tmp=$TMP_DIRECTORY
 rm -fr "$test" || {
 	GIT_EXIT_OK=t
 	echo >&5 "FATAL: Cannot prepare test area"
 	exit 1
 }
 
-MAIL_DIR="${TRASH_DIRECTORY}/mail"
-export NOTMUCH_CONFIG="${TRASH_DIRECTORY}/notmuch-config"
+MAIL_DIR="${TMP_DIRECTORY}/mail"
+export NOTMUCH_CONFIG="${TMP_DIRECTORY}/notmuch-config"
 
 mkdir -p "${test}"
 mkdir "$MAIL_DIR"

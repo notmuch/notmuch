@@ -27,8 +27,55 @@ do
 	done <"$file"
 done
 
-printf "%-8s%d\n" fixed $fixed
-printf "%-8s%d\n" success $success
-printf "%-8s%d\n" failed $failed
-printf "%-8s%d\n" broken $broken
-printf "%-8s%d\n" total $total
+pluralize () {
+    case $2 in
+	1)
+	    case $1 in
+		test)
+		    echo test ;;
+		failure)
+		    echo failure ;;
+	    esac
+	    ;;
+	*)
+	    case $1 in
+		test)
+		    echo tests ;;
+		failure)
+		    echo failures ;;
+	    esac
+	    ;;
+    esac
+}
+
+echo "Notmuch test suite complete."
+if [ "$fixed" = "0" ] && [ "$broken" = "0" ]; then
+    tests=$(pluralize "test" $total)
+    printf "All $total $tests "
+    if [ "$broken" = "0" ]; then
+	echo "passed."
+    else
+	failures=$(pluralize "failure" $broken)
+	echo "behaved as expected ($broken expected $failures)."
+    fi;
+else
+    echo "$success/$total tests passed."
+    if [ "$broken" != "0" ]; then
+	tests=$(pluralize "test" $broken)
+	echo "$broken broken $tests failed as expected."
+    fi
+    if [ "$fixed" != "0" ]; then
+	tests=$(pluralize "test" $fixed)
+	echo "$fixed broken $tests now fixed."
+    fi
+    if [ "$failed" != "0" ]; then
+	tests=$(pluralize "test" $failed)
+	echo "$failed $tests failed."
+    fi
+fi
+
+skipped=$(($total - $fixed - $success - $failed - $broken))
+if [ "$skipped" != "0" ]; then
+    tests=$(pluralize "test" $skipped)
+    echo "$skipped $tests skipped."
+fi

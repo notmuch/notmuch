@@ -20,4 +20,4 @@ done
 ./aggregate-results.sh test-results/t*-*
 
 # Clean up
-rm -r test-results
+#rm -r test-results
