@@ -21,27 +21,12 @@ fi
 test_expect_success 'success is reported like this' '
     :
 '
-test_expect_failure 'pretend we have a known breakage' '
-    false
-'
-test_expect_failure 'pretend we have fixed a known breakage' '
-    :
-'
 test_set_prereq HAVEIT
 haveit=no
 test_expect_success HAVEIT 'test runs if prerequisite is satisfied' '
     test_have_prereq HAVEIT &&
     haveit=yes
 '
-donthaveit=yes
-test_expect_success DONTHAVEIT 'unmet prerequisite causes test to be skipped' '
-    donthaveit=no
-'
-if test $haveit$donthaveit != yesyes
-then
-	say "bug in test framework: prerequisite tags do not work reliably"
-	exit 1
-fi
 
 clean=no
 test_expect_success 'tests clean up after themselves' '
