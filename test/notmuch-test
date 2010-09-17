@@ -8,16 +8,18 @@
 
 cd $(dirname "$0")
 
+TESTS="basic new search json thread-naming reply dump-restore uuencode threading-out-of-order author-reordering from-line-heuristics long-msgid encoding-issues"
+
 # Clean up any results from a previous run
 rm -r test-results >/dev/null 2>/dev/null
 
 # Run the tests
-for test in t[0-9][0-9][0-9][0-9]*.sh; do
-	./"$test"
+for test in $TESTS; do
+	./$test
 done
 
 # Report results
-./aggregate-results.sh test-results/t*-*
+./aggregate-results.sh test-results/*
 
 # Clean up
-#rm -r test-results
+rm -r test-results
