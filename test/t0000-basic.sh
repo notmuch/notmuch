@@ -17,27 +17,6 @@ fi
 . ./test-lib.sh
 
 ################################################################
-# Test mail store prepared in test-lib.sh
-
-test_expect_success \
-    'test that mail store was created' \
-    'test -d "${MAIL_DIR}"'
-
-
-find "${MAIL_DIR}" -type f -print >should-be-empty
-test_expect_success \
-    'mail store should be empty' \
-    'cmp -s /dev/null should-be-empty'
-
-test_expect_success \
-    'NOTMUCH_CONFIG is set and points to an existing file' \
-    'test -f "${NOTMUCH_CONFIG}"'
-
-test_expect_success \
-    'PATH is set to this repository' \
-    'test "`echo $PATH|cut -f1 -d:`" = "`dirname ${TEST_DIRECTORY}`"'
-
-################################################################
 # Test harness
 test_expect_success 'success is reported like this' '
     :
@@ -84,5 +63,26 @@ fi
 test_expect_code 2 'failure to clean up causes the test to fail' '
     test_when_finished "(exit 2)"
 '
+
+################################################################
+# Test mail store prepared in test-lib.sh
+
+test_expect_success \
+    'test that mail store was created' \
+    'test -d "${MAIL_DIR}"'
+
+
+find "${MAIL_DIR}" -type f -print >should-be-empty
+test_expect_success \
+    'mail store should be empty' \
+    'cmp -s /dev/null should-be-empty'
+
+test_expect_success \
+    'NOTMUCH_CONFIG is set and points to an existing file' \
+    'test -f "${NOTMUCH_CONFIG}"'
+
+test_expect_success \
+    'PATH is set to this repository' \
+    'test "`echo $PATH|cut -f1 -d:`" = "`dirname ${TEST_DIRECTORY}`"'
 
 test_done
