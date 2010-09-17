@@ -1,0 +1,7 @@
+# -*- makefile -*-
+
+dir := test
+
+.PHONY: test
+test:	all
+	@${dir}/notmuch-test

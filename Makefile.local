@@ -61,10 +61,6 @@ ifeq ($(shell cat .first-build-message 2>/dev/null),)
 endif
 endif
 
-.PHONY: test
-test: all
-	@./test/notmuch-test
-
 $(TAR_FILE):
 	git archive --format=tar --prefix=$(PACKAGE)-$(VERSION)/ HEAD > $(TAR_FILE).tmp
 	echo $(VERSION) > version.tmp
