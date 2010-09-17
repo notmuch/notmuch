@@ -1,164 +1,165 @@
 #!/bin/bash
-test_description="\"notmuch new\" in several variations"
+test_description='"notmuch new" in several variations'
 . ./test-lib.sh
-test_expect_success "No new messages" '
-output=$(NOTMUCH_NEW) &&
-pass_if_equal "$output" "No new mail."
 
-'
-test_expect_success "Single new message" '
-generate_message &&
-output=$(NOTMUCH_NEW) &&
-pass_if_equal "$output" "Added 1 new message to the database."
+test_begin_subtest "No new messages"
+output=$(NOTMUCH_NEW)
+test_expect_equal "$output" "No new mail."
 
-'
-test_expect_success "Multiple new messages" '
-generate_message &&
-generate_message &&
-output=$(NOTMUCH_NEW) &&
-pass_if_equal "$output" "Added 2 new messages to the database."
 
-'
-test_expect_success "No new messages (non-empty DB)" '
-output=$(NOTMUCH_NEW) &&
-pass_if_equal "$output" "No new mail."
+test_begin_subtest "Single new message"
+generate_message
+output=$(NOTMUCH_NEW)
+test_expect_equal "$output" "Added 1 new message to the database."
 
-'
-test_expect_success "New directories" '
-rm -rf "${MAIL_DIR}"/* "${MAIL_DIR}"/.notmuch &&
-mkdir "${MAIL_DIR}"/def &&
-mkdir "${MAIL_DIR}"/ghi &&
-generate_message [dir]=def &&
 
-output=$(NOTMUCH_NEW) &&
-pass_if_equal "$output" "Added 1 new message to the database."
+test_begin_subtest "Multiple new messages"
+generate_message
+generate_message
+output=$(NOTMUCH_NEW)
+test_expect_equal "$output" "Added 2 new messages to the database."
 
-'
-test_expect_success "Alternate inode order" '
 
-rm -rf "${MAIL_DIR}"/.notmuch &&
-mv "${MAIL_DIR}"/ghi "${MAIL_DIR}"/abc &&
-rm "${MAIL_DIR}"/def/* &&
-generate_message [dir]=abc &&
+test_begin_subtest "No new messages (non-empty DB)"
+output=$(NOTMUCH_NEW)
+test_expect_equal "$output" "No new mail."
 
-output=$(NOTMUCH_NEW) &&
-pass_if_equal "$output" "Added 1 new message to the database."
 
-'
-test_expect_success "Message moved in" '
-rm -rf "${MAIL_DIR}"/* "${MAIL_DIR}"/.notmuch &&
-generate_message &&
-tmp_msg_filename=tmp/"$gen_msg_filename" &&
-mkdir -p "$(dirname "$tmp_msg_filename")" &&
-mv "$gen_msg_filename" "$tmp_msg_filename" &&
-increment_mtime "${MAIL_DIR}" &&
-$NOTMUCH new > /dev/null &&
-mv "$tmp_msg_filename" "$gen_msg_filename" &&
-increment_mtime "${MAIL_DIR}" &&
-output=$(NOTMUCH_NEW) &&
-pass_if_equal "$output" "Added 1 new message to the database."
+test_begin_subtest "New directories"
+rm -rf "${MAIL_DIR}"/* "${MAIL_DIR}"/.notmuch
+mkdir "${MAIL_DIR}"/def
+mkdir "${MAIL_DIR}"/ghi
+generate_message [dir]=def
 
-'
-test_expect_success "Renamed message" '
+output=$(NOTMUCH_NEW)
+test_expect_equal "$output" "Added 1 new message to the database."
 
-generate_message &&
-$NOTMUCH new > /dev/null &&
-mv "$gen_msg_filename" "${gen_msg_filename}"-renamed &&
-increment_mtime "${MAIL_DIR}" &&
-output=$(NOTMUCH_NEW) &&
-pass_if_equal "$output" "No new mail. Detected 1 file rename."
 
-'
-test_expect_success "Deleted message" '
+test_begin_subtest "Alternate inode order"
 
-rm "${gen_msg_filename}"-renamed &&
-increment_mtime "${MAIL_DIR}" &&
-output=$(NOTMUCH_NEW) &&
-pass_if_equal "$output" "No new mail. Removed 1 message."
+rm -rf "${MAIL_DIR}"/.notmuch
+mv "${MAIL_DIR}"/ghi "${MAIL_DIR}"/abc
+rm "${MAIL_DIR}"/def/*
+generate_message [dir]=abc
 
-'
-test_expect_success "Renamed directory" '
+output=$(NOTMUCH_NEW)
+test_expect_equal "$output" "Added 1 new message to the database."
 
-generate_message [dir]=dir &&
-generate_message [dir]=dir &&
-generate_message [dir]=dir &&
 
-$NOTMUCH new > /dev/null &&
+test_begin_subtest "Message moved in"
+rm -rf "${MAIL_DIR}"/* "${MAIL_DIR}"/.notmuch
+generate_message
+tmp_msg_filename=tmp/"$gen_msg_filename"
+mkdir -p "$(dirname "$tmp_msg_filename")"
+mv "$gen_msg_filename" "$tmp_msg_filename"
+increment_mtime "${MAIL_DIR}"
+$NOTMUCH new > /dev/null
+mv "$tmp_msg_filename" "$gen_msg_filename"
+increment_mtime "${MAIL_DIR}"
+output=$(NOTMUCH_NEW)
+test_expect_equal "$output" "Added 1 new message to the database."
 
-mv "${MAIL_DIR}"/dir "${MAIL_DIR}"/dir-renamed &&
-increment_mtime "${MAIL_DIR}" &&
 
-output=$(NOTMUCH_NEW) &&
-pass_if_equal "$output" "No new mail. Detected 3 file renames."
+test_begin_subtest "Renamed message"
 
-'
-test_expect_success "Deleted directory" '
+generate_message
+$NOTMUCH new > /dev/null
+mv "$gen_msg_filename" "${gen_msg_filename}"-renamed
+increment_mtime "${MAIL_DIR}"
+output=$(NOTMUCH_NEW)
+test_expect_equal "$output" "No new mail. Detected 1 file rename."
 
-rm -rf "${MAIL_DIR}"/dir-renamed &&
-increment_mtime "${MAIL_DIR}" &&
 
-output=$(NOTMUCH_NEW) &&
-pass_if_equal "$output" "No new mail. Removed 3 messages."
+test_begin_subtest "Deleted message"
 
-'
-test_expect_success "New directory (at end of list)" '
+rm "${gen_msg_filename}"-renamed
+increment_mtime "${MAIL_DIR}"
+output=$(NOTMUCH_NEW)
+test_expect_equal "$output" "No new mail. Removed 1 message."
 
-generate_message [dir]=zzz &&
-generate_message [dir]=zzz &&
-generate_message [dir]=zzz &&
 
-output=$(NOTMUCH_NEW) &&
-pass_if_equal "$output" "Added 3 new messages to the database."
+test_begin_subtest "Renamed directory"
 
-'
-test_expect_success "Deleted directory (end of list)" '
+generate_message [dir]=dir
+generate_message [dir]=dir
+generate_message [dir]=dir
 
-rm -rf "${MAIL_DIR}"/zzz &&
-increment_mtime "${MAIL_DIR}" &&
+$NOTMUCH new > /dev/null
 
-output=$(NOTMUCH_NEW) &&
-pass_if_equal "$output" "No new mail. Removed 3 messages."
+mv "${MAIL_DIR}"/dir "${MAIL_DIR}"/dir-renamed
+increment_mtime "${MAIL_DIR}"
 
-'
-test_expect_success "New symlink to directory" '
+output=$(NOTMUCH_NEW)
+test_expect_equal "$output" "No new mail. Detected 3 file renames."
 
-rm -rf "${MAIL_DIR}"/.notmuch &&
-mv "${MAIL_DIR}" "$PWD"/actual_maildir &&
 
-mkdir "${MAIL_DIR}" &&
-ln -s "$PWD"/actual_maildir "${MAIL_DIR}"/symlink &&
+test_begin_subtest "Deleted directory"
 
-output=$(NOTMUCH_NEW) &&
-pass_if_equal "$output" "Added 1 new message to the database."
+rm -rf "${MAIL_DIR}"/dir-renamed
+increment_mtime "${MAIL_DIR}"
 
-'
-test_expect_success "New symlink to a file" '
-generate_message &&
-external_msg_filename="$PWD"/external/"$(basename "$gen_msg_filename")" &&
-mkdir -p "$(dirname "$external_msg_filename")" &&
-mv "$gen_msg_filename" "$external_msg_filename" &&
-ln -s "$external_msg_filename" "$gen_msg_filename" &&
-increment_mtime "${MAIL_DIR}" &&
-output=$(NOTMUCH_NEW) &&
-pass_if_equal "$output" "Added 1 new message to the database."
+output=$(NOTMUCH_NEW)
+test_expect_equal "$output" "No new mail. Removed 3 messages."
 
-'
-test_expect_success "New two-level directory" '
 
-generate_message [dir]=two/levels &&
-generate_message [dir]=two/levels &&
-generate_message [dir]=two/levels &&
+test_begin_subtest "New directory (at end of list)"
 
-output=$(NOTMUCH_NEW) &&
-pass_if_equal "$output" "Added 3 new messages to the database."
+generate_message [dir]=zzz
+generate_message [dir]=zzz
+generate_message [dir]=zzz
 
-'
-test_expect_success "Deleted two-level directory" '
+output=$(NOTMUCH_NEW)
+test_expect_equal "$output" "Added 3 new messages to the database."
 
-rm -rf "${MAIL_DIR}"/two &&
-increment_mtime "${MAIL_DIR}" &&
 
-output=$(NOTMUCH_NEW) &&
-pass_if_equal "$output" "No new mail. Removed 3 messages."
-'
+test_begin_subtest "Deleted directory (end of list)"
+
+rm -rf "${MAIL_DIR}"/zzz
+increment_mtime "${MAIL_DIR}"
+
+output=$(NOTMUCH_NEW)
+test_expect_equal "$output" "No new mail. Removed 3 messages."
+
+
+test_begin_subtest "New symlink to directory"
+
+rm -rf "${MAIL_DIR}"/.notmuch
+mv "${MAIL_DIR}" "$PWD"/actual_maildir
+
+mkdir "${MAIL_DIR}"
+ln -s "$PWD"/actual_maildir "${MAIL_DIR}"/symlink
+
+output=$(NOTMUCH_NEW)
+test_expect_equal "$output" "Added 1 new message to the database."
+
+
+test_begin_subtest "New symlink to a file"
+generate_message
+external_msg_filename="$PWD"/external/"$(basename "$gen_msg_filename")"
+mkdir -p "$(dirname "$external_msg_filename")"
+mv "$gen_msg_filename" "$external_msg_filename"
+ln -s "$external_msg_filename" "$gen_msg_filename"
+increment_mtime "${MAIL_DIR}"
+output=$(NOTMUCH_NEW)
+test_expect_equal "$output" "Added 1 new message to the database."
+
+
+test_begin_subtest "New two-level directory"
+
+generate_message [dir]=two/levels
+generate_message [dir]=two/levels
+generate_message [dir]=two/levels
+
+output=$(NOTMUCH_NEW)
+test_expect_equal "$output" "Added 3 new messages to the database."
+
+
+test_begin_subtest "Deleted two-level directory"
+
+rm -rf "${MAIL_DIR}"/two
+increment_mtime "${MAIL_DIR}"
+
+output=$(NOTMUCH_NEW)
+test_expect_equal "$output" "No new mail. Removed 3 messages."
+
 test_done

@@ -373,19 +373,37 @@ add_message ()
     notmuch new > /dev/null
 }
 
-pass_if_equal ()
+test_begin_subtest ()
 {
-    output=$1
-    expected=$2
+    test_subtest_name="$1"
+}
 
-    if [ "$output" = "$expected" ]; then
-	true
-    else
-	testname=$this_test.$test_count
-	echo "$expected" > $testname.expected
-	echo "$output" > $testname.output
-	diff -u $testname.expected $testname.output
-	false
+# Pass test if two arguments match
+#
+# Note: Unlike all other test_expect_* functions, this function does
+# not accept a test name. Instead, the caller should call
+# test_begin_subtest before calling this function in order to set the
+# name.
+test_expect_equal ()
+{
+	test "$#" = 3 && { prereq=$1; shift; } || prereq=
+	test "$#" = 2 ||
+	error "bug in the test script: not 2 or 3 parameters to test_expect_equal"
+
+	output="$1"
+	expected="$2"
+	if ! test_skip "$@"
+	then
+		say >&3 "expecting success: diff $output $expected"
+		if [ "$output" = "$expected" ]; then
+			test_ok_ "$test_subtest_name"
+		else
+			testname=$this_test.$test_count
+			echo "$expected" > $testname.expected
+			echo "$output" > $testname.output
+			test_failure_ "$test_subtest_name" "$(diff -u $testname.expected $testname.output)"
+		fi
+		echo >&3 ""
     fi
 }
 

@@ -2,11 +2,11 @@
 test_description="Testing encoding issues"
 . ./test-lib.sh
 
-test_expect_success "Message with text of unknown charset" '
-add_message "[content-type]=\"text/plain; charset=unknown-8bit\"" \
-            "[body]=irrelevant" &&
-output=$($NOTMUCH show id:${gen_msg_id} 2>&1 | notmuch_show_sanitize) &&
-pass_if_equal "$output" "message{ id:msg-001@notmuch-test-suite depth:0 match:1 filename:/XXX/mail/msg-001
+test_begin_subtest "Message with text of unknown charset"
+add_message '[content-type]="text/plain; charset=unknown-8bit"' \
+            "[body]=irrelevant"
+output=$($NOTMUCH show id:${gen_msg_id} 2>&1 | notmuch_show_sanitize)
+test_expect_equal "$output" "message{ id:msg-001@notmuch-test-suite depth:0 match:1 filename:/XXX/mail/msg-001
 header{
 Notmuch Test Suite <test_suite@notmuchmail.org> (2001-01-05) (inbox unread)
 Subject: Test message #1
@@ -20,6 +20,5 @@ irrelevant
 part}
 body}
 message}"
-'
 
 test_done

@@ -1,10 +1,9 @@
 #!/bin/bash
 test_description="handling of uuencoded data"
 . ./test-lib.sh
-test_expect_success 'Generate message' '
 
-add_message [subject]=uuencodetest "[date]=\"Sat, 01 Jan 2000 12:00:00 -0000\"" \
-"[body]=\"This message is used to ensure that notmuch correctly handles a
+add_message [subject]=uuencodetest '[date]="Sat, 01 Jan 2000 12:00:00 -0000"' \
+'[body]="This message is used to ensure that notmuch correctly handles a
 message containing a block of uuencoded data. First, we have a marker
 this content beforeuudata . Then we beging the uunencoded data itself:
 
@@ -18,19 +17,18 @@ MSEARCH RESULT.
 \\\`
 end
 
-Finally, we have our afteruudata marker as well.\""
+Finally, we have our afteruudata marker as well."'
 
-'
-test_expect_success "Ensure content before uu data is indexed" '
-output=$($NOTMUCH search beforeuudata | notmuch_search_sanitize) &&
-pass_if_equal "$output" "thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; uuencodetest (inbox unread)"
-'
-test_expect_success "Ensure uu data is not indexed" '
-output=$($NOTMUCH search DURINGUUDATA | notmuch_search_sanitize) &&
-pass_if_equal "$output" ""
-'
-test_expect_success "Ensure content after uu data is indexed" '
-output=$($NOTMUCH search afteruudata | notmuch_search_sanitize) &&
-pass_if_equal "$output" "thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; uuencodetest (inbox unread)"
-'
+test_begin_subtest "Ensure content before uu data is indexed"
+output=$($NOTMUCH search beforeuudata | notmuch_search_sanitize)
+test_expect_equal "$output" "thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; uuencodetest (inbox unread)"
+
+test_begin_subtest "Ensure uu data is not indexed"
+output=$($NOTMUCH search DURINGUUDATA | notmuch_search_sanitize)
+test_expect_equal "$output" ""
+
+test_begin_subtest "Ensure content after uu data is indexed"
+output=$($NOTMUCH search afteruudata | notmuch_search_sanitize)
+test_expect_equal "$output" "thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; uuencodetest (inbox unread)"
+
 test_done

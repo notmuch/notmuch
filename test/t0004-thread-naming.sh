@@ -1,81 +1,73 @@
 #!/bin/bash
 test_description="naming of threads with changing subject"
 . ./test-lib.sh
-test_expect_success 'Generate some messages' '
-add_message "[subject]=\"thread-naming: Initial thread subject\"" \
-            "[date]=\"Fri, 05 Jan 2001 15:43:56 -0000\"" &&
-first=${gen_msg_cnt} &&
-parent=${gen_msg_id} &&
-add_message "[subject]=\"thread-naming: Older changed subject\"" \
-            "[date]=\"Sat, 06 Jan 2001 15:43:56 -0000\"" \
-            "[in-reply-to]=\<$parent\>" &&
-add_message "[subject]=\"thread-naming: Newer changed subject\"" \
-            "[date]=\"Sun, 07 Jan 2001 15:43:56 -0000\"" \
-            "[in-reply-to]=\<$parent\>" &&
-add_message "[subject]=\"thread-naming: Final thread subject\"" \
-            "[date]=\"Mon, 08 Jan 2001 15:43:56 -0000\"" \
-            "[in-reply-to]=\<$parent\>" &&
+
+test_begin_subtest 'Generate some messages'
+add_message '[subject]="thread-naming: Initial thread subject"' \
+            '[date]="Fri, 05 Jan 2001 15:43:56 -0000"'
+first=${gen_msg_cnt}
+parent=${gen_msg_id}
+add_message '[subject]="thread-naming: Older changed subject"' \
+            '[date]="Sat, 06 Jan 2001 15:43:56 -0000"' \
+            "[in-reply-to]=\<$parent\>"
+add_message '[subject]="thread-naming: Newer changed subject"' \
+            '[date]="Sun, 07 Jan 2001 15:43:56 -0000"' \
+            "[in-reply-to]=\<$parent\>"
+add_message '[subject]="thread-naming: Final thread subject"' \
+            '[date]="Mon, 08 Jan 2001 15:43:56 -0000"' \
+            "[in-reply-to]=\<$parent\>"
 final=${gen_msg_id}
 
-'
-test_expect_success "Initial thread name (oldest-first search)" '
-output=$($NOTMUCH search --sort=oldest-first thread-naming and tag:inbox | notmuch_search_sanitize) &&
-pass_if_equal "$output" "thread:XXX   2001-01-05 [4/4] Notmuch Test Suite; thread-naming: Initial thread subject (inbox unread)"
+test_begin_subtest "Initial thread name (oldest-first search)"
+output=$($NOTMUCH search --sort=oldest-first thread-naming and tag:inbox | notmuch_search_sanitize)
+test_expect_equal "$output" "thread:XXX   2001-01-05 [4/4] Notmuch Test Suite; thread-naming: Initial thread subject (inbox unread)"
 
-'
-test_expect_success "Initial thread name (newest-first search)" '
-output=$($NOTMUCH search --sort=newest-first thread-naming and tag:inbox | notmuch_search_sanitize) &&
-pass_if_equal "$output" "thread:XXX   2001-01-08 [4/4] Notmuch Test Suite; thread-naming: Final thread subject (inbox unread)"
+test_begin_subtest "Initial thread name (newest-first search)"
+output=$($NOTMUCH search --sort=newest-first thread-naming and tag:inbox | notmuch_search_sanitize)
+test_expect_equal "$output" "thread:XXX   2001-01-08 [4/4] Notmuch Test Suite; thread-naming: Final thread subject (inbox unread)"
 
 # Remove oldest and newest messages from search results
 $NOTMUCH tag -inbox id:$parent or id:$final
 
-'
-test_expect_success "Changed thread name (oldest-first search)" '
-output=$($NOTMUCH search --sort=oldest-first thread-naming and tag:inbox | notmuch_search_sanitize) &&
-pass_if_equal "$output" "thread:XXX   2001-01-06 [2/4] Notmuch Test Suite; thread-naming: Older changed subject (inbox unread)"
+test_begin_subtest "Changed thread name (oldest-first search)"
+output=$($NOTMUCH search --sort=oldest-first thread-naming and tag:inbox | notmuch_search_sanitize)
+test_expect_equal "$output" "thread:XXX   2001-01-06 [2/4] Notmuch Test Suite; thread-naming: Older changed subject (inbox unread)"
 
-'
-test_expect_success "Changed thread name (newest-first search)" '
-output=$($NOTMUCH search --sort=newest-first thread-naming and tag:inbox | notmuch_search_sanitize) &&
-pass_if_equal "$output" "thread:XXX   2001-01-07 [2/4] Notmuch Test Suite; thread-naming: Newer changed subject (inbox unread)"
+test_begin_subtest "Changed thread name (newest-first search)"
+output=$($NOTMUCH search --sort=newest-first thread-naming and tag:inbox | notmuch_search_sanitize)
+test_expect_equal "$output" "thread:XXX   2001-01-07 [2/4] Notmuch Test Suite; thread-naming: Newer changed subject (inbox unread)"
 
-'
-test_expect_success "Ignore added reply prefix (Re:)" '
-add_message "[subject]=\"Re: thread-naming: Initial thread subject\"" \
-            "[date]=\"Tue, 09 Jan 2001 15:43:45 -0000\"" \
-            "[in-reply-to]=\<$parent\>" &&
-output=$($NOTMUCH search --sort=newest-first thread-naming and tag:inbox | notmuch_search_sanitize) &&
-pass_if_equal "$output" "thread:XXX   2001-01-09 [3/5] Notmuch Test Suite; thread-naming: Initial thread subject (inbox unread)"
+test_begin_subtest "Ignore added reply prefix (Re:)"
+add_message '[subject]="Re: thread-naming: Initial thread subject"' \
+            '[date]="Tue, 09 Jan 2001 15:43:45 -0000"' \
+            "[in-reply-to]=\<$parent\>"
+output=$($NOTMUCH search --sort=newest-first thread-naming and tag:inbox | notmuch_search_sanitize)
+test_expect_equal "$output" "thread:XXX   2001-01-09 [3/5] Notmuch Test Suite; thread-naming: Initial thread subject (inbox unread)"
 
-'
-test_expect_success "Ignore added reply prefix (Aw:)" '
-add_message "[subject]=\"Aw: thread-naming: Initial thread subject\"" \
-            "[date]=\"Wed, 10 Jan 2001 15:43:45 -0000\"" \
-            "[in-reply-to]=\<$parent\>" &&
-output=$($NOTMUCH search --sort=newest-first thread-naming and tag:inbox | notmuch_search_sanitize) &&
-pass_if_equal "$output" "thread:XXX   2001-01-10 [4/6] Notmuch Test Suite; thread-naming: Initial thread subject (inbox unread)"
+test_begin_subtest "Ignore added reply prefix (Aw:)"
+add_message '[subject]="Aw: thread-naming: Initial thread subject"' \
+            '[date]="Wed, 10 Jan 2001 15:43:45 -0000"' \
+            "[in-reply-to]=\<$parent\>"
+output=$($NOTMUCH search --sort=newest-first thread-naming and tag:inbox | notmuch_search_sanitize)
+test_expect_equal "$output" "thread:XXX   2001-01-10 [4/6] Notmuch Test Suite; thread-naming: Initial thread subject (inbox unread)"
 
-'
-test_expect_success "Ignore added reply prefix (Vs:)" '
-add_message "[subject]=\"Vs: thread-naming: Initial thread subject\"" \
-            "[date]=\"Thu, 11 Jan 2001 15:43:45 -0000\"" \
-            "[in-reply-to]=\<$parent\>" &&
-output=$($NOTMUCH search --sort=newest-first thread-naming and tag:inbox | notmuch_search_sanitize) &&
-pass_if_equal "$output" "thread:XXX   2001-01-11 [5/7] Notmuch Test Suite; thread-naming: Initial thread subject (inbox unread)"
+test_begin_subtest "Ignore added reply prefix (Vs:)"
+add_message '[subject]="Vs: thread-naming: Initial thread subject"' \
+            '[date]="Thu, 11 Jan 2001 15:43:45 -0000"' \
+            "[in-reply-to]=\<$parent\>"
+output=$($NOTMUCH search --sort=newest-first thread-naming and tag:inbox | notmuch_search_sanitize)
+test_expect_equal "$output" "thread:XXX   2001-01-11 [5/7] Notmuch Test Suite; thread-naming: Initial thread subject (inbox unread)"
 
-'
-test_expect_success "Ignore added reply prefix (Sv:)" '
-add_message "[subject]=\"Sv: thread-naming: Initial thread subject\"" \
-            "[date]=\"Fri, 12 Jan 2001 15:43:45 -0000\"" \
-            "[in-reply-to]=\<$parent\>" &&
-output=$($NOTMUCH search --sort=newest-first thread-naming and tag:inbox | notmuch_search_sanitize) &&
-pass_if_equal "$output" "thread:XXX   2001-01-12 [6/8] Notmuch Test Suite; thread-naming: Initial thread subject (inbox unread)"
+test_begin_subtest "Ignore added reply prefix (Sv:)"
+add_message '[subject]="Sv: thread-naming: Initial thread subject"' \
+            '[date]="Fri, 12 Jan 2001 15:43:45 -0000"' \
+            "[in-reply-to]=\<$parent\>"
+output=$($NOTMUCH search --sort=newest-first thread-naming and tag:inbox | notmuch_search_sanitize)
+test_expect_equal "$output" "thread:XXX   2001-01-12 [6/8] Notmuch Test Suite; thread-naming: Initial thread subject (inbox unread)"
 
-'
-test_expect_success "Test order of messages in \"notmuch show\"" '
-output=$($NOTMUCH show thread-naming | notmuch_show_sanitize) &&
-pass_if_equal "$output" "message{ id:msg-$(printf "%03d" $first)@notmuch-test-suite depth:0 match:1 filename:/XXX/mail/msg-$(printf "%03d" $first)
+test_begin_subtest 'Test order of messages in "notmuch show"'
+output=$($NOTMUCH show thread-naming | notmuch_show_sanitize)
+test_expect_equal "$output" "message{ id:msg-$(printf "%03d" $first)@notmuch-test-suite depth:0 match:1 filename:/XXX/mail/msg-$(printf "%03d" $first)
 header{
 Notmuch Test Suite <test_suite@notmuchmail.org> (2001-01-05) (unread)
 Subject: thread-naming: Initial thread subject
@@ -187,5 +179,4 @@ This is just a test message (#$((first + 7)))
 part}
 body}
 message}"
-'
 test_done
