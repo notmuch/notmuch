@@ -94,6 +94,13 @@ the user hasn't set this variable with the old or new value."
 
 ;;
 
+(defun notmuch-common-do-stash (text)
+  "Common function to stash text in kill ring, and display in minibuffer."
+  (kill-new text)
+  (message "Stashed: %s" text))
+
+;;
+
 ;; XXX: This should be a generic function in emacs somewhere, not
 ;; here.
 (defun point-invisible-p ()
@@ -110,3 +117,4 @@ within the current window."
 	  (assq prop buffer-invisibility-spec)))))
 
 (provide 'notmuch-lib)
+

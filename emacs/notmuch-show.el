@@ -1088,49 +1088,45 @@ buffer."
   (interactive)
   (notmuch-show-archive-thread-internal nil))
 
-(defun notmuch-show-do-stash (text)
-  (kill-new text)
-  (message "Saved: %s" text))
-
 (defun notmuch-show-stash-cc ()
   "Copy CC field of current message to kill-ring."
   (interactive)
-  (notmuch-show-do-stash (notmuch-show-get-cc)))
+  (notmuch-common-do-stash (notmuch-show-get-cc)))
 
 (defun notmuch-show-stash-date ()
   "Copy date of current message to kill-ring."
   (interactive)
-  (notmuch-show-do-stash (notmuch-show-get-date)))
+  (notmuch-common-do-stash (notmuch-show-get-date)))
 
 (defun notmuch-show-stash-filename ()
   "Copy filename of current message to kill-ring."
   (interactive)
-  (notmuch-show-do-stash (notmuch-show-get-filename)))
+  (notmuch-common-do-stash (notmuch-show-get-filename)))
 
 (defun notmuch-show-stash-from ()
   "Copy From address of current message to kill-ring."
   (interactive)
-  (notmuch-show-do-stash (notmuch-show-get-from)))
+  (notmuch-common-do-stash (notmuch-show-get-from)))
 
 (defun notmuch-show-stash-message-id ()
   "Copy message ID of current message to kill-ring."
   (interactive)
-  (notmuch-show-do-stash (notmuch-show-get-message-id)))
+  (notmuch-common-do-stash (notmuch-show-get-message-id)))
 
 (defun notmuch-show-stash-subject ()
   "Copy Subject field of current message to kill-ring."
   (interactive)
-  (notmuch-show-do-stash (notmuch-show-get-subject)))
+  (notmuch-common-do-stash (notmuch-show-get-subject)))
 
 (defun notmuch-show-stash-tags ()
   "Copy tags of current message to kill-ring as a comma separated list."
   (interactive)
-  (notmuch-show-do-stash (mapconcat 'identity (notmuch-show-get-tags) ",")))
+  (notmuch-common-do-stash (mapconcat 'identity (notmuch-show-get-tags) ",")))
 
 (defun notmuch-show-stash-to ()
   "Copy To address of current message to kill-ring."
   (interactive)
-  (notmuch-show-do-stash (notmuch-show-get-to)))
+  (notmuch-common-do-stash (notmuch-show-get-to)))
 
 ;; Commands typically bound to buttons.
 
