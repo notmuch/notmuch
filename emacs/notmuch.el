@@ -207,6 +207,7 @@ For a mouse binding, return nil."
     (define-key map "m" 'notmuch-mua-mail)
     (define-key map "s" 'notmuch-search)
     (define-key map "o" 'notmuch-search-toggle-order)
+    (define-key map "c" 'notmuch-search-stash-map)
     (define-key map "=" 'notmuch-search-refresh-view)
     (define-key map "G" 'notmuch-search-poll-and-refresh-view)
     (define-key map "t" 'notmuch-search-filter-by-tag)
@@ -220,6 +221,18 @@ For a mouse binding, return nil."
     map)
   "Keymap for \"notmuch search\" buffers.")
 (fset 'notmuch-search-mode-map notmuch-search-mode-map)
+
+(defvar notmuch-search-stash-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map "i" 'notmuch-search-stash-thread-id)
+    map)
+  "Submap for stash commands")
+(fset 'notmuch-search-stash-map notmuch-search-stash-map)
+
+(defun notmuch-search-stash-thread-id ()
+  "Copy thread ID of current thread to kill-ring."
+  (interactive)
+  (notmuch-common-do-stash (notmuch-search-find-thread-id)))
 
 (defvar notmuch-search-query-string)
 (defvar notmuch-search-target-thread)
