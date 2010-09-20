@@ -4,4 +4,4 @@ dir := test
 
 .PHONY: test
 test:	all
-	@${dir}/notmuch-test
+	@${dir}/notmuch-test $(OPTIONS)
