@@ -354,7 +354,7 @@ EOF
     increment_mtime "$(dirname "${gen_msg_filename}")"
 }
 
-# Generate a new message and add it to the index.
+# Generate a new message and add it to the database.
 #
 # All of the arguments and return values supported by generate_message
 # are also supported here, so see that function for details.
@@ -362,6 +362,24 @@ add_message ()
 {
     generate_message "$@" &&
     notmuch new > /dev/null
+}
+
+# Generate a corpus of email and add it to the database.
+#
+# This corpus is fixed, (it happens to be 50 messages from early in
+# the history of the notmuch mailing list), which allows for reliably
+# testing commands that need to operate on a not-totally-trivial
+# number of messages.
+add_email_corpus ()
+{
+    rm -rf ${MAIL_DIR}
+    if [ -d ../corpus.mail ]; then
+	cp -a ../corpus.mail ${MAIL_DIR}
+    else
+	cp -a ../corpus ${MAIL_DIR}
+	notmuch new
+	cp -a ${MAIL_DIR} ../corpus.mail
+    fi
 }
 
 test_begin_subtest ()
@@ -801,7 +819,7 @@ MAIL_DIR="${TMP_DIRECTORY}/mail"
 export NOTMUCH_CONFIG="${TMP_DIRECTORY}/notmuch-config"
 
 mkdir -p "${test}"
-mkdir "$MAIL_DIR"
+mkdir -p "${MAIL_DIR}"
 
 cat <<EOF >"${NOTMUCH_CONFIG}"
 [database]

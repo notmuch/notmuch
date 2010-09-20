@@ -22,4 +22,4 @@ done
 ./aggregate-results.sh test-results/*
 
 # Clean up
-rm -r test-results
+rm -r test-results corpus.mail

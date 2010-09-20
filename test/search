@@ -2,6 +2,8 @@
 test_description='"notmuch search" in several variations'
 . ./test-lib.sh
 
+add_email_corpus
+
 test_begin_subtest "Search body"
 add_message '[subject]="body search"' '[date]="Sat, 01 Jan 2000 12:00:00 -0000"' [body]=bodysearchtest
 output=$(notmuch search bodysearchtest | notmuch_search_sanitize)
