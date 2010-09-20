@@ -740,7 +740,6 @@ find_notmuch_path ()
 # Test the binaries we have just built.  The tests are kept in
 # test/ subdirectory and are run in 'trash directory' subdirectory.
 TEST_DIRECTORY=$(pwd)
-# FIXME: Only the normal case bellow is updated to notmuch
 if test -n "$valgrind"
 then
 	make_symlink () {
@@ -786,15 +785,12 @@ then
 	# override all git executables in TEST_DIRECTORY/..
 	GIT_VALGRIND=$TEST_DIRECTORY/valgrind
 	mkdir -p "$GIT_VALGRIND"/bin
-	for file in $TEST_DIRECTORY/../git* $TEST_DIRECTORY/../test-*
-	do
-		make_valgrind_symlink $file
-	done
+	make_valgrind_symlink $TEST_DIRECTORY/../notmuch
 	OLDIFS=$IFS
 	IFS=:
 	for path in $PATH
 	do
-		ls "$path"/git-* 2> /dev/null |
+		ls "$path"/notmuch 2> /dev/null |
 		while read file
 		do
 			make_valgrind_symlink "$file"
@@ -804,11 +800,6 @@ then
 	PATH=$GIT_VALGRIND/bin:$PATH
 	GIT_EXEC_PATH=$GIT_VALGRIND/bin
 	export GIT_VALGRIND
-elif test -n "$GIT_TEST_INSTALLED" ; then
-	GIT_EXEC_PATH=$($GIT_TEST_INSTALLED/git --exec-path)  ||
-	error "Cannot run git from $GIT_TEST_INSTALLED."
-	PATH=$GIT_TEST_INSTALLED:$TEST_DIRECTORY/..:$PATH
-	GIT_EXEC_PATH=${GIT_TEST_EXEC_PATH:-$GIT_EXEC_PATH}
 else # normal case
 	notmuch_path=`find_notmuch_path "$TEST_DIRECTORY"`
 	test -n "$notmuch_path" && PATH="$notmuch_path:$PATH"
