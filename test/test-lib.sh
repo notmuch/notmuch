@@ -154,7 +154,7 @@ then
 	exit 0
 fi
 
-echo "Testing ${test_description}"
+echo $(basename "$0"): "Testing ${test_description}"
 
 exec 5>&1
 if test "$verbose" = "t"
