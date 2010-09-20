@@ -396,8 +396,6 @@ test_expect_equal ()
     fi
 }
 
-NOTMUCH=notmuch
-
 NOTMUCH_NEW ()
 {
     notmuch new | grep -v -E -e '^Processed [0-9]*( total)? file|Found [0-9]* total file'

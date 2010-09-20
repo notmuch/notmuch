@@ -9,7 +9,7 @@ add_message '[from]="Sender <sender@example.com>"' \
             '[date]="Tue, 05 Jan 2010 15:43:56 -0000"' \
             '[body]="from guessing test"'
 
-output=$($NOTMUCH reply id:${gen_msg_id})
+output=$(notmuch reply id:${gen_msg_id})
 test_expect_equal "$output" "From: Notmuch Test Suite <test_suite@notmuchmail.org>
 Subject: Re: notmuch-reply-test
 To: Sender <sender@example.com>, mailinglist@notmuchmail.org
@@ -28,7 +28,7 @@ add_message '[from]="Sender <sender@example.com>"' \
             '[date]="Tue, 05 Jan 2010 15:43:56 -0000"' \
             '[body]="from guessing test"'
 
-output=$($NOTMUCH reply id:${gen_msg_id})
+output=$(notmuch reply id:${gen_msg_id})
 test_expect_equal "$output" "From: Notmuch Test Suite <test_suite_other@notmuchmail.org>
 Subject: Re: notmuch-reply-test
 To: Sender <sender@example.com>, mailinglist@notmuchmail.org
@@ -47,7 +47,7 @@ add_message '[from]="Sender <sender@example.com>"' \
             '[date]="Tue, 05 Jan 2010 15:43:56 -0000"' \
             '[body]="from guessing test"'
 
-output=$($NOTMUCH reply id:${gen_msg_id})
+output=$(notmuch reply id:${gen_msg_id})
 test_expect_equal "$output" "From: Notmuch Test Suite <test_suite_other@notmuchmail.org>
 Subject: Re: notmuch-reply-test
 To: Sender <sender@example.com>, mailinglist@notmuchmail.org
@@ -68,7 +68,7 @@ add_message '[from]="Sender <sender@example.com>"' \
             '[date]="Tue, 05 Jan 2010 15:43:56 -0000"' \
             '[body]="from guessing test"'
 
-output=$($NOTMUCH reply id:${gen_msg_id})
+output=$(notmuch reply id:${gen_msg_id})
 test_expect_equal "$output" "From: Notmuch Test Suite <test_suite_other@notmuchmail.org>
 Subject: Re: notmuch-reply-test
 To: Sender <sender@example.com>, mailinglist@notmuchmail.org
@@ -89,7 +89,7 @@ add_message '[from]="Sender <sender@example.com>"' \
             '[date]="Tue, 05 Jan 2010 15:43:56 -0000"' \
             '[body]="from guessing test"'
 
-output=$($NOTMUCH reply id:${gen_msg_id})
+output=$(notmuch reply id:${gen_msg_id})
 test_expect_equal "$output" "From: Notmuch Test Suite <test_suite@otherdomain.org>
 Subject: Re: notmuch-reply-test
 To: Sender <sender@example.com>, mailinglist@notmuchmail.org
@@ -111,7 +111,7 @@ add_message '[from]="Sender <sender@example.com>"' \
             '[date]="Tue, 05 Jan 2010 15:43:56 -0000"' \
             '[body]="from guessing test"'
 
-output=$($NOTMUCH reply id:${gen_msg_id})
+output=$(notmuch reply id:${gen_msg_id})
 test_expect_equal "$output" "From: Notmuch Test Suite <test_suite@notmuchmail.org>
 Subject: Re: notmuch-reply-test
 To: Sender <sender@example.com>, mailinglist@notmuchmail.org
@@ -130,7 +130,7 @@ add_message '[from]="Sender <sender@example.com>"' \
             '[date]="Tue, 05 Jan 2010 15:43:56 -0000"' \
             '[body]="from guessing test"'
 
-output=$($NOTMUCH reply id:${gen_msg_id})
+output=$(notmuch reply id:${gen_msg_id})
 test_expect_equal "$output" "From: Notmuch Test Suite <test_suite@notmuchmail.org>
 Subject: Re: notmuch-reply-test
 To: Sender <sender@example.com>, mailinglist@notmuchmail.org
@@ -149,7 +149,7 @@ add_message '[from]="Sender <sender@example.com>"' \
             '[date]="Tue, 05 Jan 2010 15:43:56 -0000"' \
             '[body]="from guessing test"'
 
-output=$($NOTMUCH reply id:${gen_msg_id})
+output=$(notmuch reply id:${gen_msg_id})
 test_expect_equal "$output" "From: Notmuch Test Suite <test_suite@notmuchmail.org>
 Subject: Re: notmuch-reply-test
 To: Sender <sender@example.com>, mailinglist@notmuchmail.org
@@ -170,7 +170,7 @@ add_message '[from]="Sender <sender@example.com>"' \
             '[date]="Tue, 05 Jan 2010 15:43:56 -0000"' \
             '[body]="from guessing test"'
 
-output=$($NOTMUCH reply id:${gen_msg_id})
+output=$(notmuch reply id:${gen_msg_id})
 test_expect_equal "$output" "From: Notmuch Test Suite <test_suite@notmuchmail.org>
 Subject: Re: notmuch-reply-test
 To: Sender <sender@example.com>, mailinglist@notmuchmail.org
@@ -191,7 +191,7 @@ add_message '[from]="Sender <sender@example.com>"' \
             '[date]="Tue, 05 Jan 2010 15:43:56 -0000"' \
             '[body]="from guessing test"'
 
-output=$($NOTMUCH reply id:${gen_msg_id})
+output=$(notmuch reply id:${gen_msg_id})
 test_expect_equal "$output" "From: Notmuch Test Suite <test_suite@notmuchmail.org>
 Subject: Re: notmuch-reply-test
 To: Sender <sender@example.com>, mailinglist@notmuchmail.org

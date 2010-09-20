@@ -20,15 +20,15 @@ end
 Finally, we have our afteruudata marker as well."'
 
 test_begin_subtest "Ensure content before uu data is indexed"
-output=$($NOTMUCH search beforeuudata | notmuch_search_sanitize)
+output=$(notmuch search beforeuudata | notmuch_search_sanitize)
 test_expect_equal "$output" "thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; uuencodetest (inbox unread)"
 
 test_begin_subtest "Ensure uu data is not indexed"
-output=$($NOTMUCH search DURINGUUDATA | notmuch_search_sanitize)
+output=$(notmuch search DURINGUUDATA | notmuch_search_sanitize)
 test_expect_equal "$output" ""
 
 test_begin_subtest "Ensure content after uu data is indexed"
-output=$($NOTMUCH search afteruudata | notmuch_search_sanitize)
+output=$(notmuch search afteruudata | notmuch_search_sanitize)
 test_expect_equal "$output" "thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; uuencodetest (inbox unread)"
 
 test_done
