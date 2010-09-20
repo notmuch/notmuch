@@ -15,7 +15,7 @@ rm -r test-results >/dev/null 2>/dev/null
 
 # Run the tests
 for test in $TESTS; do
-	./$test
+	./$test "$@"
 done
 
 # Report results
