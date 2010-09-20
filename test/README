@@ -17,11 +17,6 @@ one of the executable scripts in this directory, (such as ./search,
 
 The following command-line options are available when running tests:
 
---verbose::
-	This makes the test more verbose.  Specifically, the
-	command being run and their output if any are also
-	output.
-
 --debug::
 	This may help the person who is developing a new test.
 	It causes the command defined with test_debug to run.

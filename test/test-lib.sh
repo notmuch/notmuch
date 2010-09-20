@@ -385,7 +385,6 @@ test_expect_equal ()
 	expected="$2"
 	if ! test_skip "$@"
 	then
-		say >&3 "expecting success: diff $output $expected"
 		if [ "$output" = "$expected" ]; then
 			test_ok_ "$test_subtest_name"
 		else
@@ -394,7 +393,6 @@ test_expect_equal ()
 			echo "$output" > $testname.output
 			test_failure_ "$test_subtest_name" "$(diff -u $testname.expected $testname.output)"
 		fi
-		echo >&3 ""
     fi
 }
 
@@ -522,7 +520,6 @@ test_expect_failure () {
 	error "bug in the test script: not 2 or 3 parameters to test-expect-failure"
 	if ! test_skip "$@"
 	then
-		say >&3 "checking known breakage: $2"
 		test_run_ "$2"
 		if [ "$?" = 0 -a "$eval_ret" = 0 ]
 		then
@@ -531,7 +528,6 @@ test_expect_failure () {
 			test_known_broken_failure_ "$1"
 		fi
 	fi
-	echo >&3 ""
 }
 
 test_expect_success () {
@@ -540,7 +536,6 @@ test_expect_success () {
 	error "bug in the test script: not 2 or 3 parameters to test-expect-success"
 	if ! test_skip "$@"
 	then
-		say >&3 "expecting success: $2"
 		test_run_ "$2"
 		if [ "$?" = 0 -a "$eval_ret" = 0 ]
 		then
@@ -549,7 +544,6 @@ test_expect_success () {
 			test_failure_ "$@"
 		fi
 	fi
-	echo >&3 ""
 }
 
 test_expect_code () {
@@ -558,7 +552,6 @@ test_expect_code () {
 	error "bug in the test script: not 3 or 4 parameters to test-expect-code"
 	if ! test_skip "$@"
 	then
-		say >&3 "expecting exit code $1: $3"
 		test_run_ "$3"
 		if [ "$?" = 0 -a "$eval_ret" = "$1" ]
 		then
@@ -567,7 +560,6 @@ test_expect_code () {
 			test_failure_ "$@"
 		fi
 	fi
-	echo >&3 ""
 }
 
 # test_external runs external test scripts that provide continuous
@@ -613,7 +605,6 @@ test_external_without_stderr () {
 	[ -f "$stderr" ] || error "Internal error: $stderr disappeared."
 	descr="no stderr: $1"
 	shift
-	say >&3 "expecting no stderr from previous command"
 	if [ ! -s "$stderr" ]; then
 		rm "$stderr"
 		test_ok_ "$descr"

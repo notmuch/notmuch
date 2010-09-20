@@ -1,0 +1,6 @@
+{
+   zlib inflation uses uninitialize values
+   Memcheck:Cond
+   fun:inflateReset2
+   fun:inflateInit2_
+}

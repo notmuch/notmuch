@@ -13,7 +13,7 @@ TRACK_ORIGINS=--track-origins=yes
 
 exec valgrind -q --error-exitcode=126 \
 	--leak-check=no \
-	--suppressions="$GIT_VALGRIND/default.supp" \
+	--suppressions="$GIT_VALGRIND/suppressions" \
 	--gen-suppressions=all \
 	$TRACK_ORIGINS \
 	--log-fd=4 \
