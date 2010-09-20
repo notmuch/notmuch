@@ -1,5 +1,5 @@
 #!/bin/bash
-test_description="Testing encoding issues"
+test_description="encoding issues"
 . ./test-lib.sh
 
 test_begin_subtest "Message with text of unknown charset"

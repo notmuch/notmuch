@@ -1,5 +1,5 @@
 #!/bin/bash
-test_description="Testing messages with ridiculously-long message IDs"
+test_description="messages with ridiculously-long message IDs"
 . ./test-lib.sh
 
 test_begin_subtest "Referencing long ID before adding"
