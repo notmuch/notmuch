@@ -1,0 +1,46 @@
+From: "Alexander Botero-Lowry" <alex.boterolowry@gmail.com>
+To: notmuch@notmuchmail.org
+Date: Tue, 17 Nov 2009 21:45:36 -0800
+Subject: [notmuch] Mac OS X/Darwin compatibility issues
+In-Reply-To: <ddd65cda0911171950o4eea4389v86de9525e46052d3@mail.gmail.com>
+References: <ddd65cda0911171950o4eea4389v86de9525e46052d3@mail.gmail.com>
+Message-ID: <86einw2xof.fsf@fortitudo.i-did-not-set--mail-host-address--so-tickle-me>
+
+On Wed, 18 Nov 2009 11:50:17 +0800, Jjgod Jiang <gzjjgod at gmail.com> wrote:
+> Hi,
+> 
+> When I tried to compile notmuch under Mac OS X 10.6, several issues
+> arisen:
+> 
+> 1. g++ reports 'warning: command line option "-Wmissing-declarations"
+> is valid for C/ObjC but not for C++'
+> 
+I got that too. I presume it's newly supported in GCC4.4?
+
+> 3. Several errors about missing GNU extensions like getline() and strndup():
+> 
+strndup from V8:
+
+char* strndup(char* str, size_t n) {
+  // Stupid implementation of strndup since macos isn't born with
+  // one.
+  size_t len = strlen(str);
+  if (len <= n)
+    return StrDup(str);
+  char* result = new char[n+1];
+  size_t i;
+  for (i = 0; i <= n; i++)
+    result[i] = str[i];
+  result[i] = '\0';
+  return result;
+}
+
+> warning: implicit declaration of function ?getline?
+> error: ?strndup? was not declared in this scope
+> 
+for getline do you mind trying #define _GNU_SOURCE 1
+before #include <stdio.h> in the offending files? The FreeBSD man pages
+mentions that as a way of enabling the GNU version of getline().
+
+Alex
+

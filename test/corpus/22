@@ -1,0 +1,30 @@
+From: "Lars Kellogg-Stedman" <lars@seas.harvard.edu>
+To: notmuch@notmuchmail.org
+Date: Tue, 17 Nov 2009 19:50:40 -0500
+Subject: [notmuch] Working with Maildir storage?
+In-Reply-To: <yunaayketfm.fsf@aiko.keithp.com>
+References: <20091117190054.GU3165@dottiness.seas.harvard.edu>
+	<87iqd9rn3l.fsf@vertex.dottedmag>
+	<20091117203301.GV3165@dottiness.seas.harvard.edu>
+	<yunaayketfm.fsf@aiko.keithp.com>
+Message-ID: <20091118005040.GA25380@dottiness.seas.harvard.edu>
+
+> I've also pushed a slightly more complicated (and complete) fix to my
+> private notmuch repository
+
+The version of lib/messages.cc in your repo doesn't build because it's
+missing "#include <stdint.h>" (for the uint32_t on line 466).
+
+-- 
+Lars Kellogg-Stedman <lars at seas.harvard.edu>
+Senior Technologist, Computing and Information Technology
+Harvard University School of Engineering and Applied Sciences
+
+-------------- next part --------------
+A non-text attachment was scrubbed...
+Name: not available
+Type: application/pgp-signature
+Size: 489 bytes
+Desc: not available
+URL: <http://notmuchmail.org/pipermail/notmuch/attachments/20091117/b069f470/attachment.pgp>
+

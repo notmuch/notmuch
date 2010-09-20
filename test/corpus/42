@@ -1,0 +1,30 @@
+From: "Carl Worth" <cworth@cworth.org>
+To: notmuch@notmuchmail.org
+Date: Wed, 18 Nov 2009 02:19:26 -0800
+Subject: [notmuch] [PATCH] Make notmuch-show 'X' (and 'x') commands
+ remove inbox (and unread) tags
+In-Reply-To: <1258493565-13508-1-git-send-email-keithp@keithp.com>
+References: <1258493565-13508-1-git-send-email-keithp@keithp.com>
+Message-ID: <87k4xoqgnl.fsf@yoom.home.cworth.org>
+
+On Tue, 17 Nov 2009 13:32:45 -0800, Keith Packard <keithp at keithp.com> wrote:
+> When closing a thread view, mark the thread as archived by removing
+> the "inbox" tag, and for the 'x' variant, the "unread" tag as well,
+> then kill the buffer and update the search window view as well.
+> 
+> This makes 'x' much the same as 'a', but instead of taking you to the
+> next message, it takes you back to the search window instead.
+
+I don't like this---but that's because I use 'x' precisely *because* it
+preserves these tags.
+
+Otherwise, you might as well just remove inbox and unread as soon as the
+message is presented to the user. And that's a bug in a lot of other
+email programs that I'm unwilling to replicate.
+
+We may run into a need to define different ways that people like to work
+with their email here. (I know that so far I've just been coding up the
+way I want my mail to work.)
+
+-Carl
+

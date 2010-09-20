@@ -1,0 +1,40 @@
+From: "Keith Packard" <keithp@keithp.com>
+To: notmuch@notmuchmail.org
+Date: Wed, 18 Nov 2009 00:29:59 -0800
+Subject: [notmuch] [PATCH] Create a default notmuch-show-hook that
+	highlights URLs and uses word-wrap
+Message-ID: <1258532999-9316-1-git-send-email-keithp@keithp.com>
+
+I created the notmuch-show-hook precisely so I could add these two
+options, but I suspect most people will want them, so I just made them
+the default. If you don't want them, you can use remove-hook to get
+rid of this.
+
+Signed-off-by: Keith Packard <keithp at keithp.com>
+---
+ notmuch.el |    8 ++++++++
+ 1 files changed, 8 insertions(+), 0 deletions(-)
+
+diff --git a/notmuch.el b/notmuch.el
+index 1bb1294..c95cb43 100644
+--- a/notmuch.el
++++ b/notmuch.el
+@@ -698,6 +698,14 @@ view, (remove the \"inbox\" tag from each), with either
+   :options '(goto-address)
+   :group 'notmuch)
+ 
++; Make show mode a bit prettier, highlighting URLs and using word wrap
++
++(defun notmuch-show-pretty-hook ()
++  (goto-address-mode 1)
++  (visual-line-mode))
++
++(add-hook 'notmuch-show-hook 'notmuch-show-pretty-hook)
++
+ (defun notmuch-show (thread-id &optional parent-buffer)
+   "Run \"notmuch show\" with the given thread ID and display results.
+ 
+-- 
+1.6.5.2
+
+

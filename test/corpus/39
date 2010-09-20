@@ -1,0 +1,32 @@
+From: "Alexander Botero-Lowry" <alex.boterolowry@gmail.com>
+To: notmuch@notmuchmail.org
+Date: Wed, 18 Nov 2009 00:52:34 -0800
+Subject: [notmuch] [PATCH] Create a default notmuch-show-hook that
+ highlights URLs and uses word-wrap
+In-Reply-To: <1258532999-9316-1-git-send-email-keithp@keithp.com>
+References: <1258532999-9316-1-git-send-email-keithp@keithp.com>
+Message-ID: <867hto2p0t.fsf@fortitudo.i-did-not-set--mail-host-address--so-tickle-me>
+
+On Wed, 18 Nov 2009 00:29:59 -0800, Keith Packard <keithp at keithp.com> wrote:
+> I created the notmuch-show-hook precisely so I could add these two
+> options, but I suspect most people will want them, so I just made them
+> the default. If you don't want them, you can use remove-hook to get
+> rid of this.
+> 
+Yes, hooks should be added for search as well. :)
+
+> +; Make show mode a bit prettier, highlighting URLs and using word wrap
+> +
+> +(defun notmuch-show-pretty-hook ()
+> +  (goto-address-mode 1)
+> +  (visual-line-mode))
+> +
+visual-line-mode turns out to make subject look pretty ugly if there is a
+continuation. It doesn't do much good for the citation headers
+either. We probably need to do our own intelligent wrapping rather then
+use visual-line-mode to make this actually look right.
+
+goto-address-mode is important though. :)
+
+alex
+

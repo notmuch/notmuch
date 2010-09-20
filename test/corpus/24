@@ -1,0 +1,86 @@
+From: "Lars Kellogg-Stedman" <lars@seas.harvard.edu>
+To: notmuch@notmuchmail.org
+Date: Tue, 17 Nov 2009 20:01:16 -0500
+Subject: [notmuch] "notmuch help" outputs to stderr?
+In-Reply-To: <20091118005829.GB25380@dottiness.seas.harvard.edu>
+References: <20091118005829.GB25380@dottiness.seas.harvard.edu>
+Message-ID: <20091118010116.GC25380@dottiness.seas.harvard.edu>
+
+> I've attached a patch that lets usage() take a FILE * argument so that
+> you can output to stderr in response to usage errors, and stdout in
+> response to an explicit request.
+
+Whoops, missed a couple of stderr's in that last patch.  New one
+attached.
+
+-- 
+Lars Kellogg-Stedman <lars at seas.harvard.edu>
+Senior Technologist, Computing and Information Technology
+Harvard University School of Engineering and Applied Sciences
+
+-------------- next part --------------
+diff --git a/notmuch.c b/notmuch.c
+index c47e640..446c810 100644
+--- a/notmuch.c
++++ b/notmuch.c
+@@ -157,23 +157,23 @@ command_t commands[] = {
+ };
+ 
+ static void
+-usage (void)
++usage (FILE *out)
+ {
+     command_t *command;
+     unsigned int i;
+ 
+-    fprintf (stderr, "Usage: notmuch <command> [args...]\n");
+-    fprintf (stderr, "\n");
+-    fprintf (stderr, "Where <command> and [args...] are as follows:\n");
+-    fprintf (stderr, "\n");
++    fprintf (out, "Usage: notmuch <command> [args...]\n");
++    fprintf (out, "\n");
++    fprintf (out, "Where <command> and [args...] are as follows:\n");
++    fprintf (out, "\n");
+ 
+     for (i = 0; i < ARRAY_SIZE (commands); i++) {
+ 	command = &commands[i];
+ 
+-	fprintf (stderr, "\t%s\t%s\n\n", command->name, command->summary);
++	fprintf (out, "\t%s\t%s\n\n", command->name, command->summary);
+     }
+ 
+-    fprintf (stderr, "Use \"notmuch help <command>\" for more details on each command.\n\n");
++    fprintf (out, "Use \"notmuch help <command>\" for more details on each command.\n\n");
+ }
+ 
+ static int
+@@ -183,8 +183,8 @@ notmuch_help_command (unused (void *ctx), int argc, char *argv[])
+     unsigned int i;
+ 
+     if (argc == 0) {
+-	fprintf (stderr, "The notmuch mail system.\n\n");
+-	usage ();
++	fprintf (stdout, "The notmuch mail system.\n\n");
++	usage (stdout);
+ 	return 0;
+     }
+ 
+@@ -192,8 +192,8 @@ notmuch_help_command (unused (void *ctx), int argc, char *argv[])
+ 	command = &commands[i];
+ 
+ 	if (strcmp (argv[0], command->name) == 0) {
+-	    fprintf (stderr, "Help for \"notmuch %s\":\n\n", argv[0]);
+-	    fprintf (stderr, "\t%s\t%s\n\n%s\n\n", command->name,
++	    fprintf (stdout, "Help for \"notmuch %s\":\n\n", argv[0]);
++	    fprintf (stdout, "\t%s\t%s\n\n%s\n\n", command->name,
+ 		     command->summary, command->documentation);
+ 	    return 0;
+ 	}
+-------------- next part --------------
+A non-text attachment was scrubbed...
+Name: not available
+Type: application/pgp-signature
+Size: 489 bytes
+Desc: not available
+URL: <http://notmuchmail.org/pipermail/notmuch/attachments/20091117/8c0e4dc3/attachment.pgp>
+

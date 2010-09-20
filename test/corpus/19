@@ -1,0 +1,360 @@
+From: "Ingmar Vanhassel" <ingmar@exherbo.org>
+To: notmuch@notmuchmail.org
+Date: Wed, 18 Nov 2009 00:23:42 +0100
+Subject: [notmuch] [PATCH] Typsos
+Message-ID: <1258500222-32066-1-git-send-email-ingmar@exherbo.org>
+
+---
+ Makefile                |    4 ++--
+ README                  |    6 +++---
+ gmime-filter-reply.h    |    2 +-
+ lib/database.cc         |    2 +-
+ lib/index.cc            |    2 +-
+ lib/message.cc          |    2 +-
+ lib/messages.c          |    2 +-
+ lib/notmuch-private.h   |    2 +-
+ lib/notmuch.h           |   10 +++++-----
+ lib/sha1.c              |    2 +-
+ lib/thread.cc           |    2 +-
+ notmuch-completion.bash |    2 +-
+ notmuch-new.c           |    4 ++--
+ notmuch-search.c        |    2 +-
+ notmuch.1               |    4 ++--
+ notmuch.el              |   10 +++++-----
+ show-message.c          |    2 +-
+ 17 files changed, 30 insertions(+), 30 deletions(-)
+
+diff --git a/Makefile b/Makefile
+index 436dacf..96aaa73 100644
+--- a/Makefile
++++ b/Makefile
+@@ -1,4 +1,4 @@
+-# Default FLAGS, (can be overriden by user such as "make CFLAGS=-O2")
++# Default FLAGS, (can be overridden by user such as "make CFLAGS=-O2")
+ WARN_FLAGS=-Wall -Wextra -Wmissing-declarations -Wwrite-strings -Wswitch-enum
+ CFLAGS=-O2
+ 
+@@ -14,7 +14,7 @@ override CXXFLAGS += $(WARN_FLAGS) $(extra_cflags) $(extra_cxxflags)
+ override LDFLAGS += `pkg-config --libs glib-2.0 gmime-2.4 talloc` \
+ 			`xapian-config --libs`
+ 
+-# Include our local Makfile.local first so that its first target is default
++# Include our local Makefile.local first so that its first target is default
+ include Makefile.local
+ include lib/Makefile.local
+ 
+diff --git a/README b/README
+index 40f05ab..27af77f 100644
+--- a/README
++++ b/README
+@@ -3,7 +3,7 @@ Notmuch - thread-based email index, search and tagging.
+ Notmuch is a system for indexing, searching, reading, and tagging
+ large collections of email messages. It uses the Xapian library to
+ provide fast, full-text search of very large collection of email with
+-a very convenient search syntas.
++a very convenient search syntax.
+ 
+ Notmuch is free software, released under the GNU General Public
+ License version 3 (or later).
+@@ -45,7 +45,7 @@ obtaining a more sophisticated interface:
+ 	notmuch.el file in this distribution.
+ 
+ 	If someone were to write a curses-based interface, or similar,
+-	it might also be reasonable to buil on the "notmuch"
++	it might also be reasonable to build on the "notmuch"
+ 	command-line interface.
+ 
+      2. Build on top of the notmuch library interface.
+@@ -67,4 +67,4 @@ still in development. We would appreciate any contributions to these
+ efforts.
+ 
+ 
+-	
+\ No newline at end of file
++	
+diff --git a/gmime-filter-reply.h b/gmime-filter-reply.h
+index 41cbc13..b7cbc6b 100644
+--- a/gmime-filter-reply.h
++++ b/gmime-filter-reply.h
+@@ -40,7 +40,7 @@ typedef struct _GMimeFilterReplyClass GMimeFilterReplyClass;
+  * @saw_nl: previous char was a \n
+  * @saw_angle: previous char was a >
+  *
+- * A filter to insert/remove reply markers (lines begining with >)
++ * A filter to insert/remove reply markers (lines beginning with >)
+  **/
+ struct _GMimeFilterReply {
+ 	GMimeFilter parent_object;
+diff --git a/lib/database.cc b/lib/database.cc
+index 3c8d626..27597cf 100644
+--- a/lib/database.cc
++++ b/lib/database.cc
+@@ -180,7 +180,7 @@ notmuch_status_to_string (notmuch_status_t status)
+     case NOTMUCH_STATUS_TAG_TOO_LONG:
+ 	return "Tag value is too long (exceeds NOTMUCH_TAG_MAX)";
+     case NOTMUCH_STATUS_UNBALANCED_FREEZE_THAW:
+-	return "Unblanced number of calls to notmuch_message_freeze/thaw";
++	return "Unbalanced number of calls to notmuch_message_freeze/thaw";
+     default:
+     case NOTMUCH_STATUS_LAST_STATUS:
+ 	return "Unknown error status value";
+diff --git a/lib/index.cc b/lib/index.cc
+index 65b83b3..80df64b 100644
+--- a/lib/index.cc
++++ b/lib/index.cc
+@@ -198,7 +198,7 @@ _index_mime_part (notmuch_message_t *message,
+ 		if (i == 1)
+ 		    continue;
+ 		if (i > 1)
+-		    fprintf (stderr, "Warning: Unexpected extra parts of mutlipart/signed. Indexing anyway.\n");
++		    fprintf (stderr, "Warning: Unexpected extra parts of multipart/signed. Indexing anyway.\n");
+ 	    }
+ 	    _index_mime_part (message,
+ 			      g_mime_multipart_get_part (multipart, i));
+diff --git a/lib/message.cc b/lib/message.cc
+index a4b090b..1d6623f 100644
+--- a/lib/message.cc
++++ b/lib/message.cc
+@@ -144,7 +144,7 @@ _notmuch_message_create (const void *talloc_owner,
+ }
+ 
+ /* Create a new notmuch_message_t object for a specific message ID,
+- * (which may or may not already exist in the databas).
++ * (which may or may not already exist in the database).
+  *
+  * Here, 'talloc owner' is an optional talloc context to which the new
+  * message will belong. This allows for the caller to not bother
+diff --git a/lib/messages.c b/lib/messages.c
+index a588f8f..2f7c283 100644
+--- a/lib/messages.c
++++ b/lib/messages.c
+@@ -47,7 +47,7 @@ _notmuch_message_list_create (const void *ctx)
+     return list;
+ }
+ 
+-/* Append 'node' (which can of course point to an aribtrarily long
++/* Append 'node' (which can of course point to an arbitrarily long
+  * list of nodes) to the end of 'list'.
+  */
+ void
+diff --git a/lib/notmuch-private.h b/lib/notmuch-private.h
+index 6036ce4..af82e58 100644
+--- a/lib/notmuch-private.h
++++ b/lib/notmuch-private.h
+@@ -235,7 +235,7 @@ notmuch_message_file_open (const char *filename);
+ notmuch_message_file_t *
+ _notmuch_message_file_open_ctx (void *ctx, const char *filename);
+ 
+-/* Close a notmuch message preivously opened with notmuch_message_open. */
++/* Close a notmuch message previously opened with notmuch_message_open. */
+ void
+ notmuch_message_file_close (notmuch_message_file_t *message);
+ 
+diff --git a/lib/notmuch.h b/lib/notmuch.h
+index 32b5332..384c177 100644
+--- a/lib/notmuch.h
++++ b/lib/notmuch.h
+@@ -222,7 +222,7 @@ notmuch_database_get_timestamp (notmuch_database_t *database,
+ 
+ /* Add a new message to the given notmuch database.
+  *
+- * Here,'filename' should be a path relative to the the path of
++ * Here,'filename' should be a path relative to the path of
+  * 'database' (see notmuch_database_get_path), or else should be an
+  * absolute filename with initial components that match the path of
+  * 'database'.
+@@ -258,7 +258,7 @@ notmuch_database_add_message (notmuch_database_t *database,
+ 			      const char *filename,
+ 			      notmuch_message_t **message);
+ 
+-/* Find a message with the given messsage_id.
++/* Find a message with the given message_id.
+  *
+  * If the database contains a message with the given message_id, then
+  * a new notmuch_message_t object is returned. The caller should call
+@@ -620,7 +620,7 @@ notmuch_messages_advance (notmuch_messages_t *messages);
+ /* Destroy a notmuch_messages_t object.
+  *
+  * It's not strictly necessary to call this function. All memory from
+- * the notmuch_messages_t object will be reclaimed when the containg
++ * the notmuch_messages_t object will be reclaimed when the containing
+  * query object is destroyed.
+  */
+ void
+@@ -865,7 +865,7 @@ notmuch_tags_has_more (notmuch_tags_t *tags);
+ /* Get the current tag from 'tags' as a string.
+  *
+  * Note: The returned string belongs to 'tags' and has a lifetime
+- * identical to it (and the query to which it utlimately belongs).
++ * identical to it (and the query to which it ultimately belongs).
+  *
+  * See the documentation of notmuch_message_get_tags for example code
+  * showing how to iterate over a notmuch_tags_t object.
+@@ -884,7 +884,7 @@ notmuch_tags_advance (notmuch_tags_t *tags);
+ /* Destroy a notmuch_tags_t object.
+  *
+  * It's not strictly necessary to call this function. All memory from
+- * the notmuch_tags_t object will be reclaimed when the containg
++ * the notmuch_tags_t object will be reclaimed when the containing
+  * message or query objects are destroyed.
+  */
+ void
+diff --git a/lib/sha1.c b/lib/sha1.c
+index ff4dd16..cc48108 100644
+--- a/lib/sha1.c
++++ b/lib/sha1.c
+@@ -43,7 +43,7 @@ _hex_of_sha1_digest (const unsigned char digest[SHA1_DIGEST_SIZE])
+     return result;
+ }
+ 
+-/* Create a hexadcimal string version of the SHA-1 digest of 'str'
++/* Create a hexadecimal string version of the SHA-1 digest of 'str'
+  * (including its null terminating character).
+  *
+  * This function returns a newly allocated string which the caller
+diff --git a/lib/thread.cc b/lib/thread.cc
+index 4411d64..da58edc 100644
+--- a/lib/thread.cc
++++ b/lib/thread.cc
+@@ -190,7 +190,7 @@ _resolve_thread_relationships (unused (notmuch_thread_t *thread))
+  * subject line, the total count of messages, and all authors). The
+  * second search is for all messages that are in the thread and that
+  * also match the given query_string. This is to allow for a separate
+- * count of matched messages, and to allow a viewer to diplay these
++ * count of matched messages, and to allow a viewer to display these
+  * messages differently.
+  *
+  * Here, 'ctx' is talloc context for the resulting thread object.
+diff --git a/notmuch-completion.bash b/notmuch-completion.bash
+index ad55f6d..cdad05d 100644
+--- a/notmuch-completion.bash
++++ b/notmuch-completion.bash
+@@ -1,4 +1,4 @@
+-# Bash completion for notmutch
++# Bash completion for notmuch
+ #
+ # Copyright ?? 2009 Carl Worth
+ #
+diff --git a/notmuch-new.c b/notmuch-new.c
+index 83a05ba..5405a9f 100644
+--- a/notmuch-new.c
++++ b/notmuch-new.c
+@@ -303,7 +303,7 @@ add_files (notmuch_database_t *notmuch,
+ 
+ /* XXX: This should be merged with the add_files function since it
+  * shares a lot of logic with it. */
+-/* Recursively count all regular files in path and all sub-direcotries
++/* Recursively count all regular files in path and all sub-directories
+  * of path.  The result is added to *count (which should be
+  * initialized to zero by the top-level caller before calling
+  * count_files). */
+@@ -469,7 +469,7 @@ notmuch_new_command (void *ctx,
+ 
+     if (elapsed > 1 && ! add_files_state.saw_read_only_directory) {
+ 	printf ("\nTip: If you have any sub-directories that are archives (that is,\n"
+-		"they will never receive new mail), marking these directores as\n"
++		"they will never receive new mail), marking these directories as\n"
+ 		"read-only (chmod u-w /path/to/dir) will make \"notmuch new\"\n"
+ 		"much more efficient (it won't even look in those directories).\n");
+     }
+diff --git a/notmuch-search.c b/notmuch-search.c
+index 8db09c7..ac81372 100644
+--- a/notmuch-search.c
++++ b/notmuch-search.c
+@@ -76,7 +76,7 @@ notmuch_search_command (void *ctx, int argc, char *argv[])
+ 
+     query_str = query_string_from_args (ctx, argc, argv);
+     if (query_str == NULL) {
+-	fprintf (stderr, "Out of moemory.\n");
++	fprintf (stderr, "Out of memory.\n");
+ 	return 1;
+     }
+ 
+diff --git a/notmuch.1 b/notmuch.1
+index 6c3d10f..86d5f59 100644
+--- a/notmuch.1
++++ b/notmuch.1
+@@ -60,7 +60,7 @@ archives, and will then proceed to build a database that indexes the
+ mail to allow for fast search of the archive.
+ 
+ This directory can contain any number of sub-directories and should
+-primarily contain only files with indvidual email messages
++primarily contain only files with individual email messages
+ (eg. maildir or mh archives are perfect). If there are other,
+ non-email files (such as indexes maintained by other email programs)
+ then notmuch will do its best to detect those and ignore them.
+@@ -173,7 +173,7 @@ Constructs a reply template for a set of messages.
+ 
+ See the documentation of
+ .B search
+-for deatils of the supported syntax of search terms.
++for details of the supported syntax of search terms.
+ 
+ To make replying to email easier,
+ .B notmuch reply
+diff --git a/notmuch.el b/notmuch.el
+index 8894a8e..7e01ed6 100644
+--- a/notmuch.el
++++ b/notmuch.el
+@@ -205,7 +205,7 @@ Unlike builtin `next-line' this version accepts no arguments."
+ (defun notmuch-show-mark-read-then-archive-thread ()
+   "Remove \"unread\" tag from each message, then archive and show next thread.
+ 
+-Archive each message currrently shown by removing the \"unread\"
++Archive each message currently shown by removing the \"unread\"
+ and \"inbox\" tag from each. Then kill this buffer and show the
+ next thread from the search from which this thread was originally
+ shown.
+@@ -220,7 +220,7 @@ buffer."
+ (defun notmuch-show-archive-thread ()
+   "Archive each message in thread, and show next thread from search.
+ 
+-Archive each message currrently shown by removing the \"inbox\"
++Archive each message currently shown by removing the \"inbox\"
+ tag from each. Then kill this buffer and show the next thread
+ from the search from which this thread was originally shown.
+ 
+@@ -340,7 +340,7 @@ there are no more unread messages past the current point."
+       (notmuch-show-next-message)))
+ 
+ (defun notmuch-show-next-open-message ()
+-  "Advance to the the next message which is not hidden.
++  "Advance to the next message which is not hidden.
+ 
+ If read messages are currently hidden, advance to the next unread
+ message. Otherwise, advance to the next message."
+@@ -674,7 +674,7 @@ thread from that buffer can be show when done with this one)."
+       )))
+ 
+ (defvar notmuch-search-authors-width 40
+-  "Number of columns to use to diplay authors in a notmuch-search buffer.")
++  "Number of columns to use to display authors in a notmuch-search buffer.")
+ 
+ (defvar notmuch-search-mode-map
+   (let ((map (make-sparse-keymap)))
+@@ -910,7 +910,7 @@ the beginning of the buffer).
+ 
+ This command toggles the sort order for the current search.
+ 
+-Note that any fitlered searches created by
++Note that any filtered searches created by
+ `notmuch-search-filter' retain the search order of the parent
+ search."
+   (interactive)
+diff --git a/show-message.c b/show-message.c
+index 79b02e2..38f5897 100644
+--- a/show-message.c
++++ b/show-message.c
+@@ -38,7 +38,7 @@ show_message_part (GMimeObject *part, int *part_count,
+ 		if (i == 1)
+ 		    continue;
+ 		if (i > 1)
+-		    fprintf (stderr, "Warning: Unexpected extra parts of mutlipart/signed. Continuing.\n");
++		    fprintf (stderr, "Warning: Unexpected extra parts of multipart/signed. Continuing.\n");
+ 	    }
+ 	    show_message_part (g_mime_multipart_get_part (multipart, i),
+ 			       part_count, show_part);
+-- 
+1.6.5.2.433.g23cdb
+
+

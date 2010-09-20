@@ -1,0 +1,39 @@
+From: "Jan Janak" <jan@ryngle.com>
+To: notmuch@notmuchmail.org
+Date: Tue, 17 Nov 2009 23:18:47 +0100
+Subject: [notmuch] [PATCH] Older versions of install do not support -C.
+Message-ID: <1258496327-12086-1-git-send-email-jan@ryngle.com>
+
+Do not use -C cmdline option of install, older versions, commonly found in
+distributions like Debian, do not seem to support it. Running make install
+on such systems (tested on Debian Lenny) fails.
+
+Signed-off-by: Jan Janak <jan at ryngle.com>
+---
+ Makefile.local |    8 ++++----
+ 1 files changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/Makefile.local b/Makefile.local
+index f824bed..f51f1d1 100644
+--- a/Makefile.local
++++ b/Makefile.local
+@@ -27,11 +27,11 @@ install: all notmuch.1.gz
+ 	for d in $(DESTDIR)$(prefix)/bin/ $(DESTDIR)$(prefix)/share/man/man1 \
+ 		$(DESTDIR)/etc/bash_completion.d/ ; \
+ 	do \
+-		install -C -d $$d ; \
++		install -d $$d ; \
+ 	done ;
+-	install -C notmuch $(DESTDIR)$(prefix)/bin/
+-	install -C -m0644 notmuch.1.gz $(DESTDIR)$(prefix)/share/man/man1/
+-	install -C notmuch-completion.bash \
++	install notmuch $(DESTDIR)$(prefix)/bin/
++	install -m0644 notmuch.1.gz $(DESTDIR)$(prefix)/share/man/man1/
++	install notmuch-completion.bash \
+ 		$(DESTDIR)/etc/bash_completion.d/notmuch
+ 
+ SRCS  := $(SRCS) $(notmuch_client_srcs)
+-- 
+1.6.3.3
+
+

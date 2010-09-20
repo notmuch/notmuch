@@ -1,0 +1,27 @@
+From: "Keith Packard" <keithp@keithp.com>
+To: notmuch@notmuchmail.org
+Date: Tue, 17 Nov 2009 13:15:25 -0800
+Subject: [notmuch] [PATCH 1/2] Close message file after parsing message
+ headers
+In-Reply-To: <87lji5cbwo.fsf@yoom.home.cworth.org>
+References: <1258471718-6781-1-git-send-email-dottedmag@dottedmag.net>
+	<87lji5cbwo.fsf@yoom.home.cworth.org>
+Message-ID: <yunbpj0etua.fsf@aiko.keithp.com>
+
+On Tue, 17 Nov 2009 09:13:27 -0800, Carl Worth <cworth at cworth.org> wrote:
+
+> I didn't apply Keith's fix yet, because I think I'd rather just fix the
+> indexer to store the In-Reply-To header in a separate term prefix from
+> the term used for the References header[*]. That will then let us lookup
+> the in-reply-to value later for thread constructions without having to
+> open the original email file at all.
+
+Threading the message also involves displaying the from and to contents,
+which requires opening the message file. The alternative to the fix I
+provided is to just parse all of the message headers when first opening
+the message; it could then be immediately closed and the hash referred
+to for all header data. Given the choice, just having the caller say
+when it has finished with a message is probably a reasonable option...
+
+-keith
+

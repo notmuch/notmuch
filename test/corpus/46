@@ -1,0 +1,57 @@
+From: "Carl Worth" <cworth@cworth.org>
+To: notmuch@notmuchmail.org
+Date: Wed, 18 Nov 2009 03:02:43 -0800
+Subject: [notmuch] New to the list
+In-Reply-To: <1258498485-sup-142@elly>
+References: <1258498485-sup-142@elly>
+Message-ID: <87bpj0qeng.fsf@yoom.home.cworth.org>
+
+On Tue, 17 Nov 2009 23:57:18 +0100, Israel Herraiz <isra at herraiz.org> wrote:
+> I have subscribed to the list. As suggested by the welcome message, I
+> am introducing myself. My name is Israel Herraiz, and I have done a
+> couple of contributions to Sup, the probably well-known here e-mail
+> client.
+
+Welcome, Israel!
+
+I'm glad people read that little bit of text in the welcome email and
+are introducing themselves. I like to think of our new notmuch community
+as a very personable place.
+
+> "Not much" sounds interesting, and I wonder whether it could be
+> integrated with the views of Sup (inbox, threads, etc). So I have
+> subscribed to the list to keep an eye on what's going on here.
+> 
+> I have just heard of "Not much". I have not even tried to download the
+> code yet.
+
+Yes, take a look. If you're already an emacs user, then you'll find the
+interface of notmuch very comfortable, (looks a lot like sup, but lives
+inside of emacs). Even outside of emacs, the command line interface of
+notmuch gives view *fairly* similar to those of sup:
+
+    notmuch search tag:inbox		# Very much like sup's inbox
+
+    notmuch show thread:some-thread-id	# A lot like sup's thread -view
+
+The command-line output right now isn't nearly as neat as sup's, (it
+doesn't elide comments--it doesn't do the indenting of threads, etc.),
+even though the command-line interface has all the information it needs
+to do that. The reason for that is to let the emacs code own most of the
+formatting, (so that it can be more flexible--such as making hidden
+things visible, changing column widths, etc.).
+
+But one thing I wonder is if there would be situations where it would
+make sense to get the cleaner output directly out of the command-line
+tool.
+
+For example, for someone who isn't an emacs user, the command-line
+interface might be their only introduction to what the "notmuch
+experience" is like. So maybe "notmuch show" should give nice clean
+output by default and then the emacs code could call "notmuch show
+--format=emacs-friendly" or something to get the current output.
+
+That's an idea anyway.
+
+-Carl
+

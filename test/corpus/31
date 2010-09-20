@@ -1,0 +1,31 @@
+From: "Jjgod Jiang" <gzjjgod@gmail.com>
+To: notmuch@notmuchmail.org
+Date: Wed, 18 Nov 2009 11:50:17 +0800
+Subject: [notmuch] Mac OS X/Darwin compatibility issues
+Message-ID: <ddd65cda0911171950o4eea4389v86de9525e46052d3@mail.gmail.com>
+
+Hi,
+
+When I tried to compile notmuch under Mac OS X 10.6, several issues
+arisen:
+
+1. g++ reports 'warning: command line option "-Wmissing-declarations"
+is valid for C/ObjC but not for C++'
+
+2.
+notmuch-reply.c: In function ?address_is_users?:
+notmuch-reply.c:87: warning: passing argument 2 of
+?notmuch_config_get_user_other_email? from incompatible pointer type
+
+That's due to the size incompatibility of 'unsigned int' and 'size_t'
+(size_t is uint64_t in Mac OS X).
+
+3. Several errors about missing GNU extensions like getline() and strndup():
+
+warning: implicit declaration of function ?getline?
+error: ?strndup? was not declared in this scope
+
+We can implement these with fgets() and strncpy() though.
+
+- Jiang
+

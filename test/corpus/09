@@ -1,0 +1,33 @@
+From: "Mikhail Gusarov" <dottedmag@dottedmag.net>
+To: notmuch@notmuchmail.org
+Date: Wed, 18 Nov 2009 02:50:48 +0600
+Subject: [notmuch] Working with Maildir storage?
+In-Reply-To: <20091117203301.GV3165@dottiness.seas.harvard.edu> (Lars
+	Kellogg-Stedman's message of "Tue, 17 Nov 2009 15:33:01 -0500")
+References: <20091117190054.GU3165@dottiness.seas.harvard.edu>
+	<87iqd9rn3l.fsf@vertex.dottedmag>
+	<20091117203301.GV3165@dottiness.seas.harvard.edu>
+Message-ID: <87fx8can9z.fsf@vertex.dottedmag>
+
+
+Twas brillig at 15:33:01 17.11.2009 UTC-05 when lars at seas.harvard.edu did gyre and gimble:
+
+ LK> Is the list archived anywhere?  The obvious archives
+ LK> (http://notmuchmail.org/pipermail/notmuch/) aren't available, and I
+ LK> think I subscribed too late to get the patch (I only just saw the
+ LK> discussion about it).
+
+ LK> It doesn't look like the patch is in git yet.
+
+Just has been pushed
+
+-- 
+  http://fossarchy.blogspot.com/
+-------------- next part --------------
+A non-text attachment was scrubbed...
+Name: not available
+Type: application/pgp-signature
+Size: 834 bytes
+Desc: not available
+URL: <http://notmuchmail.org/pipermail/notmuch/attachments/20091118/0e33d964/attachment.pgp>
+

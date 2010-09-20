@@ -1,0 +1,84 @@
+From: "Carl Worth" <cworth@cworth.org>
+To: notmuch@notmuchmail.org
+Date: Wed, 18 Nov 2009 03:15:31 -0800
+Subject: [notmuch] Introducing myself
+In-Reply-To: <20091118002059.067214ed@hikari>
+References: <20091118002059.067214ed@hikari>
+Message-ID: <87aaykqe24.fsf@yoom.home.cworth.org>
+
+On Wed, 18 Nov 2009 00:20:59 +0100, Adrian Perez de Castro <aperez at igalia.com> wrote:
+> I have just heard about Not Much today in some random Linux-related news
+> site (LWN?), my name is Adrian Perez and I work as systems administrator
+
+Welcome to notmuch, Adrian! We're glad to have you here.
+
+> by default on most distribution. I got to have some mailboxes indexed and
+> basic searching working a couple of months ago. Lately I have been very
+> busy and had no time for coding, and them... boom! Not Much appears -- and
+> it is almost exactly what I was trying to do, but faster. I have been
+> playing a bit with Not Much today, and I think it has potential.
+
+It's funny, because I had the exact same experience with sup a couple of
+months ago. I had been frustrated for years with email programs, and had
+been thinking about how I'd like things to work n the back of my mind
+for a long time, (but never *quite* getting to the point where I would
+commit to writing an email system myself).
+
+And then... boom! I found sup and was instantly hooked. It had so much
+of what I had imagined, (and much of what I hadn't yet imagined) that I
+was quite delighted.
+
+It was really quite by accident that I ended up inventing a different
+system. I had started out just trying to speedup index creation for sup.
+If I hadn't run into the problem that it was very difficult[*] to create a
+sup-compatible index from C code, I might have stopped there.
+
+So I'd written a bunch of functional code, only to find myself stuck at
+the very last step, (hooking it up to the existing sup interface). Then
+Keith suggested emacs and it all seemed pretty easy since I'd already
+done all the Xapian work. So it's funny, I was only willing to commit to
+this project because I wasn't consciously aware I was working on it.
+Otherwise it would have seemed to overwhelming to start. :-)
+
+Anyway, that's a lot of off-topic rambling off of your introduction. But
+I'm glad that notmuch can now give that same "boom!" to others, and I'm
+glad you see potential in it.
+
+> Also, I would like to share one idea I had in mind, that you might find
+> interesting: One thing I have found very annoying is having to re-tag my
+> mail when the indexes get b0rked (it happened a couple of times to me while
+> using Sup), so I was planning to mails as read/unread and adding the tags
+> not just to the index, but to the mail text itself, e.g. by adding a
+> "X-Tags" header field or by reusing the "Keywords" one. This way, the index
+> could be totally recreated by re-reading the mail directories, and this
+> would also allow to a tools like OfflineIMAP [1] to get the mails into a
+> local maildir, tagging and indexing the mails with the e-mail reader and
+> then syncing back the messages with the "X-Tags" header to the IMAP server.
+> This would allow to use the mail reader from a different computer and still
+> have everything tagged finely.
+
+It is an interesting idea. But there's also something really comforting
+about the email indexed never modifying the mail files. If you're
+reading the notmuch commit logs closely you'll see that I'm not actually
+careful enough to be trusted with your mail (but I try). So I like that
+I don't even have to trust myself---the worst that happens is that I
+have to recreate my index.
+
+And as Keith mentioned, we've got the "notmuch dump; notmuch restore"
+idea working exactly as it did in sup. (Though I am thinking of also
+adding thread IDs to that now---more on that later.)
+
+The big annoyance I had with sup index creation, (I ended up having to
+do it more than once too), was that it takes *forever*. Right now,
+notmuch is a little bit faster, but not a lot faster. And I've got some
+ideas to fix that. It would be really nice if index creation were pain
+free. (And maybe it is for some user with small amounts of mail---oh, to
+have only 40000 messages to have to index!).
+
+-Carl
+
+[*] The problem here is that sup puts serialized ruby data structures
+into the data field of its Xapian documents. So being compatible with
+sup means being able to recreate serialized data structures for a
+particular version of ruby.
+

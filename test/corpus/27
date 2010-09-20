@@ -1,0 +1,21 @@
+From: "Keith Packard" <keithp@keithp.com>
+To: notmuch@notmuchmail.org
+Date: Tue, 17 Nov 2009 17:59:49 -0800
+Subject: [notmuch] New to the list
+In-Reply-To: <1258498485-sup-142@elly>
+References: <1258498485-sup-142@elly>
+Message-ID: <yun3a4cegoa.fsf@aiko.keithp.com>
+
+On Tue, 17 Nov 2009 23:57:18 +0100, Israel Herraiz <isra at herraiz.org> wrote:
+
+> "Not much" sounds interesting, and I wonder whether it could be
+> integrated with the views of Sup (inbox, threads, etc). So I have
+> subscribed to the list to keep an eye on what's going on here.
+
+We've tried to clone much of the sup UI inside emacs, including the
+inbox and threaded message presentation. Of course, we had to "improve"
+it a bit, as much due to the differences between curses and emacs as due
+to personal preferences...
+
+-keith
+

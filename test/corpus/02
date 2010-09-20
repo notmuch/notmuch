@@ -1,0 +1,32 @@
+From: "Mikhail Gusarov" <dottedmag@dottedmag.net>
+To: notmuch@notmuchmail.org
+Date: Tue, 17 Nov 2009 21:28:38 +0600
+Subject: [notmuch] [PATCH 2/2] Include <stdint.h> to get uint32_t in C++
+	file with gcc 4.4
+In-Reply-To: <1258471718-6781-1-git-send-email-dottedmag@dottedmag.net>
+References: <1258471718-6781-1-git-send-email-dottedmag@dottedmag.net>
+Message-ID: <1258471718-6781-2-git-send-email-dottedmag@dottedmag.net>
+
+
+Signed-off-by: Mikhail Gusarov <dottedmag at dottedmag.net>
+---
+ lib/message.cc |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
+
+diff --git a/lib/message.cc b/lib/message.cc
+index 72c350f..a4b090b 100644
+--- a/lib/message.cc
++++ b/lib/message.cc
+@@ -21,6 +21,8 @@
+ #include "notmuch-private.h"
+ #include "database-private.h"
+ 
++#include <stdint.h>
++
+ #include <gmime/gmime.h>
+ 
+ #include <xapian.h>
+-- 
+1.6.3.3
+
+

@@ -1,0 +1,31 @@
+From: "Carl Worth" <cworth@cworth.org>
+To: notmuch@notmuchmail.org
+Date: Wed, 18 Nov 2009 01:42:02 -0800
+Subject: [notmuch] [PATCH 1/2] Close message file after parsing message
+ headers
+In-Reply-To: <yunbpj0etua.fsf@aiko.keithp.com>
+References: <1258471718-6781-1-git-send-email-dottedmag@dottedmag.net>
+	<87lji5cbwo.fsf@yoom.home.cworth.org> <yunbpj0etua.fsf@aiko.keithp.com>
+Message-ID: <87pr7gqidx.fsf@yoom.home.cworth.org>
+
+On Tue, 17 Nov 2009 13:15:25 -0800, Keith Packard <keithp at keithp.com> wrote:
+> Threading the message also involves displaying the from and to contents,
+> which requires opening the message file. The alternative to the fix I
+> provided is to just parse all of the message headers when first opening
+> the message; it could then be immediately closed and the hash referred
+> to for all header data. Given the choice, just having the caller say
+> when it has finished with a message is probably a reasonable option...
+
+Hi Keith,
+
+Once I finally got back on the ground again, I pushed out a revised
+version of your patch, (didn't need the reply-to stuff anymore since I
+had fixed that differently in the meantime).
+
+I'm pretty happy with the state of this portion of the code now.
+
+Thanks Keith and Mikhail for your input on and code to fix this bug.
+
+-Carl
+
+

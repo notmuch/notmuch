@@ -1,0 +1,32 @@
+From: "Stewart Smith" <stewart@flamingspork.com>
+To: notmuch@notmuchmail.org
+Date: Wed, 18 Nov 2009 12:05:53 +1100
+Subject: [notmuch] [PATCH] Fix linking with gcc to use g++ to link in C++
+	libs.
+Message-ID: <1258506353-20352-1-git-send-email-stewart@flamingspork.com>
+
+Previously, Ubuntu 9.10, gcc 4.4.1 was getting:
+
+ccache gcc `pkg-config --libs glib-2.0 gmime-2.4 talloc` `xapian-config --libs` notmuch.o notmuch-config.o notmuch-dump.o notmuch-new.o notmuch-reply.o notmuch-restore.o notmuch-search.o notmuch-setup.o notmuch-show.o notmuch-tag.o notmuch-time.o gmime-filter-reply.o query-string.o show-message.o lib/notmuch.a -o notmuch
+/usr/bin/ld: lib/notmuch.a(database.o): in function global constructors keyed to BOOLEAN_PREFIX_INTERNAL:database.cc(.text+0x3a): error: undefined reference to 'std::ios_base::Init::Init()'
+---
+ Makefile.local |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/Makefile.local b/Makefile.local
+index f824bed..dbd3e20 100644
+--- a/Makefile.local
++++ b/Makefile.local
+@@ -18,7 +18,7 @@ notmuch_client_srcs =		\
+ 
+ notmuch_client_modules = $(notmuch_client_srcs:.c=.o)
+ notmuch: $(notmuch_client_modules) lib/notmuch.a
+-	$(CC) $(LDFLAGS) $^ -o $@
++	$(CXX) $(LDFLAGS) $^ -o $@
+ 
+ notmuch.1.gz:
+ 	gzip --stdout notmuch.1 > notmuch.1.gz
+-- 
+1.6.3.3
+
+

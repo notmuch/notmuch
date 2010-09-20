@@ -1,0 +1,38 @@
+From: "Keith Packard" <keithp@keithp.com>
+To: notmuch@notmuchmail.org
+Date: Tue, 17 Nov 2009 18:03:17 -0800
+Subject: [notmuch] Introducing myself
+In-Reply-To: <20091118002059.067214ed@hikari>
+References: <20091118002059.067214ed@hikari>
+Message-ID: <yun1vjwegii.fsf@aiko.keithp.com>
+
+On Wed, 18 Nov 2009 00:20:59 +0100, Adrian Perez de Castro <aperez at igalia.com> wrote:
+
+> Some time ago I thought
+> about doing something like Not Much and in fact I played a bit with the
+> Python+Xapian and the Python+Whoosh combinations, because I find relaxing
+> to code things in Python when I am not working and also it is installed
+> by default on most distribution. I got to have some mailboxes indexed and
+> basic searching working a couple of months ago.
+
+Sup certainly started a lot of people thinking...
+
+> Also, I would like to share one idea I had in mind, that you might find
+> interesting: One thing I have found very annoying is having to re-tag my
+> mail when the indexes get b0rked (it happened a couple of times to me while
+> using Sup), so I was planning to mails as read/unread and adding the tags
+> not just to the index, but to the mail text itself, e.g. by adding a
+> "X-Tags" header field or by reusing the "Keywords" one.
+
+Easier than that, notmuch (and sup too), provide a 'dump' command which
+just lists all of the message IDs and their associated tags. Makes
+saving tags easy and doesn't involve rewriting messages. I do this once
+a day just before my computer is backed up to an external drive.
+
+If the index is destroyed, you can reindex the messages and then reapply
+all of the tags with 'notmuch restore'.
+
+--
+keith.packard at intel.com
+
+

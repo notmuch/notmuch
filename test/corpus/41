@@ -1,0 +1,37 @@
+From: "Carl Worth" <cworth@cworth.org>
+To: notmuch@notmuchmail.org
+Date: Wed, 18 Nov 2009 02:08:10 -0800
+Subject: [notmuch] Working with Maildir storage?
+In-Reply-To: <20091117190054.GU3165@dottiness.seas.harvard.edu>
+References: <20091117190054.GU3165@dottiness.seas.harvard.edu>
+Message-ID: <87ocn0qh6d.fsf@yoom.home.cworth.org>
+
+On Tue, 17 Nov 2009 14:00:54 -0500, Lars Kellogg-Stedman <lars at seas.harvard.edu> wrote:
+> I saw the LWN article and decided to take a look at notmuch.  I'm
+> currently using mutt and mairix to index and read a collection of
+> Maildir mail folders (around 40,000 messages total).
+
+Welcome, Lars!
+
+I hadn't even seen that Keith's blog post had been picked up by lwn.net.
+That's very interesting. So, thanks for coming and trying out notmuch.
+
+>   Error opening
+>   /home/lars/Mail/read-messages.2008/cur/1246413773.24928_27334.hostname,U=3026:2,S:
+>   Too many open files
+
+Sadly, the lwn article coincided with me having just introduced this
+bug, and then getting on a Trans-Atlantic flight. So I fixed the bug
+fairly quickly, but there was quite a bit of latency before I could push
+the fix out. It should be fixed now.
+
+> I'm curious if this is expected behavior (i.e., notmuch does not work
+> with Maildir) or if something else is going on.
+
+Notmuch works just fine with maildir---it's one of the things that it
+likes the best.
+
+Happy hacking,
+
+-Carl
+

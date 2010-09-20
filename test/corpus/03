@@ -1,0 +1,39 @@
+From: "Lars Kellogg-Stedman" <lars@seas.harvard.edu>
+To: notmuch@notmuchmail.org
+Date: Tue, 17 Nov 2009 14:00:54 -0500
+Subject: [notmuch] Working with Maildir storage?
+Message-ID: <20091117190054.GU3165@dottiness.seas.harvard.edu>
+
+I saw the LWN article and decided to take a look at notmuch.  I'm
+currently using mutt and mairix to index and read a collection of
+Maildir mail folders (around 40,000 messages total).
+
+notmuch indexed the messages without complaint, but my attempt at
+searching bombed out. Running, for example:
+
+  notmuch search storage
+
+Resulted in 4604 lines of errors along the lines of:
+
+  Error opening
+  /home/lars/Mail/read-messages.2008/cur/1246413773.24928_27334.hostname,U=3026:2,S:
+  Too many open files
+
+I'm curious if this is expected behavior (i.e., notmuch does not work
+with Maildir) or if something else is going on.
+
+Cheers,
+
+-- 
+Lars Kellogg-Stedman <lars at seas.harvard.edu>
+Senior Technologist, Computing and Information Technology
+Harvard University School of Engineering and Applied Sciences
+
+-------------- next part --------------
+A non-text attachment was scrubbed...
+Name: not available
+Type: application/pgp-signature
+Size: 489 bytes
+Desc: not available
+URL: <http://notmuchmail.org/pipermail/notmuch/attachments/20091117/0bc8f9bd/attachment.pgp>
+
