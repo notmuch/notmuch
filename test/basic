@@ -74,6 +74,6 @@ test_expect_success \
 
 test_expect_success \
     'PATH is set to this repository' \
-    'test "`echo $PATH|cut -f1 -d:`" = "`dirname ${TEST_DIRECTORY}`"'
+    'test "`echo $PATH|cut -f1 -d: | sed -e 's,/test/valgrind/bin$,,'`" = "`dirname ${TEST_DIRECTORY}`"'
 
 test_done
