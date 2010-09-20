@@ -94,10 +94,12 @@ This test harness library does the following things:
  - If the script is invoked with command line argument --help
    (or -h), it shows the test_description and exits.
 
- - Creates a temporary directory with default notmuch-config and empty
-   mail store. This directory is 'test/tmp.<test-basename>'. The path
-   to notmuch-config is exported in NOTMUCH_CONFIG environment
-   variable and mail store path is stored in MAIL_DIR variable.
+ - Creates a temporary directory with default notmuch-config and a
+   mail store with a corpus of mail, (initially, 50 early messages
+   sent to the notmuch list). This directory is
+   test/tmp.<test-basename>. The path to notmuch-config is exported in
+   NOTMUCH_CONFIG environment variable and mail store path is stored
+   in MAIL_DIR variable.
 
  - Defines standard test helper functions for your scripts to
    use.  These functions are designed to make all scripts behave
@@ -115,13 +117,13 @@ Test harness library
 There are a handful helper functions defined in the test harness
 library for your script to use.
 
- - test_expect_success <message> <script>
+ test_expect_success <message> <script>
 
    This takes two strings as parameter, and evaluates the
    <script>.  If it yields success, test is considered
    successful.  <message> should state what it is testing.
 
- - test_expect_failure <message> <script>
+ test_expect_failure <message> <script>
 
    This is NOT the opposite of test_expect_success, but is used
    to mark a test that demonstrates a known breakage.  Unlike
@@ -130,12 +132,12 @@ library for your script to use.
    success and "still broken" on failure.  Failures from these
    tests won't cause -i (immediate) to stop.
 
- - test_begin_subtest <message>
+ test_begin_subtest <message>
 
    Set the test description message for a subsequent test_expect_equal
    invocation (see below).
 
- - test_expect_equal <output> <expected>
+ test_expect_equal <output> <expected>
 
    This is an often-used convenience function built on top of
    test_expect_success. It uses the message from the last
@@ -145,16 +147,41 @@ library for your script to use.
    will generate a failure and print the difference of the two
    strings.
 
- - test_debug <script>
+ test_debug <script>
 
    This takes a single argument, <script>, and evaluates it only
    when the test script is started with --debug command line
    argument.  This is primarily meant for use during the
    development of a new test script.
 
- - test_done
+ test_done
 
    Your test script must have test_done at the end.  Its purpose
    is to summarize successes and failures in the test script and
    exit with an appropriate error code.
-k
+
+There are also a number of mail-specific functions which are useful in
+writing tests:
+
+  generate_message
+
+    Generates a message with an optional template. Most tests will
+    actually prefere to call add_message. See below.
+
+  add_message
+
+    Generate a message and add it to the database (by calling "notmuch
+    new"). It is sufficient to simply call add_message with no
+    arguments if you don't care about the content of the message. If
+    more control is needed, arguments can be provide to specify many
+    different header values for the new message. See the documentation
+    within test-lib.sh or refer to many example calls within existing
+    tests.
+
+  add_email_corpus
+
+    This function should be called at the beginning of a test file
+    when a test needs to operate on a non-empty body of messages. It
+    will intialize the mail database to a known state of 50 sample
+    messages, (culled from the early history of the notmuch mailing
+    list).
