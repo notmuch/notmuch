@@ -49,15 +49,6 @@ unset CDPATH
 
 unset GREP_OPTIONS
 
-case $(echo $GIT_TRACE |tr "[A-Z]" "[a-z]") in
-	1|2|true)
-		echo "* warning: Some tests will not work if GIT_TRACE" \
-			"is set as to trace on STDERR ! *"
-		echo "* warning: Please set GIT_TRACE to something" \
-			"other than 1, 2 or true ! *"
-		;;
-esac
-
 # Convenience
 #
 # A regexp to match 5 and 40 hexdigits
@@ -500,7 +491,7 @@ test_run_ () {
 test_skip () {
 	test_count=$(($test_count+1))
 	to_skip=
-	for skp in $GIT_SKIP_TESTS
+	for skp in $NOTMUCH_SKIP_TESTS
 	do
 		case $this_test.$test_count in
 		$skp)
@@ -782,7 +773,7 @@ then
 		make_symlink "$symlink_target" "$GIT_VALGRIND/bin/$base" || exit
 	}
 
-	# override all git executables in TEST_DIRECTORY/..
+	# override notmuch executable in TEST_DIRECTORY/..
 	GIT_VALGRIND=$TEST_DIRECTORY/valgrind
 	mkdir -p "$GIT_VALGRIND"/bin
 	make_valgrind_symlink $TEST_DIRECTORY/../notmuch
@@ -843,10 +834,10 @@ cd -P "$test" || error "Cannot setup test environment"
 
 this_test=${0##*/}
 this_test=${this_test%%-*}
-for skp in $GIT_SKIP_TESTS
+for skp in $NOTMUCH_SKIP_TESTS
 do
 	to_skip=
-	for skp in $GIT_SKIP_TESTS
+	for skp in $NOTMUCH_SKIP_TESTS
 	do
 		case "$this_test" in
 		$skp)
