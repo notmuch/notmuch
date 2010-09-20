@@ -49,7 +49,7 @@ pluralize () {
 }
 
 echo "Notmuch test suite complete."
-if [ "$fixed" = "0" ] && [ "$broken" = "0" ]; then
+if [ "$fixed" = "0" ] && [ "$failed" = "0" ]; then
     tests=$(pluralize "test" $total)
     printf "All $total $tests "
     if [ "$broken" = "0" ]; then
