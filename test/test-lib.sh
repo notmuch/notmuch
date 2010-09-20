@@ -396,9 +396,6 @@ test_expect_equal ()
     fi
 }
 
-TEST_DIR=$(pwd)/test.$$
-MAIL_DIR=${TEST_DIR}/mail
-export NOTMUCH_CONFIG=${TEST_DIR}/notmuch-config
 NOTMUCH=notmuch
 
 NOTMUCH_NEW ()
