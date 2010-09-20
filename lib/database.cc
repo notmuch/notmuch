@@ -1300,7 +1300,7 @@ _resolve_message_id_to_thread_id (notmuch_database_t *notmuch,
 
     talloc_free (metadata_key);
 
-    return thread_id;
+    return talloc_strdup (ctx, thread_id);
 }
 
 static notmuch_status_t
