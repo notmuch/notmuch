@@ -691,7 +691,7 @@ matching will be applied."
 		  (more t)
 		  (inhibit-read-only t))
 	      (while more
-		(if (string-match "^\\(thread:[0-9A-Fa-f]*\\) \\(.*\\) \\(\\[[0-9/]*\\]\\) \\([^;]*\\); \\(.*\\) (\\([^()]*\\))$" string line)
+		(if (string-match "^\\(thread:[0-9A-Fa-f]*\\) \\([^][]*\\) \\(\\[[0-9/]*\\]\\) \\([^;]*\\); \\(.*\\) (\\([^()]*\\))$" string line)
 		    (let* ((thread-id (match-string 1 string))
 			   (date (match-string 2 string))
 			   (count (match-string 3 string))
