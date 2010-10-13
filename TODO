@@ -6,6 +6,13 @@ Fix the things that are causing the most pain to new users
 
 Emacs interface (notmuch.el)
 ----------------------------
+Switch the notmuch-search view to use "notmuch search --format=json"
+to fix large classes of bugs regarding poorly-escaped output and lame
+regular expressions. (The most recently found, unfixed example is the
+sender's name containing ';' which causes emacs to drop a search
+result.) This may require removing the outer array from the current
+"notmuch search --format=json" results.
+
 Enhance '+' and '-' in the search view to operate on an entire region
 if set.
 
@@ -318,3 +325,11 @@ Audit everything for dealing with out-of-memory (and drop xutil.c).
 
 Investigate why the notmuch database is slightly larger than the sup
 database for the same corpus of email.
+
+Makefile should print message teaching user about LD_LIBRARY_PATH (or
+similar) if libdir is not set to a directory examined by ldconfig.
+
+Fix notmuch build system to work with gold, (apt-get
+binutils-gold). Need the notmuch binary to explicitly link againsts
+libraries it depends on, (rather than just getting them via
+libnotmuch).
