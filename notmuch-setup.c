@@ -92,7 +92,7 @@ notmuch_setup_command (unused (void *ctx),
 		       unused (int argc), unused (char *argv[]))
 {
     char *response = NULL;
-    size_t response_size;
+    size_t response_size = 0;
     notmuch_config_t *config;
     const char **old_other_emails;
     size_t old_other_emails_len;
