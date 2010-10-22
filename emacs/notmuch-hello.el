@@ -381,7 +381,7 @@ Complete list of currently available key bindings:
 		     :help-echo "Refresh"
 		     (notmuch-hello-nice-number
 		      (string-to-number (car (process-lines notmuch-command "count")))))
-      (widget-insert " messages (that's not much mail).\n"))
+      (widget-insert " messages.\n"))
 
     (let ((found-target-pos nil)
 	  (final-target-pos nil))

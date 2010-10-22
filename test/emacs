@@ -6,7 +6,7 @@ add_email_corpus
 
 test_begin_subtest "Test emacs-hello interface"
 output=$(test_emacs '(notmuch-hello) (message (buffer-string))' 2>&1)
-test_expect_equal "$output" "   Welcome to notmuch. You have 50 messages (that's not much mail).
+test_expect_equal "$output" "   Welcome to notmuch. You have 50 messages.
 
 Saved searches: [edit]
 
