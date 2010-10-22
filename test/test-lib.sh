@@ -715,6 +715,12 @@ test_done () {
 	fi
 }
 
+test_emacs () {
+    emacs_code="$1"
+    emacs --batch --no-site-file --directory ../../emacs --load notmuch.el --eval "(progn (set-frame-width (window-frame (get-buffer-window)) 80) ${emacs_code})"
+}
+
+
 find_notmuch_path ()
 {
     dir="$1"

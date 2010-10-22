@@ -154,6 +154,14 @@ library for your script to use.
    argument.  This is primarily meant for use during the
    development of a new test script.
 
+ test_emacs <emacs-lisp-expressions>
+
+   This function executes the provided emacs lisp script within
+   emacs. The script can be a sequence of emacs lisp expressions,
+   (that is, they will be evaluated within a progn form). The lisp
+   expressions can call `message' to generate output on stdout to be
+   examined by the calling test script.
+
  test_done
 
    Your test script must have test_done at the end.  Its purpose
