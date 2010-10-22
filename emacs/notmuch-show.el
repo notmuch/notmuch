@@ -85,10 +85,10 @@ any given message."
 (defmacro with-current-notmuch-show-message (&rest body)
   "Evaluate body with current buffer set to the text of current message"
   `(save-excursion
-     (let ((filename (notmuch-show-get-filename)))
-       (let ((buf (generate-new-buffer (concat "*notmuch-msg-" filename "*"))))
+     (let ((id (notmuch-show-get-message-id)))
+       (let ((buf (generate-new-buffer (concat "*notmuch-msg-" id "*"))))
          (with-current-buffer buf
-           (insert-file-contents filename nil nil nil t)
+	    (call-process notmuch-command nil t nil "cat" id)
            ,@body)
 	 (kill-buffer buf)))))
 
@@ -917,7 +917,11 @@ any effects from previous calls to
 (defun notmuch-show-view-raw-message ()
   "View the file holding the current message."
   (interactive)
-  (view-file (notmuch-show-get-filename)))
+  (let ((id (notmuch-show-get-message-id)))
+    (let ((buf (get-buffer-create (concat "*notmuch-raw-" id "*"))))
+      (switch-to-buffer buf)
+      (save-excursion
+	(call-process notmuch-command nil t nil "cat" id)))))
 
 (defun notmuch-show-pipe-message (entire-thread command)
   "Pipe the contents of the current message (or thread) to the given command.
@@ -938,7 +942,7 @@ than only the current message."
 		       (mapconcat 'identity (notmuch-show-get-message-ids-for-open-messages) " OR "))
 		      " | " command))
       (setq shell-command
-	    (concat command " < " (shell-quote-argument (notmuch-show-get-filename)))))
+	    (concat "notmuch cat " (shell-quote-argument (notmuch-show-get-message-id)) " | " command)))
     (start-process-shell-command "notmuch-pipe-command" "*notmuch-pipe*" shell-command)))
 
 (defun notmuch-show-add-tags-worker (current-tags add-tags)
