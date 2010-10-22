@@ -111,6 +111,9 @@ int
 notmuch_search_tags_command (void *ctx, int argc, char *argv[]);
 
 int
+notmuch_cat_command (void *ctx, int argc, char *argv[]);
+
+int
 notmuch_part_command (void *ctx, int argc, char *argv[]);
 
 int

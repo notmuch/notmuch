@@ -343,6 +343,10 @@ command_t commands[] = {
       "\tcontain tags only from messages that match the search-term(s).\n"
       "\n"
       "\tIn both cases the list will be alphabetically sorted." },
+    { "cat", notmuch_cat_command,
+      "<search-terms>",
+      "Output raw content of a single message matched by the search term.",
+      "" },
     { "part", notmuch_part_command,
       "--part=<num> <search-terms>",
       "Output a single MIME part of a message.",
