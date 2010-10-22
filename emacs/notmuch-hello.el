@@ -209,11 +209,12 @@ should be. Returns a cons cell `(tags-per-line width)'."
 		   ;; after the name.
 		   (+ 9 1 widest)))))))
 
-    (cons tags-per-line (/ (- (window-width) notmuch-hello-indent
-			      ;; Count is 9 wide (8 digits plus
-			      ;; space), 1 for the space after the
-			      ;; name.
-			      (* tags-per-line (+ 9 1)))
+    (cons tags-per-line (/ (max 1
+				(- (window-width) notmuch-hello-indent
+				   ;; Count is 9 wide (8 digits plus
+				   ;; space), 1 for the space after the
+				   ;; name.
+				   (* tags-per-line (+ 9 1))))
 			   tags-per-line))))
 
 (defun notmuch-hello-insert-tags (tag-alist widest target)
@@ -249,7 +250,9 @@ should be. Returns a cons cell `(tags-per-line width)'."
 		;; can just insert `(- widest (length name))' spaces -
 		;; the column separator is included in the button if
 		;; `(equal widest (length name)'.
-		(widget-insert (make-string (- widest (length name)) ? ))))
+		(widget-insert (make-string (max 1
+						 (- widest (length name)))
+					    ? ))))
 	    (setq count (1+ count))
 	    (if (eq (% count tags-per-line) 0)
 		(widget-insert "\n")))
