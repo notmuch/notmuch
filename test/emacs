@@ -2,24 +2,23 @@
 test_description="emacs interface"
 . test-lib.sh
 
+EXPECTED=../emacs.expected-output
+
 add_email_corpus
 
-test_begin_subtest "Test emacs-hello interface"
+test_begin_subtest "Basic notmuch-hello view in emacs"
 output=$(test_emacs '(notmuch-hello) (message (buffer-string))' 2>&1)
-test_expect_equal "$output" "   Welcome to notmuch. You have 50 messages.
+expected=$(cat $EXPECTED/notmuch-hello)
+test_expect_equal "$output" "$expected"
 
-Saved searches: [edit]
+test_begin_subtest "Basic notmuch-search view in emacs"
+output=$(test_emacs '(notmuch-search "tag:inbox") (while (get-buffer-process (current-buffer)) (sleep-for 0.1)) (message (buffer-string))' 2>&1)
+expected=$(cat $EXPECTED/notmuch-search-tag-inbox)
+test_expect_equal "$output" "$expected"
 
-	  50 inbox           50 unread    
-
-Search:                                                                     
-
-[Show all tags]
-
-	 Type a search query and hit RET to view matching threads.
-		Edit saved searches with the \`edit' button.
-  Hit RET or click on a saved search or tag name to view matching threads.
-    \`=' refreshes this screen. \`s' jumps to the search box. \`q' to quit."
-
+test_begin_subtest "Basic notmuch-show view in emacs"
+output=$(test_emacs '(notmuch-show "thread:0000000000000009") (message (buffer-string))' 2>&1)
+expected=$(cat $EXPECTED/notmuch-show-thread-9)
+test_expect_equal "$output" "$expected"
 
 test_done
