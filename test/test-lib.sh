@@ -377,7 +377,7 @@ add_email_corpus ()
 	cp -a ../corpus.mail ${MAIL_DIR}
     else
 	cp -a ../corpus ${MAIL_DIR}
-	notmuch new
+	notmuch new >/dev/null
 	cp -a ${MAIL_DIR} ../corpus.mail
     fi
 }
