@@ -50,11 +50,10 @@ test_emacs '(notmuch-show "thread:0000000000000001") (notmuch-show-remove-tag "t
 output=$(notmuch search thread:0000000000000001)
 test_expect_equal "$output" "thread:0000000000000001   2009-11-18 [4/4] Jjgod Jiang, Alexander Botero-Lowry; [notmuch] Mac OS X/Darwin compatibility issues (inbox unread)"
 
-test_begin_subtest "Message with .. in Message-Id
-	[XXX:Tag manipulation from show view doesn't work with .. in Message-Id]"
+test_begin_subtest "Message with .. in Message-Id:"
 add_message [id]=123..456@example '[subject]="Message with .. in Message-Id"'
 test_emacs '(notmuch-search "id:\"123..456@example\"") (notmuch-test-wait) (notmuch-search-add-tag "search-add") (notmuch-search-add-tag "search-remove") (notmuch-search-remove-tag "search-remove") (notmuch-show "id:\"123..456@example\"") (notmuch-test-wait) (notmuch-show-add-tag "show-add") (notmuch-show-add-tag "show-remove") (notmuch-show-remove-tag "show-remove")'
 output=$(notmuch search 'id:"123..456@example"' | notmuch_search_sanitize)
-test_expect_equal_failure "$output" "thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; Message with .. in Message-Id (inbox search-add show-add)"
+test_expect_equal "$output" "thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; Message with .. in Message-Id (inbox search-add show-add)"
 
 test_done

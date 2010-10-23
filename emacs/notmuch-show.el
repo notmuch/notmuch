@@ -726,7 +726,7 @@ All currently available key bindings:
 
 (defun notmuch-show-get-message-id ()
   "Return the message id of the current message."
-  (concat "id:" (notmuch-show-get-prop :id)))
+  (concat "id:\"" (notmuch-show-get-prop :id) "\""))
 
 ;; dme: Would it make sense to use a macro for many of these?
 
