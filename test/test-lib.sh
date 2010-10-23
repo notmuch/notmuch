@@ -414,6 +414,24 @@ test_expect_equal ()
     fi
 }
 
+test_expect_equal_failure ()
+{
+	test "$#" = 3 && { prereq=$1; shift; } || prereq=
+	test "$#" = 2 ||
+	error "bug in the test script: not 2 or 3 parameters to test_expect_equal"
+
+	output="$1"
+	expected="$2"
+	if ! test_skip "$@"
+	then
+		if [ "$output" = "$expected" ]; then
+			test_known_broken_ok_ "$test_subtest_name"
+		else
+			test_known_broken_failure_ "$test_subtest_name"
+		fi
+    fi
+}
+
 NOTMUCH_NEW ()
 {
     notmuch new | grep -v -E -e '^Processed [0-9]*( total)? file|Found [0-9]* total file'

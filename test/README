@@ -147,6 +147,13 @@ library for your script to use.
    will generate a failure and print the difference of the two
    strings.
 
+ test_expect_equal_failure <output> <expected>
+
+   This works similar to test_expect_equal (see above) but is used to
+   mark a test that demonstrates a known breakage, (that is, the
+   author of the test expectes "output" and "expected" to differ until
+   the breakage is fixed). See test_expect_failure for details.
+
  test_debug <script>
 
    This takes a single argument, <script>, and evaluates it only
