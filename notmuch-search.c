@@ -122,7 +122,7 @@ format_thread_json (const void *ctx,
     talloc_free (ctx_quote);
 }
 
-static void
+static int
 do_search_threads (const void *ctx,
 		   const search_format_t *format,
 		   notmuch_query_t *query,
@@ -136,7 +136,11 @@ do_search_threads (const void *ctx,
 
     fputs (format->results_start, stdout);
 
-    for (threads = notmuch_query_search_threads (query);
+    threads = notmuch_query_search_threads (query);
+    if (threads == NULL)
+	return 1;
+
+    for (;
 	 notmuch_threads_valid (threads);
 	 notmuch_threads_move_to_next (threads))
     {
@@ -183,6 +187,8 @@ do_search_threads (const void *ctx,
     }
 
     fputs (format->results_end, stdout);
+
+    return 0;
 }
 
 int
@@ -195,7 +201,7 @@ notmuch_search_command (void *ctx, int argc, char *argv[])
     char *opt;
     notmuch_sort_t sort = NOTMUCH_SORT_NEWEST_FIRST;
     const search_format_t *format = &format_text;
-    int i;
+    int i, ret;
 
     for (i = 0; i < argc && argv[i][0] == '-'; i++) {
 	if (strcmp (argv[i], "--") == 0) {
@@ -258,10 +264,10 @@ notmuch_search_command (void *ctx, int argc, char *argv[])
 
     notmuch_query_set_sort (query, sort);
 
-    do_search_threads (ctx, format, query, sort);
+    ret = do_search_threads (ctx, format, query, sort);
 
     notmuch_query_destroy (query);
     notmuch_database_close (notmuch);
 
-    return 0;
+    return ret;
 }
