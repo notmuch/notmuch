@@ -30,4 +30,24 @@ test_begin_subtest "Navigation of notmuch-search to thread view"
 output=$(test_emacs '(notmuch-search "tag:inbox") (notmuch-test-wait) (goto-char (point-min)) (re-search-forward "Working with Maildir") (notmuch-search-show-thread) (notmuch-test-wait) (message (buffer-string))' 2>&1)
 test_expect_equal "$output" "$expected"
 
+test_begin_subtest "Add tag from search view"
+test_emacs '(notmuch-search "thread:0000000000000001") (notmuch-test-wait) (notmuch-search-add-tag "tag-from-search-view")'
+output=$(notmuch search thread:0000000000000001)
+test_expect_equal "$output" "thread:0000000000000001   2009-11-18 [4/4] Jjgod Jiang, Alexander Botero-Lowry; [notmuch] Mac OS X/Darwin compatibility issues (inbox tag-from-search-view unread)"
+
+test_begin_subtest "Remove tag from search view"
+test_emacs '(notmuch-search "thread:0000000000000001") (notmuch-test-wait) (notmuch-search-remove-tag "tag-from-search-view")'
+output=$(notmuch search thread:0000000000000001)
+test_expect_equal "$output" "thread:0000000000000001   2009-11-18 [4/4] Jjgod Jiang, Alexander Botero-Lowry; [notmuch] Mac OS X/Darwin compatibility issues (inbox unread)"
+
+test_begin_subtest "Add tag from notmuch-show view"
+test_emacs '(notmuch-show "thread:0000000000000001") (notmuch-show-add-tag "tag-from-show-view")'
+output=$(notmuch search thread:0000000000000001)
+test_expect_equal "$output" "thread:0000000000000001   2009-11-18 [4/4] Jjgod Jiang, Alexander Botero-Lowry; [notmuch] Mac OS X/Darwin compatibility issues (inbox tag-from-show-view unread)"
+
+test_begin_subtest "Remove tag from notmuch-show view"
+test_emacs '(notmuch-show "thread:0000000000000001") (notmuch-show-remove-tag "tag-from-show-view")'
+output=$(notmuch search thread:0000000000000001)
+test_expect_equal "$output" "thread:0000000000000001   2009-11-18 [4/4] Jjgod Jiang, Alexander Botero-Lowry; [notmuch] Mac OS X/Darwin compatibility issues (inbox unread)"
+
 test_done
