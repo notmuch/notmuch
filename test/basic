@@ -52,7 +52,7 @@ test_expect_code 2 'failure to clean up causes the test to fail' '
 # Ensure that all tests are being run
 test_begin_subtest 'Ensure that all available tests will be run by notmuch-test'
 tests_in_suite=$(grep TESTS= ../notmuch-test | sed -e "s/TESTS=\"\(.*\)\"/\1/" | tr " " "\n" | sort)
-available=$(ls -1 ../ | grep -v -E "^(aggregate-results.sh|Makefile|Makefile.local|notmuch-test|README|test-lib.sh|test-results|tmp.*|valgrind|corpus*)" | sort)
+available=$(ls -1 ../ | grep -v -E "^(aggregate-results.sh|Makefile|Makefile.local|notmuch-test|README|test-lib.sh|test-results|tmp.*|valgrind|corpus*|emacs.expected-output)" | sort)
 test_expect_equal "$tests_in_suite" "$available"
 
 ################################################################
