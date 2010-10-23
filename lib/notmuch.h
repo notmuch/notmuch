@@ -400,6 +400,8 @@ notmuch_query_set_sort (notmuch_query_t *query, notmuch_sort_t sort);
  * notmuch_threads_t object. (For consistency, we do provide a
  * notmuch_threads_destroy function, but there's no good reason
  * to call it if the query is about to be destroyed).
+ *
+ * If a Xapian exception occurs this function will return NULL.
  */
 notmuch_threads_t *
 notmuch_query_search_threads (notmuch_query_t *query);

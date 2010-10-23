@@ -249,6 +249,10 @@ notmuch_query_search_threads (notmuch_query_t *query)
 					      free, NULL);
 
     threads->messages = notmuch_query_search_messages (query);
+    if (threads->messages == NULL) {
+	    talloc_free (threads);
+	    return NULL;
+    }
 
     threads->thread_id = NULL;
 
