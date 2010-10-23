@@ -12,13 +12,22 @@ expected=$(cat $EXPECTED/notmuch-hello)
 test_expect_equal "$output" "$expected"
 
 test_begin_subtest "Basic notmuch-search view in emacs"
-output=$(test_emacs '(notmuch-search "tag:inbox") (while (get-buffer-process (current-buffer)) (sleep-for 0.1)) (message (buffer-string))' 2>&1)
+output=$(test_emacs '(notmuch-search "tag:inbox") (notmuch-test-wait) (message (buffer-string))' 2>&1)
 expected=$(cat $EXPECTED/notmuch-search-tag-inbox)
 test_expect_equal "$output" "$expected"
+
+test_begin_subtest "Navigation of notmuch-hello to search results
+	[XXX: Need to decide the correct order of the search results]"
+output=$(test_emacs '(notmuch-hello) (goto-char (point-min)) (re-search-forward "inbox") (widget-button-press (point)) (notmuch-test-wait) (message (buffer-string))' 2>&1)
+test_expect_equal_failure "$output" "$expected"
 
 test_begin_subtest "Basic notmuch-show view in emacs"
 output=$(test_emacs '(notmuch-show "thread:0000000000000009") (message (buffer-string))' 2>&1)
 expected=$(cat $EXPECTED/notmuch-show-thread-9)
+test_expect_equal "$output" "$expected"
+
+test_begin_subtest "Navigation of notmuch-search to thread view"
+output=$(test_emacs '(notmuch-search "tag:inbox") (notmuch-test-wait) (goto-char (point-min)) (re-search-forward "Working with Maildir") (notmuch-search-show-thread) (notmuch-test-wait) (message (buffer-string))' 2>&1)
 test_expect_equal "$output" "$expected"
 
 test_done

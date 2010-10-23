@@ -735,7 +735,11 @@ test_done () {
 
 test_emacs () {
     emacs_code="$1"
-    emacs --batch --no-site-file --directory ../../emacs --load notmuch.el --eval "(progn (set-frame-width (window-frame (get-buffer-window)) 80) ${emacs_code})"
+    emacs --batch --no-site-file --directory ../../emacs --load notmuch.el \
+	--eval "(defun notmuch-test-wait ()
+			(while (get-buffer-process (current-buffer))
+				(sleep-for 0.1)))" \
+	--eval "(progn (set-frame-width (window-frame (get-buffer-window)) 80) ${emacs_code})"
 }
 
 
