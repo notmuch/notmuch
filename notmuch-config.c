@@ -562,28 +562,41 @@ notmuch_config_set_new_tags (notmuch_config_t *config,
     config->new_tags = NULL;
 }
 
-int
-notmuch_config_command (void *ctx, int argc, char *argv[])
+/* Given a configuration item of the form <group>.<key> return the
+ * component group and key. If any error occurs, print a message on
+ * stderr and return 1. Otherwise, return 0.
+ *
+ * Note: This function modifies the original 'item' string.
+ */
+static int
+_item_split (char *item, char **group, char **key)
+{
+    char *period;
+
+    *group = item;
+
+    period = index (item, '.');
+    if (period == NULL || *(period+1) == '\0') {
+	fprintf (stderr,
+		 "Invalid configuration name: %s\n"
+		 "(Should be of the form <section>.<item>)\n", item);
+	return 1;
+    }
+
+    *period = '\0';
+    *key = period + 1;
+
+    return 0;
+}
+
+static int
+notmuch_config_command_get (void *ctx, char *item)
 {
     notmuch_config_t *config;
-    char *item;
-
-    if (argc != 2) {
-	fprintf (stderr, "Error: notmuch config requires two arguments.\n");
-	return 1;
-    }
-
-    if (strcmp (argv[0], "get")) {
-	fprintf (stderr, "Unrecognized argument for notmuch config: %s\n",
-		 argv[0]);
-	return 1;
-    }
 
     config = notmuch_config_open (ctx, NULL, NULL);
     if (config == NULL)
 	return 1;
-
-    item = argv[1];
 
     if (strcmp(item, "database.path") == 0) {
 	printf ("%s\n", notmuch_config_get_database_path (config));
@@ -608,20 +621,10 @@ notmuch_config_command (void *ctx, int argc, char *argv[])
     } else {
 	char **value;
 	size_t i, length;
-	char *group, *period, *key;
+	char *group, *key;
 
-	group = item;
-
-	period = index (item, '.');
-	if (period == NULL || *(period+1) == '\0') {
-	    fprintf (stderr,
-		     "Invalid configuration name: %s\n"
-		     "(Should be of the form <section>.<item>)\n", item);
+	if (_item_split (item, &group, &key))
 	    return 1;
-	}
-
-	*period = '\0';
-	key = period + 1;
 
 	value = g_key_file_get_string_list (config->key_file,
 					    group, key,
@@ -641,4 +644,62 @@ notmuch_config_command (void *ctx, int argc, char *argv[])
     notmuch_config_close (config);
 
     return 0;
+}
+
+static int
+notmuch_config_command_set (void *ctx, char *item, int argc, char *argv[])
+{
+    notmuch_config_t *config;
+    char *group, *key;
+    int ret;
+
+    if (_item_split (item, &group, &key))
+	return 1;
+
+    config = notmuch_config_open (ctx, NULL, NULL);
+    if (config == NULL)
+	return 1;
+
+    /* With only the name of an item, we clear it from the
+     * configuration file.
+     *
+     * With a single value, we set it as a string.
+     *
+     * With multiple values, we set them as a string list.
+     */
+    switch (argc) {
+    case 0:
+	g_key_file_remove_key (config->key_file, group, key, NULL);
+	break;
+    case 1:
+	g_key_file_set_string (config->key_file, group, key, argv[0]);
+	break;
+    default:
+	g_key_file_set_string_list (config->key_file, group, key,
+				    (const gchar **) argv, argc);
+	break;
+    }
+
+    ret = notmuch_config_save (config);
+    notmuch_config_close (config);
+
+    return ret;
+}
+
+int
+notmuch_config_command (void *ctx, int argc, char *argv[])
+{
+    if (argc < 2) {
+	fprintf (stderr, "Error: notmuch config requires at least two arguments.\n");
+	return 1;
+    }
+
+    if (strcmp (argv[0], "get") == 0)
+	return notmuch_config_command_get (ctx, argv[1]);
+    else if (strcmp (argv[0], "set") == 0)
+	return notmuch_config_command_set (ctx, argv[1], argc - 2, argv + 2);
+
+    fprintf (stderr, "Unrecognized argument for notmuch config: %s\n",
+	     argv[0]);
+    return 1;
 }

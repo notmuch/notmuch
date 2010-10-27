@@ -322,19 +322,30 @@ command_t commands[] = {
       "\tmessage specified by the search terms does not include a\n"
       "\tpart with the specified \"id\" there will be no output." },
     { "config", notmuch_config_command,
-      "get <section>.<item>",
-      "Get settings from the notmuch configuration file.",
+      "[get|set] <section>.<item> [value ...]",
+      "Get or set settings in the notmuch configuration file.",
+      "    config get <section>.<item>\n"
+      "\n"
       "\tThe value of the specified configuration item is printed\n"
       "\tto stdout. If the item has multiple values, each value\n"
       "\tis separated by a newline character.\n"
       "\n"
-      "\tAvailable configuration items include at least"
+      "\tAvailable configuration items include at least\n"
       "\n"
       "\t\tdatabase.path\n"
       "\t\tuser.name\n"
       "\t\tuser.primary_email\n"
       "\t\tuser.other_email\n"
-      "\t\tnew.tags\n" },
+      "\t\tnew.tags\n"
+      "\n"
+      "    config set <section>.<item> [value ...]\n"
+      "\n"
+      "\tThe specified configuration item is set to the given value.\n"
+      "\tTo specify a multiple-value item, provide each value as\n"
+      "\ta separate command-line argument.\n"
+      "\n"
+      "\tIf no values are provided, the specified configuration item\n"
+      "\twill be removed from the configuration file." },
     { "help", notmuch_help_command,
       "[<command>]",
       "This message, or more detailed help for the named command.",

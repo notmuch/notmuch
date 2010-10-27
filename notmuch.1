@@ -406,14 +406,12 @@ section below for details of the supported syntax for <search-terms>.
 
 The
 .B config
-command can be used to get settings from the notmuch configuration
-file.
+command can be used to get or set settings int the notmuch
+configuration file.
 
 .RS 4
 .TP 4
 .BR "config get " <section> . <item>
-
-Get settings from the notmuch configuration file.
 
 The value of the specified configuration item is printed to stdout. If
 the item has multiple values, each value is separated by a newline
@@ -430,6 +428,18 @@ Available configuration items include at least
 	user.other_email
 
 	new.tags
+.RE
+
+.RS 4
+.TP 4
+.BR "config set " <section> . "<item> [values ...]"
+
+The specified configuration item is set to the given value.  To
+specify a multiple-value item, provide each value as a separate
+command-line argument.
+
+If no values are provided, the specified configuration item will be
+removed from the configuration file.
 .RE
 
 .SH SEARCH SYNTAX
