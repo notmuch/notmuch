@@ -18,6 +18,8 @@
 
 (require 'message)
 
+(require 'notmuch-lib)
+
 (defvar notmuch-maildir-fcc-count 0)
 
 (defcustom notmuch-fcc-dirs nil
@@ -43,10 +45,9 @@
  used. The first entry is used as a default fallback when nothing
  else matches.
 
- In all cases, the complete FCC directory will be constructed by 
- concatenating the content  of the variable 'message-directory' 
- ('~/Mail/' by default and customizable via M-x
- customize-variable<RET>message-directory<RET>) and this value.
+ In all cases, a relative FCC directory will be understood to
+ specify a directory within the notmuch mail store, (as set by
+ the database.path option in the notmuch configuration file).
 
  You will be prompted to create the directory if it does not exist yet when 
  sending a mail.
@@ -90,8 +91,9 @@
   ;; if there is no fcc header yet, add ours
   (unless (message-fetch-field "fcc")
     (message-add-header (concat "Fcc: "
-                                (file-name-as-directory message-directory)
-                                subdir)))
+				(if (= (elt subdir 0) ?/)
+				    subdir
+				  (concat (notmuch-database-path) "/" subdir)))))
 
   ;; finally test if fcc points to a valid maildir
   (let ((fcc-header (message-fetch-field "fcc")))

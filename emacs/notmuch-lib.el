@@ -68,6 +68,13 @@ the user hasn't set this variable with the old or new value."
 	(match-string 2 long-string)
       "unknown")))
 
+(defun notmuch-database-path ()
+  "Return the database.path value from the notmuch configuration."
+  ;; Trim off the trailing newline
+  (substring (shell-command-to-string
+	      (concat notmuch-command " config get database.path"))
+	      0 -1))
+
 ;;
 
 ;; XXX: This should be a generic function in emacs somewhere, not
