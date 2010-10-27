@@ -22,7 +22,7 @@
 
 (defvar notmuch-maildir-fcc-count 0)
 
-(defcustom notmuch-fcc-dirs nil
+(defcustom notmuch-fcc-dirs "sent"
  "Determines the maildir directory to save outgoing mails in.
 
  If set to non-nil, this will cause message mode to file your
