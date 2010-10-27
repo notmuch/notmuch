@@ -566,7 +566,7 @@ int
 notmuch_config_command (void *ctx, int argc, char *argv[])
 {
     notmuch_config_t *config;
-    const char *item;
+    char *item;
 
     if (argc != 2) {
 	fprintf (stderr, "Error: notmuch config requires two arguments.\n");
@@ -606,9 +606,36 @@ notmuch_config_command (void *ctx, int argc, char *argv[])
 	for (i = 0; i < length; i++)
 	    printf ("%s\n", tags[i]);
     } else {
-	fprintf (stderr, "Unknown configuration item: %s\n",
-		 argv[1]);
-	return 1;
+	char **value;
+	size_t i, length;
+	char *group, *period, *key;
+
+	group = item;
+
+	period = index (item, '.');
+	if (period == NULL || *(period+1) == '\0') {
+	    fprintf (stderr,
+		     "Invalid configuration name: %s\n"
+		     "(Should be of the form <section>.<item>)\n", item);
+	    return 1;
+	}
+
+	*period = '\0';
+	key = period + 1;
+
+	value = g_key_file_get_string_list (config->key_file,
+					    group, key,
+					    &length, NULL);
+	if (value == NULL) {
+	    fprintf (stderr, "Unknown configuration item: %s.%s\n",
+		     group, key);
+	    return 1;
+	}
+
+	for (i = 0; i < length; i++)
+	    printf ("%s\n", value[i]);
+
+	free (value);
     }
 
     notmuch_config_close (config);
