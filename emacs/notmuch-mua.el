@@ -126,6 +126,10 @@ list."
       (when (not (string= "" user-agent))
 	(push (cons "User-Agent" user-agent) other-headers))))
 
+  (unless (assoc "From" other-headers)
+    (push (cons "From" (concat
+			(notmuch-user-name) " <" (notmuch-user-primary-email) ">")) other-headers))
+
   (message-mail to subject other-headers continue
 		switch-function yank-action send-actions)
   (message-sort-headers)

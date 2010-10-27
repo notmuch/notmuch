@@ -68,12 +68,24 @@ the user hasn't set this variable with the old or new value."
 	(match-string 2 long-string)
       "unknown")))
 
-(defun notmuch-database-path ()
-  "Return the database.path value from the notmuch configuration."
+(defun notmuch-config-get (item)
+  "Return a value from the notmuch configuration."
   ;; Trim off the trailing newline
   (substring (shell-command-to-string
-	      (concat notmuch-command " config get database.path"))
+	      (concat notmuch-command " config get " item))
 	      0 -1))
+
+(defun notmuch-database-path ()
+  "Return the database.path value from the notmuch configuration."
+  (notmuch-config-get "database.path"))
+
+(defun notmuch-user-name ()
+  "Return the user.name value from the notmuch configuration."
+  (notmuch-config-get "user.name"))
+
+(defun notmuch-user-primary-email ()
+  "Return the user.primary_email value from the notmuch configuration."
+  (notmuch-config-get "user.primary_email"))
 
 ;;
 

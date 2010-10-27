@@ -68,19 +68,11 @@ smtp_dummy_pid=$!
 test_emacs "(setq message-send-mail-function 'message-smtpmail-send-it) (setq smtpmail-smtp-server \"localhost\") (setq smtpmail-smtp-service \"25025\") (notmuch-hello) (notmuch-mua-mail) (message-goto-to) (insert \"user@example.com\") (message-goto-subject) (insert \"Testing message sent via SMTP\") (message-goto-body) (insert \"This is a test that messages are sent via SMTP\") (message-send-and-exit)" >/dev/null 2>&1
 wait ${smtp_dummy_pid}
 
-# XXX: Masking away the User-Agent, Date, and Message-ID makes sense,
-# since these fields are inherently unpredictable. But doing the same
-# thing with the From address is cheating. What should really be
-# happening here is that the emacs interface should be using something
-# like "notmuch compose" to construct the initial message and it
-# should be getting the user's name and email address from the notmuch
-# configuration file.
-
-output=$(sed -e 's,^From: .*,From: XXX,' \
+output=$(sed \
     -e s',^User-Agent: Notmuch/.* Emacs/.*,User-Agent: Notmuch/XXX Emacs/XXX,' \
     -e s',^Date:.*,Date: XXX,' \
     -e s',^Message-ID: <.*>$,Message-ID: <XXX>,' < sent_message)
-test_expect_equal "$output" "From: XXX
+test_expect_equal "$output" "From: Notmuch Test Suite <test_suite@notmuchmail.org>
 To: user@example.com
 Subject: Testing message sent via SMTP
 User-Agent: Notmuch/XXX Emacs/XXX
