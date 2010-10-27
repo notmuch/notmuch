@@ -113,6 +113,9 @@ notmuch_search_tags_command (void *ctx, int argc, char *argv[]);
 int
 notmuch_part_command (void *ctx, int argc, char *argv[]);
 
+int
+notmuch_config_command (void *ctx, int argc, char *argv[]);
+
 const char *
 notmuch_time_relative_date (const void *ctx, time_t then);
 
@@ -174,7 +177,7 @@ void
 notmuch_config_set_user_primary_email (notmuch_config_t *config,
 				       const char *primary_email);
 
-char **
+const char **
 notmuch_config_get_user_other_email (notmuch_config_t *config,
 				     size_t *length);
 

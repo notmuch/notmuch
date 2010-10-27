@@ -321,6 +321,20 @@ command_t commands[] = {
       "\tby the \"--format=json\" option of \"notmuch show\". If the\n"
       "\tmessage specified by the search terms does not include a\n"
       "\tpart with the specified \"id\" there will be no output." },
+    { "config", notmuch_config_command,
+      "get <section>.<item>",
+      "Get settings from the notmuch configuration file.",
+      "\tThe value of the specified configuration item is printed\n"
+      "\tto stdout. If the item has multiple values, each value\n"
+      "\tis separated by a newline character.\n"
+      "\n"
+      "\tAvailable configuration items include at least"
+      "\n"
+      "\t\tdatabase.path\n"
+      "\t\tuser.name\n"
+      "\t\tuser.primary_email\n"
+      "\t\tuser.other_email\n"
+      "\t\tnew.tags\n" },
     { "help", notmuch_help_command,
       "[<command>]",
       "This message, or more detailed help for the named command.",

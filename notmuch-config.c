@@ -68,7 +68,7 @@ struct _notmuch_config {
     char *database_path;
     char *user_name;
     char *user_primary_email;
-    char **user_other_email;
+    const char **user_other_email;
     size_t user_other_email_length;
     const char **new_tags;
     size_t new_tags_length;
@@ -474,7 +474,7 @@ notmuch_config_set_user_primary_email (notmuch_config_t *config,
     config->user_primary_email = NULL;
 }
 
-char **
+const char **
 notmuch_config_get_user_other_email (notmuch_config_t *config,
 				     size_t *length)
 {
@@ -562,3 +562,56 @@ notmuch_config_set_new_tags (notmuch_config_t *config,
     config->new_tags = NULL;
 }
 
+int
+notmuch_config_command (void *ctx, int argc, char *argv[])
+{
+    notmuch_config_t *config;
+    const char *item;
+
+    if (argc != 2) {
+	fprintf (stderr, "Error: notmuch config requires two arguments.\n");
+	return 1;
+    }
+
+    if (strcmp (argv[0], "get")) {
+	fprintf (stderr, "Unrecognized argument for notmuch config: %s\n",
+		 argv[0]);
+	return 1;
+    }
+
+    config = notmuch_config_open (ctx, NULL, NULL);
+    if (config == NULL)
+	return 1;
+
+    item = argv[1];
+
+    if (strcmp(item, "database.path") == 0) {
+	printf ("%s\n", notmuch_config_get_database_path (config));
+    } else if (strcmp(item, "user.name") == 0) {
+	printf ("%s\n", notmuch_config_get_user_name (config));
+    } else if (strcmp(item, "user.primary_email") == 0) {
+	printf ("%s\n", notmuch_config_get_user_primary_email (config));
+    } else if (strcmp(item, "user.other_email") == 0) {
+	const char **other_email;
+	size_t i, length;
+	
+	other_email = notmuch_config_get_user_other_email (config, &length);
+	for (i = 0; i < length; i++)
+	    printf ("%s\n", other_email[i]);
+    } else if (strcmp(item, "new.tags") == 0) {
+	const char **tags;
+	size_t i, length;
+
+	tags = notmuch_config_get_new_tags (config, &length);
+	for (i = 0; i < length; i++)
+	    printf ("%s\n", tags[i]);
+    } else {
+	fprintf (stderr, "Unknown configuration item: %s\n",
+		 argv[1]);
+	return 1;
+    }
+
+    notmuch_config_close (config);
+
+    return 0;
+}
