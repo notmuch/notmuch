@@ -844,7 +844,8 @@ rm -fr "$test" || {
 }
 
 MAIL_DIR="${TMP_DIRECTORY}/mail"
-export NOTMUCH_CONFIG="${TMP_DIRECTORY}/notmuch-config"
+export HOME="${TMP_DIRECTORY}"
+export NOTMUCH_CONFIG="${HOME}/notmuch-config"
 
 mkdir -p "${test}"
 mkdir -p "${MAIL_DIR}"
