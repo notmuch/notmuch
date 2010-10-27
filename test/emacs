@@ -56,4 +56,24 @@ test_emacs '(notmuch-search "id:\"123..456@example\"") (notmuch-test-wait) (notm
 output=$(notmuch search 'id:"123..456@example"' | notmuch_search_sanitize)
 test_expect_equal "$output" "thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; Message with .. in Message-Id (inbox search-add show-add)"
 
+test_begin_subtest "Sending a message via (fake) SMTP"
+../smtp-dummy sent_message &
+smtp_dummy_pid=$!
+test_emacs "(setq message-send-mail-function 'message-smtpmail-send-it) (setq smtpmail-smtp-server \"localhost\") (setq smtpmail-smtp-service \"25025\") (notmuch-hello) (notmuch-mua-mail) (message-goto-to) (insert \"user@example.com\") (message-goto-subject) (insert \"Testing message sent via SMTP\") (message-goto-body) (insert \"This is a test that messages are sent via SMTP\") (message-send-and-exit)" >/dev/null 2>&1
+wait ${smtp_dummy_pid}
+output=$(sed -e 's,^From: .*,From: XXX,' \
+    -e s',^User-Agent: Notmuch/.* Emacs/.*,User-Agent: Notmuch/XXX Emacs/XXX,' \
+    -e s',^Date:.*,Date: XXX,' \
+    -e s',^Message-ID: <.*>$,Message-ID: <XXX>,' < sent_message)
+test_expect_equal "$output" "From: XXX
+To: user@example.com
+Subject: Testing message sent via SMTP
+User-Agent: Notmuch/XXX Emacs/XXX
+Date: XXX
+Message-ID: <XXX>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+
+This is a test that messages are sent via SMTP"
+
 test_done
