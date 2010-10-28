@@ -51,10 +51,10 @@ along with notmuch.  If not, see <http://www.gnu.org/licenses/>.
 
 Copyright 2010 Sebastian Spaeth <Sebastian@SSpaeth.de>'
 """
-from database import Database, Query
-from message import Messages, Message
-from thread import Threads, Thread
-from tag import Tags
+from notmuch.database import Database, Query
+from notmuch.message import Messages, Message
+from notmuch.thread import Threads, Thread
+from notmuch.tag import Tags
 from notmuch.globals import nmlib, STATUS, NotmuchError
 __LICENSE__="GPL v3+"
 __VERSION__='0.2.2'
