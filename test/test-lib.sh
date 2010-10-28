@@ -15,6 +15,14 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see http://www.gnu.org/licenses/ .
 
+if [ ${BASH_VERSINFO[0]} -lt 4 ]; then
+    echo "Error: The notmuch test suite requires a bash version >= 4.0"
+    echo "due to use of associative arrays within the test suite."
+    echo "Please try again with a newer bash (or help us fix the"
+    echo "test suite to be more portable). Thanks."
+    exit 1
+fi
+
 # if --tee was passed, write the output not only to the terminal, but
 # additionally to the file test-results/$BASENAME.out, too.
 case "$GIT_TEST_TEE_STARTED, $* " in
