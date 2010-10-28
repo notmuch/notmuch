@@ -165,7 +165,7 @@ command_t commands[] = {
       "\t\tPresents the results in either JSON or\n"
       "\t\tplain-text (default)\n"
       "\n"
-      "\t--output=(summary|threads|messages|tags)\n"
+      "\t--output=(summary|threads|messages|files|tags)\n"
       "\n"
       "\t\tsummary (default)\n"
       "\n"
