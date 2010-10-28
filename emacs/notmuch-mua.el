@@ -126,7 +126,7 @@ list."
       (when (not (string= "" user-agent))
 	(push (cons "User-Agent" user-agent) other-headers))))
 
-  (unless (assoc "From" other-headers)
+  (unless (mail-header 'from other-headers)
     (push (cons "From" (concat
 			(notmuch-user-name) " <" (notmuch-user-primary-email) ">")) other-headers))
 
