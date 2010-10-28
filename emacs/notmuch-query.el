@@ -47,7 +47,7 @@ is a possibly empty forest of replies.
   (apply 'append
 	 (mapcar
 	   (lambda (tree)
-	     (funcall mapper fn tree))
+	     (funcall mapper function tree))
 	   seq)))
 
 (defun notmuch-query-map-threads (fn threads)
