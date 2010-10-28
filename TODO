@@ -13,9 +13,6 @@ sender's name containing ';' which causes emacs to drop a search
 result.) This may require removing the outer array from the current
 "notmuch search --format=json" results.
 
-Enhance '+' and '-' in the search view to operate on an entire region
-if set.
-
 Fix '*' to work by simply calling '+' or '-' on a region consisting of
 the entire buffer.
 
@@ -38,8 +35,6 @@ Add support to "mute" a thread (add a "muted" tag and then don't
 display threads in searches by default where any message of the thread
 has the "muted" tag).
 
-Fix i-search to open up invisible citations as necessary.
-
 Make '=' count from the end rather than from the beginning if more
 than half-way through the buffer.
 
@@ -47,10 +42,6 @@ Fix to automatically wrap long headers (for RFC compliance) before
 sending. This should probably just be fixed in message-mode itself,
 (but perhaps we can have a notmuch-message-mode that layers this on
 top).
-
-Implement Fcc and use it for all messages, (whether a new composition,
-a reply, or a forward). This again may require a notmuch-message-mode
-that extends message-mode.
 
 Stop hiding the headers so much in the thread-view mode.
 
@@ -63,60 +54,8 @@ Change 'a' command in thread-view mode to only archive open messages.
 
 Add a binding to open all closed messages.
 
-Make all authors and subjects available to isearch, (hidden by default
-but with magic expansion while isearching).
-
-Fix notmuch-hello as follows:
-
-	1. Change the "notmuch" and message count in the welcome sentence to
-	   not be buttons.
-
-	2. Put the saved searches (if any) before the search bar.
-
-	3. When `notmuch-hello' (or even `notmuch' when it gets its new name)
-	   is invoked directly, move to the first button, (go to point-min and
-	   then call widget-forward). That is, if the user has any saved
-	   searches, then point will be on the first one. If the user has no
-	   saved searches, then point will be on the search bar.
-
-	4. Fix refresh of notmuch-hello to leave point in the same logical
-	   place, (the same saved-search widget at least).
-
 Change the 'a'rchive command in the thread view to only archive open
 messages.
-
-Emacs saved-search interface
-----------------------------
-Here's a proposal Carl wrote (id:87einafy4u.fsf@yoom.home.cworth.org):
-
-  So what I'm imagining for the default notmuch view is something like
-  this:
-
-          Welcome to notmuch.
-
-              Notmuch search: _________________________________________
-
-          Saved searches:
-
-              55,342      All messages
-                  22      Inbox
-
-          Recent searches:
-
-                   1      from:"someone special" and tag:unread
-                  34      tag:notmuch and tag:todo
-
-          Click (or press Enter) on any search to see the results.
-          Right-click (or press Space) on any recent search to save it.
-
-  So the "saved searches" portion of the view is basically just what
-  notmuch-folder displays now. Above that there's an obvious place to
-  start a new search, (in a slightly more "web-browser-like" way than the
-  typical mini-buffer approach).
-
-  All recent searches appear in the list at the bottom automatically, and
-  there's the documented mechanism for saving a search, (giving it a name
-  and having it appear above).
 
 Portability
 -----------
@@ -161,9 +100,6 @@ ideas:
 
 Add a "--format" option to "notmuch search", (something printf-like
 for selecting what gets printed).
-
-Add a "--count-only" (or so?) option to "notmuch search" for returning
-the count of search results.
 
 Give "notmuch restore" some progress indicator.
 
@@ -215,8 +151,6 @@ class.
 Make failure to read a file (such as a permissions problem) a warning
 rather than an error (should be similar to the existing warning for a
 non-mail file).
-
-Actually compile and install a libnotmuch shared library.
 
 Fix to use the *last* Message-ID header if multiple such headers are
 encountered, (I noticed this is one thing that kept me from seeing the
@@ -302,7 +236,7 @@ fix old messages to be consistent.
 Start indexing the List-Id header, (and re-index this header for
 existing messages at the next database upgrade).
 
-Start indexing the message file's directory ana make it available for
+Start indexing the message file's directory and make it available for
 search as "folder:" (and re-index this value for existing messages at
 the next database upgrade).
 
@@ -311,20 +245,7 @@ re-index these for existing messages at the next database upgrade).
 
 Test suite
 ----------
-Start testing --format=json.
-
 Achieve 100% test coverage with the test suite.
-
-Modularize test suite (to be able to run individual tests).
-
-Summarize test results at the end.
-
-Fix the insane quoting nightmare of the test suite, (and once we do
-that we can actually test the implicit-phrase search feature such as
-"notmuch search 'body search (phrase)'"
-
-Test "notmuch reply" choosing the correct email address from the
-Received header when no configured email address appears in To or Cc.
 
 General
 -------
