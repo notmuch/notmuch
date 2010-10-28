@@ -945,7 +945,7 @@ than only the current message."
 (defun notmuch-show-add-tags-worker (current-tags add-tags)
   "Add to `current-tags' with any tags from `add-tags' not
 currently present and return the result."
-  (let ((result-tags (copy-seq current-tags)))
+  (let ((result-tags (copy-sequence current-tags)))
     (mapc (lambda (add-tag)
 	    (unless (member add-tag current-tags)
 	      (setq result-tags (push add-tag result-tags))))
@@ -955,7 +955,7 @@ currently present and return the result."
 (defun notmuch-show-del-tags-worker (current-tags del-tags)
   "Remove any tags in `del-tags' from `current-tags' and return
 the result."
-  (let ((result-tags (copy-seq current-tags)))
+  (let ((result-tags (copy-sequence current-tags)))
     (mapc (lambda (del-tag)
 	    (setq result-tags (delete del-tag result-tags)))
 	  del-tags)
