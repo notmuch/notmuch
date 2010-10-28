@@ -361,9 +361,17 @@ typedef enum {
     NOTMUCH_SORT_UNSORTED
 } notmuch_sort_t;
 
+/* Return the query_string of this query. See notmuch_query_create. */
+const char *
+notmuch_query_get_query_string (notmuch_query_t *query);
+
 /* Specify the sorting desired for this query. */
 void
 notmuch_query_set_sort (notmuch_query_t *query, notmuch_sort_t sort);
+
+/* Return the sort specified for this query. See notmuch_query_set_sort. */
+notmuch_sort_t
+notmuch_query_get_sort (notmuch_query_t *query);
 
 /* Execute a query for threads, returning a notmuch_threads_t object
  * which can be used to iterate over the results. The returned threads

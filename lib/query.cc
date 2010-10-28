@@ -70,10 +70,22 @@ notmuch_query_create (notmuch_database_t *notmuch,
     return query;
 }
 
+const char *
+notmuch_query_get_query_string (notmuch_query_t *query)
+{
+    return query->query_string;
+}
+
 void
 notmuch_query_set_sort (notmuch_query_t *query, notmuch_sort_t sort)
 {
     query->sort = sort;
+}
+
+notmuch_sort_t
+notmuch_query_get_sort (notmuch_query_t *query)
+{
+    return query->sort;
 }
 
 /* We end up having to call the destructors explicitly because we had
