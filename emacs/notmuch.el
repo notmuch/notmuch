@@ -796,9 +796,12 @@ The optional parameters are used as follows:
       (goto-char (point-min))
       (save-excursion
 	(let ((proc (start-process-shell-command
-		     "notmuch-search" buffer notmuch-command "search"
-		     (if oldest-first "--sort=oldest-first" "--sort=newest-first")
-		     (shell-quote-argument query))))
+		     "notmuch-search" buffer
+		     (concat notmuch-command " search "
+			     (if oldest-first
+				 "--sort=oldest-first "
+			       "--sort=newest-first ")
+			     (shell-quote-argument query)))))
 	  (set-process-sentinel proc 'notmuch-search-process-sentinel)
 	  (set-process-filter proc 'notmuch-search-process-filter))))
     (run-hooks 'notmuch-search-hook)))
