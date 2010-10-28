@@ -22,8 +22,9 @@ output=$(test_emacs '(notmuch-hello) (goto-char (point-min)) (re-search-forward 
 test_expect_equal_failure "$output" "$expected"
 
 test_begin_subtest "Basic notmuch-show view in emacs"
-output=$(test_emacs '(notmuch-show "thread:0000000000000009") (message (buffer-string))' 2>&1)
-expected=$(cat $EXPECTED/notmuch-show-thread-9)
+maildir_storage_thread=$(notmuch search --output=threads id:20091117190054.GU3165@dottiness.seas.harvard.edu)
+output=$(test_emacs "(notmuch-show \"$maildir_storage_thread\") (message (buffer-string))" 2>&1)
+expected=$(cat $EXPECTED/notmuch-show-thread-maildir-storage)
 test_expect_equal "$output" "$expected"
 
 test_begin_subtest "Navigation of notmuch-search to thread view"
@@ -31,24 +32,25 @@ output=$(test_emacs '(notmuch-search "tag:inbox") (notmuch-test-wait) (goto-char
 test_expect_equal "$output" "$expected"
 
 test_begin_subtest "Add tag from search view"
-test_emacs '(notmuch-search "thread:0000000000000001") (notmuch-test-wait) (notmuch-search-add-tag "tag-from-search-view")'
-output=$(notmuch search thread:0000000000000001)
-test_expect_equal "$output" "thread:0000000000000001   2009-11-18 [4/4] Jjgod Jiang, Alexander Botero-Lowry; [notmuch] Mac OS X/Darwin compatibility issues (inbox tag-from-search-view unread)"
+os_x_darwin_thread=$(notmuch search --output=threads id:ddd65cda0911171950o4eea4389v86de9525e46052d3@mail.gmail.com)
+test_emacs "(notmuch-search \"$os_x_darwin_thread\") (notmuch-test-wait) (notmuch-search-add-tag \"tag-from-search-view\")"
+output=$(notmuch search $os_x_darwin_thread | notmuch_search_sanitize)
+test_expect_equal "$output" "thread:XXX   2009-11-18 [4/4] Jjgod Jiang, Alexander Botero-Lowry; [notmuch] Mac OS X/Darwin compatibility issues (inbox tag-from-search-view unread)"
 
 test_begin_subtest "Remove tag from search view"
-test_emacs '(notmuch-search "thread:0000000000000001") (notmuch-test-wait) (notmuch-search-remove-tag "tag-from-search-view")'
-output=$(notmuch search thread:0000000000000001)
-test_expect_equal "$output" "thread:0000000000000001   2009-11-18 [4/4] Jjgod Jiang, Alexander Botero-Lowry; [notmuch] Mac OS X/Darwin compatibility issues (inbox unread)"
+test_emacs "(notmuch-search \"$os_x_darwin_thread\") (notmuch-test-wait) (notmuch-search-remove-tag \"tag-from-search-view\")"
+output=$(notmuch search $os_x_darwin_thread | notmuch_search_sanitize)
+test_expect_equal "$output" "thread:XXX   2009-11-18 [4/4] Jjgod Jiang, Alexander Botero-Lowry; [notmuch] Mac OS X/Darwin compatibility issues (inbox unread)"
 
 test_begin_subtest "Add tag from notmuch-show view"
-test_emacs '(notmuch-show "thread:0000000000000001") (notmuch-show-add-tag "tag-from-show-view")'
-output=$(notmuch search thread:0000000000000001)
-test_expect_equal "$output" "thread:0000000000000001   2009-11-18 [4/4] Jjgod Jiang, Alexander Botero-Lowry; [notmuch] Mac OS X/Darwin compatibility issues (inbox tag-from-show-view unread)"
+test_emacs "(notmuch-show \"$os_x_darwin_thread\") (notmuch-show-add-tag \"tag-from-show-view\")"
+output=$(notmuch search $os_x_darwin_thread | notmuch_search_sanitize)
+test_expect_equal "$output" "thread:XXX   2009-11-18 [4/4] Jjgod Jiang, Alexander Botero-Lowry; [notmuch] Mac OS X/Darwin compatibility issues (inbox tag-from-show-view unread)"
 
 test_begin_subtest "Remove tag from notmuch-show view"
-test_emacs '(notmuch-show "thread:0000000000000001") (notmuch-show-remove-tag "tag-from-show-view")'
-output=$(notmuch search thread:0000000000000001)
-test_expect_equal "$output" "thread:0000000000000001   2009-11-18 [4/4] Jjgod Jiang, Alexander Botero-Lowry; [notmuch] Mac OS X/Darwin compatibility issues (inbox unread)"
+test_emacs "(notmuch-show \"$os_x_darwin_thread\") (notmuch-show-remove-tag \"tag-from-show-view\")"
+output=$(notmuch search $os_x_darwin_thread | notmuch_search_sanitize)
+test_expect_equal "$output" "thread:XXX   2009-11-18 [4/4] Jjgod Jiang, Alexander Botero-Lowry; [notmuch] Mac OS X/Darwin compatibility issues (inbox unread)"
 
 test_begin_subtest "Message with .. in Message-Id:"
 add_message [id]=123..456@example '[subject]="Message with .. in Message-Id"'
