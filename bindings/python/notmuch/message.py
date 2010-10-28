@@ -748,7 +748,7 @@ class Message(object):
         output += "\n\fbody{"
 
         parts = format["body"]
-        parts.sort(key=lambda(p): p["id"])
+        parts.sort(key=lambda x: x['id'])
         for p in parts:
             if not p.has_key("filename"):
                 output += "\n\fpart{ "
