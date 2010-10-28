@@ -24,6 +24,7 @@ typedef enum {
     OUTPUT_SUMMARY,
     OUTPUT_THREADS,
     OUTPUT_MESSAGES,
+    OUTPUT_FILES,
     OUTPUT_TAGS
 } output_t;
 
@@ -240,7 +241,8 @@ do_search_threads (const void *ctx,
 static int
 do_search_messages (const void *ctx,
 		    const search_format_t *format,
-		    notmuch_query_t *query)
+		    notmuch_query_t *query,
+		    output_t output)
 {
     notmuch_message_t *message;
     notmuch_messages_t *messages;
@@ -259,7 +261,13 @@ do_search_messages (const void *ctx,
 	if (! first_message)
 	    fputs (format->item_sep, stdout);
 
-	format->item_id (ctx, "id:", notmuch_message_get_message_id (message));
+	if (output == OUTPUT_FILES) {
+	    format->item_id (ctx, "",
+			     notmuch_message_get_filename (message));
+	} else { /* output == OUTPUT_MESSAGES */
+	    format->item_id (ctx, "id:",
+			     notmuch_message_get_message_id (message));
+	}
 
 	first_message = 0;
 
@@ -363,6 +371,8 @@ notmuch_search_command (void *ctx, int argc, char *argv[])
 		output = OUTPUT_THREADS;
 	    } else if (strcmp (opt, "messages") == 0) {
 		output = OUTPUT_MESSAGES;
+	    } else if (strcmp (opt, "files") == 0) {
+		output = OUTPUT_FILES;
 	    } else if (strcmp (opt, "tags") == 0) {
 		output = OUTPUT_TAGS;
 	    } else {
@@ -414,7 +424,8 @@ notmuch_search_command (void *ctx, int argc, char *argv[])
 	ret = do_search_threads (ctx, format, query, sort, output);
 	break;
     case OUTPUT_MESSAGES:
-	ret = do_search_messages (ctx, format, query);
+    case OUTPUT_FILES:
+	ret = do_search_messages (ctx, format, query, output);
 	break;
     case OUTPUT_TAGS:
 	ret = do_search_tags (ctx, notmuch, format, query);
