@@ -87,4 +87,15 @@ notmuch new > /dev/null
 output=$(notmuch search 'subject:"testing message sent via SMTP"' | notmuch_search_sanitize)
 test_expect_equal "$output" "thread:XXX   1974-03-29 [1/1] Notmuch Test Suite; Testing message sent via SMTP (inbox unread)"
 
+test_begin_subtest "Reply within emacs"
+output=$(test_emacs '(notmuch-search "subject:\"testing message sent via SMTP\"") (notmuch-test-wait) (notmuch-search-reply-to-thread) (message (buffer-string))' 2>&1 | sed -e 's/^In-Reply-To: <.*>$/In-Reply-To: <XXX>/')
+test_expect_equal "$output" "From: Notmuch Test Suite <test_suite@notmuchmail.org>
+To: user@example.com
+Subject: Re: Testing message sent via SMTP
+In-Reply-To: <XXX>
+Fcc: $(pwd)/mail/sent
+--text follows this line--
+On Fri, 29 Mar 1974 10:00:00 -0000, Notmuch Test Suite <test_suite@notmuchmail.org> wrote:
+> This is a test that messages are sent via SMTP"
+
 test_done
