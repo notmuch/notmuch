@@ -119,7 +119,7 @@ static int
 address_is_users (const char *address, notmuch_config_t *config)
 {
     const char *primary;
-    char **other;
+    const char **other;
     size_t i, other_len;
 
     primary = notmuch_config_get_user_primary_email (config);
@@ -312,7 +312,8 @@ static const char *
 guess_from_received_header (notmuch_config_t *config, notmuch_message_t *message)
 {
     const char *received,*primary,*by;
-    char **other,*tohdr;
+    const char **other;
+    char *tohdr;
     char *mta,*ptr,*token;
     char *domain=NULL;
     char *tld=NULL;

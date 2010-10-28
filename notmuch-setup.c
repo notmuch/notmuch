@@ -94,7 +94,7 @@ notmuch_setup_command (unused (void *ctx),
     char *response = NULL;
     size_t response_size;
     notmuch_config_t *config;
-    char **old_other_emails;
+    const char **old_other_emails;
     size_t old_other_emails_len;
     GPtrArray *other_emails;
     unsigned int i;
