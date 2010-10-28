@@ -82,4 +82,9 @@ Content-Type: text/plain; charset=us-ascii
 
 This is a test that messages are sent via SMTP"
 
+test_begin_subtest "Verify that sent messages are saved/searchable (via FCC)"
+notmuch new > /dev/null
+output=$(notmuch search 'subject:"testing message sent via SMTP"' | notmuch_search_sanitize)
+test_expect_equal "$output" "thread:XXX   1974-03-29 [1/1] Notmuch Test Suite; Testing message sent via SMTP (inbox unread)"
+
 test_done
