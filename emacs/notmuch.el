@@ -575,9 +575,10 @@ This function advances the next thread when finished."
 			(if (and atbob
 				 (not (string= notmuch-search-target-thread "found")))
 			    (set 'never-found-target-thread t))))))
-	      (if (and never-found-target-thread
+	      (when (and never-found-target-thread
 		       notmuch-search-target-line)
-		  (goto-line notmuch-search-target-line)))))))
+		  (goto-char (point-min))
+		  (forward-line (1- notmuch-search-target-line))))))))
 
 (defcustom notmuch-search-line-faces nil
   "Tag/face mapping for line highlighting in notmuch-search.
