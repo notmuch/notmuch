@@ -89,15 +89,6 @@ option (or similar) to "notmuch show".) For now, this is being worked
 around in the emacs interface by noticing that "notmuch show" returns
 nothing and re-rerunning the command without the extra arguments.
 
-Teach "notmuch search" to return many different kinds of results. Some
-ideas:
-
-	notmuch search --output=threads	# Default if no --output is given
-	notmuch search --output=messages
-	notmuch search --output=tags
-	notmuch search --output=addresses
-	notmuch search --output=terms
-
 Add a "--format" option to "notmuch search", (something printf-like
 for selecting what gets printed).
 

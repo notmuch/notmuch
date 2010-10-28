@@ -150,6 +150,46 @@ include
 
 Presents the results in either JSON or plain-text (default).
 .RE
+
+.RS 4
+.TP 4
+.B \-\-output=(summary|threads|messages|tags)
+
+.RS 4
+.TP 4
+.B summary
+
+Output a summary of each thread with any message matching the search
+terms. The summary includes the thread ID, date, the number of
+messages in the thread (both the number matched and the total number),
+the authors of the thread and the subject.
+.RE
+.RS 4
+.TP 4
+.B threads
+
+Output the thread IDs of all threads with any message matching the
+search terms, either one per line (--format=text) or as a JSON array
+(--format=json).
+.RE
+.RS 4
+.TP 4
+.B messages
+
+Output the message IDs of all messages matching the search terms,
+either one per line (--format=text) or as a JSON array
+(--format=json).
+.RE
+.RS 4
+.TP 4
+.B tags
+
+Output all tags that appear on any message matching the search terms,
+either one per line (--format=text) or as a JSON array
+(--format=json).
+.RE
+.RE
+
 .RS 4
 .TP 4
 .BR \-\-sort= ( newest\-first | oldest\-first )
@@ -214,7 +254,6 @@ will be delimited by easily-parsed markers. Each marker consists of a
 Control-L character (ASCII decimal 12), the name of the marker, and
 then either an opening or closing brace, ('{' or '}'), to either open
 or close the component.
-
 .RE
 .RS 4
 .TP 4
@@ -240,7 +279,6 @@ beginning with "From " (preceded by zero or more '>' characters) have
 an additional '>' character added. This reversible escaping
 is termed "mboxrd" format and described in detail here:
 http://homepage.ntlworld.com/jonathan.deboynepollard/FGA/mail-mbox-formats.html
-
 .RE
 A common use of
 .B notmuch show

@@ -20,24 +20,39 @@
 
 #include "notmuch-client.h"
 
+typedef enum {
+    OUTPUT_SUMMARY,
+    OUTPUT_THREADS,
+    OUTPUT_MESSAGES,
+    OUTPUT_TAGS
+} output_t;
+
 typedef struct search_format {
     const char *results_start;
-    const char *thread_start;
-    void (*thread) (const void *ctx,
-		    const char *thread_id,
-		    const time_t date,
-		    const int matched,
-		    const int total,
-		    const char *authors,
-		    const char *subject);
+    const char *item_start;
+    void (*item_id) (const void *ctx,
+		     const char *item_type,
+		     const char *item_id);
+    void (*thread_summary) (const void *ctx,
+			    const char *thread_id,
+			    const time_t date,
+			    const int matched,
+			    const int total,
+			    const char *authors,
+			    const char *subject);
     const char *tag_start;
     const char *tag;
     const char *tag_sep;
     const char *tag_end;
-    const char *thread_sep;
-    const char *thread_end;
+    const char *item_sep;
+    const char *item_end;
     const char *results_end;
 } search_format_t;
+
+static void
+format_item_id_text (const void *ctx,
+		     const char *item_type,
+		     const char *item_id);
 
 static void
 format_thread_text (const void *ctx,
@@ -50,13 +65,19 @@ format_thread_text (const void *ctx,
 static const search_format_t format_text = {
     "",
 	"",
+	    format_item_id_text,
 	    format_thread_text,
 	    " (",
 		"%s", " ",
-	    ")", "",
-	"\n",
-    "",
+	    ")", "\n",
+	"",
+    "\n",
 };
+
+static void
+format_item_id_json (const void *ctx,
+		     const char *item_type,
+		     const char *item_id);
 
 static void
 format_thread_json (const void *ctx,
@@ -69,6 +90,7 @@ format_thread_json (const void *ctx,
 static const search_format_t format_json = {
     "[",
 	"{",
+	    format_item_id_json,
 	    format_thread_json,
 	    "\"tags\": [",
 		"\"%s\"", ", ",
@@ -76,6 +98,14 @@ static const search_format_t format_json = {
 	"}",
     "]\n",
 };
+
+static void
+format_item_id_text (unused (const void *ctx),
+		     const char *item_type,
+		     const char *item_id)
+{
+    printf ("%s%s", item_type, item_id);
+}
 
 static void
 format_thread_text (const void *ctx,
@@ -93,6 +123,19 @@ format_thread_text (const void *ctx,
 	    total,
 	    authors,
 	    subject);
+}
+
+static void
+format_item_id_json (const void *ctx,
+		     unused (const char *item_type),
+		     const char *item_id)
+{
+    void *ctx_quote = talloc_new (ctx);
+
+    printf ("%s", json_quote_str (ctx_quote, item_id));
+
+    talloc_free (ctx_quote);
+    
 }
 
 static void
@@ -126,15 +169,14 @@ static int
 do_search_threads (const void *ctx,
 		   const search_format_t *format,
 		   notmuch_query_t *query,
-		   notmuch_sort_t sort)
+		   notmuch_sort_t sort,
+		   output_t output)
 {
     notmuch_thread_t *thread;
     notmuch_threads_t *threads;
     notmuch_tags_t *tags;
     time_t date;
     int first_thread = 1;
-
-    fputs (format->results_start, stdout);
 
     threads = notmuch_query_search_threads (query);
     if (threads == NULL)
@@ -147,46 +189,130 @@ do_search_threads (const void *ctx,
 	int first_tag = 1;
 
 	if (! first_thread)
-	    fputs (format->thread_sep, stdout);
+	    fputs (format->item_sep, stdout);
 
 	thread = notmuch_threads_get (threads);
 
-	if (sort == NOTMUCH_SORT_OLDEST_FIRST)
-	    date = notmuch_thread_get_oldest_date (thread);
-	else
-	    date = notmuch_thread_get_newest_date (thread);
+	if (output == OUTPUT_THREADS) {
+	    format->item_id (ctx, "thread:",
+			     notmuch_thread_get_thread_id (thread));
+	} else { /* output == OUTPUT_SUMMARY */
+	    fputs (format->item_start, stdout);
 
-	fputs (format->thread_start, stdout);
+	    if (sort == NOTMUCH_SORT_OLDEST_FIRST)
+		date = notmuch_thread_get_oldest_date (thread);
+	    else
+		date = notmuch_thread_get_newest_date (thread);
 
-	format->thread (ctx,
-			notmuch_thread_get_thread_id (thread),
-			date,
-			notmuch_thread_get_matched_messages (thread),
-			notmuch_thread_get_total_messages (thread),
-			notmuch_thread_get_authors (thread),
-			notmuch_thread_get_subject (thread));
+	    format->thread_summary (ctx,
+				    notmuch_thread_get_thread_id (thread),
+				    date,
+				    notmuch_thread_get_matched_messages (thread),
+				    notmuch_thread_get_total_messages (thread),
+				    notmuch_thread_get_authors (thread),
+				    notmuch_thread_get_subject (thread));
 
-	fputs (format->tag_start, stdout);
+	    fputs (format->tag_start, stdout);
 
-	for (tags = notmuch_thread_get_tags (thread);
-	     notmuch_tags_valid (tags);
-	     notmuch_tags_move_to_next (tags))
-	{
-	    if (! first_tag)
-		fputs (format->tag_sep, stdout);
-	    printf (format->tag, notmuch_tags_get (tags));
-	    first_tag = 0;
+	    for (tags = notmuch_thread_get_tags (thread);
+		 notmuch_tags_valid (tags);
+		 notmuch_tags_move_to_next (tags))
+	    {
+		if (! first_tag)
+		    fputs (format->tag_sep, stdout);
+		printf (format->tag, notmuch_tags_get (tags));
+		first_tag = 0;
+	    }
+
+	    fputs (format->tag_end, stdout);
+
+	    fputs (format->item_end, stdout);
 	}
-
-	fputs (format->tag_end, stdout);
-	fputs (format->thread_end, stdout);
 
 	first_thread = 0;
 
 	notmuch_thread_destroy (thread);
     }
 
-    fputs (format->results_end, stdout);
+    return 0;
+}
+
+static int
+do_search_messages (const void *ctx,
+		    const search_format_t *format,
+		    notmuch_query_t *query)
+{
+    notmuch_message_t *message;
+    notmuch_messages_t *messages;
+    int first_message = 1;
+
+    messages = notmuch_query_search_messages (query);
+    if (messages == NULL)
+	return 1;
+
+    for (;
+	 notmuch_messages_valid (messages);
+	 notmuch_messages_move_to_next (messages))
+    {
+	message = notmuch_messages_get (messages);
+
+	if (! first_message)
+	    fputs (format->item_sep, stdout);
+
+	format->item_id (ctx, "id:", notmuch_message_get_message_id (message));
+
+	first_message = 0;
+
+	notmuch_message_destroy (message);
+    }
+
+    notmuch_messages_destroy (messages);
+
+    return 0;
+}
+
+static int
+do_search_tags (const void *ctx,
+		notmuch_database_t *notmuch,
+		const search_format_t *format,
+		notmuch_query_t *query)
+{
+    notmuch_messages_t *messages = NULL;
+    notmuch_tags_t *tags;
+    const char *tag;
+    int first_tag = 1;
+
+    /* Special-case query of "*" for better performance. */
+    if (strcmp (notmuch_query_get_query_string (query), "*") == 0) {
+	tags = notmuch_database_get_all_tags (notmuch);
+    } else {
+	messages = notmuch_query_search_messages (query);
+	if (messages == NULL)
+	    return 1;
+
+	tags = notmuch_messages_collect_tags (messages);
+    }
+    if (tags == NULL)
+	return 1;
+
+    for (;
+	 notmuch_tags_valid (tags);
+	 notmuch_tags_move_to_next (tags))
+    {
+	tag = notmuch_tags_get (tags);
+
+	if (! first_tag)
+	    fputs (format->item_sep, stdout);
+
+	format->item_id (ctx, "", tag);
+
+	first_tag = 0;
+    }
+
+    notmuch_tags_destroy (tags);
+
+    if (messages)
+	notmuch_messages_destroy (messages);
 
     return 0;
 }
@@ -202,6 +328,7 @@ notmuch_search_command (void *ctx, int argc, char *argv[])
     notmuch_sort_t sort = NOTMUCH_SORT_NEWEST_FIRST;
     const search_format_t *format = &format_text;
     int i, ret;
+    output_t output = OUTPUT_SUMMARY;
 
     for (i = 0; i < argc && argv[i][0] == '-'; i++) {
 	if (strcmp (argv[i], "--") == 0) {
@@ -226,6 +353,20 @@ notmuch_search_command (void *ctx, int argc, char *argv[])
 		format = &format_json;
 	    } else {
 		fprintf (stderr, "Invalid value for --format: %s\n", opt);
+		return 1;
+	    }
+	} else if (STRNCMP_LITERAL (argv[i], "--output=") == 0) {
+	    opt = argv[i] + sizeof ("--output=") - 1;
+	    if (strcmp (opt, "summary") == 0) {
+		output = OUTPUT_SUMMARY;
+	    } else if (strcmp (opt, "threads") == 0) {
+		output = OUTPUT_THREADS;
+	    } else if (strcmp (opt, "messages") == 0) {
+		output = OUTPUT_MESSAGES;
+	    } else if (strcmp (opt, "tags") == 0) {
+		output = OUTPUT_TAGS;
+	    } else {
+		fprintf (stderr, "Invalid value for --output: %s\n", opt);
 		return 1;
 	    }
 	} else {
@@ -264,7 +405,23 @@ notmuch_search_command (void *ctx, int argc, char *argv[])
 
     notmuch_query_set_sort (query, sort);
 
-    ret = do_search_threads (ctx, format, query, sort);
+    fputs (format->results_start, stdout);
+
+    switch (output) {
+    default:
+    case OUTPUT_SUMMARY:
+    case OUTPUT_THREADS:
+	ret = do_search_threads (ctx, format, query, sort, output);
+	break;
+    case OUTPUT_MESSAGES:
+	ret = do_search_messages (ctx, format, query);
+	break;
+    case OUTPUT_TAGS:
+	ret = do_search_tags (ctx, notmuch, format, query);
+	break;
+    }
+
+    fputs (format->results_end, stdout);
 
     notmuch_query_destroy (query);
     notmuch_database_close (notmuch);
