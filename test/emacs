@@ -16,6 +16,11 @@ output=$(test_emacs '(setq notmuch-show-empty-saved-searches t) (setq notmuch-sa
 expected=$(cat $EXPECTED/notmuch-hello-with-empty)
 test_expect_equal "$output" "$expected"
 
+test_begin_subtest "No saved searches displayed (all with 0 results)"
+output=$(test_emacs '(setq notmuch-saved-searches '\''(("empty" . "tag:doesnotexist"))) (notmuch-hello) (message (buffer-string))' 2>&1)
+expected=$(cat $EXPECTED/notmuch-hello-no-saved-searches)
+test_expect_equal "$output" "$expected"
+
 test_begin_subtest "Basic notmuch-search view in emacs"
 output=$(test_emacs '(notmuch-search "tag:inbox") (notmuch-test-wait) (message (buffer-string))' 2>&1)
 expected=$(cat $EXPECTED/notmuch-search-tag-inbox)
