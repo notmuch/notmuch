@@ -586,7 +586,6 @@ function is used. "
       "Keymap for \"notmuch show\" buffers.")
 (fset 'notmuch-show-mode-map notmuch-show-mode-map)
 
-;;;###autoload
 (defun notmuch-show-mode ()
   "Major mode for viewing a thread with notmuch.
 

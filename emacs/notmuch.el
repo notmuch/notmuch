@@ -329,7 +329,6 @@ For a mouse binding, return nil."
   "Face used in search mode face for tags."
   :group 'notmuch)
 
-;;;###autoload
 (defun notmuch-search-mode ()
   "Major mode displaying results of a notmuch search.
 

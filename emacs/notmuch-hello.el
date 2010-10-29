@@ -317,7 +317,9 @@ Complete list of currently available key bindings:
  ;;(setq buffer-read-only t)
 )
 
+;;;###autoload
 (defun notmuch-hello (&optional no-display)
+  "Run notmuch and display saved searches, known tags, etc."
   (interactive)
 
   ; Jump through a hoop to get this value from the deprecated variable
@@ -513,7 +515,6 @@ Complete list of currently available key bindings:
       (unless (widget-at)
 	(notmuch-hello-goto-search)))))
 
-;;;###autoload
 (defun notmuch-folder ()
   "Deprecated function for invoking notmuch---calling `notmuch' is preferred now."
   (interactive)
