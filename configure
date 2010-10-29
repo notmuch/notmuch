@@ -15,7 +15,7 @@ CXX=${CXX:-g++}
 CFLAGS=${CFLAGS:--O2}
 CXXFLAGS=${CXXFLAGS:-\$(CFLAGS)}
 LDFLAGS=${LDFLAGS:-}
-XAPIAN_CONFIG=${XAPIAN_CONFIG:-xapian-config-1.1${tab}xapian-config}
+XAPIAN_CONFIG=${XAPIAN_CONFIG:-xapian-config}
 
 # We don't allow the EMACS or GZIP Makefile variables inherit values
 # from the environment as we do with CC and CXX above. The reason is
