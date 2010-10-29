@@ -115,6 +115,7 @@ Typically \",\" in the US and UK and \".\" in Europe."
     (while (> n 0)
       (push (% n 1000) result)
       (setq n (/ n 1000)))
+    (setq result (or result '(0)))
     (apply #'concat
      (number-to-string (car result))
      (mapcar (lambda (elem)
