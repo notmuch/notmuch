@@ -20,4 +20,9 @@
    (concat "/usr/share/"
 	   (symbol-name debian-emacs-flavor)
 	   "/site-lisp/notmuch"))
+  (autoload 'notmuch "notmuch" "Run notmuch and display saved searches, known tags, etc." t)
+  (autoload 'notmuch-hello "notmuch" "Run notmuch and display saved searches, known tags, etc." t)
+  (autoload 'notmuch-search "notmuch" "Run \"notmuch search\" with the given query string and display results." t)
+  (autoload 'notmuch-show "notmuch" "Run \"notmuch show\" with the given thread ID and display results." t)
+
   ))
