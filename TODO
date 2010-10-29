@@ -247,8 +247,3 @@ database for the same corpus of email.
 
 Makefile should print message teaching user about LD_LIBRARY_PATH (or
 similar) if libdir is not set to a directory examined by ldconfig.
-
-Fix notmuch build system to work with gold, (apt-get
-binutils-gold). Need the notmuch binary to explicitly link againsts
-libraries it depends on, (rather than just getting them via
-libnotmuch).
