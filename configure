@@ -402,6 +402,16 @@ else
     rpath_ldflags=""
 fi
 
+printf "Checking for -Wl,--as-needed... "
+if ${CC} -Wl,--as-needed -o minimal minimal.c >/dev/null 2>&1
+then
+    printf "Yes.\n"
+    as_needed_ldflags="-Wl,--as-needed"
+else
+    printf "No (nothing to worry about).\n"
+    as_needed_ldflags=""
+fi
+
 WARN_CXXFLAGS=""
 printf "Checking for available C++ compiler warning flags... "
 for flag in -Wall -Wextra -Wwrite-strings -Wswitch-enum; do
@@ -534,6 +544,9 @@ TALLOC_LDFLAGS = ${talloc_ldflags}
 
 # Flags needed to have linker set rpath attribute
 RPATH_LDFLAGS = ${rpath_ldflags}
+
+# Flags needed to have linker link only to necessary libraries
+AS_NEEDED_LDFLAGS = ${as_needed_ldflags}
 
 # Whether valgrind header files are available
 HAVE_VALGRIND = ${have_valgrind}
