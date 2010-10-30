@@ -399,6 +399,7 @@ then
     rpath_ldflags="-Wl,--enable-new-dtags -Wl,-rpath,\$(libdir)"
 else
     printf "No (nothing to worry about).\n"
+    rpath_ldflags=""
 fi
 
 WARN_CXXFLAGS=""
