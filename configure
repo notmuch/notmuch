@@ -391,6 +391,30 @@ else
 fi
 rm -f compat/have_strcasestr
 
+printf "int main(void){return 0;}\n" > minimal.c
+
+WARN_CXXFLAGS=""
+printf "Checking for available C++ compiler warning flags... "
+for flag in -Wall -Wextra -Wwrite-strings -Wswitch-enum; do
+    if ${CC} $flag -o minimal minimal.c > /dev/null 2>&1
+    then
+	WARN_CXXFLAGS="${WARN_CXXFLAGS}${WARN_CXXFLAGS:+ }${flag}"
+    fi
+done
+printf "\n\t${WARN_CXXFLAGS}\n"
+
+WARN_CFLAGS="${WARN_CXXFLAGS}"
+printf "Checking for available C compiler warning flags... "
+for flag in -Wmissing-declarations; do
+    if ${CC} $flag -o minimal minimal.c > /dev/null 2>&1
+    then
+	WARN_CFLAGS="${WARN_CFLAGS}${WARN_CFLAGS:+ }${flag}"
+    fi
+done
+printf "\n\t${WARN_CFLAGS}\n"
+
+rm -f minimal minimal.c
+	
 cat <<EOF
 
 All required packages were found. You may now run the following
@@ -429,10 +453,10 @@ CXXFLAGS = ${CXXFLAGS}
 LDFLAGS = ${LDFLAGS}
 
 # Flags to enable warnings when using the C++ compiler
-WARN_CXXFLAGS=-Wall -Wextra -Wwrite-strings -Wswitch-enum
+WARN_CXXFLAGS=${WARN_CXXFLAGS}
 
 # Flags to enable warnings when using the C compiler
-WARN_CFLAGS=\$(WARN_CXXFLAGS) -Wmissing-declarations
+WARN_CFLAGS=${WARN_CFLAGS}
 
 # The prefix to which notmuch should be installed
 # Note: If you change this value here, be sure to ensure that the

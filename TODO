@@ -57,10 +57,6 @@ Add a binding to open all closed messages.
 Change the 'a'rchive command in the thread view to only archive open
 messages.
 
-Portability
------------
-Fix configure script to test each compiler warning we want to use.
-
 Completion
 ----------
 Fix bash completion to complete multiple search options (both --first
