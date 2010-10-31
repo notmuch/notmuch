@@ -1,0 +1,231 @@
+#!/bin/bash
+
+test_description="Test maildir synchronization"
+
+. ./test-lib.sh
+
+filter_show() {
+    sed -e 's/, /,\n/g'|sed -e "s|${MAIL_DIR}/||" -e '/^"tags"/d'
+    echo
+}
+
+cat >> "$NOTMUCH_CONFIG" <<EOF
+[maildir]
+synchronize_flags=true
+EOF
+
+test_begin_subtest "No new messages"
+output=$(NOTMUCH_NEW)
+test_expect_equal "$output" "No new mail."
+
+cat > expected <<EOF
+Added 1 new message to the database.
+EOF
+test_expect_success "Add a message, no flags" '
+generate_message [subject]="\"test message\"" [date]="\"Sat, 01 Jan 2000 12:00:00 -0000\"" [filename]="\"msg-001:2,\"" &&
+NOTMUCH_NEW > actual &&
+test_cmp expected actual
+#emacs --eval "(gdb \"gdb --annotate=3 --args $(which notmuch) new\")"
+'
+cat > expected <<EOF
+thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; test message (inbox unread)
+EOF
+test_expect_success 'Search for the message' '
+notmuch search tag:inbox and tag:unread | notmuch_search_sanitize > actual &&
+test_cmp expected actual
+'
+cat > expected <<EOF
+No new mail. Detected 1 file rename.
+EOF
+test_expect_success 'Add seen flag' '
+mv "${gen_msg_filename}" "${gen_msg_filename}S" &&
+increment_mtime "$(dirname "${gen_msg_filename}")" &&
+NOTMUCH_NEW > actual &&
+test_cmp expected actual
+'
+cat > expected <<EOF
+thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; test message (inbox)
+EOF
+test_expect_success 'Check that tags were updated' '
+notmuch search tag:inbox and not tag:unread | notmuch_search_sanitize > actual &&
+test_cmp expected actual
+'
+cat > expected <<EOF
+Added 1 new message to the database.
+EOF
+test_expect_success "Add a seen message" '
+generate_message [subject]="\"test message 2\"" [date]="\"Sat, 01 Jan 2000 12:00:00 -0000\"" [filename]="\"msg-002:2,S\"" &&
+NOTMUCH_NEW > actual &&
+test_cmp expected actual
+'
+cat > expected <<EOF
+thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; test message (inbox)
+thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; test message 2 (inbox)
+EOF
+test_expect_success 'Check that the seen message is not tagged unread' '
+notmuch search tag:inbox and not tag:unread | notmuch_search_sanitize > actual &&
+test_cmp expected actual
+'
+test_expect_success 'Tag the seen messages as replied' '
+notmuch tag +replied -inbox tag:inbox and not tag:unread
+'
+
+cat > expected <<EOF
+msg-001:2,RS
+msg-002:2,RS
+EOF
+test_expect_success 'Check that R flag was added' '
+ls -1 "${MAIL_DIR}" > actual &&
+test_cmp expected actual
+'
+cat <<EOF > show-expected
+[[[{"id": "msg-001@notmuch-test-suite",
+"match": true,
+"filename": "msg-001:2,RS",
+"timestamp": 946728000,
+"date_relative": "2000-01-01",
+"headers": {"Subject": "test message",
+"From": "Notmuch Test Suite <test_suite@notmuchmail.org>",
+"To": "Notmuch Test Suite <test_suite@notmuchmail.org>",
+"Cc": "",
+"Bcc": "",
+"Date": "Sat,
+01 Jan 2000 12:00:00 -0000"},
+"body": [{"id": 1,
+"content-type": "text/plain",
+"content": "This is just a test message (#1)\n"}]},
+[]]]]
+EOF
+
+test_expect_success 'Message renamed due to changed flags can be shown without running notmuch new' '
+notmuch show --format=json id:msg-001@notmuch-test-suite | filter_show > show-actual &&
+test_cmp show-expected show-actual
+'
+
+test_expect_success 'Test that we can reply to the renamed message' '
+notmuch reply id:msg-001@notmuch-test-suite
+'
+
+echo "No new mail." > expected
+test_expect_success 'No rename should be detected by notmuch new' '
+increment_mtime "$(dirname "${gen_msg_filename}")" &&
+notmuch new > actual &&
+test_cmp expected actual
+'
+test_expect_success "Add a message to new/ without info" '
+generate_message [subject]="\"test message 3\"" [date]="\"Sat, 01 Jan 2000 12:00:00 -0000\"" [dir]=new &&
+NOTMUCH_NEW > actual &&
+test_cmp - actual <<EOF
+Added 1 new message to the database.
+EOF
+'
+test_expect_success "Check that the message has inbox and unread tags" '
+notmuch search tag:inbox and tag:unread | notmuch_search_sanitize > actual &&
+test_cmp - actual <<EOF
+thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; test message 3 (inbox unread)
+EOF
+'
+test_expect_success "Tag the message with 'tmp' tag" '
+notmuch tag +tmp tag:inbox and tag:unread'
+
+test_expect_success "Check that the message was not moved from new/ to cur/" '
+echo filename:$gen_msg_filename > expected &&
+notmuch show id:$gen_msg_id|grep -o "filename:.*$" > actual &&
+test_cmp expected actual &&
+test -f "$gen_msg_filename"
+'
+test_expect_success "Check that the message was not renamed" '
+ls "${MAIL_DIR}/new" > actual &&
+test_cmp - actual <<EOF
+msg-003
+EOF
+'
+test_expect_success 'Removing of unread tag should fail without cur/' '
+test_must_fail notmuch tag -unread tag:inbox and tag:unread
+'
+test_expect_success "Check that the tags were not changed" '
+notmuch search tag:inbox and tag:unread | notmuch_search_sanitize > actual &&
+test_cmp - actual <<EOF
+thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; test message 3 (inbox tmp unread)
+EOF
+'
+
+# notmuch new is not necessary here, but we run it in order to check
+# for 'no rename' later (*).
+test_expect_success 'Create cur/ and let notmuch know about it' '
+mkdir "$MAIL_DIR/cur" &&
+notmuch new
+'
+test_expect_success 'Removing of unread tag should pass with cur/' '
+notmuch tag -unread tag:inbox and tag:unread
+'
+test_expect_success 'Check that the message was moved to cur/' '\
+ls "$MAIL_DIR/cur" > actual &&
+test_cmp - actual <<EOF
+msg-003:2,S
+EOF
+'
+test_expect_success 'No rename should be detected by notmuch new' '
+increment_mtime "$MAIL_DIR/cur" &&
+notmuch new > actual &&
+test_cmp - actual <<EOF
+No new mail.
+EOF
+'
+# (*) If notmuch new was not run we've got "Processed 1 file in almost
+# no time" here. The reason is that removing unread tag in a previous
+# test created directory document in the database but this document
+# was not linked as subdirectory of $MAIL_DIR. Therefore notmuch new
+# could not reach the cur/ directory and its files in it during
+# recurive traversal.
+test_expect_success 'Remove info from file name' '
+mv "$MAIL_DIR/cur/msg-003:2,S" "$MAIL_DIR/cur/msg-003" &&
+increment_mtime "$MAIL_DIR/cur" &&
+NOTMUCH_NEW > actual
+test_cmp - actual <<EOF
+No new mail. Detected 1 file rename.
+EOF
+'
+test_expect_success "Check that removing info did not change tags" '
+notmuch search tag:inbox | notmuch_search_sanitize > actual &&
+test_cmp - actual <<EOF
+thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; test message 3 (inbox tmp)
+EOF
+'
+test_expect_success "Add a message to fakenew/ without info" '
+generate_message [subject]="\"test message 4\"" [date]="\"Sat, 01 Jan 2000 12:00:00 -0000\"" [dir]=fakenew &&
+NOTMUCH_NEW > actual &&
+test_cmp - actual <<EOF
+Added 1 new message to the database.
+EOF
+'
+test_expect_success "Check that the message has inbox and unread tags" '
+notmuch search tag:inbox and tag:unread | notmuch_search_sanitize > actual &&
+test_cmp - actual <<EOF
+thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; test message 4 (inbox unread)
+EOF
+'
+test_expect_success 'Removing of unread tag should leave the message in fakenew/' '
+notmuch tag -unread tag:inbox and tag:unread &&
+ls "$MAIL_DIR/fakenew" > actual &&
+test_cmp - actual <<EOF
+msg-004:2,S
+EOF
+'
+
+test_expect_success 'Make maildir flags out of sync with the database' '
+ls $MAIL_DIR > expected &&
+mv $MAIL_DIR/msg-001:2,RS $MAIL_DIR/msg-001:2, &&
+mv $MAIL_DIR/msg-002:2,RS $MAIL_DIR/msg-002:2, &&
+increment_mtime $MAIL_DIR
+'
+
+test_expect_success 'Test whether dump/new/restore synchronizes the maildir flags with the database' '
+notmuch dump dump.txt &&
+notmuch new &&
+notmuch restore dump.txt &&
+ls $MAIL_DIR > actual &&
+test_cmp expected actual
+'
+
+test_done

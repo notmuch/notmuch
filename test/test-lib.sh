@@ -245,6 +245,12 @@ increment_mtime ()
 #	Generate the message in directory 'directory/of/choice' within
 #	the mail store. The directory will be created if necessary.
 #
+#  [filename]=name
+#
+#	Store the message in file 'name'. The default is to store it
+#	in 'msg-<count>', where <count> is three-digit number of the
+#	message.
+#	
 #  [body]=text
 #
 #	Text to use as the body of the email message
@@ -281,10 +287,14 @@ generate_message ()
     local additional_headers
 
     gen_msg_cnt=$((gen_msg_cnt + 1))
-    gen_msg_name=msg-$(printf "%03d" $gen_msg_cnt)
+    if [ -z "${template[filename]}" ]; then
+	gen_msg_name="msg-$(printf "%03d" $gen_msg_cnt)"
+    else
+	gen_msg_name=${template[filename]}
+    fi
 
     if [ -z "${template[id]}" ]; then
-	gen_msg_id="${gen_msg_name}@notmuch-test-suite"
+	gen_msg_id="${gen_msg_name%:2,*}@notmuch-test-suite"
     else
 	gen_msg_id="${template[id]}"
     fi
