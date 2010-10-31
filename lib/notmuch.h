@@ -780,6 +780,7 @@ notmuch_message_get_filename (notmuch_message_t *message);
 /* Message flags */
 typedef enum _notmuch_message_flag {
     NOTMUCH_MESSAGE_FLAG_MATCH,
+    NOTMUCH_MESSAGE_FLAG_TAGS_INVALID,
 } notmuch_message_flag_t;
 
 /* Get a value of a flag for the email corresponding to 'message'. */
@@ -895,6 +896,12 @@ notmuch_message_remove_tag (notmuch_message_t *message, const char *tag);
  */
 notmuch_status_t
 notmuch_message_remove_all_tags (notmuch_message_t *message);
+
+/* Add or remove tags based on the maildir flags in the file name.
+ */
+notmuch_status_t
+notmuch_message_maildir_to_tags (notmuch_message_t *message,
+				 const char *filename);
 
 /* Freeze the current state of 'message' within the database.
  *

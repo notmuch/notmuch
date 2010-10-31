@@ -261,6 +261,10 @@ notmuch_status_t
 _notmuch_message_add_filename (notmuch_message_t *message,
 			       const char *filename);
 
+notmuch_private_status_t
+_notmuch_message_rename (notmuch_message_t *message,
+			 const char *new_filename);
+
 void
 _notmuch_message_ensure_thread_id (notmuch_message_t *message);
 
