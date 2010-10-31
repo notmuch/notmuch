@@ -195,6 +195,16 @@ notmuch_setup_command (unused (void *ctx),
 	g_ptr_array_free (tags, TRUE);
     }
 
+    prompt ("Synchronize maildir flags with notmuch tags? %s: ",
+	    notmuch_config_get_maildir_sync (config) == TRUE ? "[yes]/no" : "[no]/yes");
+    if (strlen (response) > 0) {
+	if (strcasecmp (response, "yes") == 0||
+	    strcasecmp (response, "y") == 0)
+	    notmuch_config_set_maildir_sync (config, TRUE);
+	else
+	    notmuch_config_set_maildir_sync (config, FALSE);
+    }
+
     if (! notmuch_config_save (config)) {
 	if (is_new)
 	  welcome_message_post_setup ();

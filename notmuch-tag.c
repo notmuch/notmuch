@@ -100,6 +100,8 @@ notmuch_tag_command (void *ctx, unused (int argc), unused (char *argv[]))
 				     NOTMUCH_DATABASE_MODE_READ_WRITE);
     if (notmuch == NULL)
 	return 1;
+    notmuch_database_set_maildir_sync (notmuch,
+				       notmuch_config_get_maildir_sync (config));
 
     query = notmuch_query_create (notmuch, query_string);
     if (query == NULL) {

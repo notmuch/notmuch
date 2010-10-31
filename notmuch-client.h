@@ -198,6 +198,13 @@ notmuch_config_set_new_tags (notmuch_config_t *config,
 			     size_t length);
 
 notmuch_bool_t
+notmuch_config_get_maildir_sync (notmuch_config_t *config);
+
+void
+notmuch_config_set_maildir_sync (notmuch_config_t *config,
+				 notmuch_bool_t maildir_sync);
+
+notmuch_bool_t
 debugger_is_active (void);
 
 #endif

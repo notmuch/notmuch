@@ -688,6 +688,8 @@ notmuch_database_open (const char *path,
 	notmuch = NULL;
     }
 
+    notmuch_database_set_maildir_sync (notmuch, FALSE);
+
   DONE:
     if (notmuch_path)
 	free (notmuch_path);
@@ -715,6 +717,13 @@ notmuch_database_close (notmuch_database_t *notmuch)
     delete notmuch->xapian_db;
     delete notmuch->value_range_processor;
     talloc_free (notmuch);
+}
+
+void
+notmuch_database_set_maildir_sync (notmuch_database_t *database,
+				   notmuch_bool_t maildir_sync)
+{
+    database->maildir_sync = maildir_sync;
 }
 
 const char *

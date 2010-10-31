@@ -61,6 +61,14 @@ static const char user_config_comment[] =
     " recipient list of replies, and will set the From address based on the\n"
     " address to which the original email was addressed.\n";
 
+static const char maildir_config_comment[] =
+    " Maildir compatibility configuration\n"
+    "\n"
+    " Here you can configure whether notmuch will synchronize its tags with\n"
+    " maildir flags."
+    "\n"
+    "\tsynchronize_flags      Valid values are true and false.\n";
+
 struct _notmuch_config {
     char *filename;
     GKeyFile *key_file;
@@ -72,7 +80,10 @@ struct _notmuch_config {
     size_t user_other_email_length;
     const char **new_tags;
     size_t new_tags_length;
+    notmuch_bool_t maildir_sync;
 };
+
+#define MAILDIR_SYNC_UNDEF ((notmuch_bool_t)-1)
 
 static int
 notmuch_config_destructor (notmuch_config_t *config)
@@ -191,6 +202,7 @@ notmuch_config_open (void *ctx,
     int file_had_database_group;
     int file_had_new_group;
     int file_had_user_group;
+    int file_had_maildir_group;
 
     if (is_new_ret)
 	*is_new_ret = 0;
@@ -221,6 +233,7 @@ notmuch_config_open (void *ctx,
     config->user_other_email_length = 0;
     config->new_tags = NULL;
     config->new_tags_length = 0;
+    config->maildir_sync = MAILDIR_SYNC_UNDEF;
 
     if (! g_key_file_load_from_file (config->key_file,
 				     config->filename,
@@ -263,6 +276,7 @@ notmuch_config_open (void *ctx,
 						    "database");
     file_had_new_group = g_key_file_has_group (config->key_file, "new");
     file_had_user_group = g_key_file_has_group (config->key_file, "user");
+    file_had_maildir_group = g_key_file_has_group (config->key_file, "maildir");
 
 
     if (notmuch_config_get_database_path (config) == NULL) {
@@ -313,6 +327,10 @@ notmuch_config_open (void *ctx,
 	notmuch_config_set_new_tags (config, tags, 2);
     }
 
+    if (notmuch_config_get_maildir_sync (config) == MAILDIR_SYNC_UNDEF) {
+	notmuch_config_set_maildir_sync (config, FALSE);
+    }
+
     /* Whenever we know of configuration sections that don't appear in
      * the configuration file, we add some comments to help the user
      * understand what can be done. */
@@ -338,6 +356,12 @@ notmuch_config_open (void *ctx,
     {
 	g_key_file_set_comment (config->key_file, "user", NULL,
 				user_config_comment, NULL);
+    }
+
+    if (! file_had_maildir_group)
+    {
+	g_key_file_set_comment (config->key_file, "maildir", NULL,
+				maildir_config_comment, NULL);
     }
 
     if (is_new_ret)
@@ -702,4 +726,29 @@ notmuch_config_command (void *ctx, int argc, char *argv[])
     fprintf (stderr, "Unrecognized argument for notmuch config: %s\n",
 	     argv[0]);
     return 1;
+}
+
+notmuch_bool_t
+notmuch_config_get_maildir_sync (notmuch_config_t *config)
+{
+    GError *err = NULL;
+    if (config->maildir_sync == MAILDIR_SYNC_UNDEF) {
+	config->maildir_sync =
+	    g_key_file_get_boolean (config->key_file,
+				    "maildir", "synchronize_flags", &err);
+	if (err) {
+	    config->maildir_sync = MAILDIR_SYNC_UNDEF;
+	    g_error_free (err);
+	}
+    }
+    return config->maildir_sync;
+}
+
+void
+notmuch_config_set_maildir_sync (notmuch_config_t *config,
+				 notmuch_bool_t maildir_sync)
+{
+    g_key_file_set_boolean (config->key_file,
+			    "maildir", "synchronize_flags", maildir_sync);
+    config->maildir_sync = maildir_sync;
 }

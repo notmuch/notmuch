@@ -176,6 +176,12 @@ notmuch_database_open (const char *path,
 void
 notmuch_database_close (notmuch_database_t *database);
 
+/* Sets whether maildir flags should be synchronized with notmuch
+ * tags. */
+void
+notmuch_database_set_maildir_sync (notmuch_database_t *database,
+				   notmuch_bool_t maildir_sync);
+
 /* Return the database path of the given database.
  *
  * The return value is a string owned by notmuch so should not be

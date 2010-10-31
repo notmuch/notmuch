@@ -41,6 +41,8 @@ notmuch_restore_command (unused (void *ctx), int argc, char *argv[])
     if (notmuch == NULL)
 	return 1;
 
+    notmuch_database_set_maildir_sync (notmuch,
+				       notmuch_config_get_maildir_sync (config));
     if (argc) {
 	input = fopen (argv[0], "r");
 	if (input == NULL) {
