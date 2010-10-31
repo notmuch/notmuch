@@ -1670,7 +1670,8 @@ notmuch_database_add_message (notmuch_database_t *notmuch,
 
   DONE:
     if (message) {
-	if (ret == NOTMUCH_STATUS_SUCCESS && message_ret)
+	if ((ret == NOTMUCH_STATUS_SUCCESS ||
+	     ret == NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID) && message_ret)
 	    *message_ret = message;
 	else
 	    notmuch_message_destroy (message);

@@ -238,7 +238,8 @@ notmuch_database_get_directory (notmuch_database_t *database,
  * notmuch database will reference the filename, and will not copy the
  * entire contents of the file.
  *
- * If 'message' is not NULL, then, on successful return '*message'
+ * If 'message' is not NULL, then, on successful return
+ * (NOTMUCH_STATUS_SUCCESS or NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID) '*message'
  * will be initialized to a message object that can be used for things
  * such as adding tags to the just-added message. The user should call
  * notmuch_message_destroy when done with the message. On any failure
