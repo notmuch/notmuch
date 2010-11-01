@@ -23,7 +23,7 @@ notmuch (0.4) unstable; urgency=low
   * emacs bugfix: Fix to correctly handle message IDs containing ".."
   * emacs bugfix: Fix initialization so "M-x notmuch" works by default.
 
- -- Carl Worth <cworth@cworth.org>  Mon, 01 Nov 2010 16:23:47 -0700
+ -- Carl Worth <cworth@debian.org>  Mon, 01 Nov 2010 16:23:47 -0700
 
 notmuch (0.3.1) unstable; urgency=low
 
