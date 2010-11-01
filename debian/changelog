@@ -1,3 +1,30 @@
+notmuch (0.4) unstable; urgency=low
+
+  * new: notmuch search --output=(summary|threads|messages|tags|files)
+  * new: notmuch show --format=mbox <search-specification>
+  * new: notmuch config [get|set] <section>.<item> [value ...]
+  * lib: Add notmuch_query_get_query_string and notmuch_query_get_sort
+  * emacs: Enable Fcc of all sent messages by default (to "sent" directory)
+  * emacs: Ability to all open messages in a thread to a pipe
+  * emacs: Optional support for detecting inline patches
+  * emacs: Automatically tag messages as "replied" when sending a reply
+  * emacs: Allow search-result color specifications to overlay each other
+  * emacs: Make hidden author names still available for incremental search.
+  * emacs: New binding of Control-TAB (works like TAB in reverse)
+  * test: New modularization of test suite.
+  * test: New testing of emacs interface.
+  * bugfix: Avoid setting Bcc header in "notmuch reply"
+  * bugfix: Avoid corruption of database when "notmuch new " is interrupted.
+  * bugfix: Fix failure with extremely long message ID headers.
+  * bugfix: Fix for messages with "charset=unknown-8bit"
+  * bugfix: Fix notmuch_query_search_threads to return NULL on any exception
+  * bugfix: Fix "notmuch search" to return non-zero on any exception
+  * emacs bugfix: Fix for message with a subject containing, "[1234]"
+  * emacs bugfix: Fix to correctly handle message IDs containing ".."
+  * emacs bugfix: Fix initialization so "M-x notmuch" works by default.
+
+ -- Carl Worth <cworth@cworth.org>  Mon, 01 Nov 2010 16:23:47 -0700
+
 notmuch (0.3.1) unstable; urgency=low
 
   * Fix an infinite loop in "notmuch reply"
