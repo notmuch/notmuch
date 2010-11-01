@@ -189,7 +189,9 @@ do_search_threads (const void *ctx,
     {
 	int first_tag = 1;
 
-	if (! first_thread)
+	if (first_thread)
+	    fputs (format->results_start, stdout);
+	else
 	    fputs (format->item_sep, stdout);
 
 	thread = notmuch_threads_get (threads);
@@ -235,6 +237,9 @@ do_search_threads (const void *ctx,
 	notmuch_thread_destroy (thread);
     }
 
+    if (! first_thread)
+	fputs (format->results_end, stdout);
+
     return 0;
 }
 
@@ -258,7 +263,9 @@ do_search_messages (const void *ctx,
     {
 	message = notmuch_messages_get (messages);
 
-	if (! first_message)
+	if (first_message)
+	    fputs (format->results_start, stdout);
+	else
 	    fputs (format->item_sep, stdout);
 
 	if (output == OUTPUT_FILES) {
@@ -275,6 +282,9 @@ do_search_messages (const void *ctx,
     }
 
     notmuch_messages_destroy (messages);
+
+    if (! first_message)
+	fputs (format->results_end, stdout);
 
     return 0;
 }
@@ -415,8 +425,6 @@ notmuch_search_command (void *ctx, int argc, char *argv[])
 
     notmuch_query_set_sort (query, sort);
 
-    fputs (format->results_start, stdout);
-
     switch (output) {
     default:
     case OUTPUT_SUMMARY:
@@ -431,8 +439,6 @@ notmuch_search_command (void *ctx, int argc, char *argv[])
 	ret = do_search_tags (ctx, notmuch, format, query);
 	break;
     }
-
-    fputs (format->results_end, stdout);
 
     notmuch_query_destroy (query);
     notmuch_database_close (notmuch);
