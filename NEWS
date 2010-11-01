@@ -1,5 +1,22 @@
+Notmuch 0.4.0 (2010-11-01)
+==========================
 New command-line features
 -------------------------
+notmuch search --output=(summary|threads|messages|tags|files)
+
+  This new option allows for particular items to be returned from
+  notmuch searches. The "summary" option is the default and behaves
+  just as "notmuch search" has historically behaved.
+
+  The new option values allow for thread IDs, message IDs, lists of
+  tags, and lists of filenames to be returned from searches. It is
+  expected that this new option will be very useful in shell
+  scripts. For example:
+
+	for file in $(notmuch search --output=files <search-terms>); do
+		<operations-on> "$file"
+	done
+
 notmuch show --format=mbox <search-specification>
 
   This new option allows for the messages matching a search
@@ -9,34 +26,202 @@ notmuch show --format=mbox <search-specification>
   beginning of all lines beginning with one or more '>' characters
   followed by the 5 characters "From ".
 
+notmuch config [get|set] <section>.<item> [value ...]
+
+  The new top-level "config" command allows for any value in the
+  notmuch configuration file to be queried or set to a new value. Both
+  single-valued and multi-valued items are supported, as our any
+  custom items stored in the configuration file.
+
+Avoid setting Bcc header in "notmuch reply"
+
+  We decided that this was a bit heavy-handed as the actual mail
+  user-agent should be responsible for setting any Bcc option. Also,
+  see below for the notmuch/emacs user-agent now setting an Fcc by
+  default rather than Bcc.
+
+New library features
+--------------------
+Add notmuch_query_get_query_string and notmuch_query_get_sort
+
+  These are simply functions for querying properties of a
+  notmuch_query_t object.
+
 New emacs features
 ------------------
-Add a new, optional hook for detecting inline patches
+Enable Fcc of all sent messages by default (to "sent" directory)
+
+  All messages sent from the emacs interface will now be saved to the
+  notmuch mail store where they will be incorporated to the database
+  by the next "notmuch new". By default, messages are saved to the
+  "sent" directory at the top-level of the mail store. This directory
+  can be customized by means of the "Notmuch Fcc Dirs" option in the
+  notmuch customize interface.
+
+Ability to all open messages in a thread to a pipe
+
+  Historically, the '|' keybinding allows for piping a single message
+  to an external command. Now, by prefixing this key with a prefix
+  argument, (for example, by pressing "Control-U |"), all open
+  messages in the current thread will be sent to the external command.
+
+Optional support for detecting inline patches
 
   This hook is disabled by default but can be enabled with a checkbox
-  under ""Notmuch Show Insert Text/Plain Hook" in the notmuch
-  customize interface. It allows for inline patches to be detected and
-  treated as if they were attachments, (with context-sensitive
-  highlighting).
+  under "Notmuch Show Insert Text/Plain Hook" in the notmuch customize
+  interface. It allows for inline patches to be detected and treated
+  as if they were attachments, (with context-sensitive highlighting).
 
 Automatically tag messages as "replied" when sending a reply
 
-  This feature adds a "replied" tag by default, but can easily be
-  customized to add or remove other tags as well. For example, a user
-  might use a tag of "needs-reply" and can configure this feature to
-  automatically remove that tag when replying. See "Notmuch Message
-  Mark Replied" in the notmuch customize interface.
+  Messages replied to within the emacs interface will now be tagged as
+  "replied". This feature can easily be customized to add or remove
+  other tags as well. For example, a user might use a tag of
+  "needs-reply" and can configure this feature to automatically remove
+  that tag when replying. See "Notmuch Message Mark Replied" in the
+  notmuch customize interface.
 
-Emacs mail improvements
+Allow search-result color specifications to overlay each other
+
+  For example, one tag can specify the background color of matching
+  lines, while another can specify the foreground. With this change,
+  both settings will now be visible simultaneously, (which was not the
+  case in previous releases). See "Notmuch Search Line Faces" in the
+  notmuch customize interface.
+
+Make hidden author names still available for incremental search.
+
+  When there is insufficient space to display all authors of a thread
+  in search results, the names of hidden authors are now still made
+  available to emacs' incremental search commands. As the user
+  searches, matching lines will temporarily expand to show the hidden
+  names.
+
+New binding of Control-TAB (works like TAB in reverse)
+
+  Many notmuch nodes already use TAB to navigate forward through
+  various items allowing actions, (message headers, email attachments,
+  etc.). The new Control-TAB binding operates similarly but in the
+  opposite direction.
+
+New build-system features
+-------------------------
+Various portability fixes have been applied
+
+  These include fixes for build failures on at least Solaris, FreeBSD,
+  and Fedora systems. We're hopeful that the notmuch code base is now
+  more portable than ever before.
+
+Arrange for libnotmuch to be found automatically after make install
+
+  The notmuch build system is now careful to help the user avoid
+  errors of the form "libnotmuch.so could not be found" immediately
+  after installing. This support takes two forms:
+
+	1. If the library is installed to a system directory,
+	   (configured in /etc/ld.so.conf), then "make install" will
+	   automatically run ldconfig.
+
+	2. If the library is installed to a non-system directory, the
+	   build system adds a DR_RUNPATH entry to the final binary
+	   pointing to the directory to which the library is installed.
+
+  When this support works, the user should be able to run notmuch
+  immediately after "make install", without any errors trying to find
+  the notmuch library, and without having to manually set environment
+  variables such as LD_LIBRARY_PATH.
+
+Check compiler/linker options before using them
+
+  The configure script now carefully checks that any desired
+  compilation options, (whether for enabling compiler warnings, or for
+  embedding rpath, etc.), are supported. Only supported options are
+  used in the resulting Makefile.
+
+New test-suite features
 -----------------------
-Easier way to define a fcc directory
-    
-  In the common case that a user only has one FCC (save outgoing mail
-  in the Mail directory, it is now possible to simply configure a
-  string such as "Sent" in the notmuch-fcc-dirs variable. More complex
-  options, depending on a users email address, are possible and
-  described in the variable customization help text.
-    
+New modularization of test suite.
+
+  Thanks to a gracious relicensing of the test-suite infrastructure
+  from the git project, notmuch now has a modular test suite. This
+  provides the ability to run individual sections of the test suite
+  rather than the whole things. It also provides better summary of
+  test results, with support for tests that are expected to fail
+  (BROKEN and FIXED) in addition to PASS and FAIL. Finally, it makes
+  it easy to run the test suite within valgrind (pass --valgrind to
+  notmuch-test or to any sub-script) which has been very useful.
+
+New testing of emacs interface.
+
+  The test suite has been augmented to allow automated testing of the
+  emacs interfaces. So far, this includes basic searches, display of
+  threads, and tag manipulation. This also includes a test that a new
+  message can successfully be sent out through a (dummy) SMTP server
+  and that said message is successfully integrated into the notmuch
+  database via the FCC setting.
+
+General bug fixes
+-----------------
+Fix potential corruption of database when "notmuch new " is interrupted.
+
+  Previously, an interruption of "notmuch new" would (rarely) result
+  in a corrupt database. The corruption would manifest itself by a
+  persistent error of the form:
+
+	document ID of 1234 has no thread ID
+
+  The message-adding code has been carefully audited and reworked to
+  avoid this sort of corruption regardless of when it is interrupted.
+
+Fix failure with extremely long message ID headers.
+
+  Previously, a message with an extremely long message ID, (say, more
+  than 300 characters), would fail to be added to notmuch, (triggering
+  Xapian exceptions). This has now been fixed.
+
+Fix for messages with "charset=unknown-8bit"
+
+  Previously, messages with this charset would cause notmuch to emit a
+  GMime warning, (which would then trip up emacs or other interfaces
+  parsing the notmuch results).
+
+Fix notmuch_query_search_threads function to return NULL on any exception
+
+Fix "notmuch search" to return non-zero if notmuch_query_search_threads fails
+
+  Previously, this command could confusingly report a Xapian
+  exception, yet still return an error code of 0. It now correctly
+  returns a failing error code of 1 in this case.
+
+Emacs bug fixes
+---------------
+Fix to handle a message with a subject containing, for example "[1234]"
+
+  Previously, a message subject containing a sequence of digits within
+  square brackets would cause the emacs interface to mis-parse the
+  output of "notmuch search". This would result in the message being
+  mis-displayed and prevent the user from manipulating the message in
+  the emacs interface.
+
+Fix to correctly handle message IDs containing ".."
+
+  The emacs interface now properly quotes message IDs to avoid a
+  Xapian bug in which the ".." within a message ID would be
+  misinterpreted as a numeric range specification.
+
+Python-binding fixes
+--------------------
+The python bindings for notmuch have been updated to work with python3.
+
+Debian-specific fixes
+---------------------
+Fix emacs initialization so "M-x notmuch" works for users by default.
+
+  Now, a new Debian user can immediately run "emacs -f notmuch" after
+  "apt-get install notmuch". Previously, the user would have had to
+  edit the ~/.emacs file to add "(require 'notmuch)" before this would
+  work.
+
 Notmuch 0.3.1 (2010-04-27)
 ==========================
 General bug fixes
