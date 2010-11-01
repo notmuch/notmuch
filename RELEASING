@@ -48,10 +48,10 @@ repository. From here, there are just a few steps to release:
 	as "1.1" or "1.2").
 
 	Finally, releases that do not change "features" but are merely
-	bug fixes either add increase the micro number or add it
-	(starting at ".1" if not present). So a bug-fix release from
-	"1.0" would be "1.0.1" and a subsequent bug-fix release would
-	be "1.0.2" etc.
+	bug fixes either increase the micro number or add it (starting
+	at ".1" if not present). So a bug-fix release from "1.0" would
+	be "1.0.1" and a subsequent bug-fix release would be "1.0.2"
+	etc.
 
 	Commit this change.
 
