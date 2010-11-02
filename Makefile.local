@@ -249,7 +249,8 @@ notmuch_client_srcs =		\
 	notmuch-time.c		\
 	query-string.c		\
 	show-message.c		\
-	json.c
+	json.c			\
+	xutil.c
 
 notmuch_client_modules = $(notmuch_client_srcs:.c=.o)
 

@@ -48,6 +48,8 @@ NOTMUCH_BEGIN_DECLS
 
 #include "xutil.h"
 
+#pragma GCC visibility push(hidden)
+
 #ifdef DEBUG
 # define DEBUG_DATABASE_SANITY 1
 # define DEBUG_QUERY 1
@@ -441,6 +443,8 @@ _notmuch_tags_add_tag (notmuch_tags_t *tags, const char *tag);
 
 void
 _notmuch_tags_prepare_iterator (notmuch_tags_t *tags);
+
+#pragma GCC visibility pop
 
 NOTMUCH_END_DECLS
 

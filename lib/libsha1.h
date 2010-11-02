@@ -43,6 +43,8 @@ extern "C"
 
 #include <stdint.h>
 
+#pragma GCC visibility push(hidden)
+
 /* Size of SHA1 digest */
 
 #define SHA1_DIGEST_SIZE 20
@@ -59,6 +61,8 @@ void sha1_begin(sha1_ctx ctx[1]);
 void sha1_hash(const unsigned char data[], unsigned long len, sha1_ctx ctx[1]);
 void sha1_end(unsigned char hval[], sha1_ctx ctx[1]);
 void sha1(unsigned char hval[], const unsigned char data[], unsigned long len);
+
+#pragma GCC visibility pop
 
 #if defined(__cplusplus)
 }

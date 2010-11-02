@@ -34,6 +34,8 @@
 
 #include <xapian.h>
 
+#pragma GCC visibility push(hidden)
+
 struct _notmuch_database {
     notmuch_bool_t exception_reported;
 
@@ -64,5 +66,7 @@ struct _notmuch_database {
 notmuch_tags_t *
 _notmuch_convert_tags (void *ctx, Xapian::TermIterator &i,
 		       Xapian::TermIterator &end);
+
+#pragma GCC visibility pop
 
 #endif
