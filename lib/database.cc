@@ -185,7 +185,7 @@ typedef struct {
  * nearly universal to all mail messages).
  */
 
-prefix_t BOOLEAN_PREFIX_INTERNAL[] = {
+static prefix_t BOOLEAN_PREFIX_INTERNAL[] = {
     { "type",			"T" },
     { "reference",		"XREFERENCE" },
     { "replyto",		"XREPLYTO" },
@@ -194,14 +194,14 @@ prefix_t BOOLEAN_PREFIX_INTERNAL[] = {
     { "directory-direntry",	"XDDIRENTRY" },
 };
 
-prefix_t BOOLEAN_PREFIX_EXTERNAL[] = {
+static prefix_t BOOLEAN_PREFIX_EXTERNAL[] = {
     { "thread",			"G" },
     { "tag",			"K" },
     { "is",			"K" },
     { "id",			"Q" }
 };
 
-prefix_t PROBABILISTIC_PREFIX[]= {
+static prefix_t PROBABILISTIC_PREFIX[]= {
     { "from",			"XFROM" },
     { "to",			"XTO" },
     { "attachment",		"XATTACHMENT" },

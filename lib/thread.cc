@@ -140,14 +140,14 @@ _complete_thread_authors (notmuch_thread_t *thread)
     thread->authors_array = NULL;
 }
 
-/* clean up the uggly "Lastname, Firstname" format that some mail systems
+/* clean up the ugly "Lastname, Firstname" format that some mail systems
  * (most notably, Exchange) are creating to be "Firstname Lastname"
  * To make sure that we don't change other potential situations where a
  * comma is in the name, we check that we match one of these patterns
  * "Last, First" <first.last@company.com>
  * "Last, First MI" <first.mi.last@company.com>
  */
-char *
+static char *
 _thread_cleanup_author (notmuch_thread_t *thread,
 			const char *author, const char *from)
 {

@@ -63,7 +63,7 @@ struct _NotmuchFilterDiscardUuencodeClass {
     GMimeFilterClass parent_class;
 };
 
-GMimeFilter *notmuch_filter_discard_uuencode_new (void);
+static GMimeFilter *notmuch_filter_discard_uuencode_new (void);
 
 static void notmuch_filter_discard_uuencode_finalize (GObject *object);
 
@@ -195,7 +195,7 @@ filter_reset (GMimeFilter *gmime_filter)
  *
  * Returns: a new #NotmuchFilterDiscardUuencode filter.
  **/
-GMimeFilter *
+static GMimeFilter *
 notmuch_filter_discard_uuencode_new (void)
 {
     static GType type = 0;

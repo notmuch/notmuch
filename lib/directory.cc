@@ -52,7 +52,7 @@ _notmuch_filenames_destructor (notmuch_filenames_t *filenames)
  * iterating over the non-prefixed portion of terms sharing a common
  * prefix.
  */
-notmuch_filenames_t *
+static notmuch_filenames_t *
 _notmuch_filenames_create (void *ctx,
 			   notmuch_database_t *notmuch,
 			   const char *prefix)
