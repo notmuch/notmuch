@@ -24,7 +24,6 @@
 
 #include <sys/time.h>
 #include <signal.h>
-#include <xapian.h>
 
 #include <glib.h> /* g_free, GPtrArray, GHashTable */
 

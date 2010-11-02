@@ -23,8 +23,6 @@
 
 #include <glib.h> /* GHashTable, GPtrArray */
 
-#include <xapian.h>
-
 struct _notmuch_query {
     notmuch_database_t *notmuch;
     const char *query_string;

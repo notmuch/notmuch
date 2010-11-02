@@ -25,8 +25,6 @@
 
 #include <gmime/gmime.h>
 
-#include <xapian.h>
-
 struct _notmuch_message {
     notmuch_database_t *notmuch;
     Xapian::docid doc_id;

@@ -21,8 +21,6 @@
 #include "notmuch-private.h"
 #include "database-private.h"
 
-#include <xapian.h>
-
 struct _notmuch_filenames {
     Xapian::TermIterator iterator;
     Xapian::TermIterator end;

@@ -21,8 +21,6 @@
 #include "notmuch-private.h"
 #include "database-private.h"
 
-#include <xapian.h>
-
 #include <gmime/gmime.h>
 #include <glib.h> /* GHashTable */
 
