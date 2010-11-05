@@ -6,6 +6,9 @@ Fix the things that are causing the most pain to new users
 
 Emacs interface (notmuch.el)
 ----------------------------
+Add notmuch-bcc and notmuch-cc for setting default Bcc and Cc values,
+(should affect the message-setup-hook).
+
 Switch the notmuch-search view to use "notmuch search --format=json"
 to fix large classes of bugs regarding poorly-escaped output and lame
 regular expressions. (The most recently found, unfixed example is the
