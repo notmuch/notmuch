@@ -26,10 +26,10 @@ output=$(test_emacs '(notmuch-search "tag:inbox") (notmuch-test-wait) (message (
 expected=$(cat $EXPECTED/notmuch-search-tag-inbox)
 test_expect_equal "$output" "$expected"
 
-test_begin_subtest "Navigation of notmuch-hello to search results
-	[XXX: Need to decide the correct order of the search results]"
+test_begin_subtest "Navigation of notmuch-hello to search results"
 output=$(test_emacs '(notmuch-hello) (goto-char (point-min)) (re-search-forward "inbox") (widget-button-press (point)) (notmuch-test-wait) (message (buffer-string))' 2>&1)
-test_expect_equal_failure "$output" "$expected"
+expected=$(cat $EXPECTED/notmuch-hello-view-inbox)
+test_expect_equal "$output" "$expected"
 
 test_begin_subtest "Basic notmuch-show view in emacs"
 maildir_storage_thread=$(notmuch search --output=threads id:20091117190054.GU3165@dottiness.seas.harvard.edu)
