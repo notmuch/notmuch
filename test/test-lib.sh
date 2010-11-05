@@ -742,12 +742,29 @@ test_done () {
 }
 
 test_emacs () {
-    emacs_code="$1"
-    emacs --batch --no-site-file --directory ../../emacs --load notmuch.el \
+	# Construct a little test script here for the benefit of the user,
+	# (who can easily run "run_emacs" to get the same emacs environment
+	# for investigating any failures).    
+	cat <<EOF > run_emacs
+#!/bin/sh
+export PATH=$PATH
+export HOME=$HOME
+export NOTMUCH_CONFIG=$NOTMUCH_CONFIG
+
+# We assume that the user will give a command-line argument only if
+# wanting to run in batch mode.
+if [ \$# -gt 0 ]; then
+	BATCH=--batch
+fi
+
+emacs \$BATCH --no-site-file --directory ../../emacs --load notmuch.el \
 	--eval "(defun notmuch-test-wait ()
 			(while (get-buffer-process (current-buffer))
 				(sleep-for 0.1)))" \
-	--eval "(progn (set-frame-width (window-frame (get-buffer-window)) 80) ${emacs_code})"
+	--eval "(progn (set-frame-width (window-frame (get-buffer-window)) 80) \$@)"
+EOF
+	chmod a+x ./run_emacs
+	./run_emacs "$@"
 }
 
 
