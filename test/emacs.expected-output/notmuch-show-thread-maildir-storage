@@ -1,4 +1,4 @@
-"Lars Kellogg-Stedman" <lars@seas.harvard.edu> (2009-11-17) (inbox)
+Lars Kellogg-Stedman <lars@seas.harvard.edu> (2009-11-17) (inbox)
 Subject: [notmuch] Working with Maildir storage?
 To: notmuch@notmuchmail.org
 Date: Tue, 17 Nov 2009 14:00:54 -0500
@@ -23,27 +23,26 @@ with Maildir) or if something else is going on.
 
 Cheers,
 
-[ 12-line signature. Click/Enter to toggle visibility. ]
+[ 4-line signature. Click/Enter to toggle visibility. ]
 -- 
-Lars Kellogg-Stedman <lars at seas.harvard.edu>
+Lars Kellogg-Stedman <lars@seas.harvard.edu>
 Senior Technologist, Computing and Information Technology
 Harvard University School of Engineering and Applied Sciences
 
--------------- next part --------------
-A non-text attachment was scrubbed...
-Name: not available
-Type: application/pgp-signature
-Size: 489 bytes
-Desc: not available
-URL: <http://notmuchmail.org/pipermail/notmuch/attachments/20091117/0bc8f9bd/attachment.pgp>
-
- "Mikhail Gusarov" <dottedmag@dottedmag.net> (2009-11-17) (inbox unread)
- Subject: [notmuch] Working with Maildir storage?
+[ application/pgp-signature ]
+[ text/plain ]
+[ 3-line signature. Click/Enter to toggle visibility. ]
+_______________________________________________
+notmuch mailing list
+notmuch@notmuchmail.org
+http://notmuchmail.org/mailman/listinfo/notmuch
+ Mikhail Gusarov <dottedmag@dottedmag.net> (2009-11-17) (inbox unread)
+ Subject: Re: [notmuch] Working with Maildir storage?
  To: notmuch@notmuchmail.org
  Date: Wed, 18 Nov 2009 01:02:38 +0600
 
 
- Twas brillig at 14:00:54 17.11.2009 UTC-05 when lars at seas.harvard.edu did gyre and gimble:
+ Twas brillig at 14:00:54 17.11.2009 UTC-05 when lars@seas.harvard.edu did gyre and gimble:
 
   LK> Resulted in 4604 lines of errors along the lines of:
 
@@ -53,20 +52,20 @@ URL: <http://notmuchmail.org/pipermail/notmuch/attachments/20091117/0bc8f9bd/att
 
  See the patch just posted here.
 
- [ 9-line signature. Click/Enter to toggle visibility. ]
+ [ 1-line signature. Click/Enter to toggle visibility. ]
  -- 
  http://fossarchy.blogspot.com/
- -------------- next part --------------
- A non-text attachment was scrubbed...
- Name: not available
- Type: application/pgp-signature
- Size: 834 bytes
- Desc: not available
- URL: <http://notmuchmail.org/pipermail/notmuch/attachments/20091118/60743c36/attachment.pgp>
-
-  "Lars Kellogg-Stedman" <lars@seas.harvard.edu> (2009-11-17) (inbox unread)
-  Subject: [notmuch] Working with Maildir storage?
-  To: notmuch@notmuchmail.org
+ [ application/pgp-signature ]
+ [ text/plain ]
+ [ 3-line signature. Click/Enter to toggle visibility. ]
+ _______________________________________________
+ notmuch mailing list
+ notmuch@notmuchmail.org
+ http://notmuchmail.org/mailman/listinfo/notmuch
+  Lars Kellogg-Stedman <lars@seas.harvard.edu> (2009-11-17) (inbox unread)
+  Subject: Re: [notmuch] Working with Maildir storage?
+  To: Mikhail Gusarov <dottedmag@dottedmag.net>
+  Cc: notmuch@notmuchmail.org
   Date: Tue, 17 Nov 2009 15:33:01 -0500
 
   > See the patch just posted here.
@@ -80,20 +79,19 @@ URL: <http://notmuchmail.org/pipermail/notmuch/attachments/20091117/0bc8f9bd/att
 
   -- Lars
 
-  [ 12-line signature. Click/Enter to toggle visibility. ]
+  [ 4-line signature. Click/Enter to toggle visibility. ]
   -- 
-  Lars Kellogg-Stedman <lars at seas.harvard.edu>
+  Lars Kellogg-Stedman <lars@seas.harvard.edu>
   Senior Technologist, Computing and Information Technology
   Harvard University School of Engineering and Applied Sciences
 
-  -------------- next part --------------
-  A non-text attachment was scrubbed...
-  Name: not available
-  Type: application/pgp-signature
-  Size: 489 bytes
-  Desc: not available
-  URL: <http://notmuchmail.org/pipermail/notmuch/attachments/20091117/5bed6654/attachment.pgp>
-
+  [ application/pgp-signature ]
+  [ text/plain ]
+  [ 3-line signature. Click/Enter to toggle visibility. ]
+  _______________________________________________
+  notmuch mailing list
+  notmuch@notmuchmail.org
+  http://notmuchmail.org/mailman/listinfo/notmuch
    "Mikhail Gusarov" <dottedmag@dottedmag.net> (2009-11-17) (inbox unread)
    Subject: [notmuch] Working with Maildir storage?
    To: notmuch@notmuchmail.org
@@ -144,9 +142,10 @@ URL: <http://notmuchmail.org/pipermail/notmuch/attachments/20091117/0bc8f9bd/att
 
    -keith
 
-    "Lars Kellogg-Stedman" <lars@seas.harvard.edu> (2009-11-18) (inbox unread)
-    Subject: [notmuch] Working with Maildir storage?
-    To: notmuch@notmuchmail.org
+    Lars Kellogg-Stedman <lars@seas.harvard.edu> (2009-11-18) (inbox unread)
+    Subject: Re: [notmuch] Working with Maildir storage?
+    To: Keith Packard <keithp@keithp.com>
+    Cc: notmuch@notmuchmail.org
     Date: Tue, 17 Nov 2009 19:50:40 -0500
 
     > I've also pushed a slightly more complicated (and complete) fix to my
@@ -155,20 +154,19 @@ URL: <http://notmuchmail.org/pipermail/notmuch/attachments/20091117/0bc8f9bd/att
     The version of lib/messages.cc in your repo doesn't build because it's
     missing "#include <stdint.h>" (for the uint32_t on line 466).
 
-    [ 12-line signature. Click/Enter to toggle visibility. ]
+    [ 4-line signature. Click/Enter to toggle visibility. ]
     -- 
-    Lars Kellogg-Stedman <lars at seas.harvard.edu>
+    Lars Kellogg-Stedman <lars@seas.harvard.edu>
     Senior Technologist, Computing and Information Technology
     Harvard University School of Engineering and Applied Sciences
 
-    -------------- next part --------------
-    A non-text attachment was scrubbed...
-    Name: not available
-    Type: application/pgp-signature
-    Size: 489 bytes
-    Desc: not available
-    URL: <http://notmuchmail.org/pipermail/notmuch/attachments/20091117/b069f470/attachment.pgp>
-
+    [ application/pgp-signature ]
+    [ text/plain ]
+    [ 3-line signature. Click/Enter to toggle visibility. ]
+    _______________________________________________
+    notmuch mailing list
+    notmuch@notmuchmail.org
+    http://notmuchmail.org/mailman/listinfo/notmuch
  "Carl Worth" <cworth@cworth.org> (2009-11-18) (inbox unread)
  Subject: [notmuch] Working with Maildir storage?
  To: notmuch@notmuchmail.org

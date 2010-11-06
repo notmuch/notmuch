@@ -1,5 +1,5 @@
   2009-11-18 [1/1]   Chris Wilson         [notmuch] [PATCH 1/2] Makefile: evaluate pkg-config once (inbox unread)
-  2009-11-18 [2/2]   Carl Worth, Alex Botero-Lowry [notmuch] [PATCH] Error out if no query is supplied to search instead of going into an infinite loop (inbox unread)
+  2009-11-18 [2/2]   Carl Worth, Alex Botero-Lowry [notmuch] [PATCH] Error out if no query is supplied to search instead of going into an infinite loop (attachment inbox unread)
   2009-11-18 [2/2]   Carl Worth, Ingmar Vanhassel [notmuch] [PATCH] Typsos (inbox unread)
   2009-11-18 [3/3]   Carl Worth, Keith Packard, Adrian Perez de Castro [notmuch] Introducing myself (inbox unread)
   2009-11-18 [3/3]   Carl Worth, Keith Packard, Israel Herraiz [notmuch] New to the list (inbox unread)
@@ -17,7 +17,7 @@
   2009-11-18 [1/1]   Stewart Smith        [notmuch] [PATCH] count_files: sort directory in inode order before statting (inbox unread)
   2009-11-18 [1/1]   Stewart Smith        [notmuch] [PATCH 2/2] Read mail directory in inode number order (inbox unread)
   2009-11-18 [1/1]   Stewart Smith        [notmuch] [PATCH] Fix linking with gcc to use g++ to link in C++ libs. (inbox unread)
-  2009-11-18 [2/2]   Lars Kellogg-Stedman [notmuch] "notmuch help" outputs to stderr? (inbox unread)
+  2009-11-18 [2/2]   Lars Kellogg-Stedman [notmuch] "notmuch help" outputs to stderr? (attachment inbox unread)
   2009-11-17 [1/1]   Mikhail Gusarov      [notmuch] [PATCH] Handle rename of message file (inbox unread)
-  2009-11-17 [2/2]   Carl Worth, Alex Botero-Lowry [notmuch] preliminary FreeBSD support (inbox unread)
+  2009-11-17 [2/2]   Carl Worth, Alex Botero-Lowry [notmuch] preliminary FreeBSD support (attachment inbox unread)
 End of search results.
