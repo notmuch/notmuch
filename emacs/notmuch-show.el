@@ -937,12 +937,13 @@ than only the current message."
   (let (shell-command)
     (if entire-thread
 	(setq shell-command 
-	      (concat "notmuch show --format=mbox "
+	      (concat notmuch-command " show --format=mbox "
 		      (shell-quote-argument
 		       (mapconcat 'identity (notmuch-show-get-message-ids-for-open-messages) " OR "))
 		      " | " command))
       (setq shell-command
-	    (concat "notmuch show --format=raw " (shell-quote-argument (notmuch-show-get-message-id)) " | " command)))
+	    (concat notmuch-command " show --format=raw "
+		    (shell-quote-argument (notmuch-show-get-message-id)) " | " command)))
     (start-process-shell-command "notmuch-pipe-command" "*notmuch-pipe*" shell-command)))
 
 (defun notmuch-show-add-tags-worker (current-tags add-tags)
