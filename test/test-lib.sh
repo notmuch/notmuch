@@ -748,7 +748,6 @@ test_emacs () {
 	cat <<EOF > run_emacs
 #!/bin/sh
 export PATH=$PATH
-export HOME=$HOME
 export NOTMUCH_CONFIG=$NOTMUCH_CONFIG
 
 # We assume that the user will give a command-line argument only if
@@ -757,10 +756,30 @@ if [ \$# -gt 0 ]; then
 	BATCH=--batch
 fi
 
-emacs \$BATCH --no-site-file --directory ../../emacs --load notmuch.el \
+# Here's what we are using here:
+#
+# --batch:		Quit after given commands and print all (messages)
+#
+# --no-init-file	Don't load users ~/.emacs
+#
+# --no-site-file	Don't load the site-wide startup stuff
+#
+# --directory		Ensure that the local notmuch.el source is found
+#
+# --load		Force loading of notmuch.el
+#
+# notmuch-test-wait	Function for tests to use to wait for process completion
+#
+# message-signature	Avoiding appending user's signature on messages
+#
+# set-frame-width	80 columns (avoids crazy 10-column default of --batch)
+
+emacs \$BATCH --no-init-file --no-site-file \
+	--directory ../../emacs --load notmuch.el \
 	--eval "(defun notmuch-test-wait ()
 			(while (get-buffer-process (current-buffer))
 				(sleep-for 0.1)))" \
+	--eval "(setq message-signature nil)" \
 	--eval "(progn (set-frame-width (window-frame (get-buffer-window)) 80) \$@)"
 EOF
 	chmod a+x ./run_emacs
@@ -869,8 +888,7 @@ rm -fr "$test" || {
 }
 
 MAIL_DIR="${TMP_DIRECTORY}/mail"
-export HOME="${TMP_DIRECTORY}"
-export NOTMUCH_CONFIG="${HOME}/notmuch-config"
+export NOTMUCH_CONFIG="${TMP_DIRECTORY}/notmuch-config"
 
 mkdir -p "${test}"
 mkdir -p "${MAIL_DIR}"

@@ -100,7 +100,9 @@ output=$(notmuch search 'subject:"testing message sent via SMTP"' | notmuch_sear
 test_expect_equal "$output" "thread:XXX   1974-03-29 [1/1] Notmuch Test Suite; Testing message sent via SMTP (inbox unread)"
 
 test_begin_subtest "Reply within emacs"
-output=$(test_emacs '(notmuch-search "subject:\"testing message sent via SMTP\"") (notmuch-test-wait) (notmuch-search-reply-to-thread) (message (buffer-string))' 2>&1 | sed -e 's/^In-Reply-To: <.*>$/In-Reply-To: <XXX>/')
+# We sed away everything before the ^From in the output to avoid getting
+# confused by messages such as "Parsing /home/cworth/.mailrc... done"
+output=$(test_emacs '(notmuch-search "subject:\"testing message sent via SMTP\"") (notmuch-test-wait) (notmuch-search-reply-to-thread) (message (buffer-string))' 2>&1 | sed -ne '/^From/,$ p' | sed -e 's/^In-Reply-To: <.*>$/In-Reply-To: <XXX>/')
 test_expect_equal "$output" "From: Notmuch Test Suite <test_suite@notmuchmail.org>
 To: user@example.com
 Subject: Re: Testing message sent via SMTP
