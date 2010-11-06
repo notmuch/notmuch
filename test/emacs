@@ -118,4 +118,10 @@ output=$(cat attachment)
 expected=$(cat $EXPECTED/attachment)
 test_expect_equal "$output" "$expected"
 
+test_begin_subtest "View raw message within emacs"
+expected=$(cat $EXPECTED/raw-message-cf0c4d-52ad0a)
+first_line=$(echo "$expected" | head -n1)
+output=$(test_emacs '(notmuch-show "id:cf0c4d610911171136h1713aa59w9cf9aa31f052ad0a@mail.gmail.com") (notmuch-show-view-raw-message) (message (buffer-string))' 2>&1 | sed -ne "/$first_line/,\$ p")
+test_expect_equal "$output" "$expected"
+
 test_done
