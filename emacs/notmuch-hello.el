@@ -294,7 +294,7 @@ should be. Returns a cons cell `(tags-per-line width)'."
     (define-key map "v" '(lambda () "Display the notmuch version" (interactive)
                            (message "notmuch version %s" (notmuch-version))))
     (define-key map "?" 'notmuch-help)
-    (define-key map "q" 'kill-this-buffer)
+    (define-key map "q" 'notmuch-kill-this-buffer)
     (define-key map "=" 'notmuch-hello-update)
     (define-key map "G" 'notmuch-hello-poll-and-update)
     (define-key map (kbd "<C-tab>") 'widget-backward)

@@ -87,6 +87,11 @@ the user hasn't set this variable with the old or new value."
   "Return the user.primary_email value from the notmuch configuration."
   (notmuch-config-get "user.primary_email"))
 
+(defun notmuch-kill-this-buffer ()
+  "Kill the current buffer."
+  (interactive)
+  (kill-buffer (current-buffer)))
+
 ;;
 
 ;; XXX: This should be a generic function in emacs somewhere, not

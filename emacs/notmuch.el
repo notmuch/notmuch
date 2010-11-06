@@ -232,7 +232,7 @@ For a mouse binding, return nil."
   "Exit the search buffer, calling any defined continuation function."
   (interactive)
   (let ((continuation notmuch-search-continuation))
-    (kill-this-buffer)
+    (notmuch-kill-this-buffer)
     (when continuation
       (funcall continuation))))
 
@@ -824,7 +824,7 @@ same relative position within the new buffer."
 	(target-thread (notmuch-search-find-thread-id))
 	(query notmuch-search-query-string)
 	(continuation notmuch-search-continuation))
-    (kill-this-buffer)
+    (notmuch-kill-this-buffer)
     (notmuch-search query oldest-first target-thread target-line continuation)
     (goto-char (point-min))))
 

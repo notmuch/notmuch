@@ -555,7 +555,7 @@ function is used. "
 (defvar notmuch-show-mode-map
       (let ((map (make-sparse-keymap)))
 	(define-key map "?" 'notmuch-help)
-	(define-key map "q" 'kill-this-buffer)
+	(define-key map "q" 'notmuch-kill-this-buffer)
 	(define-key map (kbd "<C-tab>") 'widget-backward)
 	(define-key map (kbd "M-TAB") 'notmuch-show-previous-button)
 	(define-key map (kbd "<backtab>") 'notmuch-show-previous-button)
@@ -1043,7 +1043,7 @@ argument, hide all of the messages."
 	until (not (notmuch-show-goto-message-next)))
   ;; Move to the next item in the search results, if any.
   (let ((parent-buffer notmuch-show-parent-buffer))
-    (kill-this-buffer)
+    (notmuch-kill-this-buffer)
     (if parent-buffer
 	(progn
 	  (switch-to-buffer parent-buffer)
