@@ -5,8 +5,10 @@ dir := test
 $(dir)/smtp-dummy: $(dir)/smtp-dummy.c
 	$(call quiet,CC) $^ -o $@
 
-.PHONY: test
+.PHONY: test check
 test:	all $(dir)/smtp-dummy
 	@${dir}/notmuch-test $(OPTIONS)
+
+check: test
 
 CLEAN := $(CLEAN) $(dir)/smtp-dummy
