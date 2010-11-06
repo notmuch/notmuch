@@ -1,3 +1,35 @@
+New command-line features
+-------------------------
+New "notmuch show --format=raw" for getting at original email contents
+
+  This new feature allows for a fully-functional email client to be
+  built on top of the notmuch command-line without needing any direct
+  access to the mail store itself.
+
+  For example, it's now possible to run "emacs -f notmuch" on a local
+  machine with only ssh access to the mail store/notmuch database. To
+  do this, simply set the notmuch-command variable in emacs to the
+  name of a script containing:
+
+	ssh user@host notmuch "$@"
+
+  If the ssh client has enabled connection sharing (ControlMaster
+  option in OpenSSH), the emacs interface can be quite responsive this
+  way.
+
+General bug fixes
+-----------------
+Fix "notmuch search" to print nothing when nothing matches
+
+  The 0.4 release had a bug in which:
+
+	notmuch search <expression-with-no-matches>
+
+  would produce a single blank line of output, (where previous
+  versions would produce no output. This fix also causes a change in
+  the --format=json output, (which would previously produce "[]" and
+  now produces nothing).
+
 Notmuch 0.4 (2010-11-01)
 ========================
 New command-line features
