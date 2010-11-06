@@ -112,4 +112,10 @@ Fcc: $(pwd)/mail/sent
 On Fri, 29 Mar 1974 10:00:00 -0000, Notmuch Test Suite <test_suite@notmuchmail.org> wrote:
 > This is a test that messages are sent via SMTP"
 
+test_begin_subtest "Save attachment from within emacs"
+echo "./attachment" | test_emacs '(notmuch-show "id:cf0c4d610911171136h1713aa59w9cf9aa31f052ad0a@mail.gmail.com") (notmuch-show-save-attachments)' > /dev/null 2>&1
+output=$(cat attachment)
+expected=$(cat $EXPECTED/attachment)
+test_expect_equal "$output" "$expected"
+
 test_done
