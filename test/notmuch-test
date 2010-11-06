@@ -16,7 +16,7 @@ fi
 
 cd $(dirname "$0")
 
-TESTS="basic new search json thread-naming reply cat dump-restore uuencode thread-order author-order from-guessing long-id encoding emacs"
+TESTS="basic new search json thread-naming raw reply dump-restore uuencode thread-order author-order from-guessing long-id encoding emacs"
 
 # Clean up any results from a previous run
 rm -r test-results >/dev/null 2>/dev/null

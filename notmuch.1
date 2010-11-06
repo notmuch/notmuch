@@ -248,7 +248,7 @@ matched message will be displayed.
 
 .RS 4
 .TP 4
-.B \-\-format=(text|json|mbox)
+.B \-\-format=(text|json|mbox|raw)
 
 .RS 4
 .TP 4
@@ -287,6 +287,16 @@ an additional '>' character added. This reversible escaping
 is termed "mboxrd" format and described in detail here:
 http://homepage.ntlworld.com/jonathan.deboynepollard/FGA/mail-mbox-formats.html
 .RE
+.RS 4
+.TP 4
+.B raw
+
+The original, raw content of the email message is displayed.
+Consumers of this format should expect to implement MIME decoding and
+similar functions. This format must only be used with search terms
+matching a single message.
+
+.RE
 A common use of
 .B notmuch show
 is to display a single thread of email messages. For this, use a
@@ -299,10 +309,6 @@ See the
 .B "SEARCH SYNTAX"
 section below for details of the supported syntax for <search-terms>.
 .RE
-.TP
-.BR cat  " <search-term>..."
-
-Output raw content of a single message matched by the search term.
 .TP
 .BR count " <search-term>..."
 

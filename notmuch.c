@@ -222,7 +222,7 @@ command_t commands[] = {
       "\t\tall messages in the same thread as any matched\n"
       "\t\tmessage will be displayed.\n"
       "\n"
-      "\t--format=(text|json|mbox)\n"
+      "\t--format=(text|json|mbox|raw)\n"
       "\n"
       "\t\ttext (default)\n"
       "\n"
@@ -253,6 +253,13 @@ command_t commands[] = {
       "\t\t\"mboxrd\" format and described in detail here:\n"
       "\n"
       "\t\thttp://homepage.ntlworld.com/jonathan.deboynepollard/FGA/mail-mbox-formats.html\n"
+      "\n"
+      "\t\traw\n"
+      "\n"
+      "\t\tThe original, raw content of the email message is displayed.\n"
+      "\t\tConsumers of this format should expect to implement MIME\n"
+      "\t\tdecoding and similar functions. This format must only\n"
+      "\t\tbe used with search terms matching a single message.\n"
       "\n"
       "\tA common use of \"notmuch show\" is to display a single\n"
       "\tthread of email messages. For this, use a search term of\n"
@@ -343,10 +350,6 @@ command_t commands[] = {
       "\tcontain tags only from messages that match the search-term(s).\n"
       "\n"
       "\tIn both cases the list will be alphabetically sorted." },
-    { "cat", notmuch_cat_command,
-      "<search-terms>",
-      "Output raw content of a single message matched by the search term.",
-      "" },
     { "part", notmuch_part_command,
       "--part=<num> <search-terms>",
       "Output a single MIME part of a message.",

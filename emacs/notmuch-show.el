@@ -88,7 +88,7 @@ any given message."
      (let ((id (notmuch-show-get-message-id)))
        (let ((buf (generate-new-buffer (concat "*notmuch-msg-" id "*"))))
          (with-current-buffer buf
-	    (call-process notmuch-command nil t nil "cat" id)
+	    (call-process notmuch-command nil t nil "show" "--format=raw" id)
            ,@body)
 	 (kill-buffer buf)))))
 
@@ -921,7 +921,7 @@ any effects from previous calls to
     (let ((buf (get-buffer-create (concat "*notmuch-raw-" id "*"))))
       (switch-to-buffer buf)
       (save-excursion
-	(call-process notmuch-command nil t nil "cat" id)))))
+	(call-process notmuch-command nil t nil "show" "--format=raw" id)))))
 
 (defun notmuch-show-pipe-message (entire-thread command)
   "Pipe the contents of the current message (or thread) to the given command.
@@ -942,7 +942,7 @@ than only the current message."
 		       (mapconcat 'identity (notmuch-show-get-message-ids-for-open-messages) " OR "))
 		      " | " command))
       (setq shell-command
-	    (concat "notmuch cat " (shell-quote-argument (notmuch-show-get-message-id)) " | " command)))
+	    (concat "notmuch show --format=raw " (shell-quote-argument (notmuch-show-get-message-id)) " | " command)))
     (start-process-shell-command "notmuch-pipe-command" "*notmuch-pipe*" shell-command)))
 
 (defun notmuch-show-add-tags-worker (current-tags add-tags)

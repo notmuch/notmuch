@@ -1,6 +1,6 @@
 #!/bin/bash
 
-test_description='notmuch cat'
+test_description='notmuch show --format=raw'
 . ./test-lib.sh
 
 test_begin_subtest "Generate some messages"
@@ -9,16 +9,12 @@ generate_message
 output=$(NOTMUCH_NEW)
 test_expect_equal "$output" "Added 2 new messages to the database."
 
-test_begin_subtest "Without arguments"
-output=$(notmuch cat 2>&1)
-test_expect_equal "$output" "Error: notmuch cat requires at least one search term."
-
-test_begin_subtest "Attempt to cat multiple messages"
-output=$(notmuch cat "*" 2>&1)
+test_begin_subtest "Attempt to show multiple raw messages"
+output=$(notmuch show --format=raw "*" 2>&1)
 test_expect_equal "$output" "Error: search term did not match precisely one message."
 
-test_begin_subtest "Cat a message"
-output=$(notmuch cat id:msg-001@notmuch-test-suite)
+test_begin_subtest "Show a raw message"
+output=$(notmuch show --format=raw id:msg-001@notmuch-test-suite)
 test_expect_equal "$output" "From: Notmuch Test Suite <test_suite@notmuchmail.org>
 To: Notmuch Test Suite <test_suite@notmuchmail.org>
 Message-Id: <msg-001@notmuch-test-suite>
@@ -27,8 +23,8 @@ Date: Tue, 05 Jan 2001 15:43:57 -0000
 
 This is just a test message (#1)"
 
-test_begin_subtest "Cat another message"
-output=$(notmuch cat id:msg-002@notmuch-test-suite)
+test_begin_subtest "Show another raw message"
+output=$(notmuch show --format=raw id:msg-002@notmuch-test-suite)
 test_expect_equal "$output" "From: Notmuch Test Suite <test_suite@notmuchmail.org>
 To: Notmuch Test Suite <test_suite@notmuchmail.org>
 Message-Id: <msg-002@notmuch-test-suite>

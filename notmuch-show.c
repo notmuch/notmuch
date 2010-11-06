@@ -528,21 +528,105 @@ show_messages (void *ctx, const show_format_t *format, notmuch_messages_t *messa
     fputs (format->message_set_end, stdout);
 }
 
+/* Support for --format=raw */
+static int
+do_show_raw (unused(void *ctx), notmuch_query_t *query)
+{
+    notmuch_messages_t *messages;
+    notmuch_message_t *message;
+    const char *filename;
+    FILE *file;
+    size_t size;
+    char buf[4096];
+
+    if (notmuch_query_count_messages (query) != 1) {
+	fprintf (stderr, "Error: search term did not match precisely one message.\n");
+	return 1;
+    }
+
+    messages = notmuch_query_search_messages (query);
+    message = notmuch_messages_get (messages);
+
+    if (message == NULL) {
+	fprintf (stderr, "Error: Cannot find matching message.\n");
+	return 1;
+    }
+
+    filename = notmuch_message_get_filename (message);
+    if (filename == NULL) {
+	fprintf (stderr, "Error: Cannot message filename.\n");
+	return 1;
+    }
+
+    file = fopen (filename, "r");
+    if (file == NULL) {
+	fprintf (stderr, "Error: Cannot open file %s: %s\n", filename, strerror (errno));
+	return 1;
+    }
+
+    while (!feof (file)) {
+	size = fread (buf, 1, sizeof (buf), file);
+	fwrite (buf, size, 1, stdout);
+    }
+
+    fclose (file);
+
+    return 0;
+}
+
+/* Support for --format=text|json|mbox */
+static int
+do_show (void *ctx,
+	 notmuch_query_t *query,
+	 const show_format_t *format,
+	 int entire_thread)
+{
+    notmuch_threads_t *threads;
+    notmuch_thread_t *thread;
+    notmuch_messages_t *messages;
+    int first_toplevel = 1;
+
+    fputs (format->message_set_start, stdout);
+
+    for (threads = notmuch_query_search_threads (query);
+	 notmuch_threads_valid (threads);
+	 notmuch_threads_move_to_next (threads))
+    {
+	thread = notmuch_threads_get (threads);
+
+	messages = notmuch_thread_get_toplevel_messages (thread);
+
+	if (messages == NULL)
+	    INTERNAL_ERROR ("Thread %s has no toplevel messages.\n",
+			    notmuch_thread_get_thread_id (thread));
+
+	if (!first_toplevel)
+	    fputs (format->message_set_sep, stdout);
+	first_toplevel = 0;
+
+	show_messages (ctx, format, messages, 0, entire_thread);
+
+	notmuch_thread_destroy (thread);
+
+    }
+
+    fputs (format->message_set_end, stdout);
+
+    return 0;
+}
+
 int
 notmuch_show_command (void *ctx, unused (int argc), unused (char *argv[]))
 {
     notmuch_config_t *config;
     notmuch_database_t *notmuch;
     notmuch_query_t *query;
-    notmuch_threads_t *threads;
-    notmuch_thread_t *thread;
-    notmuch_messages_t *messages;
     char *query_string;
     char *opt;
     const show_format_t *format = &format_text;
     int entire_thread = 0;
     int i;
-    int first_toplevel = 1;
+    int raw = 0;
 
     for (i = 0; i < argc && argv[i][0] == '-'; i++) {
 	if (strcmp (argv[i], "--") == 0) {
@@ -558,6 +642,8 @@ notmuch_show_command (void *ctx, unused (int argc), unused (char *argv[]))
 		entire_thread = 1;
 	    } else if (strcmp (opt, "mbox") == 0) {
 		format = &format_mbox;
+	    } else if (strcmp (opt, "raw") == 0) {
+		raw = 1;
 	    } else {
 		fprintf (stderr, "Invalid value for --format: %s\n", opt);
 		return 1;
@@ -599,115 +685,11 @@ notmuch_show_command (void *ctx, unused (int argc), unused (char *argv[]))
 	return 1;
     }
 
-    fputs (format->message_set_start, stdout);
+    if (raw)
+	return do_show_raw (ctx, query);
+    else
+	return do_show (ctx, query, format, entire_thread);
 
-    for (threads = notmuch_query_search_threads (query);
-	 notmuch_threads_valid (threads);
-	 notmuch_threads_move_to_next (threads))
-    {
-	thread = notmuch_threads_get (threads);
-
-	messages = notmuch_thread_get_toplevel_messages (thread);
-
-	if (messages == NULL)
-	    INTERNAL_ERROR ("Thread %s has no toplevel messages.\n",
-			    notmuch_thread_get_thread_id (thread));
-
-	if (!first_toplevel)
-	    fputs (format->message_set_sep, stdout);
-	first_toplevel = 0;
-
-	show_messages (ctx, format, messages, 0, entire_thread);
-
-	notmuch_thread_destroy (thread);
-
-    }
-
-    fputs (format->message_set_end, stdout);
-
-    notmuch_query_destroy (query);
-    notmuch_database_close (notmuch);
-
-    return 0;
-}
-
-int
-notmuch_cat_command (void *ctx, unused (int argc), unused (char *argv[]))
-{
-    notmuch_config_t *config;
-    notmuch_database_t *notmuch;
-    notmuch_query_t *query;
-    notmuch_messages_t *messages;
-    notmuch_message_t *message;
-    char *query_string;
-    int i;
-    const char *filename;
-    FILE *file;
-    size_t size;
-    char buf[4096];
-
-    for (i = 0; i < argc && argv[i][0] == '-'; i++) {
-	fprintf (stderr, "Unrecognized option: %s\n", argv[i]);
-	return 1;
-    }
-
-    config = notmuch_config_open (ctx, NULL, NULL);
-    if (config == NULL)
-	return 1;
-
-    query_string = query_string_from_args (ctx, argc, argv);
-    if (query_string == NULL) {
-	fprintf (stderr, "Out of memory\n");
-	return 1;
-    }
-
-    if (*query_string == '\0') {
-	fprintf (stderr, "Error: notmuch cat requires at least one search term.\n");
-	return 1;
-    }
-
-    notmuch = notmuch_database_open (notmuch_config_get_database_path (config),
-				     NOTMUCH_DATABASE_MODE_READ_ONLY);
-    if (notmuch == NULL)
-	return 1;
-
-    query = notmuch_query_create (notmuch, query_string);
-    if (query == NULL) {
-	fprintf (stderr, "Error: Out of memory\n");
-	return 1;
-    }
-
-    if (notmuch_query_count_messages (query) != 1) {
-	fprintf (stderr, "Error: search term did not match precisely one message.\n");
-	return 1;
-    }
-
-    messages = notmuch_query_search_messages (query);
-    message = notmuch_messages_get (messages);
-
-    if (message == NULL) {
-	fprintf (stderr, "Error: Cannot find matching message.\n");
-	return 1;
-    }
-
-    filename = notmuch_message_get_filename (message);
-    if (filename == NULL) {
-	fprintf (stderr, "Error: Cannot message filename.\n");
-	return 1;
-    }
-
-    file = fopen (filename, "r");
-    if (file == NULL) {
-	fprintf (stderr, "Error: Cannot open file %s: %s\n", filename, strerror (errno));
-	return 1;
-    }
-
-    while (!feof (file)) {
-	size = fread (buf, 1, sizeof (buf), file);
-	fwrite (buf, size, 1, stdout);
-    }
-
-    fclose (file);
     notmuch_query_destroy (query);
     notmuch_database_close (notmuch);
 
