@@ -550,6 +550,10 @@ function is used. "
     ;; Move straight to the first open message
     (if (not (notmuch-show-message-visible-p))
 	(notmuch-show-next-open-message))
+
+    ;; Set the header line to the subject of the first open message.
+    (setq header-line-format (notmuch-show-strip-re (notmuch-show-get-subject)))
+
     (notmuch-show-mark-read)))
 
 (defvar notmuch-show-stash-map
