@@ -381,17 +381,24 @@ current buffer, if possible."
 (defun notmuch-show-make-symbol (type)
   (make-symbol (concat "notmuch-show-" type)))
 
+(defun notmuch-show-strip-re (string)
+  (replace-regexp-in-string "^\\([Rr]e: *\\)+" "" string))
+
+(defvar notmuch-show-previous-subject "")
+(make-variable-buffer-local 'notmuch-show-previous-subject)
+
 (defun notmuch-show-insert-msg (msg depth)
   "Insert the message MSG at depth DEPTH in the current thread."
-  (let ((headers (plist-get msg :headers))
-	;; Indentation causes the buffer offset of the start/end
-	;; points to move, so we must use markers.
-	message-start message-end
-	content-start content-end
-	headers-start headers-end
-	body-start body-end
-	(headers-invis-spec (notmuch-show-make-symbol "header"))
-	(message-invis-spec (notmuch-show-make-symbol "message")))
+  (let* ((headers (plist-get msg :headers))
+	 ;; Indentation causes the buffer offset of the start/end
+	 ;; points to move, so we must use markers.
+	 message-start message-end
+	 content-start content-end
+	 headers-start headers-end
+	 body-start body-end
+	 (headers-invis-spec (notmuch-show-make-symbol "header"))
+	 (message-invis-spec (notmuch-show-make-symbol "message"))
+	 (bare-subject (notmuch-show-strip-re (plist-get headers :Subject))))
 
     ;; Set `buffer-invisibility-spec' to `nil' (a list), otherwise
     ;; removing items from `buffer-invisibility-spec' (which is what
@@ -428,9 +435,16 @@ current buffer, if possible."
     (insert "\n")
     (save-excursion
       (goto-char content-start)
-      (forward-line 1)
+      ;; If the subject of this message is the same as that of the
+      ;; previous message, don't display it when this message is
+      ;; collapsed.
+      (when (not (string= notmuch-show-previous-subject
+			  bare-subject))
+	(forward-line 1))
       (setq headers-start (point-marker)))
     (setq headers-end (point-marker))
+
+    (setq notmuch-show-previous-subject bare-subject)
 
     (setq body-start (point-marker))
     (notmuch-show-insert-body msg (plist-get msg :body) depth)
