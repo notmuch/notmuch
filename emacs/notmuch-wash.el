@@ -145,7 +145,7 @@ is what to put on the button."
 	   (re-search-forward notmuch-wash-signature-regexp nil t))
       (let* ((sig-start (match-beginning 0))
 	     (sig-end (match-end 0))
-	     (sig-lines (1- (count-lines sig-start (point-max)))))
+	     (sig-lines (count-lines sig-start (point-max))))
 	(if (<= sig-lines notmuch-wash-signature-lines-max)
 	    (let ((sig-start-marker (make-marker))
 		  (sig-end-marker (make-marker)))
