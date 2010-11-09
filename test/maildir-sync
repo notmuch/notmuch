@@ -1,11 +1,14 @@
 #!/bin/bash
 
-test_description="Test maildir synchronization"
+test_description="maildir synchronization"
 
 . ./test-lib.sh
 
-filter_show() {
-    sed -e 's/, /,\n/g'|sed -e "s|${MAIL_DIR}/||" -e '/^"tags"/d'
+# Much easier to examine differences if the "notmuch show
+# --format=json" output includes some newlines. Also, need to avoid
+# including the local value of MAIL_DIR in the result.
+filter_show_json() {
+    sed -e 's/, /,\n/g'  | sed -e "s|${MAIL_DIR}/|MAIL_DIR/|"
     echo
 }
 
@@ -14,218 +17,118 @@ cat >> "$NOTMUCH_CONFIG" <<EOF
 synchronize_flags=true
 EOF
 
-test_begin_subtest "No new messages"
-output=$(NOTMUCH_NEW)
-test_expect_equal "$output" "No new mail."
+# Create the expected maildir structure
+mkdir $MAIL_DIR/cur
+mkdir $MAIL_DIR/new
+mkdir $MAIL_DIR/tmp
 
-cat > expected <<EOF
-Added 1 new message to the database.
-EOF
-test_expect_success "Add a message, no flags" '
-generate_message [subject]="\"test message\"" [date]="\"Sat, 01 Jan 2000 12:00:00 -0000\"" [filename]="\"msg-001:2,\"" &&
-NOTMUCH_NEW > actual &&
-test_cmp expected actual
-#emacs --eval "(gdb \"gdb --annotate=3 --args $(which notmuch) new\")"
-'
-cat > expected <<EOF
-thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; test message (inbox unread)
-EOF
-test_expect_success 'Search for the message' '
-notmuch search tag:inbox and tag:unread | notmuch_search_sanitize > actual &&
-test_cmp expected actual
-'
-cat > expected <<EOF
+test_begin_subtest "Adding 'S' flag to existing filename removes 'unread' tag"
+add_message [subject]='"Adding S flag"' [filename]='adding-s-flag:2,' [dir]=cur
+output=$(notmuch search subject:"Adding S flag" | notmuch_search_sanitize)
+output+="
+"
+mv "${gen_msg_filename}" "${gen_msg_filename}S"
+increment_mtime "$(dirname "${gen_msg_filename}")"
+output+=$(NOTMUCH_NEW)
+output+="
+"
+output+=$(notmuch search subject:"Adding S flag" | notmuch_search_sanitize)
+test_expect_equal "$output" "thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; Adding S flag (inbox unread)
 No new mail. Detected 1 file rename.
-EOF
-test_expect_success 'Add seen flag' '
-mv "${gen_msg_filename}" "${gen_msg_filename}S" &&
-increment_mtime "$(dirname "${gen_msg_filename}")" &&
-NOTMUCH_NEW > actual &&
-test_cmp expected actual
-'
-cat > expected <<EOF
-thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; test message (inbox)
-EOF
-test_expect_success 'Check that tags were updated' '
-notmuch search tag:inbox and not tag:unread | notmuch_search_sanitize > actual &&
-test_cmp expected actual
-'
-cat > expected <<EOF
-Added 1 new message to the database.
-EOF
-test_expect_success "Add a seen message" '
-generate_message [subject]="\"test message 2\"" [date]="\"Sat, 01 Jan 2000 12:00:00 -0000\"" [filename]="\"msg-002:2,S\"" &&
-NOTMUCH_NEW > actual &&
-test_cmp expected actual
-'
-cat > expected <<EOF
-thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; test message (inbox)
-thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; test message 2 (inbox)
-EOF
-test_expect_success 'Check that the seen message is not tagged unread' '
-notmuch search tag:inbox and not tag:unread | notmuch_search_sanitize > actual &&
-test_cmp expected actual
-'
-test_expect_success 'Tag the seen messages as replied' '
-notmuch tag +replied -inbox tag:inbox and not tag:unread
-'
+thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; Adding S flag (inbox)"
 
-cat > expected <<EOF
-msg-001:2,RS
-msg-002:2,RS
-EOF
-test_expect_success 'Check that R flag was added' '
-ls -1 "${MAIL_DIR}" > actual &&
-test_cmp expected actual
-'
-cat <<EOF > show-expected
-[[[{"id": "msg-001@notmuch-test-suite",
+test_begin_subtest "Adding message with 'S' flag prevents 'unread' tag"
+add_message [subject]='"Adding message with S"' [filename]='adding-with-s-flag:2,S' [dir]=cur
+output=$(notmuch search subject:"Adding message with S" | notmuch_search_sanitize)
+test_expect_equal "$output" "thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; Adding message with S (inbox)"
+
+test_begin_subtest "Adding 'replied' tag adds 'R' flag to filename"
+add_message [subject]='"Adding replied tag"' [filename]='adding-replied-tag:2,S' [dir]=cur
+notmuch tag +replied subject:"Adding replied tag"
+output=$(cd ${MAIL_DIR}/cur; ls -1 adding-replied*)
+test_expect_equal "$output" "adding-replied-tag:2,RS"
+
+test_begin_subtest "notmuch show works with renamed file (without notmuch new)"
+output=$(notmuch show --format=json id:${gen_msg_id} | filter_show_json)
+test_expect_equal "$output" '[[[{"id": "adding-replied-tag@notmuch-test-suite",
 "match": true,
-"filename": "msg-001:2,RS",
-"timestamp": 946728000,
-"date_relative": "2000-01-01",
-"headers": {"Subject": "test message",
+"filename": "MAIL_DIR/cur/adding-replied-tag:2,RS",
+"timestamp": 978709437,
+"date_relative": "2001-01-05",
+"tags": ["inbox","replied"],
+"headers": {"Subject": "Adding replied tag",
 "From": "Notmuch Test Suite <test_suite@notmuchmail.org>",
 "To": "Notmuch Test Suite <test_suite@notmuchmail.org>",
 "Cc": "",
 "Bcc": "",
-"Date": "Sat,
-01 Jan 2000 12:00:00 -0000"},
+"Date": "Tue,
+05 Jan 2001 15:43:57 -0000"},
 "body": [{"id": 1,
 "content-type": "text/plain",
-"content": "This is just a test message (#1)\n"}]},
-[]]]]
-EOF
+"content": "This is just a test message (#3)\n"}]},
+[]]]]'
 
-test_expect_success 'Message renamed due to changed flags can be shown without running notmuch new' '
-notmuch show --format=json id:msg-001@notmuch-test-suite | filter_show > show-actual &&
-test_cmp show-expected show-actual
-'
+test_expect_success 'notmuch reply works with renamed file (without notmuch new)' 'notmuch reply id:${gen_msg_id}'
 
-test_expect_success 'Test that we can reply to the renamed message' '
-notmuch reply id:msg-001@notmuch-test-suite
-'
+test_begin_subtest "notmuch new detects no file rename after tag->flag synchronization"
+increment_mtime "$(dirname ${gen_msg_filename})"
+output=$(NOTMUCH_NEW)
+test_expect_equal "$output" "No new mail."
 
-echo "No new mail." > expected
-test_expect_success 'No rename should be detected by notmuch new' '
-increment_mtime "$(dirname "${gen_msg_filename}")" &&
-notmuch new > actual &&
-test_cmp expected actual
-'
-test_expect_success "Add a message to new/ without info" '
-generate_message [subject]="\"test message 3\"" [date]="\"Sat, 01 Jan 2000 12:00:00 -0000\"" [dir]=new &&
-NOTMUCH_NEW > actual &&
-test_cmp - actual <<EOF
-Added 1 new message to the database.
-EOF
-'
-test_expect_success "Check that the message has inbox and unread tags" '
-notmuch search tag:inbox and tag:unread | notmuch_search_sanitize > actual &&
-test_cmp - actual <<EOF
-thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; test message 3 (inbox unread)
-EOF
-'
-test_expect_success "Tag the message with 'tmp' tag" '
-notmuch tag +tmp tag:inbox and tag:unread'
+test_begin_subtest "When read, message moved from new to cur"
+add_message [subject]='"Message to move to cur"' [date]='"Sat, 01 Jan 2000 12:00:00 -0000"' [filename]='message-to-move-to-cur' [dir]=new
+notmuch tag -unread subject:"Message to move to cur"
+output=$(cd "$MAIL_DIR/cur"; ls message-to-move*)
+test_expect_equal "$output" "message-to-move-to-cur:2,S"
 
-test_expect_success "Check that the message was not moved from new/ to cur/" '
-echo filename:$gen_msg_filename > expected &&
-notmuch show id:$gen_msg_id|grep -o "filename:.*$" > actual &&
-test_cmp expected actual &&
-test -f "$gen_msg_filename"
-'
-test_expect_success "Check that the message was not renamed" '
-ls "${MAIL_DIR}/new" > actual &&
-test_cmp - actual <<EOF
-msg-003
-EOF
-'
-test_expect_success 'Removing of unread tag should fail without cur/' '
-test_must_fail notmuch tag -unread tag:inbox and tag:unread
-'
-test_expect_success "Check that the tags were not changed" '
-notmuch search tag:inbox and tag:unread | notmuch_search_sanitize > actual &&
-test_cmp - actual <<EOF
-thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; test message 3 (inbox tmp unread)
-EOF
-'
-
-# notmuch new is not necessary here, but we run it in order to check
-# for 'no rename' later (*).
-test_expect_success 'Create cur/ and let notmuch know about it' '
-mkdir "$MAIL_DIR/cur" &&
-notmuch new
-'
-test_expect_success 'Removing of unread tag should pass with cur/' '
-notmuch tag -unread tag:inbox and tag:unread
-'
-test_expect_success 'Check that the message was moved to cur/' '\
-ls "$MAIL_DIR/cur" > actual &&
-test_cmp - actual <<EOF
-msg-003:2,S
-EOF
-'
-test_expect_success 'No rename should be detected by notmuch new' '
-increment_mtime "$MAIL_DIR/cur" &&
-notmuch new > actual &&
-test_cmp - actual <<EOF
-No new mail.
-EOF
-'
+test_begin_subtest "No rename should be detected by notmuch new"
+increment_mtime "$MAIL_DIR/cur"
+output=$(NOTMUCH_NEW)
+test_expect_equal "$output" "No new mail."
 # (*) If notmuch new was not run we've got "Processed 1 file in almost
 # no time" here. The reason is that removing unread tag in a previous
 # test created directory document in the database but this document
 # was not linked as subdirectory of $MAIL_DIR. Therefore notmuch new
 # could not reach the cur/ directory and its files in it during
 # recurive traversal.
-test_expect_success 'Remove info from file name' '
-mv "$MAIL_DIR/cur/msg-003:2,S" "$MAIL_DIR/cur/msg-003" &&
-increment_mtime "$MAIL_DIR/cur" &&
-NOTMUCH_NEW > actual
-test_cmp - actual <<EOF
-No new mail. Detected 1 file rename.
-EOF
-'
-test_expect_success "Check that removing info did not change tags" '
-notmuch search tag:inbox | notmuch_search_sanitize > actual &&
-test_cmp - actual <<EOF
-thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; test message 3 (inbox tmp)
-EOF
-'
-test_expect_success "Add a message to fakenew/ without info" '
-generate_message [subject]="\"test message 4\"" [date]="\"Sat, 01 Jan 2000 12:00:00 -0000\"" [dir]=fakenew &&
-NOTMUCH_NEW > actual &&
-test_cmp - actual <<EOF
-Added 1 new message to the database.
-EOF
-'
-test_expect_success "Check that the message has inbox and unread tags" '
-notmuch search tag:inbox and tag:unread | notmuch_search_sanitize > actual &&
-test_cmp - actual <<EOF
-thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; test message 4 (inbox unread)
-EOF
-'
-test_expect_success 'Removing of unread tag should leave the message in fakenew/' '
-notmuch tag -unread tag:inbox and tag:unread &&
-ls "$MAIL_DIR/fakenew" > actual &&
-test_cmp - actual <<EOF
-msg-004:2,S
-EOF
-'
+#
+# XXX: The above sounds like a bug that should be fixed. If notmuch is
+# creating new directories in the mail store, then it should be
+# creating all necessary database state for those directories.
 
-test_expect_success 'Make maildir flags out of sync with the database' '
-ls $MAIL_DIR > expected &&
-mv $MAIL_DIR/msg-001:2,RS $MAIL_DIR/msg-001:2, &&
-mv $MAIL_DIR/msg-002:2,RS $MAIL_DIR/msg-002:2, &&
-increment_mtime $MAIL_DIR
-'
+test_begin_subtest "Removing info from filename leaves tags unchanged"
+add_message [subject]='"Message to lose maildir info"' [filename]='message-to-lose-maildir-info' [dir]=cur
+notmuch tag -unread subject:"Message to lose maildir info"
+mv "$MAIL_DIR/cur/message-to-lose-maildir-info:2,S" "$MAIL_DIR/cur/message-without-maildir-info"
+increment_mtime "$MAIL_DIR/cur"
+output=$(NOTMUCH_NEW)
+output+="
+"
+output+=$(notmuch search subject:"Message to lose maildir info" | notmuch_search_sanitize)
+test_expect_equal "$output" "No new mail. Detected 1 file rename.
+thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; Message to lose maildir info (inbox)"
 
-test_expect_success 'Test whether dump/new/restore synchronizes the maildir flags with the database' '
-notmuch dump dump.txt &&
-notmuch new &&
-notmuch restore dump.txt &&
-ls $MAIL_DIR > actual &&
-test_cmp expected actual
-'
+add_message [subject]='"Non-maildir message"' [dir]=notmaildir/new [filename]='non-maildir-message'
+expected=$(notmuch search --output=files subject:"Non-maildir message")
+test_expect_success "Can remove unread tag from message in non-maildir directory" 'notmuch tag -unread subject:"Non-maildir message"'
+
+test_begin_subtest "Message in non-maildir directory does not get renamed"
+output=$(notmuch search --output=files subject:"Non-maildir message")
+test_expect_equal "$output" "$expected"
+
+test_begin_subtest "notmuch dump/restore re-synchronizes maildir tags with flags"
+# Capture current filename state
+expected=$(ls $MAIL_DIR/cur)
+# Add/remove some flags from filenames
+mv $MAIL_DIR/cur/adding-replied-tag:2,RS $MAIL_DIR/cur/adding-replied-tag:2,S
+mv $MAIL_DIR/cur/adding-s-flag:2,S $MAIL_DIR/cur/adding-s-flag:2,
+mv $MAIL_DIR/cur/adding-with-s-flag:2,S $MAIL_DIR/cur/adding-with-s-flag:2,RS
+mv $MAIL_DIR/cur/message-to-move-to-cur:2,S $MAIL_DIR/cur/message-to-move-to-cur:2,SD
+increment_mtime $MAIL_DIR/cur
+notmuch dump dump.txt
+NOTMUCH_NEW >/dev/null
+notmuch restore dump.txt
+output=$(ls $MAIL_DIR/cur)
+test_expect_equal "$output" "$expected"
 
 test_done
