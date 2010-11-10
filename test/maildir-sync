@@ -131,4 +131,23 @@ notmuch restore dump.txt
 output=$(ls $MAIL_DIR/cur)
 test_expect_equal "$output" "$expected"
 
+test_begin_subtest 'Duplicated message is tagged according to the duplicate'
+cp "$MAIL_DIR/cur/msg-003" "$MAIL_DIR/cur/msg-003-dup:2,RS" 
+increment_mtime $MAIL_DIR/cur 
+NOTMUCH_NEW > output
+notmuch search id:msg-003@notmuch-test-suite | notmuch_search_sanitize >> output
+test_expect_equal "$(< output)" "No new mail.
+thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; test message 3 (inbox replied tmp)"
+
+test_begin_subtest 'The original message receives the same flags as the duplicate'
+ls $MAIL_DIR/cur > actual
+test_expect_equal_failure "$(< actual)" "msg-003:2,RS
+msg-003-dup:2,RS"
+
+test_begin_subtest 'Tagging modifies flags of both the original and the duplicate'
+notmuch tag -replied id:msg-003@notmuch-test-suite
+ls $MAIL_DIR/cur > actual
+test_expect_equal_failure "$(< actual)"  "msg-003:2,S
+msg-003-dup:2,S"
+
 test_done
