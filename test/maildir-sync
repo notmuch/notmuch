@@ -131,23 +131,33 @@ notmuch restore dump.txt
 output=$(ls $MAIL_DIR/cur)
 test_expect_equal "$output" "$expected"
 
-test_begin_subtest 'Duplicated message is tagged according to the duplicate'
-cp "$MAIL_DIR/cur/msg-003" "$MAIL_DIR/cur/msg-003-dup:2,RS" 
-increment_mtime $MAIL_DIR/cur 
+test_begin_subtest 'Adding flags to duplicate message tags the mail'
+add_message [subject]='"Duplicated message"' [dir]=cur [filename]='duplicated-message:2,'
+cp "$MAIL_DIR/cur/duplicated-message:2," "$MAIL_DIR/cur/duplicated-message-copy:2,RS"
+increment_mtime $MAIL_DIR/cur
 NOTMUCH_NEW > output
-notmuch search id:msg-003@notmuch-test-suite | notmuch_search_sanitize >> output
+notmuch search subject:"Duplicated message" | notmuch_search_sanitize >> output
 test_expect_equal "$(< output)" "No new mail.
-thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; test message 3 (inbox replied tmp)"
+thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; Duplicated message (inbox replied)"
 
-test_begin_subtest 'The original message receives the same flags as the duplicate'
-ls $MAIL_DIR/cur > actual
-test_expect_equal_failure "$(< actual)" "msg-003:2,RS
-msg-003-dup:2,RS"
+test_begin_subtest "Duplicate mail with new flags propagates flag to original file"
+(cd $MAIL_DIR/cur/; ls duplicated*) > actual
+test_expect_equal "$(< actual)" "duplicated-message:2,RS
+duplicated-message-copy:2,RS"
 
-test_begin_subtest 'Tagging modifies flags of both the original and the duplicate'
-notmuch tag -replied id:msg-003@notmuch-test-suite
-ls $MAIL_DIR/cur > actual
-test_expect_equal_failure "$(< actual)"  "msg-003:2,S
-msg-003-dup:2,S"
+test_begin_subtest "Adding duplicate message without flags does not remove tags"
+cp "$MAIL_DIR/cur/duplicated-message-copy:2,RS" "$MAIL_DIR/cur/duplicated-message-another-copy:2,"
+increment_mtime $MAIL_DIR/cur
+NOTMUCH_NEW > output
+notmuch search subject:"Duplicated message" | notmuch_search_sanitize >> output
+test_expect_equal "$(< output)" "No new mail.
+thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; Duplicated message (inbox replied)"
+
+test_begin_subtest "Tag changes modify flags of multiple files"
+notmuch tag -replied subject:"Duplicated message"
+(cd $MAIL_DIR/cur/; ls duplicated*) > actual
+test_expect_equal "$(< actual)"  "duplicated-message-another-copy:2,S
+duplicated-message-copy:2,S
+duplicated-message:2,S"
 
 test_done
