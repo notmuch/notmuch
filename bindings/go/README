@@ -8,4 +8,9 @@ they are heavily inspired from the vala bindings from Sebastian Spaeth:
 
 note: the whole library hasn't been wrapped (yet?)
 
+todo
+----
+
+ - improve notmuch-addrlookup regexp
+
 [1] http://notmuchmail.org/
