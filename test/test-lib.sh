@@ -909,7 +909,6 @@ EOF
 cd -P "$test" || error "Cannot setup test environment"
 
 this_test=${0##*/}
-this_test=${this_test%%-*}
 for skp in $NOTMUCH_SKIP_TESTS
 do
 	to_skip=
