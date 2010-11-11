@@ -79,6 +79,7 @@ _notmuch_filenames_create (const void *ctx,
 	return NULL;
 
     filenames->iterator = list->head;
+    (void) talloc_reference (filenames, list);
 
     return filenames;
 }
