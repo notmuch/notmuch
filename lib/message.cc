@@ -1009,15 +1009,11 @@ notmuch_message_tags_to_maildir_flags (notmuch_message_t *message)
 	strcpy (filename_new+(p-filename)+3, flags);
 
 	if (strcmp (filename, filename_new) != 0) {
-	    notmuch_status_t status;
+	    notmuch_status_t status = NOTMUCH_STATUS_SUCCESS;
 
 	    ret = rename (filename, filename_new);
-	    if (ret == -1) {
-		perror (talloc_asprintf (message, "rename of %s to %s failed",
-				     filename, filename_new));
-		exit (1);
-	    }
-	    status = _notmuch_message_rename (message, filename_new);
+	    if (ret == 0)
+		status = _notmuch_message_rename (message, filename_new);
 
 	    _notmuch_message_sync (message);
 
