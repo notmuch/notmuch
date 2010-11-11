@@ -96,6 +96,21 @@ test_expect_equal "$output" "No new mail."
 # creating new directories in the mail store, then it should be
 # creating all necessary database state for those directories.
 
+test_begin_subtest "Removing 'S' flag from existing filename adds 'unread' tag"
+add_message [subject]='"Removing S flag"' [filename]='removing-s-flag:2,S' [dir]=cur
+output=$(notmuch search subject:"Removing S flag" | notmuch_search_sanitize)
+output+="
+"
+mv "${gen_msg_filename}" "${gen_msg_filename%S}"
+increment_mtime "$(dirname "${gen_msg_filename}")"
+output+=$(NOTMUCH_NEW)
+output+="
+"
+output+=$(notmuch search subject:"Removing S flag" | notmuch_search_sanitize)
+test_expect_equal "$output" "thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; Removing S flag (inbox)
+No new mail. Detected 1 file rename.
+thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; Removing S flag (inbox unread)"
+
 test_begin_subtest "Removing info from filename leaves tags unchanged"
 add_message [subject]='"Message to lose maildir info"' [filename]='message-to-lose-maildir-info' [dir]=cur
 notmuch tag -unread subject:"Message to lose maildir info"
