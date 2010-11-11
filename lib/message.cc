@@ -868,6 +868,7 @@ notmuch_message_maildir_flags_to_tags (notmuch_message_t *message)
     const char *filename;
     char *combined_flags = talloc_strdup (message, "");
     unsigned i;
+    int seen_maildir_info = 0;
 
     for (filenames = notmuch_message_get_filenames (message);
 	 notmuch_filenames_valid (filenames);
@@ -879,10 +880,17 @@ notmuch_message_maildir_flags_to_tags (notmuch_message_t *message)
 	if (! flags)
 	    continue;
 
+	seen_maildir_info = 1;
 	flags += 3;
 
 	combined_flags = talloc_strdup_append (combined_flags, flags);
     }
+
+    /* If none of the filenames have any maildir info field (not even
+     * an empty info with no flags set) then there's no information to
+     * go on, so do nothing. */
+    if (! seen_maildir_info)
+	return NOTMUCH_STATUS_SUCCESS;
 
     status = notmuch_message_freeze (message);
     if (status)
