@@ -772,10 +772,23 @@ notmuch_message_get_replies (notmuch_message_t *message);
  * Note: If this message corresponds to multiple files in the mail
  * store, (that is, multiple files contain identical message IDs),
  * this function will arbitrarily return a single one of those
- * filenames.
+ * filenames. See notmuch_message_get_filenames for returning the
+ * complete list of filenames.
  */
 const char *
 notmuch_message_get_filename (notmuch_message_t *message);
+
+/* Get all filenames for the email corresponding to 'message'.
+ *
+ * Returns a notmuch_filenames_t iterator listing all the filenames
+ * associated with 'message'. These files may not have identical
+ * content, but each will have the identical Message-ID.
+ *
+ * Each filename in the iterator is an absolute filename, (the initial
+ * component will match notmuch_database_get_path() ).
+ */
+notmuch_filenames_t *
+notmuch_message_get_filenames (notmuch_message_t *message);
 
 /* Message flags */
 typedef enum _notmuch_message_flag {

@@ -33,12 +33,12 @@ _create_filenames_for_terms_with_prefix (void *ctx,
 					 notmuch_database_t *notmuch,
 					 const char *prefix)
 {
-    notmuch_filenames_t *filenames;
+    notmuch_filename_list_t *filename_list;
     Xapian::TermIterator i, end;
     int prefix_len = strlen (prefix);
 
-    filenames = _notmuch_filenames_create (ctx);
-    if (unlikely (filenames == NULL))
+    filename_list = _notmuch_filename_list_create (ctx);
+    if (unlikely (filename_list == NULL))
 	return NULL;
 
     end = notmuch->xapian_db->allterms_end (prefix);
@@ -47,13 +47,11 @@ _create_filenames_for_terms_with_prefix (void *ctx,
     {
 	std::string term = *i;
 
-	_notmuch_filenames_add_filename (filenames, term.c_str () +
-					 prefix_len);
+	_notmuch_filename_list_add_filename (filename_list, term.c_str () +
+					     prefix_len);
     }
 
-    _notmuch_filenames_move_to_first (filenames);
-
-    return filenames;
+    return _notmuch_filenames_create (ctx, filename_list);
 }
 
 struct _notmuch_directory {

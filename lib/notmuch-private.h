@@ -450,15 +450,35 @@ _notmuch_tags_prepare_iterator (notmuch_tags_t *tags);
 
 /* filenames.c */
 
+typedef struct _notmuch_filename_node {
+    char *filename;
+    struct _notmuch_filename_node *next;
+} notmuch_filename_node_t;
+
+typedef struct _notmuch_filename_list {
+    notmuch_filename_node_t *head;
+    notmuch_filename_node_t **tail;
+} notmuch_filename_list_t;
+
+notmuch_filename_list_t *
+_notmuch_filename_list_create (const void *ctx);
+
+/* Add 'filename' to 'list'.
+ *
+ * The list will create its own talloced copy of 'filename'.
+ */
+void
+_notmuch_filename_list_add_filename (notmuch_filename_list_t *list,
+				     const char *filename);
+
+void
+_notmuch_filename_list_destroy (notmuch_filename_list_t *list);
+
+/* The notmuch_filenames_t is an iterator object for a
+ * notmuch_filename_list_t */
 notmuch_filenames_t *
-_notmuch_filenames_create (const void *ctx);
-
-void
-_notmuch_filenames_add_filename (notmuch_filenames_t *filenames,
-				 const char *filename);
-
-void
-_notmuch_filenames_move_to_first (notmuch_filenames_t *filenames);
+_notmuch_filenames_create (const void *ctx,
+			   notmuch_filename_list_t *list);
 
 #pragma GCC visibility pop
 

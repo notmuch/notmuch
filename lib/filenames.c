@@ -20,24 +20,57 @@
 
 #include "notmuch-private.h"
 
-typedef struct _notmuch_filenames_node {
-    char *filename;
-    struct _notmuch_filenames_node *next;
-} notmuch_filenames_node_t;
-
 struct _notmuch_filenames {
-    notmuch_filenames_node_t *head;
-    notmuch_filenames_node_t **tail;
-    notmuch_filenames_node_t *iterator;
+    notmuch_filename_node_t *iterator;
 };
 
-/* Create a new notmuch_filenames_t object, with 'ctx' as its
+/* Create a new notmuch_filename_list_t object, with 'ctx' as its
  * talloc owner.
  *
  * This function can return NULL in case of out-of-memory.
  */
+notmuch_filename_list_t *
+_notmuch_filename_list_create (const void *ctx)
+{
+    notmuch_filename_list_t *list;
+
+    list = talloc (ctx, notmuch_filename_list_t);
+    if (unlikely (list == NULL))
+	return NULL;
+
+    list->head = NULL;
+    list->tail = &list->head;
+
+    return list;
+}
+
+void
+_notmuch_filename_list_add_filename (notmuch_filename_list_t *list,
+				     const char *filename)
+{
+    /* Create and initialize new node. */
+    notmuch_filename_node_t *node = talloc (list,
+					    notmuch_filename_node_t);
+
+    node->filename = talloc_strdup (node, filename);
+    node->next = NULL;
+
+    /* Append the node to the list. */
+    *(list->tail) = node;
+    list->tail = &node->next;
+}
+
+void
+_notmuch_filename_list_destroy (notmuch_filename_list_t *list)
+{
+    talloc_free (list);
+}
+
+/* The notmuch_filenames_t is an iterator object for a
+ * notmuch_filename_list_t */
 notmuch_filenames_t *
-_notmuch_filenames_create (const void *ctx)
+_notmuch_filenames_create (const void *ctx,
+			   notmuch_filename_list_t *list)
 {
     notmuch_filenames_t *filenames;
 
@@ -45,30 +78,9 @@ _notmuch_filenames_create (const void *ctx)
     if (unlikely (filenames == NULL))
 	return NULL;
 
-    filenames->head = NULL;
-    filenames->tail = &filenames->head;
-
-    filenames->iterator = NULL;
+    filenames->iterator = list->head;
 
     return filenames;
-}
-
-/* Append a single 'node' to the end of 'filenames'.
- */
-void
-_notmuch_filenames_add_filename (notmuch_filenames_t *filenames,
-				 const char *filename)
-{
-    /* Create and initialize new node. */
-    notmuch_filenames_node_t *node = talloc (filenames,
-					     notmuch_filenames_node_t);
-
-    node->filename = talloc_strdup (node, filename);
-    node->next = NULL;
-
-    /* Append the node to the list. */
-    *(filenames->tail) = node;
-    filenames->tail = &node->next;
 }
 
 notmuch_bool_t
@@ -87,12 +99,6 @@ notmuch_filenames_get (notmuch_filenames_t *filenames)
 	return NULL;
 
     return filenames->iterator->filename;
-}
-
-void
-_notmuch_filenames_move_to_first (notmuch_filenames_t *filenames)
-{
-    filenames->iterator = filenames->head;
 }
 
 void

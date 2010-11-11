@@ -32,7 +32,7 @@ struct _notmuch_message {
     char *message_id;
     char *thread_id;
     char *in_reply_to;
-    char *filename;
+    notmuch_filename_list_t *filename_list;
     char *author;
     notmuch_message_file_t *message_file;
     notmuch_message_list_t *replies;
@@ -101,7 +101,7 @@ _notmuch_message_create_for_document (const void *talloc_owner,
     message->message_id = NULL;
     message->thread_id = NULL;
     message->in_reply_to = NULL;
-    message->filename = NULL;
+    message->filename_list = NULL;
     message->message_file = NULL;
     message->author = NULL;
 
@@ -432,9 +432,9 @@ _notmuch_message_add_filename (notmuch_message_t *message,
     void *local = talloc_new (message);
     char *direntry;
 
-    if (message->filename) {
-	talloc_free (message->filename);
-	message->filename = NULL;
+    if (message->filename_list) {
+	_notmuch_filename_list_destroy (message->filename_list);
+	message->filename_list = NULL;
     }
 
     if (filename == NULL)
@@ -465,28 +465,23 @@ _notmuch_message_clear_data (notmuch_message_t *message)
     message->doc.set_data ("");
 }
 
-const char *
-notmuch_message_get_filename (notmuch_message_t *message)
+static void
+_notmuch_message_ensure_filename_list (notmuch_message_t *message)
 {
     const char *prefix = _find_prefix ("file-direntry");
     int prefix_len = strlen (prefix);
     Xapian::TermIterator i;
-    char *colon, *direntry = NULL;
-    const char *db_path, *directory, *basename;
-    unsigned int directory_id;
-    void *local = talloc_new (message);
 
-    if (message->filename)
-	return message->filename;
+    if (message->filename_list)
+	return;
+
+    message->filename_list = _notmuch_filename_list_create (message);
 
     i = message->doc.termlist_begin ();
     i.skip_to (prefix);
 
-    if (i != message->doc.termlist_end ())
-	direntry = talloc_strdup (local, (*i).c_str ());
-
     if (i == message->doc.termlist_end () ||
-	strncmp (direntry, prefix, prefix_len))
+	strncmp ((*i).c_str (), prefix, prefix_len))
     {
 	/* A message document created by an old version of notmuch
 	 * (prior to rename support) will have the filename in the
@@ -501,39 +496,77 @@ notmuch_message_get_filename (notmuch_message_t *message)
 	if (data == NULL)
 	    INTERNAL_ERROR ("message with no filename");
 
-	message->filename = talloc_strdup (message, data);
+	_notmuch_filename_list_add_filename (message->filename_list, data);
 
-	return message->filename;
+	return;
     }
 
-    direntry += prefix_len;
+    for (; i != message->doc.termlist_end (); i++) {
+	void *local = talloc_new (message);
+	const char *db_path, *directory, *basename, *filename;
+	char *colon, *direntry = NULL;
+	unsigned int directory_id;
 
-    directory_id = strtol (direntry, &colon, 10);
+	/* Terminate loop at first term without desired prefix. */
+	if (strncmp ((*i).c_str (), prefix, prefix_len))
+	    break;
 
-    if (colon == NULL || *colon != ':')
-	INTERNAL_ERROR ("malformed direntry");
+	direntry = talloc_strdup (local, (*i).c_str ());
 
-    basename = colon + 1;
+	direntry += prefix_len;
 
-    *colon = '\0';
+	directory_id = strtol (direntry, &colon, 10);
 
-    db_path = notmuch_database_get_path (message->notmuch);
+	if (colon == NULL || *colon != ':')
+	    INTERNAL_ERROR ("malformed direntry");
 
-    directory = _notmuch_database_get_directory_path (local,
-						      message->notmuch,
-						      directory_id);
+	basename = colon + 1;
 
-    if (strlen (directory))
-	message->filename = talloc_asprintf (message, "%s/%s/%s",
-					     db_path, directory, basename);
-    else
-	message->filename = talloc_asprintf (message, "%s/%s",
-					     db_path, basename);
-    talloc_free ((void *) directory);
+	*colon = '\0';
 
-    talloc_free (local);
+	db_path = notmuch_database_get_path (message->notmuch);
 
-    return message->filename;
+	directory = _notmuch_database_get_directory_path (local,
+							  message->notmuch,
+							  directory_id);
+
+	if (strlen (directory))
+	    filename = talloc_asprintf (message, "%s/%s/%s",
+					db_path, directory, basename);
+	else
+	    filename = talloc_asprintf (message, "%s/%s",
+					db_path, basename);
+
+	_notmuch_filename_list_add_filename (message->filename_list,
+					     filename);
+
+	talloc_free (local);
+    }
+}
+
+const char *
+notmuch_message_get_filename (notmuch_message_t *message)
+{
+    _notmuch_message_ensure_filename_list (message);
+
+    if (message->filename_list == NULL)
+	return NULL;
+
+    if (message->filename_list->head == NULL ||
+	message->filename_list->head->filename == NULL)
+    {
+	INTERNAL_ERROR ("message with no filename");
+    }
+
+    return message->filename_list->head->filename;
+}
+
+notmuch_filenames_t *
+notmuch_message_get_filenames (notmuch_message_t *message)
+{
+    _notmuch_message_ensure_filename_list (message);
+
+    return _notmuch_filenames_create (message, message->filename_list);
 }
 
 notmuch_bool_t
