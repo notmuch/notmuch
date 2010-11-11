@@ -859,53 +859,40 @@ notmuch_message_remove_tag (notmuch_message_t *message, const char *tag)
     return NOTMUCH_STATUS_SUCCESS;
 }
 
-/* XXX: Needs to iterate over all message filenames. */
 notmuch_status_t
 notmuch_message_maildir_flags_to_tags (notmuch_message_t *message)
 {
-    const char *flags, *p;
-    char f;
-    bool valid, unread;
-    unsigned i;
+    const char *flags;
     notmuch_status_t status;
+    notmuch_filenames_t *filenames;
     const char *filename;
+    char *combined_flags = talloc_strdup (message, "");
+    unsigned i;
 
-    filename = notmuch_message_get_filename (message);
+    for (filenames = notmuch_message_get_filenames (message);
+	 notmuch_filenames_valid (filenames);
+	 notmuch_filenames_move_to_next (filenames))
+    {
+	filename = notmuch_filenames_get (filenames);
 
-    flags = strstr (filename, ":2,");
-    if (!flags)
-	return NOTMUCH_STATUS_FILE_NOT_EMAIL;
-    flags += 3;
+	flags = strstr (filename, ":2,");
+	if (! flags)
+	    continue;
 
-    /*  Check that the letters are valid Maildir flags */
-    f = 0;
-    valid = true;
-    for (p=flags; valid && *p; p++) {
-	switch (*p) {
-	case 'P':
-	case 'R':
-	case 'S':
-	case 'T':
-	case 'D':
-	case 'F':
-	    if (*p > f) f=*p;
-	    else valid = false;
-	break;
-	default:
-	    valid = false;
-	}
-    }
-    if (!valid) {
-	fprintf (stderr, "Warning: Invalid maildir flags in filename %s\n", filename);
-	return NOTMUCH_STATUS_FILE_NOT_EMAIL;
+	flags += 3;
+
+	combined_flags = talloc_strdup_append (combined_flags, flags);
     }
 
     status = notmuch_message_freeze (message);
     if (status)
 	return status;
-    unread = true;
+
     for (i = 0; i < ARRAY_SIZE(flag2tag); i++) {
-	if ((strchr (flags, flag2tag[i].flag) != NULL) ^ flag2tag[i].inverse) {
+	if ((strchr (combined_flags, flag2tag[i].flag) != NULL)
+	    ^ 
+	    flag2tag[i].inverse)
+	{
 	    status = notmuch_message_add_tag (message, flag2tag[i].tag);
 	} else {
 	    status = notmuch_message_remove_tag (message, flag2tag[i].tag);
@@ -914,6 +901,8 @@ notmuch_message_maildir_flags_to_tags (notmuch_message_t *message)
 	    return status;
     }
     status = notmuch_message_thaw (message);
+
+    talloc_free (combined_flags);
 
     return status;
 }
