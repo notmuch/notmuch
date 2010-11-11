@@ -961,15 +961,14 @@ maildir_get_subdir (char *filename)
     return subdir;
 }
 
-/* XXX: Needs to iterate over all filenames in the message
- *
- * XXX: Needs to ensure that existing, unsupported flags in the
+/* XXX: Needs to ensure that existing, unsupported flags in the
  *      filename are left unchanged (which also needs a test in the
  *      test suite).
  */
 notmuch_status_t
 notmuch_message_tags_to_maildir_flags (notmuch_message_t *message)
 {
+    notmuch_filenames_t *filenames;
     char flags[ARRAY_SIZE(flag2tag)+1];
     const char *filename, *p;
     char *filename_new, *subdir = NULL;
@@ -977,49 +976,56 @@ notmuch_message_tags_to_maildir_flags (notmuch_message_t *message)
 
     maildir_get_new_flags (message, flags);
 
-    filename = notmuch_message_get_filename (message);
-    /* TODO: Iterate over all file names. */
-    p = strstr(filename, ":2,");
-    if ((p && strcmp (p+3, flags) == 0) ||
-	(!p && flags[0] == '\0')) {
-	// Return if flags are not to be changed - this suppresses
-	// moving the message from new/ to cur/ during initial
-	// tagging.
-	return NOTMUCH_STATUS_SUCCESS;
-    }
-    if (!p)
-	p = filename + strlen(filename);
+    for (filenames = notmuch_message_get_filenames (message);
+	 notmuch_filenames_valid (filenames);
+	 notmuch_filenames_move_to_next (filenames))
+    {
+	filename = notmuch_filenames_get (filenames);
 
-    filename_new = (char*)talloc_size(message, (p-filename) + 3 + sizeof(flags));
-    if (unlikely (filename_new == NULL))
-	return NOTMUCH_STATUS_OUT_OF_MEMORY;
-
-    memcpy(filename_new, filename, p-filename);
-    filename_new[p-filename] = '\0';
-
-    /* If message is in new/ move it under cur/. */
-    subdir = maildir_get_subdir (filename_new);
-    if (subdir && memcmp (subdir, "new/", 4) == 0)
-	memcpy (subdir, "cur/", 4);
-
-    strcpy (filename_new+(p-filename), ":2,");
-    strcpy (filename_new+(p-filename)+3, flags);
-
-    if (strcmp (filename, filename_new) != 0) {
-	notmuch_status_t status;
-
-	ret = rename (filename, filename_new);
-	if (ret == -1) {
-	    perror (talloc_asprintf (message, "rename of %s to %s failed",
-				     filename, filename_new));
-	    exit (1);
+	p = strstr(filename, ":2,");
+	if ((p && strcmp (p+3, flags) == 0) ||
+	    (!p && flags[0] == '\0'))
+	{
+	    continue;
 	}
-	status = _notmuch_message_rename (message, filename_new);
 
-	_notmuch_message_sync (message);
+	if (!p)
+	    p = filename + strlen(filename);
 
-	return status;
+	filename_new = (char*) talloc_size (message,
+					    (p-filename) + 3 + sizeof (flags));
+	if (unlikely (filename_new == NULL))
+	    return NOTMUCH_STATUS_OUT_OF_MEMORY;
+
+	memcpy (filename_new, filename, p-filename);
+	filename_new[p-filename] = '\0';
+
+	/* If message is in new/ move it under cur/. */
+	subdir = maildir_get_subdir (filename_new);
+	if (subdir && memcmp (subdir, "new/", 4) == 0)
+	    memcpy (subdir, "cur/", 4);
+
+	strcpy (filename_new+(p-filename), ":2,");
+	strcpy (filename_new+(p-filename)+3, flags);
+
+	if (strcmp (filename, filename_new) != 0) {
+	    notmuch_status_t status;
+
+	    ret = rename (filename, filename_new);
+	    if (ret == -1) {
+		perror (talloc_asprintf (message, "rename of %s to %s failed",
+				     filename, filename_new));
+		exit (1);
+	    }
+	    status = _notmuch_message_rename (message, filename_new);
+
+	    _notmuch_message_sync (message);
+
+	    if (status)
+		return status;
+	}
     }
+
     return NOTMUCH_STATUS_SUCCESS;
 }
 
