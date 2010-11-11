@@ -779,8 +779,7 @@ notmuch_message_get_filename (notmuch_message_t *message);
 
 /* Message flags */
 typedef enum _notmuch_message_flag {
-    NOTMUCH_MESSAGE_FLAG_MATCH,
-    NOTMUCH_MESSAGE_FLAG_TAGS_INVALID,
+    NOTMUCH_MESSAGE_FLAG_MATCH
 } notmuch_message_flag_t;
 
 /* Get a value of a flag for the email corresponding to 'message'. */

@@ -1642,13 +1642,6 @@ notmuch_database_add_message (notmuch_database_t *notmuch,
 
 	_notmuch_message_add_filename (message, filename);
 
-	/* This is a new message or it has a new filename and as such,
-	 * its tags in database either do not exists or might be out
-	 * of date. We assign the tags later in notmuch new, but until
-	 * then we should not synchronize the tags back to the maildir
-	 * flags (if notmuch is configured to do so). */
-	notmuch_message_set_flag(message, NOTMUCH_MESSAGE_FLAG_TAGS_INVALID, TRUE);
-
 	/* Is this a newly created message object? */
 	if (private_status == NOTMUCH_PRIVATE_STATUS_NO_DOCUMENT_FOUND) {
 	    _notmuch_message_add_term (message, "type", "mail");

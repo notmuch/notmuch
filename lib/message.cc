@@ -882,9 +882,6 @@ notmuch_message_maildir_flags_to_tags (notmuch_message_t *message)
     }
     status = notmuch_message_thaw (message);
 
-    /* From now on, we can synchronize the tags from the database to
-     * the mailstore. */
-    notmuch_message_set_flag (message, NOTMUCH_MESSAGE_FLAG_TAGS_INVALID, FALSE);
     return status;
 }
 
