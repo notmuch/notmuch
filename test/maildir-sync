@@ -118,7 +118,7 @@ output+=$(notmuch search subject:"Message to lose maildir info" | notmuch_search
 test_expect_equal "$output" "No new mail. Detected 1 file rename.
 thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; Message to lose maildir info (inbox)"
 
-add_message [subject]='"Non-maildir message"' [dir]=notmaildir/new [filename]='non-maildir-message'
+add_message [subject]='"Non-maildir message"' [dir]=notmaildir [filename]='non-maildir-message'
 expected=$(notmuch search --output=files subject:"Non-maildir message")
 test_expect_success "Can remove unread tag from message in non-maildir directory" 'notmuch tag -unread subject:"Non-maildir message"'
 

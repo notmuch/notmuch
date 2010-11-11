@@ -947,9 +947,13 @@ notmuch_message_maildir_flags_to_tags (notmuch_message_t *message);
  *
  * Specifically, for each filename corresponding to this message:
  *
- * Rename the file so that its filename ends with the sequence ":2,"
- * followed by zero or more of the following single-character flags
- * (in ASCII order):
+ * If the filename is not in a maildir directory, do nothing.
+ * (A maildir directory is determined as a directory named "new" or
+ * "cur".)
+ *
+ * If the filename is in a maildir directory, rename the file so that
+ * its filename ends with the sequence ":2," followed by zero or more
+ * of the following single-character flags (in ASCII order):
  *
  *   'D' iff the message has the "draft" tag
  *   'F' iff the message has the "flagged" tag

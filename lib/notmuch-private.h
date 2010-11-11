@@ -57,6 +57,9 @@ NOTMUCH_BEGIN_DECLS
 
 #define COMPILE_TIME_ASSERT(pred) ((void)sizeof(char[1 - 2*!(pred)]))
 
+#define STRNCMP_LITERAL(var, literal) \
+    strncmp ((var), (literal), sizeof (literal) - 1)
+
 /* There's no point in continuing when we've detected that we've done
  * something wrong internally (as opposed to the user passing in a
  * bogus value).

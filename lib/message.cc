@@ -945,20 +945,45 @@ maildir_get_new_flags(notmuch_message_t *message, char *flags)
     *p = '\0';
 }
 
-static char *
-maildir_get_subdir (char *filename)
+/* Is the given filename within a maildir directory?
+ *
+ * Specifically, is the final directory component of 'filename' either
+ * "cur" or "new". If so, return a pointer to that final directory
+ * component within 'filename'. If not, return NULL.
+ *
+ * A non-NULL return value is guaranteed to be a valid string pointer
+ * pointing to the characters "new/" or "cur/", (but not
+ * NUL-terminated).
+ */
+static const char *
+_filename_is_in_maildir (const char *filename)
 {
-    char *p, *subdir = NULL;
+    const char *slash, *dir = NULL;
 
-    p = filename + strlen (filename) - 1;
-    while (p > filename + 3 && *p != '/')
-	p--;
-    if (*p == '/') {
-	subdir = p - 3;
-	if (subdir > filename && *(subdir - 1) != '/')
-	    subdir = NULL;
+    /* Find the last '/' separating directory from filename. */
+    slash = strrchr (filename, '/');
+    if (slash == NULL)
+	return NULL;
+
+    /* Jump back 4 characters to where the previous '/' will be if the
+     * directory is named "cur" or "new". */
+    if (slash - filename < 4)
+	return NULL;
+
+    slash -= 4;
+
+    if (*slash != '/')
+	return NULL;
+
+    dir = slash + 1;
+
+    if (STRNCMP_LITERAL (dir, "cur/") == 0 ||
+	STRNCMP_LITERAL (dir, "new/") == 0)
+    {
+	return dir;
     }
-    return subdir;
+
+    return NULL;
 }
 
 /* XXX: Needs to ensure that existing, unsupported flags in the
@@ -971,7 +996,7 @@ notmuch_message_tags_to_maildir_flags (notmuch_message_t *message)
     notmuch_filenames_t *filenames;
     char flags[ARRAY_SIZE(flag2tag)+1];
     const char *filename, *p;
-    char *filename_new, *subdir = NULL;
+    char *filename_new, *dir;
     int ret;
 
     maildir_get_new_flags (message, flags);
@@ -981,6 +1006,9 @@ notmuch_message_tags_to_maildir_flags (notmuch_message_t *message)
 	 notmuch_filenames_move_to_next (filenames))
     {
 	filename = notmuch_filenames_get (filenames);
+
+	if (! _filename_is_in_maildir (filename))
+	    continue;
 
 	p = strstr(filename, ":2,");
 	if ((p && strcmp (p+3, flags) == 0) ||
@@ -1001,9 +1029,9 @@ notmuch_message_tags_to_maildir_flags (notmuch_message_t *message)
 	filename_new[p-filename] = '\0';
 
 	/* If message is in new/ move it under cur/. */
-	subdir = maildir_get_subdir (filename_new);
-	if (subdir && memcmp (subdir, "new/", 4) == 0)
-	    memcpy (subdir, "cur/", 4);
+	dir = (char *) _filename_is_in_maildir (filename_new);
+	if (dir && STRNCMP_LITERAL (dir, "new/") == 0)
+	    memcpy (dir, "cur/", 4);
 
 	strcpy (filename_new+(p-filename), ":2,");
 	strcpy (filename_new+(p-filename)+3, flags);
