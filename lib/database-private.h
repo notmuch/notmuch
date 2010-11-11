@@ -51,7 +51,6 @@ struct _notmuch_database {
     Xapian::QueryParser *query_parser;
     Xapian::TermGenerator *term_gen;
     Xapian::ValueRangeProcessor *value_range_processor;
-    notmuch_bool_t maildir_sync;
 };
 
 /* Convert tags from Xapian internal format to notmuch format.

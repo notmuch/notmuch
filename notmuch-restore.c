@@ -25,6 +25,7 @@ notmuch_restore_command (unused (void *ctx), int argc, char *argv[])
 {
     notmuch_config_t *config;
     notmuch_database_t *notmuch;
+    notmuch_bool_t synchronize_flags;
     FILE *input;
     char *line = NULL;
     size_t line_size;
@@ -41,8 +42,8 @@ notmuch_restore_command (unused (void *ctx), int argc, char *argv[])
     if (notmuch == NULL)
 	return 1;
 
-    notmuch_database_set_maildir_sync (notmuch,
-				       notmuch_config_get_maildir_synchronize_flags (config));
+    synchronize_flags = notmuch_config_get_maildir_synchronize_flags (config);
+
     if (argc) {
 	input = fopen (argv[0], "r");
 	if (input == NULL) {
@@ -132,6 +133,9 @@ notmuch_restore_command (unused (void *ctx), int argc, char *argv[])
 	}
 
 	notmuch_message_thaw (message);
+
+	if (synchronize_flags)
+	    notmuch_message_tags_to_maildir_flags (message);
 
       NEXT_LINE:
 	if (message)

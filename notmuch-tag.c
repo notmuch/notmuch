@@ -45,6 +45,7 @@ notmuch_tag_command (void *ctx, unused (int argc), unused (char *argv[]))
     notmuch_messages_t *messages;
     notmuch_message_t *message;
     struct sigaction action;
+    notmuch_bool_t synchronize_flags;
     int i;
 
     /* Setup our handler for SIGINT */
@@ -100,8 +101,8 @@ notmuch_tag_command (void *ctx, unused (int argc), unused (char *argv[]))
 				     NOTMUCH_DATABASE_MODE_READ_WRITE);
     if (notmuch == NULL)
 	return 1;
-    notmuch_database_set_maildir_sync (notmuch,
-				       notmuch_config_get_maildir_synchronize_flags (config));
+
+    synchronize_flags = notmuch_config_get_maildir_synchronize_flags (config);
 
     query = notmuch_query_create (notmuch, query_string);
     if (query == NULL) {
@@ -128,6 +129,9 @@ notmuch_tag_command (void *ctx, unused (int argc), unused (char *argv[]))
 	    notmuch_message_add_tag (message, argv[add_tags[i]] + 1);
 
 	notmuch_message_thaw (message);
+
+	if (synchronize_flags)
+	    notmuch_message_tags_to_maildir_flags (message);
 
 	notmuch_message_destroy (message);
     }

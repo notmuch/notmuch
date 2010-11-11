@@ -176,12 +176,6 @@ notmuch_database_open (const char *path,
 void
 notmuch_database_close (notmuch_database_t *database);
 
-/* Sets whether maildir flags should be synchronized with notmuch
- * tags. */
-void
-notmuch_database_set_maildir_sync (notmuch_database_t *database,
-				   notmuch_bool_t maildir_sync);
-
 /* Return the database path of the given database.
  *
  * The return value is a string owned by notmuch so should not be
@@ -903,11 +897,74 @@ notmuch_message_remove_tag (notmuch_message_t *message, const char *tag);
 notmuch_status_t
 notmuch_message_remove_all_tags (notmuch_message_t *message);
 
-/* Add or remove tags based on the maildir flags in the file name.
+/* Add/remove tags according to maildir flags in the message filename(s)
+ *
+ * This function examines the filenames of 'message' for maildir
+ * flags, and adds or removes tags on 'message' as follows when these
+ * flags are present:
+ *
+ *	Flag	Action
+ *	----	------
+ *	'D'	Adds the "draft" tag to the message
+ *	'F'	Adds the "flagged" tag to the message
+ *	'P'	Adds the "passed" tag to the message
+ *	'R'	Adds the "replied" tag to the message
+ *	'S'	Removes the "unread" tag from the message
+ *
+ * The only filenames examined for flags are filenames which appear to
+ * be within a maildir directory, (the file must be in a directory
+ * named "new" or "cur" and there must be a neighboring directory
+ * named respectively "cur" or "new"). The flags are identified as
+ * trailing components of the filename after a sequence of ":2,".
+ *
+ * If there are multiple filenames associated with this message, the
+ * flag is considered present if it appears in one or more
+ * filenames. (That is, the flags from the multiple filenames are
+ * combined with the logical OR operator.)
+ *
+ * A client can ensure that notmuch database tags remain synchronized
+ * with maildir flags by calling this function after each call to
+ * notmuch_database_add_message. See also
+ * notmuch_message_tags_to_maildir_flags for synchronizing tag changes
+ * back to maildir flags.
  */
 notmuch_status_t
-notmuch_message_maildir_to_tags (notmuch_message_t *message,
-				 const char *filename);
+notmuch_message_maildir_flags_to_tags (notmuch_message_t *message);
+
+/* Rename message filename(s) to encode tags as maildir flags
+ *
+ * Specifically, for each filename corresponding to this message:
+ *
+ * If the filename is not in a maildir directory, do nothing.
+ * (A maildir directory is determined as a directory named "new" or
+ * "cur" with a neighboring directory named respectively "cur" or
+ * "new".)
+ *
+ * If the filename is in a maildir directory, rename the file so that
+ * its filename ends with the sequence ":2," followed by zero or more
+ * of the following single-character flags (in ASCII order):
+ *
+ *   'D' if the message has the "draft" tag
+ *   'F' if the message has the "flagged" tag
+ *   'P' if the message has the "passed" tag
+ *   'R' if the message has the "replied" tag
+ *   'S' if the message does not have the "unread" tag
+ *
+ * Any existing flags unmentioned in the list above are left
+ * unaffected by the rename.
+ *
+ * Also, if this filename is in a directory named "new", rename it to
+ * be within the neighboring directory named "cur".
+ *
+ * A client can ensure that maildir filename flags remain synchronized
+ * with notmuch database tags by calling this function after changing
+ * tags, (after calls to notmuch_message_add_tag,
+ * notmuch_message_remove_tag, or notmuch_message_freeze/
+ * notmuch_message_thaw). See also notmuch_message_maildir_flags_to_tags
+ * for synchronizing maildir flag changes back to tags.
+ */
+notmuch_status_t
+notmuch_message_tags_to_maildir_flags (notmuch_message_t *message);
 
 /* Freeze the current state of 'message' within the database.
  *

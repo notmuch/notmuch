@@ -610,29 +610,15 @@ _notmuch_message_set_date (notmuch_message_t *message,
 			    Xapian::sortable_serialise (time_value));
 }
 
-static notmuch_private_status_t
-_notmuch_message_tags_to_maildir (notmuch_message_t *message);
-
 /* Synchronize changes made to message->doc out into the database. */
 void
 _notmuch_message_sync (notmuch_message_t *message)
 {
     Xapian::WritableDatabase *db;
-    notmuch_private_status_t status;
 
     if (message->notmuch->mode == NOTMUCH_DATABASE_MODE_READ_ONLY)
 	return;
 
-    if (message->notmuch->maildir_sync &&
-	!notmuch_message_get_flag(message, NOTMUCH_MESSAGE_FLAG_TAGS_INVALID)) {
- 	status = _notmuch_message_tags_to_maildir (message);
-	if (status != NOTMUCH_PRIVATE_STATUS_SUCCESS) {
-	    fprintf (stderr, "Error: Cannot sync tags to maildir (%s)\n",
-		     notmuch_status_to_string ((notmuch_status_t)status));
-	    /* Exit to avoid unsynchronized mailstore. */
-	    exit(1);
-	}
-    }
     db = static_cast <Xapian::WritableDatabase *> (message->notmuch->xapian_db);
     db->replace_document (message->doc_id, message->doc);
 }
@@ -749,7 +735,7 @@ _notmuch_message_remove_term (notmuch_message_t *message,
  * This change will not be reflected in the database until the next
  * call to _notmuch_message_sync.
  */
-notmuch_private_status_t
+notmuch_status_t
 _notmuch_message_rename (notmuch_message_t *message,
 			 const char *new_filename)
 {
@@ -757,29 +743,31 @@ _notmuch_message_rename (notmuch_message_t *message,
     char *direntry;
     Xapian::PostingIterator i, end;
     Xapian::Document document;
-    notmuch_private_status_t pstatus;
+    notmuch_private_status_t private_status;
     notmuch_status_t status;
     const char *old_filename;
 
     old_filename = notmuch_message_get_filename(message);
     old_filename = talloc_reference(local, old_filename);
-    if (unlikely(!old_filename))
-	return NOTMUCH_PRIVATE_STATUS_OUT_OF_MEMORY;
+    if (unlikely (! old_filename))
+	return NOTMUCH_STATUS_OUT_OF_MEMORY;
 
     status = _notmuch_message_add_filename (message, new_filename);
     if (status)
-	return (notmuch_private_status_t)status;
+	return status;
 
     status = _notmuch_database_filename_to_direntry (local, message->notmuch,
 						     old_filename, &direntry);
     if (status)
-	return (notmuch_private_status_t)status;
+	return status;
 
-    pstatus = _notmuch_message_remove_term (message, "file-direntry", direntry);
+    private_status = _notmuch_message_remove_term (message, "file-direntry", direntry);
+    status = COERCE_STATUS (private_status,
+			    "Unexpected error from _notmuch_message_remove_term");
 
     talloc_free (local);
 
-    return pstatus;
+    return status;
 }
 
 notmuch_status_t
@@ -838,14 +826,18 @@ notmuch_message_remove_tag (notmuch_message_t *message, const char *tag)
     return NOTMUCH_STATUS_SUCCESS;
 }
 
+/* XXX: Needs to iterate over all message filenames. */
 notmuch_status_t
-notmuch_message_maildir_to_tags (notmuch_message_t *message, const char *filename)
+notmuch_message_maildir_flags_to_tags (notmuch_message_t *message)
 {
     const char *flags, *p;
     char f;
     bool valid, unread;
     unsigned i;
     notmuch_status_t status;
+    const char *filename;
+
+    filename = notmuch_message_get_filename (message);
 
     flags = strstr (filename, ":2,");
     if (!flags)
@@ -942,10 +934,14 @@ maildir_get_subdir (char *filename)
     return subdir;
 }
 
-/* Rename the message file so that maildir flags corresponds to the
- * tags and, if aplicable, move the message from new/ to cur/. */
-static notmuch_private_status_t
-_notmuch_message_tags_to_maildir (notmuch_message_t *message)
+/* XXX: Needs to iterate over all filenames in the message
+ *
+ * XXX: Needs to ensure that existing, unsupported flags in the
+ *      filename are left unchanged (which also needs a test in the
+ *      test suite).
+ */
+notmuch_status_t
+notmuch_message_tags_to_maildir_flags (notmuch_message_t *message)
 {
     char flags[ARRAY_SIZE(flag2tag)+1];
     const char *filename, *p;
@@ -962,14 +958,15 @@ _notmuch_message_tags_to_maildir (notmuch_message_t *message)
 	// Return if flags are not to be changed - this suppresses
 	// moving the message from new/ to cur/ during initial
 	// tagging.
-	return NOTMUCH_PRIVATE_STATUS_SUCCESS;
+	return NOTMUCH_STATUS_SUCCESS;
     }
     if (!p)
 	p = filename + strlen(filename);
 
     filename_new = (char*)talloc_size(message, (p-filename) + 3 + sizeof(flags));
     if (unlikely (filename_new == NULL))
-	return NOTMUCH_PRIVATE_STATUS_OUT_OF_MEMORY;
+	return NOTMUCH_STATUS_OUT_OF_MEMORY;
+
     memcpy(filename_new, filename, p-filename);
     filename_new[p-filename] = '\0';
 
@@ -991,7 +988,7 @@ _notmuch_message_tags_to_maildir (notmuch_message_t *message)
 	return _notmuch_message_rename (message, filename_new);
 	/* _notmuch_message_sync is our caller. Do not call it here. */
     }
-    return NOTMUCH_PRIVATE_STATUS_SUCCESS;
+    return NOTMUCH_STATUS_SUCCESS;
 }
 
 notmuch_status_t

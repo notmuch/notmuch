@@ -412,12 +412,12 @@ add_files_recursive (notmuch_database_t *notmuch,
 	    for (tag=state->new_tags; *tag != NULL; tag++)
 	        notmuch_message_add_tag (message, *tag);
 	    if (state->synchronize_flags == TRUE)
-		notmuch_message_maildir_to_tags (message, next);
+		notmuch_message_maildir_flags_to_tags (message);
 	    break;
 	/* Non-fatal issues (go on to next file) */
 	case NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID:
 	    if (state->synchronize_flags == TRUE)
-		notmuch_message_maildir_to_tags (message, next);
+		notmuch_message_maildir_flags_to_tags (message);
 	    break;
 	case NOTMUCH_STATUS_FILE_NOT_EMAIL:
 	    fprintf (stderr, "Note: Ignoring non-mail file: %s\n",
