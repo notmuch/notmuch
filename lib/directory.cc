@@ -21,28 +21,6 @@
 #include "notmuch-private.h"
 #include "database-private.h"
 
-struct _notmuch_filenames {
-    Xapian::TermIterator iterator;
-    Xapian::TermIterator end;
-    int prefix_len;
-    char *filename;
-};
-
-/* We end up having to call the destructors explicitly because we had
- * to use "placement new" in order to initialize C++ objects within a
- * block that we allocated with talloc. So C++ is making talloc
- * slightly less simple to use, (we wouldn't need
- * talloc_set_destructor at all otherwise).
- */
-static int
-_notmuch_filenames_destructor (notmuch_filenames_t *filenames)
-{
-    filenames->iterator.~TermIterator ();
-    filenames->end.~TermIterator ();
-
-    return 0;
-}
-
 /* Create an iterator to iterate over the basenames of files (or
  * directories) that all share a common parent directory.
  *
@@ -51,79 +29,31 @@ _notmuch_filenames_destructor (notmuch_filenames_t *filenames)
  * prefix.
  */
 static notmuch_filenames_t *
-_notmuch_filenames_create (void *ctx,
-			   notmuch_database_t *notmuch,
-			   const char *prefix)
+_create_filenames_for_terms_with_prefix (void *ctx,
+					 notmuch_database_t *notmuch,
+					 const char *prefix)
 {
     notmuch_filenames_t *filenames;
+    Xapian::TermIterator i, end;
+    int prefix_len = strlen (prefix);
 
-    filenames = talloc (ctx, notmuch_filenames_t);
+    filenames = _notmuch_filenames_create (ctx);
     if (unlikely (filenames == NULL))
 	return NULL;
 
-    new (&filenames->iterator) Xapian::TermIterator ();
-    new (&filenames->end) Xapian::TermIterator ();
+    end = notmuch->xapian_db->allterms_end (prefix);
 
-    talloc_set_destructor (filenames, _notmuch_filenames_destructor);
+    for (i = notmuch->xapian_db->allterms_begin (prefix); i != end; i++)
+    {
+	std::string term = *i;
 
-    filenames->iterator = notmuch->xapian_db->allterms_begin (prefix);
-    filenames->end = notmuch->xapian_db->allterms_end (prefix);
+	_notmuch_filenames_add_filename (filenames, term.c_str () +
+					 prefix_len);
+    }
 
-    filenames->prefix_len = strlen (prefix);
-
-    filenames->filename = NULL;
+    _notmuch_filenames_move_to_first (filenames);
 
     return filenames;
-}
-
-notmuch_bool_t
-notmuch_filenames_valid (notmuch_filenames_t *filenames)
-{
-    if (filenames == NULL)
-	return NULL;
-
-    return (filenames->iterator != filenames->end);
-}
-
-const char *
-notmuch_filenames_get (notmuch_filenames_t *filenames)
-{
-    if (filenames == NULL || filenames->iterator == filenames->end)
-	return NULL;
-
-    if (filenames->filename == NULL) {
-	std::string term = *filenames->iterator;
-
-	filenames->filename = talloc_strdup (filenames,
-					     term.c_str () +
-					     filenames->prefix_len);
-    }
-
-    return filenames->filename;
-}
-
-void
-notmuch_filenames_move_to_next (notmuch_filenames_t *filenames)
-{
-    if (filenames == NULL)
-	return;
-
-    if (filenames->filename) {
-	talloc_free (filenames->filename);
-	filenames->filename = NULL;
-    }
-
-    if (filenames->iterator != filenames->end)
-	filenames->iterator++;
-}
-
-void
-notmuch_filenames_destroy (notmuch_filenames_t *filenames)
-{
-    if (filenames == NULL)
-	return;
-
-    talloc_free (filenames);
 }
 
 struct _notmuch_directory {
@@ -304,8 +234,9 @@ notmuch_directory_get_child_files (notmuch_directory_t *directory)
 			    _find_prefix ("file-direntry"),
 			    directory->document_id);
 
-    child_files = _notmuch_filenames_create (directory,
-					     directory->notmuch, term);
+    child_files = _create_filenames_for_terms_with_prefix (directory,
+							   directory->notmuch,
+							   term);
 
     talloc_free (term);
 
@@ -322,8 +253,8 @@ notmuch_directory_get_child_directories (notmuch_directory_t *directory)
 			    _find_prefix ("directory-direntry"),
 			    directory->document_id);
 
-    child_directories = _notmuch_filenames_create (directory,
-						   directory->notmuch, term);
+    child_directories = _create_filenames_for_terms_with_prefix (directory,
+						 directory->notmuch, term);
 
     talloc_free (term);
 

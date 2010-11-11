@@ -42,8 +42,7 @@ _notmuch_message_list_create (const void *ctx)
     return list;
 }
 
-/* Append 'node' (which can of course point to an arbitrarily long
- * list of nodes) to the end of 'list'.
+/* Append a single 'node' to the end of 'list'.
  */
 void
 _notmuch_message_list_append (notmuch_message_list_t *list,

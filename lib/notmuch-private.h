@@ -448,6 +448,18 @@ _notmuch_tags_add_tag (notmuch_tags_t *tags, const char *tag);
 void
 _notmuch_tags_prepare_iterator (notmuch_tags_t *tags);
 
+/* filenames.c */
+
+notmuch_filenames_t *
+_notmuch_filenames_create (const void *ctx);
+
+void
+_notmuch_filenames_add_filename (notmuch_filenames_t *filenames,
+				 const char *filename);
+
+void
+_notmuch_filenames_move_to_first (notmuch_filenames_t *filenames);
+
 #pragma GCC visibility pop
 
 NOTMUCH_END_DECLS
