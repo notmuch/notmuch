@@ -915,13 +915,16 @@ notmuch_message_remove_all_tags (notmuch_message_t *message);
  * flags, and adds or removes tags on 'message' as follows when these
  * flags are present:
  *
- *	Flag	Action
- *	----	------
+ *	Flag	Action if present
+ *	----	-----------------
  *	'D'	Adds the "draft" tag to the message
  *	'F'	Adds the "flagged" tag to the message
  *	'P'	Adds the "passed" tag to the message
  *	'R'	Adds the "replied" tag to the message
  *	'S'	Removes the "unread" tag from the message
+ *
+ * For each flag that is not present, the opposite action (add/remove)
+ * is performed for the corresponding tags.
  *
  * The only filenames examined for flags are filenames which appear to
  * be within a maildir directory, (the file must be in a directory
@@ -956,11 +959,11 @@ notmuch_message_maildir_flags_to_tags (notmuch_message_t *message);
  * its filename ends with the sequence ":2," followed by zero or more
  * of the following single-character flags (in ASCII order):
  *
- *   'D' if the message has the "draft" tag
- *   'F' if the message has the "flagged" tag
- *   'P' if the message has the "passed" tag
- *   'R' if the message has the "replied" tag
- *   'S' if the message does not have the "unread" tag
+ *   'D' iff the message has the "draft" tag
+ *   'F' iff the message has the "flagged" tag
+ *   'P' iff the message has the "passed" tag
+ *   'R' iff the message has the "replied" tag
+ *   'S' iff the message does not have the "unread" tag
  *
  * Any existing flags unmentioned in the list above are left
  * unaffected by the rename.
