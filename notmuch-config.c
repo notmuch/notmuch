@@ -344,7 +344,7 @@ notmuch_config_open (void *ctx,
 	g_key_file_get_boolean (config->key_file,
 				"maildir", "synchronize_flags", &error);
     if (error) {
-	config->maildir_synchronize_flags = TRUE;
+	notmuch_config_set_maildir_synchronize_flags (config, TRUE);
 	g_error_free (error);
     }
 
