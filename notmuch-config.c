@@ -64,10 +64,24 @@ static const char user_config_comment[] =
 static const char maildir_config_comment[] =
     " Maildir compatibility configuration\n"
     "\n"
-    " Here you can configure whether notmuch will synchronize its tags with\n"
-    " maildir flags."
+    " The following option is supported here:\n"
     "\n"
-    "\tsynchronize_flags      Valid values are true and false.\n";
+    "\tsynchronize_flags      Valid values are true and false.\n"
+    "\n"
+    "\tIf true, then the following maildir flags (in message filenames)\n"
+    "\twill be syncrhonized with the corresponding notmuch tags:\n"
+    "\n"
+    "\t\tFlag	Tag\n"
+    "\t\t----	-------\n"
+    "\t\tD	draft\n"
+    "\t\tF	flagged\n"
+    "\t\tP	passed\n"
+    "\t\tR	replied\n"
+    "\t\tS	unread (added when 'S' tag is not present)\n"
+    "\n"
+    "\tThe \"notmuch new\" command will notice flag changes in filenames\n"
+    "\tand update tags, while the \"notmuch tag\" and \"notmuch restore\"\n"
+    "\tcommands will notice tag changes and update flags in filenames\n";
 
 struct _notmuch_config {
     char *filename;
