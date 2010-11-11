@@ -926,11 +926,8 @@ notmuch_message_remove_all_tags (notmuch_message_t *message);
  * For each flag that is not present, the opposite action (add/remove)
  * is performed for the corresponding tags.
  *
- * The only filenames examined for flags are filenames which appear to
- * be within a maildir directory, (the file must be in a directory
- * named "new" or "cur" and there must be a neighboring directory
- * named respectively "cur" or "new"). The flags are identified as
- * trailing components of the filename after a sequence of ":2,".
+ * Flags are identified as trailing components of the filename after a
+ * sequence of ":2,".
  *
  * If there are multiple filenames associated with this message, the
  * flag is considered present if it appears in one or more
@@ -950,14 +947,9 @@ notmuch_message_maildir_flags_to_tags (notmuch_message_t *message);
  *
  * Specifically, for each filename corresponding to this message:
  *
- * If the filename is not in a maildir directory, do nothing.
- * (A maildir directory is determined as a directory named "new" or
- * "cur" with a neighboring directory named respectively "cur" or
- * "new".)
- *
- * If the filename is in a maildir directory, rename the file so that
- * its filename ends with the sequence ":2," followed by zero or more
- * of the following single-character flags (in ASCII order):
+ * Rename the file so that its filename ends with the sequence ":2,"
+ * followed by zero or more of the following single-character flags
+ * (in ASCII order):
  *
  *   'D' iff the message has the "draft" tag
  *   'F' iff the message has the "flagged" tag
@@ -965,8 +957,8 @@ notmuch_message_maildir_flags_to_tags (notmuch_message_t *message);
  *   'R' iff the message has the "replied" tag
  *   'S' iff the message does not have the "unread" tag
  *
- * Any existing flags unmentioned in the list above are left
- * unaffected by the rename.
+ * Warning: any existing flags unmentioned in the list above will be
+ * removed by this renaming.
  *
  * Also, if this filename is in a directory named "new", rename it to
  * be within the neighboring directory named "cur".
