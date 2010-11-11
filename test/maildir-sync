@@ -12,11 +12,6 @@ filter_show_json() {
     echo
 }
 
-cat >> "$NOTMUCH_CONFIG" <<EOF
-[maildir]
-synchronize_flags=true
-EOF
-
 # Create the expected maildir structure
 mkdir $MAIL_DIR/cur
 mkdir $MAIL_DIR/new

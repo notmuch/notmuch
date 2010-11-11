@@ -97,8 +97,6 @@ struct _notmuch_config {
     notmuch_bool_t maildir_synchronize_flags;
 };
 
-#define MAILDIR_SYNC_UNDEF ((notmuch_bool_t)-1)
-
 static int
 notmuch_config_destructor (notmuch_config_t *config)
 {
@@ -247,7 +245,7 @@ notmuch_config_open (void *ctx,
     config->user_other_email_length = 0;
     config->new_tags = NULL;
     config->new_tags_length = 0;
-    config->maildir_synchronize_flags = MAILDIR_SYNC_UNDEF;
+    config->maildir_synchronize_flags = TRUE;
 
     if (! g_key_file_load_from_file (config->key_file,
 				     config->filename,
@@ -341,8 +339,13 @@ notmuch_config_open (void *ctx,
 	notmuch_config_set_new_tags (config, tags, 2);
     }
 
-    if (notmuch_config_get_maildir_synchronize_flags (config) == MAILDIR_SYNC_UNDEF) {
-	notmuch_config_set_maildir_synchronize_flags (config, FALSE);
+    error = NULL;
+    config->maildir_synchronize_flags =
+	g_key_file_get_boolean (config->key_file,
+				"maildir", "synchronize_flags", &error);
+    if (error) {
+	config->maildir_synchronize_flags = TRUE;
+	g_error_free (error);
     }
 
     /* Whenever we know of configuration sections that don't appear in
@@ -745,16 +748,6 @@ notmuch_config_command (void *ctx, int argc, char *argv[])
 notmuch_bool_t
 notmuch_config_get_maildir_synchronize_flags (notmuch_config_t *config)
 {
-    GError *err = NULL;
-    if (config->maildir_synchronize_flags == MAILDIR_SYNC_UNDEF) {
-	config->maildir_synchronize_flags =
-	    g_key_file_get_boolean (config->key_file,
-				    "maildir", "synchronize_flags", &err);
-	if (err) {
-	    config->maildir_synchronize_flags = MAILDIR_SYNC_UNDEF;
-	    g_error_free (err);
-	}
-    }
     return config->maildir_synchronize_flags;
 }
 
