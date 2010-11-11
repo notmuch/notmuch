@@ -80,7 +80,7 @@ struct _notmuch_config {
     size_t user_other_email_length;
     const char **new_tags;
     size_t new_tags_length;
-    notmuch_bool_t maildir_sync;
+    notmuch_bool_t maildir_synchronize_flags;
 };
 
 #define MAILDIR_SYNC_UNDEF ((notmuch_bool_t)-1)
@@ -233,7 +233,7 @@ notmuch_config_open (void *ctx,
     config->user_other_email_length = 0;
     config->new_tags = NULL;
     config->new_tags_length = 0;
-    config->maildir_sync = MAILDIR_SYNC_UNDEF;
+    config->maildir_synchronize_flags = MAILDIR_SYNC_UNDEF;
 
     if (! g_key_file_load_from_file (config->key_file,
 				     config->filename,
@@ -327,8 +327,8 @@ notmuch_config_open (void *ctx,
 	notmuch_config_set_new_tags (config, tags, 2);
     }
 
-    if (notmuch_config_get_maildir_sync (config) == MAILDIR_SYNC_UNDEF) {
-	notmuch_config_set_maildir_sync (config, FALSE);
+    if (notmuch_config_get_maildir_synchronize_flags (config) == MAILDIR_SYNC_UNDEF) {
+	notmuch_config_set_maildir_synchronize_flags (config, FALSE);
     }
 
     /* Whenever we know of configuration sections that don't appear in
@@ -729,26 +729,26 @@ notmuch_config_command (void *ctx, int argc, char *argv[])
 }
 
 notmuch_bool_t
-notmuch_config_get_maildir_sync (notmuch_config_t *config)
+notmuch_config_get_maildir_synchronize_flags (notmuch_config_t *config)
 {
     GError *err = NULL;
-    if (config->maildir_sync == MAILDIR_SYNC_UNDEF) {
-	config->maildir_sync =
+    if (config->maildir_synchronize_flags == MAILDIR_SYNC_UNDEF) {
+	config->maildir_synchronize_flags =
 	    g_key_file_get_boolean (config->key_file,
 				    "maildir", "synchronize_flags", &err);
 	if (err) {
-	    config->maildir_sync = MAILDIR_SYNC_UNDEF;
+	    config->maildir_synchronize_flags = MAILDIR_SYNC_UNDEF;
 	    g_error_free (err);
 	}
     }
-    return config->maildir_sync;
+    return config->maildir_synchronize_flags;
 }
 
 void
-notmuch_config_set_maildir_sync (notmuch_config_t *config,
-				 notmuch_bool_t maildir_sync)
+notmuch_config_set_maildir_synchronize_flags (notmuch_config_t *config,
+					      notmuch_bool_t synchronize_flags)
 {
     g_key_file_set_boolean (config->key_file,
-			    "maildir", "synchronize_flags", maildir_sync);
-    config->maildir_sync = maildir_sync;
+			    "maildir", "synchronize_flags", synchronize_flags);
+    config->maildir_synchronize_flags = synchronize_flags;
 }

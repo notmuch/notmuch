@@ -45,7 +45,7 @@ typedef struct {
 
     _filename_list_t *removed_files;
     _filename_list_t *removed_directories;
-    notmuch_bool_t maildir_sync;
+    notmuch_bool_t synchronize_flags;
 } add_files_state_t;
 
 static volatile sig_atomic_t do_add_files_print_progress = 0;
@@ -411,12 +411,12 @@ add_files_recursive (notmuch_database_t *notmuch,
 	    state->added_messages++;
 	    for (tag=state->new_tags; *tag != NULL; tag++)
 	        notmuch_message_add_tag (message, *tag);
-	    if (state->maildir_sync == TRUE)
+	    if (state->synchronize_flags == TRUE)
 		notmuch_message_maildir_to_tags (message, next);
 	    break;
 	/* Non-fatal issues (go on to next file) */
 	case NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID:
-	    if (state->maildir_sync == TRUE)
+	    if (state->synchronize_flags == TRUE)
 		notmuch_message_maildir_to_tags (message, next);
 	    break;
 	case NOTMUCH_STATUS_FILE_NOT_EMAIL:
@@ -741,7 +741,7 @@ notmuch_new_command (void *ctx, int argc, char *argv[])
 	return 1;
 
     add_files_state.new_tags = notmuch_config_get_new_tags (config, &add_files_state.new_tags_length);
-    add_files_state.maildir_sync = notmuch_config_get_maildir_sync (config);
+    add_files_state.synchronize_flags = notmuch_config_get_maildir_synchronize_flags (config);
     db_path = notmuch_config_get_database_path (config);
 
     dot_notmuch_path = talloc_asprintf (ctx, "%s/%s", db_path, ".notmuch");
