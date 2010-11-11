@@ -998,14 +998,19 @@ notmuch_message_tags_to_maildir_flags (notmuch_message_t *message)
     strcpy (filename_new+(p-filename)+3, flags);
 
     if (strcmp (filename, filename_new) != 0) {
+	notmuch_status_t status;
+
 	ret = rename (filename, filename_new);
 	if (ret == -1) {
 	    perror (talloc_asprintf (message, "rename of %s to %s failed",
 				     filename, filename_new));
 	    exit (1);
 	}
-	return _notmuch_message_rename (message, filename_new);
-	/* _notmuch_message_sync is our caller. Do not call it here. */
+	status = _notmuch_message_rename (message, filename_new);
+
+	_notmuch_message_sync (message);
+
+	return status;
     }
     return NOTMUCH_STATUS_SUCCESS;
 }
