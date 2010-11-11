@@ -155,11 +155,6 @@ notmuch search subject:"Duplicated message" | notmuch_search_sanitize >> output
 test_expect_equal "$(< output)" "No new mail.
 thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; Duplicated message (inbox replied)"
 
-test_begin_subtest "Duplicate mail with new flags propagates flag to original file"
-(cd $MAIL_DIR/cur/; ls duplicated*) > actual
-test_expect_equal "$(< actual)" "duplicated-message:2,RS
-duplicated-message-copy:2,RS"
-
 test_begin_subtest "Adding duplicate message without flags does not remove tags"
 cp "$MAIL_DIR/cur/duplicated-message-copy:2,RS" "$MAIL_DIR/cur/duplicated-message-another-copy:2,"
 increment_mtime $MAIL_DIR/cur
