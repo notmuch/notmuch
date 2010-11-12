@@ -23,7 +23,7 @@ with Maildir) or if something else is going on.
 
 Cheers,
 
-[ 4-line signature. Click/Enter to toggle visibility. ]
+[ 5-line signature. Click/Enter to toggle visibility. ]
 -- 
 Lars Kellogg-Stedman <lars@seas.harvard.edu>
 Senior Technologist, Computing and Information Technology
@@ -31,7 +31,7 @@ Harvard University School of Engineering and Applied Sciences
 
 [ application/pgp-signature ]
 [ text/plain ]
-[ 3-line signature. Click/Enter to toggle visibility. ]
+[ 4-line signature. Click/Enter to toggle visibility. ]
 _______________________________________________
 notmuch mailing list
 notmuch@notmuchmail.org
@@ -52,12 +52,12 @@ http://notmuchmail.org/mailman/listinfo/notmuch
 
  See the patch just posted here.
 
- [ 1-line signature. Click/Enter to toggle visibility. ]
+ [ 2-line signature. Click/Enter to toggle visibility. ]
  -- 
  http://fossarchy.blogspot.com/
  [ application/pgp-signature ]
  [ text/plain ]
- [ 3-line signature. Click/Enter to toggle visibility. ]
+ [ 4-line signature. Click/Enter to toggle visibility. ]
  _______________________________________________
  notmuch mailing list
  notmuch@notmuchmail.org
@@ -79,7 +79,7 @@ http://notmuchmail.org/mailman/listinfo/notmuch
 
   -- Lars
 
-  [ 4-line signature. Click/Enter to toggle visibility. ]
+  [ 5-line signature. Click/Enter to toggle visibility. ]
   -- 
   Lars Kellogg-Stedman <lars@seas.harvard.edu>
   Senior Technologist, Computing and Information Technology
@@ -87,7 +87,7 @@ http://notmuchmail.org/mailman/listinfo/notmuch
 
   [ application/pgp-signature ]
   [ text/plain ]
-  [ 3-line signature. Click/Enter to toggle visibility. ]
+  [ 4-line signature. Click/Enter to toggle visibility. ]
   _______________________________________________
   notmuch mailing list
   notmuch@notmuchmail.org
@@ -109,7 +109,7 @@ http://notmuchmail.org/mailman/listinfo/notmuch
 
    Just has been pushed
 
-   [ 9-line signature. Click/Enter to toggle visibility. ]
+   [ 10-line signature. Click/Enter to toggle visibility. ]
    -- 
    http://fossarchy.blogspot.com/
    -------------- next part --------------
@@ -154,7 +154,7 @@ http://notmuchmail.org/mailman/listinfo/notmuch
     The version of lib/messages.cc in your repo doesn't build because it's
     missing "#include <stdint.h>" (for the uint32_t on line 466).
 
-    [ 4-line signature. Click/Enter to toggle visibility. ]
+    [ 5-line signature. Click/Enter to toggle visibility. ]
     -- 
     Lars Kellogg-Stedman <lars@seas.harvard.edu>
     Senior Technologist, Computing and Information Technology
@@ -162,7 +162,7 @@ http://notmuchmail.org/mailman/listinfo/notmuch
 
     [ application/pgp-signature ]
     [ text/plain ]
-    [ 3-line signature. Click/Enter to toggle visibility. ]
+    [ 4-line signature. Click/Enter to toggle visibility. ]
     _______________________________________________
     notmuch mailing list
     notmuch@notmuchmail.org
