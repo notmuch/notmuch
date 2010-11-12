@@ -1,3 +1,19 @@
+notmuch (0.5) unstable; urgency=low
+
+  * new: maildir-flag synchronization
+  * new: New "notmuch show --format=raw" (enables local emacs interface,
+    for example, to use remote notmuch via ssh)
+  * lib: Support for multiple files for a message
+    (notmuch_message_get_filenames)
+  * lib: Support for maildir-flag synchronization
+    (notmuch_message_tags_to_maildir_flags and
+    notmuch_message_maildir_flags_to_tags)
+  * emacs: Incompatible change to format of notmuch-fcc-dirs variable (for
+    users using the "fancy" configuration)
+  * emacs: Cleaner display of subject lines in thread views
+
+ -- Carl Worth <cworth@debian.org>  Thu, 11 Nov 2010 20:49:11 -0800
+
 notmuch (0.4) unstable; urgency=low
 
   * new: notmuch search --output=(summary|threads|messages|tags|files)
