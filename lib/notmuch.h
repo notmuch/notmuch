@@ -947,9 +947,11 @@ notmuch_message_maildir_flags_to_tags (notmuch_message_t *message);
  *
  * Specifically, for each filename corresponding to this message:
  *
- * If the filename is not in a maildir directory, do nothing.
- * (A maildir directory is determined as a directory named "new" or
- * "cur".)
+ * If the filename is not in a maildir directory, do nothing.  (A
+ * maildir directory is determined as a directory named "new" or
+ * "cur".) Similarly, if the filename has invalid maildir info,
+ * (repeated or outof-ASCII-order flag characters after ":2,"), then
+ * do nothing.
  *
  * If the filename is in a maildir directory, rename the file so that
  * its filename ends with the sequence ":2," followed by zero or more
@@ -961,8 +963,8 @@ notmuch_message_maildir_flags_to_tags (notmuch_message_t *message);
  *   'R' iff the message has the "replied" tag
  *   'S' iff the message does not have the "unread" tag
  *
- * Warning: any existing flags unmentioned in the list above will be
- * removed by this renaming.
+ * Any existing flags unmentioned in the list above will be preserved
+ * in the renaming.
  *
  * Also, if this filename is in a directory named "new", rename it to
  * be within the neighboring directory named "cur".

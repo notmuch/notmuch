@@ -133,7 +133,7 @@ expected=$(ls $MAIL_DIR/cur)
 mv $MAIL_DIR/cur/adding-replied-tag:2,RS $MAIL_DIR/cur/adding-replied-tag:2,S
 mv $MAIL_DIR/cur/adding-s-flag:2,S $MAIL_DIR/cur/adding-s-flag:2,
 mv $MAIL_DIR/cur/adding-with-s-flag:2,S $MAIL_DIR/cur/adding-with-s-flag:2,RS
-mv $MAIL_DIR/cur/message-to-move-to-cur:2,S $MAIL_DIR/cur/message-to-move-to-cur:2,SD
+mv $MAIL_DIR/cur/message-to-move-to-cur:2,S $MAIL_DIR/cur/message-to-move-to-cur:2,DS
 increment_mtime $MAIL_DIR/cur
 notmuch dump dump.txt
 NOTMUCH_NEW >/dev/null
@@ -164,5 +164,15 @@ notmuch tag -replied subject:"Duplicated message"
 test_expect_equal "$(< actual)"  "duplicated-message-another-copy:2,S
 duplicated-message-copy:2,S
 duplicated-message:2,S"
+
+test_begin_subtest "Synchronizing tag changes preserves unsupported maildir flags"
+add_message [subject]='"Unsupported maildir flags"' [dir]=cur [filename]='unsupported-maildir-flags:2,FSZxyz'
+notmuch tag +unread +draft -flagged subject:"Unsupported maildir flags"
+test_expect_equal "$(cd $MAIL_DIR/cur/; ls unsupported*)" "unsupported-maildir-flags:2,DZxyz"
+
+test_begin_subtest "A file with non-compliant maildir info will not be renamed"
+add_message [subject]='"Non-compliant maildir info"' [dir]=cur [filename]='non-compliant-maildir-info:2,These-are-not-flags-in-ASCII-order-donottouch'
+notmuch tag +unread +draft -flagged subject:"Non-compliant maildir info"
+test_expect_equal "$(cd $MAIL_DIR/cur/; ls non-compliant*)" "non-compliant-maildir-info:2,These-are-not-flags-in-ASCII-order-donottouch"
 
 test_done

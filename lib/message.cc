@@ -453,6 +453,41 @@ _notmuch_message_add_filename (notmuch_message_t *message,
     return NOTMUCH_STATUS_SUCCESS;
 }
 
+/* Change a particular filename for 'message' from 'old_filename' to
+ * 'new_filename'
+ *
+ * This change will not be reflected in the database until the next
+ * call to _notmuch_message_sync.
+ */
+notmuch_status_t
+_notmuch_message_rename (notmuch_message_t *message,
+			 const char *old_filename,
+			 const char *new_filename)
+{
+    void *local = talloc_new (message);
+    char *direntry;
+    notmuch_private_status_t private_status;
+    notmuch_status_t status;
+
+    status = _notmuch_message_add_filename (message, new_filename);
+    if (status)
+	return status;
+
+    status = _notmuch_database_filename_to_direntry (local, message->notmuch,
+						     old_filename, &direntry);
+    if (status)
+	return status;
+
+    private_status = _notmuch_message_remove_term (message,
+						   "file-direntry", direntry);
+    status = COERCE_STATUS (private_status,
+			    "Unexpected error from _notmuch_message_remove_term");
+
+    talloc_free (local);
+
+    return status;
+}
+
 char *
 _notmuch_message_talloc_copy_data (notmuch_message_t *message)
 {
@@ -763,46 +798,6 @@ _notmuch_message_remove_term (notmuch_message_t *message,
     return NOTMUCH_PRIVATE_STATUS_SUCCESS;
 }
 
-/* Change the message filename stored in the database.
- *
- * This change will not be reflected in the database until the next
- * call to _notmuch_message_sync.
- */
-notmuch_status_t
-_notmuch_message_rename (notmuch_message_t *message,
-			 const char *new_filename)
-{
-    void *local = talloc_new (message);
-    char *direntry;
-    Xapian::PostingIterator i, end;
-    Xapian::Document document;
-    notmuch_private_status_t private_status;
-    notmuch_status_t status;
-    const char *old_filename;
-
-    old_filename = notmuch_message_get_filename(message);
-    old_filename = talloc_reference(local, old_filename);
-    if (unlikely (! old_filename))
-	return NOTMUCH_STATUS_OUT_OF_MEMORY;
-
-    status = _notmuch_message_add_filename (message, new_filename);
-    if (status)
-	return status;
-
-    status = _notmuch_database_filename_to_direntry (local, message->notmuch,
-						     old_filename, &direntry);
-    if (status)
-	return status;
-
-    private_status = _notmuch_message_remove_term (message, "file-direntry", direntry);
-    status = COERCE_STATUS (private_status,
-			    "Unexpected error from _notmuch_message_remove_term");
-
-    talloc_free (local);
-
-    return status;
-}
-
 notmuch_status_t
 notmuch_message_add_tag (notmuch_message_t *message, const char *tag)
 {
@@ -915,36 +910,6 @@ notmuch_message_maildir_flags_to_tags (notmuch_message_t *message)
     return status;
 }
 
-static void
-maildir_get_new_flags(notmuch_message_t *message, char *flags)
-{
-    notmuch_tags_t *tags;
-    const char *tag;
-    unsigned i;
-    char *p;
-
-    for (i = 0; i < ARRAY_SIZE(flag2tag); i++)
-	flags[i] = flag2tag[i].inverse ? flag2tag[i].flag : '\0';
-
-    for (tags = notmuch_message_get_tags (message);
-	 notmuch_tags_valid (tags);
-	 notmuch_tags_move_to_next (tags))
-    {
-	tag = notmuch_tags_get (tags);
-	for (i = 0; i < ARRAY_SIZE(flag2tag); i++) {
-	    if (strcmp(tag, flag2tag[i].tag) == 0)
-		flags[i] = flag2tag[i].inverse ? '\0' : flag2tag[i].flag;
-	}
-    }
-
-    p = flags;
-    for (i = 0; i < ARRAY_SIZE(flag2tag); i++) {
-	if (flags[i])
-	    *p++ = flags[i];
-    }
-    *p = '\0';
-}
-
 /* Is the given filename within a maildir directory?
  *
  * Specifically, is the final directory component of 'filename' either
@@ -986,20 +951,180 @@ _filename_is_in_maildir (const char *filename)
     return NULL;
 }
 
-/* XXX: Needs to ensure that existing, unsupported flags in the
- *      filename are left unchanged (which also needs a test in the
- *      test suite).
+/* From the set of tags on 'message' and the flag2tag table, compute a
+ * set of maildir-flag actions to be taken, (flags that should be
+ * either set or cleared).
+ *
+ * The result is returned as two talloced strings: to_set, and to_clear
  */
+static void
+_get_maildir_flag_actions (notmuch_message_t *message,
+			   char **to_set_ret,
+			   char **to_clear_ret)
+{
+    char *to_set, *to_clear;
+    notmuch_tags_t *tags;
+    const char *tag;
+    unsigned i;
+
+    to_set = talloc_strdup (message, "");
+    to_clear = talloc_strdup (message, "");
+
+    /* First, find flags for all set tags. */
+    for (tags = notmuch_message_get_tags (message);
+	 notmuch_tags_valid (tags);
+	 notmuch_tags_move_to_next (tags))
+    {
+	tag = notmuch_tags_get (tags);
+
+	for (i = 0; i < ARRAY_SIZE (flag2tag); i++) {
+	    if (strcmp (tag, flag2tag[i].tag) == 0) {
+		if (flag2tag[i].inverse)
+		    to_clear = talloc_asprintf_append (to_clear,
+						       "%c",
+						       flag2tag[i].flag);
+		else
+		    to_set = talloc_asprintf_append (to_set,
+						     "%c",
+						     flag2tag[i].flag);
+	    }
+	}
+    }
+
+    /* Then, find the flags for all tags not present. */
+    for (i = 0; i < ARRAY_SIZE (flag2tag); i++) {
+	if (flag2tag[i].inverse) {
+	    if (strchr (to_clear, flag2tag[i].flag) == NULL)
+		to_set = talloc_asprintf_append (to_set, "%c", flag2tag[i].flag);
+	} else {
+	    if (strchr (to_set, flag2tag[i].flag) == NULL)
+		to_clear = talloc_asprintf_append (to_clear, "%c", flag2tag[i].flag);
+	}
+    }
+
+    *to_set_ret = to_set;
+    *to_clear_ret = to_clear;
+}
+
+/* Given 'filename' and a set of maildir flags to set and to clear,
+ * compute the new maildir filename.
+ *
+ * If the existing filename is in the directory "new", the new
+ * filename will be in the directory "cur".
+ *
+ * After a sequence of ":2," in the filename, any subsequent
+ * single-character flags will be added or removed according to the
+ * characters in flags_to_set and flags_to_clear. Any existing flags
+ * not mentioned in either string will remain. The final list of flags
+ * will be in ASCII order.
+ *
+ * If the original flags seem invalid, (repeated characters or
+ * non-ASCII ordering of flags), this function will return NULL
+ * (meaning that renaming would not be safe and should not occur).
+ */
+static char*
+_new_maildir_filename (void *ctx,
+		       const char *filename,
+		       const char *flags_to_set,
+		       const char *flags_to_clear)
+{
+    const char *info, *flags;
+    unsigned int flag, last_flag;
+    char *filename_new, *dir;
+    char flag_map[128];
+    int flags_in_map = 0;
+    unsigned int i;
+    char *s;
+
+    memset (flag_map, 0, sizeof (flag_map));
+
+    info = strstr (filename, ":2,");
+
+    if (info == NULL) {
+	info = filename + strlen(filename);
+    } else {
+	flags = info + 3;
+
+	/* Loop through existing flags in filename. */
+	for (flags = info + 3, last_flag = 0;
+	     *flags;
+	     last_flag = flag, flags++)
+	{
+	    flag = *flags;
+
+	    /* Original flags not in ASCII order. Abort. */
+	    if (flag < last_flag)
+		return NULL;
+
+	    /* Non-ASCII flag. Abort. */
+	    if (flag > sizeof(flag_map) - 1)
+		return NULL;
+
+	    /* Repeated flag value. Abort. */
+	    if (flag_map[flag])
+		return NULL;
+
+	    flag_map[flag] = 1;
+	    flags_in_map++;
+	}
+    }
+
+    /* Then set and clear our flags from tags. */
+    for (flags = flags_to_set; *flags; flags++) {
+	flag = *flags;
+	if (flag_map[flag] == 0) {
+	    flag_map[flag] = 1;
+	    flags_in_map++;
+	}
+    }
+
+    for (flags = flags_to_clear; *flags; flags++) {
+	flag = *flags;
+	if (flag_map[flag]) {
+	    flag_map[flag] = 0;
+	    flags_in_map--;
+	}
+    }
+
+    filename_new = (char *) talloc_size (ctx,
+					 info - filename +
+					 strlen (":2,") + flags_in_map + 1);
+    if (unlikely (filename_new == NULL))
+	return NULL;
+
+    strncpy (filename_new, filename, info - filename);
+    filename_new[info - filename] = '\0';
+
+    strcat (filename_new, ":2,");
+
+    s = filename_new + strlen (filename_new);
+    for (i = 0; i < sizeof (flag_map); i++)
+    {
+	if (flag_map[i]) {
+	    *s = i;
+	    s++;
+	}
+    }
+    *s = '\0';
+
+    /* If message is in new/ move it under cur/. */
+    dir = (char *) _filename_is_in_maildir (filename_new);
+    if (dir && STRNCMP_LITERAL (dir, "new/") == 0)
+	memcpy (dir, "cur/", 4);
+
+    return filename_new;
+}
+
 notmuch_status_t
 notmuch_message_tags_to_maildir_flags (notmuch_message_t *message)
 {
     notmuch_filenames_t *filenames;
-    char flags[ARRAY_SIZE(flag2tag)+1];
-    const char *filename, *p;
-    char *filename_new, *dir;
-    int ret;
+    const char *filename;
+    char *filename_new;
+    char *to_set, *to_clear;
+    notmuch_status_t status;
 
-    maildir_get_new_flags (message, flags);
+    _get_maildir_flag_actions (message, &to_set, &to_clear);
 
     for (filenames = notmuch_message_get_filenames (message);
 	 notmuch_filenames_valid (filenames);
@@ -1010,45 +1135,35 @@ notmuch_message_tags_to_maildir_flags (notmuch_message_t *message)
 	if (! _filename_is_in_maildir (filename))
 	    continue;
 
-	p = strstr(filename, ":2,");
-	if ((p && strcmp (p+3, flags) == 0) ||
-	    (!p && flags[0] == '\0'))
-	{
+	filename_new = _new_maildir_filename (message, filename,
+					      to_set, to_clear);
+	if (filename_new == NULL)
 	    continue;
-	}
 
-	if (!p)
-	    p = filename + strlen(filename);
+	if (strcmp (filename, filename_new)) {
+	    int err;
+	    notmuch_status_t new_status;
 
-	filename_new = (char*) talloc_size (message,
-					    (p-filename) + 3 + sizeof (flags));
-	if (unlikely (filename_new == NULL))
-	    return NOTMUCH_STATUS_OUT_OF_MEMORY;
+	    err = rename (filename, filename_new);
+	    if (err)
+		continue;
 
-	memcpy (filename_new, filename, p-filename);
-	filename_new[p-filename] = '\0';
-
-	/* If message is in new/ move it under cur/. */
-	dir = (char *) _filename_is_in_maildir (filename_new);
-	if (dir && STRNCMP_LITERAL (dir, "new/") == 0)
-	    memcpy (dir, "cur/", 4);
-
-	strcpy (filename_new+(p-filename), ":2,");
-	strcpy (filename_new+(p-filename)+3, flags);
-
-	if (strcmp (filename, filename_new) != 0) {
-	    notmuch_status_t status = NOTMUCH_STATUS_SUCCESS;
-
-	    ret = rename (filename, filename_new);
-	    if (ret == 0)
-		status = _notmuch_message_rename (message, filename_new);
+	    new_status = _notmuch_message_rename (message,
+						  filename, filename_new);
+	    /* Hold on to only the first error. */
+	    if (! status && new_status) {
+		status = new_status;
+		continue;
+	    }
 
 	    _notmuch_message_sync (message);
-
-	    if (status)
-		return status;
 	}
+
+	talloc_free (filename_new);
     }
+
+    talloc_free (to_set);
+    talloc_free (to_clear);
 
     return NOTMUCH_STATUS_SUCCESS;
 }
