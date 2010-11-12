@@ -110,11 +110,12 @@ will NOT be removed or replaced."
     (when subdir
       (message-add-header
        (concat "Fcc: "
-	       ;; If the resulting directory is not an absolute path,
-	       ;; prepend the standard notmuch database path.
-	       (if (= (elt subdir 0) ?/)
-		   subdir
-		 (concat (notmuch-database-path) "/" subdir))))
+	       (file-truename
+		;; If the resulting directory is not an absolute path,
+		;; prepend the standard notmuch database path.
+		(if (= (elt subdir 0) ?/)
+		    subdir
+		  (concat (notmuch-database-path) "/" subdir)))))
       
       ;; finally test if fcc points to a valid maildir
       (let ((fcc-header (message-fetch-field "Fcc")))
