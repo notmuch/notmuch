@@ -35,15 +35,18 @@ libnotmuch.so.1 libnotmuch1 #MINVER#
  notmuch_message_freeze@Base 0.3
  notmuch_message_get_date@Base 0.3
  notmuch_message_get_filename@Base 0.3
+ notmuch_message_get_filenames@Base 0.5
  notmuch_message_get_flag@Base 0.3
  notmuch_message_get_header@Base 0.3
  notmuch_message_get_message_id@Base 0.3
  notmuch_message_get_replies@Base 0.3
  notmuch_message_get_tags@Base 0.3
  notmuch_message_get_thread_id@Base 0.3
+ notmuch_message_maildir_flags_to_tags@Base 0.5
  notmuch_message_remove_all_tags@Base 0.3
  notmuch_message_remove_tag@Base 0.3
  notmuch_message_set_flag@Base 0.3
+ notmuch_message_tags_to_maildir_flags@Base 0.5
  notmuch_message_thaw@Base 0.3
  notmuch_messages_collect_tags@Base 0.3
  notmuch_messages_destroy@Base 0.3
