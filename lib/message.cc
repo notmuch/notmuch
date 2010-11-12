@@ -1122,7 +1122,7 @@ notmuch_message_tags_to_maildir_flags (notmuch_message_t *message)
     const char *filename;
     char *filename_new;
     char *to_set, *to_clear;
-    notmuch_status_t status;
+    notmuch_status_t status = NOTMUCH_STATUS_SUCCESS;
 
     _get_maildir_flag_actions (message, &to_set, &to_clear);
 
