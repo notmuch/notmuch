@@ -77,7 +77,7 @@ static const char maildir_config_comment[] =
     "\t\tF	flagged\n"
     "\t\tP	passed\n"
     "\t\tR	replied\n"
-    "\t\tS	unread (added when 'S' tag is not present)\n"
+    "\t\tS	unread (added when 'S' flag is not present)\n"
     "\n"
     "\tThe \"notmuch new\" command will notice flag changes in filenames\n"
     "\tand update tags, while the \"notmuch tag\" and \"notmuch restore\"\n"
