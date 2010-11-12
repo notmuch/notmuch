@@ -50,7 +50,7 @@ struct maildir_flag_tag {
 };
 
 /* ASCII ordered table of Maildir flags and associated tags */
-struct maildir_flag_tag flag2tag[] = {
+static struct maildir_flag_tag flag2tag[] = {
     { 'D', "draft",   false},
     { 'F', "flagged", false},
     { 'P', "passed",  false},
@@ -459,7 +459,7 @@ _notmuch_message_add_filename (notmuch_message_t *message,
  * This change will not be reflected in the database until the next
  * call to _notmuch_message_sync.
  */
-notmuch_status_t
+static notmuch_status_t
 _notmuch_message_rename (notmuch_message_t *message,
 			 const char *old_filename,
 			 const char *new_filename)
