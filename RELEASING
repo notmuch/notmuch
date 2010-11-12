@@ -13,7 +13,7 @@ repository. From here, there are just a few steps to release:
 
 	Read through the entry at the top of the NEWS file and see if
 	you are aware of any major features recently added that are
-	not mentioned there. If so, pleas add them, (and ask the
+	not mentioned there. If so, please add them, (and ask the
 	authors of the commits to update NEWS in the future).
 
 2) Verify that the library version in lib/Makefile.local is correct
