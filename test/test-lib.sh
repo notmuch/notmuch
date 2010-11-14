@@ -396,12 +396,17 @@ add_email_corpus ()
 
 test_begin_subtest ()
 {
+    if [ -n "$inside_subtest" ]; then
+	exec 1>&6 2>&7		# Restore stdout and stderr
+	error "bug in test script: Missing test_expect_equal in ${BASH_SOURCE[1]}:${BASH_LINENO[0]}"
+    fi
     test_subtest_name="$1"
     # Remember stdout and stderr file descriptios and redirect test
     # output to the previously prepared file descriptors 3 and 4 (see
     # bellow)
     if test "$verbose" != "t"; then exec 4>test.output 3>&4; fi
     exec 6>&1 7>&2 >&3 2>&4
+    inside_subtest=t
 }
 
 # Pass test if two arguments match
@@ -413,6 +418,7 @@ test_begin_subtest ()
 test_expect_equal ()
 {
 	exec 1>&6 2>&7		# Restore stdout and stderr
+	inside_subtest=
 	test "$#" = 3 && { prereq=$1; shift; } || prereq=
 	test "$#" = 2 ||
 	error "bug in the test script: not 2 or 3 parameters to test_expect_equal"
