@@ -98,6 +98,7 @@ On Tue, 05 Jan 2010 15:43:56 -0000, Sender <sender@example.com> wrote:
 
 test_begin_subtest "Testing From line heuristics (with single configured address)"
 sed -i -e "s/^other_email.*//" "${NOTMUCH_CONFIG}"
+test_expect_equal '' ''
 
 test_begin_subtest "Magic from guessing (nothing to go on)"
 add_message '[from]="Sender <sender@example.com>"' \
