@@ -1,0 +1,27 @@
+#!/bin/bash
+
+test_description='the verbosity options of the test framework itself.'
+
+. ./test-lib.sh
+
+test_expect_success 'print something in test_expect_success and pass' '
+  echo "hello stdout" &&
+  echo "hello stderr" >&2 &&
+  true
+'
+test_expect_success 'print something in test_expect_success and fail' '
+  echo "hello stdout" &&
+  echo "hello stderr" >&2 &&
+  false
+'
+test_begin_subtest 'print something between test_begin_subtest and test_expect_equal and pass'
+echo "hello stdout"
+echo "hello stderr" >&2
+test_expect_equal "a" "a"
+
+test_begin_subtest 'print something test_begin_subtest and test_expect_equal and fail'
+echo "hello stdout"
+echo "hello stderr" >&2
+test_expect_equal "a" "b"
+
+test_done

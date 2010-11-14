@@ -1,0 +1,20 @@
+test-verbose: Testing the verbosity options of the test framework itself.
+ PASS   print something in test_expect_success and pass
+ FAIL   print something in test_expect_success and fail
+	
+	  echo "hello stdout" &&
+	  echo "hello stderr" >&2 &&
+	  false
+	
+hello stdout
+hello stderr
+ PASS   print something between test_begin_subtest and test_expect_equal and pass
+ FAIL   print something test_begin_subtest and test_expect_equal and fail
+	--- test-verbose.4.expected	2010-11-14 21:41:12.738189710 +0000
+	+++ test-verbose.4.output	2010-11-14 21:41:12.738189710 +0000
+	@@ -1 +1 @@
+	-b
+	+a
+hello stdout
+hello stderr
+

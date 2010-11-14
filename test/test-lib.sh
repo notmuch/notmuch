@@ -165,12 +165,6 @@ fi
 echo $(basename "$0"): "Testing ${test_description}"
 
 exec 5>&1
-if test "$verbose" = "t"
-then
-	exec 4>&2 3>&1
-else
-	exec 4>/dev/null 3>/dev/null
-fi
 
 test_failure=0
 test_count=0
@@ -403,6 +397,11 @@ add_email_corpus ()
 test_begin_subtest ()
 {
     test_subtest_name="$1"
+    # Remember stdout and stderr file descriptios and redirect test
+    # output to the previously prepared file descriptors 3 and 4 (see
+    # bellow)
+    if test "$verbose" != "t"; then exec 4>test.output 3>&4; fi
+    exec 6>&1 7>&2 >&3 2>&4
 }
 
 # Pass test if two arguments match
@@ -413,6 +412,7 @@ test_begin_subtest ()
 # name.
 test_expect_equal ()
 {
+	exec 1>&6 2>&7		# Restore stdout and stderr
 	test "$#" = 3 && { prereq=$1; shift; } || prereq=
 	test "$#" = 2 ||
 	error "bug in the test script: not 2 or 3 parameters to test_expect_equal"
@@ -508,6 +508,7 @@ test_failure_ () {
 	echo " $1"
 	shift
 	echo "$@" | sed -e 's/^/	/'
+	if test "$verbose" != "t"; then cat test.output; fi
 	test "$immediate" = "" || { GIT_EXIT_OK=t; exit 1; }
 }
 
@@ -529,6 +530,7 @@ test_debug () {
 
 test_run_ () {
 	test_cleanup=:
+	if test "$verbose" != "t"; then exec 4>test.output 3>&4; fi
 	eval >&3 2>&4 "$1"
 	eval_ret=$?
 	eval >&3 2>&4 "$test_cleanup"
@@ -917,6 +919,13 @@ EOF
 # Use -P to resolve symlinks in our working directory so that the cwd
 # in subprocesses like git equals our $PWD (for pathname comparisons).
 cd -P "$test" || error "Cannot setup test environment"
+
+if test "$verbose" = "t"
+then
+	exec 4>&2 3>&1
+else
+	exec 4>test.output 3>&4
+fi
 
 this_test=${0##*/}
 for skp in $NOTMUCH_SKIP_TESTS

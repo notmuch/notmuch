@@ -52,8 +52,27 @@ test_expect_code 2 'failure to clean up causes the test to fail' '
 # Ensure that all tests are being run
 test_begin_subtest 'Ensure that all available tests will be run by notmuch-test'
 tests_in_suite=$(grep TESTS= ../notmuch-test | sed -e "s/TESTS=\"\(.*\)\"/\1/" | tr " " "\n" | sort)
-available=$(ls -1 ../ | grep -v -E "^(aggregate-results.sh|Makefile|Makefile.local|notmuch-test|README|test-lib.sh|test-results|tmp.*|valgrind|corpus*|emacs.expected-output|smtp-dummy|smtp-dummy.c)" | sort)
+available=$(ls -1 ../ | grep -v -E "^(aggregate-results.sh|Makefile|Makefile.local|notmuch-test|README|test-lib.sh|test-results|tmp.*|valgrind|corpus*|emacs.expected-output|smtp-dummy|smtp-dummy.c|test-verbose|test.expected-output)" | sort)
 test_expect_equal "$tests_in_suite" "$available"
+
+EXPECTED=../test.expected-output
+suppress_diff_date() {
+    sed -e 's/\(.*\-\-\- test-verbose\.4\.\expected\).*/\1/' \
+	-e 's/\(.*\+\+\+ test-verbose\.4\.\output\).*/\1/'
+}
+
+test_begin_subtest "Ensure that test output is suppressed unless the test fails"
+output=$(cd ..; ./test-verbose 2>&1 | suppress_diff_date)
+expected=$(cat $EXPECTED/test-verbose-no | suppress_diff_date)
+test_expect_equal "$output" "$expected"
+
+test_begin_subtest "Ensure that -v does not suppress test output"
+output=$(cd ..; ./test-verbose -v 2>&1 | suppress_diff_date)
+expected=$(cat $EXPECTED/test-verbose-yes | suppress_diff_date)
+# Do not include the results of test-verbose in totals
+rm $TEST_DIRECTORY/test-results/test-verbose-*
+test_expect_equal "$output" "$expected"
+
 
 ################################################################
 # Test mail store prepared in test-lib.sh
