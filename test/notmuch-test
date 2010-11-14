@@ -14,12 +14,20 @@ if [ ${BASH_VERSINFO[0]} -lt 4 ]; then
     exit 1
 fi
 
+set -e
+
+die () {
+    echo >&2 "Unexpected failure"
+}
+
+trap 'die' 0
+
 cd $(dirname "$0")
 
 TESTS="basic new search json thread-naming raw reply dump-restore uuencode thread-order author-order from-guessing long-id encoding emacs maildir-sync"
 
 # Clean up any results from a previous run
-rm -r test-results >/dev/null 2>/dev/null
+rm -rf test-results >/dev/null 2>/dev/null
 
 # Run the tests
 for test in $TESTS; do
@@ -31,3 +39,5 @@ done
 
 # Clean up
 rm -r test-results corpus.mail
+
+trap '' 0
