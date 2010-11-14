@@ -144,7 +144,7 @@ else
 fi
 
 error () {
-	say_color error "error: $*"
+	say_color error "error: $*\n"
 	GIT_EXIT_OK=t
 	exit 1
 }
