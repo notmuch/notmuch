@@ -935,11 +935,13 @@ any effects from previous calls to
 (defun notmuch-show-view-raw-message ()
   "View the file holding the current message."
   (interactive)
-  (let ((id (notmuch-show-get-message-id)))
-    (let ((buf (get-buffer-create (concat "*notmuch-raw-" id "*"))))
-      (switch-to-buffer buf)
-      (save-excursion
-	(call-process notmuch-command nil t nil "show" "--format=raw" id)))))
+  (let* ((id (notmuch-show-get-message-id))
+	 (buf (get-buffer-create (concat "*notmuch-raw-" id "*"))))
+    (call-process notmuch-command nil buf nil "show" "--format=raw" id)
+    (switch-to-buffer buf)
+    (goto-char (point-min))
+    (set-buffer-modified-p nil)
+    (view-buffer buf 'kill-buffer-if-not-modified)))
 
 (defun notmuch-show-pipe-message (entire-thread command)
   "Pipe the contents of the current message (or thread) to the given command.
