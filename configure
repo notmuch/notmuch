@@ -232,6 +232,20 @@ if [ "$have_gmime" = "0" ]; then
     errors=$((errors + 1))
 fi
 
+# GMime already depends on Glib >= 2.12, but we use at least one Glib
+# function that only exists as of 2.14, (g_hash_table_get_keys)
+printf "Checking for Glib development files (>= 2.14)... "
+have_glib=0
+if pkg-config --exists 'glib-2.0 >= 2.14'; then
+    printf "Yes.\n"
+    have_glib=1
+    glib_cflags=$(pkg-config --cflags glib-2.0)
+    glib_ldflags=$(pkg-config --libs glib-2.0)
+else
+    printf "No.\n"
+    errors=$((errors + 1))
+fi
+
 printf "Checking for talloc development files... "
 if pkg-config --exists talloc; then
     printf "Yes.\n"
@@ -318,6 +332,10 @@ EOF
     if [ $have_gmime -eq 0 ]; then
 	echo "	GMime 2.4 library (including development files such as headers)"
 	echo "	http://spruce.sourceforge.net/gmime/"
+    fi
+    if [ $have_glib -eq 0 ]; then
+	echo "	Glib library >= 2.14 (including development files such as headers)"
+	echo "	http://ftp.gnome.org/pub/gnome/sources/glib/"
     fi
     if [ $have_talloc -eq 0 ]; then
 	echo "	The talloc library (including development files such as headers)"
