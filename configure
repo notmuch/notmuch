@@ -220,7 +220,7 @@ fi
 printf "Checking for GMime development files... "
 have_gmime=0
 for gmimepc in gmime-2.6 gmime-2.4; do
-    if pkg-config --modversion $gmimepc > /dev/null 2>&1; then
+    if pkg-config --exists $gmimepc; then
 	printf "Yes ($gmimepc).\n"
 	have_gmime=1
 	gmime_cflags=$(pkg-config --cflags $gmimepc)
@@ -233,7 +233,7 @@ if [ "$have_gmime" = "0" ]; then
 fi
 
 printf "Checking for talloc development files... "
-if pkg-config --modversion talloc > /dev/null 2>&1; then
+if pkg-config --exists talloc; then
     printf "Yes.\n"
     have_talloc=1
     talloc_cflags=$(pkg-config --cflags talloc)
@@ -246,7 +246,7 @@ else
 fi
 
 printf "Checking for valgrind development files... "
-if pkg-config --modversion valgrind > /dev/null 2>&1; then
+if pkg-config --exists valgrind; then
     printf "Yes.\n"
     have_valgrind=1
     valgrind_cflags=$(pkg-config --cflags valgrind)
@@ -256,7 +256,7 @@ else
 fi
 
 if [ -z "${EMACSLISPDIR}" ]; then
-    if pkg-config --modversion emacs > /dev/null 2>&1; then
+    if pkg-config --exists emacs; then
 	EMACSLISPDIR=$(pkg-config emacs --variable sitepkglispdir)
     else
 	EMACSLISPDIR='$(prefix)/share/emacs/site-lisp'
