@@ -68,6 +68,21 @@ and *then* --max-threads), and also complete value for --sort=
 
 notmuch command-line tool
 -------------------------
+Add support to "notmuch search" and "notmuch show" to allow for
+listing of duplicate messages, (distinct filenames with the same
+Message-ID). I'm not sure what the option should be named. Perhaps
+--with-duplicates ?
+
+Add a -0 option to "notmuch search" so that one can safely deal with
+any filename with:
+
+	notmuch search --output=files -0 <terms> | xargs -0 <command>
+
+"notmuch setup" should use realpath() before replacing the
+configuration file. The ensures that the final target file of any
+intermediate symbolic links is what is actually replaced, (rather than
+any symbolic link).
+
 Replace "notmuch reply" with "notmuch compose --reply <search-terms>".
 This would enable a plain "notmuch compose" to be used to construct an
 initial message, (which would then have the properly configured name
@@ -126,6 +141,17 @@ the confusing gmime-filter-headers.c code (which decodes).
 
 notmuch library
 ---------------
+Add support for custom flag<->tag mappings. In the notmuch
+configuration file this could be
+
+	[maildir]
+	synchronize_flags = R:replied; D*:deleted; S:~unread;
+
+In the library interface this could be implemented with an array of
+structures to define the mapping (flag character, tag name,
+inverse-sense bit (~ above), and tag-when-any-file-flagged
+vs. tag-when-all-files-flagged (* above)).
+
 Add an interface to accept a "key" and a byte stream, rather than a
 filename.
 
