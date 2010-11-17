@@ -440,6 +440,8 @@ test_expect_equal ()
 
 test_expect_equal_failure ()
 {
+	exec 1>&6 2>&7		# Restore stdout and stderr
+	inside_subtest=
 	test "$#" = 3 && { prereq=$1; shift; } || prereq=
 	test "$#" = 2 ||
 	error "bug in the test script: not 2 or 3 parameters to test_expect_equal"
