@@ -190,7 +190,7 @@ is what to put on the button."
 (defun notmuch-wash-tidy-citations (depth)
   "Improve the display of cited regions of a message.
 
-Perform four transformations on the message body:
+Perform several transformations on the message body:
 
 - Remove lines of repeated citation leaders with no other
   content,
@@ -214,17 +214,7 @@ Perform four transformations on the message body:
   ;; text.
   (goto-char (point-min))
   (while (re-search-forward "\\(^>[> ]*\n\\)\\(^$\\|^[^>].*\\)" nil t)
-    (replace-match "\\2"))
-
-  ;; Insert a blank line before a citation if there isn't one.
-  (goto-char (point-min))
-  (while (re-search-forward "\\(^[^>]+\\)\n>" nil t)
-    (replace-match "\\1\n\n>"))
-
-  ;; Insert a blank line after a citation if there isn't one.
-  (goto-char (point-min))
-  (while (re-search-forward "\\(^>.+\\)\n\\([^>]\\)" nil t)
-    (replace-match "\\1\n\n\\2")))
+    (replace-match "\\2")))
 
 ;;
 
