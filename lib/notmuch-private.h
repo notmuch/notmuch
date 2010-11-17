@@ -156,6 +156,8 @@ typedef enum _notmuch_private_status {
      :									\
      (notmuch_status_t) private_status)
 
+typedef struct _notmuch_doc_id_set notmuch_doc_id_set_t;
+
 /* database.cc */
 
 /* Lookup a prefix value by name.
@@ -222,8 +224,8 @@ _notmuch_directory_get_document_id (notmuch_directory_t *directory);
 notmuch_thread_t *
 _notmuch_thread_create (void *ctx,
 			notmuch_database_t *notmuch,
-			const char *thread_id,
-			const char *query_string,
+			unsigned int seed_doc_id,
+			notmuch_doc_id_set_t *match_set,
 			notmuch_sort_t sort);
 
 /* message.cc */
@@ -238,6 +240,9 @@ notmuch_message_t *
 _notmuch_message_create_for_message_id (notmuch_database_t *notmuch,
 					const char *message_id,
 					notmuch_private_status_t *status);
+
+unsigned int
+_notmuch_message_get_doc_id (notmuch_message_t *message);
 
 const char *
 _notmuch_message_get_in_reply_to (notmuch_message_t *message);
@@ -425,6 +430,14 @@ _notmuch_mset_messages_get (notmuch_messages_t *messages);
 
 void
 _notmuch_mset_messages_move_to_next (notmuch_messages_t *messages);
+
+notmuch_bool_t
+_notmuch_doc_id_set_contains (notmuch_doc_id_set_t *doc_ids,
+                              unsigned int doc_id);
+
+void
+_notmuch_doc_id_set_remove (notmuch_doc_id_set_t *doc_ids,
+                            unsigned int doc_id);
 
 /* message.cc */
 

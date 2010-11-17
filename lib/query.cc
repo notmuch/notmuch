@@ -36,13 +36,21 @@ typedef struct _notmuch_mset_messages {
     Xapian::MSetIterator iterator_end;
 } notmuch_mset_messages_t;
 
+struct _notmuch_doc_id_set {
+    unsigned int *bitmap;
+    unsigned int bound;
+};
+
 struct _notmuch_threads {
     notmuch_query_t *query;
-    GHashTable *threads;
-    notmuch_messages_t *messages;
 
-    /* This thread ID is our iterator state. */
-    const char *thread_id;
+    /* The ordered list of doc ids matched by the query. */
+    GArray *doc_ids;
+    /* Our iterator's current position in doc_ids. */
+    unsigned int doc_id_pos;
+    /* The set of matched docid's that have not been assigned to a
+     * thread. Initially, this contains every docid in doc_ids. */
+    notmuch_doc_id_set_t match_set;
 };
 
 notmuch_query_t *
@@ -195,6 +203,19 @@ _notmuch_mset_messages_valid (notmuch_messages_t *messages)
     return (mset_messages->iterator != mset_messages->iterator_end);
 }
 
+static Xapian::docid
+_notmuch_mset_messages_get_doc_id (notmuch_messages_t *messages)
+{
+    notmuch_mset_messages_t *mset_messages;
+
+    mset_messages = (notmuch_mset_messages_t *) messages;
+
+    if (! _notmuch_mset_messages_valid (&mset_messages->base))
+	return 0;
+
+    return *mset_messages->iterator;
+}
+
 notmuch_message_t *
 _notmuch_mset_messages_get (notmuch_messages_t *messages)
 {
@@ -233,6 +254,49 @@ _notmuch_mset_messages_move_to_next (notmuch_messages_t *messages)
     mset_messages->iterator++;
 }
 
+static notmuch_bool_t
+_notmuch_doc_id_set_init (void *ctx,
+			  notmuch_doc_id_set_t *doc_ids,
+			  GArray *arr, unsigned int bound)
+{
+    size_t count = (bound + sizeof (doc_ids->bitmap[0]) - 1) /
+	sizeof (doc_ids->bitmap[0]);
+    unsigned int *bitmap = talloc_zero_array (ctx, unsigned int, count);
+
+    if (bitmap == NULL)
+	return FALSE;
+
+    doc_ids->bitmap = bitmap;
+    doc_ids->bound = bound;
+
+    for (unsigned int i = 0; i < arr->len; i++) {
+	unsigned int doc_id = g_array_index(arr, unsigned int, i);
+	bitmap[doc_id / sizeof (bitmap[0])] |=
+	    1 << (doc_id % sizeof (bitmap[0]));
+    }
+
+    return TRUE;
+}
+
+notmuch_bool_t
+_notmuch_doc_id_set_contains (notmuch_doc_id_set_t *doc_ids,
+			      unsigned int doc_id)
+{
+    if (doc_id >= doc_ids->bound)
+	return FALSE;
+    return (doc_ids->bitmap[doc_id / sizeof (doc_ids->bitmap[0])] &
+	    (1 << (doc_id % sizeof (doc_ids->bitmap[0])))) != 0;
+}
+
+void
+_notmuch_doc_id_set_remove (notmuch_doc_id_set_t *doc_ids,
+                            unsigned int doc_id)
+{
+    if (doc_id < doc_ids->bound)
+	doc_ids->bitmap[doc_id / sizeof (doc_ids->bitmap[0])] &=
+	    ~(1 << (doc_id % sizeof (doc_ids->bitmap[0])));
+}
+
 /* Glib objects force use to use a talloc destructor as well, (but not
  * nearly as ugly as the for messages due to C++ objects). At
  * this point, I'd really like to have some talloc-friendly
@@ -240,7 +304,8 @@ _notmuch_mset_messages_move_to_next (notmuch_messages_t *messages)
 static int
 _notmuch_threads_destructor (notmuch_threads_t *threads)
 {
-    g_hash_table_unref (threads->threads);
+    if (threads->doc_ids)
+	g_array_unref (threads->doc_ids);
 
     return 0;
 }
@@ -249,24 +314,39 @@ notmuch_threads_t *
 notmuch_query_search_threads (notmuch_query_t *query)
 {
     notmuch_threads_t *threads;
+    notmuch_messages_t *messages;
+    Xapian::docid max_doc_id = 0;
 
     threads = talloc (query, notmuch_threads_t);
     if (threads == NULL)
 	return NULL;
+    threads->doc_ids = NULL;
+    talloc_set_destructor (threads, _notmuch_threads_destructor);
 
     threads->query = query;
-    threads->threads = g_hash_table_new_full (g_str_hash, g_str_equal,
-					      free, NULL);
 
-    threads->messages = notmuch_query_search_messages (query);
-    if (threads->messages == NULL) {
+    messages = notmuch_query_search_messages (query);
+    if (messages == NULL) {
 	    talloc_free (threads);
 	    return NULL;
     }
 
-    threads->thread_id = NULL;
+    threads->doc_ids = g_array_new (FALSE, FALSE, sizeof (unsigned int));
+    while (notmuch_messages_valid (messages)) {
+	unsigned int doc_id = _notmuch_mset_messages_get_doc_id (messages);
+	g_array_append_val (threads->doc_ids, doc_id);
+	max_doc_id = MAX (max_doc_id, doc_id);
+	notmuch_messages_move_to_next (messages);
+    }
+    threads->doc_id_pos = 0;
 
-    talloc_set_destructor (threads, _notmuch_threads_destructor);
+    talloc_free (messages);
+
+    if (! _notmuch_doc_id_set_init (threads, &threads->match_set,
+				    threads->doc_ids, max_doc_id + 1)) {
+	talloc_free (threads);
+	return NULL;
+    }
 
     return threads;
 }
@@ -280,51 +360,41 @@ notmuch_query_destroy (notmuch_query_t *query)
 notmuch_bool_t
 notmuch_threads_valid (notmuch_threads_t *threads)
 {
-    notmuch_message_t *message;
+    unsigned int doc_id;
 
-    if (threads->thread_id)
-	return TRUE;
+    while (threads->doc_id_pos < threads->doc_ids->len) {
+	doc_id = g_array_index (threads->doc_ids, unsigned int,
+				threads->doc_id_pos);
+	if (_notmuch_doc_id_set_contains (&threads->match_set, doc_id))
+	    break;
 
-    while (notmuch_messages_valid (threads->messages))
-    {
-	message = notmuch_messages_get (threads->messages);
-
-	threads->thread_id = notmuch_message_get_thread_id (message);
-
-	if (! g_hash_table_lookup_extended (threads->threads,
-					    threads->thread_id,
-					    NULL, NULL))
-	{
-	    g_hash_table_insert (threads->threads,
-				 xstrdup (threads->thread_id), NULL);
-	    notmuch_messages_move_to_next (threads->messages);
-	    return TRUE;
-	}
-
-	notmuch_messages_move_to_next (threads->messages);
+	threads->doc_id_pos++;
     }
 
-    threads->thread_id = NULL;
-    return FALSE;
+    return threads->doc_id_pos < threads->doc_ids->len;
 }
 
 notmuch_thread_t *
 notmuch_threads_get (notmuch_threads_t *threads)
 {
+    unsigned int doc_id;
+
     if (! notmuch_threads_valid (threads))
 	return NULL;
 
+    doc_id = g_array_index (threads->doc_ids, unsigned int,
+			    threads->doc_id_pos);
     return _notmuch_thread_create (threads->query,
 				   threads->query->notmuch,
-				   threads->thread_id,
-				   threads->query->query_string,
+				   doc_id,
+				   &threads->match_set,
 				   threads->query->sort);
 }
 
 void
 notmuch_threads_move_to_next (notmuch_threads_t *threads)
 {
-    threads->thread_id = NULL;
+    threads->doc_id_pos++;
 }
 
 void

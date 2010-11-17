@@ -254,6 +254,12 @@ _notmuch_message_create_for_message_id (notmuch_database_t *notmuch,
     return message;
 }
 
+unsigned int
+_notmuch_message_get_doc_id (notmuch_message_t *message)
+{
+    return message->doc_id;
+}
+
 const char *
 notmuch_message_get_message_id (notmuch_message_t *message)
 {

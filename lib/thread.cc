@@ -371,16 +371,17 @@ _resolve_thread_relationships (unused (notmuch_thread_t *thread))
      */
 }
 
-/* Create a new notmuch_thread_t object for the given thread ID,
- * treating any messages matching 'query_string' as "matched".
+/* Create a new notmuch_thread_t object by finding the thread
+ * containing the message with the given doc ID, treating any messages
+ * contained in match_set as "matched".  Remove all messages in the
+ * thread from match_set.
  *
- * Creating the thread will trigger two database searches. The first
- * is for all messages belonging to the thread, (to get the first
- * subject line, the total count of messages, and all authors). The
- * second search is for all messages that are in the thread and that
- * also match the given query_string. This is to allow for a separate
- * count of matched messages, and to allow a viewer to display these
- * messages differently.
+ * Creating the thread will perform a database search to get all
+ * messages belonging to the thread and will get the first subject
+ * line, the total count of messages, and all authors in the thread.
+ * Each message in the thread is checked against match_set to allow
+ * for a separate count of matched messages, and to allow a viewer to
+ * display these messages differently.
  *
  * Here, 'ctx' is talloc context for the resulting thread object.
  *
@@ -389,52 +390,27 @@ _resolve_thread_relationships (unused (notmuch_thread_t *thread))
 notmuch_thread_t *
 _notmuch_thread_create (void *ctx,
 			notmuch_database_t *notmuch,
-			const char *thread_id,
-			const char *query_string,
+			unsigned int seed_doc_id,
+			notmuch_doc_id_set_t *match_set,
 			notmuch_sort_t sort)
 {
     notmuch_thread_t *thread;
+    notmuch_message_t *seed_message;
+    const char *thread_id;
     const char *thread_id_query_string;
     notmuch_query_t *thread_id_query;
 
     notmuch_messages_t *messages;
     notmuch_message_t *message;
-    notmuch_bool_t matched_is_subset_of_thread;
 
+    seed_message = _notmuch_message_create (ctx, notmuch, seed_doc_id, NULL);
+    if (! seed_message)
+	INTERNAL_ERROR ("Thread seed message %u does not exist", seed_doc_id);
+
+    thread_id = notmuch_message_get_thread_id (seed_message);
     thread_id_query_string = talloc_asprintf (ctx, "thread:%s", thread_id);
-    if (unlikely (query_string == NULL))
+    if (unlikely (thread_id_query_string == NULL))
 	return NULL;
-
-    /* Under normal circumstances we need to do two database
-     * queries. One is for the thread itself (thread_id_query_string)
-     * and the second is to determine which messages in that thread
-     * match the original query (matched_query_string).
-     *
-     * But under two circumstances, we use only the
-     * thread_id_query_string:
-     *
-     *	1. If the original query_string *is* just the thread
-     *	   specification.
-     *
-     *  2. If the original query_string matches all messages ("" or
-     *     "*").
-     *
-     * In either of these cases, we can be more efficient by running
-     * just the thread_id query (since we know all messages in the
-     * thread will match the query_string).
-     *
-     * Beyond the performance advantage, in the second case, it's
-     * important to not try to create a concatenated query because our
-     * parser handles "" and "*" as special cases and will not do the
-     * right thing with a query string of "* and thread:<foo>".
-     **/
-    matched_is_subset_of_thread = 1;
-    if (strcmp (query_string, thread_id_query_string) == 0 ||
-	strcmp (query_string, "") == 0 ||
-	strcmp (query_string, "*") == 0)
-    {
-	matched_is_subset_of_thread = 0;
-    }
 
     thread_id_query = notmuch_query_create (notmuch, thread_id_query_string);
     if (unlikely (thread_id_query == NULL))
@@ -482,47 +458,24 @@ _notmuch_thread_create (void *ctx,
 	 notmuch_messages_valid (messages);
 	 notmuch_messages_move_to_next (messages))
     {
+	unsigned int doc_id;
+
 	message = notmuch_messages_get (messages);
+	doc_id = _notmuch_message_get_doc_id (message);
+	if (doc_id == seed_doc_id)
+	    message = seed_message;
 
 	_thread_add_message (thread, message);
 
-	if (! matched_is_subset_of_thread)
+	if ( _notmuch_doc_id_set_contains (match_set, doc_id)) {
+	    _notmuch_doc_id_set_remove (match_set, doc_id);
 	    _thread_add_matched_message (thread, message, sort);
+	}
 
 	_notmuch_message_close (message);
     }
 
     notmuch_query_destroy (thread_id_query);
-
-    if (matched_is_subset_of_thread)
-    {
-	const char *matched_query_string;
-	notmuch_query_t *matched_query;
-
-	matched_query_string = talloc_asprintf (ctx, "%s AND (%s)",
-						thread_id_query_string,
-						query_string);
-	if (unlikely (matched_query_string == NULL))
-	    return NULL;
-
-	matched_query = notmuch_query_create (notmuch, matched_query_string);
-	if (unlikely (matched_query == NULL))
-	    return NULL;
-
-	/* As above, we use oldest-first order unconditionally here. */
-	notmuch_query_set_sort (matched_query, NOTMUCH_SORT_OLDEST_FIRST);
-
-	for (messages = notmuch_query_search_messages (matched_query);
-	     notmuch_messages_valid (messages);
-	     notmuch_messages_move_to_next (messages))
-	{
-	    message = notmuch_messages_get (messages);
-	    _thread_add_matched_message (thread, message, sort);
-	    _notmuch_message_close (message);
-	}
-
-	notmuch_query_destroy (matched_query);
-    }
 
     _resolve_thread_authors_string (thread);
 
