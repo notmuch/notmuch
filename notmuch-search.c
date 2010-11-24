@@ -319,7 +319,9 @@ do_search_tags (const void *ctx,
     {
 	tag = notmuch_tags_get (tags);
 
-	if (! first_tag)
+	if (first_tag)
+	    fputs (format->results_start, stdout);
+	else
 	    fputs (format->item_sep, stdout);
 
 	format->item_id (ctx, "", tag);
@@ -331,6 +333,9 @@ do_search_tags (const void *ctx,
 
     if (messages)
 	notmuch_messages_destroy (messages);
+
+    if (! first_tag)
+	fputs (format->results_end, stdout);
 
     return 0;
 }
