@@ -34,6 +34,8 @@ current message/thread and make searches not return deleted messages
 by default, (unless the user asks explicitly for deleted messags in
 the search query).
 
+Add keybindings for next/previous thread.
+
 Add support to "mute" a thread (add a "muted" tag and then don't
 display threads in searches by default where any message of the thread
 has the "muted" tag).
