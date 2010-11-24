@@ -304,26 +304,6 @@ _index_address_list (notmuch_message_t *message,
     }
 }
 
-static const char *
-skip_re_in_subject (const char *subject)
-{
-    const char *s = subject;
-
-    if (subject == NULL)
-	return NULL;
-
-    while (*s) {
-	while (*s && isspace (*s))
-	    s++;
-	if (strncasecmp (s, "re:", 3) == 0)
-	    s += 3;
-	else
-	    break;
-    }
-
-    return s;
-}
-
 /* Callback to generate terms for each mime part of a message. */
 static void
 _index_mime_part (notmuch_message_t *message,
@@ -459,7 +439,6 @@ _notmuch_message_index_file (notmuch_message_t *message,
     _index_address_list (message, "to", addresses);
 
     subject = g_mime_message_get_subject (mime_message);
-    subject = skip_re_in_subject (subject);
     _notmuch_message_gen_terms (message, "subject", subject);
 
     _index_mime_part (message, g_mime_message_get_mime_part (mime_message));
