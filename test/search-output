@@ -29,6 +29,31 @@ thread:THREADID
 thread:THREADID
 thread:THREADID"
 
+test_begin_subtest "notmuch search --format=json --output=threads"
+output=$(notmuch search --format=json --output=threads '*' | sed -e s/\".*\"/\"THREADID\"/)
+test_expect_equal "$output" '["THREADID",
+"THREADID",
+"THREADID",
+"THREADID",
+"THREADID",
+"THREADID",
+"THREADID",
+"THREADID",
+"THREADID",
+"THREADID",
+"THREADID",
+"THREADID",
+"THREADID",
+"THREADID",
+"THREADID",
+"THREADID",
+"THREADID",
+"THREADID",
+"THREADID",
+"THREADID",
+"THREADID",
+"THREADID"]'
+
 test_begin_subtest "notmuch search --output=messages"
 output=$(notmuch search --output=messages '*')
 test_expect_equal "$output" "id:1258544095-16616-1-git-send-email-chris@chris-wilson.co.uk
@@ -81,6 +106,59 @@ id:20091117190054.GU3165@dottiness.seas.harvard.edu
 id:87lji5cbwo.fsf@yoom.home.cworth.org
 id:1258471718-6781-2-git-send-email-dottedmag@dottedmag.net
 id:1258471718-6781-1-git-send-email-dottedmag@dottedmag.net"
+
+test_begin_subtest "notmuch search --format=json --output=messages"
+output=$(notmuch search --format=json --output=messages '*')
+test_expect_equal "$output" '["1258544095-16616-1-git-send-email-chris@chris-wilson.co.uk",
+"877htoqdbo.fsf@yoom.home.cworth.org",
+"878we4qdqf.fsf@yoom.home.cworth.org",
+"87aaykqe24.fsf@yoom.home.cworth.org",
+"87bpj0qeng.fsf@yoom.home.cworth.org",
+"87fx8cqf8v.fsf@yoom.home.cworth.org",
+"87hbssqfix.fsf@yoom.home.cworth.org",
+"87iqd8qgiz.fsf@yoom.home.cworth.org",
+"87k4xoqgnl.fsf@yoom.home.cworth.org",
+"87ocn0qh6d.fsf@yoom.home.cworth.org",
+"87pr7gqidx.fsf@yoom.home.cworth.org",
+"867hto2p0t.fsf@fortitudo.i-did-not-set--mail-host-address--so-tickle-me",
+"1258532999-9316-1-git-send-email-keithp@keithp.com",
+"86aayk2rbj.fsf@fortitudo.i-did-not-set--mail-host-address--so-tickle-me",
+"86d43g2w3y.fsf@fortitudo.i-did-not-set--mail-host-address--so-tickle-me",
+"ddd65cda0911172214t60d22b63hcfeb5a19ab54a39b@mail.gmail.com",
+"86einw2xof.fsf@fortitudo.i-did-not-set--mail-host-address--so-tickle-me",
+"736613.51770.qm@web113505.mail.gq1.yahoo.com",
+"1258520223-15328-1-git-send-email-jan@ryngle.com",
+"ddd65cda0911171950o4eea4389v86de9525e46052d3@mail.gmail.com",
+"1258510940-7018-1-git-send-email-stewart@flamingspork.com",
+"yunzl6kd1w0.fsf@aiko.keithp.com",
+"yun1vjwegii.fsf@aiko.keithp.com",
+"yun3a4cegoa.fsf@aiko.keithp.com",
+"1258509400-32511-1-git-send-email-stewart@flamingspork.com",
+"1258506353-20352-1-git-send-email-stewart@flamingspork.com",
+"20091118010116.GC25380@dottiness.seas.harvard.edu",
+"20091118005829.GB25380@dottiness.seas.harvard.edu",
+"20091118005040.GA25380@dottiness.seas.harvard.edu",
+"cf0c4d610911171623q3e27a0adx802e47039b57604b@mail.gmail.com",
+"1258500222-32066-1-git-send-email-ingmar@exherbo.org",
+"20091117232137.GA7669@griffis1.net",
+"20091118002059.067214ed@hikari",
+"1258498485-sup-142@elly",
+"f35dbb950911171438k5df6eb56k77b6c0944e2e79ae@mail.gmail.com",
+"f35dbb950911171435ieecd458o853c873e35f4be95@mail.gmail.com",
+"1258496327-12086-1-git-send-email-jan@ryngle.com",
+"1258493565-13508-1-git-send-email-keithp@keithp.com",
+"yunaayketfm.fsf@aiko.keithp.com",
+"yunbpj0etua.fsf@aiko.keithp.com",
+"1258491078-29658-1-git-send-email-dottedmag@dottedmag.net",
+"87fx8can9z.fsf@vertex.dottedmag",
+"20091117203301.GV3165@dottiness.seas.harvard.edu",
+"87lji4lx9v.fsf@yoom.home.cworth.org",
+"cf0c4d610911171136h1713aa59w9cf9aa31f052ad0a@mail.gmail.com",
+"87iqd9rn3l.fsf@vertex.dottedmag",
+"20091117190054.GU3165@dottiness.seas.harvard.edu",
+"87lji5cbwo.fsf@yoom.home.cworth.org",
+"1258471718-6781-2-git-send-email-dottedmag@dottedmag.net",
+"1258471718-6781-1-git-send-email-dottedmag@dottedmag.net"]'
 
 test_begin_subtest "notmuch search --output=files"
 output=$(notmuch search --output=files '*' | sed -e "s,$MAIL_DIR,MAIL_DIR,")
@@ -135,10 +213,69 @@ MAIL_DIR/cur/07:2,
 MAIL_DIR/cur/02:2,
 MAIL_DIR/cur/01:2,"
 
+test_begin_subtest "notmuch search --format=json --output=files"
+output=$(notmuch search --format=json --output=files '*' | sed -e "s,$MAIL_DIR,MAIL_DIR,")
+test_expect_equal "$output" '["MAIL_DIR/cur/50:2,",
+"MAIL_DIR/cur/49:2,",
+"MAIL_DIR/cur/48:2,",
+"MAIL_DIR/cur/47:2,",
+"MAIL_DIR/cur/46:2,",
+"MAIL_DIR/cur/45:2,",
+"MAIL_DIR/cur/44:2,",
+"MAIL_DIR/cur/43:2,",
+"MAIL_DIR/cur/42:2,",
+"MAIL_DIR/cur/41:2,",
+"MAIL_DIR/cur/40:2,",
+"MAIL_DIR/cur/39:2,",
+"MAIL_DIR/cur/38:2,",
+"MAIL_DIR/cur/37:2,",
+"MAIL_DIR/cur/36:2,",
+"MAIL_DIR/cur/35:2,",
+"MAIL_DIR/cur/34:2,",
+"MAIL_DIR/cur/33:2,",
+"MAIL_DIR/cur/32:2,",
+"MAIL_DIR/cur/31:2,",
+"MAIL_DIR/cur/30:2,",
+"MAIL_DIR/cur/29:2,",
+"MAIL_DIR/cur/28:2,",
+"MAIL_DIR/cur/27:2,",
+"MAIL_DIR/cur/26:2,",
+"MAIL_DIR/cur/25:2,",
+"MAIL_DIR/cur/24:2,",
+"MAIL_DIR/cur/23:2,",
+"MAIL_DIR/cur/22:2,",
+"MAIL_DIR/cur/21:2,",
+"MAIL_DIR/cur/19:2,",
+"MAIL_DIR/cur/18:2,",
+"MAIL_DIR/cur/20:2,",
+"MAIL_DIR/cur/17:2,",
+"MAIL_DIR/cur/16:2,",
+"MAIL_DIR/cur/15:2,",
+"MAIL_DIR/cur/14:2,",
+"MAIL_DIR/cur/13:2,",
+"MAIL_DIR/cur/12:2,",
+"MAIL_DIR/cur/11:2,",
+"MAIL_DIR/cur/10:2,",
+"MAIL_DIR/cur/09:2,",
+"MAIL_DIR/cur/08:2,",
+"MAIL_DIR/cur/06:2,",
+"MAIL_DIR/cur/05:2,",
+"MAIL_DIR/cur/04:2,",
+"MAIL_DIR/cur/03:2,",
+"MAIL_DIR/cur/07:2,",
+"MAIL_DIR/cur/02:2,",
+"MAIL_DIR/cur/01:2,"]'
+
 test_begin_subtest "notmuch search --output=tags"
 output=$(notmuch search --output=tags '*')
 test_expect_equal "$output" "attachment
 inbox
 unread"
+
+test_begin_subtest "notmuch search --format=json --output=tags"
+output=$(notmuch search --format=json --output=tags '*')
+test_expect_equal "$output" '["attachment",
+"inbox",
+"unread"]'
 
 test_done
