@@ -256,6 +256,92 @@ _notmuch_message_create_for_message_id (notmuch_database_t *notmuch,
     return message;
 }
 
+static char *
+_notmuch_message_get_term (notmuch_message_t *message,
+			   Xapian::TermIterator &i, Xapian::TermIterator &end,
+			   const char *prefix)
+{
+    int prefix_len = strlen (prefix);
+    const char *term = NULL;
+    char *value;
+
+    i.skip_to (prefix);
+
+    if (i != end)
+	term = (*i).c_str ();
+
+    if (!term || strncmp (term, prefix, prefix_len))
+	return NULL;
+
+    value = talloc_strdup (message, term + prefix_len);
+
+#if DEBUG_DATABASE_SANITY
+    i++;
+
+    if (i != end && strncmp ((*i).c_str (), prefix, prefix_len) == 0) {
+	INTERNAL_ERROR ("Mail (doc_id: %d) has duplicate %s terms: %s and %s\n",
+			message->doc_id, prefix, value,
+			(*i).c_str () + prefix_len);
+    }
+#endif
+
+    return value;
+}
+
+void
+_notmuch_message_ensure_metadata (notmuch_message_t *message)
+{
+    Xapian::TermIterator i, end;
+    const char *thread_prefix = _find_prefix ("thread"),
+	*id_prefix = _find_prefix ("id"),
+	*replyto_prefix = _find_prefix ("replyto");
+
+    /* We do this all in a single pass because Xapian decompresses the
+     * term list every time you iterate over it.  Thus, while this is
+     * slightly more costly than looking up individual fields if only
+     * one field of the message object is actually used, it's a huge
+     * win as more fields are used. */
+
+    i = message->doc.termlist_begin ();
+    end = message->doc.termlist_end ();
+
+    /* Get thread */
+    if (!message->thread_id)
+	message->thread_id =
+	    _notmuch_message_get_term (message, i, end, thread_prefix);
+
+    /* Get id */
+    assert (strcmp (thread_prefix, id_prefix) < 0);
+    if (!message->message_id)
+	message->message_id =
+	    _notmuch_message_get_term (message, i, end, id_prefix);
+
+    /* Get reply to */
+    assert (strcmp (id_prefix, replyto_prefix) < 0);
+    if (!message->in_reply_to)
+	message->in_reply_to =
+	    _notmuch_message_get_term (message, i, end, replyto_prefix);
+    /* It's perfectly valid for a message to have no In-Reply-To
+     * header. For these cases, we return an empty string. */
+    if (!message->in_reply_to)
+	message->in_reply_to = talloc_strdup (message, "");
+}
+
+static void
+_notmuch_message_invalidate_metadata (notmuch_message_t *message,
+				      const char *prefix_name)
+{
+    if (strcmp ("thread", prefix_name) == 0) {
+	talloc_free (message->thread_id);
+	message->thread_id = NULL;
+    }
+
+    if (strcmp ("replyto", prefix_name) == 0) {
+	talloc_free (message->in_reply_to);
+	message->in_reply_to = NULL;
+    }
+}
+
 unsigned int
 _notmuch_message_get_doc_id (notmuch_message_t *message)
 {
@@ -265,32 +351,11 @@ _notmuch_message_get_doc_id (notmuch_message_t *message)
 const char *
 notmuch_message_get_message_id (notmuch_message_t *message)
 {
-    Xapian::TermIterator i;
-
-    if (message->message_id)
-	return message->message_id;
-
-    i = message->doc.termlist_begin ();
-    i.skip_to (_find_prefix ("id"));
-
-    if (i == message->doc.termlist_end ())
-	INTERNAL_ERROR ("Message with document ID of %d has no message ID.\n",
+    if (!message->message_id)
+	_notmuch_message_ensure_metadata (message);
+    if (!message->message_id)
+	INTERNAL_ERROR ("Message with document ID of %u has no message ID.\n",
 			message->doc_id);
-
-    message->message_id = talloc_strdup (message, (*i).c_str () + 1);
-
-#if DEBUG_DATABASE_SANITY
-    i++;
-
-    if (i != message->doc.termlist_end () &&
-	strncmp ((*i).c_str (), _find_prefix ("id"),
-		 strlen (_find_prefix ("id"))) == 0)
-    {
-	INTERNAL_ERROR ("Mail (doc_id: %d) has duplicate message IDs",
-			message->doc_id);
-    }
-#endif
-
     return message->message_id;
 }
 
@@ -329,89 +394,19 @@ notmuch_message_get_header (notmuch_message_t *message, const char *header)
 const char *
 _notmuch_message_get_in_reply_to (notmuch_message_t *message)
 {
-    const char *prefix = _find_prefix ("replyto");
-    int prefix_len = strlen (prefix);
-    Xapian::TermIterator i;
-    std::string in_reply_to;
-
-    if (message->in_reply_to)
-	return message->in_reply_to;
-
-    i = message->doc.termlist_begin ();
-    i.skip_to (prefix);
-
-    if (i != message->doc.termlist_end ())
-	in_reply_to = *i;
-
-    /* It's perfectly valid for a message to have no In-Reply-To
-     * header. For these cases, we return an empty string. */
-    if (i == message->doc.termlist_end () ||
-	strncmp (in_reply_to.c_str (), prefix, prefix_len))
-    {
-	message->in_reply_to = talloc_strdup (message, "");
-	return message->in_reply_to;
-    }
-
-    message->in_reply_to = talloc_strdup (message,
-					  in_reply_to.c_str () + prefix_len);
-
-#if DEBUG_DATABASE_SANITY
-    i++;
-
-    in_reply_to = *i;
-
-    if (i != message->doc.termlist_end () &&
-	strncmp ((*i).c_str (), prefix, prefix_len) == 0)
-    {
-       INTERNAL_ERROR ("Message %s has duplicate In-Reply-To IDs: %s and %s\n",
-			notmuch_message_get_message_id (message),
-			message->in_reply_to,
-			(*i).c_str () + prefix_len);
-    }
-#endif
-
+    if (!message->in_reply_to)
+	_notmuch_message_ensure_metadata (message);
     return message->in_reply_to;
 }
 
 const char *
 notmuch_message_get_thread_id (notmuch_message_t *message)
 {
-    const char *prefix = _find_prefix ("thread");
-    Xapian::TermIterator i;
-    std::string id;
-
-    /* This code is written with the assumption that "thread" has a
-     * single-character prefix. */
-    assert (strlen (prefix) == 1);
-
-    if (message->thread_id)
-	return message->thread_id;
-
-    i = message->doc.termlist_begin ();
-    i.skip_to (prefix);
-
-    if (i != message->doc.termlist_end ())
-	id = *i;
-
-    if (i == message->doc.termlist_end () || id[0] != *prefix)
-	INTERNAL_ERROR ("Message with document ID of %d has no thread ID.\n",
+    if (!message->thread_id)
+	_notmuch_message_ensure_metadata (message);
+    if (!message->thread_id)
+	INTERNAL_ERROR ("Message with document ID of %u has no thread ID.\n",
 			message->doc_id);
-
-    message->thread_id = talloc_strdup (message, id.c_str () + 1);
-
-#if DEBUG_DATABASE_SANITY
-    i++;
-    id = *i;
-
-    if (i != message->doc.termlist_end () && id[0] == *prefix)
-    {
-	INTERNAL_ERROR ("Message %s has duplicate thread IDs: %s and %s\n",
-			notmuch_message_get_message_id (message),
-			message->thread_id,
-			id.c_str () + 1);
-    }
-#endif
-
     return message->thread_id;
 }
 
@@ -809,6 +804,8 @@ _notmuch_message_add_term (notmuch_message_t *message,
 
     talloc_free (term);
 
+    _notmuch_message_invalidate_metadata (message, prefix_name);
+
     return NOTMUCH_PRIVATE_STATUS_SUCCESS;
 }
 
@@ -873,6 +870,8 @@ _notmuch_message_remove_term (notmuch_message_t *message,
     }
 
     talloc_free (term);
+
+    _notmuch_message_invalidate_metadata (message, prefix_name);
 
     return NOTMUCH_PRIVATE_STATUS_SUCCESS;
 }
