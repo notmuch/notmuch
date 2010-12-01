@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 test_description='"notmuch new" in several variations'
 . ./test-lib.sh
 
