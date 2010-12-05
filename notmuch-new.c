@@ -308,9 +308,16 @@ add_files_recursive (notmuch_database_t *notmuch,
 	next = NULL;
     }
 
-    /* If this directory hasn't been modified since the last
-     * "notmuch new", then we can skip the second pass entirely. */
-    if (fs_mtime <= db_mtime)
+    /* If the directory's modification time in the filesystem is the
+     * same as what we recorded in the database the last time we
+     * scanned it, then we can skip the second pass entirely.
+     *
+     * We test for strict equality here to avoid a bug that can happen
+     * if the system clock jumps backward, (preventing new mail from
+     * being discovered until the clock catches up and the directory
+     * is modified again).
+     */
+    if (fs_mtime == db_mtime)
 	goto DONE;
 
     /* Pass 2: Scan for new files, removed files, and removed directories. */
