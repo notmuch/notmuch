@@ -454,6 +454,9 @@ test_expect_equal_failure ()
 			test_known_broken_ok_ "$test_subtest_name"
 		else
 			test_known_broken_failure_ "$test_subtest_name"
+			testname=$this_test.$test_count
+			echo "$expected" > $testname.expected
+			echo "$output" > $testname.output
 		fi
     fi
 }
@@ -754,7 +757,9 @@ test_done () {
 	echo
 
 	if [ "$test_failure" = "0" ]; then
-	    rm -rf "$remove_tmp"
+	    if [ "$test_broken" = "0" ]; then	    
+		rm -rf "$remove_tmp"
+	    fi
 	    exit 0
 	else
 	    exit 1
