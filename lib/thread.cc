@@ -288,11 +288,17 @@ _thread_add_matched_message (notmuch_thread_t *thread,
 
     date = notmuch_message_get_date (message);
 
-    if (date < thread->oldest || ! thread->matched_messages)
+    if (date < thread->oldest || ! thread->matched_messages) {
 	thread->oldest = date;
+	if (sort == NOTMUCH_SORT_OLDEST_FIRST)
+	    _thread_set_subject_from_message (thread, message);
+    }
 
-    if (date > thread->newest || ! thread->matched_messages)
+    if (date > thread->newest || ! thread->matched_messages) {
 	thread->newest = date;
+	if (sort != NOTMUCH_SORT_OLDEST_FIRST)
+	    _thread_set_subject_from_message (thread, message);
+    }
 
     thread->matched_messages++;
 
@@ -304,12 +310,6 @@ _thread_add_matched_message (notmuch_thread_t *thread,
     }
 
     _thread_add_matched_author (thread, notmuch_message_get_author (hashed_message));
-
-    if ((sort == NOTMUCH_SORT_OLDEST_FIRST && date <= thread->newest) ||
-	(sort != NOTMUCH_SORT_OLDEST_FIRST && date == thread->newest))
-    {
-	_thread_set_subject_from_message (thread, message);
-    }
 }
 
 static void
