@@ -31,7 +31,7 @@ struct _notmuch_thread {
     GHashTable *authors_hash;
     GPtrArray *authors_array;
     GHashTable *matched_authors_hash;
-    int has_non_matched_authors;
+    GPtrArray *matched_authors_array;
     char *authors;
     GHashTable *tags;
 
@@ -56,11 +56,16 @@ _notmuch_thread_destructor (notmuch_thread_t *thread)
 	thread->authors_array = NULL;
     }
 
+    if (thread->matched_authors_array) {
+	g_ptr_array_free (thread->matched_authors_array, TRUE);
+	thread->matched_authors_array = NULL;
+    }
+
     return 0;
 }
 
-/* Add each author of the thread to the thread's authors_hash and the
- * thread's authors_array. */
+/* Add each author of the thread to the thread's authors_hash and to
+ * the thread's authors_array. */
 static void
 _thread_add_author (notmuch_thread_t *thread,
 		    const char *author)
@@ -82,7 +87,7 @@ _thread_add_author (notmuch_thread_t *thread,
 }
 
 /* Add each matched author of the thread to the thread's
- * matched_authors_hash and to the thread's authors string. */
+ * matched_authors_hash and to the thread's matched_authors_array. */
 static void
 _thread_add_matched_author (notmuch_thread_t *thread,
 			    const char *author)
@@ -100,42 +105,54 @@ _thread_add_matched_author (notmuch_thread_t *thread,
 
     g_hash_table_insert (thread->matched_authors_hash, author_copy, NULL);
 
-    if (thread->authors)
-	thread->authors = talloc_asprintf (thread, "%s, %s",
-					   thread->authors,
-					   author);
-    else
-	thread->authors = author_copy;
+    g_ptr_array_add (thread->matched_authors_array, author_copy);
 }
 
-/* Copy any authors from the authors array that were not also matched
- * authors onto the end of the thread's authors string.
- * We use a '|' to separate matched and unmatched authors. */
+/* Construct an authors string from matched_authors_array and
+ * authors_array. The string contains matched authors first, then
+ * non-matched authors (with the two groups separated by '|'). Within
+ * each group, authors are listed in date order. */
 static void
-_complete_thread_authors (notmuch_thread_t *thread)
+_resolve_thread_authors_string (notmuch_thread_t *thread)
 {
     unsigned int i;
     char *author;
+    int first_non_matched_author = 1;
 
+    /* First, list all matched authors in date order. */
+    for (i = 0; i < thread->matched_authors_array->len; i++) {
+	author = (char *) g_ptr_array_index (thread->matched_authors_array, i);
+	if (thread->authors)
+	    thread->authors = talloc_asprintf (thread, "%s, %s",
+					       thread->authors,
+					       author);
+	else
+	    thread->authors = author;
+    }
+
+    /* Next, append any non-matched authors that haven't already appeared. */
     for (i = 0; i < thread->authors_array->len; i++) {
 	author = (char *) g_ptr_array_index (thread->authors_array, i);
 	if (g_hash_table_lookup_extended (thread->matched_authors_hash,
 					  author, NULL, NULL))
 	    continue;
-	if (thread->has_non_matched_authors) {
-	    thread->authors = talloc_asprintf (thread, "%s, %s",
-					       thread->authors,
-					       author);
-	} else {
+	if (first_non_matched_author) {
 	    thread->authors = talloc_asprintf (thread, "%s| %s",
 					       thread->authors,
 					       author);
-	    thread->has_non_matched_authors = 1;
+	} else {
+	    thread->authors = talloc_asprintf (thread, "%s, %s",
+					       thread->authors,
+					       author);
 	}
+
+	first_non_matched_author = 0;
     }
 
     g_ptr_array_free (thread->authors_array, TRUE);
     thread->authors_array = NULL;
+    g_ptr_array_free (thread->matched_authors_array, TRUE);
+    thread->matched_authors_array = NULL;
 }
 
 /* clean up the ugly "Lastname, Firstname" format that some mail systems
@@ -278,6 +295,10 @@ _thread_set_subject_from_message (notmuch_thread_t *thread,
     thread->subject = talloc_strdup (thread, cleaned_subject);
 }
 
+/* Add a message to this thread which is known to match the original
+ * search specification. The 'sort' parameter controls whether the
+ * oldest or newest matching subject is applied to the thread as a
+ * whole. */
 static void
 _thread_add_matched_message (notmuch_thread_t *thread,
 			     notmuch_message_t *message,
@@ -434,8 +455,8 @@ _notmuch_thread_create (void *ctx,
     thread->matched_authors_hash = g_hash_table_new_full (g_str_hash,
 							  g_str_equal,
 							  NULL, NULL);
+    thread->matched_authors_array = g_ptr_array_new ();
     thread->authors = NULL;
-    thread->has_non_matched_authors = 0;
     thread->tags = g_hash_table_new_full (g_str_hash, g_str_equal,
 					  free, NULL);
 
@@ -451,6 +472,10 @@ _notmuch_thread_create (void *ctx,
     thread->oldest = 0;
     thread->newest = 0;
 
+    /* We use oldest-first order unconditionally here to obtain the
+     * proper author ordering for the thread. The 'sort' parameter
+     * passed to this function is used only to indicate whether the
+     * oldest or newest subject is desired. */
     notmuch_query_set_sort (thread_id_query, NOTMUCH_SORT_OLDEST_FIRST);
 
     for (messages = notmuch_query_search_messages (thread_id_query);
@@ -484,6 +509,9 @@ _notmuch_thread_create (void *ctx,
 	if (unlikely (matched_query == NULL))
 	    return NULL;
 
+	/* As above, we use oldest-first order unconditionally here. */
+	notmuch_query_set_sort (matched_query, NOTMUCH_SORT_OLDEST_FIRST);
+
 	for (messages = notmuch_query_search_messages (matched_query);
 	     notmuch_messages_valid (messages);
 	     notmuch_messages_move_to_next (messages))
@@ -496,7 +524,7 @@ _notmuch_thread_create (void *ctx,
 	notmuch_query_destroy (matched_query);
     }
 
-    _complete_thread_authors (thread);
+    _resolve_thread_authors_string (thread);
 
     _resolve_thread_relationships (thread);
 
