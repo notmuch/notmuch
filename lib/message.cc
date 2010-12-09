@@ -711,9 +711,13 @@ notmuch_tags_t *
 notmuch_message_get_tags (notmuch_message_t *message)
 {
     Xapian::TermIterator i, end;
+    notmuch_string_list_t *tags;
     i = message->doc.termlist_begin();
     end = message->doc.termlist_end();
-    return _notmuch_convert_tags(message, i, end);
+    tags = _notmuch_database_get_terms_with_prefix (message, i, end,
+						    _find_prefix ("tag"));
+    _notmuch_string_list_sort (tags);
+    return _notmuch_tags_create (message, tags);
 }
 
 const char *
