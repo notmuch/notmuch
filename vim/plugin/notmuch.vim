@@ -120,6 +120,7 @@ let g:notmuch_search_maps = {
         \ '<Space>':    ':call <SID>NM_search_show_thread(0)<CR>',
         \ '<Enter>':    ':call <SID>NM_search_show_thread(1)<CR>',
         \ '<C-]>':      ':call <SID>NM_search_expand(''<cword>'')<CR>',
+        \ 'I':          ':call <SID>NM_search_mark_read_thread()<CR>',
         \ 'a':          ':call <SID>NM_search_archive_thread()<CR>',
         \ 'A':          ':call <SID>NM_search_mark_read_then_archive_thread()<CR>',
         \ 'f':          ':call <SID>NM_search_filter()<CR>',
@@ -308,6 +309,11 @@ function! s:NM_search_edit()
         if strlen(text)
                 call <SID>NM_cmd_search(split(text))
         endif
+endfunction
+
+function! s:NM_search_mark_read_thread()
+        call <SID>NM_tag([], ['-unread'])
+        norm j
 endfunction
 
 function! s:NM_search_archive_thread()
