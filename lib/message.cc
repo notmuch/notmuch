@@ -32,6 +32,7 @@ struct _notmuch_message {
     char *message_id;
     char *thread_id;
     char *in_reply_to;
+    notmuch_string_list_t *tag_list;
     notmuch_string_list_t *filename_term_list;
     notmuch_string_list_t *filename_list;
     char *author;
@@ -103,6 +104,7 @@ _notmuch_message_create_for_document (const void *talloc_owner,
     message->message_id = NULL;
     message->thread_id = NULL;
     message->in_reply_to = NULL;
+    message->tag_list = NULL;
     message->filename_term_list = NULL;
     message->filename_list = NULL;
     message->message_file = NULL;
@@ -295,6 +297,7 @@ _notmuch_message_ensure_metadata (notmuch_message_t *message)
 {
     Xapian::TermIterator i, end;
     const char *thread_prefix = _find_prefix ("thread"),
+	*tag_prefix = _find_prefix ("tag"),
 	*id_prefix = _find_prefix ("id"),
 	*filename_prefix = _find_prefix ("file-direntry"),
 	*replyto_prefix = _find_prefix ("replyto");
@@ -313,8 +316,17 @@ _notmuch_message_ensure_metadata (notmuch_message_t *message)
 	message->thread_id =
 	    _notmuch_message_get_term (message, i, end, thread_prefix);
 
+    /* Get tags */
+    assert (strcmp (thread_prefix, tag_prefix) < 0);
+    if (!message->tag_list) {
+	message->tag_list =
+	    _notmuch_database_get_terms_with_prefix (message, i, end,
+						     tag_prefix);
+	_notmuch_string_list_sort (message->tag_list);
+    }
+
     /* Get id */
-    assert (strcmp (thread_prefix, id_prefix) < 0);
+    assert (strcmp (tag_prefix, id_prefix) < 0);
     if (!message->message_id)
 	message->message_id =
 	    _notmuch_message_get_term (message, i, end, id_prefix);
@@ -346,6 +358,11 @@ _notmuch_message_invalidate_metadata (notmuch_message_t *message,
     if (strcmp ("thread", prefix_name) == 0) {
 	talloc_free (message->thread_id);
 	message->thread_id = NULL;
+    }
+
+    if (strcmp ("tag", prefix_name) == 0) {
+	talloc_unlink (message, message->tag_list);
+	message->tag_list = NULL;
     }
 
     if (strcmp ("file-direntry", prefix_name) == 0) {
@@ -712,14 +729,20 @@ notmuch_message_get_date (notmuch_message_t *message)
 notmuch_tags_t *
 notmuch_message_get_tags (notmuch_message_t *message)
 {
-    Xapian::TermIterator i, end;
-    notmuch_string_list_t *tags;
-    i = message->doc.termlist_begin();
-    end = message->doc.termlist_end();
-    tags = _notmuch_database_get_terms_with_prefix (message, i, end,
-						    _find_prefix ("tag"));
-    _notmuch_string_list_sort (tags);
-    return _notmuch_tags_create (message, tags);
+    notmuch_tags_t *tags;
+
+    if (!message->tag_list)
+	_notmuch_message_ensure_metadata (message);
+
+    tags = _notmuch_tags_create (message, message->tag_list);
+    /* _notmuch_tags_create steals the reference to the tag_list, but
+     * in this case it's still used by the message, so we add an
+     * *additional* talloc reference to the list.  As a result, it's
+     * possible to modify the message tags (which talloc_unlink's the
+     * current list from the message) while still iterating because
+     * the iterator will keep the current list alive. */
+    talloc_reference (message, message->tag_list);
+    return tags;
 }
 
 const char *
@@ -1287,6 +1310,7 @@ notmuch_message_remove_all_tags (notmuch_message_t *message)
     if (! message->frozen)
 	_notmuch_message_sync (message);
 
+    talloc_free (tags);
     return NOTMUCH_STATUS_SUCCESS;
 }
 
