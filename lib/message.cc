@@ -32,6 +32,7 @@ struct _notmuch_message {
     char *message_id;
     char *thread_id;
     char *in_reply_to;
+    notmuch_string_list_t *filename_term_list;
     notmuch_string_list_t *filename_list;
     char *author;
     notmuch_message_file_t *message_file;
@@ -102,6 +103,7 @@ _notmuch_message_create_for_document (const void *talloc_owner,
     message->message_id = NULL;
     message->thread_id = NULL;
     message->in_reply_to = NULL;
+    message->filename_term_list = NULL;
     message->filename_list = NULL;
     message->message_file = NULL;
     message->author = NULL;
@@ -294,6 +296,7 @@ _notmuch_message_ensure_metadata (notmuch_message_t *message)
     Xapian::TermIterator i, end;
     const char *thread_prefix = _find_prefix ("thread"),
 	*id_prefix = _find_prefix ("id"),
+	*filename_prefix = _find_prefix ("file-direntry"),
 	*replyto_prefix = _find_prefix ("replyto");
 
     /* We do this all in a single pass because Xapian decompresses the
@@ -316,8 +319,17 @@ _notmuch_message_ensure_metadata (notmuch_message_t *message)
 	message->message_id =
 	    _notmuch_message_get_term (message, i, end, id_prefix);
 
+    /* Get filename list.  Here we get only the terms.  We lazily
+     * expand them to full file names when needed in
+     * _notmuch_message_ensure_filename_list. */
+    assert (strcmp (id_prefix, filename_prefix) < 0);
+    if (!message->filename_term_list && !message->filename_list)
+	message->filename_term_list =
+	    _notmuch_database_get_terms_with_prefix (message, i, end,
+						     filename_prefix);
+
     /* Get reply to */
-    assert (strcmp (id_prefix, replyto_prefix) < 0);
+    assert (strcmp (filename_prefix, replyto_prefix) < 0);
     if (!message->in_reply_to)
 	message->in_reply_to =
 	    _notmuch_message_get_term (message, i, end, replyto_prefix);
@@ -334,6 +346,12 @@ _notmuch_message_invalidate_metadata (notmuch_message_t *message,
     if (strcmp ("thread", prefix_name) == 0) {
 	talloc_free (message->thread_id);
 	message->thread_id = NULL;
+    }
+
+    if (strcmp ("file-direntry", prefix_name) == 0) {
+	talloc_free (message->filename_term_list);
+	talloc_free (message->filename_list);
+	message->filename_term_list = message->filename_list = NULL;
     }
 
     if (strcmp ("replyto", prefix_name) == 0) {
@@ -439,11 +457,6 @@ _notmuch_message_add_filename (notmuch_message_t *message,
     if (filename == NULL)
 	INTERNAL_ERROR ("Message filename cannot be NULL.");
 
-    if (message->filename_list) {
-	talloc_free (message->filename_list);
-	message->filename_list = NULL;
-    }
-
     relative = _notmuch_database_relative_path (message->notmuch, filename);
 
     status = _notmuch_database_split_path (local, relative, &directory, NULL);
@@ -490,11 +503,6 @@ _notmuch_message_remove_filename (notmuch_message_t *message,
     notmuch_private_status_t private_status;
     notmuch_status_t status;
     Xapian::TermIterator i, last;
-
-    if (message->filename_list) {
-	talloc_free (message->filename_list);
-	message->filename_list = NULL;
-    }
 
     status = _notmuch_database_filename_to_direntry (local, message->notmuch,
 						     filename, &direntry);
@@ -575,21 +583,18 @@ _notmuch_message_clear_data (notmuch_message_t *message)
 static void
 _notmuch_message_ensure_filename_list (notmuch_message_t *message)
 {
-    const char *prefix = _find_prefix ("file-direntry");
-    int prefix_len = strlen (prefix);
-    Xapian::TermIterator i;
+    notmuch_string_node_t *node;
 
     if (message->filename_list)
 	return;
 
+    if (!message->filename_term_list)
+	_notmuch_message_ensure_metadata (message);
+
     message->filename_list = _notmuch_string_list_create (message);
+    node = message->filename_term_list->head;
 
-    i = message->doc.termlist_begin ();
-    i.skip_to (prefix);
-
-    if (i == message->doc.termlist_end () ||
-	strncmp ((*i).c_str (), prefix, prefix_len))
-    {
+    if (!node) {
 	/* A message document created by an old version of notmuch
 	 * (prior to rename support) will have the filename in the
 	 * data of the document rather than as a file-direntry term.
@@ -608,19 +613,13 @@ _notmuch_message_ensure_filename_list (notmuch_message_t *message)
 	return;
     }
 
-    for (; i != message->doc.termlist_end (); i++) {
+    for (; node; node = node->next) {
 	void *local = talloc_new (message);
 	const char *db_path, *directory, *basename, *filename;
 	char *colon, *direntry = NULL;
 	unsigned int directory_id;
 
-	/* Terminate loop at first term without desired prefix. */
-	if (strncmp ((*i).c_str (), prefix, prefix_len))
-	    break;
-
-	direntry = talloc_strdup (local, (*i).c_str ());
-
-	direntry += prefix_len;
+	direntry = node->string;
 
 	directory_id = strtol (direntry, &colon, 10);
 
@@ -648,6 +647,9 @@ _notmuch_message_ensure_filename_list (notmuch_message_t *message)
 
 	talloc_free (local);
     }
+
+    talloc_free (message->filename_term_list);
+    message->filename_term_list = NULL;
 }
 
 const char *
