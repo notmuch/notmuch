@@ -50,6 +50,7 @@ extra_cflags += -I$(srcdir)/$(dir) -fPIC
 libnotmuch_c_srcs =		\
 	$(notmuch_compat_srcs)	\
 	$(dir)/filenames.c	\
+	$(dir)/string-list.c	\
 	$(dir)/libsha1.c	\
 	$(dir)/message-file.c	\
 	$(dir)/messages.c	\

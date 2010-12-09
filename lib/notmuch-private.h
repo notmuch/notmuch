@@ -457,48 +457,45 @@ notmuch_sha1_of_string (const char *str);
 char *
 notmuch_sha1_of_file (const char *filename);
 
+/* string-list.c */
+
+typedef struct _notmuch_string_node {
+    char *string;
+    struct _notmuch_string_node *next;
+} notmuch_string_node_t;
+
+typedef struct _notmuch_string_list {
+    int length;
+    notmuch_string_node_t *head;
+    notmuch_string_node_t **tail;
+} notmuch_string_list_t;
+
+notmuch_string_list_t *
+_notmuch_string_list_create (const void *ctx);
+
+/* Add 'string' to 'list'.
+ *
+ * The list will create its own talloced copy of 'string'.
+ */
+void
+_notmuch_string_list_append (notmuch_string_list_t *list,
+			     const char *string);
+
+void
+_notmuch_string_list_sort (notmuch_string_list_t *list);
+
 /* tags.c */
 
 notmuch_tags_t *
-_notmuch_tags_create (void *ctx);
-
-void
-_notmuch_tags_add_tag (notmuch_tags_t *tags, const char *tag);
-
-void
-_notmuch_tags_prepare_iterator (notmuch_tags_t *tags);
+_notmuch_tags_create (const void *ctx, notmuch_string_list_t *list);
 
 /* filenames.c */
 
-typedef struct _notmuch_filename_node {
-    char *filename;
-    struct _notmuch_filename_node *next;
-} notmuch_filename_node_t;
-
-typedef struct _notmuch_filename_list {
-    notmuch_filename_node_t *head;
-    notmuch_filename_node_t **tail;
-} notmuch_filename_list_t;
-
-notmuch_filename_list_t *
-_notmuch_filename_list_create (const void *ctx);
-
-/* Add 'filename' to 'list'.
- *
- * The list will create its own talloced copy of 'filename'.
- */
-void
-_notmuch_filename_list_add_filename (notmuch_filename_list_t *list,
-				     const char *filename);
-
-void
-_notmuch_filename_list_destroy (notmuch_filename_list_t *list);
-
-/* The notmuch_filenames_t is an iterator object for a
- * notmuch_filename_list_t */
+/* The notmuch_filenames_t iterates over a notmuch_string_list_t of
+ * file names */
 notmuch_filenames_t *
 _notmuch_filenames_create (const void *ctx,
-			   notmuch_filename_list_t *list);
+			   notmuch_string_list_t *list);
 
 #pragma GCC visibility pop
 

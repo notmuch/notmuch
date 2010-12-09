@@ -32,7 +32,7 @@ struct _notmuch_message {
     char *message_id;
     char *thread_id;
     char *in_reply_to;
-    notmuch_filename_list_t *filename_list;
+    notmuch_string_list_t *filename_list;
     char *author;
     notmuch_message_file_t *message_file;
     notmuch_message_list_t *replies;
@@ -440,7 +440,7 @@ _notmuch_message_add_filename (notmuch_message_t *message,
 	INTERNAL_ERROR ("Message filename cannot be NULL.");
 
     if (message->filename_list) {
-	_notmuch_filename_list_destroy (message->filename_list);
+	talloc_free (message->filename_list);
 	message->filename_list = NULL;
     }
 
@@ -492,7 +492,7 @@ _notmuch_message_remove_filename (notmuch_message_t *message,
     Xapian::TermIterator i, last;
 
     if (message->filename_list) {
-	_notmuch_filename_list_destroy (message->filename_list);
+	talloc_free (message->filename_list);
 	message->filename_list = NULL;
     }
 
@@ -582,7 +582,7 @@ _notmuch_message_ensure_filename_list (notmuch_message_t *message)
     if (message->filename_list)
 	return;
 
-    message->filename_list = _notmuch_filename_list_create (message);
+    message->filename_list = _notmuch_string_list_create (message);
 
     i = message->doc.termlist_begin ();
     i.skip_to (prefix);
@@ -603,7 +603,7 @@ _notmuch_message_ensure_filename_list (notmuch_message_t *message)
 	if (data == NULL)
 	    INTERNAL_ERROR ("message with no filename");
 
-	_notmuch_filename_list_add_filename (message->filename_list, data);
+	_notmuch_string_list_append (message->filename_list, data);
 
 	return;
     }
@@ -644,8 +644,7 @@ _notmuch_message_ensure_filename_list (notmuch_message_t *message)
 	    filename = talloc_asprintf (message, "%s/%s",
 					db_path, basename);
 
-	_notmuch_filename_list_add_filename (message->filename_list,
-					     filename);
+	_notmuch_string_list_append (message->filename_list, filename);
 
 	talloc_free (local);
     }
@@ -660,12 +659,12 @@ notmuch_message_get_filename (notmuch_message_t *message)
 	return NULL;
 
     if (message->filename_list->head == NULL ||
-	message->filename_list->head->filename == NULL)
+	message->filename_list->head->string == NULL)
     {
 	INTERNAL_ERROR ("message with no filename");
     }
 
-    return message->filename_list->head->filename;
+    return message->filename_list->head->string;
 }
 
 notmuch_filenames_t *

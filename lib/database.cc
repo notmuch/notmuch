@@ -1762,15 +1762,15 @@ _notmuch_convert_tags (void *ctx, Xapian::TermIterator &i,
 		       Xapian::TermIterator &end)
 {
     const char *prefix = _find_prefix ("tag");
-    notmuch_tags_t *tags;
+    notmuch_string_list_t *list;
     std::string tag;
 
     /* Currently this iteration is written with the assumption that
      * "tag" has a single-character prefix. */
     assert (strlen (prefix) == 1);
 
-    tags = _notmuch_tags_create (ctx);
-    if (unlikely (tags == NULL))
+    list = _notmuch_string_list_create (ctx);
+    if (unlikely (list == NULL))
 	return NULL;
 
     i.skip_to (prefix);
@@ -1781,14 +1781,14 @@ _notmuch_convert_tags (void *ctx, Xapian::TermIterator &i,
 	if (tag.empty () || tag[0] != *prefix)
 	    break;
 
-	_notmuch_tags_add_tag (tags, tag.c_str () + 1);
+	_notmuch_string_list_append (list, tag.c_str () + 1);
 
 	i++;
     }
 
-    _notmuch_tags_prepare_iterator (tags);
+    _notmuch_string_list_sort (list);
 
-    return tags;
+    return _notmuch_tags_create (ctx, list);
 }
 
 notmuch_tags_t *

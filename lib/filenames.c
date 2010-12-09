@@ -21,56 +21,14 @@
 #include "notmuch-private.h"
 
 struct _notmuch_filenames {
-    notmuch_filename_node_t *iterator;
+    notmuch_string_node_t *iterator;
 };
 
-/* Create a new notmuch_filename_list_t object, with 'ctx' as its
- * talloc owner.
- *
- * This function can return NULL in case of out-of-memory.
- */
-notmuch_filename_list_t *
-_notmuch_filename_list_create (const void *ctx)
-{
-    notmuch_filename_list_t *list;
-
-    list = talloc (ctx, notmuch_filename_list_t);
-    if (unlikely (list == NULL))
-	return NULL;
-
-    list->head = NULL;
-    list->tail = &list->head;
-
-    return list;
-}
-
-void
-_notmuch_filename_list_add_filename (notmuch_filename_list_t *list,
-				     const char *filename)
-{
-    /* Create and initialize new node. */
-    notmuch_filename_node_t *node = talloc (list,
-					    notmuch_filename_node_t);
-
-    node->filename = talloc_strdup (node, filename);
-    node->next = NULL;
-
-    /* Append the node to the list. */
-    *(list->tail) = node;
-    list->tail = &node->next;
-}
-
-void
-_notmuch_filename_list_destroy (notmuch_filename_list_t *list)
-{
-    talloc_free (list);
-}
-
-/* The notmuch_filenames_t is an iterator object for a
- * notmuch_filename_list_t */
+/* The notmuch_filenames_t iterates over a notmuch_string_list_t of
+ * file names */
 notmuch_filenames_t *
 _notmuch_filenames_create (const void *ctx,
-			   notmuch_filename_list_t *list)
+			   notmuch_string_list_t *list)
 {
     notmuch_filenames_t *filenames;
 
@@ -99,7 +57,7 @@ notmuch_filenames_get (notmuch_filenames_t *filenames)
     if (filenames->iterator == NULL)
 	return NULL;
 
-    return filenames->iterator->filename;
+    return filenames->iterator->string;
 }
 
 void
