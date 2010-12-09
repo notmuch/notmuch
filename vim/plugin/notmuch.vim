@@ -308,12 +308,12 @@ function! s:NM_search_edit()
 endfunction
 
 function! s:NM_search_archive_thread()
-        call <SID>NM_add_remove_tags([], '-', ['inbox'])
+        call <SID>NM_tag([], ['-inbox'])
         norm j
 endfunction
 
 function! s:NM_search_mark_read_then_archive_thread()
-        call <SID>NM_add_remove_tags([], '-', ['unread', 'inbox'])
+        call <SID>NM_tag([], ['-unread', '-inbox'])
         norm j
 endfunction
 
@@ -404,7 +404,8 @@ function! s:NM_search_add_remove_tags(prompt, prefix, intags)
         else
                 let tags = a:intags
         endif
-        call <SID>NM_add_remove_tags([], a:prefix, tags)
+        call map(tags, 'a:prefix . v:val')
+        call <SID>NM_tag([], tags)
 endfunction
 
 " --- implement show screen {{{1
@@ -498,7 +499,7 @@ function! s:NM_show_archive_thread()
 endfunction
 
 function! s:NM_show_mark_read_then_archive_thread()
-        call <SID>NM_add_remove_tags(b:nm_search_words, '-', ['unread', 'inbox'])
+        call <SID>NM_tag(b:nm_search_words, ['-unread', '-inbox'])
         call <SID>NM_show_next_thread()
 endfunction
 
@@ -562,7 +563,8 @@ function! s:NM_show_advance_marking_read_and_archiving()
                 let filter = <SID>NM_combine_tags('tag:', advance_tags, 'OR', '()')
                          \ + ['AND']
                          \ + <SID>NM_combine_tags('', ids, 'OR', '()')
-                call <SID>NM_add_remove_tags(filter, '-', advance_tags)
+                call map(advance_tags, '"+" . v:val')
+                call <SID>NM_tag(filter, advance_tags)
                 call <SID>NM_show_next(1, 1)
                 return
         endif
@@ -581,7 +583,8 @@ function! s:NM_show_advance_marking_read_and_archiving()
                         " do this last to hide the latency
                         let filter = <SID>NM_combine_tags('tag:', advance_tags, 'OR', '()')
                                  \ + ['AND', msg_top['id']]
-                        call <SID>NM_add_remove_tags(filter, '-', advance_tags)
+                        call map(advance_tags, '"-" . v:val')
+                        call <SID>NM_tag(filter, advance_tags)
                 endif
                 return
         endif
@@ -1265,12 +1268,11 @@ function! s:NM_search_expand(arg)
         let b:nm_prev_bufnr = prev_bufnr
 endfunction
 
-function! s:NM_add_remove_tags(filter, prefix, tags)
+function! s:NM_tag(filter, tags)
         let filter = len(a:filter) ? a:filter : [<SID>NM_search_thread_id()]
         if !len(filter)
                 throw 'Eeek! I couldn''t find the thead id!'
         endif
-        call map(a:tags, 'a:prefix . v:val')
         let args = ['tag']
         call extend(args, a:tags)
         call add(args, '--')
