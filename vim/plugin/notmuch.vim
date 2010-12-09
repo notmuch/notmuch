@@ -123,6 +123,7 @@ let g:notmuch_search_maps = {
         \ 'I':          ':call <SID>NM_search_mark_read_thread()<CR>',
         \ 'a':          ':call <SID>NM_search_archive_thread()<CR>',
         \ 'A':          ':call <SID>NM_search_mark_read_then_archive_thread()<CR>',
+        \ 'D':          ':call <SID>NM_search_delete_thread()<CR>',
         \ 'f':          ':call <SID>NM_search_filter()<CR>',
         \ 'm':          ':call <SID>NM_new_mail()<CR>',
         \ 'o':          ':call <SID>NM_search_toggle_order()<CR>',
@@ -323,6 +324,11 @@ endfunction
 
 function! s:NM_search_mark_read_then_archive_thread()
         call <SID>NM_tag([], ['-unread', '-inbox'])
+        norm j
+endfunction
+
+function! s:NM_search_delete_thread()
+        call <SID>NM_tag([], ['+delete','-inbox','-unread'])
         norm j
 endfunction
 
