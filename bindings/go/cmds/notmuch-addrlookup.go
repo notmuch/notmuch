@@ -11,7 +11,8 @@ import "sort"
 
 // 3rd-party imports
 import "notmuch"
-import "github.com/jteeuwen/go-pkg-ini/ini"
+//import "github.com/jteeuwen/go-pkg-ini/ini"
+import "github.com/kless/goconfig/config"
 
 type mail_addr_freq struct {
 	addr  string
@@ -178,7 +179,7 @@ type address_matcher struct {
 }
 
 func new_address_matcher() *address_matcher {
-	var cfg *ini.Config
+	var cfg *config.Config
 	var err os.Error
 
 	// honor NOTMUCH_CONFIG
@@ -187,13 +188,16 @@ func new_address_matcher() *address_matcher {
 		home = os.Getenv("HOME")
 	}
 
-	if cfg,err = ini.Load(path.Join(home, ".notmuch-config")); err != nil {
+	if cfg,err = config.ReadDefault(path.Join(home, ".notmuch-config")); err != nil {
 		log.Exitf("error loading config file:",err)
 	}
 
-	db_path := cfg.S("database", "path", "")
-	primary_email := cfg.S("user", "primary_email", "")
-	addrbook_tag := cfg.S("user", "addrbook_tag", "addressbook")
+	db_path,_ := cfg.String("database", "path")
+	primary_email,_ := cfg.String("user", "primary_email")
+	addrbook_tag,err := cfg.String("user", "addrbook_tag")
+	if err != nil {
+		addrbook_tag = "addressbook"
+	}
 
 	self := &address_matcher{db:nil, 
 	                         user_db_path:db_path,
