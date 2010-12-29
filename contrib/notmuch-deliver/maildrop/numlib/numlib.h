@@ -12,8 +12,8 @@ extern "C" {
 
 static const char numlib_h_rcsid[]="$Id: numlib.h,v 1.10 2004/01/11 02:47:33 mrsam Exp $";
 
-#ifdef HAVE_CONFIG_H
-#include	"config.h" /* VPATH build */
+#if	HAVE_CONFIG_H
+#include	"../numlib/config.h" /* VPATH build */
 #endif
 
 #include	<sys/types.h>

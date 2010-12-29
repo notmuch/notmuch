@@ -146,10 +146,11 @@ AC_SUBST([NOTMUCH_DELIVER_CFLAGS])
 dnl }}}
 
 dnl {{{ Output
-AM_CONFIG_HEADER(config.h)
+AC_CONFIG_HEADERS([config.h])
+AC_CONFIG_LINKS([maildrop/numlib/config.h:config.h])
 AC_OUTPUT(
 		  Makefile
-		  numlib/Makefile
+		  maildrop/numlib/Makefile
 		  src/Makefile
 		  )
 dnl }}}
