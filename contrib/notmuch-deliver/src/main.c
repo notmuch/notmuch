@@ -415,6 +415,11 @@ main(int argc, char **argv)
 	}
 	g_free(conf_path);
 
+	if ((argc - 1) > 1) {
+		g_critical("Won't deliver to %d folders", argc - 1);
+		return EX_USAGE;
+	}
+
 	if (argc > 1) {
 		folder = g_strdup_printf("%s%s", opt_folder ? "." : "", argv[1]);
 		maildir = g_build_filename(db_path, folder, NULL);
