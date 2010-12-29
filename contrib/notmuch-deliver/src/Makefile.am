@@ -1,4 +1,5 @@
 DEFS+= -DGITHEAD=\"$(GITHEAD)\"
+AM_CPPFLAGS= -I$(top_srcdir)
 AM_CFLAGS= @NOTMUCH_DELIVER_CFLAGS@ $(glib_CFLAGS)
 
 noinst_HEADERS=\
