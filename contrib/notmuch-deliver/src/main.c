@@ -167,8 +167,7 @@ save_splice(int fdin, int fdout)
 		do {
 			written = splice(pfd[0], NULL, fdout, NULL, ret, 0);
 			if (!written) {
-				g_critical("Splicing data to temporary file failed: %s",
-					g_strerror(errno));
+				g_critical("Splicing data to temporary file failed: internal error");
 				close(pfd[0]);
 				close(pfd[1]);
 				return EX_IOERR;
