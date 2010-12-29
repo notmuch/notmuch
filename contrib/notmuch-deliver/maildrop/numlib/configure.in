@@ -1,7 +1,7 @@
 dnl Process this file with autoconf to produce a configure script.
-dnl $Id: configure.in,v 1.6 2004/12/10 02:34:46 mrsam Exp $
+dnl $Id: configure.in,v 1.7 2010/03/19 01:09:26 mrsam Exp $
 dnl
-dnl Copyright 1998 - 2004 Double Precision, Inc.  See COPYING for
+dnl Copyright 1998 - 2010 Double Precision, Inc.  See COPYING for
 dnl distribution information.
 
 AC_PREREQ(2.59)
@@ -29,7 +29,12 @@ dnl Checks for libraries.
 
 dnl Checks for header files.
 
-AC_CHECK_HEADERS(unistd.h)
+AC_CHECK_HEADERS(unistd.h stdint.h)
+
+AC_CHECK_TYPE(int64_t, [ : ],
+		       [
+		       AC_DEFINE_UNQUOTED(int64_t,long long,[default definition of int64_t])
+		       ])
 
 dnl Checks for typedefs, structures, and compiler characteristics.
 AC_TYPE_UID_T

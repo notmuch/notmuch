@@ -2,7 +2,7 @@
 #define	numlib_h
 
 /*
-** Copyright 1998 - 2003 Double Precision, Inc.
+** Copyright 1998 - 2010 Double Precision, Inc.
 ** See COPYING for distribution information.
 */
 
@@ -10,10 +10,14 @@
 extern "C" {
 #endif
 
-static const char numlib_h_rcsid[]="$Id: numlib.h,v 1.10 2004/01/11 02:47:33 mrsam Exp $";
+static const char numlib_h_rcsid[]="$Id: numlib.h,v 1.11 2010/03/19 01:09:26 mrsam Exp $";
 
 #if	HAVE_CONFIG_H
 #include	"../numlib/config.h" /* VPATH build */
+#endif
+
+#if	HAVE_STDINT_H
+#include	<stdint.h>
 #endif
 
 #include	<sys/types.h>
@@ -25,6 +29,7 @@ static const char numlib_h_rcsid[]="$Id: numlib.h,v 1.10 2004/01/11 02:47:33 mrs
 
 char	*libmail_str_time_t(time_t, char *);
 char	*libmail_str_off_t(off_t, char *);
+char	*libmail_str_int64_t(int64_t, char *);
 char	*libmail_str_pid_t(pid_t, char *);
 char	*libmail_str_dev_t(dev_t, char *);
 char	*libmail_str_ino_t(ino_t, char *);
