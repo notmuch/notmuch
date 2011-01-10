@@ -224,7 +224,9 @@ Init_notmuch(void)
     notmuch_rb_cQuery = rb_define_class_under(mod, "Query", rb_cData);
     rb_undef_method(notmuch_rb_cQuery, "initialize");
     rb_define_method(notmuch_rb_cQuery, "destroy", notmuch_rb_query_destroy, 0);
+    rb_define_method(notmuch_rb_cQuery, "sort", notmuch_rb_query_get_sort, 0);
     rb_define_method(notmuch_rb_cQuery, "sort=", notmuch_rb_query_set_sort, 1);
+    rb_define_method(notmuch_rb_cQuery, "to_s", notmuch_rb_query_get_string, 0);
     rb_define_method(notmuch_rb_cQuery, "search_threads", notmuch_rb_query_search_threads, 0);
     rb_define_method(notmuch_rb_cQuery, "search_messages", notmuch_rb_query_search_messages, 0);
 

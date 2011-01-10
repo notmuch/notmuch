@@ -190,7 +190,13 @@ VALUE
 notmuch_rb_query_destroy(VALUE self);
 
 VALUE
+notmuch_rb_query_get_sort(VALUE self);
+
+VALUE
 notmuch_rb_query_set_sort(VALUE self, VALUE sortv);
+
+VALUE
+notmuch_rb_query_get_string(VALUE self);
 
 VALUE
 notmuch_rb_query_search_threads(VALUE self);

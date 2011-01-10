@@ -39,6 +39,21 @@ notmuch_rb_query_destroy(VALUE self)
 }
 
 /*
+ * call-seq: QUERY.sort => fixnum
+ *
+ * Get sort type of the +QUERY+
+ */
+VALUE
+notmuch_rb_query_get_sort(VALUE self)
+{
+    notmuch_query_t *query;
+
+    Data_Get_Notmuch_Query(self, query);
+
+    return FIX2INT(notmuch_query_get_sort(query));
+}
+
+/*
  * call-seq: QUERY.sort=(fixnum) => nil
  *
  * Set sort type of the +QUERY+
@@ -56,6 +71,21 @@ notmuch_rb_query_set_sort(VALUE self, VALUE sortv)
     notmuch_query_set_sort(query, FIX2UINT(sortv));
 
     return Qnil;
+}
+
+/*
+ * call-seq: QUERY.to_s => string
+ *
+ * Get query string of the +QUERY+
+ */
+VALUE
+notmuch_rb_query_get_string(VALUE self)
+{
+    notmuch_query_t *query;
+
+    Data_Get_Notmuch_Query(self, query);
+
+    return rb_str_new2(notmuch_query_get_query_string(query));
 }
 
 /*
