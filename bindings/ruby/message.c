@@ -111,6 +111,24 @@ notmuch_rb_message_get_filename(VALUE self)
 }
 
 /*
+ * call-seq: MESSAGE.filanames => FILENAMES
+ *
+ * Get all filenames for the email corresponding to MESSAGE.
+ */
+VALUE
+notmuch_rb_message_get_filenames(VALUE self)
+{
+    notmuch_filenames_t *fnames;
+    notmuch_message_t *message;
+
+    Data_Get_Notmuch_Message(self, message);
+
+    fnames = notmuch_message_get_filenames(message);
+
+    return Data_Wrap_Struct(notmuch_rb_cFileNames, NULL, NULL, fnames);
+}
+
+/*
  * call-seq: MESSAGE.get_flag(flag) => true or false
  *
  * Get a value of a flag for the email corresponding to 'message'

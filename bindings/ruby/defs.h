@@ -269,6 +269,9 @@ VALUE
 notmuch_rb_message_get_filename(VALUE self);
 
 VALUE
+notmuch_rb_message_get_filenames(VALUE self);
+
+VALUE
 notmuch_rb_message_get_flag(VALUE self, VALUE flagv);
 
 VALUE

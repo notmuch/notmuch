@@ -263,6 +263,7 @@ Init_notmuch(void)
     rb_define_method(notmuch_rb_cMessage, "thread_id", notmuch_rb_message_get_thread_id, 0);
     rb_define_method(notmuch_rb_cMessage, "replies", notmuch_rb_message_get_replies, 0);
     rb_define_method(notmuch_rb_cMessage, "filename", notmuch_rb_message_get_filename, 0);
+    rb_define_method(notmuch_rb_cMessage, "filenames", notmuch_rb_message_get_filenames, 0);
     rb_define_method(notmuch_rb_cMessage, "get_flag", notmuch_rb_message_get_flag, 1);
     rb_define_method(notmuch_rb_cMessage, "set_flag", notmuch_rb_message_set_flag, 2);
     rb_define_method(notmuch_rb_cMessage, "date", notmuch_rb_message_get_date, 0);
