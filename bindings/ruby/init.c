@@ -273,6 +273,8 @@ Init_notmuch(void)
     rb_define_alias(notmuch_rb_cMessage, "<<", "add_tag");
     rb_define_method(notmuch_rb_cMessage, "remove_tag", notmuch_rb_message_remove_tag, 1);
     rb_define_method(notmuch_rb_cMessage, "remove_all_tags", notmuch_rb_message_remove_all_tags, 0);
+    rb_define_method(notmuch_rb_cMessage, "maildir_flags_to_tags", notmuch_rb_message_maildir_flags_to_tags, 0);
+    rb_define_method(notmuch_rb_cMessage, "tags_to_maildir_flags", notmuch_rb_message_tags_to_maildir_flags, 0);
     rb_define_method(notmuch_rb_cMessage, "freeze", notmuch_rb_message_freeze, 0);
     rb_define_method(notmuch_rb_cMessage, "thaw", notmuch_rb_message_thaw, 0);
 

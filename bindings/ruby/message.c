@@ -284,6 +284,44 @@ notmuch_rb_message_remove_all_tags(VALUE self)
 }
 
 /*
+ * call-seq: MESSAGE.maildir_flags_to_tags => true
+ *
+ * Add/remove tags according to maildir flags in the message filename(s)
+ */
+VALUE
+notmuch_rb_message_maildir_flags_to_tags(VALUE self)
+{
+    notmuch_status_t ret;
+    notmuch_message_t *message;
+
+    Data_Get_Notmuch_Message(self, message);
+
+    ret = notmuch_message_maildir_flags_to_tags(message);
+    notmuch_rb_status_raise(ret);
+
+    return Qtrue;
+}
+
+/*
+ * call-seq: MESSAGE.tags_to_maildir_flags => true
+ *
+ * Rename message filename(s) to encode tags as maildir flags
+ */
+VALUE
+notmuch_rb_message_tags_to_maildir_flags(VALUE self)
+{
+    notmuch_status_t ret;
+    notmuch_message_t *message;
+
+    Data_Get_Notmuch_Message(self, message);
+
+    ret = notmuch_message_tags_to_maildir_flags(message);
+    notmuch_rb_status_raise(ret);
+
+    return Qtrue;
+}
+
+/*
  * call-seq: MESSAGE.freeze => true
  *
  * Freeze the 'message'

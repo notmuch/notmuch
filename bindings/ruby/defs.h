@@ -293,6 +293,12 @@ VALUE
 notmuch_rb_message_remove_all_tags(VALUE self);
 
 VALUE
+notmuch_rb_message_maildir_flags_to_tags(VALUE self);
+
+VALUE
+notmuch_rb_message_tags_to_maildir_flags(VALUE self);
+
+VALUE
 notmuch_rb_message_freeze(VALUE self);
 
 VALUE
