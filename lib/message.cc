@@ -132,8 +132,8 @@ _notmuch_message_create_for_document (const void *talloc_owner,
  *
  * Here, 'talloc owner' is an optional talloc context to which the new
  * message will belong. This allows for the caller to not bother
- * calling notmuch_message_destroy on the message, and no that all
- * memory will be reclaimed with 'talloc_owner' is free. The caller
+ * calling notmuch_message_destroy on the message, and know that all
+ * memory will be reclaimed when 'talloc_owner' is freed. The caller
  * still can call notmuch_message_destroy when finished with the
  * message if desired.
  *
