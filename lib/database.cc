@@ -1710,7 +1710,7 @@ notmuch_database_remove_message (notmuch_database_t *notmuch,
 	if (status)
 	    return status;
 
-	term = talloc_asprintf (notmuch, "%s%s", prefix, direntry);
+	term = talloc_asprintf (local, "%s%s", prefix, direntry);
 
 	find_doc_ids_for_term (notmuch, term, &i, &end);
 
