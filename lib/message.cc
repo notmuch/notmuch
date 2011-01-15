@@ -434,17 +434,24 @@ notmuch_status_t
 _notmuch_message_add_filename (notmuch_message_t *message,
 			       const char *filename)
 {
+    const char *relative, *directory;
     notmuch_status_t status;
     void *local = talloc_new (message);
     char *direntry;
+
+    if (filename == NULL)
+	INTERNAL_ERROR ("Message filename cannot be NULL.");
 
     if (message->filename_list) {
 	_notmuch_filename_list_destroy (message->filename_list);
 	message->filename_list = NULL;
     }
 
-    if (filename == NULL)
-	INTERNAL_ERROR ("Message filename cannot be NULL.");
+    relative = _notmuch_database_relative_path (message->notmuch, filename);
+
+    status = _notmuch_database_split_path (local, relative, &directory, NULL);
+    if (status)
+	return status;
 
     status = _notmuch_database_filename_to_direntry (local,
 						     message->notmuch,
@@ -452,42 +459,104 @@ _notmuch_message_add_filename (notmuch_message_t *message,
     if (status)
 	return status;
 
+    /* New file-direntry allows navigating to this message with
+     * notmuch_directory_get_child_files() . */
     _notmuch_message_add_term (message, "file-direntry", direntry);
+
+    /* New terms allow user to search with folder: specification. */
+    _notmuch_message_gen_terms (message, "folder", directory);
 
     talloc_free (local);
 
     return NOTMUCH_STATUS_SUCCESS;
 }
 
-/* Change a particular filename for 'message' from 'old_filename' to
- * 'new_filename'
+/* Remove a particular 'filename' from 'message'.
  *
  * This change will not be reflected in the database until the next
  * call to _notmuch_message_sync.
- */
-static notmuch_status_t
-_notmuch_message_rename (notmuch_message_t *message,
-			 const char *old_filename,
-			 const char *new_filename)
+ *
+ * Note: This function does not remove a document from the database,
+ * even if the specified filename is the only filename for this
+ * message. For that functionality, see
+ * _notmuch_database_remove_message. */
+notmuch_status_t
+_notmuch_message_remove_filename (notmuch_message_t *message,
+				  const char *filename)
 {
+    const char *direntry_prefix = _find_prefix ("file-direntry");
+    int direntry_prefix_len = strlen (direntry_prefix);
+    const char *folder_prefix = _find_prefix ("folder");
+    int folder_prefix_len = strlen (folder_prefix);
     void *local = talloc_new (message);
     char *direntry;
     notmuch_private_status_t private_status;
     notmuch_status_t status;
+    Xapian::TermIterator i, last;
 
-    status = _notmuch_message_add_filename (message, new_filename);
-    if (status)
-	return status;
+    if (message->filename_list) {
+	_notmuch_filename_list_destroy (message->filename_list);
+	message->filename_list = NULL;
+    }
 
     status = _notmuch_database_filename_to_direntry (local, message->notmuch,
-						     old_filename, &direntry);
+						     filename, &direntry);
     if (status)
 	return status;
 
+    /* Unlink this file from its parent directory. */
     private_status = _notmuch_message_remove_term (message,
 						   "file-direntry", direntry);
     status = COERCE_STATUS (private_status,
 			    "Unexpected error from _notmuch_message_remove_term");
+
+    /* Re-synchronize "folder:" terms for this message. This requires
+     * first removing all "folder:" terms, then adding back terms for
+     * all remaining filenames of the message. */
+    while (1) {
+	i = message->doc.termlist_begin ();
+	i.skip_to (folder_prefix);
+
+	/* Terminate loop when no terms remain with desired prefix. */
+	if (i == message->doc.termlist_end () ||
+	    strncmp ((*i).c_str (), folder_prefix, folder_prefix_len))
+	{
+	    break;
+	}
+
+	try {
+	    message->doc.remove_term ((*i));
+	} catch (const Xapian::InvalidArgumentError) {
+	    /* Ignore failure to remove non-existent term. */
+	}
+    }
+
+    i = message->doc.termlist_begin ();
+    i.skip_to (direntry_prefix);
+
+    for (; i != message->doc.termlist_end (); i++) {
+	unsigned int directory_id;
+	const char *direntry, *directory;
+	char *colon;
+
+	/* Terminate loop at first term without desired prefix. */
+	if (strncmp ((*i).c_str (), direntry_prefix, direntry_prefix_len))
+	    break;
+
+	direntry = (*i).c_str ();
+	direntry += direntry_prefix_len;
+
+	directory_id = strtol (direntry, &colon, 10);
+
+	if (colon == NULL || *colon != ':')
+	    INTERNAL_ERROR ("malformed direntry");
+
+	directory = _notmuch_database_get_directory_path (local,
+							  message->notmuch,
+							  directory_id);
+	if (strlen (directory))
+	    _notmuch_message_gen_terms (message, "folder", directory);
+    }
 
     talloc_free (local);
 
@@ -1154,8 +1223,16 @@ notmuch_message_tags_to_maildir_flags (notmuch_message_t *message)
 	    if (err)
 		continue;
 
-	    new_status = _notmuch_message_rename (message,
-						  filename, filename_new);
+	    new_status = _notmuch_message_remove_filename (message,
+							   filename);
+	    /* Hold on to only the first error. */
+	    if (! status && new_status) {
+		status = new_status;
+		continue;
+	    }
+
+	    new_status = _notmuch_message_add_filename (message,
+							filename_new);
 	    /* Hold on to only the first error. */
 	    if (! status && new_status) {
 		status = new_status;

@@ -270,6 +270,10 @@ _notmuch_message_add_filename (notmuch_message_t *message,
 			       const char *filename);
 
 notmuch_status_t
+_notmuch_message_remove_filename (notmuch_message_t *message,
+				  const char *filename);
+
+notmuch_status_t
 _notmuch_message_rename (notmuch_message_t *message,
 			 const char *new_filename);
 

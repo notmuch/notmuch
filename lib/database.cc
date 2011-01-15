@@ -89,8 +89,9 @@ typedef struct {
  *
  * In addition, terms from the content of the message are added with
  * "from", "to", "attachment", and "subject" prefixes for use by the
- * user in searching. But the database doesn't really care itself
- * about any of these.
+ * user in searching. Similarly, terms from the path of the mail
+ * message are added with a "folder" prefix. But the database doesn't
+ * really care itself about any of these.
  *
  * The data portion of a mail document is empty.
  *
@@ -204,7 +205,8 @@ static prefix_t PROBABILISTIC_PREFIX[]= {
     { "from",			"XFROM" },
     { "to",			"XTO" },
     { "attachment",		"XATTACHMENT" },
-    { "subject",		"XSUBJECT"}
+    { "subject",		"XSUBJECT"},
+    { "folder",			"XFOLDER"}
 };
 
 int
@@ -1716,11 +1718,20 @@ notmuch_database_remove_message (notmuch_database_t *notmuch,
 
 	for ( ; i != end; i++) {
 	    Xapian::TermIterator j;
+	    notmuch_message_t *message;
+	    notmuch_private_status_t private_status;
 
+	    message = _notmuch_message_create (local, notmuch,
+					       *i, &private_status);
+	    if (message == NULL)
+		return COERCE_STATUS (private_status,
+				      "Inconsistent document ID in datbase.");
+
+	    _notmuch_message_remove_filename (message, filename);
+	    _notmuch_message_sync (message);
+
+	    /* Take care to find document after sync'ing filename removal. */
 	    document = find_document_for_doc_id (notmuch, *i);
-
-	    document.remove_term (term);
-
 	    j = document.termlist_begin ();
 	    j.skip_to (prefix);
 
@@ -1731,7 +1742,6 @@ notmuch_database_remove_message (notmuch_database_t *notmuch,
 		db->delete_document (document.get_docid ());
 		status = NOTMUCH_STATUS_SUCCESS;
 	    } else {
-		db->replace_document (document.get_docid (), document);
 		status = NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID;
 	    }
 	}
