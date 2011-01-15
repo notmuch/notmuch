@@ -526,6 +526,8 @@ terms to match against specific portions of an email, (where
 
 	thread:<thread-id>
 
+	folder:<directory-path>
+
 The
 .B from:
 prefix is used to match the name or address of the sender of an email
@@ -568,6 +570,13 @@ prefix can be used with the thread ID values that are generated
 internally by notmuch (and do not appear in email messages). These
 thread ID values can be seen in the first column of output from
 .B "notmuch search"
+
+The
+.B folder:
+prefix can be used to search for email message files that are
+contained within particular directories within the mail store. Only
+the directory components below the top-level mail database path are
+available to be searched.
 
 In addition to individual terms, multiple terms can be
 combined with Boolean operators (
