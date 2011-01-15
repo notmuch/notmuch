@@ -403,7 +403,7 @@ test_begin_subtest ()
     test_subtest_name="$1"
     # Remember stdout and stderr file descriptios and redirect test
     # output to the previously prepared file descriptors 3 and 4 (see
-    # bellow)
+    # below)
     if test "$verbose" != "t"; then exec 4>test.output 3>&4; fi
     exec 6>&1 7>&2 >&3 2>&4
     inside_subtest=t
