@@ -418,10 +418,12 @@ add_files_recursive (notmuch_database_t *notmuch,
 	/* success */
 	case NOTMUCH_STATUS_SUCCESS:
 	    state->added_messages++;
+	    notmuch_message_freeze (message);
 	    for (tag=state->new_tags; *tag != NULL; tag++)
 	        notmuch_message_add_tag (message, *tag);
 	    if (state->synchronize_flags == TRUE)
 		notmuch_message_maildir_flags_to_tags (message);
+	    notmuch_message_thaw (message);
 	    break;
 	/* Non-fatal issues (go on to next file) */
 	case NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID:
