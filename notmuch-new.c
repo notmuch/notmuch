@@ -28,6 +28,7 @@ typedef struct _filename_node {
 } _filename_node_t;
 
 typedef struct _filename_list {
+    unsigned count;
     _filename_node_t *head;
     _filename_node_t **tail;
 } _filename_list_t;
@@ -50,12 +51,12 @@ typedef struct {
     _filename_list_t *message_ids_to_sync;
 } add_files_state_t;
 
-static volatile sig_atomic_t do_add_files_print_progress = 0;
+static volatile sig_atomic_t do_print_progress = 0;
 
 static void
 handle_sigalrm (unused (int signal))
 {
-    do_add_files_print_progress = 1;
+    do_print_progress = 1;
 }
 
 static volatile sig_atomic_t interrupted;
@@ -81,6 +82,7 @@ _filename_list_create (const void *ctx)
 
     list->head = NULL;
     list->tail = &list->head;
+    list->count = 0;
 
     return list;
 }
@@ -91,6 +93,8 @@ _filename_list_add (_filename_list_t *list,
 {
     _filename_node_t *node = talloc (list, _filename_node_t);
 
+    list->count++;
+
     node->filename = talloc_strdup (list, filename);
     node->next = NULL;
 
@@ -99,28 +103,28 @@ _filename_list_add (_filename_list_t *list,
 }
 
 static void
-add_files_print_progress (add_files_state_t *state)
+generic_print_progress (const char *action, const char *object,
+			struct timeval tv_start, unsigned processed, unsigned total)
 {
     struct timeval tv_now;
     double elapsed_overall, rate_overall;
 
     gettimeofday (&tv_now, NULL);
 
-    elapsed_overall = notmuch_time_elapsed (state->tv_start, tv_now);
-    rate_overall = (state->processed_files) / elapsed_overall;
+    elapsed_overall = notmuch_time_elapsed (tv_start, tv_now);
+    rate_overall = processed / elapsed_overall;
 
-    printf ("Processed %d", state->processed_files);
+    printf ("%s %d ", action, processed);
 
-    if (state->total_files) {
+    if (total) {
 	double time_remaining;
 
-	time_remaining = ((state->total_files - state->processed_files) /
-			  rate_overall);
-	printf (" of %d files (", state->total_files);
+	time_remaining = ((total - processed) / rate_overall);
+	printf ("of %d %s (", total, object);
 	notmuch_time_print_formatted_seconds (time_remaining);
-	printf (" remaining).      \r");
+	printf (" remaining).\033[K\r");
     } else {
-	printf (" files (%d files/sec.)    \r", (int) rate_overall);
+	printf ("%s (%d %s/sec.)\033[K\r", object, (int) rate_overall, object);
     }
 
     fflush (stdout);
@@ -460,9 +464,10 @@ add_files_recursive (notmuch_database_t *notmuch,
 	    message = NULL;
 	}
 
-	if (do_add_files_print_progress) {
-	    do_add_files_print_progress = 0;
-	    add_files_print_progress (state);
+	if (do_print_progress) {
+	    do_print_progress = 0;
+	    generic_print_progress ("Processed", "files", state->tv_start,
+				    state->processed_files, state->total_files);
 	}
 
 	talloc_free (next);
@@ -521,37 +526,55 @@ add_files_recursive (notmuch_database_t *notmuch,
     return ret;
 }
 
+static void
+setup_progress_printing_timer (void)
+{
+    struct sigaction action;
+    struct itimerval timerval;
+
+    /* Setup our handler for SIGALRM */
+    memset (&action, 0, sizeof (struct sigaction));
+    action.sa_handler = handle_sigalrm;
+    sigemptyset (&action.sa_mask);
+    action.sa_flags = SA_RESTART;
+    sigaction (SIGALRM, &action, NULL);
+
+    /* Then start a timer to send SIGALRM once per second. */
+    timerval.it_interval.tv_sec = 1;
+    timerval.it_interval.tv_usec = 0;
+    timerval.it_value.tv_sec = 1;
+    timerval.it_value.tv_usec = 0;
+    setitimer (ITIMER_REAL, &timerval, NULL);
+}
+
+static void
+stop_progress_printing_timer (void)
+{
+    struct sigaction action;
+    struct itimerval timerval;
+
+    /* Now stop the timer. */
+    timerval.it_interval.tv_sec = 0;
+    timerval.it_interval.tv_usec = 0;
+    timerval.it_value.tv_sec = 0;
+    timerval.it_value.tv_usec = 0;
+    setitimer (ITIMER_REAL, &timerval, NULL);
+
+    /* And disable the signal handler. */
+    action.sa_handler = SIG_IGN;
+    sigaction (SIGALRM, &action, NULL);
+}
+
+
 /* This is the top-level entry point for add_files. It does a couple
- * of error checks, sets up the progress-printing timer and then calls
- * into the recursive function. */
+ * of error checks and then calls into the recursive function. */
 static notmuch_status_t
 add_files (notmuch_database_t *notmuch,
 	   const char *path,
 	   add_files_state_t *state)
 {
     notmuch_status_t status;
-    struct sigaction action;
-    struct itimerval timerval;
-    notmuch_bool_t timer_is_active = FALSE;
     struct stat st;
-
-    if (state->output_is_a_tty && ! debugger_is_active () && ! state->verbose) {
-	/* Setup our handler for SIGALRM */
-	memset (&action, 0, sizeof (struct sigaction));
-	action.sa_handler = handle_sigalrm;
-	sigemptyset (&action.sa_mask);
-	action.sa_flags = SA_RESTART;
-	sigaction (SIGALRM, &action, NULL);
-
-	/* Then start a timer to send SIGALRM once per second. */
-	timerval.it_interval.tv_sec = 1;
-	timerval.it_interval.tv_usec = 0;
-	timerval.it_value.tv_sec = 1;
-	timerval.it_value.tv_usec = 0;
-	setitimer (ITIMER_REAL, &timerval, NULL);
-
-	timer_is_active = TRUE;
-    }
 
     if (stat (path, &st)) {
 	fprintf (stderr, "Error reading directory %s: %s\n",
@@ -565,19 +588,6 @@ add_files (notmuch_database_t *notmuch,
     }
 
     status = add_files_recursive (notmuch, path, state);
-
-    if (timer_is_active) {
-	/* Now stop the timer. */
-	timerval.it_interval.tv_sec = 0;
-	timerval.it_interval.tv_usec = 0;
-	timerval.it_value.tv_sec = 0;
-	timerval.it_value.tv_usec = 0;
-	setitimer (ITIMER_REAL, &timerval, NULL);
-
-	/* And disable the signal handler. */
-	action.sa_handler = SIG_IGN;
-	sigaction (SIGALRM, &action, NULL);
-    }
 
     return status;
 }
@@ -727,7 +737,7 @@ notmuch_new_command (void *ctx, int argc, char *argv[])
     notmuch_database_t *notmuch;
     add_files_state_t add_files_state;
     double elapsed;
-    struct timeval tv_now;
+    struct timeval tv_now, tv_start;
     int ret = 0;
     struct stat st;
     const char *db_path;
@@ -737,6 +747,7 @@ notmuch_new_command (void *ctx, int argc, char *argv[])
     int renamed_files, removed_files;
     notmuch_status_t status;
     int i;
+    notmuch_bool_t timer_is_active = FALSE;
 
     add_files_state.verbose = 0;
     add_files_state.output_is_a_tty = isatty (fileno (stdout));
@@ -749,7 +760,6 @@ notmuch_new_command (void *ctx, int argc, char *argv[])
 	    return 1;
 	}
     }
-
     config = notmuch_config_open (ctx, NULL, NULL);
     if (config == NULL)
 	return 1;
@@ -812,21 +822,41 @@ notmuch_new_command (void *ctx, int argc, char *argv[])
     add_files_state.removed_files = _filename_list_create (ctx);
     add_files_state.removed_directories = _filename_list_create (ctx);
 
+    if (! debugger_is_active () && add_files_state.output_is_a_tty
+	&& ! add_files_state.verbose) {
+	setup_progress_printing_timer ();
+	timer_is_active = TRUE;
+    }
+
     ret = add_files (notmuch, db_path, &add_files_state);
 
     removed_files = 0;
     renamed_files = 0;
+    gettimeofday (&tv_start, NULL);
     for (f = add_files_state.removed_files->head; f; f = f->next) {
 	status = notmuch_database_remove_message (notmuch, f->filename);
 	if (status == NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID)
 	    renamed_files++;
 	else
 	    removed_files++;
+	if (do_print_progress) {
+	    do_print_progress = 0;
+	    generic_print_progress ("Cleaned up", "messages",
+		tv_start, removed_files + renamed_files,
+		add_files_state.removed_files->count);
+	}
     }
 
-    for (f = add_files_state.removed_directories->head; f; f = f->next) {
+    gettimeofday (&tv_start, NULL);
+    for (f = add_files_state.removed_directories->head, i = 0; f; f = f->next, i++) {
 	_remove_directory (ctx, notmuch, f->filename,
 			   &renamed_files, &removed_files);
+	if (do_print_progress) {
+	    do_print_progress = 0;
+	    generic_print_progress ("Cleaned up", "directories",
+		tv_start, i,
+		add_files_state.removed_directories->count);
+	}
     }
 
     talloc_free (add_files_state.removed_files);
@@ -835,21 +865,31 @@ notmuch_new_command (void *ctx, int argc, char *argv[])
     /* Now that removals are done (hence the database is aware of all
      * renames), we can synchronize maildir_flags to tags for all
      * messages that had new filenames appear on this run. */
+    gettimeofday (&tv_start, NULL);
     if (add_files_state.synchronize_flags) {
 	_filename_node_t *node;
 	notmuch_message_t *message;
-	for (node = add_files_state.message_ids_to_sync->head;
+	for (node = add_files_state.message_ids_to_sync->head, i = 0;
 	     node;
-	     node = node->next)
+	     node = node->next, i++)
 	{
 	    message = notmuch_database_find_message (notmuch, node->filename);
 	    notmuch_message_maildir_flags_to_tags (message);
 	    notmuch_message_destroy (message);
+	    if (do_print_progress) {
+		do_print_progress = 0;
+		generic_print_progress (
+		    "Synchronized tags for", "messages",
+		    tv_start, i, add_files_state.message_ids_to_sync->count);
+	    }
 	}
     }
 
     talloc_free (add_files_state.message_ids_to_sync);
     add_files_state.message_ids_to_sync = NULL;
+
+    if (timer_is_active)
+	stop_progress_printing_timer ();
 
     gettimeofday (&tv_now, NULL);
     elapsed = notmuch_time_elapsed (add_files_state.tv_start,
@@ -861,10 +901,10 @@ notmuch_new_command (void *ctx, int argc, char *argv[])
 		"file" : "total files");
 	notmuch_time_print_formatted_seconds (elapsed);
 	if (elapsed > 1) {
-	    printf (" (%d files/sec.).                 \n",
+	    printf (" (%d files/sec.).\033[K\n",
 		    (int) (add_files_state.processed_files / elapsed));
 	} else {
-	    printf (".                    \n");
+	    printf (".\033[K\n");
 	}
     }
 
