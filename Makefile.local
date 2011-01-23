@@ -277,6 +277,7 @@ ifeq ($(MAKECMDGOALS), install)
 	@echo "through the process of configuring notmuch and creating"
 	@echo "a database of existing email messages. The \"notmuch\""
 	@echo "command will also offer some sample search commands."
+ifeq ($(WITH_EMACS), 1)
 	@echo ""
 	@echo "Beyond the command-line interface, notmuch also offers"
 	@echo "a full-featured interface for reading and writing mail"
@@ -287,6 +288,7 @@ ifeq ($(MAKECMDGOALS), install)
 	@echo ""
 	@echo "And then run emacs as \"emacs -f notmuch\" or invoke"
 	@echo "the command \"M-x notmuch\" from within emacs."
+endif
 endif
 
 .PHONY: install-desktop

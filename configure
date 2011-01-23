@@ -28,6 +28,9 @@ XAPIAN_CONFIG=${XAPIAN_CONFIG:-xapian-config}
 # options.
 PREFIX=/usr/local
 LIBDIR=
+WITH_EMACS=1
+WITH_BASH=1
+WITH_ZSH=1
 
 usage ()
 {
@@ -81,6 +84,15 @@ Fine tuning of some installation directories is available:
 	--mandir=DIR		Install man pages to DIR [PREFIX/share/man]
 	--sysconfdir=DIR	Read-only single-machine data [PREFIX/etc]
 	--emacslispdir=DIR	Emacs code [PREFIX/share/emacs/site-lisp]
+	--bashcompletiondir=DIR Bash completions files [SYSCONFDIR/bash_completion.d]
+	--zshcompletiondir=DIR	Zsh completions files [PREFIX/share/zsh/functions/Completion/Unix]
+
+Some features can be disabled (--with-feature=no is equivalent to
+--without-feature) :
+
+	--without-emacs			Do not install lisp file
+	--without-bash-completion	Do not install bash completions files
+	--without-zsh-completion	Do not install zsh completions files
 
 Additional options are accepted for compatibility with other
 configure-script calling conventions, but don't do anything yet:
@@ -114,6 +126,34 @@ for option; do
 	SYSCONFDIR="${option#*=}"
     elif [ "${option%%=*}" = '--emacslispdir' ] ; then
 	EMACSLISPDIR="${option#*=}"
+    elif [ "${option%%=*}" = '--bashcompletiondir' ] ; then
+	BASHCOMPLETIONDIR="${option#*=}"
+    elif [ "${option%%=*}" = '--zshcompletiondir' ] ; then
+	ZSHCOMLETIONDIR="${option#*=}"
+    elif [ "${option%%=*}" = '--with-emacs' ]; then
+	if [ "${option#*=}" = 'no' ]; then
+	    WITH_EMACS=0
+	else
+	    WITH_EMACS=1
+	fi
+    elif [ "${option}" = '--without-emacs' ] ; then
+	WITH_EMACS=0
+    elif [ "${option%%=*}" = '--with-bash-completion' ]; then
+	if [ "${option#*=}" = 'no' ]; then
+	    WITH_BASH=0
+	else
+	    WITH_BASH=1
+	fi
+    elif [ "${option}" = '--without-bash-completion' ] ; then
+	WITH_BASH=0
+    elif [ "${option%%=*}" = '--with-zsh-completion' ]; then
+	if [ "${option#*=}" = 'no' ]; then
+	    WITH_ZSH=0
+	else
+	    WITH_ZSH=1
+	fi
+    elif [ "${option}" = '--without-zsh-completion' ] ; then
+	WITH_ZSH=0
     elif [ "${option%%=*}" = '--build' ] ; then
 	build_option="${option#*=}"
 	case ${build_option} in
@@ -527,10 +567,10 @@ HAVE_EMACS = ${have_emacs}
 desktop_dir = \$(prefix)/share/applications
 
 # The directory to which bash completions files should be installed
-bash_completion_dir = \$(sysconfdir)/bash_completion.d
+bash_completion_dir = ${BASHCOMPLETIONDIR:=\$(sysconfdir)/bash_completion.d}
 
 # The directory to which zsh completions files should be installed
-zsh_completion_dir = \$(prefix)/share/zsh/functions/Completion/Unix
+zsh_completion_dir = ${ZSHCOMLETIONDIR:=\$(prefix)/share/zsh/functions/Completion/Unix}
 
 # Whether the getline function is available (if not, then notmuch will
 # build its own version)
@@ -571,6 +611,15 @@ HAVE_VALGRIND = ${have_valgrind}
 
 # And if so, flags needed at compile time for valgrind macros
 VALGRIND_CFLAGS = ${valgrind_cflags}
+
+# Support for emacs
+WITH_EMACS = ${WITH_EMACS}
+
+# Support for bash completion
+WITH_BASH = ${WITH_BASH}
+
+# Support for zsh completion
+WITH_ZSH = ${WITH_ZSH}
 
 # Combined flags for compiling and linking against all of the above
 CONFIGURE_CFLAGS = -DHAVE_GETLINE=\$(HAVE_GETLINE) \$(GMIME_CFLAGS)      \\

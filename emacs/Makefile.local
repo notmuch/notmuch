@@ -22,11 +22,13 @@ emacs_bytecode := $(subst .el,.elc,$(emacs_sources))
 %.elc: %.el
 	$(call quiet,EMACS) --directory emacs -batch -f batch-byte-compile $<
 
+ifeq ($(WITH_EMACS),1)
 ifeq ($(HAVE_EMACS),1)
 all: $(emacs_bytecode)
 endif
 
 install: install-emacs
+endif
 
 .PHONY: install-emacs
 install-emacs:
