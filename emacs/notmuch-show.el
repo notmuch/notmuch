@@ -948,7 +948,7 @@ any effects from previous calls to
 
 The given command will be executed with the raw contents of the
 current email message as stdin. Anything printed by the command
-to stdout or stderr will appear in the *Messages* buffer.
+to stdout or stderr will appear in the *notmuch-pipe* buffer.
 
 When invoked with a prefix argument, the command will receive all
 open messages in the current thread (formatted as an mbox) rather
@@ -964,7 +964,18 @@ than only the current message."
       (setq shell-command
 	    (concat notmuch-command " show --format=raw "
 		    (shell-quote-argument (notmuch-show-get-message-id)) " | " command)))
-    (start-process-shell-command "notmuch-pipe-command" "*notmuch-pipe*" shell-command)))
+    (let ((buf (get-buffer-create (concat "*notmuch-pipe*"))))
+      (with-current-buffer buf
+	(setq buffer-read-only nil)
+	(erase-buffer)
+	(let ((exit-code (call-process-shell-command shell-command nil buf)))
+	  (goto-char (point-max))
+	  (set-buffer-modified-p nil)
+	  (setq buffer-read-only t)
+	  (unless (zerop exit-code)
+	    (switch-to-buffer-other-window buf)
+	    (message (format "Command '%s' exited abnormally with code %d"
+			     shell-command exit-code))))))))
 
 (defun notmuch-show-add-tags-worker (current-tags add-tags)
   "Add to `current-tags' with any tags from `add-tags' not
