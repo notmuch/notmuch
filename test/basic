@@ -51,8 +51,13 @@ test_expect_code 2 'failure to clean up causes the test to fail' '
 
 # Ensure that all tests are being run
 test_begin_subtest 'Ensure that all available tests will be run by notmuch-test'
-tests_in_suite=$(grep TESTS= ../notmuch-test | sed -e "s/TESTS=\"\(.*\)\"/\1/" | tr " " "\n" | sort)
-available=$(ls -1 ../ | grep -v -E "^(aggregate-results.sh|Makefile|Makefile.local|notmuch-test|README|test-lib.sh|test-results|tmp.*|valgrind|corpus*|emacs.expected-output|smtp-dummy|smtp-dummy.c|test-verbose|test.expected-output|.*~)" | sort)
+eval $(sed -n -e '/^TESTS="$/,/^"$/p' notmuch-test ../notmuch-test)
+tests_in_suite=$(for i in $TESTS; do echo $i; done | sort)
+available=$(ls -1 ../ | \
+    sed -r -e "/^(aggregate-results.sh|Makefile|Makefile.local|notmuch-test)/d" \
+	   -e "/^(README|test-lib.sh|test-results|tmp.*|valgrind|corpus*)/d" \
+	   -e "/^(emacs.expected-output|smtp-dummy|smtp-dummy.c|test-verbose)/d" \
+	   -e "/^(test.expected-output|.*~)/d" | sort)
 test_expect_equal "$tests_in_suite" "$available"
 
 EXPECTED=../test.expected-output
