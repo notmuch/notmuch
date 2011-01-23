@@ -18,5 +18,5 @@ ifeq ($(WITH_BASH),1)
 endif
 ifeq ($(WITH_ZSH),1)
 	mkdir -p $(DESTDIR)$(zsh_completion_dir)
-	install -m0644 $(zsh_script) $(DESTDIR)$(zsh_completion_dir)/notmuch
+	install -m0644 $(zsh_script) $(DESTDIR)$(zsh_completion_dir)/_notmuch
 endif
