@@ -397,7 +397,7 @@ _notmuch_thread_create (void *ctx,
     notmuch_thread_t *thread;
     notmuch_message_t *seed_message;
     const char *thread_id;
-    const char *thread_id_query_string;
+    char *thread_id_query_string;
     notmuch_query_t *thread_id_query;
 
     notmuch_messages_t *messages;
@@ -415,6 +415,8 @@ _notmuch_thread_create (void *ctx,
     thread_id_query = notmuch_query_create (notmuch, thread_id_query_string);
     if (unlikely (thread_id_query == NULL))
 	return NULL;
+
+    talloc_free (thread_id_query_string);
 
     thread = talloc (ctx, notmuch_thread_t);
     if (unlikely (thread == NULL))

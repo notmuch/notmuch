@@ -548,6 +548,8 @@ main (int argc, char *argv[])
     command_t *command;
     unsigned int i;
 
+    talloc_enable_null_tracking ();
+
     local = talloc_new (NULL);
 
     g_mime_init (0);

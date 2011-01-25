@@ -167,8 +167,7 @@ format_thread_json (const void *ctx,
 }
 
 static int
-do_search_threads (const void *ctx,
-		   const search_format_t *format,
+do_search_threads (const search_format_t *format,
 		   notmuch_query_t *query,
 		   notmuch_sort_t sort,
 		   output_t output)
@@ -197,7 +196,7 @@ do_search_threads (const void *ctx,
 	thread = notmuch_threads_get (threads);
 
 	if (output == OUTPUT_THREADS) {
-	    format->item_id (ctx, "thread:",
+	    format->item_id (thread, "thread:",
 			     notmuch_thread_get_thread_id (thread));
 	} else { /* output == OUTPUT_SUMMARY */
 	    fputs (format->item_start, stdout);
@@ -207,7 +206,7 @@ do_search_threads (const void *ctx,
 	    else
 		date = notmuch_thread_get_newest_date (thread);
 
-	    format->thread_summary (ctx,
+	    format->thread_summary (thread,
 				    notmuch_thread_get_thread_id (thread),
 				    date,
 				    notmuch_thread_get_matched_messages (thread),
@@ -244,8 +243,7 @@ do_search_threads (const void *ctx,
 }
 
 static int
-do_search_messages (const void *ctx,
-		    const search_format_t *format,
+do_search_messages (const search_format_t *format,
 		    notmuch_query_t *query,
 		    output_t output)
 {
@@ -269,10 +267,10 @@ do_search_messages (const void *ctx,
 	    fputs (format->item_sep, stdout);
 
 	if (output == OUTPUT_FILES) {
-	    format->item_id (ctx, "",
+	    format->item_id (message, "",
 			     notmuch_message_get_filename (message));
 	} else { /* output == OUTPUT_MESSAGES */
-	    format->item_id (ctx, "id:",
+	    format->item_id (message, "id:",
 			     notmuch_message_get_message_id (message));
 	}
 
@@ -290,8 +288,7 @@ do_search_messages (const void *ctx,
 }
 
 static int
-do_search_tags (const void *ctx,
-		notmuch_database_t *notmuch,
+do_search_tags (notmuch_database_t *notmuch,
 		const search_format_t *format,
 		notmuch_query_t *query)
 {
@@ -324,7 +321,7 @@ do_search_tags (const void *ctx,
 	else
 	    fputs (format->item_sep, stdout);
 
-	format->item_id (ctx, "", tag);
+	format->item_id (tags, "", tag);
 
 	first_tag = 0;
     }
@@ -412,7 +409,7 @@ notmuch_search_command (void *ctx, int argc, char *argv[])
     if (notmuch == NULL)
 	return 1;
 
-    query_str = query_string_from_args (ctx, argc, argv);
+    query_str = query_string_from_args (notmuch, argc, argv);
     if (query_str == NULL) {
 	fprintf (stderr, "Out of memory.\n");
 	return 1;
@@ -434,14 +431,14 @@ notmuch_search_command (void *ctx, int argc, char *argv[])
     default:
     case OUTPUT_SUMMARY:
     case OUTPUT_THREADS:
-	ret = do_search_threads (ctx, format, query, sort, output);
+	ret = do_search_threads (format, query, sort, output);
 	break;
     case OUTPUT_MESSAGES:
     case OUTPUT_FILES:
-	ret = do_search_messages (ctx, format, query, output);
+	ret = do_search_messages (format, query, output);
 	break;
     case OUTPUT_TAGS:
-	ret = do_search_tags (ctx, notmuch, format, query);
+	ret = do_search_tags (notmuch, format, query);
 	break;
     }
 
