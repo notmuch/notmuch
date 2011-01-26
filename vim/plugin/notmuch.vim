@@ -18,7 +18,8 @@
 " along with Notmuch.  If not, see <http://www.gnu.org/licenses/>.
 "
 " Authors: Bart Trojanowski <bart@jukie.net>
-
+" Contributors: Peter Hartman <peterjohnhartman@gmail.com>
+"
 " --- configuration defaults {{{1
 
 let s:notmuch_defaults = {
@@ -1024,11 +1025,9 @@ endfunction
 " --- --- compose screen helper functions {{{2
 
 function! s:NM_compose_get_user_email()
-        let name = substitute(system('id -u -n'), '\v(^\s*|\s*$|\n)', '', 'g')
-        let fqdn = substitute(system('hostname -f'), '\v(^\s*|\s*$|\n)', '', 'g')
-
-        " TODO: do this properly
-        return name . '@' . fqdn
+        " TODO: do this properly (still), i.e., allow for multiple email accounts
+        let email = substitute(system('notmuch config get user.primary_email'), '\v(^\s*|\s*$|\n)', '', 'g')
+	return email
 endfunction
 
 function! s:NM_compose_find_line_match(start, pattern, failure)
