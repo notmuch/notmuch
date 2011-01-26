@@ -32,11 +32,11 @@ endif
 
 .PHONY: install-emacs
 install-emacs:
-	mkdir -p $(DESTDIR)$(emacslispdir)
-	install -m0644 $(emacs_sources) $(DESTDIR)$(emacslispdir)
+	mkdir -p "$(DESTDIR)$(emacslispdir)"
+	install -m0644 $(emacs_sources) "$(DESTDIR)$(emacslispdir)"
 ifeq ($(HAVE_EMACS),1)
-	install -m0644 $(emacs_bytecode) $(DESTDIR)$(emacslispdir)
+	install -m0644 $(emacs_bytecode) "$(DESTDIR)$(emacslispdir)"
 endif
-	install -m0644 $(emacs_images) $(DESTDIR)$(emacslispdir)
+	install -m0644 $(emacs_images) "$(DESTDIR)$(emacslispdir)"
 
 CLEAN := $(CLEAN) $(emacs_bytecode)

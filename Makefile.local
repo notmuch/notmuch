@@ -265,10 +265,10 @@ notmuch.1.gz: notmuch.1
 
 .PHONY: install
 install: all notmuch.1.gz
-	mkdir -p $(DESTDIR)$(mandir)/man1
-	install -m0644 notmuch.1.gz $(DESTDIR)$(mandir)/man1/
-	mkdir -p $(DESTDIR)$(prefix)/bin/
-	install notmuch-shared $(DESTDIR)$(prefix)/bin/notmuch
+	mkdir -p "$(DESTDIR)$(mandir)/man1"
+	install -m0644 notmuch.1.gz "$(DESTDIR)$(mandir)/man1/"
+	mkdir -p "$(DESTDIR)$(prefix)/bin/"
+	install notmuch-shared "$(DESTDIR)$(prefix)/bin/notmuch"
 ifeq ($(MAKECMDGOALS), install)
 	@echo ""
 	@echo "Notmuch is now installed to $(DESTDIR)$(prefix)"
@@ -293,8 +293,8 @@ endif
 
 .PHONY: install-desktop
 install-desktop:
-	mkdir -p $(DESTDIR)$(desktop_dir)
-	desktop-file-install --mode 0644 --dir $(DESTDIR)$(desktop_dir) notmuch.desktop
+	mkdir -p "$(DESTDIR)$(desktop_dir)"
+	desktop-file-install --mode 0644 --dir "$(DESTDIR)$(desktop_dir)" notmuch.desktop
 
 SRCS  := $(SRCS) $(notmuch_client_srcs)
 CLEAN := $(CLEAN) notmuch notmuch-shared $(notmuch_client_modules) notmuch.elc notmuch.1.gz

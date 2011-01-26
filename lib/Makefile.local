@@ -86,12 +86,12 @@ install: install-$(dir)
 # variable that is not reused.
 lib := $(dir)
 install-$(dir):
-	mkdir -p $(DESTDIR)$(libdir)/
-	install -m0644 $(lib)/$(LIBNAME) $(DESTDIR)$(libdir)/
-	ln -sf $(LIBNAME) $(DESTDIR)$(libdir)/$(SONAME)
-	ln -sf $(LIBNAME) $(DESTDIR)$(libdir)/$(LINKER_NAME)
-	mkdir -p $(DESTDIR)$(includedir)
-	install -m0644 $(lib)/notmuch.h $(DESTDIR)$(includedir)/
+	mkdir -p "$(DESTDIR)$(libdir)/"
+	install -m0644 "$(lib)/$(LIBNAME)" "$(DESTDIR)$(libdir)/"
+	ln -sf $(LIBNAME) "$(DESTDIR)$(libdir)/$(SONAME)"
+	ln -sf $(LIBNAME) "$(DESTDIR)$(libdir)/$(LINKER_NAME)"
+	mkdir -p "$(DESTDIR)$(includedir)"
+	install -m0644 "$(lib)/notmuch.h" "$(DESTDIR)$(includedir)/"
 	$(LIBRARY_INSTALL_POST_COMMAND)
 
 SRCS  := $(SRCS) $(libnotmuch_c_srcs) $(libnotmuch_cxx_srcs)
