@@ -420,11 +420,8 @@ add_files_recursive (notmuch_database_t *notmuch,
 	    state->added_messages++;
 	    for (tag=state->new_tags; *tag != NULL; tag++)
 	        notmuch_message_add_tag (message, *tag);
-	    /* Defer sync of maildir flags until after old filenames
-	     * are removed in the case of a rename. */
 	    if (state->synchronize_flags == TRUE)
-		_filename_list_add (state->message_ids_to_sync,
-				    notmuch_message_get_message_id (message));
+		notmuch_message_maildir_flags_to_tags (message);
 	    break;
 	/* Non-fatal issues (go on to next file) */
 	case NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID:
