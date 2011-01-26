@@ -117,15 +117,19 @@ generic_print_progress (const char *action, const char *object,
     printf ("%s %d ", action, processed);
 
     if (total) {
-	double time_remaining;
-
-	time_remaining = ((total - processed) / rate_overall);
-	printf ("of %d %s (", total, object);
-	notmuch_time_print_formatted_seconds (time_remaining);
-	printf (" remaining).\033[K\r");
+	printf ("of %d %s", total, object);
+	if (processed > 0 && elapsed_overall > 0.5) {
+	    double time_remaining = ((total - processed) / rate_overall);
+	    printf (" (");
+	    notmuch_time_print_formatted_seconds (time_remaining);
+	    printf (" remaining)");
+	}
     } else {
-	printf ("%s (%d %s/sec.)\033[K\r", object, (int) rate_overall, object);
+	printf ("%s", object);
+	if (elapsed_overall > 0.5)
+	    printf (" (%d %s/sec.)", (int) rate_overall, object);
     }
+    printf (".\033[K\r");
 
     fflush (stdout);
 }
