@@ -39,6 +39,7 @@ struct _notmuch_message {
     unsigned long flags;
 
     Xapian::Document doc;
+    Xapian::termcount termpos;
 };
 
 #define ARRAY_SIZE(arr) (sizeof (arr) / sizeof (arr[0]))
@@ -123,6 +124,7 @@ _notmuch_message_create_for_document (const void *talloc_owner,
     talloc_set_destructor (message, _notmuch_message_destructor);
 
     message->doc = doc;
+    message->termpos = 0;
 
     return message;
 }
@@ -824,11 +826,13 @@ _notmuch_message_gen_terms (notmuch_message_t *message,
 	return NOTMUCH_PRIVATE_STATUS_NULL_POINTER;
 
     term_gen->set_document (message->doc);
+    term_gen->set_termpos (message->termpos);
 
     if (prefix_name) {
 	const char *prefix = _find_prefix (prefix_name);
 
 	term_gen->index_text (text, 1, prefix);
+	message->termpos = term_gen->get_termpos ();
     }
 
     term_gen->index_text (text);
