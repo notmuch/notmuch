@@ -35,7 +35,7 @@ is a possibly empty forest of replies.
 	 (json-false 'nil))
     (with-temp-buffer
       (progn
-	(apply 'call-process (append (list notmuch-command nil t nil) args))
+	(apply 'call-process (append (list notmuch-command nil (list t nil) nil) args))
 	(goto-char (point-min))
 	(json-read)))))
 
