@@ -16,7 +16,7 @@ fi
 
 cd $(dirname "$0")
 
-TESTS="basic new search search-output search-by-folder json thread-naming raw reply dump-restore uuencode thread-order author-order from-guessing long-id encoding emacs maildir-sync"
+TESTS="basic new search search-output search-by-folder search-position-overlap-bug json thread-naming raw reply dump-restore uuencode thread-order author-order from-guessing long-id encoding emacs maildir-sync"
 
 # Clean up any results from a previous run
 rm -r test-results >/dev/null 2>/dev/null
