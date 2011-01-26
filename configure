@@ -1,13 +1,5 @@
 #! /bin/sh
 
-# Removing space from IFS makes it much easier to support filenames
-# with spaces. See http://www.dwheeler.com/essays/filenames-in-shell.html
-# for gory details.
-IFS="$(printf '\n\t')"
-
-# Since we don't have space in IFS we use tab to separate things in lists
-tab="$(printf '\t')"
-
 # Set several defaults (optionally specified by the user in
 # environemnt variables)
 CC=${CC:-gcc}
@@ -343,11 +335,16 @@ elif [ $uname = "Linux" ] ; then
     platform=LINUX
     linker_resolves_library_dependencies=1
     ldconfig_paths=$(/sbin/ldconfig -N -X -v 2>/dev/null | sed -n -e 's,^\(/.*\):\( (.*)\)\?$,\1,p')
+    # Separate ldconfig_paths only on newline (not on any potential
+    # embedded space characters in any filenames).
+    OLD_IFS=$IFS
+    IFS="$(printf '\n')"
     for path in $ldconfig_paths; do
 	if [ "$path" = "$libdir_expanded" ]; then
 	    libdir_in_ldconfig=1
 	fi
     done
+    IFS=$OLD_IFS
 else
     printf "Unknown.\n"
     cat <<EOF
