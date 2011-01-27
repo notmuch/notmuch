@@ -351,8 +351,11 @@ ${additional_headers}"
 ${additional_headers}"
     fi
 
+    # Note that in the way we're setting it above and using it below,
+    # `additional_headers' will also serve as the header / body separator
+    # (empty line in between).
 
-cat <<EOF >"$gen_msg_filename"
+    cat <<EOF >"$gen_msg_filename"
 From: ${template[from]}
 To: ${template[to]}
 Message-Id: <${gen_msg_id}>
