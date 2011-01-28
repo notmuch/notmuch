@@ -60,6 +60,7 @@ available=$(ls -1 $TEST_DIRECTORY/ | \
 	   -e "/^(test.expected-output|.*~)/d" \
 	   -e "/^(gnupg-secret-key.asc)/d" \
 	   -e "/^(gnupg-secret-key.NOTE)/d" \
+	   -e "/^(atomicity.gdb)/d" \
 	   | sort)
 test_expect_equal "$tests_in_suite" "$available"
 

@@ -42,6 +42,7 @@ TESTS="
   crypto
   symbol-hiding
   search-folder-coherence
+  atomicity
 "
 TESTS=${NOTMUCH_TESTS:=$TESTS}
 
