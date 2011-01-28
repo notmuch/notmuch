@@ -23,6 +23,7 @@ TESTS="
   search-output
   search-by-folder
   search-position-overlap-bug
+  search-lwn
   json
   thread-naming
   raw

@@ -3,12 +3,6 @@ test_description='"notmuch search" in several variations'
 . ./test-lib.sh
 
 add_email_corpus
-add_message \
-  '[from]="LWN.net Weekly Notification <lwn@lwn.net>"' \
-  '[subject]="LWN.net Weekly Edition for January 27, 2011 available"'
-add_message \
-  '[from]="LWN.net Mailing Lists <lwn@lwn.net>"' \
-  '[subject]="LWN.net newly freed content for January 27, 2011"'
 
 test_begin_subtest "Search body"
 add_message '[subject]="body search"' '[date]="Sat, 01 Jan 2000 12:00:00 -0000"' [body]=bodysearchtest
@@ -63,34 +57,6 @@ add_message '[subject]="search by from (name)"' '[date]="Sat, 01 Jan 2000 12:00:
 output=$(notmuch search from:"Search By From Name" | notmuch_search_sanitize)
 test_expect_equal "$output" "thread:XXX   2000-01-01 [1/1] Search By From Name; search by from (name) (inbox unread)"
 
-test_begin_subtest "LWN, I:"
-output=$(notmuch search from:'lwn.net weekly notification' | notmuch_search_sanitize)
-test_expect_equal "$output" "thread:XXX   2001-01-05 [1/1] LWN.net Weekly Notification; LWN.net Weekly Edition for January 27, 2011 available (inbox unread)"
-
-test_begin_subtest "LWN, II:"
-output=$(notmuch search from:'lwn.net mailing lists' | notmuch_search_sanitize)
-test_expect_equal "$output" "thread:XXX   2001-01-05 [1/1] LWN.net Mailing Lists; LWN.net newly freed content for January 27, 2011 (inbox unread)"
-
-test_begin_subtest "LWN, III:"
-output=$(notmuch search from:lwn and from:weekly | notmuch_search_sanitize)
-test_expect_equal "$output" "thread:XXX   2001-01-05 [1/1] LWN.net Weekly Notification; LWN.net Weekly Edition for January 27, 2011 available (inbox unread)"
-
-test_begin_subtest "LWN, IV:"
-output=$(notmuch search from:lwn and from:mailing | notmuch_search_sanitize)
-test_expect_equal "$output" "thread:XXX   2001-01-05 [1/1] LWN.net Mailing Lists; LWN.net newly freed content for January 27, 2011 (inbox unread)"
-
-test_begin_subtest "LWN, V:"
-output=$(notmuch search from:lwn@lwn.net and subject:weekly | notmuch_search_sanitize)
-test_expect_equal "$output" "thread:XXX   2001-01-05 [1/1] LWN.net Weekly Notification; LWN.net Weekly Edition for January 27, 2011 available (inbox unread)"
-
-test_begin_subtest "LWN, VI:"
-output=$(notmuch search from:lwn@lwn.net and subject:mailing | notmuch_search_sanitize)
-test_expect_equal "$output" "thread:XXX   2001-01-05 [1/1] LWN.net Mailing Lists; LWN.net newly freed content for January 27, 2011 (inbox unread)"
-
-test_begin_subtest "LWN, VII:"
-output=$(notmuch count from:lwn@lwn.net)
-test_expect_equal "$output" 2
-
 test_begin_subtest "Search by to: (address)"
 add_message '[subject]="search by to (address)"' '[date]="Sat, 01 Jan 2000 12:00:00 -0000"' [to]=searchbyto@example.com
 output=$(notmuch search to:searchbyto@example.com | notmuch_search_sanitize)
@@ -131,8 +97,6 @@ thread:XXX   2009-11-18 [1/1] Stewart Smith; [notmuch] [PATCH] Fix linking with 
 thread:XXX   2009-11-18 [2/2] Lars Kellogg-Stedman; [notmuch] \"notmuch help\" outputs to stderr? (attachment inbox unread)
 thread:XXX   2009-11-17 [1/1] Mikhail Gusarov; [notmuch] [PATCH] Handle rename of message file (inbox unread)
 thread:XXX   2009-11-17 [2/2] Alex Botero-Lowry, Carl Worth; [notmuch] preliminary FreeBSD support (attachment inbox unread)
-thread:XXX   2001-01-05 [1/1] LWN.net Weekly Notification; LWN.net Weekly Edition for January 27, 2011 available (inbox unread)
-thread:XXX   2001-01-05 [1/1] LWN.net Mailing Lists; LWN.net newly freed content for January 27, 2011 (inbox unread)
 thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; body search (inbox unread)
 thread:XXX   2000-01-01 [1/1] searchbyfrom; search by from (inbox unread)
 thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; search by to (inbox unread)

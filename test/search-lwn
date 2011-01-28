@@ -1,0 +1,45 @@
+#!/bin/bash
+test_description='searching for messages from lwn.net'
+. ./test-lib.sh
+
+add_message \
+  '[from]="LWN.net Weekly Notification <lwn@lwn.net>"' \
+  '[subject]="LWN.net Weekly Edition for January 27, 2011 available"'
+add_message \
+  '[from]="LWN.net Mailing Lists <lwn@lwn.net>"' \
+  '[subject]="LWN.net newly freed content for January 27, 2011"'
+
+test_begin_subtest "LWN, I:"
+output=$(notmuch search from:'lwn.net weekly notification' | notmuch_search_sanitize)
+test_expect_equal "$output" "thread:XXX   2001-01-05 [1/1] LWN.net Weekly Notification; LWN.net Weekly Edition for January 27, 2011 available (inbox unread)"
+
+test_begin_subtest "LWN, II:"
+output=$(notmuch search from:'lwn.net mailing lists' | notmuch_search_sanitize)
+test_expect_equal "$output" "thread:XXX   2001-01-05 [1/1] LWN.net Mailing Lists; LWN.net newly freed content for January 27, 2011 (inbox unread)"
+
+test_begin_subtest "LWN, III:"
+output=$(notmuch search from:lwn and from:weekly | notmuch_search_sanitize)
+test_expect_equal "$output" "thread:XXX   2001-01-05 [1/1] LWN.net Weekly Notification; LWN.net Weekly Edition for January 27, 2011 available (inbox unread)"
+
+test_begin_subtest "LWN, IV:"
+output=$(notmuch search from:lwn and from:mailing | notmuch_search_sanitize)
+test_expect_equal "$output" "thread:XXX   2001-01-05 [1/1] LWN.net Mailing Lists; LWN.net newly freed content for January 27, 2011 (inbox unread)"
+
+test_begin_subtest "LWN, V:"
+output=$(notmuch search from:lwn@lwn.net and subject:weekly | notmuch_search_sanitize)
+test_expect_equal "$output" "thread:XXX   2001-01-05 [1/1] LWN.net Weekly Notification; LWN.net Weekly Edition for January 27, 2011 available (inbox unread)"
+
+test_begin_subtest "LWN, VI:"
+output=$(notmuch search from:lwn@lwn.net and subject:mailing | notmuch_search_sanitize)
+test_expect_equal "$output" "thread:XXX   2001-01-05 [1/1] LWN.net Mailing Lists; LWN.net newly freed content for January 27, 2011 (inbox unread)"
+
+test_begin_subtest "LWN, VII:"
+output=$(notmuch count from:lwn@lwn.net)
+test_expect_equal "$output" 2
+
+test_begin_subtest 'Search for all messages ("*")'
+output=$(notmuch search '*' | notmuch_search_sanitize)
+test_expect_equal "$output" "thread:XXX   2001-01-05 [1/1] LWN.net Weekly Notification; LWN.net Weekly Edition for January 27, 2011 available (inbox unread)
+thread:XXX   2001-01-05 [1/1] LWN.net Mailing Lists; LWN.net newly freed content for January 27, 2011 (inbox unread)"
+
+test_done
