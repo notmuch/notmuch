@@ -214,6 +214,36 @@ notmuch_database_upgrade (notmuch_database_t *database,
 						   double progress),
 			  void *closure);
 
+/* Begin an atomic database operation.
+ *
+ * Any modifications performed between a successful begin and a
+ * notmuch_database_end_atomic will be applied to the database
+ * atomically.  Note that, unlike a typical database transaction, this
+ * only ensures atomicity, not durability; neither begin nor end
+ * necessarily flush modifications to disk.
+ *
+ * Return value:
+ *
+ * NOTMUCH_STATUS_SUCCESS: Successfully entered atomic section.
+ *
+ * NOTMUCH_STATUS_XAPIAN_EXCEPTION: A Xapian exception occurred;
+ *	atomic section not entered.
+ */
+notmuch_status_t
+notmuch_database_begin_atomic (notmuch_database_t *notmuch);
+
+/* Indicate the end of an atomic database operation.
+ *
+ * Return value:
+ *
+ * NOTMUCH_STATUS_SUCCESS: Successfully completed atomic section.
+ *
+ * NOTMUCH_STATUS_XAPIAN_EXCEPTION: A Xapian exception occurred;
+ *	atomic section not ended.
+ */
+notmuch_status_t
+notmuch_database_end_atomic (notmuch_database_t *notmuch);
+
 /* Retrieve a directory object from the database for 'path'.
  *
  * Here, 'path' should be a path relative to the path of 'database'

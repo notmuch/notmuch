@@ -974,6 +974,50 @@ notmuch_database_upgrade (notmuch_database_t *notmuch,
     return NOTMUCH_STATUS_SUCCESS;
 }
 
+notmuch_status_t
+notmuch_database_begin_atomic (notmuch_database_t *notmuch)
+{
+    if (notmuch->mode == NOTMUCH_DATABASE_MODE_READ_ONLY)
+	return NOTMUCH_STATUS_SUCCESS;
+
+    try {
+	(static_cast <Xapian::WritableDatabase *> (notmuch->xapian_db))->begin_transaction (false);
+    } catch (const Xapian::Error &error) {
+	fprintf (stderr, "A Xapian exception occurred beginning transaction: %s.\n",
+		 error.get_msg().c_str());
+	notmuch->exception_reported = TRUE;
+	return NOTMUCH_STATUS_XAPIAN_EXCEPTION;
+    }
+    return NOTMUCH_STATUS_SUCCESS;
+}
+
+notmuch_status_t
+notmuch_database_end_atomic (notmuch_database_t *notmuch)
+{
+    Xapian::WritableDatabase *db;
+
+    if (notmuch->mode == NOTMUCH_DATABASE_MODE_READ_ONLY)
+	return NOTMUCH_STATUS_SUCCESS;
+
+    db = static_cast <Xapian::WritableDatabase *> (notmuch->xapian_db);
+    try {
+	db->commit_transaction ();
+
+	/* This is a hack for testing.  Xapian never flushes on a
+	 * non-flushed commit, even if the flush threshold is 1.
+	 * However, we rely on flushing to test atomicity. */
+	const char *thresh = getenv ("XAPIAN_FLUSH_THRESHOLD");
+	if (thresh && atoi (thresh) == 1)
+	    db->commit ();
+    } catch (const Xapian::Error &error) {
+	fprintf (stderr, "A Xapian exception occurred committing transaction: %s.\n",
+		 error.get_msg().c_str());
+	notmuch->exception_reported = TRUE;
+	return NOTMUCH_STATUS_XAPIAN_EXCEPTION;
+    }
+    return NOTMUCH_STATUS_SUCCESS;
+}
+
 /* We allow the user to use arbitrarily long paths for directories. But
  * we have a term-length limit. So if we exceed that, we'll use the
  * SHA-1 of the path for the database term.
