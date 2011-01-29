@@ -450,6 +450,12 @@ add_files_recursive (notmuch_database_t *notmuch,
 	    fflush (stdout);
 	}
 
+	status = notmuch_database_begin_atomic (notmuch);
+	if (status) {
+	    ret = status;
+	    goto DONE;
+	}
+
 	status = notmuch_database_add_message (notmuch, next, &message);
 	switch (status) {
 	/* success */
@@ -487,6 +493,12 @@ add_files_recursive (notmuch_database_t *notmuch,
 	case NOTMUCH_STATUS_UNBALANCED_ATOMIC:
 	case NOTMUCH_STATUS_LAST_STATUS:
 	    INTERNAL_ERROR ("add_message returned unexpected value: %d",  status);
+	    goto DONE;
+	}
+
+	status = notmuch_database_end_atomic (notmuch);
+	if (status) {
+	    ret = status;
 	    goto DONE;
 	}
 
@@ -728,6 +740,9 @@ remove_filename (notmuch_database_t *notmuch,
 {
     notmuch_status_t status;
     notmuch_message_t *message;
+    status = notmuch_database_begin_atomic (notmuch);
+    if (status)
+	return status;
     message = notmuch_database_find_message_by_filename (notmuch, path);
     status = notmuch_database_remove_message (notmuch, path);
     if (status == NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID) {
@@ -737,6 +752,7 @@ remove_filename (notmuch_database_t *notmuch,
     } else
 	add_files_state->removed_messages++;
     notmuch_message_destroy (message);
+    notmuch_database_end_atomic (notmuch);
     return status;
 }
 
