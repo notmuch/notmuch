@@ -72,7 +72,7 @@ static const search_format_t format_text = {
 		"%s", " ",
 	    ")", "\n",
 	"",
-    "\n",
+    "",
 };
 
 static void
@@ -182,15 +182,15 @@ do_search_threads (const search_format_t *format,
     if (threads == NULL)
 	return 1;
 
+    fputs (format->results_start, stdout);
+
     for (;
 	 notmuch_threads_valid (threads);
 	 notmuch_threads_move_to_next (threads))
     {
 	int first_tag = 1;
 
-	if (first_thread)
-	    fputs (format->results_start, stdout);
-	else
+	if (! first_thread)
 	    fputs (format->item_sep, stdout);
 
 	thread = notmuch_threads_get (threads);
@@ -236,8 +236,7 @@ do_search_threads (const search_format_t *format,
 	notmuch_thread_destroy (thread);
     }
 
-    if (! first_thread)
-	fputs (format->results_end, stdout);
+    fputs (format->results_end, stdout);
 
     return 0;
 }
@@ -255,15 +254,15 @@ do_search_messages (const search_format_t *format,
     if (messages == NULL)
 	return 1;
 
+    fputs (format->results_start, stdout);
+
     for (;
 	 notmuch_messages_valid (messages);
 	 notmuch_messages_move_to_next (messages))
     {
 	message = notmuch_messages_get (messages);
 
-	if (first_message)
-	    fputs (format->results_start, stdout);
-	else
+	if (! first_message)
 	    fputs (format->item_sep, stdout);
 
 	if (output == OUTPUT_FILES) {
@@ -281,8 +280,7 @@ do_search_messages (const search_format_t *format,
 
     notmuch_messages_destroy (messages);
 
-    if (! first_message)
-	fputs (format->results_end, stdout);
+    fputs (format->results_end, stdout);
 
     return 0;
 }
@@ -310,15 +308,15 @@ do_search_tags (notmuch_database_t *notmuch,
     if (tags == NULL)
 	return 1;
 
+    fputs (format->results_start, stdout);
+
     for (;
 	 notmuch_tags_valid (tags);
 	 notmuch_tags_move_to_next (tags))
     {
 	tag = notmuch_tags_get (tags);
 
-	if (first_tag)
-	    fputs (format->results_start, stdout);
-	else
+	if (! first_tag)
 	    fputs (format->item_sep, stdout);
 
 	format->item_id (tags, "", tag);
@@ -331,8 +329,7 @@ do_search_tags (notmuch_database_t *notmuch,
     if (messages)
 	notmuch_messages_destroy (messages);
 
-    if (! first_tag)
-	fputs (format->results_end, stdout);
+    fputs (format->results_end, stdout);
 
     return 0;
 }
