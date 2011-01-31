@@ -41,6 +41,9 @@ struct _notmuch_doc_id_set {
     unsigned int bound;
 };
 
+#define DOCIDSET_WORD(bit) ((bit) / sizeof (unsigned int))
+#define DOCIDSET_BIT(bit) ((bit) % sizeof (unsigned int))
+
 struct _notmuch_threads {
     notmuch_query_t *query;
 
@@ -270,9 +273,8 @@ _notmuch_doc_id_set_init (void *ctx,
     doc_ids->bound = bound;
 
     for (unsigned int i = 0; i < arr->len; i++) {
-	unsigned int doc_id = g_array_index(arr, unsigned int, i);
-	bitmap[doc_id / sizeof (bitmap[0])] |=
-	    1 << (doc_id % sizeof (bitmap[0]));
+	unsigned int doc_id = g_array_index (arr, unsigned int, i);
+	bitmap[DOCIDSET_WORD(doc_id)] |= 1 << DOCIDSET_BIT(doc_id);
     }
 
     return TRUE;
@@ -284,8 +286,7 @@ _notmuch_doc_id_set_contains (notmuch_doc_id_set_t *doc_ids,
 {
     if (doc_id >= doc_ids->bound)
 	return FALSE;
-    return (doc_ids->bitmap[doc_id / sizeof (doc_ids->bitmap[0])] &
-	    (1 << (doc_id % sizeof (doc_ids->bitmap[0])))) != 0;
+    return doc_ids->bitmap[DOCIDSET_WORD(doc_id)] & (1 << DOCIDSET_BIT(doc_id));
 }
 
 void
@@ -293,8 +294,7 @@ _notmuch_doc_id_set_remove (notmuch_doc_id_set_t *doc_ids,
                             unsigned int doc_id)
 {
     if (doc_id < doc_ids->bound)
-	doc_ids->bitmap[doc_id / sizeof (doc_ids->bitmap[0])] &=
-	    ~(1 << (doc_id % sizeof (doc_ids->bitmap[0])));
+	doc_ids->bitmap[DOCIDSET_WORD(doc_id)] &= ~(1 << DOCIDSET_BIT(doc_id));
 }
 
 /* Glib objects force use to use a talloc destructor as well, (but not
