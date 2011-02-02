@@ -37,6 +37,7 @@ TESTS="
   encoding
   emacs
   maildir-sync
+  emacs-forgetfulness
 "
 
 # Clean up any results from a previous run
