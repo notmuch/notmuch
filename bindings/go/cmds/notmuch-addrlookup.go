@@ -11,7 +11,6 @@ import "sort"
 
 // 3rd-party imports
 import "notmuch"
-//import "github.com/jteeuwen/go-pkg-ini/ini"
 import "github.com/kless/goconfig/config"
 
 type mail_addr_freq struct {
@@ -189,7 +188,7 @@ func new_address_matcher() *address_matcher {
 	}
 
 	if cfg,err = config.ReadDefault(path.Join(home, ".notmuch-config")); err != nil {
-		log.Exitf("error loading config file:",err)
+		log.Fatalf("error loading config file:",err)
 	}
 
 	db_path,_ := cfg.String("database", "path")
