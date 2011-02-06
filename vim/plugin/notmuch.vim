@@ -962,7 +962,16 @@ function! s:NM_compose_send()
         exec printf(':0,%dd', hdr_starts)
         write
 
-        let cmdtxt = g:notmuch_sendmail . ' -t < ' . fname
+        let line = getline(1)
+        let m = matchlist(line, '^From:\s*\(.*\)\s*<\(.*\)>$')
+        if (len(m) >= 2)
+                let from = m[2]
+        else
+                let m = matchlist(line, '^From:\s*\(.*\)$')
+                let from = m[1]
+        endif
+
+        let cmdtxt = g:notmuch_sendmail . ' -t -f ' . from . ' < ' . fname
         let out = system(cmdtxt)
         let err = v:shell_error
         if err
