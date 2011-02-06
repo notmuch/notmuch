@@ -724,6 +724,21 @@ upgrade_print_progress (void *closure,
     fflush (stdout);
 }
 
+/* Remove one message filename from the database. */
+static notmuch_status_t
+remove_filename (notmuch_database_t *notmuch,
+		 const char *path,
+		 add_files_state_t *add_files_state)
+{
+    notmuch_status_t status;
+    status = notmuch_database_remove_message (notmuch, path);
+    if (status == NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID)
+	add_files_state->renamed_messages++;
+    else
+	add_files_state->removed_messages++;
+    return status;
+}
+
 /* Recursively remove all filenames from the database referring to
  * 'path' (or to any of its children). */
 static void
@@ -734,7 +749,6 @@ _remove_directory (void *ctx,
 {
     notmuch_directory_t *directory;
     notmuch_filenames_t *files, *subdirs;
-    notmuch_status_t status;
     char *absolute;
 
     directory = notmuch_database_get_directory (notmuch, path);
@@ -745,11 +759,7 @@ _remove_directory (void *ctx,
     {
 	absolute = talloc_asprintf (ctx, "%s/%s", path,
 				    notmuch_filenames_get (files));
-	status = notmuch_database_remove_message (notmuch, absolute);
-	if (status == NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID)
-	    add_files_state->renamed_messages++;
-	else
-	    add_files_state->removed_messages++;
+	remove_filename (notmuch, absolute, add_files_state);
 	talloc_free (absolute);
     }
 
@@ -780,7 +790,6 @@ notmuch_new_command (void *ctx, int argc, char *argv[])
     char *dot_notmuch_path;
     struct sigaction action;
     _filename_node_t *f;
-    notmuch_status_t status;
     int i;
     notmuch_bool_t timer_is_active = FALSE;
 
@@ -869,11 +878,7 @@ notmuch_new_command (void *ctx, int argc, char *argv[])
 
     gettimeofday (&tv_start, NULL);
     for (f = add_files_state.removed_files->head; f && !interrupted; f = f->next) {
-	status = notmuch_database_remove_message (notmuch, f->filename);
-	if (status == NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID)
-	    add_files_state.renamed_messages++;
-	else
-	    add_files_state.removed_messages++;
+	remove_filename (notmuch, f->filename, &add_files_state);
 	if (do_print_progress) {
 	    do_print_progress = 0;
 	    generic_print_progress ("Cleaned up", "messages",
