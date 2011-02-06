@@ -501,6 +501,9 @@ _notmuch_message_add_filename (notmuch_message_t *message,
  * This change will not be reflected in the database until the next
  * call to _notmuch_message_sync.
  *
+ * If this message still has other filenames, returns
+ * NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID.
+ *
  * Note: This function does not remove a document from the database,
  * even if the specified filename is the only filename for this
  * message. For that functionality, see
@@ -589,6 +592,9 @@ _notmuch_message_remove_filename (notmuch_message_t *message,
 	/* Terminate loop at first term without desired prefix. */
 	if (strncmp ((*i).c_str (), direntry_prefix, direntry_prefix_len))
 	    break;
+
+	/* Indicate that there are filenames remaining. */
+	status = NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID;
 
 	direntry = (*i).c_str ();
 	direntry += direntry_prefix_len;
@@ -1282,7 +1288,8 @@ notmuch_message_tags_to_maildir_flags (notmuch_message_t *message)
 	    new_status = _notmuch_message_remove_filename (message,
 							   filename);
 	    /* Hold on to only the first error. */
-	    if (! status && new_status) {
+	    if (! status && new_status
+		&& new_status != NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID) {
 		status = new_status;
 		continue;
 	    }
