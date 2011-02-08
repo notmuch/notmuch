@@ -24,6 +24,7 @@
 
 typedef struct _filename_node {
     char *filename;
+    time_t mtime;
     struct _filename_node *next;
 } _filename_node_t;
 
@@ -46,6 +47,7 @@ typedef struct {
 
     _filename_list_t *removed_files;
     _filename_list_t *removed_directories;
+    _filename_list_t *directory_mtimes;
 
     notmuch_bool_t synchronize_flags;
     _filename_list_t *message_ids_to_sync;
@@ -86,7 +88,7 @@ _filename_list_create (const void *ctx)
     return list;
 }
 
-static void
+static _filename_node_t *
 _filename_list_add (_filename_list_t *list,
 		    const char *filename)
 {
@@ -99,6 +101,8 @@ _filename_list_add (_filename_list_t *list,
 
     *(list->tail) = node;
     list->tail = &node->next;
+
+    return node;
 }
 
 static void
@@ -536,11 +540,8 @@ add_files_recursive (notmuch_database_t *notmuch,
      * the database because a message could be delivered later in this
      * same second.  This may lead to unnecessary re-scans, but it
      * avoids overlooking messages. */
-    if (! interrupted && fs_mtime != stat_time) {
-	status = notmuch_directory_set_mtime (directory, fs_mtime);
-	if (status && ret == NOTMUCH_STATUS_SUCCESS)
-	    ret = status;
-    }
+    if (fs_mtime != stat_time)
+	_filename_list_add (state->directory_mtimes, path)->mtime = fs_mtime;
 
   DONE:
     if (next)
@@ -856,6 +857,7 @@ notmuch_new_command (void *ctx, int argc, char *argv[])
 
     add_files_state.removed_files = _filename_list_create (ctx);
     add_files_state.removed_directories = _filename_list_create (ctx);
+    add_files_state.directory_mtimes = _filename_list_create (ctx);
 
     if (! debugger_is_active () && add_files_state.output_is_a_tty
 	&& ! add_files_state.verbose) {
@@ -894,8 +896,18 @@ notmuch_new_command (void *ctx, int argc, char *argv[])
 	}
     }
 
+    for (f = add_files_state.directory_mtimes->head; f && !interrupted; f = f->next) {
+	notmuch_directory_t *directory;
+	directory = notmuch_database_get_directory (notmuch, f->filename);
+	if (directory) {
+	    notmuch_directory_set_mtime (directory, f->mtime);
+	    notmuch_directory_destroy (directory);
+	}
+    }
+
     talloc_free (add_files_state.removed_files);
     talloc_free (add_files_state.removed_directories);
+    talloc_free (add_files_state.directory_mtimes);
 
     /* Now that removals are done (hence the database is aware of all
      * renames), we can synchronize maildir_flags to tags for all
