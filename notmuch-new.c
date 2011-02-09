@@ -868,7 +868,7 @@ notmuch_new_command (void *ctx, int argc, char *argv[])
     removed_files = 0;
     renamed_files = 0;
     gettimeofday (&tv_start, NULL);
-    for (f = add_files_state.removed_files->head; f; f = f->next) {
+    for (f = add_files_state.removed_files->head; f && !interrupted; f = f->next) {
 	status = notmuch_database_remove_message (notmuch, f->filename);
 	if (status == NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID)
 	    renamed_files++;
@@ -883,7 +883,7 @@ notmuch_new_command (void *ctx, int argc, char *argv[])
     }
 
     gettimeofday (&tv_start, NULL);
-    for (f = add_files_state.removed_directories->head, i = 0; f; f = f->next, i++) {
+    for (f = add_files_state.removed_directories->head, i = 0; f && !interrupted; f = f->next, i++) {
 	_remove_directory (ctx, notmuch, f->filename,
 			   &renamed_files, &removed_files);
 	if (do_print_progress) {
