@@ -5,8 +5,8 @@ dir := completion
 # The dir variable will be re-assigned to later, so we can't use it
 # directly in any shell commands. Instead we save its value in other,
 # private variables that we can use in the commands.
-bash_script := $(dir)/notmuch-completion.bash
-zsh_script := $(dir)/notmuch-completion.zsh
+bash_script := $(srcdir)/$(dir)/notmuch-completion.bash
+zsh_script := $(srcdir)/$(dir)/notmuch-completion.zsh
 
 install: install-$(dir)
 

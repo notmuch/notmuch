@@ -15,9 +15,9 @@ emacs_sources := \
 	$(dir)/coolj.el
 
 emacs_images := \
-	$(dir)/notmuch-logo.png
+	$(srcdir)/$(dir)/notmuch-logo.png
 
-emacs_bytecode := $(subst .el,.elc,$(emacs_sources))
+emacs_bytecode = $(emacs_sources:.el=.elc)
 
 %.elc: %.el
 	$(call quiet,EMACS) --directory emacs -batch -f batch-byte-compile $<

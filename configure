@@ -1,5 +1,26 @@
 #! /bin/sh
 
+srcdir=$(dirname "$0")
+
+# For a non-srcdir configure invocation (such as ../configure), create
+# the directory structure and copy Makefiles.
+if [ "$srcdir" != "." ]; then
+
+    for dir in . $(grep "^subdirs *=" "$srcdir"/Makefile | sed -e "s/subdirs *= *//"); do
+	mkdir -p "$dir"
+	cp "$srcdir"/"$dir"/Makefile.local "$dir"
+	cp "$srcdir"/"$dir"/Makefile "$dir"
+    done
+
+    # Easiest way to get the test suite to work is to just copy the
+    # whole thing into the build directory.
+    cp -a "$srcdir"/test/* test
+
+    # Emacs only likes to generate compiled files next to the .el files
+    # by default so copy these as well (which is not ideal0.
+    cp -a "$srcdir"/emacs/*.el emacs
+fi
+
 # Set several defaults (optionally specified by the user in
 # environemnt variables)
 CC=${CC:-gcc}
@@ -424,7 +445,7 @@ EOF
 fi
 
 printf "Checking for getline... "
-if ${CC} -o compat/have_getline compat/have_getline.c > /dev/null 2>&1
+if ${CC} -o compat/have_getline "$srcdir"/compat/have_getline.c > /dev/null 2>&1
 then
     printf "Yes.\n"
     have_getline=1
@@ -435,7 +456,7 @@ fi
 rm -f compat/have_getline
 
 printf "Checking for strcasestr... "
-if ${CC} -o compat/have_strcasestr compat/have_strcasestr.c > /dev/null 2>&1
+if ${CC} -o compat/have_strcasestr "$srcdir"/compat/have_strcasestr.c > /dev/null 2>&1
 then
     printf "Yes.\n"
     have_strcasestr=1
@@ -507,6 +528,24 @@ cat > Makefile.config <<EOF
 # but be warned that if configure is run again it will destroy your
 # changes, (and this could happen by simply calling "make" if the
 # configure script is updated).
+
+srcdir = ${srcdir}
+
+# We use vpath directives (rather than the VPATH variable) since the
+# VPATH variable matches targets as well as prerequisites, (which is
+# not useful since then a target left-over from a srcdir build would
+# cause a target to not be built in the non-srcdir build).
+#
+# Also, we don't use a single "vpath % \$(srcdir)" here because we
+# don't want the vpath to trigger for our emacs lisp compilation,
+# (unless we first find a way to convince emacs to build the .elc
+# target in a directory other than the directory of the .el
+# prerequisite). In the meantime, we're actually copying in the .el
+# files, (which is quite ugly).
+vpath %.c \$(srcdir)
+vpath %.cc \$(srcdir)
+vpath %.1 \$(srcdir)
+vpath Makefile.% \$(srcdir)
 
 # The C compiler to use
 CC = ${CC}

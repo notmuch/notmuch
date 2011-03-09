@@ -19,7 +19,7 @@ extra_cxxflags :=
 # Makefile.config if it doesn't exist yet. And add Makefile.config to
 # our global dependency list.
 include Makefile.config
-Makefile.config: configure
+Makefile.config: $(srcdir)/configure
 	@echo ""
 	@echo "Note: Calling ./configure with no command-line arguments. This is often fine,"
 	@echo "      but if you want to specify any arguments (such as an alternate prefix"

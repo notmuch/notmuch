@@ -1,7 +1,7 @@
 # -*- makefile -*-
 
 dir := compat
-extra_cflags += -I$(dir)
+extra_cflags += -I$(srcdir)/$(dir)
 
 notmuch_compat_srcs :=
 

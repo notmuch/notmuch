@@ -255,16 +255,6 @@ existing messages at the next database upgrade).
 Add support for the user to specify custom headers to be indexed (and
 re-index these for existing messages at the next database upgrade).
 
-Build system
-------------
-Fix to allow a non-source-directory build. For example, the below
-should be made to work:
-
-	mkdir build_dir
-	cd build_dir
-	../configure
-	make
-
 Test suite
 ----------
 Achieve 100% test coverage with the test suite.

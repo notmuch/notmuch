@@ -45,7 +45,7 @@ endif
 endif
 
 dir := lib
-extra_cflags += -I$(dir) -fPIC
+extra_cflags += -I$(srcdir)/$(dir) -fPIC
 
 libnotmuch_c_srcs =		\
 	$(notmuch_compat_srcs)	\
@@ -85,13 +85,13 @@ install: install-$(dir)
 # but cannot be used reliably within commands, so copy its value to a
 # variable that is not reused.
 lib := $(dir)
-install-$(dir):
+install-$(dir): $(dir)/$(LIBNAME)
 	mkdir -p "$(DESTDIR)$(libdir)/"
 	install -m0644 "$(lib)/$(LIBNAME)" "$(DESTDIR)$(libdir)/"
 	ln -sf $(LIBNAME) "$(DESTDIR)$(libdir)/$(SONAME)"
 	ln -sf $(LIBNAME) "$(DESTDIR)$(libdir)/$(LINKER_NAME)"
 	mkdir -p "$(DESTDIR)$(includedir)"
-	install -m0644 "$(lib)/notmuch.h" "$(DESTDIR)$(includedir)/"
+	install -m0644 "$(srcdir)/$(lib)/notmuch.h" "$(DESTDIR)$(includedir)/"
 	$(LIBRARY_INSTALL_POST_COMMAND)
 
 SRCS  := $(SRCS) $(libnotmuch_c_srcs) $(libnotmuch_cxx_srcs)

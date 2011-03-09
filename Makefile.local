@@ -12,7 +12,7 @@ PACKAGE=notmuch
 
 IS_GIT=$(shell if [ -d .git ] ; then echo yes ; else echo no; fi)
 
-VERSION:=$(shell cat version)
+VERSION:=$(shell cat ${srcdir}/version)
 ifneq ($(MAKECMDGOALS),release)
 ifneq ($(MAKECMDGOALS),release-message)
 ifeq ($(IS_GIT),yes)
@@ -81,7 +81,7 @@ dist: $(TAR_FILE)
 # targets in the case of parallel invocation of make (-j).
 #
 # We carefully ensure that our VERSION variable is passed down to any
-# sub-ordinate make invocations (which won't otherwhise know that they
+# sub-ordinate make invocations (which won't otherwise know that they
 # are part of the release and need to take the version from the
 # version file).
 .PHONY: release
