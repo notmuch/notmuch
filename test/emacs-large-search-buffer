@@ -21,7 +21,7 @@ notmuch new > /dev/null
 test_begin_subtest 'Comparing emacs result to "notmuch search"'
 expected="$(notmuch search '*' | sed -e 's/^thread:[0-9a-f]*  //' -e 's/;//' -e  's/xx*/[BLOB]/')
 End of search results."
-output=$(test_emacs '(notmuch-search "*") (notmuch-test-wait) (message (buffer-string))' 2>&1 | sed -e s',  *, ,g' -e 's/xx*/[BLOB]/')
+output=$(test_emacs '(notmuch-search "*") (notmuch-test-wait) (message (buffer-string))' 2>&1 | sed -e s',  *, ,g' -e 's/xxx*/[BLOB]/g')
 test_expect_equal "$output" "$expected"
 
 test_done
