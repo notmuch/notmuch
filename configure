@@ -529,7 +529,12 @@ cat > Makefile.config <<EOF
 # changes, (and this could happen by simply calling "make" if the
 # configure script is updated).
 
+# The top-level directory for the source, (the directory containing
+# the configure script). This may be different than the build
+# directory (the current directory at the time configure was run).
 srcdir = ${srcdir}
+
+configure_options = $@
 
 # We use vpath directives (rather than the VPATH variable) since the
 # VPATH variable matches targets as well as prerequisites, (which is

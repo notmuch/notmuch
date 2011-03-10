@@ -25,13 +25,15 @@ srcdir ?= .
 
 include Makefile.config
 Makefile.config: $(srcdir)/configure
+ifeq ($(configure_options),)
 	@echo ""
 	@echo "Note: Calling ./configure with no command-line arguments. This is often fine,"
 	@echo "      but if you want to specify any arguments (such as an alternate prefix"
 	@echo "      into which to install), call ./configure explicitly and then make again."
 	@echo "      See \"./configure --help\" for more details."
 	@echo ""
-	./configure
+endif
+	$(srcdir)/configure $(configure_options)
 
 # Finally, include all of the Makefile.local fragments where all the
 # real work is done.
