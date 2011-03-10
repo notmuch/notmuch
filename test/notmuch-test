@@ -36,8 +36,8 @@ TESTS="
   long-id
   encoding
   emacs
+  emacs-large-search-buffer
   maildir-sync
-  emacs-forgetfulness
 "
 
 # Clean up any results from a previous run

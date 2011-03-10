@@ -1,0 +1,27 @@
+#!/bin/bash
+test_description="Emacs with large search results buffer"
+. test-lib.sh
+
+x=xxxxxxxxxx # 10
+x=$x$x$x$x$x$x$x$x$x$x # 100
+x=$x$x$x$x$x$x$x$x$x # 900
+
+# We generate a long subject here (over 900 bytes) so that the emacs
+# search results get large quickly. With 30 such messages we should
+# cross several 4kB page boundaries and see the bug.
+n=30
+for i in $(seq 1 $n); do
+  # Roughly 100B2 KiB per message.  That is, we need two messages in order to
+  # exceed the typical size of the pipe buffer (4 KiB on commodity systems).
+  generate_message '[subject]="$x $i of $n"'
+done
+
+notmuch new > /dev/null
+
+test_begin_subtest 'Comparing emacs result to "notmuch search"'
+expected="$(notmuch search '*' | sed -e 's/^thread:[0-9a-f]*  //' -e 's/;//' -e  's/xx*/[BLOB]/')
+End of search results."
+output=$(test_emacs '(notmuch-search "*") (notmuch-test-wait) (message (buffer-string))' 2>&1 | sed -e s',  *, ,g' -e 's/xx*/[BLOB]/')
+test_expect_equal "$output" "$expected"
+
+test_done
