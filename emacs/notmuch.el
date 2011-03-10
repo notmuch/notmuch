@@ -736,6 +736,10 @@ non-authors is found, assume that all of the authors match."
 	  do (notmuch-search-insert-field field date count authors subject tags)))
   (insert "\n"))
 
+(defvar notmuch-search-process-filter-data nil
+  "Data that has not yet been processed.")
+(make-variable-buffer-local 'notmuch-search-process-filter-data)
+
 (defun notmuch-search-process-filter (proc string)
   "Process and filter the output of \"notmuch search\""
   (let ((buffer (process-buffer proc))
@@ -745,7 +749,9 @@ non-authors is found, assume that all of the authors match."
 	  (save-excursion
 	    (let ((line 0)
 		  (more t)
-		  (inhibit-read-only t))
+		  (inhibit-read-only t)
+		  (string (concat notmuch-search-process-filter-data string)))
+	      (setq notmuch-search-process-filter-data nil)
 	      (while more
 		(while (and (< line (length string)) (= (elt string line) ?\n))
 		  (setq line (1+ line)))
@@ -775,7 +781,7 @@ non-authors is found, assume that all of the authors match."
 		  (while (and (< line (length string)) (= (elt string line) ?\n))
 		    (setq line (1+ line)))
 		  (if (< line (length string))
-		      (insert (concat "Error: Unexpected output from notmuch search:\n" (substring string line) "\n")))
+		      (setq notmuch-search-process-filter-data (substring string line)))
 		  ))))
 	  (if found-target
 	      (goto-char found-target)))
