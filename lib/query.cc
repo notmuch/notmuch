@@ -41,6 +41,9 @@ struct _notmuch_doc_id_set {
     unsigned int bound;
 };
 
+#define DOCIDSET_WORD(bit) ((bit) / sizeof (unsigned int))
+#define DOCIDSET_BIT(bit) ((bit) % sizeof (unsigned int))
+
 struct _notmuch_threads {
     notmuch_query_t *query;
 
@@ -257,22 +260,24 @@ _notmuch_mset_messages_move_to_next (notmuch_messages_t *messages)
 static notmuch_bool_t
 _notmuch_doc_id_set_init (void *ctx,
 			  notmuch_doc_id_set_t *doc_ids,
-			  GArray *arr, unsigned int bound)
+			  GArray *arr)
 {
-    size_t count = (bound + sizeof (doc_ids->bitmap[0]) - 1) /
-	sizeof (doc_ids->bitmap[0]);
-    unsigned int *bitmap = talloc_zero_array (ctx, unsigned int, count);
+    unsigned int max = 0;
+    unsigned int *bitmap;
+
+    for (unsigned int i = 0; i < arr->len; i++)
+	max = MAX(max, g_array_index (arr, unsigned int, i));
+    bitmap = talloc_zero_array (ctx, unsigned int, 1 + max / sizeof (*bitmap));
 
     if (bitmap == NULL)
 	return FALSE;
 
     doc_ids->bitmap = bitmap;
-    doc_ids->bound = bound;
+    doc_ids->bound = max + 1;
 
     for (unsigned int i = 0; i < arr->len; i++) {
-	unsigned int doc_id = g_array_index(arr, unsigned int, i);
-	bitmap[doc_id / sizeof (bitmap[0])] |=
-	    1 << (doc_id % sizeof (bitmap[0]));
+	unsigned int doc_id = g_array_index (arr, unsigned int, i);
+	bitmap[DOCIDSET_WORD(doc_id)] |= 1 << DOCIDSET_BIT(doc_id);
     }
 
     return TRUE;
@@ -284,8 +289,7 @@ _notmuch_doc_id_set_contains (notmuch_doc_id_set_t *doc_ids,
 {
     if (doc_id >= doc_ids->bound)
 	return FALSE;
-    return (doc_ids->bitmap[doc_id / sizeof (doc_ids->bitmap[0])] &
-	    (1 << (doc_id % sizeof (doc_ids->bitmap[0])))) != 0;
+    return doc_ids->bitmap[DOCIDSET_WORD(doc_id)] & (1 << DOCIDSET_BIT(doc_id));
 }
 
 void
@@ -293,8 +297,7 @@ _notmuch_doc_id_set_remove (notmuch_doc_id_set_t *doc_ids,
                             unsigned int doc_id)
 {
     if (doc_id < doc_ids->bound)
-	doc_ids->bitmap[doc_id / sizeof (doc_ids->bitmap[0])] &=
-	    ~(1 << (doc_id % sizeof (doc_ids->bitmap[0])));
+	doc_ids->bitmap[DOCIDSET_WORD(doc_id)] &= ~(1 << DOCIDSET_BIT(doc_id));
 }
 
 /* Glib objects force use to use a talloc destructor as well, (but not
@@ -315,7 +318,6 @@ notmuch_query_search_threads (notmuch_query_t *query)
 {
     notmuch_threads_t *threads;
     notmuch_messages_t *messages;
-    Xapian::docid max_doc_id = 0;
 
     threads = talloc (query, notmuch_threads_t);
     if (threads == NULL)
@@ -335,7 +337,6 @@ notmuch_query_search_threads (notmuch_query_t *query)
     while (notmuch_messages_valid (messages)) {
 	unsigned int doc_id = _notmuch_mset_messages_get_doc_id (messages);
 	g_array_append_val (threads->doc_ids, doc_id);
-	max_doc_id = MAX (max_doc_id, doc_id);
 	notmuch_messages_move_to_next (messages);
     }
     threads->doc_id_pos = 0;
@@ -343,7 +344,7 @@ notmuch_query_search_threads (notmuch_query_t *query)
     talloc_free (messages);
 
     if (! _notmuch_doc_id_set_init (threads, &threads->match_set,
-				    threads->doc_ids, max_doc_id + 1)) {
+				    threads->doc_ids)) {
 	talloc_free (threads);
 	return NULL;
     }
