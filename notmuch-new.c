@@ -182,15 +182,20 @@ _entries_resemble_maildir (struct dirent **entries, int count)
  *
  *   o Ask the filesystem for files and directories within 'path'
  *     (via scandir and stored in fs_entries)
- *   o Ask the database for files and directories within 'path'
- *     (db_files and db_subdirs)
  *
  *   o Pass 1: For each directory in fs_entries, recursively call into
  *     this same function.
  *
- *   o Pass 2: If 'fs_mtime' > 'db_mtime', then walk fs_entries
- *     simultaneously with db_files and db_subdirs. Look for one of
- *     three interesting cases:
+ *   o Compare fs_mtime to db_mtime. If they are equivalent, terminate
+ *     the algorithm at this point, (this directory has not been
+ *     updated in the filesystem since the last database scan of PASS
+ *     2).
+ *
+ *   o Ask the database for files and directories within 'path'
+ *     (db_files and db_subdirs)
+ *
+ *   o Pass 2: Walk fs_entries simultaneously with db_files and
+ *     db_subdirs. Look for one of three interesting cases:
  *
  *	   1. Regular file in fs_entries and not in db_files
  *            This is a new file to add_message into the database.
@@ -320,6 +325,9 @@ add_files_recursive (notmuch_database_t *notmuch,
     if (fs_mtime == db_mtime)
 	goto DONE;
 
+    /* new_directory means a directory that the database has never
+     * seen before. In that case, we can simply leave db_files and
+     * db_subdirs NULL. */
     if (!new_directory) {
 	db_files = notmuch_directory_get_child_files (directory);
 	db_subdirs = notmuch_directory_get_child_directories (directory);
