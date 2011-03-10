@@ -16,8 +16,13 @@ extra_cflags :=
 extra_cxxflags :=
 
 # Get settings from the output of configure by running it to generate
-# Makefile.config if it doesn't exist yet. And add Makefile.config to
-# our global dependency list.
+# Makefile.config if it doesn't exist yet.
+
+# If Makefile.config doesn't exist, then srcdir won't be
+# set. Conditionally set it (assuming a plain srcdir build) so that
+# the rule to generate Makefile.config can actually work.
+srcdir ?= .
+
 include Makefile.config
 Makefile.config: $(srcdir)/configure
 	@echo ""
