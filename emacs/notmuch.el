@@ -563,6 +563,10 @@ This function advances the next thread when finished."
   (notmuch-search-remove-tag-thread "inbox")
   (forward-line))
 
+(defvar notmuch-search-process-filter-data nil
+  "Data that has not yet been processed.")
+(make-variable-buffer-local 'notmuch-search-process-filter-data)
+
 (defun notmuch-search-process-sentinel (proc msg)
   "Add a message to let user know when \"notmuch search\" exits"
   (let ((buffer (process-buffer proc))
@@ -737,10 +741,6 @@ non-authors is found, assume that all of the authors match."
     (loop for field in fields
 	  do (notmuch-search-insert-field field date count authors subject tags)))
   (insert "\n"))
-
-(defvar notmuch-search-process-filter-data nil
-  "Data that has not yet been processed.")
-(make-variable-buffer-local 'notmuch-search-process-filter-data)
 
 (defun notmuch-search-process-filter (proc string)
   "Process and filter the output of \"notmuch search\""
