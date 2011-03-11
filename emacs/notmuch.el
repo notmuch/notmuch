@@ -580,6 +580,8 @@ This function advances the next thread when finished."
 		      (insert "Incomplete search results (search process was killed).\n"))
 		  (if (eq status 'exit)
 		      (progn
+			(if notmuch-search-process-filter-data
+			    (insert (concat "Error: Unexpected output from notmuch search:\n" notmuch-search-process-filter-data)))
 			(insert "End of search results.")
 			(if (not (= exit-status 0))
 			    (insert (format " (process returned %d)" exit-status)))
