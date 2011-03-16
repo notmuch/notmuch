@@ -486,7 +486,6 @@ def main():
             print "\n".join([t for t in msgs.collect_tags()])
     #-------------------------------------
     elif sys.argv[1] == 'dump':
-        # TODO: implement "dump <filename>"
         if len(sys.argv) == 2:
             f = sys.stdout
         else:
