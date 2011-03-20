@@ -156,7 +156,7 @@ insert before the button, probably for indentation."
     (let* ((cite-start (match-beginning 0))
 	   (cite-end (match-end 0))
 	   (cite-lines (count-lines cite-start cite-end)))
-      (overlay-put (make-overlay cite-start cite-end) 'face 'message-cited-text-face)
+      (overlay-put (make-overlay cite-start cite-end) 'face 'message-cited-text)
       (when (> cite-lines (+ notmuch-wash-citation-lines-prefix
 			     notmuch-wash-citation-lines-suffix
 			     1))
@@ -178,7 +178,7 @@ insert before the button, probably for indentation."
 		  (sig-end-marker (make-marker)))
 	      (set-marker sig-start-marker sig-start)
 	      (set-marker sig-end-marker (point-max))
-	      (overlay-put (make-overlay sig-start-marker sig-end-marker) 'face 'message-cited-text-face)
+	      (overlay-put (make-overlay sig-start-marker sig-end-marker) 'face 'message-cited-text)
 	      (notmuch-wash-region-to-button
 	       sig-start-marker sig-end-marker
 	       "signature" "\n"))))))
