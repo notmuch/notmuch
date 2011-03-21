@@ -16,6 +16,7 @@
  * along with this program.  If not, see http://www.gnu.org/licenses/ .
  *
  * Author: Carl Worth <cworth@cworth.org>
+ *         Austin Clements <aclements@csail.mit.edu>
  */
 
 #include "notmuch-private.h"
