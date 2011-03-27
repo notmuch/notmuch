@@ -612,7 +612,7 @@ The attributes defined for matching tags are merged, with later
 attributes overriding earlier. A message having both \"delete\"
 and \"unread\" tags with the above settings would have a green
 foreground and blue background."
-  :type '(alist :key-type (string) :value-type (list))
+  :type '(alist :key-type (string) :value-type (custom-face-edit))
   :group 'notmuch)
 
 (defun notmuch-search-color-line (start end line-tag-list)
