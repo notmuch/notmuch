@@ -36,36 +36,58 @@ search."
   :group 'notmuch
   :type 'boolean)
 
+(defface notmuch-crypto-signature-good
+  '((t (:background "green" :foreground "black")))
+  "Face used for good signatures."
+  :group 'notmuch)
+
+(defface notmuch-crypto-signature-good-key
+  '((t (:background "orange" :foreground "black")))
+  "Face used for good signatures."
+  :group 'notmuch)
+
+(defface notmuch-crypto-signature-bad
+  '((t (:background "red" :foreground "black")))
+  "Face used for bad signatures."
+  :group 'notmuch)
+
+(defface notmuch-crypto-signature-unknown
+  '((t (:background "red" :foreground "black")))
+  "Face used for signatures of unknown status."
+  :group 'notmuch)
+
+(defface notmuch-crypto-decryption
+  '((t (:background "purple" :foreground "black")))
+  "Face used for encryption/decryption status messages."
+  :group 'notmuch)
+
 (define-button-type 'notmuch-crypto-status-button-type
   'action '(lambda (button) (message (button-get button 'help-echo)))
   'follow-link t
-  'help-echo "Set notmuch-crypto-process-mime to process cryptographic mime parts."
-  'face '(:foreground "blue")
-  'mouse-face '(:foreground "blue"))
+  'help-echo "Set notmuch-crypto-process-mime to process cryptographic mime parts.")
 
 (defun notmuch-crypto-insert-sigstatus-button (sigstatus from)
   (let* ((status (plist-get sigstatus :status))
 	 (help-msg nil)
 	 (label "Signature not processed")
-	 (face '(:background "red" :foreground "black")))
+	 (face 'notmuch-crypto-signature-unknown))
     (cond
      ((string= status "good")
       ; if userid present, userid has full or greater validity
       (if (plist-member sigstatus :userid)
 	  (let ((userid (plist-get sigstatus :userid)))
 	    (setq label (concat "Good signature by: " userid))
-	    (setq face '(:background "green" :foreground "black")))
+	    (setq face 'notmuch-crypto-signature-good))
 	(let ((fingerprint (concat "0x" (plist-get sigstatus :fingerprint))))
 	  (setq label (concat "Good signature by key: " fingerprint))
-	  (setq face '(:background "orange" :foreground "black")))))
+	  (setq face 'notmuch-crypto-signature-good-key))))
      ((string= status "error")
       (let ((keyid (concat "0x" (plist-get sigstatus :keyid))))
-	(setq label (concat "Unknown key ID " keyid " or unsupported algorithm"))
-	(setq face '(:background "red" :foreground "black"))))
+	(setq label (concat "Unknown key ID " keyid " or unsupported algorithm"))))
      ((string= status "bad")
       (let ((keyid (concat "0x" (plist-get sigstatus :keyid))))
 	(setq label (concat "Bad signature (claimed key ID " keyid ")"))
-	(setq face '(:background "red" :foreground "black"))))
+	(setq face 'notmuch-crypto-signature-bad)))
      (t
       (setq label "Unknown signature status")
       (if status (setq label (concat label " \"" status "\"")))))
@@ -83,7 +105,7 @@ search."
   (let* ((status (plist-get encstatus :status))
 	 (help-msg nil)
 	 (label "Decryption not attempted")
-	 (face '(:background "purple" :foreground "black")))
+	 (face 'notmuch-crypto-decryption))
     (cond
      ((string= status "good")
       (setq label "Decryption successful"))
