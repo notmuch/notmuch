@@ -973,6 +973,13 @@ rm -fr "$test" || {
 	exit 1
 }
 
+# A temporary home directory is needed by at least:
+# - emacs/"Sending a message via (fake) SMTP"
+# - emacs/"Reply within emacs"
+# - crypto/emacs_deliver_message
+export HOME="${TMP_DIRECTORY}/home"
+mkdir -p "${HOME}"
+
 MAIL_DIR="${TMP_DIRECTORY}/mail"
 export GNUPGHOME="${TMP_DIRECTORY}/gnupg"
 export NOTMUCH_CONFIG="${TMP_DIRECTORY}/notmuch-config"
