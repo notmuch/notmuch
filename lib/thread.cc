@@ -537,23 +537,23 @@ notmuch_thread_get_newest_date (notmuch_thread_t *thread)
 notmuch_tags_t *
 notmuch_thread_get_tags (notmuch_thread_t *thread)
 {
-    notmuch_tags_t *tags;
+    notmuch_string_list_t *tags;
     GList *keys, *l;
 
-    tags = _notmuch_tags_create (thread);
+    tags = _notmuch_string_list_create (thread);
     if (unlikely (tags == NULL))
 	return NULL;
 
     keys = g_hash_table_get_keys (thread->tags);
 
     for (l = keys; l; l = l->next)
-	_notmuch_tags_add_tag (tags, (char *) l->data);
+	_notmuch_string_list_append (tags, (char *) l->data);
 
     g_list_free (keys);
 
-    _notmuch_tags_prepare_iterator (tags);
+    _notmuch_string_list_sort (tags);
 
-    return tags;
+    return _notmuch_tags_create (thread, tags);
 }
 
 void

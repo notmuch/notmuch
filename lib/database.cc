@@ -1757,49 +1757,42 @@ notmuch_database_remove_message (notmuch_database_t *notmuch,
     return status;
 }
 
-notmuch_tags_t *
-_notmuch_convert_tags (void *ctx, Xapian::TermIterator &i,
-		       Xapian::TermIterator &end)
+notmuch_string_list_t *
+_notmuch_database_get_terms_with_prefix (void *ctx, Xapian::TermIterator &i,
+					 Xapian::TermIterator &end,
+					 const char *prefix)
 {
-    const char *prefix = _find_prefix ("tag");
-    notmuch_tags_t *tags;
-    std::string tag;
+    int prefix_len = strlen (prefix);
+    notmuch_string_list_t *list;
 
-    /* Currently this iteration is written with the assumption that
-     * "tag" has a single-character prefix. */
-    assert (strlen (prefix) == 1);
-
-    tags = _notmuch_tags_create (ctx);
-    if (unlikely (tags == NULL))
+    list = _notmuch_string_list_create (ctx);
+    if (unlikely (list == NULL))
 	return NULL;
 
-    i.skip_to (prefix);
-
-    while (i != end) {
-	tag = *i;
-
-	if (tag.empty () || tag[0] != *prefix)
+    for (i.skip_to (prefix); i != end; i++) {
+	/* Terminate loop at first term without desired prefix. */
+	if (strncmp ((*i).c_str (), prefix, prefix_len))
 	    break;
 
-	_notmuch_tags_add_tag (tags, tag.c_str () + 1);
-
-	i++;
+	_notmuch_string_list_append (list, (*i).c_str () + prefix_len);
     }
 
-    _notmuch_tags_prepare_iterator (tags);
-
-    return tags;
+    return list;
 }
 
 notmuch_tags_t *
 notmuch_database_get_all_tags (notmuch_database_t *db)
 {
     Xapian::TermIterator i, end;
+    notmuch_string_list_t *tags;
 
     try {
 	i = db->xapian_db->allterms_begin();
 	end = db->xapian_db->allterms_end();
-	return _notmuch_convert_tags(db, i, end);
+	tags = _notmuch_database_get_terms_with_prefix (db, i, end,
+							_find_prefix ("tag"));
+	_notmuch_string_list_sort (tags);
+	return _notmuch_tags_create (db, tags);
     } catch (const Xapian::Error &error) {
 	fprintf (stderr, "A Xapian exception occurred getting tags: %s.\n",
 		 error.get_msg().c_str());

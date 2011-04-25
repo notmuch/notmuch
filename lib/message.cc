@@ -32,7 +32,9 @@ struct _notmuch_message {
     char *message_id;
     char *thread_id;
     char *in_reply_to;
-    notmuch_filename_list_t *filename_list;
+    notmuch_string_list_t *tag_list;
+    notmuch_string_list_t *filename_term_list;
+    notmuch_string_list_t *filename_list;
     char *author;
     notmuch_message_file_t *message_file;
     notmuch_message_list_t *replies;
@@ -102,6 +104,8 @@ _notmuch_message_create_for_document (const void *talloc_owner,
     message->message_id = NULL;
     message->thread_id = NULL;
     message->in_reply_to = NULL;
+    message->tag_list = NULL;
+    message->filename_term_list = NULL;
     message->filename_list = NULL;
     message->message_file = NULL;
     message->author = NULL;
@@ -256,6 +260,123 @@ _notmuch_message_create_for_message_id (notmuch_database_t *notmuch,
     return message;
 }
 
+static char *
+_notmuch_message_get_term (notmuch_message_t *message,
+			   Xapian::TermIterator &i, Xapian::TermIterator &end,
+			   const char *prefix)
+{
+    int prefix_len = strlen (prefix);
+    const char *term = NULL;
+    char *value;
+
+    i.skip_to (prefix);
+
+    if (i != end)
+	term = (*i).c_str ();
+
+    if (!term || strncmp (term, prefix, prefix_len))
+	return NULL;
+
+    value = talloc_strdup (message, term + prefix_len);
+
+#if DEBUG_DATABASE_SANITY
+    i++;
+
+    if (i != end && strncmp ((*i).c_str (), prefix, prefix_len) == 0) {
+	INTERNAL_ERROR ("Mail (doc_id: %d) has duplicate %s terms: %s and %s\n",
+			message->doc_id, prefix, value,
+			(*i).c_str () + prefix_len);
+    }
+#endif
+
+    return value;
+}
+
+void
+_notmuch_message_ensure_metadata (notmuch_message_t *message)
+{
+    Xapian::TermIterator i, end;
+    const char *thread_prefix = _find_prefix ("thread"),
+	*tag_prefix = _find_prefix ("tag"),
+	*id_prefix = _find_prefix ("id"),
+	*filename_prefix = _find_prefix ("file-direntry"),
+	*replyto_prefix = _find_prefix ("replyto");
+
+    /* We do this all in a single pass because Xapian decompresses the
+     * term list every time you iterate over it.  Thus, while this is
+     * slightly more costly than looking up individual fields if only
+     * one field of the message object is actually used, it's a huge
+     * win as more fields are used. */
+
+    i = message->doc.termlist_begin ();
+    end = message->doc.termlist_end ();
+
+    /* Get thread */
+    if (!message->thread_id)
+	message->thread_id =
+	    _notmuch_message_get_term (message, i, end, thread_prefix);
+
+    /* Get tags */
+    assert (strcmp (thread_prefix, tag_prefix) < 0);
+    if (!message->tag_list) {
+	message->tag_list =
+	    _notmuch_database_get_terms_with_prefix (message, i, end,
+						     tag_prefix);
+	_notmuch_string_list_sort (message->tag_list);
+    }
+
+    /* Get id */
+    assert (strcmp (tag_prefix, id_prefix) < 0);
+    if (!message->message_id)
+	message->message_id =
+	    _notmuch_message_get_term (message, i, end, id_prefix);
+
+    /* Get filename list.  Here we get only the terms.  We lazily
+     * expand them to full file names when needed in
+     * _notmuch_message_ensure_filename_list. */
+    assert (strcmp (id_prefix, filename_prefix) < 0);
+    if (!message->filename_term_list && !message->filename_list)
+	message->filename_term_list =
+	    _notmuch_database_get_terms_with_prefix (message, i, end,
+						     filename_prefix);
+
+    /* Get reply to */
+    assert (strcmp (filename_prefix, replyto_prefix) < 0);
+    if (!message->in_reply_to)
+	message->in_reply_to =
+	    _notmuch_message_get_term (message, i, end, replyto_prefix);
+    /* It's perfectly valid for a message to have no In-Reply-To
+     * header. For these cases, we return an empty string. */
+    if (!message->in_reply_to)
+	message->in_reply_to = talloc_strdup (message, "");
+}
+
+static void
+_notmuch_message_invalidate_metadata (notmuch_message_t *message,
+				      const char *prefix_name)
+{
+    if (strcmp ("thread", prefix_name) == 0) {
+	talloc_free (message->thread_id);
+	message->thread_id = NULL;
+    }
+
+    if (strcmp ("tag", prefix_name) == 0) {
+	talloc_unlink (message, message->tag_list);
+	message->tag_list = NULL;
+    }
+
+    if (strcmp ("file-direntry", prefix_name) == 0) {
+	talloc_free (message->filename_term_list);
+	talloc_free (message->filename_list);
+	message->filename_term_list = message->filename_list = NULL;
+    }
+
+    if (strcmp ("replyto", prefix_name) == 0) {
+	talloc_free (message->in_reply_to);
+	message->in_reply_to = NULL;
+    }
+}
+
 unsigned int
 _notmuch_message_get_doc_id (notmuch_message_t *message)
 {
@@ -265,32 +386,11 @@ _notmuch_message_get_doc_id (notmuch_message_t *message)
 const char *
 notmuch_message_get_message_id (notmuch_message_t *message)
 {
-    Xapian::TermIterator i;
-
-    if (message->message_id)
-	return message->message_id;
-
-    i = message->doc.termlist_begin ();
-    i.skip_to (_find_prefix ("id"));
-
-    if (i == message->doc.termlist_end ())
-	INTERNAL_ERROR ("Message with document ID of %d has no message ID.\n",
+    if (!message->message_id)
+	_notmuch_message_ensure_metadata (message);
+    if (!message->message_id)
+	INTERNAL_ERROR ("Message with document ID of %u has no message ID.\n",
 			message->doc_id);
-
-    message->message_id = talloc_strdup (message, (*i).c_str () + 1);
-
-#if DEBUG_DATABASE_SANITY
-    i++;
-
-    if (i != message->doc.termlist_end () &&
-	strncmp ((*i).c_str (), _find_prefix ("id"),
-		 strlen (_find_prefix ("id"))) == 0)
-    {
-	INTERNAL_ERROR ("Mail (doc_id: %d) has duplicate message IDs",
-			message->doc_id);
-    }
-#endif
-
     return message->message_id;
 }
 
@@ -329,89 +429,19 @@ notmuch_message_get_header (notmuch_message_t *message, const char *header)
 const char *
 _notmuch_message_get_in_reply_to (notmuch_message_t *message)
 {
-    const char *prefix = _find_prefix ("replyto");
-    int prefix_len = strlen (prefix);
-    Xapian::TermIterator i;
-    std::string in_reply_to;
-
-    if (message->in_reply_to)
-	return message->in_reply_to;
-
-    i = message->doc.termlist_begin ();
-    i.skip_to (prefix);
-
-    if (i != message->doc.termlist_end ())
-	in_reply_to = *i;
-
-    /* It's perfectly valid for a message to have no In-Reply-To
-     * header. For these cases, we return an empty string. */
-    if (i == message->doc.termlist_end () ||
-	strncmp (in_reply_to.c_str (), prefix, prefix_len))
-    {
-	message->in_reply_to = talloc_strdup (message, "");
-	return message->in_reply_to;
-    }
-
-    message->in_reply_to = talloc_strdup (message,
-					  in_reply_to.c_str () + prefix_len);
-
-#if DEBUG_DATABASE_SANITY
-    i++;
-
-    in_reply_to = *i;
-
-    if (i != message->doc.termlist_end () &&
-	strncmp ((*i).c_str (), prefix, prefix_len) == 0)
-    {
-       INTERNAL_ERROR ("Message %s has duplicate In-Reply-To IDs: %s and %s\n",
-			notmuch_message_get_message_id (message),
-			message->in_reply_to,
-			(*i).c_str () + prefix_len);
-    }
-#endif
-
+    if (!message->in_reply_to)
+	_notmuch_message_ensure_metadata (message);
     return message->in_reply_to;
 }
 
 const char *
 notmuch_message_get_thread_id (notmuch_message_t *message)
 {
-    const char *prefix = _find_prefix ("thread");
-    Xapian::TermIterator i;
-    std::string id;
-
-    /* This code is written with the assumption that "thread" has a
-     * single-character prefix. */
-    assert (strlen (prefix) == 1);
-
-    if (message->thread_id)
-	return message->thread_id;
-
-    i = message->doc.termlist_begin ();
-    i.skip_to (prefix);
-
-    if (i != message->doc.termlist_end ())
-	id = *i;
-
-    if (i == message->doc.termlist_end () || id[0] != *prefix)
-	INTERNAL_ERROR ("Message with document ID of %d has no thread ID.\n",
+    if (!message->thread_id)
+	_notmuch_message_ensure_metadata (message);
+    if (!message->thread_id)
+	INTERNAL_ERROR ("Message with document ID of %u has no thread ID.\n",
 			message->doc_id);
-
-    message->thread_id = talloc_strdup (message, id.c_str () + 1);
-
-#if DEBUG_DATABASE_SANITY
-    i++;
-    id = *i;
-
-    if (i != message->doc.termlist_end () && id[0] == *prefix)
-    {
-	INTERNAL_ERROR ("Message %s has duplicate thread IDs: %s and %s\n",
-			notmuch_message_get_message_id (message),
-			message->thread_id,
-			id.c_str () + 1);
-    }
-#endif
-
     return message->thread_id;
 }
 
@@ -443,11 +473,6 @@ _notmuch_message_add_filename (notmuch_message_t *message,
 
     if (filename == NULL)
 	INTERNAL_ERROR ("Message filename cannot be NULL.");
-
-    if (message->filename_list) {
-	_notmuch_filename_list_destroy (message->filename_list);
-	message->filename_list = NULL;
-    }
 
     relative = _notmuch_database_relative_path (message->notmuch, filename);
 
@@ -495,11 +520,6 @@ _notmuch_message_remove_filename (notmuch_message_t *message,
     notmuch_private_status_t private_status;
     notmuch_status_t status;
     Xapian::TermIterator i, last;
-
-    if (message->filename_list) {
-	_notmuch_filename_list_destroy (message->filename_list);
-	message->filename_list = NULL;
-    }
 
     status = _notmuch_database_filename_to_direntry (local, message->notmuch,
 						     filename, &direntry);
@@ -580,21 +600,18 @@ _notmuch_message_clear_data (notmuch_message_t *message)
 static void
 _notmuch_message_ensure_filename_list (notmuch_message_t *message)
 {
-    const char *prefix = _find_prefix ("file-direntry");
-    int prefix_len = strlen (prefix);
-    Xapian::TermIterator i;
+    notmuch_string_node_t *node;
 
     if (message->filename_list)
 	return;
 
-    message->filename_list = _notmuch_filename_list_create (message);
+    if (!message->filename_term_list)
+	_notmuch_message_ensure_metadata (message);
 
-    i = message->doc.termlist_begin ();
-    i.skip_to (prefix);
+    message->filename_list = _notmuch_string_list_create (message);
+    node = message->filename_term_list->head;
 
-    if (i == message->doc.termlist_end () ||
-	strncmp ((*i).c_str (), prefix, prefix_len))
-    {
+    if (!node) {
 	/* A message document created by an old version of notmuch
 	 * (prior to rename support) will have the filename in the
 	 * data of the document rather than as a file-direntry term.
@@ -608,24 +625,18 @@ _notmuch_message_ensure_filename_list (notmuch_message_t *message)
 	if (data == NULL)
 	    INTERNAL_ERROR ("message with no filename");
 
-	_notmuch_filename_list_add_filename (message->filename_list, data);
+	_notmuch_string_list_append (message->filename_list, data);
 
 	return;
     }
 
-    for (; i != message->doc.termlist_end (); i++) {
+    for (; node; node = node->next) {
 	void *local = talloc_new (message);
 	const char *db_path, *directory, *basename, *filename;
 	char *colon, *direntry = NULL;
 	unsigned int directory_id;
 
-	/* Terminate loop at first term without desired prefix. */
-	if (strncmp ((*i).c_str (), prefix, prefix_len))
-	    break;
-
-	direntry = talloc_strdup (local, (*i).c_str ());
-
-	direntry += prefix_len;
+	direntry = node->string;
 
 	directory_id = strtol (direntry, &colon, 10);
 
@@ -649,11 +660,13 @@ _notmuch_message_ensure_filename_list (notmuch_message_t *message)
 	    filename = talloc_asprintf (message, "%s/%s",
 					db_path, basename);
 
-	_notmuch_filename_list_add_filename (message->filename_list,
-					     filename);
+	_notmuch_string_list_append (message->filename_list, filename);
 
 	talloc_free (local);
     }
+
+    talloc_free (message->filename_term_list);
+    message->filename_term_list = NULL;
 }
 
 const char *
@@ -665,12 +678,12 @@ notmuch_message_get_filename (notmuch_message_t *message)
 	return NULL;
 
     if (message->filename_list->head == NULL ||
-	message->filename_list->head->filename == NULL)
+	message->filename_list->head->string == NULL)
     {
 	INTERNAL_ERROR ("message with no filename");
     }
 
-    return message->filename_list->head->filename;
+    return message->filename_list->head->string;
 }
 
 notmuch_filenames_t *
@@ -716,10 +729,20 @@ notmuch_message_get_date (notmuch_message_t *message)
 notmuch_tags_t *
 notmuch_message_get_tags (notmuch_message_t *message)
 {
-    Xapian::TermIterator i, end;
-    i = message->doc.termlist_begin();
-    end = message->doc.termlist_end();
-    return _notmuch_convert_tags(message, i, end);
+    notmuch_tags_t *tags;
+
+    if (!message->tag_list)
+	_notmuch_message_ensure_metadata (message);
+
+    tags = _notmuch_tags_create (message, message->tag_list);
+    /* _notmuch_tags_create steals the reference to the tag_list, but
+     * in this case it's still used by the message, so we add an
+     * *additional* talloc reference to the list.  As a result, it's
+     * possible to modify the message tags (which talloc_unlink's the
+     * current list from the message) while still iterating because
+     * the iterator will keep the current list alive. */
+    talloc_reference (message, message->tag_list);
+    return tags;
 }
 
 const char *
@@ -809,6 +832,8 @@ _notmuch_message_add_term (notmuch_message_t *message,
 
     talloc_free (term);
 
+    _notmuch_message_invalidate_metadata (message, prefix_name);
+
     return NOTMUCH_PRIVATE_STATUS_SUCCESS;
 }
 
@@ -873,6 +898,8 @@ _notmuch_message_remove_term (notmuch_message_t *message,
     }
 
     talloc_free (term);
+
+    _notmuch_message_invalidate_metadata (message, prefix_name);
 
     return NOTMUCH_PRIVATE_STATUS_SUCCESS;
 }
@@ -1283,6 +1310,7 @@ notmuch_message_remove_all_tags (notmuch_message_t *message)
     if (! message->frozen)
 	_notmuch_message_sync (message);
 
+    talloc_free (tags);
     return NOTMUCH_STATUS_SUCCESS;
 }
 

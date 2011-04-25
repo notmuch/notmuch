@@ -53,18 +53,16 @@ struct _notmuch_database {
     Xapian::ValueRangeProcessor *value_range_processor;
 };
 
-/* Convert tags from Xapian internal format to notmuch format.
- *
- * The function gets a TermIterator as argument and uses that iterator to find
- * all tag terms in the object. The tags are then converted to a
- * notmuch_tags_t list and returned. The function needs to allocate memory for
- * the resulting list and it uses the argument ctx as talloc context.
+/* Return the list of terms from the given iterator matching a prefix.
+ * The prefix will be stripped from the strings in the returned list.
+ * The list will be allocated using ctx as the talloc context.
  *
  * The function returns NULL on failure.
  */
-notmuch_tags_t *
-_notmuch_convert_tags (void *ctx, Xapian::TermIterator &i,
-		       Xapian::TermIterator &end);
+notmuch_string_list_t *
+_notmuch_database_get_terms_with_prefix (void *ctx, Xapian::TermIterator &i,
+					 Xapian::TermIterator &end,
+					 const char *prefix);
 
 #pragma GCC visibility pop
 
