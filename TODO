@@ -255,6 +255,13 @@ existing messages at the next database upgrade).
 Add support for the user to specify custom headers to be indexed (and
 re-index these for existing messages at the next database upgrade).
 
+Save filenames for files detected as "not an email file" in the
+database. This would allow for two things: 1. Optimizing "notmuch new"
+to not have to look at these files again (since they are potentially
+large so the detection could be potentially slow). 2. A "notmuch
+search" syntax could be added to allow the user to find these files,
+(and perhaps delete them or move them away as appropriate).
+
 Test suite
 ----------
 Achieve 100% test coverage with the test suite.
