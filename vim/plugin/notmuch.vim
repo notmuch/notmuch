@@ -18,7 +18,8 @@
 " along with Notmuch.  If not, see <http://www.gnu.org/licenses/>.
 "
 " Authors: Bart Trojanowski <bart@jukie.net>
-" Contributors: Peter Hartman <peterjohnhartman@gmail.com>
+" Contributors: Felipe Contreras <felipe.contreras@gmail.com>,
+"   Peter Hartman <peterjohnhartman@gmail.com>
 "
 " --- configuration defaults {{{1
 
