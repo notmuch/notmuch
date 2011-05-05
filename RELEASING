@@ -35,7 +35,21 @@ repository. From here, there are just a few steps to release:
 
 	Commit this change, if any.
 
-3) Upgrade the version in the file "version"
+3) Update the debian/libnotmuch1.symbols file
+
+	If the library version changed at all (step 2) it probably
+	means that symbols have changed/been added, in which case the
+	debian symbols file also needs to be updated:
+
+	       dpkg-buildpackage -uc -us
+	       dpkg-gensymbols -plibnotmuch1 | patch -p0
+
+	Carefully review the changes to debian/libnotmuch1.symbols to
+	make sure there are no unexpected changes.
+
+	Commit this change, if any.
+
+4) Upgrade the version in the file "version"
 
 	The scheme for the release number is as follows:
 
@@ -55,7 +69,7 @@ repository. From here, there are just a few steps to release:
 
 	Commit this change.
 
-4) Create an entry for the new release in debian/changelog
+5) Create an entry for the new release in debian/changelog
 
 	The syntax of this file is tightly restricted, but the
 	available emacs mode (see the dpkg-dev-el package) helps.
@@ -69,7 +83,7 @@ repository. From here, there are just a few steps to release:
 	release, (taking entries from NEWS and the version from the
 	version file, and creating a new commit, etc.)
 
-5) Run "make release" which will perform the following steps.
+6) Run "make release" which will perform the following steps.
 
    Note: If any problem occurs during the process, (such as a lintian
    warning that you decide should be fixed), you can abort at the
@@ -98,7 +112,7 @@ repository. From here, there are just a few steps to release:
 	* Push that tag
 	* Provide some text for the release announcement (see below).
 
-6) Send a message to notmuch@notmuchmail.org to announce the release.
+7) Send a message to notmuch@notmuchmail.org to announce the release.
 
 	Use the text provided from "make release" above, (if for some
 	reason you lose this message, "make release-message" prints
