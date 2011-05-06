@@ -5,8 +5,8 @@ test_description='various settings for "notmuch search --output="'
 add_email_corpus
 
 test_begin_subtest "notmuch search --output=threads"
-output=$(notmuch search --output=threads '*' | sed -e s/thread:.*/thread:THREADID/)
-test_expect_equal "$output" "thread:THREADID
+notmuch search --output=threads '*' | sed -e s/thread:.*/thread:THREADID/ >OUTPUT
+cat <<EOF >EXPECTED
 thread:THREADID
 thread:THREADID
 thread:THREADID
@@ -27,11 +27,15 @@ thread:THREADID
 thread:THREADID
 thread:THREADID
 thread:THREADID
-thread:THREADID"
+thread:THREADID
+thread:THREADID
+EOF
+test_expect_equal_file OUTPUT EXPECTED
 
 test_begin_subtest "notmuch search --format=json --output=threads"
-output=$(notmuch search --format=json --output=threads '*' | sed -e s/\".*\"/\"THREADID\"/)
-test_expect_equal "$output" '["THREADID",
+notmuch search --format=json --output=threads '*' | sed -e s/\".*\"/\"THREADID\"/ >OUTPUT
+cat <<EOF >EXPECTED
+["THREADID",
 "THREADID",
 "THREADID",
 "THREADID",
@@ -52,11 +56,14 @@ test_expect_equal "$output" '["THREADID",
 "THREADID",
 "THREADID",
 "THREADID",
-"THREADID"]'
+"THREADID"]
+EOF
+test_expect_equal_file OUTPUT EXPECTED
 
 test_begin_subtest "notmuch search --output=messages"
-output=$(notmuch search --output=messages '*')
-test_expect_equal "$output" "id:1258544095-16616-1-git-send-email-chris@chris-wilson.co.uk
+notmuch search --output=messages '*' >OUTPUT
+cat <<EOF >EXPECTED
+id:1258544095-16616-1-git-send-email-chris@chris-wilson.co.uk
 id:877htoqdbo.fsf@yoom.home.cworth.org
 id:878we4qdqf.fsf@yoom.home.cworth.org
 id:87aaykqe24.fsf@yoom.home.cworth.org
@@ -105,11 +112,14 @@ id:87iqd9rn3l.fsf@vertex.dottedmag
 id:20091117190054.GU3165@dottiness.seas.harvard.edu
 id:87lji5cbwo.fsf@yoom.home.cworth.org
 id:1258471718-6781-2-git-send-email-dottedmag@dottedmag.net
-id:1258471718-6781-1-git-send-email-dottedmag@dottedmag.net"
+id:1258471718-6781-1-git-send-email-dottedmag@dottedmag.net
+EOF
+test_expect_equal_file OUTPUT EXPECTED
 
 test_begin_subtest "notmuch search --format=json --output=messages"
-output=$(notmuch search --format=json --output=messages '*')
-test_expect_equal "$output" '["1258544095-16616-1-git-send-email-chris@chris-wilson.co.uk",
+notmuch search --format=json --output=messages '*' >OUTPUT
+cat <<EOF >EXPECTED
+["1258544095-16616-1-git-send-email-chris@chris-wilson.co.uk",
 "877htoqdbo.fsf@yoom.home.cworth.org",
 "878we4qdqf.fsf@yoom.home.cworth.org",
 "87aaykqe24.fsf@yoom.home.cworth.org",
@@ -158,11 +168,14 @@ test_expect_equal "$output" '["1258544095-16616-1-git-send-email-chris@chris-wil
 "20091117190054.GU3165@dottiness.seas.harvard.edu",
 "87lji5cbwo.fsf@yoom.home.cworth.org",
 "1258471718-6781-2-git-send-email-dottedmag@dottedmag.net",
-"1258471718-6781-1-git-send-email-dottedmag@dottedmag.net"]'
+"1258471718-6781-1-git-send-email-dottedmag@dottedmag.net"]
+EOF
+test_expect_equal_file OUTPUT EXPECTED
 
 test_begin_subtest "notmuch search --output=files"
-output=$(notmuch search --output=files '*' | sed -e "s,$MAIL_DIR,MAIL_DIR,")
-test_expect_equal "$output" "MAIL_DIR/cur/50:2,
+notmuch search --output=files '*' | sed -e "s,$MAIL_DIR,MAIL_DIR," >OUTPUT
+cat <<EOF >EXPECTED
+MAIL_DIR/cur/50:2,
 MAIL_DIR/cur/49:2,
 MAIL_DIR/cur/48:2,
 MAIL_DIR/cur/47:2,
@@ -211,11 +224,14 @@ MAIL_DIR/cur/04:2,
 MAIL_DIR/cur/03:2,
 MAIL_DIR/cur/07:2,
 MAIL_DIR/cur/02:2,
-MAIL_DIR/cur/01:2,"
+MAIL_DIR/cur/01:2,
+EOF
+test_expect_equal_file OUTPUT EXPECTED
 
 test_begin_subtest "notmuch search --format=json --output=files"
-output=$(notmuch search --format=json --output=files '*' | sed -e "s,$MAIL_DIR,MAIL_DIR,")
-test_expect_equal "$output" '["MAIL_DIR/cur/50:2,",
+notmuch search --format=json --output=files '*' | sed -e "s,$MAIL_DIR,MAIL_DIR," >OUTPUT
+cat <<EOF >EXPECTED
+["MAIL_DIR/cur/50:2,",
 "MAIL_DIR/cur/49:2,",
 "MAIL_DIR/cur/48:2,",
 "MAIL_DIR/cur/47:2,",
@@ -264,20 +280,28 @@ test_expect_equal "$output" '["MAIL_DIR/cur/50:2,",
 "MAIL_DIR/cur/03:2,",
 "MAIL_DIR/cur/07:2,",
 "MAIL_DIR/cur/02:2,",
-"MAIL_DIR/cur/01:2,"]'
+"MAIL_DIR/cur/01:2,"]
+EOF
+test_expect_equal_file OUTPUT EXPECTED
 
 test_begin_subtest "notmuch search --output=tags"
-output=$(notmuch search --output=tags '*')
-test_expect_equal "$output" "attachment
+notmuch search --output=tags '*' >OUTPUT
+cat <<EOF >EXPECTED
+attachment
 inbox
 signed
-unread"
+unread
+EOF
+test_expect_equal_file OUTPUT EXPECTED
 
 test_begin_subtest "notmuch search --format=json --output=tags"
-output=$(notmuch search --format=json --output=tags '*')
-test_expect_equal "$output" '["attachment",
+notmuch search --format=json --output=tags '*' >OUTPUT
+cat <<EOF >EXPECTED
+["attachment",
 "inbox",
 "signed",
-"unread"]'
+"unread"]
+EOF
+test_expect_equal_file OUTPUT EXPECTED
 
 test_done
