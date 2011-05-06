@@ -48,6 +48,7 @@ typedef struct search_format {
     const char *item_sep;
     const char *item_end;
     const char *results_end;
+    const char *results_null;
 } search_format_t;
 
 static void
@@ -72,6 +73,7 @@ static const search_format_t format_text = {
 		"%s", " ",
 	    ")", "\n",
 	"",
+    "\n",
     "",
 };
 
@@ -97,6 +99,7 @@ static const search_format_t format_json = {
 		"\"%s\"", ", ",
 	    "]", ",\n",
 	"}",
+    "]\n",
     "]\n",
 };
 
@@ -236,7 +239,10 @@ do_search_threads (const search_format_t *format,
 	notmuch_thread_destroy (thread);
     }
 
-    fputs (format->results_end, stdout);
+    if (first_thread)
+	fputs (format->results_null, stdout);
+    else
+	fputs (format->results_end, stdout);
 
     return 0;
 }
@@ -280,7 +286,10 @@ do_search_messages (const search_format_t *format,
 
     notmuch_messages_destroy (messages);
 
-    fputs (format->results_end, stdout);
+    if (first_message)
+	fputs (format->results_null, stdout);
+    else
+	fputs (format->results_end, stdout);
 
     return 0;
 }
@@ -329,7 +338,10 @@ do_search_tags (notmuch_database_t *notmuch,
     if (messages)
 	notmuch_messages_destroy (messages);
 
-    fputs (format->results_end, stdout);
+    if (first_tag)
+	fputs (format->results_null, stdout);
+    else
+	fputs (format->results_end, stdout);
 
     return 0;
 }
