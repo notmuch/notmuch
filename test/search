@@ -118,9 +118,4 @@ add_message '[subject]="utf8-message-body-subject"' '[date]="Sat, 01 Jan 2000 12
 output=$(notmuch search "bödý" | notmuch_search_sanitize)
 test_expect_equal "$output" "thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; utf8-message-body-subject (inbox unread)"
 
-test_expect_success "Search for non-existent message prints nothing" '
-echo -n > expected &&
-notmuch search "no-message-matches-this" > actual &&
-test_cmp expected actual'
-
 test_done

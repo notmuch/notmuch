@@ -304,4 +304,16 @@ cat <<EOF >EXPECTED
 EOF
 test_expect_equal_file OUTPUT EXPECTED
 
+test_begin_subtest "notmuch search for non-existent message prints nothing"
+notmuch search "no-message-matches-this" > OUTPUT
+echo -n >EXPECTED
+test_expect_equal_file OUTPUT EXPECTED
+
+test_begin_subtest "notmuch search --format=json for non-existent message prints proper empty json"
+notmuch search --format=json "no-message-matches-this" > OUTPUT
+cat <<EOF >EXPECTED
+[]
+EOF
+test_expect_equal_file OUTPUT EXPECTED
+
 test_done
