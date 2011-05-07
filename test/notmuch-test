@@ -40,6 +40,7 @@ TESTS="
   emacs-large-search-buffer
   maildir-sync
 "
+TESTS=${NOTMUCH_TESTS:=$TESTS}
 
 # Clean up any results from a previous run
 rm -r test-results >/dev/null 2>/dev/null
