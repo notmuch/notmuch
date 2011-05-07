@@ -54,4 +54,4 @@ done
 ./aggregate-results.sh test-results/*
 
 # Clean up
-rm -r test-results corpus.mail
+rm -rf test-results corpus.mail
