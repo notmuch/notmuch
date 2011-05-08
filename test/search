@@ -24,6 +24,11 @@ add_message [subject]=subjectsearchtest '[date]="Sat, 01 Jan 2000 12:00:00 -0000
 output=$(notmuch search subject:subjectsearchtest | notmuch_search_sanitize)
 test_expect_equal "$output" "thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; subjectsearchtest (inbox unread)"
 
+test_begin_subtest "Search by subject (utf-8):"
+add_message [subject]=utf8-sübjéct '[date]="Sat, 01 Jan 2000 12:00:00 -0000"'
+output=$(notmuch search subject:utf8-sübjéct | notmuch_search_sanitize)
+test_expect_equal "$output" "thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; utf8-sübjéct (inbox unread)"
+
 test_begin_subtest "Search by id:"
 add_message '[subject]="search by id"' '[date]="Sat, 01 Jan 2000 12:00:00 -0000"'
 output=$(notmuch search id:${gen_msg_id} | notmuch_search_sanitize)
@@ -101,6 +106,7 @@ thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; body search (inbox unread)
 thread:XXX   2000-01-01 [1/1] searchbyfrom; search by from (inbox unread)
 thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; search by to (inbox unread)
 thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; subjectsearchtest (inbox unread)
+thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; utf8-sübjéct (inbox unread)
 thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; search by id (inbox unread)
 thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; search by tag (inbox searchbytag unread)
 thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; search by thread (inbox unread)

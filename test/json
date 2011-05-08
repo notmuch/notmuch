@@ -18,11 +18,6 @@ test_expect_equal "$output" "[{\"thread\": \"XXX\",
 \"subject\": \"json-search-subject\",
 \"tags\": [\"inbox\", \"unread\"]}]"
 
-test_begin_subtest "Search by subject (utf-8):"
-add_message [subject]=utf8-sübjéct "[date]=\"Sat, 01 Jan 2000 12:00:00 -0000\""
-output=$(notmuch search subject:utf8-sübjéct | notmuch_search_sanitize)
-test_expect_equal "$output" "thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; utf8-sübjéct (inbox unread)"
-
 test_begin_subtest "Show message: json, utf-8"
 add_message "[subject]=\"json-show-utf8-body-sübjéct\"" "[date]=\"Sat, 01 Jan 2000 12:00:00 -0000\"" "[body]=\"jsön-show-méssage\""
 output=$(notmuch show --format=json "jsön-show-méssage")
