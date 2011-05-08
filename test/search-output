@@ -304,6 +304,15 @@ cat <<EOF >EXPECTED
 EOF
 test_expect_equal_file OUTPUT EXPECTED
 
+test_begin_subtest "santize output for quoted-printable line-breaks in author and subject"
+add_message "[subject]='two =?ISO-8859-1?Q?line=0A_subject?=
+	headers'"
+notmuch search id:"$gen_msg_id" | notmuch_search_sanitize >OUTPUT
+cat <<EOF >EXPECTED
+thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; two line? subject headers (inbox unread)
+EOF
+test_expect_equal_file OUTPUT EXPECTED
+
 test_begin_subtest "notmuch search for non-existent message prints nothing"
 notmuch search "no-message-matches-this" > OUTPUT
 echo -n >EXPECTED
