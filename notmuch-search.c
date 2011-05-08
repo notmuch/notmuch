@@ -111,6 +111,20 @@ format_item_id_text (unused (const void *ctx),
     printf ("%s%s", item_type, item_id);
 }
 
+static char *
+sanitize_string (const void *ctx, const char *str)
+{
+    char *out, *loop;
+
+    loop = out = talloc_strdup (ctx, str);
+
+    for (; *loop; loop++) {
+	if ((unsigned char)(*loop) < 32)
+	    *loop = '?';
+    }
+    return out;
+}
+
 static void
 format_thread_text (const void *ctx,
 		    const char *thread_id,
@@ -120,13 +134,17 @@ format_thread_text (const void *ctx,
 		    const char *authors,
 		    const char *subject)
 {
+    void *ctx_quote = talloc_new (ctx);
+
     printf ("thread:%s %12s [%d/%d] %s; %s",
 	    thread_id,
 	    notmuch_time_relative_date (ctx, date),
 	    matched,
 	    total,
-	    authors,
-	    subject);
+	    sanitize_string (ctx_quote, authors),
+	    sanitize_string (ctx_quote, subject));
+
+    talloc_free (ctx_quote);
 }
 
 static void
