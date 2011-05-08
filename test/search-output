@@ -4,7 +4,7 @@ test_description='various settings for "notmuch search --output="'
 
 add_email_corpus
 
-test_begin_subtest "notmuch search --output=threads"
+test_begin_subtest "--output=threads"
 notmuch search --output=threads '*' | sed -e s/thread:.*/thread:THREADID/ >OUTPUT
 cat <<EOF >EXPECTED
 thread:THREADID
@@ -32,7 +32,7 @@ thread:THREADID
 EOF
 test_expect_equal_file OUTPUT EXPECTED
 
-test_begin_subtest "notmuch search --format=json --output=threads"
+test_begin_subtest "--output=threads --format=json"
 notmuch search --format=json --output=threads '*' | sed -e s/\".*\"/\"THREADID\"/ >OUTPUT
 cat <<EOF >EXPECTED
 ["THREADID",
@@ -60,7 +60,7 @@ cat <<EOF >EXPECTED
 EOF
 test_expect_equal_file OUTPUT EXPECTED
 
-test_begin_subtest "notmuch search --output=messages"
+test_begin_subtest "--output=messages"
 notmuch search --output=messages '*' >OUTPUT
 cat <<EOF >EXPECTED
 id:1258544095-16616-1-git-send-email-chris@chris-wilson.co.uk
@@ -116,7 +116,7 @@ id:1258471718-6781-1-git-send-email-dottedmag@dottedmag.net
 EOF
 test_expect_equal_file OUTPUT EXPECTED
 
-test_begin_subtest "notmuch search --format=json --output=messages"
+test_begin_subtest "--output=messages --format=json"
 notmuch search --format=json --output=messages '*' >OUTPUT
 cat <<EOF >EXPECTED
 ["1258544095-16616-1-git-send-email-chris@chris-wilson.co.uk",
@@ -172,7 +172,7 @@ cat <<EOF >EXPECTED
 EOF
 test_expect_equal_file OUTPUT EXPECTED
 
-test_begin_subtest "notmuch search --output=files"
+test_begin_subtest "--output=files"
 notmuch search --output=files '*' | sed -e "s,$MAIL_DIR,MAIL_DIR," >OUTPUT
 cat <<EOF >EXPECTED
 MAIL_DIR/cur/50:2,
@@ -228,7 +228,7 @@ MAIL_DIR/cur/01:2,
 EOF
 test_expect_equal_file OUTPUT EXPECTED
 
-test_begin_subtest "notmuch search --format=json --output=files"
+test_begin_subtest "--output=files --format=json"
 notmuch search --format=json --output=files '*' | sed -e "s,$MAIL_DIR,MAIL_DIR," >OUTPUT
 cat <<EOF >EXPECTED
 ["MAIL_DIR/cur/50:2,",
@@ -284,7 +284,7 @@ cat <<EOF >EXPECTED
 EOF
 test_expect_equal_file OUTPUT EXPECTED
 
-test_begin_subtest "notmuch search --output=tags"
+test_begin_subtest "--output=tags"
 notmuch search --output=tags '*' >OUTPUT
 cat <<EOF >EXPECTED
 attachment
@@ -294,7 +294,7 @@ unread
 EOF
 test_expect_equal_file OUTPUT EXPECTED
 
-test_begin_subtest "notmuch search --format=json --output=tags"
+test_begin_subtest "--output=tags --format=json"
 notmuch search --format=json --output=tags '*' >OUTPUT
 cat <<EOF >EXPECTED
 ["attachment",
@@ -313,12 +313,12 @@ thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; two line? subject headers (inb
 EOF
 test_expect_equal_file OUTPUT EXPECTED
 
-test_begin_subtest "notmuch search for non-existent message prints nothing"
+test_begin_subtest "search for non-existent message prints nothing"
 notmuch search "no-message-matches-this" > OUTPUT
 echo -n >EXPECTED
 test_expect_equal_file OUTPUT EXPECTED
 
-test_begin_subtest "notmuch search --format=json for non-existent message prints proper empty json"
+test_begin_subtest "search --format=json for non-existent message prints proper empty json"
 notmuch search --format=json "no-message-matches-this" > OUTPUT
 echo "[]" >EXPECTED
 test_expect_equal_file OUTPUT EXPECTED
