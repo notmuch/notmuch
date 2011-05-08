@@ -34,8 +34,4 @@ test_expect_equal "$output" "[{\"thread\": \"XXX\",
 \"subject\": \"json-search-utf8-body-sübjéct\",
 \"tags\": [\"inbox\", \"unread\"]}]"
 
-test_begin_subtest "Search returning no messages"
-output=$(notmuch search --format=json "this string had better not match any messages" | notmuch_search_sanitize)
-test_expect_equal "$output" "[]"
-
 test_done
