@@ -306,10 +306,11 @@ message at DEPTH in the current thread."
 		   "Filename to save as: "
 		   (or mailcap-download-directory "~/")
 		   nil nil
-		   filename))
-	    (require-final-newline nil)
-	    (coding-system-for-write 'no-conversion))
-	(write-region (point-min) (point-max) file)))))
+		   filename)))
+	;; Don't re-compress .gz & al.  Arguably we should make
+	;; `file-name-handler-alist' nil, but that would chop
+	;; ange-ftp, which is reasonable to use here.
+	(mm-write-region (point-min) (point-max) file nil nil nil 'no-conversion t)))))
 
 (defun notmuch-show-mm-display-part-inline (msg part content-type content)
   "Use the mm-decode/mm-view functions to display a part in the
