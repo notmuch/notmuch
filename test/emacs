@@ -112,11 +112,15 @@ Fcc: $(pwd)/mail/sent
 On Fri, 29 Mar 1974 10:00:00 -0000, Notmuch Test Suite <test_suite@notmuchmail.org> wrote:
 > This is a test that messages are sent via SMTP"
 
-test_begin_subtest "Save attachment from within emacs"
-echo "./attachment" | test_emacs '(notmuch-show "id:cf0c4d610911171136h1713aa59w9cf9aa31f052ad0a@mail.gmail.com") (notmuch-show-save-attachments)' > /dev/null 2>&1
-output=$(cat attachment)
-expected=$(cat $EXPECTED/attachment)
-test_expect_equal "$output" "$expected"
+test_begin_subtest "Save attachment from within emacs using notmuch-show-save-attachments"
+# save as archive to test that Emacs does not re-compress .gz
+echo ./attachment1.gz | test_emacs '(notmuch-show "id:cf0c4d610911171136h1713aa59w9cf9aa31f052ad0a@mail.gmail.com") (notmuch-show-save-attachments)' > /dev/null 2>&1
+test_expect_equal_file "$EXPECTED/attachment" attachment1.gz
+
+test_begin_subtest "Save attachment from within emacs using notmuch-show-save-part"
+# save as archive to test that Emacs does not re-compress .gz
+echo ./attachment2.gz | test_emacs '(notmuch-show-save-part "id:cf0c4d610911171136h1713aa59w9cf9aa31f052ad0a@mail.gmail.com" 5)' > /dev/null 2>&1
+test_expect_equal_file "$EXPECTED/attachment" attachment2.gz
 
 test_begin_subtest "View raw message within emacs"
 expected=$(cat $EXPECTED/raw-message-cf0c4d-52ad0a)
