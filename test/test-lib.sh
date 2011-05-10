@@ -477,8 +477,8 @@ test_expect_equal_file ()
 			test_ok_ "$test_subtest_name"
 		else
 			testname=$this_test.$test_count
-			mv "$output" $testname.output
-			mv "$expected" $testname.expected
+			cp "$output" $testname.output
+			cp "$expected" $testname.expected
 			test_failure_ "$test_subtest_name" "$(diff -u $testname.expected $testname.output)"
 		fi
     fi
