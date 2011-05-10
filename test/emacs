@@ -7,38 +7,38 @@ EXPECTED=../emacs.expected-output
 add_email_corpus
 
 test_begin_subtest "Basic notmuch-hello view in emacs"
-output=$(test_emacs '(notmuch-hello) (message (buffer-string))' 2>&1)
+output=$(test_emacs '(notmuch-hello) (princ (buffer-string))')
 expected=$(cat $EXPECTED/notmuch-hello)
 test_expect_equal "$output" "$expected"
 
 test_begin_subtest "Saved search with 0 results"
-output=$(test_emacs '(setq notmuch-show-empty-saved-searches t) (setq notmuch-saved-searches '\''(("inbox" . "tag:inbox") ("unread" . "tag:unread") ("empty" . "tag:doesnotexist"))) (notmuch-hello) (message (buffer-string))' 2>&1)
+output=$(test_emacs '(setq notmuch-show-empty-saved-searches t) (setq notmuch-saved-searches '\''(("inbox" . "tag:inbox") ("unread" . "tag:unread") ("empty" . "tag:doesnotexist"))) (notmuch-hello) (princ (buffer-string))')
 expected=$(cat $EXPECTED/notmuch-hello-with-empty)
 test_expect_equal "$output" "$expected"
 
 test_begin_subtest "No saved searches displayed (all with 0 results)"
-output=$(test_emacs '(setq notmuch-saved-searches '\''(("empty" . "tag:doesnotexist"))) (notmuch-hello) (message (buffer-string))' 2>&1)
+output=$(test_emacs '(setq notmuch-saved-searches '\''(("empty" . "tag:doesnotexist"))) (notmuch-hello) (princ (buffer-string))')
 expected=$(cat $EXPECTED/notmuch-hello-no-saved-searches)
 test_expect_equal "$output" "$expected"
 
 test_begin_subtest "Basic notmuch-search view in emacs"
-output=$(test_emacs '(notmuch-search "tag:inbox") (notmuch-test-wait) (message (buffer-string))' 2>&1)
+output=$(test_emacs '(notmuch-search "tag:inbox") (notmuch-test-wait) (princ (buffer-string))')
 expected=$(cat $EXPECTED/notmuch-search-tag-inbox)
 test_expect_equal "$output" "$expected"
 
 test_begin_subtest "Navigation of notmuch-hello to search results"
-output=$(test_emacs '(notmuch-hello) (goto-char (point-min)) (re-search-forward "inbox") (widget-button-press (point)) (notmuch-test-wait) (message (buffer-string))' 2>&1)
+output=$(test_emacs '(notmuch-hello) (goto-char (point-min)) (re-search-forward "inbox") (widget-button-press (point)) (notmuch-test-wait) (princ (buffer-string))')
 expected=$(cat $EXPECTED/notmuch-hello-view-inbox)
 test_expect_equal "$output" "$expected"
 
 test_begin_subtest "Basic notmuch-show view in emacs"
 maildir_storage_thread=$(notmuch search --output=threads id:20091117190054.GU3165@dottiness.seas.harvard.edu)
-output=$(test_emacs "(notmuch-show \"$maildir_storage_thread\") (message (buffer-string))" 2>&1)
+output=$(test_emacs "(notmuch-show \"$maildir_storage_thread\") (princ (buffer-string))")
 expected=$(cat $EXPECTED/notmuch-show-thread-maildir-storage)
 test_expect_equal "$output" "$expected"
 
 test_begin_subtest "Navigation of notmuch-search to thread view"
-output=$(test_emacs '(notmuch-search "tag:inbox") (notmuch-test-wait) (goto-char (point-min)) (re-search-forward "Working with Maildir") (notmuch-search-show-thread) (notmuch-test-wait) (message (buffer-string))' 2>&1)
+output=$(test_emacs '(notmuch-search "tag:inbox") (notmuch-test-wait) (goto-char (point-min)) (re-search-forward "Working with Maildir") (notmuch-search-show-thread) (notmuch-test-wait) (princ (buffer-string))')
 test_expect_equal "$output" "$expected"
 
 test_begin_subtest "Add tag from search view"
@@ -102,7 +102,7 @@ test_expect_equal "$output" "thread:XXX   1974-03-29 [1/1] Notmuch Test Suite; T
 test_begin_subtest "Reply within emacs"
 # We sed away everything before the ^From in the output to avoid getting
 # confused by messages such as "Parsing /home/cworth/.mailrc... done"
-output=$(test_emacs '(notmuch-search "subject:\"testing message sent via SMTP\"") (notmuch-test-wait) (notmuch-search-reply-to-thread) (message (buffer-string))' 2>&1 | sed -ne '/^From/,$ p' | sed -e 's/^In-Reply-To: <.*>$/In-Reply-To: <XXX>/')
+output=$(test_emacs '(notmuch-search "subject:\"testing message sent via SMTP\"") (notmuch-test-wait) (notmuch-search-reply-to-thread) (princ (buffer-string))' | sed -ne '/^From/,$ p' | sed -e 's/^In-Reply-To: <.*>$/In-Reply-To: <XXX>/')
 test_expect_equal "$output" "From: Notmuch Test Suite <test_suite@notmuchmail.org>
 To: user@example.com
 Subject: Re: Testing message sent via SMTP
@@ -121,7 +121,7 @@ test_expect_equal "$output" "$expected"
 test_begin_subtest "View raw message within emacs"
 expected=$(cat $EXPECTED/raw-message-cf0c4d-52ad0a)
 first_line=$(echo "$expected" | head -n1)
-output=$(test_emacs '(notmuch-show "id:cf0c4d610911171136h1713aa59w9cf9aa31f052ad0a@mail.gmail.com") (notmuch-show-view-raw-message) (message (buffer-string))' 2>&1 | sed -ne "/$first_line/,\$ p")
+output=$(test_emacs '(notmuch-show "id:cf0c4d610911171136h1713aa59w9cf9aa31f052ad0a@mail.gmail.com") (notmuch-show-view-raw-message) (princ (buffer-string))' | sed -ne "/$first_line/,\$ p")
 test_expect_equal "$output" "$expected"
 
 test_begin_subtest "Hiding/showing signature in notmuch-show view"
