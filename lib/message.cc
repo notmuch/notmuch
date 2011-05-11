@@ -213,7 +213,6 @@ _notmuch_message_create_for_message_id (notmuch_database_t *notmuch,
 {
     notmuch_message_t *message;
     Xapian::Document doc;
-    Xapian::WritableDatabase *db;
     unsigned int doc_id;
     char *term;
 
@@ -233,7 +232,6 @@ _notmuch_message_create_for_message_id (notmuch_database_t *notmuch,
     if (notmuch->mode == NOTMUCH_DATABASE_MODE_READ_ONLY)
 	INTERNAL_ERROR ("Failure to ensure database is writable.");
 
-    db = static_cast<Xapian::WritableDatabase *> (notmuch->xapian_db);
     try {
 	doc.add_term (term, 0);
 	talloc_free (term);
