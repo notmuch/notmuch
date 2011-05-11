@@ -81,6 +81,12 @@ _internal_error (const char *format, ...) PRINTF_ATTRIBUTE (1, 2);
 
 #define unused(x) x __attribute__ ((unused))
 
+#ifdef __cplusplus
+# define visible __attribute__((visibility("default")))
+#else
+# define visible
+#endif
+
 /* Thanks to Andrew Tridgell's (SAMBA's) talloc for this definition of
  * unlikely. The talloc source code comes to us via the GNU LGPL v. 3.
  */
@@ -405,7 +411,7 @@ typedef struct _notmuch_message_list {
  * somewhere with some nasty C++ objects in it. We'll try to maintain
  * ignorance of that here. (See notmuch_mset_messages_t in query.cc)
  */
-struct _notmuch_messages {
+struct visible _notmuch_messages {
     notmuch_bool_t is_of_list_type;
     notmuch_message_node_t *iterator;
 };

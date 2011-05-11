@@ -25,7 +25,7 @@
 
 #include <gmime/gmime.h>
 
-struct _notmuch_message {
+struct visible _notmuch_message {
     notmuch_database_t *notmuch;
     Xapian::docid doc_id;
     int frozen;

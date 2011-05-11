@@ -44,7 +44,7 @@ struct _notmuch_doc_id_set {
 #define DOCIDSET_WORD(bit) ((bit) / sizeof (unsigned int))
 #define DOCIDSET_BIT(bit) ((bit) % sizeof (unsigned int))
 
-struct _notmuch_threads {
+struct visible _notmuch_threads {
     notmuch_query_t *query;
 
     /* The ordered list of doc ids matched by the query. */

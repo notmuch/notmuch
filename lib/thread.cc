@@ -24,7 +24,7 @@
 #include <gmime/gmime.h>
 #include <glib.h> /* GHashTable */
 
-struct _notmuch_thread {
+struct visible _notmuch_thread {
     notmuch_database_t *notmuch;
     char *thread_id;
     char *subject;
