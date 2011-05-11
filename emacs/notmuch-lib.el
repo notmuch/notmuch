@@ -116,6 +116,19 @@ within the current window."
       (or (memq prop buffer-invisibility-spec)
 	  (assq prop buffer-invisibility-spec)))))
 
+; This lets us avoid compiling these replacement functions when emacs
+; is sufficiently new enough to supply them alone. We do the macro
+; treatment rather than just wrapping our defun calls in a when form
+; specifically so that the compiler never sees the code on new emacs,
+; (since the code is triggering warnings that we don't know how to get
+; rid of.
+;
+; A more clever macro here would accept a condition and a list of forms.
+(defmacro compile-on-emacs-prior-to-23 (form)
+  "Conditionally evaluate form only on emacs < emacs-23."
+  (list 'when (< emacs-major-version 23)
+	form))
+
 ;; Compatibility functions for versions of emacs before emacs 23.
 ;;
 ;; Both functions here were copied from emacs 23 with the following copyright:
@@ -124,21 +137,20 @@ within the current window."
 ;;   2004, 2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 ;;
 ;; and under the GPL version 3 (or later) exactly as notmuch itself.
-(when (< emacs-major-version 23)
-  (defun apply-partially (fun &rest args)
-  "Return a function that is a partial application of FUN to ARGS.
+(compile-on-emacs-prior-to-23
+ (defun apply-partially (fun &rest args)
+   "Return a function that is a partial application of FUN to ARGS.
 ARGS is a list of the first N arguments to pass to FUN.
 The result is a new function which does the same as FUN, except that
 the first N arguments are fixed at the values with which this function
 was called."
-  (lexical-let ((fun fun) (args1 args))
-    (lambda (&rest args2) (apply fun (append args1 args2)))))
+   (lexical-let ((fun fun) (args1 args))
+     (lambda (&rest args2) (apply fun (append args1 args2))))))
 
-  (defun mouse-event-p (object)
-  "Return non-nil if OBJECT is a mouse click event."
-  (memq (event-basic-type object) '(mouse-1 mouse-2 mouse-3 mouse-movement))))
-
-
+(compile-on-emacs-prior-to-23
+ (defun mouse-event-p (object)
+   "Return non-nil if OBJECT is a mouse click event."
+   (memq (event-basic-type object) '(mouse-1 mouse-2 mouse-3 mouse-movement))))
 
 (provide 'notmuch-lib)
 
