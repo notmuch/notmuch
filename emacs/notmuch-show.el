@@ -224,22 +224,25 @@ same as that of the previous message."
 				 ")"))))))
 
 (defun notmuch-show-clean-address (address)
-  "Clean a single email address for display."
-  (let* ((parsed (mail-header-parse-address address))
-	 (address (car parsed))
-	 (name (cdr parsed)))
-    ;; Remove double quotes. They might be required during transport,
-    ;; but we don't need to see them.
-    (when name
-      (setq name (replace-regexp-in-string "\"" "" name)))
-    ;; If the address is 'foo@bar.com <foo@bar.com>' then show just
-    ;; 'foo@bar.com'.
-    (when (string= name address)
-      (setq name nil))
+  "Try to clean a single email ADDRESS for display.  Return
+unchanged ADDRESS if parsing fails."
+  (condition-case nil
+    (let* ((parsed (mail-header-parse-address address))
+	   (address (car parsed))
+	   (name (cdr parsed)))
+      ;; Remove double quotes. They might be required during transport,
+      ;; but we don't need to see them.
+      (when name
+        (setq name (replace-regexp-in-string "\"" "" name)))
+      ;; If the address is 'foo@bar.com <foo@bar.com>' then show just
+      ;; 'foo@bar.com'.
+      (when (string= name address)
+        (setq name nil))
 
-    (if (not name)
-	address
-      (concat name " <" address ">"))))
+      (if (not name)
+        address
+        (concat name " <" address ">")))
+    (error address)))
 
 (defun notmuch-show-insert-headerline (headers date tags depth)
   "Insert a notmuch style headerline based on HEADERS for a
