@@ -449,7 +449,7 @@ test_expect_equal ()
 
 	output="$1"
 	expected="$2"
-	if ! test_skip "$@"
+	if ! test_skip "$test_subtest_name"
 	then
 		if [ "$output" = "$expected" ]; then
 			test_ok_ "$test_subtest_name"
@@ -472,7 +472,7 @@ test_expect_equal_file ()
 
 	output="$1"
 	expected="$2"
-	if ! test_skip "$@"
+	if ! test_skip "$test_subtest_name"
 	then
 		if diff -q "$expected" "$output" >/dev/null ; then
 			test_ok_ "$test_subtest_name"
