@@ -37,8 +37,21 @@ output=$(test_emacs "(notmuch-show \"$maildir_storage_thread\") (princ (buffer-s
 expected=$(cat $EXPECTED/notmuch-show-thread-maildir-storage)
 test_expect_equal "$output" "$expected"
 
+test_begin_subtest "notmuch-show for message with invalid From"
+add_message "[subject]=\"message-with-invalid-from\"" "[from]=\"\\\"Invalid \\\" From\\\" <test_suite@notmuchmail.org>\""
+thread=$(notmuch search --output=threads subject:message-with-invalid-from)
+output=$(test_emacs "(notmuch-show \"$thread\") (princ (buffer-string))")
+test_expect_equal "$output" \
+'"Invalid " From" <test_suite@notmuchmail.org> (2001-01-05) (inbox)
+Subject: message-with-invalid-from
+To: Notmuch Test Suite <test_suite@notmuchmail.org>
+Date: Tue, 05 Jan 2001 15:43:57 -0000
+
+This is just a test message (#1)'
+
 test_begin_subtest "Navigation of notmuch-search to thread view"
 output=$(test_emacs '(notmuch-search "tag:inbox") (notmuch-test-wait) (goto-char (point-min)) (re-search-forward "Working with Maildir") (notmuch-search-show-thread) (notmuch-test-wait) (princ (buffer-string))')
+expected=$(cat $EXPECTED/notmuch-show-thread-maildir-storage)
 test_expect_equal "$output" "$expected"
 
 test_begin_subtest "Add tag from search view"
