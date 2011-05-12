@@ -563,6 +563,7 @@ test_failure_ () {
 	test_failure=$(($test_failure + 1))
 	test_failure_message_ "FAIL" "$@"
 	test "$immediate" = "" || { GIT_EXIT_OK=t; exit 1; }
+	return 1
 }
 
 test_failure_message_ () {
@@ -584,6 +585,7 @@ test_known_broken_failure_ () {
 	test_subtest_known_broken_=
 	test_broken=$(($test_broken+1))
 	test_failure_message_ "BROKEN" "$@"
+	return 1
 }
 
 test_debug () {
