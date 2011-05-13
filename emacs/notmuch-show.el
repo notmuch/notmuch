@@ -280,9 +280,42 @@ current buffer, if possible."
 	      t)
 	  nil)))))
 
+(defun notmuch-show-insert-part-multipart/alternative (msg part content-type nth depth declared-type)
+  (let ((inner-parts (plist-get part :content)))
+    (notmuch-show-insert-part-header nth declared-type content-type nil)
+    ;; In most cases, multipart/alternative is used to provide both
+    ;; text/plain and text/html (or multipart/related with text/html
+    ;; and image/*) parts. We might allow the user to express a
+    ;; preference about which part to show, but for the moment we just
+    ;; choose the first. This is usually the text/plain part.
+    (notmuch-show-insert-bodypart msg (car inner-parts) depth)
+    (mapc (lambda (inner-part)
+	    (let ((inner-type (concat (plist-get inner-part :content-type) " (not shown)")))
+	      (notmuch-show-insert-part-header (plist-get inner-part :id) inner-type inner-type nil)))
+	  (cdr inner-parts)))
+  t)
+
 (defun notmuch-show-insert-part-multipart/* (msg part content-type nth depth declared-type)
   (let ((inner-parts (plist-get part :content)))
     (notmuch-show-insert-part-header nth declared-type content-type nil)
+    ;; Show all of the parts.
+    (mapc (lambda (inner-part)
+	    (notmuch-show-insert-bodypart msg inner-part depth))
+	  inner-parts))
+  t)
+
+(defun notmuch-show-insert-part-message/rfc822 (msg part content-type nth depth declared-type)
+  (let* ((message-part (plist-get part :content))
+	 (inner-parts (plist-get message-part :content)))
+    (notmuch-show-insert-part-header nth declared-type content-type nil)
+    ;; Override `notmuch-message-headers' to force `From' to be
+    ;; displayed.
+    (let ((notmuch-message-headers '("From" "Subject" "To" "Cc" "Date")))
+      (notmuch-show-insert-headers (plist-get part :headers)))
+    ;; Blank line after headers to be compatible with the normal
+    ;; message display.
+    (insert "\n")
+
     ;; Show all of the parts.
     (mapc (lambda (inner-part)
 	    (notmuch-show-insert-bodypart msg inner-part depth))
