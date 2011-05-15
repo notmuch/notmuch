@@ -459,6 +459,44 @@ and will also appear in a buffer named \"*Notmuch errors*\"."
 	    (error (buffer-substring beg end))
 	    ))))))
 
+(defun notmuch-tag (query &rest tags)
+  "Add/remove tags in TAGS to messages matching QUERY.
+
+TAGS should be a list of strings of the form \"+TAG\" or \"-TAG\" and
+QUERY should be a string containing the search-query.
+
+Note: Other code should always use this function alter tags of
+messages instead of running (notmuch-call-notmuch-process \"tag\" ..)
+directly, so that hooks specified in notmuch-before-tag-hook and
+notmuch-after-tag-hook will be run."
+  (run-hooks 'notmuch-before-tag-hook)
+  (apply 'notmuch-call-notmuch-process
+	 (append (list "tag") tags (list "--" query)))
+  (run-hooks 'notmuch-after-tag-hook))
+
+(defcustom notmuch-before-tag-hook nil
+  "Hooks that are run before tags of a message are modified.
+
+'tags' will contain the tags that are about to be added or removed as
+a list of strings of the form \"+TAG\" or \"-TAG\".
+'query' will be a string containing the search query that determines
+the messages that are about to be tagged"
+
+  :type 'hook
+  :options '(hl-line-mode)
+  :group 'notmuch)
+
+(defcustom notmuch-after-tag-hook nil
+  "Hooks that are run before tags of a message are modified.
+
+'tags' will contain the tags that were added or removed as
+a list of strings of the form \"+TAG\" or \"-TAG\".
+'query' will be a string containing the search query that determines
+the messages that were tagged"
+  :type 'hook
+  :options '(hl-line-mode)
+  :group 'notmuch)
+
 (defun notmuch-search-set-tags (tags)
   (save-excursion
     (end-of-line)
@@ -498,7 +536,7 @@ and will also appear in a buffer named \"*Notmuch errors*\"."
 
 (defun notmuch-search-add-tag-region (tag beg end)
   (let ((search-id-string (mapconcat 'identity (notmuch-search-find-thread-id-region beg end) " or ")))
-    (notmuch-call-notmuch-process "tag" (concat "+" tag) search-id-string)
+    (notmuch-tag search-id-string (concat "+" tag))
     (save-excursion
       (let ((last-line (line-number-at-pos end))
 	    (max-line (- (line-number-at-pos (point-max)) 2)))
@@ -512,7 +550,7 @@ and will also appear in a buffer named \"*Notmuch errors*\"."
 
 (defun notmuch-search-remove-tag-region (tag beg end)
   (let ((search-id-string (mapconcat 'identity (notmuch-search-find-thread-id-region beg end) " or ")))
-    (notmuch-call-notmuch-process "tag" (concat "-" tag) search-id-string)
+    (notmuch-tag search-id-string (concat "-" tag))
     (save-excursion
       (let ((last-line (line-number-at-pos end))
 	    (max-line (- (line-number-at-pos (point-max)) 2)))
@@ -809,8 +847,7 @@ characters as well as `_.+-'.
 	(unless (string-match-p "^[-+][-+_.[:word:]]+$" (car words))
 	  (error "Action must be of the form `+thistag -that_tag'"))
 	(setq words (cdr words))))
-    (apply 'notmuch-call-notmuch-process "tag"
-	   (append action-split (list notmuch-search-query-string) nil))))
+    (apply 'notmuch-tag notmuch-search-query-string action-split)))
 
 (defun notmuch-search-buffer-title (query)
   "Returns the title for a buffer with notmuch search results."

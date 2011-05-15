@@ -1218,10 +1218,8 @@ the result."
 	 (new-tags (notmuch-show-add-tags-worker current-tags toadd)))
 
     (unless (equal current-tags new-tags)
-      (apply 'notmuch-call-notmuch-process
-	     (append (cons "tag"
-			   (mapcar (lambda (s) (concat "+" s)) toadd))
-		     (cons (notmuch-show-get-message-id) nil)))
+      (apply 'notmuch-tag (notmuch-show-get-message-id)
+	     (mapcar (lambda (s) (concat "+" s)) toadd))
       (notmuch-show-set-tags new-tags))))
 
 (defun notmuch-show-remove-tag (&rest toremove)
@@ -1234,10 +1232,8 @@ the result."
 	 (new-tags (notmuch-show-del-tags-worker current-tags toremove)))
 
     (unless (equal current-tags new-tags)
-      (apply 'notmuch-call-notmuch-process
-	     (append (cons "tag"
-			   (mapcar (lambda (s) (concat "-" s)) toremove))
-		     (cons (notmuch-show-get-message-id) nil)))
+      (apply 'notmuch-tag (notmuch-show-get-message-id)
+	     (mapcar (lambda (s) (concat "-" s)) toremove))
       (notmuch-show-set-tags new-tags))))
 
 (defun notmuch-show-toggle-headers ()

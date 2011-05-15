@@ -44,8 +44,7 @@ the \"inbox\" and \"todo\", you would set
 				 (concat "+" str)
 			       str))
 			  notmuch-message-replied-tags)))
-	(apply 'notmuch-call-notmuch-process "tag"
-	       (append tags (list (concat "id:" (car (car rep)))) nil))))))
+	(apply 'notmuch-tag (concat "id:" (car (car rep))) tags)))))
 
 (add-hook 'message-send-hook 'notmuch-message-mark-replied)
 
