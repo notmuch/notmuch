@@ -25,6 +25,7 @@ TESTS="
   search-position-overlap-bug
   search-insufficient-from-quoting
   json
+  multipart
   thread-naming
   raw
   reply
