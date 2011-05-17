@@ -30,6 +30,9 @@ show_message_part (GMimeObject *part, int *part_count,
 	GMimeMultipart *multipart = GMIME_MULTIPART (part);
 	int i;
 
+	*part_count = *part_count + 1;
+	(*show_part) (part, part_count);
+
 	for (i = 0; i < g_mime_multipart_get_count (multipart); i++) {
 	    show_message_part (g_mime_multipart_get_part (multipart, i),
 			       part_count, show_part);

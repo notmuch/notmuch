@@ -410,6 +410,11 @@ format_part_text (GMimeObject *part, int *part_count)
 	show_part_content (part, stream_stdout);
 	g_object_unref(stream_stdout);
     }
+    else if (g_mime_content_type_is_type (content_type, "multipart", "*"))
+    {
+	/* Do nothing for multipart since its content will be printed
+	 * when recursing. */
+    }
     else
     {
 	printf ("Non-text part: %s\n",

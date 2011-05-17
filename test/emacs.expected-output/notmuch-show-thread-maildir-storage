@@ -3,6 +3,9 @@ Subject: [notmuch] Working with Maildir storage?
 To: notmuch@notmuchmail.org
 Date: Tue, 17 Nov 2009 14:00:54 -0500
 
+[ multipart/mixed ]
+[ multipart/signed ]
+[ text/plain ]
 I saw the LWN article and decided to take a look at notmuch.  I'm
 currently using mutt and mairix to index and read a collection of
 Maildir mail folders (around 40,000 messages total).
@@ -41,6 +44,9 @@ http://notmuchmail.org/mailman/listinfo/notmuch
  To: notmuch@notmuchmail.org
  Date: Wed, 18 Nov 2009 01:02:38 +0600
 
+ [ multipart/mixed ]
+ [ multipart/signed ]
+ [ text/plain ]
 
  Twas brillig at 14:00:54 17.11.2009 UTC-05 when lars@seas.harvard.edu did gyre and gimble:
 
@@ -68,6 +74,9 @@ http://notmuchmail.org/mailman/listinfo/notmuch
   Cc: notmuch@notmuchmail.org
   Date: Tue, 17 Nov 2009 15:33:01 -0500
 
+  [ multipart/mixed ]
+  [ multipart/signed ]
+  [ text/plain ]
   > See the patch just posted here.
 
   Is the list archived anywhere?  The obvious archives
@@ -148,6 +157,9 @@ http://notmuchmail.org/mailman/listinfo/notmuch
     Cc: notmuch@notmuchmail.org
     Date: Tue, 17 Nov 2009 19:50:40 -0500
 
+    [ multipart/mixed ]
+    [ multipart/signed ]
+    [ text/plain ]
     > I've also pushed a slightly more complicated (and complete) fix to my
     > private notmuch repository
 

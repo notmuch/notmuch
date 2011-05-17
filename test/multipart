@@ -58,19 +58,23 @@ To: cworth@cworth.org
 Date: Tue, 05 Jan 2001 15:43:57 -0000
 header}
 body{
-part{ ID: 1, Content-type: text/plain
+part{ ID: 1, Content-type: multipart/signed
+part}
+part{ ID: 2, Content-type: multipart/mixed
+part}
+part{ ID: 3, Content-type: text/plain
 This is an inline text part.
 part}
-attachment{ ID: 2, Content-type: text/plain
+attachment{ ID: 4, Content-type: text/plain
 Attachment: attachment (text/plain)
 This is a text attachment.
 attachment}
-part{ ID: 3, Content-type: text/plain
+part{ ID: 5, Content-type: text/plain
 And this message is signed.
 
 -Carl
 part}
-part{ ID: 4, Content-type: application/pgp-signature
+part{ ID: 6, Content-type: application/pgp-signature
 Non-text part: application/pgp-signature
 part}
 body}
@@ -78,7 +82,7 @@ Non-text part: application/pgp-signature
 
 test_begin_subtest "Show multipart MIME message (--format=json)"
 output=$(notmuch show --format=json 'id:87liy5ap00.fsf@yoom.home.cworth.org')
-test_expect_equal "$output" '[[[{"id": "87liy5ap00.fsf@yoom.home.cworth.org", "match": true, "filename": "/home/cworth/src/notmuch/test/tmp.multipart/mail/multipart", "timestamp": 978709437, "date_relative": "2001-01-05", "tags": ["attachment","inbox","unread"], "headers": {"Subject": "Multipart message", "From": "Carl Worth <cworth@cworth.org>", "To": "cworth@cworth.org", "Cc": "", "Bcc": "", "Date": "Tue, 05 Jan 2001 15:43:57 -0000"}, "body": [{"id": 1, "content-type": "text/plain", "content": "This is an inline text part.\n"}, {"id": 2, "content-type": "text/plain", "filename": "attachment", "content": "This is a text attachment.\n"}, {"id": 3, "content-type": "text/plain", "content": "And this message is signed.\n\n-Carl\n"}, {"id": 4, "content-type": "application/pgp-signature"}]}, []]]]'
+test_expect_equal "$output" '[[[{"id": "87liy5ap00.fsf@yoom.home.cworth.org", "match": true, "filename": "/home/cworth/src/notmuch/test/tmp.multipart/mail/multipart", "timestamp": 978709437, "date_relative": "2001-01-05", "tags": ["attachment","inbox","unread"], "headers": {"Subject": "Multipart message", "From": "Carl Worth <cworth@cworth.org>", "To": "cworth@cworth.org", "Cc": "", "Bcc": "", "Date": "Tue, 05 Jan 2001 15:43:57 -0000"}, "body": [{"id": 1, "content-type": "multipart/signed"}, {"id": 2, "content-type": "multipart/mixed"}, {"id": 3, "content-type": "text/plain", "content": "This is an inline text part.\n"}, {"id": 4, "content-type": "text/plain", "filename": "attachment", "content": "This is a text attachment.\n"}, {"id": 5, "content-type": "text/plain", "content": "And this message is signed.\n\n-Carl\n"}, {"id": 6, "content-type": "application/pgp-signature"}]}, []]]]'
 
 test_done
 
