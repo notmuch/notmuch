@@ -329,7 +329,7 @@ notmuch_message_file_get_header (notmuch_message_file_t *message,
 	/* we treat the Received: header special - we want to concat ALL of 
 	 * the Received: headers we encounter.
 	 * for everything else we return the first instance of a header */
-	if (is_received) {
+	if (strcasecmp(header, "received") == 0) {
 	    if (header_sofar == NULL) {
 		/* first Received: header we encountered; just add it */
 		g_hash_table_insert (message->headers, header, decoded_value);
