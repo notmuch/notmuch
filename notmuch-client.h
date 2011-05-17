@@ -133,7 +133,8 @@ query_string_from_args (void *ctx, int argc, char *argv[]);
 
 notmuch_status_t
 show_message_body (const char *filename,
-		   void (*show_part) (GMimeObject *part, int *part_count));
+		   void (*show_part) (GMimeObject *part, int *part_count, int first),
+		   void (*show_part_end) (GMimeObject *part));
 
 notmuch_status_t
 show_one_part (const char *filename, int part);

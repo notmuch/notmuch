@@ -32,7 +32,8 @@ typedef struct show_format {
     const char *header_end;
     const char *body_start;
     void (*part) (GMimeObject *part,
-		  int *part_count);
+		  int *part_count, int first);
+    void (*part_end) (GMimeObject *part);
     const char *body_end;
     const char *message_end;
     const char *message_set_sep;
@@ -46,14 +47,20 @@ format_message_text (unused (const void *ctx),
 static void
 format_headers_text (const void *ctx,
 		     notmuch_message_t *message);
+
 static void
 format_part_text (GMimeObject *part,
-		  int *part_count);
+		  int *part_count,
+		  int first);
+
+static void
+format_part_end_text (GMimeObject *part);
+
 static const show_format_t format_text = {
     "",
 	"\fmessage{ ", format_message_text,
 	    "\fheader{\n", format_headers_text, "\fheader}\n",
-	    "\fbody{\n", format_part_text, "\fbody}\n",
+	    "\fbody{\n", format_part_text, format_part_end_text, "\fbody}\n",
 	"\fmessage}\n", "",
     ""
 };
@@ -65,14 +72,20 @@ format_message_json (const void *ctx,
 static void
 format_headers_json (const void *ctx,
 		     notmuch_message_t *message);
+
 static void
 format_part_json (GMimeObject *part,
-		  int *part_count);
+		  int *part_count,
+		  int first);
+
+static void
+format_part_end_json (GMimeObject *part);
+
 static const show_format_t format_json = {
     "[",
 	"{", format_message_json,
 	    ", \"headers\": {", format_headers_json, "}",
-	    ", \"body\": [", format_part_json, "]",
+	    ", \"body\": [", format_part_json, format_part_end_json, "]",
 	"}", ", ",
     "]"
 };
@@ -86,7 +99,7 @@ static const show_format_t format_mbox = {
     "",
         "", format_message_mbox,
             "", NULL, "",
-            "", NULL, "",
+	    "", NULL, NULL, "",
         "", "",
     ""
 };
@@ -364,7 +377,7 @@ show_part_content (GMimeObject *part, GMimeStream *stream_out)
 }
 
 static void
-format_part_text (GMimeObject *part, int *part_count)
+format_part_text (GMimeObject *part, int *part_count, unused (int first))
 {
     GMimeContentDisposition *disposition;
     GMimeContentType *content_type;
@@ -390,8 +403,6 @@ format_part_text (GMimeObject *part, int *part_count)
 	    show_part_content (part, stream_stdout);
 	    g_object_unref(stream_stdout);
 	}
-
-	printf ("\fattachment}\n");
 
 	return;
     }
@@ -420,12 +431,27 @@ format_part_text (GMimeObject *part, int *part_count)
 	printf ("Non-text part: %s\n",
 		g_mime_content_type_to_string (content_type));
     }
-
-    printf ("\fpart}\n");
 }
 
 static void
-format_part_json (GMimeObject *part, int *part_count)
+format_part_end_text (GMimeObject *part)
+{
+    GMimeContentDisposition *disposition;
+
+    disposition = g_mime_object_get_content_disposition (part);
+    if (disposition &&
+	strcmp (disposition->disposition, GMIME_DISPOSITION_ATTACHMENT) == 0)
+    {
+	printf ("\fattachment}\n");
+    }
+    else
+    {
+	printf ("\fpart}\n");
+    }
+}
+
+static void
+format_part_json (GMimeObject *part, int *part_count, int first)
 {
     GMimeContentType *content_type;
     GMimeContentDisposition *disposition;
@@ -435,7 +461,7 @@ format_part_json (GMimeObject *part, int *part_count)
 
     content_type = g_mime_object_get_content_type (GMIME_OBJECT (part));
 
-    if (*part_count > 1)
+    if (! first)
 	fputs (", ", stdout);
 
     printf ("{\"id\": %d, \"content-type\": %s",
@@ -459,12 +485,27 @@ format_part_json (GMimeObject *part, int *part_count)
 
 	printf (", \"content\": %s", json_quote_chararray (ctx, (char *) part_content->data, part_content->len));
     }
-
-    fputs ("}", stdout);
+    else if (g_mime_content_type_is_type (content_type, "multipart", "*"))
+    {
+	printf (", \"content\": [");
+    }
 
     talloc_free (ctx);
     if (stream_memory)
 	g_object_unref (stream_memory);
+}
+
+static void
+format_part_end_json (GMimeObject *part)
+{
+    GMimeContentType *content_type;
+
+    content_type = g_mime_object_get_content_type (GMIME_OBJECT (part));
+
+    if (g_mime_content_type_is_type (content_type, "multipart", "*"))
+	printf ("]");
+
+    printf ("}");
 }
 
 static void
@@ -481,7 +522,8 @@ show_message (void *ctx, const show_format_t *format, notmuch_message_t *message
 
     fputs (format->body_start, stdout);
     if (format->part)
-	show_message_body (notmuch_message_get_filename (message), format->part);
+	show_message_body (notmuch_message_get_filename (message),
+			   format->part, format->part_end);
     fputs (format->body_end, stdout);
 
     fputs (format->message_end, stdout);

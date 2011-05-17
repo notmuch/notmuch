@@ -23,20 +23,27 @@
 #include "notmuch-client.h"
 
 static void
-show_message_part (GMimeObject *part, int *part_count,
-		   void (*show_part) (GMimeObject *part, int *part_count))
+show_message_part (GMimeObject *part,
+		   int *part_count,
+		   void (*show_part) (GMimeObject *part, int *part_count, int first),
+		   void (*show_part_end) (GMimeObject *part),
+		   int first)
 {
     if (GMIME_IS_MULTIPART (part)) {
 	GMimeMultipart *multipart = GMIME_MULTIPART (part);
 	int i;
 
 	*part_count = *part_count + 1;
-	(*show_part) (part, part_count);
+	(*show_part) (part, part_count, first);
 
 	for (i = 0; i < g_mime_multipart_get_count (multipart); i++) {
 	    show_message_part (g_mime_multipart_get_part (multipart, i),
-			       part_count, show_part);
+			       part_count, show_part, show_part_end, i == 0);
 	}
+
+	if (show_part_end)
+	    (*show_part_end) (part);
+
 	return;
     }
 
@@ -46,7 +53,7 @@ show_message_part (GMimeObject *part, int *part_count,
 	mime_message = g_mime_message_part_get_message (GMIME_MESSAGE_PART (part));
 
 	show_message_part (g_mime_message_get_mime_part (mime_message),
-			   part_count, show_part);
+			   part_count, show_part, show_part_end, first);
 
 	return;
     }
@@ -59,12 +66,15 @@ show_message_part (GMimeObject *part, int *part_count,
 
     *part_count = *part_count + 1;
 
-    (*show_part) (part, part_count);
+    (*show_part) (part, part_count, first);
+    if (show_part_end)
+	(*show_part_end) (part);
 }
 
 notmuch_status_t
 show_message_body (const char *filename,
-		   void (*show_part) (GMimeObject *part, int *part_count))
+		   void (*show_part) (GMimeObject *part, int *part_count, int first),
+		   void (*show_part_end) (GMimeObject *part))
 {
     GMimeStream *stream = NULL;
     GMimeParser *parser = NULL;
@@ -88,7 +98,7 @@ show_message_body (const char *filename,
     mime_message = g_mime_parser_construct_message (parser);
 
     show_message_part (g_mime_message_get_mime_part (mime_message),
-		       &part_count, show_part);
+		       &part_count, show_part, show_part_end, TRUE);
 
   DONE:
     if (mime_message)

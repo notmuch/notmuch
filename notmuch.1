@@ -260,7 +260,8 @@ decoded. Various components in the output,
 will be delimited by easily-parsed markers. Each marker consists of a
 Control-L character (ASCII decimal 12), the name of the marker, and
 then either an opening or closing brace, ('{' or '}'), to either open
-or close the component.
+or close the component. For a multipart MIME message, these parts will
+be nested.
 .RE
 .RS 4
 .TP 4
@@ -268,8 +269,9 @@ or close the component.
 
 The output is formatted with Javascript Object Notation (JSON). This
 format is more robust than the text format for automated
-processing. JSON output always includes all messages in a matching
-thread; in effect
+processing. The nested structure of multipart MIME messages is
+reflected in nested JSON output. JSON output always includes all
+messages in a matching thread; in effect
 .B \-\-format=json
 implies
 .B \-\-entire\-thread

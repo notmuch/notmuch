@@ -280,6 +280,15 @@ current buffer, if possible."
 	      t)
 	  nil)))))
 
+(defun notmuch-show-insert-part-multipart/* (msg part content-type nth depth declared-type)
+  (let ((inner-parts (plist-get part :content)))
+    (notmuch-show-insert-part-header nth declared-type content-type nil)
+    ;; Show all of the parts.
+    (mapc (lambda (inner-part)
+	    (notmuch-show-insert-bodypart msg inner-part depth))
+	  inner-parts))
+  t)
+
 (defun notmuch-show-insert-part-text/plain (msg part content-type nth depth declared-type)
   (let ((start (point)))
     ;; If this text/plain part is not the first part in the message,
