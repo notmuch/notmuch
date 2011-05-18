@@ -2,7 +2,13 @@
 
 dir := test
 
-$(dir)/smtp-dummy: $(dir)/smtp-dummy.c
+smtp_dummy_srcs =		\
+	$(notmuch_compat_srcs)	\
+	$(dir)/smtp-dummy.c
+
+smtp_dummy_modules = $(smtp_dummy_srcs:.c=.o)
+
+$(dir)/smtp-dummy: $(smtp_dummy_modules)
 	$(call quiet,CC) $^ -o $@
 
 .PHONY: test check
