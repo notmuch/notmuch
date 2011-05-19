@@ -49,7 +49,7 @@ notmuch new > /dev/null
 
 test_begin_subtest "Show multipart MIME message (--format=text)"
 output=$(notmuch show --format=text 'id:87liy5ap00.fsf@yoom.home.cworth.org')
-test_expect_equal "$output" "message{ id:87liy5ap00.fsf@yoom.home.cworth.org depth:0 match:1 filename:/home/cworth/src/notmuch/test/tmp.multipart/mail/multipart
+test_expect_equal "$output" "message{ id:87liy5ap00.fsf@yoom.home.cworth.org depth:0 match:1 filename:${MAIL_DIR}/multipart
 header{
 Carl Worth <cworth@cworth.org> (2001-01-05) (attachment inbox unread)
 Subject: Multipart message
@@ -82,7 +82,7 @@ Non-text part: application/pgp-signature
 
 test_begin_subtest "Show multipart MIME message (--format=json)"
 output=$(notmuch show --format=json 'id:87liy5ap00.fsf@yoom.home.cworth.org')
-test_expect_equal "$output" '[[[{"id": "87liy5ap00.fsf@yoom.home.cworth.org", "match": true, "filename": "/home/cworth/src/notmuch/test/tmp.multipart/mail/multipart", "timestamp": 978709437, "date_relative": "2001-01-05", "tags": ["attachment","inbox","unread"], "headers": {"Subject": "Multipart message", "From": "Carl Worth <cworth@cworth.org>", "To": "cworth@cworth.org", "Cc": "", "Bcc": "", "Date": "Tue, 05 Jan 2001 15:43:57 -0000"}, "body": [{"id": 1, "content-type": "multipart/signed", "content": [{"id": 2, "content-type": "multipart/mixed", "content": [{"id": 3, "content-type": "text/plain", "content": "This is an inline text part.\n"}, {"id": 4, "content-type": "text/plain", "filename": "attachment", "content": "This is a text attachment.\n"}, {"id": 5, "content-type": "text/plain", "content": "And this message is signed.\n\n-Carl\n"}]}, {"id": 6, "content-type": "application/pgp-signature"}]}]}, []]]]'
+test_expect_equal "$output" '[[[{"id": "87liy5ap00.fsf@yoom.home.cworth.org", "match": true, "filename": "'"${MAIL_DIR}"'/multipart", "timestamp": 978709437, "date_relative": "2001-01-05", "tags": ["attachment","inbox","unread"], "headers": {"Subject": "Multipart message", "From": "Carl Worth <cworth@cworth.org>", "To": "cworth@cworth.org", "Cc": "", "Bcc": "", "Date": "Tue, 05 Jan 2001 15:43:57 -0000"}, "body": [{"id": 1, "content-type": "multipart/signed", "content": [{"id": 2, "content-type": "multipart/mixed", "content": [{"id": 3, "content-type": "text/plain", "content": "This is an inline text part.\n"}, {"id": 4, "content-type": "text/plain", "filename": "attachment", "content": "This is a text attachment.\n"}, {"id": 5, "content-type": "text/plain", "content": "And this message is signed.\n\n-Carl\n"}]}, {"id": 6, "content-type": "application/pgp-signature"}]}]}, []]]]'
 
 test_done
 
