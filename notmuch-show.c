@@ -524,7 +524,7 @@ show_messages (void *ctx,
 	       const notmuch_show_format_t *format,
 	       notmuch_messages_t *messages,
 	       int indent,
-	       notmuch_bool_t entire_thread)
+	       notmuch_show_params_t *params)
 {
     notmuch_message_t *message;
     notmuch_bool_t match;
@@ -549,15 +549,18 @@ show_messages (void *ctx,
 
 	next_indent = indent;
 
-	if (match || entire_thread) {
+	if (match || params->entire_thread) {
 	    show_message (ctx, format, message, indent);
 	    next_indent = indent + 1;
 
 	    fputs (format->message_set_sep, stdout);
 	}
 
-	show_messages (ctx, format, notmuch_message_get_replies (message),
-		       next_indent, entire_thread);
+	show_messages (ctx,
+		       format,
+		       notmuch_message_get_replies (message),
+		       next_indent,
+		       params);
 
 	notmuch_message_destroy (message);
 
@@ -618,7 +621,7 @@ static int
 do_show (void *ctx,
 	 notmuch_query_t *query,
 	 const notmuch_show_format_t *format,
-	 int entire_thread)
+	 notmuch_show_params_t *params)
 {
     notmuch_threads_t *threads;
     notmuch_thread_t *thread;
@@ -643,7 +646,7 @@ do_show (void *ctx,
 	    fputs (format->message_set_sep, stdout);
 	first_toplevel = 0;
 
-	show_messages (ctx, format, messages, 0, entire_thread);
+	show_messages (ctx, format, messages, 0, params);
 
 	notmuch_thread_destroy (thread);
 
@@ -663,9 +666,11 @@ notmuch_show_command (void *ctx, unused (int argc), unused (char *argv[]))
     char *query_string;
     char *opt;
     const notmuch_show_format_t *format = &format_text;
-    int entire_thread = 0;
+    notmuch_show_params_t params;
     int i;
     int raw = 0;
+
+    params.entire_thread = 0;
 
     for (i = 0; i < argc && argv[i][0] == '-'; i++) {
 	if (strcmp (argv[i], "--") == 0) {
@@ -678,7 +683,7 @@ notmuch_show_command (void *ctx, unused (int argc), unused (char *argv[]))
 		format = &format_text;
 	    } else if (strcmp (opt, "json") == 0) {
 		format = &format_json;
-		entire_thread = 1;
+		params.entire_thread = 1;
 	    } else if (strcmp (opt, "mbox") == 0) {
 		format = &format_mbox;
 	    } else if (strcmp (opt, "raw") == 0) {
@@ -688,7 +693,7 @@ notmuch_show_command (void *ctx, unused (int argc), unused (char *argv[]))
 		return 1;
 	    }
 	} else if (STRNCMP_LITERAL (argv[i], "--entire-thread") == 0) {
-	    entire_thread = 1;
+	    params.entire_thread = 1;
 	} else {
 	    fprintf (stderr, "Unrecognized option: %s\n", argv[i]);
 	    return 1;
@@ -727,7 +732,7 @@ notmuch_show_command (void *ctx, unused (int argc), unused (char *argv[]))
     if (raw)
 	return do_show_raw (ctx, query);
     else
-	return do_show (ctx, query, format, entire_thread);
+	return do_show (ctx, query, format, &params);
 
     notmuch_query_destroy (query);
     notmuch_database_close (notmuch);

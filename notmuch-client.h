@@ -75,6 +75,10 @@ typedef struct notmuch_show_format {
     const char *message_set_end;
 } notmuch_show_format_t;
 
+typedef struct notmuch_show_params {
+    int entire_thread;
+} notmuch_show_params_t;
+
 /* There's no point in continuing when we've detected that we've done
  * something wrong internally (as opposed to the user passing in a
  * bogus value).
