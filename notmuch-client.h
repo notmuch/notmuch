@@ -54,6 +54,27 @@
 #define STRINGIFY(s) STRINGIFY_(s)
 #define STRINGIFY_(s) #s
 
+typedef struct notmuch_show_format {
+    const char *message_set_start;
+    const char *message_start;
+    void (*message) (const void *ctx,
+		     notmuch_message_t *message,
+		     int indent);
+    const char *header_start;
+    void (*header) (const void *ctx,
+		    notmuch_message_t *message);
+    const char *header_end;
+    const char *body_start;
+    void (*part) (GMimeObject *part,
+		  int *part_count,
+		  int first);
+    void (*part_end) (GMimeObject *part);
+    const char *body_end;
+    const char *message_end;
+    const char *message_set_sep;
+    const char *message_set_end;
+} notmuch_show_format_t;
+
 /* There's no point in continuing when we've detected that we've done
  * something wrong internally (as opposed to the user passing in a
  * bogus value).
@@ -133,8 +154,7 @@ query_string_from_args (void *ctx, int argc, char *argv[]);
 
 notmuch_status_t
 show_message_body (const char *filename,
-		   void (*show_part) (GMimeObject *part, int *part_count, int first),
-		   void (*show_part_end) (GMimeObject *part));
+		   const notmuch_show_format_t *format);
 
 notmuch_status_t
 show_one_part (const char *filename, int part);

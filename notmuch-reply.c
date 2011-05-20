@@ -25,6 +25,20 @@
 #include "gmime-filter-headers.h"
 
 static void
+reply_part (GMimeObject *part,
+	    unused (int *part_count),
+	    unused (int first));
+
+static const notmuch_show_format_t format_reply = {
+    NULL,
+	NULL, NULL,
+	    NULL, NULL, NULL,
+	    NULL, reply_part, NULL, NULL,
+	NULL, NULL,
+    NULL
+};
+
+static void
 reply_part_content (GMimeObject *part)
 {
     GMimeStream *stream_stdout = NULL, *stream_filter = NULL;
@@ -72,12 +86,13 @@ show_reply_headers (GMimeMessage *message)
 }
 
 static void
-reply_part (GMimeObject *part, int *part_count, unused (int first))
+reply_part (GMimeObject *part,
+	    unused (int *part_count),
+	    unused (int first))
 {
     GMimeContentDisposition *disposition;
     GMimeContentType *content_type;
 
-    (void) part_count;
     disposition = g_mime_object_get_content_disposition (part);
     if (disposition &&
 	strcmp (disposition->disposition, GMIME_DISPOSITION_ATTACHMENT) == 0)
@@ -447,6 +462,7 @@ notmuch_reply_format_default(void *ctx, notmuch_config_t *config, notmuch_query_
     notmuch_message_t *message;
     const char *subject, *from_addr = NULL;
     const char *in_reply_to, *orig_references, *references;
+    const notmuch_show_format_t *format = &format_reply;
 
     for (messages = notmuch_query_search_messages (query);
 	 notmuch_messages_valid (messages);
@@ -506,7 +522,7 @@ notmuch_reply_format_default(void *ctx, notmuch_config_t *config, notmuch_query_
 		notmuch_message_get_header (message, "from"));
 
 	show_message_body (notmuch_message_get_filename (message),
-			   reply_part, NULL);
+			   format);
 
 	notmuch_message_destroy (message);
     }

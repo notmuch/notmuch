@@ -20,26 +20,6 @@
 
 #include "notmuch-client.h"
 
-typedef struct show_format {
-    const char *message_set_start;
-    const char *message_start;
-    void (*message) (const void *ctx,
-		     notmuch_message_t *message,
-		     int indent);
-    const char *header_start;
-    void (*header) (const void *ctx,
-		    notmuch_message_t *message);
-    const char *header_end;
-    const char *body_start;
-    void (*part) (GMimeObject *part,
-		  int *part_count, int first);
-    void (*part_end) (GMimeObject *part);
-    const char *body_end;
-    const char *message_end;
-    const char *message_set_sep;
-    const char *message_set_end;
-} show_format_t;
-
 static void
 format_message_text (unused (const void *ctx),
 		     notmuch_message_t *message,
@@ -56,7 +36,7 @@ format_part_text (GMimeObject *part,
 static void
 format_part_end_text (GMimeObject *part);
 
-static const show_format_t format_text = {
+static const notmuch_show_format_t format_text = {
     "",
 	"\fmessage{ ", format_message_text,
 	    "\fheader{\n", format_headers_text, "\fheader}\n",
@@ -81,7 +61,7 @@ format_part_json (GMimeObject *part,
 static void
 format_part_end_json (GMimeObject *part);
 
-static const show_format_t format_json = {
+static const notmuch_show_format_t format_json = {
     "[",
 	"{", format_message_json,
 	    ", \"headers\": {", format_headers_json, "}",
@@ -95,7 +75,7 @@ format_message_mbox (const void *ctx,
 		     notmuch_message_t *message,
 		     unused (int indent));
 
-static const show_format_t format_mbox = {
+static const notmuch_show_format_t format_mbox = {
     "",
         "", format_message_mbox,
             "", NULL, "",
@@ -515,7 +495,10 @@ format_part_end_json (GMimeObject *part)
 }
 
 static void
-show_message (void *ctx, const show_format_t *format, notmuch_message_t *message, int indent)
+show_message (void *ctx,
+	      const notmuch_show_format_t *format,
+	      notmuch_message_t *message,
+	      int indent)
 {
     fputs (format->message_start, stdout);
     if (format->message)
@@ -529,7 +512,7 @@ show_message (void *ctx, const show_format_t *format, notmuch_message_t *message
     fputs (format->body_start, stdout);
     if (format->part)
 	show_message_body (notmuch_message_get_filename (message),
-			   format->part, format->part_end);
+			   format);
     fputs (format->body_end, stdout);
 
     fputs (format->message_end, stdout);
@@ -537,7 +520,10 @@ show_message (void *ctx, const show_format_t *format, notmuch_message_t *message
 
 
 static void
-show_messages (void *ctx, const show_format_t *format, notmuch_messages_t *messages, int indent,
+show_messages (void *ctx,
+	       const notmuch_show_format_t *format,
+	       notmuch_messages_t *messages,
+	       int indent,
 	       notmuch_bool_t entire_thread)
 {
     notmuch_message_t *message;
@@ -631,7 +617,7 @@ do_show_raw (unused(void *ctx), notmuch_query_t *query)
 static int
 do_show (void *ctx,
 	 notmuch_query_t *query,
-	 const show_format_t *format,
+	 const notmuch_show_format_t *format,
 	 int entire_thread)
 {
     notmuch_threads_t *threads;
@@ -676,7 +662,7 @@ notmuch_show_command (void *ctx, unused (int argc), unused (char *argv[]))
     notmuch_query_t *query;
     char *query_string;
     char *opt;
-    const show_format_t *format = &format_text;
+    const notmuch_show_format_t *format = &format_text;
     int entire_thread = 0;
     int i;
     int raw = 0;
