@@ -124,4 +124,15 @@ first_line=$(echo "$expected" | head -n1)
 output=$(test_emacs '(notmuch-show "id:cf0c4d610911171136h1713aa59w9cf9aa31f052ad0a@mail.gmail.com") (notmuch-show-view-raw-message) (message (buffer-string))' 2>&1 | sed -ne "/$first_line/,\$ p")
 test_expect_equal "$output" "$expected"
 
+test_begin_subtest "Hiding/showing signature in notmuch-show view"
+maildir_storage_thread=$(notmuch search --output=threads id:20091117190054.GU3165@dottiness.seas.harvard.edu)
+output=$(test_emacs "(notmuch-show \"$maildir_storage_thread\")
+		     (search-forward \"Click/Enter to show.\")
+		     (button-activate (button-at (point)))
+		     (search-backward \"Click/Enter to hide.\")
+		     (button-activate (button-at (point)))
+		     (princ (buffer-string))")
+expected=$(cat $EXPECTED/notmuch-show-thread-maildir-storage)
+test_expect_equal "$output" "$expected"
+
 test_done
