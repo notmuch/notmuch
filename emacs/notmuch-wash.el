@@ -35,14 +35,24 @@
   "\\(^[[:space:]]*>.*\n\\)+"
   "Pattern to match citation lines.")
 
-(defvar notmuch-wash-signature-button-format
-  "[ %d-line signature. Click/Enter to toggle visibility. ]"
+(defvar notmuch-wash-button-signature-hidden-format
+  "[ %d-line signature. Click/Enter to show. ]"
   "String used to construct button text for hidden signatures.
 Can use up to one integer format parameter, i.e. %d")
 
-(defvar notmuch-wash-citation-button-format
-  "[ %d more citation lines. Click/Enter to toggle visibility. ]"
+(defvar notmuch-wash-button-signature-visible-format
+  "[ %d-line signature. Click/Enter to hide. ]"
+  "String used to construct button text for visible signatures.
+Can use up to one integer format parameter, i.e. %d")
+
+(defvar notmuch-wash-button-citation-hidden-format
+  "[ %d more citation lines. Click/Enter to show. ]"
   "String used to construct button text for hidden citations.
+Can use up to one integer format parameter, i.e. %d")
+
+(defvar notmuch-wash-button-citation-visible-format
+  "[ %d more citation lines. Click/Enter to hide. ]"
+  "String used to construct button text for visible citations.
 Can use up to one integer format parameter, i.e. %d")
 
 (defvar notmuch-wash-signature-lines-max 12
@@ -69,6 +79,16 @@ collapse the remaining lines into a button.")
     (if (invisible-p invis-spec)
 	(remove-from-invisibility-spec invis-spec)
       (add-to-invisibility-spec invis-spec)))
+  (let* ((new-start (button-start cite-button))
+	 (overlay (button-get cite-button 'overlay))
+	 (button-label (notmuch-wash-button-label overlay))
+	 (inhibit-read-only t))
+    (save-excursion
+      (goto-char new-start)
+      (insert button-label)
+      (let ((old-end (button-end cite-button)))
+	(move-overlay cite-button new-start (point))
+	(delete-region (point) old-end))))
   (force-window-update)
   (redisplay t))
 
@@ -88,13 +108,21 @@ collapse the remaining lines into a button.")
 (defun notmuch-wash-region-isearch-show (overlay)
   (remove-from-invisibility-spec (overlay-get overlay 'invisible)))
 
-(defun notmuch-wash-region-to-button (beg end type prefix button-text)
+(defun notmuch-wash-button-label (overlay)
+  (let* ((type (overlay-get overlay 'type))
+	 (invis-spec (overlay-get overlay 'invisible))
+	 (state (if (invisible-p invis-spec) "hidden" "visible"))
+	 (label-format (symbol-value (intern-soft (concat "notmuch-wash-button-"
+							  type "-" state "-format"))))
+	 (lines-count (count-lines (overlay-start overlay) (overlay-end overlay))))
+    (format label-format lines-count)))
+
+(defun notmuch-wash-region-to-button (beg end type prefix)
   "Auxilary function to do the actual making of overlays and buttons
 
 BEG and END are buffer locations. TYPE should a string, either
 \"citation\" or \"signature\". PREFIX is some arbitrary text to
-insert before the button, probably for indentation.  BUTTON-TEXT
-is what to put on the button."
+insert before the button, probably for indentation."
 
   ;; This uses some slightly tricky conversions between strings and
   ;; symbols because of the way the button code works. Note that
@@ -108,12 +136,14 @@ is what to put on the button."
     (add-to-invisibility-spec invis-spec)
     (overlay-put overlay 'invisible invis-spec)
     (overlay-put overlay 'isearch-open-invisible #'notmuch-wash-region-isearch-show)
+    (overlay-put overlay 'type type)
     (goto-char (1+ end))
     (save-excursion
       (goto-char (1- beg))
       (insert prefix)
-      (insert-button button-text
+      (insert-button (notmuch-wash-button-label overlay)
 		     'invisibility-spec invis-spec
+		     'overlay overlay
 		     :type button-type))))
 
 (defun notmuch-wash-excerpt-citations (depth)
@@ -136,11 +166,7 @@ is what to put on the button."
 	  (forward-line (- notmuch-wash-citation-lines-suffix))
 	  (notmuch-wash-region-to-button
 	   hidden-start (point-marker)
-	   "citation" "\n"
-	   (format notmuch-wash-citation-button-format
-		   (- cite-lines
-		      notmuch-wash-citation-lines-prefix
-		      notmuch-wash-citation-lines-suffix)))))))
+	   "citation" "\n")))))
   (if (and (not (eobp))
 	   (re-search-forward notmuch-wash-signature-regexp nil t))
       (let* ((sig-start (match-beginning 0))
@@ -154,8 +180,7 @@ is what to put on the button."
 	      (overlay-put (make-overlay sig-start-marker sig-end-marker) 'face 'message-cited-text-face)
 	      (notmuch-wash-region-to-button
 	       sig-start-marker sig-end-marker
-	       "signature" "\n"
-	       (format notmuch-wash-signature-button-format sig-lines)))))))
+	       "signature" "\n"))))))
 
 ;;
 
