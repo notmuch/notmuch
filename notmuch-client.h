@@ -77,6 +77,7 @@ typedef struct notmuch_show_format {
 
 typedef struct notmuch_show_params {
     int entire_thread;
+    int raw;
 } notmuch_show_params_t;
 
 /* There's no point in continuing when we've detected that we've done

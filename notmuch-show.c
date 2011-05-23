@@ -565,16 +565,15 @@ show_messages (void *ctx,
     fputs (format->message_set_end, stdout);
 }
 
-/* Support for --format=raw */
+/* Formatted output of single message */
 static int
-do_show_raw (unused(void *ctx), notmuch_query_t *query)
+do_show_single (void *ctx,
+		notmuch_query_t *query,
+		const notmuch_show_format_t *format,
+		notmuch_show_params_t *params)
 {
     notmuch_messages_t *messages;
     notmuch_message_t *message;
-    const char *filename;
-    FILE *file;
-    size_t size;
-    char buf[4096];
 
     if (notmuch_query_count_messages (query) != 1) {
 	fprintf (stderr, "Error: search term did not match precisely one message.\n");
@@ -589,29 +588,39 @@ do_show_raw (unused(void *ctx), notmuch_query_t *query)
 	return 1;
     }
 
-    filename = notmuch_message_get_filename (message);
-    if (filename == NULL) {
-	fprintf (stderr, "Error: Cannot message filename.\n");
-	return 1;
-    }
+    /* Special case for --format=raw of full single message, just cat out file */
+    if (params->raw) {
 
-    file = fopen (filename, "r");
-    if (file == NULL) {
-	fprintf (stderr, "Error: Cannot open file %s: %s\n", filename, strerror (errno));
-	return 1;
-    }
+	const char *filename;
+	FILE *file;
+	size_t size;
+	char buf[4096];
 
-    while (!feof (file)) {
-	size = fread (buf, 1, sizeof (buf), file);
-	fwrite (buf, size, 1, stdout);
-    }
+	filename = notmuch_message_get_filename (message);
+	if (filename == NULL) {
+	    fprintf (stderr, "Error: Cannot message filename.\n");
+	    return 1;
+	}
 
-    fclose (file);
+	file = fopen (filename, "r");
+	if (file == NULL) {
+	    fprintf (stderr, "Error: Cannot open file %s: %s\n", filename, strerror (errno));
+	    return 1;
+	}
+
+	while (!feof (file)) {
+	    size = fread (buf, 1, sizeof (buf), file);
+	    fwrite (buf, size, 1, stdout);
+	}
+
+	fclose (file);
+
+    }
 
     return 0;
 }
 
-/* Support for --format=text|json|mbox */
+/* Formatted output of threads */
 static int
 do_show (void *ctx,
 	 notmuch_query_t *query,
@@ -663,9 +672,9 @@ notmuch_show_command (void *ctx, unused (int argc), unused (char *argv[]))
     const notmuch_show_format_t *format = &format_text;
     notmuch_show_params_t params;
     int i;
-    int raw = 0;
 
     params.entire_thread = 0;
+    params.raw = 0;
 
     for (i = 0; i < argc && argv[i][0] == '-'; i++) {
 	if (strcmp (argv[i], "--") == 0) {
@@ -682,7 +691,7 @@ notmuch_show_command (void *ctx, unused (int argc), unused (char *argv[]))
 	    } else if (strcmp (opt, "mbox") == 0) {
 		format = &format_mbox;
 	    } else if (strcmp (opt, "raw") == 0) {
-		raw = 1;
+		params.raw = 1;
 	    } else {
 		fprintf (stderr, "Invalid value for --format: %s\n", opt);
 		return 1;
@@ -724,8 +733,10 @@ notmuch_show_command (void *ctx, unused (int argc), unused (char *argv[]))
 	return 1;
     }
 
-    if (raw)
-	return do_show_raw (ctx, query);
+    /* If --format=raw specified without specifying part, we can only
+     * output single message, so set part=0 */
+    if (params.raw)
+	return do_show_single (ctx, query, format, &params);
     else
 	return do_show (ctx, query, format, &params);
 
