@@ -710,6 +710,7 @@ notmuch_show_command (void *ctx, unused (int argc), unused (char *argv[]))
     const notmuch_show_format_t *format = &format_text;
     notmuch_show_params_t params;
     int mbox = 0;
+    int format_specified = 0;
     int i;
 
     params.entire_thread = 0;
@@ -738,6 +739,7 @@ notmuch_show_command (void *ctx, unused (int argc), unused (char *argv[]))
 		fprintf (stderr, "Invalid value for --format: %s\n", opt);
 		return 1;
 	    }
+	    format_specified = 1;
 	} else if (STRNCMP_LITERAL (argv[i], "--part=") == 0) {
 	    params.part = atoi(argv[i] + sizeof ("--part=") - 1);
 	} else if (STRNCMP_LITERAL (argv[i], "--entire-thread") == 0) {
@@ -781,6 +783,10 @@ notmuch_show_command (void *ctx, unused (int argc), unused (char *argv[]))
 	fprintf (stderr, "Out of memory\n");
 	return 1;
     }
+
+    /* if part was requested and format was not specified, use format=raw */
+    if (params.part >= 0 && !format_specified)
+	format = &format_raw;
 
     /* If --format=raw specified without specifying part, we can only
      * output single message, so set part=0 */
