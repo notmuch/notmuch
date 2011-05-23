@@ -709,6 +709,7 @@ notmuch_show_command (void *ctx, unused (int argc), unused (char *argv[]))
     char *opt;
     const notmuch_show_format_t *format = &format_text;
     notmuch_show_params_t params;
+    int mbox = 0;
     int i;
 
     params.entire_thread = 0;
@@ -729,6 +730,7 @@ notmuch_show_command (void *ctx, unused (int argc), unused (char *argv[]))
 		params.entire_thread = 1;
 	    } else if (strcmp (opt, "mbox") == 0) {
 		format = &format_mbox;
+		mbox = 1;
 	    } else if (strcmp (opt, "raw") == 0) {
 		format = &format_raw;
 		params.raw = 1;
@@ -756,6 +758,11 @@ notmuch_show_command (void *ctx, unused (int argc), unused (char *argv[]))
     query_string = query_string_from_args (ctx, argc, argv);
     if (query_string == NULL) {
 	fprintf (stderr, "Out of memory\n");
+	return 1;
+    }
+
+    if (mbox && params.part > 0) {
+	fprintf (stderr, "Error: specifying parts is incompatible with mbox output format.\n");
 	return 1;
     }
 
