@@ -461,6 +461,8 @@ notmuch_reply_format_default(void *ctx, notmuch_config_t *config, notmuch_query_
     const char *subject, *from_addr = NULL;
     const char *in_reply_to, *orig_references, *references;
     const notmuch_show_format_t *format = &format_reply;
+    notmuch_show_params_t params;
+    params.part = -1;
 
     for (messages = notmuch_query_search_messages (query);
 	 notmuch_messages_valid (messages);
@@ -520,7 +522,7 @@ notmuch_reply_format_default(void *ctx, notmuch_config_t *config, notmuch_query_
 		notmuch_message_get_header (message, "from"));
 
 	show_message_body (notmuch_message_get_filename (message),
-			   format);
+			   format, &params);
 
 	notmuch_message_destroy (message);
     }

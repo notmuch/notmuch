@@ -78,6 +78,7 @@ typedef struct notmuch_show_format {
 typedef struct notmuch_show_params {
     int entire_thread;
     int raw;
+    int part;
 } notmuch_show_params_t;
 
 /* There's no point in continuing when we've detected that we've done
@@ -140,9 +141,6 @@ int
 notmuch_cat_command (void *ctx, int argc, char *argv[]);
 
 int
-notmuch_part_command (void *ctx, int argc, char *argv[]);
-
-int
 notmuch_config_command (void *ctx, int argc, char *argv[]);
 
 const char *
@@ -159,7 +157,8 @@ query_string_from_args (void *ctx, int argc, char *argv[]);
 
 notmuch_status_t
 show_message_body (const char *filename,
-		   const notmuch_show_format_t *format);
+		   const notmuch_show_format_t *format,
+		   notmuch_show_params_t *params);
 
 notmuch_status_t
 show_one_part (const char *filename, int part);

@@ -269,6 +269,15 @@ command_t commands[] = {
       "\t\tdecoding and similar functions. This format must only\n"
       "\t\tbe used with search terms matching a single message.\n"
       "\n"
+      "\t--part=N\n"
+      "\n"
+      "\t\tOutput the single decoded MIME part N of a single message.\n"
+      "\t\tThe search terms must match only a single message.\n"
+      "\t\tMessage parts are numbered in a depth-first walk of the\n"
+      "\t\tmessage MIME structure, and are identified in the 'json' or\n"
+      "\t\t'text' output formats.\n"
+      "\n"
+      "\n"
       "\tA common use of \"notmuch show\" is to display a single\n"
       "\tthread of email messages. For this, use a search term of\n"
       "\t\"thread:<thread-id>\" as can be seen in the first column\n"
@@ -358,17 +367,6 @@ command_t commands[] = {
       "\tcontain tags only from messages that match the search-term(s).\n"
       "\n"
       "\tIn both cases the list will be alphabetically sorted." },
-    { "part", notmuch_part_command,
-      "--part=<num> <search-terms>",
-      "Output a single MIME part of a message.",
-      "\tA single decoded MIME part, with no encoding or framing,\n"
-      "\tis output to stdout. The search terms must match only a single\n"
-      "\tmessage, otherwise this command will fail.\n"
-      "\n"
-      "\tThe part number should match the part \"id\" field output\n"
-      "\tby the \"--format=json\" option of \"notmuch show\". If the\n"
-      "\tmessage specified by the search terms does not include a\n"
-      "\tpart with the specified \"id\" there will be no output." },
     { "config", notmuch_config_command,
       "[get|set] <section>.<item> [value ...]",
       "Get or set settings in the notmuch configuration file.",

@@ -297,8 +297,20 @@ The original, raw content of the email message is displayed.
 Consumers of this format should expect to implement MIME decoding and
 similar functions. This format must only be used with search terms
 matching a single message.
-
 .RE
+.RE
+
+.RS 4
+.TP 4
+.B \-\-part=N
+
+Output the single decoded MIME part N of a single message.  The search
+terms must match only a single message.  Message parts are numbered in
+a depth-first walk of the message MIME structure, and are identified
+in the 'json' or
+'text' output formats.
+.RE
+
 A common use of
 .B notmuch show
 is to display a single thread of email messages. For this, use a
@@ -311,7 +323,8 @@ See the
 .B "SEARCH SYNTAX"
 section below for details of the supported syntax for <search-terms>.
 .RE
-.TP
+.RS 4
+.TP 4
 .BR count " <search-term>..."
 
 Count messages matching the search terms.

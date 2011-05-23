@@ -82,6 +82,19 @@ static const notmuch_show_format_t format_mbox = {
     ""
 };
 
+static void
+format_part_raw (GMimeObject *part,
+		 unused (int *part_count));
+
+static const notmuch_show_format_t format_raw = {
+    "",
+	"", NULL,
+	    "", NULL, "",
+            "", format_part_raw, NULL, "", "",
+	"", "",
+    ""
+};
+
 static const char *
 _get_tags_as_string (const void *ctx, notmuch_message_t *message)
 {
@@ -329,6 +342,10 @@ show_part_content (GMimeObject *part, GMimeStream *stream_out)
     GMimeDataWrapper *wrapper;
     const char *charset;
 
+    /* do nothing if this is a multipart */
+    if (GMIME_IS_MULTIPART (part) || GMIME_IS_MESSAGE_PART (part))
+	return;
+
     charset = g_mime_object_get_content_type_parameter (part, "charset");
 
     if (stream_out) {
@@ -490,29 +507,44 @@ format_part_end_json (GMimeObject *part)
 }
 
 static void
+format_part_raw (GMimeObject *part, unused (int *part_count))
+{
+    GMimeStream *stream_stdout = g_mime_stream_file_new (stdout);
+    g_mime_stream_file_set_owner (GMIME_STREAM_FILE (stream_stdout), FALSE);
+    show_part_content (part, stream_stdout);
+    g_object_unref(stream_stdout);
+}
+
+static void
 show_message (void *ctx,
 	      const notmuch_show_format_t *format,
 	      notmuch_message_t *message,
-	      int indent)
+	      int indent,
+	      notmuch_show_params_t *params)
 {
-    fputs (format->message_start, stdout);
-    if (format->message)
-	format->message(ctx, message, indent);
+    if (params->part <= 0) {
+	fputs (format->message_start, stdout);
+	if (format->message)
+	    format->message(ctx, message, indent);
 
-    fputs (format->header_start, stdout);
-    if (format->header)
-	format->header(ctx, message);
-    fputs (format->header_end, stdout);
+	fputs (format->header_start, stdout);
+	if (format->header)
+	    format->header(ctx, message);
+	fputs (format->header_end, stdout);
 
-    fputs (format->body_start, stdout);
+	fputs (format->body_start, stdout);
+    }
+
     if (format->part)
 	show_message_body (notmuch_message_get_filename (message),
-			   format);
-    fputs (format->body_end, stdout);
+			   format, params);
 
-    fputs (format->message_end, stdout);
+    if (params->part <= 0) {
+	fputs (format->body_end, stdout);
+
+	fputs (format->message_end, stdout);
+    }
 }
-
 
 static void
 show_messages (void *ctx,
@@ -545,7 +577,7 @@ show_messages (void *ctx,
 	next_indent = indent;
 
 	if (match || params->entire_thread) {
-	    show_message (ctx, format, message, indent);
+	    show_message (ctx, format, message, indent, params);
 	    next_indent = indent + 1;
 
 	    fputs (format->message_set_sep, stdout);
@@ -588,8 +620,10 @@ do_show_single (void *ctx,
 	return 1;
     }
 
+    notmuch_message_set_flag (message, NOTMUCH_MESSAGE_FLAG_MATCH, 1);
+
     /* Special case for --format=raw of full single message, just cat out file */
-    if (params->raw) {
+    if (params->raw && 0 == params->part) {
 
 	const char *filename;
 	FILE *file;
@@ -614,6 +648,10 @@ do_show_single (void *ctx,
 	}
 
 	fclose (file);
+
+    } else {
+
+	show_message (ctx, format, message, 0, params);
 
     }
 
@@ -675,6 +713,7 @@ notmuch_show_command (void *ctx, unused (int argc), unused (char *argv[]))
 
     params.entire_thread = 0;
     params.raw = 0;
+    params.part = -1;
 
     for (i = 0; i < argc && argv[i][0] == '-'; i++) {
 	if (strcmp (argv[i], "--") == 0) {
@@ -691,11 +730,14 @@ notmuch_show_command (void *ctx, unused (int argc), unused (char *argv[]))
 	    } else if (strcmp (opt, "mbox") == 0) {
 		format = &format_mbox;
 	    } else if (strcmp (opt, "raw") == 0) {
+		format = &format_raw;
 		params.raw = 1;
 	    } else {
 		fprintf (stderr, "Invalid value for --format: %s\n", opt);
 		return 1;
 	    }
+	} else if (STRNCMP_LITERAL (argv[i], "--part=") == 0) {
+	    params.part = atoi(argv[i] + sizeof ("--part=") - 1);
 	} else if (STRNCMP_LITERAL (argv[i], "--entire-thread") == 0) {
 	    params.entire_thread = 1;
 	} else {
@@ -735,7 +777,10 @@ notmuch_show_command (void *ctx, unused (int argc), unused (char *argv[]))
 
     /* If --format=raw specified without specifying part, we can only
      * output single message, so set part=0 */
-    if (params.raw)
+    if (params.raw && params.part < 0)
+	params.part = 0;
+
+    if (params.part >= 0)
 	return do_show_single (ctx, query, format, &params);
     else
 	return do_show (ctx, query, format, &params);
@@ -744,79 +789,4 @@ notmuch_show_command (void *ctx, unused (int argc), unused (char *argv[]))
     notmuch_database_close (notmuch);
 
     return 0;
-}
-
-int
-notmuch_part_command (void *ctx, unused (int argc), unused (char *argv[]))
-{
-	notmuch_config_t *config;
-	notmuch_database_t *notmuch;
-	notmuch_query_t *query;
-	notmuch_messages_t *messages;
-	notmuch_message_t *message;
-	char *query_string;
-	int i;
-	int part = 0;
-
-	for (i = 0; i < argc && argv[i][0] == '-'; i++) {
-		if (strcmp (argv[i], "--") == 0) {
-			i++;
-			break;
-		}
-		if (STRNCMP_LITERAL (argv[i], "--part=") == 0) {
-			part = atoi(argv[i] + sizeof ("--part=") - 1);
-		} else {
-			fprintf (stderr, "Unrecognized option: %s\n", argv[i]);
-			return 1;
-		}
-	}
-
-	argc -= i;
-	argv += i;
-
-	config = notmuch_config_open (ctx, NULL, NULL);
-	if (config == NULL)
-		return 1;
-
-	query_string = query_string_from_args (ctx, argc, argv);
-	if (query_string == NULL) {
-		fprintf (stderr, "Out of memory\n");
-		return 1;
-	}
-
-	if (*query_string == '\0') {
-		fprintf (stderr, "Error: notmuch part requires at least one search term.\n");
-		return 1;
-	}
-
-	notmuch = notmuch_database_open (notmuch_config_get_database_path (config),
-					 NOTMUCH_DATABASE_MODE_READ_ONLY);
-	if (notmuch == NULL)
-		return 1;
-
-	query = notmuch_query_create (notmuch, query_string);
-	if (query == NULL) {
-		fprintf (stderr, "Out of memory\n");
-		return 1;
-	}
-
-	if (notmuch_query_count_messages (query) != 1) {
-		fprintf (stderr, "Error: search term did not match precisely one message.\n");
-		return 1;
-	}
-
-	messages = notmuch_query_search_messages (query);
-	message = notmuch_messages_get (messages);
-
-	if (message == NULL) {
-		fprintf (stderr, "Error: cannot find matching message.\n");
-		return 1;
-	}
-
-	show_one_part (notmuch_message_get_filename (message), part);
-
-	notmuch_query_destroy (query);
-	notmuch_database_close (notmuch);
-
-	return 0;
 }
