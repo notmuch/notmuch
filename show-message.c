@@ -138,6 +138,8 @@ show_one_part_worker (GMimeObject *part, int *part_count, int desired_part)
 	GMimeMultipart *multipart = GMIME_MULTIPART (part);
 	int i;
 
+	*part_count = *part_count + 1;
+
 	for (i = 0; i < g_mime_multipart_get_count (multipart); i++) {
 		show_one_part_worker (g_mime_multipart_get_part (multipart, i),
 				      part_count, desired_part);
