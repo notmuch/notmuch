@@ -28,12 +28,15 @@ show_message_part (GMimeObject *part,
 		   const notmuch_show_format_t *format,
 		   int first)
 {
+    if (!first)
+	fputs (format->part_sep, stdout);
+
     if (GMIME_IS_MULTIPART (part)) {
 	GMimeMultipart *multipart = GMIME_MULTIPART (part);
 	int i;
 
 	*part_count = *part_count + 1;
-	format->part (part, part_count, first);
+	format->part (part, part_count);
 
 	for (i = 0; i < g_mime_multipart_get_count (multipart); i++) {
 	    show_message_part (g_mime_multipart_get_part (multipart, i),
@@ -65,7 +68,7 @@ show_message_part (GMimeObject *part,
 
     *part_count = *part_count + 1;
 
-    format->part (part, part_count, first);
+    format->part (part, part_count);
     if (format->part_end)
 	format->part_end (part);
 }

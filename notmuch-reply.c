@@ -26,14 +26,13 @@
 
 static void
 reply_part (GMimeObject *part,
-	    unused (int *part_count),
-	    unused (int first));
+	    unused (int *part_count));
 
 static const notmuch_show_format_t format_reply = {
     NULL,
 	NULL, NULL,
 	    NULL, NULL, NULL,
-	    NULL, reply_part, NULL, NULL,
+	    NULL, reply_part, NULL, NULL, NULL,
 	NULL, NULL,
     NULL
 };
@@ -87,8 +86,7 @@ show_reply_headers (GMimeMessage *message)
 
 static void
 reply_part (GMimeObject *part,
-	    unused (int *part_count),
-	    unused (int first))
+	    unused (int *part_count))
 {
     GMimeContentDisposition *disposition;
     GMimeContentType *content_type;

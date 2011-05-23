@@ -66,9 +66,9 @@ typedef struct notmuch_show_format {
     const char *header_end;
     const char *body_start;
     void (*part) (GMimeObject *part,
-		  int *part_count,
-		  int first);
+		  int *part_count);
     void (*part_end) (GMimeObject *part);
+    const char *part_sep;
     const char *body_end;
     const char *message_end;
     const char *message_set_sep;

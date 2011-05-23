@@ -30,8 +30,7 @@ format_headers_text (const void *ctx,
 
 static void
 format_part_text (GMimeObject *part,
-		  int *part_count,
-		  int first);
+		  int *part_count);
 
 static void
 format_part_end_text (GMimeObject *part);
@@ -40,7 +39,7 @@ static const notmuch_show_format_t format_text = {
     "",
 	"\fmessage{ ", format_message_text,
 	    "\fheader{\n", format_headers_text, "\fheader}\n",
-	    "\fbody{\n", format_part_text, format_part_end_text, "\fbody}\n",
+	    "\fbody{\n", format_part_text, format_part_end_text, "", "\fbody}\n",
 	"\fmessage}\n", "",
     ""
 };
@@ -55,8 +54,7 @@ format_headers_json (const void *ctx,
 
 static void
 format_part_json (GMimeObject *part,
-		  int *part_count,
-		  int first);
+		  int *part_count);
 
 static void
 format_part_end_json (GMimeObject *part);
@@ -65,7 +63,7 @@ static const notmuch_show_format_t format_json = {
     "[",
 	"{", format_message_json,
 	    ", \"headers\": {", format_headers_json, "}",
-	    ", \"body\": [", format_part_json, format_part_end_json, "]",
+	    ", \"body\": [", format_part_json, format_part_end_json, ", ", "]",
 	"}", ", ",
     "]"
 };
@@ -79,7 +77,7 @@ static const notmuch_show_format_t format_mbox = {
     "",
         "", format_message_mbox,
             "", NULL, "",
-	    "", NULL, NULL, "",
+            "", NULL, NULL, "", "",
         "", "",
     ""
 };
@@ -357,7 +355,7 @@ show_part_content (GMimeObject *part, GMimeStream *stream_out)
 }
 
 static void
-format_part_text (GMimeObject *part, int *part_count, unused (int first))
+format_part_text (GMimeObject *part, int *part_count)
 {
     GMimeContentDisposition *disposition;
     GMimeContentType *content_type;
@@ -431,7 +429,7 @@ format_part_end_text (GMimeObject *part)
 }
 
 static void
-format_part_json (GMimeObject *part, int *part_count, int first)
+format_part_json (GMimeObject *part, int *part_count)
 {
     GMimeContentType *content_type;
     GMimeContentDisposition *disposition;
@@ -441,9 +439,6 @@ format_part_json (GMimeObject *part, int *part_count, int first)
     const char *cid;
 
     content_type = g_mime_object_get_content_type (GMIME_OBJECT (part));
-
-    if (! first)
-	fputs (", ", stdout);
 
     printf ("{\"id\": %d, \"content-type\": %s",
 	    *part_count,
