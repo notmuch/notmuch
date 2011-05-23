@@ -416,7 +416,8 @@ format_part_text (GMimeObject *part, int *part_count)
 	show_part_content (part, stream_stdout);
 	g_object_unref(stream_stdout);
     }
-    else if (g_mime_content_type_is_type (content_type, "multipart", "*"))
+    else if (g_mime_content_type_is_type (content_type, "multipart", "*") ||
+	     g_mime_content_type_is_type (content_type, "message", "rfc822"))
     {
 	/* Do nothing for multipart since its content will be printed
 	 * when recursing. */
@@ -483,7 +484,8 @@ format_part_json (GMimeObject *part, int *part_count)
 
 	printf (", \"content\": %s", json_quote_chararray (ctx, (char *) part_content->data, part_content->len));
     }
-    else if (g_mime_content_type_is_type (content_type, "multipart", "*"))
+    else if (g_mime_content_type_is_type (content_type, "multipart", "*") ||
+	     g_mime_content_type_is_type (content_type, "message", "rfc822"))
     {
 	printf (", \"content\": [");
     }
@@ -500,7 +502,8 @@ format_part_end_json (GMimeObject *part)
 
     content_type = g_mime_object_get_content_type (GMIME_OBJECT (part));
 
-    if (g_mime_content_type_is_type (content_type, "multipart", "*"))
+    if (g_mime_content_type_is_type (content_type, "multipart", "*") ||
+	g_mime_content_type_is_type (content_type, "message", "rfc822"))
 	printf ("]");
 
     printf ("}");
