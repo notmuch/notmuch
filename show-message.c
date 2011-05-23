@@ -28,47 +28,37 @@ show_message_part (GMimeObject *part,
 		   const notmuch_show_format_t *format,
 		   int first)
 {
+    *part_count += 1;
+
+    if (! (GMIME_IS_PART (part) || GMIME_IS_MULTIPART (part) || GMIME_IS_MESSAGE_PART (part))) {
+	fprintf (stderr, "Warning: Not displaying unknown mime part: %s.\n",
+		 g_type_name (G_OBJECT_TYPE (part)));
+	return;
+    }
+
     if (!first)
 	fputs (format->part_sep, stdout);
+
+    format->part (part, part_count);
 
     if (GMIME_IS_MULTIPART (part)) {
 	GMimeMultipart *multipart = GMIME_MULTIPART (part);
 	int i;
-
-	*part_count = *part_count + 1;
-	format->part (part, part_count);
 
 	for (i = 0; i < g_mime_multipart_get_count (multipart); i++) {
 	    show_message_part (g_mime_multipart_get_part (multipart, i),
 			       part_count, format, i == 0);
 	}
 
-	if (format->part_end)
-	    format->part_end (part);
-
-	return;
-    }
-
-    if (GMIME_IS_MESSAGE_PART (part)) {
+    } else if (GMIME_IS_MESSAGE_PART (part)) {
 	GMimeMessage *mime_message;
 
 	mime_message = g_mime_message_part_get_message (GMIME_MESSAGE_PART (part));
 
 	show_message_part (g_mime_message_get_mime_part (mime_message),
 			   part_count, format, first);
-
-	return;
     }
 
-    if (! (GMIME_IS_PART (part))) {
-	fprintf (stderr, "Warning: Not displaying unknown mime part: %s.\n",
-		 g_type_name (G_OBJECT_TYPE (part)));
-	return;
-    }
-
-    *part_count = *part_count + 1;
-
-    format->part (part, part_count);
     if (format->part_end)
 	format->part_end (part);
 }
