@@ -556,7 +556,7 @@ current buffer, if possible."
   (with-temp-buffer
     (let ((coding-system-for-read 'no-conversion))
       (call-process notmuch-command nil t nil
-		    "part" (format "--part=%s" part-number) message-id)
+		    "show" "--format=raw" (format "--part=%s" part-number) message-id)
       (buffer-string))))
 
 (defun notmuch-show-get-bodypart-content (msg part nth)
