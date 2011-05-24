@@ -287,7 +287,13 @@ a blank line separating each message. Lines in the message content
 beginning with "From " (preceded by zero or more '>' characters) have
 an additional '>' character added. This reversible escaping
 is termed "mboxrd" format and described in detail here:
+
+.nf
+.nh
 http://homepage.ntlworld.com/jonathan.deboynepollard/FGA/mail-mbox-formats.html
+.hy
+.fi
+.
 .RE
 .RS 4
 .TP 4
@@ -312,8 +318,7 @@ message.
 Output the single decoded MIME part N of a single message.  The search
 terms must match only a single message.  Message parts are numbered in
 a depth-first walk of the message MIME structure, and are identified
-in the 'json' or
-'text' output formats.
+in the 'json' or 'text' output formats.
 .RE
 
 A common use of
