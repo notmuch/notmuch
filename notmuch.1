@@ -252,7 +252,7 @@ matched message will be displayed.
 
 .RS 4
 .TP 4
-.B text
+.BR text " (default for messages)"
 
 The default plain-text format has all text-content MIME parts
 decoded. Various components in the output,
@@ -291,12 +291,17 @@ http://homepage.ntlworld.com/jonathan.deboynepollard/FGA/mail-mbox-formats.html
 .RE
 .RS 4
 .TP 4
-.B raw
+.BR raw " (default for a single part, see \-\-part)"
 
-The original, raw content of the email message is displayed.
-Consumers of this format should expect to implement MIME decoding and
-similar functions. This format must only be used with search terms
-matching a single message.
+For a message, the original, raw content of the email message is
+output. Consumers of this format should expect to implement MIME
+decoding and similar functions.
+
+For a single part (\-\-part) the raw part content is output after
+performing any necessary MIME decoding.
+
+The raw format must only be used with search terms matching single
+message.
 .RE
 .RE
 
