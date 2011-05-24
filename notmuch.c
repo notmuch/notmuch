@@ -32,6 +32,17 @@ typedef struct command {
     const char *documentation;
 } command_t;
 
+#define MAX_ALIAS_SUBSTITUTIONS 2
+
+typedef struct alias {
+    const char *name;
+    const char *substitutions[MAX_ALIAS_SUBSTITUTIONS];
+} alias_t;
+
+alias_t aliases[] = {
+    { "part", { "show", "--format=raw"}}
+};
+
 static int
 notmuch_help_command (void *ctx, int argc, char *argv[]);
 
@@ -115,7 +126,7 @@ static const char search_terms_help[] =
     "\n"
     "\t\t$(date +%%s -d 2009-10-01)..$(date +%%s)\n\n";
 
-command_t commands[] = {
+static command_t commands[] = {
     { "setup", notmuch_setup_command,
       NULL,
       "Interactively setup notmuch for first use.",
@@ -546,7 +557,9 @@ main (int argc, char *argv[])
 {
     void *local;
     command_t *command;
-    unsigned int i;
+    alias_t *alias;
+    unsigned int i, j;
+    const char **argv_local;
 
     talloc_enable_null_tracking ();
 
@@ -563,6 +576,40 @@ main (int argc, char *argv[])
     if (STRNCMP_LITERAL (argv[1], "--version") == 0) {
 	printf ("notmuch " STRINGIFY(NOTMUCH_VERSION) "\n");
 	return 0;
+    }
+
+    for (i = 0; i < ARRAY_SIZE (aliases); i++) {
+	alias = &aliases[i];
+
+	if (strcmp (argv[1], alias->name) == 0)
+	{
+	    int substitutions;
+
+	    argv_local = talloc_size (local, sizeof (char *) *
+				      (argc + MAX_ALIAS_SUBSTITUTIONS - 1));
+	    if (argv_local == NULL) {
+		fprintf (stderr, "Out of memory.\n");
+		return 1;
+	    }
+
+	    /* Copy all substution arguments from the alias. */
+	    argv_local[0] = argv[0];
+	    for (j = 0; j < MAX_ALIAS_SUBSTITUTIONS; j++) {
+		if (alias->substitutions[j] == NULL)
+		    break;
+		argv_local[j+1] = alias->substitutions[j];
+	    }
+	    substitutions = j;
+
+	    /* And copy all original arguments (skipping the argument
+	     * that matched the alias of course. */
+	    for (j = 2; j < (unsigned) argc; j++) {
+		argv_local[substitutions+j-1] = argv[j];
+	    }
+
+	    argc += substitutions - 1;
+	    argv = (char **) argv_local;
+	}
     }
 
     for (i = 0; i < ARRAY_SIZE (commands); i++) {
