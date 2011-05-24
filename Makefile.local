@@ -242,7 +242,6 @@ notmuch_client_srcs =		\
 	notmuch-reply.c		\
 	notmuch-restore.c	\
 	notmuch-search.c	\
-	notmuch-search-tags.c   \
 	notmuch-setup.c		\
 	notmuch-show.c		\
 	notmuch-tag.c		\

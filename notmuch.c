@@ -32,7 +32,7 @@ typedef struct command {
     const char *documentation;
 } command_t;
 
-#define MAX_ALIAS_SUBSTITUTIONS 2
+#define MAX_ALIAS_SUBSTITUTIONS 3
 
 typedef struct alias {
     const char *name;
@@ -40,7 +40,8 @@ typedef struct alias {
 } alias_t;
 
 alias_t aliases[] = {
-    { "part", { "show", "--format=raw"}}
+    { "part", { "show", "--format=raw"}},
+    { "search-tags", {"search", "--output=tags", "*"}}
 };
 
 static int
@@ -374,15 +375,6 @@ static command_t commands[] = {
       "\tSo if you've previously been using sup for mail, then the\n"
       "\t\"notmuch restore\" command provides you a way to import\n"
       "\tall of your tags (or labels as sup calls them)." },
-    { "search-tags", notmuch_search_tags_command,
-      "[<search-terms> [...] ]",
-      "List all tags found in the database or matching messages.",
-      "\tRun this command without any search-term(s) to obtain a list\n"
-      "\tof all tags found in the database. If you provide one or more\n"
-      "\tsearch-terms as argument(s) then the resulting list will\n"
-      "\tcontain tags only from messages that match the search-term(s).\n"
-      "\n"
-      "\tIn both cases the list will be alphabetically sorted." },
     { "config", notmuch_config_command,
       "[get|set] <section>.<item> [value ...]",
       "Get or set settings in the notmuch configuration file.",
