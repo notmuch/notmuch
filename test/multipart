@@ -305,4 +305,24 @@ test_expect_success \
     "--format=mbox --part=1, incompatible, expect error" \
     "! notmuch show --format=mbox --part=1 'id:87liy5ap00.fsf@yoom.home.cworth.org'"
 
+test_begin_subtest "'notmuch reply' to a multipart message"
+output=$(notmuch reply 'id:87liy5ap00.fsf@yoom.home.cworth.org')
+test_expect_equal "$output" "From: Notmuch Test Suite <test_suite@notmuchmail.org>
+Subject: Re: Multipart message
+To: Carl Worth <cworth@cworth.org>, cworth@cworth.org
+In-Reply-To: <87liy5ap00.fsf@yoom.home.cworth.org>
+References: <87liy5ap00.fsf@yoom.home.cworth.org>
+
+On Tue, 05 Jan 2001 15:43:57 -0000, Carl Worth <cworth@cworth.org> wrote:
+Non-text part: multipart/signed
+Non-text part: multipart/mixed
+Non-text part: message/rfc822
+Non-text part: text/html
+> This is a text attachment.
+> And this message is signed.
+> 
+> -Carl
+Non-text part: application/pgp-signature"
+
+
 test_done
