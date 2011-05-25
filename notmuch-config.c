@@ -109,13 +109,15 @@ notmuch_config_destructor (notmuch_config_t *config)
 static char *
 get_name_from_passwd_file (void *ctx)
 {
-    long pw_buf_size = sysconf(_SC_GETPW_R_SIZE_MAX);
-    char *pw_buf = talloc_zero_size (ctx, pw_buf_size);
+    long pw_buf_size;
+    char *pw_buf;
     struct passwd passwd, *ignored;
     char *name;
     int e;
 
+    pw_buf_size = sysconf(_SC_GETPW_R_SIZE_MAX);
     if (pw_buf_size == -1) pw_buf_size = 64;
+    pw_buf = talloc_size (ctx, pw_buf_size);
 
     while ((e = getpwuid_r (getuid (), &passwd, pw_buf,
                             pw_buf_size, &ignored)) == ERANGE) {
@@ -142,13 +144,16 @@ get_name_from_passwd_file (void *ctx)
 static char *
 get_username_from_passwd_file (void *ctx)
 {
-    long pw_buf_size = sysconf(_SC_GETPW_R_SIZE_MAX);
-    char *pw_buf = talloc_zero_size (ctx, pw_buf_size);
+    long pw_buf_size;
+    char *pw_buf;
     struct passwd passwd, *ignored;
     char *name;
     int e;
 
+    pw_buf_size = sysconf(_SC_GETPW_R_SIZE_MAX);
     if (pw_buf_size == -1) pw_buf_size = 64;
+    pw_buf = talloc_zero_size (ctx, pw_buf_size);
+
     while ((e = getpwuid_r (getuid (), &passwd, pw_buf,
                             pw_buf_size, &ignored)) == ERANGE) {
         pw_buf_size = pw_buf_size * 2;
