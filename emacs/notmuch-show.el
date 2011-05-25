@@ -753,8 +753,9 @@ current buffer, if possible."
     ;; message.
     (put-text-property message-start message-end :notmuch-message-extent (cons message-start message-end))
 
-    (let ((headers-overlay (make-overlay headers-start headers-end)))
-      (overlay-put headers-overlay 'invisible headers-invis-spec)
+    (let ((headers-overlay (make-overlay headers-start headers-end))
+          (invis-specs (list headers-invis-spec message-invis-spec)))
+      (overlay-put headers-overlay 'invisible invis-specs)
       (overlay-put headers-overlay 'priority 10))
     (overlay-put (make-overlay body-start body-end) 'invisible message-invis-spec)
 
@@ -994,20 +995,11 @@ All currently available key bindings:
       (add-to-invisibility-spec spec))))
 
 (defun notmuch-show-message-visible (props visible-p)
-  (if visible-p
-      ;; When making the message visible, the headers may or not be
-      ;; visible. So we check that property separately.
-      (let ((headers-visible (plist-get props :headers-visible)))
-	(notmuch-show-element-visible props headers-visible :headers-invis-spec)
-	(notmuch-show-element-visible props t :message-invis-spec))
-    (notmuch-show-element-visible props nil :headers-invis-spec)
-    (notmuch-show-element-visible props nil :message-invis-spec))
-
+  (notmuch-show-element-visible props visible-p :message-invis-spec)
   (notmuch-show-set-prop :message-visible visible-p props))
 
 (defun notmuch-show-headers-visible (props visible-p)
-  (if (plist-get props :message-visible)
-      (notmuch-show-element-visible props visible-p :headers-invis-spec))
+  (notmuch-show-element-visible props visible-p :headers-invis-spec)
   (notmuch-show-set-prop :headers-visible visible-p props))
 
 ;; Functions for setting and getting attributes of the current
