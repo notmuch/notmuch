@@ -124,7 +124,8 @@ collapse the remaining lines into a button.")
   :supertype 'notmuch-wash-button-invisibility-toggle-type)
 
 (defun notmuch-wash-region-isearch-show (overlay)
-  (remove-from-invisibility-spec (overlay-get overlay 'invisible)))
+  (dolist (invis-spec (overlay-get overlay 'invisible))
+    (remove-from-invisibility-spec invis-spec)))
 
 (defun notmuch-wash-button-label (overlay)
   (let* ((type (overlay-get overlay 'type))
@@ -135,7 +136,7 @@ collapse the remaining lines into a button.")
 	 (lines-count (count-lines (overlay-start overlay) (overlay-end overlay))))
     (format label-format lines-count)))
 
-(defun notmuch-wash-region-to-button (beg end type prefix)
+(defun notmuch-wash-region-to-button (msg beg end type prefix)
   "Auxilary function to do the actual making of overlays and buttons
 
 BEG and END are buffer locations. TYPE should a string, either
@@ -148,11 +149,12 @@ insert before the button, probably for indentation."
   ;; since the newly created symbol has no plist.
 
   (let ((overlay (make-overlay beg end))
+	(message-invis-spec (plist-get msg :message-invis-spec))
 	(invis-spec (make-symbol (concat "notmuch-" type "-region")))
 	(button-type (intern-soft (concat "notmuch-wash-button-"
 					  type "-toggle-type"))))
     (add-to-invisibility-spec invis-spec)
-    (overlay-put overlay 'invisible invis-spec)
+    (overlay-put overlay 'invisible (list invis-spec message-invis-spec))
     (overlay-put overlay 'isearch-open-invisible #'notmuch-wash-region-isearch-show)
     (overlay-put overlay 'type type)
     (goto-char (1+ end))
@@ -174,7 +176,7 @@ insert before the button, probably for indentation."
 	     (msg-end (point-max))
 	     (msg-lines (count-lines msg-start msg-end)))
 	(notmuch-wash-region-to-button
-	 msg-start msg-end "original" "\n")))
+	 msg msg-start msg-end "original" "\n")))
   (while (and (< (point) (point-max))
 	      (re-search-forward notmuch-wash-citation-regexp nil t))
     (let* ((cite-start (match-beginning 0))
@@ -190,7 +192,7 @@ insert before the button, probably for indentation."
 	  (goto-char cite-end)
 	  (forward-line (- notmuch-wash-citation-lines-suffix))
 	  (notmuch-wash-region-to-button
-	   hidden-start (point-marker)
+	   msg hidden-start (point-marker)
 	   "citation" "\n")))))
   (if (and (not (eobp))
 	   (re-search-forward notmuch-wash-signature-regexp nil t))
@@ -204,7 +206,7 @@ insert before the button, probably for indentation."
 	      (set-marker sig-end-marker (point-max))
 	      (overlay-put (make-overlay sig-start-marker sig-end-marker) 'face 'message-cited-text)
 	      (notmuch-wash-region-to-button
-	       sig-start-marker sig-end-marker
+	       msg sig-start-marker sig-end-marker
 	       "signature" "\n"))))))
 
 ;;
