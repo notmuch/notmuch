@@ -753,7 +753,9 @@ current buffer, if possible."
     ;; message.
     (put-text-property message-start message-end :notmuch-message-extent (cons message-start message-end))
 
-    (overlay-put (make-overlay headers-start headers-end) 'invisible headers-invis-spec)
+    (let ((headers-overlay (make-overlay headers-start headers-end)))
+      (overlay-put headers-overlay 'invisible headers-invis-spec)
+      (overlay-put headers-overlay 'priority 10))
     (overlay-put (make-overlay body-start body-end) 'invisible message-invis-spec)
 
     ;; Save the properties for this message. Currently this saves the

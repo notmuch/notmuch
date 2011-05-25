@@ -156,6 +156,7 @@ insert before the button, probably for indentation."
     (add-to-invisibility-spec invis-spec)
     (overlay-put overlay 'invisible (list invis-spec message-invis-spec))
     (overlay-put overlay 'isearch-open-invisible #'notmuch-wash-region-isearch-show)
+    (overlay-put overlay 'priority 10)
     (overlay-put overlay 'type type)
     (goto-char (1+ end))
     (save-excursion
