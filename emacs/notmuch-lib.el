@@ -120,6 +120,15 @@ within the current window."
       (or (memq prop buffer-invisibility-spec)
 	  (assq prop buffer-invisibility-spec)))))
 
+(defun notmuch-remove-if-not (predicate list)
+  "Return a copy of LIST with all items not satisfying PREDICATE removed."
+  (let (out)
+    (while list
+      (when (funcall predicate (car list))
+        (push (car list) out))
+      (setq list (cdr list)))
+    (nreverse out)))
+
 ; This lets us avoid compiling these replacement functions when emacs
 ; is sufficiently new enough to supply them alone. We do the macro
 ; treatment rather than just wrapping our defun calls in a when form

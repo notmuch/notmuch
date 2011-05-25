@@ -55,6 +55,26 @@
   :type 'boolean
   :group 'notmuch)
 
+(defcustom notmuch-hello-tag-list-make-query nil
+  "Function or string to generate queries for the all tags list.
+
+This variable controls which query results are shown for each tag
+in the \"all tags\" list. If nil, it will use all messages with
+that tag. If this is set to a string, it is used as a filter for
+messages having that tag (equivalent to \"tag:TAG and (THIS-VARIABLE)\").
+Finally this can be a function that will be called for each tag and
+should return a filter for that tag, or nil to hide the tag."
+  :type '(choice (const :tag "All messages" nil)
+		 (const :tag "Unread messages" "tag:unread")
+		 (const :tag "Custom filter" string)
+		 (const :tag "Custom filter function" function))
+  :group 'notmuch)
+
+(defcustom notmuch-hello-hide-tags nil
+  "List of tags to be hidden in the \"all tags\"-section."
+  :type '(repeat string)
+  :group 'notmuch)
+
 (defface notmuch-hello-logo-background
   '((((class color)
       (background dark))
@@ -318,6 +338,25 @@ Complete list of currently available key bindings:
  ;;(setq buffer-read-only t)
 )
 
+(defun notmuch-hello-generate-tag-alist ()
+  "Return an alist from tags to queries to display in the all-tags section."
+  (notmuch-remove-if-not
+   #'cdr
+   (mapcar (lambda (tag)
+	     (cons tag
+		   (cond
+		    ((functionp notmuch-hello-tag-list-make-query)
+		     (concat "tag:" tag " and ("
+			     (funcall notmuch-hello-tag-list-make-query tag) ")"))
+		    ((stringp notmuch-hello-tag-list-make-query)
+		     (concat "tag:" tag " and ("
+			     notmuch-hello-tag-list-make-query ")"))
+		    (t (concat "tag:" tag)))))
+	   (notmuch-remove-if-not
+	    (lambda (tag)
+	      (not (member tag notmuch-hello-hide-tags)))
+	    (process-lines notmuch-command "search-tags")))))
+
 ;;;###autoload
 (defun notmuch-hello (&optional no-display)
   "Run notmuch and display saved searches, known tags, etc."
@@ -396,9 +435,7 @@ Complete list of currently available key bindings:
 		      if (> (string-to-number (notmuch-saved-search-count (cdr elem))) 0)
 		      collect elem)))
 	     (saved-widest (notmuch-hello-longest-label saved-alist))
-	     (alltags-alist (if notmuch-show-all-tags-list
-				(mapcar '(lambda (tag) (cons tag (concat "tag:" tag)))
-					(process-lines notmuch-command "search-tags"))))
+	     (alltags-alist (if notmuch-show-all-tags-list (notmuch-hello-generate-tag-alist)))
 	     (alltags-widest (notmuch-hello-longest-label alltags-alist))
 	     (widest (max saved-widest alltags-widest)))
 
