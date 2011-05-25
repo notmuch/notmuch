@@ -164,7 +164,7 @@ insert before the button, probably for indentation."
 		     'overlay overlay
 		     :type button-type))))
 
-(defun notmuch-wash-excerpt-citations (depth)
+(defun notmuch-wash-excerpt-citations (msg depth)
   "Excerpt citations and up to one signature."
   (goto-char (point-min))
   (beginning-of-line)
@@ -209,7 +209,7 @@ insert before the button, probably for indentation."
 
 ;;
 
-(defun notmuch-wash-elide-blank-lines (depth)
+(defun notmuch-wash-elide-blank-lines (msg depth)
   "Elide leading, trailing and successive blank lines."
 
   ;; Algorithm derived from `article-strip-multiple-blank-lines' in
@@ -237,7 +237,7 @@ insert before the button, probably for indentation."
 
 ;;
 
-(defun notmuch-wash-tidy-citations (depth)
+(defun notmuch-wash-tidy-citations (msg depth)
   "Improve the display of cited regions of a message.
 
 Perform several transformations on the message body:
@@ -268,7 +268,7 @@ Perform several transformations on the message body:
 
 ;;
 
-(defun notmuch-wash-wrap-long-lines (depth)
+(defun notmuch-wash-wrap-long-lines (msg depth)
   "Wrap any long lines in the message to the width of the window.
 
 When doing so, maintaining citation leaders in the wrapped text."
@@ -287,7 +287,7 @@ When doing so, maintaining citation leaders in the wrapped text."
 
 (defvar diff-file-header-re) ; From `diff-mode.el'.
 
-(defun notmuch-wash-convert-inline-patch-to-part (depth)
+(defun notmuch-wash-convert-inline-patch-to-part (msg depth)
   "Convert an inline patch into a fake 'text/x-diff' attachment.
 
 Given that this function guesses whether a buffer includes a

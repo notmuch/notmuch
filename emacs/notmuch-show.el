@@ -546,7 +546,7 @@ current buffer, if possible."
     (save-excursion
       (save-restriction
 	(narrow-to-region start (point-max))
-	(run-hook-with-args 'notmuch-show-insert-text/plain-hook depth))))
+	(run-hook-with-args 'notmuch-show-insert-text/plain-hook msg depth))))
   t)
 
 (defun notmuch-show-insert-part-text/x-vcalendar (msg part content-type nth depth declared-type)
