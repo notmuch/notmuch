@@ -713,6 +713,9 @@ current buffer, if possible."
 
     (setq content-start (point-marker))
 
+    (plist-put msg :headers-invis-spec headers-invis-spec)
+    (plist-put msg :message-invis-spec message-invis-spec)
+
     ;; Set `headers-start' to point after the 'Subject:' header to be
     ;; compatible with the existing implementation. This just sets it
     ;; to after the first header.
@@ -750,10 +753,7 @@ current buffer, if possible."
     ;; message.
     (put-text-property message-start message-end :notmuch-message-extent (cons message-start message-end))
 
-    (plist-put msg :headers-invis-spec headers-invis-spec)
     (overlay-put (make-overlay headers-start headers-end) 'invisible headers-invis-spec)
-
-    (plist-put msg :message-invis-spec message-invis-spec)
     (overlay-put (make-overlay body-start body-end) 'invisible message-invis-spec)
 
     ;; Save the properties for this message. Currently this saves the
