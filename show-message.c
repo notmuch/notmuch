@@ -49,7 +49,9 @@ show_message_part (GMimeObject *part,
 	if (!first && (params->part <= 0 || state->in_zone))
 	    fputs (format->part_sep, stdout);
 
-	format->part (part, &(state->part_count));
+	if (format->part_start)
+	    format->part_start (part, &(state->part_count));
+	format->part_content (part);
     }
 
     if (GMIME_IS_MULTIPART (part)) {

@@ -25,14 +25,18 @@
 #include "gmime-filter-headers.h"
 
 static void
-reply_part (GMimeObject *part,
-	    unused (int *part_count));
+reply_part_content (GMimeObject *part);
 
 static const notmuch_show_format_t format_reply = {
     "",
 	"", NULL,
 	    "", NULL, "",
-	    "", reply_part, NULL, "", "",
+	    "",
+	        NULL,
+	        reply_part_content,
+	        NULL,
+	        "",
+	    "",
 	"", "",
     ""
 };
@@ -57,8 +61,7 @@ show_reply_headers (GMimeMessage *message)
 }
 
 static void
-reply_part (GMimeObject *part,
-	    unused (int *part_count))
+reply_part_content (GMimeObject *part)
 {
     GMimeContentType *content_type = g_mime_object_get_content_type (GMIME_OBJECT (part));
     GMimeContentDisposition *disposition = g_mime_object_get_content_disposition (part);
