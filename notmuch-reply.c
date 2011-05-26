@@ -88,31 +88,8 @@ static void
 reply_part (GMimeObject *part,
 	    unused (int *part_count))
 {
-    GMimeContentDisposition *disposition;
-    GMimeContentType *content_type;
-
-    disposition = g_mime_object_get_content_disposition (part);
-    if (disposition &&
-	strcmp (disposition->disposition, GMIME_DISPOSITION_ATTACHMENT) == 0)
-    {
-	const char *filename = g_mime_part_get_filename (GMIME_PART (part));
-	content_type = g_mime_object_get_content_type (GMIME_OBJECT (part));
-
-	if (g_mime_content_type_is_type (content_type, "text", "*") &&
-	    !g_mime_content_type_is_type (content_type, "text", "html"))
-	{
-	    reply_part_content (part);
-	}
-	else
-	{
-	    printf ("Attachment: %s (%s)\n", filename,
-		    g_mime_content_type_to_string (content_type));
-	}
-
-	return;
-    }
-
-    content_type = g_mime_object_get_content_type (GMIME_OBJECT (part));
+    GMimeContentType *content_type = g_mime_object_get_content_type (GMIME_OBJECT (part));
+    GMimeContentDisposition *disposition = g_mime_object_get_content_disposition (part);
 
     if (g_mime_content_type_is_type (content_type, "text", "*") &&
 	!g_mime_content_type_is_type (content_type, "text", "html"))
@@ -121,8 +98,18 @@ reply_part (GMimeObject *part,
     }
     else
     {
-	printf ("Non-text part: %s\n",
-		g_mime_content_type_to_string (content_type));
+	if (disposition &&
+	    strcmp (disposition->disposition, GMIME_DISPOSITION_ATTACHMENT) == 0)
+	{
+	    const char *filename = g_mime_part_get_filename (GMIME_PART (part));
+	    printf ("Attachment: %s (%s)\n", filename,
+		    g_mime_content_type_to_string (content_type));
+	}
+	else
+	{
+	    printf ("Non-text part: %s\n",
+		    g_mime_content_type_to_string (content_type));
+	}
     }
 }
 
