@@ -22,17 +22,20 @@
 (require 'notmuch-lib)
 (require 'json)
 
-(defun notmuch-query-get-threads (search-terms &rest options)
+(defun notmuch-query-get-threads (search-terms)
   "Return a list of threads of messages matching SEARCH-TERMS.
 
 A thread is a forest or list of trees. A tree is a two element
 list where the first element is a message, and the second element
 is a possibly empty forest of replies.
 "
-  (let  ((args (append '("show" "--format=json") search-terms))
+  (let  ((args '("show" "--format=json"))
 	 (json-object-type 'plist)
 	 (json-array-type 'list)
 	 (json-false 'nil))
+    (if notmuch-show-process-crypto
+	(setq args (append args '("--decrypt"))))
+    (setq args (append args search-terms))
     (with-temp-buffer
       (progn
 	(apply 'call-process (append (list notmuch-command nil (list t nil) nil) args))

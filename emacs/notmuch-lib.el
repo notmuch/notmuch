@@ -165,5 +165,10 @@ was called."
    "Return non-nil if OBJECT is a mouse click event."
    (memq (event-basic-type object) '(mouse-1 mouse-2 mouse-3 mouse-movement))))
 
+;; This variable is used only buffer local, but it needs to be
+;; declared globally first to avoid compiler warnings.
+(defvar notmuch-show-process-crypto nil)
+(make-variable-buffer-local 'notmuch-show-process-crypto)
+
 (provide 'notmuch-lib)
 

@@ -12,6 +12,7 @@ emacs_sources := \
 	$(dir)/notmuch-address.el \
 	$(dir)/notmuch-maildir-fcc.el \
 	$(dir)/notmuch-message.el \
+	$(dir)/notmuch-crypto.el \
 	$(dir)/coolj.el
 
 emacs_images := \

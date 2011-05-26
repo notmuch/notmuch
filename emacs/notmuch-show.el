@@ -32,6 +32,7 @@
 (require 'notmuch-query)
 (require 'notmuch-wash)
 (require 'notmuch-mua)
+(require 'notmuch-crypto)
 
 (declare-function notmuch-call-notmuch-process "notmuch" (&rest args))
 (declare-function notmuch-fontify-headers "notmuch" nil)
@@ -295,18 +296,20 @@ message at DEPTH in the current thread."
 ;; Functions handling particular MIME parts.
 
 (defun notmuch-show-save-part (message-id nth &optional filename)
-  (with-temp-buffer
-    ;; Always acquires the part via `notmuch part', even if it is
-    ;; available in the JSON output.
-    (insert (notmuch-show-get-bodypart-internal message-id nth))
-    (let ((file (read-file-name
-		 "Filename to save as: "
-		 (or mailcap-download-directory "~/")
-		 nil nil
-		 filename))
-	  (require-final-newline nil)
-          (coding-system-for-write 'no-conversion))
-      (write-region (point-min) (point-max) file))))
+  (let ((process-crypto notmuch-show-process-crypto))
+    (with-temp-buffer
+      (setq notmuch-show-process-crypto process-crypto)
+      ;; Always acquires the part via `notmuch part', even if it is
+      ;; available in the JSON output.
+      (insert (notmuch-show-get-bodypart-internal message-id nth))
+      (let ((file (read-file-name
+		   "Filename to save as: "
+		   (or mailcap-download-directory "~/")
+		   nil nil
+		   filename))
+	    (require-final-newline nil)
+	    (coding-system-for-write 'no-conversion))
+	(write-region (point-min) (point-max) file)))))
 
 (defun notmuch-show-mm-display-part-inline (msg part content-type content)
   "Use the mm-decode/mm-view functions to display a part in the
@@ -551,13 +554,20 @@ current buffer, if possible."
 
 ;; Helper for parts which are generally not included in the default
 ;; JSON output.
-
+;; Uses the buffer-local variable notmuch-show-process-crypto to
+;; determine if parts should be decrypted first.
 (defun notmuch-show-get-bodypart-internal (message-id part-number)
-  (with-temp-buffer
-    (let ((coding-system-for-read 'no-conversion))
-      (call-process notmuch-command nil t nil
-		    "show" "--format=raw" (format "--part=%s" part-number) message-id)
-      (buffer-string))))
+  (let ((args '("show" "--format=raw"))
+	(part-arg (format "--part=%s" part-number)))
+    (setq args (append args (list part-arg)))
+    (if notmuch-show-process-crypto
+	(setq args (append args '("--decrypt"))))
+    (setq args (append args (list message-id)))
+    (with-temp-buffer
+      (let ((coding-system-for-read 'no-conversion))
+	(progn
+	  (apply 'call-process (append (list notmuch-command nil (list t nil) nil) args))
+	  (buffer-string))))))
 
 (defun notmuch-show-get-bodypart-content (msg part nth)
   (or (plist-get part :content)
@@ -578,6 +588,16 @@ current buffer, if possible."
   "Insert the body part PART at depth DEPTH in the current thread."
   (let ((content-type (downcase (plist-get part :content-type)))
 	(nth (plist-get part :id)))
+    ;; add encryption status button if encstatus specified
+    (if (plist-member part :encstatus)
+	(let* ((encstatus (car (plist-get part :encstatus))))
+	  (notmuch-crypto-insert-encstatus-button encstatus)))
+    ;; add signature status button if sigstatus specified
+    (if (plist-member part :sigstatus)
+	(let* ((headers (plist-get msg :headers))
+	       (from (plist-get headers :From))
+	       (sigstatus (car (plist-get part :sigstatus))))
+	  (notmuch-crypto-insert-sigstatus-button sigstatus from)))
     (notmuch-show-insert-bodypart-internal msg part content-type nth depth content-type))
   ;; Some of the body part handlers leave point somewhere up in the
   ;; part, so we make sure that we're down at the end.
@@ -711,9 +731,10 @@ current buffer, if possible."
   (mapc '(lambda (thread) (notmuch-show-insert-thread thread 0)) forest))
 
 (defvar notmuch-show-parent-buffer nil)
+(make-variable-buffer-local 'notmuch-show-parent-buffer)
 
 ;;;###autoload
-(defun notmuch-show (thread-id &optional parent-buffer query-context buffer-name)
+(defun notmuch-show (thread-id &optional parent-buffer query-context buffer-name crypto-switch)
   "Run \"notmuch show\" with the given thread ID and display results.
 
 The optional PARENT-BUFFER is the notmuch-search buffer from
@@ -733,10 +754,14 @@ function is used. "
   (let ((buffer (get-buffer-create (generate-new-buffer-name
 				    (or buffer-name
 					(concat "*notmuch-" thread-id "*")))))
+	(process-crypto (if crypto-switch
+			    (not notmuch-crypto-process-mime)
+			  notmuch-crypto-process-mime))
 	(inhibit-read-only t))
     (switch-to-buffer buffer)
     (notmuch-show-mode)
-    (set (make-local-variable 'notmuch-show-parent-buffer) parent-buffer)
+    (setq notmuch-show-parent-buffer parent-buffer)
+    (setq notmuch-show-process-crypto process-crypto)
     (erase-buffer)
     (goto-char (point-min))
     (save-excursion
