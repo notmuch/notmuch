@@ -441,6 +441,29 @@ test_expect_equal ()
     fi
 }
 
+test_expect_equal_file ()
+{
+	exec 1>&6 2>&7		# Restore stdout and stderr
+	inside_subtest=
+	test "$#" = 3 && { prereq=$1; shift; } || prereq=
+	test "$#" = 2 ||
+	error "bug in the test script: not 2 or 3 parameters to test_expect_equal"
+
+	output="$1"
+	expected="$2"
+	if ! test_skip "$@"
+	then
+		if diff -q "$expected" "$output" >/dev/null ; then
+			test_ok_ "$test_subtest_name"
+		else
+			testname=$this_test.$test_count
+			mv "$output" $testname.output
+			mv "$expected" $testname.expected
+			test_failure_ "$test_subtest_name" "$(diff -u $testname.expected $testname.output)"
+		fi
+    fi
+}
+
 test_expect_equal_failure ()
 {
 	exec 1>&6 2>&7		# Restore stdout and stderr
