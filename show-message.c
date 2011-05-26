@@ -46,7 +46,7 @@ show_message_part (GMimeObject *part,
     selected = (params->part <= 0 || state->part_count == params->part);
 
     if (selected || state->in_zone) {
-	if (!first && (params->part <= 0 || state->in_zone) && format->part_sep)
+	if (!first && (params->part <= 0 || state->in_zone))
 	    fputs (format->part_sep, stdout);
 
 	format->part (part, &(state->part_count));

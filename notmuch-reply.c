@@ -29,12 +29,12 @@ reply_part (GMimeObject *part,
 	    unused (int *part_count));
 
 static const notmuch_show_format_t format_reply = {
-    NULL,
-	NULL, NULL,
-	    NULL, NULL, NULL,
-	    NULL, reply_part, NULL, NULL, NULL,
-	NULL, NULL,
-    NULL
+    "",
+	"", NULL,
+	    "", NULL, "",
+	    "", reply_part, NULL, "", "",
+	"", "",
+    ""
 };
 
 static void
