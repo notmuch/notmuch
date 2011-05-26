@@ -502,6 +502,12 @@ notmuch_show_sanitize ()
 {
     sed -e "$NOTMUCH_SHOW_FILENAME_SQUELCH"
 }
+notmuch_show_sanitize_all ()
+{
+    sed \
+	-e 's| filename:.*| filename:XXXXX|' \
+	-e 's| id:[^ ]* | id:XXXXX |'
+}
 
 # End of notmuch helper functions
 
