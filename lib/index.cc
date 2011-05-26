@@ -325,6 +325,12 @@ _index_mime_part (notmuch_message_t *message,
 	GMimeMultipart *multipart = GMIME_MULTIPART (part);
 	int i;
 
+	if (GMIME_IS_MULTIPART_SIGNED (multipart))
+	  _notmuch_message_add_term (message, "tag", "signed");
+
+	if (GMIME_IS_MULTIPART_ENCRYPTED (multipart))
+	  _notmuch_message_add_term (message, "tag", "encrypted");
+
 	for (i = 0; i < g_mime_multipart_get_count (multipart); i++) {
 	    if (GMIME_IS_MULTIPART_SIGNED (multipart)) {
 		/* Don't index the signature. */

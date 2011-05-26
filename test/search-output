@@ -270,12 +270,14 @@ test_begin_subtest "notmuch search --output=tags"
 output=$(notmuch search --output=tags '*')
 test_expect_equal "$output" "attachment
 inbox
+signed
 unread"
 
 test_begin_subtest "notmuch search --format=json --output=tags"
 output=$(notmuch search --format=json --output=tags '*')
 test_expect_equal "$output" '["attachment",
 "inbox",
+"signed",
 "unread"]'
 
 test_done

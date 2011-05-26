@@ -1,4 +1,4 @@
-Lars Kellogg-Stedman <lars@seas.harvard.edu> (2009-11-17) (inbox)
+Lars Kellogg-Stedman <lars@seas.harvard.edu> (2009-11-17) (inbox signed)
 Subject: [notmuch] Working with Maildir storage?
 To: notmuch@notmuchmail.org
 Date: Tue, 17 Nov 2009 14:00:54 -0500
@@ -39,7 +39,7 @@ _______________________________________________
 notmuch mailing list
 notmuch@notmuchmail.org
 http://notmuchmail.org/mailman/listinfo/notmuch
- Mikhail Gusarov <dottedmag@dottedmag.net> (2009-11-17) (inbox unread)
+ Mikhail Gusarov <dottedmag@dottedmag.net> (2009-11-17) (inbox signed unread)
  Subject: Re: [notmuch] Working with Maildir storage?
  To: notmuch@notmuchmail.org
  Date: Wed, 18 Nov 2009 01:02:38 +0600
@@ -68,7 +68,7 @@ http://notmuchmail.org/mailman/listinfo/notmuch
  notmuch mailing list
  notmuch@notmuchmail.org
  http://notmuchmail.org/mailman/listinfo/notmuch
-  Lars Kellogg-Stedman <lars@seas.harvard.edu> (2009-11-17) (inbox unread)
+  Lars Kellogg-Stedman <lars@seas.harvard.edu> (2009-11-17) (inbox signed unread)
   Subject: Re: [notmuch] Working with Maildir storage?
   To: Mikhail Gusarov <dottedmag@dottedmag.net>
   Cc: notmuch@notmuchmail.org
@@ -151,7 +151,7 @@ http://notmuchmail.org/mailman/listinfo/notmuch
 
    -keith
 
-    Lars Kellogg-Stedman <lars@seas.harvard.edu> (2009-11-18) (inbox unread)
+    Lars Kellogg-Stedman <lars@seas.harvard.edu> (2009-11-18) (inbox signed unread)
     Subject: Re: [notmuch] Working with Maildir storage?
     To: Keith Packard <keithp@keithp.com>
     Cc: notmuch@notmuchmail.org
