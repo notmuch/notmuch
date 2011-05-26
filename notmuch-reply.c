@@ -34,6 +34,7 @@ static const notmuch_show_format_t format_reply = {
 	    "",
 	        NULL,
 	        NULL,
+	        NULL,
 	        reply_part_content,
 	        NULL,
 	        "",
@@ -438,7 +439,10 @@ guess_from_received_header (notmuch_config_t *config, notmuch_message_t *message
 }
 
 static int
-notmuch_reply_format_default(void *ctx, notmuch_config_t *config, notmuch_query_t *query)
+notmuch_reply_format_default(void *ctx,
+			     notmuch_config_t *config,
+			     notmuch_query_t *query,
+			     notmuch_show_params_t *params)
 {
     GMimeMessage *reply;
     notmuch_messages_t *messages;
@@ -446,9 +450,6 @@ notmuch_reply_format_default(void *ctx, notmuch_config_t *config, notmuch_query_
     const char *subject, *from_addr = NULL;
     const char *in_reply_to, *orig_references, *references;
     const notmuch_show_format_t *format = &format_reply;
-    notmuch_show_params_t params;
-    params.part = -1;
-    params.cryptoctx = NULL;
 
     for (messages = notmuch_query_search_messages (query);
 	 notmuch_messages_valid (messages);
@@ -508,7 +509,7 @@ notmuch_reply_format_default(void *ctx, notmuch_config_t *config, notmuch_query_
 		notmuch_message_get_header (message, "from"));
 
 	show_message_body (notmuch_message_get_filename (message),
-			   format, &params);
+			   format, params);
 
 	notmuch_message_destroy (message);
     }
@@ -517,7 +518,10 @@ notmuch_reply_format_default(void *ctx, notmuch_config_t *config, notmuch_query_
 
 /* This format is currently tuned for a git send-email --notmuch hook */
 static int
-notmuch_reply_format_headers_only(void *ctx, notmuch_config_t *config, notmuch_query_t *query)
+notmuch_reply_format_headers_only(void *ctx,
+				  notmuch_config_t *config,
+				  notmuch_query_t *query,
+				  unused (notmuch_show_params_t *params))
 {
     GMimeMessage *reply;
     notmuch_messages_t *messages;
@@ -579,9 +583,12 @@ notmuch_reply_command (void *ctx, int argc, char *argv[])
     notmuch_query_t *query;
     char *opt, *query_string;
     int i, ret = 0;
-    int (*reply_format_func)(void *ctx, notmuch_config_t *config, notmuch_query_t *query);
+    int (*reply_format_func)(void *ctx, notmuch_config_t *config, notmuch_query_t *query, notmuch_show_params_t *params);
+    notmuch_show_params_t params;
 
     reply_format_func = notmuch_reply_format_default;
+    params.part = -1;
+    params.cryptoctx = NULL;
 
     for (i = 0; i < argc && argv[i][0] == '-'; i++) {
 	if (strcmp (argv[i], "--") == 0) {
@@ -597,6 +604,16 @@ notmuch_reply_command (void *ctx, int argc, char *argv[])
 	    } else {
 		fprintf (stderr, "Invalid value for --format: %s\n", opt);
 		return 1;
+	    }
+	} else if ((STRNCMP_LITERAL (argv[i], "--decrypt") == 0)) {
+	    if (params.cryptoctx == NULL) {
+		GMimeSession* session = g_object_new(notmuch_gmime_session_get_type(), NULL);
+		if (NULL == (params.cryptoctx = g_mime_gpg_context_new(session, "gpg")))
+		    fprintf (stderr, "Failed to construct gpg context.\n");
+		else
+		    g_mime_gpg_context_set_always_trust((GMimeGpgContext*)params.cryptoctx, FALSE);
+		g_object_unref (session);
+		session = NULL;
 	    }
 	} else {
 	    fprintf (stderr, "Unrecognized option: %s\n", argv[i]);
@@ -633,11 +650,14 @@ notmuch_reply_command (void *ctx, int argc, char *argv[])
 	return 1;
     }
 
-    if (reply_format_func (ctx, config, query) != 0)
+    if (reply_format_func (ctx, config, query, &params) != 0)
 	return 1;
 
     notmuch_query_destroy (query);
     notmuch_database_close (notmuch);
+
+    if (params.cryptoctx)
+	g_object_unref(params.cryptoctx);
 
     return ret;
 }

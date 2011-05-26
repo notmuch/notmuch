@@ -45,6 +45,7 @@ static const notmuch_show_format_t format_text = {
 	    "\fbody{\n",
 	        format_part_start_text,
 	        NULL,
+	        NULL,
 	        format_part_content_text,
 	        format_part_end_text,
 	        "",
@@ -66,6 +67,9 @@ format_part_start_json (unused (GMimeObject *part),
 			int *part_count);
 
 static void
+format_part_encstatus_json (int status);
+
+static void
 format_part_sigstatus_json (const GMimeSignatureValidity* validity);
 
 static void
@@ -80,6 +84,7 @@ static const notmuch_show_format_t format_json = {
 	    ", \"headers\": {", format_headers_json, "}",
 	    ", \"body\": [",
 	        format_part_start_json,
+	        format_part_encstatus_json,
 	        format_part_sigstatus_json,
 	        format_part_content_json,
 	        format_part_end_json,
@@ -103,6 +108,7 @@ static const notmuch_show_format_t format_mbox = {
                 NULL,
                 NULL,
                 NULL,
+                NULL,
                 "",
             "",
         "", "",
@@ -117,6 +123,7 @@ static const notmuch_show_format_t format_raw = {
 	"", NULL,
 	    "", NULL, "",
             "",
+                NULL,
                 NULL,
                 NULL,
                 format_part_content_raw,
@@ -496,6 +503,18 @@ format_part_start_json (unused (GMimeObject *part), int *part_count)
 }
 
 static void
+format_part_encstatus_json (int status)
+{
+    printf (", \"encstatus\": [{\"status\": ");
+    if (status) {
+	printf ("\"good\"");
+    } else {
+	printf ("\"bad\"");
+    }
+    printf ("}]");
+}
+
+static void
 format_part_sigstatus_json (const GMimeSignatureValidity* validity)
 {
     printf (", \"sigstatus\": [");
@@ -822,6 +841,7 @@ notmuch_show_command (void *ctx, unused (int argc), unused (char *argv[]))
     params.raw = 0;
     params.part = -1;
     params.cryptoctx = NULL;
+    params.decrypt = 0;
 
     for (i = 0; i < argc && argv[i][0] == '-'; i++) {
 	if (strcmp (argv[i], "--") == 0) {
@@ -850,7 +870,8 @@ notmuch_show_command (void *ctx, unused (int argc), unused (char *argv[]))
 	    params.part = atoi(argv[i] + sizeof ("--part=") - 1);
 	} else if (STRNCMP_LITERAL (argv[i], "--entire-thread") == 0) {
 	    params.entire_thread = 1;
-	} else if (STRNCMP_LITERAL (argv[i], "--verify") == 0) {
+	} else if ((STRNCMP_LITERAL (argv[i], "--verify") == 0) ||
+		   (STRNCMP_LITERAL (argv[i], "--decrypt") == 0)) {
 	    if (params.cryptoctx == NULL) {
 		GMimeSession* session = g_object_new(notmuch_gmime_session_get_type(), NULL);
 		if (NULL == (params.cryptoctx = g_mime_gpg_context_new(session, "gpg")))
@@ -860,6 +881,8 @@ notmuch_show_command (void *ctx, unused (int argc), unused (char *argv[]))
 		g_object_unref (session);
 		session = NULL;
 	    }
+	    if (STRNCMP_LITERAL (argv[i], "--decrypt") == 0)
+		params.decrypt = 1;
 	} else {
 	    fprintf (stderr, "Unrecognized option: %s\n", argv[i]);
 	    return 1;

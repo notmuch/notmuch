@@ -67,6 +67,7 @@ typedef struct notmuch_show_format {
     const char *body_start;
     void (*part_start) (GMimeObject *part,
 			int *part_count);
+    void (*part_encstatus) (int status);
     void (*part_sigstatus) (const GMimeSignatureValidity* validity);
     void (*part_content) (GMimeObject *part);
     void (*part_end) (GMimeObject *part);
@@ -82,6 +83,7 @@ typedef struct notmuch_show_params {
     int raw;
     int part;
     GMimeCipherContext* cryptoctx;
+    int decrypt;
 } notmuch_show_params_t;
 
 /* There's no point in continuing when we've detected that we've done

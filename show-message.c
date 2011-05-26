@@ -58,7 +58,34 @@ show_message_part (GMimeObject *part,
 	GMimeMultipart *multipart = GMIME_MULTIPART (part);
 	GError* err = NULL;
 
-	if (GMIME_IS_MULTIPART_SIGNED (part))
+	if (GMIME_IS_MULTIPART_ENCRYPTED (part) && params->decrypt)
+	{
+	    if ( g_mime_multipart_get_count (multipart) != 2 ) {
+		/* this violates RFC 3156 section 4, so we won't bother with it. */
+		fprintf (stderr,
+			 "Error: %d part(s) for a multipart/encrypted message (should be exactly 2)\n",
+			 g_mime_multipart_get_count (multipart));
+	    } else {
+		GMimeMultipartEncrypted *encrypteddata = GMIME_MULTIPART_ENCRYPTED (part);
+		GMimeObject *decryptedpart = g_mime_multipart_encrypted_decrypt (encrypteddata, params->cryptoctx, &err);
+		if (decryptedpart) {
+		    if ((selected || state->in_zone) && format->part_encstatus)
+			format->part_encstatus (1);
+		    const GMimeSignatureValidity *sigvalidity = g_mime_multipart_encrypted_get_signature_validity (encrypteddata);
+		    if (!sigvalidity)
+			fprintf (stderr, "Failed to verify signed part: %s\n", (err ? err->message : "no error explanation given"));
+		    if ((selected || state->in_zone) && format->part_sigstatus)
+			format->part_sigstatus (sigvalidity);
+		    /* swap the part with the decrypted part */
+		    part = decryptedpart;
+		} else {
+		    fprintf (stderr, "Failed to decrypt part: %s\n", (err ? err->message : "no error explanation given"));
+		    if ((selected || state->in_zone) && format->part_encstatus)
+			format->part_encstatus (0);
+		}
+	    }
+	}
+	else if (GMIME_IS_MULTIPART_SIGNED (part))
 	{
 	    if ( g_mime_multipart_get_count (multipart) != 2 ) {
 		/* this violates RFC 3156 section 5, so we won't bother with it. */
