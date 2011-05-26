@@ -138,6 +138,29 @@ list."
 
   (message-goto-to))
 
+(defcustom notmuch-identities nil
+  "Identities that can be used as the From: address when composing a new message.
+
+If this variable is left unset, then a list will be constructed from the
+name and addresses configured in the notmuch configuration file."
+  :group 'notmuch
+  :type '(repeat string))
+
+(defun notmuch-mua-sender-collection ()
+  (if notmuch-identities
+      notmuch-identities
+    (mapcar (lambda (address)
+	      (concat (notmuch-user-name) " <" address ">"))
+	    (cons (notmuch-user-primary-email) (notmuch-user-other-email)))))
+
+(defvar notmuch-mua-sender-history nil)
+
+(defun notmuch-mua-prompt-for-sender ()
+  (interactive)
+  (let ((collection (notmuch-mua-sender-collection)))
+    (ido-completing-read "Send mail From: " collection
+			 nil 'confirm nil 'notmuch-mua-sender-history (car collection))))
+
 (defun notmuch-mua-send-and-exit (&optional arg)
   (interactive "P")
   (message-send-and-exit arg))
