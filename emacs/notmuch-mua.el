@@ -172,6 +172,20 @@ the From: address first."
 	   (list (cons 'from (notmuch-mua-prompt-for-sender))))))
     (notmuch-mua-mail nil nil other-headers)))
 
+(defun notmuch-mua-new-forward-message (&optional prompt-for-sender)
+  "Invoke the notmuch message forwarding window.
+
+If PROMPT-FOR-SENDER is non-nil, the user will be prompted for
+the From: address first."
+  (interactive "P")
+  (if prompt-for-sender
+      (let* ((sender (notmuch-mua-prompt-for-sender))
+	     (address-components (mail-extract-address-components sender))
+	     (user-full-name (car address-components))
+	     (user-mail-address (cadr address-components)))
+	(notmuch-mua-forward-message))
+    (notmuch-mua-forward-message)))
+
 (defun notmuch-mua-send-and-exit (&optional arg)
   (interactive "P")
   (message-send-and-exit arg))

@@ -1103,11 +1103,11 @@ any effects from previous calls to
   (interactive)
   (notmuch-mua-reply (notmuch-show-get-message-id)))
 
-(defun notmuch-show-forward-message ()
+(defun notmuch-show-forward-message (&optional prompt-for-sender)
   "Forward the current message."
-  (interactive)
+  (interactive "P")
   (with-current-notmuch-show-message
-   (notmuch-mua-forward-message)))
+   (notmuch-mua-new-forward-message prompt-for-sender)))
 
 (defun notmuch-show-next-message ()
   "Show the next message."
