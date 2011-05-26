@@ -792,9 +792,9 @@ fi
 #
 # --no-site-file	Don't load the site-wide startup stuff
 #
-# --directory		Ensure that the local notmuch.el source is found
+# --directory		Ensure that the local elisp sources are found
 #
-# --load		Force loading of notmuch.el
+# --load		Force loading of notmuch.el and test-lib.el
 #
 # notmuch-test-wait	Function for tests to use to wait for process completion
 #
@@ -804,6 +804,7 @@ fi
 
 emacs \$BATCH --no-init-file --no-site-file \
 	--directory ../../emacs --load notmuch.el \
+	--directory .. --load test-lib.el \
 	--eval "(defun notmuch-test-wait ()
 			(while (get-buffer-process (current-buffer))
 				(sleep-for 0.1)))" \

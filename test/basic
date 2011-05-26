@@ -55,7 +55,7 @@ eval $(sed -n -e '/^TESTS="$/,/^"$/p' notmuch-test ../notmuch-test)
 tests_in_suite=$(for i in $TESTS; do echo $i; done | sort)
 available=$(ls -1 ../ | \
     sed -r -e "/^(aggregate-results.sh|Makefile|Makefile.local|notmuch-test)/d" \
-	   -e "/^(README|test-lib.sh|test-results|tmp.*|valgrind|corpus*)/d" \
+	   -e "/^(README|test-lib.sh|test-lib.el|test-results|tmp.*|valgrind|corpus*)/d" \
 	   -e "/^(emacs.expected-output|smtp-dummy|smtp-dummy.c|test-verbose)/d" \
 	   -e "/^(test.expected-output|.*~)/d" | sort)
 test_expect_equal "$tests_in_suite" "$available"
