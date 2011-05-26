@@ -39,6 +39,7 @@ TESTS="
   emacs
   emacs-large-search-buffer
   maildir-sync
+  crypto
 "
 TESTS=${NOTMUCH_TESTS:=$TESTS}
 

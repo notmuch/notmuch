@@ -57,7 +57,10 @@ available=$(ls -1 ../ | \
     sed -r -e "/^(aggregate-results.sh|Makefile|Makefile.local|notmuch-test)/d" \
 	   -e "/^(README|test-lib.sh|test-lib.el|test-results|tmp.*|valgrind|corpus*)/d" \
 	   -e "/^(emacs.expected-output|smtp-dummy|smtp-dummy.c|test-verbose)/d" \
-	   -e "/^(test.expected-output|.*~)/d" | sort)
+	   -e "/^(test.expected-output|.*~)/d" \
+	   -e "/^(gnupg-secret-key.asc)/d" \
+	   -e "/^(gnupg-secret-key.NOTE)/d" \
+	   | sort)
 test_expect_equal "$tests_in_suite" "$available"
 
 EXPECTED=../test.expected-output

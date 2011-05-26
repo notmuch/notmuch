@@ -379,6 +379,26 @@ add_message ()
     notmuch new > /dev/null
 }
 
+# Deliver a message with emacs and add it to the database
+#
+# Uses emacs to generate and deliver a message to the mail store.
+# Accepts arbitrary extra emacs/elisp functions to modify the message
+# before sending, which is useful to doing things like attaching files
+# to the message and encrypting/signing.
+emacs_deliver_message ()
+{
+    local subject="$1"
+    local body="$2"
+    shift 2
+    # before we can send a message, we have to prepare the FCC maildir
+    mkdir -p "$MAIL_DIR"/sent/{cur,new,tmp}
+    ../smtp-dummy sent_message &
+    smtp_dummy_pid=$!
+    test_emacs "(setq message-send-mail-function 'message-smtpmail-send-it) (setq smtpmail-smtp-server \"localhost\") (setq smtpmail-smtp-service \"25025\") (notmuch-hello) (notmuch-mua-mail) (message-goto-to) (insert \"test_suite@notmuchmail.org\nDate: 01 Jan 2000 12:00:00 -0000\") (message-goto-subject) (insert \"${subject}\") (message-goto-body) (insert \"${body}\") $@ (message-send-and-exit)" >/dev/null 2>&1
+    wait ${smtp_dummy_pid}
+    notmuch new >/dev/null
+}
+
 # Generate a corpus of email and add it to the database.
 #
 # This corpus is fixed, (it happens to be 50 messages from early in
@@ -507,6 +527,14 @@ notmuch_show_sanitize_all ()
     sed \
 	-e 's| filename:.*| filename:XXXXX|' \
 	-e 's| id:[^ ]* | id:XXXXX |'
+}
+
+notmuch_json_show_sanitize ()
+{
+    sed -e 's|, |,\n |g' | \
+	sed \
+	-e 's|"id": "[^"]*",|"id": "XXXXX",|' \
+	-e 's|"filename": "[^"]*",|"filename": "YYYYY",|'
 }
 
 # End of notmuch helper functions
@@ -946,6 +974,7 @@ rm -fr "$test" || {
 }
 
 MAIL_DIR="${TMP_DIRECTORY}/mail"
+export GNUPGHOME="${TMP_DIRECTORY}/gnupg"
 export NOTMUCH_CONFIG="${TMP_DIRECTORY}/notmuch-config"
 
 mkdir -p "${test}"
