@@ -149,6 +149,11 @@ name and addresses configured in the notmuch configuration file."
   :group 'notmuch
   :type '(repeat string))
 
+(defcustom notmuch-always-prompt-for-sender nil
+  "Always prompt for the From: address when composing a new message."
+  :group 'notmuch
+  :type 'boolean)
+
 (defun notmuch-mua-sender-collection ()
   (if notmuch-identities
       notmuch-identities
@@ -171,7 +176,7 @@ If PROMPT-FOR-SENDER is non-nil, the user will be prompted for
 the From: address first."
   (interactive "P")
   (let ((other-headers
-	 (when prompt-for-sender
+	 (when (or prompt-for-sender notmuch-always-prompt-for-sender)
 	   (list (cons 'from (notmuch-mua-prompt-for-sender))))))
     (notmuch-mua-mail nil nil other-headers)))
 
@@ -181,7 +186,7 @@ the From: address first."
 If PROMPT-FOR-SENDER is non-nil, the user will be prompted for
 the From: address first."
   (interactive "P")
-  (if prompt-for-sender
+  (if (or prompt-for-sender notmuch-always-prompt-for-sender)
       (let* ((sender (notmuch-mua-prompt-for-sender))
 	     (address-components (mail-extract-address-components sender))
 	     (user-full-name (car address-components))
@@ -193,7 +198,7 @@ the From: address first."
   "Invoke the notmuch reply window."
   (interactive "P")
   (let ((sender
-	 (when prompt-for-sender
+	 (when (or prompt-for-sender notmuch-always-prompt-for-sender)
 	   (notmuch-mua-prompt-for-sender))))
     (notmuch-mua-reply query-string sender)))
 
