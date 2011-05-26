@@ -161,6 +161,17 @@ name and addresses configured in the notmuch configuration file."
     (ido-completing-read "Send mail From: " collection
 			 nil 'confirm nil 'notmuch-mua-sender-history (car collection))))
 
+(defun notmuch-mua-new-mail (&optional prompt-for-sender)
+  "Invoke the notmuch mail composition window.
+
+If PROMPT-FOR-SENDER is non-nil, the user will be prompted for
+the From: address first."
+  (interactive "P")
+  (let ((other-headers
+	 (when prompt-for-sender
+	   (list (cons 'from (notmuch-mua-prompt-for-sender))))))
+    (notmuch-mua-mail nil nil other-headers)))
+
 (defun notmuch-mua-send-and-exit (&optional arg)
   (interactive "P")
   (message-send-and-exit arg))

@@ -298,7 +298,7 @@ should be. Returns a cons cell `(tags-per-line width)'."
     (define-key map "=" 'notmuch-hello-update)
     (define-key map "G" 'notmuch-hello-poll-and-update)
     (define-key map (kbd "<C-tab>") 'widget-backward)
-    (define-key map "m" 'notmuch-mua-mail)
+    (define-key map "m" 'notmuch-mua-new-mail)
     (define-key map "s" 'notmuch-hello-goto-search)
     map)
   "Keymap for \"notmuch hello\" buffers.")

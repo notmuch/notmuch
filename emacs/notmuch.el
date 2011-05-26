@@ -204,7 +204,7 @@ For a mouse binding, return nil."
     (define-key map "p" 'notmuch-search-previous-thread)
     (define-key map "n" 'notmuch-search-next-thread)
     (define-key map "r" 'notmuch-search-reply-to-thread)
-    (define-key map "m" 'notmuch-mua-mail)
+    (define-key map "m" 'notmuch-mua-new-mail)
     (define-key map "s" 'notmuch-search)
     (define-key map "o" 'notmuch-search-toggle-order)
     (define-key map "c" 'notmuch-search-stash-map)

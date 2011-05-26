@@ -792,7 +792,7 @@ function is used. "
 	(define-key map (kbd "<backtab>") 'notmuch-show-previous-button)
 	(define-key map (kbd "TAB") 'notmuch-show-next-button)
 	(define-key map "s" 'notmuch-search)
-	(define-key map "m" 'notmuch-mua-mail)
+	(define-key map "m" 'notmuch-mua-new-mail)
 	(define-key map "f" 'notmuch-show-forward-message)
 	(define-key map "r" 'notmuch-show-reply)
 	(define-key map "|" 'notmuch-show-pipe-message)
