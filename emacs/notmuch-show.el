@@ -1098,10 +1098,10 @@ any effects from previous calls to
       ;; Move to the previous message.
       (notmuch-show-previous-message)))))
 
-(defun notmuch-show-reply ()
+(defun notmuch-show-reply (&optional prompt-for-sender)
   "Reply to the current message."
-  (interactive)
-  (notmuch-mua-reply (notmuch-show-get-message-id)))
+  (interactive "P")
+  (notmuch-mua-new-reply (notmuch-show-get-message-id) prompt-for-sender))
 
 (defun notmuch-show-forward-message (&optional prompt-for-sender)
   "Forward the current message."

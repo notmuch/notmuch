@@ -69,7 +69,7 @@ list."
 	    (push header message-hidden-headers)))
 	notmuch-mua-hidden-headers))
 
-(defun notmuch-mua-reply (query-string)
+(defun notmuch-mua-reply (query-string &optional sender)
   (let (headers body)
     ;; This make assumptions about the output of `notmuch reply', but
     ;; really only that the headers come first followed by a blank
@@ -85,6 +85,9 @@ list."
 	      (setq headers (mail-header-extract)))))
       (forward-line 1)
       (setq body (buffer-substring (point) (point-max))))
+    ;; If sender is non-nil, set the From: header to its value.
+    (when sender
+      (mail-header-set 'from sender headers))
     (let
 	;; Overlay the composition window on that being used to read
 	;; the original message.
@@ -185,6 +188,14 @@ the From: address first."
 	     (user-mail-address (cadr address-components)))
 	(notmuch-mua-forward-message))
     (notmuch-mua-forward-message)))
+
+(defun notmuch-mua-new-reply (query-string &optional prompt-for-sender)
+  "Invoke the notmuch reply window."
+  (interactive "P")
+  (let ((sender
+	 (when prompt-for-sender
+	   (notmuch-mua-prompt-for-sender))))
+    (notmuch-mua-reply query-string sender)))
 
 (defun notmuch-mua-send-and-exit (&optional arg)
   (interactive "P")

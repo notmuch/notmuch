@@ -436,11 +436,11 @@ Complete list of currently available key bindings:
 			 32 nil nil t)))
       (error "End of search results"))))
 
-(defun notmuch-search-reply-to-thread ()
+(defun notmuch-search-reply-to-thread (&optional prompt-for-sender)
   "Begin composing a reply to the entire current thread in a new buffer."
-  (interactive)
+  (interactive "P")
   (let ((message-id (notmuch-search-find-thread-id)))
-    (notmuch-mua-reply message-id)))
+    (notmuch-mua-new-reply message-id prompt-for-sender)))
 
 (defun notmuch-call-notmuch-process (&rest args)
   "Synchronously invoke \"notmuch\" with the given list of arguments.
