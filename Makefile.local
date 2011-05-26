@@ -246,6 +246,7 @@ notmuch_client_srcs =		\
 	notmuch-show.c		\
 	notmuch-tag.c		\
 	notmuch-time.c		\
+	notmuch-gmime-session.c \
 	query-string.c		\
 	show-message.c		\
 	json.c			\

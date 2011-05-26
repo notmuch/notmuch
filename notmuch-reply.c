@@ -33,6 +33,7 @@ static const notmuch_show_format_t format_reply = {
 	    "", NULL, "",
 	    "",
 	        NULL,
+	        NULL,
 	        reply_part_content,
 	        NULL,
 	        "",
@@ -447,6 +448,7 @@ notmuch_reply_format_default(void *ctx, notmuch_config_t *config, notmuch_query_
     const notmuch_show_format_t *format = &format_reply;
     notmuch_show_params_t params;
     params.part = -1;
+    params.cryptoctx = NULL;
 
     for (messages = notmuch_query_search_messages (query);
 	 notmuch_messages_valid (messages);

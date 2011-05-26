@@ -67,6 +67,7 @@ typedef struct notmuch_show_format {
     const char *body_start;
     void (*part_start) (GMimeObject *part,
 			int *part_count);
+    void (*part_sigstatus) (const GMimeSignatureValidity* validity);
     void (*part_content) (GMimeObject *part);
     void (*part_end) (GMimeObject *part);
     const char *part_sep;
@@ -80,6 +81,7 @@ typedef struct notmuch_show_params {
     int entire_thread;
     int raw;
     int part;
+    GMimeCipherContext* cryptoctx;
 } notmuch_show_params_t;
 
 /* There's no point in continuing when we've detected that we've done
@@ -232,5 +234,8 @@ notmuch_config_set_maildir_synchronize_flags (notmuch_config_t *config,
 
 notmuch_bool_t
 debugger_is_active (void);
+
+GType
+notmuch_gmime_session_get_type (void);
 
 #endif

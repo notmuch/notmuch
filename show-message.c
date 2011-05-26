@@ -51,8 +51,47 @@ show_message_part (GMimeObject *part,
 
 	if (format->part_start)
 	    format->part_start (part, &(state->part_count));
-	format->part_content (part);
     }
+
+    /* handle PGP/MIME parts */
+    if (GMIME_IS_MULTIPART (part) && params->cryptoctx) {
+	GMimeMultipart *multipart = GMIME_MULTIPART (part);
+	GError* err = NULL;
+
+	if (GMIME_IS_MULTIPART_SIGNED (part))
+	{
+	    if ( g_mime_multipart_get_count (multipart) != 2 ) {
+		/* this violates RFC 3156 section 5, so we won't bother with it. */
+		fprintf (stderr,
+			 "Error: %d part(s) for a multipart/signed message (should be exactly 2)\n",
+			 g_mime_multipart_get_count (multipart));
+	    } else {
+		/* For some reason the GMimeSignatureValidity returned
+		 * here is not a const (inconsistent with that
+		 * returned by
+		 * g_mime_multipart_encrypted_get_signature_validity,
+		 * and therefore needs to be properly disposed of.
+		 * Hopefully the API will become more consistent. */
+		GMimeSignatureValidity *sigvalidity = g_mime_multipart_signed_verify (GMIME_MULTIPART_SIGNED (part), params->cryptoctx, &err);
+		if (!sigvalidity) {
+		    fprintf (stderr, "Failed to verify signed part: %s\n", (err ? err->message : "no error explanation given"));
+		}
+		if ((selected || state->in_zone) && format->part_sigstatus)
+		    format->part_sigstatus (sigvalidity);
+		/* extract only data part, and ignore signature part */
+		part = g_mime_multipart_get_part (multipart, 0);
+		if (sigvalidity)
+		    g_mime_signature_validity_free (sigvalidity);
+	    }
+	}
+
+	if (err)
+	    g_error_free (err);
+    }
+    /* end handle PGP/MIME parts */
+
+    if (selected || state->in_zone)
+	format->part_content (part);
 
     if (GMIME_IS_MULTIPART (part)) {
 	GMimeMultipart *multipart = GMIME_MULTIPART (part);

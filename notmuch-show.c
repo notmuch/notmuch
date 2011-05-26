@@ -44,6 +44,7 @@ static const notmuch_show_format_t format_text = {
 	    "\fheader{\n", format_headers_text, "\fheader}\n",
 	    "\fbody{\n",
 	        format_part_start_text,
+	        NULL,
 	        format_part_content_text,
 	        format_part_end_text,
 	        "",
@@ -65,6 +66,9 @@ format_part_start_json (unused (GMimeObject *part),
 			int *part_count);
 
 static void
+format_part_sigstatus_json (const GMimeSignatureValidity* validity);
+
+static void
 format_part_content_json (GMimeObject *part);
 
 static void
@@ -76,6 +80,7 @@ static const notmuch_show_format_t format_json = {
 	    ", \"headers\": {", format_headers_json, "}",
 	    ", \"body\": [",
 	        format_part_start_json,
+	        format_part_sigstatus_json,
 	        format_part_content_json,
 	        format_part_end_json,
 	        ", ",
@@ -97,6 +102,7 @@ static const notmuch_show_format_t format_mbox = {
                 NULL,
                 NULL,
                 NULL,
+                NULL,
                 "",
             "",
         "", "",
@@ -111,6 +117,7 @@ static const notmuch_show_format_t format_raw = {
 	"", NULL,
 	    "", NULL, "",
             "",
+                NULL,
                 NULL,
                 format_part_content_raw,
                 NULL,
@@ -396,6 +403,22 @@ show_part_content (GMimeObject *part, GMimeStream *stream_out)
 	g_object_unref(stream_filter);
 }
 
+static const char*
+signerstatustostring (GMimeSignerStatus x)
+{
+    switch (x) {
+    case GMIME_SIGNER_STATUS_NONE:
+	return "none";
+    case GMIME_SIGNER_STATUS_GOOD:
+	return "good";
+    case GMIME_SIGNER_STATUS_BAD:
+	return "bad";
+    case GMIME_SIGNER_STATUS_ERROR:
+	return "error";
+    }
+    return "unknown";
+}
+
 static void
 format_part_start_text (GMimeObject *part, int *part_count)
 {
@@ -470,6 +493,65 @@ static void
 format_part_start_json (unused (GMimeObject *part), int *part_count)
 {
     printf ("{\"id\": %d", *part_count);
+}
+
+static void
+format_part_sigstatus_json (const GMimeSignatureValidity* validity)
+{
+    printf (", \"sigstatus\": [");
+
+    if (!validity) {
+	printf ("]");
+	return;
+    }
+
+    const GMimeSigner *signer = g_mime_signature_validity_get_signers (validity);
+    int first = 1;
+    void *ctx_quote = talloc_new (NULL);
+
+    while (signer) {
+	if (first)
+	    first = 0;
+	else
+	    printf (", ");
+
+	printf ("{");
+
+	/* status */
+	printf ("\"status\": %s", json_quote_str (ctx_quote, signerstatustostring(signer->status)));
+
+	if (signer->status == GMIME_SIGNER_STATUS_GOOD)
+	{
+	    if (signer->fingerprint)
+		printf (", \"fingerprint\": %s", json_quote_str (ctx_quote, signer->fingerprint));
+	    /* these dates are seconds since the epoch; should we
+	     * provide a more human-readable format string? */
+	    if (signer->created)
+		printf (", \"created\": %d", (int) signer->created);
+	    if (signer->expires)
+		printf (", \"expires\": %d", (int) signer->expires);
+	    /* output user id only if validity is FULL or ULTIMATE. */
+	    /* note that gmime is using the term "trust" here, which
+	     * is WRONG.  It's actually user id "validity". */
+	    if ((signer->name) && (signer->trust)) {
+		if ((signer->trust == GMIME_SIGNER_TRUST_FULLY) || (signer->trust == GMIME_SIGNER_TRUST_ULTIMATE))
+		    printf (", \"userid\": %s", json_quote_str (ctx_quote, signer->name));
+           }
+       } else {
+           if (signer->keyid)
+               printf (", \"keyid\": %s", json_quote_str (ctx_quote, signer->keyid));
+       }
+       if (signer->errors != GMIME_SIGNER_ERROR_NONE) {
+           printf (", \"errors\": %x", signer->errors);
+       }
+
+       printf ("}");
+       signer = signer->next;
+    }
+
+    printf ("]");
+
+    talloc_free (ctx_quote);
 }
 
 static void
@@ -739,6 +821,7 @@ notmuch_show_command (void *ctx, unused (int argc), unused (char *argv[]))
     params.entire_thread = 0;
     params.raw = 0;
     params.part = -1;
+    params.cryptoctx = NULL;
 
     for (i = 0; i < argc && argv[i][0] == '-'; i++) {
 	if (strcmp (argv[i], "--") == 0) {
@@ -767,6 +850,16 @@ notmuch_show_command (void *ctx, unused (int argc), unused (char *argv[]))
 	    params.part = atoi(argv[i] + sizeof ("--part=") - 1);
 	} else if (STRNCMP_LITERAL (argv[i], "--entire-thread") == 0) {
 	    params.entire_thread = 1;
+	} else if (STRNCMP_LITERAL (argv[i], "--verify") == 0) {
+	    if (params.cryptoctx == NULL) {
+		GMimeSession* session = g_object_new(notmuch_gmime_session_get_type(), NULL);
+		if (NULL == (params.cryptoctx = g_mime_gpg_context_new(session, "gpg")))
+		    fprintf (stderr, "Failed to construct gpg context.\n");
+		else
+		    g_mime_gpg_context_set_always_trust((GMimeGpgContext*)params.cryptoctx, FALSE);
+		g_object_unref (session);
+		session = NULL;
+	    }
 	} else {
 	    fprintf (stderr, "Unrecognized option: %s\n", argv[i]);
 	    return 1;
@@ -823,6 +916,9 @@ notmuch_show_command (void *ctx, unused (int argc), unused (char *argv[]))
 
     notmuch_query_destroy (query);
     notmuch_database_close (notmuch);
+
+    if (params.cryptoctx)
+	g_object_unref(params.cryptoctx);
 
     return 0;
 }

@@ -321,6 +321,17 @@ a depth-first walk of the message MIME structure, and are identified
 in the 'json' or 'text' output formats.
 .RE
 
+.RS 4
+.TP 4
+.B \-\-verify
+
+Compute and report the validity of any MIME cryptographic signatures
+found in the selected content (ie. "multipart/signed" parts). Status
+of the signature will be reported (currently only supported with
+--format=json), and the multipart/signed part will be replaced by the
+signed data.
+.RE
+
 A common use of
 .B notmuch show
 is to display a single thread of email messages. For this, use a
