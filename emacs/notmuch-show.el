@@ -524,6 +524,11 @@ current buffer, if possible."
 		nil))
 	  nil))))
 
+(defun notmuch-show-insert-part-application/* (msg part content-type nth depth declared-type
+)
+  ;; do not render random "application" parts
+  (notmuch-show-insert-part-header nth content-type declared-type (plist-get part :filename)))
+
 (defun notmuch-show-insert-part-*/* (msg part content-type nth depth declared-type)
   ;; This handler _must_ succeed - it is the handler of last resort.
   (notmuch-show-insert-part-header nth content-type declared-type (plist-get part :filename))
