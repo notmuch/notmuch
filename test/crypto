@@ -57,8 +57,12 @@ expected='[[[{"id": "XXXXX",
  "sigstatus": [{"status": "good",
  "fingerprint": "'$FINGERPRINT'",
  "created": 946728000}],
+ "content-type": "multipart/signed",
+ "content": [{"id": 2,
  "content-type": "text/plain",
- "content": "This is a test signed message.\n"}]},
+ "content": "This is a test signed message.\n"},
+ {"id": 3,
+ "content-type": "application/pgp-signature"}]}]},
  []]]]'
 test_expect_equal \
     "$output" \
@@ -88,8 +92,12 @@ expected='[[[{"id": "XXXXX",
  "fingerprint": "'$FINGERPRINT'",
  "created": 946728000,
  "userid": " Notmuch Test Suite <test_suite@notmuchmail.org> (INSECURE!)"}],
+ "content-type": "multipart/signed",
+ "content": [{"id": 2,
  "content-type": "text/plain",
- "content": "This is a test signed message.\n"}]},
+ "content": "This is a test signed message.\n"},
+ {"id": 3,
+ "content-type": "application/pgp-signature"}]}]},
  []]]]'
 test_expect_equal \
     "$output" \
@@ -117,8 +125,12 @@ expected='[[[{"id": "XXXXX",
  "sigstatus": [{"status": "error",
  "keyid": "'$(echo $FINGERPRINT | cut -c 25-)'",
  "errors": 2}],
+ "content-type": "multipart/signed",
+ "content": [{"id": 2,
  "content-type": "text/plain",
- "content": "This is a test signed message.\n"}]},
+ "content": "This is a test signed message.\n"},
+ {"id": 3,
+ "content-type": "application/pgp-signature"}]}]},
  []]]]'
 test_expect_equal \
     "$output" \
@@ -320,8 +332,12 @@ expected='[[[{"id": "XXXXX",
  "sigstatus": [{"status": "error",
  "keyid": "6D92612D94E46381",
  "errors": 8}],
+ "content-type": "multipart/signed",
+ "content": [{"id": 2,
  "content-type": "text/plain",
- "content": "This is a test signed message.\n"}]},
+ "content": "This is a test signed message.\n"},
+ {"id": 3,
+ "content-type": "application/pgp-signature"}]}]},
  []]]]'
 test_expect_equal \
     "$output" \

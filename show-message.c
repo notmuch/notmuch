@@ -105,8 +105,6 @@ show_message_part (GMimeObject *part,
 		}
 		if ((selected || state->in_zone) && format->part_sigstatus)
 		    format->part_sigstatus (sigvalidity);
-		/* extract only data part, and ignore signature part */
-		part = g_mime_multipart_get_part (multipart, 0);
 		if (sigvalidity)
 		    g_mime_signature_validity_free (sigvalidity);
 	    }
