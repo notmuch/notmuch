@@ -160,14 +160,19 @@ To: test_suite@notmuchmail.org
 Date: 01 Jan 2000 12:00:00 -0000
 header}
 body{
-part{ ID: 1, Content-type: multipart/mixed
-part{ ID: 2, Content-type: text/plain
+part{ ID: 1, Content-type: multipart/encrypted
+part{ ID: 2, Content-type: application/pgp-encrypted
+Non-text part: application/pgp-encrypted
+part}
+part{ ID: 3, Content-type: multipart/mixed
+part{ ID: 4, Content-type: text/plain
 This is a test encrypted message.
 part}
-attachment{ ID: 3, Content-type: application/octet-stream
+attachment{ ID: 5, Content-type: application/octet-stream
 Attachment: TESTATTACHMENT (application/octet-stream)
 Non-text part: application/octet-stream
 attachment}
+part}
 part}
 body}
 message}'
@@ -194,33 +199,37 @@ expected='[[[{"id": "XXXXX",
  "body": [{"id": 1,
  "encstatus": [{"status": "good"}],
  "sigstatus": [],
- "content-type": "multipart/mixed",
+ "content-type": "multipart/encrypted",
  "content": [{"id": 2,
+ "content-type": "application/pgp-encrypted"},
+ {"id": 3,
+ "content-type": "multipart/mixed",
+ "content": [{"id": 4,
  "content-type": "text/plain",
  "content": "This is a test encrypted message.\n"},
- {"id": 3,
+ {"id": 5,
  "content-type": "application/octet-stream",
- "filename": "TESTATTACHMENT"}]}]},
+ "filename": "TESTATTACHMENT"}]}]}]},
  []]]]'
 test_expect_equal \
     "$output" \
     "$expected"
 
-test_begin_subtest "decryption, --format=json, --part=2"
-output=$(notmuch show --format=json --part=2 --decrypt subject:"test encrypted message 001" \
+test_begin_subtest "decryption, --format=json, --part=4"
+output=$(notmuch show --format=json --part=4 --decrypt subject:"test encrypted message 001" \
     | notmuch_json_show_sanitize \
     | sed -e 's|"created": [1234567890]*|"created": 946728000|')
-expected='{"id": 2,
+expected='{"id": 4,
  "content-type": "text/plain",
  "content": "This is a test encrypted message.\n"}'
 test_expect_equal \
     "$output" \
     "$expected"
 
-test_begin_subtest "decrypt attachment (--part=3 --format=raw)"
+test_begin_subtest "decrypt attachment (--part=5 --format=raw)"
 notmuch show \
     --format=raw \
-    --part=3 \
+    --part=5 \
     --decrypt \
     subject:"test encrypted message 001" >OUTPUT
 test_expect_equal_file OUTPUT TESTATTACHMENT
@@ -283,8 +292,12 @@ expected='[[[{"id": "XXXXX",
  "fingerprint": "'$FINGERPRINT'",
  "created": 946728000,
  "userid": " Notmuch Test Suite <test_suite@notmuchmail.org> (INSECURE!)"}],
+ "content-type": "multipart/encrypted",
+ "content": [{"id": 2,
+ "content-type": "application/pgp-encrypted"},
+ {"id": 3,
  "content-type": "text/plain",
- "content": "This is another test encrypted message.\n"}]},
+ "content": "This is another test encrypted message.\n"}]}]},
  []]]]'
 test_expect_equal \
     "$output" \
@@ -297,6 +310,8 @@ expected='From: Notmuch Test Suite <test_suite@notmuchmail.org>
 Subject: Re: test encrypted message 002
 
 On 01 Jan 2000 12:00:00 -0000, Notmuch Test Suite <test_suite@notmuchmail.org> wrote:
+Non-text part: multipart/encrypted
+Non-text part: application/pgp-encrypted
 > This is another test encrypted message.'
 test_expect_equal \
     "$output" \

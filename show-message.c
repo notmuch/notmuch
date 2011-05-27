@@ -34,6 +34,7 @@ show_message_part (GMimeObject *part,
 		   notmuch_show_params_t *params,
 		   int first)
 {
+    GMimeObject *decryptedpart = NULL;
     int selected;
     state->part_count += 1;
 
@@ -67,7 +68,7 @@ show_message_part (GMimeObject *part,
 			 g_mime_multipart_get_count (multipart));
 	    } else {
 		GMimeMultipartEncrypted *encrypteddata = GMIME_MULTIPART_ENCRYPTED (part);
-		GMimeObject *decryptedpart = g_mime_multipart_encrypted_decrypt (encrypteddata, params->cryptoctx, &err);
+		decryptedpart = g_mime_multipart_encrypted_decrypt (encrypteddata, params->cryptoctx, &err);
 		if (decryptedpart) {
 		    if ((selected || state->in_zone) && format->part_encstatus)
 			format->part_encstatus (1);
@@ -76,8 +77,6 @@ show_message_part (GMimeObject *part,
 			fprintf (stderr, "Failed to verify signed part: %s\n", (err ? err->message : "no error explanation given"));
 		    if ((selected || state->in_zone) && format->part_sigstatus)
 			format->part_sigstatus (sigvalidity);
-		    /* swap the part with the decrypted part */
-		    part = decryptedpart;
 		} else {
 		    fprintf (stderr, "Failed to decrypt part: %s\n", (err ? err->message : "no error explanation given"));
 		    if ((selected || state->in_zone) && format->part_encstatus)
@@ -125,9 +124,20 @@ show_message_part (GMimeObject *part,
 	if (selected)
 	    state->in_zone = 1;
 
-	for (i = 0; i < g_mime_multipart_get_count (multipart); i++) {
-	    show_message_part (g_mime_multipart_get_part (multipart, i),
-			       state, format, params, i == 0);
+	if (decryptedpart) {
+	    /* We emit the useless application/pgp-encrypted version
+	     * part here only to keep the emitted output as consistent
+	     * as possible between decrypted output and the
+	     * unprocessed multipart/mime. For some strange reason,
+	     * the actual encrypted data is the second part of the
+	     * multipart. */
+	    show_message_part (g_mime_multipart_get_part (multipart, 0), state, format, params, TRUE);
+	    show_message_part (decryptedpart, state, format, params, FALSE);
+	} else {
+	    for (i = 0; i < g_mime_multipart_get_count (multipart); i++) {
+		show_message_part (g_mime_multipart_get_part (multipart, i),
+				   state, format, params, i == 0);
+	    }
 	}
 
 	if (selected)
