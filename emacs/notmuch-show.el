@@ -446,6 +446,56 @@ current buffer, if possible."
       (indent-rigidly start (point) 1)))
   t)
 
+(defun notmuch-show-insert-part-multipart/signed (msg part content-type nth depth declared-type)
+  (let ((button (notmuch-show-insert-part-header nth declared-type content-type nil)))
+    (button-put button 'face '(:foreground "blue"))
+    ;; add signature status button if sigstatus provided
+    (if (plist-member part :sigstatus)
+	(let* ((headers (plist-get msg :headers))
+	       (from (plist-get headers :From))
+	       (sigstatus (car (plist-get part :sigstatus))))
+	  (notmuch-crypto-insert-sigstatus-button sigstatus from))
+      ;; if we're not adding sigstatus, tell the user how they can get it
+      (button-put button 'help-echo "Set notmuch-crypto-process-mime to process cryptographic mime parts.")))
+
+  (let ((inner-parts (plist-get part :content))
+	(start (point)))
+    ;; Show all of the parts.
+    (mapc (lambda (inner-part)
+	    (notmuch-show-insert-bodypart msg inner-part depth))
+	  inner-parts)
+
+    (when notmuch-show-indent-multipart
+      (indent-rigidly start (point) 1)))
+  t)
+
+(defun notmuch-show-insert-part-multipart/encrypted (msg part content-type nth depth declared-type)
+  (let ((button (notmuch-show-insert-part-header nth declared-type content-type nil)))
+    (button-put button 'face '(:foreground "blue"))
+    ;; add encryption status button if encstatus specified
+    (if (plist-member part :encstatus)
+	(let ((encstatus (car (plist-get part :encstatus))))
+	  (notmuch-crypto-insert-encstatus-button encstatus)
+	  ;; add signature status button if sigstatus specified
+	  (if (plist-member part :sigstatus)
+	      (let* ((headers (plist-get msg :headers))
+		     (from (plist-get headers :From))
+		     (sigstatus (car (plist-get part :sigstatus))))
+		(notmuch-crypto-insert-sigstatus-button sigstatus from))))
+      ;; if we're not adding encstatus, tell the user how they can get it
+      (button-put button 'help-echo "Set notmuch-crypto-process-mime to process cryptographic mime parts.")))
+
+  (let ((inner-parts (plist-get part :content))
+	(start (point)))
+    ;; Show all of the parts.
+    (mapc (lambda (inner-part)
+	    (notmuch-show-insert-bodypart msg inner-part depth))
+	  inner-parts)
+
+    (when notmuch-show-indent-multipart
+      (indent-rigidly start (point) 1)))
+  t)
+
 (defun notmuch-show-insert-part-multipart/* (msg part content-type nth depth declared-type)
   (notmuch-show-insert-part-header nth declared-type content-type nil)
   (let ((inner-parts (plist-get part :content))
@@ -593,16 +643,6 @@ current buffer, if possible."
   "Insert the body part PART at depth DEPTH in the current thread."
   (let ((content-type (downcase (plist-get part :content-type)))
 	(nth (plist-get part :id)))
-    ;; add encryption status button if encstatus specified
-    (if (plist-member part :encstatus)
-	(let* ((encstatus (car (plist-get part :encstatus))))
-	  (notmuch-crypto-insert-encstatus-button encstatus)))
-    ;; add signature status button if sigstatus specified
-    (if (plist-member part :sigstatus)
-	(let* ((headers (plist-get msg :headers))
-	       (from (plist-get headers :From))
-	       (sigstatus (car (plist-get part :sigstatus))))
-	  (notmuch-crypto-insert-sigstatus-button sigstatus from)))
     (notmuch-show-insert-bodypart-internal msg part content-type nth depth content-type))
   ;; Some of the body part handlers leave point somewhere up in the
   ;; part, so we make sure that we're down at the end.

@@ -46,7 +46,7 @@ search."
 (defun notmuch-crypto-insert-sigstatus-button (sigstatus from)
   (let* ((status (plist-get sigstatus :status))
 	 (help-msg nil)
-	 (label "multipart/signed: signature not processed")
+	 (label "Signature not processed")
 	 (face '(:background "red" :foreground "black")))
     (cond
      ((string= status "good")
@@ -82,17 +82,17 @@ search."
 (defun notmuch-crypto-insert-encstatus-button (encstatus)
   (let* ((status (plist-get encstatus :status))
 	 (help-msg nil)
-	 (label "multipart/encrypted: decryption not attempted")
+	 (label "Decryption not attempted")
 	 (face '(:background "purple" :foreground "black")))
     (cond
      ((string= status "good")
-      (setq label "decryption successful"))
+      (setq label "Decryption successful"))
      ((string= status "bad")
-      (setq label "decryption error"))
+      (setq label "Decryption error"))
      (t
-      (setq label (concat "unknown encstatus \"" status "\""))))
+      (setq label (concat "Unknown encstatus \"" status "\""))))
     (insert-button
-     (concat "[ multipart/encrypted: " label " ]")
+     (concat "[ " label " ]")
      :type 'notmuch-crypto-status-button-type
      'help-echo help-msg
      'face face
