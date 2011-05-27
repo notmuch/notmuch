@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 test_description='"notmuch search" by folder: (with variations)'
 . ./test-lib.sh
 

@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 test_description="output of multipart message"
 . ./test-lib.sh
 
