@@ -46,9 +46,17 @@ TESTS=${NOTMUCH_TESTS:=$TESTS}
 # Clean up any results from a previous run
 rm -r test-results >/dev/null 2>/dev/null
 
+# test for timeout utility
+if command -v timeout >/dev/null; then
+    TEST_TIMEOUT_CMD="timeout 2m "
+    echo "INFO: using 2 minute timeout for tests"
+else
+    TEST_TIMEOUT_CMD=""
+fi
+
 # Run the tests
 for test in $TESTS; do
-	./$test "$@"
+    $TEST_TIMEOUT_CMD ./$test "$@"
 done
 
 # Report results
