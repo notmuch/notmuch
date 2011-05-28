@@ -1,3 +1,24 @@
+notmuch (0.5+nmu3) unstable; urgency=low
+
+  * Non-maintainer upload.
+  * Upload to unstable.
+
+ -- David Bremner <bremner@debian.org>  Sun, 01 May 2011 15:09:09 -0300
+
+notmuch (0.5+nmu2) experimental; urgency=low
+
+  * Non-maintainer upload.
+  * Second try at timeout for test. Put timeouts at top level.
+
+ -- David Bremner <bremner@debian.org>  Sun, 19 Dec 2010 21:40:08 -0400
+
+notmuch (0.5+nmu1) experimental; urgency=low
+
+  * Non-maintainer upload.
+  * Add a timeout to emacs tests to hopefully work around build failures.
+
+ -- David Bremner <bremner@debian.org>  Tue, 14 Dec 2010 22:23:51 -0400
+
 notmuch (0.5) unstable; urgency=low
 
   * new: maildir-flag synchronization
