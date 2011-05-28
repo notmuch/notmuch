@@ -80,7 +80,7 @@ will NOT be removed or replaced."
   (let ((subdir
 	 (cond
 	  ((or (not notmuch-fcc-dirs)
-	       (message-fetch-field "Fcc"))
+	       (message-field-value "Fcc"))
 	   ;; Nothing set or an existing header.
 	   nil)
 
@@ -93,7 +93,7 @@ will NOT be removed or replaced."
 	   (error "Invalid `notmuch-fcc-dirs' setting (old style)"))
 
 	  ((listp notmuch-fcc-dirs)
-	   (let* ((from (message-fetch-field "From"))
+	   (let* ((from (message-field-value "From"))
 		  (match
 		   (catch 'first-match
 		     (dolist (re-folder notmuch-fcc-dirs)
@@ -118,7 +118,7 @@ will NOT be removed or replaced."
 		  (concat (notmuch-database-path) "/" subdir)))))
       
       ;; finally test if fcc points to a valid maildir
-      (let ((fcc-header (message-fetch-field "Fcc")))
+      (let ((fcc-header (message-field-value "Fcc")))
 	(unless (notmuch-maildir-fcc-dir-is-maildir-p fcc-header)
 	  (cond ((not (file-writable-p fcc-header))
 		 (error (format "No permission to create %s, which does not exist"
