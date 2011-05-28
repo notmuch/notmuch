@@ -319,4 +319,71 @@ for error."
 
 ;;
 
+;; Temporary workaround for Emacs bug #8721
+;; http://debbugs.gnu.org/cgi/bugreport.cgi?bug=8721
+
+(defun notmuch-isearch-range-invisible (beg end)
+  "Same as `isearch-range-invisible' but with fixed Emacs bug #8721."
+  (when (/= beg end)
+    ;; Check that invisibility runs up to END.
+    (save-excursion
+      (goto-char beg)
+      (let (;; can-be-opened keeps track if we can open some overlays.
+	    (can-be-opened (eq search-invisible 'open))
+	    ;; the list of overlays that could be opened
+	    (crt-overlays nil))
+	(when (and can-be-opened isearch-hide-immediately)
+	  (isearch-close-unnecessary-overlays beg end))
+	;; If the following character is currently invisible,
+	;; skip all characters with that same `invisible' property value.
+	;; Do that over and over.
+	(while (and (< (point) end) (invisible-p (point)))
+	  (if (invisible-p (get-text-property (point) 'invisible))
+	      (progn
+		(goto-char (next-single-property-change (point) 'invisible
+							nil end))
+		;; if text is hidden by an `invisible' text property
+		;; we cannot open it at all.
+		(setq can-be-opened nil))
+	    (when can-be-opened
+	      (let ((overlays (overlays-at (point)))
+		    ov-list
+		    o
+		    invis-prop)
+		(while overlays
+		  (setq o (car overlays)
+			invis-prop (overlay-get o 'invisible))
+		  (if (invisible-p invis-prop)
+		      (if (overlay-get o 'isearch-open-invisible)
+			  (setq ov-list (cons o ov-list))
+			;; We found one overlay that cannot be
+			;; opened, that means the whole chunk
+			;; cannot be opened.
+			(setq can-be-opened nil)))
+		  (setq overlays (cdr overlays)))
+		(if can-be-opened
+		    ;; It makes sense to append to the open
+		    ;; overlays list only if we know that this is
+		    ;; t.
+		    (setq crt-overlays (append ov-list crt-overlays)))))
+	    (goto-char (next-overlay-change (point)))))
+	;; See if invisibility reaches up thru END.
+	(if (>= (point) end)
+	    (if (and can-be-opened (consp crt-overlays))
+		(progn
+		  (setq isearch-opened-overlays
+			(append isearch-opened-overlays crt-overlays))
+		  (mapc 'isearch-open-overlay-temporary crt-overlays)
+		  nil)
+	      (setq isearch-hidden t)))))))
+
+(defadvice isearch-range-invisible (around notmuch-isearch-range-invisible-advice activate)
+  "Call `notmuch-isearch-range-invisible' instead of the original
+`isearch-range-invisible' when in `notmuch-show-mode' mode."
+  (if (eq major-mode 'notmuch-show-mode)
+      (setq ad-return-value (notmuch-isearch-range-invisible beg end))
+    ad-do-it))
+
+;;
+
 (provide 'notmuch-wash)
