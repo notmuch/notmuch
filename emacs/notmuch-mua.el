@@ -155,7 +155,10 @@ name and addresses configured in the notmuch configuration file."
   :type '(repeat string))
 
 (defcustom notmuch-always-prompt-for-sender nil
-  "Always prompt for the From: address when composing a new message."
+  "Always prompt for the From: address when composing or forwarding a message.
+
+This is not taken into account when replying to a message, because in that case
+the From: header is already filled in by notmuch."
   :group 'notmuch
   :type 'boolean)
 
@@ -203,7 +206,7 @@ the From: address first."
   "Invoke the notmuch reply window."
   (interactive "P")
   (let ((sender
-	 (when (or prompt-for-sender notmuch-always-prompt-for-sender)
+	 (when prompt-for-sender
 	   (notmuch-mua-prompt-for-sender))))
     (notmuch-mua-reply query-string sender)))
 
