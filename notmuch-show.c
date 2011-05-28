@@ -456,7 +456,6 @@ format_part_content_text (GMimeObject *part)
 {
     GMimeContentDisposition *disposition = g_mime_object_get_content_disposition (part);
     GMimeContentType *content_type = g_mime_object_get_content_type (GMIME_OBJECT (part));
-    GMimeStream *stream_stdout = g_mime_stream_file_new (stdout);
 
     printf (", Content-type: %s\n", g_mime_content_type_to_string (content_type));
 
@@ -471,6 +470,7 @@ format_part_content_text (GMimeObject *part)
     if (g_mime_content_type_is_type (content_type, "text", "*") &&
 	!g_mime_content_type_is_type (content_type, "text", "html"))
     {
+	GMimeStream *stream_stdout = g_mime_stream_file_new (stdout);
 	g_mime_stream_file_set_owner (GMIME_STREAM_FILE (stream_stdout), FALSE);
 	show_text_part_content (part, stream_stdout);
 	g_object_unref(stream_stdout);
