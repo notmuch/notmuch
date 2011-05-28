@@ -168,8 +168,7 @@ Non-text part: application/pgp-encrypted
 part{ ID: 4, Content-type: text/plain
 This is a test encrypted message.
 part}
-attachment{ ID: 5, Content-type: application/octet-stream
-Attachment: TESTATTACHMENT (application/octet-stream)
+attachment{ ID: 5, Filename: TESTATTACHMENT, Content-type: application/octet-stream
 Non-text part: application/octet-stream
 attachment}
 part}
