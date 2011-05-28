@@ -162,20 +162,33 @@ the From: header is already filled in by notmuch."
   :group 'notmuch
   :type 'boolean)
 
-(defun notmuch-mua-sender-collection ()
-  (if notmuch-identities
-      notmuch-identities
-    (mapcar (lambda (address)
-	      (concat (notmuch-user-name) " <" address ">"))
-	    (cons (notmuch-user-primary-email) (notmuch-user-other-email)))))
-
 (defvar notmuch-mua-sender-history nil)
 
 (defun notmuch-mua-prompt-for-sender ()
   (interactive)
-  (let ((collection (notmuch-mua-sender-collection)))
-    (ido-completing-read "Send mail From: " collection
-			 nil 'confirm nil 'notmuch-mua-sender-history (car collection))))
+  (let (name addresses one-name-only)
+    ;; If notmuch-identities is non-nil, check if there is a fixed user name.
+    (if notmuch-identities
+	(let ((components (mapcar 'mail-extract-address-components notmuch-identities)))
+	  (setq name          (caar components)
+		addresses     (mapcar 'cadr components)
+		one-name-only (eval
+			       (cons 'and
+				     (mapcar (lambda (identity)
+					       (string-equal name (car identity)))
+					     components)))))
+      ;; If notmuch-identities is nil, use values from the notmuch configuration file.
+      (setq name          (notmuch-user-name)
+	    addresses     (cons (notmuch-user-primary-email) (notmuch-user-other-email))
+	    one-name-only t))
+    ;; Now prompt the user, either for an email address only or for a full identity.
+    (if one-name-only
+	(let ((address
+	       (ido-completing-read (concat "Sender address for " name ": ") addresses
+				    nil nil nil 'notmuch-mua-sender-history (car addresses))))
+	  (concat name " <" address ">"))
+      (ido-completing-read "Send mail From: " notmuch-identities
+			   nil nil nil 'notmuch-mua-sender-history (car notmuch-identities)))))
 
 (defun notmuch-mua-new-mail (&optional prompt-for-sender)
   "Invoke the notmuch mail composition window.
