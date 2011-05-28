@@ -88,7 +88,7 @@ will NOT be removed or replaced."
 	   notmuch-fcc-dirs)
 
 	  ((and (listp notmuch-fcc-dirs)
-		(= 1 (length (car notmuch-fcc-dirs))))
+		(stringp (car notmuch-fcc-dirs)))
 	   ;; Old style - no longer works.
 	   (error "Invalid `notmuch-fcc-dirs' setting (old style)"))
 
