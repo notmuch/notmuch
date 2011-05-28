@@ -1,3 +1,36 @@
+notmuch (0.6~171) experimental; urgency=low
+
+  * Git snapshot cb8418784c2
+  * PGP/MIME handling in CLI and emacs front end.
+  * cli: Rewrite of multipart handling.
+  * emacs: Make the queries used in the all-tags section configurable
+  * emacs: Choose from address when composing/replying
+  * emacs: add notmuch-before- and notmuch-after-tag-hook
+  * notmuch reply: Avoid segmentation fault when printing multiple parts
+  * notmuch show: New part output handling.
+  * emacs: Show cleaner `From:' addresses in the summary line.
+  * emacs: Add custom `notmuch-show-elide-same-subject', 
+    `notmuch-show-always-show-subject' 
+  * emacs: Render text/x-vcalendar parts.
+  * emacs: Add `notmuch-show-multipart/alternative-discouraged'.
+  * vim: parse 'from' address, use sendmail directly, implement archive in
+    show view, refactor tagging stuff
+  * Eager metadata optimizations
+  * emacs: Fix notmuch-search-process-filter to handle incomplete lines
+  * Fix installation of zsh completion
+  * new: Enhance progress reporting
+  * Do not defer maildir flag synchronization for new messages
+  * vim: Get user email address from notmuch config file.
+  * lib: Save and restore term position in message while indexing.
+  * notmuch search: Clean up some memory leaks during search loop.
+  * New bindings for Go
+  * ruby: Add wrapper for message_get_filenames,  maildir sync. interface
+    query_get_s{ort,tring}
+  * Add support for folder-based searching.
+  * compatibility fixes for emacs22
+
+ -- David Bremner <bremner@debian.org>  Sat, 28 May 2011 07:25:49 -0300
+
 notmuch (0.5+nmu3) unstable; urgency=low
 
   * Non-maintainer upload.
