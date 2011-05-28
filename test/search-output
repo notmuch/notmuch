@@ -304,7 +304,7 @@ cat <<EOF >EXPECTED
 EOF
 test_expect_equal_file OUTPUT EXPECTED
 
-test_begin_subtest "santize output for quoted-printable line-breaks in author and subject"
+test_begin_subtest "sanitize output for quoted-printable line-breaks in author and subject"
 add_message "[subject]='two =?ISO-8859-1?Q?line=0A_subject?=
 	headers'"
 notmuch search id:"$gen_msg_id" | notmuch_search_sanitize >OUTPUT
