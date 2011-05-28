@@ -116,6 +116,9 @@ sanitize_string (const void *ctx, const char *str)
 {
     char *out, *loop;
 
+    if (NULL == str)
+	return NULL;
+
     loop = out = talloc_strdup (ctx, str);
 
     for (; *loop; loop++) {
