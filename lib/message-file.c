@@ -341,12 +341,17 @@ notmuch_message_file_get_header (notmuch_message_file_t *message,
 		strncpy(combined_header,header_sofar,hdrsofar);
 		*(combined_header+hdrsofar) = ' ';
 		strncpy(combined_header+hdrsofar+1,decoded_value,newhdr+1);
+		free (decoded_value);
 		g_hash_table_insert (message->headers, header, combined_header);
 	    }
 	} else {
 	    if (header_sofar == NULL) {
 		/* Only insert if we don't have a value for this header, yet. */
 		g_hash_table_insert (message->headers, header, decoded_value);
+	    } else {
+		free (header);
+		free (decoded_value);
+		decoded_value = header_sofar;
 	    }
 	}
 	/* if we found a match we can bail - unless of course we are
