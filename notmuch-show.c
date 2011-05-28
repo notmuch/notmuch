@@ -454,18 +454,20 @@ format_part_start_text (GMimeObject *part, int *part_count)
 static void
 format_part_content_text (GMimeObject *part)
 {
-    GMimeContentDisposition *disposition = g_mime_object_get_content_disposition (part);
+    const char *cid = g_mime_object_get_content_id (part);
     GMimeContentType *content_type = g_mime_object_get_content_type (GMIME_OBJECT (part));
 
-    printf (", Content-type: %s\n", g_mime_content_type_to_string (content_type));
-
-    if (disposition &&
-	strcmp (disposition->disposition, GMIME_DISPOSITION_ATTACHMENT) == 0)
+    if (GMIME_IS_PART (part))
     {
 	const char *filename = g_mime_part_get_filename (GMIME_PART (part));
-	printf ("Attachment: %s (%s)\n", filename,
-		g_mime_content_type_to_string (content_type));
+	if (filename)
+	    printf (", Filename: %s", filename);
     }
+
+    if (cid)
+	printf (", Content-id: %s", cid);
+
+    printf (", Content-type: %s\n", g_mime_content_type_to_string (content_type));
 
     if (g_mime_content_type_is_type (content_type, "text", "*") &&
 	!g_mime_content_type_is_type (content_type, "text", "html"))
@@ -591,7 +593,6 @@ format_part_content_json (GMimeObject *part)
     GMimeStream *stream_memory = g_mime_stream_mem_new ();
     const char *cid = g_mime_object_get_content_id (part);
     void *ctx = talloc_new (NULL);
-    GMimeContentDisposition *disposition = g_mime_object_get_content_disposition (part);
     GByteArray *part_content;
 
     printf (", \"content-type\": %s",
@@ -600,12 +601,11 @@ format_part_content_json (GMimeObject *part)
     if (cid != NULL)
 	    printf(", \"content-id\": %s", json_quote_str (ctx, cid));
 
-    if (disposition &&
-	strcmp (disposition->disposition, GMIME_DISPOSITION_ATTACHMENT) == 0)
+    if (GMIME_IS_PART (part))
     {
 	const char *filename = g_mime_part_get_filename (GMIME_PART (part));
-
-	printf (", \"filename\": %s", json_quote_str (ctx, filename));
+	if (filename)
+	    printf (", \"filename\": %s", json_quote_str (ctx, filename));
     }
 
     if (g_mime_content_type_is_type (content_type, "text", "*") &&
