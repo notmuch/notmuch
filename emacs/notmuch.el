@@ -221,7 +221,6 @@ For a mouse binding, return nil."
     (define-key map "-" 'notmuch-search-remove-tag)
     (define-key map "+" 'notmuch-search-add-tag)
     (define-key map (kbd "RET") 'notmuch-search-show-thread)
-    (define-key map (kbd "M-RET") 'notmuch-search-show-thread-crypto-switch)
     map)
   "Keymap for \"notmuch search\" buffers.")
 (fset 'notmuch-search-mode-map notmuch-search-mode-map)
@@ -421,13 +420,9 @@ Complete list of currently available key bindings:
   "Return a list of authors for the current region"
   (notmuch-search-properties-in-region 'notmuch-search-subject beg end))
 
-(defun notmuch-search-show-thread-crypto-switch ()
-  (interactive)
-  (notmuch-search-show-thread t))
-
 (defun notmuch-search-show-thread (&optional crypto-switch)
   "Display the currently selected thread."
-  (interactive)
+  (interactive "P")
   (let ((thread-id (notmuch-search-find-thread-id))
 	(subject (notmuch-search-find-subject)))
     (if (> (length thread-id) 0)
