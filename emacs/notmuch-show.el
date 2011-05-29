@@ -780,8 +780,14 @@ current buffer, if possible."
   "Insert the forest of threads FOREST."
   (mapc '(lambda (thread) (notmuch-show-insert-thread thread 0)) forest))
 
+(defvar notmuch-show-thread-id nil)
+(make-variable-buffer-local 'notmuch-show-thread-id)
 (defvar notmuch-show-parent-buffer nil)
 (make-variable-buffer-local 'notmuch-show-parent-buffer)
+(defvar notmuch-show-query-context nil)
+(make-variable-buffer-local 'notmuch-show-query-context)
+(defvar notmuch-show-buffer-name nil)
+(make-variable-buffer-local 'notmuch-show-buffer-name)
 
 ;;;###autoload
 (defun notmuch-show (thread-id &optional parent-buffer query-context buffer-name crypto-switch)
@@ -801,17 +807,23 @@ which the message thread is shown. If it is nil (which occurs
 when the command is called interactively) the argument to the
 function is used. "
   (interactive "sNotmuch show: ")
-  (let ((buffer (get-buffer-create (generate-new-buffer-name
-				    (or buffer-name
-					(concat "*notmuch-" thread-id "*")))))
-	(process-crypto (if crypto-switch
-			    (not notmuch-crypto-process-mime)
-			  notmuch-crypto-process-mime))
-	(inhibit-read-only t))
+  (let* ((buffer-name (generate-new-buffer-name
+		       (or buffer-name
+			   (concat "*notmuch-" thread-id "*"))))
+	 (buffer (get-buffer-create buffer-name))
+	 (process-crypto (if crypto-switch
+			     (not notmuch-crypto-process-mime)
+			   notmuch-crypto-process-mime))
+	 (inhibit-read-only t))
     (switch-to-buffer buffer)
     (notmuch-show-mode)
+
+    (setq notmuch-show-thread-id thread-id)
     (setq notmuch-show-parent-buffer parent-buffer)
+    (setq notmuch-show-query-context query-context)
+    (setq notmuch-show-buffer-name buffer-name)
     (setq notmuch-show-process-crypto process-crypto)
+
     (erase-buffer)
     (goto-char (point-min))
     (save-excursion
@@ -844,6 +856,21 @@ function is used. "
 
     (notmuch-show-mark-read)))
 
+(defun notmuch-show-refresh-view (&optional crypto-switch)
+  "Refresh the current view (with crypto switch if prefix given).
+
+Kills the current buffer and reruns notmuch show with the same
+thread id.  If a prefix is given, the current thread is
+redisplayed with the crypto switch activated, which switch the
+logic of the notmuch-crypto-process-mime customization variable."
+  (interactive "P")
+  (let ((thread-id notmuch-show-thread-id)
+	(parent-buffer notmuch-show-parent-buffer)
+	(query-context notmuch-show-query-context)
+	(buffer-name notmuch-show-buffer-name))
+    (notmuch-kill-this-buffer)
+    (notmuch-show thread-id parent-buffer query-context buffer-name crypto-switch)))
+
 (defvar notmuch-show-stash-map
   (let ((map (make-sparse-keymap)))
     (define-key map "c" 'notmuch-show-stash-cc)
@@ -875,6 +902,7 @@ function is used. "
 	(define-key map "V" 'notmuch-show-view-raw-message)
 	(define-key map "v" 'notmuch-show-view-all-mime-parts)
 	(define-key map "c" 'notmuch-show-stash-map)
+	(define-key map "=" 'notmuch-show-refresh-view)
 	(define-key map "h" 'notmuch-show-toggle-headers)
 	(define-key map "-" 'notmuch-show-remove-tag)
 	(define-key map "+" 'notmuch-show-add-tag)
