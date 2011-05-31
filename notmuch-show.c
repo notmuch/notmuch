@@ -393,10 +393,6 @@ show_text_part_content (GMimeObject *part, GMimeStream *stream_out)
 	INTERNAL_ERROR ("Illegal request to format non-text part (%s) as text.",
 			g_mime_content_type_to_string (content_type));
 
-    /* do nothing if this is a multipart */
-    if (GMIME_IS_MULTIPART (part) || GMIME_IS_MESSAGE_PART (part))
-	return;
-
     charset = g_mime_object_get_content_type_parameter (part, "charset");
 
     if (stream_out) {
