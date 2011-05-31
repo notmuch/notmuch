@@ -31,8 +31,9 @@ on the success or failure of the verification process and on the
 validity of user ID of the signer.
 
 The effect of setting this variable can be seen temporarily by
-viewing a signed or encrypted message with M-RET in notmuch
-search."
+providing a prefix when viewing a signed or encrypted message, or
+by providing a prefix when reloading the message in notmuch-show
+mode."
   :group 'notmuch
   :type 'boolean)
 
