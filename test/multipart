@@ -29,7 +29,7 @@ Message-ID: <87liy5ap01.fsf@yoom.home.cworth.org>
 MIME-Version: 1.0
 Content-Type: text/html
 
-<p>This is an imbeded message, with a single html part.</p>
+<p>This is an embedded message, with a single html part.</p>
 
 --=-=-=
 Content-Disposition: attachment; filename=attachment
@@ -238,7 +238,7 @@ test_expect_equal "$output" "$(cat "${MAIL_DIR}"/multipart)"
 test_begin_subtest "--format=raw --part=1, message body"
 output=$(notmuch show --format=raw --part=1 'id:87liy5ap00.fsf@yoom.home.cworth.org')
 test_expect_equal "$output" \
-'<p>This is an imbeded message, with a single html part.</p>
+'<p>This is an embedded message, with a single html part.</p>
 This is a text attachment.
 And this message is signed.
 
@@ -254,7 +254,7 @@ W6cAmQE4dcYrx/LPLtYLZm1jsGauE5hE
 test_begin_subtest "--format=raw --part=2, multipart/mixed"
 output=$(notmuch show --format=raw --part=2 'id:87liy5ap00.fsf@yoom.home.cworth.org')
 test_expect_equal "$output" \
-'<p>This is an imbeded message, with a single html part.</p>
+'<p>This is an embedded message, with a single html part.</p>
 This is a text attachment.
 And this message is signed.
 
@@ -263,12 +263,12 @@ And this message is signed.
 test_begin_subtest "--format=raw --part=3, rfc822 multipart"
 output=$(notmuch show --format=raw --part=3 'id:87liy5ap00.fsf@yoom.home.cworth.org')
 test_expect_equal "$output" \
-'<p>This is an imbeded message, with a single html part.</p>'
+'<p>This is an embedded message, with a single html part.</p>'
 
 test_begin_subtest "--format=raw --part=4, html part"
 output=$(notmuch show --format=raw --part=4 'id:87liy5ap00.fsf@yoom.home.cworth.org')
 test_expect_equal "$output" \
-'<p>This is an imbeded message, with a single html part.</p>'
+'<p>This is an embedded message, with a single html part.</p>'
 
 test_begin_subtest "--format=raw --part=5, inline attachment"
 output=$(notmuch show --format=raw --part=5 'id:87liy5ap00.fsf@yoom.home.cworth.org')
