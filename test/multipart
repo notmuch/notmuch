@@ -56,6 +56,39 @@ W6cAmQE4dcYrx/LPLtYLZm1jsGauE5hE
 -----END PGP SIGNATURE-----
 --==-=-=--
 EOF
+
+cat <<EOF > ${MAIL_DIR}/base64-part-with-crlf
+From: Carl Worth <cworth@cworth.org>
+To: cworth@cworth.org
+Subject: Test message with a BASE64 encoded binary containing CRLF pair
+Date: Tue, 05 Jan 2001 15:43:57 -0000
+User-Agent: Notmuch/0.5 (http://notmuchmail.org) Emacs/23.3.1 (i486-pc-linux-gnu)
+Message-ID: <base64-part-with-crlf>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="==-=-=";
+
+--==-=-=
+
+The attached BASE64-encoded part expands to a binary containing a CRLF
+pair (that is one bye of 0x0D followed by one byte of 0x0A). This is
+designed to ensure that notmuch is not corrupting the output of this
+part by converting the CRLF pair to an LF only (as would be appropriate
+for display of a text part on a Linux system, for example).
+
+The part should be a 3-byte file with the following sequence of 3
+hexadecimal bytes:
+
+	EF 0D 0A
+
+--==-=-=
+Content-Type: application/octet-stream
+Content-Disposition: attachment; filename=crlf.bin
+Content-Transfer-Encoding: base64
+
+7w0K
+--==-=-=--
+EOF
+increment_mtime "$MAIL_DIR"
 notmuch new > /dev/null
 
 test_begin_subtest "--format=text --part=0, full message"
@@ -324,5 +357,9 @@ Non-text part: text/html
 > -Carl
 Non-text part: application/pgp-signature"
 
+test_begin_subtest "'notmuch show --part' does not corrupt a part with CRLF pair"
+notmuch show --format=raw --part=3 id:base64-part-with-crlf > crlf.out
+echo -n -e "\xEF\x0D\x0A" > crlf.expected
+test_expect_equal_file crlf.out crlf.expected
 
 test_done
