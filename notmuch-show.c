@@ -420,7 +420,7 @@ show_text_part_content (GMimeObject *part, GMimeStream *stream_out)
 }
 
 static const char*
-signerstatustostring (GMimeSignerStatus x)
+signer_status_to_string (GMimeSignerStatus x)
 {
     switch (x) {
     case GMIME_SIGNER_STATUS_NONE:
@@ -546,7 +546,9 @@ format_part_sigstatus_json (const GMimeSignatureValidity* validity)
 	printf ("{");
 
 	/* status */
-	printf ("\"status\": %s", json_quote_str (ctx_quote, signerstatustostring(signer->status)));
+	printf ("\"status\": %s",
+		json_quote_str (ctx_quote,
+				signer_status_to_string (signer->status)));
 
 	if (signer->status == GMIME_SIGNER_STATUS_GOOD)
 	{
