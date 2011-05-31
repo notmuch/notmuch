@@ -70,20 +70,26 @@ search."
   (let* ((status (plist-get sigstatus :status))
 	 (help-msg nil)
 	 (label "Signature not processed")
-	 (face 'notmuch-crypto-signature-unknown))
+	 (face 'notmuch-crypto-signature-unknown)
+	 (button-action '(lambda (button) (message (button-get button 'help-echo)))))
     (cond
      ((string= status "good")
-      ; if userid present, userid has full or greater validity
-      (if (plist-member sigstatus :userid)
-	  (let ((userid (plist-get sigstatus :userid)))
-	    (setq label (concat "Good signature by: " userid))
-	    (setq face 'notmuch-crypto-signature-good))
-	(let ((fingerprint (concat "0x" (plist-get sigstatus :fingerprint))))
-	  (setq label (concat "Good signature by key: " fingerprint))
-	  (setq face 'notmuch-crypto-signature-good-key))))
+      (let ((fingerprint (concat "0x" (plist-get sigstatus :fingerprint))))
+	;; if userid present, userid has full or greater validity
+	(if (plist-member sigstatus :userid)
+	    (let ((userid (plist-get sigstatus :userid)))
+	      (setq label (concat "Good signature by: " userid))
+	      (setq face 'notmuch-crypto-signature-good))
+	  (progn
+	    (setq label (concat "Good signature by key: " fingerprint))
+	    (setq face 'notmuch-crypto-signature-good-key)))
+	(setq button-action 'notmuch-crypto-sigstatus-good-callback)
+	(setq help-msg (concat "Click to list key ID 0x" fingerprint "."))))
      ((string= status "error")
       (let ((keyid (concat "0x" (plist-get sigstatus :keyid))))
-	(setq label (concat "Unknown key ID " keyid " or unsupported algorithm"))))
+	(setq label (concat "Unknown key ID " keyid " or unsupported algorithm"))
+	(setq button-action 'notmuch-crypto-sigstatus-error-callback)
+	(setq help-msg (concat "Click to retreive key ID " keyid " from keyserver and redisplay."))))
      ((string= status "bad")
       (let ((keyid (concat "0x" (plist-get sigstatus :keyid))))
 	(setq label (concat "Bad signature (claimed key ID " keyid ")"))
@@ -97,9 +103,35 @@ search."
      'help-echo help-msg
      'face face
      'mouse-face face
+     'action button-action
      :notmuch-sigstatus sigstatus
      :notmuch-from from)
     (insert "\n")))
+
+(declare-function notmuch-show-refresh-view "notmuch-show" (&optional crypto-switch))
+
+(defun notmuch-crypto-sigstatus-good-callback (button)
+  (let* ((sigstatus (button-get button :notmuch-sigstatus))
+	 (fingerprint (concat "0x" (plist-get sigstatus :fingerprint)))
+	 (buffer (get-buffer-create "*notmuch-crypto-gpg-out*"))
+	 (window (display-buffer buffer t nil)))
+    (with-selected-window window
+      (with-current-buffer buffer
+	(call-process "gpg" nil t t "--list-keys" fingerprint))
+      (recenter -1))))
+
+(defun notmuch-crypto-sigstatus-error-callback (button)
+  (let* ((sigstatus (button-get button :notmuch-sigstatus))
+	 (keyid (concat "0x" (plist-get sigstatus :keyid)))
+	 (buffer (get-buffer-create "*notmuch-crypto-gpg-out*"))
+	 (window (display-buffer buffer t nil)))
+    (with-selected-window window
+      (with-current-buffer buffer
+	(call-process "gpg" nil t t "--recv-keys" keyid)
+	(insert "\n")
+	(call-process "gpg" nil t t "--list-keys" keyid))
+      (recenter -1))
+    (notmuch-show-refresh-view)))
 
 (defun notmuch-crypto-insert-encstatus-button (encstatus)
   (let* ((status (plist-get encstatus :status))
