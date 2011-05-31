@@ -374,12 +374,24 @@ format_headers_json (const void *ctx, notmuch_message_t *message)
     talloc_free (ctx_quote);
 }
 
+/* Write a MIME text part out to the given stream.
+ *
+ * Both line-ending conversion (CRLF->LF) and charset conversion ( ->
+ * UTF-8) will be performed, so it is inappropriate to call this
+ * function with a non-text part. Doing so will trigger an internal
+ * error.
+ */
 static void
-show_part_content (GMimeObject *part, GMimeStream *stream_out)
+show_text_part_content (GMimeObject *part, GMimeStream *stream_out)
 {
+    GMimeContentType *content_type = g_mime_object_get_content_type (GMIME_OBJECT (part));
     GMimeStream *stream_filter = NULL;
     GMimeDataWrapper *wrapper;
     const char *charset;
+
+    if (! g_mime_content_type_is_type (content_type, "text", "*"))
+	INTERNAL_ERROR ("Illegal request to format non-text part (%s) as text.",
+			g_mime_content_type_to_string (content_type));
 
     /* do nothing if this is a multipart */
     if (GMIME_IS_MULTIPART (part) || GMIME_IS_MESSAGE_PART (part))
@@ -463,7 +475,7 @@ format_part_content_text (GMimeObject *part)
 	!g_mime_content_type_is_type (content_type, "text", "html"))
     {
 	g_mime_stream_file_set_owner (GMIME_STREAM_FILE (stream_stdout), FALSE);
-	show_part_content (part, stream_stdout);
+	show_text_part_content (part, stream_stdout);
 	g_object_unref(stream_stdout);
     }
     else if (g_mime_content_type_is_type (content_type, "multipart", "*") ||
@@ -600,7 +612,7 @@ format_part_content_json (GMimeObject *part)
     if (g_mime_content_type_is_type (content_type, "text", "*") &&
 	!g_mime_content_type_is_type (content_type, "text", "html"))
     {
-	show_part_content (part, stream_memory);
+	show_text_part_content (part, stream_memory);
 	part_content = g_mime_stream_mem_get_byte_array (GMIME_STREAM_MEM (stream_memory));
 
 	printf (", \"content\": %s", json_quote_chararray (ctx, (char *) part_content->data, part_content->len));
@@ -633,10 +645,25 @@ format_part_end_json (GMimeObject *part)
 static void
 format_part_content_raw (GMimeObject *part)
 {
-    GMimeStream *stream_stdout = g_mime_stream_file_new (stdout);
+    GMimeStream *stream_stdout;
+    GMimeStream *stream_filter = NULL;
+    GMimeDataWrapper *wrapper;
+
+    stream_stdout = g_mime_stream_file_new (stdout);
     g_mime_stream_file_set_owner (GMIME_STREAM_FILE (stream_stdout), FALSE);
-    show_part_content (part, stream_stdout);
-    g_object_unref(stream_stdout);
+
+    stream_filter = g_mime_stream_filter_new (stream_stdout);
+
+    wrapper = g_mime_part_get_content_object (GMIME_PART (part));
+
+    if (wrapper && stream_filter)
+	g_mime_data_wrapper_write_to_stream (wrapper, stream_filter);
+
+    if (stream_filter)
+	g_object_unref (stream_filter);
+
+    if (stream_stdout)
+	g_object_unref(stream_stdout);
 }
 
 static void
