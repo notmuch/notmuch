@@ -1,3 +1,11 @@
+notmuch (0.6~180) experimental; urgency=low
+
+  * Git snapshot g1a96c40
+  * Fix corruption of binary parts
+    (see ML id:"874o4a1m74.fsf@yoom.home.cworth.org")
+
+ -- David Bremner <bremner@debian.org>  Tue, 31 May 2011 21:16:35 -0300
+
 notmuch (0.6~171) experimental; urgency=low
 
   * Git snapshot cb8418784c2
