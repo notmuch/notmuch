@@ -2,7 +2,7 @@ libnotmuch.so.1 libnotmuch1 #MINVER#
  _Z32_notmuch_message_ensure_metadataP16_notmuch_message@Base 0.6~171
  _ZN6Xapian20InvalidArgumentErrorC1ERKS0_@Base 0.6~171
  _ZN6Xapian20InvalidArgumentErrorC2ERKS0_@Base 0.6~171
- _ZN6Xapian20InvalidArgumentErrorD1Ev@Base 0.6~171
+#MISSING: 0.6~180# _ZN6Xapian20InvalidArgumentErrorD1Ev@Base 0.6~171
  _ZTIN6Xapian10LogicErrorE@Base 0.3
  _ZTIN6Xapian12RuntimeErrorE@Base 0.3
  _ZTIN6Xapian16DocNotFoundErrorE@Base 0.3
