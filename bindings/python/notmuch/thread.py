@@ -141,7 +141,19 @@ class Threads(object):
         self._threads = None
         return i
 
+    def __nonzero__(self):
+        """Check if :class:`Threads` contains at least one more valid thread
+        
+        The existence of this function makes 'if Threads: foo' work, as
+        that will implicitely call len() exhausting the iterator if
+        __nonzero__ does not exist. This function makes `bool(Threads())`
+        work repeatedly.
 
+        :return: True if there is at least one more thread in the
+           Iterator, False if not. None on a "Out-of-memory" error.
+        """
+        return self._threads is not None and \
+            nmlib.notmuch_threads_valid(self._threads) > 0
 
     def __del__(self):
         """Close and free the notmuch Threads"""
