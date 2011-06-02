@@ -23,6 +23,7 @@ from ctypes import c_char_p, c_void_p, c_long, c_uint
 from datetime import date
 from notmuch.globals import nmlib, STATUS, NotmuchError, Enum
 from notmuch.tag import Tags
+from notmuch.filename import Filenames
 import sys
 import email
 import types
@@ -244,6 +245,10 @@ class Message(object):
     _get_filename = nmlib.notmuch_message_get_filename
     _get_filename.restype = c_char_p 
 
+    """return all filenames for a message"""
+    _get_filenames = nmlib.notmuch_message_get_filenames
+    _get_filenames.restype = c_void_p
+
     """notmuch_message_get_flag"""
     _get_flag = nmlib.notmuch_message_get_flag
     _get_flag.restype = c_uint
@@ -399,6 +404,19 @@ class Message(object):
         if self._msg is None:
             raise NotmuchError(STATUS.NOT_INITIALIZED)
         return Message._get_filename(self._msg)
+
+    def get_filenames(self):
+        """Get all filenames for the email corresponding to 'message'
+
+        Returns a Filenames() generator with all absolute filepaths for
+        messages recorded to have the same Message-ID. These files must
+        not necessarily have identical content."""
+        if self._msg is None:
+            raise NotmuchError(STATUS.NOT_INITIALIZED)
+        
+        files_p = Message._get_filenames(self._msg)
+
+        return Filenames(files_p, self).as_generator()
 
     def get_flag(self, flag):
         """Checks whether a specific flag is set for this message
