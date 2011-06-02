@@ -142,6 +142,8 @@ More information on specific topics can be found on the following pages:
 
    .. automethod:: get_filename
 
+   .. automethod:: get_filenames
+
    .. attribute:: FLAG
 
         FLAG.MATCH 
