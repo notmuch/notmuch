@@ -81,14 +81,25 @@ class Tags(object):
     def next(self):
         if self._tags is None:
             raise NotmuchError(STATUS.NOT_INITIALIZED)
-
-        if not nmlib.notmuch_tags_valid(self._tags):
+        # No need to call nmlib.notmuch_tags_valid(self._tags);
+        # Tags._get safely returns None, if there is no more valid tag.
+        tag = Tags._get (self._tags)
+        if tag is None:
             self._tags = None
             raise StopIteration
-
-        tag = Tags._get (self._tags)
         nmlib.notmuch_tags_move_to_next(self._tags)
         return tag
+
+    def __nonzero__(self):
+        """Implement bool(Tags) check that can be repeatedly used
+
+        If __nonzero__ is not implemented, "if Tags()"
+        will implicitly call __len__, using up our iterator, so it is
+        important that this function is defined.
+
+        :returns: True if the Tags() iterator has at least one more Tag
+            left."""
+        return nmlib.notmuch_tags_valid(self._tags) > 0
 
     def __len__(self):
         """len(:class:`Tags`) returns the number of contained tags
