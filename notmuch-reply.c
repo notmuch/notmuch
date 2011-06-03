@@ -607,7 +607,7 @@ notmuch_reply_command (void *ctx, int argc, char *argv[])
 	    }
 	} else if ((STRNCMP_LITERAL (argv[i], "--decrypt") == 0)) {
 	    if (params.cryptoctx == NULL) {
-		GMimeSession* session = g_object_new(notmuch_gmime_session_get_type(), NULL);
+		GMimeSession* session = g_object_new(g_mime_session_get_type(), NULL);
 		if (NULL == (params.cryptoctx = g_mime_gpg_context_new(session, "gpg")))
 		    fprintf (stderr, "Failed to construct gpg context.\n");
 		else
