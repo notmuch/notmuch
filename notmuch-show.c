@@ -708,6 +708,9 @@ format_part_end_json (GMimeObject *part)
 static void
 format_part_content_raw (GMimeObject *part)
 {
+    if (! GMIME_IS_PART (part))
+	return;
+
     GMimeStream *stream_stdout;
     GMimeStream *stream_filter = NULL;
     GMimeDataWrapper *wrapper;
