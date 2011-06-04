@@ -1,6 +1,18 @@
+notmuch (0.6~215) experimental; urgency=low
+
+  * Git snapshot 5143e5e
+  * GMime: improve password handling, prevent premature closing stdout
+  * Emacs: sender address UI tweaks
+  * lib/message-file: plug three memleaks.
+  * Updated python bindings
+  * Sanitize "Subject:" and "Author:" fields in notmuch-search
+  * vim: new delete command, update mark as read command
+
+ -- David Bremner <bremner@debian.org>  Sat, 04 Jun 2011 08:37:36 -0300
+
 notmuch (0.6~180) experimental; urgency=low
 
-  * Git snapshot g1a96c40
+  * Git snapshot 1a96c40
   * Fix corruption of binary parts
     (see ML id:"874o4a1m74.fsf@yoom.home.cworth.org")
 
