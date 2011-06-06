@@ -25,12 +25,15 @@
 #include "gmime-filter-headers.h"
 
 static void
+reply_headers_message_part (GMimeMessage *message);
+
+static void
 reply_part_content (GMimeObject *part);
 
 static const notmuch_show_format_t format_reply = {
     "",
 	"", NULL,
-	    "", NULL, "",
+	    "", NULL, reply_headers_message_part, ">\n",
 	    "",
 	        NULL,
 	        NULL,
@@ -61,6 +64,28 @@ show_reply_headers (GMimeMessage *message)
 	g_object_unref(stream_stdout);
     }
 }
+
+static void
+reply_headers_message_part (GMimeMessage *message)
+{
+    InternetAddressList *recipients;
+    const char *recipients_string;
+
+    printf ("> From: %s\n", g_mime_message_get_sender (message));
+    recipients = g_mime_message_get_recipients (message, GMIME_RECIPIENT_TYPE_TO);
+    recipients_string = internet_address_list_to_string (recipients, 0);
+    if (recipients_string)
+	printf ("> To: %s\n",
+		recipients_string);
+    recipients = g_mime_message_get_recipients (message, GMIME_RECIPIENT_TYPE_CC);
+    recipients_string = internet_address_list_to_string (recipients, 0);
+    if (recipients_string)
+	printf ("> Cc: %s\n",
+		recipients_string);
+    printf ("> Subject: %s\n", g_mime_message_get_subject (message));
+    printf ("> Date: %s\n", g_mime_message_get_date_as_string (message));
+}
+
 
 static void
 reply_part_content (GMimeObject *part)
@@ -94,6 +119,10 @@ reply_part_content (GMimeObject *part)
 	    g_object_unref(stream_filter);
 	if (stream_stdout)
 	    g_object_unref(stream_stdout);
+    }
+    else if (g_mime_content_type_is_type (content_type, "message", "rfc822"))
+    {
+	/* Output nothing, since rfc822 subparts will be handled individually. */
     }
     else
     {
