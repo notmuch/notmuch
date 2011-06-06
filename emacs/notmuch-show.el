@@ -508,21 +508,26 @@ current buffer, if possible."
   t)
 
 (defun notmuch-show-insert-part-message/rfc822 (msg part content-type nth depth declared-type)
-  (let* ((message-part (plist-get part :content))
-	 (inner-parts (plist-get message-part :content)))
-    (notmuch-show-insert-part-header nth declared-type content-type nil)
+  (notmuch-show-insert-part-header nth declared-type content-type nil)
+  (let* ((message (car (plist-get part :content)))
+	 (headers (plist-get message :headers))
+	 (body (car (plist-get message :body)))
+	 (start (point)))
+
     ;; Override `notmuch-message-headers' to force `From' to be
     ;; displayed.
     (let ((notmuch-message-headers '("From" "Subject" "To" "Cc" "Date")))
-      (notmuch-show-insert-headers (plist-get part :headers)))
+      (notmuch-show-insert-headers (plist-get message :headers)))
+
     ;; Blank line after headers to be compatible with the normal
     ;; message display.
     (insert "\n")
 
-    ;; Show all of the parts.
-    (mapc (lambda (inner-part)
-	    (notmuch-show-insert-bodypart msg inner-part depth))
-	  inner-parts))
+    ;; Show the body
+    (notmuch-show-insert-bodypart msg body depth)
+
+    (when notmuch-show-indent-multipart
+      (indent-rigidly start (point) 1)))
   t)
 
 (defun notmuch-show-insert-part-text/plain (msg part content-type nth depth declared-type)
