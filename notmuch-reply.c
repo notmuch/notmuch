@@ -98,6 +98,11 @@ reply_part_content (GMimeObject *part)
     {
 	/* Output nothing, since multipart subparts will be handled individually. */
     }
+    else if (g_mime_content_type_is_type (content_type, "application", "pgp-encrypted") ||
+	     g_mime_content_type_is_type (content_type, "application", "pgp-signature"))
+    {
+	/* Ignore PGP/MIME cruft parts */
+    }
     else if (g_mime_content_type_is_type (content_type, "text", "*") &&
 	!g_mime_content_type_is_type (content_type, "text", "html"))
     {
