@@ -586,7 +586,6 @@ Non-text part: text/html
 > And this message is signed.
 > 
 > -Carl
-Non-text part: application/pgp-signature
 EOF
 test_expect_equal_file OUTPUT EXPECTED
 

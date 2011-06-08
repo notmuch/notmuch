@@ -309,8 +309,6 @@ expected='From: Notmuch Test Suite <test_suite@notmuchmail.org>
 Subject: Re: test encrypted message 002
 
 On 01 Jan 2000 12:00:00 -0000, Notmuch Test Suite <test_suite@notmuchmail.org> wrote:
-Non-text part: multipart/encrypted
-Non-text part: application/pgp-encrypted
 > This is another test encrypted message.'
 test_expect_equal \
     "$output" \
