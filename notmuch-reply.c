@@ -93,7 +93,12 @@ reply_part_content (GMimeObject *part)
     GMimeContentType *content_type = g_mime_object_get_content_type (GMIME_OBJECT (part));
     GMimeContentDisposition *disposition = g_mime_object_get_content_disposition (part);
 
-    if (g_mime_content_type_is_type (content_type, "text", "*") &&
+    if (g_mime_content_type_is_type (content_type, "multipart", "*") ||
+	g_mime_content_type_is_type (content_type, "message", "rfc822"))
+    {
+	/* Output nothing, since multipart subparts will be handled individually. */
+    }
+    else if (g_mime_content_type_is_type (content_type, "text", "*") &&
 	!g_mime_content_type_is_type (content_type, "text", "html"))
     {
 	GMimeStream *stream_stdout = NULL, *stream_filter = NULL;
@@ -119,10 +124,6 @@ reply_part_content (GMimeObject *part)
 	    g_object_unref(stream_filter);
 	if (stream_stdout)
 	    g_object_unref(stream_stdout);
-    }
-    else if (g_mime_content_type_is_type (content_type, "message", "rfc822"))
-    {
-	/* Output nothing, since rfc822 subparts will be handled individually. */
     }
     else
     {
