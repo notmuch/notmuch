@@ -149,4 +149,51 @@ test_emacs "(notmuch-show \"$maildir_storage_thread\")
 	    (princ (buffer-string))" >OUTPUT
 test_expect_equal_file OUTPUT $EXPECTED/notmuch-show-thread-maildir-storage
 
+test_begin_subtest "Detection and hiding of top-post quoting of message"
+add_message '[subject]="The problem with top-posting"' \
+	    [id]=top-post-target \
+	    '[body]="A: Because it messes up the order in which people normally read text.
+Q: Why is top-posting such a bad thing?
+A: Top-posting.
+Q: What is the most annoying thing in e-mail?"'
+add_message '[from]="Top Poster <top@poster.com>"' \
+	    [in-reply-to]=top-post-target \
+	    [references]=top-post-target \
+	    '[subject]="Re: The problem with top-posting"' \
+	    '[body]="Thanks for the advice! I will be sure to put it to good use.
+
+-Top Poster
+
+----- Original Message -----
+From: Notmuch Test Suite <test_suite@notmuchmail.org>
+To: Notmuch Test Suite <test_suite@notmuchmai.org>
+Sent: Tue, 05 Jan 2001 15:43:57 -0000
+Subject: The problem with top-posting
+
+Q: Why is top-posting such a bad thing?
+A: Top-posting.
+Q: What is the most annoying thing in e-mail?"'
+test_emacs "(notmuch-show \"top-posting\")
+	    (princ (visible-buffer-string))" >OUTPUT
+echo "Notmuch Test Suite <test_suite@notmuchmail.org> (2001-01-05) (inbox)
+Subject: The problem with top-posting
+To: Notmuch Test Suite <test_suite@notmuchmail.org>
+Date: Tue, 05 Jan 2001 15:43:57 -0000
+
+A: Because it messes up the order in which people normally read text.
+Q: Why is top-posting such a bad thing?
+A: Top-posting.
+Q: What is the most annoying thing in e-mail?
+Top Poster <top@poster.com> (2001-01-05) (inbox unread)
+Subject: Re: The problem with top-posting
+To: Notmuch Test Suite <test_suite@notmuchmail.org>
+Date: Tue, 05 Jan 2001 15:43:57 -0000
+
+Thanks for the advice! I will be sure to put it to good use.
+
+-Top Poster
+
+[ 9-line hidden original message. Click/Enter to show. ]" > EXPECTED
+test_expect_equal_file OUTPUT EXPECTED
+
 test_done
