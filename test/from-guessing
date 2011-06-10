@@ -95,6 +95,27 @@ References: <${gen_msg_id}>
 On Tue, 05 Jan 2010 15:43:56 -0000, Sender <sender@example.com> wrote:
 > from guessing test"
 
+test_begin_subtest "Magic from guessing (multiple Received: headers)"
+add_message '[from]="Sender <sender@example.com>"' \
+             [to]=mailinglist@notmuchmail.org \
+             [subject]=notmuch-reply-test \
+            "[header]=\"Received: from extraneous.example.com (extraneous.example.com [1.1.1.1])
+Received: from mail.example.com (mail.example.com [1.1.1.1])
+        by mail.otherdomain.org (some MTA) with ESMTP id 12345678
+        for <test_suite_other@notmuchmail.org>; Sat, 10 Apr 2010 07:54:51 -0400 (EDT)
+Received: from extraneous.example.com (extraneous.example.com [1.1.1.1])\"" \
+            '[date]="Tue, 05 Jan 2010 15:43:56 -0000"' \
+            '[body]="from guessing test"'
+
+output="$(notmuch reply id:${gen_msg_id})"
+test_expect_equal "$output" "From: Notmuch Test Suite <test_suite_other@notmuchmail.org>
+Subject: Re: notmuch-reply-test
+To: Sender <sender@example.com>, mailinglist@notmuchmail.org
+In-Reply-To: <${gen_msg_id}>
+References: <${gen_msg_id}>
+
+On Tue, 05 Jan 2010 15:43:56 -0000, Sender <sender@example.com> wrote:
+> from guessing test"
 
 test_begin_subtest "Testing From line heuristics (with single configured address)"
 sed -i -e "s/^other_email.*//" "${NOTMUCH_CONFIG}"
