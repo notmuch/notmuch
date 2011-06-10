@@ -531,6 +531,8 @@ _notmuch_message_remove_filename (notmuch_message_t *message,
 						   "file-direntry", direntry);
     status = COERCE_STATUS (private_status,
 			    "Unexpected error from _notmuch_message_remove_term");
+    if (status)
+	return status;
 
     /* Re-synchronize "folder:" terms for this message. This requires:
      *  1. removing all "folder:" terms
