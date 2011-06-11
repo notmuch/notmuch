@@ -81,6 +81,9 @@ typedef int notmuch_bool_t;
  * NOTMUCH_STATUS_UNBALANCED_FREEZE_THAW: The notmuch_message_thaw
  *	function has been called more times than notmuch_message_freeze.
  *
+ * NOTMUCH_STATUS_UNBALANCED_ATOMIC: notmuch_database_end_atomic has
+ *	been called more times than notmuch_database_begin_atomic.
+ *
  * And finally:
  *
  * NOTMUCH_STATUS_LAST_STATUS: Not an actual status value. Just a way
@@ -97,6 +100,7 @@ typedef enum _notmuch_status {
     NOTMUCH_STATUS_NULL_POINTER,
     NOTMUCH_STATUS_TAG_TOO_LONG,
     NOTMUCH_STATUS_UNBALANCED_FREEZE_THAW,
+    NOTMUCH_STATUS_UNBALANCED_ATOMIC,
 
     NOTMUCH_STATUS_LAST_STATUS
 } notmuch_status_t;
@@ -222,6 +226,9 @@ notmuch_database_upgrade (notmuch_database_t *database,
  * only ensures atomicity, not durability; neither begin nor end
  * necessarily flush modifications to disk.
  *
+ * Atomic sections may be nested.  begin_atomic and end_atomic must
+ * always be called in pairs.
+ *
  * Return value:
  *
  * NOTMUCH_STATUS_SUCCESS: Successfully entered atomic section.
@@ -240,6 +247,9 @@ notmuch_database_begin_atomic (notmuch_database_t *notmuch);
  *
  * NOTMUCH_STATUS_XAPIAN_EXCEPTION: A Xapian exception occurred;
  *	atomic section not ended.
+ *
+ * NOTMUCH_STATUS_UNBALANCED_ATOMIC: The database is not currently in
+ *	an atomic section.
  */
 notmuch_status_t
 notmuch_database_end_atomic (notmuch_database_t *notmuch);

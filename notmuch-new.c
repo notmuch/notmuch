@@ -488,6 +488,7 @@ add_files_recursive (notmuch_database_t *notmuch,
 	case NOTMUCH_STATUS_NULL_POINTER:
 	case NOTMUCH_STATUS_TAG_TOO_LONG:
 	case NOTMUCH_STATUS_UNBALANCED_FREEZE_THAW:
+	case NOTMUCH_STATUS_UNBALANCED_ATOMIC:
 	case NOTMUCH_STATUS_LAST_STATUS:
 	    INTERNAL_ERROR ("add_message returned unexpected value: %d",  status);
 	    goto DONE;

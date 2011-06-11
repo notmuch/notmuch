@@ -273,6 +273,8 @@ notmuch_status_to_string (notmuch_status_t status)
 	return "Tag value is too long (exceeds NOTMUCH_TAG_MAX)";
     case NOTMUCH_STATUS_UNBALANCED_FREEZE_THAW:
 	return "Unbalanced number of calls to notmuch_message_freeze/thaw";
+    case NOTMUCH_STATUS_UNBALANCED_ATOMIC:
+	return "Unbalanced number of calls to notmuch_database_begin_atomic/end_atomic";
     default:
     case NOTMUCH_STATUS_LAST_STATUS:
 	return "Unknown error status value";
@@ -611,6 +613,7 @@ notmuch_database_open (const char *path,
 
     notmuch->needs_upgrade = FALSE;
     notmuch->mode = mode;
+    notmuch->atomic_nesting = 0;
     try {
 	string last_thread_id;
 
@@ -977,8 +980,9 @@ notmuch_database_upgrade (notmuch_database_t *notmuch,
 notmuch_status_t
 notmuch_database_begin_atomic (notmuch_database_t *notmuch)
 {
-    if (notmuch->mode == NOTMUCH_DATABASE_MODE_READ_ONLY)
-	return NOTMUCH_STATUS_SUCCESS;
+    if (notmuch->mode == NOTMUCH_DATABASE_MODE_READ_ONLY ||
+	notmuch->atomic_nesting > 0)
+	goto DONE;
 
     try {
 	(static_cast <Xapian::WritableDatabase *> (notmuch->xapian_db))->begin_transaction (false);
@@ -988,6 +992,9 @@ notmuch_database_begin_atomic (notmuch_database_t *notmuch)
 	notmuch->exception_reported = TRUE;
 	return NOTMUCH_STATUS_XAPIAN_EXCEPTION;
     }
+
+DONE:
+    notmuch->atomic_nesting++;
     return NOTMUCH_STATUS_SUCCESS;
 }
 
@@ -996,8 +1003,12 @@ notmuch_database_end_atomic (notmuch_database_t *notmuch)
 {
     Xapian::WritableDatabase *db;
 
-    if (notmuch->mode == NOTMUCH_DATABASE_MODE_READ_ONLY)
-	return NOTMUCH_STATUS_SUCCESS;
+    if (notmuch->atomic_nesting == 0)
+	return NOTMUCH_STATUS_UNBALANCED_ATOMIC;
+
+    if (notmuch->mode == NOTMUCH_DATABASE_MODE_READ_ONLY ||
+	notmuch->atomic_nesting > 1)
+	goto DONE;
 
     db = static_cast <Xapian::WritableDatabase *> (notmuch->xapian_db);
     try {
@@ -1015,6 +1026,9 @@ notmuch_database_end_atomic (notmuch_database_t *notmuch)
 	notmuch->exception_reported = TRUE;
 	return NOTMUCH_STATUS_XAPIAN_EXCEPTION;
     }
+
+DONE:
+    notmuch->atomic_nesting--;
     return NOTMUCH_STATUS_SUCCESS;
 }
 

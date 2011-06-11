@@ -43,6 +43,7 @@ struct _notmuch_database {
 
     notmuch_bool_t needs_upgrade;
     notmuch_database_mode_t mode;
+    int atomic_nesting;
     Xapian::Database *xapian_db;
 
     unsigned int last_doc_id;
