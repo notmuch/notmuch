@@ -1747,57 +1747,60 @@ notmuch_status_t
 notmuch_database_remove_message (notmuch_database_t *notmuch,
 				 const char *filename)
 {
-    void *local;
-    const char *prefix = _find_prefix ("file-direntry");
-    char *direntry, *term;
-    Xapian::PostingIterator i, end;
-    Xapian::Document document;
-    notmuch_status_t status;
+    notmuch_message_t *message =
+	notmuch_database_find_message_by_filename (notmuch, filename);
+    notmuch_status_t status = NOTMUCH_STATUS_SUCCESS;
 
-    status = _notmuch_database_ensure_writable (notmuch);
-    if (status)
-	return status;
-
-    local = talloc_new (notmuch);
-
-    try {
-
-	status = _notmuch_database_filename_to_direntry (local, notmuch,
-							 filename, &direntry);
-	if (status)
-	    return status;
-
-	term = talloc_asprintf (local, "%s%s", prefix, direntry);
-
-	find_doc_ids_for_term (notmuch, term, &i, &end);
-
-	for ( ; i != end; i++) {
-	    Xapian::TermIterator j;
-	    notmuch_message_t *message;
-	    notmuch_private_status_t private_status;
-
-	    message = _notmuch_message_create (local, notmuch,
-					       *i, &private_status);
-	    if (message == NULL)
-		return COERCE_STATUS (private_status,
-				      "Inconsistent document ID in datbase.");
-
+    if (message) {
 	    status = _notmuch_message_remove_filename (message, filename);
 	    if (status == NOTMUCH_STATUS_SUCCESS)
 		_notmuch_message_delete (message);
 	    else if (status == NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID)
 		_notmuch_message_sync (message);
+    }
+
+    return status;
+}
+
+notmuch_message_t *
+notmuch_database_find_message_by_filename (notmuch_database_t *notmuch,
+					   const char *filename)
+{
+    void *local;
+    const char *prefix = _find_prefix ("file-direntry");
+    char *direntry, *term;
+    Xapian::PostingIterator i, end;
+    notmuch_message_t *message = NULL;
+    notmuch_status_t status;
+
+    local = talloc_new (notmuch);
+
+    try {
+	status = _notmuch_database_filename_to_direntry (local, notmuch,
+							 filename, &direntry);
+	if (status)
+	    return NULL;
+
+	term = talloc_asprintf (local, "%s%s", prefix, direntry);
+
+	find_doc_ids_for_term (notmuch, term, &i, &end);
+
+	if (i != end) {
+	    notmuch_private_status_t private_status;
+
+	    message = _notmuch_message_create (notmuch, notmuch,
+					       *i, &private_status);
 	}
     } catch (const Xapian::Error &error) {
-	fprintf (stderr, "Error: A Xapian exception occurred removing message: %s\n",
+	fprintf (stderr, "Error: A Xapian exception occurred finding message by filename: %s\n",
 		 error.get_msg().c_str());
 	notmuch->exception_reported = TRUE;
-	status = NOTMUCH_STATUS_XAPIAN_EXCEPTION;
+	message = NULL;
     }
 
     talloc_free (local);
 
-    return status;
+    return message;
 }
 
 notmuch_string_list_t *

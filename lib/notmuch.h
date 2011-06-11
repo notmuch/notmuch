@@ -356,6 +356,22 @@ notmuch_message_t *
 notmuch_database_find_message (notmuch_database_t *database,
 			       const char *message_id);
 
+/* Find a message with the given filename.
+ *
+ * If the database contains a message with the given filename, then a
+ * new notmuch_message_t object is returned.  The caller should call 
+ * notmuch_message_destroy when done with the message.
+ *
+ * This function returns NULL in the following situations:
+ *
+ *	* No message is found with the given filename
+ *	* An out-of-memory situation occurs
+ *	* A Xapian exception occurs
+ */
+notmuch_message_t *
+notmuch_database_find_message_by_filename (notmuch_database_t *notmuch,
+					   const char *filename);
+
 /* Return a list of all tags found in the database.
  *
  * This function creates a list of all tags found in the database. The
