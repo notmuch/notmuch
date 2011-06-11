@@ -266,9 +266,10 @@ notmuch_directory_t *
 notmuch_database_get_directory (notmuch_database_t *database,
 				const char *path);
 
-/* Add a new message to the given notmuch database.
+/* Add a new message to the given notmuch database or associate an
+ * additional filename with an existing message.
  *
- * Here,'filename' should be a path relative to the path of
+ * Here, 'filename' should be a path relative to the path of
  * 'database' (see notmuch_database_get_path), or else should be an
  * absolute filename with initial components that match the path of
  * 'database'.
@@ -277,6 +278,10 @@ notmuch_database_get_directory (notmuch_database_t *database,
  * that is expected to remain at its current location, (since the
  * notmuch database will reference the filename, and will not copy the
  * entire contents of the file.
+ *
+ * If another message with the same message ID already exists in the
+ * database, rather than creating a new message, this adds 'filename'
+ * to the list of the filenames for the existing message.
  *
  * If 'message' is not NULL, then, on successful return
  * (NOTMUCH_STATUS_SUCCESS or NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID) '*message'
@@ -295,7 +300,7 @@ notmuch_database_get_directory (notmuch_database_t *database,
  * NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID: Message has the same message
  *	ID as another message already in the database. The new
  *	filename was successfully added to the message in the database
- *	(if not already present).
+ *	(if not already present) and the existing message is returned.
  *
  * NOTMUCH_STATUS_FILE_ERROR: an error occurred trying to open the
  *	file, (such as permission denied, or file not found,
@@ -312,14 +317,14 @@ notmuch_database_add_message (notmuch_database_t *database,
 			      const char *filename,
 			      notmuch_message_t **message);
 
-/* Remove a message from the given notmuch database.
+/* Remove a message filename from the given notmuch database. If the
+ * message has no more filenames, remove the message.
  *
- * Note that only this particular filename association is removed from
- * the database. If the same message (as determined by the message ID)
- * is still available via other filenames, then the message will
- * persist in the database for those filenames. When the last filename
- * is removed for a particular message, the database content for that
- * message will be entirely removed.
+ * If the same message (as determined by the message ID) is still
+ * available via other filenames, then the message will persist in the
+ * database for those filenames. When the last filename is removed for
+ * a particular message, the database content for that message will be
+ * entirely removed.
  *
  * Return value:
  *
