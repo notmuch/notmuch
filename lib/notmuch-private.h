@@ -293,6 +293,9 @@ _notmuch_message_set_date (notmuch_message_t *message,
 void
 _notmuch_message_sync (notmuch_message_t *message);
 
+notmuch_status_t
+_notmuch_message_delete (notmuch_message_t *message);
+
 void
 _notmuch_message_close (notmuch_message_t *message);
 

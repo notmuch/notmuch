@@ -1747,7 +1747,6 @@ notmuch_status_t
 notmuch_database_remove_message (notmuch_database_t *notmuch,
 				 const char *filename)
 {
-    Xapian::WritableDatabase *db;
     void *local;
     const char *prefix = _find_prefix ("file-direntry");
     char *direntry, *term;
@@ -1760,8 +1759,6 @@ notmuch_database_remove_message (notmuch_database_t *notmuch,
 	return status;
 
     local = talloc_new (notmuch);
-
-    db = static_cast <Xapian::WritableDatabase *> (notmuch->xapian_db);
 
     try {
 
@@ -1785,23 +1782,11 @@ notmuch_database_remove_message (notmuch_database_t *notmuch,
 		return COERCE_STATUS (private_status,
 				      "Inconsistent document ID in datbase.");
 
-	    _notmuch_message_remove_filename (message, filename);
-	    _notmuch_message_sync (message);
-
-	    /* Take care to find document after sync'ing filename removal. */
-	    document = find_document_for_doc_id (notmuch, *i);
-	    j = document.termlist_begin ();
-	    j.skip_to (prefix);
-
-	    /* Was this the last file-direntry in the message? */
-	    if (j == document.termlist_end () ||
-		strncmp ((*j).c_str (), prefix, strlen (prefix)))
-	    {
-		db->delete_document (document.get_docid ());
-		status = NOTMUCH_STATUS_SUCCESS;
-	    } else {
-		status = NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID;
-	    }
+	    status = _notmuch_message_remove_filename (message, filename);
+	    if (status == NOTMUCH_STATUS_SUCCESS)
+		_notmuch_message_delete (message);
+	    else if (status == NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID)
+		_notmuch_message_sync (message);
 	}
     } catch (const Xapian::Error &error) {
 	fprintf (stderr, "Error: A Xapian exception occurred removing message: %s\n",

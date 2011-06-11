@@ -822,6 +822,22 @@ _notmuch_message_sync (notmuch_message_t *message)
     db->replace_document (message->doc_id, message->doc);
 }
 
+/* Delete a message document from the database. */
+notmuch_status_t
+_notmuch_message_delete (notmuch_message_t *message)
+{
+    notmuch_status_t status;
+    Xapian::WritableDatabase *db;
+
+    status = _notmuch_database_ensure_writable (message->notmuch);
+    if (status)
+	return status;
+
+    db = static_cast <Xapian::WritableDatabase *> (message->notmuch->xapian_db);
+    db->delete_document (message->doc_id);
+    return NOTMUCH_STATUS_SUCCESS;
+}
+
 /* Ensure that 'message' is not holding any file object open. Future
  * calls to various functions will still automatically open the
  * message file as needed.
