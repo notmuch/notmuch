@@ -42,7 +42,7 @@ typedef struct {
 
     int total_files;
     int processed_files;
-    int added_messages;
+    int added_messages, removed_messages, renamed_messages;
     struct timeval tv_start;
 
     _filename_list_t *removed_files;
@@ -730,8 +730,7 @@ static void
 _remove_directory (void *ctx,
 		   notmuch_database_t *notmuch,
 		   const char *path,
-		   int *renamed_files,
-		   int *removed_files)
+		   add_files_state_t *add_files_state)
 {
     notmuch_directory_t *directory;
     notmuch_filenames_t *files, *subdirs;
@@ -748,9 +747,9 @@ _remove_directory (void *ctx,
 				    notmuch_filenames_get (files));
 	status = notmuch_database_remove_message (notmuch, absolute);
 	if (status == NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID)
-	    *renamed_files = *renamed_files + 1;
+	    add_files_state->renamed_messages++;
 	else
-	    *removed_files = *removed_files + 1;
+	    add_files_state->removed_messages++;
 	talloc_free (absolute);
     }
 
@@ -760,7 +759,7 @@ _remove_directory (void *ctx,
     {
 	absolute = talloc_asprintf (ctx, "%s/%s", path,
 				    notmuch_filenames_get (subdirs));
-	_remove_directory (ctx, notmuch, absolute, renamed_files, removed_files);
+	_remove_directory (ctx, notmuch, absolute, add_files_state);
 	talloc_free (absolute);
     }
 
@@ -781,7 +780,6 @@ notmuch_new_command (void *ctx, int argc, char *argv[])
     char *dot_notmuch_path;
     struct sigaction action;
     _filename_node_t *f;
-    int renamed_files, removed_files;
     notmuch_status_t status;
     int i;
     notmuch_bool_t timer_is_active = FALSE;
@@ -854,6 +852,7 @@ notmuch_new_command (void *ctx, int argc, char *argv[])
 
     add_files_state.processed_files = 0;
     add_files_state.added_messages = 0;
+    add_files_state.removed_messages = add_files_state.renamed_messages = 0;
     gettimeofday (&add_files_state.tv_start, NULL);
 
     add_files_state.removed_files = _filename_list_create (ctx);
@@ -868,27 +867,24 @@ notmuch_new_command (void *ctx, int argc, char *argv[])
 
     ret = add_files (notmuch, db_path, &add_files_state);
 
-    removed_files = 0;
-    renamed_files = 0;
     gettimeofday (&tv_start, NULL);
     for (f = add_files_state.removed_files->head; f && !interrupted; f = f->next) {
 	status = notmuch_database_remove_message (notmuch, f->filename);
 	if (status == NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID)
-	    renamed_files++;
+	    add_files_state.renamed_messages++;
 	else
-	    removed_files++;
+	    add_files_state.removed_messages++;
 	if (do_print_progress) {
 	    do_print_progress = 0;
 	    generic_print_progress ("Cleaned up", "messages",
-		tv_start, removed_files + renamed_files,
+		tv_start, add_files_state.removed_messages + add_files_state.renamed_messages,
 		add_files_state.removed_files->count);
 	}
     }
 
     gettimeofday (&tv_start, NULL);
     for (f = add_files_state.removed_directories->head, i = 0; f && !interrupted; f = f->next, i++) {
-	_remove_directory (ctx, notmuch, f->filename,
-			   &renamed_files, &removed_files);
+	_remove_directory (ctx, notmuch, f->filename, &add_files_state);
 	if (do_print_progress) {
 	    do_print_progress = 0;
 	    generic_print_progress ("Cleaned up", "directories",
@@ -965,16 +961,16 @@ notmuch_new_command (void *ctx, int argc, char *argv[])
 	printf ("No new mail.");
     }
 
-    if (removed_files) {
+    if (add_files_state.removed_messages) {
 	printf (" Removed %d %s.",
-		removed_files,
-		removed_files == 1 ? "message" : "messages");
+		add_files_state.removed_messages,
+		add_files_state.removed_messages == 1 ? "message" : "messages");
     }
 
-    if (renamed_files) {
+    if (add_files_state.renamed_messages) {
 	printf (" Detected %d file %s.",
-		renamed_files,
-		renamed_files == 1 ? "rename" : "renames");
+		add_files_state.renamed_messages,
+		add_files_state.renamed_messages == 1 ? "rename" : "renames");
     }
 
     printf ("\n");
