@@ -59,8 +59,8 @@ test_begin_subtest "Magic from guessing (Received: .. for ..)"
 add_message '[from]="Sender <sender@example.com>"' \
              [to]=mailinglist@notmuchmail.org \
              [subject]=notmuch-reply-test \
-            "[header]=\"Received: from mail.example.com (mail.example.com [1.1.1.1])\
-        by mail.notmuchmail.org (some MTA) with ESMTP id 12345678\
+            "[header]=\"Received: from mail.example.com (mail.example.com [1.1.1.1])
+        by mail.notmuchmail.org (some MTA) with ESMTP id 12345678
         for <test_suite_other@notmuchmail.org>; Sat, 10 Apr 2010 07:54:51 -0400 (EDT)\"" \
             '[date]="Tue, 05 Jan 2010 15:43:56 -0000"' \
             '[body]="from guessing test"'
@@ -79,8 +79,8 @@ test_begin_subtest "Magic from guessing (Received: domain)"
 add_message '[from]="Sender <sender@example.com>"' \
              [to]=mailinglist@notmuchmail.org \
              [subject]=notmuch-reply-test \
-            "[header]=\"Received: from mail.example.com (mail.example.com [1.1.1.1])\
-        by mail.otherdomain.org (some MTA) with ESMTP id 12345678\
+            "[header]=\"Received: from mail.example.com (mail.example.com [1.1.1.1])
+        by mail.otherdomain.org (some MTA) with ESMTP id 12345678
         Sat, 10 Apr 2010 07:54:51 -0400 (EDT)\"" \
             '[date]="Tue, 05 Jan 2010 15:43:56 -0000"' \
             '[body]="from guessing test"'
@@ -178,8 +178,8 @@ test_begin_subtest "Magic from guessing (Received: .. for ..)"
 add_message '[from]="Sender <sender@example.com>"' \
              [to]=mailinglist@notmuchmail.org \
              [subject]=notmuch-reply-test \
-            "[header]=\"Received: from mail.example.com (mail.example.com [1.1.1.1])\
-        by mail.notmuchmail.org (some MTA) with ESMTP id 12345678\
+            "[header]=\"Received: from mail.example.com (mail.example.com [1.1.1.1])
+        by mail.notmuchmail.org (some MTA) with ESMTP id 12345678
         for <test_suite_other@notmuchmail.org>; Sat, 10 Apr 2010 07:54:51 -0400 (EDT)\"" \
             '[date]="Tue, 05 Jan 2010 15:43:56 -0000"' \
             '[body]="from guessing test"'
@@ -198,8 +198,8 @@ test_begin_subtest "Magic from guessing (Received: domain)"
 add_message '[from]="Sender <sender@example.com>"' \
              [to]=mailinglist@notmuchmail.org \
              [subject]=notmuch-reply-test \
-            "[header]=\"Received: from mail.example.com (mail.example.com [1.1.1.1])\
-        by mail.otherdomain.org (some MTA) with ESMTP id 12345678\
+            "[header]=\"Received: from mail.example.com (mail.example.com [1.1.1.1])
+        by mail.otherdomain.org (some MTA) with ESMTP id 12345678
         Sat, 10 Apr 2010 07:54:51 -0400 (EDT)\"" \
             '[date]="Tue, 05 Jan 2010 15:43:56 -0000"' \
             '[body]="from guessing test"'
