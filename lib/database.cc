@@ -1601,7 +1601,7 @@ notmuch_database_add_message (notmuch_database_t *notmuch,
 {
     notmuch_message_file_t *message_file;
     notmuch_message_t *message = NULL;
-    notmuch_status_t ret = NOTMUCH_STATUS_SUCCESS;
+    notmuch_status_t ret = NOTMUCH_STATUS_SUCCESS, ret2;
     notmuch_private_status_t private_status;
 
     const char *date, *header;
@@ -1618,6 +1618,12 @@ notmuch_database_add_message (notmuch_database_t *notmuch,
     message_file = notmuch_message_file_open (filename);
     if (message_file == NULL)
 	return NOTMUCH_STATUS_FILE_ERROR;
+
+    /* Adding a message may change many documents.  Do this all
+     * atomically. */
+    ret = notmuch_database_begin_atomic (notmuch);
+    if (ret)
+	goto DONE;
 
     notmuch_message_file_restrict_headers (message_file,
 					   "date",
@@ -1739,6 +1745,12 @@ notmuch_database_add_message (notmuch_database_t *notmuch,
 
     if (message_file)
 	notmuch_message_file_close (message_file);
+
+    ret2 = notmuch_database_end_atomic (notmuch);
+    if ((ret == NOTMUCH_STATUS_SUCCESS ||
+	 ret == NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID) &&
+	ret2 != NOTMUCH_STATUS_SUCCESS)
+	ret = ret2;
 
     return ret;
 }
