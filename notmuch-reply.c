@@ -427,13 +427,13 @@ guess_from_received_header (notmuch_config_t *config, notmuch_message_t *message
 
 	    if (strcasestr(primary, domain)) {
 		free(mta);
-	    return primary;
-	}
-	for (i = 0; i < other_len; i++)
-	    if (strcasestr (other[i],domain)) {
-		free(mta);
-		return other[i];
+		return primary;
 	    }
+	    for (i = 0; i < other_len; i++)
+		if (strcasestr (other[i],domain)) {
+		    free(mta);
+		    return other[i];
+		}
 	}
 	free (mta);
     }
