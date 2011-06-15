@@ -401,8 +401,10 @@ guess_from_received_header (notmuch_config_t *config, notmuch_message_t *message
 	    break;
 	mta = xstrdup (by);
 	token = strtok(mta," \t");
-	if (token == NULL)
+	if (token == NULL) {
+	    free (mta);
 	    break;
+	}
 	/* Now extract the last two components of the MTA host name
 	 * as domain and tld.
 	 */
