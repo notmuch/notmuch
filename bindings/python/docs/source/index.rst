@@ -127,7 +127,12 @@ More information on specific topics can be found on the following pages:
 
    .. automethod:: collect_tags
 
-   .. automethod:: __len__
+   .. method:: __len__()
+
+   .. note:: :meth:`__len__` was removed in version 0.6 as it exhausted
+       the iterator and broke list(Messages()). Use the
+       :meth:`Query.count_messages` function or use
+       `len(list(msgs))`.
 
 :class:`Message` -- A single message
 ----------------------------------------

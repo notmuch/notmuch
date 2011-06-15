@@ -37,35 +37,27 @@ class Messages(object):
 
     This object provides an iterator over a list of notmuch messages
     (Technically, it provides a wrapper for the underlying
-    *notmuch_messages_t* structure). Do note that the underlying
-    library only provides a one-time iterator (it cannot reset the
-    iterator to the start). Thus iterating over the function will
-    "exhaust" the list of messages, and a subsequent iteration attempt
-    will raise a :exc:`NotmuchError` STATUS.NOT_INITIALIZED. Also
-    note, that any function that uses iteration will also
-    exhaust the messages. So both::
+    *notmuch_messages_t* structure). Do note that the underlying library
+    only provides a one-time iterator (it cannot reset the iterator to
+    the start). Thus iterating over the function will "exhaust" the list
+    of messages, and a subsequent iteration attempt will raise a
+    :exc:`NotmuchError` STATUS.NOT_INITIALIZED. Also note, that any
+    function that uses iteration will also exhaust the messages.If you
+    need to re-iterate over a list of messages you will need to retrieve
+    a new :class:`Messages` object or cache your :class:`Message`s in a
+    list via::
 
-      for msg in msgs: print msg 
+       msglist = list(msgs)
 
-    as well as::
-
-       number_of_msgs = len(msgs)
-
-    will "exhaust" the Messages. If you need to re-iterate over a list of
-    messages you will need to retrieve a new :class:`Messages` object.
-
-    Things are not as bad as it seems though, you can store and reuse
-    the single Message objects as often as you want as long as you
-    keep the parent Messages object around. (Recall that due to
-    hierarchical memory allocation, all derived Message objects will
-    be invalid when we delete the parent Messages() object, even if it
-    was already "exhausted".) So this works::
+    You can store and reuse the single Message objects as often as you
+    want as long as you keep the parent Messages object around. (Recall
+    that due to hierarchical memory allocation, all derived Message
+    objects will be invalid when we delete the parent Messages() object,
+    even if it was already "exhausted".) So this works::
 
       db   = Database()
       msgs = Query(db,'').search_messages() #get a Messages() object
-      msglist = []
-      for m in msgs:
-         msglist.append(m)
+      msglist = list(msgs)
 
       # msgs is "exhausted" now and even len(msgs) will raise an exception.
       # However it will be kept around until all retrieved Message() objects are
@@ -80,7 +72,7 @@ class Messages(object):
       print (msglist[0].get_message_id())
     """
 
-    #notmuch_tags_get
+    #notmuch_messages_get
     _get = nmlib.notmuch_messages_get
     _get.restype = c_void_p
 
@@ -148,33 +140,12 @@ class Messages(object):
         nmlib.notmuch_messages_move_to_next(self._msgs)
         return msg
 
-    def __len__(self):
-        """len(:class:`Messages`) returns the number of contained messages
-
-        .. note:: As this iterates over the messages, we will not be able to 
-               iterate over them again! So this will fail::
-
-                 #THIS FAILS
-                 msgs = Database().create_query('').search_message()
-                 if len(msgs) > 0:              #this 'exhausts' msgs
-                     # next line raises NotmuchError(STATUS.NOT_INITIALIZED)!!!
-                     for msg in msgs: print msg
-
-               Most of the time, using the
-               :meth:`Query.count_messages` is therefore more
-               appropriate (and much faster). While not guaranteeing
-               that it will return the exact same number than len(),
-               in my tests it effectively always did so.
+    def __nonzero__(self):
         """
-        if self._msgs is None:
-            raise NotmuchError(STATUS.NOT_INITIALIZED)
-
-        i=0
-        while nmlib.notmuch_messages_valid(self._msgs):
-            nmlib.notmuch_messages_move_to_next(self._msgs)
-            i += 1
-        self._msgs = None
-        return i
+        :return: True if there is at least one more thread in the
+            Iterator, False if not."""
+        return self._msgs is not None and \
+            nmlib.notmuch_messages_valid(self._msgs) > 0
 
     def __del__(self):
         """Close and free the notmuch Messages"""
