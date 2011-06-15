@@ -406,6 +406,7 @@ guess_from_received_header (notmuch_config_t *config, notmuch_message_t *message
 	/* Now extract the last two components of the MTA host name
 	 * as domain and tld.
 	 */
+	domain = tld = NULL;
 	while ((ptr = strsep (&token, delim)) != NULL) {
 	    if (*ptr == '\0')
 		continue;
