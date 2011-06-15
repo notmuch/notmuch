@@ -41,44 +41,52 @@ class Messages(object):
     only provides a one-time iterator (it cannot reset the iterator to
     the start). Thus iterating over the function will "exhaust" the list
     of messages, and a subsequent iteration attempt will raise a
-    :exc:`NotmuchError` STATUS.NOT_INITIALIZED. Also note, that any
-    function that uses iteration will also exhaust the messages.If you
-    need to re-iterate over a list of messages you will need to retrieve
-    a new :class:`Messages` object or cache your :class:`Message`s in a
-    list via::
+    :exc:`NotmuchError` STATUS.NOT_INITIALIZED. If you need to
+    re-iterate over a list of messages you will need to retrieve a new
+    :class:`Messages` object or cache your :class:`Message`s in a list
+    via::
 
        msglist = list(msgs)
 
-    You can store and reuse the single Message objects as often as you
-    want as long as you keep the parent Messages object around. (Recall
-    that due to hierarchical memory allocation, all derived Message
-    objects will be invalid when we delete the parent Messages() object,
-    even if it was already "exhausted".) So this works::
+    You can store and reuse the single :class:`Message` objects as often
+    as you want as long as you keep the parent :class:`Messages` object
+    around. (Due to hierarchical memory allocation, all derived
+    :class:`Message` objects will be invalid when we delete the parent
+    :class:`Messages` object, even if it was already exhausted.) So
+    this works::
 
       db   = Database()
       msgs = Query(db,'').search_messages() #get a Messages() object
       msglist = list(msgs)
 
-      # msgs is "exhausted" now and even len(msgs) will raise an exception.
-      # However it will be kept around until all retrieved Message() objects are
-      # also deleted. If you did e.g. an explicit del(msgs) here, the 
-      # following lines would fail.
+      # msgs is "exhausted" now and msgs.next() will raise an exception.
+      # However it will be kept alive until all retrieved Message()
+      # objects are also deleted. If you do e.g. an explicit del(msgs)
+      # here, the following lines would fail.
       
       # You can reiterate over *msglist* however as often as you want. 
-      # It is simply a list with Message objects.
+      # It is simply a list with :class:`Message`s.
 
       print (msglist[0].get_filename())
       print (msglist[1].get_filename())
       print (msglist[0].get_message_id())
 
 
-    As Message() implements both __hash__() and __cmp__(), it is
-    possible to make sets out of Messages() and use set arithmetic::
+    As :class:`Message` implements both __hash__() and __cmp__(), it is
+    possible to make sets out of :class:`Messages` and use set
+    arithmetic (this happens in python and will of course be *much*
+    slower than redoing a proper query with the appropriate filters::
 
         s1, s2 = set(msgs1), set(msgs2)
         s.union(s2)
         s1 -= s2
         ...
+
+    Be careful when using set arithmetic between message sets derived
+    from different Databases (ie the same database reopened after
+    messages have changed). If messages have added or removed associated
+    files in the meantime, it is possible that the same message would be
+    considered as a different object (as it points to a different file).
     """
 
     #notmuch_messages_get
@@ -220,8 +228,8 @@ class Message(object):
 
     Technically, this wraps the underlying *notmuch_message_t* structure.
 
-    As this implements both __hash__() and __cmp__(), it is possible to
-    compare 2 Message objects with::
+    As this implements __cmp__() it is possible to compare 2
+    :class:`Message`s with::
 
         if msg1 == msg2:
     """
@@ -784,8 +792,12 @@ class Message(object):
     def __cmp__(self, other):
         """Implement cmp(), so we can compare Message()s
 
-        2 Messages are considered equal if they point to the same
-        Message-Id and if they point to the same file names."""
+        2 messages are considered equal if they point to the same
+        Message-Id and if they point to the same file names. If 2
+        Messages derive from different queries where some files have
+        been added or removed, the same messages would not be considered
+        equal (as they do not point to the same set of files
+        any more)."""
         res =  cmp(self.get_message_id(), other.get_message_id())
         if res:
             res = cmp(list(self.get_filenames()), list(other.get_filenames()))
