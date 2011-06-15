@@ -70,6 +70,15 @@ class Messages(object):
       print (msglist[0].get_filename())
       print (msglist[1].get_filename())
       print (msglist[0].get_message_id())
+
+
+    As Message() implements both __hash__() and __cmp__(), it is
+    possible to make sets out of Messages() and use set arithmetic::
+
+        s1, s2 = set(msgs1), set(msgs2)
+        s.union(s2)
+        s1 -= s2
+        ...
     """
 
     #notmuch_messages_get
@@ -210,6 +219,11 @@ class Message(object):
     """Represents a single Email message
 
     Technically, this wraps the underlying *notmuch_message_t* structure.
+
+    As this implements both __hash__() and __cmp__(), it is possible to
+    compare 2 Message objects with::
+
+        if msg1 == msg2:
     """
 
     """notmuch_message_get_filename (notmuch_message_t *message)"""
@@ -759,6 +773,23 @@ class Message(object):
         output += "\n\fmessage}"
 
         return output
+
+    def __hash__(self):
+        """Implement hash(), so we can use Message() sets"""
+        file = self.get_filename()
+        if file is None:
+            return None
+        return hash(file)
+
+    def __cmp__(self, other):
+        """Implement cmp(), so we can compare Message()s
+
+        2 Messages are considered equal if they point to the same
+        Message-Id and if they point to the same file names."""
+        res =  cmp(self.get_message_id(), other.get_message_id())
+        if res:
+            res = cmp(list(self.get_filenames()), list(other.get_filenames()))
+        return res
 
     def __del__(self):
         """Close and free the notmuch Message"""
