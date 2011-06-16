@@ -99,9 +99,6 @@ process_command (FILE *peer, FILE *output, const char *command)
 static void
 do_smtp_to_file (FILE *peer, FILE *output)
 {
-	char buf[4096];
-	ssize_t bytes;
-	char greeting[] = "220 localhost smtp-dummy\r\n";
 	char *line = NULL;
 	size_t line_size;
 	ssize_t line_len;
@@ -193,7 +190,7 @@ main (int argc, char *argv[])
 	if (peer_file == NULL) {
 		fprintf (stderr, "Error: fdopen() failed: %s\n",
 			 strerror (errno));
-		return;
+		exit (1);
 	}
 
 	do_smtp_to_file (peer_file, output);
