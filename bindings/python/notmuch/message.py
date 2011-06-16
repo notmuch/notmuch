@@ -749,9 +749,7 @@ class Message(object):
         msg['from'] = self.get_header('from')
         msg['tags'] = str(self.get_tags())
         msg['date'] = date.fromtimestamp(self.get_date())
-        replies = self.get_replies()
-        msg['replies'] = len(replies) if replies is not None else 0
-        return "%(from)s (%(date)s) (%(tags)s) %(replies)d replies" % (msg)
+        return "%(from)s (%(date)s) (%(tags)s)" % (msg)
 
 
     def get_message_parts(self):
