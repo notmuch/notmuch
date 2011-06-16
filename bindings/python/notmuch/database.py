@@ -100,6 +100,7 @@ class Database(object):
                 Database._std_db_path = self._get_user_default_db()
             path = Database._std_db_path
 
+        assert isinstance(path, basestring), 'Path needs to be a string or None.'
         if create == False:
             self.open(path, mode)
         else:
