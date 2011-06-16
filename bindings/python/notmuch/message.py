@@ -43,7 +43,7 @@ class Messages(object):
     of messages, and a subsequent iteration attempt will raise a
     :exc:`NotmuchError` STATUS.NOT_INITIALIZED. If you need to
     re-iterate over a list of messages you will need to retrieve a new
-    :class:`Messages` object or cache your :class:`Message`s in a list
+    :class:`Messages` object or cache your :class:`Message`\s in a list
     via::
 
        msglist = list(msgs)
@@ -226,12 +226,12 @@ class Messages(object):
 class Message(object):
     """Represents a single Email message
 
-    Technically, this wraps the underlying *notmuch_message_t* structure.
+    Technically, this wraps the underlying *notmuch_message_t*
+    structure. A user will usually not create these objects themselves
+    but get them as search results.
 
-    As this implements __cmp__() it is possible to compare 2
-    :class:`Message`s with::
-
-        if msg1 == msg2:
+    As it implements :meth:`__cmp__`, it is possible to compare two
+    :class:`Message`\s using `if msg1 == msg2: ...`.
     """
 
     """notmuch_message_get_filename (notmuch_message_t *message)"""
@@ -284,6 +284,7 @@ class Message(object):
         :param msg_p: A pointer to an internal notmuch_message_t
             Structure.  If it is `None`, we will raise an :exc:`NotmuchError`
             STATUS.NULL_POINTER.
+
         :param parent: A 'parent' object is passed which this message is
               derived from. We save a reference to it, so we can
               automatically delete the parent object once all derived
@@ -313,7 +314,7 @@ class Message(object):
         The returned string belongs to 'message' will only be valid for as 
         long as the message is valid.
 
-        This function will not return None since Notmuch ensures that every
+        This function will not return `None` since Notmuch ensures that every
         message belongs to a single thread.
 
         :returns: String with a thread ID

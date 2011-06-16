@@ -28,6 +28,7 @@ More information on specific topics can be found on the following pages:
 .. toctree::
    :maxdepth: 1
 
+   status_and_errors
    notmuch   
 
 :mod:`notmuch` -- The Notmuch interface
@@ -157,7 +158,7 @@ More information on specific topics can be found on the following pages:
 	  query. This allows us to distinguish matches from the rest
 	  of the messages in that thread.
 
-  .. automethod:: get_flag
+   .. automethod:: get_flag
 
    .. automethod:: set_flag
    
@@ -166,6 +167,10 @@ More information on specific topics can be found on the following pages:
    .. automethod:: get_header
 
    .. automethod:: get_tags
+
+   .. automethod:: maildir_flags_to_tags
+
+   .. automethod:: tags_to_maildir_flags
 
    .. automethod:: remove_tag
 
@@ -177,7 +182,9 @@ More information on specific topics can be found on the following pages:
 
    .. automethod:: thaw
 
-   .. automethod:: format_as_text
+   .. automethod:: format_message_as_json
+
+   .. automethod:: format_message_as_text
 
    .. automethod:: __str__
 
@@ -252,32 +259,8 @@ More information on specific topics can be found on the following pages:
 
    .. autoattribute:: notmuch.database.Directory.path
 
-:exc:`NotmuchError` -- A Notmuch execution error
-------------------------------------------------
-.. autoexception:: NotmuchError
-   :members:
 
-   This execption inherits directly from :exc:`Exception` and is raised on errors during the notmuch execution.
-
-:class:`STATUS` -- Notmuch operation return status
---------------------------------------------------
-
-.. data:: STATUS
-
-  STATUS is a class, whose attributes provide constants that serve as return indicators for notmuch functions. Currently the following ones are defined. For possible return values and specific meaning for each method, see the method description.
-
-  * SUCCESS
-  * OUT_OF_MEMORY
-  * READ_ONLY_DATABASE
-  * XAPIAN_EXCEPTION
-  * FILE_ERROR
-  * FILE_NOT_EMAIL
-  * DUPLICATE_MESSAGE_ID
-  * NULL_POINTER
-  * TAG_TOO_LONG
-  * UNBALANCED_FREEZE_THAW
-  * NOT_INITIALIZED
-
+The `next page <status_and_errors.html>`_ contains information on possible Status and Error values.
 
 Indices and tables
 ==================

@@ -37,7 +37,6 @@ class Enum(object):
 #-----------------------------------------------------------------------------
 class Status(Enum):
     """Enum with a string representation of a notmuch_status_t value."""
-    __name__="foo"
     _status2str = nmlib.notmuch_status_to_string
     _status2str.restype = c_char_p
     _status2str.argtypes = [c_int]
@@ -67,7 +66,22 @@ STATUS = Status(['SUCCESS',
   'TAG_TOO_LONG',
   'UNBALANCED_FREEZE_THAW',
   'NOT_INITIALIZED'])
+"""STATUS is a class, whose attributes provide constants that serve as return indicators for notmuch functions. Currently the following ones are defined. For possible return values and specific meaning for each method, see the method description.
 
+  * SUCCESS
+  * OUT_OF_MEMORY
+  * READ_ONLY_DATABASE
+  * XAPIAN_EXCEPTION
+  * FILE_ERROR
+  * FILE_NOT_EMAIL
+  * DUPLICATE_MESSAGE_ID
+  * NULL_POINTER
+  * TAG_TOO_LONG
+  * UNBALANCED_FREEZE_THAW
+  * NOT_INITIALIZED
+
+  Invoke the class method `notmuch.STATUS.status2str` with a status value as argument to receive a human readable string"""
+STATUS.__name__ = 'STATUS' 
 
 class NotmuchError(Exception):
     def __init__(self, status=None, message=None):
