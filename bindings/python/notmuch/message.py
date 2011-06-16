@@ -19,7 +19,7 @@ Copyright 2010 Sebastian Spaeth <Sebastian@SSpaeth.de>'
 """
 
         
-from ctypes import c_char_p, c_void_p, c_long, c_uint
+from ctypes import c_char_p, c_void_p, c_long, c_uint, c_int
 from datetime import date
 from notmuch.globals import nmlib, STATUS, NotmuchError, Enum
 from notmuch.tag import Tags
@@ -268,6 +268,14 @@ class Message(object):
     _get_header = nmlib.notmuch_message_get_header
     _get_header.restype = c_char_p
 
+    """notmuch_status_t ..._maildir_flags_to_tags (notmuch_message_t *)"""
+    _tags_to_maildir_flags = nmlib.notmuch_message_tags_to_maildir_flags
+    _tags_to_maildir_flags.restype = c_int
+
+    """notmuch_status_t ..._tags_to_maildir_flags (notmuch_message_t *)"""
+    _maildir_flags_to_tags = nmlib.notmuch_message_maildir_flags_to_tags
+    _maildir_flags_to_tags.restype = c_int
+
     #Constants: Flags that can be set/get with set_flag
     FLAG = Enum(['MATCH'])
 
@@ -461,13 +469,22 @@ class Message(object):
             raise NotmuchError(STATUS.NULL_POINTER)
         return Tags(tags_p, self)
 
-    def add_tag(self, tag):
+    def add_tag(self, tag, sync_maildir_flags=True):
         """Adds a tag to the given message
 
         Adds a tag to the current message. The maximal tag length is defined in
         the notmuch library and is currently 200 bytes.
 
         :param tag: String with a 'tag' to be added.
+
+        :param sync_maildir_flags: If notmuch configuration is set to do
+            this, add maildir flags corresponding to notmuch tags. See
+            :meth:`tags_to_maildir_flags`. Use False if you want to
+            add/remove many tags on a message without having to
+            physically rename the file every time. Do note, that this
+            will do nothing when a message is frozen, as tag changes
+            will not be committed to the database yet.
+
         :returns: STATUS.SUCCESS if the tag was successfully added.
                   Raises an exception otherwise.
         :exception: :exc:`NotmuchError`. They have the following meaning:
@@ -488,19 +505,29 @@ class Message(object):
 
         status = nmlib.notmuch_message_add_tag (self._msg, tag)
 
-        if STATUS.SUCCESS == status:
-            # return on success
-            return status
+        # bail out on failure
+        if status != STATUS.SUCCESS:
+            raise NotmuchError(status)
 
-        raise NotmuchError(status)
+        if sync_maildir_flags:
+            self.tags_to_maildir_flags()
+        return STATUS.SUCCESS
 
-    def remove_tag(self, tag):
+    def remove_tag(self, tag, sync_maildir_flags=True):
         """Removes a tag from the given message
 
         If the message has no such tag, this is a non-operation and
         will report success anyway.
 
         :param tag: String with a 'tag' to be removed.
+        :param sync_maildir_flags: If notmuch configuration is set to do
+            this, add maildir flags corresponding to notmuch tags. See
+            :meth:`tags_to_maildir_flags`. Use False if you want to
+            add/remove many tags on a message without having to
+            physically rename the file every time. Do note, that this
+            will do nothing when a message is frozen, as tag changes
+            will not be committed to the database yet.
+
         :returns: STATUS.SUCCESS if the tag was successfully removed or if 
                   the message had no such tag.
                   Raises an exception otherwise.
@@ -521,18 +548,29 @@ class Message(object):
             raise NotmuchError(STATUS.NOT_INITIALIZED)
 
         status = nmlib.notmuch_message_remove_tag(self._msg, tag)
+        # bail out on error
+        if status != STATUS.SUCCESS:
+            raise NotmuchError(status)
 
-        if STATUS.SUCCESS == status:
-            # return on success
-            return status
+        if sync_maildir_flags:
+            self.tags_to_maildir_flags()
+        return STATUS.SUCCESS
 
-        raise NotmuchError(status)
 
-    def remove_all_tags(self):
+
+    def remove_all_tags(self, sync_maildir_flags=True):
         """Removes all tags from the given message.
 
         See :meth:`freeze` for an example showing how to safely
         replace tag values.
+
+        :param sync_maildir_flags: If notmuch configuration is set to do
+            this, add maildir flags corresponding to notmuch tags. See
+            :meth:`tags_to_maildir_flags`. Use False if you want to
+            add/remove many tags on a message without having to
+            physically rename the file every time. Do note, that this
+            will do nothing when a message is frozen, as tag changes
+            will not be committed to the database yet.
 
         :returns: STATUS.SUCCESS if the tags were successfully removed.
                   Raises an exception otherwise.
@@ -549,11 +587,13 @@ class Message(object):
  
         status = nmlib.notmuch_message_remove_all_tags(self._msg)
 
-        if STATUS.SUCCESS == status:
-            # return on success
-            return status
+        # bail out on error
+        if status != STATUS.SUCCESS:
+            raise NotmuchError(status)
 
-        raise NotmuchError(status)
+        if sync_maildir_flags:
+            self.tags_to_maildir_flags()
+        return STATUS.SUCCESS
 
     def freeze(self):
         """Freezes the current state of 'message' within the database
@@ -571,10 +611,11 @@ class Message(object):
         have a given set of tags might look like this::
 
           msg.freeze()
-          msg.remove_all_tags()
+          msg.remove_all_tags(False)
           for tag in new_tags:
-              msg.add_tag(tag)
+              msg.add_tag(tag, False)
           msg.thaw()
+          msg.tags_to_maildir_flags()
 
         With freeze/thaw used like this, the message in the database is
         guaranteed to have either the full set of original tag values, or
@@ -646,6 +687,61 @@ class Message(object):
         """(Not implemented)"""
         return self.get_flag(Message.FLAG.MATCH)
 
+    def tags_to_maildir_flags(self):
+        """Synchronize notmuch tags to file Maildir flags
+
+              'D' if the message has the "draft" tag
+              'F' if the message has the "flagged" tag
+              'P' if the message has the "passed" tag
+              'R' if the message has the "replied" tag
+              'S' if the message does not have the "unread" tag
+            
+        Any existing flags unmentioned in the list above will be
+        preserved in the renaming.
+            
+        Also, if this filename is in a directory named "new", rename it
+        to be within the neighboring directory named "cur".
+
+        Usually, you do not need to call this manually as
+        tag changing methods should be implicitly calling it.
+
+        :returns: a :class:`STATUS`. In short, you want to see
+            notmuch.STATUS.SUCCESS here. See there for details."""
+        if self._msg is None:
+            raise NotmuchError(STATUS.NOT_INITIALIZED)
+        status = Message._tags_to_maildir_flags(self._msg)
+
+    def maildir_flags_to_tags(self):
+        """Synchronize file Maildir flags to notmuch tags
+
+            Flag    Action if present
+            ----    -----------------
+            'D'     Adds the "draft" tag to the message
+            'F'     Adds the "flagged" tag to the message
+            'P'     Adds the "passed" tag to the message
+            'R'     Adds the "replied" tag to the message
+            'S'     Removes the "unread" tag from the message
+
+        For each flag that is not present, the opposite action
+        (add/remove) is performed for the corresponding tags.  If there
+        are multiple filenames associated with this message, the flag is
+        considered present if it appears in one or more filenames. (That
+        is, the flags from the multiple filenames are combined with the
+        logical OR operator.)
+
+        Usually, you do not need to call this manually as
+        :meth:`Database.add_message` implicitly calls it.
+
+        :returns: a :class:`STATUS`. In short, you want to see
+            notmuch.STATUS.SUCCESS here. See there for details."""
+        if self._msg is None:
+            raise NotmuchError(STATUS.NOT_INITIALIZED)
+        status = Message._tags_to_maildir_flags(self._msg)
+
+    def __repr__(self):
+        """Represent a Message() object by str()"""
+        return self.__str__()
+
     def __str__(self):
         """A message() is represented by a 1-line summary"""
         msg = {}
@@ -653,8 +749,8 @@ class Message(object):
         msg['tags'] = str(self.get_tags())
         msg['date'] = date.fromtimestamp(self.get_date())
         replies = self.get_replies()
-        msg['replies'] = len(replies) if replies is not None else -1
-        return "%(from)s (%(date)s) (%(tags)s) (%(replies)d) replies" % (msg)
+        msg['replies'] = len(replies) if replies is not None else 0
+        return "%(from)s (%(date)s) (%(tags)s) %(replies)d replies" % (msg)
 
 
     def get_message_parts(self):

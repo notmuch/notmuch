@@ -273,6 +273,9 @@ class Database(object):
         notmuch database will reference the filename, and will not copy the
         entire contents of the file.
 
+        If the message contains Maildir flags, we will -depending on the
+        notmuch configuration- sync those tags to initial notmuch tags.
+
         :returns: On success, we return 
 
            1) a :class:`Message` object that can be used for things
@@ -310,11 +313,12 @@ class Database(object):
                                                   filename,
                                                   byref(msg_p))
  
-        if not status in [STATUS.SUCCESS,STATUS.DUPLICATE_MESSAGE_ID]:
+        if not status in [STATUS.SUCCESS, STATUS.DUPLICATE_MESSAGE_ID]:
             raise NotmuchError(status)
 
-        #construct Message() and return
+        #construct Message(), sync initial tags from Maildir flags and return
         msg = Message(msg_p, self)
+        msg.maildir_flags_to_tags()
         return (msg, status)
 
     def remove_message(self, filename):
