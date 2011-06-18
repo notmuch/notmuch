@@ -1,3 +1,14 @@
+notmuch (0.6~237) experimental; urgency=low
+
+  * Git snapshot 12d6f90
+  * Emacs: hide original message in top posted replies, isearch fix,
+    message display/hiding fixes/improvements.
+  * CLI: received header fixes.
+  * python: Improve docs, Remove Messages().__len__, Implement
+    Message.__cmp__ and __hash__, Message.tags_to_maildir_flags
+
+ -- David Bremner <bremner@debian.org>  Sat, 18 Jun 2011 11:14:51 -0300
+
 notmuch (0.6~215) experimental; urgency=low
 
   * Git snapshot 5143e5e
