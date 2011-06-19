@@ -4,7 +4,9 @@ Priority: extra
 Maintainer: Carl Worth <cworth@debian.org>
 Uploaders: Jameson Graef Rollins <jrollins@finestructure.net>, martin f. krafft <madduck@debian.org>, 
 	   David Bremner <bremner@debian.org>
-Build-Depends: debhelper (>= 7.0.50~), pkg-config, libxapian-dev, libgmime-2.4-dev, libtalloc-dev, libz-dev, emacs (>= 23~)
+Build-Depends: debhelper (>= 7.0.50~), pkg-config, libxapian-dev, 
+ libgmime-2.4-dev, libtalloc-dev, libz-dev, emacs (>= 23~), 
+ python-all (>= 2.6.6-3~)
 Standards-Version: 3.9.1.0
 Homepage: http://notmuchmail.org/
 Vcs-Git: git://notmuchmail.org/git/notmuch
@@ -50,3 +52,16 @@ Description: thread-based email index, search and tagging (development)
  .
  This package provides the necessary development libraries and header
  files to allow you to develop new software using libnotmuch.
+
+Package: python-notmuch
+Architecture: all
+Section: python
+Depends: ${misc:Depends}, ${python:Depends}, libnotmuch1
+Description: python interface to the notmuch mail search and index library
+ Notmuch is a system for indexing, searching, reading, and tagging
+ large collections of email messages in maildir or mh format. It uses
+ the Xapian library to provide fast, full-text search with a very
+ convenient search syntax.
+ .
+ This package provides a Python interface to the notmuch
+ functionality, directly interfacing with a shared notmuch library.
