@@ -1,7 +1,22 @@
 #!/usr/bin/env python
 
+import os
+import re
 from distutils.core import setup
-from notmuch import __VERSION__
+
+def get_version():
+    file = open('notmuch/__init__.py')
+    try:
+        for line in file:
+            if re.match('__VERSION__\s*=\s*',line) != None:
+                version = line.split('=', 1)[1]
+                return eval(version, {}, {})
+    finally:
+        file.close()
+    raise IOError('Unexpected end-of-file')
+
+__VERSION__=get_version()
+
 setup(name='notmuch',
       version=__VERSION__,
       description='Python binding of the notmuch mail search and indexing library.',
