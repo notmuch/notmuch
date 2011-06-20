@@ -1,3 +1,19 @@
+notmuch (0.6~254) experimental; urgency=low
+
+  [David Bremner]
+  * Git snapshot fba968d
+  * Upstream release candidate
+  * Build binary package python-notmuch from upstream notmuch.
+  * Split off emacs and vim interfaces into their own packages.
+    (Closes: #578199)
+  * Hide Xapian exception symbols
+  * Build-depend on emacs23-nox instead of emacs
+
+  [ Jameson Rollins ]
+  * Bump standards version to 3.9.2 (No changes).
+  
+ -- David Bremner <bremner@debian.org>  Thu, 23 Jun 2011 07:50:05 -0300
+
 notmuch (0.6~237) experimental; urgency=low
 
   * Git snapshot 12d6f90
