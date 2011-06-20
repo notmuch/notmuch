@@ -1314,7 +1314,7 @@ endfunction
 function! s:NM_tag(filter, tags)
         let filter = len(a:filter) ? a:filter : [<SID>NM_search_thread_id()]
         if !len(filter)
-                throw 'Eeek! I couldn''t find the thead id!'
+                throw 'Eeek! I couldn''t find the thread id!'
         endif
         let args = ['tag']
         call extend(args, a:tags)
