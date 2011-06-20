@@ -373,7 +373,7 @@ add_files_recursive (notmuch_database_t *notmuch,
 	/* If we're looking at a symlink, we only want to add it if it
 	 * links to a regular file, (and not to a directory, say).
 	 *
-	 * Similarly, if the file is of unknown type (due to filesytem
+	 * Similarly, if the file is of unknown type (due to filesystem
 	 * limitations), then we also need to look closer.
 	 *
 	 * In either case, a stat does the trick.

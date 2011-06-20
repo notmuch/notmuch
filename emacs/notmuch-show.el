@@ -121,7 +121,7 @@ same as that of the previous message."
   "Use external viewers to view all attachments from the current message."
   (interactive)
   (with-current-notmuch-show-message
-   ; We ovverride the mm-inline-media-tests to indicate which message
+   ; We override the mm-inline-media-tests to indicate which message
    ; parts are already sufficiently handled by the original
    ; presentation of the message in notmuch-show mode. These parts
    ; will be inserted directly into the temporary buffer of

@@ -428,7 +428,7 @@ Complete list of currently available key bindings:
     (let ((found-target-pos nil)
 	  (final-target-pos nil))
       (let* ((saved-alist
-	      ;; Filter out empty saved seaches if required.
+	      ;; Filter out empty saved searches if required.
 	      (if notmuch-show-empty-saved-searches
 		  notmuch-saved-searches
 		(loop for elem in notmuch-saved-searches

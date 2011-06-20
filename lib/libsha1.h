@@ -38,7 +38,7 @@ extern "C"
 {
 #endif
 #if 0
-} /* Appleasing Emacs */
+} /* Appeasing Emacs */
 #endif
 
 #include <stdint.h>

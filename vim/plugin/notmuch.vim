@@ -765,7 +765,7 @@ function! s:NM_cmd_show_parse(inlines)
 
                         if part_end
                                 " FIXME: this is a hack for handling two folds being added for one line
-                                "         we should handle addinga fold in a function
+                                "         we should handle adding a fold in a function
                                 if len(foldinfo) && foldinfo[1] < foldinfo[2]
                                         call add(info['folds'], foldinfo[0:3])
                                         let info['foldtext'][foldinfo[1]] = foldinfo[4]

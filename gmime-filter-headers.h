@@ -39,7 +39,7 @@ typedef struct _GMimeFilterHeadersClass GMimeFilterHeadersClass;
  * @parent_object: parent #GMimeFilter
  * @saw_nl: previous char was a \n
  * @line: temporary buffer for line unfolding
- * @line_size: size of currently allocated nemory for @line
+ * @line_size: size of currently allocated memory for @line
  * @lineptr: pointer to the first unused character in @line
  *
  * A filter to decode rfc2047 encoded headers

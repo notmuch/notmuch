@@ -837,7 +837,7 @@ _notmuch_message_add_term (notmuch_message_t *message,
 
 /* Parse 'text' and add a term to 'message' for each parsed word. Each
  * term will be added both prefixed (if prefix_name is not NULL) and
- * also unprefixed). */
+ * also non-prefixed). */
 notmuch_private_status_t
 _notmuch_message_gen_terms (notmuch_message_t *message,
 			    const char *prefix_name,
