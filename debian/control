@@ -5,8 +5,8 @@ Maintainer: Carl Worth <cworth@debian.org>
 Uploaders: Jameson Graef Rollins <jrollins@finestructure.net>, martin f. krafft <madduck@debian.org>, 
 	   David Bremner <bremner@debian.org>
 Build-Depends: debhelper (>= 7.0.50~), pkg-config, libxapian-dev, 
- libgmime-2.4-dev, libtalloc-dev, libz-dev, emacs (>= 23~), 
- python-all (>= 2.6.6-3~)
+ libgmime-2.4-dev, libtalloc-dev, libz-dev,  python-all (>= 2.6.6-3~),
+ emacs23-nox | emacs23 (>=23~) | emacs23-lucid (>=23~)
 Standards-Version: 3.9.1.0
 Homepage: http://notmuchmail.org/
 Vcs-Git: git://notmuchmail.org/git/notmuch
