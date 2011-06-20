@@ -803,7 +803,7 @@ The optional QUERY-CONTEXT is a notmuch search term. Only
 messages from the thread matching this search term are shown if
 non-nil.
 
-The optional BUFFER-NAME provides the neame of the buffer in
+The optional BUFFER-NAME provides the name of the buffer in
 which the message thread is shown. If it is nil (which occurs
 when the command is called interactively) the argument to the
 function is used. "
@@ -921,7 +921,7 @@ more selectively, (such as '\\[notmuch-show-next-message]' and '\\[notmuch-show-
 without removing any tags, and '\\[notmuch-show-archive-thread]' to archive an entire thread
 without scrolling through with \\[notmuch-show-advance-and-archive]).
 
-You can add or remove arbitary tags from the current message with
+You can add or remove arbitrary tags from the current message with
 '\\[notmuch-show-add-tag]' or '\\[notmuch-show-remove-tag]'.
 
 All currently available key bindings:

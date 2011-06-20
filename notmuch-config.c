@@ -69,7 +69,7 @@ static const char maildir_config_comment[] =
     "\tsynchronize_flags      Valid values are true and false.\n"
     "\n"
     "\tIf true, then the following maildir flags (in message filenames)\n"
-    "\twill be syncrhonized with the corresponding notmuch tags:\n"
+    "\twill be synchronized with the corresponding notmuch tags:\n"
     "\n"
     "\t\tFlag	Tag\n"
     "\t\t----	-------\n"

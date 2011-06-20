@@ -137,7 +137,7 @@ collapse the remaining lines into a button.")
     (format label-format lines-count)))
 
 (defun notmuch-wash-region-to-button (msg beg end type prefix)
-  "Auxilary function to do the actual making of overlays and buttons
+  "Auxiliary function to do the actual making of overlays and buttons
 
 BEG and END are buffer locations. TYPE should a string, either
 \"citation\" or \"signature\". PREFIX is some arbitrary text to
