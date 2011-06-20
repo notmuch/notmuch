@@ -112,15 +112,15 @@ Allow for notmuch-fcc-dirs to have a value of nil.
   string. Instead it's now a list of cons cells where the car of each
   cell is a regular expression to be matched against the sender
   address, and the cdr is the name of a folder to use for an FCC. So
-  the old fallback behavior can be achieved by including a fineal cell
+  the old fallback behavior can be achieved by including a final cell
   of (".*" . "default-fcc-folder").
 
 Vim interface improvements
 --------------------------
 Felipe Contreras provided a number of updates for the vim interface.
 
-  These include optimiations, support for newer versions of vim, fixed
-  support for sending mail on modern systmms, new commands, and
+  These include optimizations, support for newer versions of vim, fixed
+  support for sending mail on modern systems, new commands, and
   various cleanups.
 
 New bindings
@@ -606,7 +606,7 @@ Fix to compile against GMime 2.6
 
 Fix configure script to accept (and ignore) various standard options.
 
-  For example, those that the gentoo build scripts expect configure to
+  For example, those that the Gentoo build scripts expect configure to
   accept are now all accepted.
 
 Test suite
@@ -714,7 +714,7 @@ tags by region.
   Selective bulk tagging is now possible by selecting a region of
   threads and then using either the '+' or '-' keybindings. Bulk
   tagging is still available for all threads matching the current
-  search with th '*' binding.
+  search with the '*' binding.
 
 More meaningful buffer names for thread-view buffers.
 

@@ -29,7 +29,7 @@ Make 'notmuch-show-pipe-message have a private history.
 
 Add support for a delete keybinding that adds a "deleted" tag to the
 current message/thread and make searches not return deleted messages
-by default, (unless the user asks explicitly for deleted messags in
+by default, (unless the user asks explicitly for deleted messages in
 the search query).
 
 Add keybindings for next/previous thread.
@@ -119,7 +119,7 @@ Allow configuration for filename patterns that should be ignored when
 indexing.
 
 Replace the "notmuch part --part=id" command with "notmuch show
---part=id", (David Edmonson wants to rewrite some of "notmuch show" to
+--part=id", (David Edmondson wants to rewrite some of "notmuch show" to
 provide more MIME-structure information in its output first).
 
 Replace the "notmuch search-tags" command with "notmuch search
