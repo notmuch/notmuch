@@ -127,7 +127,7 @@ main (int argc, char *argv[])
 
 	if (argc != 2) {
 		fprintf (stderr, "Usage: %s <output-file>\n", argv[0]);
-		exit (1);
+		return 1;
 	}
 
 	output_filename = argv[1];
@@ -135,14 +135,14 @@ main (int argc, char *argv[])
 	if (output == NULL) {
 		fprintf (stderr, "Failed to open %s for writing: %s\n",
 			 output_filename, strerror (errno));
-		exit (1);
+		return 1;
 	}
 
 	sock = socket (AF_INET, SOCK_STREAM, 0);
 	if (sock == -1) {
 		fprintf (stderr, "Error: socket() failed: %s\n",
 			 strerror (errno));
-		exit (1);
+		return 1;
 	}
 
 	reuse = 1;
@@ -150,13 +150,13 @@ main (int argc, char *argv[])
 	if (err) {
 		fprintf (stderr, "Error: setsockopt() failed: %s\n",
 			 strerror (errno));
-		exit (1);
+		return 1;
 	}
 
 	hostinfo = gethostbyname ("localhost");
 	if (hostinfo == NULL) {
 		fprintf (stderr, "Unknown host: localhost\n");
-		exit (1);
+		return 1;
 	}
 
 	addr.sin_family = AF_INET;
@@ -167,7 +167,7 @@ main (int argc, char *argv[])
 		fprintf (stderr, "Error: bind() failed: %s\n",
 			 strerror (errno));
 		close (sock);
-		exit (1);
+		return 1;
 	}
 
 	err = listen (sock, 1);
@@ -175,7 +175,7 @@ main (int argc, char *argv[])
 		fprintf (stderr, "Error: listen() failed: %s\n",
 			 strerror (errno));
 		close (sock);
-		exit (1);
+		return 1;
 	}
 
 	peer_addr_len = sizeof (peer_addr);
@@ -183,14 +183,14 @@ main (int argc, char *argv[])
 	if (peer == -1) {
 		fprintf (stderr, "Error: accept() failed: %s\n",
 			 strerror (errno));
-		exit (1);
+		return 1;
 	}
 
 	peer_file = fdopen (peer, "w+");
 	if (peer_file == NULL) {
 		fprintf (stderr, "Error: fdopen() failed: %s\n",
 			 strerror (errno));
-		exit (1);
+		return 1;
 	}
 
 	do_smtp_to_file (peer_file, output);
