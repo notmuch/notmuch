@@ -1,11 +1,18 @@
 #!/usr/bin/make -f
 
+VERSION=$(shell dpkg-parsechangelog | sed -n 's/^Version:\([^-]*\)/\1/p')
+
 %:
 	dh $@
 
 override_dh_auto_configure:
+	cp version debian/version.pre-build
+	echo $(VERSION) > version
 	dh_auto_configure -- --emacslispdir=/usr/share/emacs/site-lisp/notmuch
 
+override_dh_auto_clean:
+	-mv debian/version.pre-build version
+	dh_auto_clean
 override_dh_installdocs:
 	dh_installdocs
 	install -m644 vim/README debian/notmuch/usr/share/doc/notmuch/README.vim
