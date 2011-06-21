@@ -1,5 +1,5 @@
 #! /bin/sh -e
-# /usr/lib/emacsen-common/packages/install/notmuch
+# /usr/lib/emacsen-common/packages/install/notmuch-emacs
 
 # Written by Jim Van Zandt <jrv@debian.org>, borrowing heavily
 # from the install scripts for gettext by Santiago Vila

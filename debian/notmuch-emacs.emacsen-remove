@@ -1,5 +1,5 @@
 #!/bin/sh -e
-# /usr/lib/emacsen-common/packages/remove/notmuch
+# /usr/lib/emacsen-common/packages/remove/notmuch-emacs
 
 FLAVOR=$1
 PACKAGE=notmuch
