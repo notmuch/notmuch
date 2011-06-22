@@ -56,7 +56,7 @@ tests_in_suite=$(for i in $TESTS; do echo $i; done | sort)
 available=$(ls -1 ../ | \
     sed -r -e "/^(aggregate-results.sh|Makefile|Makefile.local|notmuch-test)/d" \
 	   -e "/^(README|test-lib.sh|test-lib.el|test-results|tmp.*|valgrind|corpus*)/d" \
-	   -e "/^(emacs.expected-output|smtp-dummy|smtp-dummy.c|test-verbose)/d" \
+	   -e "/^(emacs.expected-output|smtp-dummy|smtp-dummy.c|test-verbose|symbol-test.cc)/d" \
 	   -e "/^(test.expected-output|.*~)/d" \
 	   -e "/^(gnupg-secret-key.asc)/d" \
 	   -e "/^(gnupg-secret-key.NOTE)/d" \
