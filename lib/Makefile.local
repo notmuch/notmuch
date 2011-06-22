@@ -36,7 +36,7 @@ LIBRARY_SUFFIX = so
 LINKER_NAME = libnotmuch.$(LIBRARY_SUFFIX)
 SONAME = $(LINKER_NAME).$(LIBNOTMUCH_VERSION_MAJOR)
 LIBNAME = $(SONAME).$(LIBNOTMUCH_VERSION_MINOR).$(LIBNOTMUCH_VERSION_RELEASE)
-LIBRARY_LINK_FLAG = -shared -Wl,-soname=$(SONAME)
+LIBRARY_LINK_FLAG = -shared -Wl,--version-script=notmuch.sym,-soname=$(SONAME)
 ifeq ($(LIBDIR_IN_LDCONFIG),1)
 ifeq ($(DESTDIR),)
 LIBRARY_INSTALL_POST_COMMAND=ldconfig
@@ -66,13 +66,20 @@ libnotmuch_cxx_srcs =		\
 	$(dir)/query.cc		\
 	$(dir)/thread.cc
 
-libnotmuch_modules = $(libnotmuch_c_srcs:.c=.o) $(libnotmuch_cxx_srcs:.cc=.o)
+libnotmuch_modules := $(libnotmuch_c_srcs:.c=.o) $(libnotmuch_cxx_srcs:.cc=.o)
 
 $(dir)/libnotmuch.a: $(libnotmuch_modules)
 	$(call quiet,AR) rcs $@ $^
 
-$(dir)/$(LIBNAME): $(libnotmuch_modules)
-	$(call quiet,CXX $(CXXFLAGS)) $^ $(FINAL_LIBNOTMUCH_LDFLAGS) $(LIBRARY_LINK_FLAG) -o $@
+$(dir)/$(LIBNAME): $(libnotmuch_modules) notmuch.sym
+	echo $(libnotmuch_modules)
+	$(call quiet,CXX $(CXXFLAGS)) $(libnotmuch_modules) $(FINAL_LIBNOTMUCH_LDFLAGS) $(LIBRARY_LINK_FLAG) -o $@
+
+notmuch.sym: lib/notmuch.h
+	gcc -aux-info notmuch.aux $<
+	printf "{\nglobal:\n" > notmuch.sym
+	sed  -n 's/.*\(notmuch_[a-z_]*\) (.*/\t\1;/p' notmuch.aux >> notmuch.sym
+	printf "local: *;\n};\n" >> notmuch.sym
 
 $(dir)/$(SONAME): $(dir)/$(LIBNAME)
 	ln -sf $(LIBNAME) $@
@@ -96,4 +103,4 @@ install-$(dir): $(dir)/$(LIBNAME)
 	$(LIBRARY_INSTALL_POST_COMMAND)
 
 SRCS  := $(SRCS) $(libnotmuch_c_srcs) $(libnotmuch_cxx_srcs)
-CLEAN := $(CLEAN) $(libnotmuch_modules) $(dir)/$(SONAME) $(dir)/$(LINKER_NAME) $(dir)$(LIBNAME) libnotmuch.a
+CLEAN := $(CLEAN) $(libnotmuch_modules) $(dir)/$(SONAME) $(dir)/$(LINKER_NAME) $(dir)$(LIBNAME) libnotmuch.a notmuch.aux notmuch.sym
