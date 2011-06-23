@@ -67,8 +67,8 @@ Description: python interface to the notmuch mail search and index library
 Package: notmuch-emacs
 Architecture: all
 Section: mail
-Breaks: notmuch (<<0.6~238~)
-Replaces: notmuch (<<0.6~238~)
+Breaks: notmuch (<<0.6~254~)
+Replaces: notmuch (<<0.6~254~)
 Depends: ${misc:Depends}, notmuch,
  emacs23 (>= 23~) | emacs23-nox (>=23~) | emacs23-lucid (>=23~)
 Description: thread-based email index, search and tagging (emacs interface)
@@ -83,8 +83,8 @@ Description: thread-based email index, search and tagging (emacs interface)
 Package: notmuch-vim
 Architecture: all
 Section: mail
-Breaks: notmuch (<<0.6~238~)
-Replaces: notmuch (<<0.6~238~)
+Breaks: notmuch (<<0.6~254~)
+Replaces: notmuch (<<0.6~254~)
 Depends: ${misc:Depends}, notmuch, vim-addon-manager
 Description: thread-based email index, search and tagging (vim interface)
  Notmuch is a system for indexing, searching, reading, and tagging
