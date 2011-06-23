@@ -96,7 +96,7 @@ same as that of the previous message."
 	     notmuch-wash-excerpt-citations))
 
 ;; Mostly useful for debugging.
-(defcustom notmuch-show-all-multipart/alternative-parts nil
+(defcustom notmuch-show-all-multipart/alternative-parts t
   "Should all parts of multipart/alternative parts be shown?"
   :group 'notmuch
   :type 'boolean)
