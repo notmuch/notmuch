@@ -26,6 +26,3 @@ override_dh_auto_install:
 override_dh_installdocs:
 	dh_installdocs
 	install -m644 vim/README debian/notmuch/usr/share/doc/notmuch/README.vim
-
-override_dh_auto_build:
-	make RPATH_LDFLAGS=""
