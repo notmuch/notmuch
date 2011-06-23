@@ -124,7 +124,6 @@ mkdir -p mail/sent-string/new
 mkdir -p mail/sent-string/tmp
 
 test_begin_subtest "notmuch-fcc-dirs set to a string"
-test_emacs "(setq notmuch-fcc-dirs nil) (notmuch-mua-mail) (princ (buffer-string))" > OUTPUT
 test_emacs "(setq notmuch-fcc-dirs \"sent-string\") (notmuch-mua-mail) (princ (buffer-string))" > OUTPUT
 cat <<EOF >EXPECTED
 From: Notmuch Test Suite <test_suite@notmuchmail.org>
