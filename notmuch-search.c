@@ -275,6 +275,7 @@ do_search_messages (const search_format_t *format,
 {
     notmuch_message_t *message;
     notmuch_messages_t *messages;
+    notmuch_filenames_t *filenames;
     int first_message = 1;
 
     messages = notmuch_query_search_messages (query);
@@ -289,18 +290,32 @@ do_search_messages (const search_format_t *format,
     {
 	message = notmuch_messages_get (messages);
 
-	if (! first_message)
-	    fputs (format->item_sep, stdout);
-
 	if (output == OUTPUT_FILES) {
-	    format->item_id (message, "",
-			     notmuch_message_get_filename (message));
+	    filenames = notmuch_message_get_filenames (message);
+
+	    for (;
+		 notmuch_filenames_valid (filenames);
+		 notmuch_filenames_move_to_next (filenames))
+	    {
+		if (! first_message)
+		    fputs (format->item_sep, stdout);
+
+		format->item_id (message, "",
+				 notmuch_filenames_get (filenames));
+
+		first_message = 0;
+	    }
+	    
+	    notmuch_filenames_destroy( filenames );
+
 	} else { /* output == OUTPUT_MESSAGES */
+	    if (! first_message)
+		fputs (format->item_sep, stdout);
+
 	    format->item_id (message, "id:",
 			     notmuch_message_get_message_id (message));
+	    first_message = 0;
 	}
-
-	first_message = 0;
 
 	notmuch_message_destroy (message);
     }
