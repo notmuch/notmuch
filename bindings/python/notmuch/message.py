@@ -470,7 +470,7 @@ class Message(object):
             raise NotmuchError(STATUS.NULL_POINTER)
         return Tags(tags_p, self)
 
-    def add_tag(self, tag, sync_maildir_flags=True):
+    def add_tag(self, tag, sync_maildir_flags=False):
         """Adds a tag to the given message
 
         Adds a tag to the current message. The maximal tag length is defined in
@@ -480,11 +480,11 @@ class Message(object):
 
         :param sync_maildir_flags: If notmuch configuration is set to do
             this, add maildir flags corresponding to notmuch tags. See
-            :meth:`tags_to_maildir_flags`. Use False if you want to
-            add/remove many tags on a message without having to
-            physically rename the file every time. Do note, that this
-            will do nothing when a message is frozen, as tag changes
-            will not be committed to the database yet.
+            underlying method :meth:`tags_to_maildir_flags`. Use False
+            if you want to add/remove many tags on a message without
+            having to physically rename the file every time. Do note,
+            that this will do nothing when a message is frozen, as tag
+            changes will not be committed to the database yet.
 
         :returns: STATUS.SUCCESS if the tag was successfully added.
                   Raises an exception otherwise.
@@ -514,7 +514,7 @@ class Message(object):
             self.tags_to_maildir_flags()
         return STATUS.SUCCESS
 
-    def remove_tag(self, tag, sync_maildir_flags=True):
+    def remove_tag(self, tag, sync_maildir_flags=False):
         """Removes a tag from the given message
 
         If the message has no such tag, this is a non-operation and
@@ -523,11 +523,11 @@ class Message(object):
         :param tag: String with a 'tag' to be removed.
         :param sync_maildir_flags: If notmuch configuration is set to do
             this, add maildir flags corresponding to notmuch tags. See
-            :meth:`tags_to_maildir_flags`. Use False if you want to
-            add/remove many tags on a message without having to
-            physically rename the file every time. Do note, that this
-            will do nothing when a message is frozen, as tag changes
-            will not be committed to the database yet.
+            underlying method :meth:`tags_to_maildir_flags`. Use False
+            if you want to add/remove many tags on a message without
+            having to physically rename the file every time. Do note,
+            that this will do nothing when a message is frozen, as tag
+            changes will not be committed to the database yet.
 
         :returns: STATUS.SUCCESS if the tag was successfully removed or if 
                   the message had no such tag.
@@ -559,11 +559,12 @@ class Message(object):
 
 
 
-    def remove_all_tags(self, sync_maildir_flags=True):
+    def remove_all_tags(self, sync_maildir_flags=False):
         """Removes all tags from the given message.
 
         See :meth:`freeze` for an example showing how to safely
         replace tag values.
+
 
         :param sync_maildir_flags: If notmuch configuration is set to do
             this, add maildir flags corresponding to notmuch tags. See
@@ -703,8 +704,9 @@ class Message(object):
         Also, if this filename is in a directory named "new", rename it
         to be within the neighboring directory named "cur".
 
-        Usually, you do not need to call this manually as
-        tag changing methods should be implicitly calling it.
+        Do note that calling this method while a message is frozen might
+        not work yet, as the modified tags have not been committed yet
+        to the database.
 
         :returns: a :class:`STATUS`. In short, you want to see
             notmuch.STATUS.SUCCESS here. See there for details."""
@@ -730,8 +732,8 @@ class Message(object):
         is, the flags from the multiple filenames are combined with the
         logical OR operator.)
 
-        Usually, you do not need to call this manually as
-        :meth:`Database.add_message` implicitly calls it.
+        As a convenience, you can set the sync_maildir_flags parameter in
+        :meth:`Database.add_message` to implicitly call this.
 
         :returns: a :class:`STATUS`. In short, you want to see
             notmuch.STATUS.SUCCESS here. See there for details."""
