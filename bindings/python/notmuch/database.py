@@ -261,10 +261,10 @@ class Database(object):
         # return the Directory, init it with the absolute path
         return Directory(abs_dirpath, dir_p, self)
 
-    def add_message(self, filename):
+    def add_message(self, filename, sync_maildir_flags=False):
         """Adds a new message to the database
 
-        `filename` should be a path relative to the path of the open
+        :param filename: should be a path relative to the path of the open
         database (see :meth:`get_path`), or else should be an absolute
         filename with initial components that match the path of the
         database.
@@ -274,8 +274,12 @@ class Database(object):
         notmuch database will reference the filename, and will not copy the
         entire contents of the file.
 
-        If the message contains Maildir flags, we will -depending on the
-        notmuch configuration- sync those tags to initial notmuch tags.
+        :param sync_maildir_flags: If the message contains Maildir
+            flags, we will -depending on the notmuch configuration- sync
+            those tags to initial notmuch tags, if set to `True`. It is
+            `False` by default to remain consistent with the libnotmuch
+            API. You might want to look into the underlying method
+            :meth:`Message.maildir_flags_to_tags`.
 
         :returns: On success, we return 
 
@@ -317,9 +321,11 @@ class Database(object):
         if not status in [STATUS.SUCCESS, STATUS.DUPLICATE_MESSAGE_ID]:
             raise NotmuchError(status)
 
-        #construct Message(), sync initial tags from Maildir flags and return
+        #construct Message() and return
         msg = Message(msg_p, self)
-        msg.maildir_flags_to_tags()
+        #automatic sync initial tags from Maildir flags
+        if sync_maildir_flags:
+            msg.maildir_flags_to_tags()
         return (msg, status)
 
     def remove_message(self, filename):
