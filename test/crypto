@@ -318,7 +318,7 @@ test_expect_equal \
     "$expected"
 
 test_begin_subtest "signature verification with revoked key"
-# generate revokation certificate and load it to revoke key
+# generate revocation certificate and load it to revoke key
 echo "y
 1
 Notmuch Test Suite key revocation (automated) $(date '+%F_%T%z')

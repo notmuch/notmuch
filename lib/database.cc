@@ -69,7 +69,7 @@ typedef struct {
  *
  *    Multiple terms of given prefix:
  *
- *	reference: All message IDs from In-Reply-To and Re ferences
+ *	reference: All message IDs from In-Reply-To and References
  *		   headers in the message.
  *
  *	tag:	   Any tags associated with this message by the user.
@@ -137,7 +137,7 @@ typedef struct {
  *			ASCII integer. The initial database version
  *			was 1, (though a schema existed before that
  *			were no "version" database value existed at
- *			all). Succesive versions are allocated as
+ *			all). Successive versions are allocated as
  *			changes are made to the database (such as by
  *			indexing new fields).
  *
@@ -148,7 +148,7 @@ typedef struct {
  *			incremented for each thread ID.
  *
  *	thread_id_*	A pre-allocated thread ID for a particular
- *			message. This is actually an arbitarily large
+ *			message. This is actually an arbitrarily large
  *			family of metadata name. Any particular name is
  *			formed by concatenating "thread_id_" with a message
  *			ID (or the SHA1 sum of a message ID if it is very
@@ -422,7 +422,7 @@ skip_space_and_comments (const char **str)
 }
 
 /* Parse an RFC 822 message-id, discarding whitespace, any RFC 822
- * comments, and the '<' and '>' delimeters.
+ * comments, and the '<' and '>' delimiters.
  *
  * If not NULL, then *next will be made to point to the first character
  * not parsed, (possibly pointing to the final '\0' terminator.
@@ -1149,7 +1149,7 @@ _notmuch_database_filename_to_direntry (void *ctx,
 
 /* Given a legal 'path' for the database, return the relative path.
  *
- * The return value will be a pointer to the originl path contents,
+ * The return value will be a pointer to the original path contents,
  * and will be either the original string (if 'path' was relative) or
  * a portion of the string (if path was absolute and begins with the
  * database path).
@@ -1476,7 +1476,7 @@ _notmuch_database_link_message_to_children (notmuch_database_t *notmuch,
  * In all cases, we assign to the current message the first thread_id
  * found (through either parent or child). We will also merge any
  * existing, distinct threads where this message belongs to both,
- * (which is not uncommon when mesages are processed out of order).
+ * (which is not uncommon when messages are processed out of order).
  *
  * Finally, if no thread ID has been found through parent or child, we
  * call _notmuch_message_generate_thread_id to generate a new thread

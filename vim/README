@@ -37,7 +37,7 @@ Buffer types:
         You are presented with the search results when you run :NotMuch.
 
         Keybindings:
-            <Space> - show the selected thread colapsing unmatched items
+            <Space> - show the selected thread collapsing unmatched items
             <Enter> - show the entire selected thread
             a       - archive message (remove inbox tag)
             f       - filter the current search terms

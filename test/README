@@ -151,7 +151,7 @@ library for your script to use.
 
    This works similar to test_expect_equal (see above) but is used to
    mark a test that demonstrates a known breakage, (that is, the
-   author of the test expectes "output" and "expected" to differ until
+   author of the test expects "output" and "expected" to differ until
    the breakage is fixed). See test_expect_failure for details.
 
  test_debug <script>
@@ -181,7 +181,7 @@ writing tests:
   generate_message
 
     Generates a message with an optional template. Most tests will
-    actually prefere to call add_message. See below.
+    actually prefer to call add_message. See below.
 
   add_message
 
@@ -197,6 +197,6 @@ writing tests:
 
     This function should be called at the beginning of a test file
     when a test needs to operate on a non-empty body of messages. It
-    will intialize the mail database to a known state of 50 sample
+    will initialize the mail database to a known state of 50 sample
     messages, (culled from the early history of the notmuch mailing
     list).

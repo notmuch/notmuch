@@ -48,7 +48,7 @@ static int
 notmuch_help_command (void *ctx, int argc, char *argv[]);
 
 static const char search_terms_help[] =
-    "\tSeveral notmuch commands accept a comman syntax for search\n"
+    "\tSeveral notmuch commands accept a common syntax for search\n"
     "\tterms.\n"
     "\n"
     "\tThe search terms can consist of free-form text (and quoted\n"

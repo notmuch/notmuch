@@ -88,7 +88,7 @@ the user hasn't set this variable with the old or new value."
   (notmuch-config-get "user.primary_email"))
 
 (defun notmuch-user-other-email ()
-  "Return the user.primary_email value (as a list) from the notmuch configuration."
+  "Return the user.other_email value (as a list) from the notmuch configuration."
   (split-string (notmuch-config-get "user.other_email") "\n"))
 
 (defun notmuch-kill-this-buffer ()

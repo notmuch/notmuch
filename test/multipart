@@ -209,7 +209,7 @@ Non-text part: text/html
 EOF
 test_expect_equal_file OUTPUT EXPECTED
 
-test_begin_subtest "--format=text --part=5, inline attachement"
+test_begin_subtest "--format=text --part=5, inline attachment"
 notmuch show --format=text --part=5 'id:87liy5ap00.fsf@yoom.home.cworth.org' >OUTPUT
 cat <<EOF >EXPECTED
 attachment{ ID: 5, Content-type: text/plain

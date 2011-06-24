@@ -174,7 +174,7 @@ void sha1_hash(const unsigned char data[], unsigned long len, sha1_ctx ctx[1])
     if((ctx->count[0] += len) < len)
         ++(ctx->count[1]);
 
-    while(len >= space)     /* tranfer whole blocks if possible  */
+    while(len >= space)     /* transfer whole blocks if possible  */
     {
         memcpy(((unsigned char*)ctx->wbuf) + pos, sp, space);
         sp += space; len -= space; space = SHA1_BLOCK_SIZE; pos = 0;

@@ -64,7 +64,7 @@
     ("authors" . "%-20s ")
     ("subject" . "%s ")
     ("tags" . "(%s)"))
-  "Search result formating. Supported fields are:
+  "Search result formatting. Supported fields are:
 	date, count, authors, subject, tags
 For example:
 	(setq notmuch-search-result-format \(\(\"authors\" . \"%-40s\"\)
@@ -493,7 +493,7 @@ the messages that are about to be tagged"
   :group 'notmuch)
 
 (defcustom notmuch-after-tag-hook nil
-  "Hooks that are run before tags of a message are modified.
+  "Hooks that are run after tags of a message are modified.
 
 'tags' will contain the tags that were added or removed as
 a list of strings of the form \"+TAG\" or \"-TAG\".
@@ -836,7 +836,7 @@ non-authors is found, assume that all of the authors match."
 (defun notmuch-search-operate-all (action)
   "Add/remove tags from all matching messages.
 
-Tis command adds or removes tags from all messages matching the
+This command adds or removes tags from all messages matching the
 current search terms. When called interactively, this command
 will prompt for tags to be added or removed. Tags prefixed with
 '+' will be added and tags prefixed with '-' will be removed.

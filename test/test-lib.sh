@@ -424,7 +424,7 @@ test_begin_subtest ()
 	error "bug in test script: Missing test_expect_equal in ${BASH_SOURCE[1]}:${BASH_LINENO[0]}"
     fi
     test_subtest_name="$1"
-    # Remember stdout and stderr file descriptios and redirect test
+    # Remember stdout and stderr file descriptors and redirect test
     # output to the previously prepared file descriptors 3 and 4 (see
     # below)
     if test "$verbose" != "t"; then exec 4>test.output 3>&4; fi

@@ -22,7 +22,7 @@ if [ "$srcdir" != "." ]; then
 fi
 
 # Set several defaults (optionally specified by the user in
-# environemnt variables)
+# environment variables)
 CC=${CC:-gcc}
 CXX=${CXX:-g++}
 CFLAGS=${CFLAGS:--O2}
@@ -608,7 +608,7 @@ includedir = ${INCLUDEDIR:=\$(prefix)/include}
 # The directory to which man pages should be installed
 mandir = ${MANDIR:=\$(prefix)/share/man}
 
-# The directory to which read-only (configuration) filesshould be installed
+# The directory to which read-only (configuration) files should be installed
 sysconfdir = ${SYSCONFDIR:=\$(prefix)/etc}
 
 # The directory to which emacs lisp files should be installed

@@ -103,7 +103,7 @@ typedef enum _notmuch_status {
 
 /* Get a string representation of a notmuch_status_t value.
  *
- * The result is readonly.
+ * The result is read-only.
  */
 const char *
 notmuch_status_to_string (notmuch_status_t status);
@@ -510,7 +510,7 @@ notmuch_threads_move_to_next (notmuch_threads_t *threads);
  *
  * It's not strictly necessary to call this function. All memory from
  * the notmuch_threads_t object will be reclaimed when the
- * containg query object is destroyed.
+ * containing query object is destroyed.
  */
 void
 notmuch_threads_destroy (notmuch_threads_t *threads);

@@ -278,7 +278,7 @@ add_recipients_from_message (GMimeMessage *reply,
      * The munging is easy to detect, because it results in a
      * redundant reply-to header, (with an address that already exists
      * in either To or Cc). So in this case, we ignore the Reply-To
-     * field and use the From header. Thie ensures the original sender
+     * field and use the From header. This ensures the original sender
      * will get the reply even if not subscribed to the list. Note
      * that the address in the Reply-To header will always appear in
      * the reply.
@@ -362,7 +362,7 @@ guess_from_received_header (notmuch_config_t *config, notmuch_message_t *message
      * them indications to which email address this message was
      * delivered.
      * The Received: header is special in our get_header function
-     * and is always concated.
+     * and is always concatenated.
      */
     received = notmuch_message_get_header (message, "received");
     if (received == NULL)

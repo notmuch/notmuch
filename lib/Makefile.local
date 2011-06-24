@@ -89,7 +89,7 @@ $(dir)/$(LINKER_NAME): $(dir)/$(SONAME)
 
 install: install-$(dir)
 
-# The (often-reused) $dir works fine within targets/pre-requisites,
+# The (often-reused) $dir works fine within targets/prerequisites,
 # but cannot be used reliably within commands, so copy its value to a
 # variable that is not reused.
 lib := $(dir)

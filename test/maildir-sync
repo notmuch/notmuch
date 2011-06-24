@@ -85,7 +85,7 @@ test_expect_equal "$output" "No new mail."
 # test created directory document in the database but this document
 # was not linked as subdirectory of $MAIL_DIR. Therefore notmuch new
 # could not reach the cur/ directory and its files in it during
-# recurive traversal.
+# recursive traversal.
 #
 # XXX: The above sounds like a bug that should be fixed. If notmuch is
 # creating new directories in the mail store, then it should be

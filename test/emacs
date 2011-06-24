@@ -108,6 +108,77 @@ notmuch new > /dev/null
 output=$(notmuch search 'subject:"testing message sent via SMTP"' | notmuch_search_sanitize)
 test_expect_equal "$output" "thread:XXX   1974-03-29 [1/1] Notmuch Test Suite; Testing message sent via SMTP (inbox)"
 
+test_begin_subtest "notmuch-fcc-dirs set to nil"
+test_emacs "(setq notmuch-fcc-dirs nil) (notmuch-mua-mail) (princ (buffer-string))" > OUTPUT
+cat <<EOF >EXPECTED
+From: Notmuch Test Suite <test_suite@notmuchmail.org>
+To: 
+Subject: 
+--text follows this line--
+EOF
+test_expect_equal_file OUTPUT EXPECTED
+
+# Make another FCC maildir specific for the next test
+mkdir -p mail/sent-string/cur
+mkdir -p mail/sent-string/new
+mkdir -p mail/sent-string/tmp
+
+test_begin_subtest "notmuch-fcc-dirs set to a string"
+test_emacs "(setq notmuch-fcc-dirs \"sent-string\") (notmuch-mua-mail) (princ (buffer-string))" > OUTPUT
+cat <<EOF >EXPECTED
+From: Notmuch Test Suite <test_suite@notmuchmail.org>
+To: 
+Subject: 
+Fcc: ${MAIL_DIR}/sent-string
+--text follows this line--
+EOF
+test_expect_equal_file OUTPUT EXPECTED
+
+# Make more FCC maildirs specific for the next test
+mkdir -p mail/sent-list-match/cur
+mkdir -p mail/sent-list-match/new
+mkdir -p mail/sent-list-match/tmp
+mkdir -p mail/failure/cur
+mkdir -p mail/failure/new
+mkdir -p mail/failure/tmp
+
+test_begin_subtest "notmuch-fcc-dirs set to a list (with match)"
+test_emacs "(setq notmuch-fcc-dirs '((\"notmuchmail.org\" . \"sent-list-match\") (\".*\" . \"failure\"))) (notmuch-mua-mail) (princ (buffer-string))" > OUTPUT
+cat <<EOF >EXPECTED
+From: Notmuch Test Suite <test_suite@notmuchmail.org>
+To: 
+Subject: 
+Fcc: ${MAIL_DIR}/sent-list-match
+--text follows this line--
+EOF
+test_expect_equal_file OUTPUT EXPECTED
+
+# Make another FCC maildir specific for the next test
+mkdir -p mail/sent-list-catch-all/cur
+mkdir -p mail/sent-list-catch-all/new
+mkdir -p mail/sent-list-catch-all/tmp
+ 
+test_begin_subtest "notmuch-fcc-dirs set to a list (catch-all)"
+test_emacs "(setq notmuch-fcc-dirs '((\"example.com\" . \"failure\") (\".*\" . \"sent-list-catch-all\"))) (notmuch-mua-mail) (princ (buffer-string))" > OUTPUT
+cat <<EOF >EXPECTED
+From: Notmuch Test Suite <test_suite@notmuchmail.org>
+To: 
+Subject: 
+Fcc: ${MAIL_DIR}/sent-list-catch-all
+--text follows this line--
+EOF
+test_expect_equal_file OUTPUT EXPECTED
+
+test_begin_subtest "notmuch-fcc-dirs set to a list (no match)"
+test_emacs "(setq notmuch-fcc-dirs '((\"example.com\" . \"failure\") (\"nomatchhere.net\" . \"failure\"))) (notmuch-mua-mail) (princ (buffer-string))" > OUTPUT
+cat <<EOF >EXPECTED
+From: Notmuch Test Suite <test_suite@notmuchmail.org>
+To: 
+Subject: 
+--text follows this line--
+EOF
+test_expect_equal_file OUTPUT EXPECTED
+
 test_begin_subtest "Reply within emacs"
 # We sed away everything before the ^From in the output to avoid getting
 # confused by messages such as "Parsing /home/cworth/.mailrc... done"
