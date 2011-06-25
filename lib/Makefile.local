@@ -103,4 +103,6 @@ install-$(dir): $(dir)/$(LIBNAME)
 	$(LIBRARY_INSTALL_POST_COMMAND)
 
 SRCS  := $(SRCS) $(libnotmuch_c_srcs) $(libnotmuch_cxx_srcs)
-CLEAN := $(CLEAN) $(libnotmuch_modules) $(dir)/$(SONAME) $(dir)/$(LINKER_NAME) $(dir)$(LIBNAME) libnotmuch.a notmuch.aux notmuch.sym
+CLEAN += $(libnotmuch_modules) $(dir)/$(SONAME) $(dir)/$(LINKER_NAME)
+CLEAN += $(dir)/$(LIBNAME) $(dir)/libnotmuch.a notmuch.aux notmuch.sym
+CLEAN += $(dir)/notmuch.h.gch
