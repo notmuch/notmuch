@@ -41,6 +41,7 @@ TESTS="
   maildir-sync
   crypto
   symbol-hiding
+  search-folder-coherence
 "
 TESTS=${NOTMUCH_TESTS:=$TESTS}
 
