@@ -76,9 +76,8 @@ $(dir)/$(LIBNAME): $(libnotmuch_modules) notmuch.sym
 	$(call quiet,CXX $(CXXFLAGS)) $(libnotmuch_modules) $(FINAL_LIBNOTMUCH_LDFLAGS) $(LIBRARY_LINK_FLAG) -o $@
 
 notmuch.sym: lib/notmuch.h
-	gcc -aux-info notmuch.aux $<
 	printf "{\nglobal:\n" > notmuch.sym
-	sed  -n 's/.*\(notmuch_[a-z_]*\) (.*/\t\1;/p' notmuch.aux >> notmuch.sym
+	sed  -n 's/^\s*\(notmuch_[a-z_]*\)\s*(.*/\t\1;/p' $< >> notmuch.sym
 	printf "local: *;\n};\n" >> notmuch.sym
 
 $(dir)/$(SONAME): $(dir)/$(LIBNAME)
@@ -103,4 +102,4 @@ install-$(dir): $(dir)/$(LIBNAME)
 	$(LIBRARY_INSTALL_POST_COMMAND)
 
 SRCS  := $(SRCS) $(libnotmuch_c_srcs) $(libnotmuch_cxx_srcs)
-CLEAN := $(CLEAN) $(libnotmuch_modules) $(dir)/$(SONAME) $(dir)/$(LINKER_NAME) $(dir)$(LIBNAME) libnotmuch.a notmuch.aux notmuch.sym
+CLEAN := $(CLEAN) $(libnotmuch_modules) $(dir)/$(SONAME) $(dir)/$(LINKER_NAME) $(dir)$(LIBNAME) libnotmuch.a notmuch.sym
