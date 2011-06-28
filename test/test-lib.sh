@@ -839,11 +839,11 @@ test_done () {
 	fi
 }
 
-test_emacs () {
+emacs_generate_script () {
 	# Construct a little test script here for the benefit of the user,
 	# (who can easily run "run_emacs" to get the same emacs environment
 	# for investigating any failures).    
-	cat <<EOF > run_emacs
+	cat <<EOF >"$TMP_DIRECTORY/run_emacs"
 #!/bin/sh
 export PATH=$PATH
 export NOTMUCH_CONFIG=$NOTMUCH_CONFIG
@@ -867,12 +867,15 @@ fi
 # --load		Force loading of notmuch.el and test-lib.el
 
 emacs \$BATCH --no-init-file --no-site-file \
-	--directory ../../emacs --load notmuch.el \
-	--directory .. --load test-lib.el \
+	--directory "$TMP_DIRECTORY/../../emacs" --load notmuch.el \
+	--directory "$TMP_DIRECTORY/.." --load test-lib.el \
 	--eval "(progn \$@)"
 EOF
-	chmod a+x ./run_emacs
-	./run_emacs "$@"
+	chmod a+x "$TMP_DIRECTORY/run_emacs"
+}
+
+test_emacs () {
+	"$TMP_DIRECTORY/run_emacs" "$@"
 }
 
 
@@ -999,6 +1002,8 @@ name=Notmuch Test Suite
 primary_email=test_suite@notmuchmail.org
 other_email=test_suite_other@notmuchmail.org;test_suite@otherdomain.org
 EOF
+
+emacs_generate_script
 
 
 # Use -P to resolve symlinks in our working directory so that the cwd
