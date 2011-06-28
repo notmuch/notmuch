@@ -7,32 +7,51 @@ EXPECTED=../emacs.expected-output
 add_email_corpus
 
 test_begin_subtest "Basic notmuch-hello view in emacs"
-test_emacs '(notmuch-hello) (princ (buffer-string))' >OUTPUT
+test_emacs '(notmuch-hello)
+	    (princ (buffer-string))' >OUTPUT
 test_expect_equal_file OUTPUT $EXPECTED/notmuch-hello
 
 test_begin_subtest "Saved search with 0 results"
-test_emacs '(setq notmuch-show-empty-saved-searches t) (setq notmuch-saved-searches '\''(("inbox" . "tag:inbox") ("unread" . "tag:unread") ("empty" . "tag:doesnotexist"))) (notmuch-hello) (princ (buffer-string))' >OUTPUT
+test_emacs '(setq notmuch-show-empty-saved-searches t)
+	    (setq notmuch-saved-searches
+		  '\''(("inbox" . "tag:inbox")
+		       ("unread" . "tag:unread")
+		       ("empty" . "tag:doesnotexist")))
+	    (notmuch-hello)
+	    (princ (buffer-string))' >OUTPUT
 test_expect_equal_file OUTPUT $EXPECTED/notmuch-hello-with-empty
 
 test_begin_subtest "No saved searches displayed (all with 0 results)"
-test_emacs '(setq notmuch-saved-searches '\''(("empty" . "tag:doesnotexist"))) (notmuch-hello) (princ (buffer-string))' >OUTPUT
+test_emacs '(setq notmuch-saved-searches
+		  '\''(("empty" . "tag:doesnotexist")))
+	    (notmuch-hello)
+	    (princ (buffer-string))' >OUTPUT
 test_expect_equal_file OUTPUT $EXPECTED/notmuch-hello-no-saved-searches
 
 test_begin_subtest "Basic notmuch-search view in emacs"
-test_emacs '(notmuch-search "tag:inbox") (notmuch-test-wait) (princ (buffer-string))' >OUTPUT
+test_emacs '(notmuch-search "tag:inbox")
+	    (notmuch-test-wait)
+	    (princ (buffer-string))' >OUTPUT
 test_expect_equal_file OUTPUT $EXPECTED/notmuch-search-tag-inbox
 
 test_begin_subtest "Navigation of notmuch-hello to search results"
-test_emacs '(notmuch-hello) (goto-char (point-min)) (re-search-forward "inbox") (widget-button-press (point)) (notmuch-test-wait) (princ (buffer-string))' >OUTPUT
+test_emacs '(notmuch-hello)
+	    (goto-char (point-min))
+	    (re-search-forward "inbox")
+	    (widget-button-press (point))
+	    (notmuch-test-wait)
+	    (princ (buffer-string))' >OUTPUT
 test_expect_equal_file OUTPUT $EXPECTED/notmuch-hello-view-inbox
 
 test_begin_subtest "Basic notmuch-show view in emacs"
 maildir_storage_thread=$(notmuch search --output=threads id:20091117190054.GU3165@dottiness.seas.harvard.edu)
-test_emacs "(notmuch-show \"$maildir_storage_thread\") (princ (buffer-string))" >OUTPUT
+test_emacs "(notmuch-show \"$maildir_storage_thread\")
+	    (princ (buffer-string))" >OUTPUT
 test_expect_equal_file OUTPUT $EXPECTED/notmuch-show-thread-maildir-storage
 
 test_begin_subtest "notmuch-show for message with invalid From"
-add_message "[subject]=\"message-with-invalid-from\"" "[from]=\"\\\"Invalid \\\" From\\\" <test_suite@notmuchmail.org>\""
+add_message "[subject]=\"message-with-invalid-from\"" \
+	    "[from]=\"\\\"Invalid \\\" From\\\" <test_suite@notmuchmail.org>\""
 thread=$(notmuch search --output=threads subject:message-with-invalid-from)
 output=$(test_emacs "(notmuch-show \"$thread\") (princ (buffer-string))")
 test_expect_equal "$output" \
@@ -44,33 +63,54 @@ Date: Tue, 05 Jan 2001 15:43:57 -0000
 This is just a test message (#1)'
 
 test_begin_subtest "Navigation of notmuch-search to thread view"
-test_emacs '(notmuch-search "tag:inbox") (notmuch-test-wait) (goto-char (point-min)) (re-search-forward "Working with Maildir") (notmuch-search-show-thread) (notmuch-test-wait) (princ (buffer-string))' >OUTPUT
+test_emacs '(notmuch-search "tag:inbox")
+	    (notmuch-test-wait)
+	    (goto-char (point-min))
+	    (re-search-forward "Working with Maildir")
+	    (notmuch-search-show-thread)
+	    (notmuch-test-wait)
+	    (princ (buffer-string))' >OUTPUT
 test_expect_equal_file OUTPUT $EXPECTED/notmuch-show-thread-maildir-storage
 
 test_begin_subtest "Add tag from search view"
 os_x_darwin_thread=$(notmuch search --output=threads id:ddd65cda0911171950o4eea4389v86de9525e46052d3@mail.gmail.com)
-test_emacs "(notmuch-search \"$os_x_darwin_thread\") (notmuch-test-wait) (notmuch-search-add-tag \"tag-from-search-view\")"
+test_emacs "(notmuch-search \"$os_x_darwin_thread\")
+	    (notmuch-test-wait)
+	    (notmuch-search-add-tag \"tag-from-search-view\")"
 output=$(notmuch search $os_x_darwin_thread | notmuch_search_sanitize)
 test_expect_equal "$output" "thread:XXX   2009-11-18 [4/4] Jjgod Jiang, Alexander Botero-Lowry; [notmuch] Mac OS X/Darwin compatibility issues (inbox tag-from-search-view unread)"
 
 test_begin_subtest "Remove tag from search view"
-test_emacs "(notmuch-search \"$os_x_darwin_thread\") (notmuch-test-wait) (notmuch-search-remove-tag \"tag-from-search-view\")"
+test_emacs "(notmuch-search \"$os_x_darwin_thread\")
+	    (notmuch-test-wait)
+	    (notmuch-search-remove-tag \"tag-from-search-view\")"
 output=$(notmuch search $os_x_darwin_thread | notmuch_search_sanitize)
 test_expect_equal "$output" "thread:XXX   2009-11-18 [4/4] Jjgod Jiang, Alexander Botero-Lowry; [notmuch] Mac OS X/Darwin compatibility issues (inbox unread)"
 
 test_begin_subtest "Add tag from notmuch-show view"
-test_emacs "(notmuch-show \"$os_x_darwin_thread\") (notmuch-show-add-tag \"tag-from-show-view\")"
+test_emacs "(notmuch-show \"$os_x_darwin_thread\")
+	    (notmuch-show-add-tag \"tag-from-show-view\")"
 output=$(notmuch search $os_x_darwin_thread | notmuch_search_sanitize)
 test_expect_equal "$output" "thread:XXX   2009-11-18 [4/4] Jjgod Jiang, Alexander Botero-Lowry; [notmuch] Mac OS X/Darwin compatibility issues (inbox tag-from-show-view unread)"
 
 test_begin_subtest "Remove tag from notmuch-show view"
-test_emacs "(notmuch-show \"$os_x_darwin_thread\") (notmuch-show-remove-tag \"tag-from-show-view\")"
+test_emacs "(notmuch-show \"$os_x_darwin_thread\")
+	    (notmuch-show-remove-tag \"tag-from-show-view\")"
 output=$(notmuch search $os_x_darwin_thread | notmuch_search_sanitize)
 test_expect_equal "$output" "thread:XXX   2009-11-18 [4/4] Jjgod Jiang, Alexander Botero-Lowry; [notmuch] Mac OS X/Darwin compatibility issues (inbox unread)"
 
 test_begin_subtest "Message with .. in Message-Id:"
 add_message [id]=123..456@example '[subject]="Message with .. in Message-Id"'
-test_emacs '(notmuch-search "id:\"123..456@example\"") (notmuch-test-wait) (notmuch-search-add-tag "search-add") (notmuch-search-add-tag "search-remove") (notmuch-search-remove-tag "search-remove") (notmuch-show "id:\"123..456@example\"") (notmuch-test-wait) (notmuch-show-add-tag "show-add") (notmuch-show-add-tag "show-remove") (notmuch-show-remove-tag "show-remove")'
+test_emacs '(notmuch-search "id:\"123..456@example\"")
+	    (notmuch-test-wait)
+	    (notmuch-search-add-tag "search-add")
+	    (notmuch-search-add-tag "search-remove")
+	    (notmuch-search-remove-tag "search-remove")
+	    (notmuch-show "id:\"123..456@example\"")
+	    (notmuch-test-wait)
+	    (notmuch-show-add-tag "show-add")
+	    (notmuch-show-add-tag "show-remove")
+	    (notmuch-show-remove-tag "show-remove")'
 output=$(notmuch search 'id:"123..456@example"' | notmuch_search_sanitize)
 test_expect_equal "$output" "thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; Message with .. in Message-Id (inbox search-add show-add)"
 
@@ -83,7 +123,18 @@ mkdir -p mail/sent/tmp
 
 ../smtp-dummy sent_message &
 smtp_dummy_pid=$!
-test_emacs "(setq message-send-mail-function 'message-smtpmail-send-it) (setq smtpmail-smtp-server \"localhost\") (setq smtpmail-smtp-service \"25025\") (notmuch-hello) (notmuch-mua-mail) (message-goto-to) (insert \"user@example.com\nDate: Fri, 29 Mar 1974 10:00:00 -0000\") (message-goto-subject) (insert \"Testing message sent via SMTP\") (message-goto-body) (insert \"This is a test that messages are sent via SMTP\") (message-send-and-exit)" >/dev/null 2>&1
+test_emacs "(setq message-send-mail-function 'message-smtpmail-send-it)
+	    (setq smtpmail-smtp-server \"localhost\")
+	    (setq smtpmail-smtp-service \"25025\")
+	    (notmuch-hello)
+	    (notmuch-mua-mail)
+	    (message-goto-to)
+	    (insert \"user@example.com\nDate: Fri, 29 Mar 1974 10:00:00 -0000\")
+	    (message-goto-subject)
+	    (insert \"Testing message sent via SMTP\")
+	    (message-goto-body)
+	    (insert \"This is a test that messages are sent via SMTP\")
+	    (message-send-and-exit)" >/dev/null 2>&1
 wait ${smtp_dummy_pid}
 
 sed \
@@ -109,7 +160,9 @@ output=$(notmuch search 'subject:"testing message sent via SMTP"' | notmuch_sear
 test_expect_equal "$output" "thread:XXX   1974-03-29 [1/1] Notmuch Test Suite; Testing message sent via SMTP (inbox)"
 
 test_begin_subtest "notmuch-fcc-dirs set to nil"
-test_emacs "(setq notmuch-fcc-dirs nil) (notmuch-mua-mail) (princ (buffer-string))" > OUTPUT
+test_emacs "(setq notmuch-fcc-dirs nil)
+	    (notmuch-mua-mail)
+	    (princ (buffer-string))" > OUTPUT
 cat <<EOF >EXPECTED
 From: Notmuch Test Suite <test_suite@notmuchmail.org>
 To: 
@@ -124,7 +177,9 @@ mkdir -p mail/sent-string/new
 mkdir -p mail/sent-string/tmp
 
 test_begin_subtest "notmuch-fcc-dirs set to a string"
-test_emacs "(setq notmuch-fcc-dirs \"sent-string\") (notmuch-mua-mail) (princ (buffer-string))" > OUTPUT
+test_emacs "(setq notmuch-fcc-dirs \"sent-string\")
+	    (notmuch-mua-mail)
+	    (princ (buffer-string))" > OUTPUT
 cat <<EOF >EXPECTED
 From: Notmuch Test Suite <test_suite@notmuchmail.org>
 To: 
@@ -143,7 +198,11 @@ mkdir -p mail/failure/new
 mkdir -p mail/failure/tmp
 
 test_begin_subtest "notmuch-fcc-dirs set to a list (with match)"
-test_emacs "(setq notmuch-fcc-dirs '((\"notmuchmail.org\" . \"sent-list-match\") (\".*\" . \"failure\"))) (notmuch-mua-mail) (princ (buffer-string))" > OUTPUT
+test_emacs "(setq notmuch-fcc-dirs
+		  '((\"notmuchmail.org\" . \"sent-list-match\")
+		    (\".*\" . \"failure\")))
+	    (notmuch-mua-mail)
+	    (princ (buffer-string))" > OUTPUT
 cat <<EOF >EXPECTED
 From: Notmuch Test Suite <test_suite@notmuchmail.org>
 To: 
@@ -159,7 +218,11 @@ mkdir -p mail/sent-list-catch-all/new
 mkdir -p mail/sent-list-catch-all/tmp
  
 test_begin_subtest "notmuch-fcc-dirs set to a list (catch-all)"
-test_emacs "(setq notmuch-fcc-dirs '((\"example.com\" . \"failure\") (\".*\" . \"sent-list-catch-all\"))) (notmuch-mua-mail) (princ (buffer-string))" > OUTPUT
+test_emacs "(setq notmuch-fcc-dirs
+		  '((\"example.com\" . \"failure\")
+		    (\".*\" . \"sent-list-catch-all\")))
+	    (notmuch-mua-mail)
+	    (princ (buffer-string))" > OUTPUT
 cat <<EOF >EXPECTED
 From: Notmuch Test Suite <test_suite@notmuchmail.org>
 To: 
@@ -170,7 +233,11 @@ EOF
 test_expect_equal_file OUTPUT EXPECTED
 
 test_begin_subtest "notmuch-fcc-dirs set to a list (no match)"
-test_emacs "(setq notmuch-fcc-dirs '((\"example.com\" . \"failure\") (\"nomatchhere.net\" . \"failure\"))) (notmuch-mua-mail) (princ (buffer-string))" > OUTPUT
+test_emacs "(setq notmuch-fcc-dirs
+		  '((\"example.com\" . \"failure\")
+		    (\"nomatchhere.net\" . \"failure\")))
+	    (notmuch-mua-mail)
+	    (princ (buffer-string))" > OUTPUT
 cat <<EOF >EXPECTED
 From: Notmuch Test Suite <test_suite@notmuchmail.org>
 To: 
@@ -182,7 +249,12 @@ test_expect_equal_file OUTPUT EXPECTED
 test_begin_subtest "Reply within emacs"
 # We sed away everything before the ^From in the output to avoid getting
 # confused by messages such as "Parsing /home/cworth/.mailrc... done"
-test_emacs '(notmuch-search "subject:\"testing message sent via SMTP\"") (notmuch-test-wait) (notmuch-search-reply-to-thread) (princ (buffer-string))' | sed -ne '/^From/,$ p' | sed -e 's/^In-Reply-To: <.*>$/In-Reply-To: <XXX>/' >OUTPUT
+test_emacs '(notmuch-search "subject:\"testing message sent via SMTP\"")
+	    (notmuch-test-wait)
+	    (notmuch-search-reply-to-thread)
+	    (princ (buffer-string))' |
+sed -ne '/^From/,$ p' |
+sed -e 's/^In-Reply-To: <.*>$/In-Reply-To: <XXX>/' >OUTPUT
 cat <<EOF >EXPECTED
 From: Notmuch Test Suite <test_suite@notmuchmail.org>
 To: user@example.com
@@ -197,17 +269,23 @@ test_expect_equal_file OUTPUT EXPECTED
 
 test_begin_subtest "Save attachment from within emacs using notmuch-show-save-attachments"
 # save as archive to test that Emacs does not re-compress .gz
-echo ./attachment1.gz | test_emacs '(notmuch-show "id:cf0c4d610911171136h1713aa59w9cf9aa31f052ad0a@mail.gmail.com") (notmuch-show-save-attachments)' > /dev/null 2>&1
+echo ./attachment1.gz |
+test_emacs '(notmuch-show "id:cf0c4d610911171136h1713aa59w9cf9aa31f052ad0a@mail.gmail.com")
+	    (notmuch-show-save-attachments)' > /dev/null 2>&1
 test_expect_equal_file attachment1.gz "$EXPECTED/attachment"
 
 test_begin_subtest "Save attachment from within emacs using notmuch-show-save-part"
 # save as archive to test that Emacs does not re-compress .gz
-echo ./attachment2.gz | test_emacs '(notmuch-show-save-part "id:cf0c4d610911171136h1713aa59w9cf9aa31f052ad0a@mail.gmail.com" 5)' > /dev/null 2>&1
+echo ./attachment2.gz |
+test_emacs '(notmuch-show-save-part "id:cf0c4d610911171136h1713aa59w9cf9aa31f052ad0a@mail.gmail.com" 5)' > /dev/null 2>&1
 test_expect_equal_file attachment2.gz "$EXPECTED/attachment"
 
 test_begin_subtest "View raw message within emacs"
 first_line=$(head -n1 $EXPECTED/raw-message-cf0c4d-52ad0a)
-test_emacs '(notmuch-show "id:cf0c4d610911171136h1713aa59w9cf9aa31f052ad0a@mail.gmail.com") (notmuch-show-view-raw-message) (princ (buffer-string))' | sed -ne "/$first_line/,\$ p" >OUTPUT
+test_emacs '(notmuch-show "id:cf0c4d610911171136h1713aa59w9cf9aa31f052ad0a@mail.gmail.com")
+	    (notmuch-show-view-raw-message)
+	    (princ (buffer-string))' |
+sed -ne "/$first_line/,\$ p" >OUTPUT
 test_expect_equal_file OUTPUT $EXPECTED/raw-message-cf0c4d-52ad0a
 
 test_begin_subtest "Hiding/showing signature in notmuch-show view"
