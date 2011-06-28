@@ -831,6 +831,8 @@ test_done () {
 
 	echo
 
+	[ -n "$EMACS_SERVER" ] && test_emacs '(kill-emacs)'
+
 	if [ "$test_failure" = "0" ]; then
 	    if [ "$test_broken" = "0" ]; then	    
 		rm -rf "$remove_tmp"
@@ -850,15 +852,7 @@ emacs_generate_script () {
 export PATH=$PATH
 export NOTMUCH_CONFIG=$NOTMUCH_CONFIG
 
-# We assume that the user will give a command-line argument only if
-# wanting to run in batch mode.
-if [ \$# -gt 0 ]; then
-	BATCH=--batch
-fi
-
 # Here's what we are using here:
-#
-# --batch:		Quit after given commands and print all (messages)
 #
 # --no-init-file	Don't load users ~/.emacs
 #
@@ -868,16 +862,24 @@ fi
 #
 # --load		Force loading of notmuch.el and test-lib.el
 
-emacs \$BATCH --no-init-file --no-site-file \
+emacs --no-init-file --no-site-file \
 	--directory "$TEST_DIRECTORY/../emacs" --load notmuch.el \
 	--directory "$TEST_DIRECTORY" --load test-lib.el \
-	--eval "(progn \$@)"
+	"\$@"
 EOF
 	chmod a+x "$TMP_DIRECTORY/run_emacs"
 }
 
 test_emacs () {
-	"$TMP_DIRECTORY/run_emacs" "$@"
+	if [ -z "$EMACS_SERVER" ]; then
+		EMACS_SERVER="notmuch-test-suite-$$"
+		"$TMP_DIRECTORY/run_emacs" \
+			--daemon \
+			--eval "(setq server-name \"$EMACS_SERVER\")" \
+			--eval "(orphan-watchdog $$)" || return
+	fi
+
+	emacsclient --socket-name="$EMACS_SERVER" --eval "(progn $@)"
 }
 
 

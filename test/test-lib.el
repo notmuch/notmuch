@@ -23,6 +23,12 @@
 ;; avoid crazy 10-column default of --batch
 (set-frame-width (window-frame (get-buffer-window)) 80)
 
+;; `read-file-name' by default uses `completing-read' function to read
+;; user input.  It does not respect `standard-input' variable which we
+;; use in tests to provide user input.  So replace it with a plain
+;; `read' call.
+(setq read-file-name-function (lambda (&rest _) (read)))
+
 (defun notmuch-test-wait ()
   "Wait for process completion."
   (while (get-buffer-process (current-buffer))
@@ -51,3 +57,10 @@ FILENAME is OUTPUT."
 	  (setq str (concat str (buffer-substring start next-pos))))
 	(setq start next-pos)))
     str))
+
+(defun orphan-watchdog (pid)
+  "Periodically check that the process with id PID is still
+running, quit if it terminated."
+  (if (not (process-attributes pid))
+      (kill-emacs)
+    (run-at-time "1 min" nil 'orphan-watchdog pid)))
