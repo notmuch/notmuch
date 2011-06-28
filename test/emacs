@@ -8,7 +8,7 @@ add_email_corpus
 
 test_begin_subtest "Basic notmuch-hello view in emacs"
 test_emacs '(notmuch-hello)
-	    (princ (buffer-string))' >OUTPUT
+	    (test-output)'
 test_expect_equal_file OUTPUT $EXPECTED/notmuch-hello
 
 test_begin_subtest "Saved search with 0 results"
@@ -18,20 +18,20 @@ test_emacs '(setq notmuch-show-empty-saved-searches t)
 		       ("unread" . "tag:unread")
 		       ("empty" . "tag:doesnotexist")))
 	    (notmuch-hello)
-	    (princ (buffer-string))' >OUTPUT
+	    (test-output)'
 test_expect_equal_file OUTPUT $EXPECTED/notmuch-hello-with-empty
 
 test_begin_subtest "No saved searches displayed (all with 0 results)"
 test_emacs '(setq notmuch-saved-searches
 		  '\''(("empty" . "tag:doesnotexist")))
 	    (notmuch-hello)
-	    (princ (buffer-string))' >OUTPUT
+	    (test-output)'
 test_expect_equal_file OUTPUT $EXPECTED/notmuch-hello-no-saved-searches
 
 test_begin_subtest "Basic notmuch-search view in emacs"
 test_emacs '(notmuch-search "tag:inbox")
 	    (notmuch-test-wait)
-	    (princ (buffer-string))' >OUTPUT
+	    (test-output)'
 test_expect_equal_file OUTPUT $EXPECTED/notmuch-search-tag-inbox
 
 test_begin_subtest "Navigation of notmuch-hello to search results"
@@ -40,27 +40,30 @@ test_emacs '(notmuch-hello)
 	    (re-search-forward "inbox")
 	    (widget-button-press (point))
 	    (notmuch-test-wait)
-	    (princ (buffer-string))' >OUTPUT
+	    (test-output)'
 test_expect_equal_file OUTPUT $EXPECTED/notmuch-hello-view-inbox
 
 test_begin_subtest "Basic notmuch-show view in emacs"
 maildir_storage_thread=$(notmuch search --output=threads id:20091117190054.GU3165@dottiness.seas.harvard.edu)
 test_emacs "(notmuch-show \"$maildir_storage_thread\")
-	    (princ (buffer-string))" >OUTPUT
+	    (test-output)"
 test_expect_equal_file OUTPUT $EXPECTED/notmuch-show-thread-maildir-storage
 
 test_begin_subtest "notmuch-show for message with invalid From"
 add_message "[subject]=\"message-with-invalid-from\"" \
 	    "[from]=\"\\\"Invalid \\\" From\\\" <test_suite@notmuchmail.org>\""
 thread=$(notmuch search --output=threads subject:message-with-invalid-from)
-output=$(test_emacs "(notmuch-show \"$thread\") (princ (buffer-string))")
-test_expect_equal "$output" \
-'"Invalid " From" <test_suite@notmuchmail.org> (2001-01-05) (inbox)
+test_emacs "(notmuch-show \"$thread\")
+	    (test-output)"
+cat <<EOF >EXPECTED
+"Invalid " From" <test_suite@notmuchmail.org> (2001-01-05) (inbox)
 Subject: message-with-invalid-from
 To: Notmuch Test Suite <test_suite@notmuchmail.org>
 Date: Tue, 05 Jan 2001 15:43:57 -0000
 
-This is just a test message (#1)'
+This is just a test message (#1)
+EOF
+test_expect_equal_file OUTPUT EXPECTED
 
 test_begin_subtest "Navigation of notmuch-search to thread view"
 test_emacs '(notmuch-search "tag:inbox")
@@ -69,7 +72,7 @@ test_emacs '(notmuch-search "tag:inbox")
 	    (re-search-forward "Working with Maildir")
 	    (notmuch-search-show-thread)
 	    (notmuch-test-wait)
-	    (princ (buffer-string))' >OUTPUT
+	    (test-output)'
 test_expect_equal_file OUTPUT $EXPECTED/notmuch-show-thread-maildir-storage
 
 test_begin_subtest "Add tag from search view"
@@ -162,7 +165,7 @@ test_expect_equal "$output" "thread:XXX   1974-03-29 [1/1] Notmuch Test Suite; T
 test_begin_subtest "notmuch-fcc-dirs set to nil"
 test_emacs "(setq notmuch-fcc-dirs nil)
 	    (notmuch-mua-mail)
-	    (princ (buffer-string))" > OUTPUT
+	    (test-output)"
 cat <<EOF >EXPECTED
 From: Notmuch Test Suite <test_suite@notmuchmail.org>
 To: 
@@ -179,7 +182,7 @@ mkdir -p mail/sent-string/tmp
 test_begin_subtest "notmuch-fcc-dirs set to a string"
 test_emacs "(setq notmuch-fcc-dirs \"sent-string\")
 	    (notmuch-mua-mail)
-	    (princ (buffer-string))" > OUTPUT
+	    (test-output)"
 cat <<EOF >EXPECTED
 From: Notmuch Test Suite <test_suite@notmuchmail.org>
 To: 
@@ -202,7 +205,7 @@ test_emacs "(setq notmuch-fcc-dirs
 		  '((\"notmuchmail.org\" . \"sent-list-match\")
 		    (\".*\" . \"failure\")))
 	    (notmuch-mua-mail)
-	    (princ (buffer-string))" > OUTPUT
+	    (test-output)"
 cat <<EOF >EXPECTED
 From: Notmuch Test Suite <test_suite@notmuchmail.org>
 To: 
@@ -222,7 +225,7 @@ test_emacs "(setq notmuch-fcc-dirs
 		  '((\"example.com\" . \"failure\")
 		    (\".*\" . \"sent-list-catch-all\")))
 	    (notmuch-mua-mail)
-	    (princ (buffer-string))" > OUTPUT
+	    (test-output)"
 cat <<EOF >EXPECTED
 From: Notmuch Test Suite <test_suite@notmuchmail.org>
 To: 
@@ -237,7 +240,7 @@ test_emacs "(setq notmuch-fcc-dirs
 		  '((\"example.com\" . \"failure\")
 		    (\"nomatchhere.net\" . \"failure\")))
 	    (notmuch-mua-mail)
-	    (princ (buffer-string))" > OUTPUT
+	    (test-output)"
 cat <<EOF >EXPECTED
 From: Notmuch Test Suite <test_suite@notmuchmail.org>
 To: 
@@ -252,9 +255,9 @@ test_begin_subtest "Reply within emacs"
 test_emacs '(notmuch-search "subject:\"testing message sent via SMTP\"")
 	    (notmuch-test-wait)
 	    (notmuch-search-reply-to-thread)
-	    (princ (buffer-string))' |
-sed -ne '/^From/,$ p' |
-sed -e 's/^In-Reply-To: <.*>$/In-Reply-To: <XXX>/' >OUTPUT
+	    (test-output)'
+sed -i -ne '/^From/,$ p' OUTPUT
+sed -i -e 's/^In-Reply-To: <.*>$/In-Reply-To: <XXX>/' OUTPUT
 cat <<EOF >EXPECTED
 From: Notmuch Test Suite <test_suite@notmuchmail.org>
 To: user@example.com
@@ -284,8 +287,8 @@ test_begin_subtest "View raw message within emacs"
 first_line=$(head -n1 $EXPECTED/raw-message-cf0c4d-52ad0a)
 test_emacs '(notmuch-show "id:cf0c4d610911171136h1713aa59w9cf9aa31f052ad0a@mail.gmail.com")
 	    (notmuch-show-view-raw-message)
-	    (princ (buffer-string))' |
-sed -ne "/$first_line/,\$ p" >OUTPUT
+	    (test-output)'
+sed -i -ne "/$first_line/,\$ p" OUTPUT
 test_expect_equal_file OUTPUT $EXPECTED/raw-message-cf0c4d-52ad0a
 
 test_begin_subtest "Hiding/showing signature in notmuch-show view"
@@ -295,7 +298,7 @@ test_emacs "(notmuch-show \"$maildir_storage_thread\")
 	    (button-activate (button-at (point)))
 	    (search-backward \"Click/Enter to hide.\")
 	    (button-activate (button-at (point)))
-	    (princ (buffer-string))" >OUTPUT
+	    (test-output)"
 test_expect_equal_file OUTPUT $EXPECTED/notmuch-show-thread-maildir-storage
 
 test_begin_subtest "Detection and hiding of top-post quoting of message"
@@ -323,7 +326,7 @@ Q: Why is top-posting such a bad thing?
 A: Top-posting.
 Q: What is the most annoying thing in e-mail?"'
 test_emacs "(notmuch-show \"top-posting\")
-	    (princ (visible-buffer-string))" >OUTPUT
+	    (test-visible-output)"
 echo "Notmuch Test Suite <test_suite@notmuchmail.org> (2001-01-05) (inbox)
 Subject: The problem with top-posting
 To: Notmuch Test Suite <test_suite@notmuchmail.org>
@@ -346,19 +349,17 @@ Thanks for the advice! I will be sure to put it to good use.
 test_expect_equal_file OUTPUT EXPECTED
 
 test_begin_subtest "Hiding message in notmuch-show view"
-output=$(test_emacs '(notmuch-show "id:f35dbb950911171438k5df6eb56k77b6c0944e2e79ae@mail.gmail.com")
-		     (notmuch-show-toggle-message)
-		     (princ (visible-buffer-string))')
-expected=$(cat $EXPECTED/notmuch-show-thread-with-hidden-messages)
-test_expect_equal "$output" "$expected"
+test_emacs '(notmuch-show "id:f35dbb950911171438k5df6eb56k77b6c0944e2e79ae@mail.gmail.com")
+	    (notmuch-show-toggle-message)
+	    (test-visible-output)'
+test_expect_equal_file OUTPUT $EXPECTED/notmuch-show-thread-with-hidden-messages
 
 test_begin_subtest "Hiding message with visible citation in notmuch-show view"
-output=$(test_emacs '(notmuch-show "id:f35dbb950911171438k5df6eb56k77b6c0944e2e79ae@mail.gmail.com")
-		     (search-forward "Click/Enter to show.")
-		     (button-activate (button-at (point)))
-		     (notmuch-show-toggle-message)
-		     (princ (visible-buffer-string))')
-expected=$(cat $EXPECTED/notmuch-show-thread-with-hidden-messages)
-test_expect_equal "$output" "$expected"
+test_emacs '(notmuch-show "id:f35dbb950911171438k5df6eb56k77b6c0944e2e79ae@mail.gmail.com")
+	    (search-forward "Click/Enter to show.")
+	    (button-activate (button-at (point)))
+	    (notmuch-show-toggle-message)
+	    (test-visible-output)'
+test_expect_equal_file OUTPUT $EXPECTED/notmuch-show-thread-with-hidden-messages
 
 test_done

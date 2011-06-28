@@ -28,6 +28,16 @@
   (while (get-buffer-process (current-buffer))
     (sleep-for 0.1)))
 
+(defun test-output (&optional filename)
+  "Save current buffer to file FILENAME.  Default FILENAME is OUTPUT."
+  (write-region (point-min) (point-max) (or filename "OUTPUT")))
+
+(defun test-visible-output (&optional filename)
+  "Save visible text in current buffer to file FILENAME.  Default
+FILENAME is OUTPUT."
+  (let ((text (visible-buffer-string)))
+    (with-temp-file (or filename "OUTPUT") (insert text))))
+
 (defun visible-buffer-string ()
   "Same as `buffer-string', but excludes invisible text."
   (visible-buffer-substring (point-min) (point-max)))
