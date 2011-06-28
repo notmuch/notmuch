@@ -250,13 +250,10 @@ EOF
 test_expect_equal_file OUTPUT EXPECTED
 
 test_begin_subtest "Reply within emacs"
-# We sed away everything before the ^From in the output to avoid getting
-# confused by messages such as "Parsing /home/cworth/.mailrc... done"
 test_emacs '(notmuch-search "subject:\"testing message sent via SMTP\"")
 	    (notmuch-test-wait)
 	    (notmuch-search-reply-to-thread)
 	    (test-output)'
-sed -i -ne '/^From/,$ p' OUTPUT
 sed -i -e 's/^In-Reply-To: <.*>$/In-Reply-To: <XXX>/' OUTPUT
 cat <<EOF >EXPECTED
 From: Notmuch Test Suite <test_suite@notmuchmail.org>
@@ -284,11 +281,9 @@ test_emacs '(notmuch-show-save-part "id:cf0c4d610911171136h1713aa59w9cf9aa31f052
 test_expect_equal_file attachment2.gz "$EXPECTED/attachment"
 
 test_begin_subtest "View raw message within emacs"
-first_line=$(head -n1 $EXPECTED/raw-message-cf0c4d-52ad0a)
 test_emacs '(notmuch-show "id:cf0c4d610911171136h1713aa59w9cf9aa31f052ad0a@mail.gmail.com")
 	    (notmuch-show-view-raw-message)
 	    (test-output)'
-sed -i -ne "/$first_line/,\$ p" OUTPUT
 test_expect_equal_file OUTPUT $EXPECTED/raw-message-cf0c4d-52ad0a
 
 test_begin_subtest "Hiding/showing signature in notmuch-show view"
