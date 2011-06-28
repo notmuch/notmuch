@@ -855,8 +855,6 @@ fi
 #
 # notmuch-test-wait	Function for tests to use to wait for process completion
 #
-# message-signature	Avoiding appending user's signature on messages
-#
 # set-frame-width	80 columns (avoids crazy 10-column default of --batch)
 
 emacs \$BATCH --no-init-file --no-site-file \
@@ -865,7 +863,6 @@ emacs \$BATCH --no-init-file --no-site-file \
 	--eval "(defun notmuch-test-wait ()
 			(while (get-buffer-process (current-buffer))
 				(sleep-for 0.1)))" \
-	--eval "(setq message-signature nil)" \
 	--eval "(progn (set-frame-width (window-frame (get-buffer-window)) 80) \$@)"
 EOF
 	chmod a+x ./run_emacs
