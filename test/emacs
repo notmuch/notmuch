@@ -118,28 +118,12 @@ output=$(notmuch search 'id:"123..456@example"' | notmuch_search_sanitize)
 test_expect_equal "$output" "thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; Message with .. in Message-Id (inbox search-add show-add)"
 
 test_begin_subtest "Sending a message via (fake) SMTP"
-
-# Before we can send a message, we have to prepare the FCC maildir
-mkdir -p mail/sent/cur
-mkdir -p mail/sent/new
-mkdir -p mail/sent/tmp
-
-../smtp-dummy sent_message &
-smtp_dummy_pid=$!
-test_emacs "(setq message-send-mail-function 'message-smtpmail-send-it)
-	    (setq smtpmail-smtp-server \"localhost\")
-	    (setq smtpmail-smtp-service \"25025\")
-	    (notmuch-hello)
-	    (notmuch-mua-mail)
-	    (message-goto-to)
-	    (insert \"user@example.com\nDate: Fri, 29 Mar 1974 10:00:00 -0000\")
-	    (message-goto-subject)
-	    (insert \"Testing message sent via SMTP\")
-	    (message-goto-body)
-	    (insert \"This is a test that messages are sent via SMTP\")
-	    (message-send-and-exit)" >/dev/null 2>&1
-wait ${smtp_dummy_pid}
-
+emacs_deliver_message \
+    'Testing message sent via SMTP' \
+    'This is a test that messages are sent via SMTP' \
+    '(message-goto-to)
+     (kill-whole-line)
+     (insert "To: user@example.com\n")'
 sed \
     -e s',^User-Agent: Notmuch/.* Emacs/.*,User-Agent: Notmuch/XXX Emacs/XXX,' \
     -e s',^Message-ID: <.*>$,Message-ID: <XXX>,' < sent_message >OUTPUT
@@ -147,7 +131,7 @@ cat <<EOF >EXPECTED
 From: Notmuch Test Suite <test_suite@notmuchmail.org>
 To: user@example.com
 Subject: Testing message sent via SMTP
-Date: Fri, 29 Mar 1974 10:00:00 -0000
+Date: 01 Jan 2000 12:00:00 -0000
 User-Agent: Notmuch/XXX Emacs/XXX
 Message-ID: <XXX>
 MIME-Version: 1.0
@@ -160,7 +144,7 @@ test_expect_equal_file OUTPUT EXPECTED
 test_begin_subtest "Verify that sent messages are saved/searchable (via FCC)"
 notmuch new > /dev/null
 output=$(notmuch search 'subject:"testing message sent via SMTP"' | notmuch_search_sanitize)
-test_expect_equal "$output" "thread:XXX   1974-03-29 [1/1] Notmuch Test Suite; Testing message sent via SMTP (inbox)"
+test_expect_equal "$output" "thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; Testing message sent via SMTP (inbox)"
 
 test_begin_subtest "notmuch-fcc-dirs set to nil"
 test_emacs "(setq notmuch-fcc-dirs nil)
@@ -262,7 +246,7 @@ Subject: Re: Testing message sent via SMTP
 In-Reply-To: <XXX>
 Fcc: $(pwd)/mail/sent
 --text follows this line--
-On Fri, 29 Mar 1974 10:00:00 -0000, Notmuch Test Suite <test_suite@notmuchmail.org> wrote:
+On 01 Jan 2000 12:00:00 -0000, Notmuch Test Suite <test_suite@notmuchmail.org> wrote:
 > This is a test that messages are sent via SMTP
 EOF
 test_expect_equal_file OUTPUT EXPECTED
