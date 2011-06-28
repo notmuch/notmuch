@@ -394,19 +394,20 @@ emacs_deliver_message ()
     mkdir -p "$MAIL_DIR"/sent/{cur,new,tmp}
     ../smtp-dummy sent_message &
     smtp_dummy_pid=$!
-    test_emacs "(setq message-send-mail-function 'message-smtpmail-send-it)
-		(setq smtpmail-smtp-server \"localhost\")
-		(setq smtpmail-smtp-service \"25025\")
-		(notmuch-hello)
-		(notmuch-mua-mail)
-		(message-goto-to)
-		(insert \"test_suite@notmuchmail.org\nDate: 01 Jan 2000 12:00:00 -0000\")
-		(message-goto-subject)
-		(insert \"${subject}\")
-		(message-goto-body)
-		(insert \"${body}\")
-		$@
-		(message-send-and-exit)" >/dev/null 2>&1
+    test_emacs \
+	"(let ((message-send-mail-function 'message-smtpmail-send-it)
+	       (smtpmail-smtp-server \"localhost\")
+	       (smtpmail-smtp-service \"25025\"))
+	   (notmuch-hello)
+	   (notmuch-mua-mail)
+	   (message-goto-to)
+	   (insert \"test_suite@notmuchmail.org\nDate: 01 Jan 2000 12:00:00 -0000\")
+	   (message-goto-subject)
+	   (insert \"${subject}\")
+	   (message-goto-body)
+	   (insert \"${body}\")
+	   $@
+	   (message-send-and-exit))" >/dev/null 2>&1
     wait ${smtp_dummy_pid}
     notmuch new >/dev/null
 }

@@ -1,4 +1,10 @@
 #!/usr/bin/env bash
+
+# Note: do not use `setq' for setting variables in Emacs tests because
+# it affects other tests that may run in the same Emacs instance.  Use
+# `let' instead so the scope of the changed variables is limited to a
+# single test.
+
 test_description="emacs interface"
 . test-lib.sh
 
@@ -12,20 +18,20 @@ test_emacs '(notmuch-hello)
 test_expect_equal_file OUTPUT $EXPECTED/notmuch-hello
 
 test_begin_subtest "Saved search with 0 results"
-test_emacs '(setq notmuch-show-empty-saved-searches t)
-	    (setq notmuch-saved-searches
-		  '\''(("inbox" . "tag:inbox")
-		       ("unread" . "tag:unread")
-		       ("empty" . "tag:doesnotexist")))
-	    (notmuch-hello)
-	    (test-output)'
+test_emacs '(let ((notmuch-show-empty-saved-searches t)
+		  (notmuch-saved-searches
+		   '\''(("inbox" . "tag:inbox")
+			("unread" . "tag:unread")
+			("empty" . "tag:doesnotexist"))))
+	      (notmuch-hello)
+	      (test-output))'
 test_expect_equal_file OUTPUT $EXPECTED/notmuch-hello-with-empty
 
 test_begin_subtest "No saved searches displayed (all with 0 results)"
-test_emacs '(setq notmuch-saved-searches
-		  '\''(("empty" . "tag:doesnotexist")))
-	    (notmuch-hello)
-	    (test-output)'
+test_emacs '(let ((notmuch-saved-searches
+		   '\''(("empty" . "tag:doesnotexist"))))
+	      (notmuch-hello)
+	      (test-output))'
 test_expect_equal_file OUTPUT $EXPECTED/notmuch-hello-no-saved-searches
 
 test_begin_subtest "Basic notmuch-search view in emacs"
@@ -147,9 +153,9 @@ output=$(notmuch search 'subject:"testing message sent via SMTP"' | notmuch_sear
 test_expect_equal "$output" "thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; Testing message sent via SMTP (inbox)"
 
 test_begin_subtest "notmuch-fcc-dirs set to nil"
-test_emacs "(setq notmuch-fcc-dirs nil)
-	    (notmuch-mua-mail)
-	    (test-output)"
+test_emacs "(let ((notmuch-fcc-dirs nil))
+	      (notmuch-mua-mail)
+	      (test-output))"
 cat <<EOF >EXPECTED
 From: Notmuch Test Suite <test_suite@notmuchmail.org>
 To: 
@@ -164,9 +170,9 @@ mkdir -p mail/sent-string/new
 mkdir -p mail/sent-string/tmp
 
 test_begin_subtest "notmuch-fcc-dirs set to a string"
-test_emacs "(setq notmuch-fcc-dirs \"sent-string\")
-	    (notmuch-mua-mail)
-	    (test-output)"
+test_emacs "(let ((notmuch-fcc-dirs \"sent-string\"))
+	      (notmuch-mua-mail)
+	      (test-output))"
 cat <<EOF >EXPECTED
 From: Notmuch Test Suite <test_suite@notmuchmail.org>
 To: 
@@ -185,11 +191,11 @@ mkdir -p mail/failure/new
 mkdir -p mail/failure/tmp
 
 test_begin_subtest "notmuch-fcc-dirs set to a list (with match)"
-test_emacs "(setq notmuch-fcc-dirs
-		  '((\"notmuchmail.org\" . \"sent-list-match\")
-		    (\".*\" . \"failure\")))
-	    (notmuch-mua-mail)
-	    (test-output)"
+test_emacs "(let ((notmuch-fcc-dirs
+		   '((\"notmuchmail.org\" . \"sent-list-match\")
+		     (\".*\" . \"failure\"))))
+	      (notmuch-mua-mail)
+	      (test-output))"
 cat <<EOF >EXPECTED
 From: Notmuch Test Suite <test_suite@notmuchmail.org>
 To: 
@@ -205,11 +211,11 @@ mkdir -p mail/sent-list-catch-all/new
 mkdir -p mail/sent-list-catch-all/tmp
  
 test_begin_subtest "notmuch-fcc-dirs set to a list (catch-all)"
-test_emacs "(setq notmuch-fcc-dirs
-		  '((\"example.com\" . \"failure\")
-		    (\".*\" . \"sent-list-catch-all\")))
-	    (notmuch-mua-mail)
-	    (test-output)"
+test_emacs "(let ((notmuch-fcc-dirs
+		   '((\"example.com\" . \"failure\")
+		     (\".*\" . \"sent-list-catch-all\"))))
+	      (notmuch-mua-mail)
+	      (test-output))"
 cat <<EOF >EXPECTED
 From: Notmuch Test Suite <test_suite@notmuchmail.org>
 To: 
@@ -220,11 +226,11 @@ EOF
 test_expect_equal_file OUTPUT EXPECTED
 
 test_begin_subtest "notmuch-fcc-dirs set to a list (no match)"
-test_emacs "(setq notmuch-fcc-dirs
-		  '((\"example.com\" . \"failure\")
-		    (\"nomatchhere.net\" . \"failure\")))
-	    (notmuch-mua-mail)
-	    (test-output)"
+test_emacs "(let ((notmuch-fcc-dirs
+		   '((\"example.com\" . \"failure\")
+		     (\"nomatchhere.net\" . \"failure\"))))
+	      (notmuch-mua-mail)
+	      (test-output))"
 cat <<EOF >EXPECTED
 From: Notmuch Test Suite <test_suite@notmuchmail.org>
 To: 
