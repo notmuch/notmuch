@@ -20,7 +20,7 @@ emacs_images := \
 
 emacs_bytecode = $(emacs_sources:.el=.elc)
 
-%.elc: %.el
+%.elc: %.el $(global_deps)
 	$(call quiet,EMACS) --directory emacs -batch -f batch-byte-compile $<
 
 ifeq ($(WITH_EMACS),1)
