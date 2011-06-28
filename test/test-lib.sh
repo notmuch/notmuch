@@ -852,18 +852,11 @@ fi
 # --directory		Ensure that the local elisp sources are found
 #
 # --load		Force loading of notmuch.el and test-lib.el
-#
-# notmuch-test-wait	Function for tests to use to wait for process completion
-#
-# set-frame-width	80 columns (avoids crazy 10-column default of --batch)
 
 emacs \$BATCH --no-init-file --no-site-file \
 	--directory ../../emacs --load notmuch.el \
 	--directory .. --load test-lib.el \
-	--eval "(defun notmuch-test-wait ()
-			(while (get-buffer-process (current-buffer))
-				(sleep-for 0.1)))" \
-	--eval "(progn (set-frame-width (window-frame (get-buffer-window)) 80) \$@)"
+	--eval "(progn \$@)"
 EOF
 	chmod a+x ./run_emacs
 	./run_emacs "$@"

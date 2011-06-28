@@ -20,6 +20,14 @@
 ;;
 ;; Authors: Dmitry Kurochkin <dmitry.kurochkin@gmail.com>
 
+;; avoid crazy 10-column default of --batch
+(set-frame-width (window-frame (get-buffer-window)) 80)
+
+(defun notmuch-test-wait ()
+  "Wait for process completion."
+  (while (get-buffer-process (current-buffer))
+    (sleep-for 0.1)))
+
 (defun visible-buffer-string ()
   "Same as `buffer-string', but excludes invisible text."
   (visible-buffer-substring (point-min) (point-max)))
