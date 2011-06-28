@@ -41,6 +41,15 @@ The following command-line options are available when running tests:
 	As the names depend on the tests' file names, it is safe to
 	run the tests with this option in parallel.
 
+--root=<dir>::
+	This runs the testsuites specified under a seperate directory.
+	However, caution is advised, as not all tests are maintained
+	with this relocation in mind, so some tests may behave
+	differently.
+
+	Pointing this argument at a tmpfs filesystem can improve the
+	speed of the test suite for some users.
+
 When invoking the test suite via "make test" any of the above options
 can be specified as follows:
 

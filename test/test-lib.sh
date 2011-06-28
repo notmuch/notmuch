@@ -392,7 +392,7 @@ emacs_deliver_message ()
     shift 2
     # before we can send a message, we have to prepare the FCC maildir
     mkdir -p "$MAIL_DIR"/sent/{cur,new,tmp}
-    ../smtp-dummy sent_message &
+    $TEST_DIRECTORY/smtp-dummy sent_message &
     smtp_dummy_pid=$!
     test_emacs \
 	"(let ((message-send-mail-function 'message-smtpmail-send-it)
@@ -421,12 +421,12 @@ emacs_deliver_message ()
 add_email_corpus ()
 {
     rm -rf ${MAIL_DIR}
-    if [ -d ../corpus.mail ]; then
-	cp -a ../corpus.mail ${MAIL_DIR}
+    if [ -d $TEST_DIRECTORY/corpus.mail ]; then
+	cp -a $TEST_DIRECTORY/corpus.mail ${MAIL_DIR}
     else
-	cp -a ../corpus ${MAIL_DIR}
+	cp -a $TEST_DIRECTORY/corpus ${MAIL_DIR}
 	notmuch new >/dev/null
-	cp -a ${MAIL_DIR} ../corpus.mail
+	cp -a ${MAIL_DIR} $TEST_DIRECTORY/corpus.mail
     fi
 }
 
@@ -867,8 +867,8 @@ fi
 # --load		Force loading of notmuch.el and test-lib.el
 
 emacs \$BATCH --no-init-file --no-site-file \
-	--directory "$TMP_DIRECTORY/../../emacs" --load notmuch.el \
-	--directory "$TMP_DIRECTORY/.." --load test-lib.el \
+	--directory "$TEST_DIRECTORY/../emacs" --load notmuch.el \
+	--directory "$TEST_DIRECTORY" --load test-lib.el \
 	--eval "(progn \$@)"
 EOF
 	chmod a+x "$TMP_DIRECTORY/run_emacs"
@@ -931,11 +931,11 @@ then
 		    test ! -d "$symlink_target" &&
 		    test "#!" != "$(head -c 2 < "$symlink_target")"
 		then
-			symlink_target=../valgrind.sh
+			symlink_target=$TEST_DIRECTORY/valgrind.sh
 		fi
 		case "$base" in
 		*.sh|*.perl)
-			symlink_target=../unprocessed-script
+			symlink_target=$TEST_DIRECTORY/unprocessed-script
 		esac
 		# create the link, or replace it if it is out of date
 		make_symlink "$symlink_target" "$GIT_VALGRIND/bin/$base" || exit
