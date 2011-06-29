@@ -213,6 +213,7 @@ _entries_resemble_maildir (struct dirent **entries, int count)
  *     information is lost from the database).
  *
  *   o Tell the database to update its time of 'path' to 'fs_mtime'
+ *     if fs_mtime isn't the current wall-clock time.
  */
 static notmuch_status_t
 add_files_recursive (notmuch_database_t *notmuch,
@@ -230,6 +231,7 @@ add_files_recursive (notmuch_database_t *notmuch,
     notmuch_directory_t *directory;
     notmuch_filenames_t *db_files = NULL;
     notmuch_filenames_t *db_subdirs = NULL;
+    time_t stat_time;
     struct stat st;
     notmuch_bool_t is_maildir, new_directory;
     const char **tag;
@@ -239,6 +241,7 @@ add_files_recursive (notmuch_database_t *notmuch,
 		 path, strerror (errno));
 	return NOTMUCH_STATUS_FILE_ERROR;
     }
+    stat_time = time (NULL);
 
     /* This is not an error since we may have recursed based on a
      * symlink to a regular file, not a directory, and we don't know
@@ -509,7 +512,22 @@ add_files_recursive (notmuch_database_t *notmuch,
 	notmuch_filenames_move_to_next (db_subdirs);
     }
 
-    if (! interrupted) {
+    /* If the directory's mtime is the same as the wall-clock time
+     * when we stat'ed the directory, we skip updating the mtime in
+     * the database because a message could be delivered later in this
+     * same second.  This may lead to unnecessary re-scans, but it
+     * avoids overlooking messages.
+     *
+     * XXX Bug workaround: If this is a new directory, we *must*
+     * update the mtime; otherwise the next run will see the 0 mtime
+     * and think this is still a new directory containing no files or
+     * subdirs (which is unsound in general).  If fs_mtime ==
+     * stat_time, we set the database mtime to a bogus (but non-zero!)
+     * value to force a rescan.
+     */
+    if (new_directory && fs_mtime == stat_time)
+	fs_mtime = 1;
+    if (! interrupted && fs_mtime != stat_time) {
 	status = notmuch_directory_set_mtime (directory, fs_mtime);
 	if (status && ret == NOTMUCH_STATUS_SUCCESS)
 	    ret = status;
