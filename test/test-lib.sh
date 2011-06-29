@@ -409,6 +409,8 @@ emacs_deliver_message ()
 	   $@
 	   (message-send-and-exit))" >/dev/null 2>&1
     wait ${smtp_dummy_pid}
+    increment_mtime "$MAIL_DIR"/sent/cur
+    increment_mtime "$MAIL_DIR"/sent/new
     notmuch new >/dev/null
 }
 
