@@ -156,6 +156,13 @@ library for your script to use.
    will generate a failure and print the difference of the two
    strings.
 
+ test_expect_equal_file <output> <expected>
+
+   Identical to test_exepect_equal, except that <output> and
+   <expected> are files instead of strings.  This is a much more
+   robust method to compare formatted textual information, since it
+   also notices whitespace and closing newline differences.
+
  test_expect_equal_failure <output> <expected>
 
    This works similar to test_expect_equal (see above) but is used to
