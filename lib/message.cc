@@ -514,6 +514,8 @@ _notmuch_message_remove_filename (notmuch_message_t *message,
     const char *folder_prefix = _find_prefix ("folder");
     int folder_prefix_len = strlen (folder_prefix);
     void *local = talloc_new (message);
+    char *zfolder_prefix = talloc_asprintf(local, "Z%s", folder_prefix);
+    int zfolder_prefix_len = strlen (zfolder_prefix);
     char *direntry;
     notmuch_private_status_t private_status;
     notmuch_status_t status;
@@ -530,9 +532,12 @@ _notmuch_message_remove_filename (notmuch_message_t *message,
     status = COERCE_STATUS (private_status,
 			    "Unexpected error from _notmuch_message_remove_term");
 
-    /* Re-synchronize "folder:" terms for this message. This requires
-     * first removing all "folder:" terms, then adding back terms for
-     * all remaining filenames of the message. */
+    /* Re-synchronize "folder:" terms for this message. This requires:
+     *  1. removing all "folder:" terms
+     *  2. removing all "folder:" stemmed terms
+     *  3. adding back terms for all remaining filenames of the message. */
+
+    /* 1. removing all "folder:" terms */
     while (1) {
 	i = message->doc.termlist_begin ();
 	i.skip_to (folder_prefix);
@@ -551,6 +556,26 @@ _notmuch_message_remove_filename (notmuch_message_t *message,
 	}
     }
 
+    /* 2. removing all "folder:" stemmed terms */
+    while (1) {
+	i = message->doc.termlist_begin ();
+	i.skip_to (zfolder_prefix);
+
+	/* Terminate loop when no terms remain with desired prefix. */
+	if (i == message->doc.termlist_end () ||
+	    strncmp ((*i).c_str (), zfolder_prefix, zfolder_prefix_len))
+	{
+	    break;
+	}
+
+	try {
+	    message->doc.remove_term ((*i));
+	} catch (const Xapian::InvalidArgumentError) {
+	    /* Ignore failure to remove non-existent term. */
+	}
+    }
+
+    /* 3. adding back terms for all remaining filenames of the message. */
     i = message->doc.termlist_begin ();
     i.skip_to (direntry_prefix);
 
