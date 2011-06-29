@@ -1,6 +1,8 @@
 notmuch (0.6~264) UNRELEASED; urgency=low
 
   * New snapshot, in progress
+  * Fix description of notmuch-vim to mention vim, not emacs
+    (Closes: #631974)
 
  -- David Bremner <bremner@debian.org>  Thu, 23 Jun 2011 19:39:05 -0300
 
