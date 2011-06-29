@@ -213,16 +213,6 @@ remove_cr () {
 	tr '\015' Q | sed -e 's/Q$//'
 }
 
-# Notmuch helper functions
-increment_mtime_amount=0
-increment_mtime ()
-{
-    dir="$1"
-
-    increment_mtime_amount=$((increment_mtime_amount + 1))
-    touch -d "+${increment_mtime_amount} seconds" "$dir"
-}
-
 # Generate a new message in the mail directory, with a unique message
 # ID and subject. The message is not added to the index.
 #
@@ -364,9 +354,6 @@ Date: ${template[date]}
 ${additional_headers}
 ${template[body]}
 EOF
-
-    # Ensure that the mtime of the containing directory is updated
-    increment_mtime "$(dirname "${gen_msg_filename}")"
 }
 
 # Generate a new message and add it to the database.
@@ -409,8 +396,6 @@ emacs_deliver_message ()
 	   $@
 	   (message-send-and-exit))" >/dev/null 2>&1
     wait ${smtp_dummy_pid}
-    increment_mtime "$MAIL_DIR"/sent/cur
-    increment_mtime "$MAIL_DIR"/sent/new
     notmuch new >/dev/null
 }
 

@@ -23,14 +23,12 @@ test_expect_equal "$output" "thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; B
 
 test_begin_subtest "After removing duplicate instance of matching path"
 rm -r "${MAIL_DIR}/bad/news"
-increment_mtime "${MAIL_DIR}/bad"
 notmuch new
 output=$(notmuch search folder:bad/news | notmuch_search_sanitize)
 test_expect_equal "$output" "thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; Bears (inbox unread)"
 
 test_begin_subtest "After rename, old path returns nothing"
 mv "${MAIL_DIR}/duplicate/bad/news" "${MAIL_DIR}/duplicate/bad/olds"
-increment_mtime "${MAIL_DIR}/duplicate/bad"
 notmuch new
 output=$(notmuch search folder:bad/news | notmuch_search_sanitize)
 test_expect_equal "$output" ""

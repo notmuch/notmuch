@@ -36,7 +36,6 @@ test_expect_equal "$output" "thread:0000000000000001   2001-01-05 [1/1] Notmuch 
 
 test_begin_subtest "Remove folder:spam copy of email"
 rm $dir/spam/$(basename $file_x)
-increment_mtime $dir/spam
 output=$(NOTMUCH_NEW)
 test_expect_equal "$output" "No new mail. Detected 1 file rename."
 

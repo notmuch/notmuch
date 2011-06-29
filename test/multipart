@@ -88,7 +88,6 @@ Content-Transfer-Encoding: base64
 7w0K
 --==-=-=--
 EOF
-increment_mtime "$MAIL_DIR"
 notmuch new > /dev/null
 
 test_begin_subtest "--format=text --part=0, full message"
