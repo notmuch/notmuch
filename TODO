@@ -267,6 +267,9 @@ large so the detection could be potentially slow). 2. A "notmuch
 search" syntax could be added to allow the user to find these files,
 (and perhaps delete them or move them away as appropriate).
 
+Fix filesystem/notmuch-new race condition by not updating database
+mtime for a directory if it is the same as the current mtime.
+
 Test suite
 ----------
 Achieve 100% test coverage with the test suite.
