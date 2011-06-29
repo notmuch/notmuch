@@ -72,7 +72,6 @@ $(dir)/libnotmuch.a: $(libnotmuch_modules)
 	$(call quiet,AR) rcs $@ $^
 
 $(dir)/$(LIBNAME): $(libnotmuch_modules) notmuch.sym
-	echo $(libnotmuch_modules)
 	$(call quiet,CXX $(CXXFLAGS)) $(libnotmuch_modules) $(FINAL_LIBNOTMUCH_LDFLAGS) $(LIBRARY_LINK_FLAG) -o $@
 
 notmuch.sym: lib/notmuch.h
