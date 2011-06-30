@@ -342,6 +342,47 @@ test_emacs '(notmuch-show "id:f35dbb950911171438k5df6eb56k77b6c0944e2e79ae@mail.
 	    (test-visible-output)'
 test_expect_equal_file OUTPUT $EXPECTED/notmuch-show-thread-with-hidden-messages
 
+test_begin_subtest "Stashing in notmuch-show"
+add_message '[date]="Sat, 01 Jan 2000 12:00:00 -0000"' \
+    '[from]="Some One <someone@somewhere.org>"' \
+    '[to]="Some One Else <notsomeone@somewhere.org>"' \
+    '[cc]="Notmuch <notmuch@notmuchmail.org>"' \
+    '[subject]="Stash my stashables"' \
+    '[id]="bought"' \
+    '[body]="Unable to stash body. Where did you get it in the first place?!?"'
+notmuch tag +stashtest id:${gen_msg_id}
+test_emacs '(notmuch-show "id:\"bought\"")
+        (notmuch-show-stash-date)
+        (notmuch-show-stash-from)
+        (notmuch-show-stash-to)
+        (notmuch-show-stash-cc)
+        (notmuch-show-stash-subject)
+        (notmuch-show-stash-message-id)
+        (notmuch-show-stash-message-id-stripped)
+        (notmuch-show-stash-tags)
+        (notmuch-show-stash-filename)
+        (switch-to-buffer
+          (generate-new-buffer "*test-stashing*"))
+        (dotimes (i 9)
+          (yank)
+          (insert "\n")
+          (rotate-yank-pointer 1))
+        (reverse-region (point-min) (point-max))
+	    (test-output)'
+sed -i -e 's/^.*tmp.emacs\/mail.*$/FILENAME/' OUTPUT
+test_expect_equal_file OUTPUT $EXPECTED/emacs-stashing
+
+test_begin_subtest "Stashing in notmuch-search"
+test_emacs '(notmuch-search "id:\"bought\"")
+        (notmuch-test-wait)
+        (notmuch-search-stash-thread-id)
+        (switch-to-buffer
+          (generate-new-buffer "*test-stashing*"))
+        (yank)
+	    (test-output)'
+sed -i -e 's/^thread:.*$/thread:XXX/' OUTPUT
+test_expect_equal $(cat OUTPUT) "thread:XXX"
+
 test_begin_subtest 'Hiding message following HTML part'
 test_subtest_known_broken
 id='html-message@notmuchmail.org'
