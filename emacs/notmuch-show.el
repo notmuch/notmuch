@@ -896,6 +896,7 @@ logic of the notmuch-crypto-process-mime customization variable."
     (define-key map "F" 'notmuch-show-stash-filename)
     (define-key map "f" 'notmuch-show-stash-from)
     (define-key map "i" 'notmuch-show-stash-message-id)
+    (define-key map "I" 'notmuch-show-stash-message-id-stripped)
     (define-key map "s" 'notmuch-show-stash-subject)
     (define-key map "T" 'notmuch-show-stash-tags)
     (define-key map "t" 'notmuch-show-stash-to)
@@ -1439,6 +1440,11 @@ buffer."
   "Copy message ID of current message to kill-ring."
   (interactive)
   (notmuch-common-do-stash (notmuch-show-get-message-id)))
+
+(defun notmuch-show-stash-message-id-stripped ()
+  "Copy message ID of current message (sans `id:' prefix) to kill-ring."
+  (interactive)
+  (notmuch-common-do-stash (substring (notmuch-show-get-message-id) 4 -1)))
 
 (defun notmuch-show-stash-subject ()
   "Copy Subject field of current message to kill-ring."
