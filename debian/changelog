@@ -1,12 +1,13 @@
-notmuch (0.6~264) UNRELEASED; urgency=low
+notmuch (0.6~rc1) experimental; urgency=low
 
-  * New snapshot, in progress
+  * Git snapshot 3f777b2
+  * Upstream release candidate.
   * Fix description of notmuch-vim to mention vim, not emacs
     (Closes: #631974)
   * Install zsh completion as an example instead of into /usr/share/zsh to
     avoid file conflict with zsh.
 
- -- David Bremner <bremner@debian.org>  Thu, 30 Jun 2011 08:44:27 -0300
+ -- David Bremner <bremner@debian.org>  Thu, 30 Jun 2011 10:02:05 -0300
 
 notmuch (0.6~254) experimental; urgency=low
 
