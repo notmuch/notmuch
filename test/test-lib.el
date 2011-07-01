@@ -20,9 +20,6 @@
 ;;
 ;; Authors: Dmitry Kurochkin <dmitry.kurochkin@gmail.com>
 
-;; avoid crazy 10-column default of --batch
-(set-frame-width (window-frame (get-buffer-window)) 80)
-
 ;; `read-file-name' by default uses `completing-read' function to read
 ;; user input.  It does not respect `standard-input' variable which we
 ;; use in tests to provide user input.  So replace it with a plain
