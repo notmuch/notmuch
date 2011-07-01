@@ -50,6 +50,8 @@ TZ=UTC
 TERM=dumb
 export LANG LC_ALL PAGER TERM TZ
 GIT_TEST_CMP=${GIT_TEST_CMP:-diff -u}
+export SCREENRC=/dev/null
+export SYSSCREENRC=/dev/null
 
 # Protect ourselves from common misconfiguration to export
 # CDPATH into the environment
