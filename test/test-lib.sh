@@ -394,7 +394,7 @@ emacs_deliver_message ()
 	   (message-goto-body)
 	   (insert \"${body}\")
 	   $@
-	   (message-send-and-exit))" >/dev/null 2>&1
+	   (message-send-and-exit))"
     wait ${smtp_dummy_pid}
     notmuch new >/dev/null
 }
