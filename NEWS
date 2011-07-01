@@ -1,4 +1,4 @@
-Notmuch 0.6 (2011-07-XX)
+Notmuch 0.6 (2011-07-01)
 =======================
 New, general features
 ---------------------
@@ -13,9 +13,11 @@ Folder-based searching
   For example, one might use things such as:
 
 	folder:spam
-	folder:2011/06
+        folder:2011-*
+        folder:work/todo
 
-  or anything else that matches directories within your mail storage.
+  to match any path containing a directory "spam", "work/todo", or
+  containing a directory starting with "2011-", respectively.
 
   This feature is particularly useful for users of delivery-agent
   software (such as procmail or maildrop) that is filtering mail and
@@ -32,15 +34,19 @@ Folder-based searching
 	notmuch new
 	notmuch restore notmuch.dump
 
+Support for PGP/MIME
+
+  Both the command line interface and the emacs-interface have new
+  support for PGP/MIME, detailed below. Thanks to Daniel Kahn Gillmor
+  and Jameson Graef Rollins for making this happen.
+
 New, automatic tags: "signed" and "encrypted"
 
   These tags will automatically be applied to messages containing
   multipart/signed and multipart/encrypted parts.
 
   NOTE: Only messages that are newly indexed with this version of
-  notmuch will receive these tags. In order to enable this feature for
-  all mail, the entire notmuch index will need to be rebuilt (see
-  above).
+  notmuch will receive these tags.
 
 New command-line features
 -------------------------
@@ -52,6 +58,8 @@ Add new "notmuch show --verify" option for signature verification
 Add new "notmuch show --decrypt" and "notmuch reply --decrypt" options
 
   This option instructs notmuch to decrypt PGP/MIME-encrypted parts.
+  Note that this feature currently requires gpg-agent and a passphrase entry
+  tool (e.g. pinentry-gtk or pinentry-curses).
 
 Proper nesting of multipart parts in "notmuch show" output
 
@@ -79,19 +87,19 @@ Deprecate "notmuch search-tags", (in favor of "notmuch search --output=tags *")
 
 Performance improvements
 ------------------------
-Faster searches (by doing fewer serches to construct threads)
+Faster searches (by doing fewer searches to construct threads)
 
   Whenever a user asks for search results as threads, notmuch first
   performs a search for messages matching the query, then performs
   additional searches to find other messages in the resulting threads.
 
-  Removing inefficiences and redundancies in these secondary searches
+  Removing inefficiencies and redundancies in these secondary searches
   results in a measured speedups of 1.5x for a typical search.
 
 Faster searches (by doing fewer passes to gather message data)
 
   Optimizing Xapian data access patterns (using a single pass to get
-  all message-document data rather than a ps for each data type)
+  all message-document data rather than a pass for each data type)
   results in a measured speedup of 1.7x for a typical search.
 
   The benefits of this optimization combine with the preceding
@@ -110,11 +118,20 @@ Make "notmuch new" faster for unchanged directories
   Optimizing to not do any further examinations of sub-directories
   when the filesystem indicates that a directory is unchanged from the
   last "notmuch new" results in measured speedups of 8.5 for the "No
-  new mail" case, (was 0.77s, now 0.09s). Thanks to Austin Clements
-  and Karel Zak.
+  new mail" case, (was 0.77s, now 0.09s). Thanks to Karel Zak.
 
 New emacs-interface features
 ----------------------------
+
+Support for PGP/MIME (GnuPG)
+
+  Automatically indicate validity of signatures for multipart/signed
+  messages.  Automatically display decrypted content for
+  multipart/encrypted messages.  See the emacs variable
+  notmuch-crypto-process-mime for more information. Note that this
+  needs gpg-agent and a pinentry tool just as the command line tools.
+  Also note there is no support SMIME yet.
+
 Output of pipe command is now displayed if pipe command fails
 
   This is extremely useful in the common use case of piping a patch to
@@ -130,7 +147,7 @@ User-selectable From address
   will prompt for the from address to use.
 
   The user can customize the "Notmuch Identities" setting in the
-  notmuch cutomize group in order to use addresses other than those in
+  notmuch customize group in order to use addresses other than those in
   the notmuch configuration file if desired.
 
   The user can also choose to always be prompted for the from address
@@ -138,6 +155,11 @@ User-selectable From address
   the "Notmuch Always Prompt For Sender" option in the notmuch
   customize group.
 
+Hiding of repeated subjects in collapsed thread view
+
+  In notmuch-show mode, if a collapsed message has the same subject as
+  its parent, the subject is not shown.
+  
 Automatic detection and hiding of original message in top-posted message
 
   When a message contains a line looking something like:
@@ -154,7 +176,7 @@ New hooks for running code when tags are modified
   Some users want to perform additional actions whenever a particular
   tag is added/removed from a message. This could be used to, for
   example, interface with some external spam-recognition training
-  tool. T facilitate this, two new hooks are added which can be
+  tool. To facilitate this, two new hooks are added which can be
   modified in the following settings of the notmuch customize group:
 
 	Notmuch Before Tag Hook
@@ -181,24 +203,20 @@ Better rendering of text/x-vcalendar parts
 
 Avoid getting confused by Subject and Author fields with newline characters
 
-  Replacing all characters with ACII code less than 32 with a question mark.
+  Replacing all characters with ASCII code less than 32 with a question mark.
 
 Cleaner display of From line in email messages (remove double quotes,
 and drop "name" if it's actually just a repeat of the email address).
 
 Vim interface improvements
 --------------------------
-Felipe Contreras provided a number of updates for the vim interface.
+Felipe Contreras provided a number of updates for the vim interface:
 
-  Using sendmail directly rather than mailx,
-
-  Implementing archive in show view
-
-  Add support to mark as read in show and search views
-
-  Add delete commands
-
-  Various cleanups.
+  * Using sendmail directly rather than mailx,
+  * Implementing archive in show view
+  * Add support to mark as read in show and search views
+  * Add delete commands
+  * Various cleanups.
 
 Bindings improvements
 ---------------------
@@ -207,22 +225,28 @@ Ruby bindings are now much more complete
   Including QUERY.sort, QUERY.to_s, MESSAGE.maildir_flags_to_tags,
   MESSAGE.tags_to_maildir_flags, and MESSAGE.get_filenames
 
-Python bindings are now much more complete
+* Python bindings have been upodated and extended
+  (docs online at http://packages.python.org/notmuch/)
 
-  Including Message().get_filenames(),
-  Message().tags_to_maildir_flags(), Threads().__nonzero__,
-  Tags().__nonzero__()
+  New bindings:
+  - Message().get_filenames(),
+  - Message().tags_to_maildir_flags(),Message().maildir_flags_to_tags()
+  - list(Threads()) and list(Messages) works now
 
-  Also implement Message.__cmp__ and __hash__
+  - Message().__cmp__() and __hash__()
   These allow, for example:
-
-	if msg1 == msg2
+        if msg1 == msg2: ...
 
   As well as set arithmetic on Messages():
 
-	s1, s2= msgs1, msgs2
+        s1, s2= set(msgs1), set(msgs2)
 	s1.union(s2)
 	s2 -= s1
+
+   Removed:
+     - len(Messages()) as it exausted the iterator.
+       Use len(list(Messages())) or
+       Query.count_messages() to get the length.
 
 Added initial Go bindings in bindings/go
 
@@ -254,17 +278,17 @@ Binary for bash for running test suite now located via PATH.
   bash 4). As some systems supply an older version of bash at
   /bin/bash, the test suite is now updated to search $PATH to locate
   the bash binary. This allows users of systems with old /bin/bash to
-  simply install bash >= 4 somwhere on $PATH before /bin and then use
+  simply install bash >= 4 somewhere on $PATH before /bin and then use
   the test suite.
 
 Support for testing output with a trailing newline.
 
   Previously, some tests would fail to notice a difference in the
-  presense/absence of a trailing newline in a program output, (which
+  presence/absence of a trailing newline in a program output, (which
   has led to bugs in the past). Now, carefully-written tests (using
   test_expect_equal_file rather than test_expect_equal) will detect
   any change in the presence/absence of a trailing newline. Many tests
-  are updated to take advnatage of this.
+  are updated to take advantage of this.
 
 Avoiding accessing user's $HOME while running test suite
 
@@ -313,7 +337,7 @@ Fix libnotmuch library to only export notmuch API functions
 
   Previous release of the notmuch library also exported some Xapian
   C++ exception type symbols. These were never part of the library
-  interface and were never intented to be exported.
+  interface and were never intended to be exported.
 
 Emacs-interface bug fixes
 -------------------------
@@ -321,16 +345,16 @@ Display any unexpected output or errors from "notmuch search" invocations
 
   Previously any misformatted output or trailing error messages were
   silently ignored. This output is now clearly displayed. This fix was
-  very helpful in identifying and fixing the bug decribed below.
+  very helpful in identifying and fixing the bug described below.
 
 Fix bug where some threads would be missing from large search results
 
   When a search returned a "large" number of results, the emacs
-  interface was incorrectly dropping one thread everytime the output
-  of the "notmuch search" process spanned the emacss read-buffer. This
+  interface was incorrectly dropping one thread every time the output
+  of the "notmuch search" process spanned the emacs read-buffer. This
   is now fixed.
 
-Avoid rec-compression of .gz files (and similar) when saving attachment
+Avoid re-compression of .gz files (and similar) when saving attachment
 
   Emacs was being too clever for its own good and trying to
   re-compress pre-compressed .gz files when saving such attachments
@@ -456,15 +480,15 @@ Allow for notmuch-fcc-dirs to have a value of nil.
   string. Instead it's now a list of cons cells where the car of each
   cell is a regular expression to be matched against the sender
   address, and the cdr is the name of a folder to use for an FCC. So
-  the old fallback behavior can be achieved by including a fineal cell
+  the old fallback behavior can be achieved by including a final cell
   of (".*" . "default-fcc-folder").
 
 Vim interface improvements
 --------------------------
 Felipe Contreras provided a number of updates for the vim interface.
 
-  These include optimiations, support for newer versions of vim, fixed
-  support for sending mail on modern systmms, new commands, and
+  These include optimizations, support for newer versions of vim, fixed
+  support for sending mail on modern systems, new commands, and
   various cleanups.
 
 New bindings
@@ -950,7 +974,7 @@ Fix to compile against GMime 2.6
 
 Fix configure script to accept (and ignore) various standard options.
 
-  For example, those that the gentoo build scripts expect configure to
+  For example, those that the Gentoo build scripts expect configure to
   accept are now all accepted.
 
 Test suite
@@ -1058,7 +1082,7 @@ tags by region.
   Selective bulk tagging is now possible by selecting a region of
   threads and then using either the '+' or '-' keybindings. Bulk
   tagging is still available for all threads matching the current
-  search with th '*' binding.
+  search with the '*' binding.
 
 More meaningful buffer names for thread-view buffers.
 
@@ -1112,3 +1136,4 @@ a performance bug that made notmuch very slow when modifying
 tags. This would cause distracting pauses when reading mail while
 notmuch would wait for Xapian when removing the "inbox" and "unread"
 tags from messages in a thread.
+
