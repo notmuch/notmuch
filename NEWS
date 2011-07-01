@@ -1,3 +1,347 @@
+Notmuch 0.6 (2011-07-XX)
+=======================
+New, general features
+---------------------
+Folder-based searching
+
+  Notmuch queries can now include a search term to match the
+  directories in which mail files are stored (within the mail
+  storage). The syntax is as follows:
+
+	folder:<path>
+
+  For example, one might use things such as:
+
+	folder:spam
+	folder:2011/06
+
+  or anything else that matches directories within your mail storage.
+
+  This feature is particularly useful for users of delivery-agent
+  software (such as procmail or maildrop) that is filtering mail and
+  delivering it to particular folders, or users of systems such as
+  Gmail that use filesystem directories to indicate message tags.
+
+  NOTE: Only messages that are newly indexed with this version of
+  notmuch will be searchable with folder: terms. In order to enable
+  this feature for all mail, the entire notmuch index will need to be
+  rebuilt as follows:
+
+	notmuch dump > notmuch.dump
+	# Backup, then remove notmuch database ($MAIL/.notmuch)
+	notmuch new
+	notmuch restore notmuch.dump
+
+New, automatic tags: "signed" and "encrypted"
+
+  These tags will automatically be applied to messages containing
+  multipart/signed and multipart/encrypted parts.
+
+  NOTE: Only messages that are newly indexed with this version of
+  notmuch will receive these tags. In order to enable this feature for
+  all mail, the entire notmuch index will need to be rebuilt (see
+  above).
+
+New command-line features
+-------------------------
+Add new "notmuch show --verify" option for signature verification
+
+  This option instruct notmuch to verify the signature of
+  PGP/MIME-signed parts.
+
+Add new "notmuch show --decrypt" and "notmuch reply --decrypt" options
+
+  This option instructs notmuch to decrypt PGP/MIME-encrypted parts.
+
+Proper nesting of multipart parts in "notmuch show" output
+
+  MIME parts are now display with proper nesting to reflect original
+  MIME hierarchy of a message. This allows clients to correctly
+  analyze the MIME structure, (such as, for example, determining to
+  which parts a signature part applies).
+
+Add new "notmuch show --part" option
+
+  This is a replacement for the older "notmuch part" command, (which
+  is now deprecated—it should still work as always, but is no longer
+  documented). Putting part output under "notmuch show" allows for all
+  of the "notmuch show" options to be applied when extracting a single
+  part, (such as --format=json for extracting a message part with JSON
+  formatting).
+
+Deprecate "notmuch search-tags", (in favor of "notmuch search --output=tags *")
+
+  The "notmuch search-tags" sub-command has been redundant since the
+  addition of the --output=tags option to "notmuch search". We now
+  make that more clear by deprecating "notmuch search-tags", (dropping
+  it from the documentation). We do continue to support the old syntax
+  by translating it internally to the new call.
+
+Performance improvements
+------------------------
+Faster searches (by doing fewer serches to construct threads)
+
+  Whenever a user asks for search results as threads, notmuch first
+  performs a search for messages matching the query, then performs
+  additional searches to find other messages in the resulting threads.
+
+  Removing inefficiences and redundancies in these secondary searches
+  results in a measured speedups of 1.5x for a typical search.
+
+Faster searches (by doing fewer passes to gather message data)
+
+  Optimizing Xapian data access patterns (using a single pass to get
+  all message-document data rather than a ps for each data type)
+  results in a measured speedup of 1.7x for a typical search.
+
+  The benefits of this optimization combine with the preceding
+  optimization. With both in place, Austin Clements measured a speedup
+  of 2.5x for a search of all messages in his inbox (was 4.5s, now
+  1.8s). Thanks, Austin!
+
+Faster initial indexing
+
+  More efficient indexing of new messages results in a measured
+  speedup of 1.4x for the initial indexing of 3 GB of mail (1h 14m
+  rather than 1h 46m). Thanks to Austin Clements and Michal Sojka.
+
+Make "notmuch new" faster for unchanged directories
+
+  Optimizing to not do any further examinations of sub-directories
+  when the filesystem indicates that a directory is unchanged from the
+  last "notmuch new" results in measured speedups of 8.5 for the "No
+  new mail" case, (was 0.77s, now 0.09s). Thanks to Austin Clements
+  and Karel Zak.
+
+New emacs-interface features
+----------------------------
+Output of pipe command is now displayed if pipe command fails
+
+  This is extremely useful in the common use case of piping a patch to
+  "git am". If git fails to cleanly merge the patch the error messages
+  from the failed merge are now clearly displayed to the user, (where
+  previously they were silently hidden from the user).
+
+User-selectable From address
+
+  A user can choose which configured email addresses should be used as
+  the From address whenever composing a new message. To do so, simply
+  press C-u before the command which will open a new message. Emacs
+  will prompt for the from address to use.
+
+  The user can customize the "Notmuch Identities" setting in the
+  notmuch cutomize group in order to use addresses other than those in
+  the notmuch configuration file if desired.
+
+  The user can also choose to always be prompted for the from address
+  when composing a new message (without having to use C-u) by setting
+  the "Notmuch Always Prompt For Sender" option in the notmuch
+  customize group.
+
+Automatic detection and hiding of original message in top-posted message
+
+  When a message contains a line looking something like:
+
+	----- Original Message -----
+
+  emacs hides this and all subsequent lines as an "original message",
+  (allowing the user to click or press enter on the "original message"
+  button to display it again). This makes the handling of top-posted
+  citations work much like conventional citations.
+
+New hooks for running code when tags are modified
+
+  Some users want to perform additional actions whenever a particular
+  tag is added/removed from a message. This could be used to, for
+  example, interface with some external spam-recognition training
+  tool. T facilitate this, two new hooks are added which can be
+  modified in the following settings of the notmuch customize group:
+
+	Notmuch Before Tag Hook
+	Notmuch After Tag Hook
+
+New optional support for hiding some multipart/alternative parts
+
+  Many emails are sent with redundant content within a
+  multipart/alternative group (such as a text/plain part as well as a
+  text/html part). Users can configure the setting:
+
+	Notmuch Show All Multipart/Alternative Parts
+
+  to "off" in the notmuch customize group to have the interface
+  automatically hide some part alternatives (such as text/html
+  parts). This new part hiding is not configured by default yet
+  because there's not yet a simple way to re-display such a hidden
+  part if it is not actually redundant with a displayed part.
+
+Better rendering of text/x-vcalendar parts
+
+  These parts are now displayed in a format suitable for use with the
+  emacs diary.
+
+Avoid getting confused by Subject and Author fields with newline characters
+
+  Replacing all characters with ACII code less than 32 with a question mark.
+
+Cleaner display of From line in email messages (remove double quotes,
+and drop "name" if it's actually just a repeat of the email address).
+
+Vim interface improvements
+--------------------------
+Felipe Contreras provided a number of updates for the vim interface.
+
+  Using sendmail directly rather than mailx,
+
+  Implementing archive in show view
+
+  Add support to mark as read in show and search views
+
+  Add delete commands
+
+  Various cleanups.
+
+Bindings improvements
+---------------------
+Ruby bindings are now much more complete
+
+  Including QUERY.sort, QUERY.to_s, MESSAGE.maildir_flags_to_tags,
+  MESSAGE.tags_to_maildir_flags, and MESSAGE.get_filenames
+
+Python bindings are now much more complete
+
+  Including Message().get_filenames(),
+  Message().tags_to_maildir_flags(), Threads().__nonzero__,
+  Tags().__nonzero__()
+
+  Also implement Message.__cmp__ and __hash__
+  These allow, for example:
+
+	if msg1 == msg2
+
+  As well as set arithmetic on Messages():
+
+	s1, s2= msgs1, msgs2
+	s1.union(s2)
+	s2 -= s1
+
+Added initial Go bindings in bindings/go
+
+New build-system features
+-------------------------
+Added support for building in a directory other than the source directory
+
+  This can be used with the widely-supported idiom of simply running
+  the configure script from some other directory:
+
+	mkdir build
+	cd build
+	../configure
+	make
+
+Fix to save configure options for future, implicit runs of configure
+
+  When a user updates the source (such as with "git pull") calling
+  "make" may cause an automatic re-run of the configure script. When
+  this happens, the configure script will automatically be called with
+  the same options the user originally passed in the most-recent
+  manual invocation of configure.
+
+New test-suite feature
+----------------------
+Binary for bash for running test suite now located via PATH.
+
+  The notmuch test suite requires a fairly recent version of bash (>=
+  bash 4). As some systems supply an older version of bash at
+  /bin/bash, the test suite is now updated to search $PATH to locate
+  the bash binary. This allows users of systems with old /bin/bash to
+  simply install bash >= 4 somwhere on $PATH before /bin and then use
+  the test suite.
+
+Support for testing output with a trailing newline.
+
+  Previously, some tests would fail to notice a difference in the
+  presense/absence of a trailing newline in a program output, (which
+  has led to bugs in the past). Now, carefully-written tests (using
+  test_expect_equal_file rather than test_expect_equal) will detect
+  any change in the presence/absence of a trailing newline. Many tests
+  are updated to take advnatage of this.
+
+Avoiding accessing user's $HOME while running test suite
+
+  The test suite now carefully creates its own HOME directory. This
+  allows the test suite to be run with no existing HOME directory, (as
+  some build systems apparently do), and avoids test-suite differences
+  due to configuration files in the users HOME directory.
+
+
+General bug fixes
+-----------------
+Output *all* files for "notmuch search --output=files"
+
+  For the cases where multiple files have the same Message ID,
+  previous versions of notmuch would output only one such file. This
+  command is now fixed to correctly output all files.
+
+Fixed spurious search results from "overlapped" indexing of addresses
+
+  This fixed a bug where a search for:
+
+	to:user@elsewhere.com
+
+  would incorrectly match a message sent:
+
+	To: user@example,com, someone@elsewhere.com
+
+Fix --output=json when search has no results
+
+  A bug present since notmuch 0.4 had caused searches with no results
+  to produce an invalid json object. This is now fixed to cleanly
+  return a valid json object representing an empty array "[]" as
+  expected.
+
+fix the automatic detection of the From address for "notmuch reply"
+from the Received headers in some cases.
+
+Fix core dump on DragonFlyBSD due to -1 return value from
+sysconf(_SC_GETPW_R_SIZE_MAX).
+
+Cleaned up several memory leaks
+
+Eliminated a few, rare segmentation faults and a double-free.
+
+Fix libnotmuch library to only export notmuch API functions
+
+  Previous release of the notmuch library also exported some Xapian
+  C++ exception type symbols. These were never part of the library
+  interface and were never intented to be exported.
+
+Emacs-interface bug fixes
+-------------------------
+Display any unexpected output or errors from "notmuch search" invocations
+
+  Previously any misformatted output or trailing error messages were
+  silently ignored. This output is now clearly displayed. This fix was
+  very helpful in identifying and fixing the bug decribed below.
+
+Fix bug where some threads would be missing from large search results
+
+  When a search returned a "large" number of results, the emacs
+  interface was incorrectly dropping one thread everytime the output
+  of the "notmuch search" process spanned the emacss read-buffer. This
+  is now fixed.
+
+Avoid rec-compression of .gz files (and similar) when saving attachment
+
+  Emacs was being too clever for its own good and trying to
+  re-compress pre-compressed .gz files when saving such attachments
+  (potentially corrupting the attachment). The emacs interface is
+  fixed to avoid this bug.
+
+Fix hiding of a message when a previously-hidden citation is visible
+
+  Previously the citation would remain visible in this case. This is
+  fixed so that hiding a message hides all parts.
+
 Notmuch 0.5 (2010-11-11)
 ========================
 New, general features
