@@ -841,10 +841,16 @@ EOF
 test_emacs () {
 	if [ -z "$EMACS_SERVER" ]; then
 		EMACS_SERVER="notmuch-test-suite-$$"
-		"$TMP_DIRECTORY/run_emacs" \
-			--daemon \
+		# start a detached screen session with an emacs server
+		screen -S "$EMACS_SERVER" -d -m "$TMP_DIRECTORY/run_emacs" \
+			--no-window-system \
 			--eval "(setq server-name \"$EMACS_SERVER\")" \
+			--eval '(server-start)' \
 			--eval "(orphan-watchdog $$)" || return
+		# wait until the emacs server is up
+		until test_emacs '()' 2>/dev/null; do
+			sleep 1
+		done
 	fi
 
 	emacsclient --socket-name="$EMACS_SERVER" --eval "(progn $@)"
