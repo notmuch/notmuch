@@ -1,3 +1,13 @@
+notmuch (0.6) unstable; urgency=low
+
+  * New upstream release; see /usr/share/doc/notmuch/NEWS for
+    details. Hilights include:
+    - Folder-based search (Closes: #597222)
+    - PGP/MIME decryption and verification
+  * Document strict dependency on emacs23 (Closes: #631994).
+
+ -- David Bremner <bremner@debian.org>  Fri, 01 Jul 2011 11:45:22 -0300
+
 notmuch (0.6~rc1) experimental; urgency=low
 
   * Git snapshot 3f777b2

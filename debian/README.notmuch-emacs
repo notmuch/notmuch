@@ -1,0 +1,8 @@
+
+* This package currently works only with emacs 23.  Users of 
+  pre-release snapshots of emacs 24 can expect problems.
+
+* For help in getting started with notmuch and the emacs interface,
+  see /usr/share/doc/notmuch/README.
+
+ -- David Bremner <bremner@debian.org>, Fri,  1 Jul 2011 11:41:26 -0300
