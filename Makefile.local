@@ -90,6 +90,7 @@ release: verify-source-tree-and-version
 	$(MAKE) VERSION=$(VERSION) verify-newer
 	$(MAKE) VERSION=$(VERSION) clean
 	$(MAKE) VERSION=$(VERSION) test
+	git tag -s -m "$(PACKAGE) $(VERSION) release" $(VERSION)
 	$(MAKE) VERSION=$(VERSION) $(GPG_FILE)
 	ln -sf $(TAR_FILE) $(DEB_TAR_FILE)
 	pristine-tar commit $(DEB_TAR_FILE) $(VERSION)
@@ -97,7 +98,6 @@ release: verify-source-tree-and-version
 	ssh $(RELEASE_HOST) "rm -f $(RELEASE_DIR)/LATEST-$(PACKAGE)-[0-9]* && ln -s $(TAR_FILE) $(RELEASE_DIR)/LATEST-$(PACKAGE)-$(VERSION)"
 	mkdir -p releases
 	mv $(TAR_FILE) $(SHA1_FILE) $(GPG_FILE) releases
-	git tag -s -m "$(PACKAGE) $(VERSION) release" $(VERSION)
 	git push origin $(VERSION)
 	$(MAKE) VERSION=$(VERSION) release-message > $(PACKAGE)-$(VERSION).announce
 	@echo "Please send a release announcement using $(PACKAGE)-$(VERSION).announce as a template."
