@@ -180,11 +180,16 @@ verify-version-components:
 .PHONY: verify-newer
 verify-newer:
 	@echo -n "Checking that no $(VERSION) release already exists..."
-	@ssh $(RELEASE_HOST) test ! -e $(RELEASE_DIR)/$(TAR_FILE) \
-		|| (echo "Ouch." && echo "Found: $(RELEASE_HOST):$(RELEASE_DIR)/$(TAR_FILE)" \
-		&& echo "Refusing to replace an existing release." \
-		&& echo "Don't forget to update \"version\" as described in RELEASING before release." && false)
-	@echo "Good."
+	@wget -q -O /dev/null $(RELEASE_URL)/$(TAR_FILE) ; \
+	case $$? in \
+          8) echo "Good." ;; \
+          0) echo "Ouch."; \
+	     echo "Found: $(RELEASE_URL)/$(TAR_FILE)"; \
+	     echo "Refusing to replace an existing release."; \
+	     echo "Don't forget to update \"version\" as described in RELEASING before release." ; \
+	     false ;; \
+	  *) echo "An unexpected error occured"; \
+	     false;; esac
 
 # The user has not set any verbosity, default to quiet mode and inform the
 # user how to enable verbose compiles.
