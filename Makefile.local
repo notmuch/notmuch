@@ -61,7 +61,13 @@ endif
 endif
 
 $(TAR_FILE):
-	git archive --format=tar --prefix=$(PACKAGE)-$(VERSION)/ HEAD > $(TAR_FILE).tmp
+	if git tag -v $(VERSION) >/dev/null 2>&1; then \
+           ref=$(VERSION); \
+        else \
+           ref="HEAD" ; \
+	   echo "Warning: No signed tag for $(VERSION)"; \
+	fi ; \
+	git archive --format=tar --prefix=$(PACKAGE)-$(VERSION)/ $$ref > $(TAR_FILE).tmp
 	echo $(VERSION) > version.tmp
 	tar --append -f $(TAR_FILE).tmp --transform s_^_$(PACKAGE)-$(VERSION)/_  --transform 's_.tmp$$__' version.tmp
 	rm version.tmp
