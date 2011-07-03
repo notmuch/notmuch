@@ -76,7 +76,7 @@ $(dir)/$(LIBNAME): $(libnotmuch_modules) notmuch.sym
 
 notmuch.sym: lib/notmuch.h
 	printf "{\nglobal:\n" > notmuch.sym
-	sed  -n 's/^\s*\(notmuch_[a-z_]*\)\s*(.*/\t\1;/p' $< >> notmuch.sym
+	sed  -n 's/^[[:space:]]*\(notmuch_[a-z_]*\)[[:space:]]*(.*/'"`printf "\t"`"'\1;/p' $< >> notmuch.sym
 	printf "local: *;\n};\n" >> notmuch.sym
 
 $(dir)/$(SONAME): $(dir)/$(LIBNAME)
