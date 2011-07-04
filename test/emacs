@@ -1,10 +1,5 @@
 #!/usr/bin/env bash
 
-# Note: do not use `setq' for setting variables in Emacs tests because
-# it affects other tests that may run in the same Emacs instance.  Use
-# `let' instead so the scope of the changed variables is limited to a
-# single test.
-
 test_description="emacs interface"
 . test-lib.sh
 

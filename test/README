@@ -181,9 +181,13 @@ library for your script to use.
 
    This function executes the provided emacs lisp script within
    emacs. The script can be a sequence of emacs lisp expressions,
-   (that is, they will be evaluated within a progn form). The lisp
-   expressions can call `message' to generate output on stdout to be
-   examined by the calling test script.
+   (that is, they will be evaluated within a progn form). Emacs
+   stdout and stderr is not available, the common way to get output
+   is to save it to a file. There are some auxiliary functions
+   useful in emacs tests provided in test-lib.el. Do not use `setq'
+   for setting variables in Emacs tests because it affects other
+   tests that may run in the same Emacs instance.  Use `let' instead
+   so the scope of the changed variables is limited to a single test.
 
  test_done
 
