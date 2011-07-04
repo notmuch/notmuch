@@ -342,4 +342,30 @@ test_emacs '(notmuch-show "id:f35dbb950911171438k5df6eb56k77b6c0944e2e79ae@mail.
 	    (test-visible-output)'
 test_expect_equal_file OUTPUT $EXPECTED/notmuch-show-thread-with-hidden-messages
 
+test_begin_subtest 'Hiding message following HTML part'
+test_subtest_known_broken
+id='html-message@notmuchmail.org'
+emacs_deliver_message \
+    'HTML message' \
+    '' \
+    "(message-goto-eoh)
+     (insert \"Message-ID: <$id>\n\")
+     (message-goto-body)
+     (mml-insert-part \"text/html\")
+     (insert \"<body>This is a test HTML message</body>\")"
+emacs_deliver_message \
+    'Reply to HTML message' \
+    'This is a reply to the test HTML message' \
+    "(message-goto-eoh)
+     (insert \"In-Reply-To: <$id>\n\")"
+test_emacs "(notmuch-show \"id:$id\") \
+            (notmuch-show-next-message) \
+            (command-execute (key-binding (kbd \"RET\"))) \
+            (test-visible-output)"
+test_emacs "(notmuch-show \"id:$id\") \
+            (notmuch-show-next-message) \
+            (notmuch-show-toggle-message) \
+            (test-visible-output \"EXPECTED\")"
+test_expect_equal_file OUTPUT EXPECTED
+
 test_done
