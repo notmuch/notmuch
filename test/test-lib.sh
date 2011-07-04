@@ -424,6 +424,7 @@ test_begin_subtest ()
 	error "bug in test script: Missing test_expect_equal in ${BASH_SOURCE[1]}:${BASH_LINENO[0]}"
     fi
     test_subtest_name="$1"
+    test_subtest_known_broken_=
     # Remember stdout and stderr file descriptors and redirect test
     # output to the previously prepared file descriptors 3 and 4 (see
     # below)
@@ -480,29 +481,6 @@ test_expect_equal_file ()
 			cp "$output" $testname.output
 			cp "$expected" $testname.expected
 			test_failure_ "$test_subtest_name" "$(diff -u $testname.expected $testname.output)"
-		fi
-    fi
-}
-
-test_expect_equal_failure ()
-{
-	exec 1>&6 2>&7		# Restore stdout and stderr
-	inside_subtest=
-	test "$#" = 3 && { prereq=$1; shift; } || prereq=
-	test "$#" = 2 ||
-	error "bug in the test script: not 2 or 3 parameters to test_expect_equal"
-
-	output="$1"
-	expected="$2"
-	if ! test_skip "$@"
-	then
-		if [ "$output" = "$expected" ]; then
-			test_known_broken_ok_ "$test_subtest_name"
-		else
-			test_known_broken_failure_ "$test_subtest_name"
-			testname=$this_test.$test_count
-			echo "$expected" > $testname.expected
-			echo "$output" > $testname.output
 		fi
     fi
 }
@@ -568,19 +546,31 @@ test_have_prereq () {
 # the text_expect_* functions instead.
 
 test_ok_ () {
+	if test "$test_subtest_known_broken_" = "t"; then
+		test_known_broken_ok_ "$@"
+		return
+	fi
 	test_success=$(($test_success + 1))
 	say_color pass "%-6s" "PASS"
 	echo " $@"
 }
 
 test_failure_ () {
+	if test "$test_subtest_known_broken_" = "t"; then
+		test_known_broken_failure_ "$@"
+		return
+	fi
 	test_failure=$(($test_failure + 1))
-	say_color error "%-6s" "FAIL"
-	echo " $1"
-	shift
+	test_failure_message_ "FAIL" "$@"
+	test "$immediate" = "" || { GIT_EXIT_OK=t; exit 1; }
+}
+
+test_failure_message_ () {
+	say_color error "%-6s" "$1"
+	echo " $2"
+	shift 2
 	echo "$@" | sed -e 's/^/	/'
 	if test "$verbose" != "t"; then cat test.output; fi
-	test "$immediate" = "" || { GIT_EXIT_OK=t; exit 1; }
 }
 
 test_known_broken_ok_ () {
@@ -591,8 +581,7 @@ test_known_broken_ok_ () {
 
 test_known_broken_failure_ () {
 	test_broken=$(($test_broken+1))
-	say_color pass "%-6s" "BROKEN"
-	echo " $@"
+	test_failure_message_ "BROKEN" "$@"
 }
 
 test_debug () {
@@ -636,20 +625,8 @@ test_skip () {
 	esac
 }
 
-test_expect_failure () {
-	test "$#" = 3 && { prereq=$1; shift; } || prereq=
-	test "$#" = 2 ||
-	error "bug in the test script: not 2 or 3 parameters to test-expect-failure"
-	if ! test_skip "$@"
-	then
-		test_run_ "$2"
-		if [ "$?" = 0 -a "$eval_ret" = 0 ]
-		then
-			test_known_broken_ok_ "$1"
-		else
-			test_known_broken_failure_ "$1"
-		fi
-	fi
+test_subtest_known_broken () {
+	test_subtest_known_broken_=t
 }
 
 test_expect_success () {
