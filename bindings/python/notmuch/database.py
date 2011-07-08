@@ -195,7 +195,7 @@ class Database(object):
         # Raise a NotmuchError if not initialized
         self._verify_initialized_db()
 
-        return notmuch_database_needs_upgrade(self._db) 
+        return nmlib.notmuch_database_needs_upgrade(self._db) 
 
     def upgrade(self):
         """Upgrades the current database
