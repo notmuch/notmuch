@@ -1053,6 +1053,12 @@ All currently available key bindings:
     (put-text-property (point) (+ (point) 1) :notmuch-message-properties props)))
 
 (defun notmuch-show-get-message-properties ()
+  "Return the properties of the current message as a plist.
+
+Some useful entries are:
+:headers - Property list containing the headers :Date, :Subject, :From, etc.
+:body - Body of the message
+:tags - Tags for this message"
   (save-excursion
     (notmuch-show-move-to-message-top)
     (get-text-property (point) :notmuch-message-properties)))
