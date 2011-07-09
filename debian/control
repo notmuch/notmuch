@@ -15,7 +15,7 @@ Dm-Upload-Allowed: yes
 
 Package: notmuch
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}
+Depends: libnotmuch1 (= ${binary:Version}), ${shlibs:Depends}, ${misc:Depends}
 Recommends: notmuch-emacs | notmuch-vim
 Description: thread-based email index, search and tagging
  Notmuch is a system for indexing, searching, reading, and tagging
