@@ -2,8 +2,10 @@ notmuch (0.6.1) unstable; urgency=low
 
   * Properly install README.Debian in notmuch-vim (Closes: #632992).
     Thanks to Jason Woofenden for the report.
+  * Force notmuch to depend on the same version of libnotmuch. Thanks to
+    Uwe Kleine-König for the patch.
 
- -- David Bremner <bremner@debian.org>  Thu, 07 Jul 2011 22:41:13 -0300
+ -- David Bremner <bremner@debian.org>  Sun, 10 Jul 2011 09:34:02 -0300
 
 notmuch (0.6) unstable; urgency=low
 
