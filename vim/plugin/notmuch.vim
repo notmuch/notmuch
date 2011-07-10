@@ -58,7 +58,7 @@ let s:notmuch_defaults = {
         \
         \ 'g:notmuch_compose_insert_mode_start':     1                            ,
         \ 'g:notmuch_compose_header_help':           1                            ,
-        \ 'g:notmuch_compose_temp_file_dir':         '~/.notmuch/compose/'        ,
+        \ 'g:notmuch_compose_temp_file_dir':         '~/.notmuch/compose'         ,
         \ }
 
 " defaults for g:notmuch_initial_search_words
