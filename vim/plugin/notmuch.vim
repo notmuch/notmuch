@@ -25,7 +25,7 @@
 
 let s:notmuch_defaults = {
         \ 'g:notmuch_cmd':                           'notmuch'                    ,
-        \ 'g:notmuch_sendmail':                      'sendmail'                   ,
+        \ 'g:notmuch_sendmail':                      '/usr/sbin/sendmail'         ,
         \ 'g:notmuch_debug':                         0                            ,
         \
         \ 'g:notmuch_search_newest_first':           1                            ,
