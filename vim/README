@@ -7,8 +7,9 @@ Dependencies:
     notmuch:
         Naturally, it expects you have notmuch installed and configured.
 
-    mailx:
-        To send mail, notmuch.vim uses the UNIX mailx command.
+    sendmail:
+        To send mail, notmuch.vim uses sendmail as default.  Most modern MTAs
+        provide a compatibility binary, and so should work well.
 
 
 To install:
