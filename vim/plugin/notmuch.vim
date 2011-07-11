@@ -262,12 +262,12 @@ function! s:NM_cmd_search_fmtline(line)
                 return 'ERROR PARSING: ' . a:line
         endif
         let max = g:notmuch_search_from_column_width
-        let flist = []
-        for at in split(m[4], ", ")
-                let p = min([stridx(at, "."), stridx(at, "@")])
-                call insert(flist, tolower(at[0:p - 1]))
+        let flist = {}
+        for at in split(m[4], '[|,] ')
+                let p = split(at, '[@.]')
+                let flist[p[0]] = 1
         endfor
-        let from = join(flist, ", ")
+        let from = join(keys(flist), ", ")
         return printf("%-12s %3s %-20.20s | %s (%s)", m[2], m[3], from, m[5], m[6])
 endfunction
 
