@@ -796,7 +796,14 @@ function! s:NM_cmd_show_parse(inlines)
                                 endif
                                 call add(info['disp'],
                                          \ printf('--- %s ---', in_part))
-                                let part_start = len(info['disp']) + 1
+                                " We don't yet handle nested parts, so pop
+                                " multipart/* immediately so text/plain
+                                " sub-parts are parsed properly
+                                if match(in_part, '^multipart/') != -1
+                                        let in_part = ''
+                                else
+                                        let part_start = len(info['disp']) + 1
+                                endif
                         endif
 
                 elseif in_header
