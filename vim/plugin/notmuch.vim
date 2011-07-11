@@ -747,8 +747,11 @@ function! s:NM_cmd_show_parse(inlines)
                                 elseif mode_type == 'cit'
                                         if part_end || match(line, g:notmuch_show_citation_regexp) == -1
                                                 let outlnum = len(info['disp'])
-                                                let foldinfo = [ mode_type, mode_start, outlnum-1, len(info['msgs']),
-                                                               \ printf('[ %d-line citation.  Press "c" to show. ]', outlnum - mode_start) ]
+                                                if !part_end
+                                                        let outlnum = outlnum - 1
+                                                endif
+                                                let foldinfo = [ mode_type, mode_start, outlnum, len(info['msgs']),
+                                                               \ printf('[ %d-line citation.  Press "c" to show. ]', 1 + outlnum - mode_start) ]
                                                 let mode_type = ''
                                         endif
                                 elseif mode_type == 'sig'
@@ -756,8 +759,8 @@ function! s:NM_cmd_show_parse(inlines)
                                         if (outlnum - mode_start) > g:notmuch_show_signature_lines_max
                                                 let mode_type = ''
                                         elseif part_end
-                                                let foldinfo = [ mode_type, mode_start, outlnum-1, len(info['msgs']),
-                                                               \ printf('[ %d-line signature.  Press "i" to show. ]', outlnum - mode_start) ]
+                                                let foldinfo = [ mode_type, mode_start, outlnum, len(info['msgs']),
+                                                               \ printf('[ %d-line signature.  Press "i" to show. ]', 1 + outlnum - mode_start) ]
                                                 let mode_type = ''
                                         endif
                                 endif
