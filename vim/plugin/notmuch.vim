@@ -149,7 +149,7 @@ let g:notmuch_show_maps = {
         \ 'b':          ':call <SID>NM_show_fold_toggle(''b'', ''bdy'', !g:notmuch_show_fold_bodies)<CR>',
         \ 'c':          ':call <SID>NM_show_fold_toggle(''c'', ''cit'', !g:notmuch_show_fold_citations)<CR>',
         \ 'h':          ':call <SID>NM_show_fold_toggle(''h'', ''hdr'', !g:notmuch_show_fold_headers)<CR>',
-        \ 'i':          ':call <SID>NM_show_fold_toggle(''s'', ''sig'', !g:notmuch_show_fold_signatures)<CR>',
+        \ 'i':          ':call <SID>NM_show_fold_toggle(''i'', ''sig'', !g:notmuch_show_fold_signatures)<CR>',
         \
         \ 'I':          ':call <SID>NM_show_mark_read_thread()<CR>',
         \ 'a':          ':call <SID>NM_show_archive_thread()<CR>',
@@ -757,7 +757,7 @@ function! s:NM_cmd_show_parse(inlines)
                                                 let mode_type = ''
                                         elseif part_end
                                                 let foldinfo = [ mode_type, mode_start, outlnum-1, len(info['msgs']),
-                                                               \ printf('[ %d-line signature.  Press "s" to show. ]', outlnum - mode_start) ]
+                                                               \ printf('[ %d-line signature.  Press "i" to show. ]', outlnum - mode_start) ]
                                                 let mode_type = ''
                                         endif
                                 endif
