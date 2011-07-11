@@ -501,7 +501,7 @@ class Query(object):
         :param db: An open database which we derive the Query from.
         :type db: :class:`Database`
         :param querystr: The query string for the message.
-        :type querystr: str
+        :type querystr: utf-8 encoded str or unicode
         """
         self._db = None
         self._query = None
@@ -517,7 +517,7 @@ class Query(object):
         :param db: Database to create the query from.
         :type db: :class:`Database`
         :param querystr: The query string
-        :type querystr: str
+        :type querystr: utf-8 encoded str or unicode
         :returns: Nothing
         :exception: :exc:`NotmuchError`
 
@@ -529,7 +529,9 @@ class Query(object):
             raise NotmuchError(STATUS.NOT_INITIALIZED)            
         # create reference to parent db to keep it alive
         self._db = db
-        
+        if isinstance(querystr, unicode):
+            # xapian takes utf-8 encoded byte arrays
+            querystr = querystr.encode('utf-8')
         # create query, return None if too little mem available
         query_p = Query._create(db.db_p, querystr)
         if query_p is None:
