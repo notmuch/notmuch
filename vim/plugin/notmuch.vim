@@ -596,7 +596,7 @@ function! s:NM_show_advance_marking_read_and_archiving()
                 let filter = <SID>NM_combine_tags('tag:', advance_tags, 'OR', '()')
                          \ + ['AND']
                          \ + <SID>NM_combine_tags('', ids, 'OR', '()')
-                call map(advance_tags, '"+" . v:val')
+                call map(advance_tags, '"-" . v:val')
                 call <SID>NM_tag(filter, advance_tags)
                 call <SID>NM_show_next(1, 1)
                 return
