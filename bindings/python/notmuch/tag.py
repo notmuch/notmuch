@@ -23,10 +23,12 @@ from notmuch.globals import nmlib, STATUS, NotmuchError
 class Tags(object):
     """Represents a list of notmuch tags
 
-    This object provides an iterator over a list of notmuch tags. Do
-    note that the underlying library only provides a one-time iterator
-    (it cannot reset the iterator to the start). Thus iterating over
-    the function will "exhaust" the list of tags, and a subsequent
+    This object provides an iterator over a list of notmuch tags (which
+    are unicode instances). 
+
+    Do note that the underlying library only provides a one-time
+    iterator (it cannot reset the iterator to the start). Thus iterating
+    over the function will "exhaust" the list of tags, and a subsequent
     iteration attempt will raise a :exc:`NotmuchError`
     STATUS.NOT_INITIALIZED. Also note, that any function that uses
     iteration (nearly all) will also exhaust the tags. So both::
@@ -83,7 +85,7 @@ class Tags(object):
             raise NotmuchError(STATUS.NOT_INITIALIZED)
         # No need to call nmlib.notmuch_tags_valid(self._tags);
         # Tags._get safely returns None, if there is no more valid tag.
-        tag = Tags._get (self._tags)
+        tag = Tags._get(self._tags).decode('utf-8')
         if tag is None:
             self._tags = None
             raise StopIteration
