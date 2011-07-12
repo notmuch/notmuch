@@ -24,6 +24,7 @@ from notmuch.thread import Threads
 from notmuch.message import Messages, Message
 from notmuch.tag import Tags
 
+
 class Database(object):
     """Represents a notmuch database (wraps notmuch_database_t)
 
@@ -36,7 +37,7 @@ class Database(object):
     _std_db_path = None
     """Class attribute to cache user's default database"""
 
-    MODE = Enum(['READ_ONLY','READ_WRITE'])
+    MODE = Enum(['READ_ONLY', 'READ_WRITE'])
     """Constants: Mode in which to open the database"""
 
     """notmuch_database_get_directory"""
@@ -52,7 +53,7 @@ class Database(object):
     _get_version.restype = c_uint
 
     """notmuch_database_open"""
-    _open = nmlib.notmuch_database_open 
+    _open = nmlib.notmuch_database_open
     _open.restype = c_void_p
 
     """notmuch_database_upgrade"""
@@ -71,9 +72,9 @@ class Database(object):
     _create = nmlib.notmuch_database_create
     _create.restype = c_void_p
 
-    def __init__(self, path=None, create=False, mode= 0):
-        """If *path* is `None`, we will try to read a users notmuch 
-        configuration and use his configured database. The location of the 
+    def __init__(self, path=None, create=False, mode=0):
+        """If *path* is `None`, we will try to read a users notmuch
+        configuration and use his configured database. The location of the
         configuration file can be specified through the environment variable
         *NOTMUCH_CONFIG*, falling back to the default `~/.notmuch-config`.
 
@@ -84,9 +85,9 @@ class Database(object):
                        above for behavior if `None`)
         :type path:    `str` or `None`
         :param create: Pass `False` to open an existing, `True` to create a new
-                       database.  
+                       database.
         :type create:  bool
-        :param mode:   Mode to open a database in. Is always 
+        :param mode:   Mode to open a database in. Is always
                        :attr:`MODE`.READ_WRITE when creating a new one.
         :type mode:    :attr:`MODE`
         :returns:      Nothing
@@ -100,7 +101,7 @@ class Database(object):
                 Database._std_db_path = self._get_user_default_db()
             path = Database._std_db_path
 
-        assert isinstance(path, basestring), 'Path needs to be a string or None.'
+        assert isinstance(path, basestring), 'Path must be a string or None.'
         if create == False:
             self.open(path, mode)
         else:
@@ -109,7 +110,7 @@ class Database(object):
     def _verify_initialized_db(self):
         """Raises a NotmuchError in case self._db is still None"""
         if self._db is None:
-            raise NotmuchError(STATUS.NOT_INITIALIZED)            
+            raise NotmuchError(STATUS.NOT_INITIALIZED)
 
     def create(self, path):
         """Creates a new notmuch database
@@ -128,8 +129,8 @@ class Database(object):
                     (after printing an error message on stderr).
         """
         if self._db is not None:
-            raise NotmuchError(
-            message="Cannot create db, this Database() already has an open one.")
+            raise NotmuchError(message="Cannot create db, this Database() "
+                                       "already has an open one.")
 
         res = Database._create(path, Database.MODE.READ_WRITE)
 
@@ -138,7 +139,7 @@ class Database(object):
                 message="Could not create the specified database")
         self._db = res
 
-    def open(self, path, mode= 0): 
+    def open(self, path, mode=0):
         """Opens an existing database
 
         This function is used by __init__() and usually does not need
@@ -146,7 +147,7 @@ class Database(object):
         *notmuch_database_open* function.
 
         :param status: Open the database in read-only or read-write mode
-        :type status:  :attr:`MODE` 
+        :type status:  :attr:`MODE`
         :returns: Nothing
         :exception: Raises :exc:`NotmuchError` in case
                     of any failure (after printing an error message on stderr).
@@ -178,7 +179,7 @@ class Database(object):
         # Raise a NotmuchError if not initialized
         self._verify_initialized_db()
 
-        return Database._get_version (self._db)
+        return Database._get_version(self._db)
 
     def needs_upgrade(self):
         """Does this database need to be upgraded before writing to it?
@@ -195,7 +196,7 @@ class Database(object):
         # Raise a NotmuchError if not initialized
         self._verify_initialized_db()
 
-        return nmlib.notmuch_database_needs_upgrade(self._db) 
+        return nmlib.notmuch_database_needs_upgrade(self._db)
 
     def upgrade(self):
         """Upgrades the current database
@@ -207,7 +208,7 @@ class Database(object):
         NOT IMPLEMENTED: The optional progress_notify callback can be
         used by the caller to provide progress indication to the
         user. If non-NULL it will be called periodically with
-        'progress' as a floating-point value in the range of [0.0..1.0] 
+        'progress' as a floating-point value in the range of [0.0..1.0]
         indicating the progress made so far in the upgrade process.
 
         :TODO: catch exceptions, document return values and etc...
@@ -215,15 +216,15 @@ class Database(object):
         # Raise a NotmuchError if not initialized
         self._verify_initialized_db()
 
-        status = Database._upgrade (self._db, None, None)
+        status = Database._upgrade(self._db, None, None)
         #TODO: catch exceptions, document return values and etc
         return status
 
     def get_directory(self, path):
-        """Returns a :class:`Directory` of path, 
+        """Returns a :class:`Directory` of path,
         (creating it if it does not exist(?))
 
-        .. warning:: This call needs a writeable database in 
+        .. warning:: This call needs a writeable database in
            Database.MODE.READ_WRITE mode. The underlying library will exit the
            program if this method is used on a read-only database!
 
@@ -233,11 +234,11 @@ class Database(object):
         :returns: :class:`Directory` or raises an exception.
         :exception: :exc:`NotmuchError`
 
-                  STATUS.NOT_INITIALIZED 
+                  STATUS.NOT_INITIALIZED
                     If the database was not intitialized.
 
                   STATUS.FILE_ERROR
-                    If path is not relative database or absolute with initial 
+                    If path is not relative database or absolute with initial
                     components same as database.
 
         """
@@ -249,14 +250,15 @@ class Database(object):
             # we got an absolute path
             if not path.startswith(self.get_path()):
                 # but its initial components are not equal to the db path
-                raise NotmuchError(STATUS.FILE_ERROR, 
-                                   message="Database().get_directory() called with a wrong absolute path.")
+                raise NotmuchError(STATUS.FILE_ERROR,
+                                   message="Database().get_directory() called "
+                                           "with a wrong absolute path.")
             abs_dirpath = path
         else:
             #we got a relative path, make it absolute
-            abs_dirpath = os.path.abspath(os.path.join(self.get_path(),path))
+            abs_dirpath = os.path.abspath(os.path.join(self.get_path(), path))
 
-        dir_p = Database._get_directory(self._db, path);
+        dir_p = Database._get_directory(self._db, path)
 
         # return the Directory, init it with the absolute path
         return Directory(abs_dirpath, dir_p, self)
@@ -281,7 +283,7 @@ class Database(object):
             API. You might want to look into the underlying method
             :meth:`Message.maildir_flags_to_tags`.
 
-        :returns: On success, we return 
+        :returns: On success, we return
 
            1) a :class:`Message` object that can be used for things
               such as adding tags to the just-added message.
@@ -300,10 +302,11 @@ class Database(object):
               If such an exception occurs, nothing was added to the database.
 
               STATUS.FILE_ERROR
-                      An error occurred trying to open the file, (such as 
+                      An error occurred trying to open the file, (such as
                       permission denied, or file not found, etc.).
               STATUS.FILE_NOT_EMAIL
-                      The contents of filename don't look like an email message.
+                      The contents of filename don't look like an email
+                      message.
               STATUS.READ_ONLY_DATABASE
                       Database was opened in read-only mode so no message can
                       be added.
@@ -317,7 +320,7 @@ class Database(object):
         status = nmlib.notmuch_database_add_message(self._db,
                                                   filename,
                                                   byref(msg_p))
- 
+
         if not status in [STATUS.SUCCESS, STATUS.DUPLICATE_MESSAGE_ID]:
             raise NotmuchError(status)
 
@@ -341,17 +344,18 @@ class Database(object):
         :returns: A STATUS value with the following meaning:
 
              STATUS.SUCCESS
-               The last filename was removed and the message was removed 
+               The last filename was removed and the message was removed
                from the database.
              STATUS.DUPLICATE_MESSAGE_ID
-               This filename was removed but the message persists in the 
+               This filename was removed but the message persists in the
                database with at least one other filename.
 
         :exception: Raises a :exc:`NotmuchError` with the following meaning.
-             If such an exception occurs, nothing was removed from the database.
+             If such an exception occurs, nothing was removed from the
+             database.
 
              STATUS.READ_ONLY_DATABASE
-               Database was opened in read-only mode so no message can be 
+               Database was opened in read-only mode so no message can be
                removed.
              STATUS.NOT_INITIALIZED
                The database has not been initialized.
@@ -374,8 +378,8 @@ class Database(object):
                   occurs. Do note that Xapian Exceptions include
                   "Database modified" situations, e.g. when the
                   notmuch database has been modified by
-                  another program in the meantime. A return value of 
-                  `None` is therefore no guarantee that the message 
+                  another program in the meantime. A return value of
+                  `None` is therefore no guarantee that the message
                   does not exist.
         :exception: :exc:`NotmuchError` with STATUS.NOT_INITIALIZED if
                   the database was not intitialized.
@@ -397,7 +401,7 @@ class Database(object):
         # Raise a NotmuchError if not initialized
         self._verify_initialized_db()
 
-        tags_p = Database._get_all_tags (self._db)
+        tags_p = Database._get_all_tags(self._db)
         if tags_p == None:
             raise NotmuchError(STATUS.NULL_POINTER)
         return Tags(tags_p, self)
@@ -442,10 +446,10 @@ class Database(object):
         conf_f = os.getenv('NOTMUCH_CONFIG',
                            os.path.expanduser('~/.notmuch-config'))
         config.read(conf_f)
-        if not config.has_option('database','path'):
-            raise NotmuchError(message=
-                               "No DB path specified and no user default found")
-        return config.get('database','path')
+        if not config.has_option('database', 'path'):
+            raise NotmuchError(message="No DB path specified"
+                                       " and no user default found")
+        return config.get('database', 'path')
 
     @property
     def db_p(self):
@@ -456,7 +460,7 @@ class Database(object):
         """
         return self._db
 
-#------------------------------------------------------------------------------
+
 class Query(object):
     """Represents a search query on an opened :class:`Database`.
 
@@ -476,7 +480,7 @@ class Query(object):
            other unexpected behavior. See above for more details.
     """
     # constants
-    SORT = Enum(['OLDEST_FIRST','NEWEST_FIRST','MESSAGE_ID', 'UNSORTED'])
+    SORT = Enum(['OLDEST_FIRST', 'NEWEST_FIRST', 'MESSAGE_ID', 'UNSORTED'])
     """Constants: Sort order in which to return results"""
 
     """notmuch_query_create"""
@@ -490,7 +494,6 @@ class Query(object):
     """notmuch_query_search_messages"""
     _search_messages = nmlib.notmuch_query_search_messages
     _search_messages.restype = c_void_p
-
 
     """notmuch_query_count_messages"""
     _count_messages = nmlib.notmuch_query_count_messages
@@ -511,7 +514,7 @@ class Query(object):
     def create(self, db, querystr):
         """Creates a new query derived from a Database
 
-        This function is utilized by __init__() and usually does not need to 
+        This function is utilized by __init__() and usually does not need to
         be called directly.
 
         :param db: Database to create the query from.
@@ -522,11 +525,11 @@ class Query(object):
         :exception: :exc:`NotmuchError`
 
                       * STATUS.NOT_INITIALIZED if db is not inited
-                      * STATUS.NULL_POINTER if the query creation failed 
+                      * STATUS.NULL_POINTER if the query creation failed
                         (too little memory)
         """
         if db.db_p is None:
-            raise NotmuchError(STATUS.NOT_INITIALIZED)            
+            raise NotmuchError(STATUS.NOT_INITIALIZED)
         # create reference to parent db to keep it alive
         self._db = db
         if isinstance(querystr, unicode):
@@ -545,7 +548,7 @@ class Query(object):
 
         :param sort: Sort order (see :attr:`Query.SORT`)
         :returns: Nothing
-        :exception: :exc:`NotmuchError` STATUS.NOT_INITIALIZED if query has not 
+        :exception: :exc:`NotmuchError` STATUS.NOT_INITIALIZED if query has not
                     been initialized.
         """
         if self._query is None:
@@ -558,7 +561,7 @@ class Query(object):
         """Execute a query for threads
 
         Execute a query for threads, returning a :class:`Threads` iterator.
-        The returned threads are owned by the query and as such, will only be 
+        The returned threads are owned by the query and as such, will only be
         valid until the Query is deleted.
 
         The method sets :attr:`Message.FLAG`\.MATCH for those messages that
@@ -572,17 +575,17 @@ class Query(object):
         :exception: :exc:`NotmuchError`
 
                       * STATUS.NOT_INITIALIZED if query is not inited
-                      * STATUS.NULL_POINTER if search_threads failed 
+                      * STATUS.NULL_POINTER if search_threads failed
         """
         if self._query is None:
-            raise NotmuchError(STATUS.NOT_INITIALIZED)            
+            raise NotmuchError(STATUS.NOT_INITIALIZED)
 
         threads_p = Query._search_threads(self._query)
 
         if threads_p is None:
             raise NotmuchError(STATUS.NULL_POINTER)
 
-        return Threads(threads_p,self)
+        return Threads(threads_p, self)
 
     def search_messages(self):
         """Filter messages according to the query and return
@@ -595,17 +598,17 @@ class Query(object):
         :exception: :exc:`NotmuchError`
 
                       * STATUS.NOT_INITIALIZED if query is not inited
-                      * STATUS.NULL_POINTER if search_messages failed 
+                      * STATUS.NULL_POINTER if search_messages failed
         """
         if self._query is None:
-            raise NotmuchError(STATUS.NOT_INITIALIZED)            
+            raise NotmuchError(STATUS.NOT_INITIALIZED)
 
         msgs_p = Query._search_messages(self._query)
 
         if msgs_p is None:
             NotmuchError(STATUS.NULL_POINTER)
 
-        return Messages(msgs_p,self)
+        return Messages(msgs_p, self)
 
     def count_messages(self):
         """Estimate the number of messages matching the query
@@ -623,17 +626,16 @@ class Query(object):
                       * STATUS.NOT_INITIALIZED if query is not inited
         """
         if self._query is None:
-            raise NotmuchError(STATUS.NOT_INITIALIZED)            
+            raise NotmuchError(STATUS.NOT_INITIALIZED)
 
         return Query._count_messages(self._query)
 
     def __del__(self):
         """Close and free the Query"""
         if self._query is not None:
-            nmlib.notmuch_query_destroy (self._query)
+            nmlib.notmuch_query_destroy(self._query)
 
 
-#------------------------------------------------------------------------------
 class Directory(object):
     """Represents a directory entry in the notmuch directory
 
@@ -665,9 +667,9 @@ class Directory(object):
     _get_child_directories.restype = c_void_p
 
     def _verify_dir_initialized(self):
-        """Raises a NotmuchError(STATUS.NOT_INITIALIZED) if the dir_p is None"""
+        """Raises a NotmuchError(STATUS.NOT_INITIALIZED) if dir_p is None"""
         if self._dir_p is None:
-            raise NotmuchError(STATUS.NOT_INITIALIZED)            
+            raise NotmuchError(STATUS.NOT_INITIALIZED)
 
     def __init__(self, path, dir_p, parent):
         """
@@ -683,8 +685,7 @@ class Directory(object):
         self._dir_p = dir_p
         self._parent = parent
 
-
-    def set_mtime (self, mtime):
+    def set_mtime(self, mtime):
         """Sets the mtime value of this directory in the database
 
         The intention is for the caller to use the mtime to allow efficient
@@ -692,29 +693,29 @@ class Directory(object):
         recommended usage is as follows:
 
         * Read the mtime of a directory from the filesystem
- 
+
         * Call :meth:`Database.add_message` for all mail files in
           the directory
 
-        * Call notmuch_directory_set_mtime with the mtime read from the 
+        * Call notmuch_directory_set_mtime with the mtime read from the
           filesystem.  Then, when wanting to check for updates to the
           directory in the future, the client can call :meth:`get_mtime`
-          and know that it only needs to add files if the mtime of the 
+          and know that it only needs to add files if the mtime of the
           directory and files are newer than the stored timestamp.
 
-          .. note:: :meth:`get_mtime` function does not allow the caller 
+          .. note:: :meth:`get_mtime` function does not allow the caller
                  to distinguish a timestamp of 0 from a non-existent
                  timestamp. So don't store a timestamp of 0 unless you are
-                 comfortable with that.  
+                 comfortable with that.
 
-          :param mtime: A (time_t) timestamp 
+          :param mtime: A (time_t) timestamp
           :returns: Nothing on success, raising an exception on failure.
           :exception: :exc:`NotmuchError`:
 
                         STATUS.XAPIAN_EXCEPTION
                           A Xapian exception occurred, mtime not stored.
                         STATUS.READ_ONLY_DATABASE
-                          Database was opened in read-only mode so directory 
+                          Database was opened in read-only mode so directory
                           mtime cannot be modified.
                         STATUS.NOT_INITIALIZED
                           The directory has not been initialized
@@ -731,12 +732,12 @@ class Directory(object):
         #fail with Exception otherwise
         raise NotmuchError(status)
 
-    def get_mtime (self):
+    def get_mtime(self):
         """Gets the mtime value of this directory in the database
 
         Retrieves a previously stored mtime for this directory.
 
-        :param mtime: A (time_t) timestamp 
+        :param mtime: A (time_t) timestamp
         :returns: Nothing on success, raising an exception on failure.
         :exception: :exc:`NotmuchError`:
 
@@ -746,19 +747,19 @@ class Directory(object):
         #Raise a NotmuchError(STATUS.NOT_INITIALIZED) if self.dir_p is None
         self._verify_dir_initialized()
 
-        return Directory._get_mtime (self._dir_p)
+        return Directory._get_mtime(self._dir_p)
 
     # Make mtime attribute a property of Directory()
     mtime = property(get_mtime, set_mtime, doc="""Property that allows getting
                      and setting of the Directory *mtime* (read-write)
 
-                     See :meth:`get_mtime` and :meth:`set_mtime` for usage and 
+                     See :meth:`get_mtime` and :meth:`set_mtime` for usage and
                      possible exceptions.""")
 
     def get_child_files(self):
         """Gets a Filenames iterator listing all the filenames of
         messages in the database within the given directory.
- 
+
         The returned filenames will be the basename-entries only (not
         complete paths.
         """
@@ -771,7 +772,7 @@ class Directory(object):
     def get_child_directories(self):
         """Gets a :class:`Filenames` iterator listing all the filenames of
         sub-directories in the database within the given directory
-        
+
         The returned filenames will be the basename-entries only (not
         complete paths.
         """
@@ -795,10 +796,9 @@ class Directory(object):
         if self._dir_p is not None:
             nmlib.notmuch_directory_destroy(self._dir_p)
 
-#------------------------------------------------------------------------------
+
 class Filenames(object):
-    """An iterator over File- or Directory names that are stored in the database
-    """
+    """An iterator over File- or Directory names stored in the database"""
 
     #notmuch_filenames_get
     _get = nmlib.notmuch_filenames_get
@@ -828,14 +828,14 @@ class Filenames(object):
             self._files_p = None
             raise StopIteration
 
-        file = Filenames._get (self._files_p)
+        file = Filenames._get(self._files_p)
         nmlib.notmuch_filenames_move_to_next(self._files_p)
         return file
 
     def __len__(self):
         """len(:class:`Filenames`) returns the number of contained files
 
-        .. note:: As this iterates over the files, we will not be able to 
+        .. note:: As this iterates over the files, we will not be able to
                iterate over them again! So this will fail::
 
                  #THIS FAILS
@@ -847,7 +847,7 @@ class Filenames(object):
         if self._files_p is None:
             raise NotmuchError(STATUS.NOT_INITIALIZED)
 
-        i=0
+        i = 0
         while nmlib.notmuch_filenames_valid(self._files_p):
             nmlib.notmuch_filenames_move_to_next(self._files_p)
             i += 1
