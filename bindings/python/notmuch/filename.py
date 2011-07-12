@@ -19,19 +19,20 @@ Copyright 2010 Sebastian Spaeth <Sebastian@SSpaeth.de>'
 from ctypes import c_char_p
 from notmuch.globals import nmlib, STATUS, NotmuchError
 
-#------------------------------------------------------------------------------
+
 class Filenames(object):
     """Represents a list of filenames as returned by notmuch
 
-    This object contains the Filenames iterator. The main function is as_generator() which will return a generator so we can do a Filenamesth an iterator over a list of notmuch filenames. Do
-    note that the underlying library only provides a one-time iterator
-    (it cannot reset the iterator to the start). Thus iterating over
-    the function will "exhaust" the list of tags, and a subsequent
-    iteration attempt will raise a :exc:`NotmuchError`
-    STATUS.NOT_INITIALIZED. Also note, that any function that uses
-    iteration (nearly all) will also exhaust the tags. So both::
+    This object contains the Filenames iterator. The main function is
+    as_generator() which will return a generator so we can do a Filenamesth an
+    iterator over a list of notmuch filenames. Do note that the underlying
+    library only provides a one-time iterator (it cannot reset the iterator to
+    the start). Thus iterating over the function will "exhaust" the list of
+    tags, and a subsequent iteration attempt will raise a :exc:`NotmuchError`
+    STATUS.NOT_INITIALIZED. Also note, that any function that uses iteration
+    (nearly all) will also exhaust the tags. So both::
 
-      for name in filenames: print name 
+      for name in filenames: print name
 
     as well as::
 
@@ -85,10 +86,10 @@ class Filenames(object):
             self._files = None
             return
 
-        file = Filenames._get (self._files)
+        file = Filenames._get(self._files)
         nmlib.notmuch_filenames_move_to_next(self._files)
         yield file
-        
+
     def __str__(self):
         """Represent Filenames() as newline-separated list of full paths
 
@@ -105,4 +106,4 @@ class Filenames(object):
     def __del__(self):
         """Close and free the notmuch filenames"""
         if self._files is not None:
-            nmlib.notmuch_filenames_destroy (self._files)
+            nmlib.notmuch_filenames_destroy(self._files)
