@@ -27,14 +27,14 @@ try:
 except:
     raise ImportError("Could not find shared 'notmuch' library.")
 
-#-----------------------------------------------------------------------------
+
 class Enum(object):
     """Provides ENUMS as "code=Enum(['a','b','c'])" where code.a=0 etc..."""
     def __init__(self, names):
         for number, name in enumerate(names):
             setattr(self, name, number)
 
-#-----------------------------------------------------------------------------
+
 class Status(Enum):
     """Enum with a string representation of a notmuch_status_t value."""
     _status2str = nmlib.notmuch_status_to_string
@@ -49,10 +49,10 @@ class Status(Enum):
 
     @classmethod
     def status2str(self, status):
-        """Get a string representation of a notmuch_status_t value."""   
+        """Get a string representation of a notmuch_status_t value."""
         # define strings for custom error messages
         if status == STATUS.NOT_INITIALIZED:
-          return "Operation on uninitialized object impossible."
+            return "Operation on uninitialized object impossible."
         return str(Status._status2str(status))
 
 STATUS = Status(['SUCCESS',
@@ -66,7 +66,10 @@ STATUS = Status(['SUCCESS',
   'TAG_TOO_LONG',
   'UNBALANCED_FREEZE_THAW',
   'NOT_INITIALIZED'])
-"""STATUS is a class, whose attributes provide constants that serve as return indicators for notmuch functions. Currently the following ones are defined. For possible return values and specific meaning for each method, see the method description.
+"""STATUS is a class, whose attributes provide constants that serve as return
+indicators for notmuch functions. Currently the following ones are defined. For
+possible return values and specific meaning for each method, see the method
+description.
 
   * SUCCESS
   * OUT_OF_MEMORY
@@ -80,8 +83,10 @@ STATUS = Status(['SUCCESS',
   * UNBALANCED_FREEZE_THAW
   * NOT_INITIALIZED
 
-  Invoke the class method `notmuch.STATUS.status2str` with a status value as argument to receive a human readable string"""
-STATUS.__name__ = 'STATUS' 
+Invoke the class method `notmuch.STATUS.status2str` with a status value as
+argument to receive a human readable string"""
+STATUS.__name__ = 'STATUS'
+
 
 class NotmuchError(Exception):
     def __init__(self, status=None, message=None):
@@ -89,6 +94,7 @@ class NotmuchError(Exception):
         super(NotmuchError, self).__init__(message, status)
 
     def __str__(self):
-        if self.args[0] is not None: return self.args[0]
-        else: return STATUS.status2str(self.args[1])
-
+        if self.args[0] is not None:
+            return self.args[0]
+        else:
+            return STATUS.status2str(self.args[1])
