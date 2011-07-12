@@ -1,9 +1,10 @@
-"""The :mod:`notmuch` module provides most of the functionality that a user is likely to need.
+"""The :mod:`notmuch` module provides most of the functionality that a user is
+likely to need.
 
 .. note:: The underlying notmuch library is build on a hierarchical
     memory allocator called talloc. All objects derive from a
     top-level :class:`Database` object.
-    
+
     This means that as soon as an object is deleted, all underlying
     derived objects such as Queries, Messages, Message, and Tags will
     be freed by the underlying library as well. Accessing these
@@ -56,6 +57,6 @@ from notmuch.message import Messages, Message
 from notmuch.thread import Threads, Thread
 from notmuch.tag import Tags
 from notmuch.globals import nmlib, STATUS, NotmuchError
-__LICENSE__="GPL v3+"
-__VERSION__='0.6'
-__AUTHOR__ ='Sebastian Spaeth <Sebastian@SSpaeth.de>'
+__LICENSE__ = "GPL v3+"
+__VERSION__ = '0.6'
+__AUTHOR__ = 'Sebastian Spaeth <Sebastian@SSpaeth.de>'
