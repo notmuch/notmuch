@@ -167,8 +167,8 @@ endif
 
 .PHONY: verify-version-debian
 verify-version-debian: verify-version-components
-	@echo -n "Checking that Debian package version is $(VERSION)..."
-	@if [ "$(VERSION)" != $$(dpkg-parsechangelog | grep ^Version | awk '{print $$2}') ] ; then \
+	@echo -n "Checking that Debian package version is $(VERSION)-1..."
+	@if [ "$(VERSION)-1" != $$(dpkg-parsechangelog | grep ^Version | awk '{print $$2}') ] ; then \
 		(echo "No." && \
 		 echo "Please edit version and debian/changelog to have consistent versions." && false) \
 	 fi
