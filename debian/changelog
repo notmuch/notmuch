@@ -1,4 +1,4 @@
-notmuch (0.6.1) unstable; urgency=low
+notmuch (0.6.1-1) unstable; urgency=low
 
   * Properly install README.Debian in notmuch-vim (Closes: #632992).
     Thanks to Jason Woofenden for the report.
