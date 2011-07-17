@@ -87,6 +87,7 @@ dist: $(TAR_FILE)
 .PHONY: release
 release: verify-source-tree-and-version
 	$(MAKE) VERSION=$(VERSION) verify-newer
+	$(MAKE) VERSION=$(VERSION) clean
 	$(MAKE) VERSION=$(VERSION) test
 	rm -rf ./debian-build
 	git-buildpackage
