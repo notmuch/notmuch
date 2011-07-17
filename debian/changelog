@@ -4,8 +4,10 @@ notmuch (0.6.1-1) unstable; urgency=low
     Thanks to Jason Woofenden for the report.
   * Force notmuch to depend on the same version of libnotmuch. Thanks to
     Uwe Kleine-König for the patch.
+  * Export typeinfo for Xapian exceptions from libnotmuch. This fixes
+    certain mysterious uncaught exception problems.
 
- -- David Bremner <bremner@debian.org>  Sun, 10 Jul 2011 09:34:02 -0300
+ -- David Bremner <bremner@debian.org>  Sun, 17 Jul 2011 10:20:42 -0300
 
 notmuch (0.6) unstable; urgency=low
 
