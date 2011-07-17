@@ -100,6 +100,7 @@ release: verify-source-tree-and-version
 	$(MAKE) VERSION=$(VERSION) $(GPG_FILE)
 	ln -sf $(TAR_FILE) $(DEB_TAR_FILE)
 	pristine-tar commit $(DEB_TAR_FILE) $(VERSION)
+	git tag -s -m "$(PACKAGE) Debian $(VERSION)-1 upload (same as $(VERSION))" debian/$(VERSION)-1
 	mkdir -p releases
 	mv $(TAR_FILE) $(SHA1_FILE) $(GPG_FILE) releases
 	$(MAKE) VERSION=$(VERSION) release-message > $(PACKAGE)-$(VERSION).announce
