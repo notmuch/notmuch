@@ -1,3 +1,14 @@
+Notmuch 0.6.1 (2011-07-17)
+==========================
+
+Bug-fix release.
+----------------
+
+Re-export Xapian exception typeinfo symbols.
+  
+  It turned out our aggressive symbol hiding caused problems for
+  people running gcc 4.4.5.
+
 Notmuch 0.6 (2011-07-01)
 =======================
 New, general features

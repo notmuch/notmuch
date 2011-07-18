@@ -70,3 +70,13 @@ libnotmuch.so.1 libnotmuch1 #MINVER#
  notmuch_threads_get@Base 0.3
  notmuch_threads_move_to_next@Base 0.3
  notmuch_threads_valid@Base 0.3
+ (c++)"typeinfo for Xapian::LogicError@Base" 0.6.1
+ (c++)"typeinfo for Xapian::RuntimeError@Base" 0.6.1
+ (c++)"typeinfo for Xapian::DocNotFoundError@Base" 0.6.1
+ (c++)"typeinfo for Xapian::InvalidArgumentError@Base" 0.6.1
+ (c++)"typeinfo for Xapian::Error@Base" 0.6.1
+ (c++)"typeinfo name for Xapian::LogicError@Base" 0.6.1
+ (c++)"typeinfo name for Xapian::RuntimeError@Base" 0.6.1
+ (c++)"typeinfo name for Xapian::DocNotFoundError@Base" 0.6.1
+ (c++)"typeinfo name for Xapian::InvalidArgumentError@Base" 0.6.1
+ (c++)"typeinfo name for Xapian::Error@Base" 0.6.1

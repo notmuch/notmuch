@@ -25,6 +25,7 @@ RELEASE_HOST=notmuchmail.org
 RELEASE_DIR=/srv/notmuchmail.org/www/releases
 RELEASE_URL=http://notmuchmail.org/releases
 TAR_FILE=$(PACKAGE)-$(VERSION).tar.gz
+DEB_TAR_FILE=$(PACKAGE)_$(VERSION).orig.tar.gz
 SHA1_FILE=$(TAR_FILE).sha1
 GPG_FILE=$(SHA1_FILE).asc
 
@@ -60,7 +61,13 @@ endif
 endif
 
 $(TAR_FILE):
-	git archive --format=tar --prefix=$(PACKAGE)-$(VERSION)/ HEAD > $(TAR_FILE).tmp
+	if git tag -v $(VERSION) >/dev/null 2>&1; then \
+           ref=$(VERSION); \
+        else \
+           ref="HEAD" ; \
+	   echo "Warning: No signed tag for $(VERSION)"; \
+	fi ; \
+	git archive --format=tar --prefix=$(PACKAGE)-$(VERSION)/ $$ref > $(TAR_FILE).tmp
 	echo $(VERSION) > version.tmp
 	tar --append -f $(TAR_FILE).tmp --transform s_^_$(PACKAGE)-$(VERSION)/_  --transform 's_.tmp$$__' version.tmp
 	rm version.tmp
@@ -87,21 +94,21 @@ dist: $(TAR_FILE)
 .PHONY: release
 release: verify-source-tree-and-version
 	$(MAKE) VERSION=$(VERSION) verify-newer
+	$(MAKE) VERSION=$(VERSION) clean
 	$(MAKE) VERSION=$(VERSION) test
-	rm -rf ./debian-build
-	git-buildpackage
-	cp debian-build/notmuch_$(VERSION).tar.gz notmuch-$(VERSION).tar.gz
+	git tag -s -m "$(PACKAGE) $(VERSION) release" $(VERSION)
 	$(MAKE) VERSION=$(VERSION) $(GPG_FILE)
-	scp $(TAR_FILE) $(SHA1_FILE) $(GPG_FILE) $(RELEASE_HOST):$(RELEASE_DIR)
-	ssh $(RELEASE_HOST) "rm -f $(RELEASE_DIR)/LATEST-$(PACKAGE)-[0-9]* && ln -s $(TAR_FILE) $(RELEASE_DIR)/LATEST-$(PACKAGE)-$(VERSION)"
+	ln -sf $(TAR_FILE) $(DEB_TAR_FILE)
+	pristine-tar commit $(DEB_TAR_FILE) $(VERSION)
+	git tag -s -m "$(PACKAGE) Debian $(VERSION)-1 upload (same as $(VERSION))" debian/$(VERSION)-1
 	mkdir -p releases
 	mv $(TAR_FILE) $(SHA1_FILE) $(GPG_FILE) releases
-	(cd debian-build; dput *.changes)
-	mv debian-build/* releases
-	rmdir debian-build
-	git tag -s -m "$(PACKAGE) $(VERSION) release" $(VERSION)
-	git push origin $(VERSION)
 	$(MAKE) VERSION=$(VERSION) release-message > $(PACKAGE)-$(VERSION).announce
+ifeq ($(REALLY_UPLOAD),yes)
+	git push origin $(VERSION)
+	cd releases && scp $(TAR_FILE) $(SHA1_FILE) $(GPG_FILE) $(RELEASE_HOST):$(RELEASE_DIR)
+	ssh $(RELEASE_HOST) "rm -f $(RELEASE_DIR)/LATEST-$(PACKAGE)-[0-9]* ; ln -s $(TAR_FILE) $(RELEASE_DIR)/LATEST-$(PACKAGE)-$(VERSION)"
+endif
 	@echo "Please send a release announcement using $(PACKAGE)-$(VERSION).announce as a template."
 
 .PHONY: release-message
@@ -161,8 +168,8 @@ endif
 
 .PHONY: verify-version-debian
 verify-version-debian: verify-version-components
-	@echo -n "Checking that Debian package version is $(VERSION)..."
-	@if [ "$(VERSION)" != $$(dpkg-parsechangelog | grep ^Version | awk '{print $$2}') ] ; then \
+	@echo -n "Checking that Debian package version is $(VERSION)-1..."
+	@if [ "$(VERSION)-1" != $$(dpkg-parsechangelog | grep ^Version | awk '{print $$2}') ] ; then \
 		(echo "No." && \
 		 echo "Please edit version and debian/changelog to have consistent versions." && false) \
 	 fi
@@ -180,11 +187,16 @@ verify-version-components:
 .PHONY: verify-newer
 verify-newer:
 	@echo -n "Checking that no $(VERSION) release already exists..."
-	@ssh $(RELEASE_HOST) test ! -e $(RELEASE_DIR)/$(TAR_FILE) \
-		|| (echo "Ouch." && echo "Found: $(RELEASE_HOST):$(RELEASE_DIR)/$(TAR_FILE)" \
-		&& echo "Refusing to replace an existing release." \
-		&& echo "Don't forget to update \"version\" as described in RELEASING before release." && false)
-	@echo "Good."
+	@wget -q -O /dev/null $(RELEASE_URL)/$(TAR_FILE) ; \
+	case $$? in \
+          8) echo "Good." ;; \
+          0) echo "Ouch."; \
+	     echo "Found: $(RELEASE_URL)/$(TAR_FILE)"; \
+	     echo "Refusing to replace an existing release."; \
+	     echo "Don't forget to update \"version\" as described in RELEASING before release." ; \
+	     false ;; \
+	  *) echo "An unexpected error occured"; \
+	     false;; esac
 
 # The user has not set any verbosity, default to quiet mode and inform the
 # user how to enable verbose compiles.
