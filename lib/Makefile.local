@@ -74,7 +74,7 @@ $(dir)/libnotmuch.a: $(libnotmuch_modules)
 $(dir)/$(LIBNAME): $(libnotmuch_modules) notmuch.sym
 	$(call quiet,CXX $(CXXFLAGS)) $(libnotmuch_modules) $(FINAL_LIBNOTMUCH_LDFLAGS) $(LIBRARY_LINK_FLAG) -o $@
 
-notmuch.sym: lib/notmuch.h
+notmuch.sym: lib/notmuch.h $(libnotmuch_modules)
 	sh lib/gen-version-script.sh $< $(libnotmuch_modules) > $@
 
 $(dir)/$(SONAME): $(dir)/$(LIBNAME)
