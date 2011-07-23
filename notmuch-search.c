@@ -176,12 +176,14 @@ format_thread_json (const void *ctx,
 
     printf ("\"thread\": %s,\n"
 	    "\"timestamp\": %ld,\n"
+	    "\"date_relative\": \"%s\",\n"
 	    "\"matched\": %d,\n"
 	    "\"total\": %d,\n"
 	    "\"authors\": %s,\n"
 	    "\"subject\": %s,\n",
 	    json_quote_str (ctx_quote, thread_id),
 	    date,
+	    notmuch_time_relative_date (ctx, date),
 	    matched,
 	    total,
 	    json_quote_str (ctx_quote, authors),
