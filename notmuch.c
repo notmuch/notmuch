@@ -579,6 +579,7 @@ main (int argc, char *argv[])
     local = talloc_new (NULL);
 
     g_mime_init (0);
+    g_type_init ();
 
     if (argc == 1)
 	return notmuch (local);
