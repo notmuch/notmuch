@@ -40,139 +40,7 @@
  * - Notmuch::Thread
  * - Notmuch::Message
  * - Notmuch::Tags
- *
- * == Constants
- *
- * - Notmuch::MODE_READ_ONLY
- *
- *   Open the database in read only mode.
- *
- * - Notmuch::MODE_READ_WRITE
- *
- *   Open the database in read write mode.
- *
- * - Notmuch::TAG_MAX
- *
- *   Maximum allowed length of a tag
  */
-
-/*
- * Document-class: Notmuch::Database
- *
- * Notmuch database interaction
- */
-
-/*
- * Document-class: Notmuch::Directory
- *
- * Notmuch directory
- */
-
-/*
- * Document-class: Notmuch::FileNames
- *
- * Notmuch file names
- */
-
-/*
- * Document-class: Notmuch::Query
- *
- * Notmuch query
- */
-
-/*
- * Document-class: Notmuch::Threads
- *
- * Notmuch threads
- */
-
-/*
- * Document-class: Notmuch::Messages
- *
- * Notmuch messages
- */
-
-/*
- * Document-class: Notmuch::Thread
- *
- * Notmuch thread
- */
-
-/*
- * Document-class: Notmuch::Message
- *
- * Notmuch message
- */
-
-/*
- * Document-class: Notmuch::Tags
- *
- * Notmuch tags
- */
-
-/*
- * Document-class: Notmuch::BaseError
- *
- * Base class for all notmuch exceptions
- */
-
-/*
- * Document-class: Notmuch::DatabaseError
- *
- * Raised when the database can't be created or opened.
- */
-
-/*
- * Document-class: Notmuch::MemoryError
- *
- * Raised when notmuch is out of memory
- */
-
-/*
- * Document-class: Notmuch::ReadOnlyError
- *
- * Raised when an attempt was made to write to a database opened in read-only
- * mode.
- */
-
-/*
- * Document-class: Notmuch::XapianError
- *
- * Raised when a Xapian exception occurs
- */
-
-/*
- * Document-class: Notmuch::FileError
- *
- * Raised when an error occurs trying to read or write to a file.
- */
-
-/*
- * Document-class: Notmuch::FileNotEmailError
- *
- * Raised when a file is presented that doesn't appear to be an email message.
- */
-
-/*
- * Document-class: Notmuch::NullPointerError
- *
- * Raised when the user erroneously passes a +NULL+ pointer to a notmuch
- * function.
- */
-
-/*
- * Document-class: Notmuch::TagTooLongError
- *
- * Raised when a tag value is too long (exceeds Notmuch::TAG_MAX)
- */
-
-/*
- * Document-class: Notmuch::UnbalancedFreezeThawError
- *
- * Raised when the notmuch_message_thaw function has been called more times
- * than notmuch_message_freeze.
- */
-
 
 void
 Init_notmuch(void)
@@ -185,27 +53,100 @@ Init_notmuch(void)
 
     mod = rb_define_module("Notmuch");
 
+    /*
+     * Document-const: Notmuch::MODE_READ_ONLY
+     *
+     * Open the database in read only mode
+     */
     rb_define_const(mod, "MODE_READ_ONLY", INT2FIX(NOTMUCH_DATABASE_MODE_READ_ONLY));
+    /*
+     * Document-const: Notmuch::MODE_READ_WRITE
+     *
+     * Open the database in read write mode
+     */
     rb_define_const(mod, "MODE_READ_WRITE", INT2FIX(NOTMUCH_DATABASE_MODE_READ_WRITE));
     rb_define_const(mod, "SORT_OLDEST_FIRST", INT2FIX(NOTMUCH_SORT_OLDEST_FIRST));
     rb_define_const(mod, "SORT_NEWEST_FIRST", INT2FIX(NOTMUCH_SORT_NEWEST_FIRST));
     rb_define_const(mod, "SORT_MESSAGE_ID", INT2FIX(NOTMUCH_SORT_MESSAGE_ID));
     rb_define_const(mod, "SORT_UNSORTED", INT2FIX(NOTMUCH_SORT_UNSORTED));
     rb_define_const(mod, "MESSAGE_FLAG_MATCH", INT2FIX(NOTMUCH_MESSAGE_FLAG_MATCH));
+    /*
+     * Document-const: Notmuch::TAG_MAX
+     *
+     * Maximum allowed length of a tag
+     */
     rb_define_const(mod, "TAG_MAX", INT2FIX(NOTMUCH_TAG_MAX));
 
+    /*
+     * Document-class: Notmuch::BaseError
+     *
+     * Base class for all notmuch exceptions
+     */
     notmuch_rb_eBaseError = rb_define_class_under(mod, "BaseError", rb_eStandardError);
+    /*
+     * Document-class: Notmuch::DatabaseError
+     *
+     * Raised when the database can't be created or opened.
+     */
     notmuch_rb_eDatabaseError = rb_define_class_under(mod, "DatabaseError", notmuch_rb_eBaseError);
+    /*
+     * Document-class: Notmuch::MemoryError
+     *
+     * Raised when notmuch is out of memory
+     */
     notmuch_rb_eMemoryError = rb_define_class_under(mod, "MemoryError", notmuch_rb_eBaseError);
+    /*
+     * Document-class: Notmuch::ReadOnlyError
+     *
+     * Raised when an attempt was made to write to a database opened in read-only
+     * mode.
+     */
     notmuch_rb_eReadOnlyError = rb_define_class_under(mod, "ReadOnlyError", notmuch_rb_eBaseError);
+    /*
+     * Document-class: Notmuch::XapianError
+     *
+     * Raised when a Xapian exception occurs
+     */
     notmuch_rb_eXapianError = rb_define_class_under(mod, "XapianError", notmuch_rb_eBaseError);
+    /*
+     * Document-class: Notmuch::FileError
+     *
+     * Raised when an error occurs trying to read or write to a file.
+     */
     notmuch_rb_eFileError = rb_define_class_under(mod, "FileError", notmuch_rb_eBaseError);
+    /*
+     * Document-class: Notmuch::FileNotEmailError
+     *
+     * Raised when a file is presented that doesn't appear to be an email message.
+     */
     notmuch_rb_eFileNotEmailError = rb_define_class_under(mod, "FileNotEmailError", notmuch_rb_eBaseError);
+    /*
+     * Document-class: Notmuch::NullPointerError
+     *
+     * Raised when the user erroneously passes a +NULL+ pointer to a notmuch
+     * function.
+     */
     notmuch_rb_eNullPointerError = rb_define_class_under(mod, "NullPointerError", notmuch_rb_eBaseError);
+    /*
+     * Document-class: Notmuch::TagTooLongError
+     *
+     * Raised when a tag value is too long (exceeds Notmuch::TAG_MAX)
+     */
     notmuch_rb_eTagTooLongError = rb_define_class_under(mod, "TagTooLongError", notmuch_rb_eBaseError);
+    /*
+     * Document-class: Notmuch::UnbalancedFreezeThawError
+     *
+     * Raised when the notmuch_message_thaw function has been called more times
+     * than notmuch_message_freeze.
+     */
     notmuch_rb_eUnbalancedFreezeThawError = rb_define_class_under(mod, "UnbalancedFreezeThawError",
             notmuch_rb_eBaseError);
 
+    /*
+     * Document-class: Notmuch::Database
+     *
+     * Notmuch database interaction
+     */
     notmuch_rb_cDatabase = rb_define_class_under(mod, "Database", rb_cData);
     rb_define_alloc_func(notmuch_rb_cDatabase, notmuch_rb_database_alloc);
     rb_define_singleton_method(notmuch_rb_cDatabase, "open", notmuch_rb_database_open, -1);
@@ -220,6 +161,11 @@ Init_notmuch(void)
     rb_define_method(notmuch_rb_cDatabase, "remove_message", notmuch_rb_database_remove_message, 1);
     rb_define_method(notmuch_rb_cDatabase, "query", notmuch_rb_database_query_create, 1);
 
+    /*
+     * Document-class: Notmuch::Directory
+     *
+     * Notmuch directory
+     */
     notmuch_rb_cDirectory = rb_define_class_under(mod, "Directory", rb_cData);
     rb_undef_method(notmuch_rb_cDirectory, "initialize");
     rb_define_method(notmuch_rb_cDirectory, "destroy", notmuch_rb_directory_destroy, 0);
@@ -228,12 +174,22 @@ Init_notmuch(void)
     rb_define_method(notmuch_rb_cDirectory, "child_files", notmuch_rb_directory_get_child_files, 0);
     rb_define_method(notmuch_rb_cDirectory, "child_directories", notmuch_rb_directory_get_child_directories, 0);
 
+    /*
+     * Document-class: Notmuch::FileNames
+     *
+     * Notmuch file names
+     */
     notmuch_rb_cFileNames = rb_define_class_under(mod, "FileNames", rb_cData);
     rb_undef_method(notmuch_rb_cFileNames, "initialize");
     rb_define_method(notmuch_rb_cFileNames, "destroy", notmuch_rb_filenames_destroy, 0);
     rb_define_method(notmuch_rb_cFileNames, "each", notmuch_rb_filenames_each, 0);
     rb_include_module(notmuch_rb_cFileNames, rb_mEnumerable);
 
+    /*
+     * Document-class: Notmuch::Query
+     *
+     * Notmuch query
+     */
     notmuch_rb_cQuery = rb_define_class_under(mod, "Query", rb_cData);
     rb_undef_method(notmuch_rb_cQuery, "initialize");
     rb_define_method(notmuch_rb_cQuery, "destroy", notmuch_rb_query_destroy, 0);
@@ -243,12 +199,22 @@ Init_notmuch(void)
     rb_define_method(notmuch_rb_cQuery, "search_threads", notmuch_rb_query_search_threads, 0);
     rb_define_method(notmuch_rb_cQuery, "search_messages", notmuch_rb_query_search_messages, 0);
 
+    /*
+     * Document-class: Notmuch::Threads
+     *
+     * Notmuch threads
+     */
     notmuch_rb_cThreads = rb_define_class_under(mod, "Threads", rb_cData);
     rb_undef_method(notmuch_rb_cThreads, "initialize");
     rb_define_method(notmuch_rb_cThreads, "destroy", notmuch_rb_threads_destroy, 0);
     rb_define_method(notmuch_rb_cThreads, "each", notmuch_rb_threads_each, 0);
     rb_include_module(notmuch_rb_cThreads, rb_mEnumerable);
 
+    /*
+     * Document-class: Notmuch::Messages
+     *
+     * Notmuch messages
+     */
     notmuch_rb_cMessages = rb_define_class_under(mod, "Messages", rb_cData);
     rb_undef_method(notmuch_rb_cMessages, "initialize");
     rb_define_method(notmuch_rb_cMessages, "destroy", notmuch_rb_messages_destroy, 0);
@@ -256,6 +222,11 @@ Init_notmuch(void)
     rb_define_method(notmuch_rb_cMessages, "tags", notmuch_rb_messages_collect_tags, 0);
     rb_include_module(notmuch_rb_cMessages, rb_mEnumerable);
 
+    /*
+     * Document-class: Notmuch::Thread
+     *
+     * Notmuch thread
+     */
     notmuch_rb_cThread = rb_define_class_under(mod, "Thread", rb_cData);
     rb_undef_method(notmuch_rb_cThread, "initialize");
     rb_define_method(notmuch_rb_cThread, "destroy", notmuch_rb_thread_destroy, 0);
@@ -269,6 +240,11 @@ Init_notmuch(void)
     rb_define_method(notmuch_rb_cThread, "newest_date", notmuch_rb_thread_get_newest_date, 0);
     rb_define_method(notmuch_rb_cThread, "tags", notmuch_rb_thread_get_tags, 0);
 
+    /*
+     * Document-class: Notmuch::Message
+     *
+     * Notmuch message
+     */
     notmuch_rb_cMessage = rb_define_class_under(mod, "Message", rb_cData);
     rb_undef_method(notmuch_rb_cMessage, "initialize");
     rb_define_method(notmuch_rb_cMessage, "destroy", notmuch_rb_message_destroy, 0);
@@ -292,6 +268,11 @@ Init_notmuch(void)
     rb_define_method(notmuch_rb_cMessage, "freeze", notmuch_rb_message_freeze, 0);
     rb_define_method(notmuch_rb_cMessage, "thaw", notmuch_rb_message_thaw, 0);
 
+    /*
+     * Document-class: Notmuch::Tags
+     *
+     * Notmuch tags
+     */
     notmuch_rb_cTags = rb_define_class_under(mod, "Tags", rb_cData);
     rb_undef_method(notmuch_rb_cTags, "initialize");
     rb_define_method(notmuch_rb_cTags, "destroy", notmuch_rb_tags_destroy, 0);
