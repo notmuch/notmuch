@@ -174,17 +174,17 @@ Init_notmuch(void)
      */
     notmuch_rb_cDatabase = rb_define_class_under(mod, "Database", rb_cData);
     rb_define_alloc_func(notmuch_rb_cDatabase, notmuch_rb_database_alloc);
-    rb_define_singleton_method(notmuch_rb_cDatabase, "open", notmuch_rb_database_open, -1);
-    rb_define_method(notmuch_rb_cDatabase, "initialize", notmuch_rb_database_initialize, -1);
-    rb_define_method(notmuch_rb_cDatabase, "close", notmuch_rb_database_close, 0);
-    rb_define_method(notmuch_rb_cDatabase, "path", notmuch_rb_database_path, 0);
-    rb_define_method(notmuch_rb_cDatabase, "version", notmuch_rb_database_version, 0);
-    rb_define_method(notmuch_rb_cDatabase, "needs_upgrade?", notmuch_rb_database_needs_upgrade, 0);
-    rb_define_method(notmuch_rb_cDatabase, "upgrade!", notmuch_rb_database_upgrade, 0);
-    rb_define_method(notmuch_rb_cDatabase, "get_directory", notmuch_rb_database_get_directory, 1);
-    rb_define_method(notmuch_rb_cDatabase, "add_message", notmuch_rb_database_add_message, 1);
-    rb_define_method(notmuch_rb_cDatabase, "remove_message", notmuch_rb_database_remove_message, 1);
-    rb_define_method(notmuch_rb_cDatabase, "query", notmuch_rb_database_query_create, 1);
+    rb_define_singleton_method(notmuch_rb_cDatabase, "open", notmuch_rb_database_open, -1); /* in database.c */
+    rb_define_method(notmuch_rb_cDatabase, "initialize", notmuch_rb_database_initialize, -1); /* in database.c */
+    rb_define_method(notmuch_rb_cDatabase, "close", notmuch_rb_database_close, 0); /* in database.c */
+    rb_define_method(notmuch_rb_cDatabase, "path", notmuch_rb_database_path, 0); /* in database.c */
+    rb_define_method(notmuch_rb_cDatabase, "version", notmuch_rb_database_version, 0); /* in database.c */
+    rb_define_method(notmuch_rb_cDatabase, "needs_upgrade?", notmuch_rb_database_needs_upgrade, 0); /* in database.c */
+    rb_define_method(notmuch_rb_cDatabase, "upgrade!", notmuch_rb_database_upgrade, 0); /* in database.c */
+    rb_define_method(notmuch_rb_cDatabase, "get_directory", notmuch_rb_database_get_directory, 1); /* in database.c */
+    rb_define_method(notmuch_rb_cDatabase, "add_message", notmuch_rb_database_add_message, 1); /* in database.c */
+    rb_define_method(notmuch_rb_cDatabase, "remove_message", notmuch_rb_database_remove_message, 1); /* in database.c */
+    rb_define_method(notmuch_rb_cDatabase, "query", notmuch_rb_database_query_create, 1); /* in database.c */
 
     /*
      * Document-class: Notmuch::Directory
@@ -193,11 +193,11 @@ Init_notmuch(void)
      */
     notmuch_rb_cDirectory = rb_define_class_under(mod, "Directory", rb_cData);
     rb_undef_method(notmuch_rb_cDirectory, "initialize");
-    rb_define_method(notmuch_rb_cDirectory, "destroy", notmuch_rb_directory_destroy, 0);
-    rb_define_method(notmuch_rb_cDirectory, "mtime", notmuch_rb_directory_get_mtime, 0);
-    rb_define_method(notmuch_rb_cDirectory, "mtime=", notmuch_rb_directory_set_mtime, 1);
-    rb_define_method(notmuch_rb_cDirectory, "child_files", notmuch_rb_directory_get_child_files, 0);
-    rb_define_method(notmuch_rb_cDirectory, "child_directories", notmuch_rb_directory_get_child_directories, 0);
+    rb_define_method(notmuch_rb_cDirectory, "destroy", notmuch_rb_directory_destroy, 0); /* in directory.c */
+    rb_define_method(notmuch_rb_cDirectory, "mtime", notmuch_rb_directory_get_mtime, 0); /* in directory.c */
+    rb_define_method(notmuch_rb_cDirectory, "mtime=", notmuch_rb_directory_set_mtime, 1); /* in directory.c */
+    rb_define_method(notmuch_rb_cDirectory, "child_files", notmuch_rb_directory_get_child_files, 0); /* in directory.c */
+    rb_define_method(notmuch_rb_cDirectory, "child_directories", notmuch_rb_directory_get_child_directories, 0); /* in directory.c */
 
     /*
      * Document-class: Notmuch::FileNames
@@ -206,8 +206,8 @@ Init_notmuch(void)
      */
     notmuch_rb_cFileNames = rb_define_class_under(mod, "FileNames", rb_cData);
     rb_undef_method(notmuch_rb_cFileNames, "initialize");
-    rb_define_method(notmuch_rb_cFileNames, "destroy", notmuch_rb_filenames_destroy, 0);
-    rb_define_method(notmuch_rb_cFileNames, "each", notmuch_rb_filenames_each, 0);
+    rb_define_method(notmuch_rb_cFileNames, "destroy", notmuch_rb_filenames_destroy, 0); /* in filenames.c */
+    rb_define_method(notmuch_rb_cFileNames, "each", notmuch_rb_filenames_each, 0); /* in filenames.c */
     rb_include_module(notmuch_rb_cFileNames, rb_mEnumerable);
 
     /*
@@ -217,12 +217,12 @@ Init_notmuch(void)
      */
     notmuch_rb_cQuery = rb_define_class_under(mod, "Query", rb_cData);
     rb_undef_method(notmuch_rb_cQuery, "initialize");
-    rb_define_method(notmuch_rb_cQuery, "destroy", notmuch_rb_query_destroy, 0);
-    rb_define_method(notmuch_rb_cQuery, "sort", notmuch_rb_query_get_sort, 0);
-    rb_define_method(notmuch_rb_cQuery, "sort=", notmuch_rb_query_set_sort, 1);
-    rb_define_method(notmuch_rb_cQuery, "to_s", notmuch_rb_query_get_string, 0);
-    rb_define_method(notmuch_rb_cQuery, "search_threads", notmuch_rb_query_search_threads, 0);
-    rb_define_method(notmuch_rb_cQuery, "search_messages", notmuch_rb_query_search_messages, 0);
+    rb_define_method(notmuch_rb_cQuery, "destroy", notmuch_rb_query_destroy, 0); /* in query.c */
+    rb_define_method(notmuch_rb_cQuery, "sort", notmuch_rb_query_get_sort, 0); /* in query.c */
+    rb_define_method(notmuch_rb_cQuery, "sort=", notmuch_rb_query_set_sort, 1); /* in query.c */
+    rb_define_method(notmuch_rb_cQuery, "to_s", notmuch_rb_query_get_string, 0); /* in query.c */
+    rb_define_method(notmuch_rb_cQuery, "search_threads", notmuch_rb_query_search_threads, 0); /* in query.c */
+    rb_define_method(notmuch_rb_cQuery, "search_messages", notmuch_rb_query_search_messages, 0); /* in query.c */
 
     /*
      * Document-class: Notmuch::Threads
@@ -231,8 +231,8 @@ Init_notmuch(void)
      */
     notmuch_rb_cThreads = rb_define_class_under(mod, "Threads", rb_cData);
     rb_undef_method(notmuch_rb_cThreads, "initialize");
-    rb_define_method(notmuch_rb_cThreads, "destroy", notmuch_rb_threads_destroy, 0);
-    rb_define_method(notmuch_rb_cThreads, "each", notmuch_rb_threads_each, 0);
+    rb_define_method(notmuch_rb_cThreads, "destroy", notmuch_rb_threads_destroy, 0); /* in threads.c */
+    rb_define_method(notmuch_rb_cThreads, "each", notmuch_rb_threads_each, 0); /* in threads.c */
     rb_include_module(notmuch_rb_cThreads, rb_mEnumerable);
 
     /*
@@ -242,9 +242,9 @@ Init_notmuch(void)
      */
     notmuch_rb_cMessages = rb_define_class_under(mod, "Messages", rb_cData);
     rb_undef_method(notmuch_rb_cMessages, "initialize");
-    rb_define_method(notmuch_rb_cMessages, "destroy", notmuch_rb_messages_destroy, 0);
-    rb_define_method(notmuch_rb_cMessages, "each", notmuch_rb_messages_each, 0);
-    rb_define_method(notmuch_rb_cMessages, "tags", notmuch_rb_messages_collect_tags, 0);
+    rb_define_method(notmuch_rb_cMessages, "destroy", notmuch_rb_messages_destroy, 0); /* in messages.c */
+    rb_define_method(notmuch_rb_cMessages, "each", notmuch_rb_messages_each, 0); /* in messages.c */
+    rb_define_method(notmuch_rb_cMessages, "tags", notmuch_rb_messages_collect_tags, 0); /* in messages.c */
     rb_include_module(notmuch_rb_cMessages, rb_mEnumerable);
 
     /*
@@ -254,16 +254,16 @@ Init_notmuch(void)
      */
     notmuch_rb_cThread = rb_define_class_under(mod, "Thread", rb_cData);
     rb_undef_method(notmuch_rb_cThread, "initialize");
-    rb_define_method(notmuch_rb_cThread, "destroy", notmuch_rb_thread_destroy, 0);
-    rb_define_method(notmuch_rb_cThread, "thread_id", notmuch_rb_thread_get_thread_id, 0);
-    rb_define_method(notmuch_rb_cThread, "total_messages", notmuch_rb_thread_get_total_messages, 0);
-    rb_define_method(notmuch_rb_cThread, "toplevel_messages", notmuch_rb_thread_get_toplevel_messages, 0);
-    rb_define_method(notmuch_rb_cThread, "matched_messages", notmuch_rb_thread_get_matched_messages, 0);
-    rb_define_method(notmuch_rb_cThread, "authors", notmuch_rb_thread_get_authors, 0);
-    rb_define_method(notmuch_rb_cThread, "subject", notmuch_rb_thread_get_subject, 0);
-    rb_define_method(notmuch_rb_cThread, "oldest_date", notmuch_rb_thread_get_oldest_date, 0);
-    rb_define_method(notmuch_rb_cThread, "newest_date", notmuch_rb_thread_get_newest_date, 0);
-    rb_define_method(notmuch_rb_cThread, "tags", notmuch_rb_thread_get_tags, 0);
+    rb_define_method(notmuch_rb_cThread, "destroy", notmuch_rb_thread_destroy, 0); /* in thread.c */
+    rb_define_method(notmuch_rb_cThread, "thread_id", notmuch_rb_thread_get_thread_id, 0); /* in thread.c */
+    rb_define_method(notmuch_rb_cThread, "total_messages", notmuch_rb_thread_get_total_messages, 0); /* in thread.c */
+    rb_define_method(notmuch_rb_cThread, "toplevel_messages", notmuch_rb_thread_get_toplevel_messages, 0); /* in thread.c */
+    rb_define_method(notmuch_rb_cThread, "matched_messages", notmuch_rb_thread_get_matched_messages, 0); /* in thread.c */
+    rb_define_method(notmuch_rb_cThread, "authors", notmuch_rb_thread_get_authors, 0); /* in thread.c */
+    rb_define_method(notmuch_rb_cThread, "subject", notmuch_rb_thread_get_subject, 0); /* in thread.c */
+    rb_define_method(notmuch_rb_cThread, "oldest_date", notmuch_rb_thread_get_oldest_date, 0); /* in thread.c */
+    rb_define_method(notmuch_rb_cThread, "newest_date", notmuch_rb_thread_get_newest_date, 0); /* in thread.c */
+    rb_define_method(notmuch_rb_cThread, "tags", notmuch_rb_thread_get_tags, 0); /* in thread.c */
 
     /*
      * Document-class: Notmuch::Message
@@ -272,26 +272,26 @@ Init_notmuch(void)
      */
     notmuch_rb_cMessage = rb_define_class_under(mod, "Message", rb_cData);
     rb_undef_method(notmuch_rb_cMessage, "initialize");
-    rb_define_method(notmuch_rb_cMessage, "destroy", notmuch_rb_message_destroy, 0);
-    rb_define_method(notmuch_rb_cMessage, "message_id", notmuch_rb_message_get_message_id, 0);
-    rb_define_method(notmuch_rb_cMessage, "thread_id", notmuch_rb_message_get_thread_id, 0);
-    rb_define_method(notmuch_rb_cMessage, "replies", notmuch_rb_message_get_replies, 0);
-    rb_define_method(notmuch_rb_cMessage, "filename", notmuch_rb_message_get_filename, 0);
-    rb_define_method(notmuch_rb_cMessage, "filenames", notmuch_rb_message_get_filenames, 0);
-    rb_define_method(notmuch_rb_cMessage, "get_flag", notmuch_rb_message_get_flag, 1);
-    rb_define_method(notmuch_rb_cMessage, "set_flag", notmuch_rb_message_set_flag, 2);
-    rb_define_method(notmuch_rb_cMessage, "date", notmuch_rb_message_get_date, 0);
-    rb_define_method(notmuch_rb_cMessage, "header", notmuch_rb_message_get_header, 1);
+    rb_define_method(notmuch_rb_cMessage, "destroy", notmuch_rb_message_destroy, 0); /* in message.c */
+    rb_define_method(notmuch_rb_cMessage, "message_id", notmuch_rb_message_get_message_id, 0); /* in message.c */
+    rb_define_method(notmuch_rb_cMessage, "thread_id", notmuch_rb_message_get_thread_id, 0); /* in message.c */
+    rb_define_method(notmuch_rb_cMessage, "replies", notmuch_rb_message_get_replies, 0); /* in message.c */
+    rb_define_method(notmuch_rb_cMessage, "filename", notmuch_rb_message_get_filename, 0); /* in message.c */
+    rb_define_method(notmuch_rb_cMessage, "filenames", notmuch_rb_message_get_filenames, 0); /* in message.c */
+    rb_define_method(notmuch_rb_cMessage, "get_flag", notmuch_rb_message_get_flag, 1); /* in message.c */
+    rb_define_method(notmuch_rb_cMessage, "set_flag", notmuch_rb_message_set_flag, 2); /* in message.c */
+    rb_define_method(notmuch_rb_cMessage, "date", notmuch_rb_message_get_date, 0); /* in message.c */
+    rb_define_method(notmuch_rb_cMessage, "header", notmuch_rb_message_get_header, 1); /* in message.c */
     rb_define_alias(notmuch_rb_cMessage, "[]", "header");
-    rb_define_method(notmuch_rb_cMessage, "tags", notmuch_rb_message_get_tags, 0);
-    rb_define_method(notmuch_rb_cMessage, "add_tag", notmuch_rb_message_add_tag, 1);
+    rb_define_method(notmuch_rb_cMessage, "tags", notmuch_rb_message_get_tags, 0); /* in message.c */
+    rb_define_method(notmuch_rb_cMessage, "add_tag", notmuch_rb_message_add_tag, 1); /* in message.c */
     rb_define_alias(notmuch_rb_cMessage, "<<", "add_tag");
-    rb_define_method(notmuch_rb_cMessage, "remove_tag", notmuch_rb_message_remove_tag, 1);
-    rb_define_method(notmuch_rb_cMessage, "remove_all_tags", notmuch_rb_message_remove_all_tags, 0);
-    rb_define_method(notmuch_rb_cMessage, "maildir_flags_to_tags", notmuch_rb_message_maildir_flags_to_tags, 0);
-    rb_define_method(notmuch_rb_cMessage, "tags_to_maildir_flags", notmuch_rb_message_tags_to_maildir_flags, 0);
-    rb_define_method(notmuch_rb_cMessage, "freeze", notmuch_rb_message_freeze, 0);
-    rb_define_method(notmuch_rb_cMessage, "thaw", notmuch_rb_message_thaw, 0);
+    rb_define_method(notmuch_rb_cMessage, "remove_tag", notmuch_rb_message_remove_tag, 1); /* in message.c */
+    rb_define_method(notmuch_rb_cMessage, "remove_all_tags", notmuch_rb_message_remove_all_tags, 0); /* in message.c */
+    rb_define_method(notmuch_rb_cMessage, "maildir_flags_to_tags", notmuch_rb_message_maildir_flags_to_tags, 0); /* in message.c */
+    rb_define_method(notmuch_rb_cMessage, "tags_to_maildir_flags", notmuch_rb_message_tags_to_maildir_flags, 0); /* in message.c */
+    rb_define_method(notmuch_rb_cMessage, "freeze", notmuch_rb_message_freeze, 0); /* in message.c */
+    rb_define_method(notmuch_rb_cMessage, "thaw", notmuch_rb_message_thaw, 0); /* in message.c */
 
     /*
      * Document-class: Notmuch::Tags
@@ -300,7 +300,7 @@ Init_notmuch(void)
      */
     notmuch_rb_cTags = rb_define_class_under(mod, "Tags", rb_cData);
     rb_undef_method(notmuch_rb_cTags, "initialize");
-    rb_define_method(notmuch_rb_cTags, "destroy", notmuch_rb_tags_destroy, 0);
-    rb_define_method(notmuch_rb_cTags, "each", notmuch_rb_tags_each, 0);
+    rb_define_method(notmuch_rb_cTags, "destroy", notmuch_rb_tags_destroy, 0); /* in tags.c */
+    rb_define_method(notmuch_rb_cTags, "each", notmuch_rb_tags_each, 0); /* in tags.c */
     rb_include_module(notmuch_rb_cTags, rb_mEnumerable);
 }
