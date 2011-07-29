@@ -65,10 +65,35 @@ Init_notmuch(void)
      * Open the database in read write mode
      */
     rb_define_const(mod, "MODE_READ_WRITE", INT2FIX(NOTMUCH_DATABASE_MODE_READ_WRITE));
+    /*
+     * Document-const: Notmuch::SORT_OLDEST_FIRST
+     *
+     * Sort query results by oldest first
+     */
     rb_define_const(mod, "SORT_OLDEST_FIRST", INT2FIX(NOTMUCH_SORT_OLDEST_FIRST));
+    /*
+     * Document-const: Notmuch::SORT_NEWEST_FIRST
+     *
+     * Sort query results by newest first
+     */
     rb_define_const(mod, "SORT_NEWEST_FIRST", INT2FIX(NOTMUCH_SORT_NEWEST_FIRST));
+    /*
+     * Document-const: Notmuch::SORT_MESSAGE_ID
+     *
+     * Sort query results by message id
+     */
     rb_define_const(mod, "SORT_MESSAGE_ID", INT2FIX(NOTMUCH_SORT_MESSAGE_ID));
+    /*
+     * Document-const: Notmuch::SORT_UNSORTED
+     *
+     * Do not sort query results
+     */
     rb_define_const(mod, "SORT_UNSORTED", INT2FIX(NOTMUCH_SORT_UNSORTED));
+    /*
+     * Document-const: Notmuch::MESSAGE_FLAG_MATCH
+     *
+     * Message flag "match"
+     */
     rb_define_const(mod, "MESSAGE_FLAG_MATCH", INT2FIX(NOTMUCH_MESSAGE_FLAG_MATCH));
     /*
      * Document-const: Notmuch::TAG_MAX
