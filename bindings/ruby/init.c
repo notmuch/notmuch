@@ -1,6 +1,6 @@
 /* The Ruby interface to the notmuch mail library
  *
- * Copyright © 2010 Ali Polatel
+ * Copyright © 2010, 2011 Ali Polatel
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,6 +26,20 @@
  * == Summary
  *
  * Ruby extension to the <tt>notmuch</tt> mail library.
+ *
+ * == Classes
+ *
+ * Following are the classes that are most likely to be of interest to
+ * the user:
+ *
+ * - Notmuch::Database
+ * - Notmuch::Filenames
+ * - Notmuch::Query
+ * - Notmuch::Threads
+ * - Notmuch::Messages
+ * - Notmuch::Thread
+ * - Notmuch::Message
+ * - Notmuch::Tags
  *
  * == Constants
  *
@@ -159,7 +173,6 @@
  * than notmuch_message_freeze.
  */
 
-#define RDOC_HATE 1
 
 void
 Init_notmuch(void)
