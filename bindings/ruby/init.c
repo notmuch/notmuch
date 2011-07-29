@@ -33,7 +33,7 @@
  * the user:
  *
  * - Notmuch::Database
- * - Notmuch::Filenames
+ * - Notmuch::FileNames
  * - Notmuch::Query
  * - Notmuch::Threads
  * - Notmuch::Messages
