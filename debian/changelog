@@ -1,3 +1,21 @@
+notmuch (0.7~rc1-1) experimental; urgency=low
+
+  * Upstream release candidate.
+  * Fix for notmuch.sym and parallel build (Thanks to
+    Thomas Jost)
+  * Bug fixes from Jason Woofenden for vim interface:
+    -  Fix "space (in show mode) mostly adds tag:inbox and tag:unread
+       instead of removing them"  (Closes: #633009).
+    -  Fix "says press 's'; to toggle signatures, but it's
+       really 'i'",  (Closes: #633115).
+    -  Fix "fix for from list on search pages", (Closes: #633045).
+  * Bug fixes for vim interface from Uwe Kleine-König
+    - use full path for sendmail/doc fix
+    - fix compose temp file name
+  * Python tag encoding fixes from Sebastian Spaeth.
+
+ -- David Bremner <bremner@debian.org>  Fri, 29 Jul 2011 12:16:56 +0200
+
 notmuch (0.6.1-1) unstable; urgency=low
 
   * Properly install README.Debian in notmuch-vim (Closes: #632992).
