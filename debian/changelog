@@ -1,3 +1,10 @@
+notmuch (0.7-1) unstable; urgency=low
+
+  * New upstream release (no changes since 0.7~rc1).
+  * Upload to unstable.
+
+ -- David Bremner <bremner@debian.org>  Mon, 01 Aug 2011 21:46:26 +0200
+
 notmuch (0.7~rc1-1) experimental; urgency=low
 
   * Upstream release candidate.
