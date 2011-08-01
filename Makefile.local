@@ -15,11 +15,16 @@ IS_GIT=$(shell if [ -d .git ] ; then echo yes ; else echo no; fi)
 VERSION:=$(shell cat ${srcdir}/version)
 ifneq ($(MAKECMDGOALS),release)
 ifneq ($(MAKECMDGOALS),release-message)
+ifneq ($(MAKECMDGOALS),pre-release)
 ifeq ($(IS_GIT),yes)
 VERSION:=$(shell git describe --match '[0-9.]*')
 endif
 endif
 endif
+endif
+
+UPSTREAM_TAG=$(subst ~,_,$(VERSION))
+DEB_TAG=debian/$(UPSTREAM_TAG)-1
 
 RELEASE_HOST=notmuchmail.org
 RELEASE_DIR=/srv/notmuchmail.org/www/releases
@@ -96,11 +101,11 @@ release: verify-source-tree-and-version
 	$(MAKE) VERSION=$(VERSION) verify-newer
 	$(MAKE) VERSION=$(VERSION) clean
 	$(MAKE) VERSION=$(VERSION) test
-	git tag -s -m "$(PACKAGE) $(VERSION) release" $(VERSION)
+	git tag -s -m "$(PACKAGE) $(VERSION) release" $(UPSTREAM_TAG)
 	$(MAKE) VERSION=$(VERSION) $(GPG_FILE)
 	ln -sf $(TAR_FILE) $(DEB_TAR_FILE)
-	pristine-tar commit $(DEB_TAR_FILE) $(VERSION)
-	git tag -s -m "$(PACKAGE) Debian $(VERSION)-1 upload (same as $(VERSION))" debian/$(VERSION)-1
+	pristine-tar commit $(DEB_TAR_FILE) $(UPSTREAM_TAG)
+	git tag -s -m "$(PACKAGE) Debian $(VERSION)-1 upload (same as $(VERSION))" $(DEB_TAG)
 	mkdir -p releases
 	mv $(TAR_FILE) $(SHA1_FILE) $(GPG_FILE) releases
 	$(MAKE) VERSION=$(VERSION) release-message > $(PACKAGE)-$(VERSION).announce
@@ -110,6 +115,18 @@ ifeq ($(REALLY_UPLOAD),yes)
 	ssh $(RELEASE_HOST) "rm -f $(RELEASE_DIR)/LATEST-$(PACKAGE)-[0-9]* ; ln -s $(TAR_FILE) $(RELEASE_DIR)/LATEST-$(PACKAGE)-$(VERSION)"
 endif
 	@echo "Please send a release announcement using $(PACKAGE)-$(VERSION).announce as a template."
+
+.PHONY: pre-release
+pre-release:
+	$(MAKE) VERSION=$(VERSION) clean
+	$(MAKE) VERSION=$(VERSION) test
+	git tag -s -m "$(PACKAGE) $(VERSION) release" $(UPSTREAM_TAG)
+	git tag -s -m "$(PACKAGE) Debian $(VERSION)-1 upload (same as $(VERSION))" $(DEB_TAG)
+	$(MAKE) VERSION=$(VERSION) $(TAR_FILE)
+	ln -sf $(TAR_FILE) $(DEB_TAR_FILE)
+	pristine-tar commit $(DEB_TAR_FILE) $(UPSTREAM_TAG)
+	mkdir -p releases
+	mv $(TAR_FILE) $(DEB_TAR_FILE) releases
 
 .PHONY: release-message
 release-message:

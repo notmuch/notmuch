@@ -1,3 +1,38 @@
+Notmuch 0.7 (2011-08-01)
+========================
+
+Vim interface improvements
+--------------------------
+
+Jason Woofenden provided a number of bug fixes for the Vim interface
+
+  * fix citation/signature fold lengths
+  * fix cig/cit parsing within multipart/*
+  * fix on-screen instructions for show-signature
+  * fix from list reformatting in search view
+  * fix space key: now archives (did opposite)
+
+Uwe Kleine-König contributed
+
+  * use full path for sendmail/doc fix
+  * fix compose temp file name
+
+Python Bindings changes
+-----------------------
+
+Sebastian Spaeth contributed two changes related to unicode and UTF8:
+
+  * message tags are now explicitly unicode
+  * query string is encoded as a UTF8 byte string
+
+Build-System improvments
+------------------------
+
+Generate notmuch.sym after the relevant object files
+
+  This fixes a bug in parallel building. Thanks to Thomas Jost for the
+  patch.
+
 Notmuch 0.6.1 (2011-07-17)
 ==========================
 
