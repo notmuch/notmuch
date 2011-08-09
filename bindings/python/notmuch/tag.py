@@ -83,12 +83,10 @@ class Tags(object):
     def next(self):
         if self._tags is None:
             raise NotmuchError(STATUS.NOT_INITIALIZED)
-        # No need to call nmlib.notmuch_tags_valid(self._tags);
-        # Tags._get safely returns None, if there is no more valid tag.
-        tag = Tags._get(self._tags).decode('utf-8')
-        if tag is None:
+        if not nmlib.notmuch_tags_valid(self._tags):
             self._tags = None
             raise StopIteration
+        tag = Tags._get(self._tags).decode('utf-8')
         nmlib.notmuch_tags_move_to_next(self._tags)
         return tag
 
