@@ -72,6 +72,9 @@ For example:
   :type '(alist :key-type (string) :value-type (string))
   :group 'notmuch)
 
+(defvar notmuch-query-history nil
+  "Variable to store minibuffer history for notmuch queries")
+
 (defun notmuch-select-tag-with-completion (prompt &rest search-terms)
   (let ((tag-list
 	 (with-output-to-string
@@ -882,6 +885,36 @@ characters as well as `_.+-'.
 	   (concat "*notmuch-search-" query "*"))
 	  )))
 
+(defun notmuch-read-query (prompt)
+  "Read a notmuch-query from the minibuffer with completion.
+
+PROMPT is the string to prompt with."
+  (lexical-let
+      ((completions
+	(append (list "folder:" "thread:" "id:" "date:" "from:" "to:"
+		      "subject:" "attachment:")
+		(mapcar (lambda (tag)
+			  (concat "tag:" tag))
+			(process-lines "notmuch" "search" "--output=tags" "*")))))
+    (let ((keymap (copy-keymap minibuffer-local-map))
+	  (minibuffer-completion-table
+	   (completion-table-dynamic
+	    (lambda (string)
+	      ;; generate a list of possible completions for the current input
+	      (cond
+	       ;; this ugly regexp is used to get the last word of the input
+	       ;; possibly preceded by a '('
+	       ((string-match "\\(^\\|.* (?\\)\\([^ ]*\\)$" string)
+		(mapcar (lambda (compl)
+			  (concat (match-string-no-properties 1 string) compl))
+			(all-completions (match-string-no-properties 2 string)
+					 completions)))
+	       (t (list string)))))))
+      ;; this was simpler than convincing completing-read to accept spaces:
+      (define-key keymap (kbd "<tab>") 'minibuffer-complete)
+      (read-from-minibuffer prompt nil keymap nil
+			    'notmuch-query-history nil nil))))
+
 ;;;###autoload
 (defun notmuch-search (query &optional oldest-first target-thread target-line continuation)
   "Run \"notmuch search\" with the given query string and display results.
@@ -893,7 +926,7 @@ The optional parameters are used as follows:
                  current if it appears in the search results.
   target-line: The line number to move to if the target thread does not
                appear in the search results."
-  (interactive "sNotmuch search: ")
+  (interactive (list (notmuch-read-query "Notmuch search: ")))
   (let ((buffer (get-buffer-create (notmuch-search-buffer-title query))))
     (switch-to-buffer buffer)
     (notmuch-search-mode)
@@ -991,7 +1024,7 @@ search."
 
 Runs a new search matching only messages that match both the
 current search results AND the additional query string provided."
-  (interactive "sFilter search: ")
+  (interactive (list (notmuch-read-query "Filter search: ")))
   (let ((grouped-query (if (string-match-p notmuch-search-disjunctive-regexp query)
 			   (concat "( " query " )")
 			 query)))
