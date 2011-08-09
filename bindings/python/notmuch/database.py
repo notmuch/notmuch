@@ -580,7 +580,7 @@ class Query(object):
         threads_p = Query._search_threads(self._query)
 
         if threads_p is None:
-            NotmuchError(STATUS.NULL_POINTER)
+            raise NotmuchError(STATUS.NULL_POINTER)
 
         return Threads(threads_p,self)
 
