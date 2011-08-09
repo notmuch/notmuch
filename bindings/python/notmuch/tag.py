@@ -116,8 +116,8 @@ class Tags(object):
             raise NotmuchError(STATUS.NOT_INITIALIZED)
 
         i=0
-        while nmlib.notmuch_tags_valid(self._msgs):
-            nmlib.notmuch_tags_move_to_next(self._msgs)
+        while nmlib.notmuch_tags_valid(self._tags):
+            nmlib.notmuch_tags_move_to_next(self._tags)
             i += 1
         self._tags = None
         return i
