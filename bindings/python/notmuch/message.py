@@ -395,7 +395,7 @@ class Message(object):
         header = Message._get_header(self._msg, header)
         if header == None:
             raise NotmuchError(STATUS.NULL_POINTER)
-        return header
+        return header.decode('UTF-8')
 
     def get_filename(self):
         """Returns the file path of the message file
@@ -747,7 +747,7 @@ class Message(object):
         """A message() is represented by a 1-line summary"""
         msg = {}
         msg['from'] = self.get_header('from')
-        msg['tags'] = str(self.get_tags())
+        msg['tags'] = self.get_tags()
         msg['date'] = date.fromtimestamp(self.get_date())
         return "%(from)s (%(date)s) (%(tags)s)" % (msg)
 
