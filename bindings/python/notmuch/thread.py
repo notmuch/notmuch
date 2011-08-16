@@ -292,7 +292,10 @@ class Thread(object):
         """
         if self._thread is None:
             raise NotmuchError(STATUS.NOT_INITIALIZED)
-        return Thread._get_authors(self._thread).decode('UTF-8')
+        authors = Thread._get_authors(self._thread)
+        if authors is None:
+            return None
+        return authors.decode('UTF-8')
 
     def get_subject(self):
         """Returns the Subject of 'thread'
@@ -302,7 +305,10 @@ class Thread(object):
         """
         if self._thread is None:
             raise NotmuchError(STATUS.NOT_INITIALIZED)
-        return Thread._get_subject(self._thread).decode('UTF-8')
+        subject = Thread._get_subject(self._thread)
+        if subject is None:
+            return None
+        return subject.decode('UTF-8')
 
     def get_newest_date(self):
         """Returns time_t of the newest message date

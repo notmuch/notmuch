@@ -86,7 +86,7 @@ class Tags(object):
         if not nmlib.notmuch_tags_valid(self._tags):
             self._tags = None
             raise StopIteration
-        tag = Tags._get(self._tags).decode('utf-8')
+        tag = Tags._get(self._tags).decode('UTF-8')
         nmlib.notmuch_tags_move_to_next(self._tags)
         return tag
 
