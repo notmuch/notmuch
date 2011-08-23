@@ -23,5 +23,5 @@ while read sym; do
 	    ;;
     esac
 done
-sed  -n 's/^\s*\(notmuch_[a-z_]*\)\s*(.*/\t\1;/p' $HEADER
+sed  -n 's/^[[:space:]]*\(notmuch_[a-z_]*\)[[:space:]]*(.*/ \1;/p' $HEADER
 printf "local: *;\n};\n"
