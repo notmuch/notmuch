@@ -53,12 +53,11 @@ left of cnotmuch then.
 Requirements
 ------------
 
-You need to have notmuch installed (or rather libnotmuch.so.1). The
-release version 0.3 should work fine. Also, notmuch makes use of the
-ctypes library, and has only been tested with python 2.5. It will not
-work on earlier python versions.
+You need to have notmuch installed (or rather libnotmuch.so.1). Also,
+notmuch makes use of the ctypes library, and has only been tested with
+python >= 2.5. It will not work on earlier python versions.
 """,
-      classifiers=['Development Status :: 2 - Pre-Alpha',
+      classifiers=['Development Status :: 3 - Alpha',
                    'Intended Audience :: Developers',
                    'License :: OSI Approved :: GNU General Public License (GPL)',
                    'Programming Language :: Python :: 2',
