@@ -2,19 +2,28 @@
 
 import os
 import re
-import sys
 from distutils.core import setup
-dirname = os.path.dirname(os.path.abspath(__file__)) # Package's main folder
-sys.path.insert(0, dirname)
-import notmuch
+
+def get_version():
+    file = open('notmuch/__init__.py')
+    try:
+        for line in file:
+            if re.match('__VERSION__\s*=\s*',line) != None:
+                version = line.split('=', 1)[1]
+                return eval(version, {}, {})
+    finally:
+        file.close()
+    raise IOError('Unexpected end-of-file')
+
+__VERSION__=get_version()
 
 setup(name='notmuch',
-      version=notmuch.__VERSION__,
+      version=__VERSION__,
       description='Python binding of the notmuch mail search and indexing library.',
       author='Sebastian Spaeth',
       author_email='Sebastian@SSpaeth.de',
       url='http://notmuchmail.org/',
-      download_url='http://notmuchmail.org/releases/notmuch-'+ notmuch.__VERSION__+'.tar.gz',
+      download_url='http://notmuchmail.org/releases/notmuch-'+__VERSION__+'.tar.gz',
       packages=['notmuch'],
       keywords = ["library", "email"],
       long_description="""Overview
@@ -44,11 +53,12 @@ left of cnotmuch then.
 Requirements
 ------------
 
-You need to have notmuch installed (or rather libnotmuch.so.1). Also,
-notmuch makes use of the ctypes library, and has only been tested with
-python >= 2.5. It will not work on earlier python versions.
+You need to have notmuch installed (or rather libnotmuch.so.1). The
+release version 0.3 should work fine. Also, notmuch makes use of the
+ctypes library, and has only been tested with python 2.5. It will not
+work on earlier python versions.
 """,
-      classifiers=['Development Status :: 3 - Alpha',
+      classifiers=['Development Status :: 2 - Pre-Alpha',
                    'Intended Audience :: Developers',
                    'License :: OSI Approved :: GNU General Public License (GPL)',
                    'Programming Language :: Python :: 2',
