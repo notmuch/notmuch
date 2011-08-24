@@ -57,6 +57,6 @@ from notmuch.message import Messages, Message
 from notmuch.thread import Threads, Thread
 from notmuch.tag import Tags
 from notmuch.globals import nmlib, STATUS, NotmuchError
+from notmuch.version import __VERSION__
 __LICENSE__ = "GPL v3+"
-__VERSION__ = '0.6'
 __AUTHOR__ = 'Sebastian Spaeth <Sebastian@SSpaeth.de>'
