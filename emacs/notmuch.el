@@ -951,7 +951,8 @@ The optional parameters are used as follows:
 		       "--sort=newest-first")
 		     query)))
 	  (set-process-sentinel proc 'notmuch-search-process-sentinel)
-	  (set-process-filter proc 'notmuch-search-process-filter))))
+	  (set-process-filter proc 'notmuch-search-process-filter)
+	  (set-process-query-on-exit-flag proc nil))))
     (run-hooks 'notmuch-search-hook)))
 
 (defun notmuch-search-refresh-view ()
