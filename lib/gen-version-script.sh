@@ -23,5 +23,6 @@ while read sym; do
 	    ;;
     esac
 done
+nm $* | awk '$1 ~ "^[0-9a-fA-F][0-9a-fA-F]*$" && $2 == "T" && $3 ~ "^get(line|delim)$" {print $3 ";"}'
 sed  -n 's/^[[:space:]]*\(notmuch_[a-z_]*\)[[:space:]]*(.*/ \1;/p' $HEADER
 printf "local: *;\n};\n"
