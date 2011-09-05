@@ -2,6 +2,29 @@
 test_description="output of multipart message"
 . ./test-lib.sh
 
+cat <<EOF > embedded_message
+From: Carl Worth <cworth@cworth.org>
+To: cworth@cworth.org
+Subject: html message
+Date: Fri, 05 Jan 2001 15:42:57 +0000
+User-Agent: Notmuch/0.5 (http://notmuchmail.org) Emacs/23.3.1 (i486-pc-linux-gnu)
+Message-ID: <87liy5ap01.fsf@yoom.home.cworth.org>
+MIME-Version: 1.0
+Content-Type: multipart/alternative; boundary="==-=-=="
+
+--==-=-==
+Content-Type: text/html
+
+<p>This is an embedded message, with a multipart/alternative part.</p>
+
+--==-=-==
+Content-Type: text/plain
+
+This is an embedded message, with a multipart/alternative part.
+
+--==-=-==--
+EOF
+
 cat <<EOF > ${MAIL_DIR}/multipart
 From: Carl Worth <cworth@cworth.org>
 To: cworth@cworth.org
@@ -20,17 +43,9 @@ Content-Type: multipart/mixed; boundary="=-=-="
 Content-Type: message/rfc822
 Content-Disposition: inline
 
-From: Carl Worth <cworth@cworth.org>
-To: cworth@cworth.org
-Subject: html message
-Date: Fri, 05 Jan 2001 15:42:57 +0000
-User-Agent: Notmuch/0.5 (http://notmuchmail.org) Emacs/23.3.1 (i486-pc-linux-gnu)
-Message-ID: <87liy5ap01.fsf@yoom.home.cworth.org>
-MIME-Version: 1.0
-Content-Type: text/html
-
-<p>This is an embedded message, with a single html part.</p>
-
+EOF
+cat embedded_message >> ${MAIL_DIR}/multipart
+cat <<EOF >> ${MAIL_DIR}/multipart
 --=-=-=
 Content-Disposition: attachment; filename=attachment
 
@@ -105,20 +120,33 @@ Date: Fri, 05 Jan 2001 15:43:57 +0000
 part{ ID: 1, Content-type: multipart/signed
 part{ ID: 2, Content-type: multipart/mixed
 part{ ID: 3, Content-type: message/rfc822
-part{ ID: 4, Content-type: text/html
+header{
+From: Carl Worth <cworth@cworth.org>
+To: cworth@cworth.org
+Subject: html message
+Date: Fri, 05 Jan 2001 15:42:57 +0000
+header}
+body{
+part{ ID: 4, Content-type: multipart/alternative
+part{ ID: 5, Content-type: text/html
 Non-text part: text/html
 part}
+part{ ID: 6, Content-type: text/plain
+This is an embedded message, with a multipart/alternative part.
 part}
-attachment{ ID: 5, Filename: attachment, Content-type: text/plain
+part}
+body}
+part}
+attachment{ ID: 7, Filename: attachment, Content-type: text/plain
 This is a text attachment.
 attachment}
-part{ ID: 6, Content-type: text/plain
+part{ ID: 8, Content-type: text/plain
 And this message is signed.
 
 -Carl
 part}
 part}
-part{ ID: 7, Content-type: application/pgp-signature
+part{ ID: 9, Content-type: application/pgp-signature
 Non-text part: application/pgp-signature
 part}
 part}
@@ -133,20 +161,33 @@ cat <<EOF >EXPECTED
 part{ ID: 1, Content-type: multipart/signed
 part{ ID: 2, Content-type: multipart/mixed
 part{ ID: 3, Content-type: message/rfc822
-part{ ID: 4, Content-type: text/html
+header{
+From: Carl Worth <cworth@cworth.org>
+To: cworth@cworth.org
+Subject: html message
+Date: Fri, 05 Jan 2001 15:42:57 +0000
+header}
+body{
+part{ ID: 4, Content-type: multipart/alternative
+part{ ID: 5, Content-type: text/html
 Non-text part: text/html
 part}
+part{ ID: 6, Content-type: text/plain
+This is an embedded message, with a multipart/alternative part.
 part}
-attachment{ ID: 5, Filename: attachment, Content-type: text/plain
+part}
+body}
+part}
+attachment{ ID: 7, Filename: attachment, Content-type: text/plain
 This is a text attachment.
 attachment}
-part{ ID: 6, Content-type: text/plain
+part{ ID: 8, Content-type: text/plain
 And this message is signed.
 
 -Carl
 part}
 part}
-part{ ID: 7, Content-type: application/pgp-signature
+part{ ID: 9, Content-type: application/pgp-signature
 Non-text part: application/pgp-signature
 part}
 part}
@@ -158,14 +199,27 @@ notmuch show --format=text --part=2 'id:87liy5ap00.fsf@yoom.home.cworth.org' >OU
 cat <<EOF >EXPECTED
 part{ ID: 2, Content-type: multipart/mixed
 part{ ID: 3, Content-type: message/rfc822
-part{ ID: 4, Content-type: text/html
+header{
+From: Carl Worth <cworth@cworth.org>
+To: cworth@cworth.org
+Subject: html message
+Date: Fri, 05 Jan 2001 15:42:57 +0000
+header}
+body{
+part{ ID: 4, Content-type: multipart/alternative
+part{ ID: 5, Content-type: text/html
 Non-text part: text/html
 part}
+part{ ID: 6, Content-type: text/plain
+This is an embedded message, with a multipart/alternative part.
 part}
-attachment{ ID: 5, Filename: attachment, Content-type: text/plain
+part}
+body}
+part}
+attachment{ ID: 7, Filename: attachment, Content-type: text/plain
 This is a text attachment.
 attachment}
-part{ ID: 6, Content-type: text/plain
+part{ ID: 8, Content-type: text/plain
 And this message is signed.
 
 -Carl
@@ -174,39 +228,75 @@ And this message is signed.
 EOF
 test_expect_equal_file OUTPUT EXPECTED
 
-test_begin_subtest "--format=text --part=3, rfc822 multipart"
+test_begin_subtest "--format=text --part=3, rfc822 part"
 notmuch show --format=text --part=3 'id:87liy5ap00.fsf@yoom.home.cworth.org' >OUTPUT
 cat <<EOF >EXPECTED
 part{ ID: 3, Content-type: message/rfc822
-part{ ID: 4, Content-type: text/html
+header{
+From: Carl Worth <cworth@cworth.org>
+To: cworth@cworth.org
+Subject: html message
+Date: Fri, 05 Jan 2001 15:42:57 +0000
+header}
+body{
+part{ ID: 4, Content-type: multipart/alternative
+part{ ID: 5, Content-type: text/html
 Non-text part: text/html
 part}
+part{ ID: 6, Content-type: text/plain
+This is an embedded message, with a multipart/alternative part.
+part}
+part}
+body}
 part}
 EOF
 test_expect_equal_file OUTPUT EXPECTED
 
-test_begin_subtest "--format=text --part=4, html part"
+test_begin_subtest "--format=text --part=4, rfc822's multipart"
 notmuch show --format=text --part=4 'id:87liy5ap00.fsf@yoom.home.cworth.org' >OUTPUT
 cat <<EOF >EXPECTED
-part{ ID: 4, Content-type: text/html
+part{ ID: 4, Content-type: multipart/alternative
+part{ ID: 5, Content-type: text/html
+Non-text part: text/html
+part}
+part{ ID: 6, Content-type: text/plain
+This is an embedded message, with a multipart/alternative part.
+part}
+part}
+EOF
+test_expect_equal_file OUTPUT EXPECTED
+
+test_begin_subtest "--format=text --part=5, rfc822's html part"
+notmuch show --format=text --part=5 'id:87liy5ap00.fsf@yoom.home.cworth.org' >OUTPUT
+cat <<EOF >EXPECTED
+part{ ID: 5, Content-type: text/html
 Non-text part: text/html
 part}
 EOF
 test_expect_equal_file OUTPUT EXPECTED
 
-test_begin_subtest "--format=text --part=5, inline attachment"
-notmuch show --format=text --part=5 'id:87liy5ap00.fsf@yoom.home.cworth.org' >OUTPUT
+test_begin_subtest "--format=text --part=6, rfc822's text part"
+notmuch show --format=text --part=6 'id:87liy5ap00.fsf@yoom.home.cworth.org' >OUTPUT
 cat <<EOF >EXPECTED
-attachment{ ID: 5, Filename: attachment, Content-type: text/plain
+part{ ID: 6, Content-type: text/plain
+This is an embedded message, with a multipart/alternative part.
+part}
+EOF
+test_expect_equal_file OUTPUT EXPECTED
+
+test_begin_subtest "--format=text --part=7, inline attachement"
+notmuch show --format=text --part=7 'id:87liy5ap00.fsf@yoom.home.cworth.org' >OUTPUT
+cat <<EOF >EXPECTED
+attachment{ ID: 7, Filename: attachment, Content-type: text/plain
 This is a text attachment.
 attachment}
 EOF
 test_expect_equal_file OUTPUT EXPECTED
 
-test_begin_subtest "--format=text --part=6, plain text part"
-notmuch show --format=text --part=6 'id:87liy5ap00.fsf@yoom.home.cworth.org' >OUTPUT
+test_begin_subtest "--format=text --part=8, plain text part"
+notmuch show --format=text --part=8 'id:87liy5ap00.fsf@yoom.home.cworth.org' >OUTPUT
 cat <<EOF >EXPECTED
-part{ ID: 6, Content-type: text/plain
+part{ ID: 8, Content-type: text/plain
 And this message is signed.
 
 -Carl
@@ -214,10 +304,10 @@ And this message is signed.
 EOF
 test_expect_equal_file OUTPUT EXPECTED
 
-test_begin_subtest "--format=text --part=7, pgp signature (unverified)"
-notmuch show --format=text --part=7 'id:87liy5ap00.fsf@yoom.home.cworth.org' >OUTPUT
+test_begin_subtest "--format=text --part=9, pgp signature (unverified)"
+notmuch show --format=text --part=9 'id:87liy5ap00.fsf@yoom.home.cworth.org' >OUTPUT
 cat <<EOF >EXPECTED
-part{ ID: 7, Content-type: application/pgp-signature
+part{ ID: 9, Content-type: application/pgp-signature
 Non-text part: application/pgp-signature
 part}
 EOF
@@ -228,48 +318,126 @@ test_expect_success \
     "notmuch show --format=text --part=8 'id:87liy5ap00.fsf@yoom.home.cworth.org'"
 
 test_begin_subtest "--format=json --part=0, full message"
-output=$(notmuch show --format=json --part=0 'id:87liy5ap00.fsf@yoom.home.cworth.org')
-test_expect_equal "$output" \
-'{"id": "87liy5ap00.fsf@yoom.home.cworth.org", "match": true, "filename": "'"${MAIL_DIR}/multipart"'", "timestamp": 978709437, "date_relative": "2001-01-05", "tags": ["attachment","inbox","signed","unread"], "headers": {"Subject": "Multipart message", "From": "Carl Worth <cworth@cworth.org>", "To": "cworth@cworth.org", "Cc": "", "Bcc": "", "Date": "Fri, 05 Jan 2001 15:43:57 +0000"}, "body": [{"id": 1, "content-type": "multipart/signed", "content": [{"id": 2, "content-type": "multipart/mixed", "content": [{"id": 3, "content-type": "message/rfc822", "content": [{"id": 4, "content-type": "text/html"}]}, {"id": 5, "content-type": "text/plain", "filename": "attachment", "content": "This is a text attachment.\n"}, {"id": 6, "content-type": "text/plain", "content": "And this message is signed.\n\n-Carl\n"}]}, {"id": 7, "content-type": "application/pgp-signature"}]}]}'
+notmuch show --format=json --part=0 'id:87liy5ap00.fsf@yoom.home.cworth.org' | sed 's|{"id":|\n{"id":|g' >OUTPUT
+echo >>OUTPUT # expect *no* newline at end of output
+cat <<EOF >EXPECTED
+
+{"id": "87liy5ap00.fsf@yoom.home.cworth.org", "match": true, "filename": "${MAIL_DIR}/multipart", "timestamp": 978709437, "date_relative": "2001-01-05", "tags": ["attachment","inbox","signed","unread"], "headers": {"Subject": "Multipart message", "From": "Carl Worth <cworth@cworth.org>", "To": "cworth@cworth.org", "Cc": "", "Bcc": "", "Date": "Fri, 05 Jan 2001 15:43:57 +0000"}, "body": [
+{"id": 1, "content-type": "multipart/signed", "content": [
+{"id": 2, "content-type": "multipart/mixed", "content": [
+{"id": 3, "content-type": "message/rfc822", "content": [{"headers": {"From": "Carl Worth <cworth@cworth.org>", "To": "cworth@cworth.org", "Subject": "html message", "Date": "Fri, 05 Jan 2001 15:42:57 +0000"}, "body": [
+{"id": 4, "content-type": "multipart/alternative", "content": [
+{"id": 5, "content-type": "text/html"}, 
+{"id": 6, "content-type": "text/plain", "content": "This is an embedded message, with a multipart/alternative part.\n"}]}]}]}, 
+{"id": 7, "content-type": "text/plain", "filename": "attachment", "content": "This is a text attachment.\n"}, 
+{"id": 8, "content-type": "text/plain", "content": "And this message is signed.\n\n-Carl\n"}]}, 
+{"id": 9, "content-type": "application/pgp-signature"}]}]}
+EOF
+test_expect_equal_file OUTPUT EXPECTED
 
 test_begin_subtest "--format=json --part=1, message body"
-output=$(notmuch show --format=json --part=1 'id:87liy5ap00.fsf@yoom.home.cworth.org')
-test_expect_equal "$output" \
-'{"id": 1, "content-type": "multipart/signed", "content": [{"id": 2, "content-type": "multipart/mixed", "content": [{"id": 3, "content-type": "message/rfc822", "content": [{"id": 4, "content-type": "text/html"}]}, {"id": 5, "content-type": "text/plain", "filename": "attachment", "content": "This is a text attachment.\n"}, {"id": 6, "content-type": "text/plain", "content": "And this message is signed.\n\n-Carl\n"}]}, {"id": 7, "content-type": "application/pgp-signature"}]}'
+notmuch show --format=json --part=1 'id:87liy5ap00.fsf@yoom.home.cworth.org' | sed 's|{"id":|\n{"id":|g' >OUTPUT
+echo >>OUTPUT # expect *no* newline at end of output
+cat <<EOF >EXPECTED
+
+{"id": 1, "content-type": "multipart/signed", "content": [
+{"id": 2, "content-type": "multipart/mixed", "content": [
+{"id": 3, "content-type": "message/rfc822", "content": [{"headers": {"From": "Carl Worth <cworth@cworth.org>", "To": "cworth@cworth.org", "Subject": "html message", "Date": "Fri, 05 Jan 2001 15:42:57 +0000"}, "body": [
+{"id": 4, "content-type": "multipart/alternative", "content": [
+{"id": 5, "content-type": "text/html"}, 
+{"id": 6, "content-type": "text/plain", "content": "This is an embedded message, with a multipart/alternative part.\n"}]}]}]}, 
+{"id": 7, "content-type": "text/plain", "filename": "attachment", "content": "This is a text attachment.\n"}, 
+{"id": 8, "content-type": "text/plain", "content": "And this message is signed.\n\n-Carl\n"}]}, 
+{"id": 9, "content-type": "application/pgp-signature"}]}
+EOF
+test_expect_equal_file OUTPUT EXPECTED
 
 test_begin_subtest "--format=json --part=2, multipart/mixed"
-output=$(notmuch show --format=json --part=2 'id:87liy5ap00.fsf@yoom.home.cworth.org')
-test_expect_equal "$output" \
-'{"id": 2, "content-type": "multipart/mixed", "content": [{"id": 3, "content-type": "message/rfc822", "content": [{"id": 4, "content-type": "text/html"}]}, {"id": 5, "content-type": "text/plain", "filename": "attachment", "content": "This is a text attachment.\n"}, {"id": 6, "content-type": "text/plain", "content": "And this message is signed.\n\n-Carl\n"}]}'
+notmuch show --format=json --part=2 'id:87liy5ap00.fsf@yoom.home.cworth.org' | sed 's|{"id":|\n{"id":|g' >OUTPUT
+echo >>OUTPUT # expect *no* newline at end of output
+cat <<EOF >EXPECTED
 
-test_begin_subtest "--format=json --part=3, rfc822 multipart"
-output=$(notmuch show --format=json --part=3 'id:87liy5ap00.fsf@yoom.home.cworth.org')
-test_expect_equal "$output" \
-'{"id": 3, "content-type": "message/rfc822", "content": [{"id": 4, "content-type": "text/html"}]}'
+{"id": 2, "content-type": "multipart/mixed", "content": [
+{"id": 3, "content-type": "message/rfc822", "content": [{"headers": {"From": "Carl Worth <cworth@cworth.org>", "To": "cworth@cworth.org", "Subject": "html message", "Date": "Fri, 05 Jan 2001 15:42:57 +0000"}, "body": [
+{"id": 4, "content-type": "multipart/alternative", "content": [
+{"id": 5, "content-type": "text/html"}, 
+{"id": 6, "content-type": "text/plain", "content": "This is an embedded message, with a multipart/alternative part.\n"}]}]}]}, 
+{"id": 7, "content-type": "text/plain", "filename": "attachment", "content": "This is a text attachment.\n"}, 
+{"id": 8, "content-type": "text/plain", "content": "And this message is signed.\n\n-Carl\n"}]}
+EOF
+test_expect_equal_file OUTPUT EXPECTED
 
-test_begin_subtest "--format=json --part=4, html part"
-output=$(notmuch show --format=json --part=4 'id:87liy5ap00.fsf@yoom.home.cworth.org')
-test_expect_equal "$output" \
-'{"id": 4, "content-type": "text/html"}'
+test_begin_subtest "--format=json --part=3, rfc822 part"
+notmuch show --format=json --part=3 'id:87liy5ap00.fsf@yoom.home.cworth.org' | sed 's|{"id":|\n{"id":|g' >OUTPUT
+echo >>OUTPUT # expect *no* newline at end of output
+cat <<EOF >EXPECTED
 
-test_begin_subtest "--format=json --part=5, inline attachment"
-output=$(notmuch show --format=json --part=5 'id:87liy5ap00.fsf@yoom.home.cworth.org')
-test_expect_equal "$output" \
-'{"id": 5, "content-type": "text/plain", "filename": "attachment", "content": "This is a text attachment.\n"}'
+{"id": 3, "content-type": "message/rfc822", "content": [{"headers": {"From": "Carl Worth <cworth@cworth.org>", "To": "cworth@cworth.org", "Subject": "html message", "Date": "Fri, 05 Jan 2001 15:42:57 +0000"}, "body": [
+{"id": 4, "content-type": "multipart/alternative", "content": [
+{"id": 5, "content-type": "text/html"}, 
+{"id": 6, "content-type": "text/plain", "content": "This is an embedded message, with a multipart/alternative part.\n"}]}]}]}
+EOF
+test_expect_equal_file OUTPUT EXPECTED
 
-test_begin_subtest "--format=json --part=6, plain text part"
-output=$(notmuch show --format=json --part=6 'id:87liy5ap00.fsf@yoom.home.cworth.org')
-test_expect_equal "$output" \
-'{"id": 6, "content-type": "text/plain", "content": "And this message is signed.\n\n-Carl\n"}'
+test_begin_subtest "--format=json --part=4, rfc822's multipart/alternative"
+notmuch show --format=json --part=4 'id:87liy5ap00.fsf@yoom.home.cworth.org' | sed 's|{"id":|\n{"id":|g' >OUTPUT
+echo >>OUTPUT # expect *no* newline at end of output
+cat <<EOF >EXPECTED
 
-test_begin_subtest "--format=json --part=7, pgp signature (unverified)"
-output=$(notmuch show --format=json --part=7 'id:87liy5ap00.fsf@yoom.home.cworth.org')
-test_expect_equal "$output" \
-'{"id": 7, "content-type": "application/pgp-signature"}'
+{"id": 4, "content-type": "multipart/alternative", "content": [
+{"id": 5, "content-type": "text/html"}, 
+{"id": 6, "content-type": "text/plain", "content": "This is an embedded message, with a multipart/alternative part.\n"}]}
+EOF
+test_expect_equal_file OUTPUT EXPECTED
+
+test_begin_subtest "--format=json --part=5, rfc822's html part"
+notmuch show --format=json --part=5 'id:87liy5ap00.fsf@yoom.home.cworth.org' | sed 's|{"id":|\n{"id":|g' >OUTPUT
+echo >>OUTPUT # expect *no* newline at end of output
+cat <<EOF >EXPECTED
+
+{"id": 5, "content-type": "text/html"}
+EOF
+test_expect_equal_file OUTPUT EXPECTED
+
+test_begin_subtest "--format=json --part=6, rfc822's text part"
+notmuch show --format=json --part=6 'id:87liy5ap00.fsf@yoom.home.cworth.org' | sed 's|{"id":|\n{"id":|g' >OUTPUT
+echo >>OUTPUT # expect *no* newline at end of output
+cat <<EOF >EXPECTED
+
+{"id": 6, "content-type": "text/plain", "content": "This is an embedded message, with a multipart/alternative part.\n"}
+EOF
+test_expect_equal_file OUTPUT EXPECTED
+
+test_begin_subtest "--format=json --part=7, inline attachment"
+notmuch show --format=json --part=7 'id:87liy5ap00.fsf@yoom.home.cworth.org' | sed 's|{"id":|\n{"id":|g' >OUTPUT
+echo >>OUTPUT # expect *no* newline at end of output
+cat <<EOF >EXPECTED
+
+{"id": 7, "content-type": "text/plain", "filename": "attachment", "content": "This is a text attachment.\n"}
+EOF
+test_expect_equal_file OUTPUT EXPECTED
+
+test_begin_subtest "--format=json --part=8, plain text part"
+notmuch show --format=json --part=8 'id:87liy5ap00.fsf@yoom.home.cworth.org' | sed 's|{"id":|\n{"id":|g' >OUTPUT
+echo >>OUTPUT # expect *no* newline at end of output
+cat <<EOF >EXPECTED
+
+{"id": 8, "content-type": "text/plain", "content": "And this message is signed.\n\n-Carl\n"}
+EOF
+test_expect_equal_file OUTPUT EXPECTED
+
+test_begin_subtest "--format=json --part=9, pgp signature (unverified)"
+notmuch show --format=json --part=9 'id:87liy5ap00.fsf@yoom.home.cworth.org' | sed 's|{"id":|\n{"id":|g' >OUTPUT
+echo >>OUTPUT # expect *no* newline at end of output
+cat <<EOF >EXPECTED
+
+{"id": 9, "content-type": "application/pgp-signature"}
+EOF
+test_expect_equal_file OUTPUT EXPECTED
 
 test_expect_success \
-    "--format=json --part=8, no part, expect error" \
-    "notmuch show --format=json --part=8 'id:87liy5ap00.fsf@yoom.home.cworth.org'"
+    "--format=json --part=10, no part, expect error" \
+    "notmuch show --format=json --part=10 'id:87liy5ap00.fsf@yoom.home.cworth.org'"
 
 test_begin_subtest "--format=raw"
 notmuch show --format=raw 'id:87liy5ap00.fsf@yoom.home.cworth.org' >OUTPUT
@@ -284,7 +452,13 @@ notmuch show --format=raw --part=1 'id:87liy5ap00.fsf@yoom.home.cworth.org' >OUT
 # output should *not* include newline
 echo >>OUTPUT
 cat <<EOF >EXPECTED
-<p>This is an embedded message, with a single html part.</p>
+From: Carl Worth <cworth@cworth.org>
+To: cworth@cworth.org
+Subject: html message
+Date: Fri, 05 Jan 2001 15:42:57 +0000
+
+<p>This is an embedded message, with a multipart/alternative part.</p>
+This is an embedded message, with a multipart/alternative part.
 This is a text attachment.
 And this message is signed.
 
@@ -302,7 +476,13 @@ test_expect_equal_file OUTPUT EXPECTED
 test_begin_subtest "--format=raw --part=2, multipart/mixed"
 notmuch show --format=raw --part=2 'id:87liy5ap00.fsf@yoom.home.cworth.org' >OUTPUT
 cat <<EOF >EXPECTED
-<p>This is an embedded message, with a single html part.</p>
+From: Carl Worth <cworth@cworth.org>
+To: cworth@cworth.org
+Subject: html message
+Date: Fri, 05 Jan 2001 15:42:57 +0000
+
+<p>This is an embedded message, with a multipart/alternative part.</p>
+This is an embedded message, with a multipart/alternative part.
 This is a text attachment.
 And this message is signed.
 
@@ -310,29 +490,41 @@ And this message is signed.
 EOF
 test_expect_equal_file OUTPUT EXPECTED
 
-test_begin_subtest "--format=raw --part=3, rfc822 multipart"
+test_begin_subtest "--format=raw --part=3, rfc822 part"
 notmuch show --format=raw --part=3 'id:87liy5ap00.fsf@yoom.home.cworth.org' >OUTPUT
-cat <<EOF >EXPECTED
-<p>This is an embedded message, with a single html part.</p>
-EOF
-test_expect_equal_file OUTPUT EXPECTED
+test_expect_equal_file OUTPUT embedded_message
 
-test_begin_subtest "--format=raw --part=4, html part"
+test_begin_subtest "--format=raw --part=4, rfc822's html part"
 notmuch show --format=raw --part=4 'id:87liy5ap00.fsf@yoom.home.cworth.org' >OUTPUT
 cat <<EOF >EXPECTED
-<p>This is an embedded message, with a single html part.</p>
+<p>This is an embedded message, with a multipart/alternative part.</p>
+This is an embedded message, with a multipart/alternative part.
 EOF
 test_expect_equal_file OUTPUT EXPECTED
 
-test_begin_subtest "--format=raw --part=5, inline attachment"
+test_begin_subtest "--format=raw --part=5, rfc822's html part"
 notmuch show --format=raw --part=5 'id:87liy5ap00.fsf@yoom.home.cworth.org' >OUTPUT
+cat <<EOF >EXPECTED
+<p>This is an embedded message, with a multipart/alternative part.</p>
+EOF
+test_expect_equal_file OUTPUT EXPECTED
+
+test_begin_subtest "--format=raw --part=6, rfc822's text part"
+notmuch show --format=raw --part=6 'id:87liy5ap00.fsf@yoom.home.cworth.org' >OUTPUT
+cat <<EOF >EXPECTED
+This is an embedded message, with a multipart/alternative part.
+EOF
+test_expect_equal_file OUTPUT EXPECTED
+
+test_begin_subtest "--format=raw --part=7, inline attachment"
+notmuch show --format=raw --part=7 'id:87liy5ap00.fsf@yoom.home.cworth.org' >OUTPUT
 cat <<EOF >EXPECTED
 This is a text attachment.
 EOF
 test_expect_equal_file OUTPUT EXPECTED
 
-test_begin_subtest "--format=raw --part=6, plain text part"
-notmuch show --format=raw --part=6 'id:87liy5ap00.fsf@yoom.home.cworth.org' >OUTPUT
+test_begin_subtest "--format=raw --part=8, plain text part"
+notmuch show --format=raw --part=8 'id:87liy5ap00.fsf@yoom.home.cworth.org' >OUTPUT
 cat <<EOF >EXPECTED
 And this message is signed.
 
@@ -340,8 +532,8 @@ And this message is signed.
 EOF
 test_expect_equal_file OUTPUT EXPECTED
 
-test_begin_subtest "--format=raw --part=7, pgp signature (unverified)"
-notmuch show --format=raw --part=7 'id:87liy5ap00.fsf@yoom.home.cworth.org' >OUTPUT
+test_begin_subtest "--format=raw --part=9, pgp signature (unverified)"
+notmuch show --format=raw --part=9 'id:87liy5ap00.fsf@yoom.home.cworth.org' >OUTPUT
 # output should *not* include newline
 echo >>OUTPUT
 cat <<EOF >EXPECTED
@@ -356,7 +548,7 @@ EOF
 test_expect_equal_file OUTPUT EXPECTED
 
 test_expect_success \
-    "--format=raw --part=8, no part, expect error" \
+    "--format=raw --part=10, no part, expect error" \
     "notmuch show --format=raw --part=8 'id:87liy5ap00.fsf@yoom.home.cworth.org'"
 
 test_begin_subtest "--format=mbox"
@@ -383,8 +575,14 @@ References: <87liy5ap00.fsf@yoom.home.cworth.org>
 On Fri, 05 Jan 2001 15:43:57 +0000, Carl Worth <cworth@cworth.org> wrote:
 Non-text part: multipart/signed
 Non-text part: multipart/mixed
-Non-text part: message/rfc822
+> From: Carl Worth <cworth@cworth.org>
+> To: cworth@cworth.org
+> Subject: html message
+> Date: Fri, 05 Jan 2001 15:42:57 +0000
+>
+Non-text part: multipart/alternative
 Non-text part: text/html
+> This is an embedded message, with a multipart/alternative part.
 > This is a text attachment.
 > And this message is signed.
 > 
