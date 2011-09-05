@@ -65,7 +65,7 @@ list."
 (defun notmuch-mua-add-more-hidden-headers ()
   "Add some headers to the list that are hidden by default."
   (mapc (lambda (header)
-	  (when (not (member header 'message-hidden-headers))
+	  (when (not (member header message-hidden-headers))
 	    (push header message-hidden-headers)))
 	notmuch-mua-hidden-headers))
 

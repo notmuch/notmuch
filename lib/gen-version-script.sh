@@ -12,7 +12,7 @@ HEADER=$1
 shift
 
 printf '{\nglobal:\n'
-nm --defined $* | awk '$3 ~ "Xapian.*Error" {print $3}' | sort | uniq | \
+nm  $* | awk '$1 ~ "^[0-9a-fA-F][0-9a-fA-F]*$" && $3 ~ "Xapian.*Error" {print $3}' | sort | uniq | \
 while read sym; do
     demangled=$(c++filt $sym)
     case $demangled in
@@ -23,5 +23,6 @@ while read sym; do
 	    ;;
     esac
 done
+nm $* | awk '$1 ~ "^[0-9a-fA-F][0-9a-fA-F]*$" && $2 == "T" && $3 ~ "^get(line|delim)$" {print $3 ";"}'
 sed  -n 's/^[[:space:]]*\(notmuch_[a-z_]*\)[[:space:]]*(.*/ \1;/p' $HEADER
 printf "local: *;\n};\n"
