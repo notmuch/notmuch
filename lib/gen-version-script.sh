@@ -12,7 +12,7 @@ HEADER=$1
 shift
 
 printf '{\nglobal:\n'
-nm --defined $* | awk '$3 ~ "Xapian.*Error" {print $3}' | sort | uniq | \
+nm  $* | awk '$1 ~ "^[0-9a-fA-F][0-9a-fA-F]*$" && $3 ~ "Xapian.*Error" {print $3}' | sort | uniq | \
 while read sym; do
     demangled=$(c++filt $sym)
     case $demangled in
