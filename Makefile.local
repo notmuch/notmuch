@@ -34,6 +34,8 @@ DEB_TAR_FILE=$(PACKAGE)_$(VERSION).orig.tar.gz
 SHA1_FILE=$(TAR_FILE).sha1
 GPG_FILE=$(SHA1_FILE).asc
 
+PV_FILE=bindings/python/notmuch/version.py
+
 # Smash together user's values with our extra values
 FINAL_CFLAGS = -DNOTMUCH_VERSION=$(VERSION) $(CFLAGS) $(WARN_CFLAGS) $(CONFIGURE_CFLAGS) $(extra_cflags)
 FINAL_CXXFLAGS = $(CXXFLAGS) $(WARN_CXXFLAGS) $(CONFIGURE_CXXFLAGS) $(extra_cflags) $(extra_cxxflags)
@@ -166,7 +168,7 @@ release-message:
 verify-source-tree-and-version: verify-no-dirty-code
 
 .PHONY: verify-no-dirty-code
-verify-no-dirty-code: verify-version-debian
+verify-no-dirty-code: verify-version-debian verify-version-python
 ifeq ($(IS_GIT),yes)
 	@printf "Checking that source tree is clean..."
 ifneq ($(shell git ls-files -m),)
@@ -189,6 +191,15 @@ verify-version-debian: verify-version-components
 	@if [ "$(VERSION)-1" != $$(dpkg-parsechangelog | grep ^Version | awk '{print $$2}') ] ; then \
 		(echo "No." && \
 		 echo "Please edit version and debian/changelog to have consistent versions." && false) \
+	 fi
+	@echo "Good."
+
+.PHONY: verify-version-python
+verify-version-python: verify-version-components
+	@echo -n "Checking that python bindings version is $(VERSION)..."
+	@if [ "$(VERSION)" != $$(python -c "execfile('$(PV_FILE)'); print __VERSION__") ] ; then \
+		(echo "No." && \
+		 echo "Please edit version and $(PV_FILE) to have consistent versions." && false) \
 	 fi
 	@echo "Good."
 
