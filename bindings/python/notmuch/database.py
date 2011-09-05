@@ -152,7 +152,8 @@ class Database(object):
         :exception: Raises :exc:`NotmuchError` in case
                     of any failure (after printing an error message on stderr).
         """
-
+        if isinstance(path, unicode):
+            path = path.encode('utf-8') 
         res = Database._open(path, mode)
 
         if res is None:
@@ -167,7 +168,7 @@ class Database(object):
         # Raise a NotmuchError if not initialized
         self._verify_initialized_db()
 
-        return Database._get_path(self._db)
+        return Database._get_path(self._db).decode('utf-8')
 
     def get_version(self):
         """Returns the database format version
@@ -228,8 +229,8 @@ class Database(object):
            Database.MODE.READ_WRITE mode. The underlying library will exit the
            program if this method is used on a read-only database!
 
-        :param path: A str containing the path relative to the path of database
-              (see :meth:`get_path`), or else should be an absolute path
+        :param path: An unicode string containing the path relative to the path
+              of database (see :meth:`get_path`), or else should be an absolute path
               with initial components that match the path of 'database'.
         :returns: :class:`Directory` or raises an exception.
         :exception: :exc:`NotmuchError`
@@ -258,6 +259,8 @@ class Database(object):
             #we got a relative path, make it absolute
             abs_dirpath = os.path.abspath(os.path.join(self.get_path(), path))
 
+        if isinstance(path, unicode):
+            path = path.encode('UTF-8')
         dir_p = Database._get_directory(self._db, path)
 
         # return the Directory, init it with the absolute path
@@ -449,7 +452,7 @@ class Database(object):
         if not config.has_option('database', 'path'):
             raise NotmuchError(message="No DB path specified"
                                        " and no user default found")
-        return config.get('database', 'path')
+        return config.get('database', 'path').decode('utf-8')
 
     @property
     def db_p(self):
@@ -673,7 +676,7 @@ class Directory(object):
 
     def __init__(self, path, dir_p, parent):
         """
-        :param path:   The absolute path of the directory object.
+        :param path:   The absolute path of the directory object as unicode.
         :param dir_p:  The pointer to an internal notmuch_directory_t object.
         :param parent: The object this Directory is derived from
                        (usually a :class:`Database`). We do not directly use
@@ -681,6 +684,7 @@ class Directory(object):
                        this Directory object lives. This keeps the
                        parent object alive.
         """
+        assert isinstance(path, unicode), "Path needs to be an UNICODE object"
         self._path = path
         self._dir_p = dir_p
         self._parent = parent
