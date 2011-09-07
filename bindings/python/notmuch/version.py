@@ -1,2 +1,2 @@
-# This file is potentially auto-generated. Do not modify
-__VERSION__ = '0.6'
+# this file should be kept in sync with ../../../version
+__VERSION__ = '0.8~rc1'
