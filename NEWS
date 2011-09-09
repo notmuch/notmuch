@@ -15,6 +15,10 @@ Improved Build system portability
   specific to the GNU versions of sed and nm. The new version should
   be more portable to e.g. OpenBSD.
 
+Documentation update for Ruby bindings
+
+  Added documentation, typo fixes, and improved support for rdoc.
+
 Notmuch 0.7 (2011-08-01)
 ========================
 
