@@ -1,4 +1,4 @@
-Notmuch 0.8 (2011-09-05)
+Notmuch 0.8 (2011-09-10)
 ========================
 
 Improved handling of message/rfc822 parts
@@ -8,6 +8,22 @@ Improved handling of message/rfc822 parts
   Output of the completely raw rfc822-formatted message, including all
   headers, is unfortunately not yet supported (but hopefully will be
   soon).
+
+Improved Build system portability 
+
+  Certain parts of the shell script generating notmuch.sym were
+  specific to the GNU versions of sed and nm. The new version should
+  be more portable to e.g. OpenBSD.
+
+Documentation update for Ruby bindings
+
+  Added documentation, typo fixes, and improved support for rdoc.
+
+Unicode, iterator, PEP8 changes for python bindings
+
+  - PEP8 (code formatting) changes for python files.
+  - Remove Tags.__len__ ; see 0.6 release notes for motivation.
+  - Decode headers as UTF8, encode (unicode) database paths as UTF8.
 
 Notmuch 0.7 (2011-08-01)
 ========================
