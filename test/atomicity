@@ -58,7 +58,6 @@ cp ${NOTMUCH_CONFIG} ${NOTMUCH_CONFIG}.snap
 NOTMUCH_CONFIG=${NOTMUCH_CONFIG}.snap notmuch config set database.path $MAIL_DIR.snap
 
 
-test_begin_subtest '"notmuch new" is idempotent under arbitrary aborts'
 
 # Execute notmuch new and, at every call to rename, snapshot the
 # database, run notmuch new again on the snapshot, and capture the
@@ -93,7 +92,10 @@ for ((i = 0; i < $outcount; i++)); do
         i=$(expr $end - 1)
     fi
 done
-test_expect_equal_failure GDB "$(cat searchall)" "$(cat expectall)"
+
+test_begin_subtest '"notmuch new" is idempotent under arbitrary aborts'
+test_subtest_known_broken
+test_expect_equal GDB "$(cat searchall)" "$(cat expectall)"
 
 test_expect_success GDB "detected $outcount>10 abort points" "test $outcount -gt 10"
 
