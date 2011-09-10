@@ -1,6 +1,10 @@
 notmuch (0.8-1) unstable; urgency=low
 
   * New upstream version.
+    - Improved handling of message/rfc822 parts
+    - Improved Build system portability 
+    - Documentation update for Ruby bindings
+    - Unicode, iterator, PEP8 changes for python bindings
 
  -- David Bremner <bremner@debian.org>  Sat, 10 Sep 2011 08:53:55 -0300
 
