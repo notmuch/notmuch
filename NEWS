@@ -19,6 +19,12 @@ Documentation update for Ruby bindings
 
   Added documentation, typo fixes, and improved support for rdoc.
 
+Unicode, iterator, PEP8 changes for python bindings
+
+  - PEP8 (code formatting) changes for python files.
+  - Remove Tags.__len__ ; see 0.6 release notes for motivation.
+  - Decode headers as UTF8, encode (unicode) database paths as UTF8.
+
 Notmuch 0.7 (2011-08-01)
 ========================
 
