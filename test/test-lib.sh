@@ -574,12 +574,14 @@ test_failure_message_ () {
 }
 
 test_known_broken_ok_ () {
+	test_subtest_known_broken_=
 	test_fixed=$(($test_fixed+1))
 	say_color pass "%-6s" "FIXED"
 	echo " $@"
 }
 
 test_known_broken_failure_ () {
+	test_subtest_known_broken_=
 	test_broken=$(($test_broken+1))
 	test_failure_message_ "BROKEN" "$@"
 }
@@ -614,6 +616,7 @@ test_skip () {
 	fi
 	case "$to_skip" in
 	t)
+		test_subtest_known_broken_=
 		say_color skip >&3 "skipping test: $@"
 		say_color skip "%-6s" "SKIP"
 		echo " $1"
