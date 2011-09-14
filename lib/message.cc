@@ -1217,8 +1217,6 @@ _new_maildir_filename (void *ctx,
     if (info == NULL) {
 	info = filename + strlen(filename);
     } else {
-	flags = info + 3;
-
 	/* Loop through existing flags in filename. */
 	for (flags = info + 3, last_flag = 0;
 	     *flags;
