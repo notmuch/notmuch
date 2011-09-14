@@ -49,16 +49,16 @@ struct visible _notmuch_message {
 struct maildir_flag_tag {
     char flag;
     const char *tag;
-    bool inverse;
+    notmuch_bool_t inverse;
 };
 
 /* ASCII ordered table of Maildir flags and associated tags */
 static struct maildir_flag_tag flag2tag[] = {
-    { 'D', "draft",   false},
-    { 'F', "flagged", false},
-    { 'P', "passed",  false},
-    { 'R', "replied", false},
-    { 'S', "unread",  true }
+    { 'D', "draft",   FALSE},
+    { 'F', "flagged", FALSE},
+    { 'P', "passed",  FALSE},
+    { 'R', "replied", FALSE},
+    { 'S', "unread",  TRUE }
 };
 
 /* We end up having to call the destructor explicitly because we had
