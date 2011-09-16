@@ -19,11 +19,10 @@ Copyright 2010 Sebastian Spaeth <Sebastian@SSpaeth.de>'
 
 import os
 from ctypes import c_int, c_char_p, c_void_p, c_uint, c_long, byref
-from notmuch.globals import nmlib, STATUS, NotmuchError, Enum
+from notmuch.globals import nmlib, STATUS, NotmuchError, Enum, _str
 from notmuch.thread import Threads
 from notmuch.message import Messages, Message
 from notmuch.tag import Tags
-
 
 class Database(object):
     """Represents a notmuch database (wraps notmuch_database_t)
@@ -101,7 +100,6 @@ class Database(object):
                 Database._std_db_path = self._get_user_default_db()
             path = Database._std_db_path
 
-        assert isinstance(path, basestring), 'Path must be a string or None.'
         if create == False:
             self.open(path, mode)
         else:
@@ -132,7 +130,7 @@ class Database(object):
             raise NotmuchError(message="Cannot create db, this Database() "
                                        "already has an open one.")
 
-        res = Database._create(path, Database.MODE.READ_WRITE)
+        res = Database._create(_str(path), Database.MODE.READ_WRITE)
 
         if res is None:
             raise NotmuchError(
@@ -152,9 +150,7 @@ class Database(object):
         :exception: Raises :exc:`NotmuchError` in case
                     of any failure (after printing an error message on stderr).
         """
-        if isinstance(path, unicode):
-            path = path.encode('utf-8') 
-        res = Database._open(path, mode)
+        res = Database._open(_str(path), mode)
 
         if res is None:
             raise NotmuchError(
@@ -259,12 +255,10 @@ class Database(object):
             #we got a relative path, make it absolute
             abs_dirpath = os.path.abspath(os.path.join(self.get_path(), path))
 
-        if isinstance(path, unicode):
-            path = path.encode('UTF-8')
-        dir_p = Database._get_directory(self._db, path)
+        dir_p = Database._get_directory(self._db, _str(path))
 
         # return the Directory, init it with the absolute path
-        return Directory(abs_dirpath, dir_p, self)
+        return Directory(_str(abs_dirpath), dir_p, self)
 
     def add_message(self, filename, sync_maildir_flags=False):
         """Adds a new message to the database
@@ -321,7 +315,7 @@ class Database(object):
 
         msg_p = c_void_p()
         status = nmlib.notmuch_database_add_message(self._db,
-                                                  filename,
+                                                  _str(filename),
                                                   byref(msg_p))
 
         if not status in [STATUS.SUCCESS, STATUS.DUPLICATE_MESSAGE_ID]:
@@ -390,10 +384,8 @@ class Database(object):
         # Raise a NotmuchError if not initialized
         self._verify_initialized_db()
 
-        msg_p = Database._find_message(self._db, msgid)
-        if msg_p is None:
-            return None
-        return Message(msg_p, self)
+        msg_p = Database._find_message(self._db, _str(msgid))
+        return msg_p and Message(msg_p, self) or None
 
     def get_all_tags(self):
         """Returns :class:`Tags` with a list of all tags found in the database
@@ -535,11 +527,8 @@ class Query(object):
             raise NotmuchError(STATUS.NOT_INITIALIZED)
         # create reference to parent db to keep it alive
         self._db = db
-        if isinstance(querystr, unicode):
-            # xapian takes utf-8 encoded byte arrays
-            querystr = querystr.encode('utf-8')
         # create query, return None if too little mem available
-        query_p = Query._create(db.db_p, querystr)
+        query_p = Query._create(db.db_p, _str(querystr))
         if query_p is None:
             NotmuchError(STATUS.NULL_POINTER)
         self._query = query_p

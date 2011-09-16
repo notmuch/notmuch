@@ -21,7 +21,7 @@ Copyright 2010 Sebastian Spaeth <Sebastian@SSpaeth.de>'
 
 from ctypes import c_char_p, c_void_p, c_long, c_uint, c_int
 from datetime import date
-from notmuch.globals import nmlib, STATUS, NotmuchError, Enum
+from notmuch.globals import nmlib, STATUS, NotmuchError, Enum, _str
 from notmuch.tag import Tags
 from notmuch.filename import Filenames
 import sys
@@ -505,7 +505,7 @@ class Message(object):
         if self._msg is None:
             raise NotmuchError(STATUS.NOT_INITIALIZED)
 
-        status = nmlib.notmuch_message_add_tag(self._msg, tag)
+        status = nmlib.notmuch_message_add_tag(self._msg, _str(tag))
 
         # bail out on failure
         if status != STATUS.SUCCESS:
@@ -549,7 +549,7 @@ class Message(object):
         if self._msg is None:
             raise NotmuchError(STATUS.NOT_INITIALIZED)
 
-        status = nmlib.notmuch_message_remove_tag(self._msg, tag)
+        status = nmlib.notmuch_message_remove_tag(self._msg, _str(tag))
         # bail out on error
         if status != STATUS.SUCCESS:
             raise NotmuchError(status)

@@ -98,3 +98,15 @@ class NotmuchError(Exception):
             return self.args[0]
         else:
             return STATUS.status2str(self.args[1])
+
+def _str(value):
+    """Ensure a nicely utf-8 encoded string to pass to libnotmuch
+
+    C++ code expects strings to be well formatted and
+    unicode strings to have no null bytes."""
+    if not isinstance(value, basestring):
+        raise TypeError("Expected str or unicode, got %s" % str(type(value)))
+    if isinstance(value, unicode):
+        return value.encode('UTF-8')
+    return value
+
