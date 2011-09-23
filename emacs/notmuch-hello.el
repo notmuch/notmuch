@@ -42,6 +42,26 @@
   :type 'boolean
   :group 'notmuch)
 
+(defun notmuch-sort-saved-searches (alist)
+  "Generate an alphabetically sorted saved searches alist."
+  (sort alist (lambda (a b) (string< (car a) (car b)))))
+
+(defcustom notmuch-saved-search-sort-function nil
+  "Function used to sort the saved searches for the notmuch-hello view.
+
+This variable controls how saved searches should be sorted. No
+sorting (nil) displays the saved searches in the order they are
+stored in `notmuch-saved-searches'. Sort alphabetically sorts the
+saved searches in alphabetical order. Custom sort function should
+be a function or a lambda expression that takes the saved
+searches alist as a parameter, and returns a new saved searches
+alist to be used."
+  :type '(choice (const :tag "No sorting" nil)
+		 (const :tag "Sort alphabetically" notmuch-sort-saved-searches)
+		 (function :tag "Custom sort function"
+			   :value notmuch-sort-saved-searches))
+  :group 'notmuch)
+
 (defvar notmuch-hello-indent 4
   "How much to indent non-headers.")
 
@@ -440,6 +460,10 @@ Complete list of currently available key bindings:
 	     (widest (max saved-widest alltags-widest)))
 
 	(when saved-alist
+	  ;; Sort saved searches if required.
+	  (when notmuch-saved-search-sort-function
+	    (setq saved-alist
+		  (funcall notmuch-saved-search-sort-function saved-alist)))
 	  (widget-insert "\nSaved searches: ")
 	  (widget-create 'push-button
 			 :notify (lambda (&rest ignore)
