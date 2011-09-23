@@ -188,8 +188,8 @@ Typically \",\" in the US and UK and \".\" in Europe."
 		collect elem))
     ;; Add the new one.
     (customize-save-variable 'notmuch-saved-searches
-			     (push (cons name search)
-				   notmuch-saved-searches))
+			     (add-to-list 'notmuch-saved-searches
+					  (cons name search) t))
     (message "Saved '%s' as '%s'." search name)
     (notmuch-hello-update)))
 
