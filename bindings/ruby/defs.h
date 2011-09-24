@@ -151,6 +151,12 @@ VALUE
 notmuch_rb_database_upgrade(VALUE self);
 
 VALUE
+notmuch_rb_database_begin_atomic(VALUE self);
+
+VALUE
+notmuch_rb_database_end_atomic(VALUE self);
+
+VALUE
 notmuch_rb_database_get_directory(VALUE self, VALUE pathv);
 
 VALUE

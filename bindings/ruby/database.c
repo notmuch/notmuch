@@ -1,6 +1,6 @@
 /* The Ruby interface to the notmuch mail library
  *
- * Copyright © 2010 Ali Polatel
+ * Copyright © 2010, 2011 Ali Polatel
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -199,6 +199,44 @@ notmuch_rb_database_upgrade(VALUE self)
         pnotify = NULL;
 
     ret = notmuch_database_upgrade(db, pnotify, pnotify ? &block : NULL);
+    notmuch_rb_status_raise(ret);
+
+    return Qtrue;
+}
+
+/*
+ * call-seq: DB.begin_atomic => nil
+ *
+ * Begin an atomic database operation.
+ */
+VALUE
+notmuch_rb_database_begin_atomic(VALUE self)
+{
+    notmuch_status_t ret;
+    notmuch_database_t *db;
+
+    Data_Get_Notmuch_Database(self, db);
+
+    ret = notmuch_database_begin_atomic(db);
+    notmuch_rb_status_raise(ret);
+
+    return Qtrue;
+}
+
+/*
+ * call-seq: DB.end_atomic => nil
+ *
+ * Indicate the end of an atomic database operation.
+ */
+VALUE
+notmuch_rb_database_end_atomic(VALUE self)
+{
+    notmuch_status_t ret;
+    notmuch_database_t *db;
+
+    Data_Get_Notmuch_Database(self, db);
+
+    ret = notmuch_database_end_atomic(db);
     notmuch_rb_status_raise(ret);
 
     return Qtrue;

@@ -181,6 +181,8 @@ Init_notmuch(void)
     rb_define_method(notmuch_rb_cDatabase, "version", notmuch_rb_database_version, 0); /* in database.c */
     rb_define_method(notmuch_rb_cDatabase, "needs_upgrade?", notmuch_rb_database_needs_upgrade, 0); /* in database.c */
     rb_define_method(notmuch_rb_cDatabase, "upgrade!", notmuch_rb_database_upgrade, 0); /* in database.c */
+    rb_define_method(notmuch_rb_cDatabase, "begin_atomic", notmuch_rb_database_begin_atomic, 0); /* in database.c */
+    rb_define_method(notmuch_rb_cDatabase, "end_atomic", notmuch_rb_database_end_atomic, 0); /* in database.c */
     rb_define_method(notmuch_rb_cDatabase, "get_directory", notmuch_rb_database_get_directory, 1); /* in database.c */
     rb_define_method(notmuch_rb_cDatabase, "add_message", notmuch_rb_database_add_message, 1); /* in database.c */
     rb_define_method(notmuch_rb_cDatabase, "remove_message", notmuch_rb_database_remove_message, 1); /* in database.c */
