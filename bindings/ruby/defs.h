@@ -44,6 +44,7 @@ VALUE notmuch_rb_eFileNotEmailError;
 VALUE notmuch_rb_eNullPointerError;
 VALUE notmuch_rb_eTagTooLongError;
 VALUE notmuch_rb_eUnbalancedFreezeThawError;
+VALUE notmuch_rb_eUnbalancedAtomicError;
 
 ID ID_call;
 ID ID_db_create;

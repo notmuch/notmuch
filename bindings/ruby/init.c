@@ -166,7 +166,14 @@ Init_notmuch(void)
      */
     notmuch_rb_eUnbalancedFreezeThawError = rb_define_class_under(mod, "UnbalancedFreezeThawError",
             notmuch_rb_eBaseError);
-
+    /*
+     * Document-class: Notmuch::UnbalancedAtomicError
+     *
+     * Raised when notmuch_database_end_atomic has been called more times than
+     * notmuch_database_begin_atomic
+     */
+    notmuch_rb_eUnbalancedAtomicError = rb_define_class_under(mod, "UnbalancedAtomicError",
+            notmuch_rb_eBaseError);
     /*
      * Document-class: Notmuch::Database
      *

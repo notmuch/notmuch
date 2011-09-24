@@ -43,6 +43,8 @@ notmuch_rb_status_raise(notmuch_status_t status)
         rb_raise(notmuch_rb_eTagTooLongError, "tag too long");
     case NOTMUCH_STATUS_UNBALANCED_FREEZE_THAW:
         rb_raise(notmuch_rb_eUnbalancedFreezeThawError, "unbalanced freeze/thaw");
+    case NOTMUCH_STATUS_UNBALANCED_ATOMIC:
+        rb_raise(notmuch_rb_eUnbalancedAtomicError, "unbalanced atomic");
     default:
         rb_raise(notmuch_rb_eBaseError, "unknown notmuch error");
     }
