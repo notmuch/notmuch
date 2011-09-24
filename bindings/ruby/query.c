@@ -21,7 +21,7 @@
 #include "defs.h"
 
 /*
- * call-seq: QUERY.destroy => nil
+ * call-seq: QUERY.destroy! => nil
  *
  * Destroys the query, freeing all resources allocated for it.
  */

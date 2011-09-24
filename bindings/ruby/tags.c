@@ -21,7 +21,7 @@
 #include "defs.h"
 
 /*
- * call-seq: TAGS.destroy => nil
+ * call-seq: TAGS.destroy! => nil
  *
  * Destroys the tags, freeing all resources allocated for it.
  */

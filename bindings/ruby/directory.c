@@ -21,7 +21,7 @@
 #include "defs.h"
 
 /*
- * call-seq: DIR.destroy => nil
+ * call-seq: DIR.destroy! => nil
  *
  * Destroys the directory, freeing all resources allocated for it.
  */

@@ -21,7 +21,7 @@
 #include "defs.h"
 
 /*
- * call-seq: THREADS.destroy => nil
+ * call-seq: THREADS.destroy! => nil
  *
  * Destroys the threads, freeing all resources allocated for it.
  */

@@ -21,7 +21,7 @@
 #include "defs.h"
 
 /*
- * call-seq: FILENAMES.destroy => nil
+ * call-seq: FILENAMES.destroy! => nil
  *
  * Destroys the filenames, freeing all resources allocated for it.
  */

@@ -21,7 +21,7 @@
 #include "defs.h"
 
 /*
- * call-seq: MESSAGES.destroy => nil
+ * call-seq: MESSAGES.destroy! => nil
  *
  * Destroys the messages, freeing all resources allocated for it.
  */
