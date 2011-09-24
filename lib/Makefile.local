@@ -17,7 +17,7 @@ LIBNOTMUCH_VERSION_MAJOR = 1
 # the time of release for any additions to the library interface,
 # (and when it is incremented, the release version of the library should
 #  be reset to 0).
-LIBNOTMUCH_VERSION_MINOR = 3
+LIBNOTMUCH_VERSION_MINOR = 4
 
 # The release version the library interface. This should be incremented at
 # the time of release if there have been no changes to the interface, (but
