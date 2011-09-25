@@ -7,7 +7,7 @@ test_description='atomicity'
 # final database contents should be the same regardless of when (or
 # if) it is killed and restarted.
 
-if which gdb; then
+if which gdb 1>/dev/null 2>&1; then
     test_set_prereq GDB
 
 # Create a maildir structure to also stress flag synchronization
