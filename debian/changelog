@@ -1,10 +1,12 @@
 notmuch (0.9~rc1-1) experimental; urgency=low
 
   * Upstream release candidate
+    - Atomicity improvements, thanks to Austin Clements
+    - Add missing call to g_type_init, thanks to Aaron Ecay
   * notmuch-emacs: add versioned dependency on notmuch.  
     (Closes: #642240).
 
- -- David Bremner <bremner@debian.org>  Sat, 24 Sep 2011 23:12:55 -0300
+ -- David Bremner <bremner@debian.org>  Sun, 25 Sep 2011 11:26:01 -0300
 
 notmuch (0.8-1) unstable; urgency=low
 
