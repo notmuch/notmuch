@@ -68,7 +68,7 @@ class Filenames(object):
              once all derived objects are dead.
         """
         if files_p is None:
-            NotmuchError(STATUS.NULL_POINTER)
+            raise NotmuchError(STATUS.NULL_POINTER)
 
         self._files = files_p
         #save reference to parent object so we keep it alive

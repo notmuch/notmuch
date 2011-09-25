@@ -115,7 +115,7 @@ class Messages(object):
                the Python object.(?)
         """
         if msgs_p is None:
-            NotmuchError(STATUS.NULL_POINTER)
+            raise NotmuchError(STATUS.NULL_POINTER)
 
         self._msgs = msgs_p
         #store parent, so we keep them alive as long as self  is alive
@@ -290,7 +290,7 @@ class Message(object):
               objects are dead.
         """
         if msg_p is None:
-            NotmuchError(STATUS.NULL_POINTER)
+            raise NotmuchError(STATUS.NULL_POINTER)
         self._msg = msg_p
         #keep reference to parent, so we keep it alive
         self._parent = parent

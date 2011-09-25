@@ -70,7 +70,7 @@ class Tags(object):
                cache the tags in the Python object(?)
         """
         if tags_p is None:
-            NotmuchError(STATUS.NULL_POINTER)
+            raise NotmuchError(STATUS.NULL_POINTER)
 
         self._tags = tags_p
         #save reference to parent object so we keep it alive

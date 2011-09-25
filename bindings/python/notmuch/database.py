@@ -569,7 +569,7 @@ class Query(object):
         # create query, return None if too little mem available
         query_p = Query._create(db.db_p, _str(querystr))
         if query_p is None:
-            NotmuchError(STATUS.NULL_POINTER)
+            raise NotmuchError(STATUS.NULL_POINTER)
         self._query = query_p
 
     def set_sort(self, sort):
@@ -637,7 +637,7 @@ class Query(object):
         msgs_p = Query._search_messages(self._query)
 
         if msgs_p is None:
-            NotmuchError(STATUS.NULL_POINTER)
+            raise NotmuchError(STATUS.NULL_POINTER)
 
         return Messages(msgs_p, self)
 

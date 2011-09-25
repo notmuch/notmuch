@@ -95,7 +95,7 @@ class Threads(object):
                the Python object.(?)
         """
         if threads_p is None:
-            NotmuchError(STATUS.NULL_POINTER)
+            raise NotmuchError(STATUS.NULL_POINTER)
 
         self._threads = threads_p
         #store parent, so we keep them alive as long as self  is alive
@@ -206,7 +206,7 @@ class Thread(object):
               objects are dead.
         """
         if thread_p is None:
-            NotmuchError(STATUS.NULL_POINTER)
+            raise NotmuchError(STATUS.NULL_POINTER)
         self._thread = thread_p
         #keep reference to parent, so we keep it alive
         self._parent = parent
@@ -263,7 +263,7 @@ class Thread(object):
         msgs_p = Thread._get_toplevel_messages(self._thread)
 
         if msgs_p is None:
-            NotmuchError(STATUS.NULL_POINTER)
+            raise NotmuchError(STATUS.NULL_POINTER)
 
         return Messages(msgs_p, self)
 
