@@ -93,13 +93,14 @@ STATUS.__name__ = 'STATUS'
 class NotmuchError(Exception):
     def __init__(self, status=None, message=None):
         """Is initiated with a (notmuch.STATUS[,message=None])"""
-        super(NotmuchError, self).__init__(message, status)
+        self.status = status
+        self.message = message
 
     def __str__(self):
-        if self.args[0] is not None:
-            return self.args[0]
+        if self.message is not None:
+            return self.message
         else:
-            return STATUS.status2str(self.args[1])
+            return STATUS.status2str(self.status)
 
 def _str(value):
     """Ensure a nicely utf-8 encoded string to pass to libnotmuch
