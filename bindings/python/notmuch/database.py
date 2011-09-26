@@ -109,7 +109,7 @@ class Database(object):
         else:
             self.create(path)
 
-    def _verify_initialized_db(self):
+    def _assert_db_is_initialized(self):
         """Raises a NotmuchError in case self._db is still None"""
         if self._db is None:
             raise NotmuchError(STATUS.NOT_INITIALIZED)
@@ -165,9 +165,7 @@ class Database(object):
         """Returns the file path of an open database
 
         Wraps *notmuch_database_get_path*."""
-        # Raise a NotmuchError if not initialized
-        self._verify_initialized_db()
-
+        self._assert_db_is_initialized()
         return Database._get_path(self._db).decode('utf-8')
 
     def get_version(self):
@@ -177,9 +175,7 @@ class Database(object):
         :exception: :exc:`NotmuchError` with STATUS.NOT_INITIALIZED if
                     the database was not intitialized.
         """
-        # Raise a NotmuchError if not initialized
-        self._verify_initialized_db()
-
+        self._assert_db_is_initialized()
         return Database._get_version(self._db)
 
     def needs_upgrade(self):
@@ -194,9 +190,7 @@ class Database(object):
         :exception: :exc:`NotmuchError` with STATUS.NOT_INITIALIZED if
                     the database was not intitialized.
         """
-        # Raise a NotmuchError if not initialized
-        self._verify_initialized_db()
-
+        self._assert_db_is_initialized()
         return nmlib.notmuch_database_needs_upgrade(self._db)
 
     def upgrade(self):
@@ -214,9 +208,7 @@ class Database(object):
 
         :TODO: catch exceptions, document return values and etc...
         """
-        # Raise a NotmuchError if not initialized
-        self._verify_initialized_db()
-
+        self._assert_db_is_initialized()
         status = Database._upgrade(self._db, None, None)
         #TODO: catch exceptions, document return values and etc
         return status
@@ -236,8 +228,7 @@ class Database(object):
 
                         A Xapian exception occurred; atomic section not
                         entered."""
-        # Raise a NotmuchError if not initialized
-        self._verify_initialized_db()
+        self._assert_db_is_initialized()
         status = nmlib.notmuch_database_begin_atomic(self._db)
         if status != STATUS.SUCCESS:
             raise NotmuchError(status)
@@ -257,8 +248,7 @@ class Database(object):
                     ended.
                 STATUS.UNBALANCED_ATOMIC:
                     end_atomic has been called more times than begin_atomic."""
-        # Raise a NotmuchError if not initialized
-        self._verify_initialized_db()
+        self._assert_db_is_initialized()
         status = nmlib.notmuch_database_end_atomic(self._db)
         if status != STATUS.SUCCESS:
             raise NotmuchError(status)
@@ -286,9 +276,7 @@ class Database(object):
                     components same as database.
 
         """
-        # Raise a NotmuchError if not initialized
-        self._verify_initialized_db()
-
+        self._assert_db_is_initialized()
         # sanity checking if path is valid, and make path absolute
         if path[0] == os.sep:
             # we got an absolute path
@@ -357,9 +345,7 @@ class Database(object):
               STATUS.NOT_INITIALIZED
                       The database has not been initialized.
         """
-        # Raise a NotmuchError if not initialized
-        self._verify_initialized_db()
-
+        self._assert_db_is_initialized()
         msg_p = c_void_p()
         status = nmlib.notmuch_database_add_message(self._db,
                                                   _str(filename),
@@ -404,9 +390,7 @@ class Database(object):
              STATUS.NOT_INITIALIZED
                The database has not been initialized.
         """
-        # Raise a NotmuchError if not initialized
-        self._verify_initialized_db()
-
+        self._assert_db_is_initialized()
         return nmlib.notmuch_database_remove_message(self._db,
                                                        filename)
 
@@ -428,9 +412,7 @@ class Database(object):
         :exception: :exc:`NotmuchError` with STATUS.NOT_INITIALIZED if
                   the database was not intitialized.
         """
-        # Raise a NotmuchError if not initialized
-        self._verify_initialized_db()
-
+        self._assert_db_is_initialized()
         msg_p = Database._find_message(self._db, _str(msgid))
         return msg_p and Message(msg_p, self) or None
 
@@ -444,7 +426,7 @@ class Database(object):
                 * No message is found with the given filename
                 * An out-of-memory situation occurs
                 * A Xapian exception occurs"""
-        self._verify_initialized_db()
+        self._assert_db_is_initialized()
         msg_p = Database._find_message_by_filename(self._db, _str(filename))
         return msg_p and Message(msg_p, self) or None
 
@@ -454,9 +436,7 @@ class Database(object):
         :returns: :class:`Tags`
         :execption: :exc:`NotmuchError` with STATUS.NULL_POINTER on error
         """
-        # Raise a NotmuchError if not initialized
-        self._verify_initialized_db()
-
+        self._assert_db_is_initialized()
         tags_p = Database._get_all_tags(self._db)
         if tags_p == None:
             raise NotmuchError(STATUS.NULL_POINTER)
@@ -480,9 +460,7 @@ class Database(object):
 
         This function is a python extension and not in the underlying C API.
         """
-        # Raise a NotmuchError if not initialized
-        self._verify_initialized_db()
-
+        self._assert_db_is_initialized()
         return Query(self, querystring)
 
     def __repr__(self):
