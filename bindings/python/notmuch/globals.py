@@ -89,10 +89,32 @@ Invoke the class method `notmuch.STATUS.status2str` with a status value as
 argument to receive a human readable string"""
 STATUS.__name__ = 'STATUS'
 
-
 class NotmuchError(Exception):
-    def __init__(self, status=None, message=None):
-        """Is initiated with a (notmuch.STATUS[,message=None])"""
+    """Is initiated with a (notmuch.STATUS[, message=None]). It will not
+    return an instance of the class NotmuchError, but a derived instance
+    of a more specific Error Message, e.g. OutOfMemoryError. Each status
+    but SUCCESS has a corresponding subclassed Exception."""
+
+    @classmethod
+    def get_subclass_exc(cls, status, message=None):
+        """Returns a fine grained Exception() type,detailing the error status"""
+        subclasses = {
+            STATUS.OUT_OF_MEMORY: OutOfMemoryError,
+            STATUS.READ_ONLY_DATABASE: ReadOnlyDatabaseError,
+            STATUS.XAPIAN_EXCEPTION: XapianError,
+            STATUS.FILE_ERROR: FileError,
+            STATUS.FILE_NOT_EMAIL: FileNotEmailError,
+            STATUS.DUPLICATE_MESSAGE_ID: DuplicateMessageIdError,
+            STATUS.NULL_POINTER: NullPointerError,
+            STATUS.TAG_TOO_LONG: TagTooLongError,
+            STATUS.UNBALANCED_FREEZE_THAW: UnbalancedFreezeThawError,
+            STATUS.UNBALANCED_ATOMIC: UnbalancedAtomicError,
+            STATUS.NOT_INITIALIZED: NotInitializedError
+        }
+        assert 0 < status <= len(subclasses)
+        return subclasses[status](status, message)
+
+    def __init__(self, status, message=None):
         self.status = status
         self.message = message
 
@@ -103,6 +125,32 @@ class NotmuchError(Exception):
             return STATUS.status2str(self.status)
         else:
             return 'Unknown error'
+
+# List of Subclassed exceptions that correspond to STATUS values and are
+# subclasses of NotmuchError:
+class OutOfMemoryError(NotmuchError):
+    pass
+class ReadOnlyDatabaseError(NotmuchError):
+    pass
+class XapianError(NotmuchError):
+    pass
+class FileError(NotmuchError):
+    pass
+class FileNotEmailError(NotmuchError):
+    pass
+class DuplicateMessageIdError(NotmuchError):
+    pass
+class NullPointerError(NotmuchError):
+    pass
+class TagTooLongError(NotmuchError):
+    pass
+class UnbalancedFreezeThawError(NotmuchError):
+    pass
+class UnbalancedAtomicError(NotmuchError):
+    pass
+class NotInitializedError(NotmuchError):
+    pass
+
 
 def _str(value):
     """Ensure a nicely utf-8 encoded string to pass to libnotmuch
