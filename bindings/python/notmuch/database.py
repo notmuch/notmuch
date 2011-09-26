@@ -697,7 +697,7 @@ class Directory(object):
     _get_child_directories = nmlib.notmuch_directory_get_child_directories
     _get_child_directories.restype = c_void_p
 
-    def _verify_dir_initialized(self):
+    def _assert_dir_is_initialized(self):
         """Raises a NotmuchError(STATUS.NOT_INITIALIZED) if dir_p is None"""
         if self._dir_p is None:
             raise NotmuchError(STATUS.NOT_INITIALIZED)
@@ -752,9 +752,7 @@ class Directory(object):
                         STATUS.NOT_INITIALIZED
                           The directory has not been initialized
         """
-        #Raise a NotmuchError(STATUS.NOT_INITIALIZED) if the dir_p is None
-        self._verify_dir_initialized()
-
+        self._assert_dir_is_initialized()
         #TODO: make sure, we convert the mtime parameter to a 'c_long'
         status = Directory._set_mtime(self._dir_p, mtime)
 
@@ -776,9 +774,7 @@ class Directory(object):
                         STATUS.NOT_INITIALIZED
                           The directory has not been initialized
         """
-        #Raise a NotmuchError(STATUS.NOT_INITIALIZED) if self.dir_p is None
-        self._verify_dir_initialized()
-
+        self._assert_dir_is_initialized()
         return Directory._get_mtime(self._dir_p)
 
     # Make mtime attribute a property of Directory()
@@ -795,9 +791,7 @@ class Directory(object):
         The returned filenames will be the basename-entries only (not
         complete paths.
         """
-        #Raise a NotmuchError(STATUS.NOT_INITIALIZED) if self._dir_p is None
-        self._verify_dir_initialized()
-
+        self._assert_dir_is_initialized()
         files_p = Directory._get_child_files(self._dir_p)
         return Filenames(files_p, self)
 
@@ -808,9 +802,7 @@ class Directory(object):
         The returned filenames will be the basename-entries only (not
         complete paths.
         """
-        #Raise a NotmuchError(STATUS.NOT_INITIALIZED) if self._dir_p is None
-        self._verify_dir_initialized()
-
+        self._assert_dir_is_initialized()
         files_p = Directory._get_child_directories(self._dir_p)
         return Filenames(files_p, self)
 
