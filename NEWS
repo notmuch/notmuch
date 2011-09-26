@@ -22,6 +22,13 @@ New functions
 
   notmuch_database_find_message_by_filename does exactly what it says.
 
+Ruby bindings changes
+---------------------
+
+  Wrap new library functions notmuch_database_{begin,end}_atomic, 
+  and add new exception Notmuch::UnbalancedAtomicError. Rename destroy 
+  to destroy! according to Ruby naming conventions.
+  
 
 Notmuch 0.8 (2011-09-10)
 ========================
