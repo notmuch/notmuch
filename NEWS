@@ -22,6 +22,12 @@ New functions
 
   notmuch_database_find_message_by_filename does exactly what it says.
 
+Python bindings changes
+-----------------------
+
+  Re-encode python unicode objects to utf-8 before passing back to
+  libnotmuch.
+
 Ruby bindings changes
 ---------------------
 
