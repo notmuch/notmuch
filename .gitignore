@@ -4,7 +4,7 @@ TAGS
 tags
 *cscope*
 .deps
-notmuch
+/notmuch
 notmuch.sym
 notmuch-shared
 notmuch.1.gz
