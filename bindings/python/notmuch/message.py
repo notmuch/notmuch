@@ -187,7 +187,7 @@ class Messages(object):
             set_end = "]"
             set_sep = ", "
         else:
-            raise Exception
+            raise TypeError("format must be either 'text' or 'json'")
 
         first_set = True
 
@@ -208,10 +208,8 @@ class Messages(object):
             if (match or entire_thread):
                 if format.lower() == "text":
                     sys.stdout.write(msg.format_message_as_text(indent))
-                elif format.lower() == "json":
-                    sys.stdout.write(msg.format_message_as_json(indent))
                 else:
-                    raise NotmuchError
+                    sys.stdout.write(msg.format_message_as_json(indent))
                 next_indent = indent + 1
 
             # get replies and print them also out (if there are any)
