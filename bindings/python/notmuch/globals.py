@@ -99,8 +99,10 @@ class NotmuchError(Exception):
     def __str__(self):
         if self.message is not None:
             return self.message
-        else:
+        elif self.status is not None:
             return STATUS.status2str(self.status)
+        else:
+            return 'Unknown error'
 
 def _str(value):
     """Ensure a nicely utf-8 encoded string to pass to libnotmuch
