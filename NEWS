@@ -1,3 +1,28 @@
+Notmuch 0.9 (2011-10-01)
+========================
+
+New, general features
+---------------------
+
+Correct handling of interruptions during "notmuch new"
+
+  "notmuch new" now operates as a series of small, self-consistent
+  transactions, so it can correctly resume after an interruption or
+  crash.  Previously, interruption could lose existing tags, fail to
+  detect messages on resume, or leave the database in a state
+  temporarily or permanently inconsistent with the mail store.
+
+Library changes
+---------------
+
+New functions
+
+  notmuch_database_begin_atomic and notmuch_database_end_atomic allow
+  multiple database operations to be performed atomically.
+
+  notmuch_database_find_message_by_filename does exactly what it says.
+
+
 Notmuch 0.8 (2011-09-10)
 ========================
 
