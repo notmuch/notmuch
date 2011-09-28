@@ -63,6 +63,10 @@ class Database(object):
     _find_message = nmlib.notmuch_database_find_message
     _find_message.restype = c_void_p
 
+    """notmuch_database_find_message_by_filename"""
+    _find_message_by_filename = nmlib.notmuch_database_find_message_by_filename
+    _find_message_by_filename.restype = c_void_p
+
     """notmuch_database_get_all_tags"""
     _get_all_tags = nmlib.notmuch_database_get_all_tags
     _get_all_tags.restype = c_void_p
@@ -291,7 +295,7 @@ class Database(object):
               STATUS.DUPLICATE_MESSAGE_ID
                   Message has the same message ID as another message already
                   in the database. The new filename was successfully added
-                  to the message in the database.
+                  to the list of the filenames for the existing message.
 
         :rtype:   2-tuple(:class:`Message`, STATUS)
 
@@ -329,7 +333,7 @@ class Database(object):
         return (msg, status)
 
     def remove_message(self, filename):
-        """Removes a message from the given notmuch database
+        """Removes a message (filename) from the given notmuch database
 
         Note that only this particular filename association is removed from
         the database. If the same message (as determined by the message ID)
@@ -385,6 +389,20 @@ class Database(object):
         self._verify_initialized_db()
 
         msg_p = Database._find_message(self._db, _str(msgid))
+        return msg_p and Message(msg_p, self) or None
+
+    def find_message_by_filename(self, filename):
+        """Find a message with the given filename
+
+        :returns: If the database contains a message with the given
+            filename, then a class:`Message:` is returned.  This
+            function returns None in the following situations:
+
+                * No message is found with the given filename
+                * An out-of-memory situation occurs
+                * A Xapian exception occurs"""
+        self._verify_initialized_db()
+        msg_p = Database._find_message_by_filename(self._db, _str(filename))
         return msg_p and Message(msg_p, self) or None
 
     def get_all_tags(self):
