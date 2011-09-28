@@ -221,6 +221,49 @@ class Database(object):
         #TODO: catch exceptions, document return values and etc
         return status
 
+    def begin_atomic(self):
+        """Begin an atomic database operation
+
+        Any modifications performed between a successful
+        :meth:`begin_atomic` and a :meth:`end_atomic` will be applied to
+        the database atomically.  Note that, unlike a typical database
+        transaction, this only ensures atomicity, not durability;
+        neither begin nor end necessarily flush modifications to disk.
+
+        :returns: STATUS.SUCCESS or raises
+
+        :exception: :exc:`NotmuchError` STATUS.XAPIAN_EXCEPTION::
+
+                        A Xapian exception occurred; atomic section not
+                        entered."""
+        # Raise a NotmuchError if not initialized
+        self._verify_initialized_db()
+        status = nmlib.notmuch_database_begin_atomic(self._db)
+        if status != STATUS.SUCCESS:
+            raise NotmuchError(status)
+        return status
+
+    def end_atomic(self):
+        """Indicate the end of an atomic database operation
+
+        See :meth:`begin_atomic` for details.
+
+        :returns: STATUS.SUCCESS or raises
+
+        :exception:
+            :exc:`NotmuchError`:
+                STATUS.XAPIAN_EXCEPTION
+                    A Xapian exception occurred; atomic section not
+                    ended.
+                STATUS.UNBALANCED_ATOMIC:
+                    end_atomic has been called more times than begin_atomic."""
+        # Raise a NotmuchError if not initialized
+        self._verify_initialized_db()
+        status = nmlib.notmuch_database_end_atomic(self._db)
+        if status != STATUS.SUCCESS:
+            raise NotmuchError(status)
+        return status
+
     def get_directory(self, path):
         """Returns a :class:`Directory` of path,
         (creating it if it does not exist(?))

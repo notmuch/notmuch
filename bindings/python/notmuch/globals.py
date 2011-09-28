@@ -65,6 +65,7 @@ STATUS = Status(['SUCCESS',
   'NULL_POINTER',
   'TAG_TOO_LONG',
   'UNBALANCED_FREEZE_THAW',
+  'UNBALANCED_ATOMIC',
   'NOT_INITIALIZED'])
 """STATUS is a class, whose attributes provide constants that serve as return
 indicators for notmuch functions. Currently the following ones are defined. For
@@ -81,6 +82,7 @@ description.
   * NULL_POINTER
   * TAG_TOO_LONG
   * UNBALANCED_FREEZE_THAW
+  * UNBALANCED_ATOMIC
   * NOT_INITIALIZED
 
 Invoke the class method `notmuch.STATUS.status2str` with a status value as
