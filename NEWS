@@ -29,6 +29,8 @@ Python bindings changes
     libnotmuch.
   - Support Database().begin_atomic()/end_atomic()
   - Support Database().find_message_by_filename()
+    NB! This needs a db opened in READ-WRITE mode currently, or it will crash
+    the python process. The is a limitation (=bug) of the underlying libnotmuch.
   - Fixes where we would not throw NotmuchErrors when we should (Justus Winter)
 
 Ruby bindings changes
