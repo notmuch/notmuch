@@ -164,7 +164,7 @@ class Database(object):
     def get_path(self):
         """Returns the file path of an open database
 
-        Wraps *notmuch_database_get_path*."""
+        .. ..:: Wraps underlying `notmuch_database_get_path`"""
         self._assert_db_is_initialized()
         return Database._get_path(self._db).decode('utf-8')
 
@@ -172,7 +172,7 @@ class Database(object):
         """Returns the database format version
 
         :returns: The database version as positive integer
-        :exception: :exc:`NotmuchError` with STATUS.NOT_INITIALIZED if
+        :exception: :exc:`NotmuchError` with :attr:`STATUS`.NOT_INITIALIZED if
                     the database was not intitialized.
         """
         self._assert_db_is_initialized()
@@ -187,7 +187,7 @@ class Database(object):
         etc.) will work unless :meth:`upgrade` is called successfully first.
 
         :returns: `True` or `False`
-        :exception: :exc:`NotmuchError` with STATUS.NOT_INITIALIZED if
+        :exception: :exc:`NotmuchError` with :attr:`STATUS`.NOT_INITIALIZED if
                     the database was not intitialized.
         """
         self._assert_db_is_initialized()
@@ -222,9 +222,9 @@ class Database(object):
         transaction, this only ensures atomicity, not durability;
         neither begin nor end necessarily flush modifications to disk.
 
-        :returns: STATUS.SUCCESS or raises
+        :returns: :attr:`STATUS`.SUCCESS or raises
 
-        :exception: :exc:`NotmuchError` STATUS.XAPIAN_EXCEPTION::
+        :exception: :exc:`NotmuchError` :attr:`STATUS`.XAPIAN_EXCEPTION::
 
                         A Xapian exception occurred; atomic section not
                         entered."""
@@ -239,14 +239,14 @@ class Database(object):
 
         See :meth:`begin_atomic` for details.
 
-        :returns: STATUS.SUCCESS or raises
+        :returns: :attr:`STATUS`.SUCCESS or raises
 
         :exception:
             :exc:`NotmuchError`:
-                STATUS.XAPIAN_EXCEPTION
+                :attr:`STATUS`.XAPIAN_EXCEPTION
                     A Xapian exception occurred; atomic section not
                     ended.
-                STATUS.UNBALANCED_ATOMIC:
+                :attr:`STATUS`.UNBALANCED_ATOMIC:
                     end_atomic has been called more times than begin_atomic."""
         self._assert_db_is_initialized()
         status = nmlib.notmuch_database_end_atomic(self._db)
@@ -259,7 +259,7 @@ class Database(object):
         (creating it if it does not exist(?))
 
         .. warning:: This call needs a writeable database in
-           Database.MODE.READ_WRITE mode. The underlying library will exit the
+           :attr:`Database.MODE`.READ_WRITE mode. The underlying library will exit the
            program if this method is used on a read-only database!
 
         :param path: An unicode string containing the path relative to the path
@@ -268,10 +268,10 @@ class Database(object):
         :returns: :class:`Directory` or raises an exception.
         :exception: :exc:`NotmuchError`
 
-                  STATUS.NOT_INITIALIZED
+                  :attr:`STATUS`.NOT_INITIALIZED
                     If the database was not intitialized.
 
-                  STATUS.FILE_ERROR
+                  :attr:`STATUS`.FILE_ERROR
                     If path is not relative database or absolute with initial
                     components same as database.
 
@@ -298,15 +298,16 @@ class Database(object):
     def add_message(self, filename, sync_maildir_flags=False):
         """Adds a new message to the database
 
-        :param filename: should be a path relative to the path of the open
-        database (see :meth:`get_path`), or else should be an absolute
-        filename with initial components that match the path of the
-        database.
+        :param filename: should be a path relative to the path of the
+            open database (see :meth:`get_path`), or else should be an
+            absolute filename with initial components that match the
+            path of the database.
 
-        The file should be a single mail message (not a multi-message mbox)
-        that is expected to remain at its current location, since the
-        notmuch database will reference the filename, and will not copy the
-        entire contents of the file.
+            The file should be a single mail message (not a
+            multi-message mbox) that is expected to remain at its
+            current location, since the notmuch database will reference
+            the filename, and will not copy the entire contents of the
+            file.
 
         :param sync_maildir_flags: If the message contains Maildir
             flags, we will -depending on the notmuch configuration- sync
@@ -319,30 +320,30 @@ class Database(object):
 
            1) a :class:`Message` object that can be used for things
               such as adding tags to the just-added message.
-           2) one of the following STATUS values:
+           2) one of the following :attr:`STATUS` values:
 
-              STATUS.SUCCESS
+              :attr:`STATUS`.SUCCESS
                   Message successfully added to database.
-              STATUS.DUPLICATE_MESSAGE_ID
+              :attr:`STATUS`.DUPLICATE_MESSAGE_ID
                   Message has the same message ID as another message already
                   in the database. The new filename was successfully added
                   to the list of the filenames for the existing message.
 
-        :rtype:   2-tuple(:class:`Message`, STATUS)
+        :rtype:   2-tuple(:class:`Message`, :attr:`STATUS`)
 
         :exception: Raises a :exc:`NotmuchError` with the following meaning.
               If such an exception occurs, nothing was added to the database.
 
-              STATUS.FILE_ERROR
+              :attr:`STATUS`.FILE_ERROR
                       An error occurred trying to open the file, (such as
                       permission denied, or file not found, etc.).
-              STATUS.FILE_NOT_EMAIL
+              :attr:`STATUS`.FILE_NOT_EMAIL
                       The contents of filename don't look like an email
                       message.
-              STATUS.READ_ONLY_DATABASE
+              :attr:`STATUS`.READ_ONLY_DATABASE
                       Database was opened in read-only mode so no message can
                       be added.
-              STATUS.NOT_INITIALIZED
+              :attr:`STATUS`.NOT_INITIALIZED
                       The database has not been initialized.
         """
         self._assert_db_is_initialized()
@@ -371,12 +372,12 @@ class Database(object):
         is removed for a particular message, the database content for that
         message will be entirely removed.
 
-        :returns: A STATUS value with the following meaning:
+        :returns: A :attr:`STATUS` value with the following meaning:
 
-             STATUS.SUCCESS
+             :attr:`STATUS`.SUCCESS
                The last filename was removed and the message was removed
                from the database.
-             STATUS.DUPLICATE_MESSAGE_ID
+             :attr:`STATUS`.DUPLICATE_MESSAGE_ID
                This filename was removed but the message persists in the
                database with at least one other filename.
 
@@ -384,10 +385,10 @@ class Database(object):
              If such an exception occurs, nothing was removed from the
              database.
 
-             STATUS.READ_ONLY_DATABASE
+             :attr:`STATUS`.READ_ONLY_DATABASE
                Database was opened in read-only mode so no message can be
                removed.
-             STATUS.NOT_INITIALIZED
+             :attr:`STATUS`.NOT_INITIALIZED
                The database has not been initialized.
         """
         self._assert_db_is_initialized()
@@ -409,7 +410,7 @@ class Database(object):
                   another program in the meantime. A return value of
                   `None` is therefore no guarantee that the message
                   does not exist.
-        :exception: :exc:`NotmuchError` with STATUS.NOT_INITIALIZED if
+        :exception: :exc:`NotmuchError` with :attr:`STATUS`.NOT_INITIALIZED if
                   the database was not intitialized.
         """
         self._assert_db_is_initialized()
@@ -418,6 +419,11 @@ class Database(object):
 
     def find_message_by_filename(self, filename):
         """Find a message with the given filename
+
+        .. warning:: This call needs a writeable database in
+           :attr:`Database.MODE`.READ_WRITE mode. The underlying library will
+           exit the program if this method is used on a read-only
+           database!
 
         :returns: If the database contains a message with the given
             filename, then a class:`Message:` is returned.  This
@@ -434,7 +440,7 @@ class Database(object):
         """Returns :class:`Tags` with a list of all tags found in the database
 
         :returns: :class:`Tags`
-        :execption: :exc:`NotmuchError` with STATUS.NULL_POINTER on error
+        :execption: :exc:`NotmuchError` with :attr:`STATUS`.NULL_POINTER on error
         """
         self._assert_db_is_initialized()
         tags_p = Database._get_all_tags(self._db)
@@ -558,8 +564,8 @@ class Query(object):
         :returns: Nothing
         :exception: :exc:`NotmuchError`
 
-                      * STATUS.NOT_INITIALIZED if db is not inited
-                      * STATUS.NULL_POINTER if the query creation failed
+                      * :attr:`STATUS`.NOT_INITIALIZED if db is not inited
+                      * :attr:`STATUS`.NULL_POINTER if the query creation failed
                         (too little memory)
         """
         if db.db_p is None:
@@ -579,7 +585,7 @@ class Query(object):
 
         :param sort: Sort order (see :attr:`Query.SORT`)
         :returns: Nothing
-        :exception: :exc:`NotmuchError` STATUS.NOT_INITIALIZED if query has not
+        :exception: :exc:`NotmuchError` :attr:`STATUS`.NOT_INITIALIZED if query has not
                     been initialized.
         """
         if self._query is None:
@@ -605,8 +611,8 @@ class Query(object):
         :returns: :class:`Threads`
         :exception: :exc:`NotmuchError`
 
-                      * STATUS.NOT_INITIALIZED if query is not inited
-                      * STATUS.NULL_POINTER if search_threads failed
+                      * :attr:`STATUS`.NOT_INITIALIZED if query is not inited
+                      * :attr:`STATUS`.NULL_POINTER if search_threads failed
         """
         if self._query is None:
             raise NotmuchError(STATUS.NOT_INITIALIZED)
@@ -628,8 +634,8 @@ class Query(object):
         :returns: :class:`Messages`
         :exception: :exc:`NotmuchError`
 
-                      * STATUS.NOT_INITIALIZED if query is not inited
-                      * STATUS.NULL_POINTER if search_messages failed
+                      * :attr:`STATUS`.NOT_INITIALIZED if query is not inited
+                      * :attr:`STATUS`.NULL_POINTER if search_messages failed
         """
         if self._query is None:
             raise NotmuchError(STATUS.NOT_INITIALIZED)
@@ -654,7 +660,7 @@ class Query(object):
         :returns: :class:`Messages`
         :exception: :exc:`NotmuchError`
 
-                      * STATUS.NOT_INITIALIZED if query is not inited
+                      * :attr:`STATUS`.NOT_INITIALIZED if query is not inited
         """
         if self._query is None:
             raise NotmuchError(STATUS.NOT_INITIALIZED)
@@ -698,7 +704,7 @@ class Directory(object):
     _get_child_directories.restype = c_void_p
 
     def _assert_dir_is_initialized(self):
-        """Raises a NotmuchError(STATUS.NOT_INITIALIZED) if dir_p is None"""
+        """Raises a NotmuchError(:attr:`STATUS`.NOT_INITIALIZED) if dir_p is None"""
         if self._dir_p is None:
             raise NotmuchError(STATUS.NOT_INITIALIZED)
 
@@ -744,12 +750,12 @@ class Directory(object):
           :returns: Nothing on success, raising an exception on failure.
           :exception: :exc:`NotmuchError`:
 
-                        STATUS.XAPIAN_EXCEPTION
+                        :attr:`STATUS`.XAPIAN_EXCEPTION
                           A Xapian exception occurred, mtime not stored.
-                        STATUS.READ_ONLY_DATABASE
+                        :attr:`STATUS`.READ_ONLY_DATABASE
                           Database was opened in read-only mode so directory
                           mtime cannot be modified.
-                        STATUS.NOT_INITIALIZED
+                        :attr:`STATUS`.NOT_INITIALIZED
                           The directory has not been initialized
         """
         self._assert_dir_is_initialized()
@@ -771,7 +777,7 @@ class Directory(object):
         :returns: Nothing on success, raising an exception on failure.
         :exception: :exc:`NotmuchError`:
 
-                        STATUS.NOT_INITIALIZED
+                        :attr:`STATUS`.NOT_INITIALIZED
                           The directory has not been initialized
         """
         self._assert_dir_is_initialized()
@@ -865,7 +871,7 @@ class Filenames(object):
                  #THIS FAILS
                  files = Database().get_directory('').get_child_files()
                  if len(files) > 0:              #this 'exhausts' msgs
-                     # next line raises NotmuchError(STATUS.NOT_INITIALIZED)!!!
+                     # next line raises NotmuchError(:attr:`STATUS`.NOT_INITIALIZED)!!!
                      for file in files: print file
         """
         if self._files_p is None:

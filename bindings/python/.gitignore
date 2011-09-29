@@ -1,2 +1,3 @@
 *.py[co]
-/build
+/docs/build
+/docs/html

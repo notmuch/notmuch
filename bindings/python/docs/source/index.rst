@@ -130,7 +130,7 @@ More information on specific topics can be found on the following pages:
 
    .. method:: __len__()
 
-   .. note:: :meth:`__len__` was removed in version 0.6 as it exhausted
+   .. warning:: :meth:`__len__` was removed in version 0.6 as it exhausted
        the iterator and broke list(Messages()). Use the
        :meth:`Query.count_messages` function or use
        `len(list(msgs))`.
@@ -195,7 +195,12 @@ More information on specific topics can be found on the following pages:
 .. autoclass:: Tags
    :members:
 
-   .. automethod:: __len__
+   .. method:: __len__
+
+       .. warning:: :meth:`__len__` was removed in version 0.6 as it
+           exhausted the iterator and broke list(Tags()). Use
+           :meth:`len(list(msgs))` instead if you need to know the
+           number of tags.
 
    .. automethod:: __str__
 
