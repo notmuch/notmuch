@@ -25,8 +25,11 @@ New functions
 Python bindings changes
 -----------------------
 
-  Re-encode python unicode objects to utf-8 before passing back to
-  libnotmuch.
+  - Re-encode python unicode objects to utf-8 before passing back to
+    libnotmuch.
+  - Support Database().begin_atomic()/end_atomic()
+  - Support Database().find_message_by_filename()
+  - Fixes where we would not throw NotmuchErrors when we should (Justus Winter)
 
 Ruby bindings changes
 ---------------------
