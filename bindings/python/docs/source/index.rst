@@ -55,6 +55,10 @@ More information on specific topics can be found on the following pages:
 
    .. automethod:: upgrade
 
+   .. automethod:: begin_atomic
+
+   .. automethod:: end_atomic
+
    .. automethod:: get_directory
 
    .. automethod:: add_message
@@ -62,6 +66,8 @@ More information on specific topics can be found on the following pages:
    .. automethod:: remove_message
 
    .. automethod:: find_message
+
+   .. automethod:: find_message_by_filename
 
    .. automethod:: get_all_tags
 

@@ -224,10 +224,11 @@ class Database(object):
 
         :returns: :attr:`STATUS`.SUCCESS or raises
 
-        :exception: :exc:`NotmuchError` :attr:`STATUS`.XAPIAN_EXCEPTION::
+        :exception: :exc:`NotmuchError`:
+            :attr:`STATUS`.XAPIAN_EXCEPTION
+                Xapian exception occurred; atomic section not entered.
 
-                        A Xapian exception occurred; atomic section not
-                        entered."""
+        *Added in notmuch 0.9*"""
         self._assert_db_is_initialized()
         status = nmlib.notmuch_database_begin_atomic(self._db)
         if status != STATUS.SUCCESS:
@@ -247,7 +248,9 @@ class Database(object):
                     A Xapian exception occurred; atomic section not
                     ended.
                 :attr:`STATUS`.UNBALANCED_ATOMIC:
-                    end_atomic has been called more times than begin_atomic."""
+                    end_atomic has been called more times than begin_atomic.
+
+        *Added in notmuch 0.9*"""
         self._assert_db_is_initialized()
         status = nmlib.notmuch_database_end_atomic(self._db)
         if status != STATUS.SUCCESS:
@@ -431,7 +434,9 @@ class Database(object):
 
                 * No message is found with the given filename
                 * An out-of-memory situation occurs
-                * A Xapian exception occurs"""
+                * A Xapian exception occurs
+
+        *Added in notmuch 0.9*"""
         self._assert_db_is_initialized()
         msg_p = Database._find_message_by_filename(self._db, _str(filename))
         return msg_p and Message(msg_p, self) or None
