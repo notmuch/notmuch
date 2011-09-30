@@ -82,13 +82,11 @@ class Filenames(object):
         if self._files is None:
             raise NotmuchError(STATUS.NOT_INITIALIZED)
 
-        if not nmlib.notmuch_filenames_valid(self._files):
-            self._files = None
-            return
+        while nmlib.notmuch_filenames_valid(self._files):
+            yield Filenames._get(self._files)
+            nmlib.notmuch_filenames_move_to_next(self._files)
 
-        file = Filenames._get(self._files)
-        nmlib.notmuch_filenames_move_to_next(self._files)
-        yield file
+        self._files = None
 
     def __str__(self):
         """Represent Filenames() as newline-separated list of full paths
