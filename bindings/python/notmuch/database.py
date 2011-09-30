@@ -112,7 +112,7 @@ class Database(object):
     def _assert_db_is_initialized(self):
         """Raises a NotmuchError in case self._db is still None"""
         if self._db is None:
-            raise NotmuchError.get_subclass_exc(STATUS.NOT_INITIALIZED)
+            raise NotmuchError(STATUS.NOT_INITIALIZED)
 
     def create(self, path):
         """Creates a new notmuch database
@@ -231,7 +231,7 @@ class Database(object):
         self._assert_db_is_initialized()
         status = nmlib.notmuch_database_begin_atomic(self._db)
         if status != STATUS.SUCCESS:
-            raise NotmuchError.get_subclass_exc(status)
+            raise NotmuchError(status)
         return status
 
     def end_atomic(self):
@@ -253,7 +253,7 @@ class Database(object):
         self._assert_db_is_initialized()
         status = nmlib.notmuch_database_end_atomic(self._db)
         if status != STATUS.SUCCESS:
-            raise NotmuchError.get_subclass_exc(status)
+            raise NotmuchError(status)
         return status
 
     def get_directory(self, path):
@@ -284,7 +284,7 @@ class Database(object):
             # we got an absolute path
             if not path.startswith(self.get_path()):
                 # but its initial components are not equal to the db path
-                raise NotmuchError.get_subclass_exc(STATUS.FILE_ERROR,
+                raise NotmuchError(STATUS.FILE_ERROR,
                                    message="Database().get_directory() called "
                                            "with a wrong absolute path.")
             abs_dirpath = path
@@ -355,7 +355,7 @@ class Database(object):
                                                   byref(msg_p))
 
         if not status in [STATUS.SUCCESS, STATUS.DUPLICATE_MESSAGE_ID]:
-            raise NotmuchError.get_subclass_exc(status)
+            raise NotmuchError(status)
 
         #construct Message() and return
         msg = Message(msg_p, self)
@@ -449,7 +449,7 @@ class Database(object):
         self._assert_db_is_initialized()
         tags_p = Database._get_all_tags(self._db)
         if tags_p == None:
-            raise NotmuchError.get_subclass_exc(STATUS.NULL_POINTER)
+            raise NotmuchError(STATUS.NULL_POINTER)
         return Tags(tags_p, self)
 
     def create_query(self, querystring):
@@ -573,13 +573,13 @@ class Query(object):
                         (too little memory)
         """
         if db.db_p is None:
-            raise NotmuchError.get_subclass_exc(STATUS.NOT_INITIALIZED)
+            raise NotmuchError(STATUS.NOT_INITIALIZED)
         # create reference to parent db to keep it alive
         self._db = db
         # create query, return None if too little mem available
         query_p = Query._create(db.db_p, _str(querystr))
         if query_p is None:
-            raise NotmuchError.get_subclass_exc(STATUS.NULL_POINTER)
+            raise NotmuchError(STATUS.NULL_POINTER)
         self._query = query_p
 
     def set_sort(self, sort):
@@ -593,7 +593,7 @@ class Query(object):
                     been initialized.
         """
         if self._query is None:
-            raise NotmuchError.get_subclass_exc(STATUS.NOT_INITIALIZED)
+            raise NotmuchError(STATUS.NOT_INITIALIZED)
 
         self.sort = sort
         nmlib.notmuch_query_set_sort(self._query, sort)
@@ -619,7 +619,7 @@ class Query(object):
                       * :attr:`STATUS`.NULL_POINTER if search_threads failed
         """
         if self._query is None:
-            raise NotmuchError.get_subclass_exc(STATUS.NOT_INITIALIZED)
+            raise NotmuchError(STATUS.NOT_INITIALIZED)
 
         threads_p = Query._search_threads(self._query)
 
@@ -642,12 +642,12 @@ class Query(object):
                       * :attr:`STATUS`.NULL_POINTER if search_messages failed
         """
         if self._query is None:
-            raise NotmuchError.get_subclass_exc(STATUS.NOT_INITIALIZED)
+            raise NotmuchError(STATUS.NOT_INITIALIZED)
 
         msgs_p = Query._search_messages(self._query)
 
         if msgs_p is None:
-            raise NotmuchError.get_subclass_exc(STATUS.NULL_POINTER)
+            raise NotmuchError(STATUS.NULL_POINTER)
 
         return Messages(msgs_p, self)
 
@@ -667,7 +667,7 @@ class Query(object):
                       * :attr:`STATUS`.NOT_INITIALIZED if query is not inited
         """
         if self._query is None:
-            raise NotmuchError.get_subclass_exc(STATUS.NOT_INITIALIZED)
+            raise NotmuchError(STATUS.NOT_INITIALIZED)
 
         return Query._count_messages(self._query)
 
@@ -710,7 +710,7 @@ class Directory(object):
     def _assert_dir_is_initialized(self):
         """Raises a NotmuchError(:attr:`STATUS`.NOT_INITIALIZED) if dir_p is None"""
         if self._dir_p is None:
-            raise NotmuchError.get_subclass_exc(STATUS.NOT_INITIALIZED)
+            raise NotmuchError(STATUS.NOT_INITIALIZED)
 
     def __init__(self, path, dir_p, parent):
         """
@@ -770,7 +770,7 @@ class Directory(object):
         if status == STATUS.SUCCESS:
             return
         #fail with Exception otherwise
-        raise NotmuchError.get_subclass_exc(status)
+        raise NotmuchError(status)
 
     def get_mtime(self):
         """Gets the mtime value of this directory in the database
@@ -856,7 +856,7 @@ class Filenames(object):
 
     def next(self):
         if self._files_p is None:
-            raise NotmuchError.get_subclass_exc(STATUS.NOT_INITIALIZED)
+            raise NotmuchError(STATUS.NOT_INITIALIZED)
 
         if not nmlib.notmuch_filenames_valid(self._files_p):
             self._files_p = None
@@ -879,7 +879,7 @@ class Filenames(object):
                      for file in files: print file
         """
         if self._files_p is None:
-            raise NotmuchError.get_subclass_exc(STATUS.NOT_INITIALIZED)
+            raise NotmuchError(STATUS.NOT_INITIALIZED)
 
         i = 0
         while nmlib.notmuch_filenames_valid(self._files_p):

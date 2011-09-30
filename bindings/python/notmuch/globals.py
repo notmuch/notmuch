@@ -96,7 +96,7 @@ class NotmuchError(Exception):
     but SUCCESS has a corresponding subclassed Exception."""
 
     @classmethod
-    def get_subclass_exc(cls, status, message=None):
+    def get_exc_subclass(cls, status):
         """Returns a fine grained Exception() type,detailing the error status"""
         subclasses = {
             STATUS.OUT_OF_MEMORY: OutOfMemoryError,
@@ -112,9 +112,23 @@ class NotmuchError(Exception):
             STATUS.NOT_INITIALIZED: NotInitializedError
         }
         assert 0 < status <= len(subclasses)
-        return subclasses[status](status, message)
+        return subclasses[status]
 
-    def __init__(self, status, message=None):
+    def __new__(cls, *args, **kwargs):
+        """Return a correct subclass of NotmuchError if needed
+
+        We return a NotmuchError instance if status is None (or 0) and a
+        subclass that inherits from NotmuchError depending on the
+        'status' parameter otherwise."""
+        # get 'status'. Passed in as arg or kwarg?
+        status = args[0] if len(args) else kwargs.get('status', None)
+        # no 'status' or cls is subclass already, return 'cls' instance
+        if not status or cls != NotmuchError:
+            return super(NotmuchError, cls).__new__(cls)
+        subclass = cls.get_exc_subclass(status) # which class to use?
+        return subclass.__new__(subclass, *args, **kwargs)
+
+    def __init__(self, status=None, message=None):
         self.status = status
         self.message = message
 
@@ -127,7 +141,7 @@ class NotmuchError(Exception):
             return 'Unknown error'
 
 # List of Subclassed exceptions that correspond to STATUS values and are
-# subclasses of NotmuchError:
+# subclasses of NotmuchError.
 class OutOfMemoryError(NotmuchError):
     pass
 class ReadOnlyDatabaseError(NotmuchError):
