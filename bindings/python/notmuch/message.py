@@ -369,22 +369,23 @@ class Message(object):
         return Message._get_date(self._msg)
 
     def get_header(self, header):
-        """Returns a message header
+        """Get the value of the specified header.
 
-        This returns any message header that is stored in the notmuch database.
-        This is only a selected subset of headers, which is currently:
+        The value will be read from the actual message file, not from
+        the notmuch database. The header name is case insensitive.
 
-          TODO: add stored headers
+        Returns an empty string ("") if the message does not contain a
+        header line matching 'header'.
 
         :param header: The name of the header to be retrieved.
-                       It is not case-sensitive (TODO: confirm).
+                       It is not case-sensitive.
         :type header: str
         :returns: The header value as string
         :exception: :exc:`NotmuchError`
 
                     * STATUS.NOT_INITIALIZED if the message
                       is not initialized.
-                    * STATUS.NULL_POINTER, if no header was found
+                    * STATUS.NULL_POINTER if any error occured.
         """
         if self._msg is None:
             raise NotmuchError(STATUS.NOT_INITIALIZED)
