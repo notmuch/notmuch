@@ -1769,6 +1769,8 @@ notmuch_database_remove_message (notmuch_database_t *notmuch,
 		_notmuch_message_delete (message);
 	    else if (status == NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID)
 		_notmuch_message_sync (message);
+
+	    notmuch_message_destroy (message);
     }
 
     return status;
