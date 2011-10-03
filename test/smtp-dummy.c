@@ -71,7 +71,7 @@ static int
 process_command (FILE *peer, FILE *output, const char *command)
 {
 	if (STRNCMP_LITERAL (command, "EHLO ") == 0) {
-		fprintf (peer, "502\r\n");
+		fprintf (peer, "502 not implemented\r\n");
 		fflush (peer);
 	} else if (STRNCMP_LITERAL (command, "HELO ") == 0) {
 		fprintf (peer, "250 localhost\r\n");
