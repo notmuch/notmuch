@@ -167,6 +167,12 @@ VALUE
 notmuch_rb_database_remove_message (VALUE self, VALUE pathv);
 
 VALUE
+notmuch_rb_database_find_message (VALUE self, VALUE idv);
+
+VALUE
+notmuch_rb_database_find_message_by_filename (VALUE self, VALUE pathv);
+
+VALUE
 notmuch_rb_database_query_create (VALUE self, VALUE qstrv);
 
 /* directory.c */
