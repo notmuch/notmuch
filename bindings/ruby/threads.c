@@ -1,6 +1,6 @@
 /* The Ruby interface to the notmuch mail library
  *
- * Copyright © 2010 Ali Polatel
+ * Copyright © 2010, 2011 Ali Polatel
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,14 +26,14 @@
  * Destroys the threads, freeing all resources allocated for it.
  */
 VALUE
-notmuch_rb_threads_destroy(VALUE self)
+notmuch_rb_threads_destroy (VALUE self)
 {
     notmuch_threads_t *threads;
 
-    Data_Get_Struct(self, notmuch_threads_t, threads);
+    Data_Get_Struct (self, notmuch_threads_t, threads);
 
-    notmuch_threads_destroy(threads);
-    DATA_PTR(self) = NULL;
+    notmuch_threads_destroy (threads);
+    DATA_PTR (self) = NULL;
 
     return Qnil;
 }
@@ -44,16 +44,16 @@ notmuch_rb_threads_destroy(VALUE self)
  * parameter.
  */
 VALUE
-notmuch_rb_threads_each(VALUE self)
+notmuch_rb_threads_each (VALUE self)
 {
     notmuch_thread_t *thread;
     notmuch_threads_t *threads;
 
-    Data_Get_Notmuch_Threads(self, threads);
+    Data_Get_Notmuch_Threads (self, threads);
 
-    for (; notmuch_threads_valid(threads); notmuch_threads_move_to_next(threads)) {
-        thread = notmuch_threads_get(threads);
-        rb_yield(Data_Wrap_Struct(notmuch_rb_cThread, NULL, NULL, thread));
+    for (; notmuch_threads_valid (threads); notmuch_threads_move_to_next (threads)) {
+	thread = notmuch_threads_get (threads);
+	rb_yield (Data_Wrap_Struct (notmuch_rb_cThread, NULL, NULL, thread));
     }
 
     return self;

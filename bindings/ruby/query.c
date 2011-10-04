@@ -1,6 +1,6 @@
 /* The Ruby interface to the notmuch mail library
  *
- * Copyright © 2010 Ali Polatel
+ * Copyright © 2010, 2011 Ali Polatel
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,14 +26,14 @@
  * Destroys the query, freeing all resources allocated for it.
  */
 VALUE
-notmuch_rb_query_destroy(VALUE self)
+notmuch_rb_query_destroy (VALUE self)
 {
     notmuch_query_t *query;
 
-    Data_Get_Notmuch_Query(self, query);
+    Data_Get_Notmuch_Query (self, query);
 
-    notmuch_query_destroy(query);
-    DATA_PTR(self) = NULL;
+    notmuch_query_destroy (query);
+    DATA_PTR (self) = NULL;
 
     return Qnil;
 }
@@ -44,13 +44,13 @@ notmuch_rb_query_destroy(VALUE self)
  * Get sort type of the +QUERY+
  */
 VALUE
-notmuch_rb_query_get_sort(VALUE self)
+notmuch_rb_query_get_sort (VALUE self)
 {
     notmuch_query_t *query;
 
-    Data_Get_Notmuch_Query(self, query);
+    Data_Get_Notmuch_Query (self, query);
 
-    return FIX2INT(notmuch_query_get_sort(query));
+    return FIX2INT (notmuch_query_get_sort (query));
 }
 
 /*
@@ -59,16 +59,16 @@ notmuch_rb_query_get_sort(VALUE self)
  * Set sort type of the +QUERY+
  */
 VALUE
-notmuch_rb_query_set_sort(VALUE self, VALUE sortv)
+notmuch_rb_query_set_sort (VALUE self, VALUE sortv)
 {
     notmuch_query_t *query;
 
-    Data_Get_Notmuch_Query(self, query);
+    Data_Get_Notmuch_Query (self, query);
 
-    if (!FIXNUM_P(sortv))
-        rb_raise(rb_eTypeError, "Not a Fixnum");
+    if (!FIXNUM_P (sortv))
+	rb_raise (rb_eTypeError, "Not a Fixnum");
 
-    notmuch_query_set_sort(query, FIX2UINT(sortv));
+    notmuch_query_set_sort (query, FIX2UINT (sortv));
 
     return Qnil;
 }
@@ -79,13 +79,13 @@ notmuch_rb_query_set_sort(VALUE self, VALUE sortv)
  * Get query string of the +QUERY+
  */
 VALUE
-notmuch_rb_query_get_string(VALUE self)
+notmuch_rb_query_get_string (VALUE self)
 {
     notmuch_query_t *query;
 
-    Data_Get_Notmuch_Query(self, query);
+    Data_Get_Notmuch_Query (self, query);
 
-    return rb_str_new2(notmuch_query_get_query_string(query));
+    return rb_str_new2 (notmuch_query_get_query_string (query));
 }
 
 /*
@@ -94,18 +94,18 @@ notmuch_rb_query_get_string(VALUE self)
  * Search for threads
  */
 VALUE
-notmuch_rb_query_search_threads(VALUE self)
+notmuch_rb_query_search_threads (VALUE self)
 {
     notmuch_query_t *query;
     notmuch_threads_t *threads;
 
-    Data_Get_Notmuch_Query(self, query);
+    Data_Get_Notmuch_Query (self, query);
 
-    threads = notmuch_query_search_threads(query);
+    threads = notmuch_query_search_threads (query);
     if (!threads)
-        rb_raise(notmuch_rb_eMemoryError, "Out of memory");
+	rb_raise (notmuch_rb_eMemoryError, "Out of memory");
 
-    return Data_Wrap_Struct(notmuch_rb_cThreads, NULL, NULL, threads);
+    return Data_Wrap_Struct (notmuch_rb_cThreads, NULL, NULL, threads);
 }
 
 /*
@@ -114,16 +114,16 @@ notmuch_rb_query_search_threads(VALUE self)
  * Search for messages
  */
 VALUE
-notmuch_rb_query_search_messages(VALUE self)
+notmuch_rb_query_search_messages (VALUE self)
 {
     notmuch_query_t *query;
     notmuch_messages_t *messages;
 
-    Data_Get_Notmuch_Query(self, query);
+    Data_Get_Notmuch_Query (self, query);
 
-    messages = notmuch_query_search_messages(query);
+    messages = notmuch_query_search_messages (query);
     if (!messages)
-        rb_raise(notmuch_rb_eMemoryError, "Out of memory");
+	rb_raise (notmuch_rb_eMemoryError, "Out of memory");
 
-    return Data_Wrap_Struct(notmuch_rb_cMessages, NULL, NULL, messages);
+    return Data_Wrap_Struct (notmuch_rb_cMessages, NULL, NULL, messages);
 }

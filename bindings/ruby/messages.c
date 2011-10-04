@@ -1,6 +1,6 @@
 /* The Ruby interface to the notmuch mail library
  *
- * Copyright © 2010 Ali Polatel
+ * Copyright © 2010, 2011 Ali Polatel
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,14 +26,14 @@
  * Destroys the messages, freeing all resources allocated for it.
  */
 VALUE
-notmuch_rb_messages_destroy(VALUE self)
+notmuch_rb_messages_destroy (VALUE self)
 {
     notmuch_messages_t *messages;
 
-    Data_Get_Notmuch_Messages(self, messages);
+    Data_Get_Notmuch_Messages (self, messages);
 
-    notmuch_messages_destroy(messages);
-    DATA_PTR(self) = NULL;
+    notmuch_messages_destroy (messages);
+    DATA_PTR (self) = NULL;
 
     return Qnil;
 }
@@ -44,16 +44,16 @@ notmuch_rb_messages_destroy(VALUE self)
  * parameter.
  */
 VALUE
-notmuch_rb_messages_each(VALUE self)
+notmuch_rb_messages_each (VALUE self)
 {
     notmuch_message_t *message;
     notmuch_messages_t *messages;
 
-    Data_Get_Notmuch_Messages(self, messages);
+    Data_Get_Notmuch_Messages (self, messages);
 
-    for (; notmuch_messages_valid(messages); notmuch_messages_move_to_next(messages)) {
-        message = notmuch_messages_get(messages);
-        rb_yield(Data_Wrap_Struct(notmuch_rb_cMessage, NULL, NULL, message));
+    for (; notmuch_messages_valid (messages); notmuch_messages_move_to_next (messages)) {
+	message = notmuch_messages_get (messages);
+	rb_yield (Data_Wrap_Struct (notmuch_rb_cMessage, NULL, NULL, message));
     }
 
     return self;
@@ -65,16 +65,16 @@ notmuch_rb_messages_each(VALUE self)
  * Collect tags from the messages
  */
 VALUE
-notmuch_rb_messages_collect_tags(VALUE self)
+notmuch_rb_messages_collect_tags (VALUE self)
 {
     notmuch_tags_t *tags;
     notmuch_messages_t *messages;
 
-    Data_Get_Notmuch_Messages(self, messages);
+    Data_Get_Notmuch_Messages (self, messages);
 
-    tags = notmuch_messages_collect_tags(messages);
+    tags = notmuch_messages_collect_tags (messages);
     if (!tags)
-        rb_raise(notmuch_rb_eMemoryError, "Out of memory");
+	rb_raise (notmuch_rb_eMemoryError, "Out of memory");
 
-    return Data_Wrap_Struct(notmuch_rb_cTags, NULL, NULL, tags);
+    return Data_Wrap_Struct (notmuch_rb_cTags, NULL, NULL, tags);
 }
