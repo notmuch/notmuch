@@ -194,10 +194,6 @@ notmuch_rb_message_get_header (VALUE self, VALUE headerv)
 
     Data_Get_Notmuch_Message (self, message);
 
-#if !defined(RSTRING_PTR)
-#define RSTRING_PTR(v) (RSTRING((v))->ptr)
-#endif /* !defined(RSTRING_PTR) */
-
     SafeStringValue (headerv);
     header = RSTRING_PTR (headerv);
 
@@ -242,10 +238,6 @@ notmuch_rb_message_add_tag (VALUE self, VALUE tagv)
 
     Data_Get_Notmuch_Message (self, message);
 
-#if !defined(RSTRING_PTR)
-#define RSTRING_PTR(v) (RSTRING((v))->ptr)
-#endif /* !defined(RSTRING_PTR) */
-
     SafeStringValue (tagv);
     tag = RSTRING_PTR (tagv);
 
@@ -268,10 +260,6 @@ notmuch_rb_message_remove_tag (VALUE self, VALUE tagv)
     notmuch_message_t *message;
 
     Data_Get_Notmuch_Message (self, message);
-
-#if !defined(RSTRING_PTR)
-#define RSTRING_PTR(v) (RSTRING((v))->ptr)
-#endif /* !defined(RSTRING_PTR) */
 
     SafeStringValue (tagv);
     tag = RSTRING_PTR (tagv);

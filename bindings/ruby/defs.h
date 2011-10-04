@@ -50,76 +50,81 @@ ID ID_call;
 ID ID_db_create;
 ID ID_db_mode;
 
-#define Data_Get_Notmuch_Database (obj, ptr)		\
-    do {						\
-	Check_Type (obj, T_DATA);			\
-	if (DATA_PTR (obj) == NULL)			\
-	rb_raise (rb_eRuntimeError, "database closed");	\
-	Data_Get_Struct (obj, notmuch_database_t, ptr);	\
+/* RSTRING_PTR() is new in ruby-1.9 */
+#if !defined(RSTRING_PTR)
+# define RSTRING_PTR(v) (RSTRING((v))->ptr)
+#endif /* !defined (RSTRING_PTR) */
+
+#define Data_Get_Notmuch_Database(obj, ptr)			\
+    do {							\
+	Check_Type ((obj), T_DATA);				\
+	if (DATA_PTR ((obj)) == NULL)				\
+	rb_raise (rb_eRuntimeError, "database closed");		\
+	Data_Get_Struct ((obj), notmuch_database_t, (ptr));	\
     } while (0)
 
-#define Data_Get_Notmuch_Directory (obj, ptr)			\
+#define Data_Get_Notmuch_Directory(obj, ptr)			\
     do {							\
-	Check_Type (obj, T_DATA);				\
-	if (DATA_PTR (obj) == NULL)				\
+	Check_Type ((obj), T_DATA);				\
+	if (DATA_PTR ((obj)) == NULL)				\
 	rb_raise (rb_eRuntimeError, "directory destroyed");	\
-	Data_Get_Struct (obj, notmuch_directory_t, ptr);	\
+	Data_Get_Struct ((obj), notmuch_directory_t, (ptr));	\
     } while (0)
 
-#define Data_Get_Notmuch_FileNames (obj, ptr)			\
+#define Data_Get_Notmuch_FileNames(obj, ptr)			\
     do {							\
-	Check_Type (obj, T_DATA);				\
-	if (DATA_PTR (obj) == NULL)				\
+	Check_Type ((obj), T_DATA);				\
+	if (DATA_PTR ((obj)) == NULL)				\
 	rb_raise (rb_eRuntimeError, "filenames destroyed");	\
-	Data_Get_Struct (obj, notmuch_filenames_t, ptr);	\
+	Data_Get_Struct ((obj), notmuch_filenames_t, (ptr));	\
     } while (0)
 
-#define Data_Get_Notmuch_Query (obj, ptr)			\
+#define Data_Get_Notmuch_Query(obj, ptr)			\
     do {							\
-	Check_Type (obj, T_DATA);				\
-	if (DATA_PTR (obj) == NULL)				\
-	rb_raise (rb_eRuntimeError, "query destroyed");	\
-	Data_Get_Struct (obj, notmuch_query_t, ptr);		\
+	Check_Type ((obj), T_DATA);				\
+	if (DATA_PTR ((obj)) == NULL)				\
+	rb_raise (rb_eRuntimeError, "query destroyed");		\
+	Data_Get_Struct ((obj), notmuch_query_t, (ptr));	\
     } while (0)
 
-#define Data_Get_Notmuch_Threads (obj, ptr)			\
+#define Data_Get_Notmuch_Threads(obj, ptr)			\
     do {							\
-	Check_Type (obj, T_DATA);				\
-	if (DATA_PTR (obj) == NULL)				\
+	Check_Type ((obj), T_DATA);				\
+	if (DATA_PTR ((obj)) == NULL)				\
 	rb_raise (rb_eRuntimeError, "threads destroyed");	\
-	Data_Get_Struct (obj, notmuch_threads_t, ptr);		\
+	Data_Get_Struct ((obj), notmuch_threads_t, (ptr));	\
     } while (0)
 
-#define Data_Get_Notmuch_Messages (obj, ptr)			\
+#define Data_Get_Notmuch_Messages(obj, ptr)			\
     do {							\
-	Check_Type (obj, T_DATA);				\
-	if (DATA_PTR (obj) == NULL)				\
+	Check_Type ((obj), T_DATA);				\
+	if (DATA_PTR ((obj)) == NULL)				\
 	rb_raise (rb_eRuntimeError, "messages destroyed");	\
-	Data_Get_Struct (obj, notmuch_messages_t, ptr);		\
+	Data_Get_Struct ((obj), notmuch_messages_t, (ptr));	\
     } while (0)
 
-#define Data_Get_Notmuch_Thread (obj, ptr)			\
+#define Data_Get_Notmuch_Thread(obj, ptr)			\
     do {							\
-	Check_Type (obj, T_DATA);				\
-	if (DATA_PTR (obj) == NULL)				\
+	Check_Type ((obj), T_DATA);				\
+	if (DATA_PTR ((obj)) == NULL)				\
 	rb_raise (rb_eRuntimeError, "thread destroyed");	\
-	Data_Get_Struct (obj, notmuch_thread_t, ptr);		\
+	Data_Get_Struct ((obj), notmuch_thread_t, (ptr));	\
     } while (0)
 
-#define Data_Get_Notmuch_Message (obj, ptr)			\
+#define Data_Get_Notmuch_Message(obj, ptr)			\
     do {							\
-	Check_Type (obj, T_DATA);				\
-	if (DATA_PTR (obj) == NULL)				\
+	Check_Type ((obj), T_DATA);				\
+	if (DATA_PTR ((obj)) == NULL)				\
 	rb_raise (rb_eRuntimeError, "message destroyed");	\
-	Data_Get_Struct (obj, notmuch_message_t, ptr);		\
+	Data_Get_Struct ((obj), notmuch_message_t, (ptr));	\
     } while (0)
 
-#define Data_Get_Notmuch_Tags (obj, ptr)		\
+#define Data_Get_Notmuch_Tags(obj, ptr)			\
     do {						\
-	Check_Type (obj, T_DATA);			\
-	if (DATA_PTR (obj) == NULL)			\
+	Check_Type ((obj), T_DATA);			\
+	if (DATA_PTR ((obj)) == NULL)			\
 	rb_raise (rb_eRuntimeError, "tags destroyed");	\
-	Data_Get_Struct (obj, notmuch_tags_t, ptr);	\
+	Data_Get_Struct ((obj), notmuch_tags_t, (ptr));	\
     } while (0)
 
 /* status.c */

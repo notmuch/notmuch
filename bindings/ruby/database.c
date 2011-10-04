@@ -43,10 +43,6 @@ notmuch_rb_database_initialize (int argc, VALUE *argv, VALUE self)
     VALUE pathv, hashv;
     VALUE modev;
 
-#if !defined(RSTRING_PTR)
-# define RSTRING_PTR(v) (RSTRING((v))->ptr)
-#endif /* !defined(RSTRING_PTR) */
-
     /* Check arguments */
     rb_scan_args (argc, argv, "11", &pathv, &hashv);
 
@@ -255,10 +251,6 @@ notmuch_rb_database_get_directory (VALUE self, VALUE pathv)
 
     Data_Get_Notmuch_Database (self, db);
 
-#if !defined(RSTRING_PTR)
-# define RSTRING_PTR(v) (RSTRING((v))->ptr)
-#endif /* !defined(RSTRING_PTR) */
-
     SafeStringValue (pathv);
     path = RSTRING_PTR (pathv);
 
@@ -287,10 +279,6 @@ notmuch_rb_database_add_message (VALUE self, VALUE pathv)
 
     Data_Get_Notmuch_Database (self, db);
 
-#if !defined(RSTRING_PTR)
-# define RSTRING_PTR(v) (RSTRING((v))->ptr)
-#endif /* !defined(RSTRING_PTR) */
-
     SafeStringValue (pathv);
     path = RSTRING_PTR (pathv);
 
@@ -317,10 +305,6 @@ notmuch_rb_database_remove_message (VALUE self, VALUE pathv)
 
     Data_Get_Notmuch_Database (self, db);
 
-#if !defined(RSTRING_PTR)
-# define RSTRING_PTR(v) (RSTRING((v))->ptr)
-#endif /* !defined (RSTRING_PTR) */
-
     SafeStringValue (pathv);
     path = RSTRING_PTR (pathv);
 
@@ -343,10 +327,6 @@ notmuch_rb_database_find_message (VALUE self, VALUE idv)
     notmuch_message_t *message;
 
     Data_Get_Notmuch_Database (self, db);
-
-#if !defined(RSTRING_PTR)
-# define RSTRING_PTR(v) (RSTRING((v))->ptr)
-#endif /* !defined (RSTRING_PTR) */
 
     SafeStringValue (idv);
     id = RSTRING_PTR (idv);
@@ -374,10 +354,6 @@ notmuch_rb_database_find_message_by_filename (VALUE self, VALUE pathv)
 
     Data_Get_Notmuch_Database (self, db);
 
-#if !defined(RSTRING_PTR)
-# define RSTRING_PTR(v) (RSTRING((v))->ptr)
-#endif /* !defined (RSTRING_PTR) */
-
     SafeStringValue (pathv);
     path = RSTRING_PTR (pathv);
 
@@ -402,10 +378,6 @@ notmuch_rb_database_query_create (VALUE self, VALUE qstrv)
     notmuch_database_t *db;
 
     Data_Get_Notmuch_Database (self, db);
-
-#if !defined(RSTRING_PTR)
-# define RSTRING_PTR(v) (RSTRING((v))->ptr)
-#endif /* !defined (RSTRING_PTR) */
 
     SafeStringValue (qstrv);
     qstr = RSTRING_PTR (qstrv);
