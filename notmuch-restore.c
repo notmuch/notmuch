@@ -87,10 +87,13 @@ notmuch_restore_command (unused (void *ctx), int argc, char *argv[])
 	file_tags = xstrndup (line + match[2].rm_so,
 			      match[2].rm_eo - match[2].rm_so);
 
-	message = notmuch_database_find_message (notmuch, message_id);
-	if (message == NULL) {
-	    fprintf (stderr, "Warning: Cannot apply tags to missing message: %s\n",
-		     message_id);
+	status = notmuch_database_find_message (notmuch, message_id, &message);
+	if (status || message == NULL) {
+	    fprintf (stderr, "Warning: Cannot apply tags to %smessage: %s\n",
+		     message ? "" : "missing ", message_id);
+	    if (status)
+		fprintf (stderr, "%s\n",
+			 notmuch_status_to_string(status));
 	    goto NEXT_LINE;
 	}
 

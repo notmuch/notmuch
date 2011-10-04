@@ -216,11 +216,13 @@ _notmuch_message_create_for_message_id (notmuch_database_t *notmuch,
     unsigned int doc_id;
     char *term;
 
-    *status_ret = NOTMUCH_PRIVATE_STATUS_SUCCESS;
-
-    message = notmuch_database_find_message (notmuch, message_id);
+    *status_ret = (notmuch_private_status_t) notmuch_database_find_message (notmuch,
+									    message_id,
+									    &message);
     if (message)
 	return talloc_steal (notmuch, message);
+    else if (*status_ret)
+	return NULL;
 
     term = talloc_asprintf (NULL, "%s%s",
 			    _find_prefix ("id"), message_id);
