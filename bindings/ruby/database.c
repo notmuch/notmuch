@@ -331,6 +331,66 @@ notmuch_rb_database_remove_message(VALUE self, VALUE pathv)
 }
 
 /*
+ * call-seq: DB.find_message(id) => MESSAGE or nil
+ *
+ * Find a message by message id.
+ */
+VALUE
+notmuch_rb_database_find_message(VALUE self, VALUE idv)
+{
+    const char *id;
+    notmuch_status_t ret;
+    notmuch_database_t *db;
+    notmuch_message_t *message;
+
+    Data_Get_Notmuch_Database(self, db);
+
+#if !defined(RSTRING_PTR)
+#define RSTRING_PTR(v) (RSTRING((v))->ptr)
+#endif /* !defined(RSTRING_PTR) */
+
+    SafeStringValue(idv);
+    id = RSTRING_PTR(idv);
+
+    ret = notmuch_database_find_message(db, id, &message);
+    notmuch_rb_status_raise(ret);
+
+    if (message)
+        return Data_Wrap_Struct(notmuch_rb_cMessage, NULL, NULL, message);
+    return Qnil;
+}
+
+/*
+ * call-seq: DB.find_message_by_filename(path) => MESSAGE or nil
+ *
+ * Find a message by filename.
+ */
+VALUE
+notmuch_rb_database_find_message_by_filename(VALUE self, VALUE pathv)
+{
+    const char *path;
+    notmuch_status_t ret;
+    notmuch_database_t *db;
+    notmuch_message_t *message;
+
+    Data_Get_Notmuch_Database(self, db);
+
+#if !defined(RSTRING_PTR)
+#define RSTRING_PTR(v) (RSTRING((v))->ptr)
+#endif /* !defined(RSTRING_PTR) */
+
+    SafeStringValue(pathv);
+    path = RSTRING_PTR(pathv);
+
+    ret = notmuch_database_find_message_by_filename(db, path, &message);
+    notmuch_rb_status_raise(ret);
+
+    if (message)
+        return Data_Wrap_Struct(notmuch_rb_cMessage, NULL, NULL, message);
+    return Qnil;
+}
+
+/*
  * call-seq: DB.query(query) => QUERY
  *
  * Retrieve a query object for the query string 'query'
