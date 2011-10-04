@@ -347,35 +347,57 @@ notmuch_database_remove_message (notmuch_database_t *database,
 
 /* Find a message with the given message_id.
  *
- * If the database contains a message with the given message_id, then
- * a new notmuch_message_t object is returned. The caller should call
- * notmuch_message_destroy when done with the message.
+ * If a message with the given message_id is found then, on successful return
+ * (NOTMUCH_STATUS_SUCCESS) '*message' will be initialized to a message
+ * object.  The caller should call notmuch_message_destroy when done with the
+ * message.
  *
- * This function returns NULL in the following situations:
+ * On any failure or when the message is not found, this function initializes
+ * '*message' to NULL. This means, when NOTMUCH_STATUS_SUCCESS is returned, the
+ * caller is supposed to check '*message' for NULL to find out whether the
+ * message with the given message_id was found.
  *
- *	* No message is found with the given message_id
- *	* An out-of-memory situation occurs
- *	* A Xapian exception occurs
+ * Return value:
+ *
+ * NOTMUCH_STATUS_SUCCESS: Successful return, check '*message'.
+ *
+ * NOTMUCH_STATUS_NULL_POINTER: The given 'message' argument is NULL
+ *
+ * NOTMUCH_STATUS_OUT_OF_MEMORY: Out of memory, creating message object
+ *
+ * NOTMUCH_STATUS_XAPIAN_EXCEPTION: A Xapian exception occurred
  */
-notmuch_message_t *
+notmuch_status_t
 notmuch_database_find_message (notmuch_database_t *database,
-			       const char *message_id);
+			       const char *message_id,
+			       notmuch_message_t **message);
 
 /* Find a message with the given filename.
  *
- * If the database contains a message with the given filename, then a
- * new notmuch_message_t object is returned.  The caller should call 
- * notmuch_message_destroy when done with the message.
+ * If the database contains a message with the given filename then, on
+ * successful return (NOTMUCH_STATUS_SUCCESS) '*message' will be initialized to
+ * a message object. The caller should call notmuch_message_destroy when done
+ * with the message.
  *
- * This function returns NULL in the following situations:
+ * On any failure or when the message is not found, this function initializes
+ * '*message' to NULL. This means, when NOTMUCH_STATUS_SUCCESS is returned, the
+ * caller is supposed to check '*message' for NULL to find out whether the
+ * message with the given filename is found.
  *
- *	* No message is found with the given filename
- *	* An out-of-memory situation occurs
- *	* A Xapian exception occurs
+ * Return value:
+ *
+ * NOTMUCH_STATUS_SUCCESS: Successful return, check '*message'
+ *
+ * NOTMUCH_STATUS_NULL_POINTER: The given 'message' argument is NULL
+ *
+ * NOTMUCH_STATUS_OUT_OF_MEMORY: Out of memory, creating the message object
+ *
+ * NOTMUCH_STATUS_XAPIAN_EXCEPTION: A Xapian exception occurred
  */
-notmuch_message_t *
+notmuch_status_t
 notmuch_database_find_message_by_filename (notmuch_database_t *notmuch,
-					   const char *filename);
+					   const char *filename,
+					   notmuch_message_t **message);
 
 /* Return a list of all tags found in the database.
  *
