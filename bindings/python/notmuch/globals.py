@@ -23,7 +23,7 @@ from ctypes.util import find_library
 #-----------------------------------------------------------------------------
 #package-global instance of the notmuch library
 try:
-    nmlib = CDLL("libnotmuch.so.1")
+    nmlib = CDLL("libnotmuch.so.2")
 except:
     raise ImportError("Could not find shared 'notmuch' library.")
 
