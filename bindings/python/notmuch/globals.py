@@ -143,31 +143,32 @@ class NotmuchError(Exception):
 # List of Subclassed exceptions that correspond to STATUS values and are
 # subclasses of NotmuchError.
 class OutOfMemoryError(NotmuchError):
-    pass
+    status = STATUS.OUT_OF_MEMORY
 class ReadOnlyDatabaseError(NotmuchError):
-    pass
+    status = STATUS.READ_ONLY_DATABASE
 class XapianError(NotmuchError):
-    pass
+    status = STATUS.XAPIAN_EXCEPTION
 class FileError(NotmuchError):
-    pass
+    status = STATUS.FILE_ERROR
 class FileNotEmailError(NotmuchError):
-    pass
+    status = STATUS.FILE_NOT_EMAIL
 class DuplicateMessageIdError(NotmuchError):
-    pass
+    status = STATUS.DUPLICATE_MESSAGE_ID
 class NullPointerError(NotmuchError):
-    pass
+    status = STATUS.NULL_POINTER
 class TagTooLongError(NotmuchError):
-    pass
+    status = STATUS.TAG_TOO_LONG
 class UnbalancedFreezeThawError(NotmuchError):
-    pass
+    status = STATUS.UNBALANCED_FREEZE_THAW
 class UnbalancedAtomicError(NotmuchError):
-    pass
+    status = STATUS.UNBALANCED_ATOMIC
 class NotInitializedError(NotmuchError):
     """Derived from NotmuchError, this occurs if the underlying data
     structure (e.g. database is not initialized (yet) or an iterator has
     been exhausted. You can test for NotmuchError with .status =
     STATUS.NOT_INITIALIZED"""
-    pass
+    status = STATUS.NOT_INITIALIZED
+
 
 
 def _str(value):
