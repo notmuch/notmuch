@@ -422,8 +422,7 @@ class Database(object):
                   notmuch database has been modified by another program
                   in the meantime. In this case, you should close and
                   reopen the database and retry.
-
-             :exc:`NotInitializedError` if
+            :exc:`NotInitializedError` if
                     the database was not intitialized.
         """
         self._assert_db_is_initialized()
@@ -455,8 +454,7 @@ class Database(object):
                   notmuch database has been modified by another program
                   in the meantime. In this case, you should close and
                   reopen the database and retry.
-
-             :exc:`NotInitializedError` if
+            :exc:`NotInitializedError` if
                     the database was not intitialized.
 
         *Added in notmuch 0.9*"""
