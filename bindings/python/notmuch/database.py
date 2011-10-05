@@ -20,7 +20,7 @@ Copyright 2010 Sebastian Spaeth <Sebastian@SSpaeth.de>'
 import os
 from ctypes import c_int, c_char_p, c_void_p, c_uint, c_long, byref
 from notmuch.globals import (nmlib, STATUS, NotmuchError, NotInitializedError,
-     OutOfMemoryError, XapianError, Enum, _str)
+     NullPointerError, OutOfMemoryError, XapianError, Enum, _str)
 from notmuch.thread import Threads
 from notmuch.message import Messages, Message
 from notmuch.tag import Tags
@@ -486,7 +486,6 @@ class Database(object):
 
         This function is a python extension and not in the underlying C API.
         """
-        self._assert_db_is_initialized()
         return Query(self, querystring)
 
     def __repr__(self):
@@ -572,6 +571,11 @@ class Query(object):
         self.sort = None
         self.create(db, querystr)
 
+    def _assert_query_is_initialized(self):
+        """Raises :exc:`NotInitializedError` if self._query is `None`"""
+        if self._query is None:
+            raise NotInitializedError()
+
     def create(self, db, querystr):
         """Creates a new query derived from a Database
 
@@ -589,14 +593,13 @@ class Query(object):
             :exc:`NotInitializedError` if the underlying db was not
                 intitialized.
         """
-        if db.db_p is None:
-            raise NotmuchError(STATUS.NOT_INITIALIZED)
+        db._assert_db_is_initialized()
         # create reference to parent db to keep it alive
         self._db = db
         # create query, return None if too little mem available
         query_p = Query._create(db.db_p, _str(querystr))
         if query_p is None:
-            raise NotmuchError(STATUS.NULL_POINTER)
+            raise NullPointerError
         self._query = query_p
 
     def set_sort(self, sort):
@@ -604,9 +607,7 @@ class Query(object):
 
         :param sort: Sort order (see :attr:`Query.SORT`)
         """
-        if self._query is None:
-            raise NotmuchError(STATUS.NOT_INITIALIZED)
-
+        self._assert_query_is_initialized()
         self.sort = sort
         nmlib.notmuch_query_set_sort(self._query, sort)
 
@@ -624,14 +625,11 @@ class Query(object):
         :returns: :class:`Threads`
         :exception: :exc:`NullPointerError` if search_threads failed
         """
-        if self._query is None:
-            raise NotmuchError(STATUS.NOT_INITIALIZED)
-
+        self._assert_query_is_initialized()
         threads_p = Query._search_threads(self._query)
 
         if threads_p is None:
-            raise NotmuchError(STATUS.NULL_POINTER)
-
+            raise NullPointerError
         return Threads(threads_p, self)
 
     def search_messages(self):
@@ -641,14 +639,11 @@ class Query(object):
         :returns: :class:`Messages`
         :exception: :exc:`NullPointerError` if search_messages failed
         """
-        if self._query is None:
-            raise NotmuchError(STATUS.NOT_INITIALIZED)
-
+        self._assert_query_is_initialized()
         msgs_p = Query._search_messages(self._query)
 
         if msgs_p is None:
-            raise NotmuchError(STATUS.NULL_POINTER)
-
+            raise NullPointerError
         return Messages(msgs_p, self)
 
     def count_messages(self):
@@ -663,9 +658,7 @@ class Query(object):
 
         :returns: :class:`Messages`
         """
-        if self._query is None:
-            raise NotmuchError(STATUS.NOT_INITIALIZED)
-
+        self._assert_query_is_initialized()
         return Query._count_messages(self._query)
 
     def __del__(self):
