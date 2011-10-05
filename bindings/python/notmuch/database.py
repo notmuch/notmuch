@@ -26,13 +26,27 @@ from notmuch.message import Messages, Message
 from notmuch.tag import Tags
 
 class Database(object):
-    """Represents a notmuch database (wraps notmuch_database_t)
+    """The :class:`Database` is the highest-level object that notmuch
+    provides. It references a notmuch database, and can be opened in
+    read-only or read-write mode. A :class:`Query` can be derived from
+    or be applied to a specific database to find messages. Also adding
+    and removing messages to the database happens via this
+    object. Modifications to the database are not atmic by default (see
+    :meth:`begin_atomic`) and once a database has been modified, all
+    other database objects pointing to the same data-base will throw an
+    :exc:`XapianError` as the underlying database has been
+    modified. Close and reopen the database to continue working with it.
 
-    .. note:: Do remember that as soon as we tear down this object,
-           all underlying derived objects such as queries, threads,
-           messages, tags etc will be freed by the underlying library
-           as well. Accessing these objects will lead to segfaults and
-           other unexpected behavior. See above for more details.
+    .. note:: Any function in this class can and will throw an
+           :exc:`NotInitializedError` if the database was not
+           intitialized properly.
+
+    .. note:: Do remember that as soon as we tear down (e.g. via `del
+           db`) this object, all underlying derived objects such as
+           queries, threads, messages, tags etc will be freed by the
+           underlying library as well. Accessing these objects will lead
+           to segfaults and other unexpected behavior. See above for
+           more details.
     """
     _std_db_path = None
     """Class attribute to cache user's default database"""
@@ -151,7 +165,7 @@ class Database(object):
         :type status:  :attr:`MODE`
         :returns: Nothing
         :exception: Raises :exc:`NotmuchError` in case
-                    of any failure (after printing an error message on stderr).
+            of any failure (possibly after printing an error message on stderr).
         """
         res = Database._open(_str(path), mode)
 
@@ -160,9 +174,7 @@ class Database(object):
         self._db = res
 
     def get_path(self):
-        """Returns the file path of an open database
-
-        .. ..:: Wraps underlying `notmuch_database_get_path`"""
+        """Returns the file path of an open database"""
         self._assert_db_is_initialized()
         return Database._get_path(self._db).decode('utf-8')
 
@@ -170,8 +182,6 @@ class Database(object):
         """Returns the database format version
 
         :returns: The database version as positive integer
-        :exception: :exc:`NotInitializedError` if
-                    the database was not intitialized.
         """
         self._assert_db_is_initialized()
         return Database._get_version(self._db)
@@ -185,8 +195,6 @@ class Database(object):
         etc.) will work unless :meth:`upgrade` is called successfully first.
 
         :returns: `True` or `False`
-        :exception: :exc:`NotInitializedError` if
-                    the database was not intitialized.
         """
         self._assert_db_is_initialized()
         return nmlib.notmuch_database_needs_upgrade(self._db)
@@ -205,9 +213,6 @@ class Database(object):
         indicating the progress made so far in the upgrade process.
 
         :TODO: catch exceptions, document return values and etc...
-
-        :exception: :exc:`NotInitializedError` if
-                    the database was not intitialized.
         """
         self._assert_db_is_initialized()
         status = Database._upgrade(self._db, None, None)
@@ -228,9 +233,6 @@ class Database(object):
         :exception: :exc:`NotmuchError`:
             :attr:`STATUS`.XAPIAN_EXCEPTION
                 Xapian exception occurred; atomic section not entered.
-
-            :exc:`NotInitializedError` if
-                the database was not intitialized.
 
         *Added in notmuch 0.9*"""
         self._assert_db_is_initialized()
@@ -253,9 +255,6 @@ class Database(object):
                     ended.
                 :attr:`STATUS`.UNBALANCED_ATOMIC:
                     end_atomic has been called more times than begin_atomic.
-
-            :exc:`NotInitializedError` if
-                    the database was not intitialized.
 
         *Added in notmuch 0.9*"""
         self._assert_db_is_initialized()
@@ -280,9 +279,6 @@ class Database(object):
             :exc:`NotmuchError` with :attr:`STATUS`.FILE_ERROR
                     If path is not relative database or absolute with initial
                     components same as database.
-
-            :exc:`NotInitializedError` if
-                    the database was not intitialized.
         """
         self._assert_db_is_initialized()
         # sanity checking if path is valid, and make path absolute
@@ -351,9 +347,6 @@ class Database(object):
               :attr:`STATUS`.READ_ONLY_DATABASE
                       Database was opened in read-only mode so no message can
                       be added.
-
-            :exc:`NotInitializedError` if
-                    the database was not intitialized.
         """
         self._assert_db_is_initialized()
         msg_p = c_void_p()
@@ -397,9 +390,6 @@ class Database(object):
              :attr:`STATUS`.READ_ONLY_DATABASE
                Database was opened in read-only mode so no message can be
                removed.
-
-             :exc:`NotInitializedError` if
-                    the database was not intitialized.
         """
         self._assert_db_is_initialized()
         return nmlib.notmuch_database_remove_message(self._db,
@@ -537,11 +527,12 @@ class Query(object):
     A query selects and filters a subset of messages from the notmuch
     database we derive from.
 
-    Query() provides an instance attribute :attr:`sort`, which
+    :class:`Query` provides an instance attribute :attr:`sort`, which
     contains the sort order (if specified via :meth:`set_sort`) or
     `None`.
 
-    Technically, it wraps the underlying *notmuch_query_t* struct.
+    Any function in this class may throw an :exc:`NotInitializedError`
+    in case the underlying query object was not set up correctly.
 
     .. note:: Do remember that as soon as we tear down this object,
            all underlying derived objects such as threads,
@@ -592,11 +583,11 @@ class Query(object):
         :param querystr: The query string
         :type querystr: utf-8 encoded str or unicode
         :returns: Nothing
-        :exception: :exc:`NotmuchError`
-
-                      * :attr:`STATUS`.NOT_INITIALIZED if db is not inited
-                      * :attr:`STATUS`.NULL_POINTER if the query creation failed
-                        (too little memory)
+        :exception:
+            :exc:`NullPointerError` if the query creation failed
+                (e.g. too little memory).
+            :exc:`NotInitializedError` if the underlying db was not
+                intitialized.
         """
         if db.db_p is None:
             raise NotmuchError(STATUS.NOT_INITIALIZED)
@@ -611,12 +602,7 @@ class Query(object):
     def set_sort(self, sort):
         """Set the sort order future results will be delivered in
 
-        Wraps the underlying *notmuch_query_set_sort* function.
-
         :param sort: Sort order (see :attr:`Query.SORT`)
-        :returns: Nothing
-        :exception: :exc:`NotmuchError` :attr:`STATUS`.NOT_INITIALIZED if query has not
-                    been initialized.
         """
         if self._query is None:
             raise NotmuchError(STATUS.NOT_INITIALIZED)
@@ -635,14 +621,8 @@ class Query(object):
         match the query. The method :meth:`Message.get_flag` allows us
         to get the value of this flag.
 
-        Technically, it wraps the underlying
-        *notmuch_query_search_threads* function.
-
         :returns: :class:`Threads`
-        :exception: :exc:`NotmuchError`
-
-                      * :attr:`STATUS`.NOT_INITIALIZED if query is not inited
-                      * :attr:`STATUS`.NULL_POINTER if search_threads failed
+        :exception: :exc:`NullPointerError` if search_threads failed
         """
         if self._query is None:
             raise NotmuchError(STATUS.NOT_INITIALIZED)
@@ -658,14 +638,8 @@ class Query(object):
         """Filter messages according to the query and return
         :class:`Messages` in the defined sort order
 
-        Technically, it wraps the underlying
-        *notmuch_query_search_messages* function.
-
         :returns: :class:`Messages`
-        :exception: :exc:`NotmuchError`
-
-                      * :attr:`STATUS`.NOT_INITIALIZED if query is not inited
-                      * :attr:`STATUS`.NULL_POINTER if search_messages failed
+        :exception: :exc:`NullPointerError` if search_messages failed
         """
         if self._query is None:
             raise NotmuchError(STATUS.NOT_INITIALIZED)
@@ -688,9 +662,6 @@ class Query(object):
         *notmuch_query_count_messages* function.
 
         :returns: :class:`Messages`
-        :exception: :exc:`NotmuchError`
-
-                      * :attr:`STATUS`.NOT_INITIALIZED if query is not inited
         """
         if self._query is None:
             raise NotmuchError(STATUS.NOT_INITIALIZED)

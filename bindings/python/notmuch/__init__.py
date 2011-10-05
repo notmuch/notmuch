@@ -17,7 +17,7 @@ likely to need.
             db = Database('path',create=True)
             msgs = Query(db,'from:myself').search_messages()
 
-    This returns a :class:`Messages` which internally contains a
+    This returns :class:`Messages` which internally contains a
     reference to its parent :class:`Query` object. Otherwise the
     Query() would be immediately freed, taking our *msgs* down with
     it.
@@ -31,7 +31,6 @@ likely to need.
     Pretty much the same is valid for all other objects in the
     hierarchy, such as :class:`Query`, :class:`Messages`,
     :class:`Message`, and :class:`Tags`.
-
 """
 
 """

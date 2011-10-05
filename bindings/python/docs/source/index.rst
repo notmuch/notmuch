@@ -21,7 +21,13 @@ Notmuch can be imported as::
 
 or::
 
- from notmuch import Query,Database
+ from notmuch import Query, Database
+
+ db = Database('path',create=True)
+ msgs = Query(db,'from:myself').search_messages()
+
+ for msg in msgs:
+    print (msg)
 
 More information on specific topics can be found on the following pages:
 
@@ -35,8 +41,6 @@ More information on specific topics can be found on the following pages:
 =================================================
 
 .. automodule:: notmuch
-
-:todo: Document nmlib,STATUS
 
 :class:`notmuch.Database` -- The underlying notmuch database
 ---------------------------------------------------------------------
@@ -73,9 +77,6 @@ More information on specific topics can be found on the following pages:
 
    .. automethod:: create_query
 
-   .. note:: :meth:`create_query` was broken in release
-             0.1 and is fixed since 0.1.1.
-
    .. attribute:: Database.MODE
 
      Defines constants that are used as the mode in which to open a database.
@@ -87,6 +88,7 @@ More information on specific topics can be found on the following pages:
        Open the database in read-write mode
 
    .. autoattribute:: db_p
+
 
 :class:`notmuch.Query` -- A search query
 -------------------------------------------------
