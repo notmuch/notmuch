@@ -19,7 +19,8 @@ Copyright 2010 Sebastian Spaeth <Sebastian@SSpaeth.de>'
 
 import os
 from ctypes import c_int, c_char_p, c_void_p, c_uint, c_long, byref
-from notmuch.globals import nmlib, STATUS, NotmuchError, Enum, _str
+from notmuch.globals import (nmlib, STATUS, NotmuchError, NotInitializedError,
+     OutOfMemoryError, XapianError, Enum, _str)
 from notmuch.thread import Threads
 from notmuch.message import Messages, Message
 from notmuch.tag import Tags
@@ -61,11 +62,9 @@ class Database(object):
 
     """ notmuch_database_find_message"""
     _find_message = nmlib.notmuch_database_find_message
-    _find_message.restype = c_void_p
 
     """notmuch_database_find_message_by_filename"""
     _find_message_by_filename = nmlib.notmuch_database_find_message_by_filename
-    _find_message_by_filename.restype = c_void_p
 
     """notmuch_database_get_all_tags"""
     _get_all_tags = nmlib.notmuch_database_get_all_tags
@@ -93,8 +92,8 @@ class Database(object):
         :param mode:   Mode to open a database in. Is always
                        :attr:`MODE`.READ_WRITE when creating a new one.
         :type mode:    :attr:`MODE`
-        :returns:      Nothing
-        :exception:    :exc:`NotmuchError` in case of failure.
+        :exception: :exc:`NotmuchError` or derived exception in case of
+            failure.
         """
         self._db = None
         if path is None:
@@ -110,9 +109,9 @@ class Database(object):
             self.create(path)
 
     def _assert_db_is_initialized(self):
-        """Raises a NotmuchError in case self._db is still None"""
+        """Raises :exc:`NotInitializedError` if self._db is `None`"""
         if self._db is None:
-            raise NotmuchError(STATUS.NOT_INITIALIZED)
+            raise NotInitializedError()
 
     def create(self, path):
         """Creates a new notmuch database
@@ -128,7 +127,7 @@ class Database(object):
         :type path: str
         :returns: Nothing
         :exception: :exc:`NotmuchError` in case of any failure
-                    (after printing an error message on stderr).
+                    (possibly after printing an error message on stderr).
         """
         if self._db is not None:
             raise NotmuchError(message="Cannot create db, this Database() "
@@ -171,7 +170,7 @@ class Database(object):
         """Returns the database format version
 
         :returns: The database version as positive integer
-        :exception: :exc:`NotmuchError` with :attr:`STATUS`.NOT_INITIALIZED if
+        :exception: :exc:`NotInitializedError` if
                     the database was not intitialized.
         """
         self._assert_db_is_initialized()
@@ -186,7 +185,7 @@ class Database(object):
         etc.) will work unless :meth:`upgrade` is called successfully first.
 
         :returns: `True` or `False`
-        :exception: :exc:`NotmuchError` with :attr:`STATUS`.NOT_INITIALIZED if
+        :exception: :exc:`NotInitializedError` if
                     the database was not intitialized.
         """
         self._assert_db_is_initialized()
@@ -206,6 +205,9 @@ class Database(object):
         indicating the progress made so far in the upgrade process.
 
         :TODO: catch exceptions, document return values and etc...
+
+        :exception: :exc:`NotInitializedError` if
+                    the database was not intitialized.
         """
         self._assert_db_is_initialized()
         status = Database._upgrade(self._db, None, None)
@@ -226,6 +228,9 @@ class Database(object):
         :exception: :exc:`NotmuchError`:
             :attr:`STATUS`.XAPIAN_EXCEPTION
                 Xapian exception occurred; atomic section not entered.
+
+            :exc:`NotInitializedError` if
+                the database was not intitialized.
 
         *Added in notmuch 0.9*"""
         self._assert_db_is_initialized()
@@ -249,6 +254,9 @@ class Database(object):
                 :attr:`STATUS`.UNBALANCED_ATOMIC:
                     end_atomic has been called more times than begin_atomic.
 
+            :exc:`NotInitializedError` if
+                    the database was not intitialized.
+
         *Added in notmuch 0.9*"""
         self._assert_db_is_initialized()
         status = nmlib.notmuch_database_end_atomic(self._db)
@@ -268,15 +276,13 @@ class Database(object):
               of database (see :meth:`get_path`), or else should be an absolute path
               with initial components that match the path of 'database'.
         :returns: :class:`Directory` or raises an exception.
-        :exception: :exc:`NotmuchError`
-
-                  :attr:`STATUS`.NOT_INITIALIZED
-                    If the database was not intitialized.
-
-                  :attr:`STATUS`.FILE_ERROR
+        :exception:
+            :exc:`NotmuchError` with :attr:`STATUS`.FILE_ERROR
                     If path is not relative database or absolute with initial
                     components same as database.
 
+            :exc:`NotInitializedError` if
+                    the database was not intitialized.
         """
         self._assert_db_is_initialized()
         # sanity checking if path is valid, and make path absolute
@@ -345,8 +351,9 @@ class Database(object):
               :attr:`STATUS`.READ_ONLY_DATABASE
                       Database was opened in read-only mode so no message can
                       be added.
-              :attr:`STATUS`.NOT_INITIALIZED
-                      The database has not been initialized.
+
+            :exc:`NotInitializedError` if
+                    the database was not intitialized.
         """
         self._assert_db_is_initialized()
         msg_p = c_void_p()
@@ -390,8 +397,9 @@ class Database(object):
              :attr:`STATUS`.READ_ONLY_DATABASE
                Database was opened in read-only mode so no message can be
                removed.
-             :attr:`STATUS`.NOT_INITIALIZED
-               The database has not been initialized.
+
+             :exc:`NotInitializedError` if
+                    the database was not intitialized.
         """
         self._assert_db_is_initialized()
         return nmlib.notmuch_database_remove_message(self._db,
@@ -403,20 +411,26 @@ class Database(object):
         Wraps the underlying *notmuch_database_find_message* function.
 
         :param msgid: The message ID
-        :type msgid: string
-        :returns: :class:`Message` or `None` if no message is found or
-                  if any xapian exception or out-of-memory situation
-                  occurs. Do note that Xapian Exceptions include
-                  "Database modified" situations, e.g. when the
-                  notmuch database has been modified by
-                  another program in the meantime. A return value of
-                  `None` is therefore no guarantee that the message
-                  does not exist.
-        :exception: :exc:`NotmuchError` with :attr:`STATUS`.NOT_INITIALIZED if
-                  the database was not intitialized.
+        :type msgid: unicode or str
+        :returns: :class:`Message` or `None` if no message is found.
+        :exception:
+            :exc:`OutOfMemoryError`
+                  If an Out-of-memory occured while constructing the message.
+            :exc:`XapianError`
+                  In case of a Xapian Exception. These exceptions
+                  include "Database modified" situations, e.g. when the
+                  notmuch database has been modified by another program
+                  in the meantime. In this case, you should close and
+                  reopen the database and retry.
+
+             :exc:`NotInitializedError` if
+                    the database was not intitialized.
         """
         self._assert_db_is_initialized()
-        msg_p = Database._find_message(self._db, _str(msgid))
+        msg_p = c_void_p()
+        status = Database._find_message(self._db, _str(msgid), byref(msg_p))
+        if status != STATUS.SUCCESS:
+            raise NotmuchError(status)
         return msg_p and Message(msg_p, self) or None
 
     def find_message_by_filename(self, filename):
@@ -429,15 +443,29 @@ class Database(object):
 
         :returns: If the database contains a message with the given
             filename, then a class:`Message:` is returned.  This
-            function returns None in the following situations:
+            function returns None if no message is found with the given
+            filename.
 
-                * No message is found with the given filename
-                * An out-of-memory situation occurs
-                * A Xapian exception occurs
+        :exception:
+            :exc:`OutOfMemoryError`
+                  If an Out-of-memory occured while constructing the message.
+            :exc:`XapianError`
+                  In case of a Xapian Exception. These exceptions
+                  include "Database modified" situations, e.g. when the
+                  notmuch database has been modified by another program
+                  in the meantime. In this case, you should close and
+                  reopen the database and retry.
+
+             :exc:`NotInitializedError` if
+                    the database was not intitialized.
 
         *Added in notmuch 0.9*"""
         self._assert_db_is_initialized()
-        msg_p = Database._find_message_by_filename(self._db, _str(filename))
+        msg_p = c_void_p()
+        status = Database._find_message_by_filename(self._db, _str(filename),
+                                                    byref(msg_p))
+        if status != STATUS.SUCCESS:
+            raise NotmuchError(status)
         return msg_p and Message(msg_p, self) or None
 
     def get_all_tags(self):

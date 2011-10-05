@@ -163,6 +163,10 @@ class UnbalancedFreezeThawError(NotmuchError):
 class UnbalancedAtomicError(NotmuchError):
     pass
 class NotInitializedError(NotmuchError):
+    """Derived from NotmuchError, this occurs if the underlying data
+    structure (e.g. database is not initialized (yet) or an iterator has
+    been exhausted. You can test for NotmuchError with .status =
+    STATUS.NOT_INITIALIZED"""
     pass
 
 
