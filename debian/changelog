@@ -1,10 +1,13 @@
 notmuch (0.9~rc2-1) experimental; urgency=low
 
   * Upstream release candidate
-  * New SONAME for libnotmuch because of changes to
-    notmuch_database_find_message*
+  * API changes for n_d_find_message and n_d_find_message_by_filename.
+    - New SONAME for libnotmuch
+    - bindings changes for ruby and python
+  * Less non-text parts reported in replies.
+  * emacs: provide button action to fetch unknown gpg keys 
 
- -- David Bremner <bremner@debian.org>  Tue, 04 Oct 2011 13:59:15 -0300
+ -- David Bremner <bremner@debian.org>  Fri, 07 Oct 2011 18:53:04 -0300
 
 notmuch (0.9~rc1-1) experimental; urgency=low
 
