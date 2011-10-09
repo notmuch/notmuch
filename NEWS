@@ -39,7 +39,20 @@ Ruby bindings changes
   Wrap new library functions notmuch_database_{begin,end}_atomic, 
   and add new exception Notmuch::UnbalancedAtomicError. Rename destroy 
   to destroy! according to Ruby naming conventions.
-  
+
+Emacs improvements
+------------------
+
+  * Add gpg callback to crypto sigstatus buttons to retrieve/refresh
+    signing key.
+  * Add notmuch-show-refresh-view function (and corresponding binding)
+    to refresh the view of a notmuch-show buffer.
+
+Reply formatting cleanup
+------------------------
+
+  "notmuch reply" no longer includes notification that non-leafnode
+  MIME parts are being suppressed.
 
 Notmuch 0.8 (2011-09-10)
 ========================
