@@ -30,6 +30,7 @@ notmuch_dump_command (unused (void *ctx), int argc, char *argv[])
     notmuch_messages_t *messages;
     notmuch_message_t *message;
     notmuch_tags_t *tags;
+    const char* query_str = "";
 
     config = notmuch_config_open (ctx, NULL, NULL);
     if (config == NULL)
@@ -56,7 +57,15 @@ notmuch_dump_command (unused (void *ctx), int argc, char *argv[])
 	argv++;
     }
 
-    query = notmuch_query_create (notmuch, "");
+    if (argc) {
+	query_str = query_string_from_args (notmuch, argc, argv);
+	if (query_str == NULL) {
+	    fprintf (stderr, "Out of memory.\n");
+	    return 1;
+	}
+    }
+ 
+    query = notmuch_query_create (notmuch, query_str);
     if (query == NULL) {
 	fprintf (stderr, "Out of memory\n");
 	return 1;
