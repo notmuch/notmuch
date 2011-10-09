@@ -17,7 +17,7 @@ along with notmuch.  If not, see <http://www.gnu.org/licenses/>.
 Copyright 2010 Sebastian Spaeth <Sebastian@SSpaeth.de>'
 """
 
-from ctypes import CDLL, c_char_p, c_int
+from ctypes import CDLL, c_char_p, c_int, Structure, POINTER
 from ctypes.util import find_library
 
 #-----------------------------------------------------------------------------
@@ -182,3 +182,39 @@ def _str(value):
         return value.encode('UTF-8')
     return value
 
+
+class NotmuchDatabaseS(Structure):
+    pass
+NotmuchDatabaseP = POINTER(NotmuchDatabaseS)
+
+class NotmuchQueryS(Structure):
+    pass
+NotmuchQueryP = POINTER(NotmuchQueryS)
+
+class NotmuchThreadsS(Structure):
+    pass
+NotmuchThreadsP = POINTER(NotmuchThreadsS)
+
+class NotmuchThreadS(Structure):
+    pass
+NotmuchThreadP = POINTER(NotmuchThreadS)
+
+class NotmuchMessagesS(Structure):
+    pass
+NotmuchMessagesP = POINTER(NotmuchMessagesS)
+
+class NotmuchMessageS(Structure):
+    pass
+NotmuchMessageP = POINTER(NotmuchMessageS)
+
+class NotmuchTagsS(Structure):
+    pass
+NotmuchTagsP = POINTER(NotmuchTagsS)
+
+class NotmuchDirectoryS(Structure):
+    pass
+NotmuchDirectoryP = POINTER(NotmuchDirectoryS)
+
+class NotmuchFilenamesS(Structure):
+    pass
+NotmuchFilenamesP = POINTER(NotmuchFilenamesS)
