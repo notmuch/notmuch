@@ -6,17 +6,17 @@ add_email_corpus
 
 test_expect_success "Dumping all tags" "generate_message &&
 notmuch new &&
-notmuch dump dump.expected"
+notmuch dump > dump.expected"
 
 test_begin_subtest "Clearing all tags"
 sed -e "s/(\([^(]*\))$/()/" < dump.expected > clear.expected
-notmuch restore clear.expected
-notmuch dump clear.actual
+notmuch restore < clear.expected
+notmuch dump > clear.actual
 test_expect_equal "$(< clear.actual)" "$(< clear.expected)"
 
 test_begin_subtest "Restoring original tags"
-notmuch restore dump.expected
-notmuch dump dump.actual
+notmuch restore < dump.expected
+notmuch dump > dump.actual
 test_expect_equal "$(< dump.actual)" "$(< dump.expected)"
 
 test_expect_success "Restore with nothing to do" "notmuch restore dump.expected"
