@@ -26,7 +26,7 @@ notmuch_dump_command (unused (void *ctx), int argc, char *argv[])
     notmuch_config_t *config;
     notmuch_database_t *notmuch;
     notmuch_query_t *query;
-    FILE *output;
+    FILE *output = stdout;
     notmuch_messages_t *messages;
     notmuch_message_t *message;
     notmuch_tags_t *tags;
@@ -40,23 +40,28 @@ notmuch_dump_command (unused (void *ctx), int argc, char *argv[])
     if (notmuch == NULL)
 	return 1;
 
-    query = notmuch_query_create (notmuch, "");
-    if (query == NULL) {
-	fprintf (stderr, "Out of memory\n");
-	return 1;
-    }
-    notmuch_query_set_sort (query, NOTMUCH_SORT_MESSAGE_ID);
-
-    if (argc) {
+    if (argc && strcmp (argv[0], "--") != 0) {
 	output = fopen (argv[0], "w");
 	if (output == NULL) {
 	    fprintf (stderr, "Error opening %s for writing: %s\n",
 		     argv[0], strerror (errno));
 	    return 1;
 	}
-    } else {
-	output = stdout;
+	argc--;
+	argv++;
     }
+
+    if (argc && strcmp (argv[0], "--") == 0){
+	argc--;
+	argv++;
+    }
+
+    query = notmuch_query_create (notmuch, "");
+    if (query == NULL) {
+	fprintf (stderr, "Out of memory\n");
+	return 1;
+    }
+    notmuch_query_set_sort (query, NOTMUCH_SORT_MESSAGE_ID);
 
     for (messages = notmuch_query_search_messages (query);
 	 notmuch_messages_valid (messages);
