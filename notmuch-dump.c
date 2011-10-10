@@ -42,6 +42,7 @@ notmuch_dump_command (unused (void *ctx), int argc, char *argv[])
 	return 1;
 
     if (argc && strcmp (argv[0], "--") != 0) {
+	fprintf (stderr, "Warning: the output file argument of dump is deprecated.\n");
 	output = fopen (argv[0], "w");
 	if (output == NULL) {
 	    fprintf (stderr, "Error opening %s for writing: %s\n",
