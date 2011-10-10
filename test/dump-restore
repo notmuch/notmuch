@@ -8,6 +8,34 @@ test_expect_success "Dumping all tags" "generate_message &&
 notmuch new &&
 notmuch dump > dump.expected"
 
+test_begin_subtest "dump outfile"
+notmuch dump dump-outfile.actual
+test_expect_equal_file dump.expected dump-outfile.actual
+
+test_begin_subtest "dump outfile --"
+notmuch dump dump-1-arg-dash.actual --
+test_expect_equal_file dump.expected dump-1-arg-dash.actual
+
+# Note, we assume all messages from cworth have a message-id
+# containing cworth.org
+
+grep cworth\.org dump.expected > dump-cworth.expected
+
+test_begin_subtest "dump -- from:cworth"
+test_subtest_known_broken
+notmuch dump -- from:cworth > dump-dash-cworth.actual
+test_expect_equal_file dump-cworth.expected dump-dash-cworth.actual
+
+test_begin_subtest "dump outfile from:cworth"
+test_subtest_known_broken
+notmuch dump dump-outfile-cworth.actual from:cworth
+test_expect_equal_file dump-cworth.expected dump-outfile-cworth.actual
+
+test_begin_subtest "dump outfile -- from:cworth"
+test_subtest_known_broken
+notmuch dump dump-outfile-dash-inbox.actual -- from:cworth
+test_expect_equal_file dump-cworth.expected dump-outfile-dash-inbox.actual
+
 test_begin_subtest "Clearing all tags"
 sed -e "s/(\([^(]*\))$/()/" < dump.expected > clear.expected
 notmuch restore < clear.expected
