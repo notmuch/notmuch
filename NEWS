@@ -22,6 +22,13 @@ New functions
 
   notmuch_database_find_message_by_filename does exactly what it says.
 
+API changes
+
+  notmuch_database_find_message (and n_d_f_m_by_filename) now return
+  a status indicator and uses an output parameter for the
+  message. This change required changing the SONAME of libnotmuch to
+  libnotmuch.so.2
+
 Python bindings changes
 -----------------------
 
