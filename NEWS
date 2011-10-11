@@ -39,13 +39,15 @@ Python bindings changes
     NB! This needs a db opened in READ-WRITE mode currently, or it will crash
     the python process. The is a limitation (=bug) of the underlying libnotmuch.
   - Fixes where we would not throw NotmuchErrors when we should (Justus Winter)
+  - Update for n_d_find_message* API changes (see above).
 
 Ruby bindings changes
 ---------------------
 
-  Wrap new library functions notmuch_database_{begin,end}_atomic, 
-  and add new exception Notmuch::UnbalancedAtomicError. Rename destroy 
-  to destroy! according to Ruby naming conventions.
+  - Wrap new library functions notmuch_database_{begin,end}_atomic.
+  - Add new exception Notmuch::UnbalancedAtomicError. 
+  - Rename destroy  to destroy! according to Ruby naming conventions.
+  - Update for n_d_find_message* API changes (see above).
 
 Emacs improvements
 ------------------
