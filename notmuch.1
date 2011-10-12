@@ -458,16 +458,27 @@ purposes, and to restore from that dump
 
 .RS 4
 .TP 4
-.BR dump " [<filename>]"
+.BR dump " [<filename>] [--] [<search-terms>]"
 
 Creates a plain-text dump of the tags of each message.
 
-The output is to the given filename, if any, or to stdout.
+Output is to the given filename, if any, or to stdout.  Note that
+using the filename argument is deprecated.
 
 These tags are the only data in the notmuch database that can't be
 recreated from the messages themselves.  The output of notmuch dump is
 therefore the only critical thing to backup (and much more friendly to
 incremental backup than the native database files.)
+
+With no search terms, a dump of all messages in the database will be
+generated.  A "--" argument instructs notmuch that the
+remaining arguments are search terms.
+
+See the
+.B "SEARCH SYNTAX"
+section below for details of the supported syntax for <search-terms>.
+.RE
+
 .TP
 .BR restore " <filename>"
 

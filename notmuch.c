@@ -375,14 +375,23 @@ static command_t commands[] = {
       "\tSee \"notmuch help search-terms\" for details of the search\n"
       "\tterms syntax." },
     { "dump", notmuch_dump_command,
-      "[<filename>]",
+      "[<filename>] [--] [<search-terms>]",
       "Create a plain-text dump of the tags for each message.",
       "\tOutput is to the given filename, if any, or to stdout.\n"
+      "\tNote that using the filename argument is deprecated.\n"
+      "\n"
       "\tThese tags are the only data in the notmuch database\n"
       "\tthat can't be recreated from the messages themselves.\n"
       "\tThe output of notmuch dump is therefore the only\n"
       "\tcritical thing to backup (and much more friendly to\n"
-      "\tincremental backup than the native database files.)" },
+      "\tincremental backup than the native database files.)\n" 
+      "\n"
+      "\tWith no search terms, a dump of all messages in the\n"
+      "\tdatabase will be generated. A \"--\" argument instructs\n"
+      "\tnotmuch that the remaining arguments are search terms.\n"
+      "\n"
+      "\tSee \"notmuch help search-terms\" for the search-term syntax.\n"      
+ },
     { "restore", notmuch_restore_command,
       "<filename>",
       "Restore the tags from the given dump file (see 'dump').",
