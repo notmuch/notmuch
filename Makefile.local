@@ -130,6 +130,17 @@ pre-release:
 	mkdir -p releases
 	mv $(TAR_FILE) $(DEB_TAR_FILE) releases
 
+.PHONY: debian-snapshot
+debian-snapshot: TMPFILE := $(shell mktemp)
+debian-snapshot:
+	make VERSION=$(VERSION) clean
+	cp debian/changelog $(TMPFILE)
+	EDITOR=/bin/true dch -v $(VERSION)+1 -D UNRELEASED 'test build, not for upload'
+	echo '3.0 (native)' > debian/source/format
+	debuild -us -uc
+	mv -f $(TMPFILE) debian/changelog
+	echo '3.0 (quilt)' > debian/source/format
+
 .PHONY: release-message
 release-message:
 	@echo "To: notmuch@notmuchmail.org"
