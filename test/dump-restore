@@ -4,9 +4,31 @@ test_description="\"notmuch dump\" and \"notmuch restore\""
 
 add_email_corpus
 
-test_expect_success "Dumping all tags" "generate_message &&
-notmuch new &&
-notmuch dump > dump.expected"
+test_expect_success 'Dumping all tags' \
+  'generate_message &&
+  notmuch new &&
+  notmuch dump > dump.expected'
+
+test_expect_success 'Clearing all tags' \
+  'sed -e "s/(\([^(]*\))$/()/" < dump.expected > clear.expected &&
+  notmuch restore clear.expected &&
+  notmuch dump > clear.actual &&
+  test_cmp clear.expected clear.actual'
+
+test_expect_success 'Restoring original tags' \
+  'notmuch restore dump.expected &&
+  notmuch dump > dump.actual &&
+  test_cmp dump.expected dump.actual'
+
+test_expect_success 'Restore with nothing to do' \
+  'notmuch restore < dump.expected &&
+  notmuch dump > dump.actual &&
+  test_cmp dump.expected dump.actual'
+
+# notmuch restore currently only considers the first argument.
+test_subtest_known_broken
+test_expect_success 'Invalid restore invocation' \
+  'test_must_fail notmuch restore dump.expected another_one'
 
 test_begin_subtest "dump outfile"
 notmuch dump dump-outfile.actual
@@ -36,18 +58,5 @@ test_expect_equal_file dump-cworth.expected dump-outfile-cworth.actual
 test_begin_subtest "dump outfile -- from:cworth"
 notmuch dump dump-outfile-dash-inbox.actual -- from:cworth
 test_expect_equal_file dump-cworth.expected dump-outfile-dash-inbox.actual
-
-test_begin_subtest "Clearing all tags"
-sed -e "s/(\([^(]*\))$/()/" < dump.expected > clear.expected
-notmuch restore < clear.expected
-notmuch dump > clear.actual
-test_expect_equal "$(< clear.actual)" "$(< clear.expected)"
-
-test_begin_subtest "Restoring original tags"
-notmuch restore < dump.expected
-notmuch dump > dump.actual
-test_expect_equal "$(< dump.actual)" "$(< dump.expected)"
-
-test_expect_success "Restore with nothing to do" "notmuch restore dump.expected"
 
 test_done
