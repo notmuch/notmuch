@@ -462,6 +462,7 @@ test_expect_equal ()
     fi
 }
 
+# Like test_expect_equal, but takes two filenames.
 test_expect_equal_file ()
 {
 	exec 1>&6 2>&7		# Restore stdout and stderr
@@ -724,7 +725,7 @@ test_external_without_stderr () {
 	fi
 }
 
-# This is not among top-level (test_expect_success | test_expect_failure)
+# This is not among top-level (test_expect_success)
 # but is a prefix that can be used in the test script, like:
 #
 #	test_expect_success 'complain and die' '
