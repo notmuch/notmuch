@@ -18,6 +18,8 @@
  * Author: Carl Worth <cworth@cworth.org>
  */
 
+#include <getopt.h>
+
 #include "notmuch-client.h"
 
 int
@@ -26,7 +28,8 @@ notmuch_restore_command (unused (void *ctx), int argc, char *argv[])
     notmuch_config_t *config;
     notmuch_database_t *notmuch;
     notmuch_bool_t synchronize_flags;
-    FILE *input;
+    notmuch_bool_t accumulate = FALSE;
+    FILE *input = stdin;
     char *line = NULL;
     size_t line_size;
     ssize_t line_len;
@@ -44,18 +47,34 @@ notmuch_restore_command (unused (void *ctx), int argc, char *argv[])
 
     synchronize_flags = notmuch_config_get_maildir_synchronize_flags (config);
 
-    argc--; argv++; /* skip subcommand argument */
+    struct option options[] = {
+	{ "accumulate",   no_argument,       0, 'a' },
+	{ 0, 0, 0, 0}
+    };
 
-    if (argc) {
-	input = fopen (argv[0], "r");
+    int opt;
+    do {
+	opt = getopt_long (argc, argv, "", options, NULL);
+
+	switch (opt) {
+	case 'a':
+	    accumulate = 1;
+	    break;
+	case '?':
+	    return 1;
+	    break;
+	}
+
+    } while (opt != -1);
+
+    if (optind < argc) {
+	input = fopen (argv[optind], "r");
 	if (input == NULL) {
 	    fprintf (stderr, "Error opening %s for reading: %s\n",
-		     argv[0], strerror (errno));
+		     argv[optind], strerror (errno));
 	    return 1;
 	}
-    } else {
-	printf ("No filename given. Reading dump from stdin.\n");
-	input = stdin;
+	optind++;
     }
 
     /* Dump output is one line per message. We match a sequence of
@@ -99,6 +118,13 @@ notmuch_restore_command (unused (void *ctx), int argc, char *argv[])
 	    goto NEXT_LINE;
 	}
 
+	/* In order to detect missing messages, this check/optimization is
+	 * intentionally done *after* first finding the message.  */
+	if (accumulate && (file_tags == NULL || *file_tags == '\0'))
+	{
+	    goto NEXT_LINE;
+	}
+
 	db_tags_str = NULL;
 	for (db_tags = notmuch_message_get_tags (message);
 	     notmuch_tags_valid (db_tags);
@@ -120,7 +146,9 @@ notmuch_restore_command (unused (void *ctx), int argc, char *argv[])
 	}
 
 	notmuch_message_freeze (message);
-	notmuch_message_remove_all_tags (message);
+
+	if (!accumulate)
+	    notmuch_message_remove_all_tags (message);
 
 	next = file_tags;
 	while (next) {

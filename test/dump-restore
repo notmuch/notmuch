@@ -23,7 +23,6 @@ test_expect_success 'Clearing all tags' \
   notmuch dump > clear.actual &&
   test_cmp clear.expected clear.actual'
 
-test_subtest_known_broken	# missing --accumuluate
 test_expect_success 'Accumulate original tags' \
   'notmuch tag +ABC +DEF -- from:cworth &&
   notmuch restore --accumulate < dump.expected &&
@@ -40,13 +39,11 @@ test_expect_success 'Restore with nothing to do' \
   notmuch dump > dump.actual &&
   test_cmp dump.expected dump.actual'
 
-test_subtest_known_broken	# missing --accumuluate
 test_expect_success 'Restore with nothing to do, II' \
   'notmuch restore --accumulate dump.expected &&
   notmuch dump > dump.actual &&
   test_cmp dump.expected dump.actual'
 
-test_subtest_known_broken	# missing --accumuluate
 test_expect_success 'Restore with nothing to do, III' \
   'notmuch restore --accumulate < clear.expected &&
   notmuch dump > dump.actual &&
