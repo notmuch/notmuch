@@ -393,13 +393,17 @@ static command_t commands[] = {
       "\tSee \"notmuch help search-terms\" for the search-term syntax.\n"      
  },
     { "restore", notmuch_restore_command,
-      "<filename>",
+      "[--accumulate] [<filename>]",
       "Restore the tags from the given dump file (see 'dump').",
+      "\tInput is read from the given filename, if any, or from stdin.\n"
       "\tNote: The dump file format is specifically chosen to be\n"
       "\tcompatible with the format of files produced by sup-dump.\n"
       "\tSo if you've previously been using sup for mail, then the\n"
       "\t\"notmuch restore\" command provides you a way to import\n"
-      "\tall of your tags (or labels as sup calls them)." },
+      "\tall of your tags (or labels as sup calls them).\n"
+      "\tThe --accumulate switch causes the union of the existing and new\n"
+      "\ttags to be applied, instead of replacing each message's tags as\n"
+      "\tthey are read in from the dump file."},
     { "config", notmuch_config_command,
       "[get|set] <section>.<item> [value ...]",
       "Get or set settings in the notmuch configuration file.",

@@ -480,7 +480,7 @@ section below for details of the supported syntax for <search-terms>.
 .RE
 
 .TP
-.BR restore " <filename>"
+.BR restore " [--accumulate] [<filename>]"
 
 Restores the tags from the given file (see
 .BR "notmuch dump" ")."
@@ -493,6 +493,10 @@ So if you've previously been using sup for mail, then the
 .B "notmuch restore"
 command provides you a way to import all of your tags (or labels as
 sup calls them).
+
+The --accumulate switch causes the union of the existing and new tags to be
+applied, instead of replacing each message's tags as they are read in from the
+dump file.
 .RE
 
 The

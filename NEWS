@@ -1,11 +1,20 @@
 Notmuch 0.10 (2011-xx-xx)
+=========================
 
-notmuch dump changes 
---------------------
+New command-line features
+-------------------------
 
-The dump command now takes an optional search term much like notmuch
-search/show/tag. The output file argument of dump is deprecated in
-favour of using stdout.
+Add "notmuch restore --accumulate" option
+
+  The --accumulate switch causes the union of the existing and new tags to be
+  applied, instead of replacing each message's tags as they are read in from
+  the dump file.
+
+Add search terms to  "notmuch dump"
+
+  The dump command now takes an optional search term much like notmuch
+  search/show/tag. The output file argument of dump is deprecated in
+  favour of using stdout.
 
 Notmuch 0.9 (2011-10-01)
 ========================
