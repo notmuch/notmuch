@@ -50,7 +50,6 @@ test_expect_success 'Restore with nothing to do, III' \
   test_cmp dump.expected dump.actual'
 
 # notmuch restore currently only considers the first argument.
-test_subtest_known_broken
 test_expect_success 'Invalid restore invocation' \
   'test_must_fail notmuch restore dump.expected another_one'
 

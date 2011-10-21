@@ -77,6 +77,13 @@ notmuch_restore_command (unused (void *ctx), int argc, char *argv[])
 	optind++;
     }
 
+    if (optind < argc) {
+	fprintf (stderr,
+	 "Cannot read dump from more than one file: %s\n",
+		 argv[optind]);
+	return 1;
+    }
+
     /* Dump output is one line per message. We match a sequence of
      * non-space characters for the message-id, then one or more
      * spaces, then a list of space-separated tags as a sequence of
