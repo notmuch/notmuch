@@ -9,11 +9,26 @@ test_expect_success 'Dumping all tags' \
   notmuch new &&
   notmuch dump > dump.expected'
 
+# The use of from:cworth is rather arbitrary: it matches some of the
+# email corpus' messages, but not all of them.
+
+test_expect_success 'Dumping all tags II' \
+  'notmuch tag +ABC +DEF -- from:cworth &&
+  notmuch dump > dump-ABC_DEF.expected &&
+  ! cmp dump.expected dump-ABC_DEF.expected'
+
 test_expect_success 'Clearing all tags' \
   'sed -e "s/(\([^(]*\))$/()/" < dump.expected > clear.expected &&
   notmuch restore clear.expected &&
   notmuch dump > clear.actual &&
   test_cmp clear.expected clear.actual'
+
+test_subtest_known_broken	# missing --accumuluate
+test_expect_success 'Accumulate original tags' \
+  'notmuch tag +ABC +DEF -- from:cworth &&
+  notmuch restore --accumulate < dump.expected &&
+  notmuch dump > dump.actual &&
+  test_cmp dump-ABC_DEF.expected dump.actual'
 
 test_expect_success 'Restoring original tags' \
   'notmuch restore dump.expected &&
@@ -22,6 +37,18 @@ test_expect_success 'Restoring original tags' \
 
 test_expect_success 'Restore with nothing to do' \
   'notmuch restore < dump.expected &&
+  notmuch dump > dump.actual &&
+  test_cmp dump.expected dump.actual'
+
+test_subtest_known_broken	# missing --accumuluate
+test_expect_success 'Restore with nothing to do, II' \
+  'notmuch restore --accumulate dump.expected &&
+  notmuch dump > dump.actual &&
+  test_cmp dump.expected dump.actual'
+
+test_subtest_known_broken	# missing --accumuluate
+test_expect_success 'Restore with nothing to do, III' \
+  'notmuch restore --accumulate < clear.expected &&
   notmuch dump > dump.actual &&
   test_cmp dump.expected dump.actual'
 
