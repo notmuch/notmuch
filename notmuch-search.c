@@ -395,6 +395,8 @@ notmuch_search_command (void *ctx, int argc, char *argv[])
     int i, ret;
     output_t output = OUTPUT_SUMMARY;
 
+    argc--; argv++; /* skip subcommand argument */
+
     for (i = 0; i < argc && argv[i][0] == '-'; i++) {
 	if (strcmp (argv[i], "--") == 0) {
 	    i++;

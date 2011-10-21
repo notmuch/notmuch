@@ -735,6 +735,8 @@ notmuch_config_command_set (void *ctx, char *item, int argc, char *argv[])
 int
 notmuch_config_command (void *ctx, int argc, char *argv[])
 {
+    argc--; argv++; /* skip subcommand argument */
+
     if (argc < 2) {
 	fprintf (stderr, "Error: notmuch config requires at least two arguments.\n");
 	return 1;

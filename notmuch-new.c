@@ -815,6 +815,8 @@ notmuch_new_command (void *ctx, int argc, char *argv[])
     add_files_state.verbose = 0;
     add_files_state.output_is_a_tty = isatty (fileno (stdout));
 
+    argc--; argv++; /* skip subcommand argument */
+
     for (i = 0; i < argc && argv[i][0] == '-'; i++) {
 	if (STRNCMP_LITERAL (argv[i], "--verbose") == 0) {
 	    add_files_state.verbose = 1;

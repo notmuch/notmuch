@@ -936,6 +936,8 @@ notmuch_show_command (void *ctx, unused (int argc), unused (char *argv[]))
     params.cryptoctx = NULL;
     params.decrypt = 0;
 
+    argc--; argv++; /* skip subcommand argument */
+
     for (i = 0; i < argc && argv[i][0] == '-'; i++) {
 	if (strcmp (argv[i], "--") == 0) {
 	    i++;

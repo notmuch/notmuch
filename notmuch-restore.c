@@ -44,6 +44,8 @@ notmuch_restore_command (unused (void *ctx), int argc, char *argv[])
 
     synchronize_flags = notmuch_config_get_maildir_synchronize_flags (config);
 
+    argc--; argv++; /* skip subcommand argument */
+
     if (argc) {
 	input = fopen (argv[0], "r");
 	if (input == NULL) {

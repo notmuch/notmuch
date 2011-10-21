@@ -465,6 +465,8 @@ notmuch_help_command (unused (void *ctx), int argc, char *argv[])
     command_t *command;
     unsigned int i;
 
+    argc--; argv++; /* Ignore "help" */
+
     if (argc == 0) {
 	printf ("The notmuch mail system.\n\n");
 	usage (stdout);
@@ -639,7 +641,7 @@ main (int argc, char *argv[])
 	command = &commands[i];
 
 	if (strcmp (argv[1], command->name) == 0)
-	    return (command->function) (local, argc - 2, &argv[2]);
+	    return (command->function) (local, argc - 1, &argv[1]);
     }
 
     fprintf (stderr, "Error: Unknown command '%s' (see \"notmuch help\")\n",

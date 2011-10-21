@@ -628,6 +628,8 @@ notmuch_reply_command (void *ctx, int argc, char *argv[])
     params.part = -1;
     params.cryptoctx = NULL;
 
+    argc--; argv++; /* skip subcommand argument */
+
     for (i = 0; i < argc && argv[i][0] == '-'; i++) {
 	if (strcmp (argv[i], "--") == 0) {
 	    i++;

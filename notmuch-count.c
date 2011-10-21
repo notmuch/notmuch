@@ -35,6 +35,8 @@ notmuch_count_command (void *ctx, int argc, char *argv[])
     notmuch_sort_t sort = NOTMUCH_SORT_NEWEST_FIRST;
 #endif
 
+    argc--; argv++; /* skip subcommand argument */
+
     for (i = 0; i < argc && argv[i][0] == '-'; i++) {
 	if (strcmp (argv[i], "--") == 0) {
 	    i++;
