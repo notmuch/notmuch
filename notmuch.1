@@ -454,7 +454,7 @@ section below for details of the supported syntax for <search-terms>.
 The
 .BR dump " and " restore
 commands can be used to create a textual dump of email tags for backup
-purposes, and to restore from that dump
+purposes, and to restore from that dump.
 
 .RS 4
 .TP 4
@@ -483,7 +483,9 @@ section below for details of the supported syntax for <search-terms>.
 .BR restore " <filename>"
 
 Restores the tags from the given file (see
-.BR "notmuch dump" "."
+.BR "notmuch dump" ")."
+
+The input is read from the given filename, if any, or from stdin.
 
 Note: The dump file format is specifically chosen to be
 compatible with the format of files produced by sup-dump.
