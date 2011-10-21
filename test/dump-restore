@@ -45,7 +45,7 @@ test_expect_equal_file dump.expected dump-1-arg-dash.actual
 # Note, we assume all messages from cworth have a message-id
 # containing cworth.org
 
-grep cworth\.org dump.expected > dump-cworth.expected
+grep 'cworth[.]org' dump.expected > dump-cworth.expected
 
 test_begin_subtest "dump -- from:cworth"
 notmuch dump -- from:cworth > dump-dash-cworth.actual
