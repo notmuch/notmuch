@@ -41,6 +41,11 @@ endif
 dir := lib
 extra_cflags += -I$(srcdir)/$(dir) -fPIC
 
+# The (often-reused) $dir works fine within targets/prerequisites,
+# but cannot be used reliably within commands, so copy its value to a
+# variable that is not reused.
+lib := $(dir)
+
 libnotmuch_c_srcs =		\
 	$(notmuch_compat_srcs)	\
 	$(dir)/filenames.c	\
@@ -68,8 +73,8 @@ $(dir)/libnotmuch.a: $(libnotmuch_modules)
 $(dir)/$(LIBNAME): $(libnotmuch_modules) notmuch.sym
 	$(call quiet,CXX $(CXXFLAGS)) $(libnotmuch_modules) $(FINAL_LIBNOTMUCH_LDFLAGS) $(LIBRARY_LINK_FLAG) -o $@
 
-notmuch.sym: lib/notmuch.h $(libnotmuch_modules)
-	sh lib/gen-version-script.sh $< $(libnotmuch_modules) > $@
+notmuch.sym: $(srcdir)/$(dir)/notmuch.h $(libnotmuch_modules)
+	sh $(srcdir)/$(lib)/gen-version-script.sh $< $(libnotmuch_modules) > $@
 
 $(dir)/$(SONAME): $(dir)/$(LIBNAME)
 	ln -sf $(LIBNAME) $@
@@ -79,10 +84,6 @@ $(dir)/$(LINKER_NAME): $(dir)/$(SONAME)
 
 install: install-$(dir)
 
-# The (often-reused) $dir works fine within targets/prerequisites,
-# but cannot be used reliably within commands, so copy its value to a
-# variable that is not reused.
-lib := $(dir)
 install-$(dir): $(dir)/$(LIBNAME)
 	mkdir -p "$(DESTDIR)$(libdir)/"
 	install -m0644 "$(lib)/$(LIBNAME)" "$(DESTDIR)$(libdir)/"
