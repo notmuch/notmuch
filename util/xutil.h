@@ -43,7 +43,8 @@ xstrdup (const char *s);
 char *
 xstrndup (const char *s, size_t n);
 
-void
+/* Returns 0 for successful compilation, 1 otherwise */
+int
 xregcomp (regex_t *preg, const char *regex, int cflags);
 
 int

@@ -88,9 +88,10 @@ notmuch_restore_command (unused (void *ctx), int argc, char *argv[])
      * non-space characters for the message-id, then one or more
      * spaces, then a list of space-separated tags as a sequence of
      * characters within literal '(' and ')'. */
-    xregcomp (&regex,
-	      "^([^ ]+) \\(([^)]*)\\)$",
-	      REG_EXTENDED);
+    if ( xregcomp (&regex,
+		   "^([^ ]+) \\(([^)]*)\\)$",
+		   REG_EXTENDED) )
+	INTERNAL_ERROR("compile time constant regex failed.");
 
     while ((line_len = getline (&line, &line_size, input)) != -1) {
 	regmatch_t match[3];
