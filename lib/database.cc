@@ -209,21 +209,6 @@ static prefix_t PROBABILISTIC_PREFIX[]= {
     { "folder",			"XFOLDER"}
 };
 
-int
-_internal_error (const char *format, ...)
-{
-    va_list va_args;
-
-    va_start (va_args, format);
-
-    fprintf (stderr, "Internal error: ");
-    vfprintf (stderr, format, va_args);
-
-    exit (1);
-
-    return 1;
-}
-
 const char *
 _find_prefix (const char *name)
 {

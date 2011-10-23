@@ -47,6 +47,7 @@ NOTMUCH_BEGIN_DECLS
 #include <talloc.h>
 
 #include "xutil.h"
+#include "error_util.h"
 
 #pragma GCC visibility push(hidden)
 
@@ -59,25 +60,6 @@ NOTMUCH_BEGIN_DECLS
 
 #define STRNCMP_LITERAL(var, literal) \
     strncmp ((var), (literal), sizeof (literal) - 1)
-
-/* There's no point in continuing when we've detected that we've done
- * something wrong internally (as opposed to the user passing in a
- * bogus value).
- *
- * Note that PRINTF_ATTRIBUTE comes from talloc.h
- */
-int
-_internal_error (const char *format, ...) PRINTF_ATTRIBUTE (1, 2);
-
-/* There's no point in continuing when we've detected that we've done
- * something wrong internally (as opposed to the user passing in a
- * bogus value).
- *
- * Note that __location__ comes from talloc.h.
- */
-#define INTERNAL_ERROR(format, ...)			\
-    _internal_error (format " (%s).\n",			\
-		     ##__VA_ARGS__, __location__)
 
 #define unused(x) x __attribute__ ((unused))
 

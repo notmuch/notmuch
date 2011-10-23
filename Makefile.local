@@ -39,7 +39,7 @@ PV_FILE=bindings/python/notmuch/version.py
 # Smash together user's values with our extra values
 FINAL_CFLAGS = -DNOTMUCH_VERSION=$(VERSION) $(CFLAGS) $(WARN_CFLAGS) $(CONFIGURE_CFLAGS) $(extra_cflags)
 FINAL_CXXFLAGS = $(CXXFLAGS) $(WARN_CXXFLAGS) $(CONFIGURE_CXXFLAGS) $(extra_cflags) $(extra_cxxflags)
-FINAL_NOTMUCH_LDFLAGS = $(LDFLAGS) -Llib -lnotmuch $(AS_NEEDED_LDFLAGS) $(GMIME_LDFLAGS) $(TALLOC_LDFLAGS)
+FINAL_NOTMUCH_LDFLAGS = $(LDFLAGS) -Lutil -lutil -Llib -lnotmuch $(AS_NEEDED_LDFLAGS) $(GMIME_LDFLAGS) $(TALLOC_LDFLAGS)
 FINAL_NOTMUCH_LINKER = CC
 ifneq ($(LINKER_RESOLVES_LIBRARY_DEPENDENCIES),1)
 FINAL_NOTMUCH_LDFLAGS += $(CONFIGURE_LDFLAGS)
@@ -299,12 +299,11 @@ notmuch_client_srcs =		\
 	notmuch-time.c		\
 	query-string.c		\
 	show-message.c		\
-	json.c			\
-	xutil.c
+	json.c
 
 notmuch_client_modules = $(notmuch_client_srcs:.c=.o)
 
-notmuch: $(notmuch_client_modules) lib/libnotmuch.a
+notmuch: $(notmuch_client_modules) lib/libnotmuch.a util/libutil.a
 	$(call quiet,CXX $(CFLAGS)) $^ $(FINAL_LIBNOTMUCH_LDFLAGS) -o $@
 
 notmuch-shared: $(notmuch_client_modules) lib/$(LINKER_NAME)

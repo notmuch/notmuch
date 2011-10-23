@@ -18,9 +18,11 @@
  * Author: Carl Worth <cworth@cworth.org>
  */
 
-#include "notmuch-private.h"
-
 #include <stdio.h>
+#include <string.h>
+
+#include "xutil.h"
+#include "error_util.h"
 
 void *
 xcalloc (size_t nmemb, size_t size)

@@ -1,0 +1,11 @@
+# -*- makefile -*-
+
+dir := util
+extra_cflags += -I$(srcdir)/$(dir)
+
+libutil_c_srcs := $(dir)/xutil.c $(dir)/error_util.c
+
+libutil_modules := $(libutil_c_srcs:.c=.o)
+
+$(dir)/libutil.a: $(libutil_modules)
+	$(call quiet,AR) rcs $@ $^

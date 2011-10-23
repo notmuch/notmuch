@@ -54,8 +54,7 @@ libnotmuch_c_srcs =		\
 	$(dir)/message-file.c	\
 	$(dir)/messages.c	\
 	$(dir)/sha1.c		\
-	$(dir)/tags.c		\
-	$(dir)/xutil.c
+	$(dir)/tags.c
 
 libnotmuch_cxx_srcs =		\
 	$(dir)/database.cc	\
@@ -71,7 +70,7 @@ $(dir)/libnotmuch.a: $(libnotmuch_modules)
 	$(call quiet,AR) rcs $@ $^
 
 $(dir)/$(LIBNAME): $(libnotmuch_modules) notmuch.sym
-	$(call quiet,CXX $(CXXFLAGS)) $(libnotmuch_modules) $(FINAL_LIBNOTMUCH_LDFLAGS) $(LIBRARY_LINK_FLAG) -o $@
+	$(call quiet,CXX $(CXXFLAGS)) $(libnotmuch_modules) $(FINAL_LIBNOTMUCH_LDFLAGS) $(LIBRARY_LINK_FLAG) -o $@ -L$(srcdir)/util -lutil
 
 notmuch.sym: $(srcdir)/$(dir)/notmuch.h $(libnotmuch_modules)
 	sh $(srcdir)/$(lib)/gen-version-script.sh $< $(libnotmuch_modules) > $@
