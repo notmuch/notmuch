@@ -97,6 +97,7 @@ Fine tuning of some installation directories is available:
 	--mandir=DIR		Install man pages to DIR [PREFIX/share/man]
 	--sysconfdir=DIR	Read-only single-machine data [PREFIX/etc]
 	--emacslispdir=DIR	Emacs code [PREFIX/share/emacs/site-lisp]
+	--emacsetcdir=DIR	Emacs miscellaneous files [PREFIX/share/emacs/site-lisp]
 	--bashcompletiondir=DIR Bash completions files [SYSCONFDIR/bash_completion.d]
 	--zshcompletiondir=DIR	Zsh completions files [PREFIX/share/zsh/functions/Completion/Unix]
 
@@ -139,6 +140,8 @@ for option; do
 	SYSCONFDIR="${option#*=}"
     elif [ "${option%%=*}" = '--emacslispdir' ] ; then
 	EMACSLISPDIR="${option#*=}"
+    elif [ "${option%%=*}" = '--emacsetcdir' ] ; then
+	EMACSETCDIR="${option#*=}"
     elif [ "${option%%=*}" = '--bashcompletiondir' ] ; then
 	BASHCOMPLETIONDIR="${option#*=}"
     elif [ "${option%%=*}" = '--zshcompletiondir' ] ; then
@@ -327,6 +330,14 @@ if [ -z "${EMACSLISPDIR}" ]; then
 	EMACSLISPDIR=$(pkg-config emacs --variable sitepkglispdir)
     else
 	EMACSLISPDIR='$(prefix)/share/emacs/site-lisp'
+    fi
+fi
+
+if [ -z "${EMACSETCDIR}" ]; then
+    if pkg-config --exists emacs; then
+	EMACSETCDIR=$(pkg-config emacs --variable sitepkglispdir)
+    else
+	EMACSETCDIR='$(prefix)/share/emacs/site-lisp'
     fi
 fi
 
@@ -613,6 +624,10 @@ sysconfdir = ${SYSCONFDIR:=\$(prefix)/etc}
 
 # The directory to which emacs lisp files should be installed
 emacslispdir=${EMACSLISPDIR}
+
+# The directory to which emacs miscellaneous (machine-independent) files should
+# be installed
+emacsetcdir=${EMACSETCDIR}
 
 # Whether there's an emacs binary available for byte-compiling
 HAVE_EMACS = ${have_emacs}
