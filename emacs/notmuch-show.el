@@ -27,6 +27,7 @@
 (require 'mm-decode)
 (require 'mailcap)
 (require 'icalendar)
+(require 'goto-addr)
 
 (require 'notmuch-lib)
 (require 'notmuch-query)
@@ -789,6 +790,24 @@ current buffer, if possible."
 (defvar notmuch-show-buffer-name nil)
 (make-variable-buffer-local 'notmuch-show-buffer-name)
 
+(defun notmuch-show-buttonise-links (start end)
+  "Buttonise URLs and mail addresses between START and END.
+
+This also turns id:\"<message id>\"-parts into buttons for
+a corresponding notmuch search."
+  (goto-address-fontify-region start end)
+  (save-excursion
+    (goto-char start)
+    (while (re-search-forward "id:\\(\"?\\)[^[:space:]\"]+\\1" end t)
+      ;; remove the overlay created by goto-address-mode
+      (remove-overlays (match-beginning 0) (match-end 0) 'goto-address t)
+      (make-text-button (match-beginning 0) (match-end 0)
+			'action `(lambda (arg)
+				   (notmuch-search ,(match-string-no-properties 0)))
+			'follow-link t
+			'help-echo "Mouse-1, RET: search for this message"
+			'face goto-address-mail-face))))
+
 ;;;###autoload
 (defun notmuch-show (thread-id &optional parent-buffer query-context buffer-name crypto-switch)
   "Run \"notmuch show\" with the given thread ID and display results.
@@ -839,9 +858,8 @@ function is used. "
 	  (notmuch-show-insert-forest
 	   (notmuch-query-get-threads basic-args))))
 
-      ;; Enable buttonisation of URLs and email addresses in the
-      ;; buffer.
-      (goto-address-mode t)
+      (jit-lock-register #'notmuch-show-buttonise-links)
+
       ;; Act on visual lines rather than logical lines.
       (visual-line-mode t)
 
