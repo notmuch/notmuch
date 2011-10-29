@@ -138,6 +138,11 @@ Typically \",\" in the US and UK and \".\" in Europe."
   :group 'notmuch
   :type 'string)
 
+(defcustom notmuch-hello-mode-hook nil
+  "Functions called after entering `notmuch-hello-mode'."
+  :group 'notmuch
+  :type 'hook)
+
 (defvar notmuch-hello-url "http://notmuchmail.org"
   "The `notmuch' web site.")
 
@@ -355,6 +360,7 @@ Complete list of currently available key bindings:
  (use-local-map notmuch-hello-mode-map)
  (setq major-mode 'notmuch-hello-mode
        mode-name "notmuch-hello")
+ (run-mode-hooks 'notmuch-hello-mode-hook)
  ;;(setq buffer-read-only t)
 )
 
