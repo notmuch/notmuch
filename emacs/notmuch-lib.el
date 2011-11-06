@@ -105,21 +105,6 @@ the user hasn't set this variable with the old or new value."
 
 ;;
 
-;; XXX: This should be a generic function in emacs somewhere, not
-;; here.
-(defun point-invisible-p ()
-  "Return whether the character at point is invisible.
-
-Here visibility is determined by `buffer-invisibility-spec' and
-the invisible property of any overlays for point. It doesn't have
-anything to do with whether point is currently being displayed
-within the current window."
-  (let ((prop (get-char-property (point) 'invisible)))
-    (if (eq buffer-invisibility-spec t)
-	prop
-      (or (memq prop buffer-invisibility-spec)
-	  (assq prop buffer-invisibility-spec)))))
-
 (defun notmuch-remove-if-not (predicate list)
   "Return a copy of LIST with all items not satisfying PREDICATE removed."
   (let (out)
