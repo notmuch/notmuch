@@ -1152,17 +1152,18 @@ thread, (remove the \"inbox\" tag from each message). Also kill
 this buffer, and display the next thread from the search from
 which this thread was originally shown."
   (interactive)
-  (let ((end-of-this-message (notmuch-show-message-bottom)))
+  (let* ((end-of-this-message (notmuch-show-message-bottom))
+	 (visible-end-of-this-message (1- end-of-this-message)))
+    (while (invisible-p visible-end-of-this-message)
+      (setq visible-end-of-this-message
+	    (previous-single-char-property-change visible-end-of-this-message
+						  'invisible)))
     (cond
      ;; Ideally we would test `end-of-this-message' against the result
      ;; of `window-end', but that doesn't account for the fact that
-     ;; the end of the message might be hidden, so we have to actually
-     ;; go to the end, walk back over invisible text and then see if
-     ;; point is visible.
-     ((save-excursion
-	(goto-char (- end-of-this-message 1))
-	(notmuch-show-move-past-invisible-backward)
-	(> (point) (window-end)))
+     ;; the end of the message might be hidden.
+     ((and visible-end-of-this-message
+	   (> visible-end-of-this-message (window-end)))
       ;; The bottom of this message is not visible - scroll.
       (scroll-up nil))
 

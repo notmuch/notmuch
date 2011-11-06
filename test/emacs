@@ -369,7 +369,6 @@ test_emacs "(notmuch-show \"id:$id\") \
 test_expect_equal_file OUTPUT EXPECTED
 
 test_begin_subtest 'notmuch-show-advance-and-archive with invisible signature'
-test_subtest_known_broken
 message1='id:20091118010116.GC25380@dottiness.seas.harvard.edu'
 message2='id:1258491078-29658-1-git-send-email-dottedmag@dottedmag.net'
 test_emacs "(notmuch-search \"$message1 or $message2\")
