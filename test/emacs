@@ -368,6 +368,21 @@ test_emacs "(notmuch-show \"id:$id\") \
             (test-visible-output \"EXPECTED\")"
 test_expect_equal_file OUTPUT EXPECTED
 
+test_begin_subtest 'notmuch-show-advance-and-archive with invisible signature'
+test_subtest_known_broken
+message1='id:20091118010116.GC25380@dottiness.seas.harvard.edu'
+message2='id:1258491078-29658-1-git-send-email-dottedmag@dottedmag.net'
+test_emacs "(notmuch-search \"$message1 or $message2\")
+	    (notmuch-test-wait)
+	    (notmuch-search-show-thread)
+	    (goto-char (point-max))
+	    (redisplay)
+	    (notmuch-show-advance-and-archive)
+	    (test-output)"
+test_emacs "(notmuch-show \"$message2\")
+	    (test-output \"EXPECTED\")"
+test_expect_equal_file OUTPUT EXPECTED
+
 test_begin_subtest "Refresh show buffer"
 test_emacs '(notmuch-show "id:f35dbb950911171438k5df6eb56k77b6c0944e2e79ae@mail.gmail.com")
 	    (test-visible-output "EXPECTED")
