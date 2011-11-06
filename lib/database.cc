@@ -1725,7 +1725,7 @@ notmuch_database_add_message (notmuch_database_t *notmuch,
 		goto DONE;
 
 	    date = notmuch_message_file_get_header (message_file, "date");
-	    _notmuch_message_set_date (message, date);
+	    _notmuch_message_set_header_values (message, date, from, subject);
 
 	    _notmuch_message_index_file (message, filename);
 	} else {

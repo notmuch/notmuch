@@ -93,7 +93,9 @@ NOTMUCH_BEGIN_DECLS
 
 typedef enum {
     NOTMUCH_VALUE_TIMESTAMP = 0,
-    NOTMUCH_VALUE_MESSAGE_ID
+    NOTMUCH_VALUE_MESSAGE_ID,
+    NOTMUCH_VALUE_FROM,
+    NOTMUCH_VALUE_SUBJECT
 } notmuch_value_t;
 
 /* Xapian (with flint backend) complains if we provide a term longer
@@ -269,9 +271,10 @@ void
 _notmuch_message_ensure_thread_id (notmuch_message_t *message);
 
 void
-_notmuch_message_set_date (notmuch_message_t *message,
-			   const char *date);
-
+_notmuch_message_set_header_values (notmuch_message_t *message,
+				    const char *date,
+				    const char *from,
+				    const char *subject);
 void
 _notmuch_message_sync (notmuch_message_t *message);
 

@@ -412,6 +412,21 @@ _notmuch_message_ensure_message_file (notmuch_message_t *message)
 const char *
 notmuch_message_get_header (notmuch_message_t *message, const char *header)
 {
+    std::string value;
+
+    /* Fetch header from the appropriate xapian value field if
+     * available */
+    if (strcasecmp (header, "from") == 0)
+	value = message->doc.get_value (NOTMUCH_VALUE_FROM);
+    else if (strcasecmp (header, "subject") == 0)
+	value = message->doc.get_value (NOTMUCH_VALUE_SUBJECT);
+    else if (strcasecmp (header, "message-id") == 0)
+	value = message->doc.get_value (NOTMUCH_VALUE_MESSAGE_ID);
+
+    if (!value.empty())
+	return talloc_strdup (message, value.c_str ());
+
+    /* Otherwise fall back to parsing the file */
     _notmuch_message_ensure_message_file (message);
     if (message->message_file == NULL)
 	return NULL;
@@ -795,8 +810,10 @@ notmuch_message_set_author (notmuch_message_t *message,
 }
 
 void
-_notmuch_message_set_date (notmuch_message_t *message,
-			   const char *date)
+_notmuch_message_set_header_values (notmuch_message_t *message,
+				    const char *date,
+				    const char *from,
+				    const char *subject)
 {
     time_t time_value;
 
@@ -809,6 +826,8 @@ _notmuch_message_set_date (notmuch_message_t *message,
 
     message->doc.add_value (NOTMUCH_VALUE_TIMESTAMP,
 			    Xapian::sortable_serialise (time_value));
+    message->doc.add_value (NOTMUCH_VALUE_FROM, from);
+    message->doc.add_value (NOTMUCH_VALUE_SUBJECT, subject);
 }
 
 /* Synchronize changes made to message->doc out into the database. */
