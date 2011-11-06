@@ -1016,14 +1016,6 @@ All currently available key bindings:
     (notmuch-show-move-to-message-top)
     t))
 
-(defun notmuch-show-move-past-invisible-forward ()
-  (while (point-invisible-p)
-    (forward-char)))
-
-(defun notmuch-show-move-past-invisible-backward ()
-  (while (point-invisible-p)
-    (backward-char)))
-
 ;; Functions relating to the visibility of messages and their
 ;; components.
 
