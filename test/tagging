@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+test_description='"notmuch tag"'
+. ./test-lib.sh
+
+add_message '[subject]=One'
+add_message '[subject]=Two'
+
+test_begin_subtest "Adding tags"
+notmuch tag +tag1 +tag2 +tag3 \*
+output=$(notmuch search \* | notmuch_search_sanitize)
+test_expect_equal "$output" "\
+thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; One (inbox tag1 tag2 tag3 unread)
+thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; Two (inbox tag1 tag2 tag3 unread)"
+
+test_begin_subtest "Removing tags"
+notmuch tag -tag1 -tag2 \*
+output=$(notmuch search \* | notmuch_search_sanitize)
+test_expect_equal "$output" "\
+thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; One (inbox tag3 unread)
+thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; Two (inbox tag3 unread)"
+
+test_expect_code 1 "No tag operations" 'notmuch tag One'
+test_expect_code 1 "No query" 'notmuch tag +tag2'
+
+test_begin_subtest "Redundant tagging"
+notmuch tag +tag1 -tag3 One
+notmuch tag +tag1 -tag3 \*
+output=$(notmuch search \* | notmuch_search_sanitize)
+test_expect_equal "$output" "\
+thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; One (inbox tag1 unread)
+thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; Two (inbox tag1 unread)"
+
+test_begin_subtest "Special characters in tags"
+notmuch tag +':" ' \*
+notmuch tag -':" ' Two
+output=$(notmuch search \* | notmuch_search_sanitize)
+test_expect_equal "$output" "\
+thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; One (:\"  inbox tag1 unread)
+thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; Two (inbox tag1 unread)"
+
+test_done

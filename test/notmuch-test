@@ -24,6 +24,7 @@ TESTS="
   search-by-folder
   search-position-overlap-bug
   search-insufficient-from-quoting
+  tagging
   json
   multipart
   thread-naming
