@@ -60,10 +60,13 @@ else
     TEST_TIMEOUT_CMD=""
 fi
 
+trap 'e=$?; kill $!; exit $e' HUP INT TERM
 # Run the tests
 for test in $TESTS; do
-    $TEST_TIMEOUT_CMD ./$test "$@"
+    $TEST_TIMEOUT_CMD ./$test "$@" &
+    wait $!
 done
+trap - HUP INT TERM
 
 # Report results
 ./aggregate-results.sh test-results/*
