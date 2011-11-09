@@ -1,3 +1,16 @@
+Notmuch 0.11 (201x-xx-xx)
+=========================
+
+Performance
+-----------
+
+Automatic tag query optimization
+
+  "notmuch tag" now automatically optimizes the user's query to
+  exclude messages whose tags won't change.  In the past, we've
+  suggested that people do this by hand; this is no longer necessary.
+
+
 Notmuch 0.10.1 (2011-11-25)
 ===========================
 
