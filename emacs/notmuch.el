@@ -378,7 +378,7 @@ Complete list of currently available key bindings:
   (make-local-variable 'notmuch-search-target-line)
   (set (make-local-variable 'notmuch-search-continuation) nil)
   (set (make-local-variable 'scroll-preserve-screen-position) t)
-  (add-to-invisibility-spec 'notmuch-search)
+  (add-to-invisibility-spec (cons 'ellipsis t))
   (use-local-map notmuch-search-mode-map)
   (setq truncate-lines t)
   (setq major-mode 'notmuch-search-mode
@@ -679,9 +679,6 @@ foreground and blue background."
 			      (append (overlay-get overlay 'face) attributes)))))
 	  notmuch-search-line-faces)))
 
-(defun notmuch-search-isearch-authors-show (overlay)
-  (remove-from-invisibility-spec (cons (overlay-get overlay 'invisible) t)))
-
 (defun notmuch-search-author-propertize (authors)
   "Split `authors' into matching and non-matching authors and
 propertize appropriately. If no boundary between authors and
@@ -755,13 +752,11 @@ non-authors is found, assume that all of the authors match."
       (insert visible-string)
       (when (not (string= invisible-string ""))
 	(let ((start (point))
-	      (invis-spec (make-symbol "notmuch-search-authors"))
 	      overlay)
 	  (insert invisible-string)
-	  (add-to-invisibility-spec (cons invis-spec t))
 	  (setq overlay (make-overlay start (point)))
-	  (overlay-put overlay 'invisible invis-spec)
-	  (overlay-put overlay 'isearch-open-invisible #'notmuch-search-isearch-authors-show)))
+	  (overlay-put overlay 'invisible 'ellipsis)
+	  (overlay-put overlay 'isearch-open-invisible #'delete-overlay)))
       (insert padding))))
 
 (defun notmuch-search-insert-field (field date count authors subject tags)
