@@ -830,7 +830,7 @@ export NOTMUCH_CONFIG=$NOTMUCH_CONFIG
 #
 # --load		Force loading of notmuch.el and test-lib.el
 
-emacs --no-init-file --no-site-file \
+exec emacs --no-init-file --no-site-file \
 	--directory "$TEST_DIRECTORY/../emacs" --load notmuch.el \
 	--directory "$TEST_DIRECTORY" --load test-lib.el \
 	"\$@"
