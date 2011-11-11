@@ -39,7 +39,7 @@ done,*)
 	;;
 esac
 
-# Keep the original TERM for say_color
+# Keep the original TERM for say_color and test_emacs
 ORIGINAL_TERM=$TERM
 
 # For repeatability, reset the environment to known value.
@@ -50,8 +50,6 @@ TZ=UTC
 TERM=dumb
 export LANG LC_ALL PAGER TERM TZ
 GIT_TEST_CMP=${GIT_TEST_CMP:-diff -u}
-export SCREENRC=/dev/null
-export SYSSCREENRC=/dev/null
 
 # Protect ourselves from common misconfiguration to export
 # CDPATH into the environment
@@ -843,12 +841,15 @@ EOF
 test_emacs () {
 	if [ -z "$EMACS_SERVER" ]; then
 		EMACS_SERVER="notmuch-test-suite-$$"
-		# start a detached screen session with an emacs server
-		screen -S "$EMACS_SERVER" -d -m "$TMP_DIRECTORY/run_emacs" \
-			--no-window-system \
-			--eval "(setq server-name \"$EMACS_SERVER\")" \
-			--eval '(server-start)' \
-			--eval "(orphan-watchdog $$)" || return
+		# start a detached session with an emacs server
+		# user's TERM is given to dtach which assumes a minimally
+		# VT100-compatible terminal -- and emacs inherits that
+		TERM=$ORIGINAL_TERM dtach -n "$TMP_DIRECTORY/emacs-dtach-socket.$$" \
+			sh -c "stty rows 24 cols 80; exec '$TMP_DIRECTORY/run_emacs' \
+				--no-window-system \
+				--eval '(setq server-name \"$EMACS_SERVER\")' \
+				--eval '(server-start)' \
+				--eval '(orphan-watchdog $$)'" || return
 		# wait until the emacs server is up
 		until test_emacs '()' 2>/dev/null; do
 			sleep 1
