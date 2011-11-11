@@ -16,7 +16,7 @@ Build-Depends:
  python-all (>= 2.6.6-3~),
  emacs23-nox | emacs23 (>=23~) | emacs23-lucid (>=23~),
  gdb,
- screen
+ dtach
 Standards-Version: 3.9.2
 Homepage: http://notmuchmail.org/
 Vcs-Git: git://notmuchmail.org/git/notmuch
