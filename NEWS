@@ -4,9 +4,9 @@ Notmuch 0.10 (2011-xx-xx)
 New build and testing features
 ------------------------------
 
-Emacs tests are now done in screen. This means that screen is now
+Emacs tests are now done in dtach. This means that dtach  is now
 needed to run the notmuch test suite, at least until the checking for
-screen is improved.
+prerequisites is improved.
 
 New command-line features
 -------------------------
