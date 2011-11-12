@@ -159,6 +159,7 @@ main (int argc, char *argv[])
 		return 1;
 	}
 
+	memset (&addr, 0, sizeof (addr));
 	addr.sin_family = AF_INET;
 	addr.sin_port = htons (25025);
 	addr.sin_addr = *(struct in_addr *) hostinfo->h_addr;
