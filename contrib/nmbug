@@ -1,0 +1,621 @@
+#!/usr/bin/env perl
+# Copyright (c) 2011 David Bremner
+# License: same as notmuch
+
+use strict;
+use warnings;
+use File::Temp qw(tempdir);
+use Pod::Usage;
+
+no encoding;
+
+my $NMBGIT = $ENV{NMBGIT} || $ENV{HOME}.'/.nmbug';
+
+$NMBGIT .= '/.git' if (-d $NMBGIT.'/.git');
+
+my $TAGPREFIX = $ENV{NMBPREFIX} || 'notmuch::';
+
+# magic hash for git
+my $EMPTYBLOB = 'e69de29bb2d1d6434b8b29ae775ad8c2e48c5391';
+
+# for encoding
+
+my $ESCAPE_CHAR =	'%';
+my $NO_ESCAPE =		'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'.
+			'0123456789+-_@=.:,';
+my $MUST_ENCODE =	qr{[^\Q$NO_ESCAPE\E]};
+my $ESCAPED_RX =	qr{$ESCAPE_CHAR([A-Fa-f0-9]{2})};
+
+my %command = (
+	     archive	=> \&do_archive,
+	     checkout	=> \&do_checkout,
+	     commit	=> \&do_commit,
+	     fetch	=> \&do_fetch,
+	     help	=> \&do_help,
+	     log	=> \&do_log,
+	     merge	=> \&do_merge,
+	     pull	=> \&do_pull,
+	     push	=> \&do_push,
+	     status	=> \&do_status,
+	     );
+
+my $subcommand = shift || usage ();
+
+if (!exists $command{$subcommand}) {
+  usage ();
+}
+
+&{$command{$subcommand}}(@ARGV);
+
+sub git_pipe {
+  my $envref = (ref $_[0] eq 'HASH') ? shift : {};
+  my $ioref  = (ref $_[0] eq 'ARRAY') ? shift : undef;
+  my $dir = ($_[0] eq '-|' or $_[0] eq '|-') ? shift : undef;
+
+  unshift @_, 'git';
+  $envref->{GIT_DIR} ||= $NMBGIT;
+  spawn ($envref, defined $ioref ? $ioref : (), defined $dir ? $dir : (), @_);
+}
+
+sub git {
+  my $fh = git_pipe (@_);
+  my $str = join ('', <$fh>);
+  chomp($str);
+  return $str;
+}
+
+sub spawn {
+  my $envref = (ref $_[0] eq 'HASH') ? shift : {};
+  my $ioref  = (ref $_[0] eq 'ARRAY') ? shift : undef;
+  my $dir = ($_[0] eq '-|' or $_[0] eq '|-') ? shift : '-|';
+
+  die unless @_;
+
+  if (open my $child, $dir) {
+    return $child;
+  }
+  # child
+  while (my ($key, $value) = each %{$envref}) {
+    $ENV{$key} = $value;
+  }
+
+  if (defined $ioref && $dir eq '-|') {
+      open my $fh, '|-', @_ or die "open |- @_: $!";
+      foreach my $line (@{$ioref}) {
+	print $fh $line, "\n";
+      }
+      exit 0;
+    } else {
+      if ($dir ne '|-') {
+	open STDIN, '<', '/dev/null' or die "reopening stdin: $!"
+      }
+      exec @_;
+      die "exec @_: $!";
+    }
+}
+
+
+sub get_tags {
+  my $prefix = shift;
+  my @tags;
+
+  my $fh = spawn ('-|', qw/notmuch search --output=tags/, "*")
+    or die 'error dumping tags';
+
+  while (<$fh>) {
+    chomp ();
+    push @tags, $_ if (m/^$prefix/);
+  }
+  return @tags;
+}
+
+
+sub do_archive {
+  system ('git', "--git-dir=$NMBGIT", 'archive', 'HEAD');
+}
+
+
+sub is_committed {
+  my $status = shift;
+  return scalar (@{$status->{added}} ) + scalar (@{$status->{deleted}} ) == 0;
+}
+
+
+sub do_commit {
+  my @args = @_;
+
+  my $status = compute_status ();
+
+  if ( is_committed ($status) ) {
+    print "Nothing to commit\n";
+    return;
+  }
+
+  my $index = read_tree ('HEAD');
+
+  update_index ($index, $status);
+
+  my $tree = git ( { GIT_INDEX_FILE => $index }, 'write-tree')
+    or die 'no output from write-tree';
+
+  my $parent = git ( 'rev-parse', 'HEAD'  )
+    or die 'no output from rev-parse';
+
+  my $commit = git ([ @args ], 'commit-tree', $tree, '-p', $parent)
+    or die 'commit-tree';
+
+  git ('update-ref', 'HEAD', $commit);
+
+  unlink $index || die "unlink: $!";
+
+}
+
+sub read_tree {
+  my $treeish = shift;
+  my $index = $NMBGIT.'/nmbug.index';
+  git ({ GIT_INDEX_FILE => $index }, 'read-tree', '--empty');
+  git ({ GIT_INDEX_FILE => $index }, 'read-tree', $treeish);
+  return $index;
+}
+
+sub update_index {
+  my $index = shift;
+  my $status = shift;
+
+  my $git = spawn ({ GIT_DIR => $NMBGIT, GIT_INDEX_FILE => $index },
+		     '|-', qw/git update-index --index-info/)
+    or die 'git update-index';
+
+  foreach my $pair (@{$status->{deleted}}) {
+    index_tags_for_msg ($git, $pair->{id}, 'D', $pair->{tag});
+  }
+
+  foreach my $pair (@{$status->{added}}) {
+    index_tags_for_msg ($git, $pair->{id}, 'A', $pair->{tag});
+  }
+}
+
+
+sub do_fetch {
+  my $remote = shift || 'origin';
+
+  git ('fetch', $remote);
+}
+
+
+sub notmuch {
+  my @args = @_;
+  system ('notmuch', @args) == 0 or die  "notmuch @args failed: $?";
+}
+
+
+sub index_tags {
+
+  my $index = $NMBGIT.'/nmbug.index';
+
+  my $query = join ' ', map ("tag:$_", get_tags ($TAGPREFIX));
+
+  my $fh = spawn ('-|', qw/notmuch dump --/, $query)
+    or die "notmuch dump: $!";
+
+  git ('read-tree', '--empty');
+  my $git = spawn ({ GIT_DIR => $NMBGIT, GIT_INDEX_FILE => $index },
+		     '|-', qw/git update-index --index-info/)
+    or die 'git update-index';
+
+  while (<$fh>) {
+    m/ ( [^ ]* ) \s+ \( ([^\)]* ) \) /x || die 'syntax error in dump';
+    my ($id,$rest) = ($1,$2);
+
+    #strip prefixes before writing
+    my @tags = grep { s/^$TAGPREFIX//; } split (' ', $rest);
+    index_tags_for_msg ($git,$id, 'A', @tags);
+  }
+
+  close $git;
+  return $index;
+}
+
+sub index_tags_for_msg {
+  my $fh = shift;
+  my $msgid = shift;
+  my $mode = shift;
+
+  my $hash = $EMPTYBLOB;
+  my $blobmode = '100644';
+
+  if ($mode eq 'D') {
+    $blobmode = '0';
+    $hash = '0000000000000000000000000000000000000000';
+  }
+
+  foreach my $tag (@_) {
+    my $tagpath = 'tags/' . encode_for_fs ($msgid) . '/' . encode_for_fs ($tag);
+    print $fh "$blobmode $hash\t$tagpath\n";
+  }
+}
+
+
+sub do_checkout {
+  do_sync (action => 'checkout');
+}
+
+
+sub do_sync {
+
+  my %args = @_;
+
+  my $status = compute_status ();
+  my ($A_action, $D_action);
+
+  if ($args{action} eq 'checkout') {
+    $A_action = '-';
+    $D_action = '+';
+  } else {
+    $A_action = '+';
+    $D_action = '-';
+  }
+
+  foreach my $pair (@{$status->{added}}) {
+
+    notmuch ('tag', $A_action.$TAGPREFIX.$pair->{tag},
+	     'id:'.$pair->{id});
+  }
+
+  foreach my $pair (@{$status->{deleted}}) {
+    notmuch ('tag', $D_action.$TAGPREFIX.$pair->{tag},
+	     'id:'.$pair->{id});
+  }
+
+}
+
+
+sub insist_committed {
+
+  my $status=compute_status();
+  if ( !is_committed ($status) ) {
+    print "Uncommitted changes to $TAGPREFIX* tags in notmuch
+
+For a summary of changes, run 'nmbug status'
+To save your changes,     run 'nmbug commit' before merging/pull
+To discard your changes,  run 'nmbug checkout'
+";
+    exit (1);
+  }
+
+}
+
+
+sub do_pull {
+  my $remote = shift || 'origin';
+
+  git ( 'fetch', $remote);
+
+  do_merge ();
+}
+
+
+sub do_merge {
+  insist_committed ();
+
+  my $tempwork = tempdir ('/tmp/nmbug-merge.XXXXXX', CLEANUP => 1);
+
+  git ( { GIT_WORK_TREE => $tempwork }, 'checkout', '-f', 'HEAD');
+
+  git ( { GIT_WORK_TREE => $tempwork }, 'merge', 'FETCH_HEAD');
+
+  do_checkout ();
+}
+
+
+sub do_log {
+  # we don't want output trapping here, because we want the pager.
+  system ( 'git', "--git-dir=$NMBGIT", 'log', '--name-status', @_);
+}
+
+
+sub do_push {
+  my $remote = shift || 'origin';
+
+  git ('push', $remote);
+}
+
+
+sub do_status {
+  my $status = compute_status ();
+
+  my %output = ();
+  foreach my $pair (@{$status->{added}}) {
+    $output{$pair->{id}} ||= {};
+    $output{$pair->{id}}{$pair->{tag}} = 'A'
+  }
+
+  foreach my $pair (@{$status->{deleted}}) {
+    $output{$pair->{id}} ||= {};
+    $output{$pair->{id}}{$pair->{tag}} = 'D'
+  }
+
+  foreach my $pair (@{$status->{missing}}) {
+    $output{$pair->{id}} ||= {};
+    $output{$pair->{id}}{$pair->{tag}} = 'U'
+  }
+
+  if (is_unmerged ()) {
+    foreach my $pair (diff_refs ('A')) {
+      $output{$pair->{id}} ||= {};
+      $output{$pair->{id}}{$pair->{tag}} ||= ' ';
+      $output{$pair->{id}}{$pair->{tag}} .= 'a';
+    }
+
+    foreach my $pair (diff_refs ('D')) {
+      $output{$pair->{id}} ||= {};
+      $output{$pair->{id}}{$pair->{tag}} ||= ' ';
+      $output{$pair->{id}}{$pair->{tag}} .= 'd';
+    }
+  }
+
+  foreach my $id (sort keys %output) {
+    foreach my $tag (sort keys %{$output{$id}}) {
+      printf "%s\t%s\t%s\n", $output{$id}{$tag}, $id, $tag;
+    }
+  }
+}
+
+
+sub is_unmerged {
+
+  return 0 if (! -f $NMBGIT.'/FETCH_HEAD');
+
+  my $fetch_head = git ('rev-parse', 'FETCH_HEAD');
+  my $base = git ( 'merge-base', 'HEAD', 'FETCH_HEAD');
+
+  return ($base ne $fetch_head);
+
+}
+
+sub compute_status {
+  my %args = @_;
+
+  my @added;
+  my @deleted;
+  my @missing;
+
+  my $index = index_tags ();
+
+  my @maybe_deleted = diff_index ($index, 'D');
+
+  foreach my $pair (@maybe_deleted) {
+
+    my $id = $pair->{id};
+
+    my $fh = spawn ('-|', qw/notmuch search --output=files/,"id:$id")
+      or die "searching for $id";
+    if (!<$fh>) {
+      push @missing, $pair;
+    } else {
+      push @deleted, $pair;
+    }
+  }
+
+
+  @added = diff_index ($index, 'A');
+
+  unlink $index || die "unlink $index: $!";
+
+  return { added => [@added], deleted => [@deleted], missing => [@missing] };
+}
+
+
+sub diff_index {
+  my $index = shift;
+  my $filter = shift;
+
+  my $fh = git_pipe ({ GIT_INDEX_FILE => $index },
+		  qw/diff-index --cached/,
+		 "--diff-filter=$filter", qw/--name-only HEAD/ );
+
+  return unpack_diff_lines ($fh);
+}
+
+
+sub diff_refs {
+  my $filter = shift;
+  my $ref1 = shift || 'HEAD';
+  my $ref2 = shift || 'FETCH_HEAD';
+
+  my $fh= git_pipe ( 'diff', "--diff-filter=$filter", '--name-only',
+		 $ref1, $ref2);
+
+  return unpack_diff_lines ($fh);
+}
+
+
+sub unpack_diff_lines {
+  my $fh = shift;
+
+  my @found;
+  while(<$fh>) {
+    chomp ();
+    my ($id,$tag) = m|tags/ ([^/]+) / ([^/]+) |x;
+
+    $id = decode_from_fs ($id);
+    $tag = decode_from_fs ($tag);
+
+    push @found, { id => $id, tag => $tag };
+  }
+
+  return @found;
+}
+
+
+sub encode_for_fs {
+  my $str = shift;
+
+  $str =~ s/($MUST_ENCODE)/"$ESCAPE_CHAR".sprintf ("%02x",ord ($1))/ge;
+  return $str;
+}
+
+
+sub decode_from_fs {
+  my $str = shift;
+
+  $str =~ s/$ESCAPED_RX/ chr (hex ($1))/eg;
+
+  return $str;
+
+}
+
+
+sub usage {
+  pod2usage ();
+  exit (1);
+}
+
+
+sub do_help {
+  pod2usage ( -verbose => 2 );
+  exit (0);
+}
+
+__END__
+
+=head1 NAME
+
+nmbug - manage notmuch tags about notmuch
+
+=head1 SYNOPSIS
+
+nmbug subcommand [options]
+
+B<nmbug help> for more help
+
+=head1 OPTIONS
+
+=head2 Most common commands
+
+=over 8
+
+=item B<commit> [message]
+
+Commit appropriately prefixed tags from the notmuch database to
+git. Any extra arguments are used (one per line) as a commit message.
+
+=item  B<push> [remote]
+
+push local nmbug git state to remote repo
+
+=item  B<pull> [remote]
+
+pull (merge) remote repo changes to notmuch. B<pull> is equivalent to
+B<fetch> followed by B<merge>.
+
+=back
+
+=head2 Other Useful Commands
+
+=over 8
+
+=item B<checkout>
+
+Update the notmuch database from git. This is mainly useful to discard
+your changes in notmuch relative to git.
+
+=item B<fetch> [remote]
+
+Fetch changes from the remote repo (see merge to bring those changes
+into notmuch).
+
+=item B<help> [subcommand]
+
+print help [for subcommand]
+
+=item B<log> [parameters]
+
+A simple wrapper for git log. After running C<nmbug fetch>, you can
+inspect the changes with C<nmbug log HEAD..FETCH_HEAD>
+
+=item B<merge>
+
+Merge changes from FETCH_HEAD into HEAD, and load the result into
+notmuch.
+
+=item  B<status>
+
+Show pending updates in notmuch or git repo. See below for more
+information about the output format.
+
+=back
+
+=head2 Less common commands
+
+=over 8
+
+=item B<archive>
+
+Dump a tar archive (using git archive) of the current nmbug tag set.
+
+=back
+
+=head1 STATUS FORMAT
+
+B<nmbug status> prints lines of the form
+
+   ng Message-Id tag
+
+where n is a single character representing notmuch database status
+
+=over 8
+
+=item B<A>
+
+Tag is present in notmuch database, but not committed to nmbug
+(equivalently, tag has been deleted in nmbug repo, e.g. by a pull, but
+not restored to notmuch database).
+
+=item B<D>
+
+Tag is present in nmbug repo, but not restored to notmuch database
+(equivalently, tag has been deleted in notmuch)
+
+=item B<U>
+
+Message is unknown (missing from local notmuch database)
+
+=back
+
+The second character (if present) represents a difference between remote
+git and local. Typically C<nmbug fetch> needs to be run to update this.
+
+=over 8
+
+
+=item B<a>
+
+Tag is present in remote, but not in local git.
+
+
+=item B<d>
+
+Tag is present in local git, but not in remote git.
+
+
+=back
+
+=head1 DUMP FORMAT
+
+Each tag $tag for message with Message-Id $id is written to
+an empty file
+
+	tags/encode($id)/encode($tag)
+
+The encoding preserves alphanumerics, and the characters "+-_@=.:,"
+(not the quotes).  All other octets are replaced with '%' followed by
+a two digit hex number.
+
+=head1 ENVIRONMENT
+
+B<NMBGIT> specifies the location of the git repository used by nmbug.
+If not specified $HOME/.nmbug is used.
+
+B<NMBPREFIX> specifies the prefix in the notmuch database for tags of
+interest to nmbug. If not specified 'notmuch::' is used.
