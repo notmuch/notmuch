@@ -824,7 +824,11 @@ non-nil.
 The optional BUFFER-NAME provides the name of the buffer in
 which the message thread is shown. If it is nil (which occurs
 when the command is called interactively) the argument to the
-function is used. "
+function is used.
+
+The optional CRYPTO-SWITCH toggles the value of the
+notmuch-crypto-process-mime customization variable for this show
+buffer."
   (interactive "sNotmuch show: ")
   (let* ((buffer-name (generate-new-buffer-name
 		       (or buffer-name
