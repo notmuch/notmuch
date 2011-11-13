@@ -830,13 +830,16 @@ The optional CRYPTO-SWITCH toggles the value of the
 notmuch-crypto-process-mime customization variable for this show
 buffer."
   (interactive "sNotmuch show: ")
+  (let* ((process-crypto (if crypto-switch
+			     (not notmuch-crypto-process-mime)
+			   notmuch-crypto-process-mime)))
+    (notmuch-show-worker thread-id parent-buffer query-context buffer-name process-crypto)))
+
+(defun notmuch-show-worker (thread-id parent-buffer query-context buffer-name process-crypto)
   (let* ((buffer-name (generate-new-buffer-name
 		       (or buffer-name
 			   (concat "*notmuch-" thread-id "*"))))
 	 (buffer (get-buffer-create buffer-name))
-	 (process-crypto (if crypto-switch
-			     (not notmuch-crypto-process-mime)
-			   notmuch-crypto-process-mime))
 	 (inhibit-read-only t))
     (switch-to-buffer buffer)
     (notmuch-show-mode)
@@ -882,16 +885,17 @@ buffer."
   "Refresh the current view (with crypto switch if prefix given).
 
 Kills the current buffer and reruns notmuch show with the same
-thread id.  If a prefix is given, the current thread is
-redisplayed with the crypto switch activated, which switch the
-logic of the notmuch-crypto-process-mime customization variable."
+thread id.  If a prefix is given, crypto processing is toggled."
   (interactive "P")
   (let ((thread-id notmuch-show-thread-id)
 	(parent-buffer notmuch-show-parent-buffer)
 	(query-context notmuch-show-query-context)
-	(buffer-name notmuch-show-buffer-name))
+	(buffer-name notmuch-show-buffer-name)
+	(process-crypto (if crypto-switch
+			    (not notmuch-show-process-crypto)
+			  notmuch-show-process-crypto)))
     (notmuch-kill-this-buffer)
-    (notmuch-show thread-id parent-buffer query-context buffer-name crypto-switch)))
+    (notmuch-show-worker thread-id parent-buffer query-context buffer-name process-crypto)))
 
 (defvar notmuch-show-stash-map
   (let ((map (make-sparse-keymap)))
