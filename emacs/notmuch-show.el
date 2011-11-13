@@ -1135,26 +1135,18 @@ All currently available key bindings:
 
 ;; Commands typically bound to keys.
 
-(defun notmuch-show-advance-and-archive ()
-  "Advance through thread and archive.
-
-This command is intended to be one of the simplest ways to
-process a thread of email. It does the following:
+(defun notmuch-show-advance ()
+  "Advance through thread.
 
 If the current message in the thread is not yet fully visible,
 scroll by a near screenful to read more of the message.
 
 Otherwise, (the end of the current message is already within the
-current window), advance to the next open message.
-
-Finally, if there is no further message to advance to, and this
-last message is already read, then archive the entire current
-thread, (remove the \"inbox\" tag from each message). Also kill
-this buffer, and display the next thread from the search from
-which this thread was originally shown."
+current window), advance to the next open message."
   (interactive)
   (let* ((end-of-this-message (notmuch-show-message-bottom))
-	 (visible-end-of-this-message (1- end-of-this-message)))
+	 (visible-end-of-this-message (1- end-of-this-message))
+	 (ret nil))
     (while (invisible-p visible-end-of-this-message)
       (setq visible-end-of-this-message
 	    (previous-single-char-property-change visible-end-of-this-message
@@ -1173,8 +1165,24 @@ which this thread was originally shown."
       (notmuch-show-next-open-message))
 
      (t
-      ;; This is the last message - archive the thread.
-      (notmuch-show-archive-thread)))))
+      ;; This is the last message - change the return value
+      (setq ret t)))
+    ret))
+
+(defun notmuch-show-advance-and-archive ()
+  "Advance through thread and archive.
+
+This command is intended to be one of the simplest ways to
+process a thread of email. It works exactly like
+notmuch-show-advance, in that it scrolls through messages in a
+show buffer, except that when it gets to the end of the buffer it
+archives the entire current thread, (remove the \"inbox\" tag
+from each message), kills the buffer, and displays the next
+thread from the search from which this thread was originally
+shown."
+  (interactive)
+  (if (notmuch-show-advance)
+      (notmuch-show-archive-thread)))
 
 (defun notmuch-show-rewind ()
   "Backup through the thread, (reverse scrolling compared to \\[notmuch-show-advance-and-archive]).
