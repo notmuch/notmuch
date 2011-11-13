@@ -70,7 +70,7 @@ $(dir)/libnotmuch.a: $(libnotmuch_modules)
 	$(call quiet,AR) rcs $@ $^
 
 $(dir)/$(LIBNAME): $(libnotmuch_modules) notmuch.sym
-	$(call quiet,CXX $(CXXFLAGS)) $(libnotmuch_modules) $(FINAL_LIBNOTMUCH_LDFLAGS) $(LIBRARY_LINK_FLAG) -o $@ -L$(srcdir)/util -lutil
+	$(call quiet,CXX $(CXXFLAGS)) $(libnotmuch_modules) $(FINAL_LIBNOTMUCH_LDFLAGS) $(LIBRARY_LINK_FLAG) -o $@ util/libutil.a
 
 notmuch.sym: $(srcdir)/$(dir)/notmuch.h $(libnotmuch_modules)
 	sh $(srcdir)/$(lib)/gen-version-script.sh $< $(libnotmuch_modules) > $@
