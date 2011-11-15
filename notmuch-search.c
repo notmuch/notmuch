@@ -194,13 +194,22 @@ static int
 do_search_threads (const search_format_t *format,
 		   notmuch_query_t *query,
 		   notmuch_sort_t sort,
-		   output_t output)
+		   output_t output,
+		   int offset,
+		   int limit)
 {
     notmuch_thread_t *thread;
     notmuch_threads_t *threads;
     notmuch_tags_t *tags;
     time_t date;
     int first_thread = 1;
+    int i;
+
+    if (offset < 0) {
+	offset += notmuch_query_count_threads (query);
+	if (offset < 0)
+	    offset = 0;
+    }
 
     threads = notmuch_query_search_threads (query);
     if (threads == NULL)
@@ -208,16 +217,21 @@ do_search_threads (const search_format_t *format,
 
     fputs (format->results_start, stdout);
 
-    for (;
-	 notmuch_threads_valid (threads);
-	 notmuch_threads_move_to_next (threads))
+    for (i = 0;
+	 notmuch_threads_valid (threads) && (limit < 0 || i < offset + limit);
+	 notmuch_threads_move_to_next (threads), i++)
     {
 	int first_tag = 1;
 
+	thread = notmuch_threads_get (threads);
+
+	if (i < offset) {
+	    notmuch_thread_destroy (thread);
+	    continue;
+	}
+
 	if (! first_thread)
 	    fputs (format->item_sep, stdout);
-
-	thread = notmuch_threads_get (threads);
 
 	if (output == OUTPUT_THREADS) {
 	    format->item_id (thread, "thread:",
@@ -271,12 +285,21 @@ do_search_threads (const search_format_t *format,
 static int
 do_search_messages (const search_format_t *format,
 		    notmuch_query_t *query,
-		    output_t output)
+		    output_t output,
+		    int offset,
+		    int limit)
 {
     notmuch_message_t *message;
     notmuch_messages_t *messages;
     notmuch_filenames_t *filenames;
     int first_message = 1;
+    int i;
+
+    if (offset < 0) {
+	offset += notmuch_query_count_messages (query);
+	if (offset < 0)
+	    offset = 0;
+    }
 
     messages = notmuch_query_search_messages (query);
     if (messages == NULL)
@@ -284,10 +307,13 @@ do_search_messages (const search_format_t *format,
 
     fputs (format->results_start, stdout);
 
-    for (;
-	 notmuch_messages_valid (messages);
-	 notmuch_messages_move_to_next (messages))
+    for (i = 0;
+	 notmuch_messages_valid (messages) && (limit < 0 || i < offset + limit);
+	 notmuch_messages_move_to_next (messages), i++)
     {
+	if (i < offset)
+	    continue;
+
 	message = notmuch_messages_get (messages);
 
 	if (output == OUTPUT_FILES) {
@@ -394,6 +420,8 @@ notmuch_search_command (void *ctx, int argc, char *argv[])
     const search_format_t *format = &format_text;
     int i, ret;
     output_t output = OUTPUT_SUMMARY;
+    int offset = 0;
+    int limit = -1; /* unlimited */
 
     argc--; argv++; /* skip subcommand argument */
 
@@ -410,6 +438,22 @@ notmuch_search_command (void *ctx, int argc, char *argv[])
 		sort = NOTMUCH_SORT_NEWEST_FIRST;
 	    } else {
 		fprintf (stderr, "Invalid value for --sort: %s\n", opt);
+		return 1;
+	    }
+	} else if (STRNCMP_LITERAL (argv[i], "--offset=") == 0) {
+	    char *p;
+	    opt = argv[i] + sizeof ("--offset=") - 1;
+	    offset = strtol (opt, &p, 10);
+	    if (*opt == '\0' || p == opt || *p != '\0') {
+		fprintf (stderr, "Invalid value for --offset: %s\n", opt);
+		return 1;
+	    }
+	} else if (STRNCMP_LITERAL (argv[i], "--limit=") == 0) {
+	    char *p;
+	    opt = argv[i] + sizeof ("--limit=") - 1;
+	    limit = strtoul (opt, &p, 10);
+	    if (*opt == '\0' || p == opt || *p != '\0') {
+		fprintf (stderr, "Invalid value for --limit: %s\n", opt);
 		return 1;
 	    }
 	} else if (STRNCMP_LITERAL (argv[i], "--format=") == 0) {
@@ -478,11 +522,11 @@ notmuch_search_command (void *ctx, int argc, char *argv[])
     default:
     case OUTPUT_SUMMARY:
     case OUTPUT_THREADS:
-	ret = do_search_threads (format, query, sort, output);
+	ret = do_search_threads (format, query, sort, output, offset, limit);
 	break;
     case OUTPUT_MESSAGES:
     case OUTPUT_FILES:
-	ret = do_search_messages (format, query, output);
+	ret = do_search_messages (format, query, output, offset, limit);
 	break;
     case OUTPUT_TAGS:
 	ret = do_search_tags (notmuch, format, query);

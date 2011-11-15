@@ -222,6 +222,15 @@ static command_t commands[] = {
       "\t\t(oldest-first) or reverse chronological order\n"
       "\t\t(newest-first), which is the default.\n"
       "\n"
+      "\t--offset=[-]N\n"
+      "\n"
+      "\t\tSkip displaying the first N results. With the leading '-',\n"
+      "\t\tstart at the Nth result from the end.\n"
+      "\n"
+      "\t--limit=N\n"
+      "\n"
+      "\t\tLimit the number of displayed results to N.\n"
+      "\n"
       "\tSee \"notmuch help search-terms\" for details of the search\n"
       "\tterms syntax." },
     { "show", notmuch_show_command,

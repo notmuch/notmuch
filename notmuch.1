@@ -214,11 +214,26 @@ when sorting by
 .B newest\-first
 the threads will be sorted by the newest message in each thread.
 
-.RE
-.RS 4
 By default, results will be displayed in reverse chronological order,
 (that is, the newest results will be displayed first).
+.RE
 
+.RS 4
+.TP 4
+.BR \-\-offset=[\-]N
+
+Skip displaying the first N results. With the leading '\-', start at the Nth
+result from the end.
+.RE
+
+.RS 4
+.TP 4
+.BR \-\-limit=N
+
+Limit the number of displayed results to N.
+.RE
+
+.RS 4
 See the
 .B "SEARCH SYNTAX"
 section below for details of the supported syntax for <search-terms>.

@@ -23,6 +23,11 @@ Add search terms to  "notmuch dump"
   search/show/tag. The output file argument of dump is deprecated in
   favour of using stdout.
 
+Add "notmuch search" --offset and --limit options
+
+  The search command now takes options --offset=[-]N and --limit=N to limit
+  the number of results shown.
+
 Optimizations
 -------------
 
