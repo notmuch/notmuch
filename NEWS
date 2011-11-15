@@ -23,6 +23,21 @@ Add search terms to  "notmuch dump"
   search/show/tag. The output file argument of dump is deprecated in
   favour of using stdout.
 
+Optimizations
+-------------
+
+Search avoids opening and parsing message files
+
+  We now store more information in the database so search no longer
+  has to open every message file to get basic headers.  This can
+  improve search speed by as much as 10X, but taking advantage of this
+  requires a database rebuild:
+
+	notmuch dump > notmuch.dump
+	# Backup, then remove notmuch database ($MAIL/.notmuch)
+	notmuch new
+	notmuch restore notmuch.dump
+
 Notmuch 0.9 (2011-10-01)
 ========================
 
