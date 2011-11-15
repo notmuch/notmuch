@@ -19,6 +19,7 @@ cd $(dirname "$0")
 TESTS="
   basic
   new
+  count
   search
   search-output
   search-by-folder
