@@ -609,6 +609,20 @@ notmuch_threads_destroy (notmuch_threads_t *threads);
 unsigned
 notmuch_query_count_messages (notmuch_query_t *query);
  
+/* Return the number of threads matching a search.
+ *
+ * This function performs a search and returns the number of unique thread IDs
+ * in the matching messages. This is the same as number of threads matching a
+ * search.
+ *
+ * Note that this is a significantly heavier operation than
+ * notmuch_query_count_messages().
+ *
+ * If an error occurs, this function may return 0.
+ */
+unsigned
+notmuch_query_count_threads (notmuch_query_t *query);
+
 /* Get the thread ID of 'thread'.
  *
  * The returned string belongs to 'thread' and as such, should not be
