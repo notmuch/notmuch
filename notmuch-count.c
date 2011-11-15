@@ -29,11 +29,6 @@ notmuch_count_command (void *ctx, int argc, char *argv[])
     notmuch_query_t *query;
     char *query_str;
     int i;
-#if 0
-    char *opt, *end;
-    int i, first = 0, max_threads = -1;
-    notmuch_sort_t sort = NOTMUCH_SORT_NEWEST_FIRST;
-#endif
 
     argc--; argv++; /* skip subcommand argument */
 
@@ -42,33 +37,6 @@ notmuch_count_command (void *ctx, int argc, char *argv[])
 	    i++;
 	    break;
 	}
-#if 0
-	if (STRNCMP_LITERAL (argv[i], "--first=") == 0) {
-	    opt = argv[i] + sizeof ("--first=") - 1;
-	    first = strtoul (opt, &end, 10);
-	    if (*opt == '\0' || *end != '\0') {
-		fprintf (stderr, "Invalid value for --first: %s\n", opt);
-		return 1;
-	    }
-	} else if (STRNCMP_LITERAL (argv[i], "--max-threads=") == 0) {
-	    opt = argv[i] + sizeof ("--max-threads=") - 1;
-	    max_threads = strtoul (opt, &end, 10);
-	    if (*opt == '\0' || *end != '\0') {
-		fprintf (stderr, "Invalid value for --max-threads: %s\n", opt);
-		return 1;
-	    }
-	} else if (STRNCMP_LITERAL (argv[i], "--sort=") == 0) {
-	    opt = argv[i] + sizeof ("--sort=") - 1;
-	    if (strcmp (opt, "oldest-first") == 0) {
-		sort = NOTMUCH_SORT_OLDEST_FIRST;
-	    } else if (strcmp (opt, "newest-first") == 0) {
-		sort = NOTMUCH_SORT_NEWEST_FIRST;
-	    } else {
-		fprintf (stderr, "Invalid value for --sort: %s\n", opt);
-		return 1;
-	    }
-	} else
-#endif
 	{
 	    fprintf (stderr, "Unrecognized option: %s\n", argv[i]);
 	    return 1;
