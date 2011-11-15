@@ -328,12 +328,24 @@ static command_t commands[] = {
       "\tSee \"notmuch help search-terms\" for details of the search\n"
       "\tterms syntax." },
     { "count", notmuch_count_command,
-      "<search-terms> [...]",
+      "[options...] <search-terms> [...]",
       "Count messages matching the search terms.",
-      "\tThe number of matching messages is output to stdout.\n"
+      "\tThe number of matching messages (or threads) is output to stdout.\n"
       "\n"
-      "\tWith no search terms, a count of all messages in the database\n"
-      "\twill be displayed.\n"
+      "\tWith no search terms, a count of all messages (or threads) in\n"
+      "\tthe database will be displayed.\n"
+      "\n"
+      "\tSupported options for count include:\n"
+      "\n"
+      "\t--output=(messages|threads)\n"
+      "\n"
+      "\t\tmessages (default)\n"
+      "\n"
+      "\t\tOutput the number of matching messages.\n"
+      "\n"
+      "\t\tthreads\n"
+      "\n"
+      "\t\tOutput the number of matching threads.\n"
       "\n"
       "\tSee \"notmuch help search-terms\" for details of the search\n"
       "\tterms syntax." },

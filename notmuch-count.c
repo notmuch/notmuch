@@ -29,6 +29,7 @@ notmuch_count_command (void *ctx, int argc, char *argv[])
     notmuch_query_t *query;
     char *query_str;
     int i;
+    notmuch_bool_t output_messages = TRUE;
 
     argc--; argv++; /* skip subcommand argument */
 
@@ -37,7 +38,17 @@ notmuch_count_command (void *ctx, int argc, char *argv[])
 	    i++;
 	    break;
 	}
-	{
+	if (STRNCMP_LITERAL (argv[i], "--output=") == 0) {
+	    const char *opt = argv[i] + sizeof ("--output=") - 1;
+	    if (strcmp (opt, "threads") == 0) {
+		output_messages = FALSE;
+	    } else if (strcmp (opt, "messages") == 0) {
+		output_messages = TRUE;
+	    } else {
+		fprintf (stderr, "Invalid value for --output: %s\n", opt);
+		return 1;
+	    }
+	} else {
 	    fprintf (stderr, "Unrecognized option: %s\n", argv[i]);
 	    return 1;
 	}
@@ -71,7 +82,10 @@ notmuch_count_command (void *ctx, int argc, char *argv[])
 	return 1;
     }
 
-    printf ("%u\n", notmuch_query_count_messages(query));
+    if (output_messages)
+	printf ("%u\n", notmuch_query_count_messages (query));
+    else
+	printf ("%u\n", notmuch_query_count_threads (query));
 
     notmuch_query_destroy (query);
     notmuch_database_close (notmuch);

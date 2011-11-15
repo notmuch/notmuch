@@ -28,6 +28,11 @@ Add "notmuch search" --offset and --limit options
   The search command now takes options --offset=[-]N and --limit=N to limit
   the number of results shown.
 
+Add "notmuch count --output" option
+
+  The count command is now capable of counting threads in addition to
+  messages. This is selected using the new --output=(threads|messages) option.
+
 Optimizations
 -------------
 
