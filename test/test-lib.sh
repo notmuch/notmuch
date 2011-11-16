@@ -847,7 +847,7 @@ test_emacs () {
 		# start a detached session with an emacs server
 		# user's TERM is given to dtach which assumes a minimally
 		# VT100-compatible terminal -- and emacs inherits that
-		TERM=$ORIGINAL_TERM dtach -n "$TMP_DIRECTORY/emacs-dtach-socket.$$" \
+		TERM=$ORIGINAL_TERM dtach -n "$TEST_TMPDIR/emacs-dtach-socket.$$" \
 			sh -c "stty rows 24 cols 80; exec '$TMP_DIRECTORY/run_emacs' \
 				--no-window-system \
 				--eval '(setq server-name \"$EMACS_SERVER\")' \
