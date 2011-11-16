@@ -41,6 +41,11 @@ Add tab-completion for notmuch-search and notmuch-search-filter
   These functions now support completion tags for query parts
   starting with "tag:".
 
+Turn "id:MSG-ID" links into buttons associated with notmuch searches
+
+  Text of the form "id:MSG-ID" in mails is now a clickable button that
+  opens a notmuch search for the given message id.
+
 Performance
 -----------
 
