@@ -130,7 +130,7 @@ Ruby bindings changes
 ---------------------
 
   - Wrap new library functions notmuch_database_{begin,end}_atomic.
-  - Add new exception Notmuch::UnbalancedAtomicError. 
+  - Add new exception Notmuch::UnbalancedAtomicError.
   - Rename destroy  to destroy! according to Ruby naming conventions.
   - Update for n_d_find_message* API changes (see above).
 
@@ -159,7 +159,7 @@ Improved handling of message/rfc822 parts
   headers, is unfortunately not yet supported (but hopefully will be
   soon).
 
-Improved Build system portability 
+Improved Build system portability
 
   Certain parts of the shell script generating notmuch.sym were
   specific to the GNU versions of sed and nm. The new version should
@@ -202,7 +202,7 @@ Sebastian Spaeth contributed two changes related to unicode and UTF8:
   * message tags are now explicitly unicode
   * query string is encoded as a UTF8 byte string
 
-Build-System improvments
+Build-System improvements
 ------------------------
 
 Generate notmuch.sym after the relevant object files
@@ -217,7 +217,7 @@ Bug-fix release.
 ----------------
 
 Re-export Xapian exception typeinfo symbols.
-  
+
   It turned out our aggressive symbol hiding caused problems for
   people running gcc 4.4.5.
 
@@ -236,8 +236,8 @@ Folder-based searching
   For example, one might use things such as:
 
 	folder:spam
-        folder:2011-*
-        folder:work/todo
+	folder:2011-*
+	folder:work/todo
 
   to match any path containing a directory "spam", "work/todo", or
   containing a directory starting with "2011-", respectively.
@@ -382,7 +382,7 @@ Hiding of repeated subjects in collapsed thread view
 
   In notmuch-show mode, if a collapsed message has the same subject as
   its parent, the subject is not shown.
-  
+
 Automatic detection and hiding of original message in top-posted message
 
   When a message contains a line looking something like:
@@ -448,7 +448,7 @@ Ruby bindings are now much more complete
   Including QUERY.sort, QUERY.to_s, MESSAGE.maildir_flags_to_tags,
   MESSAGE.tags_to_maildir_flags, and MESSAGE.get_filenames
 
-* Python bindings have been upodated and extended
+* Python bindings have been updated and extended
   (docs online at http://packages.python.org/notmuch/)
 
   New bindings:
@@ -458,16 +458,16 @@ Ruby bindings are now much more complete
 
   - Message().__cmp__() and __hash__()
   These allow, for example:
-        if msg1 == msg2: ...
+	if msg1 == msg2: ...
 
   As well as set arithmetic on Messages():
 
-        s1, s2= set(msgs1), set(msgs2)
+	s1, s2= set(msgs1), set(msgs2)
 	s1.union(s2)
 	s2 -= s1
 
    Removed:
-     - len(Messages()) as it exausted the iterator.
+     - len(Messages()) as it exhausted the iterator.
        Use len(list(Messages())) or
        Query.count_messages() to get the length.
 
@@ -603,9 +603,9 @@ Maildir-flag synchronization
 	----     -----
 	'D'      draft
 	'F'      flagged
-        'P'      passed
-        'R'      replied
-        'S'      unread (added when 'S' flag is not present)
+	'P'      passed
+	'R'      replied
+	'S'      unread (added when 'S' flag is not present)
 
   The synchronization occurs in both directions, (for example, adding
   the 'S' flag to a file will cause the "unread" tag to be added, and
@@ -1359,4 +1359,3 @@ a performance bug that made notmuch very slow when modifying
 tags. This would cause distracting pauses when reading mail while
 notmuch would wait for Xapian when removing the "inbox" and "unread"
 tags from messages in a thread.
-
