@@ -369,8 +369,18 @@ test_emacs '(notmuch-show "id:\"bought\"")
           (rotate-yank-pointer 1))
         (reverse-region (point-min) (point-max))
 	    (test-output)'
-sed -i -e 's/^.*tmp.emacs\/mail.*$/FILENAME/' OUTPUT
-test_expect_equal_file OUTPUT $EXPECTED/emacs-stashing
+cat <<EOF >EXPECTED
+Sat, 01 Jan 2000 12:00:00 -0000
+Some One <someone@somewhere.org>
+Some One Else <notsomeone@somewhere.org>
+Notmuch <notmuch@notmuchmail.org>
+Stash my stashables
+id:"bought"
+bought
+inbox,stashtest
+${gen_msg_filename}
+EOF
+test_expect_equal_file OUTPUT EXPECTED
 
 test_begin_subtest "Stashing in notmuch-search"
 test_emacs '(notmuch-search "id:\"bought\"")
