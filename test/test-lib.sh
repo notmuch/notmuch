@@ -174,6 +174,7 @@ test_success=0
 
 die () {
 	code=$?
+	rm -rf "$TEST_TMPDIR"
 	if test -n "$GIT_EXIT_OK"
 	then
 		exit $code
@@ -184,6 +185,8 @@ die () {
 }
 
 GIT_EXIT_OK=
+# Note: TEST_TMPDIR *NOT* exported!
+TEST_TMPDIR=$(mktemp -d "${TMPDIR:-/tmp}/notmuch-test-$$.XXXXXX")
 trap 'die' EXIT
 
 test_decode_color () {
