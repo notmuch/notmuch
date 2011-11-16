@@ -33,8 +33,10 @@ Add "notmuch count --output" option
   The count command is now capable of counting threads in addition to
   messages. This is selected using the new --output=(threads|messages) option.
 
-Optimizations
--------------
+Performance
+-----------
+
+Emacs now constructs large search buffers more efficiently
 
 Search avoids opening and parsing message files
 
