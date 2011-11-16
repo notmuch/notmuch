@@ -62,7 +62,11 @@ repository. From here, there are just a few steps to release:
 	be "1.0.1" and a subsequent bug-fix release would be "1.0.2"
 	etc.
 
-	Commit this change.
+	Update bindings/python/notmuch/version.py to match version.
+
+	Update the version in notmuch.1 to match version.
+
+	Commit these changes.
 
 5) Create an entry for the new release in debian/changelog
 
