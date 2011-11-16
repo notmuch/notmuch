@@ -398,6 +398,8 @@ emacs_deliver_message ()
 	   (insert \"${body}\")
 	   $@
 	   (message-send-and-exit))"
+    # opportunistically quit smtp-dummy in case above fails.
+    { echo QUIT > /dev/tcp/localhost/25025; } 2>/dev/null
     wait ${smtp_dummy_pid}
     notmuch new >/dev/null
 }
