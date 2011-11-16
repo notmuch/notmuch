@@ -66,6 +66,8 @@ repository. From here, there are just a few steps to release:
 
 	Update the version in notmuch.1 to match version.
 
+	XXX: Probably these last two steps should be (semi-)automated.
+
 	Commit these changes.
 
 5) Create an entry for the new release in debian/changelog
@@ -84,31 +86,24 @@ repository. From here, there are just a few steps to release:
 
 6) Run "make release" which will perform the following steps.
 
-   Note: If any problem occurs during the process, (such as a lintian
-   warning that you decide should be fixed), you can abort at the
-   prompt for your GPG passphrase and nothing will have been uploaded
-   yet.
+   Note: in order to really upload anything, set the make variable
+   REALLY_UPLOAD=yes
 
 	* Ensure that the version consists only of digits and periods
 	* Ensure that version and debian/changelog have the same version
 	* Verify that the source tree is clean
 	* Compile the current notmuch code (aborting release if it fails)
 	* Run the notmuch test suite (aborting release if it fails)
-	* Compile a Debian package
-	* Copy the tar file from what was made for Debian package
-	* Generate a .sha1 sum file for the tar file
-	* Sign the sha1sum using your GPG setup (asks for your GPG password)
 	* Check that no release exists with the current version
-	* scp the three files to appear on http://notmuchmail.org/releases
-	* Create a LATEST-notmuch-version file (after deleting any old one)
-	* Place local copies of the tar, sha1, and gpg files into releases
-	* Upload the Debian package
-	* Place a local copy of the Debian package files in releases
-	* Tag the entire source tree with a tag of the form X.Y.Z, and sign
-	  the tag with your GPG key (asks for your GPG password, and you
-	  may need to set GIT_COMMITTER_NAME and GIT_COMMITTER_EMAIL to match
-	  your public-key's setting or this fails.)
-	* Push that tag
+	* Make a signed tag
+	* Generate a tar file from this tag
+	* Generate a .sha1 sum file for the tar file and GPG sign it.
+	* Commit a (delta for a) copy of the tar file using pristine-tar
+	* Tag for the debian version
+	* if REALLY_UPLOAD=yes
+	  - push the signed tag to the origin
+	    XXX FIXME push debian tag
+	  - scp tarball to web site
 	* Provide some text for the release announcement (see below).
 
 7) Send a message to notmuch@notmuchmail.org to announce the release.
