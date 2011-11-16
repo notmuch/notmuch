@@ -33,6 +33,14 @@ Add "notmuch count --output" option
   The count command is now capable of counting threads in addition to
   messages. This is selected using the new --output=(threads|messages) option.
 
+New emacs UI features
+---------------------
+
+Add tab-completion for notmuch-search and notmuch-search-filter
+
+  These functions now support completion tags for query parts
+  starting with "tag:".
+
 Performance
 -----------
 
