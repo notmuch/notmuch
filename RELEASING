@@ -21,31 +21,26 @@ repository. From here, there are just a few steps to release:
 	See the instructions there for how to increment it.
 
 	The version should have been updated with any commits that
-	added API, but do check that that is the case. The command
-	below can be useful for inspecting header-file changes since
-	the last release X.Y:
+	added API _in a non-upwardly compatible_ way, but do check
+	that that is the case. The command below can be useful for
+	inspecting header-file changes since the last release X.Y:
 
 		git diff X.Y..HEAD -- lib/notmuch.h
 
-	Note: We currently don't plan to increment
-	LIBNOTMUCH_VERSION_MAJOR beyond 1, so if there *are*
-	incompatible changes to the library interface, then
-	stop. Don't release. Figure out the plan on the notmuch
-	mailing list.
-
 	Commit this change, if any.
 
-3) Update the debian/libnotmuch1.symbols file
+3) Update the debian/libnotmuchX.symbols file
 
 	If the library version changed at all (step 2) it probably
 	means that symbols have changed/been added, in which case the
 	debian symbols file also needs to be updated:
 
 	       dpkg-buildpackage -uc -us
-	       dpkg-gensymbols -plibnotmuch1 | patch -p0
+	       dpkg-gensymbols -plibnotmuchX | patch -p0
 
 	Carefully review the changes to debian/libnotmuch1.symbols to
-	make sure there are no unexpected changes.
+	make sure there are no unexpected changes.  Remove any debian
+	versions from symbols.
 
 	Commit this change, if any.
 
