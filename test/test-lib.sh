@@ -644,6 +644,7 @@ test_expect_success () {
 	test "$#" = 3 && { prereq=$1; shift; } || prereq=
 	test "$#" = 2 ||
 	error "bug in the test script: not 2 or 3 parameters to test-expect-success"
+	test_reset_state_
 	if ! test_skip "$@"
 	then
 		test_run_ "$2"
@@ -660,6 +661,7 @@ test_expect_code () {
 	test "$#" = 4 && { prereq=$1; shift; } || prereq=
 	test "$#" = 3 ||
 	error "bug in the test script: not 3 or 4 parameters to test-expect-code"
+	test_reset_state_
 	if ! test_skip "$@"
 	then
 		test_run_ "$3"
@@ -686,6 +688,7 @@ test_external () {
 	error >&5 "bug in the test script: not 3 or 4 parameters to test_external"
 	descr="$1"
 	shift
+	test_reset_state_
 	if ! test_skip "$descr" "$@"
 	then
 		# Announce the script to reduce confusion about the
