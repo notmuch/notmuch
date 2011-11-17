@@ -17,7 +17,7 @@ ifneq ($(MAKECMDGOALS),release)
 ifneq ($(MAKECMDGOALS),release-message)
 ifneq ($(MAKECMDGOALS),pre-release)
 ifeq ($(IS_GIT),yes)
-VERSION:=$(shell git describe --match '[0-9.]*'|sed -e s/-/+/ -e s/-/~/)
+VERSION:=$(shell git describe --match '[0-9.]*'|sed -e s/_/~/ -e s/-/+/ -e s/-/~/)
 endif
 endif
 endif
