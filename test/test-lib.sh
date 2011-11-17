@@ -845,16 +845,17 @@ EOF
 
 test_emacs () {
 	if [ -z "$EMACS_SERVER" ]; then
-		EMACS_SERVER="notmuch-test-suite-$$"
+		server_name="notmuch-test-suite-$$"
 		# start a detached session with an emacs server
 		# user's TERM is given to dtach which assumes a minimally
 		# VT100-compatible terminal -- and emacs inherits that
 		TERM=$ORIGINAL_TERM dtach -n "$TEST_TMPDIR/emacs-dtach-socket.$$" \
 			sh -c "stty rows 24 cols 80; exec '$TMP_DIRECTORY/run_emacs' \
 				--no-window-system \
-				--eval '(setq server-name \"$EMACS_SERVER\")' \
+				--eval '(setq server-name \"$server_name\")' \
 				--eval '(server-start)' \
 				--eval '(orphan-watchdog $$)'" || return
+		EMACS_SERVER="$server_name"
 		# wait until the emacs server is up
 		until test_emacs '()' 2>/dev/null; do
 			sleep 1
