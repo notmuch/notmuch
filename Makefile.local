@@ -13,13 +13,9 @@ PACKAGE=notmuch
 IS_GIT=$(shell if [ -d .git ] ; then echo yes ; else echo no; fi)
 
 VERSION:=$(shell cat ${srcdir}/version)
-ifneq ($(MAKECMDGOALS),release)
-ifneq ($(MAKECMDGOALS),release-message)
-ifneq ($(MAKECMDGOALS),pre-release)
+ifeq ($filter release release-message pre-release,$(MAKECMDGOALS),)
 ifeq ($(IS_GIT),yes)
 VERSION:=$(shell git describe --match '[0-9.]*'|sed -e s/_/~/ -e s/-/+/ -e s/-/~/)
-endif
-endif
 endif
 endif
 
