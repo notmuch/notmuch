@@ -12,8 +12,14 @@ PACKAGE=notmuch
 
 IS_GIT=$(shell if [ -d .git ] ; then echo yes ; else echo no; fi)
 
+ifeq ($(IS_GIT),yes)
+DATE:=$(shell git log --date=short -1 --pretty=format:%cd)
+else
+DATE:=$(shell date +%F)
+endif
+
 VERSION:=$(shell cat ${srcdir}/version)
-ifeq ($filter release release-message pre-release,$(MAKECMDGOALS),)
+ifeq ($(filter release release-message pre-release update-versions,$(MAKECMDGOALS)),)
 ifeq ($(IS_GIT),yes)
 VERSION:=$(shell git describe --match '[0-9.]*'|sed -e s/_/~/ -e s/-/+/ -e s/-/~/)
 endif
@@ -86,6 +92,12 @@ $(GPG_FILE): $(SHA1_FILE)
 
 .PHONY: dist
 dist: $(TAR_FILE)
+
+.PHONY: update-versions
+
+update-versions:
+	sed -i "s/^.TH NOTMUCH 1.*$$/.TH NOTMUCH 1 ${DATE} \"Notmuch ${VERSION}\"/" notmuch.1
+	sed -i "s/^__VERSION__[[:blank:]]*=.*$$/__VERSION__ = \'${VERSION}\'/" $(PV_FILE)
 
 # We invoke make recursively only to force ordering of our phony
 # targets in the case of parallel invocation of make (-j).
