@@ -51,7 +51,7 @@ test_expect_code 2 'failure to clean up causes the test to fail' '
 
 # Ensure that all tests are being run
 test_begin_subtest 'Ensure that all available tests will be run by notmuch-test'
-eval $(sed -n -e '/^TESTS="$/,/^"$/p' notmuch-test $TEST_DIRECTORY/notmuch-test)
+eval $(sed -n -e '/^TESTS="$/,/^"$/p' $TEST_DIRECTORY/notmuch-test)
 tests_in_suite=$(for i in $TESTS; do echo $i; done | sort)
 available=$(ls -1 $TEST_DIRECTORY/ | \
     sed -r -e "/^(aggregate-results.sh|Makefile|Makefile.local|notmuch-test)/d" \
