@@ -1,4 +1,4 @@
-#!/usr//bin/env bash
+#!/usr/bin/env bash
 
 test_description='notmuch show --format=raw'
 . ./test-lib.sh
