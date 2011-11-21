@@ -187,7 +187,7 @@ release-message:
 verify-source-tree-and-version: verify-no-dirty-code
 
 .PHONY: verify-no-dirty-code
-verify-no-dirty-code: verify-version-debian verify-version-python
+verify-no-dirty-code: verify-version-debian verify-version-python verify-version-manpage
 ifeq ($(IS_GIT),yes)
 	@printf "Checking that source tree is clean..."
 ifneq ($(shell git ls-files -m),)
@@ -218,6 +218,14 @@ verify-version-python: verify-version-components
 	@[ "$(VERSION)" = $$(python -c "execfile('$(PV_FILE)'); print __VERSION__") ] || \
 		(echo "No." && \
 		 echo "Please edit version and $(PV_FILE) to have consistent versions." && false)
+	@echo "Good."
+
+.PHONY: verify-version-manpage
+verify-version-manpage: verify-version-components
+	@echo -n "Checking that manual page version is $(VERSION)..."
+	@[ "$(VERSION)" = $$(sed -n '/^[.]TH NOTMUCH 1/{s/.*"Notmuch //;s/".*//p;}' notmuch.1) ] || \
+		(echo "No." && \
+		 echo "Please edit version and notmuch.1 to have consistent versions." && false)
 	@echo "Good."
 
 .PHONY: verify-version-components
