@@ -920,6 +920,8 @@ The optional parameters are used as follows:
   (let ((buffer (get-buffer-create (notmuch-search-buffer-title query))))
     (switch-to-buffer buffer)
     (notmuch-search-mode)
+    ;; Don't track undo information for this buffer
+    (set 'buffer-undo-list t)
     (set 'notmuch-search-query-string query)
     (set 'notmuch-search-oldest-first oldest-first)
     (set 'notmuch-search-target-thread target-thread)

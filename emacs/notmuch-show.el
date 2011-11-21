@@ -843,6 +843,8 @@ buffer."
 	 (inhibit-read-only t))
     (switch-to-buffer buffer)
     (notmuch-show-mode)
+    ;; Don't track undo information for this buffer
+    (set 'buffer-undo-list t)
 
     (setq notmuch-show-thread-id thread-id)
     (setq notmuch-show-parent-buffer parent-buffer)
