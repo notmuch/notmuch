@@ -1,3 +1,10 @@
+notmuch (0.10~rc2-1) experimental; urgency=low
+
+  * New upstream release candidate
+    - includes patch to avoid long unix domain socket paths in tests
+
+ -- David Bremner <bremner@debian.org>  Sat, 19 Nov 2011 08:21:39 -0400
+
 notmuch (0.10~rc1-1) experimental; urgency=low
 
   * New upstream release candidate.
