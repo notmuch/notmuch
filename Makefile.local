@@ -207,28 +207,25 @@ endif
 .PHONY: verify-version-debian
 verify-version-debian: verify-version-components
 	@echo -n "Checking that Debian package version is $(VERSION)-1..."
-	@if [ "$(VERSION)-1" != $$(dpkg-parsechangelog | grep ^Version | awk '{print $$2}') ] ; then \
+	@[ "$(VERSION)-1" = $$(dpkg-parsechangelog | grep ^Version | awk '{print $$2}') ] || \
 		(echo "No." && \
-		 echo "Please edit version and debian/changelog to have consistent versions." && false) \
-	 fi
+		 echo "Please edit version and debian/changelog to have consistent versions." && false)
 	@echo "Good."
 
 .PHONY: verify-version-python
 verify-version-python: verify-version-components
 	@echo -n "Checking that python bindings version is $(VERSION)..."
-	@if [ "$(VERSION)" != $$(python -c "execfile('$(PV_FILE)'); print __VERSION__") ] ; then \
+	@[ "$(VERSION)" = $$(python -c "execfile('$(PV_FILE)'); print __VERSION__") ] || \
 		(echo "No." && \
-		 echo "Please edit version and $(PV_FILE) to have consistent versions." && false) \
-	 fi
+		 echo "Please edit version and $(PV_FILE) to have consistent versions." && false)
 	@echo "Good."
 
 .PHONY: verify-version-components
 verify-version-components:
 	@echo -n "Checking that $(VERSION) consists only of digits and periods..."
-	@if echo $(VERSION) | grep -q -v -x '[0-9.]*'; then \
+	@echo $(VERSION) | grep -q -x '^[0-9.]*$$' || \
 		(echo "No." && \
-	         echo "Please follow the instructions in RELEASING to choose a version" && false) \
-	 else :; fi
+	         echo "Please follow the instructions in RELEASING to choose a version" && false)
 	@echo "Good."
 
 .PHONY: verify-newer
