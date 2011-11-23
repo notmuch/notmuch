@@ -52,6 +52,11 @@ Add keybinding ('c I') for stashing Message-ID's without an id: prefix
 
   Reduces manual labour when stashing them for use outside notmuch.
 
+Do not query on notmuch-search exit
+
+   It is harmless to kill the external notmuch process, so the user
+   is no longer interrogated when they interrupt a search.
+
 Performance
 -----------
 
