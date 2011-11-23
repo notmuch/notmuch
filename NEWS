@@ -1,4 +1,4 @@
-Notmuch 0.10 (2011-xx-xx)
+Notmuch 0.10 (2011-11-23)
 =========================
 
 New build and testing features
@@ -51,6 +51,11 @@ Turn "id:MSG-ID" links into buttons associated with notmuch searches
 Add keybinding ('c I') for stashing Message-ID's without an id: prefix
 
   Reduces manual labour when stashing them for use outside notmuch.
+
+Do not query on notmuch-search exit
+
+   It is harmless to kill the external notmuch process, so the user
+   is no longer interrogated when they interrupt a search.
 
 Performance
 -----------
