@@ -1,3 +1,14 @@
+notmuch (0.10-1) unstable; urgency=low
+
+  * New upstream release
+    - search performance improvements
+    - emacs UI improvements
+    - new dump/restore features
+    - new script contrib/nmbug for sharing tags
+    - see /usr/share/doc/notmuch/NEWS for details
+
+ -- David Bremner <bremner@debian.org>  Wed, 23 Nov 2011 07:44:01 -0400
+
 notmuch (0.10~rc2-1) experimental; urgency=low
 
   * New upstream release candidate
