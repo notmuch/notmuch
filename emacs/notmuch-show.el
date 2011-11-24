@@ -91,6 +91,16 @@ any given message."
   :group 'notmuch
   :type 'boolean)
 
+(defcustom notmuch-indent-messages-width 1
+  "Width of message indentation in threads.
+
+Messages are shown indented according to their depth in a thread.
+This variable determines the width of this indentation measured
+in number of blanks.  Defaults to `1', choose `0' to disable
+indentation."
+  :group 'notmuch
+  :type 'integer)
+
 (defcustom notmuch-show-indent-multipart nil
   "Should the sub-parts of a multipart/* part be indented?"
   ;; dme: Not sure which is a good default.
@@ -238,7 +248,7 @@ unchanged ADDRESS if parsing fails."
   "Insert a notmuch style headerline based on HEADERS for a
 message at DEPTH in the current thread."
   (let ((start (point)))
-    (insert (notmuch-show-spaces-n depth)
+    (insert (notmuch-show-spaces-n (* notmuch-indent-messages-width depth))
 	    (notmuch-show-clean-address (plist-get headers :From))
 	    " ("
 	    date
@@ -739,7 +749,7 @@ current buffer, if possible."
     (setq content-end (point-marker))
 
     ;; Indent according to the depth in the thread.
-    (indent-rigidly content-start content-end depth)
+    (indent-rigidly content-start content-end (* notmuch-indent-messages-width depth))
 
     (setq message-end (point-max-marker))
 
