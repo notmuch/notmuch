@@ -57,6 +57,13 @@ test_emacs "(let ((notmuch-indent-messages-width 1))
 	      (test-output))"
 test_expect_equal_file OUTPUT $EXPECTED/notmuch-show-thread-maildir-storage
 
+test_begin_subtest "Basic notmuch-show view in emacs without indentation"
+maildir_storage_thread=$(notmuch search --output=threads id:20091117190054.GU3165@dottiness.seas.harvard.edu)
+test_emacs "(let ((notmuch-indent-messages-width 0))
+	      (notmuch-show \"$maildir_storage_thread\")
+	      (test-output))"
+test_expect_equal_file OUTPUT $EXPECTED/notmuch-show-thread-maildir-storage-without-indentation
+
 test_begin_subtest "notmuch-show for message with invalid From"
 add_message "[subject]=\"message-with-invalid-from\"" \
 	    "[from]=\"\\\"Invalid \\\" From\\\" <test_suite@notmuchmail.org>\""
