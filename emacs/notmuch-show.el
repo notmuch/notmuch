@@ -460,8 +460,7 @@ current buffer, if possible."
     (button-put button 'face '(:foreground "blue"))
     ;; add signature status button if sigstatus provided
     (if (plist-member part :sigstatus)
-	(let* ((headers (plist-get msg :headers))
-	       (from (plist-get headers :From))
+	(let* ((from (notmuch-show-get-header :From msg))
 	       (sigstatus (car (plist-get part :sigstatus))))
 	  (notmuch-crypto-insert-sigstatus-button sigstatus from))
       ;; if we're not adding sigstatus, tell the user how they can get it
@@ -487,8 +486,7 @@ current buffer, if possible."
 	  (notmuch-crypto-insert-encstatus-button encstatus)
 	  ;; add signature status button if sigstatus specified
 	  (if (plist-member part :sigstatus)
-	      (let* ((headers (plist-get msg :headers))
-		     (from (plist-get headers :From))
+	      (let* ((from (notmuch-show-get-header :From msg))
 		     (sigstatus (car (plist-get part :sigstatus))))
 		(notmuch-crypto-insert-sigstatus-button sigstatus from))))
       ;; if we're not adding encstatus, tell the user how they can get it
@@ -1089,9 +1087,9 @@ All currently available key bindings:
   "Return the filename of the current message."
   (notmuch-show-get-prop :filename))
 
-(defun notmuch-show-get-header (header)
+(defun notmuch-show-get-header (header &optional props)
   "Return the named header of the current message, if any."
-  (plist-get (notmuch-show-get-prop :headers) header))
+  (plist-get (notmuch-show-get-prop :headers props) header))
 
 (defun notmuch-show-get-cc ()
   (notmuch-show-get-header :Cc))
