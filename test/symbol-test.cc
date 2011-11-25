@@ -1,10 +1,9 @@
 #include <stdio.h>
 #include <xapian.h>
 #include <notmuch.h>
-main (int argc, char **argv){
+int main (){
 
-    notmuch_database_t *notmuch
-      = notmuch_database_open ("fakedb",
+  (void)notmuch_database_open ("fakedb",
 				     NOTMUCH_DATABASE_MODE_READ_ONLY);
 
   try{
