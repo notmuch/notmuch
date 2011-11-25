@@ -519,7 +519,6 @@ current buffer, if possible."
 (defun notmuch-show-insert-part-message/rfc822 (msg part content-type nth depth declared-type)
   (notmuch-show-insert-part-header nth declared-type content-type nil)
   (let* ((message (car (plist-get part :content)))
-	 (headers (plist-get message :headers))
 	 (body (car (plist-get message :body)))
 	 (start (point)))
 
