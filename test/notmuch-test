@@ -18,6 +18,7 @@ cd $(dirname "$0")
 
 TESTS="
   basic
+  help-test
   new
   count
   search
