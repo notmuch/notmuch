@@ -1,3 +1,10 @@
+notmuch (0.10.1-1) unstable; urgency=low
+
+  * Upstream bug fix release.
+    - Fix segfault on "notmuch --help"
+
+ -- David Bremner <bremner@debian.org>  Fri, 25 Nov 2011 12:11:30 -0500
+
 notmuch (0.10-1) unstable; urgency=low
 
   * New upstream release
