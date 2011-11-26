@@ -17,4 +17,4 @@ test:	all $(dir)/smtp-dummy
 
 check: test
 
-CLEAN := $(CLEAN) $(dir)/smtp-dummy
+CLEAN := $(CLEAN) $(dir)/smtp-dummy $(dir)/smtp-dummy.o
