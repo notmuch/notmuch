@@ -548,6 +548,19 @@ test_have_prereq () {
 	esac
 }
 
+# declare prerequisite for the given external binary
+test_declare_external_prereq () {
+	binary="$1"
+	test "$#" = 2 && name=$2 || name="$binary(1)"
+
+	hash $binary 2>/dev/null || eval "
+$binary () {
+	echo -n \"\$test_subtest_missing_external_prereqs_\" | grep -e \" $name \" ||
+	test_subtest_missing_external_prereqs_=\"$test_subtest_missing_external_prereqs_ $name\"
+	false
+}"
+}
+
 # You are not expected to call test_ok_ and test_failure_ directly, use
 # the text_expect_* functions instead.
 
@@ -624,16 +637,29 @@ test_skip () {
 	fi
 	case "$to_skip" in
 	t)
-		test_reset_state_
-		say_color skip >&3 "skipping test: $@"
-		say_color skip "%-6s" "SKIP"
-		echo " $1"
-		: true
+		test_report_skip_ "$@"
 		;;
 	*)
-		false
+		test_check_missing_external_prereqs_ "$@"
 		;;
 	esac
+}
+
+test_check_missing_external_prereqs_ () {
+	if test -n "$test_subtest_missing_external_prereqs_"; then
+		say_color skip >&3 "missing prerequisites:"
+		echo "$test_subtest_missing_external_prereqs_" >&3
+		test_report_skip_ "$@"
+	else
+		false
+	fi
+}
+
+test_report_skip_ () {
+	test_reset_state_
+	say_color skip >&3 "skipping test: $@"
+	say_color skip "%-6s" "SKIP"
+	echo " $1"
 }
 
 test_subtest_known_broken () {
@@ -648,7 +674,10 @@ test_expect_success () {
 	if ! test_skip "$@"
 	then
 		test_run_ "$2"
-		if [ "$?" = 0 -a "$eval_ret" = 0 ]
+		run_ret="$?"
+		# test_run_ may update missing external prerequisites
+		test_check_missing_external_prereqs_ "$@" ||
+		if [ "$run_ret" = 0 -a "$eval_ret" = 0 ]
 		then
 			test_ok_ "$1"
 		else
@@ -665,7 +694,10 @@ test_expect_code () {
 	if ! test_skip "$@"
 	then
 		test_run_ "$3"
-		if [ "$?" = 0 -a "$eval_ret" = "$1" ]
+		run_ret="$?"
+		# test_run_ may update missing external prerequisites,
+		test_check_missing_external_prereqs_ "$@" ||
+		if [ "$run_ret" = 0 -a "$eval_ret" = "$1" ]
 		then
 			test_ok_ "$2"
 		else
@@ -870,6 +902,7 @@ test_emacs () {
 
 test_reset_state_ () {
 	test_subtest_known_broken_=
+	test_subtest_missing_external_prereqs_=
 }
 
 
