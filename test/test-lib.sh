@@ -555,10 +555,24 @@ test_declare_external_prereq () {
 
 	hash $binary 2>/dev/null || eval "
 $binary () {
+	test_missing_external_prereq_${binary}_=t
 	echo -n \"\$test_subtest_missing_external_prereqs_\" | grep -e \" $name \" ||
 	test_subtest_missing_external_prereqs_=\"$test_subtest_missing_external_prereqs_ $name\"
 	false
 }"
+}
+
+# Explicitly require external prerequisite.  Useful when binary is
+# called indirectly (e.g. from emacs).
+# Returns success if dependency is available, failure otherwise.
+test_require_external_prereq () {
+	binary="$1"
+	if [ "$(eval echo -n \$test_missing_external_prereq_${binary}_)" = t ]; then
+		# dependency is missing, call the replacement function to note it
+		eval "$binary"
+	else
+		true
+	fi
 }
 
 # You are not expected to call test_ok_ and test_failure_ directly, use
