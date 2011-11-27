@@ -1123,3 +1123,10 @@ test -z "$NO_PYTHON" && test_set_prereq PYTHON
 # test whether the filesystem supports symbolic links
 ln -s x y 2>/dev/null && test -h y 2>/dev/null && test_set_prereq SYMLINKS
 rm -f y
+
+# declare prerequisites for external binaries used in tests
+test_declare_external_prereq dtach
+test_declare_external_prereq emacs
+test_declare_external_prereq emacsclient
+test_declare_external_prereq gdb
+test_declare_external_prereq gpg
