@@ -902,8 +902,18 @@ test_emacs () {
 }
 
 test_reset_state_ () {
+	test -z "$test_init_done_" && test_init_
+
 	test_subtest_known_broken_=
 	test_subtest_missing_external_prereqs_=
+}
+
+# called once before the first subtest
+test_init_ () {
+	test_init_done_=t
+
+	# skip all tests if there were external prerequisites missing during init
+	test_check_missing_external_prereqs_ "all tests in $this_test" && test_done
 }
 
 
