@@ -412,7 +412,7 @@ test_emacs '(notmuch-search "id:\"bought\"")
         (yank)
 	    (test-output)'
 sed -i -e 's/^thread:.*$/thread:XXX/' OUTPUT
-test_expect_equal $(cat OUTPUT) "thread:XXX"
+test_expect_equal "$(cat OUTPUT)" "thread:XXX"
 
 test_begin_subtest 'Hiding message following HTML part'
 test_subtest_known_broken
