@@ -894,6 +894,10 @@ EOF
 }
 
 test_emacs () {
+	# test dependencies beforehand to avoid the waiting loop below
+	test_require_external_prereq emacs || return
+	test_require_external_prereq emacsclient || return
+
 	if [ -z "$EMACS_SERVER" ]; then
 		server_name="notmuch-test-suite-$$"
 		# start a detached session with an emacs server
