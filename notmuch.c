@@ -621,7 +621,7 @@ main (int argc, char *argv[])
 	return notmuch (local);
 
     if (STRNCMP_LITERAL (argv[1], "--help") == 0)
-	return notmuch_help_command (NULL, 0, NULL);
+	return notmuch_help_command (NULL, argc - 1, &argv[1]);
 
     if (STRNCMP_LITERAL (argv[1], "--version") == 0) {
 	printf ("notmuch " STRINGIFY(NOTMUCH_VERSION) "\n");
