@@ -657,7 +657,8 @@ test_check_missing_external_prereqs_ () {
 
 test_report_skip_ () {
 	test_reset_state_
-	say_color skip >&3 "skipping test: $@"
+	say_color skip >&3 "skipping test:"
+	echo " $@" >&3
 	say_color skip "%-6s" "SKIP"
 	echo " $1"
 }
