@@ -73,7 +73,10 @@ notmuch_dump_command (unused (void *ctx), int argc, char *argv[])
 	fprintf (stderr, "Out of memory\n");
 	return 1;
     }
-    notmuch_query_set_sort (query, NOTMUCH_SORT_MESSAGE_ID);
+    /* Don't ask xapian to sort by Message-ID. Xapian optimizes returning the
+     * first results quickly at the expense of total time.
+     */
+    notmuch_query_set_sort (query, NOTMUCH_SORT_UNSORTED);
 
     for (messages = notmuch_query_search_messages (query);
 	 notmuch_messages_valid (messages);
