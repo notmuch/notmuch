@@ -554,8 +554,8 @@ test_declare_external_prereq () {
 	test "$#" = 2 && name=$2 || name="$binary(1)"
 
 	hash $binary 2>/dev/null || eval "
-$binary () {
 	test_missing_external_prereq_${binary}_=t
+$binary () {
 	echo -n \"\$test_subtest_missing_external_prereqs_\" | grep -e \" $name \" ||
 	test_subtest_missing_external_prereqs_=\"$test_subtest_missing_external_prereqs_ $name\"
 	false
