@@ -19,7 +19,9 @@ output="A Xapian exception occurred opening database: Couldn't stat 'fakedb/.not
 caught No chert database found at path \`./nonexistant'"
 
 mkdir -p fakedb/.notmuch
+
 test_expect_success 'running test' run_test
+
 test_begin_subtest 'checking output'
 test_expect_equal "$result" "$output" 
 test_done
