@@ -885,7 +885,7 @@ PROMPT is the string to prompt with."
 		      "subject:" "attachment:")
 		(mapcar (lambda (tag)
 			  (concat "tag:" tag))
-			(process-lines "notmuch" "search" "--output=tags" "*")))))
+			(process-lines notmuch-command "search" "--output=tags" "*")))))
     (let ((keymap (copy-keymap minibuffer-local-map))
 	  (minibuffer-completion-table
 	   (completion-table-dynamic
