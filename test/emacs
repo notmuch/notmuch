@@ -472,4 +472,35 @@ test_emacs '(notmuch-show "id:f35dbb950911171438k5df6eb56k77b6c0944e2e79ae@mail.
 	    (test-visible-output)'
 test_expect_equal_file OUTPUT EXPECTED
 
+test_begin_subtest "Do not call notmuch for non-inlinable application/mpeg parts"
+id='message-with-application/mpeg-attachment@notmuchmail.org'
+emacs_deliver_message \
+    'Message with application/mpeg attachment' \
+    '' \
+    "(message-goto-eoh)
+     (insert \"Message-ID: <$id>\n\")
+     (message-goto-body)
+     (mml-insert-part \"application/mpeg\")
+     (insert \"a fake mp3 file\")"
+notmuch_counter_reset
+test_emacs "(let ((notmuch-command \"$notmuch_counter_command\"))
+	      (notmuch-show \"id:$id\"))"
+test_expect_equal $(notmuch_counter_value) 1
+
+test_begin_subtest "Do not call notmuch for non-inlinable audio/mpeg parts"
+test_subtest_known_broken
+id='message-with-audio/mpeg-attachment@notmuchmail.org'
+emacs_deliver_message \
+    'Message with audio/mpeg attachment' \
+    '' \
+    "(message-goto-eoh)
+     (insert \"Message-ID: <$id>\n\")
+     (message-goto-body)
+     (mml-insert-part \"audio/mpeg\")
+     (insert \"a fake mp3 file\")"
+notmuch_counter_reset
+test_emacs "(let ((notmuch-command \"$notmuch_counter_command\"))
+	      (notmuch-show \"id:$id\"))"
+test_expect_equal $(notmuch_counter_value) 1
+
 test_done
