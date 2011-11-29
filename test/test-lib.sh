@@ -919,6 +919,38 @@ test_emacs () {
 	emacsclient --socket-name="$EMACS_SERVER" --eval "(progn $@)"
 }
 
+# Creates a script that counts how much time it is executed and calls
+# notmuch.  $notmuch_counter_command is set to the path to the
+# generated script.  Use notmuch_counter_value() function to get the
+# current counter value.
+notmuch_counter_reset () {
+	notmuch_counter_command="$TMP_DIRECTORY/notmuch_counter"
+	if [ ! -x "$notmuch_counter_command" ]; then
+		notmuch_counter_state_path="$TMP_DIRECTORY/notmuch_counter.state"
+		cat >"$notmuch_counter_command" <<EOF || return
+#!/bin/sh
+
+read count < "$notmuch_counter_state_path"
+echo \$((count + 1)) > "$notmuch_counter_state_path"
+
+exec notmuch "\$@"
+EOF
+		chmod +x "$notmuch_counter_command" || return
+	fi
+
+	echo 0 > "$notmuch_counter_state_path"
+}
+
+# Returns the current notmuch counter value.
+notmuch_counter_value () {
+	if [ -r "$notmuch_counter_state_path" ]; then
+		read count < "$notmuch_counter_state_path"
+	else
+		count=0
+	fi
+	echo $count
+}
+
 test_reset_state_ () {
 	test -z "$test_init_done_" && test_init_
 

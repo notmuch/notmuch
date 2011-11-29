@@ -188,8 +188,8 @@ library for your script to use.
    is to summarize successes and failures in the test script and
    exit with an appropriate error code.
 
-There are also a number of mail-specific functions which are useful in
-writing tests:
+There are also a number of notmuch-specific auxiliary functions and
+variables which are useful in writing tests:
 
   generate_message
 
@@ -213,3 +213,15 @@ writing tests:
     will initialize the mail database to a known state of 50 sample
     messages, (culled from the early history of the notmuch mailing
     list).
+
+  notmuch_counter_reset
+  $notmuch_counter_command
+  notmuch_counter_value
+
+    These allow to count how many times notmuch binary is called.
+    notmuch_counter_reset() function generates a script that counts
+    how many times it is called and resets the counter to zero.  The
+    function sets $notmuch_counter_command variable to the path to the
+    generated script that should be called instead of notmuch to do
+    the counting.  The notmuch_counter_value() function prints the
+    current counter value.
