@@ -320,17 +320,17 @@ message at DEPTH in the current thread."
 	;; ange-ftp, which is reasonable to use here.
 	(mm-write-region (point-min) (point-max) file nil nil nil 'no-conversion t)))))
 
-(defun notmuch-show-mm-display-part-inline (msg part content-type content)
+(defun notmuch-show-mm-display-part-inline (msg part nth content-type)
   "Use the mm-decode/mm-view functions to display a part in the
 current buffer, if possible."
   (let ((display-buffer (current-buffer)))
     (with-temp-buffer
-      (insert content)
       (let ((handle (mm-make-handle (current-buffer) (list content-type))))
-	(set-buffer display-buffer)
 	(if (and (mm-inlinable-p handle)
 		 (mm-inlined-p handle))
-	    (progn
+	    (let ((content (notmuch-show-get-bodypart-content msg part nth)))
+	      (insert content)
+	      (set-buffer display-buffer)
 	      (mm-display-part handle)
 	      t)
 	  nil)))))
@@ -585,17 +585,10 @@ current buffer, if possible."
 		nil))
 	  nil))))
 
-(defun notmuch-show-insert-part-application/* (msg part content-type nth depth declared-type
-)
-  ;; do not render random "application" parts
-  (notmuch-show-insert-part-header nth content-type declared-type (plist-get part :filename)))
-
 (defun notmuch-show-insert-part-*/* (msg part content-type nth depth declared-type)
   ;; This handler _must_ succeed - it is the handler of last resort.
   (notmuch-show-insert-part-header nth content-type declared-type (plist-get part :filename))
-  (let ((content (notmuch-show-get-bodypart-content msg part nth)))
-    (if content
-	(notmuch-show-mm-display-part-inline msg part content-type content)))
+  (notmuch-show-mm-display-part-inline msg part nth content-type)
   t)
 
 ;; Functions for determining how to handle MIME parts.

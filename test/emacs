@@ -488,7 +488,6 @@ test_emacs "(let ((notmuch-command \"$notmuch_counter_command\"))
 test_expect_equal $(notmuch_counter_value) 1
 
 test_begin_subtest "Do not call notmuch for non-inlinable audio/mpeg parts"
-test_subtest_known_broken
 id='message-with-audio/mpeg-attachment@notmuchmail.org'
 emacs_deliver_message \
     'Message with audio/mpeg attachment' \
