@@ -295,6 +295,7 @@ clean:
 distclean: clean
 
 notmuch_client_srcs =		\
+	command-line-arguments.c\
 	debugger.c		\
 	gmime-filter-reply.c	\
 	gmime-filter-headers.c	\
