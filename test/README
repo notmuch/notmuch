@@ -13,7 +13,8 @@ notmuch-test script). Either command will run all available tests.
 
 Alternately, you can run a specific subset of tests by simply invoking
 one of the executable scripts in this directory, (such as ./search,
-./reply, etc.)
+./reply, etc). Note that you will probably want "make test-binaries"
+before running individual tests.
 
 The following command-line options are available when running tests:
 

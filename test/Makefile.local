@@ -15,7 +15,10 @@ $(dir)/symbol-test: $(dir)/symbol-test.o
 	$(call quiet,CC) $^ -o $@ -Llib -lnotmuch -lxapian
 
 .PHONY: test check
-test:	all $(dir)/smtp-dummy $(dir)/symbol-test
+
+test-binaries: $(dir)/smtp-dummy $(dir)/symbol-test
+
+test:	all test-binaries
 	@${dir}/notmuch-test $(OPTIONS)
 
 check: test
