@@ -67,7 +67,7 @@ notmuch_dump_command (unused (void *ctx), int argc, char *argv[])
 	    return 1;
 	}
     }
- 
+
     query = notmuch_query_create (notmuch, query_str);
     if (query == NULL) {
 	fprintf (stderr, "Out of memory\n");
