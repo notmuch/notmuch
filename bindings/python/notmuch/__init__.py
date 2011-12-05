@@ -69,7 +69,7 @@ from notmuch.globals import (
     TagTooLongError,
     UnbalancedFreezeThawError,
     UnbalancedAtomicError,
-    NotInitializedError
+    NotInitializedError,
 )
 from notmuch.version import __VERSION__
 __LICENSE__ = "GPL v3+"

@@ -27,6 +27,7 @@ from notmuch.thread import Threads
 from notmuch.message import Messages, Message
 from notmuch.tag import Tags
 
+
 class Database(object):
     """The :class:`Database` is the highest-level object that notmuch
     provides. It references a notmuch database, and can be opened in
@@ -83,12 +84,14 @@ class Database(object):
 
     """ notmuch_database_find_message"""
     _find_message = nmlib.notmuch_database_find_message
-    _find_message.argtypes = [NotmuchDatabaseP, c_char_p, POINTER(NotmuchMessageP)]
+    _find_message.argtypes = [NotmuchDatabaseP, c_char_p,
+                              POINTER(NotmuchMessageP)]
     _find_message.restype = c_uint
 
     """notmuch_database_find_message_by_filename"""
     _find_message_by_filename = nmlib.notmuch_database_find_message_by_filename
-    _find_message_by_filename.argtypes = [NotmuchDatabaseP, c_char_p, POINTER(NotmuchMessageP)]
+    _find_message_by_filename.argtypes = [NotmuchDatabaseP, c_char_p,
+                                          POINTER(NotmuchMessageP)]
     _find_message_by_filename.restype = c_uint
 
     """notmuch_database_get_all_tags"""
@@ -177,8 +180,8 @@ class Database(object):
         :param status: Open the database in read-only or read-write mode
         :type status:  :attr:`MODE`
         :returns: Nothing
-        :exception: Raises :exc:`NotmuchError` in case
-            of any failure (possibly after printing an error message on stderr).
+        :exception: Raises :exc:`NotmuchError` in case of any failure
+                    (possibly after printing an error message on stderr).
         """
         res = Database._open(_str(path), mode)
 
@@ -293,12 +296,12 @@ class Database(object):
         (creating it if it does not exist(?))
 
         .. warning:: This call needs a writeable database in
-           :attr:`Database.MODE`.READ_WRITE mode. The underlying library will exit the
-           program if this method is used on a read-only database!
+           :attr:`Database.MODE`.READ_WRITE mode. The underlying library will
+           exit the program if this method is used on a read-only database!
 
         :param path: An unicode string containing the path relative to the path
-              of database (see :meth:`get_path`), or else should be an absolute path
-              with initial components that match the path of 'database'.
+              of database (see :meth:`get_path`), or else should be an absolute
+              path with initial components that match the path of 'database'.
         :returns: :class:`Directory` or raises an exception.
         :exception:
             :exc:`NotmuchError` with :attr:`STATUS`.FILE_ERROR
@@ -325,7 +328,8 @@ class Database(object):
         return Directory(_str(abs_dirpath), dir_p, self)
 
     _add_message = nmlib.notmuch_database_add_message
-    _add_message.argtypes = [NotmuchDatabaseP, c_char_p, POINTER(NotmuchMessageP)]
+    _add_message.argtypes = [NotmuchDatabaseP, c_char_p,
+                             POINTER(NotmuchMessageP)]
     _add_message.restype = c_uint
 
     def add_message(self, filename, sync_maildir_flags=False):
@@ -490,7 +494,8 @@ class Database(object):
         """Returns :class:`Tags` with a list of all tags found in the database
 
         :returns: :class:`Tags`
-        :execption: :exc:`NotmuchError` with :attr:`STATUS`.NULL_POINTER on error
+        :execption: :exc:`NotmuchError` with :attr:`STATUS`.NULL_POINTER
+                    on error
         """
         self._assert_db_is_initialized()
         tags_p = Database._get_all_tags(self._db)
@@ -748,7 +753,8 @@ class Directory(object):
     _get_child_directories.restype = NotmuchFilenamesP
 
     def _assert_dir_is_initialized(self):
-        """Raises a NotmuchError(:attr:`STATUS`.NOT_INITIALIZED) if dir_p is None"""
+        """Raises a NotmuchError(:attr:`STATUS`.NOT_INITIALIZED)
+        if dir_p is None"""
         if self._dir_p is None:
             raise NotmuchError(STATUS.NOT_INITIALIZED)
 

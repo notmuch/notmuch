@@ -89,6 +89,7 @@ Invoke the class method `notmuch.STATUS.status2str` with a status value as
 argument to receive a human readable string"""
 STATUS.__name__ = 'STATUS'
 
+
 class NotmuchError(Exception):
     """Is initiated with a (notmuch.STATUS[, message=None]). It will not
     return an instance of the class NotmuchError, but a derived instance
@@ -97,7 +98,8 @@ class NotmuchError(Exception):
 
     @classmethod
     def get_exc_subclass(cls, status):
-        """Returns a fine grained Exception() type,detailing the error status"""
+        """Returns a fine grained Exception() type,
+        detailing the error status"""
         subclasses = {
             STATUS.OUT_OF_MEMORY: OutOfMemoryError,
             STATUS.READ_ONLY_DATABASE: ReadOnlyDatabaseError,
@@ -109,7 +111,7 @@ class NotmuchError(Exception):
             STATUS.TAG_TOO_LONG: TagTooLongError,
             STATUS.UNBALANCED_FREEZE_THAW: UnbalancedFreezeThawError,
             STATUS.UNBALANCED_ATOMIC: UnbalancedAtomicError,
-            STATUS.NOT_INITIALIZED: NotInitializedError
+            STATUS.NOT_INITIALIZED: NotInitializedError,
         }
         assert 0 < status <= len(subclasses)
         return subclasses[status]
@@ -125,7 +127,7 @@ class NotmuchError(Exception):
         # no 'status' or cls is subclass already, return 'cls' instance
         if not status or cls != NotmuchError:
             return super(NotmuchError, cls).__new__(cls)
-        subclass = cls.get_exc_subclass(status) # which class to use?
+        subclass = cls.get_exc_subclass(status)  # which class to use?
         return subclass.__new__(subclass, *args, **kwargs)
 
     def __init__(self, status=None, message=None):
@@ -140,35 +142,55 @@ class NotmuchError(Exception):
         else:
             return 'Unknown error'
 
+
 # List of Subclassed exceptions that correspond to STATUS values and are
 # subclasses of NotmuchError.
 class OutOfMemoryError(NotmuchError):
     status = STATUS.OUT_OF_MEMORY
+
+
 class ReadOnlyDatabaseError(NotmuchError):
     status = STATUS.READ_ONLY_DATABASE
+
+
 class XapianError(NotmuchError):
     status = STATUS.XAPIAN_EXCEPTION
+
+
 class FileError(NotmuchError):
     status = STATUS.FILE_ERROR
+
+
 class FileNotEmailError(NotmuchError):
     status = STATUS.FILE_NOT_EMAIL
+
+
 class DuplicateMessageIdError(NotmuchError):
     status = STATUS.DUPLICATE_MESSAGE_ID
+
+
 class NullPointerError(NotmuchError):
     status = STATUS.NULL_POINTER
+
+
 class TagTooLongError(NotmuchError):
     status = STATUS.TAG_TOO_LONG
+
+
 class UnbalancedFreezeThawError(NotmuchError):
     status = STATUS.UNBALANCED_FREEZE_THAW
+
+
 class UnbalancedAtomicError(NotmuchError):
     status = STATUS.UNBALANCED_ATOMIC
+
+
 class NotInitializedError(NotmuchError):
     """Derived from NotmuchError, this occurs if the underlying data
     structure (e.g. database is not initialized (yet) or an iterator has
     been exhausted. You can test for NotmuchError with .status =
     STATUS.NOT_INITIALIZED"""
     status = STATUS.NOT_INITIALIZED
-
 
 
 def _str(value):
@@ -187,33 +209,41 @@ class NotmuchDatabaseS(Structure):
     pass
 NotmuchDatabaseP = POINTER(NotmuchDatabaseS)
 
+
 class NotmuchQueryS(Structure):
     pass
 NotmuchQueryP = POINTER(NotmuchQueryS)
+
 
 class NotmuchThreadsS(Structure):
     pass
 NotmuchThreadsP = POINTER(NotmuchThreadsS)
 
+
 class NotmuchThreadS(Structure):
     pass
 NotmuchThreadP = POINTER(NotmuchThreadS)
+
 
 class NotmuchMessagesS(Structure):
     pass
 NotmuchMessagesP = POINTER(NotmuchMessagesS)
 
+
 class NotmuchMessageS(Structure):
     pass
 NotmuchMessageP = POINTER(NotmuchMessageS)
+
 
 class NotmuchTagsS(Structure):
     pass
 NotmuchTagsP = POINTER(NotmuchTagsS)
 
+
 class NotmuchDirectoryS(Structure):
     pass
 NotmuchDirectoryP = POINTER(NotmuchDirectoryS)
+
 
 class NotmuchFilenamesS(Structure):
     pass
