@@ -128,10 +128,12 @@ class Messages(object):
         """Return the unique :class:`Tags` in the contained messages
 
         :returns: :class:`Tags`
-        :exceptions: :exc:`NotmuchError` STATUS.NOT_INITIALIZED if not inited
+        :exceptions: :exc:`NotmuchError` STATUS.NOT_INITIALIZED if not init'ed
 
-        .. note:: :meth:`collect_tags` will iterate over the messages and
-          therefore will not allow further iterations.
+        .. note::
+
+            :meth:`collect_tags` will iterate over the messages and therefore
+            will not allow further iterations.
         """
         if self._msgs is None:
             raise NotmuchError(STATUS.NOT_INITIALIZED)
@@ -359,14 +361,15 @@ class Message(object):
         """Gets all direct replies to this message as :class:`Messages`
         iterator
 
-        .. note:: This call only makes sense if 'message' was
-          ultimately obtained from a :class:`Thread` object, (such as
-          by coming directly from the result of calling
-          :meth:`Thread.get_toplevel_messages` or by any number of
-          subsequent calls to :meth:`get_replies`). If this message was
-          obtained through some non-thread means, (such as by a call
-          to :meth:`Query.search_messages`), then this function will
-          return `None`.
+        .. note::
+
+            This call only makes sense if 'message' was ultimately obtained from
+            a :class:`Thread` object, (such as by coming directly from the
+            result of calling :meth:`Thread.get_toplevel_messages` or by any
+            number of subsequent calls to :meth:`get_replies`). If this message
+            was obtained through some non-thread means, (such as by a call to
+            :meth:`Query.search_messages`), then this function will return
+            `None`.
 
         :returns: :class:`Messages` or `None` if there are no replies to
             this message.
@@ -647,7 +650,7 @@ class Message(object):
 
         This means that changes to the message state, (via :meth:`add_tag`,
         :meth:`remove_tag`, and :meth:`remove_all_tags`), will not be
-        committed to the database until the message is :meth:`thaw`ed.
+        committed to the database until the message is :meth:`thaw` ed.
 
         Multiple calls to freeze/thaw are valid and these calls will
         "stack". That is there must be as many calls to thaw as to freeze

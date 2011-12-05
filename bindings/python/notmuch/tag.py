@@ -113,11 +113,12 @@ class Tags(object):
     def __str__(self):
         """The str() representation of Tags() is a space separated list of tags
 
-        .. note:: As this iterates over the tags, we will not be able
-               to iterate over them again (as in retrieve them)! If
-               the tags have been exhausted already, this will raise a
-               :exc:`NotmuchError` STATUS.NOT_INITIALIZED on
-               subsequent attempts.
+        .. note::
+
+            As this iterates over the tags, we will not be able to iterate over
+            them again (as in retrieve them)! If the tags have been exhausted
+            already, this will raise a :exc:`NotmuchError`
+            STATUS.NOT_INITIALIZED on subsequent attempts.
         """
         return " ".join(self)
 

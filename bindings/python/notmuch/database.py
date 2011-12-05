@@ -40,16 +40,19 @@ class Database(object):
     :exc:`XapianError` as the underlying database has been
     modified. Close and reopen the database to continue working with it.
 
-    .. note:: Any function in this class can and will throw an
-           :exc:`NotInitializedError` if the database was not
-           intitialized properly.
+    .. note::
 
-    .. note:: Do remember that as soon as we tear down (e.g. via `del
-           db`) this object, all underlying derived objects such as
-           queries, threads, messages, tags etc will be freed by the
-           underlying library as well. Accessing these objects will lead
-           to segfaults and other unexpected behavior. See above for
-           more details.
+        Any function in this class can and will throw an
+        :exc:`NotInitializedError` if the database was not intitialized
+        properly.
+
+    .. note::
+
+        Do remember that as soon as we tear down (e.g. via `del db`) this
+        object, all underlying derived objects such as queries, threads,
+        messages, tags etc will be freed by the underlying library as well.
+        Accessing these objects will lead to segfaults and other unexpected
+        behavior. See above for more details.
     """
     _std_db_path = None
     """Class attribute to cache user's default database"""
@@ -253,10 +256,8 @@ class Database(object):
         neither begin nor end necessarily flush modifications to disk.
 
         :returns: :attr:`STATUS`.SUCCESS or raises
-
-        :exception: :exc:`NotmuchError`:
-            :attr:`STATUS`.XAPIAN_EXCEPTION
-                Xapian exception occurred; atomic section not entered.
+        :exception: :exc:`NotmuchError`: :attr:`STATUS`.XAPIAN_EXCEPTION
+                    Xapian exception occurred; atomic section not entered.
 
         *Added in notmuch 0.9*"""
         self._assert_db_is_initialized()
@@ -295,9 +296,11 @@ class Database(object):
         """Returns a :class:`Directory` of path,
         (creating it if it does not exist(?))
 
-        .. warning:: This call needs a writeable database in
-           :attr:`Database.MODE`.READ_WRITE mode. The underlying library will
-           exit the program if this method is used on a read-only database!
+        .. warning::
+
+            This call needs a writeable database in
+            :attr:`Database.MODE`.READ_WRITE mode. The underlying library will
+            exit the program if this method is used on a read-only database!
 
         :param path: An unicode string containing the path relative to the path
               of database (see :meth:`get_path`), or else should be an absolute
@@ -459,10 +462,11 @@ class Database(object):
     def find_message_by_filename(self, filename):
         """Find a message with the given filename
 
-        .. warning:: This call needs a writeable database in
-           :attr:`Database.MODE`.READ_WRITE mode. The underlying library will
-           exit the program if this method is used on a read-only
-           database!
+        .. warning::
+
+            This call needs a writeable database in
+            :attr:`Database.MODE`.READ_WRITE mode. The underlying library will
+            exit the program if this method is used on a read-only database!
 
         :returns: If the database contains a message with the given
             filename, then a class:`Message:` is returned.  This
@@ -791,10 +795,12 @@ class Directory(object):
           and know that it only needs to add files if the mtime of the
           directory and files are newer than the stored timestamp.
 
-          .. note:: :meth:`get_mtime` function does not allow the caller
-                 to distinguish a timestamp of 0 from a non-existent
-                 timestamp. So don't store a timestamp of 0 unless you are
-                 comfortable with that.
+          .. note::
+
+                :meth:`get_mtime` function does not allow the caller to
+                distinguish a timestamp of 0 from a non-existent timestamp. So
+                don't store a timestamp of 0 unless you are comfortable with
+                that.
 
           :param mtime: A (time_t) timestamp
           :returns: Nothing on success, raising an exception on failure.
@@ -928,13 +934,16 @@ class Filenames(object):
     def __len__(self):
         """len(:class:`Filenames`) returns the number of contained files
 
-        .. note:: As this iterates over the files, we will not be able to
-               iterate over them again! So this will fail::
+        .. note::
+
+            As this iterates over the files, we will not be able to
+            iterate over them again! So this will fail::
 
                  #THIS FAILS
                  files = Database().get_directory('').get_child_files()
-                 if len(files) > 0:              #this 'exhausts' msgs
-                     # next line raises NotmuchError(:attr:`STATUS`.NOT_INITIALIZED)!!!
+                 if len(files) > 0:  # this 'exhausts' msgs
+                     # next line raises
+                     # NotmuchError(:attr:`STATUS`.NOT_INITIALIZED)
                      for file in files: print file
         """
         if self._files_p is None:
