@@ -18,7 +18,7 @@ Copyright 2010 Sebastian Spaeth <Sebastian@SSpaeth.de>'
 """
 from ctypes import c_char_p
 from notmuch.globals import (nmlib, STATUS, NotmuchError,
-    NotmuchFilenamesP, NotmuchMessagesP, NotmuchMessageP)
+    NotmuchFilenamesP, NotmuchMessageP)
 
 
 class Filenames(object):

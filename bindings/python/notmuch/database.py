@@ -18,9 +18,9 @@ Copyright 2010 Sebastian Spaeth <Sebastian@SSpaeth.de>'
 """
 
 import os
-from ctypes import c_int, c_char_p, c_void_p, c_uint, c_long, byref, POINTER
+from ctypes import c_char_p, c_void_p, c_uint, c_long, byref, POINTER
 from notmuch.globals import (nmlib, STATUS, NotmuchError, NotInitializedError,
-     NullPointerError, OutOfMemoryError, XapianError, Enum, _str,
+     NullPointerError, Enum, _str,
      NotmuchDatabaseP, NotmuchDirectoryP, NotmuchMessageP, NotmuchTagsP,
      NotmuchQueryP, NotmuchMessagesP, NotmuchThreadsP, NotmuchFilenamesP)
 from notmuch.thread import Threads

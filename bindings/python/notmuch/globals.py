@@ -18,7 +18,6 @@ Copyright 2010 Sebastian Spaeth <Sebastian@SSpaeth.de>'
 """
 
 from ctypes import CDLL, c_char_p, c_int, Structure, POINTER
-from ctypes.util import find_library
 
 #-----------------------------------------------------------------------------
 #package-global instance of the notmuch library

@@ -19,7 +19,7 @@ Copyright 2010 Sebastian Spaeth <Sebastian@SSpaeth.de>'
 """
 
 
-from ctypes import c_char_p, c_void_p, c_long, c_uint, c_int
+from ctypes import c_char_p, c_long, c_uint, c_int
 from datetime import date
 from notmuch.globals import (nmlib, STATUS, NotmuchError, Enum, _str,
     NotmuchTagsP, NotmuchMessagesP, NotmuchMessageP, NotmuchFilenamesP)
@@ -27,7 +27,6 @@ from notmuch.tag import Tags
 from notmuch.filename import Filenames
 import sys
 import email
-import types
 try:
     import simplejson as json
 except ImportError:
