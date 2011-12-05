@@ -1,3 +1,10 @@
+notmuch (0.10.1-2) unstable; urgency=low
+
+  * Upstream bug fix release
+    - Fix segfault in python bindings due to missing g_type_init call.
+
+ -- David Bremner <bremner@debian.org>  Sun, 04 Dec 2011 22:06:46 -0400
+
 notmuch (0.10.1-1) unstable; urgency=low
 
   * Upstream bug fix release.
