@@ -122,7 +122,7 @@ release: verify-source-tree-and-version
 ifeq ($(REALLY_UPLOAD),yes)
 	git push origin $(VERSION)
 	cd releases && scp $(TAR_FILE) $(SHA1_FILE) $(GPG_FILE) $(RELEASE_HOST):$(RELEASE_DIR)
-	ssh $(RELEASE_HOST) "rm -f $(RELEASE_DIR)/LATEST-$(PACKAGE)-[0-9]* ; ln -s $(TAR_FILE) $(RELEASE_DIR)/LATEST-$(TAR_FILE)"
+	ssh $(RELEASE_HOST) "rm -f $(RELEASE_DIR)/LATEST-$(PACKAGE)-* ; ln -s $(TAR_FILE) $(RELEASE_DIR)/LATEST-$(TAR_FILE)"
 endif
 	@echo "Please send a release announcement using $(PACKAGE)-$(VERSION).announce as a template."
 
