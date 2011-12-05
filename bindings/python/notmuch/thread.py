@@ -392,30 +392,19 @@ class Thread(object):
         return Tags(tags_p, self)
 
     def __str__(self):
-        """A str(Thread()) is represented by a 1-line summary"""
-        thread = {}
-        thread['id'] = self.get_thread_id()
+        return unicode(self).encode('utf-8')
 
-        ###TODO: How do we find out the current sort order of Threads?
-        ###Add a "sort" attribute to the Threads() object?
-        #if (sort == NOTMUCH_SORT_OLDEST_FIRST)
-        #         date = notmuch_thread_get_oldest_date (thread);
-        #else
-        #         date = notmuch_thread_get_newest_date (thread);
-        thread['date'] = date.fromtimestamp(self.get_newest_date())
-        thread['matched'] = self.get_matched_messages()
-        thread['total'] = self.get_total_messages()
-        thread['authors'] = self.get_authors()
-        thread['subject'] = self.get_subject()
-        thread['tags'] = self.get_tags()
+    def __unicode__(self):
+        frm = "thread:%s %12s [%d/%d] %s; %s (%s)"
 
-        return "thread:%s %12s [%d/%d] %s; %s (%s)" % (thread['id'],
-                                                       thread['date'],
-                                                       thread['matched'],
-                                                       thread['total'],
-                                                       thread['authors'],
-                                                       thread['subject'],
-                                                       thread['tags'])
+        return frm % (self.get_thread_id(),
+                      date.fromtimestamp(self.get_newest_date()),
+                      self.get_matched_messages(),
+                      self.get_total_messages(),
+                      self.get_authors(),
+                      self.get_subject(),
+                      self.get_tags(),
+                     )
 
     _destroy = nmlib.notmuch_thread_destroy
     _destroy.argtypes = [NotmuchThreadP]
