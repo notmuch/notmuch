@@ -796,12 +796,14 @@ class Message(object):
         return self.__str__()
 
     def __str__(self):
-        """A message() is represented by a 1-line summary"""
-        msg = {}
-        msg['from'] = self.get_header('from')
-        msg['tags'] = self.get_tags()
-        msg['date'] = date.fromtimestamp(self.get_date())
-        return "%(from)s (%(date)s) (%(tags)s)" % (msg)
+        return unicode(self).encode('utf-8')
+
+    def __unicode__(self):
+        format = "%(from)s (%(date)s) (%(tags)s)"
+        return format % (self.get_header('from'),
+                         self.get_tags(),
+                         date.fromtimestamp(self.get_date()),
+                        )
 
     def get_message_parts(self):
         """Output like notmuch show"""

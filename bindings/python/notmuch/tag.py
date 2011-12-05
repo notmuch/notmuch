@@ -111,7 +111,10 @@ class Tags(object):
         return self._valid(self._tags) > 0
 
     def __str__(self):
-        """The str() representation of Tags() is a space separated list of tags
+        return unicode(self).encode('utf-8')
+
+    def __unicode__(self):
+        """string representation of :class:`Tags`: a space separated list of tags
 
         .. note::
 

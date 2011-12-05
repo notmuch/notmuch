@@ -99,6 +99,9 @@ class Filenames(object):
         self._files = None
 
     def __str__(self):
+        return unicode(self).encode('utf-8')
+
+    def __unicode__(self):
         """Represent Filenames() as newline-separated list of full paths
 
         .. note:: As this iterates over the filenames, we will not be

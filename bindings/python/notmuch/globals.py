@@ -48,11 +48,11 @@ class Status(Enum):
 
     @classmethod
     def status2str(self, status):
-        """Get a string representation of a notmuch_status_t value."""
+        """Get a (unicode) string representation of a notmuch_status_t value."""
         # define strings for custom error messages
         if status == STATUS.NOT_INITIALIZED:
-            return "Operation on uninitialized object impossible."
-        return str(Status._status2str(status))
+            return u"Operation on uninitialized object impossible."
+        return unicode(Status._status2str(status))
 
 STATUS = Status(['SUCCESS',
   'OUT_OF_MEMORY',
@@ -134,12 +134,15 @@ class NotmuchError(Exception):
         self.message = message
 
     def __str__(self):
+        return unicode(self).encode('utf-8')
+
+    def __unicode__(self):
         if self.message is not None:
             return self.message
         elif self.status is not None:
             return STATUS.status2str(self.status)
         else:
-            return 'Unknown error'
+            return u'Unknown error'
 
 
 # List of Subclassed exceptions that correspond to STATUS values and are
