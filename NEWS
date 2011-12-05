@@ -1,3 +1,14 @@
+Notmuch 0.10.2 (2011-12-04)
+===========================
+
+Bug-fix release.
+----------------
+
+Fix crash in python bindings.
+
+    The python bindings did not call g_type_init, which caused crashes
+    for some, but not all users.
+
 Notmuch 0.10.1 (2011-11-25)
 ===========================
 
