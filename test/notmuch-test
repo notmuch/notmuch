@@ -47,6 +47,7 @@ TESTS="
   symbol-hiding
   search-folder-coherence
   atomicity
+  python
 "
 TESTS=${NOTMUCH_TESTS:=$TESTS}
 

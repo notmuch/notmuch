@@ -143,7 +143,7 @@ debian-snapshot: TMPFILE := $(shell mktemp)
 debian-snapshot:
 	make VERSION=$(VERSION) clean
 	cp debian/changelog $(TMPFILE)
-	EDITOR=/bin/true dch -v $(VERSION)+1 -D UNRELEASED 'test build, not for upload'
+	EDITOR=/bin/true dch -b -v $(VERSION)+1 -D UNRELEASED 'test build, not for upload'
 	echo '3.0 (native)' > debian/source/format
 	debuild -us -uc
 	mv -f $(TMPFILE) debian/changelog

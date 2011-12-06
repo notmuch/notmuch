@@ -26,6 +26,7 @@
 #include <signal.h>
 
 #include <glib.h> /* g_free, GPtrArray, GHashTable */
+#include <glib-object.h> /* g_type_init */
 
 using namespace std;
 
@@ -599,6 +600,9 @@ notmuch_database_open (const char *path,
 	fprintf (stderr, "Out of memory\n");
 	goto DONE;
     }
+
+    /* Initialize the GLib type system and threads */
+    g_type_init ();
 
     notmuch = talloc (NULL, notmuch_database_t);
     notmuch->exception_reported = FALSE;
