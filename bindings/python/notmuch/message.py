@@ -799,7 +799,7 @@ class Message(object):
         return unicode(self).encode('utf-8')
 
     def __unicode__(self):
-        format = "%(from)s (%(date)s) (%(tags)s)"
+        format = "%s (%s) (%s)"
         return format % (self.get_header('from'),
                          self.get_tags(),
                          date.fromtimestamp(self.get_date()),
