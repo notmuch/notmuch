@@ -1,4 +1,4 @@
-notmuch (0.10.1-2) unstable; urgency=low
+notmuch (0.10.2-1) unstable; urgency=low
 
   * Upstream bug fix release
     - Fix segfault in python bindings due to missing g_type_init call.
