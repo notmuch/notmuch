@@ -5,6 +5,8 @@ test_description="python bindings"
 add_email_corpus
 
 test_begin_subtest "compare thread ids"
+LD_LIBRARY_PATH=$TEST_DIRECTORY/../lib \
+PYTHONPATH=$TEST_DIRECTORY/../bindings/python \
 python <<EOF | sort > OUTPUT
 import notmuch
 db = notmuch.Database(mode=notmuch.Database.MODE.READ_WRITE)
