@@ -758,11 +758,11 @@ class Message(object):
         not work yet, as the modified tags have not been committed yet
         to the database.
 
-        :returns: a :class:`STATUS`. In short, you want to see
+        :returns: a :class:`STATUS` value. In short, you want to see
             notmuch.STATUS.SUCCESS here. See there for details."""
         if self._msg is None:
             raise NotmuchError(STATUS.NOT_INITIALIZED)
-        status = Message._tags_to_maildir_flags(self._msg)
+        return Message._tags_to_maildir_flags(self._msg)
 
     def maildir_flags_to_tags(self):
         """Synchronize file Maildir flags to notmuch tags
@@ -789,7 +789,7 @@ class Message(object):
             notmuch.STATUS.SUCCESS here. See there for details."""
         if self._msg is None:
             raise NotmuchError(STATUS.NOT_INITIALIZED)
-        status = Message._tags_to_maildir_flags(self._msg)
+        return Message._tags_to_maildir_flags(self._msg)
 
     def __repr__(self):
         """Represent a Message() object by str()"""
