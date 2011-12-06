@@ -79,6 +79,7 @@ class Database(object):
     _open = nmlib.notmuch_database_open
     _open.argtypes = [c_char_p, c_uint]
     _open.restype = NotmuchDatabaseP
+    #_open.restype = c_void_p
 
     """notmuch_database_upgrade"""
     _upgrade = nmlib.notmuch_database_upgrade
@@ -385,7 +386,7 @@ class Database(object):
                       be added.
         """
         self._assert_db_is_initialized()
-        msg_p = c_void_p()
+        msg_p = NotmuchMessageP()
         status = self._add_message(self._db, _str(filename), byref(msg_p))
 
         if not status in [STATUS.SUCCESS, STATUS.DUPLICATE_MESSAGE_ID]:
@@ -453,7 +454,7 @@ class Database(object):
                     the database was not intitialized.
         """
         self._assert_db_is_initialized()
-        msg_p = c_void_p()
+        msg_p = NotmuchMessageP()
         status = Database._find_message(self._db, _str(msgid), byref(msg_p))
         if status != STATUS.SUCCESS:
             raise NotmuchError(status)
@@ -487,7 +488,7 @@ class Database(object):
 
         *Added in notmuch 0.9*"""
         self._assert_db_is_initialized()
-        msg_p = c_void_p()
+        msg_p = NotmuchMessageP()
         status = Database._find_message_by_filename(self._db, _str(filename),
                                                     byref(msg_p))
         if status != STATUS.SUCCESS:
