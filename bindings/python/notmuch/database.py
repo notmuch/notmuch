@@ -79,7 +79,6 @@ class Database(object):
     _open = nmlib.notmuch_database_open
     _open.argtypes = [c_char_p, c_uint]
     _open.restype = NotmuchDatabaseP
-    #_open.restype = c_void_p
 
     """notmuch_database_upgrade"""
     _upgrade = nmlib.notmuch_database_upgrade
