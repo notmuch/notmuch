@@ -19,7 +19,6 @@
 
 #include	"numlib.h"
 
-static const char rcsid[]="$Id: changeuidgid.c,v 1.2 2003/01/05 04:01:17 mrsam Exp $";
 
 void libmail_changegroup(gid_t gid)
 {

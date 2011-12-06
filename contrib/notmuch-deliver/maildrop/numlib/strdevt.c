@@ -9,7 +9,6 @@
 #include	"numlib.h"
 #include	<string.h>
 
-static const char rcsid[]="$Id: strdevt.c,v 1.1 2003/01/26 03:22:40 mrsam Exp $";
 
 char *libmail_str_dev_t(dev_t t, char *arg)
 {

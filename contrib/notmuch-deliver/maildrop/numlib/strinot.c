@@ -9,7 +9,6 @@
 #include	"numlib.h"
 #include	<string.h>
 
-static const char rcsid[]="$Id: strinot.c,v 1.4 2003/01/05 04:01:17 mrsam Exp $";
 
 char *libmail_str_ino_t(ino_t t, char *arg)
 {

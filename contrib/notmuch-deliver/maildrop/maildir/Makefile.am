@@ -1,4 +1,3 @@
-#$Id: Makefile.am,v 1.59 2009/06/27 16:32:38 mrsam Exp $
 #
 # Copyright 1998 - 2005 Double Precision, Inc.  See COPYING for
 # distribution information.

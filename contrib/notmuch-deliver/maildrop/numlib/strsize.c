@@ -9,7 +9,6 @@
 #include	"numlib.h"
 #include	<string.h>
 
-static const char rcsid[]="$Id: strsize.c,v 1.2 2003/01/05 04:01:17 mrsam Exp $";
 
 static void cat_n(char *buf, unsigned long n)
 {

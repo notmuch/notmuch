@@ -35,7 +35,6 @@
 #include	"numlib/numlib.h"
 
 
-static const char rcsid[]="$Id: maildircreate.c,v 1.6 2003/01/26 04:07:03 mrsam Exp $";
 
 FILE *maildir_tmpcreate_fp(struct maildir_tmpcreate_info *info)
 {
