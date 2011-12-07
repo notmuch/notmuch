@@ -5,9 +5,7 @@ test_description="python bindings"
 add_email_corpus
 
 test_begin_subtest "compare thread ids"
-LD_LIBRARY_PATH=$TEST_DIRECTORY/../lib \
-PYTHONPATH=$TEST_DIRECTORY/../bindings/python \
-python <<EOF | sort > OUTPUT
+test_python <<EOF
 import notmuch
 db = notmuch.Database(mode=notmuch.Database.MODE.READ_WRITE)
 q_new = notmuch.Query(db, 'tag:inbox')
@@ -15,5 +13,5 @@ for t in q_new.search_threads():
     print t.get_thread_id()
 EOF
 notmuch search --output=threads tag:inbox | sed s/^thread:// | sort > EXPECTED
-test_expect_equal_file OUTPUT EXPECTED
+test_expect_equal_file <(sort OUTPUT) EXPECTED
 test_done

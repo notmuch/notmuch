@@ -919,6 +919,14 @@ test_emacs () {
 	emacsclient --socket-name="$EMACS_SERVER" --eval "(progn $@)"
 }
 
+test_python() {
+	export LD_LIBRARY_PATH=$TEST_DIRECTORY/../lib
+	export PYTHONPATH=$TEST_DIRECTORY/../bindings/python
+
+	(echo "import sys; _orig_stdout=sys.stdout; sys.stdout=open('OUTPUT', 'w')"; cat) \
+		| python -
+}
+
 # Creates a script that counts how much time it is executed and calls
 # notmuch.  $notmuch_counter_command is set to the path to the
 # generated script.  Use notmuch_counter_value() function to get the
@@ -1180,3 +1188,4 @@ test_declare_external_prereq emacs
 test_declare_external_prereq emacsclient
 test_declare_external_prereq gdb
 test_declare_external_prereq gpg
+test_declare_external_prereq python
