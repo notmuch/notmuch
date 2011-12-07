@@ -48,6 +48,7 @@ TESTS="
   search-folder-coherence
   atomicity
   python
+  argument-parsing
 "
 TESTS=${NOTMUCH_TESTS:=$TESTS}
 
