@@ -923,8 +923,14 @@ test_python() {
 	export LD_LIBRARY_PATH=$TEST_DIRECTORY/../lib
 	export PYTHONPATH=$TEST_DIRECTORY/../bindings/python
 
+	# Some distros (e.g. Arch Linux) ship Python 2.* as /usr/bin/python2,
+	# most others as /usr/bin/python. So first try python2, and fallback to
+	# python if python2 doesn't exist.
+	cmd=python2
+	[[ "$test_missing_external_prereq_python2_" = t ]] && cmd=python
+
 	(echo "import sys; _orig_stdout=sys.stdout; sys.stdout=open('OUTPUT', 'w')"; cat) \
-		| python -
+		| $cmd -
 }
 
 # Creates a script that counts how much time it is executed and calls
@@ -1189,3 +1195,4 @@ test_declare_external_prereq emacsclient
 test_declare_external_prereq gdb
 test_declare_external_prereq gpg
 test_declare_external_prereq python
+test_declare_external_prereq python2
