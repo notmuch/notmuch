@@ -299,6 +299,7 @@ notmuch_client_srcs =		\
 	debugger.c		\
 	gmime-filter-reply.c	\
 	gmime-filter-headers.c	\
+	hooks.c			\
 	notmuch.c		\
 	notmuch-config.c	\
 	notmuch-count.c		\

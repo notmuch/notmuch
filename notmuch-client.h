@@ -235,6 +235,9 @@ void
 notmuch_config_set_maildir_synchronize_flags (notmuch_config_t *config,
 					      notmuch_bool_t synchronize_flags);
 
+int
+notmuch_run_hook (const char *db_path, const char *hook);
+
 notmuch_bool_t
 debugger_is_active (void);
 
