@@ -1,6 +1,16 @@
 Notmuch 0.11 (201x-xx-xx)
 =========================
 
+New command-line features
+-------------------------
+
+Hooks
+
+  Hooks have been introduced to notmuch. Hooks are scripts that notmuch
+  invokes before and after certain actions. Initially, "notmuch new"
+  supports "pre-new" and "post-new" hooks that are run before and after
+  importing new messages into the database.
+
 Performance
 -----------
 

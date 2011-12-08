@@ -811,6 +811,7 @@ notmuch_new_command (void *ctx, int argc, char *argv[])
     _filename_node_t *f;
     int i;
     notmuch_bool_t timer_is_active = FALSE;
+    notmuch_bool_t run_hooks = TRUE;
 
     add_files_state.verbose = 0;
     add_files_state.output_is_a_tty = isatty (fileno (stdout));
@@ -820,6 +821,8 @@ notmuch_new_command (void *ctx, int argc, char *argv[])
     for (i = 0; i < argc && argv[i][0] == '-'; i++) {
 	if (STRNCMP_LITERAL (argv[i], "--verbose") == 0) {
 	    add_files_state.verbose = 1;
+	} else if (strcmp (argv[i], "--no-hooks") == 0) {
+	    run_hooks = FALSE;
 	} else {
 	    fprintf (stderr, "Unrecognized option: %s\n", argv[i]);
 	    return 1;
@@ -832,6 +835,12 @@ notmuch_new_command (void *ctx, int argc, char *argv[])
     add_files_state.new_tags = notmuch_config_get_new_tags (config, &add_files_state.new_tags_length);
     add_files_state.synchronize_flags = notmuch_config_get_maildir_synchronize_flags (config);
     db_path = notmuch_config_get_database_path (config);
+
+    if (run_hooks) {
+	ret = notmuch_run_hook (db_path, "pre-new");
+	if (ret)
+	    return ret;
+    }
 
     dot_notmuch_path = talloc_asprintf (ctx, "%s/%s", db_path, ".notmuch");
 
@@ -980,6 +989,9 @@ notmuch_new_command (void *ctx, int argc, char *argv[])
     }
 
     notmuch_database_close (notmuch);
+
+    if (run_hooks && !ret && !interrupted)
+	ret = notmuch_run_hook (db_path, "post-new");
 
     return ret || interrupted;
 }
