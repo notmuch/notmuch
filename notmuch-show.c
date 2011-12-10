@@ -255,7 +255,9 @@ _extract_email_address (const void *ctx, const char *from)
     email = talloc_strdup (ctx, email);
 
   DONE:
-    /* XXX: How to free addresses here? */
+    if (addresses)
+	g_object_unref (addresses);
+
     return email;
    }
 
