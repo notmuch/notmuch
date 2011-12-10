@@ -22,6 +22,7 @@
 
 #include <pwd.h>
 #include <netdb.h>
+#include <assert.h>
 
 static const char toplevel_config_comment[] =
     " .notmuch-config - Configuration file for the notmuch mail system\n"
@@ -520,92 +521,80 @@ notmuch_config_set_user_primary_email (notmuch_config_t *config,
     config->user_primary_email = NULL;
 }
 
-const char **
-notmuch_config_get_user_other_email (notmuch_config_t *config,
-				     size_t *length)
+static const char **
+_config_get_list (notmuch_config_t *config,
+		  const char *section, const char *key,
+		  const char ***outlist, size_t *list_length, size_t *ret_length)
 {
-    char **emails;
-    size_t emails_length;
-    unsigned int i;
+    assert(outlist);
 
-    if (config->user_other_email == NULL) {
-	emails = g_key_file_get_string_list (config->key_file,
-					     "user", "other_email",
-					     &emails_length, NULL);
-	if (emails) {
-	    config->user_other_email = talloc_size (config,
-						    sizeof (char *) *
-						    (emails_length + 1));
-	    for (i = 0; i < emails_length; i++)
-		config->user_other_email[i] = talloc_strdup (config->user_other_email,
-							     emails[i]);
-	    config->user_other_email[i] = NULL;
+    if (*outlist == NULL) {
 
-	    g_strfreev (emails);
+	char **inlist = g_key_file_get_string_list (config->key_file,
+					     section, key, list_length, NULL);
+	if (inlist) {
+	    unsigned int i;
 
-	    config->user_other_email_length = emails_length;
+	    *outlist = talloc_size (config, sizeof (char *) * (*list_length + 1));
+
+	    for (i = 0; i < *list_length; i++)
+		(*outlist)[i] = talloc_strdup (*outlist, inlist[i]);
+
+	    (*outlist)[i] = NULL;
+
+	    g_strfreev (inlist);
 	}
     }
 
-    *length = config->user_other_email_length;
-    return config->user_other_email;
+    if (ret_length)
+	*ret_length = *list_length;
+
+    return *outlist;
+}
+
+const char **
+notmuch_config_get_user_other_email (notmuch_config_t *config,   size_t *length)
+{
+    return _config_get_list (config, "user", "other_email",
+			     &(config->user_other_email),
+			     &(config->user_other_email_length), length);
+}
+
+const char **
+notmuch_config_get_new_tags (notmuch_config_t *config,   size_t *length)
+{
+    return _config_get_list (config, "new", "tags",
+			     &(config->new_tags),
+			     &(config->new_tags_length), length);
+}
+
+static void
+_config_set_list (notmuch_config_t *config,
+		  const char *group, const char *name,
+		  const char *list[],
+		  size_t length, const char ***config_var )
+{
+    g_key_file_set_string_list (config->key_file, group, name, list, length);
+    talloc_free (*config_var);
+    *config_var = NULL;
 }
 
 void
 notmuch_config_set_user_other_email (notmuch_config_t *config,
-				     const char *other_email[],
+				     const char *list[],
 				     size_t length)
 {
-    g_key_file_set_string_list (config->key_file,
-				"user", "other_email",
-				other_email, length);
-
-    talloc_free (config->user_other_email);
-    config->user_other_email = NULL;
-}
-
-const char **
-notmuch_config_get_new_tags (notmuch_config_t *config,
-			     size_t *length)
-{
-    char **tags;
-    size_t tags_length;
-    unsigned int i;
-
-    if (config->new_tags == NULL) {
-	tags = g_key_file_get_string_list (config->key_file,
-					   "new", "tags",
-					   &tags_length, NULL);
-	if (tags) {
-	    config->new_tags = talloc_size (config,
-					    sizeof (char *) *
-					    (tags_length + 1));
-	    for (i = 0; i < tags_length; i++)
-		config->new_tags[i] = talloc_strdup (config->new_tags,
-						     tags[i]);
-	    config->new_tags[i] = NULL;
-
-	    g_strfreev (tags);
-
-	    config->new_tags_length = tags_length;
-	}
-    }
-
-    *length = config->new_tags_length;
-    return config->new_tags;
+    _config_set_list (config, "user", "other_email", list, length,
+		     &(config->user_other_email));
 }
 
 void
 notmuch_config_set_new_tags (notmuch_config_t *config,
-			     const char *new_tags[],
-			     size_t length)
+				     const char *list[],
+				     size_t length)
 {
-    g_key_file_set_string_list (config->key_file,
-				"new", "tags",
-				new_tags, length);
-
-    talloc_free (config->new_tags);
-    config->new_tags = NULL;
+    _config_set_list (config, "new", "tags", list, length,
+		     &(config->new_tags));
 }
 
 /* Given a configuration item of the form <group>.<key> return the
