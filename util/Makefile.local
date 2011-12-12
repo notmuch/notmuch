@@ -10,4 +10,4 @@ libutil_modules := $(libutil_c_srcs:.c=.o)
 $(dir)/libutil.a: $(libutil_modules)
 	$(call quiet,AR) rcs $@ $^
 
-CLEAN := $(CLEAN) $(dir)/xutil.o $(dir)/error_util.o $(dir)/libutil.a
+CLEAN := $(CLEAN) $(libutil_modules) $(dir)/libutil.a
