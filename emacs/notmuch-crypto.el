@@ -37,6 +37,11 @@ mode."
   :group 'notmuch
   :type 'boolean)
 
+(defface notmuch-crypto-part-header
+  '((t (:foreground "blue")))
+  "Face used for crypto parts headers."
+  :group 'notmuch)
+
 (defface notmuch-crypto-signature-good
   '((t (:background "green" :foreground "black")))
   "Face used for good signatures."

@@ -457,7 +457,7 @@ current buffer, if possible."
 
 (defun notmuch-show-insert-part-multipart/signed (msg part content-type nth depth declared-type)
   (let ((button (notmuch-show-insert-part-header nth declared-type content-type nil)))
-    (button-put button 'face '(:foreground "blue"))
+    (button-put button 'face 'notmuch-crypto-part-header)
     ;; add signature status button if sigstatus provided
     (if (plist-member part :sigstatus)
 	(let* ((from (notmuch-show-get-header :From msg))
@@ -479,7 +479,7 @@ current buffer, if possible."
 
 (defun notmuch-show-insert-part-multipart/encrypted (msg part content-type nth depth declared-type)
   (let ((button (notmuch-show-insert-part-header nth declared-type content-type nil)))
-    (button-put button 'face '(:foreground "blue"))
+    (button-put button 'face 'notmuch-crypto-part-header)
     ;; add encryption status button if encstatus specified
     (if (plist-member part :encstatus)
 	(let ((encstatus (car (plist-get part :encstatus))))
