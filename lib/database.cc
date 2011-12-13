@@ -81,12 +81,16 @@ typedef struct {
  *		        STRING is the name of a file within that
  *		        directory for this mail message.
  *
- *    A mail document also has two values:
+ *    A mail document also has four values:
  *
  *	TIMESTAMP:	The time_t value corresponding to the message's
  *			Date header.
  *
  *	MESSAGE_ID:	The unique ID of the mail mess (see "id" above)
+ *
+ *	FROM:		The value of the "From" header
+ *
+ *	SUBJECT:	The value of the "Subject" header
  *
  * In addition, terms from the content of the message are added with
  * "from", "to", "attachment", and "subject" prefixes for use by the
