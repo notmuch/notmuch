@@ -38,7 +38,7 @@ typedef struct notmuch_opt_desc {
     void *output_var;
     const char *name;
     int  arg_id;
-    struct notmuch_keyword *keywords;
+    const struct notmuch_keyword *keywords;
 } notmuch_opt_desc_t;
 
 

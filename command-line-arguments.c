@@ -13,7 +13,7 @@
 static notmuch_bool_t
 _process_keyword_arg (const notmuch_opt_desc_t *arg_desc, const char *arg_str) {
 
-    notmuch_keyword_t *keywords = arg_desc->keywords;
+    const notmuch_keyword_t *keywords = arg_desc->keywords;
 
     while (keywords->name) {
 	if (strcmp (arg_str, keywords->name) == 0) {
