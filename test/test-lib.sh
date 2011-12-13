@@ -116,6 +116,16 @@ do
 	esac
 done
 
+if test -n "$debug"; then
+    print_subtest () {
+	printf " %-4s" "[$((test_count - 1))]"
+    }
+else
+    print_subtest () {
+	true
+    }
+fi
+
 if test -n "$color"; then
 	say_color () {
 		(
@@ -132,6 +142,7 @@ if test -n "$color"; then
 		printf " "
                 printf "$@"
 		tput sgr0
+		print_subtest
 		)
 	}
 else
@@ -140,6 +151,7 @@ else
 		shift
 		printf " "
                 printf "$@"
+		print_subtest
 	}
 fi
 
