@@ -21,7 +21,8 @@ Copyright 2010 Sebastian Spaeth <Sebastian@SSpaeth.de>'
 
 from ctypes import c_char_p, c_long, c_uint, c_int
 from datetime import date
-from notmuch.globals import (nmlib, STATUS, NotmuchError, Enum, _str,
+from notmuch.globals import (
+    nmlib, STATUS, NotmuchError, Enum, _str, Python3StringMixIn,
     NotmuchTagsP, NotmuchMessagesP, NotmuchMessageP, NotmuchFilenamesP)
 from notmuch.tag import Tags
 from notmuch.filename import Filenames
@@ -239,7 +240,7 @@ class Messages(object):
         sys.stdout.write(set_end)
 
 
-class Message(object):
+class Message(Python3StringMixIn):
     """Represents a single Email message
 
     Technically, this wraps the underlying *notmuch_message_t*
@@ -795,9 +796,6 @@ class Message(object):
     def __repr__(self):
         """Represent a Message() object by str()"""
         return self.__str__()
-
-    def __str__(self):
-        return unicode(self).encode('utf-8')
 
     def __unicode__(self):
         format = "%s (%s) (%s)"

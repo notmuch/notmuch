@@ -18,10 +18,10 @@ Copyright 2010 Sebastian Spaeth <Sebastian@SSpaeth.de>'
 """
 from ctypes import c_char_p
 from notmuch.globals import (nmlib, STATUS, NotmuchError,
-    NotmuchFilenamesP, NotmuchMessageP)
+    NotmuchFilenamesP, NotmuchMessageP, _str, Python3StringMixIn)
 
 
-class Filenames(object):
+class Filenames(Python3StringMixIn):
     """Represents a list of filenames as returned by notmuch
 
     This object contains the Filenames iterator. The main function is
@@ -97,9 +97,6 @@ class Filenames(object):
             self._move_to_next(self._files)
 
         self._files = None
-
-    def __str__(self):
-        return unicode(self).encode('utf-8')
 
     def __unicode__(self):
         """Represent Filenames() as newline-separated list of full paths

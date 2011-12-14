@@ -16,7 +16,7 @@ along with notmuch.  If not, see <http://www.gnu.org/licenses/>.
 
 Copyright 2010 Sebastian Spaeth <Sebastian@SSpaeth.de>'
 """
-
+import sys
 from ctypes import CDLL, c_char_p, c_int, Structure, POINTER
 
 #-----------------------------------------------------------------------------
@@ -25,6 +25,16 @@ try:
     nmlib = CDLL("libnotmuch.so.2")
 except:
     raise ImportError("Could not find shared 'notmuch' library.")
+
+
+if sys.version_info[0] == 2:
+    class Python3StringMixIn(object):
+        def __str__(self):
+            return unicode(self).encode('utf-8')
+else:
+    class Python3StringMixIn(object):
+        def __str__(self):
+            return self.__unicode__()
 
 
 class Enum(object):
@@ -89,7 +99,7 @@ argument to receive a human readable string"""
 STATUS.__name__ = 'STATUS'
 
 
-class NotmuchError(Exception):
+class NotmuchError(Exception, Python3StringMixIn):
     """Is initiated with a (notmuch.STATUS[, message=None]). It will not
     return an instance of the class NotmuchError, but a derived instance
     of a more specific Error Message, e.g. OutOfMemoryError. Each status
@@ -132,9 +142,6 @@ class NotmuchError(Exception):
     def __init__(self, status=None, message=None):
         self.status = status
         self.message = message
-
-    def __str__(self):
-        return unicode(self).encode('utf-8')
 
     def __unicode__(self):
         if self.message is not None:

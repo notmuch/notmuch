@@ -20,13 +20,13 @@ Copyright 2010 Sebastian Spaeth <Sebastian@SSpaeth.de>'
 from ctypes import c_char_p, c_long, c_int
 from notmuch.globals import (nmlib, STATUS,
     NotmuchError, NotmuchThreadP, NotmuchThreadsP, NotmuchMessagesP,
-    NotmuchTagsP,)
+    NotmuchTagsP, Python3StringMixIn)
 from notmuch.message import Messages
 from notmuch.tag import Tags
 from datetime import date
 
 
-class Threads(object):
+class Threads(Python3StringMixIn):
     """Represents a list of notmuch threads
 
     This object provides an iterator over a list of notmuch threads
@@ -391,9 +391,6 @@ class Thread(object):
         if tags_p == None:
             raise NotmuchError(STATUS.NULL_POINTER)
         return Tags(tags_p, self)
-
-    def __str__(self):
-        return unicode(self).encode('utf-8')
 
     def __unicode__(self):
         frm = "thread:%s %12s [%d/%d] %s; %s (%s)"

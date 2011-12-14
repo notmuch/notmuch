@@ -17,10 +17,10 @@ along with notmuch.  If not, see <http://www.gnu.org/licenses/>.
 Copyright 2010 Sebastian Spaeth <Sebastian@SSpaeth.de>'
 """
 from ctypes import c_char_p
-from notmuch.globals import nmlib, STATUS, NotmuchError, NotmuchTagsP
+from notmuch.globals import nmlib, STATUS, NotmuchError, NotmuchTagsP, _str, Python3StringMixIn
 
 
-class Tags(object):
+class Tags(Python3StringMixIn):
     """Represents a list of notmuch tags
 
     This object provides an iterator over a list of notmuch tags (which
@@ -110,9 +110,6 @@ class Tags(object):
         :returns: True if the Tags() iterator has at least one more Tag
             left."""
         return self._valid(self._tags) > 0
-
-    def __str__(self):
-        return unicode(self).encode('utf-8')
 
     def __unicode__(self):
         """string representation of :class:`Tags`: a space separated list of tags
