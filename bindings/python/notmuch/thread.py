@@ -246,7 +246,7 @@ class Thread(object):
         """
         if self._thread is None:
             raise NotmuchError(STATUS.NOT_INITIALIZED)
-        return Thread._get_thread_id(self._thread)
+        return Thread._get_thread_id(self._thread).decode('utf-8', errors='ignore')
 
     _get_total_messages = nmlib.notmuch_thread_get_total_messages
     _get_total_messages.argtypes = [NotmuchThreadP]

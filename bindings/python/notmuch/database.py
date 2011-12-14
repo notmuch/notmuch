@@ -430,7 +430,7 @@ class Database(object):
                removed.
         """
         self._assert_db_is_initialized()
-        return self._remove_message(self._db, filename)
+        return self._remove_message(self._db, _str(filename))
 
     def find_message(self, msgid):
         """Returns a :class:`Message` as identified by its message ID
@@ -933,9 +933,9 @@ class Filenames(object):
             self._files_p = None
             raise StopIteration
 
-        file = Filenames._get(self._files_p)
+        file_ = Filenames._get(self._files_p)
         self._move_to_next(self._files_p)
-        return file
+        return file_.decode('utf-8', errors='ignore')
     next = __next__ # python2.x iterator protocol compatibility
 
     def __len__(self):
