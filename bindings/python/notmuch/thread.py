@@ -116,7 +116,7 @@ class Threads(object):
     _move_to_next.argtypes = [NotmuchThreadsP]
     _move_to_next.restype = None
 
-    def next(self):
+    def __next__(self):
         if self._threads is None:
             raise NotmuchError(STATUS.NOT_INITIALIZED)
 
@@ -127,6 +127,7 @@ class Threads(object):
         thread = Thread(Threads._get(self._threads), self)
         self._move_to_next(self._threads)
         return thread
+    next = __next__ # python2.x iterator protocol compatibility
 
     def __len__(self):
         """len(:class:`Threads`) returns the number of contained Threads

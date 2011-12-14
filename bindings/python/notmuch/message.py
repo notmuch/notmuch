@@ -158,7 +158,7 @@ class Messages(object):
     _move_to_next.argtypes = [NotmuchMessagesP]
     _move_to_next.restype = None
 
-    def next(self):
+    def __next__(self):
         if self._msgs is None:
             raise NotmuchError(STATUS.NOT_INITIALIZED)
 
@@ -169,6 +169,7 @@ class Messages(object):
         msg = Message(Messages._get(self._msgs), self)
         self._move_to_next(self._msgs)
         return msg
+    next = __next__ # python2.x iterator protocol compatibility
 
     def __nonzero__(self):
         """

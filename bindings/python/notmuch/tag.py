@@ -89,7 +89,7 @@ class Tags(object):
     _move_to_next.argtypes = [NotmuchTagsP]
     _move_to_next.restype = None
 
-    def next(self):
+    def __next__(self):
         if self._tags is None:
             raise NotmuchError(STATUS.NOT_INITIALIZED)
         if not self._valid(self._tags):
@@ -98,6 +98,7 @@ class Tags(object):
         tag = Tags._get(self._tags).decode('UTF-8')
         self._move_to_next(self._tags)
         return tag
+    next = __next__ # python2.x iterator protocol compatibility
 
     def __nonzero__(self):
         """Implement bool(Tags) check that can be repeatedly used

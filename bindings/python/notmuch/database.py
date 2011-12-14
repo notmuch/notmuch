@@ -925,7 +925,7 @@ class Filenames(object):
     _move_to_next.argtypes = [NotmuchFilenamesP]
     _move_to_next.restype = None
 
-    def next(self):
+    def __next__(self):
         if self._files_p is None:
             raise NotmuchError(STATUS.NOT_INITIALIZED)
 
@@ -936,6 +936,7 @@ class Filenames(object):
         file = Filenames._get(self._files_p)
         self._move_to_next(self._files_p)
         return file
+    next = __next__ # python2.x iterator protocol compatibility
 
     def __len__(self):
         """len(:class:`Filenames`) returns the number of contained files
