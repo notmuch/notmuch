@@ -51,7 +51,7 @@ class Status(Enum):
         """Get a (unicode) string representation of a notmuch_status_t value."""
         # define strings for custom error messages
         if status == STATUS.NOT_INITIALIZED:
-            return u"Operation on uninitialized object impossible."
+            return "Operation on uninitialized object impossible."
         return unicode(Status._status2str(status))
 
 STATUS = Status(['SUCCESS',
@@ -142,7 +142,7 @@ class NotmuchError(Exception):
         elif self.status is not None:
             return STATUS.status2str(self.status)
         else:
-            return u'Unknown error'
+            return 'Unknown error'
 
 
 # List of Subclassed exceptions that correspond to STATUS values and are
