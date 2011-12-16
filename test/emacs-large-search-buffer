@@ -19,16 +19,25 @@ done
 notmuch new > /dev/null
 
 test_begin_subtest "Ensure that emacs doesn't drop results"
-expected="$(notmuch search '*' | sed -e 's/^thread:[0-9a-f]*  //' -e 's/;//' -e  's/xx*/[BLOB]/')
-End of search results."
+notmuch search '*' > EXPEXTED
+sed -i -e 's/^thread:[0-9a-f]*  //' -e 's/;//' -e 's/xx*/[BLOB]/' EXPEXTED
+echo 'End of search results.' >> EXPEXTED
 
-output=$(test_emacs '(notmuch-search "*") (notmuch-test-wait) (princ (buffer-string))' | sed -e s',  *, ,g' -e 's/xxx*/[BLOB]/g')
-test_expect_equal "$output" "$expected"
+test_emacs '(notmuch-search "*")
+	    (notmuch-test-wait)
+	    (test-output)'
+sed -i -e s',  *, ,g' -e 's/xxx*/[BLOB]/g' OUTPUT
+test_expect_equal_file OUTPUT EXPEXTED
 
 test_begin_subtest "Ensure that emacs doesn't drop error messages"
-output=$(test_emacs '(notmuch-search "--this-option-does-not-exist") (notmuch-test-wait) (princ (buffer-string))')
-test_expect_equal "$output" "Error: Unexpected output from notmuch search:
+test_emacs '(notmuch-search "--this-option-does-not-exist")
+	    (notmuch-test-wait)
+	    (test-output)'
+cat <<EOF >EXPEXTED
+Error: Unexpected output from notmuch search:
 Unrecognized option: --this-option-does-not-exist
-End of search results. (process returned 1)"
+End of search results. (process returned 1)
+EOF
+test_expect_equal_file OUTPUT EXPEXTED
 
 test_done

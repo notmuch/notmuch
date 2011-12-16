@@ -5,11 +5,11 @@ test_description="handling of uuencoded data"
 add_message [subject]=uuencodetest '[date]="Sat, 01 Jan 2000 12:00:00 -0000"' \
 '[body]="This message is used to ensure that notmuch correctly handles a
 message containing a block of uuencoded data. First, we have a marker
-this content beforeuudata . Then we beging the uunencoded data itself:
+this content beforeuudata . Then we begin the uuencoded data itself:
 
 begin 644 bogus-uuencoded-data
 M0123456789012345678901234567890123456789012345678901234567890
-MOBVIOUSLY, THIS IS NOT ANY SORT OF USEFUL UUNECODED DATA.    
+MOBVIOUSLY, THIS IS NOT ANY SORT OF USEFUL UUENCODED DATA.    
 MINSTEAD THIS IS JUST A WAY TO ENSURE THAT THIS BLOCK OF DATA 
 MIS CORRECTLY IGNORED WHEN NOTMUCH CREATES ITS INDEX. SO WE   
 MINCLUDE A DURINGUUDATA MARKER THAT SHOULD NOT RESULT IN ANY  

@@ -65,6 +65,8 @@ notmuch_tag_command (void *ctx, unused (int argc), unused (char *argv[]))
 	return 1;
     }
 
+    argc--; argv++; /* skip subcommand argument */
+
     for (i = 0; i < argc; i++) {
 	if (strcmp (argv[i], "--") == 0) {
 	    i++;

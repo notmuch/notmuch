@@ -18,12 +18,16 @@ cd $(dirname "$0")
 
 TESTS="
   basic
+  help-test
   new
+  count
   search
   search-output
   search-by-folder
   search-position-overlap-bug
   search-insufficient-from-quoting
+  search-limiting
+  tagging
   json
   multipart
   thread-naming
@@ -42,6 +46,8 @@ TESTS="
   crypto
   symbol-hiding
   search-folder-coherence
+  atomicity
+  python
 "
 TESTS=${NOTMUCH_TESTS:=$TESTS}
 

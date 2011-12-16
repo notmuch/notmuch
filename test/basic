@@ -51,31 +51,32 @@ test_expect_code 2 'failure to clean up causes the test to fail' '
 
 # Ensure that all tests are being run
 test_begin_subtest 'Ensure that all available tests will be run by notmuch-test'
-eval $(sed -n -e '/^TESTS="$/,/^"$/p' notmuch-test ../notmuch-test)
+eval $(sed -n -e '/^TESTS="$/,/^"$/p' notmuch-test $TEST_DIRECTORY/notmuch-test)
 tests_in_suite=$(for i in $TESTS; do echo $i; done | sort)
-available=$(ls -1 ../ | \
+available=$(ls -1 $TEST_DIRECTORY/ | \
     sed -r -e "/^(aggregate-results.sh|Makefile|Makefile.local|notmuch-test)/d" \
 	   -e "/^(README|test-lib.sh|test-lib.el|test-results|tmp.*|valgrind|corpus*)/d" \
 	   -e "/^(emacs.expected-output|smtp-dummy|smtp-dummy.c|test-verbose|symbol-test.cc)/d" \
 	   -e "/^(test.expected-output|.*~)/d" \
 	   -e "/^(gnupg-secret-key.asc)/d" \
 	   -e "/^(gnupg-secret-key.NOTE)/d" \
+	   -e "/^(atomicity.gdb)/d" \
 	   | sort)
 test_expect_equal "$tests_in_suite" "$available"
 
-EXPECTED=../test.expected-output
+EXPECTED=$TEST_DIRECTORY/test.expected-output
 suppress_diff_date() {
     sed -e 's/\(.*\-\-\- test-verbose\.4\.\expected\).*/\1/' \
 	-e 's/\(.*\+\+\+ test-verbose\.4\.\output\).*/\1/'
 }
 
 test_begin_subtest "Ensure that test output is suppressed unless the test fails"
-output=$(cd ..; ./test-verbose 2>&1 | suppress_diff_date)
+output=$(cd $TEST_DIRECTORY; ./test-verbose 2>&1 | suppress_diff_date)
 expected=$(cat $EXPECTED/test-verbose-no | suppress_diff_date)
 test_expect_equal "$output" "$expected"
 
 test_begin_subtest "Ensure that -v does not suppress test output"
-output=$(cd ..; ./test-verbose -v 2>&1 | suppress_diff_date)
+output=$(cd $TEST_DIRECTORY; ./test-verbose -v 2>&1 | suppress_diff_date)
 expected=$(cat $EXPECTED/test-verbose-yes | suppress_diff_date)
 # Do not include the results of test-verbose in totals
 rm $TEST_DIRECTORY/test-results/test-verbose-*

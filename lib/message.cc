@@ -216,11 +216,13 @@ _notmuch_message_create_for_message_id (notmuch_database_t *notmuch,
     unsigned int doc_id;
     char *term;
 
-    *status_ret = NOTMUCH_PRIVATE_STATUS_SUCCESS;
-
-    message = notmuch_database_find_message (notmuch, message_id);
+    *status_ret = (notmuch_private_status_t) notmuch_database_find_message (notmuch,
+									    message_id,
+									    &message);
     if (message)
 	return talloc_steal (notmuch, message);
+    else if (*status_ret)
+	return NULL;
 
     term = talloc_asprintf (NULL, "%s%s",
 			    _find_prefix ("id"), message_id);
@@ -410,6 +412,21 @@ _notmuch_message_ensure_message_file (notmuch_message_t *message)
 const char *
 notmuch_message_get_header (notmuch_message_t *message, const char *header)
 {
+    std::string value;
+
+    /* Fetch header from the appropriate xapian value field if
+     * available */
+    if (strcasecmp (header, "from") == 0)
+	value = message->doc.get_value (NOTMUCH_VALUE_FROM);
+    else if (strcasecmp (header, "subject") == 0)
+	value = message->doc.get_value (NOTMUCH_VALUE_SUBJECT);
+    else if (strcasecmp (header, "message-id") == 0)
+	value = message->doc.get_value (NOTMUCH_VALUE_MESSAGE_ID);
+
+    if (!value.empty())
+	return talloc_strdup (message, value.c_str ());
+
+    /* Otherwise fall back to parsing the file */
     _notmuch_message_ensure_message_file (message);
     if (message->message_file == NULL)
 	return NULL;
@@ -501,6 +518,9 @@ _notmuch_message_add_filename (notmuch_message_t *message,
  * This change will not be reflected in the database until the next
  * call to _notmuch_message_sync.
  *
+ * If this message still has other filenames, returns
+ * NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID.
+ *
  * Note: This function does not remove a document from the database,
  * even if the specified filename is the only filename for this
  * message. For that functionality, see
@@ -531,6 +551,8 @@ _notmuch_message_remove_filename (notmuch_message_t *message,
 						   "file-direntry", direntry);
     status = COERCE_STATUS (private_status,
 			    "Unexpected error from _notmuch_message_remove_term");
+    if (status)
+	return status;
 
     /* Re-synchronize "folder:" terms for this message. This requires:
      *  1. removing all "folder:" terms
@@ -587,6 +609,9 @@ _notmuch_message_remove_filename (notmuch_message_t *message,
 	/* Terminate loop at first term without desired prefix. */
 	if (strncmp ((*i).c_str (), direntry_prefix, direntry_prefix_len))
 	    break;
+
+	/* Indicate that there are filenames remaining. */
+	status = NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID;
 
 	direntry = (*i).c_str ();
 	direntry += direntry_prefix_len;
@@ -785,8 +810,10 @@ notmuch_message_set_author (notmuch_message_t *message,
 }
 
 void
-_notmuch_message_set_date (notmuch_message_t *message,
-			   const char *date)
+_notmuch_message_set_header_values (notmuch_message_t *message,
+				    const char *date,
+				    const char *from,
+				    const char *subject)
 {
     time_t time_value;
 
@@ -799,6 +826,8 @@ _notmuch_message_set_date (notmuch_message_t *message,
 
     message->doc.add_value (NOTMUCH_VALUE_TIMESTAMP,
 			    Xapian::sortable_serialise (time_value));
+    message->doc.add_value (NOTMUCH_VALUE_FROM, from);
+    message->doc.add_value (NOTMUCH_VALUE_SUBJECT, subject);
 }
 
 /* Synchronize changes made to message->doc out into the database. */
@@ -812,6 +841,22 @@ _notmuch_message_sync (notmuch_message_t *message)
 
     db = static_cast <Xapian::WritableDatabase *> (message->notmuch->xapian_db);
     db->replace_document (message->doc_id, message->doc);
+}
+
+/* Delete a message document from the database. */
+notmuch_status_t
+_notmuch_message_delete (notmuch_message_t *message)
+{
+    notmuch_status_t status;
+    Xapian::WritableDatabase *db;
+
+    status = _notmuch_database_ensure_writable (message->notmuch);
+    if (status)
+	return status;
+
+    db = static_cast <Xapian::WritableDatabase *> (message->notmuch->xapian_db);
+    db->delete_document (message->doc_id);
+    return NOTMUCH_STATUS_SUCCESS;
 }
 
 /* Ensure that 'message' is not holding any file object open. Future
@@ -862,7 +907,7 @@ _notmuch_message_add_term (notmuch_message_t *message,
 
 /* Parse 'text' and add a term to 'message' for each parsed word. Each
  * term will be added both prefixed (if prefix_name is not NULL) and
- * also unprefixed). */
+ * also non-prefixed). */
 notmuch_private_status_t
 _notmuch_message_gen_terms (notmuch_message_t *message,
 			    const char *prefix_name,
@@ -1280,7 +1325,8 @@ notmuch_message_tags_to_maildir_flags (notmuch_message_t *message)
 	    new_status = _notmuch_message_remove_filename (message,
 							   filename);
 	    /* Hold on to only the first error. */
-	    if (! status && new_status) {
+	    if (! status && new_status
+		&& new_status != NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID) {
 		status = new_status;
 		continue;
 	    }

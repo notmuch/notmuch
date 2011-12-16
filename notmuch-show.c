@@ -29,6 +29,9 @@ format_headers_text (const void *ctx,
 		     notmuch_message_t *message);
 
 static void
+format_headers_message_part_text (GMimeMessage *message);
+
+static void
 format_part_start_text (GMimeObject *part,
 			int *part_count);
 
@@ -41,7 +44,7 @@ format_part_end_text (GMimeObject *part);
 static const notmuch_show_format_t format_text = {
     "",
 	"\fmessage{ ", format_message_text,
-	    "\fheader{\n", format_headers_text, "\fheader}\n",
+	    "\fheader{\n", format_headers_text, format_headers_message_part_text, "\fheader}\n",
 	    "\fbody{\n",
 	        format_part_start_text,
 	        NULL,
@@ -63,6 +66,9 @@ format_headers_json (const void *ctx,
 		     notmuch_message_t *message);
 
 static void
+format_headers_message_part_json (GMimeMessage *message);
+
+static void
 format_part_start_json (unused (GMimeObject *part),
 			int *part_count);
 
@@ -81,7 +87,7 @@ format_part_end_json (GMimeObject *part);
 static const notmuch_show_format_t format_json = {
     "[",
 	"{", format_message_json,
-	    ", \"headers\": {", format_headers_json, "}",
+	    "\"headers\": {", format_headers_json, format_headers_message_part_json, "}",
 	    ", \"body\": [",
 	        format_part_start_json,
 	        format_part_encstatus_json,
@@ -102,7 +108,7 @@ format_message_mbox (const void *ctx,
 static const notmuch_show_format_t format_mbox = {
     "",
         "", format_message_mbox,
-            "", NULL, "",
+            "", NULL, NULL, "",
             "",
                 NULL,
                 NULL,
@@ -121,7 +127,7 @@ format_part_content_raw (GMimeObject *part);
 static const notmuch_show_format_t format_raw = {
     "",
 	"", NULL,
-	    "", NULL, "",
+	    "", NULL, format_headers_message_part_text, "\n",
             "",
                 NULL,
                 NULL,
@@ -216,7 +222,7 @@ format_message_json (const void *ctx, notmuch_message_t *message, unused (int in
                json_quote_str (ctx_quote, notmuch_tags_get (tags)));
          first = 0;
     }
-    printf("]");
+    printf("], ");
     talloc_free (ctx_quote);
 }
 
@@ -326,6 +332,7 @@ format_message_mbox (const void *ctx,
     fclose (file);
 }
 
+
 static void
 format_headers_text (const void *ctx, notmuch_message_t *message)
 {
@@ -343,6 +350,27 @@ format_headers_text (const void *ctx, notmuch_message_t *message)
 	if (value && strlen (value))
 	    printf ("%s: %s\n", name, value);
     }
+}
+
+static void
+format_headers_message_part_text (GMimeMessage *message)
+{
+    InternetAddressList *recipients;
+    const char *recipients_string;
+
+    printf ("From: %s\n", g_mime_message_get_sender (message));
+    recipients = g_mime_message_get_recipients (message, GMIME_RECIPIENT_TYPE_TO);
+    recipients_string = internet_address_list_to_string (recipients, 0);
+    if (recipients_string)
+	printf ("To: %s\n",
+		recipients_string);
+    recipients = g_mime_message_get_recipients (message, GMIME_RECIPIENT_TYPE_CC);
+    recipients_string = internet_address_list_to_string (recipients, 0);
+    if (recipients_string)
+	printf ("Cc: %s\n",
+		recipients_string);
+    printf ("Subject: %s\n", g_mime_message_get_subject (message));
+    printf ("Date: %s\n", g_mime_message_get_date_as_string (message));
 }
 
 static void
@@ -372,6 +400,40 @@ format_headers_json (const void *ctx, notmuch_message_t *message)
     }
 
     talloc_free (ctx_quote);
+}
+
+static void
+format_headers_message_part_json (GMimeMessage *message)
+{
+    void *ctx = talloc_new (NULL);
+    void *ctx_quote = talloc_new (ctx);
+    InternetAddressList *recipients;
+    const char *recipients_string;
+
+    printf ("%s: %s",
+	    json_quote_str (ctx_quote, "From"),
+	    json_quote_str (ctx_quote, g_mime_message_get_sender (message)));
+    recipients = g_mime_message_get_recipients (message, GMIME_RECIPIENT_TYPE_TO);
+    recipients_string = internet_address_list_to_string (recipients, 0);
+    if (recipients_string)
+	printf (", %s: %s",
+		json_quote_str (ctx_quote, "To"),
+		json_quote_str (ctx_quote, recipients_string));
+    recipients = g_mime_message_get_recipients (message, GMIME_RECIPIENT_TYPE_CC);
+    recipients_string = internet_address_list_to_string (recipients, 0);
+    if (recipients_string)
+	printf (", %s: %s",
+		json_quote_str (ctx_quote, "Cc"),
+		json_quote_str (ctx_quote, recipients_string));
+    printf (", %s: %s",
+	    json_quote_str (ctx_quote, "Subject"),
+	    json_quote_str (ctx_quote, g_mime_message_get_subject (message)));
+    printf (", %s: %s",
+	    json_quote_str (ctx_quote, "Date"),
+	    json_quote_str (ctx_quote, g_mime_message_get_date_as_string (message)));
+
+    talloc_free (ctx_quote);
+    talloc_free (ctx);
 }
 
 /* Write a MIME text part out to the given stream.
@@ -454,18 +516,20 @@ format_part_start_text (GMimeObject *part, int *part_count)
 static void
 format_part_content_text (GMimeObject *part)
 {
-    GMimeContentDisposition *disposition = g_mime_object_get_content_disposition (part);
+    const char *cid = g_mime_object_get_content_id (part);
     GMimeContentType *content_type = g_mime_object_get_content_type (GMIME_OBJECT (part));
 
-    printf (", Content-type: %s\n", g_mime_content_type_to_string (content_type));
-
-    if (disposition &&
-	strcmp (disposition->disposition, GMIME_DISPOSITION_ATTACHMENT) == 0)
+    if (GMIME_IS_PART (part))
     {
 	const char *filename = g_mime_part_get_filename (GMIME_PART (part));
-	printf ("Attachment: %s (%s)\n", filename,
-		g_mime_content_type_to_string (content_type));
+	if (filename)
+	    printf (", Filename: %s", filename);
     }
+
+    if (cid)
+	printf (", Content-id: %s", cid);
+
+    printf (", Content-type: %s\n", g_mime_content_type_to_string (content_type));
 
     if (g_mime_content_type_is_type (content_type, "text", "*") &&
 	!g_mime_content_type_is_type (content_type, "text", "html"))
@@ -591,7 +655,6 @@ format_part_content_json (GMimeObject *part)
     GMimeStream *stream_memory = g_mime_stream_mem_new ();
     const char *cid = g_mime_object_get_content_id (part);
     void *ctx = talloc_new (NULL);
-    GMimeContentDisposition *disposition = g_mime_object_get_content_disposition (part);
     GByteArray *part_content;
 
     printf (", \"content-type\": %s",
@@ -600,12 +663,11 @@ format_part_content_json (GMimeObject *part)
     if (cid != NULL)
 	    printf(", \"content-id\": %s", json_quote_str (ctx, cid));
 
-    if (disposition &&
-	strcmp (disposition->disposition, GMIME_DISPOSITION_ATTACHMENT) == 0)
+    if (GMIME_IS_PART (part))
     {
 	const char *filename = g_mime_part_get_filename (GMIME_PART (part));
-
-	printf (", \"filename\": %s", json_quote_str (ctx, filename));
+	if (filename)
+	    printf (", \"filename\": %s", json_quote_str (ctx, filename));
     }
 
     if (g_mime_content_type_is_type (content_type, "text", "*") &&
@@ -616,10 +678,13 @@ format_part_content_json (GMimeObject *part)
 
 	printf (", \"content\": %s", json_quote_chararray (ctx, (char *) part_content->data, part_content->len));
     }
-    else if (g_mime_content_type_is_type (content_type, "multipart", "*") ||
-	     g_mime_content_type_is_type (content_type, "message", "rfc822"))
+    else if (g_mime_content_type_is_type (content_type, "multipart", "*"))
     {
 	printf (", \"content\": [");
+    }
+    else if (g_mime_content_type_is_type (content_type, "message", "rfc822"))
+    {
+	printf (", \"content\": [{");
     }
 
     talloc_free (ctx);
@@ -630,13 +695,12 @@ format_part_content_json (GMimeObject *part)
 static void
 format_part_end_json (GMimeObject *part)
 {
-    GMimeContentType *content_type;
+    GMimeContentType *content_type = g_mime_object_get_content_type (GMIME_OBJECT (part));
 
-    content_type = g_mime_object_get_content_type (GMIME_OBJECT (part));
-
-    if (g_mime_content_type_is_type (content_type, "multipart", "*") ||
-	g_mime_content_type_is_type (content_type, "message", "rfc822"))
+    if (g_mime_content_type_is_type (content_type, "multipart", "*"))
 	printf ("]");
+    else if (g_mime_content_type_is_type (content_type, "message", "rfc822"))
+	printf ("}]");
 
     printf ("}");
 }
@@ -644,6 +708,9 @@ format_part_end_json (GMimeObject *part)
 static void
 format_part_content_raw (GMimeObject *part)
 {
+    if (! GMIME_IS_PART (part))
+	return;
+
     GMimeStream *stream_stdout;
     GMimeStream *stream_filter = NULL;
     GMimeDataWrapper *wrapper;
@@ -868,6 +935,8 @@ notmuch_show_command (void *ctx, unused (int argc), unused (char *argv[]))
     params.part = -1;
     params.cryptoctx = NULL;
     params.decrypt = 0;
+
+    argc--; argv++; /* skip subcommand argument */
 
     for (i = 0; i < argc && argv[i][0] == '-'; i++) {
 	if (strcmp (argv[i], "--") == 0) {

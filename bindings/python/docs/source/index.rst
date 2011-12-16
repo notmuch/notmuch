@@ -21,7 +21,13 @@ Notmuch can be imported as::
 
 or::
 
- from notmuch import Query,Database
+ from notmuch import Query, Database
+
+ db = Database('path',create=True)
+ msgs = Query(db,'from:myself').search_messages()
+
+ for msg in msgs:
+    print (msg)
 
 More information on specific topics can be found on the following pages:
 
@@ -35,8 +41,6 @@ More information on specific topics can be found on the following pages:
 =================================================
 
 .. automodule:: notmuch
-
-:todo: Document nmlib,STATUS
 
 :class:`notmuch.Database` -- The underlying notmuch database
 ---------------------------------------------------------------------
@@ -55,6 +59,10 @@ More information on specific topics can be found on the following pages:
 
    .. automethod:: upgrade
 
+   .. automethod:: begin_atomic
+
+   .. automethod:: end_atomic
+
    .. automethod:: get_directory
 
    .. automethod:: add_message
@@ -63,12 +71,11 @@ More information on specific topics can be found on the following pages:
 
    .. automethod:: find_message
 
+   .. automethod:: find_message_by_filename
+
    .. automethod:: get_all_tags
 
    .. automethod:: create_query
-
-   .. note:: :meth:`create_query` was broken in release
-             0.1 and is fixed since 0.1.1.
 
    .. attribute:: Database.MODE
 
@@ -81,6 +88,7 @@ More information on specific topics can be found on the following pages:
        Open the database in read-write mode
 
    .. autoattribute:: db_p
+
 
 :class:`notmuch.Query` -- A search query
 -------------------------------------------------
@@ -130,7 +138,7 @@ More information on specific topics can be found on the following pages:
 
    .. method:: __len__()
 
-   .. note:: :meth:`__len__` was removed in version 0.6 as it exhausted
+   .. warning:: :meth:`__len__` was removed in version 0.6 as it exhausted
        the iterator and broke list(Messages()). Use the
        :meth:`Query.count_messages` function or use
        `len(list(msgs))`.
@@ -195,7 +203,12 @@ More information on specific topics can be found on the following pages:
 .. autoclass:: Tags
    :members:
 
-   .. automethod:: __len__
+   .. method:: __len__
+
+       .. warning:: :meth:`__len__` was removed in version 0.6 as it
+           exhausted the iterator and broke list(Tags()). Use
+           :meth:`len(list(msgs))` instead if you need to know the
+           number of tags.
 
    .. automethod:: __str__
 

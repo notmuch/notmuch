@@ -1,3 +1,122 @@
+notmuch (0.10.2-1) unstable; urgency=low
+
+  * Upstream bug fix release
+    - Fix segfault in python bindings due to missing g_type_init call.
+
+ -- David Bremner <bremner@debian.org>  Sun, 04 Dec 2011 22:06:46 -0400
+
+notmuch (0.10.1-1) unstable; urgency=low
+
+  * Upstream bug fix release.
+    - Fix segfault on "notmuch --help"
+
+ -- David Bremner <bremner@debian.org>  Fri, 25 Nov 2011 12:11:30 -0500
+
+notmuch (0.10-1) unstable; urgency=low
+
+  * New upstream release
+    - search performance improvements
+    - emacs UI improvements
+    - new dump/restore features
+    - new script contrib/nmbug for sharing tags
+    - see /usr/share/doc/notmuch/NEWS for details
+
+ -- David Bremner <bremner@debian.org>  Wed, 23 Nov 2011 07:44:01 -0400
+
+notmuch (0.10~rc2-1) experimental; urgency=low
+
+  * New upstream release candidate
+    - includes patch to avoid long unix domain socket paths in tests
+
+ -- David Bremner <bremner@debian.org>  Sat, 19 Nov 2011 08:21:39 -0400
+
+notmuch (0.10~rc1-1) experimental; urgency=low
+
+  * New upstream release candidate.
+
+ -- David Bremner <bremner@debian.org>  Tue, 15 Nov 2011 19:46:55 -0400
+
+notmuch (0.9-1) unstable; urgency=low
+
+  * New upstream release.
+  * Only doc changes since last release candidate.
+  * Upload to unstable.
+
+ -- David Bremner <bremner@debian.org>  Tue, 11 Oct 2011 21:51:29 -0300
+
+notmuch (0.9~rc2-1) experimental; urgency=low
+
+  * Upstream release candidate
+  * API changes for n_d_find_message and n_d_find_message_by_filename.
+    - New SONAME for libnotmuch
+    - bindings changes for ruby and python
+  * Less non-text parts reported in replies.
+  * emacs: provide button action to fetch unknown gpg keys 
+
+ -- David Bremner <bremner@debian.org>  Fri, 07 Oct 2011 18:53:04 -0300
+
+notmuch (0.9~rc1-1) experimental; urgency=low
+
+  * Upstream release candidate
+    - Atomicity improvements, thanks to Austin Clements
+    - Add missing call to g_type_init, thanks to Aaron Ecay
+  * notmuch-emacs: add versioned dependency on notmuch.  
+    (Closes: #642240).
+
+ -- David Bremner <bremner@debian.org>  Sun, 25 Sep 2011 11:26:01 -0300
+
+notmuch (0.8-1) unstable; urgency=low
+
+  * New upstream version.
+    - Improved handling of message/rfc822 parts
+    - Improved Build system portability 
+    - Documentation update for Ruby bindings
+    - Unicode, iterator, PEP8 changes for python bindings
+
+ -- David Bremner <bremner@debian.org>  Sat, 10 Sep 2011 08:53:55 -0300
+
+notmuch (0.8~rc1-1) experimental; urgency=low
+
+  * Upstream release candidate.
+
+ -- David Bremner <bremner@debian.org>  Tue, 06 Sep 2011 22:24:24 -0300
+
+notmuch (0.7-1) unstable; urgency=low
+
+  * New upstream release (no changes since 0.7~rc1).
+  * Upload to unstable.
+
+ -- David Bremner <bremner@debian.org>  Mon, 01 Aug 2011 21:46:26 +0200
+
+notmuch (0.7~rc1-1) experimental; urgency=low
+
+  * Upstream release candidate.
+  * Fix for notmuch.sym and parallel build (Thanks to
+    Thomas Jost)
+  * Bug fixes from Jason Woofenden for vim interface:
+    -  Fix "space (in show mode) mostly adds tag:inbox and tag:unread
+       instead of removing them"  (Closes: #633009).
+    -  Fix "says press 's'; to toggle signatures, but it's
+       really 'i'",  (Closes: #633115).
+    -  Fix "fix for from list on search pages", (Closes: #633045).
+  * Bug fixes for vim interface from Uwe Kleine-König
+    - use full path for sendmail/doc fix
+    - fix compose temp file name
+  * Python tag encoding fixes from Sebastian Spaeth.
+
+ -- David Bremner <bremner@debian.org>  Fri, 29 Jul 2011 12:16:56 +0200
+
+notmuch (0.6.1-1) unstable; urgency=low
+
+  * Properly install README.Debian in notmuch-vim (Closes: #632992).
+    Thanks to Jason Woofenden for the report.
+  * Force notmuch to depend on the same version of libnotmuch. Thanks to
+    Uwe Kleine-König for the patch.
+  * Export typeinfo for Xapian exceptions from libnotmuch. This fixes
+    certain mysterious uncaught exception problems.
+
+ -- David Bremner <bremner@debian.org>  Sun, 17 Jul 2011 10:20:42 -0300
+
 notmuch (0.6~bpo60+1) squeeze-backports; urgency=low
 
   * Rebuild for squeeze-backports.

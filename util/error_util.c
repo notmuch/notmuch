@@ -1,4 +1,4 @@
-/* xutil.h - Various wrapper functions to abort on error.
+/* error_util.c - internal error utilities for notmuch.
  *
  * Copyright © 2009 Carl Worth
  *
@@ -18,38 +18,24 @@
  * Author: Carl Worth <cworth@cworth.org>
  */
 
-#ifndef NOTMUCH_XUTIL_H
-#define NOTMUCH_XUTIL_H
-
 #include <stdlib.h>
-#include <sys/types.h>
-#include <regex.h>
+#include <stdarg.h>
+#include <stdio.h>
 
-#pragma GCC visibility push(hidden)
-
-/* xutil.c */
-void *
-xcalloc (size_t nmemb, size_t size);
-
-void *
-xmalloc (size_t size);
-
-void *
-xrealloc (void *ptrr, size_t size);
-
-char *
-xstrdup (const char *s);
-
-char *
-xstrndup (const char *s, size_t n);
-
-void
-xregcomp (regex_t *preg, const char *regex, int cflags);
+#include "error_util.h"
 
 int
-xregexec (const regex_t *preg, const char *string,
-	  size_t nmatch, regmatch_t pmatch[], int eflags);
+_internal_error (const char *format, ...)
+{
+    va_list va_args;
 
-#pragma GCC visibility pop
+    va_start (va_args, format);
 
-#endif
+    fprintf (stderr, "Internal error: ");
+    vfprintf (stderr, format, va_args);
+
+    exit (1);
+
+    return 1;
+}
+

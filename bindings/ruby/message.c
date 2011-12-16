@@ -1,6 +1,6 @@
 /* The Ruby interface to the notmuch mail library
  *
- * Copyright © 2010 Ali Polatel
+ * Copyright © 2010, 2011 Ali Polatel
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,19 +21,19 @@
 #include "defs.h"
 
 /*
- * call-seq: MESSAGE.destroy => nil
+ * call-seq: MESSAGE.destroy! => nil
  *
  * Destroys the message, freeing all resources allocated for it.
  */
 VALUE
-notmuch_rb_message_destroy(VALUE self)
+notmuch_rb_message_destroy (VALUE self)
 {
     notmuch_message_t *message;
 
-    Data_Get_Notmuch_Message(self, message);
+    Data_Get_Notmuch_Message (self, message);
 
-    notmuch_message_destroy(message);
-    DATA_PTR(self) = NULL;
+    notmuch_message_destroy (message);
+    DATA_PTR (self) = NULL;
 
     return Qnil;
 }
@@ -44,16 +44,16 @@ notmuch_rb_message_destroy(VALUE self)
  * Get the message ID of 'message'.
  */
 VALUE
-notmuch_rb_message_get_message_id(VALUE self)
+notmuch_rb_message_get_message_id (VALUE self)
 {
     const char *msgid;
     notmuch_message_t *message;
 
-    Data_Get_Notmuch_Message(self, message);
+    Data_Get_Notmuch_Message (self, message);
 
-    msgid = notmuch_message_get_message_id(message);
+    msgid = notmuch_message_get_message_id (message);
 
-    return rb_str_new2(msgid);
+    return rb_str_new2 (msgid);
 }
 
 /*
@@ -62,16 +62,16 @@ notmuch_rb_message_get_message_id(VALUE self)
  * Get the thread ID of 'message'.
  */
 VALUE
-notmuch_rb_message_get_thread_id(VALUE self)
+notmuch_rb_message_get_thread_id (VALUE self)
 {
     const char *tid;
     notmuch_message_t *message;
 
-    Data_Get_Notmuch_Message(self, message);
+    Data_Get_Notmuch_Message (self, message);
 
-    tid = notmuch_message_get_thread_id(message);
+    tid = notmuch_message_get_thread_id (message);
 
-    return rb_str_new2(tid);
+    return rb_str_new2 (tid);
 }
 
 /*
@@ -80,16 +80,16 @@ notmuch_rb_message_get_thread_id(VALUE self)
  * Get a Notmuch::Messages enumerable for all of the replies to 'message'.
  */
 VALUE
-notmuch_rb_message_get_replies(VALUE self)
+notmuch_rb_message_get_replies (VALUE self)
 {
     notmuch_messages_t *messages;
     notmuch_message_t *message;
 
-    Data_Get_Notmuch_Message(self, message);
+    Data_Get_Notmuch_Message (self, message);
 
-    messages = notmuch_message_get_replies(message);
+    messages = notmuch_message_get_replies (message);
 
-    return Data_Wrap_Struct(notmuch_rb_cMessages, NULL, NULL, messages);
+    return Data_Wrap_Struct (notmuch_rb_cMessages, NULL, NULL, messages);
 }
 
 /*
@@ -98,16 +98,16 @@ notmuch_rb_message_get_replies(VALUE self)
  * Get a filename for the email corresponding to 'message'
  */
 VALUE
-notmuch_rb_message_get_filename(VALUE self)
+notmuch_rb_message_get_filename (VALUE self)
 {
     const char *fname;
     notmuch_message_t *message;
 
-    Data_Get_Notmuch_Message(self, message);
+    Data_Get_Notmuch_Message (self, message);
 
-    fname = notmuch_message_get_filename(message);
+    fname = notmuch_message_get_filename (message);
 
-    return rb_str_new2(fname);
+    return rb_str_new2 (fname);
 }
 
 /*
@@ -116,52 +116,52 @@ notmuch_rb_message_get_filename(VALUE self)
  * Get all filenames for the email corresponding to MESSAGE.
  */
 VALUE
-notmuch_rb_message_get_filenames(VALUE self)
+notmuch_rb_message_get_filenames (VALUE self)
 {
     notmuch_filenames_t *fnames;
     notmuch_message_t *message;
 
-    Data_Get_Notmuch_Message(self, message);
+    Data_Get_Notmuch_Message (self, message);
 
-    fnames = notmuch_message_get_filenames(message);
+    fnames = notmuch_message_get_filenames (message);
 
-    return Data_Wrap_Struct(notmuch_rb_cFileNames, NULL, NULL, fnames);
+    return Data_Wrap_Struct (notmuch_rb_cFileNames, NULL, NULL, fnames);
 }
 
 /*
- * call-seq: MESSAGE.get_flag(flag) => true or false
+ * call-seq: MESSAGE.get_flag (flag) => true or false
  *
  * Get a value of a flag for the email corresponding to 'message'
  */
 VALUE
-notmuch_rb_message_get_flag(VALUE self, VALUE flagv)
+notmuch_rb_message_get_flag (VALUE self, VALUE flagv)
 {
     notmuch_message_t *message;
 
-    Data_Get_Notmuch_Message(self, message);
+    Data_Get_Notmuch_Message (self, message);
 
-    if (!FIXNUM_P(flagv))
-        rb_raise(rb_eTypeError, "Flag not a Fixnum");
+    if (!FIXNUM_P (flagv))
+	rb_raise (rb_eTypeError, "Flag not a Fixnum");
 
-    return notmuch_message_get_flag(message, FIX2INT(flagv)) ? Qtrue : Qfalse;
+    return notmuch_message_get_flag (message, FIX2INT (flagv)) ? Qtrue : Qfalse;
 }
 
 /*
- * call-seq: MESSAGE.set_flag(flag, value) => nil
+ * call-seq: MESSAGE.set_flag (flag, value) => nil
  *
  * Set a value of a flag for the email corresponding to 'message'
  */
 VALUE
-notmuch_rb_message_set_flag(VALUE self, VALUE flagv, VALUE valuev)
+notmuch_rb_message_set_flag (VALUE self, VALUE flagv, VALUE valuev)
 {
     notmuch_message_t *message;
 
-    Data_Get_Notmuch_Message(self, message);
+    Data_Get_Notmuch_Message (self, message);
 
-    if (!FIXNUM_P(flagv))
-        rb_raise(rb_eTypeError, "Flag not a Fixnum");
+    if (!FIXNUM_P (flagv))
+	rb_raise (rb_eTypeError, "Flag not a Fixnum");
 
-    notmuch_message_set_flag(message, FIX2INT(flagv), RTEST(valuev));
+    notmuch_message_set_flag (message, FIX2INT (flagv), RTEST (valuev));
 
     return Qnil;
 }
@@ -172,40 +172,36 @@ notmuch_rb_message_set_flag(VALUE self, VALUE flagv, VALUE valuev)
  * Get the date of 'message'
  */
 VALUE
-notmuch_rb_message_get_date(VALUE self)
+notmuch_rb_message_get_date (VALUE self)
 {
     notmuch_message_t *message;
 
-    Data_Get_Notmuch_Message(self, message);
+    Data_Get_Notmuch_Message (self, message);
 
-    return UINT2NUM(notmuch_message_get_date(message));
+    return UINT2NUM (notmuch_message_get_date (message));
 }
 
 /*
- * call-seq: MESSAGE.header(name) => String
+ * call-seq: MESSAGE.header (name) => String
  *
  * Get the value of the specified header from 'message'
  */
 VALUE
-notmuch_rb_message_get_header(VALUE self, VALUE headerv)
+notmuch_rb_message_get_header (VALUE self, VALUE headerv)
 {
     const char *header, *value;
     notmuch_message_t *message;
 
-    Data_Get_Notmuch_Message(self, message);
+    Data_Get_Notmuch_Message (self, message);
 
-#if !defined(RSTRING_PTR)
-#define RSTRING_PTR(v) (RSTRING((v))->ptr)
-#endif /* !defined(RSTRING_PTR) */
+    SafeStringValue (headerv);
+    header = RSTRING_PTR (headerv);
 
-    SafeStringValue(headerv);
-    header = RSTRING_PTR(headerv);
-
-    value = notmuch_message_get_header(message, header);
+    value = notmuch_message_get_header (message, header);
     if (!value)
-        rb_raise(notmuch_rb_eMemoryError, "Out of memory");
+	rb_raise (notmuch_rb_eMemoryError, "Out of memory");
 
-    return rb_str_new2(value);
+    return rb_str_new2 (value);
 }
 
 /*
@@ -214,70 +210,62 @@ notmuch_rb_message_get_header(VALUE self, VALUE headerv)
  * Get a Notmuch::Tags enumerable for all of the tags of 'message'.
  */
 VALUE
-notmuch_rb_message_get_tags(VALUE self)
+notmuch_rb_message_get_tags (VALUE self)
 {
     notmuch_message_t *message;
     notmuch_tags_t *tags;
 
-    Data_Get_Notmuch_Message(self, message);
+    Data_Get_Notmuch_Message (self, message);
 
-    tags = notmuch_message_get_tags(message);
+    tags = notmuch_message_get_tags (message);
     if (!tags)
-        rb_raise(notmuch_rb_eMemoryError, "Out of memory");
+	rb_raise (notmuch_rb_eMemoryError, "Out of memory");
 
-    return Data_Wrap_Struct(notmuch_rb_cTags, NULL, NULL, tags);
+    return Data_Wrap_Struct (notmuch_rb_cTags, NULL, NULL, tags);
 }
 
 /*
- * call-seq: MESSAGE.add_tag(tag) => true
+ * call-seq: MESSAGE.add_tag (tag) => true
  *
  * Add a tag to the 'message'
  */
 VALUE
-notmuch_rb_message_add_tag(VALUE self, VALUE tagv)
+notmuch_rb_message_add_tag (VALUE self, VALUE tagv)
 {
     const char *tag;
     notmuch_status_t ret;
     notmuch_message_t *message;
 
-    Data_Get_Notmuch_Message(self, message);
+    Data_Get_Notmuch_Message (self, message);
 
-#if !defined(RSTRING_PTR)
-#define RSTRING_PTR(v) (RSTRING((v))->ptr)
-#endif /* !defined(RSTRING_PTR) */
+    SafeStringValue (tagv);
+    tag = RSTRING_PTR (tagv);
 
-    SafeStringValue(tagv);
-    tag = RSTRING_PTR(tagv);
-
-    ret = notmuch_message_add_tag(message, tag);
-    notmuch_rb_status_raise(ret);
+    ret = notmuch_message_add_tag (message, tag);
+    notmuch_rb_status_raise (ret);
 
     return Qtrue;
 }
 
 /*
- * call-seq: MESSAGE.remove_tag(tag) => true
+ * call-seq: MESSAGE.remove_tag (tag) => true
  *
  * Remove a tag from the 'message'
  */
 VALUE
-notmuch_rb_message_remove_tag(VALUE self, VALUE tagv)
+notmuch_rb_message_remove_tag (VALUE self, VALUE tagv)
 {
     const char *tag;
     notmuch_status_t ret;
     notmuch_message_t *message;
 
-    Data_Get_Notmuch_Message(self, message);
+    Data_Get_Notmuch_Message (self, message);
 
-#if !defined(RSTRING_PTR)
-#define RSTRING_PTR(v) (RSTRING((v))->ptr)
-#endif /* !defined(RSTRING_PTR) */
+    SafeStringValue (tagv);
+    tag = RSTRING_PTR (tagv);
 
-    SafeStringValue(tagv);
-    tag = RSTRING_PTR(tagv);
-
-    ret = notmuch_message_remove_tag(message, tag);
-    notmuch_rb_status_raise(ret);
+    ret = notmuch_message_remove_tag (message, tag);
+    notmuch_rb_status_raise (ret);
 
     return Qtrue;
 }
@@ -288,15 +276,15 @@ notmuch_rb_message_remove_tag(VALUE self, VALUE tagv)
  * Remove all tags of the 'message'
  */
 VALUE
-notmuch_rb_message_remove_all_tags(VALUE self)
+notmuch_rb_message_remove_all_tags (VALUE self)
 {
     notmuch_status_t ret;
     notmuch_message_t *message;
 
-    Data_Get_Notmuch_Message(self, message);
+    Data_Get_Notmuch_Message (self, message);
 
-    ret = notmuch_message_remove_all_tags(message);
-    notmuch_rb_status_raise(ret);
+    ret = notmuch_message_remove_all_tags (message);
+    notmuch_rb_status_raise (ret);
 
     return Qtrue;
 }
@@ -304,18 +292,18 @@ notmuch_rb_message_remove_all_tags(VALUE self)
 /*
  * call-seq: MESSAGE.maildir_flags_to_tags => true
  *
- * Add/remove tags according to maildir flags in the message filename(s)
+ * Add/remove tags according to maildir flags in the message filename (s)
  */
 VALUE
-notmuch_rb_message_maildir_flags_to_tags(VALUE self)
+notmuch_rb_message_maildir_flags_to_tags (VALUE self)
 {
     notmuch_status_t ret;
     notmuch_message_t *message;
 
-    Data_Get_Notmuch_Message(self, message);
+    Data_Get_Notmuch_Message (self, message);
 
-    ret = notmuch_message_maildir_flags_to_tags(message);
-    notmuch_rb_status_raise(ret);
+    ret = notmuch_message_maildir_flags_to_tags (message);
+    notmuch_rb_status_raise (ret);
 
     return Qtrue;
 }
@@ -323,18 +311,18 @@ notmuch_rb_message_maildir_flags_to_tags(VALUE self)
 /*
  * call-seq: MESSAGE.tags_to_maildir_flags => true
  *
- * Rename message filename(s) to encode tags as maildir flags
+ * Rename message filename (s) to encode tags as maildir flags
  */
 VALUE
-notmuch_rb_message_tags_to_maildir_flags(VALUE self)
+notmuch_rb_message_tags_to_maildir_flags (VALUE self)
 {
     notmuch_status_t ret;
     notmuch_message_t *message;
 
-    Data_Get_Notmuch_Message(self, message);
+    Data_Get_Notmuch_Message (self, message);
 
-    ret = notmuch_message_tags_to_maildir_flags(message);
-    notmuch_rb_status_raise(ret);
+    ret = notmuch_message_tags_to_maildir_flags (message);
+    notmuch_rb_status_raise (ret);
 
     return Qtrue;
 }
@@ -345,15 +333,15 @@ notmuch_rb_message_tags_to_maildir_flags(VALUE self)
  * Freeze the 'message'
  */
 VALUE
-notmuch_rb_message_freeze(VALUE self)
+notmuch_rb_message_freeze (VALUE self)
 {
     notmuch_status_t ret;
     notmuch_message_t *message;
 
-    Data_Get_Notmuch_Message(self, message);
+    Data_Get_Notmuch_Message (self, message);
 
-    ret = notmuch_message_freeze(message);
-    notmuch_rb_status_raise(ret);
+    ret = notmuch_message_freeze (message);
+    notmuch_rb_status_raise (ret);
 
     return Qtrue;
 }
@@ -364,15 +352,15 @@ notmuch_rb_message_freeze(VALUE self)
  * Thaw a 'message'
  */
 VALUE
-notmuch_rb_message_thaw(VALUE self)
+notmuch_rb_message_thaw (VALUE self)
 {
     notmuch_status_t ret;
     notmuch_message_t *message;
 
-    Data_Get_Notmuch_Message(self, message);
+    Data_Get_Notmuch_Message (self, message);
 
-    ret = notmuch_message_thaw(message);
-    notmuch_rb_status_raise(ret);
+    ret = notmuch_message_thaw (message);
+    notmuch_rb_status_raise (ret);
 
     return Qtrue;
 }

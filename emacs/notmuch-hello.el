@@ -428,7 +428,7 @@ Complete list of currently available key bindings:
     (let ((found-target-pos nil)
 	  (final-target-pos nil))
       (let* ((saved-alist
-	      ;; Filter out empty saved seaches if required.
+	      ;; Filter out empty saved searches if required.
 	      (if notmuch-show-empty-saved-searches
 		  notmuch-saved-searches
 		(loop for elem in notmuch-saved-searches
@@ -462,6 +462,10 @@ Complete list of currently available key bindings:
 				       (length "Search: ")))
 		       :action (lambda (widget &rest ignore)
 				 (notmuch-hello-search (widget-value widget))))
+	;; add an invisible space to make `widget-end-of-line' ignore
+	;; trailine spaces in the search widget field
+	(widget-insert " ")
+	(put-text-property (1- (point)) (point) 'invisible t)
 	(widget-insert "\n")
 
 	(when notmuch-hello-recent-searches

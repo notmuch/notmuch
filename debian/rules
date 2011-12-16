@@ -1,13 +1,9 @@
 #!/usr/bin/make -f
 
-VERSION=$(shell dpkg-parsechangelog | sed -n 's/^Version:\([^-]*\)/\1/p')
-
 %:
 	dh --with python2 $@
 
 override_dh_auto_configure:
-	cp version debian/version.pre-build
-	echo $(VERSION) > version
 	dh_auto_configure -- --emacslispdir=/usr/share/emacs/site-lisp/notmuch
 
 override_dh_auto_build:
@@ -15,7 +11,6 @@ override_dh_auto_build:
 	dh_auto_build --sourcedirectory bindings/python
 
 override_dh_auto_clean:
-	-mv debian/version.pre-build version
 	dh_auto_clean
 	dh_auto_clean --sourcedirectory bindings/python
 

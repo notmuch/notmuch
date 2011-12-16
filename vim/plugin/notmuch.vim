@@ -25,7 +25,7 @@
 
 let s:notmuch_defaults = {
         \ 'g:notmuch_cmd':                           'notmuch'                    ,
-        \ 'g:notmuch_sendmail':                      'sendmail'                   ,
+        \ 'g:notmuch_sendmail':                      '/usr/sbin/sendmail'         ,
         \ 'g:notmuch_debug':                         0                            ,
         \
         \ 'g:notmuch_search_newest_first':           1                            ,
@@ -58,7 +58,7 @@ let s:notmuch_defaults = {
         \
         \ 'g:notmuch_compose_insert_mode_start':     1                            ,
         \ 'g:notmuch_compose_header_help':           1                            ,
-        \ 'g:notmuch_compose_temp_file_dir':         '~/.notmuch/compose/'        ,
+        \ 'g:notmuch_compose_temp_file_dir':         '~/.notmuch/compose'         ,
         \ }
 
 " defaults for g:notmuch_initial_search_words
@@ -149,7 +149,7 @@ let g:notmuch_show_maps = {
         \ 'b':          ':call <SID>NM_show_fold_toggle(''b'', ''bdy'', !g:notmuch_show_fold_bodies)<CR>',
         \ 'c':          ':call <SID>NM_show_fold_toggle(''c'', ''cit'', !g:notmuch_show_fold_citations)<CR>',
         \ 'h':          ':call <SID>NM_show_fold_toggle(''h'', ''hdr'', !g:notmuch_show_fold_headers)<CR>',
-        \ 'i':          ':call <SID>NM_show_fold_toggle(''s'', ''sig'', !g:notmuch_show_fold_signatures)<CR>',
+        \ 'i':          ':call <SID>NM_show_fold_toggle(''i'', ''sig'', !g:notmuch_show_fold_signatures)<CR>',
         \
         \ 'I':          ':call <SID>NM_show_mark_read_thread()<CR>',
         \ 'a':          ':call <SID>NM_show_archive_thread()<CR>',
@@ -262,12 +262,12 @@ function! s:NM_cmd_search_fmtline(line)
                 return 'ERROR PARSING: ' . a:line
         endif
         let max = g:notmuch_search_from_column_width
-        let flist = []
-        for at in split(m[4], ", ")
-                let p = min([stridx(at, "."), stridx(at, "@")])
-                call insert(flist, tolower(at[0:p - 1]))
+        let flist = {}
+        for at in split(m[4], '[|,] ')
+                let p = split(at, '[@.]')
+                let flist[p[0]] = 1
         endfor
-        let from = join(flist, ", ")
+        let from = join(keys(flist), ", ")
         return printf("%-12s %3s %-20.20s | %s (%s)", m[2], m[3], from, m[5], m[6])
 endfunction
 
@@ -596,7 +596,7 @@ function! s:NM_show_advance_marking_read_and_archiving()
                 let filter = <SID>NM_combine_tags('tag:', advance_tags, 'OR', '()')
                          \ + ['AND']
                          \ + <SID>NM_combine_tags('', ids, 'OR', '()')
-                call map(advance_tags, '"+" . v:val')
+                call map(advance_tags, '"-" . v:val')
                 call <SID>NM_tag(filter, advance_tags)
                 call <SID>NM_show_next(1, 1)
                 return
@@ -747,8 +747,11 @@ function! s:NM_cmd_show_parse(inlines)
                                 elseif mode_type == 'cit'
                                         if part_end || match(line, g:notmuch_show_citation_regexp) == -1
                                                 let outlnum = len(info['disp'])
-                                                let foldinfo = [ mode_type, mode_start, outlnum-1, len(info['msgs']),
-                                                               \ printf('[ %d-line citation.  Press "c" to show. ]', outlnum - mode_start) ]
+                                                if !part_end
+                                                        let outlnum = outlnum - 1
+                                                endif
+                                                let foldinfo = [ mode_type, mode_start, outlnum, len(info['msgs']),
+                                                               \ printf('[ %d-line citation.  Press "c" to show. ]', 1 + outlnum - mode_start) ]
                                                 let mode_type = ''
                                         endif
                                 elseif mode_type == 'sig'
@@ -756,8 +759,8 @@ function! s:NM_cmd_show_parse(inlines)
                                         if (outlnum - mode_start) > g:notmuch_show_signature_lines_max
                                                 let mode_type = ''
                                         elseif part_end
-                                                let foldinfo = [ mode_type, mode_start, outlnum-1, len(info['msgs']),
-                                                               \ printf('[ %d-line signature.  Press "s" to show. ]', outlnum - mode_start) ]
+                                                let foldinfo = [ mode_type, mode_start, outlnum, len(info['msgs']),
+                                                               \ printf('[ %d-line signature.  Press "i" to show. ]', 1 + outlnum - mode_start) ]
                                                 let mode_type = ''
                                         endif
                                 endif
@@ -765,7 +768,7 @@ function! s:NM_cmd_show_parse(inlines)
 
                         if part_end
                                 " FIXME: this is a hack for handling two folds being added for one line
-                                "         we should handle addinga fold in a function
+                                "         we should handle adding a fold in a function
                                 if len(foldinfo) && foldinfo[1] < foldinfo[2]
                                         call add(info['folds'], foldinfo[0:3])
                                         let info['foldtext'][foldinfo[1]] = foldinfo[4]
@@ -796,7 +799,14 @@ function! s:NM_cmd_show_parse(inlines)
                                 endif
                                 call add(info['disp'],
                                          \ printf('--- %s ---', in_part))
-                                let part_start = len(info['disp']) + 1
+                                " We don't yet handle nested parts, so pop
+                                " multipart/* immediately so text/plain
+                                " sub-parts are parsed properly
+                                if match(in_part, '^multipart/') != -1
+                                        let in_part = ''
+                                else
+                                        let part_start = len(info['disp']) + 1
+                                endif
                         endif
 
                 elseif in_header
@@ -1314,7 +1324,7 @@ endfunction
 function! s:NM_tag(filter, tags)
         let filter = len(a:filter) ? a:filter : [<SID>NM_search_thread_id()]
         if !len(filter)
-                throw 'Eeek! I couldn''t find the thead id!'
+                throw 'Eeek! I couldn''t find the thread id!'
         endif
         let args = ['tag']
         call extend(args, a:tags)

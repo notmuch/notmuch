@@ -25,12 +25,15 @@
 #include "gmime-filter-headers.h"
 
 static void
+reply_headers_message_part (GMimeMessage *message);
+
+static void
 reply_part_content (GMimeObject *part);
 
 static const notmuch_show_format_t format_reply = {
     "",
 	"", NULL,
-	    "", NULL, "",
+	    "", NULL, reply_headers_message_part, ">\n",
 	    "",
 	        NULL,
 	        NULL,
@@ -63,12 +66,44 @@ show_reply_headers (GMimeMessage *message)
 }
 
 static void
+reply_headers_message_part (GMimeMessage *message)
+{
+    InternetAddressList *recipients;
+    const char *recipients_string;
+
+    printf ("> From: %s\n", g_mime_message_get_sender (message));
+    recipients = g_mime_message_get_recipients (message, GMIME_RECIPIENT_TYPE_TO);
+    recipients_string = internet_address_list_to_string (recipients, 0);
+    if (recipients_string)
+	printf ("> To: %s\n",
+		recipients_string);
+    recipients = g_mime_message_get_recipients (message, GMIME_RECIPIENT_TYPE_CC);
+    recipients_string = internet_address_list_to_string (recipients, 0);
+    if (recipients_string)
+	printf ("> Cc: %s\n",
+		recipients_string);
+    printf ("> Subject: %s\n", g_mime_message_get_subject (message));
+    printf ("> Date: %s\n", g_mime_message_get_date_as_string (message));
+}
+
+
+static void
 reply_part_content (GMimeObject *part)
 {
     GMimeContentType *content_type = g_mime_object_get_content_type (GMIME_OBJECT (part));
     GMimeContentDisposition *disposition = g_mime_object_get_content_disposition (part);
 
-    if (g_mime_content_type_is_type (content_type, "text", "*") &&
+    if (g_mime_content_type_is_type (content_type, "multipart", "*") ||
+	g_mime_content_type_is_type (content_type, "message", "rfc822"))
+    {
+	/* Output nothing, since multipart subparts will be handled individually. */
+    }
+    else if (g_mime_content_type_is_type (content_type, "application", "pgp-encrypted") ||
+	     g_mime_content_type_is_type (content_type, "application", "pgp-signature"))
+    {
+	/* Ignore PGP/MIME cruft parts */
+    }
+    else if (g_mime_content_type_is_type (content_type, "text", "*") &&
 	!g_mime_content_type_is_type (content_type, "text", "html"))
     {
 	GMimeStream *stream_stdout = NULL, *stream_filter = NULL;
@@ -278,7 +313,7 @@ add_recipients_from_message (GMimeMessage *reply,
      * The munging is easy to detect, because it results in a
      * redundant reply-to header, (with an address that already exists
      * in either To or Cc). So in this case, we ignore the Reply-To
-     * field and use the From header. Thie ensures the original sender
+     * field and use the From header. This ensures the original sender
      * will get the reply even if not subscribed to the list. Note
      * that the address in the Reply-To header will always appear in
      * the reply.
@@ -362,7 +397,7 @@ guess_from_received_header (notmuch_config_t *config, notmuch_message_t *message
      * them indications to which email address this message was
      * delivered.
      * The Received: header is special in our get_header function
-     * and is always concated.
+     * and is always concatenated.
      */
     received = notmuch_message_get_header (message, "received");
     if (received == NULL)
@@ -592,6 +627,8 @@ notmuch_reply_command (void *ctx, int argc, char *argv[])
     reply_format_func = notmuch_reply_format_default;
     params.part = -1;
     params.cryptoctx = NULL;
+
+    argc--; argv++; /* skip subcommand argument */
 
     for (i = 0; i < argc && argv[i][0] == '-'; i++) {
 	if (strcmp (argv[i], "--") == 0) {

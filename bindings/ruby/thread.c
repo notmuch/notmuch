@@ -1,6 +1,6 @@
 /* The Ruby interface to the notmuch mail library
  *
- * Copyright © 2010 Ali Polatel
+ * Copyright © 2010, 2011 Ali Polatel
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,19 +21,19 @@
 #include "defs.h"
 
 /*
- * call-seq: THREAD.destroy => nil
+ * call-seq: THREAD.destroy! => nil
  *
  * Destroys the thread, freeing all resources allocated for it.
  */
 VALUE
-notmuch_rb_thread_destroy(VALUE self)
+notmuch_rb_thread_destroy (VALUE self)
 {
     notmuch_thread_t *thread;
 
-    Data_Get_Notmuch_Thread(self, thread);
+    Data_Get_Notmuch_Thread (self, thread);
 
-    notmuch_thread_destroy(thread);
-    DATA_PTR(self) = NULL;
+    notmuch_thread_destroy (thread);
+    DATA_PTR (self) = NULL;
 
     return Qnil;
 }
@@ -44,16 +44,16 @@ notmuch_rb_thread_destroy(VALUE self)
  * Returns the thread id
  */
 VALUE
-notmuch_rb_thread_get_thread_id(VALUE self)
+notmuch_rb_thread_get_thread_id (VALUE self)
 {
     const char *tid;
     notmuch_thread_t *thread;
 
-    Data_Get_Notmuch_Thread(self, thread);
+    Data_Get_Notmuch_Thread (self, thread);
 
-    tid = notmuch_thread_get_thread_id(thread);
+    tid = notmuch_thread_get_thread_id (thread);
 
-    return rb_str_new2(tid);
+    return rb_str_new2 (tid);
 }
 
 /*
@@ -62,13 +62,13 @@ notmuch_rb_thread_get_thread_id(VALUE self)
  * Returns the number of total messages
  */
 VALUE
-notmuch_rb_thread_get_total_messages(VALUE self)
+notmuch_rb_thread_get_total_messages (VALUE self)
 {
     notmuch_thread_t *thread;
 
-    Data_Get_Notmuch_Thread(self, thread);
+    Data_Get_Notmuch_Thread (self, thread);
 
-    return INT2FIX(notmuch_thread_get_total_messages(thread));
+    return INT2FIX (notmuch_thread_get_total_messages (thread));
 }
 
 /*
@@ -77,18 +77,18 @@ notmuch_rb_thread_get_total_messages(VALUE self)
  * Get a Notmuch::Messages iterator for the top level messages in thread.
  */
 VALUE
-notmuch_rb_thread_get_toplevel_messages(VALUE self)
+notmuch_rb_thread_get_toplevel_messages (VALUE self)
 {
     notmuch_messages_t *messages;
     notmuch_thread_t *thread;
 
-    Data_Get_Notmuch_Thread(self, thread);
+    Data_Get_Notmuch_Thread (self, thread);
 
-    messages = notmuch_thread_get_toplevel_messages(thread);
+    messages = notmuch_thread_get_toplevel_messages (thread);
     if (!messages)
-        rb_raise(notmuch_rb_eMemoryError, "Out of memory");
+	rb_raise (notmuch_rb_eMemoryError, "Out of memory");
 
-    return Data_Wrap_Struct(notmuch_rb_cMessages, NULL, NULL, messages);
+    return Data_Wrap_Struct (notmuch_rb_cMessages, NULL, NULL, messages);
 }
 
 /*
@@ -97,13 +97,13 @@ notmuch_rb_thread_get_toplevel_messages(VALUE self)
  * Get the number of messages in thread that matched the search
  */
 VALUE
-notmuch_rb_thread_get_matched_messages(VALUE self)
+notmuch_rb_thread_get_matched_messages (VALUE self)
 {
     notmuch_thread_t *thread;
 
-    Data_Get_Notmuch_Thread(self, thread);
+    Data_Get_Notmuch_Thread (self, thread);
 
-    return INT2FIX(notmuch_thread_get_matched_messages(thread));
+    return INT2FIX (notmuch_thread_get_matched_messages (thread));
 }
 
 /*
@@ -112,16 +112,16 @@ notmuch_rb_thread_get_matched_messages(VALUE self)
  * Get a comma-separated list of the names of the authors.
  */
 VALUE
-notmuch_rb_thread_get_authors(VALUE self)
+notmuch_rb_thread_get_authors (VALUE self)
 {
     const char *authors;
     notmuch_thread_t *thread;
 
-    Data_Get_Notmuch_Thread(self, thread);
+    Data_Get_Notmuch_Thread (self, thread);
 
-    authors = notmuch_thread_get_authors(thread);
+    authors = notmuch_thread_get_authors (thread);
 
-    return rb_str_new2(authors);
+    return rb_str_new2 (authors);
 }
 
 /*
@@ -130,16 +130,16 @@ notmuch_rb_thread_get_authors(VALUE self)
  * Returns the subject of the thread
  */
 VALUE
-notmuch_rb_thread_get_subject(VALUE self)
+notmuch_rb_thread_get_subject (VALUE self)
 {
     const char *subject;
     notmuch_thread_t *thread;
 
-    Data_Get_Notmuch_Thread(self, thread);
+    Data_Get_Notmuch_Thread (self, thread);
 
-    subject = notmuch_thread_get_subject(thread);
+    subject = notmuch_thread_get_subject (thread);
 
-    return rb_str_new2(subject);
+    return rb_str_new2 (subject);
 }
 
 /*
@@ -148,13 +148,13 @@ notmuch_rb_thread_get_subject(VALUE self)
  * Get the date of the oldest message in thread.
  */
 VALUE
-notmuch_rb_thread_get_oldest_date(VALUE self)
+notmuch_rb_thread_get_oldest_date (VALUE self)
 {
     notmuch_thread_t *thread;
 
-    Data_Get_Notmuch_Thread(self, thread);
+    Data_Get_Notmuch_Thread (self, thread);
 
-    return UINT2NUM(notmuch_thread_get_oldest_date(thread));
+    return UINT2NUM (notmuch_thread_get_oldest_date (thread));
 }
 
 /*
@@ -163,13 +163,13 @@ notmuch_rb_thread_get_oldest_date(VALUE self)
  * Get the date of the newest message in thread.
  */
 VALUE
-notmuch_rb_thread_get_newest_date(VALUE self)
+notmuch_rb_thread_get_newest_date (VALUE self)
 {
     notmuch_thread_t *thread;
 
-    Data_Get_Notmuch_Thread(self, thread);
+    Data_Get_Notmuch_Thread (self, thread);
 
-    return UINT2NUM(notmuch_thread_get_newest_date(thread));
+    return UINT2NUM (notmuch_thread_get_newest_date (thread));
 }
 
 /*
@@ -178,16 +178,16 @@ notmuch_rb_thread_get_newest_date(VALUE self)
  * Get a Notmuch::Tags iterator for the tags of the thread
  */
 VALUE
-notmuch_rb_thread_get_tags(VALUE self)
+notmuch_rb_thread_get_tags (VALUE self)
 {
     notmuch_thread_t *thread;
     notmuch_tags_t *tags;
 
-    Data_Get_Notmuch_Thread(self, thread);
+    Data_Get_Notmuch_Thread (self, thread);
 
-    tags = notmuch_thread_get_tags(thread);
+    tags = notmuch_thread_get_tags (thread);
     if (!tags)
-        rb_raise(notmuch_rb_eMemoryError, "Out of memory");
+	rb_raise (notmuch_rb_eMemoryError, "Out of memory");
 
-    return Data_Wrap_Struct(notmuch_rb_cTags, NULL, NULL, tags);
+    return Data_Wrap_Struct (notmuch_rb_cTags, NULL, NULL, tags);
 }

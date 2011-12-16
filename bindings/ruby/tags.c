@@ -1,6 +1,6 @@
 /* The Ruby interface to the notmuch mail library
  *
- * Copyright © 2010 Ali Polatel
+ * Copyright © 2010, 2011 Ali Polatel
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,19 +21,19 @@
 #include "defs.h"
 
 /*
- * call-seq: TAGS.destroy => nil
+ * call-seq: TAGS.destroy! => nil
  *
  * Destroys the tags, freeing all resources allocated for it.
  */
 VALUE
-notmuch_rb_tags_destroy(VALUE self)
+notmuch_rb_tags_destroy (VALUE self)
 {
     notmuch_tags_t *tags;
 
-    Data_Get_Notmuch_Tags(self, tags);
+    Data_Get_Notmuch_Tags (self, tags);
 
-    notmuch_tags_destroy(tags);
-    DATA_PTR(self) = NULL;
+    notmuch_tags_destroy (tags);
+    DATA_PTR (self) = NULL;
 
     return Qnil;
 }
@@ -45,16 +45,16 @@ notmuch_rb_tags_destroy(VALUE self)
  * parameter.
  */
 VALUE
-notmuch_rb_tags_each(VALUE self)
+notmuch_rb_tags_each (VALUE self)
 {
     const char *tag;
     notmuch_tags_t *tags;
 
-    Data_Get_Notmuch_Tags(self, tags);
+    Data_Get_Notmuch_Tags (self, tags);
 
-    for (; notmuch_tags_valid(tags); notmuch_tags_move_to_next(tags)) {
-        tag = notmuch_tags_get(tags);
-        rb_yield(rb_str_new2(tag));
+    for (; notmuch_tags_valid (tags); notmuch_tags_move_to_next (tags)) {
+	tag = notmuch_tags_get (tags);
+	rb_yield (rb_str_new2 (tag));
     }
 
     return self;

@@ -18,6 +18,8 @@
  * Author: Carl Worth <cworth@cworth.org>
  */
 
+#include <getopt.h>
+
 #include "notmuch-client.h"
 
 int
@@ -26,7 +28,8 @@ notmuch_restore_command (unused (void *ctx), int argc, char *argv[])
     notmuch_config_t *config;
     notmuch_database_t *notmuch;
     notmuch_bool_t synchronize_flags;
-    FILE *input;
+    notmuch_bool_t accumulate = FALSE;
+    FILE *input = stdin;
     char *line = NULL;
     size_t line_size;
     ssize_t line_len;
@@ -44,25 +47,51 @@ notmuch_restore_command (unused (void *ctx), int argc, char *argv[])
 
     synchronize_flags = notmuch_config_get_maildir_synchronize_flags (config);
 
-    if (argc) {
-	input = fopen (argv[0], "r");
+    struct option options[] = {
+	{ "accumulate",   no_argument,       0, 'a' },
+	{ 0, 0, 0, 0}
+    };
+
+    int opt;
+    do {
+	opt = getopt_long (argc, argv, "", options, NULL);
+
+	switch (opt) {
+	case 'a':
+	    accumulate = 1;
+	    break;
+	case '?':
+	    return 1;
+	    break;
+	}
+
+    } while (opt != -1);
+
+    if (optind < argc) {
+	input = fopen (argv[optind], "r");
 	if (input == NULL) {
 	    fprintf (stderr, "Error opening %s for reading: %s\n",
-		     argv[0], strerror (errno));
+		     argv[optind], strerror (errno));
 	    return 1;
 	}
-    } else {
-	printf ("No filename given. Reading dump from stdin.\n");
-	input = stdin;
+	optind++;
+    }
+
+    if (optind < argc) {
+	fprintf (stderr,
+	 "Cannot read dump from more than one file: %s\n",
+		 argv[optind]);
+	return 1;
     }
 
     /* Dump output is one line per message. We match a sequence of
      * non-space characters for the message-id, then one or more
      * spaces, then a list of space-separated tags as a sequence of
      * characters within literal '(' and ')'. */
-    xregcomp (&regex,
-	      "^([^ ]+) \\(([^)]*)\\)$",
-	      REG_EXTENDED);
+    if ( xregcomp (&regex,
+		   "^([^ ]+) \\(([^)]*)\\)$",
+		   REG_EXTENDED) )
+	INTERNAL_ERROR("compile time constant regex failed.");
 
     while ((line_len = getline (&line, &line_size, input)) != -1) {
 	regmatch_t match[3];
@@ -87,10 +116,20 @@ notmuch_restore_command (unused (void *ctx), int argc, char *argv[])
 	file_tags = xstrndup (line + match[2].rm_so,
 			      match[2].rm_eo - match[2].rm_so);
 
-	message = notmuch_database_find_message (notmuch, message_id);
-	if (message == NULL) {
-	    fprintf (stderr, "Warning: Cannot apply tags to missing message: %s\n",
-		     message_id);
+	status = notmuch_database_find_message (notmuch, message_id, &message);
+	if (status || message == NULL) {
+	    fprintf (stderr, "Warning: Cannot apply tags to %smessage: %s\n",
+		     message ? "" : "missing ", message_id);
+	    if (status)
+		fprintf (stderr, "%s\n",
+			 notmuch_status_to_string(status));
+	    goto NEXT_LINE;
+	}
+
+	/* In order to detect missing messages, this check/optimization is
+	 * intentionally done *after* first finding the message.  */
+	if (accumulate && (file_tags == NULL || *file_tags == '\0'))
+	{
 	    goto NEXT_LINE;
 	}
 
@@ -115,7 +154,9 @@ notmuch_restore_command (unused (void *ctx), int argc, char *argv[])
 	}
 
 	notmuch_message_freeze (message);
-	notmuch_message_remove_all_tags (message);
+
+	if (!accumulate)
+	    notmuch_message_remove_all_tags (message);
 
 	next = file_tags;
 	while (next) {

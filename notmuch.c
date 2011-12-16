@@ -48,7 +48,7 @@ static int
 notmuch_help_command (void *ctx, int argc, char *argv[]);
 
 static const char search_terms_help[] =
-    "\tSeveral notmuch commands accept a comman syntax for search\n"
+    "\tSeveral notmuch commands accept a common syntax for search\n"
     "\tterms.\n"
     "\n"
     "\tThe search terms can consist of free-form text (and quoted\n"
@@ -222,6 +222,15 @@ static command_t commands[] = {
       "\t\t(oldest-first) or reverse chronological order\n"
       "\t\t(newest-first), which is the default.\n"
       "\n"
+      "\t--offset=[-]N\n"
+      "\n"
+      "\t\tSkip displaying the first N results. With the leading '-',\n"
+      "\t\tstart at the Nth result from the end.\n"
+      "\n"
+      "\t--limit=N\n"
+      "\n"
+      "\t\tLimit the number of displayed results to N.\n"
+      "\n"
       "\tSee \"notmuch help search-terms\" for details of the search\n"
       "\tterms syntax." },
     { "show", notmuch_show_command,
@@ -319,12 +328,24 @@ static command_t commands[] = {
       "\tSee \"notmuch help search-terms\" for details of the search\n"
       "\tterms syntax." },
     { "count", notmuch_count_command,
-      "<search-terms> [...]",
+      "[options...] <search-terms> [...]",
       "Count messages matching the search terms.",
-      "\tThe number of matching messages is output to stdout.\n"
+      "\tThe number of matching messages (or threads) is output to stdout.\n"
       "\n"
-      "\tWith no search terms, a count of all messages in the database\n"
-      "\twill be displayed.\n"
+      "\tWith no search terms, a count of all messages (or threads) in\n"
+      "\tthe database will be displayed.\n"
+      "\n"
+      "\tSupported options for count include:\n"
+      "\n"
+      "\t--output=(messages|threads)\n"
+      "\n"
+      "\t\tmessages (default)\n"
+      "\n"
+      "\t\tOutput the number of matching messages.\n"
+      "\n"
+      "\t\tthreads\n"
+      "\n"
+      "\t\tOutput the number of matching threads.\n"
       "\n"
       "\tSee \"notmuch help search-terms\" for details of the search\n"
       "\tterms syntax." },
@@ -375,22 +396,35 @@ static command_t commands[] = {
       "\tSee \"notmuch help search-terms\" for details of the search\n"
       "\tterms syntax." },
     { "dump", notmuch_dump_command,
-      "[<filename>]",
+      "[<filename>] [--] [<search-terms>]",
       "Create a plain-text dump of the tags for each message.",
       "\tOutput is to the given filename, if any, or to stdout.\n"
+      "\tNote that using the filename argument is deprecated.\n"
+      "\n"
       "\tThese tags are the only data in the notmuch database\n"
       "\tthat can't be recreated from the messages themselves.\n"
       "\tThe output of notmuch dump is therefore the only\n"
       "\tcritical thing to backup (and much more friendly to\n"
-      "\tincremental backup than the native database files.)" },
+      "\tincremental backup than the native database files.)\n" 
+      "\n"
+      "\tWith no search terms, a dump of all messages in the\n"
+      "\tdatabase will be generated. A \"--\" argument instructs\n"
+      "\tnotmuch that the remaining arguments are search terms.\n"
+      "\n"
+      "\tSee \"notmuch help search-terms\" for the search-term syntax.\n"      
+ },
     { "restore", notmuch_restore_command,
-      "<filename>",
+      "[--accumulate] [<filename>]",
       "Restore the tags from the given dump file (see 'dump').",
+      "\tInput is read from the given filename, if any, or from stdin.\n"
       "\tNote: The dump file format is specifically chosen to be\n"
       "\tcompatible with the format of files produced by sup-dump.\n"
       "\tSo if you've previously been using sup for mail, then the\n"
       "\t\"notmuch restore\" command provides you a way to import\n"
-      "\tall of your tags (or labels as sup calls them)." },
+      "\tall of your tags (or labels as sup calls them).\n"
+      "\tThe --accumulate switch causes the union of the existing and new\n"
+      "\ttags to be applied, instead of replacing each message's tags as\n"
+      "\tthey are read in from the dump file."},
     { "config", notmuch_config_command,
       "[get|set] <section>.<item> [value ...]",
       "Get or set settings in the notmuch configuration file.",
@@ -455,6 +489,8 @@ notmuch_help_command (unused (void *ctx), int argc, char *argv[])
 {
     command_t *command;
     unsigned int i;
+
+    argc--; argv++; /* Ignore "help" */
 
     if (argc == 0) {
 	printf ("The notmuch mail system.\n\n");
@@ -579,12 +615,13 @@ main (int argc, char *argv[])
     local = talloc_new (NULL);
 
     g_mime_init (0);
+    g_type_init ();
 
     if (argc == 1)
 	return notmuch (local);
 
     if (STRNCMP_LITERAL (argv[1], "--help") == 0)
-	return notmuch_help_command (NULL, 0, NULL);
+	return notmuch_help_command (NULL, argc - 1, &argv[1]);
 
     if (STRNCMP_LITERAL (argv[1], "--version") == 0) {
 	printf ("notmuch " STRINGIFY(NOTMUCH_VERSION) "\n");
@@ -629,7 +666,7 @@ main (int argc, char *argv[])
 	command = &commands[i];
 
 	if (strcmp (argv[1], command->name) == 0)
-	    return (command->function) (local, argc - 2, &argv[2]);
+	    return (command->function) (local, argc - 1, &argv[1]);
     }
 
     fprintf (stderr, "Error: Unknown command '%s' (see \"notmuch help\")\n",

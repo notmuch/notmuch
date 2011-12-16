@@ -15,9 +15,31 @@ Some methods return a status, indicating if an operation was successful and what
 
 :exc:`NotmuchError` -- A Notmuch execution error
 ------------------------------------------------
-Whenever an error occurs, we throw a special Exception:
+Whenever an error occurs, we throw a special Exception :exc:`NotmuchError`, or a more fine grained Exception which is derived from it. This means it is always safe to check for NotmuchErrors if you want to catch all errors. If you are interested in more fine grained exceptions, you can use those below.
 
 .. autoexception:: NotmuchError
-   :members:
 
-   This execption inherits directly from :exc:`Exception` and is raised on errors during the notmuch execution.
+The following exceptions are all directly derived from NotmuchError. Each of them corresponds to a specific :class:`notmuch.STATUS` value. You can either check the :attr:`status` attribute of a NotmuchError to see if a specific error has occurred, or you can directly check for the following Exception types:
+
+.. autoexception:: OutOfMemoryError(message=None)
+   :members:
+.. autoexception:: ReadOnlyDatabaseError(message=None)
+   :members:
+.. autoexception:: XapianError(message=None)
+   :members:
+.. autoexception:: FileError(message=None)
+   :members:
+.. autoexception:: FileNotEmailError(message=None)
+   :members:
+.. autoexception:: DuplicateMessageIdError(message=None)
+   :members:
+.. autoexception:: NullPointerError(message=None)
+   :members:
+.. autoexception:: TagTooLongError(message=None)
+   :members:
+.. autoexception:: UnbalancedFreezeThawError(message=None)
+   :members:
+.. autoexception:: UnbalancedAtomicError(message=None)
+   :members:
+.. autoexception:: NotInitializedError(message=None)
+   :members:

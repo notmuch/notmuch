@@ -149,8 +149,20 @@ show_message_part (GMimeObject *part,
 	if (selected)
 	    state->in_zone = 1;
 
+	if (selected || (!selected && state->in_zone)) {
+	    fputs (format->header_start, stdout);
+	    if (format->header_message_part)
+		format->header_message_part (mime_message);
+	    fputs (format->header_end, stdout);
+
+	    fputs (format->body_start, stdout);
+	}
+
 	show_message_part (g_mime_message_get_mime_part (mime_message),
 			   state, format, params, TRUE);
+
+	if (selected || (!selected && state->in_zone))
+	    fputs (format->body_end, stdout);
 
 	if (selected)
 	    state->in_zone = 0;

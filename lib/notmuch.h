@@ -81,6 +81,9 @@ typedef int notmuch_bool_t;
  * NOTMUCH_STATUS_UNBALANCED_FREEZE_THAW: The notmuch_message_thaw
  *	function has been called more times than notmuch_message_freeze.
  *
+ * NOTMUCH_STATUS_UNBALANCED_ATOMIC: notmuch_database_end_atomic has
+ *	been called more times than notmuch_database_begin_atomic.
+ *
  * And finally:
  *
  * NOTMUCH_STATUS_LAST_STATUS: Not an actual status value. Just a way
@@ -97,13 +100,14 @@ typedef enum _notmuch_status {
     NOTMUCH_STATUS_NULL_POINTER,
     NOTMUCH_STATUS_TAG_TOO_LONG,
     NOTMUCH_STATUS_UNBALANCED_FREEZE_THAW,
+    NOTMUCH_STATUS_UNBALANCED_ATOMIC,
 
     NOTMUCH_STATUS_LAST_STATUS
 } notmuch_status_t;
 
 /* Get a string representation of a notmuch_status_t value.
  *
- * The result is readonly.
+ * The result is read-only.
  */
 const char *
 notmuch_status_to_string (notmuch_status_t status);
@@ -214,6 +218,42 @@ notmuch_database_upgrade (notmuch_database_t *database,
 						   double progress),
 			  void *closure);
 
+/* Begin an atomic database operation.
+ *
+ * Any modifications performed between a successful begin and a
+ * notmuch_database_end_atomic will be applied to the database
+ * atomically.  Note that, unlike a typical database transaction, this
+ * only ensures atomicity, not durability; neither begin nor end
+ * necessarily flush modifications to disk.
+ *
+ * Atomic sections may be nested.  begin_atomic and end_atomic must
+ * always be called in pairs.
+ *
+ * Return value:
+ *
+ * NOTMUCH_STATUS_SUCCESS: Successfully entered atomic section.
+ *
+ * NOTMUCH_STATUS_XAPIAN_EXCEPTION: A Xapian exception occurred;
+ *	atomic section not entered.
+ */
+notmuch_status_t
+notmuch_database_begin_atomic (notmuch_database_t *notmuch);
+
+/* Indicate the end of an atomic database operation.
+ *
+ * Return value:
+ *
+ * NOTMUCH_STATUS_SUCCESS: Successfully completed atomic section.
+ *
+ * NOTMUCH_STATUS_XAPIAN_EXCEPTION: A Xapian exception occurred;
+ *	atomic section not ended.
+ *
+ * NOTMUCH_STATUS_UNBALANCED_ATOMIC: The database is not currently in
+ *	an atomic section.
+ */
+notmuch_status_t
+notmuch_database_end_atomic (notmuch_database_t *notmuch);
+
 /* Retrieve a directory object from the database for 'path'.
  *
  * Here, 'path' should be a path relative to the path of 'database'
@@ -226,9 +266,10 @@ notmuch_directory_t *
 notmuch_database_get_directory (notmuch_database_t *database,
 				const char *path);
 
-/* Add a new message to the given notmuch database.
+/* Add a new message to the given notmuch database or associate an
+ * additional filename with an existing message.
  *
- * Here,'filename' should be a path relative to the path of
+ * Here, 'filename' should be a path relative to the path of
  * 'database' (see notmuch_database_get_path), or else should be an
  * absolute filename with initial components that match the path of
  * 'database'.
@@ -237,6 +278,10 @@ notmuch_database_get_directory (notmuch_database_t *database,
  * that is expected to remain at its current location, (since the
  * notmuch database will reference the filename, and will not copy the
  * entire contents of the file.
+ *
+ * If another message with the same message ID already exists in the
+ * database, rather than creating a new message, this adds 'filename'
+ * to the list of the filenames for the existing message.
  *
  * If 'message' is not NULL, then, on successful return
  * (NOTMUCH_STATUS_SUCCESS or NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID) '*message'
@@ -255,7 +300,7 @@ notmuch_database_get_directory (notmuch_database_t *database,
  * NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID: Message has the same message
  *	ID as another message already in the database. The new
  *	filename was successfully added to the message in the database
- *	(if not already present).
+ *	(if not already present) and the existing message is returned.
  *
  * NOTMUCH_STATUS_FILE_ERROR: an error occurred trying to open the
  *	file, (such as permission denied, or file not found,
@@ -272,14 +317,14 @@ notmuch_database_add_message (notmuch_database_t *database,
 			      const char *filename,
 			      notmuch_message_t **message);
 
-/* Remove a message from the given notmuch database.
+/* Remove a message filename from the given notmuch database. If the
+ * message has no more filenames, remove the message.
  *
- * Note that only this particular filename association is removed from
- * the database. If the same message (as determined by the message ID)
- * is still available via other filenames, then the message will
- * persist in the database for those filenames. When the last filename
- * is removed for a particular message, the database content for that
- * message will be entirely removed.
+ * If the same message (as determined by the message ID) is still
+ * available via other filenames, then the message will persist in the
+ * database for those filenames. When the last filename is removed for
+ * a particular message, the database content for that message will be
+ * entirely removed.
  *
  * Return value:
  *
@@ -302,19 +347,57 @@ notmuch_database_remove_message (notmuch_database_t *database,
 
 /* Find a message with the given message_id.
  *
- * If the database contains a message with the given message_id, then
- * a new notmuch_message_t object is returned. The caller should call
- * notmuch_message_destroy when done with the message.
+ * If a message with the given message_id is found then, on successful return
+ * (NOTMUCH_STATUS_SUCCESS) '*message' will be initialized to a message
+ * object.  The caller should call notmuch_message_destroy when done with the
+ * message.
  *
- * This function returns NULL in the following situations:
+ * On any failure or when the message is not found, this function initializes
+ * '*message' to NULL. This means, when NOTMUCH_STATUS_SUCCESS is returned, the
+ * caller is supposed to check '*message' for NULL to find out whether the
+ * message with the given message_id was found.
  *
- *	* No message is found with the given message_id
- *	* An out-of-memory situation occurs
- *	* A Xapian exception occurs
+ * Return value:
+ *
+ * NOTMUCH_STATUS_SUCCESS: Successful return, check '*message'.
+ *
+ * NOTMUCH_STATUS_NULL_POINTER: The given 'message' argument is NULL
+ *
+ * NOTMUCH_STATUS_OUT_OF_MEMORY: Out of memory, creating message object
+ *
+ * NOTMUCH_STATUS_XAPIAN_EXCEPTION: A Xapian exception occurred
  */
-notmuch_message_t *
+notmuch_status_t
 notmuch_database_find_message (notmuch_database_t *database,
-			       const char *message_id);
+			       const char *message_id,
+			       notmuch_message_t **message);
+
+/* Find a message with the given filename.
+ *
+ * If the database contains a message with the given filename then, on
+ * successful return (NOTMUCH_STATUS_SUCCESS) '*message' will be initialized to
+ * a message object. The caller should call notmuch_message_destroy when done
+ * with the message.
+ *
+ * On any failure or when the message is not found, this function initializes
+ * '*message' to NULL. This means, when NOTMUCH_STATUS_SUCCESS is returned, the
+ * caller is supposed to check '*message' for NULL to find out whether the
+ * message with the given filename is found.
+ *
+ * Return value:
+ *
+ * NOTMUCH_STATUS_SUCCESS: Successful return, check '*message'
+ *
+ * NOTMUCH_STATUS_NULL_POINTER: The given 'message' argument is NULL
+ *
+ * NOTMUCH_STATUS_OUT_OF_MEMORY: Out of memory, creating the message object
+ *
+ * NOTMUCH_STATUS_XAPIAN_EXCEPTION: A Xapian exception occurred
+ */
+notmuch_status_t
+notmuch_database_find_message_by_filename (notmuch_database_t *notmuch,
+					   const char *filename,
+					   notmuch_message_t **message);
 
 /* Return a list of all tags found in the database.
  *
@@ -510,7 +593,7 @@ notmuch_threads_move_to_next (notmuch_threads_t *threads);
  *
  * It's not strictly necessary to call this function. All memory from
  * the notmuch_threads_t object will be reclaimed when the
- * containg query object is destroyed.
+ * containing query object is destroyed.
  */
 void
 notmuch_threads_destroy (notmuch_threads_t *threads);
@@ -526,6 +609,20 @@ notmuch_threads_destroy (notmuch_threads_t *threads);
 unsigned
 notmuch_query_count_messages (notmuch_query_t *query);
  
+/* Return the number of threads matching a search.
+ *
+ * This function performs a search and returns the number of unique thread IDs
+ * in the matching messages. This is the same as number of threads matching a
+ * search.
+ *
+ * Note that this is a significantly heavier operation than
+ * notmuch_query_count_messages().
+ *
+ * If an error occurs, this function may return 0.
+ */
+unsigned
+notmuch_query_count_threads (notmuch_query_t *query);
+
 /* Get the thread ID of 'thread'.
  *
  * The returned string belongs to 'thread' and as such, should not be

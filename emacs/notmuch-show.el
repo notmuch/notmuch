@@ -27,6 +27,7 @@
 (require 'mm-decode)
 (require 'mailcap)
 (require 'icalendar)
+(require 'goto-addr)
 
 (require 'notmuch-lib)
 (require 'notmuch-query)
@@ -110,7 +111,7 @@ any given message."
   "Use external viewers to view all attachments from the current message."
   (interactive)
   (with-current-notmuch-show-message
-   ; We ovverride the mm-inline-media-tests to indicate which message
+   ; We override the mm-inline-media-tests to indicate which message
    ; parts are already sufficiently handled by the original
    ; presentation of the message in notmuch-show mode. These parts
    ; will be inserted directly into the temporary buffer of
@@ -508,21 +509,26 @@ current buffer, if possible."
   t)
 
 (defun notmuch-show-insert-part-message/rfc822 (msg part content-type nth depth declared-type)
-  (let* ((message-part (plist-get part :content))
-	 (inner-parts (plist-get message-part :content)))
-    (notmuch-show-insert-part-header nth declared-type content-type nil)
+  (notmuch-show-insert-part-header nth declared-type content-type nil)
+  (let* ((message (car (plist-get part :content)))
+	 (headers (plist-get message :headers))
+	 (body (car (plist-get message :body)))
+	 (start (point)))
+
     ;; Override `notmuch-message-headers' to force `From' to be
     ;; displayed.
     (let ((notmuch-message-headers '("From" "Subject" "To" "Cc" "Date")))
-      (notmuch-show-insert-headers (plist-get part :headers)))
+      (notmuch-show-insert-headers (plist-get message :headers)))
+
     ;; Blank line after headers to be compatible with the normal
     ;; message display.
     (insert "\n")
 
-    ;; Show all of the parts.
-    (mapc (lambda (inner-part)
-	    (notmuch-show-insert-bodypart msg inner-part depth))
-	  inner-parts))
+    ;; Show the body
+    (notmuch-show-insert-bodypart msg body depth)
+
+    (when notmuch-show-indent-multipart
+      (indent-rigidly start (point) 1)))
   t)
 
 (defun notmuch-show-insert-part-text/plain (msg part content-type nth depth declared-type)
@@ -775,8 +781,32 @@ current buffer, if possible."
   "Insert the forest of threads FOREST."
   (mapc '(lambda (thread) (notmuch-show-insert-thread thread 0)) forest))
 
+(defvar notmuch-show-thread-id nil)
+(make-variable-buffer-local 'notmuch-show-thread-id)
 (defvar notmuch-show-parent-buffer nil)
 (make-variable-buffer-local 'notmuch-show-parent-buffer)
+(defvar notmuch-show-query-context nil)
+(make-variable-buffer-local 'notmuch-show-query-context)
+(defvar notmuch-show-buffer-name nil)
+(make-variable-buffer-local 'notmuch-show-buffer-name)
+
+(defun notmuch-show-buttonise-links (start end)
+  "Buttonise URLs and mail addresses between START and END.
+
+This also turns id:\"<message id>\"-parts into buttons for
+a corresponding notmuch search."
+  (goto-address-fontify-region start end)
+  (save-excursion
+    (goto-char start)
+    (while (re-search-forward "id:\\(\"?\\)[^[:space:]\"]+\\1" end t)
+      ;; remove the overlay created by goto-address-mode
+      (remove-overlays (match-beginning 0) (match-end 0) 'goto-address t)
+      (make-text-button (match-beginning 0) (match-end 0)
+			'action `(lambda (arg)
+				   (notmuch-search ,(match-string-no-properties 0)))
+			'follow-link t
+			'help-echo "Mouse-1, RET: search for this message"
+			'face goto-address-mail-face))))
 
 ;;;###autoload
 (defun notmuch-show (thread-id &optional parent-buffer query-context buffer-name crypto-switch)
@@ -791,22 +821,35 @@ The optional QUERY-CONTEXT is a notmuch search term. Only
 messages from the thread matching this search term are shown if
 non-nil.
 
-The optional BUFFER-NAME provides the neame of the buffer in
+The optional BUFFER-NAME provides the name of the buffer in
 which the message thread is shown. If it is nil (which occurs
 when the command is called interactively) the argument to the
-function is used. "
+function is used.
+
+The optional CRYPTO-SWITCH toggles the value of the
+notmuch-crypto-process-mime customization variable for this show
+buffer."
   (interactive "sNotmuch show: ")
-  (let ((buffer (get-buffer-create (generate-new-buffer-name
-				    (or buffer-name
-					(concat "*notmuch-" thread-id "*")))))
-	(process-crypto (if crypto-switch
-			    (not notmuch-crypto-process-mime)
-			  notmuch-crypto-process-mime))
-	(inhibit-read-only t))
+  (let* ((process-crypto (if crypto-switch
+			     (not notmuch-crypto-process-mime)
+			   notmuch-crypto-process-mime)))
+    (notmuch-show-worker thread-id parent-buffer query-context buffer-name process-crypto)))
+
+(defun notmuch-show-worker (thread-id parent-buffer query-context buffer-name process-crypto)
+  (let* ((buffer-name (generate-new-buffer-name
+		       (or buffer-name
+			   (concat "*notmuch-" thread-id "*"))))
+	 (buffer (get-buffer-create buffer-name))
+	 (inhibit-read-only t))
     (switch-to-buffer buffer)
     (notmuch-show-mode)
+
+    (setq notmuch-show-thread-id thread-id)
     (setq notmuch-show-parent-buffer parent-buffer)
+    (setq notmuch-show-query-context query-context)
+    (setq notmuch-show-buffer-name buffer-name)
     (setq notmuch-show-process-crypto process-crypto)
+
     (erase-buffer)
     (goto-char (point-min))
     (save-excursion
@@ -822,9 +865,8 @@ function is used. "
 	  (notmuch-show-insert-forest
 	   (notmuch-query-get-threads basic-args))))
 
-      ;; Enable buttonisation of URLs and email addresses in the
-      ;; buffer.
-      (goto-address-mode t)
+      (jit-lock-register #'notmuch-show-buttonise-links)
+
       ;; Act on visual lines rather than logical lines.
       (visual-line-mode t)
 
@@ -839,6 +881,22 @@ function is used. "
 
     (notmuch-show-mark-read)))
 
+(defun notmuch-show-refresh-view (&optional crypto-switch)
+  "Refresh the current view (with crypto switch if prefix given).
+
+Kills the current buffer and reruns notmuch show with the same
+thread id.  If a prefix is given, crypto processing is toggled."
+  (interactive "P")
+  (let ((thread-id notmuch-show-thread-id)
+	(parent-buffer notmuch-show-parent-buffer)
+	(query-context notmuch-show-query-context)
+	(buffer-name notmuch-show-buffer-name)
+	(process-crypto (if crypto-switch
+			    (not notmuch-show-process-crypto)
+			  notmuch-show-process-crypto)))
+    (notmuch-kill-this-buffer)
+    (notmuch-show-worker thread-id parent-buffer query-context buffer-name process-crypto)))
+
 (defvar notmuch-show-stash-map
   (let ((map (make-sparse-keymap)))
     (define-key map "c" 'notmuch-show-stash-cc)
@@ -846,6 +904,7 @@ function is used. "
     (define-key map "F" 'notmuch-show-stash-filename)
     (define-key map "f" 'notmuch-show-stash-from)
     (define-key map "i" 'notmuch-show-stash-message-id)
+    (define-key map "I" 'notmuch-show-stash-message-id-stripped)
     (define-key map "s" 'notmuch-show-stash-subject)
     (define-key map "T" 'notmuch-show-stash-tags)
     (define-key map "t" 'notmuch-show-stash-to)
@@ -870,6 +929,7 @@ function is used. "
 	(define-key map "V" 'notmuch-show-view-raw-message)
 	(define-key map "v" 'notmuch-show-view-all-mime-parts)
 	(define-key map "c" 'notmuch-show-stash-map)
+	(define-key map "=" 'notmuch-show-refresh-view)
 	(define-key map "h" 'notmuch-show-toggle-headers)
 	(define-key map "-" 'notmuch-show-remove-tag)
 	(define-key map "+" 'notmuch-show-add-tag)
@@ -909,7 +969,7 @@ more selectively, (such as '\\[notmuch-show-next-message]' and '\\[notmuch-show-
 without removing any tags, and '\\[notmuch-show-archive-thread]' to archive an entire thread
 without scrolling through with \\[notmuch-show-advance-and-archive]).
 
-You can add or remove arbitary tags from the current message with
+You can add or remove arbitrary tags from the current message with
 '\\[notmuch-show-add-tag]' or '\\[notmuch-show-remove-tag]'.
 
 All currently available key bindings:
@@ -964,14 +1024,6 @@ All currently available key bindings:
     (backward-char)
     (notmuch-show-move-to-message-top)
     t))
-
-(defun notmuch-show-move-past-invisible-forward ()
-  (while (point-invisible-p)
-    (forward-char)))
-
-(defun notmuch-show-move-past-invisible-backward ()
-  (while (point-invisible-p)
-    (backward-char)))
 
 ;; Functions relating to the visibility of messages and their
 ;; components.
@@ -1101,17 +1153,18 @@ thread, (remove the \"inbox\" tag from each message). Also kill
 this buffer, and display the next thread from the search from
 which this thread was originally shown."
   (interactive)
-  (let ((end-of-this-message (notmuch-show-message-bottom)))
+  (let* ((end-of-this-message (notmuch-show-message-bottom))
+	 (visible-end-of-this-message (1- end-of-this-message)))
+    (while (invisible-p visible-end-of-this-message)
+      (setq visible-end-of-this-message
+	    (previous-single-char-property-change visible-end-of-this-message
+						  'invisible)))
     (cond
      ;; Ideally we would test `end-of-this-message' against the result
      ;; of `window-end', but that doesn't account for the fact that
-     ;; the end of the message might be hidden, so we have to actually
-     ;; go to the end, walk back over invisible text and then see if
-     ;; point is visible.
-     ((save-excursion
-	(goto-char (- end-of-this-message 1))
-	(notmuch-show-move-past-invisible-backward)
-	(> (point) (window-end)))
+     ;; the end of the message might be hidden.
+     ((and visible-end-of-this-message
+	   (> visible-end-of-this-message (window-end)))
       ;; The bottom of this message is not visible - scroll.
       (scroll-up nil))
 
@@ -1395,6 +1448,11 @@ buffer."
   "Copy message ID of current message to kill-ring."
   (interactive)
   (notmuch-common-do-stash (notmuch-show-get-message-id)))
+
+(defun notmuch-show-stash-message-id-stripped ()
+  "Copy message ID of current message (sans `id:' prefix) to kill-ring."
+  (interactive)
+  (notmuch-common-do-stash (substring (notmuch-show-get-message-id) 4 -1)))
 
 (defun notmuch-show-stash-subject ()
   "Copy Subject field of current message to kill-ring."

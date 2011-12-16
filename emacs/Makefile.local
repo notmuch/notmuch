@@ -20,7 +20,7 @@ emacs_images := \
 
 emacs_bytecode = $(emacs_sources:.el=.elc)
 
-%.elc: %.el
+%.elc: %.el $(global_deps)
 	$(call quiet,EMACS) --directory emacs -batch -f batch-byte-compile $<
 
 ifeq ($(WITH_EMACS),1)
@@ -38,6 +38,7 @@ install-emacs:
 ifeq ($(HAVE_EMACS),1)
 	install -m0644 $(emacs_bytecode) "$(DESTDIR)$(emacslispdir)"
 endif
-	install -m0644 $(emacs_images) "$(DESTDIR)$(emacslispdir)"
+	mkdir -p "$(DESTDIR)$(emacsetcdir)"
+	install -m0644 $(emacs_images) "$(DESTDIR)$(emacsetcdir)"
 
 CLEAN := $(CLEAN) $(emacs_bytecode)

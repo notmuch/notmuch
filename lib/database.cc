@@ -26,6 +26,7 @@
 #include <signal.h>
 
 #include <glib.h> /* g_free, GPtrArray, GHashTable */
+#include <glib-object.h> /* g_type_init */
 
 using namespace std;
 
@@ -69,7 +70,7 @@ typedef struct {
  *
  *    Multiple terms of given prefix:
  *
- *	reference: All message IDs from In-Reply-To and Re ferences
+ *	reference: All message IDs from In-Reply-To and References
  *		   headers in the message.
  *
  *	tag:	   Any tags associated with this message by the user.
@@ -137,7 +138,7 @@ typedef struct {
  *			ASCII integer. The initial database version
  *			was 1, (though a schema existed before that
  *			were no "version" database value existed at
- *			all). Succesive versions are allocated as
+ *			all). Successive versions are allocated as
  *			changes are made to the database (such as by
  *			indexing new fields).
  *
@@ -148,7 +149,7 @@ typedef struct {
  *			incremented for each thread ID.
  *
  *	thread_id_*	A pre-allocated thread ID for a particular
- *			message. This is actually an arbitarily large
+ *			message. This is actually an arbitrarily large
  *			family of metadata name. Any particular name is
  *			formed by concatenating "thread_id_" with a message
  *			ID (or the SHA1 sum of a message ID if it is very
@@ -209,21 +210,6 @@ static prefix_t PROBABILISTIC_PREFIX[]= {
     { "folder",			"XFOLDER"}
 };
 
-int
-_internal_error (const char *format, ...)
-{
-    va_list va_args;
-
-    va_start (va_args, format);
-
-    fprintf (stderr, "Internal error: ");
-    vfprintf (stderr, format, va_args);
-
-    exit (1);
-
-    return 1;
-}
-
 const char *
 _find_prefix (const char *name)
 {
@@ -273,6 +259,8 @@ notmuch_status_to_string (notmuch_status_t status)
 	return "Tag value is too long (exceeds NOTMUCH_TAG_MAX)";
     case NOTMUCH_STATUS_UNBALANCED_FREEZE_THAW:
 	return "Unbalanced number of calls to notmuch_message_freeze/thaw";
+    case NOTMUCH_STATUS_UNBALANCED_ATOMIC:
+	return "Unbalanced number of calls to notmuch_database_begin_atomic/end_atomic";
     default:
     case NOTMUCH_STATUS_LAST_STATUS:
 	return "Unknown error status value";
@@ -358,12 +346,16 @@ _message_id_compressed (void *ctx, const char *message_id)
     return compressed;
 }
 
-notmuch_message_t *
+notmuch_status_t
 notmuch_database_find_message (notmuch_database_t *notmuch,
-			       const char *message_id)
+			       const char *message_id,
+			       notmuch_message_t **message_ret)
 {
     notmuch_private_status_t status;
     unsigned int doc_id;
+
+    if (message_ret == NULL)
+	return NOTMUCH_STATUS_NULL_POINTER;
 
     if (strlen (message_id) > NOTMUCH_MESSAGE_ID_MAX)
 	message_id = _message_id_compressed (notmuch, message_id);
@@ -373,14 +365,21 @@ notmuch_database_find_message (notmuch_database_t *notmuch,
 						       message_id, &doc_id);
 
 	if (status == NOTMUCH_PRIVATE_STATUS_NO_DOCUMENT_FOUND)
-	    return NULL;
+	    *message_ret = NULL;
+	else {
+	    *message_ret = _notmuch_message_create (notmuch, notmuch, doc_id,
+						    NULL);
+	    if (*message_ret == NULL)
+		return NOTMUCH_STATUS_OUT_OF_MEMORY;
+	}
 
-	return _notmuch_message_create (notmuch, notmuch, doc_id, NULL);
+	return NOTMUCH_STATUS_SUCCESS;
     } catch (const Xapian::Error &error) {
 	fprintf (stderr, "A Xapian exception occurred finding message: %s.\n",
 		 error.get_msg().c_str());
 	notmuch->exception_reported = TRUE;
-	return NULL;
+	*message_ret = NULL;
+	return NOTMUCH_STATUS_XAPIAN_EXCEPTION;
     }
 }
 
@@ -422,7 +421,7 @@ skip_space_and_comments (const char **str)
 }
 
 /* Parse an RFC 822 message-id, discarding whitespace, any RFC 822
- * comments, and the '<' and '>' delimeters.
+ * comments, and the '<' and '>' delimiters.
  *
  * If not NULL, then *next will be made to point to the first character
  * not parsed, (possibly pointing to the final '\0' terminator.
@@ -602,6 +601,9 @@ notmuch_database_open (const char *path,
 	goto DONE;
     }
 
+    /* Initialize the GLib type system and threads */
+    g_type_init ();
+
     notmuch = talloc (NULL, notmuch_database_t);
     notmuch->exception_reported = FALSE;
     notmuch->path = talloc_strdup (notmuch, path);
@@ -611,6 +613,7 @@ notmuch_database_open (const char *path,
 
     notmuch->needs_upgrade = FALSE;
     notmuch->mode = mode;
+    notmuch->atomic_nesting = 0;
     try {
 	string last_thread_id;
 
@@ -974,6 +977,61 @@ notmuch_database_upgrade (notmuch_database_t *notmuch,
     return NOTMUCH_STATUS_SUCCESS;
 }
 
+notmuch_status_t
+notmuch_database_begin_atomic (notmuch_database_t *notmuch)
+{
+    if (notmuch->mode == NOTMUCH_DATABASE_MODE_READ_ONLY ||
+	notmuch->atomic_nesting > 0)
+	goto DONE;
+
+    try {
+	(static_cast <Xapian::WritableDatabase *> (notmuch->xapian_db))->begin_transaction (false);
+    } catch (const Xapian::Error &error) {
+	fprintf (stderr, "A Xapian exception occurred beginning transaction: %s.\n",
+		 error.get_msg().c_str());
+	notmuch->exception_reported = TRUE;
+	return NOTMUCH_STATUS_XAPIAN_EXCEPTION;
+    }
+
+DONE:
+    notmuch->atomic_nesting++;
+    return NOTMUCH_STATUS_SUCCESS;
+}
+
+notmuch_status_t
+notmuch_database_end_atomic (notmuch_database_t *notmuch)
+{
+    Xapian::WritableDatabase *db;
+
+    if (notmuch->atomic_nesting == 0)
+	return NOTMUCH_STATUS_UNBALANCED_ATOMIC;
+
+    if (notmuch->mode == NOTMUCH_DATABASE_MODE_READ_ONLY ||
+	notmuch->atomic_nesting > 1)
+	goto DONE;
+
+    db = static_cast <Xapian::WritableDatabase *> (notmuch->xapian_db);
+    try {
+	db->commit_transaction ();
+
+	/* This is a hack for testing.  Xapian never flushes on a
+	 * non-flushed commit, even if the flush threshold is 1.
+	 * However, we rely on flushing to test atomicity. */
+	const char *thresh = getenv ("XAPIAN_FLUSH_THRESHOLD");
+	if (thresh && atoi (thresh) == 1)
+	    db->flush ();
+    } catch (const Xapian::Error &error) {
+	fprintf (stderr, "A Xapian exception occurred committing transaction: %s.\n",
+		 error.get_msg().c_str());
+	notmuch->exception_reported = TRUE;
+	return NOTMUCH_STATUS_XAPIAN_EXCEPTION;
+    }
+
+DONE:
+    notmuch->atomic_nesting--;
+    return NOTMUCH_STATUS_SUCCESS;
+}
+
 /* We allow the user to use arbitrarily long paths for directories. But
  * we have a term-length limit. So if we exceed that, we'll use the
  * SHA-1 of the path for the database term.
@@ -1149,7 +1207,7 @@ _notmuch_database_filename_to_direntry (void *ctx,
 
 /* Given a legal 'path' for the database, return the relative path.
  *
- * The return value will be a pointer to the originl path contents,
+ * The return value will be a pointer to the original path contents,
  * and will be either the original string (if 'path' was relative) or
  * a portion of the string (if path was absolute and begins with the
  * database path).
@@ -1253,7 +1311,9 @@ _get_metadata_thread_id_key (void *ctx, const char *message_id)
 
 /* Find the thread ID to which the message with 'message_id' belongs.
  *
- * Always returns a newly talloced string belonging to 'ctx'.
+ * Note: 'thread_id_ret' must not be NULL!
+ * On success '*thread_id_ret' is set to a newly talloced string belonging to
+ * 'ctx'.
  *
  * Note: If there is no message in the database with the given
  * 'message_id' then a new thread_id will be allocated for this
@@ -1261,25 +1321,30 @@ _get_metadata_thread_id_key (void *ctx, const char *message_id)
  * thread ID can be looked up if the message is added to the database
  * later).
  */
-static const char *
+static notmuch_status_t
 _resolve_message_id_to_thread_id (notmuch_database_t *notmuch,
 				  void *ctx,
-				  const char *message_id)
+				  const char *message_id,
+				  const char **thread_id_ret)
 {
+    notmuch_status_t status;
     notmuch_message_t *message;
     string thread_id_string;
-    const char *thread_id;
     char *metadata_key;
     Xapian::WritableDatabase *db;
 
-    message = notmuch_database_find_message (notmuch, message_id);
+    status = notmuch_database_find_message (notmuch, message_id, &message);
+
+    if (status)
+	return status;
 
     if (message) {
-	thread_id = talloc_steal (ctx, notmuch_message_get_thread_id (message));
+	*thread_id_ret = talloc_steal (ctx,
+				       notmuch_message_get_thread_id (message));
 
 	notmuch_message_destroy (message);
 
-	return thread_id;
+	return NOTMUCH_STATUS_SUCCESS;
     }
 
     /* Message has not been seen yet.
@@ -1293,15 +1358,16 @@ _resolve_message_id_to_thread_id (notmuch_database_t *notmuch,
     thread_id_string = notmuch->xapian_db->get_metadata (metadata_key);
 
     if (thread_id_string.empty()) {
-	thread_id = _notmuch_database_generate_thread_id (notmuch);
-	db->set_metadata (metadata_key, thread_id);
+	*thread_id_ret = talloc_strdup (ctx,
+					_notmuch_database_generate_thread_id (notmuch));
+	db->set_metadata (metadata_key, *thread_id_ret);
     } else {
-	thread_id = thread_id_string.c_str();
+	*thread_id_ret = talloc_strdup (ctx, thread_id_string.c_str());
     }
 
     talloc_free (metadata_key);
 
-    return talloc_strdup (ctx, thread_id);
+    return NOTMUCH_STATUS_SUCCESS;
 }
 
 static notmuch_status_t
@@ -1388,9 +1454,12 @@ _notmuch_database_link_message_to_parents (notmuch_database_t *notmuch,
 	_notmuch_message_add_term (message, "reference",
 				   parent_message_id);
 
-	parent_thread_id = _resolve_message_id_to_thread_id (notmuch,
-							     message,
-							     parent_message_id);
+	ret = _resolve_message_id_to_thread_id (notmuch,
+						message,
+						parent_message_id,
+						&parent_thread_id);
+	if (ret)
+	    goto DONE;
 
 	if (*thread_id == NULL) {
 	    *thread_id = talloc_strdup (message, parent_thread_id);
@@ -1476,7 +1545,7 @@ _notmuch_database_link_message_to_children (notmuch_database_t *notmuch,
  * In all cases, we assign to the current message the first thread_id
  * found (through either parent or child). We will also merge any
  * existing, distinct threads where this message belongs to both,
- * (which is not uncommon when mesages are processed out of order).
+ * (which is not uncommon when messages are processed out of order).
  *
  * Finally, if no thread ID has been found through parent or child, we
  * call _notmuch_message_generate_thread_id to generate a new thread
@@ -1543,7 +1612,7 @@ notmuch_database_add_message (notmuch_database_t *notmuch,
 {
     notmuch_message_file_t *message_file;
     notmuch_message_t *message = NULL;
-    notmuch_status_t ret = NOTMUCH_STATUS_SUCCESS;
+    notmuch_status_t ret = NOTMUCH_STATUS_SUCCESS, ret2;
     notmuch_private_status_t private_status;
 
     const char *date, *header;
@@ -1560,6 +1629,12 @@ notmuch_database_add_message (notmuch_database_t *notmuch,
     message_file = notmuch_message_file_open (filename);
     if (message_file == NULL)
 	return NOTMUCH_STATUS_FILE_ERROR;
+
+    /* Adding a message may change many documents.  Do this all
+     * atomically. */
+    ret = notmuch_database_begin_atomic (notmuch);
+    if (ret)
+	goto DONE;
 
     notmuch_message_file_restrict_headers (message_file,
 					   "date",
@@ -1654,7 +1729,7 @@ notmuch_database_add_message (notmuch_database_t *notmuch,
 		goto DONE;
 
 	    date = notmuch_message_file_get_header (message_file, "date");
-	    _notmuch_message_set_date (message, date);
+	    _notmuch_message_set_header_values (message, date, from, subject);
 
 	    _notmuch_message_index_file (message, filename);
 	} else {
@@ -1682,6 +1757,12 @@ notmuch_database_add_message (notmuch_database_t *notmuch,
     if (message_file)
 	notmuch_message_file_close (message_file);
 
+    ret2 = notmuch_database_end_atomic (notmuch);
+    if ((ret == NOTMUCH_STATUS_SUCCESS ||
+	 ret == NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID) &&
+	ret2 != NOTMUCH_STATUS_SUCCESS)
+	ret = ret2;
+
     return ret;
 }
 
@@ -1689,71 +1770,73 @@ notmuch_status_t
 notmuch_database_remove_message (notmuch_database_t *notmuch,
 				 const char *filename)
 {
-    Xapian::WritableDatabase *db;
+    notmuch_status_t status;
+    notmuch_message_t *message;
+
+    status = notmuch_database_find_message_by_filename (notmuch, filename,
+							&message);
+
+    if (status == NOTMUCH_STATUS_SUCCESS && message) {
+	    status = _notmuch_message_remove_filename (message, filename);
+	    if (status == NOTMUCH_STATUS_SUCCESS)
+		_notmuch_message_delete (message);
+	    else if (status == NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID)
+		_notmuch_message_sync (message);
+
+	    notmuch_message_destroy (message);
+    }
+
+    return status;
+}
+
+notmuch_status_t
+notmuch_database_find_message_by_filename (notmuch_database_t *notmuch,
+					   const char *filename,
+					   notmuch_message_t **message_ret)
+{
     void *local;
     const char *prefix = _find_prefix ("file-direntry");
     char *direntry, *term;
     Xapian::PostingIterator i, end;
-    Xapian::Document document;
     notmuch_status_t status;
 
-    status = _notmuch_database_ensure_writable (notmuch);
-    if (status)
-	return status;
+    if (message_ret == NULL)
+	return NOTMUCH_STATUS_NULL_POINTER;
 
     local = talloc_new (notmuch);
 
-    db = static_cast <Xapian::WritableDatabase *> (notmuch->xapian_db);
-
     try {
-
 	status = _notmuch_database_filename_to_direntry (local, notmuch,
 							 filename, &direntry);
 	if (status)
-	    return status;
+	    goto DONE;
 
 	term = talloc_asprintf (local, "%s%s", prefix, direntry);
 
 	find_doc_ids_for_term (notmuch, term, &i, &end);
 
-	for ( ; i != end; i++) {
-	    Xapian::TermIterator j;
-	    notmuch_message_t *message;
+	if (i != end) {
 	    notmuch_private_status_t private_status;
 
-	    message = _notmuch_message_create (local, notmuch,
-					       *i, &private_status);
-	    if (message == NULL)
-		return COERCE_STATUS (private_status,
-				      "Inconsistent document ID in datbase.");
-
-	    _notmuch_message_remove_filename (message, filename);
-	    _notmuch_message_sync (message);
-
-	    /* Take care to find document after sync'ing filename removal. */
-	    document = find_document_for_doc_id (notmuch, *i);
-	    j = document.termlist_begin ();
-	    j.skip_to (prefix);
-
-	    /* Was this the last file-direntry in the message? */
-	    if (j == document.termlist_end () ||
-		strncmp ((*j).c_str (), prefix, strlen (prefix)))
-	    {
-		db->delete_document (document.get_docid ());
-		status = NOTMUCH_STATUS_SUCCESS;
-	    } else {
-		status = NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID;
-	    }
+	    *message_ret = _notmuch_message_create (notmuch, notmuch, *i,
+						    &private_status);
+	    if (*message_ret == NULL)
+		status = NOTMUCH_STATUS_OUT_OF_MEMORY;
 	}
     } catch (const Xapian::Error &error) {
-	fprintf (stderr, "Error: A Xapian exception occurred removing message: %s\n",
+	fprintf (stderr, "Error: A Xapian exception occurred finding message by filename: %s\n",
 		 error.get_msg().c_str());
 	notmuch->exception_reported = TRUE;
 	status = NOTMUCH_STATUS_XAPIAN_EXCEPTION;
     }
 
+  DONE:
     talloc_free (local);
 
+    if (status && *message_ret) {
+	notmuch_message_destroy (*message_ret);
+	*message_ret = NULL;
+    }
     return status;
 }
 

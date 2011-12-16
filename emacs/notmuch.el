@@ -64,13 +64,16 @@
     ("authors" . "%-20s ")
     ("subject" . "%s ")
     ("tags" . "(%s)"))
-  "Search result formating. Supported fields are:
+  "Search result formatting. Supported fields are:
 	date, count, authors, subject, tags
 For example:
 	(setq notmuch-search-result-format \(\(\"authors\" . \"%-40s\"\)
 					     \(\"subject\" . \"%s\"\)\)\)"
   :type '(alist :key-type (string) :value-type (string))
   :group 'notmuch)
+
+(defvar notmuch-query-history nil
+  "Variable to store minibuffer history for notmuch queries")
 
 (defun notmuch-select-tag-with-completion (prompt &rest search-terms)
   (let ((tag-list
@@ -218,7 +221,6 @@ For a mouse binding, return nil."
     (define-key map "-" 'notmuch-search-remove-tag)
     (define-key map "+" 'notmuch-search-add-tag)
     (define-key map (kbd "RET") 'notmuch-search-show-thread)
-    (define-key map (kbd "M-RET") 'notmuch-search-show-thread-crypto-switch)
     map)
   "Keymap for \"notmuch search\" buffers.")
 (fset 'notmuch-search-mode-map notmuch-search-mode-map)
@@ -375,7 +377,7 @@ Complete list of currently available key bindings:
   (make-local-variable 'notmuch-search-target-line)
   (set (make-local-variable 'notmuch-search-continuation) nil)
   (set (make-local-variable 'scroll-preserve-screen-position) t)
-  (add-to-invisibility-spec 'notmuch-search)
+  (add-to-invisibility-spec (cons 'ellipsis t))
   (use-local-map notmuch-search-mode-map)
   (setq truncate-lines t)
   (setq major-mode 'notmuch-search-mode
@@ -418,13 +420,9 @@ Complete list of currently available key bindings:
   "Return a list of authors for the current region"
   (notmuch-search-properties-in-region 'notmuch-search-subject beg end))
 
-(defun notmuch-search-show-thread-crypto-switch ()
-  (interactive)
-  (notmuch-search-show-thread t))
-
 (defun notmuch-search-show-thread (&optional crypto-switch)
   "Display the currently selected thread."
-  (interactive)
+  (interactive "P")
   (let ((thread-id (notmuch-search-find-thread-id))
 	(subject (notmuch-search-find-subject)))
     (if (> (length thread-id) 0)
@@ -493,7 +491,7 @@ the messages that are about to be tagged"
   :group 'notmuch)
 
 (defcustom notmuch-after-tag-hook nil
-  "Hooks that are run before tags of a message are modified.
+  "Hooks that are run after tags of a message are modified.
 
 'tags' will contain the tags that were added or removed as
 a list of strings of the form \"+TAG\" or \"-TAG\".
@@ -676,9 +674,6 @@ foreground and blue background."
 			      (append (overlay-get overlay 'face) attributes)))))
 	  notmuch-search-line-faces)))
 
-(defun notmuch-search-isearch-authors-show (overlay)
-  (remove-from-invisibility-spec (cons (overlay-get overlay 'invisible) t)))
-
 (defun notmuch-search-author-propertize (authors)
   "Split `authors' into matching and non-matching authors and
 propertize appropriately. If no boundary between authors and
@@ -752,13 +747,11 @@ non-authors is found, assume that all of the authors match."
       (insert visible-string)
       (when (not (string= invisible-string ""))
 	(let ((start (point))
-	      (invis-spec (make-symbol "notmuch-search-authors"))
 	      overlay)
 	  (insert invisible-string)
-	  (add-to-invisibility-spec (cons invis-spec t))
 	  (setq overlay (make-overlay start (point)))
-	  (overlay-put overlay 'invisible invis-spec)
-	  (overlay-put overlay 'isearch-open-invisible #'notmuch-search-isearch-authors-show)))
+	  (overlay-put overlay 'invisible 'ellipsis)
+	  (overlay-put overlay 'isearch-open-invisible #'delete-overlay)))
       (insert padding))))
 
 (defun notmuch-search-insert-field (field date count authors subject tags)
@@ -836,7 +829,7 @@ non-authors is found, assume that all of the authors match."
 (defun notmuch-search-operate-all (action)
   "Add/remove tags from all matching messages.
 
-Tis command adds or removes tags from all messages matching the
+This command adds or removes tags from all messages matching the
 current search terms. When called interactively, this command
 will prompt for tags to be added or removed. Tags prefixed with
 '+' will be added and tags prefixed with '-' will be removed.
@@ -882,6 +875,36 @@ characters as well as `_.+-'.
 	   (concat "*notmuch-search-" query "*"))
 	  )))
 
+(defun notmuch-read-query (prompt)
+  "Read a notmuch-query from the minibuffer with completion.
+
+PROMPT is the string to prompt with."
+  (lexical-let
+      ((completions
+	(append (list "folder:" "thread:" "id:" "date:" "from:" "to:"
+		      "subject:" "attachment:")
+		(mapcar (lambda (tag)
+			  (concat "tag:" tag))
+			(process-lines "notmuch" "search" "--output=tags" "*")))))
+    (let ((keymap (copy-keymap minibuffer-local-map))
+	  (minibuffer-completion-table
+	   (completion-table-dynamic
+	    (lambda (string)
+	      ;; generate a list of possible completions for the current input
+	      (cond
+	       ;; this ugly regexp is used to get the last word of the input
+	       ;; possibly preceded by a '('
+	       ((string-match "\\(^\\|.* (?\\)\\([^ ]*\\)$" string)
+		(mapcar (lambda (compl)
+			  (concat (match-string-no-properties 1 string) compl))
+			(all-completions (match-string-no-properties 2 string)
+					 completions)))
+	       (t (list string)))))))
+      ;; this was simpler than convincing completing-read to accept spaces:
+      (define-key keymap (kbd "<tab>") 'minibuffer-complete)
+      (read-from-minibuffer prompt nil keymap nil
+			    'notmuch-query-history nil nil))))
+
 ;;;###autoload
 (defun notmuch-search (query &optional oldest-first target-thread target-line continuation)
   "Run \"notmuch search\" with the given query string and display results.
@@ -893,7 +916,7 @@ The optional parameters are used as follows:
                  current if it appears in the search results.
   target-line: The line number to move to if the target thread does not
                appear in the search results."
-  (interactive "sNotmuch search: ")
+  (interactive (list (notmuch-read-query "Notmuch search: ")))
   (let ((buffer (get-buffer-create (notmuch-search-buffer-title query))))
     (switch-to-buffer buffer)
     (notmuch-search-mode)
@@ -918,7 +941,8 @@ The optional parameters are used as follows:
 		       "--sort=newest-first")
 		     query)))
 	  (set-process-sentinel proc 'notmuch-search-process-sentinel)
-	  (set-process-filter proc 'notmuch-search-process-filter))))
+	  (set-process-filter proc 'notmuch-search-process-filter)
+	  (set-process-query-on-exit-flag proc nil))))
     (run-hooks 'notmuch-search-hook)))
 
 (defun notmuch-search-refresh-view ()
@@ -991,7 +1015,7 @@ search."
 
 Runs a new search matching only messages that match both the
 current search results AND the additional query string provided."
-  (interactive "sFilter search: ")
+  (interactive (list (notmuch-read-query "Filter search: ")))
   (let ((grouped-query (if (string-match-p notmuch-search-disjunctive-regexp query)
 			   (concat "( " query " )")
 			 query)))

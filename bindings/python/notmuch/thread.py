@@ -23,7 +23,7 @@ from notmuch.message import Messages
 from notmuch.tag import Tags
 from datetime import date
 
-#------------------------------------------------------------------------------
+
 class Threads(object):
     """Represents a list of notmuch threads
 
@@ -59,13 +59,13 @@ class Threads(object):
       for thread in threads:
          threadlist.append(thread)
 
-      # threads is "exhausted" now and even len(threads) will raise an 
+      # threads is "exhausted" now and even len(threads) will raise an
       # exception.
       # However it will be kept around until all retrieved Thread() objects are
-      # also deleted. If you did e.g. an explicit del(threads) here, the 
+      # also deleted. If you did e.g. an explicit del(threads) here, the
       # following lines would fail.
-      
-      # You can reiterate over *threadlist* however as often as you want. 
+
+      # You can reiterate over *threadlist* however as often as you want.
       # It is simply a list with Thread objects.
 
       print (threadlist[0].get_thread_id())
@@ -91,11 +91,11 @@ class Threads(object):
              (ie :class:`Query`) these tags are derived from. It saves
              a reference to it, so we can automatically delete the db
              object once all derived objects are dead.
-        :TODO: Make the iterator work more than once and cache the tags in 
+        :TODO: Make the iterator work more than once and cache the tags in
                the Python object.(?)
         """
         if threads_p is None:
-            NotmuchError(STATUS.NULL_POINTER)
+            raise NotmuchError(STATUS.NULL_POINTER)
 
         self._threads = threads_p
         #store parent, so we keep them alive as long as self  is alive
@@ -113,14 +113,14 @@ class Threads(object):
             self._threads = None
             raise StopIteration
 
-        thread = Thread(Threads._get (self._threads), self)
+        thread = Thread(Threads._get(self._threads), self)
         nmlib.notmuch_threads_move_to_next(self._threads)
         return thread
 
     def __len__(self):
         """len(:class:`Threads`) returns the number of contained Threads
 
-        .. note:: As this iterates over the threads, we will not be able to 
+        .. note:: As this iterates over the threads, we will not be able to
                iterate over them again! So this will fail::
 
                  #THIS FAILS
@@ -132,7 +132,7 @@ class Threads(object):
         if self._threads is None:
             raise NotmuchError(STATUS.NOT_INITIALIZED)
 
-        i=0
+        i = 0
         # returns 'bool'. On out-of-memory it returns None
         while nmlib.notmuch_threads_valid(self._threads):
             nmlib.notmuch_threads_move_to_next(self._threads)
@@ -143,7 +143,7 @@ class Threads(object):
 
     def __nonzero__(self):
         """Check if :class:`Threads` contains at least one more valid thread
-        
+
         The existence of this function makes 'if Threads: foo' work, as
         that will implicitely call len() exhausting the iterator if
         __nonzero__ does not exist. This function makes `bool(Threads())`
@@ -158,9 +158,9 @@ class Threads(object):
     def __del__(self):
         """Close and free the notmuch Threads"""
         if self._threads is not None:
-            nmlib.notmuch_messages_destroy (self._threads)
+            nmlib.notmuch_messages_destroy(self._threads)
 
-#------------------------------------------------------------------------------
+
 class Thread(object):
     """Represents a single message thread."""
 
@@ -206,7 +206,7 @@ class Thread(object):
               objects are dead.
         """
         if thread_p is None:
-            NotmuchError(STATUS.NULL_POINTER)
+            raise NotmuchError(STATUS.NULL_POINTER)
         self._thread = thread_p
         #keep reference to parent, so we keep it alive
         self._parent = parent
@@ -218,7 +218,7 @@ class Thread(object):
         for as long as the thread is valid.
 
         :returns: String with a message ID
-        :exception: :exc:`NotmuchError` STATUS.NOT_INITIALIZED if the thread 
+        :exception: :exc:`NotmuchError` STATUS.NOT_INITIALIZED if the thread
                     is not initialized.
         """
         if self._thread is None:
@@ -231,13 +231,12 @@ class Thread(object):
         :returns: The number of all messages in the database
                   belonging to this thread. Contrast with
                   :meth:`get_matched_messages`.
-        :exception: :exc:`NotmuchError` STATUS.NOT_INITIALIZED if the thread 
+        :exception: :exc:`NotmuchError` STATUS.NOT_INITIALIZED if the thread
                     is not initialized.
         """
         if self._thread is None:
             raise NotmuchError(STATUS.NOT_INITIALIZED)
         return nmlib.notmuch_thread_get_total_messages(self._thread)
-
 
     def get_toplevel_messages(self):
         """Returns a :class:`Messages` iterator for the top-level messages in
@@ -246,7 +245,7 @@ class Thread(object):
            This iterator will not necessarily iterate over all of the messages
            in the thread. It will only iterate over the messages in the thread
            which are not replies to other messages in the thread.
- 
+
            To iterate over all messages in the thread, the caller will need to
            iterate over the result of :meth:`Message.get_replies` for each
            top-level message (and do that recursively for the resulting
@@ -256,7 +255,7 @@ class Thread(object):
         :exception: :exc:`NotmuchError`
 
                       * STATUS.NOT_INITIALIZED if query is not inited
-                      * STATUS.NULL_POINTER if search_messages failed 
+                      * STATUS.NULL_POINTER if search_messages failed
         """
         if self._thread is None:
             raise NotmuchError(STATUS.NOT_INITIALIZED)
@@ -264,17 +263,17 @@ class Thread(object):
         msgs_p = Thread._get_toplevel_messages(self._thread)
 
         if msgs_p is None:
-            NotmuchError(STATUS.NULL_POINTER)
+            raise NotmuchError(STATUS.NULL_POINTER)
 
-        return Messages(msgs_p,self)
+        return Messages(msgs_p, self)
 
     def get_matched_messages(self):
         """Returns the number of messages in 'thread' that matched the query
 
-        :returns: The number of all messages belonging to this thread that 
+        :returns: The number of all messages belonging to this thread that
                   matched the :class:`Query`from which this thread was created.
                   Contrast with :meth:`get_total_messages`.
-        :exception: :exc:`NotmuchError` STATUS.NOT_INITIALIZED if the thread 
+        :exception: :exc:`NotmuchError` STATUS.NOT_INITIALIZED if the thread
                     is not initialized.
         """
         if self._thread is None:
@@ -288,29 +287,35 @@ class Thread(object):
         authors of mail messages in the query results that belong to this
         thread.
 
-        The returned string belongs to 'thread' and will only be valid for 
+        The returned string belongs to 'thread' and will only be valid for
         as long as this Thread() is not deleted.
         """
         if self._thread is None:
             raise NotmuchError(STATUS.NOT_INITIALIZED)
-        return Thread._get_authors(self._thread)
+        authors = Thread._get_authors(self._thread)
+        if authors is None:
+            return None
+        return authors.decode('UTF-8')
 
     def get_subject(self):
         """Returns the Subject of 'thread'
 
-        The returned string belongs to 'thread' and will only be valid for 
+        The returned string belongs to 'thread' and will only be valid for
         as long as this Thread() is not deleted.
         """
         if self._thread is None:
             raise NotmuchError(STATUS.NOT_INITIALIZED)
-        return Thread._get_subject(self._thread)
+        subject = Thread._get_subject(self._thread)
+        if subject is None:
+            return None
+        return subject.decode('UTF-8')
 
     def get_newest_date(self):
         """Returns time_t of the newest message date
 
         :returns: A time_t timestamp.
         :rtype: c_unit64
-        :exception: :exc:`NotmuchError` STATUS.NOT_INITIALIZED if the message 
+        :exception: :exc:`NotmuchError` STATUS.NOT_INITIALIZED if the message
                     is not initialized.
         """
         if self._thread is None:
@@ -322,7 +327,7 @@ class Thread(object):
 
         :returns: A time_t timestamp.
         :rtype: c_unit64
-        :exception: :exc:`NotmuchError` STATUS.NOT_INITIALIZED if the message 
+        :exception: :exc:`NotmuchError` STATUS.NOT_INITIALIZED if the message
                     is not initialized.
         """
         if self._thread is None:
@@ -337,14 +342,14 @@ class Thread(object):
         tags of the messages which matched the search and which belong to
         this thread.
 
-        The :class:`Tags` object is owned by the thread and as such, will only 
-        be valid for as long as this :class:`Thread` is valid (e.g. until the 
+        The :class:`Tags` object is owned by the thread and as such, will only
+        be valid for as long as this :class:`Thread` is valid (e.g. until the
         query from which it derived is explicitely deleted).
 
         :returns: A :class:`Tags` iterator.
         :exception: :exc:`NotmuchError`
 
-                      * STATUS.NOT_INITIALIZED if the thread 
+                      * STATUS.NOT_INITIALIZED if the thread
                         is not initialized.
                       * STATUS.NULL_POINTER, on error
         """
@@ -355,7 +360,7 @@ class Thread(object):
         if tags_p == None:
             raise NotmuchError(STATUS.NULL_POINTER)
         return Tags(tags_p, self)
- 
+
     def __str__(self):
         """A str(Thread()) is represented by a 1-line summary"""
         thread = {}
@@ -374,9 +379,15 @@ class Thread(object):
         thread['subject'] = self.get_subject()
         thread['tags'] = self.get_tags()
 
-        return "thread:%(id)s %(date)12s [%(matched)d/%(total)d] %(authors)s; %(subject)s (%(tags)s)" % (thread)
+        return "thread:%s %12s [%d/%d] %s; %s (%s)" % (thread['id'],
+                                                       thread['date'],
+                                                       thread['matched'],
+                                                       thread['total'],
+                                                       thread['authors'],
+                                                       thread['subject'],
+                                                       thread['tags'])
 
     def __del__(self):
         """Close and free the notmuch Thread"""
         if self._thread is not None:
-            nmlib.notmuch_thread_destroy (self._thread)
+            nmlib.notmuch_thread_destroy(self._thread)

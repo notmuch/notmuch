@@ -1,9 +1,10 @@
-"""The :mod:`notmuch` module provides most of the functionality that a user is likely to need.
+"""The :mod:`notmuch` module provides most of the functionality that a user is
+likely to need.
 
 .. note:: The underlying notmuch library is build on a hierarchical
     memory allocator called talloc. All objects derive from a
     top-level :class:`Database` object.
-    
+
     This means that as soon as an object is deleted, all underlying
     derived objects such as Queries, Messages, Message, and Tags will
     be freed by the underlying library as well. Accessing these
@@ -16,7 +17,7 @@
             db = Database('path',create=True)
             msgs = Query(db,'from:myself').search_messages()
 
-    This returns a :class:`Messages` which internally contains a
+    This returns :class:`Messages` which internally contains a
     reference to its parent :class:`Query` object. Otherwise the
     Query() would be immediately freed, taking our *msgs* down with
     it.
@@ -30,7 +31,6 @@
     Pretty much the same is valid for all other objects in the
     hierarchy, such as :class:`Query`, :class:`Messages`,
     :class:`Message`, and :class:`Tags`.
-
 """
 
 """
@@ -49,13 +49,28 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with notmuch.  If not, see <http://www.gnu.org/licenses/>.
 
-Copyright 2010 Sebastian Spaeth <Sebastian@SSpaeth.de>'
+Copyright 2010-2011 Sebastian Spaeth <Sebastian@SSpaeth.de>
 """
 from notmuch.database import Database, Query
 from notmuch.message import Messages, Message
 from notmuch.thread import Threads, Thread
 from notmuch.tag import Tags
-from notmuch.globals import nmlib, STATUS, NotmuchError
-__LICENSE__="GPL v3+"
-__VERSION__='0.6'
-__AUTHOR__ ='Sebastian Spaeth <Sebastian@SSpaeth.de>'
+from notmuch.globals import (
+    nmlib,
+    STATUS,
+    NotmuchError,
+    OutOfMemoryError,
+    ReadOnlyDatabaseError,
+    XapianError,
+    FileError,
+    FileNotEmailError,
+    DuplicateMessageIdError,
+    NullPointerError,
+    TagTooLongError,
+    UnbalancedFreezeThawError,
+    UnbalancedAtomicError,
+    NotInitializedError
+)
+from notmuch.version import __VERSION__
+__LICENSE__ = "GPL v3+"
+__AUTHOR__ = 'Sebastian Spaeth <Sebastian@SSpaeth.de>'

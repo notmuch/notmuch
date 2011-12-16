@@ -15,7 +15,9 @@ result.) This may require removing the outer array from the current
 "notmuch search --format=json" results.
 
 Fix '*' to work by simply calling '+' or '-' on a region consisting of
-the entire buffer.
+the entire buffer, (this would avoid one race condition---while still
+leaving other race conditions---but could also potentially make '*' a
+very expensive operation).
 
 Add a global keybinding table for notmuch, and then view-specific
 tables that add to it.
@@ -29,7 +31,7 @@ Make 'notmuch-show-pipe-message have a private history.
 
 Add support for a delete keybinding that adds a "deleted" tag to the
 current message/thread and make searches not return deleted messages
-by default, (unless the user asks explicitly for deleted messags in
+by default, (unless the user asks explicitly for deleted messages in
 the search query).
 
 Add keybindings for next/previous thread.
@@ -119,7 +121,7 @@ Allow configuration for filename patterns that should be ignored when
 indexing.
 
 Replace the "notmuch part --part=id" command with "notmuch show
---part=id", (David Edmonson wants to rewrite some of "notmuch show" to
+--part=id", (David Edmondson wants to rewrite some of "notmuch show" to
 provide more MIME-structure information in its output first).
 
 Replace the "notmuch search-tags" command with "notmuch search
@@ -264,6 +266,9 @@ to not have to look at these files again (since they are potentially
 large so the detection could be potentially slow). 2. A "notmuch
 search" syntax could be added to allow the user to find these files,
 (and perhaps delete them or move them away as appropriate).
+
+Fix filesystem/notmuch-new race condition by not updating database
+mtime for a directory if it is the same as the current mtime.
 
 Test suite
 ----------

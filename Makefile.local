@@ -15,23 +15,31 @@ IS_GIT=$(shell if [ -d .git ] ; then echo yes ; else echo no; fi)
 VERSION:=$(shell cat ${srcdir}/version)
 ifneq ($(MAKECMDGOALS),release)
 ifneq ($(MAKECMDGOALS),release-message)
+ifneq ($(MAKECMDGOALS),pre-release)
 ifeq ($(IS_GIT),yes)
-VERSION:=$(shell git describe --match '[0-9.]*')
+VERSION:=$(shell git describe --match '[0-9.]*'|sed -e s/_/~/ -e s/-/+/ -e s/-/~/)
 endif
 endif
 endif
+endif
+
+UPSTREAM_TAG=$(subst ~,_,$(VERSION))
+DEB_TAG=debian/$(UPSTREAM_TAG)-1
 
 RELEASE_HOST=notmuchmail.org
 RELEASE_DIR=/srv/notmuchmail.org/www/releases
 RELEASE_URL=http://notmuchmail.org/releases
 TAR_FILE=$(PACKAGE)-$(VERSION).tar.gz
+DEB_TAR_FILE=$(PACKAGE)_$(VERSION).orig.tar.gz
 SHA1_FILE=$(TAR_FILE).sha1
 GPG_FILE=$(SHA1_FILE).asc
+
+PV_FILE=bindings/python/notmuch/version.py
 
 # Smash together user's values with our extra values
 FINAL_CFLAGS = -DNOTMUCH_VERSION=$(VERSION) $(CFLAGS) $(WARN_CFLAGS) $(CONFIGURE_CFLAGS) $(extra_cflags)
 FINAL_CXXFLAGS = $(CXXFLAGS) $(WARN_CXXFLAGS) $(CONFIGURE_CXXFLAGS) $(extra_cflags) $(extra_cxxflags)
-FINAL_NOTMUCH_LDFLAGS = $(LDFLAGS) -Llib -lnotmuch $(AS_NEEDED_LDFLAGS) $(GMIME_LDFLAGS) $(TALLOC_LDFLAGS)
+FINAL_NOTMUCH_LDFLAGS = $(LDFLAGS) -Lutil -lutil -Llib -lnotmuch $(AS_NEEDED_LDFLAGS) $(GMIME_LDFLAGS) $(TALLOC_LDFLAGS)
 FINAL_NOTMUCH_LINKER = CC
 ifneq ($(LINKER_RESOLVES_LIBRARY_DEPENDENCIES),1)
 FINAL_NOTMUCH_LDFLAGS += $(CONFIGURE_LDFLAGS)
@@ -60,7 +68,13 @@ endif
 endif
 
 $(TAR_FILE):
-	git archive --format=tar --prefix=$(PACKAGE)-$(VERSION)/ HEAD > $(TAR_FILE).tmp
+	if git tag -v $(VERSION) >/dev/null 2>&1; then \
+           ref=$(VERSION); \
+        else \
+           ref="HEAD" ; \
+	   echo "Warning: No signed tag for $(VERSION)"; \
+	fi ; \
+	git archive --format=tar --prefix=$(PACKAGE)-$(VERSION)/ $$ref > $(TAR_FILE).tmp
 	echo $(VERSION) > version.tmp
 	tar --append -f $(TAR_FILE).tmp --transform s_^_$(PACKAGE)-$(VERSION)/_  --transform 's_.tmp$$__' version.tmp
 	rm version.tmp
@@ -87,22 +101,45 @@ dist: $(TAR_FILE)
 .PHONY: release
 release: verify-source-tree-and-version
 	$(MAKE) VERSION=$(VERSION) verify-newer
+	$(MAKE) VERSION=$(VERSION) clean
 	$(MAKE) VERSION=$(VERSION) test
-	rm -rf ./debian-build
-	git-buildpackage
-	cp debian-build/notmuch_$(VERSION).tar.gz notmuch-$(VERSION).tar.gz
+	git tag -s -m "$(PACKAGE) $(VERSION) release" $(UPSTREAM_TAG)
 	$(MAKE) VERSION=$(VERSION) $(GPG_FILE)
-	scp $(TAR_FILE) $(SHA1_FILE) $(GPG_FILE) $(RELEASE_HOST):$(RELEASE_DIR)
-	ssh $(RELEASE_HOST) "rm -f $(RELEASE_DIR)/LATEST-$(PACKAGE)-[0-9]* && ln -s $(TAR_FILE) $(RELEASE_DIR)/LATEST-$(PACKAGE)-$(VERSION)"
+	ln -sf $(TAR_FILE) $(DEB_TAR_FILE)
+	pristine-tar commit $(DEB_TAR_FILE) $(UPSTREAM_TAG)
+	git tag -s -m "$(PACKAGE) Debian $(VERSION)-1 upload (same as $(VERSION))" $(DEB_TAG)
 	mkdir -p releases
 	mv $(TAR_FILE) $(SHA1_FILE) $(GPG_FILE) releases
-	(cd debian-build; dput *.changes)
-	mv debian-build/* releases
-	rmdir debian-build
-	git tag -s -m "$(PACKAGE) $(VERSION) release" $(VERSION)
-	git push origin $(VERSION)
 	$(MAKE) VERSION=$(VERSION) release-message > $(PACKAGE)-$(VERSION).announce
+ifeq ($(REALLY_UPLOAD),yes)
+	git push origin $(VERSION)
+	cd releases && scp $(TAR_FILE) $(SHA1_FILE) $(GPG_FILE) $(RELEASE_HOST):$(RELEASE_DIR)
+	ssh $(RELEASE_HOST) "rm -f $(RELEASE_DIR)/LATEST-$(PACKAGE)-[0-9]* ; ln -s $(TAR_FILE) $(RELEASE_DIR)/LATEST-$(PACKAGE)-$(VERSION)"
+endif
 	@echo "Please send a release announcement using $(PACKAGE)-$(VERSION).announce as a template."
+
+.PHONY: pre-release
+pre-release:
+	$(MAKE) VERSION=$(VERSION) clean
+	$(MAKE) VERSION=$(VERSION) test
+	git tag -s -m "$(PACKAGE) $(VERSION) release" $(UPSTREAM_TAG)
+	git tag -s -m "$(PACKAGE) Debian $(VERSION)-1 upload (same as $(VERSION))" $(DEB_TAG)
+	$(MAKE) VERSION=$(VERSION) $(TAR_FILE)
+	ln -sf $(TAR_FILE) $(DEB_TAR_FILE)
+	pristine-tar commit $(DEB_TAR_FILE) $(UPSTREAM_TAG)
+	mkdir -p releases
+	mv $(TAR_FILE) $(DEB_TAR_FILE) releases
+
+.PHONY: debian-snapshot
+debian-snapshot: TMPFILE := $(shell mktemp)
+debian-snapshot:
+	make VERSION=$(VERSION) clean
+	cp debian/changelog $(TMPFILE)
+	EDITOR=/bin/true dch -b -v $(VERSION)+1 -D UNRELEASED 'test build, not for upload'
+	echo '3.0 (native)' > debian/source/format
+	debuild -us -uc
+	mv -f $(TMPFILE) debian/changelog
+	echo '3.0 (quilt)' > debian/source/format
 
 .PHONY: release-message
 release-message:
@@ -142,7 +179,7 @@ release-message:
 verify-source-tree-and-version: verify-no-dirty-code
 
 .PHONY: verify-no-dirty-code
-verify-no-dirty-code: verify-version-debian
+verify-no-dirty-code: verify-version-debian verify-version-python
 ifeq ($(IS_GIT),yes)
 	@printf "Checking that source tree is clean..."
 ifneq ($(shell git ls-files -m),)
@@ -161,10 +198,19 @@ endif
 
 .PHONY: verify-version-debian
 verify-version-debian: verify-version-components
-	@echo -n "Checking that Debian package version is $(VERSION)..."
-	@if [ "$(VERSION)" != $$(dpkg-parsechangelog | grep ^Version | awk '{print $$2}') ] ; then \
+	@echo -n "Checking that Debian package version is $(VERSION)-1..."
+	@if [ "$(VERSION)-1" != $$(dpkg-parsechangelog | grep ^Version | awk '{print $$2}') ] ; then \
 		(echo "No." && \
 		 echo "Please edit version and debian/changelog to have consistent versions." && false) \
+	 fi
+	@echo "Good."
+
+.PHONY: verify-version-python
+verify-version-python: verify-version-components
+	@echo -n "Checking that python bindings version is $(VERSION)..."
+	@if [ "$(VERSION)" != $$(python -c "execfile('$(PV_FILE)'); print __VERSION__") ] ; then \
+		(echo "No." && \
+		 echo "Please edit version and $(PV_FILE) to have consistent versions." && false) \
 	 fi
 	@echo "Good."
 
@@ -180,11 +226,16 @@ verify-version-components:
 .PHONY: verify-newer
 verify-newer:
 	@echo -n "Checking that no $(VERSION) release already exists..."
-	@ssh $(RELEASE_HOST) test ! -e $(RELEASE_DIR)/$(TAR_FILE) \
-		|| (echo "Ouch." && echo "Found: $(RELEASE_HOST):$(RELEASE_DIR)/$(TAR_FILE)" \
-		&& echo "Refusing to replace an existing release." \
-		&& echo "Don't forget to update \"version\" as described in RELEASING before release." && false)
-	@echo "Good."
+	@wget -q -O /dev/null $(RELEASE_URL)/$(TAR_FILE) ; \
+	case $$? in \
+          8) echo "Good." ;; \
+          0) echo "Ouch."; \
+	     echo "Found: $(RELEASE_URL)/$(TAR_FILE)"; \
+	     echo "Refusing to replace an existing release."; \
+	     echo "Don't forget to update \"version\" as described in RELEASING before release." ; \
+	     false ;; \
+	  *) echo "An unexpected error occured"; \
+	     false;; esac
 
 # The user has not set any verbosity, default to quiet mode and inform the
 # user how to enable verbose compiles.
@@ -248,12 +299,11 @@ notmuch_client_srcs =		\
 	notmuch-time.c		\
 	query-string.c		\
 	show-message.c		\
-	json.c			\
-	xutil.c
+	json.c
 
 notmuch_client_modules = $(notmuch_client_srcs:.c=.o)
 
-notmuch: $(notmuch_client_modules) lib/libnotmuch.a
+notmuch: $(notmuch_client_modules) lib/libnotmuch.a util/libutil.a
 	$(call quiet,CXX $(CFLAGS)) $^ $(FINAL_LIBNOTMUCH_LDFLAGS) -o $@
 
 notmuch-shared: $(notmuch_client_modules) lib/$(LINKER_NAME)

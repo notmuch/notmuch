@@ -24,6 +24,7 @@
 
 typedef struct _filename_node {
     char *filename;
+    time_t mtime;
     struct _filename_node *next;
 } _filename_node_t;
 
@@ -41,14 +42,14 @@ typedef struct {
 
     int total_files;
     int processed_files;
-    int added_messages;
+    int added_messages, removed_messages, renamed_messages;
     struct timeval tv_start;
 
     _filename_list_t *removed_files;
     _filename_list_t *removed_directories;
+    _filename_list_t *directory_mtimes;
 
     notmuch_bool_t synchronize_flags;
-    _filename_list_t *message_ids_to_sync;
 } add_files_state_t;
 
 static volatile sig_atomic_t do_print_progress = 0;
@@ -86,7 +87,7 @@ _filename_list_create (const void *ctx)
     return list;
 }
 
-static void
+static _filename_node_t *
 _filename_list_add (_filename_list_t *list,
 		    const char *filename)
 {
@@ -99,6 +100,8 @@ _filename_list_add (_filename_list_t *list,
 
     *(list->tail) = node;
     list->tail = &node->next;
+
+    return node;
 }
 
 static void
@@ -213,6 +216,7 @@ _entries_resemble_maildir (struct dirent **entries, int count)
  *     information is lost from the database).
  *
  *   o Tell the database to update its time of 'path' to 'fs_mtime'
+ *     if fs_mtime isn't the current wall-clock time.
  */
 static notmuch_status_t
 add_files_recursive (notmuch_database_t *notmuch,
@@ -230,6 +234,7 @@ add_files_recursive (notmuch_database_t *notmuch,
     notmuch_directory_t *directory;
     notmuch_filenames_t *db_files = NULL;
     notmuch_filenames_t *db_subdirs = NULL;
+    time_t stat_time;
     struct stat st;
     notmuch_bool_t is_maildir, new_directory;
     const char **tag;
@@ -239,6 +244,7 @@ add_files_recursive (notmuch_database_t *notmuch,
 		 path, strerror (errno));
 	return NOTMUCH_STATUS_FILE_ERROR;
     }
+    stat_time = time (NULL);
 
     /* This is not an error since we may have recursed based on a
      * symlink to a regular file, not a directory, and we don't know
@@ -252,6 +258,25 @@ add_files_recursive (notmuch_database_t *notmuch,
     db_mtime = notmuch_directory_get_mtime (directory);
 
     new_directory = db_mtime ? FALSE : TRUE;
+
+    /* XXX This is a temporary workaround.  If we don't update the
+     * database mtime until after processing messages in this
+     * directory, then a 0 mtime is *not* sufficient to indicate that
+     * this directory has no messages or subdirs in the database (for
+     * example, if an earlier run skipped the mtime update because
+     * fs_mtime == stat_time, or was interrupted before updating the
+     * mtime at the end).  To address this, we record a (bogus)
+     * non-zero value before processing any child messages so that a
+     * later run won't mistake this for a new directory (and, for
+     * example, fail to detect removed files and subdirs).
+     *
+     * A better solution would be for notmuch_database_get_directory
+     * to indicate if it really created a new directory or not, either
+     * by a new out-argument, or by recording this information and
+     * providing an accessor.
+     */
+    if (new_directory)
+	notmuch_directory_set_mtime (directory, -1);
 
     /* If the database knows about this directory, then we sort based
      * on strcmp to match the database sorting. Otherwise, we can do
@@ -373,7 +398,7 @@ add_files_recursive (notmuch_database_t *notmuch,
 	/* If we're looking at a symlink, we only want to add it if it
 	 * links to a regular file, (and not to a directory, say).
 	 *
-	 * Similarly, if the file is of unknown type (due to filesytem
+	 * Similarly, if the file is of unknown type (due to filesystem
 	 * limitations), then we also need to look closer.
 	 *
 	 * In either case, a stat does the trick.
@@ -425,6 +450,12 @@ add_files_recursive (notmuch_database_t *notmuch,
 	    fflush (stdout);
 	}
 
+	status = notmuch_database_begin_atomic (notmuch);
+	if (status) {
+	    ret = status;
+	    goto DONE;
+	}
+
 	status = notmuch_database_add_message (notmuch, next, &message);
 	switch (status) {
 	/* success */
@@ -439,11 +470,8 @@ add_files_recursive (notmuch_database_t *notmuch,
 	    break;
 	/* Non-fatal issues (go on to next file) */
 	case NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID:
-	    /* Defer sync of maildir flags until after old filenames
-	     * are removed in the case of a rename. */
 	    if (state->synchronize_flags == TRUE)
-		_filename_list_add (state->message_ids_to_sync,
-				    notmuch_message_get_message_id (message));
+		notmuch_message_maildir_flags_to_tags (message);
 	    break;
 	case NOTMUCH_STATUS_FILE_NOT_EMAIL:
 	    fprintf (stderr, "Note: Ignoring non-mail file: %s\n",
@@ -462,8 +490,15 @@ add_files_recursive (notmuch_database_t *notmuch,
 	case NOTMUCH_STATUS_NULL_POINTER:
 	case NOTMUCH_STATUS_TAG_TOO_LONG:
 	case NOTMUCH_STATUS_UNBALANCED_FREEZE_THAW:
+	case NOTMUCH_STATUS_UNBALANCED_ATOMIC:
 	case NOTMUCH_STATUS_LAST_STATUS:
 	    INTERNAL_ERROR ("add_message returned unexpected value: %d",  status);
+	    goto DONE;
+	}
+
+	status = notmuch_database_end_atomic (notmuch);
+	if (status) {
+	    ret = status;
 	    goto DONE;
 	}
 
@@ -509,11 +544,13 @@ add_files_recursive (notmuch_database_t *notmuch,
 	notmuch_filenames_move_to_next (db_subdirs);
     }
 
-    if (! interrupted) {
-	status = notmuch_directory_set_mtime (directory, fs_mtime);
-	if (status && ret == NOTMUCH_STATUS_SUCCESS)
-	    ret = status;
-    }
+    /* If the directory's mtime is the same as the wall-clock time
+     * when we stat'ed the directory, we skip updating the mtime in
+     * the database because a message could be delivered later in this
+     * same second.  This may lead to unnecessary re-scans, but it
+     * avoids overlooking messages. */
+    if (fs_mtime != stat_time)
+	_filename_list_add (state->directory_mtimes, path)->mtime = fs_mtime;
 
   DONE:
     if (next)
@@ -695,18 +732,42 @@ upgrade_print_progress (void *closure,
     fflush (stdout);
 }
 
+/* Remove one message filename from the database. */
+static notmuch_status_t
+remove_filename (notmuch_database_t *notmuch,
+		 const char *path,
+		 add_files_state_t *add_files_state)
+{
+    notmuch_status_t status;
+    notmuch_message_t *message;
+    status = notmuch_database_begin_atomic (notmuch);
+    if (status)
+	return status;
+    status = notmuch_database_find_message_by_filename (notmuch, path, &message);
+    if (status || message == NULL)
+	return status;
+    status = notmuch_database_remove_message (notmuch, path);
+    if (status == NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID) {
+	add_files_state->renamed_messages++;
+	if (add_files_state->synchronize_flags == TRUE)
+	    notmuch_message_maildir_flags_to_tags (message);
+    } else
+	add_files_state->removed_messages++;
+    notmuch_message_destroy (message);
+    notmuch_database_end_atomic (notmuch);
+    return status;
+}
+
 /* Recursively remove all filenames from the database referring to
  * 'path' (or to any of its children). */
 static void
 _remove_directory (void *ctx,
 		   notmuch_database_t *notmuch,
 		   const char *path,
-		   int *renamed_files,
-		   int *removed_files)
+		   add_files_state_t *add_files_state)
 {
     notmuch_directory_t *directory;
     notmuch_filenames_t *files, *subdirs;
-    notmuch_status_t status;
     char *absolute;
 
     directory = notmuch_database_get_directory (notmuch, path);
@@ -717,11 +778,7 @@ _remove_directory (void *ctx,
     {
 	absolute = talloc_asprintf (ctx, "%s/%s", path,
 				    notmuch_filenames_get (files));
-	status = notmuch_database_remove_message (notmuch, absolute);
-	if (status == NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID)
-	    *renamed_files = *renamed_files + 1;
-	else
-	    *removed_files = *removed_files + 1;
+	remove_filename (notmuch, absolute, add_files_state);
 	talloc_free (absolute);
     }
 
@@ -731,7 +788,7 @@ _remove_directory (void *ctx,
     {
 	absolute = talloc_asprintf (ctx, "%s/%s", path,
 				    notmuch_filenames_get (subdirs));
-	_remove_directory (ctx, notmuch, absolute, renamed_files, removed_files);
+	_remove_directory (ctx, notmuch, absolute, add_files_state);
 	talloc_free (absolute);
     }
 
@@ -752,13 +809,13 @@ notmuch_new_command (void *ctx, int argc, char *argv[])
     char *dot_notmuch_path;
     struct sigaction action;
     _filename_node_t *f;
-    int renamed_files, removed_files;
-    notmuch_status_t status;
     int i;
     notmuch_bool_t timer_is_active = FALSE;
 
     add_files_state.verbose = 0;
     add_files_state.output_is_a_tty = isatty (fileno (stdout));
+
+    argc--; argv++; /* skip subcommand argument */
 
     for (i = 0; i < argc && argv[i][0] == '-'; i++) {
 	if (STRNCMP_LITERAL (argv[i], "--verbose") == 0) {
@@ -774,7 +831,6 @@ notmuch_new_command (void *ctx, int argc, char *argv[])
 
     add_files_state.new_tags = notmuch_config_get_new_tags (config, &add_files_state.new_tags_length);
     add_files_state.synchronize_flags = notmuch_config_get_maildir_synchronize_flags (config);
-    add_files_state.message_ids_to_sync = _filename_list_create (ctx);
     db_path = notmuch_config_get_database_path (config);
 
     dot_notmuch_path = talloc_asprintf (ctx, "%s/%s", db_path, ".notmuch");
@@ -825,10 +881,12 @@ notmuch_new_command (void *ctx, int argc, char *argv[])
 
     add_files_state.processed_files = 0;
     add_files_state.added_messages = 0;
+    add_files_state.removed_messages = add_files_state.renamed_messages = 0;
     gettimeofday (&add_files_state.tv_start, NULL);
 
     add_files_state.removed_files = _filename_list_create (ctx);
     add_files_state.removed_directories = _filename_list_create (ctx);
+    add_files_state.directory_mtimes = _filename_list_create (ctx);
 
     if (! debugger_is_active () && add_files_state.output_is_a_tty
 	&& ! add_files_state.verbose) {
@@ -838,27 +896,20 @@ notmuch_new_command (void *ctx, int argc, char *argv[])
 
     ret = add_files (notmuch, db_path, &add_files_state);
 
-    removed_files = 0;
-    renamed_files = 0;
     gettimeofday (&tv_start, NULL);
-    for (f = add_files_state.removed_files->head; f; f = f->next) {
-	status = notmuch_database_remove_message (notmuch, f->filename);
-	if (status == NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID)
-	    renamed_files++;
-	else
-	    removed_files++;
+    for (f = add_files_state.removed_files->head; f && !interrupted; f = f->next) {
+	remove_filename (notmuch, f->filename, &add_files_state);
 	if (do_print_progress) {
 	    do_print_progress = 0;
 	    generic_print_progress ("Cleaned up", "messages",
-		tv_start, removed_files + renamed_files,
+		tv_start, add_files_state.removed_messages + add_files_state.renamed_messages,
 		add_files_state.removed_files->count);
 	}
     }
 
     gettimeofday (&tv_start, NULL);
-    for (f = add_files_state.removed_directories->head, i = 0; f; f = f->next, i++) {
-	_remove_directory (ctx, notmuch, f->filename,
-			   &renamed_files, &removed_files);
+    for (f = add_files_state.removed_directories->head, i = 0; f && !interrupted; f = f->next, i++) {
+	_remove_directory (ctx, notmuch, f->filename, &add_files_state);
 	if (do_print_progress) {
 	    do_print_progress = 0;
 	    generic_print_progress ("Cleaned up", "directories",
@@ -867,34 +918,18 @@ notmuch_new_command (void *ctx, int argc, char *argv[])
 	}
     }
 
-    talloc_free (add_files_state.removed_files);
-    talloc_free (add_files_state.removed_directories);
-
-    /* Now that removals are done (hence the database is aware of all
-     * renames), we can synchronize maildir_flags to tags for all
-     * messages that had new filenames appear on this run. */
-    gettimeofday (&tv_start, NULL);
-    if (add_files_state.synchronize_flags) {
-	_filename_node_t *node;
-	notmuch_message_t *message;
-	for (node = add_files_state.message_ids_to_sync->head, i = 0;
-	     node;
-	     node = node->next, i++)
-	{
-	    message = notmuch_database_find_message (notmuch, node->filename);
-	    notmuch_message_maildir_flags_to_tags (message);
-	    notmuch_message_destroy (message);
-	    if (do_print_progress) {
-		do_print_progress = 0;
-		generic_print_progress (
-		    "Synchronized tags for", "messages",
-		    tv_start, i, add_files_state.message_ids_to_sync->count);
-	    }
+    for (f = add_files_state.directory_mtimes->head; f && !interrupted; f = f->next) {
+	notmuch_directory_t *directory;
+	directory = notmuch_database_get_directory (notmuch, f->filename);
+	if (directory) {
+	    notmuch_directory_set_mtime (directory, f->mtime);
+	    notmuch_directory_destroy (directory);
 	}
     }
 
-    talloc_free (add_files_state.message_ids_to_sync);
-    add_files_state.message_ids_to_sync = NULL;
+    talloc_free (add_files_state.removed_files);
+    talloc_free (add_files_state.removed_directories);
+    talloc_free (add_files_state.directory_mtimes);
 
     if (timer_is_active)
 	stop_progress_printing_timer ();
@@ -925,16 +960,16 @@ notmuch_new_command (void *ctx, int argc, char *argv[])
 	printf ("No new mail.");
     }
 
-    if (removed_files) {
+    if (add_files_state.removed_messages) {
 	printf (" Removed %d %s.",
-		removed_files,
-		removed_files == 1 ? "message" : "messages");
+		add_files_state.removed_messages,
+		add_files_state.removed_messages == 1 ? "message" : "messages");
     }
 
-    if (renamed_files) {
+    if (add_files_state.renamed_messages) {
 	printf (" Detected %d file %s.",
-		renamed_files,
-		renamed_files == 1 ? "rename" : "renames");
+		add_files_state.renamed_messages,
+		add_files_state.renamed_messages == 1 ? "rename" : "renames");
     }
 
     printf ("\n");

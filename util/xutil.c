@@ -18,9 +18,11 @@
  * Author: Carl Worth <cworth@cworth.org>
  */
 
-#include "notmuch-private.h"
-
 #include <stdio.h>
+#include <string.h>
+
+#include "xutil.h"
+#include "error_util.h"
 
 void *
 xcalloc (size_t nmemb, size_t size)
@@ -97,7 +99,7 @@ xstrndup (const char *s, size_t n)
     return ret;
 }
 
-void
+int
 xregcomp (regex_t *preg, const char *regex, int cflags)
 {
     int rerr;
@@ -108,9 +110,12 @@ xregcomp (regex_t *preg, const char *regex, int cflags)
 	char *error = xmalloc (error_size);
 
 	regerror (rerr, preg, error, error_size);
-	INTERNAL_ERROR ("compiling regex %s: %s\n",
+	fprintf (stderr, "compiling regex %s: %s\n",
 			regex, error);
+	free (error);
+	return 1;
     }
+    return 0;
 }
 
 int

@@ -5,19 +5,13 @@
 # the library interface, (such as the deletion of an API or a major
 # semantic change that breaks formerly functioning code).
 #
-# Note: We don't currently have plans to increment this at this time.
-# If we *do* want to make an incompatible change to the library
-# interface, we'll have to decide whether to increment this (creating
-# a new soname) or to introduce symbol versioning to be able to
-# provide support for both old and new interfaces without having to
-# increment this.
-LIBNOTMUCH_VERSION_MAJOR = 1
+LIBNOTMUCH_VERSION_MAJOR = 2
 
 # The minor version of the library interface. This should be incremented at
 # the time of release for any additions to the library interface,
 # (and when it is incremented, the release version of the library should
 #  be reset to 0).
-LIBNOTMUCH_VERSION_MINOR = 3
+LIBNOTMUCH_VERSION_MINOR = 0
 
 # The release version the library interface. This should be incremented at
 # the time of release if there have been no changes to the interface, (but
@@ -47,6 +41,11 @@ endif
 dir := lib
 extra_cflags += -I$(srcdir)/$(dir) -fPIC
 
+# The (often-reused) $dir works fine within targets/prerequisites,
+# but cannot be used reliably within commands, so copy its value to a
+# variable that is not reused.
+lib := $(dir)
+
 libnotmuch_c_srcs =		\
 	$(notmuch_compat_srcs)	\
 	$(dir)/filenames.c	\
@@ -55,8 +54,7 @@ libnotmuch_c_srcs =		\
 	$(dir)/message-file.c	\
 	$(dir)/messages.c	\
 	$(dir)/sha1.c		\
-	$(dir)/tags.c		\
-	$(dir)/xutil.c
+	$(dir)/tags.c
 
 libnotmuch_cxx_srcs =		\
 	$(dir)/database.cc	\
@@ -72,13 +70,10 @@ $(dir)/libnotmuch.a: $(libnotmuch_modules)
 	$(call quiet,AR) rcs $@ $^
 
 $(dir)/$(LIBNAME): $(libnotmuch_modules) notmuch.sym
-	echo $(libnotmuch_modules)
-	$(call quiet,CXX $(CXXFLAGS)) $(libnotmuch_modules) $(FINAL_LIBNOTMUCH_LDFLAGS) $(LIBRARY_LINK_FLAG) -o $@
+	$(call quiet,CXX $(CXXFLAGS)) $(libnotmuch_modules) $(FINAL_LIBNOTMUCH_LDFLAGS) $(LIBRARY_LINK_FLAG) -o $@ util/libutil.a
 
-notmuch.sym: lib/notmuch.h
-	printf "{\nglobal:\n" > notmuch.sym
-	sed  -n 's/^\s*\(notmuch_[a-z_]*\)\s*(.*/\t\1;/p' $< >> notmuch.sym
-	printf "local: *;\n};\n" >> notmuch.sym
+notmuch.sym: $(srcdir)/$(dir)/notmuch.h $(libnotmuch_modules)
+	sh $(srcdir)/$(lib)/gen-version-script.sh $< $(libnotmuch_modules) > $@
 
 $(dir)/$(SONAME): $(dir)/$(LIBNAME)
 	ln -sf $(LIBNAME) $@
@@ -88,10 +83,6 @@ $(dir)/$(LINKER_NAME): $(dir)/$(SONAME)
 
 install: install-$(dir)
 
-# The (often-reused) $dir works fine within targets/pre-requisites,
-# but cannot be used reliably within commands, so copy its value to a
-# variable that is not reused.
-lib := $(dir)
 install-$(dir): $(dir)/$(LIBNAME)
 	mkdir -p "$(DESTDIR)$(libdir)/"
 	install -m0644 "$(lib)/$(LIBNAME)" "$(DESTDIR)$(libdir)/"
@@ -102,4 +93,6 @@ install-$(dir): $(dir)/$(LIBNAME)
 	$(LIBRARY_INSTALL_POST_COMMAND)
 
 SRCS  := $(SRCS) $(libnotmuch_c_srcs) $(libnotmuch_cxx_srcs)
-CLEAN := $(CLEAN) $(libnotmuch_modules) $(dir)/$(SONAME) $(dir)/$(LINKER_NAME) $(dir)$(LIBNAME) libnotmuch.a notmuch.sym
+CLEAN += $(libnotmuch_modules) $(dir)/$(SONAME) $(dir)/$(LINKER_NAME)
+CLEAN += $(dir)/$(LIBNAME) $(dir)/libnotmuch.a notmuch.sym
+CLEAN += $(dir)/notmuch.h.gch

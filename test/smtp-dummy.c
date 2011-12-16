@@ -71,7 +71,7 @@ static int
 process_command (FILE *peer, FILE *output, const char *command)
 {
 	if (STRNCMP_LITERAL (command, "EHLO ") == 0) {
-		fprintf (peer, "502\r\n");
+		fprintf (peer, "502 not implemented\r\n");
 		fflush (peer);
 	} else if (STRNCMP_LITERAL (command, "HELO ") == 0) {
 		fprintf (peer, "250 localhost\r\n");
@@ -159,6 +159,7 @@ main (int argc, char *argv[])
 		return 1;
 	}
 
+	memset (&addr, 0, sizeof (addr));
 	addr.sin_family = AF_INET;
 	addr.sin_port = htons (25025);
 	addr.sin_addr = *(struct in_addr *) hostinfo->h_addr;

@@ -41,6 +41,15 @@ The following command-line options are available when running tests:
 	As the names depend on the tests' file names, it is safe to
 	run the tests with this option in parallel.
 
+--root=<dir>::
+	This runs the testsuites specified under a seperate directory.
+	However, caution is advised, as not all tests are maintained
+	with this relocation in mind, so some tests may behave
+	differently.
+
+	Pointing this argument at a tmpfs filesystem can improve the
+	speed of the test suite for some users.
+
 When invoking the test suite via "make test" any of the above options
 can be specified as follows:
 
@@ -123,19 +132,18 @@ library for your script to use.
    <script>.  If it yields success, test is considered
    successful.  <message> should state what it is testing.
 
- test_expect_failure <message> <script>
-
-   This is NOT the opposite of test_expect_success, but is used
-   to mark a test that demonstrates a known breakage.  Unlike
-   the usual test_expect_success tests, which say "ok" on
-   success and "FAIL" on failure, this will say "FIXED" on
-   success and "still broken" on failure.  Failures from these
-   tests won't cause -i (immediate) to stop.
-
  test_begin_subtest <message>
 
    Set the test description message for a subsequent test_expect_equal
    invocation (see below).
+
+ test_subtest_known_broken
+
+   Mark the current test as broken.  Such tests are expected to fail.
+   Unlike the normal tests, which say "PASS" on success and "FAIL" on
+   failure, these will say "FIXED" on success and "BROKEN" on failure.
+   Failures from these tests won't cause -i (immediate) to stop.  A
+   test must call this before any test_expect_* function.
 
  test_expect_equal <output> <expected>
 
@@ -147,12 +155,12 @@ library for your script to use.
    will generate a failure and print the difference of the two
    strings.
 
- test_expect_equal_failure <output> <expected>
+ test_expect_equal_file <output> <expected>
 
-   This works similar to test_expect_equal (see above) but is used to
-   mark a test that demonstrates a known breakage, (that is, the
-   author of the test expectes "output" and "expected" to differ until
-   the breakage is fixed). See test_expect_failure for details.
+   Identical to test_exepect_equal, except that <output> and
+   <expected> are files instead of strings.  This is a much more
+   robust method to compare formatted textual information, since it
+   also notices whitespace and closing newline differences.
 
  test_debug <script>
 
@@ -165,9 +173,13 @@ library for your script to use.
 
    This function executes the provided emacs lisp script within
    emacs. The script can be a sequence of emacs lisp expressions,
-   (that is, they will be evaluated within a progn form). The lisp
-   expressions can call `message' to generate output on stdout to be
-   examined by the calling test script.
+   (that is, they will be evaluated within a progn form). Emacs
+   stdout and stderr is not available, the common way to get output
+   is to save it to a file. There are some auxiliary functions
+   useful in emacs tests provided in test-lib.el. Do not use `setq'
+   for setting variables in Emacs tests because it affects other
+   tests that may run in the same Emacs instance.  Use `let' instead
+   so the scope of the changed variables is limited to a single test.
 
  test_done
 
@@ -181,7 +193,7 @@ writing tests:
   generate_message
 
     Generates a message with an optional template. Most tests will
-    actually prefere to call add_message. See below.
+    actually prefer to call add_message. See below.
 
   add_message
 
@@ -197,6 +209,6 @@ writing tests:
 
     This function should be called at the beginning of a test file
     when a test needs to operate on a non-empty body of messages. It
-    will intialize the mail database to a known state of 50 sample
+    will initialize the mail database to a known state of 50 sample
     messages, (culled from the early history of the notmuch mailing
     list).

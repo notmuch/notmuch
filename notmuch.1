@@ -16,7 +16,7 @@
 .\" along with this program.  If not, see http://www.gnu.org/licenses/ .
 .\"
 .\" Author: Carl Worth <cworth@cworth.org>
-.TH NOTMUCH 1 2009-10-31 "Notmuch 0.1"
+.TH NOTMUCH 1 2011-12-04 "Notmuch 0.10.2"
 .SH NAME
 notmuch \- thread-based email index, search, and tagging
 .SH SYNOPSIS
@@ -214,11 +214,26 @@ when sorting by
 .B newest\-first
 the threads will be sorted by the newest message in each thread.
 
-.RE
-.RS 4
 By default, results will be displayed in reverse chronological order,
 (that is, the newest results will be displayed first).
+.RE
 
+.RS 4
+.TP 4
+.BR \-\-offset=[\-]N
+
+Skip displaying the first N results. With the leading '\-', start at the Nth
+result from the end.
+.RE
+
+.RS 4
+.TP 4
+.BR \-\-limit=N
+
+Limit the number of displayed results to N.
+.RE
+
+.RS 4
 See the
 .B "SEARCH SYNTAX"
 section below for details of the supported syntax for <search-terms>.
@@ -357,14 +372,35 @@ section below for details of the supported syntax for <search-terms>.
 .RE
 .RS 4
 .TP 4
-.BR count " <search-term>..."
+.BR count " [options...] <search-term>..."
 
 Count messages matching the search terms.
 
-The number of matching messages is output to stdout.
+The number of matching messages (or threads) is output to stdout.
 
-With no search terms, a count of all messages in the database will be
-displayed.
+With no search terms, a count of all messages (or threads) in the database will
+be displayed.
+
+Supported options for
+.B count
+include
+.RS 4
+.TP 4
+.B \-\-output=(messages|threads)
+
+.RS 4
+.TP 4
+.B messages
+
+Output the number of matching messages. This is the default.
+.RE
+.RS 4
+.TP 4
+.B threads
+
+Output the number of matching threads.
+.RE
+.RE
 .RE
 .RE
 
@@ -454,25 +490,38 @@ section below for details of the supported syntax for <search-terms>.
 The
 .BR dump " and " restore
 commands can be used to create a textual dump of email tags for backup
-purposes, and to restore from that dump
+purposes, and to restore from that dump.
 
 .RS 4
 .TP 4
-.BR dump " [<filename>]"
+.BR dump " [<filename>] [--] [<search-terms>]"
 
 Creates a plain-text dump of the tags of each message.
 
-The output is to the given filename, if any, or to stdout.
+Output is to the given filename, if any, or to stdout.  Note that
+using the filename argument is deprecated.
 
 These tags are the only data in the notmuch database that can't be
 recreated from the messages themselves.  The output of notmuch dump is
 therefore the only critical thing to backup (and much more friendly to
 incremental backup than the native database files.)
+
+With no search terms, a dump of all messages in the database will be
+generated.  A "--" argument instructs notmuch that the
+remaining arguments are search terms.
+
+See the
+.B "SEARCH SYNTAX"
+section below for details of the supported syntax for <search-terms>.
+.RE
+
 .TP
-.BR restore " <filename>"
+.BR restore " [--accumulate] [<filename>]"
 
 Restores the tags from the given file (see
-.BR "notmuch dump" "."
+.BR "notmuch dump" ")."
+
+The input is read from the given filename, if any, or from stdin.
 
 Note: The dump file format is specifically chosen to be
 compatible with the format of files produced by sup-dump.
@@ -480,11 +529,15 @@ So if you've previously been using sup for mail, then the
 .B "notmuch restore"
 command provides you a way to import all of your tags (or labels as
 sup calls them).
+
+The --accumulate switch causes the union of the existing and new tags to be
+applied, instead of replacing each message's tags as they are read in from the
+dump file.
 .RE
 
 The
 .B part
-command can used to output a single part of a multi-part MIME message.
+command can used to output a single part of a multipart MIME message.
 
 .RS 4
 .TP 4
@@ -641,13 +694,13 @@ expression).
 Finally, results can be restricted to only messages within a
 particular time range, (based on the Date: header) with a syntax of:
 
-	<intial-timestamp>..<final-timestamp>
+	<initial-timestamp>..<final-timestamp>
 
 Each timestamp is a number representing the number of seconds since
 1970\-01\-01 00:00:00 UTC. This is not the most convenient means of
 expressing date ranges, but until notmuch is fixed to accept a more
 convenient form, one can use the date program to construct
-timestamps. For example, with the bash shell the folowing syntax would
+timestamps. For example, with the bash shell the following syntax would
 specify a date range to return messages from 2009\-10\-01 until the
 current time:
 

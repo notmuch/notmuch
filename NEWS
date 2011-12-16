@@ -1,3 +1,254 @@
+Notmuch 0.10.2 (2011-12-04)
+===========================
+
+Bug-fix release.
+----------------
+
+Fix crash in python bindings.
+
+    The python bindings did not call g_type_init, which caused crashes
+    for some, but not all users.
+
+Notmuch 0.10.1 (2011-11-25)
+===========================
+
+Bug-fix release.
+----------------
+
+Fix --help argument
+
+  Argument processing changes in 0.10 introduced a bug where "notmuch
+  --help" crashed while "notmuch help" worked fine. This is fixed in
+  0.10.1.
+
+Notmuch 0.10 (2011-11-23)
+=========================
+
+New build and testing features
+------------------------------
+
+Emacs tests are now done in dtach. This means that dtach  is now
+needed to run the notmuch test suite, at least until the checking for
+prerequisites is improved.
+
+Full test coverage of the stashing feature in Emacs.
+
+New command-line features
+-------------------------
+
+Add "notmuch restore --accumulate" option
+
+  The --accumulate switch causes the union of the existing and new tags to be
+  applied, instead of replacing each message's tags as they are read in from
+  the dump file.
+
+Add search terms to  "notmuch dump"
+
+  The dump command now takes an optional search term much like notmuch
+  search/show/tag. The output file argument of dump is deprecated in
+  favour of using stdout.
+
+Add "notmuch search" --offset and --limit options
+
+  The search command now takes options --offset=[-]N and --limit=N to limit
+  the number of results shown.
+
+Add "notmuch count --output" option
+
+  The count command is now capable of counting threads in addition to
+  messages. This is selected using the new --output=(threads|messages) option.
+
+New emacs UI features
+---------------------
+
+Add tab-completion for notmuch-search and notmuch-search-filter
+
+  These functions now support completion tags for query parts
+  starting with "tag:".
+
+Turn "id:MSG-ID" links into buttons associated with notmuch searches
+
+  Text of the form "id:MSG-ID" in mails is now a clickable button that
+  opens a notmuch search for the given message id.
+
+Add keybinding ('c I') for stashing Message-ID's without an id: prefix
+
+  Reduces manual labour when stashing them for use outside notmuch.
+
+Do not query on notmuch-search exit
+
+   It is harmless to kill the external notmuch process, so the user
+   is no longer interrogated when they interrupt a search.
+
+Performance
+-----------
+
+Emacs now constructs large search buffers more efficiently
+
+Search avoids opening and parsing message files
+
+  We now store more information in the database so search no longer
+  has to open every message file to get basic headers.  This can
+  improve search speed by as much as 10X, but taking advantage of this
+  requires a database rebuild:
+
+	notmuch dump > notmuch.dump
+	# Backup, then remove notmuch database ($MAIL/.notmuch)
+	notmuch new
+	notmuch restore notmuch.dump
+
+New collection of add-on tools
+------------------------------
+
+The source directory "contrib" contains tools built on notmuch.  These
+tools are not part of notmuch, and you should check their individual
+licenses.  Feel free to report problems with them to the notmuch
+mailing list.
+
+nmbug - share tags with a given prefix
+
+   nmbug helps maintain a git repo containing all tags with a given
+   prefix (by default "notmuch::"). Tags can be shared by commiting
+   them to git in one location and restoring in another.
+
+Notmuch 0.9 (2011-10-01)
+========================
+
+New, general features
+---------------------
+
+Correct handling of interruptions during "notmuch new"
+
+  "notmuch new" now operates as a series of small, self-consistent
+  transactions, so it can correctly resume after an interruption or
+  crash.  Previously, interruption could lose existing tags, fail to
+  detect messages on resume, or leave the database in a state
+  temporarily or permanently inconsistent with the mail store.
+
+Library changes
+---------------
+
+New functions
+
+  notmuch_database_begin_atomic and notmuch_database_end_atomic allow
+  multiple database operations to be performed atomically.
+
+  notmuch_database_find_message_by_filename does exactly what it says.
+
+API changes
+
+  notmuch_database_find_message (and n_d_f_m_by_filename) now return
+  a status indicator and uses an output parameter for the
+  message. This change required changing the SONAME of libnotmuch to
+  libnotmuch.so.2
+
+Python bindings changes
+-----------------------
+
+  - Re-encode python unicode objects to utf-8 before passing back to
+    libnotmuch.
+  - Support Database().begin_atomic()/end_atomic()
+  - Support Database().find_message_by_filename()
+    NB! This needs a db opened in READ-WRITE mode currently, or it will crash
+    the python process. The is a limitation (=bug) of the underlying libnotmuch.
+  - Fixes where we would not throw NotmuchErrors when we should (Justus Winter)
+  - Update for n_d_find_message* API changes (see above).
+
+Ruby bindings changes
+---------------------
+
+  - Wrap new library functions notmuch_database_{begin,end}_atomic.
+  - Add new exception Notmuch::UnbalancedAtomicError.
+  - Rename destroy  to destroy! according to Ruby naming conventions.
+  - Update for n_d_find_message* API changes (see above).
+
+Emacs improvements
+------------------
+
+  * Add gpg callback to crypto sigstatus buttons to retrieve/refresh
+    signing key.
+  * Add notmuch-show-refresh-view function (and corresponding binding)
+    to refresh the view of a notmuch-show buffer.
+
+Reply formatting cleanup
+------------------------
+
+  "notmuch reply" no longer includes notification that non-leafnode
+  MIME parts are being suppressed.
+
+Notmuch 0.8 (2011-09-10)
+========================
+
+Improved handling of message/rfc822 parts
+
+  Both in the CLI and the emacs interface.  Output of rfc822 parts now
+  includes the primary headers, as well as the body and all subparts.
+  Output of the completely raw rfc822-formatted message, including all
+  headers, is unfortunately not yet supported (but hopefully will be
+  soon).
+
+Improved Build system portability
+
+  Certain parts of the shell script generating notmuch.sym were
+  specific to the GNU versions of sed and nm. The new version should
+  be more portable to e.g. OpenBSD.
+
+Documentation update for Ruby bindings
+
+  Added documentation, typo fixes, and improved support for rdoc.
+
+Unicode, iterator, PEP8 changes for python bindings
+
+  - PEP8 (code formatting) changes for python files.
+  - Remove Tags.__len__ ; see 0.6 release notes for motivation.
+  - Decode headers as UTF8, encode (unicode) database paths as UTF8.
+
+Notmuch 0.7 (2011-08-01)
+========================
+
+Vim interface improvements
+--------------------------
+
+Jason Woofenden provided a number of bug fixes for the Vim interface
+
+  * fix citation/signature fold lengths
+  * fix cig/cit parsing within multipart/*
+  * fix on-screen instructions for show-signature
+  * fix from list reformatting in search view
+  * fix space key: now archives (did opposite)
+
+Uwe Kleine-König contributed
+
+  * use full path for sendmail/doc fix
+  * fix compose temp file name
+
+Python Bindings changes
+-----------------------
+
+Sebastian Spaeth contributed two changes related to unicode and UTF8:
+
+  * message tags are now explicitly unicode
+  * query string is encoded as a UTF8 byte string
+
+Build-System improvements
+------------------------
+
+Generate notmuch.sym after the relevant object files
+
+  This fixes a bug in parallel building. Thanks to Thomas Jost for the
+  patch.
+
+Notmuch 0.6.1 (2011-07-17)
+==========================
+
+Bug-fix release.
+----------------
+
+Re-export Xapian exception typeinfo symbols.
+
+  It turned out our aggressive symbol hiding caused problems for
+  people running gcc 4.4.5.
+
 Notmuch 0.6 (2011-07-01)
 =======================
 New, general features
@@ -13,8 +264,8 @@ Folder-based searching
   For example, one might use things such as:
 
 	folder:spam
-        folder:2011-*
-        folder:work/todo
+	folder:2011-*
+	folder:work/todo
 
   to match any path containing a directory "spam", "work/todo", or
   containing a directory starting with "2011-", respectively.
@@ -159,7 +410,7 @@ Hiding of repeated subjects in collapsed thread view
 
   In notmuch-show mode, if a collapsed message has the same subject as
   its parent, the subject is not shown.
-  
+
 Automatic detection and hiding of original message in top-posted message
 
   When a message contains a line looking something like:
@@ -225,7 +476,7 @@ Ruby bindings are now much more complete
   Including QUERY.sort, QUERY.to_s, MESSAGE.maildir_flags_to_tags,
   MESSAGE.tags_to_maildir_flags, and MESSAGE.get_filenames
 
-* Python bindings have been upodated and extended
+* Python bindings have been updated and extended
   (docs online at http://packages.python.org/notmuch/)
 
   New bindings:
@@ -235,16 +486,16 @@ Ruby bindings are now much more complete
 
   - Message().__cmp__() and __hash__()
   These allow, for example:
-        if msg1 == msg2: ...
+	if msg1 == msg2: ...
 
   As well as set arithmetic on Messages():
 
-        s1, s2= set(msgs1), set(msgs2)
+	s1, s2= set(msgs1), set(msgs2)
 	s1.union(s2)
 	s2 -= s1
 
    Removed:
-     - len(Messages()) as it exausted the iterator.
+     - len(Messages()) as it exhausted the iterator.
        Use len(list(Messages())) or
        Query.count_messages() to get the length.
 
@@ -380,9 +631,9 @@ Maildir-flag synchronization
 	----     -----
 	'D'      draft
 	'F'      flagged
-        'P'      passed
-        'R'      replied
-        'S'      unread (added when 'S' flag is not present)
+	'P'      passed
+	'R'      replied
+	'S'      unread (added when 'S' flag is not present)
 
   The synchronization occurs in both directions, (for example, adding
   the 'S' flag to a file will cause the "unread" tag to be added, and
@@ -1136,4 +1387,3 @@ a performance bug that made notmuch very slow when modifying
 tags. This would cause distracting pauses when reading mail while
 notmuch would wait for Xapian when removing the "inbox" and "unread"
 tags from messages in a thread.
-

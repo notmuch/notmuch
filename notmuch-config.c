@@ -69,7 +69,7 @@ static const char maildir_config_comment[] =
     "\tsynchronize_flags      Valid values are true and false.\n"
     "\n"
     "\tIf true, then the following maildir flags (in message filenames)\n"
-    "\twill be syncrhonized with the corresponding notmuch tags:\n"
+    "\twill be synchronized with the corresponding notmuch tags:\n"
     "\n"
     "\t\tFlag	Tag\n"
     "\t\t----	-------\n"
@@ -735,6 +735,8 @@ notmuch_config_command_set (void *ctx, char *item, int argc, char *argv[])
 int
 notmuch_config_command (void *ctx, int argc, char *argv[])
 {
+    argc--; argv++; /* skip subcommand argument */
+
     if (argc < 2) {
 	fprintf (stderr, "Error: notmuch config requires at least two arguments.\n");
 	return 1;

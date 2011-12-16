@@ -12,7 +12,7 @@ add_gnupg_home ()
     local output
     [ -d ${GNUPGHOME} ] && return
     mkdir -m 0700 "$GNUPGHOME"
-    gpg --no-tty --import <../gnupg-secret-key.asc >"$GNUPGHOME"/import.log 2>&1
+    gpg --no-tty --import <$TEST_DIRECTORY/gnupg-secret-key.asc >"$GNUPGHOME"/import.log 2>&1
     test_debug "cat $GNUPGHOME/import.log"
     if (gpg --quick-random --version >/dev/null 2>&1) ; then
 	echo quick-random >> "$GNUPGHOME"/gpg.conf
@@ -168,8 +168,7 @@ Non-text part: application/pgp-encrypted
 part{ ID: 4, Content-type: text/plain
 This is a test encrypted message.
 part}
-attachment{ ID: 5, Content-type: application/octet-stream
-Attachment: TESTATTACHMENT (application/octet-stream)
+attachment{ ID: 5, Filename: TESTATTACHMENT, Content-type: application/octet-stream
 Non-text part: application/octet-stream
 attachment}
 part}
@@ -310,15 +309,13 @@ expected='From: Notmuch Test Suite <test_suite@notmuchmail.org>
 Subject: Re: test encrypted message 002
 
 On 01 Jan 2000 12:00:00 -0000, Notmuch Test Suite <test_suite@notmuchmail.org> wrote:
-Non-text part: multipart/encrypted
-Non-text part: application/pgp-encrypted
 > This is another test encrypted message.'
 test_expect_equal \
     "$output" \
     "$expected"
 
 test_begin_subtest "signature verification with revoked key"
-# generate revokation certificate and load it to revoke key
+# generate revocation certificate and load it to revoke key
 echo "y
 1
 Notmuch Test Suite key revocation (automated) $(date '+%F_%T%z')

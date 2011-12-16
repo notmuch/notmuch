@@ -457,3 +457,47 @@ notmuch_query_count_messages (notmuch_query_t *query)
 
     return count;
 }
+
+unsigned
+notmuch_query_count_threads (notmuch_query_t *query)
+{
+    notmuch_messages_t *messages;
+    GHashTable *hash;
+    unsigned int count;
+    notmuch_sort_t sort;
+
+    sort = query->sort;
+    query->sort = NOTMUCH_SORT_UNSORTED;
+    messages = notmuch_query_search_messages (query);
+    query->sort = sort;
+    if (messages == NULL)
+	return 0;
+
+    hash = g_hash_table_new_full (g_str_hash, g_str_equal, NULL, NULL);
+    if (hash == NULL) {
+	talloc_free (messages);
+	return 0;
+    }
+
+    while (notmuch_messages_valid (messages)) {
+	notmuch_message_t *message = notmuch_messages_get (messages);
+	const char *thread_id = notmuch_message_get_thread_id (message);
+	char *thread_id_copy = talloc_strdup (messages, thread_id);
+	if (unlikely (thread_id_copy == NULL)) {
+	    notmuch_message_destroy (message);
+	    count = 0;
+	    goto DONE;
+	}
+	g_hash_table_insert (hash, thread_id_copy, NULL);
+	notmuch_message_destroy (message);
+	notmuch_messages_move_to_next (messages);
+    }
+
+    count = g_hash_table_size (hash);
+
+  DONE:
+    g_hash_table_unref (hash);
+    talloc_free (messages);
+
+    return count;
+}

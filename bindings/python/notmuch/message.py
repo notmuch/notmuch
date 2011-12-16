@@ -18,10 +18,10 @@ Copyright 2010 Sebastian Spaeth <Sebastian@SSpaeth.de>'
                Jesse Rosenthal <jrosenthal@jhu.edu>
 """
 
-        
+
 from ctypes import c_char_p, c_void_p, c_long, c_uint, c_int
 from datetime import date
-from notmuch.globals import nmlib, STATUS, NotmuchError, Enum
+from notmuch.globals import nmlib, STATUS, NotmuchError, Enum, _str
 from notmuch.tag import Tags
 from notmuch.filename import Filenames
 import sys
@@ -31,7 +31,8 @@ try:
     import simplejson as json
 except ImportError:
     import json
-#------------------------------------------------------------------------------
+
+
 class Messages(object):
     """Represents a list of notmuch messages
 
@@ -63,8 +64,8 @@ class Messages(object):
       # However it will be kept alive until all retrieved Message()
       # objects are also deleted. If you do e.g. an explicit del(msgs)
       # here, the following lines would fail.
-      
-      # You can reiterate over *msglist* however as often as you want. 
+
+      # You can reiterate over *msglist* however as often as you want.
       # It is simply a list with :class:`Message`s.
 
       print (msglist[0].get_filename())
@@ -110,11 +111,11 @@ class Messages(object):
              (ie :class:`Query`) these tags are derived from. It saves
              a reference to it, so we can automatically delete the db
              object once all derived objects are dead.
-        :TODO: Make the iterator work more than once and cache the tags in 
+        :TODO: Make the iterator work more than once and cache the tags in
                the Python object.(?)
         """
         if msgs_p is None:
-            NotmuchError(STATUS.NULL_POINTER)
+            raise NotmuchError(STATUS.NULL_POINTER)
 
         self._msgs = msgs_p
         #store parent, so we keep them alive as long as self  is alive
@@ -133,7 +134,7 @@ class Messages(object):
             raise NotmuchError(STATUS.NOT_INITIALIZED)
 
         # collect all tags (returns NULL on error)
-        tags_p = Messages._collect_tags (self._msgs)
+        tags_p = Messages._collect_tags(self._msgs)
         #reset _msgs as we iterated over it and can do so only once
         self._msgs = None
 
@@ -153,7 +154,7 @@ class Messages(object):
             self._msgs = None
             raise StopIteration
 
-        msg = Message(Messages._get (self._msgs), self)
+        msg = Message(Messages._get(self._msgs), self)
         nmlib.notmuch_messages_move_to_next(self._msgs)
         return msg
 
@@ -167,14 +168,14 @@ class Messages(object):
     def __del__(self):
         """Close and free the notmuch Messages"""
         if self._msgs is not None:
-            nmlib.notmuch_messages_destroy (self._msgs)
+            nmlib.notmuch_messages_destroy(self._msgs)
 
     def print_messages(self, format, indent=0, entire_thread=False):
         """Outputs messages as needed for 'notmuch show' to sys.stdout
 
         :param format: A string of either 'text' or 'json'.
         :param indent: A number indicating the reply depth of these messages.
-        :param entire_thread: A bool, indicating whether we want to output 
+        :param entire_thread: A bool, indicating whether we want to output
                        whole threads or only the matching messages.
         """
         if format.lower() == "text":
@@ -186,7 +187,7 @@ class Messages(object):
             set_end = "]"
             set_sep = ", "
         else:
-            raise Exception
+            raise TypeError("format must be either 'text' or 'json'")
 
         first_set = True
 
@@ -195,7 +196,7 @@ class Messages(object):
         # iterate through all toplevel messages in this thread
         for msg in self:
             # if not msg:
-            #     break 
+            #     break
             if not first_set:
                 sys.stdout.write(set_sep)
             first_set = False
@@ -207,10 +208,8 @@ class Messages(object):
             if (match or entire_thread):
                 if format.lower() == "text":
                     sys.stdout.write(msg.format_message_as_text(indent))
-                elif format.lower() == "json":
-                    sys.stdout.write(msg.format_message_as_json(indent))
                 else:
-                    raise NotmuchError
+                    sys.stdout.write(msg.format_message_as_json(indent))
                 next_indent = indent + 1
 
             # get replies and print them also out (if there are any)
@@ -222,7 +221,7 @@ class Messages(object):
             sys.stdout.write(set_end)
         sys.stdout.write(set_end)
 
-#------------------------------------------------------------------------------
+
 class Message(object):
     """Represents a single Email message
 
@@ -236,7 +235,7 @@ class Message(object):
 
     """notmuch_message_get_filename (notmuch_message_t *message)"""
     _get_filename = nmlib.notmuch_message_get_filename
-    _get_filename.restype = c_char_p 
+    _get_filename.restype = c_char_p
 
     """return all filenames for a message"""
     _get_filenames = nmlib.notmuch_message_get_filenames
@@ -248,7 +247,7 @@ class Message(object):
 
     """notmuch_message_get_message_id (notmuch_message_t *message)"""
     _get_message_id = nmlib.notmuch_message_get_message_id
-    _get_message_id.restype = c_char_p 
+    _get_message_id.restype = c_char_p
 
     """notmuch_message_get_thread_id"""
     _get_thread_id = nmlib.notmuch_message_get_thread_id
@@ -291,17 +290,16 @@ class Message(object):
               objects are dead.
         """
         if msg_p is None:
-            NotmuchError(STATUS.NULL_POINTER)
+            raise NotmuchError(STATUS.NULL_POINTER)
         self._msg = msg_p
         #keep reference to parent, so we keep it alive
         self._parent = parent
 
-
     def get_message_id(self):
         """Returns the message ID
-        
+
         :returns: String with a message ID
-        :exception: :exc:`NotmuchError` STATUS.NOT_INITIALIZED if the message 
+        :exception: :exc:`NotmuchError` STATUS.NOT_INITIALIZED if the message
                     is not initialized.
         """
         if self._msg is None:
@@ -311,23 +309,24 @@ class Message(object):
     def get_thread_id(self):
         """Returns the thread ID
 
-        The returned string belongs to 'message' will only be valid for as 
+        The returned string belongs to 'message' will only be valid for as
         long as the message is valid.
 
         This function will not return `None` since Notmuch ensures that every
         message belongs to a single thread.
 
         :returns: String with a thread ID
-        :exception: :exc:`NotmuchError` STATUS.NOT_INITIALIZED if the message 
+        :exception: :exc:`NotmuchError` STATUS.NOT_INITIALIZED if the message
                     is not initialized.
         """
         if self._msg is None:
             raise NotmuchError(STATUS.NOT_INITIALIZED)
 
-        return Message._get_thread_id (self._msg);
+        return Message._get_thread_id(self._msg)
 
     def get_replies(self):
-        """Gets all direct replies to this message as :class:`Messages` iterator
+        """Gets all direct replies to this message as :class:`Messages`
+        iterator
 
         .. note:: This call only makes sense if 'message' was
           ultimately obtained from a :class:`Thread` object, (such as
@@ -338,20 +337,20 @@ class Message(object):
           to :meth:`Query.search_messages`), then this function will
           return `None`.
 
-        :returns: :class:`Messages` or `None` if there are no replies to 
+        :returns: :class:`Messages` or `None` if there are no replies to
             this message.
-        :exception: :exc:`NotmuchError` STATUS.NOT_INITIALIZED if the message 
+        :exception: :exc:`NotmuchError` STATUS.NOT_INITIALIZED if the message
                     is not initialized.
         """
         if self._msg is None:
             raise NotmuchError(STATUS.NOT_INITIALIZED)
 
-        msgs_p = Message._get_replies(self._msg);
+        msgs_p = Message._get_replies(self._msg)
 
         if msgs_p is None:
             return None
 
-        return Messages(msgs_p,self)
+        return Messages(msgs_p, self)
 
     def get_date(self):
         """Returns time_t of the message date
@@ -362,7 +361,7 @@ class Message(object):
 
         :returns: A time_t timestamp.
         :rtype: c_unit64
-        :exception: :exc:`NotmuchError` STATUS.NOT_INITIALIZED if the message 
+        :exception: :exc:`NotmuchError` STATUS.NOT_INITIALIZED if the message
                     is not initialized.
         """
         if self._msg is None:
@@ -370,37 +369,38 @@ class Message(object):
         return Message._get_date(self._msg)
 
     def get_header(self, header):
-        """Returns a message header
-        
-        This returns any message header that is stored in the notmuch database.
-        This is only a selected subset of headers, which is currently:
+        """Get the value of the specified header.
 
-          TODO: add stored headers
+        The value will be read from the actual message file, not from
+        the notmuch database. The header name is case insensitive.
+
+        Returns an empty string ("") if the message does not contain a
+        header line matching 'header'.
 
         :param header: The name of the header to be retrieved.
-                       It is not case-sensitive (TODO: confirm).
+                       It is not case-sensitive.
         :type header: str
         :returns: The header value as string
         :exception: :exc:`NotmuchError`
 
-                    * STATUS.NOT_INITIALIZED if the message 
+                    * STATUS.NOT_INITIALIZED if the message
                       is not initialized.
-                    * STATUS.NULL_POINTER, if no header was found
+                    * STATUS.NULL_POINTER if any error occured.
         """
         if self._msg is None:
             raise NotmuchError(STATUS.NOT_INITIALIZED)
 
         #Returns NULL if any error occurs.
-        header = Message._get_header (self._msg, header)
+        header = Message._get_header(self._msg, header)
         if header == None:
             raise NotmuchError(STATUS.NULL_POINTER)
-        return header
+        return header.decode('UTF-8')
 
     def get_filename(self):
         """Returns the file path of the message file
 
         :returns: Absolute file path & name of the message file
-        :exception: :exc:`NotmuchError` STATUS.NOT_INITIALIZED if the message 
+        :exception: :exc:`NotmuchError` STATUS.NOT_INITIALIZED if the message
               is not initialized.
         """
         if self._msg is None:
@@ -415,7 +415,7 @@ class Message(object):
         not necessarily have identical content."""
         if self._msg is None:
             raise NotmuchError(STATUS.NOT_INITIALIZED)
-        
+
         files_p = Message._get_filenames(self._msg)
 
         return Filenames(files_p, self).as_generator()
@@ -427,10 +427,10 @@ class Message(object):
         *Message.FLAG.MATCH* for those messages that match the
         query. This method allows us to get the value of this flag.
 
-        :param flag: One of the :attr:`Message.FLAG` values (currently only 
+        :param flag: One of the :attr:`Message.FLAG` values (currently only
                      *Message.FLAG.MATCH*
         :returns: An unsigned int (0/1), indicating whether the flag is set.
-        :exception: :exc:`NotmuchError` STATUS.NOT_INITIALIZED if the message 
+        :exception: :exc:`NotmuchError` STATUS.NOT_INITIALIZED if the message
               is not initialized.
         """
         if self._msg is None:
@@ -440,12 +440,12 @@ class Message(object):
     def set_flag(self, flag, value):
         """Sets/Unsets a specific flag for this message
 
-        :param flag: One of the :attr:`Message.FLAG` values (currently only 
+        :param flag: One of the :attr:`Message.FLAG` values (currently only
                      *Message.FLAG.MATCH*
         :param value: A bool indicating whether to set or unset the flag.
 
         :returns: Nothing
-        :exception: :exc:`NotmuchError` STATUS.NOT_INITIALIZED if the message 
+        :exception: :exc:`NotmuchError` STATUS.NOT_INITIALIZED if the message
               is not initialized.
         """
         if self._msg is None:
@@ -458,7 +458,7 @@ class Message(object):
         :returns: A :class:`Tags` iterator.
         :exception: :exc:`NotmuchError`
 
-                      * STATUS.NOT_INITIALIZED if the message 
+                      * STATUS.NOT_INITIALIZED if the message
                         is not initialized.
                       * STATUS.NULL_POINTER, on error
         """
@@ -493,10 +493,10 @@ class Message(object):
                   STATUS.NULL_POINTER
                     The 'tag' argument is NULL
                   STATUS.TAG_TOO_LONG
-                    The length of 'tag' is too long 
+                    The length of 'tag' is too long
                     (exceeds Message.NOTMUCH_TAG_MAX)
                   STATUS.READ_ONLY_DATABASE
-                    Database was opened in read-only mode so message cannot be 
+                    Database was opened in read-only mode so message cannot be
                     modified.
                   STATUS.NOT_INITIALIZED
                      The message has not been initialized.
@@ -504,7 +504,7 @@ class Message(object):
         if self._msg is None:
             raise NotmuchError(STATUS.NOT_INITIALIZED)
 
-        status = nmlib.notmuch_message_add_tag (self._msg, tag)
+        status = nmlib.notmuch_message_add_tag(self._msg, _str(tag))
 
         # bail out on failure
         if status != STATUS.SUCCESS:
@@ -529,7 +529,7 @@ class Message(object):
             that this will do nothing when a message is frozen, as tag
             changes will not be committed to the database yet.
 
-        :returns: STATUS.SUCCESS if the tag was successfully removed or if 
+        :returns: STATUS.SUCCESS if the tag was successfully removed or if
                   the message had no such tag.
                   Raises an exception otherwise.
         :exception: :exc:`NotmuchError`. They have the following meaning:
@@ -540,7 +540,7 @@ class Message(object):
                      The length of 'tag' is too long
                      (exceeds NOTMUCH_TAG_MAX)
                    STATUS.READ_ONLY_DATABASE
-                     Database was opened in read-only mode so message cannot 
+                     Database was opened in read-only mode so message cannot
                      be modified.
                    STATUS.NOT_INITIALIZED
                      The message has not been initialized.
@@ -548,7 +548,7 @@ class Message(object):
         if self._msg is None:
             raise NotmuchError(STATUS.NOT_INITIALIZED)
 
-        status = nmlib.notmuch_message_remove_tag(self._msg, tag)
+        status = nmlib.notmuch_message_remove_tag(self._msg, _str(tag))
         # bail out on error
         if status != STATUS.SUCCESS:
             raise NotmuchError(status)
@@ -556,8 +556,6 @@ class Message(object):
         if sync_maildir_flags:
             self.tags_to_maildir_flags()
         return STATUS.SUCCESS
-
-
 
     def remove_all_tags(self, sync_maildir_flags=False):
         """Removes all tags from the given message.
@@ -579,14 +577,14 @@ class Message(object):
         :exception: :exc:`NotmuchError`. They have the following meaning:
 
                    STATUS.READ_ONLY_DATABASE
-                     Database was opened in read-only mode so message cannot 
+                     Database was opened in read-only mode so message cannot
                      be modified.
                    STATUS.NOT_INITIALIZED
                      The message has not been initialized.
         """
         if self._msg is None:
             raise NotmuchError(STATUS.NOT_INITIALIZED)
- 
+
         status = nmlib.notmuch_message_remove_all_tags(self._msg)
 
         # bail out on error
@@ -600,8 +598,8 @@ class Message(object):
     def freeze(self):
         """Freezes the current state of 'message' within the database
 
-        This means that changes to the message state, (via :meth:`add_tag`, 
-        :meth:`remove_tag`, and :meth:`remove_all_tags`), will not be 
+        This means that changes to the message state, (via :meth:`add_tag`,
+        :meth:`remove_tag`, and :meth:`remove_all_tags`), will not be
         committed to the database until the message is :meth:`thaw`ed.
 
         Multiple calls to freeze/thaw are valid and these calls will
@@ -633,14 +631,14 @@ class Message(object):
         :exception: :exc:`NotmuchError`. They have the following meaning:
 
                    STATUS.READ_ONLY_DATABASE
-                     Database was opened in read-only mode so message cannot 
+                     Database was opened in read-only mode so message cannot
                      be modified.
                    STATUS.NOT_INITIALIZED
                      The message has not been initialized.
         """
         if self._msg is None:
             raise NotmuchError(STATUS.NOT_INITIALIZED)
- 
+
         status = nmlib.notmuch_message_freeze(self._msg)
 
         if STATUS.SUCCESS == status:
@@ -652,7 +650,7 @@ class Message(object):
     def thaw(self):
         """Thaws the current 'message'
 
-        Thaw the current 'message', synchronizing any changes that may have 
+        Thaw the current 'message', synchronizing any changes that may have
         occurred while 'message' was frozen into the notmuch database.
 
         See :meth:`freeze` for an example of how to use this
@@ -667,15 +665,15 @@ class Message(object):
         :exception: :exc:`NotmuchError`. They have the following meaning:
 
                    STATUS.UNBALANCED_FREEZE_THAW
-                     An attempt was made to thaw an unfrozen message. 
-                     That is, there have been an unbalanced number of calls 
+                     An attempt was made to thaw an unfrozen message.
+                     That is, there have been an unbalanced number of calls
                      to :meth:`freeze` and :meth:`thaw`.
                    STATUS.NOT_INITIALIZED
                      The message has not been initialized.
         """
         if self._msg is None:
             raise NotmuchError(STATUS.NOT_INITIALIZED)
- 
+
         status = nmlib.notmuch_message_thaw(self._msg)
 
         if STATUS.SUCCESS == status:
@@ -683,7 +681,6 @@ class Message(object):
             return status
 
         raise NotmuchError(status)
-
 
     def is_match(self):
         """(Not implemented)"""
@@ -697,10 +694,10 @@ class Message(object):
               'P' if the message has the "passed" tag
               'R' if the message has the "replied" tag
               'S' if the message does not have the "unread" tag
-            
+
         Any existing flags unmentioned in the list above will be
         preserved in the renaming.
-            
+
         Also, if this filename is in a directory named "new", rename it
         to be within the neighboring directory named "cur".
 
@@ -749,10 +746,9 @@ class Message(object):
         """A message() is represented by a 1-line summary"""
         msg = {}
         msg['from'] = self.get_header('from')
-        msg['tags'] = str(self.get_tags())
+        msg['tags'] = self.get_tags()
         msg['date'] = date.fromtimestamp(self.get_date())
         return "%(from)s (%(date)s) (%(tags)s)" % (msg)
-
 
     def get_message_parts(self):
         """Output like notmuch show"""
@@ -802,7 +798,7 @@ class Message(object):
             part_dict["content-type"] = cont_type
             # NOTE:
             # Now we emulate the current behaviour, where it ignores
-            # the html if there's a text representation. 
+            # the html if there's a text representation.
             #
             # This is being worked on, but it will be easier to fix
             # here in the future than to end up with another
@@ -813,7 +809,7 @@ class Message(object):
             else:
                 if cont_type.lower() == "text/plain":
                     part_dict["content"] = msg.get_payload()
-                elif (cont_type.lower() == "text/html" and 
+                elif (cont_type.lower() == "text/html" and
                       i == 0):
                     part_dict["content"] = msg.get_payload()
             body.append(part_dict)
@@ -858,18 +854,18 @@ class Message(object):
         parts = format["body"]
         parts.sort(key=lambda x: x['id'])
         for p in parts:
-            if not p.has_key("filename"):
+            if not "filename" in p:
                 output += "\n\fpart{ "
-                output += "ID: %d, Content-type: %s\n" % (p["id"], 
-                                                         p["content-type"])
-                if p.has_key("content"):
+                output += "ID: %d, Content-type: %s\n" % (p["id"],
+                                                          p["content-type"])
+                if "content" in p:
                     output += "\n%s\n" % p["content"]
                 else:
                     output += "Non-text part: %s\n" % p["content-type"]
-                    output += "\n\fpart}"                    
+                    output += "\n\fpart}"
             else:
                 output += "\n\fattachment{ "
-                output += "ID: %d, Content-type:%s\n" % (p["id"], 
+                output += "ID: %d, Content-type:%s\n" % (p["id"],
                                                          p["content-type"])
                 output += "Attachment: %s\n" % p["filename"]
                 output += "\n\fattachment}\n"
@@ -895,7 +891,7 @@ class Message(object):
         been added or removed, the same messages would not be considered
         equal (as they do not point to the same set of files
         any more)."""
-        res =  cmp(self.get_message_id(), other.get_message_id())
+        res = cmp(self.get_message_id(), other.get_message_id())
         if res:
             res = cmp(list(self.get_filenames()), list(other.get_filenames()))
         return res
@@ -903,4 +899,4 @@ class Message(object):
     def __del__(self):
         """Close and free the notmuch Message"""
         if self._msg is not None:
-            nmlib.notmuch_message_destroy (self._msg)
+            nmlib.notmuch_message_destroy(self._msg)

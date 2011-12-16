@@ -47,6 +47,7 @@ NOTMUCH_BEGIN_DECLS
 #include <talloc.h>
 
 #include "xutil.h"
+#include "error_util.h"
 
 #pragma GCC visibility push(hidden)
 
@@ -59,25 +60,6 @@ NOTMUCH_BEGIN_DECLS
 
 #define STRNCMP_LITERAL(var, literal) \
     strncmp ((var), (literal), sizeof (literal) - 1)
-
-/* There's no point in continuing when we've detected that we've done
- * something wrong internally (as opposed to the user passing in a
- * bogus value).
- *
- * Note that PRINTF_ATTRIBUTE comes from talloc.h
- */
-int
-_internal_error (const char *format, ...) PRINTF_ATTRIBUTE (1, 2);
-
-/* There's no point in continuing when we've detected that we've done
- * something wrong internally (as opposed to the user passing in a
- * bogus value).
- *
- * Note that __location__ comes from talloc.h.
- */
-#define INTERNAL_ERROR(format, ...)			\
-    _internal_error (format " (%s).\n",			\
-		     ##__VA_ARGS__, __location__)
 
 #define unused(x) x __attribute__ ((unused))
 
@@ -111,7 +93,9 @@ _internal_error (const char *format, ...) PRINTF_ATTRIBUTE (1, 2);
 
 typedef enum {
     NOTMUCH_VALUE_TIMESTAMP = 0,
-    NOTMUCH_VALUE_MESSAGE_ID
+    NOTMUCH_VALUE_MESSAGE_ID,
+    NOTMUCH_VALUE_FROM,
+    NOTMUCH_VALUE_SUBJECT
 } notmuch_value_t;
 
 /* Xapian (with flint backend) complains if we provide a term longer
@@ -287,11 +271,15 @@ void
 _notmuch_message_ensure_thread_id (notmuch_message_t *message);
 
 void
-_notmuch_message_set_date (notmuch_message_t *message,
-			   const char *date);
-
+_notmuch_message_set_header_values (notmuch_message_t *message,
+				    const char *date,
+				    const char *from,
+				    const char *subject);
 void
 _notmuch_message_sync (notmuch_message_t *message);
+
+notmuch_status_t
+_notmuch_message_delete (notmuch_message_t *message);
 
 void
 _notmuch_message_close (notmuch_message_t *message);

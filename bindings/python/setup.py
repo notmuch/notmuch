@@ -4,18 +4,11 @@ import os
 import re
 from distutils.core import setup
 
-def get_version():
-    file = open('notmuch/__init__.py')
-    try:
-        for line in file:
-            if re.match('__VERSION__\s*=\s*',line) != None:
-                version = line.split('=', 1)[1]
-                return eval(version, {}, {})
-    finally:
-        file.close()
-    raise IOError('Unexpected end-of-file')
-
-__VERSION__=get_version()
+# get the notmuch version number without importing the notmuch module
+version_file = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                            'notmuch', 'version.py')
+execfile(version_file)
+assert __VERSION__, 'Failed to read the notmuch binding version number'
 
 setup(name='notmuch',
       version=__VERSION__,
@@ -53,12 +46,11 @@ left of cnotmuch then.
 Requirements
 ------------
 
-You need to have notmuch installed (or rather libnotmuch.so.1). The
-release version 0.3 should work fine. Also, notmuch makes use of the
-ctypes library, and has only been tested with python 2.5. It will not
-work on earlier python versions.
+You need to have notmuch installed (or rather libnotmuch.so.1). Also,
+notmuch makes use of the ctypes library, and has only been tested with
+python >= 2.5. It will not work on earlier python versions.
 """,
-      classifiers=['Development Status :: 2 - Pre-Alpha',
+      classifiers=['Development Status :: 3 - Alpha',
                    'Intended Audience :: Developers',
                    'License :: OSI Approved :: GNU General Public License (GPL)',
                    'Programming Language :: Python :: 2',

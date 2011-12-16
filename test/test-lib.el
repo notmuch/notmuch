@@ -20,6 +20,27 @@
 ;;
 ;; Authors: Dmitry Kurochkin <dmitry.kurochkin@gmail.com>
 
+;; `read-file-name' by default uses `completing-read' function to read
+;; user input.  It does not respect `standard-input' variable which we
+;; use in tests to provide user input.  So replace it with a plain
+;; `read' call.
+(setq read-file-name-function (lambda (&rest _) (read)))
+
+(defun notmuch-test-wait ()
+  "Wait for process completion."
+  (while (get-buffer-process (current-buffer))
+    (sleep-for 0.1)))
+
+(defun test-output (&optional filename)
+  "Save current buffer to file FILENAME.  Default FILENAME is OUTPUT."
+  (write-region (point-min) (point-max) (or filename "OUTPUT")))
+
+(defun test-visible-output (&optional filename)
+  "Save visible text in current buffer to file FILENAME.  Default
+FILENAME is OUTPUT."
+  (let ((text (visible-buffer-string)))
+    (with-temp-file (or filename "OUTPUT") (insert text))))
+
 (defun visible-buffer-string ()
   "Same as `buffer-string', but excludes invisible text."
   (visible-buffer-substring (point-min) (point-max)))
@@ -33,3 +54,10 @@
 	  (setq str (concat str (buffer-substring start next-pos))))
 	(setq start next-pos)))
     str))
+
+(defun orphan-watchdog (pid)
+  "Periodically check that the process with id PID is still
+running, quit if it terminated."
+  (if (not (process-attributes pid))
+      (kill-emacs)
+    (run-at-time "1 min" nil 'orphan-watchdog pid)))

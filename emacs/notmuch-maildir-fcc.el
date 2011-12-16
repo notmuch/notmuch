@@ -163,7 +163,7 @@ will NOT be removed or replaced."
 	 (make-directory (concat path "/new/") t)
 	 (make-directory (concat path "/tmp/") t))
 	((file-regular-p path)
-	 (error "%s is a file. Can't creat maildir." path))
+	 (error "%s is a file. Can't create maildir." path))
 	(t
 	 (error "I don't know how to create a maildir here"))))
 

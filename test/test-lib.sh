@@ -39,7 +39,7 @@ done,*)
 	;;
 esac
 
-# Keep the original TERM for say_color
+# Keep the original TERM for say_color and test_emacs
 ORIGINAL_TERM=$TERM
 
 # For repeatability, reset the environment to known value.
@@ -174,6 +174,7 @@ test_success=0
 
 die () {
 	code=$?
+	rm -rf "$TEST_TMPDIR"
 	if test -n "$GIT_EXIT_OK"
 	then
 		exit $code
@@ -184,6 +185,8 @@ die () {
 }
 
 GIT_EXIT_OK=
+# Note: TEST_TMPDIR *NOT* exported!
+TEST_TMPDIR=$(mktemp -d "${TMPDIR:-/tmp}/notmuch-test-$$.XXXXXX")
 trap 'die' EXIT
 
 test_decode_color () {
@@ -211,16 +214,6 @@ append_cr () {
 
 remove_cr () {
 	tr '\015' Q | sed -e 's/Q$//'
-}
-
-# Notmuch helper functions
-increment_mtime_amount=0
-increment_mtime ()
-{
-    dir="$1"
-
-    increment_mtime_amount=$((increment_mtime_amount + 1))
-    touch -d "+${increment_mtime_amount} seconds" "$dir"
 }
 
 # Generate a new message in the mail directory, with a unique message
@@ -364,9 +357,6 @@ Date: ${template[date]}
 ${additional_headers}
 ${template[body]}
 EOF
-
-    # Ensure that the mtime of the containing directory is updated
-    increment_mtime "$(dirname "${gen_msg_filename}")"
 }
 
 # Generate a new message and add it to the database.
@@ -392,9 +382,22 @@ emacs_deliver_message ()
     shift 2
     # before we can send a message, we have to prepare the FCC maildir
     mkdir -p "$MAIL_DIR"/sent/{cur,new,tmp}
-    ../smtp-dummy sent_message &
+    $TEST_DIRECTORY/smtp-dummy sent_message &
     smtp_dummy_pid=$!
-    test_emacs "(setq message-send-mail-function 'message-smtpmail-send-it) (setq smtpmail-smtp-server \"localhost\") (setq smtpmail-smtp-service \"25025\") (notmuch-hello) (notmuch-mua-mail) (message-goto-to) (insert \"test_suite@notmuchmail.org\nDate: 01 Jan 2000 12:00:00 -0000\") (message-goto-subject) (insert \"${subject}\") (message-goto-body) (insert \"${body}\") $@ (message-send-and-exit)" >/dev/null 2>&1
+    test_emacs \
+	"(let ((message-send-mail-function 'message-smtpmail-send-it)
+	       (smtpmail-smtp-server \"localhost\")
+	       (smtpmail-smtp-service \"25025\"))
+	   (notmuch-hello)
+	   (notmuch-mua-mail)
+	   (message-goto-to)
+	   (insert \"test_suite@notmuchmail.org\nDate: 01 Jan 2000 12:00:00 -0000\")
+	   (message-goto-subject)
+	   (insert \"${subject}\")
+	   (message-goto-body)
+	   (insert \"${body}\")
+	   $@
+	   (message-send-and-exit))"
     wait ${smtp_dummy_pid}
     notmuch new >/dev/null
 }
@@ -408,12 +411,12 @@ emacs_deliver_message ()
 add_email_corpus ()
 {
     rm -rf ${MAIL_DIR}
-    if [ -d ../corpus.mail ]; then
-	cp -a ../corpus.mail ${MAIL_DIR}
+    if [ -d $TEST_DIRECTORY/corpus.mail ]; then
+	cp -a $TEST_DIRECTORY/corpus.mail ${MAIL_DIR}
     else
-	cp -a ../corpus ${MAIL_DIR}
+	cp -a $TEST_DIRECTORY/corpus ${MAIL_DIR}
 	notmuch new >/dev/null
-	cp -a ${MAIL_DIR} ../corpus.mail
+	cp -a ${MAIL_DIR} $TEST_DIRECTORY/corpus.mail
     fi
 }
 
@@ -424,7 +427,8 @@ test_begin_subtest ()
 	error "bug in test script: Missing test_expect_equal in ${BASH_SOURCE[1]}:${BASH_LINENO[0]}"
     fi
     test_subtest_name="$1"
-    # Remember stdout and stderr file descriptios and redirect test
+    test_subtest_known_broken_=
+    # Remember stdout and stderr file descriptors and redirect test
     # output to the previously prepared file descriptors 3 and 4 (see
     # below)
     if test "$verbose" != "t"; then exec 4>test.output 3>&4; fi
@@ -448,7 +452,7 @@ test_expect_equal ()
 
 	output="$1"
 	expected="$2"
-	if ! test_skip "$@"
+	if ! test_skip "$test_subtest_name"
 	then
 		if [ "$output" = "$expected" ]; then
 			test_ok_ "$test_subtest_name"
@@ -461,6 +465,7 @@ test_expect_equal ()
     fi
 }
 
+# Like test_expect_equal, but takes two filenames.
 test_expect_equal_file ()
 {
 	exec 1>&6 2>&7		# Restore stdout and stderr
@@ -471,7 +476,7 @@ test_expect_equal_file ()
 
 	output="$1"
 	expected="$2"
-	if ! test_skip "$@"
+	if ! test_skip "$test_subtest_name"
 	then
 		if diff -q "$expected" "$output" >/dev/null ; then
 			test_ok_ "$test_subtest_name"
@@ -480,29 +485,6 @@ test_expect_equal_file ()
 			cp "$output" $testname.output
 			cp "$expected" $testname.expected
 			test_failure_ "$test_subtest_name" "$(diff -u $testname.expected $testname.output)"
-		fi
-    fi
-}
-
-test_expect_equal_failure ()
-{
-	exec 1>&6 2>&7		# Restore stdout and stderr
-	inside_subtest=
-	test "$#" = 3 && { prereq=$1; shift; } || prereq=
-	test "$#" = 2 ||
-	error "bug in the test script: not 2 or 3 parameters to test_expect_equal"
-
-	output="$1"
-	expected="$2"
-	if ! test_skip "$@"
-	then
-		if [ "$output" = "$expected" ]; then
-			test_known_broken_ok_ "$test_subtest_name"
-		else
-			test_known_broken_failure_ "$test_subtest_name"
-			testname=$this_test.$test_count
-			echo "$expected" > $testname.expected
-			echo "$output" > $testname.output
 		fi
     fi
 }
@@ -568,31 +550,46 @@ test_have_prereq () {
 # the text_expect_* functions instead.
 
 test_ok_ () {
+	if test "$test_subtest_known_broken_" = "t"; then
+		test_known_broken_ok_ "$@"
+		return
+	fi
 	test_success=$(($test_success + 1))
 	say_color pass "%-6s" "PASS"
 	echo " $@"
 }
 
 test_failure_ () {
+	if test "$test_subtest_known_broken_" = "t"; then
+		test_known_broken_failure_ "$@"
+		return
+	fi
 	test_failure=$(($test_failure + 1))
-	say_color error "%-6s" "FAIL"
-	echo " $1"
-	shift
+	test_failure_message_ "FAIL" "$@"
+	test "$immediate" = "" || { GIT_EXIT_OK=t; exit 1; }
+	return 1
+}
+
+test_failure_message_ () {
+	say_color error "%-6s" "$1"
+	echo " $2"
+	shift 2
 	echo "$@" | sed -e 's/^/	/'
 	if test "$verbose" != "t"; then cat test.output; fi
-	test "$immediate" = "" || { GIT_EXIT_OK=t; exit 1; }
 }
 
 test_known_broken_ok_ () {
+	test_subtest_known_broken_=
 	test_fixed=$(($test_fixed+1))
 	say_color pass "%-6s" "FIXED"
 	echo " $@"
 }
 
 test_known_broken_failure_ () {
+	test_subtest_known_broken_=
 	test_broken=$(($test_broken+1))
-	say_color pass "%-6s" "BROKEN"
-	echo " $@"
+	test_failure_message_ "BROKEN" "$@"
+	return 1
 }
 
 test_debug () {
@@ -625,6 +622,7 @@ test_skip () {
 	fi
 	case "$to_skip" in
 	t)
+		test_subtest_known_broken_=
 		say_color skip >&3 "skipping test: $@"
 		say_color skip "%-6s" "SKIP"
 		echo " $1"
@@ -636,20 +634,8 @@ test_skip () {
 	esac
 }
 
-test_expect_failure () {
-	test "$#" = 3 && { prereq=$1; shift; } || prereq=
-	test "$#" = 2 ||
-	error "bug in the test script: not 2 or 3 parameters to test-expect-failure"
-	if ! test_skip "$@"
-	then
-		test_run_ "$2"
-		if [ "$?" = 0 -a "$eval_ret" = 0 ]
-		then
-			test_known_broken_ok_ "$1"
-		else
-			test_known_broken_failure_ "$1"
-		fi
-	fi
+test_subtest_known_broken () {
+	test_subtest_known_broken_=t
 }
 
 test_expect_success () {
@@ -742,7 +728,7 @@ test_external_without_stderr () {
 	fi
 }
 
-# This is not among top-level (test_expect_success | test_expect_failure)
+# This is not among top-level (test_expect_success)
 # but is a prefix that can be used in the test script, like:
 #
 #	test_expect_success 'complain and die' '
@@ -816,6 +802,8 @@ test_done () {
 
 	echo
 
+	[ -n "$EMACS_SERVER" ] && test_emacs '(kill-emacs)'
+
 	if [ "$test_failure" = "0" ]; then
 	    if [ "$test_broken" = "0" ]; then	    
 		rm -rf "$remove_tmp"
@@ -826,24 +814,16 @@ test_done () {
 	fi
 }
 
-test_emacs () {
+emacs_generate_script () {
 	# Construct a little test script here for the benefit of the user,
 	# (who can easily run "run_emacs" to get the same emacs environment
 	# for investigating any failures).    
-	cat <<EOF > run_emacs
+	cat <<EOF >"$TMP_DIRECTORY/run_emacs"
 #!/bin/sh
 export PATH=$PATH
 export NOTMUCH_CONFIG=$NOTMUCH_CONFIG
 
-# We assume that the user will give a command-line argument only if
-# wanting to run in batch mode.
-if [ \$# -gt 0 ]; then
-	BATCH=--batch
-fi
-
 # Here's what we are using here:
-#
-# --batch:		Quit after given commands and print all (messages)
 #
 # --no-init-file	Don't load users ~/.emacs
 #
@@ -852,24 +832,34 @@ fi
 # --directory		Ensure that the local elisp sources are found
 #
 # --load		Force loading of notmuch.el and test-lib.el
-#
-# notmuch-test-wait	Function for tests to use to wait for process completion
-#
-# message-signature	Avoiding appending user's signature on messages
-#
-# set-frame-width	80 columns (avoids crazy 10-column default of --batch)
 
-emacs \$BATCH --no-init-file --no-site-file \
-	--directory ../../emacs --load notmuch.el \
-	--directory .. --load test-lib.el \
-	--eval "(defun notmuch-test-wait ()
-			(while (get-buffer-process (current-buffer))
-				(sleep-for 0.1)))" \
-	--eval "(setq message-signature nil)" \
-	--eval "(progn (set-frame-width (window-frame (get-buffer-window)) 80) \$@)"
+exec emacs --no-init-file --no-site-file \
+	--directory "$TEST_DIRECTORY/../emacs" --load notmuch.el \
+	--directory "$TEST_DIRECTORY" --load test-lib.el \
+	"\$@"
 EOF
-	chmod a+x ./run_emacs
-	./run_emacs "$@"
+	chmod a+x "$TMP_DIRECTORY/run_emacs"
+}
+
+test_emacs () {
+	if [ -z "$EMACS_SERVER" ]; then
+		EMACS_SERVER="notmuch-test-suite-$$"
+		# start a detached session with an emacs server
+		# user's TERM is given to dtach which assumes a minimally
+		# VT100-compatible terminal -- and emacs inherits that
+		TERM=$ORIGINAL_TERM dtach -n "$TEST_TMPDIR/emacs-dtach-socket.$$" \
+			sh -c "stty rows 24 cols 80; exec '$TMP_DIRECTORY/run_emacs' \
+				--no-window-system \
+				--eval '(setq server-name \"$EMACS_SERVER\")' \
+				--eval '(server-start)' \
+				--eval '(orphan-watchdog $$)'" || return
+		# wait until the emacs server is up
+		until test_emacs '()' 2>/dev/null; do
+			sleep 1
+		done
+	fi
+
+	emacsclient --socket-name="$EMACS_SERVER" --eval "(progn $@)"
 }
 
 
@@ -925,11 +915,11 @@ then
 		    test ! -d "$symlink_target" &&
 		    test "#!" != "$(head -c 2 < "$symlink_target")"
 		then
-			symlink_target=../valgrind.sh
+			symlink_target=$TEST_DIRECTORY/valgrind.sh
 		fi
 		case "$base" in
 		*.sh|*.perl)
-			symlink_target=../unprocessed-script
+			symlink_target=$TEST_DIRECTORY/unprocessed-script
 		esac
 		# create the link, or replace it if it is out of date
 		make_symlink "$symlink_target" "$GIT_VALGRIND/bin/$base" || exit
@@ -996,6 +986,8 @@ name=Notmuch Test Suite
 primary_email=test_suite@notmuchmail.org
 other_email=test_suite_other@notmuchmail.org;test_suite@otherdomain.org
 EOF
+
+emacs_generate_script
 
 
 # Use -P to resolve symlinks in our working directory so that the cwd

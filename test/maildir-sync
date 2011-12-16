@@ -23,7 +23,6 @@ output=$(notmuch search subject:"Adding S flag" | notmuch_search_sanitize)
 output+="
 "
 mv "${gen_msg_filename}" "${gen_msg_filename}S"
-increment_mtime "$(dirname "${gen_msg_filename}")"
 output+=$(NOTMUCH_NEW)
 output+="
 "
@@ -66,7 +65,6 @@ test_expect_equal "$output" '[[[{"id": "adding-replied-tag@notmuch-test-suite",
 test_expect_success 'notmuch reply works with renamed file (without notmuch new)' 'notmuch reply id:${gen_msg_id}'
 
 test_begin_subtest "notmuch new detects no file rename after tag->flag synchronization"
-increment_mtime "$(dirname ${gen_msg_filename})"
 output=$(NOTMUCH_NEW)
 test_expect_equal "$output" "No new mail."
 
@@ -77,7 +75,6 @@ output=$(cd "$MAIL_DIR/cur"; ls message-to-move*)
 test_expect_equal "$output" "message-to-move-to-cur:2,S"
 
 test_begin_subtest "No rename should be detected by notmuch new"
-increment_mtime "$MAIL_DIR/cur"
 output=$(NOTMUCH_NEW)
 test_expect_equal "$output" "No new mail."
 # (*) If notmuch new was not run we've got "Processed 1 file in almost
@@ -85,7 +82,7 @@ test_expect_equal "$output" "No new mail."
 # test created directory document in the database but this document
 # was not linked as subdirectory of $MAIL_DIR. Therefore notmuch new
 # could not reach the cur/ directory and its files in it during
-# recurive traversal.
+# recursive traversal.
 #
 # XXX: The above sounds like a bug that should be fixed. If notmuch is
 # creating new directories in the mail store, then it should be
@@ -97,7 +94,6 @@ output=$(notmuch search subject:"Removing S flag" | notmuch_search_sanitize)
 output+="
 "
 mv "${gen_msg_filename}" "${gen_msg_filename%S}"
-increment_mtime "$(dirname "${gen_msg_filename}")"
 output+=$(NOTMUCH_NEW)
 output+="
 "
@@ -110,7 +106,6 @@ test_begin_subtest "Removing info from filename leaves tags unchanged"
 add_message [subject]='"Message to lose maildir info"' [filename]='message-to-lose-maildir-info' [dir]=cur
 notmuch tag -unread subject:"Message to lose maildir info"
 mv "$MAIL_DIR/cur/message-to-lose-maildir-info:2,S" "$MAIL_DIR/cur/message-without-maildir-info"
-increment_mtime "$MAIL_DIR/cur"
 output=$(NOTMUCH_NEW)
 output+="
 "
@@ -134,7 +129,6 @@ mv $MAIL_DIR/cur/adding-replied-tag:2,RS $MAIL_DIR/cur/adding-replied-tag:2,S
 mv $MAIL_DIR/cur/adding-s-flag:2,S $MAIL_DIR/cur/adding-s-flag:2,
 mv $MAIL_DIR/cur/adding-with-s-flag:2,S $MAIL_DIR/cur/adding-with-s-flag:2,RS
 mv $MAIL_DIR/cur/message-to-move-to-cur:2,S $MAIL_DIR/cur/message-to-move-to-cur:2,DS
-increment_mtime $MAIL_DIR/cur
 notmuch dump dump.txt
 NOTMUCH_NEW >/dev/null
 notmuch restore dump.txt
@@ -144,7 +138,6 @@ test_expect_equal "$output" "$expected"
 test_begin_subtest 'Adding flags to duplicate message tags the mail'
 add_message [subject]='"Duplicated message"' [dir]=cur [filename]='duplicated-message:2,'
 cp "$MAIL_DIR/cur/duplicated-message:2," "$MAIL_DIR/cur/duplicated-message-copy:2,RS"
-increment_mtime $MAIL_DIR/cur
 NOTMUCH_NEW > output
 notmuch search subject:"Duplicated message" | notmuch_search_sanitize >> output
 test_expect_equal "$(< output)" "No new mail.
@@ -152,7 +145,6 @@ thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; Duplicated message (inbox repl
 
 test_begin_subtest "Adding duplicate message without flags does not remove tags"
 cp "$MAIL_DIR/cur/duplicated-message-copy:2,RS" "$MAIL_DIR/cur/duplicated-message-another-copy:2,"
-increment_mtime $MAIL_DIR/cur
 NOTMUCH_NEW > output
 notmuch search subject:"Duplicated message" | notmuch_search_sanitize >> output
 test_expect_equal "$(< output)" "No new mail.
