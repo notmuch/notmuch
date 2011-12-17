@@ -124,9 +124,10 @@ list."
 
   (message-goto-to))
 
-(defun notmuch-mua-mail (&optional to subject other-headers continue
-				   switch-function yank-action send-actions)
-  "Invoke the notmuch mail composition window."
+(defun notmuch-mua-mail (&optional to subject other-headers &rest other-args)
+  "Invoke the notmuch mail composition window.
+
+OTHER-ARGS are passed through to `message-mail'."
   (interactive)
 
   (when notmuch-mua-user-agent-function
@@ -138,8 +139,7 @@ list."
     (push (cons "From" (concat
 			(notmuch-user-name) " <" (notmuch-user-primary-email) ">")) other-headers))
 
-  (message-mail to subject other-headers continue
-		switch-function yank-action send-actions)
+  (apply #'message-mail to subject other-headers other-args)
   (message-sort-headers)
   (message-hide-headers)
   (set-buffer-modified-p nil)
