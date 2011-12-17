@@ -336,8 +336,8 @@ should be. Returns a cons cell `(tags-per-line width)'."
 (defvar notmuch-hello-mode-map
   (let ((map (make-sparse-keymap)))
     (set-keymap-parent map widget-keymap)
-    (define-key map "v" '(lambda () "Display the notmuch version" (interactive)
-                           (message "notmuch version %s" (notmuch-version))))
+    (define-key map "v" (lambda () "Display the notmuch version" (interactive)
+			  (message "notmuch version %s" (notmuch-version))))
     (define-key map "?" 'notmuch-help)
     (define-key map "q" 'notmuch-kill-this-buffer)
     (define-key map "=" 'notmuch-hello-update)
@@ -513,36 +513,36 @@ Complete list of currently available key bindings:
 	  (widget-insert "\n\n")
 	  (let ((start (point))
 		(nth 0))
-	    (mapc '(lambda (search)
-		     (let ((widget-symbol (intern (format "notmuch-hello-search-%d" nth))))
-		       (set widget-symbol
-			    (widget-create 'editable-field
-				       ;; Don't let the search boxes be
-				       ;; less than 8 characters wide.
-				       :size (max 8
-						  (- (window-width)
-						     ;; Leave some space
-						     ;; at the start and
-						     ;; end of the
-						     ;; boxes.
-						     (* 2 notmuch-hello-indent)
-						     ;; 1 for the space
-						     ;; before the
-						     ;; `[save]' button. 6
-						     ;; for the `[save]'
-						     ;; button.
-						     1 6))
-				       :action (lambda (widget &rest ignore)
-						 (notmuch-hello-search (widget-value widget)))
-				       search))
-		       (widget-insert " ")
-		       (widget-create 'push-button
-				      :notify (lambda (widget &rest ignore)
-						(notmuch-hello-add-saved-search widget))
-				      :notmuch-saved-search-widget widget-symbol
-				      "save"))
-		     (widget-insert "\n")
-		     (setq nth (1+ nth)))
+	    (mapc (lambda (search)
+		    (let ((widget-symbol (intern (format "notmuch-hello-search-%d" nth))))
+		      (set widget-symbol
+			   (widget-create 'editable-field
+					  ;; Don't let the search boxes be
+					  ;; less than 8 characters wide.
+					  :size (max 8
+						     (- (window-width)
+							;; Leave some space
+							;; at the start and
+							;; end of the
+							;; boxes.
+							(* 2 notmuch-hello-indent)
+							;; 1 for the space
+							;; before the
+							;; `[save]' button. 6
+							;; for the `[save]'
+							;; button.
+							1 6))
+					  :action (lambda (widget &rest ignore)
+						    (notmuch-hello-search (widget-value widget)))
+					  search))
+		      (widget-insert " ")
+		      (widget-create 'push-button
+				     :notify (lambda (widget &rest ignore)
+					       (notmuch-hello-add-saved-search widget))
+				     :notmuch-saved-search-widget widget-symbol
+				     "save"))
+		    (widget-insert "\n")
+		    (setq nth (1+ nth)))
 		  notmuch-hello-recent-searches)
 	    (indent-rigidly start (point) notmuch-hello-indent)))
 

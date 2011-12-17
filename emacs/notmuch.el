@@ -662,16 +662,16 @@ foreground and blue background."
   ;; Create the overlay only if the message has tags which match one
   ;; of those specified in `notmuch-search-line-faces'.
   (let (overlay)
-    (mapc '(lambda (elem)
-	     (let ((tag (car elem))
-		   (attributes (cdr elem)))
-	       (when (member tag line-tag-list)
-		 (when (not overlay)
-		   (setq overlay (make-overlay start end)))
-		 ;; Merge the specified properties with any already
-		 ;; applied from an earlier match.
-		 (overlay-put overlay 'face
-			      (append (overlay-get overlay 'face) attributes)))))
+    (mapc (lambda (elem)
+	    (let ((tag (car elem))
+		  (attributes (cdr elem)))
+	      (when (member tag line-tag-list)
+		(when (not overlay)
+		  (setq overlay (make-overlay start end)))
+		;; Merge the specified properties with any already
+		;; applied from an earlier match.
+		(overlay-put overlay 'face
+			     (append (overlay-get overlay 'face) attributes)))))
 	  notmuch-search-line-faces)))
 
 (defun notmuch-search-author-propertize (authors)

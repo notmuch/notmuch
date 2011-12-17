@@ -68,7 +68,7 @@ mode."
   :group 'notmuch)
 
 (define-button-type 'notmuch-crypto-status-button-type
-  'action '(lambda (button) (message (button-get button 'help-echo)))
+  'action (lambda (button) (message (button-get button 'help-echo)))
   'follow-link t
   'help-echo "Set notmuch-crypto-process-mime to process cryptographic mime parts.")
 
@@ -77,7 +77,7 @@ mode."
 	 (help-msg nil)
 	 (label "Signature not processed")
 	 (face 'notmuch-crypto-signature-unknown)
-	 (button-action '(lambda (button) (message (button-get button 'help-echo)))))
+	 (button-action (lambda (button) (message (button-get button 'help-echo)))))
     (cond
      ((string= status "good")
       (let ((fingerprint (concat "0x" (plist-get sigstatus :fingerprint))))

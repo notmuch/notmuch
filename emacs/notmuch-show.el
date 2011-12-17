@@ -265,12 +265,12 @@ message at DEPTH in the current thread."
 (defun notmuch-show-insert-headers (headers)
   "Insert the headers of the current message."
   (let ((start (point)))
-    (mapc '(lambda (header)
-	     (let* ((header-symbol (intern (concat ":" header)))
-		    (header-value (plist-get headers header-symbol)))
-	       (if (and header-value
-			(not (string-equal "" header-value)))
-		   (notmuch-show-insert-header header header-value))))
+    (mapc (lambda (header)
+	    (let* ((header-symbol (intern (concat ":" header)))
+		   (header-value (plist-get headers header-symbol)))
+	      (if (and header-value
+		       (not (string-equal "" header-value)))
+		  (notmuch-show-insert-header header header-value))))
 	  notmuch-message-headers)
     (save-excursion
       (save-restriction
@@ -344,7 +344,7 @@ current buffer, if possible."
     ))
 
 (defun notmuch-show-multipart/*-to-list (part)
-  (mapcar '(lambda (inner-part) (plist-get inner-part :content-type))
+  (mapcar (lambda (inner-part) (plist-get inner-part :content-type))
 	  (plist-get part :content)))
 
 (defun notmuch-show-multipart/alternative-choose (types)
@@ -657,7 +657,7 @@ current buffer, if possible."
 
 (defun notmuch-show-insert-body (msg body depth)
   "Insert the body BODY at depth DEPTH in the current thread."
-  (mapc '(lambda (part) (notmuch-show-insert-bodypart msg part depth)) body))
+  (mapc (lambda (part) (notmuch-show-insert-bodypart msg part depth)) body))
 
 (defun notmuch-show-make-symbol (type)
   (make-symbol (concat "notmuch-show-" type)))
@@ -775,11 +775,11 @@ current buffer, if possible."
 
 (defun notmuch-show-insert-thread (thread depth)
   "Insert the thread THREAD at depth DEPTH in the current forest."
-  (mapc '(lambda (tree) (notmuch-show-insert-tree tree depth)) thread))
+  (mapc (lambda (tree) (notmuch-show-insert-tree tree depth)) thread))
 
 (defun notmuch-show-insert-forest (forest)
   "Insert the forest of threads FOREST."
-  (mapc '(lambda (thread) (notmuch-show-insert-thread thread 0)) forest))
+  (mapc (lambda (thread) (notmuch-show-insert-thread thread 0)) forest))
 
 (defvar notmuch-show-thread-id nil)
 (make-variable-buffer-local 'notmuch-show-thread-id)

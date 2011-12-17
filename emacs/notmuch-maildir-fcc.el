@@ -65,8 +65,8 @@ yet when sending a mail."
     ;; Set up the message-fcc-handler to move mails to the maildir in Fcc
     ;; The parameter is set to mark messages as "seen"
     (setq message-fcc-handler-function
-          '(lambda (destdir)
-             (notmuch-maildir-fcc-write-buffer-to-maildir destdir t)))
+          (lambda (destdir)
+	    (notmuch-maildir-fcc-write-buffer-to-maildir destdir t)))
     ;; add a hook to actually insert the Fcc header when sending
     (add-hook 'message-header-setup-hook 'notmuch-fcc-header-setup))
 
@@ -131,10 +131,10 @@ will NOT be removed or replaced."
  
 (defun notmuch-maildir-fcc-host-fixer (hostname)
   (replace-regexp-in-string "/\\|:"
-			    '(lambda (s)
-                               (cond ((string-equal s "/") "\\057")
-                                     ((string-equal s ":") "\\072")
-                                     (t s)))
+			    (lambda (s)
+			      (cond ((string-equal s "/") "\\057")
+				    ((string-equal s ":") "\\072")
+				    (t s)))
 			    hostname
 			    t
 			    t))
