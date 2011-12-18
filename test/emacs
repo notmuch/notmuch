@@ -485,4 +485,15 @@ counter=$(test_emacs \
 )
 test_expect_equal "$counter" 1
 
+test_begin_subtest "notmuch-hello-mode hook is not called on updates"
+test_subtest_known_broken
+counter=$(test_emacs \
+    '(let ((notmuch-hello-mode-hook-counter 0))
+       (kill-buffer "*notmuch-hello*")
+       (notmuch-hello)
+       (notmuch-hello-update)
+       notmuch-hello-mode-hook-counter)'
+)
+test_expect_equal "$counter" 1
+
 test_done
