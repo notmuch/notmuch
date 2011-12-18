@@ -61,3 +61,12 @@ running, quit if it terminated."
   (if (not (process-attributes pid))
       (kill-emacs)
     (run-at-time "1 min" nil 'orphan-watchdog pid)))
+
+(defun notmuch-hello-mode-hook-counter ()
+  "Count how many times `notmuch-hello-mode-hook' is called.
+Increments `notmuch-hello-mode-hook-counter' variable value if it
+is bound, otherwise does nothing."
+  (if (boundp 'notmuch-hello-mode-hook-counter)
+      (setq notmuch-hello-mode-hook-counter
+	    (1+ notmuch-hello-mode-hook-counter))))
+(add-hook 'notmuch-hello-mode-hook 'notmuch-hello-mode-hook-counter)
