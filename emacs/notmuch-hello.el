@@ -403,11 +403,16 @@ Complete list of currently available key bindings:
 		     (progn
 		       (widget-forward 1)
 		       (widget-value (widget-at)))
-		   (error nil)))))
+		   (error nil))))
+	(inhibit-read-only t))
 
-    (kill-all-local-variables)
-    (let ((inhibit-read-only t))
-      (erase-buffer))
+    ;; Delete all editable widget fields.  Editable widget fields are
+    ;; tracked in a buffer local variable `widget-field-list' (and
+    ;; others).  If we do `erase-buffer' without properly deleting the
+    ;; widgets, some widget-related functions are confused later.
+    (mapc 'widget-delete widget-field-list)
+
+    (erase-buffer)
 
     (unless (eq major-mode 'notmuch-hello-mode)
       (notmuch-hello-mode))
