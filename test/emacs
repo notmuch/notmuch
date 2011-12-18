@@ -476,4 +476,13 @@ test_emacs "(let ((notmuch-command \"$notmuch_counter_command\"))
 	      (notmuch-show \"id:$id\"))"
 test_expect_equal $(notmuch_counter_value) 1
 
+test_begin_subtest "notmuch-hello-mode hook is called"
+counter=$(test_emacs \
+    '(let ((notmuch-hello-mode-hook-counter 0))
+       (kill-buffer "*notmuch-hello*")
+       (notmuch-hello)
+       notmuch-hello-mode-hook-counter)'
+)
+test_expect_equal "$counter" 1
+
 test_done
