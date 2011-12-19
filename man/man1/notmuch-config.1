@@ -1,0 +1,51 @@
+.TH NOTMUCH-CONFIG 1 2011-12-04 "Notmuch 0.10.2"
+.SH NAME
+notmuch-config \- Output a single part of a multipart MIME message.
+.SH SYNOPSIS
+
+.B notmuch config get
+.RI  "<" section "> . <" item ">"
+
+.B notmuch config set
+.RI  "<" section "> . <" item "> [" value "]"
+
+.SH DESCRIPTION
+
+The
+.B config
+command can be used to get or set settings int the notmuch
+configuration file.
+
+
+.RS 4
+.TP 4
+.BR "config get " <section> . <item>
+
+The value of the specified configuration item is printed to stdout. If
+the item has multiple values, each value is separated by a newline
+character.
+
+Available configuration items include at least
+
+	database.path
+
+	user.name
+
+	user.primary_email
+
+	user.other_email
+
+	new.tags
+.RE
+
+.RS 4
+.TP 4
+.BR "config set " <section> . "<item> [values ...]"
+
+The specified configuration item is set to the given value.  To
+specify a multiple-value item, provide each value as a separate
+command-line argument.
+
+If no values are provided, the specified configuration item will be
+removed from the configuration file.
+.RE

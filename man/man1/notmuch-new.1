@@ -1,0 +1,59 @@
+.TH NOTMUCH-NEW 1 2011-12-04 "Notmuch 0.10.2"
+.SH NAME
+notmuch-new \- Incorporate new mail into the notmuch database.
+.SH SYNOPSIS
+
+.B notmuch new
+.RB "[" --no-hooks "]"
+
+.SH DESCRIPTION
+
+Find and import any new messages to the database.
+
+The
+.B new
+command scans all sub-directories of the database, performing
+full-text indexing on new messages that are found. Each new message
+will automatically be tagged with both the
+.BR inbox " and " unread
+tags.
+
+You should run
+.B "notmuch new"
+once after first running
+.B "notmuch setup"
+to create the initial database. The first run may take a long time if
+you have a significant amount of mail (several hundred thousand
+messages or more). Subsequently, you should run
+.B "notmuch new"
+whenever new mail is delivered and you wish to incorporate it into the
+database. These subsequent runs will be much quicker than the initial
+run.
+
+Invoking
+.B notmuch
+with no command argument will run
+.B new
+if
+.B "notmuch setup"
+has previously been completed, but
+.B "notmuch new"
+has not previously been run.
+
+
+The
+.B new
+command supports hooks. See the
+.B "HOOKS"
+section below for more details on hooks.
+
+Supported options for
+.B new
+include
+.RS 4
+.TP 4
+.BR \-\-no\-hooks
+
+Prevents hooks from being run.
+.RE
+.RE

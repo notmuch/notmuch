@@ -1,0 +1,26 @@
+.TH NOTMUCH-TAG 1 2011-12-04 "Notmuch 0.10.2"
+.SH NAME
+notmuch-tag \- Add/remove tags for all messages matching the search terms.
+
+.SH SYNOPSIS
+.B notmuch tag
+.RI  "+<" tag> "|\-<" tag "> [...] [\-\-] <" search-term ">..."
+
+.SH DESCRIPTION
+
+Add/remove tags for all messages matching the search terms.
+
+Tags prefixed by '+' are added while those prefixed by '\-' are
+removed. For each message, tag removal is performed before tag
+addition.
+
+The beginning of <search-terms> is recognized by the first
+argument that begins with neither '+' nor '\-'. Support for
+an initial search term beginning with '+' or '\-' is provided
+by allowing the user to specify a "\-\-" argument to separate
+the tags from the search terms.
+
+See the
+.B "SEARCH SYNTAX"
+section below for details of the supported syntax for <search-terms>.
+.RE
