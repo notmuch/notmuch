@@ -26,6 +26,13 @@ notmuch \- thread-based email index, search, and tagging
 Notmuch is a command-line based program for indexing, searching,
 reading, and tagging large collections of email messages.
 
+This page describes how to get started using notmuch from the command
+line, and gives a brief overview of the commands available. For more
+information on e.g.
+.B notmuch show
+consult the \fBnotmuch-show\fR(1) man page, also accessible via
+.B notmuch help show
+
 The quickest way to get started with Notmuch is to simply invoke the
 .B notmuch
 command with no arguments, which will interactively guide you through
@@ -38,7 +45,11 @@ convenient interface for that functionality. More sophisticated
 interfaces are expected to be built on top of either the command-line
 interface, or more likely, on top of the notmuch library
 interface. See http://notmuchmail.org for more about alternate
-interfaces to notmuch.
+interfaces to notmuch. The emacs-based interface to notmuch (available under
+.B emacs/
+in the Notmuch source distribution) is probably the most widely used at
+this time.
+
 .SH COMMANDS
 
 
@@ -118,9 +129,6 @@ behavior of notmuch.
 Specifies the location of the notmuch configuration file. Notmuch will
 use ${HOME}/.notmuch\-config if this variable is not set.
 .SH SEE ALSO
-The emacs-based interface to notmuch (available as
-.B notmuch.el
-in the Notmuch distribution).
 
 The notmuch website:
 .B http://notmuchmail.org
