@@ -40,15 +40,14 @@ interface, or more likely, on top of the notmuch library
 interface. See http://notmuchmail.org for more about alternate
 interfaces to notmuch.
 .SH COMMANDS
+
+
+.SS SETUP
+
 The
-.BR setup
+.B notmuch setup
 command is used to configure Notmuch for first use, (or to reconfigure
 it later).
-.RS 4
-.TP 4
-.B setup
-
-Interactively sets up notmuch for first use.
 
 The setup command will prompt for your full name, your primary email
 address, any alternate email addresses you use, and the directory
@@ -80,7 +79,7 @@ with no command argument will run
 if the setup command has not previously been completed.
 .RE
 
-
+.SS OTHER COMMANDS
 
 Several of the notmuch commands accept search terms with a common
 syntax. See the
@@ -91,11 +90,9 @@ The
 .BR search ", " show " and " count
 commands are used to query the email database.
 
-
 The
 .B reply
 command is useful for preparing a template for an email reply.
-.RS 4
 
 The
 .B tag

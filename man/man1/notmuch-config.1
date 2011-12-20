@@ -16,10 +16,7 @@ The
 command can be used to get or set settings int the notmuch
 configuration file.
 
-
-.RS 4
-.TP 4
-.BR "config get " <section> . <item>
+.SS GET
 
 The value of the specified configuration item is printed to stdout. If
 the item has multiple values, each value is separated by a newline
@@ -36,11 +33,8 @@ Available configuration items include at least
 	user.other_email
 
 	new.tags
-.RE
 
-.RS 4
-.TP 4
-.BR "config set " <section> . "<item> [values ...]"
+.SS SET
 
 The specified configuration item is set to the given value.  To
 specify a multiple-value item, provide each value as a separate

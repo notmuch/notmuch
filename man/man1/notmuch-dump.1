@@ -14,8 +14,7 @@ notmuch-dump \- Creates a plain-text dump of the tags of each message.
 
 .SH DESCRIPTION
 
-.TP
-.BR dump " [<filename>]"
+.SS DUMP
 
 Dump tags for messages matching the given search terms.
 
@@ -31,8 +30,7 @@ With no search terms, a dump of all messages in the database will be
 generated.  A "--" argument instructs notmuch that the
 remaining arguments are search terms.
 
-.TP
-.BR restore " [--accumulate] [<filename>]"
+.SS RESTORE
 
 Restores the tags from the given file (see
 .BR "notmuch dump" ")."
