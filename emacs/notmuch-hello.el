@@ -86,8 +86,9 @@ Finally this can be a function that will be called for each tag and
 should return a filter for that tag, or nil to hide the tag."
   :type '(choice (const :tag "All messages" nil)
 		 (const :tag "Unread messages" "tag:unread")
-		 (const :tag "Custom filter" string)
-		 (const :tag "Custom filter function" function))
+		 (string :tag "Custom filter"
+			 :value "tag:unread")
+		 (function :tag "Custom filter function"))
   :group 'notmuch)
 
 (defcustom notmuch-hello-hide-tags nil
