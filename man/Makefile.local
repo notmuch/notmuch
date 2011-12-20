@@ -1,0 +1,61 @@
+# -*- Makefile -*-
+
+dir := man
+
+# this variable seems to be needed to prevent lazy evaluation causing
+# problems with $(dir) changing values.
+MAIN_PAGE := $(dir)/man1/notmuch.1
+
+MAN1 := \
+	$(MAIN_PAGE) \
+	$(dir)/man1/notmuch-config.1 \
+	$(dir)/man1/notmuch-count.1 \
+	$(dir)/man1/notmuch-dump.1 \
+	$(dir)/man1/notmuch-new.1 \
+	$(dir)/man1/notmuch-part.1 \
+	$(dir)/man1/notmuch-reply.1 \
+	$(dir)/man1/notmuch-search.1 \
+	$(dir)/man1/notmuch-show.1 \
+	$(dir)/man1/notmuch-tag.1
+
+MAN5 := $(dir)/man5/notmuch-hooks.5
+MAN7 := $(dir)/man7/notmuch-search-terms.7
+
+MAN1_GZ := $(addsuffix .gz,$(MAN1))
+MAN5_GZ := $(addsuffix .gz,$(MAN5))
+MAN7_GZ := $(addsuffix .gz,$(MAN7))
+
+MAN_SOURCE := $(MAN1) $(MAN5) $(MAN7)
+MAN_BACKUP := $(addsuffix .bak,$(MAN_SOURCE))
+COMPRESSED_MAN := $(MAN1_GZ) $(MAN5_GZ) $(MAN7_GZ)
+
+%.gz: %
+	gzip --stdout $^ > $@
+
+.PHONY: install-man update-man-versions verify-version-manpage
+
+install-man: $(COMPRESSED_MAN)
+	mkdir -p "$(DESTDIR)$(mandir)/man1"
+	mkdir -p "$(DESTDIR)$(mandir)/man5"
+	mkdir -p "$(DESTDIR)$(mandir)/man7"
+	install -m0644 $(MAN1_GZ) $(DESTDIR)/$(mandir)/man1
+	install -m0644 $(MAN5_GZ) $(DESTDIR)/$(mandir)/man5
+	install -m0644 $(MAN7_GZ) $(DESTDIR)/$(mandir)/man7
+	cd $(DESTDIR)/$(mandir)/man1 && ln -s notmuch.1.gz notmuch-setup.1.gz
+	cd $(DESTDIR)/$(mandir)/man1 && ln -s notmuch-dump.1.gz notmuch-restore.1.gz
+
+verify-version-manpage: verify-version-components
+	@echo -n "Checking that manual page version is $(VERSION)..."
+	@[ "$(VERSION)" = $$(sed -n '/^[.]TH NOTMUCH 1/{s/.*"Notmuch //;s/".*//p;}' $(MAIN_PAGE)) ] || \
+		(echo "No." && \
+		 echo "Please edit version and notmuch.1 to have consistent versions." && false)
+	@echo "Good."
+
+update-man-versions: $(MAN_SOURCE)
+	for file in $(MAN_SOURCE); do \
+	    cp $$file $$file.bak ; \
+	    sed "s/^.TH NOTMUCH\([^[:blank:]]*\) \([1-9]\) .*$$/.TH NOTMUCH\1 \2 ${DATE} \"Notmuch ${VERSION}\"/" \
+	        < $$file.bak > $$file; \
+	done
+
+CLEAN := $(CLEAN) $(COMPRESSED_MAN) $(MAN_BACKUP)
