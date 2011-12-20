@@ -35,10 +35,12 @@
   "Function used to generate a `User-Agent:' string. If this is
 `nil' then no `User-Agent:' will be generated."
   :group 'notmuch
-  :type 'function
-  :options '(notmuch-mua-user-agent-full
-	     notmuch-mua-user-agent-notmuch
-	     notmuch-mua-user-agent-emacs))
+  :type '(choice (const :tag "No user agent string" nil)
+		 (const :tag "Full" notmuch-mua-user-agent-full)
+		 (const :tag "Notmuch" notmuch-mua-user-agent-notmuch)
+		 (const :tag "Emacs" notmuch-mua-user-agent-emacs)
+		 (function :tag "Custom user agent function"
+			   :value notmuch-mua-user-agent-full)))
 
 (defcustom notmuch-mua-hidden-headers '("^User-Agent:")
   "Headers that are added to the `message-mode' hidden headers
