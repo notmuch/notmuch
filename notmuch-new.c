@@ -67,7 +67,7 @@ handle_sigint (unused (int sig))
 {
     static char msg[] = "Stopping...         \n";
 
-    write(2, msg, sizeof(msg)-1);
+    (void) write(2, msg, sizeof(msg)-1);
     interrupted = 1;
 }
 

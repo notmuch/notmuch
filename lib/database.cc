@@ -1447,7 +1447,7 @@ _notmuch_database_link_message_to_parents (notmuch_database_t *notmuch,
     keys = g_hash_table_get_keys (parents);
     for (l = keys; l; l = l->next) {
 	char *parent_message_id;
-	const char *parent_thread_id;
+	const char *parent_thread_id = NULL;
 
 	parent_message_id = (char *) l->data;
 
