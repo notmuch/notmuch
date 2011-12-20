@@ -10,6 +10,9 @@ notmuch-show \- Show messages matching the given search terms.
 
 Shows all messages matching the search terms.
 
+See \fBnotmuch-search-terms\fR(7)
+for details of the supported syntax for <search-terms>.
+
 The messages will be grouped and sorted based on the threading (all
 replies to a particular message will appear immediately after that
 message in date order). The output is not indented by default, but
@@ -133,8 +136,10 @@ column of output from the
 .B notmuch search
 command.
 
-See the
-.B "SEARCH SYNTAX"
-section below for details of the supported syntax for <search-terms>.
-.RE
-.RS 4
+.SH SEE ALSO
+
+\fBnotmuch\fR(1), \fBnotmuch-config\fR(1), \fBnotmuch-count\fR(1),
+\fBnotmuch-dump\fR(5), \fBnotmuch-hooks\fR(5), \fBnotmuch-new\fR(1),
+\fBnotmuch-part\fR(1), \fBnotmuch-reply\fR(1),
+\fBnotmuch-restore\fR(1), \fBnotmuch-search\fR(1),
+\fBnotmuch-search-terms\fR(7), \fBnotmuch-tag\fR(1)
