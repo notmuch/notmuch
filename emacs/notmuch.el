@@ -1055,6 +1055,23 @@ current search results AND that are tagged with the given tag."
   (interactive)
   (notmuch-hello))
 
+;;;###autoload
+(defun notmuch-jump-to-recent-buffer ()
+  "Jump to the most recent notmuch buffer (search, show or hello).
+
+If no recent buffer is found, run `notmuch'."
+  (interactive)
+  (let ((last
+	 (loop for buffer in (buffer-list)
+	       if (with-current-buffer buffer
+		    (memq major-mode '(notmuch-show-mode
+				       notmuch-search-mode
+				       notmuch-hello-mode)))
+	       return buffer)))
+    (if last
+	(switch-to-buffer last)
+      (notmuch))))
+
 (setq mail-user-agent 'notmuch-user-agent)
 
 (provide 'notmuch)
