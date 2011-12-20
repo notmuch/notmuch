@@ -438,7 +438,7 @@ Complete list of currently available key bindings:
 				 "*")
 			 32 nil nil t))
 		      crypto-switch)
-      (error "End of search results"))))
+      (message "End of search results."))))
 
 (defun notmuch-search-reply-to-thread (&optional prompt-for-sender)
   "Begin composing a reply to the entire current thread in a new buffer."
