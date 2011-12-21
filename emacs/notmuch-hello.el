@@ -132,8 +132,8 @@ So:
 	  (integer :tag "Number of characters")
 	  (float :tag "Fraction of window")))
 
-(defcustom notmuch-decimal-separator ","
-  "The string used as a decimal separator.
+(defcustom notmuch-hello-thousands-separator ","
+  "The string used as a thousands separator.
 
 Typically \",\" in the US and UK and \".\" in Europe."
   :group 'notmuch
@@ -170,7 +170,7 @@ Typically \",\" in the US and UK and \".\" in Europe."
     (apply #'concat
      (number-to-string (car result))
      (mapcar (lambda (elem)
-	      (format "%s%03d" notmuch-decimal-separator elem))
+	      (format "%s%03d" notmuch-hello-thousands-separator elem))
 	     (cdr result)))))
 
 (defun notmuch-hello-trim (search)
