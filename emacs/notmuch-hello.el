@@ -132,10 +132,12 @@ So:
 	  (integer :tag "Number of characters")
 	  (float :tag "Fraction of window")))
 
-(defcustom notmuch-hello-thousands-separator ","
+(defcustom notmuch-hello-thousands-separator " "
   "The string used as a thousands separator.
 
-Typically \",\" in the US and UK and \".\" in Europe."
+Typically \",\" in the US and UK and \".\" or \" \" in Europe.
+The latter is recommended in the SI/ISO 31-0 standard and by the
+International Bureau of Weights and Measures."
   :group 'notmuch
   :type 'string)
 
