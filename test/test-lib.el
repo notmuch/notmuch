@@ -62,11 +62,16 @@ running, quit if it terminated."
       (kill-emacs)
     (run-at-time "1 min" nil 'orphan-watchdog pid)))
 
-(defun notmuch-hello-mode-hook-counter ()
-  "Count how many times `notmuch-hello-mode-hook' is called.
-Increments `notmuch-hello-mode-hook-counter' variable value if it
-is bound, otherwise does nothing."
-  (if (boundp 'notmuch-hello-mode-hook-counter)
-      (setq notmuch-hello-mode-hook-counter
-	    (1+ notmuch-hello-mode-hook-counter))))
-(add-hook 'notmuch-hello-mode-hook 'notmuch-hello-mode-hook-counter)
+(defun hook-counter (hook)
+  "Count how many times a hook is called.  Increments
+`hook'-counter variable value if it is bound, otherwise does
+nothing."
+  (let ((counter (intern (concat (symbol-name hook) "-counter"))))
+    (if (boundp counter)
+	(set counter (1+ (symbol-value counter))))))
+
+(defun add-hook-counter (hook)
+  "Add hook to count how many times `hook' is called."
+  (add-hook hook (apply-partially 'hook-counter hook)))
+
+(add-hook-counter 'notmuch-hello-mode-hook)
