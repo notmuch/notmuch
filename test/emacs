@@ -495,4 +495,23 @@ counter=$(test_emacs \
 )
 test_expect_equal "$counter" 1
 
+test_begin_subtest "notmuch-hello-refresh hook is called"
+counter=$(test_emacs \
+    '(let ((notmuch-hello-refresh-hook-counter 0))
+       (kill-buffer "*notmuch-hello*")
+       (notmuch-hello)
+       notmuch-hello-refresh-hook-counter)'
+)
+test_expect_equal "$counter" 1
+
+test_begin_subtest "notmuch-hello-refresh hook is called on updates"
+counter=$(test_emacs \
+    '(let ((notmuch-hello-refresh-hook-counter 0))
+       (kill-buffer "*notmuch-hello*")
+       (notmuch-hello)
+       (notmuch-hello-update)
+       notmuch-hello-refresh-hook-counter)'
+)
+test_expect_equal "$counter" 2
+
 test_done

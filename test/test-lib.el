@@ -75,3 +75,4 @@ nothing."
   (add-hook hook (apply-partially 'hook-counter hook)))
 
 (add-hook-counter 'notmuch-hello-mode-hook)
+(add-hook-counter 'notmuch-hello-refresh-hook)
