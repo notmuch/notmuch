@@ -54,15 +54,22 @@ line."
 	 (completion-ignore-case t)
 	 (options (notmuch-address-options orig))
 	 (num-options (length options))
-	 (chosen (if (eq num-options 1)
-		     (car options)
+	 (chosen (cond
+		  ((eq num-options 0)
+		   nil)
+		  ((eq num-options 1)
+		   (car options))
+		  (t
 		   (completing-read (format "Address (%s matches): " num-options)
 				    (cdr options) nil nil (car options)
-				    'notmuch-address-history))))
-    (when chosen
-      (push chosen notmuch-address-history)
-      (delete-region beg end)
-      (insert chosen))))
+				    'notmuch-address-history)))))
+    (if chosen
+	(progn
+	  (push chosen notmuch-address-history)
+	  (delete-region beg end)
+	  (insert chosen))
+      (message "No matches.")
+      (ding))))
 
 ;; Copied from `w3m-which-command'.
 (defun notmuch-address-locate-command (command)
