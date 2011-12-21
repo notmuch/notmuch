@@ -143,6 +143,11 @@ Typically \",\" in the US and UK and \".\" in Europe."
   :group 'notmuch
   :type 'hook)
 
+(defcustom notmuch-hello-refresh-hook nil
+  "Functions called after updating a `notmuch-hello' buffer."
+  :type 'hook
+  :group 'notmuch)
+
 (defvar notmuch-hello-url "http://notmuchmail.org"
   "The `notmuch' web site.")
 
@@ -590,7 +595,9 @@ Complete list of currently available key bindings:
 	  (widget-forward 1)))
 
       (unless (widget-at)
-	(notmuch-hello-goto-search)))))
+	(notmuch-hello-goto-search))))
+
+  (run-hooks 'notmuch-hello-refresh-hook))
 
 (defun notmuch-folder ()
   "Deprecated function for invoking notmuch---calling `notmuch' is preferred now."
