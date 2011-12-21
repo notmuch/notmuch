@@ -234,10 +234,10 @@ class Messages(object):
                 next_indent = indent + 1
 
             # get replies and print them also out (if there are any)
-            replies = msg.get_replies()
-            if not replies is None:
+            replies = msg.get_replies().format_messages(format, next_indent, entire_thread)
+            if replies:
                 result.append(set_sep)
-                result.extend(replies.format_messages(format, next_indent, entire_thread))
+                result.extend(replies)
 
             result.append(set_end)
         result.append(set_end)
@@ -254,6 +254,17 @@ class Messages(object):
                        whole threads or only the matching messages.
         """
         handle.write(''.join(self.format_messages(format, indent, entire_thread)))
+
+
+class EmptyMessagesResult(Messages):
+    def __init__(self, parent):
+        self._msgs = None
+        self._parent = parent
+
+    def __next__(self):
+        raise StopIteration()
+    next = __next__
+
 
 class Message(Python3StringMixIn):
     """Represents a single Email message
@@ -385,10 +396,9 @@ class Message(Python3StringMixIn):
             number of subsequent calls to :meth:`get_replies`). If this message
             was obtained through some non-thread means, (such as by a call to
             :meth:`Query.search_messages`), then this function will return
-            `None`.
+            an empty Messages iterator.
 
-        :returns: :class:`Messages` or `None` if there are no replies to
-            this message.
+        :returns: :class:`Messages`.
         :exception: :exc:`NotmuchError` STATUS.NOT_INITIALIZED if the message
                     is not initialized.
         """
@@ -398,7 +408,7 @@ class Message(Python3StringMixIn):
         msgs_p = Message._get_replies(self._msg)
 
         if msgs_p is None:
-            return None
+            return EmptyMessagesResult(self)
 
         return Messages(msgs_p, self)
 
