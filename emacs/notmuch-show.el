@@ -1157,8 +1157,9 @@ current window), advance to the next open message."
 	 (ret nil))
     (while (invisible-p visible-end-of-this-message)
       (setq visible-end-of-this-message
-	    (previous-single-char-property-change visible-end-of-this-message
-						  'invisible)))
+	    (max (point-min)
+		 (1- (previous-single-char-property-change
+		      visible-end-of-this-message 'invisible)))))
     (cond
      ;; Ideally we would test `end-of-this-message' against the result
      ;; of `window-end', but that doesn't account for the fact that
