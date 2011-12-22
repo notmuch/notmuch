@@ -157,8 +157,9 @@ International Bureau of Weights and Measures."
 (defvar notmuch-hello-recent-searches nil)
 
 (defun notmuch-hello-remember-search (search)
-  (if (not (member search notmuch-hello-recent-searches))
-      (push search notmuch-hello-recent-searches))
+  (setq notmuch-hello-recent-searches
+	(delete search notmuch-hello-recent-searches))
+  (push search notmuch-hello-recent-searches)
   (if (> (length notmuch-hello-recent-searches)
 	 notmuch-recent-searches-max)
       (setq notmuch-hello-recent-searches (butlast notmuch-hello-recent-searches))))
