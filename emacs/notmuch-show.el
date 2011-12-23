@@ -803,7 +803,7 @@ a corresponding notmuch search."
       (remove-overlays (match-beginning 0) (match-end 0) 'goto-address t)
       (make-text-button (match-beginning 0) (match-end 0)
 			'action `(lambda (arg)
-				   (notmuch-search ,(match-string-no-properties 0)))
+				   (notmuch-show ,(match-string-no-properties 0)))
 			'follow-link t
 			'help-echo "Mouse-1, RET: search for this message"
 			'face goto-address-mail-face))))
