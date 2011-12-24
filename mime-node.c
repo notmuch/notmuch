@@ -236,3 +236,30 @@ mime_node_child (const mime_node_t *parent, int child)
     }
     return _mime_node_create (parent, sub);
 }
+
+static mime_node_t *
+_mime_node_seek_dfs_walk (mime_node_t *node, int *n)
+{
+    mime_node_t *ret = NULL;
+    int i;
+
+    if (*n == 0)
+	return node;
+
+    *n -= 1;
+    for (i = 0; i < node->nchildren && !ret; i++) {
+	mime_node_t *child = mime_node_child (node, i);
+	ret = _mime_node_seek_dfs_walk (child, n);
+	if (!ret)
+	    talloc_free (child);
+    }
+    return ret;
+}
+
+mime_node_t *
+mime_node_seek_dfs (mime_node_t *node, int n)
+{
+    if (n < 0)
+	return NULL;
+    return _mime_node_seek_dfs_walk (node, &n);
+}

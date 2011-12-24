@@ -324,5 +324,10 @@ mime_node_open (const void *ctx, notmuch_message_t *message,
 mime_node_t *
 mime_node_child (const mime_node_t *parent, int child);
 
+/* Return the nth child of node in a depth-first traversal.  If n is
+ * 0, returns node itself.  Returns NULL if there is no such part. */
+mime_node_t *
+mime_node_seek_dfs (mime_node_t *node, int n);
+
 #include "command-line-arguments.h"
 #endif
