@@ -175,7 +175,7 @@ show_message_part (GMimeObject *part,
 }
 
 notmuch_status_t
-show_message_body (const char *filename,
+show_message_body (notmuch_message_t *message,
 		   const notmuch_show_format_t *format,
 		   notmuch_show_params_t *params)
 {
@@ -183,6 +183,7 @@ show_message_body (const char *filename,
     GMimeParser *parser = NULL;
     GMimeMessage *mime_message = NULL;
     notmuch_status_t ret = NOTMUCH_STATUS_SUCCESS;
+    const char *filename = notmuch_message_get_filename (message);
     FILE *file = NULL;
     show_message_state_t state;
 

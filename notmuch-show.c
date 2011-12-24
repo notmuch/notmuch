@@ -758,8 +758,7 @@ show_message (void *ctx,
     }
 
     if (format->part_content)
-	show_message_body (notmuch_message_get_filename (message),
-			   format, params);
+	show_message_body (message, format, params);
 
     if (params->part <= 0) {
 	fputs (format->body_end, stdout);

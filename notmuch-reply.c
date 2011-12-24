@@ -546,8 +546,7 @@ notmuch_reply_format_default(void *ctx,
 		notmuch_message_get_header (message, "date"),
 		notmuch_message_get_header (message, "from"));
 
-	show_message_body (notmuch_message_get_filename (message),
-			   format, params);
+	show_message_body (message, format, params);
 
 	notmuch_message_destroy (message);
     }
