@@ -241,5 +241,88 @@ notmuch_run_hook (const char *db_path, const char *hook);
 notmuch_bool_t
 debugger_is_active (void);
 
+/* mime-node.c */
+
+/* mime_node_t represents a single node in a MIME tree.  A MIME tree
+ * abstracts the different ways of traversing different types of MIME
+ * parts, allowing a MIME message to be viewed as a generic tree of
+ * parts.  Message-type parts have one child, multipart-type parts
+ * have multiple children, and leaf parts have zero children.
+ */
+typedef struct mime_node {
+    /* The MIME object of this part.  This will be a GMimeMessage,
+     * GMimePart, GMimeMultipart, or a subclass of one of these.
+     *
+     * This will never be a GMimeMessagePart because GMimeMessagePart
+     * is structurally redundant with GMimeMessage.  If this part is a
+     * message (that is, 'part' is a GMimeMessage), then either
+     * envelope_file will be set to a notmuch_message_t (for top-level
+     * messages) or envelope_part will be set to a GMimeMessagePart
+     * (for embedded message parts).
+     */
+    GMimeObject *part;
+
+    /* If part is a GMimeMessage, these record the envelope of the
+     * message: either a notmuch_message_t representing a top-level
+     * message, or a GMimeMessagePart representing a MIME part
+     * containing a message.
+     */
+    notmuch_message_t *envelope_file;
+    GMimeMessagePart *envelope_part;
+
+    /* The number of children of this part. */
+    int nchildren;
+
+    /* True if decryption of this part was attempted. */
+    notmuch_bool_t decrypt_attempted;
+    /* True if decryption of this part's child succeeded.  In this
+     * case, the decrypted part is substituted for the second child of
+     * this part (which would usually be the encrypted data). */
+    notmuch_bool_t decrypt_success;
+
+    /* True if signature verification on this part was attempted. */
+    notmuch_bool_t verify_attempted;
+    /* For signed or encrypted containers, the validity of the
+     * signature.  May be NULL if signature verification failed.  If
+     * there are simply no signatures, this will be non-NULL with an
+     * empty signers list. */
+    const GMimeSignatureValidity *sig_validity;
+
+    /* Internal: Context inherited from the root iterator. */
+    struct mime_node_context *ctx;
+
+    /* Internal: For successfully decrypted multipart parts, the
+     * decrypted part to substitute for the second child. */
+    GMimeObject *decrypted_child;
+} mime_node_t;
+
+/* Construct a new MIME node pointing to the root message part of
+ * message.  If cryptoctx is non-NULL, it will be used to verify
+ * signatures on any child parts.  If decrypt is true, then cryptoctx
+ * will additionally be used to decrypt any encrypted child parts.
+ *
+ * Return value:
+ *
+ * NOTMUCH_STATUS_SUCCESS: Root node is returned in *node_out.
+ *
+ * NOTMUCH_STATUS_FILE_ERROR: Failed to open message file.
+ *
+ * NOTMUCH_STATUS_OUT_OF_MEMORY: Out of memory.
+ */
+notmuch_status_t
+mime_node_open (const void *ctx, notmuch_message_t *message,
+		GMimeCipherContext *cryptoctx, notmuch_bool_t decrypt,
+		mime_node_t **node_out);
+
+/* Return a new MIME node for the requested child part of parent.
+ * parent will be used as the talloc context for the returned child
+ * node.
+ *
+ * In case of any failure, this function returns NULL, (after printing
+ * an error message on stderr).
+ */
+mime_node_t *
+mime_node_child (const mime_node_t *parent, int child);
+
 #include "command-line-arguments.h"
 #endif

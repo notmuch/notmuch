@@ -315,6 +315,7 @@ notmuch_client_srcs =		\
 	notmuch-time.c		\
 	query-string.c		\
 	show-message.c		\
+	mime-node.c		\
 	json.c
 
 notmuch_client_modules = $(notmuch_client_srcs:.c=.o)
