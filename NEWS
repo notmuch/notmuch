@@ -11,6 +11,22 @@ Hooks
   supports "pre-new" and "post-new" hooks that are run before and after
   importing new messages into the database.
 
+New emacs UI features
+---------------------
+
+Support "notmuch new" as a notmuch-poll-script
+
+  It's now possible to use "notmuch new" as a notmuch-poll-script
+  directly. This is also the new default. This allows taking better
+  advantage of the "notmuch new" hooks from emacs without intermediate
+  scripts.
+
+Improvements in saved search management
+
+  New saved searches are now appended to the list of saved searches,
+  not inserted in front. It's also possible to define a sort function
+  for displaying saved searches; alphabetical sort is provided.
+
 Performance
 -----------
 
