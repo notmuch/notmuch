@@ -42,6 +42,7 @@ TESTS="
   encoding
   emacs
   emacs-large-search-buffer
+  emacs-subject-to-filename
   maildir-sync
   crypto
   symbol-hiding
