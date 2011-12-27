@@ -12,7 +12,6 @@ MAN1 := \
 	$(dir)/man1/notmuch-count.1 \
 	$(dir)/man1/notmuch-dump.1 \
 	$(dir)/man1/notmuch-new.1 \
-	$(dir)/man1/notmuch-part.1 \
 	$(dir)/man1/notmuch-reply.1 \
 	$(dir)/man1/notmuch-search.1 \
 	$(dir)/man1/notmuch-show.1 \
