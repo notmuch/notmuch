@@ -313,7 +313,7 @@ for error."
 	      (setq patch-end (match-beginning 0)))
 	  (save-restriction
 	    (narrow-to-region patch-start patch-end)
-	    (setq part (plist-put part :content-type "text/x-diff"))
+	    (setq part (plist-put part :content-type "inline-patch-fake-part"))
 	    (setq part (plist-put part :content (buffer-string)))
 	    (setq part (plist-put part :id -1))
 	    (setq part (plist-put part :filename "inline patch"))

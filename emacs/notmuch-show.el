@@ -585,6 +585,10 @@ current buffer, if possible."
 		nil))
 	  nil))))
 
+;; Handler for wash generated inline patch fake parts.
+(defun notmuch-show-insert-part-inline-patch-fake-part (msg part content-type nth depth declared-type)
+  (notmuch-show-insert-part-*/* msg part "text/x-diff" nth depth "inline patch"))
+
 (defun notmuch-show-insert-part-*/* (msg part content-type nth depth declared-type)
   ;; This handler _must_ succeed - it is the handler of last resort.
   (notmuch-show-insert-part-header nth content-type declared-type (plist-get part :filename))
