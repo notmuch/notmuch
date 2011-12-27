@@ -41,7 +41,7 @@ install-man: $(COMPRESSED_MAN)
 	install -m0644 $(MAN1_GZ) $(DESTDIR)/$(mandir)/man1
 	install -m0644 $(MAN5_GZ) $(DESTDIR)/$(mandir)/man5
 	install -m0644 $(MAN7_GZ) $(DESTDIR)/$(mandir)/man7
-	cd $(DESTDIR)/$(mandir)/man1 && ln -s notmuch.1.gz notmuch-setup.1.gz
+	cd $(DESTDIR)/$(mandir)/man1 && ln -sf notmuch.1.gz notmuch-setup.1.gz
 
 verify-version-manpage: verify-version-components
 	@echo -n "Checking that manual page version is $(VERSION)..."
