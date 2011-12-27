@@ -8,13 +8,7 @@ notmuch-dump \- Creates a plain-text dump of the tags of each message.
 .RI "[ <" filename "> ] [--]"
 .RI "[ <" search-term ">...]"
 
-.B "notmuch restore"
-.RB [ "--accumulate" ]
-.RI "[ <" filename "> ]"
-
 .SH DESCRIPTION
-
-.SS DUMP
 
 Dump tags for messages matching the given search terms.
 
@@ -29,25 +23,6 @@ incremental backup than the native database files.)
 With no search terms, a dump of all messages in the database will be
 generated.  A "--" argument instructs notmuch that the
 remaining arguments are search terms.
-
-.SS RESTORE
-
-Restores the tags from the given file (see
-.BR "notmuch dump" ")."
-
-The input is read from the given filename, if any, or from stdin.
-
-Note: The dump file format is specifically chosen to be
-compatible with the format of files produced by sup-dump.
-So if you've previously been using sup for mail, then the
-.B "notmuch restore"
-command provides you a way to import all of your tags (or labels as
-sup calls them).
-
-The --accumulate switch causes the union of the existing and new tags to be
-applied, instead of replacing each message's tags as they are read in from the
-dump file.
-.RE
 
 See \fBnotmuch-search-terms\fR(7)
 for details of the supported syntax for <search-terms>.
