@@ -75,7 +75,10 @@ any given message."
   :group 'notmuch
   :type 'hook)
 
-(defcustom notmuch-show-insert-text/plain-hook '(notmuch-wash-excerpt-citations)
+(defcustom notmuch-show-insert-text/plain-hook '(notmuch-wash-wrap-long-lines
+						 notmuch-wash-tidy-citations
+						 notmuch-wash-elide-blank-lines
+						 notmuch-wash-excerpt-citations)
   "Functions used to improve the display of text/plain parts."
   :group 'notmuch
   :type 'hook
