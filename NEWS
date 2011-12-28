@@ -36,6 +36,14 @@ Automatic tag query optimization
   exclude messages whose tags won't change.  In the past, we've
   suggested that people do this by hand; this is no longer necessary.
 
+Memory Management
+-----------------
+
+Reduction of memory leaks
+
+  Two memory leaks when searching and showing messages were identified
+  and fixed in this release.
+
 
 Notmuch 0.10.2 (2011-12-04)
 ===========================
