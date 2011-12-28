@@ -56,6 +56,13 @@ can be specified as follows:
 
 	make test OPTIONS="--verbose"
 
+You can choose an emacs binary to run the tests in one of the
+following ways.
+
+	TEST_EMACS=my-special-emacs make test
+	TEST_EMACS=my-special-emacs ./emacs
+	make test TEST_EMACS=my-special-emacs
+
 Skipping Tests
 --------------
 If, for any reason, you need to skip one or more tests, you can do so

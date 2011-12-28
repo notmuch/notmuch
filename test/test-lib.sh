@@ -50,6 +50,7 @@ TZ=UTC
 TERM=dumb
 export LANG LC_ALL PAGER TERM TZ
 GIT_TEST_CMP=${GIT_TEST_CMP:-diff -u}
+TEST_EMACS=${TEST_EMACS:-${EMACS:-emacs}}
 
 # Protect ourselves from common misconfiguration to export
 # CDPATH into the environment
@@ -897,7 +898,7 @@ export NOTMUCH_CONFIG=$NOTMUCH_CONFIG
 #
 # --load		Force loading of notmuch.el and test-lib.el
 
-exec emacs --no-init-file --no-site-file \
+exec ${TEST_EMACS} --no-init-file --no-site-file \
 	--directory "$TEST_DIRECTORY/../emacs" --load notmuch.el \
 	--directory "$TEST_DIRECTORY" --load test-lib.el \
 	"\$@"
