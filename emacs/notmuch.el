@@ -1069,21 +1069,39 @@ current search results AND that are tagged with the given tag."
   (interactive)
   (notmuch-hello))
 
-;;;###autoload
-(defun notmuch-jump-to-recent-buffer ()
-  "Jump to the most recent notmuch buffer (search, show or hello).
+(defun notmuch-interesting-buffer (b)
+  "Is the current buffer of interest to a notmuch user?"
+  (with-current-buffer b
+    (memq major-mode '(notmuch-show-mode
+		       notmuch-search-mode
+		       notmuch-hello-mode
+		       message-mode))))
 
-If no recent buffer is found, run `notmuch'."
+;;;###autoload
+(defun notmuch-cycle-notmuch-buffers ()
+  "Cycle through any existing notmuch buffers (search, show or hello).
+
+If the current buffer is the only notmuch buffer, bury it. If no
+notmuch buffers exist, run `notmuch'."
   (interactive)
-  (let ((last
-	 (loop for buffer in (buffer-list)
-	       if (with-current-buffer buffer
-		    (memq major-mode '(notmuch-show-mode
-				       notmuch-search-mode
-				       notmuch-hello-mode)))
-	       return buffer)))
-    (if last
-	(switch-to-buffer last)
+
+  (let (start first)
+    ;; If the current buffer is a notmuch buffer, remember it and then
+    ;; bury it.
+    (when (notmuch-interesting-buffer (current-buffer))
+      (setq start (current-buffer))
+      (bury-buffer))
+
+    ;; Find the first notmuch buffer.
+    (setq first (loop for buffer in (buffer-list)
+		     if (notmuch-interesting-buffer buffer)
+		     return buffer))
+
+    (if first
+	;; If the first one we found is any other than the starting
+	;; buffer, switch to it.
+	(unless (eq first start)
+	  (switch-to-buffer first))
       (notmuch))))
 
 (setq mail-user-agent 'notmuch-user-agent)
