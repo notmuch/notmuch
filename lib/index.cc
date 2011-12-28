@@ -339,6 +339,10 @@ _index_mime_part (notmuch_message_t *message,
 		if (i > 1)
 		    fprintf (stderr, "Warning: Unexpected extra parts of multipart/signed. Indexing anyway.\n");
 	    }
+	    if (GMIME_IS_MULTIPART_ENCRYPTED (multipart)) {
+		/* Don't index encrypted parts. */
+		continue;
+	    }
 	    _index_mime_part (message,
 			      g_mime_multipart_get_part (multipart, i));
 	}
