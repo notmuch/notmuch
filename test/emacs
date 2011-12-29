@@ -81,7 +81,7 @@ cat <<EOF >EXPECTED
 "Invalid " From" <test_suite@notmuchmail.org> (2001-01-05) (inbox)
 Subject: message-with-invalid-from
 To: Notmuch Test Suite <test_suite@notmuchmail.org>
-Date: Tue, 05 Jan 2001 15:43:57 -0000
+Date: Fri, 05 Jan 2001 15:43:57 +0000
 
 This is just a test message (#1)
 EOF
@@ -320,7 +320,7 @@ add_message '[from]="Top Poster <top@poster.com>"' \
 ----- Original Message -----
 From: Notmuch Test Suite <test_suite@notmuchmail.org>
 To: Notmuch Test Suite <test_suite@notmuchmai.org>
-Sent: Tue, 05 Jan 2001 15:43:57 -0000
+Sent: Fri, 05 Jan 2001 15:43:57 +0000
 Subject: The problem with top-posting
 
 Q: Why is top-posting such a bad thing?
@@ -331,7 +331,7 @@ test_emacs "(notmuch-show \"top-posting\")
 echo "Notmuch Test Suite <test_suite@notmuchmail.org> (2001-01-05) (inbox)
 Subject: The problem with top-posting
 To: Notmuch Test Suite <test_suite@notmuchmail.org>
-Date: Tue, 05 Jan 2001 15:43:57 -0000
+Date: Fri, 05 Jan 2001 15:43:57 +0000
 
 A: Because it messes up the order in which people normally read text.
 Q: Why is top-posting such a bad thing?
@@ -340,7 +340,7 @@ Q: What is the most annoying thing in e-mail?
 Top Poster <top@poster.com> (2001-01-05) (inbox unread)
 Subject: Re: The problem with top-posting
 To: Notmuch Test Suite <test_suite@notmuchmail.org>
-Date: Tue, 05 Jan 2001 15:43:57 -0000
+Date: Fri, 05 Jan 2001 15:43:57 +0000
 
 Thanks for the advice! I will be sure to put it to good use.
 

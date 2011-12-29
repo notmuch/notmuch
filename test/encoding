@@ -12,7 +12,7 @@ Notmuch Test Suite <test_suite@notmuchmail.org> (2001-01-05) (inbox unread)
 Subject: Test message #1
 From: Notmuch Test Suite <test_suite@notmuchmail.org>
 To: Notmuch Test Suite <test_suite@notmuchmail.org>
-Date: Tue, 05 Jan 2001 15:43:57 -0000
+Date: Fri, 05 Jan 2001 15:43:57 +0000
 header}
 body{
 part{ ID: 1, Content-type: text/plain

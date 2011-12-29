@@ -19,7 +19,7 @@ test_expect_equal "$output" "From: Notmuch Test Suite <test_suite@notmuchmail.or
 To: Notmuch Test Suite <test_suite@notmuchmail.org>
 Message-Id: <msg-001@notmuch-test-suite>
 Subject: Test message #1
-Date: Tue, 05 Jan 2001 15:43:57 -0000
+Date: Fri, 05 Jan 2001 15:43:57 +0000
 
 This is just a test message (#1)"
 
@@ -29,7 +29,7 @@ test_expect_equal "$output" "From: Notmuch Test Suite <test_suite@notmuchmail.or
 To: Notmuch Test Suite <test_suite@notmuchmail.org>
 Message-Id: <msg-002@notmuch-test-suite>
 Subject: Test message #2
-Date: Tue, 05 Jan 2001 15:43:57 -0000
+Date: Fri, 05 Jan 2001 15:43:57 +0000
 
 This is just a test message (#2)"
 

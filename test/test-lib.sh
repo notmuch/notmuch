@@ -323,7 +323,7 @@ generate_message ()
     fi
 
     if [ -z "${template[date]}" ]; then
-	template[date]="Tue, 05 Jan 2001 15:43:57 -0000"
+	template[date]="Fri, 05 Jan 2001 15:43:57 +0000"
     fi
 
     additional_headers=""
