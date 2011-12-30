@@ -12,7 +12,7 @@ test_description='exception symbol hiding'
 . ./test-lib.sh
 
 run_test(){
-    result=$(LD_LIBRARY_PATH=$TEST_DIRECTORY/../lib $TEST_DIRECTORY/symbol-test 2>&1)
+    result=$(LD_LIBRARY_PATH="$TEST_DIRECTORY/../lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}" $TEST_DIRECTORY/symbol-test 2>&1)
 }
 
 output="A Xapian exception occurred opening database: Couldn't stat 'fakedb/.notmuch/xapian'
