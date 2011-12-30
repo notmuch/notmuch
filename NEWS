@@ -44,6 +44,12 @@ Reduction of memory leaks
   Two memory leaks when searching and showing messages were identified
   and fixed in this release.
 
+New add-on tool
+---------------
+
+The tool contrib/notmuch-deliver helps with initial delivery and
+tagging of mail (replacing running notmuch new).
+
 
 Notmuch 0.10.2 (2011-12-04)
 ===========================
