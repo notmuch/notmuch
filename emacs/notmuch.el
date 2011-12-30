@@ -164,16 +164,23 @@ For a mouse binding, return nil."
 		"\t"
 		(notmuch-documentation-first-line action))))))
 
-(defalias 'notmuch-substitute-one-command-key
-  (apply-partially 'notmuch-substitute-one-command-key-with-prefix nil))
+(defun notmuch-substitute-command-keys-one (key)
+  ;; A `keymap' key indicates inheritance from a parent keymap - the
+  ;; inherited mappings follow, so there is nothing to print for
+  ;; `keymap' itself.
+  (when (not (eq key 'keymap))
+    (notmuch-substitute-one-command-key-with-prefix nil key)))
 
 (defun notmuch-substitute-command-keys (doc)
   "Like `substitute-command-keys' but with documentation, not function names."
   (let ((beg 0))
     (while (string-match "\\\\{\\([^}[:space:]]*\\)}" doc beg)
-      (let ((map (substring doc (match-beginning 1) (match-end 1))))
-	(setq doc (replace-match (mapconcat 'notmuch-substitute-one-command-key
-					    (cdr (symbol-value (intern map))) "\n") 1 1 doc)))
+      (let* ((keymap-name (substring doc (match-beginning 1) (match-end 1)))
+	     (keymap (symbol-value (intern keymap-name))))
+	(setq doc (replace-match
+		   (mapconcat #'notmuch-substitute-command-keys-one
+			      (cdr keymap) "\n")
+		   1 1 doc)))
       (setq beg (match-end 0)))
     doc))
 
