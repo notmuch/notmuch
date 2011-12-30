@@ -11,8 +11,15 @@ Hooks
   supports "pre-new" and "post-new" hooks that are run before and after
   importing new messages into the database.
 
-New emacs UI features
----------------------
+Emacs Interface
+---------------
+
+Bug fixes
+
+  notmuch-show-advance (bound to the spacebar in notmuch-show-mode) had
+  a bug that caused it to always jump to the next message, even if it
+  should have scrolled down to show more of the current message instead.
+  This is now fixed.
 
 Support "notmuch new" as a notmuch-poll-script
 
