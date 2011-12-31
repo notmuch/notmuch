@@ -28,6 +28,8 @@
 #include <glib.h> /* g_free, GPtrArray, GHashTable */
 #include <glib-object.h> /* g_type_init */
 
+#include <gmime/gmime.h> /* g_mime_init */
+
 using namespace std;
 
 #define ARRAY_SIZE(arr) (sizeof (arr) / sizeof (arr[0]))
@@ -585,6 +587,7 @@ notmuch_database_open (const char *path,
     struct stat st;
     int err;
     unsigned int i, version;
+    static int initialized = 0;
 
     if (asprintf (&notmuch_path, "%s/%s", path, ".notmuch") == -1) {
 	notmuch_path = NULL;
@@ -607,6 +610,12 @@ notmuch_database_open (const char *path,
 
     /* Initialize the GLib type system and threads */
     g_type_init ();
+
+    /* Initialize gmime */
+    if (! initialized) {
+	g_mime_init (0);
+	initialized = 1;
+    }
 
     notmuch = talloc (NULL, notmuch_database_t);
     notmuch->exception_reported = FALSE;
