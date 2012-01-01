@@ -29,6 +29,8 @@ thread:THREADID
 thread:THREADID
 thread:THREADID
 thread:THREADID
+thread:THREADID
+thread:THREADID
 EOF
 test_expect_equal_file OUTPUT EXPECTED
 
@@ -56,6 +58,8 @@ cat <<EOF >EXPECTED
 "THREADID",
 "THREADID",
 "THREADID",
+"THREADID",
+"THREADID",
 "THREADID"]
 EOF
 test_expect_equal_file OUTPUT EXPECTED
@@ -63,6 +67,8 @@ test_expect_equal_file OUTPUT EXPECTED
 test_begin_subtest "--output=messages"
 notmuch search --output=messages '*' >OUTPUT
 cat <<EOF >EXPECTED
+id:4EFC743A.3060609@april.org
+id:877h1wv7mg.fsf@inf-8657.int-evry.fr
 id:1258544095-16616-1-git-send-email-chris@chris-wilson.co.uk
 id:877htoqdbo.fsf@yoom.home.cworth.org
 id:878we4qdqf.fsf@yoom.home.cworth.org
@@ -119,7 +125,9 @@ test_expect_equal_file OUTPUT EXPECTED
 test_begin_subtest "--output=messages --format=json"
 notmuch search --format=json --output=messages '*' >OUTPUT
 cat <<EOF >EXPECTED
-["1258544095-16616-1-git-send-email-chris@chris-wilson.co.uk",
+["4EFC743A.3060609@april.org",
+"877h1wv7mg.fsf@inf-8657.int-evry.fr",
+"1258544095-16616-1-git-send-email-chris@chris-wilson.co.uk",
 "877htoqdbo.fsf@yoom.home.cworth.org",
 "878we4qdqf.fsf@yoom.home.cworth.org",
 "87aaykqe24.fsf@yoom.home.cworth.org",
@@ -175,6 +183,8 @@ test_expect_equal_file OUTPUT EXPECTED
 test_begin_subtest "--output=files"
 notmuch search --output=files '*' | sed -e "s,$MAIL_DIR,MAIL_DIR," >OUTPUT
 cat <<EOF >EXPECTED
+MAIL_DIR/cur/52:2,
+MAIL_DIR/cur/53:2,
 MAIL_DIR/cur/50:2,
 MAIL_DIR/cur/49:2,
 MAIL_DIR/cur/48:2,
@@ -232,7 +242,9 @@ test_expect_equal_file OUTPUT EXPECTED
 test_begin_subtest "--output=files --format=json"
 notmuch search --format=json --output=files '*' | sed -e "s,$MAIL_DIR,MAIL_DIR," >OUTPUT
 cat <<EOF >EXPECTED
-["MAIL_DIR/cur/50:2,",
+["MAIL_DIR/cur/52:2,",
+"MAIL_DIR/cur/53:2,",
+"MAIL_DIR/cur/50:2,",
 "MAIL_DIR/cur/49:2,",
 "MAIL_DIR/cur/48:2,",
 "MAIL_DIR/cur/47:2,",

@@ -1,0 +1,39 @@
+Message-ID: <4EFC743A.3060609@april.org>
+Date: Thu, 29 Dec 2010 15:07:54 +0100
+From: "=?ISO-8859-1?Q?Fran=E7ois_Boulogne?=" <boulogne.f@gmail.com>
+User-Agent: Mozilla/5.0 (X11; Linux i686;
+ rv:9.0) Gecko/20111224 Thunderbird/9.0.1
+MIME-Version: 1.0
+To: Allan McRae <allan@archlinux.org>, 
+ "Discussion about the Arch User Repository (AUR)" <aur-general@archlinux.org>
+References: <4EFC3931.6030007@april.org> <4EFC3D62.4030202@archlinux.org>
+In-Reply-To: <4EFC3D62.4030202@archlinux.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 8bit
+Subject: Re: [aur-general] Guidelines: cp, mkdir vs install
+
+Le 29/12/2011 11:13, Allan McRae a écrit :
+> On 29/12/11 19:56, François Boulogne wrote:
+>> Hi,
+>>
+>> Looking to improve the quality of my packages, I read again the guidelines.
+>> https://wiki.archlinux.org/index.php/Arch_Packaging_Standards
+>>
+>> However, it don't see anything about the install command like
+>> install -d $pkgdir/usr/{bin,share/man/man1,share/locale}
+>>
+>> Some contributors on AUR use cp or mkdir to install files/dir (when no
+>> makefile is provided) and others use install command.
+>>
+>> What's the opinion of TU on this point?
+>>
+> 
+> Use install with -m specifying the correct permissions
+> 
+
+Thank you Allan
+
+
+-- 
+François Boulogne.
+https://www.sciunto.org

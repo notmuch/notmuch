@@ -5,6 +5,7 @@ test_description="python bindings"
 add_email_corpus
 
 test_begin_subtest "compare thread ids"
+test_subtest_known_broken
 test_python <<EOF
 import notmuch
 db = notmuch.Database(mode=notmuch.Database.MODE.READ_WRITE)
