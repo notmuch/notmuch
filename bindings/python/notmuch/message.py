@@ -427,7 +427,7 @@ class Message(object):
         header = Message._get_header(self._msg, header)
         if header == None:
             raise NotmuchError(STATUS.NULL_POINTER)
-        return header.decode('UTF-8', errors='ignore')
+        return header.decode('UTF-8', 'ignore')
 
     def get_filename(self):
         """Returns the file path of the message file
