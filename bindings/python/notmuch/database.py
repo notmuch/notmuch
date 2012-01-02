@@ -935,7 +935,7 @@ class Filenames(object):
 
         file_ = Filenames._get(self._files_p)
         self._move_to_next(self._files_p)
-        return file_.decode('utf-8', errors='ignore')
+        return file_.decode('utf-8', 'ignore')
     next = __next__ # python2.x iterator protocol compatibility
 
     def __len__(self):

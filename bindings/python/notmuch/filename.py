@@ -93,7 +93,7 @@ class Filenames(Python3StringMixIn):
             raise NotmuchError(STATUS.NOT_INITIALIZED)
 
         while self._valid(self._files):
-            yield Filenames._get(self._files).decode('utf-8', errors='ignore')
+            yield Filenames._get(self._files).decode('utf-8', 'ignore')
             self._move_to_next(self._files)
 
         self._files = None

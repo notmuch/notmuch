@@ -364,7 +364,7 @@ class Message(Python3StringMixIn):
         """
         if self._msg is None:
             raise NotmuchError(STATUS.NOT_INITIALIZED)
-        return Message._get_message_id(self._msg).decode('utf-8', errors='ignore')
+        return Message._get_message_id(self._msg).decode('utf-8', 'ignore')
 
     def get_thread_id(self):
         """Returns the thread ID
@@ -382,7 +382,7 @@ class Message(Python3StringMixIn):
         if self._msg is None:
             raise NotmuchError(STATUS.NOT_INITIALIZED)
 
-        return Message._get_thread_id(self._msg).decode('utf-8', errors='ignore')
+        return Message._get_thread_id(self._msg).decode('utf-8', 'ignore')
 
     def get_replies(self):
         """Gets all direct replies to this message as :class:`Messages`
@@ -454,7 +454,7 @@ class Message(Python3StringMixIn):
         header = Message._get_header(self._msg, _str(header))
         if header == None:
             raise NotmuchError(STATUS.NULL_POINTER)
-        return header.decode('UTF-8', errors='ignore')
+        return header.decode('UTF-8', 'ignore')
 
     def get_filename(self):
         """Returns the file path of the message file
@@ -465,7 +465,7 @@ class Message(Python3StringMixIn):
         """
         if self._msg is None:
             raise NotmuchError(STATUS.NOT_INITIALIZED)
-        return Message._get_filename(self._msg).decode('utf-8', errors='ignore')
+        return Message._get_filename(self._msg).decode('utf-8', 'ignore')
 
     def get_filenames(self):
         """Get all filenames for the email corresponding to 'message'

@@ -246,7 +246,7 @@ class Thread(object):
         """
         if self._thread is None:
             raise NotmuchError(STATUS.NOT_INITIALIZED)
-        return Thread._get_thread_id(self._thread).decode('utf-8', errors='ignore')
+        return Thread._get_thread_id(self._thread).decode('utf-8', 'ignore')
 
     _get_total_messages = nmlib.notmuch_thread_get_total_messages
     _get_total_messages.argtypes = [NotmuchThreadP]
@@ -326,7 +326,7 @@ class Thread(object):
         authors = Thread._get_authors(self._thread)
         if authors is None:
             return None
-        return authors.decode('UTF-8', errors='ignore')
+        return authors.decode('UTF-8', 'ignore')
 
     def get_subject(self):
         """Returns the Subject of 'thread'
@@ -339,7 +339,7 @@ class Thread(object):
         subject = Thread._get_subject(self._thread)
         if subject is None:
             return None
-        return subject.decode('UTF-8', errors='ignore')
+        return subject.decode('UTF-8', 'ignore')
 
     def get_newest_date(self):
         """Returns time_t of the newest message date
