@@ -1,4 +1,4 @@
-notmuch (0.11~rc1-1) unstable; urgency=low
+notmuch (0.11~rc1-1) experimental; urgency=low
 
   * New upstream release candidate.
 
