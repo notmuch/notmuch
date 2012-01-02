@@ -11,6 +11,28 @@ Hooks
   supports "pre-new" and "post-new" hooks that are run before and after
   importing new messages into the database.
 
+Performance
+-----------
+
+Automatic tag query optimization
+
+  "notmuch tag" now automatically optimizes the user's query to
+  exclude messages whose tags won't change.  In the past, we've
+  suggested that people do this by hand; this is no longer necessary.
+
+Don't sort messages when creating a dump file
+
+  This speads up tag dumps considerably, without any loss of
+  information.
+
+Memory Management
+-----------------
+
+Reduction of memory leaks
+
+  Two memory leaks when searching and showing messages were identified
+  and fixed in this release.
+
 Emacs Interface
 ---------------
 
@@ -34,22 +56,29 @@ Improvements in saved search management
   not inserted in front. It's also possible to define a sort function
   for displaying saved searches; alphabetical sort is provided.
 
-Performance
------------
+Enable hooks for notmuch-hello-mode and notmuch-hello-refresh
 
-Automatic tag query optimization
+Customizable message indentation width
 
-  "notmuch tag" now automatically optimizes the user's query to
-  exclude messages whose tags won't change.  In the past, we've
-  suggested that people do this by hand; this is no longer necessary.
+  notmuch-show-indent-messages-width
 
-Memory Management
------------------
+Customizable thousands separator
 
-Reduction of memory leaks
+  The new configuartion variable is notmuch-hello-thousands-separator.
+  The default is now a space instead of a comma.
 
-  Two memory leaks when searching and showing messages were identified
-  and fixed in this release.
+Call notmuch-show instead of notmuch-search when clicking on
+buttonized id: links.
+
+New function notmuch-show-advance
+
+  This new function advances through just the current thread, and is
+  less invasive than notmuch-show-advance-and-archive.  It can easily
+  be bound to SPC with:
+
+  (define-key notmuch-show-mode-map " " 'notmuch-show-advance)
+
+Various performance improvements.
 
 New add-on tool
 ---------------
