@@ -57,16 +57,24 @@ Improvements in saved search management
   not inserted in front. It's also possible to define a sort function
   for displaying saved searches; alphabetical sort is provided.
 
-Enable hooks for notmuch-hello-mode and notmuch-hello-refresh
+Hooks for notmuch-hello
 
-Customizable message indentation width
+  Two new hooks have been added: "notmuch-hello-mode-hook" (called after
+  entering notmuch-hello-mode) and "notmuch-hello-refresh-hook" (called
+  after updating a notmuch-hello buffer).
 
-  notmuch-show-indent-messages-width
+New face for crypto parts headers
 
-Customizable thousands separator
+  Crypto parts used to be displayed with a hardcoded color. A new face
+  has been introduced to fix this: notmuch-crypto-part-header. It
+  defaults to the same value as before, but can be customized to match
+  other color themes.
 
-  The new configuration variable is notmuch-hello-thousands-separator.
-  The default is now a space instead of a comma.
+Use space as default thousands separator
+
+  Large numbers in notmuch-hello are now displayed using a space as
+  thousands separator (e.g. "123 456" instead of "123,456"). This can be
+  changed by customizing "notmuch-hello-thousands-separator".
 
 Call notmuch-show instead of notmuch-search when clicking on
 buttonized id: links.
