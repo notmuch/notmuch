@@ -23,7 +23,8 @@ Automatic tag query optimization
 Don't sort messages when creating a dump file
 
   This speeds up tag dumps considerably, without any loss of
-  information.
+  information. To replicate the old behavior of sorted output (for
+  example to compare two dump files), one can use e.g. sort(1).
 
 Memory Management
 -----------------
