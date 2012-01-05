@@ -22,7 +22,7 @@ Automatic tag query optimization
 
 Don't sort messages when creating a dump file
 
-  This speads up tag dumps considerably, without any loss of
+  This speeds up tag dumps considerably, without any loss of
   information.
 
 Memory Management
@@ -64,7 +64,7 @@ Customizable message indentation width
 
 Customizable thousands separator
 
-  The new configuartion variable is notmuch-hello-thousands-separator.
+  The new configuration variable is notmuch-hello-thousands-separator.
   The default is now a space instead of a comma.
 
 Call notmuch-show instead of notmuch-search when clicking on
