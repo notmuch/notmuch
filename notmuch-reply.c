@@ -612,62 +612,61 @@ notmuch_reply_format_headers_only(void *ctx,
     return 0;
 }
 
+enum {
+    FORMAT_DEFAULT,
+    FORMAT_HEADERS_ONLY,
+};
+
 int
 notmuch_reply_command (void *ctx, int argc, char *argv[])
 {
     notmuch_config_t *config;
     notmuch_database_t *notmuch;
     notmuch_query_t *query;
-    char *opt, *query_string;
-    int i, ret = 0;
+    char *query_string;
+    int opt_index, ret = 0;
     int (*reply_format_func)(void *ctx, notmuch_config_t *config, notmuch_query_t *query, notmuch_show_params_t *params);
     notmuch_show_params_t params = { .part = -1 };
+    int format = FORMAT_DEFAULT;
+    notmuch_bool_t decrypt = FALSE;
 
-    reply_format_func = notmuch_reply_format_default;
+    notmuch_opt_desc_t options[] = {
+	{ NOTMUCH_OPT_KEYWORD, &format, "format", 'f',
+	  (notmuch_keyword_t []){ { "default", FORMAT_DEFAULT },
+				  { "headers-only", FORMAT_HEADERS_ONLY },
+				  { 0, 0 } } },
+	{ NOTMUCH_OPT_BOOLEAN, &decrypt, "decrypt", 'd', 0 },
+	{ 0, 0, 0, 0, 0 }
+    };
 
-    argc--; argv++; /* skip subcommand argument */
-
-    for (i = 0; i < argc && argv[i][0] == '-'; i++) {
-	if (strcmp (argv[i], "--") == 0) {
-	    i++;
-	    break;
-	}
-        if (STRNCMP_LITERAL (argv[i], "--format=") == 0) {
-	    opt = argv[i] + sizeof ("--format=") - 1;
-	    if (strcmp (opt, "default") == 0) {
-		reply_format_func = notmuch_reply_format_default;
-	    } else if (strcmp (opt, "headers-only") == 0) {
-		reply_format_func = notmuch_reply_format_headers_only;
-	    } else {
-		fprintf (stderr, "Invalid value for --format: %s\n", opt);
-		return 1;
-	    }
-	} else if ((STRNCMP_LITERAL (argv[i], "--decrypt") == 0)) {
-	    if (params.cryptoctx == NULL) {
-		GMimeSession* session = g_object_new(g_mime_session_get_type(), NULL);
-		if (NULL == (params.cryptoctx = g_mime_gpg_context_new(session, "gpg"))) {
-		    fprintf (stderr, "Failed to construct gpg context.\n");
-		} else {
-		    params.decrypt = TRUE;
-		    g_mime_gpg_context_set_always_trust((GMimeGpgContext*)params.cryptoctx, FALSE);
-		}
-		g_object_unref (session);
-		session = NULL;
-	    }
-	} else {
-	    fprintf (stderr, "Unrecognized option: %s\n", argv[i]);
-	    return 1;
-	}
+    opt_index = parse_arguments (argc, argv, options, 1);
+    if (opt_index < 0) {
+	/* diagnostics already printed */
+	return 1;
     }
 
-    argc -= i;
-    argv += i;
+    if (format == FORMAT_HEADERS_ONLY)
+	reply_format_func = notmuch_reply_format_headers_only;
+    else
+	reply_format_func = notmuch_reply_format_default;
+
+    if (decrypt) {
+	GMimeSession* session = g_object_new (g_mime_session_get_type(), NULL);
+	params.cryptoctx = g_mime_gpg_context_new (session, "gpg");
+	if (params.cryptoctx) {
+	    g_mime_gpg_context_set_always_trust ((GMimeGpgContext*) params.cryptoctx, FALSE);
+	    params.decrypt = TRUE;
+	} else {
+	    fprintf (stderr, "Failed to construct gpg context.\n");
+	}
+	g_object_unref (session);
+    }
 
     config = notmuch_config_open (ctx, NULL, NULL);
     if (config == NULL)
 	return 1;
 
-    query_string = query_string_from_args (ctx, argc, argv);
+    query_string = query_string_from_args (ctx, argc-opt_index, argv+opt_index);
     if (query_string == NULL) {
 	fprintf (stderr, "Out of memory\n");
 	return 1;
