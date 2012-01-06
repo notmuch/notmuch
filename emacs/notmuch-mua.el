@@ -108,7 +108,8 @@ list."
     (if (re-search-backward message-signature-separator nil t)
 	  (forward-line -1)
       (goto-char (point-max)))
-    (insert body))
+    (insert body)
+    (push-mark))
   (set-buffer-modified-p nil)
 
   (message-goto-body))
