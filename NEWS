@@ -1,8 +1,8 @@
 Notmuch 0.11 (201x-xx-xx)
 =========================
 
-New command-line features
--------------------------
+Command-Line Interface
+----------------------
 
 Hooks
 
@@ -10,6 +10,12 @@ Hooks
   invokes before and after certain actions. Initially, "notmuch new"
   supports "pre-new" and "post-new" hooks that are run before and after
   importing new messages into the database.
+
+notmuch reply --decrypt bugfix
+
+  The "notmuch reply" command with --decrypt argument had a rarely
+  occurring bug that caused an encrypted message not to be decrypted
+  sometimes. This is now fixed.
 
 Performance
 -----------
