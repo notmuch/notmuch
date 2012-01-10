@@ -299,15 +299,17 @@ should be. Returns a cons cell `(tags-per-line width)'."
 			       :notify #'notmuch-hello-widget-search
 			       :notmuch-search-terms query
 			       formatted-name)
-		;; Insert enough space to consume the rest of the
-		;; column.  Because the button for the name is `(1+
-		;; (length name))' long (due to the trailing space) we
-		;; can just insert `(- widest (length name))' spaces -
-		;; the column separator is included in the button if
-		;; `(equal widest (length name)'.
-		(widget-insert (make-string (max 1
-						 (- widest (length name)))
-					    ? ))))
+		(unless (eq (% count tags-per-line) (1- tags-per-line))
+		  ;; If this is not the last tag on the line, insert
+		  ;; enough space to consume the rest of the column.
+		  ;; Because the button for the name is `(1+ (length
+		  ;; name))' long (due to the trailing space) we can
+		  ;; just insert `(- widest (length name))' spaces - the
+		  ;; column separator is included in the button if
+		  ;; `(equal widest (length name)'.
+		  (widget-insert (make-string (max 1
+						   (- widest (length name)))
+					      ? )))))
 	    (setq count (1+ count))
 	    (if (eq (% count tags-per-line) 0)
 		(widget-insert "\n")))
