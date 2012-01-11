@@ -140,7 +140,7 @@ if test -n "$color"; then
 		esac
 		shift
 		printf " "
-                printf "$@"
+		printf "$@"
 		tput sgr0
 		print_subtest
 		)
@@ -150,7 +150,7 @@ else
 		test -z "$1" && test -n "$quiet" && return
 		shift
 		printf " "
-                printf "$@"
+		printf "$@"
 		print_subtest
 	}
 fi
@@ -249,7 +249,7 @@ remove_cr () {
 #	Store the message in file 'name'. The default is to store it
 #	in 'msg-<count>', where <count> is three-digit number of the
 #	message.
-#	
+#
 #  [body]=text
 #
 #	Text to use as the body of the email message
@@ -869,7 +869,7 @@ test_done () {
 	[ -n "$EMACS_SERVER" ] && test_emacs '(kill-emacs)'
 
 	if [ "$test_failure" = "0" ]; then
-	    if [ "$test_broken" = "0" ]; then	    
+	    if [ "$test_broken" = "0" ]; then
 		rm -rf "$remove_tmp"
 	    fi
 	    exit 0
@@ -881,7 +881,7 @@ test_done () {
 emacs_generate_script () {
 	# Construct a little test script here for the benefit of the user,
 	# (who can easily run "run_emacs" to get the same emacs environment
-	# for investigating any failures).    
+	# for investigating any failures).
 	cat <<EOF >"$TMP_DIRECTORY/run_emacs"
 #!/bin/sh
 export PATH=$PATH

@@ -4,18 +4,18 @@ test_description="naming of threads with changing subject"
 
 test_begin_subtest "Initial thread name (oldest-first search)"
 add_message '[subject]="thread-naming: Initial thread subject"' \
-            '[date]="Fri, 05 Jan 2001 15:43:56 -0000"'
+	    '[date]="Fri, 05 Jan 2001 15:43:56 -0000"'
 first=${gen_msg_cnt}
 parent=${gen_msg_id}
 add_message '[subject]="thread-naming: Older changed subject"' \
-            '[date]="Sat, 06 Jan 2001 15:43:56 -0000"' \
-            "[in-reply-to]=\<$parent\>"
+	    '[date]="Sat, 06 Jan 2001 15:43:56 -0000"' \
+	    "[in-reply-to]=\<$parent\>"
 add_message '[subject]="thread-naming: Newer changed subject"' \
-            '[date]="Sun, 07 Jan 2001 15:43:56 -0000"' \
-            "[in-reply-to]=\<$parent\>"
+	    '[date]="Sun, 07 Jan 2001 15:43:56 -0000"' \
+	    "[in-reply-to]=\<$parent\>"
 add_message '[subject]="thread-naming: Final thread subject"' \
-            '[date]="Mon, 08 Jan 2001 15:43:56 -0000"' \
-            "[in-reply-to]=\<$parent\>"
+	    '[date]="Mon, 08 Jan 2001 15:43:56 -0000"' \
+	    "[in-reply-to]=\<$parent\>"
 final=${gen_msg_id}
 output=$(notmuch search --sort=oldest-first thread-naming and tag:inbox | notmuch_search_sanitize)
 test_expect_equal "$output" "thread:XXX   2001-01-05 [4/4] Notmuch Test Suite; thread-naming: Initial thread subject (inbox unread)"
@@ -37,29 +37,29 @@ test_expect_equal "$output" "thread:XXX   2001-01-07 [2/4] Notmuch Test Suite; t
 
 test_begin_subtest "Ignore added reply prefix (Re:)"
 add_message '[subject]="Re: thread-naming: Initial thread subject"' \
-            '[date]="Tue, 09 Jan 2001 15:43:45 -0000"' \
-            "[in-reply-to]=\<$parent\>"
+	    '[date]="Tue, 09 Jan 2001 15:43:45 -0000"' \
+	    "[in-reply-to]=\<$parent\>"
 output=$(notmuch search --sort=newest-first thread-naming and tag:inbox | notmuch_search_sanitize)
 test_expect_equal "$output" "thread:XXX   2001-01-09 [3/5] Notmuch Test Suite; thread-naming: Initial thread subject (inbox unread)"
 
 test_begin_subtest "Ignore added reply prefix (Aw:)"
 add_message '[subject]="Aw: thread-naming: Initial thread subject"' \
-            '[date]="Wed, 10 Jan 2001 15:43:45 -0000"' \
-            "[in-reply-to]=\<$parent\>"
+	    '[date]="Wed, 10 Jan 2001 15:43:45 -0000"' \
+	    "[in-reply-to]=\<$parent\>"
 output=$(notmuch search --sort=newest-first thread-naming and tag:inbox | notmuch_search_sanitize)
 test_expect_equal "$output" "thread:XXX   2001-01-10 [4/6] Notmuch Test Suite; thread-naming: Initial thread subject (inbox unread)"
 
 test_begin_subtest "Ignore added reply prefix (Vs:)"
 add_message '[subject]="Vs: thread-naming: Initial thread subject"' \
-            '[date]="Thu, 11 Jan 2001 15:43:45 -0000"' \
-            "[in-reply-to]=\<$parent\>"
+	    '[date]="Thu, 11 Jan 2001 15:43:45 -0000"' \
+	    "[in-reply-to]=\<$parent\>"
 output=$(notmuch search --sort=newest-first thread-naming and tag:inbox | notmuch_search_sanitize)
 test_expect_equal "$output" "thread:XXX   2001-01-11 [5/7] Notmuch Test Suite; thread-naming: Initial thread subject (inbox unread)"
 
 test_begin_subtest "Ignore added reply prefix (Sv:)"
 add_message '[subject]="Sv: thread-naming: Initial thread subject"' \
-            '[date]="Fri, 12 Jan 2001 15:43:45 -0000"' \
-            "[in-reply-to]=\<$parent\>"
+	    '[date]="Fri, 12 Jan 2001 15:43:45 -0000"' \
+	    "[in-reply-to]=\<$parent\>"
 output=$(notmuch search --sort=newest-first thread-naming and tag:inbox | notmuch_search_sanitize)
 test_expect_equal "$output" "thread:XXX   2001-01-12 [6/8] Notmuch Test Suite; thread-naming: Initial thread subject (inbox unread)"
 
