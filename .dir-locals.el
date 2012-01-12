@@ -20,4 +20,6 @@
   (tab-width . 8)
   (sh-basic-offset . 4)
   (sh-indentation . 4))
+ (nil
+  (fill-column . 70))
  )
