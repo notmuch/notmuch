@@ -675,13 +675,31 @@ format_part_content_json (GMimeObject *part)
 	    printf (", \"filename\": %s", json_quote_str (ctx, filename));
     }
 
-    if (g_mime_content_type_is_type (content_type, "text", "*") &&
-	!g_mime_content_type_is_type (content_type, "text", "html"))
+    if (g_mime_content_type_is_type (content_type, "text", "*"))
     {
-	show_text_part_content (part, stream_memory);
-	part_content = g_mime_stream_mem_get_byte_array (GMIME_STREAM_MEM (stream_memory));
+	/* For non-HTML text/* parts, we include the content in the
+	 * JSON. Since JSON must be Unicode, we handle charset
+	 * decoding here and do not report a charset to the caller.
+	 * For text/html parts, we do not include the content. If a
+	 * caller is interested in text/html parts, it should retrieve
+	 * them separately and they will not be decoded. Since this
+	 * makes charset decoding the responsibility on the caller, we
+	 * report the charset for text/html parts.
+	 */
+	if (g_mime_content_type_is_type (content_type, "text", "html"))
+	{
+	    const char *content_charset = g_mime_object_get_content_type_parameter (GMIME_OBJECT (part), "charset");
 
-	printf (", \"content\": %s", json_quote_chararray (ctx, (char *) part_content->data, part_content->len));
+	    if (content_charset != NULL)
+		printf (", \"content-charset\": %s", json_quote_str (ctx, content_charset));
+	}
+	else
+	{
+	    show_text_part_content (part, stream_memory);
+	    part_content = g_mime_stream_mem_get_byte_array (GMIME_STREAM_MEM (stream_memory));
+
+	    printf (", \"content\": %s", json_quote_chararray (ctx, (char *) part_content->data, part_content->len));
+	}
     }
     else if (g_mime_content_type_is_type (content_type, "multipart", "*"))
     {

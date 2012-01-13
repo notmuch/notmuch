@@ -328,7 +328,8 @@ message at DEPTH in the current thread."
 current buffer, if possible."
   (let ((display-buffer (current-buffer)))
     (with-temp-buffer
-      (let ((handle (mm-make-handle (current-buffer) (list content-type))))
+      (let* ((charset (plist-get part :content-charset))
+	     (handle (mm-make-handle (current-buffer) `(,content-type (charset . ,charset)))))
 	(if (and (mm-inlinable-p handle)
 		 (mm-inlined-p handle))
 	    (let ((content (notmuch-show-get-bodypart-content msg part nth)))
