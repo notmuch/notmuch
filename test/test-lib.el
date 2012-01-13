@@ -26,6 +26,13 @@
 ;; `read' call.
 (setq read-file-name-function (lambda (&rest _) (read)))
 
+;; Work around a bug in emacs 23.1 and emacs 23.2 which prevents
+;; noninteractive (kill-emacs) from emacsclient.
+(if (and (= emacs-major-version 23) (< emacs-minor-version 3))
+  (defadvice kill-emacs (before disable-yes-or-no-p activate)
+    "Disable yes-or-no-p before executing kill-emacs"
+    (defun yes-or-no-p (prompt) t)))
+
 (defun notmuch-test-wait ()
   "Wait for process completion."
   (while (get-buffer-process (current-buffer))
