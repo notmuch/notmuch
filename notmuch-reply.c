@@ -203,7 +203,7 @@ scan_address_list (InternetAddressList *list,
 	    if (group_list == NULL)
 		continue;
 
-	    n += scan_address_list (group_list, config, message, type, NULL);
+	    n += scan_address_list (group_list, config, message, type, user_from);
 	} else {
 	    InternetAddressMailbox *mailbox;
 	    const char *name;

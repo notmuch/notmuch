@@ -73,7 +73,6 @@ On Tue, 05 Jan 2010 15:43:56 -0000, Sender <sender@example.com> wrote:
 > reply from alternate address"
 
 test_begin_subtest "Reply from address in named group list"
-test_subtest_known_broken
 add_message '[from]="Sender <sender@example.com>"' \
             '[to]=group:test_suite@notmuchmail.org,someone@example.com\;' \
              [cc]=test_suite_other@notmuchmail.org \
