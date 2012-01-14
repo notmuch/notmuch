@@ -677,7 +677,7 @@ format_part_content_json (GMimeObject *part)
 
     if (g_mime_content_type_is_type (content_type, "text", "*"))
     {
-	/* For non-HTML text/* parts, we include the content in the
+	/* For non-HTML text parts, we include the content in the
 	 * JSON. Since JSON must be Unicode, we handle charset
 	 * decoding here and do not report a charset to the caller.
 	 * For text/html parts, we do not include the content. If a
