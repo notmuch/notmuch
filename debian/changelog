@@ -1,3 +1,12 @@
+notmuch (0.11-1) unstable; urgency=low
+
+  * New upstream release.
+    - New 'hook' feature for notmuch-new
+    - performance and memory use improvements
+    - new add-on tool notmuch-deliver
+
+ -- David Bremner <bremner@debian.org>  Fri, 13 Jan 2012 19:59:23 -0400
+
 notmuch (0.11~rc3-1) experimental; urgency=low
 
   * New upstream release candidate
