@@ -1,3 +1,26 @@
+Notmuch 0.12 (2012-xx-xx)
+=========================
+
+Command-Line Interface
+----------------------
+
+Reply to sender
+
+  "notmuch reply" has gained the ability to create a reply template
+  for replying just to the sender of the message, in addition to reply
+  to all. The feature is available through the new command line option
+  --reply-to=(all|sender).
+
+Emacs Interface
+---------------
+
+Reply to sender
+
+  The Emacs interface has, with the new CLI support, gained the
+  ability to reply to sender in addition to reply to all. In both show
+  and search modes, 'r' has been bound to reply to sender, replacing
+  reply to all, which now has key binding 'R'.
+
 Notmuch 0.11 (2012-01-13)
 =========================
 
