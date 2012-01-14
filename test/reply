@@ -72,6 +72,25 @@ References: <${gen_msg_id}>
 On Tue, 05 Jan 2010 15:43:56 -0000, Sender <sender@example.com> wrote:
 > reply from alternate address"
 
+test_begin_subtest "Reply from address in named group list"
+test_subtest_known_broken
+add_message '[from]="Sender <sender@example.com>"' \
+            '[to]=group:test_suite@notmuchmail.org,someone@example.com\;' \
+             [cc]=test_suite_other@notmuchmail.org \
+             [subject]=notmuch-reply-test \
+            '[date]="Tue, 05 Jan 2010 15:43:56 -0000"' \
+            '[body]="Reply from address in named group list"'
+
+output=$(notmuch reply id:${gen_msg_id})
+test_expect_equal "$output" "From: Notmuch Test Suite <test_suite@notmuchmail.org>
+Subject: Re: notmuch-reply-test
+To: Sender <sender@example.com>, someone@example.com
+In-Reply-To: <${gen_msg_id}>
+References: <${gen_msg_id}>
+
+On Tue, 05 Jan 2010 15:43:56 -0000, Sender <sender@example.com> wrote:
+> Reply from address in named group list"
+
 test_begin_subtest "Support for Reply-To"
 add_message '[from]="Sender <sender@example.com>"' \
              [to]=test_suite@notmuchmail.org \
