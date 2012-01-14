@@ -1,3 +1,32 @@
+notmuch (0.11-1) unstable; urgency=low
+
+  * New upstream release.
+    - New 'hook' feature for notmuch-new
+    - performance and memory use improvements
+    - new add-on tool notmuch-deliver
+
+ -- David Bremner <bremner@debian.org>  Fri, 13 Jan 2012 19:59:23 -0400
+
+notmuch (0.11~rc3-1) experimental; urgency=low
+
+  * New upstream release candidate
+    - Fix for uninitialized variable(s) in notmuch-reply
+
+ -- David Bremner <bremner@debian.org>  Mon, 09 Jan 2012 07:07:46 -0400
+
+notmuch (0.11~rc2-1) experimental; urgency=low
+
+  * New upstream release candidate.
+    - Includes fix for one python bindings segfault.
+
+ -- David Bremner <bremner@debian.org>  Mon, 02 Jan 2012 06:57:29 -0400
+
+notmuch (0.11~rc1-1) experimental; urgency=low
+
+  * New upstream release candidate.
+
+ -- David Bremner <bremner@debian.org>  Sun, 25 Dec 2011 23:07:08 -0400
+
 notmuch (0.10.2-1) unstable; urgency=low
 
   * Upstream bug fix release

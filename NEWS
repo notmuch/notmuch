@@ -1,8 +1,8 @@
-Notmuch 0.11 (201x-xx-xx)
+Notmuch 0.11 (2012-01-13)
 =========================
 
-New command-line features
--------------------------
+Command-Line Interface
+----------------------
 
 Hooks
 
@@ -10,6 +10,12 @@ Hooks
   invokes before and after certain actions. Initially, "notmuch new"
   supports "pre-new" and "post-new" hooks that are run before and after
   importing new messages into the database.
+
+notmuch reply --decrypt bugfix
+
+  The "notmuch reply" command with --decrypt argument had a rarely
+  occurring bug that caused an encrypted message not to be decrypted
+  sometimes. This is now fixed.
 
 Performance
 -----------
@@ -19,6 +25,81 @@ Automatic tag query optimization
   "notmuch tag" now automatically optimizes the user's query to
   exclude messages whose tags won't change.  In the past, we've
   suggested that people do this by hand; this is no longer necessary.
+
+Don't sort messages when creating a dump file
+
+  This speeds up tag dumps considerably, without any loss of
+  information. To replicate the old behavior of sorted output (for
+  example to compare two dump files), one can use e.g. sort(1).
+
+Memory Management
+-----------------
+
+Reduction of memory leaks
+
+  Two memory leaks when searching and showing messages were identified
+  and fixed in this release.
+
+Emacs Interface
+---------------
+
+Bug fixes
+
+  notmuch-show-advance (bound to the spacebar in notmuch-show-mode) had
+  a bug that caused it to always jump to the next message, even if it
+  should have scrolled down to show more of the current message instead.
+  This is now fixed.
+
+Support "notmuch new" as a notmuch-poll-script
+
+  It's now possible to use "notmuch new" as a notmuch-poll-script
+  directly. This is also the new default. This allows taking better
+  advantage of the "notmuch new" hooks from emacs without intermediate
+  scripts.
+
+Improvements in saved search management
+
+  New saved searches are now appended to the list of saved searches,
+  not inserted in front. It's also possible to define a sort function
+  for displaying saved searches; alphabetical sort is provided.
+
+Hooks for notmuch-hello
+
+  Two new hooks have been added: "notmuch-hello-mode-hook" (called after
+  entering notmuch-hello-mode) and "notmuch-hello-refresh-hook" (called
+  after updating a notmuch-hello buffer).
+
+New face for crypto parts headers
+
+  Crypto parts used to be displayed with a hardcoded color. A new face
+  has been introduced to fix this: notmuch-crypto-part-header. It
+  defaults to the same value as before, but can be customized to match
+  other color themes.
+
+Use space as default thousands separator
+
+  Large numbers in notmuch-hello are now displayed using a space as
+  thousands separator (e.g. "123 456" instead of "123,456"). This can be
+  changed by customizing "notmuch-hello-thousands-separator".
+
+Call notmuch-show instead of notmuch-search when clicking on
+buttonized id: links.
+
+New function notmuch-show-advance
+
+  This new function advances through just the current thread, and is
+  less invasive than notmuch-show-advance-and-archive.  It can easily
+  be bound to SPC with:
+
+  (define-key notmuch-show-mode-map " " 'notmuch-show-advance)
+
+Various performance improvements.
+
+New add-on tool
+---------------
+
+The tool contrib/notmuch-deliver helps with initial delivery and
+tagging of mail (replacing running notmuch new).
 
 
 Notmuch 0.10.2 (2011-12-04)
