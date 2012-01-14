@@ -214,6 +214,7 @@ For a mouse binding, return nil."
     (define-key map "p" 'notmuch-search-previous-thread)
     (define-key map "n" 'notmuch-search-next-thread)
     (define-key map "r" 'notmuch-search-reply-to-thread)
+    (define-key map "R" 'notmuch-search-reply-to-thread-sender)
     (define-key map "m" 'notmuch-mua-new-mail)
     (define-key map "s" 'notmuch-search)
     (define-key map "o" 'notmuch-search-toggle-order)
@@ -448,10 +449,16 @@ Complete list of currently available key bindings:
       (message "End of search results."))))
 
 (defun notmuch-search-reply-to-thread (&optional prompt-for-sender)
+  "Begin composing a reply-all to the entire current thread in a new buffer."
+  (interactive "P")
+  (let ((message-id (notmuch-search-find-thread-id)))
+    (notmuch-mua-new-reply message-id prompt-for-sender t)))
+
+(defun notmuch-search-reply-to-thread-sender (&optional prompt-for-sender)
   "Begin composing a reply to the entire current thread in a new buffer."
   (interactive "P")
   (let ((message-id (notmuch-search-find-thread-id)))
-    (notmuch-mua-new-reply message-id prompt-for-sender)))
+    (notmuch-mua-new-reply message-id prompt-for-sender nil)))
 
 (defun notmuch-call-notmuch-process (&rest args)
   "Synchronously invoke \"notmuch\" with the given list of arguments.

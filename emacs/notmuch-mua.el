@@ -71,12 +71,15 @@ list."
 	    (push header message-hidden-headers)))
 	notmuch-mua-hidden-headers))
 
-(defun notmuch-mua-reply (query-string &optional sender)
+(defun notmuch-mua-reply (query-string &optional sender reply-all)
   (let (headers
 	body
 	(args '("reply")))
     (if notmuch-show-process-crypto
 	(setq args (append args '("--decrypt"))))
+    (if reply-all
+	(setq args (append args '("--reply-to=all")))
+      (setq args (append args '("--reply-to=sender"))))
     (setq args (append args (list query-string)))
     ;; This make assumptions about the output of `notmuch reply', but
     ;; really only that the headers come first followed by a blank
@@ -218,13 +221,13 @@ the From: address first."
 	(notmuch-mua-forward-message))
     (notmuch-mua-forward-message)))
 
-(defun notmuch-mua-new-reply (query-string &optional prompt-for-sender)
+(defun notmuch-mua-new-reply (query-string &optional prompt-for-sender reply-all)
   "Invoke the notmuch reply window."
   (interactive "P")
   (let ((sender
 	 (when prompt-for-sender
 	   (notmuch-mua-prompt-for-sender))))
-    (notmuch-mua-reply query-string sender)))
+    (notmuch-mua-reply query-string sender reply-all)))
 
 (defun notmuch-mua-send-and-exit (&optional arg)
   (interactive "P")

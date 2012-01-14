@@ -934,6 +934,7 @@ thread id.  If a prefix is given, crypto processing is toggled."
 	(define-key map "m" 'notmuch-mua-new-mail)
 	(define-key map "f" 'notmuch-show-forward-message)
 	(define-key map "r" 'notmuch-show-reply)
+	(define-key map "R" 'notmuch-show-reply-sender)
 	(define-key map "|" 'notmuch-show-pipe-message)
 	(define-key map "w" 'notmuch-show-save-attachments)
 	(define-key map "V" 'notmuch-show-view-raw-message)
@@ -1238,9 +1239,14 @@ any effects from previous calls to
       (notmuch-show-previous-message)))))
 
 (defun notmuch-show-reply (&optional prompt-for-sender)
-  "Reply to the current message."
+  "Reply to the sender and all recipients of the current message."
   (interactive "P")
-  (notmuch-mua-new-reply (notmuch-show-get-message-id) prompt-for-sender))
+  (notmuch-mua-new-reply (notmuch-show-get-message-id) prompt-for-sender t))
+
+(defun notmuch-show-reply-sender (&optional prompt-for-sender)
+  "Reply to the sender of the current message."
+  (interactive "P")
+  (notmuch-mua-new-reply (notmuch-show-get-message-id) prompt-for-sender nil))
 
 (defun notmuch-show-forward-message (&optional prompt-for-sender)
   "Forward the current message."
