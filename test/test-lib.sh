@@ -907,8 +907,11 @@ EOF
 
 test_emacs () {
 	# test dependencies beforehand to avoid the waiting loop below
-	test_require_external_prereq emacs || return
-	test_require_external_prereq emacsclient || return
+	missing_dependencies=
+	test_require_external_prereq dtach || missing_dependencies=1
+	test_require_external_prereq emacs || missing_dependencies=1
+	test_require_external_prereq emacsclient || missing_dependencies=1
+	test -z "$missing_dependencies" || return
 
 	if [ -z "$EMACS_SERVER" ]; then
 		server_name="notmuch-test-suite-$$"
