@@ -33,6 +33,7 @@ TESTS="
   thread-naming
   raw
   reply
+  reply-to-sender
   dump-restore
   uuencode
   thread-order
