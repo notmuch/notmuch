@@ -168,22 +168,29 @@ address_is_users (const char *address, notmuch_config_t *config)
     return 0;
 }
 
-/* For each address in 'list' that is not configured as one of the
- * user's addresses in 'config', add that address to 'message' as an
- * address of 'type'.
+/* Scan addresses in 'list'.
  *
- * The first address encountered that *is* the user's address will be
- * returned, (otherwise NULL is returned).
+ * If 'message' is non-NULL, then for each address in 'list' that is
+ * not configured as one of the user's addresses in 'config', add that
+ * address to 'message' as an address of 'type'.
+ *
+ * If 'user_from' is non-NULL and *user_from is NULL, *user_from will
+ * be set to the first address encountered in 'list' that is the
+ * user's address.
+ *
+ * Return the number of addresses added to 'message'. (If 'message' is
+ * NULL, the function returns 0 by definition.)
  */
-static const char *
-add_recipients_for_address_list (GMimeMessage *message,
-				 notmuch_config_t *config,
-				 GMimeRecipientType type,
-				 InternetAddressList *list)
+static unsigned int
+scan_address_list (InternetAddressList *list,
+		   notmuch_config_t *config,
+		   GMimeMessage *message,
+		   GMimeRecipientType type,
+		   const char **user_from)
 {
     InternetAddress *address;
     int i;
-    const char *ret = NULL;
+    unsigned int n = 0;
 
     for (i = 0; i < internet_address_list_length (list); i++) {
 	address = internet_address_list_get_address (list, i);
@@ -196,8 +203,7 @@ add_recipients_for_address_list (GMimeMessage *message,
 	    if (group_list == NULL)
 		continue;
 
-	    add_recipients_for_address_list (message, config,
-					     type, group_list);
+	    n += scan_address_list (group_list, config, message, type, NULL);
 	} else {
 	    InternetAddressMailbox *mailbox;
 	    const char *name;
@@ -209,40 +215,41 @@ add_recipients_for_address_list (GMimeMessage *message,
 	    addr = internet_address_mailbox_get_addr (mailbox);
 
 	    if (address_is_users (addr, config)) {
-		if (ret == NULL)
-		    ret = addr;
-	    } else {
+		if (user_from && *user_from == NULL)
+		    *user_from = addr;
+	    } else if (message) {
 		g_mime_message_add_recipient (message, type, name, addr);
+		n++;
 	    }
 	}
     }
 
-    return ret;
+    return n;
 }
 
-/* For each address in 'recipients' that is not configured as one of
- * the user's addresses in 'config', add that address to 'message' as
- * an address of 'type'.
+/* Scan addresses in 'recipients'.
  *
- * The first address encountered that *is* the user's address will be
- * returned, (otherwise NULL is returned).
+ * See the documentation of scan_address_list() above. This function
+ * does exactly the same, but converts 'recipients' to an
+ * InternetAddressList first.
  */
-static const char *
-add_recipients_for_string (GMimeMessage *message,
-			   notmuch_config_t *config,
-			   GMimeRecipientType type,
-			   const char *recipients)
+static unsigned int
+scan_address_string (const char *recipients,
+		     notmuch_config_t *config,
+		     GMimeMessage *message,
+		     GMimeRecipientType type,
+		     const char **user_from)
 {
     InternetAddressList *list;
 
     if (recipients == NULL)
-	return NULL;
+	return 0;
 
     list = internet_address_list_parse_string (recipients);
     if (list == NULL)
-	return NULL;
+	return 0;
 
-    return add_recipients_for_address_list (message, config, type, list);
+    return scan_address_list (list, config, message, type, user_from);
 }
 
 /* Does the address in the Reply-To header of 'message' already appear
@@ -324,7 +331,7 @@ add_recipients_from_message (GMimeMessage *reply,
     }
 
     for (i = 0; i < ARRAY_SIZE (reply_to_map); i++) {
-	const char *addr, *recipients;
+	const char *recipients;
 
 	recipients = notmuch_message_get_header (message,
 						 reply_to_map[i].header);
@@ -332,11 +339,8 @@ add_recipients_from_message (GMimeMessage *reply,
 	    recipients = notmuch_message_get_header (message,
 						     reply_to_map[i].fallback);
 
-	addr = add_recipients_for_string (reply, config,
-					  reply_to_map[i].recipient_type,
-					  recipients);
-	if (from_addr == NULL)
-	    from_addr = addr;
+	scan_address_string (recipients, config, reply,
+			     reply_to_map[i].recipient_type, &from_addr);
     }
 
     return from_addr;
