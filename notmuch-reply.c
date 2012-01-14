@@ -291,15 +291,23 @@ reply_to_header_is_redundant (notmuch_message_t *message)
     return 0;
 }
 
-/* Augments the recipients of reply from the headers of message.
+/* Augment the recipients of 'reply' from the "Reply-to:", "From:",
+ * "To:", "Cc:", and "Bcc:" headers of 'message'.
  *
- * If any of the user's addresses were found in these headers, the first
- * of these returned, otherwise NULL is returned.
+ * If 'reply_all' is true, use sender and all recipients, otherwise
+ * scan the headers for the first that contains something other than
+ * the user's addresses and add the recipients from this header
+ * (typically this would be reply-to-sender, but also handles reply to
+ * user's own message in a sensible way).
+ *
+ * If any of the user's addresses were found in these headers, the
+ * first of these returned, otherwise NULL is returned.
  */
 static const char *
 add_recipients_from_message (GMimeMessage *reply,
 			     notmuch_config_t *config,
-			     notmuch_message_t *message)
+			     notmuch_message_t *message,
+			     notmuch_bool_t reply_all)
 {
     struct {
 	const char *header;
@@ -313,6 +321,7 @@ add_recipients_from_message (GMimeMessage *reply,
     };
     const char *from_addr = NULL;
     unsigned int i;
+    unsigned int n = 0;
 
     /* Some mailing lists munge the Reply-To header despite it being A Bad
      * Thing, see http://www.unicom.com/pw/reply-to-harmful.html
@@ -339,8 +348,24 @@ add_recipients_from_message (GMimeMessage *reply,
 	    recipients = notmuch_message_get_header (message,
 						     reply_to_map[i].fallback);
 
-	scan_address_string (recipients, config, reply,
-			     reply_to_map[i].recipient_type, &from_addr);
+	n += scan_address_string (recipients, config, reply,
+				  reply_to_map[i].recipient_type, &from_addr);
+
+	if (!reply_all && n) {
+	    /* Stop adding new recipients in reply-to-sender mode if
+	     * we have added some recipient(s) above.
+	     *
+	     * This also handles the case of user replying to his own
+	     * message, where reply-to/from is not a recipient. In
+	     * this case there may be more than one recipient even if
+	     * not replying to all.
+	     */
+	    reply = NULL;
+
+	    /* From address and some recipients are enough, bail out. */
+	    if (from_addr)
+		break;
+	}
     }
 
     return from_addr;
@@ -484,7 +509,8 @@ static int
 notmuch_reply_format_default(void *ctx,
 			     notmuch_config_t *config,
 			     notmuch_query_t *query,
-			     notmuch_show_params_t *params)
+			     notmuch_show_params_t *params,
+			     notmuch_bool_t reply_all)
 {
     GMimeMessage *reply;
     notmuch_messages_t *messages;
@@ -513,7 +539,8 @@ notmuch_reply_format_default(void *ctx,
 	    g_mime_message_set_subject (reply, subject);
 	}
 
-	from_addr = add_recipients_from_message (reply, config, message);
+	from_addr = add_recipients_from_message (reply, config, message,
+						 reply_all);
 
 	if (from_addr == NULL)
 	    from_addr = guess_from_received_header (config, message);
@@ -562,7 +589,8 @@ static int
 notmuch_reply_format_headers_only(void *ctx,
 				  notmuch_config_t *config,
 				  notmuch_query_t *query,
-				  unused (notmuch_show_params_t *params))
+				  unused (notmuch_show_params_t *params),
+				  notmuch_bool_t reply_all)
 {
     GMimeMessage *reply;
     notmuch_messages_t *messages;
@@ -602,7 +630,7 @@ notmuch_reply_format_headers_only(void *ctx,
 	g_mime_object_set_header (GMIME_OBJECT (reply),
 				  "References", references);
 
-	(void)add_recipients_from_message (reply, config, message);
+	(void)add_recipients_from_message (reply, config, message, reply_all);
 
 	reply_headers = g_mime_object_to_string (GMIME_OBJECT (reply));
 	printf ("%s", reply_headers);
@@ -629,15 +657,20 @@ notmuch_reply_command (void *ctx, int argc, char *argv[])
     notmuch_query_t *query;
     char *query_string;
     int opt_index, ret = 0;
-    int (*reply_format_func)(void *ctx, notmuch_config_t *config, notmuch_query_t *query, notmuch_show_params_t *params);
+    int (*reply_format_func)(void *ctx, notmuch_config_t *config, notmuch_query_t *query, notmuch_show_params_t *params, notmuch_bool_t reply_all);
     notmuch_show_params_t params = { .part = -1 };
     int format = FORMAT_DEFAULT;
+    int reply_all = TRUE;
     notmuch_bool_t decrypt = FALSE;
 
     notmuch_opt_desc_t options[] = {
 	{ NOTMUCH_OPT_KEYWORD, &format, "format", 'f',
 	  (notmuch_keyword_t []){ { "default", FORMAT_DEFAULT },
 				  { "headers-only", FORMAT_HEADERS_ONLY },
+				  { 0, 0 } } },
+	{ NOTMUCH_OPT_KEYWORD, &reply_all, "reply-to", 'r',
+	  (notmuch_keyword_t []){ { "all", TRUE },
+				  { "sender", FALSE },
 				  { 0, 0 } } },
 	{ NOTMUCH_OPT_BOOLEAN, &decrypt, "decrypt", 'd', 0 },
 	{ 0, 0, 0, 0, 0 }
@@ -692,7 +725,7 @@ notmuch_reply_command (void *ctx, int argc, char *argv[])
 	return 1;
     }
 
-    if (reply_format_func (ctx, config, query, &params) != 0)
+    if (reply_format_func (ctx, config, query, &params, reply_all) != 0)
 	return 1;
 
     notmuch_query_destroy (query);

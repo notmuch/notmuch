@@ -14,11 +14,13 @@ Constructs a reply template for a set of messages.
 To make replying to email easier,
 .B notmuch reply
 takes an existing set of messages and constructs a suitable mail
-template. The Reply-to header (if any, otherwise From:) is used for
-the To: address. Vales from the To: and Cc: headers are copied, but
-not including any of the current user's email addresses (as configured
-in primary_mail or other_email in the .notmuch\-config file) in the
-recipient list
+template. The Reply-to: header (if any, otherwise From:) is used for
+the To: address. Unless
+.BR \-\-reply-to=sender
+is specified, values from the To: and Cc: headers are copied, but not
+including any of the current user's email addresses (as configured in
+primary_mail or other_email in the .notmuch\-config file) in the
+recipient list.
 
 It also builds a suitable new subject, including Re: at the front (if
 not already present), and adding the message IDs of the messages being
@@ -43,6 +45,22 @@ Includes subject and quoted message body.
 .TP
 .BR headers\-only
 Only produces In\-Reply\-To, References, To, Cc, and Bcc headers.
+.RE
+.RE
+.RS
+.TP 4
+.BR \-\-reply\-to= ( all | sender )
+.RS
+.TP 4
+.BR all " (default)"
+Replies to all addresses.
+.TP 4
+.BR sender
+Replies only to the sender. If replying to user's own message
+(Reply-to: or From: header is one of the user's configured email
+addresses), try To:, Cc:, and Bcc: headers in this order, and copy
+values from the first that contains something other than only the
+user's addresses.
 .RE
 .RE
 
