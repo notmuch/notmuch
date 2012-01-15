@@ -273,10 +273,6 @@ quiet ?= $($(shell echo $1 | sed -e s'/ .*//'))
 	sed 's,'$$(basename $*)'\.o[ :]*,$*.o $@ : ,g' < $@.$$$$ > $@; \
 	rm -f $@.$$$$
 
-DEPS := $(SRCS:%.c=.deps/%.d)
-DEPS := $(DEPS:%.cc=.deps/%.d)
--include $(DEPS)
-
 .PHONY : clean
 clean:
 	rm -f $(CLEAN); rm -rf .deps
@@ -350,3 +346,7 @@ install-desktop:
 
 SRCS  := $(SRCS) $(notmuch_client_srcs)
 CLEAN := $(CLEAN) notmuch notmuch-shared $(notmuch_client_modules) notmuch.elc
+
+DEPS := $(SRCS:%.c=.deps/%.d)
+DEPS := $(DEPS:%.cc=.deps/%.d)
+-include $(DEPS)
