@@ -27,6 +27,7 @@ struct _notmuch_query {
     notmuch_database_t *notmuch;
     const char *query_string;
     notmuch_sort_t sort;
+    notmuch_string_list_t *exclude_terms;
 };
 
 typedef struct _notmuch_mset_messages {
@@ -76,6 +77,8 @@ notmuch_query_create (notmuch_database_t *notmuch,
 
     query->sort = NOTMUCH_SORT_NEWEST_FIRST;
 
+    query->exclude_terms = _notmuch_string_list_create (query);
+
     return query;
 }
 
@@ -97,6 +100,13 @@ notmuch_query_get_sort (notmuch_query_t *query)
     return query->sort;
 }
 
+void
+notmuch_query_add_tag_exclude (notmuch_query_t *query, const char *tag)
+{
+    char *term = talloc_asprintf (query, "%s%s", _find_prefix ("tag"), tag);
+    _notmuch_string_list_append (query->exclude_terms, term);
+}
+
 /* We end up having to call the destructors explicitly because we had
  * to use "placement new" in order to initialize C++ objects within a
  * block that we allocated with talloc. So C++ is making talloc
@@ -110,6 +120,27 @@ _notmuch_messages_destructor (notmuch_mset_messages_t *messages)
     messages->iterator_end.~MSetIterator ();
 
     return 0;
+}
+
+/* Return a query that does not match messages with the excluded tags
+ * registered with the query.  Any tags that explicitly appear in
+ * xquery will not be excluded. */
+static Xapian::Query
+_notmuch_exclude_tags (notmuch_query_t *query, Xapian::Query xquery)
+{
+    for (notmuch_string_node_t *term = query->exclude_terms->head; term;
+	 term = term->next) {
+	Xapian::TermIterator it = xquery.get_terms_begin ();
+	Xapian::TermIterator end = xquery.get_terms_end ();
+	for (; it != end; it++) {
+	    if ((*it).compare (term->string) == 0)
+		break;
+	}
+	if (it == end)
+	    xquery = Xapian::Query (Xapian::Query::OP_AND_NOT,
+				    xquery, Xapian::Query (term->string));
+    }
+    return xquery;
 }
 
 notmuch_messages_t *
@@ -156,6 +187,8 @@ notmuch_query_search_messages (notmuch_query_t *query)
 	    final_query = Xapian::Query (Xapian::Query::OP_AND,
 					 mail_query, string_query);
 	}
+
+	final_query = _notmuch_exclude_tags (query, final_query);
 
 	enquire.set_weighting_scheme (Xapian::BoolWeight());
 
@@ -435,6 +468,8 @@ notmuch_query_count_messages (notmuch_query_t *query)
 	    final_query = Xapian::Query (Xapian::Query::OP_AND,
 					 mail_query, string_query);
 	}
+
+	final_query = _notmuch_exclude_tags (query, final_query);
 
 	enquire.set_weighting_scheme(Xapian::BoolWeight());
 	enquire.set_docid_order(Xapian::Enquire::ASCENDING);

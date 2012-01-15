@@ -458,7 +458,7 @@ typedef struct _notmuch_string_node {
     struct _notmuch_string_node *next;
 } notmuch_string_node_t;
 
-typedef struct _notmuch_string_list {
+typedef struct visible _notmuch_string_list {
     int length;
     notmuch_string_node_t *head;
     notmuch_string_node_t **tail;

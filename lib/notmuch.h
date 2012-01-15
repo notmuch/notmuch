@@ -457,6 +457,12 @@ notmuch_query_set_sort (notmuch_query_t *query, notmuch_sort_t sort);
 notmuch_sort_t
 notmuch_query_get_sort (notmuch_query_t *query);
 
+/* Add a tag that will be excluded from the query results by default.
+ * This exclusion will be overridden if this tag appears explicitly in
+ * the query. */
+void
+notmuch_query_add_tag_exclude (notmuch_query_t *query, const char *tag);
+
 /* Execute a query for threads, returning a notmuch_threads_t object
  * which can be used to iterate over the results. The returned threads
  * object is owned by the query and as such, will only be valid until
