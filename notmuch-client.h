@@ -235,6 +235,14 @@ void
 notmuch_config_set_maildir_synchronize_flags (notmuch_config_t *config,
 					      notmuch_bool_t synchronize_flags);
 
+const char **
+notmuch_config_get_auto_exclude_tags (notmuch_config_t *config, size_t *length);
+
+void
+notmuch_config_set_auto_exclude_tags (notmuch_config_t *config,
+				      const char *list[],
+				      size_t length);
+
 int
 notmuch_run_hook (const char *db_path, const char *hook);
 

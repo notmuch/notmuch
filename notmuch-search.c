@@ -423,6 +423,9 @@ notmuch_search_command (void *ctx, int argc, char *argv[])
     output_t output = OUTPUT_SUMMARY;
     int offset = 0;
     int limit = -1; /* unlimited */
+    const char **auto_exclude_tags;
+    size_t auto_exclude_tags_length;
+    unsigned int i;
 
     enum { NOTMUCH_FORMAT_JSON, NOTMUCH_FORMAT_TEXT }
 	format_sel = NOTMUCH_FORMAT_TEXT;
@@ -489,6 +492,11 @@ notmuch_search_command (void *ctx, int argc, char *argv[])
     }
 
     notmuch_query_set_sort (query, sort);
+
+    auto_exclude_tags = notmuch_config_get_auto_exclude_tags
+	(config, &auto_exclude_tags_length);
+    for (i = 0; i < auto_exclude_tags_length; i++)
+	notmuch_query_add_tag_exclude (query, auto_exclude_tags[i]);
 
     switch (output) {
     default:

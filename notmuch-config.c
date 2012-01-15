@@ -84,6 +84,15 @@ static const char maildir_config_comment[] =
     "\tand update tags, while the \"notmuch tag\" and \"notmuch restore\"\n"
     "\tcommands will notice tag changes and update flags in filenames\n";
 
+static const char search_config_comment[] =
+    " Search configuration\n"
+    "\n"
+    " The following option is supported here:\n"
+    "\n"
+    "\tauto_exclude_tags      A ;-separated list of tags that will be\n"
+    "\t excluded from search results by default.  Using an excluded tag\n"
+    "\t in a query will override that exclusion.\n";
+
 struct _notmuch_config {
     char *filename;
     GKeyFile *key_file;
@@ -96,6 +105,8 @@ struct _notmuch_config {
     const char **new_tags;
     size_t new_tags_length;
     notmuch_bool_t maildir_synchronize_flags;
+    const char **auto_exclude_tags;
+    size_t auto_exclude_tags_length;
 };
 
 static int
@@ -221,6 +232,7 @@ notmuch_config_open (void *ctx,
     int file_had_new_group;
     int file_had_user_group;
     int file_had_maildir_group;
+    int file_had_search_group;
 
     if (is_new_ret)
 	*is_new_ret = 0;
@@ -252,6 +264,8 @@ notmuch_config_open (void *ctx,
     config->new_tags = NULL;
     config->new_tags_length = 0;
     config->maildir_synchronize_flags = TRUE;
+    config->auto_exclude_tags = NULL;
+    config->auto_exclude_tags_length = 0;
 
     if (! g_key_file_load_from_file (config->key_file,
 				     config->filename,
@@ -295,6 +309,7 @@ notmuch_config_open (void *ctx,
     file_had_new_group = g_key_file_has_group (config->key_file, "new");
     file_had_user_group = g_key_file_has_group (config->key_file, "user");
     file_had_maildir_group = g_key_file_has_group (config->key_file, "maildir");
+    file_had_search_group = g_key_file_has_group (config->key_file, "search");
 
 
     if (notmuch_config_get_database_path (config) == NULL) {
@@ -345,6 +360,11 @@ notmuch_config_open (void *ctx,
 	notmuch_config_set_new_tags (config, tags, 2);
     }
 
+    if (notmuch_config_get_auto_exclude_tags (config, &tmp) == NULL) {
+	const char *tags[] = { "deleted", "spam" };
+	notmuch_config_set_auto_exclude_tags (config, tags, 2);
+    }
+
     error = NULL;
     config->maildir_synchronize_flags =
 	g_key_file_get_boolean (config->key_file,
@@ -385,6 +405,11 @@ notmuch_config_open (void *ctx,
     {
 	g_key_file_set_comment (config->key_file, "maildir", NULL,
 				maildir_config_comment, NULL);
+    }
+
+    if (! file_had_search_group) {
+	g_key_file_set_comment (config->key_file, "search", NULL,
+				search_config_comment, NULL);
     }
 
     if (is_new_ret)
@@ -595,6 +620,23 @@ notmuch_config_set_new_tags (notmuch_config_t *config,
 {
     _config_set_list (config, "new", "tags", list, length,
 		     &(config->new_tags));
+}
+
+const char **
+notmuch_config_get_auto_exclude_tags (notmuch_config_t *config, size_t *length)
+{
+    return _config_get_list (config, "search", "auto_exclude_tags",
+			     &(config->auto_exclude_tags),
+			     &(config->auto_exclude_tags_length), length);
+}
+
+void
+notmuch_config_set_auto_exclude_tags (notmuch_config_t *config,
+				      const char *list[],
+				      size_t length)
+{
+    _config_set_list (config, "search", "auto_exclude_tags", list, length,
+		      &(config->auto_exclude_tags));
 }
 
 /* Given a configuration item of the form <group>.<key> return the
