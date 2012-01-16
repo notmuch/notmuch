@@ -6,6 +6,19 @@ When fixing bugs or enhancing notmuch, you are strongly encouraged to
 add tests in this directory to cover what you are trying to fix or
 enhance.
 
+Prerequisites
+-------------
+Some tests require external dependencies to run. Without them, they
+will be skipped, or (rarely) marked failed. Please install these, so
+that you know if you break anything.
+
+  - dtach(1)
+  - emacs(1)
+  - emacsclient(1)
+  - gdb(1)
+  - gpg(1)
+  - python(1)
+
 Running Tests
 -------------
 The easiest way to run tests is to say "make test", (or simply run the
