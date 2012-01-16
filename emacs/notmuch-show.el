@@ -879,9 +879,6 @@ buffer."
 
       (jit-lock-register #'notmuch-show-buttonise-links)
 
-      ;; Act on visual lines rather than logical lines.
-      (visual-line-mode t)
-
       (run-hooks 'notmuch-show-hook))
 
     ;; Move straight to the first open message
@@ -993,7 +990,8 @@ All currently available key bindings:
   (use-local-map notmuch-show-mode-map)
   (setq major-mode 'notmuch-show-mode
 	mode-name "notmuch-show")
-  (setq buffer-read-only t))
+  (setq buffer-read-only t
+	truncate-lines t))
 
 (defun notmuch-show-move-to-message-top ()
   (goto-char (notmuch-show-message-top)))
