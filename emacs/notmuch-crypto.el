@@ -34,38 +34,44 @@ The effect of setting this variable can be seen temporarily by
 providing a prefix when viewing a signed or encrypted message, or
 by providing a prefix when reloading the message in notmuch-show
 mode."
-  :group 'notmuch
-  :type 'boolean)
+  :type 'boolean
+  :group 'notmuch-crypto)
 
 (defface notmuch-crypto-part-header
   '((t (:foreground "blue")))
   "Face used for crypto parts headers."
-  :group 'notmuch)
+  :group 'notmuch-crypto
+  :group 'notmuch-faces)
 
 (defface notmuch-crypto-signature-good
   '((t (:background "green" :foreground "black")))
   "Face used for good signatures."
-  :group 'notmuch)
+  :group 'notmuch-crypto
+  :group 'notmuch-faces)
 
 (defface notmuch-crypto-signature-good-key
   '((t (:background "orange" :foreground "black")))
   "Face used for good signatures."
-  :group 'notmuch)
+  :group 'notmuch-crypto
+  :group 'notmuch-faces)
 
 (defface notmuch-crypto-signature-bad
   '((t (:background "red" :foreground "black")))
   "Face used for bad signatures."
-  :group 'notmuch)
+  :group 'notmuch-crypto
+  :group 'notmuch-faces)
 
 (defface notmuch-crypto-signature-unknown
   '((t (:background "red" :foreground "black")))
   "Face used for signatures of unknown status."
-  :group 'notmuch)
+  :group 'notmuch-crypto
+  :group 'notmuch-faces)
 
 (defface notmuch-crypto-decryption
   '((t (:background "purple" :foreground "black")))
   "Face used for encryption/decryption status messages."
-  :group 'notmuch)
+  :group 'notmuch-crypto
+  :group 'notmuch-faces)
 
 (define-button-type 'notmuch-crypto-status-button-type
   'action (lambda (button) (message (button-get button 'help-echo)))

@@ -28,25 +28,26 @@
 
 (defcustom notmuch-mua-send-hook '(notmuch-mua-message-send-hook)
   "Hook run before sending messages."
-  :group 'notmuch
-  :type 'hook)
+  :type 'hook
+  :group 'notmuch-send
+  :group 'notmuch-hooks)
 
 (defcustom notmuch-mua-user-agent-function 'notmuch-mua-user-agent-full
   "Function used to generate a `User-Agent:' string. If this is
 `nil' then no `User-Agent:' will be generated."
-  :group 'notmuch
   :type '(choice (const :tag "No user agent string" nil)
 		 (const :tag "Full" notmuch-mua-user-agent-full)
 		 (const :tag "Notmuch" notmuch-mua-user-agent-notmuch)
 		 (const :tag "Emacs" notmuch-mua-user-agent-emacs)
 		 (function :tag "Custom user agent function"
-			   :value notmuch-mua-user-agent-full)))
+			   :value notmuch-mua-user-agent-full))
+  :group 'notmuch-send)
 
 (defcustom notmuch-mua-hidden-headers '("^User-Agent:")
   "Headers that are added to the `message-mode' hidden headers
 list."
-  :group 'notmuch
-  :type '(repeat string))
+  :type '(repeat string)
+  :group 'notmuch-send)
 
 ;;
 
@@ -157,16 +158,16 @@ OTHER-ARGS are passed through to `message-mail'."
 
 If this variable is left unset, then a list will be constructed from the
 name and addresses configured in the notmuch configuration file."
-  :group 'notmuch
-  :type '(repeat string))
+  :type '(repeat string)
+  :group 'notmuch-send)
 
 (defcustom notmuch-always-prompt-for-sender nil
   "Always prompt for the From: address when composing or forwarding a message.
 
 This is not taken into account when replying to a message, because in that case
 the From: header is already filled in by notmuch."
-  :group 'notmuch
-  :type 'boolean)
+  :type 'boolean
+  :group 'notmuch-send)
 
 (defvar notmuch-mua-sender-history nil)
 

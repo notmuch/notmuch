@@ -28,7 +28,8 @@
 single argument and output a list of possible matches, one per
 line."
   :type 'string
-  :group 'notmuch)
+  :group 'notmuch-send
+  :group 'notmuch-external)
 
 (defvar notmuch-address-message-alist-member
   '("^\\(Resent-\\)?\\(To\\|B?Cc\\|Reply-To\\|From\\|Mail-Followup-To\\|Mail-Copies-To\\):"

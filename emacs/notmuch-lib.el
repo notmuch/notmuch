@@ -28,17 +28,50 @@
   "Notmuch mail reader for Emacs."
   :group 'mail)
 
+(defgroup notmuch-hello nil
+  "Overview of saved searches, tags, etc."
+  :group 'notmuch)
+
+(defgroup notmuch-search nil
+  "Searching and sorting mail."
+  :group 'notmuch)
+
+(defgroup notmuch-show nil
+  "Showing messages and threads."
+  :group 'notmuch)
+
+(defgroup notmuch-send nil
+  "Sending messages from Notmuch."
+  :group 'notmuch
+  :group 'message)
+
+(defgroup notmuch-crypto nil
+  "Processing and display of cryptographic MIME parts."
+  :group 'notmuch)
+
+(defgroup notmuch-hooks nil
+  "Running custom code on well-defined occasions."
+  :group 'notmuch)
+
+(defgroup notmuch-external nil
+  "Running external commands from within Notmuch."
+  :group 'notmuch)
+
+(defgroup notmuch-faces nil
+  "Graphical attributes for displaying text"
+  :group 'notmuch)
+
 (defcustom notmuch-search-oldest-first t
   "Show the oldest mail first when searching."
   :type 'boolean
-  :group 'notmuch)
+  :group 'notmuch-search)
 
 ;;
 
 (defcustom notmuch-saved-searches nil
   "A list of saved searches to display."
   :type '(alist :key-type string :value-type string)
-  :group 'notmuch)
+  :group 'notmuch-hello)
 
 (defvar notmuch-folders nil
   "Deprecated name for what is now known as `notmuch-saved-searches'.")

@@ -35,12 +35,12 @@
 (defcustom notmuch-recent-searches-max 10
   "The number of recent searches to store and display."
   :type 'integer
-  :group 'notmuch)
+  :group 'notmuch-hello)
 
 (defcustom notmuch-show-empty-saved-searches nil
   "Should saved searches with no messages be listed?"
   :type 'boolean
-  :group 'notmuch)
+  :group 'notmuch-hello)
 
 (defun notmuch-sort-saved-searches (alist)
   "Generate an alphabetically sorted saved searches alist."
@@ -60,7 +60,7 @@ alist to be used."
 		 (const :tag "Sort alphabetically" notmuch-sort-saved-searches)
 		 (function :tag "Custom sort function"
 			   :value notmuch-sort-saved-searches))
-  :group 'notmuch)
+  :group 'notmuch-hello)
 
 (defvar notmuch-hello-indent 4
   "How much to indent non-headers.")
@@ -68,12 +68,12 @@ alist to be used."
 (defcustom notmuch-show-logo t
   "Should the notmuch logo be shown?"
   :type 'boolean
-  :group 'notmuch)
+  :group 'notmuch-hello)
 
 (defcustom notmuch-show-all-tags-list nil
   "Should all tags be shown in the notmuch-hello view?"
   :type 'boolean
-  :group 'notmuch)
+  :group 'notmuch-hello)
 
 (defcustom notmuch-hello-tag-list-make-query nil
   "Function or string to generate queries for the all tags list.
@@ -89,12 +89,12 @@ should return a filter for that tag, or nil to hide the tag."
 		 (string :tag "Custom filter"
 			 :value "tag:unread")
 		 (function :tag "Custom filter function"))
-  :group 'notmuch)
+  :group 'notmuch-hello)
 
 (defcustom notmuch-hello-hide-tags nil
   "List of tags to be hidden in the \"all tags\"-section."
   :type '(repeat string)
-  :group 'notmuch)
+  :group 'notmuch-hello)
 
 (defface notmuch-hello-logo-background
   '((((class color)
@@ -104,7 +104,8 @@ should return a filter for that tag, or nil to hide the tag."
       (background light))
      (:background "white")))
   "Background colour for the notmuch logo."
-  :group 'notmuch)
+  :group 'notmuch-hello
+  :group 'notmuch-faces)
 
 (defcustom notmuch-column-control t
   "Controls the number of columns for saved searches/tags in notmuch view.
@@ -126,11 +127,11 @@ So:
   30.
 - if you don't want to worry about all of this nonsense, leave
   this set to `t'."
-  :group 'notmuch
   :type '(choice
 	  (const :tag "Automatically calculated" t)
 	  (integer :tag "Number of characters")
-	  (float :tag "Fraction of window")))
+	  (float :tag "Fraction of window"))
+  :group 'notmuch-hello)
 
 (defcustom notmuch-hello-thousands-separator " "
   "The string used as a thousands separator.
@@ -138,18 +139,20 @@ So:
 Typically \",\" in the US and UK and \".\" or \" \" in Europe.
 The latter is recommended in the SI/ISO 31-0 standard and by the
 International Bureau of Weights and Measures."
-  :group 'notmuch
-  :type 'string)
+  :type 'string
+  :group 'notmuch-hello)
 
 (defcustom notmuch-hello-mode-hook nil
   "Functions called after entering `notmuch-hello-mode'."
-  :group 'notmuch
-  :type 'hook)
+  :type 'hook
+  :group 'notmuch-hello
+  :group 'notmuch-hooks)
 
 (defcustom notmuch-hello-refresh-hook nil
   "Functions called after updating a `notmuch-hello' buffer."
   :type 'hook
-  :group 'notmuch)
+  :group 'notmuch-hello
+  :group 'notmuch-hooks)
 
 (defvar notmuch-hello-url "http://notmuchmail.org"
   "The `notmuch' web site.")

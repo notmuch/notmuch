@@ -47,8 +47,8 @@ For an open message, all of these headers will be made visible
 according to `notmuch-message-headers-visible' or can be toggled
 with `notmuch-show-toggle-headers'. For a closed message, only
 the first header in the list will be visible."
-  :group 'notmuch
-  :type '(repeat string))
+  :type '(repeat string)
+  :group 'notmuch-show)
 
 (defcustom notmuch-message-headers-visible t
   "Should the headers be visible by default?
@@ -58,13 +58,13 @@ If this value is non-nil, then all of the headers defined in
 of each message. Otherwise, these headers will be hidden and
 `notmuch-show-toggle-headers' can be used to make the visible for
 any given message."
-  :group 'notmuch
-  :type 'boolean)
+  :type 'boolean
+  :group 'notmuch-show)
 
 (defcustom notmuch-show-relative-dates t
   "Display relative dates in the message summary line."
-  :group 'notmuch
-  :type 'boolean)
+  :type 'boolean
+  :group 'notmuch-show)
 
 (defvar notmuch-show-markup-headers-hook '(notmuch-show-colour-headers)
   "A list of functions called to decorate the headers listed in
@@ -72,27 +72,29 @@ any given message."
 
 (defcustom notmuch-show-hook nil
   "Functions called after populating a `notmuch-show' buffer."
-  :group 'notmuch
-  :type 'hook)
+  :type 'hook
+  :group 'notmuch-show
+  :group 'notmuch-hooks)
 
 (defcustom notmuch-show-insert-text/plain-hook '(notmuch-wash-wrap-long-lines
 						 notmuch-wash-tidy-citations
 						 notmuch-wash-elide-blank-lines
 						 notmuch-wash-excerpt-citations)
   "Functions used to improve the display of text/plain parts."
-  :group 'notmuch
   :type 'hook
   :options '(notmuch-wash-convert-inline-patch-to-part
 	     notmuch-wash-wrap-long-lines
 	     notmuch-wash-tidy-citations
 	     notmuch-wash-elide-blank-lines
-	     notmuch-wash-excerpt-citations))
+	     notmuch-wash-excerpt-citations)
+  :group 'notmuch-show
+  :group 'notmuch-hooks)
 
 ;; Mostly useful for debugging.
 (defcustom notmuch-show-all-multipart/alternative-parts t
   "Should all parts of multipart/alternative parts be shown?"
-  :group 'notmuch
-  :type 'boolean)
+  :type 'boolean
+  :group 'notmuch-show)
 
 (defcustom notmuch-show-indent-messages-width 1
   "Width of message indentation in threads.
@@ -101,14 +103,14 @@ Messages are shown indented according to their depth in a thread.
 This variable determines the width of this indentation measured
 in number of blanks.  Defaults to `1', choose `0' to disable
 indentation."
-  :group 'notmuch
-  :type 'integer)
+  :type 'integer
+  :group 'notmuch-show)
 
 (defcustom notmuch-show-indent-multipart nil
   "Should the sub-parts of a multipart/* part be indented?"
   ;; dme: Not sure which is a good default.
-  :group 'notmuch
-  :type 'boolean)
+  :type 'boolean
+  :group 'notmuch-show)
 
 (defmacro with-current-notmuch-show-message (&rest body)
   "Evaluate body with current buffer set to the text of current message"

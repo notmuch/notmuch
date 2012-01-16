@@ -70,7 +70,7 @@ For example:
 	(setq notmuch-search-result-format \(\(\"authors\" . \"%-40s\"\)
 					     \(\"subject\" . \"%s\"\)\)\)"
   :type '(alist :key-type (string) :value-type (string))
-  :group 'notmuch)
+  :group 'notmuch-search)
 
 (defvar notmuch-query-history nil
   "Variable to store minibuffer history for notmuch queries")
@@ -199,7 +199,8 @@ For a mouse binding, return nil."
   "List of functions to call when notmuch displays the search results."
   :type 'hook
   :options '(hl-line-mode)
-  :group 'notmuch)
+  :group 'notmuch-search
+  :group 'notmuch-hooks)
 
 (defvar notmuch-search-mode-map
   (let ((map (make-sparse-keymap)))
@@ -307,27 +308,32 @@ For a mouse binding, return nil."
  '((((class color) (background light)) (:background "#f0f0f0"))
    (((class color) (background dark)) (:background "#303030")))
  "Face for the single-line message summary in notmuch-show-mode."
- :group 'notmuch)
+ :group 'notmuch-show
+ :group 'notmuch-faces)
 
 (defface notmuch-search-date
   '((t :inherit default))
   "Face used in search mode for dates."
-  :group 'notmuch)
+  :group 'notmuch-search
+  :group 'notmuch-faces)
 
 (defface notmuch-search-count
   '((t :inherit default))
   "Face used in search mode for the count matching the query."
-  :group 'notmuch)
+  :group 'notmuch-search
+  :group 'notmuch-faces)
 
 (defface notmuch-search-subject
   '((t :inherit default))
   "Face used in search mode for subjects."
-  :group 'notmuch)
+  :group 'notmuch-search
+  :group 'notmuch-faces)
 
 (defface notmuch-search-matching-authors
   '((t :inherit default))
   "Face used in search mode for authors matching the query."
-  :group 'notmuch)
+  :group 'notmuch-search
+  :group 'notmuch-faces)
 
 (defface notmuch-search-non-matching-authors
   '((((class color)
@@ -339,7 +345,8 @@ For a mouse binding, return nil."
     (t
      (:italic t)))
   "Face used in search mode for authors not matching the query."
-  :group 'notmuch)
+  :group 'notmuch-search
+  :group 'notmuch-faces)
 
 (defface notmuch-tag-face
   '((((class color)
@@ -351,7 +358,8 @@ For a mouse binding, return nil."
     (t
      (:bold t)))
   "Face used in search mode face for tags."
-  :group 'notmuch)
+  :group 'notmuch-search
+  :group 'notmuch-faces)
 
 (defun notmuch-search-mode ()
   "Major mode displaying results of a notmuch search.
@@ -502,7 +510,7 @@ the messages that are about to be tagged"
 
   :type 'hook
   :options '(hl-line-mode)
-  :group 'notmuch)
+  :group 'notmuch-hooks)
 
 (defcustom notmuch-after-tag-hook nil
   "Hooks that are run after tags of a message are modified.
@@ -513,7 +521,7 @@ a list of strings of the form \"+TAG\" or \"-TAG\".
 the messages that were tagged"
   :type 'hook
   :options '(hl-line-mode)
-  :group 'notmuch)
+  :group 'notmuch-hooks)
 
 (defun notmuch-search-set-tags (tags)
   (save-excursion
@@ -669,7 +677,8 @@ attributes overriding earlier. A message having both \"delete\"
 and \"unread\" tags with the above settings would have a green
 foreground and blue background."
   :type '(alist :key-type (string) :value-type (custom-face-edit))
-  :group 'notmuch)
+  :group 'notmuch-search
+  :group 'notmuch-faces)
 
 (defun notmuch-search-color-line (start end line-tag-list)
   "Colorize lines in `notmuch-show' based on tags."
@@ -1004,7 +1013,7 @@ Note that the recommended way of achieving the same is using
   :type '(choice (const :tag "notmuch new" nil)
 		 (const :tag "Disabled" "")
 		 (string :tag "Custom script"))
-  :group 'notmuch)
+  :group 'notmuch-external)
 
 (defun notmuch-poll ()
   "Run \"notmuch new\" or an external script to import mail.
