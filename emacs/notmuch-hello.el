@@ -320,8 +320,8 @@ should be. Returns a cons cell `(tags-per-line width)'."
 
     ;; If the last line was not full (and hence did not include a
     ;; carriage return), insert one now.
-    (if (not (eq (% count tags-per-line) 0))
-	(widget-insert "\n"))
+    (unless (eq (% count tags-per-line) 0)
+      (widget-insert "\n"))
     found-target-pos))
 
 (defun notmuch-hello-goto-search ()
@@ -404,7 +404,7 @@ Complete list of currently available key bindings:
 
   ; Jump through a hoop to get this value from the deprecated variable
   ; name (`notmuch-folders') or from the default value.
-  (if (not notmuch-saved-searches)
+  (unless notmuch-saved-searches
     (setq notmuch-saved-searches (notmuch-saved-searches)))
 
   (if no-display
@@ -570,18 +570,18 @@ Complete list of currently available key bindings:
 	  (widget-insert "\n\n")
 	  (let ((start (point)))
 	    (setq found-target-pos (notmuch-hello-insert-tags alltags-alist widest target))
-	    (if (not final-target-pos)
-		(setq final-target-pos found-target-pos))
+	    (unless final-target-pos
+	      (setq final-target-pos found-target-pos))
 	    (indent-rigidly start (point) notmuch-hello-indent)))
 
 	(widget-insert "\n")
 
-	(if (not notmuch-show-all-tags-list)
-	    (widget-create 'push-button
-			   :notify (lambda (widget &rest ignore)
-				     (setq notmuch-show-all-tags-list t)
-				     (notmuch-hello-update))
-			   "Show all tags")))
+	(unless notmuch-show-all-tags-list
+	  (widget-create 'push-button
+			 :notify (lambda (widget &rest ignore)
+				   (setq notmuch-show-all-tags-list t)
+				   (notmuch-hello-update))
+			 "Show all tags")))
 
       (let ((start (point)))
 	(widget-insert "\n\n")

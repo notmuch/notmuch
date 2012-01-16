@@ -662,8 +662,8 @@ current buffer, if possible."
   ;; part, so we make sure that we're down at the end.
   (goto-char (point-max))
   ;; Ensure that the part ends with a carriage return.
-  (if (not (bolp))
-      (insert "\n")))
+  (unless (bolp)
+    (insert "\n")))
 
 (defun notmuch-show-insert-body (msg body depth)
   "Insert the body BODY at depth DEPTH in the current thread."
@@ -743,8 +743,8 @@ current buffer, if possible."
     (setq body-start (point-marker))
     (notmuch-show-insert-body msg (plist-get msg :body) depth)
     ;; Ensure that the body ends with a newline.
-    (if (not (bolp))
-	(insert "\n"))
+    (unless (bolp)
+      (insert "\n"))
     (setq body-end (point-marker))
     (setq content-end (point-marker))
 
@@ -885,8 +885,8 @@ buffer."
       (run-hooks 'notmuch-show-hook))
 
     ;; Move straight to the first open message
-    (if (not (notmuch-show-message-visible-p))
-	(notmuch-show-next-open-message))
+    (unless (notmuch-show-message-visible-p)
+      (notmuch-show-next-open-message))
 
     ;; Set the header line to the subject of the first open message.
     (setq header-line-format (notmuch-show-strip-re (notmuch-show-get-subject)))

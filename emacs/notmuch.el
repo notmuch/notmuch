@@ -651,8 +651,8 @@ This function advances the next thread when finished."
 			(if notmuch-search-process-filter-data
 			    (insert (concat "Error: Unexpected output from notmuch search:\n" notmuch-search-process-filter-data)))
 			(insert "End of search results.")
-			(if (not (= exit-status 0))
-			    (insert (format " (process returned %d)" exit-status)))
+			(unless (= exit-status 0)
+			  (insert (format " (process returned %d)" exit-status)))
 			(insert "\n")
 			(if (and atbob
 				 (not (string= notmuch-search-target-thread "found")))
@@ -1022,8 +1022,8 @@ Invokes `notmuch-poll-script', \"notmuch new\", or does nothing
 depending on the value of `notmuch-poll-script'."
   (interactive)
   (if (stringp notmuch-poll-script)
-      (if (not (string= notmuch-poll-script ""))
-	  (call-process notmuch-poll-script nil nil))
+      (unless (string= notmuch-poll-script "")
+	(call-process notmuch-poll-script nil nil))
     (call-process notmuch-command nil nil nil "new")))
 
 (defun notmuch-search-poll-and-refresh-view ()
