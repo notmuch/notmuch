@@ -1741,13 +1741,10 @@ argument, hide all of the messages."
 (defun notmuch-show-archive-thread (&optional unarchive)
   "Archive each message in thread.
 
-If a prefix argument is given, the messages will be
-\"unarchived\" (ie. the \"inbox\" tag will be added instead of
-removed).
-
 Archive each message currently shown by removing the \"inbox\"
-tag from each. Then kill this buffer and show the next thread
-from the search from which this thread was originally shown.
+tag from each.  If a prefix argument is given, the messages will
+be \"unarchived\" (ie. the \"inbox\" tag will be added instead of
+removed).
 
 Note: This command is safe from any race condition of new messages
 being delivered to the same thread. It does not archive the
@@ -1770,7 +1767,7 @@ buffer."
   (notmuch-show-next-thread))
 
 (defun notmuch-show-archive-message (&optional unarchive)
-  "Archive the current message.
+  "Archive the current message (remove \"inbox\" tag).
 
 If a prefix argument is given, the message will be
 \"unarchived\" (ie. the \"inbox\" tag will be added instead of
