@@ -714,12 +714,12 @@ This function advances the next thread when finished."
 Here is an example of how to color search results based on tags.
  (the following text would be placed in your ~/.emacs file):
 
- (setq notmuch-search-line-faces '((\"delete\" . (:foreground \"red\"
+ (setq notmuch-search-line-faces '((\"deleted\" . (:foreground \"red\"
 						  :background \"blue\"))
                                    (\"unread\" . (:foreground \"green\"))))
 
 The attributes defined for matching tags are merged, with later
-attributes overriding earlier. A message having both \"delete\"
+attributes overriding earlier. A message having both \"deleted\"
 and \"unread\" tags with the above settings would have a green
 foreground and blue background."
   :type '(alist :key-type (string) :value-type (custom-face-edit))
