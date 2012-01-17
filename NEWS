@@ -133,8 +133,8 @@ Bug-fix release.
 
 Fix crash in python bindings.
 
-    The python bindings did not call g_type_init, which caused crashes
-    for some, but not all users.
+  The python bindings did not call g_type_init, which caused crashes
+  for some, but not all users.
 
 Notmuch 0.10.1 (2011-11-25)
 ===========================
@@ -204,8 +204,8 @@ Add keybinding ('c I') for stashing Message-ID's without an id: prefix
 
 Do not query on notmuch-search exit
 
-   It is harmless to kill the external notmuch process, so the user
-   is no longer interrogated when they interrupt a search.
+  It is harmless to kill the external notmuch process, so the user
+  is no longer interrogated when they interrupt a search.
 
 Performance
 -----------
@@ -234,9 +234,9 @@ mailing list.
 
 nmbug - share tags with a given prefix
 
-   nmbug helps maintain a git repo containing all tags with a given
-   prefix (by default "notmuch::"). Tags can be shared by commiting
-   them to git in one location and restoring in another.
+  nmbug helps maintain a git repo containing all tags with a given
+  prefix (by default "notmuch::"). Tags can be shared by commiting
+  them to git in one location and restoring in another.
 
 Notmuch 0.9 (2011-10-01)
 ========================
@@ -621,7 +621,7 @@ Ruby bindings are now much more complete
 	s1.union(s2)
 	s2 -= s1
 
-   Removed:
+  Removed:
      - len(Messages()) as it exhausted the iterator.
        Use len(list(Messages())) or
        Query.count_messages() to get the length.
