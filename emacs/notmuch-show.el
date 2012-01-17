@@ -221,7 +221,10 @@ indentation."
     (goto-char (notmuch-show-message-top))
     (if (re-search-forward "(\\([^()]*\\))$" (line-end-position) t)
 	(let ((inhibit-read-only t))
-	  (replace-match (concat "(" (mapconcat 'identity tags " ") ")"))))))
+	  (replace-match (concat "("
+				 (propertize (mapconcat 'identity tags " ")
+					     'face 'notmuch-tag-face)
+				 ")"))))))
 
 (defun notmuch-show-clean-address (address)
   "Try to clean a single email ADDRESS for display.  Return
@@ -253,7 +256,8 @@ message at DEPTH in the current thread."
 	    " ("
 	    date
 	    ") ("
-	    (mapconcat 'identity tags " ")
+	    (propertize (mapconcat 'identity tags " ")
+			'face 'notmuch-tag-face)
 	    ")\n")
     (overlay-put (make-overlay start (point)) 'face 'notmuch-message-summary-face)))
 
