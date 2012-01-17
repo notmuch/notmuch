@@ -7,7 +7,6 @@ tags
 /notmuch
 notmuch.sym
 notmuch-shared
-notmuch.1.gz
 libnotmuch.so*
 libnotmuch*.dylib
 *.[ao]
