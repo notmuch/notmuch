@@ -625,7 +625,7 @@ thread or threads in the current region."
 This function advances the next thread when finished."
   (interactive)
   (notmuch-search-remove-tag-thread "inbox")
-  (forward-line))
+  (notmuch-search-next-thread))
 
 (defvar notmuch-search-process-filter-data nil
   "Data that has not yet been processed.")
