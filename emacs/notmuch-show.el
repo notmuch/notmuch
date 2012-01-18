@@ -34,6 +34,7 @@
 (require 'notmuch-wash)
 (require 'notmuch-mua)
 (require 'notmuch-crypto)
+(require 'notmuch-print)
 
 (declare-function notmuch-call-notmuch-process "notmuch" (&rest args))
 (declare-function notmuch-fontify-headers "notmuch" nil)
@@ -187,6 +188,52 @@ indentation."
      (notmuch-save-attachments
       mm-handle (> (notmuch-count-attachments mm-handle) 1))))
   (message "Done"))
+
+(defun notmuch-show-with-message-as-text (fn)
+  "Apply FN to a text representation of the current message.
+
+FN is called with one argument, the message properties. It should
+operation on the contents of the current buffer."
+
+  ;; Remake the header to ensure that all information is available.
+  (let* ((to (notmuch-show-get-to))
+	 (cc (notmuch-show-get-cc))
+	 (from (notmuch-show-get-from))
+	 (subject (notmuch-show-get-subject))
+	 (date (notmuch-show-get-date))
+	 (tags (notmuch-show-get-tags))
+	 (depth (notmuch-show-get-depth))
+
+	 (header (concat
+		  "Subject: " subject "\n"
+		  "To: " to "\n"
+		  (if (not (string= cc ""))
+		      (concat "Cc: " cc "\n")
+		    "")
+		  "From: " from "\n"
+		  "Date: " date "\n"
+		  (if tags
+		      (concat "Tags: "
+			      (mapconcat #'identity tags ", ") "\n")
+		    "")))
+	 (all (buffer-substring (notmuch-show-message-top)
+				(notmuch-show-message-bottom)))
+
+	 (props (notmuch-show-get-message-properties)))
+    (with-temp-buffer
+      (insert all)
+      (indent-rigidly (point-min) (point-max) (- depth))
+      ;; Remove the original header.
+      (goto-char (point-min))
+      (re-search-forward "^$" (point-max) nil)
+      (delete-region (point-min) (point))
+      (insert header)
+      (funcall fn props))))
+
+(defun notmuch-show-print-message ()
+  "Print the current message."
+  (interactive)
+  (notmuch-show-with-message-as-text 'notmuch-print-message))
 
 (defun notmuch-show-fontify-header ()
   (let ((face (cond
@@ -763,6 +810,8 @@ current buffer, if possible."
       (overlay-put headers-overlay 'priority 10))
     (overlay-put (make-overlay body-start body-end) 'invisible message-invis-spec)
 
+    (plist-put msg :depth depth)
+
     ;; Save the properties for this message. Currently this saves the
     ;; entire message (augmented it with other stuff), which seems
     ;; like overkill. We might save a reduced subset (for example, not
@@ -953,6 +1002,7 @@ thread id.  If a prefix is given, crypto processing is toggled."
 	(define-key map " " 'notmuch-show-advance-and-archive)
 	(define-key map (kbd "M-RET") 'notmuch-show-open-or-close-all)
 	(define-key map (kbd "RET") 'notmuch-show-toggle-message)
+	(define-key map "#" 'notmuch-show-print-message)
 	map)
       "Keymap for \"notmuch show\" buffers.")
 (fset 'notmuch-show-mode-map notmuch-show-mode-map)
@@ -1112,6 +1162,9 @@ Some useful entries are:
 
 (defun notmuch-show-get-to ()
   (notmuch-show-get-header :To))
+
+(defun notmuch-show-get-depth ()
+  (notmuch-show-get-prop :depth))
 
 (defun notmuch-show-set-tags (tags)
   "Set the tags of the current message."
