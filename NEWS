@@ -11,6 +11,13 @@ Reply to sender
   to all. The feature is available through the new command line option
   --reply-to=(all|sender).
 
+Tag exclusion
+
+  Tags can be automatically excluded from search results unless they
+  appear explicitly in a query.  By default, notmuch excludes the tags
+  deleted and spam.  This can be changed using the new config setting
+  search.auto_exclude_tags.
+
 Emacs Interface
 ---------------
 
@@ -20,6 +27,14 @@ Reply to sender
   ability to reply to sender in addition to reply to all. In both show
   and search modes, 'r' has been bound to reply to sender, replacing
   reply to all, which now has key binding 'R'.
+
+Library changes
+---------------
+
+New functions
+
+  notmuch_query_add_tag_exclude supports the new tag exclusion
+  feature.
 
 Notmuch 0.11 (2012-01-13)
 =========================
