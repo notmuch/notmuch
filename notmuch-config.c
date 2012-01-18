@@ -89,9 +89,10 @@ static const char search_config_comment[] =
     "\n"
     " The following option is supported here:\n"
     "\n"
-    "\tauto_exclude_tags      A ;-separated list of tags that will be\n"
-    "\t excluded from search results by default.  Using an excluded tag\n"
-    "\t in a query will override that exclusion.\n";
+    "\tauto_exclude_tags\n"
+    "\t\tA ;-separated list of tags that will be excluded from\n"
+    "\t\tsearch results by default.  Using an excluded tag in a\n"
+    "\t\tquery will override that exclusion.\n";
 
 struct _notmuch_config {
     char *filename;
