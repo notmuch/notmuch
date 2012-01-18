@@ -702,8 +702,8 @@ test_skip () {
 
 test_check_missing_external_prereqs_ () {
 	if test -n "$test_subtest_missing_external_prereqs_"; then
-		say_color skip >&3 "missing prerequisites:"
-		echo "$test_subtest_missing_external_prereqs_" >&3
+		say_color skip >&1 "missing prerequisites:"
+		echo "$test_subtest_missing_external_prereqs_" >&1
 		test_report_skip_ "$@"
 	else
 		false
