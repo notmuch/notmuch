@@ -429,14 +429,15 @@ current buffer, if possible."
     (with-temp-buffer
       (let* ((charset (plist-get part :content-charset))
 	     (handle (mm-make-handle (current-buffer) `(,content-type (charset . ,charset)))))
-	(if (and (mm-inlinable-p handle)
-		 (mm-inlined-p handle))
-	    (let ((content (notmuch-show-get-bodypart-content msg part nth)))
-	      (insert content)
-	      (set-buffer display-buffer)
-	      (mm-display-part handle)
-	      t)
-	  nil)))))
+	;; If the user wants the part inlined, insert the content and
+	;; test whether we are able to inline it (which includes both
+	;; capability and suitability tests).
+	(when (mm-inlined-p handle)
+	  (insert (notmuch-show-get-bodypart-content msg part nth))
+	  (when (mm-inlinable-p handle)
+	    (set-buffer display-buffer)
+	    (mm-display-part handle)
+	    t))))))
 
 (defvar notmuch-show-multipart/alternative-discouraged
   '(
