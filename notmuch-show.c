@@ -883,7 +883,17 @@ do_show_single (void *ctx,
 
 	while (!feof (file)) {
 	    size = fread (buf, 1, sizeof (buf), file);
-	    (void) fwrite (buf, size, 1, stdout);
+	    if (ferror (file)) {
+		fprintf (stderr, "Error: Read failed from %s\n", filename);
+		fclose (file);
+		return 1;
+	    }
+
+	    if (fwrite (buf, size, 1, stdout) != 1) {
+		fprintf (stderr, "Error: Write failed\n");
+		fclose (file);
+		return 1;
+	    }
 	}
 
 	fclose (file);
