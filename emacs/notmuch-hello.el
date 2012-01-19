@@ -511,9 +511,12 @@ Complete list of currently available key bindings:
 				       (length "Search: ")))
 		       :action (lambda (widget &rest ignore)
 				 (notmuch-hello-search (widget-value widget))))
-	;; add an invisible space to make `widget-end-of-line' ignore
-	;; trailine spaces in the search widget field
-	(widget-insert " ")
+	;; Add an invisible dot to make `widget-end-of-line' ignore
+	;; trailing spaces in the search widget field.  A dot is used
+	;; instead of a space to make `show-trailing-whitespace'
+	;; happy, i.e. avoid it marking the whole line as trailing
+	;; spaces.
+	(widget-insert ".")
 	(put-text-property (1- (point)) (point) 'invisible t)
 	(widget-insert "\n")
 
