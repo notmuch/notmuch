@@ -42,8 +42,9 @@
 
 (defgroup notmuch-send nil
   "Sending messages from Notmuch."
-  :group 'notmuch
-  :group 'message)
+  :group 'notmuch)
+
+(custom-add-to-group 'notmuch-send 'message 'custom-group)
 
 (defgroup notmuch-crypto nil
   "Processing and display of cryptographic MIME parts."
