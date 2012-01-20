@@ -36,6 +36,15 @@ New functions
   notmuch_query_add_tag_exclude supports the new tag exclusion
   feature.
 
+Build fixes
+-----------
+
+Compatibility with GMime 2.6
+
+  It is now possible to build notmuch against both GMime 2.4 and 2.6.
+  However they may be some issues in PGP signature verification
+  because of a bug in current versions of GMime 2.6.
+
 Notmuch 0.11 (2012-01-13)
 =========================
 
