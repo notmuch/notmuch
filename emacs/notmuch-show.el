@@ -113,6 +113,16 @@ indentation."
   :type 'boolean
   :group 'notmuch-show)
 
+(defcustom notmuch-show-part-button-default-action 'notmuch-show-save-part
+  "Default part header button action (on ENTER or mouse click)."
+  :group 'notmuch-show
+  :type '(choice (const :tag "Save part"
+			notmuch-show-save-part)
+		 (const :tag "View part"
+			notmuch-show-view-part)
+		 (const :tag "View interactively"
+			notmuch-show-interactively-view-part)))
+
 (defmacro with-current-notmuch-show-message (&rest body)
   "Evaluate body with current buffer set to the text of current message"
   `(save-excursion
@@ -330,9 +340,20 @@ message at DEPTH in the current thread."
 	(run-hooks 'notmuch-show-markup-headers-hook)))))
 
 (define-button-type 'notmuch-show-part-button-type
-  'action 'notmuch-show-part-button-action
+  'action 'notmuch-show-part-button-default
+  'keymap 'notmuch-show-part-button-map
   'follow-link t
   'face 'message-mml)
+
+(defvar notmuch-show-part-button-map
+  (let ((map (make-sparse-keymap)))
+    (set-keymap-parent map button-map)
+    (define-key map "s" 'notmuch-show-part-button-save)
+    (define-key map "v" 'notmuch-show-part-button-view)
+    (define-key map "o" 'notmuch-show-part-button-interactively-view)
+    map)
+  "Submap for button commands")
+(fset 'notmuch-show-part-button-map notmuch-show-part-button-map)
 
 (defun notmuch-show-insert-part-header (nth content-type declared-type &optional name comment)
   (let ((button))
@@ -348,29 +369,58 @@ message at DEPTH in the current thread."
 		   " ]")
 	   :type 'notmuch-show-part-button-type
 	   :notmuch-part nth
-	   :notmuch-filename name))
+	   :notmuch-filename name
+	   :notmuch-content-type content-type))
     (insert "\n")
     ;; return button
     button))
 
 ;; Functions handling particular MIME parts.
 
-(defun notmuch-show-save-part (message-id nth &optional filename)
-  (let ((process-crypto notmuch-show-process-crypto))
-    (with-temp-buffer
-      (setq notmuch-show-process-crypto process-crypto)
-      ;; Always acquires the part via `notmuch part', even if it is
-      ;; available in the JSON output.
-      (insert (notmuch-show-get-bodypart-internal message-id nth))
-      (let ((file (read-file-name
-		   "Filename to save as: "
-		   (or mailcap-download-directory "~/")
-		   nil nil
-		   filename)))
-	;; Don't re-compress .gz & al.  Arguably we should make
-	;; `file-name-handler-alist' nil, but that would chop
-	;; ange-ftp, which is reasonable to use here.
-	(mm-write-region (point-min) (point-max) file nil nil nil 'no-conversion t)))))
+(defmacro notmuch-with-temp-part-buffer (message-id nth &rest body)
+  (declare (indent 2))
+  (let ((process-crypto (make-symbol "process-crypto")))
+    `(let ((,process-crypto notmuch-show-process-crypto))
+       (with-temp-buffer
+	 (setq notmuch-show-process-crypto ,process-crypto)
+	 ;; Always acquires the part via `notmuch part', even if it is
+	 ;; available in the JSON output.
+	 (insert (notmuch-show-get-bodypart-internal ,message-id ,nth))
+	 ,@body))))
+
+(defun notmuch-show-save-part (message-id nth &optional filename content-type)
+  (notmuch-with-temp-part-buffer message-id nth
+    (let ((file (read-file-name
+		 "Filename to save as: "
+		 (or mailcap-download-directory "~/")
+		 nil nil
+		 filename)))
+      ;; Don't re-compress .gz & al.  Arguably we should make
+      ;; `file-name-handler-alist' nil, but that would chop
+      ;; ange-ftp, which is reasonable to use here.
+      (mm-write-region (point-min) (point-max) file nil nil nil 'no-conversion t))))
+
+(defun notmuch-show-view-part (message-id nth &optional filename content-type )
+  (notmuch-with-temp-part-buffer message-id nth
+    ;; set mm-inlined-types to nil to force an external viewer
+    (let ((handle (mm-make-handle (current-buffer) (list content-type)))
+	  (mm-inlined-types nil))
+      ;; We override mm-save-part as notmuch-show-save-part is better
+      ;; since it offers the filename. We need to lexically bind
+      ;; everything we need for notmuch-show-save-part to prevent
+      ;; potential dynamic shadowing.
+      (lexical-let ((message-id message-id)
+		    (nth nth)
+		    (filename filename)
+		    (content-type content-type))
+	(flet ((mm-save-part (&rest args) (notmuch-show-save-part
+					   message-id nth filename content-type)))
+	  (mm-display-part handle))))))
+
+(defun notmuch-show-interactively-view-part (message-id nth &optional filename content-type)
+  (notmuch-with-temp-part-buffer message-id nth
+    (let ((handle (mm-make-handle (current-buffer) (list content-type))))
+      (mm-interactively-view-part handle))))
 
 (defun notmuch-show-mm-display-part-inline (msg part nth content-type)
   "Use the mm-decode/mm-view functions to display a part in the
@@ -1555,12 +1605,30 @@ buffer."
 
 ;; Commands typically bound to buttons.
 
-(defun notmuch-show-part-button-action (button)
-  (let ((nth (button-get button :notmuch-part)))
-    (if nth
-	(notmuch-show-save-part (notmuch-show-get-message-id) nth
-				(button-get button :notmuch-filename))
-      (message "Not a valid part (is it a fake part?)."))))
+(defun notmuch-show-part-button-default (&optional button)
+  (interactive)
+  (notmuch-show-part-button-internal button notmuch-show-part-button-default-action))
+
+(defun notmuch-show-part-button-save (&optional button)
+  (interactive)
+  (notmuch-show-part-button-internal button #'notmuch-show-save-part))
+
+(defun notmuch-show-part-button-view (&optional button)
+  (interactive)
+  (notmuch-show-part-button-internal button #'notmuch-show-view-part))
+
+(defun notmuch-show-part-button-interactively-view (&optional button)
+  (interactive)
+  (notmuch-show-part-button-internal button #'notmuch-show-interactively-view-part))
+
+(defun notmuch-show-part-button-internal (button handler)
+  (let ((button (or button (button-at (point)))))
+    (if button
+	(let ((nth (button-get button :notmuch-part)))
+	  (if nth
+	      (funcall handler (notmuch-show-get-message-id) nth
+		       (button-get button :notmuch-filename)
+		       (button-get button :notmuch-content-type)))))))
 
 ;;
 
