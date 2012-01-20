@@ -48,7 +48,11 @@ show_message_part (mime_node_t *node,
 	format->part_encstatus (node->decrypt_success);
 
     if (node->verify_attempted && format->part_sigstatus)
+#ifdef GMIME_ATLEAST_26
+	format->part_sigstatus (node->sig_list);
+#else
 	format->part_sigstatus (node->sig_validity);
+#endif
 
     format->part_content (part);
 

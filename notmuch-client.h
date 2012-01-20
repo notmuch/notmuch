@@ -30,6 +30,14 @@
 
 #include <gmime/gmime.h>
 
+/* GMIME_CHECK_VERSION in gmime 2.4 is not usable from the
+ * preprocessor (it calls a runtime function). But since
+ * GMIME_MAJOR_VERSION and friends were added in gmime 2.6, we can use
+ * these to check the version number. */
+#ifdef GMIME_MAJOR_VERSION
+#define GMIME_ATLEAST_26
+#endif
+
 #include "notmuch.h"
 
 /* This is separate from notmuch-private.h because we're trying to
@@ -69,7 +77,11 @@ typedef struct notmuch_show_format {
     void (*part_start) (GMimeObject *part,
 			int *part_count);
     void (*part_encstatus) (int status);
+#ifdef GMIME_ATLEAST_26
+    void (*part_sigstatus) (GMimeSignatureList* siglist);
+#else
     void (*part_sigstatus) (const GMimeSignatureValidity* validity);
+#endif
     void (*part_content) (GMimeObject *part);
     void (*part_end) (GMimeObject *part);
     const char *part_sep;
@@ -83,7 +95,11 @@ typedef struct notmuch_show_params {
     int entire_thread;
     int raw;
     int part;
+#ifdef GMIME_ATLEAST_26
+    GMimeCryptoContext* cryptoctx;
+#else
     GMimeCipherContext* cryptoctx;
+#endif
     int decrypt;
 } notmuch_show_params_t;
 
@@ -290,11 +306,17 @@ typedef struct mime_node {
 
     /* True if signature verification on this part was attempted. */
     notmuch_bool_t verify_attempted;
+#ifdef GMIME_ATLEAST_26
+    /* The list of signatures for signed or encrypted containers. If
+     * there are no signatures, this will be NULL. */
+    GMimeSignatureList* sig_list;
+#else
     /* For signed or encrypted containers, the validity of the
      * signature.  May be NULL if signature verification failed.  If
      * there are simply no signatures, this will be non-NULL with an
      * empty signers list. */
     const GMimeSignatureValidity *sig_validity;
+#endif
 
     /* Internal: Context inherited from the root iterator. */
     struct mime_node_context *ctx;
@@ -319,8 +341,12 @@ typedef struct mime_node {
  */
 notmuch_status_t
 mime_node_open (const void *ctx, notmuch_message_t *message,
-		GMimeCipherContext *cryptoctx, notmuch_bool_t decrypt,
-		mime_node_t **node_out);
+#ifdef GMIME_ATLEAST_26
+		GMimeCryptoContext *cryptoctx,
+#else
+		GMimeCipherContext *cryptoctx,
+#endif
+		notmuch_bool_t decrypt, mime_node_t **node_out);
 
 /* Return a new MIME node for the requested child part of parent.
  * parent will be used as the talloc context for the returned child

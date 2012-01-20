@@ -104,6 +104,8 @@ test_expect_equal \
     "$expected"
 
 test_begin_subtest "signature verification with signer key unavailable"
+# this is broken with current versions of gmime-2.6
+(ldd $(which notmuch) | grep -Fq gmime-2.6) && test_subtest_known_broken
 # move the gnupghome temporarily out of the way
 mv "${GNUPGHOME}"{,.bak}
 output=$(notmuch show --format=json --verify subject:"test signed message 001" \

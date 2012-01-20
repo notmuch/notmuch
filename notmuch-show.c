@@ -76,7 +76,11 @@ static void
 format_part_encstatus_json (int status);
 
 static void
+#ifdef GMIME_ATLEAST_26
+format_part_sigstatus_json (GMimeSignatureList* siglist);
+#else
 format_part_sigstatus_json (const GMimeSignatureValidity* validity);
+#endif
 
 static void
 format_part_content_json (GMimeObject *part);
@@ -486,6 +490,21 @@ show_text_part_content (GMimeObject *part, GMimeStream *stream_out)
 	g_object_unref(stream_filter);
 }
 
+#ifdef GMIME_ATLEAST_26
+static const char*
+signature_status_to_string (GMimeSignatureStatus x)
+{
+    switch (x) {
+    case GMIME_SIGNATURE_STATUS_GOOD:
+	return "good";
+    case GMIME_SIGNATURE_STATUS_BAD:
+	return "bad";
+    case GMIME_SIGNATURE_STATUS_ERROR:
+	return "error";
+    }
+    return "unknown";
+}
+#else
 static const char*
 signer_status_to_string (GMimeSignerStatus x)
 {
@@ -501,6 +520,7 @@ signer_status_to_string (GMimeSignerStatus x)
     }
     return "unknown";
 }
+#endif
 
 static void
 format_part_start_text (GMimeObject *part, int *part_count)
@@ -592,6 +612,73 @@ format_part_encstatus_json (int status)
     printf ("}]");
 }
 
+#ifdef GMIME_ATLEAST_26
+static void
+format_part_sigstatus_json (GMimeSignatureList *siglist)
+{
+    printf (", \"sigstatus\": [");
+
+    if (!siglist) {
+	printf ("]");
+	return;
+    }
+
+    void *ctx_quote = talloc_new (NULL);
+    int i;
+    for (i = 0; i < g_mime_signature_list_length (siglist); i++) {
+	GMimeSignature *signature = g_mime_signature_list_get_signature (siglist, i);
+
+	if (i > 0)
+	    printf (", ");
+
+	printf ("{");
+
+	/* status */
+	GMimeSignatureStatus status = g_mime_signature_get_status (signature);
+	printf ("\"status\": %s",
+		json_quote_str (ctx_quote,
+				signature_status_to_string (status)));
+
+	GMimeCertificate *certificate = g_mime_signature_get_certificate (signature);
+	if (status == GMIME_SIGNATURE_STATUS_GOOD) {
+	    if (certificate)
+		printf (", \"fingerprint\": %s", json_quote_str (ctx_quote, g_mime_certificate_get_fingerprint (certificate)));
+	    /* these dates are seconds since the epoch; should we
+	     * provide a more human-readable format string? */
+	    time_t created = g_mime_signature_get_created (signature);
+	    if (created != -1)
+		printf (", \"created\": %d", (int) created);
+	    time_t expires = g_mime_signature_get_expires (signature);
+	    if (expires > 0)
+		printf (", \"expires\": %d", (int) expires);
+	    /* output user id only if validity is FULL or ULTIMATE. */
+	    /* note that gmime is using the term "trust" here, which
+	     * is WRONG.  It's actually user id "validity". */
+	    if (certificate) {
+		const char *name = g_mime_certificate_get_name (certificate);
+		GMimeCertificateTrust trust = g_mime_certificate_get_trust (certificate);
+		if (name && (trust == GMIME_CERTIFICATE_TRUST_FULLY || trust == GMIME_CERTIFICATE_TRUST_ULTIMATE))
+		    printf (", \"userid\": %s", json_quote_str (ctx_quote, name));
+	    }
+	} else if (certificate) {
+	    const char *key_id = g_mime_certificate_get_key_id (certificate);
+	    if (key_id)
+		printf (", \"keyid\": %s", json_quote_str (ctx_quote, key_id));
+	}
+
+	GMimeSignatureError errors = g_mime_signature_get_errors (signature);
+	if (errors != GMIME_SIGNATURE_ERROR_NONE) {
+	    printf (", \"errors\": %d", errors);
+	}
+
+	printf ("}");
+     }
+
+    printf ("]");
+
+    talloc_free (ctx_quote);
+}
+#else
 static void
 format_part_sigstatus_json (const GMimeSignatureValidity* validity)
 {
@@ -652,6 +739,7 @@ format_part_sigstatus_json (const GMimeSignatureValidity* validity)
 
     talloc_free (ctx_quote);
 }
+#endif
 
 static void
 format_part_content_json (GMimeObject *part)
@@ -1000,13 +1088,20 @@ notmuch_show_command (void *ctx, unused (int argc), unused (char *argv[]))
 	} else if ((STRNCMP_LITERAL (argv[i], "--verify") == 0) ||
 		   (STRNCMP_LITERAL (argv[i], "--decrypt") == 0)) {
 	    if (params.cryptoctx == NULL) {
+#ifdef GMIME_ATLEAST_26
+		/* TODO: GMimePasswordRequestFunc */
+		if (NULL == (params.cryptoctx = g_mime_gpg_context_new(NULL, "gpg")))
+#else
 		GMimeSession* session = g_object_new(g_mime_session_get_type(), NULL);
 		if (NULL == (params.cryptoctx = g_mime_gpg_context_new(session, "gpg")))
+#endif
 		    fprintf (stderr, "Failed to construct gpg context.\n");
 		else
 		    g_mime_gpg_context_set_always_trust((GMimeGpgContext*)params.cryptoctx, FALSE);
+#ifndef GMIME_ATLEAST_26
 		g_object_unref (session);
 		session = NULL;
+#endif
 	    }
 	    if (STRNCMP_LITERAL (argv[i], "--decrypt") == 0)
 		params.decrypt = 1;
