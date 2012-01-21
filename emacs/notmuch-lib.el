@@ -148,14 +148,14 @@ the user hasn't set this variable with the old or new value."
       (setq list (cdr list)))
     (nreverse out)))
 
-; This lets us avoid compiling these replacement functions when emacs
-; is sufficiently new enough to supply them alone. We do the macro
-; treatment rather than just wrapping our defun calls in a when form
-; specifically so that the compiler never sees the code on new emacs,
-; (since the code is triggering warnings that we don't know how to get
-; rid of.
-;
-; A more clever macro here would accept a condition and a list of forms.
+;; This lets us avoid compiling these replacement functions when emacs
+;; is sufficiently new enough to supply them alone. We do the macro
+;; treatment rather than just wrapping our defun calls in a when form
+;; specifically so that the compiler never sees the code on new emacs,
+;; (since the code is triggering warnings that we don't know how to get
+;; rid of.
+;;
+;; A more clever macro here would accept a condition and a list of forms.
 (defmacro compile-on-emacs-prior-to-23 (form)
   "Conditionally evaluate form only on emacs < emacs-23."
   (list 'when (< emacs-major-version 23)

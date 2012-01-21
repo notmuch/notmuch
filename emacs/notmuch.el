@@ -1,51 +1,51 @@
-; notmuch.el --- run notmuch within emacs
-;
-; Copyright © Carl Worth
-;
-; This file is part of Notmuch.
-;
-; Notmuch is free software: you can redistribute it and/or modify it
-; under the terms of the GNU General Public License as published by
-; the Free Software Foundation, either version 3 of the License, or
-; (at your option) any later version.
-;
-; Notmuch is distributed in the hope that it will be useful, but
-; WITHOUT ANY WARRANTY; without even the implied warranty of
-; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-; General Public License for more details.
-;
-; You should have received a copy of the GNU General Public License
-; along with Notmuch.  If not, see <http://www.gnu.org/licenses/>.
-;
-; Authors: Carl Worth <cworth@cworth.org>
+;; notmuch.el --- run notmuch within emacs
+;;
+;; Copyright © Carl Worth
+;;
+;; This file is part of Notmuch.
+;;
+;; Notmuch is free software: you can redistribute it and/or modify it
+;; under the terms of the GNU General Public License as published by
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
+;;
+;; Notmuch is distributed in the hope that it will be useful, but
+;; WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+;; General Public License for more details.
+;;
+;; You should have received a copy of the GNU General Public License
+;; along with Notmuch.  If not, see <http://www.gnu.org/licenses/>.
+;;
+;; Authors: Carl Worth <cworth@cworth.org>
 
-; This is an emacs-based interface to the notmuch mail system.
-;
-; You will first need to have the notmuch program installed and have a
-; notmuch database built in order to use this. See
-; http://notmuchmail.org for details.
-;
-; To install this software, copy it to a directory that is on the
-; `load-path' variable within emacs (a good candidate is
-; /usr/local/share/emacs/site-lisp). If you are viewing this from the
-; notmuch source distribution then you can simply run:
-;
-;	sudo make install-emacs
-;
-; to install it.
-;
-; Then, to actually run it, add:
-;
-;	(require 'notmuch)
-;
-; to your ~/.emacs file, and then run "M-x notmuch" from within emacs,
-; or run:
-;
-;	emacs -f notmuch
-;
-; Have fun, and let us know if you have any comment, questions, or
-; kudos: Notmuch list <notmuch@notmuchmail.org> (subscription is not
-; required, but is available from http://notmuchmail.org).
+;; This is an emacs-based interface to the notmuch mail system.
+;;
+;; You will first need to have the notmuch program installed and have a
+;; notmuch database built in order to use this. See
+;; http://notmuchmail.org for details.
+;;
+;; To install this software, copy it to a directory that is on the
+;; `load-path' variable within emacs (a good candidate is
+;; /usr/local/share/emacs/site-lisp). If you are viewing this from the
+;; notmuch source distribution then you can simply run:
+;;
+;;	sudo make install-emacs
+;;
+;; to install it.
+;;
+;; Then, to actually run it, add:
+;;
+;;	(require 'notmuch)
+;;
+;; to your ~/.emacs file, and then run "M-x notmuch" from within emacs,
+;; or run:
+;;
+;;	emacs -f notmuch
+;;
+;; Have fun, and let us know if you have any comment, questions, or
+;; kudos: Notmuch list <notmuch@notmuchmail.org> (subscription is not
+;; required, but is available from http://notmuchmail.org).
 
 (eval-when-compile (require 'cl))
 (require 'mm-view)
@@ -139,10 +139,10 @@ This is basically just `format-kbd-macro' but we also convert ESC to M-."
 	"M-"
       (concat desc " "))))
 
-; I would think that emacs would have code handy for walking a keymap
-; and generating strings for each key, and I would prefer to just call
-; that. But I couldn't find any (could be all implemented in C I
-; suppose), so I wrote my own here.
+;; I would think that emacs would have code handy for walking a keymap
+;; and generating strings for each key, and I would prefer to just call
+;; that. But I couldn't find any (could be all implemented in C I
+;; suppose), so I wrote my own here.
 (defun notmuch-substitute-one-command-key-with-prefix (prefix binding)
   "For a key binding, return a string showing a human-readable
 representation of the prefixed key as well as the first line of
@@ -271,14 +271,14 @@ For a mouse binding, return nil."
 (defun notmuch-search-scroll-down ()
   "Move backward through the search results by one window's worth."
   (interactive)
-  ; I don't know why scroll-down doesn't signal beginning-of-buffer
-  ; the way that scroll-up signals end-of-buffer, but c'est la vie.
-  ;
-  ; So instead of trapping a signal we instead check whether the
-  ; window begins on the first line of the buffer and if so, move
-  ; directly to that position. (We have to count lines since the
-  ; window-start position is not the same as point-min due to the
-  ; invisible thread-ID characters on the first line.
+  ;; I don't know why scroll-down doesn't signal beginning-of-buffer
+  ;; the way that scroll-up signals end-of-buffer, but c'est la vie.
+  ;;
+  ;; So instead of trapping a signal we instead check whether the
+  ;; window begins on the first line of the buffer and if so, move
+  ;; directly to that position. (We have to count lines since the
+  ;; window-start position is not the same as point-min due to the
+  ;; invisible thread-ID characters on the first line.
   (if (equal (count-lines (point-min) (window-start)) 0)
       (goto-char (point-min))
     (scroll-down nil)))

@@ -402,8 +402,8 @@ Complete list of currently available key bindings:
   "Run notmuch and display saved searches, known tags, etc."
   (interactive)
 
-  ; Jump through a hoop to get this value from the deprecated variable
-  ; name (`notmuch-folders') or from the default value.
+  ;; Jump through a hoop to get this value from the deprecated variable
+  ;; name (`notmuch-folders') or from the default value.
   (unless notmuch-saved-searches
     (setq notmuch-saved-searches (notmuch-saved-searches)))
 
