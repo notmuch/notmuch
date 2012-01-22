@@ -728,7 +728,7 @@ format_part_sigstatus_json (const GMimeSignatureValidity* validity)
                printf (", \"keyid\": %s", json_quote_str (ctx_quote, signer->keyid));
        }
        if (signer->errors != GMIME_SIGNER_ERROR_NONE) {
-           printf (", \"errors\": %x", signer->errors);
+           printf (", \"errors\": %d", signer->errors);
        }
 
        printf ("}");
