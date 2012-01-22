@@ -97,7 +97,7 @@ class Threads(object):
         :TODO: Make the iterator work more than once and cache the tags in
                the Python object.(?)
         """
-        if threads_p is None:
+        if not threads_p:
             raise NotmuchError(STATUS.NULL_POINTER)
 
         self._threads = threads_p
@@ -227,7 +227,7 @@ class Thread(object):
               automatically delete the parent object once all derived
               objects are dead.
         """
-        if thread_p is None:
+        if not thread_p:
             raise NotmuchError(STATUS.NULL_POINTER)
         self._thread = thread_p
         #keep reference to parent, so we keep it alive
@@ -288,7 +288,7 @@ class Thread(object):
 
         msgs_p = Thread._get_toplevel_messages(self._thread)
 
-        if msgs_p is None:
+        if not msgs_p:
             raise NotmuchError(STATUS.NULL_POINTER)
 
         return Messages(msgs_p, self)
