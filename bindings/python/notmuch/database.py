@@ -168,7 +168,7 @@ class Database(object):
 
         res = Database._create(_str(path), Database.MODE.READ_WRITE)
 
-        if res is None:
+        if not res:
             raise NotmuchError(
                 message="Could not create the specified database")
         self._db = res
@@ -188,7 +188,7 @@ class Database(object):
         """
         res = Database._open(_str(path), mode)
 
-        if res is None:
+        if not res:
             raise NotmuchError(message="Could not open the specified database")
         self._db = res
 
@@ -651,7 +651,7 @@ class Query(object):
         self._db = db
         # create query, return None if too little mem available
         query_p = Query._create(db.db_p, _str(querystr))
-        if query_p is None:
+        if not query_p:
             raise NullPointerError
         self._query = query_p
 
@@ -685,7 +685,7 @@ class Query(object):
         self._assert_query_is_initialized()
         threads_p = Query._search_threads(self._query)
 
-        if threads_p is None:
+        if not threads_p:
             raise NullPointerError
         return Threads(threads_p, self)
 
@@ -699,7 +699,7 @@ class Query(object):
         self._assert_query_is_initialized()
         msgs_p = Query._search_messages(self._query)
 
-        if msgs_p is None:
+        if not msgs_p:
             raise NullPointerError
         return Messages(msgs_p, self)
 
@@ -765,7 +765,7 @@ class Directory(object):
     def _assert_dir_is_initialized(self):
         """Raises a NotmuchError(:attr:`STATUS`.NOT_INITIALIZED)
         if dir_p is None"""
-        if self._dir_p is None:
+        if not self._dir_p:
             raise NotmuchError(STATUS.NOT_INITIALIZED)
 
     def __init__(self, path, dir_p, parent):
@@ -926,7 +926,7 @@ class Filenames(object):
     _move_to_next.restype = None
 
     def __next__(self):
-        if self._files_p is None:
+        if not self._files_p:
             raise NotmuchError(STATUS.NOT_INITIALIZED)
 
         if not self._valid(self._files_p):
@@ -953,7 +953,7 @@ class Filenames(object):
                      # NotmuchError(:attr:`STATUS`.NOT_INITIALIZED)
                      for file in files: print file
         """
-        if self._files_p is None:
+        if not self._files_p:
             raise NotmuchError(STATUS.NOT_INITIALIZED)
 
         i = 0

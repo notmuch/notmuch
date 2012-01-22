@@ -69,7 +69,7 @@ class Filenames(Python3StringMixIn):
              reference to it, so we can automatically delete the db object
              once all derived objects are dead.
         """
-        if files_p is None:
+        if not files_p:
             raise NotmuchError(STATUS.NULL_POINTER)
 
         self._files = files_p
