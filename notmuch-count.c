@@ -35,8 +35,8 @@ notmuch_count_command (void *ctx, int argc, char *argv[])
     char *query_str;
     int opt_index;
     int output = OUTPUT_MESSAGES;
-    const char **auto_exclude_tags;
-    size_t auto_exclude_tags_length;
+    const char **search_exclude_tags;
+    size_t search_exclude_tags_length;
     unsigned int i;
 
     notmuch_opt_desc_t options[] = {
@@ -78,10 +78,10 @@ notmuch_count_command (void *ctx, int argc, char *argv[])
 	return 1;
     }
 
-    auto_exclude_tags = notmuch_config_get_auto_exclude_tags
-	(config, &auto_exclude_tags_length);
-    for (i = 0; i < auto_exclude_tags_length; i++)
-	notmuch_query_add_tag_exclude (query, auto_exclude_tags[i]);
+    search_exclude_tags = notmuch_config_get_search_exclude_tags
+	(config, &search_exclude_tags_length);
+    for (i = 0; i < search_exclude_tags_length; i++)
+	notmuch_query_add_tag_exclude (query, search_exclude_tags[i]);
 
     switch (output) {
     case OUTPUT_MESSAGES:

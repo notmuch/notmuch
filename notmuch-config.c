@@ -89,7 +89,7 @@ static const char search_config_comment[] =
     "\n"
     " The following option is supported here:\n"
     "\n"
-    "\tauto_exclude_tags\n"
+    "\texclude_tags\n"
     "\t\tA ;-separated list of tags that will be excluded from\n"
     "\t\tsearch results by default.  Using an excluded tag in a\n"
     "\t\tquery will override that exclusion.\n";
@@ -106,8 +106,8 @@ struct _notmuch_config {
     const char **new_tags;
     size_t new_tags_length;
     notmuch_bool_t maildir_synchronize_flags;
-    const char **auto_exclude_tags;
-    size_t auto_exclude_tags_length;
+    const char **search_exclude_tags;
+    size_t search_exclude_tags_length;
 };
 
 static int
@@ -265,8 +265,8 @@ notmuch_config_open (void *ctx,
     config->new_tags = NULL;
     config->new_tags_length = 0;
     config->maildir_synchronize_flags = TRUE;
-    config->auto_exclude_tags = NULL;
-    config->auto_exclude_tags_length = 0;
+    config->search_exclude_tags = NULL;
+    config->search_exclude_tags_length = 0;
 
     if (! g_key_file_load_from_file (config->key_file,
 				     config->filename,
@@ -361,9 +361,9 @@ notmuch_config_open (void *ctx,
 	notmuch_config_set_new_tags (config, tags, 2);
     }
 
-    if (notmuch_config_get_auto_exclude_tags (config, &tmp) == NULL) {
+    if (notmuch_config_get_search_exclude_tags (config, &tmp) == NULL) {
 	const char *tags[] = { "deleted", "spam" };
-	notmuch_config_set_auto_exclude_tags (config, tags, 2);
+	notmuch_config_set_search_exclude_tags (config, tags, 2);
     }
 
     error = NULL;
@@ -624,20 +624,20 @@ notmuch_config_set_new_tags (notmuch_config_t *config,
 }
 
 const char **
-notmuch_config_get_auto_exclude_tags (notmuch_config_t *config, size_t *length)
+notmuch_config_get_search_exclude_tags (notmuch_config_t *config, size_t *length)
 {
-    return _config_get_list (config, "search", "auto_exclude_tags",
-			     &(config->auto_exclude_tags),
-			     &(config->auto_exclude_tags_length), length);
+    return _config_get_list (config, "search", "exclude_tags",
+			     &(config->search_exclude_tags),
+			     &(config->search_exclude_tags_length), length);
 }
 
 void
-notmuch_config_set_auto_exclude_tags (notmuch_config_t *config,
+notmuch_config_set_search_exclude_tags (notmuch_config_t *config,
 				      const char *list[],
 				      size_t length)
 {
-    _config_set_list (config, "search", "auto_exclude_tags", list, length,
-		      &(config->auto_exclude_tags));
+    _config_set_list (config, "search", "exclude_tags", list, length,
+		      &(config->search_exclude_tags));
 }
 
 /* Given a configuration item of the form <group>.<key> return the
