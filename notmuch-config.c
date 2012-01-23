@@ -362,8 +362,12 @@ notmuch_config_open (void *ctx,
     }
 
     if (notmuch_config_get_search_exclude_tags (config, &tmp) == NULL) {
-	const char *tags[] = { "deleted", "spam" };
-	notmuch_config_set_search_exclude_tags (config, tags, 2);
+	if (is_new) {
+	    const char *tags[] = { "deleted", "spam" };
+	    notmuch_config_set_search_exclude_tags (config, tags, 2);
+	} else {
+	    notmuch_config_set_search_exclude_tags (config, NULL, 0);
+	}
     }
 
     error = NULL;
