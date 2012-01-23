@@ -31,7 +31,7 @@ static void
 reply_part_content (GMimeObject *part);
 
 static const notmuch_show_format_t format_reply = {
-    "",
+    "", NULL,
 	"", NULL,
 	    "", NULL, reply_headers_message_part, ">\n",
 	    "",

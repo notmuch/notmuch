@@ -42,7 +42,7 @@ static void
 format_part_end_text (GMimeObject *part);
 
 static const notmuch_show_format_t format_text = {
-    "",
+    "", NULL,
 	"\fmessage{ ", format_message_text,
 	    "\fheader{\n", format_headers_text, format_headers_message_part_text, "\fheader}\n",
 	    "\fbody{\n",
@@ -89,7 +89,7 @@ static void
 format_part_end_json (GMimeObject *part);
 
 static const notmuch_show_format_t format_json = {
-    "[",
+    "[", NULL,
 	"{", format_message_json,
 	    "\"headers\": {", format_headers_json, format_headers_message_part_json, "}",
 	    ", \"body\": [",
@@ -110,7 +110,7 @@ format_message_mbox (const void *ctx,
 		     unused (int indent));
 
 static const notmuch_show_format_t format_mbox = {
-    "",
+    "", NULL,
         "", format_message_mbox,
             "", NULL, NULL, "",
             "",
@@ -129,7 +129,7 @@ static void
 format_part_content_raw (GMimeObject *part);
 
 static const notmuch_show_format_t format_raw = {
-    "",
+    "", NULL,
 	"", NULL,
 	    "", NULL, format_headers_message_part_text, "\n",
             "",
@@ -850,6 +850,19 @@ show_message (void *ctx,
 	      int indent,
 	      notmuch_show_params_t *params)
 {
+    if (format->part) {
+	void *local = talloc_new (ctx);
+	mime_node_t *root, *part;
+
+	if (mime_node_open (local, message, params->cryptoctx, params->decrypt,
+			    &root) == NOTMUCH_STATUS_SUCCESS &&
+	    (part = mime_node_seek_dfs (root, (params->part < 0 ?
+					       0 : params->part))))
+	    format->part (local, part, indent, params);
+	talloc_free (local);
+	return;
+    }
+
     if (params->part <= 0) {
 	fputs (format->message_start, stdout);
 	if (format->message)

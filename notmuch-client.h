@@ -62,8 +62,14 @@
 #define STRINGIFY(s) STRINGIFY_(s)
 #define STRINGIFY_(s) #s
 
+struct mime_node;
+struct notmuch_show_params;
+
 typedef struct notmuch_show_format {
     const char *message_set_start;
+    void (*part) (const void *ctx,
+		  struct mime_node *node, int indent,
+		  const struct notmuch_show_params *params);
     const char *message_start;
     void (*message) (const void *ctx,
 		     notmuch_message_t *message,
