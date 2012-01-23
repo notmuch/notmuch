@@ -364,6 +364,7 @@ format_headers_message_part_text (GMimeMessage *message)
     InternetAddressList *recipients;
     const char *recipients_string;
 
+    printf ("Subject: %s\n", g_mime_message_get_subject (message));
     printf ("From: %s\n", g_mime_message_get_sender (message));
     recipients = g_mime_message_get_recipients (message, GMIME_RECIPIENT_TYPE_TO);
     recipients_string = internet_address_list_to_string (recipients, 0);
@@ -375,7 +376,6 @@ format_headers_message_part_text (GMimeMessage *message)
     if (recipients_string)
 	printf ("Cc: %s\n",
 		recipients_string);
-    printf ("Subject: %s\n", g_mime_message_get_subject (message));
     printf ("Date: %s\n", g_mime_message_get_date_as_string (message));
 }
 
