@@ -133,6 +133,8 @@ notmuch_setup_command (unused (void *ctx),
     int is_new;
     const char **new_tags;
     size_t new_tags_len;
+    const char **search_exclude_tags;
+    size_t search_exclude_tags_len;
 
 #define prompt(format, ...)					\
     do {							\
@@ -207,6 +209,24 @@ notmuch_setup_command (unused (void *ctx),
 
 	g_ptr_array_free (tags, TRUE);
     }
+
+
+    search_exclude_tags = notmuch_config_get_search_exclude_tags (config, &search_exclude_tags_len);
+
+    printf ("Tags to exclude when searching messages (separated by spaces) [");
+    print_tag_list (search_exclude_tags, search_exclude_tags_len);
+    prompt ("]: ");
+
+    if (strlen (response)) {
+	GPtrArray *tags = parse_tag_list (ctx, response);
+
+	notmuch_config_set_search_exclude_tags (config,
+						(const char **) tags->pdata,
+						tags->len);
+
+	g_ptr_array_free (tags, TRUE);
+    }
+
 
     if (! notmuch_config_save (config)) {
 	if (is_new)
