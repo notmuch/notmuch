@@ -1,3 +1,17 @@
+Notmuch 0.11.1 (2012-mm-dd)
+===========================
+
+Bug-fix release.
+----------------
+
+Fix error handling in python bindings.
+
+  The python bindings in 0.11 failed to detect NULL pointers being
+  returned from libnotmuch functions and thus failed to raise
+  exceptions to indicate the error condition. Any subsequent calls
+  into libnotmuch caused segmentation faults.
+
+
 Notmuch 0.11 (2012-01-13)
 =========================
 
