@@ -13,10 +13,21 @@ Reply to sender
 
 Tag exclusion
 
-  Tags can be automatically excluded from search results unless they
-  appear explicitly in a query.  By default, notmuch excludes the tags
-  deleted and spam.  This can be changed using the new config setting
-  search.auto_exclude_tags.
+  Tags can be automatically excluded from search results by adding them
+  to the new 'search.exclude_tags' option in the Notmuch config file.
+
+  This behaviour can be overridden by explicitly including an excluded
+  tag in your query, for example:
+
+    notmuch search $your_query and tag:$excluded_tag
+
+  Existing users will probably want to run "notmuch setup" again to add
+  the new well-commented [search] section to the configuration file.
+
+  For new configurations, accepting the default setting will cause the
+  tags "deleted" and "spam" to be excluded, equivalent to running:
+
+    notmuch config set search.exclude_tags deleted spam
 
 Emacs Interface
 ---------------
