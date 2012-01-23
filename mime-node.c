@@ -112,6 +112,11 @@ mime_node_open (const void *ctx, notmuch_message_t *message,
     root->nchildren = 1;
     root->ctx = mctx;
 
+    root->parent = NULL;
+    root->part_num = 0;
+    root->next_child = 0;
+    root->next_part_num = 1;
+
     *root_out = root;
     return NOTMUCH_STATUS_SUCCESS;
 
@@ -137,7 +142,7 @@ _signature_validity_free (GMimeSignatureValidity **proxy)
 #endif
 
 static mime_node_t *
-_mime_node_create (const mime_node_t *parent, GMimeObject *part)
+_mime_node_create (mime_node_t *parent, GMimeObject *part)
 {
     mime_node_t *node = talloc_zero (parent, mime_node_t);
     GError *err = NULL;
@@ -150,6 +155,9 @@ _mime_node_create (const mime_node_t *parent, GMimeObject *part)
 	talloc_free (node);
 	return NULL;
     }
+    node->parent = parent;
+    node->part_num = node->next_part_num = -1;
+    node->next_child = 0;
 
     /* Deal with the different types of parts */
     if (GMIME_IS_PART (part)) {
@@ -267,9 +275,10 @@ _mime_node_create (const mime_node_t *parent, GMimeObject *part)
 }
 
 mime_node_t *
-mime_node_child (const mime_node_t *parent, int child)
+mime_node_child (mime_node_t *parent, int child)
 {
     GMimeObject *sub;
+    mime_node_t *node;
 
     if (!parent || child < 0 || child >= parent->nchildren)
 	return NULL;
@@ -287,7 +296,30 @@ mime_node_child (const mime_node_t *parent, int child)
 	INTERNAL_ERROR ("Unexpected GMimeObject type: %s",
 			g_type_name (G_OBJECT_TYPE (parent->part)));
     }
-    return _mime_node_create (parent, sub);
+    node = _mime_node_create (parent, sub);
+
+    if (child == parent->next_child && parent->next_part_num != -1) {
+	/* We're traversing in depth-first order.  Record the child's
+	 * depth-first numbering. */
+	node->part_num = parent->next_part_num;
+	node->next_part_num = node->part_num + 1;
+
+	/* Prepare the parent for its next depth-first child. */
+	parent->next_child++;
+	parent->next_part_num = -1;
+
+	if (node->nchildren == 0) {
+	    /* We've reached a leaf, so find the parent that has more
+	     * children and set it up to number its next child. */
+	    mime_node_t *iter = node->parent;
+	    while (iter && iter->next_child == iter->nchildren)
+		iter = iter->parent;
+	    if (iter)
+		iter->next_part_num = node->part_num + 1;
+	}
+    }
+
+    return node;
 }
 
 static mime_node_t *

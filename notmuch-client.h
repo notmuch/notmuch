@@ -297,6 +297,13 @@ typedef struct mime_node {
     /* The number of children of this part. */
     int nchildren;
 
+    /* The parent of this node or NULL if this is the root node. */
+    struct mime_node *parent;
+
+    /* The depth-first part number of this child if the MIME tree is
+     * being traversed in depth-first order, or -1 otherwise. */
+    int part_num;
+
     /* True if decryption of this part was attempted. */
     notmuch_bool_t decrypt_attempted;
     /* True if decryption of this part's child succeeded.  In this
@@ -324,6 +331,11 @@ typedef struct mime_node {
     /* Internal: For successfully decrypted multipart parts, the
      * decrypted part to substitute for the second child. */
     GMimeObject *decrypted_child;
+
+    /* Internal: The next child for depth-first traversal and the part
+     * number to assign it (or -1 if unknown). */
+    int next_child;
+    int next_part_num;
 } mime_node_t;
 
 /* Construct a new MIME node pointing to the root message part of
@@ -356,7 +368,7 @@ mime_node_open (const void *ctx, notmuch_message_t *message,
  * an error message on stderr).
  */
 mime_node_t *
-mime_node_child (const mime_node_t *parent, int child);
+mime_node_child (mime_node_t *parent, int child);
 
 /* Return the nth child of node in a depth-first traversal.  If n is
  * 0, returns node itself.  Returns NULL if there is no such part. */
