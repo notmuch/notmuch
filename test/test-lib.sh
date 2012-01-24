@@ -926,7 +926,7 @@ test_emacs () {
 				--eval '(orphan-watchdog $$)'" || return
 		EMACS_SERVER="$server_name"
 		# wait until the emacs server is up
-		until test_emacs '()' 2>/dev/null; do
+		until test_emacs '()' >/dev/null 2>/dev/null; do
 			sleep 1
 		done
 	fi
