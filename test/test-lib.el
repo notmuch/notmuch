@@ -20,6 +20,8 @@
 ;;
 ;; Authors: Dmitry Kurochkin <dmitry.kurochkin@gmail.com>
 
+(require 'cl)	;; This code is generally used uncompiled.
+
 ;; `read-file-name' by default uses `completing-read' function to read
 ;; user input.  It does not respect `standard-input' variable which we
 ;; use in tests to provide user input.  So replace it with a plain
@@ -92,3 +94,27 @@ nothing."
 		   result
 		 (prin1-to-string result)))
        (test-output))))
+
+(defun notmuch-test-report-unexpected (output expected)
+  "Report that the OUTPUT does not match the EXPECTED result."
+  (concat "Expect:\t" (prin1-to-string expected) "\n"
+	  "Output:\t" (prin1-to-string output) "\n"))
+
+(defun notmuch-test-expect-equal (output expected)
+  "Compare OUTPUT with EXPECTED. Report any discrepencies."
+  (if (equal output expected)
+      t
+    (cond
+     ((and (listp output)
+	   (listp expected))
+      ;; Reporting the difference between two lists is done by
+      ;; reporting differing elements of OUTPUT and EXPECTED
+      ;; pairwise. This is expected to make analysis of failures
+      ;; simpler.
+      (apply #'concat (loop for o in output
+			    for e in expected
+			    if (not (equal o e))
+			    collect (notmuch-test-report-unexpected o e))))
+
+     (t
+      (notmuch-test-report-unexpected output expected)))))
