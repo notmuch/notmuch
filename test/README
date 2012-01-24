@@ -202,6 +202,14 @@ library for your script to use.
    tests that may run in the same Emacs instance.  Use `let' instead
    so the scope of the changed variables is limited to a single test.
 
+ test_emacs_expect_t <emacs-lisp-expressions>
+
+  This function executes the provided emacs lisp script within
+  emacs in a manner similar to 'test_emacs'. The expressions should
+  return the value `t' to indicate that the test has passed. If the
+  test does not return `t' then it is considered failed and all data
+  returned by the test is reported to the tester.
+
  test_done
 
    Your test script must have test_done at the end.  Its purpose

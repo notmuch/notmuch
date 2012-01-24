@@ -503,6 +503,35 @@ test_expect_equal_file ()
     fi
 }
 
+test_emacs_expect_t () {
+	test "$#" = 2 && { prereq=$1; shift; } || prereq=
+	test "$#" = 1 ||
+	error "bug in the test script: not 1 or 2 parameters to test_emacs_expect_t"
+
+	# Run the test.
+	if ! test_skip "$test_subtest_name"
+	then
+		test_emacs "(notmuch-test-run $1)" >/dev/null
+
+		# Restore state after the test.
+		exec 1>&6 2>&7		# Restore stdout and stderr
+		inside_subtest=
+
+		# Report success/failure.
+		result=$(cat OUTPUT)
+		if [ "$result" = t ]
+		then
+			test_ok_ "$test_subtest_name"
+		else
+			test_failure_ "$test_subtest_name" "${result}"
+		fi
+	else
+		# Restore state after the (non) test.
+		exec 1>&6 2>&7		# Restore stdout and stderr
+		inside_subtest=
+	fi
+}
+
 NOTMUCH_NEW ()
 {
     notmuch new | grep -v -E -e '^Processed [0-9]*( total)? file|Found [0-9]* total file'

@@ -52,6 +52,7 @@ TESTS="
   python
   hooks
   argument-parsing
+  emacs-test-functions.sh
 "
 TESTS=${NOTMUCH_TESTS:=$TESTS}
 

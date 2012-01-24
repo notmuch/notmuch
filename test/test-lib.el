@@ -83,3 +83,12 @@ nothing."
 
 (add-hook-counter 'notmuch-hello-mode-hook)
 (add-hook-counter 'notmuch-hello-refresh-hook)
+
+(defmacro notmuch-test-run (&rest body)
+  "Evaluate a BODY of test expressions and output the result."
+  `(with-temp-buffer
+     (let ((result (progn ,@body)))
+       (insert (if (stringp result)
+		   result
+		 (prin1-to-string result)))
+       (test-output))))
