@@ -53,6 +53,7 @@ TESTS="
   hooks
   argument-parsing
   emacs-test-functions.sh
+  emacs-address-cleaning.sh
 "
 TESTS=${NOTMUCH_TESTS:=$TESTS}
 
