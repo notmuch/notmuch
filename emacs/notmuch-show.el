@@ -1076,7 +1076,7 @@ thread id.  If a prefix is given, crypto processing is toggled."
 	(define-key map "-" 'notmuch-show-remove-tag)
 	(define-key map "+" 'notmuch-show-add-tag)
 	(define-key map "x" 'notmuch-show-archive-thread-then-exit)
-	(define-key map "a" 'notmuch-show-archive-thread)
+	(define-key map "a" 'notmuch-show-archive-thread-then-next)
 	(define-key map "N" 'notmuch-show-next-message)
 	(define-key map "P" 'notmuch-show-previous-message)
 	(define-key map "n" 'notmuch-show-next-open-message)
@@ -1336,7 +1336,7 @@ thread from the search from which this thread was originally
 shown."
   (interactive)
   (if (notmuch-show-advance)
-      (notmuch-show-archive-thread)))
+      (notmuch-show-archive-thread-then-next)))
 
 (defun notmuch-show-rewind ()
   "Backup through the thread, (reverse scrolling compared to \\[notmuch-show-advance-and-archive]).
@@ -1590,8 +1590,12 @@ added."
       (if show-next
 	  (notmuch-search-show-thread)))))
 
-(defun notmuch-show-archive-thread ()
-  "Archive each message in thread, then show next thread from search.
+(defun notmuch-show-archive-thread (&optional unarchive)
+  "Archive each message in thread.
+
+If a prefix argument is given, the messages will be
+\"unarchived\" (ie. the \"inbox\" tag will be added instead of
+removed).
 
 Archive each message currently shown by removing the \"inbox\"
 tag from each. Then kill this buffer and show the next thread
@@ -1601,14 +1605,21 @@ Note: This command is safe from any race condition of new messages
 being delivered to the same thread. It does not archive the
 entire thread, but only the messages shown in the current
 buffer."
+  (interactive "P")
+  (if unarchive
+      (notmuch-show-add-tag-thread "inbox")
+    (notmuch-show-remove-tag-thread "inbox")))
+
+(defun notmuch-show-archive-thread-then-next ()
+  "Archive each message in thread, then show next thread from search."
   (interactive)
-  (notmuch-show-remove-tag-thread "inbox")
+  (notmuch-show-archive-thread)
   (notmuch-show-next-thread t))
 
 (defun notmuch-show-archive-thread-then-exit ()
   "Archive each message in thread, then exit back to search results."
   (interactive)
-  (notmuch-show-remove-tag-thread "inbox")
+  (notmuch-show-archive-thread)
   (notmuch-show-next-thread))
 
 (defun notmuch-show-stash-cc ()
