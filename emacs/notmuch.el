@@ -925,21 +925,25 @@ PROMPT is the string to prompt with."
 	       (t (list string)))))))
       ;; this was simpler than convincing completing-read to accept spaces:
       (define-key keymap (kbd "<tab>") 'minibuffer-complete)
-      (read-from-minibuffer prompt nil keymap nil
-			    'notmuch-query-history nil nil))))
+      (let ((history-delete-duplicates t))
+	(read-from-minibuffer prompt nil keymap nil
+			      'notmuch-search-history nil nil)))))
 
 ;;;###autoload
-(defun notmuch-search (query &optional oldest-first target-thread target-line continuation)
-  "Run \"notmuch search\" with the given query string and display results.
+(defun notmuch-search (&optional query oldest-first target-thread target-line continuation)
+  "Run \"notmuch search\" with the given `query' and display results.
 
-The optional parameters are used as follows:
+If `query' is nil, it is read interactively from the minibuffer.
+Other optional parameters are used as follows:
 
   oldest-first: A Boolean controlling the sort order of returned threads
   target-thread: A thread ID (with the thread: prefix) that will be made
                  current if it appears in the search results.
   target-line: The line number to move to if the target thread does not
                appear in the search results."
-  (interactive (list (notmuch-read-query "Notmuch search: ")))
+  (interactive)
+  (if (null query)
+      (setq query (notmuch-read-query "Notmuch search: ")))
   (let ((buffer (get-buffer-create (notmuch-search-buffer-title query))))
     (switch-to-buffer buffer)
     (notmuch-search-mode)

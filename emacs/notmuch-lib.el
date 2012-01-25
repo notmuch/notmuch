@@ -69,6 +69,9 @@
 
 ;;
 
+(defvar notmuch-search-history nil
+  "Variable to store notmuch searches history.")
+
 (defcustom notmuch-saved-searches nil
   "A list of saved searches to display."
   :type '(alist :key-type string :value-type string)

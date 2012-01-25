@@ -29,8 +29,8 @@
 (declare-function notmuch-search "notmuch" (query &optional oldest-first target-thread target-line continuation))
 (declare-function notmuch-poll "notmuch" ())
 
-(defcustom notmuch-recent-searches-max 10
-  "The number of recent searches to store and display."
+(defcustom notmuch-hello-recent-searches-max 10
+  "The number of recent searches to display."
   :type 'integer
   :group 'notmuch-hello)
 
@@ -154,16 +154,6 @@ International Bureau of Weights and Measures."
 (defvar notmuch-hello-url "http://notmuchmail.org"
   "The `notmuch' web site.")
 
-(defvar notmuch-hello-recent-searches nil)
-
-(defun notmuch-hello-remember-search (search)
-  (setq notmuch-hello-recent-searches
-	(delete search notmuch-hello-recent-searches))
-  (push search notmuch-hello-recent-searches)
-  (if (> (length notmuch-hello-recent-searches)
-	 notmuch-recent-searches-max)
-      (setq notmuch-hello-recent-searches (butlast notmuch-hello-recent-searches))))
-
 (defun notmuch-hello-nice-number (n)
   (let (result)
     (while (> n 0)
@@ -183,9 +173,12 @@ International Bureau of Weights and Measures."
     search))
 
 (defun notmuch-hello-search (search)
-  (let ((search (notmuch-hello-trim search)))
-    (notmuch-hello-remember-search search)
-    (notmuch-search search notmuch-search-oldest-first nil nil #'notmuch-hello-search-continuation)))
+  (unless (null search)
+    (setq search (notmuch-hello-trim search))
+    (let ((history-delete-duplicates t))
+      (add-to-history 'notmuch-search-history search)))
+  (notmuch-search search notmuch-search-oldest-first nil nil
+		  #'notmuch-hello-search-continuation))
 
 (defun notmuch-hello-add-saved-search (widget)
   (interactive)
@@ -464,7 +457,7 @@ Complete list of currently available key bindings:
 
     (let ((found-target-pos nil)
 	  (final-target-pos nil)
-	  (search-bar-pos))
+	  (default-pos))
       (let* ((saved-alist
 	      ;; Filter out empty saved searches if required.
 	      (if notmuch-show-empty-saved-searches
@@ -496,7 +489,7 @@ Complete list of currently available key bindings:
 	    (indent-rigidly start (point) notmuch-hello-indent)))
 
 	(widget-insert "\nSearch: ")
-	(setq search-bar-pos (point-marker))
+	(setq default-pos (point-marker))
 	(widget-create 'editable-field
 		       ;; Leave some space at the start and end of the
 		       ;; search boxes.
@@ -513,18 +506,18 @@ Complete list of currently available key bindings:
 	(put-text-property (1- (point)) (point) 'invisible t)
 	(widget-insert "\n")
 
-	(when notmuch-hello-recent-searches
+	(when notmuch-search-history
 	  (widget-insert "\nRecent searches: ")
 	  (widget-create 'push-button
 			 :notify (lambda (&rest ignore)
-				   (setq notmuch-hello-recent-searches nil)
+				   (setq notmuch-search-history nil)
 				   (notmuch-hello-update))
 			 "clear")
 	  (widget-insert "\n\n")
-	  (let ((start (point))
-		(nth 0))
-	    (mapc (lambda (search)
-		    (let ((widget-symbol (intern (format "notmuch-hello-search-%d" nth))))
+	  (let ((start (point)))
+	    (loop for i from 1 to notmuch-hello-recent-searches-max
+		  for search in notmuch-search-history do
+		    (let ((widget-symbol (intern (format "notmuch-hello-search-%d" i))))
 		      (set widget-symbol
 			   (widget-create 'editable-field
 					  ;; Don't let the search boxes be
@@ -551,9 +544,7 @@ Complete list of currently available key bindings:
 					       (notmuch-hello-add-saved-search widget))
 				     :notmuch-saved-search-widget widget-symbol
 				     "save"))
-		    (widget-insert "\n")
-		    (setq nth (1+ nth)))
-		  notmuch-hello-recent-searches)
+		    (widget-insert "\n"))
 	    (indent-rigidly start (point) notmuch-hello-indent)))
 
 	(when alltags-alist
@@ -582,7 +573,7 @@ Complete list of currently available key bindings:
       (let ((start (point)))
 	(widget-insert "\n\n")
 	(widget-insert "Type a search query and hit RET to view matching threads.\n")
-	(when notmuch-hello-recent-searches
+	(when notmuch-search-history
 	  (widget-insert "Hit RET to re-submit a previous search. Edit it first if you like.\n")
 	  (widget-insert "Save recent searches with the `save' button.\n"))
 	(when notmuch-saved-searches
@@ -600,7 +591,7 @@ Complete list of currently available key bindings:
 	  (widget-forward 1)))
 
       (unless (widget-at)
-	(goto-char search-bar-pos))))
+	(goto-char default-pos))))
 
   (run-hooks 'notmuch-hello-refresh-hook))
 
