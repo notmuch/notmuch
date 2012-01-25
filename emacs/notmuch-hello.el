@@ -29,9 +29,6 @@
 (declare-function notmuch-search "notmuch" (query &optional oldest-first target-thread target-line continuation))
 (declare-function notmuch-poll "notmuch" ())
 
-(defvar notmuch-hello-search-bar-marker nil
-  "The position of the search bar within the notmuch-hello buffer.")
-
 (defcustom notmuch-recent-searches-max 10
   "The number of recent searches to store and display."
   :type 'integer
@@ -324,11 +321,6 @@ should be. Returns a cons cell `(tags-per-line width)'."
       (widget-insert "\n"))
     found-target-pos))
 
-(defun notmuch-hello-goto-search ()
-  "Put point inside the `search' widget."
-  (interactive)
-  (goto-char notmuch-hello-search-bar-marker))
-
 (defimage notmuch-hello-logo ((:type png :file "notmuch-logo.png")))
 
 (defun notmuch-hello-search-continuation()
@@ -358,7 +350,7 @@ should be. Returns a cons cell `(tags-per-line width)'."
     (define-key map "G" 'notmuch-hello-poll-and-update)
     (define-key map (kbd "<C-tab>") 'widget-backward)
     (define-key map "m" 'notmuch-mua-new-mail)
-    (define-key map "s" 'notmuch-hello-goto-search)
+    (define-key map "s" 'notmuch-search)
     map)
   "Keymap for \"notmuch hello\" buffers.")
 (fset 'notmuch-hello-mode-map notmuch-hello-mode-map)
@@ -471,7 +463,8 @@ Complete list of currently available key bindings:
       (widget-insert " messages.\n"))
 
     (let ((found-target-pos nil)
-	  (final-target-pos nil))
+	  (final-target-pos nil)
+	  (search-bar-pos))
       (let* ((saved-alist
 	      ;; Filter out empty saved searches if required.
 	      (if notmuch-show-empty-saved-searches
@@ -503,7 +496,7 @@ Complete list of currently available key bindings:
 	    (indent-rigidly start (point) notmuch-hello-indent)))
 
 	(widget-insert "\nSearch: ")
-	(setq notmuch-hello-search-bar-marker (point-marker))
+	(setq search-bar-pos (point-marker))
 	(widget-create 'editable-field
 		       ;; Leave some space at the start and end of the
 		       ;; search boxes.
@@ -595,7 +588,7 @@ Complete list of currently available key bindings:
 	(when notmuch-saved-searches
 	  (widget-insert "Edit saved searches with the `edit' button.\n"))
 	(widget-insert "Hit RET or click on a saved search or tag name to view matching threads.\n")
-	(widget-insert "`=' refreshes this screen. `s' jumps to the search box. `q' to quit.\n")
+	(widget-insert "`=' refreshes this screen. `s' to search messages. `q' to quit.\n")
 	(let ((fill-column (- (window-width) notmuch-hello-indent)))
 	  (center-region start (point))))
 
@@ -607,7 +600,7 @@ Complete list of currently available key bindings:
 	  (widget-forward 1)))
 
       (unless (widget-at)
-	(notmuch-hello-goto-search))))
+	(goto-char search-bar-pos))))
 
   (run-hooks 'notmuch-hello-refresh-hook))
 
