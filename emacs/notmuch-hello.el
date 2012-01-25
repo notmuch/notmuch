@@ -172,7 +172,8 @@ International Bureau of Weights and Measures."
       (match-string 1 search)
     search))
 
-(defun notmuch-hello-search (search)
+(defun notmuch-hello-search (&optional search)
+  (interactive)
   (unless (null search)
     (setq search (notmuch-hello-trim search))
     (let ((history-delete-duplicates t))
@@ -343,7 +344,7 @@ should be. Returns a cons cell `(tags-per-line width)'."
     (define-key map "G" 'notmuch-hello-poll-and-update)
     (define-key map (kbd "<C-tab>") 'widget-backward)
     (define-key map "m" 'notmuch-mua-new-mail)
-    (define-key map "s" 'notmuch-search)
+    (define-key map "s" 'notmuch-hello-search)
     map)
   "Keymap for \"notmuch hello\" buffers.")
 (fset 'notmuch-hello-mode-map notmuch-hello-mode-map)
