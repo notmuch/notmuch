@@ -19,6 +19,8 @@
 ;;
 ;; Authors: David Edmondson <dme@dme.org>
 
+(declare-function notmuch-show-get-prop "notmuch-show" (prop &optional props))
+
 (defcustom notmuch-print-mechanism 'notmuch-print-lpr
   "How should printing be done?"
   :group 'notmuch
