@@ -1431,7 +1431,7 @@ buffer."
 	(goto-char (point-max))))))
 
 (defun notmuch-show-previous-open-message ()
-  "Show the previous message."
+  "Show the previous open message."
   (interactive)
   (while (and (notmuch-show-goto-message-previous)
 	      (not (notmuch-show-message-visible-p))))
