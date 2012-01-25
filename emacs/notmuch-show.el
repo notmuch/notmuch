@@ -39,6 +39,7 @@
 (declare-function notmuch-call-notmuch-process "notmuch" (&rest args))
 (declare-function notmuch-fontify-headers "notmuch" nil)
 (declare-function notmuch-select-tag-with-completion "notmuch" (prompt &rest search-terms))
+(declare-function notmuch-search-next-thread "notmuch" nil)
 (declare-function notmuch-search-show-thread "notmuch" nil)
 
 (defcustom notmuch-message-headers '("Subject" "To" "Cc" "Date")
@@ -1567,7 +1568,7 @@ argument, hide all of the messages."
     (if parent-buffer
 	(progn
 	  (switch-to-buffer parent-buffer)
-	  (forward-line)
+	  (notmuch-search-next-thread)
 	  (if show-next
 	      (notmuch-search-show-thread))))))
 
