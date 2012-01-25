@@ -82,6 +82,7 @@ Optional OUTPUT allows passing a list of flags to muttprint."
 
 (defun notmuch-print-message (msg)
   "Print a message using the user-selected mechanism."
+  (set-buffer-modified-p nil)
   (funcall notmuch-print-mechanism msg))
 
 (provide 'notmuch-print)
