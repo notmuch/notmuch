@@ -580,7 +580,7 @@ Complete list of currently available key bindings:
 	(when notmuch-saved-searches
 	  (widget-insert "Edit saved searches with the `edit' button.\n"))
 	(widget-insert "Hit RET or click on a saved search or tag name to view matching threads.\n")
-	(widget-insert "`=' refreshes this screen. `s' to search messages. `q' to quit.\n")
+	(widget-insert "`=' to refresh this screen. `s' to search messages. `q' to quit.\n")
 	(let ((fill-column (- (window-width) notmuch-hello-indent)))
 	  (center-region start (point))))
 
