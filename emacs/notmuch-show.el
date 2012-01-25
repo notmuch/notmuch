@@ -1390,14 +1390,19 @@ any effects from previous calls to
   (with-current-notmuch-show-message
    (notmuch-mua-new-forward-message prompt-for-sender)))
 
-(defun notmuch-show-next-message ()
-  "Show the next message."
-  (interactive)
+(defun notmuch-show-next-message (&optional pop-at-end)
+  "Show the next message.
+
+If a prefix argument is given and this is the last message in the
+thread, navigate to the next thread in the parent search buffer."
+  (interactive "P")
   (if (notmuch-show-goto-message-next)
       (progn
 	(notmuch-show-mark-read)
 	(notmuch-show-message-adjust))
-    (goto-char (point-max))))
+    (if pop-at-end
+	(notmuch-show-next-thread)
+      (goto-char (point-max)))))
 
 (defun notmuch-show-previous-message ()
   "Show the previous message."
@@ -1406,9 +1411,13 @@ any effects from previous calls to
   (notmuch-show-mark-read)
   (notmuch-show-message-adjust))
 
-(defun notmuch-show-next-open-message ()
-  "Show the next message."
-  (interactive)
+(defun notmuch-show-next-open-message (&optional pop-at-end)
+  "Show the next open message.
+
+If a prefix argument is given and this is the last open message
+in the thread, navigate to the next thread in the parent search
+buffer."
+  (interactive "P")
   (let (r)
     (while (and (setq r (notmuch-show-goto-message-next))
 		(not (notmuch-show-message-visible-p))))
@@ -1416,7 +1425,9 @@ any effects from previous calls to
 	(progn
 	  (notmuch-show-mark-read)
 	  (notmuch-show-message-adjust))
-      (goto-char (point-max)))))
+      (if pop-at-end
+	  (notmuch-show-next-thread)
+	(goto-char (point-max))))))
 
 (defun notmuch-show-previous-open-message ()
   "Show the previous message."
