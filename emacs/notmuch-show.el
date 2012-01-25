@@ -1557,20 +1557,38 @@ argument, hide all of the messages."
   (interactive)
   (backward-button 1))
 
-(defun notmuch-show-archive-thread-internal (show-next)
-  ;; Remove the tag from the current set of messages.
+(defun notmuch-show-tag-thread-internal (tag &optional remove)
+  "Add tag to the current set of messages.
+
+If the remove switch is given, tags will be removed instead of
+added."
   (goto-char (point-min))
-  (loop do (notmuch-show-remove-tag "inbox")
-	until (not (notmuch-show-goto-message-next)))
-  ;; Move to the next item in the search results, if any.
+  (let ((tag-function (if remove
+			  'notmuch-show-remove-tag
+			'notmuch-show-add-tag)))
+    (loop do (funcall tag-function tag)
+	  until (not (notmuch-show-goto-message-next)))))
+
+(defun notmuch-show-add-tag-thread (tag)
+  "Add tag to all messages in the current thread."
+  (interactive)
+  (notmuch-show-tag-thread-internal tag))
+
+(defun notmuch-show-remove-tag-thread (tag)
+  "Remove tag from all messages in the current thread."
+  (interactive)
+  (notmuch-show-tag-thread-internal tag t))
+
+(defun notmuch-show-next-thread (&optional show-next)
+  "Move to the next item in the search results, if any."
+  (interactive "P")
   (let ((parent-buffer notmuch-show-parent-buffer))
     (notmuch-kill-this-buffer)
-    (if parent-buffer
-	(progn
-	  (switch-to-buffer parent-buffer)
-	  (notmuch-search-next-thread)
-	  (if show-next
-	      (notmuch-search-show-thread))))))
+    (when parent-buffer
+      (switch-to-buffer parent-buffer)
+      (notmuch-search-next-thread)
+      (if show-next
+	  (notmuch-search-show-thread)))))
 
 (defun notmuch-show-archive-thread ()
   "Archive each message in thread, then show next thread from search.
@@ -1584,12 +1602,14 @@ being delivered to the same thread. It does not archive the
 entire thread, but only the messages shown in the current
 buffer."
   (interactive)
-  (notmuch-show-archive-thread-internal t))
+  (notmuch-show-remove-tag-thread "inbox")
+  (notmuch-show-next-thread t))
 
 (defun notmuch-show-archive-thread-then-exit ()
   "Archive each message in thread, then exit back to search results."
   (interactive)
-  (notmuch-show-archive-thread-internal nil))
+  (notmuch-show-remove-tag-thread "inbox")
+  (notmuch-show-next-thread))
 
 (defun notmuch-show-stash-cc ()
   "Copy CC field of current message to kill-ring."
