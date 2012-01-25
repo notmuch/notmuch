@@ -294,21 +294,43 @@ operation on the contents of the current buffer."
   "Try to clean a single email ADDRESS for display.  Return
 unchanged ADDRESS if parsing fails."
   (condition-case nil
-    (let* ((parsed (mail-header-parse-address address))
-	   (address (car parsed))
-	   (name (cdr parsed)))
-      ;; Remove double quotes. They might be required during transport,
-      ;; but we don't need to see them.
-      (when name
-        (setq name (replace-regexp-in-string "\"" "" name)))
+    (let (p-name p-address)
+      ;; It would be convenient to use `mail-header-parse-address',
+      ;; but that expects un-decoded mailbox parts, whereas our
+      ;; mailbox parts are already decoded (and hence may contain
+      ;; UTF-8). Given that notmuch should handle most of the awkward
+      ;; cases, some simple string deconstruction should be sufficient
+      ;; here.
+      (cond
+       ;; "User <user@dom.ain>" style.
+       ((string-match "\\(.*\\) <\\(.*\\)>" address)
+	(setq p-name (match-string 1 address)
+	      p-address (match-string 2 address)))
+
+       ;; "<user@dom.ain>" style.
+       ((string-match "<\\(.*\\)>" address)
+	(setq p-address (match-string 1 address)))
+
+       ;; Everything else.
+       (t
+	(setq p-address address)))
+
+      ;; Remove outer double quotes. They might be required during
+      ;; transport, but we don't need to see them.
+      (when (and p-name
+		 (string-match "^\"\\(.*\\)\"$" p-name))
+	(setq p-name (match-string 1 p-name)))
+
       ;; If the address is 'foo@bar.com <foo@bar.com>' then show just
       ;; 'foo@bar.com'.
-      (when (string= name address)
-        (setq name nil))
+      (when (string= p-name p-address)
+	(setq p-name nil))
 
-      (if (not name)
-        address
-        (concat name " <" address ">")))
+      ;; If no name results, return just the address.
+      (if (not p-name)
+	  p-address
+	;; Otherwise format the name and address together.
+	(concat p-name " <" p-address ">")))
     (error address)))
 
 (defun notmuch-show-insert-headerline (headers date tags depth)
@@ -1423,7 +1445,7 @@ than only the current message."
   (interactive "P\nsPipe message to command: ")
   (let (shell-command)
     (if entire-thread
-	(setq shell-command 
+	(setq shell-command
 	      (concat notmuch-command " show --format=mbox "
 		      (shell-quote-argument
 		       (mapconcat 'identity (notmuch-show-get-message-ids-for-open-messages) " OR "))
