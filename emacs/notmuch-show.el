@@ -1648,7 +1648,7 @@ removed)."
   "Archive the current message, then show the next open message in the current thread."
   (interactive)
   (notmuch-show-archive-message)
-  (notmuch-show-next-open-message))
+  (notmuch-show-next-open-message t))
 
 (defun notmuch-show-stash-cc ()
   "Copy CC field of current message to kill-ring."
