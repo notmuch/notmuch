@@ -1622,6 +1622,23 @@ buffer."
   (notmuch-show-archive-thread)
   (notmuch-show-next-thread))
 
+(defun notmuch-show-archive-message (&optional unarchive)
+  "Archive the current message.
+
+If a prefix argument is given, the message will be
+\"unarchived\" (ie. the \"inbox\" tag will be added instead of
+removed)."
+  (interactive "P")
+  (if unarchive
+      (notmuch-show-add-tag "inbox")
+    (notmuch-show-remove-tag "inbox")))
+
+(defun notmuch-show-archive-message-then-next ()
+  "Archive the current message, then show the next open message in the current thread."
+  (interactive)
+  (notmuch-show-archive-message)
+  (notmuch-show-next-open-message))
+
 (defun notmuch-show-stash-cc ()
   "Copy CC field of current message to kill-ring."
   (interactive)
