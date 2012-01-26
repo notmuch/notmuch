@@ -48,6 +48,7 @@
 ;; required, but is available from http://notmuchmail.org).
 
 (eval-when-compile (require 'cl))
+(require 'crm)
 (require 'mm-view)
 (require 'message)
 
@@ -75,12 +76,38 @@ For example:
 (defvar notmuch-query-history nil
   "Variable to store minibuffer history for notmuch queries")
 
-(defun notmuch-select-tag-with-completion (prompt &rest search-terms)
+(defun notmuch-tag-completions (&optional prefixes search-terms)
   (let ((tag-list
-	 (with-output-to-string
-	   (with-current-buffer standard-output
-	     (apply 'call-process notmuch-command nil t nil "search-tags" search-terms)))))
-    (completing-read prompt (split-string tag-list "\n+" t) nil nil nil)))
+	 (split-string
+	  (with-output-to-string
+	    (with-current-buffer standard-output
+	      (apply 'call-process notmuch-command nil t
+		     nil "search-tags" search-terms)))
+	  "\n+" t)))
+    (if (null prefixes)
+	tag-list
+      (apply #'append
+	     (mapcar (lambda (tag)
+		       (mapcar (lambda (prefix)
+				 (concat prefix tag)) prefixes))
+		     tag-list)))))
+
+(defun notmuch-select-tag-with-completion (prompt &rest search-terms)
+  (let ((tag-list (notmuch-tag-completions nil search-terms)))
+    (completing-read prompt tag-list)))
+
+(defun notmuch-select-tags-with-completion (prompt &optional prefixes &rest search-terms)
+  (let ((tag-list (notmuch-tag-completions prefixes search-terms))
+	(crm-separator " ")
+	;; By default, space is bound to "complete word" function.
+	;; Re-bind it to insert a space instead.  Note that <tab>
+	;; still does the completion.
+	(crm-local-completion-map
+	 (let ((map (make-sparse-keymap)))
+	   (set-keymap-parent map crm-local-completion-map)
+	   (define-key map " " 'self-insert-command)
+	   map)))
+    (delete "" (completing-read-multiple prompt tag-list))))
 
 (defun notmuch-foreach-mime-part (function mm-handle)
   (cond ((stringp (car mm-handle))
@@ -849,7 +876,7 @@ non-authors is found, assume that all of the authors match."
 	      (goto-char found-target)))
       (delete-process proc))))
 
-(defun notmuch-search-operate-all (action)
+(defun notmuch-search-operate-all (&rest actions)
   "Add/remove tags from all matching messages.
 
 This command adds or removes tags from all messages matching the
@@ -860,16 +887,17 @@ will prompt for tags to be added or removed. Tags prefixed with
 Each character of the tag name may consist of alphanumeric
 characters as well as `_.+-'.
 "
-  (interactive "sOperation (+add -drop): notmuch tag ")
-  (let ((action-split (split-string action " +")))
-    ;; Perform some validation
-    (let ((words action-split))
-      (when (null words) (error "No operation given"))
-      (while words
-	(unless (string-match-p "^[-+][-+_.[:word:]]+$" (car words))
-	  (error "Action must be of the form `+thistag -that_tag'"))
-	(setq words (cdr words))))
-    (apply 'notmuch-tag notmuch-search-query-string action-split)))
+  (interactive (notmuch-select-tags-with-completion
+		"Operations (+add -drop): notmuch tag "
+		'("+" "-")))
+  ;; Perform some validation
+  (let ((words actions))
+    (when (null words) (error "No operations given"))
+    (while words
+      (unless (string-match-p "^[-+][-+_.[:word:]]+$" (car words))
+	(error "Action must be of the form `+this_tag' or `-that_tag'"))
+      (setq words (cdr words))))
+  (apply 'notmuch-tag notmuch-search-query-string actions))
 
 (defun notmuch-search-buffer-title (query)
   "Returns the title for a buffer with notmuch search results."
