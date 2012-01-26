@@ -51,16 +51,19 @@ FILENAME is OUTPUT."
     (with-temp-file (or filename "OUTPUT") (insert text))))
 
 (defun visible-buffer-string ()
-  "Same as `buffer-string', but excludes invisible text."
+  "Same as `buffer-string', but excludes invisible text and
+removes any text properties."
   (visible-buffer-substring (point-min) (point-max)))
 
 (defun visible-buffer-substring (start end)
-  "Same as `buffer-substring', but excludes invisible text."
+  "Same as `buffer-substring-no-properties', but excludes
+invisible text."
   (let (str)
     (while (< start end)
       (let ((next-pos (next-char-property-change start end)))
 	(when (not (invisible-p start))
-	  (setq str (concat str (buffer-substring start next-pos))))
+	  (setq str (concat str (buffer-substring-no-properties
+				 start next-pos))))
 	(setq start next-pos)))
     str))
 
