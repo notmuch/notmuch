@@ -71,9 +71,10 @@ any given message."
   "A list of functions called to decorate the headers listed in
 `notmuch-message-headers'.")
 
-(defcustom notmuch-show-hook nil
+(defcustom notmuch-show-hook '(notmuch-show-turn-on-visual-line-mode)
   "Functions called after populating a `notmuch-show' buffer."
   :type 'hook
+  :options '(notmuch-show-turn-on-visual-line-mode)
   :group 'notmuch-show
   :group 'notmuch-hooks)
 
@@ -132,6 +133,10 @@ indentation."
 	    (call-process notmuch-command nil t nil "show" "--format=raw" id)
            ,@body)
 	 (kill-buffer buf)))))
+
+(defun notmuch-show-turn-on-visual-line-mode ()
+  "Enable Visual Line mode."
+  (visual-line-mode t))
 
 (defun notmuch-show-view-all-mime-parts ()
   "Use external viewers to view all attachments from the current message."
