@@ -891,12 +891,11 @@ characters as well as `_.+-'.
 		"Operations (+add -drop): notmuch tag "
 		'("+" "-")))
   ;; Perform some validation
-  (let ((words actions))
-    (when (null words) (error "No operations given"))
-    (while words
-      (unless (string-match-p "^[-+][-+_.[:word:]]+$" (car words))
-	(error "Action must be of the form `+this_tag' or `-that_tag'"))
-      (setq words (cdr words))))
+  (when (null actions) (error "No operations given"))
+  (mapc (lambda (action)
+	  (unless (string-match-p "^[-+][-+_.[:word:]]+$" action)
+	    (error "Action must be of the form `+this_tag' or `-that_tag'")))
+	actions)
   (apply 'notmuch-tag notmuch-search-query-string actions))
 
 (defun notmuch-search-buffer-title (query)
