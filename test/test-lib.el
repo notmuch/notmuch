@@ -92,7 +92,9 @@ nothing."
 (defmacro notmuch-test-run (&rest body)
   "Evaluate a BODY of test expressions and output the result."
   `(with-temp-buffer
-     (let ((result (progn ,@body)))
+     (let ((buffer (current-buffer))
+	   (result (progn ,@body)))
+       (switch-to-buffer buffer)
        (insert (if (stringp result)
 		   result
 		 (prin1-to-string result)))
