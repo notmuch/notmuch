@@ -116,6 +116,16 @@ do
 	esac
 done
 
+if test -n "$debug"; then
+    print_subtest () {
+	printf " %-4s" "[$((test_count - 1))]"
+    }
+else
+    print_subtest () {
+	true
+    }
+fi
+
 if test -n "$color"; then
 	say_color () {
 		(
@@ -132,6 +142,7 @@ if test -n "$color"; then
 		printf " "
                 printf "$@"
 		tput sgr0
+		print_subtest
 		)
 	}
 else
@@ -140,6 +151,7 @@ else
 		shift
 		printf " "
                 printf "$@"
+		print_subtest
 	}
 fi
 
@@ -398,6 +410,8 @@ emacs_deliver_message ()
 	   (insert \"${body}\")
 	   $@
 	   (message-send-and-exit))"
+    # opportunistically quit smtp-dummy in case above fails.
+    { echo QUIT > /dev/tcp/localhost/25025; } 2>/dev/null
     wait ${smtp_dummy_pid}
     notmuch new >/dev/null
 }
@@ -427,7 +441,7 @@ test_begin_subtest ()
 	error "bug in test script: Missing test_expect_equal in ${BASH_SOURCE[1]}:${BASH_LINENO[0]}"
     fi
     test_subtest_name="$1"
-    test_subtest_known_broken_=
+    test_reset_state_
     # Remember stdout and stderr file descriptors and redirect test
     # output to the previously prepared file descriptors 3 and 4 (see
     # below)
@@ -546,6 +560,33 @@ test_have_prereq () {
 	esac
 }
 
+# declare prerequisite for the given external binary
+test_declare_external_prereq () {
+	binary="$1"
+	test "$#" = 2 && name=$2 || name="$binary(1)"
+
+	hash $binary 2>/dev/null || eval "
+	test_missing_external_prereq_${binary}_=t
+$binary () {
+	echo -n \"\$test_subtest_missing_external_prereqs_ \" | grep -qe \" $name \" ||
+	test_subtest_missing_external_prereqs_=\"\$test_subtest_missing_external_prereqs_ $name\"
+	false
+}"
+}
+
+# Explicitly require external prerequisite.  Useful when binary is
+# called indirectly (e.g. from emacs).
+# Returns success if dependency is available, failure otherwise.
+test_require_external_prereq () {
+	binary="$1"
+	if [ "$(eval echo -n \$test_missing_external_prereq_${binary}_)" = t ]; then
+		# dependency is missing, call the replacement function to note it
+		eval "$binary"
+	else
+		true
+	fi
+}
+
 # You are not expected to call test_ok_ and test_failure_ directly, use
 # the text_expect_* functions instead.
 
@@ -579,14 +620,14 @@ test_failure_message_ () {
 }
 
 test_known_broken_ok_ () {
-	test_subtest_known_broken_=
+	test_reset_state_
 	test_fixed=$(($test_fixed+1))
 	say_color pass "%-6s" "FIXED"
 	echo " $@"
 }
 
 test_known_broken_failure_ () {
-	test_subtest_known_broken_=
+	test_reset_state_
 	test_broken=$(($test_broken+1))
 	test_failure_message_ "BROKEN" "$@"
 	return 1
@@ -622,16 +663,30 @@ test_skip () {
 	fi
 	case "$to_skip" in
 	t)
-		test_subtest_known_broken_=
-		say_color skip >&3 "skipping test: $@"
-		say_color skip "%-6s" "SKIP"
-		echo " $1"
-		: true
+		test_report_skip_ "$@"
 		;;
 	*)
-		false
+		test_check_missing_external_prereqs_ "$@"
 		;;
 	esac
+}
+
+test_check_missing_external_prereqs_ () {
+	if test -n "$test_subtest_missing_external_prereqs_"; then
+		say_color skip >&3 "missing prerequisites:"
+		echo "$test_subtest_missing_external_prereqs_" >&3
+		test_report_skip_ "$@"
+	else
+		false
+	fi
+}
+
+test_report_skip_ () {
+	test_reset_state_
+	say_color skip >&3 "skipping test:"
+	echo " $@" >&3
+	say_color skip "%-6s" "SKIP"
+	echo " $1"
 }
 
 test_subtest_known_broken () {
@@ -642,10 +697,14 @@ test_expect_success () {
 	test "$#" = 3 && { prereq=$1; shift; } || prereq=
 	test "$#" = 2 ||
 	error "bug in the test script: not 2 or 3 parameters to test-expect-success"
+	test_reset_state_
 	if ! test_skip "$@"
 	then
 		test_run_ "$2"
-		if [ "$?" = 0 -a "$eval_ret" = 0 ]
+		run_ret="$?"
+		# test_run_ may update missing external prerequisites
+		test_check_missing_external_prereqs_ "$@" ||
+		if [ "$run_ret" = 0 -a "$eval_ret" = 0 ]
 		then
 			test_ok_ "$1"
 		else
@@ -658,10 +717,14 @@ test_expect_code () {
 	test "$#" = 4 && { prereq=$1; shift; } || prereq=
 	test "$#" = 3 ||
 	error "bug in the test script: not 3 or 4 parameters to test-expect-code"
+	test_reset_state_
 	if ! test_skip "$@"
 	then
 		test_run_ "$3"
-		if [ "$?" = 0 -a "$eval_ret" = "$1" ]
+		run_ret="$?"
+		# test_run_ may update missing external prerequisites,
+		test_check_missing_external_prereqs_ "$@" ||
+		if [ "$run_ret" = 0 -a "$eval_ret" = "$1" ]
 		then
 			test_ok_ "$2"
 		else
@@ -684,6 +747,7 @@ test_external () {
 	error >&5 "bug in the test script: not 3 or 4 parameters to test_external"
 	descr="$1"
 	shift
+	test_reset_state_
 	if ! test_skip "$descr" "$@"
 	then
 		# Announce the script to reduce confusion about the
@@ -842,17 +906,22 @@ EOF
 }
 
 test_emacs () {
+	# test dependencies beforehand to avoid the waiting loop below
+	test_require_external_prereq emacs || return
+	test_require_external_prereq emacsclient || return
+
 	if [ -z "$EMACS_SERVER" ]; then
-		EMACS_SERVER="notmuch-test-suite-$$"
+		server_name="notmuch-test-suite-$$"
 		# start a detached session with an emacs server
 		# user's TERM is given to dtach which assumes a minimally
 		# VT100-compatible terminal -- and emacs inherits that
 		TERM=$ORIGINAL_TERM dtach -n "$TEST_TMPDIR/emacs-dtach-socket.$$" \
 			sh -c "stty rows 24 cols 80; exec '$TMP_DIRECTORY/run_emacs' \
 				--no-window-system \
-				--eval '(setq server-name \"$EMACS_SERVER\")' \
+				--eval '(setq server-name \"$server_name\")' \
 				--eval '(server-start)' \
 				--eval '(orphan-watchdog $$)'" || return
+		EMACS_SERVER="$server_name"
 		# wait until the emacs server is up
 		until test_emacs '()' 2>/dev/null; do
 			sleep 1
@@ -860,6 +929,67 @@ test_emacs () {
 	fi
 
 	emacsclient --socket-name="$EMACS_SERVER" --eval "(progn $@)"
+}
+
+test_python() {
+	export LD_LIBRARY_PATH=$TEST_DIRECTORY/../lib
+	export PYTHONPATH=$TEST_DIRECTORY/../bindings/python
+
+	# Some distros (e.g. Arch Linux) ship Python 2.* as /usr/bin/python2,
+	# most others as /usr/bin/python. So first try python2, and fallback to
+	# python if python2 doesn't exist.
+	cmd=python2
+	[[ "$test_missing_external_prereq_python2_" = t ]] && cmd=python
+
+	(echo "import sys; _orig_stdout=sys.stdout; sys.stdout=open('OUTPUT', 'w')"; cat) \
+		| $cmd -
+}
+
+# Creates a script that counts how much time it is executed and calls
+# notmuch.  $notmuch_counter_command is set to the path to the
+# generated script.  Use notmuch_counter_value() function to get the
+# current counter value.
+notmuch_counter_reset () {
+	notmuch_counter_command="$TMP_DIRECTORY/notmuch_counter"
+	if [ ! -x "$notmuch_counter_command" ]; then
+		notmuch_counter_state_path="$TMP_DIRECTORY/notmuch_counter.state"
+		cat >"$notmuch_counter_command" <<EOF || return
+#!/bin/sh
+
+read count < "$notmuch_counter_state_path"
+echo \$((count + 1)) > "$notmuch_counter_state_path"
+
+exec notmuch "\$@"
+EOF
+		chmod +x "$notmuch_counter_command" || return
+	fi
+
+	echo 0 > "$notmuch_counter_state_path"
+}
+
+# Returns the current notmuch counter value.
+notmuch_counter_value () {
+	if [ -r "$notmuch_counter_state_path" ]; then
+		read count < "$notmuch_counter_state_path"
+	else
+		count=0
+	fi
+	echo $count
+}
+
+test_reset_state_ () {
+	test -z "$test_init_done_" && test_init_
+
+	test_subtest_known_broken_=
+	test_subtest_missing_external_prereqs_=
+}
+
+# called once before the first subtest
+test_init_ () {
+	test_init_done_=t
+
+	# skip all tests if there were external prerequisites missing during init
+	test_check_missing_external_prereqs_ "all tests in $this_test" && test_done
 }
 
 
@@ -1069,3 +1199,12 @@ test -z "$NO_PYTHON" && test_set_prereq PYTHON
 # test whether the filesystem supports symbolic links
 ln -s x y 2>/dev/null && test -h y 2>/dev/null && test_set_prereq SYMLINKS
 rm -f y
+
+# declare prerequisites for external binaries used in tests
+test_declare_external_prereq dtach
+test_declare_external_prereq emacs
+test_declare_external_prereq emacsclient
+test_declare_external_prereq gdb
+test_declare_external_prereq gpg
+test_declare_external_prereq python
+test_declare_external_prereq python2

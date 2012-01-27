@@ -50,6 +50,27 @@ test_emacs "(notmuch-show \"$maildir_storage_thread\")
 	    (test-output)"
 test_expect_equal_file OUTPUT $EXPECTED/notmuch-show-thread-maildir-storage
 
+test_begin_subtest "Basic notmuch-show view in emacs default indentation"
+maildir_storage_thread=$(notmuch search --output=threads id:20091117190054.GU3165@dottiness.seas.harvard.edu)
+test_emacs "(let ((notmuch-show-indent-messages-width 1))
+	      (notmuch-show \"$maildir_storage_thread\")
+	      (test-output))"
+test_expect_equal_file OUTPUT $EXPECTED/notmuch-show-thread-maildir-storage
+
+test_begin_subtest "Basic notmuch-show view in emacs without indentation"
+maildir_storage_thread=$(notmuch search --output=threads id:20091117190054.GU3165@dottiness.seas.harvard.edu)
+test_emacs "(let ((notmuch-show-indent-messages-width 0))
+	      (notmuch-show \"$maildir_storage_thread\")
+	      (test-output))"
+test_expect_equal_file OUTPUT $EXPECTED/notmuch-show-thread-maildir-storage-without-indentation
+
+test_begin_subtest "Basic notmuch-show view in emacs with fourfold indentation"
+maildir_storage_thread=$(notmuch search --output=threads id:20091117190054.GU3165@dottiness.seas.harvard.edu)
+test_emacs "(let ((notmuch-show-indent-messages-width 4))
+	      (notmuch-show \"$maildir_storage_thread\")
+	      (test-output))"
+test_expect_equal_file OUTPUT $EXPECTED/notmuch-show-thread-maildir-storage-with-fourfold-indentation
+
 test_begin_subtest "notmuch-show for message with invalid From"
 add_message "[subject]=\"message-with-invalid-from\"" \
 	    "[from]=\"\\\"Invalid \\\" From\\\" <test_suite@notmuchmail.org>\""
@@ -369,8 +390,18 @@ test_emacs '(notmuch-show "id:\"bought\"")
           (rotate-yank-pointer 1))
         (reverse-region (point-min) (point-max))
 	    (test-output)'
-sed -i -e 's/^.*tmp.emacs\/mail.*$/FILENAME/' OUTPUT
-test_expect_equal_file OUTPUT $EXPECTED/emacs-stashing
+cat <<EOF >EXPECTED
+Sat, 01 Jan 2000 12:00:00 -0000
+Some One <someone@somewhere.org>
+Some One Else <notsomeone@somewhere.org>
+Notmuch <notmuch@notmuchmail.org>
+Stash my stashables
+id:"bought"
+bought
+inbox,stashtest
+${gen_msg_filename}
+EOF
+test_expect_equal_file OUTPUT EXPECTED
 
 test_begin_subtest "Stashing in notmuch-search"
 test_emacs '(notmuch-search "id:\"bought\"")
@@ -381,33 +412,7 @@ test_emacs '(notmuch-search "id:\"bought\"")
         (yank)
 	    (test-output)'
 sed -i -e 's/^thread:.*$/thread:XXX/' OUTPUT
-test_expect_equal $(cat OUTPUT) "thread:XXX"
-
-test_begin_subtest 'Hiding message following HTML part'
-test_subtest_known_broken
-id='html-message@notmuchmail.org'
-emacs_deliver_message \
-    'HTML message' \
-    '' \
-    "(message-goto-eoh)
-     (insert \"Message-ID: <$id>\n\")
-     (message-goto-body)
-     (mml-insert-part \"text/html\")
-     (insert \"<body>This is a test HTML message</body>\")"
-emacs_deliver_message \
-    'Reply to HTML message' \
-    'This is a reply to the test HTML message' \
-    "(message-goto-eoh)
-     (insert \"In-Reply-To: <$id>\n\")"
-test_emacs "(notmuch-show \"id:$id\") \
-            (notmuch-show-next-message) \
-            (command-execute (key-binding (kbd \"RET\"))) \
-            (test-visible-output)"
-test_emacs "(notmuch-show \"id:$id\") \
-            (notmuch-show-next-message) \
-            (notmuch-show-toggle-message) \
-            (test-visible-output \"EXPECTED\")"
-test_expect_equal_file OUTPUT EXPECTED
+test_expect_equal "$(cat OUTPUT)" "thread:XXX"
 
 test_begin_subtest 'notmuch-show-advance-and-archive with invisible signature'
 message1='id:20091118010116.GC25380@dottiness.seas.harvard.edu'
@@ -440,5 +445,73 @@ test_emacs '(notmuch-show "id:f35dbb950911171438k5df6eb56k77b6c0944e2e79ae@mail.
 	    (notmuch-show-refresh-view)
 	    (test-visible-output)'
 test_expect_equal_file OUTPUT EXPECTED
+
+test_begin_subtest "Do not call notmuch for non-inlinable application/mpeg parts"
+id='message-with-application/mpeg-attachment@notmuchmail.org'
+emacs_deliver_message \
+    'Message with application/mpeg attachment' \
+    '' \
+    "(message-goto-eoh)
+     (insert \"Message-ID: <$id>\n\")
+     (message-goto-body)
+     (mml-insert-part \"application/mpeg\")
+     (insert \"a fake mp3 file\")"
+notmuch_counter_reset
+test_emacs "(let ((notmuch-command \"$notmuch_counter_command\"))
+	      (notmuch-show \"id:$id\"))"
+test_expect_equal $(notmuch_counter_value) 1
+
+test_begin_subtest "Do not call notmuch for non-inlinable audio/mpeg parts"
+id='message-with-audio/mpeg-attachment@notmuchmail.org'
+emacs_deliver_message \
+    'Message with audio/mpeg attachment' \
+    '' \
+    "(message-goto-eoh)
+     (insert \"Message-ID: <$id>\n\")
+     (message-goto-body)
+     (mml-insert-part \"audio/mpeg\")
+     (insert \"a fake mp3 file\")"
+notmuch_counter_reset
+test_emacs "(let ((notmuch-command \"$notmuch_counter_command\"))
+	      (notmuch-show \"id:$id\"))"
+test_expect_equal $(notmuch_counter_value) 1
+
+test_begin_subtest "notmuch-hello-mode hook is called"
+counter=$(test_emacs \
+    '(let ((notmuch-hello-mode-hook-counter 0))
+       (kill-buffer "*notmuch-hello*")
+       (notmuch-hello)
+       notmuch-hello-mode-hook-counter)'
+)
+test_expect_equal "$counter" 1
+
+test_begin_subtest "notmuch-hello-mode hook is not called on updates"
+counter=$(test_emacs \
+    '(let ((notmuch-hello-mode-hook-counter 0))
+       (kill-buffer "*notmuch-hello*")
+       (notmuch-hello)
+       (notmuch-hello-update)
+       notmuch-hello-mode-hook-counter)'
+)
+test_expect_equal "$counter" 1
+
+test_begin_subtest "notmuch-hello-refresh hook is called"
+counter=$(test_emacs \
+    '(let ((notmuch-hello-refresh-hook-counter 0))
+       (kill-buffer "*notmuch-hello*")
+       (notmuch-hello)
+       notmuch-hello-refresh-hook-counter)'
+)
+test_expect_equal "$counter" 1
+
+test_begin_subtest "notmuch-hello-refresh hook is called on updates"
+counter=$(test_emacs \
+    '(let ((notmuch-hello-refresh-hook-counter 0))
+       (kill-buffer "*notmuch-hello*")
+       (notmuch-hello)
+       (notmuch-hello-update)
+       notmuch-hello-refresh-hook-counter)'
+)
+test_expect_equal "$counter" 2
 
 test_done

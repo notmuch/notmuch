@@ -18,12 +18,15 @@ Copyright 2010 Sebastian Spaeth <Sebastian@SSpaeth.de>'
 """
 
 import os
-from ctypes import c_int, c_char_p, c_void_p, c_uint, c_long, byref
+from ctypes import c_char_p, c_void_p, c_uint, c_long, byref, POINTER
 from notmuch.globals import (nmlib, STATUS, NotmuchError, NotInitializedError,
-     NullPointerError, OutOfMemoryError, XapianError, Enum, _str)
+     NullPointerError, Enum, _str,
+     NotmuchDatabaseP, NotmuchDirectoryP, NotmuchMessageP, NotmuchTagsP,
+     NotmuchQueryP, NotmuchMessagesP, NotmuchThreadsP, NotmuchFilenamesP)
 from notmuch.thread import Threads
 from notmuch.message import Messages, Message
 from notmuch.tag import Tags
+
 
 class Database(object):
     """The :class:`Database` is the highest-level object that notmuch
@@ -37,16 +40,19 @@ class Database(object):
     :exc:`XapianError` as the underlying database has been
     modified. Close and reopen the database to continue working with it.
 
-    .. note:: Any function in this class can and will throw an
-           :exc:`NotInitializedError` if the database was not
-           intitialized properly.
+    .. note::
 
-    .. note:: Do remember that as soon as we tear down (e.g. via `del
-           db`) this object, all underlying derived objects such as
-           queries, threads, messages, tags etc will be freed by the
-           underlying library as well. Accessing these objects will lead
-           to segfaults and other unexpected behavior. See above for
-           more details.
+        Any function in this class can and will throw an
+        :exc:`NotInitializedError` if the database was not intitialized
+        properly.
+
+    .. note::
+
+        Do remember that as soon as we tear down (e.g. via `del db`) this
+        object, all underlying derived objects such as queries, threads,
+        messages, tags etc will be freed by the underlying library as well.
+        Accessing these objects will lead to segfaults and other unexpected
+        behavior. See above for more details.
     """
     _std_db_path = None
     """Class attribute to cache user's default database"""
@@ -56,37 +62,50 @@ class Database(object):
 
     """notmuch_database_get_directory"""
     _get_directory = nmlib.notmuch_database_get_directory
-    _get_directory.restype = c_void_p
+    _get_directory.argtypes = [NotmuchDatabaseP, c_char_p]
+    _get_directory.restype = NotmuchDirectoryP
 
     """notmuch_database_get_path"""
     _get_path = nmlib.notmuch_database_get_path
+    _get_path.argtypes = [NotmuchDatabaseP]
     _get_path.restype = c_char_p
 
     """notmuch_database_get_version"""
     _get_version = nmlib.notmuch_database_get_version
+    _get_version.argtypes = [NotmuchDatabaseP]
     _get_version.restype = c_uint
 
     """notmuch_database_open"""
     _open = nmlib.notmuch_database_open
-    _open.restype = c_void_p
+    _open.argtypes = [c_char_p, c_uint]
+    _open.restype = NotmuchDatabaseP
 
     """notmuch_database_upgrade"""
     _upgrade = nmlib.notmuch_database_upgrade
-    _upgrade.argtypes = [c_void_p, c_void_p, c_void_p]
+    _upgrade.argtypes = [NotmuchDatabaseP, c_void_p, c_void_p]
+    _upgrade.restype = c_uint
 
     """ notmuch_database_find_message"""
     _find_message = nmlib.notmuch_database_find_message
+    _find_message.argtypes = [NotmuchDatabaseP, c_char_p,
+                              POINTER(NotmuchMessageP)]
+    _find_message.restype = c_uint
 
     """notmuch_database_find_message_by_filename"""
     _find_message_by_filename = nmlib.notmuch_database_find_message_by_filename
+    _find_message_by_filename.argtypes = [NotmuchDatabaseP, c_char_p,
+                                          POINTER(NotmuchMessageP)]
+    _find_message_by_filename.restype = c_uint
 
     """notmuch_database_get_all_tags"""
     _get_all_tags = nmlib.notmuch_database_get_all_tags
-    _get_all_tags.restype = c_void_p
+    _get_all_tags.argtypes = [NotmuchDatabaseP]
+    _get_all_tags.restype = NotmuchTagsP
 
     """notmuch_database_create"""
     _create = nmlib.notmuch_database_create
-    _create.restype = c_void_p
+    _create.argtypes = [c_char_p]
+    _create.restype = NotmuchDatabaseP
 
     def __init__(self, path=None, create=False, mode=0):
         """If *path* is `None`, we will try to read a users notmuch
@@ -164,8 +183,8 @@ class Database(object):
         :param status: Open the database in read-only or read-write mode
         :type status:  :attr:`MODE`
         :returns: Nothing
-        :exception: Raises :exc:`NotmuchError` in case
-            of any failure (possibly after printing an error message on stderr).
+        :exception: Raises :exc:`NotmuchError` in case of any failure
+                    (possibly after printing an error message on stderr).
         """
         res = Database._open(_str(path), mode)
 
@@ -186,6 +205,10 @@ class Database(object):
         self._assert_db_is_initialized()
         return Database._get_version(self._db)
 
+    _needs_upgrade = nmlib.notmuch_database_needs_upgrade
+    _needs_upgrade.argtypes = [NotmuchDatabaseP]
+    _needs_upgrade.restype = bool
+
     def needs_upgrade(self):
         """Does this database need to be upgraded before writing to it?
 
@@ -197,7 +220,7 @@ class Database(object):
         :returns: `True` or `False`
         """
         self._assert_db_is_initialized()
-        return nmlib.notmuch_database_needs_upgrade(self._db)
+        return self._needs_upgrade(self._db)
 
     def upgrade(self):
         """Upgrades the current database
@@ -219,6 +242,10 @@ class Database(object):
         #TODO: catch exceptions, document return values and etc
         return status
 
+    _begin_atomic = nmlib.notmuch_database_begin_atomic
+    _begin_atomic.argtypes = [NotmuchDatabaseP]
+    _begin_atomic.restype = c_uint
+
     def begin_atomic(self):
         """Begin an atomic database operation
 
@@ -229,17 +256,19 @@ class Database(object):
         neither begin nor end necessarily flush modifications to disk.
 
         :returns: :attr:`STATUS`.SUCCESS or raises
-
-        :exception: :exc:`NotmuchError`:
-            :attr:`STATUS`.XAPIAN_EXCEPTION
-                Xapian exception occurred; atomic section not entered.
+        :exception: :exc:`NotmuchError`: :attr:`STATUS`.XAPIAN_EXCEPTION
+                    Xapian exception occurred; atomic section not entered.
 
         *Added in notmuch 0.9*"""
         self._assert_db_is_initialized()
-        status = nmlib.notmuch_database_begin_atomic(self._db)
+        status = self._begin_atomic(self._db)
         if status != STATUS.SUCCESS:
             raise NotmuchError(status)
         return status
+
+    _end_atomic = nmlib.notmuch_database_end_atomic
+    _end_atomic.argtypes = [NotmuchDatabaseP]
+    _end_atomic.restype = c_uint
 
     def end_atomic(self):
         """Indicate the end of an atomic database operation
@@ -258,7 +287,7 @@ class Database(object):
 
         *Added in notmuch 0.9*"""
         self._assert_db_is_initialized()
-        status = nmlib.notmuch_database_end_atomic(self._db)
+        status = self._end_atomic(self._db)
         if status != STATUS.SUCCESS:
             raise NotmuchError(status)
         return status
@@ -267,13 +296,15 @@ class Database(object):
         """Returns a :class:`Directory` of path,
         (creating it if it does not exist(?))
 
-        .. warning:: This call needs a writeable database in
-           :attr:`Database.MODE`.READ_WRITE mode. The underlying library will exit the
-           program if this method is used on a read-only database!
+        .. warning::
+
+            This call needs a writeable database in
+            :attr:`Database.MODE`.READ_WRITE mode. The underlying library will
+            exit the program if this method is used on a read-only database!
 
         :param path: An unicode string containing the path relative to the path
-              of database (see :meth:`get_path`), or else should be an absolute path
-              with initial components that match the path of 'database'.
+              of database (see :meth:`get_path`), or else should be an absolute
+              path with initial components that match the path of 'database'.
         :returns: :class:`Directory` or raises an exception.
         :exception:
             :exc:`NotmuchError` with :attr:`STATUS`.FILE_ERROR
@@ -298,6 +329,11 @@ class Database(object):
 
         # return the Directory, init it with the absolute path
         return Directory(_str(abs_dirpath), dir_p, self)
+
+    _add_message = nmlib.notmuch_database_add_message
+    _add_message.argtypes = [NotmuchDatabaseP, c_char_p,
+                             POINTER(NotmuchMessageP)]
+    _add_message.restype = c_uint
 
     def add_message(self, filename, sync_maildir_flags=False):
         """Adds a new message to the database
@@ -349,10 +385,8 @@ class Database(object):
                       be added.
         """
         self._assert_db_is_initialized()
-        msg_p = c_void_p()
-        status = nmlib.notmuch_database_add_message(self._db,
-                                                  _str(filename),
-                                                  byref(msg_p))
+        msg_p = NotmuchMessageP()
+        status = self._add_message(self._db, _str(filename), byref(msg_p))
 
         if not status in [STATUS.SUCCESS, STATUS.DUPLICATE_MESSAGE_ID]:
             raise NotmuchError(status)
@@ -363,6 +397,10 @@ class Database(object):
         if sync_maildir_flags:
             msg.maildir_flags_to_tags()
         return (msg, status)
+
+    _remove_message = nmlib.notmuch_database_remove_message
+    _remove_message.argtypes = [NotmuchDatabaseP, c_char_p]
+    _remove_message.restype = c_uint
 
     def remove_message(self, filename):
         """Removes a message (filename) from the given notmuch database
@@ -392,8 +430,7 @@ class Database(object):
                removed.
         """
         self._assert_db_is_initialized()
-        return nmlib.notmuch_database_remove_message(self._db,
-                                                       filename)
+        return self._remove_message(self._db, filename)
 
     def find_message(self, msgid):
         """Returns a :class:`Message` as identified by its message ID
@@ -416,7 +453,7 @@ class Database(object):
                     the database was not intitialized.
         """
         self._assert_db_is_initialized()
-        msg_p = c_void_p()
+        msg_p = NotmuchMessageP()
         status = Database._find_message(self._db, _str(msgid), byref(msg_p))
         if status != STATUS.SUCCESS:
             raise NotmuchError(status)
@@ -425,10 +462,11 @@ class Database(object):
     def find_message_by_filename(self, filename):
         """Find a message with the given filename
 
-        .. warning:: This call needs a writeable database in
-           :attr:`Database.MODE`.READ_WRITE mode. The underlying library will
-           exit the program if this method is used on a read-only
-           database!
+        .. warning::
+
+            This call needs a writeable database in
+            :attr:`Database.MODE`.READ_WRITE mode. The underlying library will
+            exit the program if this method is used on a read-only database!
 
         :returns: If the database contains a message with the given
             filename, then a class:`Message:` is returned.  This
@@ -449,7 +487,7 @@ class Database(object):
 
         *Added in notmuch 0.9*"""
         self._assert_db_is_initialized()
-        msg_p = c_void_p()
+        msg_p = NotmuchMessageP()
         status = Database._find_message_by_filename(self._db, _str(filename),
                                                     byref(msg_p))
         if status != STATUS.SUCCESS:
@@ -460,7 +498,8 @@ class Database(object):
         """Returns :class:`Tags` with a list of all tags found in the database
 
         :returns: :class:`Tags`
-        :execption: :exc:`NotmuchError` with :attr:`STATUS`.NULL_POINTER on error
+        :execption: :exc:`NotmuchError` with :attr:`STATUS`.NULL_POINTER
+                    on error
         """
         self._assert_db_is_initialized()
         tags_p = Database._get_all_tags(self._db)
@@ -491,10 +530,14 @@ class Database(object):
     def __repr__(self):
         return "'Notmuch DB " + self.get_path() + "'"
 
+    _close = nmlib.notmuch_database_close
+    _close.argtypes = [NotmuchDatabaseP]
+    _close.restype = None
+
     def __del__(self):
         """Close and free the notmuch database if needed"""
         if self._db is not None:
-            nmlib.notmuch_database_close(self._db)
+            self._close(self._db)
 
     def _get_user_default_db(self):
         """ Reads a user's notmuch config and returns his db location
@@ -545,18 +588,22 @@ class Query(object):
 
     """notmuch_query_create"""
     _create = nmlib.notmuch_query_create
-    _create.restype = c_void_p
+    _create.argtypes = [NotmuchDatabaseP, c_char_p]
+    _create.restype = NotmuchQueryP
 
     """notmuch_query_search_threads"""
     _search_threads = nmlib.notmuch_query_search_threads
-    _search_threads.restype = c_void_p
+    _search_threads.argtypes = [NotmuchQueryP]
+    _search_threads.restype = NotmuchThreadsP
 
     """notmuch_query_search_messages"""
     _search_messages = nmlib.notmuch_query_search_messages
-    _search_messages.restype = c_void_p
+    _search_messages.argtypes = [NotmuchQueryP]
+    _search_messages.restype = NotmuchMessagesP
 
     """notmuch_query_count_messages"""
     _count_messages = nmlib.notmuch_query_count_messages
+    _count_messages.argtypes = [NotmuchQueryP]
     _count_messages.restype = c_uint
 
     def __init__(self, db, querystr):
@@ -602,6 +649,10 @@ class Query(object):
             raise NullPointerError
         self._query = query_p
 
+    _set_sort = nmlib.notmuch_query_set_sort
+    _set_sort.argtypes = [NotmuchQueryP, c_uint]
+    _set_sort.argtypes = None
+
     def set_sort(self, sort):
         """Set the sort order future results will be delivered in
 
@@ -609,7 +660,7 @@ class Query(object):
         """
         self._assert_query_is_initialized()
         self.sort = sort
-        nmlib.notmuch_query_set_sort(self._query, sort)
+        self._set_sort(self._query, sort)
 
     def search_threads(self):
         """Execute a query for threads
@@ -661,10 +712,14 @@ class Query(object):
         self._assert_query_is_initialized()
         return Query._count_messages(self._query)
 
+    _destroy = nmlib.notmuch_query_destroy
+    _destroy.argtypes = [NotmuchQueryP]
+    _destroy.restype = None
+
     def __del__(self):
         """Close and free the Query"""
         if self._query is not None:
-            nmlib.notmuch_query_destroy(self._query)
+            self._destroy(self._query)
 
 
 class Directory(object):
@@ -683,22 +738,27 @@ class Directory(object):
 
     """notmuch_directory_get_mtime"""
     _get_mtime = nmlib.notmuch_directory_get_mtime
+    _get_mtime.argtypes = [NotmuchDirectoryP]
     _get_mtime.restype = c_long
 
     """notmuch_directory_set_mtime"""
     _set_mtime = nmlib.notmuch_directory_set_mtime
-    _set_mtime.argtypes = [c_char_p, c_long]
+    _set_mtime.argtypes = [NotmuchDirectoryP, c_long]
+    _set_mtime.restype = c_uint
 
     """notmuch_directory_get_child_files"""
     _get_child_files = nmlib.notmuch_directory_get_child_files
-    _get_child_files.restype = c_void_p
+    _get_child_files.argtypes = [NotmuchDirectoryP]
+    _get_child_files.restype = NotmuchFilenamesP
 
     """notmuch_directory_get_child_directories"""
     _get_child_directories = nmlib.notmuch_directory_get_child_directories
-    _get_child_directories.restype = c_void_p
+    _get_child_directories.argtypes = [NotmuchDirectoryP]
+    _get_child_directories.restype = NotmuchFilenamesP
 
     def _assert_dir_is_initialized(self):
-        """Raises a NotmuchError(:attr:`STATUS`.NOT_INITIALIZED) if dir_p is None"""
+        """Raises a NotmuchError(:attr:`STATUS`.NOT_INITIALIZED)
+        if dir_p is None"""
         if self._dir_p is None:
             raise NotmuchError(STATUS.NOT_INITIALIZED)
 
@@ -735,10 +795,12 @@ class Directory(object):
           and know that it only needs to add files if the mtime of the
           directory and files are newer than the stored timestamp.
 
-          .. note:: :meth:`get_mtime` function does not allow the caller
-                 to distinguish a timestamp of 0 from a non-existent
-                 timestamp. So don't store a timestamp of 0 unless you are
-                 comfortable with that.
+          .. note::
+
+                :meth:`get_mtime` function does not allow the caller to
+                distinguish a timestamp of 0 from a non-existent timestamp. So
+                don't store a timestamp of 0 unless you are comfortable with
+                that.
 
           :param mtime: A (time_t) timestamp
           :returns: Nothing on success, raising an exception on failure.
@@ -815,10 +877,14 @@ class Directory(object):
         """Object representation"""
         return "<notmuch Directory object '%s'>" % self._path
 
+    _destroy = nmlib.notmuch_directory_destroy
+    _destroy.argtypes = [NotmuchDirectoryP]
+    _destroy.argtypes = None
+
     def __del__(self):
         """Close and free the Directory"""
         if self._dir_p is not None:
-            nmlib.notmuch_directory_destroy(self._dir_p)
+            self._destroy(self._dir_p)
 
 
 class Filenames(object):
@@ -826,6 +892,7 @@ class Filenames(object):
 
     #notmuch_filenames_get
     _get = nmlib.notmuch_filenames_get
+    _get.argtypes = [NotmuchFilenamesP]
     _get.restype = c_char_p
 
     def __init__(self, files_p, parent):
@@ -844,41 +911,56 @@ class Filenames(object):
         """ Make Filenames an iterator """
         return self
 
+    _valid = nmlib.notmuch_filenames_valid
+    _valid.argtypes = [NotmuchFilenamesP]
+    _valid.restype = bool
+
+    _move_to_next = nmlib.notmuch_filenames_move_to_next
+    _move_to_next.argtypes = [NotmuchFilenamesP]
+    _move_to_next.restype = None
+
     def next(self):
         if self._files_p is None:
             raise NotmuchError(STATUS.NOT_INITIALIZED)
 
-        if not nmlib.notmuch_filenames_valid(self._files_p):
+        if not self._valid(self._files_p):
             self._files_p = None
             raise StopIteration
 
         file = Filenames._get(self._files_p)
-        nmlib.notmuch_filenames_move_to_next(self._files_p)
+        self._move_to_next(self._files_p)
         return file
 
     def __len__(self):
         """len(:class:`Filenames`) returns the number of contained files
 
-        .. note:: As this iterates over the files, we will not be able to
-               iterate over them again! So this will fail::
+        .. note::
+
+            As this iterates over the files, we will not be able to
+            iterate over them again! So this will fail::
 
                  #THIS FAILS
                  files = Database().get_directory('').get_child_files()
-                 if len(files) > 0:              #this 'exhausts' msgs
-                     # next line raises NotmuchError(:attr:`STATUS`.NOT_INITIALIZED)!!!
+                 if len(files) > 0:  # this 'exhausts' msgs
+                     # next line raises
+                     # NotmuchError(:attr:`STATUS`.NOT_INITIALIZED)
                      for file in files: print file
         """
         if self._files_p is None:
             raise NotmuchError(STATUS.NOT_INITIALIZED)
 
         i = 0
-        while nmlib.notmuch_filenames_valid(self._files_p):
-            nmlib.notmuch_filenames_move_to_next(self._files_p)
+        while self._valid(self._files_p):
+            self._move_to_next(self._files_p)
             i += 1
         self._files_p = None
         return i
 
+    _destroy = nmlib.notmuch_filenames_destroy
+    _destroy.argtypes = [NotmuchFilenamesP]
+    _destroy.restype = None
+
     def __del__(self):
         """Close and free Filenames"""
         if self._files_p is not None:
-            nmlib.notmuch_filenames_destroy(self._files_p)
+            self._destroy(self._files_p)

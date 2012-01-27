@@ -17,8 +17,10 @@ along with notmuch.  If not, see <http://www.gnu.org/licenses/>.
 Copyright 2010 Sebastian Spaeth <Sebastian@SSpaeth.de>'
 """
 
-from ctypes import c_char_p, c_void_p, c_long
-from notmuch.globals import nmlib, STATUS, NotmuchError
+from ctypes import c_char_p, c_long, c_int
+from notmuch.globals import (nmlib, STATUS,
+    NotmuchError, NotmuchThreadP, NotmuchThreadsP, NotmuchMessagesP,
+    NotmuchTagsP,)
 from notmuch.message import Messages
 from notmuch.tag import Tags
 from datetime import date
@@ -75,7 +77,8 @@ class Threads(object):
 
     #notmuch_threads_get
     _get = nmlib.notmuch_threads_get
-    _get.restype = c_void_p
+    _get.argtypes = [NotmuchThreadsP]
+    _get.restype = NotmuchThreadP
 
     def __init__(self, threads_p, parent=None):
         """
@@ -105,16 +108,24 @@ class Threads(object):
         """ Make Threads an iterator """
         return self
 
+    _valid = nmlib.notmuch_threads_valid
+    _valid.argtypes = [NotmuchThreadsP]
+    _valid.restype = bool
+
+    _move_to_next = nmlib.notmuch_threads_move_to_next
+    _move_to_next.argtypes = [NotmuchThreadsP]
+    _move_to_next.restype = None
+
     def next(self):
         if self._threads is None:
             raise NotmuchError(STATUS.NOT_INITIALIZED)
 
-        if not nmlib.notmuch_threads_valid(self._threads):
+        if not self._valid(self._threads):
             self._threads = None
             raise StopIteration
 
         thread = Thread(Threads._get(self._threads), self)
-        nmlib.notmuch_threads_move_to_next(self._threads)
+        self._move_to_next(self._threads)
         return thread
 
     def __len__(self):
@@ -134,8 +145,8 @@ class Threads(object):
 
         i = 0
         # returns 'bool'. On out-of-memory it returns None
-        while nmlib.notmuch_threads_valid(self._threads):
-            nmlib.notmuch_threads_move_to_next(self._threads)
+        while self._valid(self._threads):
+            self._move_to_next(self._threads)
             i += 1
         # reset self._threads to mark as "exhausted"
         self._threads = None
@@ -153,12 +164,16 @@ class Threads(object):
            Iterator, False if not. None on a "Out-of-memory" error.
         """
         return self._threads is not None and \
-            nmlib.notmuch_threads_valid(self._threads) > 0
+            self._valid(self._threads) > 0
+
+    _destroy = nmlib.notmuch_threads_destroy
+    _destroy.argtypes = [NotmuchThreadsP]
+    _destroy.argtypes = None
 
     def __del__(self):
         """Close and free the notmuch Threads"""
         if self._threads is not None:
-            nmlib.notmuch_messages_destroy(self._threads)
+            self._destroy(self._threads)
 
 
 class Thread(object):
@@ -166,29 +181,36 @@ class Thread(object):
 
     """notmuch_thread_get_thread_id"""
     _get_thread_id = nmlib.notmuch_thread_get_thread_id
+    _get_thread_id.argtypes = [NotmuchThreadP]
     _get_thread_id.restype = c_char_p
 
     """notmuch_thread_get_authors"""
     _get_authors = nmlib.notmuch_thread_get_authors
+    _get_authors.argtypes = [NotmuchThreadP]
     _get_authors.restype = c_char_p
 
     """notmuch_thread_get_subject"""
     _get_subject = nmlib.notmuch_thread_get_subject
+    _get_subject.argtypes = [NotmuchThreadP]
     _get_subject.restype = c_char_p
 
     """notmuch_thread_get_toplevel_messages"""
     _get_toplevel_messages = nmlib.notmuch_thread_get_toplevel_messages
-    _get_toplevel_messages.restype = c_void_p
+    _get_toplevel_messages.argtypes = [NotmuchThreadP]
+    _get_toplevel_messages.restype = NotmuchMessagesP
 
     _get_newest_date = nmlib.notmuch_thread_get_newest_date
+    _get_newest_date.argtypes = [NotmuchThreadP]
     _get_newest_date.restype = c_long
 
     _get_oldest_date = nmlib.notmuch_thread_get_oldest_date
+    _get_oldest_date.argtypes = [NotmuchThreadP]
     _get_oldest_date.restype = c_long
 
     """notmuch_thread_get_tags"""
     _get_tags = nmlib.notmuch_thread_get_tags
-    _get_tags.restype = c_void_p
+    _get_tags.argtypes = [NotmuchThreadP]
+    _get_tags.restype = NotmuchTagsP
 
     def __init__(self, thread_p, parent=None):
         """
@@ -225,6 +247,10 @@ class Thread(object):
             raise NotmuchError(STATUS.NOT_INITIALIZED)
         return Thread._get_thread_id(self._thread)
 
+    _get_total_messages = nmlib.notmuch_thread_get_total_messages
+    _get_total_messages.argtypes = [NotmuchThreadP]
+    _get_total_messages.restype = c_int
+
     def get_total_messages(self):
         """Get the total number of messages in 'thread'
 
@@ -236,7 +262,7 @@ class Thread(object):
         """
         if self._thread is None:
             raise NotmuchError(STATUS.NOT_INITIALIZED)
-        return nmlib.notmuch_thread_get_total_messages(self._thread)
+        return self._get_total_messages(self._thread)
 
     def get_toplevel_messages(self):
         """Returns a :class:`Messages` iterator for the top-level messages in
@@ -267,6 +293,10 @@ class Thread(object):
 
         return Messages(msgs_p, self)
 
+    _get_matched_messages = nmlib.notmuch_thread_get_matched_messages
+    _get_matched_messages.argtypes = [NotmuchThreadP]
+    _get_matched_messages.restype = c_int
+
     def get_matched_messages(self):
         """Returns the number of messages in 'thread' that matched the query
 
@@ -278,7 +308,7 @@ class Thread(object):
         """
         if self._thread is None:
             raise NotmuchError(STATUS.NOT_INITIALIZED)
-        return nmlib.notmuch_thread_get_matched_messages(self._thread)
+        return self._get_matched_messages(self._thread)
 
     def get_authors(self):
         """Returns the authors of 'thread'
@@ -295,7 +325,7 @@ class Thread(object):
         authors = Thread._get_authors(self._thread)
         if authors is None:
             return None
-        return authors.decode('UTF-8')
+        return authors.decode('UTF-8', errors='ignore')
 
     def get_subject(self):
         """Returns the Subject of 'thread'
@@ -308,7 +338,7 @@ class Thread(object):
         subject = Thread._get_subject(self._thread)
         if subject is None:
             return None
-        return subject.decode('UTF-8')
+        return subject.decode('UTF-8', errors='ignore')
 
     def get_newest_date(self):
         """Returns time_t of the newest message date
@@ -362,32 +392,25 @@ class Thread(object):
         return Tags(tags_p, self)
 
     def __str__(self):
-        """A str(Thread()) is represented by a 1-line summary"""
-        thread = {}
-        thread['id'] = self.get_thread_id()
+        return unicode(self).encode('utf-8')
 
-        ###TODO: How do we find out the current sort order of Threads?
-        ###Add a "sort" attribute to the Threads() object?
-        #if (sort == NOTMUCH_SORT_OLDEST_FIRST)
-        #         date = notmuch_thread_get_oldest_date (thread);
-        #else
-        #         date = notmuch_thread_get_newest_date (thread);
-        thread['date'] = date.fromtimestamp(self.get_newest_date())
-        thread['matched'] = self.get_matched_messages()
-        thread['total'] = self.get_total_messages()
-        thread['authors'] = self.get_authors()
-        thread['subject'] = self.get_subject()
-        thread['tags'] = self.get_tags()
+    def __unicode__(self):
+        frm = "thread:%s %12s [%d/%d] %s; %s (%s)"
 
-        return "thread:%s %12s [%d/%d] %s; %s (%s)" % (thread['id'],
-                                                       thread['date'],
-                                                       thread['matched'],
-                                                       thread['total'],
-                                                       thread['authors'],
-                                                       thread['subject'],
-                                                       thread['tags'])
+        return frm % (self.get_thread_id(),
+                      date.fromtimestamp(self.get_newest_date()),
+                      self.get_matched_messages(),
+                      self.get_total_messages(),
+                      self.get_authors(),
+                      self.get_subject(),
+                      self.get_tags(),
+                     )
+
+    _destroy = nmlib.notmuch_thread_destroy
+    _destroy.argtypes = [NotmuchThreadP]
+    _destroy.restype = None
 
     def __del__(self):
         """Close and free the notmuch Thread"""
         if self._thread is not None:
-            nmlib.notmuch_thread_destroy(self._thread)
+            self._destroy(self._thread)

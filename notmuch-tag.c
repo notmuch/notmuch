@@ -26,8 +26,83 @@ static void
 handle_sigint (unused (int sig))
 {
     static char msg[] = "Stopping...         \n";
-    write(2, msg, sizeof(msg)-1);
+    (void) write(2, msg, sizeof(msg)-1);
     interrupted = 1;
+}
+
+static char *
+_escape_tag (char *buf, const char *tag)
+{
+    const char *in = tag;
+    char *out = buf;
+    /* Boolean terms surrounded by double quotes can contain any
+     * character.  Double quotes are quoted by doubling them. */
+    *out++ = '"';
+    while (*in) {
+	if (*in == '"')
+	    *out++ = '"';
+	*out++ = *in++;
+    }
+    *out++ = '"';
+    *out = 0;
+    return buf;
+}
+
+static char *
+_optimize_tag_query (void *ctx, const char *orig_query_string, char *argv[],
+		     int *add_tags, int add_tags_count,
+		     int *remove_tags, int remove_tags_count)
+{
+    /* This is subtler than it looks.  Xapian ignores the '-' operator
+     * at the beginning both queries and parenthesized groups and,
+     * furthermore, the presence of a '-' operator at the beginning of
+     * a group can inhibit parsing of the previous operator.  Hence,
+     * the user-provided query MUST appear first, but it is safe to
+     * parenthesize and the exclusion part of the query must not use
+     * the '-' operator (though the NOT operator is fine). */
+
+    char *escaped, *query_string;
+    const char *join = "";
+    int i;
+    unsigned int max_tag_len = 0;
+
+    /* Allocate a buffer for escaping tags.  This is large enough to
+     * hold a fully escaped tag with every character doubled plus
+     * enclosing quotes and a NUL. */
+    for (i = 0; i < add_tags_count; i++)
+	if (strlen (argv[add_tags[i]] + 1) > max_tag_len)
+	    max_tag_len = strlen (argv[add_tags[i]] + 1);
+    for (i = 0; i < remove_tags_count; i++)
+	if (strlen (argv[remove_tags[i]] + 1) > max_tag_len)
+	    max_tag_len = strlen (argv[remove_tags[i]] + 1);
+    escaped = talloc_array(ctx, char, max_tag_len * 2 + 3);
+    if (!escaped)
+	return NULL;
+
+    /* Build the new query string */
+    if (strcmp (orig_query_string, "*") == 0)
+	query_string = talloc_strdup (ctx, "(");
+    else
+	query_string = talloc_asprintf (ctx, "( %s ) and (", orig_query_string);
+
+    for (i = 0; i < add_tags_count && query_string; i++) {
+	query_string = talloc_asprintf_append_buffer (
+	    query_string, "%snot tag:%s", join,
+	    _escape_tag (escaped, argv[add_tags[i]] + 1));
+	join = " or ";
+    }
+    for (i = 0; i < remove_tags_count && query_string; i++) {
+	query_string = talloc_asprintf_append_buffer (
+	    query_string, "%stag:%s", join,
+	    _escape_tag (escaped, argv[remove_tags[i]] + 1));
+	join = " or ";
+    }
+
+    if (query_string)
+	query_string = talloc_strdup_append_buffer (query_string, ")");
+
+    talloc_free (escaped);
+    return query_string;
 }
 
 int
@@ -90,6 +165,16 @@ notmuch_tag_command (void *ctx, unused (int argc), unused (char *argv[]))
 
     if (*query_string == '\0') {
 	fprintf (stderr, "Error: notmuch tag requires at least one search term.\n");
+	return 1;
+    }
+
+    /* Optimize the query so it excludes messages that already have
+     * the specified set of tags. */
+    query_string = _optimize_tag_query (ctx, query_string, argv,
+					add_tags, add_tags_count,
+					remove_tags, remove_tags_count);
+    if (query_string == NULL) {
+	fprintf (stderr, "Out of memory.\n");
 	return 1;
     }
 

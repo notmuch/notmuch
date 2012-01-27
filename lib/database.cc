@@ -28,6 +28,8 @@
 #include <glib.h> /* g_free, GPtrArray, GHashTable */
 #include <glib-object.h> /* g_type_init */
 
+#include <gmime/gmime.h> /* g_mime_init */
+
 using namespace std;
 
 #define ARRAY_SIZE(arr) (sizeof (arr) / sizeof (arr[0]))
@@ -81,12 +83,16 @@ typedef struct {
  *		        STRING is the name of a file within that
  *		        directory for this mail message.
  *
- *    A mail document also has two values:
+ *    A mail document also has four values:
  *
  *	TIMESTAMP:	The time_t value corresponding to the message's
  *			Date header.
  *
  *	MESSAGE_ID:	The unique ID of the mail mess (see "id" above)
+ *
+ *	FROM:		The value of the "From" header
+ *
+ *	SUBJECT:	The value of the "Subject" header
  *
  * In addition, terms from the content of the message are added with
  * "from", "to", "attachment", and "subject" prefixes for use by the
@@ -581,6 +587,7 @@ notmuch_database_open (const char *path,
     struct stat st;
     int err;
     unsigned int i, version;
+    static int initialized = 0;
 
     if (asprintf (&notmuch_path, "%s/%s", path, ".notmuch") == -1) {
 	notmuch_path = NULL;
@@ -603,6 +610,12 @@ notmuch_database_open (const char *path,
 
     /* Initialize the GLib type system and threads */
     g_type_init ();
+
+    /* Initialize gmime */
+    if (! initialized) {
+	g_mime_init (0);
+	initialized = 1;
+    }
 
     notmuch = talloc (NULL, notmuch_database_t);
     notmuch->exception_reported = FALSE;
@@ -1447,7 +1460,7 @@ _notmuch_database_link_message_to_parents (notmuch_database_t *notmuch,
     keys = g_hash_table_get_keys (parents);
     for (l = keys; l; l = l->next) {
 	char *parent_message_id;
-	const char *parent_thread_id;
+	const char *parent_thread_id = NULL;
 
 	parent_message_id = (char *) l->data;
 

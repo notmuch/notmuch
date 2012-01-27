@@ -622,11 +622,9 @@ notmuch_reply_command (void *ctx, int argc, char *argv[])
     char *opt, *query_string;
     int i, ret = 0;
     int (*reply_format_func)(void *ctx, notmuch_config_t *config, notmuch_query_t *query, notmuch_show_params_t *params);
-    notmuch_show_params_t params;
+    notmuch_show_params_t params = { .part = -1 };
 
     reply_format_func = notmuch_reply_format_default;
-    params.part = -1;
-    params.cryptoctx = NULL;
 
     argc--; argv++; /* skip subcommand argument */
 
@@ -648,10 +646,12 @@ notmuch_reply_command (void *ctx, int argc, char *argv[])
 	} else if ((STRNCMP_LITERAL (argv[i], "--decrypt") == 0)) {
 	    if (params.cryptoctx == NULL) {
 		GMimeSession* session = g_object_new(g_mime_session_get_type(), NULL);
-		if (NULL == (params.cryptoctx = g_mime_gpg_context_new(session, "gpg")))
+		if (NULL == (params.cryptoctx = g_mime_gpg_context_new(session, "gpg"))) {
 		    fprintf (stderr, "Failed to construct gpg context.\n");
-		else
+		} else {
+		    params.decrypt = TRUE;
 		    g_mime_gpg_context_set_always_trust((GMimeGpgContext*)params.cryptoctx, FALSE);
+		}
 		g_object_unref (session);
 		session = NULL;
 	    }

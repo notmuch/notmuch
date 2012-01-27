@@ -18,7 +18,6 @@
 extern "C" {
 #endif
 
-static const char maildirmisc_h_rcsid[]="$Id: maildirmisc.h,v 1.18 2006/07/22 02:48:15 mrsam Exp $";
 
 /*
 **

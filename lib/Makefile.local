@@ -30,7 +30,7 @@ LIBRARY_SUFFIX = so
 LINKER_NAME = libnotmuch.$(LIBRARY_SUFFIX)
 SONAME = $(LINKER_NAME).$(LIBNOTMUCH_VERSION_MAJOR)
 LIBNAME = $(SONAME).$(LIBNOTMUCH_VERSION_MINOR).$(LIBNOTMUCH_VERSION_RELEASE)
-LIBRARY_LINK_FLAG = -shared -Wl,--version-script=notmuch.sym,-soname=$(SONAME)
+LIBRARY_LINK_FLAG = -shared -Wl,--version-script=notmuch.sym,-soname=$(SONAME) -Wl,--no-undefined
 ifeq ($(LIBDIR_IN_LDCONFIG),1)
 ifeq ($(DESTDIR),)
 LIBRARY_INSTALL_POST_COMMAND=ldconfig

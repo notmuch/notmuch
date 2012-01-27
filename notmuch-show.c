@@ -255,7 +255,9 @@ _extract_email_address (const void *ctx, const char *from)
     email = talloc_strdup (ctx, email);
 
   DONE:
-    /* XXX: How to free addresses here? */
+    if (addresses)
+	g_object_unref (addresses);
+
     return email;
    }
 
@@ -469,9 +471,12 @@ show_text_part_content (GMimeObject *part, GMimeStream *stream_out)
 	/* This result can be NULL for things like "unknown-8bit".
 	 * Don't set a NULL filter as that makes GMime print
 	 * annoying assertion-failure messages on stderr. */
-	if (charset_filter)
+	if (charset_filter) {
 	    g_mime_stream_filter_add (GMIME_STREAM_FILTER (stream_filter),
 				      charset_filter);
+	    g_object_unref (charset_filter);
+	}
+
     }
 
     wrapper = g_mime_part_get_content_object (GMIME_PART (part));
@@ -861,7 +866,7 @@ do_show_single (void *ctx,
 
 	while (!feof (file)) {
 	    size = fread (buf, 1, sizeof (buf), file);
-	    fwrite (buf, size, 1, stdout);
+	    (void) fwrite (buf, size, 1, stdout);
 	}
 
 	fclose (file);

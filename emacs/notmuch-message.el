@@ -39,10 +39,10 @@ the \"inbox\" and \"todo\", you would set
     (when (and notmuch-message-replied-tags rep)
       ;; add a "+" to any tag that is doesn't already begin with a "+"
       ;; or "-"
-      (let ((tags (mapcar '(lambda (str)
-			     (if (not (string-match "^[+-]" str))
-				 (concat "+" str)
-			       str))
+      (let ((tags (mapcar (lambda (str)
+			    (if (not (string-match "^[+-]" str))
+				(concat "+" str)
+			      str))
 			  notmuch-message-replied-tags)))
 	(apply 'notmuch-tag (concat "id:" (car (car rep))) tags)))))
 

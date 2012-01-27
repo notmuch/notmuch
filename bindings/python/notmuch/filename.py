@@ -17,7 +17,8 @@ along with notmuch.  If not, see <http://www.gnu.org/licenses/>.
 Copyright 2010 Sebastian Spaeth <Sebastian@SSpaeth.de>'
 """
 from ctypes import c_char_p
-from notmuch.globals import nmlib, STATUS, NotmuchError
+from notmuch.globals import (nmlib, STATUS, NotmuchError,
+    NotmuchFilenamesP, NotmuchMessageP)
 
 
 class Filenames(object):
@@ -50,6 +51,7 @@ class Filenames(object):
 
     #notmuch_filenames_get
     _get = nmlib.notmuch_filenames_get
+    _get.argtypes = [NotmuchFilenamesP]
     _get.restype = c_char_p
 
     def __init__(self, files_p, parent):
@@ -74,6 +76,14 @@ class Filenames(object):
         #save reference to parent object so we keep it alive
         self._parent = parent
 
+    _valid = nmlib.notmuch_filenames_valid
+    _valid.argtypes = [NotmuchFilenamesP]
+    _valid.restype = bool
+
+    _move_to_next = nmlib.notmuch_filenames_move_to_next
+    _move_to_next.argtypes = [NotmuchFilenamesP]
+    _move_to_next.restype = None
+
     def as_generator(self):
         """Return generator of Filenames
 
@@ -82,13 +92,16 @@ class Filenames(object):
         if self._files is None:
             raise NotmuchError(STATUS.NOT_INITIALIZED)
 
-        while nmlib.notmuch_filenames_valid(self._files):
+        while self._valid(self._files):
             yield Filenames._get(self._files)
-            nmlib.notmuch_filenames_move_to_next(self._files)
+            self._move_to_next(self._files)
 
         self._files = None
 
     def __str__(self):
+        return unicode(self).encode('utf-8')
+
+    def __unicode__(self):
         """Represent Filenames() as newline-separated list of full paths
 
         .. note:: As this iterates over the filenames, we will not be
@@ -101,7 +114,11 @@ class Filenames(object):
         """
         return "\n".join(self)
 
+    _destroy = nmlib.notmuch_filenames_destroy
+    _destroy.argtypes = [NotmuchMessageP]
+    _destroy.restype = None
+
     def __del__(self):
         """Close and free the notmuch filenames"""
         if self._files is not None:
-            nmlib.notmuch_filenames_destroy(self._files)
+            self._destroy(self._files)

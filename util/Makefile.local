@@ -9,3 +9,5 @@ libutil_modules := $(libutil_c_srcs:.c=.o)
 
 $(dir)/libutil.a: $(libutil_modules)
 	$(call quiet,AR) rcs $@ $^
+
+CLEAN := $(CLEAN) $(libutil_modules) $(dir)/libutil.a

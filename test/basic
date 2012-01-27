@@ -51,17 +51,11 @@ test_expect_code 2 'failure to clean up causes the test to fail' '
 
 # Ensure that all tests are being run
 test_begin_subtest 'Ensure that all available tests will be run by notmuch-test'
-eval $(sed -n -e '/^TESTS="$/,/^"$/p' notmuch-test $TEST_DIRECTORY/notmuch-test)
+eval $(sed -n -e '/^TESTS="$/,/^"$/p' $TEST_DIRECTORY/notmuch-test)
 tests_in_suite=$(for i in $TESTS; do echo $i; done | sort)
-available=$(ls -1 $TEST_DIRECTORY/ | \
-    sed -r -e "/^(aggregate-results.sh|Makefile|Makefile.local|notmuch-test)/d" \
-	   -e "/^(README|test-lib.sh|test-lib.el|test-results|tmp.*|valgrind|corpus*)/d" \
-	   -e "/^(emacs.expected-output|smtp-dummy|smtp-dummy.c|test-verbose|symbol-test.cc)/d" \
-	   -e "/^(test.expected-output|.*~)/d" \
-	   -e "/^(gnupg-secret-key.asc)/d" \
-	   -e "/^(gnupg-secret-key.NOTE)/d" \
-	   -e "/^(atomicity.gdb)/d" \
-	   | sort)
+available=$(find "$TEST_DIRECTORY" -maxdepth 1 -type f -executable -printf '%f\n' | \
+    sed -r -e "/^(aggregate-results.sh|notmuch-test|smtp-dummy|test-verbose|symbol-test|arg-test)$/d" | \
+    sort)
 test_expect_equal "$tests_in_suite" "$available"
 
 EXPECTED=$TEST_DIRECTORY/test.expected-output

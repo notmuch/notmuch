@@ -22,7 +22,6 @@
 
 #include	"maildirmisc.h"
 
-static const char rcsid[]="$Id: maildiropen.c,v 1.8 2003/01/19 16:39:52 mrsam Exp $";
 
 char *maildir_getlink(const char *filename)
 {

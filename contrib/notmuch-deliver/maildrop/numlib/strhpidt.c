@@ -9,7 +9,6 @@
 #include	"numlib.h"
 #include	<string.h>
 
-static const char rcsid[]="$Id: strhpidt.c,v 1.5 2003/03/12 02:45:56 mrsam Exp $";
 
 static const char xdigit[]="0123456789ABCDEF";
 

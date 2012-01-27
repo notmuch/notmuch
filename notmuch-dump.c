@@ -41,39 +41,49 @@ notmuch_dump_command (unused (void *ctx), int argc, char *argv[])
     if (notmuch == NULL)
 	return 1;
 
-    argc--; argv++; /* skip subcommand argument */
+    char *output_file_name = NULL;
+    int opt_index;
 
-    if (argc && strcmp (argv[0], "--") != 0) {
+    notmuch_opt_desc_t options[] = {
+	{ NOTMUCH_OPT_POSITION, &output_file_name, 0, 0, 0  },
+	{ 0, 0, 0, 0, 0 }
+    };
+
+    opt_index = parse_arguments (argc, argv, options, 1);
+
+    if (opt_index < 0) {
+	/* diagnostics already printed */
+	return 1;
+    }
+
+    if (output_file_name) {
 	fprintf (stderr, "Warning: the output file argument of dump is deprecated.\n");
-	output = fopen (argv[0], "w");
+	output = fopen (output_file_name, "w");
 	if (output == NULL) {
 	    fprintf (stderr, "Error opening %s for writing: %s\n",
-		     argv[0], strerror (errno));
+		     output_file_name, strerror (errno));
 	    return 1;
 	}
-	argc--;
-	argv++;
     }
 
-    if (argc && strcmp (argv[0], "--") == 0){
-	argc--;
-	argv++;
-    }
 
-    if (argc) {
-	query_str = query_string_from_args (notmuch, argc, argv);
+    if (opt_index < argc) {
+	query_str = query_string_from_args (notmuch, argc-opt_index, argv+opt_index);
 	if (query_str == NULL) {
 	    fprintf (stderr, "Out of memory.\n");
 	    return 1;
 	}
     }
- 
+
     query = notmuch_query_create (notmuch, query_str);
     if (query == NULL) {
 	fprintf (stderr, "Out of memory\n");
 	return 1;
     }
-    notmuch_query_set_sort (query, NOTMUCH_SORT_MESSAGE_ID);
+    /* Don't ask xapian to sort by Message-ID. Xapian optimizes returning the
+     * first results quickly at the expense of total time.
+     */
+    notmuch_query_set_sort (query, NOTMUCH_SORT_UNSORTED);
 
     for (messages = notmuch_query_search_messages (query);
 	 notmuch_messages_valid (messages);

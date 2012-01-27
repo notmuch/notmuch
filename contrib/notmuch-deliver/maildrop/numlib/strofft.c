@@ -9,7 +9,6 @@
 #include	"numlib.h"
 #include	<string.h>
 
-static const char rcsid[]="$Id: strofft.c,v 1.6 2010/03/19 01:09:26 mrsam Exp $";
 
 char *libmail_str_off_t(off_t t, char *arg)
 {

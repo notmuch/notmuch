@@ -1,4 +1,6 @@
 test-results
 corpus.mail
 smtp-dummy
+symbol-test
+arg-test
 tmp.*

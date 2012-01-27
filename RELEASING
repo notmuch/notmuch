@@ -62,11 +62,11 @@ repository. From here, there are just a few steps to release:
 	be "1.0.1" and a subsequent bug-fix release would be "1.0.2"
 	etc.
 
-	Update bindings/python/notmuch/version.py to match version.
+	When you are happy with the file 'version', run
 
-	Update the version in notmuch.1 to match version.
+	     make update-versions
 
-	XXX: Probably these last two steps should be (semi-)automated.
+	to propagate the version to the other places needed.
 
 	Commit these changes.
 

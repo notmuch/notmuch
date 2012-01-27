@@ -646,9 +646,9 @@ This function advances the next thread when finished."
 Here is an example of how to color search results based on tags.
  (the following text would be placed in your ~/.emacs file):
 
- (setq notmuch-search-line-faces '((\"delete\" . '(:foreground \"red\"
-						   :background \"blue\"))
-                                   (\"unread\" . '(:foreground \"green\"))))
+ (setq notmuch-search-line-faces '((\"delete\" . (:foreground \"red\"
+						  :background \"blue\"))
+                                   (\"unread\" . (:foreground \"green\"))))
 
 The attributes defined for matching tags are merged, with later
 attributes overriding earlier. A message having both \"delete\"
@@ -662,16 +662,16 @@ foreground and blue background."
   ;; Create the overlay only if the message has tags which match one
   ;; of those specified in `notmuch-search-line-faces'.
   (let (overlay)
-    (mapc '(lambda (elem)
-	     (let ((tag (car elem))
-		   (attributes (cdr elem)))
-	       (when (member tag line-tag-list)
-		 (when (not overlay)
-		   (setq overlay (make-overlay start end)))
-		 ;; Merge the specified properties with any already
-		 ;; applied from an earlier match.
-		 (overlay-put overlay 'face
-			      (append (overlay-get overlay 'face) attributes)))))
+    (mapc (lambda (elem)
+	    (let ((tag (car elem))
+		  (attributes (cdr elem)))
+	      (when (member tag line-tag-list)
+		(when (not overlay)
+		  (setq overlay (make-overlay start end)))
+		;; Merge the specified properties with any already
+		;; applied from an earlier match.
+		(overlay-put overlay 'face
+			     (append (overlay-get overlay 'face) attributes)))))
 	  notmuch-search-line-faces)))
 
 (defun notmuch-search-author-propertize (authors)
@@ -805,12 +805,12 @@ non-authors is found, assume that all of the authors match."
 		      (goto-char (point-max))
 		      (if (/= (match-beginning 1) line)
 			  (insert (concat "Error: Unexpected output from notmuch search:\n" (substring string line (match-beginning 1)) "\n")))
-		      (let ((beg (point-marker)))
+		      (let ((beg (point)))
 			(notmuch-search-show-result date count authors subject tags)
-			(notmuch-search-color-line beg (point-marker) tag-list)
-			(put-text-property beg (point-marker) 'notmuch-search-thread-id thread-id)
-			(put-text-property beg (point-marker) 'notmuch-search-authors authors)
-			(put-text-property beg (point-marker) 'notmuch-search-subject subject)
+			(notmuch-search-color-line beg (point) tag-list)
+			(put-text-property beg (point) 'notmuch-search-thread-id thread-id)
+			(put-text-property beg (point) 'notmuch-search-authors authors)
+			(put-text-property beg (point) 'notmuch-search-subject subject)
 			(if (string= thread-id notmuch-search-target-thread)
 			    (progn
 			      (set 'found-target beg)
@@ -885,7 +885,7 @@ PROMPT is the string to prompt with."
 		      "subject:" "attachment:")
 		(mapcar (lambda (tag)
 			  (concat "tag:" tag))
-			(process-lines "notmuch" "search" "--output=tags" "*")))))
+			(process-lines notmuch-command "search" "--output=tags" "*")))))
     (let ((keymap (copy-keymap minibuffer-local-map))
 	  (minibuffer-completion-table
 	   (completion-table-dynamic
@@ -920,6 +920,8 @@ The optional parameters are used as follows:
   (let ((buffer (get-buffer-create (notmuch-search-buffer-title query))))
     (switch-to-buffer buffer)
     (notmuch-search-mode)
+    ;; Don't track undo information for this buffer
+    (set 'buffer-undo-list t)
     (set 'notmuch-search-query-string query)
     (set 'notmuch-search-oldest-first oldest-first)
     (set 'notmuch-search-target-thread target-thread)
@@ -963,28 +965,43 @@ same relative position within the new buffer."
     (notmuch-search query oldest-first target-thread target-line continuation)
     (goto-char (point-min))))
 
-(defcustom notmuch-poll-script ""
+(defcustom notmuch-poll-script nil
   "An external script to incorporate new mail into the notmuch database.
 
-If this variable is non empty, then it should name a script to be
-invoked by `notmuch-search-poll-and-refresh-view' and
+This variable controls the action invoked by
+`notmuch-search-poll-and-refresh-view' and
 `notmuch-hello-poll-and-update' (each have a default keybinding
-of 'G'). The script could do any of the following depending on
+of 'G') to incorporate new mail into the notmuch database.
+
+If set to nil (the default), new mail is processed by invoking
+\"notmuch new\". Otherwise, this should be set to a string that
+gives the name of an external script that processes new mail. If
+set to the empty string, no command will be run.
+
+The external script could do any of the following depending on
 the user's needs:
 
 1. Invoke a program to transfer mail to the local mail store
 2. Invoke \"notmuch new\" to incorporate the new mail
-3. Invoke one or more \"notmuch tag\" commands to classify the mail"
-  :type 'string
+3. Invoke one or more \"notmuch tag\" commands to classify the mail
+
+Note that the recommended way of achieving the same is using
+\"notmuch new\" hooks."
+  :type '(choice (const :tag "notmuch new" nil)
+		 (const :tag "Disabled" "")
+		 (string :tag "Custom script"))
   :group 'notmuch)
 
 (defun notmuch-poll ()
-  "Run external script to import mail.
+  "Run \"notmuch new\" or an external script to import mail.
 
-Invokes `notmuch-poll-script' if it is not set to an empty string."
+Invokes `notmuch-poll-script', \"notmuch new\", or does nothing
+depending on the value of `notmuch-poll-script'."
   (interactive)
-  (if (not (string= notmuch-poll-script ""))
-      (call-process notmuch-poll-script nil nil)))
+  (if (stringp notmuch-poll-script)
+      (if (not (string= notmuch-poll-script ""))
+	  (call-process notmuch-poll-script nil nil))
+    (call-process notmuch-command nil nil nil "new")))
 
 (defun notmuch-search-poll-and-refresh-view ()
   "Invoke `notmuch-poll' to import mail, then refresh the current view."
@@ -1037,6 +1054,23 @@ current search results AND that are tagged with the given tag."
   "Run notmuch and display saved searches, known tags, etc."
   (interactive)
   (notmuch-hello))
+
+;;;###autoload
+(defun notmuch-jump-to-recent-buffer ()
+  "Jump to the most recent notmuch buffer (search, show or hello).
+
+If no recent buffer is found, run `notmuch'."
+  (interactive)
+  (let ((last
+	 (loop for buffer in (buffer-list)
+	       if (with-current-buffer buffer
+		    (memq major-mode '(notmuch-show-mode
+				       notmuch-search-mode
+				       notmuch-hello-mode)))
+	       return buffer)))
+    (if last
+	(switch-to-buffer last)
+      (notmuch))))
 
 (setq mail-user-agent 'notmuch-user-agent)
 

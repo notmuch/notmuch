@@ -16,7 +16,6 @@
 extern "C" {
 #endif
 
-static const char maildircreate_h_rcsid[]="$Id: maildircreate.h,v 1.10 2006/10/29 00:03:53 mrsam Exp $";
 
 	/* Create messages in maildirs */
 

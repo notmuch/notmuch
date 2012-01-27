@@ -19,14 +19,14 @@ Copyright 2010 Sebastian Spaeth <Sebastian@SSpaeth.de>'
 """
 
 
-from ctypes import c_char_p, c_void_p, c_long, c_uint, c_int
+from ctypes import c_char_p, c_long, c_uint, c_int
 from datetime import date
-from notmuch.globals import nmlib, STATUS, NotmuchError, Enum, _str
+from notmuch.globals import (nmlib, STATUS, NotmuchError, Enum, _str,
+    NotmuchTagsP, NotmuchMessagesP, NotmuchMessageP, NotmuchFilenamesP)
 from notmuch.tag import Tags
 from notmuch.filename import Filenames
 import sys
 import email
-import types
 try:
     import simplejson as json
 except ImportError:
@@ -92,10 +92,12 @@ class Messages(object):
 
     #notmuch_messages_get
     _get = nmlib.notmuch_messages_get
-    _get.restype = c_void_p
+    _get.argtypes = [NotmuchMessagesP]
+    _get.restype = NotmuchMessageP
 
     _collect_tags = nmlib.notmuch_messages_collect_tags
-    _collect_tags.restype = c_void_p
+    _collect_tags.argtypes = [NotmuchMessagesP]
+    _collect_tags.restype = NotmuchTagsP
 
     def __init__(self, msgs_p, parent=None):
         """
@@ -125,10 +127,12 @@ class Messages(object):
         """Return the unique :class:`Tags` in the contained messages
 
         :returns: :class:`Tags`
-        :exceptions: :exc:`NotmuchError` STATUS.NOT_INITIALIZED if not inited
+        :exceptions: :exc:`NotmuchError` STATUS.NOT_INITIALIZED if not init'ed
 
-        .. note:: :meth:`collect_tags` will iterate over the messages and
-          therefore will not allow further iterations.
+        .. note::
+
+            :meth:`collect_tags` will iterate over the messages and therefore
+            will not allow further iterations.
         """
         if self._msgs is None:
             raise NotmuchError(STATUS.NOT_INITIALIZED)
@@ -146,16 +150,24 @@ class Messages(object):
         """ Make Messages an iterator """
         return self
 
+    _valid = nmlib.notmuch_messages_valid
+    _valid.argtypes = [NotmuchMessagesP]
+    _valid.restype = bool
+
+    _move_to_next = nmlib.notmuch_messages_move_to_next
+    _move_to_next.argtypes = [NotmuchMessagesP]
+    _move_to_next.restype = None
+
     def next(self):
         if self._msgs is None:
             raise NotmuchError(STATUS.NOT_INITIALIZED)
 
-        if not nmlib.notmuch_messages_valid(self._msgs):
+        if not self._valid(self._msgs):
             self._msgs = None
             raise StopIteration
 
         msg = Message(Messages._get(self._msgs), self)
-        nmlib.notmuch_messages_move_to_next(self._msgs)
+        self._move_to_next(self._msgs)
         return msg
 
     def __nonzero__(self):
@@ -163,12 +175,16 @@ class Messages(object):
         :return: True if there is at least one more thread in the
             Iterator, False if not."""
         return self._msgs is not None and \
-            nmlib.notmuch_messages_valid(self._msgs) > 0
+            self._valid(self._msgs) > 0
+
+    _destroy = nmlib.notmuch_messages_destroy
+    _destroy.argtypes = [NotmuchMessagesP]
+    _destroy.restype = None
 
     def __del__(self):
         """Close and free the notmuch Messages"""
         if self._msgs is not None:
-            nmlib.notmuch_messages_destroy(self._msgs)
+            self._destroy(self._msgs)
 
     def print_messages(self, format, indent=0, entire_thread=False):
         """Outputs messages as needed for 'notmuch show' to sys.stdout
@@ -235,44 +251,60 @@ class Message(object):
 
     """notmuch_message_get_filename (notmuch_message_t *message)"""
     _get_filename = nmlib.notmuch_message_get_filename
+    _get_filename.argtypes = [NotmuchMessageP]
     _get_filename.restype = c_char_p
 
     """return all filenames for a message"""
     _get_filenames = nmlib.notmuch_message_get_filenames
-    _get_filenames.restype = c_void_p
+    _get_filenames.argtypes = [NotmuchMessageP]
+    _get_filenames.restype = NotmuchFilenamesP
 
     """notmuch_message_get_flag"""
     _get_flag = nmlib.notmuch_message_get_flag
-    _get_flag.restype = c_uint
+    _get_flag.argtypes = [NotmuchMessageP, c_uint]
+    _get_flag.restype = bool
+
+    """notmuch_message_set_flag"""
+    _set_flag = nmlib.notmuch_message_set_flag
+    _set_flag.argtypes = [NotmuchMessageP, c_uint, c_int]
+    _set_flag.restype = None
 
     """notmuch_message_get_message_id (notmuch_message_t *message)"""
     _get_message_id = nmlib.notmuch_message_get_message_id
+    _get_message_id.argtypes = [NotmuchMessageP]
     _get_message_id.restype = c_char_p
 
     """notmuch_message_get_thread_id"""
     _get_thread_id = nmlib.notmuch_message_get_thread_id
+    _get_thread_id.argtypes = [NotmuchMessageP]
     _get_thread_id.restype = c_char_p
 
     """notmuch_message_get_replies"""
     _get_replies = nmlib.notmuch_message_get_replies
-    _get_replies.restype = c_void_p
+    _get_replies.argtypes = [NotmuchMessageP]
+    _get_replies.restype = NotmuchMessagesP
 
     """notmuch_message_get_tags (notmuch_message_t *message)"""
     _get_tags = nmlib.notmuch_message_get_tags
-    _get_tags.restype = c_void_p
+    _get_tags.argtypes = [NotmuchMessageP]
+    _get_tags.restype = NotmuchTagsP
 
     _get_date = nmlib.notmuch_message_get_date
+    _get_date.argtypes = [NotmuchMessageP]
     _get_date.restype = c_long
 
     _get_header = nmlib.notmuch_message_get_header
+    _get_header.argtypes = [NotmuchMessageP, c_char_p]
     _get_header.restype = c_char_p
 
     """notmuch_status_t ..._maildir_flags_to_tags (notmuch_message_t *)"""
     _tags_to_maildir_flags = nmlib.notmuch_message_tags_to_maildir_flags
+    _tags_to_maildir_flags.argtypes = [NotmuchMessageP]
     _tags_to_maildir_flags.restype = c_int
 
     """notmuch_status_t ..._tags_to_maildir_flags (notmuch_message_t *)"""
     _maildir_flags_to_tags = nmlib.notmuch_message_maildir_flags_to_tags
+    _maildir_flags_to_tags.argtypes = [NotmuchMessageP]
     _maildir_flags_to_tags.restype = c_int
 
     #Constants: Flags that can be set/get with set_flag
@@ -328,14 +360,15 @@ class Message(object):
         """Gets all direct replies to this message as :class:`Messages`
         iterator
 
-        .. note:: This call only makes sense if 'message' was
-          ultimately obtained from a :class:`Thread` object, (such as
-          by coming directly from the result of calling
-          :meth:`Thread.get_toplevel_messages` or by any number of
-          subsequent calls to :meth:`get_replies`). If this message was
-          obtained through some non-thread means, (such as by a call
-          to :meth:`Query.search_messages`), then this function will
-          return `None`.
+        .. note::
+
+            This call only makes sense if 'message' was ultimately obtained from
+            a :class:`Thread` object, (such as by coming directly from the
+            result of calling :meth:`Thread.get_toplevel_messages` or by any
+            number of subsequent calls to :meth:`get_replies`). If this message
+            was obtained through some non-thread means, (such as by a call to
+            :meth:`Query.search_messages`), then this function will return
+            `None`.
 
         :returns: :class:`Messages` or `None` if there are no replies to
             this message.
@@ -394,7 +427,7 @@ class Message(object):
         header = Message._get_header(self._msg, header)
         if header == None:
             raise NotmuchError(STATUS.NULL_POINTER)
-        return header.decode('UTF-8')
+        return header.decode('UTF-8', errors='ignore')
 
     def get_filename(self):
         """Returns the file path of the message file
@@ -450,7 +483,7 @@ class Message(object):
         """
         if self._msg is None:
             raise NotmuchError(STATUS.NOT_INITIALIZED)
-        nmlib.notmuch_message_set_flag(self._msg, flag, value)
+        self._set_flag(self._msg, flag, value)
 
     def get_tags(self):
         """Returns the message tags
@@ -469,6 +502,10 @@ class Message(object):
         if tags_p == None:
             raise NotmuchError(STATUS.NULL_POINTER)
         return Tags(tags_p, self)
+
+    _add_tag = nmlib.notmuch_message_add_tag
+    _add_tag.argtypes = [NotmuchMessageP, c_char_p]
+    _add_tag.restype = c_uint
 
     def add_tag(self, tag, sync_maildir_flags=False):
         """Adds a tag to the given message
@@ -504,7 +541,7 @@ class Message(object):
         if self._msg is None:
             raise NotmuchError(STATUS.NOT_INITIALIZED)
 
-        status = nmlib.notmuch_message_add_tag(self._msg, _str(tag))
+        status = self._add_tag(self._msg, _str(tag))
 
         # bail out on failure
         if status != STATUS.SUCCESS:
@@ -513,6 +550,10 @@ class Message(object):
         if sync_maildir_flags:
             self.tags_to_maildir_flags()
         return STATUS.SUCCESS
+
+    _remove_tag = nmlib.notmuch_message_remove_tag
+    _remove_tag.argtypes = [NotmuchMessageP, c_char_p]
+    _remove_tag.restype = c_uint
 
     def remove_tag(self, tag, sync_maildir_flags=False):
         """Removes a tag from the given message
@@ -548,7 +589,7 @@ class Message(object):
         if self._msg is None:
             raise NotmuchError(STATUS.NOT_INITIALIZED)
 
-        status = nmlib.notmuch_message_remove_tag(self._msg, _str(tag))
+        status = self._remove_tag(self._msg, _str(tag))
         # bail out on error
         if status != STATUS.SUCCESS:
             raise NotmuchError(status)
@@ -556,6 +597,10 @@ class Message(object):
         if sync_maildir_flags:
             self.tags_to_maildir_flags()
         return STATUS.SUCCESS
+
+    _remove_all_tags = nmlib.notmuch_message_remove_all_tags
+    _remove_all_tags.argtypes = [NotmuchMessageP]
+    _remove_all_tags.restype = c_uint
 
     def remove_all_tags(self, sync_maildir_flags=False):
         """Removes all tags from the given message.
@@ -585,7 +630,7 @@ class Message(object):
         if self._msg is None:
             raise NotmuchError(STATUS.NOT_INITIALIZED)
 
-        status = nmlib.notmuch_message_remove_all_tags(self._msg)
+        status = self._remove_all_tags(self._msg)
 
         # bail out on error
         if status != STATUS.SUCCESS:
@@ -595,12 +640,16 @@ class Message(object):
             self.tags_to_maildir_flags()
         return STATUS.SUCCESS
 
+    _freeze = nmlib.notmuch_message_freeze
+    _freeze.argtypes = [NotmuchMessageP]
+    _freeze.restype = c_uint
+
     def freeze(self):
         """Freezes the current state of 'message' within the database
 
         This means that changes to the message state, (via :meth:`add_tag`,
         :meth:`remove_tag`, and :meth:`remove_all_tags`), will not be
-        committed to the database until the message is :meth:`thaw`ed.
+        committed to the database until the message is :meth:`thaw` ed.
 
         Multiple calls to freeze/thaw are valid and these calls will
         "stack". That is there must be as many calls to thaw as to freeze
@@ -639,13 +688,17 @@ class Message(object):
         if self._msg is None:
             raise NotmuchError(STATUS.NOT_INITIALIZED)
 
-        status = nmlib.notmuch_message_freeze(self._msg)
+        status = self._freeze(self._msg)
 
         if STATUS.SUCCESS == status:
             # return on success
             return status
 
         raise NotmuchError(status)
+
+    _thaw = nmlib.notmuch_message_thaw
+    _thaw.argtypes = [NotmuchMessageP]
+    _thaw.restype = c_uint
 
     def thaw(self):
         """Thaws the current 'message'
@@ -674,7 +727,7 @@ class Message(object):
         if self._msg is None:
             raise NotmuchError(STATUS.NOT_INITIALIZED)
 
-        status = nmlib.notmuch_message_thaw(self._msg)
+        status = self._thaw(self._msg)
 
         if STATUS.SUCCESS == status:
             # return on success
@@ -705,11 +758,11 @@ class Message(object):
         not work yet, as the modified tags have not been committed yet
         to the database.
 
-        :returns: a :class:`STATUS`. In short, you want to see
+        :returns: a :class:`STATUS` value. In short, you want to see
             notmuch.STATUS.SUCCESS here. See there for details."""
         if self._msg is None:
             raise NotmuchError(STATUS.NOT_INITIALIZED)
-        status = Message._tags_to_maildir_flags(self._msg)
+        return Message._tags_to_maildir_flags(self._msg)
 
     def maildir_flags_to_tags(self):
         """Synchronize file Maildir flags to notmuch tags
@@ -736,19 +789,21 @@ class Message(object):
             notmuch.STATUS.SUCCESS here. See there for details."""
         if self._msg is None:
             raise NotmuchError(STATUS.NOT_INITIALIZED)
-        status = Message._tags_to_maildir_flags(self._msg)
+        return Message._tags_to_maildir_flags(self._msg)
 
     def __repr__(self):
         """Represent a Message() object by str()"""
         return self.__str__()
 
     def __str__(self):
-        """A message() is represented by a 1-line summary"""
-        msg = {}
-        msg['from'] = self.get_header('from')
-        msg['tags'] = self.get_tags()
-        msg['date'] = date.fromtimestamp(self.get_date())
-        return "%(from)s (%(date)s) (%(tags)s)" % (msg)
+        return unicode(self).encode('utf-8')
+
+    def __unicode__(self):
+        format = "%s (%s) (%s)"
+        return format % (self.get_header('from'),
+                         self.get_tags(),
+                         date.fromtimestamp(self.get_date()),
+                        )
 
     def get_message_parts(self):
         """Output like notmuch show"""
@@ -896,7 +951,11 @@ class Message(object):
             res = cmp(list(self.get_filenames()), list(other.get_filenames()))
         return res
 
+    _destroy = nmlib.notmuch_message_destroy
+    _destroy.argtypes = [NotmuchMessageP]
+    _destroy.restype = None
+
     def __del__(self):
         """Close and free the notmuch Message"""
         if self._msg is not None:
-            nmlib.notmuch_message_destroy(self._msg)
+            self._destroy(self._msg)

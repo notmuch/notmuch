@@ -42,6 +42,26 @@
   :type 'boolean
   :group 'notmuch)
 
+(defun notmuch-sort-saved-searches (alist)
+  "Generate an alphabetically sorted saved searches alist."
+  (sort alist (lambda (a b) (string< (car a) (car b)))))
+
+(defcustom notmuch-saved-search-sort-function nil
+  "Function used to sort the saved searches for the notmuch-hello view.
+
+This variable controls how saved searches should be sorted. No
+sorting (nil) displays the saved searches in the order they are
+stored in `notmuch-saved-searches'. Sort alphabetically sorts the
+saved searches in alphabetical order. Custom sort function should
+be a function or a lambda expression that takes the saved
+searches alist as a parameter, and returns a new saved searches
+alist to be used."
+  :type '(choice (const :tag "No sorting" nil)
+		 (const :tag "Sort alphabetically" notmuch-sort-saved-searches)
+		 (function :tag "Custom sort function"
+			   :value notmuch-sort-saved-searches))
+  :group 'notmuch)
+
 (defvar notmuch-hello-indent 4
   "How much to indent non-headers.")
 
@@ -66,8 +86,9 @@ Finally this can be a function that will be called for each tag and
 should return a filter for that tag, or nil to hide the tag."
   :type '(choice (const :tag "All messages" nil)
 		 (const :tag "Unread messages" "tag:unread")
-		 (const :tag "Custom filter" string)
-		 (const :tag "Custom filter function" function))
+		 (string :tag "Custom filter"
+			 :value "tag:unread")
+		 (function :tag "Custom filter function"))
   :group 'notmuch)
 
 (defcustom notmuch-hello-hide-tags nil
@@ -111,12 +132,24 @@ So:
 	  (integer :tag "Number of characters")
 	  (float :tag "Fraction of window")))
 
-(defcustom notmuch-decimal-separator ","
-  "The string used as a decimal separator.
+(defcustom notmuch-hello-thousands-separator " "
+  "The string used as a thousands separator.
 
-Typically \",\" in the US and UK and \".\" in Europe."
+Typically \",\" in the US and UK and \".\" or \" \" in Europe.
+The latter is recommended in the SI/ISO 31-0 standard and by the
+International Bureau of Weights and Measures."
   :group 'notmuch
   :type 'string)
+
+(defcustom notmuch-hello-mode-hook nil
+  "Functions called after entering `notmuch-hello-mode'."
+  :group 'notmuch
+  :type 'hook)
+
+(defcustom notmuch-hello-refresh-hook nil
+  "Functions called after updating a `notmuch-hello' buffer."
+  :type 'hook
+  :group 'notmuch)
 
 (defvar notmuch-hello-url "http://notmuchmail.org"
   "The `notmuch' web site.")
@@ -124,8 +157,9 @@ Typically \",\" in the US and UK and \".\" in Europe."
 (defvar notmuch-hello-recent-searches nil)
 
 (defun notmuch-hello-remember-search (search)
-  (if (not (member search notmuch-hello-recent-searches))
-      (push search notmuch-hello-recent-searches))
+  (setq notmuch-hello-recent-searches
+	(delete search notmuch-hello-recent-searches))
+  (push search notmuch-hello-recent-searches)
   (if (> (length notmuch-hello-recent-searches)
 	 notmuch-recent-searches-max)
       (setq notmuch-hello-recent-searches (butlast notmuch-hello-recent-searches))))
@@ -139,7 +173,7 @@ Typically \",\" in the US and UK and \".\" in Europe."
     (apply #'concat
      (number-to-string (car result))
      (mapcar (lambda (elem)
-	      (format "%s%03d" notmuch-decimal-separator elem))
+	      (format "%s%03d" notmuch-hello-thousands-separator elem))
 	     (cdr result)))))
 
 (defun notmuch-hello-trim (search)
@@ -168,8 +202,8 @@ Typically \",\" in the US and UK and \".\" in Europe."
 		collect elem))
     ;; Add the new one.
     (customize-save-variable 'notmuch-saved-searches
-			     (push (cons name search)
-				   notmuch-saved-searches))
+			     (add-to-list 'notmuch-saved-searches
+					  (cons name search) t))
     (message "Saved '%s' as '%s'." search name)
     (notmuch-hello-update)))
 
@@ -311,8 +345,8 @@ should be. Returns a cons cell `(tags-per-line width)'."
 (defvar notmuch-hello-mode-map
   (let ((map (make-sparse-keymap)))
     (set-keymap-parent map widget-keymap)
-    (define-key map "v" '(lambda () "Display the notmuch version" (interactive)
-                           (message "notmuch version %s" (notmuch-version))))
+    (define-key map "v" (lambda () "Display the notmuch version" (interactive)
+			  (message "notmuch version %s" (notmuch-version))))
     (define-key map "?" 'notmuch-help)
     (define-key map "q" 'notmuch-kill-this-buffer)
     (define-key map "=" 'notmuch-hello-update)
@@ -335,6 +369,7 @@ Complete list of currently available key bindings:
  (use-local-map notmuch-hello-mode-map)
  (setq major-mode 'notmuch-hello-mode
        mode-name "notmuch-hello")
+ (run-mode-hooks 'notmuch-hello-mode-hook)
  ;;(setq buffer-read-only t)
 )
 
@@ -377,11 +412,16 @@ Complete list of currently available key bindings:
 		     (progn
 		       (widget-forward 1)
 		       (widget-value (widget-at)))
-		   (error nil)))))
+		   (error nil))))
+	(inhibit-read-only t))
 
-    (kill-all-local-variables)
-    (let ((inhibit-read-only t))
-      (erase-buffer))
+    ;; Delete all editable widget fields.  Editable widget fields are
+    ;; tracked in a buffer local variable `widget-field-list' (and
+    ;; others).  If we do `erase-buffer' without properly deleting the
+    ;; widgets, some widget-related functions are confused later.
+    (mapc 'widget-delete widget-field-list)
+
+    (erase-buffer)
 
     (unless (eq major-mode 'notmuch-hello-mode)
       (notmuch-hello-mode))
@@ -440,6 +480,10 @@ Complete list of currently available key bindings:
 	     (widest (max saved-widest alltags-widest)))
 
 	(when saved-alist
+	  ;; Sort saved searches if required.
+	  (when notmuch-saved-search-sort-function
+	    (setq saved-alist
+		  (funcall notmuch-saved-search-sort-function saved-alist)))
 	  (widget-insert "\nSaved searches: ")
 	  (widget-create 'push-button
 			 :notify (lambda (&rest ignore)
@@ -478,36 +522,36 @@ Complete list of currently available key bindings:
 	  (widget-insert "\n\n")
 	  (let ((start (point))
 		(nth 0))
-	    (mapc '(lambda (search)
-		     (let ((widget-symbol (intern (format "notmuch-hello-search-%d" nth))))
-		       (set widget-symbol
-			    (widget-create 'editable-field
-				       ;; Don't let the search boxes be
-				       ;; less than 8 characters wide.
-				       :size (max 8
-						  (- (window-width)
-						     ;; Leave some space
-						     ;; at the start and
-						     ;; end of the
-						     ;; boxes.
-						     (* 2 notmuch-hello-indent)
-						     ;; 1 for the space
-						     ;; before the
-						     ;; `[save]' button. 6
-						     ;; for the `[save]'
-						     ;; button.
-						     1 6))
-				       :action (lambda (widget &rest ignore)
-						 (notmuch-hello-search (widget-value widget)))
-				       search))
-		       (widget-insert " ")
-		       (widget-create 'push-button
-				      :notify (lambda (widget &rest ignore)
-						(notmuch-hello-add-saved-search widget))
-				      :notmuch-saved-search-widget widget-symbol
-				      "save"))
-		     (widget-insert "\n")
-		     (setq nth (1+ nth)))
+	    (mapc (lambda (search)
+		    (let ((widget-symbol (intern (format "notmuch-hello-search-%d" nth))))
+		      (set widget-symbol
+			   (widget-create 'editable-field
+					  ;; Don't let the search boxes be
+					  ;; less than 8 characters wide.
+					  :size (max 8
+						     (- (window-width)
+							;; Leave some space
+							;; at the start and
+							;; end of the
+							;; boxes.
+							(* 2 notmuch-hello-indent)
+							;; 1 for the space
+							;; before the
+							;; `[save]' button. 6
+							;; for the `[save]'
+							;; button.
+							1 6))
+					  :action (lambda (widget &rest ignore)
+						    (notmuch-hello-search (widget-value widget)))
+					  search))
+		      (widget-insert " ")
+		      (widget-create 'push-button
+				     :notify (lambda (widget &rest ignore)
+					       (notmuch-hello-add-saved-search widget))
+				     :notmuch-saved-search-widget widget-symbol
+				     "save"))
+		    (widget-insert "\n")
+		    (setq nth (1+ nth)))
 		  notmuch-hello-recent-searches)
 	    (indent-rigidly start (point) notmuch-hello-indent)))
 
@@ -555,7 +599,9 @@ Complete list of currently available key bindings:
 	  (widget-forward 1)))
 
       (unless (widget-at)
-	(notmuch-hello-goto-search)))))
+	(notmuch-hello-goto-search))))
+
+  (run-hooks 'notmuch-hello-refresh-hook))
 
 (defun notmuch-folder ()
   "Deprecated function for invoking notmuch---calling `notmuch' is preferred now."

@@ -17,7 +17,7 @@ along with notmuch.  If not, see <http://www.gnu.org/licenses/>.
 Copyright 2010 Sebastian Spaeth <Sebastian@SSpaeth.de>'
 """
 from ctypes import c_char_p
-from notmuch.globals import nmlib, STATUS, NotmuchError
+from notmuch.globals import nmlib, STATUS, NotmuchError, NotmuchTagsP
 
 
 class Tags(object):
@@ -50,6 +50,7 @@ class Tags(object):
 
     #notmuch_tags_get
     _get = nmlib.notmuch_tags_get
+    _get.argtypes = [NotmuchTagsP]
     _get.restype = c_char_p
 
     def __init__(self, tags_p, parent=None):
@@ -80,14 +81,22 @@ class Tags(object):
         """ Make Tags an iterator """
         return self
 
+    _valid = nmlib.notmuch_tags_valid
+    _valid.argtypes = [NotmuchTagsP]
+    _valid.restype = bool
+
+    _move_to_next = nmlib.notmuch_tags_move_to_next
+    _move_to_next.argtypes = [NotmuchTagsP]
+    _move_to_next.restype = None
+
     def next(self):
         if self._tags is None:
             raise NotmuchError(STATUS.NOT_INITIALIZED)
-        if not nmlib.notmuch_tags_valid(self._tags):
+        if not self._valid(self._tags):
             self._tags = None
             raise StopIteration
         tag = Tags._get(self._tags).decode('UTF-8')
-        nmlib.notmuch_tags_move_to_next(self._tags)
+        self._move_to_next(self._tags)
         return tag
 
     def __nonzero__(self):
@@ -99,20 +108,28 @@ class Tags(object):
 
         :returns: True if the Tags() iterator has at least one more Tag
             left."""
-        return nmlib.notmuch_tags_valid(self._tags) > 0
+        return self._valid(self._tags) > 0
 
     def __str__(self):
-        """The str() representation of Tags() is a space separated list of tags
+        return unicode(self).encode('utf-8')
 
-        .. note:: As this iterates over the tags, we will not be able
-               to iterate over them again (as in retrieve them)! If
-               the tags have been exhausted already, this will raise a
-               :exc:`NotmuchError` STATUS.NOT_INITIALIZED on
-               subsequent attempts.
+    def __unicode__(self):
+        """string representation of :class:`Tags`: a space separated list of tags
+
+        .. note::
+
+            As this iterates over the tags, we will not be able to iterate over
+            them again (as in retrieve them)! If the tags have been exhausted
+            already, this will raise a :exc:`NotmuchError`
+            STATUS.NOT_INITIALIZED on subsequent attempts.
         """
         return " ".join(self)
+
+    _destroy = nmlib.notmuch_tags_destroy
+    _destroy.argtypes = [NotmuchTagsP]
+    _destroy.restype = None
 
     def __del__(self):
         """Close and free the notmuch tags"""
         if self._tags is not None:
-            nmlib.notmuch_tags_destroy(self._tags)
+            self._destroy(self._tags)

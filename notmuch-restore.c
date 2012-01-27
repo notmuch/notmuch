@@ -18,8 +18,6 @@
  * Author: Carl Worth <cworth@cworth.org>
  */
 
-#include <getopt.h>
-
 #include "notmuch-client.h"
 
 int
@@ -29,12 +27,14 @@ notmuch_restore_command (unused (void *ctx), int argc, char *argv[])
     notmuch_database_t *notmuch;
     notmuch_bool_t synchronize_flags;
     notmuch_bool_t accumulate = FALSE;
+    char *input_file_name = NULL;
     FILE *input = stdin;
     char *line = NULL;
     size_t line_size;
     ssize_t line_len;
     regex_t regex;
     int rerr;
+    int opt_index;
 
     config = notmuch_config_open (ctx, NULL, NULL);
     if (config == NULL)
@@ -47,37 +47,30 @@ notmuch_restore_command (unused (void *ctx), int argc, char *argv[])
 
     synchronize_flags = notmuch_config_get_maildir_synchronize_flags (config);
 
-    struct option options[] = {
-	{ "accumulate",   no_argument,       0, 'a' },
-	{ 0, 0, 0, 0}
+    notmuch_opt_desc_t options[] = {
+	{ NOTMUCH_OPT_POSITION, &input_file_name, 0, 0, 0 },
+	{ NOTMUCH_OPT_BOOLEAN,  &accumulate, "accumulate", 'a', 0 },
+	{ 0, 0, 0, 0, 0 }
     };
 
-    int opt;
-    do {
-	opt = getopt_long (argc, argv, "", options, NULL);
+    opt_index = parse_arguments (argc, argv, options, 1);
 
-	switch (opt) {
-	case 'a':
-	    accumulate = 1;
-	    break;
-	case '?':
-	    return 1;
-	    break;
-	}
+    if (opt_index < 0) {
+	/* diagnostics already printed */
+	return 1;
+    }
 
-    } while (opt != -1);
-
-    if (optind < argc) {
-	input = fopen (argv[optind], "r");
+    if (input_file_name) {
+	input = fopen (input_file_name, "r");
 	if (input == NULL) {
 	    fprintf (stderr, "Error opening %s for reading: %s\n",
-		     argv[optind], strerror (errno));
+		     input_file_name, strerror (errno));
 	    return 1;
 	}
 	optind++;
     }
 
-    if (optind < argc) {
+    if (opt_index < argc) {
 	fprintf (stderr,
 	 "Cannot read dump from more than one file: %s\n",
 		 argv[optind]);

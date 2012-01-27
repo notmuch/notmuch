@@ -91,6 +91,16 @@ any given message."
   :group 'notmuch
   :type 'boolean)
 
+(defcustom notmuch-show-indent-messages-width 1
+  "Width of message indentation in threads.
+
+Messages are shown indented according to their depth in a thread.
+This variable determines the width of this indentation measured
+in number of blanks.  Defaults to `1', choose `0' to disable
+indentation."
+  :group 'notmuch
+  :type 'integer)
+
 (defcustom notmuch-show-indent-multipart nil
   "Should the sub-parts of a multipart/* part be indented?"
   ;; dme: Not sure which is a good default.
@@ -238,7 +248,7 @@ unchanged ADDRESS if parsing fails."
   "Insert a notmuch style headerline based on HEADERS for a
 message at DEPTH in the current thread."
   (let ((start (point)))
-    (insert (notmuch-show-spaces-n depth)
+    (insert (notmuch-show-spaces-n (* notmuch-show-indent-messages-width depth))
 	    (notmuch-show-clean-address (plist-get headers :From))
 	    " ("
 	    date
@@ -255,12 +265,12 @@ message at DEPTH in the current thread."
 (defun notmuch-show-insert-headers (headers)
   "Insert the headers of the current message."
   (let ((start (point)))
-    (mapc '(lambda (header)
-	     (let* ((header-symbol (intern (concat ":" header)))
-		    (header-value (plist-get headers header-symbol)))
-	       (if (and header-value
-			(not (string-equal "" header-value)))
-		   (notmuch-show-insert-header header header-value))))
+    (mapc (lambda (header)
+	    (let* ((header-symbol (intern (concat ":" header)))
+		   (header-value (plist-get headers header-symbol)))
+	      (if (and header-value
+		       (not (string-equal "" header-value)))
+		  (notmuch-show-insert-header header header-value))))
 	  notmuch-message-headers)
     (save-excursion
       (save-restriction
@@ -310,17 +320,17 @@ message at DEPTH in the current thread."
 	;; ange-ftp, which is reasonable to use here.
 	(mm-write-region (point-min) (point-max) file nil nil nil 'no-conversion t)))))
 
-(defun notmuch-show-mm-display-part-inline (msg part content-type content)
+(defun notmuch-show-mm-display-part-inline (msg part nth content-type)
   "Use the mm-decode/mm-view functions to display a part in the
 current buffer, if possible."
   (let ((display-buffer (current-buffer)))
     (with-temp-buffer
-      (insert content)
       (let ((handle (mm-make-handle (current-buffer) (list content-type))))
-	(set-buffer display-buffer)
 	(if (and (mm-inlinable-p handle)
 		 (mm-inlined-p handle))
-	    (progn
+	    (let ((content (notmuch-show-get-bodypart-content msg part nth)))
+	      (insert content)
+	      (set-buffer display-buffer)
 	      (mm-display-part handle)
 	      t)
 	  nil)))))
@@ -334,7 +344,7 @@ current buffer, if possible."
     ))
 
 (defun notmuch-show-multipart/*-to-list (part)
-  (mapcar '(lambda (inner-part) (plist-get inner-part :content-type))
+  (mapcar (lambda (inner-part) (plist-get inner-part :content-type))
 	  (plist-get part :content)))
 
 (defun notmuch-show-multipart/alternative-choose (types)
@@ -447,11 +457,10 @@ current buffer, if possible."
 
 (defun notmuch-show-insert-part-multipart/signed (msg part content-type nth depth declared-type)
   (let ((button (notmuch-show-insert-part-header nth declared-type content-type nil)))
-    (button-put button 'face '(:foreground "blue"))
+    (button-put button 'face 'notmuch-crypto-part-header)
     ;; add signature status button if sigstatus provided
     (if (plist-member part :sigstatus)
-	(let* ((headers (plist-get msg :headers))
-	       (from (plist-get headers :From))
+	(let* ((from (notmuch-show-get-header :From msg))
 	       (sigstatus (car (plist-get part :sigstatus))))
 	  (notmuch-crypto-insert-sigstatus-button sigstatus from))
       ;; if we're not adding sigstatus, tell the user how they can get it
@@ -470,15 +479,14 @@ current buffer, if possible."
 
 (defun notmuch-show-insert-part-multipart/encrypted (msg part content-type nth depth declared-type)
   (let ((button (notmuch-show-insert-part-header nth declared-type content-type nil)))
-    (button-put button 'face '(:foreground "blue"))
+    (button-put button 'face 'notmuch-crypto-part-header)
     ;; add encryption status button if encstatus specified
     (if (plist-member part :encstatus)
 	(let ((encstatus (car (plist-get part :encstatus))))
 	  (notmuch-crypto-insert-encstatus-button encstatus)
 	  ;; add signature status button if sigstatus specified
 	  (if (plist-member part :sigstatus)
-	      (let* ((headers (plist-get msg :headers))
-		     (from (plist-get headers :From))
+	      (let* ((from (notmuch-show-get-header :From msg))
 		     (sigstatus (car (plist-get part :sigstatus))))
 		(notmuch-crypto-insert-sigstatus-button sigstatus from))))
       ;; if we're not adding encstatus, tell the user how they can get it
@@ -511,7 +519,6 @@ current buffer, if possible."
 (defun notmuch-show-insert-part-message/rfc822 (msg part content-type nth depth declared-type)
   (notmuch-show-insert-part-header nth declared-type content-type nil)
   (let* ((message (car (plist-get part :content)))
-	 (headers (plist-get message :headers))
 	 (body (car (plist-get message :body)))
 	 (start (point)))
 
@@ -578,17 +585,10 @@ current buffer, if possible."
 		nil))
 	  nil))))
 
-(defun notmuch-show-insert-part-application/* (msg part content-type nth depth declared-type
-)
-  ;; do not render random "application" parts
-  (notmuch-show-insert-part-header nth content-type declared-type (plist-get part :filename)))
-
 (defun notmuch-show-insert-part-*/* (msg part content-type nth depth declared-type)
   ;; This handler _must_ succeed - it is the handler of last resort.
   (notmuch-show-insert-part-header nth content-type declared-type (plist-get part :filename))
-  (let ((content (notmuch-show-get-bodypart-content msg part nth)))
-    (if content
-	(notmuch-show-mm-display-part-inline msg part content-type content)))
+  (notmuch-show-mm-display-part-inline msg part nth content-type)
   t)
 
 ;; Functions for determining how to handle MIME parts.
@@ -657,7 +657,7 @@ current buffer, if possible."
 
 (defun notmuch-show-insert-body (msg body depth)
   "Insert the body BODY at depth DEPTH in the current thread."
-  (mapc '(lambda (part) (notmuch-show-insert-bodypart msg part depth)) body))
+  (mapc (lambda (part) (notmuch-show-insert-bodypart msg part depth)) body))
 
 (defun notmuch-show-make-symbol (type)
   (make-symbol (concat "notmuch-show-" type)))
@@ -739,7 +739,7 @@ current buffer, if possible."
     (setq content-end (point-marker))
 
     ;; Indent according to the depth in the thread.
-    (indent-rigidly content-start content-end depth)
+    (indent-rigidly content-start content-end (* notmuch-show-indent-messages-width depth))
 
     (setq message-end (point-max-marker))
 
@@ -775,11 +775,11 @@ current buffer, if possible."
 
 (defun notmuch-show-insert-thread (thread depth)
   "Insert the thread THREAD at depth DEPTH in the current forest."
-  (mapc '(lambda (tree) (notmuch-show-insert-tree tree depth)) thread))
+  (mapc (lambda (tree) (notmuch-show-insert-tree tree depth)) thread))
 
 (defun notmuch-show-insert-forest (forest)
   "Insert the forest of threads FOREST."
-  (mapc '(lambda (thread) (notmuch-show-insert-thread thread 0)) forest))
+  (mapc (lambda (thread) (notmuch-show-insert-thread thread 0)) forest))
 
 (defvar notmuch-show-thread-id nil)
 (make-variable-buffer-local 'notmuch-show-thread-id)
@@ -803,7 +803,7 @@ a corresponding notmuch search."
       (remove-overlays (match-beginning 0) (match-end 0) 'goto-address t)
       (make-text-button (match-beginning 0) (match-end 0)
 			'action `(lambda (arg)
-				   (notmuch-search ,(match-string-no-properties 0)))
+				   (notmuch-show ,(match-string-no-properties 0)))
 			'follow-link t
 			'help-echo "Mouse-1, RET: search for this message"
 			'face goto-address-mail-face))))
@@ -843,6 +843,8 @@ buffer."
 	 (inhibit-read-only t))
     (switch-to-buffer buffer)
     (notmuch-show-mode)
+    ;; Don't track undo information for this buffer
+    (set 'buffer-undo-list t)
 
     (setq notmuch-show-thread-id thread-id)
     (setq notmuch-show-parent-buffer parent-buffer)
@@ -1051,6 +1053,12 @@ All currently available key bindings:
     (put-text-property (point) (+ (point) 1) :notmuch-message-properties props)))
 
 (defun notmuch-show-get-message-properties ()
+  "Return the properties of the current message as a plist.
+
+Some useful entries are:
+:headers - Property list containing the headers :Date, :Subject, :From, etc.
+:body - Body of the message
+:tags - Tags for this message"
   (save-excursion
     (notmuch-show-move-to-message-top)
     (get-text-property (point) :notmuch-message-properties)))
@@ -1077,9 +1085,9 @@ All currently available key bindings:
   "Return the filename of the current message."
   (notmuch-show-get-prop :filename))
 
-(defun notmuch-show-get-header (header)
+(defun notmuch-show-get-header (header &optional props)
   "Return the named header of the current message, if any."
-  (plist-get (notmuch-show-get-prop :headers) header))
+  (plist-get (notmuch-show-get-prop :headers props) header))
 
 (defun notmuch-show-get-cc ()
   (notmuch-show-get-header :Cc))
@@ -1135,30 +1143,23 @@ All currently available key bindings:
 
 ;; Commands typically bound to keys.
 
-(defun notmuch-show-advance-and-archive ()
-  "Advance through thread and archive.
-
-This command is intended to be one of the simplest ways to
-process a thread of email. It does the following:
+(defun notmuch-show-advance ()
+  "Advance through thread.
 
 If the current message in the thread is not yet fully visible,
 scroll by a near screenful to read more of the message.
 
 Otherwise, (the end of the current message is already within the
-current window), advance to the next open message.
-
-Finally, if there is no further message to advance to, and this
-last message is already read, then archive the entire current
-thread, (remove the \"inbox\" tag from each message). Also kill
-this buffer, and display the next thread from the search from
-which this thread was originally shown."
+current window), advance to the next open message."
   (interactive)
   (let* ((end-of-this-message (notmuch-show-message-bottom))
-	 (visible-end-of-this-message (1- end-of-this-message)))
+	 (visible-end-of-this-message (1- end-of-this-message))
+	 (ret nil))
     (while (invisible-p visible-end-of-this-message)
       (setq visible-end-of-this-message
-	    (previous-single-char-property-change visible-end-of-this-message
-						  'invisible)))
+	    (max (point-min)
+		 (1- (previous-single-char-property-change
+		      visible-end-of-this-message 'invisible)))))
     (cond
      ;; Ideally we would test `end-of-this-message' against the result
      ;; of `window-end', but that doesn't account for the fact that
@@ -1173,8 +1174,24 @@ which this thread was originally shown."
       (notmuch-show-next-open-message))
 
      (t
-      ;; This is the last message - archive the thread.
-      (notmuch-show-archive-thread)))))
+      ;; This is the last message - change the return value
+      (setq ret t)))
+    ret))
+
+(defun notmuch-show-advance-and-archive ()
+  "Advance through thread and archive.
+
+This command is intended to be one of the simplest ways to
+process a thread of email. It works exactly like
+notmuch-show-advance, in that it scrolls through messages in a
+show buffer, except that when it gets to the end of the buffer it
+archives the entire current thread, (remove the \"inbox\" tag
+from each message), kills the buffer, and displays the next
+thread from the search from which this thread was originally
+shown."
+  (interactive)
+  (if (notmuch-show-advance)
+      (notmuch-show-archive-thread)))
 
 (defun notmuch-show-rewind ()
   "Backup through the thread, (reverse scrolling compared to \\[notmuch-show-advance-and-archive]).

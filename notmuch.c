@@ -127,6 +127,32 @@ static const char search_terms_help[] =
     "\n"
     "\t\t$(date +%%s -d 2009-10-01)..$(date +%%s)\n\n";
 
+static const char hooks_help[] =
+    "\tHooks are scripts (or arbitrary executables or symlinks to such) that\n"
+    "\tnotmuch invokes before and after certain actions. These scripts reside\n"
+    "\tin the .notmuch/hooks directory within the database directory and must\n"
+    "\thave executable permissions.\n"
+    "\n"
+    "\tThe currently available hooks are described below.\n"
+    "\n"
+    "\tpre-new\n"
+    "\t\tThis hook is invoked by the new command before scanning or\n"
+    "\t\timporting new messages into the database. If this hook exits\n"
+    "\t\twith a non-zero status, notmuch will abort further processing\n"
+    "\t\tof the new command.\n"
+    "\n"
+    "\t\tTypically this hook is used for fetching or delivering new\n"
+    "\t\tmail to be imported into the database.\n"
+    "\n"
+    "\tpost-new\n"
+    "\t\tThis hook is invoked by the new command after new messages\n"
+    "\t\thave been imported into the database and initial tags have\n"
+    "\t\tbeen applied. The hook will not be run if there have been any\n"
+    "\t\terrors during the scan or import.\n"
+    "\n"
+    "\t\tTypically this hook is used to perform additional query-based\n"
+    "\t\ttagging on the imported messages.\n\n";
+
 static command_t commands[] = {
     { "setup", notmuch_setup_command,
       NULL,
@@ -144,7 +170,7 @@ static command_t commands[] = {
       "\tInvoking notmuch with no command argument will run setup if\n"
       "\tthe setup command has not previously been completed." },
     { "new", notmuch_new_command,
-      "[--verbose]",
+      "[options...]",
       "Find and import new messages to the notmuch database.",
       "\tScans all sub-directories of the mail directory, performing\n"
       "\tfull-text indexing on new messages that are found. Each new\n"
@@ -159,7 +185,14 @@ static command_t commands[] = {
       "\tis delivered and you wish to incorporate it into the database.\n"
       "\tThese subsequent runs will be much quicker than the initial run.\n"
       "\n"
+      "\tThe new command supports hooks. See \"notmuch help hooks\" for\n"
+      "\tmore details on hooks.\n"
+      "\n"
       "\tSupported options for new include:\n"
+      "\n"
+      "\t--no-hooks\n"
+      "\n"
+      "\t\tPrevent hooks from being run.\n"
       "\n"
       "\t--verbose\n"
       "\n"
@@ -528,6 +561,10 @@ notmuch_help_command (unused (void *ctx), int argc, char *argv[])
 	}
 	printf ("\n");
 	printf (search_terms_help);
+	return 0;
+    } else if (strcmp (argv[0], "hooks") == 0) {
+	printf ("Help for <%s>\n\n", argv[0]);
+	printf (hooks_help);
 	return 0;
     }
 

@@ -176,12 +176,14 @@ format_thread_json (const void *ctx,
 
     printf ("\"thread\": %s,\n"
 	    "\"timestamp\": %ld,\n"
+	    "\"date_relative\": \"%s\",\n"
 	    "\"matched\": %d,\n"
 	    "\"total\": %d,\n"
 	    "\"authors\": %s,\n"
 	    "\"subject\": %s,\n",
 	    json_quote_str (ctx_quote, thread_id),
 	    date,
+	    notmuch_time_relative_date (ctx, date),
 	    matched,
 	    total,
 	    json_quote_str (ctx_quote, authors),
@@ -415,81 +417,51 @@ notmuch_search_command (void *ctx, int argc, char *argv[])
     notmuch_database_t *notmuch;
     notmuch_query_t *query;
     char *query_str;
-    char *opt;
     notmuch_sort_t sort = NOTMUCH_SORT_NEWEST_FIRST;
     const search_format_t *format = &format_text;
-    int i, ret;
+    int opt_index, ret;
     output_t output = OUTPUT_SUMMARY;
     int offset = 0;
     int limit = -1; /* unlimited */
 
-    argc--; argv++; /* skip subcommand argument */
+    enum { NOTMUCH_FORMAT_JSON, NOTMUCH_FORMAT_TEXT }
+	format_sel = NOTMUCH_FORMAT_TEXT;
 
-    for (i = 0; i < argc && argv[i][0] == '-'; i++) {
-	if (strcmp (argv[i], "--") == 0) {
-	    i++;
-	    break;
-	}
-        if (STRNCMP_LITERAL (argv[i], "--sort=") == 0) {
-	    opt = argv[i] + sizeof ("--sort=") - 1;
-	    if (strcmp (opt, "oldest-first") == 0) {
-		sort = NOTMUCH_SORT_OLDEST_FIRST;
-	    } else if (strcmp (opt, "newest-first") == 0) {
-		sort = NOTMUCH_SORT_NEWEST_FIRST;
-	    } else {
-		fprintf (stderr, "Invalid value for --sort: %s\n", opt);
-		return 1;
-	    }
-	} else if (STRNCMP_LITERAL (argv[i], "--offset=") == 0) {
-	    char *p;
-	    opt = argv[i] + sizeof ("--offset=") - 1;
-	    offset = strtol (opt, &p, 10);
-	    if (*opt == '\0' || p == opt || *p != '\0') {
-		fprintf (stderr, "Invalid value for --offset: %s\n", opt);
-		return 1;
-	    }
-	} else if (STRNCMP_LITERAL (argv[i], "--limit=") == 0) {
-	    char *p;
-	    opt = argv[i] + sizeof ("--limit=") - 1;
-	    limit = strtoul (opt, &p, 10);
-	    if (*opt == '\0' || p == opt || *p != '\0') {
-		fprintf (stderr, "Invalid value for --limit: %s\n", opt);
-		return 1;
-	    }
-	} else if (STRNCMP_LITERAL (argv[i], "--format=") == 0) {
-	    opt = argv[i] + sizeof ("--format=") - 1;
-	    if (strcmp (opt, "text") == 0) {
-		format = &format_text;
-	    } else if (strcmp (opt, "json") == 0) {
-		format = &format_json;
-	    } else {
-		fprintf (stderr, "Invalid value for --format: %s\n", opt);
-		return 1;
-	    }
-	} else if (STRNCMP_LITERAL (argv[i], "--output=") == 0) {
-	    opt = argv[i] + sizeof ("--output=") - 1;
-	    if (strcmp (opt, "summary") == 0) {
-		output = OUTPUT_SUMMARY;
-	    } else if (strcmp (opt, "threads") == 0) {
-		output = OUTPUT_THREADS;
-	    } else if (strcmp (opt, "messages") == 0) {
-		output = OUTPUT_MESSAGES;
-	    } else if (strcmp (opt, "files") == 0) {
-		output = OUTPUT_FILES;
-	    } else if (strcmp (opt, "tags") == 0) {
-		output = OUTPUT_TAGS;
-	    } else {
-		fprintf (stderr, "Invalid value for --output: %s\n", opt);
-		return 1;
-	    }
-	} else {
-	    fprintf (stderr, "Unrecognized option: %s\n", argv[i]);
-	    return 1;
-	}
+    notmuch_opt_desc_t options[] = {
+	{ NOTMUCH_OPT_KEYWORD, &sort, "sort", 's',
+	  (notmuch_keyword_t []){ { "oldest-first", NOTMUCH_SORT_OLDEST_FIRST },
+				  { "newest-first", NOTMUCH_SORT_NEWEST_FIRST },
+				  { 0, 0 } } },
+	{ NOTMUCH_OPT_KEYWORD, &format_sel, "format", 'f',
+	  (notmuch_keyword_t []){ { "json", NOTMUCH_FORMAT_JSON },
+				  { "text", NOTMUCH_FORMAT_TEXT },
+				  { 0, 0 } } },
+	{ NOTMUCH_OPT_KEYWORD, &output, "output", 'o',
+	  (notmuch_keyword_t []){ { "summary", OUTPUT_SUMMARY },
+				  { "threads", OUTPUT_THREADS },
+				  { "messages", OUTPUT_MESSAGES },
+				  { "files", OUTPUT_FILES },
+				  { "tags", OUTPUT_TAGS },
+				  { 0, 0 } } },
+	{ NOTMUCH_OPT_INT, &offset, "offset", 'O', 0 },
+	{ NOTMUCH_OPT_INT, &limit, "limit", 'L', 0  },
+	{ 0, 0, 0, 0, 0 }
+    };
+
+    opt_index = parse_arguments (argc, argv, options, 1);
+
+    if (opt_index < 0) {
+	return 1;
     }
 
-    argc -= i;
-    argv += i;
+    switch (format_sel) {
+    case NOTMUCH_FORMAT_TEXT:
+	format = &format_text;
+	break;
+    case NOTMUCH_FORMAT_JSON:
+	format = &format_json;
+	break;
+    }
 
     config = notmuch_config_open (ctx, NULL, NULL);
     if (config == NULL)
@@ -500,7 +472,7 @@ notmuch_search_command (void *ctx, int argc, char *argv[])
     if (notmuch == NULL)
 	return 1;
 
-    query_str = query_string_from_args (notmuch, argc, argv);
+    query_str = query_string_from_args (notmuch, argc-opt_index, argv+opt_index);
     if (query_str == NULL) {
 	fprintf (stderr, "Out of memory.\n");
 	return 1;

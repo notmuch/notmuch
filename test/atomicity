@@ -7,8 +7,7 @@ test_description='atomicity'
 # final database contents should be the same regardless of when (or
 # if) it is killed and restarted.
 
-if which gdb 1>/dev/null 2>&1; then
-    test_set_prereq GDB
+if test_require_external_prereq gdb; then
 
 # Create a maildir structure to also stress flag synchronization
     mkdir $MAIL_DIR/cur
@@ -91,14 +90,11 @@ if which gdb 1>/dev/null 2>&1; then
 	    i=$(expr $end - 1)
 	fi
     done
-else
-    say_color info "%-6s" "WARNING"
-    echo " Missing test prerequisite GDB"
-fi  
+fi
 
 test_begin_subtest '"notmuch new" is idempotent under arbitrary aborts'
-test_expect_equal_file GDB searchall expectall
+test_expect_equal_file searchall expectall
 
-test_expect_success GDB "detected $outcount>10 abort points" "test $outcount -gt 10"
+test_expect_success "detected $outcount>10 abort points" "test $outcount -gt 10"
 
 test_done
