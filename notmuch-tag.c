@@ -111,7 +111,7 @@ _optimize_tag_query (void *ctx, const char *orig_query_string, char *argv[],
 }
 
 int
-notmuch_tag_command (void *ctx, unused (int argc), unused (char *argv[]))
+notmuch_tag_command (void *ctx, int argc, char *argv[])
 {
     int *add_tags, *remove_tags;
     int add_tags_count = 0;
