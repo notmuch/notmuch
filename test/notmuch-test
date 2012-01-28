@@ -52,8 +52,8 @@ TESTS="
   python
   hooks
   argument-parsing
-  emacs-test-functions.sh
-  emacs-address-cleaning.sh
+  emacs-test-functions
+  emacs-address-cleaning
 "
 TESTS=${NOTMUCH_TESTS:=$TESTS}
 
