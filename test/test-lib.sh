@@ -943,6 +943,12 @@ test_emacs () {
 	test -z "$missing_dependencies" || return
 
 	if [ -z "$EMACS_SERVER" ]; then
+		emacs_tests="$(basename $0).el"
+		if [ -f "$TEST_DIRECTORY/$emacs_tests" ]; then
+			load_emacs_tests="--eval '(load \"$emacs_tests\")'"
+		else
+			load_emacs_tests=
+		fi
 		server_name="notmuch-test-suite-$$"
 		# start a detached session with an emacs server
 		# user's TERM is given to dtach which assumes a minimally
@@ -950,6 +956,7 @@ test_emacs () {
 		TERM=$ORIGINAL_TERM dtach -n "$TEST_TMPDIR/emacs-dtach-socket.$$" \
 			sh -c "stty rows 24 cols 80; exec '$TMP_DIRECTORY/run_emacs' \
 				--no-window-system \
+				$load_emacs_tests \
 				--eval '(setq server-name \"$server_name\")' \
 				--eval '(server-start)' \
 				--eval '(orphan-watchdog $$)'" || return
