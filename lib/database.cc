@@ -582,15 +582,15 @@ notmuch_database_t *
 notmuch_database_open (const char *path,
 		       notmuch_database_mode_t mode)
 {
+    void *local = talloc_new (NULL);
     notmuch_database_t *notmuch = NULL;
-    char *notmuch_path = NULL, *xapian_path = NULL;
+    char *notmuch_path, *xapian_path;
     struct stat st;
     int err;
     unsigned int i, version;
     static int initialized = 0;
 
-    if (asprintf (&notmuch_path, "%s/%s", path, ".notmuch") == -1) {
-	notmuch_path = NULL;
+    if (! (notmuch_path = talloc_asprintf (local, "%s/%s", path, ".notmuch"))) {
 	fprintf (stderr, "Out of memory\n");
 	goto DONE;
     }
@@ -602,8 +602,7 @@ notmuch_database_open (const char *path,
 	goto DONE;
     }
 
-    if (asprintf (&xapian_path, "%s/%s", notmuch_path, "xapian") == -1) {
-	xapian_path = NULL;
+    if (! (xapian_path = talloc_asprintf (local, "%s/%s", notmuch_path, "xapian"))) {
 	fprintf (stderr, "Out of memory\n");
 	goto DONE;
     }
@@ -708,10 +707,7 @@ notmuch_database_open (const char *path,
     }
 
   DONE:
-    if (notmuch_path)
-	free (notmuch_path);
-    if (xapian_path)
-	free (xapian_path);
+    talloc_free (local);
 
     return notmuch;
 }
