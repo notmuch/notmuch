@@ -617,7 +617,7 @@ notmuch_database_open (const char *path,
 	initialized = 1;
     }
 
-    notmuch = talloc (NULL, notmuch_database_t);
+    notmuch = talloc_zero (NULL, notmuch_database_t);
     notmuch->exception_reported = FALSE;
     notmuch->path = talloc_strdup (notmuch, path);
 
