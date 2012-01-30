@@ -467,6 +467,48 @@ notmuch_config_save (notmuch_config_t *config)
     return 0;
 }
 
+static const char **
+_config_get_list (notmuch_config_t *config,
+		  const char *section, const char *key,
+		  const char ***outlist, size_t *list_length, size_t *ret_length)
+{
+    assert(outlist);
+
+    if (*outlist == NULL) {
+
+	char **inlist = g_key_file_get_string_list (config->key_file,
+					     section, key, list_length, NULL);
+	if (inlist) {
+	    unsigned int i;
+
+	    *outlist = talloc_size (config, sizeof (char *) * (*list_length + 1));
+
+	    for (i = 0; i < *list_length; i++)
+		(*outlist)[i] = talloc_strdup (*outlist, inlist[i]);
+
+	    (*outlist)[i] = NULL;
+
+	    g_strfreev (inlist);
+	}
+    }
+
+    if (ret_length)
+	*ret_length = *list_length;
+
+    return *outlist;
+}
+
+static void
+_config_set_list (notmuch_config_t *config,
+		  const char *group, const char *name,
+		  const char *list[],
+		  size_t length, const char ***config_var )
+{
+    g_key_file_set_string_list (config->key_file, group, name, list, length);
+    talloc_free (*config_var);
+    *config_var = NULL;
+}
+
 const char *
 notmuch_config_get_database_path (notmuch_config_t *config)
 {
@@ -551,37 +593,6 @@ notmuch_config_set_user_primary_email (notmuch_config_t *config,
     config->user_primary_email = NULL;
 }
 
-static const char **
-_config_get_list (notmuch_config_t *config,
-		  const char *section, const char *key,
-		  const char ***outlist, size_t *list_length, size_t *ret_length)
-{
-    assert(outlist);
-
-    if (*outlist == NULL) {
-
-	char **inlist = g_key_file_get_string_list (config->key_file,
-					     section, key, list_length, NULL);
-	if (inlist) {
-	    unsigned int i;
-
-	    *outlist = talloc_size (config, sizeof (char *) * (*list_length + 1));
-
-	    for (i = 0; i < *list_length; i++)
-		(*outlist)[i] = talloc_strdup (*outlist, inlist[i]);
-
-	    (*outlist)[i] = NULL;
-
-	    g_strfreev (inlist);
-	}
-    }
-
-    if (ret_length)
-	*ret_length = *list_length;
-
-    return *outlist;
-}
-
 const char **
 notmuch_config_get_user_other_email (notmuch_config_t *config,   size_t *length)
 {
@@ -596,17 +607,6 @@ notmuch_config_get_new_tags (notmuch_config_t *config,   size_t *length)
     return _config_get_list (config, "new", "tags",
 			     &(config->new_tags),
 			     &(config->new_tags_length), length);
-}
-
-static void
-_config_set_list (notmuch_config_t *config,
-		  const char *group, const char *name,
-		  const char *list[],
-		  size_t length, const char ***config_var )
-{
-    g_key_file_set_string_list (config->key_file, group, name, list, length);
-    talloc_free (*config_var);
-    *config_var = NULL;
 }
 
 void
