@@ -469,18 +469,16 @@ Complete list of currently available key bindings:
   (let ((thread-id (notmuch-search-find-thread-id))
 	(subject (notmuch-search-find-subject)))
     (if (> (length thread-id) 0)
-	(notmuch-show thread-id
-		      (current-buffer)
-		      notmuch-search-query-string
-		      ;; name the buffer based on notmuch-search-find-subject
-		      (if (string-match "^[ \t]*$" subject)
-			  "[No Subject]"
-			(truncate-string-to-width
-			 (concat "*"
-				 (truncate-string-to-width subject 32 nil nil t)
-				 "*")
-			 32 nil nil t))
-		      crypto-switch)
+	(progn
+	  (if (string-match "^[ \t]*$" subject)
+	      (setq subject "[No Subject]"))
+
+	  (notmuch-show thread-id
+			(current-buffer)
+			notmuch-search-query-string
+			;; Name the buffer based on the subject.
+			(concat "*" (truncate-string-to-width subject 30 nil nil t) "*")
+			crypto-switch))
       (message "End of search results."))))
 
 (defun notmuch-search-reply-to-thread (&optional prompt-for-sender)
