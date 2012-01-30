@@ -316,15 +316,25 @@ unchanged ADDRESS if parsing fails."
        (t
 	(setq p-address address)))
 
-      ;; Remove elements of the mailbox part that are not relevant for
-      ;; display, even if they are required during transport.
       (when p-name
-	;; Outer double quotes.
-	(when (string-match "^\"\\(.*\\)\"$" p-name)
-	  (setq p-name (match-string 1 p-name)))
-
+	;; Remove elements of the mailbox part that are not relevant for
+	;; display, even if they are required during transport:
+	;;
 	;; Backslashes.
-	(setq p-name (replace-regexp-in-string "\\\\" "" p-name)))
+	(setq p-name (replace-regexp-in-string "\\\\" "" p-name))
+
+	;; Outer single and double quotes, which might be nested.
+	(loop
+	 with start-of-loop
+	 do (setq start-of-loop p-name)
+
+	 when (string-match "^\"\\(.*\\)\"$" p-name)
+	 do (setq p-name (match-string 1 p-name))
+
+	 when (string-match "^'\\(.*\\)'$" p-name)
+	 do (setq p-name (match-string 1 p-name))
+
+	 until (string= start-of-loop p-name)))
 
       ;; If the address is 'foo@bar.com <foo@bar.com>' then show just
       ;; 'foo@bar.com'.

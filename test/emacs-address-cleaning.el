@@ -21,11 +21,19 @@
 		  "foo (at home) <foo@bar.com>"
 		  "foo [at home] <foo@bar.com>"
 		  "Foo Bar"
+		  "'Foo Bar' <foo@bar.com>"
+		  "\"'Foo Bar'\" <foo@bar.com>"
+		  "'\"Foo Bar\"' <foo@bar.com>"
+		  "'\"'Foo Bar'\"' <foo@bar.com>"
 		  "Fred Dibna \\[extraordinaire\\] <fred@dibna.com>"))
 	 (expected '("ДБ <db-uknot@stop.me.uk>"
 		     "foo (at home) <foo@bar.com>"
 		     "foo [at home] <foo@bar.com>"
 		     "Foo Bar"
+		     "Foo Bar <foo@bar.com>"
+		     "Foo Bar <foo@bar.com>"
+		     "Foo Bar <foo@bar.com>"
+		     "Foo Bar <foo@bar.com>"
 		     "Fred Dibna [extraordinaire] <fred@dibna.com>"))
 	 (output (mapcar #'notmuch-show-clean-address input)))
     (notmuch-test-expect-equal output expected)))
