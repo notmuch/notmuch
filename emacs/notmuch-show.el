@@ -865,8 +865,6 @@ current buffer, if possible."
     ;; compatible with the existing implementation. This just sets it
     ;; to after the first header.
     (notmuch-show-insert-headers headers)
-    ;; Headers should include a blank line (backwards compatibility).
-    (insert "\n")
     (save-excursion
       (goto-char content-start)
       ;; If the subject of this message is the same as that of the
@@ -881,6 +879,8 @@ current buffer, if possible."
     (setq notmuch-show-previous-subject bare-subject)
 
     (setq body-start (point-marker))
+    ;; A blank line between the headers and the body.
+    (insert "\n")
     (notmuch-show-insert-body msg (plist-get msg :body) depth)
     ;; Ensure that the body ends with a newline.
     (unless (bolp)
