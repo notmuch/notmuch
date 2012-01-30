@@ -467,18 +467,14 @@ Complete list of currently available key bindings:
   "Display the currently selected thread."
   (interactive "P")
   (let ((thread-id (notmuch-search-find-thread-id))
-	(subject (notmuch-search-find-subject)))
+	(subject (notmuch-prettify-subject (notmuch-search-find-subject))))
     (if (> (length thread-id) 0)
-	(progn
-	  (if (string-match "^[ \t]*$" subject)
-	      (setq subject "[No Subject]"))
-
-	  (notmuch-show thread-id
-			(current-buffer)
-			notmuch-search-query-string
-			;; Name the buffer based on the subject.
-			(concat "*" (truncate-string-to-width subject 30 nil nil t) "*")
-			crypto-switch))
+	(notmuch-show thread-id
+		      (current-buffer)
+		      notmuch-search-query-string
+		      ;; Name the buffer based on the subject.
+		      (concat "*" (truncate-string-to-width subject 30 nil nil t) "*")
+		      crypto-switch)
       (message "End of search results."))))
 
 (defun notmuch-search-reply-to-thread (&optional prompt-for-sender)
@@ -853,7 +849,8 @@ non-authors is found, assume that all of the authors match."
 		      (if (/= (match-beginning 1) line)
 			  (insert (concat "Error: Unexpected output from notmuch search:\n" (substring string line (match-beginning 1)) "\n")))
 		      (let ((beg (point)))
-			(notmuch-search-show-result date count authors subject tags)
+			(notmuch-search-show-result date count authors
+						    (notmuch-prettify-subject subject) tags)
 			(notmuch-search-color-line beg (point) tag-list)
 			(put-text-property beg (point) 'notmuch-search-thread-id thread-id)
 			(put-text-property beg (point) 'notmuch-search-authors authors)

@@ -133,6 +133,15 @@ the user hasn't set this variable with the old or new value."
   (interactive)
   (kill-buffer (current-buffer)))
 
+(defun notmuch-prettify-subject (subject)
+  ;; This function is used by `notmuch-search-process-filter' which
+  ;; requires that we not disrupt its' matching state.
+  (save-match-data
+    (if (and subject
+	     (string-match "^[ \t]*$" subject))
+	"[No Subject]"
+      subject)))
+
 ;;
 
 (defun notmuch-common-do-stash (text)

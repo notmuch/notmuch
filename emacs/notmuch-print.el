@@ -19,6 +19,8 @@
 ;;
 ;; Authors: David Edmondson <dme@dme.org>
 
+(require 'notmuch-lib)
+
 (declare-function notmuch-show-get-prop "notmuch-show" (prop &optional props))
 
 (defcustom notmuch-print-mechanism 'notmuch-print-lpr
@@ -58,14 +60,16 @@ Optional OUTPUT allows passing a list of flags to muttprint."
 
 (defun notmuch-print-ps-print (msg)
   "Print a message buffer using the ps-print package."
-  (let ((subject (plist-get (notmuch-show-get-prop :headers msg) :Subject)))
+  (let ((subject (notmuch-prettify-subject
+		  (plist-get (notmuch-show-get-prop :headers msg) :Subject))))
     (rename-buffer subject t)
     (ps-print-buffer)))
 
 (defun notmuch-print-ps-print/evince (msg)
   "Preview a message buffer using ps-print and evince."
   (let ((ps-file (make-temp-file "notmuch"))
-	(subject (plist-get (notmuch-show-get-prop :headers msg) :Subject)))
+	(subject (notmuch-prettify-subject
+		  (plist-get (notmuch-show-get-prop :headers msg) :Subject))))
     (rename-buffer subject t)
     (ps-print-buffer ps-file)
     (notmuch-print-run-evince ps-file)))

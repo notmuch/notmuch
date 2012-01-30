@@ -1018,7 +1018,7 @@ buffer."
       (notmuch-show-next-open-message))
 
     ;; Set the header line to the subject of the first open message.
-    (setq header-line-format (notmuch-show-strip-re (notmuch-show-get-subject)))
+    (setq header-line-format (notmuch-show-strip-re (notmuch-show-get-pretty-subject)))
 
     (notmuch-show-mark-read)))
 
@@ -1249,6 +1249,9 @@ Some useful entries are:
 
 (defun notmuch-show-get-depth ()
   (notmuch-show-get-prop :depth))
+
+(defun notmuch-show-get-pretty-subject ()
+  (notmuch-prettify-subject (notmuch-show-get-subject)))
 
 (defun notmuch-show-set-tags (tags)
   "Set the tags of the current message."
