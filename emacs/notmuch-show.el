@@ -1087,9 +1087,10 @@ thread id.  If a prefix is given, crypto processing is toggled."
 	(define-key map "*" 'notmuch-show-tag-all)
 	(define-key map "-" 'notmuch-show-remove-tag)
 	(define-key map "+" 'notmuch-show-add-tag)
-	(define-key map "x" 'notmuch-show-archive-thread-then-exit)
-	(define-key map "a" 'notmuch-show-archive-message-then-next)
+	(define-key map "X" 'notmuch-show-archive-thread-then-exit)
+	(define-key map "x" 'notmuch-show-archive-message-then-next-or-exit)
 	(define-key map "A" 'notmuch-show-archive-thread-then-next)
+	(define-key map "a" 'notmuch-show-archive-message-then-next-or-next-thread)
 	(define-key map "N" 'notmuch-show-next-message)
 	(define-key map "P" 'notmuch-show-previous-message)
 	(define-key map "n" 'notmuch-show-next-open-message)
@@ -1452,7 +1453,8 @@ thread, navigate to the next thread in the parent search buffer."
 
 If a prefix argument is given and this is the last open message
 in the thread, navigate to the next thread in the parent search
-buffer."
+buffer. Return t if there was a next open message in the thread
+to show, nil otherwise."
   (interactive "P")
   (let (r)
     (while (and (setq r (notmuch-show-goto-message-next))
@@ -1463,7 +1465,8 @@ buffer."
 	  (notmuch-show-message-adjust))
       (if pop-at-end
 	  (notmuch-show-next-thread)
-	(goto-char (point-max))))))
+	(goto-char (point-max))))
+    r))
 
 (defun notmuch-show-previous-open-message ()
   "Show the previous open message."
@@ -1671,11 +1674,24 @@ removed)."
   (let ((op (if unarchive "+" "-")))
     (notmuch-show-tag-message (concat op "inbox"))))
 
-(defun notmuch-show-archive-message-then-next ()
-  "Archive the current message, then show the next open message in the current thread."
+(defun notmuch-show-archive-message-then-next-or-exit ()
+  "Archive the current message, then show the next open message in the current thread.
+
+If at the last open message in the current thread, then exit back
+to search results."
   (interactive)
   (notmuch-show-archive-message)
   (notmuch-show-next-open-message t))
+
+(defun notmuch-show-archive-message-then-next-or-next-thread ()
+  "Archive the current message, then show the next open message in the current thread.
+
+If at the last open message in the current thread, then show next
+thread from search."
+  (interactive)
+  (notmuch-show-archive-message)
+  (unless (notmuch-show-next-open-message)
+    (notmuch-show-next-thread t)))
 
 (defun notmuch-show-stash-cc ()
   "Copy CC field of current message to kill-ring."
