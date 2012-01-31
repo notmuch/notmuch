@@ -1444,6 +1444,11 @@ current window), advance to the next open message."
       ;; This is not the last message - move to the next visible one.
       (notmuch-show-next-open-message))
 
+     ((not (= (point) (point-max)))
+      ;; This is the last message, but the cursor is not at the end of
+      ;; the buffer. Move it there.
+      (goto-char (point-max)))
+
      (t
       ;; This is the last message - change the return value
       (setq ret t)))
