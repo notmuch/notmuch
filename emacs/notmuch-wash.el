@@ -336,30 +336,29 @@ patch and then guesses the extent of the patch, there is scope
 for error."
 
   (goto-char (point-min))
-  (if (re-search-forward diff-file-header-re nil t)
-      (progn
-	(beginning-of-line -1)
-	(let ((patch-start (point))
-	      (patch-end (point-max))
-	      part)
-	  (goto-char patch-start)
-	  (if (or
-	       ;; Patch ends with signature.
-	       (re-search-forward notmuch-wash-signature-regexp nil t)
-	       ;; Patch ends with bugtraq comment.
-	       (re-search-forward "^\\*\\*\\* " nil t))
-	      (setq patch-end (match-beginning 0)))
-	  (save-restriction
-	    (narrow-to-region patch-start patch-end)
-	    (setq part (plist-put part :content-type "inline-patch-fake-part"))
-	    (setq part (plist-put part :content (buffer-string)))
-	    (setq part (plist-put part :id -1))
-	    (setq part (plist-put part :filename
-				  (notmuch-wash-subject-to-patch-filename
-				   (plist-get
-				    (plist-get msg :headers) :Subject))))
-	    (delete-region (point-min) (point-max))
-	    (notmuch-show-insert-bodypart nil part depth))))))
+  (when (re-search-forward diff-file-header-re nil t)
+    (beginning-of-line -1)
+    (let ((patch-start (point))
+	  (patch-end (point-max))
+	  part)
+      (goto-char patch-start)
+      (if (or
+	   ;; Patch ends with signature.
+	   (re-search-forward notmuch-wash-signature-regexp nil t)
+	   ;; Patch ends with bugtraq comment.
+	   (re-search-forward "^\\*\\*\\* " nil t))
+	  (setq patch-end (match-beginning 0)))
+      (save-restriction
+	(narrow-to-region patch-start patch-end)
+	(setq part (plist-put part :content-type "inline-patch-fake-part"))
+	(setq part (plist-put part :content (buffer-string)))
+	(setq part (plist-put part :id -1))
+	(setq part (plist-put part :filename
+			      (notmuch-wash-subject-to-patch-filename
+			       (plist-get
+				(plist-get msg :headers) :Subject))))
+	(delete-region (point-min) (point-max))
+	(notmuch-show-insert-bodypart nil part depth)))))
 
 ;;
 

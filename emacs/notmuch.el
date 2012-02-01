@@ -673,17 +673,16 @@ This function advances the next thread when finished."
 		  (goto-char (point-max))
 		  (if (eq status 'signal)
 		      (insert "Incomplete search results (search process was killed).\n"))
-		  (if (eq status 'exit)
-		      (progn
-			(if notmuch-search-process-filter-data
-			    (insert (concat "Error: Unexpected output from notmuch search:\n" notmuch-search-process-filter-data)))
-			(insert "End of search results.")
-			(unless (= exit-status 0)
-			  (insert (format " (process returned %d)" exit-status)))
-			(insert "\n")
-			(if (and atbob
-				 (not (string= notmuch-search-target-thread "found")))
-			    (set 'never-found-target-thread t))))))
+		  (when (eq status 'exit)
+		    (if notmuch-search-process-filter-data
+			(insert (concat "Error: Unexpected output from notmuch search:\n" notmuch-search-process-filter-data)))
+		    (insert "End of search results.")
+		    (unless (= exit-status 0)
+		      (insert (format " (process returned %d)" exit-status)))
+		    (insert "\n")
+		    (if (and atbob
+			     (not (string= notmuch-search-target-thread "found")))
+			(set 'never-found-target-thread t)))))
 	      (when (and never-found-target-thread
 		       notmuch-search-target-line)
 		  (goto-char (point-min))
@@ -861,10 +860,9 @@ non-authors is found, assume that all of the authors match."
 			(put-text-property beg (point) 'notmuch-search-thread-id thread-id)
 			(put-text-property beg (point) 'notmuch-search-authors authors)
 			(put-text-property beg (point) 'notmuch-search-subject subject)
-			(if (string= thread-id notmuch-search-target-thread)
-			    (progn
-			      (set 'found-target beg)
-			      (set 'notmuch-search-target-thread "found"))))
+			(when (string= thread-id notmuch-search-target-thread)
+			  (set 'found-target beg)
+			  (set 'notmuch-search-target-thread "found")))
 		      (set 'line (match-end 0)))
 		  (set 'more nil)
 		  (while (and (< line (length string)) (= (elt string line) ?\n))

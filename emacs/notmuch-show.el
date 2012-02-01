@@ -1364,11 +1364,10 @@ any effects from previous calls to
       ;; If a small number of lines from the previous message are
       ;; visible, realign so that the top of the current message is at
       ;; the top of the screen.
-      (if (<= (count-screen-lines (window-start) start-of-message)
-	      next-screen-context-lines)
-	  (progn
-	    (goto-char (notmuch-show-message-top))
-	    (notmuch-show-message-adjust)))
+      (when (<= (count-screen-lines (window-start) start-of-message)
+		next-screen-context-lines)
+	(goto-char (notmuch-show-message-top))
+	(notmuch-show-message-adjust))
       ;; Move to the top left of the window.
       (goto-char (window-start)))
      (t
