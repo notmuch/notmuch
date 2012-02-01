@@ -266,7 +266,7 @@ From: Notmuch Test Suite <test_suite@notmuchmail.org>
 To: user@example.com
 Subject: Re: Testing message sent via SMTP
 In-Reply-To: <XXX>
-Fcc: $(pwd)/mail/sent
+Fcc: ${MAIL_DIR}/sent
 --text follows this line--
 On 01 Jan 2000 12:00:00 -0000, Notmuch Test Suite <test_suite@notmuchmail.org> wrote:
 > This is a test that messages are sent via SMTP
