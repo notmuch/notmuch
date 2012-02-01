@@ -497,17 +497,17 @@ test_expect_equal_file ()
 	test "$#" = 2 ||
 	error "bug in the test script: not 2 or 3 parameters to test_expect_equal"
 
-	output="$1"
-	expected="$2"
+	file1="$1"
+	file2="$2"
 	if ! test_skip "$test_subtest_name"
 	then
-		if diff -q "$expected" "$output" >/dev/null ; then
+		if diff -q "$file1" "$file2" >/dev/null ; then
 			test_ok_ "$test_subtest_name"
 		else
 			testname=$this_test.$test_count
-			cp "$output" $testname.output
-			cp "$expected" $testname.expected
-			test_failure_ "$test_subtest_name" "$(diff -u $testname.expected $testname.output)"
+			cp "$file1" "$testname.$file1"
+			cp "$file2" "$testname.$file2"
+			test_failure_ "$test_subtest_name" "$(diff -u "$testname.$file1" "$testname.$file2")"
 		fi
     fi
 }
