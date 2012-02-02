@@ -699,7 +699,8 @@ This function advances the next thread when finished."
 		  (goto-char (point-min))
 		  (forward-line (1- notmuch-search-target-line))))))))
 
-(defcustom notmuch-search-line-faces nil
+(defcustom notmuch-search-line-faces '(("unread" :weight bold)
+				       ("flagged" :foreground "blue"))
   "Tag/face mapping for line highlighting in notmuch-search.
 
 Here is an example of how to color search results based on tags.
