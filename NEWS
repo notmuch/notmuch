@@ -11,6 +11,17 @@ Fix error handling in python bindings.
   exceptions to indicate the error condition. Any subsequent calls
   into libnotmuch caused segmentation faults.
 
+Quote MML tags in replies
+
+  MML tags are text codes that Emacs uses to indicate attachments
+  (among other things) in messages being composed.  The Emacs
+  interface did not quote MML tags in the quoted text of a reply.
+  User could be tricked into replying to a maliciously formatted
+  message and not editing out the MML tags from the quoted text.  This
+  could lead to files from the user's machine being attached to the
+  outgoing message.  The Emacs interface now quotes these tags in
+  reply text, so that they do not effect outgoing messages.
+
 
 Notmuch 0.11 (2012-01-13)
 =========================
