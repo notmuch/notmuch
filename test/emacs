@@ -288,7 +288,7 @@ Subject: Re: Quote MML tags in reply
 In-Reply-To: <test-emacs-mml-quoting@message.id>
 Fcc: ${MAIL_DIR}/sent
 --text follows this line--
-On Tue, 05 Jan 2001 15:43:57 -0000, Notmuch Test Suite <test_suite@notmuchmail.org> wrote:
+On Fri, 05 Jan 2001 15:43:57 +0000, Notmuch Test Suite <test_suite@notmuchmail.org> wrote:
 > <#!part disposition=inline>
 EOF
 test_expect_equal_file OUTPUT EXPECTED
