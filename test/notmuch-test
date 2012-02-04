@@ -54,6 +54,7 @@ TESTS="
   argument-parsing
   emacs-test-functions
   emacs-address-cleaning
+  emacs-show
 "
 TESTS=${NOTMUCH_TESTS:=$TESTS}
 
