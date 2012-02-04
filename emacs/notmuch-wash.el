@@ -136,12 +136,13 @@ collapse the remaining lines into a button.")
 	 (lines-count (count-lines (overlay-start overlay) (overlay-end overlay))))
     (format label-format lines-count)))
 
-(defun notmuch-wash-region-to-button (msg beg end type prefix)
+(defun notmuch-wash-region-to-button (msg beg end type &optional prefix)
   "Auxiliary function to do the actual making of overlays and buttons
 
 BEG and END are buffer locations. TYPE should a string, either
-\"citation\" or \"signature\". PREFIX is some arbitrary text to
-insert before the button, probably for indentation."
+\"citation\" or \"signature\". Optional PREFIX is some arbitrary
+text to insert before the button, probably for indentation.  Note
+that PREFIX should not include a newline."
 
   ;; This uses some slightly tricky conversions between strings and
   ;; symbols because of the way the button code works. Note that
@@ -160,12 +161,15 @@ insert before the button, probably for indentation."
     (overlay-put overlay 'type type)
     (goto-char (1+ end))
     (save-excursion
-      (goto-char (1- beg))
-      (insert prefix)
-      (insert-button (notmuch-wash-button-label overlay)
+      (goto-char beg)
+      (if prefix
+	  (insert-before-markers prefix))
+      (let ((button-beg (point)))
+	(insert-before-markers (notmuch-wash-button-label overlay) "\n")
+	(make-button button-beg (1- (point))
 		     'invisibility-spec invis-spec
 		     'overlay overlay
-		     :type button-type))))
+		     :type button-type)))))
 
 (defun notmuch-wash-excerpt-citations (msg depth)
   "Excerpt citations and up to one signature."
@@ -177,7 +181,7 @@ insert before the button, probably for indentation."
 	     (msg-end (point-max))
 	     (msg-lines (count-lines msg-start msg-end)))
 	(notmuch-wash-region-to-button
-	 msg msg-start msg-end "original" "\n")))
+	 msg msg-start msg-end "original")))
   (while (and (< (point) (point-max))
 	      (re-search-forward notmuch-wash-citation-regexp nil t))
     (let* ((cite-start (match-beginning 0))
@@ -194,7 +198,7 @@ insert before the button, probably for indentation."
 	  (forward-line (- notmuch-wash-citation-lines-suffix))
 	  (notmuch-wash-region-to-button
 	   msg hidden-start (point-marker)
-	   "citation" "\n")))))
+	   "citation")))))
   (if (and (not (eobp))
 	   (re-search-forward notmuch-wash-signature-regexp nil t))
       (let* ((sig-start (match-beginning 0))
@@ -208,7 +212,7 @@ insert before the button, probably for indentation."
 	      (overlay-put (make-overlay sig-start-marker sig-end-marker) 'face 'message-cited-text)
 	      (notmuch-wash-region-to-button
 	       msg sig-start-marker sig-end-marker
-	       "signature" "\n"))))))
+	       "signature"))))))
 
 ;;
 
