@@ -21,40 +21,17 @@
 #include "notmuch-client.h"
 
 static void
-format_message_text (unused (const void *ctx),
-		     notmuch_message_t *message,
-		     int indent);
-static void
-format_headers_text (const void *ctx,
-		     notmuch_message_t *message);
-
-static void
 format_headers_message_part_text (GMimeMessage *message);
 
 static void
-format_part_start_text (GMimeObject *part,
-			int *part_count);
-
-static void
-format_part_content_text (GMimeObject *part);
-
-static void
-format_part_end_text (GMimeObject *part);
+format_part_text (const void *ctx, mime_node_t *node,
+		  int indent, const notmuch_show_params_t *params);
 
 static const notmuch_show_format_t format_text = {
-    "", NULL,
-	"\fmessage{ ", format_message_text,
-	    "\fheader{\n", format_headers_text, format_headers_message_part_text, "\fheader}\n",
-	    "\fbody{\n",
-	        format_part_start_text,
-	        NULL,
-	        NULL,
-	        format_part_content_text,
-	        format_part_end_text,
-	        "",
-	    "\fbody}\n",
-	"\fmessage}\n", "",
-    ""
+    .message_set_start = "",
+    .part = format_part_text,
+    .message_set_sep = "",
+    .message_set_end = ""
 };
 
 static void
@@ -188,16 +165,6 @@ _get_one_line_summary (const void *ctx, notmuch_message_t *message)
 
     return talloc_asprintf (ctx, "%s (%s) (%s)",
 			    from, relative_date, tags);
-}
-
-static void
-format_message_text (unused (const void *ctx), notmuch_message_t *message, int indent)
-{
-    printf ("id:%s depth:%d match:%d filename:%s\n",
-	    notmuch_message_get_message_id (message),
-	    indent,
-	    notmuch_message_get_flag (message, NOTMUCH_MESSAGE_FLAG_MATCH),
-	    notmuch_message_get_filename (message));
 }
 
 static void
@@ -336,26 +303,6 @@ format_message_mbox (const void *ctx,
     printf ("\n");
 
     fclose (file);
-}
-
-
-static void
-format_headers_text (const void *ctx, notmuch_message_t *message)
-{
-    const char *headers[] = {
-	"Subject", "From", "To", "Cc", "Bcc", "Date"
-    };
-    const char *name, *value;
-    unsigned int i;
-
-    printf ("%s\n", _get_one_line_summary (ctx, message));
-
-    for (i = 0; i < ARRAY_SIZE (headers); i++) {
-	name = headers[i];
-	value = notmuch_message_get_header (message, name);
-	if (value && strlen (value))
-	    printf ("%s: %s\n", name, value);
-    }
 }
 
 static void
@@ -521,78 +468,6 @@ signer_status_to_string (GMimeSignerStatus x)
     return "unknown";
 }
 #endif
-
-static void
-format_part_start_text (GMimeObject *part, int *part_count)
-{
-    GMimeContentDisposition *disposition = g_mime_object_get_content_disposition (part);
-
-    if (disposition &&
-	strcmp (disposition->disposition, GMIME_DISPOSITION_ATTACHMENT) == 0)
-    {
-	printf ("\fattachment{ ID: %d", *part_count);
-
-    } else {
-
-	printf ("\fpart{ ID: %d", *part_count);
-    }
-}
-
-static void
-format_part_content_text (GMimeObject *part)
-{
-    const char *cid = g_mime_object_get_content_id (part);
-    GMimeContentType *content_type = g_mime_object_get_content_type (GMIME_OBJECT (part));
-
-    if (GMIME_IS_PART (part))
-    {
-	const char *filename = g_mime_part_get_filename (GMIME_PART (part));
-	if (filename)
-	    printf (", Filename: %s", filename);
-    }
-
-    if (cid)
-	printf (", Content-id: %s", cid);
-
-    printf (", Content-type: %s\n", g_mime_content_type_to_string (content_type));
-
-    if (g_mime_content_type_is_type (content_type, "text", "*") &&
-	!g_mime_content_type_is_type (content_type, "text", "html"))
-    {
-	GMimeStream *stream_stdout = g_mime_stream_file_new (stdout);
-	g_mime_stream_file_set_owner (GMIME_STREAM_FILE (stream_stdout), FALSE);
-	show_text_part_content (part, stream_stdout);
-	g_object_unref(stream_stdout);
-    }
-    else if (g_mime_content_type_is_type (content_type, "multipart", "*") ||
-	     g_mime_content_type_is_type (content_type, "message", "rfc822"))
-    {
-	/* Do nothing for multipart since its content will be printed
-	 * when recursing. */
-    }
-    else
-    {
-	printf ("Non-text part: %s\n",
-		g_mime_content_type_to_string (content_type));
-    }
-}
-
-static void
-format_part_end_text (GMimeObject *part)
-{
-    GMimeContentDisposition *disposition;
-
-    disposition = g_mime_object_get_content_disposition (part);
-    if (disposition &&
-	strcmp (disposition->disposition, GMIME_DISPOSITION_ATTACHMENT) == 0)
-    {
-	printf ("\fattachment}\n");
-    }
-    else
-    {
-	printf ("\fpart}\n");
-    }
-}
 
 static void
 format_part_start_json (unused (GMimeObject *part), int *part_count)
@@ -841,6 +716,139 @@ format_part_content_raw (GMimeObject *part)
 
     if (stream_stdout)
 	g_object_unref(stream_stdout);
+}
+
+static void
+format_part_text (const void *ctx, mime_node_t *node,
+		  int indent, const notmuch_show_params_t *params)
+{
+    /* The disposition and content-type metadata are associated with
+     * the envelope for message parts */
+    GMimeObject *meta = node->envelope_part ?
+	GMIME_OBJECT (node->envelope_part) : node->part;
+    GMimeContentType *content_type = g_mime_object_get_content_type (meta);
+    int i;
+
+    if (node->envelope_file) {
+	notmuch_message_t *message = node->envelope_file;
+	const char *headers[] = {
+	    "Subject", "From", "To", "Cc", "Bcc", "Date"
+	};
+	const char *name, *value;
+	unsigned int i;
+
+	printf ("\fmessage{ ");
+	printf ("id:%s depth:%d match:%d filename:%s\n",
+		notmuch_message_get_message_id (message),
+		indent,
+		notmuch_message_get_flag (message, NOTMUCH_MESSAGE_FLAG_MATCH),
+		notmuch_message_get_filename (message));
+
+	printf ("\fheader{\n");
+
+	printf ("%s\n", _get_one_line_summary (ctx, message));
+
+	for (i = 0; i < ARRAY_SIZE (headers); i++) {
+	    name = headers[i];
+	    value = notmuch_message_get_header (message, name);
+	    if (value && strlen (value))
+		printf ("%s: %s\n", name, value);
+	}
+	printf ("\fheader}\n");
+    } else {
+	GMimeContentDisposition *disposition = g_mime_object_get_content_disposition (meta);
+	const char *cid = g_mime_object_get_content_id (meta);
+
+	if (disposition &&
+	    strcmp (disposition->disposition, GMIME_DISPOSITION_ATTACHMENT) == 0)
+	{
+	    printf ("\fattachment{ ID: %d", node->part_num);
+
+	} else {
+
+	    printf ("\fpart{ ID: %d", node->part_num);
+	}
+
+	if (GMIME_IS_PART (node->part))
+	{
+	    const char *filename = g_mime_part_get_filename (GMIME_PART (node->part));
+	    if (filename)
+		printf (", Filename: %s", filename);
+	}
+
+	if (cid)
+	    printf (", Content-id: %s", cid);
+
+	printf (", Content-type: %s\n", g_mime_content_type_to_string (content_type));
+    }
+
+    if (node->envelope_part) {
+	GMimeMessage *message = GMIME_MESSAGE (node->part);
+	InternetAddressList *recipients;
+	const char *recipients_string;
+
+	printf ("\fheader{\n");
+	printf ("Subject: %s\n", g_mime_message_get_subject (message));
+	printf ("From: %s\n", g_mime_message_get_sender (message));
+	recipients = g_mime_message_get_recipients (message, GMIME_RECIPIENT_TYPE_TO);
+	recipients_string = internet_address_list_to_string (recipients, 0);
+	if (recipients_string)
+	    printf ("To: %s\n", recipients_string);
+	recipients = g_mime_message_get_recipients (message, GMIME_RECIPIENT_TYPE_CC);
+	recipients_string = internet_address_list_to_string (recipients, 0);
+	if (recipients_string)
+	    printf ("Cc: %s\n", recipients_string);
+	printf ("Date: %s\n", g_mime_message_get_date_as_string (message));
+	printf ("\fheader}\n");
+    }
+
+    if (!node->envelope_file) {
+	if (g_mime_content_type_is_type (content_type, "text", "*") &&
+	    !g_mime_content_type_is_type (content_type, "text", "html"))
+	{
+	    GMimeStream *stream_stdout = g_mime_stream_file_new (stdout);
+	    g_mime_stream_file_set_owner (GMIME_STREAM_FILE (stream_stdout), FALSE);
+	    show_text_part_content (node->part, stream_stdout);
+	    g_object_unref(stream_stdout);
+	}
+	else if (g_mime_content_type_is_type (content_type, "multipart", "*") ||
+		 g_mime_content_type_is_type (content_type, "message", "rfc822"))
+	{
+	    /* Do nothing for multipart since its content will be printed
+	     * when recursing. */
+	}
+	else
+	{
+	    printf ("Non-text part: %s\n",
+		    g_mime_content_type_to_string (content_type));
+	}
+    }
+
+    if (GMIME_IS_MESSAGE (node->part))
+	printf ("\fbody{\n");
+
+    for (i = 0; i < node->nchildren; i++)
+	format_part_text (ctx, mime_node_child (node, i), indent, params);
+
+    if (GMIME_IS_MESSAGE (node->part))
+	printf ("\fbody}\n");
+
+    if (node->envelope_file) {
+	printf ("\fmessage}\n");
+    } else {
+	GMimeContentDisposition *disposition;
+
+	disposition = g_mime_object_get_content_disposition (meta);
+	if (disposition &&
+	    strcmp (disposition->disposition, GMIME_DISPOSITION_ATTACHMENT) == 0)
+	{
+	    printf ("\fattachment}\n");
+	}
+	else
+	{
+	    printf ("\fpart}\n");
+	}
+    }
 }
 
 static void
