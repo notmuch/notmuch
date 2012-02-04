@@ -116,7 +116,12 @@ list."
     (push-mark))
   (set-buffer-modified-p nil)
 
-  (message-goto-body))
+  (message-goto-body)
+  ;; Original message may contain (malicious) MML tags.  We must
+  ;; properly quote them in the reply.  Note that using `point-max'
+  ;; instead of `mark' here is wrong.  The buffer may include user's
+  ;; signature which should not be MML-quoted.
+  (mml-quote-region (point) (point-max)))
 
 (defun notmuch-mua-forward-message ()
   (message-forward)
