@@ -516,6 +516,12 @@ Note: Other code should always use this function alter tags of
 messages instead of running (notmuch-call-notmuch-process \"tag\" ..)
 directly, so that hooks specified in notmuch-before-tag-hook and
 notmuch-after-tag-hook will be run."
+  ;; Perform some validation
+  (when (null tags) (error "No tags given"))
+  (mapc (lambda (tag)
+	  (unless (string-match-p "^[-+][-+_.[:word:]]+$" tag)
+	    (error "Tag must be of the form `+this_tag' or `-that_tag'")))
+	tags)
   (run-hooks 'notmuch-before-tag-hook)
   (apply 'notmuch-call-notmuch-process
 	 (append (list "tag") tags (list "--" query)))
@@ -883,12 +889,6 @@ characters as well as `_.+-'.
   (interactive (notmuch-select-tags-with-completion
 		"Operations (+add -drop): notmuch tag "
 		'("+" "-")))
-  ;; Perform some validation
-  (when (null actions) (error "No operations given"))
-  (mapc (lambda (action)
-	  (unless (string-match-p "^[-+][-+_.[:word:]]+$" action)
-	    (error "Action must be of the form `+this_tag' or `-that_tag'")))
-	actions)
   (apply 'notmuch-tag notmuch-search-query-string actions))
 
 (defun notmuch-search-buffer-title (query)
