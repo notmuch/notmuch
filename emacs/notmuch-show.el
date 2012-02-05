@@ -38,9 +38,10 @@
 
 (declare-function notmuch-call-notmuch-process "notmuch" (&rest args))
 (declare-function notmuch-fontify-headers "notmuch" nil)
-(declare-function notmuch-select-tag-with-completion "notmuch" (prompt &rest search-terms))
+(declare-function notmuch-read-tag-changes "notmuch" (&optional initial-input &rest search-terms))
 (declare-function notmuch-search-next-thread "notmuch" nil)
 (declare-function notmuch-search-show-thread "notmuch" nil)
+(declare-function notmuch-update-tags "notmuch" (current-tags tag-changes))
 
 (defcustom notmuch-message-headers '("Subject" "To" "Cc" "Date")
   "Headers that should be shown in a message, in this order.
@@ -1282,7 +1283,7 @@ Some useful entries are:
 
 (defun notmuch-show-mark-read ()
   "Mark the current message as read."
-  (notmuch-show-remove-tag "unread"))
+  (notmuch-show-tag-message "-unread"))
 
 ;; Functions for getting attributes of several messages in the current
 ;; thread.
@@ -1495,51 +1496,32 @@ than only the current message."
 	    (message (format "Command '%s' exited abnormally with code %d"
 			     shell-command exit-code))))))))
 
-(defun notmuch-show-add-tags-worker (current-tags add-tags)
-  "Add to `current-tags' with any tags from `add-tags' not
-currently present and return the result."
-  (let ((result-tags (copy-sequence current-tags)))
-    (mapc (lambda (add-tag)
-	    (unless (member add-tag current-tags)
-	      (setq result-tags (push add-tag result-tags))))
-	    add-tags)
-    (sort result-tags 'string<)))
+(defun notmuch-show-tag-message (&rest tag-changes)
+  "Change tags for the current message.
 
-(defun notmuch-show-del-tags-worker (current-tags del-tags)
-  "Remove any tags in `del-tags' from `current-tags' and return
-the result."
-  (let ((result-tags (copy-sequence current-tags)))
-    (mapc (lambda (del-tag)
-	    (setq result-tags (delete del-tag result-tags)))
-	  del-tags)
-    result-tags))
-
-(defun notmuch-show-add-tag (&rest toadd)
-  "Add a tag to the current message."
-  (interactive
-   (list (notmuch-select-tag-with-completion "Tag to add: ")))
-
+TAG-CHANGES is a list of tag operations for `notmuch-tag'."
   (let* ((current-tags (notmuch-show-get-tags))
-	 (new-tags (notmuch-show-add-tags-worker current-tags toadd)))
-
+	 (new-tags (notmuch-update-tags current-tags tag-changes)))
     (unless (equal current-tags new-tags)
-      (apply 'notmuch-tag (notmuch-show-get-message-id)
-	     (mapcar (lambda (s) (concat "+" s)) toadd))
+      (apply 'notmuch-tag (notmuch-show-get-message-id) tag-changes)
       (notmuch-show-set-tags new-tags))))
 
-(defun notmuch-show-remove-tag (&rest toremove)
-  "Remove a tag from the current message."
-  (interactive
-   (list (notmuch-select-tag-with-completion
-	  "Tag to remove: " (notmuch-show-get-message-id))))
+(defun notmuch-show-tag (&optional initial-input)
+  "Change tags for the current message, read input from the minibuffer."
+  (interactive)
+  (let ((tag-changes (notmuch-read-tag-changes
+		      initial-input (notmuch-show-get-message-id))))
+    (apply 'notmuch-show-tag-message tag-changes)))
 
-  (let* ((current-tags (notmuch-show-get-tags))
-	 (new-tags (notmuch-show-del-tags-worker current-tags toremove)))
+(defun notmuch-show-add-tag ()
+  "Same as `notmuch-show-tag' but sets initial input to '+'."
+  (interactive)
+  (notmuch-show-tag "+"))
 
-    (unless (equal current-tags new-tags)
-      (apply 'notmuch-tag (notmuch-show-get-message-id)
-	     (mapcar (lambda (s) (concat "-" s)) toremove))
-      (notmuch-show-set-tags new-tags))))
+(defun notmuch-show-remove-tag ()
+  "Same as `notmuch-show-tag' but sets initial input to '-'."
+  (interactive)
+  (notmuch-show-tag "-"))
 
 (defun notmuch-show-toggle-headers ()
   "Toggle the visibility of the current message headers."
@@ -1587,10 +1569,8 @@ argument, hide all of the messages."
 If the remove switch is given, tags will be removed instead of
 added."
   (goto-char (point-min))
-  (let ((tag-function (if remove
-			  'notmuch-show-remove-tag
-			'notmuch-show-add-tag)))
-    (loop do (funcall tag-function tag)
+  (let ((op (if remove "-" "+")))
+    (loop do (notmuch-show-tag-message (concat op tag))
 	  until (not (notmuch-show-goto-message-next)))))
 
 (defun notmuch-show-add-tag-thread (tag)
@@ -1653,9 +1633,8 @@ If a prefix argument is given, the message will be
 \"unarchived\" (ie. the \"inbox\" tag will be added instead of
 removed)."
   (interactive "P")
-  (if unarchive
-      (notmuch-show-add-tag "inbox")
-    (notmuch-show-remove-tag "inbox")))
+  (let ((op (if unarchive "+" "-")))
+    (notmuch-show-tag-message (concat op "inbox"))))
 
 (defun notmuch-show-archive-message-then-next ()
   "Archive the current message, then show the next open message in the current thread."
