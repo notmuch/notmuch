@@ -571,7 +571,7 @@ the messages that were tagged"
     (let ((beg (+ (point) 1)))
       (re-search-forward ")")
       (let ((end (- (point) 1)))
-	(split-string (buffer-substring beg end))))))
+	(split-string (buffer-substring-no-properties beg end))))))
 
 (defun notmuch-search-get-tags-region (beg end)
   (save-excursion
