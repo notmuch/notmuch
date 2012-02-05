@@ -76,6 +76,14 @@ For example:
 (defvar notmuch-query-history nil
   "Variable to store minibuffer history for notmuch queries")
 
+(defvar notmuch-select-tag-history nil
+  "Variable to store minibuffer history for
+`notmuch-select-tag-with-completion' function.")
+
+(defvar notmuch-read-tag-changes-history nil
+  "Variable to store minibuffer history for
+`notmuch-read-tag-changes' function.")
+
 (defun notmuch-tag-completions (&optional search-terms)
   (split-string
    (with-output-to-string
@@ -86,7 +94,7 @@ For example:
 
 (defun notmuch-select-tag-with-completion (prompt &rest search-terms)
   (let ((tag-list (notmuch-tag-completions search-terms)))
-    (completing-read prompt tag-list)))
+    (completing-read prompt tag-list nil nil nil 'notmuch-select-tag-history)))
 
 (defun notmuch-read-tag-changes (&optional initial-input &rest search-terms)
   (let* ((all-tag-list (notmuch-tag-completions))
@@ -106,7 +114,8 @@ For example:
 	    (define-key map " " 'self-insert-command)
 	    map)))
     (delete "" (completing-read-multiple "Tags (+add -drop): "
-		tag-list nil nil initial-input))))
+		tag-list nil nil initial-input
+		'notmuch-read-tag-changes-history))))
 
 (defun notmuch-update-tags (tags tag-changes)
   "Return a copy of TAGS with additions and removals from TAG-CHANGES.
