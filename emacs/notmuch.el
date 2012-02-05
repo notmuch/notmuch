@@ -76,38 +76,56 @@ For example:
 (defvar notmuch-query-history nil
   "Variable to store minibuffer history for notmuch queries")
 
-(defun notmuch-tag-completions (&optional prefixes search-terms)
-  (let ((tag-list
-	 (split-string
-	  (with-output-to-string
-	    (with-current-buffer standard-output
-	      (apply 'call-process notmuch-command nil t
-		     nil "search-tags" search-terms)))
-	  "\n+" t)))
-    (if (null prefixes)
-	tag-list
-      (apply #'append
-	     (mapcar (lambda (tag)
-		       (mapcar (lambda (prefix)
-				 (concat prefix tag)) prefixes))
-		     tag-list)))))
+(defun notmuch-tag-completions (&optional search-terms)
+  (split-string
+   (with-output-to-string
+     (with-current-buffer standard-output
+       (apply 'call-process notmuch-command nil t
+	      nil "search-tags" search-terms)))
+   "\n+" t))
 
 (defun notmuch-select-tag-with-completion (prompt &rest search-terms)
-  (let ((tag-list (notmuch-tag-completions nil search-terms)))
+  (let ((tag-list (notmuch-tag-completions search-terms)))
     (completing-read prompt tag-list)))
 
-(defun notmuch-select-tags-with-completion (prompt &optional prefixes &rest search-terms)
-  (let ((tag-list (notmuch-tag-completions prefixes search-terms))
-	(crm-separator " ")
-	;; By default, space is bound to "complete word" function.
-	;; Re-bind it to insert a space instead.  Note that <tab>
-	;; still does the completion.
-	(crm-local-completion-map
-	 (let ((map (make-sparse-keymap)))
-	   (set-keymap-parent map crm-local-completion-map)
-	   (define-key map " " 'self-insert-command)
-	   map)))
-    (delete "" (completing-read-multiple prompt tag-list))))
+(defun notmuch-read-tag-changes (&optional initial-input &rest search-terms)
+  (let* ((all-tag-list (notmuch-tag-completions))
+	 (add-tag-list (mapcar (apply-partially 'concat "+") all-tag-list))
+	 (remove-tag-list (mapcar (apply-partially 'concat "-")
+				  (if (null search-terms)
+				      all-tag-list
+				    (notmuch-tag-completions search-terms))))
+	 (tag-list (append add-tag-list remove-tag-list))
+	 (crm-separator " ")
+	 ;; By default, space is bound to "complete word" function.
+	 ;; Re-bind it to insert a space instead.  Note that <tab>
+	 ;; still does the completion.
+	 (crm-local-completion-map
+	  (let ((map (make-sparse-keymap)))
+	    (set-keymap-parent map crm-local-completion-map)
+	    (define-key map " " 'self-insert-command)
+	    map)))
+    (delete "" (completing-read-multiple "Tags (+add -drop): "
+		tag-list nil nil initial-input))))
+
+(defun notmuch-update-tags (tags tag-changes)
+  "Return a copy of TAGS with additions and removals from TAG-CHANGES.
+
+TAG-CHANGES must be a list of tags names, each prefixed with
+either a \"+\" to indicate the tag should be added to TAGS if not
+present or a \"-\" to indicate that the tag should be removed
+from TAGS if present."
+  (let ((result-tags (copy-sequence tags)))
+    (dolist (tag-change tag-changes)
+      (let ((op (string-to-char tag-change))
+	    (tag (unless (string= tag-change "") (substring tag-change 1))))
+	(case op
+	  (?+ (unless (member tag result-tags)
+		(push tag result-tags)))
+	  (?- (setq result-tags (delete tag result-tags)))
+	  (otherwise
+	   (error "Changed tag must be of the form `+this_tag' or `-that_tag'")))))
+    (sort result-tags 'string<)))
 
 (defun notmuch-foreach-mime-part (function mm-handle)
   (cond ((stringp (car mm-handle))
@@ -447,6 +465,10 @@ Complete list of currently available key bindings:
   "Return a list of threads for the current region"
   (notmuch-search-properties-in-region 'notmuch-search-thread-id beg end))
 
+(defun notmuch-search-find-thread-id-region-search (beg end)
+  "Return a search string for threads for the current region"
+  (mapconcat 'identity (notmuch-search-find-thread-id-region beg end) " or "))
+
 (defun notmuch-search-find-authors ()
   "Return the authors for the current thread"
   (get-text-property (point) 'notmuch-search-authors))
@@ -584,74 +606,53 @@ the messages that were tagged"
 	(forward-line 1))
       output)))
 
-(defun notmuch-search-add-tag-thread (tag)
-  (notmuch-search-add-tag-region tag (point) (point)))
+(defun notmuch-search-tag-thread (&rest tags)
+  "Change tags for the currently selected thread.
 
-(defun notmuch-search-add-tag-region (tag beg end)
-  (let ((search-id-string (mapconcat 'identity (notmuch-search-find-thread-id-region beg end) " or ")))
-    (notmuch-tag search-id-string (concat "+" tag))
+See `notmuch-search-tag-region' for details."
+  (apply 'notmuch-search-tag-region (point) (point) tags))
+
+(defun notmuch-search-tag-region (beg end &rest tags)
+  "Change tags for threads in the given region.
+
+TAGS is a list of tag operations for `notmuch-tag'.  The tags are
+added or removed for all threads in the region from BEG to END."
+  (let ((search-string (notmuch-search-find-thread-id-region-search beg end)))
+    (apply 'notmuch-tag search-string tags)
     (save-excursion
       (let ((last-line (line-number-at-pos end))
 	    (max-line (- (line-number-at-pos (point-max)) 2)))
 	(goto-char beg)
 	(while (<= (line-number-at-pos) (min last-line max-line))
-	  (notmuch-search-set-tags (delete-dups (sort (cons tag (notmuch-search-get-tags)) 'string<)))
+	  (notmuch-search-set-tags
+	   (notmuch-update-tags (notmuch-search-get-tags) tags))
 	  (forward-line))))))
 
-(defun notmuch-search-remove-tag-thread (tag)
-  (notmuch-search-remove-tag-region tag (point) (point)))
+(defun notmuch-search-tag (&optional initial-input)
+  "Change tags for the currently selected thread or region."
+  (interactive)
+  (let* ((beg (if (region-active-p) (region-beginning) (point)))
+	 (end (if (region-active-p) (region-end) (point)))
+	 (search-string (notmuch-search-find-thread-id-region-search beg end))
+	 (tags (notmuch-read-tag-changes initial-input search-string)))
+    (apply 'notmuch-search-tag-region beg end tags)))
 
-(defun notmuch-search-remove-tag-region (tag beg end)
-  (let ((search-id-string (mapconcat 'identity (notmuch-search-find-thread-id-region beg end) " or ")))
-    (notmuch-tag search-id-string (concat "-" tag))
-    (save-excursion
-      (let ((last-line (line-number-at-pos end))
-	    (max-line (- (line-number-at-pos (point-max)) 2)))
-	(goto-char beg)
-	(while (<= (line-number-at-pos) (min last-line max-line))
-	  (notmuch-search-set-tags (delete tag (notmuch-search-get-tags)))
-	  (forward-line))))))
+(defun notmuch-search-add-tag ()
+  "Same as `notmuch-search-tag' but sets initial input to '+'."
+  (interactive)
+  (notmuch-search-tag "+"))
 
-(defun notmuch-search-add-tag (tag)
-  "Add a tag to the currently selected thread or region.
-
-The tag is added to all messages in the currently selected thread
-or threads in the current region."
-  (interactive
-   (list (notmuch-select-tag-with-completion "Tag to add: ")))
-  (save-excursion
-    (if (region-active-p)
-	(let* ((beg (region-beginning))
-	       (end (region-end)))
-	  (notmuch-search-add-tag-region tag beg end))
-      (notmuch-search-add-tag-thread tag))))
-
-(defun notmuch-search-remove-tag (tag)
-  "Remove a tag from the currently selected thread or region.
-
-The tag is removed from all messages in the currently selected
-thread or threads in the current region."
-  (interactive
-   (list (notmuch-select-tag-with-completion
-	  "Tag to remove: "
-	  (if (region-active-p)
-	      (mapconcat 'identity
-			 (notmuch-search-find-thread-id-region (region-beginning) (region-end))
-			 " ")
-	    (notmuch-search-find-thread-id)))))
-  (save-excursion
-    (if (region-active-p)
-	(let* ((beg (region-beginning))
-	       (end (region-end)))
-	  (notmuch-search-remove-tag-region tag beg end))
-      (notmuch-search-remove-tag-thread tag))))
+(defun notmuch-search-remove-tag ()
+  "Same as `notmuch-search-tag' but sets initial input to '-'."
+  (interactive)
+  (notmuch-search-tag "-"))
 
 (defun notmuch-search-archive-thread ()
   "Archive the currently selected thread (remove its \"inbox\" tag).
 
 This function advances the next thread when finished."
   (interactive)
-  (notmuch-search-remove-tag-thread "inbox")
+  (notmuch-search-tag-thread "-inbox")
   (notmuch-search-next-thread))
 
 (defvar notmuch-search-process-filter-data nil
@@ -886,9 +887,7 @@ will prompt for tags to be added or removed. Tags prefixed with
 Each character of the tag name may consist of alphanumeric
 characters as well as `_.+-'.
 "
-  (interactive (notmuch-select-tags-with-completion
-		"Operations (+add -drop): notmuch tag "
-		'("+" "-")))
+  (interactive (notmuch-read-tag-changes))
   (apply 'notmuch-tag notmuch-search-query-string actions))
 
 (defun notmuch-search-buffer-title (query)
