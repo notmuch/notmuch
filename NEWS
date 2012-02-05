@@ -39,6 +39,24 @@ Reply to sender
   and search modes, 'r' has been bound to reply to sender, replacing
   reply to all, which now has key binding 'R'.
 
+More flexible and consistent tagging operations
+
+  All tagging operations ("+", "-", "*") now accept multiple tags with
+  "+" or "-" prefix, like "*" operation in notmuch-search view before.
+
+  "*" operation (`notmuch-show-tag-all') is now available in
+  notmuch-show view.
+
+  `Notmuch-show-{add,remove}-tag' functions no longer accept tag
+  argument, `notmuch-show-tag-message' should be used instead.  Custom
+  bindings using these functions should be updated, e.g.:
+
+    (notmuch-show-remove-tag "unread")
+
+  should be changed to:
+
+    (notmuch-show-tag-message "-unread")
+
 Library changes
 ---------------
 
