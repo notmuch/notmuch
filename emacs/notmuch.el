@@ -548,15 +548,15 @@ messages instead of running (notmuch-call-notmuch-process \"tag\" ..)
 directly, so that hooks specified in notmuch-before-tag-hook and
 notmuch-after-tag-hook will be run."
   ;; Perform some validation
-  (when (null tags) (error "No tags given"))
   (mapc (lambda (tag)
 	  (unless (string-match-p "^[-+]\\S-+$" tag)
 	    (error "Tag must be of the form `+this_tag' or `-that_tag'")))
 	tags)
-  (run-hooks 'notmuch-before-tag-hook)
-  (apply 'notmuch-call-notmuch-process
-	 (append (list "tag") tags (list "--" query)))
-  (run-hooks 'notmuch-after-tag-hook))
+  (unless (null tags)
+    (run-hooks 'notmuch-before-tag-hook)
+    (apply 'notmuch-call-notmuch-process "tag"
+	   (append tags (list "--" query)))
+    (run-hooks 'notmuch-after-tag-hook)))
 
 (defcustom notmuch-before-tag-hook nil
   "Hooks that are run before tags of a message are modified.
