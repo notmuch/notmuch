@@ -270,7 +270,7 @@ For a mouse binding, return nil."
     (define-key map "t" 'notmuch-search-filter-by-tag)
     (define-key map "f" 'notmuch-search-filter)
     (define-key map [mouse-1] 'notmuch-search-show-thread)
-    (define-key map "*" 'notmuch-search-operate-all)
+    (define-key map "*" 'notmuch-search-tag-all)
     (define-key map "a" 'notmuch-search-archive-thread)
     (define-key map "-" 'notmuch-search-remove-tag)
     (define-key map "+" 'notmuch-search-add-tag)
@@ -419,7 +419,7 @@ any tags).
 Pressing \\[notmuch-search-show-thread] on any line displays that thread. The '\\[notmuch-search-add-tag]' and '\\[notmuch-search-remove-tag]'
 keys can be used to add or remove tags from a thread. The '\\[notmuch-search-archive-thread]' key
 is a convenience for archiving a thread (removing the \"inbox\"
-tag). The '\\[notmuch-search-operate-all]' key can be used to add or remove a tag from all
+tag). The '\\[notmuch-search-tag-all]' key can be used to add or remove a tag from all
 threads in the current buffer.
 
 Other useful commands are '\\[notmuch-search-filter]' for filtering the current search
@@ -876,7 +876,7 @@ non-authors is found, assume that all of the authors match."
 	      (goto-char found-target)))
       (delete-process proc))))
 
-(defun notmuch-search-operate-all (&rest actions)
+(defun notmuch-search-tag-all (&rest actions)
   "Add/remove tags from all matching messages.
 
 This command adds or removes tags from all messages matching the
