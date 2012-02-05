@@ -1084,6 +1084,7 @@ thread id.  If a prefix is given, crypto processing is toggled."
 	(define-key map "c" 'notmuch-show-stash-map)
 	(define-key map "=" 'notmuch-show-refresh-view)
 	(define-key map "h" 'notmuch-show-toggle-headers)
+	(define-key map "*" 'notmuch-show-tag-all)
 	(define-key map "-" 'notmuch-show-remove-tag)
 	(define-key map "+" 'notmuch-show-add-tag)
 	(define-key map "x" 'notmuch-show-archive-thread-then-exit)
@@ -1181,6 +1182,15 @@ All currently available key bindings:
     (notmuch-show-move-to-message-top)
     t))
 
+(defun notmuch-show-mapc (function)
+  "Iterate through all messages in the current thread with
+`notmuch-show-goto-message-next' and call FUNCTION for side
+effects."
+  (save-excursion
+    (goto-char (point-min))
+    (loop do (funcall function)
+	  while (notmuch-show-goto-message-next))))
+
 ;; Functions relating to the visibility of messages and their
 ;; components.
 
@@ -1232,6 +1242,18 @@ Some useful entries are:
 (defun notmuch-show-get-message-id ()
   "Return the message id of the current message."
   (concat "id:\"" (notmuch-show-get-prop :id) "\""))
+
+(defun notmuch-show-get-messages-ids ()
+  "Return all message ids of messages in the current thread."
+  (let ((message-ids))
+    (notmuch-show-mapc
+     (lambda () (push (notmuch-show-get-message-id) message-ids)))
+    message-ids))
+
+(defun notmuch-show-get-messages-ids-search ()
+  "Return a search string for all message ids of messages in the
+current thread."
+  (mapconcat 'identity (notmuch-show-get-messages-ids) " or "))
 
 ;; dme: Would it make sense to use a macro for many of these?
 
@@ -1512,6 +1534,19 @@ TAG-CHANGES is a list of tag operations for `notmuch-tag'."
   (let ((tag-changes (notmuch-read-tag-changes
 		      initial-input (notmuch-show-get-message-id))))
     (apply 'notmuch-show-tag-message tag-changes)))
+
+(defun notmuch-show-tag-all (&rest tag-changes)
+  "Change tags for all messages in the current thread.
+
+TAG-CHANGES is a list of tag operations for `notmuch-tag'."
+  (interactive (notmuch-read-tag-changes nil notmuch-show-thread-id))
+  (apply 'notmuch-tag (notmuch-show-get-messages-ids-search) tag-changes)
+  (notmuch-show-mapc
+   (lambda ()
+     (let* ((current-tags (notmuch-show-get-tags))
+	    (new-tags (notmuch-update-tags current-tags tag-changes)))
+       (unless (equal current-tags new-tags)
+	 (notmuch-show-set-tags new-tags))))))
 
 (defun notmuch-show-add-tag ()
   "Same as `notmuch-show-tag' but sets initial input to '+'."
