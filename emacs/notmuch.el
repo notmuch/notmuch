@@ -537,25 +537,26 @@ and will also appear in a buffer named \"*Notmuch errors*\"."
 	    (error (buffer-substring beg end))
 	    ))))))
 
-(defun notmuch-tag (query &rest tags)
-  "Add/remove tags in TAGS to messages matching QUERY.
+(defun notmuch-tag (query &rest tag-changes)
+  "Add/remove tags in TAG-CHANGES to messages matching QUERY.
 
-TAGS should be a list of strings of the form \"+TAG\" or \"-TAG\" and
-QUERY should be a string containing the search-query.
+TAG-CHANGES should be a list of strings of the form \"+tag\" or
+\"-tag\" and QUERY should be a string containing the
+search-query.
 
 Note: Other code should always use this function alter tags of
 messages instead of running (notmuch-call-notmuch-process \"tag\" ..)
 directly, so that hooks specified in notmuch-before-tag-hook and
 notmuch-after-tag-hook will be run."
   ;; Perform some validation
-  (mapc (lambda (tag)
-	  (unless (string-match-p "^[-+]\\S-+$" tag)
+  (mapc (lambda (tag-change)
+	  (unless (string-match-p "^[-+]\\S-+$" tag-change)
 	    (error "Tag must be of the form `+this_tag' or `-that_tag'")))
-	tags)
-  (unless (null tags)
+	tag-changes)
+  (unless (null tag-changes)
     (run-hooks 'notmuch-before-tag-hook)
     (apply 'notmuch-call-notmuch-process "tag"
-	   (append tags (list "--" query)))
+	   (append tag-changes (list "--" query)))
     (run-hooks 'notmuch-after-tag-hook)))
 
 (defcustom notmuch-before-tag-hook nil
@@ -615,26 +616,26 @@ the messages that were tagged"
 	(forward-line 1))
       output)))
 
-(defun notmuch-search-tag-thread (&rest tags)
+(defun notmuch-search-tag-thread (&rest tag-changes)
   "Change tags for the currently selected thread.
 
 See `notmuch-search-tag-region' for details."
-  (apply 'notmuch-search-tag-region (point) (point) tags))
+  (apply 'notmuch-search-tag-region (point) (point) tag-changes))
 
-(defun notmuch-search-tag-region (beg end &rest tags)
+(defun notmuch-search-tag-region (beg end &rest tag-changes)
   "Change tags for threads in the given region.
 
 TAGS is a list of tag operations for `notmuch-tag'.  The tags are
 added or removed for all threads in the region from BEG to END."
   (let ((search-string (notmuch-search-find-thread-id-region-search beg end)))
-    (apply 'notmuch-tag search-string tags)
+    (apply 'notmuch-tag search-string tag-changes)
     (save-excursion
       (let ((last-line (line-number-at-pos end))
 	    (max-line (- (line-number-at-pos (point-max)) 2)))
 	(goto-char beg)
 	(while (<= (line-number-at-pos) (min last-line max-line))
 	  (notmuch-search-set-tags
-	   (notmuch-update-tags (notmuch-search-get-tags) tags))
+	   (notmuch-update-tags (notmuch-search-get-tags) tag-changes))
 	  (forward-line))))))
 
 (defun notmuch-search-tag (&optional initial-input)
@@ -885,7 +886,7 @@ non-authors is found, assume that all of the authors match."
 	      (goto-char found-target)))
       (delete-process proc))))
 
-(defun notmuch-search-tag-all (&rest actions)
+(defun notmuch-search-tag-all (&rest tag-changes)
   "Add/remove tags from all matching messages.
 
 This command adds or removes tags from all messages matching the
@@ -897,7 +898,7 @@ Each character of the tag name may consist of alphanumeric
 characters as well as `_.+-'.
 "
   (interactive (notmuch-read-tag-changes))
-  (apply 'notmuch-tag notmuch-search-query-string actions))
+  (apply 'notmuch-tag notmuch-search-query-string tag-changes))
 
 (defun notmuch-search-buffer-title (query)
   "Returns the title for a buffer with notmuch search results."
