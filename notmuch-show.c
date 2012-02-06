@@ -1029,7 +1029,7 @@ notmuch_show_command (void *ctx, unused (int argc), unused (char *argv[]))
     notmuch_database_t *notmuch;
     notmuch_query_t *query;
     char *query_string;
-    int opt_index;
+    int opt_index, ret;
     const notmuch_show_format_t *format = &format_text;
     notmuch_show_params_t params = { .part = -1 };
     int format_sel = NOTMUCH_FORMAT_NOT_SPECIFIED;
@@ -1134,9 +1134,9 @@ notmuch_show_command (void *ctx, unused (int argc), unused (char *argv[]))
     }
 
     if (params.part >= 0)
-	return do_show_single (ctx, query, format, &params);
+	ret = do_show_single (ctx, query, format, &params);
     else
-	return do_show (ctx, query, format, &params);
+	ret = do_show (ctx, query, format, &params);
 
     notmuch_query_destroy (query);
     notmuch_database_close (notmuch);
@@ -1144,5 +1144,5 @@ notmuch_show_command (void *ctx, unused (int argc), unused (char *argv[]))
     if (params.cryptoctx)
 	g_object_unref(params.cryptoctx);
 
-    return 0;
+    return ret;
 }
