@@ -1014,6 +1014,14 @@ do_show (void *ctx,
     return 0;
 }
 
+enum {
+    NOTMUCH_FORMAT_NOT_SPECIFIED,
+    NOTMUCH_FORMAT_JSON,
+    NOTMUCH_FORMAT_TEXT,
+    NOTMUCH_FORMAT_MBOX,
+    NOTMUCH_FORMAT_RAW
+};
+
 int
 notmuch_show_command (void *ctx, unused (int argc), unused (char *argv[]))
 {
@@ -1021,89 +1029,91 @@ notmuch_show_command (void *ctx, unused (int argc), unused (char *argv[]))
     notmuch_database_t *notmuch;
     notmuch_query_t *query;
     char *query_string;
-    char *opt;
+    int opt_index;
     const notmuch_show_format_t *format = &format_text;
-    notmuch_show_params_t params;
-    int mbox = 0;
-    int format_specified = 0;
-    int i;
+    notmuch_show_params_t params = { .part = -1 };
+    int format_sel = NOTMUCH_FORMAT_NOT_SPECIFIED;
+    notmuch_bool_t verify = FALSE;
 
-    params.entire_thread = FALSE;
-    params.raw = FALSE;
-    params.part = -1;
-    params.cryptoctx = NULL;
-    params.decrypt = FALSE;
+    notmuch_opt_desc_t options[] = {
+	{ NOTMUCH_OPT_KEYWORD, &format_sel, "format", 'f',
+	  (notmuch_keyword_t []){ { "json", NOTMUCH_FORMAT_JSON },
+				  { "text", NOTMUCH_FORMAT_TEXT },
+				  { "mbox", NOTMUCH_FORMAT_MBOX },
+				  { "raw", NOTMUCH_FORMAT_RAW },
+				  { 0, 0 } } },
+	{ NOTMUCH_OPT_INT, &params.part, "part", 'p', 0 },
+	{ NOTMUCH_OPT_BOOLEAN, &params.entire_thread, "entire-thread", 't', 0 },
+	{ NOTMUCH_OPT_BOOLEAN, &params.decrypt, "decrypt", 'd', 0 },
+	{ NOTMUCH_OPT_BOOLEAN, &verify, "verify", 'v', 0 },
+	{ 0, 0, 0, 0, 0 }
+    };
 
-    argc--; argv++; /* skip subcommand argument */
-
-    for (i = 0; i < argc && argv[i][0] == '-'; i++) {
-	if (strcmp (argv[i], "--") == 0) {
-	    i++;
-	    break;
-	}
-	if (STRNCMP_LITERAL (argv[i], "--format=") == 0) {
-	    opt = argv[i] + sizeof ("--format=") - 1;
-	    if (strcmp (opt, "text") == 0) {
-		format = &format_text;
-	    } else if (strcmp (opt, "json") == 0) {
-		format = &format_json;
-		params.entire_thread = TRUE;
-	    } else if (strcmp (opt, "mbox") == 0) {
-		format = &format_mbox;
-		mbox = 1;
-	    } else if (strcmp (opt, "raw") == 0) {
-		format = &format_raw;
-		params.raw = TRUE;
-	    } else {
-		fprintf (stderr, "Invalid value for --format: %s\n", opt);
-		return 1;
-	    }
-	    format_specified = 1;
-	} else if (STRNCMP_LITERAL (argv[i], "--part=") == 0) {
-	    params.part = atoi(argv[i] + sizeof ("--part=") - 1);
-	} else if (STRNCMP_LITERAL (argv[i], "--entire-thread") == 0) {
-	    params.entire_thread = TRUE;
-	} else if ((STRNCMP_LITERAL (argv[i], "--verify") == 0) ||
-		   (STRNCMP_LITERAL (argv[i], "--decrypt") == 0)) {
-	    if (params.cryptoctx == NULL) {
-#ifdef GMIME_ATLEAST_26
-		/* TODO: GMimePasswordRequestFunc */
-		if (NULL == (params.cryptoctx = g_mime_gpg_context_new(NULL, "gpg")))
-#else
-		GMimeSession* session = g_object_new(g_mime_session_get_type(), NULL);
-		if (NULL == (params.cryptoctx = g_mime_gpg_context_new(session, "gpg")))
-#endif
-		    fprintf (stderr, "Failed to construct gpg context.\n");
-		else
-		    g_mime_gpg_context_set_always_trust((GMimeGpgContext*)params.cryptoctx, FALSE);
-#ifndef GMIME_ATLEAST_26
-		g_object_unref (session);
-		session = NULL;
-#endif
-	    }
-	    if (STRNCMP_LITERAL (argv[i], "--decrypt") == 0)
-		params.decrypt = TRUE;
-	} else {
-	    fprintf (stderr, "Unrecognized option: %s\n", argv[i]);
-	    return 1;
-	}
+    opt_index = parse_arguments (argc, argv, options, 1);
+    if (opt_index < 0) {
+	/* diagnostics already printed */
+	return 1;
     }
 
-    argc -= i;
-    argv += i;
+    if (format_sel == NOTMUCH_FORMAT_NOT_SPECIFIED) {
+	/* if part was requested and format was not specified, use format=raw */
+	if (params.part >= 0)
+	    format_sel = NOTMUCH_FORMAT_RAW;
+	else
+	    format_sel = NOTMUCH_FORMAT_TEXT;
+    }
+
+    switch (format_sel) {
+    case NOTMUCH_FORMAT_JSON:
+	format = &format_json;
+	params.entire_thread = TRUE;
+	break;
+    case NOTMUCH_FORMAT_TEXT:
+	format = &format_text;
+	break;
+    case NOTMUCH_FORMAT_MBOX:
+	if (params.part > 0) {
+	    fprintf (stderr, "Error: specifying parts is incompatible with mbox output format.\n");
+	    return 1;
+	}
+	format = &format_mbox;
+	break;
+    case NOTMUCH_FORMAT_RAW:
+	format = &format_raw;
+	/* If --format=raw specified without specifying part, we can only
+	 * output single message, so set part=0 */
+	if (params.part < 0)
+	    params.part = 0;
+	params.raw = TRUE;
+	break;
+    }
+
+    if (params.decrypt || verify) {
+#ifdef GMIME_ATLEAST_26
+	/* TODO: GMimePasswordRequestFunc */
+	params.cryptoctx = g_mime_gpg_context_new (NULL, "gpg");
+#else
+	GMimeSession* session = g_object_new (g_mime_session_get_type(), NULL);
+	params.cryptoctx = g_mime_gpg_context_new (session, "gpg");
+#endif
+	if (params.cryptoctx) {
+	    g_mime_gpg_context_set_always_trust ((GMimeGpgContext*) params.cryptoctx, FALSE);
+	} else {
+	    params.decrypt = FALSE;
+	    fprintf (stderr, "Failed to construct gpg context.\n");
+	}
+#ifndef GMIME_ATLEAST_26
+	g_object_unref (session);
+#endif
+    }
 
     config = notmuch_config_open (ctx, NULL, NULL);
     if (config == NULL)
 	return 1;
 
-    query_string = query_string_from_args (ctx, argc, argv);
+    query_string = query_string_from_args (ctx, argc-opt_index, argv+opt_index);
     if (query_string == NULL) {
 	fprintf (stderr, "Out of memory\n");
-	return 1;
-    }
-
-    if (mbox && params.part > 0) {
-	fprintf (stderr, "Error: specifying parts is incompatible with mbox output format.\n");
 	return 1;
     }
 
@@ -1122,15 +1132,6 @@ notmuch_show_command (void *ctx, unused (int argc), unused (char *argv[]))
 	fprintf (stderr, "Out of memory\n");
 	return 1;
     }
-
-    /* if part was requested and format was not specified, use format=raw */
-    if (params.part >= 0 && !format_specified)
-	format = &format_raw;
-
-    /* If --format=raw specified without specifying part, we can only
-     * output single message, so set part=0 */
-    if (params.raw && params.part < 0)
-	params.part = 0;
 
     if (params.part >= 0)
 	return do_show_single (ctx, query, format, &params);
