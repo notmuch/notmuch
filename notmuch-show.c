@@ -1028,11 +1028,11 @@ notmuch_show_command (void *ctx, unused (int argc), unused (char *argv[]))
     int format_specified = 0;
     int i;
 
-    params.entire_thread = 0;
-    params.raw = 0;
+    params.entire_thread = FALSE;
+    params.raw = FALSE;
     params.part = -1;
     params.cryptoctx = NULL;
-    params.decrypt = 0;
+    params.decrypt = FALSE;
 
     argc--; argv++; /* skip subcommand argument */
 
@@ -1047,13 +1047,13 @@ notmuch_show_command (void *ctx, unused (int argc), unused (char *argv[]))
 		format = &format_text;
 	    } else if (strcmp (opt, "json") == 0) {
 		format = &format_json;
-		params.entire_thread = 1;
+		params.entire_thread = TRUE;
 	    } else if (strcmp (opt, "mbox") == 0) {
 		format = &format_mbox;
 		mbox = 1;
 	    } else if (strcmp (opt, "raw") == 0) {
 		format = &format_raw;
-		params.raw = 1;
+		params.raw = TRUE;
 	    } else {
 		fprintf (stderr, "Invalid value for --format: %s\n", opt);
 		return 1;
@@ -1062,7 +1062,7 @@ notmuch_show_command (void *ctx, unused (int argc), unused (char *argv[]))
 	} else if (STRNCMP_LITERAL (argv[i], "--part=") == 0) {
 	    params.part = atoi(argv[i] + sizeof ("--part=") - 1);
 	} else if (STRNCMP_LITERAL (argv[i], "--entire-thread") == 0) {
-	    params.entire_thread = 1;
+	    params.entire_thread = TRUE;
 	} else if ((STRNCMP_LITERAL (argv[i], "--verify") == 0) ||
 		   (STRNCMP_LITERAL (argv[i], "--decrypt") == 0)) {
 	    if (params.cryptoctx == NULL) {
@@ -1082,7 +1082,7 @@ notmuch_show_command (void *ctx, unused (int argc), unused (char *argv[]))
 #endif
 	    }
 	    if (STRNCMP_LITERAL (argv[i], "--decrypt") == 0)
-		params.decrypt = 1;
+		params.decrypt = TRUE;
 	} else {
 	    fprintf (stderr, "Unrecognized option: %s\n", argv[i]);
 	    return 1;

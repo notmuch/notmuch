@@ -661,7 +661,6 @@ notmuch_reply_command (void *ctx, int argc, char *argv[])
     notmuch_show_params_t params = { .part = -1 };
     int format = FORMAT_DEFAULT;
     int reply_all = TRUE;
-    notmuch_bool_t decrypt = FALSE;
 
     notmuch_opt_desc_t options[] = {
 	{ NOTMUCH_OPT_KEYWORD, &format, "format", 'f',
@@ -672,7 +671,7 @@ notmuch_reply_command (void *ctx, int argc, char *argv[])
 	  (notmuch_keyword_t []){ { "all", TRUE },
 				  { "sender", FALSE },
 				  { 0, 0 } } },
-	{ NOTMUCH_OPT_BOOLEAN, &decrypt, "decrypt", 'd', 0 },
+	{ NOTMUCH_OPT_BOOLEAN, &params.decrypt, "decrypt", 'd', 0 },
 	{ 0, 0, 0, 0, 0 }
     };
 
@@ -687,7 +686,7 @@ notmuch_reply_command (void *ctx, int argc, char *argv[])
     else
 	reply_format_func = notmuch_reply_format_default;
 
-    if (decrypt) {
+    if (params.decrypt) {
 #ifdef GMIME_ATLEAST_26
 	/* TODO: GMimePasswordRequestFunc */
 	params.cryptoctx = g_mime_gpg_context_new (NULL, "gpg");
@@ -697,8 +696,8 @@ notmuch_reply_command (void *ctx, int argc, char *argv[])
 #endif
 	if (params.cryptoctx) {
 	    g_mime_gpg_context_set_always_trust ((GMimeGpgContext*) params.cryptoctx, FALSE);
-	    params.decrypt = TRUE;
 	} else {
+	    params.decrypt = FALSE;
 	    fprintf (stderr, "Failed to construct gpg context.\n");
 	}
 #ifndef GMIME_ATLEAST_26
