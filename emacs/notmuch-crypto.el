@@ -129,6 +129,7 @@ mode."
 	 (window (display-buffer buffer t nil)))
     (with-selected-window window
       (with-current-buffer buffer
+	(goto-char (point-max))
 	(call-process "gpg" nil t t "--list-keys" fingerprint))
       (recenter -1))))
 
@@ -139,6 +140,7 @@ mode."
 	 (window (display-buffer buffer t nil)))
     (with-selected-window window
       (with-current-buffer buffer
+	(goto-char (point-max))
 	(call-process "gpg" nil t t "--recv-keys" keyid)
 	(insert "\n")
 	(call-process "gpg" nil t t "--list-keys" keyid))
