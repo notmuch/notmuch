@@ -559,12 +559,14 @@ add_files_recursive (notmuch_database_t *notmuch,
   DONE:
     if (next)
 	talloc_free (next);
-    if (entry)
-	free (entry);
     if (dir)
 	closedir (dir);
-    if (fs_entries)
+    if (fs_entries) {
+	for (i = 0; i < num_fs_entries; i++)
+	    free (fs_entries[i]);
+
 	free (fs_entries);
+    }
     if (db_subdirs)
 	notmuch_filenames_destroy (db_subdirs);
     if (db_files)
@@ -704,10 +706,12 @@ count_files (const char *path, int *count)
     }
 
   DONE:
-    if (entry)
-	free (entry);
-    if (fs_entries)
+    if (fs_entries) {
+	for (i = 0; i < num_fs_entries; i++)
+	    free (fs_entries[i]);
+
         free (fs_entries);
+    }
 }
 
 static void
