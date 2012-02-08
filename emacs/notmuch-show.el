@@ -142,6 +142,10 @@ indentation."
 (make-variable-buffer-local 'notmuch-show-process-crypto)
 (put 'notmuch-show-process-crypto 'permanent-local t)
 
+(defvar notmuch-show-elide-non-matching-messages nil)
+(make-variable-buffer-local 'notmuch-show-elide-non-matching-messages)
+(put 'notmuch-show-elide-non-matching-messages 'permanent-local t)
+
 (defmacro with-current-notmuch-show-message (&rest body)
   "Evaluate body with current buffer set to the text of current message"
   `(save-excursion
@@ -942,11 +946,22 @@ current buffer, if possible."
 	     "Not processing cryptographic MIME parts."))
   (notmuch-show-refresh-view))
 
+(defun notmuch-show-toggle-elide-non-matching ()
+  "Toggle the display of non-matching messages."
+  (interactive)
+  (setq notmuch-show-elide-non-matching-messages (not notmuch-show-elide-non-matching-messages))
+  (message (if notmuch-show-elide-non-matching-messages
+	       "Showing matching messages only."
+	     "Showing all messages."))
+  (notmuch-show-refresh-view))
+
 (defun notmuch-show-insert-tree (tree depth)
   "Insert the message tree TREE at depth DEPTH in the current thread."
   (let ((msg (car tree))
 	(replies (cadr tree)))
-    (notmuch-show-insert-msg msg depth)
+    (if (or (not notmuch-show-elide-non-matching-messages)
+	    (plist-get msg :match))
+	(notmuch-show-insert-msg msg depth))
     (notmuch-show-insert-thread replies (1+ depth))))
 
 (defun notmuch-show-insert-thread (thread depth)
@@ -1102,6 +1117,7 @@ Refreshes the current view, observing changes in cryptographic preferences."
 	(define-key map (kbd "M-RET") 'notmuch-show-open-or-close-all)
 	(define-key map (kbd "RET") 'notmuch-show-toggle-message)
 	(define-key map "#" 'notmuch-show-print-message)
+	(define-key map "!" 'notmuch-show-toggle-elide-non-matching)
 	(define-key map "$" 'notmuch-show-toggle-process-crypto)
 	map)
       "Keymap for \"notmuch show\" buffers.")
