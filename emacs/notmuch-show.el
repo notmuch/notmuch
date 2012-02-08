@@ -1704,7 +1704,7 @@ added."
   (interactive "P")
   (let ((parent-buffer notmuch-show-parent-buffer))
     (notmuch-kill-this-buffer)
-    (when parent-buffer
+    (when (buffer-live-p parent-buffer)
       (switch-to-buffer parent-buffer)
       (notmuch-search-next-thread)
       (if show-next
