@@ -146,6 +146,10 @@ indentation."
 (make-variable-buffer-local 'notmuch-show-elide-non-matching-messages)
 (put 'notmuch-show-elide-non-matching-messages 'permanent-local t)
 
+(defvar notmuch-show-indent-content t)
+(make-variable-buffer-local 'notmuch-show-indent-content)
+(put 'notmuch-show-indent-content 'permanent-local t)
+
 (defmacro with-current-notmuch-show-message (&rest body)
   "Evaluate body with current buffer set to the text of current message"
   `(save-excursion
@@ -256,10 +260,12 @@ operation on the contents of the current buffer."
 	 (all (buffer-substring (notmuch-show-message-top)
 				(notmuch-show-message-bottom)))
 
-	 (props (notmuch-show-get-message-properties)))
+	 (props (notmuch-show-get-message-properties))
+	 (indenting notmuch-show-indent-content))
     (with-temp-buffer
       (insert all)
-      (indent-rigidly (point-min) (point-max) (- depth))
+      (if indenting
+	  (indent-rigidly (point-min) (point-max) (- depth)))
       ;; Remove the original header.
       (goto-char (point-min))
       (re-search-forward "^$" (point-max) nil)
@@ -900,7 +906,8 @@ current buffer, if possible."
     (setq body-start (point-marker))
     ;; A blank line between the headers and the body.
     (insert "\n")
-    (notmuch-show-insert-body msg (plist-get msg :body) depth)
+    (notmuch-show-insert-body msg (plist-get msg :body)
+			      (if notmuch-show-indent-content depth 0))
     ;; Ensure that the body ends with a newline.
     (unless (bolp)
       (insert "\n"))
@@ -908,7 +915,8 @@ current buffer, if possible."
     (setq content-end (point-marker))
 
     ;; Indent according to the depth in the thread.
-    (indent-rigidly content-start content-end (* notmuch-show-indent-messages-width depth))
+    (if notmuch-show-indent-content
+	(indent-rigidly content-start content-end (* notmuch-show-indent-messages-width depth)))
 
     (setq message-end (point-max-marker))
 
@@ -953,6 +961,15 @@ current buffer, if possible."
   (message (if notmuch-show-elide-non-matching-messages
 	       "Showing matching messages only."
 	     "Showing all messages."))
+  (notmuch-show-refresh-view))
+
+(defun notmuch-show-toggle-thread-indentation ()
+  "Toggle the indentation of threads."
+  (interactive)
+  (setq notmuch-show-indent-content (not notmuch-show-indent-content))
+  (message (if notmuch-show-indent-content
+	       "Content is indented."
+	     "Content is not indented."))
   (notmuch-show-refresh-view))
 
 (defun notmuch-show-insert-tree (tree depth)
@@ -1119,6 +1136,7 @@ Refreshes the current view, observing changes in cryptographic preferences."
 	(define-key map "#" 'notmuch-show-print-message)
 	(define-key map "!" 'notmuch-show-toggle-elide-non-matching)
 	(define-key map "$" 'notmuch-show-toggle-process-crypto)
+	(define-key map "<" 'notmuch-show-toggle-thread-indentation)
 	map)
       "Keymap for \"notmuch show\" buffers.")
 (fset 'notmuch-show-mode-map notmuch-show-mode-map)
