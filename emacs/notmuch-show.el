@@ -1038,8 +1038,11 @@ function is used."
     ;; buffer.
     (setq notmuch-show-process-crypto notmuch-crypto-process-mime)
     ;; Set the default value for
-    ;; `notmuch-show-elide-non-matching-messages' in this buffer.
+    ;; `notmuch-show-elide-non-matching-messages' in this buffer. If
+    ;; there is a prefix argument, invert the default.
     (setq notmuch-show-elide-non-matching-messages notmuch-show-only-matching-messages)
+    (if current-prefix-arg
+	(setq notmuch-show-elide-non-matching-messages (not notmuch-show-elide-non-matching-messages)))
 
     (setq notmuch-show-thread-id thread-id
 	  notmuch-show-parent-buffer parent-buffer
