@@ -1137,6 +1137,7 @@ Refreshes the current view, observing changes in cryptographic preferences."
 	(define-key map "!" 'notmuch-show-toggle-elide-non-matching)
 	(define-key map "$" 'notmuch-show-toggle-process-crypto)
 	(define-key map "<" 'notmuch-show-toggle-thread-indentation)
+	(define-key map "t" 'toggle-truncate-lines)
 	map)
       "Keymap for \"notmuch show\" buffers.")
 (fset 'notmuch-show-mode-map notmuch-show-mode-map)
