@@ -494,9 +494,9 @@ Complete list of currently available key bindings:
   "Return a list of authors for the current region"
   (notmuch-search-properties-in-region 'notmuch-search-subject beg end))
 
-(defun notmuch-search-show-thread (&optional crypto-switch)
+(defun notmuch-search-show-thread ()
   "Display the currently selected thread."
-  (interactive "P")
+  (interactive)
   (let ((thread-id (notmuch-search-find-thread-id))
 	(subject (notmuch-prettify-subject (notmuch-search-find-subject))))
     (if (> (length thread-id) 0)
@@ -504,8 +504,7 @@ Complete list of currently available key bindings:
 		      (current-buffer)
 		      notmuch-search-query-string
 		      ;; Name the buffer based on the subject.
-		      (concat "*" (truncate-string-to-width subject 30 nil nil t) "*")
-		      crypto-switch)
+		      (concat "*" (truncate-string-to-width subject 30 nil nil t) "*"))
       (message "End of search results."))))
 
 (defun notmuch-search-reply-to-thread (&optional prompt-for-sender)

@@ -126,6 +126,22 @@ indentation."
 		 (const :tag "View interactively"
 			notmuch-show-interactively-view-part)))
 
+(defvar notmuch-show-thread-id nil)
+(make-variable-buffer-local 'notmuch-show-thread-id)
+(put 'notmuch-show-thread-id 'permanent-local t)
+
+(defvar notmuch-show-parent-buffer nil)
+(make-variable-buffer-local 'notmuch-show-parent-buffer)
+(put 'notmuch-show-parent-buffer 'permanent-local t)
+
+(defvar notmuch-show-query-context nil)
+(make-variable-buffer-local 'notmuch-show-query-context)
+(put 'notmuch-show-query-context 'permanent-local t)
+
+(defvar notmuch-show-process-crypto nil)
+(make-variable-buffer-local 'notmuch-show-process-crypto)
+(put 'notmuch-show-process-crypto 'permanent-local t)
+
 (defmacro with-current-notmuch-show-message (&rest body)
   "Evaluate body with current buffer set to the text of current message"
   `(save-excursion
@@ -611,7 +627,7 @@ current buffer, if possible."
 	       (sigstatus (car (plist-get part :sigstatus))))
 	  (notmuch-crypto-insert-sigstatus-button sigstatus from))
       ;; if we're not adding sigstatus, tell the user how they can get it
-      (button-put button 'help-echo "Set notmuch-crypto-process-mime to process cryptographic mime parts.")))
+      (button-put button 'help-echo "Set notmuch-crypto-process-mime to process cryptographic MIME parts.")))
 
   (let ((inner-parts (plist-get part :content))
 	(start (point)))
@@ -637,7 +653,7 @@ current buffer, if possible."
 		     (sigstatus (car (plist-get part :sigstatus))))
 		(notmuch-crypto-insert-sigstatus-button sigstatus from))))
       ;; if we're not adding encstatus, tell the user how they can get it
-      (button-put button 'help-echo "Set notmuch-crypto-process-mime to process cryptographic mime parts.")))
+      (button-put button 'help-echo "Set notmuch-crypto-process-mime to process cryptographic MIME parts.")))
 
   (let ((inner-parts (plist-get part :content))
 	(start (point)))
@@ -764,8 +780,6 @@ current buffer, if possible."
 
 ;; Helper for parts which are generally not included in the default
 ;; JSON output.
-;; Uses the buffer-local variable notmuch-show-process-crypto to
-;; determine if parts should be decrypted first.
 (defun notmuch-show-get-bodypart-internal (message-id part-number)
   (let ((args '("show" "--format=raw"))
 	(part-arg (format "--part=%s" part-number)))
@@ -919,6 +933,15 @@ current buffer, if possible."
     ;; criteria.
     (notmuch-show-message-visible msg (plist-get msg :match))))
 
+(defun notmuch-show-toggle-process-crypto ()
+  "Toggle the processing of cryptographic MIME parts."
+  (interactive)
+  (setq notmuch-show-process-crypto (not notmuch-show-process-crypto))
+  (message (if notmuch-show-process-crypto
+	       "Processing cryptographic MIME parts."
+	     "Not processing cryptographic MIME parts."))
+  (notmuch-show-refresh-view))
+
 (defun notmuch-show-insert-tree (tree depth)
   "Insert the message tree TREE at depth DEPTH in the current thread."
   (let ((msg (car tree))
@@ -933,15 +956,6 @@ current buffer, if possible."
 (defun notmuch-show-insert-forest (forest)
   "Insert the forest of threads FOREST."
   (mapc (lambda (thread) (notmuch-show-insert-thread thread 0)) forest))
-
-(defvar notmuch-show-thread-id nil)
-(make-variable-buffer-local 'notmuch-show-thread-id)
-(defvar notmuch-show-parent-buffer nil)
-(make-variable-buffer-local 'notmuch-show-parent-buffer)
-(defvar notmuch-show-query-context nil)
-(make-variable-buffer-local 'notmuch-show-query-context)
-(defvar notmuch-show-buffer-name nil)
-(make-variable-buffer-local 'notmuch-show-buffer-name)
 
 (defun notmuch-show-buttonise-links (start end)
   "Buttonise URLs and mail addresses between START and END.
@@ -962,7 +976,7 @@ a corresponding notmuch search."
 			'face goto-address-mail-face))))
 
 ;;;###autoload
-(defun notmuch-show (thread-id &optional parent-buffer query-context buffer-name crypto-switch)
+(defun notmuch-show (thread-id &optional parent-buffer query-context buffer-name)
   "Run \"notmuch show\" with the given thread ID and display results.
 
 The optional PARENT-BUFFER is the notmuch-search buffer from
@@ -977,46 +991,41 @@ non-nil.
 The optional BUFFER-NAME provides the name of the buffer in
 which the message thread is shown. If it is nil (which occurs
 when the command is called interactively) the argument to the
-function is used.
-
-The optional CRYPTO-SWITCH toggles the value of the
-notmuch-crypto-process-mime customization variable for this show
-buffer."
+function is used."
   (interactive "sNotmuch show: ")
-  (let* ((process-crypto (if crypto-switch
-			     (not notmuch-crypto-process-mime)
-			   notmuch-crypto-process-mime)))
-    (notmuch-show-worker thread-id parent-buffer query-context buffer-name process-crypto)))
+  (let ((buffer-name (generate-new-buffer-name
+		      (or buffer-name
+			  (concat "*notmuch-" thread-id "*")))))
+    (switch-to-buffer (get-buffer-create buffer-name))
+    ;; Set the default value for `notmuch-show-process-crypto' in this
+    ;; buffer.
+    (setq notmuch-show-process-crypto notmuch-crypto-process-mime)
 
-(defun notmuch-show-worker (thread-id parent-buffer query-context buffer-name process-crypto)
-  (let* ((buffer-name (generate-new-buffer-name
-		       (or buffer-name
-			   (concat "*notmuch-" thread-id "*"))))
-	 (buffer (get-buffer-create buffer-name))
-	 (inhibit-read-only t))
-    (switch-to-buffer buffer)
+    (setq notmuch-show-thread-id thread-id
+	  notmuch-show-parent-buffer parent-buffer
+	  notmuch-show-query-context query-context)
+    (notmuch-show-worker)))
+
+(defun notmuch-show-worker ()
+  (let ((inhibit-read-only t))
+
     (notmuch-show-mode)
     ;; Don't track undo information for this buffer
     (set 'buffer-undo-list t)
 
-    (setq notmuch-show-thread-id thread-id)
-    (setq notmuch-show-parent-buffer parent-buffer)
-    (setq notmuch-show-query-context query-context)
-    (setq notmuch-show-buffer-name buffer-name)
-    (setq notmuch-show-process-crypto process-crypto)
-
     (erase-buffer)
     (goto-char (point-min))
     (save-excursion
-      (let* ((basic-args (list thread-id))
-	     (args (if query-context
-		       (append (list "\'") basic-args (list "and (" query-context ")\'"))
+      (let* ((basic-args (list notmuch-show-thread-id))
+	     (args (if notmuch-show-query-context
+		       (append (list "\'") basic-args
+			       (list "and (" notmuch-show-query-context ")\'"))
 		     (append (list "\'") basic-args (list "\'")))))
 	(notmuch-show-insert-forest (notmuch-query-get-threads args))
 	;; If the query context reduced the results to nothing, run
 	;; the basic query.
 	(when (and (eq (buffer-size) 0)
-		   query-context)
+		   notmuch-show-query-context)
 	  (notmuch-show-insert-forest
 	   (notmuch-query-get-threads basic-args))))
 
@@ -1033,21 +1042,14 @@ buffer."
 
     (notmuch-show-mark-read)))
 
-(defun notmuch-show-refresh-view (&optional crypto-switch)
-  "Refresh the current view (with crypto switch if prefix given).
+(defun notmuch-show-refresh-view ()
+  "Refresh the current view.
 
-Kills the current buffer and reruns notmuch show with the same
-thread id.  If a prefix is given, crypto processing is toggled."
-  (interactive "P")
-  (let ((thread-id notmuch-show-thread-id)
-	(parent-buffer notmuch-show-parent-buffer)
-	(query-context notmuch-show-query-context)
-	(buffer-name notmuch-show-buffer-name)
-	(process-crypto (if crypto-switch
-			    (not notmuch-show-process-crypto)
-			  notmuch-show-process-crypto)))
-    (notmuch-kill-this-buffer)
-    (notmuch-show-worker thread-id parent-buffer query-context buffer-name process-crypto)))
+Refreshes the current view, observing changes in cryptographic preferences."
+  (interactive)
+  (let ((inhibit-read-only t))
+    (erase-buffer))
+  (notmuch-show-worker))
 
 (defvar notmuch-show-stash-map
   (let ((map (make-sparse-keymap)))
@@ -1100,6 +1102,7 @@ thread id.  If a prefix is given, crypto processing is toggled."
 	(define-key map (kbd "M-RET") 'notmuch-show-open-or-close-all)
 	(define-key map (kbd "RET") 'notmuch-show-toggle-message)
 	(define-key map "#" 'notmuch-show-print-message)
+	(define-key map "$" 'notmuch-show-toggle-process-crypto)
 	map)
       "Keymap for \"notmuch show\" buffers.")
 (fset 'notmuch-show-mode-map notmuch-show-mode-map)
