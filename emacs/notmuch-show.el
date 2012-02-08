@@ -126,6 +126,11 @@ indentation."
 		 (const :tag "View interactively"
 			notmuch-show-interactively-view-part)))
 
+(defcustom notmuch-show-only-matching-messages nil
+  "Only matching messages are shown by default."
+  :type 'boolean
+  :group 'notmuch-show)
+
 (defvar notmuch-show-thread-id nil)
 (make-variable-buffer-local 'notmuch-show-thread-id)
 (put 'notmuch-show-thread-id 'permanent-local t)
@@ -1032,6 +1037,9 @@ function is used."
     ;; Set the default value for `notmuch-show-process-crypto' in this
     ;; buffer.
     (setq notmuch-show-process-crypto notmuch-crypto-process-mime)
+    ;; Set the default value for
+    ;; `notmuch-show-elide-non-matching-messages' in this buffer.
+    (setq notmuch-show-elide-non-matching-messages notmuch-show-only-matching-messages)
 
     (setq notmuch-show-thread-id thread-id
 	  notmuch-show-parent-buffer parent-buffer
