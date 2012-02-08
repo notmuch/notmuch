@@ -1690,26 +1690,6 @@ argument, hide all of the messages."
   (interactive)
   (backward-button 1))
 
-(defun notmuch-show-tag-thread-internal (tag &optional remove)
-  "Add tag to the current set of messages.
-
-If the remove switch is given, tags will be removed instead of
-added."
-  (goto-char (point-min))
-  (let ((op (if remove "-" "+")))
-    (loop do (notmuch-show-tag-message (concat op tag))
-	  until (not (notmuch-show-goto-message-next)))))
-
-(defun notmuch-show-add-tag-thread (tag)
-  "Add tag to all messages in the current thread."
-  (interactive)
-  (notmuch-show-tag-thread-internal tag))
-
-(defun notmuch-show-remove-tag-thread (tag)
-  "Remove tag from all messages in the current thread."
-  (interactive)
-  (notmuch-show-tag-thread-internal tag t))
-
 (defun notmuch-show-next-thread (&optional show-next)
   "Move to the next item in the search results, if any."
   (interactive "P")
@@ -1737,9 +1717,8 @@ being delivered to the same thread. It does not archive the
 entire thread, but only the messages shown in the current
 buffer."
   (interactive "P")
-  (if unarchive
-      (notmuch-show-add-tag-thread "inbox")
-    (notmuch-show-remove-tag-thread "inbox")))
+  (let ((op (if unarchive "+" "-")))
+    (notmuch-show-tag-all (concat op "inbox"))))
 
 (defun notmuch-show-archive-thread-then-next ()
   "Archive each message in thread, then show next thread from search."
