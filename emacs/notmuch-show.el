@@ -952,7 +952,7 @@ current buffer, if possible."
   (message (if notmuch-show-process-crypto
 	       "Processing cryptographic MIME parts."
 	     "Not processing cryptographic MIME parts."))
-  (notmuch-show-refresh-view))
+  (notmuch-show-refresh-view t))
 
 (defun notmuch-show-toggle-elide-non-matching ()
   "Toggle the display of non-matching messages."
@@ -961,7 +961,7 @@ current buffer, if possible."
   (message (if notmuch-show-elide-non-matching-messages
 	       "Showing matching messages only."
 	     "Showing all messages."))
-  (notmuch-show-refresh-view))
+  (notmuch-show-refresh-view t))
 
 (defun notmuch-show-toggle-thread-indentation ()
   "Toggle the indentation of threads."
@@ -970,7 +970,7 @@ current buffer, if possible."
   (message (if notmuch-show-indent-content
 	       "Content is indented."
 	     "Content is not indented."))
-  (notmuch-show-refresh-view))
+  (notmuch-show-refresh-view t))
 
 (defun notmuch-show-insert-tree (tree depth)
   "Insert the message tree TREE at depth DEPTH in the current thread."
@@ -1074,14 +1074,54 @@ function is used."
 
     (notmuch-show-mark-read)))
 
-(defun notmuch-show-refresh-view ()
+(defun notmuch-show-capture-state ()
+  "Capture the state of the current buffer.
+
+This includes:
+ - the list of open messages,
+ - the current message."
+  (list (notmuch-show-get-message-id) (notmuch-show-get-message-ids-for-open-messages)))
+
+(defun notmuch-show-apply-state (state)
+  "Apply STATE to the current buffer.
+
+This includes:
+ - opening the messages previously opened,
+ - closing all other messages,
+ - moving to the correct current message."
+  (let ((current (car state))
+	(open (cadr state)))
+
+    ;; Open those that were open.
+    (goto-char (point-min))
+    (loop do (notmuch-show-message-visible (notmuch-show-get-message-properties)
+					   (member (notmuch-show-get-message-id) open))
+	  until (not (notmuch-show-goto-message-next)))
+
+    ;; Go to the previously open message.
+    (goto-char (point-min))
+    (unless (loop if (string= current (notmuch-show-get-message-id))
+		  return t
+		  until (not (notmuch-show-goto-message-next)))
+      (goto-char (point-min))
+      (message "Previously current message not found."))
+    (notmuch-show-message-adjust)))
+
+(defun notmuch-show-refresh-view (&optional retain-state)
   "Refresh the current view.
 
-Refreshes the current view, observing changes in cryptographic preferences."
+Refreshes the current view, observing changes in display
+preferences. If RETAIN-STATE is non-nil then the state of the
+buffer is stored and re-applied after the refresh."
   (interactive)
-  (let ((inhibit-read-only t))
-    (erase-buffer))
-  (notmuch-show-worker))
+  (let ((inhibit-read-only t)
+	state)
+    (if retain-state
+	(setq state (notmuch-show-capture-state)))
+    (erase-buffer)
+    (notmuch-show-worker)
+    (if state
+	(notmuch-show-apply-state state))))
 
 (defvar notmuch-show-stash-map
   (let ((map (make-sparse-keymap)))
