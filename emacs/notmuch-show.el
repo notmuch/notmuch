@@ -729,7 +729,7 @@ current buffer, if possible."
 	(run-hook-with-args 'notmuch-show-insert-text/plain-hook msg depth))))
   t)
 
-(defun notmuch-show-insert-part-text/x-vcalendar (msg part content-type nth depth declared-type)
+(defun notmuch-show-insert-part-text/calendar (msg part content-type nth depth declared-type)
   (notmuch-show-insert-part-header nth declared-type content-type (plist-get part :filename))
   (insert (with-temp-buffer
 	    (insert (notmuch-show-get-bodypart-content msg part nth))
@@ -746,6 +746,10 @@ current buffer, if possible."
 	      (delete-file file)
 	      result)))
   t)
+
+;; For backwards compatibility.
+(defun notmuch-show-insert-part-text/x-vcalendar (msg part content-type nth depth declared-type)
+  (notmuch-show-insert-part-text/calendar msg part content-type nth depth declared-type))
 
 (defun notmuch-show-insert-part-application/octet-stream (msg part content-type nth depth declared-type)
   ;; If we can deduce a MIME type from the filename of the attachment,
