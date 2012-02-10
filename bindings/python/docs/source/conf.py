@@ -30,6 +30,7 @@ class Mock(object):
         return Mock() if name not in ('__file__', '__path__') else '/dev/null'
 
 MOCK_MODULES = [
+    'ctypes',
 ]
 for mod_name in MOCK_MODULES:
     sys.modules[mod_name] = Mock()
