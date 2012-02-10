@@ -18,6 +18,7 @@ Copyright 2010 Sebastian Spaeth <Sebastian@SSpaeth.de>'
 """
 
 import os
+import codecs
 from ctypes import c_char_p, c_void_p, c_uint, c_long, byref, POINTER
 from notmuch.globals import (nmlib, STATUS, NotmuchError, NotInitializedError,
      NullPointerError, Enum, _str,
@@ -553,11 +554,11 @@ class Database(object):
         config = SafeConfigParser()
         conf_f = os.getenv('NOTMUCH_CONFIG',
                            os.path.expanduser('~/.notmuch-config'))
-        config.read(conf_f)
+        config.readfp(codecs.open(conf_f, 'r', 'utf-8'))
         if not config.has_option('database', 'path'):
             raise NotmuchError(message="No DB path specified"
                                        " and no user default found")
-        return config.get('database', 'path').decode('utf-8')
+        return config.get('database', 'path')
 
     @property
     def db_p(self):
