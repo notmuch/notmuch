@@ -1124,7 +1124,7 @@ This includes:
 Refreshes the current view, observing changes in display
 preferences. If RETAIN-STATE is non-nil then the state of the
 buffer is stored and re-applied after the refresh."
-  (interactive)
+  (interactive "P")
   (let ((inhibit-read-only t)
 	state)
     (if retain-state
