@@ -249,10 +249,17 @@ For a mouse binding, return nil."
       (set-buffer-modified-p nil)
       (view-buffer (current-buffer) 'kill-buffer-if-not-modified))))
 
-(defcustom notmuch-search-hook '(hl-line-mode)
+(require 'hl-line)
+
+(defun notmuch-hl-line-mode ()
+  (prog1 (hl-line-mode)
+    (when hl-line-overlay
+      (overlay-put hl-line-overlay 'priority 1))))
+
+(defcustom notmuch-search-hook '(notmuch-hl-line-mode)
   "List of functions to call when notmuch displays the search results."
   :type 'hook
-  :options '(hl-line-mode)
+  :options '(notmuch-hl-line-mode)
   :group 'notmuch-search
   :group 'notmuch-hooks)
 
@@ -567,7 +574,7 @@ a list of strings of the form \"+TAG\" or \"-TAG\".
 the messages that are about to be tagged"
 
   :type 'hook
-  :options '(hl-line-mode)
+  :options '(notmuch-hl-line-mode)
   :group 'notmuch-hooks)
 
 (defcustom notmuch-after-tag-hook nil
@@ -578,7 +585,7 @@ a list of strings of the form \"+TAG\" or \"-TAG\".
 'query' will be a string containing the search query that determines
 the messages that were tagged"
   :type 'hook
-  :options '(hl-line-mode)
+  :options '(notmuch-hl-line-mode)
   :group 'notmuch-hooks)
 
 (defun notmuch-search-set-tags (tags)
