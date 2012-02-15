@@ -142,6 +142,9 @@ class Database(object):
         else:
             self.create(path)
 
+    def __del__(self):
+        self.close()
+
     def _assert_db_is_initialized(self):
         """Raises :exc:`NotInitializedError` if self._db is `None`"""
         if self._db is None:
@@ -192,6 +195,16 @@ class Database(object):
         if not res:
             raise NotmuchError(message="Could not open the specified database")
         self._db = res
+
+    _close = nmlib.notmuch_database_close
+    _close.argtypes = [NotmuchDatabaseP]
+    _close.restype = None
+
+    def close(self):
+        """Close and free the notmuch database if needed"""
+        if self._db is not None:
+            self._close(self._db)
+            self._db = None
 
     def get_path(self):
         """Returns the file path of an open database"""
@@ -530,15 +543,6 @@ class Database(object):
 
     def __repr__(self):
         return "'Notmuch DB " + self.get_path() + "'"
-
-    _close = nmlib.notmuch_database_close
-    _close.argtypes = [NotmuchDatabaseP]
-    _close.restype = None
-
-    def __del__(self):
-        """Close and free the notmuch database if needed"""
-        if self._db is not None:
-            self._close(self._db)
 
     def _get_user_default_db(self):
         """ Reads a user's notmuch config and returns his db location
