@@ -29,6 +29,12 @@ Tag exclusion
 
     notmuch config set search.exclude_tags deleted spam
 
+Mail store folder/file ignore
+
+   A new configuration option, `new.ignore`, lets users specify a
+   ;-separated list of file and directory names that will not be
+   searched for messages by "notmuch new".
+
 Emacs Interface
 ---------------
 
