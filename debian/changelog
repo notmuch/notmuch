@@ -1,3 +1,11 @@
+notmuch (0.11.1-1) unstable; urgency=low
+
+  * Upstream bugfix release
+    - Fix error handling bug in python bindings
+    - Fix vulnerability in emacs reply handling
+
+ -- David Bremner <bremner@debian.org>  Fri, 03 Feb 2012 08:35:41 -0400
+
 notmuch (0.11-1~bpo60+1) squeeze-backports; urgency=low
 
   * Rebuild for squeeze-backports.

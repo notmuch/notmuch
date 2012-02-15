@@ -70,7 +70,7 @@ class Tags(object):
         :TODO: Make the iterator optionally work more than once by
                cache the tags in the Python object(?)
         """
-        if tags_p is None:
+        if not tags_p:
             raise NotmuchError(STATUS.NULL_POINTER)
 
         self._tags = tags_p

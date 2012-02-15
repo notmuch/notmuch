@@ -116,7 +116,7 @@ class Messages(object):
         :TODO: Make the iterator work more than once and cache the tags in
                the Python object.(?)
         """
-        if msgs_p is None:
+        if not msgs_p:
             raise NotmuchError(STATUS.NULL_POINTER)
 
         self._msgs = msgs_p
@@ -321,7 +321,7 @@ class Message(object):
               automatically delete the parent object once all derived
               objects are dead.
         """
-        if msg_p is None:
+        if not msg_p:
             raise NotmuchError(STATUS.NULL_POINTER)
         self._msg = msg_p
         #keep reference to parent, so we keep it alive
@@ -380,7 +380,7 @@ class Message(object):
 
         msgs_p = Message._get_replies(self._msg)
 
-        if msgs_p is None:
+        if not msgs_p:
             return None
 
         return Messages(msgs_p, self)
