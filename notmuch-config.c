@@ -44,7 +44,10 @@ static const char new_config_comment[] =
     " The following options are supported here:\n"
     "\n"
     "\ttags	A list (separated by ';') of the tags that will be\n"
-    "\t	added to all messages incorporated by \"notmuch new\".\n";
+    "\t	added to all messages incorporated by \"notmuch new\".\n"
+    "\n"
+    "\tignore	A list (separated by ';') of file and directory names\n"
+    "\t	that will not be searched for messages by \"notmuch new\".\n";
 
 static const char user_config_comment[] =
     " User configuration\n"
@@ -105,6 +108,8 @@ struct _notmuch_config {
     size_t user_other_email_length;
     const char **new_tags;
     size_t new_tags_length;
+    const char **new_ignore;
+    size_t new_ignore_length;
     notmuch_bool_t maildir_synchronize_flags;
     const char **search_exclude_tags;
     size_t search_exclude_tags_length;
@@ -264,6 +269,8 @@ notmuch_config_open (void *ctx,
     config->user_other_email_length = 0;
     config->new_tags = NULL;
     config->new_tags_length = 0;
+    config->new_ignore = NULL;
+    config->new_ignore_length = 0;
     config->maildir_synchronize_flags = TRUE;
     config->search_exclude_tags = NULL;
     config->search_exclude_tags_length = 0;
@@ -359,6 +366,10 @@ notmuch_config_open (void *ctx,
     if (notmuch_config_get_new_tags (config, &tmp) == NULL) {
         const char *tags[] = { "unread", "inbox" };
 	notmuch_config_set_new_tags (config, tags, 2);
+    }
+
+    if (notmuch_config_get_new_ignore (config, &tmp) == NULL) {
+	notmuch_config_set_new_ignore (config, NULL, 0);
     }
 
     if (notmuch_config_get_search_exclude_tags (config, &tmp) == NULL) {
@@ -609,6 +620,14 @@ notmuch_config_get_new_tags (notmuch_config_t *config,   size_t *length)
 			     &(config->new_tags_length), length);
 }
 
+const char **
+notmuch_config_get_new_ignore (notmuch_config_t *config, size_t *length)
+{
+    return _config_get_list (config, "new", "ignore",
+			     &(config->new_ignore),
+			     &(config->new_ignore_length), length);
+}
+
 void
 notmuch_config_set_user_other_email (notmuch_config_t *config,
 				     const char *list[],
@@ -625,6 +644,15 @@ notmuch_config_set_new_tags (notmuch_config_t *config,
 {
     _config_set_list (config, "new", "tags", list, length,
 		     &(config->new_tags));
+}
+
+void
+notmuch_config_set_new_ignore (notmuch_config_t *config,
+			       const char *list[],
+			       size_t length)
+{
+    _config_set_list (config, "new", "ignore", list, length,
+		     &(config->new_ignore));
 }
 
 const char **

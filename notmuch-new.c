@@ -39,6 +39,8 @@ typedef struct {
     int verbose;
     const char **new_tags;
     size_t new_tags_length;
+    const char **new_ignore;
+    size_t new_ignore_length;
 
     int total_files;
     int processed_files;
@@ -181,6 +183,20 @@ _entries_resemble_maildir (struct dirent **entries, int count)
     return 0;
 }
 
+/* Test if the file/directory is to be ignored.
+ */
+static notmuch_bool_t
+_entry_in_ignore_list (const char *entry, add_files_state_t *state)
+{
+    size_t i;
+
+    for (i = 0; i < state->new_ignore_length; i++)
+	if (strcmp (entry, state->new_ignore[i]) == 0)
+	    return TRUE;
+
+    return FALSE;
+}
+
 /* Examine 'path' recursively as follows:
  *
  *   o Ask the filesystem for the mtime of 'path' (fs_mtime)
@@ -320,15 +336,15 @@ add_files_recursive (notmuch_database_t *notmuch,
 	}
 
 	/* Ignore special directories to avoid infinite recursion.
-	 * Also ignore the .notmuch directory and any "tmp" directory
-	 * that appears within a maildir.
+	 * Also ignore the .notmuch directory, any "tmp" directory
+	 * that appears within a maildir and files/directories
+	 * the user has configured to be ignored.
 	 */
-	/* XXX: Eventually we'll want more sophistication to let the
-	 * user specify files to be ignored. */
 	if (strcmp (entry->d_name, ".") == 0 ||
 	    strcmp (entry->d_name, "..") == 0 ||
 	    (is_maildir && strcmp (entry->d_name, "tmp") == 0) ||
-	    strcmp (entry->d_name, ".notmuch") ==0)
+	    strcmp (entry->d_name, ".notmuch") == 0 ||
+	    _entry_in_ignore_list (entry->d_name, state))
 	{
 	    continue;
 	}
@@ -368,6 +384,10 @@ add_files_recursive (notmuch_database_t *notmuch,
 	    break;
 
         entry = fs_entries[i];
+
+	/* Ignore files & directories user has configured to be ignored */
+	if (_entry_in_ignore_list (entry->d_name, state))
+	    continue;
 
 	/* Check if we've walked past any names in db_files or
 	 * db_subdirs. If so, these have been deleted. */
@@ -650,7 +670,7 @@ add_files (notmuch_database_t *notmuch,
  * initialized to zero by the top-level caller before calling
  * count_files). */
 static void
-count_files (const char *path, int *count)
+count_files (const char *path, int *count, add_files_state_t *state)
 {
     struct dirent *entry = NULL;
     char *next;
@@ -672,13 +692,13 @@ count_files (const char *path, int *count)
         entry = fs_entries[i++];
 
 	/* Ignore special directories to avoid infinite recursion.
-	 * Also ignore the .notmuch directory.
+	 * Also ignore the .notmuch directory and files/directories
+	 * the user has configured to be ignored.
 	 */
-	/* XXX: Eventually we'll want more sophistication to let the
-	 * user specify files to be ignored. */
 	if (strcmp (entry->d_name, ".") == 0 ||
 	    strcmp (entry->d_name, "..") == 0 ||
-	    strcmp (entry->d_name, ".notmuch") == 0)
+	    strcmp (entry->d_name, ".notmuch") == 0 ||
+	    _entry_in_ignore_list (entry->d_name, state))
 	{
 	    continue;
 	}
@@ -699,7 +719,7 @@ count_files (const char *path, int *count)
 		fflush (stdout);
 	    }
 	} else if (S_ISDIR (st.st_mode)) {
-	    count_files (next, count);
+	    count_files (next, count, state);
 	}
 
 	free (next);
@@ -841,6 +861,7 @@ notmuch_new_command (void *ctx, int argc, char *argv[])
 	return 1;
 
     add_files_state.new_tags = notmuch_config_get_new_tags (config, &add_files_state.new_tags_length);
+    add_files_state.new_ignore = notmuch_config_get_new_ignore (config, &add_files_state.new_ignore_length);
     add_files_state.synchronize_flags = notmuch_config_get_maildir_synchronize_flags (config);
     db_path = notmuch_config_get_database_path (config);
 
@@ -856,7 +877,7 @@ notmuch_new_command (void *ctx, int argc, char *argv[])
 	int count;
 
 	count = 0;
-	count_files (db_path, &count);
+	count_files (db_path, &count, &add_files_state);
 	if (interrupted)
 	    return 1;
 

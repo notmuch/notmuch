@@ -250,6 +250,15 @@ notmuch_config_set_new_tags (notmuch_config_t *config,
 			     const char *new_tags[],
 			     size_t length);
 
+const char **
+notmuch_config_get_new_ignore (notmuch_config_t *config,
+			       size_t *length);
+
+void
+notmuch_config_set_new_ignore (notmuch_config_t *config,
+			       const char *new_ignore[],
+			       size_t length);
+
 notmuch_bool_t
 notmuch_config_get_maildir_synchronize_flags (notmuch_config_t *config);
 
