@@ -41,6 +41,10 @@ class Database(object):
     :exc:`XapianError` as the underlying database has been
     modified. Close and reopen the database to continue working with it.
 
+    :class:`Database` objects implement the context manager protocol
+    so you can use the :keyword:`with` statement to ensure that the
+    database is properly closed.
+
     .. note::
 
         Any function in this class can and will throw an
@@ -205,6 +209,18 @@ class Database(object):
         if self._db is not None:
             self._close(self._db)
             self._db = None
+
+    def __enter__(self):
+        '''
+        Implements the context manager protocol.
+        '''
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        '''
+        Implements the context manager protocol.
+        '''
+        self.close()
 
     def get_path(self):
         """Returns the file path of an open database"""
