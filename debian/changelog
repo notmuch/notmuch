@@ -1,3 +1,9 @@
+notmuch (0.11.1-1~bpo60+1) squeeze-backports; urgency=low
+
+  * Rebuild for squeeze-backports.
+
+ -- David Bremner <bremner@debian.org>  Wed, 15 Feb 2012 19:18:44 -0400
+
 notmuch (0.11.1-1) unstable; urgency=low
 
   * Upstream bugfix release
