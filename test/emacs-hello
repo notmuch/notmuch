@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+
+test_description="Testing emacs notmuch-hello view"
+. test-lib.sh
+
+EXPECTED=$TEST_DIRECTORY/emacs.expected-output
+
+add_email_corpus
+
+test_begin_subtest "User-defined section with inbox tag"
+test_emacs "(let ((notmuch-hello-sections
+                   (list (lambda () (notmuch-hello-insert-searches
+                                     \"Test\" '((\"inbox\" . \"tag:inbox\")))))))
+           (notmuch-hello)
+           (test-output))"
+test_expect_equal_file OUTPUT $EXPECTED/notmuch-hello-new-section
+
+test_begin_subtest "User-defined section with empty, hidden entry"
+test_emacs "(let ((notmuch-hello-sections
+                   (list (lambda () (notmuch-hello-insert-searches
+                                     \"Test-with-empty\"
+                                     '((\"inbox\" . \"tag:inbox\")
+                                       (\"doesnotexist\" . \"tag:doesnotexist\"))
+                                     :hide-empty-searches t)))))
+             (notmuch-hello)
+             (test-output))"
+test_expect_equal_file OUTPUT $EXPECTED/notmuch-hello-section-with-empty
+
+test_begin_subtest "User-defined section, unread tag filtered out"
+test_emacs "(let ((notmuch-hello-sections
+                   (list (lambda () (notmuch-hello-insert-tags-section
+                                     \"Test-with-filtered\"
+                                     :hide-tags '(\"unread\"))))))
+             (notmuch-hello)
+             (test-output))"
+test_expect_equal_file OUTPUT $EXPECTED/notmuch-hello-section-hidden-tag
+
+test_begin_subtest "User-defined section, different query for counts"
+test_emacs "(let ((notmuch-hello-sections
+                   (list (lambda () (notmuch-hello-insert-tags-section
+                                     \"Test-with-counts\"
+                                     :filter-count \"tag:signed\")))))
+             (notmuch-hello)
+             (test-output))"
+test_expect_equal_file OUTPUT $EXPECTED/notmuch-hello-section-counts
+
+test_done
