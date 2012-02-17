@@ -18,7 +18,7 @@ Copyright 2010 Sebastian Spaeth <Sebastian@SSpaeth.de>'
 """
 from ctypes import c_char_p
 from notmuch.globals import (nmlib, STATUS, NotmuchError,
-    NotmuchFilenamesP, NotmuchMessageP, _str, Python3StringMixIn)
+    NotmuchFilenamesP, NotmuchMessageP, Python3StringMixIn)
 
 
 class Filenames(Python3StringMixIn):
