@@ -87,6 +87,14 @@ If there is one more line than the sum of
 `notmuch-wash-citation-lines-suffix', show that, otherwise
 collapse the remaining lines into a button.")
 
+(defvar notmuch-wash-wrap-lines-length nil
+  "Wrap line after at most this many characters.
+
+If this is nil, lines in messages will be wrapped to fit in the
+current window. If this is a number, lines will be wrapped after
+this many characters or at the window width (whichever one is
+lower).")
+
 (defun notmuch-wash-toggle-invisible-action (cite-button)
   (let ((invis-spec (button-get cite-button 'invisibility-spec)))
     (if (invisible-p invis-spec)
@@ -276,16 +284,24 @@ Perform several transformations on the message body:
 ;;
 
 (defun notmuch-wash-wrap-long-lines (msg depth)
-  "Wrap any long lines in the message to the width of the window.
+  "Wrap long lines in the message.
 
-When doing so, maintaining citation leaders in the wrapped text."
+If `notmuch-wash-wrap-lines-length' is a number, this will wrap
+the message lines to the minimum of the width of the window or
+its value. Otherwise, this function will wrap long lines in the
+message at the window width. When doing so, citation leaders in
+the wrapped text are maintained."
 
-  (let ((coolj-wrap-follows-window-size nil)
-	(fill-column (- (window-width)
-			depth
-			;; 2 to avoid poor interaction with
-			;; `word-wrap'.
-			2)))
+  (let* ((coolj-wrap-follows-window-size nil)
+	 (limit (if (numberp notmuch-wash-wrap-lines-length)
+		    (min notmuch-wash-wrap-lines-length
+			 (window-width))
+		  (window-width)))
+	 (fill-column (- limit
+			 depth
+			 ;; 2 to avoid poor interaction with
+			 ;; `word-wrap'.
+			 2)))
     (coolj-wrap-region (point-min) (point-max))))
 
 ;;
