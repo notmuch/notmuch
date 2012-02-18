@@ -128,6 +128,8 @@ More information on specific topics can be found on the following pages:
 
    .. automethod:: count_messages
 
+   .. automethod:: count_threads
+
 
 :class:`Messages` -- A bunch of messages
 ----------------------------------------

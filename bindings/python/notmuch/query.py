@@ -182,6 +182,25 @@ class Query(object):
         self._assert_query_is_initialized()
         return Query._count_messages(self._query)
 
+    _count_threads = nmlib.notmuch_query_count_threads
+    _count_threads.argtypes = [NotmuchQueryP]
+    _count_threads.restype = c_uint
+
+    def count_threads(self):
+        '''
+        This function performs a search and returns the number of
+        unique thread IDs in the matching messages. This is the same
+        as number of threads matching a search.
+
+        Note that this is a significantly heavier operation than
+        meth:`Query.count_messages`.
+
+        :returns: the number of threads returned by this query
+        :rtype:   int
+        '''
+        self._assert_query_is_initialized()
+        return Query._count_threads(self._query)
+
     _destroy = nmlib.notmuch_query_destroy
     _destroy.argtypes = [NotmuchQueryP]
     _destroy.restype = None
