@@ -135,7 +135,7 @@ class Messages(object):
             :meth:`collect_tags` will iterate over the messages and therefore
             will not allow further iterations.
         """
-        if self._msgs is None:
+        if not self._msgs:
             raise NotmuchError(STATUS.NOT_INITIALIZED)
 
         # collect all tags (returns NULL on error)
@@ -160,7 +160,7 @@ class Messages(object):
     _move_to_next.restype = None
 
     def __next__(self):
-        if self._msgs is None:
+        if not self._msgs:
             raise NotmuchError(STATUS.NOT_INITIALIZED)
 
         if not self._valid(self._msgs):
@@ -362,7 +362,7 @@ class Message(Python3StringMixIn):
         :exception: :exc:`NotmuchError` STATUS.NOT_INITIALIZED if the message
                     is not initialized.
         """
-        if self._msg is None:
+        if not self._msg:
             raise NotmuchError(STATUS.NOT_INITIALIZED)
         return Message._get_message_id(self._msg).decode('utf-8', 'ignore')
 
@@ -379,7 +379,7 @@ class Message(Python3StringMixIn):
         :exception: :exc:`NotmuchError` STATUS.NOT_INITIALIZED if the message
                     is not initialized.
         """
-        if self._msg is None:
+        if not self._msg:
             raise NotmuchError(STATUS.NOT_INITIALIZED)
 
         return Message._get_thread_id(self._msg).decode('utf-8', 'ignore')
@@ -402,7 +402,7 @@ class Message(Python3StringMixIn):
         :exception: :exc:`NotmuchError` STATUS.NOT_INITIALIZED if the message
                     is not initialized.
         """
-        if self._msg is None:
+        if not self._msg:
             raise NotmuchError(STATUS.NOT_INITIALIZED)
 
         msgs_p = Message._get_replies(self._msg)
@@ -424,7 +424,7 @@ class Message(Python3StringMixIn):
         :exception: :exc:`NotmuchError` STATUS.NOT_INITIALIZED if the message
                     is not initialized.
         """
-        if self._msg is None:
+        if not self._msg:
             raise NotmuchError(STATUS.NOT_INITIALIZED)
         return Message._get_date(self._msg)
 
@@ -447,7 +447,7 @@ class Message(Python3StringMixIn):
                       is not initialized.
                     * STATUS.NULL_POINTER if any error occured.
         """
-        if self._msg is None:
+        if not self._msg:
             raise NotmuchError(STATUS.NOT_INITIALIZED)
 
         #Returns NULL if any error occurs.
@@ -463,7 +463,7 @@ class Message(Python3StringMixIn):
         :exception: :exc:`NotmuchError` STATUS.NOT_INITIALIZED if the message
               is not initialized.
         """
-        if self._msg is None:
+        if not self._msg:
             raise NotmuchError(STATUS.NOT_INITIALIZED)
         return Message._get_filename(self._msg).decode('utf-8', 'ignore')
 
@@ -473,7 +473,7 @@ class Message(Python3StringMixIn):
         Returns a Filenames() generator with all absolute filepaths for
         messages recorded to have the same Message-ID. These files must
         not necessarily have identical content."""
-        if self._msg is None:
+        if not self._msg:
             raise NotmuchError(STATUS.NOT_INITIALIZED)
 
         files_p = Message._get_filenames(self._msg)
@@ -493,7 +493,7 @@ class Message(Python3StringMixIn):
         :exception: :exc:`NotmuchError` STATUS.NOT_INITIALIZED if the message
               is not initialized.
         """
-        if self._msg is None:
+        if not self._msg:
             raise NotmuchError(STATUS.NOT_INITIALIZED)
         return Message._get_flag(self._msg, flag)
 
@@ -508,7 +508,7 @@ class Message(Python3StringMixIn):
         :exception: :exc:`NotmuchError` STATUS.NOT_INITIALIZED if the message
               is not initialized.
         """
-        if self._msg is None:
+        if not self._msg:
             raise NotmuchError(STATUS.NOT_INITIALIZED)
         self._set_flag(self._msg, flag, value)
 
@@ -522,7 +522,7 @@ class Message(Python3StringMixIn):
                         is not initialized.
                       * STATUS.NULL_POINTER, on error
         """
-        if self._msg is None:
+        if not self._msg:
             raise NotmuchError(STATUS.NOT_INITIALIZED)
 
         tags_p = Message._get_tags(self._msg)
@@ -565,7 +565,7 @@ class Message(Python3StringMixIn):
                   STATUS.NOT_INITIALIZED
                      The message has not been initialized.
        """
-        if self._msg is None:
+        if not self._msg:
             raise NotmuchError(STATUS.NOT_INITIALIZED)
 
         status = self._add_tag(self._msg, _str(tag))
@@ -613,7 +613,7 @@ class Message(Python3StringMixIn):
                    STATUS.NOT_INITIALIZED
                      The message has not been initialized.
         """
-        if self._msg is None:
+        if not self._msg:
             raise NotmuchError(STATUS.NOT_INITIALIZED)
 
         status = self._remove_tag(self._msg, _str(tag))
@@ -654,7 +654,7 @@ class Message(Python3StringMixIn):
                    STATUS.NOT_INITIALIZED
                      The message has not been initialized.
         """
-        if self._msg is None:
+        if not self._msg:
             raise NotmuchError(STATUS.NOT_INITIALIZED)
 
         status = self._remove_all_tags(self._msg)
@@ -712,7 +712,7 @@ class Message(Python3StringMixIn):
                    STATUS.NOT_INITIALIZED
                      The message has not been initialized.
         """
-        if self._msg is None:
+        if not self._msg:
             raise NotmuchError(STATUS.NOT_INITIALIZED)
 
         status = self._freeze(self._msg)
@@ -751,7 +751,7 @@ class Message(Python3StringMixIn):
                    STATUS.NOT_INITIALIZED
                      The message has not been initialized.
         """
-        if self._msg is None:
+        if not self._msg:
             raise NotmuchError(STATUS.NOT_INITIALIZED)
 
         status = self._thaw(self._msg)
@@ -787,7 +787,7 @@ class Message(Python3StringMixIn):
 
         :returns: a :class:`STATUS` value. In short, you want to see
             notmuch.STATUS.SUCCESS here. See there for details."""
-        if self._msg is None:
+        if not self._msg:
             raise NotmuchError(STATUS.NOT_INITIALIZED)
         return Message._tags_to_maildir_flags(self._msg)
 
@@ -814,7 +814,7 @@ class Message(Python3StringMixIn):
 
         :returns: a :class:`STATUS`. In short, you want to see
             notmuch.STATUS.SUCCESS here. See there for details."""
-        if self._msg is None:
+        if not self._msg:
             raise NotmuchError(STATUS.NOT_INITIALIZED)
         return Message._tags_to_maildir_flags(self._msg)
 
@@ -957,7 +957,7 @@ class Message(Python3StringMixIn):
     def __hash__(self):
         """Implement hash(), so we can use Message() sets"""
         file = self.get_filename()
-        if file is None:
+        if not file:
             return None
         return hash(file)
 

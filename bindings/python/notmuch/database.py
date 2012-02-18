@@ -159,7 +159,7 @@ class Database(object):
 
     def _assert_db_is_initialized(self):
         """Raises :exc:`NotInitializedError` if self._db is `None`"""
-        if self._db is None:
+        if not self._db:
             raise NotInitializedError()
 
     def create(self, path):

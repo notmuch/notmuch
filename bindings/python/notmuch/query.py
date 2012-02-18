@@ -70,7 +70,7 @@ class Query(object):
 
     def _assert_query_is_initialized(self):
         """Raises :exc:`NotInitializedError` if self._query is `None`"""
-        if self._query is None:
+        if not self._query:
             raise NotInitializedError()
 
     """notmuch_query_create"""

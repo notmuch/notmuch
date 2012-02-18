@@ -89,7 +89,7 @@ class Filenames(Python3StringMixIn):
 
         This is the main function that will usually be used by the
         user."""
-        if self._files is None:
+        if not self._files:
             raise NotmuchError(STATUS.NOT_INITIALIZED)
 
         while self._valid(self._files):

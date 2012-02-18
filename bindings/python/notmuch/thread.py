@@ -117,7 +117,7 @@ class Threads(Python3StringMixIn):
     _move_to_next.restype = None
 
     def __next__(self):
-        if self._threads is None:
+        if not self._threads:
             raise NotmuchError(STATUS.NOT_INITIALIZED)
 
         if not self._valid(self._threads):
@@ -141,7 +141,7 @@ class Threads(Python3StringMixIn):
                      # next line raises NotmuchError(STATUS.NOT_INITIALIZED)!!!
                      for thread in threads: print thread
         """
-        if self._threads is None:
+        if not self._threads:
             raise NotmuchError(STATUS.NOT_INITIALIZED)
 
         i = 0
@@ -244,7 +244,7 @@ class Thread(object):
         :exception: :exc:`NotmuchError` STATUS.NOT_INITIALIZED if the thread
                     is not initialized.
         """
-        if self._thread is None:
+        if not self._thread:
             raise NotmuchError(STATUS.NOT_INITIALIZED)
         return Thread._get_thread_id(self._thread).decode('utf-8', 'ignore')
 
@@ -261,7 +261,7 @@ class Thread(object):
         :exception: :exc:`NotmuchError` STATUS.NOT_INITIALIZED if the thread
                     is not initialized.
         """
-        if self._thread is None:
+        if not self._thread:
             raise NotmuchError(STATUS.NOT_INITIALIZED)
         return self._get_total_messages(self._thread)
 
@@ -284,7 +284,7 @@ class Thread(object):
                       * STATUS.NOT_INITIALIZED if query is not inited
                       * STATUS.NULL_POINTER if search_messages failed
         """
-        if self._thread is None:
+        if not self._thread:
             raise NotmuchError(STATUS.NOT_INITIALIZED)
 
         msgs_p = Thread._get_toplevel_messages(self._thread)
@@ -307,7 +307,7 @@ class Thread(object):
         :exception: :exc:`NotmuchError` STATUS.NOT_INITIALIZED if the thread
                     is not initialized.
         """
-        if self._thread is None:
+        if not self._thread:
             raise NotmuchError(STATUS.NOT_INITIALIZED)
         return self._get_matched_messages(self._thread)
 
@@ -321,10 +321,10 @@ class Thread(object):
         The returned string belongs to 'thread' and will only be valid for
         as long as this Thread() is not deleted.
         """
-        if self._thread is None:
+        if not self._thread:
             raise NotmuchError(STATUS.NOT_INITIALIZED)
         authors = Thread._get_authors(self._thread)
-        if authors is None:
+        if not authors:
             return None
         return authors.decode('UTF-8', 'ignore')
 
@@ -334,10 +334,10 @@ class Thread(object):
         The returned string belongs to 'thread' and will only be valid for
         as long as this Thread() is not deleted.
         """
-        if self._thread is None:
+        if not self._thread:
             raise NotmuchError(STATUS.NOT_INITIALIZED)
         subject = Thread._get_subject(self._thread)
-        if subject is None:
+        if not subject:
             return None
         return subject.decode('UTF-8', 'ignore')
 
@@ -349,7 +349,7 @@ class Thread(object):
         :exception: :exc:`NotmuchError` STATUS.NOT_INITIALIZED if the message
                     is not initialized.
         """
-        if self._thread is None:
+        if not self._thread:
             raise NotmuchError(STATUS.NOT_INITIALIZED)
         return Thread._get_newest_date(self._thread)
 
@@ -361,7 +361,7 @@ class Thread(object):
         :exception: :exc:`NotmuchError` STATUS.NOT_INITIALIZED if the message
                     is not initialized.
         """
-        if self._thread is None:
+        if not self._thread:
             raise NotmuchError(STATUS.NOT_INITIALIZED)
         return Thread._get_oldest_date(self._thread)
 
@@ -384,7 +384,7 @@ class Thread(object):
                         is not initialized.
                       * STATUS.NULL_POINTER, on error
         """
-        if self._thread is None:
+        if not self._thread:
             raise NotmuchError(STATUS.NOT_INITIALIZED)
 
         tags_p = Thread._get_tags(self._thread)

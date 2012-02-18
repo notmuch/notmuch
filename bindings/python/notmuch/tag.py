@@ -90,7 +90,7 @@ class Tags(Python3StringMixIn):
     _move_to_next.restype = None
 
     def __next__(self):
-        if self._tags is None:
+        if not self._tags:
             raise NotmuchError(STATUS.NOT_INITIALIZED)
         if not self._valid(self._tags):
             self._tags = None
