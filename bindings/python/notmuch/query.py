@@ -56,26 +56,6 @@ class Query(object):
     SORT = Enum(['OLDEST_FIRST', 'NEWEST_FIRST', 'MESSAGE_ID', 'UNSORTED'])
     """Constants: Sort order in which to return results"""
 
-    """notmuch_query_create"""
-    _create = nmlib.notmuch_query_create
-    _create.argtypes = [NotmuchDatabaseP, c_char_p]
-    _create.restype = NotmuchQueryP
-
-    """notmuch_query_search_threads"""
-    _search_threads = nmlib.notmuch_query_search_threads
-    _search_threads.argtypes = [NotmuchQueryP]
-    _search_threads.restype = NotmuchThreadsP
-
-    """notmuch_query_search_messages"""
-    _search_messages = nmlib.notmuch_query_search_messages
-    _search_messages.argtypes = [NotmuchQueryP]
-    _search_messages.restype = NotmuchMessagesP
-
-    """notmuch_query_count_messages"""
-    _count_messages = nmlib.notmuch_query_count_messages
-    _count_messages.argtypes = [NotmuchQueryP]
-    _count_messages.restype = c_uint
-
     def __init__(self, db, querystr):
         """
         :param db: An open database which we derive the Query from.
@@ -92,6 +72,11 @@ class Query(object):
         """Raises :exc:`NotInitializedError` if self._query is `None`"""
         if self._query is None:
             raise NotInitializedError()
+
+    """notmuch_query_create"""
+    _create = nmlib.notmuch_query_create
+    _create.argtypes = [NotmuchDatabaseP, c_char_p]
+    _create.restype = NotmuchQueryP
 
     def create(self, db, querystr):
         """Creates a new query derived from a Database
@@ -132,6 +117,11 @@ class Query(object):
         self.sort = sort
         self._set_sort(self._query, sort)
 
+    """notmuch_query_search_threads"""
+    _search_threads = nmlib.notmuch_query_search_threads
+    _search_threads.argtypes = [NotmuchQueryP]
+    _search_threads.restype = NotmuchThreadsP
+
     def search_threads(self):
         """Execute a query for threads
 
@@ -153,6 +143,11 @@ class Query(object):
             raise NullPointerError
         return Threads(threads_p, self)
 
+    """notmuch_query_search_messages"""
+    _search_messages = nmlib.notmuch_query_search_messages
+    _search_messages.argtypes = [NotmuchQueryP]
+    _search_messages.restype = NotmuchMessagesP
+
     def search_messages(self):
         """Filter messages according to the query and return
         :class:`Messages` in the defined sort order
@@ -166,6 +161,11 @@ class Query(object):
         if not msgs_p:
             raise NullPointerError
         return Messages(msgs_p, self)
+
+    """notmuch_query_count_messages"""
+    _count_messages = nmlib.notmuch_query_count_messages
+    _count_messages.argtypes = [NotmuchQueryP]
+    _count_messages.restype = c_uint
 
     def count_messages(self):
         """Estimate the number of messages matching the query
