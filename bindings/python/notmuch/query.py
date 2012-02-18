@@ -162,23 +162,18 @@ class Query(object):
             raise NullPointerError
         return Messages(msgs_p, self)
 
-    """notmuch_query_count_messages"""
     _count_messages = nmlib.notmuch_query_count_messages
     _count_messages.argtypes = [NotmuchQueryP]
     _count_messages.restype = c_uint
 
     def count_messages(self):
-        """Estimate the number of messages matching the query
-
+        '''
         This function performs a search and returns Xapian's best
-        guess as to the number of matching messages. It is much faster
-        than performing :meth:`search_messages` and counting the
-        result with `len()` (although it always returned the same
-        result in my tests). Technically, it wraps the underlying
-        *notmuch_query_count_messages* function.
+        guess as to the number of matching messages.
 
-        :returns: :class:`Messages`
-        """
+        :returns: the estimated number of messages matching this query
+        :rtype:   int
+        '''
         self._assert_query_is_initialized()
         return Query._count_messages(self._query)
 
