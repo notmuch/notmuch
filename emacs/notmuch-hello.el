@@ -695,16 +695,16 @@ Supports the following entries in OPTIONS as a plist:
 				(notmuch-hello-update))
 		     "hide"))
     (widget-insert "\n")
-    (let (target-pos
-	  (searches (apply 'notmuch-hello-query-counts query-alist options)))
-      (when (and (not is-hidden)
-	       (or (not (plist-get options :hide-if-empty))
-		  searches))
-	(widget-insert "\n")
-	(setq target-pos
-	      (notmuch-hello-insert-buttons searches))
-	(indent-rigidly start (point) notmuch-hello-indent)
-	target-pos))))
+    (let (target-pos)
+      (when (not is-hidden)
+	(let ((searches (apply 'notmuch-hello-query-counts query-alist options)))
+	  (when (or (not (plist-get options :hide-if-empty))
+		    searches)
+	    (widget-insert "\n")
+	    (setq target-pos
+		  (notmuch-hello-insert-buttons searches))
+	    (indent-rigidly start (point) notmuch-hello-indent))))
+      target-pos)))
 
 (defun notmuch-hello-insert-tags-section (&optional title &rest options)
   "Insert a section displaying all tags with message counts.
