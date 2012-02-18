@@ -29,7 +29,7 @@ Where <command> and [args...] are as follows:
   **show**	<search-terms> [...]
 		Show all messages matching the search terms.
 
-		This has been partially implemented, we show a stub for each 
+		This has been partially implemented, we show a stub for each
 		found message, but do not output the full message body yet.
 
   **count**	<search-terms> [...]

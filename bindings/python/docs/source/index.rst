@@ -13,7 +13,7 @@ Within :mod:`notmuch`, the classes :class:`Database`, :class:`Query` provide mos
 
 :License: This module is covered under the GNU GPL v3 (or later).
 
-This page contains the main API overview of notmuch |release|. 
+This page contains the main API overview of notmuch |release|.
 
 Notmuch can be imported as::
 
@@ -35,7 +35,7 @@ More information on specific topics can be found on the following pages:
    :maxdepth: 1
 
    status_and_errors
-   notmuch   
+   notmuch
 
 :mod:`notmuch` -- The Notmuch interface
 =================================================
@@ -111,8 +111,8 @@ More information on specific topics can be found on the following pages:
        Sort by email message ID.
 
      SORT.UNSORTED
-       Do not apply a special sort order (returns results in document id     
-       order). 
+       Do not apply a special sort order (returns results in document id
+       order).
 
    .. automethod:: set_sort
 
@@ -141,7 +141,7 @@ More information on specific topics can be found on the following pages:
    .. method:: __len__()
 
    .. warning::
-   
+
       :meth:`__len__` was removed in version 0.6 as it exhausted the iterator and broke
       list(Messages()). Use the :meth:`Query.count_messages` function or use `len(list(msgs))`.
 
@@ -162,7 +162,7 @@ More information on specific topics can be found on the following pages:
 
    .. attribute:: FLAG
 
-        FLAG.MATCH 
+        FLAG.MATCH
           This flag is automatically set by a
 	  Query.search_threads on those messages that match the
 	  query. This allows us to distinguish matches from the rest
@@ -171,7 +171,7 @@ More information on specific topics can be found on the following pages:
    .. automethod:: get_flag
 
    .. automethod:: set_flag
-   
+
    .. automethod:: get_date
 
    .. automethod:: get_header
