@@ -20,14 +20,22 @@ Copyright 2010 Sebastian Spaeth <Sebastian@SSpaeth.de>'
 import os
 import codecs
 from ctypes import c_char_p, c_void_p, c_uint, c_long, byref, POINTER
-from notmuch.globals import (nmlib, STATUS, NotmuchError, NotInitializedError,
-     NullPointerError, Enum, _str,
-     NotmuchDatabaseP, NotmuchDirectoryP, NotmuchMessageP, NotmuchTagsP,
-     NotmuchQueryP, NotmuchMessagesP, NotmuchThreadsP, NotmuchFilenamesP)
-from notmuch.thread import Threads
-from notmuch.message import Messages, Message
+from notmuch.globals import (
+    nmlib,
+    STATUS,
+    NotmuchError,
+    NotInitializedError,
+    Enum,
+    _str,
+    NotmuchDatabaseP,
+    NotmuchDirectoryP,
+    NotmuchMessageP,
+    NotmuchTagsP,
+    NotmuchFilenamesP
+)
+from notmuch.message import Message
 from notmuch.tag import Tags
-
+from .query import Query
 
 class Database(object):
     """The :class:`Database` is the highest-level object that notmuch
@@ -588,165 +596,6 @@ class Database(object):
         guaranteed to remain stable in future versions).
         """
         return self._db
-
-
-class Query(object):
-    """Represents a search query on an opened :class:`Database`.
-
-    A query selects and filters a subset of messages from the notmuch
-    database we derive from.
-
-    :class:`Query` provides an instance attribute :attr:`sort`, which
-    contains the sort order (if specified via :meth:`set_sort`) or
-    `None`.
-
-    Any function in this class may throw an :exc:`NotInitializedError`
-    in case the underlying query object was not set up correctly.
-
-    .. note:: Do remember that as soon as we tear down this object,
-           all underlying derived objects such as threads,
-           messages, tags etc will be freed by the underlying library
-           as well. Accessing these objects will lead to segfaults and
-           other unexpected behavior. See above for more details.
-    """
-    # constants
-    SORT = Enum(['OLDEST_FIRST', 'NEWEST_FIRST', 'MESSAGE_ID', 'UNSORTED'])
-    """Constants: Sort order in which to return results"""
-
-    """notmuch_query_create"""
-    _create = nmlib.notmuch_query_create
-    _create.argtypes = [NotmuchDatabaseP, c_char_p]
-    _create.restype = NotmuchQueryP
-
-    """notmuch_query_search_threads"""
-    _search_threads = nmlib.notmuch_query_search_threads
-    _search_threads.argtypes = [NotmuchQueryP]
-    _search_threads.restype = NotmuchThreadsP
-
-    """notmuch_query_search_messages"""
-    _search_messages = nmlib.notmuch_query_search_messages
-    _search_messages.argtypes = [NotmuchQueryP]
-    _search_messages.restype = NotmuchMessagesP
-
-    """notmuch_query_count_messages"""
-    _count_messages = nmlib.notmuch_query_count_messages
-    _count_messages.argtypes = [NotmuchQueryP]
-    _count_messages.restype = c_uint
-
-    def __init__(self, db, querystr):
-        """
-        :param db: An open database which we derive the Query from.
-        :type db: :class:`Database`
-        :param querystr: The query string for the message.
-        :type querystr: utf-8 encoded str or unicode
-        """
-        self._db = None
-        self._query = None
-        self.sort = None
-        self.create(db, querystr)
-
-    def _assert_query_is_initialized(self):
-        """Raises :exc:`NotInitializedError` if self._query is `None`"""
-        if self._query is None:
-            raise NotInitializedError()
-
-    def create(self, db, querystr):
-        """Creates a new query derived from a Database
-
-        This function is utilized by __init__() and usually does not need to
-        be called directly.
-
-        :param db: Database to create the query from.
-        :type db: :class:`Database`
-        :param querystr: The query string
-        :type querystr: utf-8 encoded str or unicode
-        :returns: Nothing
-        :exception:
-            :exc:`NullPointerError` if the query creation failed
-                (e.g. too little memory).
-            :exc:`NotInitializedError` if the underlying db was not
-                intitialized.
-        """
-        db._assert_db_is_initialized()
-        # create reference to parent db to keep it alive
-        self._db = db
-        # create query, return None if too little mem available
-        query_p = Query._create(db.db_p, _str(querystr))
-        if not query_p:
-            raise NullPointerError
-        self._query = query_p
-
-    _set_sort = nmlib.notmuch_query_set_sort
-    _set_sort.argtypes = [NotmuchQueryP, c_uint]
-    _set_sort.argtypes = None
-
-    def set_sort(self, sort):
-        """Set the sort order future results will be delivered in
-
-        :param sort: Sort order (see :attr:`Query.SORT`)
-        """
-        self._assert_query_is_initialized()
-        self.sort = sort
-        self._set_sort(self._query, sort)
-
-    def search_threads(self):
-        """Execute a query for threads
-
-        Execute a query for threads, returning a :class:`Threads` iterator.
-        The returned threads are owned by the query and as such, will only be
-        valid until the Query is deleted.
-
-        The method sets :attr:`Message.FLAG`\.MATCH for those messages that
-        match the query. The method :meth:`Message.get_flag` allows us
-        to get the value of this flag.
-
-        :returns: :class:`Threads`
-        :exception: :exc:`NullPointerError` if search_threads failed
-        """
-        self._assert_query_is_initialized()
-        threads_p = Query._search_threads(self._query)
-
-        if not threads_p:
-            raise NullPointerError
-        return Threads(threads_p, self)
-
-    def search_messages(self):
-        """Filter messages according to the query and return
-        :class:`Messages` in the defined sort order
-
-        :returns: :class:`Messages`
-        :exception: :exc:`NullPointerError` if search_messages failed
-        """
-        self._assert_query_is_initialized()
-        msgs_p = Query._search_messages(self._query)
-
-        if not msgs_p:
-            raise NullPointerError
-        return Messages(msgs_p, self)
-
-    def count_messages(self):
-        """Estimate the number of messages matching the query
-
-        This function performs a search and returns Xapian's best
-        guess as to the number of matching messages. It is much faster
-        than performing :meth:`search_messages` and counting the
-        result with `len()` (although it always returned the same
-        result in my tests). Technically, it wraps the underlying
-        *notmuch_query_count_messages* function.
-
-        :returns: :class:`Messages`
-        """
-        self._assert_query_is_initialized()
-        return Query._count_messages(self._query)
-
-    _destroy = nmlib.notmuch_query_destroy
-    _destroy.argtypes = [NotmuchQueryP]
-    _destroy.restype = None
-
-    def __del__(self):
-        """Close and free the Query"""
-        if self._query is not None:
-            self._destroy(self._query)
 
 
 class Directory(object):
