@@ -716,7 +716,8 @@ void
 notmuch_database_close (notmuch_database_t *notmuch)
 {
     try {
-	if (notmuch->mode == NOTMUCH_DATABASE_MODE_READ_WRITE)
+	if (notmuch->xapian_db != NULL &&
+	    notmuch->mode == NOTMUCH_DATABASE_MODE_READ_WRITE)
 	    (static_cast <Xapian::WritableDatabase *> (notmuch->xapian_db))->flush ();
     } catch (const Xapian::Error &error) {
 	if (! notmuch->exception_reported) {
