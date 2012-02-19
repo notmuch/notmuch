@@ -1333,9 +1333,14 @@ Some useful entries are:
 		   (notmuch-show-get-message-properties))))
     (plist-get props prop)))
 
-(defun notmuch-show-get-message-id ()
-  "Return the message id of the current message."
-  (concat "id:\"" (notmuch-show-get-prop :id) "\""))
+(defun notmuch-show-get-message-id (&optional bare)
+  "Return the Message-Id of the current message.
+
+If optional argument BARE is non-nil, return
+the Message-Id without prefix and quotes."
+  (if bare
+      (notmuch-show-get-prop :id)
+    (concat "id:\"" (notmuch-show-get-prop :id) "\"")))
 
 (defun notmuch-show-get-messages-ids ()
   "Return all message ids of messages in the current thread."
@@ -1793,7 +1798,7 @@ thread from search."
 (defun notmuch-show-stash-message-id-stripped ()
   "Copy message ID of current message (sans `id:' prefix) to kill-ring."
   (interactive)
-  (notmuch-common-do-stash (substring (notmuch-show-get-message-id) 4 -1)))
+  (notmuch-common-do-stash (notmuch-show-get-message-id t)))
 
 (defun notmuch-show-stash-subject ()
   "Copy Subject field of current message to kill-ring."
