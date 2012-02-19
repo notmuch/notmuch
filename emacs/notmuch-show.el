@@ -155,6 +155,35 @@ indentation."
 (make-variable-buffer-local 'notmuch-show-indent-content)
 (put 'notmuch-show-indent-content 'permanent-local t)
 
+(defcustom notmuch-show-stash-mlarchive-link-alist
+  '(("Gmane" . "http://mid.gmane.org/")
+    ("MARC" . "http://marc.info/?i=")
+    ("Mail Archive, The" . "http://mail-archive.com/search?l=mid&q=")
+    ;; FIXME: can these services be searched by `Message-Id' ?
+    ;; ("MarkMail" . "http://markmail.org/")
+    ;; ("Nabble" . "http://nabble.com/")
+    ;; ("opensubscriber" . "http://opensubscriber.com/")
+    )
+  "List of Mailing List Archives to use when stashing links.
+
+These URIs are concatenated with the current message's
+Message-Id in `notmuch-show-stash-mlarchive-link'."
+  :type '(alist :key-type (string :tag "Name")
+		:value-type (string :tag "URL"))
+  :group 'notmuch-show)
+
+(defcustom notmuch-show-stash-mlarchive-link-default "Gmane"
+  "Default Mailing List Archive to use when stashing links.
+
+This is used when `notmuch-show-stash-mlarchive-link' isn't
+provided with an MLA argument nor `completing-read' input."
+  :type `(choice
+	  ,@(mapcar
+	     (lambda (mla)
+	       (list 'const :tag (car mla) :value (car mla)))
+	     notmuch-show-stash-mlarchive-link-alist))
+  :group 'notmuch-show)
+
 (defmacro with-current-notmuch-show-message (&rest body)
   "Evaluate body with current buffer set to the text of current message"
   `(save-excursion
@@ -1149,6 +1178,8 @@ buffer is stored and re-applied after the refresh."
     (define-key map "s" 'notmuch-show-stash-subject)
     (define-key map "T" 'notmuch-show-stash-tags)
     (define-key map "t" 'notmuch-show-stash-to)
+    (define-key map "l" 'notmuch-show-stash-mlarchive-link)
+    (define-key map "L" 'notmuch-show-stash-mlarchive-link-and-go)
     map)
   "Submap for stash commands")
 (fset 'notmuch-show-stash-map notmuch-show-stash-map)
@@ -1814,6 +1845,36 @@ thread from search."
   "Copy To address of current message to kill-ring."
   (interactive)
   (notmuch-common-do-stash (notmuch-show-get-to)))
+
+(defun notmuch-show-stash-mlarchive-link (&optional mla)
+  "Copy an ML Archive URI for the current message to the kill-ring.
+
+This presumes that the message is available at the selected Mailing List Archive.
+
+If optional argument MLA is non-nil, use the provided key instead of prompting
+the user (see `notmuch-show-stash-mlarchive-link-alist')."
+  (interactive)
+  (notmuch-common-do-stash
+   (concat (cdr (assoc
+		 (or mla
+		     (let ((completion-ignore-case t))
+		       (completing-read
+			"Mailing List Archive: "
+			notmuch-show-stash-mlarchive-link-alist
+			nil t nil nil notmuch-show-stash-mlarchive-link-default)))
+		 notmuch-show-stash-mlarchive-link-alist))
+	   (notmuch-show-get-message-id t))))
+
+(defun notmuch-show-stash-mlarchive-link-and-go (&optional mla)
+  "Copy an ML Archive URI for the current message to the kill-ring and visit it.
+
+This presumes that the message is available at the selected Mailing List Archive.
+
+If optional argument MLA is non-nil, use the provided key instead of prompting
+the user (see `notmuch-show-stash-mlarchive-link-alist')."
+  (interactive)
+  (notmuch-show-stash-mlarchive-link mla)
+  (browse-url (current-kill 0 t)))
 
 ;; Commands typically bound to buttons.
 
