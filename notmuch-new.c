@@ -37,6 +37,7 @@ typedef struct _filename_list {
 typedef struct {
     int output_is_a_tty;
     int verbose;
+    int debug;
     const char **new_tags;
     size_t new_tags_length;
     const char **new_ignore;
@@ -840,6 +841,7 @@ notmuch_new_command (void *ctx, int argc, char *argv[])
     notmuch_bool_t run_hooks = TRUE;
 
     add_files_state.verbose = 0;
+    add_files_state.debug = 0;
     add_files_state.output_is_a_tty = isatty (fileno (stdout));
 
     argc--; argv++; /* skip subcommand argument */
@@ -847,6 +849,8 @@ notmuch_new_command (void *ctx, int argc, char *argv[])
     for (i = 0; i < argc && argv[i][0] == '-'; i++) {
 	if (STRNCMP_LITERAL (argv[i], "--verbose") == 0) {
 	    add_files_state.verbose = 1;
+	} else if (strcmp (argv[i], "--debug") == 0) {
+	    add_files_state.debug = 1;
 	} else if (strcmp (argv[i], "--no-hooks") == 0) {
 	    run_hooks = FALSE;
 	} else {
