@@ -840,5 +840,14 @@ test_emacs '(let ((notmuch-show-only-matching-messages nil))
 	(test-visible-output))'
 test_expect_equal_file OUTPUT $EXPECTED/notmuch-show-elide-non-matching-messages-on
 
+test_begin_subtest "notmuch-show: disable indentation of thread content (w/ notmuch-show-toggle-thread-indentation)"
+test_emacs '(notmuch-search "from:lars@seas.harvard.edu and subject:\"Maildir storage\"")
+	(notmuch-test-wait)
+	(notmuch-search-show-thread)
+	(notmuch-test-wait)
+	(notmuch-show-toggle-thread-indentation)
+	(test-visible-output)'
+test_expect_equal_file OUTPUT $EXPECTED/notmuch-show-indent-thread-content-off
+
 
 test_done
