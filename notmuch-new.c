@@ -374,6 +374,10 @@ add_files (notmuch_database_t *notmuch,
 	    strcmp (entry->d_name, ".notmuch") == 0 ||
 	    _entry_in_ignore_list (entry->d_name, state))
 	{
+	    if (_entry_in_ignore_list (entry->d_name, state) && state->debug)
+		printf ("(D) add_files_recursive, pass 1: explicitly ignoring %s/%s\n",
+			path,
+			entry->d_name);
 	    continue;
 	}
 
@@ -415,8 +419,13 @@ add_files (notmuch_database_t *notmuch,
         entry = fs_entries[i];
 
 	/* Ignore files & directories user has configured to be ignored */
-	if (_entry_in_ignore_list (entry->d_name, state))
+	if (_entry_in_ignore_list (entry->d_name, state)) {
+	    if (state->debug)
+		printf ("(D) add_files_recursive, pass 2: explicitly ignoring %s/%s\n",
+			path,
+			entry->d_name);
 	    continue;
+	}
 
 	/* Check if we've walked past any names in db_files or
 	 * db_subdirs. If so, these have been deleted. */
@@ -685,6 +694,10 @@ count_files (const char *path, int *count, add_files_state_t *state)
 	    strcmp (entry->d_name, ".notmuch") == 0 ||
 	    _entry_in_ignore_list (entry->d_name, state))
 	{
+	    if (_entry_in_ignore_list (entry->d_name, state) && state->debug)
+		printf ("(D) count_files: explicitly ignoring %s/%s\n",
+			path,
+			entry->d_name);
 	    continue;
 	}
 
