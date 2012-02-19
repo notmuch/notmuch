@@ -35,6 +35,9 @@ Mail store folder/file ignore
    ;-separated list of file and directory names that will not be
    searched for messages by "notmuch new".
 
+   NOTE: *Every* file/directory that goes by one of those names will
+   be ignored, independent of its depth/location in the mail store.
+
 Emacs Interface
 ---------------
 
