@@ -384,6 +384,7 @@ test_emacs '(notmuch-show "id:f35dbb950911171438k5df6eb56k77b6c0944e2e79ae@mail.
 test_expect_equal_file OUTPUT $EXPECTED/notmuch-show-thread-with-hidden-messages
 
 test_begin_subtest "Stashing in notmuch-show"
+test_subtest_known_broken
 add_message '[date]="Sat, 01 Jan 2000 12:00:00 -0000"' \
     '[from]="Some One <someone@somewhere.org>"' \
     '[to]="Some One Else <notsomeone@somewhere.org>"' \
@@ -402,9 +403,12 @@ test_emacs '(notmuch-show "id:\"bought\"")
 	(notmuch-show-stash-message-id-stripped)
 	(notmuch-show-stash-tags)
 	(notmuch-show-stash-filename)
+	(notmuch-show-stash-mlarchive-link "Gmane")
+	(notmuch-show-stash-mlarchive-link "MARC")
+	(notmuch-show-stash-mlarchive-link "Mail Archive, The")
 	(switch-to-buffer
 	  (generate-new-buffer "*test-stashing*"))
-	(dotimes (i 9)
+	(dotimes (i 12)
 	  (yank)
 	  (insert "\n")
 	  (rotate-yank-pointer 1))
@@ -420,6 +424,9 @@ id:"bought"
 bought
 inbox,stashtest
 ${gen_msg_filename}
+http://mid.gmane.org/bought
+http://marc.info/?i=bought
+http://mail-archive.com/search?l=mid&q=bought
 EOF
 test_expect_equal_file OUTPUT EXPECTED
 
