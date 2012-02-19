@@ -120,7 +120,7 @@ mode."
      :notmuch-from from)
     (insert "\n")))
 
-(declare-function notmuch-show-refresh-view "notmuch-show" (&optional crypto-switch))
+(declare-function notmuch-show-refresh-view "notmuch-show" (&optional retain-state))
 
 (defun notmuch-crypto-sigstatus-good-callback (button)
   (let* ((sigstatus (button-get button :notmuch-sigstatus))
