@@ -555,7 +555,7 @@ test_emacs_expect_t () {
 
 NOTMUCH_NEW ()
 {
-    notmuch new | grep -v -E -e '^Processed [0-9]*( total)? file|Found [0-9]* total file'
+    notmuch new "${@}" | grep -v -E -e '^Processed [0-9]*( total)? file|Found [0-9]* total file'
 }
 
 notmuch_search_sanitize ()
