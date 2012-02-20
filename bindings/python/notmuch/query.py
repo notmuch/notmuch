@@ -89,7 +89,7 @@ class Query(object):
         :param querystr: The query string
         :type querystr: utf-8 encoded str or unicode
         :returns: Nothing
-        :exception:
+        :raises:
             :exc:`NullPointerError` if the query creation failed
                 (e.g. too little memory).
             :exc:`NotInitializedError` if the underlying db was not
@@ -134,7 +134,7 @@ class Query(object):
         to get the value of this flag.
 
         :returns: :class:`Threads`
-        :exception: :exc:`NullPointerError` if search_threads failed
+        :raises: :exc:`NullPointerError` if search_threads failed
         """
         self._assert_query_is_initialized()
         threads_p = Query._search_threads(self._query)
@@ -153,7 +153,7 @@ class Query(object):
         :class:`Messages` in the defined sort order
 
         :returns: :class:`Messages`
-        :exception: :exc:`NullPointerError` if search_messages failed
+        :raises: :exc:`NullPointerError` if search_messages failed
         """
         self._assert_query_is_initialized()
         msgs_p = Query._search_messages(self._query)

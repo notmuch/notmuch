@@ -370,7 +370,7 @@ class Message(Python3StringMixIn):
         """Returns the message ID
 
         :returns: String with a message ID
-        :exception: :exc:`NotInitializedError` if the message
+        :raises: :exc:`NotInitializedError` if the message
                     is not initialized.
         """
         if not self._msg:
@@ -387,7 +387,7 @@ class Message(Python3StringMixIn):
         message belongs to a single thread.
 
         :returns: String with a thread ID
-        :exception: :exc:`NotInitializedError` if the message
+        :raises: :exc:`NotInitializedError` if the message
                     is not initialized.
         """
         if not self._msg:
@@ -410,7 +410,7 @@ class Message(Python3StringMixIn):
             an empty Messages iterator.
 
         :returns: :class:`Messages`.
-        :exception: :exc:`NotInitializedError` if the message
+        :raises: :exc:`NotInitializedError` if the message
                     is not initialized.
         """
         if not self._msg:
@@ -432,7 +432,7 @@ class Message(Python3StringMixIn):
 
         :returns: A time_t timestamp.
         :rtype: c_unit64
-        :exception: :exc:`NotInitializedError` if the message
+        :raises: :exc:`NotInitializedError` if the message
                     is not initialized.
         """
         if not self._msg:
@@ -469,7 +469,7 @@ class Message(Python3StringMixIn):
         """Returns the file path of the message file
 
         :returns: Absolute file path & name of the message file
-        :exception: :exc:`NotInitializedError` if the message
+        :raises: :exc:`NotInitializedError` if the message
               is not initialized.
         """
         if not self._msg:
@@ -499,7 +499,7 @@ class Message(Python3StringMixIn):
         :param flag: One of the :attr:`Message.FLAG` values (currently only
                      *Message.FLAG.MATCH*
         :returns: An unsigned int (0/1), indicating whether the flag is set.
-        :exception: :exc:`NotInitializedError` if the message
+        :raises: :exc:`NotInitializedError` if the message
               is not initialized.
         """
         if not self._msg:
@@ -514,7 +514,7 @@ class Message(Python3StringMixIn):
         :param value: A bool indicating whether to set or unset the flag.
 
         :returns: Nothing
-        :exception: :exc:`NotInitializedError` if the message
+        :raises: :exc:`NotInitializedError` if the message
               is not initialized.
         """
         if not self._msg:

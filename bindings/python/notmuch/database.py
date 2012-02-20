@@ -140,7 +140,7 @@ class Database(object):
         :param mode:   Mode to open a database in. Is always
                        :attr:`MODE`.READ_WRITE when creating a new one.
         :type mode:    :attr:`MODE`
-        :exception: :exc:`NotmuchError` or derived exception in case of
+        :raises: :exc:`NotmuchError` or derived exception in case of
             failure.
         """
         self._db = None
@@ -177,7 +177,7 @@ class Database(object):
         :param path: A directory in which we should create the database.
         :type path: str
         :returns: Nothing
-        :exception: :exc:`NotmuchError` in case of any failure
+        :raises: :exc:`NotmuchError` in case of any failure
                     (possibly after printing an error message on stderr).
         """
         if self._db is not None:
@@ -201,7 +201,7 @@ class Database(object):
         :param status: Open the database in read-only or read-write mode
         :type status:  :attr:`MODE`
         :returns: Nothing
-        :exception: Raises :exc:`NotmuchError` in case of any failure
+        :raises: Raises :exc:`NotmuchError` in case of any failure
                     (possibly after printing an error message on stderr).
         """
         res = Database._open(_str(path), mode)
@@ -296,7 +296,7 @@ class Database(object):
         neither begin nor end necessarily flush modifications to disk.
 
         :returns: :attr:`STATUS`.SUCCESS or raises
-        :exception: :exc:`NotmuchError`: :attr:`STATUS`.XAPIAN_EXCEPTION
+        :raises: :exc:`NotmuchError`: :attr:`STATUS`.XAPIAN_EXCEPTION
                     Xapian exception occurred; atomic section not entered.
 
         *Added in notmuch 0.9*"""
@@ -317,7 +317,7 @@ class Database(object):
 
         :returns: :attr:`STATUS`.SUCCESS or raises
 
-        :exception:
+        :raises:
             :exc:`NotmuchError`:
                 :attr:`STATUS`.XAPIAN_EXCEPTION
                     A Xapian exception occurred; atomic section not
@@ -346,7 +346,7 @@ class Database(object):
               of database (see :meth:`get_path`), or else should be an absolute
               path with initial components that match the path of 'database'.
         :returns: :class:`Directory` or raises an exception.
-        :exception:
+        :raises:
             :exc:`NotmuchError` with :attr:`STATUS`.FILE_ERROR
                     If path is not relative database or absolute with initial
                     components same as database.
@@ -410,7 +410,7 @@ class Database(object):
 
         :rtype:   2-tuple(:class:`Message`, :attr:`STATUS`)
 
-        :exception: Raises a :exc:`NotmuchError` with the following meaning.
+        :raises: Raises a :exc:`NotmuchError` with the following meaning.
               If such an exception occurs, nothing was added to the database.
 
               :attr:`STATUS`.FILE_ERROR
@@ -460,7 +460,7 @@ class Database(object):
                This filename was removed but the message persists in the
                database with at least one other filename.
 
-        :exception: Raises a :exc:`NotmuchError` with the following meaning.
+        :raises: Raises a :exc:`NotmuchError` with the following meaning.
              If such an exception occurs, nothing was removed from the
              database.
 
@@ -479,7 +479,7 @@ class Database(object):
         :param msgid: The message ID
         :type msgid: unicode or str
         :returns: :class:`Message` or `None` if no message is found.
-        :exception:
+        :raises:
             :exc:`OutOfMemoryError`
                   If an Out-of-memory occured while constructing the message.
             :exc:`XapianError`
@@ -512,7 +512,7 @@ class Database(object):
             function returns None if no message is found with the given
             filename.
 
-        :exception:
+        :raises:
             :exc:`OutOfMemoryError`
                   If an Out-of-memory occured while constructing the message.
             :exc:`XapianError`
@@ -681,7 +681,7 @@ class Directory(object):
 
           :param mtime: A (time_t) timestamp
           :returns: Nothing on success, raising an exception on failure.
-          :exception: :exc:`NotmuchError`:
+          :raises: :exc:`NotmuchError`:
 
                         :attr:`STATUS`.XAPIAN_EXCEPTION
                           A Xapian exception occurred, mtime not stored.
@@ -708,7 +708,7 @@ class Directory(object):
 
         :param mtime: A (time_t) timestamp
         :returns: Nothing on success, raising an exception on failure.
-        :exception: :exc:`NotmuchError`:
+        :raises: :exc:`NotmuchError`:
 
                         :attr:`STATUS`.NOT_INITIALIZED
                           The directory has not been initialized

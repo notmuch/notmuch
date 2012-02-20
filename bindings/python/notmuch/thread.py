@@ -248,7 +248,7 @@ class Thread(object):
         for as long as the thread is valid.
 
         :returns: String with a message ID
-        :exception: :exc:`NotInitializedError` if the thread
+        :raises: :exc:`NotInitializedError` if the thread
                     is not initialized.
         """
         if not self._thread:
@@ -265,7 +265,7 @@ class Thread(object):
         :returns: The number of all messages in the database
                   belonging to this thread. Contrast with
                   :meth:`get_matched_messages`.
-        :exception: :exc:`NotInitializedError` if the thread
+        :raises: :exc:`NotInitializedError` if the thread
                     is not initialized.
         """
         if not self._thread:
@@ -309,7 +309,7 @@ class Thread(object):
         :returns: The number of all messages belonging to this thread that
                   matched the :class:`Query`from which this thread was created.
                   Contrast with :meth:`get_total_messages`.
-        :exception: :exc:`NotInitializedError` if the thread
+        :raises: :exc:`NotInitializedError` if the thread
                     is not initialized.
         """
         if not self._thread:
@@ -351,7 +351,7 @@ class Thread(object):
 
         :returns: A time_t timestamp.
         :rtype: c_unit64
-        :exception: :exc:`NotInitializedError` if the message
+        :raises: :exc:`NotInitializedError` if the message
                     is not initialized.
         """
         if not self._thread:
@@ -363,7 +363,7 @@ class Thread(object):
 
         :returns: A time_t timestamp.
         :rtype: c_unit64
-        :exception: :exc:`NotInitializedError` if the message
+        :raises: :exc:`NotInitializedError` if the message
                     is not initialized.
         """
         if not self._thread:
