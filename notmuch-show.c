@@ -65,6 +65,8 @@ format_part_content_json (GMimeObject *part);
 static void
 format_part_end_json (GMimeObject *part);
 
+/* Any changes to the JSON format should be reflected in the file
+ * devel/schemata. */
 static const notmuch_show_format_t format_json = {
     "[", NULL,
 	"{", format_message_json,

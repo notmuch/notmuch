@@ -90,6 +90,9 @@ format_thread_json (const void *ctx,
 		    const int total,
 		    const char *authors,
 		    const char *subject);
+
+/* Any changes to the JSON format should be reflected in the file
+ * devel/schemata. */
 static const search_format_t format_json = {
     "[",
 	"{",
