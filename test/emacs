@@ -78,7 +78,7 @@ thread=$(notmuch search --output=threads subject:message-with-invalid-from)
 test_emacs "(notmuch-show \"$thread\")
 	    (test-output)"
 cat <<EOF >EXPECTED
-Invalid " From <test_suite@notmuchmail.org> (2001-01-05) (inbox)
+"Invalid " (2001-01-05) (inbox)
 Subject: message-with-invalid-from
 To: Notmuch Test Suite <test_suite@notmuchmail.org>
 Date: Fri, 05 Jan 2001 15:43:57 +0000
@@ -414,7 +414,7 @@ test_emacs '(notmuch-show "id:\"bought\"")
 	(reverse-region (point-min) (point-max))
 	    (test-output)'
 cat <<EOF >EXPECTED
-Sat, 01 Jan 2000 12:00:00 -0000
+Sat, 01 Jan 2000 12:00:00 +0000
 Some One <someone@somewhere.org>
 Some One Else <notsomeone@somewhere.org>
 Notmuch <notmuch@notmuchmail.org>

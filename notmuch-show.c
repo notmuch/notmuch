@@ -291,36 +291,7 @@ format_headers_message_part_text (GMimeMessage *message)
 }
 
 static void
-format_headers_json (const void *ctx, notmuch_message_t *message)
-{
-    const char *headers[] = {
-	"Subject", "From", "To", "Cc", "Bcc", "Date"
-    };
-    const char *name, *value;
-    unsigned int i;
-    int first_header = 1;
-    void *ctx_quote = talloc_new (ctx);
-
-    for (i = 0; i < ARRAY_SIZE (headers); i++) {
-	name = headers[i];
-	value = notmuch_message_get_header (message, name);
-	if (value)
-	{
-	    if (!first_header)
-		fputs (", ", stdout);
-	    first_header = 0;
-
-	    printf ("%s: %s",
-		    json_quote_str (ctx_quote, name),
-		    json_quote_str (ctx_quote, value));
-	}
-    }
-
-    talloc_free (ctx_quote);
-}
-
-static void
-format_headers_message_part_json (GMimeMessage *message)
+format_headers_json (GMimeMessage *message)
 {
     void *ctx = talloc_new (NULL);
     void *ctx_quote = talloc_new (ctx);
@@ -690,7 +661,7 @@ format_part_json (const void *ctx, mime_node_t *node, notmuch_bool_t first)
 	format_message_json (ctx, node->envelope_file);
 
 	printf ("\"headers\": {");
-	format_headers_json (ctx, node->envelope_file);
+	format_headers_json (GMIME_MESSAGE (node->part));
 	printf ("}");
 
 	printf (", \"body\": [");
@@ -778,7 +749,7 @@ format_part_json (const void *ctx, mime_node_t *node, notmuch_bool_t first)
 
     if (GMIME_IS_MESSAGE (node->part)) {
 	printf ("\"headers\": {");
-	format_headers_message_part_json (GMIME_MESSAGE (node->part));
+	format_headers_json (GMIME_MESSAGE (node->part));
 	printf ("}");
 
 	printf (", \"body\": [");

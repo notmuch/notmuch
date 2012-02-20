@@ -322,7 +322,7 @@ notmuch show --format=json --part=0 'id:87liy5ap00.fsf@yoom.home.cworth.org' | s
 echo >>OUTPUT # expect *no* newline at end of output
 cat <<EOF >EXPECTED
 
-{"id": "87liy5ap00.fsf@yoom.home.cworth.org", "match": true, "filename": "${MAIL_DIR}/multipart", "timestamp": 978709437, "date_relative": "2001-01-05", "tags": ["attachment","inbox","signed","unread"], "headers": {"Subject": "Multipart message", "From": "Carl Worth <cworth@cworth.org>", "To": "cworth@cworth.org", "Cc": "", "Bcc": "", "Date": "Fri, 05 Jan 2001 15:43:57 +0000"}, "body": [
+{"id": "87liy5ap00.fsf@yoom.home.cworth.org", "match": true, "filename": "${MAIL_DIR}/multipart", "timestamp": 978709437, "date_relative": "2001-01-05", "tags": ["attachment","inbox","signed","unread"], "headers": {"Subject": "Multipart message", "From": "Carl Worth <cworth@cworth.org>", "To": "cworth@cworth.org", "Date": "Fri, 05 Jan 2001 15:43:57 +0000"}, "body": [
 {"id": 1, "content-type": "multipart/signed", "content": [
 {"id": 2, "content-type": "multipart/mixed", "content": [
 {"id": 3, "content-type": "message/rfc822", "content": [{"headers": {"Subject": "html message", "From": "Carl Worth <cworth@cworth.org>", "To": "cworth@cworth.org", "Date": "Fri, 05 Jan 2001 15:42:57 +0000"}, "body": [
