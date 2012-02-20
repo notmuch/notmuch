@@ -351,7 +351,7 @@ class Database(object):
         """
         self._assert_db_is_initialized()
         # sanity checking if path is valid, and make path absolute
-        if path[0] == os.sep:
+        if path and path[0] == os.sep:
             # we got an absolute path
             if not path.startswith(self.get_path()):
                 # but its initial components are not equal to the db path
