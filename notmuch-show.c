@@ -297,7 +297,7 @@ format_headers_json (const void *ctx, GMimeMessage *message)
     InternetAddressList *recipients;
     const char *recipients_string;
 
-    printf ("%s: %s",
+    printf ("{%s: %s",
 	    json_quote_str (local, "Subject"),
 	    json_quote_str (local, g_mime_message_get_subject (message)));
     printf (", %s: %s",
@@ -315,7 +315,7 @@ format_headers_json (const void *ctx, GMimeMessage *message)
 	printf (", %s: %s",
 		json_quote_str (local, "Cc"),
 		json_quote_str (local, recipients_string));
-    printf (", %s: %s",
+    printf (", %s: %s}",
 	    json_quote_str (local, "Date"),
 	    json_quote_str (local, g_mime_message_get_date_as_string (message)));
 
@@ -406,7 +406,7 @@ signer_status_to_string (GMimeSignerStatus x)
 static void
 format_part_sigstatus_json (GMimeSignatureList *siglist)
 {
-    printf (", \"sigstatus\": [");
+    printf ("[");
 
     if (!siglist) {
 	printf ("]");
@@ -472,7 +472,7 @@ format_part_sigstatus_json (GMimeSignatureList *siglist)
 static void
 format_part_sigstatus_json (const GMimeSignatureValidity* validity)
 {
-    printf (", \"sigstatus\": [");
+    printf ("[");
 
     if (!validity) {
 	printf ("]");
@@ -658,9 +658,8 @@ format_part_json (const void *ctx, mime_node_t *node, notmuch_bool_t first)
 	printf ("{");
 	format_message_json (ctx, node->envelope_file);
 
-	printf ("\"headers\": {");
+	printf ("\"headers\": ");
 	format_headers_json (ctx, GMIME_MESSAGE (node->part));
-	printf ("}");
 
 	printf (", \"body\": [");
 	format_part_json (ctx, mime_node_child (node, 0), first);
@@ -696,6 +695,7 @@ format_part_json (const void *ctx, mime_node_t *node, notmuch_bool_t first)
     }
 
     if (node->verify_attempted) {
+	printf (", \"sigstatus\": ");
 #ifdef GMIME_ATLEAST_26
 	format_part_sigstatus_json (node->sig_list);
 #else
@@ -746,9 +746,8 @@ format_part_json (const void *ctx, mime_node_t *node, notmuch_bool_t first)
 	g_object_unref (stream_memory);
 
     if (GMIME_IS_MESSAGE (node->part)) {
-	printf ("\"headers\": {");
+	printf ("\"headers\": ");
 	format_headers_json (local, GMIME_MESSAGE (node->part));
-	printf ("}");
 
 	printf (", \"body\": [");
     }
