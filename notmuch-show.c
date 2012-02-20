@@ -35,52 +35,14 @@ static const notmuch_show_format_t format_text = {
 };
 
 static void
-format_message_json (const void *ctx,
-		     notmuch_message_t *message,
-		     unused (int indent));
-static void
-format_headers_json (const void *ctx,
-		     notmuch_message_t *message);
+format_part_json_entry (const void *ctx, mime_node_t *node,
+			int indent, const notmuch_show_params_t *params);
 
-static void
-format_headers_message_part_json (GMimeMessage *message);
-
-static void
-format_part_start_json (unused (GMimeObject *part),
-			int *part_count);
-
-static void
-format_part_encstatus_json (int status);
-
-static void
-#ifdef GMIME_ATLEAST_26
-format_part_sigstatus_json (GMimeSignatureList* siglist);
-#else
-format_part_sigstatus_json (const GMimeSignatureValidity* validity);
-#endif
-
-static void
-format_part_content_json (GMimeObject *part);
-
-static void
-format_part_end_json (GMimeObject *part);
-
-/* Any changes to the JSON format should be reflected in the file
- * devel/schemata. */
 static const notmuch_show_format_t format_json = {
-    "[", NULL,
-	"{", format_message_json,
-	    "\"headers\": {", format_headers_json, format_headers_message_part_json, "}",
-	    ", \"body\": [",
-	        format_part_start_json,
-	        format_part_encstatus_json,
-	        format_part_sigstatus_json,
-	        format_part_content_json,
-	        format_part_end_json,
-	        ", ",
-	    "]",
-	"}", ", ",
-    "]"
+    .message_set_start = "[",
+    .part = format_part_json_entry,
+    .message_set_sep = ", ",
+    .message_set_end = "]"
 };
 
 static void
@@ -170,7 +132,7 @@ _get_one_line_summary (const void *ctx, notmuch_message_t *message)
 }
 
 static void
-format_message_json (const void *ctx, notmuch_message_t *message, unused (int indent))
+format_message_json (const void *ctx, notmuch_message_t *message)
 {
     notmuch_tags_t *tags;
     int first = 1;
@@ -471,24 +433,6 @@ signer_status_to_string (GMimeSignerStatus x)
 }
 #endif
 
-static void
-format_part_start_json (unused (GMimeObject *part), int *part_count)
-{
-    printf ("{\"id\": %d", *part_count);
-}
-
-static void
-format_part_encstatus_json (int status)
-{
-    printf (", \"encstatus\": [{\"status\": ");
-    if (status) {
-	printf ("\"good\"");
-    } else {
-	printf ("\"bad\"");
-    }
-    printf ("}]");
-}
-
 #ifdef GMIME_ATLEAST_26
 static void
 format_part_sigstatus_json (GMimeSignatureList *siglist)
@@ -619,81 +563,6 @@ format_part_sigstatus_json (const GMimeSignatureValidity* validity)
 #endif
 
 static void
-format_part_content_json (GMimeObject *part)
-{
-    GMimeContentType *content_type = g_mime_object_get_content_type (GMIME_OBJECT (part));
-    GMimeStream *stream_memory = g_mime_stream_mem_new ();
-    const char *cid = g_mime_object_get_content_id (part);
-    void *ctx = talloc_new (NULL);
-    GByteArray *part_content;
-
-    printf (", \"content-type\": %s",
-	    json_quote_str (ctx, g_mime_content_type_to_string (content_type)));
-
-    if (cid != NULL)
-	    printf(", \"content-id\": %s", json_quote_str (ctx, cid));
-
-    if (GMIME_IS_PART (part))
-    {
-	const char *filename = g_mime_part_get_filename (GMIME_PART (part));
-	if (filename)
-	    printf (", \"filename\": %s", json_quote_str (ctx, filename));
-    }
-
-    if (g_mime_content_type_is_type (content_type, "text", "*"))
-    {
-	/* For non-HTML text parts, we include the content in the
-	 * JSON. Since JSON must be Unicode, we handle charset
-	 * decoding here and do not report a charset to the caller.
-	 * For text/html parts, we do not include the content. If a
-	 * caller is interested in text/html parts, it should retrieve
-	 * them separately and they will not be decoded. Since this
-	 * makes charset decoding the responsibility on the caller, we
-	 * report the charset for text/html parts.
-	 */
-	if (g_mime_content_type_is_type (content_type, "text", "html"))
-	{
-	    const char *content_charset = g_mime_object_get_content_type_parameter (GMIME_OBJECT (part), "charset");
-
-	    if (content_charset != NULL)
-		printf (", \"content-charset\": %s", json_quote_str (ctx, content_charset));
-	}
-	else
-	{
-	    show_text_part_content (part, stream_memory);
-	    part_content = g_mime_stream_mem_get_byte_array (GMIME_STREAM_MEM (stream_memory));
-
-	    printf (", \"content\": %s", json_quote_chararray (ctx, (char *) part_content->data, part_content->len));
-	}
-    }
-    else if (g_mime_content_type_is_type (content_type, "multipart", "*"))
-    {
-	printf (", \"content\": [");
-    }
-    else if (g_mime_content_type_is_type (content_type, "message", "rfc822"))
-    {
-	printf (", \"content\": [{");
-    }
-
-    talloc_free (ctx);
-    if (stream_memory)
-	g_object_unref (stream_memory);
-}
-
-static void
-format_part_end_json (GMimeObject *part)
-{
-    GMimeContentType *content_type = g_mime_object_get_content_type (GMIME_OBJECT (part));
-
-    if (g_mime_content_type_is_type (content_type, "multipart", "*"))
-	printf ("]");
-    else if (g_mime_content_type_is_type (content_type, "message", "rfc822"))
-	printf ("}]");
-
-    printf ("}");
-}
-
-static void
 format_part_content_raw (GMimeObject *part)
 {
     if (! GMIME_IS_PART (part))
@@ -808,6 +677,134 @@ format_part_text (const void *ctx, mime_node_t *node,
 	printf ("\fbody}\n");
 
     printf ("\f%s}\n", part_type);
+}
+
+static void
+format_part_json (const void *ctx, mime_node_t *node, notmuch_bool_t first)
+{
+    /* Any changes to the JSON format should be reflected in the file
+     * devel/schemata. */
+
+    if (node->envelope_file) {
+	printf ("{");
+	format_message_json (ctx, node->envelope_file);
+
+	printf ("\"headers\": {");
+	format_headers_json (ctx, node->envelope_file);
+	printf ("}");
+
+	printf (", \"body\": [");
+	format_part_json (ctx, mime_node_child (node, 0), first);
+
+	printf ("]}");
+	return;
+    }
+
+    void *local = talloc_new (ctx);
+    /* The disposition and content-type metadata are associated with
+     * the envelope for message parts */
+    GMimeObject *meta = node->envelope_part ?
+	GMIME_OBJECT (node->envelope_part) : node->part;
+    GMimeContentType *content_type = g_mime_object_get_content_type (meta);
+    GMimeStream *stream_memory = g_mime_stream_mem_new ();
+    const char *cid = g_mime_object_get_content_id (meta);
+    GByteArray *part_content;
+    int i;
+
+    if (!first)
+	printf (", ");
+
+    printf ("{\"id\": %d", node->part_num);
+
+    if (node->decrypt_attempted) {
+	printf (", \"encstatus\": [{\"status\": ");
+	if (node->decrypt_success) {
+	    printf ("\"good\"");
+	} else {
+	    printf ("\"bad\"");
+	}
+	printf ("}]");
+    }
+
+    if (node->verify_attempted) {
+#ifdef GMIME_ATLEAST_26
+	format_part_sigstatus_json (node->sig_list);
+#else
+	format_part_sigstatus_json (node->sig_validity);
+#endif
+    }
+
+    printf (", \"content-type\": %s",
+	    json_quote_str (local, g_mime_content_type_to_string (content_type)));
+
+    if (cid != NULL)
+	    printf(", \"content-id\": %s", json_quote_str (local, cid));
+
+    if (GMIME_IS_PART (node->part)) {
+	const char *filename = g_mime_part_get_filename (GMIME_PART (node->part));
+	if (filename)
+	    printf (", \"filename\": %s", json_quote_str (local, filename));
+    }
+
+    if (g_mime_content_type_is_type (content_type, "text", "*")) {
+	/* For non-HTML text parts, we include the content in the
+	 * JSON. Since JSON must be Unicode, we handle charset
+	 * decoding here and do not report a charset to the caller.
+	 * For text/html parts, we do not include the content. If a
+	 * caller is interested in text/html parts, it should retrieve
+	 * them separately and they will not be decoded. Since this
+	 * makes charset decoding the responsibility on the caller, we
+	 * report the charset for text/html parts.
+	 */
+	if (g_mime_content_type_is_type (content_type, "text", "html")) {
+	    const char *content_charset = g_mime_object_get_content_type_parameter (meta, "charset");
+
+	    if (content_charset != NULL)
+		printf (", \"content-charset\": %s", json_quote_str (local, content_charset));
+	} else {
+	    show_text_part_content (node->part, stream_memory);
+	    part_content = g_mime_stream_mem_get_byte_array (GMIME_STREAM_MEM (stream_memory));
+
+	    printf (", \"content\": %s", json_quote_chararray (local, (char *) part_content->data, part_content->len));
+	}
+    } else if (g_mime_content_type_is_type (content_type, "multipart", "*")) {
+	printf (", \"content\": [");
+    } else if (g_mime_content_type_is_type (content_type, "message", "rfc822")) {
+	printf (", \"content\": [{");
+    }
+
+    if (stream_memory)
+	g_object_unref (stream_memory);
+
+    if (GMIME_IS_MESSAGE (node->part)) {
+	printf ("\"headers\": {");
+	format_headers_message_part_json (GMIME_MESSAGE (node->part));
+	printf ("}");
+
+	printf (", \"body\": [");
+    }
+
+    for (i = 0; i < node->nchildren; i++)
+	format_part_json (ctx, mime_node_child (node, i), i == 0);
+
+    if (GMIME_IS_MESSAGE (node->part))
+	printf ("]");
+
+    if (g_mime_content_type_is_type (content_type, "multipart", "*"))
+	printf ("]");
+    else if (g_mime_content_type_is_type (content_type, "message", "rfc822"))
+	printf ("}]");
+
+    printf ("}");
+
+    talloc_free (local);
+}
+
+static void
+format_part_json_entry (const void *ctx, mime_node_t *node, unused (int indent),
+			unused (const notmuch_show_params_t *params))
+{
+    format_part_json (ctx, node, TRUE);
 }
 
 static void
