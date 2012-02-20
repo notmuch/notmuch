@@ -328,6 +328,9 @@ format_headers_message_part_json (GMimeMessage *message)
     const char *recipients_string;
 
     printf ("%s: %s",
+	    json_quote_str (ctx_quote, "Subject"),
+	    json_quote_str (ctx_quote, g_mime_message_get_subject (message)));
+    printf (", %s: %s",
 	    json_quote_str (ctx_quote, "From"),
 	    json_quote_str (ctx_quote, g_mime_message_get_sender (message)));
     recipients = g_mime_message_get_recipients (message, GMIME_RECIPIENT_TYPE_TO);
@@ -342,9 +345,6 @@ format_headers_message_part_json (GMimeMessage *message)
 	printf (", %s: %s",
 		json_quote_str (ctx_quote, "Cc"),
 		json_quote_str (ctx_quote, recipients_string));
-    printf (", %s: %s",
-	    json_quote_str (ctx_quote, "Subject"),
-	    json_quote_str (ctx_quote, g_mime_message_get_subject (message)));
     printf (", %s: %s",
 	    json_quote_str (ctx_quote, "Date"),
 	    json_quote_str (ctx_quote, g_mime_message_get_date_as_string (message)));
