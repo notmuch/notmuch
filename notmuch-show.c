@@ -291,37 +291,35 @@ format_headers_message_part_text (GMimeMessage *message)
 }
 
 static void
-format_headers_json (GMimeMessage *message)
+format_headers_json (const void *ctx, GMimeMessage *message)
 {
-    void *ctx = talloc_new (NULL);
-    void *ctx_quote = talloc_new (ctx);
+    void *local = talloc_new (ctx);
     InternetAddressList *recipients;
     const char *recipients_string;
 
     printf ("%s: %s",
-	    json_quote_str (ctx_quote, "Subject"),
-	    json_quote_str (ctx_quote, g_mime_message_get_subject (message)));
+	    json_quote_str (local, "Subject"),
+	    json_quote_str (local, g_mime_message_get_subject (message)));
     printf (", %s: %s",
-	    json_quote_str (ctx_quote, "From"),
-	    json_quote_str (ctx_quote, g_mime_message_get_sender (message)));
+	    json_quote_str (local, "From"),
+	    json_quote_str (local, g_mime_message_get_sender (message)));
     recipients = g_mime_message_get_recipients (message, GMIME_RECIPIENT_TYPE_TO);
     recipients_string = internet_address_list_to_string (recipients, 0);
     if (recipients_string)
 	printf (", %s: %s",
-		json_quote_str (ctx_quote, "To"),
-		json_quote_str (ctx_quote, recipients_string));
+		json_quote_str (local, "To"),
+		json_quote_str (local, recipients_string));
     recipients = g_mime_message_get_recipients (message, GMIME_RECIPIENT_TYPE_CC);
     recipients_string = internet_address_list_to_string (recipients, 0);
     if (recipients_string)
 	printf (", %s: %s",
-		json_quote_str (ctx_quote, "Cc"),
-		json_quote_str (ctx_quote, recipients_string));
+		json_quote_str (local, "Cc"),
+		json_quote_str (local, recipients_string));
     printf (", %s: %s",
-	    json_quote_str (ctx_quote, "Date"),
-	    json_quote_str (ctx_quote, g_mime_message_get_date_as_string (message)));
+	    json_quote_str (local, "Date"),
+	    json_quote_str (local, g_mime_message_get_date_as_string (message)));
 
-    talloc_free (ctx_quote);
-    talloc_free (ctx);
+    talloc_free (local);
 }
 
 /* Write a MIME text part out to the given stream.
@@ -661,7 +659,7 @@ format_part_json (const void *ctx, mime_node_t *node, notmuch_bool_t first)
 	format_message_json (ctx, node->envelope_file);
 
 	printf ("\"headers\": {");
-	format_headers_json (GMIME_MESSAGE (node->part));
+	format_headers_json (ctx, GMIME_MESSAGE (node->part));
 	printf ("}");
 
 	printf (", \"body\": [");
@@ -749,7 +747,7 @@ format_part_json (const void *ctx, mime_node_t *node, notmuch_bool_t first)
 
     if (GMIME_IS_MESSAGE (node->part)) {
 	printf ("\"headers\": {");
-	format_headers_json (GMIME_MESSAGE (node->part));
+	format_headers_json (local, GMIME_MESSAGE (node->part));
 	printf ("}");
 
 	printf (", \"body\": [");
