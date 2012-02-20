@@ -176,7 +176,6 @@ class Database(object):
 
         :param path: A directory in which we should create the database.
         :type path: str
-        :returns: Nothing
         :raises: :exc:`NotmuchError` in case of any failure
                     (possibly after printing an error message on stderr).
         """
@@ -200,7 +199,6 @@ class Database(object):
 
         :param status: Open the database in read-only or read-write mode
         :type status:  :attr:`MODE`
-        :returns: Nothing
         :raises: Raises :exc:`NotmuchError` in case of any failure
                     (possibly after printing an error message on stderr).
         """
@@ -699,7 +697,6 @@ class Directory(object):
         Retrieves a previously stored mtime for this directory.
 
         :param mtime: A (time_t) timestamp
-        :returns: Nothing on success, raising an exception on failure.
         :raises: :exc:`NotmuchError`:
 
                         :attr:`STATUS`.NOT_INITIALIZED

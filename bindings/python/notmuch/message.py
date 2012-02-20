@@ -513,7 +513,6 @@ class Message(Python3StringMixIn):
                      *Message.FLAG.MATCH*
         :param value: A bool indicating whether to set or unset the flag.
 
-        :returns: Nothing
         :raises: :exc:`NotInitializedError` if the message
               is not initialized.
         """

@@ -88,7 +88,6 @@ class Query(object):
         :type db: :class:`Database`
         :param querystr: The query string
         :type querystr: utf-8 encoded str or unicode
-        :returns: Nothing
         :raises:
             :exc:`NullPointerError` if the query creation failed
                 (e.g. too little memory).
