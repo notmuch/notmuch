@@ -23,7 +23,9 @@ from ctypes import c_char_p, c_void_p, c_uint, c_long, byref, POINTER
 from notmuch.globals import (
     nmlib,
     STATUS,
+    FileError,
     NotmuchError,
+    NullPointerError,
     NotInitializedError,
     Enum,
     _str,
@@ -355,9 +357,8 @@ class Database(object):
             # we got an absolute path
             if not path.startswith(self.get_path()):
                 # but its initial components are not equal to the db path
-                raise NotmuchError(STATUS.FILE_ERROR,
-                                   message="Database().get_directory() called "
-                                           "with a wrong absolute path.")
+                raise FileError('Database().get_directory() called '
+                                'with a wrong absolute path')
             abs_dirpath = path
         else:
             #we got a relative path, make it absolute
@@ -542,7 +543,7 @@ class Database(object):
         self._assert_db_is_initialized()
         tags_p = Database._get_all_tags(self._db)
         if tags_p == None:
-            raise NotmuchError(STATUS.NULL_POINTER)
+            raise NullPointerError()
         return Tags(tags_p, self)
 
     def create_query(self, querystring):
@@ -636,7 +637,7 @@ class Directory(object):
         """Raises a NotmuchError(:attr:`STATUS`.NOT_INITIALIZED)
         if dir_p is None"""
         if not self._dir_p:
-            raise NotmuchError(STATUS.NOT_INITIALIZED)
+            raise NotInitializedError()
 
     def __init__(self, path, dir_p, parent):
         """
@@ -797,7 +798,7 @@ class Filenames(object):
 
     def __next__(self):
         if not self._files_p:
-            raise NotmuchError(STATUS.NOT_INITIALIZED)
+            raise NotInitializedError()
 
         if not self._valid(self._files_p):
             self._files_p = None
@@ -824,7 +825,7 @@ class Filenames(object):
                      for file in files: print file
         """
         if not self._files_p:
-            raise NotmuchError(STATUS.NOT_INITIALIZED)
+            raise NotInitializedError()
 
         i = 0
         while self._valid(self._files_p):

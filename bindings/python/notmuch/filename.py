@@ -17,8 +17,14 @@ along with notmuch.  If not, see <http://www.gnu.org/licenses/>.
 Copyright 2010 Sebastian Spaeth <Sebastian@SSpaeth.de>'
 """
 from ctypes import c_char_p
-from notmuch.globals import (nmlib, STATUS, NotmuchError,
-    NotmuchFilenamesP, NotmuchMessageP, Python3StringMixIn)
+from notmuch.globals import (
+    nmlib,
+    NullPointerError,
+    NotInitializedError,
+    NotmuchMessageP,
+    NotmuchFilenamesP,
+    Python3StringMixIn,
+)
 
 
 class Filenames(Python3StringMixIn):
@@ -29,9 +35,9 @@ class Filenames(Python3StringMixIn):
     iterator over a list of notmuch filenames. Do note that the underlying
     library only provides a one-time iterator (it cannot reset the iterator to
     the start). Thus iterating over the function will "exhaust" the list of
-    tags, and a subsequent iteration attempt will raise a :exc:`NotmuchError`
-    STATUS.NOT_INITIALIZED. Also note, that any function that uses iteration
-    (nearly all) will also exhaust the tags. So both::
+    tags, and a subsequent iteration attempt will raise a
+    :exc:`NotInitializedError`. Also note, that any function that uses
+    iteration (nearly all) will also exhaust the tags. So both::
 
       for name in filenames: print name
 
@@ -61,8 +67,8 @@ class Filenames(Python3StringMixIn):
              will almost never instantiate a :class:`Tags` object
              herself. They are usually handed back as a result,
              e.g. in :meth:`Database.get_all_tags`.  *tags_p* must be
-             valid, we will raise an :exc:`NotmuchError`
-             (STATUS.NULL_POINTER) if it is `None`.
+             valid, we will raise an :exc:`NullPointerError`
+             if it is `None`.
         :type files_p: :class:`ctypes.c_void_p`
         :param parent: The parent object (ie :class:`Message` these
              filenames are derived from, and saves a
@@ -70,7 +76,7 @@ class Filenames(Python3StringMixIn):
              once all derived objects are dead.
         """
         if not files_p:
-            raise NotmuchError(STATUS.NULL_POINTER)
+            raise NullPointerError()
 
         self._files = files_p
         #save reference to parent object so we keep it alive
@@ -90,7 +96,7 @@ class Filenames(Python3StringMixIn):
         This is the main function that will usually be used by the
         user."""
         if not self._files:
-            raise NotmuchError(STATUS.NOT_INITIALIZED)
+            raise NotInitializedError()
 
         while self._valid(self._files):
             yield Filenames._get(self._files).decode('utf-8', 'ignore')
@@ -104,7 +110,7 @@ class Filenames(Python3StringMixIn):
         .. note:: As this iterates over the filenames, we will not be
                able to iterate over them again (as in retrieve them)! If
                the tags have been exhausted already, this will raise a
-               :exc:`NotmuchError` STATUS.NOT_INITIALIZED on subsequent
+               :exc:`NotInitializedError` on subsequent
                attempts. However, you can use
                :meth:`Message.get_filenames` repeatedly to perform
                various actions on filenames.
