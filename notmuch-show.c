@@ -678,9 +678,10 @@ format_part_json (const void *ctx, mime_node_t *node, notmuch_bool_t first)
     GMimeObject *meta = node->envelope_part ?
 	GMIME_OBJECT (node->envelope_part) : node->part;
     GMimeContentType *content_type = g_mime_object_get_content_type (meta);
-    GMimeStream *stream_memory = g_mime_stream_mem_new ();
     const char *cid = g_mime_object_get_content_id (meta);
-    GByteArray *part_content;
+    const char *filename = GMIME_IS_PART (node->part) ?
+	g_mime_part_get_filename (GMIME_PART (node->part)) : NULL;
+    const char *terminator = "";
     int i;
 
     if (!first)
@@ -688,15 +689,9 @@ format_part_json (const void *ctx, mime_node_t *node, notmuch_bool_t first)
 
     printf ("{\"id\": %d", node->part_num);
 
-    if (node->decrypt_attempted) {
-	printf (", \"encstatus\": [{\"status\": ");
-	if (node->decrypt_success) {
-	    printf ("\"good\"");
-	} else {
-	    printf ("\"bad\"");
-	}
-	printf ("}]");
-    }
+    if (node->decrypt_attempted)
+	printf (", \"encstatus\": [{\"status\": \"%s\"}]",
+		node->decrypt_success ? "good" : "bad");
 
     if (node->verify_attempted) {
 	printf (", \"sigstatus\": ");
@@ -706,16 +701,13 @@ format_part_json (const void *ctx, mime_node_t *node, notmuch_bool_t first)
     printf (", \"content-type\": %s",
 	    json_quote_str (local, g_mime_content_type_to_string (content_type)));
 
-    if (cid != NULL)
-	    printf(", \"content-id\": %s", json_quote_str (local, cid));
+    if (cid)
+	printf (", \"content-id\": %s", json_quote_str (local, cid));
+
+    if (filename)
+	printf (", \"filename\": %s", json_quote_str (local, filename));
 
     if (GMIME_IS_PART (node->part)) {
-	const char *filename = g_mime_part_get_filename (GMIME_PART (node->part));
-	if (filename)
-	    printf (", \"filename\": %s", json_quote_str (local, filename));
-    }
-
-    if (g_mime_content_type_is_type (content_type, "text", "*")) {
 	/* For non-HTML text parts, we include the content in the
 	 * JSON. Since JSON must be Unicode, we handle charset
 	 * decoding here and do not report a charset to the caller.
@@ -730,42 +722,33 @@ format_part_json (const void *ctx, mime_node_t *node, notmuch_bool_t first)
 
 	    if (content_charset != NULL)
 		printf (", \"content-charset\": %s", json_quote_str (local, content_charset));
-	} else {
+	} else if (g_mime_content_type_is_type (content_type, "text", "*")) {
+	    GMimeStream *stream_memory = g_mime_stream_mem_new ();
+	    GByteArray *part_content;
 	    show_text_part_content (node->part, stream_memory);
 	    part_content = g_mime_stream_mem_get_byte_array (GMIME_STREAM_MEM (stream_memory));
 
 	    printf (", \"content\": %s", json_quote_chararray (local, (char *) part_content->data, part_content->len));
+	    g_object_unref (stream_memory);
 	}
-    } else if (g_mime_content_type_is_type (content_type, "multipart", "*")) {
+    } else if (GMIME_IS_MULTIPART (node->part)) {
 	printf (", \"content\": [");
-    } else if (g_mime_content_type_is_type (content_type, "message", "rfc822")) {
+	terminator = "]";
+    } else if (GMIME_IS_MESSAGE (node->part)) {
 	printf (", \"content\": [{");
-    }
-
-    if (stream_memory)
-	g_object_unref (stream_memory);
-
-    if (GMIME_IS_MESSAGE (node->part)) {
 	printf ("\"headers\": ");
 	format_headers_json (local, GMIME_MESSAGE (node->part));
 
 	printf (", \"body\": [");
+	terminator = "]}]";
     }
+
+    talloc_free (local);
 
     for (i = 0; i < node->nchildren; i++)
 	format_part_json (ctx, mime_node_child (node, i), i == 0);
 
-    if (GMIME_IS_MESSAGE (node->part))
-	printf ("]");
-
-    if (g_mime_content_type_is_type (content_type, "multipart", "*"))
-	printf ("]");
-    else if (g_mime_content_type_is_type (content_type, "message", "rfc822"))
-	printf ("}]");
-
-    printf ("}");
-
-    talloc_free (local);
+    printf ("%s}", terminator);
 }
 
 static void
