@@ -404,8 +404,10 @@ signer_status_to_string (GMimeSignerStatus x)
 
 #ifdef GMIME_ATLEAST_26
 static void
-format_part_sigstatus_json (GMimeSignatureList *siglist)
+format_part_sigstatus_json (mime_node_t *node)
 {
+    GMimeSignatureList *siglist = node->sig_list;
+
     printf ("[");
 
     if (!siglist) {
@@ -470,8 +472,10 @@ format_part_sigstatus_json (GMimeSignatureList *siglist)
 }
 #else
 static void
-format_part_sigstatus_json (const GMimeSignatureValidity* validity)
+format_part_sigstatus_json (mime_node_t *node)
 {
+    const GMimeSignatureValidity* validity = node->sig_validity;
+
     printf ("[");
 
     if (!validity) {
@@ -696,11 +700,7 @@ format_part_json (const void *ctx, mime_node_t *node, notmuch_bool_t first)
 
     if (node->verify_attempted) {
 	printf (", \"sigstatus\": ");
-#ifdef GMIME_ATLEAST_26
-	format_part_sigstatus_json (node->sig_list);
-#else
-	format_part_sigstatus_json (node->sig_validity);
-#endif
+	format_part_sigstatus_json (node);
     }
 
     printf (", \"content-type\": %s",
