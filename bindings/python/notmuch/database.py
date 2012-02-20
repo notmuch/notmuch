@@ -679,27 +679,19 @@ class Directory(object):
                 don't store a timestamp of 0 unless you are comfortable with
                 that.
 
-          :param mtime: A (time_t) timestamp
-          :returns: Nothing on success, raising an exception on failure.
-          :raises: :exc:`NotmuchError`:
-
-                        :attr:`STATUS`.XAPIAN_EXCEPTION
-                          A Xapian exception occurred, mtime not stored.
-                        :attr:`STATUS`.READ_ONLY_DATABASE
-                          Database was opened in read-only mode so directory
-                          mtime cannot be modified.
-                        :attr:`STATUS`.NOT_INITIALIZED
-                          The directory has not been initialized
+        :param mtime: A (time_t) timestamp
+        :raises: :exc:`XapianError` a Xapian exception occurred, mtime
+                 not stored
+        :raises: :exc:`ReadOnlyDatabaseError` the database was opened
+                 in read-only mode so directory mtime cannot be modified
+        :raises: :exc:`NotInitializedError` the directory object has not
+                 been initialized
         """
         self._assert_dir_is_initialized()
-        #TODO: make sure, we convert the mtime parameter to a 'c_long'
         status = Directory._set_mtime(self._dir_p, mtime)
 
-        #return on success
-        if status == STATUS.SUCCESS:
-            return
-        #fail with Exception otherwise
-        raise NotmuchError(status)
+        if status != STATUS.SUCCESS:
+            raise NotmuchError(status)
 
     def get_mtime(self):
         """Gets the mtime value of this directory in the database
