@@ -365,7 +365,7 @@ class Database(object):
         dir_p = Database._get_directory(self._db, _str(path))
 
         # return the Directory, init it with the absolute path
-        return Directory(_str(abs_dirpath), dir_p, self)
+        return Directory(abs_dirpath, dir_p, self)
 
     _add_message = nmlib.notmuch_database_add_message
     _add_message.argtypes = [NotmuchDatabaseP, c_char_p,
@@ -639,7 +639,7 @@ class Directory(object):
 
     def __init__(self, path, dir_p, parent):
         """
-        :param path:   The absolute path of the directory object as unicode.
+        :param path:   The absolute path of the directory object.
         :param dir_p:  The pointer to an internal notmuch_directory_t object.
         :param parent: The object this Directory is derived from
                        (usually a :class:`Database`). We do not directly use
@@ -647,7 +647,6 @@ class Directory(object):
                        this Directory object lives. This keeps the
                        parent object alive.
         """
-        assert isinstance(path, unicode), "Path needs to be an UNICODE object"
         self._path = path
         self._dir_p = dir_p
         self._parent = parent
