@@ -1672,7 +1672,7 @@ TAG-CHANGES is a list of tag operations for `notmuch-tag'."
     (apply 'notmuch-show-tag-message tag-changes)))
 
 (defun notmuch-show-tag-all (&rest tag-changes)
-  "Change tags for all messages in the current thread.
+  "Change tags for all messages in the current buffer.
 
 TAG-CHANGES is a list of tag operations for `notmuch-tag'."
   (interactive (notmuch-read-tag-changes nil notmuch-show-thread-id))
@@ -1765,13 +1765,13 @@ buffer."
     (notmuch-show-tag-all (concat op "inbox"))))
 
 (defun notmuch-show-archive-thread-then-next ()
-  "Archive each message in thread, then show next thread from search."
+  "Archive all messages in the current buffer, then show next thread from search."
   (interactive)
   (notmuch-show-archive-thread)
   (notmuch-show-next-thread t))
 
 (defun notmuch-show-archive-thread-then-exit ()
-  "Archive each message in thread, then exit back to search results."
+  "Archive all messages in the current buffer, then exit back to search results."
   (interactive)
   (notmuch-show-archive-thread)
   (notmuch-show-next-thread))
