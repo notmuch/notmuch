@@ -1080,9 +1080,14 @@ function is used."
     (setq notmuch-show-thread-id thread-id
 	  notmuch-show-parent-buffer parent-buffer
 	  notmuch-show-query-context query-context)
-    (notmuch-show-worker)))
+    (notmuch-show-build-buffer)
 
-(defun notmuch-show-worker ()
+    ;; Move to the first open message and mark it read
+    (if (notmuch-show-message-visible-p)
+	(notmuch-show-mark-read)
+      (notmuch-show-next-open-message))))
+
+(defun notmuch-show-build-buffer ()
   (let ((inhibit-read-only t))
 
     (notmuch-show-mode)
@@ -1109,14 +1114,8 @@ function is used."
 
       (run-hooks 'notmuch-show-hook))
 
-    ;; Move straight to the first open message
-    (unless (notmuch-show-message-visible-p)
-      (notmuch-show-next-open-message))
-
     ;; Set the header line to the subject of the first open message.
-    (setq header-line-format (notmuch-show-strip-re (notmuch-show-get-pretty-subject)))
-
-    (notmuch-show-mark-read)))
+    (setq header-line-format (notmuch-show-strip-re (notmuch-show-get-pretty-subject)))))
 
 (defun notmuch-show-capture-state ()
   "Capture the state of the current buffer.
@@ -1163,9 +1162,14 @@ buffer is stored and re-applied after the refresh."
     (if retain-state
 	(setq state (notmuch-show-capture-state)))
     (erase-buffer)
-    (notmuch-show-worker)
+    (notmuch-show-build-buffer)
     (if state
-	(notmuch-show-apply-state state))))
+	(notmuch-show-apply-state state)
+      ;; We're resetting state, so navigate to the first open message
+      ;; and mark it read, just like opening a new show buffer.
+      (if (notmuch-show-message-visible-p)
+	  (notmuch-show-mark-read)
+	(notmuch-show-next-open-message)))))
 
 (defvar notmuch-show-stash-map
   (let ((map (make-sparse-keymap)))
