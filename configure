@@ -273,9 +273,11 @@ if [ ${have_xapian} = "0" ]; then
     errors=$((errors + 1))
 fi
 
+# If using GMime 2.6, we need to have a version >= 2.6.5 to avoid a
+# crypto bug. We need 2.6.7 for permissive "From " header handling.
 printf "Checking for GMime development files... "
 have_gmime=0
-for gmimepc in gmime-2.6 gmime-2.4; do
+for gmimepc in 'gmime-2.6 >= 2.6.7' gmime-2.4; do
     if pkg-config --exists $gmimepc; then
 	printf "Yes ($gmimepc).\n"
 	have_gmime=1
