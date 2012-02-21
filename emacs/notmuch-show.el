@@ -990,7 +990,7 @@ current buffer, if possible."
   (message (if notmuch-show-process-crypto
 	       "Processing cryptographic MIME parts."
 	     "Not processing cryptographic MIME parts."))
-  (notmuch-show-refresh-view t))
+  (notmuch-show-refresh-view))
 
 (defun notmuch-show-toggle-elide-non-matching ()
   "Toggle the display of non-matching messages."
@@ -999,7 +999,7 @@ current buffer, if possible."
   (message (if notmuch-show-elide-non-matching-messages
 	       "Showing matching messages only."
 	     "Showing all messages."))
-  (notmuch-show-refresh-view t))
+  (notmuch-show-refresh-view))
 
 (defun notmuch-show-toggle-thread-indentation ()
   "Toggle the indentation of threads."
@@ -1008,7 +1008,7 @@ current buffer, if possible."
   (message (if notmuch-show-indent-content
 	       "Content is indented."
 	     "Content is not indented."))
-  (notmuch-show-refresh-view t))
+  (notmuch-show-refresh-view))
 
 (defun notmuch-show-insert-tree (tree depth)
   "Insert the message tree TREE at depth DEPTH in the current thread."
@@ -1150,17 +1150,17 @@ This includes:
       (message "Previously current message not found."))
     (notmuch-show-message-adjust)))
 
-(defun notmuch-show-refresh-view (&optional retain-state)
+(defun notmuch-show-refresh-view (&optional reset-state)
   "Refresh the current view.
 
 Refreshes the current view, observing changes in display
-preferences. If RETAIN-STATE is non-nil then the state of the
-buffer is stored and re-applied after the refresh."
+preferences. If invoked with a prefix argument (or RESET-STATE is
+non-nil) then the state of the buffer (open/closed messages) is
+reset based on the original query."
   (interactive "P")
   (let ((inhibit-read-only t)
-	state)
-    (if retain-state
-	(setq state (notmuch-show-capture-state)))
+	(state (unless reset-state
+		 (notmuch-show-capture-state))))
     (erase-buffer)
     (notmuch-show-build-buffer)
     (if state
