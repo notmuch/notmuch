@@ -63,6 +63,11 @@ More flexible and consistent tagging operations
 
     (notmuch-show-tag-message "-unread")
 
+Refreshing the show view ('=' by default) no longer opens or closes messages
+
+  To get the old behavior of putting messages back in their initial
+  opened/closed state, use a prefix argument, e.g., C-u =.
+
 Library changes
 ---------------
 
