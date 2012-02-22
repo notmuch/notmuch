@@ -515,17 +515,16 @@ class Database(object):
             function returns None if no message is found with the given
             filename.
 
-        :raises:
-            :exc:`OutOfMemoryError`
-                  If an Out-of-memory occured while constructing the message.
-            :exc:`XapianError`
-                  In case of a Xapian Exception. These exceptions
-                  include "Database modified" situations, e.g. when the
-                  notmuch database has been modified by another program
-                  in the meantime. In this case, you should close and
-                  reopen the database and retry.
-            :exc:`NotInitializedError` if
-                    the database was not intitialized.
+        :raises: :exc:`OutOfMemoryError` if an Out-of-memory occured while
+                 constructing the message.
+        :raises: :exc:`XapianError` in case of a Xapian Exception.
+                 These exceptions include "Database modified"
+                 situations, e.g. when the notmuch database has been
+                 modified by another program in the meantime. In this
+                 case, you should close and reopen the database and
+                 retry.
+        :raises: :exc:`NotInitializedError` if the database was not
+                 intitialized.
 
         *Added in notmuch 0.9*"""
         self._assert_db_is_initialized()
