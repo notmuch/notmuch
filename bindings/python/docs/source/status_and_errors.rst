@@ -5,6 +5,12 @@ Status and Errors
 
 Some methods return a status, indicating if an operation was successful and what the error was. Most of these status codes are expressed as a specific value, the :class:`notmuch.STATUS`.
 
+.. note::
+
+    Prior to version 0.12 the exception classes and the enumeration
+    :class:`notmuch.STATUS` were defined in `notmuch.globals`. They
+    have since then been moved into `notmuch.errors`.
+
 :class:`STATUS` -- Notmuch operation return value
 --------------------------------------------------
 
