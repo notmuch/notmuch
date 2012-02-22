@@ -345,10 +345,8 @@ class Database(object):
               of database (see :meth:`get_path`), or else should be an absolute
               path with initial components that match the path of 'database'.
         :returns: :class:`Directory` or raises an exception.
-        :raises:
-            :exc:`NotmuchError` with :attr:`STATUS`.FILE_ERROR
-                    If path is not relative database or absolute with initial
-                    components same as database.
+        :raises: :exc:`FileError` if path is not relative database or absolute
+                 with initial components same as database.
         """
         self._assert_db_is_initialized()
         # sanity checking if path is valid, and make path absolute
