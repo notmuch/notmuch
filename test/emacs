@@ -609,12 +609,12 @@ test_emacs \
 	   (test-visible-output))'
 test_expect_equal_file OUTPUT $EXPECTED/notmuch-show-message-with-headers-hidden
 
-test_begin_subtest "notmuch-show: hide message headers (w/ notmuch-show-toggle-headers)"
+test_begin_subtest "notmuch-show: hide message headers (w/ notmuch-show-toggle-visibility-headers)"
 test_emacs \
 	'(let ((notmuch-message-headers '\''("Subject" "To" "Cc" "Date"))
 	       (notmuch-message-headers-visible t))
 	   (notmuch-show "id:f35dbb950911171438k5df6eb56k77b6c0944e2e79ae@mail.gmail.com")
-	   (notmuch-show-toggle-headers)
+	   (notmuch-show-toggle-visibility-headers)
 	   (test-visible-output))'
 test_expect_equal_file OUTPUT $EXPECTED/notmuch-show-message-with-headers-hidden
 

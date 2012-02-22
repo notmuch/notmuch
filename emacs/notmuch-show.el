@@ -47,8 +47,8 @@
 
 For an open message, all of these headers will be made visible
 according to `notmuch-message-headers-visible' or can be toggled
-with `notmuch-show-toggle-headers'. For a closed message, only
-the first header in the list will be visible."
+with `notmuch-show-toggle-visibility-headers'. For a closed message,
+only the first header in the list will be visible."
   :type '(repeat string)
   :group 'notmuch-show)
 
@@ -58,8 +58,8 @@ the first header in the list will be visible."
 If this value is non-nil, then all of the headers defined in
 `notmuch-message-headers' will be visible by default in the display
 of each message. Otherwise, these headers will be hidden and
-`notmuch-show-toggle-headers' can be used to make the visible for
-any given message."
+`notmuch-show-toggle-visibility-headers' can be used to make them
+visible for any given message."
   :type 'boolean
   :group 'notmuch-show)
 
@@ -1170,7 +1170,7 @@ reset based on the original query."
 	(define-key map "v" 'notmuch-show-view-all-mime-parts)
 	(define-key map "c" 'notmuch-show-stash-map)
 	(define-key map "=" 'notmuch-show-refresh-view)
-	(define-key map "h" 'notmuch-show-toggle-headers)
+	(define-key map "h" 'notmuch-show-toggle-visibility-headers)
 	(define-key map "*" 'notmuch-show-tag-all)
 	(define-key map "-" 'notmuch-show-remove-tag)
 	(define-key map "+" 'notmuch-show-add-tag)
@@ -1709,7 +1709,7 @@ See `notmuch-tag' for information on the format of TAG-CHANGES."
   (interactive)
   (notmuch-show-tag "-"))
 
-(defun notmuch-show-toggle-headers ()
+(defun notmuch-show-toggle-visibility-headers ()
   "Toggle the visibility of the current message headers."
   (interactive)
   (let ((props (notmuch-show-get-message-properties)))
