@@ -71,6 +71,13 @@ New functions
   notmuch_query_add_tag_exclude supports the new tag exclusion
   feature.
 
+Python bindings changes
+-----------------------
+
+Python 3.2 compatibility
+
+  The python bindings are now compatible with both python 2.5+ and 3.2.
+
 Build fixes
 -----------
 
