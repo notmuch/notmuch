@@ -53,7 +53,7 @@ Copyright 2010-2011 Sebastian Spaeth <Sebastian@SSpaeth.de>
 """
 from .database import Database
 from .directory import Directory
-from .filename import Filenames
+from .filenames import Filenames
 from .message import Message
 from .messages import Messages
 from .query import Query

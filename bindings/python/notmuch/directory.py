@@ -26,7 +26,7 @@ from notmuch.globals import (
     NotmuchDirectoryP,
     NotmuchFilenamesP
 )
-from .filename import Filenames
+from .filenames import Filenames
 
 class Directory(object):
     """Represents a directory entry in the notmuch directory

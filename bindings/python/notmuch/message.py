@@ -36,7 +36,7 @@ from .globals import (
     NotmuchFilenamesP,
 )
 from .tag import Tags
-from .filename import Filenames
+from .filenames import Filenames
 
 import email
 try:
