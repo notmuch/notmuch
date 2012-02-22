@@ -504,12 +504,6 @@ class Database(object):
     def find_message_by_filename(self, filename):
         """Find a message with the given filename
 
-        .. warning::
-
-            This call needs a writeable database in
-            :attr:`Database.MODE`.READ_WRITE mode. The underlying library will
-            exit the program if this method is used on a read-only database!
-
         :returns: If the database contains a message with the given
             filename, then a class:`Message:` is returned.  This
             function returns None if no message is found with the given
@@ -525,9 +519,19 @@ class Database(object):
                  retry.
         :raises: :exc:`NotInitializedError` if the database was not
                  intitialized.
+        :raises: :exc:`ReadOnlyDatabaseError` if the database has not been
+                 opened in read-write mode
 
         *Added in notmuch 0.9*"""
         self._assert_db_is_initialized()
+
+        # work around libnotmuch calling exit(3), see
+        # id:20120221002921.8534.57091@thinkbox.jade-hamburg.de
+        # TODO: remove once this issue is resolved
+        if self.mode != Database.MODE.READ_WRITE:
+            raise ReadOnlyDatabaseError('The database has to be opened in '
+                                        'read-write mode for get_directory')
+
         msg_p = NotmuchMessageP()
         status = Database._find_message_by_filename(self._db, _str(filename),
                                                     byref(msg_p))
