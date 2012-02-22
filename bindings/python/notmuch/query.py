@@ -30,7 +30,7 @@ from notmuch.globals import (
     NotInitializedError,
 )
 from notmuch.thread import Threads
-from notmuch.message import Messages
+from .messages import Messages
 
 
 class Query(object):

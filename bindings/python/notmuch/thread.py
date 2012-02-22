@@ -28,7 +28,7 @@ from notmuch.globals import (
     NotmuchMessagesP,
     NotmuchTagsP,
 )
-from notmuch.message import Messages
+from .messages import Messages
 from notmuch.tag import Tags
 from datetime import date
 
