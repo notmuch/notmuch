@@ -78,6 +78,12 @@ Python 3.2 compatibility
 
   The python bindings are now compatible with both python 2.5+ and 3.2.
 
+Added missing unicode conversions
+
+  Python strings have to be encoded to and decoded from utf-8 when
+  calling libnotmuch functions. Porting the bindings to python 3.2
+  revealed a few function calls that were missing these conversions.
+
 Build fixes
 -----------
 
