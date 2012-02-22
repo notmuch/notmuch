@@ -58,7 +58,8 @@ from .message import Message
 from .messages import Messages
 from .query import Query
 from .tag import Tags
-from .thread import Threads, Thread
+from .thread import Thread
+from .threads import Threads
 from .globals import (
     nmlib,
     STATUS,

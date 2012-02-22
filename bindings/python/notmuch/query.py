@@ -29,7 +29,7 @@ from notmuch.globals import (
     NullPointerError,
     NotInitializedError,
 )
-from notmuch.thread import Threads
+from .threads import Threads
 from .messages import Messages
 
 
