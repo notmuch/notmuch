@@ -618,6 +618,19 @@ test_emacs \
 	   (test-visible-output))'
 test_expect_equal_file OUTPUT $EXPECTED/notmuch-show-message-with-headers-hidden
 
+test_begin_subtest "notmuch-show: collapse all messages in thread"
+test_emacs '(notmuch-show "id:f35dbb950911171435ieecd458o853c873e35f4be95@mail.gmail.com")
+	(let ((current-prefix-arg t))
+	  (notmuch-show-open-or-close-all)
+	  (test-visible-output))'
+test_expect_equal_file OUTPUT $EXPECTED/notmuch-show-thread-with-all-messages-collapsed
+
+test_begin_subtest "notmuch-show: uncollapse all messages in thread"
+test_emacs '(notmuch-show "id:f35dbb950911171435ieecd458o853c873e35f4be95@mail.gmail.com")
+	(notmuch-show-open-or-close-all)
+	(test-visible-output)'
+test_expect_equal_file OUTPUT $EXPECTED/notmuch-show-thread-with-all-messages-uncollapsed
+
 test_begin_subtest "Stashing in notmuch-show"
 add_message '[date]="Sat, 01 Jan 2000 12:00:00 -0000"' \
     '[from]="Some One <someone@somewhere.org>"' \
