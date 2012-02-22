@@ -78,9 +78,13 @@ class Filenames(Python3StringMixIn):
         if not files_p:
             raise NullPointerError()
 
-        self._files = files_p
+        self._files_p = files_p
         #save reference to parent object so we keep it alive
         self._parent = parent
+
+    def __iter__(self):
+        """ Make Filenames an iterator """
+        return self
 
     _valid = nmlib.notmuch_filenames_valid
     _valid.argtypes = [NotmuchFilenamesP]
@@ -90,19 +94,30 @@ class Filenames(Python3StringMixIn):
     _move_to_next.argtypes = [NotmuchFilenamesP]
     _move_to_next.restype = None
 
+    def __next__(self):
+        if not self._files_p:
+            raise NotInitializedError()
+
+        if not self._valid(self._files_p):
+            self._files_p = None
+            raise StopIteration
+
+        file_ = Filenames._get(self._files_p)
+        self._move_to_next(self._files_p)
+        return file_.decode('utf-8', 'ignore')
+    next = __next__ # python2.x iterator protocol compatibility
+
     def as_generator(self):
         """Return generator of Filenames
 
         This is the main function that will usually be used by the
-        user."""
-        if not self._files:
-            raise NotInitializedError()
+        user.
 
-        while self._valid(self._files):
-            yield Filenames._get(self._files).decode('utf-8', 'ignore')
-            self._move_to_next(self._files)
-
-        self._files = None
+        .. deprecated:: 0.12
+                        :class:`Filenames` objects implement the
+                        iterator protocol.
+        """
+        return self
 
     def __unicode__(self):
         """Represent Filenames() as newline-separated list of full paths
@@ -123,5 +138,30 @@ class Filenames(Python3StringMixIn):
 
     def __del__(self):
         """Close and free the notmuch filenames"""
-        if self._files is not None:
-            self._destroy(self._files)
+        if self._files_p is not None:
+            self._destroy(self._files_p)
+
+    def __len__(self):
+        """len(:class:`Filenames`) returns the number of contained files
+
+        .. note::
+
+            As this iterates over the files, we will not be able to
+            iterate over them again! So this will fail::
+
+                 #THIS FAILS
+                 files = Database().get_directory('').get_child_files()
+                 if len(files) > 0:  # this 'exhausts' msgs
+                     # next line raises
+                     # NotmuchError(:attr:`STATUS`.NOT_INITIALIZED)
+                     for file in files: print file
+        """
+        if not self._files_p:
+            raise NotInitializedError()
+
+        i = 0
+        while self._valid(self._files_p):
+            self._move_to_next(self._files_p)
+            i += 1
+        self._files_p = None
+        return i

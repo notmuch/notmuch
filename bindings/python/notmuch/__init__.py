@@ -51,11 +51,14 @@ along with notmuch.  If not, see <http://www.gnu.org/licenses/>.
 
 Copyright 2010-2011 Sebastian Spaeth <Sebastian@SSpaeth.de>
 """
-from notmuch.database import Database, Query
-from notmuch.message import Messages, Message
-from notmuch.thread import Threads, Thread
-from notmuch.tag import Tags
-from notmuch.globals import (
+from .database import Database
+from .directory import Directory
+from .filename import Filenames
+from .message import Messages, Message
+from .query import Query
+from .tag import Tags
+from .thread import Threads, Thread
+from .globals import (
     nmlib,
     STATUS,
     NotmuchError,
@@ -71,6 +74,6 @@ from notmuch.globals import (
     UnbalancedAtomicError,
     NotInitializedError,
 )
-from notmuch.version import __VERSION__
+from .version import __VERSION__
 __LICENSE__ = "GPL v3+"
 __AUTHOR__ = 'Sebastian Spaeth <Sebastian@SSpaeth.de>'

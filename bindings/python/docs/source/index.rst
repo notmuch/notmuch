@@ -254,26 +254,28 @@ More information on specific topics can be found on the following pages:
 :class:`Filenames` -- An iterator over filenames
 ------------------------------------------------
 
-.. autoclass:: notmuch.database.Filenames
+.. autoclass:: notmuch.Filenames
 
-   .. automethod:: notmuch.database.Filenames.__len__
+   .. automethod:: notmuch.Filenames.__len__
+
+   .. automethod:: notmuch.Filenames.as_generator
 
 :class:`notmuch.database.Directoy` -- A directory entry in the database
 ------------------------------------------------------------------------
 
-.. autoclass:: notmuch.database.Directory
+.. autoclass:: notmuch.Directory
 
-   .. automethod:: notmuch.database.Directory.get_child_files
+   .. automethod:: notmuch.Directory.get_child_files
 
-   .. automethod:: notmuch.database.Directory.get_child_directories
+   .. automethod:: notmuch.Directory.get_child_directories
 
-   .. automethod:: notmuch.database.Directory.get_mtime
+   .. automethod:: notmuch.Directory.get_mtime
 
-   .. automethod:: notmuch.database.Directory.set_mtime
+   .. automethod:: notmuch.Directory.set_mtime
 
-   .. autoattribute:: notmuch.database.Directory.mtime
+   .. autoattribute:: notmuch.Directory.mtime
 
-   .. autoattribute:: notmuch.database.Directory.path
+   .. autoattribute:: notmuch.Directory.path
 
 
 The `next page <status_and_errors.html>`_ contains information on possible Status and Error values.
