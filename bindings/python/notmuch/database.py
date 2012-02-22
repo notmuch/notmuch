@@ -27,6 +27,7 @@ from notmuch.globals import (
     NotmuchError,
     NullPointerError,
     NotInitializedError,
+    ReadOnlyDatabaseError,
     Enum,
     _str,
     NotmuchDatabaseP,
@@ -145,6 +146,7 @@ class Database(object):
             failure.
         """
         self._db = None
+        self.mode = mode
         if path is None:
             # no path specified. use a user's default database
             if Database._std_db_path is None:
@@ -335,20 +337,24 @@ class Database(object):
         """Returns a :class:`Directory` of path,
         (creating it if it does not exist(?))
 
-        .. warning::
-
-            This call needs a writeable database in
-            :attr:`Database.MODE`.READ_WRITE mode. The underlying library will
-            exit the program if this method is used on a read-only database!
-
         :param path: An unicode string containing the path relative to the path
               of database (see :meth:`get_path`), or else should be an absolute
               path with initial components that match the path of 'database'.
         :returns: :class:`Directory` or raises an exception.
         :raises: :exc:`FileError` if path is not relative database or absolute
                  with initial components same as database.
+        :raises: :exc:`ReadOnlyDatabaseError` if the database has not been
+                 opened in read-write mode
         """
         self._assert_db_is_initialized()
+
+        # work around libnotmuch calling exit(3), see
+        # id:20120221002921.8534.57091@thinkbox.jade-hamburg.de
+        # TODO: remove once this issue is resolved
+        if self.mode != Database.MODE.READ_WRITE:
+            raise ReadOnlyDatabaseError('The database has to be opened in '
+                                        'read-write mode for get_directory')
+
         # sanity checking if path is valid, and make path absolute
         if path and path[0] == os.sep:
             # we got an absolute path
