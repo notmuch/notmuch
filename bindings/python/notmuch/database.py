@@ -122,7 +122,8 @@ class Database(object):
     _create.argtypes = [c_char_p]
     _create.restype = NotmuchDatabaseP
 
-    def __init__(self, path=None, create=False, mode=0):
+    def __init__(self, path = None, create = False,
+                 mode = MODE.READ_ONLY):
         """If *path* is `None`, we will try to read a users notmuch
         configuration and use his configured database. The location of the
         configuration file can be specified through the environment variable
