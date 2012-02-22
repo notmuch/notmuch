@@ -26,14 +26,16 @@ from .globals import (
     Enum,
     _str,
     Python3StringMixIn,
-    STATUS,
-    NotmuchError,
-    NullPointerError,
-    NotInitializedError,
     NotmuchTagsP,
     NotmuchMessageP,
     NotmuchMessagesP,
     NotmuchFilenamesP,
+)
+from .errors import (
+    STATUS,
+    NotmuchError,
+    NullPointerError,
+    NotInitializedError,
 )
 from .tag import Tags
 from .filenames import Filenames

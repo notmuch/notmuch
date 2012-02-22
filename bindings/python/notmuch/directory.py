@@ -20,11 +20,13 @@ Copyright 2010 Sebastian Spaeth <Sebastian@SSpaeth.de>'
 from ctypes import c_uint, c_long
 from notmuch.globals import (
     nmlib,
+    NotmuchDirectoryP,
+    NotmuchFilenamesP
+)
+from .errors import (
     STATUS,
     NotmuchError,
     NotInitializedError,
-    NotmuchDirectoryP,
-    NotmuchFilenamesP
 )
 from .filenames import Filenames
 

@@ -60,8 +60,8 @@ from .query import Query
 from .tag import Tags
 from .thread import Thread
 from .threads import Threads
-from .globals import (
-    nmlib,
+from .globals import nmlib
+from .errors import (
     STATUS,
     NotmuchError,
     OutOfMemoryError,

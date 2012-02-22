@@ -20,10 +20,12 @@ Copyright 2010 Sebastian Spaeth <Sebastian@SSpaeth.de>'
 from notmuch.globals import (
     nmlib,
     Python3StringMixIn,
-    NullPointerError,
-    NotInitializedError,
     NotmuchThreadP,
     NotmuchThreadsP,
+)
+from .errors import (
+    NullPointerError,
+    NotInitializedError,
 )
 from .thread import Thread
 

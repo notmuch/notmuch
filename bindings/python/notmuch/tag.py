@@ -20,9 +20,11 @@ from ctypes import c_char_p
 from notmuch.globals import (
     nmlib,
     Python3StringMixIn,
+    NotmuchTagsP,
+)
+from .errors import (
     NullPointerError,
     NotInitializedError,
-    NotmuchTagsP,
 )
 
 

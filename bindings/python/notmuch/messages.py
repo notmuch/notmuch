@@ -20,11 +20,13 @@ Copyright 2010 Sebastian Spaeth <Sebastian@SSpaeth.de>'
 
 from .globals import (
     nmlib,
-    NullPointerError,
-    NotInitializedError,
     NotmuchTagsP,
     NotmuchMessageP,
     NotmuchMessagesP,
+)
+from .errors import (
+    NullPointerError,
+    NotInitializedError,
 )
 from .tag import Tags
 from .message import Message

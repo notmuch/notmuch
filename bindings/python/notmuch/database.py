@@ -22,18 +22,20 @@ import codecs
 from ctypes import c_char_p, c_void_p, c_uint, byref, POINTER
 from notmuch.globals import (
     nmlib,
-    STATUS,
-    FileError,
-    NotmuchError,
-    NullPointerError,
-    NotInitializedError,
-    ReadOnlyDatabaseError,
     Enum,
     _str,
     NotmuchDatabaseP,
     NotmuchDirectoryP,
     NotmuchMessageP,
     NotmuchTagsP,
+)
+from .errors import (
+    STATUS,
+    FileError,
+    NotmuchError,
+    NullPointerError,
+    NotInitializedError,
+    ReadOnlyDatabaseError,
 )
 from notmuch.message import Message
 from notmuch.tag import Tags

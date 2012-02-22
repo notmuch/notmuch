@@ -26,6 +26,8 @@ from notmuch.globals import (
     NotmuchThreadsP,
     NotmuchDatabaseP,
     NotmuchMessagesP,
+)
+from .errors import (
     NullPointerError,
     NotInitializedError,
 )
