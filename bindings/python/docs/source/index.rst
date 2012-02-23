@@ -42,10 +42,10 @@ More information on specific topics can be found on the following pages:
 
 .. automodule:: notmuch
 
-:class:`notmuch.Database` -- The underlying notmuch database
+:class:`Database` -- The underlying notmuch database
 ---------------------------------------------------------------------
 
-.. autoclass:: notmuch.Database([path=None[, create=False[, mode=MODE.READ_ONLY]]])
+.. autoclass:: Database([path=None[, create=False[, mode=MODE.READ_ONLY]]])
 
    .. automethod:: create
 
@@ -90,10 +90,10 @@ More information on specific topics can be found on the following pages:
    .. autoattribute:: db_p
 
 
-:class:`notmuch.Query` -- A search query
+:class:`Query` -- A search query
 -------------------------------------------------
 
-.. autoclass:: notmuch.Query
+.. autoclass:: Query
 
    .. automethod:: create
 
@@ -216,10 +216,10 @@ More information on specific topics can be found on the following pages:
    .. automethod:: __str__
 
 
-:class:`notmuch.Threads` -- Threads iterator
+:class:`Threads` -- Threads iterator
 -----------------------------------------------------
 
-.. autoclass:: notmuch.Threads
+.. autoclass:: Threads
 
    .. automethod:: __len__
 
@@ -254,28 +254,28 @@ More information on specific topics can be found on the following pages:
 :class:`Filenames` -- An iterator over filenames
 ------------------------------------------------
 
-.. autoclass:: notmuch.Filenames
+.. autoclass:: Filenames
 
-   .. automethod:: notmuch.Filenames.__len__
+   .. automethod:: Filenames.__len__
 
-   .. automethod:: notmuch.Filenames.as_generator
+   .. automethod:: Filenames.as_generator
 
-:class:`notmuch.database.Directoy` -- A directory entry in the database
+:class:`Directoy` -- A directory entry in the database
 ------------------------------------------------------------------------
 
-.. autoclass:: notmuch.Directory
+.. autoclass:: Directory
 
-   .. automethod:: notmuch.Directory.get_child_files
+   .. automethod:: Directory.get_child_files
 
-   .. automethod:: notmuch.Directory.get_child_directories
+   .. automethod:: Directory.get_child_directories
 
-   .. automethod:: notmuch.Directory.get_mtime
+   .. automethod:: Directory.get_mtime
 
-   .. automethod:: notmuch.Directory.set_mtime
+   .. automethod:: Directory.set_mtime
 
-   .. autoattribute:: notmuch.Directory.mtime
+   .. autoattribute:: Directory.mtime
 
-   .. autoattribute:: notmuch.Directory.path
+   .. autoattribute:: Directory.path
 
 
 The `next page <status_and_errors.html>`_ contains information on possible Status and Error values.
