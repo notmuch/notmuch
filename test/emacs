@@ -122,15 +122,27 @@ test_emacs "(notmuch-search \"$os_x_darwin_thread\")
 output=$(notmuch search $os_x_darwin_thread | notmuch_search_sanitize)
 test_expect_equal "$output" "thread:XXX   2009-11-18 [4/4] Jjgod Jiang, Alexander Botero-Lowry; [notmuch] Mac OS X/Darwin compatibility issues (inbox unread)"
 
-test_begin_subtest "Add tag from notmuch-show view"
+test_begin_subtest "notmuch-show: add single tag to single message"
 test_emacs "(notmuch-show \"$os_x_darwin_thread\")
 	    (execute-kbd-macro \"+tag-from-show-view\")"
 output=$(notmuch search $os_x_darwin_thread | notmuch_search_sanitize)
 test_expect_equal "$output" "thread:XXX   2009-11-18 [4/4] Jjgod Jiang, Alexander Botero-Lowry; [notmuch] Mac OS X/Darwin compatibility issues (inbox tag-from-show-view unread)"
 
-test_begin_subtest "Remove tag from notmuch-show view"
+test_begin_subtest "notmuch-show: remove single tag from single message"
 test_emacs "(notmuch-show \"$os_x_darwin_thread\")
 	    (execute-kbd-macro \"-tag-from-show-view\")"
+output=$(notmuch search $os_x_darwin_thread | notmuch_search_sanitize)
+test_expect_equal "$output" "thread:XXX   2009-11-18 [4/4] Jjgod Jiang, Alexander Botero-Lowry; [notmuch] Mac OS X/Darwin compatibility issues (inbox unread)"
+
+test_begin_subtest "notmuch-show: add multiple tags to single message"
+test_emacs "(notmuch-show \"$os_x_darwin_thread\")
+	    (execute-kbd-macro \"+tag1-from-show-view +tag2-from-show-view\")"
+output=$(notmuch search $os_x_darwin_thread | notmuch_search_sanitize)
+test_expect_equal "$output" "thread:XXX   2009-11-18 [4/4] Jjgod Jiang, Alexander Botero-Lowry; [notmuch] Mac OS X/Darwin compatibility issues (inbox tag1-from-show-view tag2-from-show-view unread)"
+
+test_begin_subtest "notmuch-show: remove multiple tags from single message"
+test_emacs "(notmuch-show \"$os_x_darwin_thread\")
+	    (execute-kbd-macro \"-tag1-from-show-view -tag2-from-show-view\")"
 output=$(notmuch search $os_x_darwin_thread | notmuch_search_sanitize)
 test_expect_equal "$output" "thread:XXX   2009-11-18 [4/4] Jjgod Jiang, Alexander Botero-Lowry; [notmuch] Mac OS X/Darwin compatibility issues (inbox unread)"
 
