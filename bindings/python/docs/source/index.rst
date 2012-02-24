@@ -15,25 +15,13 @@ Within :mod:`notmuch`, the classes :class:`Database`, :class:`Query` provide mos
 
 This page contains the main API overview of notmuch |release|.
 
-Notmuch can be imported as::
-
- import notmuch
-
-or::
-
- from notmuch import Query, Database
-
- db = Database('path',create=True)
- msgs = Query(db,'from:myself').search_messages()
-
- for msg in msgs:
-    print (msg)
 
 More information on specific topics can be found on the following pages:
 
 .. toctree::
    :maxdepth: 1
 
+   quickstart
    status_and_errors
    notmuch
 
