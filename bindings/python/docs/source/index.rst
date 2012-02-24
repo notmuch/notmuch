@@ -22,13 +22,9 @@ More information on specific topics can be found on the following pages:
    :maxdepth: 1
 
    quickstart
+   notes
    status_and_errors
    notmuch
-
-:mod:`notmuch` -- The Notmuch interface
-=================================================
-
-.. automodule:: notmuch
 
 :class:`Database` -- The underlying notmuch database
 ---------------------------------------------------------------------
