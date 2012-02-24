@@ -356,6 +356,11 @@ ${additional_headers}"
 ${additional_headers}"
     fi
 
+    if [ ! -z "${template[content-transfer-encoding]}" ]; then
+	additional_headers="Content-Transfer-Encoding: ${template[content-transfer-encoding]}
+${additional_headers}"
+    fi
+
     # Note that in the way we're setting it above and using it below,
     # `additional_headers' will also serve as the header / body separator
     # (empty line in between).
