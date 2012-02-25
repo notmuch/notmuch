@@ -1114,7 +1114,7 @@ function is used."
 
       (run-hooks 'notmuch-show-hook))
 
-    ;; Set the header line to the subject of the first open message.
+    ;; Set the header line to the subject of the first message.
     (setq header-line-format (notmuch-show-strip-re (notmuch-show-get-pretty-subject)))))
 
 (defun notmuch-show-capture-state ()
