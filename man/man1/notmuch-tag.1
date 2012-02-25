@@ -23,6 +23,12 @@ an initial search term beginning with '+' or '\-' is provided
 by allowing the user to specify a "\-\-" argument to separate
 the tags from the search terms.
 
+.B "notmuch tag"
+updates the maildir flags according to tag changes if the
+.B "maildir.synchronize_flags"
+configuration option is enabled. See \fBnotmuch-config\fR(1) for
+details.
+
 .SH SEE ALSO
 
 \fBnotmuch\fR(1), \fBnotmuch-config\fR(1), \fBnotmuch-count\fR(1),

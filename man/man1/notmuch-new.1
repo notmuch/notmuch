@@ -40,6 +40,11 @@ has previously been completed, but
 .B "notmuch new"
 has not previously been run.
 
+.B "notmuch new"
+updates tags according to maildir flag changes if the
+.B "maildir.synchronize_flags"
+configuration option is enabled. See \fBnotmuch-config\fR(1) for
+details.
 
 The
 .B new
