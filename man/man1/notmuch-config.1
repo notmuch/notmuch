@@ -4,10 +4,10 @@ notmuch-config \- Access notmuch configuration file.
 .SH SYNOPSIS
 
 .B notmuch config get
-.RI  "<" section "> . <" item ">"
+.RI  "<" section ">.<" item ">"
 
 .B notmuch config set
-.RI  "<" section "> . <" item "> [" value "]"
+.RI  "<" section ">.<" item "> [" value " ...]"
 
 .SH DESCRIPTION
 
@@ -85,7 +85,7 @@ directory hierarchy.
 
 .RS 4
 .TP 4
-.B search.exclude
+.B search.exclude_tags
 A list of tags that will be excluded from search results by
 default. Using an excluded tag in a query will override that
 exclusion.
