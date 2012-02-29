@@ -11,24 +11,6 @@ Reply to sender
   to all. The feature is available through the new command line option
   --reply-to=(all|sender).
 
-Tag exclusion
-
-  Tags can be automatically excluded from search results by adding them
-  to the new 'search.exclude_tags' option in the Notmuch config file.
-
-  This behaviour can be overridden by explicitly including an excluded
-  tag in your query, for example:
-
-    notmuch search $your_query and tag:$excluded_tag
-
-  Existing users will probably want to run "notmuch setup" again to add
-  the new well-commented [search] section to the configuration file.
-
-  For new configurations, accepting the default setting will cause the
-  tags "deleted" and "spam" to be excluded, equivalent to running:
-
-    notmuch config set search.exclude_tags deleted spam
-
 Mail store folder/file ignore
 
    A new configuration option, `new.ignore`, lets users specify a
