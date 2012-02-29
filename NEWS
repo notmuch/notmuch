@@ -71,6 +71,15 @@ Refreshing the show view ('=' by default) no longer opens or closes messages
   To get the old behavior of putting messages back in their initial
   opened/closed state, use a prefix argument, e.g., C-u =.
 
+Attachment buttons can be used to view or save attachments.
+
+  When the cursor is on an attachment button the key 's' can be used
+  to save the attachment, the key 'v' to view the attachment in the
+  default mailcap application, and the key 'o' prompts the user for an
+  application to use to open the attachment. By default Enter or mouse
+  button 1 saves the attachment but this is customisable (option
+  Notmuch Show Part Button Default Action).
+
 Library changes
 ---------------
 
