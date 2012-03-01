@@ -475,6 +475,7 @@ notmuch_threads_get (notmuch_threads_t *threads)
 				   threads->query->notmuch,
 				   doc_id,
 				   &threads->match_set,
+				   threads->query->exclude_terms,
 				   threads->query->sort);
 }
 

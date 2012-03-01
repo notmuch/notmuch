@@ -148,6 +148,8 @@ typedef enum _notmuch_private_status {
 
 typedef struct _notmuch_doc_id_set notmuch_doc_id_set_t;
 
+typedef struct _notmuch_string_list notmuch_string_list_t;
+
 /* database.cc */
 
 /* Lookup a prefix value by name.
@@ -216,6 +218,7 @@ _notmuch_thread_create (void *ctx,
 			notmuch_database_t *notmuch,
 			unsigned int seed_doc_id,
 			notmuch_doc_id_set_t *match_set,
+			notmuch_string_list_t *excluded_terms,
 			notmuch_sort_t sort);
 
 /* message.cc */
@@ -459,11 +462,11 @@ typedef struct _notmuch_string_node {
     struct _notmuch_string_node *next;
 } notmuch_string_node_t;
 
-typedef struct visible _notmuch_string_list {
+struct visible _notmuch_string_list {
     int length;
     notmuch_string_node_t *head;
     notmuch_string_node_t **tail;
-} notmuch_string_list_t;
+};
 
 notmuch_string_list_t *
 _notmuch_string_list_create (const void *ctx);

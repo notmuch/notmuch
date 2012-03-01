@@ -672,8 +672,10 @@ notmuch_thread_get_toplevel_messages (notmuch_thread_t *thread);
 /* Get the number of messages in 'thread' that matched the search.
  *
  * This count includes only the messages in this thread that were
- * matched by the search from which the thread was created. Contrast
- * with notmuch_thread_get_total_messages() .
+ * matched by the search from which the thread was created and were
+ * not excluded by any exclude tags passed in with the query (see
+ * notmuch_query_add_tag_exclude). Contrast with
+ * notmuch_thread_get_total_messages() .
  */
 int
 notmuch_thread_get_matched_messages (notmuch_thread_t *thread);

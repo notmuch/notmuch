@@ -214,7 +214,8 @@ _thread_cleanup_author (notmuch_thread_t *thread,
  */
 static void
 _thread_add_message (notmuch_thread_t *thread,
-		     notmuch_message_t *message)
+		     notmuch_message_t *message,
+		     notmuch_string_list_t *exclude_terms)
 {
     notmuch_tags_t *tags;
     const char *tag;
@@ -262,6 +263,15 @@ _thread_add_message (notmuch_thread_t *thread,
 	 notmuch_tags_move_to_next (tags))
     {
 	tag = notmuch_tags_get (tags);
+	/* Mark excluded messages. */
+	for (notmuch_string_node_t *term = exclude_terms->head; term;
+	     term = term->next) {
+	    /* We ignore initial 'K'. */
+	    if (strcmp(tag, (term->string + 1)) == 0) {
+		notmuch_message_set_flag (message, NOTMUCH_MESSAGE_FLAG_EXCLUDED, TRUE);
+		break;
+	    }
+	}
 	g_hash_table_insert (thread->tags, xstrdup (tag), NULL);
     }
 }
@@ -321,7 +331,8 @@ _thread_add_matched_message (notmuch_thread_t *thread,
 	    _thread_set_subject_from_message (thread, message);
     }
 
-    thread->matched_messages++;
+    if (!notmuch_message_get_flag (message, NOTMUCH_MESSAGE_FLAG_EXCLUDED))
+	thread->matched_messages++;
 
     if (g_hash_table_lookup_extended (thread->message_hash,
 			    notmuch_message_get_message_id (message), NULL,
@@ -392,6 +403,7 @@ _notmuch_thread_create (void *ctx,
 			notmuch_database_t *notmuch,
 			unsigned int seed_doc_id,
 			notmuch_doc_id_set_t *match_set,
+			notmuch_string_list_t *exclude_terms,
 			notmuch_sort_t sort)
 {
     notmuch_thread_t *thread;
@@ -467,7 +479,7 @@ _notmuch_thread_create (void *ctx,
 	if (doc_id == seed_doc_id)
 	    message = seed_message;
 
-	_thread_add_message (thread, message);
+	_thread_add_message (thread, message, exclude_terms);
 
 	if ( _notmuch_doc_id_set_contains (match_set, doc_id)) {
 	    _notmuch_doc_id_set_remove (match_set, doc_id);
