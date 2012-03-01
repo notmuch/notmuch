@@ -145,7 +145,7 @@ mode."
 	(insert "\n")
 	(call-process "gpg" nil t t "--list-keys" keyid))
       (recenter -1))
-    (notmuch-show-refresh-view t)))
+    (notmuch-show-refresh-view)))
 
 (defun notmuch-crypto-insert-encstatus-button (encstatus)
   (let* ((status (plist-get encstatus :status))
