@@ -80,6 +80,12 @@ Attachment buttons can be used to view or save attachments.
   button 1 saves the attachment but this is customisable (option
   Notmuch Show Part Button Default Action).
 
+New functions
+
+  `notmuch-show-stash-mlarchive-link{,-and-go}' allow stashing and
+  optionally visiting a URI to the current message at one of a number
+  of Mailing List Archives.
+
 Library changes
 ---------------
 
