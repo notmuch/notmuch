@@ -148,6 +148,11 @@ output=$(notmuch search subject:deleted | notmuch_search_sanitize)
 test_expect_equal "$output" "thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; Not deleted (inbox unread)
 thread:XXX   2001-01-05 [1/2] Notmuch Test Suite; Not deleted reply (deleted inbox unread)"
 
+test_begin_subtest "Don't exclude \"deleted\" messages when --no-exclude specified"
+output=$(notmuch search --no-exclude subject:deleted | notmuch_search_sanitize)
+test_expect_equal "$output" "thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; Not deleted (inbox unread)
+thread:XXX   2001-01-05 [2/2] Notmuch Test Suite; Deleted (deleted inbox unread)"
+
 test_begin_subtest "Don't exclude \"deleted\" messages from search if not configured"
 notmuch config set search.exclude_tags
 output=$(notmuch search subject:deleted | notmuch_search_sanitize)
