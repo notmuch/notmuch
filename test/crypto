@@ -43,6 +43,7 @@ output=$(notmuch show --format=json --verify subject:"test signed message 001" \
     | sed -e 's|"created": [1234567890]*|"created": 946728000|')
 expected='[[[{"id": "XXXXX",
  "match": true,
+ "excluded": false,
  "filename": "YYYYY",
  "timestamp": 946728000,
  "date_relative": "2000-01-01",
@@ -76,6 +77,7 @@ output=$(notmuch show --format=json --verify subject:"test signed message 001" \
     | sed -e 's|"created": [1234567890]*|"created": 946728000|')
 expected='[[[{"id": "XXXXX",
  "match": true,
+ "excluded": false,
  "filename": "YYYYY",
  "timestamp": 946728000,
  "date_relative": "2000-01-01",
@@ -111,6 +113,7 @@ output=$(notmuch show --format=json --verify subject:"test signed message 001" \
     | sed -e 's|"created": [1234567890]*|"created": 946728000|')
 expected='[[[{"id": "XXXXX",
  "match": true,
+ "excluded": false,
  "filename": "YYYYY",
  "timestamp": 946728000,
  "date_relative": "2000-01-01",
@@ -150,7 +153,7 @@ test_begin_subtest "decryption, --format=text"
 output=$(notmuch show --format=text --decrypt subject:"test encrypted message 001" \
     | notmuch_show_sanitize_all \
     | sed -e 's|"created": [1234567890]*|"created": 946728000|')
-expected='message{ id:XXXXX depth:0 match:1 filename:XXXXX
+expected='message{ id:XXXXX depth:0 match:1 excluded:0 filename:XXXXX
 header{
 Notmuch Test Suite <test_suite@notmuchmail.org> (2000-01-01) (encrypted inbox)
 Subject: test encrypted message 001
@@ -184,6 +187,7 @@ output=$(notmuch show --format=json --decrypt subject:"test encrypted message 00
     | sed -e 's|"created": [1234567890]*|"created": 946728000|')
 expected='[[[{"id": "XXXXX",
  "match": true,
+ "excluded": false,
  "filename": "YYYYY",
  "timestamp": 946728000,
  "date_relative": "2000-01-01",
@@ -238,6 +242,7 @@ output=$(notmuch show --format=json --decrypt subject:"test encrypted message 00
     | sed -e 's|"created": [1234567890]*|"created": 946728000|')
 expected='[[[{"id": "XXXXX",
  "match": true,
+ "excluded": false,
  "filename": "YYYYY",
  "timestamp": 946728000,
  "date_relative": "2000-01-01",
@@ -272,6 +277,7 @@ output=$(notmuch show --format=json --decrypt subject:"test encrypted message 00
     | sed -e 's|"created": [1234567890]*|"created": 946728000|')
 expected='[[[{"id": "XXXXX",
  "match": true,
+ "excluded": false,
  "filename": "YYYYY",
  "timestamp": 946728000,
  "date_relative": "2000-01-01",
@@ -326,6 +332,7 @@ output=$(notmuch show --format=json --verify subject:"test signed message 001" \
     | sed -e 's|"created": [1234567890]*|"created": 946728000|')
 expected='[[[{"id": "XXXXX",
  "match": true,
+ "excluded": false,
  "filename": "YYYYY",
  "timestamp": 946728000,
  "date_relative": "2000-01-01",

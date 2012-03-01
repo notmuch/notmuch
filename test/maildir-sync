@@ -46,6 +46,7 @@ test_begin_subtest "notmuch show works with renamed file (without notmuch new)"
 output=$(notmuch show --format=json id:${gen_msg_id} | filter_show_json)
 test_expect_equal "$output" '[[[{"id": "adding-replied-tag@notmuch-test-suite",
 "match": true,
+"excluded": false,
 "filename": "MAIL_DIR/cur/adding-replied-tag:2,RS",
 "timestamp": 978709437,
 "date_relative": "2001-01-05",
