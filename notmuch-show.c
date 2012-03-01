@@ -143,9 +143,10 @@ format_message_json (const void *ctx, notmuch_message_t *message)
     date = notmuch_message_get_date (message);
     relative_date = notmuch_time_relative_date (ctx, date);
 
-    printf ("\"id\": %s, \"match\": %s, \"filename\": %s, \"timestamp\": %ld, \"date_relative\": \"%s\", \"tags\": [",
+    printf ("\"id\": %s, \"match\": %s, \"excluded\": %s, \"filename\": %s, \"timestamp\": %ld, \"date_relative\": \"%s\", \"tags\": [",
 	    json_quote_str (ctx_quote, notmuch_message_get_message_id (message)),
 	    notmuch_message_get_flag (message, NOTMUCH_MESSAGE_FLAG_MATCH) ? "true" : "false",
+	    notmuch_message_get_flag (message, NOTMUCH_MESSAGE_FLAG_EXCLUDED) ? "true" : "false",
 	    json_quote_str (ctx_quote, notmuch_message_get_filename (message)),
 	    date, relative_date);
 
@@ -579,11 +580,12 @@ format_part_text (const void *ctx, mime_node_t *node,
 	notmuch_message_t *message = node->envelope_file;
 
 	part_type = "message";
-	printf ("\f%s{ id:%s depth:%d match:%d filename:%s\n",
+	printf ("\f%s{ id:%s depth:%d match:%d excluded:%d filename:%s\n",
 		part_type,
 		notmuch_message_get_message_id (message),
 		indent,
-		notmuch_message_get_flag (message, NOTMUCH_MESSAGE_FLAG_MATCH),
+		notmuch_message_get_flag (message, NOTMUCH_MESSAGE_FLAG_MATCH) ? 1 : 0,
+		notmuch_message_get_flag (message, NOTMUCH_MESSAGE_FLAG_EXCLUDED) ? 1 : 0,
 		notmuch_message_get_filename (message));
     } else {
 	GMimeContentDisposition *disposition = g_mime_object_get_content_disposition (meta);
@@ -984,6 +986,7 @@ notmuch_show_command (void *ctx, unused (int argc), unused (char *argv[]))
     notmuch_show_params_t params = { .part = -1 };
     int format_sel = NOTMUCH_FORMAT_NOT_SPECIFIED;
     notmuch_bool_t verify = FALSE;
+    notmuch_bool_t no_exclude = FALSE;
 
     notmuch_opt_desc_t options[] = {
 	{ NOTMUCH_OPT_KEYWORD, &format_sel, "format", 'f',
@@ -996,6 +999,7 @@ notmuch_show_command (void *ctx, unused (int argc), unused (char *argv[]))
 	{ NOTMUCH_OPT_BOOLEAN, &params.entire_thread, "entire-thread", 't', 0 },
 	{ NOTMUCH_OPT_BOOLEAN, &params.decrypt, "decrypt", 'd', 0 },
 	{ NOTMUCH_OPT_BOOLEAN, &verify, "verify", 'v', 0 },
+	{ NOTMUCH_OPT_BOOLEAN, &no_exclude, "no-exclude", 'n', 0 },
 	{ 0, 0, 0, 0, 0 }
     };
 
@@ -1083,10 +1087,23 @@ notmuch_show_command (void *ctx, unused (int argc), unused (char *argv[]))
 	return 1;
     }
 
+    /* If a single message is requested we do not use search_excludes. */
     if (params.part >= 0)
 	ret = do_show_single (ctx, query, format, &params);
-    else
+    else {
+	if (!no_exclude) {
+	    const char **search_exclude_tags;
+	    size_t search_exclude_tags_length;
+	    unsigned int i;
+
+	    search_exclude_tags = notmuch_config_get_search_exclude_tags
+		(config, &search_exclude_tags_length);
+	    for (i = 0; i < search_exclude_tags_length; i++)
+		notmuch_query_add_tag_exclude (query, search_exclude_tags[i]);
+	}
 	ret = do_show (ctx, query, format, &params);
+    }
+
 
     notmuch_query_destroy (query);
     notmuch_database_close (notmuch);
