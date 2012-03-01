@@ -122,12 +122,15 @@ _notmuch_messages_destructor (notmuch_mset_messages_t *messages)
     return 0;
 }
 
-/* Return a query that does not match messages with the excluded tags
- * registered with the query.  Any tags that explicitly appear in
- * xquery will not be excluded. */
+/* Return a query that matches messages with the excluded tags
+ * registered with query.  Any tags that explicitly appear in xquery
+ * will not be excluded. The caller of this function has to combine
+ * the returned query appropriately.*/
 static Xapian::Query
 _notmuch_exclude_tags (notmuch_query_t *query, Xapian::Query xquery)
 {
+    Xapian::Query exclude_query = Xapian::Query::MatchNothing;
+
     for (notmuch_string_node_t *term = query->exclude_terms->head; term;
 	 term = term->next) {
 	Xapian::TermIterator it = xquery.get_terms_begin ();
@@ -137,10 +140,10 @@ _notmuch_exclude_tags (notmuch_query_t *query, Xapian::Query xquery)
 		break;
 	}
 	if (it == end)
-	    xquery = Xapian::Query (Xapian::Query::OP_AND_NOT,
-				    xquery, Xapian::Query (term->string));
+	    exclude_query = Xapian::Query (Xapian::Query::OP_OR,
+				    exclude_query, Xapian::Query (term->string));
     }
-    return xquery;
+    return exclude_query;
 }
 
 notmuch_messages_t *
@@ -168,7 +171,7 @@ notmuch_query_search_messages (notmuch_query_t *query)
 	Xapian::Query mail_query (talloc_asprintf (query, "%s%s",
 						   _find_prefix ("type"),
 						   "mail"));
-	Xapian::Query string_query, final_query;
+	Xapian::Query string_query, final_query, exclude_query;
 	Xapian::MSet mset;
 	unsigned int flags = (Xapian::QueryParser::FLAG_BOOLEAN |
 			      Xapian::QueryParser::FLAG_PHRASE |
@@ -188,7 +191,10 @@ notmuch_query_search_messages (notmuch_query_t *query)
 					 mail_query, string_query);
 	}
 
-	final_query = _notmuch_exclude_tags (query, final_query);
+	exclude_query = _notmuch_exclude_tags (query, final_query);
+
+	final_query = Xapian::Query (Xapian::Query::OP_AND_NOT,
+					 final_query, exclude_query);
 
 	enquire.set_weighting_scheme (Xapian::BoolWeight());
 
@@ -449,7 +455,7 @@ notmuch_query_count_messages (notmuch_query_t *query)
 	Xapian::Query mail_query (talloc_asprintf (query, "%s%s",
 						   _find_prefix ("type"),
 						   "mail"));
-	Xapian::Query string_query, final_query;
+	Xapian::Query string_query, final_query, exclude_query;
 	Xapian::MSet mset;
 	unsigned int flags = (Xapian::QueryParser::FLAG_BOOLEAN |
 			      Xapian::QueryParser::FLAG_PHRASE |
@@ -469,7 +475,10 @@ notmuch_query_count_messages (notmuch_query_t *query)
 					 mail_query, string_query);
 	}
 
-	final_query = _notmuch_exclude_tags (query, final_query);
+	exclude_query = _notmuch_exclude_tags (query, final_query);
+
+	final_query = Xapian::Query (Xapian::Query::OP_AND_NOT,
+					 final_query, exclude_query);
 
 	enquire.set_weighting_scheme(Xapian::BoolWeight());
 	enquire.set_docid_order(Xapian::Enquire::ASCENDING);
