@@ -981,7 +981,8 @@ current buffer, if possible."
 
     ;; Message visibility depends on whether it matched the search
     ;; criteria.
-    (notmuch-show-message-visible msg (plist-get msg :match))))
+    (notmuch-show-message-visible msg (and (plist-get msg :match)
+					   (not (plist-get msg :excluded))))))
 
 (defun notmuch-show-toggle-process-crypto ()
   "Toggle the processing of cryptographic MIME parts."
@@ -1081,11 +1082,7 @@ function is used."
 	  notmuch-show-parent-buffer parent-buffer
 	  notmuch-show-query-context query-context)
     (notmuch-show-build-buffer)
-
-    ;; Move to the first open message and mark it read
-    (if (notmuch-show-message-visible-p)
-	(notmuch-show-mark-read)
-      (notmuch-show-next-open-message))))
+    (notmuch-show-goto-first-wanted-message)))
 
 (defun notmuch-show-build-buffer ()
   (let ((inhibit-read-only t))
@@ -1167,9 +1164,7 @@ reset based on the original query."
 	(notmuch-show-apply-state state)
       ;; We're resetting state, so navigate to the first open message
       ;; and mark it read, just like opening a new show buffer.
-      (if (notmuch-show-message-visible-p)
-	  (notmuch-show-mark-read)
-	(notmuch-show-next-open-message)))))
+      (notmuch-show-goto-first-wanted-message))))
 
 (defvar notmuch-show-stash-map
   (let ((map (make-sparse-keymap)))
@@ -1600,6 +1595,29 @@ to show, nil otherwise."
 	  (notmuch-show-next-thread)
 	(goto-char (point-max))))
     r))
+
+(defun notmuch-show-next-matching-message ()
+  "Show the next matching message."
+  (interactive)
+  (let (r)
+    (while (and (setq r (notmuch-show-goto-message-next))
+		(not (notmuch-show-get-prop :match))))
+    (if r
+	(progn
+	  (notmuch-show-mark-read)
+	  (notmuch-show-message-adjust))
+      (goto-char (point-max)))))
+
+(defun notmuch-show-goto-first-wanted-message ()
+  "Move to the first open message and mark it read"
+  (goto-char (point-min))
+  (if (notmuch-show-message-visible-p)
+      (notmuch-show-mark-read)
+    (notmuch-show-next-open-message))
+  (when (eobp)
+    (goto-char (point-min))
+    (unless (notmuch-show-get-prop :match)
+      (notmuch-show-next-matching-message))))
 
 (defun notmuch-show-previous-open-message ()
   "Show the previous open message."
