@@ -88,6 +88,8 @@ notmuch_count_command (void *ctx, int argc, char *argv[])
 	    notmuch_query_add_tag_exclude (query, search_exclude_tags[i]);
     }
 
+    notmuch_query_set_omit_excluded_messages (query, TRUE);
+
     switch (output) {
     case OUTPUT_MESSAGES:
 	printf ("%u\n", notmuch_query_count_messages (query));

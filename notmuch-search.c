@@ -210,6 +210,9 @@ do_search_threads (const search_format_t *format,
     int first_thread = 1;
     int i;
 
+    if (output == OUTPUT_THREADS)
+	notmuch_query_set_omit_excluded_messages (query, TRUE);
+
     if (offset < 0) {
 	offset += notmuch_query_count_threads (query);
 	if (offset < 0)
@@ -300,6 +303,8 @@ do_search_messages (const search_format_t *format,
     int first_message = 1;
     int i;
 
+    notmuch_query_set_omit_excluded_messages (query, TRUE);
+
     if (offset < 0) {
 	offset += notmuch_query_count_messages (query);
 	if (offset < 0)
@@ -370,6 +375,10 @@ do_search_tags (notmuch_database_t *notmuch,
     notmuch_tags_t *tags;
     const char *tag;
     int first_tag = 1;
+
+    notmuch_query_set_omit_excluded_messages (query, TRUE);
+    /* should the following only special case if no excluded terms
+     * specified? */
 
     /* Special-case query of "*" for better performance. */
     if (strcmp (notmuch_query_get_query_string (query), "*") == 0) {

@@ -1030,6 +1030,7 @@ notmuch_show_command (void *ctx, unused (int argc), unused (char *argv[]))
 	    fprintf (stderr, "Error: specifying parts is incompatible with mbox output format.\n");
 	    return 1;
 	}
+
 	format = &format_mbox;
 	break;
     case NOTMUCH_FORMAT_RAW:
@@ -1086,6 +1087,11 @@ notmuch_show_command (void *ctx, unused (int argc), unused (char *argv[]))
 	fprintf (stderr, "Out of memory\n");
 	return 1;
     }
+
+    /* if format=mbox then we can not output excluded messages as
+     * there is no way to make the exclude flag available */
+    if (format_sel == NOTMUCH_FORMAT_MBOX)
+	notmuch_query_set_omit_excluded_messages (query, TRUE);
 
     /* If a single message is requested we do not use search_excludes. */
     if (params.part >= 0)
