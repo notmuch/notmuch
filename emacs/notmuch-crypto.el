@@ -101,7 +101,7 @@ mode."
       (let ((keyid (concat "0x" (plist-get sigstatus :keyid))))
 	(setq label (concat "Unknown key ID " keyid " or unsupported algorithm"))
 	(setq button-action 'notmuch-crypto-sigstatus-error-callback)
-	(setq help-msg (concat "Click to retreive key ID " keyid " from keyserver and redisplay."))))
+	(setq help-msg (concat "Click to retrieve key ID " keyid " from keyserver and redisplay."))))
      ((string= status "bad")
       (let ((keyid (concat "0x" (plist-get sigstatus :keyid))))
 	(setq label (concat "Bad signature (claimed key ID " keyid ")"))
