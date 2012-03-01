@@ -426,8 +426,7 @@ notmuch_search_command (void *ctx, int argc, char *argv[])
     output_t output = OUTPUT_SUMMARY;
     int offset = 0;
     int limit = -1; /* unlimited */
-    const char **search_exclude_tags;
-    size_t search_exclude_tags_length;
+    notmuch_bool_t no_exclude = FALSE;
     unsigned int i;
 
     enum { NOTMUCH_FORMAT_JSON, NOTMUCH_FORMAT_TEXT }
@@ -449,6 +448,7 @@ notmuch_search_command (void *ctx, int argc, char *argv[])
 				  { "files", OUTPUT_FILES },
 				  { "tags", OUTPUT_TAGS },
 				  { 0, 0 } } },
+	{ NOTMUCH_OPT_BOOLEAN, &no_exclude, "no-exclude", 'd', 0 },
 	{ NOTMUCH_OPT_INT, &offset, "offset", 'O', 0 },
 	{ NOTMUCH_OPT_INT, &limit, "limit", 'L', 0  },
 	{ 0, 0, 0, 0, 0 }
@@ -496,10 +496,15 @@ notmuch_search_command (void *ctx, int argc, char *argv[])
 
     notmuch_query_set_sort (query, sort);
 
-    search_exclude_tags = notmuch_config_get_search_exclude_tags
-	(config, &search_exclude_tags_length);
-    for (i = 0; i < search_exclude_tags_length; i++)
-	notmuch_query_add_tag_exclude (query, search_exclude_tags[i]);
+    if (!no_exclude) {
+	const char **search_exclude_tags;
+	size_t search_exclude_tags_length;
+
+	search_exclude_tags = notmuch_config_get_search_exclude_tags
+	    (config, &search_exclude_tags_length);
+	for (i = 0; i < search_exclude_tags_length; i++)
+	    notmuch_query_add_tag_exclude (query, search_exclude_tags[i]);
+    }
 
     switch (output) {
     default:
