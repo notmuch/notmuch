@@ -28,6 +28,7 @@ struct _notmuch_query {
     const char *query_string;
     notmuch_sort_t sort;
     notmuch_string_list_t *exclude_terms;
+    notmuch_bool_t omit_excluded_messages;
 };
 
 typedef struct _notmuch_mset_messages {
@@ -57,6 +58,12 @@ struct visible _notmuch_threads {
     notmuch_doc_id_set_t match_set;
 };
 
+/* We need this in the message functions so forward declare. */
+static notmuch_bool_t
+_notmuch_doc_id_set_init (void *ctx,
+			  notmuch_doc_id_set_t *doc_ids,
+			  GArray *arr);
+
 notmuch_query_t *
 notmuch_query_create (notmuch_database_t *notmuch,
 		      const char *query_string)
@@ -79,6 +86,8 @@ notmuch_query_create (notmuch_database_t *notmuch,
 
     query->exclude_terms = _notmuch_string_list_create (query);
 
+    query->omit_excluded_messages = FALSE;
+
     return query;
 }
 
@@ -86,6 +95,12 @@ const char *
 notmuch_query_get_query_string (notmuch_query_t *query)
 {
     return query->query_string;
+}
+
+void
+notmuch_query_set_omit_excluded_messages (notmuch_query_t *query, notmuch_bool_t omit)
+{
+    query->omit_excluded_messages = omit;
 }
 
 void
@@ -124,8 +139,9 @@ _notmuch_messages_destructor (notmuch_mset_messages_t *messages)
 
 /* Return a query that matches messages with the excluded tags
  * registered with query.  Any tags that explicitly appear in xquery
- * will not be excluded. The caller of this function has to combine
- * the returned query appropriately.*/
+ * will not be excluded, and will be removed from the list of exclude
+ * tags.  The caller of this function has to combine the returned
+ * query appropriately.*/
 static Xapian::Query
 _notmuch_exclude_tags (notmuch_query_t *query, Xapian::Query xquery)
 {
@@ -142,6 +158,8 @@ _notmuch_exclude_tags (notmuch_query_t *query, Xapian::Query xquery)
 	if (it == end)
 	    exclude_query = Xapian::Query (Xapian::Query::OP_OR,
 				    exclude_query, Xapian::Query (term->string));
+	else
+	    term->string = talloc_strdup (query, "");
     }
     return exclude_query;
 }
@@ -173,6 +191,7 @@ notmuch_query_search_messages (notmuch_query_t *query)
 						   "mail"));
 	Xapian::Query string_query, final_query, exclude_query;
 	Xapian::MSet mset;
+	Xapian::MSetIterator iterator;
 	unsigned int flags = (Xapian::QueryParser::FLAG_BOOLEAN |
 			      Xapian::QueryParser::FLAG_PHRASE |
 			      Xapian::QueryParser::FLAG_LOVEHATE |
@@ -190,11 +209,35 @@ notmuch_query_search_messages (notmuch_query_t *query)
 	    final_query = Xapian::Query (Xapian::Query::OP_AND,
 					 mail_query, string_query);
 	}
+	messages->base.excluded_doc_ids = NULL;
 
-	exclude_query = _notmuch_exclude_tags (query, final_query);
+	if (query->exclude_terms) {
+	    exclude_query = _notmuch_exclude_tags (query, final_query);
+	    exclude_query = Xapian::Query (Xapian::Query::OP_AND,
+					   exclude_query, final_query);
 
-	final_query = Xapian::Query (Xapian::Query::OP_AND_NOT,
-					 final_query, exclude_query);
+	    if (query->omit_excluded_messages)
+		final_query = Xapian::Query (Xapian::Query::OP_AND_NOT,
+					     final_query, exclude_query);
+	    else {
+		enquire.set_weighting_scheme (Xapian::BoolWeight());
+		enquire.set_query (exclude_query);
+
+		mset = enquire.get_mset (0, notmuch->xapian_db->get_doccount ());
+
+		GArray *excluded_doc_ids = g_array_new (FALSE, FALSE, sizeof (unsigned int));
+
+		for (iterator = mset.begin (); iterator != mset.end (); iterator++) {
+		    unsigned int doc_id = *iterator;
+		    g_array_append_val (excluded_doc_ids, doc_id);
+		}
+		messages->base.excluded_doc_ids = talloc (messages, _notmuch_doc_id_set);
+		_notmuch_doc_id_set_init (query, messages->base.excluded_doc_ids,
+					  excluded_doc_ids);
+		g_array_unref (excluded_doc_ids);
+	    }
+	}
+
 
 	enquire.set_weighting_scheme (Xapian::BoolWeight());
 
@@ -282,6 +325,10 @@ _notmuch_mset_messages_get (notmuch_messages_t *messages)
     {
 	INTERNAL_ERROR ("a messages iterator contains a non-existent document ID.\n");
     }
+
+    if (messages->excluded_doc_ids &&
+	_notmuch_doc_id_set_contains (messages->excluded_doc_ids, doc_id))
+	notmuch_message_set_flag (message, NOTMUCH_MESSAGE_FLAG_EXCLUDED, TRUE);
 
     return message;
 }

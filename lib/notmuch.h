@@ -449,6 +449,13 @@ typedef enum {
 const char *
 notmuch_query_get_query_string (notmuch_query_t *query);
 
+/* Specify whether to results should omit the excluded results rather
+ * than just marking them excluded. This is useful for passing a
+ * notmuch_messages_t not containing the excluded messages to other
+ * functions. */
+void
+notmuch_query_set_omit_excluded_messages (notmuch_query_t *query, notmuch_bool_t omit);
+
 /* Specify the sorting desired for this query. */
 void
 notmuch_query_set_sort (notmuch_query_t *query, notmuch_sort_t sort);
@@ -895,7 +902,8 @@ notmuch_message_get_filenames (notmuch_message_t *message);
 
 /* Message flags */
 typedef enum _notmuch_message_flag {
-    NOTMUCH_MESSAGE_FLAG_MATCH
+    NOTMUCH_MESSAGE_FLAG_MATCH,
+    NOTMUCH_MESSAGE_FLAG_EXCLUDED
 } notmuch_message_flag_t;
 
 /* Get a value of a flag for the email corresponding to 'message'. */

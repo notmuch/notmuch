@@ -401,6 +401,7 @@ typedef struct _notmuch_message_list {
  */
 struct visible _notmuch_messages {
     notmuch_bool_t is_of_list_type;
+    notmuch_doc_id_set_t *excluded_doc_ids;
     notmuch_message_node_t *iterator;
 };
 
