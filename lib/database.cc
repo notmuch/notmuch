@@ -726,6 +726,17 @@ notmuch_database_close (notmuch_database_t *notmuch)
 	}
     }
 
+    /* Many Xapian objects (and thus notmuch objects) hold references to
+     * the database, so merely deleting the database may not suffice to
+     * close it.  Thus, we explicitly close it here. */
+    if (notmuch->xapian_db != NULL) {
+	try {
+	    notmuch->xapian_db->close();
+	} catch (const Xapian::Error &error) {
+	    /* do nothing */
+	}
+    }
+
     delete notmuch->term_gen;
     delete notmuch->query_parser;
     delete notmuch->xapian_db;
