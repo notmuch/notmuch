@@ -85,6 +85,14 @@ directory hierarchy.
 
 .RS 4
 .TP 4
+.B search.exclude_tags
+A list of tags that will be excluded from search results by
+default. Using an excluded tag in a query will override that
+exclusion.
+.RE
+
+.RS 4
+.TP 4
 .B maildir.synchronize_flags
 If true, then the following maildir flags (in message filenames) will
 be synchronized with the corresponding notmuch tags:

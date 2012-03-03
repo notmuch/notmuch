@@ -377,7 +377,8 @@ notmuch_config_open (void *ctx,
 
     if (notmuch_config_get_search_exclude_tags (config, &tmp) == NULL) {
 	if (is_new) {
-	    /* We do not set default search_exclude_tags for 0.12 */
+	    const char *tags[] = { "deleted", "spam" };
+	    notmuch_config_set_search_exclude_tags (config, tags, 2);
 	} else {
 	    notmuch_config_set_search_exclude_tags (config, NULL, 0);
 	}
