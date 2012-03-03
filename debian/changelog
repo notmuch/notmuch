@@ -1,6 +1,7 @@
 notmuch (0.12~rc1-1) experimental; urgency=low
 
   * Upstream pre-release.
+  * Bump standards version to 3.9.3; no changes.
 
  -- David Bremner <bremner@debian.org>  Thu, 01 Mar 2012 07:51:45 -0400
 

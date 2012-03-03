@@ -101,7 +101,7 @@ mode."
       (let ((keyid (concat "0x" (plist-get sigstatus :keyid))))
 	(setq label (concat "Unknown key ID " keyid " or unsupported algorithm"))
 	(setq button-action 'notmuch-crypto-sigstatus-error-callback)
-	(setq help-msg (concat "Click to retreive key ID " keyid " from keyserver and redisplay."))))
+	(setq help-msg (concat "Click to retrieve key ID " keyid " from keyserver and redisplay."))))
      ((string= status "bad")
       (let ((keyid (concat "0x" (plist-get sigstatus :keyid))))
 	(setq label (concat "Bad signature (claimed key ID " keyid ")"))
@@ -145,7 +145,7 @@ mode."
 	(insert "\n")
 	(call-process "gpg" nil t t "--list-keys" keyid))
       (recenter -1))
-    (notmuch-show-refresh-view t)))
+    (notmuch-show-refresh-view)))
 
 (defun notmuch-crypto-insert-encstatus-button (encstatus)
   (let* ((status (plist-get encstatus :status))
