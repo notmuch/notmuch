@@ -95,6 +95,9 @@ list."
 	      (goto-char (point-min))
 	      (setq headers (mail-header-extract)))))
       (forward-line 1)
+      ;; Original message may contain (malicious) MML tags. We must
+      ;; properly quote them in the reply.
+      (mml-quote-region (point) (point-max))
       (setq body (buffer-substring (point) (point-max))))
     ;; If sender is non-nil, set the From: header to its value.
     (when sender
@@ -116,12 +119,7 @@ list."
     (push-mark))
   (set-buffer-modified-p nil)
 
-  (message-goto-body)
-  ;; Original message may contain (malicious) MML tags.  We must
-  ;; properly quote them in the reply.  Note that using `point-max'
-  ;; instead of `mark' here is wrong.  The buffer may include user's
-  ;; signature which should not be MML-quoted.
-  (mml-quote-region (point) (mark)))
+  (message-goto-body))
 
 (defun notmuch-mua-forward-message ()
   (message-forward)
