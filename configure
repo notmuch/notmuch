@@ -171,37 +171,9 @@ for option; do
     elif [ "${option}" = '--without-zsh-completion' ] ; then
 	WITH_ZSH=0
     elif [ "${option%%=*}" = '--build' ] ; then
-	build_option="${option#*=}"
-	case ${build_option} in
-	    *-*-*) ;;
-	    *)
-		echo "Unrecognized value for --build option: ${build_option}"
-		echo "Should be: <cpu>-<vendor>-<os>"
-		echo "See:"
-		echo "	$0 --help"
-		echo ""
-		exit 1
-	esac
-	build_cpu=${build_option%%-*}
-	build_option=${build_option#*-}
-	build_vendor=${build_option%%-*}
-	build_os=${build_option#*-}
+	true
     elif [ "${option%%=*}" = '--host' ] ; then
-	host_option="${option#*=}"
-	case ${host_option} in
-	    *-*-*) ;;
-	    *)
-		echo "Unrecognized value for --host option: ${host_option}"
-		echo "Should be: <cpu>-<vendor>-<os>"
-		echo "See:"
-		echo "	$0 --help"
-		echo ""
-		exit 1
-	esac
-	host_cpu=${host_option%%-*}
-	host_option=${host_option#*-}
-	host_vendor=${host_option%%-*}
-	host_os=${host_option#*-}
+	true
     elif [ "${option%%=*}" = '--infodir' ] ; then
 	true
     elif [ "${option%%=*}" = '--datadir' ] ; then
