@@ -365,9 +365,9 @@ elif [ $uname = "SunOS" ] ; then
     printf "Solaris.\n"
     platform=SOLARIS
     linker_resolves_library_dependencies=0
-elif [ $uname = "Linux" ] ; then
-    printf "Linux\n"
-    platform=LINUX
+elif [ $uname = "Linux" ] || [ $uname = "GNU" ] ; then
+    printf "$uname\n"
+    platform="$uname"
     linker_resolves_library_dependencies=1
 
     printf "Checking for $libdir_expanded in ldconfig... "
