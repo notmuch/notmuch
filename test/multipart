@@ -496,7 +496,7 @@ test_subtest_known_broken
 notmuch show --format=raw --part=3 'id:87liy5ap00.fsf@yoom.home.cworth.org' >OUTPUT
 test_expect_equal_file OUTPUT embedded_message
 
-test_begin_subtest "--format=raw --part=4, rfc822's html part"
+test_begin_subtest "--format=raw --part=4, rfc822's multipart"
 notmuch show --format=raw --part=4 'id:87liy5ap00.fsf@yoom.home.cworth.org' >OUTPUT
 cat <<EOF >EXPECTED
 <p>This is an embedded message, with a multipart/alternative part.</p>
