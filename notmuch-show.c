@@ -45,25 +45,15 @@ static const notmuch_show_format_t format_json = {
     .message_set_end = "]"
 };
 
-static void
-format_message_mbox (const void *ctx,
-		     notmuch_message_t *message,
-		     unused (int indent));
+static notmuch_status_t
+format_part_mbox (const void *ctx, mime_node_t *node,
+		  int indent, const notmuch_show_params_t *params);
 
 static const notmuch_show_format_t format_mbox = {
-    "", NULL,
-        "", format_message_mbox,
-            "", NULL, NULL, "",
-            "",
-                NULL,
-                NULL,
-                NULL,
-                NULL,
-                NULL,
-                "",
-            "",
-        "", "",
-    ""
+    .message_set_start = "",
+    .part = format_part_mbox,
+    .message_set_sep = "",
+    .message_set_end = ""
 };
 
 static void
@@ -719,11 +709,12 @@ format_part_json_entry (const void *ctx, mime_node_t *node, unused (int indent),
  *
  * http://qmail.org/qmail-manual-html/man5/mbox.html
  */
-static void
-format_message_mbox (const void *ctx,
-		     notmuch_message_t *message,
-		     unused (int indent))
+static notmuch_status_t
+format_part_mbox (const void *ctx, mime_node_t *node, unused (int indent),
+		  unused (const notmuch_show_params_t *params))
 {
+    notmuch_message_t *message = node->envelope_file;
+
     const char *filename;
     FILE *file;
     const char *from;
@@ -736,12 +727,15 @@ format_message_mbox (const void *ctx,
     size_t line_size;
     ssize_t line_len;
 
+    if (!message)
+	INTERNAL_ERROR ("format_part_mbox requires a root part");
+
     filename = notmuch_message_get_filename (message);
     file = fopen (filename, "r");
     if (file == NULL) {
 	fprintf (stderr, "Failed to open %s: %s\n",
 		 filename, strerror (errno));
-	return;
+	return NOTMUCH_STATUS_FILE_ERROR;
     }
 
     from = notmuch_message_get_header (message, "from");
@@ -762,6 +756,8 @@ format_message_mbox (const void *ctx,
     printf ("\n");
 
     fclose (file);
+
+    return NOTMUCH_STATUS_SUCCESS;
 }
 
 static notmuch_status_t
