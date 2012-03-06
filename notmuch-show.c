@@ -20,9 +20,6 @@
 
 #include "notmuch-client.h"
 
-static void
-format_headers_message_part_text (GMimeMessage *message);
-
 static notmuch_status_t
 format_part_text (const void *ctx, mime_node_t *node,
 		  int indent, const notmuch_show_params_t *params);
@@ -56,23 +53,16 @@ static const notmuch_show_format_t format_mbox = {
     .message_set_end = ""
 };
 
-static void
-format_part_content_raw (GMimeObject *part);
+static notmuch_status_t
+format_part_raw (unused (const void *ctx), mime_node_t *node,
+		 unused (int indent),
+		 unused (const notmuch_show_params_t *params));
 
 static const notmuch_show_format_t format_raw = {
-    "", NULL,
-	"", NULL,
-	    "", NULL, format_headers_message_part_text, "\n",
-            "",
-                NULL,
-                NULL,
-                NULL,
-                format_part_content_raw,
-                NULL,
-                "",
-            "",
-	"", "",
-    ""
+    .message_set_start = "",
+    .part = format_part_raw,
+    .message_set_sep = "",
+    .message_set_end = ""
 };
 
 static const char *
@@ -208,27 +198,6 @@ _is_from_line (const char *line)
 	return 1;
     else
 	return 0;
-}
-
-static void
-format_headers_message_part_text (GMimeMessage *message)
-{
-    InternetAddressList *recipients;
-    const char *recipients_string;
-
-    printf ("Subject: %s\n", g_mime_message_get_subject (message));
-    printf ("From: %s\n", g_mime_message_get_sender (message));
-    recipients = g_mime_message_get_recipients (message, GMIME_RECIPIENT_TYPE_TO);
-    recipients_string = internet_address_list_to_string (recipients, 0);
-    if (recipients_string)
-	printf ("To: %s\n",
-		recipients_string);
-    recipients = g_mime_message_get_recipients (message, GMIME_RECIPIENT_TYPE_CC);
-    recipients_string = internet_address_list_to_string (recipients, 0);
-    if (recipients_string)
-	printf ("Cc: %s\n",
-		recipients_string);
-    printf ("Date: %s\n", g_mime_message_get_date_as_string (message));
 }
 
 static void
@@ -733,31 +702,82 @@ format_part_mbox (const void *ctx, mime_node_t *node, unused (int indent),
     return NOTMUCH_STATUS_SUCCESS;
 }
 
-static void
-format_part_content_raw (GMimeObject *part)
+static notmuch_status_t
+format_part_raw (unused (const void *ctx), mime_node_t *node,
+		 unused (int indent),
+		 unused (const notmuch_show_params_t *params))
 {
-    if (! GMIME_IS_PART (part))
-	return;
+    if (node->envelope_file) {
+	/* Special case the entire message to avoid MIME parsing. */
+	const char *filename;
+	FILE *file;
+	size_t size;
+	char buf[4096];
+
+	filename = notmuch_message_get_filename (node->envelope_file);
+	if (filename == NULL) {
+	    fprintf (stderr, "Error: Cannot get message filename.\n");
+	    return NOTMUCH_STATUS_FILE_ERROR;
+	}
+
+	file = fopen (filename, "r");
+	if (file == NULL) {
+	    fprintf (stderr, "Error: Cannot open file %s: %s\n", filename, strerror (errno));
+	    return NOTMUCH_STATUS_FILE_ERROR;
+	}
+
+	while (!feof (file)) {
+	    size = fread (buf, 1, sizeof (buf), file);
+	    if (ferror (file)) {
+		fprintf (stderr, "Error: Read failed from %s\n", filename);
+		fclose (file);
+		return NOTMUCH_STATUS_FILE_ERROR;
+	    }
+
+	    if (fwrite (buf, size, 1, stdout) != 1) {
+		fprintf (stderr, "Error: Write failed\n");
+		fclose (file);
+		return NOTMUCH_STATUS_FILE_ERROR;
+	    }
+	}
+
+	fclose (file);
+	return NOTMUCH_STATUS_SUCCESS;
+    }
 
     GMimeStream *stream_stdout;
     GMimeStream *stream_filter = NULL;
-    GMimeDataWrapper *wrapper;
 
     stream_stdout = g_mime_stream_file_new (stdout);
     g_mime_stream_file_set_owner (GMIME_STREAM_FILE (stream_stdout), FALSE);
 
     stream_filter = g_mime_stream_filter_new (stream_stdout);
 
-    wrapper = g_mime_part_get_content_object (GMIME_PART (part));
+    if (GMIME_IS_PART (node->part)) {
+	/* For leaf parts, we emit only the transfer-decoded
+	 * body. */
+	GMimeDataWrapper *wrapper;
+	wrapper = g_mime_part_get_content_object (GMIME_PART (node->part));
 
-    if (wrapper && stream_filter)
-	g_mime_data_wrapper_write_to_stream (wrapper, stream_filter);
+	if (wrapper && stream_filter)
+	    g_mime_data_wrapper_write_to_stream (wrapper, stream_filter);
+    } else {
+	/* Write out the whole part.  For message parts (the root
+	 * part and embedded message parts), this will be the
+	 * message including its headers (but not the
+	 * encapsulating part's headers).  For multipart parts,
+	 * this will include the headers. */
+	if (stream_filter)
+	    g_mime_object_write_to_stream (node->part, stream_filter);
+    }
 
     if (stream_filter)
 	g_object_unref (stream_filter);
 
     if (stream_stdout)
 	g_object_unref(stream_stdout);
+
+    return NOTMUCH_STATUS_SUCCESS;
 }
 
 static notmuch_status_t
@@ -893,50 +913,7 @@ do_show_single (void *ctx,
 
     notmuch_message_set_flag (message, NOTMUCH_MESSAGE_FLAG_MATCH, 1);
 
-    /* Special case for --format=raw of full single message, just cat out file */
-    if (params->raw && 0 == params->part) {
-
-	const char *filename;
-	FILE *file;
-	size_t size;
-	char buf[4096];
-
-	filename = notmuch_message_get_filename (message);
-	if (filename == NULL) {
-	    fprintf (stderr, "Error: Cannot message filename.\n");
-	    return 1;
-	}
-
-	file = fopen (filename, "r");
-	if (file == NULL) {
-	    fprintf (stderr, "Error: Cannot open file %s: %s\n", filename, strerror (errno));
-	    return 1;
-	}
-
-	while (!feof (file)) {
-	    size = fread (buf, 1, sizeof (buf), file);
-	    if (ferror (file)) {
-		fprintf (stderr, "Error: Read failed from %s\n", filename);
-		fclose (file);
-		return 1;
-	    }
-
-	    if (fwrite (buf, size, 1, stdout) != 1) {
-		fprintf (stderr, "Error: Write failed\n");
-		fclose (file);
-		return 1;
-	    }
-	}
-
-	fclose (file);
-
-	return 0;
-
-    } else {
-
-	return show_message (ctx, format, message, 0, params) != NOTMUCH_STATUS_SUCCESS;
-
-    }
+    return show_message (ctx, format, message, 0, params) != NOTMUCH_STATUS_SUCCESS;
 }
 
 /* Formatted output of threads */

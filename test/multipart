@@ -450,58 +450,80 @@ test_expect_equal_file OUTPUT "${MAIL_DIR}"/multipart
 
 test_begin_subtest "--format=raw --part=1, message body"
 notmuch show --format=raw --part=1 'id:87liy5ap00.fsf@yoom.home.cworth.org' >OUTPUT
-# output should *not* include newline
-echo >>OUTPUT
-cat <<EOF >EXPECTED
-Subject: html message
-From: Carl Worth <cworth@cworth.org>
-To: cworth@cworth.org
-Date: Fri, 05 Jan 2001 15:42:57 +0000
-
-<p>This is an embedded message, with a multipart/alternative part.</p>
-This is an embedded message, with a multipart/alternative part.
-This is a text attachment.
-And this message is signed.
-
--Carl
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-
-iEYEARECAAYFAk3SA/gACgkQ6JDdNq8qSWj0sACghqVJEQJUs3yV8zbTzhgnSIcD
-W6cAmQE4dcYrx/LPLtYLZm1jsGauE5hE
-=zkga
------END PGP SIGNATURE-----
-EOF
-test_expect_equal_file OUTPUT EXPECTED
+test_expect_equal_file OUTPUT "${MAIL_DIR}"/multipart
 
 test_begin_subtest "--format=raw --part=2, multipart/mixed"
 notmuch show --format=raw --part=2 'id:87liy5ap00.fsf@yoom.home.cworth.org' >OUTPUT
 cat <<EOF >EXPECTED
-Subject: html message
+Content-Type: multipart/mixed; boundary="=-=-="
+
+--=-=-=
+Content-Type: message/rfc822
+Content-Disposition: inline
+
 From: Carl Worth <cworth@cworth.org>
 To: cworth@cworth.org
+Subject: html message
 Date: Fri, 05 Jan 2001 15:42:57 +0000
+User-Agent: Notmuch/0.5 (http://notmuchmail.org) Emacs/23.3.1 (i486-pc-linux-gnu)
+Message-ID: <87liy5ap01.fsf@yoom.home.cworth.org>
+MIME-Version: 1.0
+Content-Type: multipart/alternative; boundary="==-=-=="
+
+--==-=-==
+Content-Type: text/html
 
 <p>This is an embedded message, with a multipart/alternative part.</p>
+
+--==-=-==
+Content-Type: text/plain
+
 This is an embedded message, with a multipart/alternative part.
+
+--==-=-==--
+
+--=-=-=
+Content-Disposition: attachment; filename=attachment
+
 This is a text attachment.
+
+--=-=-=
+
 And this message is signed.
 
 -Carl
+
+--=-=-=--
 EOF
 test_expect_equal_file OUTPUT EXPECTED
 
 test_begin_subtest "--format=raw --part=3, rfc822 part"
-test_subtest_known_broken
-
 notmuch show --format=raw --part=3 'id:87liy5ap00.fsf@yoom.home.cworth.org' >OUTPUT
 test_expect_equal_file OUTPUT embedded_message
 
 test_begin_subtest "--format=raw --part=4, rfc822's multipart"
 notmuch show --format=raw --part=4 'id:87liy5ap00.fsf@yoom.home.cworth.org' >OUTPUT
 cat <<EOF >EXPECTED
+From: Carl Worth <cworth@cworth.org>
+To: cworth@cworth.org
+Subject: html message
+Date: Fri, 05 Jan 2001 15:42:57 +0000
+User-Agent: Notmuch/0.5 (http://notmuchmail.org) Emacs/23.3.1 (i486-pc-linux-gnu)
+Message-ID: <87liy5ap01.fsf@yoom.home.cworth.org>
+MIME-Version: 1.0
+Content-Type: multipart/alternative; boundary="==-=-=="
+
+--==-=-==
+Content-Type: text/html
+
 <p>This is an embedded message, with a multipart/alternative part.</p>
+
+--==-=-==
+Content-Type: text/plain
+
 This is an embedded message, with a multipart/alternative part.
+
+--==-=-==--
 EOF
 test_expect_equal_file OUTPUT EXPECTED
 
