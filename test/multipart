@@ -46,6 +46,7 @@ Content-Disposition: inline
 EOF
 cat embedded_message >> ${MAIL_DIR}/multipart
 cat <<EOF >> ${MAIL_DIR}/multipart
+
 --=-=-=
 Content-Disposition: attachment; filename=attachment
 
