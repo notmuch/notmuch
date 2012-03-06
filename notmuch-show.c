@@ -23,7 +23,7 @@
 static void
 format_headers_message_part_text (GMimeMessage *message);
 
-static void
+static notmuch_status_t
 format_part_text (const void *ctx, mime_node_t *node,
 		  int indent, const notmuch_show_params_t *params);
 
@@ -34,7 +34,7 @@ static const notmuch_show_format_t format_text = {
     .message_set_end = ""
 };
 
-static void
+static notmuch_status_t
 format_part_json_entry (const void *ctx, mime_node_t *node,
 			int indent, const notmuch_show_params_t *params);
 
@@ -563,7 +563,7 @@ format_part_content_raw (GMimeObject *part)
 	g_object_unref(stream_stdout);
 }
 
-static void
+static notmuch_status_t
 format_part_text (const void *ctx, mime_node_t *node,
 		  int indent, const notmuch_show_params_t *params)
 {
@@ -652,6 +652,8 @@ format_part_text (const void *ctx, mime_node_t *node,
 	printf ("\fbody}\n");
 
     printf ("\f%s}\n", part_type);
+
+    return NOTMUCH_STATUS_SUCCESS;
 }
 
 static void
@@ -753,14 +755,16 @@ format_part_json (const void *ctx, mime_node_t *node, notmuch_bool_t first)
     printf ("%s}", terminator);
 }
 
-static void
+static notmuch_status_t
 format_part_json_entry (const void *ctx, mime_node_t *node, unused (int indent),
 			unused (const notmuch_show_params_t *params))
 {
     format_part_json (ctx, node, TRUE);
+
+    return NOTMUCH_STATUS_SUCCESS;
 }
 
-static void
+static notmuch_status_t
 show_message (void *ctx,
 	      const notmuch_show_format_t *format,
 	      notmuch_message_t *message,
@@ -770,14 +774,18 @@ show_message (void *ctx,
     if (format->part) {
 	void *local = talloc_new (ctx);
 	mime_node_t *root, *part;
+	notmuch_status_t status;
 
-	if (mime_node_open (local, message, params->cryptoctx, params->decrypt,
-			    &root) == NOTMUCH_STATUS_SUCCESS &&
-	    (part = mime_node_seek_dfs (root, (params->part < 0 ?
-					       0 : params->part))))
-	    format->part (local, part, indent, params);
+	status = mime_node_open (local, message, params->cryptoctx,
+				 params->decrypt, &root);
+	if (status)
+	    goto DONE;
+	part = mime_node_seek_dfs (root, (params->part < 0 ? 0 : params->part));
+	if (part)
+	    status = format->part (local, part, indent, params);
+      DONE:
 	talloc_free (local);
-	return;
+	return status;
     }
 
     if (params->part <= 0) {
@@ -801,9 +809,11 @@ show_message (void *ctx,
 
 	fputs (format->message_end, stdout);
     }
+
+    return NOTMUCH_STATUS_SUCCESS;
 }
 
-static void
+static notmuch_status_t
 show_messages (void *ctx,
 	       const notmuch_show_format_t *format,
 	       notmuch_messages_t *messages,
@@ -814,6 +824,7 @@ show_messages (void *ctx,
     notmuch_bool_t match;
     int first_set = 1;
     int next_indent;
+    notmuch_status_t status, res = NOTMUCH_STATUS_SUCCESS;
 
     fputs (format->message_set_start, stdout);
 
@@ -834,17 +845,22 @@ show_messages (void *ctx,
 	next_indent = indent;
 
 	if (match || params->entire_thread) {
-	    show_message (ctx, format, message, indent, params);
+	    status = show_message (ctx, format, message, indent, params);
+	    if (status && !res)
+		res = status;
 	    next_indent = indent + 1;
 
-	    fputs (format->message_set_sep, stdout);
+	    if (!status)
+		fputs (format->message_set_sep, stdout);
 	}
 
-	show_messages (ctx,
-		       format,
-		       notmuch_message_get_replies (message),
-		       next_indent,
-		       params);
+	status = show_messages (ctx,
+				format,
+				notmuch_message_get_replies (message),
+				next_indent,
+				params);
+	if (status && !res)
+	    res = status;
 
 	notmuch_message_destroy (message);
 
@@ -852,6 +868,8 @@ show_messages (void *ctx,
     }
 
     fputs (format->message_set_end, stdout);
+
+    return res;
 }
 
 /* Formatted output of single message */
@@ -916,13 +934,13 @@ do_show_single (void *ctx,
 
 	fclose (file);
 
+	return 0;
+
     } else {
 
-	show_message (ctx, format, message, 0, params);
+	return show_message (ctx, format, message, 0, params) != NOTMUCH_STATUS_SUCCESS;
 
     }
-
-    return 0;
 }
 
 /* Formatted output of threads */
@@ -936,6 +954,7 @@ do_show (void *ctx,
     notmuch_thread_t *thread;
     notmuch_messages_t *messages;
     int first_toplevel = 1;
+    notmuch_status_t status, res = NOTMUCH_STATUS_SUCCESS;
 
     fputs (format->message_set_start, stdout);
 
@@ -955,7 +974,9 @@ do_show (void *ctx,
 	    fputs (format->message_set_sep, stdout);
 	first_toplevel = 0;
 
-	show_messages (ctx, format, messages, 0, params);
+	status = show_messages (ctx, format, messages, 0, params);
+	if (status && !res)
+	    res = status;
 
 	notmuch_thread_destroy (thread);
 
@@ -963,7 +984,7 @@ do_show (void *ctx,
 
     fputs (format->message_set_end, stdout);
 
-    return 0;
+    return res != NOTMUCH_STATUS_SUCCESS;
 }
 
 enum {

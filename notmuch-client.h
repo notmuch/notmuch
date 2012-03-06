@@ -67,9 +67,9 @@ struct notmuch_show_params;
 
 typedef struct notmuch_show_format {
     const char *message_set_start;
-    void (*part) (const void *ctx,
-		  struct mime_node *node, int indent,
-		  const struct notmuch_show_params *params);
+    notmuch_status_t (*part) (const void *ctx,
+			      struct mime_node *node, int indent,
+			      const struct notmuch_show_params *params);
     const char *message_start;
     void (*message) (const void *ctx,
 		     notmuch_message_t *message,
