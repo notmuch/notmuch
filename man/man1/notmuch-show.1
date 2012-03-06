@@ -84,12 +84,17 @@ http://homepage.ntlworld.com/jonathan.deboynepollard/FGA/mail-mbox-formats.html
 .TP 4
 .BR raw " (default for a single part, see \-\-part)"
 
-For a message, the original, raw content of the email message is
-output. Consumers of this format should expect to implement MIME
-decoding and similar functions.
+For a message or an attached message part, the original, raw content
+of the email message is output. Consumers of this format should expect
+to implement MIME decoding and similar functions.
 
 For a single part (\-\-part) the raw part content is output after
-performing any necessary MIME decoding.
+performing any necessary MIME decoding.  Note that messages with a
+simple body still have two parts: part 0 is the whole message and part
+1 is the body.
+
+For a multipart part, the part headers and body (including all child
+parts) is output.
 
 The raw format must only be used with search terms matching single
 message.
