@@ -220,56 +220,6 @@ _is_from_line (const char *line)
 	return 0;
 }
 
-/* Print a message in "mboxrd" format as documented, for example,
- * here:
- *
- * http://qmail.org/qmail-manual-html/man5/mbox.html
- */
-static void
-format_message_mbox (const void *ctx,
-		     notmuch_message_t *message,
-		     unused (int indent))
-{
-    const char *filename;
-    FILE *file;
-    const char *from;
-
-    time_t date;
-    struct tm date_gmtime;
-    char date_asctime[26];
-
-    char *line = NULL;
-    size_t line_size;
-    ssize_t line_len;
-
-    filename = notmuch_message_get_filename (message);
-    file = fopen (filename, "r");
-    if (file == NULL) {
-	fprintf (stderr, "Failed to open %s: %s\n",
-		 filename, strerror (errno));
-	return;
-    }
-
-    from = notmuch_message_get_header (message, "from");
-    from = _extract_email_address (ctx, from);
-
-    date = notmuch_message_get_date (message);
-    gmtime_r (&date, &date_gmtime);
-    asctime_r (&date_gmtime, date_asctime);
-
-    printf ("From %s %s", from, date_asctime);
-
-    while ((line_len = getline (&line, &line_size, file)) != -1 ) {
-	if (_is_from_line (line))
-	    putchar ('>');
-	printf ("%s", line);
-    }
-
-    printf ("\n");
-
-    fclose (file);
-}
-
 static void
 format_headers_message_part_text (GMimeMessage *message)
 {
@@ -762,6 +712,56 @@ format_part_json_entry (const void *ctx, mime_node_t *node, unused (int indent),
     format_part_json (ctx, node, TRUE);
 
     return NOTMUCH_STATUS_SUCCESS;
+}
+
+/* Print a message in "mboxrd" format as documented, for example,
+ * here:
+ *
+ * http://qmail.org/qmail-manual-html/man5/mbox.html
+ */
+static void
+format_message_mbox (const void *ctx,
+		     notmuch_message_t *message,
+		     unused (int indent))
+{
+    const char *filename;
+    FILE *file;
+    const char *from;
+
+    time_t date;
+    struct tm date_gmtime;
+    char date_asctime[26];
+
+    char *line = NULL;
+    size_t line_size;
+    ssize_t line_len;
+
+    filename = notmuch_message_get_filename (message);
+    file = fopen (filename, "r");
+    if (file == NULL) {
+	fprintf (stderr, "Failed to open %s: %s\n",
+		 filename, strerror (errno));
+	return;
+    }
+
+    from = notmuch_message_get_header (message, "from");
+    from = _extract_email_address (ctx, from);
+
+    date = notmuch_message_get_date (message);
+    gmtime_r (&date, &date_gmtime);
+    asctime_r (&date_gmtime, date_asctime);
+
+    printf ("From %s %s", from, date_asctime);
+
+    while ((line_len = getline (&line, &line_size, file)) != -1 ) {
+	if (_is_from_line (line))
+	    putchar ('>');
+	printf ("%s", line);
+    }
+
+    printf ("\n");
+
+    fclose (file);
 }
 
 static notmuch_status_t
