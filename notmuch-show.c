@@ -476,33 +476,6 @@ format_part_sigstatus_json (mime_node_t *node)
 }
 #endif
 
-static void
-format_part_content_raw (GMimeObject *part)
-{
-    if (! GMIME_IS_PART (part))
-	return;
-
-    GMimeStream *stream_stdout;
-    GMimeStream *stream_filter = NULL;
-    GMimeDataWrapper *wrapper;
-
-    stream_stdout = g_mime_stream_file_new (stdout);
-    g_mime_stream_file_set_owner (GMIME_STREAM_FILE (stream_stdout), FALSE);
-
-    stream_filter = g_mime_stream_filter_new (stream_stdout);
-
-    wrapper = g_mime_part_get_content_object (GMIME_PART (part));
-
-    if (wrapper && stream_filter)
-	g_mime_data_wrapper_write_to_stream (wrapper, stream_filter);
-
-    if (stream_filter)
-	g_object_unref (stream_filter);
-
-    if (stream_stdout)
-	g_object_unref(stream_stdout);
-}
-
 static notmuch_status_t
 format_part_text (const void *ctx, mime_node_t *node,
 		  int indent, const notmuch_show_params_t *params)
@@ -758,6 +731,33 @@ format_part_mbox (const void *ctx, mime_node_t *node, unused (int indent),
     fclose (file);
 
     return NOTMUCH_STATUS_SUCCESS;
+}
+
+static void
+format_part_content_raw (GMimeObject *part)
+{
+    if (! GMIME_IS_PART (part))
+	return;
+
+    GMimeStream *stream_stdout;
+    GMimeStream *stream_filter = NULL;
+    GMimeDataWrapper *wrapper;
+
+    stream_stdout = g_mime_stream_file_new (stdout);
+    g_mime_stream_file_set_owner (GMIME_STREAM_FILE (stream_stdout), FALSE);
+
+    stream_filter = g_mime_stream_filter_new (stream_stdout);
+
+    wrapper = g_mime_part_get_content_object (GMIME_PART (part));
+
+    if (wrapper && stream_filter)
+	g_mime_data_wrapper_write_to_stream (wrapper, stream_filter);
+
+    if (stream_filter)
+	g_object_unref (stream_filter);
+
+    if (stream_stdout)
+	g_object_unref(stream_stdout);
 }
 
 static notmuch_status_t
