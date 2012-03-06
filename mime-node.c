@@ -97,11 +97,26 @@ mime_node_open (const void *ctx, notmuch_message_t *message,
     }
 
     mctx->stream = g_mime_stream_file_new (mctx->file);
+    if (!mctx->stream) {
+	fprintf (stderr, "Out of memory.\n");
+	status = NOTMUCH_STATUS_OUT_OF_MEMORY;
+	goto DONE;
+    }
     g_mime_stream_file_set_owner (GMIME_STREAM_FILE (mctx->stream), FALSE);
 
     mctx->parser = g_mime_parser_new_with_stream (mctx->stream);
+    if (!mctx->parser) {
+	fprintf (stderr, "Out of memory.\n");
+	status = NOTMUCH_STATUS_OUT_OF_MEMORY;
+	goto DONE;
+    }
 
     mctx->mime_message = g_mime_parser_construct_message (mctx->parser);
+    if (!mctx->mime_message) {
+	fprintf (stderr, "Failed to parse %s\n", filename);
+	status = NOTMUCH_STATUS_FILE_ERROR;
+	goto DONE;
+    }
 
     mctx->cryptoctx = cryptoctx;
     mctx->decrypt = decrypt;
