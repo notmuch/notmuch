@@ -281,6 +281,7 @@ for gmimepc in gmime-2.6 gmime-2.4; do
 	have_gmime=1
 	gmime_cflags=$(pkg-config --cflags $gmimepc)
 	gmime_ldflags=$(pkg-config --libs $gmimepc)
+	break
     fi
 done
 if [ "$have_gmime" = "0" ]; then
