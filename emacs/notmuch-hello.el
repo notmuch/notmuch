@@ -461,7 +461,7 @@ Such a list can be computed with `notmuch-hello-query-counts'."
 		  ;; just insert `(- widest (length name))' spaces - the
 		  ;; column separator is included in the button if
 		  ;; `(equal widest (length name)'.
-		  (widget-insert (make-string (max 1
+		  (widget-insert (make-string (max 0
 						   (- widest (length name)))
 					      ? )))))
 	    (setq count (1+ count))
