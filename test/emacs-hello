@@ -44,4 +44,13 @@ test_emacs "(let ((notmuch-hello-sections
              (test-output))"
 test_expect_equal_file OUTPUT $EXPECTED/notmuch-hello-section-counts
 
+test_begin_subtest "Column alignment for tag/queries with long names"
+test_subtest_known_broken
+tag=a-very-long-tag # length carefully calculated for 80 characters window width
+notmuch tag +$tag '*'
+test_emacs '(notmuch-hello)
+            (test-output)'
+notmuch tag -$tag '*'
+test_expect_equal_file OUTPUT $EXPECTED/notmuch-hello-long-names
+
 test_done
