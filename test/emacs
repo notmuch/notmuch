@@ -39,7 +39,7 @@ test_begin_subtest "Navigation of notmuch-hello to search results"
 test_emacs '(notmuch-hello)
 	    (goto-char (point-min))
 	    (re-search-forward "inbox")
-	    (widget-button-press (point))
+	    (widget-button-press (1- (point)))
 	    (notmuch-test-wait)
 	    (test-output)'
 test_expect_equal_file OUTPUT $EXPECTED/notmuch-hello-view-inbox

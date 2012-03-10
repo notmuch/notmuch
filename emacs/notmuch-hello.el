@@ -429,7 +429,8 @@ Such a list can be computed with `notmuch-hello-query-counts'."
   (let* ((widest (notmuch-hello-longest-label searches))
 	 (tags-and-width (notmuch-hello-tags-per-line widest))
 	 (tags-per-line (car tags-and-width))
-	 (widest (cdr tags-and-width))
+	 (column-width (cdr tags-and-width))
+	 (column-indent 0)
 	 (count 0)
 	 (reordered-list (notmuch-hello-reflect searches tags-per-line))
 	 ;; Hack the display of the buttons used.
@@ -441,32 +442,25 @@ Such a list can be computed with `notmuch-hello-query-counts'."
     (mapc (lambda (elem)
 	    ;; (not elem) indicates an empty slot in the matrix.
 	    (when elem
+	      (if (> column-indent 0)
+		  (widget-insert (make-string column-indent ? )))
 	      (let* ((name (first elem))
 		     (query (second elem))
-		     (msg-count (third elem))
-		     (formatted-name (format "%s " name)))
+		     (msg-count (third elem)))
 		(widget-insert (format "%8s "
 				       (notmuch-hello-nice-number msg-count)))
-		(if (string= formatted-name notmuch-hello-target)
+		(if (string= name notmuch-hello-target)
 		    (setq found-target-pos (point-marker)))
 		(widget-create 'push-button
 			       :notify #'notmuch-hello-widget-search
 			       :notmuch-search-terms query
-			       formatted-name)
-		(unless (eq (% count tags-per-line) (1- tags-per-line))
-		  ;; If this is not the last tag on the line, insert
-		  ;; enough space to consume the rest of the column.
-		  ;; Because the button for the name is `(1+ (length
-		  ;; name))' long (due to the trailing space) we can
-		  ;; just insert `(- widest (length name))' spaces - the
-		  ;; column separator is included in the button if
-		  ;; `(equal widest (length name)'.
-		  (widget-insert (make-string (max 0
-						   (- widest (length name)))
-					      ? )))))
+			       name)
+		(setq column-indent
+		      (1+ (max 0 (- column-width (length name)))))))
 	    (setq count (1+ count))
-	    (if (eq (% count tags-per-line) 0)
-		(widget-insert "\n")))
+	    (when (eq (% count tags-per-line) 0)
+	      (setq column-indent 0)
+	      (widget-insert "\n")))
 	  reordered-list)
 
     ;; If the last line was not full (and hence did not include a
