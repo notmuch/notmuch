@@ -318,7 +318,11 @@ generate_message ()
     fi
 
     if [ -z "${template[subject]}" ]; then
-	template[subject]="Test message #${gen_msg_cnt}"
+	if [ -n "$test_subtest_name" ]; then
+	    template[subject]="$test_subtest_name"
+	else
+	    template[subject]="Test message #${gen_msg_cnt}"
+	fi
     fi
 
     if [ -z "${template[date]}" ]; then
