@@ -83,6 +83,11 @@ Show view archiving key binding changes
   results. The thread archiving functions are now available in 'A' and
   'X'.
 
+Support text/calendar MIME type
+
+  The text/calendar MIME type is now supported in addition to
+  text/x-vcalendar.
+
 Library changes
 ---------------
 
