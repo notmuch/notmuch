@@ -48,6 +48,11 @@ WITH_EMACS=1
 WITH_BASH=1
 WITH_ZSH=1
 
+GMIME_24_VERSION='gmime-2.4'
+GMIME_26_VERSION='gmime-2.6 >= 2.6.7'
+
+WITH_GMIME_VERSIONS="$GMIME_26_VERSION;$GMIME_24_VERSION"
+
 usage ()
 {
     cat <<EOF
@@ -173,6 +178,12 @@ for option; do
 	fi
     elif [ "${option}" = '--without-zsh-completion' ] ; then
 	WITH_ZSH=0
+    elif [ "${option%%=*}" = '--with-gmime-version' ] ; then
+	if [ "${option#*=}" = '2.4' ]; then
+	     WITH_GMIME_VERSIONS=$GMIME_24_VERSION
+	 elif [ "${option#*=}" = '2.6' ]; then
+	     WITH_GMIME_VERSIONS=$GMIME_26_VERSION
+	fi
     elif [ "${option%%=*}" = '--build' ] ; then
 	true
     elif [ "${option%%=*}" = '--host' ] ; then
@@ -252,7 +263,8 @@ fi
 # crypto bug. We need 2.6.7 for permissive "From " header handling.
 printf "Checking for GMime development files... "
 have_gmime=0
-for gmimepc in 'gmime-2.6 >= 2.6.7' gmime-2.4; do
+IFS=';'
+for gmimepc in $WITH_GMIME_VERSIONS; do
     if pkg-config --exists $gmimepc; then
 	printf "Yes ($gmimepc).\n"
 	have_gmime=1
@@ -261,6 +273,7 @@ for gmimepc in 'gmime-2.6 >= 2.6.7' gmime-2.4; do
 	break
     fi
 done
+IFS=$DEFAULT_IFS
 if [ "$have_gmime" = "0" ]; then
     printf "No.\n"
     errors=$((errors + 1))
