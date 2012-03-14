@@ -219,13 +219,14 @@ notmuch_query_search_messages (notmuch_query_t *query)
 
 	if (query->exclude_terms) {
 	    exclude_query = _notmuch_exclude_tags (query, final_query);
-	    exclude_query = Xapian::Query (Xapian::Query::OP_AND,
-					   exclude_query, final_query);
 
 	    if (query->omit_excluded_messages)
 		final_query = Xapian::Query (Xapian::Query::OP_AND_NOT,
 					     final_query, exclude_query);
 	    else {
+		exclude_query = Xapian::Query (Xapian::Query::OP_AND,
+					   exclude_query, final_query);
+
 		enquire.set_weighting_scheme (Xapian::BoolWeight());
 		enquire.set_query (exclude_query);
 
