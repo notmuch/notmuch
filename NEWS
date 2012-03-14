@@ -74,6 +74,15 @@ Fix MML tag quoting in replies
   inserted in `message-setup-hook'. Quoting is now limited to the
   cited message.
 
+Show view archiving key binding changes
+
+  The show view archiving key bindings 'a' and 'x' now remove the
+  "inbox" tag from the current message only (instead of thread), and
+  move to the next message. At the last message, 'a' proceeds to the
+  next thread in search results, and 'x' returns to search
+  results. The thread archiving functions are now available in 'A' and
+  'X'.
+
 Library changes
 ---------------
 
