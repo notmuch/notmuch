@@ -20,6 +20,12 @@ Mail store folder/file ignore
    NOTE: *Every* file/directory that goes by one of those names will
    be ignored, independent of its depth/location in the mail store.
 
+Manual page for notmuch configuration options
+
+  The notmuch CLI configuration file options are now documented in the
+  notmuch-config(1) manual page in addition to the configuration file
+  itself.
+
 Emacs Interface
 ---------------
 
