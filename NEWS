@@ -68,6 +68,12 @@ New functions
   optionally visiting a URI to the current message at one of a number
   of Mailing List Archives.
 
+Fix MML tag quoting in replies
+
+  The MML tag quoting fix of 0.11.1 unintentionally quoted tags
+  inserted in `message-setup-hook'. Quoting is now limited to the
+  cited message.
+
 Library changes
 ---------------
 
