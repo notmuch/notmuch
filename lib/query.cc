@@ -64,15 +64,21 @@ _notmuch_doc_id_set_init (void *ctx,
 			  notmuch_doc_id_set_t *doc_ids,
 			  GArray *arr);
 
+static notmuch_bool_t
+_debug_query (void)
+{
+    char *env = getenv ("NOTMUCH_DEBUG_QUERY");
+    return (env && strcmp (env, "") != 0);
+}
+
 notmuch_query_t *
 notmuch_query_create (notmuch_database_t *notmuch,
 		      const char *query_string)
 {
     notmuch_query_t *query;
 
-#ifdef DEBUG_QUERY
-    fprintf (stderr, "Query string is:\n%s\n", query_string);
-#endif
+    if (_debug_query ())
+	fprintf (stderr, "Query string is:\n%s\n", query_string);
 
     query = talloc (NULL, notmuch_query_t);
     if (unlikely (query == NULL))
@@ -255,9 +261,9 @@ notmuch_query_search_messages (notmuch_query_t *query)
 	    break;
 	}
 
-#if DEBUG_QUERY
-	fprintf (stderr, "Final query is:\n%s\n", final_query.get_description().c_str());
-#endif
+	if (_debug_query ())
+	    fprintf (stderr, "Final query is:\n%s\n",
+		     final_query.get_description ().c_str ());
 
 	enquire.set_query (final_query);
 
@@ -531,9 +537,9 @@ notmuch_query_count_messages (notmuch_query_t *query)
 	enquire.set_weighting_scheme(Xapian::BoolWeight());
 	enquire.set_docid_order(Xapian::Enquire::ASCENDING);
 
-#if DEBUG_QUERY
-	fprintf (stderr, "Final query is:\n%s\n", final_query.get_description().c_str());
-#endif
+	if (_debug_query ())
+	    fprintf (stderr, "Final query is:\n%s\n",
+		     final_query.get_description ().c_str ());
 
 	enquire.set_query (final_query);
 
