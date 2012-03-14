@@ -130,7 +130,7 @@ output=$(notmuch search "bödý" | notmuch_search_sanitize)
 test_expect_equal "$output" "thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; utf8-message-body-subject (inbox unread)"
 
 test_begin_subtest "Exclude \"deleted\" messages from search"
-notmuch config set search.exclude_tags = deleted
+notmuch config set search.exclude_tags deleted
 generate_message '[subject]="Not deleted"'
 generate_message '[subject]="Deleted"'
 notmuch new > /dev/null

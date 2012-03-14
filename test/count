@@ -38,7 +38,7 @@ test_expect_equal \
     "`notmuch count --output=threads ${SEARCH}`"
 
 test_begin_subtest "count excluding \"deleted\" messages"
-notmuch config set search.exclude_tags = deleted
+notmuch config set search.exclude_tags deleted
 generate_message '[subject]="Not deleted"'
 generate_message '[subject]="Another not deleted"'
 generate_message '[subject]="Deleted"'
