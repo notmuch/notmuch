@@ -1,5 +1,8 @@
 #! /bin/sh
 
+# Store original IFS value so it can be changed (and restored) in many places.
+readonly DEFAULT_IFS=$IFS
+
 srcdir=$(dirname "$0")
 
 # For a non-srcdir configure invocation (such as ../configure), create
@@ -351,7 +354,6 @@ elif [ $uname = "Linux" ] || [ $uname = "GNU" ] ; then
     #	IFS=$(printf '\n')
     #
     # because the shell's command substitution deletes any trailing newlines.
-    OLD_IFS=$IFS
     IFS="
 "
     for path in $ldconfig_paths; do
@@ -359,7 +361,7 @@ elif [ $uname = "Linux" ] || [ $uname = "GNU" ] ; then
 	    libdir_in_ldconfig=1
 	fi
     done
-    IFS=$OLD_IFS
+    IFS=$DEFAULT_IFS
     if [ "$libdir_in_ldconfig" = '0' ]; then
 	printf "No (will set RPATH)\n"
     else
@@ -508,7 +510,7 @@ done
 printf "\n\t${WARN_CFLAGS}\n"
 
 rm -f minimal minimal.c
-	
+
 cat <<EOF
 
 All required packages were found. You may now run the following
