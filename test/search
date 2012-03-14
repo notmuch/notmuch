@@ -132,12 +132,29 @@ test_expect_equal "$output" "thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; u
 test_begin_subtest "Exclude \"deleted\" messages from search"
 notmuch config set search.exclude_tags deleted
 generate_message '[subject]="Not deleted"'
+not_deleted_id=$gen_msg_id
 generate_message '[subject]="Deleted"'
 notmuch new > /dev/null
 notmuch tag +deleted id:$gen_msg_id
+deleted_id=$gen_msg_id
 output=$(notmuch search subject:deleted | notmuch_search_sanitize)
 test_expect_equal "$output" "thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; Not deleted (inbox unread)
 thread:XXX   2001-01-05 [0/1] Notmuch Test Suite; Deleted (deleted inbox unread)"
+
+test_begin_subtest "Exclude \"deleted\" messages from message search"
+output=$(notmuch search --output=messages subject:deleted | notmuch_search_sanitize)
+test_expect_equal "$output" "id:$not_deleted_id"
+
+test_begin_subtest "Exclude \"deleted\" messages from message search (no-exclude)"
+output=$(notmuch search --no-exclude --output=messages subject:deleted | notmuch_search_sanitize)
+test_expect_equal "$output" "id:$not_deleted_id
+id:$deleted_id"
+
+test_begin_subtest "Exclude \"deleted\" messages from message search (non-existent exclude-tag)"
+notmuch config set search.exclude_tags deleted non_existent_tag
+output=$(notmuch search --output=messages subject:deleted | notmuch_search_sanitize)
+test_expect_equal "$output" "id:$not_deleted_id"
+notmuch config set search.exclude_tags deleted
 
 test_begin_subtest "Exclude \"deleted\" messages from search, overridden"
 output=$(notmuch search subject:deleted and tag:deleted | notmuch_search_sanitize)
