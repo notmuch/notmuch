@@ -261,9 +261,12 @@ notmuch_query_search_messages (notmuch_query_t *query)
 	    break;
 	}
 
-	if (_debug_query ())
+	if (_debug_query ()) {
+	    fprintf (stderr, "Exclude query is:\n%s\n",
+		     exclude_query.get_description ().c_str ());
 	    fprintf (stderr, "Final query is:\n%s\n",
 		     final_query.get_description ().c_str ());
+	}
 
 	enquire.set_query (final_query);
 
@@ -537,9 +540,12 @@ notmuch_query_count_messages (notmuch_query_t *query)
 	enquire.set_weighting_scheme(Xapian::BoolWeight());
 	enquire.set_docid_order(Xapian::Enquire::ASCENDING);
 
-	if (_debug_query ())
+	if (_debug_query ()) {
+	    fprintf (stderr, "Exclude query is:\n%s\n",
+		     exclude_query.get_description ().c_str ());
 	    fprintf (stderr, "Final query is:\n%s\n",
 		     final_query.get_description ().c_str ());
+	}
 
 	enquire.set_query (final_query);
 
