@@ -1568,6 +1568,11 @@ to show, nil otherwise."
 	  (notmuch-show-message-adjust))
       (goto-char (point-max)))))
 
+(defun notmuch-show-open-if-matched ()
+  "Open a message if it is matched (whether or not excluded)."
+  (let ((props (notmuch-show-get-message-properties)))
+    (notmuch-show-message-visible props (plist-get props :match))))
+
 (defun notmuch-show-goto-first-wanted-message ()
   "Move to the first open message and mark it read"
   (goto-char (point-min))
@@ -1575,9 +1580,14 @@ to show, nil otherwise."
       (notmuch-show-mark-read)
     (notmuch-show-next-open-message))
   (when (eobp)
+    ;; There are no matched non-excluded messages so open all matched
+    ;; (necessarily excluded) messages and go to the first.
+    (notmuch-show-mapc 'notmuch-show-open-if-matched)
+    (force-window-update)
     (goto-char (point-min))
-    (unless (notmuch-show-get-prop :match)
-      (notmuch-show-next-matching-message))))
+    (if (notmuch-show-message-visible-p)
+	(notmuch-show-mark-read)
+      (notmuch-show-next-open-message))))
 
 (defun notmuch-show-previous-open-message ()
   "Show the previous open message."
