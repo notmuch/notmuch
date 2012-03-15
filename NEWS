@@ -119,6 +119,12 @@ Generate inline patch fake attachment file names from message subject
   'git format-patch' instead of just "inline patch". See "Notmuch Show
   Insert Text/Plain Hook" in the notmuch customize interface.
 
+Enable `notmuch-search-line-faces' by default
+
+  Make the `notmuch-search-line-faces' functionality more discoverable
+  for new users by showing "unread" messages bold and "flagged"
+  messages blue by default in the search view.
+
 Library changes
 ---------------
 
