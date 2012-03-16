@@ -962,7 +962,7 @@ PROMPT is the string to prompt with."
 					 completions)))
 	       (t (list string)))))))
       ;; this was simpler than convincing completing-read to accept spaces:
-      (define-key keymap (kbd "<tab>") 'minibuffer-complete)
+      (define-key keymap (kbd "TAB") 'minibuffer-complete)
       (let ((history-delete-duplicates t))
 	(read-from-minibuffer prompt nil keymap nil
 			      'notmuch-search-history nil nil)))))
