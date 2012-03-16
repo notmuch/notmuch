@@ -172,7 +172,7 @@ class Threads(Python3StringMixIn):
 
     _destroy = nmlib.notmuch_threads_destroy
     _destroy.argtypes = [NotmuchThreadsP]
-    _destroy.argtypes = None
+    _destroy.restype = None
 
     def __del__(self):
         """Close and free the notmuch Threads"""
