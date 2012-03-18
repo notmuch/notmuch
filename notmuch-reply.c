@@ -505,6 +505,61 @@ guess_from_received_header (notmuch_config_t *config, notmuch_message_t *message
     return NULL;
 }
 
+static GMimeMessage *
+create_reply_message(void *ctx,
+		     notmuch_config_t *config,
+		     notmuch_message_t *message,
+		     notmuch_bool_t reply_all)
+{
+    const char *subject, *from_addr = NULL;
+    const char *in_reply_to, *orig_references, *references;
+
+    /* The 1 means we want headers in a "pretty" order. */
+    GMimeMessage *reply = g_mime_message_new (1);
+    if (reply == NULL) {
+	fprintf (stderr, "Out of memory\n");
+	return NULL;
+    }
+
+    subject = notmuch_message_get_header (message, "subject");
+    if (subject) {
+	if (strncasecmp (subject, "Re:", 3))
+	    subject = talloc_asprintf (ctx, "Re: %s", subject);
+	g_mime_message_set_subject (reply, subject);
+    }
+
+    from_addr = add_recipients_from_message (reply, config,
+					     message, reply_all);
+
+    if (from_addr == NULL)
+	from_addr = guess_from_received_header (config, message);
+
+    if (from_addr == NULL)
+	from_addr = notmuch_config_get_user_primary_email (config);
+
+    from_addr = talloc_asprintf (ctx, "%s <%s>",
+				 notmuch_config_get_user_name (config),
+				 from_addr);
+    g_mime_object_set_header (GMIME_OBJECT (reply),
+			      "From", from_addr);
+
+    in_reply_to = talloc_asprintf (ctx, "<%s>",
+				   notmuch_message_get_message_id (message));
+
+    g_mime_object_set_header (GMIME_OBJECT (reply),
+			      "In-Reply-To", in_reply_to);
+
+    orig_references = notmuch_message_get_header (message, "references");
+    references = talloc_asprintf (ctx, "%s%s%s",
+				  orig_references ? orig_references : "",
+				  orig_references ? " " : "",
+				  in_reply_to);
+    g_mime_object_set_header (GMIME_OBJECT (reply),
+			      "References", references);
+
+    return reply;
+}
+
 static int
 notmuch_reply_format_default(void *ctx,
 			     notmuch_config_t *config,
@@ -515,8 +570,6 @@ notmuch_reply_format_default(void *ctx,
     GMimeMessage *reply;
     notmuch_messages_t *messages;
     notmuch_message_t *message;
-    const char *subject, *from_addr = NULL;
-    const char *in_reply_to, *orig_references, *references;
     const notmuch_show_format_t *format = &format_reply;
 
     for (messages = notmuch_query_search_messages (query);
@@ -525,48 +578,15 @@ notmuch_reply_format_default(void *ctx,
     {
 	message = notmuch_messages_get (messages);
 
-	/* The 1 means we want headers in a "pretty" order. */
-	reply = g_mime_message_new (1);
-	if (reply == NULL) {
-	    fprintf (stderr, "Out of memory\n");
+	reply = create_reply_message (ctx, config, message, reply_all);
+
+	/* If reply creation failed, we're out of memory, so don't
+	 * bother trying any more messages.
+	 */
+	if (!reply) {
+	    notmuch_message_destroy (message);
 	    return 1;
 	}
-
-	subject = notmuch_message_get_header (message, "subject");
-	if (subject) {
-	    if (strncasecmp (subject, "Re:", 3))
-		subject = talloc_asprintf (ctx, "Re: %s", subject);
-	    g_mime_message_set_subject (reply, subject);
-	}
-
-	from_addr = add_recipients_from_message (reply, config, message,
-						 reply_all);
-
-	if (from_addr == NULL)
-	    from_addr = guess_from_received_header (config, message);
-
-	if (from_addr == NULL)
-	    from_addr = notmuch_config_get_user_primary_email (config);
-
-	from_addr = talloc_asprintf (ctx, "%s <%s>",
-				     notmuch_config_get_user_name (config),
-				     from_addr);
-	g_mime_object_set_header (GMIME_OBJECT (reply),
-				  "From", from_addr);
-
-	in_reply_to = talloc_asprintf (ctx, "<%s>",
-			     notmuch_message_get_message_id (message));
-
-	g_mime_object_set_header (GMIME_OBJECT (reply),
-				  "In-Reply-To", in_reply_to);
-
-	orig_references = notmuch_message_get_header (message, "references");
-	references = talloc_asprintf (ctx, "%s%s%s",
-				      orig_references ? orig_references : "",
-				      orig_references ? " " : "",
-				      in_reply_to);
-	g_mime_object_set_header (GMIME_OBJECT (reply),
-				  "References", references);
 
 	show_reply_headers (reply);
 
