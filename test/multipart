@@ -612,6 +612,59 @@ Non-text part: text/html
 EOF
 test_expect_equal_file OUTPUT EXPECTED
 
+test_begin_subtest "'notmuch reply' to a multipart message with json format"
+test_subtest_known_broken
+notmuch reply --format=json 'id:87liy5ap00.fsf@yoom.home.cworth.org' | notmuch_json_show_sanitize >OUTPUT
+cat <<EOF >EXPECTED
+{"reply-headers": {"Subject": "Re: Multipart message",
+ "From": "Notmuch Test Suite <test_suite@notmuchmail.org>",
+ "To": "Carl Worth <cworth@cworth.org>,
+ cworth@cworth.org",
+ "In-reply-to": "<87liy5ap00.fsf@yoom.home.cworth.org>",
+ "References": " <87liy5ap00.fsf@yoom.home.cworth.org>"},
+ "original": {"id": "XXXXX",
+ "match": false,
+ "excluded": false,
+ "filename": "YYYYY",
+ "timestamp": 978709437,
+ "date_relative": "2001-01-05",
+ "tags": ["attachment","inbox","signed","unread"],
+ "headers": {"Subject": "Multipart message",
+ "From": "Carl Worth <cworth@cworth.org>",
+ "To": "cworth@cworth.org",
+ "Date": "Fri,
+ 05 Jan 2001 15:43:57 +0000"},
+ "body": [{"id": 1,
+ "content-type": "multipart/signed",
+ "content": [{"id": 2,
+ "content-type": "multipart/mixed",
+ "content": [{"id": 3,
+ "content-type": "message/rfc822",
+ "content": [{"headers": {"Subject": "html message",
+ "From": "Carl Worth <cworth@cworth.org>",
+ "To": "cworth@cworth.org",
+ "Date": "Fri,
+ 05 Jan 2001 15:42:57 +0000"},
+ "body": [{"id": 4,
+ "content-type": "multipart/alternative",
+ "content": [{"id": 5,
+ "content-type": "text/html"},
+ {"id": 6,
+ "content-type": "text/plain",
+ "content": "This is an embedded message,
+ with a multipart/alternative part.\n"}]}]}]},
+ {"id": 7,
+ "content-type": "text/plain",
+ "filename": "YYYYY",
+ "content": "This is a text attachment.\n"},
+ {"id": 8,
+ "content-type": "text/plain",
+ "content": "And this message is signed.\n\n-Carl\n"}]},
+ {"id": 9,
+ "content-type": "application/pgp-signature"}]}]}}
+EOF
+test_expect_equal_file OUTPUT EXPECTED
+
 test_begin_subtest "'notmuch show --part' does not corrupt a part with CRLF pair"
 notmuch show --format=raw --part=3 id:base64-part-with-crlf > crlf.out
 echo -n -e "\xEF\x0D\x0A" > crlf.expected
