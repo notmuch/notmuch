@@ -1,15 +1,5 @@
-Notmuch 0.12 (2012-xx-xx)
+Notmuch 0.13 (2012-xx-xx)
 =========================
-
-Command-Line Interface
-----------------------
-
-Reply to sender
-
-  "notmuch reply" has gained the ability to create a reply template
-  for replying just to the sender of the message, in addition to reply
-  to all. The feature is available through the new command line option
-  --reply-to=(all|sender).
 
 Tag exclusion
 
@@ -28,6 +18,19 @@ Tag exclusion
   tags "deleted" and "spam" to be excluded, equivalent to running:
 
     notmuch config set search.exclude_tags deleted spam
+
+Notmuch 0.12 (2012-xx-xx)
+=========================
+
+Command-Line Interface
+----------------------
+
+Reply to sender
+
+  "notmuch reply" has gained the ability to create a reply template
+  for replying just to the sender of the message, in addition to reply
+  to all. The feature is available through the new command line option
+  --reply-to=(all|sender).
 
 Mail store folder/file ignore
 
