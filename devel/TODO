@@ -141,6 +141,14 @@ Simplify notmuch-reply to simply print the headers (we have the
 original values) rather than calling GMime (which encodes) and adding
 the confusing gmime-filter-headers.c code (which decodes).
 
+Properly handle replying to multiple messages. Currently, the JSON
+reply format only supports a single message, but the default reply
+format accepts searches returning multiple messages. The expected
+behavior of replying to multiple messages is not obvious, and there
+are multiple ideas that might make sense. Some consensus needs to be
+reached on this issue, and then both reply formats should be updated
+to be consistent.
+
 notmuch library
 ---------------
 Add support for custom flag<->tag mappings. In the notmuch
