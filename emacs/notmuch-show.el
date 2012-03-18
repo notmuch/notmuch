@@ -488,7 +488,7 @@ message at DEPTH in the current thread."
 	 (setq notmuch-show-process-crypto ,process-crypto)
 	 ;; Always acquires the part via `notmuch part', even if it is
 	 ;; available in the JSON output.
-	 (insert (notmuch-show-get-bodypart-internal ,message-id ,nth))
+	 (insert (notmuch-get-bodypart-internal ,message-id ,nth notmuch-show-process-crypto))
 	 ,@body))))
 
 (defun notmuch-show-save-part (message-id nth &optional filename content-type)
@@ -536,7 +536,7 @@ current buffer, if possible."
 	;; test whether we are able to inline it (which includes both
 	;; capability and suitability tests).
 	(when (mm-inlined-p handle)
-	  (insert (notmuch-show-get-bodypart-content msg part nth))
+	  (insert (notmuch-get-bodypart-content msg part nth notmuch-show-process-crypto))
 	  (when (mm-inlinable-p handle)
 	    (set-buffer display-buffer)
 	    (mm-display-part handle)
@@ -613,8 +613,8 @@ current buffer, if possible."
 	  ;; times (hundreds!), which results in many calls to
 	  ;; `notmuch part'.
 	  (unless content
-	    (setq content (notmuch-show-get-bodypart-internal (concat "id:" message-id)
-							      part-number))
+	    (setq content (notmuch-get-bodypart-internal (concat "id:" message-id)
+							      part-number notmuch-show-process-crypto))
 	    (with-current-buffer w3m-current-buffer
 	      (notmuch-show-w3m-cid-store-internal url
 						   message-id
@@ -734,7 +734,7 @@ current buffer, if possible."
     ;; insert a header to make this clear.
     (if (> nth 1)
 	(notmuch-show-insert-part-header nth declared-type content-type (plist-get part :filename)))
-    (insert (notmuch-show-get-bodypart-content msg part nth))
+    (insert (notmuch-get-bodypart-content msg part nth notmuch-show-process-crypto))
     (save-excursion
       (save-restriction
 	(narrow-to-region start (point-max))
@@ -744,7 +744,7 @@ current buffer, if possible."
 (defun notmuch-show-insert-part-text/calendar (msg part content-type nth depth declared-type)
   (notmuch-show-insert-part-header nth declared-type content-type (plist-get part :filename))
   (insert (with-temp-buffer
-	    (insert (notmuch-show-get-bodypart-content msg part nth))
+	    (insert (notmuch-get-bodypart-content msg part nth notmuch-show-process-crypto))
 	    (goto-char (point-min))
 	    (let ((file (make-temp-file "notmuch-ical"))
 		  result)
@@ -805,25 +805,6 @@ current buffer, if possible."
 			 "/*"))
 		(intern (concat "notmuch-show-insert-part-" content-type))))
     result))
-
-;; Helper for parts which are generally not included in the default
-;; JSON output.
-(defun notmuch-show-get-bodypart-internal (message-id part-number)
-  (let ((args '("show" "--format=raw"))
-	(part-arg (format "--part=%s" part-number)))
-    (setq args (append args (list part-arg)))
-    (if notmuch-show-process-crypto
-	(setq args (append args '("--decrypt"))))
-    (setq args (append args (list message-id)))
-    (with-temp-buffer
-      (let ((coding-system-for-read 'no-conversion))
-	(progn
-	  (apply 'call-process (append (list notmuch-command nil (list t nil) nil) args))
-	  (buffer-string))))))
-
-(defun notmuch-show-get-bodypart-content (msg part nth)
-  (or (plist-get part :content)
-      (notmuch-show-get-bodypart-internal (concat "id:" (plist-get msg :id)) nth)))
 
 ;; 
 

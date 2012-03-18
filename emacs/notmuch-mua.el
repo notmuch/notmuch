@@ -19,10 +19,14 @@
 ;;
 ;; Authors: David Edmondson <dme@dme.org>
 
+(require 'json)
 (require 'message)
+(require 'format-spec)
 
 (require 'notmuch-lib)
 (require 'notmuch-address)
+
+(eval-when-compile (require 'cl))
 
 ;;
 
@@ -72,54 +76,92 @@ list."
 	    (push header message-hidden-headers)))
 	notmuch-mua-hidden-headers))
 
+(defun notmuch-mua-get-quotable-parts (parts)
+  (loop for part in parts
+	if (notmuch-match-content-type (plist-get part :content-type) "multipart/alternative")
+	  collect (let* ((subparts (plist-get part :content))
+			(types (mapcar (lambda (part) (plist-get part :content-type)) subparts))
+			(chosen-type (car (notmuch-multipart/alternative-choose types))))
+		   (loop for part in (reverse subparts)
+			 if (notmuch-match-content-type (plist-get part :content-type) chosen-type)
+			 return part))
+	else if (notmuch-match-content-type (plist-get part :content-type) "multipart/*")
+	  append (notmuch-mua-get-quotable-parts (plist-get part :content))
+	else if (notmuch-match-content-type (plist-get part :content-type) "text/*")
+	  collect part))
+
 (defun notmuch-mua-reply (query-string &optional sender reply-all)
-  (let (headers
-	body
-	(args '("reply")))
-    (if notmuch-show-process-crypto
-	(setq args (append args '("--decrypt"))))
+  (let ((args '("reply" "--format=json"))
+	reply
+	original)
+    (when notmuch-show-process-crypto
+      (setq args (append args '("--decrypt"))))
+
     (if reply-all
 	(setq args (append args '("--reply-to=all")))
       (setq args (append args '("--reply-to=sender"))))
     (setq args (append args (list query-string)))
-    ;; This make assumptions about the output of `notmuch reply', but
-    ;; really only that the headers come first followed by a blank
-    ;; line and then the body.
+
+    ;; Get the reply object as JSON, and parse it into an elisp object.
     (with-temp-buffer
       (apply 'call-process (append (list notmuch-command nil (list t t) nil) args))
       (goto-char (point-min))
-      (if (re-search-forward "^$" nil t)
-	  (save-excursion
-	    (save-restriction
-	      (narrow-to-region (point-min) (point))
-	      (goto-char (point-min))
-	      (setq headers (mail-header-extract)))))
-      (forward-line 1)
-      ;; Original message may contain (malicious) MML tags. We must
-      ;; properly quote them in the reply.
-      (mml-quote-region (point) (point-max))
-      (setq body (buffer-substring (point) (point-max))))
-    ;; If sender is non-nil, set the From: header to its value.
-    (when sender
-      (mail-header-set 'from sender headers))
-    (let
-	;; Overlay the composition window on that being used to read
-	;; the original message.
-	((same-window-regexps '("\\*mail .*")))
-      (notmuch-mua-mail (mail-header 'to headers)
-			(mail-header 'subject headers)
-			(message-headers-to-generate headers t '(to subject))))
-    ;; insert the message body - but put it in front of the signature
-    ;; if one is present
-    (goto-char (point-max))
-    (if (re-search-backward message-signature-separator nil t)
-	  (forward-line -1)
-      (goto-char (point-max)))
-    (insert body)
-    (push-mark))
-  (set-buffer-modified-p nil)
+      (let ((json-object-type 'plist)
+	    (json-array-type 'list)
+	    (json-false 'nil))
+	(setq reply (json-read))))
 
-  (message-goto-body))
+    ;; Extract the original message to simplify the following code.
+    (setq original (plist-get reply :original))
+
+    ;; Extract the headers of both the reply and the original message.
+    (let* ((original-headers (plist-get original :headers))
+	   (reply-headers (plist-get reply :reply-headers)))
+
+      ;; If sender is non-nil, set the From: header to its value.
+      (when sender
+	(plist-put reply-headers :From sender))
+      (let
+	  ;; Overlay the composition window on that being used to read
+	  ;; the original message.
+	  ((same-window-regexps '("\\*mail .*")))
+	(notmuch-mua-mail (plist-get reply-headers :To)
+			  (plist-get reply-headers :Subject)
+			  (notmuch-plist-to-alist reply-headers)))
+      ;; Insert the message body - but put it in front of the signature
+      ;; if one is present
+      (goto-char (point-max))
+      (if (re-search-backward message-signature-separator nil t)
+	  (forward-line -1)
+	(goto-char (point-max)))
+
+      (let ((from (plist-get original-headers :From))
+	    (date (plist-get original-headers :Date))
+	    (start (point)))
+
+	;; message-cite-original constructs a citation line based on the From and Date
+	;; headers of the original message, which are assumed to be in the buffer.
+	(insert "From: " from "\n")
+	(insert "Date: " date "\n\n")
+
+	;; Get the parts of the original message that should be quoted; this includes
+	;; all the text parts, except the non-preferred ones in a multipart/alternative.
+	(let ((quotable-parts (notmuch-mua-get-quotable-parts (plist-get original :body))))
+	  (mapc (lambda (part)
+		  (insert (notmuch-get-bodypart-content original part
+							(plist-get part :id)
+							notmuch-show-process-crypto)))
+		quotable-parts))
+
+	(set-mark (point))
+	(goto-char start)
+	;; Quote the original message according to the user's configured style.
+	(message-cite-original))))
+
+  (goto-char (point-max))
+  (push-mark)
+  (message-goto-body)
+  (set-buffer-modified-p nil))
 
 (defun notmuch-mua-forward-message ()
   (message-forward)
@@ -145,7 +187,7 @@ OTHER-ARGS are passed through to `message-mail'."
       (when (not (string= "" user-agent))
 	(push (cons "User-Agent" user-agent) other-headers))))
 
-  (unless (mail-header 'from other-headers)
+  (unless (mail-header 'From other-headers)
     (push (cons "From" (concat
 			(notmuch-user-name) " <" (notmuch-user-primary-email) ">")) other-headers))
 
@@ -208,7 +250,7 @@ the From: address first."
   (interactive "P")
   (let ((other-headers
 	 (when (or prompt-for-sender notmuch-always-prompt-for-sender)
-	   (list (cons 'from (notmuch-mua-prompt-for-sender))))))
+	   (list (cons 'From (notmuch-mua-prompt-for-sender))))))
     (notmuch-mua-mail nil nil other-headers)))
 
 (defun notmuch-mua-new-forward-message (&optional prompt-for-sender)

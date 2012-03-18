@@ -206,6 +206,36 @@ the user hasn't set this variable with the old or new value."
 	  (setq seq (nconc (delete elem seq) (list elem))))))
     seq))
 
+(defun notmuch-parts-filter-by-type (parts type)
+  "Given a list of message parts, return a list containing the ones matching
+the given type."
+  (remove-if-not
+   (lambda (part) (notmuch-match-content-type (plist-get part :content-type) type))
+   parts))
+
+;; Helper for parts which are generally not included in the default
+;; JSON output.
+(defun notmuch-get-bodypart-internal (message-id part-number process-crypto)
+  (let ((args '("show" "--format=raw"))
+	(part-arg (format "--part=%s" part-number)))
+    (setq args (append args (list part-arg)))
+    (if process-crypto
+	(setq args (append args '("--decrypt"))))
+    (setq args (append args (list message-id)))
+    (with-temp-buffer
+      (let ((coding-system-for-read 'no-conversion))
+	(progn
+	  (apply 'call-process (append (list notmuch-command nil (list t nil) nil) args))
+	  (buffer-string))))))
+
+(defun notmuch-get-bodypart-content (msg part nth process-crypto)
+  (or (plist-get part :content)
+      (notmuch-get-bodypart-internal (concat "id:" (plist-get msg :id)) nth process-crypto)))
+
+(defun notmuch-plist-to-alist (plist)
+  (loop for (key value . rest) on plist by #'cddr
+	collect (cons (substring (symbol-name key) 1) value)))
+
 ;; Compatibility functions for versions of emacs before emacs 23.
 ;;
 ;; Both functions here were copied from emacs 23 with the following copyright:

@@ -268,13 +268,13 @@ Subject: Re: Testing message sent via SMTP
 In-Reply-To: <XXX>
 Fcc: ${MAIL_DIR}/sent
 --text follows this line--
-On 01 Jan 2000 12:00:00 -0000, Notmuch Test Suite <test_suite@notmuchmail.org> wrote:
+Notmuch Test Suite <test_suite@notmuchmail.org> writes:
+
 > This is a test that messages are sent via SMTP
 EOF
 test_expect_equal_file OUTPUT EXPECTED
 
 test_begin_subtest "Reply within emacs to a multipart/mixed message"
-test_subtest_known_broken
 test_emacs '(notmuch-show "id:20091118002059.067214ed@hikari")
 		(notmuch-show-reply)
 		(test-output)'
@@ -334,7 +334,6 @@ EOF
 test_expect_equal_file OUTPUT EXPECTED
 
 test_begin_subtest "Reply within emacs to a multipart/alternative message"
-test_subtest_known_broken
 test_emacs '(notmuch-show "id:cf0c4d610911171136h1713aa59w9cf9aa31f052ad0a@mail.gmail.com")
 		(notmuch-show-reply)
 		(test-output)'
@@ -385,7 +384,8 @@ Subject: Re: Quote MML tags in reply
 In-Reply-To: <test-emacs-mml-quoting@message.id>
 Fcc: ${MAIL_DIR}/sent
 --text follows this line--
-On Fri, 05 Jan 2001 15:43:57 +0000, Notmuch Test Suite <test_suite@notmuchmail.org> wrote:
+Notmuch Test Suite <test_suite@notmuchmail.org> writes:
+
 > <#!part disposition=inline>
 EOF
 test_expect_equal_file OUTPUT EXPECTED
