@@ -77,8 +77,9 @@ part = {
     content?:       string
 }
 
-# The headers of a message (format_headers_json with raw headers) or
-# a part (format_headers_message_part_json with pretty-printed headers)
+# The headers of a message (format_headers_json with raw headers
+# and reply = FALSE) or a part (format_headers_message_part_json
+# with pretty-printed headers)
 headers = {
     Subject:        string,
     From:           string,
@@ -135,4 +136,26 @@ thread = {
     authors:        string,   # comma-separated names with | between
                               # matched and unmatched
     subject:        string
+}
+
+notmuch reply schema
+--------------------
+
+reply = {
+    # The headers of the constructed reply (format_headers_json with
+    # raw headers and reply = TRUE)
+    reply-headers: reply_headers,
+
+    # As in the show format (format_part_json)
+    original: message
+}
+
+reply_headers = {
+    Subject:        string,
+    From:           string,
+    To?:            string,
+    Cc?:            string,
+    Bcc?:           string,
+    In-reply-to:    string,
+    References:     string
 }
