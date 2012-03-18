@@ -68,6 +68,16 @@ values from the first that contains something other than only the
 user's addresses.
 .RE
 .RE
+.RS
+.TP 4
+.B \-\-decrypt
+
+Decrypt any MIME encrypted parts found in the selected content
+(ie. "multipart/encrypted" parts). Status of the decryption will be
+reported (currently only supported with --format=json) and the
+multipart/encrypted part will be replaced by the decrypted
+content.
+.RE
 
 See \fBnotmuch-search-terms\fR(7)
 for details of the supported syntax for <search-terms>.
