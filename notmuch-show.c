@@ -200,8 +200,8 @@ _is_from_line (const char *line)
 	return 0;
 }
 
-static void
-format_headers_json (const void *ctx, GMimeMessage *message)
+void
+format_headers_json (const void *ctx, GMimeMessage *message, notmuch_bool_t reply)
 {
     void *local = talloc_new (ctx);
     InternetAddressList *recipients;
@@ -225,9 +225,22 @@ format_headers_json (const void *ctx, GMimeMessage *message)
 	printf (", %s: %s",
 		json_quote_str (local, "Cc"),
 		json_quote_str (local, recipients_string));
-    printf (", %s: %s}",
-	    json_quote_str (local, "Date"),
-	    json_quote_str (local, g_mime_message_get_date_as_string (message)));
+
+    if (reply) {
+	printf (", %s: %s",
+		json_quote_str (local, "In-reply-to"),
+		json_quote_str (local, g_mime_object_get_header (GMIME_OBJECT (message), "In-reply-to")));
+
+	printf (", %s: %s",
+		json_quote_str (local, "References"),
+		json_quote_str (local, g_mime_object_get_header (GMIME_OBJECT (message), "References")));
+    } else {
+	printf (", %s: %s",
+		json_quote_str (local, "Date"),
+		json_quote_str (local, g_mime_message_get_date_as_string (message)));
+    }
+
+    printf ("}");
 
     talloc_free (local);
 }
@@ -538,7 +551,7 @@ format_part_text (const void *ctx, mime_node_t *node,
     return NOTMUCH_STATUS_SUCCESS;
 }
 
-static void
+void
 format_part_json (const void *ctx, mime_node_t *node, notmuch_bool_t first)
 {
     /* Any changes to the JSON format should be reflected in the file
@@ -549,7 +562,7 @@ format_part_json (const void *ctx, mime_node_t *node, notmuch_bool_t first)
 	format_message_json (ctx, node->envelope_file);
 
 	printf ("\"headers\": ");
-	format_headers_json (ctx, GMIME_MESSAGE (node->part));
+	format_headers_json (ctx, GMIME_MESSAGE (node->part), FALSE);
 
 	printf (", \"body\": [");
 	format_part_json (ctx, mime_node_child (node, 0), first);
@@ -623,7 +636,7 @@ format_part_json (const void *ctx, mime_node_t *node, notmuch_bool_t first)
     } else if (GMIME_IS_MESSAGE (node->part)) {
 	printf (", \"content\": [{");
 	printf ("\"headers\": ");
-	format_headers_json (local, GMIME_MESSAGE (node->part));
+	format_headers_json (local, GMIME_MESSAGE (node->part), FALSE);
 
 	printf (", \"body\": [");
 	terminator = "]}]";

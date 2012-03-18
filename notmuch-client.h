@@ -62,7 +62,7 @@
 #define STRINGIFY(s) STRINGIFY_(s)
 #define STRINGIFY_(s) #s
 
-struct mime_node;
+typedef struct mime_node mime_node_t;
 struct notmuch_show_params;
 
 typedef struct notmuch_show_format {
@@ -191,6 +191,12 @@ show_message_body (notmuch_message_t *message,
 notmuch_status_t
 show_one_part (const char *filename, int part);
 
+void
+format_part_json (const void *ctx, mime_node_t *node, notmuch_bool_t first);
+
+void
+format_headers_json (const void *ctx, GMimeMessage *message, notmuch_bool_t reply);
+
 char *
 json_quote_chararray (const void *ctx, const char *str, const size_t len);
 
@@ -288,7 +294,7 @@ debugger_is_active (void);
  * parts.  Message-type parts have one child, multipart-type parts
  * have multiple children, and leaf parts have zero children.
  */
-typedef struct mime_node {
+struct mime_node {
     /* The MIME object of this part.  This will be a GMimeMessage,
      * GMimePart, GMimeMultipart, or a subclass of one of these.
      *
@@ -351,7 +357,7 @@ typedef struct mime_node {
      * number to assign it (or -1 if unknown). */
     int next_child;
     int next_part_num;
-} mime_node_t;
+};
 
 /* Construct a new MIME node pointing to the root message part of
  * message.  If cryptoctx is non-NULL, it will be used to verify

@@ -604,6 +604,51 @@ notmuch_reply_format_default(void *ctx,
     return 0;
 }
 
+static int
+notmuch_reply_format_json(void *ctx,
+			  notmuch_config_t *config,
+			  notmuch_query_t *query,
+			  notmuch_show_params_t *params,
+			  notmuch_bool_t reply_all)
+{
+    GMimeMessage *reply;
+    notmuch_messages_t *messages;
+    notmuch_message_t *message;
+    mime_node_t *node;
+
+    if (notmuch_query_count_messages (query) != 1) {
+	fprintf (stderr, "Error: search term did not match precisely one message.\n");
+	return 1;
+    }
+
+    messages = notmuch_query_search_messages (query);
+    message = notmuch_messages_get (messages);
+    if (mime_node_open (ctx, message, params->cryptoctx, params->decrypt,
+			&node) != NOTMUCH_STATUS_SUCCESS)
+	return 1;
+
+    reply = create_reply_message (ctx, config, message, reply_all);
+    if (!reply)
+	return 1;
+
+    /* The headers of the reply message we've created */
+    printf ("{\"reply-headers\": ");
+    format_headers_json (ctx, reply, TRUE);
+    g_object_unref (G_OBJECT (reply));
+    reply = NULL;
+
+    /* Start the original */
+    printf (", \"original\": ");
+
+    format_part_json (ctx, node, TRUE);
+
+    /* End */
+    printf ("}\n");
+    notmuch_message_destroy (message);
+
+    return 0;
+}
+
 /* This format is currently tuned for a git send-email --notmuch hook */
 static int
 notmuch_reply_format_headers_only(void *ctx,
@@ -666,6 +711,7 @@ notmuch_reply_format_headers_only(void *ctx,
 
 enum {
     FORMAT_DEFAULT,
+    FORMAT_JSON,
     FORMAT_HEADERS_ONLY,
 };
 
@@ -685,6 +731,7 @@ notmuch_reply_command (void *ctx, int argc, char *argv[])
     notmuch_opt_desc_t options[] = {
 	{ NOTMUCH_OPT_KEYWORD, &format, "format", 'f',
 	  (notmuch_keyword_t []){ { "default", FORMAT_DEFAULT },
+				  { "json", FORMAT_JSON },
 				  { "headers-only", FORMAT_HEADERS_ONLY },
 				  { 0, 0 } } },
 	{ NOTMUCH_OPT_KEYWORD, &reply_all, "reply-to", 'r',
@@ -703,6 +750,8 @@ notmuch_reply_command (void *ctx, int argc, char *argv[])
 
     if (format == FORMAT_HEADERS_ONLY)
 	reply_format_func = notmuch_reply_format_headers_only;
+    else if (format == FORMAT_JSON)
+	reply_format_func = notmuch_reply_format_json;
     else
 	reply_format_func = notmuch_reply_format_default;
 

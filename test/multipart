@@ -613,7 +613,6 @@ EOF
 test_expect_equal_file OUTPUT EXPECTED
 
 test_begin_subtest "'notmuch reply' to a multipart message with json format"
-test_subtest_known_broken
 notmuch reply --format=json 'id:87liy5ap00.fsf@yoom.home.cworth.org' | notmuch_json_show_sanitize >OUTPUT
 cat <<EOF >EXPECTED
 {"reply-headers": {"Subject": "Re: Multipart message",
