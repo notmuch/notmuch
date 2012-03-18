@@ -177,7 +177,7 @@ class Directory(object):
 
     _destroy = nmlib.notmuch_directory_destroy
     _destroy.argtypes = [NotmuchDirectoryP]
-    _destroy.argtypes = None
+    _destroy.restype = None
 
     def __del__(self):
         """Close and free the Directory"""

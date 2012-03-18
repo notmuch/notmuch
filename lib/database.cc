@@ -1825,6 +1825,9 @@ notmuch_database_find_message_by_filename (notmuch_database_t *notmuch,
     if (message_ret == NULL)
 	return NOTMUCH_STATUS_NULL_POINTER;
 
+    /* return NULL on any failure */
+    *message_ret = NULL;
+
     local = talloc_new (notmuch);
 
     try {
