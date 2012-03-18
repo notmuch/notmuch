@@ -1,6 +1,28 @@
 Notmuch 0.13 (2012-xx-xx)
 =========================
 
+Command-Line Interface
+----------------------
+
+Reply to sender
+
+  "notmuch reply" has gained the ability to create a reply template
+  for replying just to the sender of the message, in addition to reply
+  to all. The feature is available through the new command line option
+  --reply-to=(all|sender).
+
+JSON reply format
+
+  "notmuch reply" can now produce JSON output that contains the headers
+  for a reply message and full information about the original message
+  begin replied to. This allows MUAs to create replies intelligtently.
+  For example, an MUA that can parse HTML might quote HTML parts.
+
+  Calling notmuch reply with --format=json imposes the restriction that
+  only a single message is returned by the search, as replying to
+  multiple messages does not have a well-defined behavior. The default
+  retains its current behavior for multiple message replies.
+
 Tag exclusion
 
   Tags can be automatically excluded from search results by adding them
@@ -18,6 +40,17 @@ Tag exclusion
   tags "deleted" and "spam" to be excluded, equivalent to running:
 
     notmuch config set search.exclude_tags deleted spam
+
+Emacs Interface
+---------------
+
+Reply improvement using the JSON format
+
+  Emacs now uses the JSON reply format to create replies. It obeys
+  the customization variables message-citation-line-format and
+  message-citation-line-function when creating the first line of the
+  reply body, and it will quote HTML parts if no text/plain parts are
+  available.
 
 Notmuch 0.12 (2012-xx-xx)
 =========================
