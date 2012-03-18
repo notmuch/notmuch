@@ -21,6 +21,8 @@
 
 ;; This is an part of an emacs-based interface to the notmuch mail system.
 
+(eval-when-compile (require 'cl))
+
 (defvar notmuch-command "notmuch"
   "Command to run the notmuch binary.")
 
@@ -172,6 +174,37 @@ the user hasn't set this variable with the old or new value."
   "Conditionally evaluate form only on emacs < emacs-23."
   (list 'when (< emacs-major-version 23)
 	form))
+
+(defun notmuch-split-content-type (content-type)
+  "Split content/type into 'content' and 'type'"
+  (split-string content-type "/"))
+
+(defun notmuch-match-content-type (t1 t2)
+  "Return t if t1 and t2 are matching content types, taking wildcards into account"
+  (let ((st1 (notmuch-split-content-type t1))
+	(st2 (notmuch-split-content-type t2)))
+    (if (or (string= (cadr st1) "*")
+	    (string= (cadr st2) "*"))
+	(string= (car st1) (car st2))
+      (string= t1 t2))))
+
+(defvar notmuch-multipart/alternative-discouraged
+  '(
+    ;; Avoid HTML parts.
+    "text/html"
+    ;; multipart/related usually contain a text/html part and some associated graphics.
+    "multipart/related"
+    ))
+
+(defun notmuch-multipart/alternative-choose (types)
+  "Return a list of preferred types from the given list of types"
+  ;; Based on `mm-preferred-alternative-precedence'.
+  (let ((seq types))
+    (dolist (pref (reverse notmuch-multipart/alternative-discouraged))
+      (dolist (elem (copy-sequence seq))
+	(when (string-match pref elem)
+	  (setq seq (nconc (delete elem seq) (list elem))))))
+    seq))
 
 ;; Compatibility functions for versions of emacs before emacs 23.
 ;;

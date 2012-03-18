@@ -542,30 +542,13 @@ current buffer, if possible."
 	    (mm-display-part handle)
 	    t))))))
 
-(defvar notmuch-show-multipart/alternative-discouraged
-  '(
-    ;; Avoid HTML parts.
-    "text/html"
-    ;; multipart/related usually contain a text/html part and some associated graphics.
-    "multipart/related"
-    ))
-
 (defun notmuch-show-multipart/*-to-list (part)
   (mapcar (lambda (inner-part) (plist-get inner-part :content-type))
 	  (plist-get part :content)))
 
-(defun notmuch-show-multipart/alternative-choose (types)
-  ;; Based on `mm-preferred-alternative-precedence'.
-  (let ((seq types))
-    (dolist (pref (reverse notmuch-show-multipart/alternative-discouraged))
-      (dolist (elem (copy-sequence seq))
-	(when (string-match pref elem)
-	  (setq seq (nconc (delete elem seq) (list elem))))))
-    seq))
-
 (defun notmuch-show-insert-part-multipart/alternative (msg part content-type nth depth declared-type)
   (notmuch-show-insert-part-header nth declared-type content-type nil)
-  (let ((chosen-type (car (notmuch-show-multipart/alternative-choose (notmuch-show-multipart/*-to-list part))))
+  (let ((chosen-type (car (notmuch-multipart/alternative-choose (notmuch-show-multipart/*-to-list part))))
 	(inner-parts (plist-get part :content))
 	(start (point)))
     ;; This inserts all parts of the chosen type rather than just one,
@@ -808,9 +791,6 @@ current buffer, if possible."
 
 ;; Functions for determining how to handle MIME parts.
 
-(defun notmuch-show-split-content-type (content-type)
-  (split-string content-type "/"))
-
 (defun notmuch-show-handlers-for (content-type)
   "Return a list of content handlers for a part of type CONTENT-TYPE."
   (let (result)
@@ -821,7 +801,7 @@ current buffer, if possible."
 	  (list (intern (concat "notmuch-show-insert-part-*/*"))
 		(intern (concat
 			 "notmuch-show-insert-part-"
-			 (car (notmuch-show-split-content-type content-type))
+			 (car (notmuch-split-content-type content-type))
 			 "/*"))
 		(intern (concat "notmuch-show-insert-part-" content-type))))
     result))
