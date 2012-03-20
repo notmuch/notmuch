@@ -4,9 +4,9 @@ notmuch (0.12-1) unstable; urgency=low
     - Python 3.2 support
     - GMime 2.6 support
     - Many updates to emacs interface (see /usr/share/doc/notmuch/NEWS)
-    - Ignore files/directories with mail hierarchy
+    - Optionally ignore some files/directories within mail hierarchy
 
- -- David Bremner <bremner@debian.org>  Mon, 19 Mar 2012 22:41:58 -0300
+ -- David Bremner <bremner@debian.org>  Tue, 20 Mar 2012 18:45:22 -0300
 
 notmuch (0.12~rc2-1) experimental; urgency=low
 
