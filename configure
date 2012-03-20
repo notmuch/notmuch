@@ -404,17 +404,19 @@ EOF
     if [ $have_gmime -eq 0 ]; then
 	echo "	GMime 2.4 library (including development files such as headers)"
 	echo "	http://spruce.sourceforge.net/gmime/"
+	echo
     fi
     if [ $have_glib -eq 0 ]; then
 	echo "	Glib library >= 2.22 (including development files such as headers)"
 	echo "	http://ftp.gnome.org/pub/gnome/sources/glib/"
+	echo
     fi
     if [ $have_talloc -eq 0 ]; then
 	echo "	The talloc library (including development files such as headers)"
 	echo "	http://talloc.samba.org/"
+	echo
     fi
     cat <<EOF
-
 With any luck, you're using a modern, package-based operating system
 that has all of these packages available in the distribution. In that
 case a simple command will install everything you need. For example:
