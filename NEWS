@@ -20,6 +20,12 @@ Mail store folder/file ignore
    NOTE: *Every* file/directory that goes by one of those names will
    be ignored, independent of its depth/location in the mail store.
 
+Unified help and manual pages
+
+   The notmuch help command now runs man for the appropriate page.  If
+   you install notmuch somewhere "unusual", you may need to update
+   MANPATH.
+
 Manual page for notmuch configuration options
 
   The notmuch CLI configuration file options are now documented in the
