@@ -167,6 +167,11 @@ Enable `notmuch-search-line-faces' by default
   for new users by showing "unread" messages bold and "flagged"
   messages blue by default in the search view.
 
+Printing Support
+
+  notmuch-show mode now has simple printing support, bound to '#' by
+  default. You can customize the variable notmuch-print-mechanism.
+
 Library changes
 ---------------
 
