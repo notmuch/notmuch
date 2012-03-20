@@ -52,7 +52,7 @@ Reply improvement using the JSON format
   reply body, and it will quote HTML parts if no text/plain parts are
   available.
 
-Notmuch 0.12 (2012-xx-xx)
+Notmuch 0.12 (2012-03-20)
 =========================
 
 Command-Line Interface
@@ -73,6 +73,12 @@ Mail store folder/file ignore
 
    NOTE: *Every* file/directory that goes by one of those names will
    be ignored, independent of its depth/location in the mail store.
+
+Unified help and manual pages
+
+   The notmuch help command now runs man for the appropriate page.  If
+   you install notmuch somewhere "unusual", you may need to update
+   MANPATH.
 
 Manual page for notmuch configuration options
 
@@ -188,8 +194,10 @@ Build fixes
 Compatibility with GMime 2.6
 
   It is now possible to build notmuch against both GMime 2.4 and 2.6.
-  However, a bug in current GMime 2.6 causes notmuch not to report
-  signatures where the signer key is unavailable (GNOME bug 668085).
+  However, a bug in GMime 2.6 before 2.6.5 causes notmuch not to
+  report signatures where the signer key is unavailable (GNOME bug
+  668085).  For compatibility with GMime 2.4's tolerance of "From "
+  headers we require GMime 2.6 >= 2.6.7.
 
 Notmuch 0.11.1 (2012-02-03)
 ===========================

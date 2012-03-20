@@ -1,3 +1,13 @@
+notmuch (0.12-1) unstable; urgency=low
+
+  * New upstream release
+    - Python 3.2 support
+    - GMime 2.6 support
+    - Many updates to emacs interface (see /usr/share/doc/notmuch/NEWS)
+    - Ignore files/directories with mail hierarchy
+
+ -- David Bremner <bremner@debian.org>  Mon, 19 Mar 2012 22:41:58 -0300
+
 notmuch (0.12~rc2-1) experimental; urgency=low
 
   * Upstream pre-release
