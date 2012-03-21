@@ -48,8 +48,13 @@ WITH_EMACS=1
 WITH_BASH=1
 WITH_ZSH=1
 
-GMIME_24_VERSION='gmime-2.4'
-GMIME_26_VERSION='gmime-2.6 >= 2.6.7'
+# Compatible GMime versions (with constraints).
+# If using GMime 2.6, we need to have a version >= 2.6.5 to avoid a
+# crypto bug. We need 2.6.7 for permissive "From " header handling.
+GMIME_24_VERSION_CTR=''
+GMIME_24_VERSION="gmime-2.4 $GMIME_24_VERSION_CTR"
+GMIME_26_VERSION_CTR='>= 2.6.7'
+GMIME_26_VERSION="gmime-2.6 $GMIME_26_VERSION_CTR"
 
 WITH_GMIME_VERSIONS="$GMIME_26_VERSION;$GMIME_24_VERSION"
 
@@ -259,8 +264,6 @@ if [ ${have_xapian} = "0" ]; then
     errors=$((errors + 1))
 fi
 
-# If using GMime 2.6, we need to have a version >= 2.6.5 to avoid a
-# crypto bug. We need 2.6.7 for permissive "From " header handling.
 printf "Checking for GMime development files... "
 have_gmime=0
 IFS=';'
@@ -402,7 +405,8 @@ EOF
 	echo "	http://xapian.org/"
     fi
     if [ $have_gmime -eq 0 ]; then
-	echo "	GMime 2.4 library (including development files such as headers)"
+	echo "	Either GMime 2.4 library" $GMIME_24_VERSION_CTR "or GMime 2.6 library" $GMIME_26_VERSION_CTR
+	echo "	(including development files such as headers)"
 	echo "	http://spruce.sourceforge.net/gmime/"
 	echo
     fi
