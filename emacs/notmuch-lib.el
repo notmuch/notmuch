@@ -185,8 +185,9 @@ the user hasn't set this variable with the old or new value."
 	(st2 (notmuch-split-content-type t2)))
     (if (or (string= (cadr st1) "*")
 	    (string= (cadr st2) "*"))
-	(string= (car st1) (car st2))
-      (string= t1 t2))))
+	;; Comparison of content types should be case insensitive.
+	(string= (downcase (car st1)) (downcase (car st2)))
+      (string= (downcase t1) (downcase t2)))))
 
 (defvar notmuch-multipart/alternative-discouraged
   '(
