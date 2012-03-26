@@ -1,0 +1,59 @@
+notmuch-mutt: Notmuch (of a) helper for Mutt
+============================================
+
+notmuch-mutt provide integration among the [Mutt] [1] mail user agent and the
+[Notmuch] [2] mail indexer.
+
+notmuch-mutt offer two main integration features. The first one is the ability
+of stating a **search query interactively** and then jump to a fresh Maildir
+containing its search results only. The second one is the ability to
+**reconstruct threads on the fly** starting from the currently highlighted
+mail, which comes handy when a thread has been split across different maildirs,
+archived, or the like.
+
+notmuch-mutt enables to trigger mail searches via a Mutt macro (usually F8) and
+reconstruct threads via another (usually F9). Check the manpage for the 2-liner
+configuration snippet for your Mutt configuration files (~/.muttrc,
+/etc/Muttrc, or a /etc/Muttrc.d snippet).
+
+A [blog style introduction] [3] to notmuch-mutt is available and includes some
+more rationale for its existence.
+
+Arguably, some of the logics of notmuch-mutt could disappear by adding support
+for a --output=symlinks flag to notmuch.
+
+
+[1]: http://www.mutt.org/
+[2]: http://notmuchmail.org/
+[3]: http://upsilon.cc/~zack/blog/posts/2011/01/how_to_use_Notmuch_with_Mutt/
+
+
+Requirements
+------------
+
+To *run* notmuch-mutt you will need Perl with the following libraries:
+
+- Mail::Box <http://search.cpan.org/~markov/Mail-Box/>
+  (Debian package: libmail-box-perl)
+- Mail::Internet <http://search.cpan.org/~markov/MailTools/>
+  (Debian package: libmailtools-perl)
+- String::ShellQuote <http://search.cpan.org/~rosch/String-ShellQuote/ShellQuote.pm>
+  (Debian package: libstring-shellquote-perl)
+- Term::ReadLine <http://search.cpan.org/~hayashi/Term-ReadLine-Gnu/>
+  (Debian package: libterm-readline-gnu-perl)
+
+To *build* notmuch-mutt documentation you will need:
+
+- pod2man (coming with Perl) to generate the manpage
+- markdown to generate README.html out of this file
+
+
+License
+-------
+
+notmuch-mutt is copyright (C) 2011-2012 Stefano Zacchiroli <zack@upsilon.cc>.
+
+notmuch-mutt is released under the terms of the GNU General Public License
+(GPL), version 3 or above. A copy of the license is available online at
+<http://www.gnu.org/licenses/>.
+
