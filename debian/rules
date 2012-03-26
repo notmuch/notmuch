@@ -9,10 +9,12 @@ override_dh_auto_configure:
 override_dh_auto_build:
 	dh_auto_build
 	dh_auto_build --sourcedirectory bindings/python
+	$(MAKE) -C contrib/notmuch-mutt
 
 override_dh_auto_clean:
 	dh_auto_clean
 	dh_auto_clean --sourcedirectory bindings/python
+	$(MAKE) -C contrib/notmuch-mutt clean
 
 override_dh_auto_install:
 	dh_auto_install

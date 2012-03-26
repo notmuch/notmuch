@@ -105,3 +105,19 @@ Description: thread-based email index, search and tagging (vim interface)
  This package provides a vim based mail user agent based on
  notmuch.
 
+Package: notmuch-mutt
+Architecture: all
+Depends: notmuch, libmail-box-perl, libmailtools-perl,
+ libstring-shellquote-perl, libterm-readline-gnu-perl,
+ ${misc:Depends}
+Recommends: mutt
+Enhances: notmuch, mutt
+Description: thread-based email index, search and tagging (Mutt interface)
+ notmuch-mutt provides integration among the Mutt mail user agent and
+ the Notmuch mail indexer.
+ .
+ notmuch-mutt offer two main integration features. The first one is
+ the ability of stating a search query interactively and then jump to
+ a fresh Maildir containing its search results only. The second one is
+ the ability to reconstruct threads on the fly starting from the
+ current highlighted mail.

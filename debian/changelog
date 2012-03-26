@@ -1,3 +1,9 @@
+notmuch (0.12-2) UNRELEASED; urgency=low
+
+  * new binary package "notmuch-mutt" for Mutt integration
+
+ -- Stefano Zacchiroli <zack@debian.org>  Mon, 26 Mar 2012 10:47:29 +0200
+
 notmuch (0.12-1) unstable; urgency=low
 
   * New upstream release
