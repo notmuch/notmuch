@@ -110,6 +110,63 @@ _optimize_tag_query (void *ctx, const char *orig_query_string,
     return query_string;
 }
 
+/* Tag messages matching 'query_string' according to 'tag_ops', which
+ * must be an array of tagging operations terminated with an empty
+ * element. */
+static int
+tag_query (void *ctx, notmuch_database_t *notmuch, const char *query_string,
+	   tag_operation_t *tag_ops, notmuch_bool_t synchronize_flags)
+{
+    notmuch_query_t *query;
+    notmuch_messages_t *messages;
+    notmuch_message_t *message;
+    int i;
+
+    /* Optimize the query so it excludes messages that already have
+     * the specified set of tags. */
+    query_string = _optimize_tag_query (ctx, query_string, tag_ops);
+    if (query_string == NULL) {
+	fprintf (stderr, "Out of memory.\n");
+	return 1;
+    }
+
+    query = notmuch_query_create (notmuch, query_string);
+    if (query == NULL) {
+	fprintf (stderr, "Out of memory.\n");
+	return 1;
+    }
+
+    /* tagging is not interested in any special sort order */
+    notmuch_query_set_sort (query, NOTMUCH_SORT_UNSORTED);
+
+    for (messages = notmuch_query_search_messages (query);
+	 notmuch_messages_valid (messages) && !interrupted;
+	 notmuch_messages_move_to_next (messages))
+    {
+	message = notmuch_messages_get (messages);
+
+	notmuch_message_freeze (message);
+
+	for (i = 0; tag_ops[i].tag; i++) {
+	    if (tag_ops[i].remove)
+		notmuch_message_remove_tag (message, tag_ops[i].tag);
+	    else
+		notmuch_message_add_tag (message, tag_ops[i].tag);
+	}
+
+	notmuch_message_thaw (message);
+
+	if (synchronize_flags)
+	    notmuch_message_tags_to_maildir_flags (message);
+
+	notmuch_message_destroy (message);
+    }
+
+    notmuch_query_destroy (query);
+
+    return interrupted;
+}
+
 int
 notmuch_tag_command (void *ctx, int argc, char *argv[])
 {
@@ -118,12 +175,10 @@ notmuch_tag_command (void *ctx, int argc, char *argv[])
     char *query_string;
     notmuch_config_t *config;
     notmuch_database_t *notmuch;
-    notmuch_query_t *query;
-    notmuch_messages_t *messages;
-    notmuch_message_t *message;
     struct sigaction action;
     notmuch_bool_t synchronize_flags;
     int i;
+    int ret;
 
     /* Setup our handler for SIGINT */
     memset (&action, 0, sizeof (struct sigaction));
@@ -170,14 +225,6 @@ notmuch_tag_command (void *ctx, int argc, char *argv[])
 	return 1;
     }
 
-    /* Optimize the query so it excludes messages that already have
-     * the specified set of tags. */
-    query_string = _optimize_tag_query (ctx, query_string, tag_ops);
-    if (query_string == NULL) {
-	fprintf (stderr, "Out of memory.\n");
-	return 1;
-    }
-
     config = notmuch_config_open (ctx, NULL, NULL);
     if (config == NULL)
 	return 1;
@@ -189,40 +236,9 @@ notmuch_tag_command (void *ctx, int argc, char *argv[])
 
     synchronize_flags = notmuch_config_get_maildir_synchronize_flags (config);
 
-    query = notmuch_query_create (notmuch, query_string);
-    if (query == NULL) {
-	fprintf (stderr, "Out of memory.\n");
-	return 1;
-    }
+    ret = tag_query (ctx, notmuch, query_string, tag_ops, synchronize_flags);
 
-    /* tagging is not interested in any special sort order */
-    notmuch_query_set_sort (query, NOTMUCH_SORT_UNSORTED);
-
-    for (messages = notmuch_query_search_messages (query);
-	 notmuch_messages_valid (messages) && !interrupted;
-	 notmuch_messages_move_to_next (messages))
-    {
-	message = notmuch_messages_get (messages);
-
-	notmuch_message_freeze (message);
-
-	for (i = 0; tag_ops[i].tag; i++) {
-	    if (tag_ops[i].remove)
-		notmuch_message_remove_tag (message, tag_ops[i].tag);
-	    else
-		notmuch_message_add_tag (message, tag_ops[i].tag);
-	}
-
-	notmuch_message_thaw (message);
-
-	if (synchronize_flags)
-	    notmuch_message_tags_to_maildir_flags (message);
-
-	notmuch_message_destroy (message);
-    }
-
-    notmuch_query_destroy (query);
     notmuch_database_close (notmuch);
 
-    return interrupted;
+    return ret;
 }
