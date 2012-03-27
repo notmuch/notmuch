@@ -47,7 +47,11 @@ format_part_reply (mime_node_t *node)
 {
     int i;
 
-    if (GMIME_IS_MESSAGE (node->part)) {
+    if (node->envelope_file) {
+	printf ("On %s, %s wrote:\n",
+		notmuch_message_get_header (node->envelope_file, "date"),
+		notmuch_message_get_header (node->envelope_file, "from"));
+    } else if (GMIME_IS_MESSAGE (node->part)) {
 	GMimeMessage *message = GMIME_MESSAGE (node->part);
 	InternetAddressList *recipients;
 	const char *recipients_string;
@@ -540,13 +544,9 @@ notmuch_reply_format_default(void *ctx,
 	g_object_unref (G_OBJECT (reply));
 	reply = NULL;
 
-	printf ("On %s, %s wrote:\n",
-		notmuch_message_get_header (message, "date"),
-		notmuch_message_get_header (message, "from"));
-
 	if (mime_node_open (ctx, message, params->cryptoctx, params->decrypt,
 			    &root) == NOTMUCH_STATUS_SUCCESS) {
-	    format_part_reply (mime_node_child (root, 0));
+	    format_part_reply (root);
 	    talloc_free (root);
 	}
 
