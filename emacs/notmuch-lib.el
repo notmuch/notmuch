@@ -220,13 +220,13 @@ the given type."
 
 ;; Helper for parts which are generally not included in the default
 ;; JSON output.
-(defun notmuch-get-bodypart-internal (message-id part-number process-crypto)
+(defun notmuch-get-bodypart-internal (query part-number process-crypto)
   (let ((args '("show" "--format=raw"))
 	(part-arg (format "--part=%s" part-number)))
     (setq args (append args (list part-arg)))
     (if process-crypto
 	(setq args (append args '("--decrypt"))))
-    (setq args (append args (list message-id)))
+    (setq args (append args (list query)))
     (with-temp-buffer
       (let ((coding-system-for-read 'no-conversion))
 	(progn
