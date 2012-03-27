@@ -24,28 +24,6 @@
 #include "gmime-filter-headers.h"
 
 static void
-reply_headers_message_part (GMimeMessage *message);
-
-static void
-reply_part_content (GMimeObject *part);
-
-static const notmuch_show_format_t format_reply = {
-    "", NULL,
-	"", NULL,
-	    "", NULL, reply_headers_message_part, ">\n",
-	    "",
-	        NULL,
-	        NULL,
-	        NULL,
-	        reply_part_content,
-	        NULL,
-	        "",
-	    "",
-	"", "",
-    ""
-};
-
-static void
 show_reply_headers (GMimeMessage *message)
 {
     GMimeStream *stream_stdout = NULL, *stream_filter = NULL;
@@ -65,66 +43,55 @@ show_reply_headers (GMimeMessage *message)
 }
 
 static void
-reply_headers_message_part (GMimeMessage *message)
+format_part_reply (mime_node_t *node)
 {
-    InternetAddressList *recipients;
-    const char *recipients_string;
+    int i;
 
-    printf ("> From: %s\n", g_mime_message_get_sender (message));
-    recipients = g_mime_message_get_recipients (message, GMIME_RECIPIENT_TYPE_TO);
-    recipients_string = internet_address_list_to_string (recipients, 0);
-    if (recipients_string)
-	printf ("> To: %s\n",
-		recipients_string);
-    recipients = g_mime_message_get_recipients (message, GMIME_RECIPIENT_TYPE_CC);
-    recipients_string = internet_address_list_to_string (recipients, 0);
-    if (recipients_string)
-	printf ("> Cc: %s\n",
-		recipients_string);
-    printf ("> Subject: %s\n", g_mime_message_get_subject (message));
-    printf ("> Date: %s\n", g_mime_message_get_date_as_string (message));
-}
+    if (GMIME_IS_MESSAGE (node->part)) {
+	GMimeMessage *message = GMIME_MESSAGE (node->part);
+	InternetAddressList *recipients;
+	const char *recipients_string;
 
+	printf ("> From: %s\n", g_mime_message_get_sender (message));
+	recipients = g_mime_message_get_recipients (message, GMIME_RECIPIENT_TYPE_TO);
+	recipients_string = internet_address_list_to_string (recipients, 0);
+	if (recipients_string)
+	    printf ("> To: %s\n",
+		    recipients_string);
+	recipients = g_mime_message_get_recipients (message, GMIME_RECIPIENT_TYPE_CC);
+	recipients_string = internet_address_list_to_string (recipients, 0);
+	if (recipients_string)
+	    printf ("> Cc: %s\n",
+		    recipients_string);
+	printf ("> Subject: %s\n", g_mime_message_get_subject (message));
+	printf ("> Date: %s\n", g_mime_message_get_date_as_string (message));
+	printf (">\n");
+    } else if (GMIME_IS_PART (node->part)) {
+	GMimeContentType *content_type = g_mime_object_get_content_type (node->part);
+	GMimeContentDisposition *disposition = g_mime_object_get_content_disposition (node->part);
 
-static void
-reply_part_content (GMimeObject *part)
-{
-    GMimeContentType *content_type = g_mime_object_get_content_type (GMIME_OBJECT (part));
-    GMimeContentDisposition *disposition = g_mime_object_get_content_disposition (part);
-
-    if (g_mime_content_type_is_type (content_type, "multipart", "*") ||
-	g_mime_content_type_is_type (content_type, "message", "rfc822"))
-    {
-	/* Output nothing, since multipart subparts will be handled individually. */
-    }
-    else if (g_mime_content_type_is_type (content_type, "application", "pgp-encrypted") ||
-	     g_mime_content_type_is_type (content_type, "application", "pgp-signature"))
-    {
-	/* Ignore PGP/MIME cruft parts */
-    }
-    else if (g_mime_content_type_is_type (content_type, "text", "*") &&
-	!g_mime_content_type_is_type (content_type, "text", "html"))
-    {
-	GMimeStream *stream_stdout = g_mime_stream_file_new (stdout);
-	g_mime_stream_file_set_owner (GMIME_STREAM_FILE (stream_stdout), FALSE);
-	show_text_part_content (part, stream_stdout, NOTMUCH_SHOW_TEXT_PART_REPLY);
-	g_object_unref(stream_stdout);
-    }
-    else
-    {
-	if (disposition &&
-	    strcmp (disposition->disposition, GMIME_DISPOSITION_ATTACHMENT) == 0)
-	{
-	    const char *filename = g_mime_part_get_filename (GMIME_PART (part));
+	if (g_mime_content_type_is_type (content_type, "application", "pgp-encrypted") ||
+	    g_mime_content_type_is_type (content_type, "application", "pgp-signature")) {
+	    /* Ignore PGP/MIME cruft parts */
+	} else if (g_mime_content_type_is_type (content_type, "text", "*") &&
+		   !g_mime_content_type_is_type (content_type, "text", "html")) {
+	    GMimeStream *stream_stdout = g_mime_stream_file_new (stdout);
+	    g_mime_stream_file_set_owner (GMIME_STREAM_FILE (stream_stdout), FALSE);
+	    show_text_part_content (node->part, stream_stdout, NOTMUCH_SHOW_TEXT_PART_REPLY);
+	    g_object_unref(stream_stdout);
+	} else if (disposition &&
+		   strcmp (disposition->disposition, GMIME_DISPOSITION_ATTACHMENT) == 0) {
+	    const char *filename = g_mime_part_get_filename (GMIME_PART (node->part));
 	    printf ("Attachment: %s (%s)\n", filename,
 		    g_mime_content_type_to_string (content_type));
-	}
-	else
-	{
+	} else {
 	    printf ("Non-text part: %s\n",
 		    g_mime_content_type_to_string (content_type));
 	}
     }
+
+    for (i = 0; i < node->nchildren; i++)
+	format_part_reply (mime_node_child (node, i));
 }
 
 /* Is the given address configured as one of the user's "personal" or
@@ -550,7 +517,7 @@ notmuch_reply_format_default(void *ctx,
     GMimeMessage *reply;
     notmuch_messages_t *messages;
     notmuch_message_t *message;
-    const notmuch_show_format_t *format = &format_reply;
+    mime_node_t *root;
 
     for (messages = notmuch_query_search_messages (query);
 	 notmuch_messages_valid (messages);
@@ -577,7 +544,11 @@ notmuch_reply_format_default(void *ctx,
 		notmuch_message_get_header (message, "date"),
 		notmuch_message_get_header (message, "from"));
 
-	show_message_body (message, format, params);
+	if (mime_node_open (ctx, message, params->cryptoctx, params->decrypt,
+			    &root) == NOTMUCH_STATUS_SUCCESS) {
+	    format_part_reply (mime_node_child (root, 0));
+	    talloc_free (root);
+	}
 
 	notmuch_message_destroy (message);
     }
