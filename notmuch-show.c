@@ -19,6 +19,7 @@
  */
 
 #include "notmuch-client.h"
+#include "gmime-filter-reply.h"
 
 static notmuch_status_t
 format_part_text (const void *ctx, mime_node_t *node,
@@ -247,13 +248,17 @@ format_headers_json (const void *ctx, GMimeMessage *message, notmuch_bool_t repl
 
 /* Write a MIME text part out to the given stream.
  *
+ * If (flags & NOTMUCH_SHOW_TEXT_PART_REPLY), this prepends "> " to
+ * each output line.
+ *
  * Both line-ending conversion (CRLF->LF) and charset conversion ( ->
  * UTF-8) will be performed, so it is inappropriate to call this
  * function with a non-text part. Doing so will trigger an internal
  * error.
  */
-static void
-show_text_part_content (GMimeObject *part, GMimeStream *stream_out)
+void
+show_text_part_content (GMimeObject *part, GMimeStream *stream_out,
+			notmuch_show_text_part_flags flags)
 {
     GMimeContentType *content_type = g_mime_object_get_content_type (GMIME_OBJECT (part));
     GMimeStream *stream_filter = NULL;
@@ -284,6 +289,16 @@ show_text_part_content (GMimeObject *part, GMimeStream *stream_out)
 	    g_object_unref (charset_filter);
 	}
 
+    }
+
+    if (flags & NOTMUCH_SHOW_TEXT_PART_REPLY) {
+	GMimeFilter *reply_filter;
+	reply_filter = g_mime_filter_reply_new (TRUE);
+	if (reply_filter) {
+	    g_mime_stream_filter_add (GMIME_STREAM_FILTER (stream_filter),
+				      reply_filter);
+	    g_object_unref (reply_filter);
+	}
     }
 
     wrapper = g_mime_part_get_content_object (GMIME_PART (part));
@@ -532,7 +547,7 @@ format_part_text (const void *ctx, mime_node_t *node,
 	{
 	    GMimeStream *stream_stdout = g_mime_stream_file_new (stdout);
 	    g_mime_stream_file_set_owner (GMIME_STREAM_FILE (stream_stdout), FALSE);
-	    show_text_part_content (node->part, stream_stdout);
+	    show_text_part_content (node->part, stream_stdout, 0);
 	    g_object_unref(stream_stdout);
 	} else {
 	    printf ("Non-text part: %s\n",
@@ -624,7 +639,7 @@ format_part_json (const void *ctx, mime_node_t *node, notmuch_bool_t first)
 	} else if (g_mime_content_type_is_type (content_type, "text", "*")) {
 	    GMimeStream *stream_memory = g_mime_stream_mem_new ();
 	    GByteArray *part_content;
-	    show_text_part_content (node->part, stream_memory);
+	    show_text_part_content (node->part, stream_memory, 0);
 	    part_content = g_mime_stream_mem_get_byte_array (GMIME_STREAM_MEM (stream_memory));
 
 	    printf (", \"content\": %s", json_quote_chararray (local, (char *) part_content->data, part_content->len));

@@ -197,6 +197,14 @@ format_part_json (const void *ctx, mime_node_t *node, notmuch_bool_t first);
 void
 format_headers_json (const void *ctx, GMimeMessage *message, notmuch_bool_t reply);
 
+typedef enum {
+    NOTMUCH_SHOW_TEXT_PART_REPLY = 1 << 0,
+} notmuch_show_text_part_flags;
+
+void
+show_text_part_content (GMimeObject *part, GMimeStream *stream_out,
+			notmuch_show_text_part_flags flags);
+
 char *
 json_quote_chararray (const void *ctx, const char *str, const size_t len);
 

@@ -21,7 +21,6 @@
  */
 
 #include "notmuch-client.h"
-#include "gmime-filter-reply.h"
 #include "gmime-filter-headers.h"
 
 static void
@@ -106,29 +105,10 @@ reply_part_content (GMimeObject *part)
     else if (g_mime_content_type_is_type (content_type, "text", "*") &&
 	!g_mime_content_type_is_type (content_type, "text", "html"))
     {
-	GMimeStream *stream_stdout = NULL, *stream_filter = NULL;
-	GMimeDataWrapper *wrapper;
-	const char *charset;
-
-	charset = g_mime_object_get_content_type_parameter (part, "charset");
-	stream_stdout = g_mime_stream_file_new (stdout);
-	if (stream_stdout) {
-	    g_mime_stream_file_set_owner (GMIME_STREAM_FILE (stream_stdout), FALSE);
-	    stream_filter = g_mime_stream_filter_new(stream_stdout);
-	    if (charset) {
-		g_mime_stream_filter_add(GMIME_STREAM_FILTER(stream_filter),
-					 g_mime_filter_charset_new(charset, "UTF-8"));
-	    }
-	}
-	g_mime_stream_filter_add(GMIME_STREAM_FILTER(stream_filter),
-				 g_mime_filter_reply_new(TRUE));
-	wrapper = g_mime_part_get_content_object (GMIME_PART (part));
-	if (wrapper && stream_filter)
-	    g_mime_data_wrapper_write_to_stream (wrapper, stream_filter);
-	if (stream_filter)
-	    g_object_unref(stream_filter);
-	if (stream_stdout)
-	    g_object_unref(stream_stdout);
+	GMimeStream *stream_stdout = g_mime_stream_file_new (stdout);
+	g_mime_stream_file_set_owner (GMIME_STREAM_FILE (stream_stdout), FALSE);
+	show_text_part_content (part, stream_stdout, NOTMUCH_SHOW_TEXT_PART_REPLY);
+	g_object_unref(stream_stdout);
     }
     else
     {
