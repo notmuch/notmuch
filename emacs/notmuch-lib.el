@@ -144,6 +144,10 @@ the user hasn't set this variable with the old or new value."
 	"[No Subject]"
       subject)))
 
+(defun notmuch-id-to-query (id)
+  "Return a query that matches the message with id ID."
+  (concat "id:\"" (replace-regexp-in-string "\"" "\"\"" id t t) "\""))
+
 ;;
 
 (defun notmuch-common-do-stash (text)
@@ -231,7 +235,7 @@ the given type."
 
 (defun notmuch-get-bodypart-content (msg part nth process-crypto)
   (or (plist-get part :content)
-      (notmuch-get-bodypart-internal (concat "id:" (plist-get msg :id)) nth process-crypto)))
+      (notmuch-get-bodypart-internal (notmuch-id-to-query (plist-get msg :id)) nth process-crypto)))
 
 (defun notmuch-plist-to-alist (plist)
   (loop for (key value . rest) on plist by #'cddr

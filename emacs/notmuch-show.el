@@ -613,7 +613,7 @@ current buffer, if possible."
 	  ;; times (hundreds!), which results in many calls to
 	  ;; `notmuch part'.
 	  (unless content
-	    (setq content (notmuch-get-bodypart-internal (concat "id:" message-id)
+	    (setq content (notmuch-get-bodypart-internal (notmuch-id-to-query message-id)
 							      part-number notmuch-show-process-crypto))
 	    (with-current-buffer w3m-current-buffer
 	      (notmuch-show-w3m-cid-store-internal url
@@ -1325,16 +1325,16 @@ Some useful entries are:
     (plist-get props prop)))
 
 (defun notmuch-show-get-message-id (&optional bare)
-  "Return the Message-Id of the current message.
+  "Return an id: query for the Message-Id of the current message.
 
 If optional argument BARE is non-nil, return
-the Message-Id without prefix and quotes."
+the Message-Id without id: prefix and escaping."
   (if bare
       (notmuch-show-get-prop :id)
-    (concat "id:\"" (notmuch-show-get-prop :id) "\"")))
+    (notmuch-id-to-query (notmuch-show-get-prop :id))))
 
 (defun notmuch-show-get-messages-ids ()
-  "Return all message ids of messages in the current thread."
+  "Return all id: queries of messages in the current thread."
   (let ((message-ids))
     (notmuch-show-mapc
      (lambda () (push (notmuch-show-get-message-id) message-ids)))
@@ -1401,7 +1401,7 @@ current thread."
 ;; thread.
 
 (defun notmuch-show-get-message-ids-for-open-messages ()
-  "Return a list of all message IDs for open messages in the current thread."
+  "Return a list of all id: queries for open messages in the current thread."
   (save-excursion
     (let (message-ids done)
       (goto-char (point-min))
@@ -1805,7 +1805,7 @@ thread from search."
   (notmuch-common-do-stash (notmuch-show-get-from)))
 
 (defun notmuch-show-stash-message-id ()
-  "Copy message ID of current message to kill-ring."
+  "Copy id: query matching the current message to kill-ring."
   (interactive)
   (notmuch-common-do-stash (notmuch-show-get-message-id)))
 
