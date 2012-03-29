@@ -298,3 +298,6 @@ was called."
 
 (provide 'notmuch-lib)
 
+;; Local Variables:
+;; byte-compile-warnings: (not cl-functions)
+;; End:
