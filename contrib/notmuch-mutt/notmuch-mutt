@@ -169,7 +169,7 @@ notmuch-mutt - notmuch (of a) helper for Mutt
 =head1 DESCRIPTION
 
 notmuch-mutt is a frontend to the notmuch mail indexer capable of populating
-maildir with search results.
+a maildir with search results.
 
 =head1 OPTIONS
 
