@@ -52,6 +52,16 @@ Reply improvement using the JSON format
   reply body, and it will quote HTML parts if no text/plain parts are
   available.
 
+New add-on tool: notmuch-mutt
+-----------------------------
+
+The new contrib/ tool "notmuch-mutt" provides Notmuch integration for
+the Mutt mail user agent. Using it, Mutt users can perform mail
+search, thread reconstruction, and mail tagging/untagging without
+leaving Mutt.  notmuch-mutt, formerly distributed under the name
+"mutt-notmuch" by Stefano Zacchiroli, will be maintained as a notmuch
+contrib/ from now on.
+
 Notmuch 0.12 (2012-03-20)
 =========================
 
