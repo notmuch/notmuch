@@ -127,7 +127,7 @@ list."
 	  ((same-window-regexps '("\\*mail .*")))
 	(notmuch-mua-mail (plist-get reply-headers :To)
 			  (plist-get reply-headers :Subject)
-			  (notmuch-plist-to-alist reply-headers)))
+			  (notmuch-headers-plist-to-alist reply-headers)))
       ;; Insert the message body - but put it in front of the signature
       ;; if one is present
       (goto-char (point-max))
@@ -185,11 +185,11 @@ OTHER-ARGS are passed through to `message-mail'."
   (when notmuch-mua-user-agent-function
     (let ((user-agent (funcall notmuch-mua-user-agent-function)))
       (when (not (string= "" user-agent))
-	(push (cons "User-Agent" user-agent) other-headers))))
+	(push (cons 'User-Agent user-agent) other-headers))))
 
-  (unless (mail-header 'From other-headers)
-    (push (cons "From" (concat
-			(notmuch-user-name) " <" (notmuch-user-primary-email) ">")) other-headers))
+  (unless (assq 'From other-headers)
+    (push (cons 'From (concat
+		       (notmuch-user-name) " <" (notmuch-user-primary-email) ">")) other-headers))
 
   (apply #'message-mail to subject other-headers other-args)
   (message-sort-headers)

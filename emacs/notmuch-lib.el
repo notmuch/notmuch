@@ -237,9 +237,12 @@ the given type."
   (or (plist-get part :content)
       (notmuch-get-bodypart-internal (notmuch-id-to-query (plist-get msg :id)) nth process-crypto)))
 
-(defun notmuch-plist-to-alist (plist)
+;; Converts a plist of headers to an alist of headers. The input plist should
+;; have symbols of the form :Header as keys, and the resulting alist will have
+;; symbols of the form 'Header as keys.
+(defun notmuch-headers-plist-to-alist (plist)
   (loop for (key value . rest) on plist by #'cddr
-	collect (cons (substring (symbol-name key) 1) value)))
+	collect (cons (intern (substring (symbol-name key) 1)) value)))
 
 ;; Compatibility functions for versions of emacs before emacs 23.
 ;;

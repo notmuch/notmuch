@@ -286,7 +286,6 @@ EOF
 test_expect_equal_file OUTPUT EXPECTED
 
 test_begin_subtest "Reply from alternate address within emacs"
-test_subtest_known_broken
 add_message '[from]="Sender <sender@example.com>"' \
 	     [to]=test_suite_other@notmuchmail.org
 
