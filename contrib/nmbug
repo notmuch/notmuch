@@ -60,6 +60,9 @@ sub git_pipe {
 sub git {
   my $fh = git_pipe (@_);
   my $str = join ('', <$fh>);
+  unless (close $fh) {
+    die "'git @_' exited with nonzero value\n";
+  }
   chomp($str);
   return $str;
 }
@@ -84,7 +87,7 @@ sub spawn {
       foreach my $line (@{$ioref}) {
 	print $fh $line, "\n";
       }
-      exit 0;
+      exit ! close $fh;
     } else {
       if ($dir ne '|-') {
 	open STDIN, '<', '/dev/null' or die "reopening stdin: $!"
@@ -105,6 +108,9 @@ sub get_tags {
   while (<$fh>) {
     chomp ();
     push @tags, $_ if (m/^$prefix/);
+  }
+  unless (close $fh) {
+    die "'notmuch search --output=tags *' exited with nonzero value\n";
   }
   return @tags;
 }
@@ -173,6 +179,10 @@ sub update_index {
   foreach my $pair (@{$status->{added}}) {
     index_tags_for_msg ($git, $pair->{id}, 'A', $pair->{tag});
   }
+  unless (close $git) {
+    die "'git update-index --index-info' exited with nonzero value\n";
+  }
+
 }
 
 
@@ -211,8 +221,12 @@ sub index_tags {
     my @tags = grep { s/^$TAGPREFIX//; } split (' ', $rest);
     index_tags_for_msg ($git,$id, 'A', @tags);
   }
-
-  close $git;
+  unless (close $git) {
+    die "'git update-index --index-info' exited with nonzero value\n";
+  }
+  unless (close $fh) {
+    die "'notmuch dump -- $query' exited with nonzero value\n";
+  }
   return $index;
 }
 
@@ -395,6 +409,9 @@ sub compute_status {
     } else {
       push @deleted, $pair;
     }
+    unless (close $fh) {
+      die "'notmuch search --output=files id:$id' exited with nonzero value\n";
+    }
   }
 
 
@@ -414,7 +431,12 @@ sub diff_index {
 		  qw/diff-index --cached/,
 		 "--diff-filter=$filter", qw/--name-only HEAD/ );
 
-  return unpack_diff_lines ($fh);
+  my @lines = unpack_diff_lines ($fh);
+  unless (close $fh) {
+    die "'git diff-index --cached --diff-filter=$filter --name-only HEAD' ",
+	"exited with nonzero value\n";
+  }
+  return @lines;
 }
 
 
@@ -426,7 +448,12 @@ sub diff_refs {
   my $fh= git_pipe ( 'diff', "--diff-filter=$filter", '--name-only',
 		 $ref1, $ref2);
 
-  return unpack_diff_lines ($fh);
+  my @lines = unpack_diff_lines ($fh);
+  unless (close $fh) {
+    die "'git diff --diff-filter=$filter --name-only $ref1 $ref2' ",
+	"exited with nonzero value\n";
+  }
+  return @lines;
 }
 
 
