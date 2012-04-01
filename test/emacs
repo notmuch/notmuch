@@ -267,7 +267,6 @@ EOF
 test_expect_equal_file OUTPUT EXPECTED
 
 test_begin_subtest "Reply within emacs"
-test_subtest_known_broken
 test_emacs '(let ((message-hidden-headers ''()))
 	    (notmuch-search "subject:\"testing message sent via SMTP\"")
 	    (notmuch-test-wait)
@@ -292,7 +291,6 @@ EOF
 test_expect_equal_file OUTPUT EXPECTED
 
 test_begin_subtest "Reply from alternate address within emacs"
-test_subtest_known_broken
 add_message '[from]="Sender <sender@example.com>"' \
 	     [to]=test_suite_other@notmuchmail.org
 
@@ -318,7 +316,6 @@ EOF
 test_expect_equal_file OUTPUT EXPECTED
 
 test_begin_subtest "Reply from address in named group list within emacs"
-test_subtest_known_broken
 add_message '[from]="Sender <sender@example.com>"' \
             '[to]=group:test_suite@notmuchmail.org,someone@example.com\;' \
              [cc]=test_suite_other@notmuchmail.org
@@ -345,7 +342,6 @@ EOF
 test_expect_equal_file OUTPUT EXPECTED
 
 test_begin_subtest "Reply within emacs to a multipart/mixed message"
-test_subtest_known_broken
 test_emacs '(let ((message-hidden-headers ''()))
 	    (notmuch-show "id:20091118002059.067214ed@hikari")
 		(notmuch-show-reply)
@@ -409,7 +405,6 @@ EOF
 test_expect_equal_file OUTPUT EXPECTED
 
 test_begin_subtest "Reply within emacs to a multipart/alternative message"
-test_subtest_known_broken
 test_emacs '(let ((message-hidden-headers ''()))
 	    (notmuch-show "id:cf0c4d610911171136h1713aa59w9cf9aa31f052ad0a@mail.gmail.com")
 		(notmuch-show-reply)
@@ -450,7 +445,6 @@ EOF
 test_expect_equal_file OUTPUT EXPECTED
 
 test_begin_subtest "Quote MML tags in reply"
-test_subtest_known_broken
 message_id='test-emacs-mml-quoting@message.id'
 add_message [id]="$message_id" \
 	    "[subject]='$test_subtest_name'" \

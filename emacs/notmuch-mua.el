@@ -90,6 +90,15 @@ list."
 	else if (notmuch-match-content-type (plist-get part :content-type) "text/*")
 	  collect part))
 
+;; There is a bug in emacs 23's message.el that results in a newline
+;; not being inserted after the References header, so the next header
+;; is concatenated to the end of it. This function fixes the problem,
+;; while guarding against the possibility that some current or future
+;; version of emacs has the bug fixed.
+(defun notmuch-mua-insert-references (original-func header references)
+  (funcall original-func header references)
+  (unless (bolp) (insert "\n")))
+
 (defun notmuch-mua-reply (query-string &optional sender reply-all)
   (let ((args '("reply" "--format=json"))
 	reply
@@ -125,9 +134,22 @@ list."
 	  ;; Overlay the composition window on that being used to read
 	  ;; the original message.
 	  ((same-window-regexps '("\\*mail .*")))
-	(notmuch-mua-mail (plist-get reply-headers :To)
-			  (plist-get reply-headers :Subject)
-			  (notmuch-headers-plist-to-alist reply-headers)))
+
+	;; We modify message-header-format-alist to get around a bug in message.el.
+	;; See the comment above on notmuch-mua-insert-references.
+	(let ((message-header-format-alist
+	       (loop for pair in message-header-format-alist
+		     if (eq (car pair) 'References)
+		     collect (cons 'References
+				   (apply-partially
+				    'notmuch-mua-insert-references
+				    (cdr pair)))
+		     else
+		     collect pair)))
+	  (notmuch-mua-mail (plist-get reply-headers :To)
+			    (plist-get reply-headers :Subject)
+			    (notmuch-headers-plist-to-alist reply-headers))))
+
       ;; Insert the message body - but put it in front of the signature
       ;; if one is present
       (goto-char (point-max))
