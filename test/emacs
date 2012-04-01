@@ -285,6 +285,50 @@ Notmuch Test Suite <test_suite@notmuchmail.org> writes:
 EOF
 test_expect_equal_file OUTPUT EXPECTED
 
+test_begin_subtest "Reply from alternate address within emacs"
+test_subtest_known_broken
+add_message '[from]="Sender <sender@example.com>"' \
+	     [to]=test_suite_other@notmuchmail.org
+
+test_emacs "(notmuch-search \"id:\\\"${gen_msg_id}\\\"\")
+	    (notmuch-test-wait)
+	    (notmuch-search-reply-to-thread)
+	    (test-output)"
+cat <<EOF >EXPECTED
+From: Notmuch Test Suite <test_suite_other@notmuchmail.org>
+To: Sender <sender@example.com>
+Subject: Re: ${test_subtest_name}
+In-Reply-To: <${gen_msg_id}>
+Fcc: ${MAIL_DIR}/sent
+--text follows this line--
+Sender <sender@example.com> writes:
+
+> This is just a test message (#${gen_msg_cnt})
+EOF
+test_expect_equal_file OUTPUT EXPECTED
+
+test_begin_subtest "Reply from address in named group list within emacs"
+add_message '[from]="Sender <sender@example.com>"' \
+            '[to]=group:test_suite@notmuchmail.org,someone@example.com\;' \
+             [cc]=test_suite_other@notmuchmail.org
+
+test_emacs "(notmuch-search \"id:\\\"${gen_msg_id}\\\"\")
+	    (notmuch-test-wait)
+	    (notmuch-search-reply-to-thread)
+	    (test-output)"
+cat <<EOF >EXPECTED
+From: Notmuch Test Suite <test_suite@notmuchmail.org>
+To: Sender <sender@example.com>, someone@example.com
+Subject: Re: ${test_subtest_name}
+In-Reply-To: <${gen_msg_id}>
+Fcc: ${MAIL_DIR}/sent
+--text follows this line--
+Sender <sender@example.com> writes:
+
+> This is just a test message (#${gen_msg_cnt})
+EOF
+test_expect_equal_file OUTPUT EXPECTED
+
 test_begin_subtest "Reply within emacs to a multipart/mixed message"
 test_emacs '(notmuch-show "id:20091118002059.067214ed@hikari")
 		(notmuch-show-reply)
