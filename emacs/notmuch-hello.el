@@ -41,7 +41,7 @@
 
 (defun notmuch-sort-saved-searches (alist)
   "Generate an alphabetically sorted saved searches alist."
-  (sort alist (lambda (a b) (string< (car a) (car b)))))
+  (sort (copy-sequence alist) (lambda (a b) (string< (car a) (car b)))))
 
 (defcustom notmuch-saved-search-sort-function nil
   "Function used to sort the saved searches for the notmuch-hello view.
