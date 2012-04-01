@@ -267,17 +267,23 @@ EOF
 test_expect_equal_file OUTPUT EXPECTED
 
 test_begin_subtest "Reply within emacs"
-test_emacs '(notmuch-search "subject:\"testing message sent via SMTP\"")
+test_subtest_known_broken
+test_emacs '(let ((message-hidden-headers ''()))
+	    (notmuch-search "subject:\"testing message sent via SMTP\"")
 	    (notmuch-test-wait)
 	    (notmuch-search-reply-to-thread)
-	    (test-output)'
+	    (test-output))'
 sed -i -e 's/^In-Reply-To: <.*>$/In-Reply-To: <XXX>/' OUTPUT
+sed -i -e 's/^References: <.*>$/References: <XXX>/' OUTPUT
+sed -i -e 's,^User-Agent: Notmuch/.* Emacs/.*,User-Agent: Notmuch/XXX Emacs/XXX,' OUTPUT
 cat <<EOF >EXPECTED
 From: Notmuch Test Suite <test_suite@notmuchmail.org>
 To: user@example.com
 Subject: Re: Testing message sent via SMTP
 In-Reply-To: <XXX>
 Fcc: ${MAIL_DIR}/sent
+References: <XXX>
+User-Agent: Notmuch/XXX Emacs/XXX
 --text follows this line--
 Notmuch Test Suite <test_suite@notmuchmail.org> writes:
 
@@ -286,19 +292,24 @@ EOF
 test_expect_equal_file OUTPUT EXPECTED
 
 test_begin_subtest "Reply from alternate address within emacs"
+test_subtest_known_broken
 add_message '[from]="Sender <sender@example.com>"' \
 	     [to]=test_suite_other@notmuchmail.org
 
-test_emacs "(notmuch-search \"id:\\\"${gen_msg_id}\\\"\")
+test_emacs "(let ((message-hidden-headers '()))
+	    (notmuch-search \"id:\\\"${gen_msg_id}\\\"\")
 	    (notmuch-test-wait)
 	    (notmuch-search-reply-to-thread)
-	    (test-output)"
+	    (test-output))"
+sed -i -e 's,^User-Agent: Notmuch/.* Emacs/.*,User-Agent: Notmuch/XXX Emacs/XXX,' OUTPUT
 cat <<EOF >EXPECTED
 From: Notmuch Test Suite <test_suite_other@notmuchmail.org>
 To: Sender <sender@example.com>
 Subject: Re: ${test_subtest_name}
 In-Reply-To: <${gen_msg_id}>
 Fcc: ${MAIL_DIR}/sent
+References: <${gen_msg_id}>
+User-Agent: Notmuch/XXX Emacs/XXX
 --text follows this line--
 Sender <sender@example.com> writes:
 
@@ -307,20 +318,25 @@ EOF
 test_expect_equal_file OUTPUT EXPECTED
 
 test_begin_subtest "Reply from address in named group list within emacs"
+test_subtest_known_broken
 add_message '[from]="Sender <sender@example.com>"' \
             '[to]=group:test_suite@notmuchmail.org,someone@example.com\;' \
              [cc]=test_suite_other@notmuchmail.org
 
-test_emacs "(notmuch-search \"id:\\\"${gen_msg_id}\\\"\")
+test_emacs "(let ((message-hidden-headers '()))
+	    (notmuch-search \"id:\\\"${gen_msg_id}\\\"\")
 	    (notmuch-test-wait)
 	    (notmuch-search-reply-to-thread)
-	    (test-output)"
+	    (test-output))"
+sed -i -e 's,^User-Agent: Notmuch/.* Emacs/.*,User-Agent: Notmuch/XXX Emacs/XXX,' OUTPUT
 cat <<EOF >EXPECTED
 From: Notmuch Test Suite <test_suite@notmuchmail.org>
 To: Sender <sender@example.com>, someone@example.com
 Subject: Re: ${test_subtest_name}
 In-Reply-To: <${gen_msg_id}>
 Fcc: ${MAIL_DIR}/sent
+References: <${gen_msg_id}>
+User-Agent: Notmuch/XXX Emacs/XXX
 --text follows this line--
 Sender <sender@example.com> writes:
 
@@ -329,15 +345,20 @@ EOF
 test_expect_equal_file OUTPUT EXPECTED
 
 test_begin_subtest "Reply within emacs to a multipart/mixed message"
-test_emacs '(notmuch-show "id:20091118002059.067214ed@hikari")
+test_subtest_known_broken
+test_emacs '(let ((message-hidden-headers ''()))
+	    (notmuch-show "id:20091118002059.067214ed@hikari")
 		(notmuch-show-reply)
-		(test-output)'
+		(test-output))'
+sed -i -e 's,^User-Agent: Notmuch/.* Emacs/.*,User-Agent: Notmuch/XXX Emacs/XXX,' OUTPUT
 cat <<EOF >EXPECTED
 From: Notmuch Test Suite <test_suite@notmuchmail.org>
 To: Adrian Perez de Castro <aperez@igalia.com>, notmuch@notmuchmail.org
 Subject: Re: [notmuch] Introducing myself
 In-Reply-To: <20091118002059.067214ed@hikari>
 Fcc: ${MAIL_DIR}/sent
+References: <20091118002059.067214ed@hikari>
+User-Agent: Notmuch/XXX Emacs/XXX
 --text follows this line--
 Adrian Perez de Castro <aperez@igalia.com> writes:
 
@@ -388,15 +409,20 @@ EOF
 test_expect_equal_file OUTPUT EXPECTED
 
 test_begin_subtest "Reply within emacs to a multipart/alternative message"
-test_emacs '(notmuch-show "id:cf0c4d610911171136h1713aa59w9cf9aa31f052ad0a@mail.gmail.com")
+test_subtest_known_broken
+test_emacs '(let ((message-hidden-headers ''()))
+	    (notmuch-show "id:cf0c4d610911171136h1713aa59w9cf9aa31f052ad0a@mail.gmail.com")
 		(notmuch-show-reply)
-		(test-output)'
+		(test-output))'
+sed -i -e 's,^User-Agent: Notmuch/.* Emacs/.*,User-Agent: Notmuch/XXX Emacs/XXX,' OUTPUT
 cat <<EOF >EXPECTED
 From: Notmuch Test Suite <test_suite@notmuchmail.org>
 To: Alex Botero-Lowry <alex.boterolowry@gmail.com>, notmuch@notmuchmail.org
 Subject: Re: [notmuch] preliminary FreeBSD support
 In-Reply-To: <cf0c4d610911171136h1713aa59w9cf9aa31f052ad0a@mail.gmail.com>
 Fcc: ${MAIL_DIR}/sent
+References: <cf0c4d610911171136h1713aa59w9cf9aa31f052ad0a@mail.gmail.com>
+User-Agent: Notmuch/XXX Emacs/XXX
 --text follows this line--
 Alex Botero-Lowry <alex.boterolowry@gmail.com> writes:
 
@@ -424,19 +450,24 @@ EOF
 test_expect_equal_file OUTPUT EXPECTED
 
 test_begin_subtest "Quote MML tags in reply"
+test_subtest_known_broken
 message_id='test-emacs-mml-quoting@message.id'
 add_message [id]="$message_id" \
 	    "[subject]='$test_subtest_name'" \
 	    '[body]="<#part disposition=inline>"'
-test_emacs "(notmuch-show \"id:$message_id\")
+test_emacs "(let ((message-hidden-headers '()))
+	      (notmuch-show \"id:$message_id\")
 	      (notmuch-show-reply)
-	      (test-output)"
+	      (test-output))"
+sed -i -e 's,^User-Agent: Notmuch/.* Emacs/.*,User-Agent: Notmuch/XXX Emacs/XXX,' OUTPUT
 cat <<EOF >EXPECTED
 From: Notmuch Test Suite <test_suite@notmuchmail.org>
 To: 
 Subject: Re: Quote MML tags in reply
 In-Reply-To: <test-emacs-mml-quoting@message.id>
 Fcc: ${MAIL_DIR}/sent
+References: <test-emacs-mml-quoting@message.id>
+User-Agent: Notmuch/XXX Emacs/XXX
 --text follows this line--
 Notmuch Test Suite <test_suite@notmuchmail.org> writes:
 
