@@ -1,53 +1,54 @@
-; notmuch.el --- run notmuch within emacs
-;
-; Copyright © Carl Worth
-;
-; This file is part of Notmuch.
-;
-; Notmuch is free software: you can redistribute it and/or modify it
-; under the terms of the GNU General Public License as published by
-; the Free Software Foundation, either version 3 of the License, or
-; (at your option) any later version.
-;
-; Notmuch is distributed in the hope that it will be useful, but
-; WITHOUT ANY WARRANTY; without even the implied warranty of
-; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-; General Public License for more details.
-;
-; You should have received a copy of the GNU General Public License
-; along with Notmuch.  If not, see <http://www.gnu.org/licenses/>.
-;
-; Authors: Carl Worth <cworth@cworth.org>
+;; notmuch.el --- run notmuch within emacs
+;;
+;; Copyright © Carl Worth
+;;
+;; This file is part of Notmuch.
+;;
+;; Notmuch is free software: you can redistribute it and/or modify it
+;; under the terms of the GNU General Public License as published by
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
+;;
+;; Notmuch is distributed in the hope that it will be useful, but
+;; WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+;; General Public License for more details.
+;;
+;; You should have received a copy of the GNU General Public License
+;; along with Notmuch.  If not, see <http://www.gnu.org/licenses/>.
+;;
+;; Authors: Carl Worth <cworth@cworth.org>
 
-; This is an emacs-based interface to the notmuch mail system.
-;
-; You will first need to have the notmuch program installed and have a
-; notmuch database built in order to use this. See
-; http://notmuchmail.org for details.
-;
-; To install this software, copy it to a directory that is on the
-; `load-path' variable within emacs (a good candidate is
-; /usr/local/share/emacs/site-lisp). If you are viewing this from the
-; notmuch source distribution then you can simply run:
-;
-;	sudo make install-emacs
-;
-; to install it.
-;
-; Then, to actually run it, add:
-;
-;	(require 'notmuch)
-;
-; to your ~/.emacs file, and then run "M-x notmuch" from within emacs,
-; or run:
-;
-;	emacs -f notmuch
-;
-; Have fun, and let us know if you have any comment, questions, or
-; kudos: Notmuch list <notmuch@notmuchmail.org> (subscription is not
-; required, but is available from http://notmuchmail.org).
+;; This is an emacs-based interface to the notmuch mail system.
+;;
+;; You will first need to have the notmuch program installed and have a
+;; notmuch database built in order to use this. See
+;; http://notmuchmail.org for details.
+;;
+;; To install this software, copy it to a directory that is on the
+;; `load-path' variable within emacs (a good candidate is
+;; /usr/local/share/emacs/site-lisp). If you are viewing this from the
+;; notmuch source distribution then you can simply run:
+;;
+;;	sudo make install-emacs
+;;
+;; to install it.
+;;
+;; Then, to actually run it, add:
+;;
+;;	(require 'notmuch)
+;;
+;; to your ~/.emacs file, and then run "M-x notmuch" from within emacs,
+;; or run:
+;;
+;;	emacs -f notmuch
+;;
+;; Have fun, and let us know if you have any comment, questions, or
+;; kudos: Notmuch list <notmuch@notmuchmail.org> (subscription is not
+;; required, but is available from http://notmuchmail.org).
 
 (eval-when-compile (require 'cl))
+(require 'crm)
 (require 'mm-view)
 (require 'message)
 
@@ -70,17 +71,70 @@ For example:
 	(setq notmuch-search-result-format \(\(\"authors\" . \"%-40s\"\)
 					     \(\"subject\" . \"%s\"\)\)\)"
   :type '(alist :key-type (string) :value-type (string))
-  :group 'notmuch)
+  :group 'notmuch-search)
 
 (defvar notmuch-query-history nil
   "Variable to store minibuffer history for notmuch queries")
 
+(defvar notmuch-select-tag-history nil
+  "Variable to store minibuffer history for
+`notmuch-select-tag-with-completion' function.")
+
+(defvar notmuch-read-tag-changes-history nil
+  "Variable to store minibuffer history for
+`notmuch-read-tag-changes' function.")
+
+(defun notmuch-tag-completions (&optional search-terms)
+  (split-string
+   (with-output-to-string
+     (with-current-buffer standard-output
+       (apply 'call-process notmuch-command nil t
+	      nil "search-tags" search-terms)))
+   "\n+" t))
+
 (defun notmuch-select-tag-with-completion (prompt &rest search-terms)
-  (let ((tag-list
-	 (with-output-to-string
-	   (with-current-buffer standard-output
-	     (apply 'call-process notmuch-command nil t nil "search-tags" search-terms)))))
-    (completing-read prompt (split-string tag-list "\n+" t) nil nil nil)))
+  (let ((tag-list (notmuch-tag-completions search-terms)))
+    (completing-read prompt tag-list nil nil nil 'notmuch-select-tag-history)))
+
+(defun notmuch-read-tag-changes (&optional initial-input &rest search-terms)
+  (let* ((all-tag-list (notmuch-tag-completions))
+	 (add-tag-list (mapcar (apply-partially 'concat "+") all-tag-list))
+	 (remove-tag-list (mapcar (apply-partially 'concat "-")
+				  (if (null search-terms)
+				      all-tag-list
+				    (notmuch-tag-completions search-terms))))
+	 (tag-list (append add-tag-list remove-tag-list))
+	 (crm-separator " ")
+	 ;; By default, space is bound to "complete word" function.
+	 ;; Re-bind it to insert a space instead.  Note that <tab>
+	 ;; still does the completion.
+	 (crm-local-completion-map
+	  (let ((map (make-sparse-keymap)))
+	    (set-keymap-parent map crm-local-completion-map)
+	    (define-key map " " 'self-insert-command)
+	    map)))
+    (delete "" (completing-read-multiple "Tags (+add -drop): "
+		tag-list nil nil initial-input
+		'notmuch-read-tag-changes-history))))
+
+(defun notmuch-update-tags (tags tag-changes)
+  "Return a copy of TAGS with additions and removals from TAG-CHANGES.
+
+TAG-CHANGES must be a list of tags names, each prefixed with
+either a \"+\" to indicate the tag should be added to TAGS if not
+present or a \"-\" to indicate that the tag should be removed
+from TAGS if present."
+  (let ((result-tags (copy-sequence tags)))
+    (dolist (tag-change tag-changes)
+      (let ((op (string-to-char tag-change))
+	    (tag (unless (string= tag-change "") (substring tag-change 1))))
+	(case op
+	  (?+ (unless (member tag result-tags)
+		(push tag result-tags)))
+	  (?- (setq result-tags (delete tag result-tags)))
+	  (otherwise
+	   (error "Changed tag must be of the form `+this_tag' or `-that_tag'")))))
+    (sort result-tags 'string<)))
 
 (defun notmuch-foreach-mime-part (function mm-handle)
   (cond ((stringp (car mm-handle))
@@ -139,10 +193,10 @@ This is basically just `format-kbd-macro' but we also convert ESC to M-."
 	"M-"
       (concat desc " "))))
 
-; I would think that emacs would have code handy for walking a keymap
-; and generating strings for each key, and I would prefer to just call
-; that. But I couldn't find any (could be all implemented in C I
-; suppose), so I wrote my own here.
+;; I would think that emacs would have code handy for walking a keymap
+;; and generating strings for each key, and I would prefer to just call
+;; that. But I couldn't find any (could be all implemented in C I
+;; suppose), so I wrote my own here.
 (defun notmuch-substitute-one-command-key-with-prefix (prefix binding)
   "For a key binding, return a string showing a human-readable
 representation of the prefixed key as well as the first line of
@@ -164,16 +218,23 @@ For a mouse binding, return nil."
 		"\t"
 		(notmuch-documentation-first-line action))))))
 
-(defalias 'notmuch-substitute-one-command-key
-  (apply-partially 'notmuch-substitute-one-command-key-with-prefix nil))
+(defun notmuch-substitute-command-keys-one (key)
+  ;; A `keymap' key indicates inheritance from a parent keymap - the
+  ;; inherited mappings follow, so there is nothing to print for
+  ;; `keymap' itself.
+  (when (not (eq key 'keymap))
+    (notmuch-substitute-one-command-key-with-prefix nil key)))
 
 (defun notmuch-substitute-command-keys (doc)
   "Like `substitute-command-keys' but with documentation, not function names."
   (let ((beg 0))
     (while (string-match "\\\\{\\([^}[:space:]]*\\)}" doc beg)
-      (let ((map (substring doc (match-beginning 1) (match-end 1))))
-	(setq doc (replace-match (mapconcat 'notmuch-substitute-one-command-key
-					    (cdr (symbol-value (intern map))) "\n") 1 1 doc)))
+      (let* ((keymap-name (substring doc (match-beginning 1) (match-end 1)))
+	     (keymap (symbol-value (intern keymap-name))))
+	(setq doc (replace-match
+		   (mapconcat #'notmuch-substitute-command-keys-one
+			      (cdr keymap) "\n")
+		   1 1 doc)))
       (setq beg (match-end 0)))
     doc))
 
@@ -188,11 +249,19 @@ For a mouse binding, return nil."
       (set-buffer-modified-p nil)
       (view-buffer (current-buffer) 'kill-buffer-if-not-modified))))
 
-(defcustom notmuch-search-hook '(hl-line-mode)
+(require 'hl-line)
+
+(defun notmuch-hl-line-mode ()
+  (prog1 (hl-line-mode)
+    (when hl-line-overlay
+      (overlay-put hl-line-overlay 'priority 1))))
+
+(defcustom notmuch-search-hook '(notmuch-hl-line-mode)
   "List of functions to call when notmuch displays the search results."
   :type 'hook
-  :options '(hl-line-mode)
-  :group 'notmuch)
+  :options '(notmuch-hl-line-mode)
+  :group 'notmuch-search
+  :group 'notmuch-hooks)
 
 (defvar notmuch-search-mode-map
   (let ((map (make-sparse-keymap)))
@@ -206,7 +275,8 @@ For a mouse binding, return nil."
     (define-key map ">" 'notmuch-search-last-thread)
     (define-key map "p" 'notmuch-search-previous-thread)
     (define-key map "n" 'notmuch-search-next-thread)
-    (define-key map "r" 'notmuch-search-reply-to-thread)
+    (define-key map "r" 'notmuch-search-reply-to-thread-sender)
+    (define-key map "R" 'notmuch-search-reply-to-thread)
     (define-key map "m" 'notmuch-mua-new-mail)
     (define-key map "s" 'notmuch-search)
     (define-key map "o" 'notmuch-search-toggle-order)
@@ -216,7 +286,7 @@ For a mouse binding, return nil."
     (define-key map "t" 'notmuch-search-filter-by-tag)
     (define-key map "f" 'notmuch-search-filter)
     (define-key map [mouse-1] 'notmuch-search-show-thread)
-    (define-key map "*" 'notmuch-search-operate-all)
+    (define-key map "*" 'notmuch-search-tag-all)
     (define-key map "a" 'notmuch-search-archive-thread)
     (define-key map "-" 'notmuch-search-remove-tag)
     (define-key map "+" 'notmuch-search-add-tag)
@@ -262,14 +332,14 @@ For a mouse binding, return nil."
 (defun notmuch-search-scroll-down ()
   "Move backward through the search results by one window's worth."
   (interactive)
-  ; I don't know why scroll-down doesn't signal beginning-of-buffer
-  ; the way that scroll-up signals end-of-buffer, but c'est la vie.
-  ;
-  ; So instead of trapping a signal we instead check whether the
-  ; window begins on the first line of the buffer and if so, move
-  ; directly to that position. (We have to count lines since the
-  ; window-start position is not the same as point-min due to the
-  ; invisible thread-ID characters on the first line.
+  ;; I don't know why scroll-down doesn't signal beginning-of-buffer
+  ;; the way that scroll-up signals end-of-buffer, but c'est la vie.
+  ;;
+  ;; So instead of trapping a signal we instead check whether the
+  ;; window begins on the first line of the buffer and if so, move
+  ;; directly to that position. (We have to count lines since the
+  ;; window-start position is not the same as point-min due to the
+  ;; invisible thread-ID characters on the first line.
   (if (equal (count-lines (point-min) (window-start)) 0)
       (goto-char (point-min))
     (scroll-down nil)))
@@ -299,27 +369,32 @@ For a mouse binding, return nil."
  '((((class color) (background light)) (:background "#f0f0f0"))
    (((class color) (background dark)) (:background "#303030")))
  "Face for the single-line message summary in notmuch-show-mode."
- :group 'notmuch)
+ :group 'notmuch-show
+ :group 'notmuch-faces)
 
 (defface notmuch-search-date
   '((t :inherit default))
   "Face used in search mode for dates."
-  :group 'notmuch)
+  :group 'notmuch-search
+  :group 'notmuch-faces)
 
 (defface notmuch-search-count
   '((t :inherit default))
   "Face used in search mode for the count matching the query."
-  :group 'notmuch)
+  :group 'notmuch-search
+  :group 'notmuch-faces)
 
 (defface notmuch-search-subject
   '((t :inherit default))
   "Face used in search mode for subjects."
-  :group 'notmuch)
+  :group 'notmuch-search
+  :group 'notmuch-faces)
 
 (defface notmuch-search-matching-authors
   '((t :inherit default))
   "Face used in search mode for authors matching the query."
-  :group 'notmuch)
+  :group 'notmuch-search
+  :group 'notmuch-faces)
 
 (defface notmuch-search-non-matching-authors
   '((((class color)
@@ -331,7 +406,8 @@ For a mouse binding, return nil."
     (t
      (:italic t)))
   "Face used in search mode for authors not matching the query."
-  :group 'notmuch)
+  :group 'notmuch-search
+  :group 'notmuch-faces)
 
 (defface notmuch-tag-face
   '((((class color)
@@ -343,7 +419,8 @@ For a mouse binding, return nil."
     (t
      (:bold t)))
   "Face used in search mode face for tags."
-  :group 'notmuch)
+  :group 'notmuch-search
+  :group 'notmuch-faces)
 
 (defun notmuch-search-mode ()
   "Major mode displaying results of a notmuch search.
@@ -358,7 +435,7 @@ any tags).
 Pressing \\[notmuch-search-show-thread] on any line displays that thread. The '\\[notmuch-search-add-tag]' and '\\[notmuch-search-remove-tag]'
 keys can be used to add or remove tags from a thread. The '\\[notmuch-search-archive-thread]' key
 is a convenience for archiving a thread (removing the \"inbox\"
-tag). The '\\[notmuch-search-operate-all]' key can be used to add or remove a tag from all
+tag). The '\\[notmuch-search-tag-all]' key can be used to add or remove a tag from all
 threads in the current buffer.
 
 Other useful commands are '\\[notmuch-search-filter]' for filtering the current search
@@ -404,6 +481,10 @@ Complete list of currently available key bindings:
   "Return a list of threads for the current region"
   (notmuch-search-properties-in-region 'notmuch-search-thread-id beg end))
 
+(defun notmuch-search-find-thread-id-region-search (beg end)
+  "Return a search string for threads for the current region"
+  (mapconcat 'identity (notmuch-search-find-thread-id-region beg end) " or "))
+
 (defun notmuch-search-find-authors ()
   "Return the authors for the current thread"
   (get-text-property (point) 'notmuch-search-authors))
@@ -420,31 +501,30 @@ Complete list of currently available key bindings:
   "Return a list of authors for the current region"
   (notmuch-search-properties-in-region 'notmuch-search-subject beg end))
 
-(defun notmuch-search-show-thread (&optional crypto-switch)
+(defun notmuch-search-show-thread ()
   "Display the currently selected thread."
-  (interactive "P")
+  (interactive)
   (let ((thread-id (notmuch-search-find-thread-id))
-	(subject (notmuch-search-find-subject)))
+	(subject (notmuch-prettify-subject (notmuch-search-find-subject))))
     (if (> (length thread-id) 0)
 	(notmuch-show thread-id
 		      (current-buffer)
 		      notmuch-search-query-string
-		      ;; name the buffer based on notmuch-search-find-subject
-		      (if (string-match "^[ \t]*$" subject)
-			  "[No Subject]"
-			(truncate-string-to-width
-			 (concat "*"
-				 (truncate-string-to-width subject 32 nil nil t)
-				 "*")
-			 32 nil nil t))
-		      crypto-switch)
-      (error "End of search results"))))
+		      ;; Name the buffer based on the subject.
+		      (concat "*" (truncate-string-to-width subject 30 nil nil t) "*"))
+      (message "End of search results."))))
 
 (defun notmuch-search-reply-to-thread (&optional prompt-for-sender)
+  "Begin composing a reply-all to the entire current thread in a new buffer."
+  (interactive "P")
+  (let ((message-id (notmuch-search-find-thread-id)))
+    (notmuch-mua-new-reply message-id prompt-for-sender t)))
+
+(defun notmuch-search-reply-to-thread-sender (&optional prompt-for-sender)
   "Begin composing a reply to the entire current thread in a new buffer."
   (interactive "P")
   (let ((message-id (notmuch-search-find-thread-id)))
-    (notmuch-mua-new-reply message-id prompt-for-sender)))
+    (notmuch-mua-new-reply message-id prompt-for-sender nil)))
 
 (defun notmuch-call-notmuch-process (&rest args)
   "Synchronously invoke \"notmuch\" with the given list of arguments.
@@ -463,20 +543,27 @@ and will also appear in a buffer named \"*Notmuch errors*\"."
 	    (error (buffer-substring beg end))
 	    ))))))
 
-(defun notmuch-tag (query &rest tags)
-  "Add/remove tags in TAGS to messages matching QUERY.
+(defun notmuch-tag (query &rest tag-changes)
+  "Add/remove tags in TAG-CHANGES to messages matching QUERY.
 
-TAGS should be a list of strings of the form \"+TAG\" or \"-TAG\" and
-QUERY should be a string containing the search-query.
+TAG-CHANGES should be a list of strings of the form \"+tag\" or
+\"-tag\" and QUERY should be a string containing the
+search-query.
 
 Note: Other code should always use this function alter tags of
 messages instead of running (notmuch-call-notmuch-process \"tag\" ..)
 directly, so that hooks specified in notmuch-before-tag-hook and
 notmuch-after-tag-hook will be run."
-  (run-hooks 'notmuch-before-tag-hook)
-  (apply 'notmuch-call-notmuch-process
-	 (append (list "tag") tags (list "--" query)))
-  (run-hooks 'notmuch-after-tag-hook))
+  ;; Perform some validation
+  (mapc (lambda (tag-change)
+	  (unless (string-match-p "^[-+]\\S-+$" tag-change)
+	    (error "Tag must be of the form `+this_tag' or `-that_tag'")))
+	tag-changes)
+  (unless (null tag-changes)
+    (run-hooks 'notmuch-before-tag-hook)
+    (apply 'notmuch-call-notmuch-process "tag"
+	   (append tag-changes (list "--" query)))
+    (run-hooks 'notmuch-after-tag-hook)))
 
 (defcustom notmuch-before-tag-hook nil
   "Hooks that are run before tags of a message are modified.
@@ -487,8 +574,8 @@ a list of strings of the form \"+TAG\" or \"-TAG\".
 the messages that are about to be tagged"
 
   :type 'hook
-  :options '(hl-line-mode)
-  :group 'notmuch)
+  :options '(notmuch-hl-line-mode)
+  :group 'notmuch-hooks)
 
 (defcustom notmuch-after-tag-hook nil
   "Hooks that are run after tags of a message are modified.
@@ -498,8 +585,8 @@ a list of strings of the form \"+TAG\" or \"-TAG\".
 'query' will be a string containing the search query that determines
 the messages that were tagged"
   :type 'hook
-  :options '(hl-line-mode)
-  :group 'notmuch)
+  :options '(notmuch-hl-line-mode)
+  :group 'notmuch-hooks)
 
 (defun notmuch-search-set-tags (tags)
   (save-excursion
@@ -522,7 +609,7 @@ the messages that were tagged"
     (let ((beg (+ (point) 1)))
       (re-search-forward ")")
       (let ((end (- (point) 1)))
-	(split-string (buffer-substring beg end))))))
+	(split-string (buffer-substring-no-properties beg end))))))
 
 (defun notmuch-search-get-tags-region (beg end)
   (save-excursion
@@ -535,75 +622,54 @@ the messages that were tagged"
 	(forward-line 1))
       output)))
 
-(defun notmuch-search-add-tag-thread (tag)
-  (notmuch-search-add-tag-region tag (point) (point)))
+(defun notmuch-search-tag-thread (&rest tag-changes)
+  "Change tags for the currently selected thread.
 
-(defun notmuch-search-add-tag-region (tag beg end)
-  (let ((search-id-string (mapconcat 'identity (notmuch-search-find-thread-id-region beg end) " or ")))
-    (notmuch-tag search-id-string (concat "+" tag))
+See `notmuch-search-tag-region' for details."
+  (apply 'notmuch-search-tag-region (point) (point) tag-changes))
+
+(defun notmuch-search-tag-region (beg end &rest tag-changes)
+  "Change tags for threads in the given region.
+
+TAGS is a list of tag operations for `notmuch-tag'.  The tags are
+added or removed for all threads in the region from BEG to END."
+  (let ((search-string (notmuch-search-find-thread-id-region-search beg end)))
+    (apply 'notmuch-tag search-string tag-changes)
     (save-excursion
       (let ((last-line (line-number-at-pos end))
 	    (max-line (- (line-number-at-pos (point-max)) 2)))
 	(goto-char beg)
 	(while (<= (line-number-at-pos) (min last-line max-line))
-	  (notmuch-search-set-tags (delete-dups (sort (cons tag (notmuch-search-get-tags)) 'string<)))
+	  (notmuch-search-set-tags
+	   (notmuch-update-tags (notmuch-search-get-tags) tag-changes))
 	  (forward-line))))))
 
-(defun notmuch-search-remove-tag-thread (tag)
-  (notmuch-search-remove-tag-region tag (point) (point)))
+(defun notmuch-search-tag (&optional initial-input)
+  "Change tags for the currently selected thread or region."
+  (interactive)
+  (let* ((beg (if (region-active-p) (region-beginning) (point)))
+	 (end (if (region-active-p) (region-end) (point)))
+	 (search-string (notmuch-search-find-thread-id-region-search beg end))
+	 (tags (notmuch-read-tag-changes initial-input search-string)))
+    (apply 'notmuch-search-tag-region beg end tags)))
 
-(defun notmuch-search-remove-tag-region (tag beg end)
-  (let ((search-id-string (mapconcat 'identity (notmuch-search-find-thread-id-region beg end) " or ")))
-    (notmuch-tag search-id-string (concat "-" tag))
-    (save-excursion
-      (let ((last-line (line-number-at-pos end))
-	    (max-line (- (line-number-at-pos (point-max)) 2)))
-	(goto-char beg)
-	(while (<= (line-number-at-pos) (min last-line max-line))
-	  (notmuch-search-set-tags (delete tag (notmuch-search-get-tags)))
-	  (forward-line))))))
+(defun notmuch-search-add-tag ()
+  "Same as `notmuch-search-tag' but sets initial input to '+'."
+  (interactive)
+  (notmuch-search-tag "+"))
 
-(defun notmuch-search-add-tag (tag)
-  "Add a tag to the currently selected thread or region.
-
-The tag is added to all messages in the currently selected thread
-or threads in the current region."
-  (interactive
-   (list (notmuch-select-tag-with-completion "Tag to add: ")))
-  (save-excursion
-    (if (region-active-p)
-	(let* ((beg (region-beginning))
-	       (end (region-end)))
-	  (notmuch-search-add-tag-region tag beg end))
-      (notmuch-search-add-tag-thread tag))))
-
-(defun notmuch-search-remove-tag (tag)
-  "Remove a tag from the currently selected thread or region.
-
-The tag is removed from all messages in the currently selected
-thread or threads in the current region."
-  (interactive
-   (list (notmuch-select-tag-with-completion
-	  "Tag to remove: "
-	  (if (region-active-p)
-	      (mapconcat 'identity
-			 (notmuch-search-find-thread-id-region (region-beginning) (region-end))
-			 " ")
-	    (notmuch-search-find-thread-id)))))
-  (save-excursion
-    (if (region-active-p)
-	(let* ((beg (region-beginning))
-	       (end (region-end)))
-	  (notmuch-search-remove-tag-region tag beg end))
-      (notmuch-search-remove-tag-thread tag))))
+(defun notmuch-search-remove-tag ()
+  "Same as `notmuch-search-tag' but sets initial input to '-'."
+  (interactive)
+  (notmuch-search-tag "-"))
 
 (defun notmuch-search-archive-thread ()
   "Archive the currently selected thread (remove its \"inbox\" tag).
 
 This function advances the next thread when finished."
   (interactive)
-  (notmuch-search-remove-tag-thread "inbox")
-  (forward-line))
+  (notmuch-search-tag-thread "-inbox")
+  (notmuch-search-next-thread))
 
 (defvar notmuch-search-process-filter-data nil
   "Data that has not yet been processed.")
@@ -624,23 +690,23 @@ This function advances the next thread when finished."
 		  (goto-char (point-max))
 		  (if (eq status 'signal)
 		      (insert "Incomplete search results (search process was killed).\n"))
-		  (if (eq status 'exit)
-		      (progn
-			(if notmuch-search-process-filter-data
-			    (insert (concat "Error: Unexpected output from notmuch search:\n" notmuch-search-process-filter-data)))
-			(insert "End of search results.")
-			(if (not (= exit-status 0))
-			    (insert (format " (process returned %d)" exit-status)))
-			(insert "\n")
-			(if (and atbob
-				 (not (string= notmuch-search-target-thread "found")))
-			    (set 'never-found-target-thread t))))))
+		  (when (eq status 'exit)
+		    (if notmuch-search-process-filter-data
+			(insert (concat "Error: Unexpected output from notmuch search:\n" notmuch-search-process-filter-data)))
+		    (insert "End of search results.")
+		    (unless (= exit-status 0)
+		      (insert (format " (process returned %d)" exit-status)))
+		    (insert "\n")
+		    (if (and atbob
+			     (not (string= notmuch-search-target-thread "found")))
+			(set 'never-found-target-thread t)))))
 	      (when (and never-found-target-thread
 		       notmuch-search-target-line)
 		  (goto-char (point-min))
 		  (forward-line (1- notmuch-search-target-line))))))))
 
-(defcustom notmuch-search-line-faces nil
+(defcustom notmuch-search-line-faces '(("unread" :weight bold)
+				       ("flagged" :foreground "blue"))
   "Tag/face mapping for line highlighting in notmuch-search.
 
 Here is an example of how to color search results based on tags.
@@ -655,7 +721,8 @@ attributes overriding earlier. A message having both \"delete\"
 and \"unread\" tags with the above settings would have a green
 foreground and blue background."
   :type '(alist :key-type (string) :value-type (custom-face-edit))
-  :group 'notmuch)
+  :group 'notmuch-search
+  :group 'notmuch-faces)
 
 (defun notmuch-search-color-line (start end line-tag-list)
   "Colorize lines in `notmuch-show' based on tags."
@@ -806,15 +873,15 @@ non-authors is found, assume that all of the authors match."
 		      (if (/= (match-beginning 1) line)
 			  (insert (concat "Error: Unexpected output from notmuch search:\n" (substring string line (match-beginning 1)) "\n")))
 		      (let ((beg (point)))
-			(notmuch-search-show-result date count authors subject tags)
+			(notmuch-search-show-result date count authors
+						    (notmuch-prettify-subject subject) tags)
 			(notmuch-search-color-line beg (point) tag-list)
 			(put-text-property beg (point) 'notmuch-search-thread-id thread-id)
 			(put-text-property beg (point) 'notmuch-search-authors authors)
 			(put-text-property beg (point) 'notmuch-search-subject subject)
-			(if (string= thread-id notmuch-search-target-thread)
-			    (progn
-			      (set 'found-target beg)
-			      (set 'notmuch-search-target-thread "found"))))
+			(when (string= thread-id notmuch-search-target-thread)
+			  (set 'found-target beg)
+			  (set 'notmuch-search-target-thread "found")))
 		      (set 'line (match-end 0)))
 		  (set 'more nil)
 		  (while (and (< line (length string)) (= (elt string line) ?\n))
@@ -826,7 +893,7 @@ non-authors is found, assume that all of the authors match."
 	      (goto-char found-target)))
       (delete-process proc))))
 
-(defun notmuch-search-operate-all (action)
+(defun notmuch-search-tag-all (&rest tag-changes)
   "Add/remove tags from all matching messages.
 
 This command adds or removes tags from all messages matching the
@@ -837,16 +904,8 @@ will prompt for tags to be added or removed. Tags prefixed with
 Each character of the tag name may consist of alphanumeric
 characters as well as `_.+-'.
 "
-  (interactive "sOperation (+add -drop): notmuch tag ")
-  (let ((action-split (split-string action " +")))
-    ;; Perform some validation
-    (let ((words action-split))
-      (when (null words) (error "No operation given"))
-      (while words
-	(unless (string-match-p "^[-+][-+_.[:word:]]+$" (car words))
-	  (error "Action must be of the form `+thistag -that_tag'"))
-	(setq words (cdr words))))
-    (apply 'notmuch-tag notmuch-search-query-string action-split)))
+  (interactive (notmuch-read-tag-changes))
+  (apply 'notmuch-tag notmuch-search-query-string tag-changes))
 
 (defun notmuch-search-buffer-title (query)
   "Returns the title for a buffer with notmuch search results."
@@ -902,21 +961,25 @@ PROMPT is the string to prompt with."
 	       (t (list string)))))))
       ;; this was simpler than convincing completing-read to accept spaces:
       (define-key keymap (kbd "<tab>") 'minibuffer-complete)
-      (read-from-minibuffer prompt nil keymap nil
-			    'notmuch-query-history nil nil))))
+      (let ((history-delete-duplicates t))
+	(read-from-minibuffer prompt nil keymap nil
+			      'notmuch-search-history nil nil)))))
 
 ;;;###autoload
-(defun notmuch-search (query &optional oldest-first target-thread target-line continuation)
-  "Run \"notmuch search\" with the given query string and display results.
+(defun notmuch-search (&optional query oldest-first target-thread target-line continuation)
+  "Run \"notmuch search\" with the given `query' and display results.
 
-The optional parameters are used as follows:
+If `query' is nil, it is read interactively from the minibuffer.
+Other optional parameters are used as follows:
 
   oldest-first: A Boolean controlling the sort order of returned threads
   target-thread: A thread ID (with the thread: prefix) that will be made
                  current if it appears in the search results.
   target-line: The line number to move to if the target thread does not
                appear in the search results."
-  (interactive (list (notmuch-read-query "Notmuch search: ")))
+  (interactive)
+  (if (null query)
+      (setq query (notmuch-read-query "Notmuch search: ")))
   (let ((buffer (get-buffer-create (notmuch-search-buffer-title query))))
     (switch-to-buffer buffer)
     (notmuch-search-mode)
@@ -990,7 +1053,7 @@ Note that the recommended way of achieving the same is using
   :type '(choice (const :tag "notmuch new" nil)
 		 (const :tag "Disabled" "")
 		 (string :tag "Custom script"))
-  :group 'notmuch)
+  :group 'notmuch-external)
 
 (defun notmuch-poll ()
   "Run \"notmuch new\" or an external script to import mail.
@@ -999,8 +1062,8 @@ Invokes `notmuch-poll-script', \"notmuch new\", or does nothing
 depending on the value of `notmuch-poll-script'."
   (interactive)
   (if (stringp notmuch-poll-script)
-      (if (not (string= notmuch-poll-script ""))
-	  (call-process notmuch-poll-script nil nil))
+      (unless (string= notmuch-poll-script "")
+	(call-process notmuch-poll-script nil nil))
     (call-process notmuch-command nil nil nil "new")))
 
 (defun notmuch-search-poll-and-refresh-view ()
@@ -1055,21 +1118,39 @@ current search results AND that are tagged with the given tag."
   (interactive)
   (notmuch-hello))
 
-;;;###autoload
-(defun notmuch-jump-to-recent-buffer ()
-  "Jump to the most recent notmuch buffer (search, show or hello).
+(defun notmuch-interesting-buffer (b)
+  "Is the current buffer of interest to a notmuch user?"
+  (with-current-buffer b
+    (memq major-mode '(notmuch-show-mode
+		       notmuch-search-mode
+		       notmuch-hello-mode
+		       message-mode))))
 
-If no recent buffer is found, run `notmuch'."
+;;;###autoload
+(defun notmuch-cycle-notmuch-buffers ()
+  "Cycle through any existing notmuch buffers (search, show or hello).
+
+If the current buffer is the only notmuch buffer, bury it. If no
+notmuch buffers exist, run `notmuch'."
   (interactive)
-  (let ((last
-	 (loop for buffer in (buffer-list)
-	       if (with-current-buffer buffer
-		    (memq major-mode '(notmuch-show-mode
-				       notmuch-search-mode
-				       notmuch-hello-mode)))
-	       return buffer)))
-    (if last
-	(switch-to-buffer last)
+
+  (let (start first)
+    ;; If the current buffer is a notmuch buffer, remember it and then
+    ;; bury it.
+    (when (notmuch-interesting-buffer (current-buffer))
+      (setq start (current-buffer))
+      (bury-buffer))
+
+    ;; Find the first notmuch buffer.
+    (setq first (loop for buffer in (buffer-list)
+		     if (notmuch-interesting-buffer buffer)
+		     return buffer))
+
+    (if first
+	;; If the first one we found is any other than the starting
+	;; buffer, switch to it.
+	(unless (eq first start)
+	  (switch-to-buffer first))
       (notmuch))))
 
 (setq mail-user-agent 'notmuch-user-agent)

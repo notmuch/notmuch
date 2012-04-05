@@ -90,6 +90,9 @@ format_thread_json (const void *ctx,
 		    const int total,
 		    const char *authors,
 		    const char *subject);
+
+/* Any changes to the JSON format should be reflected in the file
+ * devel/schemata. */
 static const search_format_t format_json = {
     "[",
 	"{",
@@ -423,6 +426,9 @@ notmuch_search_command (void *ctx, int argc, char *argv[])
     output_t output = OUTPUT_SUMMARY;
     int offset = 0;
     int limit = -1; /* unlimited */
+    const char **search_exclude_tags;
+    size_t search_exclude_tags_length;
+    unsigned int i;
 
     enum { NOTMUCH_FORMAT_JSON, NOTMUCH_FORMAT_TEXT }
 	format_sel = NOTMUCH_FORMAT_TEXT;
@@ -489,6 +495,11 @@ notmuch_search_command (void *ctx, int argc, char *argv[])
     }
 
     notmuch_query_set_sort (query, sort);
+
+    search_exclude_tags = notmuch_config_get_search_exclude_tags
+	(config, &search_exclude_tags_length);
+    for (i = 0; i < search_exclude_tags_length; i++)
+	notmuch_query_add_tag_exclude (query, search_exclude_tags[i]);
 
     switch (output) {
     default:

@@ -10,4 +10,5 @@ libutil_modules := $(libutil_c_srcs:.c=.o)
 $(dir)/libutil.a: $(libutil_modules)
 	$(call quiet,AR) rcs $@ $^
 
+SRCS := $(SRCS) $(libutil_c_srcs)
 CLEAN := $(CLEAN) $(libutil_modules) $(dir)/libutil.a

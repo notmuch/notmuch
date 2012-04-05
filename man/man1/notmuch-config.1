@@ -1,0 +1,136 @@
+.TH NOTMUCH-CONFIG 1 2012-03-19 "Notmuch 0.12"
+.SH NAME
+notmuch-config \- Access notmuch configuration file.
+.SH SYNOPSIS
+
+.B notmuch config get
+.RI  "<" section ">.<" item ">"
+
+.B notmuch config set
+.RI  "<" section ">.<" item "> [" value " ...]"
+
+.SH DESCRIPTION
+
+The
+.B config
+command can be used to get or set settings in the notmuch
+configuration file.
+
+.RS 4
+.TP 4
+.B get
+The value of the specified configuration item is printed to stdout. If
+the item has multiple values (it is a list), each value is separated
+by a newline character.
+.RE
+
+.RS 4
+.TP 4
+.B set
+The specified configuration item is set to the given value. To specify
+a multiple-value item (a list), provide each value as a separate
+command-line argument.
+
+If no values are provided, the specified configuration item will be
+removed from the configuration file.
+.RE
+
+The available configuration items are described below.
+
+.RS 4
+.TP 4
+.B database.path
+The top-level directory where your mail currently exists and to where
+mail will be delivered in the future. Files should be individual email
+messages. Notmuch will store its database within a sub-directory of
+the path configured here named
+.BR ".notmuch".
+.RE
+
+.RS 4
+.TP 4
+.B user.name
+Your full name.
+.RE
+
+.RS 4
+.TP 4
+.B user.primary_email
+Your primary email address.
+.RE
+
+.RS 4
+.TP 4
+.B user.other_email
+A list of other email addresses at which you receive email.
+.RE
+
+.RS 4
+.TP 4
+.B new.tags
+A list of tags that will be added to all messages incorporated by
+.BR "notmuch new".
+.RE
+
+.RS 4
+.TP 4
+.B new.ignore
+A list of file and directory names, without path, that will not be
+searched for messages by
+.BR "notmuch new".
+All the files and directories matching any of the names specified here
+will be ignored, regardless of the location in the mail store
+directory hierarchy.
+.RE
+
+.RS 4
+.TP 4
+.B maildir.synchronize_flags
+If true, then the following maildir flags (in message filenames) will
+be synchronized with the corresponding notmuch tags:
+
+  Flag    Tag
+  ----    -------
+  D       draft
+  F       flagged
+  P       passed
+  R       replied
+  S       unread (added when 'S' flag is not present)
+
+The
+.B notmuch new
+command will notice flag changes in filenames and update tags, while
+the
+.B notmuch tag
+and
+.B notmuch restore
+commands will notice tag changes and update flags in filenames.
+
+If there have been any changes in the maildir (new messages added, old
+ones removed or renamed, maildir flags changed, etc.), it is advisable
+to run
+.B notmuch new
+before
+.B notmuch tag
+or
+.B notmuch restore
+commands to ensure the tag changes are properly synchronized to the
+maildir flags, as the commands expect the database and maildir to be
+in sync.
+.RE
+
+.RE
+.SH ENVIRONMENT
+The following environment variables can be used to control the
+behavior of notmuch.
+.TP
+.B NOTMUCH_CONFIG
+Specifies the location of the notmuch configuration file. Notmuch will
+use ${HOME}/.notmuch\-config if this variable is not set.
+.SH SEE ALSO
+
+\fBnotmuch\fR(1), \fBnotmuch-count\fR(1), \fBnotmuch-dump\fR(1),
+\fBnotmuch-hooks\fR(5), \fBnotmuch-new\fR(1), \fBnotmuch-reply\fR(1),
+\fBnotmuch-restore\fR(1), \fBnotmuch-search\fR(1),
+\fBnotmuch-search-terms\fR(7), \fBnotmuch-show\fR(1),
+\fBnotmuch-tag\fR(1)

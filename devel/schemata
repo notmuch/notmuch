@@ -1,0 +1,138 @@
+This file describes the schemata used for notmuch's structured output
+format (currently JSON).
+
+[]'s indicate lists.  List items can be marked with a '?', meaning
+they are optional; or a '*', meaning there can be zero or more of that
+item.  {}'s indicate an object that maps from field identifiers to
+values.  An object field marked '?' is optional.  |'s indicate
+alternates (e.g., int|string means something can be an int or a
+string).
+
+Common non-terminals
+--------------------
+
+# Number of seconds since the Epoch
+unix_time = int
+
+# Thread ID, sans "thread:"
+threadid = string
+
+# Message ID, sans "id:"
+messageid = string
+
+notmuch show schema
+-------------------
+
+# A top-level set of threads (do_show)
+# Returned by notmuch show without a --part argument
+thread_set = [thread*]
+
+# Top-level messages in a thread (show_messages)
+thread = [thread_node*]
+
+# A message and its replies (show_messages)
+thread_node = [
+    message?,                 # present if --entire-thread or matched
+    [thread_node*]            # children of message
+]
+
+# A message (show_message)
+message = {
+    # (format_message_json)
+    id:             messageid,
+    match:          bool,
+    filename:	    string,
+    timestamp:      unix_time, # date header as unix time
+    date_relative:  string,   # user-friendly timestamp
+    tags:           [string*],
+
+    headers:        headers,
+    body:           [part]
+}
+
+# A MIME part (show_message_body)
+part = {
+    # format_part_start_json
+    id:             int|string, # part id (currently DFS part number)
+
+    # format_part_encstatus_json
+    encstatus?:     encstatus,
+
+    # format_part_sigstatus_json
+    sigstatus?:     sigstatus,
+
+    # format_part_content_json
+    content-type:   string,
+    content-id?:    string,
+    # if content-type starts with "multipart/":
+    content:        [part*],
+    # if content-type is "message/rfc822":
+    content:        [{headers: headers, body: [part]}],
+    # otherwise (leaf parts):
+    filename?:      string,
+    content-charset?: string,
+    # A leaf part's body content is optional, but may be included if
+    # it can be correctly encoded as a string.  Consumers should use
+    # this in preference to fetching the part content separately.
+    content?:       string
+}
+
+# The headers of a message (format_headers_json with raw headers) or
+# a part (format_headers_message_part_json with pretty-printed headers)
+headers = {
+    Subject:        string,
+    From:           string,
+    To?:            string,
+    Cc?:            string,
+    Bcc?:           string,
+    Date:           string
+}
+
+# Encryption status (format_part_encstatus_json)
+encstatus = [{status: "good"|"bad"}]
+
+# Signature status (format_part_sigstatus_json)
+sigstatus = [signature*]
+
+signature = {
+    # signature_status_to_string
+    status:         "none"|"good"|"bad"|"error"|"unknown",
+    # if status is "good":
+    fingerprint?:   string,
+    created?:       unix_time,
+    expires?:       unix_time,
+    userid?:        string
+    # if status is not "good":
+    keyid?:         string
+    # if the signature has errors:
+    errors?:        int
+}
+
+notmuch search schema
+---------------------
+
+# --output=summary
+summary = [thread*]
+
+# --output=threads
+threads = [threadid*]
+
+# --output=messages
+messages = [messageid*]
+
+# --output=files
+files = [string*]
+
+# --output=tags
+tags = [string*]
+
+thread = {
+    thread:         threadid,
+    timestamp:      unix_time,
+    date_relative:  string,   # user-friendly timestamp
+    matched:        int,      # number of matched messages
+    total:          int,      # total messages in thread
+    authors:        string,   # comma-separated names with | between
+                              # matched and unmatched
+    subject:        string
+}

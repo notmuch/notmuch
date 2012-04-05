@@ -46,6 +46,7 @@ libnotmuch.so.2 libnotmuch2 #MINVER#
  notmuch_messages_get@Base 0.3
  notmuch_messages_move_to_next@Base 0.3
  notmuch_messages_valid@Base 0.3
+ notmuch_query_add_tag_exclude@Base 0.12~rc1
  notmuch_query_count_messages@Base 0.3
  notmuch_query_count_threads@Base 0.10~rc1
  notmuch_query_create@Base 0.3

@@ -315,6 +315,7 @@ _index_mime_part (notmuch_message_t *message,
     GByteArray *byte_array;
     GMimeContentDisposition *disposition;
     char *body;
+    const char *charset;
 
     if (! part) {
 	fprintf (stderr, "Warning: Not indexing empty mime part.\n");
@@ -338,6 +339,10 @@ _index_mime_part (notmuch_message_t *message,
 		    continue;
 		if (i > 1)
 		    fprintf (stderr, "Warning: Unexpected extra parts of multipart/signed. Indexing anyway.\n");
+	    }
+	    if (GMIME_IS_MULTIPART_ENCRYPTED (multipart)) {
+		/* Don't index encrypted parts. */
+		continue;
 	    }
 	    _index_mime_part (message,
 			      g_mime_multipart_get_part (multipart, i));
@@ -385,6 +390,20 @@ _index_mime_part (notmuch_message_t *message,
 
     g_mime_stream_filter_add (GMIME_STREAM_FILTER (filter),
 			      discard_uuencode_filter);
+
+    charset = g_mime_object_get_content_type_parameter (part, "charset");
+    if (charset) {
+	GMimeFilter *charset_filter;
+	charset_filter = g_mime_filter_charset_new (charset, "UTF-8");
+	/* This result can be NULL for things like "unknown-8bit".
+	 * Don't set a NULL filter as that makes GMime print
+	 * annoying assertion-failure messages on stderr. */
+	if (charset_filter) {
+	    g_mime_stream_filter_add (GMIME_STREAM_FILTER (filter),
+				      charset_filter);
+	    g_object_unref (charset_filter);
+	}
+    }
 
     wrapper = g_mime_part_get_content_object (GMIME_PART (part));
     if (wrapper)

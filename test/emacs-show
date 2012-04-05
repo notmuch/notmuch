@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+
+test_description="Testing emacs notmuch-show view"
+. test-lib.sh
+
+test_begin_subtest "Hiding Original Message region at beginning of a message"
+message_id='OriginalMessageHiding.1@notmuchmail.org'
+add_message \
+    [id]="$message_id" \
+    '[subject]="Hiding Original Message region at beginning of a message"' \
+    '[body]="-----Original Message-----
+Text here."'
+
+cat <<EOF >EXPECTED
+Notmuch Test Suite <test_suite@notmuchmail.org> (2001-01-05) (inbox)
+Subject: Hiding Original Message region at beginning of a message
+To: Notmuch Test Suite <test_suite@notmuchmail.org>
+Date: Fri, 05 Jan 2001 15:43:57 +0000
+
+[ 2-line hidden original message. Click/Enter to show. ]
+EOF
+
+test_emacs "(notmuch-show \"id:$message_id\")
+	    (test-visible-output)"
+test_expect_equal_file OUTPUT EXPECTED
+
+test_done

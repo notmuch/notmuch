@@ -18,6 +18,24 @@ import sys, os
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 sys.path.insert(0,os.path.abspath('../..'))
 
+class Mock(object):
+    def __init__(self, *args, **kwargs):
+        pass
+
+    def __call__(self, *args, **kwargs):
+        return Mock()
+
+    @classmethod
+    def __getattr__(self, name):
+        return Mock() if name not in ('__file__', '__path__') else '/dev/null'
+
+MOCK_MODULES = [
+    'ctypes',
+]
+for mod_name in MOCK_MODULES:
+    sys.modules[mod_name] = Mock()
+
+
 from notmuch import __VERSION__,__AUTHOR__
 # -- General configuration -----------------------------------------------------
 
@@ -39,8 +57,8 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'cnotmuch'
-copyright = u'2010, ' + __AUTHOR__
+project = u'notmuch'
+copyright = u'2010-2012, ' + __AUTHOR__
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the

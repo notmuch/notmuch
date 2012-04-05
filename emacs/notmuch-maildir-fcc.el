@@ -51,13 +51,13 @@ the database.path option in the notmuch configuration file).
 You will be prompted to create the directory if it does not exist
 yet when sending a mail."
 
- :require 'notmuch-fcc-initialization
- :group 'notmuch
  :type '(choice
 	 (const :tag "No FCC header" nil)
 	 (string :tag "A single folder")
 	 (repeat :tag "A folder based on the From header"
-		 (cons regexp (string :tag "Folder")))))
+		 (cons regexp (string :tag "Folder"))))
+ :require 'notmuch-fcc-initialization
+ :group 'notmuch-send)
 
 (defun notmuch-fcc-initialization ()
   "If notmuch-fcc-directories is set,

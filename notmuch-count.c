@@ -21,6 +21,11 @@
 
 #include "notmuch-client.h"
 
+enum {
+    OUTPUT_THREADS,
+    OUTPUT_MESSAGES,
+};
+
 int
 notmuch_count_command (void *ctx, int argc, char *argv[])
 {
@@ -28,34 +33,25 @@ notmuch_count_command (void *ctx, int argc, char *argv[])
     notmuch_database_t *notmuch;
     notmuch_query_t *query;
     char *query_str;
-    int i;
-    notmuch_bool_t output_messages = TRUE;
+    int opt_index;
+    int output = OUTPUT_MESSAGES;
+    const char **search_exclude_tags;
+    size_t search_exclude_tags_length;
+    unsigned int i;
 
-    argc--; argv++; /* skip subcommand argument */
+    notmuch_opt_desc_t options[] = {
+	{ NOTMUCH_OPT_KEYWORD, &output, "output", 'o',
+	  (notmuch_keyword_t []){ { "threads", OUTPUT_THREADS },
+				  { "messages", OUTPUT_MESSAGES },
+				  { 0, 0 } } },
+	{ 0, 0, 0, 0, 0 }
+    };
 
-    for (i = 0; i < argc && argv[i][0] == '-'; i++) {
-	if (strcmp (argv[i], "--") == 0) {
-	    i++;
-	    break;
-	}
-	if (STRNCMP_LITERAL (argv[i], "--output=") == 0) {
-	    const char *opt = argv[i] + sizeof ("--output=") - 1;
-	    if (strcmp (opt, "threads") == 0) {
-		output_messages = FALSE;
-	    } else if (strcmp (opt, "messages") == 0) {
-		output_messages = TRUE;
-	    } else {
-		fprintf (stderr, "Invalid value for --output: %s\n", opt);
-		return 1;
-	    }
-	} else {
-	    fprintf (stderr, "Unrecognized option: %s\n", argv[i]);
-	    return 1;
-	}
+    opt_index = parse_arguments (argc, argv, options, 1);
+
+    if (opt_index < 0) {
+	return 1;
     }
-
-    argc -= i;
-    argv += i;
 
     config = notmuch_config_open (ctx, NULL, NULL);
     if (config == NULL)
@@ -66,7 +62,7 @@ notmuch_count_command (void *ctx, int argc, char *argv[])
     if (notmuch == NULL)
 	return 1;
 
-    query_str = query_string_from_args (ctx, argc, argv);
+    query_str = query_string_from_args (ctx, argc-opt_index, argv+opt_index);
     if (query_str == NULL) {
 	fprintf (stderr, "Out of memory.\n");
 	return 1;
@@ -82,10 +78,19 @@ notmuch_count_command (void *ctx, int argc, char *argv[])
 	return 1;
     }
 
-    if (output_messages)
+    search_exclude_tags = notmuch_config_get_search_exclude_tags
+	(config, &search_exclude_tags_length);
+    for (i = 0; i < search_exclude_tags_length; i++)
+	notmuch_query_add_tag_exclude (query, search_exclude_tags[i]);
+
+    switch (output) {
+    case OUTPUT_MESSAGES:
 	printf ("%u\n", notmuch_query_count_messages (query));
-    else
+	break;
+    case OUTPUT_THREADS:
 	printf ("%u\n", notmuch_query_count_threads (query));
+	break;
+    }
 
     notmuch_query_destroy (query);
     notmuch_database_close (notmuch);

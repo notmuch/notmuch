@@ -34,38 +34,44 @@ The effect of setting this variable can be seen temporarily by
 providing a prefix when viewing a signed or encrypted message, or
 by providing a prefix when reloading the message in notmuch-show
 mode."
-  :group 'notmuch
-  :type 'boolean)
+  :type 'boolean
+  :group 'notmuch-crypto)
 
 (defface notmuch-crypto-part-header
   '((t (:foreground "blue")))
   "Face used for crypto parts headers."
-  :group 'notmuch)
+  :group 'notmuch-crypto
+  :group 'notmuch-faces)
 
 (defface notmuch-crypto-signature-good
   '((t (:background "green" :foreground "black")))
   "Face used for good signatures."
-  :group 'notmuch)
+  :group 'notmuch-crypto
+  :group 'notmuch-faces)
 
 (defface notmuch-crypto-signature-good-key
   '((t (:background "orange" :foreground "black")))
   "Face used for good signatures."
-  :group 'notmuch)
+  :group 'notmuch-crypto
+  :group 'notmuch-faces)
 
 (defface notmuch-crypto-signature-bad
   '((t (:background "red" :foreground "black")))
   "Face used for bad signatures."
-  :group 'notmuch)
+  :group 'notmuch-crypto
+  :group 'notmuch-faces)
 
 (defface notmuch-crypto-signature-unknown
   '((t (:background "red" :foreground "black")))
   "Face used for signatures of unknown status."
-  :group 'notmuch)
+  :group 'notmuch-crypto
+  :group 'notmuch-faces)
 
 (defface notmuch-crypto-decryption
   '((t (:background "purple" :foreground "black")))
   "Face used for encryption/decryption status messages."
-  :group 'notmuch)
+  :group 'notmuch-crypto
+  :group 'notmuch-faces)
 
 (define-button-type 'notmuch-crypto-status-button-type
   'action (lambda (button) (message (button-get button 'help-echo)))
@@ -95,7 +101,7 @@ mode."
       (let ((keyid (concat "0x" (plist-get sigstatus :keyid))))
 	(setq label (concat "Unknown key ID " keyid " or unsupported algorithm"))
 	(setq button-action 'notmuch-crypto-sigstatus-error-callback)
-	(setq help-msg (concat "Click to retreive key ID " keyid " from keyserver and redisplay."))))
+	(setq help-msg (concat "Click to retrieve key ID " keyid " from keyserver and redisplay."))))
      ((string= status "bad")
       (let ((keyid (concat "0x" (plist-get sigstatus :keyid))))
 	(setq label (concat "Bad signature (claimed key ID " keyid ")"))
@@ -114,7 +120,7 @@ mode."
      :notmuch-from from)
     (insert "\n")))
 
-(declare-function notmuch-show-refresh-view "notmuch-show" (&optional crypto-switch))
+(declare-function notmuch-show-refresh-view "notmuch-show" (&optional reset-state))
 
 (defun notmuch-crypto-sigstatus-good-callback (button)
   (let* ((sigstatus (button-get button :notmuch-sigstatus))
@@ -123,6 +129,7 @@ mode."
 	 (window (display-buffer buffer t nil)))
     (with-selected-window window
       (with-current-buffer buffer
+	(goto-char (point-max))
 	(call-process "gpg" nil t t "--list-keys" fingerprint))
       (recenter -1))))
 
@@ -133,6 +140,7 @@ mode."
 	 (window (display-buffer buffer t nil)))
     (with-selected-window window
       (with-current-buffer buffer
+	(goto-char (point-max))
 	(call-process "gpg" nil t t "--recv-keys" keyid)
 	(insert "\n")
 	(call-process "gpg" nil t t "--list-keys" keyid))

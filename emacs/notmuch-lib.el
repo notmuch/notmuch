@@ -28,17 +28,54 @@
   "Notmuch mail reader for Emacs."
   :group 'mail)
 
+(defgroup notmuch-hello nil
+  "Overview of saved searches, tags, etc."
+  :group 'notmuch)
+
+(defgroup notmuch-search nil
+  "Searching and sorting mail."
+  :group 'notmuch)
+
+(defgroup notmuch-show nil
+  "Showing messages and threads."
+  :group 'notmuch)
+
+(defgroup notmuch-send nil
+  "Sending messages from Notmuch."
+  :group 'notmuch)
+
+(custom-add-to-group 'notmuch-send 'message 'custom-group)
+
+(defgroup notmuch-crypto nil
+  "Processing and display of cryptographic MIME parts."
+  :group 'notmuch)
+
+(defgroup notmuch-hooks nil
+  "Running custom code on well-defined occasions."
+  :group 'notmuch)
+
+(defgroup notmuch-external nil
+  "Running external commands from within Notmuch."
+  :group 'notmuch)
+
+(defgroup notmuch-faces nil
+  "Graphical attributes for displaying text"
+  :group 'notmuch)
+
 (defcustom notmuch-search-oldest-first t
   "Show the oldest mail first when searching."
   :type 'boolean
-  :group 'notmuch)
+  :group 'notmuch-search)
 
 ;;
+
+(defvar notmuch-search-history nil
+  "Variable to store notmuch searches history.")
 
 (defcustom notmuch-saved-searches nil
   "A list of saved searches to display."
   :type '(alist :key-type string :value-type string)
-  :group 'notmuch)
+  :group 'notmuch-hello)
 
 (defvar notmuch-folders nil
   "Deprecated name for what is now known as `notmuch-saved-searches'.")
@@ -96,6 +133,15 @@ the user hasn't set this variable with the old or new value."
   (interactive)
   (kill-buffer (current-buffer)))
 
+(defun notmuch-prettify-subject (subject)
+  ;; This function is used by `notmuch-search-process-filter' which
+  ;; requires that we not disrupt its' matching state.
+  (save-match-data
+    (if (and subject
+	     (string-match "^[ \t]*$" subject))
+	"[No Subject]"
+      subject)))
+
 ;;
 
 (defun notmuch-common-do-stash (text)
@@ -114,14 +160,14 @@ the user hasn't set this variable with the old or new value."
       (setq list (cdr list)))
     (nreverse out)))
 
-; This lets us avoid compiling these replacement functions when emacs
-; is sufficiently new enough to supply them alone. We do the macro
-; treatment rather than just wrapping our defun calls in a when form
-; specifically so that the compiler never sees the code on new emacs,
-; (since the code is triggering warnings that we don't know how to get
-; rid of.
-;
-; A more clever macro here would accept a condition and a list of forms.
+;; This lets us avoid compiling these replacement functions when emacs
+;; is sufficiently new enough to supply them alone. We do the macro
+;; treatment rather than just wrapping our defun calls in a when form
+;; specifically so that the compiler never sees the code on new emacs,
+;; (since the code is triggering warnings that we don't know how to get
+;; rid of.
+;;
+;; A more clever macro here would accept a condition and a list of forms.
 (defmacro compile-on-emacs-prior-to-23 (form)
   "Conditionally evaluate form only on emacs < emacs-23."
   (list 'when (< emacs-major-version 23)

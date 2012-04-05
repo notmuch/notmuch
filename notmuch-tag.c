@@ -26,7 +26,12 @@ static void
 handle_sigint (unused (int sig))
 {
     static char msg[] = "Stopping...         \n";
-    (void) write(2, msg, sizeof(msg)-1);
+
+    /* This write is "opportunistic", so it's okay to ignore the
+     * result.  It is not required for correctness, and if it does
+     * fail or produce a short write, we want to get out of the signal
+     * handler as quickly as possible, not retry it. */
+    IGNORE_RESULT (write (2, msg, sizeof(msg)-1));
     interrupted = 1;
 }
 
@@ -106,7 +111,7 @@ _optimize_tag_query (void *ctx, const char *orig_query_string, char *argv[],
 }
 
 int
-notmuch_tag_command (void *ctx, unused (int argc), unused (char *argv[]))
+notmuch_tag_command (void *ctx, int argc, char *argv[])
 {
     int *add_tags, *remove_tags;
     int add_tags_count = 0;

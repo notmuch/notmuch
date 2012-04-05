@@ -29,7 +29,6 @@ typedef struct command {
     command_function_t function;
     const char *arguments;
     const char *summary;
-    const char *documentation;
 } command_t;
 
 #define MAX_ALIAS_SUBSTITUTIONS 3
@@ -47,447 +46,40 @@ alias_t aliases[] = {
 static int
 notmuch_help_command (void *ctx, int argc, char *argv[]);
 
-static const char search_terms_help[] =
-    "\tSeveral notmuch commands accept a common syntax for search\n"
-    "\tterms.\n"
-    "\n"
-    "\tThe search terms can consist of free-form text (and quoted\n"
-    "\tphrases) which will match all messages that contain all of\n"
-    "\tthe given terms/phrases in the body, the subject, or any of\n"
-    "\tthe sender or recipient headers.\n"
-    "\n"
-    "\tAs a special case, a search string consisting of exactly a\n"
-    "\tsingle asterisk (\"*\") will match all messages.\n"
-    "\n"
-    "\tIn addition to free text, the following prefixes can be used\n"
-    "\tto force terms to match against specific portions of an email,\n"
-    "\t(where <brackets> indicate user-supplied values):\n"
-    "\n"
-    "\t\tfrom:<name-or-address>\n"
-    "\t\tto:<name-or-address>\n"
-    "\t\tsubject:<word-or-quoted-phrase>\n"
-    "\t\tattachment:<word>\n"
-    "\t\ttag:<tag> (or is:<tag>)\n"
-    "\t\tid:<message-id>\n"
-    "\t\tthread:<thread-id>\n"
-    "\t\tfolder:<directory-path>\n"
-    "\n"
-    "\tThe from: prefix is used to match the name or address of\n"
-    "\tthe sender of an email message.\n"
-    "\n"
-    "\tThe to: prefix is used to match the names or addresses of\n"
-    "\tany recipient of an email message, (whether To, Cc, or Bcc).\n"
-    "\n"
-    "\tAny term prefixed with subject: will match only text from\n"
-    "\tthe subject of an email. Quoted phrases are supported when\n"
-    "\tsearching with: subject:\"this is a phrase\".\n"
-    "\n"
-    "\tFor tag: and is:, valid tag values include \"inbox\" and \"unread\"\n"
-    "\tby default for new messages added by \"notmuch new\" as well\n"
-    "\tas any other tag values added manually with \"notmuch tag\".\n"
-    "\n"
-    "\tFor id:, message ID values are the literal contents of the\n"
-    "\tMessage-ID: header of email messages, but without the '<','>'\n"
-    "\tdelimiters.\n"
-    "\n"
-    "\tThe thread: prefix can be used with the thread ID values that\n"
-    "\tare generated internally by notmuch (and do not appear in email\n"
-    "\tmessages). These thread ID values can be seen in the first\n"
-    "\tcolumn of output from \"notmuch search\".\n"
-    "\n"
-    "\tThe folder: prefix can be used to search for email message\n"
-    "\tfiles that are contained within particular directories within\n"
-    "\tthe mail store. Only the directory components below the top-level\n"
-    "\tmail database path are available to be searched.\n"
-    "\n"
-    "\tIn addition to individual terms, multiple terms can be\n"
-    "\tcombined with Boolean operators (\"and\", \"or\", \"not\", etc.).\n"
-    "\tEach term in the query will be implicitly connected by a\n"
-    "\tlogical AND if no explicit operator is provided, (except\n"
-    "\tthat terms with a common prefix will be implicitly combined\n"
-    "\twith OR until we get Xapian defect #402 fixed).\n"
-    "\n"
-    "\tParentheses can also be used to control the combination of\n"
-    "\tthe Boolean operators, but will have to be protected from\n"
-    "\tinterpretation by the shell, (such as by putting quotation\n"
-    "\tmarks around any parenthesized expression).\n"
-    "\n"
-    "\tFinally, results can be restricted to only messages within a\n"
-    "\tparticular time range, (based on the Date: header) with:\n"
-    "\n"
-    "\t\t<intial-timestamp>..<final-timestamp>\n"
-    "\n"
-    "\tEach timestamp is a number representing the number of seconds\n"
-    "\tsince 1970-01-01 00:00:00 UTC. This is not the most convenient\n"
-    "\tmeans of expressing date ranges, but until notmuch is fixed to\n"
-    "\taccept a more convenient form, one can use the date program to\n"
-    "\tconstruct timestamps. For example, with the bash shell the\n"
-    "\tfollowing syntax would specify a date range to return messages\n"
-    "\tfrom 2009-10-01 until the current time:\n"
-    "\n"
-    "\t\t$(date +%%s -d 2009-10-01)..$(date +%%s)\n\n";
-
-static const char hooks_help[] =
-    "\tHooks are scripts (or arbitrary executables or symlinks to such) that\n"
-    "\tnotmuch invokes before and after certain actions. These scripts reside\n"
-    "\tin the .notmuch/hooks directory within the database directory and must\n"
-    "\thave executable permissions.\n"
-    "\n"
-    "\tThe currently available hooks are described below.\n"
-    "\n"
-    "\tpre-new\n"
-    "\t\tThis hook is invoked by the new command before scanning or\n"
-    "\t\timporting new messages into the database. If this hook exits\n"
-    "\t\twith a non-zero status, notmuch will abort further processing\n"
-    "\t\tof the new command.\n"
-    "\n"
-    "\t\tTypically this hook is used for fetching or delivering new\n"
-    "\t\tmail to be imported into the database.\n"
-    "\n"
-    "\tpost-new\n"
-    "\t\tThis hook is invoked by the new command after new messages\n"
-    "\t\thave been imported into the database and initial tags have\n"
-    "\t\tbeen applied. The hook will not be run if there have been any\n"
-    "\t\terrors during the scan or import.\n"
-    "\n"
-    "\t\tTypically this hook is used to perform additional query-based\n"
-    "\t\ttagging on the imported messages.\n\n";
-
 static command_t commands[] = {
     { "setup", notmuch_setup_command,
       NULL,
-      "Interactively setup notmuch for first use.",
-      "\tThe setup command will prompt for your full name, your primary\n"
-      "\temail address, any alternate email addresses you use, and the\n"
-      "\tdirectory containing your email archives. Your answers will be\n"
-      "\twritten to a configuration file in ${NOTMUCH_CONFIG} (if set)\n"
-      "\tor ${HOME}/.notmuch-config.\n"
-      "\n"
-      "\tThis configuration file will be created with descriptive\n"
-      "\tcomments, making it easy to edit by hand later to change the\n"
-      "\tconfiguration. Or you can run \"notmuch setup\" again.\n"
-      "\n"
-      "\tInvoking notmuch with no command argument will run setup if\n"
-      "\tthe setup command has not previously been completed." },
+      "Interactively setup notmuch for first use." },
     { "new", notmuch_new_command,
       "[options...]",
-      "Find and import new messages to the notmuch database.",
-      "\tScans all sub-directories of the mail directory, performing\n"
-      "\tfull-text indexing on new messages that are found. Each new\n"
-      "\tmessage will be tagged as both \"inbox\" and \"unread\".\n"
-      "\n"
-      "\tYou should run \"notmuch new\" once after first running\n"
-      "\t\"notmuch setup\" to create the initial database. The first\n"
-      "\trun may take a long time if you have a significant amount of\n"
-      "\tmail (several hundred thousand messages or more).\n"
-      "\n"
-      "\tSubsequently, you should run \"notmuch new\" whenever new mail\n"
-      "\tis delivered and you wish to incorporate it into the database.\n"
-      "\tThese subsequent runs will be much quicker than the initial run.\n"
-      "\n"
-      "\tThe new command supports hooks. See \"notmuch help hooks\" for\n"
-      "\tmore details on hooks.\n"
-      "\n"
-      "\tSupported options for new include:\n"
-      "\n"
-      "\t--no-hooks\n"
-      "\n"
-      "\t\tPrevent hooks from being run.\n"
-      "\n"
-      "\t--verbose\n"
-      "\n"
-      "\t\tVerbose operation. Shows paths of message files as\n"
-      "\t\tthey are being indexed.\n"
-      "\n"
-      "\tInvoking notmuch with no command argument will run new if\n"
-      "\tthe setup command has previously been completed, but new has\n"
-      "\tnot previously been run." },
+      "Find and import new messages to the notmuch database." },
     { "search", notmuch_search_command,
       "[options...] <search-terms> [...]",
-      "Search for messages matching the given search terms.",
-      "\tNote that the individual mail messages will be matched\n"
-      "\tagainst the search terms, but the results will be the\n"
-      "\tthreads (one per line) containing the matched messages.\n"
-      "\n"
-      "\tSupported options for search include:\n"
-      "\n"
-      "\t--format=(json|text)\n"
-      "\n"
-      "\t\tPresents the results in either JSON or\n"
-      "\t\tplain-text (default)\n"
-      "\n"
-      "\t--output=(summary|threads|messages|files|tags)\n"
-      "\n"
-      "\t\tsummary (default)\n"
-      "\n"
-      "\t\tOutput a summary of each thread with any message matching the\n"
-      "\t\tsearch terms. The summary includes the thread ID, date, the\n"
-      "\t\tnumber of messages in the thread (both the number matched and\n"
-      "\t\tthe total number), the authors of the thread and the subject.\n"
-      "\n"
-      "\t\tthreads\n"
-      "\n"
-      "\t\tOutput the thread IDs of all threads with any message matching\n"
-      "\t\tthe search terms, either one per line (--format=text) or as a\n"
-      "\t\tJSON array (--format=json).\n"
-      "\n"
-      "\t\tmessages\n"
-      "\n"
-      "\t\tOutput the message IDs of all messages matching the search\n"
-      "\t\tterms, either one per line (--format=text) or as a JSON array\n"
-      "\t\t(--format=json).\n"
-      "\n"
-      "\t\tfiles\n"
-      "\n"
-      "\t\tOutput the filenames of all messages matching the search\n"
-      "\t\tterms, either one per line (--format=text) or as a JSON array\n"
-      "\t\t(--format=json).\n"
-      "\n"
-      "\t\ttags\n"
-      "\n"
-      "\t\tOutput all tags that appear on any message matching the search\n"
-      "\t\tterms, either one per line (--format=text) or as a JSON array\n"
-      "\t\t(--format=json).\n"
-      "\n"
-      "\t--sort=(newest-first|oldest-first)\n"
-      "\n"
-      "\t\tPresent results in either chronological order\n"
-      "\t\t(oldest-first) or reverse chronological order\n"
-      "\t\t(newest-first), which is the default.\n"
-      "\n"
-      "\t--offset=[-]N\n"
-      "\n"
-      "\t\tSkip displaying the first N results. With the leading '-',\n"
-      "\t\tstart at the Nth result from the end.\n"
-      "\n"
-      "\t--limit=N\n"
-      "\n"
-      "\t\tLimit the number of displayed results to N.\n"
-      "\n"
-      "\tSee \"notmuch help search-terms\" for details of the search\n"
-      "\tterms syntax." },
+      "Search for messages matching the given search terms." },
     { "show", notmuch_show_command,
       "<search-terms> [...]",
-      "Show all messages matching the search terms.",
-      "\tThe messages are grouped and sorted based on the threading\n"
-      "\t(all replies to a particular message appear immediately\n"
-      "\tafter that message in date order).\n"
-      "\n"
-      "\tSupported options for show include:\n"
-      "\n"
-      "\t--entire-thread\n"
-      "\n"
-      "\t\tBy default only those messages that match the\n"
-      "\t\tsearch terms will be displayed. With this option,\n"
-      "\t\tall messages in the same thread as any matched\n"
-      "\t\tmessage will be displayed.\n"
-      "\n"
-      "\t--format=(text|json|mbox|raw)\n"
-      "\n"
-      "\t\ttext (default for messages)\n"
-      "\n"
-      "\t\tThe default plain-text format has all text-content MIME parts\n"
-      "\t\tdecoded. Various components in the output, ('message', 'header',\n"
-      "\t\t'body', 'attachment', and MIME 'part') are delimited by\n"
-      "\t\teasily-parsed markers. Each marker consists of a Control-L\n"
-      "\t\tcharacter (ASCII decimal 12), the name of the marker, and\n"
-      "\t\tthen either an opening or closing brace, '{' or '}' to\n"
-      "\t\teither open or close the component. For a multipart MIME\n"
-      "\t\tmessage, these parts will be nested.\n"
-      "\n"
-      "\t\tjson\n"
-      "\n"
-      "\t\tThe output is formatted with Javascript Object Notation\n"
-      "\t\t(JSON). This format is more robust than the text format\n"
-      "\t\tfor automated processing. The nested structure of multipart\n"
-      "\t\tMIME messages is reflected in nested JSON output. JSON\n"
-      "\t\toutput always includes all messages in a matching thread;\n"
-      "\t\tin effect '--format=json' implies '--entire-thread'\n"
-      "\n"
-      "\t\tmbox\n"
-      "\n"
-      "\t\tAll matching messages are output in the traditional, Unix\n"
-      "\t\tmbox format with each message being prefixed by a line\n"
-      "\t\tbeginning with 'From ' and a blank line separating each\n"
-      "\t\tmessage. Lines in the message content beginning with 'From '\n"
-      "\t\t(preceded by zero or more '>' characters) have an additional\n"
-      "\t\t'>' character added. This reversible escaping is termed\n"
-      "\t\t\"mboxrd\" format and described in detail here:\n"
-      "\n"
-      "\t\thttp://homepage.ntlworld.com/jonathan.deboynepollard/FGA/mail-mbox-formats.html\n"
-      "\n"
-      "\t\traw (default for a single part, see --part)\n"
-      "\n"
-      "\t\tFor a message, the original, raw content of the email\n"
-      "\t\tmessage is output. Consumers of this format should\n"
-      "\t\texpect to implement MIME decoding and similar functions.\n"
-      "\n"
-      "\t\tFor a single part (--part) the raw part content is output\n"
-      "\t\tafter performing any necessary MIME decoding.\n"
-      "\n"
-      "\t\tThe raw format must only be used with search terms matching\n"
-      "\t\tsingle message.\n"
-      "\n"
-      "\t--part=N\n"
-      "\n"
-      "\t\tOutput the single decoded MIME part N of a single message.\n"
-      "\t\tThe search terms must match only a single message.\n"
-      "\t\tMessage parts are numbered in a depth-first walk of the\n"
-      "\t\tmessage MIME structure, and are identified in the 'json' or\n"
-      "\t\t'text' output formats.\n"
-      "\n"
-      "\t--verify\n"
-      "\n"
-      "\t\tCompute and report the validity of any MIME cryptographic\n"
-      "\t\tsignatures found in the selected content (ie.\n"
-      "\t\t\"multipart/signed\" parts). Status of the signature will be\n"
-      "\t\treported (currently only supported with --format=json) and\n"
-      "\t\tthe multipart/signed part will be replaced by the signed data.\n"
-      "\n"
-      "\t--decrypt\n"
-      "\n"
-      "\t\tDecrypt any MIME encrypted parts found in the selected content\n"
-      "\t\t(ie. \"multipart/encrypted\" parts). Status of the decryption\n"
-      "\t\twill be reported (currently only supported with --format=json)\n"
-      "\t\tand the multipart/encrypted part will be replaced by the\n"
-      "\t\tdecrypted content.\n"
-      "\n"
-      "\n"
-      "\tA common use of \"notmuch show\" is to display a single\n"
-      "\tthread of email messages. For this, use a search term of\n"
-      "\t\"thread:<thread-id>\" as can be seen in the first column\n"
-      "\tof output from the \"notmuch search\" command.\n"
-      "\n"
-      "\tSee \"notmuch help search-terms\" for details of the search\n"
-      "\tterms syntax." },
+      "Show all messages matching the search terms." },
     { "count", notmuch_count_command,
       "[options...] <search-terms> [...]",
-      "Count messages matching the search terms.",
-      "\tThe number of matching messages (or threads) is output to stdout.\n"
-      "\n"
-      "\tWith no search terms, a count of all messages (or threads) in\n"
-      "\tthe database will be displayed.\n"
-      "\n"
-      "\tSupported options for count include:\n"
-      "\n"
-      "\t--output=(messages|threads)\n"
-      "\n"
-      "\t\tmessages (default)\n"
-      "\n"
-      "\t\tOutput the number of matching messages.\n"
-      "\n"
-      "\t\tthreads\n"
-      "\n"
-      "\t\tOutput the number of matching threads.\n"
-      "\n"
-      "\tSee \"notmuch help search-terms\" for details of the search\n"
-      "\tterms syntax." },
+      "Count messages matching the search terms." },
     { "reply", notmuch_reply_command,
       "[options...] <search-terms> [...]",
-      "Construct a reply template for a set of messages.",
-      "\tConstructs a new message as a reply to a set of existing\n"
-      "\tmessages. The Reply-To: header (if any, otherwise From:) is\n"
-      "\tused for the To: address. The To: and Cc: headers are copied,\n"
-      "\tbut not including any of the user's configured addresses.\n"
-      "\n"
-      "\tA suitable subject is constructed. The In-Reply-to: and\n"
-      "\tReferences: headers are set appropriately, and the content\n"
-      "\tof the original messages is quoted and included in the body\n"
-      "\t(unless --format=headers-only is given).\n"
-      "\n"
-      "\tThe resulting message template is output to stdout.\n"
-      "\n"
-      "\tSupported options for reply include:\n"
-      "\n"
-      "\t--format=(default|headers-only)\n"
-      "\n"
-      "\t\tdefault:\n"
-      "\t\t\tIncludes subject and quoted message body.\n"
-      "\n"
-      "\t\theaders-only:\n"
-      "\t\t\tOnly produces In-Reply-To, References, To\n"
-      "\t\t\tCc, and Bcc headers.\n"
-      "\n"
-      "\tSee \"notmuch help search-terms\" for details of the search\n"
-      "\tterms syntax." },
+      "Construct a reply template for a set of messages." },
     { "tag", notmuch_tag_command,
-      "+<tag>|-<tag> [...] [--] <search-terms> [...]",
-      "Add/remove tags for all messages matching the search terms.",
-      "\tThe search terms are handled exactly as in 'search' so one\n"
-      "\tcan use that command first to see what will be modified.\n"
-      "\n"
-      "\tTags prefixed by '+' are added while those prefixed by\n"
-      "\t'-' are removed. For each message, tag removal is performed\n"
-      "\tbefore tag addition.\n"
-      "\n"
-      "\tThe beginning of <search-terms> is recognized by the first\n"
-      "\targument that begins with neither '+' nor '-'. Support for\n"
-      "\tan initial search term beginning with '+' or '-' is provided\n"
-      "\tby allowing the user to specify a \"--\" argument to separate\n"
-      "\tthe tags from the search terms.\n"
-      "\n"
-      "\tSee \"notmuch help search-terms\" for details of the search\n"
-      "\tterms syntax." },
+      "+<tag>|-<tag> [...] [--] <search-terms> [...]" ,
+      "Add/remove tags for all messages matching the search terms." },
     { "dump", notmuch_dump_command,
       "[<filename>] [--] [<search-terms>]",
-      "Create a plain-text dump of the tags for each message.",
-      "\tOutput is to the given filename, if any, or to stdout.\n"
-      "\tNote that using the filename argument is deprecated.\n"
-      "\n"
-      "\tThese tags are the only data in the notmuch database\n"
-      "\tthat can't be recreated from the messages themselves.\n"
-      "\tThe output of notmuch dump is therefore the only\n"
-      "\tcritical thing to backup (and much more friendly to\n"
-      "\tincremental backup than the native database files.)\n" 
-      "\n"
-      "\tWith no search terms, a dump of all messages in the\n"
-      "\tdatabase will be generated. A \"--\" argument instructs\n"
-      "\tnotmuch that the remaining arguments are search terms.\n"
-      "\n"
-      "\tSee \"notmuch help search-terms\" for the search-term syntax.\n"      
- },
+      "Create a plain-text dump of the tags for each message." },
     { "restore", notmuch_restore_command,
       "[--accumulate] [<filename>]",
-      "Restore the tags from the given dump file (see 'dump').",
-      "\tInput is read from the given filename, if any, or from stdin.\n"
-      "\tNote: The dump file format is specifically chosen to be\n"
-      "\tcompatible with the format of files produced by sup-dump.\n"
-      "\tSo if you've previously been using sup for mail, then the\n"
-      "\t\"notmuch restore\" command provides you a way to import\n"
-      "\tall of your tags (or labels as sup calls them).\n"
-      "\tThe --accumulate switch causes the union of the existing and new\n"
-      "\ttags to be applied, instead of replacing each message's tags as\n"
-      "\tthey are read in from the dump file."},
+      "Restore the tags from the given dump file (see 'dump')." },
     { "config", notmuch_config_command,
       "[get|set] <section>.<item> [value ...]",
-      "Get or set settings in the notmuch configuration file.",
-      "    config get <section>.<item>\n"
-      "\n"
-      "\tThe value of the specified configuration item is printed\n"
-      "\tto stdout. If the item has multiple values, each value\n"
-      "\tis separated by a newline character.\n"
-      "\n"
-      "\tAvailable configuration items include at least\n"
-      "\n"
-      "\t\tdatabase.path\n"
-      "\t\tuser.name\n"
-      "\t\tuser.primary_email\n"
-      "\t\tuser.other_email\n"
-      "\t\tnew.tags\n"
-      "\n"
-      "    config set <section>.<item> [value ...]\n"
-      "\n"
-      "\tThe specified configuration item is set to the given value.\n"
-      "\tTo specify a multiple-value item, provide each value as\n"
-      "\ta separate command-line argument.\n"
-      "\n"
-      "\tIf no values are provided, the specified configuration item\n"
-      "\twill be removed from the configuration file." },
+      "Get or set settings in the notmuch configuration file." },
     { "help", notmuch_help_command,
       "[<command>]",
-      "This message, or more detailed help for the named command.",
-      "\tExcept in this case, where there's not much more detailed\n"
-      "\thelp available." }
+      "This message, or more detailed help for the named command." }
 };
 
 static void
@@ -517,8 +109,17 @@ usage (FILE *out)
     "and \"notmuch help search-terms\" for the common search-terms syntax.\n\n");
 }
 
+static void
+exec_man (const char *page)
+{
+    if (execlp ("man", "man", page, (char *) NULL)) {
+	perror ("exec man");
+	exit (1);
+    }
+}
+
 static int
-notmuch_help_command (unused (void *ctx), int argc, char *argv[])
+notmuch_help_command (void *ctx, int argc, char *argv[])
 {
     command_t *command;
     unsigned int i;
@@ -531,41 +132,28 @@ notmuch_help_command (unused (void *ctx), int argc, char *argv[])
 	return 0;
     }
 
+    if (strcmp (argv[0], "help") == 0) {
+	printf ("The notmuch help system.\n\n"
+		"\tNotmuch uses the man command to display help. In case\n"
+		"\tof difficulties check that MANPATH includes the pages\n"
+		"\tinstalled by notmuch.\n\n"
+		"\tTry \"notmuch help\" for a list of topics.\n");
+	return 0;
+    }
+
     for (i = 0; i < ARRAY_SIZE (commands); i++) {
 	command = &commands[i];
 
 	if (strcmp (argv[0], command->name) == 0) {
-	    printf ("Help for \"notmuch %s\":\n\n", argv[0]);
-	    if (command->arguments)
-		printf ("%s %s\n\n\t%s\n\n%s\n\n",
-			command->name, command->arguments,
-			command->summary, command->documentation);
-	    else
-		printf ("%s\t%s\n\n%s\n\n", command->name,
-			command->summary, command->documentation);
-	    return 0;
+	    char *page = talloc_asprintf (ctx, "notmuch-%s", command->name);
+	    exec_man (page);
 	}
     }
 
     if (strcmp (argv[0], "search-terms") == 0) {
-	printf ("Help for <%s>\n\n", argv[0]);
-	for (i = 0; i < ARRAY_SIZE (commands); i++) {
-	    command = &commands[i];
-
-	    if (command->arguments &&
-		strstr (command->arguments, "search-terms"))
-	    {
-		printf ("\t%s\t%s\n",
-			command->name, command->arguments);
-	    }
-	}
-	printf ("\n");
-	printf (search_terms_help);
-	return 0;
+	exec_man ("notmuch-search-terms");
     } else if (strcmp (argv[0], "hooks") == 0) {
-	printf ("Help for <%s>\n\n", argv[0]);
-	printf (hooks_help);
-	return 0;
+	exec_man ("notmuch-hooks");
     }
 
     fprintf (stderr,

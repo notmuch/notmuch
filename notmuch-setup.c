@@ -87,6 +87,38 @@ welcome_message_post_setup (void)
 "have sufficient storage space available now.\n\n");
 }
 
+static void
+print_tag_list (const char **tags, size_t tags_len)
+{
+    unsigned int i;
+    for (i = 0; i < tags_len; i++) {
+	if (i != 0)
+	    printf (" ");
+	printf ("%s", tags[i]);
+    }
+}
+
+static GPtrArray *
+parse_tag_list (void *ctx, char *response)
+{
+    GPtrArray *tags = g_ptr_array_new ();
+    char *tag = response;
+    char *space;
+
+    while (tag && *tag) {
+	space = strchr (tag, ' ');
+	if (space)
+	    g_ptr_array_add (tags, talloc_strndup (ctx, tag, space - tag));
+	else
+	    g_ptr_array_add (tags, talloc_strdup (ctx, tag));
+	tag = space;
+	while (tag && *tag == ' ')
+	    tag++;
+    }
+
+    return tags;
+}
+
 int
 notmuch_setup_command (unused (void *ctx),
 		       unused (int argc), unused (char *argv[]))
@@ -164,36 +196,20 @@ notmuch_setup_command (unused (void *ctx),
     new_tags = notmuch_config_get_new_tags (config, &new_tags_len);
 
     printf ("Tags to apply to all new messages (separated by spaces) [");
-
-    for (i = 0; i < new_tags_len; i++) {
-	if (i != 0)
-	    printf (" ");
-	printf ("%s", new_tags[i]);
-    }
-
+    print_tag_list (new_tags, new_tags_len);
     prompt ("]: ");
 
     if (strlen (response)) {
-	GPtrArray *tags = g_ptr_array_new ();
-	char *tag = response;
-	char *space;
-
-	while (tag && *tag) {
-	    space = strchr (tag, ' ');
-	    if (space)
-		g_ptr_array_add (tags, talloc_strndup (ctx, tag, space - tag));
-	    else
-		g_ptr_array_add (tags, talloc_strdup (ctx, tag));
-	    tag = space;
-	    while (tag && *tag == ' ')
-		tag++;
-	}
+	GPtrArray *tags = parse_tag_list (ctx, response);
 
 	notmuch_config_set_new_tags (config, (const char **) tags->pdata,
 				     tags->len);
 
 	g_ptr_array_free (tags, TRUE);
     }
+
+
+    /* Temporarily remove exclude tag support for 0.12 */
 
     if (! notmuch_config_save (config)) {
 	if (is_new)

@@ -20,4 +20,6 @@
   2009-11-18 [1/1]   Alexander Botero-Lowry  [notmuch] request for pull (inbox unread)
   2009-11-18 [2/2]   Keith Packard, Alexander Botero-Lowry    [notmuch] [PATCH] Create a default notmuch-show-hook that highlights URLs and uses word-wrap (inbox unread)
   2009-11-18 [1/1]   Chris Wilson         [notmuch] [PATCH 1/2] Makefile: evaluate pkg-config once (inbox unread)
+  2010-12-16 [1/1]   Olivier Berger       Essai accentué (inbox unread)
+  2010-12-29 [1/1]   François Boulogne    [aur-general] Guidelines: cp, mkdir vs install (inbox unread)
 End of search results.

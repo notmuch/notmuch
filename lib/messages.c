@@ -127,8 +127,10 @@ notmuch_messages_get (notmuch_messages_t *messages)
 void
 notmuch_messages_move_to_next (notmuch_messages_t *messages)
 {
-    if (! messages->is_of_list_type)
-	return _notmuch_mset_messages_move_to_next (messages);
+    if (! messages->is_of_list_type) {
+	_notmuch_mset_messages_move_to_next (messages);
+	return;
+    }
 
     if (messages->iterator == NULL)
 	return;

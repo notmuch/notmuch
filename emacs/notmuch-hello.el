@@ -29,18 +29,15 @@
 (declare-function notmuch-search "notmuch" (query &optional oldest-first target-thread target-line continuation))
 (declare-function notmuch-poll "notmuch" ())
 
-(defvar notmuch-hello-search-bar-marker nil
-  "The position of the search bar within the notmuch-hello buffer.")
-
-(defcustom notmuch-recent-searches-max 10
-  "The number of recent searches to store and display."
+(defcustom notmuch-hello-recent-searches-max 10
+  "The number of recent searches to display."
   :type 'integer
-  :group 'notmuch)
+  :group 'notmuch-hello)
 
 (defcustom notmuch-show-empty-saved-searches nil
   "Should saved searches with no messages be listed?"
   :type 'boolean
-  :group 'notmuch)
+  :group 'notmuch-hello)
 
 (defun notmuch-sort-saved-searches (alist)
   "Generate an alphabetically sorted saved searches alist."
@@ -60,7 +57,7 @@ alist to be used."
 		 (const :tag "Sort alphabetically" notmuch-sort-saved-searches)
 		 (function :tag "Custom sort function"
 			   :value notmuch-sort-saved-searches))
-  :group 'notmuch)
+  :group 'notmuch-hello)
 
 (defvar notmuch-hello-indent 4
   "How much to indent non-headers.")
@@ -68,12 +65,12 @@ alist to be used."
 (defcustom notmuch-show-logo t
   "Should the notmuch logo be shown?"
   :type 'boolean
-  :group 'notmuch)
+  :group 'notmuch-hello)
 
 (defcustom notmuch-show-all-tags-list nil
   "Should all tags be shown in the notmuch-hello view?"
   :type 'boolean
-  :group 'notmuch)
+  :group 'notmuch-hello)
 
 (defcustom notmuch-hello-tag-list-make-query nil
   "Function or string to generate queries for the all tags list.
@@ -89,12 +86,12 @@ should return a filter for that tag, or nil to hide the tag."
 		 (string :tag "Custom filter"
 			 :value "tag:unread")
 		 (function :tag "Custom filter function"))
-  :group 'notmuch)
+  :group 'notmuch-hello)
 
 (defcustom notmuch-hello-hide-tags nil
   "List of tags to be hidden in the \"all tags\"-section."
   :type '(repeat string)
-  :group 'notmuch)
+  :group 'notmuch-hello)
 
 (defface notmuch-hello-logo-background
   '((((class color)
@@ -104,7 +101,8 @@ should return a filter for that tag, or nil to hide the tag."
       (background light))
      (:background "white")))
   "Background colour for the notmuch logo."
-  :group 'notmuch)
+  :group 'notmuch-hello
+  :group 'notmuch-faces)
 
 (defcustom notmuch-column-control t
   "Controls the number of columns for saved searches/tags in notmuch view.
@@ -126,11 +124,11 @@ So:
   30.
 - if you don't want to worry about all of this nonsense, leave
   this set to `t'."
-  :group 'notmuch
   :type '(choice
 	  (const :tag "Automatically calculated" t)
 	  (integer :tag "Number of characters")
-	  (float :tag "Fraction of window")))
+	  (float :tag "Fraction of window"))
+  :group 'notmuch-hello)
 
 (defcustom notmuch-hello-thousands-separator " "
   "The string used as a thousands separator.
@@ -138,31 +136,23 @@ So:
 Typically \",\" in the US and UK and \".\" or \" \" in Europe.
 The latter is recommended in the SI/ISO 31-0 standard and by the
 International Bureau of Weights and Measures."
-  :group 'notmuch
-  :type 'string)
+  :type 'string
+  :group 'notmuch-hello)
 
 (defcustom notmuch-hello-mode-hook nil
   "Functions called after entering `notmuch-hello-mode'."
-  :group 'notmuch
-  :type 'hook)
+  :type 'hook
+  :group 'notmuch-hello
+  :group 'notmuch-hooks)
 
 (defcustom notmuch-hello-refresh-hook nil
   "Functions called after updating a `notmuch-hello' buffer."
   :type 'hook
-  :group 'notmuch)
+  :group 'notmuch-hello
+  :group 'notmuch-hooks)
 
 (defvar notmuch-hello-url "http://notmuchmail.org"
   "The `notmuch' web site.")
-
-(defvar notmuch-hello-recent-searches nil)
-
-(defun notmuch-hello-remember-search (search)
-  (setq notmuch-hello-recent-searches
-	(delete search notmuch-hello-recent-searches))
-  (push search notmuch-hello-recent-searches)
-  (if (> (length notmuch-hello-recent-searches)
-	 notmuch-recent-searches-max)
-      (setq notmuch-hello-recent-searches (butlast notmuch-hello-recent-searches))))
 
 (defun notmuch-hello-nice-number (n)
   (let (result)
@@ -182,10 +172,14 @@ International Bureau of Weights and Measures."
       (match-string 1 search)
     search))
 
-(defun notmuch-hello-search (search)
-  (let ((search (notmuch-hello-trim search)))
-    (notmuch-hello-remember-search search)
-    (notmuch-search search notmuch-search-oldest-first nil nil #'notmuch-hello-search-continuation)))
+(defun notmuch-hello-search (&optional search)
+  (interactive)
+  (unless (null search)
+    (setq search (notmuch-hello-trim search))
+    (let ((history-delete-duplicates t))
+      (add-to-history 'notmuch-search-history search)))
+  (notmuch-search search notmuch-search-oldest-first nil nil
+		  #'notmuch-hello-search-continuation))
 
 (defun notmuch-hello-add-saved-search (widget)
   (interactive)
@@ -299,15 +293,17 @@ should be. Returns a cons cell `(tags-per-line width)'."
 			       :notify #'notmuch-hello-widget-search
 			       :notmuch-search-terms query
 			       formatted-name)
-		;; Insert enough space to consume the rest of the
-		;; column.  Because the button for the name is `(1+
-		;; (length name))' long (due to the trailing space) we
-		;; can just insert `(- widest (length name))' spaces -
-		;; the column separator is included in the button if
-		;; `(equal widest (length name)'.
-		(widget-insert (make-string (max 1
-						 (- widest (length name)))
-					    ? ))))
+		(unless (eq (% count tags-per-line) (1- tags-per-line))
+		  ;; If this is not the last tag on the line, insert
+		  ;; enough space to consume the rest of the column.
+		  ;; Because the button for the name is `(1+ (length
+		  ;; name))' long (due to the trailing space) we can
+		  ;; just insert `(- widest (length name))' spaces - the
+		  ;; column separator is included in the button if
+		  ;; `(equal widest (length name)'.
+		  (widget-insert (make-string (max 1
+						   (- widest (length name)))
+					      ? )))))
 	    (setq count (1+ count))
 	    (if (eq (% count tags-per-line) 0)
 		(widget-insert "\n")))
@@ -315,14 +311,9 @@ should be. Returns a cons cell `(tags-per-line width)'."
 
     ;; If the last line was not full (and hence did not include a
     ;; carriage return), insert one now.
-    (if (not (eq (% count tags-per-line) 0))
-	(widget-insert "\n"))
+    (unless (eq (% count tags-per-line) 0)
+      (widget-insert "\n"))
     found-target-pos))
-
-(defun notmuch-hello-goto-search ()
-  "Put point inside the `search' widget."
-  (interactive)
-  (goto-char notmuch-hello-search-bar-marker))
 
 (defimage notmuch-hello-logo ((:type png :file "notmuch-logo.png")))
 
@@ -353,7 +344,7 @@ should be. Returns a cons cell `(tags-per-line width)'."
     (define-key map "G" 'notmuch-hello-poll-and-update)
     (define-key map (kbd "<C-tab>") 'widget-backward)
     (define-key map "m" 'notmuch-mua-new-mail)
-    (define-key map "s" 'notmuch-hello-goto-search)
+    (define-key map "s" 'notmuch-hello-search)
     map)
   "Keymap for \"notmuch hello\" buffers.")
 (fset 'notmuch-hello-mode-map notmuch-hello-mode-map)
@@ -397,9 +388,9 @@ Complete list of currently available key bindings:
   "Run notmuch and display saved searches, known tags, etc."
   (interactive)
 
-  ; Jump through a hoop to get this value from the deprecated variable
-  ; name (`notmuch-folders') or from the default value.
-  (if (not notmuch-saved-searches)
+  ;; Jump through a hoop to get this value from the deprecated variable
+  ;; name (`notmuch-folders') or from the default value.
+  (unless notmuch-saved-searches
     (setq notmuch-saved-searches (notmuch-saved-searches)))
 
   (if no-display
@@ -466,7 +457,8 @@ Complete list of currently available key bindings:
       (widget-insert " messages.\n"))
 
     (let ((found-target-pos nil)
-	  (final-target-pos nil))
+	  (final-target-pos nil)
+	  (default-pos))
       (let* ((saved-alist
 	      ;; Filter out empty saved searches if required.
 	      (if notmuch-show-empty-saved-searches
@@ -498,7 +490,7 @@ Complete list of currently available key bindings:
 	    (indent-rigidly start (point) notmuch-hello-indent)))
 
 	(widget-insert "\nSearch: ")
-	(setq notmuch-hello-search-bar-marker (point-marker))
+	(setq default-pos (point-marker))
 	(widget-create 'editable-field
 		       ;; Leave some space at the start and end of the
 		       ;; search boxes.
@@ -506,24 +498,27 @@ Complete list of currently available key bindings:
 				       (length "Search: ")))
 		       :action (lambda (widget &rest ignore)
 				 (notmuch-hello-search (widget-value widget))))
-	;; add an invisible space to make `widget-end-of-line' ignore
-	;; trailine spaces in the search widget field
-	(widget-insert " ")
+	;; Add an invisible dot to make `widget-end-of-line' ignore
+	;; trailing spaces in the search widget field.  A dot is used
+	;; instead of a space to make `show-trailing-whitespace'
+	;; happy, i.e. avoid it marking the whole line as trailing
+	;; spaces.
+	(widget-insert ".")
 	(put-text-property (1- (point)) (point) 'invisible t)
 	(widget-insert "\n")
 
-	(when notmuch-hello-recent-searches
+	(when notmuch-search-history
 	  (widget-insert "\nRecent searches: ")
 	  (widget-create 'push-button
 			 :notify (lambda (&rest ignore)
-				   (setq notmuch-hello-recent-searches nil)
+				   (setq notmuch-search-history nil)
 				   (notmuch-hello-update))
 			 "clear")
 	  (widget-insert "\n\n")
-	  (let ((start (point))
-		(nth 0))
-	    (mapc (lambda (search)
-		    (let ((widget-symbol (intern (format "notmuch-hello-search-%d" nth))))
+	  (let ((start (point)))
+	    (loop for i from 1 to notmuch-hello-recent-searches-max
+		  for search in notmuch-search-history do
+		    (let ((widget-symbol (intern (format "notmuch-hello-search-%d" i))))
 		      (set widget-symbol
 			   (widget-create 'editable-field
 					  ;; Don't let the search boxes be
@@ -550,9 +545,7 @@ Complete list of currently available key bindings:
 					       (notmuch-hello-add-saved-search widget))
 				     :notmuch-saved-search-widget widget-symbol
 				     "save"))
-		    (widget-insert "\n")
-		    (setq nth (1+ nth)))
-		  notmuch-hello-recent-searches)
+		    (widget-insert "\n"))
 	    (indent-rigidly start (point) notmuch-hello-indent)))
 
 	(when alltags-alist
@@ -565,29 +558,29 @@ Complete list of currently available key bindings:
 	  (widget-insert "\n\n")
 	  (let ((start (point)))
 	    (setq found-target-pos (notmuch-hello-insert-tags alltags-alist widest target))
-	    (if (not final-target-pos)
-		(setq final-target-pos found-target-pos))
+	    (unless final-target-pos
+	      (setq final-target-pos found-target-pos))
 	    (indent-rigidly start (point) notmuch-hello-indent)))
 
 	(widget-insert "\n")
 
-	(if (not notmuch-show-all-tags-list)
-	    (widget-create 'push-button
-			   :notify (lambda (widget &rest ignore)
-				     (setq notmuch-show-all-tags-list t)
-				     (notmuch-hello-update))
-			   "Show all tags")))
+	(unless notmuch-show-all-tags-list
+	  (widget-create 'push-button
+			 :notify (lambda (widget &rest ignore)
+				   (setq notmuch-show-all-tags-list t)
+				   (notmuch-hello-update))
+			 "Show all tags")))
 
       (let ((start (point)))
 	(widget-insert "\n\n")
 	(widget-insert "Type a search query and hit RET to view matching threads.\n")
-	(when notmuch-hello-recent-searches
+	(when notmuch-search-history
 	  (widget-insert "Hit RET to re-submit a previous search. Edit it first if you like.\n")
 	  (widget-insert "Save recent searches with the `save' button.\n"))
 	(when notmuch-saved-searches
 	  (widget-insert "Edit saved searches with the `edit' button.\n"))
 	(widget-insert "Hit RET or click on a saved search or tag name to view matching threads.\n")
-	(widget-insert "`=' refreshes this screen. `s' jumps to the search box. `q' to quit.\n")
+	(widget-insert "`=' to refresh this screen. `s' to search messages. `q' to quit.\n")
 	(let ((fill-column (- (window-width) notmuch-hello-indent)))
 	  (center-region start (point))))
 
@@ -599,7 +592,7 @@ Complete list of currently available key bindings:
 	  (widget-forward 1)))
 
       (unless (widget-at)
-	(notmuch-hello-goto-search))))
+	(goto-char default-pos))))
 
   (run-hooks 'notmuch-hello-refresh-hook))
 

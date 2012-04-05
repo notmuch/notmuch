@@ -13,7 +13,8 @@ emacs_sources := \
 	$(dir)/notmuch-maildir-fcc.el \
 	$(dir)/notmuch-message.el \
 	$(dir)/notmuch-crypto.el \
-	$(dir)/coolj.el
+	$(dir)/coolj.el \
+	$(dir)/notmuch-print.el
 
 emacs_images := \
 	$(srcdir)/$(dir)/notmuch-logo.png

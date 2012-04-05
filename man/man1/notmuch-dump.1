@@ -1,0 +1,37 @@
+.TH NOTMUCH-DUMP 1 2012-03-19 "Notmuch 0.12"
+.SH NAME
+notmuch-dump \- Creates a plain-text dump of the tags of each message.
+
+.SH SYNOPSIS
+
+.B "notmuch dump"
+.RI "[ <" filename "> ] [--]"
+.RI "[ <" search-term ">...]"
+
+.SH DESCRIPTION
+
+Dump tags for messages matching the given search terms.
+
+Output is to the given filename, if any, or to stdout.  Note that
+using the filename argument is deprecated.
+
+These tags are the only data in the notmuch database that can't be
+recreated from the messages themselves.  The output of notmuch dump is
+therefore the only critical thing to backup (and much more friendly to
+incremental backup than the native database files.)
+
+With no search terms, a dump of all messages in the database will be
+generated.  A "--" argument instructs notmuch that the
+remaining arguments are search terms.
+
+See \fBnotmuch-search-terms\fR(7)
+for details of the supported syntax for <search-terms>.
+
+.RE
+.SH SEE ALSO
+
+\fBnotmuch\fR(1), \fBnotmuch-config\fR(1), \fBnotmuch-count\fR(1),
+\fBnotmuch-hooks\fR(5), \fBnotmuch-new\fR(1), \fBnotmuch-reply\fR(1),
+\fBnotmuch-restore\fR(1), \fBnotmuch-search\fR(1),
+\fBnotmuch-search-terms\fR(7), \fBnotmuch-show\fR(1),
+\fBnotmuch-tag\fR(1)

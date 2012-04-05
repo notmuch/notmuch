@@ -19,25 +19,25 @@ done
 notmuch new > /dev/null
 
 test_begin_subtest "Ensure that emacs doesn't drop results"
-notmuch search '*' > EXPEXTED
-sed -i -e 's/^thread:[0-9a-f]*  //' -e 's/;//' -e 's/xx*/[BLOB]/' EXPEXTED
-echo 'End of search results.' >> EXPEXTED
+notmuch search '*' > EXPECTED
+sed -i -e 's/^thread:[0-9a-f]*  //' -e 's/;//' -e 's/xx*/[BLOB]/' EXPECTED
+echo 'End of search results.' >> EXPECTED
 
 test_emacs '(notmuch-search "*")
 	    (notmuch-test-wait)
 	    (test-output)'
 sed -i -e s',  *, ,g' -e 's/xxx*/[BLOB]/g' OUTPUT
-test_expect_equal_file OUTPUT EXPEXTED
+test_expect_equal_file OUTPUT EXPECTED
 
 test_begin_subtest "Ensure that emacs doesn't drop error messages"
 test_emacs '(notmuch-search "--this-option-does-not-exist")
 	    (notmuch-test-wait)
 	    (test-output)'
-cat <<EOF >EXPEXTED
+cat <<EOF >EXPECTED
 Error: Unexpected output from notmuch search:
 Unrecognized option: --this-option-does-not-exist
 End of search results. (process returned 1)
 EOF
-test_expect_equal_file OUTPUT EXPEXTED
+test_expect_equal_file OUTPUT EXPECTED
 
 test_done

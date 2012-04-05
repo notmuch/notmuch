@@ -582,15 +582,15 @@ notmuch_database_t *
 notmuch_database_open (const char *path,
 		       notmuch_database_mode_t mode)
 {
+    void *local = talloc_new (NULL);
     notmuch_database_t *notmuch = NULL;
-    char *notmuch_path = NULL, *xapian_path = NULL;
+    char *notmuch_path, *xapian_path;
     struct stat st;
     int err;
     unsigned int i, version;
     static int initialized = 0;
 
-    if (asprintf (&notmuch_path, "%s/%s", path, ".notmuch") == -1) {
-	notmuch_path = NULL;
+    if (! (notmuch_path = talloc_asprintf (local, "%s/%s", path, ".notmuch"))) {
 	fprintf (stderr, "Out of memory\n");
 	goto DONE;
     }
@@ -602,8 +602,7 @@ notmuch_database_open (const char *path,
 	goto DONE;
     }
 
-    if (asprintf (&xapian_path, "%s/%s", notmuch_path, "xapian") == -1) {
-	xapian_path = NULL;
+    if (! (xapian_path = talloc_asprintf (local, "%s/%s", notmuch_path, "xapian"))) {
 	fprintf (stderr, "Out of memory\n");
 	goto DONE;
     }
@@ -617,7 +616,7 @@ notmuch_database_open (const char *path,
 	initialized = 1;
     }
 
-    notmuch = talloc (NULL, notmuch_database_t);
+    notmuch = talloc_zero (NULL, notmuch_database_t);
     notmuch->exception_reported = FALSE;
     notmuch->path = talloc_strdup (notmuch, path);
 
@@ -703,14 +702,12 @@ notmuch_database_open (const char *path,
     } catch (const Xapian::Error &error) {
 	fprintf (stderr, "A Xapian exception occurred opening database: %s\n",
 		 error.get_msg().c_str());
+	notmuch_database_close (notmuch);
 	notmuch = NULL;
     }
 
   DONE:
-    if (notmuch_path)
-	free (notmuch_path);
-    if (xapian_path)
-	free (xapian_path);
+    talloc_free (local);
 
     return notmuch;
 }
@@ -719,12 +716,24 @@ void
 notmuch_database_close (notmuch_database_t *notmuch)
 {
     try {
-	if (notmuch->mode == NOTMUCH_DATABASE_MODE_READ_WRITE)
+	if (notmuch->xapian_db != NULL &&
+	    notmuch->mode == NOTMUCH_DATABASE_MODE_READ_WRITE)
 	    (static_cast <Xapian::WritableDatabase *> (notmuch->xapian_db))->flush ();
     } catch (const Xapian::Error &error) {
 	if (! notmuch->exception_reported) {
 	    fprintf (stderr, "Error: A Xapian exception occurred flushing database: %s\n",
 		     error.get_msg().c_str());
+	}
+    }
+
+    /* Many Xapian objects (and thus notmuch objects) hold references to
+     * the database, so merely deleting the database may not suffice to
+     * close it.  Thus, we explicitly close it here. */
+    if (notmuch->xapian_db != NULL) {
+	try {
+	    notmuch->xapian_db->close();
+	} catch (const Xapian::Error &error) {
+	    /* do nothing */
 	}
     }
 
@@ -1815,6 +1824,9 @@ notmuch_database_find_message_by_filename (notmuch_database_t *notmuch,
 
     if (message_ret == NULL)
 	return NOTMUCH_STATUS_NULL_POINTER;
+
+    /* return NULL on any failure */
+    *message_ret = NULL;
 
     local = talloc_new (notmuch);
 

@@ -1,4 +1,3 @@
-#!/usr/bin/env bash
 #
 # Copyright (c) 2005 Junio C Hamano
 #
@@ -50,6 +49,7 @@ TZ=UTC
 TERM=dumb
 export LANG LC_ALL PAGER TERM TZ
 GIT_TEST_CMP=${GIT_TEST_CMP:-diff -u}
+TEST_EMACS=${TEST_EMACS:-${EMACS:-emacs}}
 
 # Protect ourselves from common misconfiguration to export
 # CDPATH into the environment
@@ -140,7 +140,7 @@ if test -n "$color"; then
 		esac
 		shift
 		printf " "
-                printf "$@"
+		printf "$@"
 		tput sgr0
 		print_subtest
 		)
@@ -150,7 +150,7 @@ else
 		test -z "$1" && test -n "$quiet" && return
 		shift
 		printf " "
-                printf "$@"
+		printf "$@"
 		print_subtest
 	}
 fi
@@ -249,7 +249,7 @@ remove_cr () {
 #	Store the message in file 'name'. The default is to store it
 #	in 'msg-<count>', where <count> is three-digit number of the
 #	message.
-#	
+#
 #  [body]=text
 #
 #	Text to use as the body of the email message
@@ -322,7 +322,7 @@ generate_message ()
     fi
 
     if [ -z "${template[date]}" ]; then
-	template[date]="Tue, 05 Jan 2001 15:43:57 -0000"
+	template[date]="Fri, 05 Jan 2001 15:43:57 +0000"
     fi
 
     additional_headers=""
@@ -353,6 +353,11 @@ ${additional_headers}"
 
     if [ ! -z "${template[content-type]}" ]; then
 	additional_headers="Content-Type: ${template[content-type]}
+${additional_headers}"
+    fi
+
+    if [ ! -z "${template[content-transfer-encoding]}" ]; then
+	additional_headers="Content-Transfer-Encoding: ${template[content-transfer-encoding]}
 ${additional_headers}"
     fi
 
@@ -501,6 +506,35 @@ test_expect_equal_file ()
 			test_failure_ "$test_subtest_name" "$(diff -u $testname.expected $testname.output)"
 		fi
     fi
+}
+
+test_emacs_expect_t () {
+	test "$#" = 2 && { prereq=$1; shift; } || prereq=
+	test "$#" = 1 ||
+	error "bug in the test script: not 1 or 2 parameters to test_emacs_expect_t"
+
+	# Run the test.
+	if ! test_skip "$test_subtest_name"
+	then
+		test_emacs "(notmuch-test-run $1)" >/dev/null
+
+		# Restore state after the test.
+		exec 1>&6 2>&7		# Restore stdout and stderr
+		inside_subtest=
+
+		# Report success/failure.
+		result=$(cat OUTPUT)
+		if [ "$result" = t ]
+		then
+			test_ok_ "$test_subtest_name"
+		else
+			test_failure_ "$test_subtest_name" "${result}"
+		fi
+	else
+		# Restore state after the (non) test.
+		exec 1>&6 2>&7		# Restore stdout and stderr
+		inside_subtest=
+	fi
 }
 
 NOTMUCH_NEW ()
@@ -673,8 +707,8 @@ test_skip () {
 
 test_check_missing_external_prereqs_ () {
 	if test -n "$test_subtest_missing_external_prereqs_"; then
-		say_color skip >&3 "missing prerequisites:"
-		echo "$test_subtest_missing_external_prereqs_" >&3
+		say_color skip >&1 "missing prerequisites:"
+		echo "$test_subtest_missing_external_prereqs_" >&1
 		test_report_skip_ "$@"
 	else
 		false
@@ -869,7 +903,7 @@ test_done () {
 	[ -n "$EMACS_SERVER" ] && test_emacs '(kill-emacs)'
 
 	if [ "$test_failure" = "0" ]; then
-	    if [ "$test_broken" = "0" ]; then	    
+	    if [ "$test_broken" = "0" ]; then
 		rm -rf "$remove_tmp"
 	    fi
 	    exit 0
@@ -881,7 +915,7 @@ test_done () {
 emacs_generate_script () {
 	# Construct a little test script here for the benefit of the user,
 	# (who can easily run "run_emacs" to get the same emacs environment
-	# for investigating any failures).    
+	# for investigating any failures).
 	cat <<EOF >"$TMP_DIRECTORY/run_emacs"
 #!/bin/sh
 export PATH=$PATH
@@ -897,7 +931,7 @@ export NOTMUCH_CONFIG=$NOTMUCH_CONFIG
 #
 # --load		Force loading of notmuch.el and test-lib.el
 
-exec emacs --no-init-file --no-site-file \
+exec ${TEST_EMACS} --no-init-file --no-site-file \
 	--directory "$TEST_DIRECTORY/../emacs" --load notmuch.el \
 	--directory "$TEST_DIRECTORY" --load test-lib.el \
 	"\$@"
@@ -907,10 +941,19 @@ EOF
 
 test_emacs () {
 	# test dependencies beforehand to avoid the waiting loop below
-	test_require_external_prereq emacs || return
-	test_require_external_prereq emacsclient || return
+	missing_dependencies=
+	test_require_external_prereq dtach || missing_dependencies=1
+	test_require_external_prereq emacs || missing_dependencies=1
+	test_require_external_prereq emacsclient || missing_dependencies=1
+	test -z "$missing_dependencies" || return
 
 	if [ -z "$EMACS_SERVER" ]; then
+		emacs_tests="$(basename $0).el"
+		if [ -f "$TEST_DIRECTORY/$emacs_tests" ]; then
+			load_emacs_tests="--eval '(load \"$emacs_tests\")'"
+		else
+			load_emacs_tests=
+		fi
 		server_name="notmuch-test-suite-$$"
 		# start a detached session with an emacs server
 		# user's TERM is given to dtach which assumes a minimally
@@ -918,12 +961,13 @@ test_emacs () {
 		TERM=$ORIGINAL_TERM dtach -n "$TEST_TMPDIR/emacs-dtach-socket.$$" \
 			sh -c "stty rows 24 cols 80; exec '$TMP_DIRECTORY/run_emacs' \
 				--no-window-system \
+				$load_emacs_tests \
 				--eval '(setq server-name \"$server_name\")' \
 				--eval '(server-start)' \
 				--eval '(orphan-watchdog $$)'" || return
 		EMACS_SERVER="$server_name"
 		# wait until the emacs server is up
-		until test_emacs '()' 2>/dev/null; do
+		until test_emacs '()' >/dev/null 2>/dev/null; do
 			sleep 1
 		done
 	fi

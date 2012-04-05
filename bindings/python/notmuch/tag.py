@@ -17,10 +17,18 @@ along with notmuch.  If not, see <http://www.gnu.org/licenses/>.
 Copyright 2010 Sebastian Spaeth <Sebastian@SSpaeth.de>'
 """
 from ctypes import c_char_p
-from notmuch.globals import nmlib, STATUS, NotmuchError, NotmuchTagsP
+from notmuch.globals import (
+    nmlib,
+    Python3StringMixIn,
+    NotmuchTagsP,
+)
+from .errors import (
+    NullPointerError,
+    NotInitializedError,
+)
 
 
-class Tags(object):
+class Tags(Python3StringMixIn):
     """Represents a list of notmuch tags
 
     This object provides an iterator over a list of notmuch tags (which
@@ -29,9 +37,9 @@ class Tags(object):
     Do note that the underlying library only provides a one-time
     iterator (it cannot reset the iterator to the start). Thus iterating
     over the function will "exhaust" the list of tags, and a subsequent
-    iteration attempt will raise a :exc:`NotmuchError`
-    STATUS.NOT_INITIALIZED. Also note, that any function that uses
-    iteration (nearly all) will also exhaust the tags. So both::
+    iteration attempt will raise a :exc:`NotInitializedError`.
+    Also note, that any function that uses iteration (nearly all) will
+    also exhaust the tags. So both::
 
       for tag in tags: print tag
 
@@ -60,8 +68,8 @@ class Tags(object):
              will almost never instantiate a :class:`Tags` object
              herself. They are usually handed back as a result,
              e.g. in :meth:`Database.get_all_tags`.  *tags_p* must be
-             valid, we will raise an :exc:`NotmuchError`
-             (STATUS.NULL_POINTER) if it is `None`.
+             valid, we will raise an :exc:`NullPointerError` if it is
+             `None`.
         :type tags_p: :class:`ctypes.c_void_p`
         :param parent: The parent object (ie :class:`Database` or
              :class:`Message` these tags are derived from, and saves a
@@ -71,7 +79,7 @@ class Tags(object):
                cache the tags in the Python object(?)
         """
         if not tags_p:
-            raise NotmuchError(STATUS.NULL_POINTER)
+            raise NullPointerError()
 
         self._tags = tags_p
         #save reference to parent object so we keep it alive
@@ -89,15 +97,16 @@ class Tags(object):
     _move_to_next.argtypes = [NotmuchTagsP]
     _move_to_next.restype = None
 
-    def next(self):
-        if self._tags is None:
-            raise NotmuchError(STATUS.NOT_INITIALIZED)
+    def __next__(self):
+        if not self._tags:
+            raise NotInitializedError()
         if not self._valid(self._tags):
             self._tags = None
             raise StopIteration
         tag = Tags._get(self._tags).decode('UTF-8')
         self._move_to_next(self._tags)
         return tag
+    next = __next__ # python2.x iterator protocol compatibility
 
     def __nonzero__(self):
         """Implement bool(Tags) check that can be repeatedly used
@@ -110,9 +119,6 @@ class Tags(object):
             left."""
         return self._valid(self._tags) > 0
 
-    def __str__(self):
-        return unicode(self).encode('utf-8')
-
     def __unicode__(self):
         """string representation of :class:`Tags`: a space separated list of tags
 
@@ -120,8 +126,8 @@ class Tags(object):
 
             As this iterates over the tags, we will not be able to iterate over
             them again (as in retrieve them)! If the tags have been exhausted
-            already, this will raise a :exc:`NotmuchError`
-            STATUS.NOT_INITIALIZED on subsequent attempts.
+            already, this will raise a :exc:`NotInitializedError`on subsequent
+            attempts.
         """
         return " ".join(self)
 

@@ -157,7 +157,7 @@ Notmuch Test Suite <test_suite@notmuchmail.org> (2000-01-01) (encrypted inbox)
 Subject: test encrypted message 001
 From: Notmuch Test Suite <test_suite@notmuchmail.org>
 To: test_suite@notmuchmail.org
-Date: 01 Jan 2000 12:00:00 -0000
+Date: Sat, 01 Jan 2000 12:00:00 +0000
 header}
 body{
 part{ ID: 1, Content-type: multipart/encrypted

@@ -1,0 +1,121 @@
+.TH NOTMUCH-SEARCH 1 2012-03-19 "Notmuch 0.12"
+.SH NAME
+notmuch-search \- Search for messages matching the given search terms.
+.SH SYNOPSIS
+
+.B notmuch search
+.RI  [  options "...] <" search-term ">..."
+
+.SH DESCRIPTION
+
+Search for messages matching the given search terms, and display as
+results the threads containing the matched messages.
+
+The output consists of one line per thread, giving a thread ID, the
+date of the newest (or oldest, depending on the sort option) matched
+message in the thread, the number of matched messages and total
+messages in the thread, the names of all participants in the thread,
+and the subject of the newest (or oldest) message.
+
+See \fBnotmuch-search-terms\fR(7)
+for details of the supported syntax for <search-terms>.
+
+Supported options for
+.B search
+include
+.RS 4
+.TP 4
+.BR \-\-format= ( json | text )
+
+Presents the results in either JSON or plain-text (default).
+.RE
+
+.RS 4
+.TP 4
+.B \-\-output=(summary|threads|messages|files|tags)
+
+.RS 4
+.TP 4
+.B summary
+
+Output a summary of each thread with any message matching the search
+terms. The summary includes the thread ID, date, the number of
+messages in the thread (both the number matched and the total number),
+the authors of the thread and the subject.
+.RE
+.RS 4
+.TP 4
+.B threads
+
+Output the thread IDs of all threads with any message matching the
+search terms, either one per line (\-\-format=text) or as a JSON array
+(\-\-format=json).
+.RE
+.RS 4
+.TP 4
+.B messages
+
+Output the message IDs of all messages matching the search terms,
+either one per line (\-\-format=text) or as a JSON array
+(\-\-format=json).
+.RE
+.RS 4
+.TP 4
+.B files
+
+Output the filenames of all messages matching the search terms, either
+one per line (\-\-format=text) or as a JSON array (\-\-format=json).
+.RE
+.RS 4
+.TP 4
+.B tags
+
+Output all tags that appear on any message matching the search terms,
+either one per line (\-\-format=text) or as a JSON array
+(\-\-format=json).
+.RE
+.RE
+
+.RS 4
+.TP 4
+.BR \-\-sort= ( newest\-first | oldest\-first )
+
+This option can be used to present results in either chronological order
+.RB ( oldest\-first )
+or reverse chronological order
+.RB ( newest\-first ).
+
+Note: The thread order will be distinct between these two options
+(beyond being simply reversed). When sorting by
+.B oldest\-first
+the threads will be sorted by the oldest message in each thread, but
+when sorting by
+.B newest\-first
+the threads will be sorted by the newest message in each thread.
+
+By default, results will be displayed in reverse chronological order,
+(that is, the newest results will be displayed first).
+.RE
+
+.RS 4
+.TP 4
+.BR \-\-offset=[\-]N
+
+Skip displaying the first N results. With the leading '\-', start at the Nth
+result from the end.
+.RE
+
+.RS 4
+.TP 4
+.BR \-\-limit=N
+
+Limit the number of displayed results to N.
+.RE
+
+.SH SEE ALSO
+
+\fBnotmuch\fR(1), \fBnotmuch-config\fR(1), \fBnotmuch-count\fR(1),
+\fBnotmuch-dump\fR(1), \fBnotmuch-hooks\fR(5), \fBnotmuch-new\fR(1),
+\fBnotmuch-reply\fR(1), \fBnotmuch-restore\fR(1),
+\fBnotmuch-search-terms\fR(7), \fBnotmuch-show\fR(1),
+\fBnotmuch-tag\fR(1)

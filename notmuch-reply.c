@@ -31,7 +31,7 @@ static void
 reply_part_content (GMimeObject *part);
 
 static const notmuch_show_format_t format_reply = {
-    "",
+    "", NULL,
 	"", NULL,
 	    "", NULL, reply_headers_message_part, ">\n",
 	    "",
@@ -168,22 +168,29 @@ address_is_users (const char *address, notmuch_config_t *config)
     return 0;
 }
 
-/* For each address in 'list' that is not configured as one of the
- * user's addresses in 'config', add that address to 'message' as an
- * address of 'type'.
+/* Scan addresses in 'list'.
  *
- * The first address encountered that *is* the user's address will be
- * returned, (otherwise NULL is returned).
+ * If 'message' is non-NULL, then for each address in 'list' that is
+ * not configured as one of the user's addresses in 'config', add that
+ * address to 'message' as an address of 'type'.
+ *
+ * If 'user_from' is non-NULL and *user_from is NULL, *user_from will
+ * be set to the first address encountered in 'list' that is the
+ * user's address.
+ *
+ * Return the number of addresses added to 'message'. (If 'message' is
+ * NULL, the function returns 0 by definition.)
  */
-static const char *
-add_recipients_for_address_list (GMimeMessage *message,
-				 notmuch_config_t *config,
-				 GMimeRecipientType type,
-				 InternetAddressList *list)
+static unsigned int
+scan_address_list (InternetAddressList *list,
+		   notmuch_config_t *config,
+		   GMimeMessage *message,
+		   GMimeRecipientType type,
+		   const char **user_from)
 {
     InternetAddress *address;
     int i;
-    const char *ret = NULL;
+    unsigned int n = 0;
 
     for (i = 0; i < internet_address_list_length (list); i++) {
 	address = internet_address_list_get_address (list, i);
@@ -196,8 +203,7 @@ add_recipients_for_address_list (GMimeMessage *message,
 	    if (group_list == NULL)
 		continue;
 
-	    add_recipients_for_address_list (message, config,
-					     type, group_list);
+	    n += scan_address_list (group_list, config, message, type, user_from);
 	} else {
 	    InternetAddressMailbox *mailbox;
 	    const char *name;
@@ -209,40 +215,41 @@ add_recipients_for_address_list (GMimeMessage *message,
 	    addr = internet_address_mailbox_get_addr (mailbox);
 
 	    if (address_is_users (addr, config)) {
-		if (ret == NULL)
-		    ret = addr;
-	    } else {
+		if (user_from && *user_from == NULL)
+		    *user_from = addr;
+	    } else if (message) {
 		g_mime_message_add_recipient (message, type, name, addr);
+		n++;
 	    }
 	}
     }
 
-    return ret;
+    return n;
 }
 
-/* For each address in 'recipients' that is not configured as one of
- * the user's addresses in 'config', add that address to 'message' as
- * an address of 'type'.
+/* Scan addresses in 'recipients'.
  *
- * The first address encountered that *is* the user's address will be
- * returned, (otherwise NULL is returned).
+ * See the documentation of scan_address_list() above. This function
+ * does exactly the same, but converts 'recipients' to an
+ * InternetAddressList first.
  */
-static const char *
-add_recipients_for_string (GMimeMessage *message,
-			   notmuch_config_t *config,
-			   GMimeRecipientType type,
-			   const char *recipients)
+static unsigned int
+scan_address_string (const char *recipients,
+		     notmuch_config_t *config,
+		     GMimeMessage *message,
+		     GMimeRecipientType type,
+		     const char **user_from)
 {
     InternetAddressList *list;
 
     if (recipients == NULL)
-	return NULL;
+	return 0;
 
     list = internet_address_list_parse_string (recipients);
     if (list == NULL)
-	return NULL;
+	return 0;
 
-    return add_recipients_for_address_list (message, config, type, list);
+    return scan_address_list (list, config, message, type, user_from);
 }
 
 /* Does the address in the Reply-To header of 'message' already appear
@@ -284,15 +291,23 @@ reply_to_header_is_redundant (notmuch_message_t *message)
     return 0;
 }
 
-/* Augments the recipients of reply from the headers of message.
+/* Augment the recipients of 'reply' from the "Reply-to:", "From:",
+ * "To:", "Cc:", and "Bcc:" headers of 'message'.
  *
- * If any of the user's addresses were found in these headers, the first
- * of these returned, otherwise NULL is returned.
+ * If 'reply_all' is true, use sender and all recipients, otherwise
+ * scan the headers for the first that contains something other than
+ * the user's addresses and add the recipients from this header
+ * (typically this would be reply-to-sender, but also handles reply to
+ * user's own message in a sensible way).
+ *
+ * If any of the user's addresses were found in these headers, the
+ * first of these returned, otherwise NULL is returned.
  */
 static const char *
 add_recipients_from_message (GMimeMessage *reply,
 			     notmuch_config_t *config,
-			     notmuch_message_t *message)
+			     notmuch_message_t *message,
+			     notmuch_bool_t reply_all)
 {
     struct {
 	const char *header;
@@ -306,6 +321,7 @@ add_recipients_from_message (GMimeMessage *reply,
     };
     const char *from_addr = NULL;
     unsigned int i;
+    unsigned int n = 0;
 
     /* Some mailing lists munge the Reply-To header despite it being A Bad
      * Thing, see http://www.unicom.com/pw/reply-to-harmful.html
@@ -324,7 +340,7 @@ add_recipients_from_message (GMimeMessage *reply,
     }
 
     for (i = 0; i < ARRAY_SIZE (reply_to_map); i++) {
-	const char *addr, *recipients;
+	const char *recipients;
 
 	recipients = notmuch_message_get_header (message,
 						 reply_to_map[i].header);
@@ -332,11 +348,24 @@ add_recipients_from_message (GMimeMessage *reply,
 	    recipients = notmuch_message_get_header (message,
 						     reply_to_map[i].fallback);
 
-	addr = add_recipients_for_string (reply, config,
-					  reply_to_map[i].recipient_type,
-					  recipients);
-	if (from_addr == NULL)
-	    from_addr = addr;
+	n += scan_address_string (recipients, config, reply,
+				  reply_to_map[i].recipient_type, &from_addr);
+
+	if (!reply_all && n) {
+	    /* Stop adding new recipients in reply-to-sender mode if
+	     * we have added some recipient(s) above.
+	     *
+	     * This also handles the case of user replying to his own
+	     * message, where reply-to/from is not a recipient. In
+	     * this case there may be more than one recipient even if
+	     * not replying to all.
+	     */
+	    reply = NULL;
+
+	    /* From address and some recipients are enough, bail out. */
+	    if (from_addr)
+		break;
+	}
     }
 
     return from_addr;
@@ -480,7 +509,8 @@ static int
 notmuch_reply_format_default(void *ctx,
 			     notmuch_config_t *config,
 			     notmuch_query_t *query,
-			     notmuch_show_params_t *params)
+			     notmuch_show_params_t *params,
+			     notmuch_bool_t reply_all)
 {
     GMimeMessage *reply;
     notmuch_messages_t *messages;
@@ -509,7 +539,8 @@ notmuch_reply_format_default(void *ctx,
 	    g_mime_message_set_subject (reply, subject);
 	}
 
-	from_addr = add_recipients_from_message (reply, config, message);
+	from_addr = add_recipients_from_message (reply, config, message,
+						 reply_all);
 
 	if (from_addr == NULL)
 	    from_addr = guess_from_received_header (config, message);
@@ -546,8 +577,7 @@ notmuch_reply_format_default(void *ctx,
 		notmuch_message_get_header (message, "date"),
 		notmuch_message_get_header (message, "from"));
 
-	show_message_body (notmuch_message_get_filename (message),
-			   format, params);
+	show_message_body (message, format, params);
 
 	notmuch_message_destroy (message);
     }
@@ -559,7 +589,8 @@ static int
 notmuch_reply_format_headers_only(void *ctx,
 				  notmuch_config_t *config,
 				  notmuch_query_t *query,
-				  unused (notmuch_show_params_t *params))
+				  unused (notmuch_show_params_t *params),
+				  notmuch_bool_t reply_all)
 {
     GMimeMessage *reply;
     notmuch_messages_t *messages;
@@ -599,7 +630,7 @@ notmuch_reply_format_headers_only(void *ctx,
 	g_mime_object_set_header (GMIME_OBJECT (reply),
 				  "References", references);
 
-	(void)add_recipients_from_message (reply, config, message);
+	(void)add_recipients_from_message (reply, config, message, reply_all);
 
 	reply_headers = g_mime_object_to_string (GMIME_OBJECT (reply));
 	printf ("%s", reply_headers);
@@ -613,62 +644,72 @@ notmuch_reply_format_headers_only(void *ctx,
     return 0;
 }
 
+enum {
+    FORMAT_DEFAULT,
+    FORMAT_HEADERS_ONLY,
+};
+
 int
 notmuch_reply_command (void *ctx, int argc, char *argv[])
 {
     notmuch_config_t *config;
     notmuch_database_t *notmuch;
     notmuch_query_t *query;
-    char *opt, *query_string;
-    int i, ret = 0;
-    int (*reply_format_func)(void *ctx, notmuch_config_t *config, notmuch_query_t *query, notmuch_show_params_t *params);
+    char *query_string;
+    int opt_index, ret = 0;
+    int (*reply_format_func)(void *ctx, notmuch_config_t *config, notmuch_query_t *query, notmuch_show_params_t *params, notmuch_bool_t reply_all);
     notmuch_show_params_t params = { .part = -1 };
+    int format = FORMAT_DEFAULT;
+    int reply_all = TRUE;
 
-    reply_format_func = notmuch_reply_format_default;
+    notmuch_opt_desc_t options[] = {
+	{ NOTMUCH_OPT_KEYWORD, &format, "format", 'f',
+	  (notmuch_keyword_t []){ { "default", FORMAT_DEFAULT },
+				  { "headers-only", FORMAT_HEADERS_ONLY },
+				  { 0, 0 } } },
+	{ NOTMUCH_OPT_KEYWORD, &reply_all, "reply-to", 'r',
+	  (notmuch_keyword_t []){ { "all", TRUE },
+				  { "sender", FALSE },
+				  { 0, 0 } } },
+	{ NOTMUCH_OPT_BOOLEAN, &params.decrypt, "decrypt", 'd', 0 },
+	{ 0, 0, 0, 0, 0 }
+    };
 
-    argc--; argv++; /* skip subcommand argument */
-
-    for (i = 0; i < argc && argv[i][0] == '-'; i++) {
-	if (strcmp (argv[i], "--") == 0) {
-	    i++;
-	    break;
-	}
-        if (STRNCMP_LITERAL (argv[i], "--format=") == 0) {
-	    opt = argv[i] + sizeof ("--format=") - 1;
-	    if (strcmp (opt, "default") == 0) {
-		reply_format_func = notmuch_reply_format_default;
-	    } else if (strcmp (opt, "headers-only") == 0) {
-		reply_format_func = notmuch_reply_format_headers_only;
-	    } else {
-		fprintf (stderr, "Invalid value for --format: %s\n", opt);
-		return 1;
-	    }
-	} else if ((STRNCMP_LITERAL (argv[i], "--decrypt") == 0)) {
-	    if (params.cryptoctx == NULL) {
-		GMimeSession* session = g_object_new(g_mime_session_get_type(), NULL);
-		if (NULL == (params.cryptoctx = g_mime_gpg_context_new(session, "gpg"))) {
-		    fprintf (stderr, "Failed to construct gpg context.\n");
-		} else {
-		    params.decrypt = TRUE;
-		    g_mime_gpg_context_set_always_trust((GMimeGpgContext*)params.cryptoctx, FALSE);
-		}
-		g_object_unref (session);
-		session = NULL;
-	    }
-	} else {
-	    fprintf (stderr, "Unrecognized option: %s\n", argv[i]);
-	    return 1;
-	}
+    opt_index = parse_arguments (argc, argv, options, 1);
+    if (opt_index < 0) {
+	/* diagnostics already printed */
+	return 1;
     }
 
-    argc -= i;
-    argv += i;
+    if (format == FORMAT_HEADERS_ONLY)
+	reply_format_func = notmuch_reply_format_headers_only;
+    else
+	reply_format_func = notmuch_reply_format_default;
+
+    if (params.decrypt) {
+#ifdef GMIME_ATLEAST_26
+	/* TODO: GMimePasswordRequestFunc */
+	params.cryptoctx = g_mime_gpg_context_new (NULL, "gpg");
+#else
+	GMimeSession* session = g_object_new (g_mime_session_get_type(), NULL);
+	params.cryptoctx = g_mime_gpg_context_new (session, "gpg");
+#endif
+	if (params.cryptoctx) {
+	    g_mime_gpg_context_set_always_trust ((GMimeGpgContext*) params.cryptoctx, FALSE);
+	} else {
+	    params.decrypt = FALSE;
+	    fprintf (stderr, "Failed to construct gpg context.\n");
+	}
+#ifndef GMIME_ATLEAST_26
+	g_object_unref (session);
+#endif
+    }
 
     config = notmuch_config_open (ctx, NULL, NULL);
     if (config == NULL)
 	return 1;
 
-    query_string = query_string_from_args (ctx, argc, argv);
+    query_string = query_string_from_args (ctx, argc-opt_index, argv+opt_index);
     if (query_string == NULL) {
 	fprintf (stderr, "Out of memory\n");
 	return 1;
@@ -690,7 +731,7 @@ notmuch_reply_command (void *ctx, int argc, char *argv[])
 	return 1;
     }
 
-    if (reply_format_func (ctx, config, query, &params) != 0)
+    if (reply_format_func (ctx, config, query, &params, reply_all) != 0)
 	return 1;
 
     notmuch_query_destroy (query);

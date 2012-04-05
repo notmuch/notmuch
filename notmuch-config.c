@@ -44,7 +44,13 @@ static const char new_config_comment[] =
     " The following options are supported here:\n"
     "\n"
     "\ttags	A list (separated by ';') of the tags that will be\n"
-    "\t	added to all messages incorporated by \"notmuch new\".\n";
+    "\t	added to all messages incorporated by \"notmuch new\".\n"
+    "\n"
+    "\tignore	A list (separated by ';') of file and directory names\n"
+    "\t	that will not be searched for messages by \"notmuch new\".\n"
+    "\n"
+    "\t	NOTE: *Every* file/directory that goes by one of those names will\n"
+    "\t	be ignored, independent of its depth/location in the mail store.\n";
 
 static const char user_config_comment[] =
     " User configuration\n"
@@ -84,6 +90,16 @@ static const char maildir_config_comment[] =
     "\tand update tags, while the \"notmuch tag\" and \"notmuch restore\"\n"
     "\tcommands will notice tag changes and update flags in filenames\n";
 
+static const char search_config_comment[] =
+    " Search configuration\n"
+    "\n"
+    " The following option is supported here:\n"
+    "\n"
+    "\texclude_tags\n"
+    "\t\tA ;-separated list of tags that will be excluded from\n"
+    "\t\tsearch results by default.  Using an excluded tag in a\n"
+    "\t\tquery will override that exclusion.\n";
+
 struct _notmuch_config {
     char *filename;
     GKeyFile *key_file;
@@ -95,7 +111,11 @@ struct _notmuch_config {
     size_t user_other_email_length;
     const char **new_tags;
     size_t new_tags_length;
+    const char **new_ignore;
+    size_t new_ignore_length;
     notmuch_bool_t maildir_synchronize_flags;
+    const char **search_exclude_tags;
+    size_t search_exclude_tags_length;
 };
 
 static int
@@ -221,6 +241,7 @@ notmuch_config_open (void *ctx,
     int file_had_new_group;
     int file_had_user_group;
     int file_had_maildir_group;
+    int file_had_search_group;
 
     if (is_new_ret)
 	*is_new_ret = 0;
@@ -251,7 +272,11 @@ notmuch_config_open (void *ctx,
     config->user_other_email_length = 0;
     config->new_tags = NULL;
     config->new_tags_length = 0;
+    config->new_ignore = NULL;
+    config->new_ignore_length = 0;
     config->maildir_synchronize_flags = TRUE;
+    config->search_exclude_tags = NULL;
+    config->search_exclude_tags_length = 0;
 
     if (! g_key_file_load_from_file (config->key_file,
 				     config->filename,
@@ -295,6 +320,7 @@ notmuch_config_open (void *ctx,
     file_had_new_group = g_key_file_has_group (config->key_file, "new");
     file_had_user_group = g_key_file_has_group (config->key_file, "user");
     file_had_maildir_group = g_key_file_has_group (config->key_file, "maildir");
+    file_had_search_group = g_key_file_has_group (config->key_file, "search");
 
 
     if (notmuch_config_get_database_path (config) == NULL) {
@@ -345,6 +371,18 @@ notmuch_config_open (void *ctx,
 	notmuch_config_set_new_tags (config, tags, 2);
     }
 
+    if (notmuch_config_get_new_ignore (config, &tmp) == NULL) {
+	notmuch_config_set_new_ignore (config, NULL, 0);
+    }
+
+    if (notmuch_config_get_search_exclude_tags (config, &tmp) == NULL) {
+	if (is_new) {
+	    /* We do not set default search_exclude_tags for 0.12 */
+	} else {
+	    notmuch_config_set_search_exclude_tags (config, NULL, 0);
+	}
+    }
+
     error = NULL;
     config->maildir_synchronize_flags =
 	g_key_file_get_boolean (config->key_file,
@@ -385,6 +423,11 @@ notmuch_config_open (void *ctx,
     {
 	g_key_file_set_comment (config->key_file, "maildir", NULL,
 				maildir_config_comment, NULL);
+    }
+
+    if (! file_had_search_group) {
+	g_key_file_set_comment (config->key_file, "search", NULL,
+				search_config_comment, NULL);
     }
 
     if (is_new_ret)
@@ -435,6 +478,48 @@ notmuch_config_save (notmuch_config_t *config)
 
     g_free (data);
     return 0;
+}
+
+static const char **
+_config_get_list (notmuch_config_t *config,
+		  const char *section, const char *key,
+		  const char ***outlist, size_t *list_length, size_t *ret_length)
+{
+    assert(outlist);
+
+    if (*outlist == NULL) {
+
+	char **inlist = g_key_file_get_string_list (config->key_file,
+					     section, key, list_length, NULL);
+	if (inlist) {
+	    unsigned int i;
+
+	    *outlist = talloc_size (config, sizeof (char *) * (*list_length + 1));
+
+	    for (i = 0; i < *list_length; i++)
+		(*outlist)[i] = talloc_strdup (*outlist, inlist[i]);
+
+	    (*outlist)[i] = NULL;
+
+	    g_strfreev (inlist);
+	}
+    }
+
+    if (ret_length)
+	*ret_length = *list_length;
+
+    return *outlist;
+}
+
+static void
+_config_set_list (notmuch_config_t *config,
+		  const char *group, const char *name,
+		  const char *list[],
+		  size_t length, const char ***config_var )
+{
+    g_key_file_set_string_list (config->key_file, group, name, list, length);
+    talloc_free (*config_var);
+    *config_var = NULL;
 }
 
 const char *
@@ -521,37 +606,6 @@ notmuch_config_set_user_primary_email (notmuch_config_t *config,
     config->user_primary_email = NULL;
 }
 
-static const char **
-_config_get_list (notmuch_config_t *config,
-		  const char *section, const char *key,
-		  const char ***outlist, size_t *list_length, size_t *ret_length)
-{
-    assert(outlist);
-
-    if (*outlist == NULL) {
-
-	char **inlist = g_key_file_get_string_list (config->key_file,
-					     section, key, list_length, NULL);
-	if (inlist) {
-	    unsigned int i;
-
-	    *outlist = talloc_size (config, sizeof (char *) * (*list_length + 1));
-
-	    for (i = 0; i < *list_length; i++)
-		(*outlist)[i] = talloc_strdup (*outlist, inlist[i]);
-
-	    (*outlist)[i] = NULL;
-
-	    g_strfreev (inlist);
-	}
-    }
-
-    if (ret_length)
-	*ret_length = *list_length;
-
-    return *outlist;
-}
-
 const char **
 notmuch_config_get_user_other_email (notmuch_config_t *config,   size_t *length)
 {
@@ -568,15 +622,12 @@ notmuch_config_get_new_tags (notmuch_config_t *config,   size_t *length)
 			     &(config->new_tags_length), length);
 }
 
-static void
-_config_set_list (notmuch_config_t *config,
-		  const char *group, const char *name,
-		  const char *list[],
-		  size_t length, const char ***config_var )
+const char **
+notmuch_config_get_new_ignore (notmuch_config_t *config, size_t *length)
 {
-    g_key_file_set_string_list (config->key_file, group, name, list, length);
-    talloc_free (*config_var);
-    *config_var = NULL;
+    return _config_get_list (config, "new", "ignore",
+			     &(config->new_ignore),
+			     &(config->new_ignore_length), length);
 }
 
 void
@@ -595,6 +646,32 @@ notmuch_config_set_new_tags (notmuch_config_t *config,
 {
     _config_set_list (config, "new", "tags", list, length,
 		     &(config->new_tags));
+}
+
+void
+notmuch_config_set_new_ignore (notmuch_config_t *config,
+			       const char *list[],
+			       size_t length)
+{
+    _config_set_list (config, "new", "ignore", list, length,
+		     &(config->new_ignore));
+}
+
+const char **
+notmuch_config_get_search_exclude_tags (notmuch_config_t *config, size_t *length)
+{
+    return _config_get_list (config, "search", "exclude_tags",
+			     &(config->search_exclude_tags),
+			     &(config->search_exclude_tags_length), length);
+}
+
+void
+notmuch_config_set_search_exclude_tags (notmuch_config_t *config,
+				      const char *list[],
+				      size_t length)
+{
+    _config_set_list (config, "search", "exclude_tags", list, length,
+		      &(config->search_exclude_tags));
 }
 
 /* Given a configuration item of the form <group>.<key> return the

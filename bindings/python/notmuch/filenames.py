@@ -17,11 +17,19 @@ along with notmuch.  If not, see <http://www.gnu.org/licenses/>.
 Copyright 2010 Sebastian Spaeth <Sebastian@SSpaeth.de>'
 """
 from ctypes import c_char_p
-from notmuch.globals import (nmlib, STATUS, NotmuchError,
-    NotmuchFilenamesP, NotmuchMessageP)
+from notmuch.globals import (
+    nmlib,
+    NotmuchMessageP,
+    NotmuchFilenamesP,
+    Python3StringMixIn,
+)
+from .errors import (
+    NullPointerError,
+    NotInitializedError,
+)
 
 
-class Filenames(object):
+class Filenames(Python3StringMixIn):
     """Represents a list of filenames as returned by notmuch
 
     This object contains the Filenames iterator. The main function is
@@ -29,9 +37,9 @@ class Filenames(object):
     iterator over a list of notmuch filenames. Do note that the underlying
     library only provides a one-time iterator (it cannot reset the iterator to
     the start). Thus iterating over the function will "exhaust" the list of
-    tags, and a subsequent iteration attempt will raise a :exc:`NotmuchError`
-    STATUS.NOT_INITIALIZED. Also note, that any function that uses iteration
-    (nearly all) will also exhaust the tags. So both::
+    tags, and a subsequent iteration attempt will raise a
+    :exc:`NotInitializedError`. Also note, that any function that uses
+    iteration (nearly all) will also exhaust the tags. So both::
 
       for name in filenames: print name
 
@@ -61,8 +69,8 @@ class Filenames(object):
              will almost never instantiate a :class:`Tags` object
              herself. They are usually handed back as a result,
              e.g. in :meth:`Database.get_all_tags`.  *tags_p* must be
-             valid, we will raise an :exc:`NotmuchError`
-             (STATUS.NULL_POINTER) if it is `None`.
+             valid, we will raise an :exc:`NullPointerError`
+             if it is `None`.
         :type files_p: :class:`ctypes.c_void_p`
         :param parent: The parent object (ie :class:`Message` these
              filenames are derived from, and saves a
@@ -70,11 +78,15 @@ class Filenames(object):
              once all derived objects are dead.
         """
         if not files_p:
-            raise NotmuchError(STATUS.NULL_POINTER)
+            raise NullPointerError()
 
-        self._files = files_p
+        self._files_p = files_p
         #save reference to parent object so we keep it alive
         self._parent = parent
+
+    def __iter__(self):
+        """ Make Filenames an iterator """
+        return self
 
     _valid = nmlib.notmuch_filenames_valid
     _valid.argtypes = [NotmuchFilenamesP]
@@ -84,22 +96,30 @@ class Filenames(object):
     _move_to_next.argtypes = [NotmuchFilenamesP]
     _move_to_next.restype = None
 
+    def __next__(self):
+        if not self._files_p:
+            raise NotInitializedError()
+
+        if not self._valid(self._files_p):
+            self._files_p = None
+            raise StopIteration
+
+        file_ = Filenames._get(self._files_p)
+        self._move_to_next(self._files_p)
+        return file_.decode('utf-8', 'ignore')
+    next = __next__ # python2.x iterator protocol compatibility
+
     def as_generator(self):
         """Return generator of Filenames
 
         This is the main function that will usually be used by the
-        user."""
-        if self._files is None:
-            raise NotmuchError(STATUS.NOT_INITIALIZED)
+        user.
 
-        while self._valid(self._files):
-            yield Filenames._get(self._files)
-            self._move_to_next(self._files)
-
-        self._files = None
-
-    def __str__(self):
-        return unicode(self).encode('utf-8')
+        .. deprecated:: 0.12
+                        :class:`Filenames` objects implement the
+                        iterator protocol.
+        """
+        return self
 
     def __unicode__(self):
         """Represent Filenames() as newline-separated list of full paths
@@ -107,7 +127,7 @@ class Filenames(object):
         .. note:: As this iterates over the filenames, we will not be
                able to iterate over them again (as in retrieve them)! If
                the tags have been exhausted already, this will raise a
-               :exc:`NotmuchError` STATUS.NOT_INITIALIZED on subsequent
+               :exc:`NotInitializedError` on subsequent
                attempts. However, you can use
                :meth:`Message.get_filenames` repeatedly to perform
                various actions on filenames.
@@ -120,5 +140,30 @@ class Filenames(object):
 
     def __del__(self):
         """Close and free the notmuch filenames"""
-        if self._files is not None:
-            self._destroy(self._files)
+        if self._files_p is not None:
+            self._destroy(self._files_p)
+
+    def __len__(self):
+        """len(:class:`Filenames`) returns the number of contained files
+
+        .. note::
+
+            As this iterates over the files, we will not be able to
+            iterate over them again! So this will fail::
+
+                 #THIS FAILS
+                 files = Database().get_directory('').get_child_files()
+                 if len(files) > 0:  # this 'exhausts' msgs
+                     # next line raises
+                     # NotmuchError(:attr:`STATUS`.NOT_INITIALIZED)
+                     for file in files: print file
+        """
+        if not self._files_p:
+            raise NotInitializedError()
+
+        i = 0
+        while self._valid(self._files_p):
+            self._move_to_next(self._files_p)
+            i += 1
+        self._files_p = None
+        return i

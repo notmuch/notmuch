@@ -33,6 +33,7 @@ TESTS="
   thread-naming
   raw
   reply
+  reply-to-sender
   dump-restore
   uuencode
   thread-order
@@ -42,6 +43,7 @@ TESTS="
   encoding
   emacs
   emacs-large-search-buffer
+  emacs-subject-to-filename
   maildir-sync
   crypto
   symbol-hiding
@@ -50,6 +52,9 @@ TESTS="
   python
   hooks
   argument-parsing
+  emacs-test-functions
+  emacs-address-cleaning
+  emacs-show
 "
 TESTS=${NOTMUCH_TESTS:=$TESTS}
 

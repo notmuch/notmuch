@@ -17,7 +17,12 @@ import stat
 import email
 
 from notmuch import Database, Query, NotmuchError, STATUS
-from ConfigParser import SafeConfigParser
+try:
+    # python3.x
+    from configparser import SafeConfigParser
+except ImportError:
+    # python2.x
+    from ConfigParser import SafeConfigParser
 from cStringIO import StringIO
 
 PREFIX = re.compile('(\w+):(.*$)')

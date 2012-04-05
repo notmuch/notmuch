@@ -1,0 +1,38 @@
+.TH NOTMUCH-TAG 1 2012-03-19 "Notmuch 0.12"
+.SH NAME
+notmuch-tag \- Add/remove tags for all messages matching the search terms.
+
+.SH SYNOPSIS
+.B notmuch tag
+.RI  "+<" tag> "|\-<" tag "> [...] [\-\-] <" search-term ">..."
+
+.SH DESCRIPTION
+
+Add/remove tags for all messages matching the search terms.
+
+See \fBnotmuch-search-terms\fR(7)
+for details of the supported syntax for <search-terms>.
+
+Tags prefixed by '+' are added while those prefixed by '\-' are
+removed. For each message, tag removal is performed before tag
+addition.
+
+The beginning of <search-terms> is recognized by the first
+argument that begins with neither '+' nor '\-'. Support for
+an initial search term beginning with '+' or '\-' is provided
+by allowing the user to specify a "\-\-" argument to separate
+the tags from the search terms.
+
+.B "notmuch tag"
+updates the maildir flags according to tag changes if the
+.B "maildir.synchronize_flags"
+configuration option is enabled. See \fBnotmuch-config\fR(1) for
+details.
+
+.SH SEE ALSO
+
+\fBnotmuch\fR(1), \fBnotmuch-config\fR(1), \fBnotmuch-count\fR(1),
+\fBnotmuch-dump\fR(1), \fBnotmuch-hooks\fR(5), \fBnotmuch-new\fR(1),
+\fBnotmuch-reply\fR(1), \fBnotmuch-restore\fR(1),
+\fBnotmuch-search\fR(1), \fBnotmuch-search-terms\fR(7),
+\fBnotmuch-show\fR(1),

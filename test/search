@@ -79,8 +79,11 @@ output=$(notmuch search 'subject:"subject search test (phrase)"' | notmuch_searc
 test_expect_equal "$output" "thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; subject search test (phrase) (inbox unread)"
 
 test_begin_subtest 'Search for all messages ("*")'
-output=$(notmuch search '*' | notmuch_search_sanitize)
-test_expect_equal "$output" "thread:XXX   2009-11-18 [1/1] Chris Wilson; [notmuch] [PATCH 1/2] Makefile: evaluate pkg-config once (inbox unread)
+notmuch search '*' | notmuch_search_sanitize > OUTPUT
+cat <<EOF >EXPECTED
+thread:XXX   2010-12-29 [1/1] François Boulogne; [aur-general] Guidelines: cp, mkdir vs install (inbox unread)
+thread:XXX   2010-12-16 [1/1] Olivier Berger; Essai accentué (inbox unread)
+thread:XXX   2009-11-18 [1/1] Chris Wilson; [notmuch] [PATCH 1/2] Makefile: evaluate pkg-config once (inbox unread)
 thread:XXX   2009-11-18 [2/2] Alex Botero-Lowry, Carl Worth; [notmuch] [PATCH] Error out if no query is supplied to search instead of going into an infinite loop (attachment inbox unread)
 thread:XXX   2009-11-18 [2/2] Ingmar Vanhassel, Carl Worth; [notmuch] [PATCH] Typsos (inbox unread)
 thread:XXX   2009-11-18 [3/3] Adrian Perez de Castro, Keith Packard, Carl Worth; [notmuch] Introducing myself (inbox signed unread)
@@ -99,7 +102,7 @@ thread:XXX   2009-11-18 [1/1] Jan Janak; [notmuch] [PATCH] notmuch new: Support 
 thread:XXX   2009-11-18 [1/1] Stewart Smith; [notmuch] [PATCH] count_files: sort directory in inode order before statting (inbox unread)
 thread:XXX   2009-11-18 [1/1] Stewart Smith; [notmuch] [PATCH 2/2] Read mail directory in inode number order (inbox unread)
 thread:XXX   2009-11-18 [1/1] Stewart Smith; [notmuch] [PATCH] Fix linking with gcc to use g++ to link in C++ libs. (inbox unread)
-thread:XXX   2009-11-18 [2/2] Lars Kellogg-Stedman; [notmuch] \"notmuch help\" outputs to stderr? (attachment inbox signed unread)
+thread:XXX   2009-11-18 [2/2] Lars Kellogg-Stedman; [notmuch] "notmuch help" outputs to stderr? (attachment inbox signed unread)
 thread:XXX   2009-11-17 [1/1] Mikhail Gusarov; [notmuch] [PATCH] Handle rename of message file (inbox unread)
 thread:XXX   2009-11-17 [2/2] Alex Botero-Lowry, Carl Worth; [notmuch] preliminary FreeBSD support (attachment inbox unread)
 thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; body search (inbox unread)
@@ -117,11 +120,38 @@ thread:XXX   2000-01-01 [1/1] Search By From Name; search by from (name) (inbox 
 thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; search by to (address) (inbox unread)
 thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; search by to (name) (inbox unread)
 thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; subject search test (phrase) (inbox unread)
-thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; this phrase should not match the subject search test (inbox unread)"
+thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; this phrase should not match the subject search test (inbox unread)
+EOF
+test_expect_equal_file OUTPUT EXPECTED
 
 test_begin_subtest "Search body (utf-8):"
 add_message '[subject]="utf8-message-body-subject"' '[date]="Sat, 01 Jan 2000 12:00:00 -0000"' '[body]="message body utf8: bödý"'
 output=$(notmuch search "bödý" | notmuch_search_sanitize)
 test_expect_equal "$output" "thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; utf8-message-body-subject (inbox unread)"
+
+test_begin_subtest "Exclude \"deleted\" messages from search"
+notmuch config set search.exclude_tags = deleted
+generate_message '[subject]="Not deleted"'
+generate_message '[subject]="Deleted"'
+notmuch new > /dev/null
+notmuch tag +deleted id:$gen_msg_id
+output=$(notmuch search subject:deleted | notmuch_search_sanitize)
+test_expect_equal "$output" "thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; Not deleted (inbox unread)"
+
+test_begin_subtest "Exclude \"deleted\" messages from search, overridden"
+output=$(notmuch search subject:deleted and tag:deleted | notmuch_search_sanitize)
+test_expect_equal "$output" "thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; Deleted (deleted inbox unread)"
+
+test_begin_subtest "Exclude \"deleted\" messages from threads"
+add_message '[subject]="Not deleted reply"' '[in-reply-to]="<$gen_msg_id>"'
+output=$(notmuch search subject:deleted | notmuch_search_sanitize)
+test_expect_equal "$output" "thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; Not deleted (inbox unread)
+thread:XXX   2001-01-05 [1/2] Notmuch Test Suite; Not deleted reply (deleted inbox unread)"
+
+test_begin_subtest "Don't exclude \"deleted\" messages from search if not configured"
+notmuch config set search.exclude_tags
+output=$(notmuch search subject:deleted | notmuch_search_sanitize)
+test_expect_equal "$output" "thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; Not deleted (inbox unread)
+thread:XXX   2001-01-05 [2/2] Notmuch Test Suite; Deleted (deleted inbox unread)"
 
 test_done

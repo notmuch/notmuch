@@ -28,25 +28,26 @@
 
 (defcustom notmuch-mua-send-hook '(notmuch-mua-message-send-hook)
   "Hook run before sending messages."
-  :group 'notmuch
-  :type 'hook)
+  :type 'hook
+  :group 'notmuch-send
+  :group 'notmuch-hooks)
 
 (defcustom notmuch-mua-user-agent-function 'notmuch-mua-user-agent-full
   "Function used to generate a `User-Agent:' string. If this is
 `nil' then no `User-Agent:' will be generated."
-  :group 'notmuch
   :type '(choice (const :tag "No user agent string" nil)
 		 (const :tag "Full" notmuch-mua-user-agent-full)
 		 (const :tag "Notmuch" notmuch-mua-user-agent-notmuch)
 		 (const :tag "Emacs" notmuch-mua-user-agent-emacs)
 		 (function :tag "Custom user agent function"
-			   :value notmuch-mua-user-agent-full)))
+			   :value notmuch-mua-user-agent-full))
+  :group 'notmuch-send)
 
 (defcustom notmuch-mua-hidden-headers '("^User-Agent:")
   "Headers that are added to the `message-mode' hidden headers
 list."
-  :group 'notmuch
-  :type '(repeat string))
+  :type '(repeat string)
+  :group 'notmuch-send)
 
 ;;
 
@@ -71,12 +72,15 @@ list."
 	    (push header message-hidden-headers)))
 	notmuch-mua-hidden-headers))
 
-(defun notmuch-mua-reply (query-string &optional sender)
+(defun notmuch-mua-reply (query-string &optional sender reply-all)
   (let (headers
 	body
 	(args '("reply")))
     (if notmuch-show-process-crypto
 	(setq args (append args '("--decrypt"))))
+    (if reply-all
+	(setq args (append args '("--reply-to=all")))
+      (setq args (append args '("--reply-to=sender"))))
     (setq args (append args (list query-string)))
     ;; This make assumptions about the output of `notmuch reply', but
     ;; really only that the headers come first followed by a blank
@@ -91,6 +95,9 @@ list."
 	      (goto-char (point-min))
 	      (setq headers (mail-header-extract)))))
       (forward-line 1)
+      ;; Original message may contain (malicious) MML tags. We must
+      ;; properly quote them in the reply.
+      (mml-quote-region (point) (point-max))
       (setq body (buffer-substring (point) (point-max))))
     ;; If sender is non-nil, set the From: header to its value.
     (when sender
@@ -108,15 +115,11 @@ list."
     (if (re-search-backward message-signature-separator nil t)
 	  (forward-line -1)
       (goto-char (point-max)))
-    (insert body))
+    (insert body)
+    (push-mark))
   (set-buffer-modified-p nil)
 
-  (message-goto-body)
-  ;; Original message may contain (malicious) MML tags.  We must
-  ;; properly quote them in the reply.  Note that using `point-max'
-  ;; instead of `mark' here is wrong.  The buffer may include user's
-  ;; signature which should not be MML-quoted.
-  (mml-quote-region (point) (point-max)))
+  (message-goto-body))
 
 (defun notmuch-mua-forward-message ()
   (message-forward)
@@ -158,16 +161,16 @@ OTHER-ARGS are passed through to `message-mail'."
 
 If this variable is left unset, then a list will be constructed from the
 name and addresses configured in the notmuch configuration file."
-  :group 'notmuch
-  :type '(repeat string))
+  :type '(repeat string)
+  :group 'notmuch-send)
 
 (defcustom notmuch-always-prompt-for-sender nil
   "Always prompt for the From: address when composing or forwarding a message.
 
 This is not taken into account when replying to a message, because in that case
 the From: header is already filled in by notmuch."
-  :group 'notmuch
-  :type 'boolean)
+  :type 'boolean
+  :group 'notmuch-send)
 
 (defvar notmuch-mua-sender-history nil)
 
@@ -222,13 +225,13 @@ the From: address first."
 	(notmuch-mua-forward-message))
     (notmuch-mua-forward-message)))
 
-(defun notmuch-mua-new-reply (query-string &optional prompt-for-sender)
+(defun notmuch-mua-new-reply (query-string &optional prompt-for-sender reply-all)
   "Invoke the notmuch reply window."
   (interactive "P")
   (let ((sender
 	 (when prompt-for-sender
 	   (notmuch-mua-prompt-for-sender))))
-    (notmuch-mua-reply query-string sender)))
+    (notmuch-mua-reply query-string sender reply-all)))
 
 (defun notmuch-mua-send-and-exit (&optional arg)
   (interactive "P")

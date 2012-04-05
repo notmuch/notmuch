@@ -117,10 +117,10 @@ test_expect_equal "$output" "No new mail. Removed 3 messages."
 test_begin_subtest "New symlink to directory"
 
 rm -rf "${MAIL_DIR}"/.notmuch
-mv "${MAIL_DIR}" "$PWD"/actual_maildir
+mv "${MAIL_DIR}" "${TMP_DIRECTORY}"/actual_maildir
 
 mkdir "${MAIL_DIR}"
-ln -s "$PWD"/actual_maildir "${MAIL_DIR}"/symlink
+ln -s "${TMP_DIRECTORY}"/actual_maildir "${MAIL_DIR}"/symlink
 
 output=$(NOTMUCH_NEW)
 test_expect_equal "$output" "Added 1 new message to the database."
@@ -128,7 +128,7 @@ test_expect_equal "$output" "Added 1 new message to the database."
 
 test_begin_subtest "New symlink to a file"
 generate_message
-external_msg_filename="$PWD"/external/"$(basename "$gen_msg_filename")"
+external_msg_filename="${TMP_DIRECTORY}"/external/"$(basename "$gen_msg_filename")"
 mkdir -p "$(dirname "$external_msg_filename")"
 mv "$gen_msg_filename" "$external_msg_filename"
 ln -s "$external_msg_filename" "$gen_msg_filename"
@@ -152,5 +152,26 @@ rm -rf "${MAIL_DIR}"/two
 
 output=$(NOTMUCH_NEW)
 test_expect_equal "$output" "No new mail. Removed 3 messages."
+
+# This test requires that notmuch new has been run at least once.
+test_begin_subtest "Skip and report non-mail files"
+generate_message
+mkdir -p "${MAIL_DIR}"/.git && touch "${MAIL_DIR}"/.git/config
+touch "${MAIL_DIR}"/ignored_file
+touch "${MAIL_DIR}"/.ignored_hidden_file
+output=$(NOTMUCH_NEW 2>&1)
+test_expect_equal "$output" \
+"Note: Ignoring non-mail file: ${MAIL_DIR}/.git/config
+Note: Ignoring non-mail file: ${MAIL_DIR}/.ignored_hidden_file
+Note: Ignoring non-mail file: ${MAIL_DIR}/ignored_file
+Added 1 new message to the database."
+
+test_begin_subtest "Ignore files and directories specified in new.ignore"
+generate_message
+notmuch config set new.ignore .git ignored_file .ignored_hidden_file
+touch "${MAIL_DIR}"/.git # change .git's mtime for notmuch new to rescan.
+output=$(NOTMUCH_NEW 2>&1)
+test_expect_equal "$output" "Added 1 new message to the database."
+
 
 test_done

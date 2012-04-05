@@ -28,7 +28,8 @@
 single argument and output a list of possible matches, one per
 line."
   :type 'string
-  :group 'notmuch)
+  :group 'notmuch-send
+  :group 'notmuch-external)
 
 (defvar notmuch-address-message-alist-member
   '("^\\(Resent-\\)?\\(To\\|B?Cc\\|Reply-To\\|From\\|Mail-Followup-To\\|Mail-Copies-To\\):"
@@ -37,9 +38,9 @@ line."
 (defvar notmuch-address-history nil)
 
 (defun notmuch-address-message-insinuate ()
-  (if (not (memq notmuch-address-message-alist-member message-completion-alist))
-      (setq message-completion-alist
-	    (push notmuch-address-message-alist-member message-completion-alist))))
+  (unless (memq notmuch-address-message-alist-member message-completion-alist)
+    (setq message-completion-alist
+	  (push notmuch-address-message-alist-member message-completion-alist))))
 
 (defun notmuch-address-options (original)
   (process-lines notmuch-address-command original))

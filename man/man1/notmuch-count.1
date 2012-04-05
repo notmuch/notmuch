@@ -1,0 +1,50 @@
+.TH NOTMUCH-COUNT 1 2012-03-19 "Notmuch 0.12"
+.SH NAME
+notmuch-count \- Count messages matching the given search terms.
+.SH SYNOPSIS
+
+.B notmuch count
+.RI  [ options "... ] <" search-term ">..."
+
+.SH DESCRIPTION
+
+Count messages matching the search terms.
+
+The number of matching messages (or threads) is output to stdout.
+
+With no search terms, a count of all messages (or threads) in the database will
+be displayed.
+
+See \fBnotmuch-search-terms\fR(7)
+for details of the supported syntax for <search-terms>.
+
+Supported options for
+.B count
+include
+.RS 4
+.TP 4
+.B \-\-output=(messages|threads)
+
+.RS 4
+.TP 4
+.B messages
+
+Output the number of matching messages. This is the default.
+.RE
+.RS 4
+.TP 4
+.B threads
+
+Output the number of matching threads.
+.RE
+.RE
+.RE
+.RE
+
+.SH SEE ALSO
+
+\fBnotmuch\fR(1), \fBnotmuch-config\fR(1), \fBnotmuch-dump\fR(1),
+\fBnotmuch-hooks\fR(5), \fBnotmuch-new\fR(1), \fBnotmuch-reply\fR(1),
+\fBnotmuch-restore\fR(1), \fBnotmuch-search\fR(1),
+\fBnotmuch-search-terms\fR(7), \fBnotmuch-show\fR(1),
+\fBnotmuch-tag\fR(1)

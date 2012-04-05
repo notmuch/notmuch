@@ -31,7 +31,7 @@ For example, if you wanted to add a \"replied\" tag and remove
 the \"inbox\" and \"todo\", you would set
     (\"replied\" \"-inbox\" \"-todo\"\)"
   :type 'list
-  :group 'notmuch)
+  :group 'notmuch-send)
 
 (defun notmuch-message-mark-replied ()
   ;; get the in-reply-to header and parse it for the message id.

@@ -53,7 +53,7 @@ endif
 FINAL_LIBNOTMUCH_LDFLAGS = $(LDFLAGS) $(AS_NEEDED_LDFLAGS) $(CONFIGURE_LDFLAGS)
 
 .PHONY: all
-all: notmuch notmuch-shared notmuch.1.gz
+all: notmuch notmuch-shared
 ifeq ($(MAKECMDGOALS),)
 ifeq ($(shell cat .first-build-message 2>/dev/null),)
 	@NOTMUCH_FIRST_BUILD=1 $(MAKE) --no-print-directory all
@@ -95,8 +95,7 @@ dist: $(TAR_FILE)
 
 .PHONY: update-versions
 
-update-versions:
-	sed -i "s/^.TH NOTMUCH 1.*$$/.TH NOTMUCH 1 ${DATE} \"Notmuch ${VERSION}\"/" notmuch.1
+update-versions: update-man-versions
 	sed -i "s/^__VERSION__[[:blank:]]*=.*$$/__VERSION__ = \'${VERSION}\'/" $(PV_FILE)
 
 # We invoke make recursively only to force ordering of our phony
@@ -221,14 +220,6 @@ verify-version-python: verify-version-components
 		 echo "Please edit version and $(PV_FILE) to have consistent versions." && false)
 	@echo "Good."
 
-.PHONY: verify-version-manpage
-verify-version-manpage: verify-version-components
-	@echo -n "Checking that manual page version is $(VERSION)..."
-	@[ "$(VERSION)" = $$(sed -n '/^[.]TH NOTMUCH 1/{s/.*"Notmuch //;s/".*//p;}' notmuch.1) ] || \
-		(echo "No." && \
-		 echo "Please edit version and notmuch.1 to have consistent versions." && false)
-	@echo "Good."
-
 .PHONY: verify-version-components
 verify-version-components:
 	@echo -n "Checking that $(VERSION) consists only of digits and periods..."
@@ -282,10 +273,6 @@ quiet ?= $($(shell echo $1 | sed -e s'/ .*//'))
 	sed 's,'$$(basename $*)'\.o[ :]*,$*.o $@ : ,g' < $@.$$$$ > $@; \
 	rm -f $@.$$$$
 
-DEPS := $(SRCS:%.c=.deps/%.d)
-DEPS := $(DEPS:%.cc=.deps/%.d)
--include $(DEPS)
-
 .PHONY : clean
 clean:
 	rm -f $(CLEAN); rm -rf .deps
@@ -315,6 +302,7 @@ notmuch_client_srcs =		\
 	notmuch-time.c		\
 	query-string.c		\
 	show-message.c		\
+	mime-node.c		\
 	json.c
 
 notmuch_client_modules = $(notmuch_client_srcs:.c=.o)
@@ -325,13 +313,8 @@ notmuch: $(notmuch_client_modules) lib/libnotmuch.a util/libutil.a
 notmuch-shared: $(notmuch_client_modules) lib/$(LINKER_NAME)
 	$(call quiet,$(FINAL_NOTMUCH_LINKER) $(CFLAGS)) $(notmuch_client_modules) $(FINAL_NOTMUCH_LDFLAGS) -o $@
 
-notmuch.1.gz: notmuch.1
-	gzip --stdout $^ > $@
-
 .PHONY: install
-install: all notmuch.1.gz
-	mkdir -p "$(DESTDIR)$(mandir)/man1"
-	install -m0644 notmuch.1.gz "$(DESTDIR)$(mandir)/man1/"
+install: all install-man
 	mkdir -p "$(DESTDIR)$(prefix)/bin/"
 	install notmuch-shared "$(DESTDIR)$(prefix)/bin/notmuch"
 ifeq ($(MAKECMDGOALS), install)
@@ -362,4 +345,8 @@ install-desktop:
 	desktop-file-install --mode 0644 --dir "$(DESTDIR)$(desktop_dir)" notmuch.desktop
 
 SRCS  := $(SRCS) $(notmuch_client_srcs)
-CLEAN := $(CLEAN) notmuch notmuch-shared $(notmuch_client_modules) notmuch.elc notmuch.1.gz
+CLEAN := $(CLEAN) notmuch notmuch-shared $(notmuch_client_modules) notmuch.elc
+
+DEPS := $(SRCS:%.c=.deps/%.d)
+DEPS := $(DEPS:%.cc=.deps/%.d)
+-include $(DEPS)

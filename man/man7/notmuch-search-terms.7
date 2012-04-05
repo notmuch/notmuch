@@ -1,0 +1,140 @@
+.TH NOTMUCH-SEARCH-TERMS 7 2012-03-19 "Notmuch 0.12"
+
+.SH NAME
+notmuch-search-terms \- Syntax for notmuch queries
+
+.SH SYNOPSIS
+
+.B notmuch count
+.RI  [ options... ]
+.RI  < search-term ">..."
+
+.B "notmuch dump"
+.RI "[ <" filename "> ] [--]"
+.RI "[ <" search-term ">...]"
+
+.B notmuch search
+.RI  [  options "...] <" search-term ">..."
+
+.B notmuch show
+.RI "[" options "...] <" search-term ">..."
+
+.B notmuch tag
+.RI  "+<" tag> "|\-<" tag "> [...] [\-\-] <" search-term ">..."
+
+
+.SH DESCRIPTION
+Several notmuch commands accept a common syntax for search terms.
+
+The search terms can consist of free-form text (and quoted phrases)
+which will match all messages that contain all of the given
+terms/phrases in the body, the subject, or any of the sender or
+recipient headers.
+
+As a special case, a search string consisting of exactly a single
+asterisk ("*") will match all messages.
+
+In addition to free text, the following prefixes can be used to force
+terms to match against specific portions of an email, (where
+<brackets> indicate user-supplied values):
+
+	from:<name-or-address>
+
+	to:<name-or-address>
+
+	subject:<word-or-quoted-phrase>
+
+	attachment:<word>
+
+	tag:<tag> (or is:<tag>)
+
+	id:<message-id>
+
+	thread:<thread-id>
+
+	folder:<directory-path>
+
+The
+.B from:
+prefix is used to match the name or address of the sender of an email
+message.
+
+The
+.B to:
+prefix is used to match the names or addresses of any recipient of an
+email message, (whether To, Cc, or Bcc).
+
+Any term prefixed with
+.B subject:
+will match only text from the subject of an email. Searching for a
+phrase in the subject is supported by including quotation marks around
+the phrase, immediately following
+.BR subject: .
+
+The
+.B attachment:
+prefix can be used to search for specific filenames (or extensions) of
+attachments to email messages.
+
+For
+.BR tag: " and " is:
+valid tag values include
+.BR inbox " and " unread
+by default for new messages added by
+.B notmuch new
+as well as any other tag values added manually with
+.BR "notmuch tag" .
+
+For
+.BR id: ,
+message ID values are the literal contents of the Message\-ID: header
+of email messages, but without the '<', '>' delimiters.
+
+The
+.B thread:
+prefix can be used with the thread ID values that are generated
+internally by notmuch (and do not appear in email messages). These
+thread ID values can be seen in the first column of output from
+.B "notmuch search"
+
+The
+.B folder:
+prefix can be used to search for email message files that are
+contained within particular directories within the mail store. Only
+the directory components below the top-level mail database path are
+available to be searched.
+
+In addition to individual terms, multiple terms can be
+combined with Boolean operators (
+.BR and ", " or ", " not
+, etc.). Each term in the query will be implicitly connected by a
+logical AND if no explicit operator is provided, (except that terms
+with a common prefix will be implicitly combined with OR until we get
+Xapian defect #402 fixed).
+
+Parentheses can also be used to control the combination of the Boolean
+operators, but will have to be protected from interpretation by the
+shell, (such as by putting quotation marks around any parenthesized
+expression).
+
+Finally, results can be restricted to only messages within a
+particular time range, (based on the Date: header) with a syntax of:
+
+	<initial-timestamp>..<final-timestamp>
+
+Each timestamp is a number representing the number of seconds since
+1970\-01\-01 00:00:00 UTC. This is not the most convenient means of
+expressing date ranges, but until notmuch is fixed to accept a more
+convenient form, one can use the date program to construct
+timestamps. For example, with the bash shell the following syntax would
+specify a date range to return messages from 2009\-10\-01 until the
+current time:
+
+	$(date +%s \-d 2009\-10\-01)..$(date +%s)
+
+.SH SEE ALSO
+
+\fBnotmuch\fR(1), \fBnotmuch-config\fR(1), \fBnotmuch-count\fR(1),
+\fBnotmuch-dump\fR(1), \fBnotmuch-hooks\fR(5), \fBnotmuch-new\fR(1),
+\fBnotmuch-reply\fR(1), \fBnotmuch-restore\fR(1),
+\fBnotmuch-search\fR(1), \fBnotmuch-show\fR(1), \fBnotmuch-tag\fR(1)

@@ -121,9 +121,9 @@ Date: Fri, 05 Jan 2001 15:43:57 +0000
 part{ ID: 2, Content-type: multipart/mixed
 part{ ID: 3, Content-type: message/rfc822
 header{
+Subject: html message
 From: Carl Worth <cworth@cworth.org>
 To: cworth@cworth.org
-Subject: html message
 Date: Fri, 05 Jan 2001 15:42:57 +0000
 header}
 body{
@@ -162,9 +162,9 @@ cat <<EOF >EXPECTED
 part{ ID: 2, Content-type: multipart/mixed
 part{ ID: 3, Content-type: message/rfc822
 header{
+Subject: html message
 From: Carl Worth <cworth@cworth.org>
 To: cworth@cworth.org
-Subject: html message
 Date: Fri, 05 Jan 2001 15:42:57 +0000
 header}
 body{
@@ -200,9 +200,9 @@ cat <<EOF >EXPECTED
 part{ ID: 2, Content-type: multipart/mixed
 part{ ID: 3, Content-type: message/rfc822
 header{
+Subject: html message
 From: Carl Worth <cworth@cworth.org>
 To: cworth@cworth.org
-Subject: html message
 Date: Fri, 05 Jan 2001 15:42:57 +0000
 header}
 body{
@@ -233,9 +233,9 @@ notmuch show --format=text --part=3 'id:87liy5ap00.fsf@yoom.home.cworth.org' >OU
 cat <<EOF >EXPECTED
 part{ ID: 3, Content-type: message/rfc822
 header{
+Subject: html message
 From: Carl Worth <cworth@cworth.org>
 To: cworth@cworth.org
-Subject: html message
 Date: Fri, 05 Jan 2001 15:42:57 +0000
 header}
 body{
@@ -452,9 +452,9 @@ notmuch show --format=raw --part=1 'id:87liy5ap00.fsf@yoom.home.cworth.org' >OUT
 # output should *not* include newline
 echo >>OUTPUT
 cat <<EOF >EXPECTED
+Subject: html message
 From: Carl Worth <cworth@cworth.org>
 To: cworth@cworth.org
-Subject: html message
 Date: Fri, 05 Jan 2001 15:42:57 +0000
 
 <p>This is an embedded message, with a multipart/alternative part.</p>
@@ -476,9 +476,9 @@ test_expect_equal_file OUTPUT EXPECTED
 test_begin_subtest "--format=raw --part=2, multipart/mixed"
 notmuch show --format=raw --part=2 'id:87liy5ap00.fsf@yoom.home.cworth.org' >OUTPUT
 cat <<EOF >EXPECTED
+Subject: html message
 From: Carl Worth <cworth@cworth.org>
 To: cworth@cworth.org
-Subject: html message
 Date: Fri, 05 Jan 2001 15:42:57 +0000
 
 <p>This is an embedded message, with a multipart/alternative part.</p>
