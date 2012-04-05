@@ -427,7 +427,7 @@ case a simple command will install everything you need. For example:
 
 On Debian and similar systems:
 
-	sudo apt-get install libxapian-dev libgmime-2.4-dev libtalloc-dev
+	sudo apt-get install libxapian-dev libgmime-2.6-dev libtalloc-dev
 
 Or on Fedora and similar systems:
 
