@@ -99,6 +99,7 @@ typedef struct notmuch_show_format {
 
 typedef struct notmuch_show_params {
     notmuch_bool_t entire_thread;
+    notmuch_bool_t omit_excluded;
     notmuch_bool_t raw;
     int part;
 #ifdef GMIME_ATLEAST_26

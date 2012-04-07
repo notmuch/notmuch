@@ -866,6 +866,7 @@ show_messages (void *ctx,
 {
     notmuch_message_t *message;
     notmuch_bool_t match;
+    notmuch_bool_t excluded;
     int first_set = 1;
     int next_indent;
     notmuch_status_t status, res = NOTMUCH_STATUS_SUCCESS;
@@ -885,10 +886,11 @@ show_messages (void *ctx,
 	message = notmuch_messages_get (messages);
 
 	match = notmuch_message_get_flag (message, NOTMUCH_MESSAGE_FLAG_MATCH);
+	excluded = notmuch_message_get_flag (message, NOTMUCH_MESSAGE_FLAG_EXCLUDED);
 
 	next_indent = indent;
 
-	if (match || params->entire_thread) {
+	if ((match && (!excluded || !params->omit_excluded)) || params->entire_thread) {
 	    status = show_message (ctx, format, message, indent, params);
 	    if (status && !res)
 		res = status;
@@ -996,6 +998,12 @@ enum {
     NOTMUCH_FORMAT_RAW
 };
 
+/* The following is to allow future options to be added more easily */
+enum {
+    EXCLUDE_TRUE,
+    EXCLUDE_FALSE,
+};
+
 int
 notmuch_show_command (void *ctx, unused (int argc), unused (char *argv[]))
 {
@@ -1005,10 +1013,10 @@ notmuch_show_command (void *ctx, unused (int argc), unused (char *argv[]))
     char *query_string;
     int opt_index, ret;
     const notmuch_show_format_t *format = &format_text;
-    notmuch_show_params_t params = { .part = -1 };
+    notmuch_show_params_t params = { .part = -1, .omit_excluded = TRUE };
     int format_sel = NOTMUCH_FORMAT_NOT_SPECIFIED;
     notmuch_bool_t verify = FALSE;
-    notmuch_bool_t no_exclude = FALSE;
+    int exclude = EXCLUDE_TRUE;
 
     notmuch_opt_desc_t options[] = {
 	{ NOTMUCH_OPT_KEYWORD, &format_sel, "format", 'f',
@@ -1017,11 +1025,14 @@ notmuch_show_command (void *ctx, unused (int argc), unused (char *argv[]))
 				  { "mbox", NOTMUCH_FORMAT_MBOX },
 				  { "raw", NOTMUCH_FORMAT_RAW },
 				  { 0, 0 } } },
+        { NOTMUCH_OPT_KEYWORD, &exclude, "exclude", 'x',
+          (notmuch_keyword_t []){ { "true", EXCLUDE_TRUE },
+                                  { "false", EXCLUDE_FALSE },
+                                  { 0, 0 } } },
 	{ NOTMUCH_OPT_INT, &params.part, "part", 'p', 0 },
 	{ NOTMUCH_OPT_BOOLEAN, &params.entire_thread, "entire-thread", 't', 0 },
 	{ NOTMUCH_OPT_BOOLEAN, &params.decrypt, "decrypt", 'd', 0 },
 	{ NOTMUCH_OPT_BOOLEAN, &verify, "verify", 'v', 0 },
-	{ NOTMUCH_OPT_BOOLEAN, &no_exclude, "no-exclude", 'n', 0 },
 	{ 0, 0, 0, 0, 0 }
     };
 
@@ -1110,28 +1121,29 @@ notmuch_show_command (void *ctx, unused (int argc), unused (char *argv[]))
 	return 1;
     }
 
-    /* if format=mbox then we can not output excluded messages as
-     * there is no way to make the exclude flag available */
-    if (format_sel == NOTMUCH_FORMAT_MBOX)
-	notmuch_query_set_omit_excluded_messages (query, TRUE);
-
     /* If a single message is requested we do not use search_excludes. */
     if (params.part >= 0)
 	ret = do_show_single (ctx, query, format, &params);
     else {
-	if (!no_exclude) {
-	    const char **search_exclude_tags;
-	    size_t search_exclude_tags_length;
-	    unsigned int i;
+	/* We always apply set the exclude flag. The
+	 * exclude=true|false option controls whether or not we return
+	 * threads that only match in an excluded message */
+	const char **search_exclude_tags;
+	size_t search_exclude_tags_length;
+	unsigned int i;
 
-	    search_exclude_tags = notmuch_config_get_search_exclude_tags
-		(config, &search_exclude_tags_length);
-	    for (i = 0; i < search_exclude_tags_length; i++)
-		notmuch_query_add_tag_exclude (query, search_exclude_tags[i]);
+	search_exclude_tags = notmuch_config_get_search_exclude_tags
+	    (config, &search_exclude_tags_length);
+	for (i = 0; i < search_exclude_tags_length; i++)
+	    notmuch_query_add_tag_exclude (query, search_exclude_tags[i]);
+
+	if (exclude == EXCLUDE_FALSE) {
+	    notmuch_query_set_omit_excluded (query, FALSE);
+	    params.omit_excluded = FALSE;
 	}
+
 	ret = do_show (ctx, query, format, &params);
     }
-
 
     notmuch_query_destroy (query);
     notmuch_database_close (notmuch);

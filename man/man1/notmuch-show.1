@@ -135,9 +135,21 @@ content.
 
 .RS 4
 .TP 4
-.B \-\-no-exclude
+.BR \-\-exclude=(true|false)
 
-Do not exclude the messages matching search.exclude_tags in the config file.
+Specify whether to omit threads only matching search.tag_exclude from
+the search results (the default) or not. In either case the excluded
+message will be marked with the exclude flag (except when output=mbox
+when there is nowhere to put the flag).
+
+If --entire-thread is specified then complete threads are returned
+regardless (with the excluded flag being set when appropriate) but
+threads that only match in an excluded message are not returned when
+.B --exclude=true.
+
+The default is
+.B --exclude=true.
+
 .RE
 
 A common use of
