@@ -37,25 +37,4 @@ test_expect_equal \
     "0" \
     "`notmuch count --output=threads ${SEARCH}`"
 
-test_begin_subtest "count excluding \"deleted\" messages"
-notmuch config set search.exclude_tags deleted
-generate_message '[subject]="Not deleted"'
-generate_message '[subject]="Another not deleted"'
-generate_message '[subject]="Deleted"'
-notmuch new > /dev/null
-notmuch tag +deleted id:$gen_msg_id
-test_expect_equal \
-    "2" \
-    "`notmuch count subject:deleted`"
-
-test_begin_subtest "count \"deleted\" messages, exclude overridden"
-test_expect_equal \
-    "1" \
-    "`notmuch count subject:deleted and tag:deleted`"
-
-test_begin_subtest "count \"deleted\" messages, --exclude=false"
-test_expect_equal \
-    "3" \
-    "`notmuch count --exclude=false subject:deleted`"
-
 test_done

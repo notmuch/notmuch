@@ -27,6 +27,7 @@ TESTS="
   search-position-overlap-bug
   search-insufficient-from-quoting
   search-limiting
+  excludes
   tagging
   json
   multipart
