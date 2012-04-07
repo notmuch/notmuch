@@ -1060,13 +1060,15 @@ function is used."
 		       (append (list "\'") basic-args
 			       (list "and (" notmuch-show-query-context ")\'"))
 		     (append (list "\'") basic-args (list "\'")))))
-	(notmuch-show-insert-forest (notmuch-query-get-threads args))
+	(notmuch-show-insert-forest (notmuch-query-get-threads
+				     (cons "--exclude=false" args)))
 	;; If the query context reduced the results to nothing, run
 	;; the basic query.
 	(when (and (eq (buffer-size) 0)
 		   notmuch-show-query-context)
 	  (notmuch-show-insert-forest
-	   (notmuch-query-get-threads basic-args))))
+	   (notmuch-query-get-threads
+	    (cons "--exclude=false" basic-args)))))
 
       (jit-lock-register #'notmuch-show-buttonise-links)
 
