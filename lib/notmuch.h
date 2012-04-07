@@ -449,12 +449,25 @@ typedef enum {
 const char *
 notmuch_query_get_query_string (notmuch_query_t *query);
 
-/* Specify whether to results should omit the excluded results rather
- * than just marking them excluded. This is useful for passing a
- * notmuch_messages_t not containing the excluded messages to other
- * functions. */
+/* Specify whether to omit excluded results or simply flag them.  By
+ * default, this is set to TRUE.
+ *
+ * If this is TRUE, notmuch_query_search_messages will omit excluded
+ * messages from the results.  notmuch_query_search_threads will omit
+ * threads that match only in excluded messages, but will include all
+ * messages in threads that match in at least one non-excluded
+ * message.
+ *
+ * The performance difference when calling
+ * notmuch_query_search_messages should be relatively small (and both
+ * should be very fast).  However, in some cases,
+ * notmuch_query_search_threads is very much faster when omitting
+ * excluded messages as it does not need to construct the threads that
+ * only match in excluded messages.
+ */
+
 void
-notmuch_query_set_omit_excluded_messages (notmuch_query_t *query, notmuch_bool_t omit);
+notmuch_query_set_omit_excluded (notmuch_query_t *query, notmuch_bool_t omit_excluded);
 
 /* Specify the sorting desired for this query. */
 void

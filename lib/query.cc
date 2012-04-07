@@ -28,7 +28,7 @@ struct _notmuch_query {
     const char *query_string;
     notmuch_sort_t sort;
     notmuch_string_list_t *exclude_terms;
-    notmuch_bool_t omit_excluded_messages;
+    notmuch_bool_t omit_excluded;
 };
 
 typedef struct _notmuch_mset_messages {
@@ -92,7 +92,7 @@ notmuch_query_create (notmuch_database_t *notmuch,
 
     query->exclude_terms = _notmuch_string_list_create (query);
 
-    query->omit_excluded_messages = FALSE;
+    query->omit_excluded = TRUE;
 
     return query;
 }
@@ -104,9 +104,9 @@ notmuch_query_get_query_string (notmuch_query_t *query)
 }
 
 void
-notmuch_query_set_omit_excluded_messages (notmuch_query_t *query, notmuch_bool_t omit)
+notmuch_query_set_omit_excluded (notmuch_query_t *query, notmuch_bool_t omit_excluded)
 {
-    query->omit_excluded_messages = omit;
+    query->omit_excluded = omit_excluded;
 }
 
 void
@@ -220,7 +220,7 @@ notmuch_query_search_messages (notmuch_query_t *query)
 	if (query->exclude_terms) {
 	    exclude_query = _notmuch_exclude_tags (query, final_query);
 
-	    if (query->omit_excluded_messages)
+	    if (query->omit_excluded)
 		final_query = Xapian::Query (Xapian::Query::OP_AND_NOT,
 					     final_query, exclude_query);
 	    else {
