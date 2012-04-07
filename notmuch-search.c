@@ -210,9 +210,6 @@ do_search_threads (const search_format_t *format,
     int first_thread = 1;
     int i;
 
-    if (output == OUTPUT_THREADS)
-	notmuch_query_set_omit_excluded_messages (query, TRUE);
-
     if (offset < 0) {
 	offset += notmuch_query_count_threads (query);
 	if (offset < 0)
@@ -303,8 +300,6 @@ do_search_messages (const search_format_t *format,
     int first_message = 1;
     int i;
 
-    notmuch_query_set_omit_excluded_messages (query, TRUE);
-
     if (offset < 0) {
 	offset += notmuch_query_count_messages (query);
 	if (offset < 0)
@@ -376,7 +371,6 @@ do_search_tags (notmuch_database_t *notmuch,
     const char *tag;
     int first_tag = 1;
 
-    notmuch_query_set_omit_excluded_messages (query, TRUE);
     /* should the following only special case if no excluded terms
      * specified? */
 
@@ -422,6 +416,12 @@ do_search_tags (notmuch_database_t *notmuch,
     return 0;
 }
 
+enum {
+    EXCLUDE_TRUE,
+    EXCLUDE_FALSE,
+    EXCLUDE_FLAG,
+};
+
 int
 notmuch_search_command (void *ctx, int argc, char *argv[])
 {
@@ -435,7 +435,7 @@ notmuch_search_command (void *ctx, int argc, char *argv[])
     output_t output = OUTPUT_SUMMARY;
     int offset = 0;
     int limit = -1; /* unlimited */
-    notmuch_bool_t no_exclude = FALSE;
+    int exclude = EXCLUDE_TRUE;
     unsigned int i;
 
     enum { NOTMUCH_FORMAT_JSON, NOTMUCH_FORMAT_TEXT }
@@ -457,7 +457,11 @@ notmuch_search_command (void *ctx, int argc, char *argv[])
 				  { "files", OUTPUT_FILES },
 				  { "tags", OUTPUT_TAGS },
 				  { 0, 0 } } },
-	{ NOTMUCH_OPT_BOOLEAN, &no_exclude, "no-exclude", 'd', 0 },
+        { NOTMUCH_OPT_KEYWORD, &exclude, "exclude", 'x',
+          (notmuch_keyword_t []){ { "true", EXCLUDE_TRUE },
+                                  { "false", EXCLUDE_FALSE },
+                                  { "flag", EXCLUDE_FLAG },
+                                  { 0, 0 } } },
 	{ NOTMUCH_OPT_INT, &offset, "offset", 'O', 0 },
 	{ NOTMUCH_OPT_INT, &limit, "limit", 'L', 0  },
 	{ 0, 0, 0, 0, 0 }
@@ -505,7 +509,15 @@ notmuch_search_command (void *ctx, int argc, char *argv[])
 
     notmuch_query_set_sort (query, sort);
 
-    if (!no_exclude) {
+    if (exclude == EXCLUDE_FLAG && output != OUTPUT_SUMMARY) {
+	/* If we are not doing summary output there is nowhere to
+	 * print the excluded flag so fall back on including the
+	 * excluded messages. */
+	fprintf (stderr, "Warning: this output format cannot flag excluded messages.\n");
+	exclude = EXCLUDE_FALSE;
+    }
+
+    if (exclude == EXCLUDE_TRUE || exclude == EXCLUDE_FLAG) {
 	const char **search_exclude_tags;
 	size_t search_exclude_tags_length;
 
@@ -513,6 +525,8 @@ notmuch_search_command (void *ctx, int argc, char *argv[])
 	    (config, &search_exclude_tags_length);
 	for (i = 0; i < search_exclude_tags_length; i++)
 	    notmuch_query_add_tag_exclude (query, search_exclude_tags[i]);
+	if (exclude == EXCLUDE_FLAG)
+	    notmuch_query_set_omit_excluded (query, FALSE);
     }
 
     switch (output) {
