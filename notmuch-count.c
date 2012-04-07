@@ -26,6 +26,12 @@ enum {
     OUTPUT_MESSAGES,
 };
 
+/* The following is to allow future options to be added more easily */
+enum {
+    EXCLUDE_TRUE,
+    EXCLUDE_FALSE,
+};
+
 int
 notmuch_count_command (void *ctx, int argc, char *argv[])
 {
@@ -35,7 +41,7 @@ notmuch_count_command (void *ctx, int argc, char *argv[])
     char *query_str;
     int opt_index;
     int output = OUTPUT_MESSAGES;
-    notmuch_bool_t no_exclude = FALSE;
+    int exclude = EXCLUDE_TRUE;
     unsigned int i;
 
     notmuch_opt_desc_t options[] = {
@@ -43,7 +49,10 @@ notmuch_count_command (void *ctx, int argc, char *argv[])
 	  (notmuch_keyword_t []){ { "threads", OUTPUT_THREADS },
 				  { "messages", OUTPUT_MESSAGES },
 				  { 0, 0 } } },
-	{ NOTMUCH_OPT_BOOLEAN, &no_exclude, "no-exclude", 'd', 0 },
+	{ NOTMUCH_OPT_KEYWORD, &exclude, "exclude", 'x',
+	  (notmuch_keyword_t []){ { "true", EXCLUDE_TRUE },
+				  { "false", EXCLUDE_FALSE },
+				  { 0, 0 } } },
 	{ 0, 0, 0, 0, 0 }
     };
 
@@ -78,7 +87,7 @@ notmuch_count_command (void *ctx, int argc, char *argv[])
 	return 1;
     }
 
-    if (!no_exclude) {
+    if (exclude == EXCLUDE_TRUE) {
 	const char **search_exclude_tags;
 	size_t search_exclude_tags_length;
 
@@ -87,8 +96,6 @@ notmuch_count_command (void *ctx, int argc, char *argv[])
 	for (i = 0; i < search_exclude_tags_length; i++)
 	    notmuch_query_add_tag_exclude (query, search_exclude_tags[i]);
     }
-
-    notmuch_query_set_omit_excluded_messages (query, TRUE);
 
     switch (output) {
     case OUTPUT_MESSAGES:

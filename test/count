@@ -53,9 +53,9 @@ test_expect_equal \
     "1" \
     "`notmuch count subject:deleted and tag:deleted`"
 
-test_begin_subtest "count \"deleted\" messages, with --no-exclude"
+test_begin_subtest "count \"deleted\" messages, --exclude=false"
 test_expect_equal \
     "3" \
-    "`notmuch count --no-exclude subject:deleted`"
+    "`notmuch count --exclude=false subject:deleted`"
 
 test_done
