@@ -815,46 +815,20 @@ show_message (void *ctx,
 	      int indent,
 	      notmuch_show_params_t *params)
 {
-    if (format->part) {
-	void *local = talloc_new (ctx);
-	mime_node_t *root, *part;
-	notmuch_status_t status;
+    void *local = talloc_new (ctx);
+    mime_node_t *root, *part;
+    notmuch_status_t status;
 
-	status = mime_node_open (local, message, params->cryptoctx,
-				 params->decrypt, &root);
-	if (status)
-	    goto DONE;
-	part = mime_node_seek_dfs (root, (params->part < 0 ? 0 : params->part));
-	if (part)
-	    status = format->part (local, part, indent, params);
-      DONE:
-	talloc_free (local);
-	return status;
-    }
-
-    if (params->part <= 0) {
-	fputs (format->message_start, stdout);
-	if (format->message)
-	    format->message(ctx, message, indent);
-
-	fputs (format->header_start, stdout);
-	if (format->header)
-	    format->header(ctx, message);
-	fputs (format->header_end, stdout);
-
-	fputs (format->body_start, stdout);
-    }
-
-    if (format->part_content)
-	show_message_body (message, format, params);
-
-    if (params->part <= 0) {
-	fputs (format->body_end, stdout);
-
-	fputs (format->message_end, stdout);
-    }
-
-    return NOTMUCH_STATUS_SUCCESS;
+    status = mime_node_open (local, message, params->cryptoctx,
+			     params->decrypt, &root);
+    if (status)
+	goto DONE;
+    part = mime_node_seek_dfs (root, (params->part < 0 ? 0 : params->part));
+    if (part)
+	status = format->part (local, part, indent, params);
+  DONE:
+    talloc_free (local);
+    return status;
 }
 
 static notmuch_status_t
