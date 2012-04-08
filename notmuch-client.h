@@ -185,11 +185,6 @@ char *
 query_string_from_args (void *ctx, int argc, char *argv[]);
 
 notmuch_status_t
-show_message_body (notmuch_message_t *message,
-		   const notmuch_show_format_t *format,
-		   notmuch_show_params_t *params);
-
-notmuch_status_t
 show_one_part (const char *filename, int part);
 
 void

@@ -301,7 +301,6 @@ notmuch_client_srcs =		\
 	notmuch-tag.c		\
 	notmuch-time.c		\
 	query-string.c		\
-	show-message.c		\
 	mime-node.c		\
 	json.c
 
