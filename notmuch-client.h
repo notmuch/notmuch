@@ -70,29 +70,6 @@ typedef struct notmuch_show_format {
     notmuch_status_t (*part) (const void *ctx,
 			      struct mime_node *node, int indent,
 			      const struct notmuch_show_params *params);
-    const char *message_start;
-    void (*message) (const void *ctx,
-		     notmuch_message_t *message,
-		     int indent);
-    const char *header_start;
-    void (*header) (const void *ctx,
-		    notmuch_message_t *message);
-    void (*header_message_part) (GMimeMessage *message);
-    const char *header_end;
-    const char *body_start;
-    void (*part_start) (GMimeObject *part,
-			int *part_count);
-    void (*part_encstatus) (int status);
-#ifdef GMIME_ATLEAST_26
-    void (*part_sigstatus) (GMimeSignatureList* siglist);
-#else
-    void (*part_sigstatus) (const GMimeSignatureValidity* validity);
-#endif
-    void (*part_content) (GMimeObject *part);
-    void (*part_end) (GMimeObject *part);
-    const char *part_sep;
-    const char *body_end;
-    const char *message_end;
     const char *message_set_sep;
     const char *message_set_end;
 } notmuch_show_format_t;
