@@ -26,10 +26,7 @@ format_part_text (const void *ctx, mime_node_t *node,
 		  int indent, const notmuch_show_params_t *params);
 
 static const notmuch_show_format_t format_text = {
-    .message_set_start = "",
     .part = format_part_text,
-    .message_set_sep = "",
-    .message_set_end = ""
 };
 
 static notmuch_status_t
@@ -48,10 +45,7 @@ format_part_mbox (const void *ctx, mime_node_t *node,
 		  int indent, const notmuch_show_params_t *params);
 
 static const notmuch_show_format_t format_mbox = {
-    .message_set_start = "",
     .part = format_part_mbox,
-    .message_set_sep = "",
-    .message_set_end = ""
 };
 
 static notmuch_status_t
@@ -60,10 +54,7 @@ format_part_raw (unused (const void *ctx), mime_node_t *node,
 		 unused (const notmuch_show_params_t *params));
 
 static const notmuch_show_format_t format_raw = {
-    .message_set_start = "",
     .part = format_part_raw,
-    .message_set_sep = "",
-    .message_set_end = ""
 };
 
 static const char *
