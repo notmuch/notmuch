@@ -845,17 +845,19 @@ show_messages (void *ctx,
     int next_indent;
     notmuch_status_t status, res = NOTMUCH_STATUS_SUCCESS;
 
-    fputs (format->message_set_start, stdout);
+    if (format->message_set_start)
+	fputs (format->message_set_start, stdout);
 
     for (;
 	 notmuch_messages_valid (messages);
 	 notmuch_messages_move_to_next (messages))
     {
-	if (!first_set)
+	if (!first_set && format->message_set_sep)
 	    fputs (format->message_set_sep, stdout);
 	first_set = 0;
 
-	fputs (format->message_set_start, stdout);
+	if (format->message_set_start)
+	    fputs (format->message_set_start, stdout);
 
 	message = notmuch_messages_get (messages);
 
@@ -870,7 +872,7 @@ show_messages (void *ctx,
 		res = status;
 	    next_indent = indent + 1;
 
-	    if (!status)
+	    if (!status && format->message_set_sep)
 		fputs (format->message_set_sep, stdout);
 	}
 
@@ -884,10 +886,12 @@ show_messages (void *ctx,
 
 	notmuch_message_destroy (message);
 
-	fputs (format->message_set_end, stdout);
+	if (format->message_set_end)
+	    fputs (format->message_set_end, stdout);
     }
 
-    fputs (format->message_set_end, stdout);
+    if (format->message_set_end)
+	fputs (format->message_set_end, stdout);
 
     return res;
 }
@@ -933,7 +937,8 @@ do_show (void *ctx,
     int first_toplevel = 1;
     notmuch_status_t status, res = NOTMUCH_STATUS_SUCCESS;
 
-    fputs (format->message_set_start, stdout);
+    if (format->message_set_start)
+	fputs (format->message_set_start, stdout);
 
     for (threads = notmuch_query_search_threads (query);
 	 notmuch_threads_valid (threads);
@@ -947,7 +952,7 @@ do_show (void *ctx,
 	    INTERNAL_ERROR ("Thread %s has no toplevel messages.\n",
 			    notmuch_thread_get_thread_id (thread));
 
-	if (!first_toplevel)
+	if (!first_toplevel && format->message_set_sep)
 	    fputs (format->message_set_sep, stdout);
 	first_toplevel = 0;
 
@@ -959,7 +964,8 @@ do_show (void *ctx,
 
     }
 
-    fputs (format->message_set_end, stdout);
+    if (format->message_set_end)
+	fputs (format->message_set_end, stdout);
 
     return res != NOTMUCH_STATUS_SUCCESS;
 }
