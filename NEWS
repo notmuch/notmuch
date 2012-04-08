@@ -41,6 +41,17 @@ Tag exclusion
 
     notmuch config set search.exclude_tags deleted spam
 
+Raw show format changes
+
+  The output of show --format=raw has changed for multipart and
+  message parts.  Previously, the output was a mash of somewhat-parsed
+  headers and transfer-decoded bodies.  Now, such parts are reproduced
+  faithfully from the original source.  Message parts (which includes
+  part 0) output the full message, including the message headers (but
+  not the transfer headers).  Multipart parts output the part as
+  encoded in the original message, including the part's headers.  Leaf
+  parts, as before, output the part's transfer-decoded body.
+
 Emacs Interface
 ---------------
 
