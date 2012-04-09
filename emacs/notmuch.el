@@ -85,6 +85,8 @@ For example:
 `notmuch-read-tag-changes' function.")
 
 (defun notmuch-tag-completions (&optional search-terms)
+  (if (null search-terms)
+      (setq search-terms (list "*")))
   (split-string
    (with-output-to-string
      (with-current-buffer standard-output
