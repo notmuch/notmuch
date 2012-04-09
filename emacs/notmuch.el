@@ -89,7 +89,7 @@ For example:
    (with-output-to-string
      (with-current-buffer standard-output
        (apply 'call-process notmuch-command nil t
-	      nil "search-tags" search-terms)))
+	      nil "search" "--output=tags" search-terms)))
    "\n+" t))
 
 (defun notmuch-select-tag-with-completion (prompt &rest search-terms)
