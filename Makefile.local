@@ -256,22 +256,12 @@ endif
 quiet ?= $($(shell echo $1 | sed -e s'/ .*//'))
 
 %.o: %.cc $(global_deps)
-	$(call quiet,CXX $(CXXFLAGS)) -c $(FINAL_CXXFLAGS) $< -o $@
+	@mkdir -p .deps/$(@D)
+	$(call quiet,CXX $(CXXFLAGS)) -c $(FINAL_CXXFLAGS) $< -o $@ -MD -MP -MF .deps/$*.d
 
 %.o: %.c $(global_deps)
-	$(call quiet,CC $(CFLAGS)) -c $(FINAL_CFLAGS) $< -o $@
-
-.deps/%.d: %.c $(global_deps)
-	@set -e; rm -f $@; mkdir -p $$(dirname $@) ; \
-	$(CC) -M $(CPPFLAGS) $(FINAL_CFLAGS) $< > $@.$$$$ 2>/dev/null ; \
-	sed 's,'$$(basename $*)'\.o[ :]*,$*.o $@ : ,g' < $@.$$$$ > $@; \
-	rm -f $@.$$$$
-
-.deps/%.d: %.cc $(global_deps)
-	@set -e; rm -f $@; mkdir -p $$(dirname $@) ; \
-	$(CXX) -M $(CPPFLAGS) $(FINAL_CXXFLAGS) $< > $@.$$$$ 2>/dev/null ; \
-	sed 's,'$$(basename $*)'\.o[ :]*,$*.o $@ : ,g' < $@.$$$$ > $@; \
-	rm -f $@.$$$$
+	@mkdir -p .deps/$(@D)
+	$(call quiet,CC $(CFLAGS)) -c $(FINAL_CFLAGS) $< -o $@ -MD -MP -MF .deps/$*.d
 
 .PHONY : clean
 clean:
