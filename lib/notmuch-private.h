@@ -495,8 +495,26 @@ notmuch_filenames_t *
 _notmuch_filenames_create (const void *ctx,
 			   notmuch_string_list_t *list);
 
-#pragma GCC visibility pop
-
 NOTMUCH_END_DECLS
+
+#ifdef __cplusplus
+/* Implicit typecast from 'void *' to 'T *' is okay in C, but not in
+ * C++. In talloc_steal, an explicit cast is provided for type safety
+ * in some GCC versions. Otherwise, a cast is required. Provide a
+ * template function for this to maintain type safety, and redefine
+ * talloc_steal to use it.
+ */
+#if !(__GNUC__ >= 3)
+template <class T> T *
+_notmuch_talloc_steal (const void *new_ctx, const T *ptr)
+{
+    return static_cast<T *> (talloc_steal (new_ctx, ptr));
+}
+#undef talloc_steal
+#define talloc_steal _notmuch_talloc_steal
+#endif
+#endif
+
+#pragma GCC visibility pop
 
 #endif
