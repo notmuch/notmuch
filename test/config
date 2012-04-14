@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+
+test_description='"notmuch config"'
+. test-lib.sh
+
+test_begin_subtest "Get string value"
+test_expect_equal "$(notmuch config get user.name)" "Notmuch Test Suite"
+
+test_begin_subtest "Get list value"
+test_expect_equal "$(notmuch config get new.tags)" "\
+unread
+inbox"
+
+test_begin_subtest "Set string value"
+notmuch config set foo.string "this is a string value"
+test_expect_equal "$(notmuch config get foo.string)" "this is a string value"
+
+test_begin_subtest "Set string value again"
+notmuch config set foo.string "this is another string value"
+test_expect_equal "$(notmuch config get foo.string)" "this is another string value"
+
+test_begin_subtest "Set list value"
+notmuch config set foo.list this "is a" "list value"
+test_expect_equal "$(notmuch config get foo.list)" "\
+this
+is a
+list value"
+
+test_begin_subtest "Set list value again"
+notmuch config set foo.list this "is another" "list value"
+test_expect_equal "$(notmuch config get foo.list)" "\
+this
+is another
+list value"
+
+test_begin_subtest "Remove key"
+notmuch config set foo.remove baz
+notmuch config set foo.remove
+test_expect_equal "$(notmuch config get foo.remove)" ""
+
+test_begin_subtest "Remove non-existent key"
+notmuch config set foo.nonexistent
+test_expect_equal "$(notmuch config get foo.nonexistent)" ""
+
+test_done
