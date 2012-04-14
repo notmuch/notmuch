@@ -804,15 +804,26 @@ notmuch_config_command (void *ctx, int argc, char *argv[])
 {
     argc--; argv++; /* skip subcommand argument */
 
-    if (argc < 2) {
-	fprintf (stderr, "Error: notmuch config requires at least two arguments.\n");
+    if (argc < 1) {
+	fprintf (stderr, "Error: notmuch config requires at least one argument.\n");
 	return 1;
     }
 
-    if (strcmp (argv[0], "get") == 0)
+    if (strcmp (argv[0], "get") == 0) {
+	if (argc != 2) {
+	    fprintf (stderr, "Error: notmuch config get requires exactly "
+		     "one argument.\n");
+	    return 1;
+	}
 	return notmuch_config_command_get (ctx, argv[1]);
-    else if (strcmp (argv[0], "set") == 0)
+    } else if (strcmp (argv[0], "set") == 0) {
+	if (argc < 2) {
+	    fprintf (stderr, "Error: notmuch config set requires at least "
+		     "one argument.\n");
+	    return 1;
+	}
 	return notmuch_config_command_set (ctx, argv[1], argc - 2, argv + 2);
+    }
 
     fprintf (stderr, "Unrecognized argument for notmuch config: %s\n",
 	     argv[0]);
