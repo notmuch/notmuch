@@ -751,7 +751,7 @@ notmuch_config_command_get (void *ctx, char *item)
 	for (i = 0; i < length; i++)
 	    printf ("%s\n", value[i]);
 
-	free (value);
+	g_strfreev (value);
     }
 
     notmuch_config_close (config);
