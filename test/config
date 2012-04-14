@@ -43,7 +43,6 @@ notmuch config set foo.nonexistent
 test_expect_equal "$(notmuch config get foo.nonexistent)" ""
 
 test_begin_subtest "List all items"
-test_subtest_known_broken
 notmuch config set database.path "/canonical/path"
 output=$(notmuch config list)
 test_expect_equal "$output" "\

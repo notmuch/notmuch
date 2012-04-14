@@ -799,6 +799,51 @@ notmuch_config_command_set (void *ctx, char *item, int argc, char *argv[])
     return ret;
 }
 
+static int
+notmuch_config_command_list (void *ctx)
+{
+    notmuch_config_t *config;
+    char **groups;
+    size_t g, groups_length;
+
+    config = notmuch_config_open (ctx, NULL, NULL);
+    if (config == NULL)
+	return 1;
+
+    groups = g_key_file_get_groups (config->key_file, &groups_length);
+    if (groups == NULL)
+	return 1;
+
+    for (g = 0; g < groups_length; g++) {
+	char **keys;
+	size_t k, keys_length;
+
+	keys = g_key_file_get_keys (config->key_file,
+				    groups[g], &keys_length, NULL);
+	if (keys == NULL)
+	    continue;
+
+	for (k = 0; k < keys_length; k++) {
+	    char *value;
+
+	    value = g_key_file_get_string (config->key_file,
+					   groups[g], keys[k], NULL);
+	    if (value != NULL) {
+		printf ("%s.%s=%s\n", groups[g], keys[k], value);
+		free (value);
+	    }
+	}
+
+	g_strfreev (keys);
+    }
+
+    g_strfreev (groups);
+
+    notmuch_config_close (config);
+
+    return 0;
+}
+
 int
 notmuch_config_command (void *ctx, int argc, char *argv[])
 {
@@ -823,6 +868,8 @@ notmuch_config_command (void *ctx, int argc, char *argv[])
 	    return 1;
 	}
 	return notmuch_config_command_set (ctx, argv[1], argc - 2, argv + 2);
+    } else if (strcmp (argv[0], "list") == 0) {
+	return notmuch_config_command_list (ctx);
     }
 
     fprintf (stderr, "Unrecognized argument for notmuch config: %s\n",
