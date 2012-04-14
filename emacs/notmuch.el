@@ -523,13 +523,10 @@ and will also appear in a buffer named \"*Notmuch errors*\"."
 See `notmuch-search-tag-region' for details."
   (apply 'notmuch-search-tag-region (point) (point) tag-changes))
 
-(defun notmuch-search-tag-region (beg end &rest tag-changes)
-  "Change tags for threads in the given region.
-
-TAGS is a list of tag operations for `notmuch-tag'.  The tags are
-added or removed for all threads in the region from BEG to END."
+(defun notmuch-search-tag-region (beg end &optional tag-changes)
+  "Change tags for threads in the given region."
   (let ((search-string (notmuch-search-find-thread-id-region-search beg end)))
-    (apply 'notmuch-tag search-string tag-changes)
+    (setq tag-changes (funcall 'notmuch-tag search-string tag-changes))
     (save-excursion
       (let ((last-line (line-number-at-pos end))
 	    (max-line (- (line-number-at-pos (point-max)) 2)))
@@ -539,14 +536,14 @@ added or removed for all threads in the region from BEG to END."
 	   (notmuch-update-tags (notmuch-search-get-tags) tag-changes))
 	  (forward-line))))))
 
-(defun notmuch-search-tag (&optional initial-input)
-  "Change tags for the currently selected thread or region."
+(defun notmuch-search-tag (&optional tag-changes)
+  "Change tags for the currently selected thread or region.
+
+See `notmuch-tag' for information on the format of TAG-CHANGES."
   (interactive)
   (let* ((beg (if (region-active-p) (region-beginning) (point)))
-	 (end (if (region-active-p) (region-end) (point)))
-	 (search-string (notmuch-search-find-thread-id-region-search beg end))
-	 (tags (notmuch-read-tag-changes initial-input search-string)))
-    (apply 'notmuch-search-tag-region beg end tags)))
+	 (end (if (region-active-p) (region-end) (point))))
+    (funcall 'notmuch-search-tag-region beg end tag-changes)))
 
 (defun notmuch-search-add-tag ()
   "Same as `notmuch-search-tag' but sets initial input to '+'."
@@ -789,18 +786,11 @@ non-authors is found, assume that all of the authors match."
 	      (goto-char found-target)))
       (delete-process proc))))
 
-(defun notmuch-search-tag-all (&rest tag-changes)
-  "Add/remove tags from all matching messages.
+(defun notmuch-search-tag-all (&optional tag-changes)
+  "Add/remove tags from all messages in current search buffer.
 
-This command adds or removes tags from all messages matching the
-current search terms. When called interactively, this command
-will prompt for tags to be added or removed. Tags prefixed with
-'+' will be added and tags prefixed with '-' will be removed.
-
-Each character of the tag name may consist of alphanumeric
-characters as well as `_.+-'.
-"
-  (interactive (notmuch-read-tag-changes))
+See `notmuch-tag' for information on the format of TAG-CHANGES."
+  (interactive)
   (apply 'notmuch-tag notmuch-search-query-string tag-changes))
 
 (defun notmuch-search-buffer-title (query)
