@@ -108,18 +108,26 @@ from TAGS if present."
 	   (error "Changed tag must be of the form `+this_tag' or `-that_tag'")))))
     (sort result-tags 'string<)))
 
-(defun notmuch-tag (query &rest tag-changes)
+(defun notmuch-tag (query &optional tag-changes)
   "Add/remove tags in TAG-CHANGES to messages matching QUERY.
 
-TAG-CHANGES should be a list of strings of the form \"+tag\" or
-\"-tag\" and QUERY should be a string containing the
-search-query.
+QUERY should be a string containing the search-terms.
+TAG-CHANGES can take multiple forms.  If TAG-CHANGES is a list of
+strings of the form \"+tag\" or \"-tag\" then those are the tag
+changes applied.  If TAG-CHANGES is a string then it is
+interpreted as a single tag change.  If TAG-CHANGES is the string
+\"-\" or \"+\", or null, then the user is prompted to enter the
+tag changes.
 
 Note: Other code should always use this function alter tags of
 messages instead of running (notmuch-call-notmuch-process \"tag\" ..)
 directly, so that hooks specified in notmuch-before-tag-hook and
 notmuch-after-tag-hook will be run."
   ;; Perform some validation
+  (if (string-or-null-p tag-changes)
+      (if (or (string= tag-changes "-") (string= tag-changes "+") (null tag-changes))
+	  (setq tag-changes (notmuch-read-tag-changes tag-changes query))
+	(setq tag-changes (list tag-changes))))
   (mapc (lambda (tag-change)
 	  (unless (string-match-p "^[-+]\\S-+$" tag-change)
 	    (error "Tag must be of the form `+this_tag' or `-that_tag'")))
@@ -128,7 +136,9 @@ notmuch-after-tag-hook will be run."
     (run-hooks 'notmuch-before-tag-hook)
     (apply 'notmuch-call-notmuch-process "tag"
 	   (append tag-changes (list "--" query)))
-    (run-hooks 'notmuch-after-tag-hook)))
+    (run-hooks 'notmuch-after-tag-hook))
+  ;; in all cases we return tag-changes as a list
+  tag-changes)
 
 ;;
 
