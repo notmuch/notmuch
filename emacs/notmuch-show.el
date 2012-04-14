@@ -1653,22 +1653,26 @@ TAG-CHANGES is a list of tag operations for `notmuch-tag'."
   (let* ((current-tags (notmuch-show-get-tags))
 	 (new-tags (notmuch-update-tags current-tags tag-changes)))
     (unless (equal current-tags new-tags)
-      (apply 'notmuch-tag (notmuch-show-get-message-id) tag-changes)
+      (funcall 'notmuch-tag (notmuch-show-get-message-id) tag-changes)
       (notmuch-show-set-tags new-tags))))
 
-(defun notmuch-show-tag (&optional initial-input)
-  "Change tags for the current message, read input from the minibuffer."
+(defun notmuch-show-tag (&optional tag-changes)
+  "Change tags for the current message.
+
+See `notmuch-tag' for information on the format of TAG-CHANGES."
   (interactive)
-  (let ((tag-changes (notmuch-read-tag-changes
-		      initial-input (notmuch-show-get-message-id))))
-    (apply 'notmuch-show-tag-message tag-changes)))
+  (setq tag-changes (funcall 'notmuch-tag (notmuch-show-get-message-id) tag-changes))
+  (let* ((current-tags (notmuch-show-get-tags))
+	 (new-tags (notmuch-update-tags current-tags tag-changes)))
+    (unless (equal current-tags new-tags)
+      (notmuch-show-set-tags new-tags))))
 
-(defun notmuch-show-tag-all (&rest tag-changes)
-  "Change tags for all messages in the current buffer.
+(defun notmuch-show-tag-all (&optional tag-changes)
+  "Change tags for all messages in the current show buffer.
 
-TAG-CHANGES is a list of tag operations for `notmuch-tag'."
-  (interactive (notmuch-read-tag-changes nil notmuch-show-thread-id))
-  (apply 'notmuch-tag (notmuch-show-get-messages-ids-search) tag-changes)
+See `notmuch-tag' for information on the format of TAG-CHANGES."
+  (interactive)
+  (setq tag-changes (funcall 'notmuch-tag (notmuch-show-get-messages-ids-search) tag-changes))
   (notmuch-show-mapc
    (lambda ()
      (let* ((current-tags (notmuch-show-get-tags))
