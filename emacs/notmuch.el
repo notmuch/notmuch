@@ -517,12 +517,6 @@ and will also appear in a buffer named \"*Notmuch errors*\"."
 	(forward-line 1))
       output)))
 
-(defun notmuch-search-tag-thread (&rest tag-changes)
-  "Change tags for the currently selected thread.
-
-See `notmuch-search-tag-region' for details."
-  (apply 'notmuch-search-tag-region (point) (point) tag-changes))
-
 (defun notmuch-search-tag-region (beg end &optional tag-changes)
   "Change tags for threads in the given region."
   (let ((search-string (notmuch-search-find-thread-id-region-search beg end)))
@@ -560,7 +554,7 @@ See `notmuch-tag' for information on the format of TAG-CHANGES."
 
 This function advances the next thread when finished."
   (interactive)
-  (notmuch-search-tag-thread "-inbox")
+  (notmuch-search-tag '("-inbox"))
   (notmuch-search-next-thread))
 
 (defvar notmuch-search-process-filter-data nil
