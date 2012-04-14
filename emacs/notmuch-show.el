@@ -30,6 +30,7 @@
 (require 'goto-addr)
 
 (require 'notmuch-lib)
+(require 'notmuch-tag)
 (require 'notmuch-query)
 (require 'notmuch-wash)
 (require 'notmuch-mua)
@@ -38,10 +39,8 @@
 
 (declare-function notmuch-call-notmuch-process "notmuch" (&rest args))
 (declare-function notmuch-fontify-headers "notmuch" nil)
-(declare-function notmuch-read-tag-changes "notmuch" (&optional initial-input &rest search-terms))
 (declare-function notmuch-search-next-thread "notmuch" nil)
 (declare-function notmuch-search-show-thread "notmuch" nil)
-(declare-function notmuch-update-tags "notmuch" (current-tags tag-changes))
 
 (defcustom notmuch-message-headers '("Subject" "To" "Cc" "Date")
   "Headers that should be shown in a message, in this order.

@@ -20,6 +20,7 @@
 ;; Authors: Jesse Rosenthal <jrosenthal@jhu.edu>
 
 (require 'message)
+(require 'notmuch-tag)
 (require 'notmuch-mua)
 
 (defcustom notmuch-message-replied-tags '("replied")
