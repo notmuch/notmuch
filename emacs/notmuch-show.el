@@ -1075,7 +1075,7 @@ function is used."
       (run-hooks 'notmuch-show-hook))
 
     ;; Set the header line to the subject of the first message.
-    (setq header-line-format (notmuch-show-strip-re (notmuch-show-get-pretty-subject)))))
+    (setq header-line-format (notmuch-show-strip-re (notmuch-show-get-subject)))))
 
 (defun notmuch-show-capture-state ()
   "Capture the state of the current buffer.
@@ -1374,9 +1374,6 @@ current thread."
 
 (defun notmuch-show-get-depth ()
   (notmuch-show-get-prop :depth))
-
-(defun notmuch-show-get-pretty-subject ()
-  (notmuch-prettify-subject (notmuch-show-get-subject)))
 
 (defun notmuch-show-set-tags (tags)
   "Set the tags of the current message."

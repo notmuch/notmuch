@@ -507,7 +507,7 @@ Complete list of currently available key bindings:
   "Display the currently selected thread."
   (interactive)
   (let ((thread-id (notmuch-search-find-thread-id))
-	(subject (notmuch-prettify-subject (notmuch-search-find-subject))))
+	(subject (notmuch-search-find-subject)))
     (if (> (length thread-id) 0)
 	(notmuch-show thread-id
 		      (current-buffer)
@@ -877,8 +877,7 @@ non-authors is found, assume that all of the authors match."
 		      ;; We currently just throw away excluded matches.
 		      (unless (eq (aref count 1) ?0)
 			(let ((beg (point)))
-			  (notmuch-search-show-result date count authors
-						      (notmuch-prettify-subject subject) tags)
+			  (notmuch-search-show-result date count authors subject tags)
 			  (notmuch-search-color-line beg (point) tag-list)
 			  (put-text-property beg (point) 'notmuch-search-thread-id thread-id)
 			  (put-text-property beg (point) 'notmuch-search-authors authors)
