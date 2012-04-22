@@ -779,7 +779,8 @@ remove_filename (notmuch_database_t *notmuch,
 	return status;
     status = notmuch_database_find_message_by_filename (notmuch, path, &message);
     if (status || message == NULL)
-	return status;
+	goto DONE;
+
     status = notmuch_database_remove_message (notmuch, path);
     if (status == NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID) {
 	add_files_state->renamed_messages++;
@@ -790,6 +791,8 @@ remove_filename (notmuch_database_t *notmuch,
 	add_files_state->removed_messages++;
     }
     notmuch_message_destroy (message);
+
+  DONE:
     notmuch_database_end_atomic (notmuch);
     return status;
 }
