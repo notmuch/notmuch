@@ -114,7 +114,7 @@ func NewDatabase(path string) *Database {
  * An existing notmuch database can be identified by the presence of a
  * directory named ".notmuch" below 'path'.
  *
- * The caller should call notmuch_database_close when finished with
+ * The caller should call notmuch_database_destroy when finished with
  * this database.
  *
  * In case of any failure, this function returns NULL, (after printing
@@ -140,7 +140,7 @@ func OpenDatabase(path string, mode DatabaseMode) *Database {
 /* Close the given notmuch database, freeing all associated
  * resources. See notmuch_database_open. */
 func (self *Database) Close() {
-	C.notmuch_database_close(self.db)
+	C.notmuch_database_destroy(self.db)
 }
 
 /* Return the database path of the given database.
