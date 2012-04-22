@@ -110,7 +110,7 @@ notmuch_rb_database_close (VALUE self)
     notmuch_database_t *db;
 
     Data_Get_Notmuch_Database (self, db);
-    notmuch_database_close (db);
+    notmuch_database_destroy (db);
     DATA_PTR (self) = NULL;
 
     return Qnil;
