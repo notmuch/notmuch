@@ -161,8 +161,13 @@ class Database(object):
         else:
             self.create(path)
 
+    _destroy = nmlib.notmuch_database_destroy
+    _destroy.argtypes = [NotmuchDatabaseP]
+    _destroy.restype = None
+
     def __del__(self):
-        self.close()
+        if self._db:
+            self._destroy(self._db)
 
     def _assert_db_is_initialized(self):
         """Raises :exc:`NotInitializedError` if self._db is `None`"""
@@ -218,10 +223,11 @@ class Database(object):
     _close.restype = None
 
     def close(self):
-        """Close and free the notmuch database if needed"""
-        if self._db is not None:
+        '''
+        Closes the notmuch database.
+        '''
+        if self._db:
             self._close(self._db)
-            self._db = None
 
     def __enter__(self):
         '''
