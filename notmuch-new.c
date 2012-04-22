@@ -785,8 +785,10 @@ remove_filename (notmuch_database_t *notmuch,
 	add_files_state->renamed_messages++;
 	if (add_files_state->synchronize_flags == TRUE)
 	    notmuch_message_maildir_flags_to_tags (message);
-    } else
+	status = NOTMUCH_STATUS_SUCCESS;
+    } else if (status == NOTMUCH_STATUS_SUCCESS) {
 	add_files_state->removed_messages++;
+    }
     notmuch_message_destroy (message);
     notmuch_database_end_atomic (notmuch);
     return status;
@@ -794,12 +796,13 @@ remove_filename (notmuch_database_t *notmuch,
 
 /* Recursively remove all filenames from the database referring to
  * 'path' (or to any of its children). */
-static void
+static notmuch_status_t
 _remove_directory (void *ctx,
 		   notmuch_database_t *notmuch,
 		   const char *path,
 		   add_files_state_t *add_files_state)
 {
+    notmuch_status_t status = NOTMUCH_STATUS_SUCCESS;
     notmuch_directory_t *directory;
     notmuch_filenames_t *files, *subdirs;
     char *absolute;
@@ -812,8 +815,10 @@ _remove_directory (void *ctx,
     {
 	absolute = talloc_asprintf (ctx, "%s/%s", path,
 				    notmuch_filenames_get (files));
-	remove_filename (notmuch, absolute, add_files_state);
+	status = remove_filename (notmuch, absolute, add_files_state);
 	talloc_free (absolute);
+	if (status)
+	    goto DONE;
     }
 
     for (subdirs = notmuch_directory_get_child_directories (directory);
@@ -822,11 +827,15 @@ _remove_directory (void *ctx,
     {
 	absolute = talloc_asprintf (ctx, "%s/%s", path,
 				    notmuch_filenames_get (subdirs));
-	_remove_directory (ctx, notmuch, absolute, add_files_state);
+	status = _remove_directory (ctx, notmuch, absolute, add_files_state);
 	talloc_free (absolute);
+	if (status)
+	    goto DONE;
     }
 
+  DONE:
     notmuch_directory_destroy (directory);
+    return status;
 }
 
 int
@@ -944,7 +953,9 @@ notmuch_new_command (void *ctx, int argc, char *argv[])
 
     gettimeofday (&tv_start, NULL);
     for (f = add_files_state.removed_files->head; f && !interrupted; f = f->next) {
-	remove_filename (notmuch, f->filename, &add_files_state);
+	ret = remove_filename (notmuch, f->filename, &add_files_state);
+	if (ret)
+	    goto DONE;
 	if (do_print_progress) {
 	    do_print_progress = 0;
 	    generic_print_progress ("Cleaned up", "messages",
@@ -955,7 +966,9 @@ notmuch_new_command (void *ctx, int argc, char *argv[])
 
     gettimeofday (&tv_start, NULL);
     for (f = add_files_state.removed_directories->head, i = 0; f && !interrupted; f = f->next, i++) {
-	_remove_directory (ctx, notmuch, f->filename, &add_files_state);
+	ret = _remove_directory (ctx, notmuch, f->filename, &add_files_state);
+	if (ret)
+	    goto DONE;
 	if (do_print_progress) {
 	    do_print_progress = 0;
 	    generic_print_progress ("Cleaned up", "directories",
