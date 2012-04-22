@@ -1035,8 +1035,8 @@ notmuch_new_command (void *ctx, int argc, char *argv[])
     printf ("\n");
 
     if (ret)
-	printf ("\nNote: A fatal error was encountered: %s\n",
-		notmuch_status_to_string (ret));
+	fprintf (stderr, "Note: A fatal error was encountered: %s\n",
+		 notmuch_status_to_string (ret));
 
     notmuch_database_close (notmuch);
 
