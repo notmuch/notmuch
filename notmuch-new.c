@@ -308,6 +308,10 @@ add_files_recursive (notmuch_database_t *notmuch,
     if (num_fs_entries == -1) {
 	fprintf (stderr, "Error opening directory %s: %s\n",
 		 path, strerror (errno));
+	/* We consider this a fatal error because, if a user moved a
+	 * message from another directory that we were able to scan
+	 * into this directory, skipping this directory will cause
+	 * that message to be lost. */
 	ret = NOTMUCH_STATUS_FILE_ERROR;
 	goto DONE;
     }
@@ -351,8 +355,10 @@ add_files_recursive (notmuch_database_t *notmuch,
 
 	next = talloc_asprintf (notmuch, "%s/%s", path, entry->d_name);
 	status = add_files_recursive (notmuch, next, state);
-	if (status && ret == NOTMUCH_STATUS_SUCCESS)
+	if (status) {
 	    ret = status;
+	    goto DONE;
+	}
 	talloc_free (next);
 	next = NULL;
     }
@@ -933,6 +939,8 @@ notmuch_new_command (void *ctx, int argc, char *argv[])
     }
 
     ret = add_files (notmuch, db_path, &add_files_state);
+    if (ret)
+	goto DONE;
 
     gettimeofday (&tv_start, NULL);
     for (f = add_files_state.removed_files->head; f && !interrupted; f = f->next) {
@@ -965,6 +973,7 @@ notmuch_new_command (void *ctx, int argc, char *argv[])
 	}
     }
 
+  DONE:
     talloc_free (add_files_state.removed_files);
     talloc_free (add_files_state.removed_directories);
     talloc_free (add_files_state.directory_mtimes);
@@ -1012,10 +1021,9 @@ notmuch_new_command (void *ctx, int argc, char *argv[])
 
     printf ("\n");
 
-    if (ret) {
-	printf ("\nNote: At least one error was encountered: %s\n",
+    if (ret)
+	printf ("\nNote: A fatal error was encountered: %s\n",
 		notmuch_status_to_string (ret));
-    }
 
     notmuch_database_close (notmuch);
 
