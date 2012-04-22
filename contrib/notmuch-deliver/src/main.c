@@ -455,7 +455,7 @@ main(int argc, char **argv)
 	g_strfreev(opt_rtags);
 	g_free(mail);
 
-	notmuch_database_close(db);
+	notmuch_database_destroy(db);
 
 	return 0;
 }
