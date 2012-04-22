@@ -107,7 +107,7 @@ notmuch_count_command (void *ctx, int argc, char *argv[])
     }
 
     notmuch_query_destroy (query);
-    notmuch_database_close (notmuch);
+    notmuch_database_destroy (notmuch);
 
     return 0;
 }

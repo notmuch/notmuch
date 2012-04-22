@@ -192,7 +192,7 @@ notmuch_restore_command (unused (void *ctx), int argc, char *argv[])
     if (line)
 	free (line);
 
-    notmuch_database_close (notmuch);
+    notmuch_database_destroy (notmuch);
     if (input != stdin)
 	fclose (input);
 

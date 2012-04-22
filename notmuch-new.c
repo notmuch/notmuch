@@ -1041,7 +1041,7 @@ notmuch_new_command (void *ctx, int argc, char *argv[])
 	fprintf (stderr, "Note: A fatal error was encountered: %s\n",
 		 notmuch_status_to_string (ret));
 
-    notmuch_database_close (notmuch);
+    notmuch_database_destroy (notmuch);
 
     if (run_hooks && !ret && !interrupted)
 	ret = notmuch_run_hook (db_path, "post-new");

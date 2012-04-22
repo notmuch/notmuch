@@ -238,7 +238,7 @@ notmuch_tag_command (void *ctx, int argc, char *argv[])
 
     ret = tag_query (ctx, notmuch, query_string, tag_ops, synchronize_flags);
 
-    notmuch_database_close (notmuch);
+    notmuch_database_destroy (notmuch);
 
     return ret;
 }

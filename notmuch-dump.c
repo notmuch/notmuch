@@ -116,7 +116,7 @@ notmuch_dump_command (unused (void *ctx), int argc, char *argv[])
 	fclose (output);
 
     notmuch_query_destroy (query);
-    notmuch_database_close (notmuch);
+    notmuch_database_destroy (notmuch);
 
     return 0;
 }

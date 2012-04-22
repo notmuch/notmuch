@@ -1117,7 +1117,7 @@ notmuch_show_command (void *ctx, unused (int argc), unused (char *argv[]))
     }
 
     notmuch_query_destroy (query);
-    notmuch_database_close (notmuch);
+    notmuch_database_destroy (notmuch);
 
     if (params.cryptoctx)
 	g_object_unref(params.cryptoctx);
