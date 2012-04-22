@@ -73,6 +73,18 @@ leaving Mutt.  notmuch-mutt, formerly distributed under the name
 "mutt-notmuch" by Stefano Zacchiroli, will be maintained as a notmuch
 contrib/ from now on.
 
+Library changes
+---------------
+
+API changes
+
+  The function notmuch_database_close has been split into
+  notmuch_database_close and notmuch_database_destroy.
+
+  This makes it possible for long running programs to close the xapian
+  database and thus release the lock associated with it without
+  destroying the data structures obtained from it.
+
 Notmuch 0.12 (2012-03-20)
 =========================
 
