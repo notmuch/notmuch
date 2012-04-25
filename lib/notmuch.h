@@ -133,7 +133,7 @@ typedef struct _notmuch_filenames notmuch_filenames_t;
  *
  * After a successful call to notmuch_database_create, the returned
  * database will be open so the caller should call
- * notmuch_database_close when finished with it.
+ * notmuch_database_destroy when finished with it.
  *
  * The database will not yet have any data in it
  * (notmuch_database_create itself is a very cheap function). Messages
@@ -165,7 +165,7 @@ typedef enum {
  * An existing notmuch database can be identified by the presence of a
  * directory named ".notmuch" below 'path'.
  *
- * The caller should call notmuch_database_close when finished with
+ * The caller should call notmuch_database_destroy when finished with
  * this database.
  *
  * In case of any failure, this function returns NULL, (after printing
@@ -175,10 +175,24 @@ notmuch_database_t *
 notmuch_database_open (const char *path,
 		       notmuch_database_mode_t mode);
 
-/* Close the given notmuch database, freeing all associated
- * resources. See notmuch_database_open. */
+/* Close the given notmuch database.
+ *
+ * After notmuch_database_close has been called, calls to other
+ * functions on objects derived from this database may either behave
+ * as if the database had not been closed (e.g., if the required data
+ * has been cached) or may fail with a
+ * NOTMUCH_STATUS_XAPIAN_EXCEPTION.
+ *
+ * notmuch_database_close can be called multiple times.  Later calls
+ * have no effect.
+ */
 void
 notmuch_database_close (notmuch_database_t *database);
+
+/* Destroy the notmuch database, closing it if necessary and freeing
+* all associated resources. */
+void
+notmuch_database_destroy (notmuch_database_t *database);
 
 /* Return the database path of the given database.
  *

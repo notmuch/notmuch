@@ -642,7 +642,7 @@ notmuch_database_open (const char *path,
 			 "       read-write mode.\n",
 			 notmuch_path, version, NOTMUCH_DATABASE_VERSION);
 		notmuch->mode = NOTMUCH_DATABASE_MODE_READ_ONLY;
-		notmuch_database_close (notmuch);
+		notmuch_database_destroy (notmuch);
 		notmuch = NULL;
 		goto DONE;
 	    }
@@ -702,7 +702,7 @@ notmuch_database_open (const char *path,
     } catch (const Xapian::Error &error) {
 	fprintf (stderr, "A Xapian exception occurred opening database: %s\n",
 		 error.get_msg().c_str());
-	notmuch_database_close (notmuch);
+	notmuch_database_destroy (notmuch);
 	notmuch = NULL;
     }
 
@@ -738,9 +738,19 @@ notmuch_database_close (notmuch_database_t *notmuch)
     }
 
     delete notmuch->term_gen;
+    notmuch->term_gen = NULL;
     delete notmuch->query_parser;
+    notmuch->query_parser = NULL;
     delete notmuch->xapian_db;
+    notmuch->xapian_db = NULL;
     delete notmuch->value_range_processor;
+    notmuch->value_range_processor = NULL;
+}
+
+void
+notmuch_database_destroy (notmuch_database_t *notmuch)
+{
+    notmuch_database_close (notmuch);
     talloc_free (notmuch);
 }
 
