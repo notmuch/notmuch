@@ -146,11 +146,11 @@ More flexible and consistent tagging operations
   argument, `notmuch-show-tag-message' should be used instead.  Custom
   bindings using these functions should be updated, e.g.:
 
-    (notmuch-show-remove-tag "unread")
+        (notmuch-show-remove-tag "unread")
 
   should be changed to:
 
-    (notmuch-show-tag-message "-unread")
+        (notmuch-show-tag-message "-unread")
 
 Refreshing the show view ('=' by default) no longer opens or closes messages
 
@@ -359,7 +359,7 @@ New function notmuch-show-advance
   less invasive than notmuch-show-advance-and-archive.  It can easily
   be bound to SPC with:
 
-  (define-key notmuch-show-mode-map " " 'notmuch-show-advance)
+        (define-key notmuch-show-mode-map " " 'notmuch-show-advance)
 
 Various performance improvements.
 
@@ -623,8 +623,10 @@ Re-export Xapian exception typeinfo symbols.
 
 Notmuch 0.6 (2011-07-01)
 =======================
+
 New, general features
 ---------------------
+
 Folder-based searching
 
   Notmuch queries can now include a search term to match the
@@ -673,6 +675,7 @@ New, automatic tags: "signed" and "encrypted"
 
 New command-line features
 -------------------------
+
 Add new "notmuch show --verify" option for signature verification
 
   This option instruct notmuch to verify the signature of
@@ -710,6 +713,7 @@ Deprecate "notmuch search-tags", (in favor of "notmuch search --output=tags *")
 
 Performance improvements
 ------------------------
+
 Faster searches (by doing fewer searches to construct threads)
 
   Whenever a user asks for search results as threads, notmuch first
@@ -833,6 +837,7 @@ and drop "name" if it's actually just a repeat of the email address).
 
 Vim interface improvements
 --------------------------
+
 Felipe Contreras provided a number of updates for the vim interface:
 
   * Using sendmail directly rather than mailx,
@@ -843,38 +848,45 @@ Felipe Contreras provided a number of updates for the vim interface:
 
 Bindings improvements
 ---------------------
+
 Ruby bindings are now much more complete
 
   Including QUERY.sort, QUERY.to_s, MESSAGE.maildir_flags_to_tags,
   MESSAGE.tags_to_maildir_flags, and MESSAGE.get_filenames
 
 * Python bindings have been updated and extended
+
   (docs online at http://packages.python.org/notmuch/)
 
   New bindings:
-  - Message().get_filenames(),
-  - Message().tags_to_maildir_flags(),Message().maildir_flags_to_tags()
-  - list(Threads()) and list(Messages) works now
 
+  - Message().get_filenames(), Message().tags_to_maildir_flags(),
+    Message().maildir_flags_to_tags(), list(Threads()) and
+    list(Messages) works now
   - Message().__cmp__() and __hash__()
+
   These allow, for example:
+
         if msg1 == msg2: ...
 
   As well as set arithmetic on Messages():
 
-        s1, s2= set(msgs1), set(msgs2)
+        s1, s2 = set(msgs1), set(msgs2)
         s1.union(s2)
         s2 -= s1
 
   Removed:
-     - len(Messages()) as it exhausted the iterator.
-       Use len(list(Messages())) or
-       Query.count_messages() to get the length.
+
+  - len(Messages()) as it exhausted the iterator
+
+  Use len(list(Messages())) or Query.count_messages()
+  to get the length.
 
 Added initial Go bindings in bindings/go
 
 New build-system features
 -------------------------
+
 Added support for building in a directory other than the source directory
 
   This can be used with the widely-supported idiom of simply running
@@ -895,7 +907,8 @@ Fix to save configure options for future, implicit runs of configure
 
 New test-suite feature
 ----------------------
-Binary for bash for running test suite now located via PATH.
+
+Binary for bash for running test suite now located via PATH
 
   The notmuch test suite requires a fairly recent version of bash (>=
   bash 4). As some systems supply an older version of bash at
@@ -923,6 +936,7 @@ Avoiding accessing user's $HOME while running test suite
 
 General bug fixes
 -----------------
+
 Output *all* files for "notmuch search --output=files"
 
   For the cases where multiple files have the same Message ID,
@@ -964,6 +978,7 @@ Fix libnotmuch library to only export notmuch API functions
 
 Emacs-interface bug fixes
 -------------------------
+
 Display any unexpected output or errors from "notmuch search" invocations
 
   Previously any misformatted output or trailing error messages were
@@ -991,8 +1006,10 @@ Fix hiding of a message when a previously-hidden citation is visible
 
 Notmuch 0.5 (2010-11-11)
 ========================
+
 New, general features
 ---------------------
+
 Maildir-flag synchronization
 
   Notmuch now knows how to synchronize flags in maildir filenames with
@@ -1036,6 +1053,7 @@ Maildir-flag synchronization
 
 New library features
 --------------------
+
 Support for querying multiple filenames for a single message
 
   It is common for the mailstore to contain multiple files with the
@@ -1054,6 +1072,7 @@ Support for querying multiple filenames for a single message
 
 New command-line features
 -------------------------
+
 New "notmuch show --format=raw" for getting at original email contents
 
   This new feature allows for a fully-functional email client to be
@@ -1073,6 +1092,7 @@ New "notmuch show --format=raw" for getting at original email contents
 
 General bug fixes
 -----------------
+
 Fix "notmuch search" to print nothing when nothing matches
 
   The 0.4 release had a bug in which:
@@ -1086,6 +1106,7 @@ Fix "notmuch search" to print nothing when nothing matches
 
 Emacs interface improvements
 ----------------------------
+
 Fix to allow pipe ('|') command to work when using notmuch over ssh
 
 Fix count of lines in hidden signatures.
@@ -1108,7 +1129,8 @@ Allow for notmuch-fcc-dirs to have a value of nil.
 
 Vim interface improvements
 --------------------------
-Felipe Contreras provided a number of updates for the vim interface.
+
+Felipe Contreras provided a number of updates for the vim interface
 
   These include optimizations, support for newer versions of vim, fixed
   support for sending mail on modern systems, new commands, and
@@ -1116,12 +1138,15 @@ Felipe Contreras provided a number of updates for the vim interface.
 
 New bindings
 ------------
+
 Added initial ruby bindings in bindings/ruby
 
 Notmuch 0.4 (2010-11-01)
 ========================
+
 New command-line features
 -------------------------
+
 notmuch search --output=(summary|threads|messages|tags|files)
 
   This new option allows for particular items to be returned from
@@ -1162,6 +1187,7 @@ Avoid setting Bcc header in "notmuch reply"
 
 New library features
 --------------------
+
 Add notmuch_query_get_query_string and notmuch_query_get_sort
 
   These are simply functions for querying properties of a
@@ -1169,6 +1195,7 @@ Add notmuch_query_get_query_string and notmuch_query_get_sort
 
 New emacs features
 ------------------
+
 Enable Fcc of all sent messages by default (to "sent" directory)
 
   All messages sent from the emacs interface will now be saved to the
@@ -1238,13 +1265,13 @@ Arrange for libnotmuch to be found automatically after make install
   errors of the form "libnotmuch.so could not be found" immediately
   after installing. This support takes two forms:
 
-        1. If the library is installed to a system directory,
-           (configured in /etc/ld.so.conf), then "make install" will
-           automatically run ldconfig.
+  1. If the library is installed to a system directory,
+     (configured in /etc/ld.so.conf), then "make install" will
+     automatically run ldconfig.
 
-        2. If the library is installed to a non-system directory, the
-           build system adds a DR_RUNPATH entry to the final binary
-           pointing to the directory to which the library is installed.
+  2. If the library is installed to a non-system directory, the
+     build system adds a DR_RUNPATH entry to the final binary
+     pointing to the directory to which the library is installed.
 
   When this support works, the user should be able to run notmuch
   immediately after "make install", without any errors trying to find
@@ -1260,7 +1287,8 @@ Check compiler/linker options before using them
 
 New test-suite features
 -----------------------
-New modularization of test suite.
+
+New modularization of test suite
 
   Thanks to a gracious relicensing of the test-suite infrastructure
   from the git project, notmuch now has a modular test suite. This
@@ -1282,7 +1310,8 @@ New testing of emacs interface.
 
 General bug fixes
 -----------------
-Fix potential corruption of database when "notmuch new " is interrupted.
+
+Fix potential corruption of database when "notmuch new" is interrupted
 
   Previously, an interruption of "notmuch new" would (rarely) result
   in a corrupt database. The corruption would manifest itself by a
@@ -1315,6 +1344,7 @@ Fix "notmuch search" to return non-zero if notmuch_query_search_threads fails
 
 Emacs bug fixes
 ---------------
+
 Fix to handle a message with a subject containing, for example "[1234]"
 
   Previously, a message subject containing a sequence of digits within
@@ -1331,11 +1361,13 @@ Fix to correctly handle message IDs containing ".."
 
 Python-binding fixes
 --------------------
+
 The python bindings for notmuch have been updated to work with python3.
 
 Debian-specific fixes
 ---------------------
-Fix emacs initialization so "M-x notmuch" works for users by default.
+
+Fix emacs initialization so "M-x notmuch" works for users by default
 
   Now, a new Debian user can immediately run "emacs -f notmuch" after
   "apt-get install notmuch". Previously, the user would have had to
@@ -1344,8 +1376,10 @@ Fix emacs initialization so "M-x notmuch" works for users by default.
 
 Notmuch 0.3.1 (2010-04-27)
 ==========================
+
 General bug fixes
 -----------------
+
 Fix an infinite loop in "notmuch reply"
 
   This bug could be triggered by replying to a message where the
@@ -1361,22 +1395,26 @@ Fix a potential SEGV in "notmuch search"
 
 Emacs bug fixes
 ---------------
-Fix calculations for line wrapping in the primary "notmuch" view.
+
+Fix calculations for line wrapping in the primary "notmuch" view
 
 Fix Fcc support to prompt to create a directory if the specified Fcc
 directory does not exist.
 
 Build fix
 ---------
-Fix build on OpenSolaris (at least) due to missing 'extern "C"' block.
+
+Fix build on OpenSolaris (at least) due to missing 'extern "C"' block
 
   Without this, the C++ sources could not find strcasestr and the
   final linking of notmuch would fail.
 
 Notmuch 0.3 (2010-04-27)
 ========================
+
 New command-line features
 -------------------------
+
 User-configurable tags for new messages
 
   A new "new.tags" option is available in the configuration file to
@@ -1415,6 +1453,7 @@ Indication of author names that match a search
 
 New: Python bindings
 --------------------
+
 Sebastian Spaeth has contributed his python bindings for the notmuch
 library to the central repository. These bindings were previously
 known as "cnotmuch" within python but have now been renamed to be
@@ -1431,6 +1470,7 @@ package-building scripts. Improvements are welcome.
 
 Emacs interface improvements
 ----------------------------
+
 An entirely new initial view for notmuch, (friendly yet powerful)
 
   Some of us call the new view "notmuch hello" but you can get at it
@@ -1447,16 +1487,16 @@ An entirely new initial view for notmuch, (friendly yet powerful)
   search of messages with that tag that's simply a click (or keypress)
   away.
 
-  Note: For users that liked the original mode of "emacs -f notmuch"
-        immediately displaying a particular search result, we
-        recommend instead running something like:
+  NOTE: For users that liked the original mode of "emacs -f notmuch"
+  immediately displaying a particular search result, we recommend
+  instead running something like:
 
-                emacs --eval '(notmuch search "tag:inbox" t)'
+        emacs --eval '(notmuch search "tag:inbox" t)'
 
-        The "t" means to sort the messages in an "oldest first" order,
-        (as notmuch would do previously by default). You can also
-        leave that off to have your search results in "newest first"
-        order.
+  The "t" means to sort the messages in an "oldest first" order,
+  (as notmuch would do previously by default). You can also
+  leave that off to have your search results in "newest first"
+  order.
 
 Full-featured "customize" support for configuring notmuch
 
@@ -1580,6 +1620,7 @@ New keybinding (M-Ret) to open all collapsed messages in a thread.
 
 New library feature
 -------------------
+
 Provide a new NOTMUCH_SORT_UNSORTED value for queries
 
   This can be somewhat faster when sorting simply isn't desired. For
@@ -1590,6 +1631,7 @@ Provide a new NOTMUCH_SORT_UNSORTED value for queries
 
 Build fixes
 -----------
+
 Fix to compile against GMime 2.6
 
   Previously notmuch insisted on being able to find GMime 2.4, (even
@@ -1602,15 +1644,17 @@ Fix configure script to accept (and ignore) various standard options.
 
 Test suite
 ----------
-A large number of new tests for the many new features.
 
-Better display of output from failed tests.
+A large number of new tests for the many new features
+
+Better display of output from failed tests
 
   Now shows failures with diff rather than forcing the user to gaze at
   complete actual and expected output looking for deviation.
 
 Notmuch 0.2 (2010-04-16)
 ========================
+
 This is the second release of the notmuch mail system, with actual
 detailed release notes this time!
 
@@ -1626,7 +1670,8 @@ notmuch in subsequent releases.
 
 General features
 ----------------
-Better guessing of From: header.
+
+Better guessing of From: header
 
   Notmuch now tries harder to guess which configured address should be
   used as the From: line in a "notmuch reply". It will examine the
@@ -1659,6 +1704,7 @@ missing.
 
 General bug fixes
 -----------------
+
 Fix potential data loss in "notmuch new" with SIGINT
 
   One code path in "notmuch new" was not properly handling
@@ -1691,7 +1737,8 @@ Fix headers to be properly decoded in "notmuch reply"
 
 Emacs client features
 ---------------------
-Show the last few lines of citations as well as the first few lines.
+
+Show the last few lines of citations as well as the first few lines
 
   It's often the case that the last sentence of a citation is what is
   being replied to directly, so the last few lines are often much more
@@ -1721,9 +1768,10 @@ Provide for customized colors of threads in search view based on tags.
 
 Build-system features
 ---------------------
-Add support to properly build libnotmuch on Darwin systems (OS X).
 
-Add support to configure for many standard options.
+Add support to properly build libnotmuch on Darwin systems (OS X)
+
+Add support to configure for many standard options
 
   We include actual support for:
 
@@ -1748,6 +1796,7 @@ its results.
 
 Notmuch 0.1 (2010-04-05)
 ========================
+
 This is the first release of the notmuch mail system.
 
 It includes the libnotmuch library, the notmuch command-line
