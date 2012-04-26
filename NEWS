@@ -464,10 +464,10 @@ Search avoids opening and parsing message files
   improve search speed by as much as 10X, but taking advantage of this
   requires a database rebuild:
 
-	notmuch dump > notmuch.dump
-	# Backup, then remove notmuch database ($MAIL/.notmuch)
-	notmuch new
-	notmuch restore notmuch.dump
+        notmuch dump > notmuch.dump
+        # Backup, then remove notmuch database ($MAIL/.notmuch)
+        notmuch new
+        notmuch restore notmuch.dump
 
 New collection of add-on tools
 ------------------------------
@@ -631,13 +631,13 @@ Folder-based searching
   directories in which mail files are stored (within the mail
   storage). The syntax is as follows:
 
-	folder:<path>
+        folder:<path>
 
   For example, one might use things such as:
 
-	folder:spam
-	folder:2011-*
-	folder:work/todo
+        folder:spam
+        folder:2011-*
+        folder:work/todo
 
   to match any path containing a directory "spam", "work/todo", or
   containing a directory starting with "2011-", respectively.
@@ -652,10 +652,10 @@ Folder-based searching
   this feature for all mail, the entire notmuch index will need to be
   rebuilt as follows:
 
-	notmuch dump > notmuch.dump
-	# Backup, then remove notmuch database ($MAIL/.notmuch)
-	notmuch new
-	notmuch restore notmuch.dump
+        notmuch dump > notmuch.dump
+        # Backup, then remove notmuch database ($MAIL/.notmuch)
+        notmuch new
+        notmuch restore notmuch.dump
 
 Support for PGP/MIME
 
@@ -787,7 +787,7 @@ Automatic detection and hiding of original message in top-posted message
 
   When a message contains a line looking something like:
 
-	----- Original Message -----
+        ----- Original Message -----
 
   emacs hides this and all subsequent lines as an "original message",
   (allowing the user to click or press enter on the "original message"
@@ -802,8 +802,8 @@ New hooks for running code when tags are modified
   tool. To facilitate this, two new hooks are added which can be
   modified in the following settings of the notmuch customize group:
 
-	Notmuch Before Tag Hook
-	Notmuch After Tag Hook
+        Notmuch Before Tag Hook
+        Notmuch After Tag Hook
 
 New optional support for hiding some multipart/alternative parts
 
@@ -811,7 +811,7 @@ New optional support for hiding some multipart/alternative parts
   multipart/alternative group (such as a text/plain part as well as a
   text/html part). Users can configure the setting:
 
-	Notmuch Show All Multipart/Alternative Parts
+        Notmuch Show All Multipart/Alternative Parts
 
   to "off" in the notmuch customize group to have the interface
   automatically hide some part alternatives (such as text/html
@@ -858,13 +858,13 @@ Ruby bindings are now much more complete
 
   - Message().__cmp__() and __hash__()
   These allow, for example:
-	if msg1 == msg2: ...
+        if msg1 == msg2: ...
 
   As well as set arithmetic on Messages():
 
-	s1, s2= set(msgs1), set(msgs2)
-	s1.union(s2)
-	s2 -= s1
+        s1, s2= set(msgs1), set(msgs2)
+        s1.union(s2)
+        s2 -= s1
 
   Removed:
      - len(Messages()) as it exhausted the iterator.
@@ -880,10 +880,10 @@ Added support for building in a directory other than the source directory
   This can be used with the widely-supported idiom of simply running
   the configure script from some other directory:
 
-	mkdir build
-	cd build
-	../configure
-	make
+        mkdir build
+        cd build
+        ../configure
+        make
 
 Fix to save configure options for future, implicit runs of configure
 
@@ -933,11 +933,11 @@ Fixed spurious search results from "overlapped" indexing of addresses
 
   This fixed a bug where a search for:
 
-	to:user@elsewhere.com
+        to:user@elsewhere.com
 
   would incorrectly match a message sent:
 
-	To: user@example,com, someone@elsewhere.com
+        To: user@example,com, someone@elsewhere.com
 
 Fix --output=json when search has no results
 
@@ -999,13 +999,13 @@ Maildir-flag synchronization
   tags in the notmuch database. The following flag/tag mappings are
   supported:
 
-	Flag <-> Tag
-	----     -----
-	'D'      draft
-	'F'      flagged
-	'P'      passed
-	'R'      replied
-	'S'      unread (added when 'S' flag is not present)
+        Flag <-> Tag
+        ----     -----
+        'D'      draft
+        'F'      flagged
+        'P'      passed
+        'R'      replied
+        'S'      unread (added when 'S' flag is not present)
 
   The synchronization occurs in both directions, (for example, adding
   the 'S' flag to a file will cause the "unread" tag to be added, and
@@ -1018,7 +1018,7 @@ Maildir-flag synchronization
   new maildir.synchronize_flags option in the configuration file. For
   example:
 
-	notmuch config set maildir.synchronize_flags false
+        notmuch config set maildir.synchronize_flags false
 
   Users upgrading may also want to run "notmuch setup" once (just
   accept the existing configuration) to get a new, nicely-commented
@@ -1027,8 +1027,8 @@ Maildir-flag synchronization
   For users of the notmuch library, the new synchronization
   functionality is available with the following two new functions:
 
-	notmuch_message_maildir_flags_to_tags
-	notmuch_message_tags_to_maildir_flags
+        notmuch_message_maildir_flags_to_tags
+        notmuch_message_tags_to_maildir_flags
 
   It is anticipated that future improvements to this support will
   allow for safe synchronization of the 'T' flag with the "deleted"
@@ -1046,7 +1046,7 @@ Support for querying multiple filenames for a single message
   With this release, library users can access all filenames for a
   message with the new function:
 
-	notmuch_message_get_filenames
+        notmuch_message_get_filenames
 
   Together with notmuch_filenames_valid, notmuch_filenames_get, and
   notmuch_filenames_move_to_next it is now possible to iterate over
@@ -1065,7 +1065,7 @@ New "notmuch show --format=raw" for getting at original email contents
   do this, simply set the notmuch-command variable in emacs to the
   name of a script containing:
 
-	ssh user@host notmuch "$@"
+        ssh user@host notmuch "$@"
 
   If the ssh client has enabled connection sharing (ControlMaster
   option in OpenSSH), the emacs interface can be quite responsive this
@@ -1077,7 +1077,7 @@ Fix "notmuch search" to print nothing when nothing matches
 
   The 0.4 release had a bug in which:
 
-	notmuch search <expression-with-no-matches>
+        notmuch search <expression-with-no-matches>
 
   would produce a single blank line of output, (where previous
   versions would produce no output. This fix also causes a change in
@@ -1133,9 +1133,9 @@ notmuch search --output=(summary|threads|messages|tags|files)
   expected that this new option will be very useful in shell
   scripts. For example:
 
-	for file in $(notmuch search --output=files <search-terms>); do
-		<operations-on> "$file"
-	done
+        for file in $(notmuch search --output=files <search-terms>); do
+                <operations-on> "$file"
+        done
 
 notmuch show --format=mbox <search-specification>
 
@@ -1238,13 +1238,13 @@ Arrange for libnotmuch to be found automatically after make install
   errors of the form "libnotmuch.so could not be found" immediately
   after installing. This support takes two forms:
 
-	1. If the library is installed to a system directory,
-	   (configured in /etc/ld.so.conf), then "make install" will
-	   automatically run ldconfig.
+        1. If the library is installed to a system directory,
+           (configured in /etc/ld.so.conf), then "make install" will
+           automatically run ldconfig.
 
-	2. If the library is installed to a non-system directory, the
-	   build system adds a DR_RUNPATH entry to the final binary
-	   pointing to the directory to which the library is installed.
+        2. If the library is installed to a non-system directory, the
+           build system adds a DR_RUNPATH entry to the final binary
+           pointing to the directory to which the library is installed.
 
   When this support works, the user should be able to run notmuch
   immediately after "make install", without any errors trying to find
@@ -1288,7 +1288,7 @@ Fix potential corruption of database when "notmuch new " is interrupted.
   in a corrupt database. The corruption would manifest itself by a
   persistent error of the form:
 
-	document ID of 1234 has no thread ID
+        document ID of 1234 has no thread ID
 
   The message-adding code has been carefully audited and reworked to
   avoid this sort of corruption regardless of when it is interrupted.
@@ -1448,15 +1448,15 @@ An entirely new initial view for notmuch, (friendly yet powerful)
   away.
 
   Note: For users that liked the original mode of "emacs -f notmuch"
-	immediately displaying a particular search result, we
-	recommend instead running something like:
+        immediately displaying a particular search result, we
+        recommend instead running something like:
 
-		emacs --eval '(notmuch search "tag:inbox" t)'
+                emacs --eval '(notmuch search "tag:inbox" t)'
 
-	The "t" means to sort the messages in an "oldest first" order,
-	(as notmuch would do previously by default). You can also
-	leave that off to have your search results in "newest first"
-	order.
+        The "t" means to sort the messages in an "oldest first" order,
+        (as notmuch would do previously by default). You can also
+        leave that off to have your search results in "newest first"
+        order.
 
 Full-featured "customize" support for configuring notmuch
 
@@ -1487,7 +1487,7 @@ Support for doing tab-completion of email addresses
   One such program (implemented in python with the python bindings to
   notmuch) is available via:
 
-	git clone  http://jkr.acm.jhu.edu/git/notmuch_addresses.git
+        git clone  http://jkr.acm.jhu.edu/git/notmuch_addresses.git
 
   Install that program as notmuch-addresses on your PATH, and then
   hitting TAB on a partial email address or name within the To: or Cc:
@@ -1678,11 +1678,11 @@ Fix headers to be properly decoded in "notmuch reply"
 
   Previously, the user might see:
 
-	Subject: Re: =?iso-8859-2?q?Rozlu=E8ka?=
+        Subject: Re: =?iso-8859-2?q?Rozlu=E8ka?=
 
   rather than:
 
-	Subject: Re: Rozlučka
+        Subject: Re: Rozlučka
 
   The former text is properly encoded to be RFC-compliant SMTP, will
   be sent correctly, and will be properly decoded by the
@@ -1727,12 +1727,12 @@ Add support to configure for many standard options.
 
   We include actual support for:
 
-	--includedir --mandir --sysconfdir
+        --includedir --mandir --sysconfdir
 
   And accept and silently ignore several more:
 
-	--build --infodir --libexecdir --localstatedir
-	--disable-maintainer-mode --disable-dependency-tracking
+        --build --infodir --libexecdir --localstatedir
+        --disable-maintainer-mode --disable-dependency-tracking
 
 Install emacs client in "make install" rather than requiring a
 separate "make install-emacs".
@@ -1759,3 +1759,13 @@ a performance bug that made notmuch very slow when modifying
 tags. This would cause distracting pauses when reading mail while
 notmuch would wait for Xapian when removing the "inbox" and "unread"
 tags from messages in a thread.
+
+
+<!--
+ Local variables:
+ mode: text
+ tab-width: 8
+ indent-tabs-mode: nil
+ End:
+ vi: sw=8 ts=8 et
+-->
