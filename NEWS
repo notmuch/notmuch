@@ -81,6 +81,9 @@ contrib/ from now on.
 Library changes
 ---------------
 
+The API changes detailed below break binary and source compatibility,
+so libnotmuch has been bumped to version 3.0.0.
+
 The function notmuch_database_close has been split into
 notmuch_database_close and notmuch_database_destroy
 
