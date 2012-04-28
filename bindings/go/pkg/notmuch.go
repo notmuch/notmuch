@@ -306,20 +306,21 @@ func (self *Database) RemoveMessage(fname string) Status {
  *	* An out-of-memory situation occurs
  *	* A Xapian exception occurs
  */
-func (self *Database) FindMessage(message_id string) *Message {
+func (self *Database) FindMessage(message_id string) (*Message, Status) {
 	
 	var c_msg_id *C.char = C.CString(message_id)
 	defer C.free(unsafe.Pointer(c_msg_id))
 
 	if c_msg_id == nil {
-		return nil
+		return nil, STATUS_OUT_OF_MEMORY
 	}
 
-	msg := C.notmuch_database_find_message(self.db, c_msg_id)
-	if msg == nil {
-		return nil
+	msg := &Message{message:nil}
+	st := Status(C.notmuch_database_find_message(self.db, c_msg_id, &msg.message))
+	if st != STATUS_SUCCESS {
+		return nil, st
 	}
-	return &Message{message:msg}
+	return msg, st
 }
 
 /* Return a list of all tags found in the database.
