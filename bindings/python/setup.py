@@ -7,7 +7,8 @@ from distutils.core import setup
 version_file = os.path.join(os.path.dirname(__file__),
                             'notmuch', 'version.py')
 exec(compile(open(version_file).read(), version_file, 'exec'))
-assert __VERSION__, 'Failed to read the notmuch binding version number'
+assert '__VERSION__' in globals(), \
+    'Failed to read the notmuch binding version number'
 
 setup(name='notmuch',
       version=__VERSION__,
