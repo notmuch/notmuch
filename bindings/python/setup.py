@@ -4,7 +4,7 @@ import os
 from distutils.core import setup
 
 # get the notmuch version number without importing the notmuch module
-version_file = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+version_file = os.path.join(os.path.dirname(__file__),
                             'notmuch', 'version.py')
 exec(compile(open(version_file).read(), version_file, 'exec'))
 assert __VERSION__, 'Failed to read the notmuch binding version number'
