@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 import os
-import re
 from distutils.core import setup
 
 # get the notmuch version number without importing the notmuch module
