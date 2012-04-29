@@ -52,6 +52,11 @@ Raw show format changes
   encoded in the original message, including the part's headers.  Leaf
   parts, as before, output the part's transfer-decoded body.
 
+Listing configuration items
+
+  The new "config list" command prints out all configuration items and
+  their values.
+
 Emacs Interface
 ---------------
 
