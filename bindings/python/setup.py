@@ -16,10 +16,10 @@ setup(name='notmuch',
       author='Sebastian Spaeth',
       author_email='Sebastian@SSpaeth.de',
       url='http://notmuchmail.org/',
-      download_url='http://notmuchmail.org/releases/notmuch-'+__VERSION__+'.tar.gz',
+      download_url='http://notmuchmail.org/releases/notmuch-%s.tar.gz' % __VERSION__,
       packages=['notmuch'],
-      keywords = ["library", "email"],
-      long_description="""Overview
+      keywords=['library', 'email'],
+      long_description='''Overview
 ========
 
 The notmuch module provides an interface to the `notmuch
@@ -37,7 +37,7 @@ Requirements
 You need to have notmuch installed (or rather libnotmuch.so.1). Also,
 notmuch makes use of the ctypes library, and has only been tested with
 python >= 2.5. It will not work on earlier python versions.
-""",
+''',
       classifiers=['Development Status :: 3 - Alpha',
                    'Intended Audience :: Developers',
                    'License :: OSI Approved :: GNU General Public License (GPL)',
