@@ -14,7 +14,7 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with notmuch.  If not, see <http://www.gnu.org/licenses/>.
 
-Copyright 2010 Sebastian Spaeth <Sebastian@SSpaeth.de>'
+Copyright 2010 Sebastian Spaeth <Sebastian@SSpaeth.de>
 """
 from ctypes import c_char_p
 from notmuch.globals import (
