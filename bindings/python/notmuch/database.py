@@ -64,14 +64,6 @@ class Database(object):
         Any function in this class can and will throw an
         :exc:`NotInitializedError` if the database was not intitialized
         properly.
-
-    .. note::
-
-        Do remember that as soon as we tear down (e.g. via `del db`) this
-        object, all underlying derived objects such as queries, threads,
-        messages, tags etc will be freed by the underlying library as well.
-        Accessing these objects will lead to segfaults and other unexpected
-        behavior. See above for more details.
     """
     _std_db_path = None
     """Class attribute to cache user's default database"""
