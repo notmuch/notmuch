@@ -88,8 +88,8 @@ class Database(object):
 
     """notmuch_database_open"""
     _open = nmlib.notmuch_database_open
-    _open.argtypes = [c_char_p, c_uint]
-    _open.restype = NotmuchDatabaseP
+    _open.argtypes = [c_char_p, c_uint, POINTER(NotmuchDatabaseP)]
+    _open.restype = c_uint
 
     """notmuch_database_upgrade"""
     _upgrade = nmlib.notmuch_database_upgrade
@@ -115,8 +115,8 @@ class Database(object):
 
     """notmuch_database_create"""
     _create = nmlib.notmuch_database_create
-    _create.argtypes = [c_char_p]
-    _create.restype = NotmuchDatabaseP
+    _create.argtypes = [c_char_p, POINTER(NotmuchDatabaseP)]
+    _create.restype = c_uint
 
     def __init__(self, path = None, create = False,
                  mode = MODE.READ_ONLY):
@@ -186,12 +186,13 @@ class Database(object):
             raise NotmuchError(message="Cannot create db, this Database() "
                                        "already has an open one.")
 
-        res = Database._create(_str(path), Database.MODE.READ_WRITE)
+        db = NotmuchDatabaseP()
+        status = Database._create(_str(path), Database.MODE.READ_WRITE, byref(db))
 
-        if not res:
-            raise NotmuchError(
-                message="Could not create the specified database")
-        self._db = res
+        if status != STATUS.SUCCESS:
+            raise NotmuchError(status)
+        self._db = db
+        return status
 
     def open(self, path, mode=0):
         """Opens an existing database
@@ -205,11 +206,13 @@ class Database(object):
         :raises: Raises :exc:`NotmuchError` in case of any failure
                     (possibly after printing an error message on stderr).
         """
-        res = Database._open(_str(path), mode)
+        db = NotmuchDatabaseP()
+        status = Database._open(_str(path), mode, byref(db))
 
-        if not res:
-            raise NotmuchError(message="Could not open the specified database")
-        self._db = res
+        if status != STATUS.SUCCESS:
+            raise NotmuchError(status)
+        self._db = db
+        return status
 
     _close = nmlib.notmuch_database_close
     _close.argtypes = [NotmuchDatabaseP]
