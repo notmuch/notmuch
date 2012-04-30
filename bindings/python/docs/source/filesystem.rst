@@ -10,8 +10,6 @@ Files and directories
 
    .. automethod:: Filenames.__len__
 
-   .. automethod:: Filenames.as_generator
-
 :class:`Directoy` -- A directory entry in the database
 ------------------------------------------------------
 
