@@ -614,7 +614,15 @@ class Message(Python3StringMixIn):
         """Create an internal representation of the message parts,
         which can easily be output to json, text, or another output
         format. The argument match tells whether this matched a
-        query."""
+        query.
+
+        .. deprecated:: 0.13
+                        This code adds functionality at the python
+                        level that is unlikely to be useful for
+                        anyone. Furthermore the python bindings strive
+                        to be a thin wrapper around libnotmuch, so
+                        this code will be removed in notmuch 0.14.
+        """
         output = {}
         output["id"] = self.get_message_id()
         output["match"] = self.is_match()
@@ -660,12 +668,29 @@ class Message(Python3StringMixIn):
     def format_message_as_json(self, indent=0):
         """Outputs the message as json. This is essentially the same
         as python's dict format, but we run it through, just so we
-        don't have to worry about the details."""
+        don't have to worry about the details.
+
+        .. deprecated:: 0.13
+                        This code adds functionality at the python
+                        level that is unlikely to be useful for
+                        anyone. Furthermore the python bindings strive
+                        to be a thin wrapper around libnotmuch, so
+                        this code will be removed in notmuch 0.14.
+        """
         return json.dumps(self.format_message_internal())
 
     def format_message_as_text(self, indent=0):
         """Outputs it in the old-fashioned notmuch text form. Will be
-        easy to change to a new format when the format changes."""
+        easy to change to a new format when the format changes.
+
+        .. deprecated:: 0.13
+                        This code adds functionality at the python
+                        level that is unlikely to be useful for
+                        anyone. Furthermore the python bindings strive
+                        to be a thin wrapper around libnotmuch, so
+                        this code will be removed in notmuch 0.14.
+        """
+
 
         format = self.format_message_internal()
         output = "\fmessage{ id:%s depth:%d match:%d filename:%s" \
