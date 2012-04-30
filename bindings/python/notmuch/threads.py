@@ -157,18 +157,15 @@ class Threads(Python3StringMixIn):
         return i
 
     def __nonzero__(self):
-        """Check if :class:`Threads` contains at least one more valid thread
+        '''
+        Implement truth value testing. If __nonzero__ is not
+        implemented, the python runtime would fall back to `len(..) >
+        0` thus exhausting the iterator.
 
-        The existence of this function makes 'if Threads: foo' work, as
-        that will implicitely call len() exhausting the iterator if
-        __nonzero__ does not exist. This function makes `bool(Threads())`
-        work repeatedly.
-
-        :return: True if there is at least one more thread in the
-           Iterator, False if not. None on a "Out-of-memory" error.
-        """
-        return self._threads is not None and \
-            self._valid(self._threads) > 0
+        :returns: True if the wrapped iterator has at least one more object
+                  left.
+        '''
+        return self._threads and self._valid(self._threads)
 
     _destroy = nmlib.notmuch_threads_destroy
     _destroy.argtypes = [NotmuchThreadsP]

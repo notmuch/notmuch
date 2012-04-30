@@ -109,15 +109,15 @@ class Tags(Python3StringMixIn):
     next = __next__ # python2.x iterator protocol compatibility
 
     def __nonzero__(self):
-        """Implement bool(Tags) check that can be repeatedly used
+        '''
+        Implement truth value testing. If __nonzero__ is not
+        implemented, the python runtime would fall back to `len(..) >
+        0` thus exhausting the iterator.
 
-        If __nonzero__ is not implemented, "if Tags()"
-        will implicitly call __len__, using up our iterator, so it is
-        important that this function is defined.
-
-        :returns: True if the Tags() iterator has at least one more Tag
-            left."""
-        return self._valid(self._tags) > 0
+        :returns: True if the wrapped iterator has at least one more object
+                  left.
+        '''
+        return self._tags and self._valid(self._tags)
 
     def __unicode__(self):
         """string representation of :class:`Tags`: a space separated list of tags

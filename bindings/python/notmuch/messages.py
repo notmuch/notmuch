@@ -172,11 +172,15 @@ class Messages(object):
     next = __next__ # python2.x iterator protocol compatibility
 
     def __nonzero__(self):
-        """
-        :return: True if there is at least one more thread in the
-            Iterator, False if not."""
-        return self._msgs is not None and \
-            self._valid(self._msgs) > 0
+        '''
+        Implement truth value testing. If __nonzero__ is not
+        implemented, the python runtime would fall back to `len(..) >
+        0` thus exhausting the iterator.
+
+        :returns: True if the wrapped iterator has at least one more object
+                  left.
+        '''
+        return self._msgs and self._valid(self._msgs)
 
     _destroy = nmlib.notmuch_messages_destroy
     _destroy.argtypes = [NotmuchMessagesP]
