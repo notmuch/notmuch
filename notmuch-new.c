@@ -900,7 +900,8 @@ notmuch_new_command (void *ctx, int argc, char *argv[])
 	    return 1;
 
 	printf ("Found %d total files (that's not much mail).\n", count);
-	notmuch = notmuch_database_create (db_path);
+	if (notmuch_database_create (db_path, &notmuch))
+	    return 1;
 	add_files_state.total_files = count;
     } else {
 	if (notmuch_database_open (db_path, NOTMUCH_DATABASE_MODE_READ_WRITE,

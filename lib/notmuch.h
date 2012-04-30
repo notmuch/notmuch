@@ -140,11 +140,25 @@ typedef struct _notmuch_filenames notmuch_filenames_t;
  * contained within 'path' can be added to the database by calling
  * notmuch_database_add_message.
  *
- * In case of any failure, this function returns NULL, (after printing
- * an error message on stderr).
+ * In case of any failure, this function returns an error status and
+ * sets *database to NULL (after printing an error message on stderr).
+ *
+ * Return value:
+ *
+ * NOTMUCH_STATUS_SUCCESS: Successfully created the database.
+ *
+ * NOTMUCH_STATUS_NULL_POINTER: The given 'path' argument is NULL.
+ *
+ * NOTMUCH_STATUS_OUT_OF_MEMORY: Out of memory.
+ *
+ * NOTMUCH_STATUS_FILE_ERROR: An error occurred trying to create the
+ *	database file (such as permission denied, or file not found,
+ *	etc.), or the database already exists.
+ *
+ * NOTMUCH_STATUS_XAPIAN_EXCEPTION: A Xapian exception occurred.
  */
-notmuch_database_t *
-notmuch_database_create (const char *path);
+notmuch_status_t
+notmuch_database_create (const char *path, notmuch_database_t **database);
 
 typedef enum {
     NOTMUCH_DATABASE_MODE_READ_ONLY = 0,

@@ -520,9 +520,10 @@ parse_references (void *ctx,
     }
 }
 
-notmuch_database_t *
-notmuch_database_create (const char *path)
+notmuch_status_t
+notmuch_database_create (const char *path, notmuch_database_t **database)
 {
+    notmuch_status_t status = NOTMUCH_STATUS_SUCCESS;
     notmuch_database_t *notmuch = NULL;
     char *notmuch_path = NULL;
     struct stat st;
@@ -530,6 +531,7 @@ notmuch_database_create (const char *path)
 
     if (path == NULL) {
 	fprintf (stderr, "Error: Cannot create a database for a NULL path.\n");
+	status = NOTMUCH_STATUS_NULL_POINTER;
 	goto DONE;
     }
 
@@ -537,12 +539,14 @@ notmuch_database_create (const char *path)
     if (err) {
 	fprintf (stderr, "Error: Cannot create database at %s: %s.\n",
 		 path, strerror (errno));
+	status = NOTMUCH_STATUS_FILE_ERROR;
 	goto DONE;
     }
 
     if (! S_ISDIR (st.st_mode)) {
 	fprintf (stderr, "Error: Cannot create database at %s: Not a directory.\n",
 		 path);
+	status = NOTMUCH_STATUS_FILE_ERROR;
 	goto DONE;
     }
 
@@ -553,19 +557,30 @@ notmuch_database_create (const char *path)
     if (err) {
 	fprintf (stderr, "Error: Cannot create directory %s: %s.\n",
 		 notmuch_path, strerror (errno));
+	status = NOTMUCH_STATUS_FILE_ERROR;
 	goto DONE;
     }
 
-    notmuch_database_open (path,
-			   NOTMUCH_DATABASE_MODE_READ_WRITE,
-			   &notmuch);
-    notmuch_database_upgrade (notmuch, NULL, NULL);
+    status = notmuch_database_open (path,
+				    NOTMUCH_DATABASE_MODE_READ_WRITE,
+				    &notmuch);
+    if (status)
+	goto DONE;
+    status = notmuch_database_upgrade (notmuch, NULL, NULL);
+    if (status) {
+	notmuch_database_close(notmuch);
+	notmuch = NULL;
+    }
 
   DONE:
     if (notmuch_path)
 	talloc_free (notmuch_path);
 
-    return notmuch;
+    if (database)
+	*database = notmuch;
+    else
+	talloc_free (notmuch);
+    return status;
 }
 
 notmuch_status_t
