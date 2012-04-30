@@ -115,13 +115,10 @@ class Filenames(Python3StringMixIn):
     def __unicode__(self):
         """Represent Filenames() as newline-separated list of full paths
 
-        .. note:: As this iterates over the filenames, we will not be
-               able to iterate over them again (as in retrieve them)! If
-               the tags have been exhausted already, this will raise a
-               :exc:`NotInitializedError` on subsequent
-               attempts. However, you can use
-               :meth:`Message.get_filenames` repeatedly to perform
-               various actions on filenames.
+        .. note::
+
+            This method exhausts the iterator object, so you will not be able to
+            iterate over them again.
         """
         return "\n".join(self)
 
@@ -139,15 +136,8 @@ class Filenames(Python3StringMixIn):
 
         .. note::
 
-            As this iterates over the files, we will not be able to
-            iterate over them again! So this will fail::
-
-                 #THIS FAILS
-                 files = Database().get_directory('').get_child_files()
-                 if len(files) > 0:  # this 'exhausts' msgs
-                     # next line raises
-                     # NotmuchError(:attr:`STATUS`.NOT_INITIALIZED)
-                     for file in files: print file
+            This method exhausts the iterator object, so you will not be able to
+            iterate over them again.
         """
         if not self._files_p:
             raise NotInitializedError()
