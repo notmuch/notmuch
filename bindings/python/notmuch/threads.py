@@ -176,5 +176,5 @@ class Threads(Python3StringMixIn):
 
     def __del__(self):
         """Close and free the notmuch Threads"""
-        if self._threads is not None:
+        if self._threads:
             self._destroy(self._threads)

@@ -184,7 +184,7 @@ class Messages(object):
 
     def __del__(self):
         """Close and free the notmuch Messages"""
-        if self._msgs is not None:
+        if self._msgs:
             self._destroy(self._msgs)
 
     def format_messages(self, format, indent=0, entire_thread=False):

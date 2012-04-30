@@ -741,5 +741,5 @@ class Message(Python3StringMixIn):
 
     def __del__(self):
         """Close and free the notmuch Message"""
-        if self._msg is not None:
+        if self._msg:
             self._destroy(self._msg)

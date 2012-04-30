@@ -128,7 +128,7 @@ class Filenames(Python3StringMixIn):
 
     def __del__(self):
         """Close and free the notmuch filenames"""
-        if self._files_p is not None:
+        if self._files_p:
             self._destroy(self._files_p)
 
     def __len__(self):

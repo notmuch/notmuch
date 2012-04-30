@@ -189,7 +189,7 @@ class Database(object):
         :raises: :exc:`NotmuchError` in case of any failure
                     (possibly after printing an error message on stderr).
         """
-        if self._db is not None:
+        if self._db:
             raise NotmuchError(message="Cannot create db, this Database() "
                                        "already has an open one.")
 

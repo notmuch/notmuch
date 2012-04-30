@@ -137,5 +137,5 @@ class Tags(Python3StringMixIn):
 
     def __del__(self):
         """Close and free the notmuch tags"""
-        if self._tags is not None:
+        if self._tags:
             self._destroy(self._tags)

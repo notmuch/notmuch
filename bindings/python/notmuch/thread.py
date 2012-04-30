@@ -260,5 +260,5 @@ class Thread(object):
 
     def __del__(self):
         """Close and free the notmuch Thread"""
-        if self._thread is not None:
+        if self._thread:
             self._destroy(self._thread)

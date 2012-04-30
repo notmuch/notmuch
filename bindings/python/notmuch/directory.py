@@ -181,5 +181,5 @@ class Directory(object):
 
     def __del__(self):
         """Close and free the Directory"""
-        if self._dir_p is not None:
+        if self._dir_p:
             self._destroy(self._dir_p)

@@ -203,5 +203,5 @@ class Query(object):
 
     def __del__(self):
         """Close and free the Query"""
-        if self._query is not None:
+        if self._query:
             self._destroy(self._query)
