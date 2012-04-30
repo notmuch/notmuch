@@ -42,6 +42,8 @@ notmuch_rb_database_initialize (int argc, VALUE *argv, VALUE self)
     int create, mode;
     VALUE pathv, hashv;
     VALUE modev;
+    notmuch_database_t *database;
+    notmuch_status_t ret;
 
     /* Check arguments */
     rb_scan_args (argc, argv, "11", &pathv, &hashv);
@@ -73,9 +75,13 @@ notmuch_rb_database_initialize (int argc, VALUE *argv, VALUE self)
     }
 
     Check_Type (self, T_DATA);
-    DATA_PTR (self) = create ? notmuch_database_create (path) : notmuch_database_open (path, mode);
-    if (!DATA_PTR (self))
-	rb_raise (notmuch_rb_eDatabaseError, "Failed to open database");
+    if (create)
+	ret = notmuch_database_create (path, &database);
+    else
+	ret = notmuch_database_open (path, mode, &database);
+    notmuch_rb_status_raise (ret);
+
+    DATA_PTR (self) = database;
 
     return self;
 }
