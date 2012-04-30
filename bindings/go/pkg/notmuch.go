@@ -86,21 +86,21 @@ const (
 )
 
 // Create a new, empty notmuch database located at 'path'
-func NewDatabase(path string) *Database {
+func NewDatabase(path string) (*Database, Status) {
 
 	var c_path *C.char = C.CString(path)
 	defer C.free(unsafe.Pointer(c_path))
 
 	if c_path == nil {
-		return nil
+		return nil, STATUS_OUT_OF_MEMORY
 	}
 
 	self := &Database{db:nil}
-	self.db = C.notmuch_database_create(c_path)
-	if self.db == nil {
-		return nil
+	st := Status(C.notmuch_database_create(c_path, &self.db))
+	if st != STATUS_SUCCESS {
+		return nil, st
 	}
-	return self
+	return self, st
 }
 
 /* Open an existing notmuch database located at 'path'.
@@ -120,21 +120,21 @@ func NewDatabase(path string) *Database {
  * In case of any failure, this function returns NULL, (after printing
  * an error message on stderr).
  */
-func OpenDatabase(path string, mode DatabaseMode) *Database {
+func OpenDatabase(path string, mode DatabaseMode) (*Database, Status) {
 
 	var c_path *C.char = C.CString(path)
 	defer C.free(unsafe.Pointer(c_path))
 
 	if c_path == nil {
-		return nil
+		return nil, STATUS_OUT_OF_MEMORY
 	}
 
 	self := &Database{db:nil}
-	self.db = C.notmuch_database_open(c_path, C.notmuch_database_mode_t(mode))
-	if self.db == nil {
-		return nil
+	st := Status(C.notmuch_database_open(c_path, C.notmuch_database_mode_t(mode), &self.db))
+	if st != STATUS_SUCCESS {
+		return nil, st
 	}
-	return self
+	return self, st
 }
 
 /* Close the given notmuch database, freeing all associated
