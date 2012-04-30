@@ -903,9 +903,8 @@ notmuch_new_command (void *ctx, int argc, char *argv[])
 	notmuch = notmuch_database_create (db_path);
 	add_files_state.total_files = count;
     } else {
-	notmuch = notmuch_database_open (db_path,
-					 NOTMUCH_DATABASE_MODE_READ_WRITE);
-	if (notmuch == NULL)
+	if (notmuch_database_open (db_path, NOTMUCH_DATABASE_MODE_READ_WRITE,
+				   &notmuch))
 	    return 1;
 
 	if (notmuch_database_needs_upgrade (notmuch)) {

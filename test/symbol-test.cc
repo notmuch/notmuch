@@ -4,7 +4,8 @@
 
 
 int main() {
-  (void) notmuch_database_open("fakedb", NOTMUCH_DATABASE_MODE_READ_ONLY);
+  notmuch_database_t *notmuch;
+  notmuch_database_open("fakedb", NOTMUCH_DATABASE_MODE_READ_ONLY, &notmuch);
 
   try {
     (void) new Xapian::WritableDatabase("./nonexistant", Xapian::DB_OPEN);

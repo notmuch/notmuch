@@ -36,9 +36,8 @@ notmuch_dump_command (unused (void *ctx), int argc, char *argv[])
     if (config == NULL)
 	return 1;
 
-    notmuch = notmuch_database_open (notmuch_config_get_database_path (config),
-				     NOTMUCH_DATABASE_MODE_READ_ONLY);
-    if (notmuch == NULL)
+    if (notmuch_database_open (notmuch_config_get_database_path (config),
+			       NOTMUCH_DATABASE_MODE_READ_ONLY, &notmuch))
 	return 1;
 
     char *output_file_name = NULL;

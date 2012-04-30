@@ -151,9 +151,6 @@ typedef enum {
     NOTMUCH_DATABASE_MODE_READ_WRITE
 } notmuch_database_mode_t;
 
-/* XXX: I think I'd like this to take an extra argument of
- * notmuch_status_t* for returning a status value on failure. */
-
 /* Open an existing notmuch database located at 'path'.
  *
  * The database should have been created at some time in the past,
@@ -168,12 +165,27 @@ typedef enum {
  * The caller should call notmuch_database_destroy when finished with
  * this database.
  *
- * In case of any failure, this function returns NULL, (after printing
- * an error message on stderr).
+ * In case of any failure, this function returns an error status and
+ * sets *database to NULL (after printing an error message on stderr).
+ *
+ * Return value:
+ *
+ * NOTMUCH_STATUS_SUCCESS: Successfully opened the database.
+ *
+ * NOTMUCH_STATUS_NULL_POINTER: The given 'path' argument is NULL.
+ *
+ * NOTMUCH_STATUS_OUT_OF_MEMORY: Out of memory.
+ *
+ * NOTMUCH_STATUS_FILE_ERROR: An error occurred trying to open the
+ *	database file (such as permission denied, or file not found,
+ *	etc.), or the database version is unknown.
+ *
+ * NOTMUCH_STATUS_XAPIAN_EXCEPTION: A Xapian exception occurred.
  */
-notmuch_database_t *
+notmuch_status_t
 notmuch_database_open (const char *path,
-		       notmuch_database_mode_t mode);
+		       notmuch_database_mode_t mode,
+		       notmuch_database_t **database);
 
 /* Close the given notmuch database.
  *

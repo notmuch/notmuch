@@ -1081,9 +1081,8 @@ notmuch_show_command (void *ctx, unused (int argc), unused (char *argv[]))
 	return 1;
     }
 
-    notmuch = notmuch_database_open (notmuch_config_get_database_path (config),
-				     NOTMUCH_DATABASE_MODE_READ_ONLY);
-    if (notmuch == NULL)
+    if (notmuch_database_open (notmuch_config_get_database_path (config),
+			       NOTMUCH_DATABASE_MODE_READ_ONLY, &notmuch))
 	return 1;
 
     query = notmuch_query_create (notmuch, query_string);

@@ -556,8 +556,9 @@ notmuch_database_create (const char *path)
 	goto DONE;
     }
 
-    notmuch = notmuch_database_open (path,
-				     NOTMUCH_DATABASE_MODE_READ_WRITE);
+    notmuch_database_open (path,
+			   NOTMUCH_DATABASE_MODE_READ_WRITE,
+			   &notmuch);
     notmuch_database_upgrade (notmuch, NULL, NULL);
 
   DONE:
@@ -578,10 +579,12 @@ _notmuch_database_ensure_writable (notmuch_database_t *notmuch)
     return NOTMUCH_STATUS_SUCCESS;
 }
 
-notmuch_database_t *
+notmuch_status_t
 notmuch_database_open (const char *path,
-		       notmuch_database_mode_t mode)
+		       notmuch_database_mode_t mode,
+		       notmuch_database_t **database)
 {
+    notmuch_status_t status = NOTMUCH_STATUS_SUCCESS;
     void *local = talloc_new (NULL);
     notmuch_database_t *notmuch = NULL;
     char *notmuch_path, *xapian_path;
@@ -590,8 +593,15 @@ notmuch_database_open (const char *path,
     unsigned int i, version;
     static int initialized = 0;
 
+    if (path == NULL) {
+	fprintf (stderr, "Error: Cannot open a database for a NULL path.\n");
+	status = NOTMUCH_STATUS_NULL_POINTER;
+	goto DONE;
+    }
+
     if (! (notmuch_path = talloc_asprintf (local, "%s/%s", path, ".notmuch"))) {
 	fprintf (stderr, "Out of memory\n");
+	status = NOTMUCH_STATUS_OUT_OF_MEMORY;
 	goto DONE;
     }
 
@@ -599,11 +609,13 @@ notmuch_database_open (const char *path,
     if (err) {
 	fprintf (stderr, "Error opening database at %s: %s\n",
 		 notmuch_path, strerror (errno));
+	status = NOTMUCH_STATUS_FILE_ERROR;
 	goto DONE;
     }
 
     if (! (xapian_path = talloc_asprintf (local, "%s/%s", notmuch_path, "xapian"))) {
 	fprintf (stderr, "Out of memory\n");
+	status = NOTMUCH_STATUS_OUT_OF_MEMORY;
 	goto DONE;
     }
 
@@ -644,6 +656,7 @@ notmuch_database_open (const char *path,
 		notmuch->mode = NOTMUCH_DATABASE_MODE_READ_ONLY;
 		notmuch_database_destroy (notmuch);
 		notmuch = NULL;
+		status = NOTMUCH_STATUS_FILE_ERROR;
 		goto DONE;
 	    }
 
@@ -704,12 +717,17 @@ notmuch_database_open (const char *path,
 		 error.get_msg().c_str());
 	notmuch_database_destroy (notmuch);
 	notmuch = NULL;
+	status = NOTMUCH_STATUS_XAPIAN_EXCEPTION;
     }
 
   DONE:
     talloc_free (local);
 
-    return notmuch;
+    if (database)
+	*database = notmuch;
+    else
+	talloc_free (notmuch);
+    return status;
 }
 
 void
