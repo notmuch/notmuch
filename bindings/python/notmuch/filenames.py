@@ -109,18 +109,6 @@ class Filenames(Python3StringMixIn):
         return file_.decode('utf-8', 'ignore')
     next = __next__ # python2.x iterator protocol compatibility
 
-    def as_generator(self):
-        """Return generator of Filenames
-
-        This is the main function that will usually be used by the
-        user.
-
-        .. deprecated:: 0.12
-                        :class:`Filenames` objects implement the
-                        iterator protocol.
-        """
-        return self
-
     def __unicode__(self):
         """Represent Filenames() as newline-separated list of full paths
 
