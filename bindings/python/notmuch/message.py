@@ -259,7 +259,7 @@ class Message(Python3StringMixIn):
 
         files_p = Message._get_filenames(self._msg)
 
-        return Filenames(files_p, self).as_generator()
+        return Filenames(files_p, self)
 
     def get_flag(self, flag):
         """Checks whether a specific flag is set for this message
