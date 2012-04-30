@@ -56,7 +56,8 @@ class Database(object):
 
     :class:`Database` objects implement the context manager protocol
     so you can use the :keyword:`with` statement to ensure that the
-    database is properly closed.
+    database is properly closed. See :meth:`close` for more
+    information.
 
     .. note::
 
@@ -225,6 +226,13 @@ class Database(object):
     def close(self):
         '''
         Closes the notmuch database.
+
+        .. warning::
+
+            This function closes the notmuch database. From that point
+            on every method invoked on any object ever derived from
+            the closed database may cease to function and raise a
+            NotmuchError.
         '''
         if self._db:
             self._close(self._db)

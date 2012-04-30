@@ -9,6 +9,8 @@
 
    .. automethod:: open(path, status=MODE.READ_ONLY)
 
+   .. automethod:: close
+
    .. automethod:: get_path
 
    .. automethod:: get_version
