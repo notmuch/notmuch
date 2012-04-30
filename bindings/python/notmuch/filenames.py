@@ -32,29 +32,32 @@ from .errors import (
 class Filenames(Python3StringMixIn):
     """Represents a list of filenames as returned by notmuch
 
-    This object contains the Filenames iterator. The main function is
-    as_generator() which will return a generator so we can do a Filenamesth an
-    iterator over a list of notmuch filenames. Do note that the underlying
-    library only provides a one-time iterator (it cannot reset the iterator to
-    the start). Thus iterating over the function will "exhaust" the list of
-    tags, and a subsequent iteration attempt will raise a
-    :exc:`NotInitializedError`. Also note, that any function that uses
-    iteration (nearly all) will also exhaust the tags. So both::
+    Objects of this class implement the iterator protocol.
 
-      for name in filenames: print name
+    .. note::
 
-    as well as::
+        The underlying library only provides a one-time iterator (it
+        cannot reset the iterator to the start). Thus iterating over
+        the function will "exhaust" the list of tags, and a subsequent
+        iteration attempt will raise a
+        :exc:`NotInitializedError`. Also note, that any function that
+        uses iteration (nearly all) will also exhaust the tags. So
+        both::
 
-       number_of_names = len(names)
+           for name in filenames: print name
 
-    and even a simple::
+        as well as::
 
-       #str() iterates over all tags to construct a space separated list
-       print(str(filenames))
+           number_of_names = len(names)
 
-    will "exhaust" the Filenames. However, you can use
-    :meth:`Message.get_filenames` repeatedly to get fresh Filenames
-    objects to perform various actions on filenames.
+        and even a simple::
+
+           #str() iterates over all tags to construct a space separated list
+           print(str(filenames))
+
+        will "exhaust" the Filenames. However, you can use
+        :meth:`Message.get_filenames` repeatedly to get fresh
+        Filenames objects to perform various actions on filenames.
     """
 
     #notmuch_filenames_get
