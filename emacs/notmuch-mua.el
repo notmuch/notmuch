@@ -159,7 +159,7 @@ list."
 
     ;; Get the reply object as JSON, and parse it into an elisp object.
     (with-temp-buffer
-      (apply 'call-process (append (list notmuch-command nil (list t t) nil) args))
+      (apply 'call-process (append (list notmuch-command nil (list t nil) nil) args))
       (goto-char (point-min))
       (let ((json-object-type 'plist)
 	    (json-array-type 'list)
