@@ -1,5 +1,19 @@
 #! /bin/sh
 
+# Test whether this shell is capable of parameter substring processing.
+( option='a/b'; : ${option#*/} ) 2>/dev/null || {
+    echo "
+The shell interpreting '$0' is lacking some required features.
+
+To work around this problem you may try to execute:
+
+    ksh $0 $*
+ or
+    bash $0 $*
+"
+    exit 1
+}
+
 # Store original IFS value so it can be changed (and restored) in many places.
 readonly DEFAULT_IFS="$IFS"
 
