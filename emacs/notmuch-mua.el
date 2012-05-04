@@ -37,6 +37,26 @@
   :group 'notmuch-send
   :group 'notmuch-hooks)
 
+(defcustom notmuch-mua-compose-in 'current-window
+  (concat
+   "Where to create the mail buffer used to compose a new message.
+Possible values are `current-window' (default), `new-window' and
+`new-frame'. If set to `current-window', the mail buffer will be
+displayed in the current window, so the old buffer will be
+restored when the mail buffer is killed. If set to `new-window'
+or `new-frame', the mail buffer will be displayed in a new
+window/frame that will be destroyed when the buffer is killed.
+You may want to customize `message-kill-buffer-on-exit'
+accordingly."
+   (when (< emacs-major-version 24)
+           " Due to a known bug in Emacs 23, you should not set
+this to `new-window' if `message-kill-buffer-on-exit' is
+disabled: this would result in an incorrect behavior."))
+  :group 'notmuch-send
+  :type '(choice (const :tag "Compose in the current window" current-window)
+		 (const :tag "Compose mail in a new window"  new-window)
+		 (const :tag "Compose mail in a new frame"   new-frame)))
+
 (defcustom notmuch-mua-user-agent-function 'notmuch-mua-user-agent-full
   "Function used to generate a `User-Agent:' string. If this is
 `nil' then no `User-Agent:' will be generated."
@@ -55,6 +75,23 @@ list."
   :group 'notmuch-send)
 
 ;;
+
+(defun notmuch-mua-get-switch-function ()
+  "Get a switch function according to `notmuch-mua-compose-in'."
+  (cond ((eq notmuch-mua-compose-in 'current-window)
+	 'switch-to-buffer)
+	((eq notmuch-mua-compose-in 'new-window)
+	 'switch-to-buffer-other-window)
+	((eq notmuch-mua-compose-in 'new-frame)
+	 'switch-to-buffer-other-frame)
+	(t (error "Invalid value for `notmuch-mua-compose-in'"))))
+
+(defun notmuch-mua-maybe-set-window-dedicated ()
+  "Set the selected window as dedicated according to
+`notmuch-mua-compose-in'."
+  (when (or (eq notmuch-mua-compose-in 'new-frame)
+	    (eq notmuch-mua-compose-in 'new-window))
+    (set-window-dedicated-p (selected-window) t)))
 
 (defun notmuch-mua-user-agent-full ()
   "Generate a `User-Agent:' string suitable for notmuch."
@@ -157,7 +194,8 @@ list."
 		     collect pair)))
 	  (notmuch-mua-mail (plist-get reply-headers :To)
 			    (plist-get reply-headers :Subject)
-			    (notmuch-headers-plist-to-alist reply-headers))))
+			    (notmuch-headers-plist-to-alist reply-headers)
+			    nil (notmuch-mua-get-switch-function))))
 
       ;; Insert the message body - but put it in front of the signature
       ;; if one is present
@@ -191,6 +229,7 @@ list."
   (set-buffer-modified-p nil))
 
 (defun notmuch-mua-forward-message ()
+  (funcall (notmuch-mua-get-switch-function) (current-buffer))
   (message-forward)
 
   (when notmuch-mua-user-agent-function
@@ -200,6 +239,7 @@ list."
   (message-sort-headers)
   (message-hide-headers)
   (set-buffer-modified-p nil)
+  (notmuch-mua-maybe-set-window-dedicated)
 
   (message-goto-to))
 
@@ -222,6 +262,7 @@ OTHER-ARGS are passed through to `message-mail'."
   (message-sort-headers)
   (message-hide-headers)
   (set-buffer-modified-p nil)
+  (notmuch-mua-maybe-set-window-dedicated)
 
   (message-goto-to))
 
@@ -278,7 +319,7 @@ the From: address first."
   (let ((other-headers
 	 (when (or prompt-for-sender notmuch-always-prompt-for-sender)
 	   (list (cons 'From (notmuch-mua-prompt-for-sender))))))
-    (notmuch-mua-mail nil nil other-headers)))
+    (notmuch-mua-mail nil nil other-headers nil (notmuch-mua-get-switch-function))))
 
 (defun notmuch-mua-new-forward-message (&optional prompt-for-sender)
   "Invoke the notmuch message forwarding window.
