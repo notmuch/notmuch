@@ -56,6 +56,7 @@ libnotmuch.so.3 libnotmuch3 #MINVER#
  notmuch_query_get_sort@Base 0.4
  notmuch_query_search_messages@Base 0.3
  notmuch_query_search_threads@Base 0.3
+ notmuch_query_set_omit_excluded@Base 0.13~rc1
  notmuch_query_set_sort@Base 0.3
  notmuch_status_to_string@Base 0.3
  notmuch_tags_destroy@Base 0.3
