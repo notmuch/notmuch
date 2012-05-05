@@ -52,7 +52,6 @@ test_emacs "(let* ((widget (widget-create 'notmuch-hello-tags-section))
 test_expect_equal_file OUTPUT $EXPECTED/notmuch-hello-empty-custom-tags-section
 
 test_begin_subtest "Empty custom queries section"
-test_subtest_known_broken
 test_emacs "(let* ((widget (widget-create 'notmuch-hello-query-section))
                    (notmuch-hello-sections (list (widget-value widget))))
              (notmuch-hello)

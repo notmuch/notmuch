@@ -187,7 +187,7 @@ This should only be set by `notmuch-hello-insert-search'.")
   :tag "Customized queries section (see docstring for details)"
   :type
   `(list :tag ""
-	 (const :tag "" notmuch-hello-insert-query-list)
+	 (const :tag "" notmuch-hello-insert-searches)
 	 (string :tag "Title for this section")
 	 (repeat :tag "Queries"
 		 (cons (string :tag "Name") (string :tag "Query")))
