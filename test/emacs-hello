@@ -44,6 +44,21 @@ test_emacs "(let ((notmuch-hello-sections
              (test-output))"
 test_expect_equal_file OUTPUT $EXPECTED/notmuch-hello-section-counts
 
+test_begin_subtest "Empty custom tags section"
+test_emacs "(let* ((widget (widget-create 'notmuch-hello-tags-section))
+                   (notmuch-hello-sections (list (widget-value widget))))
+             (notmuch-hello)
+             (test-output))"
+test_expect_equal_file OUTPUT $EXPECTED/notmuch-hello-empty-custom-tags-section
+
+test_begin_subtest "Empty custom queries section"
+test_subtest_known_broken
+test_emacs "(let* ((widget (widget-create 'notmuch-hello-query-section))
+                   (notmuch-hello-sections (list (widget-value widget))))
+             (notmuch-hello)
+             (test-output))"
+test_expect_equal_file OUTPUT $EXPECTED/notmuch-hello-empty-custom-queries-section
+
 test_begin_subtest "Column alignment for tag/queries with long names"
 tag=a-very-long-tag # length carefully calculated for 80 characters window width
 notmuch tag +$tag '*'
