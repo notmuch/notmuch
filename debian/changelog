@@ -1,8 +1,10 @@
-notmuch (0.12-2) UNRELEASED; urgency=low
+notmuch (0.13~rc1-1) UNRELEASED; urgency=low
 
+  * New upstream pre-release
   * new binary package "notmuch-mutt" for Mutt integration
+  * Bump libnotmuch SONAME because of API changes
 
- -- Stefano Zacchiroli <zack@debian.org>  Mon, 26 Mar 2012 10:47:29 +0200
+ -- David Bremner <bremner@debian.org>  Sat, 05 May 2012 10:26:47 -0300
 
 notmuch (0.12-1) unstable; urgency=low
 
