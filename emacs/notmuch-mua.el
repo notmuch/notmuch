@@ -21,6 +21,7 @@
 
 (require 'json)
 (require 'message)
+(require 'mm-view)
 (require 'format-spec)
 
 (require 'notmuch-lib)
@@ -89,6 +90,14 @@ list."
 	  append (notmuch-mua-get-quotable-parts (plist-get part :content))
 	else if (notmuch-match-content-type (plist-get part :content-type) "text/*")
 	  collect part))
+
+(defun notmuch-mua-insert-quotable-part (message part)
+  (save-restriction
+    (narrow-to-region (point) (point))
+    (notmuch-mm-display-part-inline message part (plist-get part :id)
+				    (plist-get part :content-type)
+				    notmuch-show-process-crypto)
+    (goto-char (point-max))))
 
 ;; There is a bug in emacs 23's message.el that results in a newline
 ;; not being inserted after the References header, so the next header
@@ -169,11 +178,7 @@ list."
 	;; Get the parts of the original message that should be quoted; this includes
 	;; all the text parts, except the non-preferred ones in a multipart/alternative.
 	(let ((quotable-parts (notmuch-mua-get-quotable-parts (plist-get original :body))))
-	  (mapc (lambda (part)
-		  (insert (notmuch-get-bodypart-content original part
-							(plist-get part :id)
-							notmuch-show-process-crypto)))
-		quotable-parts))
+	  (mapc (apply-partially 'notmuch-mua-insert-quotable-part original) quotable-parts))
 
 	(set-mark (point))
 	(goto-char start)

@@ -21,6 +21,8 @@
 
 ;; This is an part of an emacs-based interface to the notmuch mail system.
 
+(require 'mm-view)
+(require 'mm-decode)
 (eval-when-compile (require 'cl))
 
 (defvar notmuch-command "notmuch"
@@ -236,6 +238,23 @@ the given type."
 (defun notmuch-get-bodypart-content (msg part nth process-crypto)
   (or (plist-get part :content)
       (notmuch-get-bodypart-internal (notmuch-id-to-query (plist-get msg :id)) nth process-crypto)))
+
+(defun notmuch-mm-display-part-inline (msg part nth content-type process-crypto)
+  "Use the mm-decode/mm-view functions to display a part in the
+current buffer, if possible."
+  (let ((display-buffer (current-buffer)))
+    (with-temp-buffer
+      (let* ((charset (plist-get part :content-charset))
+	     (handle (mm-make-handle (current-buffer) `(,content-type (charset . ,charset)))))
+	;; If the user wants the part inlined, insert the content and
+	;; test whether we are able to inline it (which includes both
+	;; capability and suitability tests).
+	(when (mm-inlined-p handle)
+	  (insert (notmuch-get-bodypart-content msg part nth process-crypto))
+	  (when (mm-inlinable-p handle)
+	    (set-buffer display-buffer)
+	    (mm-display-part handle)
+	    t))))))
 
 ;; Converts a plist of headers to an alist of headers. The input plist should
 ;; have symbols of the form :Header as keys, and the resulting alist will have

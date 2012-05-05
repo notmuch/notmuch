@@ -524,23 +524,6 @@ message at DEPTH in the current thread."
     (let ((handle (mm-make-handle (current-buffer) (list content-type))))
       (mm-interactively-view-part handle))))
 
-(defun notmuch-show-mm-display-part-inline (msg part nth content-type)
-  "Use the mm-decode/mm-view functions to display a part in the
-current buffer, if possible."
-  (let ((display-buffer (current-buffer)))
-    (with-temp-buffer
-      (let* ((charset (plist-get part :content-charset))
-	     (handle (mm-make-handle (current-buffer) `(,content-type (charset . ,charset)))))
-	;; If the user wants the part inlined, insert the content and
-	;; test whether we are able to inline it (which includes both
-	;; capability and suitability tests).
-	(when (mm-inlined-p handle)
-	  (insert (notmuch-get-bodypart-content msg part nth notmuch-show-process-crypto))
-	  (when (mm-inlinable-p handle)
-	    (set-buffer display-buffer)
-	    (mm-display-part handle)
-	    t))))))
-
 (defun notmuch-show-multipart/*-to-list (part)
   (mapcar (lambda (inner-part) (plist-get inner-part :content-type))
 	  (plist-get part :content)))
@@ -785,7 +768,7 @@ current buffer, if possible."
 (defun notmuch-show-insert-part-*/* (msg part content-type nth depth declared-type)
   ;; This handler _must_ succeed - it is the handler of last resort.
   (notmuch-show-insert-part-header nth content-type declared-type (plist-get part :filename))
-  (notmuch-show-mm-display-part-inline msg part nth content-type)
+  (notmuch-mm-display-part-inline msg part nth content-type notmuch-show-process-crypto)
   t)
 
 ;; Functions for determining how to handle MIME parts.
