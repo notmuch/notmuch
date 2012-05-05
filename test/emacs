@@ -444,6 +444,33 @@ Alex Botero-Lowry <alex.boterolowry@gmail.com> writes:
 EOF
 test_expect_equal_file OUTPUT EXPECTED
 
+test_begin_subtest "Reply within emacs to an html-only message"
+test_subtest_known_broken
+add_message '[content-type]="text/html"' \
+	    '[body]="Hi,<br />This is an <b>HTML</b> test message.<br /><br />OK?"'
+test_emacs "(let ((message-hidden-headers '()))
+	    (notmuch-show \"id:${gen_msg_id}\")
+	    (notmuch-show-reply)
+	    (test-output))"
+sed -i -e 's,^User-Agent: Notmuch/.* Emacs/.*,User-Agent: Notmuch/XXX Emacs/XXX,' OUTPUT
+cat <<EOF >EXPECTED
+From: Notmuch Test Suite <test_suite@notmuchmail.org>
+To: 
+Subject: Re: Reply within emacs to an html-only message
+In-Reply-To: <${gen_msg_id}>
+Fcc: ${MAIL_DIR}/sent
+References: <${gen_msg_id}>
+User-Agent: Notmuch/XXX Emacs/XXX
+--text follows this line--
+Notmuch Test Suite <test_suite@notmuchmail.org> writes:
+
+> Hi,
+> This is an HTML test message.
+>
+> OK?
+EOF
+test_expect_equal_file OUTPUT EXPECTED
+
 test_begin_subtest "Quote MML tags in reply"
 message_id='test-emacs-mml-quoting@message.id'
 add_message [id]="$message_id" \
