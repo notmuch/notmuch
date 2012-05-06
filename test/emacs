@@ -447,7 +447,7 @@ test_expect_equal_file OUTPUT EXPECTED
 test_begin_subtest "Reply within emacs to an html-only message"
 add_message '[content-type]="text/html"' \
 	    '[body]="Hi,<br />This is an <b>HTML</b> test message.<br /><br />OK?"'
-test_emacs "(let ((message-hidden-headers '()))
+test_emacs "(let ((message-hidden-headers '()) (mm-text-html-renderer 'html2text))
 	    (notmuch-show \"id:${gen_msg_id}\")
 	    (notmuch-show-reply)
 	    (test-output))"
@@ -463,10 +463,7 @@ User-Agent: Notmuch/XXX Emacs/XXX
 --text follows this line--
 Notmuch Test Suite <test_suite@notmuchmail.org> writes:
 
-> Hi,
-> This is an HTML test message.
->
-> OK?
+> Hi,This is an HTML test message.OK?
 EOF
 test_expect_equal_file OUTPUT EXPECTED
 
