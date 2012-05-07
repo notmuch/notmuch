@@ -1,6 +1,6 @@
 /* The Ruby interface to the notmuch mail library
  *
- * Copyright © 2010, 2011 Ali Polatel
+ * Copyright © 2010, 2011, 2012 Ali Polatel
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -236,6 +236,7 @@ Init_notmuch (void)
     rb_define_method (notmuch_rb_cQuery, "to_s", notmuch_rb_query_get_string, 0); /* in query.c */
     rb_define_method (notmuch_rb_cQuery, "search_threads", notmuch_rb_query_search_threads, 0); /* in query.c */
     rb_define_method (notmuch_rb_cQuery, "search_messages", notmuch_rb_query_search_messages, 0); /* in query.c */
+    rb_define_method (notmuch_rb_cQuery, "count_messages", notmuch_rb_query_count_messages, 0); /* in query.c */
 
     /*
      * Document-class: Notmuch::Threads

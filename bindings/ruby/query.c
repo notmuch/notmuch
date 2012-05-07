@@ -1,6 +1,6 @@
 /* The Ruby interface to the notmuch mail library
  *
- * Copyright © 2010, 2011 Ali Polatel
+ * Copyright © 2010, 2011, 2012 Ali Polatel
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -126,4 +126,23 @@ notmuch_rb_query_search_messages (VALUE self)
 	rb_raise (notmuch_rb_eMemoryError, "Out of memory");
 
     return Data_Wrap_Struct (notmuch_rb_cMessages, NULL, NULL, messages);
+}
+
+/*
+ * call-seq: QUERY.count_messages => Fixnum
+ *
+ * Return an estimate of the number of messages matching a search
+ */
+VALUE
+notmuch_rb_query_count_messages (VALUE self)
+{
+    notmuch_query_t *query;
+
+    Data_Get_Notmuch_Query (self, query);
+
+    /* Xapian exceptions are not handled properly.
+     * (function may return 0 after printing a message)
+     * Thus there is nothing we can do here...
+     */
+    return UINT2FIX(notmuch_query_count_messages(query));
 }

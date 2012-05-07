@@ -222,6 +222,9 @@ notmuch_rb_query_search_threads (VALUE self);
 VALUE
 notmuch_rb_query_search_messages (VALUE self);
 
+VALUE
+notmuch_rb_query_count_messages (VALUE self);
+
 /* threads.c */
 VALUE
 notmuch_rb_threads_destroy (VALUE self);
