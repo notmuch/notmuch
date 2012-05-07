@@ -1,6 +1,6 @@
 /* The Ruby interface to the notmuch mail library
  *
- * Copyright © 2010, 2011 Ali Polatel
+ * Copyright © 2010, 2011, 2012 Ali Polatel
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,8 +21,8 @@
 #ifndef DEFS_H
 #define DEFS_H
 
-#include <notmuch.h>
 #include <ruby.h>
+#include "notmuch.h"
 
 VALUE notmuch_rb_cDatabase;
 VALUE notmuch_rb_cDirectory;
