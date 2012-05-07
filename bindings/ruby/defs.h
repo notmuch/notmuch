@@ -220,6 +220,9 @@ VALUE
 notmuch_rb_query_add_tag_exclude (VALUE self, VALUE tagv);
 
 VALUE
+notmuch_rb_query_set_omit_excluded (VALUE self, VALUE omitv);
+
+VALUE
 notmuch_rb_query_search_threads (VALUE self);
 
 VALUE

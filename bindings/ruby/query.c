@@ -107,6 +107,24 @@ notmuch_rb_query_add_tag_exclude (VALUE self, VALUE tagv)
 }
 
 /*
+ * call-seq: QUERY.omit_excluded=(boolean) => nil
+ *
+ * Specify whether to omit excluded results or simply flag them.
+ * By default, this is set to +true+.
+ */
+VALUE
+notmuch_rb_query_set_omit_excluded (VALUE self, VALUE omitv)
+{
+    notmuch_query_t *query;
+
+    Data_Get_Notmuch_Query (self, query);
+
+    notmuch_query_set_omit_excluded (query, RTEST (omitv));
+
+    return Qnil;
+}
+
+/*
  * call-seq: QUERY.search_threads => THREADS
  *
  * Search for threads
