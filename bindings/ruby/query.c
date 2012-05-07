@@ -89,6 +89,24 @@ notmuch_rb_query_get_string (VALUE self)
 }
 
 /*
+ * call-seq: QUERY.add_tag_exclude(tag) => nil
+ *
+ * Add a tag that will be excluded from the query results by default.
+ */
+VALUE
+notmuch_rb_query_add_tag_exclude (VALUE self, VALUE tagv)
+{
+    notmuch_query_t *query;
+    const char *tag;
+
+    Data_Get_Notmuch_Query (self, query);
+    tag = RSTRING_PTR(tagv);
+
+    notmuch_query_add_tag_exclude(query, tag);
+    return Qnil;
+}
+
+/*
  * call-seq: QUERY.search_threads => THREADS
  *
  * Search for threads

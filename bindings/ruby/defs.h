@@ -217,6 +217,9 @@ VALUE
 notmuch_rb_query_get_string (VALUE self);
 
 VALUE
+notmuch_rb_query_add_tag_exclude (VALUE self, VALUE tagv);
+
+VALUE
 notmuch_rb_query_search_threads (VALUE self);
 
 VALUE

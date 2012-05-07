@@ -234,6 +234,7 @@ Init_notmuch (void)
     rb_define_method (notmuch_rb_cQuery, "sort", notmuch_rb_query_get_sort, 0); /* in query.c */
     rb_define_method (notmuch_rb_cQuery, "sort=", notmuch_rb_query_set_sort, 1); /* in query.c */
     rb_define_method (notmuch_rb_cQuery, "to_s", notmuch_rb_query_get_string, 0); /* in query.c */
+    rb_define_method (notmuch_rb_cQuery, "add_tag_exclude", notmuch_rb_query_add_tag_exclude, 1); /* in query.c */
     rb_define_method (notmuch_rb_cQuery, "search_threads", notmuch_rb_query_search_threads, 0); /* in query.c */
     rb_define_method (notmuch_rb_cQuery, "search_messages", notmuch_rb_query_search_messages, 0); /* in query.c */
     rb_define_method (notmuch_rb_cQuery, "count_messages", notmuch_rb_query_count_messages, 0); /* in query.c */
