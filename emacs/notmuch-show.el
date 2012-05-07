@@ -453,6 +453,7 @@ message at DEPTH in the current thread."
     (define-key map "s" 'notmuch-show-part-button-save)
     (define-key map "v" 'notmuch-show-part-button-view)
     (define-key map "o" 'notmuch-show-part-button-interactively-view)
+    (define-key map "|" 'notmuch-show-part-button-pipe)
     map)
   "Submap for button commands")
 (fset 'notmuch-show-part-button-map notmuch-show-part-button-map)
@@ -523,6 +524,11 @@ message at DEPTH in the current thread."
   (notmuch-with-temp-part-buffer message-id nth
     (let ((handle (mm-make-handle (current-buffer) (list content-type))))
       (mm-interactively-view-part handle))))
+
+(defun notmuch-show-pipe-part (message-id nth &optional filename content-type)
+  (notmuch-with-temp-part-buffer message-id nth
+    (let ((handle (mm-make-handle (current-buffer) (list content-type))))
+      (mm-pipe-part handle))))
 
 (defun notmuch-show-multipart/*-to-list (part)
   (mapcar (lambda (inner-part) (plist-get inner-part :content-type))
@@ -1873,6 +1879,10 @@ the user (see `notmuch-show-stash-mlarchive-link-alist')."
 (defun notmuch-show-part-button-interactively-view (&optional button)
   (interactive)
   (notmuch-show-part-button-internal button #'notmuch-show-interactively-view-part))
+
+(defun notmuch-show-part-button-pipe (&optional button)
+  (interactive)
+  (notmuch-show-part-button-internal button #'notmuch-show-pipe-part))
 
 (defun notmuch-show-part-button-internal (button handler)
   (let ((button (or button (button-at (point)))))
