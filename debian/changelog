@@ -1,4 +1,4 @@
-notmuch (0.13~rc1-1) UNRELEASED; urgency=low
+notmuch (0.13~rc1-2) experimental; urgency=low
 
   * New upstream pre-release
   * new binary package "notmuch-mutt" for Mutt integration
