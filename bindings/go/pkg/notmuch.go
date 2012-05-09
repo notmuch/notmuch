@@ -14,7 +14,7 @@ import "unsafe"
 // Status codes used for the return values of most functions
 type Status C.notmuch_status_t
 const (
-	STATUS_SUCCESS Status = 0
+	STATUS_SUCCESS Status = iota
 	STATUS_OUT_OF_MEMORY
     STATUS_READ_ONLY_DATABASE
     STATUS_XAPIAN_EXCEPTION
