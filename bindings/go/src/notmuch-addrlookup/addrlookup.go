@@ -86,7 +86,7 @@ func addresses_by_frequency(msgs *notmuch.Messages, name string, pass uint, addr
 	// 	"<?(?P<mail>\\b\\w+([-+.]\\w+)*\\@\\w+[-\\.\\w]*\\.([-\\.\\w]+)*\\w\\b)>?)"
 	pattern = `.*` + strings.ToLower(name) + `.*`
 	var re *regexp.Regexp = nil
-	var err os.Error = nil
+	var err error = nil
 	if re,err = regexp.Compile(pattern); err != nil {
 		log.Printf("error: %v\n", err)
 		return &freqs
@@ -103,7 +103,7 @@ func addresses_by_frequency(msgs *notmuch.Messages, name string, pass uint, addr
 		for _,header := range headers {
 			froms := strings.ToLower(msg.GetHeader(header))
 			//println("  froms: ["+froms+"]")
-			for _,from := range strings.Split(froms, ",", -1) {
+			for _,from := range strings.Split(froms, ",") {
 				from = strings.Trim(from, " ")
 				match := re.FindString(from)
 				//println("  -> match: ["+match+"]")
@@ -179,7 +179,7 @@ type address_matcher struct {
 
 func new_address_matcher() *address_matcher {
 	var cfg *config.Config
-	var err os.Error
+	var err error
 
 	// honor NOTMUCH_CONFIG
 	home := os.Getenv("NOTMUCH_CONFIG")
