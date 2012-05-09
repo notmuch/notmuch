@@ -3,6 +3,8 @@
 package notmuch
 
 /*
+#cgo LDFLAGS: -lnotmuch
+
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
