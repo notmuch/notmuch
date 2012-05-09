@@ -15,25 +15,26 @@ import "unsafe"
 
 // Status codes used for the return values of most functions
 type Status C.notmuch_status_t
+
 const (
 	STATUS_SUCCESS Status = iota
 	STATUS_OUT_OF_MEMORY
-    STATUS_READ_ONLY_DATABASE
-    STATUS_XAPIAN_EXCEPTION
-    STATUS_FILE_ERROR
-    STATUS_FILE_NOT_EMAIL
-    STATUS_DUPLICATE_MESSAGE_ID
-    STATUS_NULL_POINTER
-    STATUS_TAG_TOO_LONG
-    STATUS_UNBALANCED_FREEZE_THAW
-    STATUS_UNBALANCED_ATOMIC
+	STATUS_READ_ONLY_DATABASE
+	STATUS_XAPIAN_EXCEPTION
+	STATUS_FILE_ERROR
+	STATUS_FILE_NOT_EMAIL
+	STATUS_DUPLICATE_MESSAGE_ID
+	STATUS_NULL_POINTER
+	STATUS_TAG_TOO_LONG
+	STATUS_UNBALANCED_FREEZE_THAW
+	STATUS_UNBALANCED_ATOMIC
 
-    STATUS_LAST_STATUS
+	STATUS_LAST_STATUS
 )
 
 func (self Status) String() string {
 	var p *C.char
-	
+
 	// p is read-only
 	p = C.notmuch_status_to_string(C.notmuch_status_t(self))
 	if p != nil {
@@ -83,9 +84,10 @@ type Filenames struct {
 }
 
 type DatabaseMode C.notmuch_database_mode_t
+
 const (
-    DATABASE_MODE_READ_ONLY DatabaseMode = 0
-    DATABASE_MODE_READ_WRITE
+	DATABASE_MODE_READ_ONLY DatabaseMode = 0
+	DATABASE_MODE_READ_WRITE
 )
 
 // Create a new, empty notmuch database located at 'path'
@@ -98,7 +100,7 @@ func NewDatabase(path string) (*Database, Status) {
 		return nil, STATUS_OUT_OF_MEMORY
 	}
 
-	self := &Database{db:nil}
+	self := &Database{db: nil}
 	st := Status(C.notmuch_database_create(c_path, &self.db))
 	if st != STATUS_SUCCESS {
 		return nil, st
@@ -132,7 +134,7 @@ func OpenDatabase(path string, mode DatabaseMode) (*Database, Status) {
 		return nil, STATUS_OUT_OF_MEMORY
 	}
 
-	self := &Database{db:nil}
+	self := &Database{db: nil}
 	st := Status(C.notmuch_database_open(c_path, C.notmuch_database_mode_t(mode), &self.db))
 	if st != STATUS_SUCCESS {
 		return nil, st
@@ -149,9 +151,9 @@ func (self *Database) Close() {
 /* Return the database path of the given database.
  */
 func (self *Database) GetPath() string {
-	
- /* The return value is a string owned by notmuch so should not be
-  * modified nor freed by the caller. */
+
+	/* The return value is a string owned by notmuch so should not be
+	 * modified nor freed by the caller. */
 	var p *C.char = C.notmuch_database_get_path(self.db)
 	if p != nil {
 		s := C.GoString(p)
@@ -181,7 +183,6 @@ func (self *Database) NeedsUpgrade() bool {
 
 // TODO: notmuch_database_upgrade
 
-
 /* Retrieve a directory object from the database for 'path'.
  *
  * Here, 'path' should be a path relative to the path of 'database'
@@ -202,7 +203,7 @@ func (self *Database) GetDirectory(path string) *Directory {
 	if c_dir == nil {
 		return nil
 	}
-	return &Directory{dir:c_dir}
+	return &Directory{dir: c_dir}
 }
 
 /* Add a new message to the given notmuch database.
@@ -245,8 +246,7 @@ func (self *Database) GetDirectory(path string) *Directory {
  * NOTMUCH_STATUS_READ_ONLY_DATABASE: Database was opened in read-only
  *	mode so no message can be added.
  */
-func 
-(self *Database) AddMessage(fname string) (*Message, Status) {
+func (self *Database) AddMessage(fname string) (*Message, Status) {
 	var c_fname *C.char = C.CString(fname)
 	defer C.free(unsafe.Pointer(c_fname))
 
@@ -257,7 +257,7 @@ func
 	var c_msg *C.notmuch_message_t = new(C.notmuch_message_t)
 	st := Status(C.notmuch_database_add_message(self.db, c_fname, &c_msg))
 
-	return &Message{message:c_msg}, st
+	return &Message{message: c_msg}, st
 }
 
 /* Remove a message from the given notmuch database.
@@ -285,7 +285,7 @@ func
  *	mode so no message can be removed.
  */
 func (self *Database) RemoveMessage(fname string) Status {
-	
+
 	var c_fname *C.char = C.CString(fname)
 	defer C.free(unsafe.Pointer(c_fname))
 
@@ -310,7 +310,7 @@ func (self *Database) RemoveMessage(fname string) Status {
  *	* A Xapian exception occurs
  */
 func (self *Database) FindMessage(message_id string) (*Message, Status) {
-	
+
 	var c_msg_id *C.char = C.CString(message_id)
 	defer C.free(unsafe.Pointer(c_msg_id))
 
@@ -318,7 +318,7 @@ func (self *Database) FindMessage(message_id string) (*Message, Status) {
 		return nil, STATUS_OUT_OF_MEMORY
 	}
 
-	msg := &Message{message:nil}
+	msg := &Message{message: nil}
 	st := Status(C.notmuch_database_find_message(self.db, c_msg_id, &msg.message))
 	if st != STATUS_SUCCESS {
 		return nil, st
@@ -338,7 +338,7 @@ func (self *Database) GetAllTags() *Tags {
 	if tags == nil {
 		return nil
 	}
-	return &Tags{tags:tags}
+	return &Tags{tags: tags}
 }
 
 /* Create a new query for 'database'.
@@ -366,7 +366,7 @@ func (self *Database) GetAllTags() *Tags {
  * Will return NULL if insufficient memory is available.
  */
 func (self *Database) CreateQuery(query string) *Query {
-	
+
 	var c_query *C.char = C.CString(query)
 	defer C.free(unsafe.Pointer(c_query))
 
@@ -378,11 +378,12 @@ func (self *Database) CreateQuery(query string) *Query {
 	if q == nil {
 		return nil
 	}
-	return &Query{query:q}
+	return &Query{query: q}
 }
 
 /* Sort values for notmuch_query_set_sort */
 type Sort C.notmuch_sort_t
+
 const (
 	SORT_OLDEST_FIRST Sort = 0
 	SORT_NEWEST_FIRST
@@ -395,7 +396,7 @@ func (self *Query) String() string {
 	// FIXME: do we own 'q' or not ?
 	q := C.notmuch_query_get_query_string(self.query)
 	//defer C.free(unsafe.Pointer(q))
-	
+
 	if q != nil {
 		s := C.GoString(q)
 		return s
@@ -457,7 +458,7 @@ func (self *Query) SearchThreads() *Threads {
 	if threads == nil {
 		return nil
 	}
-	return &Threads{threads:threads}
+	return &Threads{threads: threads}
 }
 
 /* Execute a query for messages, returning a notmuch_messages_t object
@@ -503,7 +504,7 @@ func (self *Query) SearchMessages() *Messages {
 	if msgs == nil {
 		return nil
 	}
-	return &Messages{messages:msgs}
+	return &Messages{messages: msgs}
 }
 
 /* Destroy a notmuch_query_t along with any associated resources.
@@ -605,7 +606,7 @@ func (self *Messages) Get() *Message {
 	if msg == nil {
 		return nil
 	}
-	return &Message{message:msg}
+	return &Message{message: msg}
 }
 
 /* Move the 'messages' iterator to the next message.
@@ -657,7 +658,7 @@ func (self *Messages) CollectTags() *Tags {
 	if tags == nil {
 		return nil
 	}
-	return &Tags{tags:tags}
+	return &Tags{tags: tags}
 }
 
 /* Get the message ID of 'message'.
@@ -697,14 +698,14 @@ func (self *Message) GetMessageId() string {
  * message belongs to a single thread.
  */
 func (self *Message) GetThreadId() string {
-	
+
 	if self.message == nil {
 		return ""
 	}
 	id := C.notmuch_message_get_thread_id(self.message)
 	// we dont own id
 	// defer C.free(unsafe.Pointer(id))
-	
+
 	if id == nil {
 		return ""
 	}
@@ -737,7 +738,7 @@ func (self *Message) GetReplies() *Messages {
 	if msgs == nil {
 		return nil
 	}
-	return &Messages{messages:msgs}
+	return &Messages{messages: msgs}
 }
 
 /* Get a filename for the email corresponding to 'message'.
@@ -761,7 +762,7 @@ func (self *Message) GetFileName() string {
 	fname := C.notmuch_message_get_filename(self.message)
 	// we dont own fname
 	// defer C.free(unsafe.Pointer(fname))
-	
+
 	if fname == nil {
 		return ""
 	}
@@ -770,6 +771,7 @@ func (self *Message) GetFileName() string {
 }
 
 type Flag C.notmuch_message_flag_t
+
 const (
 	MESSAGE_FLAG_MATCH Flag = 0
 )
@@ -816,16 +818,16 @@ func (self *Message) GetHeader(header string) string {
 	if self.message == nil {
 		return ""
 	}
-	
+
 	var c_header *C.char = C.CString(header)
 	defer C.free(unsafe.Pointer(c_header))
-	
+
 	/* we dont own value */
 	value := C.notmuch_message_get_header(self.message, c_header)
 	if value == nil {
 		return ""
 	}
-	
+
 	return C.GoString(value)
 }
 
@@ -867,7 +869,7 @@ func (self *Message) GetTags() *Tags {
 	if tags == nil {
 		return nil
 	}
-	return &Tags{tags:tags}
+	return &Tags{tags: tags}
 }
 
 /* The longest possible tag value. */
@@ -1124,4 +1126,5 @@ func (self *Filenames) Destroy() {
 	}
 	C.notmuch_filenames_destroy(self.fnames)
 }
+
 /* EOF */
