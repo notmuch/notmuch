@@ -209,8 +209,12 @@ func (self *address_matcher) run(name string) {
 	queries := [3]*notmuch.Query{}
 	
 	// open the database
-	self.db = notmuch.OpenDatabase(self.user_db_path, 
-		notmuch.DATABASE_MODE_READ_ONLY)
+	if db, status := notmuch.OpenDatabase(self.user_db_path,
+		notmuch.DATABASE_MODE_READ_ONLY); status == notmuch.STATUS_SUCCESS {
+        self.db = db
+	} else {
+		log.Fatalf("Failed to open the database: %v\n", status)
+	}
 
 	// pass 1: look at all from: addresses with the address book tag
 	query := "tag:" + self.user_addrbook_tag
