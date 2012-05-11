@@ -377,19 +377,14 @@ add_recipients_from_message (GMimeMessage *reply,
 static const char *
 guess_from_received_header (notmuch_config_t *config, notmuch_message_t *message)
 {
-    const char *received,*primary,*by;
-    const char **other;
-    char *tohdr;
+    const char *addr, *received, *by;
     char *mta,*ptr,*token;
     char *domain=NULL;
     char *tld=NULL;
     const char *delim=". \t";
-    size_t i,j,other_len;
+    size_t i;
 
     const char *to_headers[] = {"Envelope-to", "X-Original-To"};
-
-    primary = notmuch_config_get_user_primary_email (config);
-    other = notmuch_config_get_user_other_email (config, &other_len);
 
     /* sadly, there is no standard way to find out to which email
      * address a mail was delivered - what is in the headers depends
@@ -405,23 +400,13 @@ guess_from_received_header (notmuch_config_t *config, notmuch_message_t *message
      *    'by' part of Received headers
      * If none of these work, we give up and return NULL
      */
-    for (i = 0; i < sizeof(to_headers)/sizeof(*to_headers); i++) {
-	tohdr = xstrdup(notmuch_message_get_header (message, to_headers[i]));
-	if (tohdr && *tohdr) {
-	    /* tohdr is potentialy a list of email addresses, so here we
-	     * check if one of the email addresses is a substring of tohdr
-	     */
-	    if (strcasestr(tohdr, primary)) {
-		free(tohdr);
-		return primary;
-	    }
-	    for (j = 0; j < other_len; j++)
-		if (strcasestr (tohdr, other[j])) {
-		    free(tohdr);
-		    return other[j];
-		}
-	    free(tohdr);
-	}
+    for (i = 0; i < ARRAY_SIZE (to_headers); i++) {
+	const char *tohdr = notmuch_message_get_header (message, to_headers[i]);
+
+	/* Note: tohdr potentially contains a list of email addresses. */
+	addr = user_address_in_string (tohdr, config);
+	if (addr)
+	    return addr;
     }
 
     /* We get the concatenated Received: headers and search from the
@@ -439,19 +424,12 @@ guess_from_received_header (notmuch_config_t *config, notmuch_message_t *message
      * header
      */
     ptr = strstr (received, " for ");
-    if (ptr) {
-	/* the text following is potentialy a list of email addresses,
-	 * so again we check if one of the email addresses is a
-	 * substring of ptr
-	 */
-	if (strcasestr(ptr, primary)) {
-	    return primary;
-	}
-	for (i = 0; i < other_len; i++)
-	    if (strcasestr (ptr, other[i])) {
-		return other[i];
-	    }
-    }
+
+    /* Note: ptr potentially contains a list of email addresses. */
+    addr = user_address_in_string (ptr, config);
+    if (addr)
+	return addr;
+
     /* Finally, we parse all the " by MTA ..." headers to guess the
      * email address that this was originally delivered to.
      * We extract just the MTA here by removing leading whitespace and
@@ -492,15 +470,11 @@ guess_from_received_header (notmuch_config_t *config, notmuch_message_t *message
 	     */
 	    *(tld-1) = '.';
 
-	    if (strcasestr(primary, domain)) {
-		free(mta);
-		return primary;
+	    addr = string_in_user_address (domain, config);
+	    if (addr) {
+		free (mta);
+		return addr;
 	    }
-	    for (i = 0; i < other_len; i++)
-		if (strcasestr (other[i],domain)) {
-		    free(mta);
-		    return other[i];
-		}
 	}
 	free (mta);
     }
