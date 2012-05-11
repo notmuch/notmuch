@@ -98,25 +98,77 @@ format_part_reply (mime_node_t *node)
 	format_part_reply (mime_node_child (node, i));
 }
 
-/* Is the given address configured as one of the user's "personal" or
- * "other" addresses. */
-static int
-address_is_users (const char *address, notmuch_config_t *config)
+typedef enum {
+    USER_ADDRESS_IN_STRING,
+    STRING_IN_USER_ADDRESS,
+    STRING_IS_USER_ADDRESS,
+} address_match_t;
+
+/* Match given string against given address according to mode. */
+static notmuch_bool_t
+match_address (const char *str, const char *address, address_match_t mode)
+{
+    switch (mode) {
+    case USER_ADDRESS_IN_STRING:
+	return strcasestr (str, address) != NULL;
+    case STRING_IN_USER_ADDRESS:
+	return strcasestr (address, str) != NULL;
+    case STRING_IS_USER_ADDRESS:
+	return strcasecmp (address, str) == 0;
+    }
+
+    return FALSE;
+}
+
+/* Match given string against user's configured "primary" and "other"
+ * addresses according to mode. */
+static const char *
+address_match (const char *str, notmuch_config_t *config, address_match_t mode)
 {
     const char *primary;
     const char **other;
     size_t i, other_len;
 
+    if (!str || *str == '\0')
+	return NULL;
+
     primary = notmuch_config_get_user_primary_email (config);
-    if (strcasecmp (primary, address) == 0)
-	return 1;
+    if (match_address (str, primary, mode))
+	return primary;
 
     other = notmuch_config_get_user_other_email (config, &other_len);
-    for (i = 0; i < other_len; i++)
-	if (strcasecmp (other[i], address) == 0)
-	    return 1;
+    for (i = 0; i < other_len; i++) {
+	if (match_address (str, other[i], mode))
+	    return other[i];
+    }
 
-    return 0;
+    return NULL;
+}
+
+/* Does the given string contain an address configured as one of the
+ * user's "primary" or "other" addresses. If so, return the matching
+ * address, NULL otherwise. */
+static const char *
+user_address_in_string (const char *str, notmuch_config_t *config)
+{
+    return address_match (str, config, USER_ADDRESS_IN_STRING);
+}
+
+/* Do any of the addresses configured as one of the user's "primary"
+ * or "other" addresses contain the given string. If so, return the
+ * matching address, NULL otherwise. */
+static const char *
+string_in_user_address (const char *str, notmuch_config_t *config)
+{
+    return address_match (str, config, STRING_IN_USER_ADDRESS);
+}
+
+/* Is the given address configured as one of the user's "primary" or
+ * "other" addresses. */
+static notmuch_bool_t
+address_is_users (const char *address, notmuch_config_t *config)
+{
+    return address_match (address, config, STRING_IS_USER_ADDRESS) != NULL;
 }
 
 /* Scan addresses in 'list'.
