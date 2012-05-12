@@ -98,6 +98,14 @@ notmuch_database_open and notmuch_database_create now return errors
   return a notmuch_status_t and take an out-argument for returning the
   new database object.
 
+go bindings changes
+-------------------
+
+Go 1 compatibility
+
+  The go bindings and the notmuch-addrlookup utility are now
+  compatible with go 1.
+
 Notmuch 0.12 (2012-03-20)
 =========================
 
