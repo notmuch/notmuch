@@ -91,12 +91,12 @@ notmuch_database_close and notmuch_database_destroy
   database and thus release the lock associated with it without
   destroying the data structures obtained from it.
 
-notmuch_database_open and notmuch_database_create now return errors
+notmuch_database_open, notmuch_database_create, and
+notmuch_database_get_directory now return errors
 
-  The type signatures of notmuch_database_open and
-  notmuch_database_create have changed so that the functions now
-  return a notmuch_status_t and take an out-argument for returning the
-  new database object.
+  The type signatures of these functions have changed so that the
+  functions now return a notmuch_status_t and take an out-argument for
+  returning the new database object or directory object.
 
 go bindings changes
 -------------------
