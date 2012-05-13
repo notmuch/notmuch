@@ -252,6 +252,7 @@ VALUE
 notmuch_rb_database_get_directory (VALUE self, VALUE pathv)
 {
     const char *path;
+    notmuch_status_t ret;
     notmuch_directory_t *dir;
     notmuch_database_t *db;
 
@@ -260,11 +261,11 @@ notmuch_rb_database_get_directory (VALUE self, VALUE pathv)
     SafeStringValue (pathv);
     path = RSTRING_PTR (pathv);
 
-    dir = notmuch_database_get_directory (db, path);
-    if (!dir)
-        rb_raise (notmuch_rb_eXapianError, "Xapian exception");
-
-    return Data_Wrap_Struct (notmuch_rb_cDirectory, NULL, NULL, dir);
+    ret = notmuch_database_get_directory (db, path, &dir);
+    notmuch_rb_status_raise (ret);
+    if (dir)
+	return Data_Wrap_Struct (notmuch_rb_cDirectory, NULL, NULL, dir);
+    return Qnil;
 }
 
 /*
