@@ -955,8 +955,8 @@ notmuch_database_upgrade (notmuch_database_t *notmuch,
 		mtime = Xapian::sortable_unserialise (
 		    document.get_value (NOTMUCH_VALUE_TIMESTAMP));
 
-		directory = notmuch_database_get_directory (notmuch,
-							    term.c_str() + 10);
+		directory = _notmuch_directory_create (notmuch, term.c_str() + 10,
+						       &status);
 		notmuch_directory_set_mtime (directory, mtime);
 		notmuch_directory_destroy (directory);
 	    }
@@ -1304,20 +1304,30 @@ _notmuch_database_relative_path (notmuch_database_t *notmuch,
     return relative;
 }
 
-notmuch_directory_t *
+notmuch_status_t
 notmuch_database_get_directory (notmuch_database_t *notmuch,
-				const char *path)
+				const char *path,
+				notmuch_directory_t **directory)
 {
     notmuch_status_t status;
 
+    if (directory == NULL)
+	return NOTMUCH_STATUS_NULL_POINTER;
+    *directory = NULL;
+
+    /* XXX Handle read-only databases properly */
+    if (notmuch->mode == NOTMUCH_DATABASE_MODE_READ_ONLY)
+	return NOTMUCH_STATUS_READ_ONLY_DATABASE;
+
     try {
-	return _notmuch_directory_create (notmuch, path, &status);
+	*directory = _notmuch_directory_create (notmuch, path, &status);
     } catch (const Xapian::Error &error) {
 	fprintf (stderr, "A Xapian exception occurred getting directory: %s.\n",
 		 error.get_msg().c_str());
 	notmuch->exception_reported = TRUE;
-	return NULL;
+	status = NOTMUCH_STATUS_XAPIAN_EXCEPTION;
     }
+    return status;
 }
 
 /* Allocate a document ID that satisfies the following criteria:

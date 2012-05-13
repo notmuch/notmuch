@@ -250,7 +250,7 @@ add_files_recursive (notmuch_database_t *notmuch,
     notmuch_status_t status, ret = NOTMUCH_STATUS_SUCCESS;
     notmuch_message_t *message = NULL;
     struct dirent **fs_entries = NULL;
-    int i, num_fs_entries;
+    int i, num_fs_entries = 0;
     notmuch_directory_t *directory;
     notmuch_filenames_t *db_files = NULL;
     notmuch_filenames_t *db_subdirs = NULL;
@@ -274,8 +274,12 @@ add_files_recursive (notmuch_database_t *notmuch,
 
     fs_mtime = st.st_mtime;
 
-    directory = notmuch_database_get_directory (notmuch, path);
-    db_mtime = notmuch_directory_get_mtime (directory);
+    status = notmuch_database_get_directory (notmuch, path, &directory);
+    if (status) {
+	ret = status;
+	goto DONE;
+    }
+    db_mtime = directory ? notmuch_directory_get_mtime (directory) : 0;
 
     new_directory = db_mtime ? FALSE : TRUE;
 
@@ -295,7 +299,7 @@ add_files_recursive (notmuch_database_t *notmuch,
      * by a new out-argument, or by recording this information and
      * providing an accessor.
      */
-    if (new_directory)
+    if (new_directory && directory)
 	notmuch_directory_set_mtime (directory, -1);
 
     /* If the database knows about this directory, then we sort based
@@ -810,7 +814,9 @@ _remove_directory (void *ctx,
     notmuch_filenames_t *files, *subdirs;
     char *absolute;
 
-    directory = notmuch_database_get_directory (notmuch, path);
+    status = notmuch_database_get_directory (notmuch, path, &directory);
+    if (status || !directory)
+	return status;
 
     for (files = notmuch_directory_get_child_files (directory);
 	 notmuch_filenames_valid (files);
@@ -981,9 +987,10 @@ notmuch_new_command (void *ctx, int argc, char *argv[])
     }
 
     for (f = add_files_state.directory_mtimes->head; f && !interrupted; f = f->next) {
+	notmuch_status_t status;
 	notmuch_directory_t *directory;
-	directory = notmuch_database_get_directory (notmuch, f->filename);
-	if (directory) {
+	status = notmuch_database_get_directory (notmuch, f->filename, &directory);
+	if (status == NOTMUCH_STATUS_SUCCESS && directory) {
 	    notmuch_directory_set_mtime (directory, f->mtime);
 	    notmuch_directory_destroy (directory);
 	}

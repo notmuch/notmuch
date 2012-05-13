@@ -300,11 +300,28 @@ notmuch_database_end_atomic (notmuch_database_t *notmuch);
  * (see notmuch_database_get_path), or else should be an absolute path
  * with initial components that match the path of 'database'.
  *
- * Can return NULL if a Xapian exception occurs.
+ * Note: Currently this will create the directory object if it doesn't
+ * exist.  In the future, when a directory object does not exist this
+ * will return NOTMUCH_STATUS_SUCCESS and set *directory to NULL.
+ * Callers should be prepared for this.
+ *
+ * Return value:
+ *
+ * NOTMUCH_STATUS_SUCCESS: Successfully retrieved directory.
+ *
+ * NOTMUCH_STATUS_NULL_POINTER: The given 'directory' argument is NULL.
+ *
+ * NOTMUCH_STATUS_XAPIAN_EXCEPTION: A Xapian exception occurred;
+ *	directory not retrieved.
+ *
+ * NOTMUCH_STATUS_READ_ONLY_DATABASE: Database was opened in read-only
+ *	mode so the directory cannot be created (this case will be
+ *	removed in the future).
  */
-notmuch_directory_t *
+notmuch_status_t
 notmuch_database_get_directory (notmuch_database_t *database,
-				const char *path);
+				const char *path,
+				notmuch_directory_t **directory);
 
 /* Add a new message to the given notmuch database or associate an
  * additional filename with an existing message.
