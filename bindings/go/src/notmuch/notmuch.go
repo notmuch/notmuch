@@ -191,19 +191,20 @@ func (self *Database) NeedsUpgrade() bool {
  *
  * Can return NULL if a Xapian exception occurs.
  */
-func (self *Database) GetDirectory(path string) *Directory {
+func (self *Database) GetDirectory(path string) (*Directory, Status) {
 	var c_path *C.char = C.CString(path)
 	defer C.free(unsafe.Pointer(c_path))
 
 	if c_path == nil {
-		return nil
+		return nil, STATUS_OUT_OF_MEMORY
 	}
 
-	c_dir := C.notmuch_database_get_directory(self.db, c_path)
-	if c_dir == nil {
-		return nil
+	var c_dir *C.notmuch_directory_t
+	st := Status(C.notmuch_database_get_directory(self.db, c_path, &c_dir))
+	if st != STATUS_SUCCESS || c_dir == nil {
+		return nil, st
 	}
-	return &Directory{dir: c_dir}
+	return &Directory{dir: c_dir}, st
 }
 
 /* Add a new message to the given notmuch database.
