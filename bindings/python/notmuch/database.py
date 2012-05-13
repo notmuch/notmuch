@@ -73,8 +73,8 @@ class Database(object):
 
     """notmuch_database_get_directory"""
     _get_directory = nmlib.notmuch_database_get_directory
-    _get_directory.argtypes = [NotmuchDatabaseP, c_char_p]
-    _get_directory.restype = NotmuchDirectoryP
+    _get_directory.argtypes = [NotmuchDatabaseP, c_char_p, POINTER(NotmuchDirectoryP)]
+    _get_directory.restype = c_uint
 
     """notmuch_database_get_path"""
     _get_path = nmlib.notmuch_database_get_path
@@ -359,13 +359,6 @@ class Database(object):
         """
         self._assert_db_is_initialized()
 
-        # work around libnotmuch calling exit(3), see
-        # id:20120221002921.8534.57091@thinkbox.jade-hamburg.de
-        # TODO: remove once this issue is resolved
-        if self.mode != Database.MODE.READ_WRITE:
-            raise ReadOnlyDatabaseError('The database has to be opened in '
-                                        'read-write mode for get_directory')
-
         # sanity checking if path is valid, and make path absolute
         if path and path[0] == os.sep:
             # we got an absolute path
@@ -378,7 +371,13 @@ class Database(object):
             #we got a relative path, make it absolute
             abs_dirpath = os.path.abspath(os.path.join(self.get_path(), path))
 
-        dir_p = Database._get_directory(self._db, _str(path))
+        dir_p = NotmuchDirectoryP()
+        status = Database._get_directory(self._db, _str(path), byref(dir_p))
+
+        if status != STATUS.SUCCESS:
+            raise NotmuchError(status)
+        if not dir_p:
+            return None
 
         # return the Directory, init it with the absolute path
         return Directory(abs_dirpath, dir_p, self)
