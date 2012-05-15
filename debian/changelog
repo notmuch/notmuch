@@ -1,10 +1,13 @@
-notmuch (0.13~rc1-3) experimental; urgency=low
+notmuch (0.13-1) unstable; urgency=low
 
+  * New upstream release. See /usr/share/doc/NEWS.gz for changes.
+
+  [ Stefano Zacchiroli ]
   * Recommend all notmuch UI (including notmuch-mutt) as alternatives,
     to avoid unneeded vim/emacs installation. Thanks Matteo F. Vescovi
     for the patch. (Closes: #673011)
 
- -- Stefano Zacchiroli <zack@debian.org>  Tue, 15 May 2012 15:08:16 +0200
+ -- David Bremner <bremner@debian.org>  Tue, 15 May 2012 18:19:32 -0300
 
 notmuch (0.13~rc1-2) experimental; urgency=low
 
