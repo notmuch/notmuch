@@ -6,12 +6,12 @@ Command-Line Interface
 
 JSON reply format
 
-  "notmuch reply" can now produce JSON output that contains the headers
+  `notmuch reply` can now produce JSON output that contains the headers
   for a reply message and full information about the original message
   begin replied to. This allows MUAs to create replies intelligently.
   For example, an MUA that can parse HTML might quote HTML parts.
 
-  Calling notmuch reply with --format=json imposes the restriction that
+  Calling notmuch reply with `--format=json` imposes the restriction that
   only a single message is returned by the search, as replying to
   multiple messages does not have a well-defined behavior. The default
   retains its current behavior for multiple message replies.
@@ -19,24 +19,24 @@ JSON reply format
 Tag exclusion
 
   Tags can be automatically excluded from search results by adding them
-  to the new 'search.exclude_tags' option in the Notmuch config file.
+  to the new `search.exclude_tags` option in the Notmuch config file.
 
   This behaviour can be overridden by explicitly including an excluded
   tag in your query, for example:
 
-    notmuch search $your_query and tag:$excluded_tag
+        notmuch search $your_query and tag:$excluded_tag
 
-  Existing users will probably want to run "notmuch setup" again to add
+  Existing users will probably want to run `notmuch setup` again to add
   the new well-commented [search] section to the configuration file.
 
   For new configurations, accepting the default setting will cause the
   tags "deleted" and "spam" to be excluded, equivalent to running:
 
-    notmuch config set search.exclude_tags deleted spam
+        notmuch config set search.exclude_tags deleted spam
 
 Raw show format changes
 
-  The output of show --format=raw has changed for multipart and
+  The output of show `--format=raw` has changed for multipart and
   message parts.  Previously, the output was a mash of somewhat-parsed
   headers and transfer-decoded bodies.  Now, such parts are reproduced
   faithfully from the original source.  Message parts (which includes
@@ -47,7 +47,7 @@ Raw show format changes
 
 Listing configuration items
 
-  The new "config list" command prints out all configuration items and
+  The new `config list` command prints out all configuration items and
   their values.
 
 Emacs Interface
@@ -57,7 +57,7 @@ Changes to tagging interface
 
   The user-facing tagging functions in the Emacs interface have been
   normalized across all notmuch modes.  The tagging functions are now
-  'notmuch-search-tag' in search-mode, and 'notmuch-show-tag' in
+  notmuch-search-tag in search-mode, and notmuch-show-tag in
   show-mode.  They accept a string representing a single tag change,
   or a list of tag changes.  See 'M-x describe-function notmuch-tag'
   for more information.
@@ -76,11 +76,11 @@ Reply improvement using the JSON format
 New add-on tool: notmuch-mutt
 -----------------------------
 
-The new contrib/ tool "notmuch-mutt" provides Notmuch integration for
+The new contrib/ tool `notmuch-mutt` provides Notmuch integration for
 the Mutt mail user agent. Using it, Mutt users can perform mail
 search, thread reconstruction, and mail tagging/untagging without
 leaving Mutt.  notmuch-mutt, formerly distributed under the name
-"mutt-notmuch" by Stefano Zacchiroli, will be maintained as a notmuch
+`mutt-notmuch` by Stefano Zacchiroli, will be maintained as a notmuch
 contrib/ from now on.
 
 Library changes
@@ -89,18 +89,18 @@ Library changes
 The API changes detailed below break binary and source compatibility,
 so libnotmuch has been bumped to version 3.0.0.
 
-The function notmuch_database_close has been split into
-notmuch_database_close and notmuch_database_destroy
+The function `notmuch_database_close` has been split into
+`notmuch_database_close` and `notmuch_database_destroy`
 
   This makes it possible for long running programs to close the xapian
   database and thus release the lock associated with it without
   destroying the data structures obtained from it.
 
-notmuch_database_open, notmuch_database_create, and
-notmuch_database_get_directory now return errors
+`notmuch_database_open`, `notmuch_database_create`, and
+`notmuch_database_get_directory` now return errors
 
   The type signatures of these functions have changed so that the
-  functions now return a notmuch_status_t and take an out-argument for
+  functions now return a `notmuch_status_t` and take an out-argument for
   returning the new database object or directory object.
 
 go bindings changes
@@ -108,7 +108,7 @@ go bindings changes
 
 Go 1 compatibility
 
-  The go bindings and the notmuch-addrlookup utility are now
+  The go bindings and the `notmuch-addrlookup` utility are now
   compatible with go 1.
 
 Notmuch 0.12 (2012-03-20)
