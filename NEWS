@@ -4,13 +4,6 @@ Notmuch 0.13 (2012-xx-xx)
 Command-Line Interface
 ----------------------
 
-Reply to sender
-
-  "notmuch reply" has gained the ability to create a reply template
-  for replying just to the sender of the message, in addition to reply
-  to all. The feature is available through the new command line option
-  --reply-to=(all|sender).
-
 JSON reply format
 
   "notmuch reply" can now produce JSON output that contains the headers
