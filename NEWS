@@ -103,7 +103,7 @@ The function `notmuch_database_close` has been split into
   functions now return a `notmuch_status_t` and take an out-argument for
   returning the new database object or directory object.
 
-go bindings changes
+Go bindings changes
 -------------------
 
 Go 1 compatibility
