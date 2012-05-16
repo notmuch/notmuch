@@ -47,8 +47,4 @@
 
    .. automethod:: thaw
 
-   .. automethod:: format_message_as_json
-
-   .. automethod:: format_message_as_text
-
    .. automethod:: __str__
