@@ -1,6 +1,6 @@
 notmuch (0.13-1) unstable; urgency=low
 
-  * New upstream release. See /usr/share/doc/NEWS.gz for changes.
+  * New upstream release. See /usr/share/doc/notmuch/NEWS.gz for changes.
 
   [ Stefano Zacchiroli ]
   * Recommend all notmuch UI (including notmuch-mutt) as alternatives,
