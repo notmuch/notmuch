@@ -28,7 +28,6 @@ functionality, returning :class:`Threads`, :class:`Messages` and
    threads
    thread
    filesystem
-   notmuch
 
 Indices and tables
 ==================
