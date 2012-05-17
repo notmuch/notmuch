@@ -18,7 +18,7 @@ Copyright 2010 Sebastian Spaeth <Sebastian@SSpaeth.de>
 """
 
 from ctypes import c_char_p, c_uint
-from notmuch.globals import (
+from .globals import (
     nmlib,
     Enum,
     _str,

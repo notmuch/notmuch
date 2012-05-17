@@ -20,7 +20,7 @@ Copyright 2010 Sebastian Spaeth <Sebastian@SSpaeth.de>
 import os
 import codecs
 from ctypes import c_char_p, c_void_p, c_uint, byref, POINTER
-from notmuch.globals import (
+from .globals import (
     nmlib,
     Enum,
     _str,
@@ -37,8 +37,8 @@ from .errors import (
     NotInitializedError,
     ReadOnlyDatabaseError,
 )
-from notmuch.message import Message
-from notmuch.tag import Tags
+from .message import Message
+from .tag import Tags
 from .query import Query
 from .directory import Directory
 
