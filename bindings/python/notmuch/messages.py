@@ -142,7 +142,7 @@ class Messages(object):
         #reset _msgs as we iterated over it and can do so only once
         self._msgs = None
 
-        if tags_p == None:
+        if not tags_p:
             raise NullPointerError()
         return Tags(tags_p, self)
 

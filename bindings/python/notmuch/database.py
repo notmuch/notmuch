@@ -558,7 +558,7 @@ class Database(object):
         """
         self._assert_db_is_initialized()
         tags_p = Database._get_all_tags(self._db)
-        if tags_p == None:
+        if not tags_p:
             raise NullPointerError()
         return Tags(tags_p, self)
 

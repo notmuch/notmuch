@@ -238,7 +238,7 @@ class Thread(object):
             raise NotInitializedError()
 
         tags_p = Thread._get_tags(self._thread)
-        if tags_p == None:
+        if not tags_p:
             raise NullPointerError()
         return Tags(tags_p, self)
 

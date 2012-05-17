@@ -229,7 +229,7 @@ class Message(Python3StringMixIn):
 
         #Returns NULL if any error occurs.
         header = Message._get_header(self._msg, _str(header))
-        if header == None:
+        if not header:
             raise NullPointerError()
         return header.decode('UTF-8', 'ignore')
 
@@ -300,7 +300,7 @@ class Message(Python3StringMixIn):
             raise NotInitializedError()
 
         tags_p = Message._get_tags(self._msg)
-        if tags_p == None:
+        if not tags_p:
             raise NullPointerError()
         return Tags(tags_p, self)
 
