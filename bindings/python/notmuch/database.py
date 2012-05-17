@@ -603,7 +603,9 @@ class Database(object):
     def db_p(self):
         """Property returning a pointer to `notmuch_database_t` or `None`
 
-        This should normally not be needed by a user (and is not yet
-        guaranteed to remain stable in future versions).
+        .. deprecated:: 0.14
+                        If you really need a pointer to the notmuch
+                        database object use the `_pointer` field. This
+                        alias will be removed in notmuch 0.15.
         """
         return self._db
