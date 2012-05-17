@@ -229,7 +229,7 @@ class Message(Python3StringMixIn):
 
         #Returns NULL if any error occurs.
         header = Message._get_header(self._msg, _str(header))
-        if not header:
+        if header == None:
             raise NullPointerError()
         return header.decode('UTF-8', 'ignore')
 
