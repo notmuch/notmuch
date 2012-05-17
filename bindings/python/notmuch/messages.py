@@ -199,6 +199,13 @@ class Messages(object):
         :param entire_thread: A bool, indicating whether we want to output
                        whole threads or only the matching messages.
         :return: a list of lines
+
+        .. deprecated:: 0.14
+                        This code adds functionality at the python
+                        level that is unlikely to be useful for
+                        anyone. Furthermore the python bindings strive
+                        to be a thin wrapper around libnotmuch, so
+                        this code will be removed in notmuch 0.15.
         """
         result = list()
 
@@ -255,6 +262,13 @@ class Messages(object):
         :param indent: A number indicating the reply depth of these messages.
         :param entire_thread: A bool, indicating whether we want to output
                        whole threads or only the matching messages.
+
+        .. deprecated:: 0.14
+                        This code adds functionality at the python
+                        level that is unlikely to be useful for
+                        anyone. Furthermore the python bindings strive
+                        to be a thin wrapper around libnotmuch, so
+                        this code will be removed in notmuch 0.15.
         """
         handle.write(''.join(self.format_messages(format, indent, entire_thread)))
 
