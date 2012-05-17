@@ -20,6 +20,7 @@ Copyright 2010 Sebastian Spaeth <Sebastian@SSpaeth.de>
 import os
 import codecs
 from ctypes import c_char_p, c_void_p, c_uint, byref, POINTER
+from .compat import SafeConfigParser
 from .globals import (
     nmlib,
     Enum,
@@ -589,13 +590,6 @@ class Database(object):
         """ Reads a user's notmuch config and returns his db location
 
         Throws a NotmuchError if it cannot find it"""
-        try:
-            # python3.x
-            from configparser import SafeConfigParser
-        except ImportError:
-            # python2.x
-            from ConfigParser import SafeConfigParser
-
         config = SafeConfigParser()
         conf_f = os.getenv('NOTMUCH_CONFIG',
                            os.path.expanduser('~/.notmuch-config'))
