@@ -41,10 +41,6 @@ from .tag import Tags
 from .filenames import Filenames
 
 import email
-try:
-    import simplejson as json
-except ImportError:
-    import json
 
 
 class Message(Python3StringMixIn):
