@@ -1895,8 +1895,8 @@ notmuch_database_find_message_by_filename (notmuch_database_t *notmuch,
 
     try {
 	status = _notmuch_database_filename_to_direntry (
-	    local, notmuch, filename, NOTMUCH_FIND_CREATE, &direntry);
-	if (status)
+	    local, notmuch, filename, NOTMUCH_FIND_LOOKUP, &direntry);
+	if (status || !direntry)
 	    goto DONE;
 
 	term = talloc_asprintf (local, "%s%s", prefix, direntry);
