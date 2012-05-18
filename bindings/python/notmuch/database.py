@@ -346,7 +346,6 @@ class Database(object):
 
     def get_directory(self, path):
         """Returns a :class:`Directory` of path,
-        (creating it if it does not exist(?))
 
         :param path: An unicode string containing the path relative to the path
               of database (see :meth:`get_path`), or else should be an absolute
@@ -354,8 +353,6 @@ class Database(object):
         :returns: :class:`Directory` or raises an exception.
         :raises: :exc:`FileError` if path is not relative database or absolute
                  with initial components same as database.
-        :raises: :exc:`ReadOnlyDatabaseError` if the database has not been
-                 opened in read-write mode
         """
         self._assert_db_is_initialized()
 
