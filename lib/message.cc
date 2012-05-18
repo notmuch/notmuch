@@ -495,9 +495,8 @@ _notmuch_message_add_filename (notmuch_message_t *message,
     if (status)
 	return status;
 
-    status = _notmuch_database_filename_to_direntry (local,
-						     message->notmuch,
-						     filename, &direntry);
+    status = _notmuch_database_filename_to_direntry (
+	local, message->notmuch, filename, NOTMUCH_FIND_CREATE, &direntry);
     if (status)
 	return status;
 
@@ -541,8 +540,8 @@ _notmuch_message_remove_filename (notmuch_message_t *message,
     notmuch_status_t status;
     Xapian::TermIterator i, last;
 
-    status = _notmuch_database_filename_to_direntry (local, message->notmuch,
-						     filename, &direntry);
+    status = _notmuch_database_filename_to_direntry (
+	local, message->notmuch, filename, NOTMUCH_FIND_CREATE, &direntry);
     if (status)
 	return status;
 

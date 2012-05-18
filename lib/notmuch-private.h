@@ -207,6 +207,7 @@ notmuch_status_t
 _notmuch_database_filename_to_direntry (void *ctx,
 					notmuch_database_t *notmuch,
 					const char *filename,
+					notmuch_find_flags_t flags,
 					char **direntry);
 
 /* directory.cc */

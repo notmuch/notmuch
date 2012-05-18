@@ -1248,13 +1248,16 @@ _notmuch_database_get_directory_path (void *ctx,
  * database path), return a new string (with 'ctx' as the talloc
  * owner) suitable for use as a direntry term value.
  *
- * The necessary directory documents will be created in the database
- * as needed.
+ * If (flags & NOTMUCH_FIND_CREATE), the necessary directory documents
+ * will be created in the database as needed.  Otherwise, if the
+ * necessary directory documents do not exist, this sets
+ * *direntry to NULL and returns NOTMUCH_STATUS_SUCCESS.
  */
 notmuch_status_t
 _notmuch_database_filename_to_direntry (void *ctx,
 					notmuch_database_t *notmuch,
 					const char *filename,
+					notmuch_find_flags_t flags,
 					char **direntry)
 {
     const char *relative, *directory, *basename;
@@ -1268,10 +1271,12 @@ _notmuch_database_filename_to_direntry (void *ctx,
     if (status)
 	return status;
 
-    status = _notmuch_database_find_directory_id (notmuch, directory, NOTMUCH_FIND_CREATE,
+    status = _notmuch_database_find_directory_id (notmuch, directory, flags,
 						  &directory_id);
-    if (status)
+    if (status || directory_id == (unsigned int)-1) {
+	*direntry = NULL;
 	return status;
+    }
 
     *direntry = talloc_asprintf (ctx, "%u:%s", directory_id, basename);
 
@@ -1892,8 +1897,8 @@ notmuch_database_find_message_by_filename (notmuch_database_t *notmuch,
     local = talloc_new (notmuch);
 
     try {
-	status = _notmuch_database_filename_to_direntry (local, notmuch,
-							 filename, &direntry);
+	status = _notmuch_database_filename_to_direntry (
+	    local, notmuch, filename, NOTMUCH_FIND_CREATE, &direntry);
 	if (status)
 	    goto DONE;
 
