@@ -28,4 +28,12 @@ EOF
 notmuch search --sort=oldest-first --output=messages tag:inbox | sed s/^id:// > EXPECTED
 test_expect_equal_file OUTPUT EXPECTED
 
+test_begin_subtest "get non-existent file"
+test_python <<EOF
+import notmuch
+db = notmuch.Database(mode=notmuch.Database.MODE.READ_ONLY)
+print db.find_message_by_filename("i-dont-exist")
+EOF
+test_expect_equal "$(cat OUTPUT)" "None"
+
 test_done
