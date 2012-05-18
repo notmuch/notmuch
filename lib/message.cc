@@ -541,8 +541,8 @@ _notmuch_message_remove_filename (notmuch_message_t *message,
     Xapian::TermIterator i, last;
 
     status = _notmuch_database_filename_to_direntry (
-	local, message->notmuch, filename, NOTMUCH_FIND_CREATE, &direntry);
-    if (status)
+	local, message->notmuch, filename, NOTMUCH_FIND_LOOKUP, &direntry);
+    if (status || !direntry)
 	return status;
 
     /* Unlink this file from its parent directory. */
