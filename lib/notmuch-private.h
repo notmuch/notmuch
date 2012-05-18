@@ -195,6 +195,7 @@ _notmuch_database_find_unique_doc_id (notmuch_database_t *notmuch,
 notmuch_status_t
 _notmuch_database_find_directory_id (notmuch_database_t *database,
 				     const char *path,
+				     notmuch_find_flags_t flags,
 				     unsigned int *directory_id);
 
 const char *

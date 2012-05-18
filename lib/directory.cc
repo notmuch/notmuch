@@ -153,7 +153,13 @@ _notmuch_directory_create (notmuch_database_t *notmuch,
 
 	    _notmuch_database_split_path (local, path, &parent, &basename);
 
-	    _notmuch_database_find_directory_id (notmuch, parent, &parent_id);
+	    *status_ret = _notmuch_database_find_directory_id (
+		notmuch, parent, NOTMUCH_FIND_CREATE, &parent_id);
+	    if (*status_ret) {
+		notmuch_directory_destroy (directory);
+		directory = NULL;
+		goto DONE;
+	    }
 
 	    if (basename) {
 		term = talloc_asprintf (local, "%s%u:%s",
