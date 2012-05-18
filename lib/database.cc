@@ -1328,12 +1328,9 @@ notmuch_database_get_directory (notmuch_database_t *notmuch,
 	return NOTMUCH_STATUS_NULL_POINTER;
     *directory = NULL;
 
-    /* XXX Handle read-only databases properly */
-    if (notmuch->mode == NOTMUCH_DATABASE_MODE_READ_ONLY)
-	return NOTMUCH_STATUS_READ_ONLY_DATABASE;
-
     try {
-	*directory = _notmuch_directory_create (notmuch, path, NOTMUCH_FIND_CREATE, &status);
+	*directory = _notmuch_directory_create (notmuch, path,
+						NOTMUCH_FIND_LOOKUP, &status);
     } catch (const Xapian::Error &error) {
 	fprintf (stderr, "A Xapian exception occurred getting directory: %s.\n",
 		 error.get_msg().c_str());

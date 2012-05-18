@@ -148,6 +148,9 @@ typedef enum _notmuch_private_status {
 
 /* Flags shared by various lookup functions. */
 typedef enum _notmuch_find_flags {
+    /* Lookup without creating any documents.  This is the default
+     * behavior. */
+    NOTMUCH_FIND_LOOKUP = 0,
     /* If set, create the necessary document (or documents) if they
      * are missing.  Requires a read/write database. */
     NOTMUCH_FIND_CREATE = 1<<0,
