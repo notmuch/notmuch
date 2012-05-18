@@ -146,6 +146,13 @@ typedef enum _notmuch_private_status {
      :									\
      (notmuch_status_t) private_status)
 
+/* Flags shared by various lookup functions. */
+typedef enum _notmuch_find_flags {
+    /* If set, create the necessary document (or documents) if they
+     * are missing.  Requires a read/write database. */
+    NOTMUCH_FIND_CREATE = 1<<0,
+} notmuch_find_flags_t;
+
 typedef struct _notmuch_doc_id_set notmuch_doc_id_set_t;
 
 typedef struct _notmuch_string_list notmuch_string_list_t;
@@ -206,6 +213,7 @@ _notmuch_database_filename_to_direntry (void *ctx,
 notmuch_directory_t *
 _notmuch_directory_create (notmuch_database_t *notmuch,
 			   const char *path,
+			   notmuch_find_flags_t flags,
 			   notmuch_status_t *status_ret);
 
 unsigned int

@@ -82,28 +82,41 @@ find_directory_document (notmuch_database_t *notmuch,
     return NOTMUCH_PRIVATE_STATUS_SUCCESS;
 }
 
+/* Find or create a directory document.
+ *
+ * 'path' should be a path relative to the path of 'database', or else
+ * should be an absolute path with initial components that match the
+ * path of 'database'.
+ *
+ * If (flags & NOTMUCH_FIND_CREATE), then the directory document will
+ * be created if it does not exist.  Otherwise, if the directory
+ * document does not exist, *status_ret is set to
+ * NOTMUCH_STATUS_SUCCESS and this returns NULL.
+ */
 notmuch_directory_t *
 _notmuch_directory_create (notmuch_database_t *notmuch,
 			   const char *path,
+			   notmuch_find_flags_t flags,
 			   notmuch_status_t *status_ret)
 {
     Xapian::WritableDatabase *db;
     notmuch_directory_t *directory;
     notmuch_private_status_t private_status;
     const char *db_path;
+    notmuch_bool_t create = (flags & NOTMUCH_FIND_CREATE);
 
     *status_ret = NOTMUCH_STATUS_SUCCESS;
 
     path = _notmuch_database_relative_path (notmuch, path);
 
-    if (notmuch->mode == NOTMUCH_DATABASE_MODE_READ_ONLY)
+    if (create && notmuch->mode == NOTMUCH_DATABASE_MODE_READ_ONLY)
 	INTERNAL_ERROR ("Failure to ensure database is writable");
 
-    db = static_cast <Xapian::WritableDatabase *> (notmuch->xapian_db);
-
     directory = talloc (notmuch, notmuch_directory_t);
-    if (unlikely (directory == NULL))
+    if (unlikely (directory == NULL)) {
+	*status_ret = NOTMUCH_STATUS_OUT_OF_MEMORY;
 	return NULL;
+    }
 
     directory->notmuch = notmuch;
 
@@ -122,6 +135,13 @@ _notmuch_directory_create (notmuch_database_t *notmuch,
 	directory->document_id = directory->doc.get_docid ();
 
 	if (private_status == NOTMUCH_PRIVATE_STATUS_NO_DOCUMENT_FOUND) {
+	    if (!create) {
+		notmuch_directory_destroy (directory);
+		directory = NULL;
+		*status_ret = NOTMUCH_STATUS_SUCCESS;
+		goto DONE;
+	    }
+
 	    void *local = talloc_new (directory);
 	    const char *parent, *basename;
 	    Xapian::docid parent_id;
@@ -145,6 +165,8 @@ _notmuch_directory_create (notmuch_database_t *notmuch,
 	    directory->doc.add_value (NOTMUCH_VALUE_TIMESTAMP,
 				      Xapian::sortable_serialise (0));
 
+	    db = static_cast <Xapian::WritableDatabase *> (notmuch->xapian_db);
+
 	    directory->document_id = _notmuch_database_generate_doc_id (notmuch);
 	    db->replace_document (directory->document_id, directory->doc);
 	    talloc_free (local);
@@ -158,10 +180,11 @@ _notmuch_directory_create (notmuch_database_t *notmuch,
 		 error.get_msg().c_str());
 	notmuch->exception_reported = TRUE;
 	notmuch_directory_destroy (directory);
+	directory = NULL;
 	*status_ret = NOTMUCH_STATUS_XAPIAN_EXCEPTION;
-	return NULL;
     }
 
+  DONE:
     if (db_path != path)
 	free ((char *) db_path);
 
