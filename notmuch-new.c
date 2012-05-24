@@ -308,11 +308,10 @@ add_files_recursive (notmuch_database_t *notmuch,
     }
     stat_time = time (NULL);
 
-    /* This is not an error since we may have recursed based on a
-     * symlink to a regular file, not a directory, and we don't know
-     * that until this stat. */
-    if (! S_ISDIR (st.st_mode))
-	return NOTMUCH_STATUS_SUCCESS;
+    if (! S_ISDIR (st.st_mode)) {
+	fprintf (stderr, "Error: %s is not a directory.\n", path);
+	return NOTMUCH_STATUS_FILE_ERROR;
+    }
 
     fs_mtime = st.st_mtime;
 
@@ -655,23 +654,7 @@ add_files (notmuch_database_t *notmuch,
 	   const char *path,
 	   add_files_state_t *state)
 {
-    notmuch_status_t status;
-    struct stat st;
-
-    if (stat (path, &st)) {
-	fprintf (stderr, "Error reading directory %s: %s\n",
-		 path, strerror (errno));
-	return NOTMUCH_STATUS_FILE_ERROR;
-    }
-
-    if (! S_ISDIR (st.st_mode)) {
-	fprintf (stderr, "Error: %s is not a directory.\n", path);
-	return NOTMUCH_STATUS_FILE_ERROR;
-    }
-
-    status = add_files_recursive (notmuch, path, state);
-
-    return status;
+    return add_files_recursive (notmuch, path, state);
 }
 
 /* XXX: This should be merged with the add_files function since it
