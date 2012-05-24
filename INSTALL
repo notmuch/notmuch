@@ -65,7 +65,7 @@ dependencies with a simple simple command line. For example:
 
   For Debian and similar:
 
-        sudo apt-get install libxapian-dev libgmime-2.4-dev libtalloc-dev
+        sudo apt-get install libxapian-dev libgmime-2.6-dev libtalloc-dev
 
   For Fedora and similar:
 
