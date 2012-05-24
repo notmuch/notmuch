@@ -136,6 +136,16 @@ output=$(NOTMUCH_NEW)
 test_expect_equal "$output" "Added 1 new message to the database."
 
 
+test_begin_subtest "Broken symlink aborts"
+ln -s does-not-exist "${MAIL_DIR}/broken"
+output=$(NOTMUCH_NEW 2>&1)
+test_expect_equal "$output" \
+"Error reading directory ${MAIL_DIR}/broken: No such file or directory
+Note: A fatal error was encountered: Something went wrong trying to read or write a file
+No new mail."
+rm "${MAIL_DIR}/broken"
+
+
 test_begin_subtest "New two-level directory"
 
 generate_message [dir]=two/levels
