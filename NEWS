@@ -1,3 +1,16 @@
+Notmuch 0.13.1 (yyyy-mm-dd)
+===========================
+
+Bug-fix release
+---------------
+
+Fix inserting of UTF-8 characters from *text/plain* parts in reply
+
+  While notmuch gained ability to insert content from other than *text/plain*
+  parts of email whenever *text/plain* parts are not available (notably
+  HTML-only emails), replying to mails that do have *text/plain* the
+  non-ASCII characters were incorrectly decoded. This is now fixed.
+
 Notmuch 0.13 (2012-05-15)
 =========================
 
