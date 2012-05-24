@@ -956,7 +956,7 @@ notmuch_database_upgrade (notmuch_database_t *notmuch,
 		    document.get_value (NOTMUCH_VALUE_TIMESTAMP));
 
 		directory = _notmuch_directory_create (notmuch, term.c_str() + 10,
-						       &status);
+						       NOTMUCH_FIND_CREATE, &status);
 		notmuch_directory_set_mtime (directory, mtime);
 		notmuch_directory_destroy (directory);
 	    }
@@ -1197,9 +1197,17 @@ _notmuch_database_split_path (void *ctx,
     return NOTMUCH_STATUS_SUCCESS;
 }
 
+/* Find the document ID of the specified directory.
+ *
+ * If (flags & NOTMUCH_FIND_CREATE), a new directory document will be
+ * created if one does not exist for 'path'.  Otherwise, if the
+ * directory document does not exist, this sets *directory_id to
+ * ((unsigned int)-1) and returns NOTMUCH_STATUS_SUCCESS.
+ */
 notmuch_status_t
 _notmuch_database_find_directory_id (notmuch_database_t *notmuch,
 				     const char *path,
+				     notmuch_find_flags_t flags,
 				     unsigned int *directory_id)
 {
     notmuch_directory_t *directory;
@@ -1210,8 +1218,8 @@ _notmuch_database_find_directory_id (notmuch_database_t *notmuch,
 	return NOTMUCH_STATUS_SUCCESS;
     }
 
-    directory = _notmuch_directory_create (notmuch, path, &status);
-    if (status) {
+    directory = _notmuch_directory_create (notmuch, path, flags, &status);
+    if (status || !directory) {
 	*directory_id = -1;
 	return status;
     }
@@ -1240,13 +1248,16 @@ _notmuch_database_get_directory_path (void *ctx,
  * database path), return a new string (with 'ctx' as the talloc
  * owner) suitable for use as a direntry term value.
  *
- * The necessary directory documents will be created in the database
- * as needed.
+ * If (flags & NOTMUCH_FIND_CREATE), the necessary directory documents
+ * will be created in the database as needed.  Otherwise, if the
+ * necessary directory documents do not exist, this sets
+ * *direntry to NULL and returns NOTMUCH_STATUS_SUCCESS.
  */
 notmuch_status_t
 _notmuch_database_filename_to_direntry (void *ctx,
 					notmuch_database_t *notmuch,
 					const char *filename,
+					notmuch_find_flags_t flags,
 					char **direntry)
 {
     const char *relative, *directory, *basename;
@@ -1260,10 +1271,12 @@ _notmuch_database_filename_to_direntry (void *ctx,
     if (status)
 	return status;
 
-    status = _notmuch_database_find_directory_id (notmuch, directory,
+    status = _notmuch_database_find_directory_id (notmuch, directory, flags,
 						  &directory_id);
-    if (status)
+    if (status || directory_id == (unsigned int)-1) {
+	*direntry = NULL;
 	return status;
+    }
 
     *direntry = talloc_asprintf (ctx, "%u:%s", directory_id, basename);
 
@@ -1315,12 +1328,9 @@ notmuch_database_get_directory (notmuch_database_t *notmuch,
 	return NOTMUCH_STATUS_NULL_POINTER;
     *directory = NULL;
 
-    /* XXX Handle read-only databases properly */
-    if (notmuch->mode == NOTMUCH_DATABASE_MODE_READ_ONLY)
-	return NOTMUCH_STATUS_READ_ONLY_DATABASE;
-
     try {
-	*directory = _notmuch_directory_create (notmuch, path, &status);
+	*directory = _notmuch_directory_create (notmuch, path,
+						NOTMUCH_FIND_LOOKUP, &status);
     } catch (const Xapian::Error &error) {
 	fprintf (stderr, "A Xapian exception occurred getting directory: %s.\n",
 		 error.get_msg().c_str());
@@ -1884,9 +1894,9 @@ notmuch_database_find_message_by_filename (notmuch_database_t *notmuch,
     local = talloc_new (notmuch);
 
     try {
-	status = _notmuch_database_filename_to_direntry (local, notmuch,
-							 filename, &direntry);
-	if (status)
+	status = _notmuch_database_filename_to_direntry (
+	    local, notmuch, filename, NOTMUCH_FIND_LOOKUP, &direntry);
+	if (status || !direntry)
 	    goto DONE;
 
 	term = talloc_asprintf (local, "%s%s", prefix, direntry);

@@ -244,7 +244,12 @@ the given type."
 current buffer, if possible."
   (let ((display-buffer (current-buffer)))
     (with-temp-buffer
-      (let* ((charset (plist-get part :content-charset))
+      ;; In case there is :content, the content string is already converted
+      ;; into emacs internal format. `gnus-decoded' is a fake charset,
+      ;; which means no further decoding (to be done by mm- functions).
+      (let* ((charset (if (plist-member part :content)
+			  'gnus-decoded
+			(plist-get part :content-charset)))
 	     (handle (mm-make-handle (current-buffer) `(,content-type (charset . ,charset)))))
 	;; If the user wants the part inlined, insert the content and
 	;; test whether we are able to inline it (which includes both

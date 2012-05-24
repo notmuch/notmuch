@@ -256,7 +256,7 @@ add_files_recursive (notmuch_database_t *notmuch,
     notmuch_filenames_t *db_subdirs = NULL;
     time_t stat_time;
     struct stat st;
-    notmuch_bool_t is_maildir, new_directory;
+    notmuch_bool_t is_maildir;
     const char **tag;
 
     if (stat (path, &st)) {
@@ -281,33 +281,12 @@ add_files_recursive (notmuch_database_t *notmuch,
     }
     db_mtime = directory ? notmuch_directory_get_mtime (directory) : 0;
 
-    new_directory = db_mtime ? FALSE : TRUE;
-
-    /* XXX This is a temporary workaround.  If we don't update the
-     * database mtime until after processing messages in this
-     * directory, then a 0 mtime is *not* sufficient to indicate that
-     * this directory has no messages or subdirs in the database (for
-     * example, if an earlier run skipped the mtime update because
-     * fs_mtime == stat_time, or was interrupted before updating the
-     * mtime at the end).  To address this, we record a (bogus)
-     * non-zero value before processing any child messages so that a
-     * later run won't mistake this for a new directory (and, for
-     * example, fail to detect removed files and subdirs).
-     *
-     * A better solution would be for notmuch_database_get_directory
-     * to indicate if it really created a new directory or not, either
-     * by a new out-argument, or by recording this information and
-     * providing an accessor.
-     */
-    if (new_directory && directory)
-	notmuch_directory_set_mtime (directory, -1);
-
     /* If the database knows about this directory, then we sort based
      * on strcmp to match the database sorting. Otherwise, we can do
      * inode-based sorting for faster filesystem operation. */
     num_fs_entries = scandir (path, &fs_entries, 0,
-			      new_directory ?
-			      dirent_sort_inode : dirent_sort_strcmp_name);
+			      directory ?
+			      dirent_sort_strcmp_name : dirent_sort_inode);
 
     if (num_fs_entries == -1) {
 	fprintf (stderr, "Error opening directory %s: %s\n",
@@ -376,13 +355,12 @@ add_files_recursive (notmuch_database_t *notmuch,
      * being discovered until the clock catches up and the directory
      * is modified again).
      */
-    if (fs_mtime == db_mtime)
+    if (directory && fs_mtime == db_mtime)
 	goto DONE;
 
-    /* new_directory means a directory that the database has never
-     * seen before. In that case, we can simply leave db_files and
-     * db_subdirs NULL. */
-    if (!new_directory) {
+    /* If the database has never seen this directory before, we can
+     * simply leave db_files and db_subdirs NULL. */
+    if (directory) {
 	db_files = notmuch_directory_get_child_files (directory);
 	db_subdirs = notmuch_directory_get_child_directories (directory);
     }
