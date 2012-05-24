@@ -154,6 +154,48 @@ dirent_sort_strcmp_name (const struct dirent **a, const struct dirent **b)
     return strcmp ((*a)->d_name, (*b)->d_name);
 }
 
+/* Return the type of a directory entry relative to path as a stat(2)
+ * mode.  Like stat, this follows symlinks.  Returns -1 and sets errno
+ * if the file's type cannot be determined (which includes dangling
+ * symlinks).
+ */
+static int
+dirent_type (const char *path, const struct dirent *entry)
+{
+    struct stat statbuf;
+    char *abspath;
+    int err, saved_errno;
+
+#ifdef _DIRENT_HAVE_D_TYPE
+    /* Mapping from d_type to stat mode_t.  We omit DT_LNK so that
+     * we'll fall through to stat and get the real file type. */
+    static const mode_t modes[] = {
+	[DT_BLK]  = S_IFBLK,
+	[DT_CHR]  = S_IFCHR,
+	[DT_DIR]  = S_IFDIR,
+	[DT_FIFO] = S_IFIFO,
+	[DT_REG]  = S_IFREG,
+	[DT_SOCK] = S_IFSOCK
+    };
+    if (entry->d_type < ARRAY_SIZE(modes) && modes[entry->d_type])
+	return modes[entry->d_type];
+#endif
+
+    abspath = talloc_asprintf (NULL, "%s/%s", path, entry->d_name);
+    if (!abspath) {
+	errno = ENOMEM;
+	return -1;
+    }
+    err = stat(abspath, &statbuf);
+    saved_errno = errno;
+    talloc_free (abspath);
+    if (err < 0) {
+	errno = saved_errno;
+	return -1;
+    }
+    return statbuf.st_mode & S_IFMT;
+}
+
 /* Test if the directory looks like a Maildir directory.
  *
  * Search through the array of directory entries to see if we can find all
@@ -162,12 +204,12 @@ dirent_sort_strcmp_name (const struct dirent **a, const struct dirent **b)
  * Return 1 if the directory looks like a Maildir and 0 otherwise.
  */
 static int
-_entries_resemble_maildir (struct dirent **entries, int count)
+_entries_resemble_maildir (const char *path, struct dirent **entries, int count)
 {
     int i, found = 0;
 
     for (i = 0; i < count; i++) {
-	if (entries[i]->d_type != DT_DIR && entries[i]->d_type != DT_UNKNOWN)
+	if (dirent_type (path, entries[i]) != S_IFDIR)
 	    continue;
 
 	if (strcmp(entries[i]->d_name, "new") == 0 ||
@@ -250,7 +292,7 @@ add_files_recursive (notmuch_database_t *notmuch,
     notmuch_status_t status, ret = NOTMUCH_STATUS_SUCCESS;
     notmuch_message_t *message = NULL;
     struct dirent **fs_entries = NULL;
-    int i, num_fs_entries = 0;
+    int i, num_fs_entries = 0, entry_type;
     notmuch_directory_t *directory;
     notmuch_filenames_t *db_files = NULL;
     notmuch_filenames_t *db_subdirs = NULL;
@@ -300,7 +342,7 @@ add_files_recursive (notmuch_database_t *notmuch,
     }
 
     /* Pass 1: Recurse into all sub-directories. */
-    is_maildir = _entries_resemble_maildir (fs_entries, num_fs_entries);
+    is_maildir = _entries_resemble_maildir (path, fs_entries, num_fs_entries);
 
     for (i = 0; i < num_fs_entries; i++) {
 	if (interrupted)
@@ -308,17 +350,16 @@ add_files_recursive (notmuch_database_t *notmuch,
 
 	entry = fs_entries[i];
 
-	/* We only want to descend into directories.
-	 * But symlinks can be to directories too, of course.
-	 *
-	 * And if the filesystem doesn't tell us the file type in the
-	 * scandir results, then it might be a directory (and if not,
-	 * then we'll stat and return immediately in the next level of
-	 * recursion). */
-	if (entry->d_type != DT_DIR &&
-	    entry->d_type != DT_LNK &&
-	    entry->d_type != DT_UNKNOWN)
-	{
+	/* We only want to descend into directories (and symlinks to
+	 * directories). */
+	entry_type = dirent_type (path, entry);
+	if (entry_type == -1) {
+	    /* Be pessimistic, e.g. so we don't lose lots of mail just
+	     * because a user broke a symlink. */
+	    fprintf (stderr, "Error reading file %s/%s: %s\n",
+		     path, entry->d_name, strerror (errno));
+	    return NOTMUCH_STATUS_FILE_ERROR;
+	} else if (entry_type != S_IFDIR) {
 	    continue;
 	}
 
@@ -407,31 +448,13 @@ add_files_recursive (notmuch_database_t *notmuch,
 	    notmuch_filenames_move_to_next (db_subdirs);
 	}
 
-	/* If we're looking at a symlink, we only want to add it if it
-	 * links to a regular file, (and not to a directory, say).
-	 *
-	 * Similarly, if the file is of unknown type (due to filesystem
-	 * limitations), then we also need to look closer.
-	 *
-	 * In either case, a stat does the trick.
-	 */
-	if (entry->d_type == DT_LNK || entry->d_type == DT_UNKNOWN) {
-	    int err;
-
-	    next = talloc_asprintf (notmuch, "%s/%s", path, entry->d_name);
-	    err = stat (next, &st);
-	    talloc_free (next);
-	    next = NULL;
-
-	    /* Don't emit an error for a link pointing nowhere, since
-	     * the directory-traversal pass will have already done
-	     * that. */
-	    if (err)
-		continue;
-
-	    if (! S_ISREG (st.st_mode))
-		continue;
-	} else if (entry->d_type != DT_REG) {
+	/* Only add regular files (and symlinks to regular files). */
+	entry_type = dirent_type (path, entry);
+	if (entry_type == -1) {
+	    fprintf (stderr, "Error reading file %s/%s: %s\n",
+		     path, entry->d_name, strerror (errno));
+	    return NOTMUCH_STATUS_FILE_ERROR;
+	} else if (entry_type != S_IFREG) {
 	    continue;
 	}
 
