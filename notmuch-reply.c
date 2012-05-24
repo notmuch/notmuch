@@ -384,7 +384,11 @@ guess_from_received_header (notmuch_config_t *config, notmuch_message_t *message
     const char *delim=". \t";
     size_t i;
 
-    const char *to_headers[] = {"Envelope-to", "X-Original-To"};
+    const char *to_headers[] = {
+	"Envelope-to",
+	"X-Original-To",
+	"Delivered-To",
+    };
 
     /* sadly, there is no standard way to find out to which email
      * address a mail was delivered - what is in the headers depends
@@ -395,8 +399,9 @@ guess_from_received_header (notmuch_config_t *config, notmuch_message_t *message
      * the To: or Cc: header. From here we try the following in order:
      * 1) check for an Envelope-to: header
      * 2) check for an X-Original-To: header
-     * 3) check for a (for <email@add.res>) clause in Received: headers
-     * 4) check for the domain part of known email addresses in the
+     * 3) check for a Delivered-To: header
+     * 4) check for a (for <email@add.res>) clause in Received: headers
+     * 5) check for the domain part of known email addresses in the
      *    'by' part of Received headers
      * If none of these work, we give up and return NULL
      */
