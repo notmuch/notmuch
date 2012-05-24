@@ -281,9 +281,9 @@ _entry_in_ignore_list (const char *entry, add_files_state_t *state)
  *     if fs_mtime isn't the current wall-clock time.
  */
 static notmuch_status_t
-add_files_recursive (notmuch_database_t *notmuch,
-		     const char *path,
-		     add_files_state_t *state)
+add_files (notmuch_database_t *notmuch,
+	   const char *path,
+	   add_files_state_t *state)
 {
     DIR *dir = NULL;
     struct dirent *entry = NULL;
@@ -377,7 +377,7 @@ add_files_recursive (notmuch_database_t *notmuch,
 	}
 
 	next = talloc_asprintf (notmuch, "%s/%s", path, entry->d_name);
-	status = add_files_recursive (notmuch, next, state);
+	status = add_files (notmuch, next, state);
 	if (status) {
 	    ret = status;
 	    goto DONE;
@@ -646,16 +646,6 @@ stop_progress_printing_timer (void)
     sigaction (SIGALRM, &action, NULL);
 }
 
-
-/* This is the top-level entry point for add_files. It does a couple
- * of error checks and then calls into the recursive function. */
-static notmuch_status_t
-add_files (notmuch_database_t *notmuch,
-	   const char *path,
-	   add_files_state_t *state)
-{
-    return add_files_recursive (notmuch, path, state);
-}
 
 /* XXX: This should be merged with the add_files function since it
  * shares a lot of logic with it. */
