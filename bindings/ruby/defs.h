@@ -21,8 +21,8 @@
 #ifndef DEFS_H
 #define DEFS_H
 
+#include <notmuch.h>
 #include <ruby.h>
-#include "notmuch.h"
 
 VALUE notmuch_rb_cDatabase;
 VALUE notmuch_rb_cDirectory;
