@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-test_description="Testing emacs notmuch-show view"
+test_description="emacs notmuch-show view"
 . test-lib.sh
 
 test_begin_subtest "Hiding Original Message region at beginning of a message"
