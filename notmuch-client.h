@@ -77,6 +77,11 @@ typedef struct notmuch_show_format {
     const char *message_set_end;
 } notmuch_show_format_t;
 
+typedef struct notmuch_crypto {
+    notmuch_crypto_context_t* gpgctx;
+    notmuch_bool_t decrypt;
+} notmuch_crypto_t;
+
 typedef struct notmuch_show_params {
     notmuch_bool_t entire_thread;
     notmuch_bool_t omit_excluded;
@@ -111,6 +116,12 @@ chomp_newline (char *str)
     if (str && str[strlen(str)-1] == '\n')
 	str[strlen(str)-1] = '\0';
 }
+
+notmuch_crypto_context_t *
+notmuch_crypto_get_context (notmuch_crypto_t *crypto, const char *protocol);
+
+int
+notmuch_crypto_cleanup (notmuch_crypto_t *crypto);
 
 int
 notmuch_count_command (void *ctx, int argc, char *argv[]);
