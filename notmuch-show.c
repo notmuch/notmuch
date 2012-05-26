@@ -810,8 +810,8 @@ show_message (void *ctx,
     mime_node_t *root, *part;
     notmuch_status_t status;
 
-    status = mime_node_open (local, message, params->cryptoctx,
-			     params->decrypt, &root);
+    status = mime_node_open (local, message, params->crypto.gpgctx,
+			     params->crypto.decrypt, &root);
     if (status)
 	goto DONE;
     part = mime_node_seek_dfs (root, (params->part < 0 ? 0 : params->part));
@@ -984,7 +984,13 @@ notmuch_show_command (void *ctx, unused (int argc), unused (char *argv[]))
     char *query_string;
     int opt_index, ret;
     const notmuch_show_format_t *format = &format_text;
-    notmuch_show_params_t params = { .part = -1, .omit_excluded = TRUE };
+    notmuch_show_params_t params = {
+	.part = -1,
+	.omit_excluded = TRUE,
+	.crypto = {
+	    .decrypt = FALSE
+	}
+    };
     int format_sel = NOTMUCH_FORMAT_NOT_SPECIFIED;
     notmuch_bool_t verify = FALSE;
     int exclude = EXCLUDE_TRUE;
@@ -1002,7 +1008,7 @@ notmuch_show_command (void *ctx, unused (int argc), unused (char *argv[]))
                                   { 0, 0 } } },
 	{ NOTMUCH_OPT_INT, &params.part, "part", 'p', 0 },
 	{ NOTMUCH_OPT_BOOLEAN, &params.entire_thread, "entire-thread", 't', 0 },
-	{ NOTMUCH_OPT_BOOLEAN, &params.decrypt, "decrypt", 'd', 0 },
+	{ NOTMUCH_OPT_BOOLEAN, &params.crypto.decrypt, "decrypt", 'd', 0 },
 	{ NOTMUCH_OPT_BOOLEAN, &verify, "verify", 'v', 0 },
 	{ 0, 0, 0, 0, 0 }
     };
@@ -1047,18 +1053,18 @@ notmuch_show_command (void *ctx, unused (int argc), unused (char *argv[]))
 	break;
     }
 
-    if (params.decrypt || verify) {
+    if (params.crypto.decrypt || verify) {
 #ifdef GMIME_ATLEAST_26
 	/* TODO: GMimePasswordRequestFunc */
-	params.cryptoctx = g_mime_gpg_context_new (NULL, "gpg");
+	params.crypto.gpgctx = g_mime_gpg_context_new (NULL, "gpg");
 #else
 	GMimeSession* session = g_object_new (g_mime_session_get_type(), NULL);
-	params.cryptoctx = g_mime_gpg_context_new (session, "gpg");
+	params.crypto.gpgctx = g_mime_gpg_context_new (session, "gpg");
 #endif
-	if (params.cryptoctx) {
-	    g_mime_gpg_context_set_always_trust ((GMimeGpgContext*) params.cryptoctx, FALSE);
+	if (params.crypto.gpgctx) {
+	    g_mime_gpg_context_set_always_trust ((GMimeGpgContext*) params.crypto.gpgctx, FALSE);
 	} else {
-	    params.decrypt = FALSE;
+	    params.crypto.decrypt = FALSE;
 	    fprintf (stderr, "Failed to construct gpg context.\n");
 	}
 #ifndef GMIME_ATLEAST_26
@@ -1115,11 +1121,9 @@ notmuch_show_command (void *ctx, unused (int argc), unused (char *argv[]))
 	ret = do_show (ctx, query, format, &params);
     }
 
+    notmuch_crypto_cleanup (&params.crypto);
     notmuch_query_destroy (query);
     notmuch_database_destroy (notmuch);
-
-    if (params.cryptoctx)
-	g_object_unref(params.cryptoctx);
 
     return ret;
 }

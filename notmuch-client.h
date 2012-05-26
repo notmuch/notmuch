@@ -87,8 +87,7 @@ typedef struct notmuch_show_params {
     notmuch_bool_t omit_excluded;
     notmuch_bool_t raw;
     int part;
-    notmuch_crypto_context_t* cryptoctx;
-    notmuch_bool_t decrypt;
+    notmuch_crypto_t crypto;
 } notmuch_show_params_t;
 
 /* There's no point in continuing when we've detected that we've done
