@@ -36,6 +36,9 @@
  * these to check the version number. */
 #ifdef GMIME_MAJOR_VERSION
 #define GMIME_ATLEAST_26
+typedef GMimeCryptoContext notmuch_crypto_context_t;
+#else
+typedef GMimeCipherContext notmuch_crypto_context_t;
 #endif
 
 #include "notmuch.h"
@@ -79,11 +82,7 @@ typedef struct notmuch_show_params {
     notmuch_bool_t omit_excluded;
     notmuch_bool_t raw;
     int part;
-#ifdef GMIME_ATLEAST_26
-    GMimeCryptoContext* cryptoctx;
-#else
-    GMimeCipherContext* cryptoctx;
-#endif
+    notmuch_crypto_context_t* cryptoctx;
     notmuch_bool_t decrypt;
 } notmuch_show_params_t;
 
@@ -355,11 +354,7 @@ struct mime_node {
  */
 notmuch_status_t
 mime_node_open (const void *ctx, notmuch_message_t *message,
-#ifdef GMIME_ATLEAST_26
-		GMimeCryptoContext *cryptoctx,
-#else
-		GMimeCipherContext *cryptoctx,
-#endif
+		notmuch_crypto_context_t *cryptoctx,
 		notmuch_bool_t decrypt, mime_node_t **node_out);
 
 /* Return a new MIME node for the requested child part of parent.

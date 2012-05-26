@@ -33,11 +33,7 @@ typedef struct mime_node_context {
     GMimeMessage *mime_message;
 
     /* Context provided by the caller. */
-#ifdef GMIME_ATLEAST_26
-    GMimeCryptoContext *cryptoctx;
-#else
-    GMimeCipherContext *cryptoctx;
-#endif
+    notmuch_crypto_context_t *cryptoctx;
     notmuch_bool_t decrypt;
 } mime_node_context_t;
 
@@ -61,11 +57,7 @@ _mime_node_context_free (mime_node_context_t *res)
 
 notmuch_status_t
 mime_node_open (const void *ctx, notmuch_message_t *message,
-#ifdef GMIME_ATLEAST_26
-		GMimeCryptoContext *cryptoctx,
-#else
-		GMimeCipherContext *cryptoctx,
-#endif
+		notmuch_crypto_context_t *cryptoctx,
 		notmuch_bool_t decrypt, mime_node_t **root_out)
 {
     const char *filename = notmuch_message_get_filename (message);
