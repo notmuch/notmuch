@@ -353,7 +353,8 @@ struct mime_node {
 /* Construct a new MIME node pointing to the root message part of
  * message. If crypto->verify is true, signed child parts will be
  * verified. If crypto->decrypt is true, encrypted child parts will be
- * decrypted.
+ * decrypted.  If crypto->gpgctx is NULL, it will be lazily
+ * initialized.
  *
  * Return value:
  *

@@ -1056,29 +1056,6 @@ notmuch_show_command (void *ctx, unused (int argc), unused (char *argv[]))
 	break;
     }
 
-    if (params.crypto.decrypt || params.crypto.verify) {
-#ifdef GMIME_ATLEAST_26
-	/* TODO: GMimePasswordRequestFunc */
-	params.crypto.gpgctx = g_mime_gpg_context_new (NULL, "gpg");
-#else
-	GMimeSession* session = g_object_new (g_mime_session_get_type(), NULL);
-	params.crypto.gpgctx = g_mime_gpg_context_new (session, "gpg");
-#endif
-	if (params.crypto.gpgctx) {
-	    g_mime_gpg_context_set_always_trust ((GMimeGpgContext*) params.crypto.gpgctx, FALSE);
-	} else {
-	    /* If we fail to create the gpgctx set the verify and
-	     * decrypt flags to FALSE so we don't try to do any
-	     * further verification or decryption */
-	    params.crypto.verify = FALSE;
-	    params.crypto.decrypt = FALSE;
-	    fprintf (stderr, "Failed to construct gpg context.\n");
-	}
-#ifndef GMIME_ATLEAST_26
-	g_object_unref (session);
-#endif
-    }
-
     config = notmuch_config_open (ctx, NULL, NULL);
     if (config == NULL)
 	return 1;

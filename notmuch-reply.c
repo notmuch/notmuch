@@ -741,25 +741,6 @@ notmuch_reply_command (void *ctx, int argc, char *argv[])
     else
 	reply_format_func = notmuch_reply_format_default;
 
-    if (params.crypto.decrypt) {
-#ifdef GMIME_ATLEAST_26
-	/* TODO: GMimePasswordRequestFunc */
-	params.crypto.gpgctx = g_mime_gpg_context_new (NULL, "gpg");
-#else
-	GMimeSession* session = g_object_new (g_mime_session_get_type(), NULL);
-	params.crypto.gpgctx = g_mime_gpg_context_new (session, "gpg");
-#endif
-	if (params.crypto.gpgctx) {
-	    g_mime_gpg_context_set_always_trust ((GMimeGpgContext*) params.crypto.gpgctx, FALSE);
-	} else {
-	    params.crypto.decrypt = FALSE;
-	    fprintf (stderr, "Failed to construct gpg context.\n");
-	}
-#ifndef GMIME_ATLEAST_26
-	g_object_unref (session);
-#endif
-    }
-
     config = notmuch_config_open (ctx, NULL, NULL);
     if (config == NULL)
 	return 1;
