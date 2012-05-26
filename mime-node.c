@@ -57,8 +57,7 @@ _mime_node_context_free (mime_node_context_t *res)
 
 notmuch_status_t
 mime_node_open (const void *ctx, notmuch_message_t *message,
-		notmuch_crypto_context_t *cryptoctx,
-		notmuch_bool_t decrypt, mime_node_t **root_out)
+		notmuch_crypto_t *crypto, mime_node_t **root_out)
 {
     const char *filename = notmuch_message_get_filename (message);
     mime_node_context_t *mctx;
@@ -110,8 +109,8 @@ mime_node_open (const void *ctx, notmuch_message_t *message,
 	goto DONE;
     }
 
-    mctx->cryptoctx = cryptoctx;
-    mctx->decrypt = decrypt;
+    mctx->cryptoctx = crypto->gpgctx;
+    mctx->decrypt = crypto->decrypt;
 
     /* Create the root node */
     root->part = GMIME_OBJECT (mctx->mime_message);

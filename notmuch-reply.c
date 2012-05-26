@@ -575,8 +575,7 @@ notmuch_reply_format_default(void *ctx,
 	g_object_unref (G_OBJECT (reply));
 	reply = NULL;
 
-	if (mime_node_open (ctx, message, params->crypto.gpgctx, params->crypto.decrypt,
-			    &root) == NOTMUCH_STATUS_SUCCESS) {
+	if (mime_node_open (ctx, message, &(params->crypto), &root) == NOTMUCH_STATUS_SUCCESS) {
 	    format_part_reply (root);
 	    talloc_free (root);
 	}
@@ -605,8 +604,7 @@ notmuch_reply_format_json(void *ctx,
 
     messages = notmuch_query_search_messages (query);
     message = notmuch_messages_get (messages);
-    if (mime_node_open (ctx, message, params->crypto.gpgctx, params->crypto.decrypt,
-			&node) != NOTMUCH_STATUS_SUCCESS)
+    if (mime_node_open (ctx, message, &(params->crypto), &node) != NOTMUCH_STATUS_SUCCESS)
 	return 1;
 
     reply = create_reply_message (ctx, config, message, reply_all);

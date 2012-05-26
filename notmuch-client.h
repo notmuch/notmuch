@@ -350,9 +350,10 @@ struct mime_node {
 };
 
 /* Construct a new MIME node pointing to the root message part of
- * message.  If cryptoctx is non-NULL, it will be used to verify
- * signatures on any child parts.  If decrypt is true, then cryptoctx
- * will additionally be used to decrypt any encrypted child parts.
+ * message.  If crypto->gpgctx is non-NULL, it will be used to verify
+ * signatures on any child parts.  If crypto->decrypt is true, then
+ * crypto.gpgctx will additionally be used to decrypt any encrypted
+ * child parts.
  *
  * Return value:
  *
@@ -364,8 +365,7 @@ struct mime_node {
  */
 notmuch_status_t
 mime_node_open (const void *ctx, notmuch_message_t *message,
-		notmuch_crypto_context_t *cryptoctx,
-		notmuch_bool_t decrypt, mime_node_t **node_out);
+		notmuch_crypto_t *crypto, mime_node_t **node_out);
 
 /* Return a new MIME node for the requested child part of parent.
  * parent will be used as the talloc context for the returned child

@@ -810,8 +810,7 @@ show_message (void *ctx,
     mime_node_t *root, *part;
     notmuch_status_t status;
 
-    status = mime_node_open (local, message, params->crypto.gpgctx,
-			     params->crypto.decrypt, &root);
+    status = mime_node_open (local, message, &(params->crypto), &root);
     if (status)
 	goto DONE;
     part = mime_node_seek_dfs (root, (params->part < 0 ? 0 : params->part));
