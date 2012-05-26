@@ -79,6 +79,7 @@ typedef struct notmuch_show_format {
 
 typedef struct notmuch_crypto {
     notmuch_crypto_context_t* gpgctx;
+    notmuch_bool_t verify;
     notmuch_bool_t decrypt;
 } notmuch_crypto_t;
 
@@ -350,10 +351,9 @@ struct mime_node {
 };
 
 /* Construct a new MIME node pointing to the root message part of
- * message.  If crypto->gpgctx is non-NULL, it will be used to verify
- * signatures on any child parts.  If crypto->decrypt is true, then
- * crypto.gpgctx will additionally be used to decrypt any encrypted
- * child parts.
+ * message. If crypto->verify is true, signed child parts will be
+ * verified. If crypto->decrypt is true, encrypted child parts will be
+ * decrypted.
  *
  * Return value:
  *

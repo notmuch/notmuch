@@ -987,11 +987,11 @@ notmuch_show_command (void *ctx, unused (int argc), unused (char *argv[]))
 	.part = -1,
 	.omit_excluded = TRUE,
 	.crypto = {
+	    .verify = FALSE,
 	    .decrypt = FALSE
 	}
     };
     int format_sel = NOTMUCH_FORMAT_NOT_SPECIFIED;
-    notmuch_bool_t verify = FALSE;
     int exclude = EXCLUDE_TRUE;
 
     notmuch_opt_desc_t options[] = {
@@ -1008,7 +1008,7 @@ notmuch_show_command (void *ctx, unused (int argc), unused (char *argv[]))
 	{ NOTMUCH_OPT_INT, &params.part, "part", 'p', 0 },
 	{ NOTMUCH_OPT_BOOLEAN, &params.entire_thread, "entire-thread", 't', 0 },
 	{ NOTMUCH_OPT_BOOLEAN, &params.crypto.decrypt, "decrypt", 'd', 0 },
-	{ NOTMUCH_OPT_BOOLEAN, &verify, "verify", 'v', 0 },
+	{ NOTMUCH_OPT_BOOLEAN, &params.crypto.verify, "verify", 'v', 0 },
 	{ 0, 0, 0, 0, 0 }
     };
 
@@ -1017,6 +1017,10 @@ notmuch_show_command (void *ctx, unused (int argc), unused (char *argv[]))
 	/* diagnostics already printed */
 	return 1;
     }
+
+    /* decryption implies verification */
+    if (params.crypto.decrypt)
+	params.crypto.verify = TRUE;
 
     if (format_sel == NOTMUCH_FORMAT_NOT_SPECIFIED) {
 	/* if part was requested and format was not specified, use format=raw */
@@ -1052,7 +1056,7 @@ notmuch_show_command (void *ctx, unused (int argc), unused (char *argv[]))
 	break;
     }
 
-    if (params.crypto.decrypt || verify) {
+    if (params.crypto.decrypt || params.crypto.verify) {
 #ifdef GMIME_ATLEAST_26
 	/* TODO: GMimePasswordRequestFunc */
 	params.crypto.gpgctx = g_mime_gpg_context_new (NULL, "gpg");
@@ -1063,6 +1067,10 @@ notmuch_show_command (void *ctx, unused (int argc), unused (char *argv[]))
 	if (params.crypto.gpgctx) {
 	    g_mime_gpg_context_set_always_trust ((GMimeGpgContext*) params.crypto.gpgctx, FALSE);
 	} else {
+	    /* If we fail to create the gpgctx set the verify and
+	     * decrypt flags to FALSE so we don't try to do any
+	     * further verification or decryption */
+	    params.crypto.verify = FALSE;
 	    params.crypto.decrypt = FALSE;
 	    fprintf (stderr, "Failed to construct gpg context.\n");
 	}

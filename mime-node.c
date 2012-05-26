@@ -183,8 +183,7 @@ _mime_node_create (mime_node_t *parent, GMimeObject *part)
     }
 
     /* Handle PGP/MIME parts */
-    if (GMIME_IS_MULTIPART_ENCRYPTED (part)
-	&& node->ctx->crypto->gpgctx && node->ctx->crypto->decrypt) {
+    if (GMIME_IS_MULTIPART_ENCRYPTED (part) && node->ctx->crypto->decrypt) {
 	if (node->nchildren != 2) {
 	    /* this violates RFC 3156 section 4, so we won't bother with it. */
 	    fprintf (stderr, "Error: %d part(s) for a multipart/encrypted "
@@ -218,7 +217,7 @@ _mime_node_create (mime_node_t *parent, GMimeObject *part)
 			 (err ? err->message : "no error explanation given"));
 	    }
 	}
-    } else if (GMIME_IS_MULTIPART_SIGNED (part) && node->ctx->crypto->gpgctx) {
+    } else if (GMIME_IS_MULTIPART_SIGNED (part) && node->ctx->crypto->verify) {
 	if (node->nchildren != 2) {
 	    /* this violates RFC 3156 section 5, so we won't bother with it. */
 	    fprintf (stderr, "Error: %d part(s) for a multipart/signed message "

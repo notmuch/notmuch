@@ -707,6 +707,7 @@ notmuch_reply_command (void *ctx, int argc, char *argv[])
     notmuch_show_params_t params = {
 	.part = -1,
 	.crypto = {
+	    .verify = FALSE,
 	    .decrypt = FALSE
 	}
     };
