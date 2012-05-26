@@ -33,8 +33,7 @@ typedef struct mime_node_context {
     GMimeMessage *mime_message;
 
     /* Context provided by the caller. */
-    notmuch_crypto_context_t *cryptoctx;
-    notmuch_bool_t decrypt;
+    notmuch_crypto_t *crypto;
 } mime_node_context_t;
 
 static int
@@ -109,8 +108,7 @@ mime_node_open (const void *ctx, notmuch_message_t *message,
 	goto DONE;
     }
 
-    mctx->cryptoctx = crypto->gpgctx;
-    mctx->decrypt = crypto->decrypt;
+    mctx->crypto = crypto;
 
     /* Create the root node */
     root->part = GMIME_OBJECT (mctx->mime_message);
@@ -186,7 +184,7 @@ _mime_node_create (mime_node_t *parent, GMimeObject *part)
 
     /* Handle PGP/MIME parts */
     if (GMIME_IS_MULTIPART_ENCRYPTED (part)
-	&& node->ctx->cryptoctx && node->ctx->decrypt) {
+	&& node->ctx->crypto->gpgctx && node->ctx->crypto->decrypt) {
 	if (node->nchildren != 2) {
 	    /* this violates RFC 3156 section 4, so we won't bother with it. */
 	    fprintf (stderr, "Error: %d part(s) for a multipart/encrypted "
@@ -199,10 +197,10 @@ _mime_node_create (mime_node_t *parent, GMimeObject *part)
 #ifdef GMIME_ATLEAST_26
 	    GMimeDecryptResult *decrypt_result = NULL;
 	    node->decrypted_child = g_mime_multipart_encrypted_decrypt
-		(encrypteddata, node->ctx->cryptoctx, &decrypt_result, &err);
+		(encrypteddata, node->ctx->crypto->gpgctx, &decrypt_result, &err);
 #else
 	    node->decrypted_child = g_mime_multipart_encrypted_decrypt
-		(encrypteddata, node->ctx->cryptoctx, &err);
+		(encrypteddata, node->ctx->crypto->gpgctx, &err);
 #endif
 	    if (node->decrypted_child) {
 		node->decrypt_success = node->verify_attempted = TRUE;
@@ -220,7 +218,7 @@ _mime_node_create (mime_node_t *parent, GMimeObject *part)
 			 (err ? err->message : "no error explanation given"));
 	    }
 	}
-    } else if (GMIME_IS_MULTIPART_SIGNED (part) && node->ctx->cryptoctx) {
+    } else if (GMIME_IS_MULTIPART_SIGNED (part) && node->ctx->crypto->gpgctx) {
 	if (node->nchildren != 2) {
 	    /* this violates RFC 3156 section 5, so we won't bother with it. */
 	    fprintf (stderr, "Error: %d part(s) for a multipart/signed message "
@@ -229,7 +227,7 @@ _mime_node_create (mime_node_t *parent, GMimeObject *part)
 	} else {
 #ifdef GMIME_ATLEAST_26
 	    node->sig_list = g_mime_multipart_signed_verify
-		(GMIME_MULTIPART_SIGNED (part), node->ctx->cryptoctx, &err);
+		(GMIME_MULTIPART_SIGNED (part), node->ctx->crypto->gpgctx, &err);
 	    node->verify_attempted = TRUE;
 
 	    if (!node->sig_list)
@@ -245,7 +243,7 @@ _mime_node_create (mime_node_t *parent, GMimeObject *part)
 	     * In GMime 2.6, they're both non-const, so we'll be able
 	     * to clean up this asymmetry. */
 	    GMimeSignatureValidity *sig_validity = g_mime_multipart_signed_verify
-		(GMIME_MULTIPART_SIGNED (part), node->ctx->cryptoctx, &err);
+		(GMIME_MULTIPART_SIGNED (part), node->ctx->crypto->gpgctx, &err);
 	    node->verify_attempted = TRUE;
 	    node->sig_validity = sig_validity;
 	    if (sig_validity) {
