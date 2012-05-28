@@ -21,6 +21,11 @@ databases
   and simply return a `NULL` object if the directory does not exist,
   as documented.
 
+Fix compilation of ruby bindings.
+
+  Revert to dynamic linking, since the statically linked bindings did
+  not work well.
+
 Notmuch 0.13 (2012-05-15)
 =========================
 
