@@ -60,7 +60,7 @@ sub prompt($$) {
     while (1) {
 	chomp($query = $term->readline($text, $default));
 	if ($query eq "?") {
-	    system("man", "notmuch");
+	    system("man", "notmuch-search-terms");
 	} else {
 	    $term->WriteHistory($histfile);
 	    return $query;
