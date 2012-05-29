@@ -1,3 +1,31 @@
+Notmuch 0.13.1 (2012-05-29)
+===========================
+
+Bug-fix release
+---------------
+
+Fix inserting of UTF-8 characters from *text/plain* parts in reply
+
+  While notmuch gained ability to insert content from other than *text/plain*
+  parts of email whenever *text/plain* parts are not available (notably
+  HTML-only emails), replying to mails that do have *text/plain* the
+  non-ASCII characters were incorrectly decoded. This is now fixed.
+
+`notmuch_database_get_directory` and
+`notmuch_database_find_message_by_filename` now work on read-only
+databases
+
+  Previously, these functions attempted to create directory documents
+  that didn't exist and would return an error or abort when given a
+  read-only database.  Now they no longer create directory documents
+  and simply return a `NULL` object if the directory does not exist,
+  as documented.
+
+Fix compilation of ruby bindings.
+
+  Revert to dynamic linking, since the statically linked bindings did
+  not work well.
+
 Notmuch 0.13 (2012-05-15)
 =========================
 

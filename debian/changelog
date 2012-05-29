@@ -1,3 +1,12 @@
+notmuch (0.13.1-1) unstable; urgency=low
+
+  * Upstream bugfix release.
+    - fix for encoding problems with reply in emacs
+    - notmuch_database_(get_directory|find_message_by_filename) now
+      work for read-only databases.
+
+ -- David Bremner <bremner@debian.org>  Fri, 25 May 2012 21:19:06 -0300
+
 notmuch (0.13-1) unstable; urgency=low
 
   * New upstream release. See /usr/share/doc/notmuch/NEWS.gz for changes.
