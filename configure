@@ -374,6 +374,10 @@ elif [ $uname = "SunOS" ] ; then
     printf "Solaris.\n"
     platform=SOLARIS
     linker_resolves_library_dependencies=0
+elif [ $uname = "FreeBSD" ] ; then
+    printf "FreeBSD.\n"
+    platform=FREEBSD
+    linker_resolves_library_dependencies=0
 elif [ $uname = "Linux" ] || [ $uname = "GNU" ] ; then
     printf "$uname\n"
     platform="$uname"
@@ -663,7 +667,7 @@ HAVE_GETLINE = ${have_getline}
 # build its own version)
 HAVE_STRCASESTR = ${have_strcasestr}
 
-# Supported platforms (so far) are: LINUX, MACOSX, SOLARIS
+# Supported platforms (so far) are: LINUX, MACOSX, SOLARIS, FREEBSD
 PLATFORM = ${platform}
 
 # Whether the linker will automatically resolve the dependency of one
