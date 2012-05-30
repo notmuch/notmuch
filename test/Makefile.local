@@ -17,7 +17,7 @@ $(dir)/smtp-dummy: $(smtp_dummy_modules)
 	$(call quiet,CC) $^ -o $@
 
 $(dir)/symbol-test: $(dir)/symbol-test.o
-	$(call quiet,CXX) $^ -o $@ -Llib -lnotmuch -lxapian
+	$(call quiet,CXX) $^ -o $@ -Llib -lnotmuch $(XAPIAN_LDFLAGS)
 
 .PHONY: test check
 
