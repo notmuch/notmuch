@@ -51,7 +51,7 @@ if test_require_external_prereq gdb; then
 
     # Prepare a snapshot of the updated maildir.  The gdb script will
     # update the database in this snapshot as it goes.
-    cp -ra $MAIL_DIR $MAIL_DIR.snap
+    cp -a $MAIL_DIR $MAIL_DIR.snap
     cp ${NOTMUCH_CONFIG} ${NOTMUCH_CONFIG}.snap
     NOTMUCH_CONFIG=${NOTMUCH_CONFIG}.snap notmuch config set database.path $MAIL_DIR.snap
 
