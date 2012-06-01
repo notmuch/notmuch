@@ -359,6 +359,7 @@ main(int argc, char **argv)
 	GOptionContext *ctx;
 	GError *error = NULL;
 	notmuch_database_t *db;
+	notmuch_status_t status;
 
 	ctx = g_option_context_new("[FOLDER]");
 	g_option_context_add_main_entries(ctx, options, PACKAGE);
@@ -429,7 +430,14 @@ main(int argc, char **argv)
 		maildir = g_strdup(db_path);
 
 	g_debug("Opening notmuch database `%s'", db_path);
-	db = notmuch_database_open(db_path, NOTMUCH_DATABASE_MODE_READ_WRITE);
+	status = notmuch_database_open(db_path, NOTMUCH_DATABASE_MODE_READ_WRITE,
+				       &db);
+	if (status) {
+	    g_critical("Failed to open database `%s': %s",
+		       db_path, notmuch_status_to_string(status));
+	    g_free(maildir);
+	    return EX_SOFTWARE;
+	}
 	g_free(db_path);
 	if (db == NULL)
 		return EX_SOFTWARE;
