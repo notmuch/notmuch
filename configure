@@ -1,7 +1,7 @@
 #! /bin/sh
 
 # Store original IFS value so it can be changed (and restored) in many places.
-readonly DEFAULT_IFS=$IFS
+readonly DEFAULT_IFS="$IFS"
 
 srcdir=$(dirname "$0")
 
