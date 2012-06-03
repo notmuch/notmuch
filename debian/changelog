@@ -1,3 +1,9 @@
+notmuch (0.13.2-1) unstable; urgency=low
+
+  * Upstream bugfix release. No changes to binary packages.
+
+ -- David Bremner <bremner@debian.org>  Sat, 02 Jun 2012 18:16:01 -0300
+
 notmuch (0.13.1-1) unstable; urgency=low
 
   * Upstream bugfix release.
