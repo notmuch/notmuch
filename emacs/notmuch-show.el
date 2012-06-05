@@ -819,7 +819,7 @@ message at DEPTH in the current thread."
   (make-symbol (concat "notmuch-show-" type)))
 
 (defun notmuch-show-strip-re (string)
-  (replace-regexp-in-string "\\([Rr]e: *\\)+" "" string))
+  (replace-regexp-in-string "^\\([Rr]e: *\\)+" "" string))
 
 (defvar notmuch-show-previous-subject "")
 (make-variable-buffer-local 'notmuch-show-previous-subject)
