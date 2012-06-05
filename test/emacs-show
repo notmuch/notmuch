@@ -24,4 +24,17 @@ test_emacs "(notmuch-show \"id:$message_id\")
 	    (test-visible-output)"
 test_expect_equal_file OUTPUT EXPECTED
 
+test_begin_subtest "Bare subject #1"
+output=$(test_emacs '(notmuch-show-strip-re "Re: subject")')
+test_expect_equal "$output" '"subject"'
+
+test_begin_subtest "Bare subject #2"
+output=$(test_emacs '(notmuch-show-strip-re "re:Re: re:  Re:  re:subject")')
+test_expect_equal "$output" '"subject"'
+
+test_begin_subtest "Bare subject #3"
+test_subtest_known_broken
+output=$(test_emacs '(notmuch-show-strip-re "the cure: fix the regexp")')
+test_expect_equal "$output" '"the cure: fix the regexp"'
+
 test_done
