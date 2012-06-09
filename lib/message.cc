@@ -1090,13 +1090,19 @@ notmuch_message_maildir_flags_to_tags (notmuch_message_t *message)
 	    continue;
 
 	flags = strstr (filename, ":2,");
-	if (! flags)
-	    continue;
-
-	seen_maildir_info = 1;
-	flags += 3;
-
-	combined_flags = talloc_strdup_append (combined_flags, flags);
+	if (flags) {
+	    seen_maildir_info = 1;
+	    flags += 3;
+	    combined_flags = talloc_strdup_append (combined_flags, flags);
+	} else if (STRNCMP_LITERAL (dir, "new/") == 0) {
+	    /* Messages are delivered to new/ with no "info" part, but
+	     * they effectively have default maildir flags.  According
+	     * to the spec, we should ignore the info part for
+	     * messages in new/, but some MUAs (mutt) can set maildir
+	     * flags on messages in new/, so we're liberal in what we
+	     * accept. */
+	    seen_maildir_info = 1;
+	}
     }
 
     /* If none of the filenames have any maildir info field (not even

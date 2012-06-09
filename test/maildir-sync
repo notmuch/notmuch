@@ -167,7 +167,6 @@ notmuch tag +unread +draft -flagged subject:"Non-compliant maildir info"
 test_expect_equal "$(cd $MAIL_DIR/cur/; ls non-compliant*)" "non-compliant-maildir-info:2,These-are-not-flags-in-ASCII-order-donottouch"
 
 test_begin_subtest "Files in new/ get default synchronized tags"
-test_subtest_known_broken
 OLDCONFIG=$(notmuch config get new.tags)
 notmuch config set new.tags test
 add_message [subject]='"File in new/"' [dir]=new [filename]='file-in-new'
