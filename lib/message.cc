@@ -1027,6 +1027,47 @@ notmuch_message_remove_tag (notmuch_message_t *message, const char *tag)
     return NOTMUCH_STATUS_SUCCESS;
 }
 
+/* Is the given filename within a maildir directory?
+ *
+ * Specifically, is the final directory component of 'filename' either
+ * "cur" or "new". If so, return a pointer to that final directory
+ * component within 'filename'. If not, return NULL.
+ *
+ * A non-NULL return value is guaranteed to be a valid string pointer
+ * pointing to the characters "new/" or "cur/", (but not
+ * NUL-terminated).
+ */
+static const char *
+_filename_is_in_maildir (const char *filename)
+{
+    const char *slash, *dir = NULL;
+
+    /* Find the last '/' separating directory from filename. */
+    slash = strrchr (filename, '/');
+    if (slash == NULL)
+	return NULL;
+
+    /* Jump back 4 characters to where the previous '/' will be if the
+     * directory is named "cur" or "new". */
+    if (slash - filename < 4)
+	return NULL;
+
+    slash -= 4;
+
+    if (*slash != '/')
+	return NULL;
+
+    dir = slash + 1;
+
+    if (STRNCMP_LITERAL (dir, "cur/") == 0 ||
+	STRNCMP_LITERAL (dir, "new/") == 0)
+    {
+	return dir;
+    }
+
+    return NULL;
+}
+
 notmuch_status_t
 notmuch_message_maildir_flags_to_tags (notmuch_message_t *message)
 {
@@ -1081,47 +1122,6 @@ notmuch_message_maildir_flags_to_tags (notmuch_message_t *message)
     talloc_free (combined_flags);
 
     return status;
-}
-
-/* Is the given filename within a maildir directory?
- *
- * Specifically, is the final directory component of 'filename' either
- * "cur" or "new". If so, return a pointer to that final directory
- * component within 'filename'. If not, return NULL.
- *
- * A non-NULL return value is guaranteed to be a valid string pointer
- * pointing to the characters "new/" or "cur/", (but not
- * NUL-terminated).
- */
-static const char *
-_filename_is_in_maildir (const char *filename)
-{
-    const char *slash, *dir = NULL;
-
-    /* Find the last '/' separating directory from filename. */
-    slash = strrchr (filename, '/');
-    if (slash == NULL)
-	return NULL;
-
-    /* Jump back 4 characters to where the previous '/' will be if the
-     * directory is named "cur" or "new". */
-    if (slash - filename < 4)
-	return NULL;
-
-    slash -= 4;
-
-    if (*slash != '/')
-	return NULL;
-
-    dir = slash + 1;
-
-    if (STRNCMP_LITERAL (dir, "cur/") == 0 ||
-	STRNCMP_LITERAL (dir, "new/") == 0)
-    {
-	return dir;
-    }
-
-    return NULL;
 }
 
 /* From the set of tags on 'message' and the flag2tag table, compute a
