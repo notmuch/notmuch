@@ -1,3 +1,19 @@
+Notmuch 0.14 (xxxx-xx-xx)
+=========================
+
+General bug fixes
+-----------------
+
+Maildir tag synchronization
+
+  Maildir flag-to-tag synchronization now applies only to messages in
+  maildir-like directory structures.  Previously, it applied to any
+  message that had a maildir "info" part, which meant it could
+  incorrectly synchronize tags for non-maildir messages, while at the
+  same time failing to synchronize tags for newly received maildir
+  messages (typically causing new messages to not receive the "unread"
+  tag).
+
 Notmuch 0.13.2 (2012-06-02)
 ===========================
 
