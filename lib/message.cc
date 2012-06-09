@@ -1074,7 +1074,7 @@ notmuch_message_maildir_flags_to_tags (notmuch_message_t *message)
     const char *flags;
     notmuch_status_t status;
     notmuch_filenames_t *filenames;
-    const char *filename;
+    const char *filename, *dir;
     char *combined_flags = talloc_strdup (message, "");
     unsigned i;
     int seen_maildir_info = 0;
@@ -1084,6 +1084,10 @@ notmuch_message_maildir_flags_to_tags (notmuch_message_t *message)
 	 notmuch_filenames_move_to_next (filenames))
     {
 	filename = notmuch_filenames_get (filenames);
+	dir = _filename_is_in_maildir (filename);
+
+	if (! dir)
+	    continue;
 
 	flags = strstr (filename, ":2,");
 	if (! flags)
