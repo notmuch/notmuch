@@ -60,6 +60,7 @@ TESTS="
   emacs-hello
   emacs-show
   missing-headers
+  hex-escaping
   parse-time-string
   search-date
 "
