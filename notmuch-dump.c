@@ -19,6 +19,7 @@
  */
 
 #include "notmuch-client.h"
+#include "dump-restore-private.h"
 
 int
 notmuch_dump_command (unused (void *ctx), int argc, char *argv[])
@@ -43,7 +44,13 @@ notmuch_dump_command (unused (void *ctx), int argc, char *argv[])
     char *output_file_name = NULL;
     int opt_index;
 
+    int output_format = DUMP_FORMAT_SUP;
+
     notmuch_opt_desc_t options[] = {
+	{ NOTMUCH_OPT_KEYWORD, &output_format, "format", 'f',
+	  (notmuch_keyword_t []){ { "sup", DUMP_FORMAT_SUP },
+				  { "batch-tag", DUMP_FORMAT_BATCH_TAG },
+				  { 0, 0 } } },
 	{ NOTMUCH_OPT_STRING, &output_file_name, "output", 'o', 0  },
 	{ 0, 0, 0, 0, 0 }
     };
@@ -83,27 +90,56 @@ notmuch_dump_command (unused (void *ctx), int argc, char *argv[])
      */
     notmuch_query_set_sort (query, NOTMUCH_SORT_UNSORTED);
 
+    char *buffer = NULL;
+    size_t buffer_size = 0;
+
     for (messages = notmuch_query_search_messages (query);
 	 notmuch_messages_valid (messages);
 	 notmuch_messages_move_to_next (messages)) {
 	int first = 1;
-	message = notmuch_messages_get (messages);
+	const char *message_id;
 
-	fprintf (output,
-		 "%s (", notmuch_message_get_message_id (message));
+	message = notmuch_messages_get (messages);
+	message_id = notmuch_message_get_message_id (message);
+
+	if (output_format == DUMP_FORMAT_SUP) {
+	    fprintf (output, "%s (", message_id);
+	}
 
 	for (tags = notmuch_message_get_tags (message);
 	     notmuch_tags_valid (tags);
 	     notmuch_tags_move_to_next (tags)) {
-	    if (! first)
-		fprintf (output, " ");
+	    const char *tag_str = notmuch_tags_get (tags);
 
-	    fprintf (output, "%s", notmuch_tags_get (tags));
+	    if (! first)
+		fputs (" ", output);
 
 	    first = 0;
+
+	    if (output_format == DUMP_FORMAT_SUP) {
+		fputs (tag_str, output);
+	    } else {
+		if (hex_encode (notmuch, tag_str,
+				&buffer, &buffer_size) != HEX_SUCCESS) {
+		    fprintf (stderr, "Error: failed to hex-encode tag %s\n",
+			     tag_str);
+		    return 1;
+		}
+		fprintf (output, "+%s", buffer);
+	    }
 	}
 
-	fprintf (output, ")\n");
+	if (output_format == DUMP_FORMAT_SUP) {
+	    fputs (")\n", output);
+	} else {
+	    if (hex_encode (notmuch, message_id,
+			    &buffer, &buffer_size) != HEX_SUCCESS) {
+		    fprintf (stderr, "Error: failed to hex-encode msg-id %s\n",
+			     message_id);
+		    return 1;
+	    }
+	    fprintf (output, " -- id:%s\n", buffer);
+	}
 
 	notmuch_message_destroy (message);
     }
