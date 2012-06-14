@@ -3,4 +3,5 @@ corpus.mail
 smtp-dummy
 symbol-test
 arg-test
+hex-xcode
 tmp.*

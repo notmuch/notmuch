@@ -56,6 +56,7 @@ tests_in_suite=$(for i in $TESTS; do echo $i; done | sort)
 available=$(find "$TEST_DIRECTORY" -maxdepth 1 -type f -perm +111  \
     ! -name aggregate-results.sh	\
     ! -name arg-test			\
+    ! -name hex-xcode			\
     ! -name notmuch-test		\
     ! -name parse-time			\
     ! -name smtp-dummy			\
