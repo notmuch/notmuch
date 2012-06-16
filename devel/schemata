@@ -32,7 +32,7 @@ thread = [thread_node*]
 
 # A message and its replies (show_messages)
 thread_node = [
-    message?,                 # present if --entire-thread or matched
+    message?,                 # null if not matched and not --entire-thread
     [thread_node*]            # children of message
 ]
 

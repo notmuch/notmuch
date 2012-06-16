@@ -92,8 +92,6 @@ and email address in the From: line. We could also then easily support
 "notmuch compose --from <something>" to support getting at alternate
 email addresses.
 
-Fix the --format=json option to not imply --entire-thread.
-
 Implement "notmuch search --exclude-threads=<search-terms>" to allow
 for excluding muted threads, (and any other negative, thread-based
 filtering that the user wants to do).
