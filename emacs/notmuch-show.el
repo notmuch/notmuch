@@ -964,9 +964,9 @@ message at DEPTH in the current thread."
   "Insert the message tree TREE at depth DEPTH in the current thread."
   (let ((msg (car tree))
 	(replies (cadr tree)))
-    (if (or (not notmuch-show-elide-non-matching-messages)
-	    (plist-get msg :match))
-	(notmuch-show-insert-msg msg depth))
+    ;; We test whether there is a message or just some replies.
+    (when msg
+      (notmuch-show-insert-msg msg depth))
     (notmuch-show-insert-thread replies (1+ depth))))
 
 (defun notmuch-show-insert-thread (thread depth)
@@ -1047,16 +1047,18 @@ function is used."
 	     (args (if notmuch-show-query-context
 		       (append (list "\'") basic-args
 			       (list "and (" notmuch-show-query-context ")\'"))
-		     (append (list "\'") basic-args (list "\'")))))
-	(notmuch-show-insert-forest (notmuch-query-get-threads
-				     (cons "--exclude=false" args)))
+		     (append (list "\'") basic-args (list "\'"))))
+	     (cli-args (cons "--exclude=false"
+			     (when notmuch-show-elide-non-matching-messages
+			       (list "--entire-thread=false")))))
+
+	(notmuch-show-insert-forest (notmuch-query-get-threads (append cli-args args)))
 	;; If the query context reduced the results to nothing, run
 	;; the basic query.
 	(when (and (eq (buffer-size) 0)
 		   notmuch-show-query-context)
 	  (notmuch-show-insert-forest
-	   (notmuch-query-get-threads
-	    (cons "--exclude=false" basic-args)))))
+	   (notmuch-query-get-threads (append cli-args basic-args)))))
 
       (jit-lock-register #'notmuch-show-buttonise-links)
 
