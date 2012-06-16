@@ -37,7 +37,8 @@ static const notmuch_show_format_t format_json = {
     .message_set_start = "[",
     .part = format_part_json_entry,
     .message_set_sep = ", ",
-    .message_set_end = "]"
+    .message_set_end = "]",
+    .null_message = "null"
 };
 
 static notmuch_status_t
@@ -800,6 +801,15 @@ format_part_raw (unused (const void *ctx), mime_node_t *node,
 }
 
 static notmuch_status_t
+show_null_message (const notmuch_show_format_t *format)
+{
+    /* Output a null message. Currently empty for all formats except Json */
+    if (format->null_message)
+	printf ("%s", format->null_message);
+    return NOTMUCH_STATUS_SUCCESS;
+}
+
+static notmuch_status_t
 show_message (void *ctx,
 	      const notmuch_show_format_t *format,
 	      notmuch_message_t *message,
@@ -861,10 +871,12 @@ show_messages (void *ctx,
 	    if (status && !res)
 		res = status;
 	    next_indent = indent + 1;
-
-	    if (!status && format->message_set_sep)
-		fputs (format->message_set_sep, stdout);
+	} else {
+	    status = show_null_message (format);
 	}
+
+	if (!status && format->message_set_sep)
+	    fputs (format->message_set_sep, stdout);
 
 	status = show_messages (ctx,
 				format,

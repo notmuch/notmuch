@@ -75,6 +75,7 @@ typedef struct notmuch_show_format {
 			      const struct notmuch_show_params *params);
     const char *message_set_sep;
     const char *message_set_end;
+    const char *null_message;
 } notmuch_show_format_t;
 
 typedef struct notmuch_crypto {
