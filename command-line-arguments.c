@@ -11,9 +11,14 @@
 */
 
 static notmuch_bool_t
-_process_keyword_arg (const notmuch_opt_desc_t *arg_desc, const char *arg_str) {
+_process_keyword_arg (const notmuch_opt_desc_t *arg_desc, char next, const char *arg_str) {
 
     const notmuch_keyword_t *keywords = arg_desc->keywords;
+
+    if (next == 0) {
+	/* No keyword given */
+	arg_str = "";
+    }
 
     while (keywords->name) {
 	if (strcmp (arg_str, keywords->name) == 0) {
@@ -24,7 +29,10 @@ _process_keyword_arg (const notmuch_opt_desc_t *arg_desc, const char *arg_str) {
 	}
 	keywords++;
     }
-    fprintf (stderr, "unknown keyword: %s\n", arg_str);
+    if (next != 0)
+	fprintf (stderr, "unknown keyword: %s\n", arg_str);
+    else
+	fprintf (stderr, "option %s needs a keyword\n", arg_desc->name);
     return FALSE;
 }
 
@@ -99,7 +107,8 @@ parse_option (const char *arg,
 	     */
 	    if (next != '=' && next != ':' && next != 0) return FALSE;
 	    if (next == 0) {
-		if (try->opt_type != NOTMUCH_OPT_BOOLEAN)
+		if (try->opt_type != NOTMUCH_OPT_BOOLEAN &&
+		    try->opt_type != NOTMUCH_OPT_KEYWORD)
 		    return FALSE;
 	    } else {
 		if (value[0] == 0) return FALSE;
@@ -110,7 +119,7 @@ parse_option (const char *arg,
 
 	    switch (try->opt_type) {
 	    case NOTMUCH_OPT_KEYWORD:
-		return _process_keyword_arg (try, value);
+		return _process_keyword_arg (try, next, value);
 		break;
 	    case NOTMUCH_OPT_BOOLEAN:
 		return _process_boolean_arg (try, next, value);
