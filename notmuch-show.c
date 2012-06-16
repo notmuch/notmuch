@@ -980,6 +980,12 @@ enum {
     NOTMUCH_FORMAT_RAW
 };
 
+enum {
+    ENTIRE_THREAD_DEFAULT,
+    ENTIRE_THREAD_TRUE,
+    ENTIRE_THREAD_FALSE,
+};
+
 /* The following is to allow future options to be added more easily */
 enum {
     EXCLUDE_TRUE,
@@ -1005,6 +1011,7 @@ notmuch_show_command (void *ctx, unused (int argc), unused (char *argv[]))
     };
     int format_sel = NOTMUCH_FORMAT_NOT_SPECIFIED;
     int exclude = EXCLUDE_TRUE;
+    int entire_thread = ENTIRE_THREAD_DEFAULT;
 
     notmuch_opt_desc_t options[] = {
 	{ NOTMUCH_OPT_KEYWORD, &format_sel, "format", 'f',
@@ -1017,8 +1024,12 @@ notmuch_show_command (void *ctx, unused (int argc), unused (char *argv[]))
           (notmuch_keyword_t []){ { "true", EXCLUDE_TRUE },
                                   { "false", EXCLUDE_FALSE },
                                   { 0, 0 } } },
+	{ NOTMUCH_OPT_KEYWORD, &entire_thread, "entire-thread", 't',
+	  (notmuch_keyword_t []){ { "true", ENTIRE_THREAD_TRUE },
+				  { "false", ENTIRE_THREAD_FALSE },
+				  { "", ENTIRE_THREAD_TRUE },
+				  { 0, 0 } } },
 	{ NOTMUCH_OPT_INT, &params.part, "part", 'p', 0 },
-	{ NOTMUCH_OPT_BOOLEAN, &params.entire_thread, "entire-thread", 't', 0 },
 	{ NOTMUCH_OPT_BOOLEAN, &params.crypto.decrypt, "decrypt", 'd', 0 },
 	{ NOTMUCH_OPT_BOOLEAN, &params.crypto.verify, "verify", 'v', 0 },
 	{ 0, 0, 0, 0, 0 }
@@ -1045,7 +1056,6 @@ notmuch_show_command (void *ctx, unused (int argc), unused (char *argv[]))
     switch (format_sel) {
     case NOTMUCH_FORMAT_JSON:
 	format = &format_json;
-	params.entire_thread = TRUE;
 	break;
     case NOTMUCH_FORMAT_TEXT:
 	format = &format_text;
@@ -1067,6 +1077,19 @@ notmuch_show_command (void *ctx, unused (int argc), unused (char *argv[]))
 	params.raw = TRUE;
 	break;
     }
+
+    /* Default is entire-thread = FALSE except for format=json. */
+    if (entire_thread == ENTIRE_THREAD_DEFAULT) {
+	if (format == &format_json)
+	    entire_thread = ENTIRE_THREAD_TRUE;
+	else
+	    entire_thread = ENTIRE_THREAD_FALSE;
+    }
+
+    if (entire_thread == ENTIRE_THREAD_TRUE)
+	params.entire_thread = TRUE;
+    else
+	params.entire_thread = FALSE;
 
     config = notmuch_config_open (ctx, NULL, NULL);
     if (config == NULL)
