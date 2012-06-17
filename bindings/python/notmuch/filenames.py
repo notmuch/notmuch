@@ -14,7 +14,7 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with notmuch.  If not, see <http://www.gnu.org/licenses/>.
 
-Copyright 2010 Sebastian Spaeth <Sebastian@SSpaeth.de>'
+Copyright 2010 Sebastian Spaeth <Sebastian@SSpaeth.de>
 """
 from ctypes import c_char_p
 from notmuch.globals import (
@@ -32,29 +32,32 @@ from .errors import (
 class Filenames(Python3StringMixIn):
     """Represents a list of filenames as returned by notmuch
 
-    This object contains the Filenames iterator. The main function is
-    as_generator() which will return a generator so we can do a Filenamesth an
-    iterator over a list of notmuch filenames. Do note that the underlying
-    library only provides a one-time iterator (it cannot reset the iterator to
-    the start). Thus iterating over the function will "exhaust" the list of
-    tags, and a subsequent iteration attempt will raise a
-    :exc:`NotInitializedError`. Also note, that any function that uses
-    iteration (nearly all) will also exhaust the tags. So both::
+    Objects of this class implement the iterator protocol.
 
-      for name in filenames: print name
+    .. note::
 
-    as well as::
+        The underlying library only provides a one-time iterator (it
+        cannot reset the iterator to the start). Thus iterating over
+        the function will "exhaust" the list of tags, and a subsequent
+        iteration attempt will raise a
+        :exc:`NotInitializedError`. Also note, that any function that
+        uses iteration (nearly all) will also exhaust the tags. So
+        both::
 
-       number_of_names = len(names)
+           for name in filenames: print name
 
-    and even a simple::
+        as well as::
 
-       #str() iterates over all tags to construct a space separated list
-       print(str(filenames))
+           number_of_names = len(names)
 
-    will "exhaust" the Filenames. However, you can use
-    :meth:`Message.get_filenames` repeatedly to get fresh Filenames
-    objects to perform various actions on filenames.
+        and even a simple::
+
+           #str() iterates over all tags to construct a space separated list
+           print(str(filenames))
+
+        will "exhaust" the Filenames. However, you can use
+        :meth:`Message.get_filenames` repeatedly to get fresh
+        Filenames objects to perform various actions on filenames.
     """
 
     #notmuch_filenames_get
@@ -109,28 +112,13 @@ class Filenames(Python3StringMixIn):
         return file_.decode('utf-8', 'ignore')
     next = __next__ # python2.x iterator protocol compatibility
 
-    def as_generator(self):
-        """Return generator of Filenames
-
-        This is the main function that will usually be used by the
-        user.
-
-        .. deprecated:: 0.12
-                        :class:`Filenames` objects implement the
-                        iterator protocol.
-        """
-        return self
-
     def __unicode__(self):
         """Represent Filenames() as newline-separated list of full paths
 
-        .. note:: As this iterates over the filenames, we will not be
-               able to iterate over them again (as in retrieve them)! If
-               the tags have been exhausted already, this will raise a
-               :exc:`NotInitializedError` on subsequent
-               attempts. However, you can use
-               :meth:`Message.get_filenames` repeatedly to perform
-               various actions on filenames.
+        .. note::
+
+            This method exhausts the iterator object, so you will not be able to
+            iterate over them again.
         """
         return "\n".join(self)
 
@@ -140,7 +128,7 @@ class Filenames(Python3StringMixIn):
 
     def __del__(self):
         """Close and free the notmuch filenames"""
-        if self._files_p is not None:
+        if self._files_p:
             self._destroy(self._files_p)
 
     def __len__(self):
@@ -148,15 +136,8 @@ class Filenames(Python3StringMixIn):
 
         .. note::
 
-            As this iterates over the files, we will not be able to
-            iterate over them again! So this will fail::
-
-                 #THIS FAILS
-                 files = Database().get_directory('').get_child_files()
-                 if len(files) > 0:  # this 'exhausts' msgs
-                     # next line raises
-                     # NotmuchError(:attr:`STATUS`.NOT_INITIALIZED)
-                     for file in files: print file
+            This method exhausts the iterator object, so you will not be able to
+            iterate over them again.
         """
         if not self._files_p:
             raise NotInitializedError()

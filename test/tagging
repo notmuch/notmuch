@@ -38,4 +38,12 @@ test_expect_equal "$output" "\
 thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; One (:\"  inbox tag1 unread)
 thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; Two (inbox tag1 unread)"
 
+test_begin_subtest "Tagging order"
+notmuch tag +tag4 -tag4 One
+notmuch tag -tag4 +tag4 Two
+output=$(notmuch search \* | notmuch_search_sanitize)
+test_expect_equal "$output" "\
+thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; One (:\"  inbox tag1 unread)
+thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; Two (inbox tag1 tag4 unread)"
+
 test_done

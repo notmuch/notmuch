@@ -3,11 +3,8 @@
 test_description='notmuch show --format=raw'
 . ./test-lib.sh
 
-test_begin_subtest "Generate some messages"
-generate_message
-generate_message
-output=$(NOTMUCH_NEW)
-test_expect_equal "$output" "Added 2 new messages to the database."
+add_message
+add_message
 
 test_begin_subtest "Attempt to show multiple raw messages"
 output=$(notmuch show --format=raw "*" 2>&1)

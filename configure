@@ -1,5 +1,8 @@
 #! /bin/sh
 
+# Store original IFS value so it can be changed (and restored) in many places.
+readonly DEFAULT_IFS=$IFS
+
 srcdir=$(dirname "$0")
 
 # For a non-srcdir configure invocation (such as ../configure), create
@@ -44,6 +47,16 @@ LIBDIR=
 WITH_EMACS=1
 WITH_BASH=1
 WITH_ZSH=1
+
+# Compatible GMime versions (with constraints).
+# If using GMime 2.6, we need to have a version >= 2.6.5 to avoid a
+# crypto bug. We need 2.6.7 for permissive "From " header handling.
+GMIME_24_VERSION_CTR=''
+GMIME_24_VERSION="gmime-2.4 $GMIME_24_VERSION_CTR"
+GMIME_26_VERSION_CTR='>= 2.6.7'
+GMIME_26_VERSION="gmime-2.6 $GMIME_26_VERSION_CTR"
+
+WITH_GMIME_VERSIONS="$GMIME_26_VERSION;$GMIME_24_VERSION"
 
 usage ()
 {
@@ -170,38 +183,16 @@ for option; do
 	fi
     elif [ "${option}" = '--without-zsh-completion' ] ; then
 	WITH_ZSH=0
+    elif [ "${option%%=*}" = '--with-gmime-version' ] ; then
+	if [ "${option#*=}" = '2.4' ]; then
+	     WITH_GMIME_VERSIONS=$GMIME_24_VERSION
+	 elif [ "${option#*=}" = '2.6' ]; then
+	     WITH_GMIME_VERSIONS=$GMIME_26_VERSION
+	fi
     elif [ "${option%%=*}" = '--build' ] ; then
-	build_option="${option#*=}"
-	case ${build_option} in
-	    *-*-*) ;;
-	    *)
-		echo "Unrecognized value for --build option: ${build_option}"
-		echo "Should be: <cpu>-<vendor>-<os>"
-		echo "See:"
-		echo "	$0 --help"
-		echo ""
-		exit 1
-	esac
-	build_cpu=${build_option%%-*}
-	build_option=${build_option#*-}
-	build_vendor=${build_option%%-*}
-	build_os=${build_option#*-}
+	true
     elif [ "${option%%=*}" = '--host' ] ; then
-	host_option="${option#*=}"
-	case ${host_option} in
-	    *-*-*) ;;
-	    *)
-		echo "Unrecognized value for --host option: ${host_option}"
-		echo "Should be: <cpu>-<vendor>-<os>"
-		echo "See:"
-		echo "	$0 --help"
-		echo ""
-		exit 1
-	esac
-	host_cpu=${host_option%%-*}
-	host_option=${host_option#*-}
-	host_vendor=${host_option%%-*}
-	host_os=${host_option#*-}
+	true
     elif [ "${option%%=*}" = '--infodir' ] ; then
 	true
     elif [ "${option%%=*}" = '--datadir' ] ; then
@@ -273,11 +264,10 @@ if [ ${have_xapian} = "0" ]; then
     errors=$((errors + 1))
 fi
 
-# If using GMime 2.6, we need to have a version >= 2.6.5 to avoid a
-# crypto bug. We need 2.6.7 for permissive "From " header handling.
 printf "Checking for GMime development files... "
 have_gmime=0
-for gmimepc in 'gmime-2.6 >= 2.6.7' gmime-2.4; do
+IFS=';'
+for gmimepc in $WITH_GMIME_VERSIONS; do
     if pkg-config --exists $gmimepc; then
 	printf "Yes ($gmimepc).\n"
 	have_gmime=1
@@ -286,6 +276,7 @@ for gmimepc in 'gmime-2.6 >= 2.6.7' gmime-2.4; do
 	break
     fi
 done
+IFS=$DEFAULT_IFS
 if [ "$have_gmime" = "0" ]; then
     printf "No.\n"
     errors=$((errors + 1))
@@ -365,9 +356,9 @@ elif [ $uname = "SunOS" ] ; then
     printf "Solaris.\n"
     platform=SOLARIS
     linker_resolves_library_dependencies=0
-elif [ $uname = "Linux" ] ; then
-    printf "Linux\n"
-    platform=LINUX
+elif [ $uname = "Linux" ] || [ $uname = "GNU" ] ; then
+    printf "$uname\n"
+    platform="$uname"
     linker_resolves_library_dependencies=1
 
     printf "Checking for $libdir_expanded in ldconfig... "
@@ -379,7 +370,6 @@ elif [ $uname = "Linux" ] ; then
     #	IFS=$(printf '\n')
     #
     # because the shell's command substitution deletes any trailing newlines.
-    OLD_IFS=$IFS
     IFS="
 "
     for path in $ldconfig_paths; do
@@ -387,7 +377,7 @@ elif [ $uname = "Linux" ] ; then
 	    libdir_in_ldconfig=1
 	fi
     done
-    IFS=$OLD_IFS
+    IFS=$DEFAULT_IFS
     if [ "$libdir_in_ldconfig" = '0' ]; then
 	printf "No (will set RPATH)\n"
     else
@@ -415,26 +405,29 @@ EOF
 	echo "	http://xapian.org/"
     fi
     if [ $have_gmime -eq 0 ]; then
-	echo "	GMime 2.4 library (including development files such as headers)"
+	echo "	Either GMime 2.4 library" $GMIME_24_VERSION_CTR "or GMime 2.6 library" $GMIME_26_VERSION_CTR
+	echo "	(including development files such as headers)"
 	echo "	http://spruce.sourceforge.net/gmime/"
+	echo
     fi
     if [ $have_glib -eq 0 ]; then
 	echo "	Glib library >= 2.22 (including development files such as headers)"
 	echo "	http://ftp.gnome.org/pub/gnome/sources/glib/"
+	echo
     fi
     if [ $have_talloc -eq 0 ]; then
 	echo "	The talloc library (including development files such as headers)"
 	echo "	http://talloc.samba.org/"
+	echo
     fi
     cat <<EOF
-
 With any luck, you're using a modern, package-based operating system
 that has all of these packages available in the distribution. In that
 case a simple command will install everything you need. For example:
 
 On Debian and similar systems:
 
-	sudo apt-get install libxapian-dev libgmime-2.4-dev libtalloc-dev
+	sudo apt-get install libxapian-dev libgmime-2.6-dev libtalloc-dev
 
 Or on Fedora and similar systems:
 
@@ -536,7 +529,7 @@ done
 printf "\n\t${WARN_CFLAGS}\n"
 
 rm -f minimal minimal.c
-	
+
 cat <<EOF
 
 All required packages were found. You may now run the following

@@ -14,7 +14,7 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with notmuch.  If not, see <http://www.gnu.org/licenses/>.
 
-Copyright 2010 Sebastian Spaeth <Sebastian@SSpaeth.de>'
+Copyright 2010 Sebastian Spaeth <Sebastian@SSpaeth.de>
 """
 import sys
 from ctypes import CDLL, Structure, POINTER
@@ -22,7 +22,7 @@ from ctypes import CDLL, Structure, POINTER
 #-----------------------------------------------------------------------------
 #package-global instance of the notmuch library
 try:
-    nmlib = CDLL("libnotmuch.so.2")
+    nmlib = CDLL("libnotmuch.so.3")
 except:
     raise ImportError("Could not find shared 'notmuch' library.")
 

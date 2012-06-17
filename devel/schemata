@@ -36,7 +36,7 @@ thread_node = [
     [thread_node*]            # children of message
 ]
 
-# A message (show_message)
+# A message (format_part_json)
 message = {
     # (format_message_json)
     id:             messageid,
@@ -50,18 +50,13 @@ message = {
     body:           [part]
 }
 
-# A MIME part (show_message_body)
+# A MIME part (format_part_json)
 part = {
-    # format_part_start_json
     id:             int|string, # part id (currently DFS part number)
 
-    # format_part_encstatus_json
     encstatus?:     encstatus,
-
-    # format_part_sigstatus_json
     sigstatus?:     sigstatus,
 
-    # format_part_content_json
     content-type:   string,
     content-id?:    string,
     # if content-type starts with "multipart/":
@@ -77,8 +72,7 @@ part = {
     content?:       string
 }
 
-# The headers of a message (format_headers_json with raw headers) or
-# a part (format_headers_message_part_json with pretty-printed headers)
+# The headers of a message or part (format_headers_json with reply = FALSE)
 headers = {
     Subject:        string,
     From:           string,
@@ -88,14 +82,14 @@ headers = {
     Date:           string
 }
 
-# Encryption status (format_part_encstatus_json)
+# Encryption status (format_part_json)
 encstatus = [{status: "good"|"bad"}]
 
 # Signature status (format_part_sigstatus_json)
 sigstatus = [signature*]
 
 signature = {
-    # signature_status_to_string
+    # (signature_status_to_string)
     status:         "none"|"good"|"bad"|"error"|"unknown",
     # if status is "good":
     fingerprint?:   string,
@@ -135,4 +129,26 @@ thread = {
     authors:        string,   # comma-separated names with | between
                               # matched and unmatched
     subject:        string
+}
+
+notmuch reply schema
+--------------------
+
+reply = {
+    # The headers of the constructed reply
+    reply-headers: reply_headers,
+
+    # As in the show format (format_part_json)
+    original: message
+}
+
+# Reply headers (format_headers_json with reply = TRUE)
+reply_headers = {
+    Subject:        string,
+    From:           string,
+    To?:            string,
+    Cc?:            string,
+    Bcc?:           string,
+    In-reply-to:    string,
+    References:     string
 }

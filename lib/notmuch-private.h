@@ -146,7 +146,19 @@ typedef enum _notmuch_private_status {
      :									\
      (notmuch_status_t) private_status)
 
+/* Flags shared by various lookup functions. */
+typedef enum _notmuch_find_flags {
+    /* Lookup without creating any documents.  This is the default
+     * behavior. */
+    NOTMUCH_FIND_LOOKUP = 0,
+    /* If set, create the necessary document (or documents) if they
+     * are missing.  Requires a read/write database. */
+    NOTMUCH_FIND_CREATE = 1<<0,
+} notmuch_find_flags_t;
+
 typedef struct _notmuch_doc_id_set notmuch_doc_id_set_t;
+
+typedef struct _notmuch_string_list notmuch_string_list_t;
 
 /* database.cc */
 
@@ -186,6 +198,7 @@ _notmuch_database_find_unique_doc_id (notmuch_database_t *notmuch,
 notmuch_status_t
 _notmuch_database_find_directory_id (notmuch_database_t *database,
 				     const char *path,
+				     notmuch_find_flags_t flags,
 				     unsigned int *directory_id);
 
 const char *
@@ -197,6 +210,7 @@ notmuch_status_t
 _notmuch_database_filename_to_direntry (void *ctx,
 					notmuch_database_t *notmuch,
 					const char *filename,
+					notmuch_find_flags_t flags,
 					char **direntry);
 
 /* directory.cc */
@@ -204,6 +218,7 @@ _notmuch_database_filename_to_direntry (void *ctx,
 notmuch_directory_t *
 _notmuch_directory_create (notmuch_database_t *notmuch,
 			   const char *path,
+			   notmuch_find_flags_t flags,
 			   notmuch_status_t *status_ret);
 
 unsigned int
@@ -216,6 +231,7 @@ _notmuch_thread_create (void *ctx,
 			notmuch_database_t *notmuch,
 			unsigned int seed_doc_id,
 			notmuch_doc_id_set_t *match_set,
+			notmuch_string_list_t *excluded_terms,
 			notmuch_sort_t sort);
 
 /* message.cc */
@@ -401,6 +417,7 @@ typedef struct _notmuch_message_list {
  */
 struct visible _notmuch_messages {
     notmuch_bool_t is_of_list_type;
+    notmuch_doc_id_set_t *excluded_doc_ids;
     notmuch_message_node_t *iterator;
 };
 
@@ -458,11 +475,11 @@ typedef struct _notmuch_string_node {
     struct _notmuch_string_node *next;
 } notmuch_string_node_t;
 
-typedef struct visible _notmuch_string_list {
+struct visible _notmuch_string_list {
     int length;
     notmuch_string_node_t *head;
     notmuch_string_node_t **tail;
-} notmuch_string_list_t;
+};
 
 notmuch_string_list_t *
 _notmuch_string_list_create (const void *ctx);
@@ -491,8 +508,26 @@ notmuch_filenames_t *
 _notmuch_filenames_create (const void *ctx,
 			   notmuch_string_list_t *list);
 
-#pragma GCC visibility pop
-
 NOTMUCH_END_DECLS
+
+#ifdef __cplusplus
+/* Implicit typecast from 'void *' to 'T *' is okay in C, but not in
+ * C++. In talloc_steal, an explicit cast is provided for type safety
+ * in some GCC versions. Otherwise, a cast is required. Provide a
+ * template function for this to maintain type safety, and redefine
+ * talloc_steal to use it.
+ */
+#if !(__GNUC__ >= 3)
+template <class T> T *
+_notmuch_talloc_steal (const void *new_ctx, const T *ptr)
+{
+    return static_cast<T *> (talloc_steal (new_ctx, ptr));
+}
+#undef talloc_steal
+#define talloc_steal _notmuch_talloc_steal
+#endif
+#endif
+
+#pragma GCC visibility pop
 
 #endif

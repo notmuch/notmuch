@@ -1,4 +1,4 @@
-.TH NOTMUCH-SEARCH 1 2012-03-19 "Notmuch 0.12"
+.TH NOTMUCH-SEARCH 1 2012-06-01 "Notmuch 0.13.2"
 .SH NAME
 notmuch-search \- Search for messages matching the given search terms.
 .SH SYNOPSIS
@@ -110,6 +110,19 @@ result from the end.
 .BR \-\-limit=N
 
 Limit the number of displayed results to N.
+.RE
+
+.RS 4
+.TP 4
+.BR \-\-exclude=(true|false|flag)
+
+Specify whether to omit messages matching search.tag_exclude from the
+search results (the default) or not. The extra option
+.B flag
+only has an effect when
+.B --output=summary
+In this case all matching threads are returned but the "match count"
+is the number of matching non-excluded messages in the thread.
 .RE
 
 .SH SEE ALSO

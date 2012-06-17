@@ -520,9 +520,10 @@ parse_references (void *ctx,
     }
 }
 
-notmuch_database_t *
-notmuch_database_create (const char *path)
+notmuch_status_t
+notmuch_database_create (const char *path, notmuch_database_t **database)
 {
+    notmuch_status_t status = NOTMUCH_STATUS_SUCCESS;
     notmuch_database_t *notmuch = NULL;
     char *notmuch_path = NULL;
     struct stat st;
@@ -530,6 +531,7 @@ notmuch_database_create (const char *path)
 
     if (path == NULL) {
 	fprintf (stderr, "Error: Cannot create a database for a NULL path.\n");
+	status = NOTMUCH_STATUS_NULL_POINTER;
 	goto DONE;
     }
 
@@ -537,12 +539,14 @@ notmuch_database_create (const char *path)
     if (err) {
 	fprintf (stderr, "Error: Cannot create database at %s: %s.\n",
 		 path, strerror (errno));
+	status = NOTMUCH_STATUS_FILE_ERROR;
 	goto DONE;
     }
 
     if (! S_ISDIR (st.st_mode)) {
 	fprintf (stderr, "Error: Cannot create database at %s: Not a directory.\n",
 		 path);
+	status = NOTMUCH_STATUS_FILE_ERROR;
 	goto DONE;
     }
 
@@ -553,18 +557,30 @@ notmuch_database_create (const char *path)
     if (err) {
 	fprintf (stderr, "Error: Cannot create directory %s: %s.\n",
 		 notmuch_path, strerror (errno));
+	status = NOTMUCH_STATUS_FILE_ERROR;
 	goto DONE;
     }
 
-    notmuch = notmuch_database_open (path,
-				     NOTMUCH_DATABASE_MODE_READ_WRITE);
-    notmuch_database_upgrade (notmuch, NULL, NULL);
+    status = notmuch_database_open (path,
+				    NOTMUCH_DATABASE_MODE_READ_WRITE,
+				    &notmuch);
+    if (status)
+	goto DONE;
+    status = notmuch_database_upgrade (notmuch, NULL, NULL);
+    if (status) {
+	notmuch_database_close(notmuch);
+	notmuch = NULL;
+    }
 
   DONE:
     if (notmuch_path)
 	talloc_free (notmuch_path);
 
-    return notmuch;
+    if (database)
+	*database = notmuch;
+    else
+	talloc_free (notmuch);
+    return status;
 }
 
 notmuch_status_t
@@ -578,10 +594,12 @@ _notmuch_database_ensure_writable (notmuch_database_t *notmuch)
     return NOTMUCH_STATUS_SUCCESS;
 }
 
-notmuch_database_t *
+notmuch_status_t
 notmuch_database_open (const char *path,
-		       notmuch_database_mode_t mode)
+		       notmuch_database_mode_t mode,
+		       notmuch_database_t **database)
 {
+    notmuch_status_t status = NOTMUCH_STATUS_SUCCESS;
     void *local = talloc_new (NULL);
     notmuch_database_t *notmuch = NULL;
     char *notmuch_path, *xapian_path;
@@ -590,8 +608,15 @@ notmuch_database_open (const char *path,
     unsigned int i, version;
     static int initialized = 0;
 
+    if (path == NULL) {
+	fprintf (stderr, "Error: Cannot open a database for a NULL path.\n");
+	status = NOTMUCH_STATUS_NULL_POINTER;
+	goto DONE;
+    }
+
     if (! (notmuch_path = talloc_asprintf (local, "%s/%s", path, ".notmuch"))) {
 	fprintf (stderr, "Out of memory\n");
+	status = NOTMUCH_STATUS_OUT_OF_MEMORY;
 	goto DONE;
     }
 
@@ -599,11 +624,13 @@ notmuch_database_open (const char *path,
     if (err) {
 	fprintf (stderr, "Error opening database at %s: %s\n",
 		 notmuch_path, strerror (errno));
+	status = NOTMUCH_STATUS_FILE_ERROR;
 	goto DONE;
     }
 
     if (! (xapian_path = talloc_asprintf (local, "%s/%s", notmuch_path, "xapian"))) {
 	fprintf (stderr, "Out of memory\n");
+	status = NOTMUCH_STATUS_OUT_OF_MEMORY;
 	goto DONE;
     }
 
@@ -642,8 +669,9 @@ notmuch_database_open (const char *path,
 			 "       read-write mode.\n",
 			 notmuch_path, version, NOTMUCH_DATABASE_VERSION);
 		notmuch->mode = NOTMUCH_DATABASE_MODE_READ_ONLY;
-		notmuch_database_close (notmuch);
+		notmuch_database_destroy (notmuch);
 		notmuch = NULL;
+		status = NOTMUCH_STATUS_FILE_ERROR;
 		goto DONE;
 	    }
 
@@ -702,14 +730,19 @@ notmuch_database_open (const char *path,
     } catch (const Xapian::Error &error) {
 	fprintf (stderr, "A Xapian exception occurred opening database: %s\n",
 		 error.get_msg().c_str());
-	notmuch_database_close (notmuch);
+	notmuch_database_destroy (notmuch);
 	notmuch = NULL;
+	status = NOTMUCH_STATUS_XAPIAN_EXCEPTION;
     }
 
   DONE:
     talloc_free (local);
 
-    return notmuch;
+    if (database)
+	*database = notmuch;
+    else
+	talloc_free (notmuch);
+    return status;
 }
 
 void
@@ -738,9 +771,19 @@ notmuch_database_close (notmuch_database_t *notmuch)
     }
 
     delete notmuch->term_gen;
+    notmuch->term_gen = NULL;
     delete notmuch->query_parser;
+    notmuch->query_parser = NULL;
     delete notmuch->xapian_db;
+    notmuch->xapian_db = NULL;
     delete notmuch->value_range_processor;
+    notmuch->value_range_processor = NULL;
+}
+
+void
+notmuch_database_destroy (notmuch_database_t *notmuch)
+{
+    notmuch_database_close (notmuch);
     talloc_free (notmuch);
 }
 
@@ -912,8 +955,8 @@ notmuch_database_upgrade (notmuch_database_t *notmuch,
 		mtime = Xapian::sortable_unserialise (
 		    document.get_value (NOTMUCH_VALUE_TIMESTAMP));
 
-		directory = notmuch_database_get_directory (notmuch,
-							    term.c_str() + 10);
+		directory = _notmuch_directory_create (notmuch, term.c_str() + 10,
+						       NOTMUCH_FIND_CREATE, &status);
 		notmuch_directory_set_mtime (directory, mtime);
 		notmuch_directory_destroy (directory);
 	    }
@@ -1154,9 +1197,17 @@ _notmuch_database_split_path (void *ctx,
     return NOTMUCH_STATUS_SUCCESS;
 }
 
+/* Find the document ID of the specified directory.
+ *
+ * If (flags & NOTMUCH_FIND_CREATE), a new directory document will be
+ * created if one does not exist for 'path'.  Otherwise, if the
+ * directory document does not exist, this sets *directory_id to
+ * ((unsigned int)-1) and returns NOTMUCH_STATUS_SUCCESS.
+ */
 notmuch_status_t
 _notmuch_database_find_directory_id (notmuch_database_t *notmuch,
 				     const char *path,
+				     notmuch_find_flags_t flags,
 				     unsigned int *directory_id)
 {
     notmuch_directory_t *directory;
@@ -1167,8 +1218,8 @@ _notmuch_database_find_directory_id (notmuch_database_t *notmuch,
 	return NOTMUCH_STATUS_SUCCESS;
     }
 
-    directory = _notmuch_directory_create (notmuch, path, &status);
-    if (status) {
+    directory = _notmuch_directory_create (notmuch, path, flags, &status);
+    if (status || !directory) {
 	*directory_id = -1;
 	return status;
     }
@@ -1197,13 +1248,16 @@ _notmuch_database_get_directory_path (void *ctx,
  * database path), return a new string (with 'ctx' as the talloc
  * owner) suitable for use as a direntry term value.
  *
- * The necessary directory documents will be created in the database
- * as needed.
+ * If (flags & NOTMUCH_FIND_CREATE), the necessary directory documents
+ * will be created in the database as needed.  Otherwise, if the
+ * necessary directory documents do not exist, this sets
+ * *direntry to NULL and returns NOTMUCH_STATUS_SUCCESS.
  */
 notmuch_status_t
 _notmuch_database_filename_to_direntry (void *ctx,
 					notmuch_database_t *notmuch,
 					const char *filename,
+					notmuch_find_flags_t flags,
 					char **direntry)
 {
     const char *relative, *directory, *basename;
@@ -1217,10 +1271,12 @@ _notmuch_database_filename_to_direntry (void *ctx,
     if (status)
 	return status;
 
-    status = _notmuch_database_find_directory_id (notmuch, directory,
+    status = _notmuch_database_find_directory_id (notmuch, directory, flags,
 						  &directory_id);
-    if (status)
+    if (status || directory_id == (unsigned int)-1) {
+	*direntry = NULL;
 	return status;
+    }
 
     *direntry = talloc_asprintf (ctx, "%u:%s", directory_id, basename);
 
@@ -1261,20 +1317,27 @@ _notmuch_database_relative_path (notmuch_database_t *notmuch,
     return relative;
 }
 
-notmuch_directory_t *
+notmuch_status_t
 notmuch_database_get_directory (notmuch_database_t *notmuch,
-				const char *path)
+				const char *path,
+				notmuch_directory_t **directory)
 {
     notmuch_status_t status;
 
+    if (directory == NULL)
+	return NOTMUCH_STATUS_NULL_POINTER;
+    *directory = NULL;
+
     try {
-	return _notmuch_directory_create (notmuch, path, &status);
+	*directory = _notmuch_directory_create (notmuch, path,
+						NOTMUCH_FIND_LOOKUP, &status);
     } catch (const Xapian::Error &error) {
 	fprintf (stderr, "A Xapian exception occurred getting directory: %s.\n",
 		 error.get_msg().c_str());
 	notmuch->exception_reported = TRUE;
-	return NULL;
+	status = NOTMUCH_STATUS_XAPIAN_EXCEPTION;
     }
+    return status;
 }
 
 /* Allocate a document ID that satisfies the following criteria:
@@ -1831,9 +1894,9 @@ notmuch_database_find_message_by_filename (notmuch_database_t *notmuch,
     local = talloc_new (notmuch);
 
     try {
-	status = _notmuch_database_filename_to_direntry (local, notmuch,
-							 filename, &direntry);
-	if (status)
+	status = _notmuch_database_filename_to_direntry (
+	    local, notmuch, filename, NOTMUCH_FIND_LOOKUP, &direntry);
+	if (status || !direntry)
 	    goto DONE;
 
 	term = talloc_asprintf (local, "%s%s", prefix, direntry);

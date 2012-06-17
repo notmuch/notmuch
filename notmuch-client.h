@@ -62,43 +62,21 @@
 #define STRINGIFY(s) STRINGIFY_(s)
 #define STRINGIFY_(s) #s
 
-struct mime_node;
+typedef struct mime_node mime_node_t;
 struct notmuch_show_params;
 
 typedef struct notmuch_show_format {
     const char *message_set_start;
-    void (*part) (const void *ctx,
-		  struct mime_node *node, int indent,
-		  const struct notmuch_show_params *params);
-    const char *message_start;
-    void (*message) (const void *ctx,
-		     notmuch_message_t *message,
-		     int indent);
-    const char *header_start;
-    void (*header) (const void *ctx,
-		    notmuch_message_t *message);
-    void (*header_message_part) (GMimeMessage *message);
-    const char *header_end;
-    const char *body_start;
-    void (*part_start) (GMimeObject *part,
-			int *part_count);
-    void (*part_encstatus) (int status);
-#ifdef GMIME_ATLEAST_26
-    void (*part_sigstatus) (GMimeSignatureList* siglist);
-#else
-    void (*part_sigstatus) (const GMimeSignatureValidity* validity);
-#endif
-    void (*part_content) (GMimeObject *part);
-    void (*part_end) (GMimeObject *part);
-    const char *part_sep;
-    const char *body_end;
-    const char *message_end;
+    notmuch_status_t (*part) (const void *ctx,
+			      struct mime_node *node, int indent,
+			      const struct notmuch_show_params *params);
     const char *message_set_sep;
     const char *message_set_end;
 } notmuch_show_format_t;
 
 typedef struct notmuch_show_params {
     notmuch_bool_t entire_thread;
+    notmuch_bool_t omit_excluded;
     notmuch_bool_t raw;
     int part;
 #ifdef GMIME_ATLEAST_26
@@ -184,12 +162,21 @@ char *
 query_string_from_args (void *ctx, int argc, char *argv[]);
 
 notmuch_status_t
-show_message_body (notmuch_message_t *message,
-		   const notmuch_show_format_t *format,
-		   notmuch_show_params_t *params);
-
-notmuch_status_t
 show_one_part (const char *filename, int part);
+
+void
+format_part_json (const void *ctx, mime_node_t *node, notmuch_bool_t first);
+
+void
+format_headers_json (const void *ctx, GMimeMessage *message, notmuch_bool_t reply);
+
+typedef enum {
+    NOTMUCH_SHOW_TEXT_PART_REPLY = 1 << 0,
+} notmuch_show_text_part_flags;
+
+void
+show_text_part_content (GMimeObject *part, GMimeStream *stream_out,
+			notmuch_show_text_part_flags flags);
 
 char *
 json_quote_chararray (const void *ctx, const char *str, const size_t len);
@@ -288,7 +275,7 @@ debugger_is_active (void);
  * parts.  Message-type parts have one child, multipart-type parts
  * have multiple children, and leaf parts have zero children.
  */
-typedef struct mime_node {
+struct mime_node {
     /* The MIME object of this part.  This will be a GMimeMessage,
      * GMimePart, GMimeMultipart, or a subclass of one of these.
      *
@@ -351,7 +338,7 @@ typedef struct mime_node {
      * number to assign it (or -1 if unknown). */
     int next_child;
     int next_part_num;
-} mime_node_t;
+};
 
 /* Construct a new MIME node pointing to the root message part of
  * message.  If cryptoctx is non-NULL, it will be used to verify

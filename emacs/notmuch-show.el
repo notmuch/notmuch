@@ -30,6 +30,7 @@
 (require 'goto-addr)
 
 (require 'notmuch-lib)
+(require 'notmuch-tag)
 (require 'notmuch-query)
 (require 'notmuch-wash)
 (require 'notmuch-mua)
@@ -38,10 +39,8 @@
 
 (declare-function notmuch-call-notmuch-process "notmuch" (&rest args))
 (declare-function notmuch-fontify-headers "notmuch" nil)
-(declare-function notmuch-read-tag-changes "notmuch" (&optional initial-input &rest search-terms))
 (declare-function notmuch-search-next-thread "notmuch" nil)
 (declare-function notmuch-search-show-thread "notmuch" nil)
-(declare-function notmuch-update-tags "notmuch" (current-tags tag-changes))
 
 (defcustom notmuch-message-headers '("Subject" "To" "Cc" "Date")
   "Headers that should be shown in a message, in this order.
@@ -488,7 +487,7 @@ message at DEPTH in the current thread."
 	 (setq notmuch-show-process-crypto ,process-crypto)
 	 ;; Always acquires the part via `notmuch part', even if it is
 	 ;; available in the JSON output.
-	 (insert (notmuch-show-get-bodypart-internal ,message-id ,nth))
+	 (insert (notmuch-get-bodypart-internal ,message-id ,nth notmuch-show-process-crypto))
 	 ,@body))))
 
 (defun notmuch-show-save-part (message-id nth &optional filename content-type)
@@ -525,47 +524,13 @@ message at DEPTH in the current thread."
     (let ((handle (mm-make-handle (current-buffer) (list content-type))))
       (mm-interactively-view-part handle))))
 
-(defun notmuch-show-mm-display-part-inline (msg part nth content-type)
-  "Use the mm-decode/mm-view functions to display a part in the
-current buffer, if possible."
-  (let ((display-buffer (current-buffer)))
-    (with-temp-buffer
-      (let* ((charset (plist-get part :content-charset))
-	     (handle (mm-make-handle (current-buffer) `(,content-type (charset . ,charset)))))
-	;; If the user wants the part inlined, insert the content and
-	;; test whether we are able to inline it (which includes both
-	;; capability and suitability tests).
-	(when (mm-inlined-p handle)
-	  (insert (notmuch-show-get-bodypart-content msg part nth))
-	  (when (mm-inlinable-p handle)
-	    (set-buffer display-buffer)
-	    (mm-display-part handle)
-	    t))))))
-
-(defvar notmuch-show-multipart/alternative-discouraged
-  '(
-    ;; Avoid HTML parts.
-    "text/html"
-    ;; multipart/related usually contain a text/html part and some associated graphics.
-    "multipart/related"
-    ))
-
 (defun notmuch-show-multipart/*-to-list (part)
   (mapcar (lambda (inner-part) (plist-get inner-part :content-type))
 	  (plist-get part :content)))
 
-(defun notmuch-show-multipart/alternative-choose (types)
-  ;; Based on `mm-preferred-alternative-precedence'.
-  (let ((seq types))
-    (dolist (pref (reverse notmuch-show-multipart/alternative-discouraged))
-      (dolist (elem (copy-sequence seq))
-	(when (string-match pref elem)
-	  (setq seq (nconc (delete elem seq) (list elem))))))
-    seq))
-
 (defun notmuch-show-insert-part-multipart/alternative (msg part content-type nth depth declared-type)
   (notmuch-show-insert-part-header nth declared-type content-type nil)
-  (let ((chosen-type (car (notmuch-show-multipart/alternative-choose (notmuch-show-multipart/*-to-list part))))
+  (let ((chosen-type (car (notmuch-multipart/alternative-choose (notmuch-show-multipart/*-to-list part))))
 	(inner-parts (plist-get part :content))
 	(start (point)))
     ;; This inserts all parts of the chosen type rather than just one,
@@ -630,8 +595,8 @@ current buffer, if possible."
 	  ;; times (hundreds!), which results in many calls to
 	  ;; `notmuch part'.
 	  (unless content
-	    (setq content (notmuch-show-get-bodypart-internal (concat "id:" message-id)
-							      part-number))
+	    (setq content (notmuch-get-bodypart-internal (notmuch-id-to-query message-id)
+							      part-number notmuch-show-process-crypto))
 	    (with-current-buffer w3m-current-buffer
 	      (notmuch-show-w3m-cid-store-internal url
 						   message-id
@@ -751,7 +716,7 @@ current buffer, if possible."
     ;; insert a header to make this clear.
     (if (> nth 1)
 	(notmuch-show-insert-part-header nth declared-type content-type (plist-get part :filename)))
-    (insert (notmuch-show-get-bodypart-content msg part nth))
+    (insert (notmuch-get-bodypart-content msg part nth notmuch-show-process-crypto))
     (save-excursion
       (save-restriction
 	(narrow-to-region start (point-max))
@@ -761,7 +726,7 @@ current buffer, if possible."
 (defun notmuch-show-insert-part-text/calendar (msg part content-type nth depth declared-type)
   (notmuch-show-insert-part-header nth declared-type content-type (plist-get part :filename))
   (insert (with-temp-buffer
-	    (insert (notmuch-show-get-bodypart-content msg part nth))
+	    (insert (notmuch-get-bodypart-content msg part nth notmuch-show-process-crypto))
 	    (goto-char (point-min))
 	    (let ((file (make-temp-file "notmuch-ical"))
 		  result)
@@ -803,13 +768,10 @@ current buffer, if possible."
 (defun notmuch-show-insert-part-*/* (msg part content-type nth depth declared-type)
   ;; This handler _must_ succeed - it is the handler of last resort.
   (notmuch-show-insert-part-header nth content-type declared-type (plist-get part :filename))
-  (notmuch-show-mm-display-part-inline msg part nth content-type)
+  (notmuch-mm-display-part-inline msg part nth content-type notmuch-show-process-crypto)
   t)
 
 ;; Functions for determining how to handle MIME parts.
-
-(defun notmuch-show-split-content-type (content-type)
-  (split-string content-type "/"))
 
 (defun notmuch-show-handlers-for (content-type)
   "Return a list of content handlers for a part of type CONTENT-TYPE."
@@ -821,29 +783,10 @@ current buffer, if possible."
 	  (list (intern (concat "notmuch-show-insert-part-*/*"))
 		(intern (concat
 			 "notmuch-show-insert-part-"
-			 (car (notmuch-show-split-content-type content-type))
+			 (car (notmuch-split-content-type content-type))
 			 "/*"))
 		(intern (concat "notmuch-show-insert-part-" content-type))))
     result))
-
-;; Helper for parts which are generally not included in the default
-;; JSON output.
-(defun notmuch-show-get-bodypart-internal (message-id part-number)
-  (let ((args '("show" "--format=raw"))
-	(part-arg (format "--part=%s" part-number)))
-    (setq args (append args (list part-arg)))
-    (if notmuch-show-process-crypto
-	(setq args (append args '("--decrypt"))))
-    (setq args (append args (list message-id)))
-    (with-temp-buffer
-      (let ((coding-system-for-read 'no-conversion))
-	(progn
-	  (apply 'call-process (append (list notmuch-command nil (list t nil) nil) args))
-	  (buffer-string))))))
-
-(defun notmuch-show-get-bodypart-content (msg part nth)
-  (or (plist-get part :content)
-      (notmuch-show-get-bodypart-internal (concat "id:" (plist-get msg :id)) nth)))
 
 ;; 
 
@@ -981,7 +924,8 @@ current buffer, if possible."
 
     ;; Message visibility depends on whether it matched the search
     ;; criteria.
-    (notmuch-show-message-visible msg (plist-get msg :match))))
+    (notmuch-show-message-visible msg (and (plist-get msg :match)
+					   (not (plist-get msg :excluded))))))
 
 (defun notmuch-show-toggle-process-crypto ()
   "Toggle the processing of cryptographic MIME parts."
@@ -1081,11 +1025,7 @@ function is used."
 	  notmuch-show-parent-buffer parent-buffer
 	  notmuch-show-query-context query-context)
     (notmuch-show-build-buffer)
-
-    ;; Move to the first open message and mark it read
-    (if (notmuch-show-message-visible-p)
-	(notmuch-show-mark-read)
-      (notmuch-show-next-open-message))))
+    (notmuch-show-goto-first-wanted-message)))
 
 (defun notmuch-show-build-buffer ()
   (let ((inhibit-read-only t))
@@ -1102,20 +1042,22 @@ function is used."
 		       (append (list "\'") basic-args
 			       (list "and (" notmuch-show-query-context ")\'"))
 		     (append (list "\'") basic-args (list "\'")))))
-	(notmuch-show-insert-forest (notmuch-query-get-threads args))
+	(notmuch-show-insert-forest (notmuch-query-get-threads
+				     (cons "--exclude=false" args)))
 	;; If the query context reduced the results to nothing, run
 	;; the basic query.
 	(when (and (eq (buffer-size) 0)
 		   notmuch-show-query-context)
 	  (notmuch-show-insert-forest
-	   (notmuch-query-get-threads basic-args))))
+	   (notmuch-query-get-threads
+	    (cons "--exclude=false" basic-args)))))
 
       (jit-lock-register #'notmuch-show-buttonise-links)
 
       (run-hooks 'notmuch-show-hook))
 
     ;; Set the header line to the subject of the first message.
-    (setq header-line-format (notmuch-show-strip-re (notmuch-show-get-pretty-subject)))))
+    (setq header-line-format (notmuch-show-strip-re (notmuch-show-get-subject)))))
 
 (defun notmuch-show-capture-state ()
   "Capture the state of the current buffer.
@@ -1167,9 +1109,7 @@ reset based on the original query."
 	(notmuch-show-apply-state state)
       ;; We're resetting state, so navigate to the first open message
       ;; and mark it read, just like opening a new show buffer.
-      (if (notmuch-show-message-visible-p)
-	  (notmuch-show-mark-read)
-	(notmuch-show-next-open-message)))))
+      (notmuch-show-goto-first-wanted-message))))
 
 (defvar notmuch-show-stash-map
   (let ((map (make-sparse-keymap)))
@@ -1369,16 +1309,16 @@ Some useful entries are:
     (plist-get props prop)))
 
 (defun notmuch-show-get-message-id (&optional bare)
-  "Return the Message-Id of the current message.
+  "Return an id: query for the Message-Id of the current message.
 
 If optional argument BARE is non-nil, return
-the Message-Id without prefix and quotes."
+the Message-Id without id: prefix and escaping."
   (if bare
       (notmuch-show-get-prop :id)
-    (concat "id:\"" (notmuch-show-get-prop :id) "\"")))
+    (notmuch-id-to-query (notmuch-show-get-prop :id))))
 
 (defun notmuch-show-get-messages-ids ()
-  "Return all message ids of messages in the current thread."
+  "Return all id: queries of messages in the current thread."
   (let ((message-ids))
     (notmuch-show-mapc
      (lambda () (push (notmuch-show-get-message-id) message-ids)))
@@ -1417,9 +1357,6 @@ current thread."
 (defun notmuch-show-get-depth ()
   (notmuch-show-get-prop :depth))
 
-(defun notmuch-show-get-pretty-subject ()
-  (notmuch-prettify-subject (notmuch-show-get-subject)))
-
 (defun notmuch-show-set-tags (tags)
   "Set the tags of the current message."
   (notmuch-show-set-prop :tags tags)
@@ -1445,7 +1382,7 @@ current thread."
 ;; thread.
 
 (defun notmuch-show-get-message-ids-for-open-messages ()
-  "Return a list of all message IDs for open messages in the current thread."
+  "Return a list of all id: queries for open messages in the current thread."
   (save-excursion
     (let (message-ids done)
       (goto-char (point-min))
@@ -1488,6 +1425,11 @@ current window), advance to the next open message."
      ((not (= end-of-this-message (point-max)))
       ;; This is not the last message - move to the next visible one.
       (notmuch-show-next-open-message))
+
+     ((not (= (point) (point-max)))
+      ;; This is the last message, but the cursor is not at the end of
+      ;; the buffer. Move it there.
+      (goto-char (point-max)))
 
      (t
       ;; This is the last message - change the return value
@@ -1601,6 +1543,39 @@ to show, nil otherwise."
 	(goto-char (point-max))))
     r))
 
+(defun notmuch-show-next-matching-message ()
+  "Show the next matching message."
+  (interactive)
+  (let (r)
+    (while (and (setq r (notmuch-show-goto-message-next))
+		(not (notmuch-show-get-prop :match))))
+    (if r
+	(progn
+	  (notmuch-show-mark-read)
+	  (notmuch-show-message-adjust))
+      (goto-char (point-max)))))
+
+(defun notmuch-show-open-if-matched ()
+  "Open a message if it is matched (whether or not excluded)."
+  (let ((props (notmuch-show-get-message-properties)))
+    (notmuch-show-message-visible props (plist-get props :match))))
+
+(defun notmuch-show-goto-first-wanted-message ()
+  "Move to the first open message and mark it read"
+  (goto-char (point-min))
+  (if (notmuch-show-message-visible-p)
+      (notmuch-show-mark-read)
+    (notmuch-show-next-open-message))
+  (when (eobp)
+    ;; There are no matched non-excluded messages so open all matched
+    ;; (necessarily excluded) messages and go to the first.
+    (notmuch-show-mapc 'notmuch-show-open-if-matched)
+    (force-window-update)
+    (goto-char (point-min))
+    (if (notmuch-show-message-visible-p)
+	(notmuch-show-mark-read)
+      (notmuch-show-next-open-message))))
+
 (defun notmuch-show-previous-open-message ()
   "Show the previous open message."
   (interactive)
@@ -1661,22 +1636,26 @@ TAG-CHANGES is a list of tag operations for `notmuch-tag'."
   (let* ((current-tags (notmuch-show-get-tags))
 	 (new-tags (notmuch-update-tags current-tags tag-changes)))
     (unless (equal current-tags new-tags)
-      (apply 'notmuch-tag (notmuch-show-get-message-id) tag-changes)
+      (funcall 'notmuch-tag (notmuch-show-get-message-id) tag-changes)
       (notmuch-show-set-tags new-tags))))
 
-(defun notmuch-show-tag (&optional initial-input)
-  "Change tags for the current message, read input from the minibuffer."
+(defun notmuch-show-tag (&optional tag-changes)
+  "Change tags for the current message.
+
+See `notmuch-tag' for information on the format of TAG-CHANGES."
   (interactive)
-  (let ((tag-changes (notmuch-read-tag-changes
-		      initial-input (notmuch-show-get-message-id))))
-    (apply 'notmuch-show-tag-message tag-changes)))
+  (setq tag-changes (funcall 'notmuch-tag (notmuch-show-get-message-id) tag-changes))
+  (let* ((current-tags (notmuch-show-get-tags))
+	 (new-tags (notmuch-update-tags current-tags tag-changes)))
+    (unless (equal current-tags new-tags)
+      (notmuch-show-set-tags new-tags))))
 
-(defun notmuch-show-tag-all (&rest tag-changes)
-  "Change tags for all messages in the current buffer.
+(defun notmuch-show-tag-all (&optional tag-changes)
+  "Change tags for all messages in the current show buffer.
 
-TAG-CHANGES is a list of tag operations for `notmuch-tag'."
-  (interactive (notmuch-read-tag-changes nil notmuch-show-thread-id))
-  (apply 'notmuch-tag (notmuch-show-get-messages-ids-search) tag-changes)
+See `notmuch-tag' for information on the format of TAG-CHANGES."
+  (interactive)
+  (setq tag-changes (funcall 'notmuch-tag (notmuch-show-get-messages-ids-search) tag-changes))
   (notmuch-show-mapc
    (lambda ()
      (let* ((current-tags (notmuch-show-get-tags))
@@ -1748,13 +1727,10 @@ argument, hide all of the messages."
 (defun notmuch-show-archive-thread (&optional unarchive)
   "Archive each message in thread.
 
-If a prefix argument is given, the messages will be
-\"unarchived\" (ie. the \"inbox\" tag will be added instead of
-removed).
-
 Archive each message currently shown by removing the \"inbox\"
-tag from each. Then kill this buffer and show the next thread
-from the search from which this thread was originally shown.
+tag from each.  If a prefix argument is given, the messages will
+be \"unarchived\" (ie. the \"inbox\" tag will be added instead of
+removed).
 
 Note: This command is safe from any race condition of new messages
 being delivered to the same thread. It does not archive the
@@ -1777,7 +1753,7 @@ buffer."
   (notmuch-show-next-thread))
 
 (defun notmuch-show-archive-message (&optional unarchive)
-  "Archive the current message.
+  "Archive the current message (remove \"inbox\" tag).
 
 If a prefix argument is given, the message will be
 \"unarchived\" (ie. the \"inbox\" tag will be added instead of
@@ -1826,7 +1802,7 @@ thread from search."
   (notmuch-common-do-stash (notmuch-show-get-from)))
 
 (defun notmuch-show-stash-message-id ()
-  "Copy message ID of current message to kill-ring."
+  "Copy id: query matching the current message to kill-ring."
   (interactive)
   (notmuch-common-do-stash (notmuch-show-get-message-id)))
 

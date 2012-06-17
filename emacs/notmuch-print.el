@@ -25,7 +25,7 @@
 
 (defcustom notmuch-print-mechanism 'notmuch-print-lpr
   "How should printing be done?"
-  :group 'notmuch
+  :group 'notmuch-show
   :type '(choice
 	  (function :tag "Use lpr" notmuch-print-lpr)
 	  (function :tag "Use ps-print" notmuch-print-ps-print)

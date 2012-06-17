@@ -22,18 +22,18 @@ type frequencies map[string]uint
 
 /* Used to sort the email addresses from most to least used */
 func sort_by_freq(m1, m2 *mail_addr_freq) int {
-	if (m1.count[0] == m2.count[0] &&
+	if m1.count[0] == m2.count[0] &&
 		m1.count[1] == m2.count[1] &&
-		m1.count[2] == m2.count[2]) {
+		m1.count[2] == m2.count[2] {
 		return 0
 	}
 
-	if (m1.count[0] >  m2.count[0] ||
+	if m1.count[0] > m2.count[0] ||
 		m1.count[0] == m2.count[0] &&
-		m1.count[1] >  m2.count[1] ||
+			m1.count[1] > m2.count[1] ||
 		m1.count[0] == m2.count[0] &&
-		m1.count[1] == m2.count[1] &&
-		m1.count[2] >  m2.count[2]) {
+			m1.count[1] == m2.count[1] &&
+			m1.count[2] > m2.count[2] {
 		return -1
 	}
 
@@ -46,17 +46,17 @@ func (self *maddresses) Len() int {
 	return len(*self)
 }
 
-func (self *maddresses) Less(i,j int) bool {
+func (self *maddresses) Less(i, j int) bool {
 	m1 := (*self)[i]
 	m2 := (*self)[j]
-	v  := sort_by_freq(m1, m2)
-	if v<=0 {
+	v := sort_by_freq(m1, m2)
+	if v <= 0 {
 		return true
 	}
 	return false
 }
 
-func (self *maddresses) Swap(i,j int) {
+func (self *maddresses) Swap(i, j int) {
 	(*self)[i], (*self)[j] = (*self)[j], (*self)[i]
 }
 
@@ -66,7 +66,7 @@ func frequent_fullname(freqs frequencies) string {
 	fullname := ""
 	freqs_sz := len(freqs)
 
-	for mail,freq := range freqs {
+	for mail, freq := range freqs {
 		if (freq > maxfreq && mail != "") || freqs_sz == 1 {
 			// only use the entry if it has a real name
 			// or if this is the only entry
@@ -86,33 +86,33 @@ func addresses_by_frequency(msgs *notmuch.Messages, name string, pass uint, addr
 	// 	"<?(?P<mail>\\b\\w+([-+.]\\w+)*\\@\\w+[-\\.\\w]*\\.([-\\.\\w]+)*\\w\\b)>?)"
 	pattern = `.*` + strings.ToLower(name) + `.*`
 	var re *regexp.Regexp = nil
-	var err os.Error = nil
-	if re,err = regexp.Compile(pattern); err != nil {
+	var err error = nil
+	if re, err = regexp.Compile(pattern); err != nil {
 		log.Printf("error: %v\n", err)
 		return &freqs
 	}
-	
+
 	headers := []string{"from"}
 	if pass == 1 {
 		headers = append(headers, "to", "cc", "bcc")
 	}
 
-	for ;msgs.Valid();msgs.MoveToNext() {
+	for ; msgs.Valid(); msgs.MoveToNext() {
 		msg := msgs.Get()
 		//println("==> msg [", msg.GetMessageId(), "]")
-		for _,header := range headers {
+		for _, header := range headers {
 			froms := strings.ToLower(msg.GetHeader(header))
 			//println("  froms: ["+froms+"]")
-			for _,from := range strings.Split(froms, ",", -1) {
+			for _, from := range strings.Split(froms, ",") {
 				from = strings.Trim(from, " ")
 				match := re.FindString(from)
 				//println("  -> match: ["+match+"]")
-				occ,ok := freqs[match]
+				occ, ok := freqs[match]
 				if !ok {
 					freqs[match] = 0
 					occ = 0
 				}
-				freqs[match] = occ+1
+				freqs[match] = occ + 1
 			}
 		}
 	}
@@ -125,7 +125,7 @@ func search_address_passes(queries [3]*notmuch.Query, name string) []string {
 	addr_to_realname := make(map[string]*frequencies)
 
 	var pass uint = 0 // 0-based
-	for _,query := range queries {
+	for _, query := range queries {
 		if query == nil {
 			//println("**warning: idx [",idx,"] contains a nil query")
 			continue
@@ -133,9 +133,9 @@ func search_address_passes(queries [3]*notmuch.Query, name string) []string {
 		msgs := query.SearchMessages()
 		ht := addresses_by_frequency(msgs, name, pass, &addr_to_realname)
 		for addr, count := range *ht {
-			freq,ok := addr_freq[addr]
+			freq, ok := addr_freq[addr]
 			if !ok {
-				freq = &mail_addr_freq{addr:addr, count:[3]uint{0,0,0}}
+				freq = &mail_addr_freq{addr: addr, count: [3]uint{0, 0, 0}}
 			}
 			freq.count[pass] = count
 			addr_freq[addr] = freq
@@ -154,8 +154,8 @@ func search_address_passes(queries [3]*notmuch.Query, name string) []string {
 	}
 	sort.Sort(&addrs)
 
-	for _,addr := range addrs {
-		freqs,ok := addr_to_realname[addr.addr]
+	for _, addr := range addrs {
+		freqs, ok := addr_to_realname[addr.addr]
 		if ok {
 			val = append(val, frequent_fullname(*freqs))
 		} else {
@@ -179,7 +179,7 @@ type address_matcher struct {
 
 func new_address_matcher() *address_matcher {
 	var cfg *config.Config
-	var err os.Error
+	var err error
 
 	// honor NOTMUCH_CONFIG
 	home := os.Getenv("NOTMUCH_CONFIG")
@@ -187,30 +187,34 @@ func new_address_matcher() *address_matcher {
 		home = os.Getenv("HOME")
 	}
 
-	if cfg,err = config.ReadDefault(path.Join(home, ".notmuch-config")); err != nil {
-		log.Fatalf("error loading config file:",err)
+	if cfg, err = config.ReadDefault(path.Join(home, ".notmuch-config")); err != nil {
+		log.Fatalf("error loading config file:", err)
 	}
 
-	db_path,_ := cfg.String("database", "path")
-	primary_email,_ := cfg.String("user", "primary_email")
-	addrbook_tag,err := cfg.String("user", "addrbook_tag")
+	db_path, _ := cfg.String("database", "path")
+	primary_email, _ := cfg.String("user", "primary_email")
+	addrbook_tag, err := cfg.String("user", "addrbook_tag")
 	if err != nil {
 		addrbook_tag = "addressbook"
 	}
 
-	self := &address_matcher{db:nil, 
-	                         user_db_path:db_path,
-	                         user_primary_email:primary_email,
-	                         user_addrbook_tag:addrbook_tag}
+	self := &address_matcher{db: nil,
+		user_db_path:       db_path,
+		user_primary_email: primary_email,
+		user_addrbook_tag:  addrbook_tag}
 	return self
 }
 
 func (self *address_matcher) run(name string) {
 	queries := [3]*notmuch.Query{}
-	
+
 	// open the database
-	self.db = notmuch.OpenDatabase(self.user_db_path, 
-		notmuch.DATABASE_MODE_READ_ONLY)
+	if db, status := notmuch.OpenDatabase(self.user_db_path,
+		notmuch.DATABASE_MODE_READ_ONLY); status == notmuch.STATUS_SUCCESS {
+		self.db = db
+	} else {
+		log.Fatalf("Failed to open the database: %v\n", status)
+	}
 
 	// pass 1: look at all from: addresses with the address book tag
 	query := "tag:" + self.user_addrbook_tag
@@ -222,7 +226,7 @@ func (self *address_matcher) run(name string) {
 	// pass 2: look at all to: addresses sent from our primary mail
 	query = ""
 	if name != "" {
-		query = "to:"+name+"*"
+		query = "to:" + name + "*"
 	}
 	if self.user_primary_email != "" {
 		query = query + " from:" + self.user_primary_email
@@ -230,17 +234,17 @@ func (self *address_matcher) run(name string) {
 	queries[1] = self.db.CreateQuery(query)
 
 	// if that leads only to a few hits, we check every from too
-	if queries[0].CountMessages() + queries[1].CountMessages() < 10 {
+	if queries[0].CountMessages()+queries[1].CountMessages() < 10 {
 		query = ""
 		if name != "" {
-			query = "from:"+name+"*"
+			query = "from:" + name + "*"
 		}
 		queries[2] = self.db.CreateQuery(query)
 	}
-	
+
 	// actually retrieve and sort addresses
 	results := search_address_passes(queries, name)
-	for _,v := range results {
+	for _, v := range results {
 		if v != "" && v != "\n" {
 			fmt.Println(v)
 		}

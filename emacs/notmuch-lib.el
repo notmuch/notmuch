@@ -21,6 +21,10 @@
 
 ;; This is an part of an emacs-based interface to the notmuch mail system.
 
+(require 'mm-view)
+(require 'mm-decode)
+(eval-when-compile (require 'cl))
+
 (defvar notmuch-command "notmuch"
   "Command to run the notmuch binary.")
 
@@ -142,6 +146,10 @@ the user hasn't set this variable with the old or new value."
 	"[No Subject]"
       subject)))
 
+(defun notmuch-id-to-query (id)
+  "Return a query that matches the message with id ID."
+  (concat "id:\"" (replace-regexp-in-string "\"" "\"\"" id t t) "\""))
+
 ;;
 
 (defun notmuch-common-do-stash (text)
@@ -172,6 +180,93 @@ the user hasn't set this variable with the old or new value."
   "Conditionally evaluate form only on emacs < emacs-23."
   (list 'when (< emacs-major-version 23)
 	form))
+
+(defun notmuch-split-content-type (content-type)
+  "Split content/type into 'content' and 'type'"
+  (split-string content-type "/"))
+
+(defun notmuch-match-content-type (t1 t2)
+  "Return t if t1 and t2 are matching content types, taking wildcards into account"
+  (let ((st1 (notmuch-split-content-type t1))
+	(st2 (notmuch-split-content-type t2)))
+    (if (or (string= (cadr st1) "*")
+	    (string= (cadr st2) "*"))
+	;; Comparison of content types should be case insensitive.
+	(string= (downcase (car st1)) (downcase (car st2)))
+      (string= (downcase t1) (downcase t2)))))
+
+(defvar notmuch-multipart/alternative-discouraged
+  '(
+    ;; Avoid HTML parts.
+    "text/html"
+    ;; multipart/related usually contain a text/html part and some associated graphics.
+    "multipart/related"
+    ))
+
+(defun notmuch-multipart/alternative-choose (types)
+  "Return a list of preferred types from the given list of types"
+  ;; Based on `mm-preferred-alternative-precedence'.
+  (let ((seq types))
+    (dolist (pref (reverse notmuch-multipart/alternative-discouraged))
+      (dolist (elem (copy-sequence seq))
+	(when (string-match pref elem)
+	  (setq seq (nconc (delete elem seq) (list elem))))))
+    seq))
+
+(defun notmuch-parts-filter-by-type (parts type)
+  "Given a list of message parts, return a list containing the ones matching
+the given type."
+  (remove-if-not
+   (lambda (part) (notmuch-match-content-type (plist-get part :content-type) type))
+   parts))
+
+;; Helper for parts which are generally not included in the default
+;; JSON output.
+(defun notmuch-get-bodypart-internal (query part-number process-crypto)
+  (let ((args '("show" "--format=raw"))
+	(part-arg (format "--part=%s" part-number)))
+    (setq args (append args (list part-arg)))
+    (if process-crypto
+	(setq args (append args '("--decrypt"))))
+    (setq args (append args (list query)))
+    (with-temp-buffer
+      (let ((coding-system-for-read 'no-conversion))
+	(progn
+	  (apply 'call-process (append (list notmuch-command nil (list t nil) nil) args))
+	  (buffer-string))))))
+
+(defun notmuch-get-bodypart-content (msg part nth process-crypto)
+  (or (plist-get part :content)
+      (notmuch-get-bodypart-internal (notmuch-id-to-query (plist-get msg :id)) nth process-crypto)))
+
+(defun notmuch-mm-display-part-inline (msg part nth content-type process-crypto)
+  "Use the mm-decode/mm-view functions to display a part in the
+current buffer, if possible."
+  (let ((display-buffer (current-buffer)))
+    (with-temp-buffer
+      ;; In case there is :content, the content string is already converted
+      ;; into emacs internal format. `gnus-decoded' is a fake charset,
+      ;; which means no further decoding (to be done by mm- functions).
+      (let* ((charset (if (plist-member part :content)
+			  'gnus-decoded
+			(plist-get part :content-charset)))
+	     (handle (mm-make-handle (current-buffer) `(,content-type (charset . ,charset)))))
+	;; If the user wants the part inlined, insert the content and
+	;; test whether we are able to inline it (which includes both
+	;; capability and suitability tests).
+	(when (mm-inlined-p handle)
+	  (insert (notmuch-get-bodypart-content msg part nth process-crypto))
+	  (when (mm-inlinable-p handle)
+	    (set-buffer display-buffer)
+	    (mm-display-part handle)
+	    t))))))
+
+;; Converts a plist of headers to an alist of headers. The input plist should
+;; have symbols of the form :Header as keys, and the resulting alist will have
+;; symbols of the form 'Header as keys.
+(defun notmuch-headers-plist-to-alist (plist)
+  (loop for (key value . rest) on plist by #'cddr
+	collect (cons (intern (substring (symbol-name key) 1)) value)))
 
 ;; Compatibility functions for versions of emacs before emacs 23.
 ;;

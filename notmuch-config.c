@@ -377,7 +377,8 @@ notmuch_config_open (void *ctx,
 
     if (notmuch_config_get_search_exclude_tags (config, &tmp) == NULL) {
 	if (is_new) {
-	    /* We do not set default search_exclude_tags for 0.12 */
+	    const char *tags[] = { "deleted", "spam" };
+	    notmuch_config_set_search_exclude_tags (config, tags, 2);
 	} else {
 	    notmuch_config_set_search_exclude_tags (config, NULL, 0);
 	}
@@ -750,7 +751,7 @@ notmuch_config_command_get (void *ctx, char *item)
 	for (i = 0; i < length; i++)
 	    printf ("%s\n", value[i]);
 
-	free (value);
+	g_strfreev (value);
     }
 
     notmuch_config_close (config);
@@ -798,20 +799,78 @@ notmuch_config_command_set (void *ctx, char *item, int argc, char *argv[])
     return ret;
 }
 
+static int
+notmuch_config_command_list (void *ctx)
+{
+    notmuch_config_t *config;
+    char **groups;
+    size_t g, groups_length;
+
+    config = notmuch_config_open (ctx, NULL, NULL);
+    if (config == NULL)
+	return 1;
+
+    groups = g_key_file_get_groups (config->key_file, &groups_length);
+    if (groups == NULL)
+	return 1;
+
+    for (g = 0; g < groups_length; g++) {
+	char **keys;
+	size_t k, keys_length;
+
+	keys = g_key_file_get_keys (config->key_file,
+				    groups[g], &keys_length, NULL);
+	if (keys == NULL)
+	    continue;
+
+	for (k = 0; k < keys_length; k++) {
+	    char *value;
+
+	    value = g_key_file_get_string (config->key_file,
+					   groups[g], keys[k], NULL);
+	    if (value != NULL) {
+		printf ("%s.%s=%s\n", groups[g], keys[k], value);
+		free (value);
+	    }
+	}
+
+	g_strfreev (keys);
+    }
+
+    g_strfreev (groups);
+
+    notmuch_config_close (config);
+
+    return 0;
+}
+
 int
 notmuch_config_command (void *ctx, int argc, char *argv[])
 {
     argc--; argv++; /* skip subcommand argument */
 
-    if (argc < 2) {
-	fprintf (stderr, "Error: notmuch config requires at least two arguments.\n");
+    if (argc < 1) {
+	fprintf (stderr, "Error: notmuch config requires at least one argument.\n");
 	return 1;
     }
 
-    if (strcmp (argv[0], "get") == 0)
+    if (strcmp (argv[0], "get") == 0) {
+	if (argc != 2) {
+	    fprintf (stderr, "Error: notmuch config get requires exactly "
+		     "one argument.\n");
+	    return 1;
+	}
 	return notmuch_config_command_get (ctx, argv[1]);
-    else if (strcmp (argv[0], "set") == 0)
+    } else if (strcmp (argv[0], "set") == 0) {
+	if (argc < 2) {
+	    fprintf (stderr, "Error: notmuch config set requires at least "
+		     "one argument.\n");
+	    return 1;
+	}
 	return notmuch_config_command_set (ctx, argv[1], argc - 2, argv + 2);
+    } else if (strcmp (argv[0], "list") == 0) {
+	return notmuch_config_command_list (ctx);
+    }
 
     fprintf (stderr, "Unrecognized argument for notmuch config: %s\n",
 	     argv[0]);

@@ -26,6 +26,12 @@ enum {
     OUTPUT_MESSAGES,
 };
 
+/* The following is to allow future options to be added more easily */
+enum {
+    EXCLUDE_TRUE,
+    EXCLUDE_FALSE,
+};
+
 int
 notmuch_count_command (void *ctx, int argc, char *argv[])
 {
@@ -35,14 +41,17 @@ notmuch_count_command (void *ctx, int argc, char *argv[])
     char *query_str;
     int opt_index;
     int output = OUTPUT_MESSAGES;
-    const char **search_exclude_tags;
-    size_t search_exclude_tags_length;
+    int exclude = EXCLUDE_TRUE;
     unsigned int i;
 
     notmuch_opt_desc_t options[] = {
 	{ NOTMUCH_OPT_KEYWORD, &output, "output", 'o',
 	  (notmuch_keyword_t []){ { "threads", OUTPUT_THREADS },
 				  { "messages", OUTPUT_MESSAGES },
+				  { 0, 0 } } },
+	{ NOTMUCH_OPT_KEYWORD, &exclude, "exclude", 'x',
+	  (notmuch_keyword_t []){ { "true", EXCLUDE_TRUE },
+				  { "false", EXCLUDE_FALSE },
 				  { 0, 0 } } },
 	{ 0, 0, 0, 0, 0 }
     };
@@ -57,9 +66,8 @@ notmuch_count_command (void *ctx, int argc, char *argv[])
     if (config == NULL)
 	return 1;
 
-    notmuch = notmuch_database_open (notmuch_config_get_database_path (config),
-				     NOTMUCH_DATABASE_MODE_READ_ONLY);
-    if (notmuch == NULL)
+    if (notmuch_database_open (notmuch_config_get_database_path (config),
+			       NOTMUCH_DATABASE_MODE_READ_ONLY, &notmuch))
 	return 1;
 
     query_str = query_string_from_args (ctx, argc-opt_index, argv+opt_index);
@@ -78,10 +86,15 @@ notmuch_count_command (void *ctx, int argc, char *argv[])
 	return 1;
     }
 
-    search_exclude_tags = notmuch_config_get_search_exclude_tags
-	(config, &search_exclude_tags_length);
-    for (i = 0; i < search_exclude_tags_length; i++)
-	notmuch_query_add_tag_exclude (query, search_exclude_tags[i]);
+    if (exclude == EXCLUDE_TRUE) {
+	const char **search_exclude_tags;
+	size_t search_exclude_tags_length;
+
+	search_exclude_tags = notmuch_config_get_search_exclude_tags
+	    (config, &search_exclude_tags_length);
+	for (i = 0; i < search_exclude_tags_length; i++)
+	    notmuch_query_add_tag_exclude (query, search_exclude_tags[i]);
+    }
 
     switch (output) {
     case OUTPUT_MESSAGES:
@@ -93,7 +106,7 @@ notmuch_count_command (void *ctx, int argc, char *argv[])
     }
 
     notmuch_query_destroy (query);
-    notmuch_database_close (notmuch);
+    notmuch_database_destroy (notmuch);
 
     return 0;
 }

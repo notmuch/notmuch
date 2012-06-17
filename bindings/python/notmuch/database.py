@@ -14,7 +14,7 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with notmuch.  If not, see <http://www.gnu.org/licenses/>.
 
-Copyright 2010 Sebastian Spaeth <Sebastian@SSpaeth.de>'
+Copyright 2010 Sebastian Spaeth <Sebastian@SSpaeth.de>
 """
 
 import os
@@ -56,21 +56,14 @@ class Database(object):
 
     :class:`Database` objects implement the context manager protocol
     so you can use the :keyword:`with` statement to ensure that the
-    database is properly closed.
+    database is properly closed. See :meth:`close` for more
+    information.
 
     .. note::
 
         Any function in this class can and will throw an
         :exc:`NotInitializedError` if the database was not intitialized
         properly.
-
-    .. note::
-
-        Do remember that as soon as we tear down (e.g. via `del db`) this
-        object, all underlying derived objects such as queries, threads,
-        messages, tags etc will be freed by the underlying library as well.
-        Accessing these objects will lead to segfaults and other unexpected
-        behavior. See above for more details.
     """
     _std_db_path = None
     """Class attribute to cache user's default database"""
@@ -80,8 +73,8 @@ class Database(object):
 
     """notmuch_database_get_directory"""
     _get_directory = nmlib.notmuch_database_get_directory
-    _get_directory.argtypes = [NotmuchDatabaseP, c_char_p]
-    _get_directory.restype = NotmuchDirectoryP
+    _get_directory.argtypes = [NotmuchDatabaseP, c_char_p, POINTER(NotmuchDirectoryP)]
+    _get_directory.restype = c_uint
 
     """notmuch_database_get_path"""
     _get_path = nmlib.notmuch_database_get_path
@@ -95,8 +88,8 @@ class Database(object):
 
     """notmuch_database_open"""
     _open = nmlib.notmuch_database_open
-    _open.argtypes = [c_char_p, c_uint]
-    _open.restype = NotmuchDatabaseP
+    _open.argtypes = [c_char_p, c_uint, POINTER(NotmuchDatabaseP)]
+    _open.restype = c_uint
 
     """notmuch_database_upgrade"""
     _upgrade = nmlib.notmuch_database_upgrade
@@ -122,8 +115,8 @@ class Database(object):
 
     """notmuch_database_create"""
     _create = nmlib.notmuch_database_create
-    _create.argtypes = [c_char_p]
-    _create.restype = NotmuchDatabaseP
+    _create.argtypes = [c_char_p, POINTER(NotmuchDatabaseP)]
+    _create.restype = c_uint
 
     def __init__(self, path = None, create = False,
                  mode = MODE.READ_ONLY):
@@ -161,8 +154,13 @@ class Database(object):
         else:
             self.create(path)
 
+    _destroy = nmlib.notmuch_database_destroy
+    _destroy.argtypes = [NotmuchDatabaseP]
+    _destroy.restype = None
+
     def __del__(self):
-        self.close()
+        if self._db:
+            self._destroy(self._db)
 
     def _assert_db_is_initialized(self):
         """Raises :exc:`NotInitializedError` if self._db is `None`"""
@@ -184,16 +182,17 @@ class Database(object):
         :raises: :exc:`NotmuchError` in case of any failure
                     (possibly after printing an error message on stderr).
         """
-        if self._db is not None:
+        if self._db:
             raise NotmuchError(message="Cannot create db, this Database() "
                                        "already has an open one.")
 
-        res = Database._create(_str(path), Database.MODE.READ_WRITE)
+        db = NotmuchDatabaseP()
+        status = Database._create(_str(path), Database.MODE.READ_WRITE, byref(db))
 
-        if not res:
-            raise NotmuchError(
-                message="Could not create the specified database")
-        self._db = res
+        if status != STATUS.SUCCESS:
+            raise NotmuchError(status)
+        self._db = db
+        return status
 
     def open(self, path, mode=0):
         """Opens an existing database
@@ -207,21 +206,31 @@ class Database(object):
         :raises: Raises :exc:`NotmuchError` in case of any failure
                     (possibly after printing an error message on stderr).
         """
-        res = Database._open(_str(path), mode)
+        db = NotmuchDatabaseP()
+        status = Database._open(_str(path), mode, byref(db))
 
-        if not res:
-            raise NotmuchError(message="Could not open the specified database")
-        self._db = res
+        if status != STATUS.SUCCESS:
+            raise NotmuchError(status)
+        self._db = db
+        return status
 
     _close = nmlib.notmuch_database_close
     _close.argtypes = [NotmuchDatabaseP]
     _close.restype = None
 
     def close(self):
-        """Close and free the notmuch database if needed"""
-        if self._db is not None:
+        '''
+        Closes the notmuch database.
+
+        .. warning::
+
+            This function closes the notmuch database. From that point
+            on every method invoked on any object ever derived from
+            the closed database may cease to function and raise a
+            NotmuchError.
+        '''
+        if self._db:
             self._close(self._db)
-            self._db = None
 
     def __enter__(self):
         '''
@@ -337,7 +346,6 @@ class Database(object):
 
     def get_directory(self, path):
         """Returns a :class:`Directory` of path,
-        (creating it if it does not exist(?))
 
         :param path: An unicode string containing the path relative to the path
               of database (see :meth:`get_path`), or else should be an absolute
@@ -345,17 +353,8 @@ class Database(object):
         :returns: :class:`Directory` or raises an exception.
         :raises: :exc:`FileError` if path is not relative database or absolute
                  with initial components same as database.
-        :raises: :exc:`ReadOnlyDatabaseError` if the database has not been
-                 opened in read-write mode
         """
         self._assert_db_is_initialized()
-
-        # work around libnotmuch calling exit(3), see
-        # id:20120221002921.8534.57091@thinkbox.jade-hamburg.de
-        # TODO: remove once this issue is resolved
-        if self.mode != Database.MODE.READ_WRITE:
-            raise ReadOnlyDatabaseError('The database has to be opened in '
-                                        'read-write mode for get_directory')
 
         # sanity checking if path is valid, and make path absolute
         if path and path[0] == os.sep:
@@ -369,7 +368,13 @@ class Database(object):
             #we got a relative path, make it absolute
             abs_dirpath = os.path.abspath(os.path.join(self.get_path(), path))
 
-        dir_p = Database._get_directory(self._db, _str(path))
+        dir_p = NotmuchDirectoryP()
+        status = Database._get_directory(self._db, _str(path), byref(dir_p))
+
+        if status != STATUS.SUCCESS:
+            raise NotmuchError(status)
+        if not dir_p:
+            return None
 
         # return the Directory, init it with the absolute path
         return Directory(abs_dirpath, dir_p, self)
@@ -521,18 +526,9 @@ class Database(object):
                  retry.
         :raises: :exc:`NotInitializedError` if the database was not
                  intitialized.
-        :raises: :exc:`ReadOnlyDatabaseError` if the database has not been
-                 opened in read-write mode
 
         *Added in notmuch 0.9*"""
         self._assert_db_is_initialized()
-
-        # work around libnotmuch calling exit(3), see
-        # id:20120221002921.8534.57091@thinkbox.jade-hamburg.de
-        # TODO: remove once this issue is resolved
-        if self.mode != Database.MODE.READ_WRITE:
-            raise ReadOnlyDatabaseError('The database has to be opened in '
-                                        'read-write mode for get_directory')
 
         msg_p = NotmuchMessageP()
         status = Database._find_message_by_filename(self._db, _str(filename),

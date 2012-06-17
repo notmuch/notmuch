@@ -1,3 +1,37 @@
+notmuch (0.13.2-1) unstable; urgency=low
+
+  * Upstream bugfix release. No changes to binary packages.
+
+ -- David Bremner <bremner@debian.org>  Sat, 02 Jun 2012 18:16:01 -0300
+
+notmuch (0.13.1-1) unstable; urgency=low
+
+  * Upstream bugfix release.
+    - fix for encoding problems with reply in emacs
+    - notmuch_database_(get_directory|find_message_by_filename) now
+      work for read-only databases.
+
+ -- David Bremner <bremner@debian.org>  Fri, 25 May 2012 21:19:06 -0300
+
+notmuch (0.13-1) unstable; urgency=low
+
+  * New upstream release. See /usr/share/doc/notmuch/NEWS.gz for changes.
+
+  [ Stefano Zacchiroli ]
+  * Recommend all notmuch UI (including notmuch-mutt) as alternatives,
+    to avoid unneeded vim/emacs installation. Thanks Matteo F. Vescovi
+    for the patch. (Closes: #673011)
+
+ -- David Bremner <bremner@debian.org>  Tue, 15 May 2012 18:19:32 -0300
+
+notmuch (0.13~rc1-2) experimental; urgency=low
+
+  * New upstream pre-release
+  * new binary package "notmuch-mutt" for Mutt integration
+  * Bump libnotmuch SONAME because of API changes
+
+ -- David Bremner <bremner@debian.org>  Sat, 05 May 2012 10:26:47 -0300
+
 notmuch (0.12-1~bpo60+1) squeeze-backports; urgency=low
 
   * Rebuild for squeeze-backports.

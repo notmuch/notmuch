@@ -48,7 +48,7 @@ let s:notmuch_defaults = {
         \ 'g:notmuch_show_part_end_regexp':          'part}'                   ,
         \ 'g:notmuch_show_marker_regexp':            '\\(message\\|header\\|body\\|attachment\\|part\\)[{}].*$',
         \
-        \ 'g:notmuch_show_message_parse_regexp':     '\(id:[^ ]*\) depth:\([0-9]*\) match:\([0-9]*\) filename:\(.*\)$',
+        \ 'g:notmuch_show_message_parse_regexp':     '\(id:[^ ]*\) depth:\([0-9]*\) match:\([0-9]*\) excluded:\([0-9]*\) filename:\(.*\)$',
         \ 'g:notmuch_show_tags_regexp':              '(\([^)]*\))$'               ,
         \
         \ 'g:notmuch_show_signature_regexp':         '^\(-- \?\|_\+\)$'           ,
@@ -870,7 +870,8 @@ function! s:NM_cmd_show_parse(inlines)
                                         let msg['id'] = m[1]
                                         let msg['depth'] = m[2]
                                         let msg['match'] = m[3]
-                                        let msg['filename'] = m[4]
+                                        let msg['excluded'] = m[4]
+                                        let msg['filename'] = m[5]
                                 endif
 
                                 let in_message = 1

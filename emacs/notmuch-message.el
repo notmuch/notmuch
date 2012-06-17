@@ -20,6 +20,7 @@
 ;; Authors: Jesse Rosenthal <jrosenthal@jhu.edu>
 
 (require 'message)
+(require 'notmuch-tag)
 (require 'notmuch-mua)
 
 (defcustom notmuch-message-replied-tags '("replied")
@@ -44,7 +45,7 @@ the \"inbox\" and \"todo\", you would set
 				(concat "+" str)
 			      str))
 			  notmuch-message-replied-tags)))
-	(apply 'notmuch-tag (concat "id:" (car (car rep))) tags)))))
+	(apply 'notmuch-tag (notmuch-id-to-query (car (car rep))) tags)))))
 
 (add-hook 'message-send-hook 'notmuch-message-mark-replied)
 

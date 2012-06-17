@@ -1,6 +1,6 @@
 /* The Ruby interface to the notmuch mail library
  *
- * Copyright © 2010, 2011 Ali Polatel
+ * Copyright © 2010, 2011, 2012 Ali Polatel
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -217,10 +217,19 @@ VALUE
 notmuch_rb_query_get_string (VALUE self);
 
 VALUE
+notmuch_rb_query_add_tag_exclude (VALUE self, VALUE tagv);
+
+VALUE
+notmuch_rb_query_set_omit_excluded (VALUE self, VALUE omitv);
+
+VALUE
 notmuch_rb_query_search_threads (VALUE self);
 
 VALUE
 notmuch_rb_query_search_messages (VALUE self);
+
+VALUE
+notmuch_rb_query_count_messages (VALUE self);
 
 /* threads.c */
 VALUE

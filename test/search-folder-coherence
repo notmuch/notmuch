@@ -32,7 +32,7 @@ test_expect_equal_file OUTPUT EXPECTED
 
 test_begin_subtest "Test matches folder:spam"
 output=$(notmuch search folder:spam)
-test_expect_equal "$output" "thread:0000000000000001   2001-01-05 [1/1] Notmuch Test Suite; Test message #1 (inbox unread)"
+test_expect_equal "$output" "thread:0000000000000001   2001-01-05 [1/1] Notmuch Test Suite; Single new message (inbox unread)"
 
 test_begin_subtest "Remove folder:spam copy of email"
 rm $dir/spam/$(basename $file_x)

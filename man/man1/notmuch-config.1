@@ -1,4 +1,4 @@
-.TH NOTMUCH-CONFIG 1 2012-03-19 "Notmuch 0.12"
+.TH NOTMUCH-CONFIG 1 2012-06-01 "Notmuch 0.13.2"
 .SH NAME
 notmuch-config \- Access notmuch configuration file.
 .SH SYNOPSIS
@@ -8,6 +8,8 @@ notmuch-config \- Access notmuch configuration file.
 
 .B notmuch config set
 .RI  "<" section ">.<" item "> [" value " ...]"
+
+.B notmuch config list
 
 .SH DESCRIPTION
 
@@ -33,6 +35,18 @@ command-line argument.
 
 If no values are provided, the specified configuration item will be
 removed from the configuration file.
+.RE
+
+.RS 4
+.TP 4
+.B list
+Every configuration item is printed to stdout, each on a separate line
+of the form:
+
+.RI  "" section "." item "=" value
+
+No additional whitespace surrounds the dot or equals sign characters. In a
+multiple-value item (a list), the values are separated by semicolon characters.
 .RE
 
 The available configuration items are described below.
@@ -81,6 +95,14 @@ searched for messages by
 All the files and directories matching any of the names specified here
 will be ignored, regardless of the location in the mail store
 directory hierarchy.
+.RE
+
+.RS 4
+.TP 4
+.B search.exclude_tags
+A list of tags that will be excluded from search results by
+default. Using an excluded tag in a query will override that
+exclusion.
 .RE
 
 .RS 4

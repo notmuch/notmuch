@@ -14,7 +14,7 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with notmuch.  If not, see <http://www.gnu.org/licenses/>.
 
-Copyright 2010 Sebastian Spaeth <Sebastian@SSpaeth.de>'
+Copyright 2010 Sebastian Spaeth <Sebastian@SSpaeth.de>
 """
 
 from ctypes import c_char_p, c_uint
@@ -203,5 +203,5 @@ class Query(object):
 
     def __del__(self):
         """Close and free the Query"""
-        if self._query is not None:
+        if self._query:
             self._destroy(self._query)

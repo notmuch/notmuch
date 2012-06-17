@@ -1,4 +1,4 @@
-.TH NOTMUCH-COUNT 1 2012-03-19 "Notmuch 0.12"
+.TH NOTMUCH-COUNT 1 2012-06-01 "Notmuch 0.13.2"
 .SH NAME
 notmuch-count \- Count messages matching the given search terms.
 .SH SYNOPSIS
@@ -37,6 +37,14 @@ Output the number of matching messages. This is the default.
 
 Output the number of matching threads.
 .RE
+.RE
+
+.RS 4
+.TP 4
+.BR \-\-exclude=(true|false)
+
+Specify whether to omit messages matching search.tag_exclude from the
+count (the default) or not.
 .RE
 .RE
 .RE

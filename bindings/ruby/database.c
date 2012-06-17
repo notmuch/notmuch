@@ -42,6 +42,8 @@ notmuch_rb_database_initialize (int argc, VALUE *argv, VALUE self)
     int create, mode;
     VALUE pathv, hashv;
     VALUE modev;
+    notmuch_database_t *database;
+    notmuch_status_t ret;
 
     /* Check arguments */
     rb_scan_args (argc, argv, "11", &pathv, &hashv);
@@ -73,9 +75,13 @@ notmuch_rb_database_initialize (int argc, VALUE *argv, VALUE self)
     }
 
     Check_Type (self, T_DATA);
-    DATA_PTR (self) = create ? notmuch_database_create (path) : notmuch_database_open (path, mode);
-    if (!DATA_PTR (self))
-	rb_raise (notmuch_rb_eDatabaseError, "Failed to open database");
+    if (create)
+	ret = notmuch_database_create (path, &database);
+    else
+	ret = notmuch_database_open (path, mode, &database);
+    notmuch_rb_status_raise (ret);
+
+    DATA_PTR (self) = database;
 
     return self;
 }
@@ -110,7 +116,7 @@ notmuch_rb_database_close (VALUE self)
     notmuch_database_t *db;
 
     Data_Get_Notmuch_Database (self, db);
-    notmuch_database_close (db);
+    notmuch_database_destroy (db);
     DATA_PTR (self) = NULL;
 
     return Qnil;
@@ -246,6 +252,7 @@ VALUE
 notmuch_rb_database_get_directory (VALUE self, VALUE pathv)
 {
     const char *path;
+    notmuch_status_t ret;
     notmuch_directory_t *dir;
     notmuch_database_t *db;
 
@@ -254,11 +261,11 @@ notmuch_rb_database_get_directory (VALUE self, VALUE pathv)
     SafeStringValue (pathv);
     path = RSTRING_PTR (pathv);
 
-    dir = notmuch_database_get_directory (db, path);
-    if (!dir)
-        rb_raise (notmuch_rb_eXapianError, "Xapian exception");
-
-    return Data_Wrap_Struct (notmuch_rb_cDirectory, NULL, NULL, dir);
+    ret = notmuch_database_get_directory (db, path, &dir);
+    notmuch_rb_status_raise (ret);
+    if (dir)
+	return Data_Wrap_Struct (notmuch_rb_cDirectory, NULL, NULL, dir);
+    return Qnil;
 }
 
 /*

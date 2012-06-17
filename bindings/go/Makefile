@@ -1,30 +1,40 @@
-# Copyright 2009 The Go Authors. All rights reserved.
-# Use of this source code is governed by a BSD-style
-# license that can be found in the LICENSE file.
+# Makefile for the go bindings of notmuch
 
-include ${GOROOT}/src/Make.inc
+export GOPATH      ?= $(shell pwd)
+export CGO_CFLAGS  ?= -I../../../../lib
+export CGO_LDFLAGS ?= -L../../../../lib
 
-all: install
+GO         ?= go
+GOFMT      ?= gofmt
 
-DIRS=\
-        pkg\
-        cmds\
+all: notmuch notmuch-addrlookup
 
+.PHONY: notmuch
+notmuch:
+	$(GO) install notmuch
 
-clean.dirs: $(addsuffix .clean, $(DIRS))
-install.dirs: $(addsuffix .install, $(DIRS))
-nuke.dirs: $(addsuffix .nuke, $(DIRS))
-test.dirs: $(addsuffix .test, $(TEST))
-bench.dirs: $(addsuffix .bench, $(BENCH))
+.PHONY: goconfig
+goconfig:
+	if [ ! -d src/github.com/kless/goconfig/config ]; then \
+	    $(GO) get github.com/kless/goconfig/config; \
+	fi
 
-%.clean:
-	+cd $* && $(QUOTED_GOBIN)/gomake clean
+.PHONY: notmuch-addrlookup
+notmuch-addrlookup: notmuch goconfig
+	$(GO) install notmuch-addrlookup
 
-%.install:
-	+cd $* && $(QUOTED_GOBIN)/gomake install
+.PHONY: format
+format:
+	$(GOFMT) -w=true $(GOFMT_OPTS) src/notmuch
+	$(GOFMT) -w=true $(GOFMT_OPTS) src/notmuch-addrlookup
 
-clean: clean.dirs
+.PHONY: check-format
+check-format:
+	$(GOFMT) -d=true $(GOFMT_OPTS) src/notmuch
+	$(GOFMT) -d=true $(GOFMT_OPTS) src/notmuch-addrlookup
 
-install: install.dirs
-
-#-include ${GOROOT}/src/Make.deps
+.PHONY: clean
+clean:
+	$(GO) clean notmuch
+	$(GO) clean notmuch-addrlookup
+	rm -rf pkg bin

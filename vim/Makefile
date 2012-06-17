@@ -1,11 +1,11 @@
 .PHONY: all help install link symlink
 
-FILES     = plugin/notmuch.vim \
-	    $(wildcard syntax/notmuch-*.vim)
+files = plugin/notmuch.vim \
+	$(wildcard syntax/notmuch-*.vim)
+prefix = $(HOME)/.vim
+destdir = $(prefix)/plugin
 
-PREFIX    = $(shell ls -d ~/.vim/)
-
-OUT_FILES = $(FILES:%=${PREFIX}/%)
+INSTALL = install -D -m644
 
 all: help
 
@@ -16,9 +16,8 @@ help:
 	@echo "    make install     - copy plugin scripts and syntax files to ~/.vim"
 	@echo "    make symlink     - create symlinks in ~/.vim (useful for development)"
 
-install: ${OUT_FILES}
-link symlink:
-	${MAKE} SYMLINK=1 install
+install:
+	@for x in $(files); do $(INSTALL) $(CURDIR)/$$x $(prefix)/$$x; done
 
-${OUT_FILES}: ${PREFIX}/%: %
-	$(if ${SYMLINK},ln -fs,cp) `pwd`/$< $@
+link symlink: INSTALL = ln -fs
+link symlink: install

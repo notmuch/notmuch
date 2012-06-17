@@ -1,6 +1,6 @@
 /* The Ruby interface to the notmuch mail library
  *
- * Copyright © 2010, 2011 Ali Polatel
+ * Copyright © 2010, 2011, 2012 Ali Polatel
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -89,6 +89,42 @@ notmuch_rb_query_get_string (VALUE self)
 }
 
 /*
+ * call-seq: QUERY.add_tag_exclude(tag) => nil
+ *
+ * Add a tag that will be excluded from the query results by default.
+ */
+VALUE
+notmuch_rb_query_add_tag_exclude (VALUE self, VALUE tagv)
+{
+    notmuch_query_t *query;
+    const char *tag;
+
+    Data_Get_Notmuch_Query (self, query);
+    tag = RSTRING_PTR(tagv);
+
+    notmuch_query_add_tag_exclude(query, tag);
+    return Qnil;
+}
+
+/*
+ * call-seq: QUERY.omit_excluded=(boolean) => nil
+ *
+ * Specify whether to omit excluded results or simply flag them.
+ * By default, this is set to +true+.
+ */
+VALUE
+notmuch_rb_query_set_omit_excluded (VALUE self, VALUE omitv)
+{
+    notmuch_query_t *query;
+
+    Data_Get_Notmuch_Query (self, query);
+
+    notmuch_query_set_omit_excluded (query, RTEST (omitv));
+
+    return Qnil;
+}
+
+/*
  * call-seq: QUERY.search_threads => THREADS
  *
  * Search for threads
@@ -126,4 +162,23 @@ notmuch_rb_query_search_messages (VALUE self)
 	rb_raise (notmuch_rb_eMemoryError, "Out of memory");
 
     return Data_Wrap_Struct (notmuch_rb_cMessages, NULL, NULL, messages);
+}
+
+/*
+ * call-seq: QUERY.count_messages => Fixnum
+ *
+ * Return an estimate of the number of messages matching a search
+ */
+VALUE
+notmuch_rb_query_count_messages (VALUE self)
+{
+    notmuch_query_t *query;
+
+    Data_Get_Notmuch_Query (self, query);
+
+    /* Xapian exceptions are not handled properly.
+     * (function may return 0 after printing a message)
+     * Thus there is nothing we can do here...
+     */
+    return UINT2FIX(notmuch_query_count_messages(query));
 }

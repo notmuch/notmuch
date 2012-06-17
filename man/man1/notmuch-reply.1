@@ -1,4 +1,4 @@
-.TH NOTMUCH-REPLY 1 2012-03-19 "Notmuch 0.12"
+.TH NOTMUCH-REPLY 1 2012-06-01 "Notmuch 0.13.2"
 .SH NAME
 notmuch-reply \- Constructs a reply template for a set of messages.
 
@@ -37,11 +37,16 @@ Supported options for
 include
 .RS
 .TP 4
-.BR \-\-format= ( default | headers\-only )
+.BR \-\-format= ( default | json | headers\-only )
 .RS
 .TP 4
 .BR default
 Includes subject and quoted message body.
+.TP
+.BR json
+Produces JSON output containing headers for a reply message and the
+contents of the original message. This output can be used by a client
+to create a reply message intelligently.
 .TP
 .BR headers\-only
 Only produces In\-Reply\-To, References, To, Cc, and Bcc headers.
@@ -63,6 +68,16 @@ values from the first that contains something other than only the
 user's addresses.
 .RE
 .RE
+.RS
+.TP 4
+.B \-\-decrypt
+
+Decrypt any MIME encrypted parts found in the selected content
+(ie. "multipart/encrypted" parts). Status of the decryption will be
+reported (currently only supported with --format=json) and the
+multipart/encrypted part will be replaced by the decrypted
+content.
+.RE
 
 See \fBnotmuch-search-terms\fR(7)
 for details of the supported syntax for <search-terms>.
@@ -73,7 +88,8 @@ with a search string matching a single message, (such as
 id:<message-id>), but it can be useful to reply to several messages at
 once. For example, when a series of patches are sent in a single
 thread, replying to the entire thread allows for the reply to comment
-on issue found in multiple patches.
+on issues found in multiple patches. The default format supports
+replying to multiple messages at once, but the JSON format does not.
 .RE
 .RE
 

@@ -250,13 +250,13 @@ add_files_recursive (notmuch_database_t *notmuch,
     notmuch_status_t status, ret = NOTMUCH_STATUS_SUCCESS;
     notmuch_message_t *message = NULL;
     struct dirent **fs_entries = NULL;
-    int i, num_fs_entries;
+    int i, num_fs_entries = 0;
     notmuch_directory_t *directory;
     notmuch_filenames_t *db_files = NULL;
     notmuch_filenames_t *db_subdirs = NULL;
     time_t stat_time;
     struct stat st;
-    notmuch_bool_t is_maildir, new_directory;
+    notmuch_bool_t is_maildir;
     const char **tag;
 
     if (stat (path, &st)) {
@@ -274,40 +274,27 @@ add_files_recursive (notmuch_database_t *notmuch,
 
     fs_mtime = st.st_mtime;
 
-    directory = notmuch_database_get_directory (notmuch, path);
-    db_mtime = notmuch_directory_get_mtime (directory);
-
-    new_directory = db_mtime ? FALSE : TRUE;
-
-    /* XXX This is a temporary workaround.  If we don't update the
-     * database mtime until after processing messages in this
-     * directory, then a 0 mtime is *not* sufficient to indicate that
-     * this directory has no messages or subdirs in the database (for
-     * example, if an earlier run skipped the mtime update because
-     * fs_mtime == stat_time, or was interrupted before updating the
-     * mtime at the end).  To address this, we record a (bogus)
-     * non-zero value before processing any child messages so that a
-     * later run won't mistake this for a new directory (and, for
-     * example, fail to detect removed files and subdirs).
-     *
-     * A better solution would be for notmuch_database_get_directory
-     * to indicate if it really created a new directory or not, either
-     * by a new out-argument, or by recording this information and
-     * providing an accessor.
-     */
-    if (new_directory)
-	notmuch_directory_set_mtime (directory, -1);
+    status = notmuch_database_get_directory (notmuch, path, &directory);
+    if (status) {
+	ret = status;
+	goto DONE;
+    }
+    db_mtime = directory ? notmuch_directory_get_mtime (directory) : 0;
 
     /* If the database knows about this directory, then we sort based
      * on strcmp to match the database sorting. Otherwise, we can do
      * inode-based sorting for faster filesystem operation. */
     num_fs_entries = scandir (path, &fs_entries, 0,
-			      new_directory ?
-			      dirent_sort_inode : dirent_sort_strcmp_name);
+			      directory ?
+			      dirent_sort_strcmp_name : dirent_sort_inode);
 
     if (num_fs_entries == -1) {
 	fprintf (stderr, "Error opening directory %s: %s\n",
 		 path, strerror (errno));
+	/* We consider this a fatal error because, if a user moved a
+	 * message from another directory that we were able to scan
+	 * into this directory, skipping this directory will cause
+	 * that message to be lost. */
 	ret = NOTMUCH_STATUS_FILE_ERROR;
 	goto DONE;
     }
@@ -351,8 +338,10 @@ add_files_recursive (notmuch_database_t *notmuch,
 
 	next = talloc_asprintf (notmuch, "%s/%s", path, entry->d_name);
 	status = add_files_recursive (notmuch, next, state);
-	if (status && ret == NOTMUCH_STATUS_SUCCESS)
+	if (status) {
 	    ret = status;
+	    goto DONE;
+	}
 	talloc_free (next);
 	next = NULL;
     }
@@ -366,13 +355,12 @@ add_files_recursive (notmuch_database_t *notmuch,
      * being discovered until the clock catches up and the directory
      * is modified again).
      */
-    if (fs_mtime == db_mtime)
+    if (directory && fs_mtime == db_mtime)
 	goto DONE;
 
-    /* new_directory means a directory that the database has never
-     * seen before. In that case, we can simply leave db_files and
-     * db_subdirs NULL. */
-    if (!new_directory) {
+    /* If the database has never seen this directory before, we can
+     * simply leave db_files and db_subdirs NULL. */
+    if (directory) {
 	db_files = notmuch_directory_get_child_files (directory);
 	db_subdirs = notmuch_directory_get_child_directories (directory);
     }
@@ -773,32 +761,40 @@ remove_filename (notmuch_database_t *notmuch,
 	return status;
     status = notmuch_database_find_message_by_filename (notmuch, path, &message);
     if (status || message == NULL)
-	return status;
+	goto DONE;
+
     status = notmuch_database_remove_message (notmuch, path);
     if (status == NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID) {
 	add_files_state->renamed_messages++;
 	if (add_files_state->synchronize_flags == TRUE)
 	    notmuch_message_maildir_flags_to_tags (message);
-    } else
+	status = NOTMUCH_STATUS_SUCCESS;
+    } else if (status == NOTMUCH_STATUS_SUCCESS) {
 	add_files_state->removed_messages++;
+    }
     notmuch_message_destroy (message);
+
+  DONE:
     notmuch_database_end_atomic (notmuch);
     return status;
 }
 
 /* Recursively remove all filenames from the database referring to
  * 'path' (or to any of its children). */
-static void
+static notmuch_status_t
 _remove_directory (void *ctx,
 		   notmuch_database_t *notmuch,
 		   const char *path,
 		   add_files_state_t *add_files_state)
 {
+    notmuch_status_t status = NOTMUCH_STATUS_SUCCESS;
     notmuch_directory_t *directory;
     notmuch_filenames_t *files, *subdirs;
     char *absolute;
 
-    directory = notmuch_database_get_directory (notmuch, path);
+    status = notmuch_database_get_directory (notmuch, path, &directory);
+    if (status || !directory)
+	return status;
 
     for (files = notmuch_directory_get_child_files (directory);
 	 notmuch_filenames_valid (files);
@@ -806,8 +802,10 @@ _remove_directory (void *ctx,
     {
 	absolute = talloc_asprintf (ctx, "%s/%s", path,
 				    notmuch_filenames_get (files));
-	remove_filename (notmuch, absolute, add_files_state);
+	status = remove_filename (notmuch, absolute, add_files_state);
 	talloc_free (absolute);
+	if (status)
+	    goto DONE;
     }
 
     for (subdirs = notmuch_directory_get_child_directories (directory);
@@ -816,11 +814,15 @@ _remove_directory (void *ctx,
     {
 	absolute = talloc_asprintf (ctx, "%s/%s", path,
 				    notmuch_filenames_get (subdirs));
-	_remove_directory (ctx, notmuch, absolute, add_files_state);
+	status = _remove_directory (ctx, notmuch, absolute, add_files_state);
 	talloc_free (absolute);
+	if (status)
+	    goto DONE;
     }
 
+  DONE:
     notmuch_directory_destroy (directory);
+    return status;
 }
 
 int
@@ -882,12 +884,12 @@ notmuch_new_command (void *ctx, int argc, char *argv[])
 	    return 1;
 
 	printf ("Found %d total files (that's not much mail).\n", count);
-	notmuch = notmuch_database_create (db_path);
+	if (notmuch_database_create (db_path, &notmuch))
+	    return 1;
 	add_files_state.total_files = count;
     } else {
-	notmuch = notmuch_database_open (db_path,
-					 NOTMUCH_DATABASE_MODE_READ_WRITE);
-	if (notmuch == NULL)
+	if (notmuch_database_open (db_path, NOTMUCH_DATABASE_MODE_READ_WRITE,
+				   &notmuch))
 	    return 1;
 
 	if (notmuch_database_needs_upgrade (notmuch)) {
@@ -933,10 +935,14 @@ notmuch_new_command (void *ctx, int argc, char *argv[])
     }
 
     ret = add_files (notmuch, db_path, &add_files_state);
+    if (ret)
+	goto DONE;
 
     gettimeofday (&tv_start, NULL);
     for (f = add_files_state.removed_files->head; f && !interrupted; f = f->next) {
-	remove_filename (notmuch, f->filename, &add_files_state);
+	ret = remove_filename (notmuch, f->filename, &add_files_state);
+	if (ret)
+	    goto DONE;
 	if (do_print_progress) {
 	    do_print_progress = 0;
 	    generic_print_progress ("Cleaned up", "messages",
@@ -947,7 +953,9 @@ notmuch_new_command (void *ctx, int argc, char *argv[])
 
     gettimeofday (&tv_start, NULL);
     for (f = add_files_state.removed_directories->head, i = 0; f && !interrupted; f = f->next, i++) {
-	_remove_directory (ctx, notmuch, f->filename, &add_files_state);
+	ret = _remove_directory (ctx, notmuch, f->filename, &add_files_state);
+	if (ret)
+	    goto DONE;
 	if (do_print_progress) {
 	    do_print_progress = 0;
 	    generic_print_progress ("Cleaned up", "directories",
@@ -957,14 +965,16 @@ notmuch_new_command (void *ctx, int argc, char *argv[])
     }
 
     for (f = add_files_state.directory_mtimes->head; f && !interrupted; f = f->next) {
+	notmuch_status_t status;
 	notmuch_directory_t *directory;
-	directory = notmuch_database_get_directory (notmuch, f->filename);
-	if (directory) {
+	status = notmuch_database_get_directory (notmuch, f->filename, &directory);
+	if (status == NOTMUCH_STATUS_SUCCESS && directory) {
 	    notmuch_directory_set_mtime (directory, f->mtime);
 	    notmuch_directory_destroy (directory);
 	}
     }
 
+  DONE:
     talloc_free (add_files_state.removed_files);
     talloc_free (add_files_state.removed_directories);
     talloc_free (add_files_state.directory_mtimes);
@@ -1012,12 +1022,11 @@ notmuch_new_command (void *ctx, int argc, char *argv[])
 
     printf ("\n");
 
-    if (ret) {
-	printf ("\nNote: At least one error was encountered: %s\n",
-		notmuch_status_to_string (ret));
-    }
+    if (ret)
+	fprintf (stderr, "Note: A fatal error was encountered: %s\n",
+		 notmuch_status_to_string (ret));
 
-    notmuch_database_close (notmuch);
+    notmuch_database_destroy (notmuch);
 
     if (run_hooks && !ret && !interrupted)
 	ret = notmuch_run_hook (db_path, "post-new");

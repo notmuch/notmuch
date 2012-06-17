@@ -14,7 +14,7 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with notmuch.  If not, see <http://www.gnu.org/licenses/>.
 
-Copyright 2010 Sebastian Spaeth <Sebastian@SSpaeth.de>'
+Copyright 2010 Sebastian Spaeth <Sebastian@SSpaeth.de>
                Jesse Rosenthal <jrosenthal@jhu.edu>
 """
 
@@ -172,11 +172,15 @@ class Messages(object):
     next = __next__ # python2.x iterator protocol compatibility
 
     def __nonzero__(self):
-        """
-        :return: True if there is at least one more thread in the
-            Iterator, False if not."""
-        return self._msgs is not None and \
-            self._valid(self._msgs) > 0
+        '''
+        Implement truth value testing. If __nonzero__ is not
+        implemented, the python runtime would fall back to `len(..) >
+        0` thus exhausting the iterator.
+
+        :returns: True if the wrapped iterator has at least one more object
+                  left.
+        '''
+        return self._msgs and self._valid(self._msgs)
 
     _destroy = nmlib.notmuch_messages_destroy
     _destroy.argtypes = [NotmuchMessagesP]
@@ -184,7 +188,7 @@ class Messages(object):
 
     def __del__(self):
         """Close and free the notmuch Messages"""
-        if self._msgs is not None:
+        if self._msgs:
             self._destroy(self._msgs)
 
     def format_messages(self, format, indent=0, entire_thread=False):

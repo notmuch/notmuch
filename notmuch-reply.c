@@ -21,30 +21,7 @@
  */
 
 #include "notmuch-client.h"
-#include "gmime-filter-reply.h"
 #include "gmime-filter-headers.h"
-
-static void
-reply_headers_message_part (GMimeMessage *message);
-
-static void
-reply_part_content (GMimeObject *part);
-
-static const notmuch_show_format_t format_reply = {
-    "", NULL,
-	"", NULL,
-	    "", NULL, reply_headers_message_part, ">\n",
-	    "",
-	        NULL,
-	        NULL,
-	        NULL,
-	        reply_part_content,
-	        NULL,
-	        "",
-	    "",
-	"", "",
-    ""
-};
 
 static void
 show_reply_headers (GMimeMessage *message)
@@ -66,85 +43,59 @@ show_reply_headers (GMimeMessage *message)
 }
 
 static void
-reply_headers_message_part (GMimeMessage *message)
+format_part_reply (mime_node_t *node)
 {
-    InternetAddressList *recipients;
-    const char *recipients_string;
+    int i;
 
-    printf ("> From: %s\n", g_mime_message_get_sender (message));
-    recipients = g_mime_message_get_recipients (message, GMIME_RECIPIENT_TYPE_TO);
-    recipients_string = internet_address_list_to_string (recipients, 0);
-    if (recipients_string)
-	printf ("> To: %s\n",
-		recipients_string);
-    recipients = g_mime_message_get_recipients (message, GMIME_RECIPIENT_TYPE_CC);
-    recipients_string = internet_address_list_to_string (recipients, 0);
-    if (recipients_string)
-	printf ("> Cc: %s\n",
-		recipients_string);
-    printf ("> Subject: %s\n", g_mime_message_get_subject (message));
-    printf ("> Date: %s\n", g_mime_message_get_date_as_string (message));
-}
+    if (node->envelope_file) {
+	printf ("On %s, %s wrote:\n",
+		notmuch_message_get_header (node->envelope_file, "date"),
+		notmuch_message_get_header (node->envelope_file, "from"));
+    } else if (GMIME_IS_MESSAGE (node->part)) {
+	GMimeMessage *message = GMIME_MESSAGE (node->part);
+	InternetAddressList *recipients;
+	const char *recipients_string;
 
+	printf ("> From: %s\n", g_mime_message_get_sender (message));
+	recipients = g_mime_message_get_recipients (message, GMIME_RECIPIENT_TYPE_TO);
+	recipients_string = internet_address_list_to_string (recipients, 0);
+	if (recipients_string)
+	    printf ("> To: %s\n",
+		    recipients_string);
+	recipients = g_mime_message_get_recipients (message, GMIME_RECIPIENT_TYPE_CC);
+	recipients_string = internet_address_list_to_string (recipients, 0);
+	if (recipients_string)
+	    printf ("> Cc: %s\n",
+		    recipients_string);
+	printf ("> Subject: %s\n", g_mime_message_get_subject (message));
+	printf ("> Date: %s\n", g_mime_message_get_date_as_string (message));
+	printf (">\n");
+    } else if (GMIME_IS_PART (node->part)) {
+	GMimeContentType *content_type = g_mime_object_get_content_type (node->part);
+	GMimeContentDisposition *disposition = g_mime_object_get_content_disposition (node->part);
 
-static void
-reply_part_content (GMimeObject *part)
-{
-    GMimeContentType *content_type = g_mime_object_get_content_type (GMIME_OBJECT (part));
-    GMimeContentDisposition *disposition = g_mime_object_get_content_disposition (part);
-
-    if (g_mime_content_type_is_type (content_type, "multipart", "*") ||
-	g_mime_content_type_is_type (content_type, "message", "rfc822"))
-    {
-	/* Output nothing, since multipart subparts will be handled individually. */
-    }
-    else if (g_mime_content_type_is_type (content_type, "application", "pgp-encrypted") ||
-	     g_mime_content_type_is_type (content_type, "application", "pgp-signature"))
-    {
-	/* Ignore PGP/MIME cruft parts */
-    }
-    else if (g_mime_content_type_is_type (content_type, "text", "*") &&
-	!g_mime_content_type_is_type (content_type, "text", "html"))
-    {
-	GMimeStream *stream_stdout = NULL, *stream_filter = NULL;
-	GMimeDataWrapper *wrapper;
-	const char *charset;
-
-	charset = g_mime_object_get_content_type_parameter (part, "charset");
-	stream_stdout = g_mime_stream_file_new (stdout);
-	if (stream_stdout) {
+	if (g_mime_content_type_is_type (content_type, "application", "pgp-encrypted") ||
+	    g_mime_content_type_is_type (content_type, "application", "pgp-signature")) {
+	    /* Ignore PGP/MIME cruft parts */
+	} else if (g_mime_content_type_is_type (content_type, "text", "*") &&
+		   !g_mime_content_type_is_type (content_type, "text", "html")) {
+	    GMimeStream *stream_stdout = g_mime_stream_file_new (stdout);
 	    g_mime_stream_file_set_owner (GMIME_STREAM_FILE (stream_stdout), FALSE);
-	    stream_filter = g_mime_stream_filter_new(stream_stdout);
-	    if (charset) {
-		g_mime_stream_filter_add(GMIME_STREAM_FILTER(stream_filter),
-					 g_mime_filter_charset_new(charset, "UTF-8"));
-	    }
-	}
-	g_mime_stream_filter_add(GMIME_STREAM_FILTER(stream_filter),
-				 g_mime_filter_reply_new(TRUE));
-	wrapper = g_mime_part_get_content_object (GMIME_PART (part));
-	if (wrapper && stream_filter)
-	    g_mime_data_wrapper_write_to_stream (wrapper, stream_filter);
-	if (stream_filter)
-	    g_object_unref(stream_filter);
-	if (stream_stdout)
+	    show_text_part_content (node->part, stream_stdout, NOTMUCH_SHOW_TEXT_PART_REPLY);
 	    g_object_unref(stream_stdout);
-    }
-    else
-    {
-	if (disposition &&
-	    strcmp (disposition->disposition, GMIME_DISPOSITION_ATTACHMENT) == 0)
-	{
-	    const char *filename = g_mime_part_get_filename (GMIME_PART (part));
+	} else if (disposition &&
+		   strcmp (disposition->disposition, GMIME_DISPOSITION_ATTACHMENT) == 0) {
+	    const char *filename = g_mime_part_get_filename (GMIME_PART (node->part));
 	    printf ("Attachment: %s (%s)\n", filename,
 		    g_mime_content_type_to_string (content_type));
-	}
-	else
-	{
+	} else {
 	    printf ("Non-text part: %s\n",
 		    g_mime_content_type_to_string (content_type));
 	}
     }
+
+    for (i = 0; i < node->nchildren; i++)
+	format_part_reply (mime_node_child (node, i));
 }
 
 /* Is the given address configured as one of the user's "personal" or
@@ -505,6 +456,61 @@ guess_from_received_header (notmuch_config_t *config, notmuch_message_t *message
     return NULL;
 }
 
+static GMimeMessage *
+create_reply_message(void *ctx,
+		     notmuch_config_t *config,
+		     notmuch_message_t *message,
+		     notmuch_bool_t reply_all)
+{
+    const char *subject, *from_addr = NULL;
+    const char *in_reply_to, *orig_references, *references;
+
+    /* The 1 means we want headers in a "pretty" order. */
+    GMimeMessage *reply = g_mime_message_new (1);
+    if (reply == NULL) {
+	fprintf (stderr, "Out of memory\n");
+	return NULL;
+    }
+
+    subject = notmuch_message_get_header (message, "subject");
+    if (subject) {
+	if (strncasecmp (subject, "Re:", 3))
+	    subject = talloc_asprintf (ctx, "Re: %s", subject);
+	g_mime_message_set_subject (reply, subject);
+    }
+
+    from_addr = add_recipients_from_message (reply, config,
+					     message, reply_all);
+
+    if (from_addr == NULL)
+	from_addr = guess_from_received_header (config, message);
+
+    if (from_addr == NULL)
+	from_addr = notmuch_config_get_user_primary_email (config);
+
+    from_addr = talloc_asprintf (ctx, "%s <%s>",
+				 notmuch_config_get_user_name (config),
+				 from_addr);
+    g_mime_object_set_header (GMIME_OBJECT (reply),
+			      "From", from_addr);
+
+    in_reply_to = talloc_asprintf (ctx, "<%s>",
+				   notmuch_message_get_message_id (message));
+
+    g_mime_object_set_header (GMIME_OBJECT (reply),
+			      "In-Reply-To", in_reply_to);
+
+    orig_references = notmuch_message_get_header (message, "references");
+    references = talloc_asprintf (ctx, "%s%s%s",
+				  orig_references ? orig_references : "",
+				  orig_references ? " " : "",
+				  in_reply_to);
+    g_mime_object_set_header (GMIME_OBJECT (reply),
+			      "References", references);
+
+    return reply;
+}
+
 static int
 notmuch_reply_format_default(void *ctx,
 			     notmuch_config_t *config,
@@ -515,9 +521,7 @@ notmuch_reply_format_default(void *ctx,
     GMimeMessage *reply;
     notmuch_messages_t *messages;
     notmuch_message_t *message;
-    const char *subject, *from_addr = NULL;
-    const char *in_reply_to, *orig_references, *references;
-    const notmuch_show_format_t *format = &format_reply;
+    mime_node_t *root;
 
     for (messages = notmuch_query_search_messages (query);
 	 notmuch_messages_valid (messages);
@@ -525,62 +529,74 @@ notmuch_reply_format_default(void *ctx,
     {
 	message = notmuch_messages_get (messages);
 
-	/* The 1 means we want headers in a "pretty" order. */
-	reply = g_mime_message_new (1);
-	if (reply == NULL) {
-	    fprintf (stderr, "Out of memory\n");
+	reply = create_reply_message (ctx, config, message, reply_all);
+
+	/* If reply creation failed, we're out of memory, so don't
+	 * bother trying any more messages.
+	 */
+	if (!reply) {
+	    notmuch_message_destroy (message);
 	    return 1;
 	}
-
-	subject = notmuch_message_get_header (message, "subject");
-	if (subject) {
-	    if (strncasecmp (subject, "Re:", 3))
-		subject = talloc_asprintf (ctx, "Re: %s", subject);
-	    g_mime_message_set_subject (reply, subject);
-	}
-
-	from_addr = add_recipients_from_message (reply, config, message,
-						 reply_all);
-
-	if (from_addr == NULL)
-	    from_addr = guess_from_received_header (config, message);
-
-	if (from_addr == NULL)
-	    from_addr = notmuch_config_get_user_primary_email (config);
-
-	from_addr = talloc_asprintf (ctx, "%s <%s>",
-				     notmuch_config_get_user_name (config),
-				     from_addr);
-	g_mime_object_set_header (GMIME_OBJECT (reply),
-				  "From", from_addr);
-
-	in_reply_to = talloc_asprintf (ctx, "<%s>",
-			     notmuch_message_get_message_id (message));
-
-	g_mime_object_set_header (GMIME_OBJECT (reply),
-				  "In-Reply-To", in_reply_to);
-
-	orig_references = notmuch_message_get_header (message, "references");
-	references = talloc_asprintf (ctx, "%s%s%s",
-				      orig_references ? orig_references : "",
-				      orig_references ? " " : "",
-				      in_reply_to);
-	g_mime_object_set_header (GMIME_OBJECT (reply),
-				  "References", references);
 
 	show_reply_headers (reply);
 
 	g_object_unref (G_OBJECT (reply));
 	reply = NULL;
 
-	printf ("On %s, %s wrote:\n",
-		notmuch_message_get_header (message, "date"),
-		notmuch_message_get_header (message, "from"));
-
-	show_message_body (message, format, params);
+	if (mime_node_open (ctx, message, params->cryptoctx, params->decrypt,
+			    &root) == NOTMUCH_STATUS_SUCCESS) {
+	    format_part_reply (root);
+	    talloc_free (root);
+	}
 
 	notmuch_message_destroy (message);
     }
+    return 0;
+}
+
+static int
+notmuch_reply_format_json(void *ctx,
+			  notmuch_config_t *config,
+			  notmuch_query_t *query,
+			  notmuch_show_params_t *params,
+			  notmuch_bool_t reply_all)
+{
+    GMimeMessage *reply;
+    notmuch_messages_t *messages;
+    notmuch_message_t *message;
+    mime_node_t *node;
+
+    if (notmuch_query_count_messages (query) != 1) {
+	fprintf (stderr, "Error: search term did not match precisely one message.\n");
+	return 1;
+    }
+
+    messages = notmuch_query_search_messages (query);
+    message = notmuch_messages_get (messages);
+    if (mime_node_open (ctx, message, params->cryptoctx, params->decrypt,
+			&node) != NOTMUCH_STATUS_SUCCESS)
+	return 1;
+
+    reply = create_reply_message (ctx, config, message, reply_all);
+    if (!reply)
+	return 1;
+
+    /* The headers of the reply message we've created */
+    printf ("{\"reply-headers\": ");
+    format_headers_json (ctx, reply, TRUE);
+    g_object_unref (G_OBJECT (reply));
+    reply = NULL;
+
+    /* Start the original */
+    printf (", \"original\": ");
+
+    format_part_json (ctx, node, TRUE);
+
+    /* End */
+    printf ("}\n");
+    notmuch_message_destroy (message);
+
     return 0;
 }
 
@@ -646,6 +662,7 @@ notmuch_reply_format_headers_only(void *ctx,
 
 enum {
     FORMAT_DEFAULT,
+    FORMAT_JSON,
     FORMAT_HEADERS_ONLY,
 };
 
@@ -665,6 +682,7 @@ notmuch_reply_command (void *ctx, int argc, char *argv[])
     notmuch_opt_desc_t options[] = {
 	{ NOTMUCH_OPT_KEYWORD, &format, "format", 'f',
 	  (notmuch_keyword_t []){ { "default", FORMAT_DEFAULT },
+				  { "json", FORMAT_JSON },
 				  { "headers-only", FORMAT_HEADERS_ONLY },
 				  { 0, 0 } } },
 	{ NOTMUCH_OPT_KEYWORD, &reply_all, "reply-to", 'r',
@@ -683,6 +701,8 @@ notmuch_reply_command (void *ctx, int argc, char *argv[])
 
     if (format == FORMAT_HEADERS_ONLY)
 	reply_format_func = notmuch_reply_format_headers_only;
+    else if (format == FORMAT_JSON)
+	reply_format_func = notmuch_reply_format_json;
     else
 	reply_format_func = notmuch_reply_format_default;
 
@@ -720,9 +740,8 @@ notmuch_reply_command (void *ctx, int argc, char *argv[])
 	return 1;
     }
 
-    notmuch = notmuch_database_open (notmuch_config_get_database_path (config),
-				     NOTMUCH_DATABASE_MODE_READ_ONLY);
-    if (notmuch == NULL)
+    if (notmuch_database_open (notmuch_config_get_database_path (config),
+			       NOTMUCH_DATABASE_MODE_READ_ONLY, &notmuch))
 	return 1;
 
     query = notmuch_query_create (notmuch, query_string);
@@ -735,7 +754,7 @@ notmuch_reply_command (void *ctx, int argc, char *argv[])
 	return 1;
 
     notmuch_query_destroy (query);
-    notmuch_database_close (notmuch);
+    notmuch_database_destroy (notmuch);
 
     if (params.cryptoctx)
 	g_object_unref(params.cryptoctx);

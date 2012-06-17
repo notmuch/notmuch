@@ -133,26 +133,37 @@ typedef struct _notmuch_filenames notmuch_filenames_t;
  *
  * After a successful call to notmuch_database_create, the returned
  * database will be open so the caller should call
- * notmuch_database_close when finished with it.
+ * notmuch_database_destroy when finished with it.
  *
  * The database will not yet have any data in it
  * (notmuch_database_create itself is a very cheap function). Messages
  * contained within 'path' can be added to the database by calling
  * notmuch_database_add_message.
  *
- * In case of any failure, this function returns NULL, (after printing
- * an error message on stderr).
+ * In case of any failure, this function returns an error status and
+ * sets *database to NULL (after printing an error message on stderr).
+ *
+ * Return value:
+ *
+ * NOTMUCH_STATUS_SUCCESS: Successfully created the database.
+ *
+ * NOTMUCH_STATUS_NULL_POINTER: The given 'path' argument is NULL.
+ *
+ * NOTMUCH_STATUS_OUT_OF_MEMORY: Out of memory.
+ *
+ * NOTMUCH_STATUS_FILE_ERROR: An error occurred trying to create the
+ *	database file (such as permission denied, or file not found,
+ *	etc.), or the database already exists.
+ *
+ * NOTMUCH_STATUS_XAPIAN_EXCEPTION: A Xapian exception occurred.
  */
-notmuch_database_t *
-notmuch_database_create (const char *path);
+notmuch_status_t
+notmuch_database_create (const char *path, notmuch_database_t **database);
 
 typedef enum {
     NOTMUCH_DATABASE_MODE_READ_ONLY = 0,
     NOTMUCH_DATABASE_MODE_READ_WRITE
 } notmuch_database_mode_t;
-
-/* XXX: I think I'd like this to take an extra argument of
- * notmuch_status_t* for returning a status value on failure. */
 
 /* Open an existing notmuch database located at 'path'.
  *
@@ -165,20 +176,49 @@ typedef enum {
  * An existing notmuch database can be identified by the presence of a
  * directory named ".notmuch" below 'path'.
  *
- * The caller should call notmuch_database_close when finished with
+ * The caller should call notmuch_database_destroy when finished with
  * this database.
  *
- * In case of any failure, this function returns NULL, (after printing
- * an error message on stderr).
+ * In case of any failure, this function returns an error status and
+ * sets *database to NULL (after printing an error message on stderr).
+ *
+ * Return value:
+ *
+ * NOTMUCH_STATUS_SUCCESS: Successfully opened the database.
+ *
+ * NOTMUCH_STATUS_NULL_POINTER: The given 'path' argument is NULL.
+ *
+ * NOTMUCH_STATUS_OUT_OF_MEMORY: Out of memory.
+ *
+ * NOTMUCH_STATUS_FILE_ERROR: An error occurred trying to open the
+ *	database file (such as permission denied, or file not found,
+ *	etc.), or the database version is unknown.
+ *
+ * NOTMUCH_STATUS_XAPIAN_EXCEPTION: A Xapian exception occurred.
  */
-notmuch_database_t *
+notmuch_status_t
 notmuch_database_open (const char *path,
-		       notmuch_database_mode_t mode);
+		       notmuch_database_mode_t mode,
+		       notmuch_database_t **database);
 
-/* Close the given notmuch database, freeing all associated
- * resources. See notmuch_database_open. */
+/* Close the given notmuch database.
+ *
+ * After notmuch_database_close has been called, calls to other
+ * functions on objects derived from this database may either behave
+ * as if the database had not been closed (e.g., if the required data
+ * has been cached) or may fail with a
+ * NOTMUCH_STATUS_XAPIAN_EXCEPTION.
+ *
+ * notmuch_database_close can be called multiple times.  Later calls
+ * have no effect.
+ */
 void
 notmuch_database_close (notmuch_database_t *database);
+
+/* Destroy the notmuch database, closing it if necessary and freeing
+* all associated resources. */
+void
+notmuch_database_destroy (notmuch_database_t *database);
 
 /* Return the database path of the given database.
  *
@@ -260,11 +300,22 @@ notmuch_database_end_atomic (notmuch_database_t *notmuch);
  * (see notmuch_database_get_path), or else should be an absolute path
  * with initial components that match the path of 'database'.
  *
- * Can return NULL if a Xapian exception occurs.
+ * If this directory object does not exist in the database, this
+ * returns NOTMUCH_STATUS_SUCCESS and sets *directory to NULL.
+ *
+ * Return value:
+ *
+ * NOTMUCH_STATUS_SUCCESS: Successfully retrieved directory.
+ *
+ * NOTMUCH_STATUS_NULL_POINTER: The given 'directory' argument is NULL.
+ *
+ * NOTMUCH_STATUS_XAPIAN_EXCEPTION: A Xapian exception occurred;
+ *	directory not retrieved.
  */
-notmuch_directory_t *
+notmuch_status_t
 notmuch_database_get_directory (notmuch_database_t *database,
-				const char *path);
+				const char *path,
+				notmuch_directory_t **directory);
 
 /* Add a new message to the given notmuch database or associate an
  * additional filename with an existing message.
@@ -448,6 +499,26 @@ typedef enum {
 /* Return the query_string of this query. See notmuch_query_create. */
 const char *
 notmuch_query_get_query_string (notmuch_query_t *query);
+
+/* Specify whether to omit excluded results or simply flag them.  By
+ * default, this is set to TRUE.
+ *
+ * If this is TRUE, notmuch_query_search_messages will omit excluded
+ * messages from the results.  notmuch_query_search_threads will omit
+ * threads that match only in excluded messages, but will include all
+ * messages in threads that match in at least one non-excluded
+ * message.
+ *
+ * The performance difference when calling
+ * notmuch_query_search_messages should be relatively small (and both
+ * should be very fast).  However, in some cases,
+ * notmuch_query_search_threads is very much faster when omitting
+ * excluded messages as it does not need to construct the threads that
+ * only match in excluded messages.
+ */
+
+void
+notmuch_query_set_omit_excluded (notmuch_query_t *query, notmuch_bool_t omit_excluded);
 
 /* Specify the sorting desired for this query. */
 void
@@ -665,8 +736,10 @@ notmuch_thread_get_toplevel_messages (notmuch_thread_t *thread);
 /* Get the number of messages in 'thread' that matched the search.
  *
  * This count includes only the messages in this thread that were
- * matched by the search from which the thread was created. Contrast
- * with notmuch_thread_get_total_messages() .
+ * matched by the search from which the thread was created and were
+ * not excluded by any exclude tags passed in with the query (see
+ * notmuch_query_add_tag_exclude). Contrast with
+ * notmuch_thread_get_total_messages() .
  */
 int
 notmuch_thread_get_matched_messages (notmuch_thread_t *thread);
@@ -895,7 +968,8 @@ notmuch_message_get_filenames (notmuch_message_t *message);
 
 /* Message flags */
 typedef enum _notmuch_message_flag {
-    NOTMUCH_MESSAGE_FLAG_MATCH
+    NOTMUCH_MESSAGE_FLAG_MATCH,
+    NOTMUCH_MESSAGE_FLAG_EXCLUDED
 } notmuch_message_flag_t;
 
 /* Get a value of a flag for the email corresponding to 'message'. */

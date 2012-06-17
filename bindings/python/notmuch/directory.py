@@ -14,7 +14,7 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with notmuch.  If not, see <http://www.gnu.org/licenses/>.
 
-Copyright 2010 Sebastian Spaeth <Sebastian@SSpaeth.de>'
+Copyright 2010 Sebastian Spaeth <Sebastian@SSpaeth.de>
 """
 
 from ctypes import c_uint, c_long
@@ -181,5 +181,5 @@ class Directory(object):
 
     def __del__(self):
         """Close and free the Directory"""
-        if self._dir_p is not None:
+        if self._dir_p:
             self._destroy(self._dir_p)

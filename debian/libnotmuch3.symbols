@@ -1,8 +1,9 @@
-libnotmuch.so.2 libnotmuch2 #MINVER#
+libnotmuch.so.3 libnotmuch3 #MINVER#
  notmuch_database_add_message@Base 0.3
  notmuch_database_begin_atomic@Base 0.9~rc1
- notmuch_database_close@Base 0.3
+ notmuch_database_close@Base 0.13~rc1
  notmuch_database_create@Base 0.3
+ notmuch_database_destroy@Base 0.13~rc1
  notmuch_database_end_atomic@Base 0.9~rc1
  notmuch_database_find_message@Base 0.9~rc2
  notmuch_database_find_message_by_filename@Base 0.9~rc2
@@ -55,6 +56,7 @@ libnotmuch.so.2 libnotmuch2 #MINVER#
  notmuch_query_get_sort@Base 0.4
  notmuch_query_search_messages@Base 0.3
  notmuch_query_search_threads@Base 0.3
+ notmuch_query_set_omit_excluded@Base 0.13~rc1
  notmuch_query_set_sort@Base 0.3
  notmuch_status_to_string@Base 0.3
  notmuch_tags_destroy@Base 0.3

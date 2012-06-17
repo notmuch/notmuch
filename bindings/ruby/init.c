@@ -1,6 +1,6 @@
 /* The Ruby interface to the notmuch mail library
  *
- * Copyright © 2010, 2011 Ali Polatel
+ * Copyright © 2010, 2011, 2012 Ali Polatel
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -95,6 +95,12 @@ Init_notmuch (void)
      * Message flag "match"
      */
     rb_define_const (mod, "MESSAGE_FLAG_MATCH", INT2FIX (NOTMUCH_MESSAGE_FLAG_MATCH));
+    /*
+     * Document-const: Notmuch::MESSAGE_FLAG_EXCLUDED
+     *
+     * Message flag "excluded"
+     */
+    rb_define_const (mod, "MESSAGE_FLAG_EXCLUDED", INT2FIX (NOTMUCH_MESSAGE_FLAG_EXCLUDED));
     /*
      * Document-const: Notmuch::TAG_MAX
      *
@@ -234,8 +240,11 @@ Init_notmuch (void)
     rb_define_method (notmuch_rb_cQuery, "sort", notmuch_rb_query_get_sort, 0); /* in query.c */
     rb_define_method (notmuch_rb_cQuery, "sort=", notmuch_rb_query_set_sort, 1); /* in query.c */
     rb_define_method (notmuch_rb_cQuery, "to_s", notmuch_rb_query_get_string, 0); /* in query.c */
+    rb_define_method (notmuch_rb_cQuery, "add_tag_exclude", notmuch_rb_query_add_tag_exclude, 1); /* in query.c */
+    rb_define_method (notmuch_rb_cQuery, "omit_excluded=", notmuch_rb_query_set_omit_excluded, 1); /* in query.c */
     rb_define_method (notmuch_rb_cQuery, "search_threads", notmuch_rb_query_search_threads, 0); /* in query.c */
     rb_define_method (notmuch_rb_cQuery, "search_messages", notmuch_rb_query_search_messages, 0); /* in query.c */
+    rb_define_method (notmuch_rb_cQuery, "count_messages", notmuch_rb_query_count_messages, 0); /* in query.c */
 
     /*
      * Document-class: Notmuch::Threads

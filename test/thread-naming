@@ -65,7 +65,7 @@ test_expect_equal "$output" "thread:XXX   2001-01-12 [6/8] Notmuch Test Suite; t
 
 test_begin_subtest 'Test order of messages in "notmuch show"'
 output=$(notmuch show thread-naming | notmuch_show_sanitize)
-test_expect_equal "$output" "message{ id:msg-$(printf "%03d" $first)@notmuch-test-suite depth:0 match:1 filename:/XXX/mail/msg-$(printf "%03d" $first)
+test_expect_equal "$output" "message{ id:msg-$(printf "%03d" $first)@notmuch-test-suite depth:0 match:1 excluded:0 filename:/XXX/mail/msg-$(printf "%03d" $first)
 header{
 Notmuch Test Suite <test_suite@notmuchmail.org> (2001-01-05) (unread)
 Subject: thread-naming: Initial thread subject
@@ -79,7 +79,7 @@ This is just a test message (#$first)
 part}
 body}
 message}
-message{ id:msg-$(printf "%03d" $((first + 1)))@notmuch-test-suite depth:1 match:1 filename:/XXX/mail/msg-$(printf "%03d" $((first + 1)))
+message{ id:msg-$(printf "%03d" $((first + 1)))@notmuch-test-suite depth:1 match:1 excluded:0 filename:/XXX/mail/msg-$(printf "%03d" $((first + 1)))
 header{
 Notmuch Test Suite <test_suite@notmuchmail.org> (2001-01-06) (inbox unread)
 Subject: thread-naming: Older changed subject
@@ -93,7 +93,7 @@ This is just a test message (#$((first + 1)))
 part}
 body}
 message}
-message{ id:msg-$(printf "%03d" $((first + 2)))@notmuch-test-suite depth:1 match:1 filename:/XXX/mail/msg-$(printf "%03d" $((first + 2)))
+message{ id:msg-$(printf "%03d" $((first + 2)))@notmuch-test-suite depth:1 match:1 excluded:0 filename:/XXX/mail/msg-$(printf "%03d" $((first + 2)))
 header{
 Notmuch Test Suite <test_suite@notmuchmail.org> (2001-01-07) (inbox unread)
 Subject: thread-naming: Newer changed subject
@@ -107,7 +107,7 @@ This is just a test message (#$((first + 2)))
 part}
 body}
 message}
-message{ id:msg-$(printf "%03d" $((first + 3)))@notmuch-test-suite depth:1 match:1 filename:/XXX/mail/msg-$(printf "%03d" $((first + 3)))
+message{ id:msg-$(printf "%03d" $((first + 3)))@notmuch-test-suite depth:1 match:1 excluded:0 filename:/XXX/mail/msg-$(printf "%03d" $((first + 3)))
 header{
 Notmuch Test Suite <test_suite@notmuchmail.org> (2001-01-08) (unread)
 Subject: thread-naming: Final thread subject
@@ -121,7 +121,7 @@ This is just a test message (#$((first + 3)))
 part}
 body}
 message}
-message{ id:msg-$(printf "%03d" $((first + 4)))@notmuch-test-suite depth:1 match:1 filename:/XXX/mail/msg-$(printf "%03d" $((first + 4)))
+message{ id:msg-$(printf "%03d" $((first + 4)))@notmuch-test-suite depth:1 match:1 excluded:0 filename:/XXX/mail/msg-$(printf "%03d" $((first + 4)))
 header{
 Notmuch Test Suite <test_suite@notmuchmail.org> (2001-01-09) (inbox unread)
 Subject: Re: thread-naming: Initial thread subject
@@ -135,7 +135,7 @@ This is just a test message (#$((first + 4)))
 part}
 body}
 message}
-message{ id:msg-$(printf "%03d" $((first + 5)))@notmuch-test-suite depth:1 match:1 filename:/XXX/mail/msg-$(printf "%03d" $((first + 5)))
+message{ id:msg-$(printf "%03d" $((first + 5)))@notmuch-test-suite depth:1 match:1 excluded:0 filename:/XXX/mail/msg-$(printf "%03d" $((first + 5)))
 header{
 Notmuch Test Suite <test_suite@notmuchmail.org> (2001-01-10) (inbox unread)
 Subject: Aw: thread-naming: Initial thread subject
@@ -149,7 +149,7 @@ This is just a test message (#$((first + 5)))
 part}
 body}
 message}
-message{ id:msg-$(printf "%03d" $((first + 6)))@notmuch-test-suite depth:1 match:1 filename:/XXX/mail/msg-$(printf "%03d" $((first + 6)))
+message{ id:msg-$(printf "%03d" $((first + 6)))@notmuch-test-suite depth:1 match:1 excluded:0 filename:/XXX/mail/msg-$(printf "%03d" $((first + 6)))
 header{
 Notmuch Test Suite <test_suite@notmuchmail.org> (2001-01-11) (inbox unread)
 Subject: Vs: thread-naming: Initial thread subject
@@ -163,7 +163,7 @@ This is just a test message (#$((first + 6)))
 part}
 body}
 message}
-message{ id:msg-$(printf "%03d" $((first + 7)))@notmuch-test-suite depth:1 match:1 filename:/XXX/mail/msg-$(printf "%03d" $((first + 7)))
+message{ id:msg-$(printf "%03d" $((first + 7)))@notmuch-test-suite depth:1 match:1 excluded:0 filename:/XXX/mail/msg-$(printf "%03d" $((first + 7)))
 header{
 Notmuch Test Suite <test_suite@notmuchmail.org> (2001-01-12) (inbox unread)
 Subject: Sv: thread-naming: Initial thread subject

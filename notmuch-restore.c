@@ -20,6 +20,81 @@
 
 #include "notmuch-client.h"
 
+static int
+tag_message (notmuch_database_t *notmuch, const char *message_id,
+	     char *file_tags, notmuch_bool_t remove_all,
+	     notmuch_bool_t synchronize_flags)
+{
+    notmuch_status_t status;
+    notmuch_tags_t *db_tags;
+    char *db_tags_str;
+    notmuch_message_t *message = NULL;
+    const char *tag;
+    char *next;
+    int ret = 0;
+
+    status = notmuch_database_find_message (notmuch, message_id, &message);
+    if (status || message == NULL) {
+	fprintf (stderr, "Warning: Cannot apply tags to %smessage: %s\n",
+		 message ? "" : "missing ", message_id);
+	if (status)
+	    fprintf (stderr, "%s\n", notmuch_status_to_string(status));
+	return 1;
+    }
+
+    /* In order to detect missing messages, this check/optimization is
+     * intentionally done *after* first finding the message. */
+    if (!remove_all && (file_tags == NULL || *file_tags == '\0'))
+	goto DONE;
+
+    db_tags_str = NULL;
+    for (db_tags = notmuch_message_get_tags (message);
+	 notmuch_tags_valid (db_tags);
+	 notmuch_tags_move_to_next (db_tags)) {
+	tag = notmuch_tags_get (db_tags);
+
+	if (db_tags_str)
+	    db_tags_str = talloc_asprintf_append (db_tags_str, " %s", tag);
+	else
+	    db_tags_str = talloc_strdup (message, tag);
+    }
+
+    if (((file_tags == NULL || *file_tags == '\0') &&
+	 (db_tags_str == NULL || *db_tags_str == '\0')) ||
+	(file_tags && db_tags_str && strcmp (file_tags, db_tags_str) == 0))
+	goto DONE;
+
+    notmuch_message_freeze (message);
+
+    if (remove_all)
+	notmuch_message_remove_all_tags (message);
+
+    next = file_tags;
+    while (next) {
+	tag = strsep (&next, " ");
+	if (*tag == '\0')
+	    continue;
+	status = notmuch_message_add_tag (message, tag);
+	if (status) {
+	    fprintf (stderr, "Error applying tag %s to message %s:\n",
+		     tag, message_id);
+	    fprintf (stderr, "%s\n", notmuch_status_to_string (status));
+	    ret = 1;
+	}
+    }
+
+    notmuch_message_thaw (message);
+
+    if (synchronize_flags)
+	notmuch_message_tags_to_maildir_flags (message);
+
+DONE:
+    if (message)
+	notmuch_message_destroy (message);
+
+    return ret;
+}
+
 int
 notmuch_restore_command (unused (void *ctx), int argc, char *argv[])
 {
@@ -40,9 +115,8 @@ notmuch_restore_command (unused (void *ctx), int argc, char *argv[])
     if (config == NULL)
 	return 1;
 
-    notmuch = notmuch_database_open (notmuch_config_get_database_path (config),
-				     NOTMUCH_DATABASE_MODE_READ_WRITE);
-    if (notmuch == NULL)
+    if (notmuch_database_open (notmuch_config_get_database_path (config),
+			       NOTMUCH_DATABASE_MODE_READ_WRITE, &notmuch))
 	return 1;
 
     synchronize_flags = notmuch_config_get_maildir_synchronize_flags (config);
@@ -88,11 +162,7 @@ notmuch_restore_command (unused (void *ctx), int argc, char *argv[])
 
     while ((line_len = getline (&line, &line_size, input)) != -1) {
 	regmatch_t match[3];
-	char *message_id, *file_tags, *tag, *next;
-	notmuch_message_t *message = NULL;
-	notmuch_status_t status;
-	notmuch_tags_t *db_tags;
-	char *db_tags_str;
+	char *message_id, *file_tags;
 
 	chomp_newline (line);
 
@@ -109,72 +179,9 @@ notmuch_restore_command (unused (void *ctx), int argc, char *argv[])
 	file_tags = xstrndup (line + match[2].rm_so,
 			      match[2].rm_eo - match[2].rm_so);
 
-	status = notmuch_database_find_message (notmuch, message_id, &message);
-	if (status || message == NULL) {
-	    fprintf (stderr, "Warning: Cannot apply tags to %smessage: %s\n",
-		     message ? "" : "missing ", message_id);
-	    if (status)
-		fprintf (stderr, "%s\n",
-			 notmuch_status_to_string(status));
-	    goto NEXT_LINE;
-	}
+	tag_message (notmuch, message_id, file_tags, !accumulate,
+		     synchronize_flags);
 
-	/* In order to detect missing messages, this check/optimization is
-	 * intentionally done *after* first finding the message.  */
-	if (accumulate && (file_tags == NULL || *file_tags == '\0'))
-	{
-	    goto NEXT_LINE;
-	}
-
-	db_tags_str = NULL;
-	for (db_tags = notmuch_message_get_tags (message);
-	     notmuch_tags_valid (db_tags);
-	     notmuch_tags_move_to_next (db_tags))
-	{
-	    const char *tag = notmuch_tags_get (db_tags);
-
-	    if (db_tags_str)
-		db_tags_str = talloc_asprintf_append (db_tags_str, " %s", tag);
-	    else
-		db_tags_str = talloc_strdup (message, tag);
-	}
-
-	if (((file_tags == NULL || *file_tags == '\0') &&
-	     (db_tags_str == NULL || *db_tags_str == '\0')) ||
-	    (file_tags && db_tags_str && strcmp (file_tags, db_tags_str) == 0))
-	{
-	    goto NEXT_LINE;
-	}
-
-	notmuch_message_freeze (message);
-
-	if (!accumulate)
-	    notmuch_message_remove_all_tags (message);
-
-	next = file_tags;
-	while (next) {
-	    tag = strsep (&next, " ");
-	    if (*tag == '\0')
-		continue;
-	    status = notmuch_message_add_tag (message, tag);
-	    if (status) {
-		fprintf (stderr,
-			 "Error applying tag %s to message %s:\n",
-			 tag, message_id);
-		fprintf (stderr, "%s\n",
-			 notmuch_status_to_string (status));
-	    }
-	}
-
-	notmuch_message_thaw (message);
-
-	if (synchronize_flags)
-	    notmuch_message_tags_to_maildir_flags (message);
-
-      NEXT_LINE:
-	if (message)
-	    notmuch_message_destroy (message);
-	message = NULL;
 	free (message_id);
 	free (file_tags);
     }
@@ -184,7 +191,7 @@ notmuch_restore_command (unused (void *ctx), int argc, char *argv[])
     if (line)
 	free (line);
 
-    notmuch_database_close (notmuch);
+    notmuch_database_destroy (notmuch);
     if (input != stdin)
 	fclose (input);
 

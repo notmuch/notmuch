@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 # coding: utf-8
-# Copyright 2010, 2011 Ali Polatel <alip@exherbo.org>
+# Copyright 2010, 2011, 2012 Ali Polatel <alip@exherbo.org>
 # Distributed under the terms of the GNU General Public License v3
 
 require 'mkmf'

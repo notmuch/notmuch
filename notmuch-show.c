@@ -19,108 +19,42 @@
  */
 
 #include "notmuch-client.h"
+#include "gmime-filter-reply.h"
 
-static void
-format_headers_message_part_text (GMimeMessage *message);
-
-static void
+static notmuch_status_t
 format_part_text (const void *ctx, mime_node_t *node,
 		  int indent, const notmuch_show_params_t *params);
 
 static const notmuch_show_format_t format_text = {
-    .message_set_start = "",
     .part = format_part_text,
-    .message_set_sep = "",
-    .message_set_end = ""
 };
 
-static void
-format_message_json (const void *ctx,
-		     notmuch_message_t *message,
-		     unused (int indent));
-static void
-format_headers_json (const void *ctx,
-		     notmuch_message_t *message);
+static notmuch_status_t
+format_part_json_entry (const void *ctx, mime_node_t *node,
+			int indent, const notmuch_show_params_t *params);
 
-static void
-format_headers_message_part_json (GMimeMessage *message);
-
-static void
-format_part_start_json (unused (GMimeObject *part),
-			int *part_count);
-
-static void
-format_part_encstatus_json (int status);
-
-static void
-#ifdef GMIME_ATLEAST_26
-format_part_sigstatus_json (GMimeSignatureList* siglist);
-#else
-format_part_sigstatus_json (const GMimeSignatureValidity* validity);
-#endif
-
-static void
-format_part_content_json (GMimeObject *part);
-
-static void
-format_part_end_json (GMimeObject *part);
-
-/* Any changes to the JSON format should be reflected in the file
- * devel/schemata. */
 static const notmuch_show_format_t format_json = {
-    "[", NULL,
-	"{", format_message_json,
-	    "\"headers\": {", format_headers_json, format_headers_message_part_json, "}",
-	    ", \"body\": [",
-	        format_part_start_json,
-	        format_part_encstatus_json,
-	        format_part_sigstatus_json,
-	        format_part_content_json,
-	        format_part_end_json,
-	        ", ",
-	    "]",
-	"}", ", ",
-    "]"
+    .message_set_start = "[",
+    .part = format_part_json_entry,
+    .message_set_sep = ", ",
+    .message_set_end = "]"
 };
 
-static void
-format_message_mbox (const void *ctx,
-		     notmuch_message_t *message,
-		     unused (int indent));
+static notmuch_status_t
+format_part_mbox (const void *ctx, mime_node_t *node,
+		  int indent, const notmuch_show_params_t *params);
 
 static const notmuch_show_format_t format_mbox = {
-    "", NULL,
-        "", format_message_mbox,
-            "", NULL, NULL, "",
-            "",
-                NULL,
-                NULL,
-                NULL,
-                NULL,
-                NULL,
-                "",
-            "",
-        "", "",
-    ""
+    .part = format_part_mbox,
 };
 
-static void
-format_part_content_raw (GMimeObject *part);
+static notmuch_status_t
+format_part_raw (unused (const void *ctx), mime_node_t *node,
+		 unused (int indent),
+		 unused (const notmuch_show_params_t *params));
 
 static const notmuch_show_format_t format_raw = {
-    "", NULL,
-	"", NULL,
-	    "", NULL, format_headers_message_part_text, "\n",
-            "",
-                NULL,
-                NULL,
-                NULL,
-                format_part_content_raw,
-                NULL,
-                "",
-            "",
-	"", "",
-    ""
+    .part = format_part_raw,
 };
 
 static const char *
@@ -170,7 +104,7 @@ _get_one_line_summary (const void *ctx, notmuch_message_t *message)
 }
 
 static void
-format_message_json (const void *ctx, notmuch_message_t *message, unused (int indent))
+format_message_json (const void *ctx, notmuch_message_t *message)
 {
     notmuch_tags_t *tags;
     int first = 1;
@@ -181,9 +115,10 @@ format_message_json (const void *ctx, notmuch_message_t *message, unused (int in
     date = notmuch_message_get_date (message);
     relative_date = notmuch_time_relative_date (ctx, date);
 
-    printf ("\"id\": %s, \"match\": %s, \"filename\": %s, \"timestamp\": %ld, \"date_relative\": \"%s\", \"tags\": [",
+    printf ("\"id\": %s, \"match\": %s, \"excluded\": %s, \"filename\": %s, \"timestamp\": %ld, \"date_relative\": \"%s\", \"tags\": [",
 	    json_quote_str (ctx_quote, notmuch_message_get_message_id (message)),
 	    notmuch_message_get_flag (message, NOTMUCH_MESSAGE_FLAG_MATCH) ? "true" : "false",
+	    notmuch_message_get_flag (message, NOTMUCH_MESSAGE_FLAG_EXCLUDED) ? "true" : "false",
 	    json_quote_str (ctx_quote, notmuch_message_get_filename (message)),
 	    date, relative_date);
 
@@ -257,149 +192,64 @@ _is_from_line (const char *line)
 	return 0;
 }
 
-/* Print a message in "mboxrd" format as documented, for example,
- * here:
- *
- * http://qmail.org/qmail-manual-html/man5/mbox.html
- */
-static void
-format_message_mbox (const void *ctx,
-		     notmuch_message_t *message,
-		     unused (int indent))
+void
+format_headers_json (const void *ctx, GMimeMessage *message, notmuch_bool_t reply)
 {
-    const char *filename;
-    FILE *file;
-    const char *from;
-
-    time_t date;
-    struct tm date_gmtime;
-    char date_asctime[26];
-
-    char *line = NULL;
-    size_t line_size;
-    ssize_t line_len;
-
-    filename = notmuch_message_get_filename (message);
-    file = fopen (filename, "r");
-    if (file == NULL) {
-	fprintf (stderr, "Failed to open %s: %s\n",
-		 filename, strerror (errno));
-	return;
-    }
-
-    from = notmuch_message_get_header (message, "from");
-    from = _extract_email_address (ctx, from);
-
-    date = notmuch_message_get_date (message);
-    gmtime_r (&date, &date_gmtime);
-    asctime_r (&date_gmtime, date_asctime);
-
-    printf ("From %s %s", from, date_asctime);
-
-    while ((line_len = getline (&line, &line_size, file)) != -1 ) {
-	if (_is_from_line (line))
-	    putchar ('>');
-	printf ("%s", line);
-    }
-
-    printf ("\n");
-
-    fclose (file);
-}
-
-static void
-format_headers_message_part_text (GMimeMessage *message)
-{
+    void *local = talloc_new (ctx);
     InternetAddressList *recipients;
     const char *recipients_string;
 
-    printf ("Subject: %s\n", g_mime_message_get_subject (message));
-    printf ("From: %s\n", g_mime_message_get_sender (message));
-    recipients = g_mime_message_get_recipients (message, GMIME_RECIPIENT_TYPE_TO);
-    recipients_string = internet_address_list_to_string (recipients, 0);
-    if (recipients_string)
-	printf ("To: %s\n",
-		recipients_string);
-    recipients = g_mime_message_get_recipients (message, GMIME_RECIPIENT_TYPE_CC);
-    recipients_string = internet_address_list_to_string (recipients, 0);
-    if (recipients_string)
-	printf ("Cc: %s\n",
-		recipients_string);
-    printf ("Date: %s\n", g_mime_message_get_date_as_string (message));
-}
-
-static void
-format_headers_json (const void *ctx, notmuch_message_t *message)
-{
-    const char *headers[] = {
-	"Subject", "From", "To", "Cc", "Bcc", "Date"
-    };
-    const char *name, *value;
-    unsigned int i;
-    int first_header = 1;
-    void *ctx_quote = talloc_new (ctx);
-
-    for (i = 0; i < ARRAY_SIZE (headers); i++) {
-	name = headers[i];
-	value = notmuch_message_get_header (message, name);
-	if (value)
-	{
-	    if (!first_header)
-		fputs (", ", stdout);
-	    first_header = 0;
-
-	    printf ("%s: %s",
-		    json_quote_str (ctx_quote, name),
-		    json_quote_str (ctx_quote, value));
-	}
-    }
-
-    talloc_free (ctx_quote);
-}
-
-static void
-format_headers_message_part_json (GMimeMessage *message)
-{
-    void *ctx = talloc_new (NULL);
-    void *ctx_quote = talloc_new (ctx);
-    InternetAddressList *recipients;
-    const char *recipients_string;
-
-    printf ("%s: %s",
-	    json_quote_str (ctx_quote, "From"),
-	    json_quote_str (ctx_quote, g_mime_message_get_sender (message)));
+    printf ("{%s: %s",
+	    json_quote_str (local, "Subject"),
+	    json_quote_str (local, g_mime_message_get_subject (message)));
+    printf (", %s: %s",
+	    json_quote_str (local, "From"),
+	    json_quote_str (local, g_mime_message_get_sender (message)));
     recipients = g_mime_message_get_recipients (message, GMIME_RECIPIENT_TYPE_TO);
     recipients_string = internet_address_list_to_string (recipients, 0);
     if (recipients_string)
 	printf (", %s: %s",
-		json_quote_str (ctx_quote, "To"),
-		json_quote_str (ctx_quote, recipients_string));
+		json_quote_str (local, "To"),
+		json_quote_str (local, recipients_string));
     recipients = g_mime_message_get_recipients (message, GMIME_RECIPIENT_TYPE_CC);
     recipients_string = internet_address_list_to_string (recipients, 0);
     if (recipients_string)
 	printf (", %s: %s",
-		json_quote_str (ctx_quote, "Cc"),
-		json_quote_str (ctx_quote, recipients_string));
-    printf (", %s: %s",
-	    json_quote_str (ctx_quote, "Subject"),
-	    json_quote_str (ctx_quote, g_mime_message_get_subject (message)));
-    printf (", %s: %s",
-	    json_quote_str (ctx_quote, "Date"),
-	    json_quote_str (ctx_quote, g_mime_message_get_date_as_string (message)));
+		json_quote_str (local, "Cc"),
+		json_quote_str (local, recipients_string));
 
-    talloc_free (ctx_quote);
-    talloc_free (ctx);
+    if (reply) {
+	printf (", %s: %s",
+		json_quote_str (local, "In-reply-to"),
+		json_quote_str (local, g_mime_object_get_header (GMIME_OBJECT (message), "In-reply-to")));
+
+	printf (", %s: %s",
+		json_quote_str (local, "References"),
+		json_quote_str (local, g_mime_object_get_header (GMIME_OBJECT (message), "References")));
+    } else {
+	printf (", %s: %s",
+		json_quote_str (local, "Date"),
+		json_quote_str (local, g_mime_message_get_date_as_string (message)));
+    }
+
+    printf ("}");
+
+    talloc_free (local);
 }
 
 /* Write a MIME text part out to the given stream.
+ *
+ * If (flags & NOTMUCH_SHOW_TEXT_PART_REPLY), this prepends "> " to
+ * each output line.
  *
  * Both line-ending conversion (CRLF->LF) and charset conversion ( ->
  * UTF-8) will be performed, so it is inappropriate to call this
  * function with a non-text part. Doing so will trigger an internal
  * error.
  */
-static void
-show_text_part_content (GMimeObject *part, GMimeStream *stream_out)
+void
+show_text_part_content (GMimeObject *part, GMimeStream *stream_out,
+			notmuch_show_text_part_flags flags)
 {
     GMimeContentType *content_type = g_mime_object_get_content_type (GMIME_OBJECT (part));
     GMimeStream *stream_filter = NULL;
@@ -430,6 +280,16 @@ show_text_part_content (GMimeObject *part, GMimeStream *stream_out)
 	    g_object_unref (charset_filter);
 	}
 
+    }
+
+    if (flags & NOTMUCH_SHOW_TEXT_PART_REPLY) {
+	GMimeFilter *reply_filter;
+	reply_filter = g_mime_filter_reply_new (TRUE);
+	if (reply_filter) {
+	    g_mime_stream_filter_add (GMIME_STREAM_FILTER (stream_filter),
+				      reply_filter);
+	    g_object_unref (reply_filter);
+	}
     }
 
     wrapper = g_mime_part_get_content_object (GMIME_PART (part));
@@ -471,29 +331,13 @@ signer_status_to_string (GMimeSignerStatus x)
 }
 #endif
 
-static void
-format_part_start_json (unused (GMimeObject *part), int *part_count)
-{
-    printf ("{\"id\": %d", *part_count);
-}
-
-static void
-format_part_encstatus_json (int status)
-{
-    printf (", \"encstatus\": [{\"status\": ");
-    if (status) {
-	printf ("\"good\"");
-    } else {
-	printf ("\"bad\"");
-    }
-    printf ("}]");
-}
-
 #ifdef GMIME_ATLEAST_26
 static void
-format_part_sigstatus_json (GMimeSignatureList *siglist)
+format_part_sigstatus_json (mime_node_t *node)
 {
-    printf (", \"sigstatus\": [");
+    GMimeSignatureList *siglist = node->sig_list;
+
+    printf ("[");
 
     if (!siglist) {
 	printf ("]");
@@ -557,9 +401,11 @@ format_part_sigstatus_json (GMimeSignatureList *siglist)
 }
 #else
 static void
-format_part_sigstatus_json (const GMimeSignatureValidity* validity)
+format_part_sigstatus_json (mime_node_t *node)
 {
-    printf (", \"sigstatus\": [");
+    const GMimeSignatureValidity* validity = node->sig_validity;
+
+    printf ("[");
 
     if (!validity) {
 	printf ("]");
@@ -618,109 +464,7 @@ format_part_sigstatus_json (const GMimeSignatureValidity* validity)
 }
 #endif
 
-static void
-format_part_content_json (GMimeObject *part)
-{
-    GMimeContentType *content_type = g_mime_object_get_content_type (GMIME_OBJECT (part));
-    GMimeStream *stream_memory = g_mime_stream_mem_new ();
-    const char *cid = g_mime_object_get_content_id (part);
-    void *ctx = talloc_new (NULL);
-    GByteArray *part_content;
-
-    printf (", \"content-type\": %s",
-	    json_quote_str (ctx, g_mime_content_type_to_string (content_type)));
-
-    if (cid != NULL)
-	    printf(", \"content-id\": %s", json_quote_str (ctx, cid));
-
-    if (GMIME_IS_PART (part))
-    {
-	const char *filename = g_mime_part_get_filename (GMIME_PART (part));
-	if (filename)
-	    printf (", \"filename\": %s", json_quote_str (ctx, filename));
-    }
-
-    if (g_mime_content_type_is_type (content_type, "text", "*"))
-    {
-	/* For non-HTML text parts, we include the content in the
-	 * JSON. Since JSON must be Unicode, we handle charset
-	 * decoding here and do not report a charset to the caller.
-	 * For text/html parts, we do not include the content. If a
-	 * caller is interested in text/html parts, it should retrieve
-	 * them separately and they will not be decoded. Since this
-	 * makes charset decoding the responsibility on the caller, we
-	 * report the charset for text/html parts.
-	 */
-	if (g_mime_content_type_is_type (content_type, "text", "html"))
-	{
-	    const char *content_charset = g_mime_object_get_content_type_parameter (GMIME_OBJECT (part), "charset");
-
-	    if (content_charset != NULL)
-		printf (", \"content-charset\": %s", json_quote_str (ctx, content_charset));
-	}
-	else
-	{
-	    show_text_part_content (part, stream_memory);
-	    part_content = g_mime_stream_mem_get_byte_array (GMIME_STREAM_MEM (stream_memory));
-
-	    printf (", \"content\": %s", json_quote_chararray (ctx, (char *) part_content->data, part_content->len));
-	}
-    }
-    else if (g_mime_content_type_is_type (content_type, "multipart", "*"))
-    {
-	printf (", \"content\": [");
-    }
-    else if (g_mime_content_type_is_type (content_type, "message", "rfc822"))
-    {
-	printf (", \"content\": [{");
-    }
-
-    talloc_free (ctx);
-    if (stream_memory)
-	g_object_unref (stream_memory);
-}
-
-static void
-format_part_end_json (GMimeObject *part)
-{
-    GMimeContentType *content_type = g_mime_object_get_content_type (GMIME_OBJECT (part));
-
-    if (g_mime_content_type_is_type (content_type, "multipart", "*"))
-	printf ("]");
-    else if (g_mime_content_type_is_type (content_type, "message", "rfc822"))
-	printf ("}]");
-
-    printf ("}");
-}
-
-static void
-format_part_content_raw (GMimeObject *part)
-{
-    if (! GMIME_IS_PART (part))
-	return;
-
-    GMimeStream *stream_stdout;
-    GMimeStream *stream_filter = NULL;
-    GMimeDataWrapper *wrapper;
-
-    stream_stdout = g_mime_stream_file_new (stdout);
-    g_mime_stream_file_set_owner (GMIME_STREAM_FILE (stream_stdout), FALSE);
-
-    stream_filter = g_mime_stream_filter_new (stream_stdout);
-
-    wrapper = g_mime_part_get_content_object (GMIME_PART (part));
-
-    if (wrapper && stream_filter)
-	g_mime_data_wrapper_write_to_stream (wrapper, stream_filter);
-
-    if (stream_filter)
-	g_object_unref (stream_filter);
-
-    if (stream_stdout)
-	g_object_unref(stream_stdout);
-}
-
-static void
+static notmuch_status_t
 format_part_text (const void *ctx, mime_node_t *node,
 		  int indent, const notmuch_show_params_t *params)
 {
@@ -737,11 +481,12 @@ format_part_text (const void *ctx, mime_node_t *node,
 	notmuch_message_t *message = node->envelope_file;
 
 	part_type = "message";
-	printf ("\f%s{ id:%s depth:%d match:%d filename:%s\n",
+	printf ("\f%s{ id:%s depth:%d match:%d excluded:%d filename:%s\n",
 		part_type,
 		notmuch_message_get_message_id (message),
 		indent,
-		notmuch_message_get_flag (message, NOTMUCH_MESSAGE_FLAG_MATCH),
+		notmuch_message_get_flag (message, NOTMUCH_MESSAGE_FLAG_MATCH) ? 1 : 0,
+		notmuch_message_get_flag (message, NOTMUCH_MESSAGE_FLAG_EXCLUDED) ? 1 : 0,
 		notmuch_message_get_filename (message));
     } else {
 	GMimeContentDisposition *disposition = g_mime_object_get_content_disposition (meta);
@@ -793,7 +538,7 @@ format_part_text (const void *ctx, mime_node_t *node,
 	{
 	    GMimeStream *stream_stdout = g_mime_stream_file_new (stdout);
 	    g_mime_stream_file_set_owner (GMIME_STREAM_FILE (stream_stdout), FALSE);
-	    show_text_part_content (node->part, stream_stdout);
+	    show_text_part_content (node->part, stream_stdout, 0);
 	    g_object_unref(stream_stdout);
 	} else {
 	    printf ("Non-text part: %s\n",
@@ -808,52 +553,276 @@ format_part_text (const void *ctx, mime_node_t *node,
 	printf ("\fbody}\n");
 
     printf ("\f%s}\n", part_type);
+
+    return NOTMUCH_STATUS_SUCCESS;
 }
 
-static void
+void
+format_part_json (const void *ctx, mime_node_t *node, notmuch_bool_t first)
+{
+    /* Any changes to the JSON format should be reflected in the file
+     * devel/schemata. */
+
+    if (node->envelope_file) {
+	printf ("{");
+	format_message_json (ctx, node->envelope_file);
+
+	printf ("\"headers\": ");
+	format_headers_json (ctx, GMIME_MESSAGE (node->part), FALSE);
+
+	printf (", \"body\": [");
+	format_part_json (ctx, mime_node_child (node, 0), first);
+
+	printf ("]}");
+	return;
+    }
+
+    void *local = talloc_new (ctx);
+    /* The disposition and content-type metadata are associated with
+     * the envelope for message parts */
+    GMimeObject *meta = node->envelope_part ?
+	GMIME_OBJECT (node->envelope_part) : node->part;
+    GMimeContentType *content_type = g_mime_object_get_content_type (meta);
+    const char *cid = g_mime_object_get_content_id (meta);
+    const char *filename = GMIME_IS_PART (node->part) ?
+	g_mime_part_get_filename (GMIME_PART (node->part)) : NULL;
+    const char *terminator = "";
+    int i;
+
+    if (!first)
+	printf (", ");
+
+    printf ("{\"id\": %d", node->part_num);
+
+    if (node->decrypt_attempted)
+	printf (", \"encstatus\": [{\"status\": \"%s\"}]",
+		node->decrypt_success ? "good" : "bad");
+
+    if (node->verify_attempted) {
+	printf (", \"sigstatus\": ");
+	format_part_sigstatus_json (node);
+    }
+
+    printf (", \"content-type\": %s",
+	    json_quote_str (local, g_mime_content_type_to_string (content_type)));
+
+    if (cid)
+	printf (", \"content-id\": %s", json_quote_str (local, cid));
+
+    if (filename)
+	printf (", \"filename\": %s", json_quote_str (local, filename));
+
+    if (GMIME_IS_PART (node->part)) {
+	/* For non-HTML text parts, we include the content in the
+	 * JSON. Since JSON must be Unicode, we handle charset
+	 * decoding here and do not report a charset to the caller.
+	 * For text/html parts, we do not include the content. If a
+	 * caller is interested in text/html parts, it should retrieve
+	 * them separately and they will not be decoded. Since this
+	 * makes charset decoding the responsibility on the caller, we
+	 * report the charset for text/html parts.
+	 */
+	if (g_mime_content_type_is_type (content_type, "text", "html")) {
+	    const char *content_charset = g_mime_object_get_content_type_parameter (meta, "charset");
+
+	    if (content_charset != NULL)
+		printf (", \"content-charset\": %s", json_quote_str (local, content_charset));
+	} else if (g_mime_content_type_is_type (content_type, "text", "*")) {
+	    GMimeStream *stream_memory = g_mime_stream_mem_new ();
+	    GByteArray *part_content;
+	    show_text_part_content (node->part, stream_memory, 0);
+	    part_content = g_mime_stream_mem_get_byte_array (GMIME_STREAM_MEM (stream_memory));
+
+	    printf (", \"content\": %s", json_quote_chararray (local, (char *) part_content->data, part_content->len));
+	    g_object_unref (stream_memory);
+	}
+    } else if (GMIME_IS_MULTIPART (node->part)) {
+	printf (", \"content\": [");
+	terminator = "]";
+    } else if (GMIME_IS_MESSAGE (node->part)) {
+	printf (", \"content\": [{");
+	printf ("\"headers\": ");
+	format_headers_json (local, GMIME_MESSAGE (node->part), FALSE);
+
+	printf (", \"body\": [");
+	terminator = "]}]";
+    }
+
+    talloc_free (local);
+
+    for (i = 0; i < node->nchildren; i++)
+	format_part_json (ctx, mime_node_child (node, i), i == 0);
+
+    printf ("%s}", terminator);
+}
+
+static notmuch_status_t
+format_part_json_entry (const void *ctx, mime_node_t *node, unused (int indent),
+			unused (const notmuch_show_params_t *params))
+{
+    format_part_json (ctx, node, TRUE);
+
+    return NOTMUCH_STATUS_SUCCESS;
+}
+
+/* Print a message in "mboxrd" format as documented, for example,
+ * here:
+ *
+ * http://qmail.org/qmail-manual-html/man5/mbox.html
+ */
+static notmuch_status_t
+format_part_mbox (const void *ctx, mime_node_t *node, unused (int indent),
+		  unused (const notmuch_show_params_t *params))
+{
+    notmuch_message_t *message = node->envelope_file;
+
+    const char *filename;
+    FILE *file;
+    const char *from;
+
+    time_t date;
+    struct tm date_gmtime;
+    char date_asctime[26];
+
+    char *line = NULL;
+    size_t line_size;
+    ssize_t line_len;
+
+    if (!message)
+	INTERNAL_ERROR ("format_part_mbox requires a root part");
+
+    filename = notmuch_message_get_filename (message);
+    file = fopen (filename, "r");
+    if (file == NULL) {
+	fprintf (stderr, "Failed to open %s: %s\n",
+		 filename, strerror (errno));
+	return NOTMUCH_STATUS_FILE_ERROR;
+    }
+
+    from = notmuch_message_get_header (message, "from");
+    from = _extract_email_address (ctx, from);
+
+    date = notmuch_message_get_date (message);
+    gmtime_r (&date, &date_gmtime);
+    asctime_r (&date_gmtime, date_asctime);
+
+    printf ("From %s %s", from, date_asctime);
+
+    while ((line_len = getline (&line, &line_size, file)) != -1 ) {
+	if (_is_from_line (line))
+	    putchar ('>');
+	printf ("%s", line);
+    }
+
+    printf ("\n");
+
+    fclose (file);
+
+    return NOTMUCH_STATUS_SUCCESS;
+}
+
+static notmuch_status_t
+format_part_raw (unused (const void *ctx), mime_node_t *node,
+		 unused (int indent),
+		 unused (const notmuch_show_params_t *params))
+{
+    if (node->envelope_file) {
+	/* Special case the entire message to avoid MIME parsing. */
+	const char *filename;
+	FILE *file;
+	size_t size;
+	char buf[4096];
+
+	filename = notmuch_message_get_filename (node->envelope_file);
+	if (filename == NULL) {
+	    fprintf (stderr, "Error: Cannot get message filename.\n");
+	    return NOTMUCH_STATUS_FILE_ERROR;
+	}
+
+	file = fopen (filename, "r");
+	if (file == NULL) {
+	    fprintf (stderr, "Error: Cannot open file %s: %s\n", filename, strerror (errno));
+	    return NOTMUCH_STATUS_FILE_ERROR;
+	}
+
+	while (!feof (file)) {
+	    size = fread (buf, 1, sizeof (buf), file);
+	    if (ferror (file)) {
+		fprintf (stderr, "Error: Read failed from %s\n", filename);
+		fclose (file);
+		return NOTMUCH_STATUS_FILE_ERROR;
+	    }
+
+	    if (fwrite (buf, size, 1, stdout) != 1) {
+		fprintf (stderr, "Error: Write failed\n");
+		fclose (file);
+		return NOTMUCH_STATUS_FILE_ERROR;
+	    }
+	}
+
+	fclose (file);
+	return NOTMUCH_STATUS_SUCCESS;
+    }
+
+    GMimeStream *stream_stdout;
+    GMimeStream *stream_filter = NULL;
+
+    stream_stdout = g_mime_stream_file_new (stdout);
+    g_mime_stream_file_set_owner (GMIME_STREAM_FILE (stream_stdout), FALSE);
+
+    stream_filter = g_mime_stream_filter_new (stream_stdout);
+
+    if (GMIME_IS_PART (node->part)) {
+	/* For leaf parts, we emit only the transfer-decoded
+	 * body. */
+	GMimeDataWrapper *wrapper;
+	wrapper = g_mime_part_get_content_object (GMIME_PART (node->part));
+
+	if (wrapper && stream_filter)
+	    g_mime_data_wrapper_write_to_stream (wrapper, stream_filter);
+    } else {
+	/* Write out the whole part.  For message parts (the root
+	 * part and embedded message parts), this will be the
+	 * message including its headers (but not the
+	 * encapsulating part's headers).  For multipart parts,
+	 * this will include the headers. */
+	if (stream_filter)
+	    g_mime_object_write_to_stream (node->part, stream_filter);
+    }
+
+    if (stream_filter)
+	g_object_unref (stream_filter);
+
+    if (stream_stdout)
+	g_object_unref(stream_stdout);
+
+    return NOTMUCH_STATUS_SUCCESS;
+}
+
+static notmuch_status_t
 show_message (void *ctx,
 	      const notmuch_show_format_t *format,
 	      notmuch_message_t *message,
 	      int indent,
 	      notmuch_show_params_t *params)
 {
-    if (format->part) {
-	void *local = talloc_new (ctx);
-	mime_node_t *root, *part;
+    void *local = talloc_new (ctx);
+    mime_node_t *root, *part;
+    notmuch_status_t status;
 
-	if (mime_node_open (local, message, params->cryptoctx, params->decrypt,
-			    &root) == NOTMUCH_STATUS_SUCCESS &&
-	    (part = mime_node_seek_dfs (root, (params->part < 0 ?
-					       0 : params->part))))
-	    format->part (local, part, indent, params);
-	talloc_free (local);
-	return;
-    }
-
-    if (params->part <= 0) {
-	fputs (format->message_start, stdout);
-	if (format->message)
-	    format->message(ctx, message, indent);
-
-	fputs (format->header_start, stdout);
-	if (format->header)
-	    format->header(ctx, message);
-	fputs (format->header_end, stdout);
-
-	fputs (format->body_start, stdout);
-    }
-
-    if (format->part_content)
-	show_message_body (message, format, params);
-
-    if (params->part <= 0) {
-	fputs (format->body_end, stdout);
-
-	fputs (format->message_end, stdout);
-    }
+    status = mime_node_open (local, message, params->cryptoctx,
+			     params->decrypt, &root);
+    if (status)
+	goto DONE;
+    part = mime_node_seek_dfs (root, (params->part < 0 ? 0 : params->part));
+    if (part)
+	status = format->part (local, part, indent, params);
+  DONE:
+    talloc_free (local);
+    return status;
 }
 
-static void
+static notmuch_status_t
 show_messages (void *ctx,
 	       const notmuch_show_format_t *format,
 	       notmuch_messages_t *messages,
@@ -862,46 +831,60 @@ show_messages (void *ctx,
 {
     notmuch_message_t *message;
     notmuch_bool_t match;
+    notmuch_bool_t excluded;
     int first_set = 1;
     int next_indent;
+    notmuch_status_t status, res = NOTMUCH_STATUS_SUCCESS;
 
-    fputs (format->message_set_start, stdout);
+    if (format->message_set_start)
+	fputs (format->message_set_start, stdout);
 
     for (;
 	 notmuch_messages_valid (messages);
 	 notmuch_messages_move_to_next (messages))
     {
-	if (!first_set)
+	if (!first_set && format->message_set_sep)
 	    fputs (format->message_set_sep, stdout);
 	first_set = 0;
 
-	fputs (format->message_set_start, stdout);
+	if (format->message_set_start)
+	    fputs (format->message_set_start, stdout);
 
 	message = notmuch_messages_get (messages);
 
 	match = notmuch_message_get_flag (message, NOTMUCH_MESSAGE_FLAG_MATCH);
+	excluded = notmuch_message_get_flag (message, NOTMUCH_MESSAGE_FLAG_EXCLUDED);
 
 	next_indent = indent;
 
-	if (match || params->entire_thread) {
-	    show_message (ctx, format, message, indent, params);
+	if ((match && (!excluded || !params->omit_excluded)) || params->entire_thread) {
+	    status = show_message (ctx, format, message, indent, params);
+	    if (status && !res)
+		res = status;
 	    next_indent = indent + 1;
 
-	    fputs (format->message_set_sep, stdout);
+	    if (!status && format->message_set_sep)
+		fputs (format->message_set_sep, stdout);
 	}
 
-	show_messages (ctx,
-		       format,
-		       notmuch_message_get_replies (message),
-		       next_indent,
-		       params);
+	status = show_messages (ctx,
+				format,
+				notmuch_message_get_replies (message),
+				next_indent,
+				params);
+	if (status && !res)
+	    res = status;
 
 	notmuch_message_destroy (message);
 
-	fputs (format->message_set_end, stdout);
+	if (format->message_set_end)
+	    fputs (format->message_set_end, stdout);
     }
 
-    fputs (format->message_set_end, stdout);
+    if (format->message_set_end)
+	fputs (format->message_set_end, stdout);
+
+    return res;
 }
 
 /* Formatted output of single message */
@@ -929,50 +912,7 @@ do_show_single (void *ctx,
 
     notmuch_message_set_flag (message, NOTMUCH_MESSAGE_FLAG_MATCH, 1);
 
-    /* Special case for --format=raw of full single message, just cat out file */
-    if (params->raw && 0 == params->part) {
-
-	const char *filename;
-	FILE *file;
-	size_t size;
-	char buf[4096];
-
-	filename = notmuch_message_get_filename (message);
-	if (filename == NULL) {
-	    fprintf (stderr, "Error: Cannot message filename.\n");
-	    return 1;
-	}
-
-	file = fopen (filename, "r");
-	if (file == NULL) {
-	    fprintf (stderr, "Error: Cannot open file %s: %s\n", filename, strerror (errno));
-	    return 1;
-	}
-
-	while (!feof (file)) {
-	    size = fread (buf, 1, sizeof (buf), file);
-	    if (ferror (file)) {
-		fprintf (stderr, "Error: Read failed from %s\n", filename);
-		fclose (file);
-		return 1;
-	    }
-
-	    if (fwrite (buf, size, 1, stdout) != 1) {
-		fprintf (stderr, "Error: Write failed\n");
-		fclose (file);
-		return 1;
-	    }
-	}
-
-	fclose (file);
-
-    } else {
-
-	show_message (ctx, format, message, 0, params);
-
-    }
-
-    return 0;
+    return show_message (ctx, format, message, 0, params) != NOTMUCH_STATUS_SUCCESS;
 }
 
 /* Formatted output of threads */
@@ -986,8 +926,10 @@ do_show (void *ctx,
     notmuch_thread_t *thread;
     notmuch_messages_t *messages;
     int first_toplevel = 1;
+    notmuch_status_t status, res = NOTMUCH_STATUS_SUCCESS;
 
-    fputs (format->message_set_start, stdout);
+    if (format->message_set_start)
+	fputs (format->message_set_start, stdout);
 
     for (threads = notmuch_query_search_threads (query);
 	 notmuch_threads_valid (threads);
@@ -1001,19 +943,22 @@ do_show (void *ctx,
 	    INTERNAL_ERROR ("Thread %s has no toplevel messages.\n",
 			    notmuch_thread_get_thread_id (thread));
 
-	if (!first_toplevel)
+	if (!first_toplevel && format->message_set_sep)
 	    fputs (format->message_set_sep, stdout);
 	first_toplevel = 0;
 
-	show_messages (ctx, format, messages, 0, params);
+	status = show_messages (ctx, format, messages, 0, params);
+	if (status && !res)
+	    res = status;
 
 	notmuch_thread_destroy (thread);
 
     }
 
-    fputs (format->message_set_end, stdout);
+    if (format->message_set_end)
+	fputs (format->message_set_end, stdout);
 
-    return 0;
+    return res != NOTMUCH_STATUS_SUCCESS;
 }
 
 enum {
@@ -1022,6 +967,12 @@ enum {
     NOTMUCH_FORMAT_TEXT,
     NOTMUCH_FORMAT_MBOX,
     NOTMUCH_FORMAT_RAW
+};
+
+/* The following is to allow future options to be added more easily */
+enum {
+    EXCLUDE_TRUE,
+    EXCLUDE_FALSE,
 };
 
 int
@@ -1033,9 +984,10 @@ notmuch_show_command (void *ctx, unused (int argc), unused (char *argv[]))
     char *query_string;
     int opt_index, ret;
     const notmuch_show_format_t *format = &format_text;
-    notmuch_show_params_t params = { .part = -1 };
+    notmuch_show_params_t params = { .part = -1, .omit_excluded = TRUE };
     int format_sel = NOTMUCH_FORMAT_NOT_SPECIFIED;
     notmuch_bool_t verify = FALSE;
+    int exclude = EXCLUDE_TRUE;
 
     notmuch_opt_desc_t options[] = {
 	{ NOTMUCH_OPT_KEYWORD, &format_sel, "format", 'f',
@@ -1044,6 +996,10 @@ notmuch_show_command (void *ctx, unused (int argc), unused (char *argv[]))
 				  { "mbox", NOTMUCH_FORMAT_MBOX },
 				  { "raw", NOTMUCH_FORMAT_RAW },
 				  { 0, 0 } } },
+        { NOTMUCH_OPT_KEYWORD, &exclude, "exclude", 'x',
+          (notmuch_keyword_t []){ { "true", EXCLUDE_TRUE },
+                                  { "false", EXCLUDE_FALSE },
+                                  { 0, 0 } } },
 	{ NOTMUCH_OPT_INT, &params.part, "part", 'p', 0 },
 	{ NOTMUCH_OPT_BOOLEAN, &params.entire_thread, "entire-thread", 't', 0 },
 	{ NOTMUCH_OPT_BOOLEAN, &params.decrypt, "decrypt", 'd', 0 },
@@ -1078,6 +1034,7 @@ notmuch_show_command (void *ctx, unused (int argc), unused (char *argv[]))
 	    fprintf (stderr, "Error: specifying parts is incompatible with mbox output format.\n");
 	    return 1;
 	}
+
 	format = &format_mbox;
 	break;
     case NOTMUCH_FORMAT_RAW:
@@ -1124,9 +1081,8 @@ notmuch_show_command (void *ctx, unused (int argc), unused (char *argv[]))
 	return 1;
     }
 
-    notmuch = notmuch_database_open (notmuch_config_get_database_path (config),
-				     NOTMUCH_DATABASE_MODE_READ_ONLY);
-    if (notmuch == NULL)
+    if (notmuch_database_open (notmuch_config_get_database_path (config),
+			       NOTMUCH_DATABASE_MODE_READ_ONLY, &notmuch))
 	return 1;
 
     query = notmuch_query_create (notmuch, query_string);
@@ -1135,13 +1091,32 @@ notmuch_show_command (void *ctx, unused (int argc), unused (char *argv[]))
 	return 1;
     }
 
+    /* If a single message is requested we do not use search_excludes. */
     if (params.part >= 0)
 	ret = do_show_single (ctx, query, format, &params);
-    else
+    else {
+	/* We always apply set the exclude flag. The
+	 * exclude=true|false option controls whether or not we return
+	 * threads that only match in an excluded message */
+	const char **search_exclude_tags;
+	size_t search_exclude_tags_length;
+	unsigned int i;
+
+	search_exclude_tags = notmuch_config_get_search_exclude_tags
+	    (config, &search_exclude_tags_length);
+	for (i = 0; i < search_exclude_tags_length; i++)
+	    notmuch_query_add_tag_exclude (query, search_exclude_tags[i]);
+
+	if (exclude == EXCLUDE_FALSE) {
+	    notmuch_query_set_omit_excluded (query, FALSE);
+	    params.omit_excluded = FALSE;
+	}
+
 	ret = do_show (ctx, query, format, &params);
+    }
 
     notmuch_query_destroy (query);
-    notmuch_database_close (notmuch);
+    notmuch_database_destroy (notmuch);
 
     if (params.cryptoctx)
 	g_object_unref(params.cryptoctx);

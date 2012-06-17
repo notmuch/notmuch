@@ -1,14 +1,33 @@
 #!/usr/bin/env python
 
+"""
+This file is part of notmuch.
+
+Notmuch is free software: you can redistribute it and/or modify it
+under the terms of the GNU General Public License as published by the
+Free Software Foundation, either version 3 of the License, or (at your
+option) any later version.
+
+Notmuch is distributed in the hope that it will be useful, but WITHOUT
+ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
+
+You should have received a copy of the GNU General Public License
+along with notmuch.  If not, see <http://www.gnu.org/licenses/>.
+
+Copyright 2010 Sebastian Spaeth <Sebastian@SSpaeth.de>
+"""
+
 import os
-import re
 from distutils.core import setup
 
 # get the notmuch version number without importing the notmuch module
-version_file = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+version_file = os.path.join(os.path.dirname(__file__),
                             'notmuch', 'version.py')
 exec(compile(open(version_file).read(), version_file, 'exec'))
-assert __VERSION__, 'Failed to read the notmuch binding version number'
+assert '__VERSION__' in globals(), \
+    'Failed to read the notmuch binding version number'
 
 setup(name='notmuch',
       version=__VERSION__,
@@ -16,32 +35,20 @@ setup(name='notmuch',
       author='Sebastian Spaeth',
       author_email='Sebastian@SSpaeth.de',
       url='http://notmuchmail.org/',
-      download_url='http://notmuchmail.org/releases/notmuch-'+__VERSION__+'.tar.gz',
+      download_url='http://notmuchmail.org/releases/notmuch-%s.tar.gz' % __VERSION__,
       packages=['notmuch'],
-      keywords = ["library", "email"],
-      long_description="""Overview
-==============
+      keywords=['library', 'email'],
+      long_description='''Overview
+========
 
-The notmuch  module provides an interface to the `notmuch <http://notmuchmail.org>`_ functionality, directly interfacing with a shared notmuch library. Notmuch provides a maildatabase that allows for extremely quick searching and filtering of your email according to various criteria.
+The notmuch module provides an interface to the `notmuch
+<http://notmuchmail.org>`_ functionality, directly interfacing with a
+shared notmuch library. Notmuch provides a maildatabase that allows
+for extremely quick searching and filtering of your email according to
+various criteria.
 
-The documentation for the latest cnotmuch release can be `viewed online <http://packages.python.org/notmuch>`_.
-
-The classes notmuch.Database, notmuch.Query  provide most of the core functionality, returning notmuch.Messages and notmuch.Tags.
-
-Installation and Deinstallation
--------------------------------
-
-notmuch is included in the upstream notmuch source repository and it is
-packaged on http://pypi.python.org. This means you can do "easy_install
-notmuch" (or using pip) on your linux box and it will get installed
-into:
-
-/usr/local/lib/python2.x/dist-packages/
-
-For uninstalling, you will need to remove the "notmuch-0.x-py2.x.egg"
-directory and delete one entry refering to cnotmuch in the
-"easy-install.pth" file in that directory. There should be no trace
-left of cnotmuch then.
+The documentation for the latest notmuch release can be `viewed
+online <http://notmuch.readthedocs.org/>`_.
 
 Requirements
 ------------
@@ -49,7 +56,7 @@ Requirements
 You need to have notmuch installed (or rather libnotmuch.so.1). Also,
 notmuch makes use of the ctypes library, and has only been tested with
 python >= 2.5. It will not work on earlier python versions.
-""",
+''',
       classifiers=['Development Status :: 3 - Alpha',
                    'Intended Audience :: Developers',
                    'License :: OSI Approved :: GNU General Public License (GPL)',

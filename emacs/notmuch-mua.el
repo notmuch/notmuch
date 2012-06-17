@@ -19,10 +19,15 @@
 ;;
 ;; Authors: David Edmondson <dme@dme.org>
 
+(require 'json)
 (require 'message)
+(require 'mm-view)
+(require 'format-spec)
 
 (require 'notmuch-lib)
 (require 'notmuch-address)
+
+(eval-when-compile (require 'cl))
 
 ;;
 
@@ -31,6 +36,26 @@
   :type 'hook
   :group 'notmuch-send
   :group 'notmuch-hooks)
+
+(defcustom notmuch-mua-compose-in 'current-window
+  (concat
+   "Where to create the mail buffer used to compose a new message.
+Possible values are `current-window' (default), `new-window' and
+`new-frame'. If set to `current-window', the mail buffer will be
+displayed in the current window, so the old buffer will be
+restored when the mail buffer is killed. If set to `new-window'
+or `new-frame', the mail buffer will be displayed in a new
+window/frame that will be destroyed when the buffer is killed.
+You may want to customize `message-kill-buffer-on-exit'
+accordingly."
+   (when (< emacs-major-version 24)
+           " Due to a known bug in Emacs 23, you should not set
+this to `new-window' if `message-kill-buffer-on-exit' is
+disabled: this would result in an incorrect behavior."))
+  :group 'notmuch-send
+  :type '(choice (const :tag "Compose in the current window" current-window)
+		 (const :tag "Compose mail in a new window"  new-window)
+		 (const :tag "Compose mail in a new frame"   new-frame)))
 
 (defcustom notmuch-mua-user-agent-function 'notmuch-mua-user-agent-full
   "Function used to generate a `User-Agent:' string. If this is
@@ -50,6 +75,23 @@ list."
   :group 'notmuch-send)
 
 ;;
+
+(defun notmuch-mua-get-switch-function ()
+  "Get a switch function according to `notmuch-mua-compose-in'."
+  (cond ((eq notmuch-mua-compose-in 'current-window)
+	 'switch-to-buffer)
+	((eq notmuch-mua-compose-in 'new-window)
+	 'switch-to-buffer-other-window)
+	((eq notmuch-mua-compose-in 'new-frame)
+	 'switch-to-buffer-other-frame)
+	(t (error "Invalid value for `notmuch-mua-compose-in'"))))
+
+(defun notmuch-mua-maybe-set-window-dedicated ()
+  "Set the selected window as dedicated according to
+`notmuch-mua-compose-in'."
+  (when (or (eq notmuch-mua-compose-in 'new-frame)
+	    (eq notmuch-mua-compose-in 'new-window))
+    (set-window-dedicated-p (selected-window) t)))
 
 (defun notmuch-mua-user-agent-full ()
   "Generate a `User-Agent:' string suitable for notmuch."
@@ -72,56 +114,122 @@ list."
 	    (push header message-hidden-headers)))
 	notmuch-mua-hidden-headers))
 
+(defun notmuch-mua-get-quotable-parts (parts)
+  (loop for part in parts
+	if (notmuch-match-content-type (plist-get part :content-type) "multipart/alternative")
+	  collect (let* ((subparts (plist-get part :content))
+			(types (mapcar (lambda (part) (plist-get part :content-type)) subparts))
+			(chosen-type (car (notmuch-multipart/alternative-choose types))))
+		   (loop for part in (reverse subparts)
+			 if (notmuch-match-content-type (plist-get part :content-type) chosen-type)
+			 return part))
+	else if (notmuch-match-content-type (plist-get part :content-type) "multipart/*")
+	  append (notmuch-mua-get-quotable-parts (plist-get part :content))
+	else if (notmuch-match-content-type (plist-get part :content-type) "text/*")
+	  collect part))
+
+(defun notmuch-mua-insert-quotable-part (message part)
+  (save-restriction
+    (narrow-to-region (point) (point))
+    (notmuch-mm-display-part-inline message part (plist-get part :id)
+				    (plist-get part :content-type)
+				    notmuch-show-process-crypto)
+    (goto-char (point-max))))
+
+;; There is a bug in emacs 23's message.el that results in a newline
+;; not being inserted after the References header, so the next header
+;; is concatenated to the end of it. This function fixes the problem,
+;; while guarding against the possibility that some current or future
+;; version of emacs has the bug fixed.
+(defun notmuch-mua-insert-references (original-func header references)
+  (funcall original-func header references)
+  (unless (bolp) (insert "\n")))
+
 (defun notmuch-mua-reply (query-string &optional sender reply-all)
-  (let (headers
-	body
-	(args '("reply")))
-    (if notmuch-show-process-crypto
-	(setq args (append args '("--decrypt"))))
+  (let ((args '("reply" "--format=json"))
+	reply
+	original)
+    (when notmuch-show-process-crypto
+      (setq args (append args '("--decrypt"))))
+
     (if reply-all
 	(setq args (append args '("--reply-to=all")))
       (setq args (append args '("--reply-to=sender"))))
     (setq args (append args (list query-string)))
-    ;; This make assumptions about the output of `notmuch reply', but
-    ;; really only that the headers come first followed by a blank
-    ;; line and then the body.
-    (with-temp-buffer
-      (apply 'call-process (append (list notmuch-command nil (list t t) nil) args))
-      (goto-char (point-min))
-      (if (re-search-forward "^$" nil t)
-	  (save-excursion
-	    (save-restriction
-	      (narrow-to-region (point-min) (point))
-	      (goto-char (point-min))
-	      (setq headers (mail-header-extract)))))
-      (forward-line 1)
-      ;; Original message may contain (malicious) MML tags. We must
-      ;; properly quote them in the reply.
-      (mml-quote-region (point) (point-max))
-      (setq body (buffer-substring (point) (point-max))))
-    ;; If sender is non-nil, set the From: header to its value.
-    (when sender
-      (mail-header-set 'from sender headers))
-    (let
-	;; Overlay the composition window on that being used to read
-	;; the original message.
-	((same-window-regexps '("\\*mail .*")))
-      (notmuch-mua-mail (mail-header 'to headers)
-			(mail-header 'subject headers)
-			(message-headers-to-generate headers t '(to subject))))
-    ;; insert the message body - but put it in front of the signature
-    ;; if one is present
-    (goto-char (point-max))
-    (if (re-search-backward message-signature-separator nil t)
-	  (forward-line -1)
-      (goto-char (point-max)))
-    (insert body)
-    (push-mark))
-  (set-buffer-modified-p nil)
 
-  (message-goto-body))
+    ;; Get the reply object as JSON, and parse it into an elisp object.
+    (with-temp-buffer
+      (apply 'call-process (append (list notmuch-command nil (list t nil) nil) args))
+      (goto-char (point-min))
+      (let ((json-object-type 'plist)
+	    (json-array-type 'list)
+	    (json-false 'nil))
+	(setq reply (json-read))))
+
+    ;; Extract the original message to simplify the following code.
+    (setq original (plist-get reply :original))
+
+    ;; Extract the headers of both the reply and the original message.
+    (let* ((original-headers (plist-get original :headers))
+	   (reply-headers (plist-get reply :reply-headers)))
+
+      ;; If sender is non-nil, set the From: header to its value.
+      (when sender
+	(plist-put reply-headers :From sender))
+      (let
+	  ;; Overlay the composition window on that being used to read
+	  ;; the original message.
+	  ((same-window-regexps '("\\*mail .*")))
+
+	;; We modify message-header-format-alist to get around a bug in message.el.
+	;; See the comment above on notmuch-mua-insert-references.
+	(let ((message-header-format-alist
+	       (loop for pair in message-header-format-alist
+		     if (eq (car pair) 'References)
+		     collect (cons 'References
+				   (apply-partially
+				    'notmuch-mua-insert-references
+				    (cdr pair)))
+		     else
+		     collect pair)))
+	  (notmuch-mua-mail (plist-get reply-headers :To)
+			    (plist-get reply-headers :Subject)
+			    (notmuch-headers-plist-to-alist reply-headers)
+			    nil (notmuch-mua-get-switch-function))))
+
+      ;; Insert the message body - but put it in front of the signature
+      ;; if one is present
+      (goto-char (point-max))
+      (if (re-search-backward message-signature-separator nil t)
+	  (forward-line -1)
+	(goto-char (point-max)))
+
+      (let ((from (plist-get original-headers :From))
+	    (date (plist-get original-headers :Date))
+	    (start (point)))
+
+	;; message-cite-original constructs a citation line based on the From and Date
+	;; headers of the original message, which are assumed to be in the buffer.
+	(insert "From: " from "\n")
+	(insert "Date: " date "\n\n")
+
+	;; Get the parts of the original message that should be quoted; this includes
+	;; all the text parts, except the non-preferred ones in a multipart/alternative.
+	(let ((quotable-parts (notmuch-mua-get-quotable-parts (plist-get original :body))))
+	  (mapc (apply-partially 'notmuch-mua-insert-quotable-part original) quotable-parts))
+
+	(set-mark (point))
+	(goto-char start)
+	;; Quote the original message according to the user's configured style.
+	(message-cite-original))))
+
+  (goto-char (point-max))
+  (push-mark)
+  (message-goto-body)
+  (set-buffer-modified-p nil))
 
 (defun notmuch-mua-forward-message ()
+  (funcall (notmuch-mua-get-switch-function) (current-buffer))
   (message-forward)
 
   (when notmuch-mua-user-agent-function
@@ -131,6 +239,7 @@ list."
   (message-sort-headers)
   (message-hide-headers)
   (set-buffer-modified-p nil)
+  (notmuch-mua-maybe-set-window-dedicated)
 
   (message-goto-to))
 
@@ -143,16 +252,17 @@ OTHER-ARGS are passed through to `message-mail'."
   (when notmuch-mua-user-agent-function
     (let ((user-agent (funcall notmuch-mua-user-agent-function)))
       (when (not (string= "" user-agent))
-	(push (cons "User-Agent" user-agent) other-headers))))
+	(push (cons 'User-Agent user-agent) other-headers))))
 
-  (unless (mail-header 'from other-headers)
-    (push (cons "From" (concat
-			(notmuch-user-name) " <" (notmuch-user-primary-email) ">")) other-headers))
+  (unless (assq 'From other-headers)
+    (push (cons 'From (concat
+		       (notmuch-user-name) " <" (notmuch-user-primary-email) ">")) other-headers))
 
   (apply #'message-mail to subject other-headers other-args)
   (message-sort-headers)
   (message-hide-headers)
   (set-buffer-modified-p nil)
+  (notmuch-mua-maybe-set-window-dedicated)
 
   (message-goto-to))
 
@@ -208,8 +318,8 @@ the From: address first."
   (interactive "P")
   (let ((other-headers
 	 (when (or prompt-for-sender notmuch-always-prompt-for-sender)
-	   (list (cons 'from (notmuch-mua-prompt-for-sender))))))
-    (notmuch-mua-mail nil nil other-headers)))
+	   (list (cons 'From (notmuch-mua-prompt-for-sender))))))
+    (notmuch-mua-mail nil nil other-headers nil (notmuch-mua-get-switch-function))))
 
 (defun notmuch-mua-new-forward-message (&optional prompt-for-sender)
   "Invoke the notmuch message forwarding window.

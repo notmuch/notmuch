@@ -28,6 +28,24 @@ _process_keyword_arg (const notmuch_opt_desc_t *arg_desc, const char *arg_str) {
     return FALSE;
 }
 
+static notmuch_bool_t
+_process_boolean_arg (const notmuch_opt_desc_t *arg_desc, char next, const char *arg_str) {
+
+    if (next == 0) {
+	*((notmuch_bool_t *)arg_desc->output_var) = TRUE;
+	return TRUE;
+    }
+    if (strcmp (arg_str, "false") == 0) {
+	*((notmuch_bool_t *)arg_desc->output_var) = FALSE;
+	return TRUE;
+    }
+    if (strcmp (arg_str, "true") == 0) {
+	*((notmuch_bool_t *)arg_desc->output_var) = TRUE;
+	return TRUE;
+    }
+    return FALSE;
+}
+
 /*
    Search for the {pos_arg_index}th position argument, return FALSE if
    that does not exist.
@@ -76,14 +94,15 @@ parse_option (const char *arg,
 	    char *endptr;
 
 	    /* Everything but boolean arguments (switches) needs a
-	     * delimiter, and a non-zero length value
+	     * delimiter, and a non-zero length value. Boolean
+	     * arguments may take an optional =true or =false value.
 	     */
-
-	    if (try->opt_type != NOTMUCH_OPT_BOOLEAN) {
-		if (next != '=' && next != ':') return FALSE;
-		if (value[0] == 0) return FALSE;
+	    if (next != '=' && next != ':' && next != 0) return FALSE;
+	    if (next == 0) {
+		if (try->opt_type != NOTMUCH_OPT_BOOLEAN)
+		    return FALSE;
 	    } else {
-		if (next != 0) return FALSE;
+		if (value[0] == 0) return FALSE;
 	    }
 
 	    if (try->output_var == NULL)
@@ -94,8 +113,7 @@ parse_option (const char *arg,
 		return _process_keyword_arg (try, value);
 		break;
 	    case NOTMUCH_OPT_BOOLEAN:
-		*((notmuch_bool_t *)try->output_var) = TRUE;
-		return TRUE;
+		return _process_boolean_arg (try, next, value);
 		break;
 	    case NOTMUCH_OPT_INT:
 		*((int *)try->output_var) = strtol (value, &endptr, 10);
