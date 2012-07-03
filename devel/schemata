@@ -128,7 +128,8 @@ thread = {
     total:          int,      # total messages in thread
     authors:        string,   # comma-separated names with | between
                               # matched and unmatched
-    subject:        string
+    subject:        string,
+    tags:           [string*]
 }
 
 notmuch reply schema
