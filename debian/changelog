@@ -1,3 +1,10 @@
+notmuch (0.13.2-2) UNRELEASED; urgency=low
+
+  [ Stefano Zacchiroli ]
+  * notmuch-mutt: fix tag action invocation (Closes: #678012)
+
+ --
+
 notmuch (0.13.2-1) unstable; urgency=low
 
   * Upstream bugfix release. No changes to binary packages.
