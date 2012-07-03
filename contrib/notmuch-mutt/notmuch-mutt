@@ -211,7 +211,7 @@ F</etc/Muttrc>, or a configuration snippet under F</etc/Muttrc.d/>):
           "<enter-command>unset wait_key<enter><pipe-message>notmuch-mutt thread<enter><change-folder-readonly>~/.cache/notmuch/mutt/results<enter><enter-command>set wait_key<enter>" \
           "notmuch: reconstruct thread"
     macro index <F6> \
-          "<enter-command>unset wait_key<enter><pipe-message>notmuch-mutt tag -inbox<enter>" \
+          "<enter-command>unset wait_key<enter><pipe-message>notmuch-mutt tag -- -inbox<enter>" \
           "notmuch: remove message from inbox"
 
 The first macro (activated by <F8>) prompts the user for notmuch search terms
