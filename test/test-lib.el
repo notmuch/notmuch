@@ -89,6 +89,14 @@ nothing."
 (add-hook-counter 'notmuch-hello-mode-hook)
 (add-hook-counter 'notmuch-hello-refresh-hook)
 
+(defadvice notmuch-search-process-filter (around pessimal activate disable)
+  "Feed notmuch-search-process-filter one character at a time."
+  (let ((string (ad-get-arg 1)))
+    (loop for char across string
+	  do (progn
+	       (ad-set-arg 1 (char-to-string char))
+	       ad-do-it))))
+
 (defmacro notmuch-test-run (&rest body)
   "Evaluate a BODY of test expressions and output the result."
   `(with-temp-buffer
