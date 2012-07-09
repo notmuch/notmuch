@@ -707,42 +707,47 @@ non-authors is found, assume that all of the authors match."
 	  (overlay-put overlay 'isearch-open-invisible #'delete-overlay)))
       (insert padding))))
 
-(defun notmuch-search-insert-field (field format-string date count authors subject tags)
+(defun notmuch-search-insert-field (field format-string result)
   (cond
    ((string-equal field "date")
-    (insert (propertize (format format-string date)
+    (insert (propertize (format format-string (plist-get result :date_relative))
 			'face 'notmuch-search-date)))
    ((string-equal field "count")
-    (insert (propertize (format format-string count)
+    (insert (propertize (format format-string
+				(format "[%s/%s]" (plist-get result :matched)
+					(plist-get result :total)))
 			'face 'notmuch-search-count)))
    ((string-equal field "subject")
-    (insert (propertize (format format-string subject)
+    (insert (propertize (format format-string (plist-get result :subject))
 			'face 'notmuch-search-subject)))
 
    ((string-equal field "authors")
-    (notmuch-search-insert-authors format-string authors))
+    (notmuch-search-insert-authors format-string (plist-get result :authors)))
 
    ((string-equal field "tags")
     ;; Ignore format-string here because notmuch-search-set-tags
     ;; depends on the format of this
-    (insert (concat "(" (propertize tags 'font-lock-face 'notmuch-tag-face) ")")))))
+    (insert (concat "(" (propertize
+			 (mapconcat 'identity (plist-get result :tags) " ")
+			 'font-lock-face 'notmuch-tag-face) ")")))))
 
-(defun notmuch-search-show-result (thread-id date count authors subject tags)
+(defun notmuch-search-show-result (result)
   ;; Ignore excluded matches
-  (unless (eq (aref count 1) ?0)
-    (let ((beg (point-max))
-	  (tags-str (mapconcat 'identity tags " ")))
+  (unless (= (plist-get result :matched) 0)
+    (let ((beg (point-max)))
       (save-excursion
 	(goto-char beg)
 	(dolist (spec notmuch-search-result-format)
-	  (notmuch-search-insert-field (car spec) (cdr spec)
-				       date count authors subject tags-str))
+	  (notmuch-search-insert-field (car spec) (cdr spec) result))
 	(insert "\n")
-	(notmuch-search-color-line beg (point) tags)
-	(put-text-property beg (point) 'notmuch-search-thread-id thread-id)
-	(put-text-property beg (point) 'notmuch-search-authors authors)
-	(put-text-property beg (point) 'notmuch-search-subject subject))
-      (when (string= thread-id notmuch-search-target-thread)
+	(notmuch-search-color-line beg (point) (plist-get result :tags))
+	(put-text-property beg (point) 'notmuch-search-thread-id
+			   (concat "thread:" (plist-get result :thread)))
+	(put-text-property beg (point) 'notmuch-search-authors
+			   (plist-get result :authors))
+	(put-text-property beg (point) 'notmuch-search-subject
+			   (plist-get result :subject)))
+      (when (string= (plist-get result :thread) notmuch-search-target-thread)
 	(setq notmuch-search-target-thread "found")
 	(goto-char beg)))))
 
@@ -766,18 +771,24 @@ non-authors is found, assume that all of the authors match."
 	      (while more
 		(while (and (< line (length string)) (= (elt string line) ?\n))
 		  (setq line (1+ line)))
-		(if (string-match "^\\(thread:[0-9A-Fa-f]*\\) \\([^][]*\\) \\(\\[[0-9/]*\\]\\) \\([^;]*\\); \\(.*\\) (\\([^()]*\\))$" string line)
+		(if (string-match "^thread:\\([0-9A-Fa-f]*\\) \\([^][]*\\) \\[\\([0-9]*\\)/\\([0-9]*\\)\\] \\([^;]*\\); \\(.*\\) (\\([^()]*\\))$" string line)
 		    (let* ((thread-id (match-string 1 string))
-			   (date (match-string 2 string))
-			   (count (match-string 3 string))
-			   (authors (match-string 4 string))
-			   (subject (match-string 5 string))
-			   (tags (match-string 6 string))
-			   (tag-list (if tags (save-match-data (split-string tags)))))
-		      (if (/= (match-beginning 1) line)
+			   (tags-str (match-string 7 string))
+			   (result (list :thread thread-id
+					 :date_relative (match-string 2 string)
+					 :matched (string-to-number
+						   (match-string 3 string))
+					 :total (string-to-number
+						 (match-string 4 string))
+					 :authors (match-string 5 string)
+					 :subject (match-string 6 string)
+					 :tags (if tags-str
+						   (save-match-data
+						     (split-string tags-str))))))
+		      (if (/= (match-beginning 0) line)
 			  (notmuch-search-show-error
-			   (substring string line (match-beginning 1))))
-		      (notmuch-search-show-result thread-id date count authors subject tag-list)
+			   (substring string line (match-beginning 0))))
+		      (notmuch-search-show-result result)
 		      (set 'line (match-end 0)))
 		  (set 'more nil)
 		  (while (and (< line (length string)) (= (elt string line) ?\n))
