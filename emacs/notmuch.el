@@ -707,29 +707,30 @@ non-authors is found, assume that all of the authors match."
 	  (overlay-put overlay 'isearch-open-invisible #'delete-overlay)))
       (insert padding))))
 
-(defun notmuch-search-insert-field (field date count authors subject tags)
+(defun notmuch-search-insert-field (field format-string date count authors subject tags)
   (cond
    ((string-equal field "date")
-    (insert (propertize (format (cdr (assoc field notmuch-search-result-format)) date)
+    (insert (propertize (format format-string date)
 			'face 'notmuch-search-date)))
    ((string-equal field "count")
-    (insert (propertize (format (cdr (assoc field notmuch-search-result-format)) count)
+    (insert (propertize (format format-string count)
 			'face 'notmuch-search-count)))
    ((string-equal field "subject")
-    (insert (propertize (format (cdr (assoc field notmuch-search-result-format)) subject)
+    (insert (propertize (format format-string subject)
 			'face 'notmuch-search-subject)))
 
    ((string-equal field "authors")
-    (notmuch-search-insert-authors (cdr (assoc field notmuch-search-result-format)) authors))
+    (notmuch-search-insert-authors format-string authors))
 
    ((string-equal field "tags")
+    ;; Ignore format-string here because notmuch-search-set-tags
+    ;; depends on the format of this
     (insert (concat "(" (propertize tags 'font-lock-face 'notmuch-tag-face) ")")))))
 
 (defun notmuch-search-show-result (date count authors subject tags)
-  (let ((fields) (field))
-    (setq fields (mapcar 'car notmuch-search-result-format))
-    (loop for field in fields
-	  do (notmuch-search-insert-field field date count authors subject tags)))
+  (dolist (spec notmuch-search-result-format)
+    (notmuch-search-insert-field (car spec) (cdr spec)
+				 date count authors subject tags))
   (insert "\n"))
 
 (defun notmuch-search-process-filter (proc string)
