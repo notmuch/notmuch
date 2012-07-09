@@ -741,6 +741,11 @@ non-authors is found, assume that all of the authors match."
       (put-text-property beg (point) 'notmuch-search-authors authors)
       (put-text-property beg (point) 'notmuch-search-subject subject))))
 
+(defun notmuch-search-show-error (string &rest objects)
+  (insert "Error: Unexpected output from notmuch search:\n")
+  (insert (apply #'format string objects))
+  (insert "\n"))
+
 (defun notmuch-search-process-filter (proc string)
   "Process and filter the output of \"notmuch search\""
   (let ((buffer (process-buffer proc))
@@ -766,7 +771,8 @@ non-authors is found, assume that all of the authors match."
 			   (tag-list (if tags (save-match-data (split-string tags)))))
 		      (goto-char (point-max))
 		      (if (/= (match-beginning 1) line)
-			  (insert (concat "Error: Unexpected output from notmuch search:\n" (substring string line (match-beginning 1)) "\n")))
+			  (notmuch-search-show-error
+			   (substring string line (match-beginning 1))))
 		      (when (string= thread-id notmuch-search-target-thread)
 			(set 'found-target (point))
 			(set 'notmuch-search-target-thread "found"))
