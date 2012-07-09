@@ -730,29 +730,34 @@ non-authors is found, assume that all of the authors match."
 (defun notmuch-search-show-result (thread-id date count authors subject tags)
   ;; Ignore excluded matches
   (unless (eq (aref count 1) ?0)
-    (let ((beg (point))
+    (let ((beg (point-max))
 	  (tags-str (mapconcat 'identity tags " ")))
-      (dolist (spec notmuch-search-result-format)
-	(notmuch-search-insert-field (car spec) (cdr spec)
-				     date count authors subject tags-str))
-      (insert "\n")
-      (notmuch-search-color-line beg (point) tags)
-      (put-text-property beg (point) 'notmuch-search-thread-id thread-id)
-      (put-text-property beg (point) 'notmuch-search-authors authors)
-      (put-text-property beg (point) 'notmuch-search-subject subject))))
+      (save-excursion
+	(goto-char beg)
+	(dolist (spec notmuch-search-result-format)
+	  (notmuch-search-insert-field (car spec) (cdr spec)
+				       date count authors subject tags-str))
+	(insert "\n")
+	(notmuch-search-color-line beg (point) tags)
+	(put-text-property beg (point) 'notmuch-search-thread-id thread-id)
+	(put-text-property beg (point) 'notmuch-search-authors authors)
+	(put-text-property beg (point) 'notmuch-search-subject subject))
+      (when (string= thread-id notmuch-search-target-thread)
+	(setq notmuch-search-target-thread "found")
+	(goto-char beg)))))
 
 (defun notmuch-search-show-error (string &rest objects)
-  (insert "Error: Unexpected output from notmuch search:\n")
-  (insert (apply #'format string objects))
-  (insert "\n"))
+  (save-excursion
+    (goto-char (point-max))
+    (insert "Error: Unexpected output from notmuch search:\n")
+    (insert (apply #'format string objects))
+    (insert "\n")))
 
 (defun notmuch-search-process-filter (proc string)
   "Process and filter the output of \"notmuch search\""
-  (let ((buffer (process-buffer proc))
-	(found-target nil))
+  (let ((buffer (process-buffer proc)))
     (if (buffer-live-p buffer)
 	(with-current-buffer buffer
-	  (save-excursion
 	    (let ((line 0)
 		  (more t)
 		  (inhibit-read-only t)
@@ -769,13 +774,9 @@ non-authors is found, assume that all of the authors match."
 			   (subject (match-string 5 string))
 			   (tags (match-string 6 string))
 			   (tag-list (if tags (save-match-data (split-string tags)))))
-		      (goto-char (point-max))
 		      (if (/= (match-beginning 1) line)
 			  (notmuch-search-show-error
 			   (substring string line (match-beginning 1))))
-		      (when (string= thread-id notmuch-search-target-thread)
-			(set 'found-target (point))
-			(set 'notmuch-search-target-thread "found"))
 		      (notmuch-search-show-result thread-id date count authors subject tag-list)
 		      (set 'line (match-end 0)))
 		  (set 'more nil)
@@ -784,8 +785,6 @@ non-authors is found, assume that all of the authors match."
 		  (if (< line (length string))
 		      (setq notmuch-search-process-filter-data (substring string line)))
 		  ))))
-	  (if found-target
-	      (goto-char found-target)))
       (delete-process proc))))
 
 (defun notmuch-search-tag-all (&optional tag-changes)
