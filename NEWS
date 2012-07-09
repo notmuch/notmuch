@@ -14,6 +14,23 @@ Maildir tag synchronization
   messages (typically causing new messages to not receive the "unread"
   tag).
 
+Emacs Interface
+---------------
+
+Search now uses the JSON format internally
+
+  This should address problems with unusual characters in authors and
+  subject lines that could confuse the old text-based search parser.
+
+The date shown in search results is no longer padded before applying
+user-specified formatting
+
+  Previously, the date in the search results was padded to fixed width
+  before being formatted with `notmuch-search-result-format`.  It is
+  no longer padded.  The default format has been updated, but if
+  you've customized this variable, you may have to change your date
+  format from `"%s "` to `"%12s "`.
+
 Notmuch 0.13.2 (2012-06-02)
 ===========================
 
