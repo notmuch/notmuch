@@ -23,6 +23,7 @@
 
 (require 'mm-view)
 (require 'mm-decode)
+(require 'json)
 (eval-when-compile (require 'cl))
 
 (defvar notmuch-command "notmuch"
@@ -295,6 +296,202 @@ was called."
 ;; declared globally first to avoid compiler warnings.
 (defvar notmuch-show-process-crypto nil)
 (make-variable-buffer-local 'notmuch-show-process-crypto)
+
+;; Incremental JSON parsing
+
+(defun notmuch-json-create-parser (buffer)
+  "Return a streaming JSON parser that consumes input from BUFFER.
+
+This parser is designed to read streaming JSON whose structure is
+known to the caller.  Like a typical JSON parsing interface, it
+provides a function to read a complete JSON value from the input.
+However, it extends this with an additional function that
+requires the next value in the input to be a compound value and
+descends into it, allowing its elements to be read one at a time
+or further descended into.  Both functions can return 'retry to
+indicate that not enough input is available.
+
+The parser always consumes input from BUFFER's point.  Hence, the
+caller is allowed to delete and data before point and may
+resynchronize after an error by moving point."
+
+  (list buffer
+	;; Terminator stack: a stack of characters that indicate the
+	;; end of the compound values enclosing point
+	'()
+	;; Next: One of
+	;; * 'expect-value if the next token must be a value, but a
+	;;   value has not yet been reached
+	;; * 'value if point is at the beginning of a value
+	;; * 'expect-comma if the next token must be a comma
+	'expect-value
+	;; Allow terminator: non-nil if the next token may be a
+	;; terminator
+	nil
+	;; Partial parse position: If state is 'value, a marker for
+	;; the position of the partial parser or nil if no partial
+	;; parsing has happened yet
+	nil
+	;; Partial parse state: If state is 'value, the current
+	;; `parse-partial-sexp' state
+	nil))
+
+(defmacro notmuch-json-buffer (jp) `(first ,jp))
+(defmacro notmuch-json-term-stack (jp) `(second ,jp))
+(defmacro notmuch-json-next (jp) `(third ,jp))
+(defmacro notmuch-json-allow-term (jp) `(fourth ,jp))
+(defmacro notmuch-json-partial-pos (jp) `(fifth ,jp))
+(defmacro notmuch-json-partial-state (jp) `(sixth ,jp))
+
+(defvar notmuch-json-syntax-table
+  (let ((table (make-syntax-table)))
+    ;; The standard syntax table is what we need except that "." needs
+    ;; to have word syntax instead of punctuation syntax.
+    (modify-syntax-entry ?. "w" table)
+    table)
+  "Syntax table used for incremental JSON parsing.")
+
+(defun notmuch-json-scan-to-value (jp)
+  ;; Helper function that consumes separators, terminators, and
+  ;; whitespace from point.  Returns nil if it successfully reached
+  ;; the beginning of a value, 'end if it consumed a terminator, or
+  ;; 'retry if not enough input was available to reach a value.  Upon
+  ;; nil return, (notmuch-json-next jp) is always 'value.
+
+  (if (eq (notmuch-json-next jp) 'value)
+      ;; We're already at a value
+      nil
+    ;; Drive the state toward 'expect-value
+    (skip-chars-forward " \t\r\n")
+    (or (when (eobp) 'retry)
+	;; Test for the terminator for the current compound
+	(when (and (notmuch-json-allow-term jp)
+		   (eq (char-after) (car (notmuch-json-term-stack jp))))
+	  ;; Consume it and expect a comma or terminator next
+	  (forward-char)
+	  (setf (notmuch-json-term-stack jp) (cdr (notmuch-json-term-stack jp))
+		(notmuch-json-next jp) 'expect-comma
+		(notmuch-json-allow-term jp) t)
+	  'end)
+	;; Test for a separator
+	(when (eq (notmuch-json-next jp) 'expect-comma)
+	  (when (/= (char-after) ?,)
+	    (signal 'json-readtable-error (list "expected ','")))
+	  ;; Consume it, switch to 'expect-value, and disallow a
+	  ;; terminator
+	  (forward-char)
+	  (skip-chars-forward " \t\r\n")
+	  (setf (notmuch-json-next jp) 'expect-value
+		(notmuch-json-allow-term jp) nil)
+	  ;; We moved point, so test for eobp again and fall through
+	  ;; to the next test if there's more input
+	  (when (eobp) 'retry))
+	;; Next must be 'expect-value and we know this isn't
+	;; whitespace, EOB, or a terminator, so point must be on a
+	;; value
+	(progn
+	  (assert (eq (notmuch-json-next jp) 'expect-value))
+	  (setf (notmuch-json-next jp) 'value)
+	  nil))))
+
+(defun notmuch-json-begin-compound (jp)
+  "Parse the beginning of a compound value and traverse inside it.
+
+Returns 'retry if there is insufficient input to parse the
+beginning of the compound.  If this is able to parse the
+beginning of a compound, it moves point past the token that opens
+the compound and returns t.  Later calls to `notmuch-json-read'
+will return the compound's elements.
+
+Entering JSON objects is currently unimplemented."
+
+  (with-current-buffer (notmuch-json-buffer jp)
+    ;; Disallow terminators
+    (setf (notmuch-json-allow-term jp) nil)
+    (or (notmuch-json-scan-to-value jp)
+	(if (/= (char-after) ?\[)
+	    (signal 'json-readtable-error (list "expected '['"))
+	  (forward-char)
+	  (push ?\] (notmuch-json-term-stack jp))
+	  ;; Expect a value or terminator next
+	  (setf (notmuch-json-next jp) 'expect-value
+		(notmuch-json-allow-term jp) t)
+	  t))))
+
+(defun notmuch-json-read (jp)
+  "Parse the value at point in JP's buffer.
+
+Returns 'retry if there is insufficient input to parse a complete
+JSON value (though it may still move point over separators or
+whitespace).  If the parser is currently inside a compound value
+and the next token ends the list or object, this moves point just
+past the terminator and returns 'end.  Otherwise, this moves
+point to just past the end of the value and returns the value."
+
+  (with-current-buffer (notmuch-json-buffer jp)
+    (or
+     ;; Get to a value state
+     (notmuch-json-scan-to-value jp)
+
+     ;; Can we parse a complete value?
+     (let ((complete
+	    (if (looking-at "[-+0-9tfn]")
+		;; This is a number or a keyword, so the partial
+		;; parser isn't going to help us because a truncated
+		;; number or keyword looks like a complete symbol to
+		;; it.  Look for something that clearly ends it.
+		(save-excursion
+		  (skip-chars-forward "^]},: \t\r\n")
+		  (not (eobp)))
+
+	      ;; We're looking at a string, object, or array, which we
+	      ;; can partial parse.  If we just reached the value, set
+	      ;; up the partial parser.
+	      (when (null (notmuch-json-partial-state jp))
+		(setf (notmuch-json-partial-pos jp) (point-marker)))
+
+	      ;; Extend the partial parse until we either reach EOB or
+	      ;; get the whole value
+	      (save-excursion
+		(let ((pstate
+		       (with-syntax-table notmuch-json-syntax-table
+			 (parse-partial-sexp
+			  (notmuch-json-partial-pos jp) (point-max) 0 nil
+			  (notmuch-json-partial-state jp)))))
+		  ;; A complete value is available if we've reached
+		  ;; depth 0 or less and encountered a complete
+		  ;; subexpression.
+		  (if (and (<= (first pstate) 0) (third pstate))
+		      t
+		    ;; Not complete.  Update the partial parser state
+		    (setf (notmuch-json-partial-pos jp) (point-marker)
+			  (notmuch-json-partial-state jp) pstate)
+		    nil))))))
+
+       (if (not complete)
+	   'retry
+	 ;; We have a value.  Reset the partial parse state and expect
+	 ;; a comma or terminator after the value.
+	 (setf (notmuch-json-next jp) 'expect-comma
+	       (notmuch-json-allow-term jp) t
+	       (notmuch-json-partial-pos jp) nil
+	       (notmuch-json-partial-state jp) nil)
+	 ;; Parse the value
+	 (let ((json-object-type 'plist)
+	       (json-array-type 'list)
+	       (json-false nil))
+	   (json-read)))))))
+
+(defun notmuch-json-eof (jp)
+  "Signal a json-error if there is more data in JP's buffer.
+
+Moves point to the beginning of any trailing data or to the end
+of the buffer if there is only trailing whitespace."
+
+  (with-current-buffer (notmuch-json-buffer jp)
+    (skip-chars-forward " \t\r\n")
+    (unless (eobp)
+      (signal 'json-error (list "Trailing garbage following JSON data")))))
 
 (provide 'notmuch-lib)
 
