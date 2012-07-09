@@ -36,7 +36,6 @@ test_emacs '(notmuch-search "tag:inbox")
 test_expect_equal_file OUTPUT $EXPECTED/notmuch-search-tag-inbox
 
 test_begin_subtest "Incremental parsing of search results"
-test_subtest_known_broken
 test_emacs "(ad-enable-advice 'notmuch-search-process-filter 'around 'pessimal)
 	    (ad-activate 'notmuch-search-process-filter)
 	    (notmuch-search \"tag:inbox\")
