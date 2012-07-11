@@ -18,10 +18,10 @@ import subprocess
 # parse command line arguments
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--text", help="output plain text format",
-                    action="store_true")
+parser.add_argument('--text', help='output plain text format',
+                    action='store_true')
 
-parser.add_argument("--config", help="load config from given file")
+parser.add_argument('--config', help='load config from given file')
 
 
 args = parser.parse_args()
@@ -31,18 +31,18 @@ args = parser.parse_args()
 if args.config != None:
     fp = open(args.config)
 else:
-    nmbhome = os.getenv('NMBGIT', os.path.expanduser("~/.nmbug"))
+    nmbhome = os.getenv('NMBGIT', os.path.expanduser('~/.nmbug'))
 
     # read only the first line from the pipe
-    sha1 =  subprocess.Popen(['git', '--git-dir', nmbhome,
-                     'show-ref', '-s', 'config'],
-                      stdout=subprocess.PIPE).stdout.readline()
+    sha1 = subprocess.Popen(['git', '--git-dir', nmbhome,
+                             'show-ref', '-s', 'config'],
+                            stdout=subprocess.PIPE).stdout.readline()
 
     sha1 = sha1.rstrip()
 
-    fp =  subprocess.Popen(['git', '--git-dir', nmbhome,
-                            'cat-file', 'blob', sha1+':status-config.json'],
-                           stdout=subprocess.PIPE).stdout
+    fp = subprocess.Popen(['git', '--git-dir', nmbhome,
+                           'cat-file', 'blob', sha1+':status-config.json'],
+                          stdout=subprocess.PIPE).stdout
 
 config = json.load(fp)
 
@@ -60,10 +60,9 @@ def clear_last():
 
 def print_view(title, query, comment):
 
-    query_string = " and ".join(query)
+    query_string = ' and '.join(query)
     q_new = notmuch.Query(db, query_string)
     q_new.set_sort(notmuch.Query.SORT.OLDEST_FIRST)
-
 
     last['thread_id'] = ''
 
@@ -94,7 +93,7 @@ def print_view(title, query, comment):
                 val = rfc822.parseaddr(val)[0]
 
             if last[header] == val:
-                out[header] = ""
+                out[header] = ''
             else:
                 out[header] = val.encode('utf-8')
                 last[header] = val
@@ -108,16 +107,16 @@ def print_view(title, query, comment):
                 br = '<br />'
             else:
                 br = ''
-                
-            out['subject'] = '<a href="http://mid.gmane.org/%s">%s</a>' \
-                                    % (urllib.quote(mid), out['subject'])
 
-            print " <tr><td>%s %s" % (br, out['date'])
-            print "</td><td>%s %s" % (br, out['id'])
-            print "</td></tr>"
-            print " <tr><td>%s" % out['from']
-            print "</td><td>%s" % out['subject']
-            print "</td></tr>\n"
+            out['subject'] = '<a href="http://mid.gmane.org/%s">%s</a>' \
+                % (urllib.quote(mid), out['subject'])
+
+            print ' <tr><td>%s %s' % (br, out['date'])
+            print '</td><td>%s %s' % (br, out['id'])
+            print '</td></tr>'
+            print ' <tr><td>%s' % out['from']
+            print '</td><td>%s' % out['subject']
+            print '</td></tr>\n'
         else:
             print '%(date)-10.10s %(from)-20.20s %(subject)-40.40s\n%(id)72s\n' % out
 
