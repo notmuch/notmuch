@@ -108,8 +108,9 @@ def print_view(title, query, comment):
                 br = '<br />'
             else:
                 br = ''
-                out['subject'] = '<a href="http://mid.gmane.org/%s">%s</a>' \
-                                        % (urllib.quote(mid), out['subject'])
+                
+            out['subject'] = '<a href="http://mid.gmane.org/%s">%s</a>' \
+                                    % (urllib.quote(mid), out['subject'])
 
             print " <tr><td>%s %s" % (br, out['date'])
             print "</td><td>%s %s" % (br, out['id'])
