@@ -1525,9 +1525,11 @@ thread, navigate to the next thread in the parent search buffer."
       (goto-char (point-max)))))
 
 (defun notmuch-show-previous-message ()
-  "Show the previous message."
+  "Show the previous message or the start of the current message."
   (interactive)
-  (notmuch-show-goto-message-previous)
+  (if (= (point) (notmuch-show-message-top))
+      (notmuch-show-goto-message-previous)
+    (notmuch-show-move-to-message-top))
   (notmuch-show-mark-read)
   (notmuch-show-message-adjust))
 
@@ -1587,7 +1589,9 @@ to show, nil otherwise."
 (defun notmuch-show-previous-open-message ()
   "Show the previous open message."
   (interactive)
-  (while (and (notmuch-show-goto-message-previous)
+  (while (and (if (= (point) (notmuch-show-message-top))
+		  (notmuch-show-goto-message-previous)
+		(notmuch-show-move-to-message-top))
 	      (not (notmuch-show-message-visible-p))))
   (notmuch-show-mark-read)
   (notmuch-show-message-adjust))
