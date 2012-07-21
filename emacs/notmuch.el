@@ -293,18 +293,25 @@ For a mouse binding, return nil."
 (defun notmuch-search-next-thread ()
   "Select the next thread in the search results."
   (interactive)
-  (forward-line 1))
+  (when (notmuch-search-get-result (notmuch-search-result-end))
+    (goto-char (notmuch-search-result-end))))
 
 (defun notmuch-search-previous-thread ()
   "Select the previous thread in the search results."
   (interactive)
-  (forward-line -1))
+  (if (notmuch-search-get-result)
+      (unless (bobp)
+	(goto-char (notmuch-search-result-beginning (- (point) 1))))
+    ;; We must be past the end; jump to the last result
+    (notmuch-search-last-thread)))
 
 (defun notmuch-search-last-thread ()
   "Select the last thread in the search results."
   (interactive)
   (goto-char (point-max))
-  (forward-line -2))
+  (forward-line -2)
+  (let ((beg (notmuch-search-result-beginning)))
+    (when beg (goto-char beg))))
 
 (defun notmuch-search-first-thread ()
   "Select the first thread in the search results."
