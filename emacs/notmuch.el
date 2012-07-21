@@ -509,28 +509,12 @@ and will also appear in a buffer named \"*Notmuch errors*\"."
 	    (error (buffer-substring beg end))
 	    ))))))
 
-(defun notmuch-search-set-tags (tags)
-  (save-excursion
-    (end-of-line)
-    (re-search-backward "(")
-    (forward-char)
-    (let ((beg (point))
-	  (inhibit-read-only t))
-      (re-search-forward ")")
-      (backward-char)
-      (let ((end (point)))
-	(delete-region beg end)
-	(insert (propertize (mapconcat  'identity tags " ")
-			    'face 'notmuch-tag-face))))))
+(defun notmuch-search-set-tags (tags &optional pos)
+  (let ((new-result (plist-put (notmuch-search-get-result pos) :tags tags)))
+    (notmuch-search-update-result new-result pos)))
 
-(defun notmuch-search-get-tags ()
-  (save-excursion
-    (end-of-line)
-    (re-search-backward "(")
-    (let ((beg (+ (point) 1)))
-      (re-search-forward ")")
-      (let ((end (- (point) 1)))
-	(split-string (buffer-substring-no-properties beg end))))))
+(defun notmuch-search-get-tags (&optional pos)
+  (plist-get (notmuch-search-get-result pos) :tags))
 
 (defun notmuch-search-get-tags-region (beg end)
   (save-excursion
@@ -582,6 +566,34 @@ This function advances the next thread when finished."
   (interactive)
   (notmuch-search-tag '("-inbox"))
   (notmuch-search-next-thread))
+
+(defun notmuch-search-update-result (result &optional pos)
+  "Replace the result object of the thread at POS (or point) by
+RESULT and redraw it.
+
+This will keep point in a reasonable location.  However, if there
+are enclosing save-excursions and the saved point is in the
+result being updated, the point will be restored to the beginning
+of the result."
+  (let ((start (notmuch-search-result-beginning pos))
+	(end (notmuch-search-result-end pos))
+	(init-point (point))
+	(inhibit-read-only t))
+    ;; Delete the current thread
+    (delete-region start end)
+    ;; Insert the updated thread
+    (notmuch-search-show-result result start)
+    ;; If point was inside the old result, make an educated guess
+    ;; about where to place it now.  Unfortunately, this won't work
+    ;; with save-excursion (or any other markers that would be nice to
+    ;; preserve, such as the window start), but there's nothing we can
+    ;; do about that without a way to retrieve markers in a region.
+    (when (and (>= init-point start) (<= init-point end))
+      (let* ((new-end (notmuch-search-result-end start))
+	     (new-point (if (= init-point end)
+			    new-end
+			  (min init-point (- new-end 1)))))
+	(goto-char new-point)))))
 
 (defun notmuch-search-process-sentinel (proc msg)
   "Add a message to let user know when \"notmuch search\" exits"
@@ -745,10 +757,11 @@ non-authors is found, assume that all of the authors match."
 			 (mapconcat 'identity (plist-get result :tags) " ")
 			 'font-lock-face 'notmuch-tag-face) ")")))))
 
-(defun notmuch-search-show-result (result)
+(defun notmuch-search-show-result (result &optional pos)
+  "Insert RESULT at POS or the end of the buffer if POS is null."
   ;; Ignore excluded matches
   (unless (= (plist-get result :matched) 0)
-    (let ((beg (point-max)))
+    (let ((beg (or pos (point-max))))
       (save-excursion
 	(goto-char beg)
 	(dolist (spec notmuch-search-result-format)
