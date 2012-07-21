@@ -401,6 +401,32 @@ Complete list of currently available key bindings:
 	mode-name "notmuch-search")
   (setq buffer-read-only t))
 
+(defun notmuch-search-get-result (&optional pos)
+  "Return the result object for the thread at POS (or point).
+
+If there is no thread at POS (or point), returns nil."
+  (get-text-property (or pos (point)) 'notmuch-search-result))
+
+(defun notmuch-search-result-beginning (&optional pos)
+  "Return the point at the beginning of the thread at POS (or point).
+
+If there is no thread at POS (or point), returns nil."
+  (when (notmuch-search-get-result pos)
+    ;; We pass 1+point because previous-single-property-change starts
+    ;; searching one before the position we give it.
+    (previous-single-property-change (1+ (or pos (point)))
+				     'notmuch-search-result nil (point-min))))
+
+(defun notmuch-search-result-end (&optional pos)
+  "Return the point at the end of the thread at POS (or point).
+
+The returned point will be just after the newline character that
+ends the result line.  If there is no thread at POS (or point),
+returns nil"
+  (when (notmuch-search-get-result pos)
+    (next-single-property-change (or pos (point)) 'notmuch-search-result
+				 nil (point-max))))
+
 (defun notmuch-search-properties-in-region (property beg end)
   (save-excursion
     (let ((output nil)
@@ -736,6 +762,7 @@ non-authors is found, assume that all of the authors match."
 	  (notmuch-search-insert-field (car spec) (cdr spec) result))
 	(insert "\n")
 	(notmuch-search-color-line beg (point) (plist-get result :tags))
+	(put-text-property beg (point) 'notmuch-search-result result)
 	(put-text-property beg (point) 'notmuch-search-thread-id
 			   (concat "thread:" (plist-get result :thread)))
 	(put-text-property beg (point) 'notmuch-search-authors
