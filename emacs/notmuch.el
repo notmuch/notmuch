@@ -69,7 +69,13 @@
 	date, count, authors, subject, tags
 For example:
 	(setq notmuch-search-result-format \(\(\"authors\" . \"%-40s\"\)
-					     \(\"subject\" . \"%s\"\)\)\)"
+					     \(\"subject\" . \"%s\"\)\)\)
+Line breaks are permitted in format strings (though this is
+currently experimental).  Note that a line break at the end of an
+\"authors\" field will get elided if the authors list is long;
+place it instead at the beginning of the following field.  To
+enter a line break when setting this variable with setq, use \\n.
+To enter a line break in customize, press \\[quoted-insert] C-j."
   :type '(alist :key-type (string) :value-type (string))
   :group 'notmuch-search)
 
@@ -427,17 +433,40 @@ returns nil"
     (next-single-property-change (or pos (point)) 'notmuch-search-result
 				 nil (point-max))))
 
+(defun notmuch-search-foreach-result (beg end function)
+  "Invoke FUNCTION for each result between BEG and END.
+
+FUNCTION should take one argument.  It will be applied to the
+character position of the beginning of each result that overlaps
+the region between points BEG and END.  As a special case, if (=
+BEG END), FUNCTION will be applied to the result containing point
+BEG."
+
+  (lexical-let ((pos (notmuch-search-result-beginning beg))
+		;; End must be a marker in case function changes the
+		;; text.
+		(end (copy-marker end))
+		;; Make sure we examine at least one result, even if
+		;; (= beg end).
+		(first t))
+    ;; We have to be careful if the region extends beyond the results.
+    ;; In this case, pos could be null or there could be no result at
+    ;; pos.
+    (while (and pos (or (< pos end) first))
+      (when (notmuch-search-get-result pos)
+	(funcall function pos))
+      (setq pos (notmuch-search-result-end pos)
+	    first nil))))
+;; Unindent the function argument of notmuch-search-foreach-result so
+;; the indentation of callers doesn't get out of hand.
+(put 'notmuch-search-foreach-result 'lisp-indent-function 2)
+
 (defun notmuch-search-properties-in-region (property beg end)
-  (save-excursion
-    (let ((output nil)
-	  (last-line (line-number-at-pos end))
-	  (max-line (- (line-number-at-pos (point-max)) 2)))
-      (goto-char beg)
-      (beginning-of-line)
-      (while (<= (line-number-at-pos) (min last-line max-line))
-	(setq output (cons (get-text-property (point) property) output))
-	(forward-line 1))
-      output)))
+  (let (output)
+    (notmuch-search-foreach-result beg end
+      (lambda (pos)
+	(push (get-text-property pos property) output)))
+    output))
 
 (defun notmuch-search-find-thread-id ()
   "Return the thread for the current thread"
@@ -517,28 +546,21 @@ and will also appear in a buffer named \"*Notmuch errors*\"."
   (plist-get (notmuch-search-get-result pos) :tags))
 
 (defun notmuch-search-get-tags-region (beg end)
-  (save-excursion
-    (let ((output nil)
-	  (last-line (line-number-at-pos end))
-	  (max-line (- (line-number-at-pos (point-max)) 2)))
-      (goto-char beg)
-      (while (<= (line-number-at-pos) (min last-line max-line))
-	(setq output (append output (notmuch-search-get-tags)))
-	(forward-line 1))
-      output)))
+  (let (output)
+    (notmuch-search-foreach-result beg end
+      (lambda (pos)
+	(setq output (append output (notmuch-search-get-tags pos)))))
+    output))
 
 (defun notmuch-search-tag-region (beg end &optional tag-changes)
   "Change tags for threads in the given region."
   (let ((search-string (notmuch-search-find-thread-id-region-search beg end)))
     (setq tag-changes (funcall 'notmuch-tag search-string tag-changes))
-    (save-excursion
-      (let ((last-line (line-number-at-pos end))
-	    (max-line (- (line-number-at-pos (point-max)) 2)))
-	(goto-char beg)
-	(while (<= (line-number-at-pos) (min last-line max-line))
-	  (notmuch-search-set-tags
-	   (notmuch-update-tags (notmuch-search-get-tags) tag-changes))
-	  (forward-line))))))
+    (notmuch-search-foreach-result beg end
+      (lambda (pos)
+	(notmuch-search-set-tags
+	 (notmuch-update-tags (notmuch-search-get-tags pos) tag-changes)
+	 pos)))))
 
 (defun notmuch-search-tag (&optional tag-changes)
   "Change tags for the currently selected thread or region.
