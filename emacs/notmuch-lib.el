@@ -269,6 +269,21 @@ current buffer, if possible."
   (loop for (key value . rest) on plist by #'cddr
 	collect (cons (intern (substring (symbol-name key) 1)) value)))
 
+(defun notmuch-combine-face-text-property (start end face)
+  "Combine FACE into the 'face text property between START and END.
+
+This function combines FACE with any existing faces between START
+and END.  Attributes specified by FACE take precedence over
+existing attributes.  FACE must be a face name (a symbol or
+string), a property list of face attributes, or a list of these."
+
+  (let ((pos start))
+    (while (< pos end)
+      (let ((cur (get-text-property pos 'face))
+	    (next (next-single-property-change pos 'face nil end)))
+	(put-text-property pos next 'face (cons face cur))
+	(setq pos next)))))
+
 ;; Compatibility functions for versions of emacs before emacs 23.
 ;;
 ;; Both functions here were copied from emacs 23 with the following copyright:

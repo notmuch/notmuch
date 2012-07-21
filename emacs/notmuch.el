@@ -633,20 +633,13 @@ foreground and blue background."
 
 (defun notmuch-search-color-line (start end line-tag-list)
   "Colorize lines in `notmuch-show' based on tags."
-  ;; Create the overlay only if the message has tags which match one
-  ;; of those specified in `notmuch-search-line-faces'.
-  (let (overlay)
-    (mapc (lambda (elem)
-	    (let ((tag (car elem))
-		  (attributes (cdr elem)))
-	      (when (member tag line-tag-list)
-		(when (not overlay)
-		  (setq overlay (make-overlay start end)))
-		;; Merge the specified properties with any already
-		;; applied from an earlier match.
-		(overlay-put overlay 'face
-			     (append (overlay-get overlay 'face) attributes)))))
-	  notmuch-search-line-faces)))
+  (mapc (lambda (elem)
+	  (let ((tag (car elem))
+		(attributes (cdr elem)))
+	    (when (member tag line-tag-list)
+	      (notmuch-combine-face-text-property start end attributes))))
+	;; Reverse the list so earlier entries take precedence
+	(reverse notmuch-search-line-faces)))
 
 (defun notmuch-search-author-propertize (authors)
   "Split `authors' into matching and non-matching authors and
