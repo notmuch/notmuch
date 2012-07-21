@@ -465,16 +465,18 @@ BEG."
   (let (output)
     (notmuch-search-foreach-result beg end
       (lambda (pos)
-	(push (get-text-property pos property) output)))
+	(push (plist-get (notmuch-search-get-result pos) property) output)))
     output))
 
 (defun notmuch-search-find-thread-id ()
   "Return the thread for the current thread"
-  (get-text-property (point) 'notmuch-search-thread-id))
+  (let ((thread (plist-get (notmuch-search-get-result) :thread)))
+    (when thread (concat "thread:" thread))))
 
 (defun notmuch-search-find-thread-id-region (beg end)
   "Return a list of threads for the current region"
-  (notmuch-search-properties-in-region 'notmuch-search-thread-id beg end))
+  (mapcar (lambda (thread) (concat "thread:" thread))
+	  (notmuch-search-properties-in-region :thread beg end)))
 
 (defun notmuch-search-find-thread-id-region-search (beg end)
   "Return a search string for threads for the current region"
@@ -482,19 +484,19 @@ BEG."
 
 (defun notmuch-search-find-authors ()
   "Return the authors for the current thread"
-  (get-text-property (point) 'notmuch-search-authors))
+  (plist-get (notmuch-search-get-result) :authors))
 
 (defun notmuch-search-find-authors-region (beg end)
   "Return a list of authors for the current region"
-  (notmuch-search-properties-in-region 'notmuch-search-authors beg end))
+  (notmuch-search-properties-in-region :authors beg end))
 
 (defun notmuch-search-find-subject ()
   "Return the subject for the current thread"
-  (get-text-property (point) 'notmuch-search-subject))
+  (plist-get (notmuch-search-get-result) :subject))
 
 (defun notmuch-search-find-subject-region (beg end)
   "Return a list of authors for the current region"
-  (notmuch-search-properties-in-region 'notmuch-search-subject beg end))
+  (notmuch-search-properties-in-region :subject beg end))
 
 (defun notmuch-search-show-thread ()
   "Display the currently selected thread."
@@ -790,13 +792,7 @@ non-authors is found, assume that all of the authors match."
 	  (notmuch-search-insert-field (car spec) (cdr spec) result))
 	(insert "\n")
 	(notmuch-search-color-line beg (point) (plist-get result :tags))
-	(put-text-property beg (point) 'notmuch-search-result result)
-	(put-text-property beg (point) 'notmuch-search-thread-id
-			   (concat "thread:" (plist-get result :thread)))
-	(put-text-property beg (point) 'notmuch-search-authors
-			   (plist-get result :authors))
-	(put-text-property beg (point) 'notmuch-search-subject
-			   (plist-get result :subject)))
+	(put-text-property beg (point) 'notmuch-search-result result))
       (when (string= (plist-get result :thread) notmuch-search-target-thread)
 	(setq notmuch-search-target-thread "found")
 	(goto-char beg)))))
