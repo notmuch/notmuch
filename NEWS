@@ -17,6 +17,20 @@ Maildir tag synchronization
 Emacs Interface
 ---------------
 
+Search results now get re-colored when tags are updated
+
+The formatting of tags in search results can now be customized
+
+  Previously, attempting to change the format of tags in
+  `notmuch-search-result-format` would usually break tagging from
+  search-mode.  We no longer make assumptions about the format.
+
+Experimental support for multi-line search result formats
+
+  It is now possible to embed newlines in
+  `notmuch-search-result-format` to make individual search results
+  span multiple lines.
+
 Search now uses the JSON format internally
 
   This should address problems with unusual characters in authors and
