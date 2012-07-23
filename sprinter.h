@@ -55,4 +55,14 @@ typedef struct sprinter {
     notmuch_bool_t is_text_printer;
 } sprinter_t;
 
+
+/* Create a new unstructured printer that emits the default text format
+ * for "notmuch search". */
+struct sprinter *
+sprinter_text_create (const void *ctx, FILE *stream);
+
+/* Create a new structure printer that emits JSON. */
+struct sprinter *
+sprinter_json_create (const void *ctx, FILE *stream);
+
 #endif // NOTMUCH_SPRINTER_H

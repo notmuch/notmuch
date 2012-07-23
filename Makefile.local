@@ -290,6 +290,8 @@ notmuch_client_srcs =		\
 	notmuch-show.c		\
 	notmuch-tag.c		\
 	notmuch-time.c		\
+	sprinter-json.c		\
+	sprinter-text.c		\
 	query-string.c		\
 	mime-node.c		\
 	crypto.c		\
