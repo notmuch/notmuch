@@ -152,6 +152,22 @@ The default is
 
 .RE
 
+.RS 4
+.TP 4
+.B \-\-body=(true|false)
+
+If true (the default)
+.B notmuch show
+includes the bodies of the messages in the output; if false,
+bodies are omitted.
+.B --body=false
+is only implemented for the json format and it is incompatible with
+.B --part > 0.
+
+This is useful if the caller only needs the headers as body-less
+output is much faster and substantially smaller.
+.RE
+
 A common use of
 .B notmuch show
 is to display a single thread of email messages. For this, use a
