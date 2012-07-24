@@ -620,7 +620,7 @@ notmuch_reply_format_json(void *ctx,
     /* Start the original */
     printf (", \"original\": ");
 
-    format_part_json (ctx, node, TRUE);
+    format_part_json (ctx, node, TRUE, TRUE);
 
     /* End */
     printf ("}\n");
