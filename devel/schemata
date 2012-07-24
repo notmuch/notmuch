@@ -47,7 +47,7 @@ message = {
     tags:           [string*],
 
     headers:        headers,
-    body:           [part]
+    body?:          [part]    # omitted if --body=false
 }
 
 # A MIME part (format_part_json)
