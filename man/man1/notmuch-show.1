@@ -24,11 +24,14 @@ Supported options for
 include
 .RS 4
 .TP 4
-.B \-\-entire\-thread
+.B \-\-entire\-thread=(true|false)
 
-By default only those messages that match the search terms will be
-displayed. With this option, all messages in the same thread as any
-matched message will be displayed.
+If true,
+.B notmuch show
+outputs all messages in the thread of any message matching the search
+terms; if false, it outputs only the matching messages. For
+.B --format=json
+this defaults to true.  For other formats, this defaults to false.
 .RE
 
 .RS 4
@@ -55,11 +58,13 @@ be nested.
 The output is formatted with Javascript Object Notation (JSON). This
 format is more robust than the text format for automated
 processing. The nested structure of multipart MIME messages is
-reflected in nested JSON output. JSON output always includes all
-messages in a matching thread; in effect
+reflected in nested JSON output. By default JSON output includes all
+messages in a matching thread; that is, by default,
 .B \-\-format=json
-implies
-.B \-\-entire\-thread
+sets
+.B "\-\-entire\-thread"
+The caller can disable this behaviour by setting
+.B \-\-entire\-thread=false
 
 .RE
 .RS 4
