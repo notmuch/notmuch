@@ -1617,7 +1617,7 @@ than only the current message."
   (let (shell-command)
     (if entire-thread
 	(setq shell-command
-	      (concat notmuch-command " show --format=mbox "
+	      (concat notmuch-command " show --format=mbox --exclude=false "
 		      (shell-quote-argument
 		       (mapconcat 'identity (notmuch-show-get-message-ids-for-open-messages) " OR "))
 		      " | " command))
