@@ -366,9 +366,10 @@ operation on the contents of the current buffer."
 					     'face 'notmuch-tag-face)
 				 ")"))))))
 
-(defun notmuch-show-clean-address (address)
-  "Try to clean a single email ADDRESS for display.  Return
-unchanged ADDRESS if parsing fails."
+(defun notmuch-clean-address (address)
+  "Try to clean a single email ADDRESS for display. Return a cons
+cell of (AUTHOR_EMAIL AUTHOR_NAME). Return (ADDRESS nil) if
+parsing fails."
   (condition-case nil
     (let (p-name p-address)
       ;; It would be convenient to use `mail-header-parse-address',
@@ -416,12 +417,20 @@ unchanged ADDRESS if parsing fails."
       (when (string= p-name p-address)
 	(setq p-name nil))
 
-      ;; If no name results, return just the address.
-      (if (not p-name)
-	  p-address
-	;; Otherwise format the name and address together.
-	(concat p-name " <" p-address ">")))
-    (error address)))
+      (cons p-address p-name))
+    (error (cons address nil))))
+
+(defun notmuch-show-clean-address (address)
+  "Try to clean a single email ADDRESS for display.  Return
+unchanged ADDRESS if parsing fails."
+  (let* ((clean-address (notmuch-clean-address address))
+	 (p-address (car clean-address))
+	 (p-name (cdr clean-address)))
+    ;; If no name, return just the address.
+    (if (not p-name)
+	p-address
+      ;; Otherwise format the name and address together.
+      (concat p-name " <" p-address ">"))))
 
 (defun notmuch-show-insert-headerline (headers date tags depth)
   "Insert a notmuch style headerline based on HEADERS for a
