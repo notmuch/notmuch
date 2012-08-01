@@ -18,6 +18,8 @@ use Mail::Box::Maildir;
 use Pod::Usage;
 use String::ShellQuote;
 use Term::ReadLine;
+use Digest::SHA;
+use File::Which;
 
 
 my $xdg_cache_dir = "$ENV{HOME}/.cache";
@@ -34,16 +36,65 @@ sub empty_maildir($) {
     $folder->close();
 }
 
-# search($maildir, $query)
+# Match files by size and SHA-256; then delete duplicates
+sub builtin_remove_dups($) {
+    my ($maildir) = @_;
+    my (%size_to_files, %sha_to_files);
+
+    # Group files by matching sizes
+    foreach my $file (glob("$maildir/cur/*")) {
+        my $size = -s $file;
+        push(@{$size_to_files{$size}}, $file) if $size;
+    }
+
+    foreach my $same_size_files (values %size_to_files) {
+        # Don't run sha unless there is another file of the same size
+        next if scalar(@$same_size_files) < 2;
+        %sha_to_files = ();
+
+        # Group files with matching sizes by SHA-256
+        foreach my $file (@$same_size_files) {
+            open(my $fh, '<', $file) or next;
+            binmode($fh);
+            my $sha256hash = Digest::SHA->new(256)->addfile($fh)->hexdigest;
+            close($fh);
+
+            push(@{$sha_to_files{$sha256hash}}, $file);
+        }
+
+        # Remove duplicates
+        foreach my $same_sha_files (values %sha_to_files) {
+            next if scalar(@$same_sha_files) < 2;
+            unlink(@{$same_sha_files}[1..$#$same_sha_files]);
+        }
+    }
+}
+
+# Use either fdupes or the built-in scanner to detect and remove duplicate
+# search results in the maildir
+sub remove_duplicates($) {
+    my ($maildir) = @_;
+
+    my $fdupes = which("fdupes");
+    if ($fdupes) {
+      system("$fdupes --hardlinks --symlinks --delete --noprompt"
+             . " --quiet $maildir/cur/ > /dev/null");
+    } else {
+        builtin_remove_dups($maildir);
+    }
+}
+
+# search($maildir, $remove_dups, $query)
 # search mails according to $query with notmuch; store results in $maildir
-sub search($$) {
-    my ($maildir, $query) = @_;
+sub search($$$) {
+    my ($maildir, $remove_dups, $query) = @_;
     $query = shell_quote($query);
 
     empty_maildir($maildir);
     system("notmuch search --output=files $query"
 	   . " | sed -e 's: :\\\\ :g'"
 	   . " | xargs --no-run-if-empty ln -s -t $maildir/cur/");
+    remove_duplicates($maildir) if ($remove_dups);
 }
 
 sub prompt($$) {
@@ -74,28 +125,28 @@ sub get_message_id() {
     return $1;
 }
 
-sub search_action($$@) {
-    my ($interactive, $results_dir, @params) = @_;
+sub search_action($$$@) {
+    my ($interactive, $results_dir, $remove_dups, @params) = @_;
 
     if (! $interactive) {
-	search($results_dir, join(' ', @params));
+	search($results_dir, $remove_dups, join(' ', @params));
     } else {
 	my $query = prompt("search ('?' for man): ", join(' ', @params));
 	if ($query ne "") {
-	    search($results_dir,$query);
+	    search($results_dir, $remove_dups, $query);
 	}
     }
 }
 
-sub thread_action(@) {
-    my ($results_dir, @params) = @_;
+sub thread_action($$@) {
+    my ($results_dir, $remove_dups, @params) = @_;
 
     my $mid = get_message_id();
     my $search_cmd = 'notmuch search --output=threads ' . shell_quote("id:$mid");
     my $tid = `$search_cmd`;	# get thread id
     chomp($tid);
 
-    search($results_dir, $tid);
+    search($results_dir, $remove_dups, $tid);
 }
 
 sub tag_action(@) {
@@ -118,11 +169,13 @@ sub main() {
     my $results_dir = "$cache_dir/results";
     my $interactive = 0;
     my $help_needed = 0;
+    my $remove_dups = 0;
 
     my $getopt = GetOptions(
 	"h|help" => \$help_needed,
 	"o|output-dir=s" => \$results_dir,
-	"p|prompt" => \$interactive);
+	"p|prompt" => \$interactive,
+	"r|remove-dups" => \$remove_dups);
     if (! $getopt || $#ARGV < 0) { die_usage() };
     my ($action, @params) = ($ARGV[0], @ARGV[1..$#ARGV]);
 
@@ -136,9 +189,9 @@ sub main() {
 	print STDERR "Error: no search term provided\n\n";
 	die_usage();
     } elsif ($action eq "search") {
-	search_action($interactive, $results_dir, @params);
+	search_action($interactive, $results_dir, $remove_dups, @params);
     } elsif ($action eq "thread") {
-	thread_action($results_dir, @params);
+	thread_action($results_dir, $remove_dups, @params);
     } elsif ($action eq "tag") {
 	tag_action(@params);
     } else {
@@ -189,6 +242,12 @@ be overwritten. (Default: F<~/.cache/notmuch/mutt/results/>)
 Instead of using command line search terms, prompt the user for them (only for
 "search").
 
+=item -r
+
+=item --remove-dups
+
+Remove duplicates from search results.
+
 =item -h
 
 =item --help
@@ -205,10 +264,10 @@ the following in your Mutt configuration (usually one of: F<~/.muttrc>,
 F</etc/Muttrc>, or a configuration snippet under F</etc/Muttrc.d/>):
 
     macro index <F8> \
-          "<enter-command>unset wait_key<enter><shell-escape>notmuch-mutt --prompt search<enter><change-folder-readonly>~/.cache/notmuch/mutt/results<enter>" \
+          "<enter-command>unset wait_key<enter><shell-escape>notmuch-mutt -r --prompt search<enter><change-folder-readonly>~/.cache/notmuch/mutt/results<enter>" \
           "notmuch: search mail"
     macro index <F9> \
-          "<enter-command>unset wait_key<enter><pipe-message>notmuch-mutt thread<enter><change-folder-readonly>~/.cache/notmuch/mutt/results<enter><enter-command>set wait_key<enter>" \
+          "<enter-command>unset wait_key<enter><pipe-message>notmuch-mutt -r thread<enter><change-folder-readonly>~/.cache/notmuch/mutt/results<enter><enter-command>set wait_key<enter>" \
           "notmuch: reconstruct thread"
     macro index <F6> \
           "<enter-command>unset wait_key<enter><pipe-message>notmuch-mutt tag -- -inbox<enter>" \
