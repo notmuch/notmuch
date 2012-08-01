@@ -109,8 +109,9 @@ Package: notmuch-mutt
 Architecture: all
 Depends: notmuch, libmail-box-perl, libmailtools-perl,
  libstring-shellquote-perl, libterm-readline-gnu-perl,
+ libfile-which-perl,
  ${misc:Depends}
-Recommends: mutt
+Recommends: mutt, fdupes
 Enhances: notmuch, mutt
 Description: thread-based email index, search and tagging (Mutt interface)
  notmuch-mutt provides integration among the Mutt mail user agent and
