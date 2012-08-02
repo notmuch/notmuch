@@ -267,10 +267,9 @@ quiet ?= $($(shell echo $1 | sed -e s'/ .*//'))
 clean:
 	rm -rf $(CLEAN); rm -rf .deps
 
-# We don't (yet) have any distributed files not in the upstream repository.
-# So distclean is currently identical to clean.
 .PHONY: distclean
 distclean: clean
+	rm -rf $(DISTCLEAN)
 
 notmuch_client_srcs =		\
 	command-line-arguments.c\
@@ -338,6 +337,8 @@ install-desktop:
 
 SRCS  := $(SRCS) $(notmuch_client_srcs)
 CLEAN := $(CLEAN) notmuch notmuch-shared $(notmuch_client_modules) notmuch.elc
+
+DISTCLEAN := $(DISTCLEAN) .first-build-message Makefile.config
 
 DEPS := $(SRCS:%.c=.deps/%.d)
 DEPS := $(DEPS:%.cc=.deps/%.d)
