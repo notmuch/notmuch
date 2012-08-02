@@ -265,7 +265,7 @@ quiet ?= $($(shell echo $1 | sed -e s'/ .*//'))
 
 .PHONY : clean
 clean:
-	rm -f $(CLEAN); rm -rf .deps
+	rm -rf $(CLEAN); rm -rf .deps
 
 # We don't (yet) have any distributed files not in the upstream repository.
 # So distclean is currently identical to clean.
