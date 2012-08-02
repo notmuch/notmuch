@@ -293,7 +293,7 @@ For a mouse binding, return nil."
 (defun notmuch-search-next-thread ()
   "Select the next thread in the search results."
   (interactive)
-  (when (notmuch-search-get-result (notmuch-search-result-end))
+  (when (notmuch-search-get-result)
     (goto-char (notmuch-search-result-end))))
 
 (defun notmuch-search-previous-thread ()
