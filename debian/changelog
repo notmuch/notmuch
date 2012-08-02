@@ -3,7 +3,11 @@ notmuch (0.14-1) unstable; urgency=low
   [ Stefano Zacchiroli ]
   * notmuch-mutt: fix tag action invocation (Closes: #678012)
 
- -- David Bremner <bremner@debian.org>  Thu, 12 Jul 2012 17:47:21 -0600
+  [ David Bremner ]
+  * Do a better job of cleaning up after configuration and testing
+    (Closes: #683505)
+
+ -- David Bremner <bremner@debian.org>  Thu, 02 Aug 2012 09:36:05 -0300
 
 notmuch (0.13.2-1) unstable; urgency=low
 
