@@ -588,7 +588,6 @@ format_part_json (const void *ctx, sprinter_t *sp, mime_node_t *node,
 	return;
     }
 
-    void *local = talloc_new (ctx);
     /* The disposition and content-type metadata are associated with
      * the envelope for message parts */
     GMimeObject *meta = node->envelope_part ?
@@ -597,31 +596,41 @@ format_part_json (const void *ctx, sprinter_t *sp, mime_node_t *node,
     const char *cid = g_mime_object_get_content_id (meta);
     const char *filename = GMIME_IS_PART (node->part) ?
 	g_mime_part_get_filename (GMIME_PART (node->part)) : NULL;
-    const char *terminator = "";
+    int nclose = 0;
     int i;
 
-    if (!first)
-	printf (", ");
+    sp->begin_map (sp);
 
-    printf ("{\"id\": %d", node->part_num);
+    sp->map_key (sp, "id");
+    sp->integer (sp, node->part_num);
 
-    if (node->decrypt_attempted)
-	printf (", \"encstatus\": [{\"status\": \"%s\"}]",
-		node->decrypt_success ? "good" : "bad");
+    if (node->decrypt_attempted) {
+	sp->map_key (sp, "encstatus");
+	sp->begin_list (sp);
+	sp->begin_map (sp);
+	sp->map_key (sp, "status");
+	sp->string (sp, node->decrypt_success ? "good" : "bad");
+	sp->end (sp);
+	sp->end (sp);
+    }
 
     if (node->verify_attempted) {
-	printf (", \"sigstatus\": ");
+	sp->map_key (sp, "sigstatus");
 	format_part_sigstatus_json (sp, node);
     }
 
-    printf (", \"content-type\": %s",
-	    json_quote_str (local, g_mime_content_type_to_string (content_type)));
+    sp->map_key (sp, "content-type");
+    sp->string (sp, g_mime_content_type_to_string (content_type));
 
-    if (cid)
-	printf (", \"content-id\": %s", json_quote_str (local, cid));
+    if (cid) {
+	sp->map_key (sp, "content-id");
+	sp->string (sp, cid);
+    }
 
-    if (filename)
-	printf (", \"filename\": %s", json_quote_str (local, filename));
+    if (filename) {
+	sp->map_key (sp, "filename");
+	sp->string (sp, filename);
+    }
 
     if (GMIME_IS_PART (node->part)) {
 	/* For non-HTML text parts, we include the content in the
@@ -636,35 +645,44 @@ format_part_json (const void *ctx, sprinter_t *sp, mime_node_t *node,
 	if (g_mime_content_type_is_type (content_type, "text", "html")) {
 	    const char *content_charset = g_mime_object_get_content_type_parameter (meta, "charset");
 
-	    if (content_charset != NULL)
-		printf (", \"content-charset\": %s", json_quote_str (local, content_charset));
+	    if (content_charset != NULL) {
+		sp->map_key (sp, "content-charset");
+		sp->string (sp, content_charset);
+	    }
 	} else if (g_mime_content_type_is_type (content_type, "text", "*")) {
 	    GMimeStream *stream_memory = g_mime_stream_mem_new ();
 	    GByteArray *part_content;
 	    show_text_part_content (node->part, stream_memory, 0);
 	    part_content = g_mime_stream_mem_get_byte_array (GMIME_STREAM_MEM (stream_memory));
-
-	    printf (", \"content\": %s", json_quote_chararray (local, (char *) part_content->data, part_content->len));
+	    sp->map_key (sp, "content");
+	    sp->string_len (sp, (char *) part_content->data, part_content->len);
 	    g_object_unref (stream_memory);
 	}
     } else if (GMIME_IS_MULTIPART (node->part)) {
-	printf (", \"content\": [");
-	terminator = "]";
+	sp->map_key (sp, "content");
+	sp->begin_list (sp);
+	nclose = 1;
     } else if (GMIME_IS_MESSAGE (node->part)) {
-	printf (", \"content\": [{");
-	printf ("\"headers\": ");
+	sp->map_key (sp, "content");
+	sp->begin_list (sp);
+	sp->begin_map (sp);
+
+	sp->map_key (sp, "headers");
 	format_headers_json (sp, GMIME_MESSAGE (node->part), FALSE);
 
-	printf (", \"body\": [");
-	terminator = "]}]";
+	sp->map_key (sp, "body");
+	sp->begin_list (sp);
+	nclose = 3;
     }
-
-    talloc_free (local);
 
     for (i = 0; i < node->nchildren; i++)
 	format_part_json (ctx, sp, mime_node_child (node, i), i == 0, TRUE);
 
-    printf ("%s}", terminator);
+    /* Close content structures */
+    for (i = 0; i < nclose; i++)
+	sp->end (sp);
+    /* Close part map */
+    sp->end (sp);
 }
 
 static notmuch_status_t
