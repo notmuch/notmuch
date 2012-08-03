@@ -109,35 +109,45 @@ _get_one_line_summary (const void *ctx, notmuch_message_t *message)
 			    from, relative_date, tags);
 }
 
+/* Emit a sequence of key/value pairs for the metadata of message.
+ * The caller should begin a map before calling this. */
 static void
-format_message_json (const void *ctx, notmuch_message_t *message)
+format_message_json (sprinter_t *sp, notmuch_message_t *message)
 {
+    void *local = talloc_new (NULL);
     notmuch_tags_t *tags;
-    int first = 1;
-    void *ctx_quote = talloc_new (ctx);
     time_t date;
     const char *relative_date;
 
+    sp->map_key (sp, "id");
+    sp->string (sp, notmuch_message_get_message_id (message));
+
+    sp->map_key (sp, "match");
+    sp->boolean (sp, notmuch_message_get_flag (message, NOTMUCH_MESSAGE_FLAG_MATCH));
+
+    sp->map_key (sp, "excluded");
+    sp->boolean (sp, notmuch_message_get_flag (message, NOTMUCH_MESSAGE_FLAG_EXCLUDED));
+
+    sp->map_key (sp, "filename");
+    sp->string (sp, notmuch_message_get_filename (message));
+
+    sp->map_key (sp, "timestamp");
     date = notmuch_message_get_date (message);
-    relative_date = notmuch_time_relative_date (ctx, date);
+    sp->integer (sp, date);
 
-    printf ("\"id\": %s, \"match\": %s, \"excluded\": %s, \"filename\": %s, \"timestamp\": %ld, \"date_relative\": \"%s\", \"tags\": [",
-	    json_quote_str (ctx_quote, notmuch_message_get_message_id (message)),
-	    notmuch_message_get_flag (message, NOTMUCH_MESSAGE_FLAG_MATCH) ? "true" : "false",
-	    notmuch_message_get_flag (message, NOTMUCH_MESSAGE_FLAG_EXCLUDED) ? "true" : "false",
-	    json_quote_str (ctx_quote, notmuch_message_get_filename (message)),
-	    date, relative_date);
+    sp->map_key (sp, "date_relative");
+    relative_date = notmuch_time_relative_date (local, date);
+    sp->string (sp, relative_date);
 
+    sp->map_key (sp, "tags");
+    sp->begin_list (sp);
     for (tags = notmuch_message_get_tags (message);
 	 notmuch_tags_valid (tags);
 	 notmuch_tags_move_to_next (tags))
-    {
-         printf("%s%s", first ? "" : ",",
-               json_quote_str (ctx_quote, notmuch_tags_get (tags)));
-         first = 0;
-    }
-    printf("], ");
-    talloc_free (ctx_quote);
+	sp->string (sp, notmuch_tags_get (tags));
+    sp->end (sp);
+
+    talloc_free (local);
 }
 
 /* Extract just the email address from the contents of a From:
@@ -573,18 +583,19 @@ format_part_json (const void *ctx, sprinter_t *sp, mime_node_t *node,
      * devel/schemata. */
 
     if (node->envelope_file) {
-	printf ("{");
-	format_message_json (ctx, node->envelope_file);
+	sp->begin_map (sp);
+	format_message_json (sp, node->envelope_file);
 
-	printf ("\"headers\": ");
+	sp->map_key (sp, "headers");
 	format_headers_json (sp, GMIME_MESSAGE (node->part), FALSE);
 
 	if (output_body) {
-	    printf (", \"body\": [");
+	    sp->map_key (sp, "body");
+	    sp->begin_list (sp);
 	    format_part_json (ctx, sp, mime_node_child (node, 0), first, TRUE);
-	    printf ("]");
+	    sp->end (sp);
 	}
-	printf ("}");
+	sp->end (sp);
 	return;
     }
 
