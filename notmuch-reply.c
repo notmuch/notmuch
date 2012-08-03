@@ -22,6 +22,7 @@
 
 #include "notmuch-client.h"
 #include "gmime-filter-headers.h"
+#include "sprinter.h"
 
 static void
 show_reply_headers (GMimeMessage *message)
@@ -596,6 +597,7 @@ notmuch_reply_format_json(void *ctx,
     notmuch_messages_t *messages;
     notmuch_message_t *message;
     mime_node_t *node;
+    sprinter_t *sp;
 
     if (notmuch_query_count_messages (query) != 1) {
 	fprintf (stderr, "Error: search term did not match precisely one message.\n");
@@ -610,6 +612,8 @@ notmuch_reply_format_json(void *ctx,
     reply = create_reply_message (ctx, config, message, reply_all);
     if (!reply)
 	return 1;
+
+    sp = sprinter_json_create (ctx, stdout);
 
     /* The headers of the reply message we've created */
     printf ("{\"reply-headers\": ");
