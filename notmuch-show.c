@@ -961,11 +961,9 @@ do_show (void *ctx,
     notmuch_threads_t *threads;
     notmuch_thread_t *thread;
     notmuch_messages_t *messages;
-    int first_toplevel = 1;
     notmuch_status_t status, res = NOTMUCH_STATUS_SUCCESS;
 
-    if (format->message_set_start)
-	fputs (format->message_set_start, stdout);
+    sp->begin_list (sp);
 
     for (threads = notmuch_query_search_threads (query);
 	 notmuch_threads_valid (threads);
@@ -979,10 +977,6 @@ do_show (void *ctx,
 	    INTERNAL_ERROR ("Thread %s has no toplevel messages.\n",
 			    notmuch_thread_get_thread_id (thread));
 
-	if (!first_toplevel && format->message_set_sep)
-	    fputs (format->message_set_sep, stdout);
-	first_toplevel = 0;
-
 	status = show_messages (ctx, format, sp, messages, 0, params);
 	if (status && !res)
 	    res = status;
@@ -991,8 +985,7 @@ do_show (void *ctx,
 
     }
 
-    if (format->message_set_end)
-	fputs (format->message_set_end, stdout);
+    sp->end (sp);
 
     return res != NOTMUCH_STATUS_SUCCESS;
 }
