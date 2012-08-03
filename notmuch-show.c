@@ -337,134 +337,138 @@ signer_status_to_string (GMimeSignerStatus x)
 
 #ifdef GMIME_ATLEAST_26
 static void
-format_part_sigstatus_json (mime_node_t *node)
+format_part_sigstatus_json (sprinter_t *sp, mime_node_t *node)
 {
     GMimeSignatureList *siglist = node->sig_list;
 
-    printf ("[");
+    sp->begin_list (sp);
 
     if (!siglist) {
-	printf ("]");
+	sp->end (sp);
 	return;
     }
 
-    void *ctx_quote = talloc_new (NULL);
     int i;
     for (i = 0; i < g_mime_signature_list_length (siglist); i++) {
 	GMimeSignature *signature = g_mime_signature_list_get_signature (siglist, i);
 
-	if (i > 0)
-	    printf (", ");
-
-	printf ("{");
+	sp->begin_map (sp);
 
 	/* status */
 	GMimeSignatureStatus status = g_mime_signature_get_status (signature);
-	printf ("\"status\": %s",
-		json_quote_str (ctx_quote,
-				signature_status_to_string (status)));
+	sp->map_key (sp, "status");
+	sp->string (sp, signature_status_to_string (status));
 
 	GMimeCertificate *certificate = g_mime_signature_get_certificate (signature);
 	if (status == GMIME_SIGNATURE_STATUS_GOOD) {
-	    if (certificate)
-		printf (", \"fingerprint\": %s", json_quote_str (ctx_quote, g_mime_certificate_get_fingerprint (certificate)));
+	    if (certificate) {
+		sp->map_key (sp, "fingerprint");
+		sp->string (sp, g_mime_certificate_get_fingerprint (certificate));
+	    }
 	    /* these dates are seconds since the epoch; should we
 	     * provide a more human-readable format string? */
 	    time_t created = g_mime_signature_get_created (signature);
-	    if (created != -1)
-		printf (", \"created\": %d", (int) created);
+	    if (created != -1) {
+		sp->map_key (sp, "created");
+		sp->integer (sp, created);
+	    }
 	    time_t expires = g_mime_signature_get_expires (signature);
-	    if (expires > 0)
-		printf (", \"expires\": %d", (int) expires);
+	    if (expires > 0) {
+		sp->map_key (sp, "expires");
+		sp->integer (sp, expires);
+	    }
 	    /* output user id only if validity is FULL or ULTIMATE. */
 	    /* note that gmime is using the term "trust" here, which
 	     * is WRONG.  It's actually user id "validity". */
 	    if (certificate) {
 		const char *name = g_mime_certificate_get_name (certificate);
 		GMimeCertificateTrust trust = g_mime_certificate_get_trust (certificate);
-		if (name && (trust == GMIME_CERTIFICATE_TRUST_FULLY || trust == GMIME_CERTIFICATE_TRUST_ULTIMATE))
-		    printf (", \"userid\": %s", json_quote_str (ctx_quote, name));
+		if (name && (trust == GMIME_CERTIFICATE_TRUST_FULLY || trust == GMIME_CERTIFICATE_TRUST_ULTIMATE)) {
+		    sp->map_key (sp, "userid");
+		    sp->string (sp, name);
+		}
 	    }
 	} else if (certificate) {
 	    const char *key_id = g_mime_certificate_get_key_id (certificate);
-	    if (key_id)
-		printf (", \"keyid\": %s", json_quote_str (ctx_quote, key_id));
+	    if (key_id) {
+		sp->map_key (sp, "keyid");
+		sp->string (sp, key_id);
+	    }
 	}
 
 	GMimeSignatureError errors = g_mime_signature_get_errors (signature);
 	if (errors != GMIME_SIGNATURE_ERROR_NONE) {
-	    printf (", \"errors\": %d", errors);
+	    sp->map_key (sp, "errors");
+	    sp->integer (sp, errors);
 	}
 
-	printf ("}");
+	sp->end (sp);
      }
 
-    printf ("]");
-
-    talloc_free (ctx_quote);
+    sp->end (sp);
 }
 #else
 static void
-format_part_sigstatus_json (mime_node_t *node)
+format_part_sigstatus_json (sprinter_t *sp, mime_node_t *node)
 {
     const GMimeSignatureValidity* validity = node->sig_validity;
 
-    printf ("[");
+    sp->begin_list (sp);
 
     if (!validity) {
-	printf ("]");
+	sp->end (sp);
 	return;
     }
 
     const GMimeSigner *signer = g_mime_signature_validity_get_signers (validity);
-    int first = 1;
-    void *ctx_quote = talloc_new (NULL);
-
     while (signer) {
-	if (first)
-	    first = 0;
-	else
-	    printf (", ");
-
-	printf ("{");
+	sp->begin_map (sp);
 
 	/* status */
-	printf ("\"status\": %s",
-		json_quote_str (ctx_quote,
-				signer_status_to_string (signer->status)));
+	sp->map_key (sp, "status");
+	sp->string (sp, signer_status_to_string (signer->status));
 
 	if (signer->status == GMIME_SIGNER_STATUS_GOOD)
 	{
-	    if (signer->fingerprint)
-		printf (", \"fingerprint\": %s", json_quote_str (ctx_quote, signer->fingerprint));
+	    if (signer->fingerprint) {
+		sp->map_key (sp, "fingerprint");
+		sp->string (sp, signer->fingerprint);
+	    }
 	    /* these dates are seconds since the epoch; should we
 	     * provide a more human-readable format string? */
-	    if (signer->created)
-		printf (", \"created\": %d", (int) signer->created);
-	    if (signer->expires)
-		printf (", \"expires\": %d", (int) signer->expires);
+	    if (signer->created) {
+		sp->map_key (sp, "created");
+		sp->integer (sp, signer->created);
+	    }
+	    if (signer->expires) {
+		sp->map_key (sp, "expires");
+		sp->integer (sp, signer->expires);
+	    }
 	    /* output user id only if validity is FULL or ULTIMATE. */
 	    /* note that gmime is using the term "trust" here, which
 	     * is WRONG.  It's actually user id "validity". */
 	    if ((signer->name) && (signer->trust)) {
-		if ((signer->trust == GMIME_SIGNER_TRUST_FULLY) || (signer->trust == GMIME_SIGNER_TRUST_ULTIMATE))
-		    printf (", \"userid\": %s", json_quote_str (ctx_quote, signer->name));
+		if ((signer->trust == GMIME_SIGNER_TRUST_FULLY) || (signer->trust == GMIME_SIGNER_TRUST_ULTIMATE)) {
+		    sp->map_key (sp, "userid");
+		    sp->string (sp, signer->name);
+		}
            }
        } else {
-           if (signer->keyid)
-               printf (", \"keyid\": %s", json_quote_str (ctx_quote, signer->keyid));
+           if (signer->keyid) {
+	       sp->map_key (sp, "keyid");
+	       sp->string (sp, signer->keyid);
+	   }
        }
        if (signer->errors != GMIME_SIGNER_ERROR_NONE) {
-           printf (", \"errors\": %d", signer->errors);
+	   sp->map_key (sp, "errors");
+	   sp->integer (sp, signer->errors);
        }
 
-       printf ("}");
+       sp->end (sp);
        signer = signer->next;
     }
 
-    printf ("]");
-
-    talloc_free (ctx_quote);
+    sp->end (sp);
 }
 #endif
 
@@ -607,7 +611,7 @@ format_part_json (const void *ctx, sprinter_t *sp, mime_node_t *node,
 
     if (node->verify_attempted) {
 	printf (", \"sigstatus\": ");
-	format_part_sigstatus_json (node);
+	format_part_sigstatus_json (sp, node);
     }
 
     printf (", \"content-type\": %s",
