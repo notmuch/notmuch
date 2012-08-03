@@ -512,6 +512,16 @@ test_expect_equal_file ()
     fi
 }
 
+# Like test_expect_equal, but arguments are JSON expressions to be
+# canonicalized before diff'ing.  If an argument cannot be parsed, it
+# is used unchanged so that there's something to diff against.
+test_expect_equal_json () {
+    output=$(echo "$1" | python -mjson.tool || echo "$1")
+    expected=$(echo "$2" | python -mjson.tool || echo "$2")
+    shift 2
+    test_expect_equal "$output" "$expected" "$@"
+}
+
 test_emacs_expect_t () {
 	test "$#" = 2 && { prereq=$1; shift; } || prereq=
 	test "$#" = 1 ||
@@ -565,10 +575,9 @@ notmuch_show_sanitize_all ()
 
 notmuch_json_show_sanitize ()
 {
-    sed -e 's|, |,\n |g' | \
-	sed \
-	-e 's|"id": "[^"]*",|"id": "XXXXX",|' \
-	-e 's|"filename": "[^"]*",|"filename": "YYYYY",|'
+    sed \
+	-e 's|"id": "[^"]*",|"id": "XXXXX",|g' \
+	-e 's|"filename": "[^"]*",|"filename": "YYYYY",|g'
 }
 
 # End of notmuch helper functions

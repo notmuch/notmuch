@@ -51,8 +51,7 @@ expected='[[[{"id": "XXXXX",
  "headers": {"Subject": "test signed message 001",
  "From": "Notmuch Test Suite <test_suite@notmuchmail.org>",
  "To": "test_suite@notmuchmail.org",
- "Date": "Sat,
- 01 Jan 2000 12:00:00 +0000"},
+ "Date": "Sat, 01 Jan 2000 12:00:00 +0000"},
  "body": [{"id": 1,
  "sigstatus": [{"status": "good",
  "fingerprint": "'$FINGERPRINT'",
@@ -64,7 +63,7 @@ expected='[[[{"id": "XXXXX",
  {"id": 3,
  "content-type": "application/pgp-signature"}]}]},
  []]]]'
-test_expect_equal \
+test_expect_equal_json \
     "$output" \
     "$expected"
 
@@ -85,8 +84,7 @@ expected='[[[{"id": "XXXXX",
  "headers": {"Subject": "test signed message 001",
  "From": "Notmuch Test Suite <test_suite@notmuchmail.org>",
  "To": "test_suite@notmuchmail.org",
- "Date": "Sat,
- 01 Jan 2000 12:00:00 +0000"},
+ "Date": "Sat, 01 Jan 2000 12:00:00 +0000"},
  "body": [{"id": 1,
  "sigstatus": [{"status": "good",
  "fingerprint": "'$FINGERPRINT'",
@@ -99,7 +97,7 @@ expected='[[[{"id": "XXXXX",
  {"id": 3,
  "content-type": "application/pgp-signature"}]}]},
  []]]]'
-test_expect_equal \
+test_expect_equal_json \
     "$output" \
     "$expected"
 
@@ -119,8 +117,7 @@ expected='[[[{"id": "XXXXX",
  "headers": {"Subject": "test signed message 001",
  "From": "Notmuch Test Suite <test_suite@notmuchmail.org>",
  "To": "test_suite@notmuchmail.org",
- "Date": "Sat,
- 01 Jan 2000 12:00:00 +0000"},
+ "Date": "Sat, 01 Jan 2000 12:00:00 +0000"},
  "body": [{"id": 1,
  "sigstatus": [{"status": "error",
  "keyid": "'$(echo $FINGERPRINT | cut -c 25-)'",
@@ -132,7 +129,7 @@ expected='[[[{"id": "XXXXX",
  {"id": 3,
  "content-type": "application/pgp-signature"}]}]},
  []]]]'
-test_expect_equal \
+test_expect_equal_json \
     "$output" \
     "$expected"
 mv "${GNUPGHOME}"{.bak,}
@@ -193,8 +190,7 @@ expected='[[[{"id": "XXXXX",
  "headers": {"Subject": "test encrypted message 001",
  "From": "Notmuch Test Suite <test_suite@notmuchmail.org>",
  "To": "test_suite@notmuchmail.org",
- "Date": "Sat,
- 01 Jan 2000 12:00:00 +0000"},
+ "Date": "Sat, 01 Jan 2000 12:00:00 +0000"},
  "body": [{"id": 1,
  "encstatus": [{"status": "good"}],
  "sigstatus": [],
@@ -210,7 +206,7 @@ expected='[[[{"id": "XXXXX",
  "content-type": "application/octet-stream",
  "filename": "TESTATTACHMENT"}]}]}]},
  []]]]'
-test_expect_equal \
+test_expect_equal_json \
     "$output" \
     "$expected"
 
@@ -221,7 +217,7 @@ output=$(notmuch show --format=json --part=4 --decrypt subject:"test encrypted m
 expected='{"id": 4,
  "content-type": "text/plain",
  "content": "This is a test encrypted message.\n"}'
-test_expect_equal \
+test_expect_equal_json \
     "$output" \
     "$expected"
 
@@ -248,8 +244,7 @@ expected='[[[{"id": "XXXXX",
  "headers": {"Subject": "test encrypted message 001",
  "From": "Notmuch Test Suite <test_suite@notmuchmail.org>",
  "To": "test_suite@notmuchmail.org",
- "Date": "Sat,
- 01 Jan 2000 12:00:00 +0000"},
+ "Date": "Sat, 01 Jan 2000 12:00:00 +0000"},
  "body": [{"id": 1,
  "encstatus": [{"status": "bad"}],
  "content-type": "multipart/encrypted",
@@ -258,7 +253,7 @@ expected='[[[{"id": "XXXXX",
  {"id": 3,
  "content-type": "application/octet-stream"}]}]},
  []]]]'
-test_expect_equal \
+test_expect_equal_json \
     "$output" \
     "$expected"
 mv "${GNUPGHOME}"{.bak,}
@@ -283,8 +278,7 @@ expected='[[[{"id": "XXXXX",
  "headers": {"Subject": "test encrypted message 002",
  "From": "Notmuch Test Suite <test_suite@notmuchmail.org>",
  "To": "test_suite@notmuchmail.org",
- "Date": "Sat,
- 01 Jan 2000 12:00:00 +0000"},
+ "Date": "Sat, 01 Jan 2000 12:00:00 +0000"},
  "body": [{"id": 1,
  "encstatus": [{"status": "good"}],
  "sigstatus": [{"status": "good",
@@ -298,7 +292,7 @@ expected='[[[{"id": "XXXXX",
  "content-type": "text/plain",
  "content": "This is another test encrypted message.\n"}]}]},
  []]]]'
-test_expect_equal \
+test_expect_equal_json \
     "$output" \
     "$expected"
 
@@ -338,8 +332,7 @@ expected='[[[{"id": "XXXXX",
  "headers": {"Subject": "test signed message 001",
  "From": "Notmuch Test Suite <test_suite@notmuchmail.org>",
  "To": "test_suite@notmuchmail.org",
- "Date": "Sat,
- 01 Jan 2000 12:00:00 +0000"},
+ "Date": "Sat, 01 Jan 2000 12:00:00 +0000"},
  "body": [{"id": 1,
  "sigstatus": [{"status": "error",
  "keyid": "6D92612D94E46381",
@@ -351,7 +344,7 @@ expected='[[[{"id": "XXXXX",
  {"id": 3,
  "content-type": "application/pgp-signature"}]}]},
  []]]]'
-test_expect_equal \
+test_expect_equal_json \
     "$output" \
     "$expected"
 
