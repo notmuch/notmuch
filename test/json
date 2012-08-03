@@ -18,7 +18,7 @@ test_expect_equal_json "$output" "[[[{\"id\": \"${gen_msg_id}\", \"match\": true
 
 test_begin_subtest "Search message: json"
 add_message "[subject]=\"json-search-subject\"" "[date]=\"Sat, 01 Jan 2000 12:00:00 -0000\"" "[body]=\"json-search-message\""
-output=$(notmuch search --format=json "json-search-message" | notmuch_json_show_sanitize | notmuch_search_sanitize)
+output=$(notmuch search --format=json "json-search-message" | notmuch_search_sanitize)
 test_expect_equal_json "$output" "[{\"thread\": \"XXX\",
  \"timestamp\": 946728000,
  \"date_relative\": \"2000-01-01\",
@@ -49,7 +49,7 @@ test_expect_equal_json "$output" "[[[{\"id\": \"$id\", \"match\": true, \"exclud
 
 test_begin_subtest "Search message: json, utf-8"
 add_message "[subject]=\"json-search-utf8-body-sübjéct\"" "[date]=\"Sat, 01 Jan 2000 12:00:00 -0000\"" "[body]=\"jsön-search-méssage\""
-output=$(notmuch search --format=json "jsön-search-méssage" | notmuch_json_show_sanitize | notmuch_search_sanitize)
+output=$(notmuch search --format=json "jsön-search-méssage" | notmuch_search_sanitize)
 test_expect_equal_json "$output" "[{\"thread\": \"XXX\",
  \"timestamp\": 946728000,
  \"date_relative\": \"2000-01-01\",

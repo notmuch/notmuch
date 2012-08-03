@@ -7,7 +7,6 @@ test_description="maildir synchronization"
 # Avoid including the local value of MAIL_DIR in the result.
 filter_show_json() {
     sed -e "s|${MAIL_DIR}/|MAIL_DIR/|"
-    echo
 }
 
 # Create the expected maildir structure
