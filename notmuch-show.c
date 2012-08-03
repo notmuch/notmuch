@@ -199,48 +199,46 @@ _is_from_line (const char *line)
 }
 
 void
-format_headers_json (const void *ctx, GMimeMessage *message, notmuch_bool_t reply)
+format_headers_json (sprinter_t *sp, GMimeMessage *message,
+		     notmuch_bool_t reply)
 {
-    void *local = talloc_new (ctx);
     InternetAddressList *recipients;
     const char *recipients_string;
 
-    printf ("{%s: %s",
-	    json_quote_str (local, "Subject"),
-	    json_quote_str (local, g_mime_message_get_subject (message)));
-    printf (", %s: %s",
-	    json_quote_str (local, "From"),
-	    json_quote_str (local, g_mime_message_get_sender (message)));
+    sp->begin_map (sp);
+
+    sp->map_key (sp, "Subject");
+    sp->string (sp, g_mime_message_get_subject (message));
+
+    sp->map_key (sp, "From");
+    sp->string (sp, g_mime_message_get_sender (message));
+
     recipients = g_mime_message_get_recipients (message, GMIME_RECIPIENT_TYPE_TO);
     recipients_string = internet_address_list_to_string (recipients, 0);
-    if (recipients_string)
-	printf (", %s: %s",
-		json_quote_str (local, "To"),
-		json_quote_str (local, recipients_string));
-    recipients = g_mime_message_get_recipients (message, GMIME_RECIPIENT_TYPE_CC);
-    recipients_string = internet_address_list_to_string (recipients, 0);
-    if (recipients_string)
-	printf (", %s: %s",
-		json_quote_str (local, "Cc"),
-		json_quote_str (local, recipients_string));
-
-    if (reply) {
-	printf (", %s: %s",
-		json_quote_str (local, "In-reply-to"),
-		json_quote_str (local, g_mime_object_get_header (GMIME_OBJECT (message), "In-reply-to")));
-
-	printf (", %s: %s",
-		json_quote_str (local, "References"),
-		json_quote_str (local, g_mime_object_get_header (GMIME_OBJECT (message), "References")));
-    } else {
-	printf (", %s: %s",
-		json_quote_str (local, "Date"),
-		json_quote_str (local, g_mime_message_get_date_as_string (message)));
+    if (recipients_string) {
+	sp->map_key (sp, "To");
+	sp->string (sp, recipients_string);
     }
 
-    printf ("}");
+    recipients = g_mime_message_get_recipients (message, GMIME_RECIPIENT_TYPE_CC);
+    recipients_string = internet_address_list_to_string (recipients, 0);
+    if (recipients_string) {
+	sp->map_key (sp, "Cc");
+	sp->string (sp, recipients_string);
+    }
 
-    talloc_free (local);
+    if (reply) {
+	sp->map_key (sp, "In-reply-to");
+	sp->string (sp, g_mime_object_get_header (GMIME_OBJECT (message), "In-reply-to"));
+
+	sp->map_key (sp, "References");
+	sp->string (sp, g_mime_object_get_header (GMIME_OBJECT (message), "References"));
+    } else {
+	sp->map_key (sp, "Date");
+	sp->string (sp, g_mime_message_get_date_as_string (message));
+    }
+
+    sp->end (sp);
 }
 
 /* Write a MIME text part out to the given stream.
@@ -575,7 +573,7 @@ format_part_json (const void *ctx, sprinter_t *sp, mime_node_t *node,
 	format_message_json (ctx, node->envelope_file);
 
 	printf ("\"headers\": ");
-	format_headers_json (ctx, GMIME_MESSAGE (node->part), FALSE);
+	format_headers_json (sp, GMIME_MESSAGE (node->part), FALSE);
 
 	if (output_body) {
 	    printf (", \"body\": [");
@@ -651,7 +649,7 @@ format_part_json (const void *ctx, sprinter_t *sp, mime_node_t *node,
     } else if (GMIME_IS_MESSAGE (node->part)) {
 	printf (", \"content\": [{");
 	printf ("\"headers\": ");
-	format_headers_json (local, GMIME_MESSAGE (node->part), FALSE);
+	format_headers_json (sp, GMIME_MESSAGE (node->part), FALSE);
 
 	printf (", \"body\": [");
 	terminator = "]}]";

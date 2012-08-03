@@ -617,7 +617,7 @@ notmuch_reply_format_json(void *ctx,
 
     /* The headers of the reply message we've created */
     printf ("{\"reply-headers\": ");
-    format_headers_json (ctx, reply, TRUE);
+    format_headers_json (sp, reply, TRUE);
     g_object_unref (G_OBJECT (reply));
     reply = NULL;
 

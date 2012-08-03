@@ -183,7 +183,8 @@ format_part_json (const void *ctx, struct sprinter *sp, mime_node_t *node,
 		  notmuch_bool_t first, notmuch_bool_t output_body);
 
 void
-format_headers_json (const void *ctx, GMimeMessage *message, notmuch_bool_t reply);
+format_headers_json (struct sprinter *sp, GMimeMessage *message,
+		     notmuch_bool_t reply);
 
 typedef enum {
     NOTMUCH_SHOW_TEXT_PART_REPLY = 1 << 0,
