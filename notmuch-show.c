@@ -20,12 +20,14 @@
 
 #include "notmuch-client.h"
 #include "gmime-filter-reply.h"
+#include "sprinter.h"
 
 static notmuch_status_t
 format_part_text (const void *ctx, mime_node_t *node,
 		  int indent, const notmuch_show_params_t *params);
 
 static const notmuch_show_format_t format_text = {
+    .new_sprinter = sprinter_text_create,
     .part = format_part_text,
 };
 
@@ -34,6 +36,7 @@ format_part_json_entry (const void *ctx, mime_node_t *node,
 			int indent, const notmuch_show_params_t *params);
 
 static const notmuch_show_format_t format_json = {
+    .new_sprinter = sprinter_json_create,
     .message_set_start = "[",
     .part = format_part_json_entry,
     .message_set_sep = ", ",
@@ -46,6 +49,7 @@ format_part_mbox (const void *ctx, mime_node_t *node,
 		  int indent, const notmuch_show_params_t *params);
 
 static const notmuch_show_format_t format_mbox = {
+    .new_sprinter = sprinter_text_create,
     .part = format_part_mbox,
 };
 
@@ -55,6 +59,7 @@ format_part_raw (unused (const void *ctx), mime_node_t *node,
 		 unused (const notmuch_show_params_t *params));
 
 static const notmuch_show_format_t format_raw = {
+    .new_sprinter = sprinter_text_create,
     .part = format_part_raw,
 };
 
@@ -1003,6 +1008,7 @@ notmuch_show_command (void *ctx, unused (int argc), unused (char *argv[]))
     char *query_string;
     int opt_index, ret;
     const notmuch_show_format_t *format = &format_text;
+    sprinter_t *sprinter;
     notmuch_show_params_t params = {
 	.part = -1,
 	.omit_excluded = TRUE,
@@ -1129,6 +1135,9 @@ notmuch_show_command (void *ctx, unused (int argc), unused (char *argv[]))
 	fprintf (stderr, "Out of memory\n");
 	return 1;
     }
+
+    /* Create structure printer. */
+    sprinter = format->new_sprinter(ctx, stdout);
 
     /* If a single message is requested we do not use search_excludes. */
     if (params.part >= 0)

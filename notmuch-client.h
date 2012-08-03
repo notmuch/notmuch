@@ -69,6 +69,7 @@ typedef struct mime_node mime_node_t;
 struct notmuch_show_params;
 
 typedef struct notmuch_show_format {
+    struct sprinter *(*new_sprinter) (const void *ctx, FILE *stream);
     const char *message_set_start;
     notmuch_status_t (*part) (const void *ctx,
 			      struct mime_node *node, int indent,
