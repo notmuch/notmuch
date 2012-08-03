@@ -66,12 +66,13 @@ typedef GMimeCipherContext notmuch_crypto_context_t;
 #define STRINGIFY_(s) #s
 
 typedef struct mime_node mime_node_t;
+struct sprinter;
 struct notmuch_show_params;
 
 typedef struct notmuch_show_format {
     struct sprinter *(*new_sprinter) (const void *ctx, FILE *stream);
     const char *message_set_start;
-    notmuch_status_t (*part) (const void *ctx,
+    notmuch_status_t (*part) (const void *ctx, struct sprinter *sprinter,
 			      struct mime_node *node, int indent,
 			      const struct notmuch_show_params *params);
     const char *message_set_sep;
@@ -178,7 +179,8 @@ notmuch_status_t
 show_one_part (const char *filename, int part);
 
 void
-format_part_json (const void *ctx, mime_node_t *node, notmuch_bool_t first, notmuch_bool_t output_body);
+format_part_json (const void *ctx, struct sprinter *sp, mime_node_t *node,
+		  notmuch_bool_t first, notmuch_bool_t output_body);
 
 void
 format_headers_json (const void *ctx, GMimeMessage *message, notmuch_bool_t reply);

@@ -23,7 +23,7 @@
 #include "sprinter.h"
 
 static notmuch_status_t
-format_part_text (const void *ctx, mime_node_t *node,
+format_part_text (const void *ctx, sprinter_t *sp, mime_node_t *node,
 		  int indent, const notmuch_show_params_t *params);
 
 static const notmuch_show_format_t format_text = {
@@ -32,7 +32,7 @@ static const notmuch_show_format_t format_text = {
 };
 
 static notmuch_status_t
-format_part_json_entry (const void *ctx, mime_node_t *node,
+format_part_json_entry (const void *ctx, sprinter_t *sp, mime_node_t *node,
 			int indent, const notmuch_show_params_t *params);
 
 static const notmuch_show_format_t format_json = {
@@ -45,7 +45,7 @@ static const notmuch_show_format_t format_json = {
 };
 
 static notmuch_status_t
-format_part_mbox (const void *ctx, mime_node_t *node,
+format_part_mbox (const void *ctx, sprinter_t *sp, mime_node_t *node,
 		  int indent, const notmuch_show_params_t *params);
 
 static const notmuch_show_format_t format_mbox = {
@@ -54,7 +54,7 @@ static const notmuch_show_format_t format_mbox = {
 };
 
 static notmuch_status_t
-format_part_raw (unused (const void *ctx), mime_node_t *node,
+format_part_raw (unused (const void *ctx), sprinter_t *sp, mime_node_t *node,
 		 unused (int indent),
 		 unused (const notmuch_show_params_t *params));
 
@@ -471,7 +471,7 @@ format_part_sigstatus_json (mime_node_t *node)
 #endif
 
 static notmuch_status_t
-format_part_text (const void *ctx, mime_node_t *node,
+format_part_text (const void *ctx, sprinter_t *sp, mime_node_t *node,
 		  int indent, const notmuch_show_params_t *params)
 {
     /* The disposition and content-type metadata are associated with
@@ -553,7 +553,7 @@ format_part_text (const void *ctx, mime_node_t *node,
     }
 
     for (i = 0; i < node->nchildren; i++)
-	format_part_text (ctx, mime_node_child (node, i), indent, params);
+	format_part_text (ctx, sp, mime_node_child (node, i), indent, params);
 
     if (GMIME_IS_MESSAGE (node->part))
 	printf ("\fbody}\n");
@@ -564,7 +564,8 @@ format_part_text (const void *ctx, mime_node_t *node,
 }
 
 void
-format_part_json (const void *ctx, mime_node_t *node, notmuch_bool_t first, notmuch_bool_t output_body)
+format_part_json (const void *ctx, sprinter_t *sp, mime_node_t *node,
+		  notmuch_bool_t first, notmuch_bool_t output_body)
 {
     /* Any changes to the JSON format should be reflected in the file
      * devel/schemata. */
@@ -578,7 +579,7 @@ format_part_json (const void *ctx, mime_node_t *node, notmuch_bool_t first, notm
 
 	if (output_body) {
 	    printf (", \"body\": [");
-	    format_part_json (ctx, mime_node_child (node, 0), first, TRUE);
+	    format_part_json (ctx, sp, mime_node_child (node, 0), first, TRUE);
 	    printf ("]");
 	}
 	printf ("}");
@@ -659,16 +660,17 @@ format_part_json (const void *ctx, mime_node_t *node, notmuch_bool_t first, notm
     talloc_free (local);
 
     for (i = 0; i < node->nchildren; i++)
-	format_part_json (ctx, mime_node_child (node, i), i == 0, TRUE);
+	format_part_json (ctx, sp, mime_node_child (node, i), i == 0, TRUE);
 
     printf ("%s}", terminator);
 }
 
 static notmuch_status_t
-format_part_json_entry (const void *ctx, mime_node_t *node, unused (int indent),
+format_part_json_entry (const void *ctx, sprinter_t *sp,
+			mime_node_t *node, unused (int indent),
 			const notmuch_show_params_t *params)
 {
-    format_part_json (ctx, node, TRUE, params->output_body);
+    format_part_json (ctx, sp, node, TRUE, params->output_body);
 
     return NOTMUCH_STATUS_SUCCESS;
 }
@@ -679,7 +681,8 @@ format_part_json_entry (const void *ctx, mime_node_t *node, unused (int indent),
  * http://qmail.org/qmail-manual-html/man5/mbox.html
  */
 static notmuch_status_t
-format_part_mbox (const void *ctx, mime_node_t *node, unused (int indent),
+format_part_mbox (const void *ctx, unused (sprinter_t *sp), mime_node_t *node,
+		  unused (int indent),
 		  unused (const notmuch_show_params_t *params))
 {
     notmuch_message_t *message = node->envelope_file;
@@ -730,8 +733,8 @@ format_part_mbox (const void *ctx, mime_node_t *node, unused (int indent),
 }
 
 static notmuch_status_t
-format_part_raw (unused (const void *ctx), mime_node_t *node,
-		 unused (int indent),
+format_part_raw (unused (const void *ctx), unused (sprinter_t *sp),
+		 mime_node_t *node, unused (int indent),
 		 unused (const notmuch_show_params_t *params))
 {
     if (node->envelope_file) {
@@ -819,6 +822,7 @@ show_null_message (const notmuch_show_format_t *format)
 static notmuch_status_t
 show_message (void *ctx,
 	      const notmuch_show_format_t *format,
+	      sprinter_t *sp,
 	      notmuch_message_t *message,
 	      int indent,
 	      notmuch_show_params_t *params)
@@ -832,7 +836,7 @@ show_message (void *ctx,
 	goto DONE;
     part = mime_node_seek_dfs (root, (params->part < 0 ? 0 : params->part));
     if (part)
-	status = format->part (local, part, indent, params);
+	status = format->part (local, sp, part, indent, params);
   DONE:
     talloc_free (local);
     return status;
@@ -841,6 +845,7 @@ show_message (void *ctx,
 static notmuch_status_t
 show_messages (void *ctx,
 	       const notmuch_show_format_t *format,
+	       sprinter_t *sp,
 	       notmuch_messages_t *messages,
 	       int indent,
 	       notmuch_show_params_t *params)
@@ -874,7 +879,7 @@ show_messages (void *ctx,
 	next_indent = indent;
 
 	if ((match && (!excluded || !params->omit_excluded)) || params->entire_thread) {
-	    status = show_message (ctx, format, message, indent, params);
+	    status = show_message (ctx, format, sp, message, indent, params);
 	    if (status && !res)
 		res = status;
 	    next_indent = indent + 1;
@@ -886,7 +891,7 @@ show_messages (void *ctx,
 	    fputs (format->message_set_sep, stdout);
 
 	status = show_messages (ctx,
-				format,
+				format, sp,
 				notmuch_message_get_replies (message),
 				next_indent,
 				params);
@@ -910,6 +915,7 @@ static int
 do_show_single (void *ctx,
 		notmuch_query_t *query,
 		const notmuch_show_format_t *format,
+		sprinter_t *sp,
 		notmuch_show_params_t *params)
 {
     notmuch_messages_t *messages;
@@ -930,7 +936,8 @@ do_show_single (void *ctx,
 
     notmuch_message_set_flag (message, NOTMUCH_MESSAGE_FLAG_MATCH, 1);
 
-    return show_message (ctx, format, message, 0, params) != NOTMUCH_STATUS_SUCCESS;
+    return show_message (ctx, format, sp, message, 0, params)
+	!= NOTMUCH_STATUS_SUCCESS;
 }
 
 /* Formatted output of threads */
@@ -938,6 +945,7 @@ static int
 do_show (void *ctx,
 	 notmuch_query_t *query,
 	 const notmuch_show_format_t *format,
+	 sprinter_t *sp,
 	 notmuch_show_params_t *params)
 {
     notmuch_threads_t *threads;
@@ -965,7 +973,7 @@ do_show (void *ctx,
 	    fputs (format->message_set_sep, stdout);
 	first_toplevel = 0;
 
-	status = show_messages (ctx, format, messages, 0, params);
+	status = show_messages (ctx, format, sp, messages, 0, params);
 	if (status && !res)
 	    res = status;
 
@@ -1141,7 +1149,7 @@ notmuch_show_command (void *ctx, unused (int argc), unused (char *argv[]))
 
     /* If a single message is requested we do not use search_excludes. */
     if (params.part >= 0)
-	ret = do_show_single (ctx, query, format, &params);
+	ret = do_show_single (ctx, query, format, sprinter, &params);
     else {
 	/* We always apply set the exclude flag. The
 	 * exclude=true|false option controls whether or not we return
@@ -1160,7 +1168,7 @@ notmuch_show_command (void *ctx, unused (int argc), unused (char *argv[]))
 	    params.omit_excluded = FALSE;
 	}
 
-	ret = do_show (ctx, query, format, &params);
+	ret = do_show (ctx, query, format, sprinter, &params);
     }
 
     notmuch_crypto_cleanup (&params.crypto);
