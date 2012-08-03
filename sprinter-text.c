@@ -25,14 +25,20 @@ struct sprinter_text {
 };
 
 static void
-text_string (struct sprinter *sp, const char *val)
+text_string_len (struct sprinter *sp, const char *val, size_t len)
 {
     struct sprinter_text *sptxt = (struct sprinter_text *) sp;
 
     if (sptxt->current_prefix != NULL)
 	fprintf (sptxt->stream, "%s:", sptxt->current_prefix);
 
-    fputs(val, sptxt->stream);
+    fwrite (val, len, 1, sptxt->stream);
+}
+
+static void
+text_string (struct sprinter *sp, const char *val)
+{
+    text_string_len (sp, val, strlen (val));
 }
 
 static void
@@ -105,6 +111,7 @@ sprinter_text_create (const void *ctx, FILE *stream)
 	    .begin_list = text_begin_list,
 	    .end = text_end,
 	    .string = text_string,
+	    .string_len = text_string_len,
 	    .integer = text_integer,
 	    .boolean = text_boolean,
 	    .null = text_null,

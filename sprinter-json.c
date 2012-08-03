@@ -88,8 +88,13 @@ json_end (struct sprinter *sp)
 	fputc ('\n', spj->stream);
 }
 
+/* This implementation supports embedded NULs as allowed by the JSON
+ * specification and Unicode.  Support for *parsing* embedded NULs
+ * varies, but is generally not a problem outside of C-based parsers
+ * (Python's json module and Emacs' json.el take embedded NULs in
+ * stride). */
 static void
-json_string (struct sprinter *sp, const char *val)
+json_string_len (struct sprinter *sp, const char *val, size_t len)
 {
     static const char *const escapes[] = {
 	['\"'] = "\\\"", ['\\'] = "\\\\", ['\b'] = "\\b",
@@ -98,7 +103,7 @@ json_string (struct sprinter *sp, const char *val)
     struct sprinter_json *spj = json_begin_value (sp);
 
     fputc ('"', spj->stream);
-    for (; *val; ++val) {
+    for (; len; ++val, --len) {
 	unsigned char ch = *val;
 	if (ch < ARRAY_SIZE (escapes) && escapes[ch])
 	    fputs (escapes[ch], spj->stream);
@@ -108,6 +113,12 @@ json_string (struct sprinter *sp, const char *val)
 	    fprintf (spj->stream, "\\u%04x", ch);
     }
     fputc ('"', spj->stream);
+}
+
+static void
+json_string (struct sprinter *sp, const char *val)
+{
+    json_string_len (sp, val, strlen (val));
 }
 
 static void
@@ -166,6 +177,7 @@ sprinter_json_create (const void *ctx, FILE *stream)
 	    .begin_list = json_begin_list,
 	    .end = json_end,
 	    .string = json_string,
+	    .string_len = json_string_len,
 	    .integer = json_integer,
 	    .boolean = json_boolean,
 	    .null = json_null,

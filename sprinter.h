@@ -23,11 +23,14 @@ typedef struct sprinter {
      */
     void (*end) (struct sprinter *);
 
-    /* Print one string/integer/boolean/null element (possibly inside a
-     * list or map, followed or preceded by separators).
-     * For string, the char * must be UTF-8 encoded.
+    /* Print one string/integer/boolean/null element (possibly inside
+     * a list or map, followed or preceded by separators).  For string
+     * and string_len, the char * must be UTF-8 encoded.  string_len
+     * allows non-terminated strings and strings with embedded NULs
+     * (though the handling of the latter is format-dependent).
      */
     void (*string) (struct sprinter *, const char *);
+    void (*string_len) (struct sprinter *, const char *, size_t);
     void (*integer) (struct sprinter *, int);
     void (*boolean) (struct sprinter *, notmuch_bool_t);
     void (*null) (struct sprinter *);
