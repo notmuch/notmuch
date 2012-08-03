@@ -71,13 +71,9 @@ struct notmuch_show_params;
 
 typedef struct notmuch_show_format {
     struct sprinter *(*new_sprinter) (const void *ctx, FILE *stream);
-    const char *message_set_start;
     notmuch_status_t (*part) (const void *ctx, struct sprinter *sprinter,
 			      struct mime_node *node, int indent,
 			      const struct notmuch_show_params *params);
-    const char *message_set_sep;
-    const char *message_set_end;
-    const char *null_message;
 } notmuch_show_format_t;
 
 typedef struct notmuch_crypto {

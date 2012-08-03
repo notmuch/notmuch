@@ -37,11 +37,7 @@ format_part_json_entry (const void *ctx, sprinter_t *sp, mime_node_t *node,
 
 static const notmuch_show_format_t format_json = {
     .new_sprinter = sprinter_json_create,
-    .message_set_start = "[",
     .part = format_part_json_entry,
-    .message_set_sep = ", ",
-    .message_set_end = "]",
-    .null_message = "null"
 };
 
 static notmuch_status_t
