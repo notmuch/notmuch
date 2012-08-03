@@ -7,8 +7,9 @@ notmuch (0.14-1) unstable; urgency=low
   [ David Bremner ]
   * Do a better job of cleaning up after configuration and testing
     (Closes: #683505)
+  * Alternately depend on emacs24 instead of emacs23 (Closes: #677900).
 
- -- David Bremner <bremner@debian.org>  Thu, 02 Aug 2012 09:36:05 -0300
+ -- David Bremner <bremner@debian.org>  Thu, 02 Aug 2012 21:32:31 -0300
 
 notmuch (0.13.2-1) unstable; urgency=low
 
