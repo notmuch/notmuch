@@ -842,15 +842,6 @@ format_part_raw (unused (const void *ctx), unused (sprinter_t *sp),
 }
 
 static notmuch_status_t
-show_null_message (const notmuch_show_format_t *format)
-{
-    /* Output a null message. Currently empty for all formats except Json */
-    if (format->null_message)
-	printf ("%s", format->null_message);
-    return NOTMUCH_STATUS_SUCCESS;
-}
-
-static notmuch_status_t
 show_message (void *ctx,
 	      const notmuch_show_format_t *format,
 	      sprinter_t *sp,
@@ -884,23 +875,16 @@ show_messages (void *ctx,
     notmuch_message_t *message;
     notmuch_bool_t match;
     notmuch_bool_t excluded;
-    int first_set = 1;
     int next_indent;
     notmuch_status_t status, res = NOTMUCH_STATUS_SUCCESS;
 
-    if (format->message_set_start)
-	fputs (format->message_set_start, stdout);
+    sp->begin_list (sp);
 
     for (;
 	 notmuch_messages_valid (messages);
 	 notmuch_messages_move_to_next (messages))
     {
-	if (!first_set && format->message_set_sep)
-	    fputs (format->message_set_sep, stdout);
-	first_set = 0;
-
-	if (format->message_set_start)
-	    fputs (format->message_set_start, stdout);
+	sp->begin_list (sp);
 
 	message = notmuch_messages_get (messages);
 
@@ -915,11 +899,8 @@ show_messages (void *ctx,
 		res = status;
 	    next_indent = indent + 1;
 	} else {
-	    status = show_null_message (format);
+	    sp->null (sp);
 	}
-
-	if (!status && format->message_set_sep)
-	    fputs (format->message_set_sep, stdout);
 
 	status = show_messages (ctx,
 				format, sp,
@@ -931,12 +912,10 @@ show_messages (void *ctx,
 
 	notmuch_message_destroy (message);
 
-	if (format->message_set_end)
-	    fputs (format->message_set_end, stdout);
+	sp->end (sp);
     }
 
-    if (format->message_set_end)
-	fputs (format->message_set_end, stdout);
+    sp->end (sp);
 
     return res;
 }
