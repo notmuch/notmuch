@@ -2,6 +2,7 @@ notmuch (0.14-1) unstable; urgency=low
 
   [ Stefano Zacchiroli ]
   * notmuch-mutt: fix tag action invocation (Closes: #678012)
+  * Use notmuch-search-terms manpage in notmuch-mutt (Closes: #675073).
 
   [ David Bremner ]
   * Do a better job of cleaning up after configuration and testing
