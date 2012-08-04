@@ -124,7 +124,7 @@ mv $MAIL_DIR/cur/adding-replied-tag:2,RS $MAIL_DIR/cur/adding-replied-tag:2,S
 mv $MAIL_DIR/cur/adding-s-flag:2,S $MAIL_DIR/cur/adding-s-flag:2,
 mv $MAIL_DIR/cur/adding-with-s-flag:2,S $MAIL_DIR/cur/adding-with-s-flag:2,RS
 mv $MAIL_DIR/cur/message-to-move-to-cur:2,S $MAIL_DIR/cur/message-to-move-to-cur:2,DS
-notmuch dump dump.txt
+notmuch dump --output=dump.txt
 NOTMUCH_NEW >/dev/null
 notmuch restore dump.txt
 output=$(ls $MAIL_DIR/cur)

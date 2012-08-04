@@ -44,7 +44,7 @@ notmuch_dump_command (unused (void *ctx), int argc, char *argv[])
     int opt_index;
 
     notmuch_opt_desc_t options[] = {
-	{ NOTMUCH_OPT_POSITION, &output_file_name, 0, 0, 0  },
+	{ NOTMUCH_OPT_STRING, &output_file_name, "output", 'o', 0  },
 	{ 0, 0, 0, 0, 0 }
     };
 
@@ -56,7 +56,6 @@ notmuch_dump_command (unused (void *ctx), int argc, char *argv[])
     }
 
     if (output_file_name) {
-	fprintf (stderr, "Warning: the output file argument of dump is deprecated.\n");
 	output = fopen (output_file_name, "w");
 	if (output == NULL) {
 	    fprintf (stderr, "Error opening %s for writing: %s\n",

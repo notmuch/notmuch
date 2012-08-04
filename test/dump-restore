@@ -53,16 +53,12 @@ test_expect_success 'Restore with nothing to do, III' \
 test_expect_success 'Invalid restore invocation' \
   'test_must_fail notmuch restore dump.expected another_one'
 
-test_begin_subtest "dump outfile"
-notmuch dump dump-outfile.actual
+test_begin_subtest "dump --output=outfile"
+notmuch dump --output=dump-outfile.actual
 test_expect_equal_file dump.expected dump-outfile.actual
 
-test_begin_subtest "dump outfile # deprecated"
-test_expect_equal "Warning: the output file argument of dump is deprecated."\
-  "$(notmuch dump /dev/null 2>&1)"
-
-test_begin_subtest "dump outfile --"
-notmuch dump dump-1-arg-dash.actual --
+test_begin_subtest "dump --output=outfile --"
+notmuch dump --output=dump-1-arg-dash.actual --
 test_expect_equal_file dump.expected dump-1-arg-dash.actual
 
 # Note, we assume all messages from cworth have a message-id
@@ -74,12 +70,12 @@ test_begin_subtest "dump -- from:cworth"
 notmuch dump -- from:cworth > dump-dash-cworth.actual
 test_expect_equal_file dump-cworth.expected dump-dash-cworth.actual
 
-test_begin_subtest "dump outfile from:cworth"
-notmuch dump dump-outfile-cworth.actual from:cworth
+test_begin_subtest "dump --output=outfile from:cworth"
+notmuch dump --output=dump-outfile-cworth.actual from:cworth
 test_expect_equal_file dump-cworth.expected dump-outfile-cworth.actual
 
-test_begin_subtest "dump outfile -- from:cworth"
-notmuch dump dump-outfile-dash-inbox.actual -- from:cworth
+test_begin_subtest "dump --output=outfile -- from:cworth"
+notmuch dump --output=dump-outfile-dash-inbox.actual -- from:cworth
 test_expect_equal_file dump-cworth.expected dump-outfile-dash-inbox.actual
 
 test_done

@@ -5,15 +5,14 @@ notmuch-dump \- creates a plain-text dump of the tags of each message
 .SH SYNOPSIS
 
 .B "notmuch dump"
-.RI "[ <" filename "> ] [--]"
+.RI "[ --output=<" filename "> ] [--]"
 .RI "[ <" search-term ">...]"
 
 .SH DESCRIPTION
 
 Dump tags for messages matching the given search terms.
 
-Output is to the given filename, if any, or to stdout.  Note that
-using the filename argument is deprecated.
+Output is to the given filename, if any, or to stdout.
 
 These tags are the only data in the notmuch database that can't be
 recreated from the messages themselves.  The output of notmuch dump is
