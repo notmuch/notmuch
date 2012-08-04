@@ -126,7 +126,7 @@ mv $MAIL_DIR/cur/adding-with-s-flag:2,S $MAIL_DIR/cur/adding-with-s-flag:2,RS
 mv $MAIL_DIR/cur/message-to-move-to-cur:2,S $MAIL_DIR/cur/message-to-move-to-cur:2,DS
 notmuch dump --output=dump.txt
 NOTMUCH_NEW >/dev/null
-notmuch restore dump.txt
+notmuch restore --input=dump.txt
 output=$(ls $MAIL_DIR/cur)
 test_expect_equal "$output" "$expected"
 

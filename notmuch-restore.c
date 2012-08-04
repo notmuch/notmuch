@@ -122,7 +122,7 @@ notmuch_restore_command (unused (void *ctx), int argc, char *argv[])
     synchronize_flags = notmuch_config_get_maildir_synchronize_flags (config);
 
     notmuch_opt_desc_t options[] = {
-	{ NOTMUCH_OPT_POSITION, &input_file_name, 0, 0, 0 },
+	{ NOTMUCH_OPT_STRING, &input_file_name, "input", 'i', 0 },
 	{ NOTMUCH_OPT_BOOLEAN,  &accumulate, "accumulate", 'a', 0 },
 	{ 0, 0, 0, 0, 0 }
     };

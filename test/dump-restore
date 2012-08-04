@@ -19,7 +19,7 @@ test_expect_success 'Dumping all tags II' \
 
 test_expect_success 'Clearing all tags' \
   'sed -e "s/(\([^(]*\))$/()/" < dump.expected > clear.expected &&
-  notmuch restore clear.expected &&
+  notmuch restore --input=clear.expected &&
   notmuch dump > clear.actual &&
   test_cmp clear.expected clear.actual'
 
@@ -30,7 +30,7 @@ test_expect_success 'Accumulate original tags' \
   test_cmp dump-ABC_DEF.expected dump.actual'
 
 test_expect_success 'Restoring original tags' \
-  'notmuch restore dump.expected &&
+  'notmuch restore --input=dump.expected &&
   notmuch dump > dump.actual &&
   test_cmp dump.expected dump.actual'
 
@@ -40,7 +40,7 @@ test_expect_success 'Restore with nothing to do' \
   test_cmp dump.expected dump.actual'
 
 test_expect_success 'Restore with nothing to do, II' \
-  'notmuch restore --accumulate dump.expected &&
+  'notmuch restore --accumulate --input=dump.expected &&
   notmuch dump > dump.actual &&
   test_cmp dump.expected dump.actual'
 
@@ -51,7 +51,7 @@ test_expect_success 'Restore with nothing to do, III' \
 
 # notmuch restore currently only considers the first argument.
 test_expect_success 'Invalid restore invocation' \
-  'test_must_fail notmuch restore dump.expected another_one'
+  'test_must_fail notmuch restore --input=dump.expected another_one'
 
 test_begin_subtest "dump --output=outfile"
 notmuch dump --output=dump-outfile.actual
