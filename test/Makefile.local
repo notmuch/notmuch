@@ -45,5 +45,6 @@ CLEAN := $(CLEAN) $(dir)/smtp-dummy $(dir)/smtp-dummy.o \
 	 $(dir)/symbol-test $(dir)/symbol-test.o \
 	 $(dir)/arg-test $(dir)/arg-test.o \
 	 $(dir)/hex-xcode $(dir)/hex-xcode.o \
+	 $(dir)/database-test.o \
 	 $(dir)/parse-time $(dir)/parse-time.o \
 	 $(dir)/corpus.mail $(dir)/test-results $(dir)/tmp.*
