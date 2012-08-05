@@ -38,7 +38,7 @@
 (defun notmuch-test-wait ()
   "Wait for process completion."
   (while (get-buffer-process (current-buffer))
-    (sleep-for 0.1)))
+    (accept-process-output nil 0.1)))
 
 (defun test-output (&optional filename)
   "Save current buffer to file FILENAME.  Default FILENAME is OUTPUT."
