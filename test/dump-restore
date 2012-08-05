@@ -85,4 +85,24 @@ test_begin_subtest "dump --output=outfile -- from:cworth"
 notmuch dump --output=dump-outfile-dash-inbox.actual -- from:cworth
 test_expect_equal_file dump-cworth.expected dump-outfile-dash-inbox.actual
 
+test_begin_subtest 'roundtripping random message-ids and tags'
+    test_subtest_known_broken
+    ${TEST_DIRECTORY}/random-corpus --config-path=${NOTMUCH_CONFIG} \
+			--num-messages=10
+
+     notmuch dump| \
+	 ${TEST_DIRECTORY}/hex-xcode --direction=encode| \
+	 sort > EXPECTED.$test_count
+
+     notmuch tag +this_tag_is_very_unlikely_to_be_random '*'
+
+     ${TEST_DIRECTORY}/hex-xcode --direction=decode < EXPECTED.$test_count | \
+	 notmuch restore 2>/dev/null
+
+     notmuch dump| \
+	 ${TEST_DIRECTORY}/hex-xcode --direction=encode| \
+	 sort > OUTPUT.$test_count
+
+test_expect_equal_file EXPECTED.$test_count OUTPUT.$test_count
+
 test_done
