@@ -14,6 +14,16 @@ Maildir tag synchronization
   messages (typically causing new messages to not receive the "unread"
   tag).
 
+Command-Line Interface
+----------------------
+
+  The deprecated positional output file argument to `notmuch dump` has
+  been replaced with an `--output` option. The input file positional
+  argument to `notmuch restore` has been replaced with an `--input`
+  option for consistency with dump.  These changes simplify the syntax
+  of dump/restore options and make them more consistent with other
+  notmuch commands.
+
 Emacs Interface
 ---------------
 

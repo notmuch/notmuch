@@ -1,3 +1,17 @@
+notmuch (0.14-1) unstable; urgency=low
+
+  There is an incompatible change in option syntax for dump and restore
+  in this release. Please update your scripts.
+
+  From upstream NEWS:
+
+  The deprecated positional output file argument to notmuch dump has
+  been replaced with an --output option. The input file positional
+  argument for restore has been replaced with an --input option for
+  consistency with dump.
+
+ -- David Bremner <bremner@debian.org>  Sun, 05 Aug 2012 11:52:49 -0300
+
 notmuch (0.6~238) unstable; urgency=low
 
   The emacs user interface to notmuch is now contained in a seperate
