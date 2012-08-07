@@ -614,20 +614,20 @@ notmuch_reply_format_json(void *ctx,
 	return 1;
 
     sp = sprinter_json_create (ctx, stdout);
+    sp->begin_map (sp);
 
     /* The headers of the reply message we've created */
-    printf ("{\"reply-headers\": ");
+    sp->map_key (sp, "reply-headers");
     format_headers_json (sp, reply, TRUE);
     g_object_unref (G_OBJECT (reply));
     reply = NULL;
 
     /* Start the original */
-    printf (", \"original\": ");
-
+    sp->map_key (sp, "original");
     format_part_json (ctx, sp, node, TRUE, TRUE);
 
     /* End */
-    printf ("}\n");
+    sp->end (sp);
     notmuch_message_destroy (message);
 
     return 0;
