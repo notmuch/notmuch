@@ -475,10 +475,12 @@ BEG."
 	(push (plist-get (notmuch-search-get-result pos) property) output)))
     output))
 
-(defun notmuch-search-find-thread-id ()
-  "Return the thread for the current thread"
+(defun notmuch-search-find-thread-id (&optional bare)
+  "Return the thread for the current thread
+
+If BARE is set then do not prefix with \"thread:\""
   (let ((thread (plist-get (notmuch-search-get-result) :thread)))
-    (when thread (concat "thread:" thread))))
+    (when thread (concat (unless bare "thread:") thread))))
 
 (defun notmuch-search-find-thread-id-region (beg end)
   "Return a list of threads for the current region"
@@ -936,7 +938,7 @@ If `query' is nil, it is read interactively from the minibuffer.
 Other optional parameters are used as follows:
 
   oldest-first: A Boolean controlling the sort order of returned threads
-  target-thread: A thread ID (with the thread: prefix) that will be made
+  target-thread: A thread ID (without the thread: prefix) that will be made
                  current if it appears in the search results.
   target-line: The line number to move to if the target thread does not
                appear in the search results."
@@ -993,7 +995,7 @@ same relative position within the new buffer."
   (interactive)
   (let ((target-line (line-number-at-pos))
 	(oldest-first notmuch-search-oldest-first)
-	(target-thread (notmuch-search-find-thread-id))
+	(target-thread (notmuch-search-find-thread-id 'bare))
 	(query notmuch-search-query-string)
 	(continuation notmuch-search-continuation))
     (notmuch-kill-this-buffer)

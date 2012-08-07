@@ -55,6 +55,9 @@ user-specified formatting
   you've customized this variable, you may have to change your date
   format from `"%s "` to `"%12s "`.
 
+The thread-id for the `target-thread` argument for `notmuch-search` should
+now be supplied without the "thread:" prefix.
+
 Notmuch 0.13.2 (2012-06-02)
 ===========================
 
