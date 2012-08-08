@@ -27,7 +27,9 @@ typedef struct sprinter {
      * a list or map, followed or preceded by separators).  For string
      * and string_len, the char * must be UTF-8 encoded.  string_len
      * allows non-terminated strings and strings with embedded NULs
-     * (though the handling of the latter is format-dependent).
+     * (though the handling of the latter is format-dependent). For
+     * string (but not string_len) the string pointer passed may be
+     * NULL.
      */
     void (*string) (struct sprinter *, const char *);
     void (*string_len) (struct sprinter *, const char *, size_t);

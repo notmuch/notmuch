@@ -38,6 +38,8 @@ text_string_len (struct sprinter *sp, const char *val, size_t len)
 static void
 text_string (struct sprinter *sp, const char *val)
 {
+    if (val == NULL)
+	val = "";
     text_string_len (sp, val, strlen (val));
 }
 
