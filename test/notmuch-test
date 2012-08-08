@@ -59,6 +59,7 @@ TESTS="
   emacs-address-cleaning
   emacs-hello
   emacs-show
+  missing-headers
 "
 TESTS=${NOTMUCH_TESTS:=$TESTS}
 
