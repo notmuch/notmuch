@@ -24,7 +24,7 @@
 (require 'mm-view)
 (require 'mm-decode)
 (require 'json)
-(eval-when-compile (require 'cl))
+(require 'cl)
 
 (defvar notmuch-command "notmuch"
   "Command to run the notmuch binary.")
