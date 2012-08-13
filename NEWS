@@ -41,6 +41,14 @@ Experimental support for multi-line search result formats
   `notmuch-search-result-format` to make individual search results
   span multiple lines.
 
+Next/previous in search and show now move by boundaries
+
+  All "next" and "previous" commands in the search and show modes now
+  move to the next/previous result or message boundary.  This doesn't
+  change the behavior of "next", but "previous" commands will first
+  move to the beginning of the current result or message if point is
+  inside the result or message.
+
 Search now uses the JSON format internally
 
   This should address problems with unusual characters in authors and
