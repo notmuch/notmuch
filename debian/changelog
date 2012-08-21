@@ -8,8 +8,11 @@ notmuch (0.14-1) experimental; urgency=low
   * Do a better job of cleaning up after configuration and testing
     (Closes: #683505)
   * Alternately depend on emacs24 instead of emacs23 (Closes: #677900).
+  * New upstream version
+    - incompatible changes to dump/restore syntax
+    - bug fixes for maildir synchronization
 
- -- David Bremner <bremner@debian.org>  Mon, 20 Aug 2012 13:55:25 +0200
+ -- David Bremner <bremner@debian.org>  Tue, 21 Aug 2012 10:39:33 +0200
 
 notmuch (0.13.2-1) unstable; urgency=low
 
