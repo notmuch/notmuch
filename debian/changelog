@@ -1,4 +1,4 @@
-notmuch (0.14-1) unstable; urgency=low
+notmuch (0.14-1) experimental; urgency=low
 
   [ Stefano Zacchiroli ]
   * notmuch-mutt: fix tag action invocation (Closes: #678012)
