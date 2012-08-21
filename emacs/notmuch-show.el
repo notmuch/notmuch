@@ -183,6 +183,13 @@ provided with an MLA argument nor `completing-read' input."
 	     notmuch-show-stash-mlarchive-link-alist))
   :group 'notmuch-show)
 
+(defcustom notmuch-show-mark-read-tags '("-unread")
+  "List of tags to apply when message is read, ie. shown in notmuch-show
+buffer."
+  :type '(repeat string)
+  :group 'notmuch-show)
+
+
 (defmacro with-current-notmuch-show-message (&rest body)
   "Evaluate body with current buffer set to the text of current message"
   `(save-excursion
@@ -1383,8 +1390,9 @@ current thread."
   (notmuch-show-get-prop :headers-visible))
 
 (defun notmuch-show-mark-read ()
-  "Mark the current message as read."
-  (notmuch-show-tag-message "-unread"))
+  "Apply `notmuch-show-mark-read-tags' to the message."
+  (when notmuch-show-mark-read-tags
+    (apply 'notmuch-show-tag-message notmuch-show-mark-read-tags)))
 
 ;; Functions for getting attributes of several messages in the current
 ;; thread.
