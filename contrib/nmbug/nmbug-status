@@ -90,7 +90,9 @@ def print_view(title, query, comment):
                 val = str.join(' ', val.split(None)[1:4])
                 val = str(datetime.datetime.strptime(val, '%d %b %Y').date())
             elif header == 'from':
-                val = rfc822.parseaddr(val)[0]
+                (val, addr) = rfc822.parseaddr(val)
+                if val == '':
+                    val = addr.split('@')[0]
 
             if last[header] == val:
                 out[header] = ''
