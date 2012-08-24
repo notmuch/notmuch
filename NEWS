@@ -72,7 +72,7 @@ Notmuch 0.13.2 (2012-06-02)
 Bug-fix release
 ---------------
 
-Update contrib/notmuch-deliver for API changes in 0.13. This fixes a
+Update `contrib/notmuch-deliver` for API changes in 0.13. This fixes a
 compilation error for this contrib package.
 
 Notmuch 0.13.1 (2012-05-29)
@@ -98,7 +98,7 @@ databases
   and simply return a `NULL` object if the directory does not exist,
   as documented.
 
-Fix compilation of ruby bindings.
+Fix compilation of ruby bindings
 
   Revert to dynamic linking, since the statically linked bindings did
   not work well.
