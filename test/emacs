@@ -169,7 +169,8 @@ emacs_deliver_message \
      (insert "To: user@example.com\n")'
 sed \
     -e s',^User-Agent: Notmuch/.* Emacs/.*,User-Agent: Notmuch/XXX Emacs/XXX,' \
-    -e s',^Message-ID: <.*>$,Message-ID: <XXX>,' < sent_message >OUTPUT
+    -e s',^Message-ID: <.*>$,Message-ID: <XXX>,' \
+    -e s',^\(Content-Type: text/plain\); charset=us-ascii$,\1,' < sent_message >OUTPUT
 cat <<EOF >EXPECTED
 From: Notmuch Test Suite <test_suite@notmuchmail.org>
 To: user@example.com
@@ -178,7 +179,7 @@ Date: 01 Jan 2000 12:00:00 -0000
 User-Agent: Notmuch/XXX Emacs/XXX
 Message-ID: <XXX>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 
 This is a test that messages are sent via SMTP
 EOF
