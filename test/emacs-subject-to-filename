@@ -8,10 +8,10 @@ test_emacs '(ignore)'
 
 # test notmuch-wash-subject-to-patch-sequence-number (subject)
 test_begin_subtest "no patch sequence number"
-output=$(test_emacs '(notmuch-wash-subject-to-patch-sequence-number
-      "[PATCH] A normal patch subject without numbers")'
+output=$(test_emacs '(format "%S" (notmuch-wash-subject-to-patch-sequence-number
+      "[PATCH] A normal patch subject without numbers"))'
 )
-test_expect_equal "$output" ""
+test_expect_equal "$output" '"nil"'
 
 test_begin_subtest "patch sequence number #1"
 output=$(test_emacs '(notmuch-wash-subject-to-patch-sequence-number
