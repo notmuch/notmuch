@@ -32,7 +32,7 @@ COMPRESSED_MAN := $(MAN1_GZ) $(MAN5_GZ) $(MAN7_GZ)
 %.gz: %
 	gzip --stdout $^ > $@
 
-.PHONY: install-man update-man-versions verify-version-manpage
+.PHONY: install-man update-man-versions
 
 install-man: $(COMPRESSED_MAN)
 	mkdir -p "$(DESTDIR)$(mandir)/man1"
@@ -42,13 +42,6 @@ install-man: $(COMPRESSED_MAN)
 	install -m0644 $(MAN5_GZ) $(DESTDIR)/$(mandir)/man5
 	install -m0644 $(MAN7_GZ) $(DESTDIR)/$(mandir)/man7
 	cd $(DESTDIR)/$(mandir)/man1 && ln -sf notmuch.1.gz notmuch-setup.1.gz
-
-verify-version-manpage: verify-version-components
-	@echo -n "Checking that manual page version is $(VERSION)..."
-	@[ "$(VERSION)" = $$(sed -n '/^[.]TH NOTMUCH 1/{s/.*"Notmuch //;s/".*//p;}' $(MAIN_PAGE)) ] || \
-		(echo "No." && \
-		 echo "Please edit version and notmuch.1 to have consistent versions." && false)
-	@echo "Good."
 
 update-man-versions: $(MAN_SOURCE)
 	for file in $(MAN_SOURCE); do \
