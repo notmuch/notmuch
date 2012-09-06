@@ -593,7 +593,7 @@ See `notmuch-tag' for information on the format of TAG-CHANGES."
   (interactive)
   (notmuch-search-tag "-"))
 
-(defun notmuch-search-archive-thread ()
+(defun notmuch-search-archive-thread (&optional unarchive)
   "Archive the currently selected thread.
 
 Archive each message in the currently selected thread by applying
@@ -603,10 +603,10 @@ messages will be \"unarchived\" (i.e. the tag changes in
 `notmuch-archive-tags' will be reversed).
 
 This function advances the next thread when finished."
-  (interactive)
+  (interactive "P")
   (when notmuch-archive-tags
     (notmuch-search-tag
-     (notmuch-tag-change-list notmuch-archive-tags)))
+     (notmuch-tag-change-list notmuch-archive-tags unarchive)))
   (notmuch-search-next-thread))
 
 (defun notmuch-search-update-result (result &optional pos)
