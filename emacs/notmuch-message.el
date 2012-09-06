@@ -31,7 +31,7 @@ if it is prefaced with a \"-\", removed.
 For example, if you wanted to add a \"replied\" tag and remove
 the \"inbox\" and \"todo\", you would set
     (\"replied\" \"-inbox\" \"-todo\"\)"
-  :type 'list
+  :type '(repeat string)
   :group 'notmuch-send)
 
 (defun notmuch-message-mark-replied ()
