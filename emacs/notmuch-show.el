@@ -184,8 +184,15 @@ provided with an MLA argument nor `completing-read' input."
   :group 'notmuch-show)
 
 (defcustom notmuch-show-mark-read-tags '("-unread")
-  "List of tags to apply when message is read, ie. shown in notmuch-show
-buffer."
+  "List of tag changes to apply to a message when it is marked as read.
+
+Tags starting with \"+\" (or not starting with either \"+\" or
+\"-\") in the list will be added, and tags starting with \"-\"
+will be removed from the message being marked as read.
+
+For example, if you wanted to remove an \"unread\" tag and add a
+\"read\" tag (which would make little sense), you would set:
+    (\"-unread\" \"+read\")"
   :type '(repeat string)
   :group 'notmuch-show)
 
@@ -1390,10 +1397,18 @@ current thread."
   "Are the headers of the current message visible?"
   (notmuch-show-get-prop :headers-visible))
 
-(defun notmuch-show-mark-read ()
-  "Apply `notmuch-show-mark-read-tags' to the message."
+(defun notmuch-show-mark-read (&optional unread)
+  "Mark the current message as read.
+
+Mark the current message as read by applying the tag changes in
+`notmuch-show-mark-read-tags' to it (remove the \"unread\" tag by
+default). If a prefix argument is given, the message will be
+marked as unread, i.e. the tag changes in
+`notmuch-show-mark-read-tags' will be reversed."
+  (interactive "P")
   (when notmuch-show-mark-read-tags
-    (apply 'notmuch-show-tag-message notmuch-show-mark-read-tags)))
+    (apply 'notmuch-show-tag-message
+	   (notmuch-tag-change-list notmuch-show-mark-read-tags unread))))
 
 ;; Functions for getting attributes of several messages in the current
 ;; thread.
