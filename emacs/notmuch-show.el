@@ -1748,18 +1748,20 @@ argument, hide all of the messages."
 (defun notmuch-show-archive-thread (&optional unarchive)
   "Archive each message in thread.
 
-Archive each message currently shown by removing the \"inbox\"
-tag from each.  If a prefix argument is given, the messages will
-be \"unarchived\" (ie. the \"inbox\" tag will be added instead of
-removed).
+Archive each message currently shown by applying the tag changes
+in `notmuch-archive-tags' to each (remove the \"inbox\" tag by
+default). If a prefix argument is given, the messages will be
+\"unarchived\", i.e. the tag changes in `notmuch-archive-tags'
+will be reversed.
 
 Note: This command is safe from any race condition of new messages
 being delivered to the same thread. It does not archive the
 entire thread, but only the messages shown in the current
 buffer."
   (interactive "P")
-  (let ((op (if unarchive "+" "-")))
-    (notmuch-show-tag-all (concat op "inbox"))))
+  (when notmuch-archive-tags
+    (notmuch-show-tag-all
+     (notmuch-tag-change-list notmuch-archive-tags unarchive))))
 
 (defun notmuch-show-archive-thread-then-next ()
   "Archive all messages in the current buffer, then show next thread from search."
@@ -1774,14 +1776,17 @@ buffer."
   (notmuch-show-next-thread))
 
 (defun notmuch-show-archive-message (&optional unarchive)
-  "Archive the current message (remove \"inbox\" tag).
+  "Archive the current message.
 
-If a prefix argument is given, the message will be
-\"unarchived\" (ie. the \"inbox\" tag will be added instead of
-removed)."
+Archive the current message by applying the tag changes in
+`notmuch-archive-tags' to it (remove the \"inbox\" tag by
+default). If a prefix argument is given, the message will be
+\"unarchived\", i.e. the tag changes in `notmuch-archive-tags'
+will be reversed."
   (interactive "P")
-  (let ((op (if unarchive "+" "-")))
-    (notmuch-show-tag-message (concat op "inbox"))))
+  (when notmuch-archive-tags
+    (apply 'notmuch-show-tag-message
+	   (notmuch-tag-change-list notmuch-archive-tags unarchive))))
 
 (defun notmuch-show-archive-message-then-next-or-exit ()
   "Archive the current message, then show the next open message in the current thread.

@@ -594,11 +594,19 @@ See `notmuch-tag' for information on the format of TAG-CHANGES."
   (notmuch-search-tag "-"))
 
 (defun notmuch-search-archive-thread ()
-  "Archive the currently selected thread (remove its \"inbox\" tag).
+  "Archive the currently selected thread.
+
+Archive each message in the currently selected thread by applying
+the tag changes in `notmuch-archive-tags' to each (remove the
+\"inbox\" tag by default). If a prefix argument is given, the
+messages will be \"unarchived\" (i.e. the tag changes in
+`notmuch-archive-tags' will be reversed).
 
 This function advances the next thread when finished."
   (interactive)
-  (notmuch-search-tag '("-inbox"))
+  (when notmuch-archive-tags
+    (notmuch-search-tag
+     (notmuch-tag-change-list notmuch-archive-tags)))
   (notmuch-search-next-thread))
 
 (defun notmuch-search-update-result (result &optional pos)

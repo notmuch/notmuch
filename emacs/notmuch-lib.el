@@ -82,6 +82,20 @@
   :type '(alist :key-type string :value-type string)
   :group 'notmuch-hello)
 
+(defcustom notmuch-archive-tags '("-inbox")
+  "List of tag changes to apply to a message or a thread when it is archived.
+
+Tags starting with \"+\" (or not starting with either \"+\" or
+\"-\") in the list will be added, and tags starting with \"-\"
+will be removed from the message or thread being archived.
+
+For example, if you wanted to remove an \"inbox\" tag and add an
+\"archived\" tag, you would set:
+    (\"-inbox\" \"+archived\")"
+  :type '(repeat string)
+  :group 'notmuch-search
+  :group 'notmuch-show)
+
 (defvar notmuch-folders nil
   "Deprecated name for what is now known as `notmuch-saved-searches'.")
 
