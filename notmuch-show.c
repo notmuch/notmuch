@@ -233,6 +233,13 @@ format_headers_json (sprinter_t *sp, GMimeMessage *message,
 	sp->string (sp, recipients_string);
     }
 
+    recipients = g_mime_message_get_recipients (message, GMIME_RECIPIENT_TYPE_BCC);
+    recipients_string = internet_address_list_to_string (recipients, 0);
+    if (recipients_string) {
+	sp->map_key (sp, "Bcc");
+	sp->string (sp, recipients_string);
+    }
+
     if (reply) {
 	sp->map_key (sp, "In-reply-to");
 	sp->string (sp, g_mime_object_get_header (GMIME_OBJECT (message), "In-reply-to"));

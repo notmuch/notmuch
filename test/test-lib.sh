@@ -350,6 +350,11 @@ ${additional_headers}"
 ${additional_headers}"
     fi
 
+    if [ ! -z "${template[bcc]}" ]; then
+	additional_headers="Bcc: ${template[bcc]}
+${additional_headers}"
+    fi
+
     if [ ! -z "${template[references]}" ]; then
 	additional_headers="References: ${template[references]}
 ${additional_headers}"
