@@ -1077,10 +1077,10 @@ function is used."
 
       (jit-lock-register #'notmuch-show-buttonise-links)
 
-      (run-hooks 'notmuch-show-hook))
+      ;; Set the header line to the subject of the first message.
+      (setq header-line-format (notmuch-show-strip-re (notmuch-show-get-subject)))
 
-    ;; Set the header line to the subject of the first message.
-    (setq header-line-format (notmuch-show-strip-re (notmuch-show-get-subject)))))
+      (run-hooks 'notmuch-show-hook))))
 
 (defun notmuch-show-capture-state ()
   "Capture the state of the current buffer.
