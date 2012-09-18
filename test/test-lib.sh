@@ -403,8 +403,11 @@ emacs_deliver_message ()
     shift 2
     # before we can send a message, we have to prepare the FCC maildir
     mkdir -p "$MAIL_DIR"/sent/{cur,new,tmp}
-    $TEST_DIRECTORY/smtp-dummy sent_message &
-    smtp_dummy_pid=$!
+    # eval'ing smtp-dummy --background will set smtp_dummy_pid
+    smtp_dummy_pid=
+    eval `$TEST_DIRECTORY/smtp-dummy --background sent_message`
+    test -n "$smtp_dummy_pid" || return 1
+
     test_emacs \
 	"(let ((message-send-mail-function 'message-smtpmail-send-it)
 	       (smtpmail-smtp-server \"localhost\")
@@ -419,9 +422,11 @@ emacs_deliver_message ()
 	   (insert \"${body}\")
 	   $@
 	   (message-send-and-exit))"
-    # opportunistically quit smtp-dummy in case above fails.
-    { echo QUIT > /dev/tcp/localhost/25025; } 2>/dev/null
-    wait ${smtp_dummy_pid}
+
+    # In case message was sent properly, client waits for confirmation
+    # before exiting and resuming control here; therefore making sure
+    # that server exits by sending (KILL) signal to it is safe.
+    kill -9 $smtp_dummy_pid
     notmuch new >/dev/null
 }
 
