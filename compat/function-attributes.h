@@ -28,4 +28,20 @@
 #define __has_attribute(x) 0
 #endif
 
+/* Provide a NORETURN_ATTRIBUTE macro similar to PRINTF_ATTRIBUTE from
+ * talloc.
+ *
+ * This attribute is understood by gcc since version 2.5. clang
+ * provides support for testing for function attributes.
+ */
+#ifndef NORETURN_ATTRIBUTE
+#if (__GNUC__ >= 3 ||				\
+     (__GNUC__ == 2 && __GNUC_MINOR__ >= 5) ||	\
+     __has_attribute (noreturn))
+#define NORETURN_ATTRIBUTE __attribute__ ((noreturn))
+#else
+#define NORETURN_ATTRIBUTE
+#endif
+#endif
+
 #endif
