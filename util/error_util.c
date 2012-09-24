@@ -24,7 +24,7 @@
 
 #include "error_util.h"
 
-int
+void
 _internal_error (const char *format, ...)
 {
     va_list va_args;
@@ -35,7 +35,5 @@ _internal_error (const char *format, ...)
     vfprintf (stderr, format, va_args);
 
     exit (1);
-
-    return 1;
 }
 
