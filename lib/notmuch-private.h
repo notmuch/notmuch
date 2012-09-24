@@ -136,13 +136,17 @@ typedef enum _notmuch_private_status {
  * to or greater than NOTMUCH_STATUS_LAST_STATUS. (The idea here is
  * that the caller has previously handled any expected
  * notmuch_private_status_t values.)
+ *
+ * Note that the function _internal_error does not return. Evaluating
+ * to NOTMUCH_STATUS_SUCCESS is done purely to appease the compiler.
  */
 #define COERCE_STATUS(private_status, format, ...)			\
     ((private_status >= (notmuch_private_status_t) NOTMUCH_STATUS_LAST_STATUS)\
      ?									\
-     (notmuch_status_t) _internal_error (format " (%s).\n",		\
-                                         ##__VA_ARGS__,			\
-                                         __location__)			\
+     _internal_error (format " (%s).\n",				\
+                      ##__VA_ARGS__,					\
+                      __location__),					\
+     (notmuch_status_t) NOTMUCH_PRIVATE_STATUS_SUCCESS			\
      :									\
      (notmuch_status_t) private_status)
 
