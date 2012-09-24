@@ -291,7 +291,7 @@ mime_node_child (mime_node_t *parent, int child)
     GMimeObject *sub;
     mime_node_t *node;
 
-    if (!parent || child < 0 || child >= parent->nchildren)
+    if (!parent || !parent->part || child < 0 || child >= parent->nchildren)
 	return NULL;
 
     if (GMIME_IS_MULTIPART (parent->part)) {
