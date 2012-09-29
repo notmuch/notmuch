@@ -985,6 +985,14 @@ test_emacs () {
 		done
 	fi
 
+	# Clear test-output output file.  Most Emacs tests end with a
+	# call to (test-output).  If the test code fails with an
+	# exception before this call, the output file won't get
+	# updated.  Since we don't want to compare against an output
+	# file from another test, so start out with an empty file.
+	rm -f OUTPUT
+	touch OUTPUT
+
 	emacsclient --socket-name="$EMACS_SERVER" --eval "(progn $@)"
 }
 
