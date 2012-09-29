@@ -254,6 +254,19 @@ the given type."
   (or (plist-get part :content)
       (notmuch-get-bodypart-internal (notmuch-id-to-query (plist-get msg :id)) nth process-crypto)))
 
+;; Workaround: The call to `mm-display-part' below triggers a bug in
+;; Emacs 24 if it attempts to use the shr renderer to display an HTML
+;; part with images in it (demonstrated in 24.1 and 24.2 on Debian and
+;; Fedora 17, though unreproducable in other configurations).
+;; `mm-shr' references the variable `gnus-inhibit-images' without
+;; first loading gnus-art, which defines it, resulting in a
+;; void-variable error.  Hence, we advise `mm-shr' to ensure gnus-art
+;; is loaded.
+(if (>= emacs-major-version 24)
+    (defadvice mm-shr (before load-gnus-arts activate)
+      (require 'gnus-art nil t)
+      (ad-disable-advice 'mm-shr 'before 'load-gnus-arts)))
+
 (defun notmuch-mm-display-part-inline (msg part nth content-type process-crypto)
   "Use the mm-decode/mm-view functions to display a part in the
 current buffer, if possible."
