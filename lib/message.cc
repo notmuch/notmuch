@@ -788,7 +788,9 @@ notmuch_message_get_tags (notmuch_message_t *message)
      * possible to modify the message tags (which talloc_unlink's the
      * current list from the message) while still iterating because
      * the iterator will keep the current list alive. */
-    talloc_reference (message, message->tag_list);
+    if (!talloc_reference (message, message->tag_list))
+	return NULL;
+
     return tags;
 }
 
