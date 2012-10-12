@@ -498,16 +498,18 @@ test_expect_equal_file ()
 	error "bug in the test script: not 2 or 3 parameters to test_expect_equal"
 
 	file1="$1"
+	basename1=`basename "$file1"`
 	file2="$2"
+	basename2=`basename "$file2"`
 	if ! test_skip "$test_subtest_name"
 	then
 		if diff -q "$file1" "$file2" >/dev/null ; then
 			test_ok_ "$test_subtest_name"
 		else
 			testname=$this_test.$test_count
-			cp "$file1" "$testname.$file1"
-			cp "$file2" "$testname.$file2"
-			test_failure_ "$test_subtest_name" "$(diff -u "$testname.$file1" "$testname.$file2")"
+			cp "$file1" "$testname.$basename1"
+			cp "$file2" "$testname.$basename2"
+			test_failure_ "$test_subtest_name" "$(diff -u "$testname.$basename1" "$testname.$basename2")"
 		fi
     fi
 }
