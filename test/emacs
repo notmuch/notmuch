@@ -783,4 +783,24 @@ EOF
 test_expect_equal_file OUTPUT EXPECTED
 
 
+test_begin_subtest "don't process cryptographic MIME parts"
+test_emacs '(let ((notmuch-crypto-process-mime nil))
+	(notmuch-show "id:20091117203301.GV3165@dottiness.seas.harvard.edu")
+	(test-visible-output))'
+test_expect_equal_file OUTPUT $EXPECTED/notmuch-show-process-crypto-mime-parts-off
+
+test_begin_subtest "process cryptographic MIME parts"
+test_emacs '(let ((notmuch-crypto-process-mime t))
+	(notmuch-show "id:20091117203301.GV3165@dottiness.seas.harvard.edu")
+	(test-visible-output))'
+test_expect_equal_file OUTPUT $EXPECTED/notmuch-show-process-crypto-mime-parts-on
+
+test_begin_subtest "process cryptographic MIME parts (w/ notmuch-show-toggle-process-crypto)"
+test_emacs '(let ((notmuch-crypto-process-mime nil))
+	(notmuch-show "id:20091117203301.GV3165@dottiness.seas.harvard.edu")
+	(notmuch-show-toggle-process-crypto)
+	(test-visible-output))'
+test_expect_equal_file OUTPUT $EXPECTED/notmuch-show-process-crypto-mime-parts-on
+
+
 test_done
