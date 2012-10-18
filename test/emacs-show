@@ -3,6 +3,10 @@
 test_description="emacs notmuch-show view"
 . test-lib.sh
 
+EXPECTED=$TEST_DIRECTORY/emacs-show.expected-output
+
+add_email_corpus
+
 test_begin_subtest "Hiding Original Message region at beginning of a message"
 message_id='OriginalMessageHiding.1@notmuchmail.org'
 add_message \
@@ -35,5 +39,72 @@ test_expect_equal "$output" '"subject"'
 test_begin_subtest "Bare subject #3"
 output=$(test_emacs '(notmuch-show-strip-re "the cure: fix the regexp")')
 test_expect_equal "$output" '"the cure: fix the regexp"'
+
+test_begin_subtest "don't process cryptographic MIME parts"
+test_emacs '(let ((notmuch-crypto-process-mime nil))
+	(notmuch-show "id:20091117203301.GV3165@dottiness.seas.harvard.edu")
+	(test-visible-output))'
+test_expect_equal_file OUTPUT $EXPECTED/notmuch-show-process-crypto-mime-parts-off
+
+test_begin_subtest "process cryptographic MIME parts"
+test_emacs '(let ((notmuch-crypto-process-mime t))
+	(notmuch-show "id:20091117203301.GV3165@dottiness.seas.harvard.edu")
+	(test-visible-output))'
+test_expect_equal_file OUTPUT $EXPECTED/notmuch-show-process-crypto-mime-parts-on
+
+test_begin_subtest "process cryptographic MIME parts (w/ notmuch-show-toggle-process-crypto)"
+test_emacs '(let ((notmuch-crypto-process-mime nil))
+	(notmuch-show "id:20091117203301.GV3165@dottiness.seas.harvard.edu")
+	(notmuch-show-toggle-process-crypto)
+	(test-visible-output))'
+test_expect_equal_file OUTPUT $EXPECTED/notmuch-show-process-crypto-mime-parts-on
+
+test_begin_subtest "notmuch-show: don't elide non-matching messages"
+test_emacs '(let ((notmuch-show-only-matching-messages nil))
+	(notmuch-search "from:lars@seas.harvard.edu and subject:\"Maildir storage\"")
+	(notmuch-test-wait)
+	(notmuch-search-show-thread)
+	(notmuch-test-wait)
+	(test-visible-output))'
+test_expect_equal_file OUTPUT $EXPECTED/notmuch-show-elide-non-matching-messages-off
+
+test_begin_subtest "notmuch-show: elide non-matching messages"
+test_emacs '(let ((notmuch-show-only-matching-messages t))
+	(notmuch-search "from:lars@seas.harvard.edu and subject:\"Maildir storage\"")
+	(notmuch-test-wait)
+	(notmuch-search-show-thread)
+	(notmuch-test-wait)
+	(test-visible-output))'
+test_expect_equal_file OUTPUT $EXPECTED/notmuch-show-elide-non-matching-messages-on
+
+test_begin_subtest "notmuch-show: elide non-matching messages (w/ notmuch-show-toggle-elide-non-matching)"
+test_emacs '(let ((notmuch-show-only-matching-messages nil))
+	(notmuch-search "from:lars@seas.harvard.edu and subject:\"Maildir storage\"")
+	(notmuch-test-wait)
+	(notmuch-search-show-thread)
+	(notmuch-test-wait)
+	(notmuch-show-toggle-elide-non-matching)
+	(test-visible-output))'
+test_expect_equal_file OUTPUT $EXPECTED/notmuch-show-elide-non-matching-messages-on
+
+test_begin_subtest "notmuch-show: elide non-matching messages (w/ prefix arg to notmuch-show)"
+test_emacs '(let ((notmuch-show-only-matching-messages nil))
+	(notmuch-search "from:lars@seas.harvard.edu and subject:\"Maildir storage\"")
+	(notmuch-test-wait)
+	(let ((current-prefix-arg t))
+	  (notmuch-search-show-thread))
+	(notmuch-test-wait)
+	(test-visible-output))'
+test_expect_equal_file OUTPUT $EXPECTED/notmuch-show-elide-non-matching-messages-on
+
+test_begin_subtest "notmuch-show: disable indentation of thread content (w/ notmuch-show-toggle-thread-indentation)"
+test_emacs '(notmuch-search "from:lars@seas.harvard.edu and subject:\"Maildir storage\"")
+	(notmuch-test-wait)
+	(notmuch-search-show-thread)
+	(notmuch-test-wait)
+	(notmuch-show-toggle-thread-indentation)
+	(test-visible-output)'
+test_expect_equal_file OUTPUT $EXPECTED/notmuch-show-indent-thread-content-off
+
 
 test_done
