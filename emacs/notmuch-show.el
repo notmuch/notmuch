@@ -815,7 +815,12 @@ message at DEPTH in the current thread."
     ;; Run the content handlers until one of them returns a non-nil
     ;; value.
     (while (and handlers
-		(not (funcall (car handlers) msg part content-type nth depth declared-type)))
+		(not (condition-case err
+			 (funcall (car handlers) msg part content-type nth depth declared-type)
+		       (error (progn
+				(insert "!!! Bodypart insert error: ")
+				(insert (error-message-string err))
+				(insert " !!!\n") nil)))))
       (setq handlers (cdr handlers))))
   t)
 
