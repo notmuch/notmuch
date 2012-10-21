@@ -189,17 +189,17 @@ touch "${MAIL_DIR}"/.git # change .git's mtime for notmuch new to rescan.
 mkdir -p "${MAIL_DIR}"/one/two/three/.git
 notmuch new > /dev/null # ensure that files/folders will be printed in ASCII order.
 touch "${MAIL_DIR}"/{one,one/two,one/two/three}/ignored_file
-output=$(NOTMUCH_NEW --debug 2>&1)
+output=$(NOTMUCH_NEW --debug 2>&1 | sort)
 test_expect_equal "$output" \
 "(D) add_files_recursive, pass 1: explicitly ignoring ${MAIL_DIR}/.git
 (D) add_files_recursive, pass 1: explicitly ignoring ${MAIL_DIR}/one/two/three/.git
-(D) add_files_recursive, pass 2: explicitly ignoring ${MAIL_DIR}/one/two/three/.git
-(D) add_files_recursive, pass 2: explicitly ignoring ${MAIL_DIR}/one/two/three/ignored_file
-(D) add_files_recursive, pass 2: explicitly ignoring ${MAIL_DIR}/one/two/ignored_file
-(D) add_files_recursive, pass 2: explicitly ignoring ${MAIL_DIR}/one/ignored_file
 (D) add_files_recursive, pass 2: explicitly ignoring ${MAIL_DIR}/.git
 (D) add_files_recursive, pass 2: explicitly ignoring ${MAIL_DIR}/.ignored_hidden_file
 (D) add_files_recursive, pass 2: explicitly ignoring ${MAIL_DIR}/ignored_file
+(D) add_files_recursive, pass 2: explicitly ignoring ${MAIL_DIR}/one/ignored_file
+(D) add_files_recursive, pass 2: explicitly ignoring ${MAIL_DIR}/one/two/ignored_file
+(D) add_files_recursive, pass 2: explicitly ignoring ${MAIL_DIR}/one/two/three/.git
+(D) add_files_recursive, pass 2: explicitly ignoring ${MAIL_DIR}/one/two/three/ignored_file
 No new mail."
 
 
