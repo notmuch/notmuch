@@ -67,7 +67,7 @@ def print_view(title, query, comment):
     last['thread_id'] = ''
 
     if output_format == 'html':
-        print '<h3>%s</h3>' % title
+        print '<h3><a name="%s" />%s</h3>' % (title, title)
         print comment
         print 'The view is generated from the following query:'
         print '<blockquote>'
@@ -143,6 +143,12 @@ if output_format == 'html':
     print '<h2>Notmuch Patches</h2>'
     print 'Generated: %s<br />' % datetime.datetime.utcnow().date()
     print 'For more infomation see <a href="http://notmuchmail.org/nmbug">nmbug</a>'
+
+    print '<h3>Views</h3>'
+    print '<ul>'
+    for view in config['views']:
+        print '<li><a href="#%(title)s">%(title)s</a></li>' % view
+    print '</ul>'
 
 for view in config['views']:
     print_view(**view)
