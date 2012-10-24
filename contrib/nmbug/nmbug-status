@@ -51,12 +51,19 @@ if args.text:
 else:
     output_format = 'html'
 
-headers = ['date', 'from', 'subject']
-last = {}
+class Thread:
+    def __init__(self, last, lines):
+        self.last = last
+        self.lines = lines
 
-def clear_last():
-    for header in headers:
-        last[header] = ''
+    def join_utf8_with_newlines(self):
+        return '\n'.join( (line.encode('utf-8') for line in self.lines) )
+
+def output_with_separator(threadlist, sep):
+    outputs = (thread.join_utf8_with_newlines() for thread in threadlist)
+    print sep.join(outputs)
+
+headers = ['date', 'from', 'subject']
 
 def print_view(title, query, comment):
 
@@ -64,7 +71,12 @@ def print_view(title, query, comment):
     q_new = notmuch.Query(db, query_string)
     q_new.set_sort(notmuch.Query.SORT.OLDEST_FIRST)
 
-    last['thread_id'] = ''
+    last_thread_id = ''
+    threads = {}
+    threadlist = []
+    out = {}
+    last = None
+    lines = None
 
     if output_format == 'html':
         print '<h3><a name="%s" />%s</h3>' % (title, title)
@@ -77,11 +89,21 @@ def print_view(title, query, comment):
 
     for m in q_new.search_messages():
 
-        out = {}
-
         thread_id = m.get_thread_id()
-        if thread_id != last['thread_id']:
-            clear_last()
+
+        if thread_id != last_thread_id:
+            if threads.has_key(thread_id):
+                last = threads[thread_id].last
+                lines = threads[thread_id].lines
+            else:
+                last = {}
+                lines = []
+                thread = Thread(last, lines)
+                threads[thread_id] = thread
+                for h in headers:
+                    last[h] = ''
+                threadlist.append(thread)
+            last_thread_id = thread_id
 
         for header in headers:
             val = m.get_header(header)
@@ -94,38 +116,35 @@ def print_view(title, query, comment):
                 if val == '':
                     val = addr.split('@')[0]
 
-            if last[header] == val:
+            if header != 'subject' and last[header] == val:
                 out[header] = ''
             else:
-                out[header] = val.encode('utf-8')
+                out[header] = val
                 last[header] = val
 
         mid = m.get_message_id()
         out['id'] = 'id:"%s"' % mid
 
         if output_format == 'html':
-            # XXX using <br /> is a hack, but ... // 20111216 too
-            if thread_id != last['thread_id']:
-                br = '<br />'
-            else:
-                br = ''
 
             out['subject'] = '<a href="http://mid.gmane.org/%s">%s</a>' \
                 % (urllib.quote(mid), out['subject'])
 
-            print ' <tr><td>%s %s' % (br, out['date'])
-            print '</td><td>%s %s' % (br, out['id'])
-            print '</td></tr>'
-            print ' <tr><td>%s' % out['from']
-            print '</td><td>%s' % out['subject']
-            print '</td></tr>\n'
+            lines.append(' <tr><td>%s' % out['date'])
+            lines.append('</td><td>%s' % out['id'])
+            lines.append('</td></tr>')
+            lines.append(' <tr><td>%s' % out['from'])
+            lines.append('</td><td>%s' % out['subject'])
+            lines.append('</td></tr>')
         else:
-            print '%(date)-10.10s %(from)-20.20s %(subject)-40.40s\n%(id)72s\n' % out
-
-        last['thread_id'] = thread_id
+            lines.append('%(date)-10.10s %(from)-20.20s %(subject)-40.40s\n%(id)72s' % out)
 
     if output_format == 'html':
+        output_with_separator(threadlist,
+                              '\n<tr><td colspan="2"><br /></td></tr>\n')
         print '</table>'
+    else:
+        output_with_separator(threadlist, '\n\n')
 
 # main program
 
