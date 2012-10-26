@@ -500,7 +500,7 @@ Complete list of currently available key bindings:
 (defun notmuch-hello-generate-tag-alist (&optional hide-tags)
   "Return an alist from tags to queries to display in the all-tags section."
   (mapcar (lambda (tag)
-	    (cons tag (format "tag:%s" tag)))
+	    (cons tag (concat "tag:" (notmuch-escape-boolean-term tag))))
 	  (notmuch-remove-if-not
 	   (lambda (tag)
 	     (not (member tag hide-tags)))
