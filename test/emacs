@@ -667,7 +667,7 @@ Some One <someone@somewhere.org>
 Some One Else <notsomeone@somewhere.org>
 Notmuch <notmuch@notmuchmail.org>
 Stash my stashables
-id:"bought"
+id:bought
 bought
 inbox,stashtest
 ${gen_msg_filename}

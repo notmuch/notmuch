@@ -161,9 +161,23 @@ the user hasn't set this variable with the old or new value."
 	"[No Subject]"
       subject)))
 
+(defun notmuch-escape-boolean-term (term)
+  "Escape a boolean term for use in a query.
+
+The caller is responsible for prepending the term prefix and a
+colon.  This performs minimal escaping in order to produce
+user-friendly queries."
+
+  (save-match-data
+    (if (or (equal term "")
+	    (string-match "[ ()]\\|^\"" term))
+	;; Requires escaping
+	(concat "\"" (replace-regexp-in-string "\"" "\"\"" term t t) "\"")
+      term)))
+
 (defun notmuch-id-to-query (id)
   "Return a query that matches the message with id ID."
-  (concat "id:\"" (replace-regexp-in-string "\"" "\"\"" id t t) "\""))
+  (concat "id:" (notmuch-escape-boolean-term id)))
 
 ;;
 
