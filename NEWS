@@ -1,3 +1,17 @@
+Notmuch 0.15 (YYYY-MM-DD)
+=========================
+
+Command-Line Interface
+----------------------
+
+Empty tag names and tags beginning with "-" are deprecated
+
+  Such tags have been a frequent source of confusion and cause
+  (sometimes unresolvable) conflicts with other syntax.  notmuch tag
+  no longer allows such tags to be added to messages.  Removing such
+  tags continues to be supported to allow cleanup of existing tags,
+  but may be removed in a future release.
+
 Notmuch 0.14 (2012-08-20)
 =========================
 
