@@ -203,6 +203,17 @@ notmuch_tag_command (void *ctx, int argc, char *argv[])
 	    break;
 	}
 	if (argv[i][0] == '+' || argv[i][0] == '-') {
+	    if (argv[i][0] == '+' && argv[i][1] == '\0') {
+		fprintf(stderr, "Error: tag names cannot be empty.\n");
+		return 1;
+	    }
+	    if (argv[i][0] == '+' && argv[i][1] == '-') {
+		/* This disallows adding the non-removable tag "-" and
+		 * enables notmuch tag to take long options in the
+		 * future. */
+		fprintf(stderr, "Error: tag names must not start with '-'.\n");
+		return 1;
+	    }
 	    tag_ops[tag_ops_count].tag = argv[i] + 1;
 	    tag_ops[tag_ops_count].remove = (argv[i][0] == '-');
 	    tag_ops_count++;

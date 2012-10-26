@@ -46,4 +46,8 @@ test_expect_equal "$output" "\
 thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; One (:\"  inbox tag1 unread)
 thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; Two (inbox tag1 tag4 unread)"
 
+test_expect_code 1 "Empty tag names" 'notmuch tag + One'
+
+test_expect_code 1 "Tag name beginning with -" 'notmuch tag +- One'
+
 test_done
