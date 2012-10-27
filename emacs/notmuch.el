@@ -820,16 +820,6 @@ non-authors is found, assume that all of the authors match."
     (insert (apply #'format string objects))
     (insert "\n")))
 
-;; These two variables are internal variables to the parsing
-;; routines. They are always used buffer local but need to be declared
-;; globally to avoid compiler warnings.
-
-(defvar notmuch-json-state nil
-  "Internal incremental JSON parser object: local to the buffer being parsed.")
-
-(defvar notmuch-json-parser nil
-  "State of the internal JSON parser: local to the buffer being parsed.")
-
 (defun notmuch-search-process-filter (proc string)
   "Process and filter the output of \"notmuch search\""
   (let ((results-buf (process-buffer proc))
@@ -846,59 +836,6 @@ non-authors is found, assume that all of the authors match."
 	(notmuch-json-parse-partial-list 'notmuch-search-show-result
 					 'notmuch-search-show-error
 					 results-buf)))))
-
-(defun notmuch-json-parse-partial-list (result-function error-function results-buf)
-  "Parse a partial JSON list from current buffer.
-
-This function consumes a JSON list from the current buffer,
-applying RESULT-FUNCTION in buffer RESULT-BUFFER to each complete
-value in the list.  It operates incrementally and should be
-called whenever the buffer has been extended with additional
-data.
-
-If there is a syntax error, this will attempt to resynchronize
-with the input and will apply ERROR-FUNCTION in buffer
-RESULT-BUFFER to any input that was skipped.
-
-It sets up all the needed internal variables: the caller just
-needs to call it with point in the same place that the parser
-left it."
-  (let (done)
-    (unless (local-variable-p 'notmuch-json-parser)
-      (set (make-local-variable 'notmuch-json-parser)
-	   (notmuch-json-create-parser (current-buffer)))
-      (set (make-local-variable 'notmuch-json-state) 'begin))
-    (while (not done)
-      (condition-case nil
-	  (case notmuch-json-state
-		((begin)
-		 ;; Enter the results list
-		 (if (eq (notmuch-json-begin-compound
-			  notmuch-json-parser) 'retry)
-		     (setq done t)
-		   (setq notmuch-json-state 'result)))
-		((result)
-		 ;; Parse a result
-		 (let ((result (notmuch-json-read notmuch-json-parser)))
-		   (case result
-			 ((retry) (setq done t))
-			 ((end) (setq notmuch-json-state 'end))
-			 (otherwise (with-current-buffer results-buf
-				      (funcall result-function result))))))
-		((end)
-		 ;; Any trailing data is unexpected
-		 (notmuch-json-eof notmuch-json-parser)
-		 (setq done t)))
-	(json-error
-	 ;; Do our best to resynchronize and ensure forward
-	 ;; progress
-	 (let ((bad (buffer-substring (line-beginning-position)
-				      (line-end-position))))
-	   (forward-line)
-	   (with-current-buffer results-buf
-	     (funcall error-function "%s" bad))))))
-    ;; Clear out what we've parsed
-    (delete-region (point-min) (point))))
 
 (defun notmuch-search-tag-all (&optional tag-changes)
   "Add/remove tags from all messages in current search buffer.
