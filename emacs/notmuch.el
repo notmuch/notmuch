@@ -838,8 +838,28 @@ non-authors is found, assume that all of the authors match."
 	;; Insert new data
 	(save-excursion
 	  (goto-char (point-max))
-	  (insert string)))
-      (with-current-buffer results-buf
+	  (insert string))
+	(notmuch-json-parse-partial-list 'notmuch-search-show-result
+					 'notmuch-search-show-error
+					 results-buf)))))
+
+(defun notmuch-json-parse-partial-list (result-function error-function results-buf)
+  "Parse a partial JSON list from current buffer.
+
+This function consumes a JSON list from the current buffer,
+applying RESULT-FUNCTION in buffer RESULT-BUFFER to each complete
+value in the list.  It operates incrementally and should be
+called whenever the buffer has been extended with additional
+data.
+
+If there is a syntax error, this will attempt to resynchronize
+with the input and will apply ERROR-FUNCTION in buffer
+RESULT-BUFFER to any input that was skipped."
+  (let (done)
+    (unless (local-variable-p 'notmuch-search-json-parser)
+      (set (make-local-variable 'notmuch-search-json-parser)
+	   (notmuch-json-create-parser (current-buffer)))
+      (set (make-local-variable 'notmuch-search-process-state) 'begin))
 	(while (not done)
 	  (condition-case nil
 	      (case notmuch-search-process-state
@@ -855,7 +875,8 @@ non-authors is found, assume that all of the authors match."
 		   (case result
 		     ((retry) (setq done t))
 		     ((end) (setq notmuch-search-process-state 'end))
-		     (otherwise (notmuch-search-show-result result)))))
+			 (otherwise (with-current-buffer results-buf
+				      (funcall result-function result))))))
 		((end)
 		 ;; Any trailing data is unexpected
 		 (notmuch-json-eof notmuch-search-json-parser)
@@ -863,16 +884,13 @@ non-authors is found, assume that all of the authors match."
 	    (json-error
 	     ;; Do our best to resynchronize and ensure forward
 	     ;; progress
-	     (notmuch-search-show-error
-	      "%s"
-	      (with-current-buffer parse-buf
 		(let ((bad (buffer-substring (line-beginning-position)
 					     (line-end-position))))
 		  (forward-line)
-		  bad))))))
+	   (with-current-buffer results-buf
+	     (funcall error-function "%s" bad))))))
 	;; Clear out what we've parsed
-	(with-current-buffer parse-buf
-	  (delete-region (point-min) (point)))))))
+    (delete-region (point-min) (point))))
 
 (defun notmuch-search-tag-all (&optional tag-changes)
   "Add/remove tags from all messages in current search buffer.
@@ -984,9 +1002,6 @@ Other optional parameters are used as follows:
 	      ;; This buffer will be killed by the sentinel, which
 	      ;; should be called no matter how the process dies.
 	      (parse-buf (generate-new-buffer " *notmuch search parse*")))
-	  (set (make-local-variable 'notmuch-search-process-state) 'begin)
-	  (set (make-local-variable 'notmuch-search-json-parser)
-	       (notmuch-json-create-parser parse-buf))
 	  (process-put proc 'parse-buf parse-buf)
 	  (set-process-sentinel proc 'notmuch-search-process-sentinel)
 	  (set-process-filter proc 'notmuch-search-process-filter)
