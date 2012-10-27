@@ -1,0 +1,29 @@
+TODO FOR NOTMUCH-PICK
+
+(These are the things I can think of: to be added to as problems get
+reported or found!)
+
+Things that need fixing before acceptance to mainline
+
+- Review lisp to make idiomatic.
+- Unify functions with search or show where appropriate.
+- Work out a fall-back if the font does not contain box graphic characters.
+- Add extra functionality?
+
+- Remove debugging information.
+
+- Add tests (I have some but I am not sure how to add them if pick is
+  in contrib).
+
+Bugs:
+
+- The display flickers while pick is running. I have no idea why.
+
+Other todo items
+
+- c i, c f for stashing ids etc.
+
+- Perhaps the author should be "To: ???" if the message is from the user.
+
+- Is there some nice way to do use the expand citation buttons of
+  notmuch-show when using the split-pane mode?
