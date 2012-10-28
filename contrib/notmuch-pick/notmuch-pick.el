@@ -438,7 +438,7 @@ Does NOT change the database."
   (unless (notmuch-pick-get-match)
     (notmuch-pick-next-matching-message))
   (while (and (not (notmuch-pick-get-match))
-	      (not (eq notmuch-pick-process-state 'end)))
+	      (get-buffer-process (current-buffer)))
     (message "waiting for message")
     (sit-for 0.1)
     (goto-char (point-min))
@@ -736,9 +736,6 @@ Complete list of currently available key bindings:
     (insert "\n")))
 
 
-(defvar notmuch-pick-json-parser nil
-  "Incremental JSON parser for the search process filter.")
-
 (defun notmuch-pick-process-filter (proc string)
   "Process and filter the output of \"notmuch show\" (for pick)"
   (let ((results-buf (process-buffer proc))
@@ -751,46 +748,10 @@ Complete list of currently available key bindings:
         ;; Insert new data
         (save-excursion
           (goto-char (point-max))
-          (insert string)))
-      (with-current-buffer results-buf
-	(save-excursion
-	  (goto-char (point-max))
-	  (while (not done)
-	    (condition-case nil
-		(case notmuch-pick-process-state
-		      ((begin)
-		       ;; Enter the results list
-		       (if (eq (notmuch-json-begin-compound
-				notmuch-pick-json-parser) 'retry)
-			   (setq done t)
-			 (setq notmuch-pick-process-state 'result)))
-		      ((result)
-		       ;; Parse a result
-		       (let ((result (notmuch-json-read notmuch-pick-json-parser)))
-			 (case result
-			       ((retry) (setq done t))
-			       ((end) (setq notmuch-pick-process-state 'end))
-			       (otherwise (notmuch-pick-insert-forest-thread result)))))
-		      ((end)
-		       ;; Any trailing data is unexpected
-		       (with-current-buffer parse-buf
-			 (skip-chars-forward " \t\r\n")
-			 (if (eobp)
-			     (setq done t)
-			   (signal 'json-error nil)))))
-	      (json-error
-	       ;; Do our best to resynchronize and ensure forward
-	       ;; progress
-	       (notmuch-pick-show-error
-		"%s"
-		(with-current-buffer parse-buf
-		  (let ((bad (buffer-substring (line-beginning-position)
-					       (line-end-position))))
-		    (forward-line)
-		    bad))))))
-	  ;; Clear out what we've parsed
-	  (with-current-buffer parse-buf
-	    (delete-region (point-min) (point))))))))
+          (insert string))
+	(notmuch-json-parse-partial-list 'notmuch-pick-insert-forest-thread
+					 'notmuch-pick-show-error
+					 results-buf)))))
 
 (defun notmuch-pick-worker (basic-query &optional query-context buffer)
   (interactive)
@@ -816,9 +777,6 @@ Complete list of currently available key bindings:
               ;; This buffer will be killed by the sentinel, which
               ;; should be called no matter how the process dies.
               (parse-buf (generate-new-buffer " *notmuch pick parse*")))
-          (set (make-local-variable 'notmuch-pick-process-state) 'begin)
-          (set (make-local-variable 'notmuch-pick-json-parser)
-               (notmuch-json-create-parser parse-buf))
           (process-put proc 'parse-buf parse-buf)
 	  (set-process-sentinel proc 'notmuch-pick-process-sentinel)
 	  (set-process-filter proc 'notmuch-pick-process-filter)
