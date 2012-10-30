@@ -210,6 +210,7 @@ format_headers_json (sprinter_t *sp, GMimeMessage *message,
 {
     InternetAddressList *recipients;
     const char *recipients_string;
+    const char *reply_to_string;
 
     sp->begin_map (sp);
 
@@ -238,6 +239,12 @@ format_headers_json (sprinter_t *sp, GMimeMessage *message,
     if (recipients_string) {
 	sp->map_key (sp, "Bcc");
 	sp->string (sp, recipients_string);
+    }
+
+    reply_to_string = g_mime_message_get_reply_to (message);
+    if (reply_to_string) {
+	sp->map_key (sp, "Reply-To");
+	sp->string (sp, reply_to_string);
     }
 
     if (reply) {
