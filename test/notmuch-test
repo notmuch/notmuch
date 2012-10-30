@@ -60,6 +60,7 @@ TESTS="
   emacs-hello
   emacs-show
   missing-headers
+  parse-time-string
 "
 TESTS=${NOTMUCH_TESTS:=$TESTS}
 
