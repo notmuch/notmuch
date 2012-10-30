@@ -536,7 +536,7 @@ fi
 
 WARN_CXXFLAGS=""
 printf "Checking for available C++ compiler warning flags... "
-for flag in -Wall -Wextra -Wwrite-strings -Wswitch-enum; do
+for flag in -Wall -Wextra -Wwrite-strings; do
     if ${CC} $flag -o minimal minimal.c > /dev/null 2>&1
     then
 	WARN_CXXFLAGS="${WARN_CXXFLAGS}${WARN_CXXFLAGS:+ }${flag}"
