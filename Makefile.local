@@ -277,7 +277,7 @@ notmuch_client_srcs =		\
 
 notmuch_client_modules = $(notmuch_client_srcs:.c=.o)
 
-notmuch: $(notmuch_client_modules) lib/libnotmuch.a util/libutil.a
+notmuch: $(notmuch_client_modules) lib/libnotmuch.a util/libutil.a parse-time-string/libparse-time-string.a
 	$(call quiet,CXX $(CFLAGS)) $^ $(FINAL_LIBNOTMUCH_LDFLAGS) -o $@
 
 notmuch-shared: $(notmuch_client_modules) lib/$(LINKER_NAME)
