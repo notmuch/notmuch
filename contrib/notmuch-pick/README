@@ -15,6 +15,11 @@ Then after the "(require 'notmuch)" line in your .emacs file add
 the line "(require 'notmuch-pick nil t)". This will load notmuch-pick on
 your next emacs start.
 
+TEST
+
+Just execute run-tests.sh and it should all work (it does require that
+notmuch has already been built).
+
 USING PICK
 
 The main key entries to notmuch pick are
