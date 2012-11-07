@@ -79,6 +79,7 @@ headers = {
     To?:            string,
     Cc?:            string,
     Bcc?:           string,
+    Reply-To?:      string,
     Date:           string
 }
 
