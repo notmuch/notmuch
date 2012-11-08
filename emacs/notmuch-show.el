@@ -754,12 +754,15 @@ message at DEPTH in the current thread."
 	      (replace-match "\n" nil nil))
 	    (let ((file (make-temp-file "notmuch-ical"))
 		  result)
-	      (icalendar-import-buffer file t)
-	      (set-buffer (get-file-buffer file))
-	      (setq result (buffer-substring (point-min) (point-max)))
-	      (set-buffer-modified-p nil)
-	      (kill-buffer (current-buffer))
-	      (delete-file file)
+	      (unwind-protect
+		  (progn
+		    (unless (icalendar-import-buffer file t)
+		      (error "Icalendar import error. See *icalendar-errors* for more information"))
+		    (set-buffer (get-file-buffer file))
+		    (setq result (buffer-substring (point-min) (point-max)))
+		    (set-buffer-modified-p nil)
+		    (kill-buffer (current-buffer)))
+		(delete-file file))
 	      result)))
   t)
 
