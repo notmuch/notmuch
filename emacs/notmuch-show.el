@@ -747,12 +747,14 @@ message at DEPTH in the current thread."
   (notmuch-show-insert-part-header nth declared-type content-type (plist-get part :filename))
   (insert (with-temp-buffer
 	    (insert (notmuch-get-bodypart-content msg part nth notmuch-show-process-crypto))
+	    ;; notmuch-get-bodypart-content provides "raw", non-converted
+	    ;; data. Replace CRLF with LF before icalendar can use it.
 	    (goto-char (point-min))
+	    (while (re-search-forward "\r\n" nil t)
+	      (replace-match "\n" nil nil))
 	    (let ((file (make-temp-file "notmuch-ical"))
 		  result)
-	      (icalendar--convert-ical-to-diary
-	       (icalendar--read-element nil nil)
-	       file t)
+	      (icalendar-import-buffer file t)
 	      (set-buffer (get-file-buffer file))
 	      (setq result (buffer-substring (point-min) (point-max)))
 	      (set-buffer-modified-p nil)
