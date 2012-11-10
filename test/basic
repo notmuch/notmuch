@@ -53,9 +53,15 @@ test_expect_code 2 'failure to clean up causes the test to fail' '
 test_begin_subtest 'Ensure that all available tests will be run by notmuch-test'
 eval $(sed -n -e '/^TESTS="$/,/^"$/p' $TEST_DIRECTORY/notmuch-test)
 tests_in_suite=$(for i in $TESTS; do echo $i; done | sort)
-available=$(find "$TEST_DIRECTORY" -maxdepth 1 -type f -perm +111 | \
-    sed -r -e "s,.*/,," -e "/^(aggregate-results.sh|notmuch-test|smtp-dummy|test-verbose|symbol-test|arg-test|parse-time)$/d" | \
-    sort)
+available=$(find "$TEST_DIRECTORY" -maxdepth 1 -type f -perm +111  \
+    ! -name aggregate-results.sh	\
+    ! -name arg-test			\
+    ! -name notmuch-test		\
+    ! -name parse-time			\
+    ! -name smtp-dummy			\
+    ! -name symbol-test			\
+    ! -name test-verbose		\
+    | sed 's,.*/,,' | sort)
 test_expect_equal "$tests_in_suite" "$available"
 
 EXPECTED=$TEST_DIRECTORY/test.expected-output
