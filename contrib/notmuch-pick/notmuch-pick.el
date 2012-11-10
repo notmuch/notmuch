@@ -241,7 +241,10 @@ Some useful entries are:
 
 (defun notmuch-pick-get-message-id ()
   "Return the message id of the current message."
-  (concat "id:\"" (notmuch-pick-get-prop :id) "\""))
+  (let ((id (notmuch-pick-get-prop :id)))
+    (if id
+	(notmuch-id-to-query id)
+      nil)))
 
 (defun notmuch-pick-get-match ()
   "Return whether the current message is a match."
