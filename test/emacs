@@ -788,13 +788,12 @@ counter=$(test_emacs \
 test_expect_equal "$counter" 2
 
 
-test_begin_subtest "Rendering HTML mail with images"
 add_message '[subject]="HTML mail with images"' \
     '[content-type]="multipart/related; boundary=abcd"' \
     '[body]="--abcd
 Content-Type: text/html
 
-<img src="cid:330@goomoji.gmail">
+<img src="cid:330@goomoji.gmail"> smiley
 
 --abcd
 Content-Type: image/gif
@@ -804,21 +803,15 @@ Content-ID: <330@goomoji.gmail>
 R0lGODlhDAAMAKIFAF5LAP/zxAAAANyuAP/gaP///wAAAAAAACH5BAEAAAUALAAAAAAMAAwAAAMl
 WLPcGjDKFYi9lxKBOaGcF35DhWHamZUW0K4mAbiwWtuf0uxFAgA7
 --abcd--"'
-test_emacs "(notmuch-show \"id:${gen_msg_id}\")
-	    (test-output)"
-# Normalize output for Emacs 23 and Emacs 24
-sed -i 's/\[cid\]/*/' OUTPUT
-cat <<EOF >EXPECTED
-Notmuch Test Suite <test_suite@notmuchmail.org> (2001-01-05) (inbox)
-Subject: HTML mail with images
-To: Notmuch Test Suite <test_suite@notmuchmail.org>
-Date: Fri, 05 Jan 2001 15:43:57 +0000
-
-[ multipart/related ]
-[ text/html ]
-*
-EOF
-test_expect_equal_file OUTPUT EXPECTED
+test_emacs "(let ((mm-text-html-renderer
+		   (if (assq 'shr mm-text-html-renderer-alist)
+		       'shr 'html2text)))
+	      (notmuch-show \"id:${gen_msg_id}\"))
+	    (test-output)" > /dev/null
+# Different Emacs versions and renderers give very different results,
+# so just check that something reasonable showed up.
+test_expect_success "Rendering HTML mail with images" \
+    'grep -q smiley OUTPUT'
 
 
 test_done
