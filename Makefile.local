@@ -275,6 +275,7 @@ notmuch_client_srcs =		\
 	query-string.c		\
 	mime-node.c		\
 	crypto.c		\
+	tag-util.c
 
 notmuch_client_modules = $(notmuch_client_srcs:.c=.o)
 
