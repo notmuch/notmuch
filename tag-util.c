@@ -151,6 +151,71 @@ message_error (notmuch_message_t *message,
     fprintf (stderr, "Status: %s\n", notmuch_status_to_string (status));
 }
 
+static int
+makes_changes (notmuch_message_t *message,
+	       tag_op_list_t *list,
+	       tag_op_flag_t flags)
+{
+
+    size_t i;
+
+    notmuch_tags_t *tags;
+    notmuch_bool_t changes = FALSE;
+
+    /* First, do we delete an existing tag? */
+    changes = FALSE;
+    for (tags = notmuch_message_get_tags (message);
+	 ! changes && notmuch_tags_valid (tags);
+	 notmuch_tags_move_to_next (tags)) {
+	const char *cur_tag = notmuch_tags_get (tags);
+	int last_op =  (flags & TAG_FLAG_REMOVE_ALL) ? -1 : 0;
+
+	/* scan backwards to get last operation */
+	i = list->count;
+	while (i > 0) {
+	    i--;
+	    if (strcmp (cur_tag, list->ops[i].tag) == 0) {
+		last_op = list->ops[i].remove ? -1 : 1;
+		break;
+	    }
+	}
+
+	changes = (last_op == -1);
+    }
+    notmuch_tags_destroy (tags);
+
+    if (changes)
+	return TRUE;
+
+    /* Now check for adding new tags */
+    for (i = 0; i < list->count; i++) {
+	notmuch_bool_t exists = FALSE;
+
+	if (list->ops[i].remove)
+	    continue;
+
+	for (tags = notmuch_message_get_tags (message);
+	     notmuch_tags_valid (tags);
+	     notmuch_tags_move_to_next (tags)) {
+	    const char *cur_tag = notmuch_tags_get (tags);
+	    if (strcmp (cur_tag, list->ops[i].tag) == 0) {
+		exists = TRUE;
+		break;
+	    }
+	}
+	notmuch_tags_destroy (tags);
+
+	/* the following test is conservative,
+	 * in the sense it ignores cases like +foo ... -foo
+	 * but this is OK from a correctness point of view
+	 */
+	if (! exists)
+	    return TRUE;
+    }
+    return FALSE;
+
+}
+
 notmuch_status_t
 tag_op_list_apply (notmuch_message_t *message,
 		   tag_op_list_t *list,
@@ -159,6 +224,9 @@ tag_op_list_apply (notmuch_message_t *message,
     size_t i;
     notmuch_status_t status = 0;
     tag_operation_t *tag_ops = list->ops;
+
+    if (! (flags & TAG_FLAG_PRE_OPTIMIZED) && ! makes_changes (message, list, flags))
+	return NOTMUCH_STATUS_SUCCESS;
 
     status = notmuch_message_freeze (message);
     if (status) {
