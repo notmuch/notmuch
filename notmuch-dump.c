@@ -30,7 +30,7 @@ notmuch_dump_command (unused (void *ctx), int argc, char *argv[])
     notmuch_messages_t *messages;
     notmuch_message_t *message;
     notmuch_tags_t *tags;
-    const char* query_str = "";
+    const char *query_str = "";
 
     config = notmuch_config_open (ctx, NULL, NULL);
     if (config == NULL)
@@ -66,7 +66,7 @@ notmuch_dump_command (unused (void *ctx), int argc, char *argv[])
 
 
     if (opt_index < argc) {
-	query_str = query_string_from_args (notmuch, argc-opt_index, argv+opt_index);
+	query_str = query_string_from_args (notmuch, argc - opt_index, argv + opt_index);
 	if (query_str == NULL) {
 	    fprintf (stderr, "Out of memory.\n");
 	    return 1;
@@ -85,8 +85,7 @@ notmuch_dump_command (unused (void *ctx), int argc, char *argv[])
 
     for (messages = notmuch_query_search_messages (query);
 	 notmuch_messages_valid (messages);
-	 notmuch_messages_move_to_next (messages))
-    {
+	 notmuch_messages_move_to_next (messages)) {
 	int first = 1;
 	message = notmuch_messages_get (messages);
 
@@ -95,8 +94,7 @@ notmuch_dump_command (unused (void *ctx), int argc, char *argv[])
 
 	for (tags = notmuch_message_get_tags (message);
 	     notmuch_tags_valid (tags);
-	     notmuch_tags_move_to_next (tags))
-	{
+	     notmuch_tags_move_to_next (tags)) {
 	    if (! first)
 		fprintf (output, " ");
 
