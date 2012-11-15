@@ -141,7 +141,6 @@ notmuch_restore_command (unused (void *ctx), int argc, char *argv[])
 		     input_file_name, strerror (errno));
 	    return 1;
 	}
-	optind++;
     }
 
     if (opt_index < argc) {
