@@ -125,7 +125,10 @@ id:\"abc
 \"
 id:)
 id:
-cid:xxx"'
+cid:xxx
+mid:abc mid:abc/def
+mid:abc%20def
+mid:abc. mid:abc, mid:abc;"'
 test_emacs '(notmuch-show "id:'$gen_msg_id'")
 	(notmuch-test-mark-links)
 	(test-visible-output)'
@@ -153,6 +156,9 @@ id:"abc
 id:)
 id:
 cid:xxx
+<<mid:abc>> <<mid:abc/def>>
+<<mid:abc%20def>>
+<<mid:abc>>. <<mid:abc>>, <<mid:abc>>;
 EOF
 test_expect_equal_file OUTPUT EXPECTED
 

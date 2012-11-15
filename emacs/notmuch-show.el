@@ -1014,23 +1014,44 @@ message at DEPTH in the current thread."
    "\\)")
   "The regexp used to match id: links in messages.")
 
+(defvar notmuch-mid-regexp
+  ;; goto-address-url-regexp matched cid: links, which have the same
+  ;; grammar as the message ID part of a mid: link.  Construct the
+  ;; regexp using the same technique as goto-address-url-regexp.
+  (concat "\\<mid:\\(" thing-at-point-url-path-regexp "\\)")
+  "The regexp used to match mid: links in messages.
+
+See RFC 2392.")
+
 (defun notmuch-show-buttonise-links (start end)
   "Buttonise URLs and mail addresses between START and END.
 
-This also turns id:\"<message id>\"-parts into buttons for
-a corresponding notmuch search."
+This also turns id:\"<message id>\"-parts and mid: links into
+buttons for a corresponding notmuch search."
   (goto-address-fontify-region start end)
   (save-excursion
-    (goto-char start)
-    (while (re-search-forward notmuch-id-regexp end t)
-      ;; remove the overlay created by goto-address-mode
-      (remove-overlays (match-beginning 0) (match-end 0) 'goto-address t)
-      (make-text-button (match-beginning 0) (match-end 0)
-			'action `(lambda (arg)
-				   (notmuch-show ,(match-string-no-properties 0)))
-			'follow-link t
-			'help-echo "Mouse-1, RET: search for this message"
-			'face goto-address-mail-face))))
+    (let (links)
+      (goto-char start)
+      (while (re-search-forward notmuch-id-regexp end t)
+	(push (list (match-beginning 0) (match-end 0)
+		    (match-string-no-properties 0)) links))
+      (goto-char start)
+      (while (re-search-forward notmuch-mid-regexp end t)
+	(let* ((mid-cid (match-string-no-properties 1))
+	       (mid (save-match-data
+		      (string-match "^[^/]*" mid-cid)
+		      (url-unhex-string (match-string 0 mid-cid)))))
+	  (push (list (match-beginning 0) (match-end 0)
+		      (notmuch-id-to-query mid)) links)))
+      (dolist (link links)
+	;; Remove the overlay created by goto-address-mode
+	(remove-overlays (first link) (second link) 'goto-address t)
+	(make-text-button (first link) (second link)
+			  'action `(lambda (arg)
+				     (notmuch-show ,(third link)))
+			  'follow-link t
+			  'help-echo "Mouse-1, RET: search for this message"
+			  'face goto-address-mail-face)))))
 
 ;;;###autoload
 (defun notmuch-show (thread-id &optional parent-buffer query-context buffer-name)
