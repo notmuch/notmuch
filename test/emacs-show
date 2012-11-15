@@ -136,23 +136,23 @@ To: Notmuch Test Suite <test_suite@notmuchmail.org>
 Date: Fri, 05 Jan 2001 15:43:57 +0000
 
 <<id:abc>>
-<<id:abc.def.>> <<id:abc,def,>> <<id:abc;def;>> <<id:abc:def:>>
-<<id:foo@bar.?baz?>> <<id:foo@bar!.baz!>>
-(<<id:foo@bar.baz)>> [<<id:foo@bar.baz]>>
-<<id:foo@bar.baz...>>
+<<id:abc.def>>. <<id:abc,def>>, <<id:abc;def>>; <<id:abc:def>>:
+<<id:foo@bar.?baz>>? <<id:foo@bar!.baz>>!
+(<<id:foo@bar.baz>>) [<<id:foo@bar.baz>>]
+<<id:foo@bar.baz>>...
 <<id:2+2=5>>
 <<id:=_-:/.[]@$%+>>
-<<id:abc)def>>
-<<id:ab>>"c def
+<<id:abc>>)def
+<<id:ab"c>> def
 <<id:"abc">>def
-<<id:"ab">>"c"def
-id:"ab c"def
+<<id:"ab""c">>def
+<<id:"ab c">>def
 <<id:"abc">>.def
 id:"abc
 "
-<<id:)>>
+id:)
 id:
-c<<id:xxx>>
+cid:xxx
 EOF
 test_expect_equal_file OUTPUT EXPECTED
 

@@ -996,6 +996,24 @@ message at DEPTH in the current thread."
   "Insert the forest of threads FOREST."
   (mapc (lambda (thread) (notmuch-show-insert-thread thread 0)) forest))
 
+(defvar notmuch-id-regexp
+  (concat
+   ;; Match the id: prefix only if it begins a word (to disallow, for
+   ;; example, matching cid:).
+   "\\<id:\\("
+   ;; If the term starts with a ", then parse Xapian's quoted boolean
+   ;; term syntax, which allows for anything as long as embedded
+   ;; double quotes escaped by doubling them.  We also disallow
+   ;; newlines (which Xapian allows) to prevent runaway terms.
+   "\"\\([^\"\n]\\|\"\"\\)*\""
+   ;; Otherwise, parse Xapian's unquoted syntax, which goes up to the
+   ;; next space or ).  We disallow [.,;] as the last character
+   ;; because these are probably part of the surrounding text, and not
+   ;; part of the id.  This doesn't match single character ids; meh.
+   "\\|[^\"[:space:])][^[:space:])]*[^])[:space:].,:;?!]"
+   "\\)")
+  "The regexp used to match id: links in messages.")
+
 (defun notmuch-show-buttonise-links (start end)
   "Buttonise URLs and mail addresses between START and END.
 
@@ -1004,7 +1022,7 @@ a corresponding notmuch search."
   (goto-address-fontify-region start end)
   (save-excursion
     (goto-char start)
-    (while (re-search-forward "id:\\(\"?\\)[^[:space:]\"]+\\1" end t)
+    (while (re-search-forward notmuch-id-regexp end t)
       ;; remove the overlay created by goto-address-mode
       (remove-overlays (match-beginning 0) (match-end 0) 'goto-address t)
       (make-text-button (match-beginning 0) (match-end 0)
