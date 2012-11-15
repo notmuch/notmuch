@@ -38,13 +38,13 @@ tag_message (notmuch_database_t *notmuch, const char *message_id,
 	fprintf (stderr, "Warning: Cannot apply tags to %smessage: %s\n",
 		 message ? "" : "missing ", message_id);
 	if (status)
-	    fprintf (stderr, "%s\n", notmuch_status_to_string(status));
+	    fprintf (stderr, "%s\n", notmuch_status_to_string (status));
 	return 1;
     }
 
     /* In order to detect missing messages, this check/optimization is
      * intentionally done *after* first finding the message. */
-    if (!remove_all && (file_tags == NULL || *file_tags == '\0'))
+    if (! remove_all && (file_tags == NULL || *file_tags == '\0'))
 	goto DONE;
 
     db_tags_str = NULL;
@@ -88,7 +88,7 @@ tag_message (notmuch_database_t *notmuch, const char *message_id,
     if (synchronize_flags)
 	notmuch_message_tags_to_maildir_flags (message);
 
-DONE:
+  DONE:
     if (message)
 	notmuch_message_destroy (message);
 
@@ -145,7 +145,7 @@ notmuch_restore_command (unused (void *ctx), int argc, char *argv[])
 
     if (opt_index < argc) {
 	fprintf (stderr,
-	 "Unused positional parameter: %s\n",
+		 "Unused positional parameter: %s\n",
 		 argv[opt_index]);
 	return 1;
     }
@@ -157,7 +157,7 @@ notmuch_restore_command (unused (void *ctx), int argc, char *argv[])
     if ( xregcomp (&regex,
 		   "^([^ ]+) \\(([^)]*)\\)$",
 		   REG_EXTENDED) )
-	INTERNAL_ERROR("compile time constant regex failed.");
+	INTERNAL_ERROR ("compile time constant regex failed.");
 
     while ((line_len = getline (&line, &line_size, input)) != -1) {
 	regmatch_t match[3];
@@ -166,8 +166,7 @@ notmuch_restore_command (unused (void *ctx), int argc, char *argv[])
 	chomp_newline (line);
 
 	rerr = xregexec (&regex, line, 3, match, 0);
-	if (rerr == REG_NOMATCH)
-	{
+	if (rerr == REG_NOMATCH) {
 	    fprintf (stderr, "Warning: Ignoring invalid input line: %s\n",
 		     line);
 	    continue;
@@ -178,7 +177,7 @@ notmuch_restore_command (unused (void *ctx), int argc, char *argv[])
 	file_tags = xstrndup (line + match[2].rm_so,
 			      match[2].rm_eo - match[2].rm_so);
 
-	tag_message (notmuch, message_id, file_tags, !accumulate,
+	tag_message (notmuch, message_id, file_tags, ! accumulate,
 		     synchronize_flags);
 
 	free (message_id);
