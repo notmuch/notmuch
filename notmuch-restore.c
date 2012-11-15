@@ -145,8 +145,8 @@ notmuch_restore_command (unused (void *ctx), int argc, char *argv[])
 
     if (opt_index < argc) {
 	fprintf (stderr,
-	 "Cannot read dump from more than one file: %s\n",
-		 argv[optind]);
+	 "Unused positional parameter: %s\n",
+		 argv[opt_index]);
 	return 1;
     }
 
