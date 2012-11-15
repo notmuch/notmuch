@@ -31,7 +31,7 @@ handle_sigint (unused (int sig))
      * result.  It is not required for correctness, and if it does
      * fail or produce a short write, we want to get out of the signal
      * handler as quickly as possible, not retry it. */
-    IGNORE_RESULT (write (2, msg, sizeof(msg)-1));
+    IGNORE_RESULT (write (2, msg, sizeof (msg) - 1));
     interrupted = 1;
 }
 
@@ -40,6 +40,7 @@ _escape_tag (char *buf, const char *tag)
 {
     const char *in = tag;
     char *out = buf;
+
     /* Boolean terms surrounded by double quotes can contain any
      * character.  Double quotes are quoted by doubling them. */
     *out++ = '"';
@@ -85,8 +86,8 @@ _optimize_tag_query (void *ctx, const char *orig_query_string,
     for (i = 0; tag_ops[i].tag; i++)
 	if (strlen (tag_ops[i].tag) > max_tag_len)
 	    max_tag_len = strlen (tag_ops[i].tag);
-    escaped = talloc_array(ctx, char, max_tag_len * 2 + 3);
-    if (!escaped)
+    escaped = talloc_array (ctx, char, max_tag_len * 2 + 3);
+    if (! escaped)
 	return NULL;
 
     /* Build the new query string */
@@ -140,9 +141,8 @@ tag_query (void *ctx, notmuch_database_t *notmuch, const char *query_string,
     notmuch_query_set_sort (query, NOTMUCH_SORT_UNSORTED);
 
     for (messages = notmuch_query_search_messages (query);
-	 notmuch_messages_valid (messages) && !interrupted;
-	 notmuch_messages_move_to_next (messages))
-    {
+	 notmuch_messages_valid (messages) && ! interrupted;
+	 notmuch_messages_move_to_next (messages)) {
 	message = notmuch_messages_get (messages);
 
 	notmuch_message_freeze (message);
@@ -204,14 +204,14 @@ notmuch_tag_command (void *ctx, int argc, char *argv[])
 	}
 	if (argv[i][0] == '+' || argv[i][0] == '-') {
 	    if (argv[i][0] == '+' && argv[i][1] == '\0') {
-		fprintf(stderr, "Error: tag names cannot be empty.\n");
+		fprintf (stderr, "Error: tag names cannot be empty.\n");
 		return 1;
 	    }
 	    if (argv[i][0] == '+' && argv[i][1] == '-') {
 		/* This disallows adding the non-removable tag "-" and
 		 * enables notmuch tag to take long options in the
 		 * future. */
-		fprintf(stderr, "Error: tag names must not start with '-'.\n");
+		fprintf (stderr, "Error: tag names must not start with '-'.\n");
 		return 1;
 	    }
 	    tag_ops[tag_ops_count].tag = argv[i] + 1;
