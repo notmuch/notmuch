@@ -106,5 +106,55 @@ test_emacs '(notmuch-search "from:lars@seas.harvard.edu and subject:\"Maildir st
 	(test-visible-output)'
 test_expect_equal_file OUTPUT $EXPECTED/notmuch-show-indent-thread-content-off
 
+test_begin_subtest "id buttonization"
+add_message '[body]="
+id:abc
+id:abc.def. id:abc,def, id:abc;def; id:abc:def:
+id:foo@bar.?baz? id:foo@bar!.baz!
+(id:foo@bar.baz) [id:foo@bar.baz]
+id:foo@bar.baz...
+id:2+2=5
+id:=_-:/.[]@$%+
+id:abc)def
+id:ab\"c def
+id:\"abc\"def
+id:\"ab\"\"c\"def
+id:\"ab c\"def
+id:\"abc\".def
+id:\"abc
+\"
+id:)
+id:
+cid:xxx"'
+test_emacs '(notmuch-show "id:'$gen_msg_id'")
+	(notmuch-test-mark-links)
+	(test-visible-output)'
+cat <<EOF >EXPECTED
+Notmuch Test Suite <test_suite@notmuchmail.org> (2001-01-05) (inbox)
+Subject: id buttonization
+To: Notmuch Test Suite <test_suite@notmuchmail.org>
+Date: Fri, 05 Jan 2001 15:43:57 +0000
+
+<<id:abc>>
+<<id:abc.def.>> <<id:abc,def,>> <<id:abc;def;>> <<id:abc:def:>>
+<<id:foo@bar.?baz?>> <<id:foo@bar!.baz!>>
+(<<id:foo@bar.baz)>> [<<id:foo@bar.baz]>>
+<<id:foo@bar.baz...>>
+<<id:2+2=5>>
+<<id:=_-:/.[]@$%+>>
+<<id:abc)def>>
+<<id:ab>>"c def
+<<id:"abc">>def
+<<id:"ab">>"c"def
+id:"ab c"def
+<<id:"abc">>.def
+id:"abc
+"
+<<id:)>>
+id:
+c<<id:xxx>>
+EOF
+test_expect_equal_file OUTPUT EXPECTED
+
 
 test_done

@@ -107,6 +107,20 @@ nothing."
 	       (ad-set-arg 1 (char-to-string char))
 	       ad-do-it))))
 
+(defun notmuch-test-mark-links ()
+  "Enclose links in the current buffer with << and >>."
+  ;; Links are often created by jit-lock functions
+  (jit-lock-fontify-now)
+  (save-excursion
+    (let ((inhibit-read-only t))
+      (goto-char (point-min))
+      (let ((button))
+	(while (setq button (next-button (point)))
+	  (goto-char (button-start button))
+	  (insert "<<")
+	  (goto-char (button-end button))
+	  (insert ">>"))))))
+
 (defmacro notmuch-test-run (&rest body)
   "Evaluate a BODY of test expressions and output the result."
   `(with-temp-buffer
