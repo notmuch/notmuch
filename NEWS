@@ -12,6 +12,12 @@ Empty tag names and tags beginning with "-" are deprecated
   tags continues to be supported to allow cleanup of existing tags,
   but may be removed in a future release.
 
+Bcc and Reply-To headers are now available in notmuch show json output
+
+  The `notmuch show --format=json` now includes "Bcc" and "Reply-To" headers.
+  For example notmuch Emacs client can now have these headers visible
+  when the headers are added to the `notmuch-message-headers` variable.
+
 Library changes
 ---------------
 
