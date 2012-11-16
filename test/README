@@ -56,7 +56,7 @@ The following command-line options are available when running tests:
 	run the tests with this option in parallel.
 
 --root=<dir>::
-	This runs the testsuites specified under a seperate directory.
+	This runs the testsuites specified under a separate directory.
 	However, caution is advised, as not all tests are maintained
 	with this relocation in mind, so some tests may behave
 	differently.

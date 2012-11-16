@@ -14,8 +14,7 @@ notmuch (0.14-1) unstable; urgency=low
 
 notmuch (0.6~238) unstable; urgency=low
 
-  The emacs user interface to notmuch is now contained in a seperate
+  The emacs user interface to notmuch is now contained in a separate
   package called notmuch-emacs.
 
  -- David Bremner <bremner@debian.org>  Mon, 20 Jun 2011 23:57:55 -0300
-
