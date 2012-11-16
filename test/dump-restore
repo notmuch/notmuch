@@ -49,6 +49,13 @@ test_expect_success 'Accumulate with no tags' \
   notmuch dump > dump.actual &&
   test_cmp dump.expected dump.actual'
 
+test_expect_success 'Accumulate with new tags' \
+  'notmuch restore --input=dump.expected &&
+  notmuch restore --accumulate --input=dump-ABC_DEF.expected &&
+  notmuch dump >  OUTPUT.$test_count &&
+  notmuch restore --input=dump.expected &&
+  test_cmp dump-ABC_DEF.expected OUTPUT.$test_count'
+
 # notmuch restore currently only considers the first argument.
 test_expect_success 'Invalid restore invocation' \
   'test_must_fail notmuch restore --input=dump.expected another_one'
