@@ -39,12 +39,12 @@ test_expect_success 'Restore with nothing to do' \
   notmuch dump > dump.actual &&
   test_cmp dump.expected dump.actual'
 
-test_expect_success 'Restore with nothing to do, II' \
+test_expect_success 'Accumulate with existing tags' \
   'notmuch restore --accumulate --input=dump.expected &&
   notmuch dump > dump.actual &&
   test_cmp dump.expected dump.actual'
 
-test_expect_success 'Restore with nothing to do, III' \
+test_expect_success 'Accumulate with no tags' \
   'notmuch restore --accumulate < clear.expected &&
   notmuch dump > dump.actual &&
   test_cmp dump.expected dump.actual'
