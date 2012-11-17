@@ -1,0 +1,49 @@
+Pre-requisites
+--------------
+
+In addition to having notmuch, you need:
+
+- gpg
+- gnu tar
+- gnu time
+- xz. Some speedup can be gotten by installing "pixz", but this is
+  probably only worthwhile if you are debugging the tests.
+
+Getting set up to run tests:
+----------------------------
+
+First, you need to get the corpus.
+
+It should work to run
+
+   % make download-corpus
+
+In case that fails or is too slow, check
+
+   http://notmuchmail.org/corpus
+
+for a list of mirrors.
+
+Running tests
+-------------
+
+The easiest way to run performance tests is to say "make perf-test", (or
+simply run the notmuch-perf-test script). Either command will run all
+available performance tests.
+
+Alternately, you can run a specific subset of tests by simply invoking
+one of the executable scripts in this directory, (such as ./basic).
+
+Writing tests
+-------------
+
+Have a look at "basic" for an example.
+
+add_email_corpus takes arguments "--small" and "--medium" for when you
+want smaller subsets of the corpus to check.
+
+time_done does the cleanup; comment it out or define "$debug" to leave
+the temporary files around.
+
+Currently there is no option processing (e.g. --debug) in the
+performance tests.

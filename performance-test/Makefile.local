@@ -1,0 +1,32 @@
+# -*- makefile -*-
+
+dir := performance-test
+
+include $(dir)/version.sh
+
+CORPUS_NAME := notmuch-email-corpus-$(PERFTEST_VERSION).tar.xz
+TXZFILE := ${dir}/download/${CORPUS_NAME}
+SIGFILE := ${TXZFILE}.asc
+TEST_SCRIPT := ${dir}/notmuch-perf-test
+DEFAULT_URL :=  http://notmuchmail.org/releases/${CORPUS_NAME}
+
+perf-test: setup-perf-test all
+	$(TEST_SCRIPT) $(OPTIONS)
+
+.PHONY: download-corpus setup-perf-test
+
+# Note that this intentionally does not depend on download-corpus.
+setup-perf-test: $(TXZFILE)
+	gpg --verify $(SIGFILE)
+
+$(TXZFILE):
+	@printf "\nPlease download ${TXZFILE} using:\n\n"
+	@printf "\t%% make download-corpus\n\n"
+	@echo or see http://notmuchmail.org/corpus for download locations
+	@echo
+	@false
+
+download-corpus:
+	wget -O ${TXZFILE} ${DEFAULT_URL}
+
+CLEAN := $(CLEAN) $(dir)/tmp.*
