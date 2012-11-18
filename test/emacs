@@ -517,7 +517,6 @@ test_emacs '(let ((standard-input "\"attachment2.gz\""))
 test_expect_equal_file attachment2.gz "$EXPECTED/attachment"
 
 test_begin_subtest "Save 8bit attachment from within emacs using notmuch-show-save-attachments"
-test_subtest_known_broken
 
 add_message '[subject]="Attachment with 8bit chars"' \
 	'[header]="MIME-Version: 1.0"' \
