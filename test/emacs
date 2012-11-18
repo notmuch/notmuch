@@ -516,6 +516,33 @@ test_emacs '(let ((standard-input "\"attachment2.gz\""))
 	      (notmuch-show-save-part "id:cf0c4d610911171136h1713aa59w9cf9aa31f052ad0a@mail.gmail.com" 5))'
 test_expect_equal_file attachment2.gz "$EXPECTED/attachment"
 
+test_begin_subtest "Save 8bit attachment from within emacs using notmuch-show-save-attachments"
+test_subtest_known_broken
+
+add_message '[subject]="Attachment with 8bit chars"' \
+	'[header]="MIME-Version: 1.0"' \
+	'[content-type]="multipart/mixed; boundary=\"abcd\""' \
+	'[body]="--abcd
+Content-Type: text/plain
+
+Attachment follows:
+
+--abcd
+Content-Type: application/octet-stream; name=\"sample\"
+Content-Transfer-Encoding: 8bit
+Content-Disposition: attachment; filename=\"sample\"
+
+“¡ Hey ! It compiles ¡ Ship it !”
+
+--abcd--
+"'
+test_emacs '(notmuch-show "id:'"${gen_msg_id}"'")
+	    (delete-file "OUTPUT")
+	    (let ((standard-input "\"OUTPUT\""))
+	      (notmuch-show-save-attachments))'
+
+test_expect_equal "$(cat OUTPUT)" '“¡ Hey ! It compiles ¡ Ship it !”'
+
 test_begin_subtest "View raw message within emacs"
 test_emacs '(notmuch-show "id:cf0c4d610911171136h1713aa59w9cf9aa31f052ad0a@mail.gmail.com")
 	    (notmuch-show-view-raw-message)
