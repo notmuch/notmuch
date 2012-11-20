@@ -809,9 +809,10 @@ test_emacs "(let ((mm-text-html-renderer
 	      (notmuch-show \"id:${gen_msg_id}\"))
 	    (test-output)" > /dev/null
 # Different Emacs versions and renderers give very different results,
-# so just check that something reasonable showed up.
+# so just check that something reasonable showed up.  We first cat the
+# output so the test framework will print it if the test fails.
 test_expect_success "Rendering HTML mail with images" \
-    'grep -q smiley OUTPUT'
+    'cat OUTPUT && grep -q smiley OUTPUT'
 
 
 test_done
