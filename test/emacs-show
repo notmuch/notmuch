@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 test_description="emacs notmuch-show view"
-. test-lib.sh
+. ./test-lib.sh
 
 EXPECTED=$TEST_DIRECTORY/emacs-show.expected-output
 
