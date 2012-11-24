@@ -98,6 +98,89 @@ notmuch dump --format=batch-tag from:cworth | sed 's/^.*-- id://' | \
     sort > OUTPUT.$test_count
 test_expect_equal_file EXPECTED.$test_count OUTPUT.$test_count
 
+test_begin_subtest "format=batch-tag, # round-trip"
+notmuch dump --format=sup | sort > EXPECTED.$test_count
+notmuch dump --format=batch-tag | notmuch restore --format=batch-tag
+notmuch dump --format=sup | sort > OUTPUT.$test_count
+test_expect_equal_file EXPECTED.$test_count OUTPUT.$test_count
+
+test_begin_subtest "format=batch-tag, # blank lines and comments"
+notmuch dump --format=batch-tag| sort > EXPECTED.$test_count
+notmuch restore <<EOF
+# this line is a comment; the next has only white space
+ 	 
+
+# the previous line is empty
+EOF
+notmuch dump --format=batch-tag | sort > OUTPUT.$test_count
+test_expect_equal_file EXPECTED.$test_count OUTPUT.$test_count
+
+test_begin_subtest "format=batch-tag, # reverse-round-trip empty tag"
+cat <<EOF >EXPECTED.$test_count
++ -- id:20091117232137.GA7669@griffis1.net
+EOF
+notmuch restore --format=batch-tag < EXPECTED.$test_count
+notmuch dump --format=batch-tag id:20091117232137.GA7669@griffis1.net > OUTPUT.$test_count
+test_expect_equal_file EXPECTED.$test_count OUTPUT.$test_count
+
+tag1='comic_swear=$&^%$^%\\//-+$^%$'
+enc1=$($TEST_DIRECTORY/hex-xcode --direction=encode "$tag1")
+
+tag2=$(printf 'this\n tag\t has\n spaces')
+enc2=$($TEST_DIRECTORY/hex-xcode --direction=encode "$tag2")
+
+enc3='%c3%91%c3%a5%c3%b0%c3%a3%c3%a5%c3%a9-%c3%8f%c3%8a'
+tag3=$($TEST_DIRECTORY/hex-xcode --direction=decode $enc3)
+
+notmuch dump --format=batch-tag > BACKUP
+
+notmuch tag +"$tag1" +"$tag2" +"$tag3" -inbox -unread "*"
+
+test_begin_subtest 'format=batch-tag, round trip with strange tags'
+notmuch dump --format=batch-tag > EXPECTED.$test_count
+notmuch dump --format=batch-tag | notmuch restore --format=batch-tag
+notmuch dump --format=batch-tag > OUTPUT.$test_count
+test_expect_equal_file EXPECTED.$test_count OUTPUT.$test_count
+
+test_begin_subtest 'format=batch-tag, checking encoded output'
+notmuch dump --format=batch-tag -- from:cworth |\
+	 awk "{ print \"+$enc1 +$enc2 +$enc3 -- \" \$5 }" > EXPECTED.$test_count
+notmuch dump --format=batch-tag -- from:cworth  > OUTPUT.$test_count
+test_expect_equal_file EXPECTED.$test_count OUTPUT.$test_count
+
+test_begin_subtest 'restoring sane tags'
+notmuch restore --format=batch-tag < BACKUP
+notmuch dump --format=batch-tag > OUTPUT.$test_count
+test_expect_equal_file BACKUP OUTPUT.$test_count
+
+test_begin_subtest 'format=batch-tag, restore=auto'
+notmuch dump --format=batch-tag > EXPECTED.$test_count
+notmuch tag -inbox -unread "*"
+notmuch restore --format=auto < EXPECTED.$test_count
+notmuch dump --format=batch-tag > OUTPUT.$test_count
+test_expect_equal_file EXPECTED.$test_count OUTPUT.$test_count
+
+test_begin_subtest 'format=sup, restore=auto'
+notmuch dump --format=sup > EXPECTED.$test_count
+notmuch tag -inbox -unread "*"
+notmuch restore --format=auto < EXPECTED.$test_count
+notmuch dump --format=sup > OUTPUT.$test_count
+test_expect_equal_file EXPECTED.$test_count OUTPUT.$test_count
+
+test_begin_subtest 'format=batch-tag, restore=default'
+notmuch dump --format=batch-tag > EXPECTED.$test_count
+notmuch tag -inbox -unread "*"
+notmuch restore < EXPECTED.$test_count
+notmuch dump --format=batch-tag > OUTPUT.$test_count
+test_expect_equal_file EXPECTED.$test_count OUTPUT.$test_count
+
+test_begin_subtest 'format=sup, restore=default'
+notmuch dump --format=sup > EXPECTED.$test_count
+notmuch tag -inbox -unread "*"
+notmuch restore < EXPECTED.$test_count
+notmuch dump --format=sup > OUTPUT.$test_count
+test_expect_equal_file EXPECTED.$test_count OUTPUT.$test_count
+
 test_begin_subtest 'roundtripping random message-ids and tags'
 
     ${TEST_DIRECTORY}/random-corpus --config-path=${NOTMUCH_CONFIG} \
