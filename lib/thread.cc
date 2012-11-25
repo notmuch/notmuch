@@ -406,7 +406,8 @@ _notmuch_thread_create (void *ctx,
 			notmuch_string_list_t *exclude_terms,
 			notmuch_sort_t sort)
 {
-    notmuch_thread_t *thread;
+    void *local = talloc_new (ctx);
+    notmuch_thread_t *thread = NULL;
     notmuch_message_t *seed_message;
     const char *thread_id;
     char *thread_id_query_string;
@@ -415,24 +416,23 @@ _notmuch_thread_create (void *ctx,
     notmuch_messages_t *messages;
     notmuch_message_t *message;
 
-    seed_message = _notmuch_message_create (ctx, notmuch, seed_doc_id, NULL);
+    seed_message = _notmuch_message_create (local, notmuch, seed_doc_id, NULL);
     if (! seed_message)
 	INTERNAL_ERROR ("Thread seed message %u does not exist", seed_doc_id);
 
     thread_id = notmuch_message_get_thread_id (seed_message);
-    thread_id_query_string = talloc_asprintf (ctx, "thread:%s", thread_id);
+    thread_id_query_string = talloc_asprintf (local, "thread:%s", thread_id);
     if (unlikely (thread_id_query_string == NULL))
-	return NULL;
+	goto DONE;
 
-    thread_id_query = notmuch_query_create (notmuch, thread_id_query_string);
+    thread_id_query = talloc_steal (
+	local, notmuch_query_create (notmuch, thread_id_query_string));
     if (unlikely (thread_id_query == NULL))
-	return NULL;
+	goto DONE;
 
-    talloc_free (thread_id_query_string);
-
-    thread = talloc (ctx, notmuch_thread_t);
+    thread = talloc (local, notmuch_thread_t);
     if (unlikely (thread == NULL))
-	return NULL;
+	goto DONE;
 
     talloc_set_destructor (thread, _notmuch_thread_destructor);
 
@@ -451,8 +451,10 @@ _notmuch_thread_create (void *ctx,
 					  free, NULL);
 
     thread->message_list = _notmuch_message_list_create (thread);
-    if (unlikely (thread->message_list == NULL))
-	return NULL;
+    if (unlikely (thread->message_list == NULL)) {
+	thread = NULL;
+	goto DONE;
+    }
 
     thread->message_hash = g_hash_table_new_full (g_str_hash, g_str_equal,
 						  free, NULL);
@@ -489,12 +491,15 @@ _notmuch_thread_create (void *ctx,
 	_notmuch_message_close (message);
     }
 
-    notmuch_query_destroy (thread_id_query);
-
     _resolve_thread_authors_string (thread);
 
     _resolve_thread_relationships (thread);
 
+    /* Commit to returning thread. */
+    talloc_steal (ctx, thread);
+
+  DONE:
+    talloc_free (local);
     return thread;
 }
 
