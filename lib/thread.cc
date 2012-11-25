@@ -508,6 +508,12 @@ notmuch_thread_get_toplevel_messages (notmuch_thread_t *thread)
     return _notmuch_messages_create (thread->toplevel_list);
 }
 
+notmuch_messages_t *
+notmuch_thread_get_messages (notmuch_thread_t *thread)
+{
+    return _notmuch_messages_create (thread->message_list);
+}
+
 const char *
 notmuch_thread_get_thread_id (notmuch_thread_t *thread)
 {

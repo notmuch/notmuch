@@ -719,19 +719,20 @@ int
 notmuch_thread_get_total_messages (notmuch_thread_t *thread);
 
 /* Get a notmuch_messages_t iterator for the top-level messages in
- * 'thread'.
+ * 'thread' in oldest-first order.
  *
  * This iterator will not necessarily iterate over all of the messages
  * in the thread. It will only iterate over the messages in the thread
  * which are not replies to other messages in the thread.
- *
- * To iterate over all messages in the thread, the caller will need to
- * iterate over the result of notmuch_message_get_replies for each
- * top-level message (and do that recursively for the resulting
- * messages, etc.).
  */
 notmuch_messages_t *
 notmuch_thread_get_toplevel_messages (notmuch_thread_t *thread);
+
+/* Get a notmuch_thread_t iterator for all messages in 'thread' in
+ * oldest-first order.
+ */
+notmuch_messages_t *
+notmuch_thread_get_messages (notmuch_thread_t *thread);
 
 /* Get the number of messages in 'thread' that matched the search.
  *
