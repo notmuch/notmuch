@@ -42,19 +42,7 @@ _notmuch_message_list_create (const void *ctx)
     return list;
 }
 
-/* Append a single 'node' to the end of 'list'.
- */
-void
-_notmuch_message_list_append (notmuch_message_list_t *list,
-			      notmuch_message_node_t *node)
-{
-    *(list->tail) = node;
-    list->tail = &node->next;
-}
-
-/* Allocate a new node for 'message' and append it to the end of
- * 'list'.
- */
+/* Append 'message' to the end of 'list'. */
 void
 _notmuch_message_list_add_message (notmuch_message_list_t *list,
 				   notmuch_message_t *message)
@@ -64,7 +52,8 @@ _notmuch_message_list_add_message (notmuch_message_list_t *list,
     node->message = message;
     node->next = NULL;
 
-    _notmuch_message_list_append (list, node);
+    *(list->tail) = node;
+    list->tail = &node->next;
 }
 
 notmuch_messages_t *

@@ -429,10 +429,6 @@ notmuch_message_list_t *
 _notmuch_message_list_create (const void *ctx);
 
 void
-_notmuch_message_list_append (notmuch_message_list_t *list,
-			      notmuch_message_node_t *node);
-
-void
 _notmuch_message_list_add_message (notmuch_message_list_t *list,
 				   notmuch_message_t *message);
 
