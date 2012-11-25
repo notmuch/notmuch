@@ -262,6 +262,9 @@ VALUE
 notmuch_rb_thread_get_toplevel_messages (VALUE self);
 
 VALUE
+notmuch_rb_thread_get_messages (VALUE self);
+
+VALUE
 notmuch_rb_thread_get_matched_messages (VALUE self);
 
 VALUE

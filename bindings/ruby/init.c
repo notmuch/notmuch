@@ -306,6 +306,7 @@ Init_notmuch (void)
     rb_define_method (notmuch_rb_cThread, "thread_id", notmuch_rb_thread_get_thread_id, 0); /* in thread.c */
     rb_define_method (notmuch_rb_cThread, "total_messages", notmuch_rb_thread_get_total_messages, 0); /* in thread.c */
     rb_define_method (notmuch_rb_cThread, "toplevel_messages", notmuch_rb_thread_get_toplevel_messages, 0); /* in thread.c */
+    rb_define_method (notmuch_rb_cThread, "messages", notmuch_rb_thread_get_messages, 0); /* in thread.c */
     rb_define_method (notmuch_rb_cThread, "matched_messages", notmuch_rb_thread_get_matched_messages, 0); /* in thread.c */
     rb_define_method (notmuch_rb_cThread, "authors", notmuch_rb_thread_get_authors, 0); /* in thread.c */
     rb_define_method (notmuch_rb_cThread, "subject", notmuch_rb_thread_get_subject, 0); /* in thread.c */

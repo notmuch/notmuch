@@ -92,6 +92,26 @@ notmuch_rb_thread_get_toplevel_messages (VALUE self)
 }
 
 /*
+ * call-seq: THREAD.messages => MESSAGES
+ *
+ * Get a Notmuch::Messages iterator for the all messages in thread.
+ */
+VALUE
+notmuch_rb_thread_get_messages (VALUE self)
+{
+    notmuch_messages_t *messages;
+    notmuch_thread_t *thread;
+
+    Data_Get_Notmuch_Thread (self, thread);
+
+    messages = notmuch_thread_get_messages (thread);
+    if (!messages)
+	rb_raise (notmuch_rb_eMemoryError, "Out of memory");
+
+    return Data_Wrap_Struct (notmuch_rb_cMessages, NULL, NULL, messages);
+}
+
+/*
  * call-seq: THREAD.matched_messages => fixnum
  *
  * Get the number of messages in thread that matched the search
