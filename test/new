@@ -163,7 +163,7 @@ rm -rf "${MAIL_DIR}"/two
 output=$(NOTMUCH_NEW)
 test_expect_equal "$output" "No new mail. Removed 3 messages."
 
-test_begin_subtest "Support single-message mbox"
+test_begin_subtest "Support single-message mbox (deprecated)"
 cat > "${MAIL_DIR}"/mbox_file1 <<EOF
 From test_suite@notmuchmail.org Fri Jan  5 15:43:57 2001
 From: Notmuch Test Suite <test_suite@notmuchmail.org>
@@ -174,11 +174,13 @@ Body.
 EOF
 output=$(NOTMUCH_NEW 2>&1)
 test_expect_equal "$output" \
-"Added 1 new message to the database."
+"Warning: ${MAIL_DIR}/mbox_file1 is an mbox containing a single message,
+likely caused by misconfigured mail delivery.  Support for single-message
+mboxes is deprecated and may be removed in the future.
+Added 1 new message to the database."
 
 # This test requires that notmuch new has been run at least once.
 test_begin_subtest "Skip and report non-mail files"
-test_subtest_known_broken
 generate_message
 mkdir -p "${MAIL_DIR}"/.git && touch "${MAIL_DIR}"/.git/config
 touch "${MAIL_DIR}"/ignored_file
