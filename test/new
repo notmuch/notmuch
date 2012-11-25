@@ -225,7 +225,12 @@ touch "${MAIL_DIR}"/{one,one/two,one/two/three}/ignored_file
 output=$(NOTMUCH_NEW --debug 2>&1 | sort)
 test_expect_equal "$output" \
 "(D) add_files_recursive, pass 1: explicitly ignoring ${MAIL_DIR}/.git
+(D) add_files_recursive, pass 1: explicitly ignoring ${MAIL_DIR}/.ignored_hidden_file
+(D) add_files_recursive, pass 1: explicitly ignoring ${MAIL_DIR}/ignored_file
+(D) add_files_recursive, pass 1: explicitly ignoring ${MAIL_DIR}/one/ignored_file
+(D) add_files_recursive, pass 1: explicitly ignoring ${MAIL_DIR}/one/two/ignored_file
 (D) add_files_recursive, pass 1: explicitly ignoring ${MAIL_DIR}/one/two/three/.git
+(D) add_files_recursive, pass 1: explicitly ignoring ${MAIL_DIR}/one/two/three/ignored_file
 (D) add_files_recursive, pass 2: explicitly ignoring ${MAIL_DIR}/.git
 (D) add_files_recursive, pass 2: explicitly ignoring ${MAIL_DIR}/.ignored_hidden_file
 (D) add_files_recursive, pass 2: explicitly ignoring ${MAIL_DIR}/ignored_file
@@ -237,7 +242,6 @@ No new mail."
 
 
 test_begin_subtest "Don't stop for ignored broken symlinks"
-test_subtest_known_broken
 notmuch config set new.ignore .git ignored_file .ignored_hidden_file broken_link
 ln -s i_do_not_exist "${MAIL_DIR}"/broken_link
 output=$(NOTMUCH_NEW 2>&1)

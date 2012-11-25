@@ -350,6 +350,18 @@ add_files (notmuch_database_t *notmuch,
 
 	entry = fs_entries[i];
 
+	/* Ignore any files/directories the user has configured to
+	 * ignore.  We do this before dirent_type both for performance
+	 * and because we don't care if dirent_type fails on entries
+	 * that are explicitly ignored.
+	 */
+	if (_entry_in_ignore_list (entry->d_name, state)) {
+	    if (state->debug)
+		printf ("(D) add_files_recursive, pass 1: explicitly ignoring %s/%s\n",
+			path, entry->d_name);
+	    continue;
+	}
+
 	/* We only want to descend into directories (and symlinks to
 	 * directories). */
 	entry_type = dirent_type (path, entry);
@@ -364,22 +376,14 @@ add_files (notmuch_database_t *notmuch,
 	}
 
 	/* Ignore special directories to avoid infinite recursion.
-	 * Also ignore the .notmuch directory, any "tmp" directory
-	 * that appears within a maildir and files/directories
-	 * the user has configured to be ignored.
+	 * Also ignore the .notmuch directory and any "tmp" directory
+	 * that appears within a maildir.
 	 */
 	if (strcmp (entry->d_name, ".") == 0 ||
 	    strcmp (entry->d_name, "..") == 0 ||
 	    (is_maildir && strcmp (entry->d_name, "tmp") == 0) ||
-	    strcmp (entry->d_name, ".notmuch") == 0 ||
-	    _entry_in_ignore_list (entry->d_name, state))
-	{
-	    if (_entry_in_ignore_list (entry->d_name, state) && state->debug)
-		printf ("(D) add_files_recursive, pass 1: explicitly ignoring %s/%s\n",
-			path,
-			entry->d_name);
+	    strcmp (entry->d_name, ".notmuch") == 0)
 	    continue;
-	}
 
 	next = talloc_asprintf (notmuch, "%s/%s", path, entry->d_name);
 	status = add_files (notmuch, next, state);
