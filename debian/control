@@ -7,7 +7,7 @@ Uploaders:
  martin f. krafft <madduck@debian.org>,
  David Bremner <bremner@debian.org>
 Build-Depends:
- debhelper (>= 7.0.50~),
+ debhelper (>= 9),
  pkg-config,
  libxapian-dev,
  libgmime-2.6-dev (>= 2.6.7~) | libgmime-2.4-dev,
@@ -39,6 +39,7 @@ Package: libnotmuch3
 Section: libs
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
+Pre-Depends: ${misc:Pre-Depends}
 Description: thread-based email index, search and tagging (runtime)
  Notmuch is a system for indexing, searching, reading, and tagging
  large collections of email messages in maildir or mh format. It uses
