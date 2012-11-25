@@ -462,7 +462,7 @@ _notmuch_doc_id_set_remove (notmuch_doc_id_set_t *doc_ids,
 
 void
 _notmuch_message_add_reply (notmuch_message_t *message,
-			    notmuch_message_node_t *reply);
+			    notmuch_message_t *reply);
 
 /* sha1.c */
 

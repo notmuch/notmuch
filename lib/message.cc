@@ -462,9 +462,9 @@ notmuch_message_get_thread_id (notmuch_message_t *message)
 
 void
 _notmuch_message_add_reply (notmuch_message_t *message,
-			    notmuch_message_node_t *reply)
+			    notmuch_message_t *reply)
 {
-    _notmuch_message_list_append (message->replies, reply);
+    _notmuch_message_list_add_message (message->replies, reply);
 }
 
 notmuch_messages_t *

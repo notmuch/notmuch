@@ -35,7 +35,11 @@ struct visible _notmuch_thread {
     char *authors;
     GHashTable *tags;
 
+    /* All messages, oldest first. */
     notmuch_message_list_t *message_list;
+    /* Top-level messages, oldest first. */
+    notmuch_message_list_t *toplevel_list;
+
     GHashTable *message_hash;
     int total_messages;
     int matched_messages;
@@ -345,29 +349,22 @@ _thread_add_matched_message (notmuch_thread_t *thread,
 }
 
 static void
-_resolve_thread_relationships (unused (notmuch_thread_t *thread))
+_resolve_thread_relationships (notmuch_thread_t *thread)
 {
-    notmuch_message_node_t **prev, *node;
+    notmuch_message_node_t *node;
     notmuch_message_t *message, *parent;
     const char *in_reply_to;
 
-    prev = &thread->message_list->head;
-    while ((node = *prev)) {
+    for (node = thread->message_list->head; node; node = node->next) {
 	message = node->message;
 	in_reply_to = _notmuch_message_get_in_reply_to (message);
 	if (in_reply_to && strlen (in_reply_to) &&
 	    g_hash_table_lookup_extended (thread->message_hash,
 					  in_reply_to, NULL,
 					  (void **) &parent))
-	{
-	    *prev = node->next;
-	    if (thread->message_list->tail == &node->next)
-		thread->message_list->tail = prev;
-	    node->next = NULL;
-	    _notmuch_message_add_reply (parent, node);
-	} else {
-	    prev = &((*prev)->next);
-	}
+	    _notmuch_message_add_reply (parent, message);
+	else
+	    _notmuch_message_list_add_message (thread->toplevel_list, message);
     }
 
     /* XXX: After scanning through the entire list looking for parents
@@ -451,7 +448,9 @@ _notmuch_thread_create (void *ctx,
 					  free, NULL);
 
     thread->message_list = _notmuch_message_list_create (thread);
-    if (unlikely (thread->message_list == NULL)) {
+    thread->toplevel_list = _notmuch_message_list_create (thread);
+    if (unlikely (thread->message_list == NULL ||
+		  thread->toplevel_list == NULL)) {
 	thread = NULL;
 	goto DONE;
     }
@@ -506,7 +505,7 @@ _notmuch_thread_create (void *ctx,
 notmuch_messages_t *
 notmuch_thread_get_toplevel_messages (notmuch_thread_t *thread)
 {
-    return _notmuch_messages_create (thread->message_list);
+    return _notmuch_messages_create (thread->toplevel_list);
 }
 
 const char *
