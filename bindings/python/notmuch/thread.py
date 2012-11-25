@@ -128,11 +128,6 @@ class Thread(object):
            in the thread. It will only iterate over the messages in the thread
            which are not replies to other messages in the thread.
 
-           To iterate over all messages in the thread, the caller will need to
-           iterate over the result of :meth:`Message.get_replies` for each
-           top-level message (and do that recursively for the resulting
-           messages, etc.).
-
         :returns: :class:`Messages`
         :raises: :exc:`NotInitializedError` if query is not initialized
         :raises: :exc:`NullPointerError` if search_messages failed
@@ -141,6 +136,28 @@ class Thread(object):
             raise NotInitializedError()
 
         msgs_p = Thread._get_toplevel_messages(self._thread)
+
+        if not msgs_p:
+            raise NullPointerError()
+
+        return Messages(msgs_p, self)
+
+    """notmuch_thread_get_messages"""
+    _get_messages = nmlib.notmuch_thread_get_messages
+    _get_messages.argtypes = [NotmuchThreadP]
+    _get_messages.restype = NotmuchMessagesP
+
+    def get_messages(self):
+        """Returns a :class:`Messages` iterator for all messages in 'thread'
+
+        :returns: :class:`Messages`
+        :raises: :exc:`NotInitializedError` if query is not initialized
+        :raises: :exc:`NullPointerError` if get_messages failed
+        """
+        if not self._thread:
+            raise NotInitializedError()
+
+        msgs_p = Thread._get_messages(self._thread)
 
         if not msgs_p:
             raise NullPointerError()
