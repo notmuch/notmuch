@@ -178,16 +178,34 @@ test_expect_equal "$output" \
 
 # This test requires that notmuch new has been run at least once.
 test_begin_subtest "Skip and report non-mail files"
+test_subtest_known_broken
 generate_message
 mkdir -p "${MAIL_DIR}"/.git && touch "${MAIL_DIR}"/.git/config
 touch "${MAIL_DIR}"/ignored_file
 touch "${MAIL_DIR}"/.ignored_hidden_file
+cat > "${MAIL_DIR}"/mbox_file <<EOF
+From test_suite@notmuchmail.org Fri Jan  5 15:43:57 2001
+From: Notmuch Test Suite <test_suite@notmuchmail.org>
+To: Notmuch Test Suite <test_suite@notmuchmail.org>
+Subject: Test mbox message 1
+
+Body.
+
+From test_suite@notmuchmail.org Fri Jan  5 15:43:57 2001
+From: Notmuch Test Suite <test_suite@notmuchmail.org>
+To: Notmuch Test Suite <test_suite@notmuchmail.org>
+Subject: Test mbox message 2
+
+Body 2.
+EOF
 output=$(NOTMUCH_NEW 2>&1)
 test_expect_equal "$output" \
 "Note: Ignoring non-mail file: ${MAIL_DIR}/.git/config
 Note: Ignoring non-mail file: ${MAIL_DIR}/.ignored_hidden_file
 Note: Ignoring non-mail file: ${MAIL_DIR}/ignored_file
+Note: Ignoring non-mail file: ${MAIL_DIR}/mbox_file
 Added 1 new message to the database."
+rm "${MAIL_DIR}"/mbox_file
 
 test_begin_subtest "Ignore files and directories specified in new.ignore"
 generate_message
