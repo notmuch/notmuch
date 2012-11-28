@@ -625,18 +625,22 @@ test_have_prereq () {
 	esac
 }
 
+declare -A test_missing_external_prereq_
+declare -A test_subtest_missing_external_prereq_
+
 # declare prerequisite for the given external binary
 test_declare_external_prereq () {
 	binary="$1"
 	test "$#" = 2 && name=$2 || name="$binary(1)"
 
-	hash $binary 2>/dev/null || eval "
-	test_missing_external_prereq_${binary}_=t
+	if ! hash $binary 2>/dev/null; then
+		test_missing_external_prereq_["${binary}"]=t
+		eval "
 $binary () {
-	echo -n \"\$test_subtest_missing_external_prereqs_ \" | grep -qe \" $name \" ||
-	test_subtest_missing_external_prereqs_=\"\$test_subtest_missing_external_prereqs_ $name\"
+	test_subtest_missing_external_prereq_[\"${name}\"]=t
 	false
 }"
+	fi
 }
 
 # Explicitly require external prerequisite.  Useful when binary is
@@ -644,7 +648,7 @@ $binary () {
 # Returns success if dependency is available, failure otherwise.
 test_require_external_prereq () {
 	binary="$1"
-	if [ "$(eval echo -n \$test_missing_external_prereq_${binary}_)" = t ]; then
+	if [[ ${test_missing_external_prereq_["${binary}"]} == t ]]; then
 		# dependency is missing, call the replacement function to note it
 		eval "$binary"
 	else
@@ -737,9 +741,9 @@ test_skip () {
 }
 
 test_check_missing_external_prereqs_ () {
-	if test -n "$test_subtest_missing_external_prereqs_"; then
-		say_color skip >&1 "missing prerequisites:"
-		echo "$test_subtest_missing_external_prereqs_" >&1
+	if [[ ${#test_subtest_missing_external_prereq_[@]} != 0 ]]; then
+		say_color skip >&1 "missing prerequisites: "
+		echo ${!test_subtest_missing_external_prereq_[@]} >&1
 		test_report_skip_ "$@"
 	else
 		false
@@ -1022,7 +1026,7 @@ test_python() {
 	# most others as /usr/bin/python. So first try python2, and fallback to
 	# python if python2 doesn't exist.
 	cmd=python2
-	[[ "$test_missing_external_prereq_python2_" = t ]] && cmd=python
+	[[ ${test_missing_external_prereq_[python2]} == t ]] && cmd=python
 
 	(echo "import sys; _orig_stdout=sys.stdout; sys.stdout=open('OUTPUT', 'w')"; cat) \
 		| $cmd -
@@ -1064,7 +1068,7 @@ test_reset_state_ () {
 	test -z "$test_init_done_" && test_init_
 
 	test_subtest_known_broken_=
-	test_subtest_missing_external_prereqs_=
+	test_subtest_missing_external_prereq_=()
 }
 
 # called once before the first subtest
