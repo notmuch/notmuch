@@ -49,7 +49,13 @@ TZ=UTC
 TERM=dumb
 export LANG LC_ALL PAGER TERM TZ
 GIT_TEST_CMP=${GIT_TEST_CMP:-diff -u}
+if [[ ( -n "$TEST_EMACS" && -z "$TEST_EMACSCLIENT" ) || \
+      ( -z "$TEST_EMACS" && -n "$TEST_EMACSCLIENT" ) ]]; then
+    echo "error: must specify both or neither of TEST_EMACS and TEST_EMACSCLIENT" >&2
+    exit 1
+fi
 TEST_EMACS=${TEST_EMACS:-${EMACS:-emacs}}
+TEST_EMACSCLIENT=${TEST_EMACSCLIENT:-emacsclient}
 
 # Protect ourselves from common misconfiguration to export
 # CDPATH into the environment
@@ -969,7 +975,7 @@ test_emacs () {
 	missing_dependencies=
 	test_require_external_prereq dtach || missing_dependencies=1
 	test_require_external_prereq emacs || missing_dependencies=1
-	test_require_external_prereq emacsclient || missing_dependencies=1
+	test_require_external_prereq ${TEST_EMACSCLIENT} || missing_dependencies=1
 	test -z "$missing_dependencies" || return
 
 	if [ -z "$EMACS_SERVER" ]; then
@@ -1005,7 +1011,7 @@ test_emacs () {
 	rm -f OUTPUT
 	touch OUTPUT
 
-	emacsclient --socket-name="$EMACS_SERVER" --eval "(progn $@)"
+	${TEST_EMACSCLIENT} --socket-name="$EMACS_SERVER" --eval "(progn $@)"
 }
 
 test_python() {
@@ -1158,7 +1164,7 @@ rm -f y
 # declare prerequisites for external binaries used in tests
 test_declare_external_prereq dtach
 test_declare_external_prereq emacs
-test_declare_external_prereq emacsclient
+test_declare_external_prereq ${TEST_EMACSCLIENT}
 test_declare_external_prereq gdb
 test_declare_external_prereq gpg
 test_declare_external_prereq python
