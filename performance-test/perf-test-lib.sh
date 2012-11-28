@@ -42,7 +42,7 @@ add_email_corpus ()
 }
 
 print_header () {
-    printf "[v%4s]               Wall(s)\tUsr(s)\tSys(s)\tRes(K)\tIn\tOut\n" \
+    printf "[v%4s]               Wall(s)\tUsr(s)\tSys(s)\tRes(K)\tIn(512B)\tOut(512B)\n" \
 	   ${PERFTEST_VERSION}
 }
 
