@@ -12,9 +12,18 @@ In addition to having notmuch, you need:
 Getting set up to run tests:
 ----------------------------
 
-First, you need to get the corpus.
+First, you need to get the corpus.  If you don't already have the gpg
+key for David Bremner, run
 
-It should work to run
+   % gpg --search 'david@tethera.net'
+
+This should get you a key with fingerprint
+
+    815B 6398 2A79 F8E7 C727  86C4 762B 57BB 7842 06AD
+
+(the last 8 digits are printed as the "key id").
+
+To fetch the actual corpus it should work to run
 
    % make download-corpus
 
