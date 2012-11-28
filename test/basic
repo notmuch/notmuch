@@ -79,7 +79,7 @@ test_begin_subtest "Ensure that -v does not suppress test output"
 output=$(cd $TEST_DIRECTORY; ./test-verbose -v 2>&1 | suppress_diff_date)
 expected=$(cat $EXPECTED/test-verbose-yes | suppress_diff_date)
 # Do not include the results of test-verbose in totals
-rm $TEST_DIRECTORY/test-results/test-verbose-*
+rm $TEST_DIRECTORY/test-results/test-verbose
 rm -r $TEST_DIRECTORY/tmp.test-verbose
 test_expect_equal "$output" "$expected"
 
