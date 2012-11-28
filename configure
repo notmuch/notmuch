@@ -236,7 +236,12 @@ done
 # Makefile.config file later like most values), because we need to
 # actually investigate this value compared to the ldconfig_paths value
 # below.
-libdir_expanded=${LIBDIR:-${PREFIX}/lib}
+if [ -z "$LIBDIR" ] ; then
+    libdir_expanded="${PREFIX}/lib"
+else
+    # very non-general variable expansion
+    libdir_expanded=`echo "$LIBDIR" | sed "s|\\${prefix}|${PREFIX}|g; s|\\$prefix/|${PREFIX}/|; s|//*|/|g"`
+fi
 
 cat <<EOF
 Welcome to Notmuch, a system for indexing, searching and tagging your email.
