@@ -4,7 +4,7 @@ test_description="emacs: mail subject to filename"
 . ./test-lib.sh
 
 # emacs server can't be started in a child process with $(test_emacs ...)
-test_emacs '(ignore)'
+test_emacs '(ignore)' > /dev/null
 
 # test notmuch-wash-subject-to-patch-sequence-number (subject)
 test_begin_subtest "no patch sequence number"
