@@ -30,6 +30,17 @@ Date range search support
   `<until>`. Please refer to the `notmuch-search-terms(7)` manual page
   for details.
 
+New add-on tool: notmuch-pick
+-----------------------------
+
+The new contrib/ tool `notmuch-pick` is an experimental threaded message
+view for the emacs interface. Each message is one line in the results
+and the thread structure is shown using UTF-8 box drawing characters
+(similar to Mutt's threaded view). It comes between search and show in
+terms of amount of output and can be useful for viewing both single
+threads and multiple threads. See the notmuch-pick README file for
+further details and installation.
+
 Notmuch 0.14 (2012-08-20)
 =========================
 
