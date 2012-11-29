@@ -807,8 +807,6 @@ Complete list of currently available key bindings:
 	 (message-arg "--entire-thread"))
     (if (equal (car (process-lines notmuch-command "count" search-args)) "0")
 	(setq search-args basic-query))
-    (message "starting parser %s"
-	     (format-time-string "%r"))
     (if notmuch-pick-asynchronous-parser
 	(let ((proc (start-process
 		     "notmuch-pick" buffer
@@ -831,9 +829,7 @@ Complete list of currently available key bindings:
 	  (list "--body=false" message-arg search-args)))
 	(save-excursion
 	  (goto-char (point-max))
-	  (insert "End of search results.\n"))
-	(message "sync parser finished %s"
-		 (format-time-string "%r"))))))
+	  (insert "End of search results.\n"))))))
 
 
 (defun notmuch-pick (&optional query query-context buffer-name show-first-match)
