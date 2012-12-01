@@ -35,7 +35,6 @@
 (declare-function notmuch-show "notmuch-show" (&rest args))
 (declare-function notmuch-tag "notmuch" (query &rest tags))
 (declare-function notmuch-show-strip-re "notmuch-show" (subject))
-(declare-function notmuch-show-clean-address "notmuch-show" (parsed-address))
 (declare-function notmuch-show-spaces-n "notmuch-show" (n))
 (declare-function notmuch-read-query "notmuch" (prompt))
 (declare-function notmuch-read-tag-changes "notmuch" (&optional initial-input &rest search-terms))
@@ -521,62 +520,16 @@ than only the current message."
 	  (message (format "Command '%s' exited abnormally with code %d"
 			   shell-command exit-code)))))))
 
-;; Shamelessly stolen from notmuch-show.el: should be unified.
 (defun notmuch-pick-clean-address (address)
-  "Try to clean a single email ADDRESS for display.  Return
+  "Try to clean a single email ADDRESS for display. Return
+AUTHOR_NAME if present, otherwise return AUTHOR_EMAIL. Return
 unchanged ADDRESS if parsing fails."
-  (condition-case nil
-    (let (p-name p-address)
-      ;; It would be convenient to use `mail-header-parse-address',
-      ;; but that expects un-decoded mailbox parts, whereas our
-      ;; mailbox parts are already decoded (and hence may contain
-      ;; UTF-8). Given that notmuch should handle most of the awkward
-      ;; cases, some simple string deconstruction should be sufficient
-      ;; here.
-      (cond
-       ;; "User <user@dom.ain>" style.
-       ((string-match "\\(.*\\) <\\(.*\\)>" address)
-	(setq p-name (match-string 1 address)
-	      p-address (match-string 2 address)))
+  (let* ((clean-address (notmuch-clean-address address))
+	 (p-address (car clean-address))
+	 (p-name (cdr clean-address)))
 
-       ;; "<user@dom.ain>" style.
-       ((string-match "<\\(.*\\)>" address)
-	(setq p-address (match-string 1 address)))
-
-       ;; Everything else.
-       (t
-	(setq p-address address)))
-
-      (when p-name
-	;; Remove elements of the mailbox part that are not relevant for
-	;; display, even if they are required during transport:
-	;;
-	;; Backslashes.
-	(setq p-name (replace-regexp-in-string "\\\\" "" p-name))
-
-	;; Outer single and double quotes, which might be nested.
-	(loop
-	 with start-of-loop
-	 do (setq start-of-loop p-name)
-
-	 when (string-match "^\"\\(.*\\)\"$" p-name)
-	 do (setq p-name (match-string 1 p-name))
-
-	 when (string-match "^'\\(.*\\)'$" p-name)
-	 do (setq p-name (match-string 1 p-name))
-
-	 until (string= start-of-loop p-name)))
-
-      ;; If the address is 'foo@bar.com <foo@bar.com>' then show just
-      ;; 'foo@bar.com'.
-      (when (string= p-name p-address)
-	(setq p-name nil))
-
-      ;; If we have a name return that otherwise return the address.
-      (if (not p-name)
-	  p-address
-	p-name))
-    (error address)))
+    ;; If we have a name return that otherwise return the address.
+    (or p-name p-address)))
 
 (defun notmuch-pick-insert-field (field format-string msg)
   (let* ((headers (plist-get msg :headers))
