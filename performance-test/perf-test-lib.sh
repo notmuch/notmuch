@@ -1,5 +1,30 @@
 . ./version.sh
 
+corpus_size=large
+
+while test "$#" -ne 0
+do
+	case "$1" in
+	-d|--debug)
+		debug=t;
+		shift
+		;;
+	-s|--small)
+		corpus_size=small;
+		shift
+		;;
+	-m|--medium)
+		corpus_size=medium;
+		shift
+		;;
+	-l|--large)
+		corpus_size=large;
+		shift
+		;;
+	*)
+		echo "error: unknown performance test option '$1'" >&2; exit 1 ;;
+	esac
+done
 . ../test/test-lib-common.sh
 
 set -e
