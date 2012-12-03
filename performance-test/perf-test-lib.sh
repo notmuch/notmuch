@@ -35,6 +35,8 @@ then
 	exit 1
 fi
 
+DB_CACHE_DIR=${TEST_DIRECTORY}/notmuch.cache.$corpus_size
+
 add_email_corpus ()
 {
     rm -rf ${MAIL_DIR}
@@ -80,8 +82,34 @@ add_email_corpus ()
     fi
 
     cp -lr $MAIL_CORPUS $MAIL_DIR
+
 }
 
+time_start () {
+
+    add_email_corpus
+
+    print_header
+
+    if [ -d $DB_CACHE_DIR ]; then
+	cp -r $DB_CACHE_DIR ${MAIL_DIR}/.notmuch
+    else
+	time_run 'Initial notmuch new' "notmuch new"
+	cache_database
+    fi
+}
+
+cache_database () {
+    if [ -d $MAIL_DIR/.notmuch ]; then
+	cp -r $MAIL_DIR/.notmuch $DB_CACHE_DIR
+    else
+	echo "Warning: No database found to cache"
+    fi
+}
+
+uncache_database () {
+    rm -rf $DB_CACHE_DIR
+}
 
 print_header () {
     printf "[v%4s %6s]          Wall(s)\tUsr(s)\tSys(s)\tRes(K)\tIn/Out(512B)\n" \

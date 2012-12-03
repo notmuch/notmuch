@@ -2,11 +2,16 @@
 
 . ./perf-test-lib.sh
 
+uncache_database
+
 add_email_corpus
 
 print_header
 
 time_run 'initial notmuch new' 'notmuch new'
+
+cache_database
+
 time_run 'second notmuch new' 'notmuch new'
 time_run 'dump *' 'notmuch dump > tags.out'
 time_run 'restore *' 'notmuch restore < tags.out'
