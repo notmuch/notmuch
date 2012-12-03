@@ -39,32 +39,49 @@ add_email_corpus ()
 {
     rm -rf ${MAIL_DIR}
 
-    case "$1" in
-	--small)
-	    arg="mail/enron/bailey-s"
+    case "$corpus_size" in
+	small)
+	    mail_subdir="mail/enron/bailey-s"
+	    check_for="${TEST_DIRECTORY}/corpus/$mail_subdir"
 	    ;;
-	--medium)
-	    arg="mail/notmuch-archive"
+	medium)
+	    mail_subdir="mail/notmuch-archive"
+	    check_for="${TEST_DIRECTORY}/corpus/$mail_subdir"
 	    ;;
 	*)
-	    arg=mail
+	    mail_subdir=mail
+	    check_for="${TEST_DIRECTORY}/corpus/$mail_subdir/enron/wolfe-j"
     esac
 
-    if command -v pixz > /dev/null; then
-	XZ=pixz
-    else
-	XZ=xz
+    MAIL_CORPUS="${TEST_DIRECTORY}/corpus/$mail_subdir"
+    args=()
+    if [ ! -d "$check_for" ] ; then
+	args+=("notmuch-email-corpus/$mail_subdir")
     fi
 
-    printf "Unpacking corpus\n"
-    tar --checkpoint=.5000 --extract --strip-components=1 \
-	--directory ${TMP_DIRECTORY} \
-	--use-compress-program ${XZ} \
-	--file ../download/notmuch-email-corpus-${PERFTEST_VERSION}.tar.xz \
-	notmuch-email-corpus/"$arg"
+    if [[ ${#args[@]} > 0 ]]; then
+	if command -v pixz > /dev/null; then
+	    XZ=pixz
+	else
+	    XZ=xz
+	fi
 
-    printf "\n"
+	printf "Unpacking corpus\n"
+	mkdir -p "${TEST_DIRECTORY}/corpus"
+
+	tar --checkpoint=.5000 --extract --strip-components=1 \
+	    --directory ${TEST_DIRECTORY}/corpus \
+	    --use-compress-program ${XZ} \
+	    --file ../download/notmuch-email-corpus-${PERFTEST_VERSION}.tar.xz \
+	    "${args[@]}"
+
+	printf "\n"
+
+    fi
+
+    cp -lr $MAIL_CORPUS $MAIL_DIR
 }
+
 
 print_header () {
     printf "[v%4s %6s]          Wall(s)\tUsr(s)\tSys(s)\tRes(K)\tIn/Out(512B)\n" \

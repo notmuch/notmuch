@@ -29,4 +29,4 @@ $(TXZFILE):
 download-corpus:
 	wget -O ${TXZFILE} ${DEFAULT_URL}
 
-CLEAN := $(CLEAN) $(dir)/tmp.*
+CLEAN := $(CLEAN) $(dir)/tmp.* $(dir)/corpus
