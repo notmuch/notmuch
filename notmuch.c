@@ -245,10 +245,10 @@ main (int argc, char *argv[])
     if (argc == 1)
 	return notmuch (local);
 
-    if (STRNCMP_LITERAL (argv[1], "--help") == 0)
+    if (strcmp (argv[1], "--help") == 0)
 	return notmuch_help_command (NULL, argc - 1, &argv[1]);
 
-    if (STRNCMP_LITERAL (argv[1], "--version") == 0) {
+    if (strcmp (argv[1], "--version") == 0) {
 	printf ("notmuch " STRINGIFY(NOTMUCH_VERSION) "\n");
 	return 0;
     }
