@@ -689,7 +689,7 @@ following:
   "Show an entry for each saved search and inboxed messages for each tag"
   (notmuch-hello-insert-searches "What's in your inbox"
 				 (append
-				  (notmuch-saved-searches)
+				  notmuch-saved-searches
 				  (notmuch-hello-generate-tag-alist))
 				 :filter "tag:inbox"))
 
@@ -725,11 +725,6 @@ following:
 (defun notmuch-hello (&optional no-display)
   "Run notmuch and display saved searches, known tags, etc."
   (interactive)
-
-  ;; Jump through a hoop to get this value from the deprecated variable
-  ;; name (`notmuch-folders') or from the default value.
-  (unless notmuch-saved-searches
-    (setq notmuch-saved-searches (notmuch-saved-searches)))
 
   (if no-display
       (set-buffer "*notmuch-hello*")
