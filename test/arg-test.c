@@ -41,7 +41,7 @@ int main(int argc, char **argv){
 	printf("positional arg 1 %s\n", pos_arg1);
 
     if (pos_arg2)
-	printf("positional arg 2 %s\n", pos_arg1);
+	printf("positional arg 2 %s\n", pos_arg2);
 
 
     for ( ; opt_index < argc ; opt_index ++) {
