@@ -534,8 +534,13 @@ test_expect_equal_file ()
 # canonicalized before diff'ing.  If an argument cannot be parsed, it
 # is used unchanged so that there's something to diff against.
 test_expect_equal_json () {
-    output=$(echo "$1" | python -mjson.tool || echo "$1")
-    expected=$(echo "$2" | python -mjson.tool || echo "$2")
+    # The test suite forces LC_ALL=C, but this causes Python 3 to
+    # decode stdin as ASCII.  We need to read JSON in UTF-8, so
+    # override Python's stdio encoding defaults.
+    output=$(echo "$1" | PYTHONIOENCODING=utf-8 python -mjson.tool \
+        || echo "$1")
+    expected=$(echo "$2" | PYTHONIOENCODING=utf-8 python -mjson.tool \
+        || echo "$2")
     shift 2
     test_expect_equal "$output" "$expected" "$@"
 }
