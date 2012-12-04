@@ -18,6 +18,16 @@ Bcc and Reply-To headers are now available in notmuch show json output
   For example notmuch Emacs client can now have these headers visible
   when the headers are added to the `notmuch-message-headers` variable.
 
+Emacs Interface
+---------------
+
+Removal of the deprecated `notmuch-folders` variable
+
+  `notmuch-folders` has been deprecated since the introduction of saved
+  searches and the notmuch hello view in notmuch 0.3. `notmuch-folders`
+  has now been removed. Any remaining users should migrate to
+  `notmuch-saved-searches`.
+
 Library changes
 ---------------
 
