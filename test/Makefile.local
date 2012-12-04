@@ -22,7 +22,7 @@ random_corpus_deps =  $(dir)/random-corpus.o  $(dir)/database-test.o \
 			parse-time-string/libparse-time-string.a
 
 $(dir)/random-corpus: $(random_corpus_deps)
-	$(call quiet,CC) $(CFLAGS_FINAL) $^ -o $@ $(CONFIGURE_LDFLAGS)
+	$(call quiet,CXX) $(CFLAGS_FINAL) $^ -o $@ $(CONFIGURE_LDFLAGS)
 
 $(dir)/smtp-dummy: $(smtp_dummy_modules)
 	$(call quiet,CC) $^ -o $@
