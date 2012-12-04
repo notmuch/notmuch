@@ -581,7 +581,7 @@ NOTMUCH_NEW ()
 
 notmuch_search_sanitize ()
 {
-    sed -r -e 's/("?thread"?: ?)("?)................("?)/\1\2XXX\3/'
+    perl -pe 's/("?thread"?: ?)("?)................("?)/\1\2XXX\3/'
 }
 
 NOTMUCH_SHOW_FILENAME_SQUELCH='s,filename:.*/mail,filename:/XXX/mail,'
