@@ -4,37 +4,34 @@ test_description='"notmuch count" for messages and threads'
 
 add_email_corpus
 
-SEARCH="\"*\""
-
 test_begin_subtest "message count is the default for notmuch count"
 test_expect_equal \
-    "`notmuch search --output=messages ${SEARCH} | wc -l`" \
-    "`notmuch count ${SEARCH}`"
+    "`notmuch search --output=messages '*' | wc -l`" \
+    "`notmuch count '*'`"
 
 test_begin_subtest "message count with --output=messages"
 test_expect_equal \
-    "`notmuch search --output=messages ${SEARCH} | wc -l`" \
-    "`notmuch count --output=messages ${SEARCH}`"
+    "`notmuch search --output=messages '*' | wc -l`" \
+    "`notmuch count --output=messages '*'`"
 
 test_begin_subtest "thread count with --output=threads"
 test_expect_equal \
-    "`notmuch search --output=threads ${SEARCH} | wc -l`" \
-    "`notmuch count --output=threads ${SEARCH}`"
+    "`notmuch search --output=threads '*' | wc -l`" \
+    "`notmuch count --output=threads '*'`"
 
 test_begin_subtest "thread count is the default for notmuch search"
 test_expect_equal \
-    "`notmuch search ${SEARCH} | wc -l`" \
-    "`notmuch count --output=threads ${SEARCH}`"
+    "`notmuch search '*' | wc -l`" \
+    "`notmuch count --output=threads '*'`"
 
-SEARCH="from:cworth and not from:cworth"
 test_begin_subtest "count with no matching messages"
 test_expect_equal \
     "0" \
-    "`notmuch count --output=messages ${SEARCH}`"
+    "`notmuch count --output=messages from:cworth and not from:cworth`"
 
 test_begin_subtest "count with no matching threads"
 test_expect_equal \
     "0" \
-    "`notmuch count --output=threads ${SEARCH}`"
+    "`notmuch count --output=threads from:cworth and not from:cworth`"
 
 test_done
