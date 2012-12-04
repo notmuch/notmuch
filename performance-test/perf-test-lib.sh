@@ -56,7 +56,13 @@ add_email_corpus ()
     esac
 
     MAIL_CORPUS="${TEST_DIRECTORY}/corpus/$mail_subdir"
+    TAG_CORPUS="${TEST_DIRECTORY}/corpus/tags"
+
     args=()
+    if [ ! -d "$TAG_CORPUS" ] ; then
+	args+=("notmuch-email-corpus/tags")
+    fi
+
     if [ ! -d "$check_for" ] ; then
 	args+=("notmuch-email-corpus/$mail_subdir")
     fi
@@ -81,6 +87,7 @@ add_email_corpus ()
 
     fi
 
+    cp -lr $TAG_CORPUS $TMP_DIRECTORY/corpus.tags
     cp -lr $MAIL_CORPUS $MAIL_DIR
 
 }
