@@ -1185,6 +1185,10 @@ reset based on the original query."
   (let ((inhibit-read-only t)
 	(state (unless reset-state
 		 (notmuch-show-capture-state))))
+    ;; erase-buffer does not seem to remove overlays, which can lead
+    ;; to weird effects such as remaining images, so remove them
+    ;; manually.
+    (remove-overlays)
     (erase-buffer)
     (notmuch-show-build-buffer)
     (if state
