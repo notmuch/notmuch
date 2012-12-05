@@ -85,6 +85,19 @@ test_begin_subtest "dump --output=outfile -- from:cworth"
 notmuch dump --output=dump-outfile-dash-inbox.actual -- from:cworth
 test_expect_equal_file dump-cworth.expected dump-outfile-dash-inbox.actual
 
+test_begin_subtest "Check for a safe set of message-ids"
+notmuch search --output=messages from:cworth | sed s/^id:// > EXPECTED
+notmuch search --output=messages from:cworth | sed s/^id:// |\
+	$TEST_DIRECTORY/hex-xcode --direction=encode > OUTPUT
+test_expect_equal_file OUTPUT EXPECTED
+
+test_begin_subtest "format=batch-tag, dump sanity check."
+notmuch dump --format=sup from:cworth | cut -f1 -d' ' | \
+    sort > EXPECTED.$test_count
+notmuch dump --format=batch-tag from:cworth | sed 's/^.*-- id://' | \
+    sort > OUTPUT.$test_count
+test_expect_equal_file EXPECTED.$test_count OUTPUT.$test_count
+
 test_begin_subtest 'roundtripping random message-ids and tags'
     test_subtest_known_broken
     ${TEST_DIRECTORY}/random-corpus --config-path=${NOTMUCH_CONFIG} \
