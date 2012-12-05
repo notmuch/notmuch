@@ -42,17 +42,23 @@ available performance tests.
 
 Alternately, you can run a specific subset of tests by simply invoking
 one of the executable scripts in this directory, (such as ./basic).
+Each test script supports the following arguments
+
+--small / --medium / --large	Choose corpus size.
+--debug				Enable debugging. In particular don't delete
+				temporary directories.
 
 Writing tests
 -------------
 
-Have a look at "basic" for an example.
+Have a look at "basic" for an example. Sourcing "perf-test-lib.sh" is
+mandatory.  Utility functions include
 
-add_email_corpus takes arguments "--small" and "--medium" for when you
-want smaller subsets of the corpus to check.
-
-time_done does the cleanup; comment it out or define "$debug" to leave
-the temporary files around.
-
-Currently there is no option processing (e.g. --debug) in the
-performance tests.
+- 'add_email_corpus' unpacks a set of messages and adds them to the database.
+- 'cache_database': makes a snapshot of the current database
+- 'uncache_database': forces the next 'add_email_corpus' to rebuild the
+  database.
+- 'time_start' unpacks the mail corpus and calls notmuch new if it
+   cannot find a cache of the appropriate corpus.
+- 'time_done' does the cleanup; comment it out or pass --debug to the
+  script to leave the temporary files around.
