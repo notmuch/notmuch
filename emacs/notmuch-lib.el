@@ -168,8 +168,14 @@ user-friendly queries."
 
 (defun notmuch-common-do-stash (text)
   "Common function to stash text in kill ring, and display in minibuffer."
-  (kill-new text)
-  (message "Stashed: %s" text))
+  (if text
+      (progn
+	(kill-new text)
+	(message "Stashed: %s" text))
+    ;; There is nothing to stash so stash an empty string so the user
+    ;; doesn't accidentally paste something else somewhere.
+    (kill-new "")
+    (message "Nothing to stash!")))
 
 ;;
 
