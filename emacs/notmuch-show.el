@@ -1905,10 +1905,16 @@ thread from search."
   (interactive)
   (notmuch-common-do-stash (notmuch-show-get-from)))
 
-(defun notmuch-show-stash-message-id ()
-  "Copy id: query matching the current message to kill-ring."
-  (interactive)
-  (notmuch-common-do-stash (notmuch-show-get-message-id)))
+(defun notmuch-show-stash-message-id (&optional stash-thread-id)
+  "Copy id: query matching the current message to kill-ring.
+
+If invoked with a prefix argument (or STASH-THREAD-ID is
+non-nil), copy thread: query matching the current thread to
+kill-ring."
+  (interactive "P")
+  (if stash-thread-id
+      (notmuch-common-do-stash notmuch-show-thread-id)
+    (notmuch-common-do-stash (notmuch-show-get-message-id))))
 
 (defun notmuch-show-stash-message-id-stripped ()
   "Copy message ID of current message (sans `id:' prefix) to kill-ring."
