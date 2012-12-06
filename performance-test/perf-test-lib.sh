@@ -67,12 +67,12 @@ add_email_corpus ()
 }
 
 print_header () {
-    printf "[v%4s %6s]        Wall(s)\tUsr(s)\tSys(s)\tRes(K)\tIn/Out(512B)\n" \
+    printf "[v%4s %6s]          Wall(s)\tUsr(s)\tSys(s)\tRes(K)\tIn/Out(512B)\n" \
 	   ${PERFTEST_VERSION} ${corpus_size}
 }
 
 time_run () {
-    printf "%-22s" "$1"
+    printf "  %-22s" "$1"
     if test "$verbose" != "t"; then exec 4>test.output 3>&4; fi
     if ! eval >&3 "/usr/bin/time -f '%e\t%U\t%S\t%M\t%I/%O' $2" ; then
 	test_failure=$(($test_failure + 1))
@@ -92,3 +92,6 @@ time_done () {
 
 cd -P "$test" || error "Cannot setup test environment"
 test_failure=0
+
+echo
+echo $(basename "$0"): "Testing ${test_description:-notmuch performance}"
