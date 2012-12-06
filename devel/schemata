@@ -36,9 +36,9 @@ thread_node = [
     [thread_node*]            # children of message
 ]
 
-# A message (format_part_json)
+# A message (format_part_sprinter)
 message = {
-    # (format_message_json)
+    # (format_message_sprinter)
     id:             messageid,
     match:          bool,
     filename:	    string,
@@ -50,7 +50,7 @@ message = {
     body?:          [part]    # omitted if --body=false
 }
 
-# A MIME part (format_part_json)
+# A MIME part (format_part_sprinter)
 part = {
     id:             int|string, # part id (currently DFS part number)
 
@@ -72,7 +72,7 @@ part = {
     content?:       string
 }
 
-# The headers of a message or part (format_headers_json with reply = FALSE)
+# The headers of a message or part (format_headers_sprinter with reply = FALSE)
 headers = {
     Subject:        string,
     From:           string,
@@ -83,10 +83,10 @@ headers = {
     Date:           string
 }
 
-# Encryption status (format_part_json)
+# Encryption status (format_part_sprinter)
 encstatus = [{status: "good"|"bad"}]
 
-# Signature status (format_part_sigstatus_json)
+# Signature status (format_part_sigstatus_sprinter)
 sigstatus = [signature*]
 
 signature = {
@@ -140,11 +140,11 @@ reply = {
     # The headers of the constructed reply
     reply-headers: reply_headers,
 
-    # As in the show format (format_part_json)
+    # As in the show format (format_part_sprinter)
     original: message
 }
 
-# Reply headers (format_headers_json with reply = TRUE)
+# Reply headers (format_headers_sprinter with reply = TRUE)
 reply_headers = {
     Subject:        string,
     From:           string,

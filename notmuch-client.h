@@ -175,12 +175,12 @@ notmuch_status_t
 show_one_part (const char *filename, int part);
 
 void
-format_part_json (const void *ctx, struct sprinter *sp, mime_node_t *node,
-		  notmuch_bool_t first, notmuch_bool_t output_body);
+format_part_sprinter (const void *ctx, struct sprinter *sp, mime_node_t *node,
+		      notmuch_bool_t first, notmuch_bool_t output_body);
 
 void
-format_headers_json (struct sprinter *sp, GMimeMessage *message,
-		     notmuch_bool_t reply);
+format_headers_sprinter (struct sprinter *sp, GMimeMessage *message,
+			 notmuch_bool_t reply);
 
 typedef enum {
     NOTMUCH_SHOW_TEXT_PART_REPLY = 1 << 0,

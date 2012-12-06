@@ -548,7 +548,8 @@ notmuch_reply_format_default(void *ctx,
 			     notmuch_config_t *config,
 			     notmuch_query_t *query,
 			     notmuch_show_params_t *params,
-			     notmuch_bool_t reply_all)
+			     notmuch_bool_t reply_all,
+			     unused (sprinter_t *sp))
 {
     GMimeMessage *reply;
     notmuch_messages_t *messages;
@@ -587,17 +588,17 @@ notmuch_reply_format_default(void *ctx,
 }
 
 static int
-notmuch_reply_format_json(void *ctx,
-			  notmuch_config_t *config,
-			  notmuch_query_t *query,
-			  notmuch_show_params_t *params,
-			  notmuch_bool_t reply_all)
+notmuch_reply_format_sprinter(void *ctx,
+			      notmuch_config_t *config,
+			      notmuch_query_t *query,
+			      notmuch_show_params_t *params,
+			      notmuch_bool_t reply_all,
+			      sprinter_t *sp)
 {
     GMimeMessage *reply;
     notmuch_messages_t *messages;
     notmuch_message_t *message;
     mime_node_t *node;
-    sprinter_t *sp;
 
     if (notmuch_query_count_messages (query) != 1) {
 	fprintf (stderr, "Error: search term did not match precisely one message.\n");
@@ -613,18 +614,17 @@ notmuch_reply_format_json(void *ctx,
     if (!reply)
 	return 1;
 
-    sp = sprinter_json_create (ctx, stdout);
     sp->begin_map (sp);
 
     /* The headers of the reply message we've created */
     sp->map_key (sp, "reply-headers");
-    format_headers_json (sp, reply, TRUE);
+    format_headers_sprinter (sp, reply, TRUE);
     g_object_unref (G_OBJECT (reply));
     reply = NULL;
 
     /* Start the original */
     sp->map_key (sp, "original");
-    format_part_json (ctx, sp, node, TRUE, TRUE);
+    format_part_sprinter (ctx, sp, node, TRUE, TRUE);
 
     /* End */
     sp->end (sp);
@@ -639,7 +639,8 @@ notmuch_reply_format_headers_only(void *ctx,
 				  notmuch_config_t *config,
 				  notmuch_query_t *query,
 				  unused (notmuch_show_params_t *params),
-				  notmuch_bool_t reply_all)
+				  notmuch_bool_t reply_all,
+				  unused (sprinter_t *sp))
 {
     GMimeMessage *reply;
     notmuch_messages_t *messages;
@@ -707,7 +708,12 @@ notmuch_reply_command (void *ctx, int argc, char *argv[])
     notmuch_query_t *query;
     char *query_string;
     int opt_index, ret = 0;
-    int (*reply_format_func)(void *ctx, notmuch_config_t *config, notmuch_query_t *query, notmuch_show_params_t *params, notmuch_bool_t reply_all);
+    int (*reply_format_func) (void *ctx,
+			      notmuch_config_t *config,
+			      notmuch_query_t *query,
+			      notmuch_show_params_t *params,
+			      notmuch_bool_t reply_all,
+			      struct sprinter *sp);
     notmuch_show_params_t params = {
 	.part = -1,
 	.crypto = {
@@ -717,6 +723,7 @@ notmuch_reply_command (void *ctx, int argc, char *argv[])
     };
     int format = FORMAT_DEFAULT;
     int reply_all = TRUE;
+    struct sprinter *sp = NULL;
 
     notmuch_opt_desc_t options[] = {
 	{ NOTMUCH_OPT_KEYWORD, &format, "format", 'f',
@@ -738,12 +745,14 @@ notmuch_reply_command (void *ctx, int argc, char *argv[])
 	return 1;
     }
 
-    if (format == FORMAT_HEADERS_ONLY)
+    if (format == FORMAT_HEADERS_ONLY) {
 	reply_format_func = notmuch_reply_format_headers_only;
-    else if (format == FORMAT_JSON)
-	reply_format_func = notmuch_reply_format_json;
-    else
+    } else if (format == FORMAT_JSON) {
+	reply_format_func = notmuch_reply_format_sprinter;
+	sp = sprinter_json_create (ctx, stdout);
+    } else {
 	reply_format_func = notmuch_reply_format_default;
+    }
 
     config = notmuch_config_open (ctx, NULL, NULL);
     if (config == NULL)
@@ -770,7 +779,7 @@ notmuch_reply_command (void *ctx, int argc, char *argv[])
 	return 1;
     }
 
-    if (reply_format_func (ctx, config, query, &params, reply_all) != 0)
+    if (reply_format_func (ctx, config, query, &params, reply_all, sp) != 0)
 	return 1;
 
     notmuch_crypto_cleanup (&params.crypto);

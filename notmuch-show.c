@@ -32,12 +32,12 @@ static const notmuch_show_format_t format_text = {
 };
 
 static notmuch_status_t
-format_part_json_entry (const void *ctx, sprinter_t *sp, mime_node_t *node,
-			int indent, const notmuch_show_params_t *params);
+format_part_sprinter_entry (const void *ctx, sprinter_t *sp, mime_node_t *node,
+			    int indent, const notmuch_show_params_t *params);
 
 static const notmuch_show_format_t format_json = {
     .new_sprinter = sprinter_json_create,
-    .part = format_part_json_entry,
+    .part = format_part_sprinter_entry,
 };
 
 static notmuch_status_t
@@ -108,7 +108,7 @@ _get_one_line_summary (const void *ctx, notmuch_message_t *message)
 /* Emit a sequence of key/value pairs for the metadata of message.
  * The caller should begin a map before calling this. */
 static void
-format_message_json (sprinter_t *sp, notmuch_message_t *message)
+format_message_sprinter (sprinter_t *sp, notmuch_message_t *message)
 {
     /* Any changes to the JSON format should be reflected in the file
      * devel/schemata. */
@@ -208,8 +208,8 @@ _is_from_line (const char *line)
 }
 
 void
-format_headers_json (sprinter_t *sp, GMimeMessage *message,
-		     notmuch_bool_t reply)
+format_headers_sprinter (sprinter_t *sp, GMimeMessage *message,
+			 notmuch_bool_t reply)
 {
     /* Any changes to the JSON format should be reflected in the file
      * devel/schemata. */
@@ -363,7 +363,7 @@ signer_status_to_string (GMimeSignerStatus x)
 
 #ifdef GMIME_ATLEAST_26
 static void
-format_part_sigstatus_json (sprinter_t *sp, mime_node_t *node)
+format_part_sigstatus_sprinter (sprinter_t *sp, mime_node_t *node)
 {
     /* Any changes to the JSON format should be reflected in the file
      * devel/schemata. */
@@ -438,7 +438,7 @@ format_part_sigstatus_json (sprinter_t *sp, mime_node_t *node)
 }
 #else
 static void
-format_part_sigstatus_json (sprinter_t *sp, mime_node_t *node)
+format_part_sigstatus_sprinter (sprinter_t *sp, mime_node_t *node)
 {
     const GMimeSignatureValidity* validity = node->sig_validity;
 
@@ -595,23 +595,23 @@ format_part_text (const void *ctx, sprinter_t *sp, mime_node_t *node,
 }
 
 void
-format_part_json (const void *ctx, sprinter_t *sp, mime_node_t *node,
-		  notmuch_bool_t first, notmuch_bool_t output_body)
+format_part_sprinter (const void *ctx, sprinter_t *sp, mime_node_t *node,
+		      notmuch_bool_t first, notmuch_bool_t output_body)
 {
     /* Any changes to the JSON format should be reflected in the file
      * devel/schemata. */
 
     if (node->envelope_file) {
 	sp->begin_map (sp);
-	format_message_json (sp, node->envelope_file);
+	format_message_sprinter (sp, node->envelope_file);
 
 	sp->map_key (sp, "headers");
-	format_headers_json (sp, GMIME_MESSAGE (node->part), FALSE);
+	format_headers_sprinter (sp, GMIME_MESSAGE (node->part), FALSE);
 
 	if (output_body) {
 	    sp->map_key (sp, "body");
 	    sp->begin_list (sp);
-	    format_part_json (ctx, sp, mime_node_child (node, 0), first, TRUE);
+	    format_part_sprinter (ctx, sp, mime_node_child (node, 0), first, TRUE);
 	    sp->end (sp);
 	}
 	sp->end (sp);
@@ -646,7 +646,7 @@ format_part_json (const void *ctx, sprinter_t *sp, mime_node_t *node,
 
     if (node->verify_attempted) {
 	sp->map_key (sp, "sigstatus");
-	format_part_sigstatus_json (sp, node);
+	format_part_sigstatus_sprinter (sp, node);
     }
 
     sp->map_key (sp, "content-type");
@@ -698,7 +698,7 @@ format_part_json (const void *ctx, sprinter_t *sp, mime_node_t *node,
 	sp->begin_map (sp);
 
 	sp->map_key (sp, "headers");
-	format_headers_json (sp, GMIME_MESSAGE (node->part), FALSE);
+	format_headers_sprinter (sp, GMIME_MESSAGE (node->part), FALSE);
 
 	sp->map_key (sp, "body");
 	sp->begin_list (sp);
@@ -706,7 +706,7 @@ format_part_json (const void *ctx, sprinter_t *sp, mime_node_t *node,
     }
 
     for (i = 0; i < node->nchildren; i++)
-	format_part_json (ctx, sp, mime_node_child (node, i), i == 0, TRUE);
+	format_part_sprinter (ctx, sp, mime_node_child (node, i), i == 0, TRUE);
 
     /* Close content structures */
     for (i = 0; i < nclose; i++)
@@ -716,11 +716,11 @@ format_part_json (const void *ctx, sprinter_t *sp, mime_node_t *node,
 }
 
 static notmuch_status_t
-format_part_json_entry (const void *ctx, sprinter_t *sp,
-			mime_node_t *node, unused (int indent),
-			const notmuch_show_params_t *params)
+format_part_sprinter_entry (const void *ctx, sprinter_t *sp,
+			    mime_node_t *node, unused (int indent),
+			    const notmuch_show_params_t *params)
 {
-    format_part_json (ctx, sp, node, TRUE, params->output_body);
+    format_part_sprinter (ctx, sp, node, TRUE, params->output_body);
 
     return NOTMUCH_STATUS_SUCCESS;
 }
