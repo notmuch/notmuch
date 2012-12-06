@@ -270,6 +270,7 @@ notmuch_client_srcs =		\
 	notmuch-tag.c		\
 	notmuch-time.c		\
 	sprinter-json.c		\
+	sprinter-sexp.c		\
 	sprinter-text.c		\
 	query-string.c		\
 	mime-node.c		\

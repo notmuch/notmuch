@@ -70,4 +70,8 @@ sprinter_text_create (const void *ctx, FILE *stream);
 struct sprinter *
 sprinter_json_create (const void *ctx, FILE *stream);
 
+/* Create a new structure printer that emits S-Expressions. */
+struct sprinter *
+sprinter_sexp_create (const void *ctx, FILE *stream);
+
 #endif // NOTMUCH_SPRINTER_H
