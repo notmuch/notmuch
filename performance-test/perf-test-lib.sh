@@ -51,7 +51,9 @@ time_run () {
     if test "$verbose" != "t"; then exec 4>test.output 3>&4; fi
     if ! eval >&3 "/usr/bin/time -f '%e\t%U\t%S\t%M\t%I\t%O' $2" ; then
 	test_failure=$(($test_failure + 1))
+	return 1
     fi
+    return 0
 }
 
 time_done () {
