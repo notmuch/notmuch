@@ -697,6 +697,7 @@ notmuch_reply_format_headers_only(void *ctx,
 enum {
     FORMAT_DEFAULT,
     FORMAT_JSON,
+    FORMAT_SEXP,
     FORMAT_HEADERS_ONLY,
 };
 
@@ -729,6 +730,7 @@ notmuch_reply_command (void *ctx, int argc, char *argv[])
 	{ NOTMUCH_OPT_KEYWORD, &format, "format", 'f',
 	  (notmuch_keyword_t []){ { "default", FORMAT_DEFAULT },
 				  { "json", FORMAT_JSON },
+				  { "sexp", FORMAT_SEXP },
 				  { "headers-only", FORMAT_HEADERS_ONLY },
 				  { 0, 0 } } },
 	{ NOTMUCH_OPT_KEYWORD, &reply_all, "reply-to", 'r',
@@ -750,6 +752,9 @@ notmuch_reply_command (void *ctx, int argc, char *argv[])
     } else if (format == FORMAT_JSON) {
 	reply_format_func = notmuch_reply_format_sprinter;
 	sp = sprinter_json_create (ctx, stdout);
+    } else if (format == FORMAT_SEXP) {
+	reply_format_func = notmuch_reply_format_sprinter;
+	sp = sprinter_sexp_create (ctx, stdout);
     } else {
 	reply_format_func = notmuch_reply_format_default;
     }

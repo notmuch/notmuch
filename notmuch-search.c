@@ -305,7 +305,7 @@ notmuch_search_command (void *ctx, int argc, char *argv[])
     int exclude = EXCLUDE_TRUE;
     unsigned int i;
 
-    enum { NOTMUCH_FORMAT_JSON, NOTMUCH_FORMAT_TEXT }
+    enum { NOTMUCH_FORMAT_JSON, NOTMUCH_FORMAT_TEXT, NOTMUCH_FORMAT_SEXP }
 	format_sel = NOTMUCH_FORMAT_TEXT;
 
     notmuch_opt_desc_t options[] = {
@@ -315,6 +315,7 @@ notmuch_search_command (void *ctx, int argc, char *argv[])
 				  { 0, 0 } } },
 	{ NOTMUCH_OPT_KEYWORD, &format_sel, "format", 'f',
 	  (notmuch_keyword_t []){ { "json", NOTMUCH_FORMAT_JSON },
+				  { "sexp", NOTMUCH_FORMAT_SEXP },
 				  { "text", NOTMUCH_FORMAT_TEXT },
 				  { 0, 0 } } },
 	{ NOTMUCH_OPT_KEYWORD, &output, "output", 'o',
@@ -346,6 +347,9 @@ notmuch_search_command (void *ctx, int argc, char *argv[])
 	break;
     case NOTMUCH_FORMAT_JSON:
 	format = sprinter_json_create (ctx, stdout);
+	break;
+    case NOTMUCH_FORMAT_SEXP:
+	format = sprinter_sexp_create (ctx, stdout);
 	break;
     default:
 	/* this should never happen */

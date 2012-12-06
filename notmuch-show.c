@@ -40,6 +40,11 @@ static const notmuch_show_format_t format_json = {
     .part = format_part_sprinter_entry,
 };
 
+static const notmuch_show_format_t format_sexp = {
+    .new_sprinter = sprinter_sexp_create,
+    .part = format_part_sprinter_entry,
+};
+
 static notmuch_status_t
 format_part_mbox (const void *ctx, sprinter_t *sp, mime_node_t *node,
 		  int indent, const notmuch_show_params_t *params);
@@ -110,8 +115,8 @@ _get_one_line_summary (const void *ctx, notmuch_message_t *message)
 static void
 format_message_sprinter (sprinter_t *sp, notmuch_message_t *message)
 {
-    /* Any changes to the JSON format should be reflected in the file
-     * devel/schemata. */
+    /* Any changes to the JSON or S-Expression format should be
+     * reflected in the file devel/schemata. */
 
     void *local = talloc_new (NULL);
     notmuch_tags_t *tags;
@@ -211,8 +216,8 @@ void
 format_headers_sprinter (sprinter_t *sp, GMimeMessage *message,
 			 notmuch_bool_t reply)
 {
-    /* Any changes to the JSON format should be reflected in the file
-     * devel/schemata. */
+    /* Any changes to the JSON or S-Expression format should be
+     * reflected in the file devel/schemata. */
 
     InternetAddressList *recipients;
     const char *recipients_string;
@@ -365,8 +370,8 @@ signer_status_to_string (GMimeSignerStatus x)
 static void
 format_part_sigstatus_sprinter (sprinter_t *sp, mime_node_t *node)
 {
-    /* Any changes to the JSON format should be reflected in the file
-     * devel/schemata. */
+    /* Any changes to the JSON or S-Expression format should be
+     * reflected in the file devel/schemata. */
 
     GMimeSignatureList *siglist = node->sig_list;
 
@@ -598,8 +603,8 @@ void
 format_part_sprinter (const void *ctx, sprinter_t *sp, mime_node_t *node,
 		      notmuch_bool_t first, notmuch_bool_t output_body)
 {
-    /* Any changes to the JSON format should be reflected in the file
-     * devel/schemata. */
+    /* Any changes to the JSON or S-Expression format should be
+     * reflected in the file devel/schemata. */
 
     if (node->envelope_file) {
 	sp->begin_map (sp);
@@ -1012,6 +1017,7 @@ do_show (void *ctx,
 enum {
     NOTMUCH_FORMAT_NOT_SPECIFIED,
     NOTMUCH_FORMAT_JSON,
+    NOTMUCH_FORMAT_SEXP,
     NOTMUCH_FORMAT_TEXT,
     NOTMUCH_FORMAT_MBOX,
     NOTMUCH_FORMAT_RAW
@@ -1056,6 +1062,7 @@ notmuch_show_command (void *ctx, unused (int argc), unused (char *argv[]))
 	{ NOTMUCH_OPT_KEYWORD, &format_sel, "format", 'f',
 	  (notmuch_keyword_t []){ { "json", NOTMUCH_FORMAT_JSON },
 				  { "text", NOTMUCH_FORMAT_TEXT },
+				  { "sexp", NOTMUCH_FORMAT_SEXP },
 				  { "mbox", NOTMUCH_FORMAT_MBOX },
 				  { "raw", NOTMUCH_FORMAT_RAW },
 				  { 0, 0 } } },
@@ -1100,6 +1107,9 @@ notmuch_show_command (void *ctx, unused (int argc), unused (char *argv[]))
     case NOTMUCH_FORMAT_TEXT:
 	format = &format_text;
 	break;
+    case NOTMUCH_FORMAT_SEXP:
+	format = &format_sexp;
+	break;
     case NOTMUCH_FORMAT_MBOX:
 	if (params.part > 0) {
 	    fprintf (stderr, "Error: specifying parts is incompatible with mbox output format.\n");
@@ -1118,9 +1128,10 @@ notmuch_show_command (void *ctx, unused (int argc), unused (char *argv[]))
 	break;
     }
 
-    /* Default is entire-thread = FALSE except for format=json. */
+    /* Default is entire-thread = FALSE except for format=json and
+     * format=sexp. */
     if (entire_thread == ENTIRE_THREAD_DEFAULT) {
-	if (format == &format_json)
+	if (format == &format_json || format == &format_sexp)
 	    entire_thread = ENTIRE_THREAD_TRUE;
 	else
 	    entire_thread = ENTIRE_THREAD_FALSE;
@@ -1131,8 +1142,9 @@ notmuch_show_command (void *ctx, unused (int argc), unused (char *argv[]))
 	    fprintf (stderr, "Warning: --body=false is incompatible with --part > 0. Disabling.\n");
 	    params.output_body = TRUE;
 	} else {
-	    if (format != &format_json)
-		fprintf (stderr, "Warning: --body=false only implemented for format=json\n");
+	    if (format != &format_json && format != &format_sexp)
+		fprintf (stderr,
+			 "Warning: --body=false only implemented for format=json and format=sexp\n");
 	}
     }
 

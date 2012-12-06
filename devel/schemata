@@ -1,5 +1,5 @@
 This file describes the schemata used for notmuch's structured output
-format (currently JSON).
+format (currently JSON and S-Expressions).
 
 []'s indicate lists.  List items can be marked with a '?', meaning
 they are optional; or a '*', meaning there can be zero or more of that
@@ -7,6 +7,12 @@ item.  {}'s indicate an object that maps from field identifiers to
 values.  An object field marked '?' is optional.  |'s indicate
 alternates (e.g., int|string means something can be an int or a
 string).
+
+For S-Expression output, lists are printed delimited by () instead of
+[]. Objects are printed as p-lists, i.e. lists where the keys and values
+are interleaved. Keys are printed as keywords (symbols preceded by a
+colon), e.g. (:id "123" :time 54321 :from "foobar"). Null is printed as
+nil, true as t and false as nil.
 
 Common non-terminals
 --------------------
