@@ -51,8 +51,8 @@ Each test script supports the following arguments
 Writing tests
 -------------
 
-Have a look at "basic" for an example. Sourcing "perf-test-lib.sh" is
-mandatory.  Utility functions include
+Have a look at "01-dump-restore" for an example. Sourcing
+"perf-test-lib.sh" is mandatory.  Utility functions include
 
 - 'add_email_corpus' unpacks a set of messages and adds them to the database.
 - 'cache_database': makes a snapshot of the current database
@@ -62,3 +62,7 @@ mandatory.  Utility functions include
    cannot find a cache of the appropriate corpus.
 - 'time_done' does the cleanup; comment it out or pass --debug to the
   script to leave the temporary files around.
+
+Scripts are run in the order specified in notmuch-perf-test. In the
+future this order might be chosen automatically so please follow the
+convention of starting the name with two digits to specify the order.

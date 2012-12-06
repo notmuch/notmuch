@@ -1,0 +1,19 @@
+#!/bin/bash
+
+test_description='notmuch new'
+
+. ./perf-test-lib.sh
+
+uncache_database
+
+time_start
+
+time_run 'initial notmuch new' 'notmuch new'
+
+cache_database
+
+for i in $(seq 2 6); do
+    time_run "notmuch new #$i" 'notmuch new'
+done
+
+time_done

@@ -17,7 +17,9 @@ fi
 cd $(dirname "$0")
 
 TESTS="
-  basic
+  00-new
+  01-dump-restore
+  02-tag
 "
 
 for test in $TESTS; do
