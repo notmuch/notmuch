@@ -25,9 +25,9 @@ Supported options for
 include
 .RS 4
 .TP 4
-.BR \-\-format= ( json | text )
+.BR \-\-format= ( json | sexp | text )
 
-Presents the results in either JSON or plain-text (default).
+Presents the results in either JSON, S-Expressions or plain-text (default).
 .RE
 
 .RS 4
@@ -49,7 +49,7 @@ the authors of the thread and the subject.
 
 Output the thread IDs of all threads with any message matching the
 search terms, either one per line (\-\-format=text) or as a JSON array
-(\-\-format=json).
+(\-\-format=json) or an S-Expression list (\-\-format=sexp).
 .RE
 .RS 4
 .TP 4
@@ -57,22 +57,23 @@ search terms, either one per line (\-\-format=text) or as a JSON array
 
 Output the message IDs of all messages matching the search terms,
 either one per line (\-\-format=text) or as a JSON array
-(\-\-format=json).
+(\-\-format=json) or as an S-Expression list (\-\-format=sexp).
 .RE
 .RS 4
 .TP 4
 .B files
 
 Output the filenames of all messages matching the search terms, either
-one per line (\-\-format=text) or as a JSON array (\-\-format=json).
+one per line (\-\-format=text) or as a JSON array (\-\-format=json) or
+as an S-Expression list (\-\-format=sexp).
 .RE
 .RS 4
 .TP 4
 .B tags
 
 Output all tags that appear on any message matching the search terms,
-either one per line (\-\-format=text) or as a JSON array
-(\-\-format=json).
+either one per line (\-\-format=text) or as a JSON array (\-\-format=json)
+or as an S-Expression list (\-\-format=sexp).
 .RE
 .RE
 

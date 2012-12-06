@@ -31,12 +31,14 @@ If true,
 outputs all messages in the thread of any message matching the search
 terms; if false, it outputs only the matching messages. For
 .B --format=json
+and
+.B --format=sexp
 this defaults to true.  For other formats, this defaults to false.
 .RE
 
 .RS 4
 .TP 4
-.B \-\-format=(text|json|mbox|raw)
+.B \-\-format=(text|json|sexp|mbox|raw)
 
 .RS 4
 .TP 4
@@ -60,7 +62,25 @@ format is more robust than the text format for automated
 processing. The nested structure of multipart MIME messages is
 reflected in nested JSON output. By default JSON output includes all
 messages in a matching thread; that is, by default,
+
 .B \-\-format=json
+sets
+.B "\-\-entire\-thread"
+The caller can disable this behaviour by setting
+.B \-\-entire\-thread=false
+.RE
+.RS 4
+.TP 4
+.B sexp
+
+The output is formatted as an S-Expression (sexp). This
+format is more robust than the text format for automated
+processing. The nested structure of multipart MIME messages is
+reflected in nested S-Expression output. By default,
+S-Expression output includes all messages in a matching thread;
+that is, by default,
+
+.B \-\-format=sexp
 sets
 .B "\-\-entire\-thread"
 The caller can disable this behaviour by setting
@@ -113,7 +133,7 @@ message.
 Output the single decoded MIME part N of a single message.  The search
 terms must match only a single message.  Message parts are numbered in
 a depth-first walk of the message MIME structure, and are identified
-in the 'json' or 'text' output formats.
+in the 'json', 'sexp' or 'text' output formats.
 .RE
 
 .RS 4
@@ -123,8 +143,8 @@ in the 'json' or 'text' output formats.
 Compute and report the validity of any MIME cryptographic signatures
 found in the selected content (ie. "multipart/signed" parts). Status
 of the signature will be reported (currently only supported with
---format=json), and the multipart/signed part will be replaced by the
-signed data.
+--format=json and --format=sexp), and the multipart/signed part
+will be replaced by the signed data.
 .RE
 
 .RS 4
@@ -133,9 +153,9 @@ signed data.
 
 Decrypt any MIME encrypted parts found in the selected content
 (ie. "multipart/encrypted" parts). Status of the decryption will be
-reported (currently only supported with --format=json) and the
-multipart/encrypted part will be replaced by the decrypted
-content.  Implies --verify.
+reported (currently only supported with --format=json and
+--format=sexp) and the multipart/encrypted part will be replaced
+by the decrypted content.  Implies --verify.
 .RE
 
 .RS 4
@@ -166,7 +186,7 @@ If true (the default)
 includes the bodies of the messages in the output; if false,
 bodies are omitted.
 .B --body=false
-is only implemented for the json format and it is incompatible with
+is only implemented for the json and sexp formats and it is incompatible with
 .B --part > 0.
 
 This is useful if the caller only needs the headers as body-less
