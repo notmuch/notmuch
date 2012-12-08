@@ -38,7 +38,7 @@ tag_message (unused (void *ctx),
 
     status = notmuch_database_find_message (notmuch, message_id, &message);
     if (status || message == NULL) {
-	fprintf (stderr, "Warning: Cannot apply tags to %smessage: %s\n",
+	fprintf (stderr, "Warning: cannot apply tags to %smessage: %s\n",
 		 message ? "" : "missing ", message_id);
 	if (status)
 	    fprintf (stderr, "%s\n", notmuch_status_to_string (status));
@@ -213,7 +213,7 @@ notmuch_restore_command (unused (void *ctx), int argc, char *argv[])
 
 	    if (ret == 0) {
 		if (strncmp ("id:", query_string, 3) != 0) {
-		    fprintf (stderr, "Unsupported query: %s\n", query_string);
+		    fprintf (stderr, "Warning: unsupported query: %s\n", query_string);
 		    continue;
 		}
 		/* delete id: from front of string; tag_message
