@@ -173,7 +173,7 @@
     (define-key map "q" 'notmuch-pick-quit)
     (define-key map "x" 'notmuch-pick-quit)
     (define-key map "?" 'notmuch-help)
-    (define-key map "a" 'notmuch-pick-archive-message)
+    (define-key map "a" 'notmuch-pick-archive-message-then-next)
     (define-key map "=" 'notmuch-pick-refresh-view)
     (define-key map "s" 'notmuch-search)
     (define-key map "z" 'notmuch-pick)
@@ -393,10 +393,23 @@ Does NOT change the database."
       (kill-buffer notmuch-pick-message-buffer))
     t))
 
-(defun notmuch-pick-archive-message ()
+(defun notmuch-pick-archive-message (&optional unarchive)
+  "Archive the current message.
+
+Archive the current message by applying the tag changes in
+`notmuch-archive-tags' to it (remove the \"inbox\" tag by
+default). If a prefix argument is given, the message will be
+\"unarchived\", i.e. the tag changes in `notmuch-archive-tags'
+will be reversed."
+  (interactive "P")
+  (when notmuch-archive-tags
+    (apply 'notmuch-pick-tag
+	   (notmuch-tag-change-list notmuch-archive-tags unarchive))))
+
+(defun notmuch-pick-archive-message-then-next (&optional unarchive)
   "Archive the current message and move to next matching message."
-  (interactive)
-  (notmuch-pick-tag "-inbox")
+  (interactive "P")
+  (notmuch-pick-archive-message unarchive)
   (notmuch-pick-next-matching-message))
 
 (defun notmuch-pick-next-message ()
