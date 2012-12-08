@@ -175,8 +175,8 @@
     (define-key map "?" 'notmuch-help)
     (define-key map "a" 'notmuch-pick-archive-message-then-next)
     (define-key map "=" 'notmuch-pick-refresh-view)
-    (define-key map "s" 'notmuch-search)
-    (define-key map "z" 'notmuch-pick)
+    (define-key map "s" 'notmuch-pick-to-search)
+    (define-key map "z" 'notmuch-pick-to-pick)
     (define-key map "m" 'notmuch-pick-new-mail)
     (define-key map "f" 'notmuch-pick-forward-message)
     (define-key map "r" 'notmuch-pick-reply-sender)
@@ -288,6 +288,25 @@ Does NOT change the database."
   "Same as `notmuch-pick-tag' but sets initial input to '-'."
   (interactive)
   (notmuch-pick-tag "-"))
+
+;; The next two functions close the message window before searching or
+;; picking but they do so after the user has entered the query (in
+;; case the user was basing the query on something in the message
+;; window).
+
+(defun notmuch-pick-to-search ()
+  "Run \"notmuch search\" with the given `query' and display results."
+  (interactive)
+  (let ((query (notmuch-read-query "Notmuch search: ")))
+    (notmuch-pick-close-message-window)
+    (notmuch-search query)))
+
+(defun notmuch-pick-to-pick ()
+  "Run a query and display results in experimental notmuch-pick mode"
+  (interactive)
+  (let ((query (notmuch-read-query "Notmuch pick: ")))
+    (notmuch-pick-close-message-window)
+    (notmuch-pick query)))
 
 ;; This function should be in notmuch-hello.el but we are trying to
 ;; minimise impact on the rest of the codebase.
