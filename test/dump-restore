@@ -181,6 +181,41 @@ notmuch restore < EXPECTED.$test_count
 notmuch dump --format=sup > OUTPUT.$test_count
 test_expect_equal_file EXPECTED.$test_count OUTPUT.$test_count
 
+test_begin_subtest 'restore: checking error messages'
+notmuch restore <<EOF 2>OUTPUT
+# the next line has a space
+ 
+a
++0
++a +b
+# trailing whitespace
++a +b 
++c +d --
+# this is a harmless comment, do not yell about it.
+
+# the previous line was blank; also no yelling please
++%zz -- id:whatever
++e +f id:%yy
+# the next non-comment line should report an an empty tag error for
+# batch tagging, but not for restore
++ +e -- id:20091117232137.GA7669@griffis1.net
+# highlight the sketchy id parsing; this should be last
++g -- id:foo and bar
+EOF
+
+cat <<EOF > EXPECTED
+Warning: unsupported query: a
+Warning: no query string [+0]
+Warning: no query string [+a +b]
+Warning: missing query string [+a +b ]
+Warning: no query string after -- [+c +d --]
+Warning: hex decoding of tag %zz failed [+%zz -- id:whatever]
+Warning: hex decoding of query id:%yy failed [+e +f id:%yy]
+Warning: cannot apply tags to missing message: foo and bar
+EOF
+
+test_expect_equal_file EXPECTED OUTPUT
+
 test_begin_subtest 'roundtripping random message-ids and tags'
 
     ${TEST_DIRECTORY}/random-corpus --config-path=${NOTMUCH_CONFIG} \
