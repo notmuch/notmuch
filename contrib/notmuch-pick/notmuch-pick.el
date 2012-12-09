@@ -339,8 +339,8 @@ Does NOT change the database."
       (with-selected-window notmuch-pick-message-window
 	(setq current-prefix-arg '(4))
 	(setq buffer (notmuch-show id nil nil nil)))
-      (notmuch-pick-tag-update-display (list "-unread")))
-    (setq notmuch-pick-message-buffer buffer)))
+      (notmuch-pick-tag-update-display (list "-unread"))
+      (setq notmuch-pick-message-buffer buffer))))
 
 (defun notmuch-pick-show-message-out ()
   "Show the current message (in whole window)."
