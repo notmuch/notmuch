@@ -28,6 +28,27 @@ Removal of the deprecated `notmuch-folders` variable
   has now been removed. Any remaining users should migrate to
   `notmuch-saved-searches`.
 
+Handle errors from bodypart insertions
+
+  If displaying the text of a message in show mode causes an error (in
+  the `notmuch-show-insert-part-*` functions), notmuch no longer cuts
+  off thread display at the offending message.  The error is now
+  simply displayed in place of the message.
+
+Improved text/calendar content handling
+
+  Carriage returns in embedded text/calendar content caused insertion
+  of the calendar content fail. Now CRs are removed before calling icalendar
+  to extract icalendar data. In case icalendar extraction fails an error
+  is thrown for the bodypart insertion function to deal with.
+
+Disabled coding conversions when reading in `with-current-notmuch-show-message`
+
+  Depending on the user's locale, saving attachments containing 8-bit
+  data may have performed an unintentional encoding conversion,
+  corrupting the saved attachment.  This has been fixed by making
+  `with-current-notmuch-show-message` disable coding conversion.
+
 Library changes
 ---------------
 
