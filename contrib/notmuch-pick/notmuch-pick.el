@@ -337,8 +337,10 @@ Does NOT change the database."
       (setq notmuch-pick-message-window
 	    (split-window-vertically (/ (window-height) 4)))
       (with-selected-window notmuch-pick-message-window
-	(setq current-prefix-arg '(4))
-	(setq buffer (notmuch-show id nil nil nil)))
+	;; Since we are only displaying one message do not indent.
+	(let ((notmuch-show-indent-messages-width 0))
+	  (setq current-prefix-arg '(4))
+	  (setq buffer (notmuch-show id nil nil nil))))
       (notmuch-pick-tag-update-display (list "-unread"))
       (setq notmuch-pick-message-buffer buffer))))
 
