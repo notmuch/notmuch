@@ -484,12 +484,18 @@ mboxes is deprecated and may be removed in the future.\n", filename);
     }
 
     from = g_mime_message_get_sender (mime_message);
-    addresses = internet_address_list_parse_string (from);
 
-    _index_address_list (message, "from", addresses);
+    addresses = internet_address_list_parse_string (from);
+    if (addresses) {
+	_index_address_list (message, "from", addresses);
+	g_object_unref (addresses);
+    }
 
     addresses = g_mime_message_get_all_recipients (mime_message);
-    _index_address_list (message, "to", addresses);
+    if (addresses) {
+	_index_address_list (message, "to", addresses);
+	g_object_unref (addresses);
+    }
 
     subject = g_mime_message_get_subject (mime_message);
     _notmuch_message_gen_terms (message, "subject", subject);
