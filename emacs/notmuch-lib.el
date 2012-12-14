@@ -465,15 +465,19 @@ Entering JSON objects is currently unimplemented."
   (with-current-buffer (notmuch-json-buffer jp)
     ;; Disallow terminators
     (setf (notmuch-json-allow-term jp) nil)
-    (or (notmuch-json-scan-to-value jp)
-	(if (/= (char-after) ?\[)
-	    (signal 'json-readtable-error (list "expected '['"))
-	  (forward-char)
-	  (push ?\] (notmuch-json-term-stack jp))
-	  ;; Expect a value or terminator next
-	  (setf (notmuch-json-next jp) 'expect-value
-		(notmuch-json-allow-term jp) t)
-	  t))))
+    ;; Save "next" so we can restore it if there's a syntax error
+    (let ((saved-next (notmuch-json-next jp)))
+      (or (notmuch-json-scan-to-value jp)
+	  (if (/= (char-after) ?\[)
+	      (progn
+		(setf (notmuch-json-next jp) saved-next)
+		(signal 'json-readtable-error (list "expected '['")))
+	    (forward-char)
+	    (push ?\] (notmuch-json-term-stack jp))
+	    ;; Expect a value or terminator next
+	    (setf (notmuch-json-next jp) 'expect-value
+		  (notmuch-json-allow-term jp) t)
+	    t)))))
 
 (defun notmuch-json-read (jp)
   "Parse the value at point in JP's buffer.
