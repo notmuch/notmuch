@@ -599,6 +599,17 @@ format_part_text (const void *ctx, sprinter_t *sp, mime_node_t *node,
     return NOTMUCH_STATUS_SUCCESS;
 }
 
+static void
+format_omitted_part_meta_sprinter (sprinter_t *sp, GMimeObject *meta)
+{
+    const char *content_charset = g_mime_object_get_content_type_parameter (meta, "charset");
+
+    if (content_charset != NULL) {
+	sp->map_key (sp, "content-charset");
+	sp->string (sp, content_charset);
+    }
+}
+
 void
 format_part_sprinter (const void *ctx, sprinter_t *sp, mime_node_t *node,
 		      notmuch_bool_t first, notmuch_bool_t output_body)
@@ -677,14 +688,9 @@ format_part_sprinter (const void *ctx, sprinter_t *sp, mime_node_t *node,
 	 * makes charset decoding the responsibility on the caller, we
 	 * report the charset for text/html parts.
 	 */
-	if (g_mime_content_type_is_type (content_type, "text", "html")) {
-	    const char *content_charset = g_mime_object_get_content_type_parameter (meta, "charset");
-
-	    if (content_charset != NULL) {
-		sp->map_key (sp, "content-charset");
-		sp->string (sp, content_charset);
-	    }
-	} else if (g_mime_content_type_is_type (content_type, "text", "*")) {
+	if (g_mime_content_type_is_type (content_type, "text", "*") &&
+	    ! g_mime_content_type_is_type (content_type, "text", "html"))
+	{
 	    GMimeStream *stream_memory = g_mime_stream_mem_new ();
 	    GByteArray *part_content;
 	    show_text_part_content (node->part, stream_memory, 0);
@@ -692,6 +698,8 @@ format_part_sprinter (const void *ctx, sprinter_t *sp, mime_node_t *node,
 	    sp->map_key (sp, "content");
 	    sp->string_len (sp, (char *) part_content->data, part_content->len);
 	    g_object_unref (stream_memory);
+	} else {
+	    format_omitted_part_meta_sprinter (sp, meta);
 	}
     } else if (GMIME_IS_MULTIPART (node->part)) {
 	sp->map_key (sp, "content");
