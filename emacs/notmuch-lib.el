@@ -334,6 +334,19 @@ the user dismisses it."
 	  (insert "\n"))))
     (pop-to-buffer buf)))
 
+(defun notmuch-check-async-exit-status (proc msg)
+  "If PROC exited abnormally, pop up an error buffer and signal an error.
+
+This is a wrapper around `notmuch-check-exit-status' for
+asynchronous process sentinels.  PROC and MSG must be the
+arguments passed to the sentinel."
+  (let ((exit-status
+	 (case (process-status proc)
+	   ((exit) (process-exit-status proc))
+	   ((signal) msg))))
+    (when exit-status
+      (notmuch-check-exit-status exit-status (process-command proc)))))
+
 (defun notmuch-check-exit-status (exit-status command &optional output err-file)
   "If EXIT-STATUS is non-zero, pop up an error buffer and signal an error.
 

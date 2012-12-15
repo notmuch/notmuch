@@ -638,6 +638,7 @@ of the result."
 	(exit-status (process-exit-status proc))
 	(never-found-target-thread nil))
     (when (memq status '(exit signal))
+      (catch 'return
 	(kill-buffer (process-get proc 'parse-buf))
 	(if (buffer-live-p buffer)
 	    (with-current-buffer buffer
@@ -648,17 +649,19 @@ of the result."
 		  (if (eq status 'signal)
 		      (insert "Incomplete search results (search process was killed).\n"))
 		  (when (eq status 'exit)
-		    (insert "End of search results.")
-		    (unless (= exit-status 0)
-		      (insert (format " (process returned %d)" exit-status)))
-		    (insert "\n")
+		    (insert "End of search results.\n")
+		    (condition-case nil
+			(notmuch-check-async-exit-status proc msg)
+		      ;; Suppress the error signal since strange
+		      ;; things happen if a sentinel signals.
+		      (error (throw 'return nil)))
 		    (if (and atbob
 			     (not (string= notmuch-search-target-thread "found")))
 			(set 'never-found-target-thread t)))))
 	      (when (and never-found-target-thread
 		       notmuch-search-target-line)
 		  (goto-char (point-min))
-		  (forward-line (1- notmuch-search-target-line))))))))
+		  (forward-line (1- notmuch-search-target-line)))))))))
 
 (defcustom notmuch-search-line-faces '(("unread" :weight bold)
 				       ("flagged" :foreground "blue"))
