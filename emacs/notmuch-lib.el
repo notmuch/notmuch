@@ -375,15 +375,23 @@ contents of ERR-FILE will be included in the error message."
   "Invoke `notmuch-command' with `args' and return the parsed JSON output.
 
 The returned output will represent objects using property lists
-and arrays as lists."
+and arrays as lists.  If notmuch exits with a non-zero status,
+this will pop up a buffer containing notmuch's output and signal
+an error."
 
   (with-temp-buffer
-    (apply #'call-process notmuch-command nil (list t nil) nil args)
-    (goto-char (point-min))
-    (let ((json-object-type 'plist)
-	  (json-array-type 'list)
-	  (json-false 'nil))
-      (json-read))))
+    (let ((err-file (make-temp-file "nmerr")))
+      (unwind-protect
+	  (let ((status (apply #'call-process
+			       notmuch-command nil (list t err-file) nil args)))
+	    (notmuch-check-exit-status status (cons notmuch-command args)
+				       (buffer-string) err-file)
+	    (goto-char (point-min))
+	    (let ((json-object-type 'plist)
+		  (json-array-type 'list)
+		  (json-false 'nil))
+	      (json-read)))
+	(delete-file err-file)))))
 
 ;; Compatibility functions for versions of emacs before emacs 23.
 ;;
