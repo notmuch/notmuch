@@ -316,6 +316,61 @@ string), a property list of face attributes, or a list of these."
 	(put-text-property pos next 'face (cons face cur))
 	(setq pos next)))))
 
+(defun notmuch-pop-up-error (msg)
+  "Pop up an error buffer displaying MSG.
+
+This will accumulate error messages in the errors buffer until
+the user dismisses it."
+
+  (let ((buf (get-buffer-create "*Notmuch errors*")))
+    (with-current-buffer buf
+      (view-mode-enter nil #'kill-buffer)
+      (let ((inhibit-read-only t))
+	(goto-char (point-max))
+	(unless (bobp)
+	  (insert "\n"))
+	(insert msg)
+	(unless (bolp)
+	  (insert "\n"))))
+    (pop-to-buffer buf)))
+
+(defun notmuch-check-exit-status (exit-status command &optional output err-file)
+  "If EXIT-STATUS is non-zero, pop up an error buffer and signal an error.
+
+If EXIT-STATUS is non-zero, pop up a notmuch error buffer
+describing the error and signal an Elisp error.  EXIT-STATUS must
+be a number indicating the exit status code of a process or a
+string describing the signal that terminated the process (such as
+returned by `call-process').  COMMAND must be a list giving the
+command and its arguments.  OUTPUT, if provided, is a string
+giving the output of command.  ERR-FILE, if provided, is the name
+of a file containing the error output of command.  OUTPUT and the
+contents of ERR-FILE will be included in the error message."
+
+  ;; This is implemented as a cond to make it easy to expand.
+  (cond
+   ((eq exit-status 0) t)
+   (t
+    (notmuch-pop-up-error
+     (concat
+      (format "Error invoking notmuch.  %s exited with %s%s.\n"
+	      (mapconcat #'identity command " ")
+	      ;; Signal strings look like "Terminated", hence the
+	      ;; colon.
+	      (if (integerp exit-status) "status " "signal: ")
+	      exit-status)
+      (when err-file
+	(concat "Error:\n"
+		(with-temp-buffer
+		  (insert-file-contents err-file)
+		  (if (eobp)
+		      "(no error output)\n"
+		    (buffer-string)))))
+      (when (and output (not (equal output "")))
+	(format "Output:\n%s" output))))
+    ;; Mimic `process-lines'
+    (error "%s exited with status %s" (car command) exit-status))))
+
 ;; Compatibility functions for versions of emacs before emacs 23.
 ;;
 ;; Both functions here were copied from emacs 23 with the following copyright:
