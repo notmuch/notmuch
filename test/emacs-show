@@ -163,4 +163,26 @@ EOF
 test_expect_equal_file OUTPUT EXPECTED
 
 
+test_begin_subtest "Show handles subprocess errors"
+cat > notmuch_fail <<EOF
+#!/bin/sh
+echo This is output
+echo This is an error >&2
+exit 1
+EOF
+chmod a+x notmuch_fail
+test_emacs "(let ((notmuch-command \"$PWD/notmuch_fail\"))
+	       (ignore-errors (notmuch-show \"*\"))
+	       (notmuch-test-wait)
+	       (test-output)
+	       (with-current-buffer \"*Notmuch errors*\"
+		  (test-output \"ERROR\")))"
+test_expect_equal "$(cat OUTPUT ERROR)" "\
+Error invoking notmuch.  $PWD/notmuch_fail show --format=json --exclude=false ' * ' exited with status 1.
+Error:
+This is an error
+Output:
+This is output"
+
+
 test_done
