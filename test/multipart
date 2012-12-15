@@ -326,11 +326,11 @@ cat <<EOF >EXPECTED
 {"id": 2, "content-type": "multipart/mixed", "content": [
 {"id": 3, "content-type": "message/rfc822", "content": [{"headers": {"Subject": "html message", "From": "Carl Worth <cworth@cworth.org>", "To": "cworth@cworth.org", "Date": "Fri, 05 Jan 2001 15:42:57 +0000"}, "body": [
 {"id": 4, "content-type": "multipart/alternative", "content": [
-{"id": 5, "content-type": "text/html"}, 
+{"id": 5, "content-type": "text/html", "content-length": 71},
 {"id": 6, "content-type": "text/plain", "content": "This is an embedded message, with a multipart/alternative part.\n"}]}]}]}, 
 {"id": 7, "content-type": "text/plain", "filename": "attachment", "content": "This is a text attachment.\n"}, 
 {"id": 8, "content-type": "text/plain", "content": "And this message is signed.\n\n-Carl\n"}]}, 
-{"id": 9, "content-type": "application/pgp-signature"}]}]}
+{"id": 9, "content-type": "application/pgp-signature", "content-length": 197}]}]}
 EOF
 test_expect_equal_json "$(cat OUTPUT)" "$(cat EXPECTED)"
 
@@ -341,11 +341,11 @@ cat <<EOF >EXPECTED
 {"id": 2, "content-type": "multipart/mixed", "content": [
 {"id": 3, "content-type": "message/rfc822", "content": [{"headers": {"Subject": "html message", "From": "Carl Worth <cworth@cworth.org>", "To": "cworth@cworth.org", "Date": "Fri, 05 Jan 2001 15:42:57 +0000"}, "body": [
 {"id": 4, "content-type": "multipart/alternative", "content": [
-{"id": 5, "content-type": "text/html"}, 
+{"id": 5, "content-type": "text/html", "content-length": 71},
 {"id": 6, "content-type": "text/plain", "content": "This is an embedded message, with a multipart/alternative part.\n"}]}]}]}, 
 {"id": 7, "content-type": "text/plain", "filename": "attachment", "content": "This is a text attachment.\n"}, 
 {"id": 8, "content-type": "text/plain", "content": "And this message is signed.\n\n-Carl\n"}]}, 
-{"id": 9, "content-type": "application/pgp-signature"}]}
+{"id": 9, "content-type": "application/pgp-signature", "content-length": 197}]}
 EOF
 test_expect_equal_json "$(cat OUTPUT)" "$(cat EXPECTED)"
 
@@ -355,7 +355,7 @@ cat <<EOF >EXPECTED
 {"id": 2, "content-type": "multipart/mixed", "content": [
 {"id": 3, "content-type": "message/rfc822", "content": [{"headers": {"Subject": "html message", "From": "Carl Worth <cworth@cworth.org>", "To": "cworth@cworth.org", "Date": "Fri, 05 Jan 2001 15:42:57 +0000"}, "body": [
 {"id": 4, "content-type": "multipart/alternative", "content": [
-{"id": 5, "content-type": "text/html"}, 
+{"id": 5, "content-type": "text/html", "content-length": 71},
 {"id": 6, "content-type": "text/plain", "content": "This is an embedded message, with a multipart/alternative part.\n"}]}]}]}, 
 {"id": 7, "content-type": "text/plain", "filename": "attachment", "content": "This is a text attachment.\n"}, 
 {"id": 8, "content-type": "text/plain", "content": "And this message is signed.\n\n-Carl\n"}]}
@@ -367,7 +367,7 @@ notmuch show --format=json --part=3 'id:87liy5ap00.fsf@yoom.home.cworth.org' >OU
 cat <<EOF >EXPECTED
 {"id": 3, "content-type": "message/rfc822", "content": [{"headers": {"Subject": "html message", "From": "Carl Worth <cworth@cworth.org>", "To": "cworth@cworth.org", "Date": "Fri, 05 Jan 2001 15:42:57 +0000"}, "body": [
 {"id": 4, "content-type": "multipart/alternative", "content": [
-{"id": 5, "content-type": "text/html"}, 
+{"id": 5, "content-type": "text/html", "content-length": 71},
 {"id": 6, "content-type": "text/plain", "content": "This is an embedded message, with a multipart/alternative part.\n"}]}]}]}
 EOF
 test_expect_equal_json "$(cat OUTPUT)" "$(cat EXPECTED)"
@@ -376,7 +376,7 @@ test_begin_subtest "--format=json --part=4, rfc822's multipart/alternative"
 notmuch show --format=json --part=4 'id:87liy5ap00.fsf@yoom.home.cworth.org' >OUTPUT
 cat <<EOF >EXPECTED
 {"id": 4, "content-type": "multipart/alternative", "content": [
-{"id": 5, "content-type": "text/html"}, 
+{"id": 5, "content-type": "text/html", "content-length": 71},
 {"id": 6, "content-type": "text/plain", "content": "This is an embedded message, with a multipart/alternative part.\n"}]}
 EOF
 test_expect_equal_json "$(cat OUTPUT)" "$(cat EXPECTED)"
@@ -384,7 +384,7 @@ test_expect_equal_json "$(cat OUTPUT)" "$(cat EXPECTED)"
 test_begin_subtest "--format=json --part=5, rfc822's html part"
 notmuch show --format=json --part=5 'id:87liy5ap00.fsf@yoom.home.cworth.org' >OUTPUT
 cat <<EOF >EXPECTED
-{"id": 5, "content-type": "text/html"}
+{"id": 5, "content-type": "text/html", "content-length": 71}
 EOF
 test_expect_equal_json "$(cat OUTPUT)" "$(cat EXPECTED)"
 
@@ -412,7 +412,7 @@ test_expect_equal_json "$(cat OUTPUT)" "$(cat EXPECTED)"
 test_begin_subtest "--format=json --part=9, pgp signature (unverified)"
 notmuch show --format=json --part=9 'id:87liy5ap00.fsf@yoom.home.cworth.org' >OUTPUT
 cat <<EOF >EXPECTED
-{"id": 9, "content-type": "application/pgp-signature"}
+{"id": 9, "content-type": "application/pgp-signature", "content-length": 197}
 EOF
 test_expect_equal_json "$(cat OUTPUT)" "$(cat EXPECTED)"
 
@@ -624,7 +624,8 @@ cat <<EOF >EXPECTED
  "body": [{"id": 4,
  "content-type": "multipart/alternative",
  "content": [{"id": 5,
- "content-type": "text/html"},
+ "content-type": "text/html",
+ "content-length": 71},
  {"id": 6,
  "content-type": "text/plain",
  "content": "This is an embedded message, with a multipart/alternative part.\n"}]}]}]},
@@ -636,7 +637,8 @@ cat <<EOF >EXPECTED
  "content-type": "text/plain",
  "content": "And this message is signed.\n\n-Carl\n"}]},
  {"id": 9,
- "content-type": "application/pgp-signature"}]}]}}
+ "content-type": "application/pgp-signature",
+ "content-length": 197}]}]}}
 EOF
 test_expect_equal_json "$(cat OUTPUT)" "$(cat EXPECTED)"
 
