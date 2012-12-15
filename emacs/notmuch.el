@@ -536,19 +536,13 @@ If BARE is set then do not prefix with \"thread:\""
 (defun notmuch-call-notmuch-process (&rest args)
   "Synchronously invoke \"notmuch\" with the given list of arguments.
 
-Output from the process will be presented to the user as an error
-and will also appear in a buffer named \"*Notmuch errors*\"."
-  (let ((error-buffer (get-buffer-create "*Notmuch errors*")))
-    (with-current-buffer error-buffer
-	(erase-buffer))
-    (if (eq (apply 'call-process notmuch-command nil error-buffer nil args) 0)
-	(point)
-      (progn
-	(with-current-buffer error-buffer
-	  (let ((beg (point-min))
-		(end (- (point-max) 1)))
-	    (error (buffer-substring beg end))
-	    ))))))
+If notmuch exits with a non-zero status, output from the process
+will appear in a buffer named \"*Notmuch errors*\" and an error
+will be signaled."
+  (with-temp-buffer
+    (let ((status (apply #'call-process notmuch-command nil t nil args)))
+      (notmuch-check-exit-status status (cons notmuch-command args)
+				 (buffer-string)))))
 
 (defun notmuch-search-set-tags (tags &optional pos)
   (let ((new-result (plist-put (notmuch-search-get-result pos) :tags tags)))
