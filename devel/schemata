@@ -77,7 +77,14 @@ part = {
     # A leaf part's body content is optional, but may be included if
     # it can be correctly encoded as a string.  Consumers should use
     # this in preference to fetching the part content separately.
-    content?:       string
+    content?:       string,
+    # If a leaf part's body content is not included, the length of
+    # the encoded content (in bytes) may be given instead.
+    content-length?: int,
+    # If a leaf part's body content is not included, its transfer encoding
+    # may be given.  Using this and the encoded content length, it is
+    # possible for the consumer to estimate the decoded content length.
+    content-transfer-encoding?: string
 }
 
 # The headers of a message or part (format_headers_sprinter with reply = FALSE)

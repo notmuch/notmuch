@@ -600,13 +600,25 @@ format_part_text (const void *ctx, sprinter_t *sp, mime_node_t *node,
 }
 
 static void
-format_omitted_part_meta_sprinter (sprinter_t *sp, GMimeObject *meta)
+format_omitted_part_meta_sprinter (sprinter_t *sp, GMimeObject *meta, GMimePart *part)
 {
     const char *content_charset = g_mime_object_get_content_type_parameter (meta, "charset");
+    const char *cte = g_mime_object_get_header (meta, "content-transfer-encoding");
+    GMimeDataWrapper *wrapper = g_mime_part_get_content_object (part);
+    GMimeStream *stream = g_mime_data_wrapper_get_stream (wrapper);
+    ssize_t content_length = g_mime_stream_length (stream);
 
     if (content_charset != NULL) {
 	sp->map_key (sp, "content-charset");
 	sp->string (sp, content_charset);
+    }
+    if (cte != NULL) {
+	sp->map_key (sp, "content-transfer-encoding");
+	sp->string (sp, cte);
+    }
+    if (content_length >= 0) {
+	sp->map_key (sp, "content-length");
+	sp->integer (sp, content_length);
     }
 }
 
@@ -699,7 +711,7 @@ format_part_sprinter (const void *ctx, sprinter_t *sp, mime_node_t *node,
 	    sp->string_len (sp, (char *) part_content->data, part_content->len);
 	    g_object_unref (stream_memory);
 	} else {
-	    format_omitted_part_meta_sprinter (sp, meta);
+	    format_omitted_part_meta_sprinter (sp, meta, GMIME_PART (node->part));
 	}
     } else if (GMIME_IS_MULTIPART (node->part)) {
 	sp->map_key (sp, "content");
