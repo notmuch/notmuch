@@ -630,7 +630,7 @@ cat <<EOF >EXPECTED
  "content": "This is an embedded message, with a multipart/alternative part.\n"}]}]}]},
  {"id": 7,
  "content-type": "text/plain",
- "filename": "YYYYY",
+ "filename": "attachment",
  "content": "This is a text attachment.\n"},
  {"id": 8,
  "content-type": "text/plain",

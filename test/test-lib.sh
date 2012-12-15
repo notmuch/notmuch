@@ -600,7 +600,7 @@ notmuch_json_show_sanitize ()
 {
     sed \
 	-e 's|"id": "[^"]*",|"id": "XXXXX",|g' \
-	-e 's|"filename": "[^"]*",|"filename": "YYYYY",|g'
+	-e 's|"filename": "/[^"]*",|"filename": "YYYYY",|g'
 }
 
 # End of notmuch helper functions
