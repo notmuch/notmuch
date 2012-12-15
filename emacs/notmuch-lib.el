@@ -371,6 +371,20 @@ contents of ERR-FILE will be included in the error message."
     ;; Mimic `process-lines'
     (error "%s exited with status %s" (car command) exit-status))))
 
+(defun notmuch-call-notmuch-json (&rest args)
+  "Invoke `notmuch-command' with `args' and return the parsed JSON output.
+
+The returned output will represent objects using property lists
+and arrays as lists."
+
+  (with-temp-buffer
+    (apply #'call-process notmuch-command nil (list t nil) nil args)
+    (goto-char (point-min))
+    (let ((json-object-type 'plist)
+	  (json-array-type 'list)
+	  (json-false 'nil))
+      (json-read))))
+
 ;; Compatibility functions for versions of emacs before emacs 23.
 ;;
 ;; Both functions here were copied from emacs 23 with the following copyright:
