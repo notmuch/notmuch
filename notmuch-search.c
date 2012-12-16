@@ -305,8 +305,12 @@ notmuch_search_command (void *ctx, int argc, char *argv[])
     int exclude = EXCLUDE_TRUE;
     unsigned int i;
 
-    enum { NOTMUCH_FORMAT_JSON, NOTMUCH_FORMAT_TEXT, NOTMUCH_FORMAT_SEXP }
-	format_sel = NOTMUCH_FORMAT_TEXT;
+    enum {
+	NOTMUCH_FORMAT_JSON,
+	NOTMUCH_FORMAT_TEXT,
+	NOTMUCH_FORMAT_TEXT0,
+	NOTMUCH_FORMAT_SEXP
+    } format_sel = NOTMUCH_FORMAT_TEXT;
 
     notmuch_opt_desc_t options[] = {
 	{ NOTMUCH_OPT_KEYWORD, &sort, "sort", 's',
@@ -317,6 +321,7 @@ notmuch_search_command (void *ctx, int argc, char *argv[])
 	  (notmuch_keyword_t []){ { "json", NOTMUCH_FORMAT_JSON },
 				  { "sexp", NOTMUCH_FORMAT_SEXP },
 				  { "text", NOTMUCH_FORMAT_TEXT },
+				  { "text0", NOTMUCH_FORMAT_TEXT0 },
 				  { 0, 0 } } },
 	{ NOTMUCH_OPT_INT, &notmuch_format_version, "format-version", 0, 0 },
 	{ NOTMUCH_OPT_KEYWORD, &output, "output", 'o',
@@ -345,6 +350,13 @@ notmuch_search_command (void *ctx, int argc, char *argv[])
     switch (format_sel) {
     case NOTMUCH_FORMAT_TEXT:
 	format = sprinter_text_create (ctx, stdout);
+	break;
+    case NOTMUCH_FORMAT_TEXT0:
+	if (output == OUTPUT_SUMMARY) {
+	    fprintf (stderr, "Error: --format=text0 is not compatible with --output=summary.\n");
+	    return 1;
+	}
+	format = sprinter_text0_create (ctx, stdout);
 	break;
     case NOTMUCH_FORMAT_JSON:
 	format = sprinter_json_create (ctx, stdout);
