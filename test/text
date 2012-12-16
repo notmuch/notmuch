@@ -52,4 +52,37 @@ output=$(notmuch search --format=text "tëxt-search-méssage" | notmuch_search_s
 test_expect_equal "$output" \
 "thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; text-search-utf8-body-sübjéct (inbox unread)"
 
+add_email_corpus
+
+test_begin_subtest "Search message tags: text0"
+cat <<EOF > EXPECTED
+attachment inbox signed unread
+EOF
+notmuch search --format=text0 --output=tags '*' | xargs -0 | notmuch_search_sanitize > OUTPUT
+test_expect_equal_file EXPECTED OUTPUT
+
+# Use tr(1) to convert --output=text0 to --output=text for
+# comparison. Also translate newlines to spaces to fail with more
+# noise if they are present as delimiters instead of null
+# characters. This assumes there are no newlines in the data.
+test_begin_subtest "Compare text vs. text0 for threads"
+notmuch search --format=text --output=threads '*' | notmuch_search_sanitize > EXPECTED
+notmuch search --format=text0 --output=threads '*' | tr "\n\0" " \n" | notmuch_search_sanitize > OUTPUT
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "Compare text vs. text0 for messages"
+notmuch search --format=text --output=messages '*' | notmuch_search_sanitize > EXPECTED
+notmuch search --format=text0 --output=messages '*' | tr "\n\0" " \n" | notmuch_search_sanitize > OUTPUT
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "Compare text vs. text0 for files"
+notmuch search --format=text --output=files '*' | notmuch_search_sanitize > EXPECTED
+notmuch search --format=text0 --output=files '*' | tr "\n\0" " \n" | notmuch_search_sanitize > OUTPUT
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "Compare text vs. text0 for tags"
+notmuch search --format=text --output=tags '*' | notmuch_search_sanitize > EXPECTED
+notmuch search --format=text0 --output=tags '*' | tr "\n\0" " \n" | notmuch_search_sanitize > OUTPUT
+test_expect_equal_file EXPECTED OUTPUT
+
 test_done
