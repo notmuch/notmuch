@@ -42,10 +42,11 @@ typedef struct sprinter {
      */
     void (*map_key) (struct sprinter *, const char *);
 
-    /* Insert a separator (usually extra whitespace) for improved
-     * readability without affecting the abstract syntax of the
-     * structure being printed.
-     * For JSON, this could simply be a line break.
+    /* Insert a separator (usually extra whitespace). For the text
+     * printers, this is a syntactic separator. For the structured
+     * printers, this is for improved readability without affecting
+     * the abstract syntax of the structure being printed. For JSON,
+     * this could simply be a line break.
      */
     void (*separator) (struct sprinter *);
 
