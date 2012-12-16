@@ -68,6 +68,14 @@ text_separator (struct sprinter *sp)
 }
 
 static void
+text0_separator (struct sprinter *sp)
+{
+    struct sprinter_text *sptxt = (struct sprinter_text *) sp;
+
+    fputc ('\0', sptxt->stream);
+}
+
+static void
 text_set_prefix (struct sprinter *sp, const char *prefix)
 {
     struct sprinter_text *sptxt = (struct sprinter_text *) sp;
@@ -132,4 +140,18 @@ sprinter_text_create (const void *ctx, FILE *stream)
     *res = template;
     res->stream = stream;
     return &res->vtable;
+}
+
+struct sprinter *
+sprinter_text0_create (const void *ctx, FILE *stream)
+{
+    struct sprinter *sp;
+
+    sp = sprinter_text_create (ctx, stream);
+    if (! sp)
+	return NULL;
+
+    sp->separator = text0_separator;
+
+    return sp;
 }

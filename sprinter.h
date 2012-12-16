@@ -67,6 +67,12 @@ typedef struct sprinter {
 struct sprinter *
 sprinter_text_create (const void *ctx, FILE *stream);
 
+/* Create a new unstructured printer that emits the text format for
+ * "notmuch search", with each field separated by a null character
+ * instead of the newline character. */
+struct sprinter *
+sprinter_text0_create (const void *ctx, FILE *stream);
+
 /* Create a new structure printer that emits JSON. */
 struct sprinter *
 sprinter_json_create (const void *ctx, FILE *stream);
