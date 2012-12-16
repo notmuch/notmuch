@@ -733,6 +733,7 @@ notmuch_reply_command (void *ctx, int argc, char *argv[])
 				  { "sexp", FORMAT_SEXP },
 				  { "headers-only", FORMAT_HEADERS_ONLY },
 				  { 0, 0 } } },
+	{ NOTMUCH_OPT_INT, &notmuch_format_version, "format-version", 0, 0 },
 	{ NOTMUCH_OPT_KEYWORD, &reply_all, "reply-to", 'r',
 	  (notmuch_keyword_t []){ { "all", TRUE },
 				  { "sender", FALSE },
@@ -758,6 +759,8 @@ notmuch_reply_command (void *ctx, int argc, char *argv[])
     } else {
 	reply_format_func = notmuch_reply_format_default;
     }
+
+    notmuch_exit_if_unsupported_format ();
 
     config = notmuch_config_open (ctx, NULL, NULL);
     if (config == NULL)

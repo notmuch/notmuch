@@ -57,6 +57,16 @@ to create a reply message intelligently.
 Only produces In\-Reply\-To, References, To, Cc, and Bcc headers.
 .RE
 .RE
+
+.RS
+.TP 4
+.BR \-\-format-version=N
+
+Use the specified structured output format version.  This is intended
+for programs that invoke \fBnotmuch\fR(1) internally.  If omitted, the
+latest supported version will be used.
+.RE
+
 .RS
 .TP 4
 .BR \-\-reply\-to= ( all | sender )
@@ -98,6 +108,17 @@ replying to multiple messages at once, but the JSON and S-Expression
 formats do not.
 .RE
 .RE
+
+.SH EXIT STATUS
+
+This command supports the following special exit status codes
+
+.TP
+.B 20
+The requested format version is too old.
+.TP
+.B 21
+The requested format version is too new.
 
 .SH SEE ALSO
 
