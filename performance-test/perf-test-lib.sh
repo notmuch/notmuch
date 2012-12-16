@@ -89,24 +89,59 @@ add_email_corpus ()
 
     cp -lr $TAG_CORPUS $TMP_DIRECTORY/corpus.tags
     cp -lr $MAIL_CORPUS $MAIL_DIR
-
 }
 
-time_start () {
-
-    add_email_corpus
-
-    print_header
-
+notmuch_new_with_cache ()
+{
     if [ -d $DB_CACHE_DIR ]; then
 	cp -r $DB_CACHE_DIR ${MAIL_DIR}/.notmuch
     else
-	time_run 'Initial notmuch new' "notmuch new"
+	"$1" 'Initial notmuch new' "notmuch new"
 	cache_database
     fi
 }
 
-cache_database () {
+time_start ()
+{
+    add_email_corpus
+
+    print_header
+
+    notmuch_new_with_cache time_run
+}
+
+memory_start ()
+{
+    add_email_corpus
+
+    local timestamp=$(date +%Y%m%dT%H%M%S)
+    log_dir="${TEST_DIRECTORY}/log.$(basename $0)-$corpus_size-${timestamp}"
+    mkdir -p ${log_dir}
+
+    notmuch_new_with_cache memory_run
+}
+
+memory_run ()
+{
+    test_count=$(($test_count+1))
+
+    log_file=$log_dir/$test_count.log
+
+    printf "[ %d ]\t%s\n" $test_count "$1"
+
+    valgrind --leak-check=full --log-file="$log_file" $2
+
+    awk '/LEAK SUMMARY/,/suppressed/ { sub(/^==[0-9]*==/," "); print }' "$log_file"
+    echo
+}
+
+memory_done ()
+{
+    time_done
+}
+
+cache_database ()
+{
     if [ -d $MAIL_DIR/.notmuch ]; then
 	cp -r $MAIL_DIR/.notmuch $DB_CACHE_DIR
     else
@@ -114,17 +149,20 @@ cache_database () {
     fi
 }
 
-uncache_database () {
+uncache_database ()
+{
     rm -rf $DB_CACHE_DIR
 }
 
-print_header () {
-    printf "[v%4s %6s]          Wall(s)\tUsr(s)\tSys(s)\tRes(K)\tIn/Out(512B)\n" \
-	   ${PERFTEST_VERSION} ${corpus_size}
+print_header ()
+{
+    printf "\t\t\tWall(s)\tUsr(s)\tSys(s)\tRes(K)\tIn/Out(512B)\n"
 }
 
-time_run () {
+time_run ()
+{
     printf "  %-22s" "$1"
+    test_count=$(($test_count+1))
     if test "$verbose" != "t"; then exec 4>test.output 3>&4; fi
     if ! eval >&3 "/usr/bin/time -f '%e\t%U\t%S\t%M\t%I/%O' $2" ; then
 	test_failure=$(($test_failure + 1))
@@ -133,7 +171,8 @@ time_run () {
     return 0
 }
 
-time_done () {
+time_done ()
+{
     if [ "$test_failure" = "0" ]; then
 	rm -rf "$remove_tmp"
 	exit 0
@@ -144,6 +183,8 @@ time_done () {
 
 cd -P "$test" || error "Cannot setup test environment"
 test_failure=0
+test_count=0
 
-echo
-echo $(basename "$0"): "Testing ${test_description:-notmuch performance}"
+printf "\n%-55s [%s %s]\n"  \
+    "$(basename "$0"): Testing ${test_description:-notmuch performance}" \
+    "${PERFTEST_VERSION}"  "${corpus_size}"
