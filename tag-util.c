@@ -109,7 +109,7 @@ parse_tag_line (void *ctx, char *line,
 	    goto DONE;
 	}
 
-	if (tag_op_list_append (ctx, tag_ops, tag, remove)) {
+	if (tag_op_list_append (tag_ops, tag, remove)) {
 	    ret = line_error (TAG_PARSE_OUT_OF_MEMORY, line_for_error,
 			      "aborting");
 	    goto DONE;
@@ -294,7 +294,7 @@ tag_op_list_create (void *ctx)
     list->size = TAG_OP_LIST_INITIAL_SIZE;
     list->count = 0;
 
-    list->ops = talloc_array (ctx, tag_operation_t, list->size);
+    list->ops = talloc_array (list, tag_operation_t, list->size);
     if (list->ops == NULL)
 	return NULL;
 
@@ -303,8 +303,7 @@ tag_op_list_create (void *ctx)
 
 
 int
-tag_op_list_append (void *ctx,
-		    tag_op_list_t *list,
+tag_op_list_append (tag_op_list_t *list,
 		    const char *tag,
 		    notmuch_bool_t remove)
 {
@@ -314,7 +313,7 @@ tag_op_list_append (void *ctx,
 
     if (list->count == list->size) {
 	list->size *= 2;
-	list->ops = talloc_realloc (ctx, list->ops, tag_operation_t,
+	list->ops = talloc_realloc (list, list->ops, tag_operation_t,
 				    list->size);
 	if (list->ops == NULL) {
 	    fprintf (stderr, "Out of memory.\n");

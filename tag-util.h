@@ -87,8 +87,7 @@ tag_op_list_create (void *ctx);
  */
 
 int
-tag_op_list_append (void *ctx,
-		    tag_op_list_t *list,
+tag_op_list_append (tag_op_list_t *list,
 		    const char *tag,
 		    notmuch_bool_t remove);
 

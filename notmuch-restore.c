@@ -105,7 +105,7 @@ parse_sup_line (void *ctx, char *line,
 	    tok_len++;
 	}
 
-	if (tag_op_list_append (ctx, tag_ops, tok, FALSE))
+	if (tag_op_list_append (tag_ops, tok, FALSE))
 	    return -1;
     }
 
