@@ -318,6 +318,7 @@ notmuch_search_command (void *ctx, int argc, char *argv[])
 				  { "sexp", NOTMUCH_FORMAT_SEXP },
 				  { "text", NOTMUCH_FORMAT_TEXT },
 				  { 0, 0 } } },
+	{ NOTMUCH_OPT_INT, &notmuch_format_version, "format-version", 0, 0 },
 	{ NOTMUCH_OPT_KEYWORD, &output, "output", 'o',
 	  (notmuch_keyword_t []){ { "summary", OUTPUT_SUMMARY },
 				  { "threads", OUTPUT_THREADS },
@@ -355,6 +356,8 @@ notmuch_search_command (void *ctx, int argc, char *argv[])
 	/* this should never happen */
 	INTERNAL_ERROR("no output format selected");
     }
+
+    notmuch_exit_if_unsupported_format ();
 
     config = notmuch_config_open (ctx, NULL, NULL);
     if (config == NULL)

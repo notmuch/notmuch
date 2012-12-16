@@ -32,6 +32,15 @@ Presents the results in either JSON, S-Expressions or plain-text (default).
 
 .RS 4
 .TP 4
+.BR \-\-format-version=N
+
+Use the specified structured output format version.  This is intended
+for programs that invoke \fBnotmuch\fR(1) internally.  If omitted, the
+latest supported version will be used.
+.RE
+
+.RS 4
+.TP 4
 .B \-\-output=(summary|threads|messages|files|tags)
 
 .RS 4
@@ -125,6 +134,17 @@ only has an effect when
 In this case all matching threads are returned but the "match count"
 is the number of matching non-excluded messages in the thread.
 .RE
+
+.SH EXIT STATUS
+
+This command supports the following special exit status codes
+
+.TP
+.B 20
+The requested format version is too old.
+.TP
+.B 21
+The requested format version is too new.
 
 .SH SEE ALSO
 
