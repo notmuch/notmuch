@@ -25,9 +25,11 @@ Supported options for
 include
 .RS 4
 .TP 4
-.BR \-\-format= ( json | sexp | text )
+.BR \-\-format= ( json | sexp | text | text0 )
 
-Presents the results in either JSON, S-Expressions or plain-text (default).
+Presents the results in either JSON, S-Expressions, newline character
+separated plain-text (default), or null character separated plain-text
+(compatible with \fBxargs\fR(1) -0 option where available).
 .RE
 
 .RS 4
@@ -57,32 +59,36 @@ the authors of the thread and the subject.
 .B threads
 
 Output the thread IDs of all threads with any message matching the
-search terms, either one per line (\-\-format=text) or as a JSON array
-(\-\-format=json) or an S-Expression list (\-\-format=sexp).
+search terms, either one per line (\-\-format=text), separated by null
+characters (\-\-format=text0), as a JSON array (\-\-format=json), or
+an S-Expression list (\-\-format=sexp).
 .RE
 .RS 4
 .TP 4
 .B messages
 
 Output the message IDs of all messages matching the search terms,
-either one per line (\-\-format=text) or as a JSON array
-(\-\-format=json) or as an S-Expression list (\-\-format=sexp).
+either one per line (\-\-format=text), separated by null characters
+(\-\-format=text0), as a JSON array (\-\-format=json), or as an
+S-Expression list (\-\-format=sexp).
 .RE
 .RS 4
 .TP 4
 .B files
 
 Output the filenames of all messages matching the search terms, either
-one per line (\-\-format=text) or as a JSON array (\-\-format=json) or
-as an S-Expression list (\-\-format=sexp).
+one per line (\-\-format=text), separated by null characters
+(\-\-format=text0), as a JSON array (\-\-format=json), or as an
+S-Expression list (\-\-format=sexp).
 .RE
 .RS 4
 .TP 4
 .B tags
 
 Output all tags that appear on any message matching the search terms,
-either one per line (\-\-format=text) or as a JSON array (\-\-format=json)
-or as an S-Expression list (\-\-format=sexp).
+either one per line (\-\-format=text), separated by null characters
+(\-\-format=text0), as a JSON array (\-\-format=json), or as an
+S-Expression list (\-\-format=sexp).
 .RE
 .RE
 
