@@ -125,6 +125,7 @@ notmuch_restore_command (unused (void *ctx), int argc, char *argv[])
     char *input_file_name = NULL;
     FILE *input = stdin;
     char *line = NULL;
+    void *line_ctx = NULL;
     size_t line_size;
     ssize_t line_len;
 
@@ -208,10 +209,14 @@ notmuch_restore_command (unused (void *ctx), int argc, char *argv[])
     do {
 	char *query_string;
 
+	if (line_ctx != NULL)
+	    talloc_free (line_ctx);
+
+	line_ctx = talloc_new (ctx);
 	if (input_format == DUMP_FORMAT_SUP) {
-	    ret = parse_sup_line (ctx, line, &query_string, tag_ops);
+	    ret = parse_sup_line (line_ctx, line, &query_string, tag_ops);
 	} else {
-	    ret = parse_tag_line (ctx, line, TAG_FLAG_BE_GENEROUS,
+	    ret = parse_tag_line (line_ctx, line, TAG_FLAG_BE_GENEROUS,
 				  &query_string, tag_ops);
 
 	    if (ret == 0) {
@@ -237,12 +242,15 @@ notmuch_restore_command (unused (void *ctx), int argc, char *argv[])
 	if (ret < 0)
 	    break;
 
-	ret = tag_message (ctx, notmuch, query_string,
+	ret = tag_message (line_ctx, notmuch, query_string,
 			   tag_ops, flags);
 	if (ret)
 	    break;
 
     }  while ((line_len = getline (&line, &line_size, input)) != -1);
+
+    if (line_ctx != NULL)
+	talloc_free (line_ctx);
 
     if (input_format == DUMP_FORMAT_SUP)
 	regfree (&regex);
