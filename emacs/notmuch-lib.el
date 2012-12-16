@@ -360,9 +360,18 @@ giving the output of command.  ERR-FILE, if provided, is the name
 of a file containing the error output of command.  OUTPUT and the
 contents of ERR-FILE will be included in the error message."
 
-  ;; This is implemented as a cond to make it easy to expand.
   (cond
    ((eq exit-status 0) t)
+   ((eq exit-status 20)
+    (notmuch-pop-up-error "Error: Version mismatch.
+Emacs requested an older output format than supported by the notmuch CLI.
+You may need to restart Emacs or upgrade your notmuch Emacs package.")
+    (error "notmuch CLI version mismatch"))
+   ((eq exit-status 21)
+    (notmuch-pop-up-error "Error: Version mismatch.
+Emacs requested a newer output format than supported by the notmuch CLI.
+You may need to restart Emacs or upgrade your notmuch package.")
+    (error "notmuch CLI version mismatch"))
    (t
     (notmuch-pop-up-error
      (concat
