@@ -60,4 +60,10 @@ test_expect_equal_json "$output" "[{\"thread\": \"XXX\",
  \"tags\": [\"inbox\",
  \"unread\"]}]"
 
+test_expect_code 20 "Format version: too low" \
+    "notmuch search --format-version=0 \\*"
+
+test_expect_code 21 "Format version: too high" \
+    "notmuch search --format-version=999 \\*"
+
 test_done
