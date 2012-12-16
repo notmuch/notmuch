@@ -117,6 +117,51 @@ chomp_newline (char *str)
 	str[strlen(str)-1] = '\0';
 }
 
+/* Exit status code indicating the requested format version is too old
+ * (support for that version has been dropped).  CLI code should use
+ * notmuch_exit_if_unsupported_format rather than directly exiting
+ * with this code.
+ */
+#define NOTMUCH_EXIT_FORMAT_TOO_OLD 20
+/* Exit status code indicating the requested format version is newer
+ * than the version supported by the CLI.  CLI code should use
+ * notmuch_exit_if_unsupported_format rather than directly exiting
+ * with this code.
+ */
+#define NOTMUCH_EXIT_FORMAT_TOO_NEW 21
+
+/* The current structured output format version.  Requests for format
+ * versions above this will return an error.  Backwards-incompatible
+ * changes such as removing map fields, changing the meaning of map
+ * fields, or changing the meanings of list elements should increase
+ * this.  New (required) map fields can be added without increasing
+ * this.
+ */
+#define NOTMUCH_FORMAT_CUR 1
+/* The minimum supported structured output format version.  Requests
+ * for format versions below this will return an error. */
+#define NOTMUCH_FORMAT_MIN 1
+
+/* The output format version requested by the caller on the command
+ * line.  If no format version is requested, this will be set to
+ * NOTMUCH_FORMAT_CUR.  Even though the command-line option is
+ * per-command, this is global because commands can share structured
+ * output code.
+ */
+extern int notmuch_format_version;
+
+/* Commands that support structured output should support the
+ * following argument
+ *  { NOTMUCH_OPT_INT, &notmuch_format_version, "format-version", 0, 0 }
+ * and should invoke notmuch_exit_if_unsupported_format to check the
+ * requested version.  If notmuch_format_version is outside the
+ * supported range, this will print a detailed diagnostic message for
+ * the user and exit with NOTMUCH_EXIT_FORMAT_TOO_{OLD,NEW} to inform
+ * the invoking program of the problem.
+ */
+void
+notmuch_exit_if_unsupported_format (void);
+
 notmuch_crypto_context_t *
 notmuch_crypto_get_context (notmuch_crypto_t *crypto, const char *protocol);
 

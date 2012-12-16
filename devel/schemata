@@ -14,6 +14,8 @@ are interleaved. Keys are printed as keywords (symbols preceded by a
 colon), e.g. (:id "123" :time 54321 :from "foobar"). Null is printed as
 nil, true as t and false as nil.
 
+This is version 1 of the structured output format.
+
 Common non-terminals
 --------------------
 
