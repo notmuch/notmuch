@@ -36,8 +36,8 @@ for a list of mirrors.
 Running tests
 -------------
 
-The easiest way to run performance tests is to say "make perf-test", (or
-simply run the notmuch-perf-test script). Either command will run all
+The easiest way to run performance tests is to say "make time-test", (or
+simply run the notmuch-time-test script). Either command will run all
 available performance tests.
 
 Alternately, you can run a specific subset of tests by simply invoking
@@ -51,7 +51,7 @@ Each test script supports the following arguments
 Writing tests
 -------------
 
-Have a look at "01-dump-restore" for an example. Sourcing
+Have a look at "T01-dump-restore" for an example. Sourcing
 "perf-test-lib.sh" is mandatory.  Utility functions include
 
 - 'add_email_corpus' unpacks a set of messages and adds them to the database.
@@ -65,4 +65,5 @@ Have a look at "01-dump-restore" for an example. Sourcing
 
 Scripts are run in the order specified in notmuch-perf-test. In the
 future this order might be chosen automatically so please follow the
-convention of starting the name with two digits to specify the order.
+convention of starting the name with 'T' followed by two digits to
+specify the order.

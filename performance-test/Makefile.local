@@ -10,7 +10,7 @@ SIGFILE := ${TXZFILE}.asc
 TEST_SCRIPT := ${dir}/notmuch-perf-test
 DEFAULT_URL :=  http://notmuchmail.org/releases/${CORPUS_NAME}
 
-perf-test: setup-perf-test all
+time-test: setup-perf-test all
 	$(TEST_SCRIPT) $(OPTIONS)
 
 .PHONY: download-corpus setup-perf-test
