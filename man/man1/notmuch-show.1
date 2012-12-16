@@ -128,6 +128,15 @@ message.
 
 .RS 4
 .TP 4
+.BR \-\-format-version=N
+
+Use the specified structured output format version.  This is intended
+for programs that invoke \fBnotmuch\fR(1) internally.  If omitted, the
+latest supported version will be used.
+.RE
+
+.RS 4
+.TP 4
 .B \-\-part=N
 
 Output the single decoded MIME part N of a single message.  The search
@@ -200,6 +209,17 @@ search term of "thread:<thread-id>" as can be seen in the first
 column of output from the
 .B notmuch search
 command.
+
+.SH EXIT STATUS
+
+This command supports the following special exit status codes
+
+.TP
+.B 20
+The requested format version is too old.
+.TP
+.B 21
+The requested format version is too new.
 
 .SH SEE ALSO
 

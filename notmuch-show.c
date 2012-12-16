@@ -1066,6 +1066,7 @@ notmuch_show_command (void *ctx, unused (int argc), unused (char *argv[]))
 				  { "mbox", NOTMUCH_FORMAT_MBOX },
 				  { "raw", NOTMUCH_FORMAT_RAW },
 				  { 0, 0 } } },
+	{ NOTMUCH_OPT_INT, &notmuch_format_version, "format-version", 0, 0 },
 	{ NOTMUCH_OPT_KEYWORD, &exclude, "exclude", 'x',
 	  (notmuch_keyword_t []){ { "true", EXCLUDE_TRUE },
 				  { "false", EXCLUDE_FALSE },
@@ -1127,6 +1128,8 @@ notmuch_show_command (void *ctx, unused (int argc), unused (char *argv[]))
 	params.raw = TRUE;
 	break;
     }
+
+    notmuch_exit_if_unsupported_format ();
 
     /* Default is entire-thread = FALSE except for format=json and
      * format=sexp. */
