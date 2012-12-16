@@ -29,7 +29,7 @@ A thread is a forest or list of trees. A tree is a two element
 list where the first element is a message, and the second element
 is a possibly empty forest of replies.
 "
-  (let ((args '("show" "--format=json")))
+  (let ((args '("show" "--format=json" "--format-version=1")))
     (if notmuch-show-process-crypto
 	(setq args (append args '("--decrypt"))))
     (setq args (append args search-terms))

@@ -650,6 +650,10 @@ of the result."
 		      (insert "Incomplete search results (search process was killed).\n"))
 		  (when (eq status 'exit)
 		    (insert "End of search results.\n")
+		    ;; For version mismatch, there's no point in
+		    ;; showing the search buffer
+		    (when (or (= exit-status 20) (= exit-status 21))
+		      (kill-buffer))
 		    (condition-case nil
 			(notmuch-check-async-exit-status proc msg)
 		      ;; Suppress the error signal since strange
@@ -935,7 +939,7 @@ Other optional parameters are used as follows:
 	(let ((proc (start-process
 		     "notmuch-search" buffer
 		     notmuch-command "search"
-		     "--format=json"
+		     "--format=json" "--format-version=1"
 		     (if oldest-first
 			 "--sort=oldest-first"
 		       "--sort=newest-first")

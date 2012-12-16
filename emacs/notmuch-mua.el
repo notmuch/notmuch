@@ -146,7 +146,7 @@ list."
   (unless (bolp) (insert "\n")))
 
 (defun notmuch-mua-reply (query-string &optional sender reply-all)
-  (let ((args '("reply" "--format=json"))
+  (let ((args '("reply" "--format=json" "--format-version=1"))
 	reply
 	original)
     (when notmuch-show-process-crypto
