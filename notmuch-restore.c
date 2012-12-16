@@ -25,6 +25,9 @@
 
 static regex_t regex;
 
+/* Non-zero return indicates an error in retrieving the message,
+ * or in applying the tags.
+ */
 static int
 tag_message (unused (void *ctx),
 	     notmuch_database_t *notmuch,
@@ -48,7 +51,7 @@ tag_message (unused (void *ctx),
     /* In order to detect missing messages, this check/optimization is
      * intentionally done *after* first finding the message. */
     if ((flags & TAG_FLAG_REMOVE_ALL) || tag_op_list_size (tag_ops))
-	tag_op_list_apply (message, tag_ops, flags);
+	ret = tag_op_list_apply (message, tag_ops, flags);
 
     notmuch_message_destroy (message);
 
@@ -231,8 +234,12 @@ notmuch_restore_command (unused (void *ctx), int argc, char *argv[])
 	if (ret > 0)
 	    continue;
 
-	if (ret < 0 || tag_message (ctx, notmuch, query_string,
-				    tag_ops, flags))
+	if (ret < 0)
+	    break;
+
+	ret = tag_message (ctx, notmuch, query_string,
+			   tag_ops, flags);
+	if (ret)
 	    break;
 
     }  while ((line_len = getline (&line, &line_size, input)) != -1);
