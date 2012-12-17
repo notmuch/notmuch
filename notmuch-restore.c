@@ -88,10 +88,11 @@ parse_sup_line (void *ctx, char *line,
 	return 1;
     }
 
-    *query_str = talloc_strndup (ctx, line + match[1].rm_so,
-				 match[1].rm_eo - match[1].rm_so);
-    file_tags = talloc_strndup (ctx, line + match[2].rm_so,
-				match[2].rm_eo - match[2].rm_so);
+    *query_str = talloc_strndup_debug (ctx, line + match[1].rm_so,
+				       match[1].rm_eo - match[1].rm_so);
+
+    file_tags = talloc_strndup_debug (ctx, line + match[2].rm_so,
+				      match[2].rm_eo - match[2].rm_so);
 
     char *tok = file_tags;
     size_t tok_len = 0;
