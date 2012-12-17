@@ -322,8 +322,28 @@ main (int argc, char *argv[])
     for (i = 0; i < ARRAY_SIZE (commands); i++) {
 	command = &commands[i];
 
-	if (strcmp (argv[1], command->name) == 0)
-	    return (command->function) (local, argc - 1, &argv[1]);
+	if (strcmp (argv[1], command->name) == 0) {
+	    int ret;
+	    char *talloc_report;
+
+	    ret = (command->function)(local, argc - 1, &argv[1]);
+
+	    /* in the future support for this environment variable may
+	     * be supplemented or replaced by command line arguments
+	     * --leak-report and/or --leak-report-full */
+
+	    talloc_report = getenv ("NOTMUCH_TALLOC_REPORT");
+
+	    /* this relies on the previous call to
+	     * talloc_enable_null_tracking */
+
+	    if (talloc_report && strcmp (talloc_report, "") != 0) {
+		FILE *report = fopen (talloc_report, "w");
+		talloc_report_full (NULL, report);
+	    }
+
+	    return ret;
+	}
     }
 
     fprintf (stderr, "Error: Unknown command '%s' (see \"notmuch help\")\n",
