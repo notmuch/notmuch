@@ -58,7 +58,7 @@ typedef GMimeCipherContext notmuch_crypto_context_t;
 #include <errno.h>
 #include <signal.h>
 
-#include <talloc.h>
+#include "talloc-extra.h"
 
 #define unused(x) x __attribute__ ((unused))
 
