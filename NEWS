@@ -4,6 +4,17 @@ Notmuch 0.15 (YYYY-MM-DD)
 Command-Line Interface
 ----------------------
 
+`notmuch new` no longer chokes on mboxes
+
+  `notmuch new` now rejects mbox files containing more than one
+  message, rather than treating the file as one giant message.
+
+Support for single message mboxes is deprecated
+
+  For historical reasons, `notmuch new` will index mbox files
+  containing a single message; however, this behavior is now
+  officially deprecated.
+
 Empty tag names and tags beginning with "-" are deprecated
 
   Such tags have been a frequent source of confusion and cause
@@ -12,11 +23,23 @@ Empty tag names and tags beginning with "-" are deprecated
   tags continues to be supported to allow cleanup of existing tags,
   but may be removed in a future release.
 
+Fixed `notmuch new` to skip ignored broken symlinks
+
+  `notmuch new` now correctly skips symlinks if they are in the
+  ignored files list.  Previously, it would abort when encountering
+  broken symlink, even if it was ignored.
+
 Bcc and Reply-To headers are now available in notmuch show json output
 
   The `notmuch show --format=json` now includes "Bcc" and "Reply-To" headers.
   For example notmuch Emacs client can now have these headers visible
   when the headers are added to the `notmuch-message-headers` variable.
+
+CLI callers can now request a specific output format version
+
+  `notmuch` subcommands that support structured output now support a
+  `--format-version` argument for requesting a specific version of the
+  structured output, enabling better compatibility and error handling.
 
 Emacs Interface
 ---------------
@@ -28,12 +51,23 @@ Removal of the deprecated `notmuch-folders` variable
   has now been removed. Any remaining users should migrate to
   `notmuch-saved-searches`.
 
+Emacs now buttonizes mid: links
+
+  mid: links are a standardized way to link to messages by message ID
+  (see RFC 2392).  Emacs now hyperlinks mid: links to the appropriate
+  notmuch search.
+
 Handle errors from bodypart insertions
 
   If displaying the text of a message in show mode causes an error (in
   the `notmuch-show-insert-part-*` functions), notmuch no longer cuts
   off thread display at the offending message.  The error is now
   simply displayed in place of the message.
+
+Emacs now detects version mismatches with the notmuch CLI
+
+  Emacs now detects and reports when the Emacs interface version and
+  the notmuch CLI version are incompatible.
 
 Improved text/calendar content handling
 
@@ -48,6 +82,21 @@ Disabled coding conversions when reading in `with-current-notmuch-show-message`
   data may have performed an unintentional encoding conversion,
   corrupting the saved attachment.  This has been fixed by making
   `with-current-notmuch-show-message` disable coding conversion.
+
+Fixed errors with HTML email containing images in Emacs 24
+
+  Emacs 24 ships with a new HTML renderer that produces better output,
+  but is slightly buggy.  We work around a bug that caused it to fail
+  for HTML email containing images.
+
+Fixed handling of tags with unusual characters in them
+
+  Emacs now handles tags containing spaces, quotes, and parenthesis.
+
+Fixed buttonization of id: links without quote characters
+
+  Emacs now correctly buttonizes id: links where the message ID is not
+  quoted.
 
 Library changes
 ---------------
@@ -71,6 +120,21 @@ and the thread structure is shown using UTF-8 box drawing characters
 terms of amount of output and can be useful for viewing both single
 threads and multiple threads. See the notmuch-pick README file for
 further details and installation.
+
+Portability
+-----------
+
+notmuch now builds on OpenBSD.
+
+Internal test framework changes
+-------------------------------
+
+The emacsclient binary is now user-configurable
+
+  The test framework now accepts TEST_EMACSCLIENT in addition to
+  TEST_EMACS for configuring the emacsclient to use.  This is
+  necessary to avoid using an old emacsclient with a new emacs, which
+  can result in buggy behavior.
 
 Notmuch 0.14 (2012-08-20)
 =========================
