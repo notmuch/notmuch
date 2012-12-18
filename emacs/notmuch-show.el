@@ -483,17 +483,17 @@ message at DEPTH in the current thread."
 (fset 'notmuch-show-part-button-map notmuch-show-part-button-map)
 
 (defun notmuch-show-insert-part-header (nth content-type declared-type &optional name comment)
-  (let ((button))
+  (let ((button)
+	(base-label (concat (when name (concat name ": "))
+			    declared-type
+			    (unless (string-equal declared-type content-type)
+			      (concat " (as " content-type ")"))
+			    comment)))
+
     (setq button
 	  (insert-button
-	   (concat "[ "
-		   (if name (concat name ": ") "")
-		   declared-type
-		   (if (not (string-equal declared-type content-type))
-		       (concat " (as " content-type ")")
-		     "")
-		   (or comment "")
-		   " ]")
+	   (concat "[ " base-label " ]")
+	   :base-label base-label
 	   :type 'notmuch-show-part-button-type
 	   :notmuch-part nth
 	   :notmuch-filename name
