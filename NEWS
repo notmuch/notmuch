@@ -1,6 +1,26 @@
 Notmuch 0.15 (YYYY-MM-DD)
 =========================
 
+General
+-------
+
+Date range search support
+
+  The `date:` prefix can now be used in queries to restrict the results
+  to only messages within a particular time range (based on the Date:
+  header) with a range syntax of `date:<since>..<until>`. Notmuch
+  supports a wide variety of expressions in `<since>` and
+  `<until>`. Please refer to the `notmuch-search-terms(7)` manual page
+  for details.
+
+Empty tag names and tags beginning with "-" are deprecated
+
+  Such tags have been a frequent source of confusion and cause
+  (sometimes unresolvable) conflicts with other syntax.  notmuch tag
+  no longer allows such tags to be added to messages.  Removing such
+  tags continues to be supported to allow cleanup of existing tags,
+  but may be removed in a future release.
+
 Command-Line Interface
 ----------------------
 
@@ -14,14 +34,6 @@ Support for single message mboxes is deprecated
   For historical reasons, `notmuch new` will index mbox files
   containing a single message; however, this behavior is now
   officially deprecated.
-
-Empty tag names and tags beginning with "-" are deprecated
-
-  Such tags have been a frequent source of confusion and cause
-  (sometimes unresolvable) conflicts with other syntax.  notmuch tag
-  no longer allows such tags to be added to messages.  Removing such
-  tags continues to be supported to allow cleanup of existing tags,
-  but may be removed in a future release.
 
 Fixed `notmuch new` to skip ignored broken symlinks
 
@@ -97,18 +109,6 @@ Fixed buttonization of id: links without quote characters
 
   Emacs now correctly buttonizes id: links where the message ID is not
   quoted.
-
-Library changes
----------------
-
-Date range search support
-
-  The `date:` prefix can now be used in queries to restrict the results
-  to only messages within a particular time range (based on the Date:
-  header) with a range syntax of `date:<since>..<until>`. Notmuch
-  supports a wide variety of expressions in `<since>` and
-  `<until>`. Please refer to the `notmuch-search-terms(7)` manual page
-  for details.
 
 New add-on tool: notmuch-pick
 -----------------------------
