@@ -96,10 +96,10 @@ this many characters or at the window width (whichever one is
 lower).")
 
 (defun notmuch-wash-toggle-invisible-action (cite-button)
-  (let ((invis-spec (button-get cite-button 'invisibility-spec)))
-    (if (invisible-p invis-spec)
-	(remove-from-invisibility-spec invis-spec)
-      (add-to-invisibility-spec invis-spec)))
+  ;; Toggle overlay visibility
+  (let ((overlay (button-get cite-button 'overlay)))
+    (overlay-put overlay 'invisible (not (overlay-get overlay 'invisible))))
+  ;; Update button text
   (let* ((new-start (button-start cite-button))
 	 (overlay (button-get cite-button 'overlay))
 	 (button-label (notmuch-wash-button-label overlay))
@@ -110,9 +110,7 @@ lower).")
     (let ((old-end (button-end cite-button)))
       (move-overlay cite-button new-start (point))
       (delete-region (point) old-end))
-    (goto-char (min old-point (1- (button-end cite-button)))))
-  (force-window-update)
-  (redisplay t))
+    (goto-char (min old-point (1- (button-end cite-button))))))
 
 (define-button-type 'notmuch-wash-button-invisibility-toggle-type
   'action 'notmuch-wash-toggle-invisible-action
@@ -132,8 +130,8 @@ lower).")
   :supertype 'notmuch-wash-button-invisibility-toggle-type)
 
 (defun notmuch-wash-region-isearch-show (overlay)
-  (dolist (invis-spec (overlay-get overlay 'invisible))
-    (remove-from-invisibility-spec invis-spec)))
+  (notmuch-wash-toggle-invisible-action
+   (overlay-get overlay 'notmuch-wash-button)))
 
 (defun notmuch-wash-button-label (overlay)
   (let* ((type (overlay-get overlay 'type))
@@ -158,14 +156,10 @@ that PREFIX should not include a newline."
   ;; since the newly created symbol has no plist.
 
   (let ((overlay (make-overlay beg end))
-	(message-invis-spec (plist-get msg :message-invis-spec))
-	(invis-spec (make-symbol (concat "notmuch-" type "-region")))
 	(button-type (intern-soft (concat "notmuch-wash-button-"
 					  type "-toggle-type"))))
-    (add-to-invisibility-spec invis-spec)
-    (overlay-put overlay 'invisible (list invis-spec message-invis-spec))
+    (overlay-put overlay 'invisible t)
     (overlay-put overlay 'isearch-open-invisible #'notmuch-wash-region-isearch-show)
-    (overlay-put overlay 'priority 10)
     (overlay-put overlay 'type type)
     (goto-char (1+ end))
     (save-excursion
@@ -174,10 +168,10 @@ that PREFIX should not include a newline."
 	  (insert-before-markers prefix))
       (let ((button-beg (point)))
 	(insert-before-markers (notmuch-wash-button-label overlay) "\n")
-	(make-button button-beg (1- (point))
-		     'invisibility-spec invis-spec
-		     'overlay overlay
-		     :type button-type)))))
+	(let ((button (make-button button-beg (1- (point))
+				   'overlay overlay
+				   :type button-type)))
+	  (overlay-put overlay 'notmuch-wash-button button))))))
 
 (defun notmuch-wash-excerpt-citations (msg depth)
   "Excerpt citations and up to one signature."
@@ -379,73 +373,6 @@ for error."
 				(plist-get msg :headers) :Subject))))
 	(delete-region (point-min) (point-max))
 	(notmuch-show-insert-bodypart nil part depth)))))
-
-;;
-
-;; Temporary workaround for Emacs bug #8721
-;; http://debbugs.gnu.org/cgi/bugreport.cgi?bug=8721
-
-(defun notmuch-isearch-range-invisible (beg end)
-  "Same as `isearch-range-invisible' but with fixed Emacs bug #8721."
-  (when (/= beg end)
-    ;; Check that invisibility runs up to END.
-    (save-excursion
-      (goto-char beg)
-      (let (;; can-be-opened keeps track if we can open some overlays.
-	    (can-be-opened (eq search-invisible 'open))
-	    ;; the list of overlays that could be opened
-	    (crt-overlays nil))
-	(when (and can-be-opened isearch-hide-immediately)
-	  (isearch-close-unnecessary-overlays beg end))
-	;; If the following character is currently invisible,
-	;; skip all characters with that same `invisible' property value.
-	;; Do that over and over.
-	(while (and (< (point) end) (invisible-p (point)))
-	  (if (invisible-p (get-text-property (point) 'invisible))
-	      (progn
-		(goto-char (next-single-property-change (point) 'invisible
-							nil end))
-		;; if text is hidden by an `invisible' text property
-		;; we cannot open it at all.
-		(setq can-be-opened nil))
-	    (when can-be-opened
-	      (let ((overlays (overlays-at (point)))
-		    ov-list
-		    o
-		    invis-prop)
-		(while overlays
-		  (setq o (car overlays)
-			invis-prop (overlay-get o 'invisible))
-		  (if (invisible-p invis-prop)
-		      (if (overlay-get o 'isearch-open-invisible)
-			  (setq ov-list (cons o ov-list))
-			;; We found one overlay that cannot be
-			;; opened, that means the whole chunk
-			;; cannot be opened.
-			(setq can-be-opened nil)))
-		  (setq overlays (cdr overlays)))
-		(if can-be-opened
-		    ;; It makes sense to append to the open
-		    ;; overlays list only if we know that this is
-		    ;; t.
-		    (setq crt-overlays (append ov-list crt-overlays)))))
-	    (goto-char (next-overlay-change (point)))))
-	;; See if invisibility reaches up thru END.
-	(if (>= (point) end)
-	    (if (and can-be-opened (consp crt-overlays))
-		(progn
-		  (setq isearch-opened-overlays
-			(append isearch-opened-overlays crt-overlays))
-		  (mapc 'isearch-open-overlay-temporary crt-overlays)
-		  nil)
-	      (setq isearch-hidden t)))))))
-
-(defadvice isearch-range-invisible (around notmuch-isearch-range-invisible-advice activate)
-  "Call `notmuch-isearch-range-invisible' instead of the original
-`isearch-range-invisible' when in `notmuch-show-mode' mode."
-  (if (eq major-mode 'notmuch-show-mode)
-      (setq ad-return-value (notmuch-isearch-range-invisible beg end))
-    ad-do-it))
 
 ;;
 

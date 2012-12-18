@@ -872,26 +872,7 @@ message at DEPTH in the current thread."
 	 message-start message-end
 	 content-start content-end
 	 headers-start headers-end
-	 body-start body-end
-	 (headers-invis-spec (notmuch-show-make-symbol "header"))
-	 (message-invis-spec (notmuch-show-make-symbol "message"))
 	 (bare-subject (notmuch-show-strip-re (plist-get headers :Subject))))
-
-    ;; Set `buffer-invisibility-spec' to `nil' (a list), otherwise
-    ;; removing items from `buffer-invisibility-spec' (which is what
-    ;; `notmuch-show-headers-visible' and
-    ;; `notmuch-show-message-visible' do) is a no-op and has no
-    ;; effect. This caused threads with only matching messages to have
-    ;; those messages hidden initially because
-    ;; `buffer-invisibility-spec' stayed `t'.
-    ;;
-    ;; This needs to be set here (rather than just above the call to
-    ;; `notmuch-show-headers-visible') because some of the part
-    ;; rendering or body washing functions
-    ;; (e.g. `notmuch-wash-text/plain-citations') manipulate
-    ;; `buffer-invisibility-spec').
-    (when (eq buffer-invisibility-spec t)
-      (setq buffer-invisibility-spec nil))
 
     (setq message-start (point-marker))
 
@@ -903,9 +884,6 @@ message at DEPTH in the current thread."
 				    (plist-get msg :tags) depth)
 
     (setq content-start (point-marker))
-
-    (plist-put msg :headers-invis-spec headers-invis-spec)
-    (plist-put msg :message-invis-spec message-invis-spec)
 
     ;; Set `headers-start' to point after the 'Subject:' header to be
     ;; compatible with the existing implementation. This just sets it
@@ -924,7 +902,6 @@ message at DEPTH in the current thread."
 
     (setq notmuch-show-previous-subject bare-subject)
 
-    (setq body-start (point-marker))
     ;; A blank line between the headers and the body.
     (insert "\n")
     (notmuch-show-insert-body msg (plist-get msg :body)
@@ -932,7 +909,6 @@ message at DEPTH in the current thread."
     ;; Ensure that the body ends with a newline.
     (unless (bolp)
       (insert "\n"))
-    (setq body-end (point-marker))
     (setq content-end (point-marker))
 
     ;; Indent according to the depth in the thread.
@@ -945,11 +921,9 @@ message at DEPTH in the current thread."
     ;; message.
     (put-text-property message-start message-end :notmuch-message-extent (cons message-start message-end))
 
-    (let ((headers-overlay (make-overlay headers-start headers-end))
-          (invis-specs (list headers-invis-spec message-invis-spec)))
-      (overlay-put headers-overlay 'invisible invis-specs)
-      (overlay-put headers-overlay 'priority 10))
-    (overlay-put (make-overlay body-start body-end) 'invisible message-invis-spec)
+    ;; Create overlays used to control visibility
+    (plist-put msg :headers-overlay (make-overlay headers-start headers-end))
+    (plist-put msg :message-overlay (make-overlay headers-start content-end))
 
     (plist-put msg :depth depth)
 
@@ -1349,18 +1323,12 @@ effects."
 ;; Functions relating to the visibility of messages and their
 ;; components.
 
-(defun notmuch-show-element-visible (props visible-p spec-property)
-  (let ((spec (plist-get props spec-property)))
-    (if visible-p
-	(remove-from-invisibility-spec spec)
-      (add-to-invisibility-spec spec))))
-
 (defun notmuch-show-message-visible (props visible-p)
-  (notmuch-show-element-visible props visible-p :message-invis-spec)
+  (overlay-put (plist-get props :message-overlay) 'invisible (not visible-p))
   (notmuch-show-set-prop :message-visible visible-p props))
 
 (defun notmuch-show-headers-visible (props visible-p)
-  (notmuch-show-element-visible props visible-p :headers-invis-spec)
+  (overlay-put (plist-get props :headers-overlay) 'invisible (not visible-p))
   (notmuch-show-set-prop :headers-visible visible-p props))
 
 ;; Functions for setting and getting attributes of the current
