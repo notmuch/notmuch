@@ -567,11 +567,10 @@ message at DEPTH in the current thread."
     ;; but it's not clear that this is the wrong thing to do - which
     ;; should be chosen if there are more than one that match?
     (mapc (lambda (inner-part)
-	    (let ((inner-type (plist-get inner-part :content-type)))
-	      (if (or notmuch-show-all-multipart/alternative-parts
-		      (string= chosen-type inner-type))
-		  (notmuch-show-insert-bodypart msg inner-part depth)
-		(notmuch-show-insert-part-header (plist-get inner-part :id) inner-type inner-type nil " (not shown)"))))
+	    (let* ((inner-type (plist-get inner-part :content-type))
+		  (hide (not (or notmuch-show-all-multipart/alternative-parts
+			   (string= chosen-type inner-type)))))
+	      (notmuch-show-insert-bodypart msg inner-part depth hide)))
 	  inner-parts)
 
     (when notmuch-show-indent-multipart
@@ -839,17 +838,33 @@ message at DEPTH in the current thread."
       (setq handlers (cdr handlers))))
   t)
 
-(defun notmuch-show-insert-bodypart (msg part depth)
-  "Insert the body part PART at depth DEPTH in the current thread."
+(defun notmuch-show-create-part-overlays (msg beg end hide)
+  "Add an overlay to the part between BEG and END"
+  (let* ((button (button-at beg))
+	 (part-beg (and button (1+ (button-end button)))))
+
+    ;; If the part contains no text we do not make it toggleable. We
+    ;; also need to check that the button is a genuine part button not
+    ;; a notmuch-wash button.
+    (when (and button (/= part-beg end) (button-get button :base-label))
+	(button-put button 'overlay (make-overlay part-beg end)))))
+
+(defun notmuch-show-insert-bodypart (msg part depth &optional hide)
+  "Insert the body part PART at depth DEPTH in the current thread.
+
+If HIDE is non-nil then initially hide this part."
   (let ((content-type (downcase (plist-get part :content-type)))
-	(nth (plist-get part :id)))
-    (notmuch-show-insert-bodypart-internal msg part content-type nth depth content-type))
-  ;; Some of the body part handlers leave point somewhere up in the
-  ;; part, so we make sure that we're down at the end.
-  (goto-char (point-max))
-  ;; Ensure that the part ends with a carriage return.
-  (unless (bolp)
-    (insert "\n")))
+	(nth (plist-get part :id))
+	(beg (point)))
+
+    (notmuch-show-insert-bodypart-internal msg part content-type nth depth content-type)
+    ;; Some of the body part handlers leave point somewhere up in the
+    ;; part, so we make sure that we're down at the end.
+    (goto-char (point-max))
+    ;; Ensure that the part ends with a carriage return.
+    (unless (bolp)
+      (insert "\n"))
+    (notmuch-show-create-part-overlays msg beg (point) hide)))
 
 (defun notmuch-show-insert-body (msg body depth)
   "Insert the body BODY at depth DEPTH in the current thread."
