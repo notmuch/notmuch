@@ -94,7 +94,7 @@ visible for any given message."
   :group 'notmuch-hooks)
 
 ;; Mostly useful for debugging.
-(defcustom notmuch-show-all-multipart/alternative-parts t
+(defcustom notmuch-show-all-multipart/alternative-parts nil
   "Should all parts of multipart/alternative parts be shown?"
   :type 'boolean
   :group 'notmuch-show)
