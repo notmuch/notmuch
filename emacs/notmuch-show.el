@@ -554,6 +554,25 @@ message at DEPTH in the current thread."
     (let ((handle (mm-make-handle (current-buffer) (list content-type))))
       (mm-pipe-part handle))))
 
+;; This is taken from notmuch-wash: maybe it should be unified?
+(defun notmuch-show-toggle-part-invisibility (&optional button)
+  (interactive)
+  (let* ((button (or button (button-at (point))))
+	 (overlay (button-get button 'overlay)))
+    (when overlay
+      (let* ((show (overlay-get overlay 'invisible))
+	     (new-start (button-start button))
+	     (button-label (button-get button :base-label))
+	     (old-point (point))
+	     (inhibit-read-only t))
+	(overlay-put overlay 'invisible (not show))
+	(goto-char new-start)
+	(insert "[ " button-label (if show " ]" " (hidden) ]"))
+	(let ((old-end (button-end button)))
+	  (move-overlay button new-start (point))
+	  (delete-region (point) old-end))
+	(goto-char (min old-point (1- (button-end button))))))))
+
 (defun notmuch-show-multipart/*-to-list (part)
   (mapcar (lambda (inner-part) (plist-get inner-part :content-type))
 	  (plist-get part :content)))
@@ -847,7 +866,12 @@ message at DEPTH in the current thread."
     ;; also need to check that the button is a genuine part button not
     ;; a notmuch-wash button.
     (when (and button (/= part-beg end) (button-get button :base-label))
-	(button-put button 'overlay (make-overlay part-beg end)))))
+      (button-put button 'overlay (make-overlay part-beg end))
+      ;; We toggle the button for hidden parts as that gets the
+      ;; button label right.
+      (save-excursion
+	(when hide
+	  (notmuch-show-toggle-part-invisibility button))))))
 
 (defun notmuch-show-insert-bodypart (msg part depth &optional hide)
   "Insert the body part PART at depth DEPTH in the current thread.
@@ -1953,7 +1977,10 @@ the user (see `notmuch-show-stash-mlarchive-link-alist')."
 
 (defun notmuch-show-part-button-default (&optional button)
   (interactive)
-  (notmuch-show-part-button-internal button notmuch-show-part-button-default-action))
+  (let ((button (or button (button-at (point)))))
+    (if (button-get button 'overlay)
+	(notmuch-show-toggle-part-invisibility button)
+      (notmuch-show-part-button-internal button notmuch-show-part-button-default-action))))
 
 (defun notmuch-show-part-button-save (&optional button)
   (interactive)
