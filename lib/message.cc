@@ -1195,7 +1195,9 @@ _get_maildir_flag_actions (notmuch_message_t *message,
  * compute the new maildir filename.
  *
  * If the existing filename is in the directory "new", the new
- * filename will be in the directory "cur".
+ * filename will be in the directory "cur", except for the case when
+ * no flags are changed and the existing filename does not contain
+ * maildir info (starting with ",2:").
  *
  * After a sequence of ":2," in the filename, any subsequent
  * single-character flags will be added or removed according to the
@@ -1218,6 +1220,7 @@ _new_maildir_filename (void *ctx,
     char *filename_new, *dir;
     char flag_map[128];
     int flags_in_map = 0;
+    notmuch_bool_t flags_changed = FALSE;
     unsigned int i;
     char *s;
 
@@ -1258,6 +1261,7 @@ _new_maildir_filename (void *ctx,
 	if (flag_map[flag] == 0) {
 	    flag_map[flag] = 1;
 	    flags_in_map++;
+	    flags_changed = TRUE;
 	}
     }
 
@@ -1266,8 +1270,15 @@ _new_maildir_filename (void *ctx,
 	if (flag_map[flag]) {
 	    flag_map[flag] = 0;
 	    flags_in_map--;
+	    flags_changed = TRUE;
 	}
     }
+
+    /* Messages in new/ without maildir info can be kept in new/ if no
+     * flags have changed. */
+    dir = (char *) _filename_is_in_maildir (filename);
+    if (dir && STRNCMP_LITERAL (dir, "new/") == 0 && !*info && !flags_changed)
+	return talloc_strdup (ctx, filename);
 
     filename_new = (char *) talloc_size (ctx,
 					 info - filename +

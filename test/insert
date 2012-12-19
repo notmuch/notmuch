@@ -82,7 +82,7 @@ gen_insert_msg
 notmuch insert --folder=Drafts < "$gen_msg_filename"
 output=$(notmuch search --output=files folder:Drafts)
 dirname=$(dirname "$output")
-test_expect_equal "$dirname" "$MAIL_DIR/Drafts/cur"
+test_expect_equal "$dirname" "$MAIL_DIR/Drafts/new"
 
 test_begin_subtest "Insert message into folder, add/remove tags"
 gen_insert_msg
@@ -99,14 +99,14 @@ gen_insert_msg
 notmuch insert --folder=F --create-folder +folder < "$gen_msg_filename"
 output=$(notmuch search --output=files folder:F tag:folder)
 basename=$(basename "$output")
-test_expect_equal_file "$gen_msg_filename" "$MAIL_DIR/F/cur/${basename}"
+test_expect_equal_file "$gen_msg_filename" "$MAIL_DIR/F/new/${basename}"
 
 test_begin_subtest "Insert message, create subfolder"
 gen_insert_msg
 notmuch insert --folder=F/G/H/I/J --create-folder +folder < "$gen_msg_filename"
 output=$(notmuch search --output=files folder:F/G/H/I/J tag:folder)
 basename=$(basename "$output")
-test_expect_equal_file "$gen_msg_filename" "${MAIL_DIR}/F/G/H/I/J/cur/${basename}"
+test_expect_equal_file "$gen_msg_filename" "${MAIL_DIR}/F/G/H/I/J/new/${basename}"
 
 test_begin_subtest "Insert message, create existing subfolder"
 gen_insert_msg
