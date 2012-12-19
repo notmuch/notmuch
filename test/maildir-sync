@@ -83,6 +83,15 @@ test_expect_equal "$output" "No new mail."
 # creating new directories in the mail store, then it should be
 # creating all necessary database state for those directories.
 
+test_begin_subtest "Adding non-maildir tags does not move message from new to cur"
+test_subtest_known_broken
+add_message [subject]='"Message to stay in new"' \
+    [date]='"Sat, 01 Jan 2000 12:00:00 -0000"' \
+    [filename]='message-to-stay-in-new' [dir]=new
+notmuch tag +donotmove subject:"Message to stay in new"
+output=$(cd "$MAIL_DIR"; ls */message-to-stay-in-new*)
+test_expect_equal "$output" "new/message-to-stay-in-new"
+
 test_begin_subtest "Removing 'S' flag from existing filename adds 'unread' tag"
 add_message [subject]='"Removing S flag"' [filename]='removing-s-flag:2,S' [dir]=cur
 output=$(notmuch search subject:"Removing S flag" | notmuch_search_sanitize)
