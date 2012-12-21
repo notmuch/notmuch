@@ -111,7 +111,7 @@ _notmuch_message_file_open_ctx (void *ctx, const char *filename)
     message->headers = g_hash_table_new_full (strcase_hash,
 					      strcase_equal,
 					      free,
-					      free);
+					      g_free);
 
     message->parsing_started = 0;
     message->parsing_finished = 0;
@@ -337,11 +337,11 @@ notmuch_message_file_get_header (notmuch_message_file_t *message,
 		/* we need to add the header to those we already collected */
 		newhdr = strlen(decoded_value);
 		hdrsofar = strlen(header_sofar);
-		combined_header = xmalloc(hdrsofar + newhdr + 2);
+		combined_header = g_malloc(hdrsofar + newhdr + 2);
 		strncpy(combined_header,header_sofar,hdrsofar);
 		*(combined_header+hdrsofar) = ' ';
 		strncpy(combined_header+hdrsofar+1,decoded_value,newhdr+1);
-		free (decoded_value);
+		g_free (decoded_value);
 		g_hash_table_insert (message->headers, header, combined_header);
 	    }
 	} else {
@@ -350,7 +350,7 @@ notmuch_message_file_get_header (notmuch_message_file_t *message,
 		g_hash_table_insert (message->headers, header, decoded_value);
 	    } else {
 		free (header);
-		free (decoded_value);
+		g_free (decoded_value);
 		decoded_value = header_sofar;
 	    }
 	}
