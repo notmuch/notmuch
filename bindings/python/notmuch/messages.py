@@ -31,8 +31,6 @@ from .errors import (
 from .tag import Tags
 from .message import Message
 
-import sys
-
 class Messages(object):
     """Represents a list of notmuch messages
 
