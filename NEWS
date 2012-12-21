@@ -53,6 +53,13 @@ CLI callers can now request a specific output format version
   `--format-version` argument for requesting a specific version of the
   structured output, enabling better compatibility and error handling.
 
+`notmuch search` has gained a null character separated text output format
+
+  The new --format=text0 output format for `notmuch search` prints
+  output separated by null characters rather than newline
+  characters. This is similar to the find(1) -print0 option, and works
+  together with the xargs(1) -0 option.
+
 Emacs Interface
 ---------------
 
