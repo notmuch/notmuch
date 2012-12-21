@@ -586,14 +586,3 @@ class Database(object):
             raise NotmuchError(message="No DB path specified"
                                        " and no user default found")
         return config.get('database', 'path')
-
-    @property
-    def db_p(self):
-        """Property returning a pointer to `notmuch_database_t` or `None`
-
-        .. deprecated:: 0.14
-                        If you really need a pointer to the notmuch
-                        database object use the `_pointer` field. This
-                        alias will be removed in notmuch 0.15.
-        """
-        return self._db

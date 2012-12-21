@@ -46,5 +46,3 @@
 
      MODE.READ_WRITE
        Open the database in read-write mode
-
-   .. autoattribute:: db_p
