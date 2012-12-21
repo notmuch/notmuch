@@ -117,6 +117,25 @@ Fixed buttonization of id: links without quote characters
   Emacs now correctly buttonizes id: links where the message ID is not
   quoted.
 
+`notmuch-hello` refresh point placement improvements
+
+  Refreshing the `notmuch-hello` buffer does a better job of keeping
+  the point where it was.
+
+Automatic tag changes are now unified and customizable
+
+  All the automatic tag changes that the Emacs interface makes when
+  reading, archiving, or replying to messages, can now be
+  customized. Any number of tag additions and removals is supported
+  through the `notmuch-show-mark-read`, `notmuch-archive-tags`, and
+  `notmuch-message-replied-tags` customization variables.
+
+Support for stashing the thread id in show view
+
+  Invoking `notmuch-show-stash-message-id` with a prefix argument
+  stashes the (local and database specific) thread id of the current
+  thread instead of the message id.
+
 New add-on tool: notmuch-pick
 -----------------------------
 
