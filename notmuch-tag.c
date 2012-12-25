@@ -128,6 +128,46 @@ tag_query (void *ctx, notmuch_database_t *notmuch, const char *query_string,
     return interrupted;
 }
 
+static int
+tag_file (void *ctx, notmuch_database_t *notmuch, tag_op_flag_t flags,
+	  FILE *input)
+{
+    char *line = NULL;
+    char *query_string = NULL;
+    size_t line_size = 0;
+    ssize_t line_len;
+    int ret = 0;
+    tag_op_list_t *tag_ops;
+
+    tag_ops = tag_op_list_create (ctx);
+    if (tag_ops == NULL) {
+	fprintf (stderr, "Out of memory.\n");
+	return 1;
+    }
+
+    while ((line_len = getline (&line, &line_size, input)) != -1 &&
+	   ! interrupted) {
+
+	ret = parse_tag_line (ctx, line, TAG_FLAG_NONE,
+			      &query_string, tag_ops);
+
+	if (ret > 0)
+	    continue;
+
+	if (ret < 0)
+	    break;
+
+	ret = tag_query (ctx, notmuch, query_string, tag_ops, flags);
+	if (ret)
+	    break;
+    }
+
+    if (line)
+	free (line);
+
+    return ret;
+}
+
 int
 notmuch_tag_command (void *ctx, int argc, char *argv[])
 {
@@ -137,6 +177,10 @@ notmuch_tag_command (void *ctx, int argc, char *argv[])
     notmuch_database_t *notmuch;
     struct sigaction action;
     tag_op_flag_t tag_flags = TAG_FLAG_NONE;
+    notmuch_bool_t batch = FALSE;
+    FILE *input = stdin;
+    char *input_file_name = NULL;
+    int opt_index;
     int ret = 0;
 
     /* Setup our handler for SIGINT */
@@ -146,15 +190,42 @@ notmuch_tag_command (void *ctx, int argc, char *argv[])
     action.sa_flags = SA_RESTART;
     sigaction (SIGINT, &action, NULL);
 
-    tag_ops = tag_op_list_create (ctx);
-    if (tag_ops == NULL) {
-	fprintf (stderr, "Out of memory.\n");
+    notmuch_opt_desc_t options[] = {
+	{ NOTMUCH_OPT_BOOLEAN, &batch, "batch", 0, 0 },
+	{ NOTMUCH_OPT_STRING, &input_file_name, "input", 'i', 0 },
+	{ 0, 0, 0, 0, 0 }
+    };
+
+    opt_index = parse_arguments (argc, argv, options, 1);
+    if (opt_index < 0)
 	return 1;
+
+    if (input_file_name) {
+	batch = TRUE;
+	input = fopen (input_file_name, "r");
+	if (input == NULL) {
+	    fprintf (stderr, "Error opening %s for reading: %s\n",
+		     input_file_name, strerror (errno));
+	    return 1;
+	}
     }
 
-    if (parse_tag_command_line (ctx, argc - 1, argv + 1,
-				&query_string, tag_ops))
-	return 1;
+    if (batch) {
+	if (opt_index != argc) {
+	    fprintf (stderr, "Can't specify both cmdline and stdin!\n");
+	    return 1;
+	}
+    } else {
+	tag_ops = tag_op_list_create (ctx);
+	if (tag_ops == NULL) {
+	    fprintf (stderr, "Out of memory.\n");
+	    return 1;
+	}
+
+	if (parse_tag_command_line (ctx, argc - opt_index, argv + opt_index,
+				    &query_string, tag_ops))
+	    return 1;
+    }
 
     config = notmuch_config_open (ctx, NULL, NULL);
     if (config == NULL)
@@ -167,9 +238,15 @@ notmuch_tag_command (void *ctx, int argc, char *argv[])
     if (notmuch_config_get_maildir_synchronize_flags (config))
 	tag_flags |= TAG_FLAG_MAILDIR_SYNC;
 
-    ret = tag_query (ctx, notmuch, query_string, tag_ops, tag_flags);
+    if (batch)
+	ret = tag_file (ctx, notmuch, tag_flags, input);
+    else
+	ret = tag_query (ctx, notmuch, query_string, tag_ops, tag_flags);
 
     notmuch_database_destroy (notmuch);
 
-    return ret;
+    if (input != stdin)
+	fclose (input);
+
+    return ret || interrupted;
 }
