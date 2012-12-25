@@ -46,6 +46,57 @@ test_expect_equal "$output" "\
 thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; One (:\"  inbox tag1 unread)
 thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; Two (inbox tag1 tag4 unread)"
 
+test_begin_subtest "--batch"
+notmuch tag --batch <<EOF
+# %20 is a space in tag
+-:"%20 -tag1 +tag5 +tag6 -- One
++tag1 -tag1 -tag4 +tag4 -- Two
+-tag6 One
++tag5 Two
+EOF
+output=$(notmuch search \* | notmuch_search_sanitize)
+test_expect_equal "$output" "\
+thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; One (inbox tag5 unread)
+thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; Two (inbox tag4 tag5 unread)"
+
+# generate a common input file for the next several tests.
+cat > batch.in  <<EOF
+# %40 is an @ in tag
++%40 -tag5 +tag6 -- One
++tag1 -tag1 -tag4 +tag4 -- Two
+-tag5 +tag6 Two
+EOF
+
+cat > batch.expected <<EOF
+thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; One (@ inbox tag6 unread)
+thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; Two (inbox tag4 tag6 unread)
+EOF
+
+test_begin_subtest "--input"
+notmuch dump --format=batch-tag > backup.tags
+notmuch tag --input=batch.in
+notmuch search \* | notmuch_search_sanitize > OUTPUT
+notmuch restore --format=batch-tag < backup.tags
+test_expect_equal_file batch.expected OUTPUT
+
+test_begin_subtest "--batch --input"
+notmuch dump --format=batch-tag > backup.tags
+notmuch tag --batch --input=batch.in
+notmuch search \* | notmuch_search_sanitize > OUTPUT
+notmuch restore --format=batch-tag < backup.tags
+test_expect_equal_file batch.expected OUTPUT
+
+test_begin_subtest "--batch, blank lines and comments"
+notmuch dump | sort > EXPECTED
+notmuch tag --batch <<EOF
+# this line is a comment; the next has only white space
+ 	 
+
+# the previous line is empty
+EOF
+notmuch dump | sort > OUTPUT
+test_expect_equal_file EXPECTED OUTPUT
+
 test_begin_subtest '--batch: checking error messages'
 notmuch dump --format=batch-tag > BACKUP
 notmuch tag --batch <<EOF 2>OUTPUT
