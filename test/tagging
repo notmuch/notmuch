@@ -198,6 +198,24 @@ notmuch dump --format=batch-tag | sort > OUTPUT
 notmuch restore --format=batch-tag < BACKUP
 test_expect_equal_file EXPECTED OUTPUT
 
+test_begin_subtest '--batch: unicode message-ids'
+
+${TEST_DIRECTORY}/random-corpus --config-path=${NOTMUCH_CONFIG} \
+     --num-messages=100
+
+notmuch dump --format=batch-tag | sed 's/^.* -- /+common_tag -- /' | \
+    sort > EXPECTED
+
+notmuch dump --format=batch-tag | sed 's/^.* -- /  -- /' | \
+    notmuch restore --format=batch-tag
+
+notmuch tag --batch < EXPECTED
+
+notmuch dump --format=batch-tag| \
+    sort > OUTPUT
+
+test_expect_equal_file EXPECTED OUTPUT
+
 test_expect_code 1 "Empty tag names" 'notmuch tag + One'
 
 test_expect_code 1 "Tag name beginning with -" 'notmuch tag +- One'
