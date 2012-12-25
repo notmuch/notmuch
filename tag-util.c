@@ -40,14 +40,14 @@ parse_tag_line (void *ctx, char *line,
     char *tok = line;
     size_t tok_len = 0;
     char *line_for_error;
-    int ret = 0;
+    tag_parse_status_t ret = TAG_PARSE_SUCCESS;
 
     chomp_newline (line);
 
     line_for_error = talloc_strdup (ctx, line);
     if (line_for_error == NULL) {
 	fprintf (stderr, "Error: out of memory\n");
-	return -1;
+	return TAG_PARSE_OUT_OF_MEMORY;
     }
 
     /* remove leading space */
