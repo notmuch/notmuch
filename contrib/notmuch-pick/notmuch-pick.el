@@ -157,6 +157,10 @@
 (make-variable-buffer-local 'notmuch-pick-query-context)
 (defvar notmuch-pick-buffer-name nil)
 (make-variable-buffer-local 'notmuch-pick-buffer-name)
+;; This variable is the window used for the message pane. It is set
+;; in both the parent pick buffer and the child show buffer. It is
+;; used to try and close the message pane when quitting pick or the
+;; child show buffer.
 (defvar notmuch-pick-message-window nil)
 (make-variable-buffer-local 'notmuch-pick-message-window)
 (put 'notmuch-pick-message-window 'permanent-local t)
@@ -343,6 +347,16 @@ Does NOT change the database."
                 (notmuch-prettify-subject (notmuch-search-find-subject)))
   (notmuch-pick-show-match-message-with-wait))
 
+(defun notmuch-pick-message-window-kill-hook ()
+  (let ((buffer (current-buffer)))
+    (when (and (window-live-p notmuch-pick-message-window)
+	       (eq (window-buffer notmuch-pick-message-window) buffer))
+      ;; We do not want an error if this is the sole window in the
+      ;; frame and I do not know how to test for that in emacs pre
+      ;; 24. Hence we just ignore-errors.
+      (ignore-errors
+	(delete-window notmuch-pick-message-window)))))
+
 (defun notmuch-pick-show-message ()
   "Show the current message (in split-pane)."
   (interactive)
@@ -360,6 +374,11 @@ Does NOT change the database."
 	(let ((notmuch-show-indent-messages-width 0))
 	  (setq current-prefix-arg '(4))
 	  (setq buffer (notmuch-show id nil nil nil))))
+      ;; We need the `let' as notmuch-pick-message-window is buffer local.
+      (let ((window notmuch-pick-message-window))
+	(with-current-buffer buffer
+	  (setq notmuch-pick-message-window window)
+	  (add-hook 'kill-buffer-hook 'notmuch-pick-message-window-kill-hook)))
       (notmuch-pick-tag-update-display (list "-unread"))
       (setq notmuch-pick-message-buffer buffer))))
 
