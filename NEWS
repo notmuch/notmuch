@@ -70,6 +70,17 @@ Removal of the deprecated `notmuch-folders` variable
   has now been removed. Any remaining users should migrate to
   `notmuch-saved-searches`.
 
+Visibility of MIME parts can be toggled
+
+  Each part of a multi-part MIME email can now be shown or hidden
+  using the button at the top of each part (by pressing RET on it or
+  by clicking).  For emails with multiple alternative formats (e.g.,
+  plain text and HTML), only the preferred format is shown initially,
+  but other formats can be shown using their part buttons.  To control
+  the behavior of this, see
+  `notmuch-multipart/alternative-discouraged` and
+  `notmuch-show-all-multipart/alternative-parts`.
+
 Emacs now buttonizes mid: links
 
   mid: links are a standardized way to link to messages by message ID
