@@ -46,6 +46,41 @@ test_expect_equal "$output" "\
 thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; One (:\"  inbox tag1 unread)
 thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; Two (inbox tag1 tag4 unread)"
 
+test_begin_subtest '--batch: checking error messages'
+notmuch dump --format=batch-tag > BACKUP
+notmuch tag --batch <<EOF 2>OUTPUT
+# the next line has a space
+ 
+# this line has no tag operations, but this is permitted in batch format.
+a
++0
++a +b
+# trailing whitespace
++a +b 
++c +d --
+# this is a harmless comment, do not yell about it.
+
+# the previous line was blank; also no yelling please
++%zz -- id:whatever
+# the next non-comment line should report an an empty tag error for
+# batch tagging, but not for restore
++ +e -- id:foo
++- -- id:foo
+EOF
+
+cat <<EOF > EXPECTED
+Warning: no query string [+0]
+Warning: no query string [+a +b]
+Warning: missing query string [+a +b ]
+Warning: no query string after -- [+c +d --]
+Warning: hex decoding of tag %zz failed [+%zz -- id:whatever]
+Warning: empty tag forbidden [+ +e -- id:foo]
+Warning: tag starting with '-' forbidden [+- -- id:foo]
+EOF
+
+notmuch restore --format=batch-tag < BACKUP
+test_expect_equal_file EXPECTED OUTPUT
+
 test_expect_code 1 "Empty tag names" 'notmuch tag + One'
 
 test_expect_code 1 "Tag name beginning with -" 'notmuch tag +- One'
