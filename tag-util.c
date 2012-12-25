@@ -31,6 +31,30 @@ line_error (tag_parse_status_t status,
     return status;
 }
 
+/*
+ * Test tags for some forbidden cases.
+ *
+ * return: NULL if OK,
+ *	   explanatory message otherwise.
+ */
+
+static const char *
+illegal_tag (const char *tag, notmuch_bool_t remove)
+{
+
+    if (*tag == '\0' && ! remove)
+	return "empty tag forbidden";
+
+    /* This disallows adding the non-removable tag "-" and
+     * enables notmuch tag to take long options more easily.
+     */
+
+    if (*tag == '-' && ! remove)
+	return "tag starting with '-' forbidden";
+
+    return NULL;
+}
+
 tag_parse_status_t
 parse_tag_line (void *ctx, char *line,
 		tag_op_flag_t flags,
@@ -95,11 +119,13 @@ parse_tag_line (void *ctx, char *line,
 	remove = (*tok == '-');
 	tag = tok + 1;
 
-	/* Maybe refuse empty tags. */
-	if (! (flags & TAG_FLAG_BE_GENEROUS) && *tag == '\0') {
-	    ret = line_error (TAG_PARSE_INVALID, line_for_error,
-			      "empty tag");
-	    goto DONE;
+	/* Maybe refuse illegal tags. */
+	if (! (flags & TAG_FLAG_BE_GENEROUS)) {
+	    const char *msg = illegal_tag (tag, remove);
+	    if (msg) {
+		ret = line_error (TAG_PARSE_INVALID, line_for_error, msg);
+		goto DONE;
+	    }
 	}
 
 	/* Decode tag. */
