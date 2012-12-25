@@ -198,6 +198,31 @@ notmuch dump --format=batch-tag | sort > OUTPUT
 notmuch restore --format=batch-tag < BACKUP
 test_expect_equal_file EXPECTED OUTPUT
 
+test_begin_subtest "--batch: only space and % needs to be encoded."
+notmuch dump --format=batch-tag > BACKUP
+
+notmuch tag --batch <<EOF
++winner *
++foo::bar%25 -- (One and Two) or (One and tag:winner)
++found::it -- tag:foo::bar%
+# ignore this line and the next
+
++space%20in%20tags -- Two
+# add tag '(tags)', among other stunts.
++crazy{ +(tags) +&are +#possible\ -- tag:"space in tags"
++match*crazy -- tag:crazy{
++some_tag -- id:"this is ""nauty)"""
+EOF
+
+cat <<EOF > EXPECTED
++%23possible%5c +%26are +%28tags%29 +crazy%7b +inbox +match%2acrazy +space%20in%20tags +tag4 +tag5 +unread +winner -- id:msg-002@notmuch-test-suite
++foo%3a%3abar%25 +found%3a%3ait +inbox +tag5 +unread +winner -- id:msg-001@notmuch-test-suite
+EOF
+
+notmuch dump --format=batch-tag | sort > OUTPUT
+notmuch restore --format=batch-tag < BACKUP
+test_expect_equal_file EXPECTED OUTPUT
+
 test_begin_subtest '--batch: unicode message-ids'
 
 ${TEST_DIRECTORY}/random-corpus --config-path=${NOTMUCH_CONFIG} \
