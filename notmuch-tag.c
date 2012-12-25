@@ -19,6 +19,7 @@
  */
 
 #include "notmuch-client.h"
+#include "tag-util.h"
 #include "string-util.h"
 
 static volatile sig_atomic_t interrupted;
@@ -36,14 +37,10 @@ handle_sigint (unused (int sig))
     interrupted = 1;
 }
 
-typedef struct {
-    const char *tag;
-    notmuch_bool_t remove;
-} tag_operation_t;
 
 static char *
 _optimize_tag_query (void *ctx, const char *orig_query_string,
-		     const tag_operation_t *tag_ops)
+		     const tag_op_list_t *list)
 {
     /* This is subtler than it looks.  Xapian ignores the '-' operator
      * at the beginning both queries and parenthesized groups and,
@@ -60,7 +57,7 @@ _optimize_tag_query (void *ctx, const char *orig_query_string,
     size_t i;
 
     /* Don't optimize if there are no tag changes. */
-    if (tag_ops[0].tag == NULL)
+    if (tag_op_list_size (list) == 0)
 	return talloc_strdup (ctx, orig_query_string);
 
     /* Build the new query string */
@@ -69,17 +66,17 @@ _optimize_tag_query (void *ctx, const char *orig_query_string,
     else
 	query_string = talloc_asprintf (ctx, "( %s ) and (", orig_query_string);
 
-    for (i = 0; tag_ops[i].tag && query_string; i++) {
+    for (i = 0; i < tag_op_list_size (list) && query_string; i++) {
 	/* XXX in case of OOM, query_string will be deallocated when
 	 * ctx is, which might be at shutdown */
 	if (make_boolean_term (ctx,
-			       "tag", tag_ops[i].tag,
+			       "tag", tag_op_list_tag (list, i),
 			       &escaped, &escaped_len))
 	    return NULL;
 
 	query_string = talloc_asprintf_append_buffer (
 	    query_string, "%s%s%s", join,
-	    tag_ops[i].remove ? "" : "not ",
+	    tag_op_list_isremove (list, i) ? "" : "not ",
 	    escaped);
 	join = " or ";
     }
@@ -91,17 +88,15 @@ _optimize_tag_query (void *ctx, const char *orig_query_string,
     return query_string;
 }
 
-/* Tag messages matching 'query_string' according to 'tag_ops', which
- * must be an array of tagging operations terminated with an empty
- * element. */
+/* Tag messages matching 'query_string' according to 'tag_ops'
+ */
 static int
 tag_query (void *ctx, notmuch_database_t *notmuch, const char *query_string,
-	   tag_operation_t *tag_ops, notmuch_bool_t synchronize_flags)
+	   tag_op_list_t *tag_ops, tag_op_flag_t flags)
 {
     notmuch_query_t *query;
     notmuch_messages_t *messages;
     notmuch_message_t *message;
-    int i;
 
     /* Optimize the query so it excludes messages that already have
      * the specified set of tags. */
@@ -124,21 +119,7 @@ tag_query (void *ctx, notmuch_database_t *notmuch, const char *query_string,
 	 notmuch_messages_valid (messages) && ! interrupted;
 	 notmuch_messages_move_to_next (messages)) {
 	message = notmuch_messages_get (messages);
-
-	notmuch_message_freeze (message);
-
-	for (i = 0; tag_ops[i].tag; i++) {
-	    if (tag_ops[i].remove)
-		notmuch_message_remove_tag (message, tag_ops[i].tag);
-	    else
-		notmuch_message_add_tag (message, tag_ops[i].tag);
-	}
-
-	notmuch_message_thaw (message);
-
-	if (synchronize_flags)
-	    notmuch_message_tags_to_maildir_flags (message);
-
+	tag_op_list_apply (message, tag_ops, flags | TAG_FLAG_PRE_OPTIMIZED);
 	notmuch_message_destroy (message);
     }
 
@@ -150,15 +131,13 @@ tag_query (void *ctx, notmuch_database_t *notmuch, const char *query_string,
 int
 notmuch_tag_command (void *ctx, int argc, char *argv[])
 {
-    tag_operation_t *tag_ops;
-    int tag_ops_count = 0;
-    char *query_string;
+    tag_op_list_t *tag_ops = NULL;
+    char *query_string = NULL;
     notmuch_config_t *config;
     notmuch_database_t *notmuch;
     struct sigaction action;
-    notmuch_bool_t synchronize_flags;
-    int i;
-    int ret;
+    tag_op_flag_t tag_flags = TAG_FLAG_NONE;
+    int ret = 0;
 
     /* Setup our handler for SIGINT */
     memset (&action, 0, sizeof (struct sigaction));
@@ -167,54 +146,15 @@ notmuch_tag_command (void *ctx, int argc, char *argv[])
     action.sa_flags = SA_RESTART;
     sigaction (SIGINT, &action, NULL);
 
-    argc--; argv++; /* skip subcommand argument */
-
-    /* Array of tagging operations (add or remove), terminated with an
-     * empty element. */
-    tag_ops = talloc_array (ctx, tag_operation_t, argc + 1);
+    tag_ops = tag_op_list_create (ctx);
     if (tag_ops == NULL) {
 	fprintf (stderr, "Out of memory.\n");
 	return 1;
     }
 
-    for (i = 0; i < argc; i++) {
-	if (strcmp (argv[i], "--") == 0) {
-	    i++;
-	    break;
-	}
-	if (argv[i][0] == '+' || argv[i][0] == '-') {
-	    if (argv[i][0] == '+' && argv[i][1] == '\0') {
-		fprintf (stderr, "Error: tag names cannot be empty.\n");
-		return 1;
-	    }
-	    if (argv[i][0] == '+' && argv[i][1] == '-') {
-		/* This disallows adding the non-removable tag "-" and
-		 * enables notmuch tag to take long options in the
-		 * future. */
-		fprintf (stderr, "Error: tag names must not start with '-'.\n");
-		return 1;
-	    }
-	    tag_ops[tag_ops_count].tag = argv[i] + 1;
-	    tag_ops[tag_ops_count].remove = (argv[i][0] == '-');
-	    tag_ops_count++;
-	} else {
-	    break;
-	}
-    }
-
-    tag_ops[tag_ops_count].tag = NULL;
-
-    if (tag_ops_count == 0) {
-	fprintf (stderr, "Error: 'notmuch tag' requires at least one tag to add or remove.\n");
+    if (parse_tag_command_line (ctx, argc - 1, argv + 1,
+				&query_string, tag_ops))
 	return 1;
-    }
-
-    query_string = query_string_from_args (ctx, argc - i, &argv[i]);
-
-    if (*query_string == '\0') {
-	fprintf (stderr, "Error: notmuch tag requires at least one search term.\n");
-	return 1;
-    }
 
     config = notmuch_config_open (ctx, NULL, NULL);
     if (config == NULL)
@@ -224,9 +164,10 @@ notmuch_tag_command (void *ctx, int argc, char *argv[])
 			       NOTMUCH_DATABASE_MODE_READ_WRITE, &notmuch))
 	return 1;
 
-    synchronize_flags = notmuch_config_get_maildir_synchronize_flags (config);
+    if (notmuch_config_get_maildir_synchronize_flags (config))
+	tag_flags |= TAG_FLAG_MAILDIR_SYNC;
 
-    ret = tag_query (ctx, notmuch, query_string, tag_ops, synchronize_flags);
+    ret = tag_query (ctx, notmuch, query_string, tag_ops, tag_flags);
 
     notmuch_database_destroy (notmuch);
 

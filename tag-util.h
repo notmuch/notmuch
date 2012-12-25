@@ -72,6 +72,21 @@ parse_tag_line (void *ctx, char *line,
 		tag_op_flag_t flags,
 		char **query_str, tag_op_list_t *ops);
 
+
+
+/* Parse a command line of the following format:
+ *
+ * +<tag>|-<tag> [...] [--] <search-terms>
+ *
+ * Output Parameters:
+ *	ops	contains a list of tag operations
+ *	query_str the search terms.
+ */
+
+tag_parse_status_t
+parse_tag_command_line (void *ctx, int argc, char **argv,
+			char **query_str, tag_op_list_t *ops);
+
 /*
  * Create an empty list of tag operations
  *

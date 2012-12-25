@@ -45,8 +45,9 @@ illegal_tag (const char *tag, notmuch_bool_t remove)
     if (*tag == '\0' && ! remove)
 	return "empty tag forbidden";
 
-    /* This disallows adding the non-removable tag "-" and
-     * enables notmuch tag to take long options more easily.
+    /* This disallows adding tags starting with "-", in particular the
+     * non-removable tag "-" and enables notmuch tag to take long
+     * options more easily.
      */
 
     if (*tag == '-' && ! remove)
@@ -156,6 +157,52 @@ parse_tag_line (void *ctx, char *line,
     talloc_free (line_for_error);
     return ret;
 }
+
+tag_parse_status_t
+parse_tag_command_line (void *ctx, int argc, char **argv,
+			char **query_str, tag_op_list_t *tag_ops)
+{
+
+    int i;
+
+    tag_op_list_reset (tag_ops);
+
+    for (i = 0; i < argc; i++) {
+	if (strcmp (argv[i], "--") == 0) {
+	    i++;
+	    break;
+	}
+
+	if (argv[i][0] != '+' && argv[i][0] != '-')
+	    break;
+
+	notmuch_bool_t is_remove = argv[i][0] == '-';
+	const char *msg;
+
+	msg = illegal_tag (argv[i] + 1, is_remove);
+	if (msg) {
+	    fprintf (stderr, "Error: %s", msg);
+	    return TAG_PARSE_INVALID;
+	}
+
+	tag_op_list_append (tag_ops, argv[i] + 1, is_remove);
+    }
+
+    if (tag_op_list_size (tag_ops) == 0) {
+	fprintf (stderr, "Error: 'notmuch tag' requires at least one tag to add or remove.\n");
+	return TAG_PARSE_INVALID;
+    }
+
+    *query_str = query_string_from_args (ctx, argc - i, &argv[i]);
+
+    if (*query_str == NULL || **query_str == '\0') {
+	fprintf (stderr, "Error: notmuch tag requires at least one search term.\n");
+	return TAG_PARSE_INVALID;
+    }
+
+    return TAG_PARSE_SUCCESS;
+}
+
 
 static inline void
 message_error (notmuch_message_t *message,
