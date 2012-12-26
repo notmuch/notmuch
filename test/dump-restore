@@ -146,13 +146,11 @@ cat <<EOF > comments-and-blanks
 EOF
 
 test_begin_subtest 'restoring empty file is not an error'
-test_subtest_known_broken
 notmuch restore < /dev/null 2>OUTPUT.$test_count
 cp /dev/null EXPECTED
 test_expect_equal_file EXPECTED OUTPUT.$test_count
 
 test_begin_subtest 'file of comments and blank lines is not an error'
-test_subtest_known_broken
 notmuch restore --input=comments-and-blanks
 ret_val=$?
 test_expect_equal "$ret_val" "0"
@@ -172,7 +170,6 @@ echo "yun1vjwegii.fsf@aiko.keithp.com (another_tag)" \
     >> leading-comments-blanks-sup
 
 test_begin_subtest 'detect format=sup with leading comments and blanks'
-test_subtest_known_broken
 notmuch restore --input=leading-comments-blanks-sup
 notmuch search --output=tags id:yun1vjwegii.fsf@aiko.keithp.com > OUTPUT.$test_count
 echo "another_tag" > EXPECTED

@@ -181,11 +181,6 @@ notmuch_restore_command (unused (void *ctx), int argc, char *argv[])
 		 argv[opt_index]);
 	return 1;
     }
-    char *p;
-
-    line_len = getline (&line, &line_size, input);
-    if (line_len == 0)
-	return 0;
 
     tag_ops = tag_op_list_create (ctx);
     if (tag_ops == NULL) {
@@ -193,6 +188,19 @@ notmuch_restore_command (unused (void *ctx), int argc, char *argv[])
 	return 1;
     }
 
+    do {
+	line_len = getline (&line, &line_size, input);
+
+	/* empty input file not considered an error */
+	if (line_len < 0)
+	    return 0;
+
+    } while ((line_len == 0) ||
+	     (line[0] == '#') ||
+	     /* the cast is safe because we checked about for line_len < 0 */
+	     (strspn (line, " \t\n") == (unsigned)line_len));
+
+    char *p;
     for (p = line; (input_format == DUMP_FORMAT_AUTO) && *p; p++) {
 	if (*p == '(')
 	    input_format = DUMP_FORMAT_SUP;
