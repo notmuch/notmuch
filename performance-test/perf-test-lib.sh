@@ -126,12 +126,15 @@ memory_run ()
     test_count=$(($test_count+1))
 
     log_file=$log_dir/$test_count.log
+    talloc_log=$log_dir/$test_count.talloc
 
     printf "[ %d ]\t%s\n" $test_count "$1"
 
-    valgrind --leak-check=full --log-file="$log_file" $2
+    NOTMUCH_TALLOC_REPORT="$talloc_log" valgrind --leak-check=full --log-file="$log_file" $2
 
     awk '/LEAK SUMMARY/,/suppressed/ { sub(/^==[0-9]*==/," "); print }' "$log_file"
+    echo
+    sed -n -e 's/.*[(]total *\([^)]*\)[)]/talloced at exit: \1/p' $talloc_log
     echo
 }
 
