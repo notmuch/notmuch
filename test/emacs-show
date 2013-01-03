@@ -172,16 +172,28 @@ exit 1
 EOF
 chmod a+x notmuch_fail
 test_emacs "(let ((notmuch-command \"$PWD/notmuch_fail\"))
-	       (ignore-errors (notmuch-show \"*\"))
+	       (with-current-buffer \"*Messages*\" (erase-buffer))
+	       (condition-case err
+		   (notmuch-show \"*\")
+		 (error (message \"%s\" (second err))))
 	       (notmuch-test-wait)
-	       (test-output)
+	       (with-current-buffer \"*Messages*\"
+		  (test-output \"MESSAGES\"))
 	       (with-current-buffer \"*Notmuch errors*\"
-		  (test-output \"ERROR\")))"
-test_expect_equal "$(cat OUTPUT ERROR)" "\
-Error invoking notmuch.  $PWD/notmuch_fail show --format=json --format-version=1 --exclude=false ' * ' exited with status 1.
-Error:
+		  (test-output \"ERROR\"))
+	       (test-output))"
+sed -i -e 's/^\[.*\]$/[XXX]/' ERROR
+test_expect_equal "$(cat OUTPUT; echo ---; cat MESSAGES; echo ---; cat ERROR)" "\
+---
+This is an error (see *Notmuch errors* for more details)
+---
+[XXX]
 This is an error
-Output:
+command: $PWD/notmuch_fail show --format\\=json --format-version\\=1 --exclude\\=false \\' \\* \\'
+exit status: 1
+stderr:
+This is an error
+stdout:
 This is output"
 
 

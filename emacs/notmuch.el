@@ -654,11 +654,14 @@ of the result."
 		    ;; showing the search buffer
 		    (when (or (= exit-status 20) (= exit-status 21))
 		      (kill-buffer))
-		    (condition-case nil
+		    (condition-case err
 			(notmuch-check-async-exit-status proc msg)
 		      ;; Suppress the error signal since strange
-		      ;; things happen if a sentinel signals.
-		      (error (throw 'return nil)))
+		      ;; things happen if a sentinel signals.  Mimic
+		      ;; the top-level's handling of error messages.
+		      (error
+		       (message "%s" (second err))
+		       (throw 'return nil)))
 		    (if (and atbob
 			     (not (string= notmuch-search-target-thread "found")))
 			(set 'never-found-target-thread t)))))

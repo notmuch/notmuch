@@ -862,18 +862,27 @@ exit 1
 EOF
 chmod a+x notmuch_fail
 test_emacs "(let ((notmuch-command \"$PWD/notmuch_fail\"))
+	       (with-current-buffer \"*Messages*\" (erase-buffer))
 	       (notmuch-search \"tag:inbox\")
 	       (notmuch-test-wait)
-	       (test-output)
+	       (with-current-buffer \"*Messages*\"
+		  (test-output \"MESSAGES\"))
 	       (with-current-buffer \"*Notmuch errors*\"
-		  (test-output \"ERROR\")))"
-test_expect_equal "$(cat OUTPUT ERROR)" "\
+		  (test-output \"ERROR\"))
+	       (test-output))"
+sed -i -e 's/^\[.*\]$/[XXX]/' ERROR
+test_expect_equal "$(cat OUTPUT; echo ---; cat MESSAGES; echo ---; cat ERROR)" "\
 Error: Unexpected output from notmuch search:
 This is output
 Error: Unexpected output from notmuch search:
 This is an error
 End of search results.
-Error invoking notmuch.  $PWD/notmuch_fail search --format=json --format-version=1 --sort=newest-first tag:inbox exited with status 1."
-
+---
+$PWD/notmuch_fail exited with status 1 (see *Notmuch errors* for more details)
+---
+[XXX]
+$PWD/notmuch_fail exited with status 1
+command: $PWD/notmuch_fail search --format\=json --format-version\=1 --sort\=newest-first tag\:inbox
+exit status: 1"
 
 test_done

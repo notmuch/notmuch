@@ -316,23 +316,28 @@ string), a property list of face attributes, or a list of these."
 	(put-text-property pos next 'face (cons face cur))
 	(setq pos next)))))
 
-(defun notmuch-pop-up-error (msg)
-  "Pop up an error buffer displaying MSG.
+(defun notmuch-logged-error (msg &optional extra)
+  "Log MSG and EXTRA to *Notmuch errors* and signal MSG.
 
-This will accumulate error messages in the errors buffer until
-the user dismisses it."
+This logs MSG and EXTRA to the *Notmuch errors* buffer and
+signals MSG as an error.  If EXTRA is non-nil, text referring the
+user to the *Notmuch errors* buffer will be appended to the
+signaled error.  This function does not return."
 
-  (let ((buf (get-buffer-create "*Notmuch errors*")))
-    (with-current-buffer buf
-      (view-mode-enter nil #'kill-buffer)
-      (let ((inhibit-read-only t))
-	(goto-char (point-max))
-	(unless (bobp)
-	  (insert "\n"))
-	(insert msg)
+  (with-current-buffer (get-buffer-create "*Notmuch errors*")
+    (goto-char (point-max))
+    (unless (bobp)
+      (newline))
+    (save-excursion
+      (insert "[" (current-time-string) "]\n" msg)
+      (unless (bolp)
+	(newline))
+      (when extra
+	(insert extra)
 	(unless (bolp)
-	  (insert "\n"))))
-    (pop-to-buffer buf)))
+	  (newline)))))
+  (error "%s" (concat msg (when extra
+			    " (see *Notmuch errors* for more details)"))))
 
 (defun notmuch-check-async-exit-status (proc msg)
   "If PROC exited abnormally, pop up an error buffer and signal an error.
@@ -363,35 +368,40 @@ contents of ERR-FILE will be included in the error message."
   (cond
    ((eq exit-status 0) t)
    ((eq exit-status 20)
-    (notmuch-pop-up-error "Error: Version mismatch.
+    (notmuch-logged-error "notmuch CLI version mismatch
 Emacs requested an older output format than supported by the notmuch CLI.
-You may need to restart Emacs or upgrade your notmuch Emacs package.")
-    (error "notmuch CLI version mismatch"))
+You may need to restart Emacs or upgrade your notmuch Emacs package."))
    ((eq exit-status 21)
-    (notmuch-pop-up-error "Error: Version mismatch.
+    (notmuch-logged-error "notmuch CLI version mismatch
 Emacs requested a newer output format than supported by the notmuch CLI.
-You may need to restart Emacs or upgrade your notmuch package.")
-    (error "notmuch CLI version mismatch"))
+You may need to restart Emacs or upgrade your notmuch package."))
    (t
-    (notmuch-pop-up-error
-     (concat
-      (format "Error invoking notmuch.  %s exited with %s%s.\n"
-	      (mapconcat #'identity command " ")
-	      ;; Signal strings look like "Terminated", hence the
-	      ;; colon.
-	      (if (integerp exit-status) "status " "signal: ")
-	      exit-status)
-      (when err-file
-	(concat "Error:\n"
-		(with-temp-buffer
-		  (insert-file-contents err-file)
-		  (if (eobp)
-		      "(no error output)\n"
-		    (buffer-string)))))
-      (when (and output (not (equal output "")))
-	(format "Output:\n%s" output))))
-    ;; Mimic `process-lines'
-    (error "%s exited with status %s" (car command) exit-status))))
+    (let* ((err (when err-file
+		  (with-temp-buffer
+		    (insert-file-contents err-file)
+		    (unless (eobp)
+		      (buffer-string)))))
+	   (extra
+	    (concat
+	     "command: " (mapconcat #'shell-quote-argument command " ") "\n"
+	     (if (integerp exit-status)
+		 (format "exit status: %s\n" exit-status)
+	       (format "exit signal: %s\n" exit-status))
+	     (when err
+	       (concat "stderr:\n" err))
+	     (when output
+	       (concat "stdout:\n" output)))))
+	(if err
+	    ;; We have an error message straight from the CLI.
+	    (notmuch-logged-error
+	     (replace-regexp-in-string "\\s $" "" err) extra)
+	  ;; We only have combined output from the CLI; don't inundate
+	  ;; the user with it.  Mimic `process-lines'.
+	  (notmuch-logged-error (format "%s exited with status %s"
+					(car command) exit-status)
+				extra))
+	;; `notmuch-logged-error' does not return.
+	))))
 
 (defun notmuch-call-notmuch-json (&rest args)
   "Invoke `notmuch-command' with `args' and return the parsed JSON output.
