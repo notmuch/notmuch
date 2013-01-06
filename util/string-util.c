@@ -22,6 +22,7 @@
 #include "string-util.h"
 #include "talloc.h"
 
+#include <ctype.h>
 #include <errno.h>
 
 char *
@@ -106,4 +107,85 @@ make_boolean_term (void *ctx, const char *prefix, const char *term,
     *out = '\0';
 
     return 0;
+}
+
+static const char*
+skip_space (const char *str)
+{
+    while (*str && isspace ((unsigned char) *str))
+	++str;
+    return str;
+}
+
+int
+parse_boolean_term (void *ctx, const char *str,
+		    char **prefix_out, char **term_out)
+{
+    int err = EINVAL;
+    *prefix_out = *term_out = NULL;
+
+    /* Parse prefix */
+    str = skip_space (str);
+    const char *pos = strchr (str, ':');
+    if (! pos)
+	goto FAIL;
+    *prefix_out = talloc_strndup (ctx, str, pos - str);
+    if (! *prefix_out) {
+	err = ENOMEM;
+	goto FAIL;
+    }
+    ++pos;
+
+    /* Implement de-quoting compatible with make_boolean_term. */
+    if (*pos == '"') {
+	char *out = talloc_array (ctx, char, strlen (pos));
+	int closed = 0;
+	if (! out) {
+	    err = ENOMEM;
+	    goto FAIL;
+	}
+	*term_out = out;
+	/* Skip the opening quote, find the closing quote, and
+	 * un-double doubled internal quotes. */
+	for (++pos; *pos; ) {
+	    if (*pos == '"') {
+		++pos;
+		if (*pos != '"') {
+		    /* Found the closing quote. */
+		    closed = 1;
+		    pos = skip_space (pos);
+		    break;
+		}
+	    }
+	    *out++ = *pos++;
+	}
+	/* Did the term terminate without a closing quote or is there
+	 * trailing text after the closing quote? */
+	if (!closed || *pos)
+	    goto FAIL;
+	*out = '\0';
+    } else {
+	const char *start = pos;
+	/* Check for text after the boolean term. */
+	while (! is_unquoted_terminator (*pos))
+	    ++pos;
+	if (*skip_space (pos)) {
+	    err = EINVAL;
+	    goto FAIL;
+	}
+	/* No trailing text; dup the string so the caller can free
+	 * it. */
+	*term_out = talloc_strndup (ctx, start, pos - start);
+	if (! *term_out) {
+	    err = ENOMEM;
+	    goto FAIL;
+	}
+    }
+    return 0;
+
+ FAIL:
+    talloc_free (*prefix_out);
+    talloc_free (*term_out);
+    errno = err;
+    return -1;
 }
