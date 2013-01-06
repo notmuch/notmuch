@@ -102,6 +102,18 @@ notmuch_dump_command (unused (void *ctx), int argc, char *argv[])
 	message = notmuch_messages_get (messages);
 	message_id = notmuch_message_get_message_id (message);
 
+	if (output_format == DUMP_FORMAT_BATCH_TAG &&
+	    strchr (message_id, '\n')) {
+	    /* This will produce a line break in the output, which
+	     * would be difficult to handle in tools.  However, it's
+	     * also impossible to produce an email containing a line
+	     * break in a message ID because of unfolding, so we can
+	     * safely disallow it. */
+	    fprintf (stderr, "Warning: skipping message id containing line break: \"%s\"\n", message_id);
+	    notmuch_message_destroy (message);
+	    continue;
+	}
+
 	if (output_format == DUMP_FORMAT_SUP) {
 	    fprintf (output, "%s (", message_id);
 	}

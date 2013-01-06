@@ -96,7 +96,9 @@ random_utf8_string (void *ctx, size_t char_count)
 	    buf = talloc_realloc (ctx, buf, gchar, buf_size);
 	}
 
-	randomchar = random_unichar ();
+	do {
+	    randomchar = random_unichar ();
+	} while (randomchar == '\n');
 
 	written = g_unichar_to_utf8 (randomchar, buf + offset);
 
