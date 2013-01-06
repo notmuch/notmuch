@@ -64,13 +64,16 @@ and tags containing whitespace or non-\fBascii\fR(7) characters.
 Each line has the form
 
 .RS 4
-.RI "+<" "encoded-tag" "> " "" "+<" "encoded-tag" "> ... -- " "" " id:<" encoded-message-id >
+.RI "+<" "encoded-tag" "> " "" "+<" "encoded-tag" "> ... -- " "" " id:<" quoted-message-id >
 
-where encoded means that every byte not matching the regex
+Tags are hex-encoded by replacing every byte not matching the regex
 .B [A-Za-z0-9@=.,_+-]
-is replace by
+with
 .B %nn
-where nn is the two digit hex encoding.
+where nn is the two digit hex encoding.  The message ID is a valid Xapian
+query, quoted using Xapian boolean term quoting rules: if the ID contains
+whitespace or a close paren or starts with a double quote, it must be
+enclosed in double quotes and double quotes inside the ID must be doubled.
 The astute reader will notice this is a special case of the batch input
 format for \fBnotmuch-tag\fR(1); note that the single message-id query is
 mandatory for \fBnotmuch-restore\fR(1).

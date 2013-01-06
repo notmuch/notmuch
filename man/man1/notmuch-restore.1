@@ -57,10 +57,8 @@ sup calls them).
 The
 .B batch-tag
 dump format is intended to more robust against malformed message-ids
-and tags containing whitespace or non-\fBascii\fR(7) characters.  This
-format hex-escapes all characters those outside of a small character
-set, intended to be suitable for e.g. pathnames in most UNIX-like
-systems.
+and tags containing whitespace or non-\fBascii\fR(7) characters.  See
+\fBnotmuch-dump\fR(1) for details on this format.
 
 .B "notmuch restore"
 updates the maildir flags according to tag changes if the
