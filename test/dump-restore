@@ -234,23 +234,39 @@ a
 
 # the previous line was blank; also no yelling please
 +%zz -- id:whatever
-+e +f id:%yy
++e +f id:"
++e +f tag:abc
 # the next non-comment line should report an an empty tag error for
 # batch tagging, but not for restore
 + +e -- id:20091117232137.GA7669@griffis1.net
-# highlight the sketchy id parsing; this should be last
-+g -- id:foo and bar
+# valid id, but warning about missing message
++e id:missing_message_id
+# exercise parser
++e -- id:some)stuff
++e -- id:some stuff
++e -- id:some"stuff
++e -- id:"a_message_id_with""_a_quote"
++e -- id:"a message id with spaces"
++e --  id:an_id_with_leading_and_trailing_ws \
+
 EOF
 
 cat <<EOF > EXPECTED
-Warning: unsupported query: a
+Warning: cannot parse query: a (skipping)
 Warning: no query string [+0]
 Warning: no query string [+a +b]
 Warning: missing query string [+a +b ]
 Warning: no query string after -- [+c +d --]
 Warning: hex decoding of tag %zz failed [+%zz -- id:whatever]
-Warning: hex decoding of query id:%yy failed [+e +f id:%yy]
-Warning: cannot apply tags to missing message: foo and bar
+Warning: cannot parse query: id:" (skipping)
+Warning: not an id query: tag:abc (skipping)
+Warning: cannot apply tags to missing message: missing_message_id
+Warning: cannot parse query: id:some)stuff (skipping)
+Warning: cannot parse query: id:some stuff (skipping)
+Warning: cannot apply tags to missing message: some"stuff
+Warning: cannot apply tags to missing message: a_message_id_with"_a_quote
+Warning: cannot apply tags to missing message: a message id with spaces
+Warning: cannot apply tags to missing message: an_id_with_leading_and_trailing_ws
 EOF
 
 test_expect_equal_file EXPECTED OUTPUT

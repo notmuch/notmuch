@@ -221,7 +221,7 @@ notmuch_restore_command (unused (void *ctx), int argc, char *argv[])
 	    INTERNAL_ERROR ("compile time constant regex failed.");
 
     do {
-	char *query_string;
+	char *query_string, *prefix, *term;
 
 	if (line_ctx != NULL)
 	    talloc_free (line_ctx);
@@ -234,19 +234,22 @@ notmuch_restore_command (unused (void *ctx), int argc, char *argv[])
 				  &query_string, tag_ops);
 
 	    if (ret == 0) {
-		if (strncmp ("id:", query_string, 3) != 0) {
-		    fprintf (stderr, "Warning: unsupported query: %s\n", query_string);
+		ret = parse_boolean_term (line_ctx, query_string,
+					  &prefix, &term);
+		if (ret && errno == EINVAL) {
+		    fprintf (stderr, "Warning: cannot parse query: %s (skipping)\n", query_string);
+		    continue;
+		} else if (ret) {
+		    /* This is more fatal (e.g., out of memory) */
+		    fprintf (stderr, "Error parsing query: %s\n",
+			     strerror (errno));
+		    ret = 1;
+		    break;
+		} else if (strcmp ("id", prefix) != 0) {
+		    fprintf (stderr, "Warning: not an id query: %s (skipping)\n", query_string);
 		    continue;
 		}
-		/* delete id: from front of string; tag_message
-		 * expects a raw message-id.
-		 *
-		 * XXX: Note that query string id:foo and bar will be
-		 * interpreted as a message id "foo and bar". This
-		 * should eventually be fixed to give a better error
-		 * message.
-		 */
-		query_string = query_string + 3;
+		query_string = term;
 	    }
 	}
 

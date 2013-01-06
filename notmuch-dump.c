@@ -20,6 +20,7 @@
 
 #include "notmuch-client.h"
 #include "dump-restore-private.h"
+#include "string-util.h"
 
 int
 notmuch_dump_command (unused (void *ctx), int argc, char *argv[])
@@ -144,13 +145,13 @@ notmuch_dump_command (unused (void *ctx), int argc, char *argv[])
 	if (output_format == DUMP_FORMAT_SUP) {
 	    fputs (")\n", output);
 	} else {
-	    if (hex_encode (notmuch, message_id,
-			    &buffer, &buffer_size) != HEX_SUCCESS) {
-		    fprintf (stderr, "Error: failed to hex-encode msg-id %s\n",
-			     message_id);
+	    if (make_boolean_term (notmuch, "id", message_id,
+				   &buffer, &buffer_size)) {
+		    fprintf (stderr, "Error quoting message id %s: %s\n",
+			     message_id, strerror (errno));
 		    return 1;
 	    }
-	    fprintf (output, " -- id:%s\n", buffer);
+	    fprintf (output, " -- %s\n", buffer);
 	}
 
 	notmuch_message_destroy (message);

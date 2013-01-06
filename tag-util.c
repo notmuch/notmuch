@@ -124,12 +124,6 @@ parse_tag_line (void *ctx, char *line,
     }
 
     /* tok now points to the query string */
-    if (hex_decode_inplace (tok) != HEX_SUCCESS) {
-	ret = line_error (TAG_PARSE_INVALID, line_for_error,
-			  "hex decoding of query %s failed", tok);
-	goto DONE;
-    }
-
     *query_string = tok;
 
   DONE:
