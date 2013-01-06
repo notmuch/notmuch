@@ -26,7 +26,8 @@
 static regex_t regex;
 
 /* Non-zero return indicates an error in retrieving the message,
- * or in applying the tags.
+ * or in applying the tags.  Missing messages are reported, but not
+ * considered errors.
  */
 static int
 tag_message (unused (void *ctx),
@@ -40,12 +41,16 @@ tag_message (unused (void *ctx),
     int ret = 0;
 
     status = notmuch_database_find_message (notmuch, message_id, &message);
-    if (status || message == NULL) {
-	fprintf (stderr, "Warning: cannot apply tags to %smessage: %s\n",
-		 message ? "" : "missing ", message_id);
-	if (status)
-	    fprintf (stderr, "%s\n", notmuch_status_to_string (status));
+    if (status) {
+	fprintf (stderr, "Error applying tags to message %s: %s\n",
+		 message_id, notmuch_status_to_string (status));
 	return 1;
+    }
+    if (message == NULL) {
+	fprintf (stderr, "Warning: cannot apply tags to missing message: %s\n",
+		 message_id);
+	/* We consider this a non-fatal error. */
+	return 0;
     }
 
     /* In order to detect missing messages, this check/optimization is
