@@ -20,6 +20,9 @@
 
 
 #include "string-util.h"
+#include "talloc.h"
+
+#include <errno.h>
 
 char *
 strtok_len (char *s, const char *delim, size_t *len)
@@ -31,4 +34,76 @@ strtok_len (char *s, const char *delim, size_t *len)
     *len = strcspn (s, delim);
 
     return *len ? s : NULL;
+}
+
+static int
+is_unquoted_terminator (unsigned char c)
+{
+    return c == 0 || c <= ' ' || c == ')';
+}
+
+int
+make_boolean_term (void *ctx, const char *prefix, const char *term,
+		   char **buf, size_t *len)
+{
+    const char *in;
+    char *out;
+    size_t needed = 3;
+    int need_quoting = 0;
+
+    /* Do we need quoting?  To be paranoid, we quote anything
+     * containing a quote, even though it only matters at the
+     * beginning, and anything containing non-ASCII text. */
+    for (in = term; *in && !need_quoting; in++)
+	if (is_unquoted_terminator (*in) || *in == '"'
+	    || (unsigned char)*in > 127)
+	    need_quoting = 1;
+
+    if (need_quoting)
+	for (in = term; *in; in++)
+	    needed += (*in == '"') ? 2 : 1;
+    else
+	needed = strlen (term) + 1;
+
+    /* Reserve space for the prefix */
+    if (prefix)
+	needed += strlen (prefix) + 1;
+
+    if ((*buf == NULL) || (needed > *len)) {
+	*len = 2 * needed;
+	*buf = talloc_realloc (ctx, *buf, char, *len);
+    }
+
+    if (! *buf) {
+	errno = ENOMEM;
+	return -1;
+    }
+
+    out = *buf;
+
+    /* Copy in the prefix */
+    if (prefix) {
+	strcpy (out, prefix);
+	out += strlen (prefix);
+	*out++ = ':';
+    }
+
+    if (! need_quoting) {
+	strcpy (out, term);
+	return 0;
+    }
+
+    /* Quote term by enclosing it in double quotes and doubling any
+     * internal double quotes. */
+    *out++ = '"';
+    in = term;
+    while (*in) {
+	if (*in == '"')
+	    *out++ = '"';
+	*out++ = *in++;
+    }
+    *out++ = '"';
+    *out = '\0';
+
+    return 0;
 }

@@ -19,6 +19,7 @@
  */
 
 #include "notmuch-client.h"
+#include "string-util.h"
 
 static volatile sig_atomic_t interrupted;
 
@@ -33,25 +34,6 @@ handle_sigint (unused (int sig))
      * handler as quickly as possible, not retry it. */
     IGNORE_RESULT (write (2, msg, sizeof (msg) - 1));
     interrupted = 1;
-}
-
-static char *
-_escape_tag (char *buf, const char *tag)
-{
-    const char *in = tag;
-    char *out = buf;
-
-    /* Boolean terms surrounded by double quotes can contain any
-     * character.  Double quotes are quoted by doubling them. */
-    *out++ = '"';
-    while (*in) {
-	if (*in == '"')
-	    *out++ = '"';
-	*out++ = *in++;
-    }
-    *out++ = '"';
-    *out = 0;
-    return buf;
 }
 
 typedef struct {
@@ -71,24 +53,15 @@ _optimize_tag_query (void *ctx, const char *orig_query_string,
      * parenthesize and the exclusion part of the query must not use
      * the '-' operator (though the NOT operator is fine). */
 
-    char *escaped, *query_string;
+    char *escaped = NULL;
+    size_t escaped_len = 0;
+    char *query_string;
     const char *join = "";
-    int i;
-    unsigned int max_tag_len = 0;
+    size_t i;
 
     /* Don't optimize if there are no tag changes. */
     if (tag_ops[0].tag == NULL)
 	return talloc_strdup (ctx, orig_query_string);
-
-    /* Allocate a buffer for escaping tags.  This is large enough to
-     * hold a fully escaped tag with every character doubled plus
-     * enclosing quotes and a NUL. */
-    for (i = 0; tag_ops[i].tag; i++)
-	if (strlen (tag_ops[i].tag) > max_tag_len)
-	    max_tag_len = strlen (tag_ops[i].tag);
-    escaped = talloc_array (ctx, char, max_tag_len * 2 + 3);
-    if (! escaped)
-	return NULL;
 
     /* Build the new query string */
     if (strcmp (orig_query_string, "*") == 0)
@@ -97,10 +70,17 @@ _optimize_tag_query (void *ctx, const char *orig_query_string,
 	query_string = talloc_asprintf (ctx, "( %s ) and (", orig_query_string);
 
     for (i = 0; tag_ops[i].tag && query_string; i++) {
+	/* XXX in case of OOM, query_string will be deallocated when
+	 * ctx is, which might be at shutdown */
+	if (make_boolean_term (ctx,
+			       "tag", tag_ops[i].tag,
+			       &escaped, &escaped_len))
+	    return NULL;
+
 	query_string = talloc_asprintf_append_buffer (
-	    query_string, "%s%stag:%s", join,
+	    query_string, "%s%s%s", join,
 	    tag_ops[i].remove ? "" : "not ",
-	    _escape_tag (escaped, tag_ops[i].tag));
+	    escaped);
 	join = " or ";
     }
 
