@@ -97,6 +97,21 @@ For example, if you wanted to remove an \"inbox\" tag and add an
   :group 'notmuch-search
   :group 'notmuch-show)
 
+;; By default clicking on a button does not select the window
+;; containing the button (as opposed to clicking on a widget which
+;; does). This means that the button action is then executed in the
+;; current selected window which can cause problems if the button
+;; changes the buffer (e.g., id: links) or moves point.
+;;
+;; This provides a button type which overrides mouse-action so that
+;; the button's window is selected before the action is run. Other
+;; notmuch buttons can get the same behaviour by inheriting from this
+;; button type.
+(define-button-type 'notmuch-button-type
+  'mouse-action (lambda (button)
+		  (select-window (posn-window (event-start last-input-event)))
+		  (button-activate button)))
+
 (defun notmuch-version ()
   "Return a string with the notmuch version number."
   (let ((long-string

@@ -469,7 +469,8 @@ message at DEPTH in the current thread."
   'action 'notmuch-show-part-button-default
   'keymap 'notmuch-show-part-button-map
   'follow-link t
-  'face 'message-mml)
+  'face 'message-mml
+  :supertype 'notmuch-button-type)
 
 (defvar notmuch-show-part-button-map
   (let ((map (make-sparse-keymap)))
@@ -1085,6 +1086,7 @@ buttons for a corresponding notmuch search."
 	;; Remove the overlay created by goto-address-mode
 	(remove-overlays (first link) (second link) 'goto-address t)
 	(make-text-button (first link) (second link)
+			  :type 'notmuch-button-type
 			  'action `(lambda (arg)
 				     (notmuch-show ,(third link)))
 			  'follow-link t

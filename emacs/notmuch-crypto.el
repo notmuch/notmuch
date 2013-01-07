@@ -19,6 +19,8 @@
 ;;
 ;; Authors: Jameson Rollins <jrollins@finestructure.net>
 
+(require 'notmuch-lib)
+
 (defcustom notmuch-crypto-process-mime nil
   "Should cryptographic MIME parts be processed?
 
@@ -76,7 +78,8 @@ mode."
 (define-button-type 'notmuch-crypto-status-button-type
   'action (lambda (button) (message (button-get button 'help-echo)))
   'follow-link t
-  'help-echo "Set notmuch-crypto-process-mime to process cryptographic mime parts.")
+  'help-echo "Set notmuch-crypto-process-mime to process cryptographic mime parts."
+  :supertype 'notmuch-button-type)
 
 (defun notmuch-crypto-insert-sigstatus-button (sigstatus from)
   (let* ((status (plist-get sigstatus :status))
