@@ -127,7 +127,7 @@ parse_boolean_term (void *ctx, const char *str,
     /* Parse prefix */
     str = skip_space (str);
     const char *pos = strchr (str, ':');
-    if (! pos)
+    if (! pos || pos == str)
 	goto FAIL;
     *prefix_out = talloc_strndup (ctx, str, pos - str);
     if (! *prefix_out) {
