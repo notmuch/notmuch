@@ -1,6 +1,7 @@
 notmuch (0.15~rc1-1) experimental; urgency=low
 
   * New upstream release candidate.
+  * Change priority to optional (Closes: #687217).
 
  -- David Bremner <bremner@debian.org>  Mon, 07 Jan 2013 21:40:52 -0400
 

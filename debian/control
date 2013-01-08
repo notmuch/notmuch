@@ -1,6 +1,6 @@
 Source: notmuch
 Section: mail
-Priority: extra
+Priority: optional
 Maintainer: Carl Worth <cworth@debian.org>
 Uploaders:
  Jameson Graef Rollins <jrollins@finestructure.net>,
