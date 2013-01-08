@@ -97,6 +97,7 @@ tag_query (void *ctx, notmuch_database_t *notmuch, const char *query_string,
     notmuch_query_t *query;
     notmuch_messages_t *messages;
     notmuch_message_t *message;
+    int ret = 0;
 
     /* Optimize the query so it excludes messages that already have
      * the specified set of tags. */
@@ -119,13 +120,15 @@ tag_query (void *ctx, notmuch_database_t *notmuch, const char *query_string,
 	 notmuch_messages_valid (messages) && ! interrupted;
 	 notmuch_messages_move_to_next (messages)) {
 	message = notmuch_messages_get (messages);
-	tag_op_list_apply (message, tag_ops, flags | TAG_FLAG_PRE_OPTIMIZED);
+	ret = tag_op_list_apply (message, tag_ops, flags | TAG_FLAG_PRE_OPTIMIZED);
 	notmuch_message_destroy (message);
+	if (ret != NOTMUCH_STATUS_SUCCESS)
+	    break;
     }
 
     notmuch_query_destroy (query);
 
-    return interrupted;
+    return ret || interrupted;
 }
 
 static int
