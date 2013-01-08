@@ -22,7 +22,6 @@ Standards-Version: 3.9.3
 Homepage: http://notmuchmail.org/
 Vcs-Git: git://notmuchmail.org/git/notmuch
 Vcs-Browser: http://git.notmuchmail.org/git/notmuch
-Dm-Upload-Allowed: yes
 
 Package: notmuch
 Architecture: any
