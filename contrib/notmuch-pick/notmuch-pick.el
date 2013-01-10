@@ -155,6 +155,8 @@
 ;; The context of the search: i.e., useful but can be dropped.
 (defvar notmuch-pick-query-context nil)
 (make-variable-buffer-local 'notmuch-pick-query-context)
+(defvar notmuch-pick-target-msg nil)
+(make-variable-buffer-local 'notmuch-pick-target-msg)
 (defvar notmuch-pick-buffer-name nil)
 (make-variable-buffer-local 'notmuch-pick-buffer-name)
 ;; This variable is the window used for the message pane. It is set
@@ -328,7 +330,9 @@ Does NOT change the database."
 (defun notmuch-pick-from-show-current-query ()
   "Call notmuch pick with the current query"
   (interactive)
-  (notmuch-pick notmuch-show-thread-id notmuch-show-query-context))
+  (notmuch-pick notmuch-show-thread-id
+		notmuch-show-query-context
+		(notmuch-show-get-message-id)))
 
 ;; This function should be in notmuch.el but be we trying to minimise
 ;; impact on the rest of the codebase.
@@ -344,6 +348,7 @@ Does NOT change the database."
   (interactive)
   (notmuch-pick (notmuch-search-find-thread-id)
                 notmuch-search-query-string
+		nil
                 (notmuch-prettify-subject (notmuch-search-find-subject)))
   (notmuch-pick-show-match-message-with-wait))
 
@@ -506,9 +511,13 @@ will be reversed."
   (let ((inhibit-read-only t)
 	(basic-query notmuch-pick-basic-query)
 	(query-context notmuch-pick-query-context)
+	(target (notmuch-pick-get-message-id))
 	(buffer-name notmuch-pick-buffer-name))
     (erase-buffer)
-    (notmuch-pick-worker basic-query query-context (get-buffer buffer-name))))
+    (notmuch-pick-worker basic-query
+			 query-context
+			 target
+			 (get-buffer buffer-name))))
 
 (defmacro with-current-notmuch-pick-message (&rest body)
   "Evaluate body with current buffer set to the text of current message"
@@ -639,10 +648,16 @@ unchanged ADDRESS if parsing fails."
   (insert "\n"))
 
 (defun notmuch-pick-goto-and-insert-msg (msg)
-  "Insert msg at the end of the buffer."
+  "Insert msg at the end of the buffer. Move point to msg if it is the target"
   (save-excursion
     (goto-char (point-max))
-    (notmuch-pick-insert-msg msg)))
+    (notmuch-pick-insert-msg msg))
+  (let ((msg-id (notmuch-id-to-query (plist-get msg :id))))
+    (when (string= msg-id notmuch-pick-target-msg)
+      (setq notmuch-pick-target-msg "found")
+      (goto-char (point-max))
+      (forward-line -1))))
+
 (defun notmuch-pick-insert-tree (tree depth tree-status first last)
   "Insert the message tree TREE at depth DEPTH in the current thread."
   (let ((msg (car tree))
@@ -762,12 +777,13 @@ Complete list of currently available key bindings:
 					 'notmuch-pick-show-error
 					 results-buf)))))
 
-(defun notmuch-pick-worker (basic-query &optional query-context buffer)
+(defun notmuch-pick-worker (basic-query &optional query-context target buffer)
   (interactive)
   (notmuch-pick-mode)
   (setq notmuch-pick-basic-query basic-query)
   (setq notmuch-pick-query-context query-context)
   (setq notmuch-pick-buffer-name (buffer-name buffer))
+  (setq notmuch-pick-target-msg target)
 
   (erase-buffer)
   (goto-char (point-min))
@@ -799,7 +815,7 @@ Complete list of currently available key bindings:
 	  (insert "End of search results.\n"))))))
 
 
-(defun notmuch-pick (&optional query query-context buffer-name show-first-match)
+(defun notmuch-pick (&optional query query-context target buffer-name show-first-match)
   "Run notmuch pick with the given `query' and display the results"
   (interactive "sNotmuch pick: ")
   (if (null query)
@@ -813,7 +829,7 @@ Complete list of currently available key bindings:
     ;; Don't track undo information for this buffer
     (set 'buffer-undo-list t)
 
-    (notmuch-pick-worker query query-context buffer)
+    (notmuch-pick-worker query query-context target buffer)
 
     (setq truncate-lines t)
     (when show-first-match
