@@ -638,6 +638,11 @@ unchanged ADDRESS if parsing fails."
   (notmuch-pick-set-message-properties msg)
   (insert "\n"))
 
+(defun notmuch-pick-goto-and-insert-msg (msg)
+  "Insert msg at the end of the buffer."
+  (save-excursion
+    (goto-char (point-max))
+    (notmuch-pick-insert-msg msg)))
 (defun notmuch-pick-insert-tree (tree depth tree-status first last)
   "Insert the message tree TREE at depth DEPTH in the current thread."
   (let ((msg (car tree))
@@ -659,7 +664,7 @@ unchanged ADDRESS if parsing fails."
 	(push "├" tree-status)))
 
       (push (concat (if replies "┬" "─") "►") tree-status)
-      (notmuch-pick-insert-msg (plist-put msg :tree-status tree-status))
+      (notmuch-pick-goto-and-insert-msg (plist-put msg :tree-status tree-status))
       (pop tree-status)
       (pop tree-status)
 
@@ -678,12 +683,10 @@ unchanged ADDRESS if parsing fails."
 	  do (notmuch-pick-insert-tree tree depth tree-status (eq count 1) (eq count n)))))
 
 (defun notmuch-pick-insert-forest-thread (forest-thread)
-  (save-excursion
-    (goto-char (point-max))
-    (let (tree-status)
-      ;; Reset at the start of each main thread.
-      (setq notmuch-pick-previous-subject nil)
-      (notmuch-pick-insert-thread forest-thread 0 tree-status))))
+  (let (tree-status)
+    ;; Reset at the start of each main thread.
+    (setq notmuch-pick-previous-subject nil)
+    (notmuch-pick-insert-thread forest-thread 0 tree-status)))
 
 (defun notmuch-pick-insert-forest (forest)
   (mapc 'notmuch-pick-insert-forest-thread forest))
