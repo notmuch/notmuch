@@ -140,6 +140,7 @@ tag_file (void *ctx, notmuch_database_t *notmuch, tag_op_flag_t flags,
     size_t line_size = 0;
     ssize_t line_len;
     int ret = 0;
+    int warn = 0;
     tag_op_list_t *tag_ops;
 
     tag_ops = tag_op_list_create (ctx);
@@ -154,8 +155,13 @@ tag_file (void *ctx, notmuch_database_t *notmuch, tag_op_flag_t flags,
 	ret = parse_tag_line (ctx, line, TAG_FLAG_NONE,
 			      &query_string, tag_ops);
 
-	if (ret > 0)
+	if (ret > 0) {
+	    if (ret != TAG_PARSE_SKIPPED)
+		/* remember there has been problematic lines */
+		warn = 1;
+	    ret = 0;
 	    continue;
+	}
 
 	if (ret < 0)
 	    break;
@@ -168,7 +174,7 @@ tag_file (void *ctx, notmuch_database_t *notmuch, tag_op_flag_t flags,
     if (line)
 	free (line);
 
-    return ret;
+    return ret || warn;
 }
 
 int
