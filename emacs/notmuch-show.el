@@ -818,6 +818,16 @@ message at DEPTH in the current thread."
 (defun notmuch-show-insert-part-inline-patch-fake-part (msg part content-type nth depth declared-type)
   (notmuch-show-insert-part-*/* msg part "text/x-diff" nth depth "inline patch"))
 
+(defun notmuch-show-insert-part-text/html (msg part content-type nth depth declared-type)
+  ;; text/html handler to work around bugs in renderers and our
+  ;; invisibile parts code. In particular w3m sets up a keymap which
+  ;; "leaks" outside the invisible region and causes strange effects
+  ;; in notmuch. We set mm-inline-text-html-with-w3m-keymap to nil to
+  ;; tell w3m not to set a keymap (so the normal notmuch-show-mode-map
+  ;; remains).
+  (let ((mm-inline-text-html-with-w3m-keymap nil))
+    (notmuch-show-insert-part-*/* msg part content-type nth depth declared-type)))
+
 (defun notmuch-show-insert-part-*/* (msg part content-type nth depth declared-type)
   ;; This handler _must_ succeed - it is the handler of last resort.
   (notmuch-show-insert-part-header nth content-type declared-type (plist-get part :filename))
