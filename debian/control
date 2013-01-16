@@ -14,6 +14,7 @@ Build-Depends:
  libtalloc-dev,
  libz-dev,
  python-all (>= 2.6.6-3~),
+ python3-all (>= 3.1.2-7~),
  emacs23-nox | emacs23 (>=23~) | emacs23-lucid (>=23~) |
  emacs24-nox | emacs24 (>=24~) | emacs24-lucid (>=24~),
  gdb,
@@ -73,6 +74,19 @@ Description: python interface to the notmuch mail search and index library
  convenient search syntax.
  .
  This package provides a Python interface to the notmuch
+ functionality, directly interfacing with a shared notmuch library.
+
+Package: python3-notmuch
+Architecture: all
+Section: python
+Depends: ${misc:Depends}, ${python3:Depends}, libnotmuch3
+Description: Python 3 interface to the notmuch mail search and index library
+ Notmuch is a system for indexing, searching, reading, and tagging
+ large collections of email messages in maildir or mh format. It uses
+ the Xapian library to provide fast, full-text search with a very
+ convenient search syntax.
+ .
+ This package provides a Python 3 interface to the notmuch
  functionality, directly interfacing with a shared notmuch library.
 
 Package: notmuch-emacs
