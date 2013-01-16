@@ -4,10 +4,10 @@ notmuch (0.15~rc1-1) experimental; urgency=low
   * Change priority to optional (Closes: #687217).
   * Remove Dm-Upload-Allowed field, as this is no longer used by
     Debian.
-  * Add python3 bindings, thanks to Jakub Wilk (Closes:
-    #683515).
+  * Add python3 bindings, thanks to Jakub Wilk (Closes: #683515).
+  * Bug fix: ".ical attachment problem", (Closes: #688747).
 
- -- David Bremner <bremner@debian.org>  Wed, 16 Jan 2013 08:25:02 -0400
+ -- David Bremner <bremner@debian.org>  Wed, 16 Jan 2013 08:28:27 -0400
 
 notmuch (0.14-1) experimental; urgency=low
 
