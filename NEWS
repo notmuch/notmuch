@@ -91,6 +91,10 @@ Visibility of MIME parts can be toggled
   `notmuch-multipart/alternative-discouraged` and
   `notmuch-show-all-multipart/alternative-parts`.
 
+  Note notmuch-show-print-message (bound to '#' by default) will print
+  all parts of multipart/alternative message regardless of whether
+  they are currently hidden or shown in the buffer.
+
 Emacs now buttonizes mid: links
 
   mid: links are a standardized way to link to messages by message ID
