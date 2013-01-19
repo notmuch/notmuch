@@ -1,3 +1,26 @@
+notmuch (0.15-1) experimental; urgency=low
+
+  * New upstream release.
+    - Date range search support
+    - Empty tag names and tags beginning with "-" are deprecated
+    - Support for single message mboxes is deprecated
+    - Fixed `notmuch new` to skip ignored broken symlinks
+    - New dump/restore format and tagging interface
+    - Emacs Interface
+      - Removal of the deprecated `notmuch-folders` variable
+      - Visibility of MIME parts can be toggled
+      - Emacs now buttonizes mid: links
+      - Improved text/calendar content handling
+      - Disabled coding conversions when reading
+      - Fixed errors with HTML email containing images in Emacs 24
+      - Fixed handling of tags with unusual characters in them
+      - Fixed buttonization of id: links without quote characters
+      - Automatic tag changes are now unified and customizable
+      - Support for stashing the thread id in show view
+      - New add-on tool: notmuch-pick
+
+ -- David Bremner <bremner@debian.org>  Fri, 18 Jan 2013 21:23:36 -0400
+
 notmuch (0.15~rc1-1) experimental; urgency=low
 
   * New upstream release candidate.
