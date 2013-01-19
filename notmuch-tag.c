@@ -97,7 +97,7 @@ tag_query (void *ctx, notmuch_database_t *notmuch, const char *query_string,
     notmuch_query_t *query;
     notmuch_messages_t *messages;
     notmuch_message_t *message;
-    int ret = 0;
+    int ret = NOTMUCH_STATUS_SUCCESS;
 
     /* Optimize the query so it excludes messages that already have
      * the specified set of tags. */
