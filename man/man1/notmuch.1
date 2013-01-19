@@ -21,7 +21,7 @@
 notmuch \- thread-based email index, search, and tagging
 .SH SYNOPSIS
 .B notmuch
-.IR command " [" args " ...]"
+.RI "[" option " ...] " command  " [" arg " ...]"
 .SH DESCRIPTION
 Notmuch is a command-line based program for indexing, searching,
 reading, and tagging large collections of email messages.
@@ -49,6 +49,26 @@ interfaces to notmuch. The emacs-based interface to notmuch (available under
 .B emacs/
 in the Notmuch source distribution) is probably the most widely used at
 this time.
+
+.SH OPTIONS
+
+Supported global options for
+.B notmuch
+include
+
+.RS 4
+.TP 4
+.B \-\-help
+
+Print a synopsis of available commands and exit.
+.RE
+
+.RS 4
+.TP 4
+.B \-\-version
+
+Print the installed version of notmuch, and exit.
+.RE
 
 .SH COMMANDS
 
