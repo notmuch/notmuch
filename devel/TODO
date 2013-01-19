@@ -118,13 +118,6 @@ file.
 Allow configuration for filename patterns that should be ignored when
 indexing.
 
-Replace the "notmuch part --part=id" command with "notmuch show
---part=id", (David Edmondson wants to rewrite some of "notmuch show" to
-provide more MIME-structure information in its output first).
-
-Replace the "notmuch search-tags" command with "notmuch search
---output=tags".
-
 Fix to avoid this ugly message:
 
 	(process:17197): gmime-CRITICAL **: g_mime_message_get_mime_part: assertion `GMIME_IS_MESSAGE (message)' failed

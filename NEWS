@@ -1,3 +1,11 @@
+Notmuch 0.16 (2013-MM-DD)
+=========================
+
+Command-Line Interface
+----------------------
+
+Deprecated commands "part" and "search-tags" are removed.
+
 Notmuch 0.15 (2013-01-18)
 =========================
 
