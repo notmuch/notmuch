@@ -53,12 +53,13 @@ fi < ./version
 
 readonly VERSION
 
+# In the rest of this file, tests collect list of errors to be fixed
+
 verfail ()
 {
 	echo No.
-	echo "$@"
-	echo "Please follow the instructions in RELEASING to choose a version"
-	exit 1
+	append_emsg "$@"
+	append_emsg "  Please follow the instructions in RELEASING to choose a version"
 }
 
 echo -n "Checking that '$VERSION' is good with digits and periods... "
@@ -72,8 +73,6 @@ case $VERSION in
 	*)	verfail "'$VERSION' is a single number" ;;
 esac
 
-
-# In the rest of this file, tests collect list of errors to be fixed
 
 echo -n "Checking that this is Debian package for notmuch... "
 read deb_notmuch deb_version rest < debian/changelog
