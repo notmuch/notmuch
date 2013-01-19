@@ -504,7 +504,7 @@ Complete list of currently available key bindings:
 	  (notmuch-remove-if-not
 	   (lambda (tag)
 	     (not (member tag hide-tags)))
-	   (process-lines notmuch-command "search-tags"))))
+	   (process-lines notmuch-command "search" "--output=tags" "*"))))
 
 (defun notmuch-hello-insert-header ()
   "Insert the default notmuch-hello header."
