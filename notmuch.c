@@ -249,6 +249,14 @@ main (int argc, char *argv[])
     void *local;
     command_t *command;
     unsigned int i;
+    notmuch_bool_t print_help=FALSE, print_version=FALSE;
+    int opt_index;
+
+    notmuch_opt_desc_t options[] = {
+	{ NOTMUCH_OPT_BOOLEAN, &print_help, "help", 'h', 0 },
+	{ NOTMUCH_OPT_BOOLEAN, &print_version, "version", 'v', 0 },
+	{ 0, 0, 0, 0, 0 }
+    };
 
     talloc_enable_null_tracking ();
 
@@ -263,10 +271,16 @@ main (int argc, char *argv[])
     if (argc == 1)
 	return notmuch (local);
 
-    if (strcmp (argv[1], "--help") == 0)
+    opt_index = parse_arguments (argc, argv, options, 1);
+    if (opt_index < 0) {
+	/* diagnostics already printed */
+	return 1;
+    }
+
+    if (print_help)
 	return notmuch_help_command (NULL, argc - 1, &argv[1]);
 
-    if (strcmp (argv[1], "--version") == 0) {
+    if (print_version) {
 	printf ("notmuch " STRINGIFY(NOTMUCH_VERSION) "\n");
 	return 0;
     }
@@ -274,11 +288,11 @@ main (int argc, char *argv[])
     for (i = 0; i < ARRAY_SIZE (commands); i++) {
 	command = &commands[i];
 
-	if (strcmp (argv[1], command->name) == 0) {
+	if (strcmp (argv[opt_index], command->name) == 0) {
 	    int ret;
 	    char *talloc_report;
 
-	    ret = (command->function)(local, argc - 1, &argv[1]);
+	    ret = (command->function)(local, argc - opt_index, argv + opt_index);
 
 	    /* in the future support for this environment variable may
 	     * be supplemented or replaced by command line arguments
