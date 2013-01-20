@@ -8,6 +8,9 @@ python3_all = py3versions -s | xargs -n1 | xargs -t -I {} env {}
 override_dh_auto_configure:
 	dh_auto_configure -- --emacslispdir=/usr/share/emacs/site-lisp/notmuch
 
+override_dh_auto_test:
+	echo tests disabled.
+
 override_dh_auto_build:
 	dh_auto_build
 	dh_auto_build --sourcedirectory bindings/python
