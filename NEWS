@@ -182,8 +182,8 @@ Internal test framework changes
 
 The emacsclient binary is now user-configurable
 
-  The test framework now accepts TEST_EMACSCLIENT in addition to
-  TEST_EMACS for configuring the emacsclient to use.  This is
+  The test framework now accepts `TEST_EMACSCLIENT` in addition to
+  `TEST_EMACS` for configuring the emacsclient to use.  This is
   necessary to avoid using an old emacsclient with a new emacs, which
   can result in buggy behavior.
 
