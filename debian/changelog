@@ -1,3 +1,10 @@
+notmuch (0.15-2) experimental; urgency=low
+
+  * Disable tests until a proper fix for running tests without a
+    proper TERM value is developed (again).
+
+ -- David Bremner <bremner@debian.org>  Sun, 20 Jan 2013 18:36:16 -0400
+
 notmuch (0.15-1) experimental; urgency=low
 
   * New upstream release.
