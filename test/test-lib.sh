@@ -194,9 +194,15 @@ test_fixed=0
 test_broken=0
 test_success=0
 
-die () {
+_die_common () {
 	code=$?
+	trap - EXIT
+	set +ex
 	rm -rf "$TEST_TMPDIR"
+}
+
+die () {
+	_die_common
 	if test -n "$GIT_EXIT_OK"
 	then
 		exit $code
@@ -210,10 +216,17 @@ die () {
 	fi
 }
 
+die_signal () {
+	_die_common
+	echo >&5 "FATAL: $0: interrupted by signal" $((code - 128))
+	exit $code
+}
+
 GIT_EXIT_OK=
 # Note: TEST_TMPDIR *NOT* exported!
 TEST_TMPDIR=$(mktemp -d "${TMPDIR:-/tmp}/notmuch-test-$$.XXXXXX")
 trap 'die' EXIT
+trap 'die_signal' HUP INT TERM
 
 test_decode_color () {
 	sed	-e 's/.\[1m/<WHITE>/g' \
