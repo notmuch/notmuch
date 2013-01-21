@@ -73,7 +73,7 @@ libnotmuch_modules := $(libnotmuch_c_srcs:.c=.o) $(libnotmuch_cxx_srcs:.cc=.o)
 $(dir)/libnotmuch.a: $(libnotmuch_modules)
 	$(call quiet,AR) rcs $@ $^
 
-$(dir)/$(LIBNAME): $(libnotmuch_modules) notmuch.sym
+$(dir)/$(LIBNAME): $(libnotmuch_modules) notmuch.sym util/libutil.a parse-time-string/libparse-time-string.a
 	$(call quiet,CXX $(CXXFLAGS)) $(libnotmuch_modules) $(FINAL_LIBNOTMUCH_LDFLAGS) $(LIBRARY_LINK_FLAG) -o $@ util/libutil.a parse-time-string/libparse-time-string.a
 
 notmuch.sym: $(srcdir)/$(dir)/notmuch.h $(libnotmuch_modules)
