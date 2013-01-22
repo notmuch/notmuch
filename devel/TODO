@@ -57,11 +57,6 @@ Automatically open a message when navigating to it with N or P.
 
 Change 'a' command in thread-view mode to only archive open messages.
 
-Add a binding to open all closed messages.
-
-Change the 'a'rchive command in the thread view to only archive open
-messages.
-
 Completion
 ----------
 Fix bash completion to complete multiple search options (both --first
@@ -74,11 +69,6 @@ Add support to "notmuch search" and "notmuch show" to allow for
 listing of duplicate messages, (distinct filenames with the same
 Message-ID). I'm not sure what the option should be named. Perhaps
 --with-duplicates ?
-
-Add a -0 option to "notmuch search" so that one can safely deal with
-any filename with:
-
-	notmuch search --output=files -0 <terms> | xargs -0 <command>
 
 "notmuch setup" should use realpath() before replacing the
 configuration file. The ensures that the final target file of any
