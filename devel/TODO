@@ -146,12 +146,13 @@ vs. tag-when-all-files-flagged (* above)).
 Add an interface to accept a "key" and a byte stream, rather than a
 filename.
 
-Provide a sane syntax for date ranges. First, we don't want to require
-both endpoints to be specified. For example it would be nice to be
-able to say things like "since:2009-01-1" or "until:2009-01-1" and
-have the other endpoint be implicit. Second we'd like to support
-relative specifications of time such as "since:'2 months ago'". To do
-any of this we're probably going to need to break down an write our
+Improve syntax for date ranges queries. date:expr should be
+interpreted as date:expr..expr so that, for example, "date:2013-01-22"
+would cover the whole of the specified day (currently that's not even
+recognized as a date range expression). It might be nice to be able to
+use things like "since:2013-01-22" and "until:2013-01-22" as synonyms
+to "date:2013-01-22.." and "date:..2013-01-22", respectively. To do
+any of this we're probably going to need to break down and write our
 own parser for the query string rather than using Xapian's QueryParser
 class.
 
