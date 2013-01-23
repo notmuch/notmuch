@@ -188,7 +188,7 @@ class Database(object):
                                        "already has an open one.")
 
         db = NotmuchDatabaseP()
-        status = Database._create(_str(path), Database.MODE.READ_WRITE, byref(db))
+        status = Database._create(_str(path), byref(db))
 
         if status != STATUS.SUCCESS:
             raise NotmuchError(status)
