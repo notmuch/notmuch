@@ -1,3 +1,10 @@
+notmuch (0.15.1-1) experimental; urgency=low
+
+  * Upstream bug fix release: set default TERM for running tests.
+  * Re-enable build time self-tests.
+
+ -- David Bremner <bremner@debian.org>  Thu, 24 Jan 2013 07:19:45 -0400
+
 notmuch (0.15-2) experimental; urgency=low
 
   * Disable tests until a proper fix for running tests without a
