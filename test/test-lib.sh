@@ -41,6 +41,10 @@ esac
 # Keep the original TERM for say_color and test_emacs
 ORIGINAL_TERM=$TERM
 
+# dtach(1) provides more capable terminal environment to anything
+# that requires more than dumb terminal...
+[ x"${TERM:-dumb}" = xdumb ] && DTACH_TERM=vt100 || DTACH_TERM=$TERM
+
 # For repeatability, reset the environment to known value.
 LANG=C
 LC_ALL=C
@@ -996,9 +1000,10 @@ test_emacs () {
 		fi
 		server_name="notmuch-test-suite-$$"
 		# start a detached session with an emacs server
-		# user's TERM is given to dtach which assumes a minimally
+		# user's TERM (or 'vt100' in case user's TERM is unset, empty
+		# or 'dumb') is given to dtach which assumes a minimally
 		# VT100-compatible terminal -- and emacs inherits that
-		TERM=$ORIGINAL_TERM dtach -n "$TEST_TMPDIR/emacs-dtach-socket.$$" \
+		TERM=$DTACH_TERM dtach -n "$TEST_TMPDIR/emacs-dtach-socket.$$" \
 			sh -c "stty rows 24 cols 80; exec '$TMP_DIRECTORY/run_emacs' \
 				--no-window-system \
 				$load_emacs_tests \
