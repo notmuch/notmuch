@@ -77,12 +77,19 @@ invisible text."
 	(setq start next-pos)))
     str))
 
-(defun orphan-watchdog (pid)
+(defun orphan-watchdog-check (pid)
   "Periodically check that the process with id PID is still
 running, quit if it terminated."
   (if (not (process-attributes pid))
-      (kill-emacs)
-    (run-at-time "1 min" nil 'orphan-watchdog pid)))
+      (kill-emacs)))
+
+(defun orphan-watchdog (pid)
+  "Initiate orphan watchdog check."
+  ; If process-attributes returns nil right away, that probably means
+  ; it is unimplimented. So we delay two minutes before killing emacs.
+  (if (process-attributes pid)
+      (run-at-time 60 60 'orphan-watchdog-check pid)
+    (run-at-time 120 60 'orphan-watchdog-check pid)))
 
 (defun hook-counter (hook)
   "Count how many times a hook is called.  Increments
