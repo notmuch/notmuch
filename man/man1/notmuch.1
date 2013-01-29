@@ -147,6 +147,14 @@ behavior of notmuch.
 .B NOTMUCH_CONFIG
 Specifies the location of the notmuch configuration file. Notmuch will
 use ${HOME}/.notmuch\-config if this variable is not set.
+
+.TP
+.B NOTMUCH_TALLOC_REPORT
+Location to write a talloc memory usage report. See
+.B talloc_enable_leak_report_full
+in \fBtalloc\fR(3)
+for more information.
+
 .SH SEE ALSO
 
 \fBnotmuch-config\fR(1), \fBnotmuch-count\fR(1),
