@@ -1,3 +1,11 @@
+notmuch (0.15.2-1) experimental; urgency=low
+
+  * Upstream bug fix release.
+    - Improve support for parallel building
+    - Update Emacs tests for portability, fix FTBFS on hurd-i386
+
+ -- David Bremner <bremner@debian.org>  Tue, 29 Jan 2013 19:19:25 -0400
+
 notmuch (0.15.1-1) experimental; urgency=low
 
   * Upstream bug fix release: set default TERM for running tests.
