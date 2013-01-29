@@ -294,10 +294,6 @@ main (int argc, char *argv[])
 
 	    ret = (command->function)(local, argc - opt_index, argv + opt_index);
 
-	    /* in the future support for this environment variable may
-	     * be supplemented or replaced by command line arguments
-	     * --leak-report and/or --leak-report-full */
-
 	    talloc_report = getenv ("NOTMUCH_TALLOC_REPORT");
 
 	    /* this relies on the previous call to
@@ -305,7 +301,13 @@ main (int argc, char *argv[])
 
 	    if (talloc_report && strcmp (talloc_report, "") != 0) {
 		FILE *report = fopen (talloc_report, "w");
-		talloc_report_full (NULL, report);
+		if (report) {
+		    talloc_report_full (NULL, report);
+		} else {
+		    ret = 1;
+		    fprintf (stderr, "ERROR: unable to write talloc log. ");
+		    perror (talloc_report);
+		}
 	    }
 
 	    return ret;
