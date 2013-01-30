@@ -104,6 +104,20 @@ else
 	append_emsg "Version '$py_version' is not '$VERSION' in $PV_FILE"
 fi
 
+echo -n "Checking that NEWS header is tidy... "
+if [ "`exec sed 's/./=/g; 1q' NEWS`" = "`exec sed '1d; 2q' NEWS`" ]
+then
+	echo Yes.
+else
+	echo No.
+	if [ "`exec sed '1d; s/=//g; 2q' NEWS`" != '' ]
+	then
+		append_emsg "Line 2 in NEWS file is not all '=':s"
+	else
+		append_emsg "Line 2 in NEWS file does not have the same length as line 1"
+	fi
+fi
+
 echo -n "Checking that this is Notmuch NEWS... "
 read news_notmuch news_version news_date < NEWS
 if [ "$news_notmuch" = "Notmuch" ]
