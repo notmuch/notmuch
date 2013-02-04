@@ -316,6 +316,16 @@ current buffer, if possible."
   (loop for (key value . rest) on plist by #'cddr
 	collect (cons (intern (substring (symbol-name key) 1)) value)))
 
+(defun notmuch-face-ensure-list-form (face)
+  "Return FACE in face list form.
+
+If FACE is already a face list, it will be returned as-is.  If
+FACE is a face name or face plist, it will be returned as a
+single element face list."
+  (if (and (listp face) (not (keywordp (car face))))
+      face
+    (list face)))
+
 (defun notmuch-combine-face-text-property (start end face)
   "Combine FACE into the 'face text property between START and END.
 
@@ -324,11 +334,20 @@ and END.  Attributes specified by FACE take precedence over
 existing attributes.  FACE must be a face name (a symbol or
 string), a property list of face attributes, or a list of these."
 
-  (let ((pos start))
+  ;; A face property can have three forms: a face name (a string or
+  ;; symbol), a property list, or a list of these two forms.  In the
+  ;; list case, the faces will be combined, with the earlier faces
+  ;; taking precedent.  Here we canonicalize everything to list form
+  ;; to make it easy to combine.
+  (let ((pos start)
+	(face-list (notmuch-face-ensure-list-form face)))
     (while (< pos end)
-      (let ((cur (get-text-property pos 'face))
-	    (next (next-single-property-change pos 'face nil end)))
-	(put-text-property pos next 'face (cons face cur))
+      (let* ((cur (get-text-property pos 'face))
+	     (cur-list (notmuch-face-ensure-list-form cur))
+	     (new (cond ((null cur-list) face)
+			(t (append face-list cur-list))))
+	     (next (next-single-property-change pos 'face nil end)))
+	(put-text-property pos next 'face new)
 	(setq pos next)))))
 
 (defun notmuch-logged-error (msg &optional extra)
