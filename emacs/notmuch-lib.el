@@ -326,13 +326,16 @@ single element face list."
       face
     (list face)))
 
-(defun notmuch-combine-face-text-property (start end face)
+(defun notmuch-combine-face-text-property (start end face &optional below object)
   "Combine FACE into the 'face text property between START and END.
 
 This function combines FACE with any existing faces between START
-and END.  Attributes specified by FACE take precedence over
-existing attributes.  FACE must be a face name (a symbol or
-string), a property list of face attributes, or a list of these."
+and END in OBJECT (which defaults to the current buffer).
+Attributes specified by FACE take precedence over existing
+attributes unless BELOW is non-nil.  FACE must be a face name (a
+symbol or string), a property list of face attributes, or a list
+of these.  For convenience when applied to strings, this returns
+OBJECT."
 
   ;; A face property can have three forms: a face name (a string or
   ;; symbol), a property list, or a list of these two forms.  In the
@@ -342,13 +345,15 @@ string), a property list of face attributes, or a list of these."
   (let ((pos start)
 	(face-list (notmuch-face-ensure-list-form face)))
     (while (< pos end)
-      (let* ((cur (get-text-property pos 'face))
+      (let* ((cur (get-text-property pos 'face object))
 	     (cur-list (notmuch-face-ensure-list-form cur))
 	     (new (cond ((null cur-list) face)
+			(below (append cur-list face-list))
 			(t (append face-list cur-list))))
-	     (next (next-single-property-change pos 'face nil end)))
-	(put-text-property pos next 'face new)
-	(setq pos next)))))
+	     (next (next-single-property-change pos 'face object end)))
+	(put-text-property pos next 'face new object)
+	(setq pos next))))
+  object)
 
 (defun notmuch-logged-error (msg &optional extra)
   "Log MSG and EXTRA to *Notmuch errors* and signal MSG.
