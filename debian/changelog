@@ -1,3 +1,10 @@
+notmuch (0.15.1-1~bpo60+1) squeeze-backports; urgency=low
+
+  * Rebuild for squeeze-backports.
+  * De-multiarch library install paths.
+
+ -- David Bremner <bremner@debian.org>  Tue, 05 Feb 2013 21:01:42 -0400
+
 notmuch (0.15.1-1) experimental; urgency=low
 
   * Upstream bug fix release: set default TERM for running tests.
