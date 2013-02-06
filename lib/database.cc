@@ -19,6 +19,7 @@
  */
 
 #include "database-private.h"
+#include "parse-time-vrp.h"
 
 #include <iostream>
 
@@ -710,12 +711,14 @@ notmuch_database_open (const char *path,
 	notmuch->term_gen = new Xapian::TermGenerator;
 	notmuch->term_gen->set_stemmer (Xapian::Stem ("english"));
 	notmuch->value_range_processor = new Xapian::NumberValueRangeProcessor (NOTMUCH_VALUE_TIMESTAMP);
+	notmuch->date_range_processor = new ParseTimeValueRangeProcessor (NOTMUCH_VALUE_TIMESTAMP);
 
 	notmuch->query_parser->set_default_op (Xapian::Query::OP_AND);
 	notmuch->query_parser->set_database (*notmuch->xapian_db);
 	notmuch->query_parser->set_stemmer (Xapian::Stem ("english"));
 	notmuch->query_parser->set_stemming_strategy (Xapian::QueryParser::STEM_SOME);
 	notmuch->query_parser->add_valuerangeprocessor (notmuch->value_range_processor);
+	notmuch->query_parser->add_valuerangeprocessor (notmuch->date_range_processor);
 
 	for (i = 0; i < ARRAY_SIZE (BOOLEAN_PREFIX_EXTERNAL); i++) {
 	    prefix_t *prefix = &BOOLEAN_PREFIX_EXTERNAL[i];
@@ -778,6 +781,8 @@ notmuch_database_close (notmuch_database_t *notmuch)
     notmuch->xapian_db = NULL;
     delete notmuch->value_range_processor;
     notmuch->value_range_processor = NULL;
+    delete notmuch->date_range_processor;
+    notmuch->date_range_processor = NULL;
 }
 
 void
@@ -1816,7 +1821,9 @@ notmuch_database_add_message (notmuch_database_t *notmuch,
 	    date = notmuch_message_file_get_header (message_file, "date");
 	    _notmuch_message_set_header_values (message, date, from, subject);
 
-	    _notmuch_message_index_file (message, filename);
+	    ret = _notmuch_message_index_file (message, filename);
+	    if (ret)
+		goto DONE;
 	} else {
 	    ret = NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID;
 	}

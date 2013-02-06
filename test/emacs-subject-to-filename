@@ -1,17 +1,17 @@
 #!/usr/bin/env bash
 
 test_description="emacs: mail subject to filename"
-. test-lib.sh
+. ./test-lib.sh
 
 # emacs server can't be started in a child process with $(test_emacs ...)
-test_emacs '(ignore)'
+test_emacs '(ignore)' > /dev/null
 
 # test notmuch-wash-subject-to-patch-sequence-number (subject)
 test_begin_subtest "no patch sequence number"
-output=$(test_emacs '(notmuch-wash-subject-to-patch-sequence-number
-      "[PATCH] A normal patch subject without numbers")'
+output=$(test_emacs '(format "%S" (notmuch-wash-subject-to-patch-sequence-number
+      "[PATCH] A normal patch subject without numbers"))'
 )
-test_expect_equal "$output" ""
+test_expect_equal "$output" '"nil"'
 
 test_begin_subtest "patch sequence number #1"
 output=$(test_emacs '(notmuch-wash-subject-to-patch-sequence-number
@@ -60,55 +60,55 @@ test_begin_subtest "filename #1"
 output=$(test_emacs '(notmuch-wash-subject-to-filename
       "just a subject line")'
 )
-test_expect_equal $output '"just-a-subject-line"'
+test_expect_equal "$output" '"just-a-subject-line"'
 
 test_begin_subtest "filename #2"
 output=$(test_emacs '(notmuch-wash-subject-to-filename
       " [any]  [prefixes are ] [removed!] from the subject")'
 )
-test_expect_equal $output '"from-the-subject"'
+test_expect_equal "$output" '"from-the-subject"'
 
 test_begin_subtest "filename #3"
 output=$(test_emacs '(notmuch-wash-subject-to-filename
       "  leading and trailing space  ")'
 )
-test_expect_equal $output '"leading-and-trailing-space"'
+test_expect_equal "$output" '"leading-and-trailing-space"'
 
 test_begin_subtest "filename #4"
 output=$(test_emacs '(notmuch-wash-subject-to-filename
       "!#  leading ()// &%, and in between_and_trailing garbage ()(&%%")'
 )
-test_expect_equal $output '"-leading-and-in-between_and_trailing-garbage"'
+test_expect_equal "$output" '"-leading-and-in-between_and_trailing-garbage"'
 
 test_begin_subtest "filename #5"
 output=$(test_emacs '(notmuch-wash-subject-to-filename
       "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz.-_01234567890")'
 )
-test_expect_equal $output '"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz.-_01234567890"'
+test_expect_equal "$output" '"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz.-_01234567890"'
 
 test_begin_subtest "filename #6"
 output=$(test_emacs '(notmuch-wash-subject-to-filename
       "sequences of ... are squashed and trailing are removed ...")'
 )
-test_expect_equal $output '"sequences-of-.-are-squashed-and-trailing-are-removed"'
+test_expect_equal "$output" '"sequences-of-.-are-squashed-and-trailing-are-removed"'
 
 test_begin_subtest "filename #7"
 output=$(test_emacs '(notmuch-wash-subject-to-filename
       "max length test" 1)'
 )
-test_expect_equal $output '"m"'
+test_expect_equal "$output" '"m"'
 
 test_begin_subtest "filename #8"
 output=$(test_emacs '(notmuch-wash-subject-to-filename
       "max length test /&(/%&/%%&¤%¤" 20)'
 )
-test_expect_equal $output '"max-length-test"'
+test_expect_equal "$output" '"max-length-test"'
 
 test_begin_subtest "filename #9"
 output=$(test_emacs '(notmuch-wash-subject-to-filename
       "[a prefix] [is only separated] by [spaces], so \"by\" is not okay!")'
 )
-test_expect_equal $output '"by-spaces-so-by-is-not-okay"'
+test_expect_equal "$output" '"by-spaces-so-by-is-not-okay"'
 
 # test notmuch-wash-subject-to-patch-filename (subject)
 test_begin_subtest "patch filename #1"

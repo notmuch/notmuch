@@ -35,10 +35,20 @@
     "Disable yes-or-no-p before executing kill-emacs"
     (defun yes-or-no-p (prompt) t)))
 
+;; Emacs bug #2930:
+;;	23.0.92; `accept-process-output' and `sleep-for' do not run sentinels
+;; seems to be present in Emacs 23.1.
+;; Running `list-processes' after `accept-process-output' seems to work
+;; around this problem.
+(if (and (= emacs-major-version 23) (= emacs-minor-version 1))
+  (defadvice accept-process-output (after run-list-processes activate)
+    "run list-processes after executing accept-process-output"
+    (list-processes)))
+
 (defun notmuch-test-wait ()
   "Wait for process completion."
   (while (get-buffer-process (current-buffer))
-    (sleep-for 0.1)))
+    (accept-process-output nil 0.1)))
 
 (defun test-output (&optional filename)
   "Save current buffer to file FILENAME.  Default FILENAME is OUTPUT."
@@ -88,6 +98,28 @@ nothing."
 
 (add-hook-counter 'notmuch-hello-mode-hook)
 (add-hook-counter 'notmuch-hello-refresh-hook)
+
+(defadvice notmuch-search-process-filter (around pessimal activate disable)
+  "Feed notmuch-search-process-filter one character at a time."
+  (let ((string (ad-get-arg 1)))
+    (loop for char across string
+	  do (progn
+	       (ad-set-arg 1 (char-to-string char))
+	       ad-do-it))))
+
+(defun notmuch-test-mark-links ()
+  "Enclose links in the current buffer with << and >>."
+  ;; Links are often created by jit-lock functions
+  (jit-lock-fontify-now)
+  (save-excursion
+    (let ((inhibit-read-only t))
+      (goto-char (point-min))
+      (let ((button))
+	(while (setq button (next-button (point)))
+	  (goto-char (button-start button))
+	  (insert "<<")
+	  (goto-char (button-end button))
+	  (insert ">>"))))))
 
 (defmacro notmuch-test-run (&rest body)
   "Evaluate a BODY of test expressions and output the result."

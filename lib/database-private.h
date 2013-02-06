@@ -52,6 +52,7 @@ struct _notmuch_database {
     Xapian::QueryParser *query_parser;
     Xapian::TermGenerator *term_gen;
     Xapian::ValueRangeProcessor *value_range_processor;
+    Xapian::ValueRangeProcessor *date_range_processor;
 };
 
 /* Return the list of terms from the given iterator matching a prefix.

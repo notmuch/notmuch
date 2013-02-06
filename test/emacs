@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 test_description="emacs interface"
-. test-lib.sh
+. ./test-lib.sh
 
 EXPECTED=$TEST_DIRECTORY/emacs.expected-output
 
@@ -33,6 +33,16 @@ test_begin_subtest "Basic notmuch-search view in emacs"
 test_emacs '(notmuch-search "tag:inbox")
 	    (notmuch-test-wait)
 	    (test-output)'
+test_expect_equal_file OUTPUT $EXPECTED/notmuch-search-tag-inbox
+
+test_begin_subtest "Incremental parsing of search results"
+test_emacs "(ad-enable-advice 'notmuch-search-process-filter 'around 'pessimal)
+	    (ad-activate 'notmuch-search-process-filter)
+	    (notmuch-search \"tag:inbox\")
+	    (notmuch-test-wait)
+	    (ad-disable-advice 'notmuch-search-process-filter 'around 'pessimal)
+	    (ad-activate 'notmuch-search-process-filter)
+	    (test-output)"
 test_expect_equal_file OUTPUT $EXPECTED/notmuch-search-tag-inbox
 
 test_begin_subtest "Navigation of notmuch-hello to search results"
@@ -112,15 +122,27 @@ test_emacs "(notmuch-search \"$os_x_darwin_thread\")
 output=$(notmuch search $os_x_darwin_thread | notmuch_search_sanitize)
 test_expect_equal "$output" "thread:XXX   2009-11-18 [4/4] Jjgod Jiang, Alexander Botero-Lowry; [notmuch] Mac OS X/Darwin compatibility issues (inbox unread)"
 
-test_begin_subtest "Add tag from notmuch-show view"
+test_begin_subtest "notmuch-show: add single tag to single message"
 test_emacs "(notmuch-show \"$os_x_darwin_thread\")
 	    (execute-kbd-macro \"+tag-from-show-view\")"
 output=$(notmuch search $os_x_darwin_thread | notmuch_search_sanitize)
 test_expect_equal "$output" "thread:XXX   2009-11-18 [4/4] Jjgod Jiang, Alexander Botero-Lowry; [notmuch] Mac OS X/Darwin compatibility issues (inbox tag-from-show-view unread)"
 
-test_begin_subtest "Remove tag from notmuch-show view"
+test_begin_subtest "notmuch-show: remove single tag from single message"
 test_emacs "(notmuch-show \"$os_x_darwin_thread\")
 	    (execute-kbd-macro \"-tag-from-show-view\")"
+output=$(notmuch search $os_x_darwin_thread | notmuch_search_sanitize)
+test_expect_equal "$output" "thread:XXX   2009-11-18 [4/4] Jjgod Jiang, Alexander Botero-Lowry; [notmuch] Mac OS X/Darwin compatibility issues (inbox unread)"
+
+test_begin_subtest "notmuch-show: add multiple tags to single message"
+test_emacs "(notmuch-show \"$os_x_darwin_thread\")
+	    (execute-kbd-macro \"+tag1-from-show-view +tag2-from-show-view\")"
+output=$(notmuch search $os_x_darwin_thread | notmuch_search_sanitize)
+test_expect_equal "$output" "thread:XXX   2009-11-18 [4/4] Jjgod Jiang, Alexander Botero-Lowry; [notmuch] Mac OS X/Darwin compatibility issues (inbox tag1-from-show-view tag2-from-show-view unread)"
+
+test_begin_subtest "notmuch-show: remove multiple tags from single message"
+test_emacs "(notmuch-show \"$os_x_darwin_thread\")
+	    (execute-kbd-macro \"-tag1-from-show-view -tag2-from-show-view\")"
 output=$(notmuch search $os_x_darwin_thread | notmuch_search_sanitize)
 test_expect_equal "$output" "thread:XXX   2009-11-18 [4/4] Jjgod Jiang, Alexander Botero-Lowry; [notmuch] Mac OS X/Darwin compatibility issues (inbox unread)"
 
@@ -159,7 +181,8 @@ emacs_deliver_message \
      (insert "To: user@example.com\n")'
 sed \
     -e s',^User-Agent: Notmuch/.* Emacs/.*,User-Agent: Notmuch/XXX Emacs/XXX,' \
-    -e s',^Message-ID: <.*>$,Message-ID: <XXX>,' < sent_message >OUTPUT
+    -e s',^Message-ID: <.*>$,Message-ID: <XXX>,' \
+    -e s',^\(Content-Type: text/plain\); charset=us-ascii$,\1,' < sent_message >OUTPUT
 cat <<EOF >EXPECTED
 From: Notmuch Test Suite <test_suite@notmuchmail.org>
 To: user@example.com
@@ -168,7 +191,7 @@ Date: 01 Jan 2000 12:00:00 -0000
 User-Agent: Notmuch/XXX Emacs/XXX
 Message-ID: <XXX>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 
 This is a test that messages are sent via SMTP
 EOF
@@ -505,6 +528,32 @@ test_emacs '(let ((standard-input "\"attachment2.gz\""))
 	      (notmuch-show-save-part "id:cf0c4d610911171136h1713aa59w9cf9aa31f052ad0a@mail.gmail.com" 5))'
 test_expect_equal_file attachment2.gz "$EXPECTED/attachment"
 
+test_begin_subtest "Save 8bit attachment from within emacs using notmuch-show-save-attachments"
+
+add_message '[subject]="Attachment with 8bit chars"' \
+	'[header]="MIME-Version: 1.0"' \
+	'[content-type]="multipart/mixed; boundary=\"abcd\""' \
+	'[body]="--abcd
+Content-Type: text/plain
+
+Attachment follows:
+
+--abcd
+Content-Type: application/octet-stream; name=\"sample\"
+Content-Transfer-Encoding: 8bit
+Content-Disposition: attachment; filename=\"sample\"
+
+“¡ Hey ! It compiles ¡ Ship it !”
+
+--abcd--
+"'
+test_emacs '(notmuch-show "id:'"${gen_msg_id}"'")
+	    (delete-file "OUTPUT")
+	    (let ((standard-input "\"OUTPUT\""))
+	      (notmuch-show-save-attachments))'
+
+test_expect_equal "$(cat OUTPUT)" '“¡ Hey ! It compiles ¡ Ship it !”'
+
 test_begin_subtest "View raw message within emacs"
 test_emacs '(notmuch-show "id:cf0c4d610911171136h1713aa59w9cf9aa31f052ad0a@mail.gmail.com")
 	    (notmuch-show-view-raw-message)
@@ -582,6 +631,44 @@ test_emacs '(notmuch-show "id:f35dbb950911171438k5df6eb56k77b6c0944e2e79ae@mail.
 	    (test-visible-output)'
 test_expect_equal_file OUTPUT $EXPECTED/notmuch-show-thread-with-hidden-messages
 
+test_begin_subtest "notmuch-show: show message headers"
+test_emacs \
+	'(let ((notmuch-message-headers '\''("Subject" "To" "Cc" "Date"))
+	       (notmuch-message-headers-visible t))
+	   (notmuch-show "id:f35dbb950911171438k5df6eb56k77b6c0944e2e79ae@mail.gmail.com")
+	   (test-visible-output))'
+test_expect_equal_file OUTPUT $EXPECTED/notmuch-show-message-with-headers-visible
+
+test_begin_subtest "notmuch-show: hide message headers"
+test_emacs \
+	'(let ((notmuch-message-headers '\''("Subject" "To" "Cc" "Date"))
+	       (notmuch-message-headers-visible nil))
+	   (notmuch-show "id:f35dbb950911171438k5df6eb56k77b6c0944e2e79ae@mail.gmail.com")
+	   (test-visible-output))'
+test_expect_equal_file OUTPUT $EXPECTED/notmuch-show-message-with-headers-hidden
+
+test_begin_subtest "notmuch-show: hide message headers (w/ notmuch-show-toggle-visibility-headers)"
+test_emacs \
+	'(let ((notmuch-message-headers '\''("Subject" "To" "Cc" "Date"))
+	       (notmuch-message-headers-visible t))
+	   (notmuch-show "id:f35dbb950911171438k5df6eb56k77b6c0944e2e79ae@mail.gmail.com")
+	   (notmuch-show-toggle-visibility-headers)
+	   (test-visible-output))'
+test_expect_equal_file OUTPUT $EXPECTED/notmuch-show-message-with-headers-hidden
+
+test_begin_subtest "notmuch-show: collapse all messages in thread"
+test_emacs '(notmuch-show "id:f35dbb950911171435ieecd458o853c873e35f4be95@mail.gmail.com")
+	(let ((current-prefix-arg t))
+	  (notmuch-show-open-or-close-all)
+	  (test-visible-output))'
+test_expect_equal_file OUTPUT $EXPECTED/notmuch-show-thread-with-all-messages-collapsed
+
+test_begin_subtest "notmuch-show: uncollapse all messages in thread"
+test_emacs '(notmuch-show "id:f35dbb950911171435ieecd458o853c873e35f4be95@mail.gmail.com")
+	(notmuch-show-open-or-close-all)
+	(test-visible-output)'
+test_expect_equal_file OUTPUT $EXPECTED/notmuch-show-thread-with-all-messages-uncollapsed
+
 test_begin_subtest "Stashing in notmuch-show"
 add_message '[date]="Sat, 01 Jan 2000 12:00:00 -0000"' \
     '[from]="Some One <someone@somewhere.org>"' \
@@ -618,7 +705,7 @@ Some One <someone@somewhere.org>
 Some One Else <notsomeone@somewhere.org>
 Notmuch <notmuch@notmuchmail.org>
 Stash my stashables
-id:"bought"
+id:bought
 bought
 inbox,stashtest
 ${gen_msg_filename}
@@ -642,6 +729,8 @@ test_expect_equal "$(cat OUTPUT)" "thread:XXX"
 test_begin_subtest 'notmuch-show-advance-and-archive with invisible signature'
 message1='id:20091118010116.GC25380@dottiness.seas.harvard.edu'
 message2='id:1258491078-29658-1-git-send-email-dottedmag@dottedmag.net'
+test_emacs "(notmuch-show \"$message2\")
+	    (test-output \"EXPECTED\")"
 test_emacs "(notmuch-search \"$message1 or $message2\")
 	    (notmuch-test-wait)
 	    (notmuch-search-show-thread)
@@ -649,8 +738,6 @@ test_emacs "(notmuch-search \"$message1 or $message2\")
 	    (redisplay)
 	    (notmuch-show-advance-and-archive)
 	    (test-output)"
-test_emacs "(notmuch-show \"$message2\")
-	    (test-output \"EXPECTED\")"
 test_expect_equal_file OUTPUT EXPECTED
 
 test_begin_subtest "Refresh show buffer"
@@ -737,5 +824,65 @@ counter=$(test_emacs \
        notmuch-hello-refresh-hook-counter)'
 )
 test_expect_equal "$counter" 2
+
+
+add_message '[subject]="HTML mail with images"' \
+    '[content-type]="multipart/related; boundary=abcd"' \
+    '[body]="--abcd
+Content-Type: text/html
+
+<img src="cid:330@goomoji.gmail"> smiley
+
+--abcd
+Content-Type: image/gif
+Content-Transfer-Encoding: base64
+Content-ID: <330@goomoji.gmail>
+
+R0lGODlhDAAMAKIFAF5LAP/zxAAAANyuAP/gaP///wAAAAAAACH5BAEAAAUALAAAAAAMAAwAAAMl
+WLPcGjDKFYi9lxKBOaGcF35DhWHamZUW0K4mAbiwWtuf0uxFAgA7
+--abcd--"'
+test_emacs "(let ((mm-text-html-renderer
+		   (if (assq 'shr mm-text-html-renderer-alist)
+		       'shr 'html2text)))
+	      (notmuch-show \"id:${gen_msg_id}\"))
+	    (test-output)" > /dev/null
+# Different Emacs versions and renderers give very different results,
+# so just check that something reasonable showed up.  We first cat the
+# output so the test framework will print it if the test fails.
+test_expect_success "Rendering HTML mail with images" \
+    'cat OUTPUT && grep -q smiley OUTPUT'
+
+
+test_begin_subtest "Search handles subprocess errors"
+cat > notmuch_fail <<EOF
+#!/bin/sh
+echo This is output
+echo This is an error >&2
+exit 1
+EOF
+chmod a+x notmuch_fail
+test_emacs "(let ((notmuch-command \"$PWD/notmuch_fail\"))
+	       (with-current-buffer \"*Messages*\" (erase-buffer))
+	       (notmuch-search \"tag:inbox\")
+	       (notmuch-test-wait)
+	       (with-current-buffer \"*Messages*\"
+		  (test-output \"MESSAGES\"))
+	       (with-current-buffer \"*Notmuch errors*\"
+		  (test-output \"ERROR\"))
+	       (test-output))"
+sed -i -e 's/^\[.*\]$/[XXX]/' ERROR
+test_expect_equal "$(cat OUTPUT; echo ---; cat MESSAGES; echo ---; cat ERROR)" "\
+Error: Unexpected output from notmuch search:
+This is output
+Error: Unexpected output from notmuch search:
+This is an error
+End of search results.
+---
+$PWD/notmuch_fail exited with status 1 (see *Notmuch errors* for more details)
+---
+[XXX]
+$PWD/notmuch_fail exited with status 1
+command: $PWD/notmuch_fail search --format\=json --format-version\=1 --sort\=newest-first tag\:inbox
+exit status: 1"
 
 test_done

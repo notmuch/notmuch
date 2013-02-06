@@ -1,7 +1,21 @@
 #! /bin/sh
 
+# Test whether this shell is capable of parameter substring processing.
+( option='a/b'; : ${option#*/} ) 2>/dev/null || {
+    echo "
+The shell interpreting '$0' is lacking some required features.
+
+To work around this problem you may try to execute:
+
+    ksh $0 $*
+ or
+    bash $0 $*
+"
+    exit 1
+}
+
 # Store original IFS value so it can be changed (and restored) in many places.
-readonly DEFAULT_IFS=$IFS
+readonly DEFAULT_IFS="$IFS"
 
 srcdir=$(dirname "$0")
 
@@ -114,6 +128,10 @@ Fine tuning of some installation directories is available:
 	--bashcompletiondir=DIR Bash completions files [SYSCONFDIR/bash_completion.d]
 	--zshcompletiondir=DIR	Zsh completions files [PREFIX/share/zsh/functions/Completion/Unix]
 
+Some specific library versions can be specified (auto-detected otherwise):
+
+        --with-gmime-version=VERS       Specify GMIME version (2.4 or 2.6)
+
 Some features can be disabled (--with-feature=no is equivalent to
 --without-feature) :
 
@@ -218,7 +236,12 @@ done
 # Makefile.config file later like most values), because we need to
 # actually investigate this value compared to the ldconfig_paths value
 # below.
-libdir_expanded=${LIBDIR:-${PREFIX}/lib}
+if [ -z "$LIBDIR" ] ; then
+    libdir_expanded="${PREFIX}/lib"
+else
+    # very non-general variable expansion
+    libdir_expanded=`echo "$LIBDIR" | sed "s|\\${prefix}|${PREFIX}|g; s|\\$prefix/|${PREFIX}/|; s|//*|/|g"`
+fi
 
 cat <<EOF
 Welcome to Notmuch, a system for indexing, searching and tagging your email.
@@ -355,6 +378,14 @@ if [ $uname = "Darwin" ] ; then
 elif [ $uname = "SunOS" ] ; then
     printf "Solaris.\n"
     platform=SOLARIS
+    linker_resolves_library_dependencies=0
+elif [ $uname = "FreeBSD" ] ; then
+    printf "FreeBSD.\n"
+    platform=FREEBSD
+    linker_resolves_library_dependencies=0
+elif [ $uname = "OpenBSD" ] ; then
+    printf "OpenBSD.\n"
+    platform=OPENBSD
     linker_resolves_library_dependencies=0
 elif [ $uname = "Linux" ] || [ $uname = "GNU" ] ; then
     printf "$uname\n"
@@ -510,7 +541,7 @@ fi
 
 WARN_CXXFLAGS=""
 printf "Checking for available C++ compiler warning flags... "
-for flag in -Wall -Wextra -Wwrite-strings -Wswitch-enum; do
+for flag in -Wall -Wextra -Wwrite-strings; do
     if ${CC} $flag -o minimal minimal.c > /dev/null 2>&1
     then
 	WARN_CXXFLAGS="${WARN_CXXFLAGS}${WARN_CXXFLAGS:+ }${flag}"
@@ -645,7 +676,7 @@ HAVE_GETLINE = ${have_getline}
 # build its own version)
 HAVE_STRCASESTR = ${have_strcasestr}
 
-# Supported platforms (so far) are: LINUX, MACOSX, SOLARIS
+# Supported platforms (so far) are: LINUX, MACOSX, SOLARIS, FREEBSD, OPENBSD
 PLATFORM = ${platform}
 
 # Whether the linker will automatically resolve the dependency of one

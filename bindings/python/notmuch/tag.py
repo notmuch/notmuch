@@ -17,7 +17,7 @@ along with notmuch.  If not, see <http://www.gnu.org/licenses/>.
 Copyright 2010 Sebastian Spaeth <Sebastian@SSpaeth.de>
 """
 from ctypes import c_char_p
-from notmuch.globals import (
+from .globals import (
     nmlib,
     Python3StringMixIn,
     NotmuchTagsP,

@@ -22,6 +22,7 @@
 
 #include "notmuch-client.h"
 #include "gmime-filter-headers.h"
+#include "sprinter.h"
 
 static void
 show_reply_headers (GMimeMessage *message)
@@ -98,25 +99,77 @@ format_part_reply (mime_node_t *node)
 	format_part_reply (mime_node_child (node, i));
 }
 
-/* Is the given address configured as one of the user's "personal" or
- * "other" addresses. */
-static int
-address_is_users (const char *address, notmuch_config_t *config)
+typedef enum {
+    USER_ADDRESS_IN_STRING,
+    STRING_IN_USER_ADDRESS,
+    STRING_IS_USER_ADDRESS,
+} address_match_t;
+
+/* Match given string against given address according to mode. */
+static notmuch_bool_t
+match_address (const char *str, const char *address, address_match_t mode)
+{
+    switch (mode) {
+    case USER_ADDRESS_IN_STRING:
+	return strcasestr (str, address) != NULL;
+    case STRING_IN_USER_ADDRESS:
+	return strcasestr (address, str) != NULL;
+    case STRING_IS_USER_ADDRESS:
+	return strcasecmp (address, str) == 0;
+    }
+
+    return FALSE;
+}
+
+/* Match given string against user's configured "primary" and "other"
+ * addresses according to mode. */
+static const char *
+address_match (const char *str, notmuch_config_t *config, address_match_t mode)
 {
     const char *primary;
     const char **other;
     size_t i, other_len;
 
+    if (!str || *str == '\0')
+	return NULL;
+
     primary = notmuch_config_get_user_primary_email (config);
-    if (strcasecmp (primary, address) == 0)
-	return 1;
+    if (match_address (str, primary, mode))
+	return primary;
 
     other = notmuch_config_get_user_other_email (config, &other_len);
-    for (i = 0; i < other_len; i++)
-	if (strcasecmp (other[i], address) == 0)
-	    return 1;
+    for (i = 0; i < other_len; i++) {
+	if (match_address (str, other[i], mode))
+	    return other[i];
+    }
 
-    return 0;
+    return NULL;
+}
+
+/* Does the given string contain an address configured as one of the
+ * user's "primary" or "other" addresses. If so, return the matching
+ * address, NULL otherwise. */
+static const char *
+user_address_in_string (const char *str, notmuch_config_t *config)
+{
+    return address_match (str, config, USER_ADDRESS_IN_STRING);
+}
+
+/* Do any of the addresses configured as one of the user's "primary"
+ * or "other" addresses contain the given string. If so, return the
+ * matching address, NULL otherwise. */
+static const char *
+string_in_user_address (const char *str, notmuch_config_t *config)
+{
+    return address_match (str, config, STRING_IN_USER_ADDRESS);
+}
+
+/* Is the given address configured as one of the user's "primary" or
+ * "other" addresses. */
+static notmuch_bool_t
+address_is_users (const char *address, notmuch_config_t *config)
+{
+    return address_match (address, config, STRING_IS_USER_ADDRESS) != NULL;
 }
 
 /* Scan addresses in 'list'.
@@ -325,19 +378,18 @@ add_recipients_from_message (GMimeMessage *reply,
 static const char *
 guess_from_received_header (notmuch_config_t *config, notmuch_message_t *message)
 {
-    const char *received,*primary,*by;
-    const char **other;
-    char *tohdr;
+    const char *addr, *received, *by;
     char *mta,*ptr,*token;
     char *domain=NULL;
     char *tld=NULL;
     const char *delim=". \t";
-    size_t i,j,other_len;
+    size_t i;
 
-    const char *to_headers[] = {"Envelope-to", "X-Original-To"};
-
-    primary = notmuch_config_get_user_primary_email (config);
-    other = notmuch_config_get_user_other_email (config, &other_len);
+    const char *to_headers[] = {
+	"Envelope-to",
+	"X-Original-To",
+	"Delivered-To",
+    };
 
     /* sadly, there is no standard way to find out to which email
      * address a mail was delivered - what is in the headers depends
@@ -348,28 +400,19 @@ guess_from_received_header (notmuch_config_t *config, notmuch_message_t *message
      * the To: or Cc: header. From here we try the following in order:
      * 1) check for an Envelope-to: header
      * 2) check for an X-Original-To: header
-     * 3) check for a (for <email@add.res>) clause in Received: headers
-     * 4) check for the domain part of known email addresses in the
+     * 3) check for a Delivered-To: header
+     * 4) check for a (for <email@add.res>) clause in Received: headers
+     * 5) check for the domain part of known email addresses in the
      *    'by' part of Received headers
      * If none of these work, we give up and return NULL
      */
-    for (i = 0; i < sizeof(to_headers)/sizeof(*to_headers); i++) {
-	tohdr = xstrdup(notmuch_message_get_header (message, to_headers[i]));
-	if (tohdr && *tohdr) {
-	    /* tohdr is potentialy a list of email addresses, so here we
-	     * check if one of the email addresses is a substring of tohdr
-	     */
-	    if (strcasestr(tohdr, primary)) {
-		free(tohdr);
-		return primary;
-	    }
-	    for (j = 0; j < other_len; j++)
-		if (strcasestr (tohdr, other[j])) {
-		    free(tohdr);
-		    return other[j];
-		}
-	    free(tohdr);
-	}
+    for (i = 0; i < ARRAY_SIZE (to_headers); i++) {
+	const char *tohdr = notmuch_message_get_header (message, to_headers[i]);
+
+	/* Note: tohdr potentially contains a list of email addresses. */
+	addr = user_address_in_string (tohdr, config);
+	if (addr)
+	    return addr;
     }
 
     /* We get the concatenated Received: headers and search from the
@@ -387,19 +430,12 @@ guess_from_received_header (notmuch_config_t *config, notmuch_message_t *message
      * header
      */
     ptr = strstr (received, " for ");
-    if (ptr) {
-	/* the text following is potentialy a list of email addresses,
-	 * so again we check if one of the email addresses is a
-	 * substring of ptr
-	 */
-	if (strcasestr(ptr, primary)) {
-	    return primary;
-	}
-	for (i = 0; i < other_len; i++)
-	    if (strcasestr (ptr, other[i])) {
-		return other[i];
-	    }
-    }
+
+    /* Note: ptr potentially contains a list of email addresses. */
+    addr = user_address_in_string (ptr, config);
+    if (addr)
+	return addr;
+
     /* Finally, we parse all the " by MTA ..." headers to guess the
      * email address that this was originally delivered to.
      * We extract just the MTA here by removing leading whitespace and
@@ -440,15 +476,11 @@ guess_from_received_header (notmuch_config_t *config, notmuch_message_t *message
 	     */
 	    *(tld-1) = '.';
 
-	    if (strcasestr(primary, domain)) {
-		free(mta);
-		return primary;
+	    addr = string_in_user_address (domain, config);
+	    if (addr) {
+		free (mta);
+		return addr;
 	    }
-	    for (i = 0; i < other_len; i++)
-		if (strcasestr (other[i],domain)) {
-		    free(mta);
-		    return other[i];
-		}
 	}
 	free (mta);
     }
@@ -516,7 +548,8 @@ notmuch_reply_format_default(void *ctx,
 			     notmuch_config_t *config,
 			     notmuch_query_t *query,
 			     notmuch_show_params_t *params,
-			     notmuch_bool_t reply_all)
+			     notmuch_bool_t reply_all,
+			     unused (sprinter_t *sp))
 {
     GMimeMessage *reply;
     notmuch_messages_t *messages;
@@ -544,8 +577,7 @@ notmuch_reply_format_default(void *ctx,
 	g_object_unref (G_OBJECT (reply));
 	reply = NULL;
 
-	if (mime_node_open (ctx, message, params->cryptoctx, params->decrypt,
-			    &root) == NOTMUCH_STATUS_SUCCESS) {
+	if (mime_node_open (ctx, message, &(params->crypto), &root) == NOTMUCH_STATUS_SUCCESS) {
 	    format_part_reply (root);
 	    talloc_free (root);
 	}
@@ -556,11 +588,12 @@ notmuch_reply_format_default(void *ctx,
 }
 
 static int
-notmuch_reply_format_json(void *ctx,
-			  notmuch_config_t *config,
-			  notmuch_query_t *query,
-			  notmuch_show_params_t *params,
-			  notmuch_bool_t reply_all)
+notmuch_reply_format_sprinter(void *ctx,
+			      notmuch_config_t *config,
+			      notmuch_query_t *query,
+			      notmuch_show_params_t *params,
+			      notmuch_bool_t reply_all,
+			      sprinter_t *sp)
 {
     GMimeMessage *reply;
     notmuch_messages_t *messages;
@@ -574,27 +607,27 @@ notmuch_reply_format_json(void *ctx,
 
     messages = notmuch_query_search_messages (query);
     message = notmuch_messages_get (messages);
-    if (mime_node_open (ctx, message, params->cryptoctx, params->decrypt,
-			&node) != NOTMUCH_STATUS_SUCCESS)
+    if (mime_node_open (ctx, message, &(params->crypto), &node) != NOTMUCH_STATUS_SUCCESS)
 	return 1;
 
     reply = create_reply_message (ctx, config, message, reply_all);
     if (!reply)
 	return 1;
 
+    sp->begin_map (sp);
+
     /* The headers of the reply message we've created */
-    printf ("{\"reply-headers\": ");
-    format_headers_json (ctx, reply, TRUE);
+    sp->map_key (sp, "reply-headers");
+    format_headers_sprinter (sp, reply, TRUE);
     g_object_unref (G_OBJECT (reply));
     reply = NULL;
 
     /* Start the original */
-    printf (", \"original\": ");
-
-    format_part_json (ctx, node, TRUE);
+    sp->map_key (sp, "original");
+    format_part_sprinter (ctx, sp, node, TRUE, TRUE);
 
     /* End */
-    printf ("}\n");
+    sp->end (sp);
     notmuch_message_destroy (message);
 
     return 0;
@@ -606,7 +639,8 @@ notmuch_reply_format_headers_only(void *ctx,
 				  notmuch_config_t *config,
 				  notmuch_query_t *query,
 				  unused (notmuch_show_params_t *params),
-				  notmuch_bool_t reply_all)
+				  notmuch_bool_t reply_all,
+				  unused (sprinter_t *sp))
 {
     GMimeMessage *reply;
     notmuch_messages_t *messages;
@@ -663,6 +697,7 @@ notmuch_reply_format_headers_only(void *ctx,
 enum {
     FORMAT_DEFAULT,
     FORMAT_JSON,
+    FORMAT_SEXP,
     FORMAT_HEADERS_ONLY,
 };
 
@@ -674,22 +709,36 @@ notmuch_reply_command (void *ctx, int argc, char *argv[])
     notmuch_query_t *query;
     char *query_string;
     int opt_index, ret = 0;
-    int (*reply_format_func)(void *ctx, notmuch_config_t *config, notmuch_query_t *query, notmuch_show_params_t *params, notmuch_bool_t reply_all);
-    notmuch_show_params_t params = { .part = -1 };
+    int (*reply_format_func) (void *ctx,
+			      notmuch_config_t *config,
+			      notmuch_query_t *query,
+			      notmuch_show_params_t *params,
+			      notmuch_bool_t reply_all,
+			      struct sprinter *sp);
+    notmuch_show_params_t params = {
+	.part = -1,
+	.crypto = {
+	    .verify = FALSE,
+	    .decrypt = FALSE
+	}
+    };
     int format = FORMAT_DEFAULT;
     int reply_all = TRUE;
+    struct sprinter *sp = NULL;
 
     notmuch_opt_desc_t options[] = {
 	{ NOTMUCH_OPT_KEYWORD, &format, "format", 'f',
 	  (notmuch_keyword_t []){ { "default", FORMAT_DEFAULT },
 				  { "json", FORMAT_JSON },
+				  { "sexp", FORMAT_SEXP },
 				  { "headers-only", FORMAT_HEADERS_ONLY },
 				  { 0, 0 } } },
+	{ NOTMUCH_OPT_INT, &notmuch_format_version, "format-version", 0, 0 },
 	{ NOTMUCH_OPT_KEYWORD, &reply_all, "reply-to", 'r',
 	  (notmuch_keyword_t []){ { "all", TRUE },
 				  { "sender", FALSE },
 				  { 0, 0 } } },
-	{ NOTMUCH_OPT_BOOLEAN, &params.decrypt, "decrypt", 'd', 0 },
+	{ NOTMUCH_OPT_BOOLEAN, &params.crypto.decrypt, "decrypt", 'd', 0 },
 	{ 0, 0, 0, 0, 0 }
     };
 
@@ -699,31 +748,19 @@ notmuch_reply_command (void *ctx, int argc, char *argv[])
 	return 1;
     }
 
-    if (format == FORMAT_HEADERS_ONLY)
+    if (format == FORMAT_HEADERS_ONLY) {
 	reply_format_func = notmuch_reply_format_headers_only;
-    else if (format == FORMAT_JSON)
-	reply_format_func = notmuch_reply_format_json;
-    else
+    } else if (format == FORMAT_JSON) {
+	reply_format_func = notmuch_reply_format_sprinter;
+	sp = sprinter_json_create (ctx, stdout);
+    } else if (format == FORMAT_SEXP) {
+	reply_format_func = notmuch_reply_format_sprinter;
+	sp = sprinter_sexp_create (ctx, stdout);
+    } else {
 	reply_format_func = notmuch_reply_format_default;
-
-    if (params.decrypt) {
-#ifdef GMIME_ATLEAST_26
-	/* TODO: GMimePasswordRequestFunc */
-	params.cryptoctx = g_mime_gpg_context_new (NULL, "gpg");
-#else
-	GMimeSession* session = g_object_new (g_mime_session_get_type(), NULL);
-	params.cryptoctx = g_mime_gpg_context_new (session, "gpg");
-#endif
-	if (params.cryptoctx) {
-	    g_mime_gpg_context_set_always_trust ((GMimeGpgContext*) params.cryptoctx, FALSE);
-	} else {
-	    params.decrypt = FALSE;
-	    fprintf (stderr, "Failed to construct gpg context.\n");
-	}
-#ifndef GMIME_ATLEAST_26
-	g_object_unref (session);
-#endif
     }
+
+    notmuch_exit_if_unsupported_format ();
 
     config = notmuch_config_open (ctx, NULL, NULL);
     if (config == NULL)
@@ -750,14 +787,12 @@ notmuch_reply_command (void *ctx, int argc, char *argv[])
 	return 1;
     }
 
-    if (reply_format_func (ctx, config, query, &params, reply_all) != 0)
+    if (reply_format_func (ctx, config, query, &params, reply_all, sp) != 0)
 	return 1;
 
+    notmuch_crypto_cleanup (&params.crypto);
     notmuch_query_destroy (query);
     notmuch_database_destroy (notmuch);
-
-    if (params.cryptoctx)
-	g_object_unref(params.cryptoctx);
 
     return ret;
 }

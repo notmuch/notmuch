@@ -435,6 +435,9 @@ _notmuch_message_index_file (notmuch_message_t *message,
     const char *from, *subject;
     notmuch_status_t ret = NOTMUCH_STATUS_SUCCESS;
     static int initialized = 0;
+    char from_buf[5];
+    bool is_mbox = false;
+    static bool mbox_warning = false;
 
     if (! initialized) {
 	g_mime_init (0);
@@ -448,20 +451,51 @@ _notmuch_message_index_file (notmuch_message_t *message,
 	goto DONE;
     }
 
+    /* Is this mbox? */
+    if (fread (from_buf, sizeof (from_buf), 1, file) == 1 &&
+	strncmp (from_buf, "From ", 5) == 0)
+	is_mbox = true;
+    rewind (file);
+
     /* Evil GMime steals my FILE* here so I won't fclose it. */
     stream = g_mime_stream_file_new (file);
 
     parser = g_mime_parser_new_with_stream (stream);
+    g_mime_parser_set_scan_from (parser, is_mbox);
 
     mime_message = g_mime_parser_construct_message (parser);
 
-    from = g_mime_message_get_sender (mime_message);
-    addresses = internet_address_list_parse_string (from);
+    if (is_mbox) {
+	if (!g_mime_parser_eos (parser)) {
+	    /* This is a multi-message mbox. */
+	    ret = NOTMUCH_STATUS_FILE_NOT_EMAIL;
+	    goto DONE;
+	}
+	/* For historical reasons, we support single-message mboxes,
+	 * but this behavior is likely to change in the future, so
+	 * warn. */
+	if (!mbox_warning) {
+	    mbox_warning = true;
+	    fprintf (stderr, "\
+Warning: %s is an mbox containing a single message,\n\
+likely caused by misconfigured mail delivery.  Support for single-message\n\
+mboxes is deprecated and may be removed in the future.\n", filename);
+	}
+    }
 
-    _index_address_list (message, "from", addresses);
+    from = g_mime_message_get_sender (mime_message);
+
+    addresses = internet_address_list_parse_string (from);
+    if (addresses) {
+	_index_address_list (message, "from", addresses);
+	g_object_unref (addresses);
+    }
 
     addresses = g_mime_message_get_all_recipients (mime_message);
-    _index_address_list (message, "to", addresses);
+    if (addresses) {
+	_index_address_list (message, "to", addresses);
+	g_object_unref (addresses);
+    }
 
     subject = g_mime_message_get_subject (mime_message);
     _notmuch_message_gen_terms (message, "subject", subject);

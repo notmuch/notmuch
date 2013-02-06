@@ -23,29 +23,25 @@
 (require 'notmuch-tag)
 (require 'notmuch-mua)
 
-(defcustom notmuch-message-replied-tags '("replied")
-  "Tags to be automatically added to or removed from a message when it is replied to.
-Any tag in the list will be added to a replied message or,
-if it is prefaced with a \"-\", removed.
+(defcustom notmuch-message-replied-tags '("+replied")
+  "List of tag changes to apply to a message when it has been replied to.
+
+Tags starting with \"+\" (or not starting with either \"+\" or
+\"-\") in the list will be added, and tags starting with \"-\"
+will be removed from the message being replied to.
 
 For example, if you wanted to add a \"replied\" tag and remove
-the \"inbox\" and \"todo\", you would set
-    (\"replied\" \"-inbox\" \"-todo\"\)"
-  :type 'list
+the \"inbox\" and \"todo\" tags, you would set:
+    (\"+replied\" \"-inbox\" \"-todo\"\)"
+  :type '(repeat string)
   :group 'notmuch-send)
 
 (defun notmuch-message-mark-replied ()
   ;; get the in-reply-to header and parse it for the message id.
   (let ((rep (mail-header-parse-addresses (message-field-value "In-Reply-To"))))
     (when (and notmuch-message-replied-tags rep)
-      ;; add a "+" to any tag that is doesn't already begin with a "+"
-      ;; or "-"
-      (let ((tags (mapcar (lambda (str)
-			    (if (not (string-match "^[+-]" str))
-				(concat "+" str)
-			      str))
-			  notmuch-message-replied-tags)))
-	(apply 'notmuch-tag (notmuch-id-to-query (car (car rep))) tags)))))
+      (funcall 'notmuch-tag (notmuch-id-to-query (car (car rep)))
+	       (notmuch-tag-change-list notmuch-message-replied-tags)))))
 
 (add-hook 'message-send-hook 'notmuch-message-mark-replied)
 

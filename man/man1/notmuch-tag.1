@@ -1,23 +1,29 @@
-.TH NOTMUCH-TAG 1 2012-06-01 "Notmuch 0.13.2"
+.TH NOTMUCH-TAG 1 2013-01-24 "Notmuch 0.15.1"
 .SH NAME
-notmuch-tag \- Add/remove tags for all messages matching the search terms.
+notmuch-tag \- add/remove tags for all messages matching the search terms
 
 .SH SYNOPSIS
 .B notmuch tag
-.RI  "+<" tag> "|\-<" tag "> [...] [\-\-] <" search-term ">..."
+.RI "+<" tag ">|\-<" tag "> [...] [\-\-] <" search-term "> [...]"
+
+.B notmuch tag
+.RI "--batch"
+.RI "[ --input=<" filename "> ]"
+
 
 .SH DESCRIPTION
 
 Add/remove tags for all messages matching the search terms.
 
 See \fBnotmuch-search-terms\fR(7)
-for details of the supported syntax for <search-terms>.
+for details of the supported syntax for
+.RI < search-term >.
 
 Tags prefixed by '+' are added while those prefixed by '\-' are
-removed. For each message, tag removal is performed before tag
-addition.
+removed. For each message, tag changes are applied in the order they
+appear on the command line.
 
-The beginning of <search-terms> is recognized by the first
+The beginning of the search terms is recognized by the first
 argument that begins with neither '+' nor '\-'. Support for
 an initial search term beginning with '+' or '\-' is provided
 by allowing the user to specify a "\-\-" argument to separate
@@ -28,6 +34,93 @@ updates the maildir flags according to tag changes if the
 .B "maildir.synchronize_flags"
 configuration option is enabled. See \fBnotmuch-config\fR(1) for
 details.
+
+Supported options for
+.B tag
+include
+.RS 4
+.TP 4
+.BR \-\-batch
+
+Read batch tagging operations from a file (stdin by default). This is more
+efficient than repeated
+.B notmuch tag
+invocations. See
+.B TAG FILE FORMAT
+below for the input format. This option is not compatible with
+specifying tagging on the command line.
+.RE
+
+.RS 4
+.TP 4
+.BR "\-\-input=" <filename>
+
+Read input from given file, instead of from stdin. Implies
+.BR --batch .
+
+.SH TAG FILE FORMAT
+
+The input must consist of lines of the format:
+
+.RI "+<" tag ">|\-<" tag "> [...] [\-\-] <" query ">"
+
+Each line is interpreted similarly to
+.B notmuch tag
+command line arguments. The delimiter is one or more spaces ' '. Any
+characters in
+.RI < tag >
+.B may
+be hex-encoded with %NN where NN is the hexadecimal value of the
+character. To hex-encode a character with a multi-byte UTF-8 encoding,
+hex-encode each byte.
+Any spaces in <tag>
+.B must
+be hex-encoded as %20. Any characters that are not
+part of
+.RI  < tag >
+.B must not
+be hex-encoded.
+
+In the future tag:"tag with spaces" style quoting may be supported for
+.RI < tag >
+as well;
+for this reason all double quote characters in
+.RI < tag >
+.B should
+be hex-encoded.
+
+The
+.RI < query >
+should be quoted using Xapian boolean term quoting rules: if a term
+contains whitespace or a close paren or starts with a double quote, it
+must be enclosed in double quotes (not including any prefix) and
+double quotes inside the term must be doubled (see below for
+examples).
+
+Leading and trailing space ' ' is ignored. Empty lines and lines
+beginning with '#' are ignored.
+
+.SS EXAMPLE
+
+The following shows a valid input to batch tagging. Note that only the
+isolated '*' acts as a wildcard. Also note the two different quotings
+of the tag
+.B space in tags
+.
+.RS
+.nf
++winner *
++foo::bar%25 -- (One and Two) or (One and tag:winner)
++found::it -- tag:foo::bar%
+# ignore this line and the next
+
++space%20in%20tags -- Two
+# add tag '(tags)', among other stunts.
++crazy{ +(tags) +&are +#possible\ -- tag:"space in tags"
++match*crazy -- tag:crazy{
++some_tag -- id:"this is ""nauty)"""
+.fi
+.RE
 
 .SH SEE ALSO
 

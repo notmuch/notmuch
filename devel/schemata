@@ -1,5 +1,5 @@
 This file describes the schemata used for notmuch's structured output
-format (currently JSON).
+format (currently JSON and S-Expressions).
 
 []'s indicate lists.  List items can be marked with a '?', meaning
 they are optional; or a '*', meaning there can be zero or more of that
@@ -7,6 +7,14 @@ item.  {}'s indicate an object that maps from field identifiers to
 values.  An object field marked '?' is optional.  |'s indicate
 alternates (e.g., int|string means something can be an int or a
 string).
+
+For S-Expression output, lists are printed delimited by () instead of
+[]. Objects are printed as p-lists, i.e. lists where the keys and values
+are interleaved. Keys are printed as keywords (symbols preceded by a
+colon), e.g. (:id "123" :time 54321 :from "foobar"). Null is printed as
+nil, true as t and false as nil.
+
+This is version 1 of the structured output format.
 
 Common non-terminals
 --------------------
@@ -32,13 +40,13 @@ thread = [thread_node*]
 
 # A message and its replies (show_messages)
 thread_node = [
-    message?,                 # present if --entire-thread or matched
+    message|null,             # null if not matched and not --entire-thread
     [thread_node*]            # children of message
 ]
 
-# A message (format_part_json)
+# A message (format_part_sprinter)
 message = {
-    # (format_message_json)
+    # (format_message_sprinter)
     id:             messageid,
     match:          bool,
     filename:	    string,
@@ -47,10 +55,10 @@ message = {
     tags:           [string*],
 
     headers:        headers,
-    body:           [part]
+    body?:          [part]    # omitted if --body=false
 }
 
-# A MIME part (format_part_json)
+# A MIME part (format_part_sprinter)
 part = {
     id:             int|string, # part id (currently DFS part number)
 
@@ -69,23 +77,31 @@ part = {
     # A leaf part's body content is optional, but may be included if
     # it can be correctly encoded as a string.  Consumers should use
     # this in preference to fetching the part content separately.
-    content?:       string
+    content?:       string,
+    # If a leaf part's body content is not included, the length of
+    # the encoded content (in bytes) may be given instead.
+    content-length?: int,
+    # If a leaf part's body content is not included, its transfer encoding
+    # may be given.  Using this and the encoded content length, it is
+    # possible for the consumer to estimate the decoded content length.
+    content-transfer-encoding?: string
 }
 
-# The headers of a message or part (format_headers_json with reply = FALSE)
+# The headers of a message or part (format_headers_sprinter with reply = FALSE)
 headers = {
     Subject:        string,
     From:           string,
     To?:            string,
     Cc?:            string,
     Bcc?:           string,
+    Reply-To?:      string,
     Date:           string
 }
 
-# Encryption status (format_part_json)
+# Encryption status (format_part_sprinter)
 encstatus = [{status: "good"|"bad"}]
 
-# Signature status (format_part_sigstatus_json)
+# Signature status (format_part_sigstatus_sprinter)
 sigstatus = [signature*]
 
 signature = {
@@ -128,7 +144,8 @@ thread = {
     total:          int,      # total messages in thread
     authors:        string,   # comma-separated names with | between
                               # matched and unmatched
-    subject:        string
+    subject:        string,
+    tags:           [string*]
 }
 
 notmuch reply schema
@@ -138,11 +155,11 @@ reply = {
     # The headers of the constructed reply
     reply-headers: reply_headers,
 
-    # As in the show format (format_part_json)
+    # As in the show format (format_part_sprinter)
     original: message
 }
 
-# Reply headers (format_headers_json with reply = TRUE)
+# Reply headers (format_headers_sprinter with reply = TRUE)
 reply_headers = {
     Subject:        string,
     From:           string,

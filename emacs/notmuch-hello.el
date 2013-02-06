@@ -154,11 +154,6 @@ International Bureau of Weights and Measures."
 (defvar notmuch-hello-url "http://notmuchmail.org"
   "The `notmuch' web site.")
 
-(defvar notmuch-hello-search-pos nil
-  "Position of search widget, if any.
-
-This should only be set by `notmuch-hello-insert-search'.")
-
 (defvar notmuch-hello-custom-section-options
   '((:filter (string :tag "Filter for each tag"))
     (:filter-count (string :tag "Different filter to generate message counts"))
@@ -209,11 +204,8 @@ function produces a section simply by adding content to the current
 buffer.  A section should not end with an empty line, because a
 newline will be inserted after each section by `notmuch-hello'.
 
-Each function should take no arguments.  If the produced section
-includes `notmuch-hello-target' (i.e. cursor should be positioned
-inside this section), the function should return this element's
-position.
-Otherwise, it should return nil.
+Each function should take no arguments. The return value is
+ignored.
 
 For convenience an element can also be a list of the form (FUNC ARG1
 ARG2 .. ARGN) in which case FUNC will be applied to the rest of the
@@ -239,15 +231,6 @@ supported for \"Customized queries section\" items."
 	    notmuch-hello-tags-section
 	    notmuch-hello-query-section
 	    (function :tag "Custom section"))))
-
-(defvar notmuch-hello-target nil
-  "Button text at position of point before rebuilding the notmuch-buffer.
-
-This variable contains the text of the button, if any, the
-point was positioned at before the notmuch-hello buffer was
-rebuilt. This should never actually be global and is defined as a
-defvar only for documentation purposes and to avoid a compiler
-warning about it occurring as a free variable.")
 
 (defvar notmuch-hello-hidden-sections nil
   "List of sections titles whose contents are hidden")
@@ -435,8 +418,7 @@ Such a list can be computed with `notmuch-hello-query-counts'."
 	 (reordered-list (notmuch-hello-reflect searches tags-per-line))
 	 ;; Hack the display of the buttons used.
 	 (widget-push-button-prefix "")
-	 (widget-push-button-suffix "")
-	 (found-target-pos nil))
+	 (widget-push-button-suffix ""))
     ;; dme: It feels as though there should be a better way to
     ;; implement this loop than using an incrementing counter.
     (mapc (lambda (elem)
@@ -449,8 +431,6 @@ Such a list can be computed with `notmuch-hello-query-counts'."
 		     (msg-count (third elem)))
 		(widget-insert (format "%8s "
 				       (notmuch-hello-nice-number msg-count)))
-		(if (string= name notmuch-hello-target)
-		    (setq found-target-pos (point-marker)))
 		(widget-create 'push-button
 			       :notify #'notmuch-hello-widget-search
 			       :notmuch-search-terms query
@@ -466,8 +446,7 @@ Such a list can be computed with `notmuch-hello-query-counts'."
     ;; If the last line was not full (and hence did not include a
     ;; carriage return), insert one now.
     (unless (eq (% count tags-per-line) 0)
-      (widget-insert "\n"))
-    found-target-pos))
+      (widget-insert "\n"))))
 
 (defimage notmuch-hello-logo ((:type png :file "notmuch-logo.png")))
 
@@ -521,7 +500,7 @@ Complete list of currently available key bindings:
 (defun notmuch-hello-generate-tag-alist (&optional hide-tags)
   "Return an alist from tags to queries to display in the all-tags section."
   (mapcar (lambda (tag)
-	    (cons tag (format "tag:%s" tag)))
+	    (cons tag (concat "tag:" (notmuch-escape-boolean-term tag))))
 	  (notmuch-remove-if-not
 	   (lambda (tag)
 	     (not (member tag hide-tags)))
@@ -571,8 +550,7 @@ Complete list of currently available key bindings:
 		       (funcall notmuch-saved-search-sort-function
 				notmuch-saved-searches)
 		     notmuch-saved-searches)
-		   :show-empty-searches notmuch-show-empty-saved-searches))
-	found-target-pos)
+		   :show-empty-searches notmuch-show-empty-saved-searches)))
     (when searches
       (widget-insert "Saved searches: ")
       (widget-create 'push-button
@@ -581,15 +559,12 @@ Complete list of currently available key bindings:
 		     "edit")
       (widget-insert "\n\n")
       (let ((start (point)))
-	(setq found-target-pos
-	      (notmuch-hello-insert-buttons searches))
-	(indent-rigidly start (point) notmuch-hello-indent)
-	found-target-pos))))
+	(notmuch-hello-insert-buttons searches)
+	(indent-rigidly start (point) notmuch-hello-indent)))))
 
 (defun notmuch-hello-insert-search ()
   "Insert a search widget."
   (widget-insert "Search: ")
-  (setq notmuch-hello-search-pos (point-marker))
   (widget-create 'editable-field
 		 ;; Leave some space at the start and end of the
 		 ;; search boxes.
@@ -689,16 +664,13 @@ Supports the following entries in OPTIONS as a plist:
 				(notmuch-hello-update))
 		     "hide"))
     (widget-insert "\n")
-    (let (target-pos)
-      (when (not is-hidden)
-	(let ((searches (apply 'notmuch-hello-query-counts query-alist options)))
-	  (when (or (not (plist-get options :hide-if-empty))
-		    searches)
-	    (widget-insert "\n")
-	    (setq target-pos
-		  (notmuch-hello-insert-buttons searches))
-	    (indent-rigidly start (point) notmuch-hello-indent))))
-      target-pos)))
+    (when (not is-hidden)
+      (let ((searches (apply 'notmuch-hello-query-counts query-alist options)))
+	(when (or (not (plist-get options :hide-if-empty))
+		  searches)
+	  (widget-insert "\n")
+	  (notmuch-hello-insert-buttons searches)
+	  (indent-rigidly start (point) notmuch-hello-indent))))))
 
 (defun notmuch-hello-insert-tags-section (&optional title &rest options)
   "Insert a section displaying all tags with message counts.
@@ -717,7 +689,7 @@ following:
   "Show an entry for each saved search and inboxed messages for each tag"
   (notmuch-hello-insert-searches "What's in your inbox"
 				 (append
-				  (notmuch-saved-searches)
+				  notmuch-saved-searches
 				  (notmuch-hello-generate-tag-alist))
 				 :filter "tag:inbox"))
 
@@ -754,22 +726,12 @@ following:
   "Run notmuch and display saved searches, known tags, etc."
   (interactive)
 
-  ;; Jump through a hoop to get this value from the deprecated variable
-  ;; name (`notmuch-folders') or from the default value.
-  (unless notmuch-saved-searches
-    (setq notmuch-saved-searches (notmuch-saved-searches)))
-
   (if no-display
       (set-buffer "*notmuch-hello*")
     (switch-to-buffer "*notmuch-hello*"))
 
-  (let ((notmuch-hello-target (if (widget-at)
-				  (widget-value (widget-at))
-				(condition-case nil
-				    (progn
-				      (widget-forward 1)
-				      (widget-value (widget-at)))
-				  (error nil))))
+  (let ((target-line (line-number-at-pos))
+	(target-column (current-column))
 	(inhibit-read-only t))
 
     ;; Delete all editable widget fields.  Editable widget fields are
@@ -788,30 +750,25 @@ following:
       (mapc 'delete-overlay (car all))
       (mapc 'delete-overlay (cdr all)))
 
-    (let (final-target-pos)
-      (mapc
-       (lambda (section)
-	 (let ((point-before (point))
-	       (result (if (functionp section)
-			   (funcall section)
-			 (apply (car section) (cdr section)))))
-	   (if (and (not final-target-pos) (integer-or-marker-p result))
-	       (setq final-target-pos result))
-	   ;; don't insert a newline when the previous section didn't show
-	   ;; anything.
-	   (unless (eq (point) point-before)
-	     (widget-insert "\n"))))
-       notmuch-hello-sections)
-      (widget-setup)
+    (mapc
+     (lambda (section)
+       (let ((point-before (point)))
+	 (if (functionp section)
+	     (funcall section)
+	   (apply (car section) (cdr section)))
+	 ;; don't insert a newline when the previous section didn't
+	 ;; show anything.
+	 (unless (eq (point) point-before)
+	   (widget-insert "\n"))))
+     notmuch-hello-sections)
+    (widget-setup)
 
-      (when final-target-pos
-	(goto-char final-target-pos)
-	(unless (widget-at)
-	  (widget-forward 1)))
-
-      (unless (widget-at)
-	(when notmuch-hello-search-pos
-	  (goto-char notmuch-hello-search-pos)))))
+    ;; Move point back to where it was before refresh. Use line and
+    ;; column instead of point directly to be insensitive to additions
+    ;; and removals of text within earlier lines.
+    (goto-char (point-min))
+    (forward-line (1- target-line))
+    (move-to-column target-column))
   (run-hooks 'notmuch-hello-refresh-hook)
   (setq notmuch-hello-first-run nil))
 

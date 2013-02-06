@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 test_description="Emacs with large search results buffer"
-. test-lib.sh
+. ./test-lib.sh
 
 x=xxxxxxxxxx # 10
 x=$x$x$x$x$x$x$x$x$x$x # 100
@@ -36,7 +36,7 @@ test_emacs '(notmuch-search "--this-option-does-not-exist")
 cat <<EOF >EXPECTED
 Error: Unexpected output from notmuch search:
 Unrecognized option: --this-option-does-not-exist
-End of search results. (process returned 1)
+End of search results.
 EOF
 test_expect_equal_file OUTPUT EXPECTED
 

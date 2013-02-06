@@ -18,7 +18,7 @@ Copyright 2010 Sebastian Spaeth <Sebastian@SSpaeth.de>
 """
 
 from ctypes import c_char_p, c_long, c_int
-from notmuch.globals import (
+from .globals import (
     nmlib,
     NotmuchThreadP,
     NotmuchMessagesP,
@@ -29,7 +29,7 @@ from .errors import (
     NotInitializedError,
 )
 from .messages import Messages
-from notmuch.tag import Tags
+from .tag import Tags
 from datetime import date
 
 class Thread(object):
@@ -238,7 +238,7 @@ class Thread(object):
             raise NotInitializedError()
 
         tags_p = Thread._get_tags(self._thread)
-        if tags_p == None:
+        if not tags_p:
             raise NullPointerError()
         return Tags(tags_p, self)
 

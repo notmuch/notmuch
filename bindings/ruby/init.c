@@ -20,6 +20,32 @@
 
 #include "defs.h"
 
+VALUE notmuch_rb_cDatabase;
+VALUE notmuch_rb_cDirectory;
+VALUE notmuch_rb_cFileNames;
+VALUE notmuch_rb_cQuery;
+VALUE notmuch_rb_cThreads;
+VALUE notmuch_rb_cThread;
+VALUE notmuch_rb_cMessages;
+VALUE notmuch_rb_cMessage;
+VALUE notmuch_rb_cTags;
+
+VALUE notmuch_rb_eBaseError;
+VALUE notmuch_rb_eDatabaseError;
+VALUE notmuch_rb_eMemoryError;
+VALUE notmuch_rb_eReadOnlyError;
+VALUE notmuch_rb_eXapianError;
+VALUE notmuch_rb_eFileError;
+VALUE notmuch_rb_eFileNotEmailError;
+VALUE notmuch_rb_eNullPointerError;
+VALUE notmuch_rb_eTagTooLongError;
+VALUE notmuch_rb_eUnbalancedFreezeThawError;
+VALUE notmuch_rb_eUnbalancedAtomicError;
+
+ID ID_call;
+ID ID_db_create;
+ID ID_db_mode;
+
 /*
  * Document-module: Notmuch
  *

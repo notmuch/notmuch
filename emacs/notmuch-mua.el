@@ -146,7 +146,7 @@ list."
   (unless (bolp) (insert "\n")))
 
 (defun notmuch-mua-reply (query-string &optional sender reply-all)
-  (let ((args '("reply" "--format=json"))
+  (let ((args '("reply" "--format=json" "--format-version=1"))
 	reply
 	original)
     (when notmuch-show-process-crypto
@@ -158,13 +158,7 @@ list."
     (setq args (append args (list query-string)))
 
     ;; Get the reply object as JSON, and parse it into an elisp object.
-    (with-temp-buffer
-      (apply 'call-process (append (list notmuch-command nil (list t nil) nil) args))
-      (goto-char (point-min))
-      (let ((json-object-type 'plist)
-	    (json-array-type 'list)
-	    (json-false 'nil))
-	(setq reply (json-read))))
+    (setq reply (apply #'notmuch-call-notmuch-json args))
 
     ;; Extract the original message to simplify the following code.
     (setq original (plist-get reply :original))

@@ -11,9 +11,14 @@
 */
 
 static notmuch_bool_t
-_process_keyword_arg (const notmuch_opt_desc_t *arg_desc, const char *arg_str) {
+_process_keyword_arg (const notmuch_opt_desc_t *arg_desc, char next, const char *arg_str) {
 
     const notmuch_keyword_t *keywords = arg_desc->keywords;
+
+    if (next == '\0') {
+	/* No keyword given */
+	arg_str = "";
+    }
 
     while (keywords->name) {
 	if (strcmp (arg_str, keywords->name) == 0) {
@@ -24,14 +29,17 @@ _process_keyword_arg (const notmuch_opt_desc_t *arg_desc, const char *arg_str) {
 	}
 	keywords++;
     }
-    fprintf (stderr, "unknown keyword: %s\n", arg_str);
+    if (next != '\0')
+	fprintf (stderr, "Unknown keyword argument \"%s\" for option \"%s\".\n", arg_str, arg_desc->name);
+    else
+	fprintf (stderr, "Option \"%s\" needs a keyword argument.\n", arg_desc->name);
     return FALSE;
 }
 
 static notmuch_bool_t
 _process_boolean_arg (const notmuch_opt_desc_t *arg_desc, char next, const char *arg_str) {
 
-    if (next == 0) {
+    if (next == '\0') {
 	*((notmuch_bool_t *)arg_desc->output_var) = TRUE;
 	return TRUE;
     }
@@ -43,7 +51,41 @@ _process_boolean_arg (const notmuch_opt_desc_t *arg_desc, char next, const char 
 	*((notmuch_bool_t *)arg_desc->output_var) = TRUE;
 	return TRUE;
     }
+    fprintf (stderr, "Unknown argument \"%s\" for (boolean) option \"%s\".\n", arg_str, arg_desc->name);
     return FALSE;
+}
+
+static notmuch_bool_t
+_process_int_arg (const notmuch_opt_desc_t *arg_desc, char next, const char *arg_str) {
+
+    char *endptr;
+    if (next == '\0' || arg_str[0] == '\0') {
+	fprintf (stderr, "Option \"%s\" needs an integer argument.\n", arg_desc->name);
+	return FALSE;
+    }
+
+    *((int *)arg_desc->output_var) = strtol (arg_str, &endptr, 10);
+    if (*endptr == '\0')
+	return TRUE;
+
+    fprintf (stderr, "Unable to parse argument \"%s\" for option \"%s\" as an integer.\n",
+	     arg_str, arg_desc->name);
+    return FALSE;
+}
+
+static notmuch_bool_t
+_process_string_arg (const notmuch_opt_desc_t *arg_desc, char next, const char *arg_str) {
+
+    if (next == '\0') {
+	fprintf (stderr, "Option \"%s\" needs a string argument.\n", arg_desc->name);
+	return FALSE;
+    }
+    if (arg_str[0] == '\0') {
+	fprintf (stderr, "String argument for option \"%s\" must be non-empty.\n", arg_desc->name);
+	return FALSE;
+    }
+    *((const char **)arg_desc->output_var) = arg_str;
+    return TRUE;
 }
 
 /*
@@ -85,43 +127,35 @@ parse_option (const char *arg,
 
     arg += 2;
 
-    const notmuch_opt_desc_t *try = options;
-    while (try->opt_type != NOTMUCH_OPT_END) {
+    const notmuch_opt_desc_t *try;
+    for (try = options; try->opt_type != NOTMUCH_OPT_END; try++) {
 	if (try->name && strncmp (arg, try->name, strlen (try->name)) == 0) {
 	    char next = arg[strlen (try->name)];
 	    const char *value= arg+strlen(try->name)+1;
 
-	    char *endptr;
-
-	    /* Everything but boolean arguments (switches) needs a
-	     * delimiter, and a non-zero length value. Boolean
-	     * arguments may take an optional =true or =false value.
-	     */
-	    if (next != '=' && next != ':' && next != 0) return FALSE;
-	    if (next == 0) {
-		if (try->opt_type != NOTMUCH_OPT_BOOLEAN)
-		    return FALSE;
-	    } else {
-		if (value[0] == 0) return FALSE;
-	    }
+	    /* If we have not reached the end of the argument
+	       (i.e. the next character is not a space or delimiter)
+	       then the argument could still match a longer option
+	       name later in the option table.
+	    */
+	    if (next != '=' && next != ':' && next != '\0')
+		continue;
 
 	    if (try->output_var == NULL)
 		INTERNAL_ERROR ("output pointer NULL for option %s", try->name);
 
 	    switch (try->opt_type) {
 	    case NOTMUCH_OPT_KEYWORD:
-		return _process_keyword_arg (try, value);
+		return _process_keyword_arg (try, next, value);
 		break;
 	    case NOTMUCH_OPT_BOOLEAN:
 		return _process_boolean_arg (try, next, value);
 		break;
 	    case NOTMUCH_OPT_INT:
-		*((int *)try->output_var) = strtol (value, &endptr, 10);
-		return (*endptr == 0);
+		return _process_int_arg (try, next, value);
 		break;
 	    case NOTMUCH_OPT_STRING:
-		*((const char **)try->output_var) = value;
-		return TRUE;
+		return _process_string_arg (try, next, value);
 		break;
 	    case NOTMUCH_OPT_POSITION:
 	    case NOTMUCH_OPT_END:
@@ -130,7 +164,6 @@ parse_option (const char *arg,
 		/*UNREACHED*/
 	    }
 	}
-	try++;
     }
     fprintf (stderr, "Unrecognized option: --%s\n", arg);
     return FALSE;

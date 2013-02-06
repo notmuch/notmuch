@@ -1,0 +1,43 @@
+NOTMUCH PICK
+
+Notmuch pick is an experimental threaded message view for the emacs
+interface. Each message is one line in the results and the thread
+structure is shown using UTF-8 box drawing characters (similar to
+Mutt's threaded view). It comes between search and show in terms of
+amount of output and can be useful for viewing both single threads and
+multiple threads.
+
+INSTALL
+
+Just copy the notmuch-pick.el file somewhere into emacs's load-path.
+
+Then after the "(require 'notmuch)" line in your .emacs file add
+the line "(require 'notmuch-pick nil t)". This will load notmuch-pick on
+your next emacs start.
+
+TEST
+
+Just execute run-tests.sh and it should all work (it does require that
+notmuch has already been built).
+
+USING PICK
+
+The main key entries to notmuch pick are
+
+'z' enter a query to view using notmuch pick (works in hello, search,
+    show and pick itself).
+'Z' view the current query in pick (works from search and show)
+'M-RET' view the selected thread in pick (works in search mode)
+
+Once in pick mode, keybindings are mostly in line with the rest of
+notmuch and are all viewable with '?' as usual.
+
+CUSTOMISING PICK
+
+Pick has several customisation variables. The most significant is the
+first notmuch-pick-show-out which determines the behaviour when
+selecting a message (with RET) in the pick view. By default pick uses
+a split window showing the single message in the bottom pane. However,
+if this option is set then it views the whole thread in the complete
+window jumping to the selected message in the thread. In either case
+M-RET selects the other option.

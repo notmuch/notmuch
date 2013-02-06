@@ -187,7 +187,7 @@ release-message:
 verify-source-tree-and-version: verify-no-dirty-code
 
 .PHONY: verify-no-dirty-code
-verify-no-dirty-code: verify-version-debian verify-version-python verify-version-manpage
+verify-no-dirty-code: release-checks
 ifeq ($(IS_GIT),yes)
 	@printf "Checking that source tree is clean..."
 ifneq ($(shell git ls-files -m),)
@@ -204,29 +204,9 @@ else
 endif
 endif
 
-.PHONY: verify-version-debian
-verify-version-debian: verify-version-components
-	@echo -n "Checking that Debian package version is $(VERSION)-1..."
-	@[ "$(VERSION)-1" = $$(sed '1{ s/).*//; s/.*(//; q; }' debian/changelog) ] || \
-		(echo "No." && \
-		 echo "Please edit version and debian/changelog to have consistent versions." && false)
-	@echo "Good."
-
-.PHONY: verify-version-python
-verify-version-python: verify-version-components
-	@echo -n "Checking that python bindings version is $(VERSION)..."
-	@[ "$(VERSION)" = $$(python -c "execfile('$(PV_FILE)'); print __VERSION__") ] || \
-		(echo "No." && \
-		 echo "Please edit version and $(PV_FILE) to have consistent versions." && false)
-	@echo "Good."
-
-.PHONY: verify-version-components
-verify-version-components:
-	@echo -n "Checking that $(VERSION) consists only of digits and periods..."
-	@echo $(VERSION) | grep -q -x '^[0-9.]*$$' || \
-		(echo "No." && \
-	         echo "Please follow the instructions in RELEASING to choose a version" && false)
-	@echo "Good."
+.PHONY: release-checks
+release-checks:
+	devel/release-checks.sh
 
 .PHONY: verify-newer
 verify-newer:
@@ -265,12 +245,11 @@ quiet ?= $($(shell echo $1 | sed -e s'/ .*//'))
 
 .PHONY : clean
 clean:
-	rm -f $(CLEAN); rm -rf .deps
+	rm -rf $(CLEAN); rm -rf .deps
 
-# We don't (yet) have any distributed files not in the upstream repository.
-# So distclean is currently identical to clean.
 .PHONY: distclean
 distclean: clean
+	rm -rf $(DISTCLEAN)
 
 notmuch_client_srcs =		\
 	command-line-arguments.c\
@@ -290,13 +269,17 @@ notmuch_client_srcs =		\
 	notmuch-show.c		\
 	notmuch-tag.c		\
 	notmuch-time.c		\
+	sprinter-json.c		\
+	sprinter-sexp.c		\
+	sprinter-text.c		\
 	query-string.c		\
 	mime-node.c		\
-	json.c
+	crypto.c		\
+	tag-util.c
 
 notmuch_client_modules = $(notmuch_client_srcs:.c=.o)
 
-notmuch: $(notmuch_client_modules) lib/libnotmuch.a util/libutil.a
+notmuch: $(notmuch_client_modules) lib/libnotmuch.a util/libutil.a parse-time-string/libparse-time-string.a
 	$(call quiet,CXX $(CFLAGS)) $^ $(FINAL_LIBNOTMUCH_LDFLAGS) -o $@
 
 notmuch-shared: $(notmuch_client_modules) lib/$(LINKER_NAME)
@@ -335,6 +318,8 @@ install-desktop:
 
 SRCS  := $(SRCS) $(notmuch_client_srcs)
 CLEAN := $(CLEAN) notmuch notmuch-shared $(notmuch_client_modules) notmuch.elc
+
+DISTCLEAN := $(DISTCLEAN) .first-build-message Makefile.config
 
 DEPS := $(SRCS:%.c=.deps/%.d)
 DEPS := $(DEPS:%.cc=.deps/%.d)

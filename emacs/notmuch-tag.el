@@ -140,6 +140,21 @@ notmuch-after-tag-hook will be run."
   ;; in all cases we return tag-changes as a list
   tag-changes)
 
+(defun notmuch-tag-change-list (tags &optional reverse)
+  "Convert TAGS into a list of tag changes.
+
+Add a \"+\" prefix to any tag in TAGS list that doesn't already
+begin with a \"+\" or a \"-\". If REVERSE is non-nil, replace all
+\"+\" prefixes with \"-\" and vice versa in the result."
+  (mapcar (lambda (str)
+	    (let ((s (if (string-match "^[+-]" str) str (concat "+" str))))
+	      (if reverse
+		  (concat (if (= (string-to-char s) ?-) "+" "-")
+			  (substring s 1))
+		s)))
+	  tags))
+
+
 ;;
 
 (provide 'notmuch-tag)

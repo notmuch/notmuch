@@ -82,6 +82,8 @@ static command_t commands[] = {
       "This message, or more detailed help for the named command." }
 };
 
+int notmuch_format_version;
+
 static void
 usage (FILE *out)
 {
@@ -107,6 +109,33 @@ usage (FILE *out)
     fprintf (out,
     "Use \"notmuch help <command>\" for more details on each command\n"
     "and \"notmuch help search-terms\" for the common search-terms syntax.\n\n");
+}
+
+void
+notmuch_exit_if_unsupported_format (void)
+{
+    if (notmuch_format_version > NOTMUCH_FORMAT_CUR) {
+	fprintf (stderr, "\
+A caller requested output format version %d, but the installed notmuch\n\
+CLI only supports up to format version %d.  You may need to upgrade your\n\
+notmuch CLI.\n",
+		 notmuch_format_version, NOTMUCH_FORMAT_CUR);
+	exit (NOTMUCH_EXIT_FORMAT_TOO_NEW);
+    } else if (notmuch_format_version < NOTMUCH_FORMAT_MIN) {
+	fprintf (stderr, "\
+A caller requested output format version %d, which is no longer supported\n\
+by the notmuch CLI (it requires at least version %d).  You may need to\n\
+upgrade your notmuch front-end.\n",
+		 notmuch_format_version, NOTMUCH_FORMAT_MIN);
+	exit (NOTMUCH_EXIT_FORMAT_TOO_OLD);
+    } else if (notmuch_format_version != NOTMUCH_FORMAT_CUR) {
+	/* Warn about old version requests so compatibility issues are
+	 * less likely when we drop support for a deprecated format
+	 * versions. */
+	fprintf (stderr, "\
+A caller requested deprecated output format version %d, which may not\n\
+be supported in the future.\n", notmuch_format_version);
+    }
 }
 
 static void
@@ -242,13 +271,16 @@ main (int argc, char *argv[])
     g_mime_init (0);
     g_type_init ();
 
+    /* Globally default to the current output format version. */
+    notmuch_format_version = NOTMUCH_FORMAT_CUR;
+
     if (argc == 1)
 	return notmuch (local);
 
-    if (STRNCMP_LITERAL (argv[1], "--help") == 0)
+    if (strcmp (argv[1], "--help") == 0)
 	return notmuch_help_command (NULL, argc - 1, &argv[1]);
 
-    if (STRNCMP_LITERAL (argv[1], "--version") == 0) {
+    if (strcmp (argv[1], "--version") == 0) {
 	printf ("notmuch " STRINGIFY(NOTMUCH_VERSION) "\n");
 	return 0;
     }
@@ -290,8 +322,28 @@ main (int argc, char *argv[])
     for (i = 0; i < ARRAY_SIZE (commands); i++) {
 	command = &commands[i];
 
-	if (strcmp (argv[1], command->name) == 0)
-	    return (command->function) (local, argc - 1, &argv[1]);
+	if (strcmp (argv[1], command->name) == 0) {
+	    int ret;
+	    char *talloc_report;
+
+	    ret = (command->function)(local, argc - 1, &argv[1]);
+
+	    /* in the future support for this environment variable may
+	     * be supplemented or replaced by command line arguments
+	     * --leak-report and/or --leak-report-full */
+
+	    talloc_report = getenv ("NOTMUCH_TALLOC_REPORT");
+
+	    /* this relies on the previous call to
+	     * talloc_enable_null_tracking */
+
+	    if (talloc_report && strcmp (talloc_report, "") != 0) {
+		FILE *report = fopen (talloc_report, "w");
+		talloc_report_full (NULL, report);
+	    }
+
+	    return ret;
+	}
     }
 
     fprintf (stderr, "Error: Unknown command '%s' (see \"notmuch help\")\n",

@@ -33,12 +33,7 @@ typedef struct mime_node_context {
     GMimeMessage *mime_message;
 
     /* Context provided by the caller. */
-#ifdef GMIME_ATLEAST_26
-    GMimeCryptoContext *cryptoctx;
-#else
-    GMimeCipherContext *cryptoctx;
-#endif
-    notmuch_bool_t decrypt;
+    notmuch_crypto_t *crypto;
 } mime_node_context_t;
 
 static int
@@ -61,12 +56,7 @@ _mime_node_context_free (mime_node_context_t *res)
 
 notmuch_status_t
 mime_node_open (const void *ctx, notmuch_message_t *message,
-#ifdef GMIME_ATLEAST_26
-		GMimeCryptoContext *cryptoctx,
-#else
-		GMimeCipherContext *cryptoctx,
-#endif
-		notmuch_bool_t decrypt, mime_node_t **root_out)
+		notmuch_crypto_t *crypto, mime_node_t **root_out)
 {
     const char *filename = notmuch_message_get_filename (message);
     mime_node_context_t *mctx;
@@ -118,8 +108,7 @@ mime_node_open (const void *ctx, notmuch_message_t *message,
 	goto DONE;
     }
 
-    mctx->cryptoctx = cryptoctx;
-    mctx->decrypt = decrypt;
+    mctx->crypto = crypto;
 
     /* Create the root node */
     root->part = GMIME_OBJECT (mctx->mime_message);
@@ -161,6 +150,7 @@ _mime_node_create (mime_node_t *parent, GMimeObject *part)
 {
     mime_node_t *node = talloc_zero (parent, mime_node_t);
     GError *err = NULL;
+    notmuch_crypto_context_t *cryptoctx = NULL;
 
     /* Set basic node properties */
     node->part = part;
@@ -193,9 +183,15 @@ _mime_node_create (mime_node_t *parent, GMimeObject *part)
 	return NULL;
     }
 
+    if ((GMIME_IS_MULTIPART_ENCRYPTED (part) && node->ctx->crypto->decrypt)
+	|| (GMIME_IS_MULTIPART_SIGNED (part) && node->ctx->crypto->verify)) {
+	GMimeContentType *content_type = g_mime_object_get_content_type (part);
+	const char *protocol = g_mime_content_type_get_parameter (content_type, "protocol");
+	cryptoctx = notmuch_crypto_get_context (node->ctx->crypto, protocol);
+    }
+
     /* Handle PGP/MIME parts */
-    if (GMIME_IS_MULTIPART_ENCRYPTED (part)
-	&& node->ctx->cryptoctx && node->ctx->decrypt) {
+    if (GMIME_IS_MULTIPART_ENCRYPTED (part) && node->ctx->crypto->decrypt && cryptoctx) {
 	if (node->nchildren != 2) {
 	    /* this violates RFC 3156 section 4, so we won't bother with it. */
 	    fprintf (stderr, "Error: %d part(s) for a multipart/encrypted "
@@ -208,10 +204,10 @@ _mime_node_create (mime_node_t *parent, GMimeObject *part)
 #ifdef GMIME_ATLEAST_26
 	    GMimeDecryptResult *decrypt_result = NULL;
 	    node->decrypted_child = g_mime_multipart_encrypted_decrypt
-		(encrypteddata, node->ctx->cryptoctx, &decrypt_result, &err);
+		(encrypteddata, cryptoctx, &decrypt_result, &err);
 #else
 	    node->decrypted_child = g_mime_multipart_encrypted_decrypt
-		(encrypteddata, node->ctx->cryptoctx, &err);
+		(encrypteddata, cryptoctx, &err);
 #endif
 	    if (node->decrypted_child) {
 		node->decrypt_success = node->verify_attempted = TRUE;
@@ -229,7 +225,7 @@ _mime_node_create (mime_node_t *parent, GMimeObject *part)
 			 (err ? err->message : "no error explanation given"));
 	    }
 	}
-    } else if (GMIME_IS_MULTIPART_SIGNED (part) && node->ctx->cryptoctx) {
+    } else if (GMIME_IS_MULTIPART_SIGNED (part) && node->ctx->crypto->verify && cryptoctx) {
 	if (node->nchildren != 2) {
 	    /* this violates RFC 3156 section 5, so we won't bother with it. */
 	    fprintf (stderr, "Error: %d part(s) for a multipart/signed message "
@@ -238,7 +234,7 @@ _mime_node_create (mime_node_t *parent, GMimeObject *part)
 	} else {
 #ifdef GMIME_ATLEAST_26
 	    node->sig_list = g_mime_multipart_signed_verify
-		(GMIME_MULTIPART_SIGNED (part), node->ctx->cryptoctx, &err);
+		(GMIME_MULTIPART_SIGNED (part), cryptoctx, &err);
 	    node->verify_attempted = TRUE;
 
 	    if (!node->sig_list)
@@ -254,7 +250,7 @@ _mime_node_create (mime_node_t *parent, GMimeObject *part)
 	     * In GMime 2.6, they're both non-const, so we'll be able
 	     * to clean up this asymmetry. */
 	    GMimeSignatureValidity *sig_validity = g_mime_multipart_signed_verify
-		(GMIME_MULTIPART_SIGNED (part), node->ctx->cryptoctx, &err);
+		(GMIME_MULTIPART_SIGNED (part), cryptoctx, &err);
 	    node->verify_attempted = TRUE;
 	    node->sig_validity = sig_validity;
 	    if (sig_validity) {
@@ -295,7 +291,7 @@ mime_node_child (mime_node_t *parent, int child)
     GMimeObject *sub;
     mime_node_t *node;
 
-    if (!parent || child < 0 || child >= parent->nchildren)
+    if (!parent || !parent->part || child < 0 || child >= parent->nchildren)
 	return NULL;
 
     if (GMIME_IS_MULTIPART (parent->part)) {

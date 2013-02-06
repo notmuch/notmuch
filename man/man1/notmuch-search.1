@@ -1,6 +1,6 @@
-.TH NOTMUCH-SEARCH 1 2012-06-01 "Notmuch 0.13.2"
+.TH NOTMUCH-SEARCH 1 2013-01-24 "Notmuch 0.15.1"
 .SH NAME
-notmuch-search \- Search for messages matching the given search terms.
+notmuch-search \- search for messages matching the given search terms
 .SH SYNOPSIS
 
 .B notmuch search
@@ -25,9 +25,20 @@ Supported options for
 include
 .RS 4
 .TP 4
-.BR \-\-format= ( json | text )
+.BR \-\-format= ( json | sexp | text | text0 )
 
-Presents the results in either JSON or plain-text (default).
+Presents the results in either JSON, S-Expressions, newline character
+separated plain-text (default), or null character separated plain-text
+(compatible with \fBxargs\fR(1) -0 option where available).
+.RE
+
+.RS 4
+.TP 4
+.BR \-\-format-version=N
+
+Use the specified structured output format version.  This is intended
+for programs that invoke \fBnotmuch\fR(1) internally.  If omitted, the
+latest supported version will be used.
 .RE
 
 .RS 4
@@ -48,31 +59,36 @@ the authors of the thread and the subject.
 .B threads
 
 Output the thread IDs of all threads with any message matching the
-search terms, either one per line (\-\-format=text) or as a JSON array
-(\-\-format=json).
+search terms, either one per line (\-\-format=text), separated by null
+characters (\-\-format=text0), as a JSON array (\-\-format=json), or
+an S-Expression list (\-\-format=sexp).
 .RE
 .RS 4
 .TP 4
 .B messages
 
 Output the message IDs of all messages matching the search terms,
-either one per line (\-\-format=text) or as a JSON array
-(\-\-format=json).
+either one per line (\-\-format=text), separated by null characters
+(\-\-format=text0), as a JSON array (\-\-format=json), or as an
+S-Expression list (\-\-format=sexp).
 .RE
 .RS 4
 .TP 4
 .B files
 
 Output the filenames of all messages matching the search terms, either
-one per line (\-\-format=text) or as a JSON array (\-\-format=json).
+one per line (\-\-format=text), separated by null characters
+(\-\-format=text0), as a JSON array (\-\-format=json), or as an
+S-Expression list (\-\-format=sexp).
 .RE
 .RS 4
 .TP 4
 .B tags
 
 Output all tags that appear on any message matching the search terms,
-either one per line (\-\-format=text) or as a JSON array
-(\-\-format=json).
+either one per line (\-\-format=text), separated by null characters
+(\-\-format=text0), as a JSON array (\-\-format=json), or as an
+S-Expression list (\-\-format=sexp).
 .RE
 .RE
 
@@ -124,6 +140,17 @@ only has an effect when
 In this case all matching threads are returned but the "match count"
 is the number of matching non-excluded messages in the thread.
 .RE
+
+.SH EXIT STATUS
+
+This command supports the following special exit status codes
+
+.TP
+.B 20
+The requested format version is too old.
+.TP
+.B 21
+The requested format version is too new.
 
 .SH SEE ALSO
 

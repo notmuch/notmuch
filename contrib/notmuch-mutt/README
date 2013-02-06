@@ -41,6 +41,11 @@ To *run* notmuch-mutt you will need Perl with the following libraries:
   (Debian package: libstring-shellquote-perl)
 - Term::ReadLine <http://search.cpan.org/~hayashi/Term-ReadLine-Gnu/>
   (Debian package: libterm-readline-gnu-perl)
+- File::Which <http://search.cpan.org/dist/File-Which/>
+  (Debian package: libfile-which-perl)
+
+The --remove-dups option will use fdupes <https://code.google.com/p/fdupes/>
+if it is installed.  Version fdupes-1.50-PR2 or higher is required.
 
 To *build* notmuch-mutt documentation you will need:
 

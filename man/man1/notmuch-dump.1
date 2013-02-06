@@ -1,24 +1,85 @@
-.TH NOTMUCH-DUMP 1 2012-06-01 "Notmuch 0.13.2"
+.TH NOTMUCH-DUMP 1 2013-01-24 "Notmuch 0.15.1"
 .SH NAME
-notmuch-dump \- Creates a plain-text dump of the tags of each message.
+notmuch-dump \- creates a plain-text dump of the tags of each message
 
 .SH SYNOPSIS
 
 .B "notmuch dump"
-.RI "[ <" filename "> ] [--]"
+.RB  [ "\-\-format=(sup|batch-tag)"  "] [--]"
+.RI "[ --output=<" filename "> ] [--]"
 .RI "[ <" search-term ">...]"
 
 .SH DESCRIPTION
 
 Dump tags for messages matching the given search terms.
 
-Output is to the given filename, if any, or to stdout.  Note that
-using the filename argument is deprecated.
+Output is to the given filename, if any, or to stdout.
 
 These tags are the only data in the notmuch database that can't be
 recreated from the messages themselves.  The output of notmuch dump is
 therefore the only critical thing to backup (and much more friendly to
 incremental backup than the native database files.)
+
+.TP 4
+.B \-\-format=(sup|batch-tag)
+
+Notmuch restore supports two plain text dump formats, both with one message-id
+per line, followed by a list of tags.
+
+.RS 4
+.TP 4
+.B sup
+
+The
+.B sup
+dump file format is specifically chosen to be
+compatible with the format of files produced by sup-dump.
+So if you've previously been using sup for mail, then the
+.B "notmuch restore"
+command provides you a way to import all of your tags (or labels as
+sup calls them).
+Each line has the following form
+
+.RS 4
+.RI < message-id >
+.B (
+.RI < tag "> ..."
+.B )
+
+with zero or more tags are separated by spaces. Note that (malformed)
+message-ids may contain arbitrary non-null characters. Note also
+that tags with spaces will not be correctly restored with this format.
+
+.RE
+
+.RE
+.RS 4
+.TP 4
+.B batch-tag
+
+The
+.B batch-tag
+dump format is intended to more robust against malformed message-ids
+and tags containing whitespace or non-\fBascii\fR(7) characters.
+Each line has the form
+
+.RS 4
+.RI "+<" "encoded-tag" "> " "" "+<" "encoded-tag" "> ... -- " "" " id:<" quoted-message-id >
+
+Tags are hex-encoded by replacing every byte not matching the regex
+.B [A-Za-z0-9@=.,_+-]
+with
+.B %nn
+where nn is the two digit hex encoding.  The message ID is a valid Xapian
+query, quoted using Xapian boolean term quoting rules: if the ID contains
+whitespace or a close paren or starts with a double quote, it must be
+enclosed in double quotes and double quotes inside the ID must be doubled.
+The astute reader will notice this is a special case of the batch input
+format for \fBnotmuch-tag\fR(1); note that the single message-id query is
+mandatory for \fBnotmuch-restore\fR(1).
+
+.RE
+
 
 With no search terms, a dump of all messages in the database will be
 generated.  A "--" argument instructs notmuch that the

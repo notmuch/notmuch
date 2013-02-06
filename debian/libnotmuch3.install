@@ -1,1 +1,1 @@
-usr/lib/libnotmuch.so.*
+usr/lib/*/libnotmuch.so.*

@@ -788,7 +788,9 @@ notmuch_message_get_tags (notmuch_message_t *message)
      * possible to modify the message tags (which talloc_unlink's the
      * current list from the message) while still iterating because
      * the iterator will keep the current list alive. */
-    talloc_reference (message, message->tag_list);
+    if (!talloc_reference (message, message->tag_list))
+	return NULL;
+
     return tags;
 }
 
@@ -1027,62 +1029,6 @@ notmuch_message_remove_tag (notmuch_message_t *message, const char *tag)
     return NOTMUCH_STATUS_SUCCESS;
 }
 
-notmuch_status_t
-notmuch_message_maildir_flags_to_tags (notmuch_message_t *message)
-{
-    const char *flags;
-    notmuch_status_t status;
-    notmuch_filenames_t *filenames;
-    const char *filename;
-    char *combined_flags = talloc_strdup (message, "");
-    unsigned i;
-    int seen_maildir_info = 0;
-
-    for (filenames = notmuch_message_get_filenames (message);
-	 notmuch_filenames_valid (filenames);
-	 notmuch_filenames_move_to_next (filenames))
-    {
-	filename = notmuch_filenames_get (filenames);
-
-	flags = strstr (filename, ":2,");
-	if (! flags)
-	    continue;
-
-	seen_maildir_info = 1;
-	flags += 3;
-
-	combined_flags = talloc_strdup_append (combined_flags, flags);
-    }
-
-    /* If none of the filenames have any maildir info field (not even
-     * an empty info with no flags set) then there's no information to
-     * go on, so do nothing. */
-    if (! seen_maildir_info)
-	return NOTMUCH_STATUS_SUCCESS;
-
-    status = notmuch_message_freeze (message);
-    if (status)
-	return status;
-
-    for (i = 0; i < ARRAY_SIZE(flag2tag); i++) {
-	if ((strchr (combined_flags, flag2tag[i].flag) != NULL)
-	    ^ 
-	    flag2tag[i].inverse)
-	{
-	    status = notmuch_message_add_tag (message, flag2tag[i].tag);
-	} else {
-	    status = notmuch_message_remove_tag (message, flag2tag[i].tag);
-	}
-	if (status)
-	    return status;
-    }
-    status = notmuch_message_thaw (message);
-
-    talloc_free (combined_flags);
-
-    return status;
-}
-
 /* Is the given filename within a maildir directory?
  *
  * Specifically, is the final directory component of 'filename' either
@@ -1122,6 +1068,72 @@ _filename_is_in_maildir (const char *filename)
     }
 
     return NULL;
+}
+
+notmuch_status_t
+notmuch_message_maildir_flags_to_tags (notmuch_message_t *message)
+{
+    const char *flags;
+    notmuch_status_t status;
+    notmuch_filenames_t *filenames;
+    const char *filename, *dir;
+    char *combined_flags = talloc_strdup (message, "");
+    unsigned i;
+    int seen_maildir_info = 0;
+
+    for (filenames = notmuch_message_get_filenames (message);
+	 notmuch_filenames_valid (filenames);
+	 notmuch_filenames_move_to_next (filenames))
+    {
+	filename = notmuch_filenames_get (filenames);
+	dir = _filename_is_in_maildir (filename);
+
+	if (! dir)
+	    continue;
+
+	flags = strstr (filename, ":2,");
+	if (flags) {
+	    seen_maildir_info = 1;
+	    flags += 3;
+	    combined_flags = talloc_strdup_append (combined_flags, flags);
+	} else if (STRNCMP_LITERAL (dir, "new/") == 0) {
+	    /* Messages are delivered to new/ with no "info" part, but
+	     * they effectively have default maildir flags.  According
+	     * to the spec, we should ignore the info part for
+	     * messages in new/, but some MUAs (mutt) can set maildir
+	     * flags on messages in new/, so we're liberal in what we
+	     * accept. */
+	    seen_maildir_info = 1;
+	}
+    }
+
+    /* If none of the filenames have any maildir info field (not even
+     * an empty info with no flags set) then there's no information to
+     * go on, so do nothing. */
+    if (! seen_maildir_info)
+	return NOTMUCH_STATUS_SUCCESS;
+
+    status = notmuch_message_freeze (message);
+    if (status)
+	return status;
+
+    for (i = 0; i < ARRAY_SIZE(flag2tag); i++) {
+	if ((strchr (combined_flags, flag2tag[i].flag) != NULL)
+	    ^ 
+	    flag2tag[i].inverse)
+	{
+	    status = notmuch_message_add_tag (message, flag2tag[i].tag);
+	} else {
+	    status = notmuch_message_remove_tag (message, flag2tag[i].tag);
+	}
+	if (status)
+	    return status;
+    }
+    status = notmuch_message_thaw (message);
+
+    talloc_free (combined_flags);
+
+    return status;
 }
 
 /* From the set of tags on 'message' and the flag2tag table, compute a

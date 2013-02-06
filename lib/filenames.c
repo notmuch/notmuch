@@ -54,7 +54,7 @@ notmuch_filenames_valid (notmuch_filenames_t *filenames)
 const char *
 notmuch_filenames_get (notmuch_filenames_t *filenames)
 {
-    if (filenames->iterator == NULL)
+    if ((filenames == NULL) || (filenames->iterator == NULL))
 	return NULL;
 
     return filenames->iterator->string;
@@ -63,7 +63,7 @@ notmuch_filenames_get (notmuch_filenames_t *filenames)
 void
 notmuch_filenames_move_to_next (notmuch_filenames_t *filenames)
 {
-    if (filenames->iterator == NULL)
+    if ((filenames == NULL) || (filenames->iterator == NULL))
 	return;
 
     filenames->iterator = filenames->iterator->next;

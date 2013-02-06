@@ -41,6 +41,10 @@ esac
 # Keep the original TERM for say_color and test_emacs
 ORIGINAL_TERM=$TERM
 
+# dtach(1) provides more capable terminal environment to anything
+# that requires more than dumb terminal...
+[ x"${TERM:-dumb}" = xdumb ] && DTACH_TERM=vt100 || DTACH_TERM=$TERM
+
 # For repeatability, reset the environment to known value.
 LANG=C
 LC_ALL=C
@@ -49,7 +53,13 @@ TZ=UTC
 TERM=dumb
 export LANG LC_ALL PAGER TERM TZ
 GIT_TEST_CMP=${GIT_TEST_CMP:-diff -u}
+if [[ ( -n "$TEST_EMACS" && -z "$TEST_EMACSCLIENT" ) || \
+      ( -z "$TEST_EMACS" && -n "$TEST_EMACSCLIENT" ) ]]; then
+    echo "error: must specify both or neither of TEST_EMACS and TEST_EMACSCLIENT" >&2
+    exit 1
+fi
 TEST_EMACS=${TEST_EMACS:-${EMACS:-emacs}}
+TEST_EMACSCLIENT=${TEST_EMACSCLIENT:-emacsclient}
 
 # Protect ourselves from common misconfiguration to export
 # CDPATH into the environment
@@ -350,6 +360,11 @@ ${additional_headers}"
 ${additional_headers}"
     fi
 
+    if [ ! -z "${template[bcc]}" ]; then
+	additional_headers="Bcc: ${template[bcc]}
+${additional_headers}"
+    fi
+
     if [ ! -z "${template[references]}" ]; then
 	additional_headers="References: ${template[references]}
 ${additional_headers}"
@@ -403,8 +418,11 @@ emacs_deliver_message ()
     shift 2
     # before we can send a message, we have to prepare the FCC maildir
     mkdir -p "$MAIL_DIR"/sent/{cur,new,tmp}
-    $TEST_DIRECTORY/smtp-dummy sent_message &
-    smtp_dummy_pid=$!
+    # eval'ing smtp-dummy --background will set smtp_dummy_pid
+    smtp_dummy_pid=
+    eval `$TEST_DIRECTORY/smtp-dummy --background sent_message`
+    test -n "$smtp_dummy_pid" || return 1
+
     test_emacs \
 	"(let ((message-send-mail-function 'message-smtpmail-send-it)
 	       (smtpmail-smtp-server \"localhost\")
@@ -419,9 +437,11 @@ emacs_deliver_message ()
 	   (insert \"${body}\")
 	   $@
 	   (message-send-and-exit))"
-    # opportunistically quit smtp-dummy in case above fails.
-    { echo QUIT > /dev/tcp/localhost/25025; } 2>/dev/null
-    wait ${smtp_dummy_pid}
+
+    # In case message was sent properly, client waits for confirmation
+    # before exiting and resuming control here; therefore making sure
+    # that server exits by sending (KILL) signal to it is safe.
+    kill -9 $smtp_dummy_pid
     notmuch new >/dev/null
 }
 
@@ -497,19 +517,36 @@ test_expect_equal_file ()
 	test "$#" = 2 ||
 	error "bug in the test script: not 2 or 3 parameters to test_expect_equal"
 
-	output="$1"
-	expected="$2"
+	file1="$1"
+	basename1=`basename "$file1"`
+	file2="$2"
+	basename2=`basename "$file2"`
 	if ! test_skip "$test_subtest_name"
 	then
-		if diff -q "$expected" "$output" >/dev/null ; then
+		if diff -q "$file1" "$file2" >/dev/null ; then
 			test_ok_ "$test_subtest_name"
 		else
 			testname=$this_test.$test_count
-			cp "$output" $testname.output
-			cp "$expected" $testname.expected
-			test_failure_ "$test_subtest_name" "$(diff -u $testname.expected $testname.output)"
+			cp "$file1" "$testname.$basename1"
+			cp "$file2" "$testname.$basename2"
+			test_failure_ "$test_subtest_name" "$(diff -u "$testname.$basename1" "$testname.$basename2")"
 		fi
     fi
+}
+
+# Like test_expect_equal, but arguments are JSON expressions to be
+# canonicalized before diff'ing.  If an argument cannot be parsed, it
+# is used unchanged so that there's something to diff against.
+test_expect_equal_json () {
+    # The test suite forces LC_ALL=C, but this causes Python 3 to
+    # decode stdin as ASCII.  We need to read JSON in UTF-8, so
+    # override Python's stdio encoding defaults.
+    output=$(echo "$1" | PYTHONIOENCODING=utf-8 python -mjson.tool \
+        || echo "$1")
+    expected=$(echo "$2" | PYTHONIOENCODING=utf-8 python -mjson.tool \
+        || echo "$2")
+    shift 2
+    test_expect_equal "$output" "$expected" "$@"
 }
 
 test_emacs_expect_t () {
@@ -543,12 +580,12 @@ test_emacs_expect_t () {
 
 NOTMUCH_NEW ()
 {
-    notmuch new | grep -v -E -e '^Processed [0-9]*( total)? file|Found [0-9]* total file'
+    notmuch new "${@}" | grep -v -E -e '^Processed [0-9]*( total)? file|Found [0-9]* total file'
 }
 
 notmuch_search_sanitize ()
 {
-    sed -r -e 's/("?thread"?: ?)("?)................("?)/\1\2XXX\3/'
+    perl -pe 's/("?thread"?: ?)("?)................("?)/\1\2XXX\3/'
 }
 
 NOTMUCH_SHOW_FILENAME_SQUELCH='s,filename:.*/mail,filename:/XXX/mail,'
@@ -565,10 +602,9 @@ notmuch_show_sanitize_all ()
 
 notmuch_json_show_sanitize ()
 {
-    sed -e 's|, |,\n |g' | \
-	sed \
-	-e 's|"id": "[^"]*",|"id": "XXXXX",|' \
-	-e 's|"filename": "[^"]*",|"filename": "YYYYY",|'
+    sed \
+	-e 's|"id": "[^"]*",|"id": "XXXXX",|g' \
+	-e 's|"filename": "/[^"]*",|"filename": "YYYYY",|g'
 }
 
 # End of notmuch helper functions
@@ -598,18 +634,22 @@ test_have_prereq () {
 	esac
 }
 
+declare -A test_missing_external_prereq_
+declare -A test_subtest_missing_external_prereq_
+
 # declare prerequisite for the given external binary
 test_declare_external_prereq () {
 	binary="$1"
 	test "$#" = 2 && name=$2 || name="$binary(1)"
 
-	hash $binary 2>/dev/null || eval "
-	test_missing_external_prereq_${binary}_=t
+	if ! hash $binary 2>/dev/null; then
+		test_missing_external_prereq_["${binary}"]=t
+		eval "
 $binary () {
-	echo -n \"\$test_subtest_missing_external_prereqs_ \" | grep -qe \" $name \" ||
-	test_subtest_missing_external_prereqs_=\"\$test_subtest_missing_external_prereqs_ $name\"
+	test_subtest_missing_external_prereq_[\"${name}\"]=t
 	false
 }"
+	fi
 }
 
 # Explicitly require external prerequisite.  Useful when binary is
@@ -617,7 +657,7 @@ $binary () {
 # Returns success if dependency is available, failure otherwise.
 test_require_external_prereq () {
 	binary="$1"
-	if [ "$(eval echo -n \$test_missing_external_prereq_${binary}_)" = t ]; then
+	if [[ ${test_missing_external_prereq_["${binary}"]} == t ]]; then
 		# dependency is missing, call the replacement function to note it
 		eval "$binary"
 	else
@@ -710,9 +750,9 @@ test_skip () {
 }
 
 test_check_missing_external_prereqs_ () {
-	if test -n "$test_subtest_missing_external_prereqs_"; then
-		say_color skip >&1 "missing prerequisites:"
-		echo "$test_subtest_missing_external_prereqs_" >&1
+	if [[ ${#test_subtest_missing_external_prereq_[@]} != 0 ]]; then
+		say_color skip >&1 "missing prerequisites: "
+		echo ${!test_subtest_missing_external_prereq_[@]} >&1
 		test_report_skip_ "$@"
 	else
 		false
@@ -893,7 +933,7 @@ test_done () {
 	GIT_EXIT_OK=t
 	test_results_dir="$TEST_DIRECTORY/test-results"
 	mkdir -p "$test_results_dir"
-	test_results_path="$test_results_dir/${0%.sh}-$$"
+	test_results_path="$test_results_dir/${0%.sh}"
 
 	echo "total $test_count" >> $test_results_path
 	echo "success $test_success" >> $test_results_path
@@ -948,7 +988,7 @@ test_emacs () {
 	missing_dependencies=
 	test_require_external_prereq dtach || missing_dependencies=1
 	test_require_external_prereq emacs || missing_dependencies=1
-	test_require_external_prereq emacsclient || missing_dependencies=1
+	test_require_external_prereq ${TEST_EMACSCLIENT} || missing_dependencies=1
 	test -z "$missing_dependencies" || return
 
 	if [ -z "$EMACS_SERVER" ]; then
@@ -960,9 +1000,10 @@ test_emacs () {
 		fi
 		server_name="notmuch-test-suite-$$"
 		# start a detached session with an emacs server
-		# user's TERM is given to dtach which assumes a minimally
+		# user's TERM (or 'vt100' in case user's TERM is unset, empty
+		# or 'dumb') is given to dtach which assumes a minimally
 		# VT100-compatible terminal -- and emacs inherits that
-		TERM=$ORIGINAL_TERM dtach -n "$TEST_TMPDIR/emacs-dtach-socket.$$" \
+		TERM=$DTACH_TERM dtach -n "$TEST_TMPDIR/emacs-dtach-socket.$$" \
 			sh -c "stty rows 24 cols 80; exec '$TMP_DIRECTORY/run_emacs' \
 				--no-window-system \
 				$load_emacs_tests \
@@ -976,7 +1017,15 @@ test_emacs () {
 		done
 	fi
 
-	emacsclient --socket-name="$EMACS_SERVER" --eval "(progn $@)"
+	# Clear test-output output file.  Most Emacs tests end with a
+	# call to (test-output).  If the test code fails with an
+	# exception before this call, the output file won't get
+	# updated.  Since we don't want to compare against an output
+	# file from another test, so start out with an empty file.
+	rm -f OUTPUT
+	touch OUTPUT
+
+	${TEST_EMACSCLIENT} --socket-name="$EMACS_SERVER" --eval "(progn $@)"
 }
 
 test_python() {
@@ -987,7 +1036,7 @@ test_python() {
 	# most others as /usr/bin/python. So first try python2, and fallback to
 	# python if python2 doesn't exist.
 	cmd=python2
-	[[ "$test_missing_external_prereq_python2_" = t ]] && cmd=python
+	[[ ${test_missing_external_prereq_[python2]} == t ]] && cmd=python
 
 	(echo "import sys; _orig_stdout=sys.stdout; sys.stdout=open('OUTPUT', 'w')"; cat) \
 		| $cmd -
@@ -1029,7 +1078,7 @@ test_reset_state_ () {
 	test -z "$test_init_done_" && test_init_
 
 	test_subtest_known_broken_=
-	test_subtest_missing_external_prereqs_=
+	test_subtest_missing_external_prereq_=()
 }
 
 # called once before the first subtest
@@ -1041,129 +1090,7 @@ test_init_ () {
 }
 
 
-find_notmuch_path ()
-{
-    dir="$1"
-
-    while [ -n "$dir" ]; do
-	bin="$dir/notmuch"
-	if [ -x "$bin" ]; then
-	    echo "$dir"
-	    return
-	fi
-	dir="$(dirname "$dir")"
-	if [ "$dir" = "/" ]; then
-	    break
-	fi
-    done
-}
-
-# Test the binaries we have just built.  The tests are kept in
-# test/ subdirectory and are run in 'trash directory' subdirectory.
-TEST_DIRECTORY=$(pwd)
-if test -n "$valgrind"
-then
-	make_symlink () {
-		test -h "$2" &&
-		test "$1" = "$(readlink "$2")" || {
-			# be super paranoid
-			if mkdir "$2".lock
-			then
-				rm -f "$2" &&
-				ln -s "$1" "$2" &&
-				rm -r "$2".lock
-			else
-				while test -d "$2".lock
-				do
-					say "Waiting for lock on $2."
-					sleep 1
-				done
-			fi
-		}
-	}
-
-	make_valgrind_symlink () {
-		# handle only executables
-		test -x "$1" || return
-
-		base=$(basename "$1")
-		symlink_target=$TEST_DIRECTORY/../$base
-		# do not override scripts
-		if test -x "$symlink_target" &&
-		    test ! -d "$symlink_target" &&
-		    test "#!" != "$(head -c 2 < "$symlink_target")"
-		then
-			symlink_target=$TEST_DIRECTORY/valgrind.sh
-		fi
-		case "$base" in
-		*.sh|*.perl)
-			symlink_target=$TEST_DIRECTORY/unprocessed-script
-		esac
-		# create the link, or replace it if it is out of date
-		make_symlink "$symlink_target" "$GIT_VALGRIND/bin/$base" || exit
-	}
-
-	# override notmuch executable in TEST_DIRECTORY/..
-	GIT_VALGRIND=$TEST_DIRECTORY/valgrind
-	mkdir -p "$GIT_VALGRIND"/bin
-	make_valgrind_symlink $TEST_DIRECTORY/../notmuch
-	OLDIFS=$IFS
-	IFS=:
-	for path in $PATH
-	do
-		ls "$path"/notmuch 2> /dev/null |
-		while read file
-		do
-			make_valgrind_symlink "$file"
-		done
-	done
-	IFS=$OLDIFS
-	PATH=$GIT_VALGRIND/bin:$PATH
-	GIT_EXEC_PATH=$GIT_VALGRIND/bin
-	export GIT_VALGRIND
-else # normal case
-	notmuch_path=`find_notmuch_path "$TEST_DIRECTORY"`
-	test -n "$notmuch_path" && PATH="$notmuch_path:$PATH"
-fi
-export PATH
-
-# Test repository
-test="tmp.$(basename "$0" .sh)"
-test -n "$root" && test="$root/$test"
-case "$test" in
-/*) TMP_DIRECTORY="$test" ;;
- *) TMP_DIRECTORY="$TEST_DIRECTORY/$test" ;;
-esac
-test ! -z "$debug" || remove_tmp=$TMP_DIRECTORY
-rm -fr "$test" || {
-	GIT_EXIT_OK=t
-	echo >&5 "FATAL: Cannot prepare test area"
-	exit 1
-}
-
-# A temporary home directory is needed by at least:
-# - emacs/"Sending a message via (fake) SMTP"
-# - emacs/"Reply within emacs"
-# - crypto/emacs_deliver_message
-export HOME="${TMP_DIRECTORY}/home"
-mkdir -p "${HOME}"
-
-MAIL_DIR="${TMP_DIRECTORY}/mail"
-export GNUPGHOME="${TMP_DIRECTORY}/gnupg"
-export NOTMUCH_CONFIG="${TMP_DIRECTORY}/notmuch-config"
-
-mkdir -p "${test}"
-mkdir -p "${MAIL_DIR}"
-
-cat <<EOF >"${NOTMUCH_CONFIG}"
-[database]
-path=${MAIL_DIR}
-
-[user]
-name=Notmuch Test Suite
-primary_email=test_suite@notmuchmail.org
-other_email=test_suite_other@notmuchmail.org;test_suite@otherdomain.org
-EOF
+. ./test-lib-common.sh
 
 emacs_generate_script
 
@@ -1251,7 +1178,7 @@ rm -f y
 # declare prerequisites for external binaries used in tests
 test_declare_external_prereq dtach
 test_declare_external_prereq emacs
-test_declare_external_prereq emacsclient
+test_declare_external_prereq ${TEST_EMACSCLIENT}
 test_declare_external_prereq gdb
 test_declare_external_prereq gpg
 test_declare_external_prereq python

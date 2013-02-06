@@ -49,8 +49,9 @@ static const char new_config_comment[] =
     "\tignore	A list (separated by ';') of file and directory names\n"
     "\t	that will not be searched for messages by \"notmuch new\".\n"
     "\n"
-    "\t	NOTE: *Every* file/directory that goes by one of those names will\n"
-    "\t	be ignored, independent of its depth/location in the mail store.\n";
+    "\t	NOTE: *Every* file/directory that goes by one of those\n"
+    "\t	names will be ignored, independent of its depth/location\n"
+    "\t	in the mail store.\n";
 
 static const char user_config_comment[] =
     " User configuration\n"

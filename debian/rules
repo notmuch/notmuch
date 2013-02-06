@@ -1,7 +1,9 @@
 #!/usr/bin/make -f
 
+python3_all = py3versions -s | xargs -n1 | xargs -t -I {} env {}
+
 %:
-	dh --with python2 $@
+	dh $@ --with python2,python3
 
 override_dh_auto_configure:
 	dh_auto_configure -- --emacslispdir=/usr/share/emacs/site-lisp/notmuch
@@ -9,13 +11,16 @@ override_dh_auto_configure:
 override_dh_auto_build:
 	dh_auto_build
 	dh_auto_build --sourcedirectory bindings/python
+	cd bindings/python && $(python3_all) setup.py build
 	$(MAKE) -C contrib/notmuch-mutt
 
 override_dh_auto_clean:
 	dh_auto_clean
 	dh_auto_clean --sourcedirectory bindings/python
+	cd bindings/python && $(python3_all) setup.py clean -a
 	$(MAKE) -C contrib/notmuch-mutt clean
 
 override_dh_auto_install:
 	dh_auto_install
 	dh_auto_install --sourcedirectory bindings/python
+	cd bindings/python && $(python3_all) setup.py install --install-layout=deb --root=$(CURDIR)/debian/tmp

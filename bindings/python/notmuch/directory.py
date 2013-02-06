@@ -18,7 +18,7 @@ Copyright 2010 Sebastian Spaeth <Sebastian@SSpaeth.de>
 """
 
 from ctypes import c_uint, c_long
-from notmuch.globals import (
+from .globals import (
     nmlib,
     NotmuchDirectoryP,
     NotmuchFilenamesP

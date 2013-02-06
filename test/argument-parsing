@@ -9,7 +9,7 @@ keyword 1
 int 7
 string foo
 positional arg 1 pos1
-positional arg 2 pos1
+positional arg 2 pos2
 EOF
 test_expect_equal_file OUTPUT EXPECTED
 

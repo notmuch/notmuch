@@ -23,14 +23,16 @@
 
 #include <talloc.h>
 
+#include "function-attributes.h"
+
 /* There's no point in continuing when we've detected that we've done
  * something wrong internally (as opposed to the user passing in a
  * bogus value).
  *
  * Note that PRINTF_ATTRIBUTE comes from talloc.h
  */
-int
-_internal_error (const char *format, ...) PRINTF_ATTRIBUTE (1, 2);
+void
+_internal_error (const char *format, ...) PRINTF_ATTRIBUTE (1, 2) NORETURN_ATTRIBUTE;
 
 /* There's no point in continuing when we've detected that we've done
  * something wrong internally (as opposed to the user passing in a

@@ -1,10 +1,276 @@
+Notmuch 0.15.1 (2013-01-24)
+=========================
+
+Internal test framework changes
+-------------------------------
+
+Set a default value for TERM when running tests. This fixes certain
+build failures in non-interactive environments.
+
+Notmuch 0.15 (2013-01-18)
+=========================
+
+General
+-------
+
+Date range search support
+
+  The `date:` prefix can now be used in queries to restrict the results
+  to only messages within a particular time range (based on the Date:
+  header) with a range syntax of `date:<since>..<until>`. Notmuch
+  supports a wide variety of expressions in `<since>` and
+  `<until>`. Please refer to the `notmuch-search-terms(7)` manual page
+  for details.
+
+Empty tag names and tags beginning with "-" are deprecated
+
+  Such tags have been a frequent source of confusion and cause
+  (sometimes unresolvable) conflicts with other syntax.  notmuch tag
+  no longer allows such tags to be added to messages.  Removing such
+  tags continues to be supported to allow cleanup of existing tags,
+  but may be removed in a future release.
+
+Command-Line Interface
+----------------------
+
+`notmuch new` no longer chokes on mboxes
+
+  `notmuch new` now rejects mbox files containing more than one
+  message, rather than treating the file as one giant message.
+
+Support for single message mboxes is deprecated
+
+  For historical reasons, `notmuch new` will index mbox files
+  containing a single message; however, this behavior is now
+  officially deprecated.
+
+Fixed `notmuch new` to skip ignored broken symlinks
+
+  `notmuch new` now correctly skips symlinks if they are in the
+  ignored files list.  Previously, it would abort when encountering
+  broken symlink, even if it was ignored.
+
+New dump/restore format and tagging interface
+
+  There is a new `batch-tag` format for dump and restore that is more
+  robust, particularly with respect to tags and message-ids containing
+  whitespace.
+
+  `notmuch tag` now supports the ability to read tag operations and
+  queries from an input stream, in a format compatible with the new
+  dump/restore format.
+
+Bcc and Reply-To headers are now available in notmuch show json output
+
+  The `notmuch show --format=json` now includes "Bcc" and "Reply-To" headers.
+  For example notmuch Emacs client can now have these headers visible
+  when the headers are added to the `notmuch-message-headers` variable.
+
+CLI callers can now request a specific output format version
+
+  `notmuch` subcommands that support structured output now support a
+  `--format-version` argument for requesting a specific version of the
+  structured output, enabling better compatibility and error handling.
+
+`notmuch search` has gained a null character separated text output format
+
+  The new --format=text0 output format for `notmuch search` prints
+  output separated by null characters rather than newline
+  characters. This is similar to the find(1) -print0 option, and works
+  together with the xargs(1) -0 option.
+
+Emacs Interface
+---------------
+
+Removal of the deprecated `notmuch-folders` variable
+
+  `notmuch-folders` has been deprecated since the introduction of saved
+  searches and the notmuch hello view in notmuch 0.3. `notmuch-folders`
+  has now been removed. Any remaining users should migrate to
+  `notmuch-saved-searches`.
+
+Visibility of MIME parts can be toggled
+
+  Each part of a multi-part MIME email can now be shown or hidden
+  using the button at the top of each part (by pressing RET on it or
+  by clicking).  For emails with multiple alternative formats (e.g.,
+  plain text and HTML), only the preferred format is shown initially,
+  but other formats can be shown using their part buttons.  To control
+  the behavior of this, see
+  `notmuch-multipart/alternative-discouraged` and
+  `notmuch-show-all-multipart/alternative-parts`.
+
+  Note notmuch-show-print-message (bound to '#' by default) will print
+  all parts of multipart/alternative message regardless of whether
+  they are currently hidden or shown in the buffer.
+
+Emacs now buttonizes mid: links
+
+  mid: links are a standardized way to link to messages by message ID
+  (see RFC 2392).  Emacs now hyperlinks mid: links to the appropriate
+  notmuch search.
+
+Handle errors from bodypart insertions
+
+  If displaying the text of a message in show mode causes an error (in
+  the `notmuch-show-insert-part-*` functions), notmuch no longer cuts
+  off thread display at the offending message.  The error is now
+  simply displayed in place of the message.
+
+Emacs now detects version mismatches with the notmuch CLI
+
+  Emacs now detects and reports when the Emacs interface version and
+  the notmuch CLI version are incompatible.
+
+Improved text/calendar content handling
+
+  Carriage returns in embedded text/calendar content caused insertion
+  of the calendar content fail. Now CRs are removed before calling icalendar
+  to extract icalendar data. In case icalendar extraction fails an error
+  is thrown for the bodypart insertion function to deal with.
+
+Disabled coding conversions when reading in `with-current-notmuch-show-message`
+
+  Depending on the user's locale, saving attachments containing 8-bit
+  data may have performed an unintentional encoding conversion,
+  corrupting the saved attachment.  This has been fixed by making
+  `with-current-notmuch-show-message` disable coding conversion.
+
+Fixed errors with HTML email containing images in Emacs 24
+
+  Emacs 24 ships with a new HTML renderer that produces better output,
+  but is slightly buggy.  We work around a bug that caused it to fail
+  for HTML email containing images.
+
+Fixed handling of tags with unusual characters in them
+
+  Emacs now handles tags containing spaces, quotes, and parenthesis.
+
+Fixed buttonization of id: links without quote characters
+
+  Emacs now correctly buttonizes id: links where the message ID is not
+  quoted.
+
+`notmuch-hello` refresh point placement improvements
+
+  Refreshing the `notmuch-hello` buffer does a better job of keeping
+  the point where it was.
+
+Automatic tag changes are now unified and customizable
+
+  All the automatic tag changes that the Emacs interface makes when
+  reading, archiving, or replying to messages, can now be
+  customized. Any number of tag additions and removals is supported
+  through the `notmuch-show-mark-read`, `notmuch-archive-tags`, and
+  `notmuch-message-replied-tags` customization variables.
+
+Support for stashing the thread id in show view
+
+  Invoking `notmuch-show-stash-message-id` with a prefix argument
+  stashes the (local and database specific) thread id of the current
+  thread instead of the message id.
+
+New add-on tool: notmuch-pick
+-----------------------------
+
+The new contrib/ tool `notmuch-pick` is an experimental threaded message
+view for the emacs interface. Each message is one line in the results
+and the thread structure is shown using UTF-8 box drawing characters
+(similar to Mutt's threaded view). It comes between search and show in
+terms of amount of output and can be useful for viewing both single
+threads and multiple threads. See the notmuch-pick README file for
+further details and installation.
+
+Portability
+-----------
+
+notmuch now builds on OpenBSD.
+
+Internal test framework changes
+-------------------------------
+
+The emacsclient binary is now user-configurable
+
+  The test framework now accepts TEST_EMACSCLIENT in addition to
+  TEST_EMACS for configuring the emacsclient to use.  This is
+  necessary to avoid using an old emacsclient with a new emacs, which
+  can result in buggy behavior.
+
+Notmuch 0.14 (2012-08-20)
+=========================
+
+General bug fixes
+-----------------
+
+Maildir tag synchronization
+
+  Maildir flag-to-tag synchronization now applies only to messages in
+  maildir-like directory structures.  Previously, it applied to any
+  message that had a maildir "info" part, which meant it could
+  incorrectly synchronize tags for non-maildir messages, while at the
+  same time failing to synchronize tags for newly received maildir
+  messages (typically causing new messages to not receive the "unread"
+  tag).
+
+Command-Line Interface
+----------------------
+
+  The deprecated positional output file argument to `notmuch dump` has
+  been replaced with an `--output` option. The input file positional
+  argument to `notmuch restore` has been replaced with an `--input`
+  option for consistency with dump.  These changes simplify the syntax
+  of dump/restore options and make them more consistent with other
+  notmuch commands.
+
+Emacs Interface
+---------------
+
+Search results now get re-colored when tags are updated
+
+The formatting of tags in search results can now be customized
+
+  Previously, attempting to change the format of tags in
+  `notmuch-search-result-format` would usually break tagging from
+  search-mode.  We no longer make assumptions about the format.
+
+Experimental support for multi-line search result formats
+
+  It is now possible to embed newlines in
+  `notmuch-search-result-format` to make individual search results
+  span multiple lines.
+
+Next/previous in search and show now move by boundaries
+
+  All "next" and "previous" commands in the search and show modes now
+  move to the next/previous result or message boundary.  This doesn't
+  change the behavior of "next", but "previous" commands will first
+  move to the beginning of the current result or message if point is
+  inside the result or message.
+
+Search now uses the JSON format internally
+
+  This should address problems with unusual characters in authors and
+  subject lines that could confuse the old text-based search parser.
+
+The date shown in search results is no longer padded before applying
+user-specified formatting
+
+  Previously, the date in the search results was padded to fixed width
+  before being formatted with `notmuch-search-result-format`.  It is
+  no longer padded.  The default format has been updated, but if
+  you've customized this variable, you may have to change your date
+  format from `"%s "` to `"%12s "`.
+
+The thread-id for the `target-thread` argument for `notmuch-search` should
+now be supplied without the "thread:" prefix.
+
 Notmuch 0.13.2 (2012-06-02)
 ===========================
 
 Bug-fix release
 ---------------
 
-Update contrib/notmuch-deliver for API changes in 0.13. This fixes a
+Update `contrib/notmuch-deliver` for API changes in 0.13. This fixes a
 compilation error for this contrib package.
 
 Notmuch 0.13.1 (2012-05-29)
@@ -30,7 +296,7 @@ databases
   and simply return a `NULL` object if the directory does not exist,
   as documented.
 
-Fix compilation of ruby bindings.
+Fix compilation of ruby bindings
 
   Revert to dynamic linking, since the statically linked bindings did
   not work well.

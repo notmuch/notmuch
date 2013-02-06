@@ -1,0 +1,78 @@
+#!/usr/bin/env bash
+
+test_description="emacs pick interface"
+. test-lib.sh
+
+EXPECTED=$TEST_DIRECTORY/pick.expected-output
+
+add_email_corpus
+test_begin_subtest "Do we have emacs"
+test_emacs '(insert "hello\n")
+	    (test-output)'
+cat <<EOF >EXPECTED
+hello
+EOF
+test_expect_equal_file OUTPUT EXPECTED
+
+test_begin_subtest "Basic notmuch-pick view in emacs"
+test_emacs '(add-to-list (quote load-path) "'$PICK_DIR'")
+	    (require (quote notmuch-pick))
+	    (notmuch-pick "tag:inbox")
+	    (notmuch-test-wait)
+	    (test-output)
+	    (delete-other-windows)'
+test_expect_equal_file OUTPUT $EXPECTED/notmuch-pick-tag-inbox
+
+test_begin_subtest "Navigation of notmuch-hello to search results"
+test_emacs '(notmuch-hello)
+	    (goto-char (point-min))
+	    (re-search-forward "inbox")
+	    (widget-button-press (1- (point)))
+	    (notmuch-test-wait)
+	    (notmuch-pick-from-search-current-query)
+	    (notmuch-test-wait)
+	    (test-output)
+	    (delete-other-windows)'
+test_expect_equal_file OUTPUT $EXPECTED/notmuch-pick-tag-inbox
+
+test_begin_subtest "Pick of a single thread (from search)"
+test_emacs '(notmuch-hello)
+	    (goto-char (point-min))
+	    (re-search-forward "inbox")
+	    (widget-button-press (1- (point)))
+	    (notmuch-test-wait)
+	    (notmuch-pick-from-search-thread)
+	    (notmuch-test-wait)
+	    (test-output)
+	    (delete-other-windows)'
+test_expect_equal_file OUTPUT $EXPECTED/notmuch-pick-single-thread
+
+test_begin_subtest "Pick of a single thread (from show)"
+test_emacs '(notmuch-hello)
+	    (goto-char (point-min))
+	    (re-search-forward "inbox")
+	    (widget-button-press (1- (point)))
+	    (notmuch-test-wait)
+	    (notmuch-search-show-thread)
+	    (notmuch-pick-from-show-current-query)
+	    (notmuch-test-wait)
+	    (test-output)
+	    (delete-other-windows)'
+test_expect_equal_file OUTPUT $EXPECTED/notmuch-pick-single-thread
+
+test_begin_subtest "Message window of pick"
+test_emacs '(notmuch-hello)
+	    (goto-char (point-min))
+	    (re-search-forward "inbox")
+	    (widget-button-press (1- (point)))
+	    (notmuch-test-wait)
+	    (notmuch-search-next-thread)
+	    (notmuch-pick-from-search-thread)
+	    (notmuch-test-wait)
+	    (select-window notmuch-pick-message-window)
+	    (test-output)
+	    (delete-other-windows)'
+cp OUTPUT /tmp/mjwout
+test_expect_equal_file OUTPUT $EXPECTED/notmuch-pick-show-window
+
+test_done

@@ -1,7 +1,11 @@
 #!/usr/bin/env bash
 
-test_description="Testing emacs notmuch-show view"
-. test-lib.sh
+test_description="emacs notmuch-show view"
+. ./test-lib.sh
+
+EXPECTED=$TEST_DIRECTORY/emacs-show.expected-output
+
+add_email_corpus
 
 test_begin_subtest "Hiding Original Message region at beginning of a message"
 message_id='OriginalMessageHiding.1@notmuchmail.org'
@@ -23,5 +27,174 @@ EOF
 test_emacs "(notmuch-show \"id:$message_id\")
 	    (test-visible-output)"
 test_expect_equal_file OUTPUT EXPECTED
+
+test_begin_subtest "Bare subject #1"
+output=$(test_emacs '(notmuch-show-strip-re "Re: subject")')
+test_expect_equal "$output" '"subject"'
+
+test_begin_subtest "Bare subject #2"
+output=$(test_emacs '(notmuch-show-strip-re "re:Re: re:  Re:  re:subject")')
+test_expect_equal "$output" '"subject"'
+
+test_begin_subtest "Bare subject #3"
+output=$(test_emacs '(notmuch-show-strip-re "the cure: fix the regexp")')
+test_expect_equal "$output" '"the cure: fix the regexp"'
+
+test_begin_subtest "don't process cryptographic MIME parts"
+test_emacs '(let ((notmuch-crypto-process-mime nil))
+	(notmuch-show "id:20091117203301.GV3165@dottiness.seas.harvard.edu")
+	(test-visible-output))'
+test_expect_equal_file OUTPUT $EXPECTED/notmuch-show-process-crypto-mime-parts-off
+
+test_begin_subtest "process cryptographic MIME parts"
+test_emacs '(let ((notmuch-crypto-process-mime t))
+	(notmuch-show "id:20091117203301.GV3165@dottiness.seas.harvard.edu")
+	(test-visible-output))'
+test_expect_equal_file OUTPUT $EXPECTED/notmuch-show-process-crypto-mime-parts-on
+
+test_begin_subtest "process cryptographic MIME parts (w/ notmuch-show-toggle-process-crypto)"
+test_emacs '(let ((notmuch-crypto-process-mime nil))
+	(notmuch-show "id:20091117203301.GV3165@dottiness.seas.harvard.edu")
+	(notmuch-show-toggle-process-crypto)
+	(test-visible-output))'
+test_expect_equal_file OUTPUT $EXPECTED/notmuch-show-process-crypto-mime-parts-on
+
+test_begin_subtest "notmuch-show: don't elide non-matching messages"
+test_emacs '(let ((notmuch-show-only-matching-messages nil))
+	(notmuch-search "from:lars@seas.harvard.edu and subject:\"Maildir storage\"")
+	(notmuch-test-wait)
+	(notmuch-search-show-thread)
+	(notmuch-test-wait)
+	(test-visible-output))'
+test_expect_equal_file OUTPUT $EXPECTED/notmuch-show-elide-non-matching-messages-off
+
+test_begin_subtest "notmuch-show: elide non-matching messages"
+test_emacs '(let ((notmuch-show-only-matching-messages t))
+	(notmuch-search "from:lars@seas.harvard.edu and subject:\"Maildir storage\"")
+	(notmuch-test-wait)
+	(notmuch-search-show-thread)
+	(notmuch-test-wait)
+	(test-visible-output))'
+test_expect_equal_file OUTPUT $EXPECTED/notmuch-show-elide-non-matching-messages-on
+
+test_begin_subtest "notmuch-show: elide non-matching messages (w/ notmuch-show-toggle-elide-non-matching)"
+test_emacs '(let ((notmuch-show-only-matching-messages nil))
+	(notmuch-search "from:lars@seas.harvard.edu and subject:\"Maildir storage\"")
+	(notmuch-test-wait)
+	(notmuch-search-show-thread)
+	(notmuch-test-wait)
+	(notmuch-show-toggle-elide-non-matching)
+	(test-visible-output))'
+test_expect_equal_file OUTPUT $EXPECTED/notmuch-show-elide-non-matching-messages-on
+
+test_begin_subtest "notmuch-show: elide non-matching messages (w/ prefix arg to notmuch-show)"
+test_emacs '(let ((notmuch-show-only-matching-messages nil))
+	(notmuch-search "from:lars@seas.harvard.edu and subject:\"Maildir storage\"")
+	(notmuch-test-wait)
+	(let ((current-prefix-arg t))
+	  (notmuch-search-show-thread))
+	(notmuch-test-wait)
+	(test-visible-output))'
+test_expect_equal_file OUTPUT $EXPECTED/notmuch-show-elide-non-matching-messages-on
+
+test_begin_subtest "notmuch-show: disable indentation of thread content (w/ notmuch-show-toggle-thread-indentation)"
+test_emacs '(notmuch-search "from:lars@seas.harvard.edu and subject:\"Maildir storage\"")
+	(notmuch-test-wait)
+	(notmuch-search-show-thread)
+	(notmuch-test-wait)
+	(notmuch-show-toggle-thread-indentation)
+	(test-visible-output)'
+test_expect_equal_file OUTPUT $EXPECTED/notmuch-show-indent-thread-content-off
+
+test_begin_subtest "id buttonization"
+add_message '[body]="
+id:abc
+id:abc.def. id:abc,def, id:abc;def; id:abc:def:
+id:foo@bar.?baz? id:foo@bar!.baz!
+(id:foo@bar.baz) [id:foo@bar.baz]
+id:foo@bar.baz...
+id:2+2=5
+id:=_-:/.[]@$%+
+id:abc)def
+id:ab\"c def
+id:\"abc\"def
+id:\"ab\"\"c\"def
+id:\"ab c\"def
+id:\"abc\".def
+id:\"abc
+\"
+id:)
+id:
+cid:xxx
+mid:abc mid:abc/def
+mid:abc%20def
+mid:abc. mid:abc, mid:abc;"'
+test_emacs '(notmuch-show "id:'$gen_msg_id'")
+	(notmuch-test-mark-links)
+	(test-visible-output)'
+cat <<EOF >EXPECTED
+Notmuch Test Suite <test_suite@notmuchmail.org> (2001-01-05) (inbox)
+Subject: id buttonization
+To: Notmuch Test Suite <test_suite@notmuchmail.org>
+Date: Fri, 05 Jan 2001 15:43:57 +0000
+
+<<id:abc>>
+<<id:abc.def>>. <<id:abc,def>>, <<id:abc;def>>; <<id:abc:def>>:
+<<id:foo@bar.?baz>>? <<id:foo@bar!.baz>>!
+(<<id:foo@bar.baz>>) [<<id:foo@bar.baz>>]
+<<id:foo@bar.baz>>...
+<<id:2+2=5>>
+<<id:=_-:/.[]@$%+>>
+<<id:abc>>)def
+<<id:ab"c>> def
+<<id:"abc">>def
+<<id:"ab""c">>def
+<<id:"ab c">>def
+<<id:"abc">>.def
+id:"abc
+"
+id:)
+id:
+cid:xxx
+<<mid:abc>> <<mid:abc/def>>
+<<mid:abc%20def>>
+<<mid:abc>>. <<mid:abc>>, <<mid:abc>>;
+EOF
+test_expect_equal_file OUTPUT EXPECTED
+
+
+test_begin_subtest "Show handles subprocess errors"
+cat > notmuch_fail <<EOF
+#!/bin/sh
+echo This is output
+echo This is an error >&2
+exit 1
+EOF
+chmod a+x notmuch_fail
+test_emacs "(let ((notmuch-command \"$PWD/notmuch_fail\"))
+	       (with-current-buffer \"*Messages*\" (erase-buffer))
+	       (condition-case err
+		   (notmuch-show \"*\")
+		 (error (message \"%s\" (second err))))
+	       (notmuch-test-wait)
+	       (with-current-buffer \"*Messages*\"
+		  (test-output \"MESSAGES\"))
+	       (with-current-buffer \"*Notmuch errors*\"
+		  (test-output \"ERROR\"))
+	       (test-output))"
+sed -i -e 's/^\[.*\]$/[XXX]/' ERROR
+test_expect_equal "$(cat OUTPUT; echo ---; cat MESSAGES; echo ---; cat ERROR)" "\
+---
+This is an error (see *Notmuch errors* for more details)
+---
+[XXX]
+This is an error
+command: $PWD/notmuch_fail show --format\\=json --format-version\\=1 --exclude\\=false \\' \\* \\'
+exit status: 1
+stderr:
+This is an error
+stdout:
+This is output"
+
 
 test_done

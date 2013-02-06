@@ -62,7 +62,7 @@ cat <<EOF >EXPECTED
 "THREADID",
 "THREADID"]
 EOF
-test_expect_equal_file OUTPUT EXPECTED
+test_expect_equal_json "$(cat OUTPUT)" "$(cat EXPECTED)"
 
 test_begin_subtest "--output=messages"
 notmuch search --output=messages '*' >OUTPUT

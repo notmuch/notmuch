@@ -13,15 +13,36 @@ smtp_dummy_modules = $(smtp_dummy_srcs:.c=.o)
 $(dir)/arg-test: $(dir)/arg-test.o command-line-arguments.o util/libutil.a
 	$(call quiet,CC) -I. $^ -o $@
 
+$(dir)/hex-xcode: $(dir)/hex-xcode.o command-line-arguments.o util/libutil.a
+	$(call quiet,CC) -I. $^ -o $@ -ltalloc
+
+random_corpus_deps =  $(dir)/random-corpus.o  $(dir)/database-test.o \
+			notmuch-config.o command-line-arguments.o \
+			lib/libnotmuch.a util/libutil.a \
+			parse-time-string/libparse-time-string.a
+
+$(dir)/random-corpus: $(random_corpus_deps)
+	$(call quiet,CXX) $(CFLAGS_FINAL) $^ -o $@ $(CONFIGURE_LDFLAGS)
+
 $(dir)/smtp-dummy: $(smtp_dummy_modules)
 	$(call quiet,CC) $^ -o $@
 
 $(dir)/symbol-test: $(dir)/symbol-test.o
-	$(call quiet,CXX) $^ -o $@ -Llib -lnotmuch -lxapian
+	$(call quiet,CXX) $^ -o $@ -Llib -lnotmuch $(XAPIAN_LDFLAGS)
+
+$(dir)/parse-time: $(dir)/parse-time.o parse-time-string/parse-time-string.o
+	$(call quiet,CC) $^ -o $@
 
 .PHONY: test check
 
-test-binaries: $(dir)/arg-test $(dir)/smtp-dummy $(dir)/symbol-test
+TEST_BINARIES=$(dir)/arg-test \
+	      $(dir)/hex-xcode \
+	      $(dir)/random-corpus \
+	      $(dir)/parse-time \
+	      $(dir)/smtp-dummy \
+	      $(dir)/symbol-test
+
+test-binaries: $(TEST_BINARIES)
 
 test:	all test-binaries
 	@${dir}/notmuch-test $(OPTIONS)
@@ -31,4 +52,9 @@ check: test
 SRCS := $(SRCS) $(smtp_dummy_srcs)
 CLEAN := $(CLEAN) $(dir)/smtp-dummy $(dir)/smtp-dummy.o \
 	 $(dir)/symbol-test $(dir)/symbol-test.o \
-	 $(dir)/arg-test $(dir)/arg-test.o
+	 $(dir)/arg-test $(dir)/arg-test.o \
+	 $(dir)/hex-xcode $(dir)/hex-xcode.o \
+	 $(dir)/database-test.o \
+	 $(dir)/random-corpus $(dir)/random-corpus.o \
+	 $(dir)/parse-time $(dir)/parse-time.o \
+	 $(dir)/corpus.mail $(dir)/test-results $(dir)/tmp.*

@@ -4,12 +4,9 @@ test_description="maildir synchronization"
 
 . ./test-lib.sh
 
-# Much easier to examine differences if the "notmuch show
-# --format=json" output includes some newlines. Also, need to avoid
-# including the local value of MAIL_DIR in the result.
+# Avoid including the local value of MAIL_DIR in the result.
 filter_show_json() {
-    sed -e 's/, /,\n/g'  | sed -e "s|${MAIL_DIR}/|MAIL_DIR/|"
-    echo
+    sed -e "s|${MAIL_DIR}/|MAIL_DIR/|"
 }
 
 # Create the expected maildir structure
@@ -44,7 +41,7 @@ test_expect_equal "$output" "adding-replied-tag:2,RS"
 
 test_begin_subtest "notmuch show works with renamed file (without notmuch new)"
 output=$(notmuch show --format=json id:${gen_msg_id} | filter_show_json)
-test_expect_equal "$output" '[[[{"id": "adding-replied-tag@notmuch-test-suite",
+test_expect_equal_json "$output" '[[[{"id": "adding-replied-tag@notmuch-test-suite",
 "match": true,
 "excluded": false,
 "filename": "MAIL_DIR/cur/adding-replied-tag:2,RS",
@@ -54,8 +51,7 @@ test_expect_equal "$output" '[[[{"id": "adding-replied-tag@notmuch-test-suite",
 "headers": {"Subject": "Adding replied tag",
 "From": "Notmuch Test Suite <test_suite@notmuchmail.org>",
 "To": "Notmuch Test Suite <test_suite@notmuchmail.org>",
-"Date": "Fri,
-05 Jan 2001 15:43:57 +0000"},
+"Date": "Fri, 05 Jan 2001 15:43:57 +0000"},
 "body": [{"id": 1,
 "content-type": "text/plain",
 "content": "This is just a test message (#3)\n"}]},
@@ -128,9 +124,9 @@ mv $MAIL_DIR/cur/adding-replied-tag:2,RS $MAIL_DIR/cur/adding-replied-tag:2,S
 mv $MAIL_DIR/cur/adding-s-flag:2,S $MAIL_DIR/cur/adding-s-flag:2,
 mv $MAIL_DIR/cur/adding-with-s-flag:2,S $MAIL_DIR/cur/adding-with-s-flag:2,RS
 mv $MAIL_DIR/cur/message-to-move-to-cur:2,S $MAIL_DIR/cur/message-to-move-to-cur:2,DS
-notmuch dump dump.txt
+notmuch dump --output=dump.txt
 NOTMUCH_NEW >/dev/null
-notmuch restore dump.txt
+notmuch restore --input=dump.txt
 output=$(ls $MAIL_DIR/cur)
 test_expect_equal "$output" "$expected"
 
@@ -165,5 +161,14 @@ test_begin_subtest "A file with non-compliant maildir info will not be renamed"
 add_message [subject]='"Non-compliant maildir info"' [dir]=cur [filename]='non-compliant-maildir-info:2,These-are-not-flags-in-ASCII-order-donottouch'
 notmuch tag +unread +draft -flagged subject:"Non-compliant maildir info"
 test_expect_equal "$(cd $MAIL_DIR/cur/; ls non-compliant*)" "non-compliant-maildir-info:2,These-are-not-flags-in-ASCII-order-donottouch"
+
+test_begin_subtest "Files in new/ get default synchronized tags"
+OLDCONFIG=$(notmuch config get new.tags)
+notmuch config set new.tags test
+add_message [subject]='"File in new/"' [dir]=new [filename]='file-in-new'
+notmuch config set new.tags $OLDCONFIG
+notmuch search 'subject:"File in new"' | notmuch_search_sanitize > output
+test_expect_equal "$(< output)" \
+"thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; File in new/ (test unread)"
 
 test_done

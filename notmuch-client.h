@@ -36,6 +36,9 @@
  * these to check the version number. */
 #ifdef GMIME_MAJOR_VERSION
 #define GMIME_ATLEAST_26
+typedef GMimeCryptoContext notmuch_crypto_context_t;
+#else
+typedef GMimeCipherContext notmuch_crypto_context_t;
 #endif
 
 #include "notmuch.h"
@@ -55,7 +58,7 @@
 #include <errno.h>
 #include <signal.h>
 
-#include <talloc.h>
+#include "talloc-extra.h"
 
 #define unused(x) x __attribute__ ((unused))
 
@@ -63,28 +66,29 @@
 #define STRINGIFY_(s) #s
 
 typedef struct mime_node mime_node_t;
+struct sprinter;
 struct notmuch_show_params;
 
 typedef struct notmuch_show_format {
-    const char *message_set_start;
-    notmuch_status_t (*part) (const void *ctx,
+    struct sprinter *(*new_sprinter) (const void *ctx, FILE *stream);
+    notmuch_status_t (*part) (const void *ctx, struct sprinter *sprinter,
 			      struct mime_node *node, int indent,
 			      const struct notmuch_show_params *params);
-    const char *message_set_sep;
-    const char *message_set_end;
 } notmuch_show_format_t;
+
+typedef struct notmuch_crypto {
+    notmuch_crypto_context_t* gpgctx;
+    notmuch_bool_t verify;
+    notmuch_bool_t decrypt;
+} notmuch_crypto_t;
 
 typedef struct notmuch_show_params {
     notmuch_bool_t entire_thread;
     notmuch_bool_t omit_excluded;
+    notmuch_bool_t output_body;
     notmuch_bool_t raw;
     int part;
-#ifdef GMIME_ATLEAST_26
-    GMimeCryptoContext* cryptoctx;
-#else
-    GMimeCipherContext* cryptoctx;
-#endif
-    notmuch_bool_t decrypt;
+    notmuch_crypto_t crypto;
 } notmuch_show_params_t;
 
 /* There's no point in continuing when we've detected that we've done
@@ -112,6 +116,57 @@ chomp_newline (char *str)
     if (str && str[strlen(str)-1] == '\n')
 	str[strlen(str)-1] = '\0';
 }
+
+/* Exit status code indicating the requested format version is too old
+ * (support for that version has been dropped).  CLI code should use
+ * notmuch_exit_if_unsupported_format rather than directly exiting
+ * with this code.
+ */
+#define NOTMUCH_EXIT_FORMAT_TOO_OLD 20
+/* Exit status code indicating the requested format version is newer
+ * than the version supported by the CLI.  CLI code should use
+ * notmuch_exit_if_unsupported_format rather than directly exiting
+ * with this code.
+ */
+#define NOTMUCH_EXIT_FORMAT_TOO_NEW 21
+
+/* The current structured output format version.  Requests for format
+ * versions above this will return an error.  Backwards-incompatible
+ * changes such as removing map fields, changing the meaning of map
+ * fields, or changing the meanings of list elements should increase
+ * this.  New (required) map fields can be added without increasing
+ * this.
+ */
+#define NOTMUCH_FORMAT_CUR 1
+/* The minimum supported structured output format version.  Requests
+ * for format versions below this will return an error. */
+#define NOTMUCH_FORMAT_MIN 1
+
+/* The output format version requested by the caller on the command
+ * line.  If no format version is requested, this will be set to
+ * NOTMUCH_FORMAT_CUR.  Even though the command-line option is
+ * per-command, this is global because commands can share structured
+ * output code.
+ */
+extern int notmuch_format_version;
+
+/* Commands that support structured output should support the
+ * following argument
+ *  { NOTMUCH_OPT_INT, &notmuch_format_version, "format-version", 0, 0 }
+ * and should invoke notmuch_exit_if_unsupported_format to check the
+ * requested version.  If notmuch_format_version is outside the
+ * supported range, this will print a detailed diagnostic message for
+ * the user and exit with NOTMUCH_EXIT_FORMAT_TOO_{OLD,NEW} to inform
+ * the invoking program of the problem.
+ */
+void
+notmuch_exit_if_unsupported_format (void);
+
+notmuch_crypto_context_t *
+notmuch_crypto_get_context (notmuch_crypto_t *crypto, const char *protocol);
+
+int
+notmuch_crypto_cleanup (notmuch_crypto_t *crypto);
 
 int
 notmuch_count_command (void *ctx, int argc, char *argv[]);
@@ -165,10 +220,12 @@ notmuch_status_t
 show_one_part (const char *filename, int part);
 
 void
-format_part_json (const void *ctx, mime_node_t *node, notmuch_bool_t first);
+format_part_sprinter (const void *ctx, struct sprinter *sp, mime_node_t *node,
+		      notmuch_bool_t first, notmuch_bool_t output_body);
 
 void
-format_headers_json (const void *ctx, GMimeMessage *message, notmuch_bool_t reply);
+format_headers_sprinter (struct sprinter *sp, GMimeMessage *message,
+			 notmuch_bool_t reply);
 
 typedef enum {
     NOTMUCH_SHOW_TEXT_PART_REPLY = 1 << 0,
@@ -341,9 +398,10 @@ struct mime_node {
 };
 
 /* Construct a new MIME node pointing to the root message part of
- * message.  If cryptoctx is non-NULL, it will be used to verify
- * signatures on any child parts.  If decrypt is true, then cryptoctx
- * will additionally be used to decrypt any encrypted child parts.
+ * message. If crypto->verify is true, signed child parts will be
+ * verified. If crypto->decrypt is true, encrypted child parts will be
+ * decrypted.  If crypto->gpgctx is NULL, it will be lazily
+ * initialized.
  *
  * Return value:
  *
@@ -355,12 +413,7 @@ struct mime_node {
  */
 notmuch_status_t
 mime_node_open (const void *ctx, notmuch_message_t *message,
-#ifdef GMIME_ATLEAST_26
-		GMimeCryptoContext *cryptoctx,
-#else
-		GMimeCipherContext *cryptoctx,
-#endif
-		notmuch_bool_t decrypt, mime_node_t **node_out);
+		notmuch_crypto_t *crypto, mime_node_t **node_out);
 
 /* Return a new MIME node for the requested child part of parent.
  * parent will be used as the talloc context for the returned child

@@ -24,31 +24,31 @@
 #include <notmuch.h>
 #include <ruby.h>
 
-VALUE notmuch_rb_cDatabase;
-VALUE notmuch_rb_cDirectory;
-VALUE notmuch_rb_cFileNames;
-VALUE notmuch_rb_cQuery;
-VALUE notmuch_rb_cThreads;
-VALUE notmuch_rb_cThread;
-VALUE notmuch_rb_cMessages;
-VALUE notmuch_rb_cMessage;
-VALUE notmuch_rb_cTags;
+extern VALUE notmuch_rb_cDatabase;
+extern VALUE notmuch_rb_cDirectory;
+extern VALUE notmuch_rb_cFileNames;
+extern VALUE notmuch_rb_cQuery;
+extern VALUE notmuch_rb_cThreads;
+extern VALUE notmuch_rb_cThread;
+extern VALUE notmuch_rb_cMessages;
+extern VALUE notmuch_rb_cMessage;
+extern VALUE notmuch_rb_cTags;
 
-VALUE notmuch_rb_eBaseError;
-VALUE notmuch_rb_eDatabaseError;
-VALUE notmuch_rb_eMemoryError;
-VALUE notmuch_rb_eReadOnlyError;
-VALUE notmuch_rb_eXapianError;
-VALUE notmuch_rb_eFileError;
-VALUE notmuch_rb_eFileNotEmailError;
-VALUE notmuch_rb_eNullPointerError;
-VALUE notmuch_rb_eTagTooLongError;
-VALUE notmuch_rb_eUnbalancedFreezeThawError;
-VALUE notmuch_rb_eUnbalancedAtomicError;
+extern VALUE notmuch_rb_eBaseError;
+extern VALUE notmuch_rb_eDatabaseError;
+extern VALUE notmuch_rb_eMemoryError;
+extern VALUE notmuch_rb_eReadOnlyError;
+extern VALUE notmuch_rb_eXapianError;
+extern VALUE notmuch_rb_eFileError;
+extern VALUE notmuch_rb_eFileNotEmailError;
+extern VALUE notmuch_rb_eNullPointerError;
+extern VALUE notmuch_rb_eTagTooLongError;
+extern VALUE notmuch_rb_eUnbalancedFreezeThawError;
+extern VALUE notmuch_rb_eUnbalancedAtomicError;
 
-ID ID_call;
-ID ID_db_create;
-ID ID_db_mode;
+extern ID ID_call;
+extern ID ID_db_create;
+extern ID ID_db_mode;
 
 /* RSTRING_PTR() is new in ruby-1.9 */
 #if !defined(RSTRING_PTR)

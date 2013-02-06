@@ -140,13 +140,12 @@ will NOT be removed or replaced."
 			    t))
 
 (defun notmuch-maildir-fcc-make-uniq-maildir-id ()
-   (let* ((ct (current-time))
-	  (timeid (+ (* (car ct) 65536) (cadr ct)))
-	  (microseconds (car (cdr (cdr ct))))
+   (let* ((ftime (float-time))
+	  (microseconds (mod (* 1000000 ftime) 1000000))
 	  (hostname (notmuch-maildir-fcc-host-fixer system-name)))
      (setq notmuch-maildir-fcc-count (+ notmuch-maildir-fcc-count 1))
      (format "%d.%d_%d_%d.%s"
-	     timeid
+	     ftime
 	     (emacs-pid)
 	     microseconds
 	     notmuch-maildir-fcc-count

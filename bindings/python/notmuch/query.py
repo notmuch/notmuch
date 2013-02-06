@@ -18,7 +18,7 @@ Copyright 2010 Sebastian Spaeth <Sebastian@SSpaeth.de>
 """
 
 from ctypes import c_char_p, c_uint
-from notmuch.globals import (
+from .globals import (
     nmlib,
     Enum,
     _str,
@@ -100,7 +100,7 @@ class Query(object):
         # create reference to parent db to keep it alive
         self._db = db
         # create query, return None if too little mem available
-        query_p = Query._create(db.db_p, _str(querystr))
+        query_p = Query._create(db._db, _str(querystr))
         if not query_p:
             raise NullPointerError
         self._query = query_p

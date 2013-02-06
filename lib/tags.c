@@ -40,7 +40,7 @@ _notmuch_tags_create (const void *ctx, notmuch_string_list_t *list)
 	return NULL;
 
     tags->iterator = list->head;
-    talloc_steal (tags, list);
+    (void) talloc_steal (tags, list);
 
     return tags;
 }

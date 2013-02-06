@@ -73,6 +73,12 @@ Naming
   struct has a tag, it should be the same as the typedef name, minus
   the trailing _t.
 
+CLI conventions
+---------------
+
+* Any changes to the JSON output format of search or show need an
+  accompanying change to devel/schemata.
+
 libnotmuch conventions
 ----------------------------------
 

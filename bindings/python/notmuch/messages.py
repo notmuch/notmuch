@@ -31,8 +31,6 @@ from .errors import (
 from .tag import Tags
 from .message import Message
 
-import sys
-
 class Messages(object):
     """Represents a list of notmuch messages
 
@@ -142,7 +140,7 @@ class Messages(object):
         #reset _msgs as we iterated over it and can do so only once
         self._msgs = None
 
-        if tags_p == None:
+        if not tags_p:
             raise NullPointerError()
         return Tags(tags_p, self)
 
@@ -190,73 +188,6 @@ class Messages(object):
         """Close and free the notmuch Messages"""
         if self._msgs:
             self._destroy(self._msgs)
-
-    def format_messages(self, format, indent=0, entire_thread=False):
-        """Formats messages as needed for 'notmuch show'.
-
-        :param format: A string of either 'text' or 'json'.
-        :param indent: A number indicating the reply depth of these messages.
-        :param entire_thread: A bool, indicating whether we want to output
-                       whole threads or only the matching messages.
-        :return: a list of lines
-        """
-        result = list()
-
-        if format.lower() == "text":
-            set_start = ""
-            set_end = ""
-            set_sep = ""
-        elif format.lower() == "json":
-            set_start = "["
-            set_end = "]"
-            set_sep = ", "
-        else:
-            raise TypeError("format must be either 'text' or 'json'")
-
-        first_set = True
-
-        result.append(set_start)
-
-        # iterate through all toplevel messages in this thread
-        for msg in self:
-            # if not msg:
-            #     break
-            if not first_set:
-                result.append(set_sep)
-            first_set = False
-
-            result.append(set_start)
-            match = msg.is_match()
-            next_indent = indent
-
-            if (match or entire_thread):
-                if format.lower() == "text":
-                    result.append(msg.format_message_as_text(indent))
-                else:
-                    result.append(msg.format_message_as_json(indent))
-                next_indent = indent + 1
-
-            # get replies and print them also out (if there are any)
-            replies = msg.get_replies().format_messages(format, next_indent, entire_thread)
-            if replies:
-                result.append(set_sep)
-                result.extend(replies)
-
-            result.append(set_end)
-        result.append(set_end)
-
-        return result
-
-    def print_messages(self, format, indent=0, entire_thread=False, handle=sys.stdout):
-        """Outputs messages as needed for 'notmuch show' to a file like object.
-
-        :param format: A string of either 'text' or 'json'.
-        :param handle: A file like object to print to (default is sys.stdout).
-        :param indent: A number indicating the reply depth of these messages.
-        :param entire_thread: A bool, indicating whether we want to output
-                       whole threads or only the matching messages.
-        """
-        handle.write(''.join(self.format_messages(format, indent, entire_thread)))
 
 class EmptyMessagesResult(Messages):
     def __init__(self, parent):

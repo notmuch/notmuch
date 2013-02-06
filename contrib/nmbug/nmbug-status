@@ -1,0 +1,176 @@
+#!/usr/bin/python
+#
+# Copyright (c) 2011-2012 David Bremner <david@tethera.net>
+# License: Same as notmuch
+# dependencies
+#       - python 2.6 for json
+#       - argparse; either python 2.7, or install separately
+
+import datetime
+import notmuch
+import rfc822
+import urllib
+import json
+import argparse
+import os
+import subprocess
+
+# parse command line arguments
+
+parser = argparse.ArgumentParser()
+parser.add_argument('--text', help='output plain text format',
+                    action='store_true')
+
+parser.add_argument('--config', help='load config from given file')
+
+
+args = parser.parse_args()
+
+# read config from json file
+
+if args.config != None:
+    fp = open(args.config)
+else:
+    nmbhome = os.getenv('NMBGIT', os.path.expanduser('~/.nmbug'))
+
+    # read only the first line from the pipe
+    sha1 = subprocess.Popen(['git', '--git-dir', nmbhome,
+                             'show-ref', '-s', 'config'],
+                            stdout=subprocess.PIPE).stdout.readline()
+
+    sha1 = sha1.rstrip()
+
+    fp = subprocess.Popen(['git', '--git-dir', nmbhome,
+                           'cat-file', 'blob', sha1+':status-config.json'],
+                          stdout=subprocess.PIPE).stdout
+
+config = json.load(fp)
+
+if args.text:
+    output_format = 'text'
+else:
+    output_format = 'html'
+
+class Thread:
+    def __init__(self, last, lines):
+        self.last = last
+        self.lines = lines
+
+    def join_utf8_with_newlines(self):
+        return '\n'.join( (line.encode('utf-8') for line in self.lines) )
+
+def output_with_separator(threadlist, sep):
+    outputs = (thread.join_utf8_with_newlines() for thread in threadlist)
+    print sep.join(outputs)
+
+headers = ['date', 'from', 'subject']
+
+def print_view(title, query, comment):
+
+    query_string = ' and '.join(query)
+    q_new = notmuch.Query(db, query_string)
+    q_new.set_sort(notmuch.Query.SORT.OLDEST_FIRST)
+
+    last_thread_id = ''
+    threads = {}
+    threadlist = []
+    out = {}
+    last = None
+    lines = None
+
+    if output_format == 'html':
+        print '<h3><a name="%s" />%s</h3>' % (title, title)
+        print comment
+        print 'The view is generated from the following query:'
+        print '<blockquote>'
+        print query_string
+        print '</blockquote>'
+        print '<table>\n'
+
+    for m in q_new.search_messages():
+
+        thread_id = m.get_thread_id()
+
+        if thread_id != last_thread_id:
+            if threads.has_key(thread_id):
+                last = threads[thread_id].last
+                lines = threads[thread_id].lines
+            else:
+                last = {}
+                lines = []
+                thread = Thread(last, lines)
+                threads[thread_id] = thread
+                for h in headers:
+                    last[h] = ''
+                threadlist.append(thread)
+            last_thread_id = thread_id
+
+        for header in headers:
+            val = m.get_header(header)
+
+            if header == 'date':
+                val = str.join(' ', val.split(None)[1:4])
+                val = str(datetime.datetime.strptime(val, '%d %b %Y').date())
+            elif header == 'from':
+                (val, addr) = rfc822.parseaddr(val)
+                if val == '':
+                    val = addr.split('@')[0]
+
+            if header != 'subject' and last[header] == val:
+                out[header] = ''
+            else:
+                out[header] = val
+                last[header] = val
+
+        mid = m.get_message_id()
+        out['id'] = 'id:"%s"' % mid
+
+        if output_format == 'html':
+
+            out['subject'] = '<a href="http://mid.gmane.org/%s">%s</a>' \
+                % (urllib.quote(mid), out['subject'])
+
+            lines.append(' <tr><td>%s' % out['date'])
+            lines.append('</td><td>%s' % out['id'])
+            lines.append('</td></tr>')
+            lines.append(' <tr><td>%s' % out['from'])
+            lines.append('</td><td>%s' % out['subject'])
+            lines.append('</td></tr>')
+        else:
+            lines.append('%(date)-10.10s %(from)-20.20s %(subject)-40.40s\n%(id)72s' % out)
+
+    if output_format == 'html':
+        output_with_separator(threadlist,
+                              '\n<tr><td colspan="2"><br /></td></tr>\n')
+        print '</table>'
+    else:
+        output_with_separator(threadlist, '\n\n')
+
+# main program
+
+db = notmuch.Database(mode=notmuch.Database.MODE.READ_WRITE)
+
+if output_format == 'html':
+    print '''<?xml version="1.0" encoding="utf-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Notmuch Patches</title>
+</head>
+<body>'''
+    print '<h2>Notmuch Patches</h2>'
+    print 'Generated: %s<br />' % datetime.datetime.utcnow().date()
+    print 'For more infomation see <a href="http://notmuchmail.org/nmbug">nmbug</a>'
+
+    print '<h3>Views</h3>'
+    print '<ul>'
+    for view in config['views']:
+        print '<li><a href="#%(title)s">%(title)s</a></li>' % view
+    print '</ul>'
+
+for view in config['views']:
+    print_view(**view)
+
+if output_format == 'html':
+    print '</body>\n</html>'

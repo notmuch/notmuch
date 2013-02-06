@@ -138,4 +138,59 @@ References: <${gen_msg_id}>
 
 On Tue, 05 Jan 2010 15:43:56 -0000, Notmuch Test Suite <test_suite@notmuchmail.org> wrote:
 > 200-byte header"
+
+test_begin_subtest "From guessing: Envelope-To"
+add_message '[from]="Sender <sender@example.com>"' \
+	    '[to]="Recipient <recipient@example.com>"' \
+	    '[subject]="From guessing"' \
+	    '[date]="Tue, 05 Jan 2010 15:43:56 -0000"' \
+	    '[body]="From guessing"' \
+	    '[header]="Envelope-To: test_suite_other@notmuchmail.org"'
+
+output=$(notmuch reply id:${gen_msg_id})
+test_expect_equal "$output" "From: Notmuch Test Suite <test_suite_other@notmuchmail.org>
+Subject: Re: From guessing
+To: Sender <sender@example.com>, Recipient <recipient@example.com>
+In-Reply-To: <${gen_msg_id}>
+References: <${gen_msg_id}>
+
+On Tue, 05 Jan 2010 15:43:56 -0000, Sender <sender@example.com> wrote:
+> From guessing"
+
+test_begin_subtest "From guessing: X-Original-To"
+add_message '[from]="Sender <sender@example.com>"' \
+	    '[to]="Recipient <recipient@example.com>"' \
+	    '[subject]="From guessing"' \
+	    '[date]="Tue, 05 Jan 2010 15:43:56 -0000"' \
+	    '[body]="From guessing"' \
+	    '[header]="X-Original-To: test_suite@otherdomain.org"'
+
+output=$(notmuch reply id:${gen_msg_id})
+test_expect_equal "$output" "From: Notmuch Test Suite <test_suite@otherdomain.org>
+Subject: Re: From guessing
+To: Sender <sender@example.com>, Recipient <recipient@example.com>
+In-Reply-To: <${gen_msg_id}>
+References: <${gen_msg_id}>
+
+On Tue, 05 Jan 2010 15:43:56 -0000, Sender <sender@example.com> wrote:
+> From guessing"
+
+test_begin_subtest "From guessing: Delivered-To"
+add_message '[from]="Sender <sender@example.com>"' \
+	    '[to]="Recipient <recipient@example.com>"' \
+	    '[subject]="From guessing"' \
+	    '[date]="Tue, 05 Jan 2010 15:43:56 -0000"' \
+	    '[body]="From guessing"' \
+	    '[header]="Delivered-To: test_suite_other@notmuchmail.org"'
+
+output=$(notmuch reply id:${gen_msg_id})
+test_expect_equal "$output" "From: Notmuch Test Suite <test_suite_other@notmuchmail.org>
+Subject: Re: From guessing
+To: Sender <sender@example.com>, Recipient <recipient@example.com>
+In-Reply-To: <${gen_msg_id}>
+References: <${gen_msg_id}>
+
+On Tue, 05 Jan 2010 15:43:56 -0000, Sender <sender@example.com> wrote:
+> From guessing"
+
 test_done

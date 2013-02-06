@@ -37,7 +37,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
-#include <netinet/ip.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
 #include <netdb.h>
 #include <unistd.h>
 
@@ -117,6 +119,7 @@ do_smtp_to_file (FILE *peer, FILE *output)
 int
 main (int argc, char *argv[])
 {
+	const char * progname;
 	char *output_filename;
 	FILE *peer_file, *output;
 	int sock, peer, err;
@@ -124,9 +127,31 @@ main (int argc, char *argv[])
 	struct hostent *hostinfo;
 	socklen_t peer_addr_len;
 	int reuse;
+	int background;
+
+	progname = argv[0];
+
+	background = 0;
+	for (; argc >= 2; argc--, argv++) {
+		if (argv[1][0] != '-')
+			break;
+		if (strcmp (argv[1], "--") == 0) {
+			argc--;
+			argv++;
+			break;
+		}
+		if (strcmp (argv[1], "--background") == 0) {
+			background = 1;
+			continue;
+		}
+		fprintf(stderr, "%s: unregognized option '%s'\n",
+			progname, argv[1]);
+		return 1;
+	}
 
 	if (argc != 2) {
-		fprintf (stderr, "Usage: %s <output-file>\n", argv[0]);
+		fprintf (stderr,
+			 "Usage: %s [--background] <output-file>\n", progname);
 		return 1;
 	}
 
@@ -177,6 +202,36 @@ main (int argc, char *argv[])
 			 strerror (errno));
 		close (sock);
 		return 1;
+	}
+
+	if (background) {
+		int pid = fork ();
+		if (pid > 0) {
+			printf ("smtp_dummy_pid='%d'\n", pid);
+			fflush (stdout);
+			close (sock);
+			return 0;
+		}
+		if (pid < 0) {
+			fprintf (stderr, "Error: fork() failed: %s\n",
+				 strerror (errno));
+			close (sock);
+			return 1;
+		}
+		/* Reached if pid == 0 (the child process). */
+		/* Close stdout so that the one interested in pid value will
+		   also get EOF. */
+		close (STDOUT_FILENO);
+		/* dup2() will re-reserve fd of stdout (1) (opportunistically),
+		   in case fd of stderr (2) is open. If that was not open we
+		   don't care fd of stdout (1) either. */
+		dup2 (STDERR_FILENO, STDOUT_FILENO);
+
+		/* This process is now out of reach of shell's job control.
+		   To resolve the rare but possible condition where this
+		   "daemon" is started but never connected this process will
+		   (only) have 30 seconds to exist. */
+		alarm (30);
 	}
 
 	peer_addr_len = sizeof (peer_addr);

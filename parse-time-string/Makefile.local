@@ -1,0 +1,12 @@
+dir := parse-time-string
+extra_cflags += -I$(srcdir)/$(dir)
+
+libparse-time-string_c_srcs := $(dir)/parse-time-string.c
+
+libparse-time-string_modules := $(libparse-time-string_c_srcs:.c=.o)
+
+$(dir)/libparse-time-string.a: $(libparse-time-string_modules)
+	$(call quiet,AR) rcs $@ $^
+
+SRCS := $(SRCS) $(libparse-time-string_c_srcs)
+CLEAN := $(CLEAN) $(libparse-time-string_modules) $(dir)/libparse-time-string.a

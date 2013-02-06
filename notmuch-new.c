@@ -36,7 +36,8 @@ typedef struct _filename_list {
 
 typedef struct {
     int output_is_a_tty;
-    int verbose;
+    notmuch_bool_t verbose;
+    notmuch_bool_t debug;
     const char **new_tags;
     size_t new_tags_length;
     const char **new_ignore;
@@ -154,6 +155,48 @@ dirent_sort_strcmp_name (const struct dirent **a, const struct dirent **b)
     return strcmp ((*a)->d_name, (*b)->d_name);
 }
 
+/* Return the type of a directory entry relative to path as a stat(2)
+ * mode.  Like stat, this follows symlinks.  Returns -1 and sets errno
+ * if the file's type cannot be determined (which includes dangling
+ * symlinks).
+ */
+static int
+dirent_type (const char *path, const struct dirent *entry)
+{
+    struct stat statbuf;
+    char *abspath;
+    int err, saved_errno;
+
+#ifdef _DIRENT_HAVE_D_TYPE
+    /* Mapping from d_type to stat mode_t.  We omit DT_LNK so that
+     * we'll fall through to stat and get the real file type. */
+    static const mode_t modes[] = {
+	[DT_BLK]  = S_IFBLK,
+	[DT_CHR]  = S_IFCHR,
+	[DT_DIR]  = S_IFDIR,
+	[DT_FIFO] = S_IFIFO,
+	[DT_REG]  = S_IFREG,
+	[DT_SOCK] = S_IFSOCK
+    };
+    if (entry->d_type < ARRAY_SIZE(modes) && modes[entry->d_type])
+	return modes[entry->d_type];
+#endif
+
+    abspath = talloc_asprintf (NULL, "%s/%s", path, entry->d_name);
+    if (!abspath) {
+	errno = ENOMEM;
+	return -1;
+    }
+    err = stat(abspath, &statbuf);
+    saved_errno = errno;
+    talloc_free (abspath);
+    if (err < 0) {
+	errno = saved_errno;
+	return -1;
+    }
+    return statbuf.st_mode & S_IFMT;
+}
+
 /* Test if the directory looks like a Maildir directory.
  *
  * Search through the array of directory entries to see if we can find all
@@ -162,12 +205,12 @@ dirent_sort_strcmp_name (const struct dirent **a, const struct dirent **b)
  * Return 1 if the directory looks like a Maildir and 0 otherwise.
  */
 static int
-_entries_resemble_maildir (struct dirent **entries, int count)
+_entries_resemble_maildir (const char *path, struct dirent **entries, int count)
 {
     int i, found = 0;
 
     for (i = 0; i < count; i++) {
-	if (entries[i]->d_type != DT_DIR && entries[i]->d_type != DT_UNKNOWN)
+	if (dirent_type (path, entries[i]) != S_IFDIR)
 	    continue;
 
 	if (strcmp(entries[i]->d_name, "new") == 0 ||
@@ -239,9 +282,9 @@ _entry_in_ignore_list (const char *entry, add_files_state_t *state)
  *     if fs_mtime isn't the current wall-clock time.
  */
 static notmuch_status_t
-add_files_recursive (notmuch_database_t *notmuch,
-		     const char *path,
-		     add_files_state_t *state)
+add_files (notmuch_database_t *notmuch,
+	   const char *path,
+	   add_files_state_t *state)
 {
     DIR *dir = NULL;
     struct dirent *entry = NULL;
@@ -250,7 +293,7 @@ add_files_recursive (notmuch_database_t *notmuch,
     notmuch_status_t status, ret = NOTMUCH_STATUS_SUCCESS;
     notmuch_message_t *message = NULL;
     struct dirent **fs_entries = NULL;
-    int i, num_fs_entries = 0;
+    int i, num_fs_entries = 0, entry_type;
     notmuch_directory_t *directory;
     notmuch_filenames_t *db_files = NULL;
     notmuch_filenames_t *db_subdirs = NULL;
@@ -266,11 +309,10 @@ add_files_recursive (notmuch_database_t *notmuch,
     }
     stat_time = time (NULL);
 
-    /* This is not an error since we may have recursed based on a
-     * symlink to a regular file, not a directory, and we don't know
-     * that until this stat. */
-    if (! S_ISDIR (st.st_mode))
-	return NOTMUCH_STATUS_SUCCESS;
+    if (! S_ISDIR (st.st_mode)) {
+	fprintf (stderr, "Error: %s is not a directory.\n", path);
+	return NOTMUCH_STATUS_FILE_ERROR;
+    }
 
     fs_mtime = st.st_mtime;
 
@@ -300,7 +342,7 @@ add_files_recursive (notmuch_database_t *notmuch,
     }
 
     /* Pass 1: Recurse into all sub-directories. */
-    is_maildir = _entries_resemble_maildir (fs_entries, num_fs_entries);
+    is_maildir = _entries_resemble_maildir (path, fs_entries, num_fs_entries);
 
     for (i = 0; i < num_fs_entries; i++) {
 	if (interrupted)
@@ -308,36 +350,43 @@ add_files_recursive (notmuch_database_t *notmuch,
 
 	entry = fs_entries[i];
 
-	/* We only want to descend into directories.
-	 * But symlinks can be to directories too, of course.
-	 *
-	 * And if the filesystem doesn't tell us the file type in the
-	 * scandir results, then it might be a directory (and if not,
-	 * then we'll stat and return immediately in the next level of
-	 * recursion). */
-	if (entry->d_type != DT_DIR &&
-	    entry->d_type != DT_LNK &&
-	    entry->d_type != DT_UNKNOWN)
-	{
+	/* Ignore any files/directories the user has configured to
+	 * ignore.  We do this before dirent_type both for performance
+	 * and because we don't care if dirent_type fails on entries
+	 * that are explicitly ignored.
+	 */
+	if (_entry_in_ignore_list (entry->d_name, state)) {
+	    if (state->debug)
+		printf ("(D) add_files_recursive, pass 1: explicitly ignoring %s/%s\n",
+			path, entry->d_name);
+	    continue;
+	}
+
+	/* We only want to descend into directories (and symlinks to
+	 * directories). */
+	entry_type = dirent_type (path, entry);
+	if (entry_type == -1) {
+	    /* Be pessimistic, e.g. so we don't lose lots of mail just
+	     * because a user broke a symlink. */
+	    fprintf (stderr, "Error reading file %s/%s: %s\n",
+		     path, entry->d_name, strerror (errno));
+	    return NOTMUCH_STATUS_FILE_ERROR;
+	} else if (entry_type != S_IFDIR) {
 	    continue;
 	}
 
 	/* Ignore special directories to avoid infinite recursion.
-	 * Also ignore the .notmuch directory, any "tmp" directory
-	 * that appears within a maildir and files/directories
-	 * the user has configured to be ignored.
+	 * Also ignore the .notmuch directory and any "tmp" directory
+	 * that appears within a maildir.
 	 */
 	if (strcmp (entry->d_name, ".") == 0 ||
 	    strcmp (entry->d_name, "..") == 0 ||
 	    (is_maildir && strcmp (entry->d_name, "tmp") == 0) ||
-	    strcmp (entry->d_name, ".notmuch") == 0 ||
-	    _entry_in_ignore_list (entry->d_name, state))
-	{
+	    strcmp (entry->d_name, ".notmuch") == 0)
 	    continue;
-	}
 
 	next = talloc_asprintf (notmuch, "%s/%s", path, entry->d_name);
-	status = add_files_recursive (notmuch, next, state);
+	status = add_files (notmuch, next, state);
 	if (status) {
 	    ret = status;
 	    goto DONE;
@@ -374,8 +423,13 @@ add_files_recursive (notmuch_database_t *notmuch,
         entry = fs_entries[i];
 
 	/* Ignore files & directories user has configured to be ignored */
-	if (_entry_in_ignore_list (entry->d_name, state))
+	if (_entry_in_ignore_list (entry->d_name, state)) {
+	    if (state->debug)
+		printf ("(D) add_files_recursive, pass 2: explicitly ignoring %s/%s\n",
+			path,
+			entry->d_name);
 	    continue;
+	}
 
 	/* Check if we've walked past any names in db_files or
 	 * db_subdirs. If so, these have been deleted. */
@@ -407,31 +461,13 @@ add_files_recursive (notmuch_database_t *notmuch,
 	    notmuch_filenames_move_to_next (db_subdirs);
 	}
 
-	/* If we're looking at a symlink, we only want to add it if it
-	 * links to a regular file, (and not to a directory, say).
-	 *
-	 * Similarly, if the file is of unknown type (due to filesystem
-	 * limitations), then we also need to look closer.
-	 *
-	 * In either case, a stat does the trick.
-	 */
-	if (entry->d_type == DT_LNK || entry->d_type == DT_UNKNOWN) {
-	    int err;
-
-	    next = talloc_asprintf (notmuch, "%s/%s", path, entry->d_name);
-	    err = stat (next, &st);
-	    talloc_free (next);
-	    next = NULL;
-
-	    /* Don't emit an error for a link pointing nowhere, since
-	     * the directory-traversal pass will have already done
-	     * that. */
-	    if (err)
-		continue;
-
-	    if (! S_ISREG (st.st_mode))
-		continue;
-	} else if (entry->d_type != DT_REG) {
+	/* Only add regular files (and symlinks to regular files). */
+	entry_type = dirent_type (path, entry);
+	if (entry_type == -1) {
+	    fprintf (stderr, "Error reading file %s/%s: %s\n",
+		     path, entry->d_name, strerror (errno));
+	    return NOTMUCH_STATUS_FILE_ERROR;
+	} else if (entry_type != S_IFREG) {
 	    continue;
 	}
 
@@ -625,32 +661,6 @@ stop_progress_printing_timer (void)
 }
 
 
-/* This is the top-level entry point for add_files. It does a couple
- * of error checks and then calls into the recursive function. */
-static notmuch_status_t
-add_files (notmuch_database_t *notmuch,
-	   const char *path,
-	   add_files_state_t *state)
-{
-    notmuch_status_t status;
-    struct stat st;
-
-    if (stat (path, &st)) {
-	fprintf (stderr, "Error reading directory %s: %s\n",
-		 path, strerror (errno));
-	return NOTMUCH_STATUS_FILE_ERROR;
-    }
-
-    if (! S_ISDIR (st.st_mode)) {
-	fprintf (stderr, "Error: %s is not a directory.\n", path);
-	return NOTMUCH_STATUS_FILE_ERROR;
-    }
-
-    status = add_files_recursive (notmuch, path, state);
-
-    return status;
-}
-
 /* XXX: This should be merged with the add_files function since it
  * shares a lot of logic with it. */
 /* Recursively count all regular files in path and all sub-directories
@@ -688,6 +698,10 @@ count_files (const char *path, int *count, add_files_state_t *state)
 	    strcmp (entry->d_name, ".notmuch") == 0 ||
 	    _entry_in_ignore_list (entry->d_name, state))
 	{
+	    if (_entry_in_ignore_list (entry->d_name, state) && state->debug)
+		printf ("(D) count_files: explicitly ignoring %s/%s\n",
+			path,
+			entry->d_name);
 	    continue;
 	}
 
@@ -839,25 +853,28 @@ notmuch_new_command (void *ctx, int argc, char *argv[])
     char *dot_notmuch_path;
     struct sigaction action;
     _filename_node_t *f;
+    int opt_index;
     int i;
     notmuch_bool_t timer_is_active = FALSE;
-    notmuch_bool_t run_hooks = TRUE;
+    notmuch_bool_t no_hooks = FALSE;
 
-    add_files_state.verbose = 0;
+    add_files_state.verbose = FALSE;
+    add_files_state.debug = FALSE;
     add_files_state.output_is_a_tty = isatty (fileno (stdout));
 
-    argc--; argv++; /* skip subcommand argument */
+    notmuch_opt_desc_t options[] = {
+	{ NOTMUCH_OPT_BOOLEAN,  &add_files_state.verbose, "verbose", 'v', 0 },
+	{ NOTMUCH_OPT_BOOLEAN,  &add_files_state.debug, "debug", 'd', 0 },
+	{ NOTMUCH_OPT_BOOLEAN,  &no_hooks, "no-hooks", 'n', 0 },
+	{ 0, 0, 0, 0, 0 }
+    };
 
-    for (i = 0; i < argc && argv[i][0] == '-'; i++) {
-	if (STRNCMP_LITERAL (argv[i], "--verbose") == 0) {
-	    add_files_state.verbose = 1;
-	} else if (strcmp (argv[i], "--no-hooks") == 0) {
-	    run_hooks = FALSE;
-	} else {
-	    fprintf (stderr, "Unrecognized option: %s\n", argv[i]);
-	    return 1;
-	}
+    opt_index = parse_arguments (argc, argv, options, 1);
+    if (opt_index < 0) {
+	/* diagnostics already printed */
+	return 1;
     }
+
     config = notmuch_config_open (ctx, NULL, NULL);
     if (config == NULL)
 	return 1;
@@ -867,7 +884,7 @@ notmuch_new_command (void *ctx, int argc, char *argv[])
     add_files_state.synchronize_flags = notmuch_config_get_maildir_synchronize_flags (config);
     db_path = notmuch_config_get_database_path (config);
 
-    if (run_hooks) {
+    if (!no_hooks) {
 	ret = notmuch_run_hook (db_path, "pre-new");
 	if (ret)
 	    return ret;
@@ -1028,7 +1045,7 @@ notmuch_new_command (void *ctx, int argc, char *argv[])
 
     notmuch_database_destroy (notmuch);
 
-    if (run_hooks && !ret && !interrupted)
+    if (!no_hooks && !ret && !interrupted)
 	ret = notmuch_run_hook (db_path, "post-new");
 
     return ret || interrupted;

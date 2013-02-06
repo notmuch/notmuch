@@ -20,7 +20,8 @@ Copyright 2010 Sebastian Spaeth <Sebastian@SSpaeth.de>
 import os
 import codecs
 from ctypes import c_char_p, c_void_p, c_uint, byref, POINTER
-from notmuch.globals import (
+from .compat import SafeConfigParser
+from .globals import (
     nmlib,
     Enum,
     _str,
@@ -37,8 +38,8 @@ from .errors import (
     NotInitializedError,
     ReadOnlyDatabaseError,
 )
-from notmuch.message import Message
-from notmuch.tag import Tags
+from .message import Message
+from .tag import Tags
 from .query import Query
 from .directory import Directory
 
@@ -546,7 +547,7 @@ class Database(object):
         """
         self._assert_db_is_initialized()
         tags_p = Database._get_all_tags(self._db)
-        if tags_p == None:
+        if not tags_p:
             raise NullPointerError()
         return Tags(tags_p, self)
 
@@ -577,13 +578,6 @@ class Database(object):
         """ Reads a user's notmuch config and returns his db location
 
         Throws a NotmuchError if it cannot find it"""
-        try:
-            # python3.x
-            from configparser import SafeConfigParser
-        except ImportError:
-            # python2.x
-            from ConfigParser import SafeConfigParser
-
         config = SafeConfigParser()
         conf_f = os.getenv('NOTMUCH_CONFIG',
                            os.path.expanduser('~/.notmuch-config'))
@@ -592,12 +586,3 @@ class Database(object):
             raise NotmuchError(message="No DB path specified"
                                        " and no user default found")
         return config.get('database', 'path')
-
-    @property
-    def db_p(self):
-        """Property returning a pointer to `notmuch_database_t` or `None`
-
-        This should normally not be needed by a user (and is not yet
-        guaranteed to remain stable in future versions).
-        """
-        return self._db
