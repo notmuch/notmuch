@@ -331,7 +331,7 @@ sub do_log {
 sub do_push {
   my $remote = shift || 'origin';
 
-  git ('push', $remote);
+  git ('push', $remote, 'master');
 }
 
 
