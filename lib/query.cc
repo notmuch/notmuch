@@ -39,12 +39,12 @@ typedef struct _notmuch_mset_messages {
 } notmuch_mset_messages_t;
 
 struct _notmuch_doc_id_set {
-    unsigned int *bitmap;
+    unsigned char *bitmap;
     unsigned int bound;
 };
 
-#define DOCIDSET_WORD(bit) ((bit) / sizeof (unsigned int))
-#define DOCIDSET_BIT(bit) ((bit) % sizeof (unsigned int))
+#define DOCIDSET_WORD(bit) ((bit) / CHAR_BIT)
+#define DOCIDSET_BIT(bit) ((bit) % CHAR_BIT)
 
 struct visible _notmuch_threads {
     notmuch_query_t *query;
@@ -359,11 +359,11 @@ _notmuch_doc_id_set_init (void *ctx,
 			  GArray *arr)
 {
     unsigned int max = 0;
-    unsigned int *bitmap;
+    unsigned char *bitmap;
 
     for (unsigned int i = 0; i < arr->len; i++)
 	max = MAX(max, g_array_index (arr, unsigned int, i));
-    bitmap = talloc_zero_array (ctx, unsigned int, 1 + max / sizeof (*bitmap));
+    bitmap = talloc_zero_array (ctx, unsigned char, DOCIDSET_WORD(max) + 1);
 
     if (bitmap == NULL)
 	return FALSE;
