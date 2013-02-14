@@ -121,7 +121,8 @@ sub prompt($$) {
 
 sub get_message_id() {
     my $mail = Mail::Internet->new(\*STDIN);
-    $mail->head->get("message-id") =~ /^<(.*)>$/;	# get message-id
+    my $mid = $mail->head->get("message-id") or return undef;
+    $mid =~ /^<(.*)>$/;	# get message-id value
     return $1;
 }
 
@@ -142,6 +143,10 @@ sub thread_action($$@) {
     my ($results_dir, $remove_dups, @params) = @_;
 
     my $mid = get_message_id();
+    if (! defined $mid) {
+	empty_maildir($results_dir);
+	die "notmuch-mutt: cannot find Message-Id, abort.\n";
+    }
     my $search_cmd = 'notmuch search --output=threads ' . shell_quote("id:$mid");
     my $tid = `$search_cmd`;	# get thread id
     chomp($tid);
@@ -151,6 +156,7 @@ sub thread_action($$@) {
 
 sub tag_action(@) {
     my $mid = get_message_id();
+    defined $mid or die "notmuch-mutt: cannot find Message-Id, abort.\n";
 
     system("notmuch tag "
 	   . shell_quote(join(' ', @_))
