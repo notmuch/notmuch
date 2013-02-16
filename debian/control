@@ -106,21 +106,6 @@ Description: thread-based email index, search and tagging (emacs interface)
  This package provides an emacs based mail user agent based on
  notmuch.
 
-Package: notmuch-vim
-Architecture: all
-Section: mail
-Breaks: notmuch (<<0.6~254~)
-Replaces: notmuch (<<0.6~254~)
-Depends: ${misc:Depends}, notmuch, vim-addon-manager
-Description: thread-based email index, search and tagging (vim interface)
- Notmuch is a system for indexing, searching, reading, and tagging
- large collections of email messages in maildir or mh format. It uses
- the Xapian library to provide fast, full-text search with a very
- convenient search syntax.
- .
- This package provides a vim based mail user agent based on
- notmuch.
-
 Package: notmuch-mutt
 Architecture: all
 Depends: notmuch, libmail-box-perl, libmailtools-perl,
