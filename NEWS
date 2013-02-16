@@ -6,6 +6,15 @@ Command-Line Interface
 
 Deprecated commands "part" and "search-tags" are removed.
 
+Vim Front-End
+-------------
+
+The vim based front end to notmuch is deprecated and moved to contrib.
+We haven't been able to support this as well as we would like, and it
+has accumulated bugs and gaps in functionality.  We recommend that
+people packaging notmuch no longer provide binary packages for
+notmuch-vim, but of course that is their decision.
+
 Notmuch 0.15.1 (2013-01-24)
 =========================
 
