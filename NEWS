@@ -15,6 +15,20 @@ has accumulated bugs and gaps in functionality.  We recommend that
 people packaging notmuch no longer provide binary packages for
 notmuch-vim, but of course that is their decision.
 
+Notmuch 0.15.2 (2013-02-17)
+===========================
+
+Build fixes
+-----------
+
+Update dependencies to avoid problems when building in parallel.
+
+Internal test framework changes
+-------------------------------
+
+Adjust Emacs test watchdog mechanism to cope with `process-attributes`
+being unimplimented.
+
 Notmuch 0.15.1 (2013-01-24)
 =========================
 
