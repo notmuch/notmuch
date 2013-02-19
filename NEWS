@@ -27,10 +27,10 @@ Internal test framework changes
 -------------------------------
 
 Adjust Emacs test watchdog mechanism to cope with `process-attributes`
-being unimplimented.
+being unimplemented.
 
 Notmuch 0.15.1 (2013-01-24)
-=========================
+===========================
 
 Internal test framework changes
 -------------------------------
