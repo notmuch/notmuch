@@ -39,6 +39,11 @@ my %command = (
 	     status	=> \&do_status,
 	     );
 
+# Convert prefix into form suitable for literal matching against
+# notmuch dump --format=batch-tag output.
+my $ENCPREFIX = encode_for_fs ($TAGPREFIX);
+$ENCPREFIX =~ s/:/%3a/g;
+
 my $subcommand = shift || usage ();
 
 if (!exists $command{$subcommand}) {
@@ -203,9 +208,9 @@ sub index_tags {
 
   my $index = $NMBGIT.'/nmbug.index';
 
-  my $query = join ' ', map ("tag:$_", get_tags ($TAGPREFIX));
+  my $query = join ' ', map ("tag:\"$_\"", get_tags ($TAGPREFIX));
 
-  my $fh = spawn ('-|', qw/notmuch dump --/, $query)
+  my $fh = spawn ('-|', qw/notmuch dump --format=batch-tag --/, $query)
     or die "notmuch dump: $!";
 
   git ('read-tree', '--empty');
@@ -214,22 +219,30 @@ sub index_tags {
     or die 'git update-index';
 
   while (<$fh>) {
-    m/ ( [^ ]* ) \s+ \( ([^\)]* ) \) /x || die 'syntax error in dump';
-    my ($id,$rest) = ($1,$2);
 
-    #strip prefixes before writing
-    my @tags = grep { s/^$TAGPREFIX//; } split (' ', $rest);
+    chomp();
+    my ($rest,$id) = split(/ -- id:/);
+
+    if ($id =~ s/^"(.*)"\s*$/$1/) {
+      # xapian quoted string, dequote.
+      $id =~ s/""/"/g;
+    }
+
+    #strip prefixes from tags before writing
+    my @tags = grep { s/^[+]$ENCPREFIX//; } split (' ', $rest);
     index_tags_for_msg ($git,$id, 'A', @tags);
   }
   unless (close $git) {
     die "'git update-index --index-info' exited with nonzero value\n";
   }
   unless (close $fh) {
-    die "'notmuch dump -- $query' exited with nonzero value\n";
+    die "'notmuch dump --format=batch-tag -- $query' exited with nonzero value\n";
   }
   return $index;
 }
 
+# update the git index to either create or delete an empty file.
+# Neither argument should be encoded/escaped.
 sub index_tags_for_msg {
   my $fh = shift;
   my $msgid = shift;
