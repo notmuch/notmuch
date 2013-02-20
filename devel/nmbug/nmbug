@@ -13,7 +13,7 @@ my $NMBGIT = $ENV{NMBGIT} || $ENV{HOME}.'/.nmbug';
 
 $NMBGIT .= '/.git' if (-d $NMBGIT.'/.git');
 
-my $TAGPREFIX = $ENV{NMBPREFIX} || 'notmuch::';
+my $TAGPREFIX = defined($ENV{NMBPREFIX}) ? $ENV{NMBPREFIX} : 'notmuch::';
 
 # for encoding
 
