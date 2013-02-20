@@ -15,9 +15,6 @@ $NMBGIT .= '/.git' if (-d $NMBGIT.'/.git');
 
 my $TAGPREFIX = $ENV{NMBPREFIX} || 'notmuch::';
 
-# magic hash for git
-my $EMPTYBLOB = 'e69de29bb2d1d6434b8b29ae775ad8c2e48c5391';
-
 # for encoding
 
 my $ESCAPE_CHAR =	'%';
@@ -49,6 +46,9 @@ my $subcommand = shift || usage ();
 if (!exists $command{$subcommand}) {
   usage ();
 }
+
+# magic hash for git
+my $EMPTYBLOB = git (qw{hash-object -t blob /dev/null});
 
 &{$command{$subcommand}}(@ARGV);
 
