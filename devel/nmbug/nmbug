@@ -267,6 +267,20 @@ sub do_checkout {
   do_sync (action => 'checkout');
 }
 
+sub quote_for_xapian {
+  my $str = shift;
+  $str =~ s/"/""/g;
+  return '"' . $str . '"';
+}
+
+sub pair_to_batch_line {
+  my ($action, $pair) = @_;
+
+  # the tag should already be suitably encoded
+
+  return $action . $ENCPREFIX . $pair->{tag} .
+    ' -- id:' . quote_for_xapian ($pair->{id})."\n";
+}
 
 sub do_sync {
 
@@ -283,17 +297,20 @@ sub do_sync {
     $D_action = '-';
   }
 
-  foreach my $pair (@{$status->{added}}) {
+  my $notmuch = spawn ({}, '|-', qw/notmuch tag --batch/)
+    or die 'notmuch tag --batch';
 
-    notmuch ('tag', $A_action.$TAGPREFIX.$pair->{tag},
-	     'id:'.$pair->{id});
+  foreach my $pair (@{$status->{added}}) {
+    print $notmuch pair_to_batch_line ($A_action, $pair);
   }
 
   foreach my $pair (@{$status->{deleted}}) {
-    notmuch ('tag', $D_action.$TAGPREFIX.$pair->{tag},
-	     'id:'.$pair->{id});
+    print $notmuch pair_to_batch_line ($D_action, $pair);
   }
 
+  unless (close $notmuch) {
+    die "'notmuch tag --batch' exited with nonzero value\n";
+  }
 }
 
 
