@@ -190,8 +190,16 @@ _thread_cleanup_author (notmuch_thread_t *thread,
     if (comma && strlen(comma) > 1) {
 	/* let's assemble what we think is the correct name */
 	lname = comma - author;
-	fname = strlen(author) - lname - 2;
-	strncpy(clean_author, comma + 2, fname);
+
+	/* Skip all the spaces after the comma */
+	fname = strlen(author) - lname - 1;
+	comma += 1;
+	while (*comma == ' ') {
+	    fname -= 1;
+	    comma += 1;
+	}
+	strncpy(clean_author, comma, fname);
+
 	*(clean_author+fname) = ' ';
 	strncpy(clean_author + fname + 1, author, lname);
 	*(clean_author+fname+1+lname) = '\0';
