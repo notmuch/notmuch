@@ -45,6 +45,9 @@ notmuch_crypto_get_context (notmuch_crypto_t *crypto, const char *protocol)
 	    g_object_unref (session);
 #endif
 	    if (crypto->gpgctx) {
+#ifdef GMIME_ATLEAST_26
+		g_mime_gpg_context_set_use_agent ((GMimeGpgContext*) crypto->gpgctx, TRUE);
+#endif
 		g_mime_gpg_context_set_always_trust ((GMimeGpgContext*) crypto->gpgctx, FALSE);
 	    } else {
 		fprintf (stderr, "Failed to construct gpg context.\n");
