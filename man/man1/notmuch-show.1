@@ -163,8 +163,13 @@ will be replaced by the signed data.
 Decrypt any MIME encrypted parts found in the selected content
 (ie. "multipart/encrypted" parts). Status of the decryption will be
 reported (currently only supported with --format=json and
---format=sexp) and the multipart/encrypted part will be replaced
-by the decrypted content.  Implies --verify.
+--format=sexp) and on successful decryption the multipart/encrypted
+part will be replaced by the decrypted content.
+
+Decryption expects a functioning \fBgpg-agent\fR(1) to provide any
+needed credentials. Without one, the decryption will fail.
+
+Implies --verify.
 .RE
 
 .RS 4
