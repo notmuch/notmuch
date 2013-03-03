@@ -34,7 +34,13 @@ typedef struct command {
 static int
 notmuch_help_command (void *ctx, int argc, char *argv[]);
 
+static int
+notmuch_command (void *ctx, int argc, char *argv[]);
+
 static command_t commands[] = {
+    { NULL, notmuch_command,
+      NULL,
+      "Notmuch main command." },
     { "setup", notmuch_setup_command,
       NULL,
       "Interactively setup notmuch for first use." },
@@ -76,7 +82,8 @@ find_command (const char *name)
     size_t i;
 
     for (i = 0; i < ARRAY_SIZE (commands); i++)
-	if (strcmp (name, commands[i].name) == 0)
+	if ((!name && !commands[i].name) ||
+	    (name && commands[i].name && strcmp (name, commands[i].name) == 0))
 	    return &commands[i];
 
     return NULL;
@@ -101,8 +108,8 @@ usage (FILE *out)
     for (i = 0; i < ARRAY_SIZE (commands); i++) {
 	command = &commands[i];
 
-	fprintf (out, "  %-11s  %s\n",
-		 command->name, command->summary);
+	if (command->name)
+	    fprintf (out, "  %-11s  %s\n", command->name, command->summary);
     }
 
     fprintf (out, "\n");
@@ -192,7 +199,7 @@ notmuch_help_command (void *ctx, int argc, char *argv[])
  * to be more clever about this in the future.
  */
 static int
-notmuch (void *ctx)
+notmuch_command (void *ctx, unused(int argc), unused(char *argv[]))
 {
     notmuch_config_t *config;
     notmuch_bool_t is_new;
@@ -256,6 +263,7 @@ main (int argc, char *argv[])
 {
     void *local;
     char *talloc_report;
+    const char *command_name = NULL;
     command_t *command;
     notmuch_bool_t print_help=FALSE, print_version=FALSE;
     int opt_index;
@@ -277,9 +285,6 @@ main (int argc, char *argv[])
     /* Globally default to the current output format version. */
     notmuch_format_version = NOTMUCH_FORMAT_CUR;
 
-    if (argc == 1)
-	return notmuch (local);
-
     opt_index = parse_arguments (argc, argv, options, 1);
     if (opt_index < 0) {
 	/* diagnostics already printed */
@@ -294,10 +299,13 @@ main (int argc, char *argv[])
 	return 0;
     }
 
-    command = find_command (argv[opt_index]);
+    if (opt_index < argc)
+	command_name = argv[opt_index];
+
+    command = find_command (command_name);
     if (!command) {
 	fprintf (stderr, "Error: Unknown command '%s' (see \"notmuch help\")\n",
-		 argv[opt_index]);
+		 command_name);
 	return 1;
     }
 
