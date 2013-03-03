@@ -139,7 +139,7 @@ notmuch_restore_command (unused (void *ctx), int argc, char *argv[])
     int opt_index;
     int input_format = DUMP_FORMAT_AUTO;
 
-    config = notmuch_config_open (ctx, NULL, NULL);
+    config = notmuch_config_open (ctx, NULL, FALSE);
     if (config == NULL)
 	return 1;
 

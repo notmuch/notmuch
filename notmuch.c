@@ -202,16 +202,15 @@ static int
 notmuch_command (void *ctx, unused(int argc), unused(char *argv[]))
 {
     notmuch_config_t *config;
-    notmuch_bool_t is_new;
     char *db_path;
     struct stat st;
 
-    config = notmuch_config_open (ctx, NULL, &is_new);
+    config = notmuch_config_open (ctx, NULL, TRUE);
 
     /* If the user has never configured notmuch, then run
      * notmuch_setup_command which will give a nice welcome message,
      * and interactively guide the user through the configuration. */
-    if (is_new) {
+    if (notmuch_config_is_new (config)) {
 	notmuch_config_close (config);
 	return notmuch_setup_command (ctx, 0, NULL);
     }

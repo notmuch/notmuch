@@ -1176,7 +1176,7 @@ notmuch_show_command (void *ctx, unused (int argc), unused (char *argv[]))
     else
 	params.entire_thread = FALSE;
 
-    config = notmuch_config_open (ctx, NULL, NULL);
+    config = notmuch_config_open (ctx, NULL, FALSE);
     if (config == NULL)
 	return 1;
 

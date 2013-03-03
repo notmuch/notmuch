@@ -875,7 +875,7 @@ notmuch_new_command (void *ctx, int argc, char *argv[])
 	return 1;
     }
 
-    config = notmuch_config_open (ctx, NULL, NULL);
+    config = notmuch_config_open (ctx, NULL, FALSE);
     if (config == NULL)
 	return 1;
 

@@ -160,7 +160,7 @@ main (int argc, char **argv)
 	exit (1);
     }
 
-    config = notmuch_config_open (ctx, config_path, NULL);
+    config = notmuch_config_open (ctx, config_path, FALSE);
     if (config == NULL)
 	return 1;
 

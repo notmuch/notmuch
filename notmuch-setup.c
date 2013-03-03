@@ -130,7 +130,6 @@ notmuch_setup_command (unused (void *ctx),
     size_t old_other_emails_len;
     GPtrArray *other_emails;
     unsigned int i;
-    int is_new;
     const char **new_tags;
     size_t new_tags_len;
     const char **search_exclude_tags;
@@ -147,9 +146,9 @@ notmuch_setup_command (unused (void *ctx),
 	chomp_newline (response);				\
     } while (0)
 
-    config = notmuch_config_open (ctx, NULL, &is_new);
+    config = notmuch_config_open (ctx, NULL, TRUE);
 
-    if (is_new)
+    if (notmuch_config_is_new (config))
 	welcome_message_pre_setup ();
 
     prompt ("Your full name [%s]: ", notmuch_config_get_user_name (config));
@@ -229,7 +228,7 @@ notmuch_setup_command (unused (void *ctx),
 
 
     if (! notmuch_config_save (config)) {
-	if (is_new)
+	if (notmuch_config_is_new (config))
 	  welcome_message_post_setup ();
 	return 0;
     } else {

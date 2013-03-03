@@ -233,10 +233,9 @@ get_username_from_passwd_file (void *ctx)
 notmuch_config_t *
 notmuch_config_open (void *ctx,
 		     const char *filename,
-		     notmuch_bool_t *is_new_ret)
+		     notmuch_bool_t create_new)
 {
     GError *error = NULL;
-    int is_new = 0;
     size_t tmp;
     char *notmuch_config_env = NULL;
     int file_had_database_group;
@@ -244,9 +243,6 @@ notmuch_config_open (void *ctx,
     int file_had_user_group;
     int file_had_maildir_group;
     int file_had_search_group;
-
-    if (is_new_ret)
-	*is_new_ret = 0;
 
     notmuch_config_t *config = talloc (ctx, notmuch_config_t);
     if (config == NULL) {
@@ -286,17 +282,16 @@ notmuch_config_open (void *ctx,
 				     G_KEY_FILE_KEEP_COMMENTS,
 				     &error))
     {
-	/* If the caller passed a non-NULL value for is_new_ret, then
-	 * the caller is prepared for a default configuration file in
-	 * the case of FILE NOT FOUND. Otherwise, any read failure is
-	 * an error.
+	/* If create_new is true, then the caller is prepared for a
+	 * default configuration file in the case of FILE NOT
+	 * FOUND. Otherwise, any read failure is an error.
 	 */
-	if (is_new_ret &&
+	if (create_new &&
 	    error->domain == G_FILE_ERROR &&
 	    error->code == G_FILE_ERROR_NOENT)
 	{
 	    g_error_free (error);
-	    is_new = 1;
+	    config->is_new = TRUE;
 	}
 	else
 	{
@@ -379,7 +374,7 @@ notmuch_config_open (void *ctx,
     }
 
     if (notmuch_config_get_search_exclude_tags (config, &tmp) == NULL) {
-	if (is_new) {
+	if (config->is_new) {
 	    const char *tags[] = { "deleted", "spam" };
 	    notmuch_config_set_search_exclude_tags (config, tags, 2);
 	} else {
@@ -399,7 +394,7 @@ notmuch_config_open (void *ctx,
     /* Whenever we know of configuration sections that don't appear in
      * the configuration file, we add some comments to help the user
      * understand what can be done. */
-    if (is_new)
+    if (config->is_new)
     {
 	g_key_file_set_comment (config->key_file, NULL, NULL,
 				toplevel_config_comment, NULL);
@@ -433,11 +428,6 @@ notmuch_config_open (void *ctx,
 	g_key_file_set_comment (config->key_file, "search", NULL,
 				search_config_comment, NULL);
     }
-
-    if (is_new_ret)
-	*is_new_ret = is_new;
-
-    config->is_new = is_new;
 
     return config;
 }
@@ -719,7 +709,7 @@ notmuch_config_command_get (void *ctx, char *item)
 {
     notmuch_config_t *config;
 
-    config = notmuch_config_open (ctx, NULL, NULL);
+    config = notmuch_config_open (ctx, NULL, FALSE);
     if (config == NULL)
 	return 1;
 
@@ -781,7 +771,7 @@ notmuch_config_command_set (void *ctx, char *item, int argc, char *argv[])
     if (_item_split (item, &group, &key))
 	return 1;
 
-    config = notmuch_config_open (ctx, NULL, NULL);
+    config = notmuch_config_open (ctx, NULL, FALSE);
     if (config == NULL)
 	return 1;
 
@@ -818,7 +808,7 @@ notmuch_config_command_list (void *ctx)
     char **groups;
     size_t g, groups_length;
 
-    config = notmuch_config_open (ctx, NULL, NULL);
+    config = notmuch_config_open (ctx, NULL, FALSE);
     if (config == NULL)
 	return 1;
 

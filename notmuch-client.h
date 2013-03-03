@@ -248,7 +248,7 @@ typedef struct _notmuch_config notmuch_config_t;
 notmuch_config_t *
 notmuch_config_open (void *ctx,
 		     const char *filename,
-		     notmuch_bool_t *is_new_ret);
+		     notmuch_bool_t create_new);
 
 void
 notmuch_config_close (notmuch_config_t *config);

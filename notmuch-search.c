@@ -371,7 +371,7 @@ notmuch_search_command (void *ctx, int argc, char *argv[])
 
     notmuch_exit_if_unsupported_format ();
 
-    config = notmuch_config_open (ctx, NULL, NULL);
+    config = notmuch_config_open (ctx, NULL, FALSE);
     if (config == NULL)
 	return 1;
 

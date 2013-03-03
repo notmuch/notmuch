@@ -34,7 +34,7 @@ notmuch_dump_command (unused (void *ctx), int argc, char *argv[])
     notmuch_tags_t *tags;
     const char *query_str = "";
 
-    config = notmuch_config_open (ctx, NULL, NULL);
+    config = notmuch_config_open (ctx, NULL, FALSE);
     if (config == NULL)
 	return 1;
 
