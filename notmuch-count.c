@@ -33,9 +33,8 @@ enum {
 };
 
 int
-notmuch_count_command (void *ctx, int argc, char *argv[])
+notmuch_count_command (notmuch_config_t *config, int argc, char *argv[])
 {
-    notmuch_config_t *config;
     notmuch_database_t *notmuch;
     notmuch_query_t *query;
     char *query_str;
@@ -62,22 +61,18 @@ notmuch_count_command (void *ctx, int argc, char *argv[])
 	return 1;
     }
 
-    config = notmuch_config_open (ctx, NULL, FALSE);
-    if (config == NULL)
-	return 1;
-
     if (notmuch_database_open (notmuch_config_get_database_path (config),
 			       NOTMUCH_DATABASE_MODE_READ_ONLY, &notmuch))
 	return 1;
 
-    query_str = query_string_from_args (ctx, argc-opt_index, argv+opt_index);
+    query_str = query_string_from_args (config, argc-opt_index, argv+opt_index);
     if (query_str == NULL) {
 	fprintf (stderr, "Out of memory.\n");
 	return 1;
     }
 
     if (*query_str == '\0') {
-	query_str = talloc_strdup (ctx, "");
+	query_str = talloc_strdup (config, "");
     }
 
     query = notmuch_query_create (notmuch, query_str);

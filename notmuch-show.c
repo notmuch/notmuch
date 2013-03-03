@@ -1056,9 +1056,8 @@ enum {
 };
 
 int
-notmuch_show_command (void *ctx, unused (int argc), unused (char *argv[]))
+notmuch_show_command (notmuch_config_t *config, int argc, char *argv[])
 {
-    notmuch_config_t *config;
     notmuch_database_t *notmuch;
     notmuch_query_t *query;
     char *query_string;
@@ -1176,11 +1175,7 @@ notmuch_show_command (void *ctx, unused (int argc), unused (char *argv[]))
     else
 	params.entire_thread = FALSE;
 
-    config = notmuch_config_open (ctx, NULL, FALSE);
-    if (config == NULL)
-	return 1;
-
-    query_string = query_string_from_args (ctx, argc-opt_index, argv+opt_index);
+    query_string = query_string_from_args (config, argc-opt_index, argv+opt_index);
     if (query_string == NULL) {
 	fprintf (stderr, "Out of memory\n");
 	return 1;
@@ -1202,11 +1197,11 @@ notmuch_show_command (void *ctx, unused (int argc), unused (char *argv[]))
     }
 
     /* Create structure printer. */
-    sprinter = format->new_sprinter(ctx, stdout);
+    sprinter = format->new_sprinter(config, stdout);
 
     /* If a single message is requested we do not use search_excludes. */
     if (params.part >= 0)
-	ret = do_show_single (ctx, query, format, sprinter, &params);
+	ret = do_show_single (config, query, format, sprinter, &params);
     else {
 	/* We always apply set the exclude flag. The
 	 * exclude=true|false option controls whether or not we return
@@ -1225,7 +1220,7 @@ notmuch_show_command (void *ctx, unused (int argc), unused (char *argv[]))
 	    params.omit_excluded = FALSE;
 	}
 
-	ret = do_show (ctx, query, format, sprinter, &params);
+	ret = do_show (config, query, format, sprinter, &params);
     }
 
     notmuch_crypto_cleanup (&params.crypto);

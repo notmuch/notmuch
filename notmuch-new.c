@@ -840,9 +840,8 @@ _remove_directory (void *ctx,
 }
 
 int
-notmuch_new_command (void *ctx, int argc, char *argv[])
+notmuch_new_command (notmuch_config_t *config, int argc, char *argv[])
 {
-    notmuch_config_t *config;
     notmuch_database_t *notmuch;
     add_files_state_t add_files_state;
     double elapsed;
@@ -875,10 +874,6 @@ notmuch_new_command (void *ctx, int argc, char *argv[])
 	return 1;
     }
 
-    config = notmuch_config_open (ctx, NULL, FALSE);
-    if (config == NULL)
-	return 1;
-
     add_files_state.new_tags = notmuch_config_get_new_tags (config, &add_files_state.new_tags_length);
     add_files_state.new_ignore = notmuch_config_get_new_ignore (config, &add_files_state.new_ignore_length);
     add_files_state.synchronize_flags = notmuch_config_get_maildir_synchronize_flags (config);
@@ -890,7 +885,7 @@ notmuch_new_command (void *ctx, int argc, char *argv[])
 	    return ret;
     }
 
-    dot_notmuch_path = talloc_asprintf (ctx, "%s/%s", db_path, ".notmuch");
+    dot_notmuch_path = talloc_asprintf (config, "%s/%s", db_path, ".notmuch");
 
     if (stat (dot_notmuch_path, &st)) {
 	int count;
@@ -941,9 +936,9 @@ notmuch_new_command (void *ctx, int argc, char *argv[])
     add_files_state.removed_messages = add_files_state.renamed_messages = 0;
     gettimeofday (&add_files_state.tv_start, NULL);
 
-    add_files_state.removed_files = _filename_list_create (ctx);
-    add_files_state.removed_directories = _filename_list_create (ctx);
-    add_files_state.directory_mtimes = _filename_list_create (ctx);
+    add_files_state.removed_files = _filename_list_create (config);
+    add_files_state.removed_directories = _filename_list_create (config);
+    add_files_state.directory_mtimes = _filename_list_create (config);
 
     if (! debugger_is_active () && add_files_state.output_is_a_tty
 	&& ! add_files_state.verbose) {
@@ -970,7 +965,7 @@ notmuch_new_command (void *ctx, int argc, char *argv[])
 
     gettimeofday (&tv_start, NULL);
     for (f = add_files_state.removed_directories->head, i = 0; f && !interrupted; f = f->next, i++) {
-	ret = _remove_directory (ctx, notmuch, f->filename, &add_files_state);
+	ret = _remove_directory (config, notmuch, f->filename, &add_files_state);
 	if (ret)
 	    goto DONE;
 	if (do_print_progress) {

@@ -178,11 +178,10 @@ tag_file (void *ctx, notmuch_database_t *notmuch, tag_op_flag_t flags,
 }
 
 int
-notmuch_tag_command (void *ctx, int argc, char *argv[])
+notmuch_tag_command (notmuch_config_t *config, int argc, char *argv[])
 {
     tag_op_list_t *tag_ops = NULL;
     char *query_string = NULL;
-    notmuch_config_t *config;
     notmuch_database_t *notmuch;
     struct sigaction action;
     tag_op_flag_t tag_flags = TAG_FLAG_NONE;
@@ -225,20 +224,16 @@ notmuch_tag_command (void *ctx, int argc, char *argv[])
 	    return 1;
 	}
     } else {
-	tag_ops = tag_op_list_create (ctx);
+	tag_ops = tag_op_list_create (config);
 	if (tag_ops == NULL) {
 	    fprintf (stderr, "Out of memory.\n");
 	    return 1;
 	}
 
-	if (parse_tag_command_line (ctx, argc - opt_index, argv + opt_index,
+	if (parse_tag_command_line (config, argc - opt_index, argv + opt_index,
 				    &query_string, tag_ops))
 	    return 1;
     }
-
-    config = notmuch_config_open (ctx, NULL, FALSE);
-    if (config == NULL)
-	return 1;
 
     if (notmuch_database_open (notmuch_config_get_database_path (config),
 			       NOTMUCH_DATABASE_MODE_READ_WRITE, &notmuch))
@@ -248,9 +243,9 @@ notmuch_tag_command (void *ctx, int argc, char *argv[])
 	tag_flags |= TAG_FLAG_MAILDIR_SYNC;
 
     if (batch)
-	ret = tag_file (ctx, notmuch, tag_flags, input);
+	ret = tag_file (config, notmuch, tag_flags, input);
     else
-	ret = tag_query (ctx, notmuch, query_string, tag_ops, tag_flags);
+	ret = tag_query (config, notmuch, query_string, tag_ops, tag_flags);
 
     notmuch_database_destroy (notmuch);
 

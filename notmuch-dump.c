@@ -23,9 +23,8 @@
 #include "string-util.h"
 
 int
-notmuch_dump_command (unused (void *ctx), int argc, char *argv[])
+notmuch_dump_command (notmuch_config_t *config, int argc, char *argv[])
 {
-    notmuch_config_t *config;
     notmuch_database_t *notmuch;
     notmuch_query_t *query;
     FILE *output = stdout;
@@ -33,10 +32,6 @@ notmuch_dump_command (unused (void *ctx), int argc, char *argv[])
     notmuch_message_t *message;
     notmuch_tags_t *tags;
     const char *query_str = "";
-
-    config = notmuch_config_open (ctx, NULL, FALSE);
-    if (config == NULL)
-	return 1;
 
     if (notmuch_database_open (notmuch_config_get_database_path (config),
 			       NOTMUCH_DATABASE_MODE_READ_ONLY, &notmuch))

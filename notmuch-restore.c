@@ -120,9 +120,8 @@ parse_sup_line (void *ctx, char *line,
 }
 
 int
-notmuch_restore_command (unused (void *ctx), int argc, char *argv[])
+notmuch_restore_command (notmuch_config_t *config, int argc, char *argv[])
 {
-    notmuch_config_t *config;
     notmuch_database_t *notmuch;
     notmuch_bool_t accumulate = FALSE;
     tag_op_flag_t flags = 0;
@@ -138,10 +137,6 @@ notmuch_restore_command (unused (void *ctx), int argc, char *argv[])
     int ret = 0;
     int opt_index;
     int input_format = DUMP_FORMAT_AUTO;
-
-    config = notmuch_config_open (ctx, NULL, FALSE);
-    if (config == NULL)
-	return 1;
 
     if (notmuch_database_open (notmuch_config_get_database_path (config),
 			       NOTMUCH_DATABASE_MODE_READ_WRITE, &notmuch))
@@ -187,7 +182,7 @@ notmuch_restore_command (unused (void *ctx), int argc, char *argv[])
 	return 1;
     }
 
-    tag_ops = tag_op_list_create (ctx);
+    tag_ops = tag_op_list_create (config);
     if (tag_ops == NULL) {
 	fprintf (stderr, "Out of memory.\n");
 	return 1;
@@ -226,7 +221,7 @@ notmuch_restore_command (unused (void *ctx), int argc, char *argv[])
 	if (line_ctx != NULL)
 	    talloc_free (line_ctx);
 
-	line_ctx = talloc_new (ctx);
+	line_ctx = talloc_new (config);
 	if (input_format == DUMP_FORMAT_SUP) {
 	    ret = parse_sup_line (line_ctx, line, &query_string, tag_ops);
 	} else {

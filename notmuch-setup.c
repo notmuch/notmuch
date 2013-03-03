@@ -120,12 +120,11 @@ parse_tag_list (void *ctx, char *response)
 }
 
 int
-notmuch_setup_command (unused (void *ctx),
+notmuch_setup_command (notmuch_config_t *config,
 		       unused (int argc), unused (char *argv[]))
 {
     char *response = NULL;
     size_t response_size = 0;
-    notmuch_config_t *config;
     const char **old_other_emails;
     size_t old_other_emails_len;
     GPtrArray *other_emails;
@@ -146,8 +145,6 @@ notmuch_setup_command (unused (void *ctx),
 	chomp_newline (response);				\
     } while (0)
 
-    config = notmuch_config_open (ctx, NULL, TRUE);
-
     if (notmuch_config_is_new (config))
 	welcome_message_pre_setup ();
 
@@ -167,16 +164,16 @@ notmuch_setup_command (unused (void *ctx),
     for (i = 0; i < old_other_emails_len; i++) {
 	prompt ("Additional email address [%s]: ", old_other_emails[i]);
 	if (strlen (response))
-	    g_ptr_array_add (other_emails, talloc_strdup (ctx, response));
+	    g_ptr_array_add (other_emails, talloc_strdup (config, response));
 	else
-	    g_ptr_array_add (other_emails, talloc_strdup (ctx,
+	    g_ptr_array_add (other_emails, talloc_strdup (config,
 							 old_other_emails[i]));
     }
 
     do {
 	prompt ("Additional email address [Press 'Enter' if none]: ");
 	if (strlen (response))
-	    g_ptr_array_add (other_emails, talloc_strdup (ctx, response));
+	    g_ptr_array_add (other_emails, talloc_strdup (config, response));
     } while (strlen (response));
     if (other_emails->len)
 	notmuch_config_set_user_other_email (config,
@@ -190,7 +187,7 @@ notmuch_setup_command (unused (void *ctx),
     if (strlen (response)) {
 	const char *absolute_path;
 
-	absolute_path = make_path_absolute (ctx, response);
+	absolute_path = make_path_absolute (config, response);
 	notmuch_config_set_database_path (config, absolute_path);
     }
 
@@ -201,7 +198,7 @@ notmuch_setup_command (unused (void *ctx),
     prompt ("]: ");
 
     if (strlen (response)) {
-	GPtrArray *tags = parse_tag_list (ctx, response);
+	GPtrArray *tags = parse_tag_list (config, response);
 
 	notmuch_config_set_new_tags (config, (const char **) tags->pdata,
 				     tags->len);
@@ -217,7 +214,7 @@ notmuch_setup_command (unused (void *ctx),
     prompt ("]: ");
 
     if (strlen (response)) {
-	GPtrArray *tags = parse_tag_list (ctx, response);
+	GPtrArray *tags = parse_tag_list (config, response);
 
 	notmuch_config_set_search_exclude_tags (config,
 						(const char **) tags->pdata,

@@ -22,56 +22,57 @@
 
 #include "notmuch-client.h"
 
-typedef int (*command_function_t) (void *ctx, int argc, char *argv[]);
+typedef int (*command_function_t) (notmuch_config_t *config, int argc, char *argv[]);
 
 typedef struct command {
     const char *name;
     command_function_t function;
+    notmuch_bool_t create_config;
     const char *arguments;
     const char *summary;
 } command_t;
 
 static int
-notmuch_help_command (void *ctx, int argc, char *argv[]);
+notmuch_help_command (notmuch_config_t *config, int argc, char *argv[]);
 
 static int
-notmuch_command (void *ctx, int argc, char *argv[]);
+notmuch_command (notmuch_config_t *config, int argc, char *argv[]);
 
 static command_t commands[] = {
-    { NULL, notmuch_command,
+    { NULL, notmuch_command, TRUE,
       NULL,
       "Notmuch main command." },
-    { "setup", notmuch_setup_command,
+    { "setup", notmuch_setup_command, TRUE,
       NULL,
       "Interactively setup notmuch for first use." },
-    { "new", notmuch_new_command,
+    { "new", notmuch_new_command, FALSE,
       "[options...]",
       "Find and import new messages to the notmuch database." },
-    { "search", notmuch_search_command,
+    { "search", notmuch_search_command, FALSE,
       "[options...] <search-terms> [...]",
       "Search for messages matching the given search terms." },
-    { "show", notmuch_show_command,
+    { "show", notmuch_show_command, FALSE,
       "<search-terms> [...]",
       "Show all messages matching the search terms." },
-    { "count", notmuch_count_command,
+    { "count", notmuch_count_command, FALSE,
       "[options...] <search-terms> [...]",
       "Count messages matching the search terms." },
-    { "reply", notmuch_reply_command,
+    { "reply", notmuch_reply_command, FALSE,
       "[options...] <search-terms> [...]",
       "Construct a reply template for a set of messages." },
-    { "tag", notmuch_tag_command,
+    { "tag", notmuch_tag_command, FALSE,
       "+<tag>|-<tag> [...] [--] <search-terms> [...]" ,
       "Add/remove tags for all messages matching the search terms." },
-    { "dump", notmuch_dump_command,
+    { "dump", notmuch_dump_command, FALSE,
       "[<filename>] [--] [<search-terms>]",
       "Create a plain-text dump of the tags for each message." },
-    { "restore", notmuch_restore_command,
+    { "restore", notmuch_restore_command, FALSE,
       "[--accumulate] [<filename>]",
       "Restore the tags from the given dump file (see 'dump')." },
-    { "config", notmuch_config_command,
+    { "config", notmuch_config_command, FALSE,
       "[get|set] <section>.<item> [value ...]",
       "Get or set settings in the notmuch configuration file." },
-    { "help", notmuch_help_command,
+    { "help", notmuch_help_command, TRUE, /* create but don't save config */
       "[<command>]",
       "This message, or more detailed help for the named command." }
 };
@@ -155,7 +156,7 @@ exec_man (const char *page)
 }
 
 static int
-notmuch_help_command (void *ctx, int argc, char *argv[])
+notmuch_help_command (notmuch_config_t *config, int argc, char *argv[])
 {
     command_t *command;
 
@@ -178,7 +179,7 @@ notmuch_help_command (void *ctx, int argc, char *argv[])
 
     command = find_command (argv[0]);
     if (command) {
-	char *page = talloc_asprintf (ctx, "notmuch-%s", command->name);
+	char *page = talloc_asprintf (config, "notmuch-%s", command->name);
 	exec_man (page);
     }
 
@@ -199,28 +200,23 @@ notmuch_help_command (void *ctx, int argc, char *argv[])
  * to be more clever about this in the future.
  */
 static int
-notmuch_command (void *ctx, unused(int argc), unused(char *argv[]))
+notmuch_command (notmuch_config_t *config,
+		 unused(int argc), unused(char *argv[]))
 {
-    notmuch_config_t *config;
     char *db_path;
     struct stat st;
-
-    config = notmuch_config_open (ctx, NULL, TRUE);
 
     /* If the user has never configured notmuch, then run
      * notmuch_setup_command which will give a nice welcome message,
      * and interactively guide the user through the configuration. */
-    if (notmuch_config_is_new (config)) {
-	notmuch_config_close (config);
-	return notmuch_setup_command (ctx, 0, NULL);
-    }
+    if (notmuch_config_is_new (config))
+	return notmuch_setup_command (config, 0, NULL);
 
     /* Notmuch is already configured, but is there a database? */
-    db_path = talloc_asprintf (ctx, "%s/%s",
+    db_path = talloc_asprintf (config, "%s/%s",
 			       notmuch_config_get_database_path (config),
 			       ".notmuch");
     if (stat (db_path, &st)) {
-	notmuch_config_close (config);
 	if (errno != ENOENT) {
 	    fprintf (stderr, "Error looking for notmuch database at %s: %s\n",
 		     db_path, strerror (errno));
@@ -252,8 +248,6 @@ notmuch_command (void *ctx, unused(int argc), unused(char *argv[]))
 	    notmuch_config_get_user_name (config),
 	    notmuch_config_get_user_primary_email (config));
 
-    notmuch_config_close (config);
-
     return 0;
 }
 
@@ -264,6 +258,7 @@ main (int argc, char *argv[])
     char *talloc_report;
     const char *command_name = NULL;
     command_t *command;
+    notmuch_config_t *config;
     notmuch_bool_t print_help=FALSE, print_version=FALSE;
     int opt_index;
     int ret = 0;
@@ -308,7 +303,13 @@ main (int argc, char *argv[])
 	return 1;
     }
 
-    ret = (command->function)(local, argc - opt_index, argv + opt_index);
+    config = notmuch_config_open (local, NULL, command->create_config);
+    if (!config)
+	return 1;
+
+    ret = (command->function)(config, argc - opt_index, argv + opt_index);
+
+    notmuch_config_close (config);
 
     talloc_report = getenv ("NOTMUCH_TALLOC_REPORT");
     if (talloc_report && strcmp (talloc_report, "") != 0) {

@@ -290,9 +290,8 @@ enum {
 };
 
 int
-notmuch_search_command (void *ctx, int argc, char *argv[])
+notmuch_search_command (notmuch_config_t *config, int argc, char *argv[])
 {
-    notmuch_config_t *config;
     notmuch_database_t *notmuch;
     notmuch_query_t *query;
     char *query_str;
@@ -349,20 +348,20 @@ notmuch_search_command (void *ctx, int argc, char *argv[])
 
     switch (format_sel) {
     case NOTMUCH_FORMAT_TEXT:
-	format = sprinter_text_create (ctx, stdout);
+	format = sprinter_text_create (config, stdout);
 	break;
     case NOTMUCH_FORMAT_TEXT0:
 	if (output == OUTPUT_SUMMARY) {
 	    fprintf (stderr, "Error: --format=text0 is not compatible with --output=summary.\n");
 	    return 1;
 	}
-	format = sprinter_text0_create (ctx, stdout);
+	format = sprinter_text0_create (config, stdout);
 	break;
     case NOTMUCH_FORMAT_JSON:
-	format = sprinter_json_create (ctx, stdout);
+	format = sprinter_json_create (config, stdout);
 	break;
     case NOTMUCH_FORMAT_SEXP:
-	format = sprinter_sexp_create (ctx, stdout);
+	format = sprinter_sexp_create (config, stdout);
 	break;
     default:
 	/* this should never happen */
@@ -370,10 +369,6 @@ notmuch_search_command (void *ctx, int argc, char *argv[])
     }
 
     notmuch_exit_if_unsupported_format ();
-
-    config = notmuch_config_open (ctx, NULL, FALSE);
-    if (config == NULL)
-	return 1;
 
     if (notmuch_database_open (notmuch_config_get_database_path (config),
 			       NOTMUCH_DATABASE_MODE_READ_ONLY, &notmuch))

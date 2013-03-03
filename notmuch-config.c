@@ -705,14 +705,8 @@ _item_split (char *item, char **group, char **key)
 }
 
 static int
-notmuch_config_command_get (void *ctx, char *item)
+notmuch_config_command_get (notmuch_config_t *config, char *item)
 {
-    notmuch_config_t *config;
-
-    config = notmuch_config_open (ctx, NULL, FALSE);
-    if (config == NULL)
-	return 1;
-
     if (strcmp(item, "database.path") == 0) {
 	printf ("%s\n", notmuch_config_get_database_path (config));
     } else if (strcmp(item, "user.name") == 0) {
@@ -756,23 +750,15 @@ notmuch_config_command_get (void *ctx, char *item)
 	g_strfreev (value);
     }
 
-    notmuch_config_close (config);
-
     return 0;
 }
 
 static int
-notmuch_config_command_set (void *ctx, char *item, int argc, char *argv[])
+notmuch_config_command_set (notmuch_config_t *config, char *item, int argc, char *argv[])
 {
-    notmuch_config_t *config;
     char *group, *key;
-    int ret;
 
     if (_item_split (item, &group, &key))
-	return 1;
-
-    config = notmuch_config_open (ctx, NULL, FALSE);
-    if (config == NULL)
 	return 1;
 
     /* With only the name of an item, we clear it from the
@@ -795,22 +781,14 @@ notmuch_config_command_set (void *ctx, char *item, int argc, char *argv[])
 	break;
     }
 
-    ret = notmuch_config_save (config);
-    notmuch_config_close (config);
-
-    return ret;
+    return notmuch_config_save (config);
 }
 
 static int
-notmuch_config_command_list (void *ctx)
+notmuch_config_command_list (notmuch_config_t *config)
 {
-    notmuch_config_t *config;
     char **groups;
     size_t g, groups_length;
-
-    config = notmuch_config_open (ctx, NULL, FALSE);
-    if (config == NULL)
-	return 1;
 
     groups = g_key_file_get_groups (config->key_file, &groups_length);
     if (groups == NULL)
@@ -841,13 +819,11 @@ notmuch_config_command_list (void *ctx)
 
     g_strfreev (groups);
 
-    notmuch_config_close (config);
-
     return 0;
 }
 
 int
-notmuch_config_command (void *ctx, int argc, char *argv[])
+notmuch_config_command (notmuch_config_t *config, int argc, char *argv[])
 {
     argc--; argv++; /* skip subcommand argument */
 
@@ -862,16 +838,16 @@ notmuch_config_command (void *ctx, int argc, char *argv[])
 		     "one argument.\n");
 	    return 1;
 	}
-	return notmuch_config_command_get (ctx, argv[1]);
+	return notmuch_config_command_get (config, argv[1]);
     } else if (strcmp (argv[0], "set") == 0) {
 	if (argc < 2) {
 	    fprintf (stderr, "Error: notmuch config set requires at least "
 		     "one argument.\n");
 	    return 1;
 	}
-	return notmuch_config_command_set (ctx, argv[1], argc - 2, argv + 2);
+	return notmuch_config_command_set (config, argv[1], argc - 2, argv + 2);
     } else if (strcmp (argv[0], "list") == 0) {
-	return notmuch_config_command_list (ctx);
+	return notmuch_config_command_list (config);
     }
 
     fprintf (stderr, "Unrecognized argument for notmuch config: %s\n",

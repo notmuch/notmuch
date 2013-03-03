@@ -702,9 +702,8 @@ enum {
 };
 
 int
-notmuch_reply_command (void *ctx, int argc, char *argv[])
+notmuch_reply_command (notmuch_config_t *config, int argc, char *argv[])
 {
-    notmuch_config_t *config;
     notmuch_database_t *notmuch;
     notmuch_query_t *query;
     char *query_string;
@@ -752,21 +751,17 @@ notmuch_reply_command (void *ctx, int argc, char *argv[])
 	reply_format_func = notmuch_reply_format_headers_only;
     } else if (format == FORMAT_JSON) {
 	reply_format_func = notmuch_reply_format_sprinter;
-	sp = sprinter_json_create (ctx, stdout);
+	sp = sprinter_json_create (config, stdout);
     } else if (format == FORMAT_SEXP) {
 	reply_format_func = notmuch_reply_format_sprinter;
-	sp = sprinter_sexp_create (ctx, stdout);
+	sp = sprinter_sexp_create (config, stdout);
     } else {
 	reply_format_func = notmuch_reply_format_default;
     }
 
     notmuch_exit_if_unsupported_format ();
 
-    config = notmuch_config_open (ctx, NULL, FALSE);
-    if (config == NULL)
-	return 1;
-
-    query_string = query_string_from_args (ctx, argc-opt_index, argv+opt_index);
+    query_string = query_string_from_args (config, argc-opt_index, argv+opt_index);
     if (query_string == NULL) {
 	fprintf (stderr, "Out of memory\n");
 	return 1;
@@ -787,7 +782,7 @@ notmuch_reply_command (void *ctx, int argc, char *argv[])
 	return 1;
     }
 
-    if (reply_format_func (ctx, config, query, &params, reply_all, sp) != 0)
+    if (reply_format_func (config, config, query, &params, reply_all, sp) != 0)
 	return 1;
 
     notmuch_crypto_cleanup (&params.crypto);
