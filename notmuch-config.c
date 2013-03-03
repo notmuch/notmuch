@@ -104,6 +104,7 @@ static const char search_config_comment[] =
 struct _notmuch_config {
     char *filename;
     GKeyFile *key_file;
+    notmuch_bool_t is_new;
 
     char *database_path;
     char *user_name;
@@ -266,6 +267,7 @@ notmuch_config_open (void *ctx,
 
     config->key_file = g_key_file_new ();
 
+    config->is_new = FALSE;
     config->database_path = NULL;
     config->user_name = NULL;
     config->user_primary_email = NULL;
@@ -435,6 +437,8 @@ notmuch_config_open (void *ctx,
     if (is_new_ret)
 	*is_new_ret = is_new;
 
+    config->is_new = is_new;
+
     return config;
 }
 
@@ -481,6 +485,13 @@ notmuch_config_save (notmuch_config_t *config)
     g_free (data);
     return 0;
 }
+
+notmuch_bool_t
+notmuch_config_is_new (notmuch_config_t *config)
+{
+    return config->is_new;
+}
+
 
 static const char **
 _config_get_list (notmuch_config_t *config,

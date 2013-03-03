@@ -256,6 +256,9 @@ notmuch_config_close (notmuch_config_t *config);
 int
 notmuch_config_save (notmuch_config_t *config);
 
+notmuch_bool_t
+notmuch_config_is_new (notmuch_config_t *config);
+
 const char *
 notmuch_config_get_database_path (notmuch_config_t *config);
 
