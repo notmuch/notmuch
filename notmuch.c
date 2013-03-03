@@ -258,6 +258,7 @@ main (int argc, char *argv[])
     char *talloc_report;
     const char *command_name = NULL;
     command_t *command;
+    char *config_file_name = NULL;
     notmuch_config_t *config;
     notmuch_bool_t print_help=FALSE, print_version=FALSE;
     int opt_index;
@@ -266,6 +267,7 @@ main (int argc, char *argv[])
     notmuch_opt_desc_t options[] = {
 	{ NOTMUCH_OPT_BOOLEAN, &print_help, "help", 'h', 0 },
 	{ NOTMUCH_OPT_BOOLEAN, &print_version, "version", 'v', 0 },
+	{ NOTMUCH_OPT_STRING, &config_file_name, "config", 'c', 0 },
 	{ 0, 0, 0, 0, 0 }
     };
 
@@ -303,7 +305,7 @@ main (int argc, char *argv[])
 	return 1;
     }
 
-    config = notmuch_config_open (local, NULL, command->create_config);
+    config = notmuch_config_open (local, config_file_name, command->create_config);
     if (!config)
 	return 1;
 
