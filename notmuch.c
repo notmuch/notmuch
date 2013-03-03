@@ -70,6 +70,18 @@ static command_t commands[] = {
       "This message, or more detailed help for the named command." }
 };
 
+static command_t *
+find_command (const char *name)
+{
+    size_t i;
+
+    for (i = 0; i < ARRAY_SIZE (commands); i++)
+	if (strcmp (name, commands[i].name) == 0)
+	    return &commands[i];
+
+    return NULL;
+}
+
 int notmuch_format_version;
 
 static void
@@ -139,7 +151,6 @@ static int
 notmuch_help_command (void *ctx, int argc, char *argv[])
 {
     command_t *command;
-    unsigned int i;
 
     argc--; argv++; /* Ignore "help" */
 
@@ -158,13 +169,10 @@ notmuch_help_command (void *ctx, int argc, char *argv[])
 	return 0;
     }
 
-    for (i = 0; i < ARRAY_SIZE (commands); i++) {
-	command = &commands[i];
-
-	if (strcmp (argv[0], command->name) == 0) {
-	    char *page = talloc_asprintf (ctx, "notmuch-%s", command->name);
-	    exec_man (page);
-	}
+    command = find_command (argv[0]);
+    if (command) {
+	char *page = talloc_asprintf (ctx, "notmuch-%s", command->name);
+	exec_man (page);
     }
 
     if (strcmp (argv[0], "search-terms") == 0) {
@@ -247,10 +255,11 @@ int
 main (int argc, char *argv[])
 {
     void *local;
+    char *talloc_report;
     command_t *command;
-    unsigned int i;
     notmuch_bool_t print_help=FALSE, print_version=FALSE;
     int opt_index;
+    int ret = 0;
 
     notmuch_opt_desc_t options[] = {
 	{ NOTMUCH_OPT_BOOLEAN, &print_help, "help", 'h', 0 },
@@ -285,39 +294,32 @@ main (int argc, char *argv[])
 	return 0;
     }
 
-    for (i = 0; i < ARRAY_SIZE (commands); i++) {
-	command = &commands[i];
+    command = find_command (argv[opt_index]);
+    if (!command) {
+	fprintf (stderr, "Error: Unknown command '%s' (see \"notmuch help\")\n",
+		 argv[opt_index]);
+	return 1;
+    }
 
-	if (strcmp (argv[opt_index], command->name) == 0) {
-	    int ret;
-	    char *talloc_report;
+    ret = (command->function)(local, argc - opt_index, argv + opt_index);
 
-	    ret = (command->function)(local, argc - opt_index, argv + opt_index);
+    talloc_report = getenv ("NOTMUCH_TALLOC_REPORT");
+    if (talloc_report && strcmp (talloc_report, "") != 0) {
+	/* this relies on the previous call to
+	 * talloc_enable_null_tracking
+	 */
 
-	    talloc_report = getenv ("NOTMUCH_TALLOC_REPORT");
-
-	    /* this relies on the previous call to
-	     * talloc_enable_null_tracking */
-
-	    if (talloc_report && strcmp (talloc_report, "") != 0) {
-		FILE *report = fopen (talloc_report, "w");
-		if (report) {
-		    talloc_report_full (NULL, report);
-		} else {
-		    ret = 1;
-		    fprintf (stderr, "ERROR: unable to write talloc log. ");
-		    perror (talloc_report);
-		}
-	    }
-
-	    return ret;
+	FILE *report = fopen (talloc_report, "w");
+	if (report) {
+	    talloc_report_full (NULL, report);
+	} else {
+	    ret = 1;
+	    fprintf (stderr, "ERROR: unable to write talloc log. ");
+	    perror (talloc_report);
 	}
     }
 
-    fprintf (stderr, "Error: Unknown command '%s' (see \"notmuch help\")\n",
-	     argv[1]);
-
     talloc_free (local);
 
-    return 1;
+    return ret;
 }
