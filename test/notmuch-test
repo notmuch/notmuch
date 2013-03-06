@@ -65,6 +65,7 @@ TESTS="
   hex-escaping
   parse-time-string
   search-date
+  thread-replies
 "
 TESTS=${NOTMUCH_TESTS:=$TESTS}
 
