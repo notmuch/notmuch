@@ -12,7 +12,6 @@ test_description='test of proper handling of in-reply-to and references headers'
 . ./test-lib.sh
 
 test_begin_subtest "Use References when In-Reply-To is broken"
-test_subtest_known_broken
 add_message '[id]="foo@one.com"' \
     '[subject]=one'
 add_message '[in-reply-to]="mumble"' \
@@ -47,7 +46,6 @@ expected=`echo "$expected" | notmuch_json_show_sanitize`
 test_expect_equal_json "$output" "$expected"
 
 test_begin_subtest "Prefer References to In-Reply-To"
-test_subtest_known_broken
 add_message '[id]="foo@two.com"' \
     '[subject]=two'
 add_message '[in-reply-to]="<bar@baz.com>"' \
@@ -104,7 +102,6 @@ expected=`echo "$expected" | notmuch_json_show_sanitize`
 test_expect_equal_json "$output" "$expected"
 
 test_begin_subtest "Use last Reference"
-test_subtest_known_broken
 add_message '[id]="foo@four.com"' \
     '[subject]="four"'
 add_message '[id]="bar@four.com"' \
