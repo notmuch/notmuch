@@ -112,13 +112,25 @@ For example, if you wanted to remove an \"inbox\" tag and add an
 		  (select-window (posn-window (event-start last-input-event)))
 		  (button-activate button)))
 
+(defun notmuch-command-to-string (&rest args)
+  "Synchronously invoke \"notmuch\" with the given list of arguments.
+
+If notmuch exits with a non-zero status, output from the process
+will appear in a buffer named \"*Notmuch errors*\" and an error
+will be signaled.
+
+Otherwise the output will be returned"
+  (with-temp-buffer
+    (let* ((status (apply #'call-process notmuch-command nil t nil args))
+	   (output (buffer-string)))
+      (notmuch-check-exit-status status (cons notmuch-command args) output)
+      output)))
+
 (defun notmuch-version ()
   "Return a string with the notmuch version number."
   (let ((long-string
 	 ;; Trim off the trailing newline.
-	 (substring (shell-command-to-string
-		     (concat notmuch-command " --version"))
-		    0 -1)))
+	 (substring (notmuch-command-to-string "--version") 0 -1)))
     (if (string-match "^notmuch\\( version\\)? \\(.*\\)$"
 		      long-string)
 	(match-string 2 long-string)
@@ -127,9 +139,7 @@ For example, if you wanted to remove an \"inbox\" tag and add an
 (defun notmuch-config-get (item)
   "Return a value from the notmuch configuration."
   ;; Trim off the trailing newline
-  (substring (shell-command-to-string
-	      (concat notmuch-command " config get " item))
-	      0 -1))
+  (substring (notmuch-command-to-string "config" "get" item) 0 -1))
 
 (defun notmuch-database-path ()
   "Return the database.path value from the notmuch configuration."
