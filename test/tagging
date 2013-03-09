@@ -30,6 +30,22 @@ test_expect_equal "$output" "\
 thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; One (inbox tag1 unread)
 thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; Two (inbox tag1 unread)"
 
+test_begin_subtest "Remove all"
+notmuch tag --remove-all One
+notmuch tag --remove-all +tag5 +tag6 +unread Two
+output=$(notmuch search \* | notmuch_search_sanitize)
+test_expect_equal "$output" "\
+thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; One ()
+thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; Two (tag5 tag6 unread)"
+
+test_begin_subtest "Remove all with a no-op"
+notmuch tag +inbox +tag1 +unread One
+notmuch tag --remove-all +foo +inbox +tag1 -foo +unread Two
+output=$(notmuch search \* | notmuch_search_sanitize)
+test_expect_equal "$output" "\
+thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; One (inbox tag1 unread)
+thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; Two (inbox tag1 unread)"
+
 test_begin_subtest "Special characters in tags"
 notmuch tag +':" ' \*
 notmuch tag -':" ' Two
