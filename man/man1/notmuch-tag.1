@@ -4,7 +4,7 @@ notmuch-tag \- add/remove tags for all messages matching the search terms
 
 .SH SYNOPSIS
 .B notmuch tag
-.RI "+<" tag ">|\-<" tag "> [...] [\-\-] <" search-term "> [...]"
+.RI [ options "...] +<" tag ">|\-<" tag "> [...] [\-\-] <" search-term "> [...]"
 
 .B notmuch tag
 .RI "--batch"
@@ -38,6 +38,16 @@ details.
 Supported options for
 .B tag
 include
+.RS 4
+.TP 4
+.BR \-\-remove\-all
+
+Remove all tags from each message matching the search terms before
+applying the tag changes appearing on the command line. This means
+setting the tags of each message to the tags to be added. If there are
+no tags to be added, the messages will have no tags.
+.RE
+
 .RS 4
 .TP 4
 .BR \-\-batch
