@@ -99,12 +99,15 @@ tag_query (void *ctx, notmuch_database_t *notmuch, const char *query_string,
     notmuch_message_t *message;
     int ret = NOTMUCH_STATUS_SUCCESS;
 
-    /* Optimize the query so it excludes messages that already have
-     * the specified set of tags. */
-    query_string = _optimize_tag_query (ctx, query_string, tag_ops);
-    if (query_string == NULL) {
-	fprintf (stderr, "Out of memory.\n");
-	return 1;
+    if (! (flags & TAG_FLAG_REMOVE_ALL)) {
+	/* Optimize the query so it excludes messages that already
+	 * have the specified set of tags. */
+	query_string = _optimize_tag_query (ctx, query_string, tag_ops);
+	if (query_string == NULL) {
+	    fprintf (stderr, "Out of memory.\n");
+	    return 1;
+	}
+	flags |= TAG_FLAG_PRE_OPTIMIZED;
     }
 
     query = notmuch_query_create (notmuch, query_string);
@@ -120,7 +123,7 @@ tag_query (void *ctx, notmuch_database_t *notmuch, const char *query_string,
 	 notmuch_messages_valid (messages) && ! interrupted;
 	 notmuch_messages_move_to_next (messages)) {
 	message = notmuch_messages_get (messages);
-	ret = tag_op_list_apply (message, tag_ops, flags | TAG_FLAG_PRE_OPTIMIZED);
+	ret = tag_op_list_apply (message, tag_ops, flags);
 	notmuch_message_destroy (message);
 	if (ret != NOTMUCH_STATUS_SUCCESS)
 	    break;
@@ -186,6 +189,7 @@ notmuch_tag_command (notmuch_config_t *config, int argc, char *argv[])
     struct sigaction action;
     tag_op_flag_t tag_flags = TAG_FLAG_NONE;
     notmuch_bool_t batch = FALSE;
+    notmuch_bool_t remove_all = FALSE;
     FILE *input = stdin;
     char *input_file_name = NULL;
     int opt_index;
@@ -201,6 +205,7 @@ notmuch_tag_command (notmuch_config_t *config, int argc, char *argv[])
     notmuch_opt_desc_t options[] = {
 	{ NOTMUCH_OPT_BOOLEAN, &batch, "batch", 0, 0 },
 	{ NOTMUCH_OPT_STRING, &input_file_name, "input", 'i', 0 },
+	{ NOTMUCH_OPT_BOOLEAN, &remove_all, "remove-all", 0, 0 },
 	{ 0, 0, 0, 0, 0 }
     };
 
@@ -223,6 +228,10 @@ notmuch_tag_command (notmuch_config_t *config, int argc, char *argv[])
 	    fprintf (stderr, "Can't specify both cmdline and stdin!\n");
 	    return 1;
 	}
+	if (remove_all) {
+	    fprintf (stderr, "Can't specify both --remove-all and --batch\n");
+	    return 1;
+	}
     } else {
 	tag_ops = tag_op_list_create (config);
 	if (tag_ops == NULL) {
@@ -234,7 +243,7 @@ notmuch_tag_command (notmuch_config_t *config, int argc, char *argv[])
 				    &query_string, tag_ops))
 	    return 1;
 
-	if (tag_op_list_size (tag_ops) == 0) {
+	if (tag_op_list_size (tag_ops) == 0 && ! remove_all) {
 	    fprintf (stderr, "Error: 'notmuch tag' requires at least one tag to add or remove.\n");
 	    return 1;
 	}
@@ -246,6 +255,9 @@ notmuch_tag_command (notmuch_config_t *config, int argc, char *argv[])
 
     if (notmuch_config_get_maildir_synchronize_flags (config))
 	tag_flags |= TAG_FLAG_MAILDIR_SYNC;
+
+    if (remove_all)
+	tag_flags |= TAG_FLAG_REMOVE_ALL;
 
     if (batch)
 	ret = tag_file (config, notmuch, tag_flags, input);
