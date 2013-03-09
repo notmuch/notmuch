@@ -233,6 +233,11 @@ notmuch_tag_command (notmuch_config_t *config, int argc, char *argv[])
 	if (parse_tag_command_line (config, argc - opt_index, argv + opt_index,
 				    &query_string, tag_ops))
 	    return 1;
+
+	if (tag_op_list_size (tag_ops) == 0) {
+	    fprintf (stderr, "Error: 'notmuch tag' requires at least one tag to add or remove.\n");
+	    return 1;
+	}
     }
 
     if (notmuch_database_open (notmuch_config_get_database_path (config),

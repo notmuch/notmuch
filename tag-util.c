@@ -188,11 +188,6 @@ parse_tag_command_line (void *ctx, int argc, char **argv,
 	tag_op_list_append (tag_ops, argv[i] + 1, is_remove);
     }
 
-    if (tag_op_list_size (tag_ops) == 0) {
-	fprintf (stderr, "Error: 'notmuch tag' requires at least one tag to add or remove.\n");
-	return TAG_PARSE_INVALID;
-    }
-
     *query_str = query_string_from_args (ctx, argc - i, &argv[i]);
 
     if (*query_str == NULL || **query_str == '\0') {
