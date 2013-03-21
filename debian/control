@@ -123,7 +123,9 @@ Description: thread-based email index, search and tagging (vim interface)
 
 Package: notmuch-mutt
 Architecture: all
-Depends: notmuch, libmail-box-perl, libmailtools-perl,
+Depends:
+ notmuch (>= 0.4),
+ libmail-box-perl, libmailtools-perl,
  libstring-shellquote-perl, libterm-readline-gnu-perl,
  libfile-which-perl,
  ${misc:Depends}
