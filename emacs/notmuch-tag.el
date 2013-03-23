@@ -1,5 +1,6 @@
 ;; notmuch-tag.el --- tag messages within emacs
 ;;
+;; Copyright © Damien Cassou
 ;; Copyright © Carl Worth
 ;;
 ;; This file is part of Notmuch.
@@ -18,10 +19,143 @@
 ;; along with Notmuch.  If not, see <http://www.gnu.org/licenses/>.
 ;;
 ;; Authors: Carl Worth <cworth@cworth.org>
+;;          Damien Cassou <damien.cassou@gmail.com>
+;;
+;;; Code:
+;;
 
-(eval-when-compile (require 'cl))
+(require 'cl)
 (require 'crm)
 (require 'notmuch-lib)
+
+(defcustom notmuch-tag-formats
+  '(("unread" (propertize tag 'face '(:foreground "red")))
+    ("flagged" (notmuch-tag-format-image-data tag (notmuch-tag-star-icon))))
+  "Custom formats for individual tags.
+
+This gives a list that maps from tag names to lists of formatting
+expressions.  The car of each element gives a tag name and the
+cdr gives a list of Elisp expressions that modify the tag.  If
+the list is empty, the tag will simply be hidden.  Otherwise,
+each expression will be evaluated in order: for the first
+expression, the variable `tag' will be bound to the tag name; for
+each later expression, the variable `tag' will be bound to the
+result of the previous expression.  In this way, each expression
+can build on the formatting performed by the previous expression.
+The result of the last expression will displayed in place of the
+tag.
+
+For example, to replace a tag with another string, simply use
+that string as a formatting expression.  To change the foreground
+of a tag to red, use the expression
+  (propertize tag 'face '(:foreground \"red\"))
+
+See also `notmuch-tag-format-image', which can help replace tags
+with images."
+
+  :group 'notmuch-search
+  :group 'notmuch-show
+  :type '(alist :key-type (string :tag "Tag")
+		:extra-offset -3
+		:value-type
+		(radio :format "%v"
+		       (const :tag "Hidden" nil)
+		       (set :tag "Modified"
+			    (string :tag "Display as")
+			    (list :tag "Face" :extra-offset -4
+				  (const :format "" :inline t
+					 (propertize tag 'face))
+				  (list :format "%v"
+					(const :format "" quote)
+					custom-face-edit))
+			    (list :format "%v" :extra-offset -4
+				  (const :format "" :inline t
+					 (notmuch-tag-format-image-data tag))
+				  (choice :tag "Image"
+					  (const :tag "Star"
+						 (notmuch-tag-star-icon))
+					  (const :tag "Empty star"
+						 (notmuch-tag-star-empty-icon))
+					  (const :tag "Tag"
+						 (notmuch-tag-tag-icon))
+					  (string :tag "Custom")))
+			    (sexp :tag "Custom")))))
+
+(defun notmuch-tag-format-image-data (tag data)
+  "Replace TAG with image DATA, if available.
+
+This function returns a propertized string that will display image
+DATA in place of TAG.This is designed for use in
+`notmuch-tag-formats'.
+
+DATA is the content of an SVG picture (e.g., as returned by
+`notmuch-tag-star-icon')."
+  (propertize tag 'display
+	      `(image :type svg
+		      :data ,data
+		      :ascent center
+		      :mask heuristic)))
+
+(defun notmuch-tag-star-icon ()
+  "Return SVG data representing a star icon.
+This can be used with `notmuch-tag-format-image-data'."
+"<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>
+<svg version=\"1.1\" width=\"16\" height=\"16\">
+  <g transform=\"translate(-242.81601,-315.59635)\">
+    <path
+       d=\"m 290.25762,334.31206 -17.64143,-11.77975 -19.70508,7.85447 5.75171,-20.41814 -13.55925,-16.31348 21.19618,-0.83936 11.325,-17.93675 7.34825,19.89939 20.55849,5.22795 -16.65471,13.13786 z\"
+       transform=\"matrix(0.2484147,-0.02623394,0.02623394,0.2484147,174.63605,255.37691)\"
+       style=\"fill:#ffff00;fill-rule:evenodd;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1\" />
+  </g>
+</svg>")
+
+(defun notmuch-tag-star-empty-icon ()
+  "Return SVG data representing an empty star icon.
+This can be used with `notmuch-tag-format-image-data'."
+  "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>
+<svg version=\"1.1\" width=\"16\" height=\"16\">
+  <g transform=\"translate(-242.81601,-315.59635)\">
+    <path
+       d=\"m 290.25762,334.31206 -17.64143,-11.77975 -19.70508,7.85447 5.75171,-20.41814 -13.55925,-16.31348 21.19618,-0.83936 11.325,-17.93675 7.34825,19.89939 20.55849,5.22795 -16.65471,13.13786 z\"
+       transform=\"matrix(0.2484147,-0.02623394,0.02623394,0.2484147,174.63605,255.37691)\"
+       style=\"fill:#d6d6d1;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1\" />
+  </g>
+</svg>")
+
+(defun notmuch-tag-tag-icon ()
+  "Return SVG data representing a tag icon.
+This can be used with `notmuch-tag-format-image-data'."
+  "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>
+<svg version=\"1.1\" width=\"16\" height=\"16\">
+  <g transform=\"translate(0,-1036.3622)\">
+    <path
+       d=\"m 0.44642857,1040.9336 12.50000043,0 2.700893,3.6161 -2.700893,3.616 -12.50000043,0 z\"
+       style=\"fill:#ffff00;fill-opacity:1;fill-rule:evenodd;stroke:#000000;stroke-width:0.25;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1\" />
+  </g>
+</svg>")
+
+(defun notmuch-tag-format-tag (tag)
+  "Format TAG by looking into `notmuch-tag-formats'."
+  (let ((formats (assoc tag notmuch-tag-formats)))
+    (cond
+     ((null formats)		;; - Tag not in `notmuch-tag-formats',
+      tag)			;;   the format is the tag itself.
+     ((null (cdr formats))	;; - Tag was deliberately hidden,
+      nil)			;;   no format must be returned
+     (t				;; - Tag was found and has formats,
+      (let ((tag tag))		;;   we must apply all the formats.
+	(dolist (format (cdr formats) tag)
+	  (setq tag (eval format))))))))
+
+(defun notmuch-tag-format-tags (tags)
+  "Return a string representing formatted TAGS."
+  (notmuch-combine-face-text-property-string
+   (mapconcat #'identity
+	      ;; nil indicated that the tag was deliberately hidden
+	      (delq nil (mapcar #'notmuch-tag-format-tag tags))
+	      " ")
+   'notmuch-tag-face
+   t))
 
 (defcustom notmuch-before-tag-hook nil
   "Hooks that are run before tags of a message are modified.

@@ -797,9 +797,8 @@ non-authors is found, assume that all of the authors match."
     (notmuch-search-insert-authors format-string (plist-get result :authors)))
 
    ((string-equal field "tags")
-    (let ((tags-str (mapconcat 'identity (plist-get result :tags) " ")))
-      (insert (propertize (format format-string tags-str)
-			  'face 'notmuch-tag-face))))))
+    (let ((tags (plist-get result :tags)))
+      (insert (format format-string (notmuch-tag-format-tags tags)))))))
 
 (defun notmuch-search-show-result (result &optional pos)
   "Insert RESULT at POS or the end of the buffer if POS is null."

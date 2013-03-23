@@ -362,8 +362,7 @@ operation on the contents of the current buffer."
     (if (re-search-forward "(\\([^()]*\\))$" (line-end-position) t)
 	(let ((inhibit-read-only t))
 	  (replace-match (concat "("
-				 (propertize (mapconcat 'identity tags " ")
-					     'face 'notmuch-tag-face)
+				 (notmuch-tag-format-tags tags)
 				 ")"))))))
 
 (defun notmuch-clean-address (address)
@@ -441,8 +440,7 @@ message at DEPTH in the current thread."
 	    " ("
 	    date
 	    ") ("
-	    (propertize (mapconcat 'identity tags " ")
-			'face 'notmuch-tag-face)
+	    (notmuch-tag-format-tags tags)
 	    ")\n")
     (overlay-put (make-overlay start (point)) 'face 'notmuch-message-summary-face)))
 
