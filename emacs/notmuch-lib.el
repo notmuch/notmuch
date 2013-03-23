@@ -355,6 +355,14 @@ OBJECT."
 	(setq pos next))))
   object)
 
+(defun notmuch-combine-face-text-property-string (string face &optional below)
+  (notmuch-combine-face-text-property
+   0
+   (length string)
+   face
+   below
+   string))
+
 (defun notmuch-logged-error (msg &optional extra)
   "Log MSG and EXTRA to *Notmuch errors* and signal MSG.
 
