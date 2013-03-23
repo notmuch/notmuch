@@ -45,8 +45,9 @@ function (param_type param, param_type param)
    - likewise, there is a space following keywords such as if and while
    - every binary operator should have space on either side.
 
-* No trailing whitespace. Please enable the standard pre-commit hook
-  in git (or an equivalent hook).
+* No trailing whitespace. Please enable the standard pre-commit hook in git
+  (or an equivalent hook). The standard pre-commit hook is enabled by simply
+  renaming file '.git/hooks/pre-commit.sample' to '.git/hooks/pre-commit' .
 
 * The name in a function prototype should start at the beginning of a line.
 
