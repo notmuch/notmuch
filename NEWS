@@ -6,6 +6,18 @@ Command-Line Interface
 
 Deprecated commands "part" and "search-tags" are removed.
 
+Bash command-line completion
+
+  The notmuch command-line completion support for the bash shell has
+  been rewritten. Supported completions include all the notmuch
+  commands, command-line arguments, values for keyword arguments,
+  search prefixes (such as "subject:" or "from:") in all commands that
+  use search terms, tags after + and - in `notmuch tag`, tags after
+  "tag:" prefix, user's email addresses after "from:" and "to:"
+  prefixes, and config options (and some config option values) in
+  `notmuch config`. The new completion support depends on the
+  bash-completion package.
+
 Vim Front-End
 -------------
 
