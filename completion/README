@@ -3,8 +3,18 @@ notmuch completion
 This directory contains support for various shells to automatically
 complete partially entered notmuch command lines.
 
-notmuch-completion.bash	Command-line completion for the bash shell
+notmuch-completion.bash
 
-notmuch-completion.tcsh	Command-line completion for the tcsh shell
+  Command-line completion for the bash shell. This depends on
+  bash-completion package [1] version 2.0, which depends on bash
+  version 3.2 or later.
 
-notmuch-completion.zsh	Command-line completion for the zsh shell
+  [1] http://bash-completion.alioth.debian.org/
+
+notmuch-completion.tcsh
+
+  Command-line completion for the tcsh shell.
+
+notmuch-completion.zsh
+
+  Command-line completion for the zsh shell.
