@@ -335,6 +335,8 @@ show_text_part_content (GMimeObject *part, GMimeStream *stream_out,
 }
 
 #ifdef GMIME_ATLEAST_26
+
+/* Get signature status string (GMime 2.6) */
 static const char*
 signature_status_to_string (GMimeSignatureStatus x)
 {
@@ -348,25 +350,8 @@ signature_status_to_string (GMimeSignatureStatus x)
     }
     return "unknown";
 }
-#else
-static const char*
-signer_status_to_string (GMimeSignerStatus x)
-{
-    switch (x) {
-    case GMIME_SIGNER_STATUS_NONE:
-	return "none";
-    case GMIME_SIGNER_STATUS_GOOD:
-	return "good";
-    case GMIME_SIGNER_STATUS_BAD:
-	return "bad";
-    case GMIME_SIGNER_STATUS_ERROR:
-	return "error";
-    }
-    return "unknown";
-}
-#endif
 
-#ifdef GMIME_ATLEAST_26
+/* Signature status sprinter (GMime 2.6) */
 static void
 format_part_sigstatus_sprinter (sprinter_t *sp, mime_node_t *node)
 {
@@ -441,7 +426,27 @@ format_part_sigstatus_sprinter (sprinter_t *sp, mime_node_t *node)
 
     sp->end (sp);
 }
-#else
+
+#else /* GMIME_ATLEAST_26 */
+
+/* Get signature status string (GMime 2.4) */
+static const char*
+signer_status_to_string (GMimeSignerStatus x)
+{
+    switch (x) {
+    case GMIME_SIGNER_STATUS_NONE:
+	return "none";
+    case GMIME_SIGNER_STATUS_GOOD:
+	return "good";
+    case GMIME_SIGNER_STATUS_BAD:
+	return "bad";
+    case GMIME_SIGNER_STATUS_ERROR:
+	return "error";
+    }
+    return "unknown";
+}
+
+/* Signature status sprinter (GMime 2.4) */
 static void
 format_part_sigstatus_sprinter (sprinter_t *sp, mime_node_t *node)
 {
@@ -504,7 +509,8 @@ format_part_sigstatus_sprinter (sprinter_t *sp, mime_node_t *node)
 
     sp->end (sp);
 }
-#endif
+
+#endif /* GMIME_ATLEAST_26 */
 
 static notmuch_status_t
 format_part_text (const void *ctx, sprinter_t *sp, mime_node_t *node,
