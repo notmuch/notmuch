@@ -20,6 +20,48 @@
 
 #include "notmuch-client.h"
 
+#ifdef GMIME_ATLEAST_26
+
+/* Create a GPG context (GMime 2.6) */
+static notmuch_crypto_context_t *
+create_gpg_context (void)
+{
+    notmuch_crypto_context_t *gpgctx;
+
+    /* TODO: GMimePasswordRequestFunc */
+    gpgctx = g_mime_gpg_context_new (NULL, "gpg");
+    if (! gpgctx)
+	return NULL;
+
+    g_mime_gpg_context_set_use_agent ((GMimeGpgContext *) gpgctx, TRUE);
+    g_mime_gpg_context_set_always_trust ((GMimeGpgContext *) gpgctx, FALSE);
+
+    return gpgctx;
+}
+
+#else /* GMIME_ATLEAST_26 */
+
+/* Create a GPG context (GMime 2.4) */
+static notmuch_crypto_context_t *
+create_gpg_context (void)
+{
+    GMimeSession *session;
+    notmuch_crypto_context_t *gpgctx;
+
+    session = g_object_new (g_mime_session_get_type (), NULL);
+    gpgctx = g_mime_gpg_context_new (session, "gpg");
+    g_object_unref (session);
+
+    if (! gpgctx)
+	return NULL;
+
+    g_mime_gpg_context_set_always_trust ((GMimeGpgContext *) gpgctx, FALSE);
+
+    return gpgctx;
+}
+
+#endif /* GMIME_ATLEAST_26 */
+
 /* for the specified protocol return the context pointer (initializing
  * if needed) */
 notmuch_crypto_context_t *
@@ -33,28 +75,14 @@ notmuch_crypto_get_context (notmuch_crypto_t *crypto, const char *protocol)
      * parameter names as defined in this document are
      * case-insensitive."  Thus, we use strcasecmp for the protocol.
      */
-    if ((strcasecmp (protocol, "application/pgp-signature") == 0)
-	|| (strcasecmp (protocol, "application/pgp-encrypted") == 0)) {
-	if (!crypto->gpgctx) {
-#ifdef GMIME_ATLEAST_26
-	    /* TODO: GMimePasswordRequestFunc */
-	    crypto->gpgctx = g_mime_gpg_context_new (NULL, "gpg");
-#else
-	    GMimeSession* session = g_object_new (g_mime_session_get_type(), NULL);
-	    crypto->gpgctx = g_mime_gpg_context_new (session, "gpg");
-	    g_object_unref (session);
-#endif
-	    if (crypto->gpgctx) {
-#ifdef GMIME_ATLEAST_26
-		g_mime_gpg_context_set_use_agent ((GMimeGpgContext*) crypto->gpgctx, TRUE);
-#endif
-		g_mime_gpg_context_set_always_trust ((GMimeGpgContext*) crypto->gpgctx, FALSE);
-	    } else {
+    if (strcasecmp (protocol, "application/pgp-signature") == 0 ||
+	strcasecmp (protocol, "application/pgp-encrypted") == 0) {
+	if (! crypto->gpgctx) {
+	    crypto->gpgctx = create_gpg_context ();
+	    if (! crypto->gpgctx)
 		fprintf (stderr, "Failed to construct gpg context.\n");
-	    }
 	}
 	cryptoctx = crypto->gpgctx;
-
     } else {
 	fprintf (stderr, "Unknown or unsupported cryptographic protocol.\n");
     }
