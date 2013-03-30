@@ -130,26 +130,163 @@ DONE:
 }
 
 #ifdef GMIME_ATLEAST_26
+
+/* Signature list destructor (GMime 2.6) */
 static int
 _signature_list_free (GMimeSignatureList **proxy)
 {
     g_object_unref (*proxy);
     return 0;
 }
-#else
+
+/* Set up signature list destructor (GMime 2.6) */
+static void
+set_signature_list_destructor (mime_node_t *node)
+{
+    GMimeSignatureList **proxy = talloc (node, GMimeSignatureList *);
+    if (proxy) {
+	*proxy = node->sig_list;
+	talloc_set_destructor (proxy, _signature_list_free);
+    }
+}
+
+/* Verify a signed mime node (GMime 2.6) */
+static void
+node_verify (mime_node_t *node, GMimeObject *part,
+	     notmuch_crypto_context_t *cryptoctx)
+{
+    GError *err = NULL;
+
+    node->verify_attempted = TRUE;
+    node->sig_list = g_mime_multipart_signed_verify
+	(GMIME_MULTIPART_SIGNED (part), cryptoctx, &err);
+
+    if (node->sig_list)
+	set_signature_list_destructor (node);
+    else
+	fprintf (stderr, "Failed to verify signed part: %s\n",
+		 err ? err->message : "no error explanation given");
+
+    if (err)
+	g_error_free (err);
+}
+
+/* Decrypt and optionally verify an encrypted mime node (GMime 2.6) */
+static void
+node_decrypt_and_verify (mime_node_t *node, GMimeObject *part,
+			 notmuch_crypto_context_t *cryptoctx)
+{
+    GError *err = NULL;
+    GMimeDecryptResult *decrypt_result = NULL;
+    GMimeMultipartEncrypted *encrypteddata = GMIME_MULTIPART_ENCRYPTED (part);
+
+    node->decrypt_attempted = TRUE;
+    node->decrypted_child = g_mime_multipart_encrypted_decrypt
+	(encrypteddata, cryptoctx, &decrypt_result, &err);
+    if (! node->decrypted_child) {
+	fprintf (stderr, "Failed to decrypt part: %s\n",
+		 err ? err->message : "no error explanation given");
+	goto DONE;
+    }
+
+    node->decrypt_success = TRUE;
+    node->verify_attempted = TRUE;
+
+    /* This may be NULL if the part is not signed. */
+    node->sig_list = g_mime_decrypt_result_get_signatures (decrypt_result);
+    if (node->sig_list) {
+	g_object_ref (node->sig_list);
+	set_signature_list_destructor (node);
+    }
+    g_object_unref (decrypt_result);
+
+ DONE:
+    if (err)
+	g_error_free (err);
+}
+
+#else /* GMIME_ATLEAST_26 */
+
+/* Signature validity destructor (GMime 2.4) */
 static int
 _signature_validity_free (GMimeSignatureValidity **proxy)
 {
     g_mime_signature_validity_free (*proxy);
     return 0;
 }
-#endif
+
+/* Set up signature validity destructor (GMime 2.4) */
+static void
+set_signature_validity_destructor (mime_node_t *node)
+{
+    GMimeSignatureValidity **proxy = talloc (node, GMimeSignatureValidity *);
+    if (proxy) {
+	*proxy = node->sig_validity;
+	talloc_set_destructor (proxy, _signature_validity_free);
+    }
+}
+
+/* Verify a signed mime node (GMime 2.4) */
+static void
+node_verify (mime_node_t *node, GMimeObject *part,
+	     notmuch_crypto_context_t *cryptoctx)
+{
+    GError *err = NULL;
+
+    node->verify_attempted = TRUE;
+    node->sig_validity = g_mime_multipart_signed_verify
+	(GMIME_MULTIPART_SIGNED (part), cryptoctx, &err);
+    if (node->sig_validity) {
+	set_signature_validity_destructor (node);
+    } else {
+	fprintf (stderr, "Failed to verify signed part: %s\n",
+		 err ? err->message : "no error explanation given");
+    }
+
+    if (err)
+	g_error_free (err);
+}
+
+/* Decrypt and optionally verify an encrypted mime node (GMime 2.4) */
+static void
+node_decrypt_and_verify (mime_node_t *node, GMimeObject *part,
+			 notmuch_crypto_context_t *cryptoctx)
+{
+    GError *err = NULL;
+    GMimeMultipartEncrypted *encrypteddata = GMIME_MULTIPART_ENCRYPTED (part);
+
+    node->decrypt_attempted = TRUE;
+    node->decrypted_child = g_mime_multipart_encrypted_decrypt
+	(encrypteddata, cryptoctx, &err);
+    if (! node->decrypted_child) {
+	fprintf (stderr, "Failed to decrypt part: %s\n",
+		 err ? err->message : "no error explanation given");
+	goto DONE;
+    }
+
+    node->decrypt_success = TRUE;
+    node->verify_attempted = TRUE;
+
+    /* The GMimeSignatureValidity returned here is a const, unlike the
+     * one returned by g_mime_multipart_signed_verify() in
+     * node_verify() above, so the destructor is not needed.
+     */
+    node->sig_validity = g_mime_multipart_encrypted_get_signature_validity (encrypteddata);
+    if (! node->sig_validity)
+	fprintf (stderr, "Failed to verify encrypted signed part: %s\n",
+		 err ? err->message : "no error explanation given");
+
+ DONE:
+    if (err)
+	g_error_free (err);
+}
+
+#endif  /* GMIME_ATLEAST_26 */
 
 static mime_node_t *
 _mime_node_create (mime_node_t *parent, GMimeObject *part)
 {
     mime_node_t *node = talloc_zero (parent, mime_node_t);
-    GError *err = NULL;
     notmuch_crypto_context_t *cryptoctx = NULL;
 
     /* Set basic node properties */
@@ -198,32 +335,7 @@ _mime_node_create (mime_node_t *parent, GMimeObject *part)
 		     "message (must be exactly 2)\n",
 		     node->nchildren);
 	} else {
-	    GMimeMultipartEncrypted *encrypteddata =
-		GMIME_MULTIPART_ENCRYPTED (part);
-	    node->decrypt_attempted = TRUE;
-#ifdef GMIME_ATLEAST_26
-	    GMimeDecryptResult *decrypt_result = NULL;
-	    node->decrypted_child = g_mime_multipart_encrypted_decrypt
-		(encrypteddata, cryptoctx, &decrypt_result, &err);
-#else
-	    node->decrypted_child = g_mime_multipart_encrypted_decrypt
-		(encrypteddata, cryptoctx, &err);
-#endif
-	    if (node->decrypted_child) {
-		node->decrypt_success = node->verify_attempted = TRUE;
-#ifdef GMIME_ATLEAST_26
-		/* This may be NULL if the part is not signed. */
-		node->sig_list = g_mime_decrypt_result_get_signatures (decrypt_result);
-		if (node->sig_list)
-		    g_object_ref (node->sig_list);
-		g_object_unref (decrypt_result);
-#else
-		node->sig_validity = g_mime_multipart_encrypted_get_signature_validity (encrypteddata);
-#endif
-	    } else {
-		fprintf (stderr, "Failed to decrypt part: %s\n",
-			 (err ? err->message : "no error explanation given"));
-	    }
+	    node_decrypt_and_verify (node, part, cryptoctx);
 	}
     } else if (GMIME_IS_MULTIPART_SIGNED (part) && node->ctx->crypto->verify && cryptoctx) {
 	if (node->nchildren != 2) {
@@ -232,55 +344,9 @@ _mime_node_create (mime_node_t *parent, GMimeObject *part)
 		     "(must be exactly 2)\n",
 		     node->nchildren);
 	} else {
-#ifdef GMIME_ATLEAST_26
-	    node->sig_list = g_mime_multipart_signed_verify
-		(GMIME_MULTIPART_SIGNED (part), cryptoctx, &err);
-	    node->verify_attempted = TRUE;
-
-	    if (!node->sig_list)
-		fprintf (stderr, "Failed to verify signed part: %s\n",
-			 (err ? err->message : "no error explanation given"));
-#else
-	    /* For some reason the GMimeSignatureValidity returned
-	     * here is not a const (inconsistent with that
-	     * returned by
-	     * g_mime_multipart_encrypted_get_signature_validity,
-	     * and therefore needs to be properly disposed of.
-	     *
-	     * In GMime 2.6, they're both non-const, so we'll be able
-	     * to clean up this asymmetry. */
-	    GMimeSignatureValidity *sig_validity = g_mime_multipart_signed_verify
-		(GMIME_MULTIPART_SIGNED (part), cryptoctx, &err);
-	    node->verify_attempted = TRUE;
-	    node->sig_validity = sig_validity;
-	    if (sig_validity) {
-		GMimeSignatureValidity **proxy =
-		    talloc (node, GMimeSignatureValidity *);
-		*proxy = sig_validity;
-		talloc_set_destructor (proxy, _signature_validity_free);
-	    }
-#endif
+	    node_verify (node, part, cryptoctx);
 	}
     }
-
-#ifdef GMIME_ATLEAST_26
-    /* sig_list may be created in both above cases, so we need to
-     * cleanly handle it here. */
-    if (node->sig_list) {
-	GMimeSignatureList **proxy = talloc (node, GMimeSignatureList *);
-	*proxy = node->sig_list;
-	talloc_set_destructor (proxy, _signature_list_free);
-    }
-#endif
-
-#ifndef GMIME_ATLEAST_26
-    if (node->verify_attempted && !node->sig_validity)
-	fprintf (stderr, "Failed to verify signed part: %s\n",
-		 (err ? err->message : "no error explanation given"));
-#endif
-
-    if (err)
-	g_error_free (err);
 
     return node;
 }
