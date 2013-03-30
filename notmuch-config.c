@@ -395,39 +395,28 @@ notmuch_config_open (void *ctx,
      * the configuration file, we add some comments to help the user
      * understand what can be done. */
     if (config->is_new)
-    {
 	g_key_file_set_comment (config->key_file, NULL, NULL,
 				toplevel_config_comment, NULL);
-    }
 
     if (! file_had_database_group)
-    {
 	g_key_file_set_comment (config->key_file, "database", NULL,
 				database_config_comment, NULL);
-    }
 
     if (! file_had_new_group)
-    {
 	g_key_file_set_comment (config->key_file, "new", NULL,
 				new_config_comment, NULL);
-    }
 
     if (! file_had_user_group)
-    {
 	g_key_file_set_comment (config->key_file, "user", NULL,
 				user_config_comment, NULL);
-    }
 
     if (! file_had_maildir_group)
-    {
 	g_key_file_set_comment (config->key_file, "maildir", NULL,
 				maildir_config_comment, NULL);
-    }
 
-    if (! file_had_search_group) {
+    if (! file_had_search_group)
 	g_key_file_set_comment (config->key_file, "search", NULL,
 				search_config_comment, NULL);
-    }
 
     return config;
 }
