@@ -38,4 +38,50 @@ test_expect_equal \
     "0" \
     "`notmuch count --output=threads from:cworth and not from:cworth`"
 
+test_begin_subtest "message count is the default for batch count"
+notmuch count --batch >OUTPUT <<EOF
+
+from:cworth
+EOF
+notmuch count --output=messages >EXPECTED
+notmuch count --output=messages from:cworth >>EXPECTED
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "batch message count"
+notmuch count --batch --output=messages >OUTPUT <<EOF
+from:cworth
+
+tag:inbox
+EOF
+notmuch count --output=messages from:cworth >EXPECTED
+notmuch count --output=messages >>EXPECTED
+notmuch count --output=messages tag:inbox >>EXPECTED
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "batch thread count"
+notmuch count --batch --output=threads >OUTPUT <<EOF
+
+from:cworth
+from:cworth and not from:cworth
+foo
+EOF
+notmuch count --output=threads >EXPECTED
+notmuch count --output=threads from:cworth >>EXPECTED
+notmuch count --output=threads from:cworth and not from:cworth >>EXPECTED
+notmuch count --output=threads foo >>EXPECTED
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "batch message count with input file"
+cat >INPUT <<EOF
+from:cworth
+
+tag:inbox
+EOF
+notmuch count --input=INPUT --output=messages >OUTPUT
+notmuch count --output=messages from:cworth >EXPECTED
+notmuch count --output=messages >>EXPECTED
+notmuch count --output=messages tag:inbox >>EXPECTED
+test_expect_equal_file EXPECTED OUTPUT
+
+
 test_done
