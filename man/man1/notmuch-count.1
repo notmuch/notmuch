@@ -46,6 +46,26 @@ Output the number of matching threads.
 Specify whether to omit messages matching search.tag_exclude from the
 count (the default) or not.
 .RE
+
+.RS 4
+.TP 4
+.BR \-\-batch
+
+Read queries from a file (stdin by default), one per line, and output
+the number of matching messages (or threads) to stdout, one per
+line. On an empty input line the count of all messages (or threads) in
+the database will be output. This option is not compatible with
+specifying search terms on the command line.
+.RE
+
+.RS 4
+.TP 4
+.BR "\-\-input=" <filename>
+
+Read input from given file, instead of from stdin. Implies
+.BR --batch .
+.RE
+
 .RE
 .RE
 
