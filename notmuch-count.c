@@ -62,6 +62,27 @@ print_count (notmuch_database_t *notmuch, const char *query_str,
     return 0;
 }
 
+static int
+count_file (notmuch_database_t *notmuch, FILE *input, const char **exclude_tags,
+	    size_t exclude_tags_length, int output)
+{
+    char *line = NULL;
+    ssize_t line_len;
+    size_t line_size;
+    int ret = 0;
+
+    while (!ret && (line_len = getline (&line, &line_size, input)) != -1) {
+	chomp_newline (line);
+	ret = print_count (notmuch, line, exclude_tags, exclude_tags_length,
+			   output);
+    }
+
+    if (line)
+	free (line);
+
+    return ret;
+}
+
 int
 notmuch_count_command (notmuch_config_t *config, int argc, char *argv[])
 {
@@ -72,6 +93,9 @@ notmuch_count_command (notmuch_config_t *config, int argc, char *argv[])
     int exclude = EXCLUDE_TRUE;
     const char **search_exclude_tags = NULL;
     size_t search_exclude_tags_length = 0;
+    notmuch_bool_t batch = FALSE;
+    FILE *input = stdin;
+    char *input_file_name = NULL;
     int ret;
 
     notmuch_opt_desc_t options[] = {
@@ -83,12 +107,29 @@ notmuch_count_command (notmuch_config_t *config, int argc, char *argv[])
 	  (notmuch_keyword_t []){ { "true", EXCLUDE_TRUE },
 				  { "false", EXCLUDE_FALSE },
 				  { 0, 0 } } },
+	{ NOTMUCH_OPT_BOOLEAN, &batch, "batch", 0, 0 },
+	{ NOTMUCH_OPT_STRING, &input_file_name, "input", 'i', 0 },
 	{ 0, 0, 0, 0, 0 }
     };
 
     opt_index = parse_arguments (argc, argv, options, 1);
 
     if (opt_index < 0) {
+	return 1;
+    }
+
+    if (input_file_name) {
+	batch = TRUE;
+	input = fopen (input_file_name, "r");
+	if (input == NULL) {
+	    fprintf (stderr, "Error opening %s for reading: %s\n",
+		     input_file_name, strerror (errno));
+	    return 1;
+	}
+    }
+
+    if (batch && opt_index != argc) {
+	fprintf (stderr, "--batch and query string are not compatible\n");
 	return 1;
     }
 
@@ -107,10 +148,17 @@ notmuch_count_command (notmuch_config_t *config, int argc, char *argv[])
 	    (config, &search_exclude_tags_length);
     }
 
-    ret = print_count (notmuch, query_str, search_exclude_tags,
-		       search_exclude_tags_length, output);
+    if (batch)
+	ret = count_file (notmuch, input, search_exclude_tags,
+			  search_exclude_tags_length, output);
+    else
+	ret = print_count (notmuch, query_str, search_exclude_tags,
+			   search_exclude_tags_length, output);
 
     notmuch_database_destroy (notmuch);
+
+    if (input != stdin)
+	fclose (input);
 
     return ret;
 }
