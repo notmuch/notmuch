@@ -32,16 +32,47 @@ enum {
     EXCLUDE_FALSE,
 };
 
+static int
+print_count (notmuch_database_t *notmuch, const char *query_str,
+	     const char **exclude_tags, size_t exclude_tags_length, int output)
+{
+    notmuch_query_t *query;
+    size_t i;
+
+    query = notmuch_query_create (notmuch, query_str);
+    if (query == NULL) {
+	fprintf (stderr, "Out of memory\n");
+	return 1;
+    }
+
+    for (i = 0; i < exclude_tags_length; i++)
+	notmuch_query_add_tag_exclude (query, exclude_tags[i]);
+
+    switch (output) {
+    case OUTPUT_MESSAGES:
+	printf ("%u\n", notmuch_query_count_messages (query));
+	break;
+    case OUTPUT_THREADS:
+	printf ("%u\n", notmuch_query_count_threads (query));
+	break;
+    }
+
+    notmuch_query_destroy (query);
+
+    return 0;
+}
+
 int
 notmuch_count_command (notmuch_config_t *config, int argc, char *argv[])
 {
     notmuch_database_t *notmuch;
-    notmuch_query_t *query;
     char *query_str;
     int opt_index;
     int output = OUTPUT_MESSAGES;
     int exclude = EXCLUDE_TRUE;
-    unsigned int i;
+    const char **search_exclude_tags = NULL;
+    size_t search_exclude_tags_length = 0;
+    int ret;
 
     notmuch_opt_desc_t options[] = {
 	{ NOTMUCH_OPT_KEYWORD, &output, "output", 'o',
@@ -71,33 +102,15 @@ notmuch_count_command (notmuch_config_t *config, int argc, char *argv[])
 	return 1;
     }
 
-    query = notmuch_query_create (notmuch, query_str);
-    if (query == NULL) {
-	fprintf (stderr, "Out of memory\n");
-	return 1;
-    }
-
     if (exclude == EXCLUDE_TRUE) {
-	const char **search_exclude_tags;
-	size_t search_exclude_tags_length;
-
 	search_exclude_tags = notmuch_config_get_search_exclude_tags
 	    (config, &search_exclude_tags_length);
-	for (i = 0; i < search_exclude_tags_length; i++)
-	    notmuch_query_add_tag_exclude (query, search_exclude_tags[i]);
     }
 
-    switch (output) {
-    case OUTPUT_MESSAGES:
-	printf ("%u\n", notmuch_query_count_messages (query));
-	break;
-    case OUTPUT_THREADS:
-	printf ("%u\n", notmuch_query_count_threads (query));
-	break;
-    }
+    ret = print_count (notmuch, query_str, search_exclude_tags,
+		       search_exclude_tags_length, output);
 
-    notmuch_query_destroy (query);
     notmuch_database_destroy (notmuch);
 
-    return 0;
+    return ret;
 }
