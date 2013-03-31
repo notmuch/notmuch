@@ -71,10 +71,6 @@ notmuch_count_command (notmuch_config_t *config, int argc, char *argv[])
 	return 1;
     }
 
-    if (*query_str == '\0') {
-	query_str = talloc_strdup (config, "");
-    }
-
     query = notmuch_query_create (notmuch, query_str);
     if (query == NULL) {
 	fprintf (stderr, "Out of memory\n");
