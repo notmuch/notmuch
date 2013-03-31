@@ -213,19 +213,6 @@ user-friendly queries."
       (setq list (cdr list)))
     (nreverse out)))
 
-;; This lets us avoid compiling these replacement functions when emacs
-;; is sufficiently new enough to supply them alone. We do the macro
-;; treatment rather than just wrapping our defun calls in a when form
-;; specifically so that the compiler never sees the code on new emacs,
-;; (since the code is triggering warnings that we don't know how to get
-;; rid of.
-;;
-;; A more clever macro here would accept a condition and a list of forms.
-(defmacro compile-on-emacs-prior-to-23 (form)
-  "Conditionally evaluate form only on emacs < emacs-23."
-  (list 'when (< emacs-major-version 23)
-	form))
-
 (defun notmuch-split-content-type (content-type)
   "Split content/type into 'content' and 'type'"
   (split-string content-type "/"))
@@ -481,29 +468,6 @@ an error."
 		  (json-false 'nil))
 	      (json-read)))
 	(delete-file err-file)))))
-
-;; Compatibility functions for versions of emacs before emacs 23.
-;;
-;; Both functions here were copied from emacs 23 with the following copyright:
-;;
-;; Copyright (C) 1985, 1986, 1992, 1994, 1995, 1999, 2000, 2001, 2002, 2003,
-;;   2004, 2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
-;;
-;; and under the GPL version 3 (or later) exactly as notmuch itself.
-(compile-on-emacs-prior-to-23
- (defun apply-partially (fun &rest args)
-   "Return a function that is a partial application of FUN to ARGS.
-ARGS is a list of the first N arguments to pass to FUN.
-The result is a new function which does the same as FUN, except that
-the first N arguments are fixed at the values with which this function
-was called."
-   (lexical-let ((fun fun) (args1 args))
-     (lambda (&rest args2) (apply fun (append args1 args2))))))
-
-(compile-on-emacs-prior-to-23
- (defun mouse-event-p (object)
-   "Return non-nil if OBJECT is a mouse click event."
-   (memq (event-basic-type object) '(mouse-1 mouse-2 mouse-3 mouse-movement))))
 
 ;; This variable is used only buffer local, but it needs to be
 ;; declared globally first to avoid compiler warnings.
