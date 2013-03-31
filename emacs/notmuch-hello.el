@@ -381,26 +381,38 @@ The result is the list of elements of the form (NAME QUERY COUNT).
 The values :show-empty-searches, :filter and :filter-count from
 options will be handled as specified for
 `notmuch-hello-insert-searches'."
-  (notmuch-remove-if-not
-   #'identity
-   (mapcar
-    (lambda (elem)
-      (let* ((name (car elem))
-	     (query-and-count (if (consp (cdr elem))
-				  ;; do we have a different query for the message count?
-				  (cons (second elem) (third elem))
-				(cons (cdr elem) (cdr elem))))
-	     (message-count
-	      (string-to-number
-	       (notmuch-saved-search-count
-		(notmuch-hello-filtered-query (cdr query-and-count)
-					      (or (plist-get options :filter-count)
-						 (plist-get options :filter)))))))
-	(and (or (plist-get options :show-empty-searches) (> message-count 0))
-	     (list name (notmuch-hello-filtered-query
-			 (car query-and-count) (plist-get options :filter))
-		   message-count))))
-    query-alist)))
+  (with-temp-buffer
+    (dolist (elem query-alist nil)
+      (let ((count-query (if (consp (cdr elem))
+			     ;; do we have a different query for the message count?
+			     (third elem)
+			   (cdr elem))))
+	(insert
+	 (notmuch-hello-filtered-query count-query
+				       (or (plist-get options :filter-count)
+					   (plist-get options :filter)))
+	 "\n")))
+
+    (call-process-region (point-min) (point-max) notmuch-command
+			 t t nil "count" "--batch")
+    (goto-char (point-min))
+
+    (notmuch-remove-if-not
+     #'identity
+     (mapcar
+      (lambda (elem)
+	(let ((name (car elem))
+	      (search-query (if (consp (cdr elem))
+				 ;; do we have a different query for the message count?
+				 (second elem)
+			      (cdr elem)))
+	      (message-count (prog1 (read (current-buffer))
+				(forward-line 1))))
+	  (and (or (plist-get options :show-empty-searches) (> message-count 0))
+	       (list name (notmuch-hello-filtered-query
+			   search-query (plist-get options :filter))
+		     message-count))))
+      query-alist))))
 
 (defun notmuch-hello-insert-buttons (searches)
   "Insert buttons for SEARCHES.
