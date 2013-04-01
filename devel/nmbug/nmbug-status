@@ -13,6 +13,7 @@ import urllib
 import json
 import argparse
 import os
+import sys
 import subprocess
 
 # parse command line arguments
@@ -20,9 +21,10 @@ import subprocess
 parser = argparse.ArgumentParser()
 parser.add_argument('--text', help='output plain text format',
                     action='store_true')
-
 parser.add_argument('--config', help='load config from given file')
-
+parser.add_argument('--list-views', help='list views',
+                    action='store_true')
+parser.add_argument('--get-query', help='get query for view')
 
 args = parser.parse_args()
 
@@ -45,6 +47,16 @@ else:
                           stdout=subprocess.PIPE).stdout
 
 config = json.load(fp)
+
+if args.list_views:
+    for view in config['views']:
+        print view['title']
+    sys.exit(0)
+elif args.get_query != None:
+    for view in config['views']:
+        if args.get_query == view['title']:
+            print ' and '.join(view['query'])
+    sys.exit(0)
 
 if args.text:
     output_format = 'text'
