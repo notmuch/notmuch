@@ -7,7 +7,6 @@
 #       - argparse; either python 2.7, or install separately
 
 import datetime
-import notmuch
 import rfc822
 import urllib
 import json
@@ -57,6 +56,9 @@ elif args.get_query != None:
         if args.get_query == view['title']:
             print ' and '.join(view['query'])
     sys.exit(0)
+else:
+    # only import notmuch if needed
+    import notmuch
 
 if args.text:
     output_format = 'text'
