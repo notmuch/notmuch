@@ -31,6 +31,23 @@ line."
   :group 'notmuch-send
   :group 'notmuch-external)
 
+(defcustom notmuch-address-selection-function 'notmuch-address-selection-function
+  "The function to select address from given list. The function is
+called with PROMPT, COLLECTION, and INITIAL-INPUT as arguments
+(subset of what `completing-read' can be called with).
+While executed the value of `completion-ignore-case' is t.
+See documentation of function `notmuch-address-selection-function'
+to know how address selection is made by default."
+  :type 'function
+  :group 'notmuch-send
+  :group 'notmuch-external)
+
+(defun notmuch-address-selection-function (prompt collection initial-input)
+  "Call (`completing-read'
+      PROMPT COLLECTION nil nil INITIAL-INPUT 'notmuch-address-history)"
+  (completing-read
+   prompt collection nil nil initial-input 'notmuch-address-history))
+
 (defvar notmuch-address-message-alist-member
   '("^\\(Resent-\\)?\\(To\\|B?Cc\\|Reply-To\\|From\\|Mail-Followup-To\\|Mail-Copies-To\\):"
 	      . notmuch-address-expand-name))
@@ -61,9 +78,9 @@ line."
 		  ((eq num-options 1)
 		   (car options))
 		  (t
-		   (completing-read (format "Address (%s matches): " num-options)
-				    (cdr options) nil nil (car options)
-				    'notmuch-address-history)))))
+		   (funcall notmuch-address-selection-function
+			    (format "Address (%s matches): " num-options)
+			    (cdr options) (car options))))))
     (if chosen
 	(progn
 	  (push chosen notmuch-address-history)
