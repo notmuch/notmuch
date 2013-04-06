@@ -217,11 +217,12 @@ _signature_validity_free (GMimeSignatureValidity **proxy)
 
 /* Set up signature validity destructor (GMime 2.4) */
 static void
-set_signature_validity_destructor (mime_node_t *node)
+set_signature_validity_destructor (mime_node_t *node,
+				   GMimeSignatureValidity *sig_validity)
 {
     GMimeSignatureValidity **proxy = talloc (node, GMimeSignatureValidity *);
     if (proxy) {
-	*proxy = node->sig_validity;
+	*proxy = sig_validity;
 	talloc_set_destructor (proxy, _signature_validity_free);
     }
 }
@@ -232,12 +233,14 @@ node_verify (mime_node_t *node, GMimeObject *part,
 	     notmuch_crypto_context_t *cryptoctx)
 {
     GError *err = NULL;
+    GMimeSignatureValidity *sig_validity;
 
     node->verify_attempted = TRUE;
-    node->sig_validity = g_mime_multipart_signed_verify
+    sig_validity = g_mime_multipart_signed_verify
 	(GMIME_MULTIPART_SIGNED (part), cryptoctx, &err);
-    if (node->sig_validity) {
-	set_signature_validity_destructor (node);
+    node->sig_validity = sig_validity;
+    if (sig_validity) {
+	set_signature_validity_destructor (node, sig_validity);
     } else {
 	fprintf (stderr, "Failed to verify signed part: %s\n",
 		 err ? err->message : "no error explanation given");
