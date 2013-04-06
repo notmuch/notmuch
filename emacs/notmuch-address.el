@@ -96,47 +96,6 @@ line."
 (when (notmuch-address-locate-command notmuch-address-command)
   (notmuch-address-message-insinuate))
 
-;; functions to add sender / recipients to BBDB
-
-(defun notmuch-bbdb/snarf-headers (headers)
-  ;; Helper function to avoid code duplication in the two below
-  ;; headers should have the same format as bbdb-get-addresses-headers
-
-  ;; bbdb-get-addresses reads these
-  ;; Ugh, pass-by-global
-  (let ((addrs (bbdb-get-addresses nil nil 'notmuch-bbdb/get-header-content))
-	(bbdb-get-addresses-headers headers) ; headers to read
-	(bbdb-gag-messages t)) ; suppress m/n processed message)
-    (bbdb-update-records addrs t t))
-
-  (defun notmuch-bbdb/snarf-from ()
-    "Import the sender of the current message into BBDB"
-    (interactive)
-    (notmuch-bbdb/snarf-headers
-     (list (assoc 'authors bbdb-get-addresses-headers))))
-
-(defun notmuch-bbdb/snarf-to ()
-  "Import all recipients of the current message into BBDB"
-  (interactive)
-  (notmuch-bbdb/snarf-headers
-   (list (assoc 'recipients bbdb-get-addresses-headers))))
-
-(defvar notmuch-bbdb/header-by-name
-  ;; both are case sensitive
-  '( ("From" . :From)
-     ("To" . :To)
-     ("CC" . :Cc)
-     ("BCC" . :Bcc)
-     ("Resent-From" . nil)
-     ("Reply-To" . nil)
-     ("Resent-To" . nil)
-     ("Resent-CC" . nil))
-  "Alist for dispatching header symbols as used by notmuch-show-get-header
-from strings as used by bbdb-get-addresses")
-
-(defun notmuch-bbdb/get-header-content (name)
-  (notmuch-show-get-header (cdr (assoc name notmuch-bbdb/header-by-name))))
-
 ;;
 
 (provide 'notmuch-address)
