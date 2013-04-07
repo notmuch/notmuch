@@ -78,7 +78,6 @@ test_expect_equal "$(notmuch --config=alt-config-link config get user.name)" \
     "Link Name"
 
 test_begin_subtest "Writing config file through symlink follows symlink"
-test_subtest_known_broken
 test_expect_equal "$(readlink alt-config-link)" "alt-config"
 
 test_done

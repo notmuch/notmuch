@@ -444,7 +444,7 @@ int
 notmuch_config_save (notmuch_config_t *config)
 {
     size_t length;
-    char *data;
+    char *data, *filename;
     GError *error = NULL;
 
     data = g_key_file_to_data (config->key_file, &length, NULL);
@@ -453,14 +453,30 @@ notmuch_config_save (notmuch_config_t *config)
 	return 1;
     }
 
-    if (! g_file_set_contents (config->filename, data, length, &error)) {
-	fprintf (stderr, "Error saving configuration to %s: %s\n",
-		 config->filename, error->message);
-	g_error_free (error);
+    /* Try not to overwrite symlinks. */
+    filename = realpath (config->filename, NULL);
+    if (! filename) {
+	fprintf (stderr, "Error canonicalizing %s: %s\n", config->filename,
+		 strerror (errno));
 	g_free (data);
 	return 1;
     }
 
+    if (! g_file_set_contents (filename, data, length, &error)) {
+	if (strcmp (filename, config->filename) != 0) {
+	    fprintf (stderr, "Error saving configuration to %s (-> %s): %s\n",
+		     config->filename, filename, error->message);
+	} else {
+	    fprintf (stderr, "Error saving configuration to %s: %s\n",
+		     filename, error->message);
+	}
+	g_error_free (error);
+	free (filename);
+	g_free (data);
+	return 1;
+    }
+
+    free (filename);
     g_free (data);
     return 0;
 }
