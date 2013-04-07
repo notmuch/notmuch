@@ -57,4 +57,28 @@ maildir.synchronize_flags=true
 foo.string=this is another string value
 foo.list=this;is another;list value;"
 
+test_begin_subtest "Top level --config=FILE option"
+cp "${NOTMUCH_CONFIG}" alt-config
+notmuch --config=alt-config config set user.name "Another Name"
+test_expect_equal "$(notmuch --config=alt-config config get user.name)" \
+    "Another Name"
+
+test_begin_subtest "Top level --config=FILE option changed the right file"
+test_expect_equal "$(notmuch config get user.name)" \
+    "Notmuch Test Suite"
+
+test_begin_subtest "Read config file through a symlink"
+ln -s alt-config alt-config-link
+test_expect_equal "$(notmuch --config=alt-config-link config get user.name)" \
+    "Another Name"
+
+test_begin_subtest "Write config file through a symlink"
+notmuch --config=alt-config-link config set user.name "Link Name"
+test_expect_equal "$(notmuch --config=alt-config-link config get user.name)" \
+    "Link Name"
+
+test_begin_subtest "Writing config file through symlink follows symlink"
+test_subtest_known_broken
+test_expect_equal "$(readlink alt-config-link)" "alt-config"
+
 test_done
