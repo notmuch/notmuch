@@ -26,7 +26,7 @@
 (require 'notmuch-lib)
 (require 'notmuch-mua)
 
-(declare-function notmuch-search "notmuch" (query &optional oldest-first target-thread target-line continuation))
+(declare-function notmuch-search "notmuch" (&optional query oldest-first target-thread target-line continuation))
 (declare-function notmuch-poll "notmuch" ())
 
 (defcustom notmuch-hello-recent-searches-max 10

@@ -23,7 +23,7 @@
 
 (require 'coolj)
 
-(declare-function notmuch-show-insert-bodypart "notmuch-show" (msg part depth))
+(declare-function notmuch-show-insert-bodypart "notmuch-show" (msg part depth &optional hide))
 
 ;;
 

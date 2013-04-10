@@ -38,7 +38,6 @@
 (require 'notmuch-print)
 
 (declare-function notmuch-call-notmuch-process "notmuch" (&rest args))
-(declare-function notmuch-fontify-headers "notmuch" nil)
 (declare-function notmuch-search-next-thread "notmuch" nil)
 (declare-function notmuch-search-show-thread "notmuch" nil)
 
