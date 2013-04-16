@@ -12,15 +12,18 @@ override_dh_auto_build:
 	dh_auto_build
 	dh_auto_build --sourcedirectory bindings/python
 	cd bindings/python && $(python3_all) setup.py build
+	cd bindings/ruby && ruby extconf.rb --vendor && make
 	$(MAKE) -C contrib/notmuch-mutt
 
 override_dh_auto_clean:
 	dh_auto_clean
 	dh_auto_clean --sourcedirectory bindings/python
 	cd bindings/python && $(python3_all) setup.py clean -a
+	dh_auto_clean --sourcedirectory bindings/ruby
 	$(MAKE) -C contrib/notmuch-mutt clean
 
 override_dh_auto_install:
 	dh_auto_install
 	dh_auto_install --sourcedirectory bindings/python
 	cd bindings/python && $(python3_all) setup.py install --install-layout=deb --root=$(CURDIR)/debian/tmp
+	dh_auto_install --sourcedirectory bindings/ruby
