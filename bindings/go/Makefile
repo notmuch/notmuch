@@ -15,8 +15,8 @@ notmuch:
 
 .PHONY: goconfig
 goconfig:
-	if [ ! -d src/github.com/kless/goconfig/config ]; then \
-	    $(GO) get github.com/kless/goconfig/config; \
+	if [ ! -d github.com/msbranco/goconfig ]; then \
+	    $(GO) get github.com/msbranco/goconfig; \
 	fi
 
 .PHONY: notmuch-addrlookup

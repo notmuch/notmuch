@@ -11,7 +11,7 @@ import "sort"
 
 // 3rd-party imports
 import "notmuch"
-import "github.com/kless/goconfig/config"
+import "github.com/msbranco/goconfig"
 
 type mail_addr_freq struct {
 	addr  string
@@ -178,22 +178,20 @@ type address_matcher struct {
 }
 
 func new_address_matcher() *address_matcher {
-	var cfg *config.Config
-	var err error
-
 	// honor NOTMUCH_CONFIG
 	home := os.Getenv("NOTMUCH_CONFIG")
 	if home == "" {
 		home = os.Getenv("HOME")
 	}
 
-	if cfg, err = config.ReadDefault(path.Join(home, ".notmuch-config")); err != nil {
+	cfg, err := goconfig.ReadConfigFile(path.Join(home, ".notmuch-config"))
+	if err != nil {
 		log.Fatalf("error loading config file:", err)
 	}
 
-	db_path, _ := cfg.String("database", "path")
-	primary_email, _ := cfg.String("user", "primary_email")
-	addrbook_tag, err := cfg.String("user", "addrbook_tag")
+	db_path, _ := cfg.GetString("database", "path")
+	primary_email, _ := cfg.GetString("user", "primary_email")
+	addrbook_tag, err := cfg.GetString("user", "addrbook_tag")
 	if err != nil {
 		addrbook_tag = "addressbook"
 	}
