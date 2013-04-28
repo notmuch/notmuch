@@ -68,24 +68,18 @@ make install DESTDIR=%{buildroot}
 %postun -p /sbin/ldconfig
 
 %files
-%defattr(-,root,root,-)
 %doc AUTHORS COPYING COPYING-GPL-3 INSTALL README
-
+%{_sysconfdir}/bash_completion.d/notmuch
+%{_datadir}/zsh/functions/Completion/Unix/_notmuch
 %{_bindir}/notmuch
-%{_libdir}/libnotmuch.so.3*
 %{_mandir}/man?/*
+%{_libdir}/libnotmuch.so.3*
 
 %{_emacs_sitelispdir}/*
 
-%{_datarootdir}/zsh/functions/Completion/Unix/_notmuch
-%{_sysconfdir}/bash_completion.d/notmuch
-
 %files devel
-%defattr(-,root,root,-)
-%doc AUTHORS COPYING COPYING-GPL-3 INSTALL README
+%{_libdir}/libnotmuch.so
 %{_includedir}/*
-%{_libdir}/*.so
-
 
 %changelog
 * Sun Apr 28 2013 Felipe Contreras <felipe.contreras@gmail.com> - 0.15.2-1
