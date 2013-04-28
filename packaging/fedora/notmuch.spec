@@ -26,7 +26,7 @@ URL:            http://notmuchmail.org/
 Source0:        http://notmuchmail.org/releases/notmuch-%{version}.tar.gz
 
 BuildRequires:  xapian-core-devel gmime-devel libtalloc-devel
-BuildRequires:  zlib-devel emacs-el emacs-nox
+BuildRequires:  zlib-devel emacs-el emacs-nox python
 
 %description
 Fast system for indexing, searching, and tagging email.  Even if you
@@ -59,6 +59,15 @@ Requires:       %{name} = %{version}-%{release}, emacs(bin) >= %{_emacs_version}
 %description -n emacs-notmuch
 %{summary}.
 
+%package -n python-notmuch
+Summary:        Python bindings for notmuch
+Group:          Development/Libraries
+BuildArch:      noarch
+Requires:       %{name} = %{version}-%{release}
+
+%description -n python-notmuch
+%{summary}.
+
 %prep
 %setup -q
 
@@ -67,8 +76,16 @@ Requires:       %{name} = %{version}-%{release}, emacs(bin) >= %{_emacs_version}
     --mandir=%{_mandir} --includedir=%{_includedir} --emacslispdir=%{_emacs_sitelispdir}
 make %{?_smp_mflags} CFLAGS="%{optflags}"
 
+pushd bindings/python
+    python setup.py build
+popd
+
 %install
 make install DESTDIR=%{buildroot}
+
+pushd bindings/python
+    python setup.py install -O1 --skip-build --root %{buildroot}
+popd
 
 %post -p /sbin/ldconfig
 
@@ -88,6 +105,11 @@ make install DESTDIR=%{buildroot}
 
 %files -n emacs-notmuch
 %{_emacs_sitelispdir}/*
+
+%files -n python-notmuch
+%doc bindings/python/README
+%{python_sitelib}/*
+
 
 %changelog
 * Sun Apr 28 2013 Felipe Contreras <felipe.contreras@gmail.com> - 0.15.2-1
