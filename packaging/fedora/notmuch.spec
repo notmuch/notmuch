@@ -16,7 +16,7 @@
 
 Name:           notmuch
 Version:        0.15.2
-Release:        1%{?dist}
+Release:        2%{?dist}
 Summary:        Thread-based email index, search and tagging
 
 Group:          Applications/Internet
@@ -26,7 +26,7 @@ URL:            http://notmuchmail.org/
 Source0:        http://notmuchmail.org/releases/notmuch-%{version}.tar.gz
 
 BuildRequires:  xapian-core-devel gmime-devel libtalloc-devel
-BuildRequires:  zlib-devel emacs-el emacs-nox python
+BuildRequires:  zlib-devel emacs-el emacs-nox python perl
 
 %description
 Fast system for indexing, searching, and tagging email.  Even if you
@@ -68,6 +68,17 @@ Requires:       %{name} = %{version}-%{release}
 %description -n python-notmuch
 %{summary}.
 
+%package mutt
+Summary:        Notmuch (of a) helper for Mutt
+Group:          Development/Libraries
+BuildArch:      noarch
+Requires:       %{name} = %{version}-%{release}
+Requires:       perl(Term::ReadLine::Gnu)
+
+%description mutt
+notmuch-mutt provide integration among the Mutt mail user agent and
+the Notmuch mail indexer.
+
 %prep
 %setup -q
 
@@ -80,12 +91,19 @@ pushd bindings/python
     python setup.py build
 popd
 
+pushd contrib/notmuch-mutt
+    make
+popd
+
 %install
 make install DESTDIR=%{buildroot}
 
 pushd bindings/python
     python setup.py install -O1 --skip-build --root %{buildroot}
 popd
+
+install contrib/notmuch-mutt/notmuch-mutt %{buildroot}%{_bindir}/notmuch-mutt
+install contrib/notmuch-mutt/notmuch-mutt.1 %{buildroot}%{_mandir}/man1/notmuch-mutt.1
 
 %post -p /sbin/ldconfig
 
@@ -110,8 +128,14 @@ popd
 %doc bindings/python/README
 %{python_sitelib}/*
 
+%files mutt
+%{_bindir}/notmuch-mutt
+%{_mandir}/man1/notmuch-mutt.1*
 
 %changelog
+* Sun Apr 28 2013 Felipe Contreras <felipe.contreras@gmail.com> - 0.15.2-2
+- Sync with Fedora
+
 * Sun Apr 28 2013 Felipe Contreras <felipe.contreras@gmail.com> - 0.15.2-1
 - Update to latest upstream
 
