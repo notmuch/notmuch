@@ -25,7 +25,7 @@
 #
 
 Name:           notmuch
-Version:        0.4
+Version:        0.15.2
 Release:        1%{?dist}
 Summary:        Not much of an email program
 
@@ -99,14 +99,12 @@ developing applications that use %{name}.
 %setup -q
 
 %build
-./configure --prefix=/usr --libdir=%{_libdir} --sysconfdir=%{_sysconfdir}
+./configure --prefix=%{_prefix} --libdir=%{_libdir} --sysconfdir=%{_sysconfdir} \
+    --mandir=%{_mandir} --includedir=%{_includedir} --emacslispdir=%{_emacs_sitelispdir}
 make %{?_smp_mflags} CFLAGS="%{optflags}"
-emacs -batch -f batch-byte-compile emacs/*.el
 
 %install
-rm -rf %{buildroot}
-make install DESTDIR=%{buildroot} prefix=%{_prefix}
-mv %{buildroot}%{_sysconfdir}/bash_completion.d %{buildroot}%{_datarootdir}/bash_completion
+make install DESTDIR=%{buildroot}
 
 %clean
 rm -rf %{buildroot}
@@ -117,25 +115,28 @@ rm -rf %{buildroot}
 
 %files
 %defattr(-,root,root,-)
-%doc AUTHORS COPYING COPYING-GPL-3 INSTALL README TODO
+%doc AUTHORS COPYING COPYING-GPL-3 INSTALL README
 
 %{_bindir}/notmuch
-%{_libdir}/libnotmuch.so.*
-%{_mandir}/man1/notmuch.1*
+%{_libdir}/libnotmuch.so.3*
+%{_mandir}/man?/*
 
 %{_emacs_sitelispdir}/*
 
-%{_datarootdir}/zsh/functions/Completion/Unix/notmuch
-%{_datarootdir}/bash_completion/notmuch
+%{_datarootdir}/zsh/functions/Completion/Unix/_notmuch
+%{_sysconfdir}/bash_completion.d/notmuch
 
 %files devel
 %defattr(-,root,root,-)
-%doc AUTHORS COPYING COPYING-GPL-3 INSTALL README TODO
+%doc AUTHORS COPYING COPYING-GPL-3 INSTALL README
 %{_includedir}/*
 %{_libdir}/*.so
 
 
 %changelog
+* Sun Apr 28 2013 Felipe Contreras <felipe.contreras@gmail.com> - 0.15.2-1
+- Update to latest upstream
+
 * Tue Nov  2 2010 Scott Henson <shenson@redhat.com> - 0.4-1
 - New upstream release
 
