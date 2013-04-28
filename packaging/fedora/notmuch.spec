@@ -28,8 +28,6 @@ Source0:        http://notmuchmail.org/releases/notmuch-%{version}.tar.gz
 BuildRequires:  xapian-core-devel gmime-devel libtalloc-devel
 BuildRequires:  zlib-devel emacs-el emacs-nox
 
-Requires:       emacs(bin) >= %{_emacs_version}
-
 %description
 Fast system for indexing, searching, and tagging email.  Even if you
 receive 12000 messages per month or have on the order of millions of
@@ -51,6 +49,15 @@ Requires:       %{name} = %{version}-%{release}
 %description devel
 The %{name}-devel package contains libraries and header files for
 developing applications that use %{name}.
+
+%package -n emacs-notmuch
+Summary:        Not much support for Emacs
+Group:          Applications/Editors
+BuildArch:      noarch
+Requires:       %{name} = %{version}-%{release}, emacs(bin) >= %{_emacs_version}
+
+%description -n emacs-notmuch
+%{summary}.
 
 %prep
 %setup -q
@@ -75,11 +82,12 @@ make install DESTDIR=%{buildroot}
 %{_mandir}/man?/*
 %{_libdir}/libnotmuch.so.3*
 
-%{_emacs_sitelispdir}/*
-
 %files devel
 %{_libdir}/libnotmuch.so
 %{_includedir}/*
+
+%files -n emacs-notmuch
+%{_emacs_sitelispdir}/*
 
 %changelog
 * Sun Apr 28 2013 Felipe Contreras <felipe.contreras@gmail.com> - 0.15.2-1
