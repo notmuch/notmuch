@@ -1,16 +1,6 @@
 %global git 6b9a717c
 %global date %(date +%Y%m%d)
 
-%if %($(pkg-config emacs) ; echo $?)
-%global emacs_version 23.1
-%global emacs_lispdir %{_datadir}/emacs/site-lisp
-%global emacs_startdir %{_datadir}/emacs/site-lisp/site-start.d
-%else
-%global emacs_version %(pkg-config emacs --modversion)
-%global emacs_lispdir %(pkg-config emacs --variable sitepkglispdir)
-%global emacs_startdir %(pkg-config emacs --variable sitestartdir)
-%endif
-
 # If you are doing a git snapshot:
 #
 # Release should be 1%{git}%{?dist}
@@ -43,7 +33,7 @@ BuildRequires:  zlib-devel
 BuildRequires:  emacs-el
 BuildRequires:  emacs-nox
 
-Requires:       emacs(bin) >= %{emacs_version}
+Requires:       emacs(bin) >= %{_emacs_version}
 
 %description
 * "Not much mail" is what Notmuch thinks about your email
