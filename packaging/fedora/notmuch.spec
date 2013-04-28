@@ -17,71 +17,38 @@
 Name:           notmuch
 Version:        0.15.2
 Release:        1%{?dist}
-Summary:        Not much of an email program
+Summary:        Thread-based email index, search and tagging
 
 Group:          Applications/Internet
 License:        GPLv3+
 URL:            http://notmuchmail.org/
 
 Source0:        http://notmuchmail.org/releases/notmuch-%{version}.tar.gz
-BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
-BuildRequires:  xapian-core-devel
-BuildRequires:  gmime-devel
-BuildRequires:  libtalloc-devel
-BuildRequires:  zlib-devel
-BuildRequires:  emacs-el
-BuildRequires:  emacs-nox
+BuildRequires:  xapian-core-devel gmime-devel libtalloc-devel
+BuildRequires:  zlib-devel emacs-el emacs-nox
 
 Requires:       emacs(bin) >= %{_emacs_version}
 
 %description
-* "Not much mail" is what Notmuch thinks about your email
-  collection. Even if you receive 12000 messages per month or have on
-  the order of millions of messages that you've been saving for
-  decades. Regardless, Notmuch will be able to quickly search all of
-  it. It's just plain not much mail.
+Fast system for indexing, searching, and tagging email.  Even if you
+receive 12000 messages per month or have on the order of millions of
+messages that you've been saving for decades, Notmuch will be able to
+quickly search all of it.
 
-* "Not much mail" is also what you should have in your inbox at any
-  time. Notmuch gives you what you need, (tags and fast search), so
-  that you can keep your inbox tamed and focus on what really matters
-  in your life, (which is surely not email).
+Notmuch is not much of an email program. It doesn't receive messages
+(no POP or IMAP support). It doesn't send messages (no mail composer,
+no network code at all). And for what it does do (email search) that
+work is provided by an external library, Xapian. So if Notmuch
+provides no user interface and Xapian does all the heavy lifting, then
+what's left here? Not much.
 
-* Notmuch is an answer to Sup. Sup is a very good email program
-  written by William Morgan (and others) and is the direct inspiration
-  for Notmuch. Notmuch began as an effort to rewrite
-  performance-critical pieces of Sup in C rather than ruby. From
-  there, it grew into a separate project. One significant contribution
-  Notmuch makes compared to Sup is the separation of the
-  indexer/searcher from the user interface. (Notmuch provides a
-  library interface so that its indexing/searching/tagging features
-  can be integrated into any email program.)
-
-* Notmuch is not much of an email program. It doesn't receive messages
-  (no POP or IMAP support). It doesn't send messages (no mail composer,
-  no network code at all). And for what it does do (email search) that
-  work is provided by an external library, Xapian. So if Notmuch
-  provides no user interface and Xapian does all the heavy lifting,
-  then what's left here? Not much.
-
-Notmuch is still in the early stages of development, but it does
-include one user interface, (implemented within Emacs), which has at
-least two users using it for reading all of their incoming mail. If
-you've been looking for a fast, global-search and tag-based email
-reader to use within Emacs, then Notmuch may be exactly what you've
-been looking for.
-
-Otherwise, if you're a developer of an existing email program and
-would love a good library interface for fast, global search with
-support for arbitrary tags, then Notmuch also may be exactly what
-you've been looking for.
-
-%package        devel
-Summary:        Development files for %{name}
+%package devel
+Summary:        Development libraries and header files for %{name}
 Group:          Development/Libraries
 Requires:       %{name} = %{version}-%{release}
 
-%description    devel
+%description devel
 The %{name}-devel package contains libraries and header files for
 developing applications that use %{name}.
 
@@ -95,9 +62,6 @@ make %{?_smp_mflags} CFLAGS="%{optflags}"
 
 %install
 make install DESTDIR=%{buildroot}
-
-%clean
-rm -rf %{buildroot}
 
 %post -p /sbin/ldconfig
 
