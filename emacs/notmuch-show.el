@@ -157,6 +157,7 @@ indentation."
   '(("Gmane" . "http://mid.gmane.org/")
     ("MARC" . "http://marc.info/?i=")
     ("Mail Archive, The" . "http://mail-archive.com/search?l=mid&q=")
+    ("LKML" . "http://lkml.kernel.org/r/")
     ;; FIXME: can these services be searched by `Message-Id' ?
     ;; ("MarkMail" . "http://markmail.org/")
     ;; ("Nabble" . "http://nabble.com/")
