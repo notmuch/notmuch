@@ -797,9 +797,9 @@ message at DEPTH in the current thread."
 (defun notmuch-show-insert-part-text/x-vcalendar (msg part content-type nth depth declared-type)
   (notmuch-show-insert-part-text/calendar msg part content-type nth depth declared-type))
 
-(defun notmuch-show-insert-part-application/octet-stream (msg part content-type nth depth declared-type)
+(defun notmuch-show-get-mime-type-of-application/octet-stream (part)
   ;; If we can deduce a MIME type from the filename of the attachment,
-  ;; do so and pass it on to the handler for that type.
+  ;; we return that.
   (if (plist-get part :filename)
       (let ((extension (file-name-extension (plist-get part :filename)))
 	    mime-type)
@@ -809,7 +809,7 @@ message at DEPTH in the current thread."
 	      (setq mime-type (mailcap-extension-to-mime extension))
 	      (if (and mime-type
 		       (not (string-equal mime-type "application/octet-stream")))
-		  (notmuch-show-insert-bodypart-internal msg part mime-type nth depth content-type)
+		  mime-type
 		nil))
 	  nil))))
 
@@ -886,11 +886,14 @@ message at DEPTH in the current thread."
   "Insert the body part PART at depth DEPTH in the current thread.
 
 If HIDE is non-nil then initially hide this part."
-  (let ((content-type (downcase (plist-get part :content-type)))
-	(nth (plist-get part :id))
-	(beg (point)))
+  (let* ((content-type (downcase (plist-get part :content-type)))
+	 (mime-type (or (and (string= content-type "application/octet-stream")
+			     (notmuch-show-get-mime-type-of-application/octet-stream part))
+			content-type))
+	 (nth (plist-get part :id))
+	 (beg (point)))
 
-    (notmuch-show-insert-bodypart-internal msg part content-type nth depth content-type)
+    (notmuch-show-insert-bodypart-internal msg part mime-type nth depth content-type)
     ;; Some of the body part handlers leave point somewhere up in the
     ;; part, so we make sure that we're down at the end.
     (goto-char (point-max))
