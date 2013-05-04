@@ -815,7 +815,7 @@ message at DEPTH in the current thread."
 
 ;; Handler for wash generated inline patch fake parts.
 (defun notmuch-show-insert-part-inline-patch-fake-part (msg part content-type nth depth declared-type)
-  (notmuch-show-insert-part-*/* msg part "text/x-diff" nth depth "inline patch"))
+  (notmuch-show-insert-part-*/* msg part content-type nth depth declared-type))
 
 (defun notmuch-show-insert-part-text/html (msg part content-type nth depth declared-type)
   ;; text/html handler to work around bugs in renderers and our
@@ -889,6 +889,8 @@ If HIDE is non-nil then initially hide this part."
   (let* ((content-type (downcase (plist-get part :content-type)))
 	 (mime-type (or (and (string= content-type "application/octet-stream")
 			     (notmuch-show-get-mime-type-of-application/octet-stream part))
+			(and (string= content-type "inline patch")
+			     "text/x-diff")
 			content-type))
 	 (nth (plist-get part :id))
 	 (beg (point)))
