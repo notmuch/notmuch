@@ -20,6 +20,7 @@ TESTS="
   basic
   help-test
   config
+  setup
   new
   count
   search
