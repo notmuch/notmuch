@@ -456,10 +456,19 @@ notmuch_config_save (notmuch_config_t *config)
     /* Try not to overwrite symlinks. */
     filename = realpath (config->filename, NULL);
     if (! filename) {
-	fprintf (stderr, "Error canonicalizing %s: %s\n", config->filename,
-		 strerror (errno));
-	g_free (data);
-	return 1;
+	if (errno == ENOENT) {
+	    filename = strdup (config->filename);
+	    if (! filename) {
+		fprintf (stderr, "Out of memory.\n");
+		g_free (data);
+		return 1;
+	    }
+	} else {
+	    fprintf (stderr, "Error canonicalizing %s: %s\n", config->filename,
+		     strerror (errno));
+	    g_free (data);
+	    return 1;
+	}
     }
 
     if (! g_file_set_contents (filename, data, length, &error)) {

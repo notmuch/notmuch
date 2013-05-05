@@ -4,7 +4,6 @@ test_description='"notmuch setup"'
 . ./test-lib.sh
 
 test_begin_subtest "Create a new config interactively"
-test_subtest_known_broken
 notmuch --config=new-notmuch-config > /dev/null <<EOF
 Test Suite
 test.suite@example.com
