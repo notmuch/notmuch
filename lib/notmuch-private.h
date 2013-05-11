@@ -236,6 +236,7 @@ _notmuch_thread_create (void *ctx,
 			unsigned int seed_doc_id,
 			notmuch_doc_id_set_t *match_set,
 			notmuch_string_list_t *excluded_terms,
+			notmuch_exclude_t omit_exclude,
 			notmuch_sort_t sort);
 
 /* message.cc */

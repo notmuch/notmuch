@@ -227,7 +227,8 @@ _thread_cleanup_author (notmuch_thread_t *thread,
 static void
 _thread_add_message (notmuch_thread_t *thread,
 		     notmuch_message_t *message,
-		     notmuch_string_list_t *exclude_terms)
+		     notmuch_string_list_t *exclude_terms,
+		     notmuch_exclude_t omit_exclude)
 {
     notmuch_tags_t *tags;
     const char *tag;
@@ -235,6 +236,28 @@ _thread_add_message (notmuch_thread_t *thread,
     InternetAddress *address;
     const char *from, *author;
     char *clean_author;
+    notmuch_bool_t message_excluded = FALSE;
+
+    for (tags = notmuch_message_get_tags (message);
+	 notmuch_tags_valid (tags);
+	 notmuch_tags_move_to_next (tags))
+    {
+	tag = notmuch_tags_get (tags);
+	/* Is message excluded? */
+	for (notmuch_string_node_t *term = exclude_terms->head;
+	     term != NULL;
+	     term = term->next)
+	{
+	    /* We ignore initial 'K'. */
+	    if (strcmp(tag, (term->string + 1)) == 0) {
+		message_excluded = TRUE;
+		break;
+	    }
+	}
+    }
+
+    if (message_excluded && omit_exclude == NOTMUCH_EXCLUDE_ALL)
+	return;
 
     _notmuch_message_list_add_message (thread->message_list,
 				       talloc_steal (thread, message));
@@ -275,17 +298,12 @@ _thread_add_message (notmuch_thread_t *thread,
 	 notmuch_tags_move_to_next (tags))
     {
 	tag = notmuch_tags_get (tags);
-	/* Mark excluded messages. */
-	for (notmuch_string_node_t *term = exclude_terms->head; term;
-	     term = term->next) {
-	    /* We ignore initial 'K'. */
-	    if (strcmp(tag, (term->string + 1)) == 0) {
-		notmuch_message_set_flag (message, NOTMUCH_MESSAGE_FLAG_EXCLUDED, TRUE);
-		break;
-	    }
-	}
 	g_hash_table_insert (thread->tags, xstrdup (tag), NULL);
     }
+
+    /* Mark excluded messages. */
+    if (message_excluded)
+	notmuch_message_set_flag (message, NOTMUCH_MESSAGE_FLAG_EXCLUDED, TRUE);
 }
 
 static void
@@ -409,6 +427,7 @@ _notmuch_thread_create (void *ctx,
 			unsigned int seed_doc_id,
 			notmuch_doc_id_set_t *match_set,
 			notmuch_string_list_t *exclude_terms,
+			notmuch_exclude_t omit_excluded,
 			notmuch_sort_t sort)
 {
     void *local = talloc_new (ctx);
@@ -488,7 +507,7 @@ _notmuch_thread_create (void *ctx,
 	if (doc_id == seed_doc_id)
 	    message = seed_message;
 
-	_thread_add_message (thread, message, exclude_terms);
+	_thread_add_message (thread, message, exclude_terms, omit_excluded);
 
 	if ( _notmuch_doc_id_set_contains (match_set, doc_id)) {
 	    _notmuch_doc_id_set_remove (match_set, doc_id);
