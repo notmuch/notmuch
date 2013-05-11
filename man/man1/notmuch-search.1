@@ -147,9 +147,11 @@ results. Excluded messages are still marked in the relevant outputs.
 
 .B flag
 only has an effect when
-.B --output=summary
-In this case all matching threads are returned but the "match count"
-is the number of matching non-excluded messages in the thread.
+.BR --output=summary .
+The output is almost identical to
+.BR false ,
+but the "match count" is the number of matching non-excluded messages in the
+thread, rather than the number of matching messages.
 .RE
 
 .SH EXIT STATUS
