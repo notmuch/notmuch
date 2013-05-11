@@ -166,6 +166,16 @@ ${matching_message_ids[3]}
 ${matching_message_ids[4]}
 ${matching_message_ids[5]}"
 
+test_begin_subtest "Search, exclude=all (thread summary)"
+output=$(notmuch search --exclude=all tag:test | notmuch_search_sanitize)
+test_expect_equal "$output" "thread:XXX   2001-01-05 [1/5] Notmuch Test Suite; Some messages excluded: single non-excluded match: reply 4 (inbox test unread)
+thread:XXX   2001-01-05 [1/6] Notmuch Test Suite; No messages excluded: single match: reply 3 (inbox test unread)"
+
+test_begin_subtest "Search, exclude=all (messages)"
+output=$(notmuch search --exclude=all --output=messages tag:test | notmuch_search_sanitize)
+test_expect_equal "$output" "${matching_message_ids[4]}
+${matching_message_ids[5]}"
+
 test_begin_subtest "Search, default exclusion: tag in query (thread summary)"
 output=$(notmuch search tag:test and tag:deleted | notmuch_search_sanitize)
 test_expect_equal "$output" "thread:XXX   2001-01-05 [1/6] Notmuch Test Suite; All messages excluded: single match: reply 2 (deleted inbox test unread)
@@ -218,6 +228,18 @@ ${matching_message_ids[1]}
 ${matching_message_ids[2]}
 ${matching_message_ids[3]}"
 
+test_begin_subtest "Search, exclude=all: tag in query (thread summary)"
+output=$(notmuch search --exclude=all tag:test and tag:deleted | notmuch_search_sanitize)
+test_expect_equal "$output" "thread:XXX   2001-01-05 [1/6] Notmuch Test Suite; All messages excluded: single match: reply 2 (deleted inbox test unread)
+thread:XXX   2001-01-05 [2/6] Notmuch Test Suite; All messages excluded: double match: reply 2 (deleted inbox test unread)
+thread:XXX   2001-01-05 [1/6] Notmuch Test Suite; Some messages excluded: single excluded match: reply 3 (deleted inbox test unread)"
+
+test_begin_subtest "Search, exclude=all: tag in query (messages)"
+output=$(notmuch search --exclude=all --output=messages tag:test and tag:deleted | notmuch_search_sanitize)
+test_expect_equal "$output" "${matching_message_ids[0]}
+${matching_message_ids[1]}
+${matching_message_ids[2]}
+${matching_message_ids[3]}"
 
 #########################################################
 # Notmuch count tests
