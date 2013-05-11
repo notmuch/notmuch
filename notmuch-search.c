@@ -283,13 +283,6 @@ do_search_tags (notmuch_database_t *notmuch,
     return 0;
 }
 
-enum {
-    EXCLUDE_TRUE,
-    EXCLUDE_FALSE,
-    EXCLUDE_FLAG,
-    EXCLUDE_ALL
-};
-
 int
 notmuch_search_command (notmuch_config_t *config, int argc, char *argv[])
 {
@@ -302,7 +295,7 @@ notmuch_search_command (notmuch_config_t *config, int argc, char *argv[])
     output_t output = OUTPUT_SUMMARY;
     int offset = 0;
     int limit = -1; /* unlimited */
-    int exclude = EXCLUDE_TRUE;
+    notmuch_exclude_t exclude = NOTMUCH_EXCLUDE_TRUE;
     unsigned int i;
 
     enum {
@@ -332,10 +325,10 @@ notmuch_search_command (notmuch_config_t *config, int argc, char *argv[])
 				  { "tags", OUTPUT_TAGS },
 				  { 0, 0 } } },
         { NOTMUCH_OPT_KEYWORD, &exclude, "exclude", 'x',
-          (notmuch_keyword_t []){ { "true", EXCLUDE_TRUE },
-                                  { "false", EXCLUDE_FALSE },
-                                  { "flag", EXCLUDE_FLAG },
-                                  { "all", EXCLUDE_ALL },
+          (notmuch_keyword_t []){ { "true", NOTMUCH_EXCLUDE_TRUE },
+                                  { "false", NOTMUCH_EXCLUDE_FALSE },
+                                  { "flag", NOTMUCH_EXCLUDE_FLAG },
+                                  { "all", NOTMUCH_EXCLUDE_ALL },
                                   { 0, 0 } } },
 	{ NOTMUCH_OPT_INT, &offset, "offset", 'O', 0 },
 	{ NOTMUCH_OPT_INT, &limit, "limit", 'L', 0  },
@@ -394,15 +387,15 @@ notmuch_search_command (notmuch_config_t *config, int argc, char *argv[])
 
     notmuch_query_set_sort (query, sort);
 
-    if (exclude == EXCLUDE_FLAG && output != OUTPUT_SUMMARY) {
+    if (exclude == NOTMUCH_EXCLUDE_FLAG && output != OUTPUT_SUMMARY) {
 	/* If we are not doing summary output there is nowhere to
 	 * print the excluded flag so fall back on including the
 	 * excluded messages. */
 	fprintf (stderr, "Warning: this output format cannot flag excluded messages.\n");
-	exclude = EXCLUDE_FALSE;
+	exclude = NOTMUCH_EXCLUDE_FALSE;
     }
 
-    if (exclude != EXCLUDE_FALSE) {
+    if (exclude != NOTMUCH_EXCLUDE_FALSE) {
 	const char **search_exclude_tags;
 	size_t search_exclude_tags_length;
 
@@ -410,10 +403,7 @@ notmuch_search_command (notmuch_config_t *config, int argc, char *argv[])
 	    (config, &search_exclude_tags_length);
 	for (i = 0; i < search_exclude_tags_length; i++)
 	    notmuch_query_add_tag_exclude (query, search_exclude_tags[i]);
-	if (exclude == EXCLUDE_FLAG)
-	    notmuch_query_set_omit_excluded (query, NOTMUCH_EXCLUDE_FLAG);
-	if (exclude == EXCLUDE_ALL)
-	    notmuch_query_set_omit_excluded (query, NOTMUCH_EXCLUDE_ALL);
+	notmuch_query_set_omit_excluded (query, exclude);
     }
 
     switch (output) {
