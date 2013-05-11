@@ -130,7 +130,7 @@ Limit the number of displayed results to N.
 
 .RS 4
 .TP 4
-.BR \-\-exclude=(true|false|flag)
+.BR \-\-exclude=(true|false|all|flag)
 
 A message is called "excluded" if it matches at least one tag in
 search.tag_exclude that does not appear explicitly in the search terms.
@@ -140,6 +140,10 @@ process.
 The default value,
 .BR true ,
 prevents excluded messages from matching the search terms.
+
+.B all
+additionally prevents excluded messages from appearing in displayed
+results, in effect behaving as though the excluded messages do not exist.
 
 .B false
 allows excluded messages to match search terms and appear in displayed
