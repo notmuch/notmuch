@@ -218,13 +218,15 @@ notmuch_query_search_messages (notmuch_query_t *query)
 	}
 	messages->base.excluded_doc_ids = NULL;
 
-	if (query->exclude_terms) {
+	if ((query->omit_excluded != NOTMUCH_EXCLUDE_FALSE) && (query->exclude_terms)) {
 	    exclude_query = _notmuch_exclude_tags (query, final_query);
 
-	    if (query->omit_excluded != NOTMUCH_EXCLUDE_FALSE)
+	    if (query->omit_excluded == NOTMUCH_EXCLUDE_TRUE ||
+		query->omit_excluded == NOTMUCH_EXCLUDE_ALL)
+	    {
 		final_query = Xapian::Query (Xapian::Query::OP_AND_NOT,
 					     final_query, exclude_query);
-	    else {
+	    } else { /* NOTMUCH_EXCLUDE_FLAG */
 		exclude_query = Xapian::Query (Xapian::Query::OP_AND,
 					   exclude_query, final_query);
 

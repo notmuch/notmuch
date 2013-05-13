@@ -411,7 +411,7 @@ notmuch_search_command (notmuch_config_t *config, int argc, char *argv[])
 	for (i = 0; i < search_exclude_tags_length; i++)
 	    notmuch_query_add_tag_exclude (query, search_exclude_tags[i]);
 	if (exclude == EXCLUDE_FLAG)
-	    notmuch_query_set_omit_excluded (query, NOTMUCH_EXCLUDE_FALSE);
+	    notmuch_query_set_omit_excluded (query, NOTMUCH_EXCLUDE_FLAG);
 	if (exclude == EXCLUDE_ALL)
 	    notmuch_query_set_omit_excluded (query, NOTMUCH_EXCLUDE_ALL);
     }

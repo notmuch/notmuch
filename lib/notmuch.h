@@ -500,10 +500,15 @@ typedef enum {
 const char *
 notmuch_query_get_query_string (notmuch_query_t *query);
 
-/* Exclude values for notmuch_query_set_omit_excluded */
+/* Exclude values for notmuch_query_set_omit_excluded. The strange
+ * order is to maintain backward compatibility: the old FALSE/TRUE
+ * options correspond to the new
+ * NOTMUCH_EXCLUDE_FLAG/NOTMUCH_EXCLUDE_TRUE options.
+ */
 typedef enum {
-    NOTMUCH_EXCLUDE_FALSE,
+    NOTMUCH_EXCLUDE_FLAG,
     NOTMUCH_EXCLUDE_TRUE,
+    NOTMUCH_EXCLUDE_FALSE,
     NOTMUCH_EXCLUDE_ALL
 } notmuch_exclude_t;
 
@@ -516,6 +521,15 @@ typedef enum {
  * notmuch_query_search_threads will include all messages in threads that
  * match in at least one non-excluded message.  Otherwise, if set to ALL,
  * notmuch_query_search_threads will omit excluded messages from all threads.
+ *
+ * If set to FALSE or FLAG then both notmuch_query_search_messages and
+ * notmuch_query_search_threads will return all matching
+ * messages/threads regardless of exclude status. If set to FLAG then
+ * the exclude flag will be set for any excluded message that is
+ * returned by notmuch_query_search_messages, and the thread counts
+ * for threads returned by notmuch_query_search_threads will be the
+ * number of non-excluded messages/matches. Otherwise, if set to
+ * FALSE, then the exclude status is completely ignored.
  *
  * The performance difference when calling
  * notmuch_query_search_messages should be relatively small (and both

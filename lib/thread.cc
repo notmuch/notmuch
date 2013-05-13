@@ -238,20 +238,22 @@ _thread_add_message (notmuch_thread_t *thread,
     char *clean_author;
     notmuch_bool_t message_excluded = FALSE;
 
-    for (tags = notmuch_message_get_tags (message);
-	 notmuch_tags_valid (tags);
-	 notmuch_tags_move_to_next (tags))
-    {
-	tag = notmuch_tags_get (tags);
-	/* Is message excluded? */
-	for (notmuch_string_node_t *term = exclude_terms->head;
-	     term != NULL;
-	     term = term->next)
+    if (omit_exclude != NOTMUCH_EXCLUDE_FALSE) {
+	for (tags = notmuch_message_get_tags (message);
+	     notmuch_tags_valid (tags);
+	     notmuch_tags_move_to_next (tags))
 	{
-	    /* We ignore initial 'K'. */
-	    if (strcmp(tag, (term->string + 1)) == 0) {
-		message_excluded = TRUE;
-		break;
+	    tag = notmuch_tags_get (tags);
+	    /* Is message excluded? */
+	    for (notmuch_string_node_t *term = exclude_terms->head;
+		 term != NULL;
+		 term = term->next)
+	    {
+		/* We ignore initial 'K'. */
+		if (strcmp(tag, (term->string + 1)) == 0) {
+		    message_excluded = TRUE;
+		    break;
+		}
 	    }
 	}
     }
