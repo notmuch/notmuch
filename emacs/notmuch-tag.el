@@ -292,3 +292,7 @@ begin with a \"+\" or a \"-\". If REVERSE is non-nil, replace all
 ;;
 
 (provide 'notmuch-tag)
+
+;; Local Variables:
+;; byte-compile-warnings: (not cl-functions)
+;; End:
