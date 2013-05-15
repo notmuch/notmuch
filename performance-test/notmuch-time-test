@@ -16,12 +16,6 @@ fi
 
 cd $(dirname "$0")
 
-TESTS="
-  T00-new
-  T01-dump-restore
-  T02-tag
-"
-
-for test in $TESTS; do
-    ./$test "$@"
+for test in T*.sh; do
+    ./"$test" "$@"
 done
