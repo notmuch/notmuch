@@ -660,7 +660,7 @@ of the result."
 		      ;; things happen if a sentinel signals.  Mimic
 		      ;; the top-level's handling of error messages.
 		      (error
-		       (message "%s" (second err))
+		       (message "%s" (error-message-string err))
 		       (throw 'return nil)))
 		    (if (and atbob
 			     (not (string= notmuch-search-target-thread "found")))
