@@ -438,7 +438,7 @@ You may need to restart Emacs or upgrade your notmuch package."))
 	(if err
 	    ;; We have an error message straight from the CLI.
 	    (notmuch-logged-error
-	     (replace-regexp-in-string "\\s $" "" err) extra)
+	     (replace-regexp-in-string "[ \n\r\t\f]*\\'" "" err) extra)
 	  ;; We only have combined output from the CLI; don't inundate
 	  ;; the user with it.  Mimic `process-lines'.
 	  (notmuch-logged-error (format "%s exited with status %s"
