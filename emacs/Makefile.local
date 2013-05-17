@@ -22,6 +22,18 @@ emacs_images := \
 
 emacs_bytecode = $(emacs_sources:.el=.elc)
 
+# Because of defmacro's and defsubst's, we have to account for load
+# dependencies between Elisp files when byte compiling.  Otherwise,
+# the byte compiler may load an old .elc file when processing a
+# "require" or we may fail to rebuild a .elc that depended on a macro
+# from an updated file.
+$(dir)/.eldeps: $(dir)/Makefile.local $(dir)/make-deps.el $(emacs_sources)
+	$(call quiet,EMACS) --directory emacs -batch -l make-deps.el \
+		-f batch-make-deps $(emacs_sources) > $@.tmp && \
+		(cmp -s $@.tmp $@ || mv $@.tmp $@)
+-include $(dir)/.eldeps
+CLEAN+=$(dir)/.eldeps $(dir)/.eldeps.tmp
+
 %.elc: %.el $(global_deps)
 	$(call quiet,EMACS) --directory emacs -batch -f batch-byte-compile $<
 
