@@ -5,9 +5,26 @@
 
 require 'mkmf'
 
-# Notmuch Library
-find_header('notmuch.h', '../../lib')
-find_library('notmuch', 'notmuch_database_create', '../../lib')
+dir = File.join('..', '..', 'lib')
+
+# includes
+$INCFLAGS = "-I#{dir} #{$INCFLAGS}"
+
+# make sure there are no undefined symbols
+$LDFLAGS += ' -Wl,--no-undefined'
+
+def have_local_library(lib, path, func, headers = nil)
+  checking_for checking_message(func, lib) do
+    lib = File.join(path, lib)
+    if try_func(func, lib, headers)
+      $LOCAL_LIBS += lib
+    end
+  end
+end
+
+if not have_local_library('libnotmuch.so', dir, 'notmuch_database_create', 'notmuch.h')
+  exit 1
+end
 
 # Create Makefile
 dir_config('notmuch')
