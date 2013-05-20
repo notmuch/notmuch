@@ -180,5 +180,5 @@ notmuch_rb_query_count_messages (VALUE self)
      * (function may return 0 after printing a message)
      * Thus there is nothing we can do here...
      */
-    return UINT2FIX(notmuch_query_count_messages(query));
+    return UINT2NUM(notmuch_query_count_messages(query));
 }
