@@ -27,6 +27,15 @@ has accumulated bugs and gaps in functionality.  We recommend that
 people packaging notmuch no longer provide binary packages for
 notmuch-vim, but of course that is their decision.
 
+Emacs Interface
+---------------
+
+No Emacs 22 support
+
+  The Emacs 22 support added late 2010 was sufficient only for a short
+  period of time. After being incomplete for roughly 2 years the code
+  in question was now removed from this release.
+
 Notmuch 0.15.2 (2013-02-17)
 ===========================
 
