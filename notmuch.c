@@ -28,7 +28,6 @@ typedef struct command {
     const char *name;
     command_function_t function;
     notmuch_bool_t create_config;
-    const char *arguments;
     const char *summary;
 } command_t;
 
@@ -40,40 +39,28 @@ notmuch_command (notmuch_config_t *config, int argc, char *argv[]);
 
 static command_t commands[] = {
     { NULL, notmuch_command, TRUE,
-      NULL,
       "Notmuch main command." },
     { "setup", notmuch_setup_command, TRUE,
-      NULL,
       "Interactively setup notmuch for first use." },
     { "new", notmuch_new_command, FALSE,
-      "[options...]",
       "Find and import new messages to the notmuch database." },
     { "search", notmuch_search_command, FALSE,
-      "[options...] <search-terms> [...]",
       "Search for messages matching the given search terms." },
     { "show", notmuch_show_command, FALSE,
-      "<search-terms> [...]",
       "Show all messages matching the search terms." },
     { "count", notmuch_count_command, FALSE,
-      "[options...] <search-terms> [...]",
       "Count messages matching the search terms." },
     { "reply", notmuch_reply_command, FALSE,
-      "[options...] <search-terms> [...]",
       "Construct a reply template for a set of messages." },
     { "tag", notmuch_tag_command, FALSE,
-      "+<tag>|-<tag> [...] [--] <search-terms> [...]" ,
       "Add/remove tags for all messages matching the search terms." },
     { "dump", notmuch_dump_command, FALSE,
-      "[<filename>] [--] [<search-terms>]",
       "Create a plain-text dump of the tags for each message." },
     { "restore", notmuch_restore_command, FALSE,
-      "[--accumulate] [<filename>]",
       "Restore the tags from the given dump file (see 'dump')." },
     { "config", notmuch_config_command, FALSE,
-      "[get|set] <section>.<item> [value ...]",
       "Get or set settings in the notmuch configuration file." },
     { "help", notmuch_help_command, TRUE, /* create but don't save config */
-      "[<command>]",
       "This message, or more detailed help for the named command." }
 };
 
