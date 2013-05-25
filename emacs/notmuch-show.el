@@ -39,6 +39,7 @@
 
 (declare-function notmuch-call-notmuch-process "notmuch" (&rest args))
 (declare-function notmuch-search-next-thread "notmuch" nil)
+(declare-function notmuch-search-previous-thread "notmuch" nil)
 (declare-function notmuch-search-show-thread "notmuch" nil)
 
 (defcustom notmuch-message-headers '("Subject" "To" "Cc" "Date")
@@ -1268,6 +1269,8 @@ reset based on the original query."
 	(define-key map "P" 'notmuch-show-previous-message)
 	(define-key map "n" 'notmuch-show-next-open-message)
 	(define-key map "p" 'notmuch-show-previous-open-message)
+	(define-key map (kbd "M-n") 'notmuch-show-next-thread-show)
+	(define-key map (kbd "M-p") 'notmuch-show-previous-thread-show)
 	(define-key map (kbd "DEL") 'notmuch-show-rewind)
 	(define-key map " " 'notmuch-show-advance-and-archive)
 	(define-key map (kbd "M-RET") 'notmuch-show-open-or-close-all)
@@ -1829,16 +1832,33 @@ argument, hide all of the messages."
   (interactive)
   (backward-button 1))
 
-(defun notmuch-show-next-thread (&optional show-next)
-  "Move to the next item in the search results, if any."
+(defun notmuch-show-next-thread (&optional show previous)
+  "Move to the next item in the search results, if any.
+
+If SHOW is non-nil, open the next item in a show
+buffer. Otherwise just highlight the next item in the search
+buffer. If PREVIOUS is non-nil, move to the previous item in the
+search results instead."
   (interactive "P")
   (let ((parent-buffer notmuch-show-parent-buffer))
     (notmuch-kill-this-buffer)
     (when (buffer-live-p parent-buffer)
       (switch-to-buffer parent-buffer)
-      (notmuch-search-next-thread)
-      (if show-next
-	  (notmuch-search-show-thread)))))
+      (and (if previous
+	       (notmuch-search-previous-thread)
+	     (notmuch-search-next-thread))
+	   show
+	   (notmuch-search-show-thread)))))
+
+(defun notmuch-show-next-thread-show ()
+  "Show the next thread in the search results, if any."
+  (interactive)
+  (notmuch-show-next-thread t))
+
+(defun notmuch-show-previous-thread-show ()
+  "Show the previous thread in the search results, if any."
+  (interactive)
+  (notmuch-show-next-thread t t))
 
 (defun notmuch-show-archive-thread (&optional unarchive)
   "Archive each message in thread.
