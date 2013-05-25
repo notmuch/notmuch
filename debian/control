@@ -19,7 +19,7 @@ Build-Depends:
  emacs24-nox | emacs24 (>=24~) | emacs24-lucid (>=24~),
  gdb,
  dtach (>= 0.8)
-Standards-Version: 3.9.3
+Standards-Version: 3.9.4
 Homepage: http://notmuchmail.org/
 Vcs-Git: git://notmuchmail.org/git/notmuch
 Vcs-Browser: http://git.notmuchmail.org/git/notmuch
