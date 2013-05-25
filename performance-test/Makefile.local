@@ -2,7 +2,7 @@
 
 dir := performance-test
 
-include $(dir)/version.sh
+include $(srcdir)/$(dir)/version.sh
 
 TIME_TEST_SCRIPT := ${dir}/notmuch-time-test
 MEMORY_TEST_SCRIPT := ${dir}/notmuch-memory-test
