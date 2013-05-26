@@ -4,6 +4,37 @@ Notmuch 0.16 (2013-MM-DD)
 Command-Line Interface
 ----------------------
 
+Decrypting commands explicitly expect a gpg-agent
+
+  Decryption in `notmuch show` and `notmuch reply` has only ever
+  worked with a functioning gpg-agent. This is now made explicit in
+  code and documentation. The functional change is that it's now
+  possible to have gpg-agent running, but gpg "use-agent"
+  configuration option disabled, not forcing the user to use the agent
+  everywhere.
+
+`notmuch count --batch` option
+
+  `notmuch count` now supports batch operations similar to `notmuch
+  tag`. This is mostly an optimization for remote notmuch usage.
+
+Configuration file saves follow symbolic links
+
+  The notmuch commands that save the configuration file now follow
+  symbolic links instead of overwrite them.
+
+`notmuch tag` option to remove all tags from matching messages
+
+  `notmuch tag --remove-all` option has been added to remove all tags
+  from matching messages. This can be combined with adding new tags,
+  resulting in setting (rather than modifying) the tags of the
+  messages.
+
+Top level option to specify configuration file
+
+  It's now possible to specify the configuration file to use on the
+  command line using the `notmuch --config=FILE` option.
+
 Deprecated commands "part" and "search-tags" are removed.
 
 Bash command-line completion
