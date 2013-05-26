@@ -528,20 +528,15 @@ message at DEPTH in the current thread."
 
 (defun notmuch-show-view-part (message-id nth &optional filename content-type )
   (notmuch-with-temp-part-buffer message-id nth
-    ;; set mm-inlined-types to nil to force an external viewer
-    (let ((handle (mm-make-handle (current-buffer) (list content-type)))
-	  (mm-inlined-types nil))
-      ;; We override mm-save-part as notmuch-show-save-part is better
-      ;; since it offers the filename. We need to lexically bind
-      ;; everything we need for notmuch-show-save-part to prevent
-      ;; potential dynamic shadowing.
-      (lexical-let ((message-id message-id)
-		    (nth nth)
-		    (filename filename)
-		    (content-type content-type))
-	(flet ((mm-save-part (&rest args) (notmuch-show-save-part
-					   message-id nth filename content-type)))
-	  (mm-display-part handle))))))
+    (let* ((disposition (if filename `(attachment (filename . ,filename))))
+	   (handle (mm-make-handle (current-buffer) (list content-type)
+				   nil nil disposition))
+	   ;; Set the default save directory to be consistent with
+	   ;; `notmuch-show-save-part'.
+	   (mm-default-directory (or mailcap-download-directory "~/"))
+	   ;; set mm-inlined-types to nil to force an external viewer
+	   (mm-inlined-types nil))
+      (mm-display-part handle))))
 
 (defun notmuch-show-interactively-view-part (message-id nth &optional filename content-type)
   (notmuch-with-temp-part-buffer message-id nth
