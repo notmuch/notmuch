@@ -1,10 +1,18 @@
+notmuch (0.15.2-2) unstable; urgency=low
+
+  * Bug fix: tighten dependence of notmuch-mutt on notmuch,
+    thanks to Philippe Gimmel and Jameson Rollins (Closes: #703608).
+  * Bump Standards-Version to 3.9.4; no changes.
+
+ -- David Bremner <bremner@debian.org>  Sat, 25 May 2013 18:37:23 -0300
+
 notmuch (0.15.2-1) experimental; urgency=low
 
   * Upstream bug fix release.
     - Improve support for parallel building
     - Update Emacs tests for portability, fix FTBFS on hurd-i386
 
- -- David Bremner <bremner@debian.org>  Tue, 29 Jan 2013 19:19:25 -0400
+ -- David Bremner <bremner@debian.org>  Fri, 22 Mar 2013 20:42:42 -0400
 
 notmuch (0.15.1-1) experimental; urgency=low
 
