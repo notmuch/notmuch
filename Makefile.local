@@ -39,8 +39,8 @@ GPG_FILE=$(SHA1_FILE).asc
 PV_FILE=bindings/python/notmuch/version.py
 
 # Smash together user's values with our extra values
-FINAL_CFLAGS = -DNOTMUCH_VERSION=$(VERSION) $(CFLAGS) $(WARN_CFLAGS) $(CONFIGURE_CFLAGS) $(extra_cflags)
-FINAL_CXXFLAGS = $(CXXFLAGS) $(WARN_CXXFLAGS) $(CONFIGURE_CXXFLAGS) $(extra_cflags) $(extra_cxxflags)
+FINAL_CFLAGS = -DNOTMUCH_VERSION=$(VERSION) $(CPPFLAGS) $(CFLAGS) $(WARN_CFLAGS) $(CONFIGURE_CFLAGS) $(extra_cflags)
+FINAL_CXXFLAGS = $(CPPFLAGS) $(CXXFLAGS) $(WARN_CXXFLAGS) $(CONFIGURE_CXXFLAGS) $(extra_cflags) $(extra_cxxflags)
 FINAL_NOTMUCH_LDFLAGS = $(LDFLAGS) -Lutil -lutil -Llib -lnotmuch $(AS_NEEDED_LDFLAGS) $(GMIME_LDFLAGS) $(TALLOC_LDFLAGS)
 FINAL_NOTMUCH_LINKER = CC
 ifneq ($(LINKER_RESOLVES_LIBRARY_DEPENDENCIES),1)
@@ -237,11 +237,11 @@ quiet ?= $($(shell echo $1 | sed -e s'/ .*//'))
 
 %.o: %.cc $(global_deps)
 	@mkdir -p .deps/$(@D)
-	$(call quiet,CXX $(CXXFLAGS)) -c $(FINAL_CXXFLAGS) $< -o $@ -MD -MP -MF .deps/$*.d
+	$(call quiet,CXX $(CPPFLAGS) $(CXXFLAGS)) -c $(FINAL_CXXFLAGS) $< -o $@ -MD -MP -MF .deps/$*.d
 
 %.o: %.c $(global_deps)
 	@mkdir -p .deps/$(@D)
-	$(call quiet,CC $(CFLAGS)) -c $(FINAL_CFLAGS) $< -o $@ -MD -MP -MF .deps/$*.d
+	$(call quiet,CC $(CPPFLAGS) $(CFLAGS)) -c $(FINAL_CFLAGS) $< -o $@ -MD -MP -MF .deps/$*.d
 
 .PHONY : clean
 clean:
