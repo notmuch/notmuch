@@ -35,6 +35,11 @@ Top level option to specify configuration file
   It's now possible to specify the configuration file to use on the
   command line using the `notmuch --config=FILE` option.
 
+Top level option to redirect writes to stderr
+
+  With `notmuch --stderr=FILE` all writes to stderr are redirected to
+  the specified file. If FILE is '-', stderr is redirected to stdout.
+
 Deprecated commands "part" and "search-tags" are removed.
 
 Bash command-line completion
