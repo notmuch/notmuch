@@ -251,6 +251,32 @@ notmuch_command (notmuch_config_t *config,
     return 0;
 }
 
+static int
+redirect_stderr (const char * stderr_file)
+{
+    if (strcmp (stderr_file, "-") == 0) {
+	if (dup2 (STDOUT_FILENO, STDERR_FILENO) < 0) {
+	    perror ("dup2");
+	    return 1;
+	}
+    } else {
+	int fd = open (stderr_file, O_WRONLY|O_CREAT|O_TRUNC, 0666);
+	if (fd < 0) {
+	    fprintf (stderr, "Error: Cannot redirect stderr to '%s': %s\n",
+		     stderr_file, strerror (errno));
+	    return 1;
+	}
+	if (fd != STDERR_FILENO) {
+	    if (dup2 (fd, STDERR_FILENO) < 0) {
+		perror ("dup2");
+		return 1;
+	    }
+	    close (fd);
+	}
+    }
+    return 0;
+}
+
 int
 main (int argc, char *argv[])
 {
@@ -259,6 +285,7 @@ main (int argc, char *argv[])
     const char *command_name = NULL;
     command_t *command;
     char *config_file_name = NULL;
+    char *stderr_file = NULL;
     notmuch_config_t *config;
     notmuch_bool_t print_help=FALSE, print_version=FALSE;
     int opt_index;
@@ -268,6 +295,7 @@ main (int argc, char *argv[])
 	{ NOTMUCH_OPT_BOOLEAN, &print_help, "help", 'h', 0 },
 	{ NOTMUCH_OPT_BOOLEAN, &print_version, "version", 'v', 0 },
 	{ NOTMUCH_OPT_STRING, &config_file_name, "config", 'c', 0 },
+	{ NOTMUCH_OPT_STRING, &stderr_file, "stderr", '\0', 0 },
 	{ 0, 0, 0, 0, 0 }
     };
 
@@ -287,6 +315,10 @@ main (int argc, char *argv[])
 	return 1;
     }
 
+    if (stderr_file && redirect_stderr (stderr_file) != 0) {
+	/* error already printed */
+	return 1;
+    }
     if (print_help)
 	return notmuch_help_command (NULL, argc - 1, &argv[1]);
 
