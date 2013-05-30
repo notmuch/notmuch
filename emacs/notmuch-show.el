@@ -900,7 +900,17 @@ If HIDE is non-nil then initially hide this part."
     ;; Ensure that the part ends with a carriage return.
     (unless (bolp)
       (insert "\n"))
-    (notmuch-show-create-part-overlays msg beg (point) hide)))
+    (notmuch-show-create-part-overlays msg beg (point) hide)
+    ;; Record part information.  Since we already inserted subparts,
+    ;; don't override existing :notmuch-part properties.
+    (notmuch-map-text-property beg (point) :notmuch-part
+			       (lambda (v) (or v part)))
+    ;; Make :notmuch-part front sticky and rear non-sticky so it stays
+    ;; applied to the beginning of each line when we indent the message.
+    (notmuch-map-text-property beg (point) 'front-sticky
+			       (lambda (v) (pushnew :notmuch-part v)))
+    (notmuch-map-text-property beg (point) 'rear-nonsticky
+			       (lambda (v) (pushnew :notmuch-part v)))))
 
 (defun notmuch-show-insert-body (msg body depth)
   "Insert the body BODY at depth DEPTH in the current thread."
@@ -1403,6 +1413,14 @@ Some useful entries are:
   (save-excursion
     (notmuch-show-move-to-message-top)
     (get-text-property (point) :notmuch-message-properties)))
+
+(defun notmuch-show-get-part-properties ()
+  "Return the properties of the innermost part containing point.
+
+This is the part property list retrieved from the CLI.  Signals
+an error if there is no part containing point."
+  (or (get-text-property (point) :notmuch-part)
+      (error "No message part here")))
 
 (defun notmuch-show-set-prop (prop val &optional props)
   (let ((inhibit-read-only t)

@@ -360,6 +360,18 @@ OBJECT."
    below
    string))
 
+(defun notmuch-map-text-property (start end prop func &optional object)
+  "Transform text property PROP using FUNC.
+
+Applies FUNC to each distinct value of the text property PROP
+between START and END of OBJECT, setting PROP to the value
+returned by FUNC."
+  (while (< start end)
+    (let ((value (get-text-property start prop object))
+	  (next (next-single-property-change start prop object end)))
+      (put-text-property start next prop (funcall func value) object)
+      (setq start next))))
+
 (defun notmuch-logged-error (msg &optional extra)
   "Log MSG and EXTRA to *Notmuch errors* and signal MSG.
 
