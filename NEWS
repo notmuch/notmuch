@@ -66,6 +66,22 @@ notmuch-vim, but of course that is their decision.
 Emacs Interface
 ---------------
 
+New keymap to view/save parts
+
+  To view or save a single MIME part of a message, use the new "."
+  submap (e.g., ". s" to save, ". v" to view).  Previously, these keys
+  were only available when point was on a part button and they did not
+  have the "." prefix, so they were difficult to invoke (impossible if
+  a part did not have a button) and clashed with other bindings.
+  These new bindings also appear in show's help, so you don't have to
+  memorize them.
+
+Default part save directory is now `mm-default-directory`
+
+  Previously, notmuch offered to save parts and attachments to a mix
+  of `mm-default-directory`, `mailcap-download-directory`, and `~/`.
+  This has been standardized on `mm-default-directory`.
+
 No Emacs 22 support
 
   The Emacs 22 support added late 2010 was sufficient only for a short
