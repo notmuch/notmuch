@@ -466,21 +466,9 @@ message at DEPTH in the current thread."
 
 (define-button-type 'notmuch-show-part-button-type
   'action 'notmuch-show-part-button-default
-  'keymap 'notmuch-show-part-button-map
   'follow-link t
   'face 'message-mml
   :supertype 'notmuch-button-type)
-
-(defvar notmuch-show-part-button-map
-  (let ((map (make-sparse-keymap)))
-    (set-keymap-parent map button-map)
-    (define-key map "s" 'notmuch-show-save-part)
-    (define-key map "v" 'notmuch-show-view-part)
-    (define-key map "o" 'notmuch-show-interactively-view-part)
-    (define-key map "|" 'notmuch-show-pipe-part)
-    map)
-  "Submap for button commands")
-(fset 'notmuch-show-part-button-map notmuch-show-part-button-map)
 
 (defun notmuch-show-insert-part-header (nth content-type declared-type &optional name comment)
   (let ((button)
@@ -1202,6 +1190,16 @@ reset based on the original query."
   "Submap for stash commands")
 (fset 'notmuch-show-stash-map notmuch-show-stash-map)
 
+(defvar notmuch-show-part-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map "s" 'notmuch-show-save-part)
+    (define-key map "v" 'notmuch-show-view-part)
+    (define-key map "o" 'notmuch-show-interactively-view-part)
+    (define-key map "|" 'notmuch-show-pipe-part)
+    map)
+  "Submap for part commands")
+(fset 'notmuch-show-part-map notmuch-show-part-map)
+
 (defvar notmuch-show-mode-map
       (let ((map (make-sparse-keymap)))
 	(define-key map "?" 'notmuch-help)
@@ -1244,6 +1242,7 @@ reset based on the original query."
 	(define-key map "$" 'notmuch-show-toggle-process-crypto)
 	(define-key map "<" 'notmuch-show-toggle-thread-indentation)
 	(define-key map "t" 'toggle-truncate-lines)
+	(define-key map "." 'notmuch-show-part-map)
 	map)
       "Keymap for \"notmuch show\" buffers.")
 (fset 'notmuch-show-mode-map notmuch-show-mode-map)
