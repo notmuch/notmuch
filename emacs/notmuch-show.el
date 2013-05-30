@@ -474,10 +474,10 @@ message at DEPTH in the current thread."
 (defvar notmuch-show-part-button-map
   (let ((map (make-sparse-keymap)))
     (set-keymap-parent map button-map)
-    (define-key map "s" 'notmuch-show-part-button-save)
-    (define-key map "v" 'notmuch-show-part-button-view)
-    (define-key map "o" 'notmuch-show-part-button-interactively-view)
-    (define-key map "|" 'notmuch-show-part-button-pipe)
+    (define-key map "s" 'notmuch-show-save-part)
+    (define-key map "v" 'notmuch-show-view-part)
+    (define-key map "o" 'notmuch-show-interactively-view-part)
+    (define-key map "|" 'notmuch-show-pipe-part)
     map)
   "Submap for button commands")
 (fset 'notmuch-show-part-button-map notmuch-show-part-button-map)
@@ -494,60 +494,10 @@ message at DEPTH in the current thread."
 	  (insert-button
 	   (concat "[ " base-label " ]")
 	   :base-label base-label
-	   :type 'notmuch-show-part-button-type
-	   :notmuch-part nth
-	   :notmuch-filename name
-	   :notmuch-content-type content-type))
+	   :type 'notmuch-show-part-button-type))
     (insert "\n")
     ;; return button
     button))
-
-;; Functions handling particular MIME parts.
-
-(defmacro notmuch-with-temp-part-buffer (message-id nth &rest body)
-  (declare (indent 2))
-  (let ((process-crypto (make-symbol "process-crypto")))
-    `(let ((,process-crypto notmuch-show-process-crypto))
-       (with-temp-buffer
-	 (setq notmuch-show-process-crypto ,process-crypto)
-	 ;; Always acquires the part via `notmuch part', even if it is
-	 ;; available in the JSON output.
-	 (insert (notmuch-get-bodypart-internal ,message-id ,nth notmuch-show-process-crypto))
-	 ,@body))))
-
-(defun notmuch-show-save-part (message-id nth &optional filename content-type)
-  (notmuch-with-temp-part-buffer message-id nth
-    (let ((file (read-file-name
-		 "Filename to save as: "
-		 (or mailcap-download-directory "~/")
-		 nil nil
-		 filename)))
-      ;; Don't re-compress .gz & al.  Arguably we should make
-      ;; `file-name-handler-alist' nil, but that would chop
-      ;; ange-ftp, which is reasonable to use here.
-      (mm-write-region (point-min) (point-max) file nil nil nil 'no-conversion t))))
-
-(defun notmuch-show-view-part (message-id nth &optional filename content-type )
-  (notmuch-with-temp-part-buffer message-id nth
-    (let* ((disposition (if filename `(attachment (filename . ,filename))))
-	   (handle (mm-make-handle (current-buffer) (list content-type)
-				   nil nil disposition))
-	   ;; Set the default save directory to be consistent with
-	   ;; `notmuch-show-save-part'.
-	   (mm-default-directory (or mailcap-download-directory "~/"))
-	   ;; set mm-inlined-types to nil to force an external viewer
-	   (mm-inlined-types nil))
-      (mm-display-part handle))))
-
-(defun notmuch-show-interactively-view-part (message-id nth &optional filename content-type)
-  (notmuch-with-temp-part-buffer message-id nth
-    (let ((handle (mm-make-handle (current-buffer) (list content-type))))
-      (mm-interactively-view-part handle))))
-
-(defun notmuch-show-pipe-part (message-id nth &optional filename content-type)
-  (notmuch-with-temp-part-buffer message-id nth
-    (let ((handle (mm-make-handle (current-buffer) (list content-type))))
-      (mm-pipe-part handle))))
 
 ;; This is taken from notmuch-wash: maybe it should be unified?
 (defun notmuch-show-toggle-part-invisibility (&optional button)
@@ -569,6 +519,8 @@ message at DEPTH in the current thread."
 	  (move-overlay button new-start (point))
 	  (delete-region (point) old-end))
 	(goto-char (min old-point (1- (button-end button))))))))
+
+;; MIME part renderers
 
 (defun notmuch-show-multipart/*-to-list (part)
   (mapcar (lambda (inner-part) (plist-get inner-part :content-type))
@@ -2023,40 +1975,71 @@ the user (see `notmuch-show-stash-mlarchive-link-alist')."
   (notmuch-show-stash-mlarchive-link mla)
   (browse-url (current-kill 0 t)))
 
-;; Commands typically bound to buttons.
+;; Interactive part functions and their helpers
+
+(defun notmuch-show-generate-part-buffer (message-id nth)
+  "Return a temporary buffer containing the specified part's content."
+  (let ((buf (generate-new-buffer " *notmuch-part*"))
+	(process-crypto notmuch-show-process-crypto))
+    (with-current-buffer buf
+      (setq notmuch-show-process-crypto process-crypto)
+      ;; Always acquires the part via `notmuch part', even if it is
+      ;; available in the JSON output.
+      (insert (notmuch-get-bodypart-internal message-id nth notmuch-show-process-crypto)))
+    buf))
+
+(defun notmuch-show-current-part-handle ()
+  "Return an mm-handle for the part containing point.
+
+This creates a temporary buffer for the part's content; the
+caller is responsible for killing this buffer as appropriate."
+  (let* ((part (notmuch-show-get-part-properties))
+	 (message-id (notmuch-show-get-message-id))
+	 (nth (plist-get part :id))
+	 (buf (notmuch-show-generate-part-buffer message-id nth))
+	 (content-type (plist-get part :content-type))
+	 (filename (plist-get part :filename))
+	 (disposition (if filename `(attachment (filename . ,filename)))))
+    (mm-make-handle buf (list content-type) nil nil disposition)))
+
+(defun notmuch-show-apply-to-current-part-handle (fn)
+  "Apply FN to an mm-handle for the part containing point.
+
+This ensures that the temporary buffer created for the mm-handle
+is destroyed when FN returns."
+  (let ((handle (notmuch-show-current-part-handle)))
+    (unwind-protect
+	(funcall fn handle)
+      (kill-buffer (mm-handle-buffer handle)))))
 
 (defun notmuch-show-part-button-default (&optional button)
   (interactive)
   (let ((button (or button (button-at (point)))))
     (if (button-get button 'overlay)
 	(notmuch-show-toggle-part-invisibility button)
-      (notmuch-show-part-button-internal button notmuch-show-part-button-default-action))))
+      (call-interactively notmuch-show-part-button-default-action))))
 
-(defun notmuch-show-part-button-save (&optional button)
+(defun notmuch-show-save-part ()
+  "Save the MIME part containing point to a file."
   (interactive)
-  (notmuch-show-part-button-internal button #'notmuch-show-save-part))
+  (notmuch-show-apply-to-current-part-handle #'mm-save-part))
 
-(defun notmuch-show-part-button-view (&optional button)
+(defun notmuch-show-view-part ()
+  "View the MIME part containing point in an external viewer."
   (interactive)
-  (notmuch-show-part-button-internal button #'notmuch-show-view-part))
+  ;; Set mm-inlined-types to nil to force an external viewer
+  (let ((mm-inlined-types nil))
+    (notmuch-show-apply-to-current-part-handle #'mm-display-part)))
 
-(defun notmuch-show-part-button-interactively-view (&optional button)
+(defun notmuch-show-interactively-view-part ()
+  "View the MIME part containing point, prompting for a viewer."
   (interactive)
-  (notmuch-show-part-button-internal button #'notmuch-show-interactively-view-part))
+  (notmuch-show-apply-to-current-part-handle #'mm-interactively-view-part))
 
-(defun notmuch-show-part-button-pipe (&optional button)
+(defun notmuch-show-pipe-part ()
+  "Pipe the MIME part containing point to an external command."
   (interactive)
-  (notmuch-show-part-button-internal button #'notmuch-show-pipe-part))
+  (notmuch-show-apply-to-current-part-handle #'mm-pipe-part))
 
-(defun notmuch-show-part-button-internal (button handler)
-  (let ((button (or button (button-at (point)))))
-    (if button
-	(let ((nth (button-get button :notmuch-part)))
-	  (if nth
-	      (funcall handler (notmuch-show-get-message-id) nth
-		       (button-get button :notmuch-filename)
-		       (button-get button :notmuch-content-type)))))))
-
-;;
 
 (provide 'notmuch-show)

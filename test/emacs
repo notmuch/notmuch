@@ -525,7 +525,9 @@ test_expect_equal_file attachment1.gz "$EXPECTED/attachment"
 test_begin_subtest "Save attachment from within emacs using notmuch-show-save-part"
 # save as archive to test that Emacs does not re-compress .gz
 test_emacs '(let ((standard-input "\"attachment2.gz\""))
-	      (notmuch-show-save-part "id:cf0c4d610911171136h1713aa59w9cf9aa31f052ad0a@mail.gmail.com" 5))'
+	      (notmuch-show "id:cf0c4d610911171136h1713aa59w9cf9aa31f052ad0a@mail.gmail.com")
+	      (search-forward "0001-Deal-with")
+	      (notmuch-show-save-part))'
 test_expect_equal_file attachment2.gz "$EXPECTED/attachment"
 
 test_begin_subtest "Save 8bit attachment from within emacs using notmuch-show-save-attachments"
