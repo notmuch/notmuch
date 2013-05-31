@@ -54,7 +54,6 @@ typedef GMimeCipherContext notmuch_crypto_context_t;
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <unistd.h>
-#include <fcntl.h>
 #include <dirent.h>
 #include <errno.h>
 #include <signal.h>

@@ -9,13 +9,4 @@ test_expect_success 'notmuch help' 'notmuch help'
 test_expect_success 'notmuch help tag' 'notmuch help tag'
 test_expect_success 'notmuch --version' 'notmuch --version'
 
-test_begin_subtest "notmuch --stderr=stderr help %"
-notmuch --stderr=stderr help %
-test_expect_equal "$(cat stderr)" "
-Sorry, % is not a known command. There's not much I can do to help."
-
-test_begin_subtest "notmuch --stderr=- help %"
-test_expect_equal "$(notmuch --stderr=- help %)" "
-Sorry, % is not a known command. There's not much I can do to help."
-
 test_done
