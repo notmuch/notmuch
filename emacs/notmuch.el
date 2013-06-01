@@ -58,6 +58,7 @@
 (require 'notmuch-hello)
 (require 'notmuch-maildir-fcc)
 (require 'notmuch-message)
+(require 'notmuch-parser)
 
 (defcustom notmuch-search-result-format
   `(("date" . "%12s ")
@@ -809,13 +810,6 @@ non-authors is found, assume that all of the authors match."
 	(setq notmuch-search-target-thread "found")
 	(goto-char beg)))))
 
-(defun notmuch-search-show-error (string &rest objects)
-  (save-excursion
-    (goto-char (point-max))
-    (insert "Error: Unexpected output from notmuch search:\n")
-    (insert (apply #'format string objects))
-    (insert "\n")))
-
 (defun notmuch-search-process-filter (proc string)
   "Process and filter the output of \"notmuch search\""
   (let ((results-buf (process-buffer proc))
@@ -829,8 +823,7 @@ non-authors is found, assume that all of the authors match."
 	(save-excursion
 	  (goto-char (point-max))
 	  (insert string))
-	(notmuch-json-parse-partial-list 'notmuch-search-show-result
-					 'notmuch-search-show-error
+	(notmuch-sexp-parse-partial-list 'notmuch-search-show-result
 					 results-buf)))))
 
 (defun notmuch-search-tag-all (&optional tag-changes)
@@ -933,7 +926,7 @@ Other optional parameters are used as follows:
       (save-excursion
 	(let ((proc (notmuch-start-notmuch
 		     "notmuch-search" buffer #'notmuch-search-process-sentinel
-		     "search" "--format=json" "--format-version=1"
+		     "search" "--format=sexp" "--format-version=1"
 		     (if oldest-first
 			 "--sort=oldest-first"
 		       "--sort=newest-first")
