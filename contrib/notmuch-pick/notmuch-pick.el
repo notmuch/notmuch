@@ -384,7 +384,8 @@ Does NOT change the database."
 	(with-current-buffer buffer
 	  (setq notmuch-pick-message-window window)
 	  (add-hook 'kill-buffer-hook 'notmuch-pick-message-window-kill-hook)))
-      (notmuch-pick-tag-update-display (list "-unread"))
+      (when notmuch-show-mark-read-tags
+	(notmuch-pick-tag-update-display notmuch-show-mark-read-tags))
       (setq notmuch-pick-message-buffer buffer))))
 
 (defun notmuch-pick-show-message-out ()
