@@ -376,8 +376,8 @@ Does NOT change the database."
 	    (split-window-vertically (/ (window-height) 4)))
       (with-selected-window notmuch-pick-message-window
 	;; Since we are only displaying one message do not indent.
-	(let ((notmuch-show-indent-messages-width 0))
-	  (setq current-prefix-arg '(4))
+	(let ((notmuch-show-indent-messages-width 0)
+	      (notmuch-show-only-matching-messages t))
 	  (setq buffer (notmuch-show id nil nil nil))))
       ;; We need the `let' as notmuch-pick-message-window is buffer local.
       (let ((window notmuch-pick-message-window))
