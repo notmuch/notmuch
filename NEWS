@@ -82,6 +82,17 @@ Default part save directory is now `mm-default-directory`
   of `mm-default-directory`, `mailcap-download-directory`, and `~/`.
   This has been standardized on `mm-default-directory`.
 
+Better handling of errors in search buffers
+
+  Instead of interleaving errors in search result buffers, search mode
+  now reports errors in the minibuffer.
+
+Faster search results
+
+  Communication between search mode and the notmuch CLI is now more
+  efficient because it uses the CLI's S-expression support.  As a
+  result, search mode should now fill search buffers faster.
+
 No Emacs 22 support
 
   The Emacs 22 support added late 2010 was sufficient only for a short
