@@ -395,18 +395,21 @@ signaled error.  This function does not return."
   (error "%s" (concat msg (when extra
 			    " (see *Notmuch errors* for more details)"))))
 
-(defun notmuch-check-async-exit-status (proc msg)
+(defun notmuch-check-async-exit-status (proc msg &optional command err-file)
   "If PROC exited abnormally, pop up an error buffer and signal an error.
 
 This is a wrapper around `notmuch-check-exit-status' for
 asynchronous process sentinels.  PROC and MSG must be the
-arguments passed to the sentinel."
+arguments passed to the sentinel.  COMMAND and ERR-FILE, if
+provided, are passed to `notmuch-check-exit-status'.  If COMMAND
+is not provided, it is taken from `process-command'."
   (let ((exit-status
 	 (case (process-status proc)
 	   ((exit) (process-exit-status proc))
 	   ((signal) msg))))
     (when exit-status
-      (notmuch-check-exit-status exit-status (process-command proc)))))
+      (notmuch-check-exit-status exit-status (or command (process-command proc))
+				 nil err-file))))
 
 (defun notmuch-check-exit-status (exit-status command &optional output err-file)
   "If EXIT-STATUS is non-zero, pop up an error buffer and signal an error.
@@ -460,7 +463,7 @@ You may need to restart Emacs or upgrade your notmuch package."))
 	))))
 
 (defun notmuch-call-notmuch-json (&rest args)
-  "Invoke `notmuch-command' with `args' and return the parsed JSON output.
+  "Invoke `notmuch-command' with ARGS and return the parsed JSON output.
 
 The returned output will represent objects using property lists
 and arrays as lists.  If notmuch exits with a non-zero status,
@@ -480,6 +483,72 @@ an error."
 		  (json-false 'nil))
 	      (json-read)))
 	(delete-file err-file)))))
+
+(defun notmuch-start-notmuch (name buffer sentinel &rest args)
+  "Start and return an asynchronous notmuch command.
+
+This starts and returns an asynchronous process running
+`notmuch-command' with ARGS.  The exit status is checked via
+`notmuch-check-async-exit-status'.  Output written to stderr is
+redirected and displayed when the process exits (even if the
+process exits successfully).  NAME and BUFFER are the same as in
+`start-process'.  SENTINEL is a process sentinel function to call
+when the process exits, or nil for none.  The caller must *not*
+invoke `set-process-sentinel' directly on the returned process,
+as that will interfere with the handling of stderr and the exit
+status."
+
+  ;; There is no way (as of Emacs 24.3) to capture stdout and stderr
+  ;; separately for asynchronous processes, or even to redirect stderr
+  ;; to a file, so we use a trivial shell wrapper to send stderr to a
+  ;; temporary file and clean things up in the sentinel.
+  (let* ((err-file (make-temp-file "nmerr"))
+	 ;; Use a pipe
+	 (process-connection-type nil)
+	 ;; Find notmuch using Emacs' `exec-path'
+	 (command (or (executable-find notmuch-command)
+		      (error "command not found: %s" notmuch-command)))
+	 (proc (apply #'start-process name buffer
+		      "/bin/sh" "-c"
+		      "exec 2>\"$1\"; shift; exec \"$0\" \"$@\""
+		      command err-file args)))
+    (process-put proc 'err-file err-file)
+    (process-put proc 'sub-sentinel sentinel)
+    (process-put proc 'real-command (cons notmuch-command args))
+    (set-process-sentinel proc #'notmuch-start-notmuch-sentinel)
+    proc))
+
+(defun notmuch-start-notmuch-sentinel (proc event)
+  (let ((err-file (process-get proc 'err-file))
+	(sub-sentinel (process-get proc 'sub-sentinel))
+	(real-command (process-get proc 'real-command)))
+    (condition-case err
+	(progn
+	  ;; Invoke the sub-sentinel, if any
+	  (when sub-sentinel
+	    (funcall sub-sentinel proc event))
+	  ;; Check the exit status.  This will signal an error if the
+	  ;; exit status is non-zero.
+	  (notmuch-check-async-exit-status proc event real-command err-file)
+	  ;; If that didn't signal an error, then any error output was
+	  ;; really warning output.  Show warnings, if any.
+	  (let ((warnings
+		 (with-temp-buffer
+		   (unless (= (second (insert-file-contents err-file)) 0)
+		     (end-of-line)
+		     ;; Show first line; stuff remaining lines in the
+		     ;; errors buffer.
+		     (let ((l1 (buffer-substring (point-min) (point))))
+		       (skip-chars-forward "\n")
+		       (cons l1 (unless (eobp)
+				  (buffer-substring (point) (point-max)))))))))
+	    (when warnings
+	      (notmuch-logged-error (car warnings) (cdr warnings)))))
+      (error
+       ;; Emacs behaves strangely if an error escapes from a sentinel,
+       ;; so turn errors into messages.
+       (message "%s" (error-message-string err))))
+    (ignore-errors (delete-file err-file))))
 
 ;; This variable is used only buffer local, but it needs to be
 ;; declared globally first to avoid compiler warnings.
