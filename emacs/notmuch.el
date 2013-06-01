@@ -653,15 +653,8 @@ of the result."
 		    ;; For version mismatch, there's no point in
 		    ;; showing the search buffer
 		    (when (or (= exit-status 20) (= exit-status 21))
-		      (kill-buffer))
-		    (condition-case err
-			(notmuch-check-async-exit-status proc msg)
-		      ;; Suppress the error signal since strange
-		      ;; things happen if a sentinel signals.  Mimic
-		      ;; the top-level's handling of error messages.
-		      (error
-		       (message "%s" (error-message-string err))
-		       (throw 'return nil)))
+		      (kill-buffer)
+		      (throw 'return nil))
 		    (if (and atbob
 			     (not (string= notmuch-search-target-thread "found")))
 			(set 'never-found-target-thread t)))))
@@ -938,10 +931,9 @@ Other optional parameters are used as follows:
       (erase-buffer)
       (goto-char (point-min))
       (save-excursion
-	(let ((proc (start-process
-		     "notmuch-search" buffer
-		     notmuch-command "search"
-		     "--format=json" "--format-version=1"
+	(let ((proc (notmuch-start-notmuch
+		     "notmuch-search" buffer #'notmuch-search-process-sentinel
+		     "search" "--format=json" "--format-version=1"
 		     (if oldest-first
 			 "--sort=oldest-first"
 		       "--sort=newest-first")
@@ -951,7 +943,6 @@ Other optional parameters are used as follows:
 	      ;; should be called no matter how the process dies.
 	      (parse-buf (generate-new-buffer " *notmuch search parse*")))
 	  (process-put proc 'parse-buf parse-buf)
-	  (set-process-sentinel proc 'notmuch-search-process-sentinel)
 	  (set-process-filter proc 'notmuch-search-process-filter)
 	  (set-process-query-on-exit-flag proc nil))))
     (run-hooks 'notmuch-search-hook)))

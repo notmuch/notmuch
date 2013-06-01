@@ -855,11 +855,10 @@ test_expect_success "Rendering HTML mail with images" \
     'cat OUTPUT && grep -q smiley OUTPUT'
 
 
-test_begin_subtest "Search handles subprocess errors"
+test_begin_subtest "Search handles subprocess error exit codes"
 cat > notmuch_fail <<EOF
 #!/bin/sh
 echo This is output
-echo This is an error >&2
 exit 1
 EOF
 chmod a+x notmuch_fail
@@ -876,8 +875,6 @@ sed -i -e 's/^\[.*\]$/[XXX]/' ERROR
 test_expect_equal "$(cat OUTPUT; echo ---; cat MESSAGES; echo ---; cat ERROR)" "\
 Error: Unexpected output from notmuch search:
 This is output
-Error: Unexpected output from notmuch search:
-This is an error
 End of search results.
 ---
 $PWD/notmuch_fail exited with status 1 (see *Notmuch errors* for more details)
@@ -886,5 +883,36 @@ $PWD/notmuch_fail exited with status 1 (see *Notmuch errors* for more details)
 $PWD/notmuch_fail exited with status 1
 command: $PWD/notmuch_fail search --format\=json --format-version\=1 --sort\=newest-first tag\:inbox
 exit status: 1"
+
+test_begin_subtest "Search handles subprocess warnings"
+cat > notmuch_fail <<EOF
+#!/bin/sh
+echo This is output
+echo This is a warning >&2
+echo This is another warning >&2
+exit 0
+EOF
+chmod a+x notmuch_fail
+test_emacs "(let ((notmuch-command \"$PWD/notmuch_fail\"))
+	       (with-current-buffer \"*Messages*\" (erase-buffer))
+	       (with-current-buffer \"*Notmuch errors*\" (erase-buffer))
+	       (notmuch-search \"tag:inbox\")
+	       (notmuch-test-wait)
+	       (with-current-buffer \"*Messages*\"
+		  (test-output \"MESSAGES\"))
+	       (with-current-buffer \"*Notmuch errors*\"
+		  (test-output \"ERROR\"))
+	       (test-output))"
+sed -i -e 's/^\[.*\]$/[XXX]/' ERROR
+test_expect_equal "$(cat OUTPUT; echo ---; cat MESSAGES; echo ---; cat ERROR)" "\
+Error: Unexpected output from notmuch search:
+This is output
+End of search results.
+---
+This is a warning (see *Notmuch errors* for more details)
+---
+[XXX]
+This is a warning
+This is another warning"
 
 test_done
