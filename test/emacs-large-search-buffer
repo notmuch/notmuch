@@ -29,15 +29,4 @@ test_emacs '(notmuch-search "*")
 sed -i -e s',  *, ,g' -e 's/xxx*/[BLOB]/g' OUTPUT
 test_expect_equal_file OUTPUT EXPECTED
 
-test_begin_subtest "Ensure that emacs doesn't drop error messages"
-test_emacs '(notmuch-search "--this-option-does-not-exist")
-	    (notmuch-test-wait)
-	    (test-output)'
-cat <<EOF >EXPECTED
-Error: Unexpected output from notmuch search:
-Unrecognized option: --this-option-does-not-exist
-End of search results.
-EOF
-test_expect_equal_file OUTPUT EXPECTED
-
 test_done
