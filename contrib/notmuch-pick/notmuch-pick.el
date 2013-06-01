@@ -773,8 +773,7 @@ Complete list of currently available key bindings:
         (save-excursion
           (goto-char (point-max))
           (insert string))
-	(notmuch-json-parse-partial-list 'notmuch-pick-insert-forest-thread
-					 'notmuch-pick-show-error
+	(notmuch-sexp-parse-partial-list 'notmuch-pick-insert-forest-thread
 					 results-buf)))))
 
 (defun notmuch-pick-worker (basic-query &optional query-context target buffer)
@@ -796,7 +795,7 @@ Complete list of currently available key bindings:
     (if notmuch-pick-asynchronous-parser
 	(let ((proc (start-process
 		     "notmuch-pick" buffer
-		     notmuch-command "show" "--body=false" "--format=json"
+		     notmuch-command "show" "--body=false" "--format=sexp"
 		     message-arg search-args))
 	      ;; Use a scratch buffer to accumulate partial output.
               ;; This buffer will be killed by the sentinel, which
