@@ -1529,8 +1529,8 @@ This command is intended to be one of the simplest ways to
 process a thread of email. It works exactly like
 notmuch-show-advance, in that it scrolls through messages in a
 show buffer, except that when it gets to the end of the buffer it
-archives the entire current thread, (remove the \"inbox\" tag
-from each message), kills the buffer, and displays the next
+archives the entire current thread, (apply changes in
+`notmuch-archive-tags'), kills the buffer, and displays the next
 thread from the search from which this thread was originally
 shown."
   (interactive)
