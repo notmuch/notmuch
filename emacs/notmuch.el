@@ -904,9 +904,8 @@ Other optional parameters are used as follows:
   target-line: The line number to move to if the target thread does not
                appear in the search results."
   (interactive)
-  (if (null query)
-      (setq query (notmuch-read-query "Notmuch search: ")))
-  (let ((buffer (get-buffer-create (notmuch-search-buffer-title query))))
+  (let* ((query (or query (notmuch-read-query "Notmuch search: ")))
+	 (buffer (get-buffer-create (notmuch-search-buffer-title query))))
     (switch-to-buffer buffer)
     (notmuch-search-mode)
     ;; Don't track undo information for this buffer

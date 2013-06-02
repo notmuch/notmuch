@@ -1734,8 +1734,8 @@ TAG-CHANGES is a list of tag operations for `notmuch-tag'."
 
 See `notmuch-tag' for information on the format of TAG-CHANGES."
   (interactive)
-  (setq tag-changes (notmuch-tag (notmuch-show-get-message-id) tag-changes))
-  (let* ((current-tags (notmuch-show-get-tags))
+  (let* ((tag-changes (notmuch-tag (notmuch-show-get-message-id) tag-changes))
+	 (current-tags (notmuch-show-get-tags))
 	 (new-tags (notmuch-update-tags current-tags tag-changes)))
     (unless (equal current-tags new-tags)
       (notmuch-show-set-tags new-tags))))
