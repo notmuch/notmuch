@@ -12,5 +12,4 @@ libnotmuch*.dylib
 *.[ao]
 *~
 .*.swp
-*.elc
 releases
