@@ -562,7 +562,7 @@ will be signaled."
 (defun notmuch-search-tag-region (beg end &optional tag-changes)
   "Change tags for threads in the given region."
   (let ((search-string (notmuch-search-find-thread-id-region-search beg end)))
-    (setq tag-changes (funcall 'notmuch-tag search-string tag-changes))
+    (setq tag-changes (notmuch-tag search-string tag-changes))
     (notmuch-search-foreach-result beg end
       (lambda (pos)
 	(notmuch-search-set-tags
@@ -576,7 +576,7 @@ See `notmuch-tag' for information on the format of TAG-CHANGES."
   (interactive)
   (let* ((beg (if (region-active-p) (region-beginning) (point)))
 	 (end (if (region-active-p) (region-end) (point))))
-    (funcall 'notmuch-search-tag-region beg end tag-changes)))
+    (notmuch-search-tag-region beg end tag-changes)))
 
 (defun notmuch-search-add-tag ()
   "Same as `notmuch-search-tag' but sets initial input to '+'."

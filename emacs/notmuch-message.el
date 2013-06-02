@@ -40,7 +40,7 @@ the \"inbox\" and \"todo\" tags, you would set:
   ;; get the in-reply-to header and parse it for the message id.
   (let ((rep (mail-header-parse-addresses (message-field-value "In-Reply-To"))))
     (when (and notmuch-message-replied-tags rep)
-      (funcall 'notmuch-tag (notmuch-id-to-query (car (car rep)))
+      (notmuch-tag (notmuch-id-to-query (car (car rep)))
 	       (notmuch-tag-change-list notmuch-message-replied-tags)))))
 
 (add-hook 'message-send-hook 'notmuch-message-mark-replied)
