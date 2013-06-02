@@ -99,6 +99,11 @@ No Emacs 22 support
   period of time. After being incomplete for roughly 2 years the code
   in question was now removed from this release.
 
+Key bindings for next/previous thread
+
+  Show view has new key bindings M-n and M-p to move to the next and
+  previous thread in the search results.
+
 Notmuch 0.15.2 (2013-02-17)
 ===========================
 
