@@ -1835,10 +1835,9 @@ search results instead."
   "Archive each message in thread.
 
 Archive each message currently shown by applying the tag changes
-in `notmuch-archive-tags' to each (remove the \"inbox\" tag by
-default). If a prefix argument is given, the messages will be
-\"unarchived\", i.e. the tag changes in `notmuch-archive-tags'
-will be reversed.
+in `notmuch-archive-tags' to each. If a prefix argument is given,
+the messages will be \"unarchived\", i.e. the tag changes in
+`notmuch-archive-tags' will be reversed.
 
 Note: This command is safe from any race condition of new messages
 being delivered to the same thread. It does not archive the
@@ -1865,10 +1864,9 @@ buffer."
   "Archive the current message.
 
 Archive the current message by applying the tag changes in
-`notmuch-archive-tags' to it (remove the \"inbox\" tag by
-default). If a prefix argument is given, the message will be
-\"unarchived\", i.e. the tag changes in `notmuch-archive-tags'
-will be reversed."
+`notmuch-archive-tags' to it. If a prefix argument is given, the
+message will be \"unarchived\", i.e. the tag changes in
+`notmuch-archive-tags' will be reversed."
   (interactive "P")
   (when notmuch-archive-tags
     (apply 'notmuch-show-tag-message
