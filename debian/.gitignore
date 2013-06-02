@@ -1,10 +1,12 @@
 tmp/
 libnotmuch-dev/
-libnotmuch2/
+libnotmuch*/
 notmuch-emacs/
-notmuch-vim/
 notmuch/
-python-notmuch/
+notmuch-mutt/
+notmuch-ruby/
+python*-notmuch/
 *.debhelper
 *.debhelper.log
 *.substvars
+files
