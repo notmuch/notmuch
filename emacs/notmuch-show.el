@@ -846,11 +846,18 @@ If HIDE is non-nil then initially hide this part."
     (notmuch-map-text-property beg (point) :notmuch-part
 			       (lambda (v) (or v part)))
     ;; Make :notmuch-part front sticky and rear non-sticky so it stays
-    ;; applied to the beginning of each line when we indent the message.
+    ;; applied to the beginning of each line when we indent the
+    ;; message.  Since we're operating on arbitrary renderer output,
+    ;; watch out for sticky specs of t, which means all properties are
+    ;; front-sticky/rear-nonsticky.
     (notmuch-map-text-property beg (point) 'front-sticky
-			       (lambda (v) (pushnew :notmuch-part v)))
+			       (lambda (v) (if (listp v)
+					       (pushnew :notmuch-part v)
+					     v)))
     (notmuch-map-text-property beg (point) 'rear-nonsticky
-			       (lambda (v) (pushnew :notmuch-part v)))))
+			       (lambda (v) (if (listp v)
+					       (pushnew :notmuch-part v)
+					     v)))))
 
 (defun notmuch-show-insert-body (msg body depth)
   "Insert the body BODY at depth DEPTH in the current thread."
