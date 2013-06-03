@@ -63,15 +63,16 @@ bindings. The old font-end is available in the contrib subfolder.
 Emacs Interface
 ---------------
 
-New keymap to view/save parts
+New keymap to view/save parts; removed s/v/o/| part button bindings
 
-  To view or save a single MIME part of a message, use the new "."
-  submap (e.g., ". s" to save, ". v" to view).  Previously, these keys
-  were only available when point was on a part button and they did not
-  have the "." prefix, so they were difficult to invoke (impossible if
-  a part did not have a button) and clashed with other bindings.
-  These new bindings also appear in show's help, so you don't have to
-  memorize them.
+  The commands to view, save, and open MIME parts are now prefixed
+  with "." (". s" to save, ". v" to view, etc) and can be invoked with
+  point anywhere in a part, unlike the old commands, which were
+  restricted to part buttons.  The old "s"/"v"/"o"/"|" commands on
+  part buttons have been removed since they clashed with other
+  bindings (notably "s" for search!) and could not be invoked when
+  there was no part button.  The new, prefixed bindings appear in
+  show's help, so you no longer have to memorize them.
 
 Default part save directory is now `mm-default-directory`
 
