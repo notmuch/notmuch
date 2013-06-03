@@ -44,7 +44,7 @@ This gem is not mandatory, but it's extremely recommended.
 
 Simple:
 
- % gvim -c ':NotMuchR'
+ % gvim -c ':NotMuch'
 
 Enjoy ;)
 

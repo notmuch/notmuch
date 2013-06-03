@@ -394,7 +394,7 @@ function! s:set_defaults()
 	endif
 endfunction
 
-function! s:NotMuchR()
+function! s:NotMuch()
 	call s:set_defaults()
 
 ruby << EOF
@@ -831,6 +831,6 @@ EOF
 	call s:folders()
 endfunction
 
-command NotMuchR :call s:NotMuchR()
+command NotMuch :call s:NotMuch()
 
 " vim: set noexpandtab:
