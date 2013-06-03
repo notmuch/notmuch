@@ -213,6 +213,9 @@ For example, if you wanted to remove an \"unread\" tag and add a
   "Enable Visual Line mode."
   (visual-line-mode t))
 
+;; DEPRECATED in Notmuch 0.16 since we now have convenient part
+;; commands.  We'll keep the command around for a version or two in
+;; case people want to bind it themselves.
 (defun notmuch-show-view-all-mime-parts ()
   "Use external viewers to view all attachments from the current message."
   (interactive)
@@ -1272,7 +1275,6 @@ reset based on the original query."
 	(define-key map "|" 'notmuch-show-pipe-message)
 	(define-key map "w" 'notmuch-show-save-attachments)
 	(define-key map "V" 'notmuch-show-view-raw-message)
-	(define-key map "v" 'notmuch-show-view-all-mime-parts)
 	(define-key map "c" 'notmuch-show-stash-map)
 	(define-key map "=" 'notmuch-show-refresh-view)
 	(define-key map "h" 'notmuch-show-toggle-visibility-headers)
