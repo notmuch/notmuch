@@ -57,11 +57,8 @@ Bash command-line completion
 Vim Front-End
 -------------
 
-The vim based front end to notmuch is deprecated and moved to contrib.
-We haven't been able to support this as well as we would like, and it
-has accumulated bugs and gaps in functionality.  We recommend that
-people packaging notmuch no longer provide binary packages for
-notmuch-vim, but of course that is their decision.
+The vim based front-end has been replaced with a new one that uses the Ruby
+bindings. The old font-end is available in the contrib subfolder.
 
 Emacs Interface
 ---------------
