@@ -282,7 +282,7 @@ Does NOT change the database."
 (defun notmuch-pick-tag (&optional tag-changes)
   "Change tags for the current message"
   (interactive)
-  (setq tag-changes (funcall 'notmuch-tag (notmuch-pick-get-message-id) tag-changes))
+  (setq tag-changes (notmuch-tag (notmuch-pick-get-message-id) tag-changes))
   (notmuch-pick-tag-update-display tag-changes))
 
 (defun notmuch-pick-add-tag ()
