@@ -1008,17 +1008,8 @@ depending on the value of `notmuch-poll-script'."
 (defun notmuch-search-toggle-order ()
   "Toggle the current search order.
 
-By default, the \"inbox\" view created by `notmuch' is displayed
-in chronological order (oldest thread at the beginning of the
-buffer), while any global searches created by `notmuch-search'
-are displayed in reverse-chronological order (newest thread at
-the beginning of the buffer).
-
-This command toggles the sort order for the current search.
-
-Note that any filtered searches created by
-`notmuch-search-filter' retain the search order of the parent
-search."
+This command toggles the sort order for the current search. The
+default sort order is defined by `notmuch-search-oldest-first'."
   (interactive)
   (set 'notmuch-search-oldest-first (not notmuch-search-oldest-first))
   (notmuch-search-refresh-view))
