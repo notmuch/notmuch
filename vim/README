@@ -1,0 +1,62 @@
+== notmuch vim ruby ==
+
+This is a vim plug-in that provides a fully usable mail client interface,
+utilizing the notmuch framework, through it's ruby bindings.
+
+== install ==
+
+Simply run 'make install'. However, check that you have the depencies below.
+
+=== vim +ruby ===
+
+Make sure your vim version has ruby support: check for +ruby in 'vim --version'
+features.
+
+=== ruby bindings ===
+
+Check if you are able to run the following command cleanly:
+
+ % ruby -e "require 'notmuch'"
+
+If you don't see any errors, it means it's working and you can go to the next
+section.
+
+If it's not, you would need to compile them. Go to the 'bindings/ruby'
+directory in the notmuch source tree.
+
+=== mail gem ===
+
+Since libnotmuch library concentrates on things other than handling mail, we
+need a library to do that, and for Ruby the best library for that is called
+'mail'. The easiest way to install it is with ruby's gem. In most distro's the
+package is called 'rubygems'.
+
+Once you have gem, run:
+
+ % gem install mail
+
+In some systems gems are installed on a per-user basis by default, so make sure
+you are running as the same user as the one that installed them.
+
+This gem is not mandatory, but it's extremely recommended.
+
+== Running ==
+
+Simple:
+
+ % gvim -c ':NotMuchR'
+
+Enjoy ;)
+
+== More stuff ==
+
+As an example to configure a key mapping to add the tag 'to-do' and archive,
+this is what I use:
+
+let g:notmuch_rb_custom_search_maps = {
+	\ 't':		'search_tag("+to-do -inbox")',
+	\ }
+
+let g:notmuch_rb_custom_show_maps = {
+	\ 't':		'show_tag("+to-do -inbox")',
+	\ }
