@@ -443,10 +443,9 @@ Does NOT change the database."
   "Archive the current message.
 
 Archive the current message by applying the tag changes in
-`notmuch-archive-tags' to it (remove the \"inbox\" tag by
-default). If a prefix argument is given, the message will be
-\"unarchived\", i.e. the tag changes in `notmuch-archive-tags'
-will be reversed."
+`notmuch-archive-tags' to it. If a prefix argument is given, the
+message will be \"unarchived\", i.e. the tag changes in
+`notmuch-archive-tags' will be reversed."
   (interactive "P")
   (when notmuch-archive-tags
     (apply 'notmuch-pick-tag
