@@ -599,8 +599,9 @@ Complete list of currently available key bindings:
     (widget-insert "Recent searches: ")
     (widget-create 'push-button
 		   :notify (lambda (&rest ignore)
-			     (setq notmuch-search-history nil)
-			     (notmuch-hello-update))
+			     (when (y-or-n-p "Are you sure you want to clear the searches? ")
+			       (setq notmuch-search-history nil)
+			       (notmuch-hello-update)))
 		   "clear")
     (widget-insert "\n\n")
     (let ((start (point)))
