@@ -286,6 +286,15 @@ afterwards.")
     (message "Saved '%s' as '%s'." search name)
     (notmuch-hello-update)))
 
+(defun notmuch-hello-delete-search-from-history (widget)
+  (interactive)
+  (let ((search (widget-value
+		 (symbol-value
+		  (widget-get widget :notmuch-saved-search-widget)))))
+    (setq notmuch-search-history (delete search
+					 notmuch-search-history))
+    (notmuch-hello-update)))
+
 (defun notmuch-hello-longest-label (searches-alist)
   (or (loop for elem in searches-alist
 	    maximize (length (car elem)))
@@ -624,7 +633,12 @@ Complete list of currently available key bindings:
 						;; `[save]' button. 6
 						;; for the `[save]'
 						;; button.
-						1 6))
+						1 6
+						;; 1 for the space
+						;; before the `[del]'
+						;; button. 5 for the
+						;; `[del]' button.
+						1 5))
 				  :action (lambda (widget &rest ignore)
 					    (notmuch-hello-search (widget-value widget)))
 				  search))
@@ -633,7 +647,14 @@ Complete list of currently available key bindings:
 			     :notify (lambda (widget &rest ignore)
 				       (notmuch-hello-add-saved-search widget))
 			     :notmuch-saved-search-widget widget-symbol
-			     "save"))
+			     "save")
+	      (widget-insert " ")
+	      (widget-create 'push-button
+			     :notify (lambda (widget &rest ignore)
+				       (when (y-or-n-p "Are you sure you want to delete this search? ")
+					 (notmuch-hello-delete-search-from-history widget)))
+			     :notmuch-saved-search-widget widget-symbol
+			     "del"))
 	    (widget-insert "\n"))
       (indent-rigidly start (point) notmuch-hello-indent))
     nil))
