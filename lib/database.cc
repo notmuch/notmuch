@@ -649,7 +649,9 @@ notmuch_database_open (const char *path,
     }
 
     /* Initialize the GLib type system and threads */
+#if !GLIB_CHECK_VERSION(2, 35, 1)
     g_type_init ();
+#endif
 
     /* Initialize gmime */
     if (! initialized) {
