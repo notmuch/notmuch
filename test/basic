@@ -53,7 +53,8 @@ test_expect_code 2 'failure to clean up causes the test to fail' '
 test_begin_subtest 'Ensure that all available tests will be run by notmuch-test'
 eval $(sed -n -e '/^TESTS="$/,/^"$/p' $TEST_DIRECTORY/notmuch-test)
 tests_in_suite=$(for i in $TESTS; do echo $i; done | sort)
-available=$(find "$TEST_DIRECTORY" -maxdepth 1 -type f -perm +111  \
+available=$(find "$TEST_DIRECTORY" -maxdepth 1 -type f \
+   '(' -perm -100 -o -perm -10 -o -perm -1 ')' \
     ! -name aggregate-results.sh	\
     ! -name arg-test			\
     ! -name hex-xcode			\
