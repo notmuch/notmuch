@@ -528,8 +528,12 @@ status."
 	  (when sub-sentinel
 	    (funcall sub-sentinel proc event))
 	  ;; Check the exit status.  This will signal an error if the
-	  ;; exit status is non-zero.
-	  (notmuch-check-async-exit-status proc event real-command err-file)
+	  ;; exit status is non-zero.  Don't do this if the process
+	  ;; buffer is dead since that means Emacs killed the process
+	  ;; and there's no point in telling the user that (but we
+	  ;; still check for and report stderr output below).
+	  (when (buffer-live-p (process-buffer proc))
+	    (notmuch-check-async-exit-status proc event real-command err-file))
 	  ;; If that didn't signal an error, then any error output was
 	  ;; really warning output.  Show warnings, if any.
 	  (let ((warnings
