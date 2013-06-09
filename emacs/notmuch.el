@@ -821,8 +821,7 @@ non-authors is found, assume that all of the authors match."
 	(parse-buf (process-get proc 'parse-buf))
 	(inhibit-read-only t)
 	done)
-    (if (not (buffer-live-p results-buf))
-	(delete-process proc)
+    (when (buffer-live-p results-buf)
       (with-current-buffer parse-buf
 	;; Insert new data
 	(save-excursion
