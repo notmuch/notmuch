@@ -1751,7 +1751,10 @@ to stdout or stderr will appear in the *notmuch-pipe* buffer.
 When invoked with a prefix argument, the command will receive all
 open messages in the current thread (formatted as an mbox) rather
 than only the current message."
-  (interactive "P\nsPipe message to command: ")
+  (interactive (let ((query-string (if current-prefix-arg
+				       "Pipe all open messages to command: "
+				     "Pipe message to command: ")))
+		 (list current-prefix-arg (read-string query-string))))
   (let (shell-command)
     (if entire-thread
 	(setq shell-command
