@@ -482,7 +482,8 @@ message at DEPTH in the current thread."
 	  (insert-button
 	   (concat "[ " base-label " ]")
 	   :base-label base-label
-	   :type 'notmuch-show-part-button-type))
+	   :type 'notmuch-show-part-button-type
+	   :notmuch-part-hidden nil))
     (insert "\n")
     ;; return button
     button))
@@ -493,20 +494,22 @@ message at DEPTH in the current thread."
   (let* ((button (or button (button-at (point))))
 	 (overlay (button-get button 'overlay)))
     (when overlay
-      (let* ((show (overlay-get overlay 'invisible))
+      (let* ((show (button-get button :notmuch-part-hidden))
 	     (new-start (button-start button))
 	     (button-label (button-get button :base-label))
 	     (old-point (point))
 	     (properties (text-properties-at (point)))
 	     (inhibit-read-only t))
-	(overlay-put overlay 'invisible (not show))
+	;; Toggle the button itself.
+	(button-put button :notmuch-part-hidden (not show))
 	(goto-char new-start)
 	(insert "[ " button-label (if show " ]" " (hidden) ]"))
 	(set-text-properties new-start (point) properties)
 	(let ((old-end (button-end button)))
 	  (move-overlay button new-start (point))
 	  (delete-region (point) old-end))
-	(goto-char (min old-point (1- (button-end button))))))))
+	(goto-char (min old-point (1- (button-end button))))
+	(overlay-put overlay 'invisible (not show))))))
 
 ;; MIME part renderers
 
@@ -793,7 +796,7 @@ message at DEPTH in the current thread."
       (setq handlers (cdr handlers))))
   t)
 
-(defun notmuch-show-create-part-overlays (button beg end hide)
+(defun notmuch-show-create-part-overlays (button beg end)
   "Add an overlay to the part between BEG and END"
 
   ;; If there is no button (i.e., the part is text/plain and the first
@@ -801,11 +804,8 @@ message at DEPTH in the current thread."
   ;; toggleable.
   (when (and button (/= beg end))
     (button-put button 'overlay (make-overlay beg end))
-    ;; We toggle the button for hidden parts as that gets the
-    ;; button label right.
-    (save-excursion
-      (when hide
-	(notmuch-show-toggle-part-invisibility button)))))
+    ;; Return true if we created an overlay.
+    t))
 
 (defun notmuch-show-insert-bodypart (msg part depth &optional hide)
   "Insert the body part PART at depth DEPTH in the current thread.
@@ -832,7 +832,10 @@ If HIDE is non-nil then initially hide this part."
     ;; Ensure that the part ends with a carriage return.
     (unless (bolp)
       (insert "\n"))
-    (notmuch-show-create-part-overlays button content-beg (point) hide)
+    (notmuch-show-create-part-overlays button content-beg (point))
+    (when hide
+      (save-excursion
+	(notmuch-show-toggle-part-invisibility button)))
     ;; Record part information.  Since we already inserted subparts,
     ;; don't override existing :notmuch-part properties.
     (notmuch-map-text-property beg (point) :notmuch-part
