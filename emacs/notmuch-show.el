@@ -514,8 +514,7 @@ message at DEPTH in the current thread."
   (mapcar (lambda (inner-part) (plist-get inner-part :content-type))
 	  (plist-get part :content)))
 
-(defun notmuch-show-insert-part-multipart/alternative (msg part content-type nth depth declared-type)
-  (notmuch-show-insert-part-header nth declared-type content-type nil)
+(defun notmuch-show-insert-part-multipart/alternative (msg part content-type nth depth button)
   (let ((chosen-type (car (notmuch-multipart/alternative-choose (notmuch-show-multipart/*-to-list part))))
 	(inner-parts (plist-get part :content))
 	(start (point)))
@@ -592,8 +591,7 @@ message at DEPTH in the current thread."
 	  content-type)
       nil)))
 
-(defun notmuch-show-insert-part-multipart/related (msg part content-type nth depth declared-type)
-  (notmuch-show-insert-part-header nth declared-type content-type nil)
+(defun notmuch-show-insert-part-multipart/related (msg part content-type nth depth button)
   (let ((inner-parts (plist-get part :content))
 	(start (point)))
 
@@ -612,16 +610,15 @@ message at DEPTH in the current thread."
       (indent-rigidly start (point) 1)))
   t)
 
-(defun notmuch-show-insert-part-multipart/signed (msg part content-type nth depth declared-type)
-  (let ((button (notmuch-show-insert-part-header nth declared-type content-type nil)))
-    (button-put button 'face 'notmuch-crypto-part-header)
-    ;; add signature status button if sigstatus provided
-    (if (plist-member part :sigstatus)
-	(let* ((from (notmuch-show-get-header :From msg))
-	       (sigstatus (car (plist-get part :sigstatus))))
-	  (notmuch-crypto-insert-sigstatus-button sigstatus from))
-      ;; if we're not adding sigstatus, tell the user how they can get it
-      (button-put button 'help-echo "Set notmuch-crypto-process-mime to process cryptographic MIME parts.")))
+(defun notmuch-show-insert-part-multipart/signed (msg part content-type nth depth button)
+  (button-put button 'face 'notmuch-crypto-part-header)
+  ;; add signature status button if sigstatus provided
+  (if (plist-member part :sigstatus)
+      (let* ((from (notmuch-show-get-header :From msg))
+	     (sigstatus (car (plist-get part :sigstatus))))
+	(notmuch-crypto-insert-sigstatus-button sigstatus from))
+    ;; if we're not adding sigstatus, tell the user how they can get it
+    (button-put button 'help-echo "Set notmuch-crypto-process-mime to process cryptographic MIME parts."))
 
   (let ((inner-parts (plist-get part :content))
 	(start (point)))
@@ -634,20 +631,19 @@ message at DEPTH in the current thread."
       (indent-rigidly start (point) 1)))
   t)
 
-(defun notmuch-show-insert-part-multipart/encrypted (msg part content-type nth depth declared-type)
-  (let ((button (notmuch-show-insert-part-header nth declared-type content-type nil)))
-    (button-put button 'face 'notmuch-crypto-part-header)
-    ;; add encryption status button if encstatus specified
-    (if (plist-member part :encstatus)
-	(let ((encstatus (car (plist-get part :encstatus))))
-	  (notmuch-crypto-insert-encstatus-button encstatus)
-	  ;; add signature status button if sigstatus specified
-	  (if (plist-member part :sigstatus)
-	      (let* ((from (notmuch-show-get-header :From msg))
-		     (sigstatus (car (plist-get part :sigstatus))))
-		(notmuch-crypto-insert-sigstatus-button sigstatus from))))
-      ;; if we're not adding encstatus, tell the user how they can get it
-      (button-put button 'help-echo "Set notmuch-crypto-process-mime to process cryptographic MIME parts.")))
+(defun notmuch-show-insert-part-multipart/encrypted (msg part content-type nth depth button)
+  (button-put button 'face 'notmuch-crypto-part-header)
+  ;; add encryption status button if encstatus specified
+  (if (plist-member part :encstatus)
+      (let ((encstatus (car (plist-get part :encstatus))))
+	(notmuch-crypto-insert-encstatus-button encstatus)
+	;; add signature status button if sigstatus specified
+	(if (plist-member part :sigstatus)
+	    (let* ((from (notmuch-show-get-header :From msg))
+		   (sigstatus (car (plist-get part :sigstatus))))
+	      (notmuch-crypto-insert-sigstatus-button sigstatus from))))
+    ;; if we're not adding encstatus, tell the user how they can get it
+    (button-put button 'help-echo "Set notmuch-crypto-process-mime to process cryptographic MIME parts."))
 
   (let ((inner-parts (plist-get part :content))
 	(start (point)))
@@ -660,8 +656,7 @@ message at DEPTH in the current thread."
       (indent-rigidly start (point) 1)))
   t)
 
-(defun notmuch-show-insert-part-multipart/* (msg part content-type nth depth declared-type)
-  (notmuch-show-insert-part-header nth declared-type content-type nil)
+(defun notmuch-show-insert-part-multipart/* (msg part content-type nth depth button)
   (let ((inner-parts (plist-get part :content))
 	(start (point)))
     ;; Show all of the parts.
@@ -673,8 +668,7 @@ message at DEPTH in the current thread."
       (indent-rigidly start (point) 1)))
   t)
 
-(defun notmuch-show-insert-part-message/rfc822 (msg part content-type nth depth declared-type)
-  (notmuch-show-insert-part-header nth declared-type content-type nil)
+(defun notmuch-show-insert-part-message/rfc822 (msg part content-type nth depth button)
   (let* ((message (car (plist-get part :content)))
 	 (body (car (plist-get message :body)))
 	 (start (point)))
@@ -695,12 +689,13 @@ message at DEPTH in the current thread."
       (indent-rigidly start (point) 1)))
   t)
 
-(defun notmuch-show-insert-part-text/plain (msg part content-type nth depth declared-type)
-  (let ((start (point)))
-    ;; If this text/plain part is not the first part in the message,
-    ;; insert a header to make this clear.
-    (if (> nth 1)
-	(notmuch-show-insert-part-header nth declared-type content-type (plist-get part :filename)))
+(defun notmuch-show-insert-part-text/plain (msg part content-type nth depth button)
+  ;; For backward compatibility we want to apply the text/plain hook
+  ;; to the whole of the part including the part button if there is
+  ;; one.
+  (let ((start (if button
+		   (button-start button)
+		 (point))))
     (insert (notmuch-get-bodypart-content msg part nth notmuch-show-process-crypto))
     (save-excursion
       (save-restriction
@@ -708,8 +703,7 @@ message at DEPTH in the current thread."
 	(run-hook-with-args 'notmuch-show-insert-text/plain-hook msg depth))))
   t)
 
-(defun notmuch-show-insert-part-text/calendar (msg part content-type nth depth declared-type)
-  (notmuch-show-insert-part-header nth declared-type content-type (plist-get part :filename))
+(defun notmuch-show-insert-part-text/calendar (msg part content-type nth depth button)
   (insert (with-temp-buffer
 	    (insert (notmuch-get-bodypart-content msg part nth notmuch-show-process-crypto))
 	    ;; notmuch-get-bodypart-content provides "raw", non-converted
@@ -732,8 +726,8 @@ message at DEPTH in the current thread."
   t)
 
 ;; For backwards compatibility.
-(defun notmuch-show-insert-part-text/x-vcalendar (msg part content-type nth depth declared-type)
-  (notmuch-show-insert-part-text/calendar msg part content-type nth depth declared-type))
+(defun notmuch-show-insert-part-text/x-vcalendar (msg part content-type nth depth button)
+  (notmuch-show-insert-part-text/calendar msg part content-type nth depth button))
 
 (defun notmuch-show-get-mime-type-of-application/octet-stream (part)
   ;; If we can deduce a MIME type from the filename of the attachment,
@@ -751,7 +745,7 @@ message at DEPTH in the current thread."
 		nil))
 	  nil))))
 
-(defun notmuch-show-insert-part-text/html (msg part content-type nth depth declared-type)
+(defun notmuch-show-insert-part-text/html (msg part content-type nth depth button)
   ;; text/html handler to work around bugs in renderers and our
   ;; invisibile parts code. In particular w3m sets up a keymap which
   ;; "leaks" outside the invisible region and causes strange effects
@@ -759,11 +753,10 @@ message at DEPTH in the current thread."
   ;; tell w3m not to set a keymap (so the normal notmuch-show-mode-map
   ;; remains).
   (let ((mm-inline-text-html-with-w3m-keymap nil))
-    (notmuch-show-insert-part-*/* msg part content-type nth depth declared-type)))
+    (notmuch-show-insert-part-*/* msg part content-type nth depth button)))
 
-(defun notmuch-show-insert-part-*/* (msg part content-type nth depth declared-type)
+(defun notmuch-show-insert-part-*/* (msg part content-type nth depth button)
   ;; This handler _must_ succeed - it is the handler of last resort.
-  (notmuch-show-insert-part-header nth content-type declared-type (plist-get part :filename))
   (notmuch-mm-display-part-inline msg part nth content-type notmuch-show-process-crypto)
   t)
 
@@ -786,13 +779,13 @@ message at DEPTH in the current thread."
 
 ;; 
 
-(defun notmuch-show-insert-bodypart-internal (msg part content-type nth depth declared-type)
+(defun notmuch-show-insert-bodypart-internal (msg part content-type nth depth button)
   (let ((handlers (notmuch-show-handlers-for content-type)))
     ;; Run the content handlers until one of them returns a non-nil
     ;; value.
     (while (and handlers
 		(not (condition-case err
-			 (funcall (car handlers) msg part content-type nth depth declared-type)
+			 (funcall (car handlers) msg part content-type nth depth button)
 		       (error (progn
 				(insert "!!! Bodypart insert error: ")
 				(insert (error-message-string err))
@@ -820,6 +813,7 @@ message at DEPTH in the current thread."
   "Insert the body part PART at depth DEPTH in the current thread.
 
 If HIDE is non-nil then initially hide this part."
+
   (let* ((content-type (downcase (plist-get part :content-type)))
 	 (mime-type (or (and (string= content-type "application/octet-stream")
 			     (notmuch-show-get-mime-type-of-application/octet-stream part))
@@ -827,9 +821,12 @@ If HIDE is non-nil then initially hide this part."
 			     "text/x-diff")
 			content-type))
 	 (nth (plist-get part :id))
-	 (beg (point)))
+	 (beg (point))
+	 ;; We omit the part button for the first (or only) part if this is text/plain.
+	 (button (unless (and (string= mime-type "text/plain") (<= nth 1))
+		   (notmuch-show-insert-part-header nth mime-type content-type (plist-get part :filename)))))
 
-    (notmuch-show-insert-bodypart-internal msg part mime-type nth depth content-type)
+    (notmuch-show-insert-bodypart-internal msg part mime-type nth depth button)
     ;; Some of the body part handlers leave point somewhere up in the
     ;; part, so we make sure that we're down at the end.
     (goto-char (point-max))
