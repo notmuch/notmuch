@@ -793,21 +793,19 @@ message at DEPTH in the current thread."
       (setq handlers (cdr handlers))))
   t)
 
-(defun notmuch-show-create-part-overlays (msg beg end hide)
+(defun notmuch-show-create-part-overlays (button beg end hide)
   "Add an overlay to the part between BEG and END"
-  (let* ((button (button-at beg))
-	 (part-beg (and button (1+ (button-end button)))))
 
-    ;; If the part contains no text we do not make it toggleable. We
-    ;; also need to check that the button is a genuine part button not
-    ;; a notmuch-wash button.
-    (when (and button (/= part-beg end) (button-get button :base-label))
-      (button-put button 'overlay (make-overlay part-beg end))
-      ;; We toggle the button for hidden parts as that gets the
-      ;; button label right.
-      (save-excursion
-	(when hide
-	  (notmuch-show-toggle-part-invisibility button))))))
+  ;; If there is no button (i.e., the part is text/plain and the first
+  ;; part) or if the part has no content then we don't make the part
+  ;; toggleable.
+  (when (and button (/= beg end))
+    (button-put button 'overlay (make-overlay beg end))
+    ;; We toggle the button for hidden parts as that gets the
+    ;; button label right.
+    (save-excursion
+      (when hide
+	(notmuch-show-toggle-part-invisibility button)))))
 
 (defun notmuch-show-insert-bodypart (msg part depth &optional hide)
   "Insert the body part PART at depth DEPTH in the current thread.
@@ -824,7 +822,8 @@ If HIDE is non-nil then initially hide this part."
 	 (beg (point))
 	 ;; We omit the part button for the first (or only) part if this is text/plain.
 	 (button (unless (and (string= mime-type "text/plain") (<= nth 1))
-		   (notmuch-show-insert-part-header nth mime-type content-type (plist-get part :filename)))))
+		   (notmuch-show-insert-part-header nth mime-type content-type (plist-get part :filename))))
+	 (content-beg (point)))
 
     (notmuch-show-insert-bodypart-internal msg part mime-type nth depth button)
     ;; Some of the body part handlers leave point somewhere up in the
@@ -833,7 +832,7 @@ If HIDE is non-nil then initially hide this part."
     ;; Ensure that the part ends with a carriage return.
     (unless (bolp)
       (insert "\n"))
-    (notmuch-show-create-part-overlays msg beg (point) hide)
+    (notmuch-show-create-part-overlays button content-beg (point) hide)
     ;; Record part information.  Since we already inserted subparts,
     ;; don't override existing :notmuch-part properties.
     (notmuch-map-text-property beg (point) :notmuch-part
