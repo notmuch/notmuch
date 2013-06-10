@@ -751,10 +751,6 @@ message at DEPTH in the current thread."
 		nil))
 	  nil))))
 
-;; Handler for wash generated inline patch fake parts.
-(defun notmuch-show-insert-part-inline-patch-fake-part (msg part content-type nth depth declared-type)
-  (notmuch-show-insert-part-*/* msg part content-type nth depth declared-type))
-
 (defun notmuch-show-insert-part-text/html (msg part content-type nth depth declared-type)
   ;; text/html handler to work around bugs in renderers and our
   ;; invisibile parts code. In particular w3m sets up a keymap which
