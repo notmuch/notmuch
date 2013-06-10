@@ -807,6 +807,27 @@ message at DEPTH in the current thread."
     ;; Return true if we created an overlay.
     t))
 
+(defun notmuch-show-record-part-information (part beg end)
+  "Store PART as a text property from BEG to END"
+
+  ;; Record part information.  Since we already inserted subparts,
+  ;; don't override existing :notmuch-part properties.
+  (notmuch-map-text-property beg end :notmuch-part
+			     (lambda (v) (or v part)))
+  ;; Make :notmuch-part front sticky and rear non-sticky so it stays
+  ;; applied to the beginning of each line when we indent the
+  ;; message.  Since we're operating on arbitrary renderer output,
+  ;; watch out for sticky specs of t, which means all properties are
+  ;; front-sticky/rear-nonsticky.
+  (notmuch-map-text-property beg end 'front-sticky
+			     (lambda (v) (if (listp v)
+					     (pushnew :notmuch-part v)
+					   v)))
+  (notmuch-map-text-property beg end 'rear-nonsticky
+			     (lambda (v) (if (listp v)
+					     (pushnew :notmuch-part v)
+					   v))))
+
 (defun notmuch-show-insert-bodypart (msg part depth &optional hide)
   "Insert the body part PART at depth DEPTH in the current thread.
 
@@ -836,23 +857,7 @@ If HIDE is non-nil then initially hide this part."
     (when hide
       (save-excursion
 	(notmuch-show-toggle-part-invisibility button)))
-    ;; Record part information.  Since we already inserted subparts,
-    ;; don't override existing :notmuch-part properties.
-    (notmuch-map-text-property beg (point) :notmuch-part
-			       (lambda (v) (or v part)))
-    ;; Make :notmuch-part front sticky and rear non-sticky so it stays
-    ;; applied to the beginning of each line when we indent the
-    ;; message.  Since we're operating on arbitrary renderer output,
-    ;; watch out for sticky specs of t, which means all properties are
-    ;; front-sticky/rear-nonsticky.
-    (notmuch-map-text-property beg (point) 'front-sticky
-			       (lambda (v) (if (listp v)
-					       (pushnew :notmuch-part v)
-					     v)))
-    (notmuch-map-text-property beg (point) 'rear-nonsticky
-			       (lambda (v) (if (listp v)
-					       (pushnew :notmuch-part v)
-					     v)))))
+    (notmuch-show-record-part-information part beg (point))))
 
 (defun notmuch-show-insert-body (msg body depth)
   "Insert the body BODY at depth DEPTH in the current thread."
