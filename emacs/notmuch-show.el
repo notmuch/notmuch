@@ -488,12 +488,14 @@ message at DEPTH in the current thread."
     ;; return button
     button))
 
-;; This is taken from notmuch-wash: maybe it should be unified?
 (defun notmuch-show-toggle-part-invisibility (&optional button)
   (interactive)
   (let* ((button (or button (button-at (point))))
-	 (overlay (button-get button 'overlay)))
-    (when overlay
+	 (overlay (button-get button 'overlay))
+	 (lazy-part (button-get button :notmuch-lazy-part)))
+    ;; We have a part to toggle if there is an overlay or if there is a lazy part.
+    ;; If neither is present we cannot toggle the part so we just return nil.
+    (when (or overlay lazy-part)
       (let* ((show (button-get button :notmuch-part-hidden))
 	     (new-start (button-start button))
 	     (button-label (button-get button :base-label))
@@ -509,7 +511,15 @@ message at DEPTH in the current thread."
 	  (move-overlay button new-start (point))
 	  (delete-region (point) old-end))
 	(goto-char (min old-point (1- (button-end button))))
-	(overlay-put overlay 'invisible (not show))))))
+	;; Return nil if there is a lazy-part, it is empty, and we are
+	;; trying to show it.  In all other cases return t.
+	(if lazy-part
+	    (when show
+	      (button-put button :notmuch-lazy-part nil)
+	      (notmuch-show-lazy-part lazy-part button))
+	  ;; else there must be an overlay.
+	  (overlay-put overlay 'invisible (not show))
+	  t)))))
 
 ;; MIME part renderers
 
@@ -828,6 +838,39 @@ message at DEPTH in the current thread."
 					     (pushnew :notmuch-part v)
 					   v))))
 
+(defun notmuch-show-lazy-part (part-args button)
+  ;; Insert the lazy part after the button for the part. We would just
+  ;; move to the start of the new line following the button and insert
+  ;; the part but that point might have text properties (eg colours
+  ;; from a message header etc) so instead we start from the last
+  ;; character of the button by adding a newline and finish by
+  ;; removing the extra newline from the end of the part.
+  (save-excursion
+    (goto-char (button-end button))
+    (insert "\n")
+    (let* ((inhibit-read-only t)
+	   ;; We need to use markers for the start and end of the part
+	   ;; because the part insertion functions do not guarantee
+	   ;; to leave point at the end of the part.
+	   (part-beg (copy-marker (point) nil))
+	   (part-end (copy-marker (point) t))
+	   ;; We have to save the depth as we can't find the depth
+	   ;; when narrowed.
+	   (depth (notmuch-show-get-depth)))
+      (save-restriction
+	(narrow-to-region part-beg part-end)
+	(delete-region part-beg part-end)
+	(apply #'notmuch-show-insert-bodypart-internal part-args)
+	(indent-rigidly part-beg part-end depth))
+      (goto-char part-end)
+      (delete-char 1)
+      (notmuch-show-record-part-information (second part-args)
+					    (button-start button)
+					    part-end)
+      ;; Create the overlay. If the lazy-part turned out to be empty/not
+      ;; showable this returns nil.
+      (notmuch-show-create-part-overlays button part-beg part-end))))
+
 (defun notmuch-show-insert-bodypart (msg part depth &optional hide)
   "Insert the body part PART at depth DEPTH in the current thread.
 
@@ -846,15 +889,21 @@ If HIDE is non-nil then initially hide this part."
 		   (notmuch-show-insert-part-header nth mime-type content-type (plist-get part :filename))))
 	 (content-beg (point)))
 
-    (notmuch-show-insert-bodypart-internal msg part mime-type nth depth button)
+    (if (not hide)
+        (notmuch-show-insert-bodypart-internal msg part mime-type nth depth button)
+      (button-put button :notmuch-lazy-part
+                  (list msg part mime-type nth depth button)))
+
     ;; Some of the body part handlers leave point somewhere up in the
     ;; part, so we make sure that we're down at the end.
     (goto-char (point-max))
     ;; Ensure that the part ends with a carriage return.
     (unless (bolp)
       (insert "\n"))
-    (notmuch-show-create-part-overlays button content-beg (point))
-    (when hide
+    ;; We do not create the overlay for hidden (lazy) parts until
+    ;; they are inserted.
+    (if (not hide)
+	(notmuch-show-create-part-overlays button content-beg (point))
       (save-excursion
 	(notmuch-show-toggle-part-invisibility button)))
     (notmuch-show-record-part-information part beg (point))))
@@ -2019,8 +2068,10 @@ is destroyed when FN returns."
 (defun notmuch-show-part-button-default (&optional button)
   (interactive)
   (let ((button (or button (button-at (point)))))
-    (if (button-get button 'overlay)
-	(notmuch-show-toggle-part-invisibility button)
+    ;; Try to toggle the part, if that fails then call the default
+    ;; action. The toggle fails if the part has no emacs renderable
+    ;; content.
+    (unless (notmuch-show-toggle-part-invisibility button)
       (call-interactively notmuch-show-part-button-default-action))))
 
 (defun notmuch-show-save-part ()
