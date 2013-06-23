@@ -29,11 +29,11 @@ A thread is a forest or list of trees. A tree is a two element
 list where the first element is a message, and the second element
 is a possibly empty forest of replies.
 "
-  (let ((args '("show" "--format=json" "--format-version=1")))
+  (let ((args '("show" "--format=sexp" "--format-version=1")))
     (if notmuch-show-process-crypto
 	(setq args (append args '("--decrypt"))))
     (setq args (append args search-terms))
-    (apply #'notmuch-call-notmuch-json args)))
+    (apply #'notmuch-call-notmuch-sexp args)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Mapping functions across collections of messages.

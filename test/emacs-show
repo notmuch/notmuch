@@ -189,7 +189,7 @@ This is an error (see *Notmuch errors* for more details)
 ---
 [XXX]
 This is an error
-command: $PWD/notmuch_fail show --format\\=json --format-version\\=1 --exclude\\=false \\' \\* \\'
+command: $PWD/notmuch_fail show --format\\=sexp --format-version\\=1 --exclude\\=false \\' \\* \\'
 exit status: 1
 stderr:
 This is an error
