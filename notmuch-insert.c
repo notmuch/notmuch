@@ -100,6 +100,99 @@ check_folder_name (const char *folder)
     }
 }
 
+/* Make the given directory, succeeding if it already exists. */
+static notmuch_bool_t
+make_directory (char *path, int mode)
+{
+    notmuch_bool_t ret;
+    char *slash;
+
+    if (mkdir (path, mode) != 0)
+	return (errno == EEXIST);
+
+    /* Sync the parent directory for durability. */
+    ret = TRUE;
+    slash = strrchr (path, '/');
+    if (slash) {
+	*slash = '\0';
+	ret = sync_dir (path);
+	*slash = '/';
+    }
+    return ret;
+}
+
+/* Make the given directory including its parent directories as necessary.
+ * Return TRUE on success, FALSE on error. */
+static notmuch_bool_t
+make_directory_and_parents (char *path, int mode)
+{
+    struct stat st;
+    char *start;
+    char *end;
+    notmuch_bool_t ret;
+
+    /* First check the common case: directory already exists. */
+    if (stat (path, &st) == 0)
+	return S_ISDIR (st.st_mode) ? TRUE : FALSE;
+
+    for (start = path; *start != '\0'; start = end + 1) {
+	/* start points to the first unprocessed character.
+	 * Find the next slash from start onwards. */
+	end = strchr (start, '/');
+
+	/* If there are no more slashes then all the parent directories
+	 * have been made.  Now attempt to make the whole path. */
+	if (end == NULL)
+	    return make_directory (path, mode);
+
+	/* Make the path up to the next slash, unless the current
+	 * directory component is actually empty. */
+	if (end > start) {
+	    *end = '\0';
+	    ret = make_directory (path, mode);
+	    *end = '/';
+	    if (! ret)
+		return FALSE;
+	}
+    }
+
+    return TRUE;
+}
+
+/* Create the given maildir folder, i.e. dir and its subdirectories
+ * 'cur', 'new', 'tmp'. */
+static notmuch_bool_t
+maildir_create_folder (void *ctx, const char *dir)
+{
+    const int mode = 0700;
+    char *subdir;
+    char *tail;
+
+    /* Create 'cur' directory, including parent directories. */
+    subdir = talloc_asprintf (ctx, "%s/cur", dir);
+    if (! subdir) {
+	fprintf (stderr, "Out of memory.\n");
+	return FALSE;
+    }
+    if (! make_directory_and_parents (subdir, mode))
+	return FALSE;
+
+    tail = subdir + strlen (subdir) - 3;
+
+    /* Create 'new' directory. */
+    strcpy (tail, "new");
+    if (! make_directory (subdir, mode))
+	return FALSE;
+
+    /* Create 'tmp' directory. */
+    strcpy (tail, "tmp");
+    if (! make_directory (subdir, mode))
+	return FALSE;
+
+    talloc_free (subdir);
+    return TRUE;
+}
+
 /* Open a unique file in the 'tmp' sub-directory of dir.
  * Returns the file descriptor on success, or -1 on failure.
  * On success, file paths for the message in the 'tmp' and 'new'
@@ -306,6 +399,7 @@ notmuch_insert_command (notmuch_config_t *config, int argc, char *argv[])
     tag_op_list_t *tag_ops;
     char *query_string = NULL;
     const char *folder = NULL;
+    notmuch_bool_t create_folder = FALSE;
     const char *maildir;
     int opt_index;
     unsigned int i;
@@ -313,6 +407,7 @@ notmuch_insert_command (notmuch_config_t *config, int argc, char *argv[])
 
     notmuch_opt_desc_t options[] = {
 	{ NOTMUCH_OPT_STRING, &folder, "folder", 0, 0 },
+	{ NOTMUCH_OPT_BOOLEAN, &create_folder, "create-folder", 0, 0 },
 	{ NOTMUCH_OPT_END, 0, 0, 0, 0 }
     };
 
@@ -355,6 +450,11 @@ notmuch_insert_command (notmuch_config_t *config, int argc, char *argv[])
 	maildir = talloc_asprintf (config, "%s/%s", db_path, folder);
 	if (! maildir) {
 	    fprintf (stderr, "Out of memory\n");
+	    return 1;
+	}
+	if (create_folder && ! maildir_create_folder (config, maildir)) {
+	    fprintf (stderr, "Error: creating maildir %s: %s\n",
+		     maildir, strerror (errno));
 	    return 1;
 	}
     }
