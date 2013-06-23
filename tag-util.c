@@ -165,8 +165,6 @@ parse_tag_command_line (void *ctx, int argc, char **argv,
 
     int i;
 
-    tag_op_list_reset (tag_ops);
-
     for (i = 0; i < argc; i++) {
 	if (strcmp (argv[i], "--") == 0) {
 	    i++;

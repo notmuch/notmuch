@@ -81,6 +81,8 @@ parse_tag_line (void *ctx, char *line,
  * Output Parameters:
  *	ops	contains a list of tag operations
  *	query_str the search terms.
+ *
+ * The ops argument is not cleared.
  */
 
 tag_parse_status_t
