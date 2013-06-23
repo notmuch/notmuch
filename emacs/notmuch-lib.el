@@ -467,28 +467,6 @@ You may need to restart Emacs or upgrade your notmuch package."))
 	;; `notmuch-logged-error' does not return.
 	))))
 
-(defun notmuch-call-notmuch-json (&rest args)
-  "Invoke `notmuch-command' with ARGS and return the parsed JSON output.
-
-The returned output will represent objects using property lists
-and arrays as lists.  If notmuch exits with a non-zero status,
-this will pop up a buffer containing notmuch's output and signal
-an error."
-
-  (with-temp-buffer
-    (let ((err-file (make-temp-file "nmerr")))
-      (unwind-protect
-	  (let ((status (apply #'call-process
-			       notmuch-command nil (list t err-file) nil args)))
-	    (notmuch-check-exit-status status (cons notmuch-command args)
-				       (buffer-string) err-file)
-	    (goto-char (point-min))
-	    (let ((json-object-type 'plist)
-		  (json-array-type 'list)
-		  (json-false 'nil))
-	      (json-read)))
-	(delete-file err-file)))))
-
 (defun notmuch-call-notmuch-sexp (&rest args)
   "Invoke `notmuch-command' with ARGS and return the parsed S-exp output.
 
