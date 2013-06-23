@@ -23,6 +23,7 @@ TESTS="
   setup
   new
   count
+  insert
   search
   search-output
   search-by-folder
