@@ -247,6 +247,11 @@ notmuch_tag_command (notmuch_config_t *config, int argc, char *argv[])
 	    fprintf (stderr, "Error: 'notmuch tag' requires at least one tag to add or remove.\n");
 	    return 1;
 	}
+
+	if (*query_string == '\0') {
+	    fprintf (stderr, "Error: notmuch tag requires at least one search term.\n");
+	    return 1;
+	}
     }
 
     if (notmuch_database_open (notmuch_config_get_database_path (config),

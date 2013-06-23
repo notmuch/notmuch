@@ -190,9 +190,9 @@ parse_tag_command_line (void *ctx, int argc, char **argv,
 
     *query_str = query_string_from_args (ctx, argc - i, &argv[i]);
 
-    if (*query_str == NULL || **query_str == '\0') {
-	fprintf (stderr, "Error: notmuch tag requires at least one search term.\n");
-	return TAG_PARSE_INVALID;
+    if (*query_str == NULL) {
+	fprintf (stderr, "Out of memory.\n");
+	return TAG_PARSE_OUT_OF_MEMORY;
     }
 
     return TAG_PARSE_SUCCESS;
