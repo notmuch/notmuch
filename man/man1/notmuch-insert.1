@@ -4,6 +4,7 @@ notmuch-insert \- add a message to the maildir and notmuch database
 .SH SYNOPSIS
 
 .B notmuch insert
+.RI "[" options "]"
 .RI "[ +<" tag> "|\-<" tag "> ... ]"
 
 .SH DESCRIPTION
@@ -27,6 +28,19 @@ those prefixed by '\-' are removed.
 If the new message is a duplicate of an existing message in the database
 (it has same Message-ID), it will be added to the maildir folder and
 notmuch database, but the tags will not be changed.
+
+Option arguments must appear before any tag operation arguments.
+Supported options for
+.B insert
+include
+.RS 4
+.TP 4
+.BI "--folder=<" folder ">"
+
+Deliver the message to the specified folder,
+relative to the top-level directory given by the value of
+\fBdatabase.path\fR.
+The default is to deliver to the top-level directory.
 
 .RE
 .SH EXIT STATUS
