@@ -43,6 +43,18 @@ relative to the top-level directory given by the value of
 The default is to deliver to the top-level directory.
 
 .RE
+
+.RS 4
+.TP 4
+.B "--create-folder"
+
+Try to create the folder named by the
+.B "--folder"
+option, if it does not exist.
+Otherwise the folder must already exist for mail
+delivery to succeed.
+
+.RE
 .SH EXIT STATUS
 
 This command returns exit status 0 if the message was successfully
