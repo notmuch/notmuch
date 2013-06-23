@@ -77,4 +77,21 @@ notmuch insert +custom -unread < "$gen_msg_filename"
 output=$(notmuch count tag:custom NOT tag:unread)
 test_expect_equal "$output" "1"
 
+test_begin_subtest "Insert message into folder"
+gen_insert_msg
+notmuch insert --folder=Drafts < "$gen_msg_filename"
+output=$(notmuch search --output=files folder:Drafts)
+dirname=$(dirname "$output")
+test_expect_equal "$dirname" "$MAIL_DIR/Drafts/cur"
+
+test_begin_subtest "Insert message into folder, add/remove tags"
+gen_insert_msg
+notmuch insert --folder=Drafts +draft -unread < "$gen_msg_filename"
+output=$(notmuch count folder:Drafts tag:draft NOT tag:unread)
+test_expect_equal "$output" "1"
+
+gen_insert_msg
+test_expect_code 1 "Insert message into non-existent folder" \
+    "notmuch insert --folder=nonesuch < $gen_msg_filename"
+
 test_done
