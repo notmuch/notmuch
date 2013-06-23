@@ -261,6 +261,7 @@ notmuch_client_srcs =		\
 	notmuch-config.c	\
 	notmuch-count.c		\
 	notmuch-dump.c		\
+	notmuch-insert.c	\
 	notmuch-new.c		\
 	notmuch-reply.c		\
 	notmuch-restore.c	\

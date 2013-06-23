@@ -44,6 +44,8 @@ static command_t commands[] = {
       "Interactively setup notmuch for first use." },
     { "new", notmuch_new_command, FALSE,
       "Find and import new messages to the notmuch database." },
+    { "insert", notmuch_insert_command, FALSE,
+      "Add a new message into the maildir and notmuch database." },
     { "search", notmuch_search_command, FALSE,
       "Search for messages matching the given search terms." },
     { "show", notmuch_show_command, FALSE,
