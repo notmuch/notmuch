@@ -1,0 +1,49 @@
+.TH NOTMUCH-INSERT 1 2013-xx-xx "Notmuch 0.xx"
+.SH NAME
+notmuch-insert \- add a message to the maildir and notmuch database
+.SH SYNOPSIS
+
+.B notmuch insert
+.RI "[ +<" tag> "|\-<" tag "> ... ]"
+
+.SH DESCRIPTION
+
+.B notmuch insert
+reads a message from standard input
+and delivers it into the maildir directory given by configuration option
+.BR database.path ,
+then incorporates the message into the notmuch database.
+It is an alternative to using a separate tool to deliver
+the message then running
+.B notmuch new
+afterwards.
+
+The new message will be tagged with the tags specified by the
+.B new.tags
+configuration option, then by operations specified on the command-line:
+tags prefixed by '+' are added while
+those prefixed by '\-' are removed.
+
+If the new message is a duplicate of an existing message in the database
+(it has same Message-ID), it will be added to the maildir folder and
+notmuch database, but the tags will not be changed.
+
+.RE
+.SH EXIT STATUS
+
+This command returns exit status 0 if the message was successfully
+added to the mail directory, even if the message could not be indexed
+and added to the notmuch database.  In the latter case, a warning will
+be printed to standard error but the message file will be left on disk.
+
+If the message could not be written to disk then a non-zero exit
+status is returned.
+
+.RE
+.SH SEE ALSO
+
+\fBnotmuch\fR(1), \fBnotmuch-config\fR(1), \fBnotmuch-count\fR(1),
+\fBnotmuch-dump\fR(1), \fBnotmuch-hooks\fR(5), \fBnotmuch-reply\fR(1),
+\fBnotmuch-restore\fR(1), \fBnotmuch-search\fR(1),
+\fBnotmuch-search-terms\fR(7), \fBnotmuch-show\fR(1),
+\fBnotmuch-tag\fR(1)
