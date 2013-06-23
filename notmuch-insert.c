@@ -83,6 +83,23 @@ sync_dir (const char *dir)
     return ret;
 }
 
+/* Check the specified folder name does not contain a directory
+ * component ".." to prevent writes outside of the Maildir hierarchy. */
+static notmuch_bool_t
+check_folder_name (const char *folder)
+{
+    const char *p = folder;
+
+    for (;;) {
+	if ((p[0] == '.') && (p[1] == '.') && (p[2] == '\0' || p[2] == '/'))
+	    return FALSE;
+	p = strchr (p, '/');
+	if (!p)
+	    return TRUE;
+	p++;
+    }
+}
+
 /* Open a unique file in the 'tmp' sub-directory of dir.
  * Returns the file descriptor on success, or -1 on failure.
  * On success, file paths for the message in the 'tmp' and 'new'
@@ -288,10 +305,23 @@ notmuch_insert_command (notmuch_config_t *config, int argc, char *argv[])
     size_t new_tags_length;
     tag_op_list_t *tag_ops;
     char *query_string = NULL;
+    const char *folder = NULL;
     const char *maildir;
-    int opt_index = 1;
+    int opt_index;
     unsigned int i;
     notmuch_bool_t ret;
+
+    notmuch_opt_desc_t options[] = {
+	{ NOTMUCH_OPT_STRING, &folder, "folder", 0, 0 },
+	{ NOTMUCH_OPT_END, 0, 0, 0, 0 }
+    };
+
+    opt_index = parse_arguments (argc, argv, options, 1);
+
+    if (opt_index < 0) {
+	/* diagnostics already printed */
+	return 1;
+    }
 
     db_path = notmuch_config_get_database_path (config);
     new_tags = notmuch_config_get_new_tags (config, &new_tags_length);
@@ -315,7 +345,19 @@ notmuch_insert_command (notmuch_config_t *config, int argc, char *argv[])
 	return 1;
     }
 
-    maildir = db_path;
+    if (folder == NULL) {
+	maildir = db_path;
+    } else {
+	if (! check_folder_name (folder)) {
+	    fprintf (stderr, "Error: bad folder name: %s\n", folder);
+	    return 1;
+	}
+	maildir = talloc_asprintf (config, "%s/%s", db_path, folder);
+	if (! maildir) {
+	    fprintf (stderr, "Out of memory\n");
+	    return 1;
+	}
+    }
 
     /* Setup our handler for SIGINT. We do not set SA_RESTART so that copying
      * from standard input may be interrupted. */
