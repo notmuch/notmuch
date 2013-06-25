@@ -22,7 +22,11 @@ from ctypes import CDLL, Structure, POINTER
 #-----------------------------------------------------------------------------
 #package-global instance of the notmuch library
 try:
-    nmlib = CDLL("libnotmuch.so.3")
+    from os import uname
+    if uname()[0] == 'Darwin':
+        nmlib = CDLL("libnotmuch.3.dylib")
+    else:
+        nmlib = CDLL("libnotmuch.so.3")
 except:
     raise ImportError("Could not find shared 'notmuch' library.")
 
