@@ -652,8 +652,10 @@ unchanged ADDRESS if parsing fails."
   (save-excursion
     (goto-char (point-max))
     (notmuch-pick-insert-msg msg))
-  (let ((msg-id (notmuch-id-to-query (plist-get msg :id))))
-    (when (string= msg-id notmuch-pick-target-msg)
+  (let ((msg-id (notmuch-id-to-query (plist-get msg :id)))
+	(target notmuch-pick-target-msg))
+    (when (or (and (not target) (plist-get msg :match))
+	      (string= msg-id target))
       (setq notmuch-pick-target-msg "found")
       (goto-char (point-max))
       (forward-line -1))))
