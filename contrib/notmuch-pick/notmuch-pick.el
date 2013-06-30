@@ -264,8 +264,15 @@ Some useful entries are:
 	(msg (notmuch-pick-get-message-properties))
 	(inhibit-read-only t))
     (beginning-of-line)
-    (delete-region (point) (1+ (line-end-position)))
-    (notmuch-pick-insert-msg msg)
+    ;; This is a little tricky: we override
+    ;; notmuch-pick-previous-subject to get the decision between
+    ;; ... and a subject right and it stops notmuch-pick-insert-msg
+    ;; from overwriting the buffer local copy of
+    ;; notmuch-pick-previous-subject if this is called while the
+    ;; buffer is displaying.
+    (let ((notmuch-pick-previous-subject (notmuch-pick-get-prop :previous-subject)))
+      (delete-region (point) (1+ (line-end-position)))
+      (notmuch-pick-insert-msg msg))
     (let ((new-end (line-end-position)))
       (goto-char (if (= init-point end)
 		     new-end
@@ -628,10 +635,14 @@ unchanged ADDRESS if parsing fails."
 
 (defun notmuch-pick-insert-msg (msg)
   "Insert the message MSG according to notmuch-pick-result-format"
-  (dolist (spec notmuch-pick-result-format)
-    (notmuch-pick-insert-field (car spec) (cdr spec) msg))
-  (notmuch-pick-set-message-properties msg)
-  (insert "\n"))
+  ;; We need to save the previous subject as it will get overwritten
+  ;; by the insert-field calls.
+  (let ((previous-subject notmuch-pick-previous-subject))
+    (dolist (spec notmuch-pick-result-format)
+      (notmuch-pick-insert-field (car spec) (cdr spec) msg))
+    (notmuch-pick-set-message-properties msg)
+    (notmuch-pick-set-prop :previous-subject previous-subject)
+    (insert "\n")))
 
 (defun notmuch-pick-goto-and-insert-msg (msg)
   "Insert msg at the end of the buffer. Move point to msg if it is the target"
