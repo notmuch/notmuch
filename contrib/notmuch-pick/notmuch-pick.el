@@ -817,7 +817,19 @@ Complete list of currently available key bindings:
 
 
 (defun notmuch-pick (&optional query query-context target buffer-name open-target)
-  "Run notmuch pick with the given `query' and display the results"
+  "Run notmuch pick with the given `query' and display the results.
+
+The arguments are:
+  QUERY: the main query. This can be any query but in many cases will be
+      a single thread. If nil this is read interactively from the minibuffer.
+  QUERY-CONTEXT: is an additional term for the query. The query used
+      is QUERY and QUERY-CONTEXT unless that does not match any messages
+      in which case we fall back to just QUERY.
+  TARGET: A message ID (with the id: prefix) that will be made
+      current if it appears in the pick results.
+  BUFFER-NAME: the name of the buffer to show the pick tree. If
+      it is nil \"*notmuch-pick\" followed by QUERY is used.
+  OPEN-TARGET: If TRUE open the target message in the message pane."
   (interactive "sNotmuch pick: ")
   (if (null query)
       (setq query (notmuch-read-query "Notmuch pick: ")))
