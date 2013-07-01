@@ -764,15 +764,6 @@ Complete list of currently available key bindings:
 		      (insert (format " (process returned %d)" exit-status)))
 		    (insert "\n")))))))))
 
-
-(defun notmuch-pick-show-error (string &rest objects)
-  (save-excursion
-    (goto-char (point-max))
-    (insert "Error: Unexpected output from notmuch search:\n")
-    (insert (apply #'format string objects))
-    (insert "\n")))
-
-
 (defun notmuch-pick-process-filter (proc string)
   "Process and filter the output of \"notmuch show\" (for pick)"
   (let ((results-buf (process-buffer proc))
