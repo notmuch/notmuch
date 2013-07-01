@@ -184,8 +184,8 @@ the child show buffer.")
 
 This is used to try and make sure we don't close the message pane
 if the user has loaded a different buffer in that window.")
-(make-variable-buffer-local 'notmuch-pick-message-buffer-name)
-(put 'notmuch-pick-message-buffer-name 'permanent-local t)
+(make-variable-buffer-local 'notmuch-pick-message-buffer)
+(put 'notmuch-pick-message-buffer 'permanent-local t)
 
 (defvar notmuch-pick-process-state nil
   "Parsing state of the search process filter.")
