@@ -187,9 +187,6 @@ if the user has loaded a different buffer in that window.")
 (make-variable-buffer-local 'notmuch-pick-message-buffer)
 (put 'notmuch-pick-message-buffer 'permanent-local t)
 
-(defvar notmuch-pick-process-state nil
-  "Parsing state of the search process filter.")
-
 (defvar notmuch-pick-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map [mouse-1] 'notmuch-pick-show-message)
