@@ -146,34 +146,49 @@
   :group 'notmuch-pick
   :group 'notmuch-faces)
 
-(defvar notmuch-pick-previous-subject "")
+(defvar notmuch-pick-previous-subject
+  "The subject of the most recent result shown during the async display")
 (make-variable-buffer-local 'notmuch-pick-previous-subject)
 
-;; The basic query i.e. the key part of the search request.
-(defvar notmuch-pick-basic-query nil)
+(defvar notmuch-pick-basic-query nil
+  "A buffer local copy of argument query to the function notmuch-pick")
 (make-variable-buffer-local 'notmuch-pick-basic-query)
-;; The context of the search: i.e., useful but can be dropped.
-(defvar notmuch-pick-query-context nil)
+
+(defvar notmuch-pick-query-context nil
+  "A buffer local copy of argument query-context to the function notmuch-pick")
 (make-variable-buffer-local 'notmuch-pick-query-context)
-(defvar notmuch-pick-target-msg nil)
+
+(defvar notmuch-pick-target-msg nil
+  "A buffer local copy of argument target to the function notmuch-pick")
 (make-variable-buffer-local 'notmuch-pick-target-msg)
-(defvar notmuch-pick-open-target nil)
+
+(defvar notmuch-pick-open-target nil
+  "A buffer local copy of argument open-target to the function notmuch-pick")
 (make-variable-buffer-local 'notmuch-pick-open-target)
-(defvar notmuch-pick-buffer-name nil)
+
+(defvar notmuch-pick-buffer-name nil
+  "A buffer local copy of argument buffer-name to the function notmuch-pick")
 (make-variable-buffer-local 'notmuch-pick-buffer-name)
-;; This variable is the window used for the message pane. It is set
-;; in both the parent pick buffer and the child show buffer. It is
-;; used to try and close the message pane when quitting pick or the
-;; child show buffer.
-(defvar notmuch-pick-message-window nil)
+
+(defvar notmuch-pick-message-window nil
+  "The window of the message pane.
+
+It is set in both the pick buffer and the child show buffer. It
+is used to try and close the message pane when quitting pick or
+the child show buffer.")
 (make-variable-buffer-local 'notmuch-pick-message-window)
 (put 'notmuch-pick-message-window 'permanent-local t)
-(defvar notmuch-pick-message-buffer nil)
+
+(defvar notmuch-pick-message-buffer nil
+  "The buffer name of the show buffer in the message pane.
+
+This is used to try and make sure we don't close the message pane
+if the user has loaded a different buffer in that window.")
 (make-variable-buffer-local 'notmuch-pick-message-buffer-name)
 (put 'notmuch-pick-message-buffer-name 'permanent-local t)
+
 (defvar notmuch-pick-process-state nil
   "Parsing state of the search process filter.")
-
 
 (defvar notmuch-pick-mode-map
   (let ((map (make-sparse-keymap)))
