@@ -683,7 +683,10 @@ unchanged ADDRESS if parsing fails."
 	(notmuch-pick-show-message)))))
 
 (defun notmuch-pick-insert-tree (tree depth tree-status first last)
-  "Insert the message tree TREE at depth DEPTH in the current thread."
+  "Insert the message tree TREE at depth DEPTH in the current thread.
+
+A message tree is another name for a single sub-thread: i.e., a
+message together with all its descendents."
   (let ((msg (car tree))
 	(replies (cadr tree)))
 
@@ -714,7 +717,7 @@ unchanged ADDRESS if parsing fails."
     (notmuch-pick-insert-thread replies (1+ depth) tree-status)))
 
 (defun notmuch-pick-insert-thread (thread depth tree-status)
-  "Insert the thread THREAD at depth DEPTH >= 1 in the current forest."
+  "Insert the collection of sibling sub-threads THREAD at depth DEPTH in the current forest."
   (let ((n (length thread)))
     (loop for tree in thread
 	  for count from 1 to n
@@ -722,12 +725,17 @@ unchanged ADDRESS if parsing fails."
 	  do (notmuch-pick-insert-tree tree depth tree-status (eq count 1) (eq count n)))))
 
 (defun notmuch-pick-insert-forest-thread (forest-thread)
+  "Insert a single complete thread."
   (let (tree-status)
     ;; Reset at the start of each main thread.
     (setq notmuch-pick-previous-subject nil)
     (notmuch-pick-insert-thread forest-thread 0 tree-status)))
 
 (defun notmuch-pick-insert-forest (forest)
+  "Insert a forest of threads.
+
+This function inserts a collection of several complete threads as
+passed to it by notmuch-pick-process-filter."
   (mapc 'notmuch-pick-insert-forest-thread forest))
 
 (defun notmuch-pick-mode ()
