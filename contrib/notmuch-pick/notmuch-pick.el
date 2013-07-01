@@ -384,6 +384,7 @@ Does NOT change the database."
 		t))
 
 (defun notmuch-pick-message-window-kill-hook ()
+  "Close the message pane when exiting the show buffer."
   (let ((buffer (current-buffer)))
     (when (and (window-live-p notmuch-pick-message-window)
 	       (eq (window-buffer notmuch-pick-message-window) buffer))
