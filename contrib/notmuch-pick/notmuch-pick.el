@@ -276,6 +276,11 @@ Some useful entries are:
   (notmuch-pick-get-prop :match))
 
 (defun notmuch-pick-refresh-result ()
+  "Redisplay the current message line.
+
+This redisplays the current line based on the messages
+properties (as they are now). This is used when tags are
+updated."
   (let ((init-point (point))
 	(end (line-end-position))
 	(msg (notmuch-pick-get-message-properties))
