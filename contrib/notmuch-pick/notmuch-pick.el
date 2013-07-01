@@ -214,6 +214,11 @@ if the user has loaded a different buffer in that window.")
 (fset 'notmuch-pick-mode-map notmuch-pick-mode-map)
 
 (defun notmuch-pick-setup-show-out ()
+  "Set up the keymap for showing a thread
+
+This uses the value of the defcustom notmuch-pick-show-out to
+decide whether to show a message in the message pane or in the
+whole window."
   (let ((map notmuch-pick-mode-map))
     (if notmuch-pick-show-out
 	(progn
