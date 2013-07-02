@@ -621,7 +621,7 @@ notmuch_reply_format_sprinter(void *ctx,
 
     /* Start the original */
     sp->map_key (sp, "original");
-    format_part_sprinter (ctx, sp, node, TRUE, TRUE);
+    format_part_sprinter (ctx, sp, node, TRUE, TRUE, FALSE);
 
     /* End */
     sp->end (sp);

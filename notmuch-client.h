@@ -89,6 +89,7 @@ typedef struct notmuch_show_params {
     notmuch_bool_t raw;
     int part;
     notmuch_crypto_t crypto;
+    notmuch_bool_t include_html;
 } notmuch_show_params_t;
 
 /* There's no point in continuing when we've detected that we've done
@@ -220,7 +221,8 @@ show_one_part (const char *filename, int part);
 
 void
 format_part_sprinter (const void *ctx, struct sprinter *sp, mime_node_t *node,
-		      notmuch_bool_t first, notmuch_bool_t output_body);
+		      notmuch_bool_t first, notmuch_bool_t output_body,
+		      notmuch_bool_t include_html);
 
 void
 format_headers_sprinter (struct sprinter *sp, GMimeMessage *message,
