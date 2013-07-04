@@ -402,8 +402,13 @@ options will be handled as specified for
 					   (plist-get options :filter)))
 	 "\n")))
 
-    (call-process-region (point-min) (point-max) notmuch-command
-			 t t nil "count" "--batch")
+    (unless (= (call-process-region (point-min) (point-max) notmuch-command
+				    t t nil "count" "--batch") 0)
+      (notmuch-logged-error "notmuch count --batch failed"
+			    "Please check that the notmuch CLI is new enough to support `count
+--batch'. In general we recommend running matching versions of
+the CLI and emacs interface."))
+
     (goto-char (point-min))
 
     (notmuch-remove-if-not
