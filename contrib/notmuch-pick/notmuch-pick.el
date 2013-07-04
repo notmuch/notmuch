@@ -817,16 +817,15 @@ Complete list of currently available key bindings:
     (if (equal (car (process-lines notmuch-command "count" search-args)) "0")
 	(setq search-args basic-query))
     (if notmuch-pick-asynchronous-parser
-	(let ((proc (start-process
-		     "notmuch-pick" buffer
-		     notmuch-command "show" "--body=false" "--format=sexp"
+	(let ((proc (notmuch-start-notmuch
+		     "notmuch-pick" buffer #'notmuch-pick-process-sentinel
+		     "show" "--body=false" "--format=sexp"
 		     message-arg search-args))
 	      ;; Use a scratch buffer to accumulate partial output.
               ;; This buffer will be killed by the sentinel, which
               ;; should be called no matter how the process dies.
               (parse-buf (generate-new-buffer " *notmuch pick parse*")))
           (process-put proc 'parse-buf parse-buf)
-	  (set-process-sentinel proc 'notmuch-pick-process-sentinel)
 	  (set-process-filter proc 'notmuch-pick-process-filter)
 	  (set-process-query-on-exit-flag proc nil))
       (progn
