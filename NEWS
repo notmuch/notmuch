@@ -49,6 +49,11 @@ Bash command-line completion
   `notmuch config`. The new completion support depends on the
   bash-completion package.
 
+Support for delivering messages to Maildir
+
+  There is a new command `insert` that adds a message to a Maildir
+  folder and notmuch index.
+
 Vim Front-End
 -------------
 
