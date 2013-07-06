@@ -20,7 +20,6 @@
 ;; Authors: David Bremner <david@tethera.net>
 
 (require 'notmuch-lib)
-(require 'json)
 
 (defun notmuch-query-get-threads (search-terms)
   "Return a list of threads of messages matching SEARCH-TERMS.

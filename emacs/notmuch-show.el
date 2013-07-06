@@ -2042,7 +2042,7 @@ the user (see `notmuch-show-stash-mlarchive-link-alist')."
     (with-current-buffer buf
       (setq notmuch-show-process-crypto process-crypto)
       ;; Always acquires the part via `notmuch part', even if it is
-      ;; available in the JSON output.
+      ;; available in the SEXP output.
       (insert (notmuch-get-bodypart-internal message-id nth notmuch-show-process-crypto)))
     buf))
 

@@ -19,7 +19,6 @@
 ;;
 ;; Authors: David Edmondson <dme@dme.org>
 
-(require 'json)
 (require 'message)
 (require 'mm-view)
 (require 'format-spec)
@@ -157,7 +156,7 @@ list."
       (setq args (append args '("--reply-to=sender"))))
     (setq args (append args (list query-string)))
 
-    ;; Get the reply object as JSON, and parse it into an elisp object.
+    ;; Get the reply object as SEXP, and parse it into an elisp object.
     (setq reply (apply #'notmuch-call-notmuch-sexp args))
 
     ;; Extract the original message to simplify the following code.
