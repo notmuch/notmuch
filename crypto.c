@@ -69,6 +69,11 @@ notmuch_crypto_get_context (notmuch_crypto_t *crypto, const char *protocol)
 {
     notmuch_crypto_context_t *cryptoctx = NULL;
 
+    if (! protocol) {
+	fprintf (stderr, "Cryptographic protocol is empty.\n");
+	return cryptoctx;
+    }
+
     /* As per RFC 1847 section 2.1: "the [protocol] value token is
      * comprised of the type and sub-type tokens of the Content-Type".
      * As per RFC 1521 section 2: "Content-Type values, subtypes, and
