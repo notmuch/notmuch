@@ -27,3 +27,6 @@ override_dh_auto_install:
 	dh_auto_install --sourcedirectory bindings/python
 	cd bindings/python && $(python3_all) setup.py install --install-layout=deb --root=$(CURDIR)/debian/tmp
 	dh_auto_install --sourcedirectory bindings/ruby
+
+override_dh_strip:
+	dh_strip --dbg-package notmuch-dbg
