@@ -85,11 +85,12 @@ Better handling of errors in search buffers
   Instead of interleaving errors in search result buffers, search mode
   now reports errors in the minibuffer.
 
-Faster search results
+Faster search and show
 
-  Communication between search mode and the notmuch CLI is now more
+  Communication between Emacs and the notmuch CLI is now more
   efficient because it uses the CLI's S-expression support.  As a
-  result, search mode should now fill search buffers faster.
+  result, search mode should now fill search buffers faster and
+  threads should show faster.
 
 No Emacs 22 support
 
