@@ -1,3 +1,9 @@
+notmuch (0.16-1) unstable; urgency=low
+
+  * New upstream feature release
+
+ -- David Bremner <bremner@debian.org>  Sun, 28 Jul 2013 10:19:19 -0300
+
 notmuch (0.15.2-2) unstable; urgency=low
 
   * Bug fix: tighten dependence of notmuch-mutt on notmuch,
