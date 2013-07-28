@@ -66,6 +66,7 @@ libnotmuch.so.3 libnotmuch3 #MINVER#
  notmuch_thread_destroy@Base 0.3
  notmuch_thread_get_authors@Base 0.3
  notmuch_thread_get_matched_messages@Base 0.3
+ notmuch_thread_get_messages@Base 0.16
  notmuch_thread_get_newest_date@Base 0.3
  notmuch_thread_get_oldest_date@Base 0.3
  notmuch_thread_get_subject@Base 0.3
