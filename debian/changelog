@@ -2,6 +2,7 @@ notmuch (0.16-1) unstable; urgency=low
 
   * New upstream feature release
     - 'notmuch insert' command replaces notmuch-deliver (Closes: #692889).
+    - New ruby based vim interface (Closes: 616692, 636707).
   * Provide a notmuch-dbg package, thanks to Daniel Kahn Gillmor
     (Closes: #717339).
   * Include alot to the list of recommended interfaces, thanks to
