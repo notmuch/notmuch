@@ -90,7 +90,7 @@ Description: Python 3 interface to the notmuch mail search and index library
  This package provides a Python 3 interface to the notmuch
  functionality, directly interfacing with a shared notmuch library.
 
-Package: notmuch-ruby
+Package: ruby-notmuch
 Architecture: any
 Section: ruby
 Depends: ${shlibs:Depends}, ${misc:Depends}
@@ -125,7 +125,7 @@ Architecture: all
 Section: mail
 Breaks: notmuch (<<0.6~254~)
 Replaces: notmuch (<<0.6~254~)
-Depends: ${misc:Depends}, notmuch, vim-addon-manager, vim-ruby, notmuch-ruby
+Depends: ${misc:Depends}, notmuch, vim-addon-manager, vim-ruby, ruby-notmuch
 Recommends: ruby-mail
 Description: thread-based email index, search and tagging (vim interface)
  Notmuch is a system for indexing, searching, reading, and tagging
