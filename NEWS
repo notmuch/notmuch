@@ -4,6 +4,23 @@ Notmuch 0.16 (2013-MM-DD)
 Command-Line Interface
 ----------------------
 
+Support for delivering messages to Maildir
+
+  There is a new command `insert` that adds a message to a Maildir
+  folder and notmuch index.
+
+`notmuch count --batch` option
+
+  `notmuch count` now supports batch operations similar to `notmuch
+  tag`. This is mostly an optimization for remote notmuch usage.
+
+`notmuch tag` option to remove all tags from matching messages
+
+  `notmuch tag --remove-all` option has been added to remove all tags
+  from matching messages. This can be combined with adding new tags,
+  resulting in setting (rather than modifying) the tags of the
+  messages.
+
 Decrypting commands explicitly expect a gpg-agent
 
   Decryption in `notmuch show` and `notmuch reply` has only ever
@@ -13,29 +30,15 @@ Decrypting commands explicitly expect a gpg-agent
   configuration option disabled, not forcing the user to use the agent
   everywhere.
 
-`notmuch count --batch` option
-
-  `notmuch count` now supports batch operations similar to `notmuch
-  tag`. This is mostly an optimization for remote notmuch usage.
-
 Configuration file saves follow symbolic links
 
   The notmuch commands that save the configuration file now follow
   symbolic links instead of overwrite them.
 
-`notmuch tag` option to remove all tags from matching messages
-
-  `notmuch tag --remove-all` option has been added to remove all tags
-  from matching messages. This can be combined with adding new tags,
-  resulting in setting (rather than modifying) the tags of the
-  messages.
-
 Top level option to specify configuration file
 
   It's now possible to specify the configuration file to use on the
   command line using the `notmuch --config=FILE` option.
-
-Deprecated commands "part" and "search-tags" are removed.
 
 Bash command-line completion
 
@@ -49,16 +52,7 @@ Bash command-line completion
   `notmuch config`. The new completion support depends on the
   bash-completion package.
 
-Support for delivering messages to Maildir
-
-  There is a new command `insert` that adds a message to a Maildir
-  folder and notmuch index.
-
-Vim Front-End
--------------
-
-The vim based front-end has been replaced with a new one that uses the Ruby
-bindings. The old font-end is available in the contrib subfolder.
+Deprecated commands "part" and "search-tags" are removed.
 
 Emacs Interface
 ---------------
@@ -80,6 +74,11 @@ Default part save directory is now `mm-default-directory`
   of `mm-default-directory`, `mailcap-download-directory`, and `~/`.
   This has been standardized on `mm-default-directory`.
 
+Key bindings for next/previous thread
+
+  Show view has new key bindings M-n and M-p to move to the next and
+  previous thread in the search results.
+
 Better handling of errors in search buffers
 
   Instead of interleaving errors in search result buffers, search mode
@@ -98,10 +97,11 @@ No Emacs 22 support
   period of time. After being incomplete for roughly 2 years the code
   in question was now removed from this release.
 
-Key bindings for next/previous thread
+Vim Front-End
+-------------
 
-  Show view has new key bindings M-n and M-p to move to the next and
-  previous thread in the search results.
+The vim based front-end has been replaced with a new one that uses the Ruby
+bindings. The old font-end is available in the contrib subfolder.
 
 Python Bindings
 ---------------
