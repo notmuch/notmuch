@@ -4,8 +4,10 @@ notmuch (0.16-1) unstable; urgency=low
     - 'notmuch insert' command replaces notmuch-deliver (Closes: #692889).
   * Provide a notmuch-dbg package, thanks to Daniel Kahn Gillmor
     (Closes: #717339).
+  * Include alot to the list of recommended interfaces, thanks to
+    Simon Chopin (Closes: #709832).
 
- -- David Bremner <bremner@debian.org>  Sun, 28 Jul 2013 10:53:30 -0300
+ -- David Bremner <bremner@debian.org>  Sun, 28 Jul 2013 10:58:46 -0300
 
 notmuch (0.15.2-2) unstable; urgency=low
 
