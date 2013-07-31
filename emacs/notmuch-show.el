@@ -892,6 +892,9 @@ If HIDE is non-nil then initially hide this part."
 		   (notmuch-show-insert-part-header nth mime-type content-type (plist-get part :filename))))
 	 (content-beg (point)))
 
+    ;; Store the computed mime-type for later use (e.g. by attachment handlers).
+    (plist-put part :computed-type mime-type)
+
     (if (not hide)
         (notmuch-show-insert-bodypart-internal msg part mime-type nth depth button)
       (button-put button :notmuch-lazy-part
@@ -2055,10 +2058,10 @@ caller is responsible for killing this buffer as appropriate."
 	 (message-id (notmuch-show-get-message-id))
 	 (nth (plist-get part :id))
 	 (buf (notmuch-show-generate-part-buffer message-id nth))
-	 (content-type (plist-get part :content-type))
+	 (computed-type (plist-get part :computed-type))
 	 (filename (plist-get part :filename))
 	 (disposition (if filename `(attachment (filename . ,filename)))))
-    (mm-make-handle buf (list content-type) nil nil disposition)))
+    (mm-make-handle buf (list computed-type) nil nil disposition)))
 
 (defun notmuch-show-apply-to-current-part-handle (fn)
   "Apply FN to an mm-handle for the part containing point.
