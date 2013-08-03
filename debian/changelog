@@ -8,7 +8,7 @@ notmuch (0.16-1) unstable; urgency=low
   * Include alot to the list of recommended interfaces, thanks to
     Simon Chopin (Closes: #709832).
 
- -- David Bremner <bremner@debian.org>  Sun, 28 Jul 2013 10:58:46 -0300
+ -- David Bremner <bremner@debian.org>  Sat, 03 Aug 2013 08:28:39 -0300
 
 notmuch (0.15.2-2) unstable; urgency=low
 
