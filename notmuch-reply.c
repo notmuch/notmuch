@@ -34,6 +34,10 @@ show_reply_headers (GMimeMessage *message)
 	g_mime_stream_file_set_owner (GMIME_STREAM_FILE (stream_stdout), FALSE);
 	stream_filter = g_mime_stream_filter_new(stream_stdout);
 	if (stream_filter) {
+		// g_mime_object_write_to_stream will produce
+		// RFC2047-encoded headers, but we want to present the
+		// user with decoded headers and let whatever
+		// ultimately sends the mail do the RFC2047 encoding.
 		g_mime_stream_filter_add(GMIME_STREAM_FILTER(stream_filter),
 					 g_mime_filter_headers_new());
 		g_mime_object_write_to_stream(GMIME_OBJECT(message), stream_filter);
