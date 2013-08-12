@@ -1015,8 +1015,11 @@ notmuch_message_get_date  (notmuch_message_t *message);
 
 /* Get the value of the specified header from 'message'.
  *
- * The value will be read from the actual message file, not from the
- * notmuch database. The header name is case insensitive.
+ * Common headers are stored in the database when the message is
+ * indexed and will be returned from the database.  Other headers will
+ * be read from the actual message file.
+ *
+ * The header name is case insensitive.
  *
  * The returned string belongs to the message so should not be
  * modified or freed by the caller (nor should it be referenced after
