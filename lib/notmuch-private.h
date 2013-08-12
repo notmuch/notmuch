@@ -386,7 +386,7 @@ void
 notmuch_message_file_restrict_headersv (notmuch_message_file_t *message,
 					va_list va_headers);
 
-/* Get the value of the specified header from the message.
+/* Get the value of the specified header from the message as a UTF-8 string.
  *
  * The header name is case insensitive.
  *

@@ -767,7 +767,7 @@ notmuch_thread_get_messages (notmuch_thread_t *thread);
 int
 notmuch_thread_get_matched_messages (notmuch_thread_t *thread);
 
-/* Get the authors of 'thread'
+/* Get the authors of 'thread' as a UTF-8 string.
  *
  * The returned string is a comma-separated list of the names of the
  * authors of mail messages in the query results that belong to this
@@ -781,7 +781,7 @@ notmuch_thread_get_matched_messages (notmuch_thread_t *thread);
 const char *
 notmuch_thread_get_authors (notmuch_thread_t *thread);
 
-/* Get the subject of 'thread'
+/* Get the subject of 'thread' as a UTF-8 string.
  *
  * The subject is taken from the first message (according to the query
  * order---see notmuch_query_set_sort) in the query results that
@@ -1013,7 +1013,7 @@ notmuch_message_set_flag (notmuch_message_t *message,
 time_t
 notmuch_message_get_date  (notmuch_message_t *message);
 
-/* Get the value of the specified header from 'message'.
+/* Get the value of the specified header from 'message' as a UTF-8 string.
  *
  * Common headers are stored in the database when the message is
  * indexed and will be returned from the database.  Other headers will
