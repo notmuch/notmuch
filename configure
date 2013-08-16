@@ -530,6 +530,17 @@ else
 fi
 rm -f compat/check_getpwuid
 
+printf "Checking for standard version of asctime_r... "
+if ${CC} -o compat/check_asctime "$srcdir"/compat/check_asctime.c > /dev/null 2>&1
+then
+    printf "Yes.\n"
+    std_asctime=1
+else
+    printf "No (will define _POSIX_PTHREAD_SEMANTICS to get it).\n"
+    std_asctime=0
+fi
+rm -f compat/check_asctime
+
 printf "int main(void){return 0;}\n" > minimal.c
 
 printf "Checking for rpath support... "
@@ -697,6 +708,11 @@ HAVE_STRCASESTR = ${have_strcasestr}
 # to enable the standards-compliant version -- needed for Solaris)
 STD_GETPWUID = ${std_getpwuid}
 
+# Whether the asctime_r function is standards-compliant
+# (if not, then notmuch will #define _POSIX_PTHREAD_SEMANTICS
+# to enable the standards-compliant version -- needed for Solaris)
+STD_ASCTIME = ${std_asctime}
+
 # Supported platforms (so far) are: LINUX, MACOSX, SOLARIS, FREEBSD, OPENBSD
 PLATFORM = ${platform}
 
@@ -743,11 +759,13 @@ CONFIGURE_CFLAGS = -DHAVE_GETLINE=\$(HAVE_GETLINE) \$(GMIME_CFLAGS)      \\
 		   \$(TALLOC_CFLAGS) -DHAVE_VALGRIND=\$(HAVE_VALGRIND)   \\
 		   \$(VALGRIND_CFLAGS)                                   \\
 		   -DHAVE_STRCASESTR=\$(HAVE_STRCASESTR)                 \\
-		   -DSTD_GETPWUID=\$(STD_GETPWUID)
+		   -DSTD_GETPWUID=\$(STD_GETPWUID)                       \\
+		   -DSTD_ASCTIME=\$(STD_ASCTIME)
 CONFIGURE_CXXFLAGS = -DHAVE_GETLINE=\$(HAVE_GETLINE) \$(GMIME_CFLAGS)    \\
 		     \$(TALLOC_CFLAGS) -DHAVE_VALGRIND=\$(HAVE_VALGRIND) \\
 		     \$(VALGRIND_CFLAGS) \$(XAPIAN_CXXFLAGS)             \\
 		     -DHAVE_STRCASESTR=\$(HAVE_STRCASESTR)               \\
-		     -DSTD_GETPWUID=\$(STD_GETPWUID)
+		     -DSTD_GETPWUID=\$(STD_GETPWUID)                     \\
+		     -DSTD_ASCTIME=\$(STD_ASCTIME)
 CONFIGURE_LDFLAGS =  \$(GMIME_LDFLAGS) \$(TALLOC_LDFLAGS) \$(XAPIAN_LDFLAGS)
 EOF

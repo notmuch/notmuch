@@ -33,6 +33,9 @@ extern "C" {
 #if !STD_GETPWUID
 #define _POSIX_PTHREAD_SEMANTICS 1
 #endif
+#if !STD_ASCTIME
+#define _POSIX_PTHREAD_SEMANTICS 1
+#endif
 
 #if !HAVE_GETLINE
 #include <stdio.h>
