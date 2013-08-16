@@ -519,6 +519,17 @@ else
 fi
 rm -f compat/have_strcasestr
 
+printf "Checking for strsep... "
+if ${CC} -o compat/have_strsep "$srcdir"/compat/have_strsep.c > /dev/null 2>&1
+then
+    printf "Yes.\n"
+    have_strsep="1"
+else
+    printf "No (will use our own instead).\n"
+    have_strsep="0"
+fi
+rm -f compat/have_strsep
+
 printf "Checking for standard version of getpwuid_r... "
 if ${CC} -o compat/check_getpwuid "$srcdir"/compat/check_getpwuid.c > /dev/null 2>&1
 then
@@ -703,6 +714,10 @@ HAVE_GETLINE = ${have_getline}
 # build its own version)
 HAVE_STRCASESTR = ${have_strcasestr}
 
+# Whether the strsep function is available (if not, then notmuch will
+# build its own version)
+HAVE_STRSEP = ${have_strsep}
+
 # Whether the getpwuid_r function is standards-compliant
 # (if not, then notmuch will #define _POSIX_PTHREAD_SEMANTICS
 # to enable the standards-compliant version -- needed for Solaris)
@@ -759,12 +774,14 @@ CONFIGURE_CFLAGS = -DHAVE_GETLINE=\$(HAVE_GETLINE) \$(GMIME_CFLAGS)      \\
 		   \$(TALLOC_CFLAGS) -DHAVE_VALGRIND=\$(HAVE_VALGRIND)   \\
 		   \$(VALGRIND_CFLAGS)                                   \\
 		   -DHAVE_STRCASESTR=\$(HAVE_STRCASESTR)                 \\
+		   -DHAVE_STRSEP=\$(HAVE_STRSEP)                         \\
 		   -DSTD_GETPWUID=\$(STD_GETPWUID)                       \\
 		   -DSTD_ASCTIME=\$(STD_ASCTIME)
 CONFIGURE_CXXFLAGS = -DHAVE_GETLINE=\$(HAVE_GETLINE) \$(GMIME_CFLAGS)    \\
 		     \$(TALLOC_CFLAGS) -DHAVE_VALGRIND=\$(HAVE_VALGRIND) \\
 		     \$(VALGRIND_CFLAGS) \$(XAPIAN_CXXFLAGS)             \\
 		     -DHAVE_STRCASESTR=\$(HAVE_STRCASESTR)               \\
+		     -DHAVE_STRSEP=\$(HAVE_STRSEP)                       \\
 		     -DSTD_GETPWUID=\$(STD_GETPWUID)                     \\
 		     -DSTD_ASCTIME=\$(STD_ASCTIME)
 CONFIGURE_LDFLAGS =  \$(GMIME_LDFLAGS) \$(TALLOC_LDFLAGS) \$(XAPIAN_LDFLAGS)

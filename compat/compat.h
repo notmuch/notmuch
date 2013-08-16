@@ -53,6 +53,10 @@ getdelim (char **lineptr, size_t *n, int delimiter, FILE *fp);
 char* strcasestr(const char *haystack, const char *needle);
 #endif /* !HAVE_STRCASESTR */
 
+#if !HAVE_STRSEP
+char *strsep(char **stringp, const char *delim);
+#endif /* !HAVE_STRSEP */
+
 /* Silence gcc warnings about unused results.  These warnings exist
  * for a reason; any use of this needs to be justified. */
 #ifdef __GNUC__

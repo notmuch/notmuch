@@ -13,4 +13,8 @@ ifneq ($(HAVE_STRCASESTR),1)
 notmuch_compat_srcs += $(dir)/strcasestr.c
 endif
 
+ifneq ($(HAVE_STRSEP),1)
+notmuch_compat_srcs += $(dir)/strsep.c
+endif
+
 SRCS := $(SRCS) $(notmuch_compat_srcs)
