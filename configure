@@ -519,6 +519,17 @@ else
 fi
 rm -f compat/have_strcasestr
 
+printf "Checking for standard version of getpwuid_r... "
+if ${CC} -o compat/check_getpwuid "$srcdir"/compat/check_getpwuid.c > /dev/null 2>&1
+then
+    printf "Yes.\n"
+    std_getpwuid=1
+else
+    printf "No (will define _POSIX_PTHREAD_SEMANTICS to get it).\n"
+    std_getpwuid=0
+fi
+rm -f compat/check_getpwuid
+
 printf "int main(void){return 0;}\n" > minimal.c
 
 printf "Checking for rpath support... "
@@ -681,6 +692,11 @@ HAVE_GETLINE = ${have_getline}
 # build its own version)
 HAVE_STRCASESTR = ${have_strcasestr}
 
+# Whether the getpwuid_r function is standards-compliant
+# (if not, then notmuch will #define _POSIX_PTHREAD_SEMANTICS
+# to enable the standards-compliant version -- needed for Solaris)
+STD_GETPWUID = ${std_getpwuid}
+
 # Supported platforms (so far) are: LINUX, MACOSX, SOLARIS, FREEBSD, OPENBSD
 PLATFORM = ${platform}
 
@@ -725,10 +741,13 @@ WITH_ZSH = ${WITH_ZSH}
 # Combined flags for compiling and linking against all of the above
 CONFIGURE_CFLAGS = -DHAVE_GETLINE=\$(HAVE_GETLINE) \$(GMIME_CFLAGS)      \\
 		   \$(TALLOC_CFLAGS) -DHAVE_VALGRIND=\$(HAVE_VALGRIND)   \\
-		   \$(VALGRIND_CFLAGS) -DHAVE_STRCASESTR=\$(HAVE_STRCASESTR)
+		   \$(VALGRIND_CFLAGS)                                   \\
+		   -DHAVE_STRCASESTR=\$(HAVE_STRCASESTR)                 \\
+		   -DSTD_GETPWUID=\$(STD_GETPWUID)
 CONFIGURE_CXXFLAGS = -DHAVE_GETLINE=\$(HAVE_GETLINE) \$(GMIME_CFLAGS)    \\
 		     \$(TALLOC_CFLAGS) -DHAVE_VALGRIND=\$(HAVE_VALGRIND) \\
 		     \$(VALGRIND_CFLAGS) \$(XAPIAN_CXXFLAGS)             \\
-                     -DHAVE_STRCASESTR=\$(HAVE_STRCASESTR)
+		     -DHAVE_STRCASESTR=\$(HAVE_STRCASESTR)               \\
+		     -DSTD_GETPWUID=\$(STD_GETPWUID)
 CONFIGURE_LDFLAGS =  \$(GMIME_LDFLAGS) \$(TALLOC_LDFLAGS) \$(XAPIAN_LDFLAGS)
 EOF

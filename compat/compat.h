@@ -30,6 +30,10 @@
 extern "C" {
 #endif
 
+#if !STD_GETPWUID
+#define _POSIX_PTHREAD_SEMANTICS 1
+#endif
+
 #if !HAVE_GETLINE
 #include <stdio.h>
 #include <unistd.h>
