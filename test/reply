@@ -132,7 +132,9 @@ add_message '[subject]="This subject is exactly 200 bytes in length. Other than 
 	    '[body]="200-byte header"'
 output=$(notmuch reply id:${gen_msg_id})
 test_expect_equal "$output" "From: Notmuch Test Suite <test_suite@notmuchmail.org>
-Subject: Re: This subject is exactly 200 bytes in length. Other than its length there is not much of note here. Note that the length of 200 bytes includes the Subject: and Re: prefixes with two spaces
+Subject: Re: This subject is exactly 200 bytes in length. Other than its
+ length there is not much of note here. Note that the length of 200 bytes
+ includes the Subject: and Re: prefixes with two spaces
 In-Reply-To: <${gen_msg_id}>
 References: <${gen_msg_id}>
 
@@ -200,10 +202,11 @@ add_message '[subject]="=?iso-8859-1?q?=e0=df=e7?="' \
 	    '[body]="Encoding"'
 
 output=$(notmuch reply id:${gen_msg_id})
+# Note that GMime changes from Q- to B-encoding
 test_expect_equal "$output" "\
 From: Notmuch Test Suite <test_suite@notmuchmail.org>
-Subject: Re: àßç
-To: ☃ <snowman@example.com>
+Subject: Re: =?iso-8859-1?b?4N/n?=
+To: =?UTF-8?b?4piD?= <snowman@example.com>
 In-Reply-To: <${gen_msg_id}>
 References: <${gen_msg_id}>
 

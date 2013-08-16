@@ -255,7 +255,6 @@ notmuch_client_srcs =		\
 	command-line-arguments.c\
 	debugger.c		\
 	gmime-filter-reply.c	\
-	gmime-filter-headers.c	\
 	hooks.c			\
 	notmuch.c		\
 	notmuch-config.c	\

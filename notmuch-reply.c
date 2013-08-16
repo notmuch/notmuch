@@ -21,28 +21,18 @@
  */
 
 #include "notmuch-client.h"
-#include "gmime-filter-headers.h"
 #include "sprinter.h"
 
 static void
 show_reply_headers (GMimeMessage *message)
 {
-    GMimeStream *stream_stdout = NULL, *stream_filter = NULL;
+    GMimeStream *stream_stdout = NULL;
 
     stream_stdout = g_mime_stream_file_new (stdout);
     if (stream_stdout) {
 	g_mime_stream_file_set_owner (GMIME_STREAM_FILE (stream_stdout), FALSE);
-	stream_filter = g_mime_stream_filter_new(stream_stdout);
-	if (stream_filter) {
-		// g_mime_object_write_to_stream will produce
-		// RFC2047-encoded headers, but we want to present the
-		// user with decoded headers and let whatever
-		// ultimately sends the mail do the RFC2047 encoding.
-		g_mime_stream_filter_add(GMIME_STREAM_FILTER(stream_filter),
-					 g_mime_filter_headers_new());
-		g_mime_object_write_to_stream(GMIME_OBJECT(message), stream_filter);
-		g_object_unref(stream_filter);
-	}
+	/* Output RFC 2822 formatted (and RFC 2047 encoded) headers. */
+	g_mime_object_write_to_stream (GMIME_OBJECT(message), stream_stdout);
 	g_object_unref(stream_stdout);
     }
 }
