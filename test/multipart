@@ -599,7 +599,7 @@ cat <<EOF >EXPECTED
  "From": "Notmuch Test Suite <test_suite@notmuchmail.org>",
  "To": "Carl Worth <cworth@cworth.org>, cworth@cworth.org",
  "In-reply-to": "<87liy5ap00.fsf@yoom.home.cworth.org>",
- "References": " <87liy5ap00.fsf@yoom.home.cworth.org>"},
+ "References": "<87liy5ap00.fsf@yoom.home.cworth.org>"},
  "original": {"id": "XXXXX",
  "match": false,
  "excluded": false,

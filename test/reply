@@ -242,7 +242,7 @@ test_expect_equal_json "$output" '
     "reply-headers": {
         "From": "Notmuch Test Suite <test_suite@notmuchmail.org>",
         "In-reply-to": "<'${gen_msg_id}'>",
-        "References": " <'${gen_msg_id}'>",
+        "References": "<'${gen_msg_id}'>",
         "Subject": "Re: \u00e0\u00df\u00e7",
         "To": "\u2603 <snowman@example.com>"
     }

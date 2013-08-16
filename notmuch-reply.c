@@ -537,9 +537,12 @@ create_reply_message(void *ctx,
 			      "In-Reply-To", in_reply_to);
 
     orig_references = notmuch_message_get_header (message, "references");
+    if (!orig_references)
+	/* Treat errors like missing References headers. */
+	orig_references = "";
     references = talloc_asprintf (ctx, "%s%s%s",
-				  orig_references ? orig_references : "",
-				  orig_references ? " " : "",
+				  *orig_references ? orig_references : "",
+				  *orig_references ? " " : "",
 				  in_reply_to);
     g_mime_object_set_header (GMIME_OBJECT (reply),
 			      "References", references);
