@@ -588,6 +588,10 @@ message at DEPTH in the current thread."
 
     ;; Render the primary part.
     (notmuch-show-insert-bodypart msg (car inner-parts) depth)
+    ;; Add hidden buttons for the rest
+    (mapc (lambda (inner-part)
+	    (notmuch-show-insert-bodypart msg inner-part depth t))
+	  (cdr inner-parts))
 
     (when notmuch-show-indent-multipart
       (indent-rigidly start (point) 1)))
