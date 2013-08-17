@@ -177,7 +177,8 @@ do_search_messages (sprinter_t *format,
 		    notmuch_query_t *query,
 		    output_t output,
 		    int offset,
-		    int limit)
+		    int limit,
+		    int dupe)
 {
     notmuch_message_t *message;
     notmuch_messages_t *messages;
@@ -206,14 +207,17 @@ do_search_messages (sprinter_t *format,
 	message = notmuch_messages_get (messages);
 
 	if (output == OUTPUT_FILES) {
+	    int j;
 	    filenames = notmuch_message_get_filenames (message);
 
-	    for (;
+	    for (j = 1;
 		 notmuch_filenames_valid (filenames);
-		 notmuch_filenames_move_to_next (filenames))
+		 notmuch_filenames_move_to_next (filenames), j++)
 	    {
-		format->string (format, notmuch_filenames_get (filenames));
-		format->separator (format);
+		if (dupe < 0 || dupe == j) {
+		    format->string (format, notmuch_filenames_get (filenames));
+		    format->separator (format);
+		}
 	    }
 	    
 	    notmuch_filenames_destroy( filenames );
@@ -296,6 +300,7 @@ notmuch_search_command (notmuch_config_t *config, int argc, char *argv[])
     int offset = 0;
     int limit = -1; /* unlimited */
     notmuch_exclude_t exclude = NOTMUCH_EXCLUDE_TRUE;
+    int dupe = -1;
     unsigned int i;
 
     enum {
@@ -332,6 +337,7 @@ notmuch_search_command (notmuch_config_t *config, int argc, char *argv[])
                                   { 0, 0 } } },
 	{ NOTMUCH_OPT_INT, &offset, "offset", 'O', 0 },
 	{ NOTMUCH_OPT_INT, &limit, "limit", 'L', 0  },
+	{ NOTMUCH_OPT_INT, &dupe, "duplicate", 'D', 0  },
 	{ 0, 0, 0, 0, 0 }
     };
 
@@ -414,7 +420,7 @@ notmuch_search_command (notmuch_config_t *config, int argc, char *argv[])
 	break;
     case OUTPUT_MESSAGES:
     case OUTPUT_FILES:
-	ret = do_search_messages (format, query, output, offset, limit);
+	ret = do_search_messages (format, query, output, offset, limit, dupe);
 	break;
     case OUTPUT_TAGS:
 	ret = do_search_tags (notmuch, format, query);
