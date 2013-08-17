@@ -162,8 +162,6 @@ typedef enum _notmuch_find_flags {
 
 typedef struct _notmuch_doc_id_set notmuch_doc_id_set_t;
 
-typedef struct _notmuch_string_list notmuch_string_list_t;
-
 /* database.cc */
 
 /* Lookup a prefix value by name.
@@ -227,17 +225,6 @@ _notmuch_directory_create (notmuch_database_t *notmuch,
 
 unsigned int
 _notmuch_directory_get_document_id (notmuch_directory_t *directory);
-
-/* thread.cc */
-
-notmuch_thread_t *
-_notmuch_thread_create (void *ctx,
-			notmuch_database_t *notmuch,
-			unsigned int seed_doc_id,
-			notmuch_doc_id_set_t *match_set,
-			notmuch_string_list_t *excluded_terms,
-			notmuch_exclude_t omit_exclude,
-			notmuch_sort_t sort);
 
 /* message.cc */
 
@@ -476,11 +463,11 @@ typedef struct _notmuch_string_node {
     struct _notmuch_string_node *next;
 } notmuch_string_node_t;
 
-struct visible _notmuch_string_list {
+typedef struct visible _notmuch_string_list {
     int length;
     notmuch_string_node_t *head;
     notmuch_string_node_t **tail;
-};
+} notmuch_string_list_t;
 
 notmuch_string_list_t *
 _notmuch_string_list_create (const void *ctx);
@@ -508,6 +495,17 @@ _notmuch_tags_create (const void *ctx, notmuch_string_list_t *list);
 notmuch_filenames_t *
 _notmuch_filenames_create (const void *ctx,
 			   notmuch_string_list_t *list);
+
+/* thread.cc */
+
+notmuch_thread_t *
+_notmuch_thread_create (void *ctx,
+			notmuch_database_t *notmuch,
+			unsigned int seed_doc_id,
+			notmuch_doc_id_set_t *match_set,
+			notmuch_string_list_t *excluded_terms,
+			notmuch_exclude_t omit_exclude,
+			notmuch_sort_t sort);
 
 NOTMUCH_END_DECLS
 
