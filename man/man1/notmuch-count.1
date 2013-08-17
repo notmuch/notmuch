@@ -23,7 +23,7 @@ Supported options for
 include
 .RS 4
 .TP 4
-.B \-\-output=(messages|threads)
+.B \-\-output=(messages|threads|files)
 
 .RS 4
 .TP 4
@@ -36,6 +36,14 @@ Output the number of matching messages. This is the default.
 .B threads
 
 Output the number of matching threads.
+.RE
+.RS 4
+.TP 4
+.B files
+
+Output the number of files associated with matching messages. This may
+be bigger than the number of matching messages due to duplicates
+(i.e. multiple files having the same message-id).
 .RE
 .RE
 
