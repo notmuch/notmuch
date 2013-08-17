@@ -28,6 +28,16 @@ test_expect_equal \
     "$((`notmuch search '*' | wc -l`))" \
     "`notmuch count --output=threads '*'`"
 
+test_begin_subtest "files count"
+test_expect_equal \
+    "$((`notmuch search --output=files '*' | wc -l`))" \
+    "`notmuch count --output=files '*'`"
+
+test_begin_subtest "files count for a duplicate message-id"
+test_expect_equal \
+    "2" \
+    "`notmuch count --output=files id:20091117232137.GA7669@griffis1.net`"
+
 test_begin_subtest "count with no matching messages"
 test_expect_equal \
     "0" \
