@@ -1,3 +1,23 @@
+
+Notmuch 0.17 (UNRELEASED)
+=========================
+
+Command-Line Interface
+----------------------
+
+New options to better support handling duplicate messages
+
+  If more than one message file is associated with a message-id,
+  `notmuch search --output=files` will print all of them. A new
+  `--duplicate=N` option can be used to specify which duplicate to
+  print for each message.
+
+  `notmuch count` now supports `--output=files` option to output the
+  number of files associated with matching messages. This may be
+  bigger than the number of matching messages due to duplicates
+  (i.e. multiple files having the same message-id).
+
+
 Notmuch 0.16 (2013-08-03)
 =========================
 
