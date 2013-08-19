@@ -201,12 +201,14 @@ add_message '[subject]="=?iso-8859-1?q?=e0=df=e7?="' \
 	    '[date]="Tue, 05 Jan 2010 15:43:56 -0000"' \
 	    '[body]="Encoding"'
 
-output=$(notmuch reply id:${gen_msg_id})
-# Note that GMime changes from Q- to B-encoding
+# GMime happens to change from Q- to B-encoding.  We canonicalize the
+# case of the encoding and charset because different versions of GMime
+# capitalize the encoding differently.
+output=$(notmuch reply id:${gen_msg_id} | perl -pe 's/=\?[^?]+\?[bB]\?/lc($&)/ge')
 test_expect_equal "$output" "\
 From: Notmuch Test Suite <test_suite@notmuchmail.org>
 Subject: Re: =?iso-8859-1?b?4N/n?=
-To: =?UTF-8?b?4piD?= <snowman@example.com>
+To: =?utf-8?b?4piD?= <snowman@example.com>
 In-Reply-To: <${gen_msg_id}>
 References: <${gen_msg_id}>
 
