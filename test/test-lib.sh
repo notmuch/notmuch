@@ -22,6 +22,9 @@ if [ ${BASH_VERSINFO[0]} -lt 4 ]; then
     exit 1
 fi
 
+# Make sure echo builtin does not expand backslash-escape sequences by default.
+shopt -u xpg_echo
+
 # if --tee was passed, write the output not only to the terminal, but
 # additionally to the file test-results/$BASENAME.out, too.
 case "$GIT_TEST_TEE_STARTED, $* " in
