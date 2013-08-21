@@ -57,6 +57,11 @@ char* strcasestr(const char *haystack, const char *needle);
 char *strsep(char **stringp, const char *delim);
 #endif /* !HAVE_STRSEP */
 
+#if !HAVE_TIMEGM
+#include <time.h>
+time_t timegm (struct tm *tm);
+#endif /* !HAVE_TIMEGM */
+
 /* Silence gcc warnings about unused results.  These warnings exist
  * for a reason; any use of this needs to be justified. */
 #ifdef __GNUC__
