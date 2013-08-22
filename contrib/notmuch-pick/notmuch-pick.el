@@ -238,6 +238,22 @@ Some useful entries are:
     (beginning-of-line)
     (get-text-property (point) :notmuch-message-properties)))
 
+;; XXX This should really be a lib function but we are trying to
+;; reduce impact on the code base.
+(defun notmuch-show-get-prop (prop &optional props)
+  "This is a pick overridden version of notmuch-show-get-prop
+
+It gets property PROP from PROPS or, if PROPS is nil, the current
+message in either pick or show. This means that several functions
+in notmuch-show now work unchanged in pick as they just need the
+correct message properties."
+  (let ((props (or props
+		   (cond ((eq major-mode 'notmuch-show-mode)
+			  (notmuch-show-get-message-properties))
+			 ((eq major-mode 'notmuch-pick-mode)
+			  (notmuch-pick-get-message-properties))))))
+    (plist-get props prop)))
+
 (defun notmuch-pick-set-message-properties (props)
   (save-excursion
     (beginning-of-line)
