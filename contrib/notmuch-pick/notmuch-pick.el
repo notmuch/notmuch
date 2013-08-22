@@ -236,6 +236,10 @@ FUNC."
     (define-key map "e" (notmuch-pick-to-message-pane #'notmuch-pick-button-activate))
 
     ;; bindings from show (or elsewhere) but we close the message pane first.
+    (define-key map "m" (notmuch-pick-close-message-pane-and #'notmuch-mua-new-mail))
+    (define-key map "f" (notmuch-pick-close-message-pane-and #'notmuch-show-forward-message))
+    (define-key map "r" (notmuch-pick-close-message-pane-and #'notmuch-show-reply-sender))
+    (define-key map "R" (notmuch-pick-close-message-pane-and #'notmuch-show-reply))
     (define-key map "V" (notmuch-pick-close-message-pane-and #'notmuch-show-view-raw-message))
     (define-key map "?" (notmuch-pick-close-message-pane-and #'notmuch-help))
 
@@ -246,10 +250,6 @@ FUNC."
     (define-key map "=" 'notmuch-pick-refresh-view)
     (define-key map "s" 'notmuch-pick-to-search)
     (define-key map "z" 'notmuch-pick-to-pick)
-    (define-key map "m" 'notmuch-pick-new-mail)
-    (define-key map "f" 'notmuch-pick-forward-message)
-    (define-key map "r" 'notmuch-pick-reply-sender)
-    (define-key map "R" 'notmuch-pick-reply)
     (define-key map "n" 'notmuch-pick-next-matching-message)
     (define-key map "p" 'notmuch-pick-prev-matching-message)
     (define-key map "N" 'notmuch-pick-next-message)
@@ -598,41 +598,6 @@ message will be \"unarchived\", i.e. the tag changes in
 			 query-context
 			 target
 			 (get-buffer buffer-name))))
-
-(defmacro with-current-notmuch-pick-message (&rest body)
-  "Evaluate body with current buffer set to the text of current message"
-  `(save-excursion
-     (let ((id (notmuch-pick-get-message-id)))
-       (let ((buf (generate-new-buffer (concat "*notmuch-msg-" id "*"))))
-         (with-current-buffer buf
-	    (call-process notmuch-command nil t nil "show" "--format=raw" id)
-           ,@body)
-	 (kill-buffer buf)))))
-
-(defun notmuch-pick-new-mail (&optional prompt-for-sender)
-  "Compose new mail."
-  (interactive "P")
-  (notmuch-pick-close-message-window)
-  (notmuch-mua-new-mail prompt-for-sender ))
-
-(defun notmuch-pick-forward-message (&optional prompt-for-sender)
-  "Forward the current message."
-  (interactive "P")
-  (notmuch-pick-close-message-window)
-  (with-current-notmuch-pick-message
-   (notmuch-mua-new-forward-message prompt-for-sender)))
-
-(defun notmuch-pick-reply (&optional prompt-for-sender)
-  "Reply to the sender and all recipients of the current message."
-  (interactive "P")
-  (notmuch-pick-close-message-window)
-  (notmuch-mua-new-reply (notmuch-pick-get-message-id) prompt-for-sender t))
-
-(defun notmuch-pick-reply-sender (&optional prompt-for-sender)
-  "Reply to the sender of the current message."
-  (interactive "P")
-  (notmuch-pick-close-message-window)
-  (notmuch-mua-new-reply (notmuch-pick-get-message-id) prompt-for-sender nil))
 
 (defun notmuch-pick-clean-address (address)
   "Try to clean a single email ADDRESS for display. Return
