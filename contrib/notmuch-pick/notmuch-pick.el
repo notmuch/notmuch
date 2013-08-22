@@ -236,6 +236,7 @@ FUNC."
     (define-key map "e" (notmuch-pick-to-message-pane #'notmuch-pick-button-activate))
 
     ;; bindings from show (or elsewhere) but we close the message pane first.
+    (define-key map "V" (notmuch-pick-close-message-pane-and #'notmuch-show-view-raw-message))
     (define-key map "?" (notmuch-pick-close-message-pane-and #'notmuch-help))
 
     ;; The main pick bindings
