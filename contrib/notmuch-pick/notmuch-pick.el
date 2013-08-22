@@ -190,6 +190,8 @@ if the user has loaded a different buffer in that window.")
 (defvar notmuch-pick-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map [mouse-1] 'notmuch-pick-show-message)
+    ;; these use notmuch-show functions directly
+    (define-key map "|" 'notmuch-show-pipe-message)
     (define-key map "q" 'notmuch-pick-quit)
     (define-key map "x" 'notmuch-pick-quit)
     (define-key map "?" 'notmuch-help)
@@ -205,7 +207,6 @@ if the user has loaded a different buffer in that window.")
     (define-key map "p" 'notmuch-pick-prev-matching-message)
     (define-key map "N" 'notmuch-pick-next-message)
     (define-key map "P" 'notmuch-pick-prev-message)
-    (define-key map "|" 'notmuch-pick-pipe-message)
     (define-key map "-" 'notmuch-pick-remove-tag)
     (define-key map "+" 'notmuch-pick-add-tag)
     (define-key map " " 'notmuch-pick-scroll-or-next)
@@ -585,34 +586,6 @@ message will be \"unarchived\", i.e. the tag changes in
   (interactive "P")
   (notmuch-pick-close-message-window)
   (notmuch-mua-new-reply (notmuch-pick-get-message-id) prompt-for-sender nil))
-
-;; Shamelessly stolen from notmuch-show.el: maybe should be unified.
-(defun notmuch-pick-pipe-message (command)
-  "Pipe the contents of the current message to the given command.
-
-The given command will be executed with the raw contents of the
-current email message as stdin. Anything printed by the command
-to stdout or stderr will appear in the *notmuch-pipe* buffer.
-
-When invoked with a prefix argument, the command will receive all
-open messages in the current thread (formatted as an mbox) rather
-than only the current message."
-  (interactive "sPipe message to command: ")
-  (let ((shell-command
-	 (concat notmuch-command " show --format=raw "
-		 (shell-quote-argument (notmuch-pick-get-message-id)) " | " command))
-	 (buf (get-buffer-create (concat "*notmuch-pipe*"))))
-    (with-current-buffer buf
-      (setq buffer-read-only nil)
-      (erase-buffer)
-      (let ((exit-code (call-process-shell-command shell-command nil buf)))
-	(goto-char (point-max))
-	(set-buffer-modified-p nil)
-	(setq buffer-read-only t)
-	(unless (zerop exit-code)
-	  (switch-to-buffer-other-window buf)
-	  (message (format "Command '%s' exited abnormally with code %d"
-			   shell-command exit-code)))))))
 
 (defun notmuch-pick-clean-address (address)
   "Try to clean a single email ADDRESS for display. Return
