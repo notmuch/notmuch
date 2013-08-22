@@ -192,6 +192,8 @@ if the user has loaded a different buffer in that window.")
     (define-key map [mouse-1] 'notmuch-pick-show-message)
     ;; these use notmuch-show functions directly
     (define-key map "|" 'notmuch-show-pipe-message)
+    (define-key map "w" 'notmuch-show-save-attachments)
+    (define-key map "v" 'notmuch-show-view-all-mime-parts)
     (define-key map "q" 'notmuch-pick-quit)
     (define-key map "x" 'notmuch-pick-quit)
     (define-key map "?" 'notmuch-help)
