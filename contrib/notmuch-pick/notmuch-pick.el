@@ -208,6 +208,18 @@ This function does not give an error if there is no button."
   (let ((button (or button (button-at (point)))))
     (when button (button-activate button))))
 
+(defun notmuch-pick-close-message-pane-and (func)
+  "Close message pane and execute FUNC.
+
+This function returns a function (so can be used as a keybinding)
+which closes the message pane if open and then executes function
+FUNC."
+  `(lambda ()
+      ,(concat "(Close message pane and) " (documentation func t))
+     (interactive)
+     (notmuch-pick-close-message-window)
+     (call-interactively #',func)))
+
 (defvar notmuch-pick-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map [mouse-1] 'notmuch-pick-show-message)
