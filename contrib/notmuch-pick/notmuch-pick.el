@@ -216,6 +216,14 @@ This function does not give an error if there is no button."
     (define-key map "w" 'notmuch-show-save-attachments)
     (define-key map "v" 'notmuch-show-view-all-mime-parts)
     (define-key map "c" 'notmuch-show-stash-map)
+
+    ;; these apply to the message pane
+    (define-key map (kbd "M-TAB") (notmuch-pick-to-message-pane #'notmuch-show-previous-button))
+    (define-key map (kbd "<backtab>")  (notmuch-pick-to-message-pane #'notmuch-show-previous-button))
+    (define-key map (kbd "TAB") (notmuch-pick-to-message-pane #'notmuch-show-next-button))
+    (define-key map "e" (notmuch-pick-to-message-pane #'notmuch-pick-button-activate))
+
+    ;; The main pick bindings
     (define-key map "q" 'notmuch-pick-quit)
     (define-key map "x" 'notmuch-pick-quit)
     (define-key map "?" 'notmuch-help)
