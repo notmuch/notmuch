@@ -235,10 +235,12 @@ FUNC."
     (define-key map (kbd "TAB") (notmuch-pick-to-message-pane #'notmuch-show-next-button))
     (define-key map "e" (notmuch-pick-to-message-pane #'notmuch-pick-button-activate))
 
+    ;; bindings from show (or elsewhere) but we close the message pane first.
+    (define-key map "?" (notmuch-pick-close-message-pane-and #'notmuch-help))
+
     ;; The main pick bindings
     (define-key map "q" 'notmuch-pick-quit)
     (define-key map "x" 'notmuch-pick-quit)
-    (define-key map "?" 'notmuch-help)
     (define-key map "a" 'notmuch-pick-archive-message-then-next)
     (define-key map "=" 'notmuch-pick-refresh-view)
     (define-key map "s" 'notmuch-pick-to-search)
