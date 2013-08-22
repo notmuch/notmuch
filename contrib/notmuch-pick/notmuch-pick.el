@@ -187,6 +187,19 @@ if the user has loaded a different buffer in that window.")
 (make-variable-buffer-local 'notmuch-pick-message-buffer)
 (put 'notmuch-pick-message-buffer 'permanent-local t)
 
+(defun notmuch-pick-to-message-pane (func)
+  "Execute FUNC in message pane.
+
+This function returns a function (so can be used as a keybinding)
+which executes function FUNC in the message pane if it is
+open (if the message pane is closed it does nothing)."
+  `(lambda ()
+      ,(concat "(In message pane) " (documentation func t))
+     (interactive)
+     (when (window-live-p notmuch-pick-message-window)
+       (with-selected-window notmuch-pick-message-window
+	 (call-interactively #',func)))))
+
 (defvar notmuch-pick-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map [mouse-1] 'notmuch-pick-show-message)
