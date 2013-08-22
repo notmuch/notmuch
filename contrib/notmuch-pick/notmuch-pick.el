@@ -200,6 +200,14 @@ open (if the message pane is closed it does nothing)."
        (with-selected-window notmuch-pick-message-window
 	 (call-interactively #',func)))))
 
+(defun notmuch-pick-button-activate (&optional button)
+  "Activate BUTTON or button at point
+
+This function does not give an error if there is no button."
+  (interactive)
+  (let ((button (or button (button-at (point)))))
+    (when button (button-activate button))))
+
 (defvar notmuch-pick-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map [mouse-1] 'notmuch-pick-show-message)
