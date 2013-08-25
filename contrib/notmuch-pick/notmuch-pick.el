@@ -250,6 +250,8 @@ FUNC."
     (define-key map "p" 'notmuch-pick-prev-matching-message)
     (define-key map "N" 'notmuch-pick-next-message)
     (define-key map "P" 'notmuch-pick-prev-message)
+    (define-key map (kbd "M-p") 'notmuch-pick-prev-thread)
+    (define-key map (kbd "M-n") 'notmuch-pick-next-thread)
     (define-key map "-" 'notmuch-pick-remove-tag)
     (define-key map "+" 'notmuch-pick-add-tag)
     (define-key map "*" 'notmuch-pick-tag-thread)
@@ -600,6 +602,17 @@ message will be \"unarchived\", i.e. the tag changes in
   (when (notmuch-pick-get-message-properties)
     (while (not (or (notmuch-pick-get-prop :first) (eobp)))
       (forward-line -1))))
+
+(defun notmuch-pick-prev-thread ()
+  (interactive)
+  (forward-line -1)
+  (notmuch-pick-thread-top))
+
+(defun notmuch-pick-next-thread ()
+  (interactive)
+  (forward-line 1)
+  (while (not (or (notmuch-pick-get-prop :first) (eobp)))
+    (forward-line 1)))
 
 (defun notmuch-pick-thread-mapcar (function)
   "Iterate through all messages in the current thread
