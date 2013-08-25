@@ -241,6 +241,7 @@ FUNC."
     ;; The main pick bindings
     (define-key map "q" 'notmuch-pick-quit)
     (define-key map "x" 'notmuch-pick-quit)
+    (define-key map "A" 'notmuch-pick-archive-thread)
     (define-key map "a" 'notmuch-pick-archive-message-then-next)
     (define-key map "=" 'notmuch-pick-refresh-view)
     (define-key map "s" 'notmuch-pick-to-search)
@@ -251,6 +252,7 @@ FUNC."
     (define-key map "P" 'notmuch-pick-prev-message)
     (define-key map "-" 'notmuch-pick-remove-tag)
     (define-key map "+" 'notmuch-pick-add-tag)
+    (define-key map "*" 'notmuch-pick-tag-thread)
     (define-key map " " 'notmuch-pick-scroll-or-next)
     (define-key map "b" 'notmuch-pick-scroll-message-window-back)
     map))
@@ -614,6 +616,31 @@ message will be \"unarchived\", i.e. the tag changes in
   (mapconcat 'identity
 	     (notmuch-pick-thread-mapcar 'notmuch-pick-get-message-id)
 	     " or "))
+
+(defun notmuch-pick-tag-thread (&optional tag-changes)
+  "Tag all messages in the current thread"
+  (interactive)
+  (when (notmuch-pick-get-message-properties)
+    (let ((tag-changes (notmuch-tag (notmuch-pick-get-messages-ids-thread-search) tag-changes)))
+      (notmuch-pick-thread-mapcar
+       (lambda () (notmuch-pick-tag-update-display tag-changes))))))
+
+(defun notmuch-pick-archive-thread (&optional unarchive)
+  "Archive each message in thread.
+
+Archive each message currently shown by applying the tag changes
+in `notmuch-archive-tags' to each. If a prefix argument is given,
+the messages will be \"unarchived\", i.e. the tag changes in
+`notmuch-archive-tags' will be reversed.
+
+Note: This command is safe from any race condition of new messages
+being delivered to the same thread. It does not archive the
+entire thread, but only the messages shown in the current
+buffer."
+  (interactive "P")
+  (when notmuch-archive-tags
+    (notmuch-pick-tag-thread
+     (notmuch-tag-change-list notmuch-archive-tags unarchive))))
 
 ;; Functions below here display the pick buffer itself.
 
