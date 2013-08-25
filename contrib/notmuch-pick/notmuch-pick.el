@@ -594,6 +594,29 @@ message will be \"unarchived\", i.e. the tag changes in
 			 target
 			 (get-buffer buffer-name))))
 
+(defun notmuch-pick-thread-top ()
+  (when (notmuch-pick-get-message-properties)
+    (while (not (or (notmuch-pick-get-prop :first) (eobp)))
+      (forward-line -1))))
+
+(defun notmuch-pick-thread-mapcar (function)
+  "Iterate through all messages in the current thread
+ and call FUNCTION for side effects."
+  (save-excursion
+    (notmuch-pick-thread-top)
+    (loop collect (funcall function)
+	  do (forward-line)
+	  while (and (notmuch-pick-get-message-properties)
+		     (not (notmuch-pick-get-prop :first))))))
+
+(defun notmuch-pick-get-messages-ids-thread-search ()
+  "Return a search string for all message ids of messages in the current thread."
+  (mapconcat 'identity
+	     (notmuch-pick-thread-mapcar 'notmuch-pick-get-message-id)
+	     " or "))
+
+;; Functions below here display the pick buffer itself.
+
 (defun notmuch-pick-clean-address (address)
   "Try to clean a single email ADDRESS for display. Return
 AUTHOR_NAME if present, otherwise return AUTHOR_EMAIL. Return
@@ -702,6 +725,7 @@ message together with all its descendents."
 	(push "├" tree-status)))
 
       (push (concat (if replies "┬" "─") "►") tree-status)
+      (plist-put msg :first (and first (eq 0 depth)))
       (notmuch-pick-goto-and-insert-msg (plist-put msg :tree-status tree-status))
       (pop tree-status)
       (pop tree-status)
