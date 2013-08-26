@@ -77,11 +77,6 @@
   :type '(alist :key-type (string) :value-type (string))
   :group 'notmuch-pick)
 
-(defcustom notmuch-pick-asynchronous-parser t
-  "Use the asynchronous parser."
-  :type 'boolean
-  :group 'notmuch-pick)
-
 ;; Faces for messages that match the query.
 (defface notmuch-pick-match-date-face
   '((t :inherit default))
@@ -817,26 +812,17 @@ Complete list of currently available key bindings:
 	 (message-arg "--entire-thread"))
     (if (equal (car (process-lines notmuch-command "count" search-args)) "0")
 	(setq search-args basic-query))
-    (if notmuch-pick-asynchronous-parser
-	(let ((proc (notmuch-start-notmuch
-		     "notmuch-pick" buffer #'notmuch-pick-process-sentinel
-		     "show" "--body=false" "--format=sexp"
-		     message-arg search-args))
-	      ;; Use a scratch buffer to accumulate partial output.
-              ;; This buffer will be killed by the sentinel, which
-              ;; should be called no matter how the process dies.
-              (parse-buf (generate-new-buffer " *notmuch pick parse*")))
-          (process-put proc 'parse-buf parse-buf)
-	  (set-process-filter proc 'notmuch-pick-process-filter)
-	  (set-process-query-on-exit-flag proc nil))
-      (progn
-	(notmuch-pick-insert-forest
-	 (notmuch-query-get-threads
-	  (list "--body=false" message-arg search-args)))
-	(save-excursion
-	  (goto-char (point-max))
-	  (insert "End of search results.\n"))))))
-
+    (let ((proc (notmuch-start-notmuch
+		 "notmuch-pick" buffer #'notmuch-pick-process-sentinel
+		 "show" "--body=false" "--format=sexp"
+		 message-arg search-args))
+	  ;; Use a scratch buffer to accumulate partial output.
+	  ;; This buffer will be killed by the sentinel, which
+	  ;; should be called no matter how the process dies.
+	  (parse-buf (generate-new-buffer " *notmuch pick parse*")))
+      (process-put proc 'parse-buf parse-buf)
+      (set-process-filter proc 'notmuch-pick-process-filter)
+      (set-process-query-on-exit-flag proc nil))))
 
 (defun notmuch-pick (&optional query query-context target buffer-name open-target)
   "Run notmuch pick with the given `query' and display the results.
