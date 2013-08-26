@@ -7,7 +7,7 @@ fail() {
     exit 1
 }
 
-TESTS="emacs-pick emacs-pick-sync"
+TESTS="emacs-pick"
 TESTFILES="$TESTS pick.expected-output"
 
 export PICK_DIR="`cd \`dirname "$0"\` && pwd`"
