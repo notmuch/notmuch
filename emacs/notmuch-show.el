@@ -41,6 +41,9 @@
 (declare-function notmuch-search-next-thread "notmuch" nil)
 (declare-function notmuch-search-previous-thread "notmuch" nil)
 (declare-function notmuch-search-show-thread "notmuch" nil)
+(declare-function notmuch-foreach-mime-part "notmuch" (function mm-handle))
+(declare-function notmuch-count-attachments "notmuch" (mm-handle))
+(declare-function notmuch-save-attachments "notmuch" (mm-handle &optional queryp))
 
 (defcustom notmuch-message-headers '("Subject" "To" "Cc" "Date")
   "Headers that should be shown in a message, in this order.
@@ -236,42 +239,6 @@ For example, if you wanted to remove an \"unread\" tag and add a
 				  ("multipart/related" ignore identity)
 				 )))
      (mm-display-parts (mm-dissect-buffer)))))
-
-(defun notmuch-foreach-mime-part (function mm-handle)
-  (cond ((stringp (car mm-handle))
-         (dolist (part (cdr mm-handle))
-           (notmuch-foreach-mime-part function part)))
-        ((bufferp (car mm-handle))
-         (funcall function mm-handle))
-        (t (dolist (part mm-handle)
-             (notmuch-foreach-mime-part function part)))))
-
-(defun notmuch-count-attachments (mm-handle)
-  (let ((count 0))
-    (notmuch-foreach-mime-part
-     (lambda (p)
-       (let ((disposition (mm-handle-disposition p)))
-         (and (listp disposition)
-              (or (equal (car disposition) "attachment")
-                  (and (equal (car disposition) "inline")
-                       (assq 'filename disposition)))
-              (incf count))))
-     mm-handle)
-    count))
-
-(defun notmuch-save-attachments (mm-handle &optional queryp)
-  (notmuch-foreach-mime-part
-   (lambda (p)
-     (let ((disposition (mm-handle-disposition p)))
-       (and (listp disposition)
-            (or (equal (car disposition) "attachment")
-                (and (equal (car disposition) "inline")
-                     (assq 'filename disposition)))
-            (or (not queryp)
-                (y-or-n-p
-                 (concat "Save '" (cdr (assq 'filename disposition)) "' ")))
-            (mm-save-part p))))
-   mm-handle))
 
 (defun notmuch-show-save-attachments ()
   "Save all attachments from the current message."
