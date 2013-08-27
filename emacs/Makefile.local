@@ -29,19 +29,24 @@ emacs_bytecode = $(emacs_sources:.el=.elc)
 # the byte compiler may load an old .elc file when processing a
 # "require" or we may fail to rebuild a .elc that depended on a macro
 # from an updated file.
+ifeq ($(HAVE_EMACS),1)
 $(dir)/.eldeps: $(dir)/Makefile.local $(dir)/make-deps.el $(emacs_sources)
 	$(call quiet,EMACS) --directory emacs -batch -l make-deps.el \
 		-f batch-make-deps $(emacs_sources) > $@.tmp && \
 		(cmp -s $@.tmp $@ || mv $@.tmp $@)
 -include $(dir)/.eldeps
+endif
 CLEAN+=$(dir)/.eldeps $(dir)/.eldeps.tmp
 
+ifeq ($(HAVE_EMACS),1)
 %.elc: %.el $(global_deps)
 	$(call quiet,EMACS) --directory emacs -batch -f batch-byte-compile $<
+endif
 
 ifeq ($(WITH_EMACS),1)
 ifeq ($(HAVE_EMACS),1)
 all: $(emacs_bytecode)
+install-emacs: $(emacs_bytecode)
 endif
 
 install: install-emacs
