@@ -28,6 +28,8 @@
 
 (eval-when-compile (require 'cl))
 
+(declare-function notmuch-show-insert-bodypart "notmuch-show" (msg part depth &optional hide))
+
 ;;
 
 (defcustom notmuch-mua-send-hook '(notmuch-mua-message-send-hook)
@@ -128,12 +130,15 @@ list."
 	  collect part))
 
 (defun notmuch-mua-insert-quotable-part (message part)
-  (save-restriction
-    (narrow-to-region (point) (point))
-    (notmuch-mm-display-part-inline message part (plist-get part :id)
-				    (plist-get part :content-type)
-				    notmuch-show-process-crypto)
-    (goto-char (point-max))))
+  ;; We don't want text properties leaking from the show renderer into
+  ;; the reply so we use a temp buffer. Also we don't want hooks, such
+  ;; as notmuch-wash-*, to be run on the quotable part so we set
+  ;; notmuch-show-insert-text/plain-hook to nil.
+  (insert (with-temp-buffer
+	    (let ((notmuch-show-insert-text/plain-hook nil))
+	      ;; Show the part but do not add buttons.
+	      (notmuch-show-insert-bodypart message part 0 'no-buttons))
+	    (buffer-substring-no-properties (point-min) (point-max)))))
 
 ;; There is a bug in emacs 23's message.el that results in a newline
 ;; not being inserted after the References header, so the next header

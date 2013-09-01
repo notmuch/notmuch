@@ -844,7 +844,11 @@ message at DEPTH in the current thread."
 (defun notmuch-show-insert-bodypart (msg part depth &optional hide)
   "Insert the body part PART at depth DEPTH in the current thread.
 
-If HIDE is non-nil then initially hide this part."
+HIDE determines whether to show or hide the part and the button
+as follows: If HIDE is nil, show the part and the button. If HIDE
+is t, hide the part initially and show the button. If HIDE is
+'no-buttons, show the part but do not add any buttons (this is
+useful for quoting in replies)."
 
   (let* ((content-type (downcase (plist-get part :content-type)))
 	 (mime-type (or (and (string= content-type "application/octet-stream")
@@ -854,15 +858,19 @@ If HIDE is non-nil then initially hide this part."
 			content-type))
 	 (nth (plist-get part :id))
 	 (beg (point))
-	 ;; We omit the part button for the first (or only) part if this is text/plain.
-	 (button (unless (and (string= mime-type "text/plain") (<= nth 1))
+	 ;; Hide the part initially if HIDE is t.
+	 (show-part (not (equal hide t)))
+	 ;; We omit the part button for the first (or only) part if
+	 ;; this is text/plain, or HIDE is 'no-buttons.
+	 (button (unless (or (equal hide 'no-buttons)
+			     (and (string= mime-type "text/plain") (<= nth 1)))
 		   (notmuch-show-insert-part-header nth mime-type content-type (plist-get part :filename))))
 	 (content-beg (point)))
 
     ;; Store the computed mime-type for later use (e.g. by attachment handlers).
     (plist-put part :computed-type mime-type)
 
-    (if (not hide)
+    (if show-part
         (notmuch-show-insert-bodypart-internal msg part mime-type nth depth button)
       (button-put button :notmuch-lazy-part
                   (list msg part mime-type nth depth button)))
@@ -875,7 +883,7 @@ If HIDE is non-nil then initially hide this part."
       (insert "\n"))
     ;; We do not create the overlay for hidden (lazy) parts until
     ;; they are inserted.
-    (if (not hide)
+    (if show-part
 	(notmuch-show-create-part-overlays button content-beg (point))
       (save-excursion
 	(notmuch-show-toggle-part-invisibility button)))
