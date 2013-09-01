@@ -1,3 +1,9 @@
+notmuch (0.16-1~bpo70+1) wheezy-backports; urgency=low
+
+  * Rebuild for wheezy-backports.
+
+ -- David Bremner <bremner@debian.org>  Sun, 01 Sep 2013 19:04:32 -0300
+
 notmuch (0.16-1) unstable; urgency=low
 
   * New upstream feature release
