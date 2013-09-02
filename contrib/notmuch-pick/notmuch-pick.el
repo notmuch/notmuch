@@ -65,13 +65,18 @@
 (defcustom notmuch-pick-result-format
   `(("date" . "%12s  ")
     ("authors" . "%-20s")
-    ("subject" . " %-54s ")
+    ((("tree" . "%s")("subject" . "%s")) ." %-54s ")
     ("tags" . "(%s)"))
   "Result formatting for Pick. Supported fields are: date,
-        authors, subject, tags Note: subject includes the tree
-        structure graphics, and the author string should not
-        contain whitespace (put it in the neighbouring fields
-        instead).  For example:
+        authors, subject, tree, tags.  Tree means the thread tree
+        box graphics. The field may also be a list in which case
+        the formatting rules are applied recursively and then the
+        output of all the fields in the list is inserted
+        according to format-string.
+
+Note the author string should not contain
+        whitespace (put it in the neighbouring fields instead).
+        For example:
         (setq notmuch-pick-result-format \(\(\"authors\" . \"%-40s\"\)
                                              \(\"subject\" . \"%s\"\)\)\)"
   :type '(alist :key-type (string) :value-type (string))
@@ -103,6 +108,12 @@
   :group 'notmuch-pick
   :group 'notmuch-faces)
 
+(defface notmuch-pick-match-tree-face
+  '((t :inherit default))
+  "Face used in pick mode for the thread tree block graphics in messages matching the query."
+  :group 'notmuch-pick
+  :group 'notmuch-faces)
+
 (defface notmuch-pick-match-tag-face
   '((((class color)
       (background dark))
@@ -126,6 +137,12 @@
 (defface notmuch-pick-no-match-subject-face
   '((t (:foreground "gray")))
   "Face used in pick mode for non-matching subjects."
+  :group 'notmuch-pick
+  :group 'notmuch-faces)
+
+(defface notmuch-pick-no-match-tree-face
+  '((t (:foreground "gray")))
+  "Face used in pick mode for the thread tree block graphics in messages matching the query."
   :group 'notmuch-pick
   :group 'notmuch-faces)
 
@@ -687,19 +704,27 @@ unchanged ADDRESS if parsing fails."
 	      (propertize (format format-string (plist-get msg :date_relative))
 			  'face face))))
 
-     ((string-equal field "subject")
+     ((string-equal field "tree")
       (let ((tree-status (plist-get msg :tree-status))
-	    (bare-subject (notmuch-show-strip-re (plist-get headers :Subject)))
+	    (face (if match
+		      'notmuch-pick-match-tree-face
+		    'notmuch-pick-no-match-tree-face)))
+
+	(setq formatted-field
+	      (propertize (format format-string
+				  (mapconcat #'identity (reverse tree-status) ""))
+			  'face face))))
+
+     ((string-equal field "subject")
+      (let ((bare-subject (notmuch-show-strip-re (plist-get headers :Subject)))
 	    (face (if match
 		      'notmuch-pick-match-subject-face
 		    'notmuch-pick-no-match-subject-face)))
 	(setq formatted-field
 	      (propertize (format format-string
-				  (concat
-				   (mapconcat #'identity (reverse tree-status) "")
-				   (if (string= notmuch-pick-previous-subject bare-subject)
-				       " ..."
-				     bare-subject)))
+				  (if (string= notmuch-pick-previous-subject bare-subject)
+				      " ..."
+				    bare-subject))
 			  'face face))
 	(setq notmuch-pick-previous-subject bare-subject)))
 
