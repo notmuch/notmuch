@@ -854,6 +854,10 @@ Complete list of currently available key bindings:
 					 results-buf)))))
 
 (defun notmuch-pick-worker (basic-query &optional query-context target open-target)
+  "Insert the actual pick search in the current buffer.
+
+This is is a helper function for notmuch-pick. The arguments are
+the same as for the function notmuch-pick."
   (interactive)
   (notmuch-pick-mode)
   (setq notmuch-pick-basic-query basic-query)
