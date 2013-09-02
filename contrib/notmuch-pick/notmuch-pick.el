@@ -675,6 +675,10 @@ unchanged ADDRESS if parsing fails."
 	(match (plist-get msg :match))
 	formatted-field)
     (cond
+     ((listp field)
+      (setq formatted-field
+	    (format format-string (notmuch-pick-format-field-list field msg))))
+
      ((string-equal field "date")
       (let ((face (if match
 		      'notmuch-pick-match-date-face
@@ -722,13 +726,19 @@ unchanged ADDRESS if parsing fails."
 			  'face face)))))
     formatted-field))
 
+(defun notmuch-pick-format-field-list (field-list msg)
+  "Format fields of MSG according to FIELD-LIST and return string"
+  (let (result-string)
+    (dolist (spec field-list result-string)
+      (let ((field-string (notmuch-pick-format-field (car spec) (cdr spec) msg)))
+	(setq result-string (concat result-string field-string))))))
+
 (defun notmuch-pick-insert-msg (msg)
   "Insert the message MSG according to notmuch-pick-result-format"
   ;; We need to save the previous subject as it will get overwritten
   ;; by the insert-field calls.
   (let ((previous-subject notmuch-pick-previous-subject))
-    (dolist (spec notmuch-pick-result-format)
-      (insert (notmuch-pick-format-field (car spec) (cdr spec) msg)))
+    (insert (notmuch-pick-format-field-list notmuch-pick-result-format msg))
     (notmuch-pick-set-message-properties msg)
     (notmuch-pick-set-prop :previous-subject previous-subject)
     (insert "\n")))
