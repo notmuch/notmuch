@@ -161,10 +161,6 @@
   "A buffer local copy of argument open-target to the function notmuch-pick")
 (make-variable-buffer-local 'notmuch-pick-open-target)
 
-(defvar notmuch-pick-buffer-name nil
-  "A buffer local copy of argument buffer-name to the function notmuch-pick")
-(make-variable-buffer-local 'notmuch-pick-buffer-name)
-
 (defvar notmuch-pick-message-window nil
   "The window of the message pane.
 
@@ -590,13 +586,11 @@ message will be \"unarchived\", i.e. the tag changes in
   (let ((inhibit-read-only t)
 	(basic-query notmuch-pick-basic-query)
 	(query-context notmuch-pick-query-context)
-	(target (notmuch-pick-get-message-id))
-	(buffer-name notmuch-pick-buffer-name))
+	(target (notmuch-pick-get-message-id)))
     (erase-buffer)
     (notmuch-pick-worker basic-query
 			 query-context
-			 target
-			 (get-buffer buffer-name))))
+			 target)))
 
 (defun notmuch-pick-thread-top ()
   (when (notmuch-pick-get-message-properties)
@@ -859,12 +853,11 @@ Complete list of currently available key bindings:
 	(notmuch-sexp-parse-partial-list 'notmuch-pick-insert-forest-thread
 					 results-buf)))))
 
-(defun notmuch-pick-worker (basic-query &optional query-context target buffer open-target)
+(defun notmuch-pick-worker (basic-query &optional query-context target open-target)
   (interactive)
   (notmuch-pick-mode)
   (setq notmuch-pick-basic-query basic-query)
   (setq notmuch-pick-query-context query-context)
-  (setq notmuch-pick-buffer-name (buffer-name buffer))
   (setq notmuch-pick-target-msg target)
   (setq notmuch-pick-open-target open-target)
 
@@ -877,7 +870,7 @@ Complete list of currently available key bindings:
     (if (equal (car (process-lines notmuch-command "count" search-args)) "0")
 	(setq search-args basic-query))
     (let ((proc (notmuch-start-notmuch
-		 "notmuch-pick" buffer #'notmuch-pick-process-sentinel
+		 "notmuch-pick" (current-buffer) #'notmuch-pick-process-sentinel
 		 "show" "--body=false" "--format=sexp"
 		 message-arg search-args))
 	  ;; Use a scratch buffer to accumulate partial output.
@@ -910,13 +903,13 @@ The arguments are:
 					(concat "*notmuch-pick-" query "*")))))
 	(inhibit-read-only t))
 
-    (switch-to-buffer buffer)
-    ;; Don't track undo information for this buffer
-    (set 'buffer-undo-list t)
+    (switch-to-buffer buffer))
+  ;; Don't track undo information for this buffer
+  (set 'buffer-undo-list t)
 
-    (notmuch-pick-worker query query-context target buffer open-target)
+  (notmuch-pick-worker query query-context target open-target)
 
-    (setq truncate-lines t)))
+  (setq truncate-lines t))
 
 
 ;; Set up key bindings from the rest of notmuch.
