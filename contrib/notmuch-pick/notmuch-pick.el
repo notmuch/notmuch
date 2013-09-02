@@ -711,10 +711,9 @@ unchanged ADDRESS if parsing fails."
 	    (face (if match
 			  'notmuch-pick-match-tag-face
 			'notmuch-pick-no-match-tag-face)))
-	(when tags
-	  (insert (propertize (format format-string
-				      (mapconcat #'identity tags ", "))
-			      'face face))))))))
+	(insert (propertize (format format-string
+				    (mapconcat #'identity tags ", "))
+			    'face face)))))))
 
 (defun notmuch-pick-insert-msg (msg)
   "Insert the message MSG according to notmuch-pick-result-format"
