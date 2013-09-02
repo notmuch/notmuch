@@ -23,6 +23,17 @@ test_emacs '(add-to-list (quote load-path) "'$PICK_DIR'")
 	    (delete-other-windows)'
 test_expect_equal_file OUTPUT $EXPECTED/notmuch-pick-tag-inbox
 
+test_begin_subtest "Refreshed notmuch-pick view in emacs"
+test_emacs '(add-to-list (quote load-path) "'$PICK_DIR'")
+	    (require (quote notmuch-pick))
+	    (notmuch-pick "tag:inbox")
+	    (notmuch-test-wait)
+	    (notmuch-pick-refresh-view)
+	    (notmuch-test-wait)
+	    (test-output)
+	    (delete-other-windows)'
+test_expect_equal_file OUTPUT $EXPECTED/notmuch-pick-tag-inbox
+
 test_begin_subtest "Navigation of notmuch-hello to search results"
 test_emacs '(notmuch-hello)
 	    (goto-char (point-min))
