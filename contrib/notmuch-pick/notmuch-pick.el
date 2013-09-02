@@ -669,16 +669,19 @@ unchanged ADDRESS if parsing fails."
     ;; If we have a name return that otherwise return the address.
     (or p-name p-address)))
 
-(defun notmuch-pick-insert-field (field format-string msg)
+(defun notmuch-pick-format-field (field format-string msg)
+  "Format a FIELD of MSG according to FORMAT-STRING and return string"
   (let* ((headers (plist-get msg :headers))
-	(match (plist-get msg :match)))
+	(match (plist-get msg :match))
+	formatted-field)
     (cond
      ((string-equal field "date")
       (let ((face (if match
 		      'notmuch-pick-match-date-face
 		    'notmuch-pick-no-match-date-face)))
-	(insert (propertize (format format-string (plist-get msg :date_relative))
-			    'face face))))
+	(setq formatted-field
+	      (propertize (format format-string (plist-get msg :date_relative))
+			  'face face))))
 
      ((string-equal field "subject")
       (let ((tree-status (plist-get msg :tree-status))
@@ -686,13 +689,14 @@ unchanged ADDRESS if parsing fails."
 	    (face (if match
 		      'notmuch-pick-match-subject-face
 		    'notmuch-pick-no-match-subject-face)))
-	(insert (propertize (format format-string
-				    (concat
-				     (mapconcat #'identity (reverse tree-status) "")
-				     (if (string= notmuch-pick-previous-subject bare-subject)
-					 " ..."
-				       bare-subject)))
-			    'face face))
+	(setq formatted-field
+	      (propertize (format format-string
+				  (concat
+				   (mapconcat #'identity (reverse tree-status) "")
+				   (if (string= notmuch-pick-previous-subject bare-subject)
+				       " ..."
+				     bare-subject)))
+			  'face face))
 	(setq notmuch-pick-previous-subject bare-subject)))
 
      ((string-equal field "authors")
@@ -703,17 +707,20 @@ unchanged ADDRESS if parsing fails."
 		    'notmuch-pick-no-match-author-face)))
 	(when (> (length author) len)
 	  (setq author (substring author 0 len)))
-	(insert (propertize (format format-string author)
-			    'face face))))
+	(setq formatted-field
+	      (propertize (format format-string author)
+			  'face face))))
 
      ((string-equal field "tags")
       (let ((tags (plist-get msg :tags))
 	    (face (if match
 			  'notmuch-pick-match-tag-face
 			'notmuch-pick-no-match-tag-face)))
-	(insert (propertize (format format-string
-				    (mapconcat #'identity tags ", "))
-			    'face face)))))))
+	(setq formatted-field
+	      (propertize (format format-string
+				  (mapconcat #'identity tags ", "))
+			  'face face)))))
+    formatted-field))
 
 (defun notmuch-pick-insert-msg (msg)
   "Insert the message MSG according to notmuch-pick-result-format"
@@ -721,7 +728,7 @@ unchanged ADDRESS if parsing fails."
   ;; by the insert-field calls.
   (let ((previous-subject notmuch-pick-previous-subject))
     (dolist (spec notmuch-pick-result-format)
-      (notmuch-pick-insert-field (car spec) (cdr spec) msg))
+      (insert (notmuch-pick-format-field (car spec) (cdr spec) msg)))
     (notmuch-pick-set-message-properties msg)
     (notmuch-pick-set-prop :previous-subject previous-subject)
     (insert "\n")))
