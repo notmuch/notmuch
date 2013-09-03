@@ -228,8 +228,8 @@ For a mouse binding, return nil."
     (define-key map "s" 'notmuch-search)
     (define-key map "o" 'notmuch-search-toggle-order)
     (define-key map "c" 'notmuch-search-stash-map)
-    (define-key map "=" 'notmuch-search-refresh-view)
-    (define-key map "G" 'notmuch-search-poll-and-refresh-view)
+    (define-key map "=" 'notmuch-refresh-this-buffer)
+    (define-key map "G" 'notmuch-poll-and-refresh-this-buffer)
     (define-key map "t" 'notmuch-search-filter-by-tag)
     (define-key map "f" 'notmuch-search-filter)
     (define-key map [mouse-1] 'notmuch-search-show-thread)
@@ -403,6 +403,7 @@ Complete list of currently available key bindings:
   (make-local-variable 'notmuch-search-oldest-first)
   (make-local-variable 'notmuch-search-target-thread)
   (make-local-variable 'notmuch-search-target-line)
+  (setq notmuch-buffer-refresh-function #'notmuch-search-refresh-view)
   (set (make-local-variable 'scroll-preserve-screen-position) t)
   (add-to-invisibility-spec (cons 'ellipsis t))
   (use-local-map notmuch-search-mode-map)
@@ -950,7 +951,6 @@ query string as the current search. If the current thread is in
 the new search results, then point will be placed on the same
 thread. Otherwise, point will be moved to attempt to be in the
 same relative position within the new buffer."
-  (interactive)
   (let ((target-line (line-number-at-pos))
 	(oldest-first notmuch-search-oldest-first)
 	(target-thread (notmuch-search-find-thread-id 'bare))
@@ -958,12 +958,6 @@ same relative position within the new buffer."
     (notmuch-kill-this-buffer)
     (notmuch-search query oldest-first target-thread target-line)
     (goto-char (point-min))))
-
-(defun notmuch-search-poll-and-refresh-view ()
-  "Invoke `notmuch-poll' to import mail, then refresh the current view."
-  (interactive)
-  (notmuch-poll)
-  (notmuch-search-refresh-view))
 
 (defun notmuch-search-toggle-order ()
   "Toggle the current search order.

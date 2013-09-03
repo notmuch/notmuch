@@ -1258,7 +1258,7 @@ reset based on the original query."
 	(define-key map "w" 'notmuch-show-save-attachments)
 	(define-key map "V" 'notmuch-show-view-raw-message)
 	(define-key map "c" 'notmuch-show-stash-map)
-	(define-key map "=" 'notmuch-show-refresh-view)
+	(define-key map "=" 'notmuch-refresh-this-buffer)
 	(define-key map "h" 'notmuch-show-toggle-visibility-headers)
 	(define-key map "*" 'notmuch-show-tag-all)
 	(define-key map "-" 'notmuch-show-remove-tag)
@@ -1317,6 +1317,7 @@ All currently available key bindings:
 \\{notmuch-show-mode-map}"
   (interactive)
   (kill-all-local-variables)
+  (setq notmuch-buffer-refresh-function #'notmuch-show-refresh-view)
   (use-local-map notmuch-show-mode-map)
   (setq major-mode 'notmuch-show-mode
 	mode-name "notmuch-show")

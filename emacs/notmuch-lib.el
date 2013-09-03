@@ -204,6 +204,25 @@ depending on the value of `notmuch-poll-script'."
   (interactive)
   (kill-buffer (current-buffer)))
 
+(defvar notmuch-buffer-refresh-function nil
+  "Function to call to refresh the current buffer.")
+(make-variable-buffer-local 'notmuch-buffer-refresh-function)
+
+(defun notmuch-refresh-this-buffer ()
+  "Refresh the current buffer."
+  (interactive)
+  (when notmuch-buffer-refresh-function
+    (if (commandp notmuch-buffer-refresh-function)
+	;; Pass prefix argument, etc.
+	(call-interactively notmuch-buffer-refresh-function)
+      (funcall notmuch-buffer-refresh-function))))
+
+(defun notmuch-poll-and-refresh-this-buffer ()
+  "Invoke `notmuch-poll' to import mail, then refresh the current buffer."
+  (interactive)
+  (notmuch-poll)
+  (notmuch-refresh-this-buffer))
+
 (defun notmuch-prettify-subject (subject)
   ;; This function is used by `notmuch-search-process-filter' which
   ;; requires that we not disrupt its' matching state.
@@ -595,7 +614,6 @@ status."
 ;; declared globally first to avoid compiler warnings.
 (defvar notmuch-show-process-crypto nil)
 (make-variable-buffer-local 'notmuch-show-process-crypto)
-
 
 (provide 'notmuch-lib)
 

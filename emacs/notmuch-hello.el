@@ -481,14 +481,7 @@ Such a list can be computed with `notmuch-hello-query-counts'."
 (defun notmuch-hello-update (&optional no-display)
   "Update the current notmuch view."
   ;; Lazy - rebuild everything.
-  (interactive)
   (notmuch-hello no-display))
-
-(defun notmuch-hello-poll-and-update ()
-  "Invoke `notmuch-poll' to import mail, then refresh the current view."
-  (interactive)
-  (notmuch-poll)
-  (notmuch-hello-update))
 
 (defun notmuch-hello-window-configuration-change ()
   "Hook function to update the hello buffer when it is switched to."
@@ -528,8 +521,8 @@ Such a list can be computed with `notmuch-hello-query-counts'."
 			  (message "notmuch version %s" (notmuch-version))))
     (define-key map "?" 'notmuch-help)
     (define-key map "q" 'notmuch-kill-this-buffer)
-    (define-key map "=" 'notmuch-hello-update)
-    (define-key map "G" 'notmuch-hello-poll-and-update)
+    (define-key map "=" 'notmuch-refresh-this-buffer)
+    (define-key map "G" 'notmuch-poll-and-refresh-this-buffer)
     (define-key map (kbd "<C-tab>") 'widget-backward)
     (define-key map "m" 'notmuch-mua-new-mail)
     (define-key map "s" 'notmuch-search)
@@ -545,6 +538,7 @@ Complete list of currently available key bindings:
 \\{notmuch-hello-mode-map}"
  (interactive)
  (kill-all-local-variables)
+ (setq notmuch-buffer-refresh-function #'notmuch-hello-update)
  (use-local-map notmuch-hello-mode-map)
  (setq major-mode 'notmuch-hello-mode
 	mode-name "notmuch-hello")
