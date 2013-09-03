@@ -68,6 +68,45 @@ test_begin_subtest "Untag message in notmuch pick view (database)"
 output=$(notmuch search --output=messages 'tag:test_tag')
 test_expect_equal "$output" ""
 
+test_begin_subtest "Tag thread in notmuch pick view"
+test_emacs '(add-to-list (quote load-path) "'$PICK_DIR'")
+	    (require (quote notmuch-pick))
+	    (notmuch-pick "tag:inbox")
+	    (notmuch-test-wait)
+	    ;; move to a sizable thread
+	    (forward-line 26)
+	    (notmuch-pick-tag-thread "+test_thread_tag")
+	    (test-output)
+	    (delete-other-windows)'
+test_expect_equal_file OUTPUT $EXPECTED/notmuch-pick-tag-inbox-thread-tagged
+
+test_begin_subtest "Tag message in notmuch pick view (database)"
+output=$(notmuch search --output=messages 'tag:test_thread_tag')
+test_expect_equal "$output" \
+"id:87ocn0qh6d.fsf@yoom.home.cworth.org
+id:20091118005040.GA25380@dottiness.seas.harvard.edu
+id:yunaayketfm.fsf@aiko.keithp.com
+id:87fx8can9z.fsf@vertex.dottedmag
+id:20091117203301.GV3165@dottiness.seas.harvard.edu
+id:87iqd9rn3l.fsf@vertex.dottedmag
+id:20091117190054.GU3165@dottiness.seas.harvard.edu"
+
+test_begin_subtest "Untag thread in notmuch pick view"
+test_emacs '(add-to-list (quote load-path) "'$PICK_DIR'")
+	    (require (quote notmuch-pick))
+	    (notmuch-pick "tag:inbox")
+	    (notmuch-test-wait)
+	    ;; move to the same sizable thread as above
+	    (forward-line 26)
+	    (notmuch-pick-tag-thread "-test_thread_tag")
+	    (test-output)
+	    (delete-other-windows)'
+test_expect_equal_file OUTPUT $EXPECTED/notmuch-pick-tag-inbox
+
+test_begin_subtest "Untag message in notmuch pick view (database)"
+output=$(notmuch search --output=messages 'tag:test_thread_tag')
+test_expect_equal "$output" ""
+
 test_begin_subtest "Navigation of notmuch-hello to search results"
 test_emacs '(notmuch-hello)
 	    (goto-char (point-min))
