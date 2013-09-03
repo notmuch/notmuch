@@ -76,6 +76,33 @@ search."
   :type 'boolean
   :group 'notmuch-search)
 
+(defcustom notmuch-poll-script nil
+  "An external script to incorporate new mail into the notmuch database.
+
+This variable controls the action invoked by
+`notmuch-search-poll-and-refresh-view' and
+`notmuch-hello-poll-and-update' (each have a default keybinding
+of 'G') to incorporate new mail into the notmuch database.
+
+If set to nil (the default), new mail is processed by invoking
+\"notmuch new\". Otherwise, this should be set to a string that
+gives the name of an external script that processes new mail. If
+set to the empty string, no command will be run.
+
+The external script could do any of the following depending on
+the user's needs:
+
+1. Invoke a program to transfer mail to the local mail store
+2. Invoke \"notmuch new\" to incorporate the new mail
+3. Invoke one or more \"notmuch tag\" commands to classify the mail
+
+Note that the recommended way of achieving the same is using
+\"notmuch new\" hooks."
+  :type '(choice (const :tag "notmuch new" nil)
+		 (const :tag "Disabled" "")
+		 (string :tag "Custom script"))
+  :group 'notmuch-external)
+
 ;;
 
 (defvar notmuch-search-history nil
@@ -160,6 +187,17 @@ Otherwise the output will be returned"
 (defun notmuch-user-other-email ()
   "Return the user.other_email value (as a list) from the notmuch configuration."
   (split-string (notmuch-config-get "user.other_email") "\n"))
+
+(defun notmuch-poll ()
+  "Run \"notmuch new\" or an external script to import mail.
+
+Invokes `notmuch-poll-script', \"notmuch new\", or does nothing
+depending on the value of `notmuch-poll-script'."
+  (interactive)
+  (if (stringp notmuch-poll-script)
+      (unless (string= notmuch-poll-script "")
+	(call-process notmuch-poll-script nil nil))
+    (call-process notmuch-command nil nil nil "new")))
 
 (defun notmuch-kill-this-buffer ()
   "Kill the current buffer."
