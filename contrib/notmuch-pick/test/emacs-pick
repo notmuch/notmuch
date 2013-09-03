@@ -167,4 +167,44 @@ output=$(test_emacs '(add-to-list (quote load-path) "'$PICK_DIR'")
 		     (notmuch-show-stash-message-id)')
 test_expect_equal "$output" "\"Stashed: id:1258498485-sup-142@elly\""
 
+test_begin_subtest "Move to next matching message"
+output=$(test_emacs '(add-to-list (quote load-path) "'$PICK_DIR'")
+		     (require (quote notmuch-pick))
+		     (notmuch-pick "from:cworth")
+		     (notmuch-test-wait)
+		     (notmuch-pick-next-matching-message)
+		     (notmuch-show-stash-message-id)')
+test_expect_equal "$output" "\"Stashed: id:878we4qdqf.fsf@yoom.home.cworth.org\""
+
+test_begin_subtest "Move to next thread"
+output=$(test_emacs '(add-to-list (quote load-path) "'$PICK_DIR'")
+		     (require (quote notmuch-pick))
+		     (notmuch-pick "tag:inbox")
+		     (notmuch-test-wait)
+		     (forward-line 26)
+		     (notmuch-pick-next-thread)
+		     (notmuch-show-stash-message-id)')
+test_expect_equal "$output" "\"Stashed: id:1258471718-6781-1-git-send-email-dottedmag@dottedmag.net\""
+
+test_begin_subtest "Move to previous thread"
+output=$(test_emacs '(add-to-list (quote load-path) "'$PICK_DIR'")
+		     (require (quote notmuch-pick))
+		     (notmuch-pick "tag:inbox")
+		     (notmuch-test-wait)
+		     (forward-line 26)
+		     (notmuch-pick-prev-thread)
+		     (notmuch-show-stash-message-id)')
+test_expect_equal "$output" "\"Stashed: id:20091117190054.GU3165@dottiness.seas.harvard.edu\""
+
+test_begin_subtest "Move to previous previous thread"
+output=$(test_emacs '(add-to-list (quote load-path) "'$PICK_DIR'")
+		     (require (quote notmuch-pick))
+		     (notmuch-pick "tag:inbox")
+		     (notmuch-test-wait)
+		     (forward-line 26)
+		     (notmuch-pick-prev-thread)
+		     (notmuch-pick-prev-thread)
+		     (notmuch-show-stash-message-id)')
+test_expect_equal "$output" "\"Stashed: id:1258493565-13508-1-git-send-email-keithp@keithp.com\""
+
 test_done
