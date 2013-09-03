@@ -906,8 +906,18 @@ Other optional parameters are used as follows:
   target-thread: A thread ID (without the thread: prefix) that will be made
                  current if it appears in the search results.
   target-line: The line number to move to if the target thread does not
-               appear in the search results."
-  (interactive)
+               appear in the search results.
+
+When called interactively, this will prompt for a query and use
+the configured default sort order."
+  (interactive
+   (list
+    ;; Prompt for a query
+    nil
+    ;; Use the default search order (if we're doing a search from a
+    ;; search buffer, ignore any buffer-local overrides)
+    (default-value notmuch-search-oldest-first)))
+
   (let* ((query (or query (notmuch-read-query "Notmuch search: ")))
 	 (buffer (get-buffer-create (notmuch-search-buffer-title query))))
     (switch-to-buffer buffer)
