@@ -198,6 +198,7 @@ first line of documentation for the bound function."
 
 (defvar notmuch-search-mode-map
   (let ((map (make-sparse-keymap)))
+    (set-keymap-parent map notmuch-common-keymap)
     (define-key map "?" 'notmuch-help)
     (define-key map "q" 'notmuch-kill-this-buffer)
     (define-key map "x" 'notmuch-kill-this-buffer)

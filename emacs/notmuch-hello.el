@@ -515,8 +515,14 @@ Such a list can be computed with `notmuch-hello-query-counts'."
 
 
 (defvar notmuch-hello-mode-map
-  (let ((map (make-sparse-keymap)))
-    (set-keymap-parent map widget-keymap)
+  (let ((map (if (fboundp 'make-composed-keymap)
+		 ;; Inherit both widget-keymap and notmuch-common-keymap
+		 (make-composed-keymap widget-keymap)
+	       ;; Before Emacs 24, keymaps didn't support multiple
+	       ;; inheritance,, so just copy the widget keymap since
+	       ;; it's unlikely to change.
+	       (copy-keymap widget-keymap))))
+    (set-keymap-parent map notmuch-common-keymap)
     (define-key map "v" (lambda () "Display the notmuch version" (interactive)
 			  (message "notmuch version %s" (notmuch-version))))
     (define-key map "?" 'notmuch-help)

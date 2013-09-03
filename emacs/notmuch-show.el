@@ -1243,6 +1243,7 @@ reset based on the original query."
 
 (defvar notmuch-show-mode-map
       (let ((map (make-sparse-keymap)))
+	(set-keymap-parent map notmuch-common-keymap)
 	(define-key map "?" 'notmuch-help)
 	(define-key map "q" 'notmuch-kill-this-buffer)
 	(define-key map (kbd "<C-tab>") 'widget-backward)

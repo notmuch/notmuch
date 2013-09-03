@@ -128,6 +128,11 @@ For example, if you wanted to remove an \"inbox\" tag and add an
   :group 'notmuch-search
   :group 'notmuch-show)
 
+(defvar notmuch-common-keymap
+  (let ((map (make-sparse-keymap)))
+    map)
+  "Keymap shared by all notmuch modes.")
+
 ;; By default clicking on a button does not select the window
 ;; containing the button (as opposed to clicking on a widget which
 ;; does). This means that the button action is then executed in the
