@@ -34,6 +34,40 @@ test_emacs '(add-to-list (quote load-path) "'$PICK_DIR'")
 	    (delete-other-windows)'
 test_expect_equal_file OUTPUT $EXPECTED/notmuch-pick-tag-inbox
 
+# In the following tag tests we make sure the display is updated
+# correctly and, in a separate test, that the database is updated
+# correctly.
+
+test_begin_subtest "Tag message in notmuch pick view (display)"
+test_emacs '(add-to-list (quote load-path) "'$PICK_DIR'")
+	    (require (quote notmuch-pick))
+	    (notmuch-pick "tag:inbox")
+	    (notmuch-test-wait)
+	    (forward-line)
+	    (notmuch-pick-tag "+test_tag")
+	    (test-output)
+	    (delete-other-windows)'
+test_expect_equal_file OUTPUT $EXPECTED/notmuch-pick-tag-inbox-tagged
+
+test_begin_subtest "Tag message in notmuch pick view (database)"
+output=$(notmuch search --output=messages 'tag:test_tag')
+test_expect_equal "$output" "id:877h1wv7mg.fsf@inf-8657.int-evry.fr"
+
+test_begin_subtest "Untag message in notmuch pick view"
+test_emacs '(add-to-list (quote load-path) "'$PICK_DIR'")
+	    (require (quote notmuch-pick))
+	    (notmuch-pick "tag:inbox")
+	    (notmuch-test-wait)
+	    (forward-line)
+	    (notmuch-pick-tag "-test_tag")
+	    (test-output)
+	    (delete-other-windows)'
+test_expect_equal_file OUTPUT $EXPECTED/notmuch-pick-tag-inbox
+
+test_begin_subtest "Untag message in notmuch pick view (database)"
+output=$(notmuch search --output=messages 'tag:test_tag')
+test_expect_equal "$output" ""
+
 test_begin_subtest "Navigation of notmuch-hello to search results"
 test_emacs '(notmuch-hello)
 	    (goto-char (point-min))
