@@ -140,48 +140,34 @@ This is basically just `format-kbd-macro' but we also convert ESC to M-."
 	"M-"
       (concat desc " "))))
 
-;; I would think that emacs would have code handy for walking a keymap
-;; and generating strings for each key, and I would prefer to just call
-;; that. But I couldn't find any (could be all implemented in C I
-;; suppose), so I wrote my own here.
-(defun notmuch-substitute-one-command-key-with-prefix (prefix binding)
-  "For a key binding, return a string showing a human-readable
-representation of the prefixed key as well as the first line of
-documentation from the bound function.
+(defun notmuch-describe-keymap (keymap &optional prefix tail)
+  "Return a list of strings, each describing one key in KEYMAP.
 
-For a mouse binding, return nil."
-  (let ((key (car binding))
-	(action (cdr binding)))
-    (if (mouse-event-p key)
-	nil
-      (if (keymapp action)
-	  (let ((substitute (apply-partially 'notmuch-substitute-one-command-key-with-prefix (notmuch-prefix-key-description key)))
-		(as-list))
-	    (map-keymap (lambda (a b)
-			  (push (cons a b) as-list))
-			action)
-	    (mapconcat substitute as-list "\n"))
-	(concat prefix (format-kbd-macro (vector key))
-		"\t"
-		(notmuch-documentation-first-line action))))))
-
-(defun notmuch-substitute-command-keys-one (key)
-  ;; A `keymap' key indicates inheritance from a parent keymap - the
-  ;; inherited mappings follow, so there is nothing to print for
-  ;; `keymap' itself.
-  (when (not (eq key 'keymap))
-    (notmuch-substitute-one-command-key-with-prefix nil key)))
+Each string gives a human-readable description of the key and the
+first line of documentation for the bound function."
+  (map-keymap
+   (lambda (key binding)
+     (cond ((mouse-event-p key) nil)
+	   ((keymapp binding)
+	    (setq tail
+		  (notmuch-describe-keymap
+		   binding (notmuch-prefix-key-description key) tail)))
+	   (t
+	    (push (concat prefix (format-kbd-macro (vector key)) "\t"
+			  (notmuch-documentation-first-line binding))
+		  tail))))
+   keymap)
+  tail)
 
 (defun notmuch-substitute-command-keys (doc)
   "Like `substitute-command-keys' but with documentation, not function names."
   (let ((beg 0))
     (while (string-match "\\\\{\\([^}[:space:]]*\\)}" doc beg)
       (let* ((keymap-name (substring doc (match-beginning 1) (match-end 1)))
-	     (keymap (symbol-value (intern keymap-name))))
-	(setq doc (replace-match
-		   (mapconcat #'notmuch-substitute-command-keys-one
-			      (cdr keymap) "\n")
-		   1 1 doc)))
+	     (keymap (symbol-value (intern keymap-name)))
+	     (desc-list (notmuch-describe-keymap keymap))
+	     (desc (mapconcat #'identity desc-list "\n")))
+	(setq doc (replace-match desc 1 1 doc)))
       (setq beg (match-end 0)))
     doc))
 
