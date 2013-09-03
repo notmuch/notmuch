@@ -68,14 +68,14 @@ test_expect_equal_json "$output" '["inbox", "unread"]'
 test_begin_subtest "Insert message, add tag"
 gen_insert_msg
 notmuch insert +custom < "$gen_msg_filename"
-output=$(notmuch count tag:custom)
-test_expect_equal "$output" "1"
+output=$(notmuch search --output=messages tag:custom)
+test_expect_equal "$output" "id:$gen_msg_id"
 
 test_begin_subtest "Insert message, add/remove tags"
 gen_insert_msg
 notmuch insert +custom -unread < "$gen_msg_filename"
-output=$(notmuch count tag:custom NOT tag:unread)
-test_expect_equal "$output" "1"
+output=$(notmuch search --output=messages tag:custom NOT tag:unread)
+test_expect_equal "$output" "id:$gen_msg_id"
 
 test_begin_subtest "Insert message with default tags stays in new/"
 gen_insert_msg
@@ -123,8 +123,8 @@ test_expect_equal "$dirname" "$MAIL_DIR/Drafts/new"
 test_begin_subtest "Insert message into folder, add/remove tags"
 gen_insert_msg
 notmuch insert --folder=Drafts +draft -unread < "$gen_msg_filename"
-output=$(notmuch count folder:Drafts tag:draft NOT tag:unread)
-test_expect_equal "$output" "1"
+output=$(notmuch search --output=messages folder:Drafts tag:draft NOT tag:unread)
+test_expect_equal "$output" "id:$gen_msg_id"
 
 gen_insert_msg
 test_expect_code 1 "Insert message into non-existent folder" \
