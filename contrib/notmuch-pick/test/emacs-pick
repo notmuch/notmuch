@@ -159,4 +159,12 @@ test_emacs '(notmuch-hello)
 cp OUTPUT /tmp/mjwout
 test_expect_equal_file OUTPUT $EXPECTED/notmuch-pick-show-window
 
+test_begin_subtest "Stash id"
+output=$(test_emacs '(add-to-list (quote load-path) "'$PICK_DIR'")
+		     (require (quote notmuch-pick))
+		     (notmuch-pick "id:1258498485-sup-142@elly")
+		     (notmuch-test-wait)
+		     (notmuch-show-stash-message-id)')
+test_expect_equal "$output" "\"Stashed: id:1258498485-sup-142@elly\""
+
 test_done
