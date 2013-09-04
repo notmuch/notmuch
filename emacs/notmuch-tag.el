@@ -30,7 +30,8 @@
 
 (defcustom notmuch-tag-formats
   '(("unread" (propertize tag 'face '(:foreground "red")))
-    ("flagged" (notmuch-tag-format-image-data tag (notmuch-tag-star-icon))))
+    ("flagged" (propertize tag 'face '(:foreground "blue"))
+     (notmuch-tag-format-image-data tag (notmuch-tag-star-icon))))
   "Custom formats for individual tags.
 
 This gives a list that maps from tag names to lists of formatting
