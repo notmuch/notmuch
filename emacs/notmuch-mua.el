@@ -196,11 +196,16 @@ list."
 			    nil (notmuch-mua-get-switch-function))))
 
       ;; Insert the message body - but put it in front of the signature
-      ;; if one is present
-      (goto-char (point-max))
-      (if (re-search-backward message-signature-separator nil t)
-	  (forward-line -1)
-	(goto-char (point-max)))
+      ;; if one is present, and after any other content
+      ;; message*setup-hooks may have added to the message body already.
+      (save-restriction
+	(message-goto-body)
+	(narrow-to-region (point) (point-max))
+	(goto-char (point-max))
+	(if (re-search-backward message-signature-separator nil t)
+	    (if message-signature-insert-empty-line
+		(forward-line -1))
+	  (goto-char (point-max))))
 
       (let ((from (plist-get original-headers :From))
 	    (date (plist-get original-headers :Date))
