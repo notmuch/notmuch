@@ -470,7 +470,7 @@ message at DEPTH in the current thread."
 	     (new-start (button-start button))
 	     (button-label (button-get button :base-label))
 	     (old-point (point))
-	     (properties (text-properties-at (point)))
+	     (properties (text-properties-at (button-start button)))
 	     (inhibit-read-only t))
 	;; Toggle the button itself.
 	(button-put button :notmuch-part-hidden (not show))
