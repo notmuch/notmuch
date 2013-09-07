@@ -113,9 +113,7 @@ sub tag_action(@) {
     my $mid = get_message_id();
     defined $mid or die "notmuch-mutt: cannot find Message-Id, abort.\n";
 
-    system("notmuch tag "
-	   . shell_quote(join(' ', @_))
-	   . " id:$mid");
+    system("notmuch", "tag", @_, "--", "id:$mid");
 }
 
 sub die_usage() {
