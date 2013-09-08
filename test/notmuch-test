@@ -97,6 +97,9 @@ trap - HUP INT TERM
 
 # Report results
 ./aggregate-results.sh test-results/*
+ev=$?
 
 # Clean up
 rm -rf test-results corpus.mail
+
+exit $ev

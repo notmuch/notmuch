@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+set -eu
+
 fixed=0
 success=0
 failed=0
@@ -78,4 +80,11 @@ skipped=$(($total - $fixed - $success - $failed - $broken))
 if [ "$skipped" != "0" ]; then
     tests=$(pluralize "test" $skipped)
     echo "$skipped $tests skipped."
+fi
+
+if [ $success -gt 0 -a $fixed -eq 0 -a $failed -eq 0 -a $skipped -eq 0 ]
+then
+    exit 0
+else
+    exit 1
 fi
