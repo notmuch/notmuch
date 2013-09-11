@@ -264,7 +264,7 @@ main (int argc, char *argv[])
 
     local = talloc_new (NULL);
 
-    g_mime_init (0);
+    g_mime_init (GMIME_ENABLE_RFC2047_WORKAROUNDS);
 #if !GLIB_CHECK_VERSION(2, 35, 1)
     g_type_init ();
 #endif

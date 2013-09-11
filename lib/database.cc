@@ -655,7 +655,7 @@ notmuch_database_open (const char *path,
 
     /* Initialize gmime */
     if (! initialized) {
-	g_mime_init (0);
+	g_mime_init (GMIME_ENABLE_RFC2047_WORKAROUNDS);
 	initialized = 1;
     }
 

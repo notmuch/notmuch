@@ -440,7 +440,7 @@ _notmuch_message_index_file (notmuch_message_t *message,
     static bool mbox_warning = false;
 
     if (! initialized) {
-	g_mime_init (0);
+	g_mime_init (GMIME_ENABLE_RFC2047_WORKAROUNDS);
 	initialized = 1;
     }
 
