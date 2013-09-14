@@ -888,7 +888,7 @@ the configured default sort order."
     nil
     ;; Use the default search order (if we're doing a search from a
     ;; search buffer, ignore any buffer-local overrides)
-    (default-value notmuch-search-oldest-first)))
+    (default-value 'notmuch-search-oldest-first)))
 
   (let* ((query (or query (notmuch-read-query "Notmuch search: ")))
 	 (buffer (get-buffer-create (notmuch-search-buffer-title query))))
