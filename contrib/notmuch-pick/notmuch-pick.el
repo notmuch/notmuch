@@ -428,17 +428,6 @@ Does NOT change the database."
     (notmuch-pick-close-message-window)
     (notmuch-pick query)))
 
-;; This function should be in notmuch-hello.el but we are trying to
-;; minimise impact on the rest of the codebase.
-(defun notmuch-pick-from-hello (&optional search)
-  "Run a query and display results in experimental notmuch-pick mode"
-  (interactive)
-  (unless (null search)
-    (setq search (notmuch-hello-trim search))
-    (let ((history-delete-duplicates t))
-      (add-to-history 'notmuch-search-history search)))
-  (notmuch-pick search))
-
 ;; This function should be in notmuch-show.el but be we trying to
 ;; minimise impact on the rest of the codebase.
 (defun notmuch-pick-from-show-current-query ()
