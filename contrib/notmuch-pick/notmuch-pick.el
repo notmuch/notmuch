@@ -899,7 +899,7 @@ The arguments are:
   BUFFER-NAME: the name of the buffer to show the pick tree. If
       it is nil \"*notmuch-pick\" followed by QUERY is used.
   OPEN-TARGET: If TRUE open the target message in the message pane."
-  (interactive "sNotmuch pick: ")
+  (interactive)
   (if (null query)
       (setq query (notmuch-read-query "Notmuch pick: ")))
   (let ((buffer (get-buffer-create (generate-new-buffer-name
