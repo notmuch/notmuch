@@ -678,20 +678,16 @@ unchanged ADDRESS if parsing fails."
 (defun notmuch-pick-format-field (field format-string msg)
   "Format a FIELD of MSG according to FORMAT-STRING and return string"
   (let* ((headers (plist-get msg :headers))
-	(match (plist-get msg :match))
-	formatted-field)
+	 (match (plist-get msg :match)))
     (cond
      ((listp field)
-      (setq formatted-field
-	    (format format-string (notmuch-pick-format-field-list field msg))))
+      (format format-string (notmuch-pick-format-field-list field msg)))
 
      ((string-equal field "date")
       (let ((face (if match
 		      'notmuch-pick-match-date-face
 		    'notmuch-pick-no-match-date-face)))
-	(setq formatted-field
-	      (propertize (format format-string (plist-get msg :date_relative))
-			  'face face))))
+	(propertize (format format-string (plist-get msg :date_relative)) 'face face)))
 
      ((string-equal field "tree")
       (let ((tree-status (plist-get msg :tree-status))
@@ -699,23 +695,23 @@ unchanged ADDRESS if parsing fails."
 		      'notmuch-pick-match-tree-face
 		    'notmuch-pick-no-match-tree-face)))
 
-	(setq formatted-field
-	      (propertize (format format-string
-				  (mapconcat #'identity (reverse tree-status) ""))
-			  'face face))))
+	(propertize (format format-string
+			    (mapconcat #'identity (reverse tree-status) ""))
+		    'face face)))
 
      ((string-equal field "subject")
       (let ((bare-subject (notmuch-show-strip-re (plist-get headers :Subject)))
+	    (previous-subject notmuch-pick-previous-subject)
 	    (face (if match
 		      'notmuch-pick-match-subject-face
 		    'notmuch-pick-no-match-subject-face)))
-	(setq formatted-field
-	      (propertize (format format-string
-				  (if (string= notmuch-pick-previous-subject bare-subject)
-				      " ..."
-				    bare-subject))
-			  'face face))
-	(setq notmuch-pick-previous-subject bare-subject)))
+
+	(setq notmuch-pick-previous-subject bare-subject)
+	(propertize (format format-string
+			    (if (string= previous-subject bare-subject)
+				" ..."
+			      bare-subject))
+		    'face face)))
 
      ((string-equal field "authors")
       (let ((author (notmuch-pick-clean-address (plist-get headers :From)))
@@ -725,20 +721,17 @@ unchanged ADDRESS if parsing fails."
 		    'notmuch-pick-no-match-author-face)))
 	(when (> (length author) len)
 	  (setq author (substring author 0 len)))
-	(setq formatted-field
-	      (propertize (format format-string author)
-			  'face face))))
+	(propertize (format format-string author) 'face face)))
 
      ((string-equal field "tags")
       (let ((tags (plist-get msg :tags))
 	    (face (if match
-			  'notmuch-pick-match-tag-face
-			'notmuch-pick-no-match-tag-face)))
-	(setq formatted-field
-	      (propertize (format format-string
-				  (mapconcat #'identity tags ", "))
-			  'face face)))))
-    formatted-field))
+		      'notmuch-pick-match-tag-face
+		    'notmuch-pick-no-match-tag-face)))
+	(propertize (format format-string
+			    (mapconcat #'identity tags ", "))
+		    'face face))))))
+
 
 (defun notmuch-pick-format-field-list (field-list msg)
   "Format fields of MSG according to FIELD-LIST and return string"
