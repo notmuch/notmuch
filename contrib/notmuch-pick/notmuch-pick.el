@@ -213,6 +213,17 @@ FUNC."
 
 (defvar notmuch-pick-mode-map
   (let ((map (make-sparse-keymap)))
+    (set-keymap-parent map notmuch-common-keymap)
+    ;; The following override the global keymap.
+    ;; Override because we want to close message pane first.
+    (define-key map "?" (notmuch-pick-close-message-pane-and #'notmuch-help))
+    ;; Override because we first close message pane and then close pick buffer.
+    (define-key map "q" 'notmuch-pick-quit)
+    ;; Override because we close message pane after the search query is entered.
+    (define-key map "s" 'notmuch-pick-to-search)
+    ;; Override because we want to close message pane first.
+    (define-key map "m" (notmuch-pick-close-message-pane-and #'notmuch-mua-new-mail))
+
     (define-key map [mouse-1] 'notmuch-pick-show-message)
     ;; these use notmuch-show functions directly
     (define-key map "|" 'notmuch-show-pipe-message)
@@ -227,20 +238,16 @@ FUNC."
     (define-key map "e" (notmuch-pick-to-message-pane #'notmuch-pick-button-activate))
 
     ;; bindings from show (or elsewhere) but we close the message pane first.
-    (define-key map "m" (notmuch-pick-close-message-pane-and #'notmuch-mua-new-mail))
     (define-key map "f" (notmuch-pick-close-message-pane-and #'notmuch-show-forward-message))
     (define-key map "r" (notmuch-pick-close-message-pane-and #'notmuch-show-reply-sender))
     (define-key map "R" (notmuch-pick-close-message-pane-and #'notmuch-show-reply))
     (define-key map "V" (notmuch-pick-close-message-pane-and #'notmuch-show-view-raw-message))
-    (define-key map "?" (notmuch-pick-close-message-pane-and #'notmuch-help))
 
     ;; The main pick bindings
-    (define-key map "q" 'notmuch-pick-quit)
     (define-key map "x" 'notmuch-pick-quit)
     (define-key map "A" 'notmuch-pick-archive-thread)
     (define-key map "a" 'notmuch-pick-archive-message-then-next)
     (define-key map "=" 'notmuch-pick-refresh-view)
-    (define-key map "s" 'notmuch-pick-to-search)
     (define-key map "z" 'notmuch-pick-to-pick)
     (define-key map "n" 'notmuch-pick-next-matching-message)
     (define-key map "p" 'notmuch-pick-prev-matching-message)
@@ -808,6 +815,7 @@ Complete list of currently available key bindings:
 
   (interactive)
   (kill-all-local-variables)
+  (setq notmuch-buffer-refresh-function #'notmuch-pick-refresh-view)
   (use-local-map notmuch-pick-mode-map)
   (setq major-mode 'notmuch-pick-mode
 	mode-name "notmuch-pick")
