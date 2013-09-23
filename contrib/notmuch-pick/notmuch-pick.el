@@ -50,17 +50,10 @@
   "Showing message and thread structure."
   :group 'notmuch)
 
-;; This is ugly. We can't run setup-show-out until it has been defined
-;; which needs the keymap to be defined. So we defer setting up to
-;; notmuch-pick-init.
 (defcustom notmuch-pick-show-out nil
   "View selected messages in new window rather than split-pane."
   :type 'boolean
-  :group 'notmuch-pick
-  :set (lambda (symbol value)
-	 (set-default symbol value)
-	 (when (fboundp 'notmuch-pick-setup-show-out)
-	   (notmuch-pick-setup-show-out))))
+  :group 'notmuch-pick)
 
 (defcustom notmuch-pick-result-format
   `(("date" . "%12s  ")
@@ -241,7 +234,6 @@ FUNC."
     ;; Override because we want to close message pane first.
     (define-key map "m" (notmuch-pick-close-message-pane-and #'notmuch-mua-new-mail))
 
-    (define-key map [mouse-1] 'notmuch-pick-show-message)
     ;; these use notmuch-show functions directly
     (define-key map "|" 'notmuch-show-pipe-message)
     (define-key map "w" 'notmuch-show-save-attachments)
@@ -261,6 +253,8 @@ FUNC."
     (define-key map "V" (notmuch-pick-close-message-pane-and #'notmuch-show-view-raw-message))
 
     ;; The main pick bindings
+    (define-key map (kbd "RET") 'notmuch-pick-show-message)
+    (define-key map [mouse-1] 'notmuch-pick-show-message)
     (define-key map "x" 'notmuch-pick-quit)
     (define-key map "A" 'notmuch-pick-archive-thread)
     (define-key map "a" 'notmuch-pick-archive-message-then-next)
@@ -279,21 +273,6 @@ FUNC."
     (define-key map "b" 'notmuch-pick-scroll-message-window-back)
     map))
 (fset 'notmuch-pick-mode-map notmuch-pick-mode-map)
-
-(defun notmuch-pick-setup-show-out ()
-  "Set up the keymap for showing a thread
-
-This uses the value of the defcustom notmuch-pick-show-out to
-decide whether to show a message in the message pane or in the
-whole window."
-  (let ((map notmuch-pick-mode-map))
-    (if notmuch-pick-show-out
-	(progn
-	  (define-key map (kbd "M-RET") 'notmuch-pick-show-message)
-	  (define-key map (kbd "RET") 'notmuch-pick-show-message-out))
-      (progn
-	(define-key map (kbd "RET") 'notmuch-pick-show-message)
-	(define-key map (kbd "M-RET") 'notmuch-pick-show-message-out)))))
 
 (defun notmuch-pick-get-message-properties ()
   "Return the properties of the current message as a plist.
@@ -466,7 +445,7 @@ Does NOT change the database."
       (ignore-errors
 	(delete-window notmuch-pick-message-window)))))
 
-(defun notmuch-pick-show-message ()
+(defun notmuch-pick-show-message-in ()
   "Show the current message (in split-pane)."
   (interactive)
   (let ((id (notmuch-pick-get-message-id))
@@ -502,6 +481,17 @@ Does NOT change the database."
       ;; We close the window to kill off un-needed buffers.
       (notmuch-pick-close-message-window)
       (notmuch-show id nil nil nil))))
+
+(defun notmuch-pick-show-message (arg)
+  "Show the current message.
+
+Shows in split pane or whole window according to value of
+`notmuch-pick-show-out'. A prefix argument reverses the choice."
+  (interactive "P")
+  (if (or (and notmuch-pick-show-out  (not arg))
+	  (and (not notmuch-pick-show-out) arg))
+      (notmuch-pick-show-message-out)
+    (notmuch-pick-show-message-in)))
 
 (defun notmuch-pick-scroll-message-window ()
   "Scroll the message window (if it exists)"
@@ -566,14 +556,14 @@ message will be \"unarchived\", i.e. the tag changes in
   (interactive)
   (forward-line)
   (when (window-live-p notmuch-pick-message-window)
-    (notmuch-pick-show-message)))
+    (notmuch-pick-show-message-in)))
 
 (defun notmuch-pick-prev-message ()
   "Move to previous message."
   (interactive)
   (forward-line -1)
   (when (window-live-p notmuch-pick-message-window)
-    (notmuch-pick-show-message)))
+    (notmuch-pick-show-message-in)))
 
 (defun notmuch-pick-prev-matching-message ()
   "Move to previous matching message."
@@ -582,7 +572,7 @@ message will be \"unarchived\", i.e. the tag changes in
   (while (and (not (bobp)) (not (notmuch-pick-get-match)))
     (forward-line -1))
   (when (window-live-p notmuch-pick-message-window)
-    (notmuch-pick-show-message)))
+    (notmuch-pick-show-message-in)))
 
 (defun notmuch-pick-next-matching-message ()
   "Move to next matching message."
@@ -591,7 +581,7 @@ message will be \"unarchived\", i.e. the tag changes in
   (while (and (not (eobp)) (not (notmuch-pick-get-match)))
     (forward-line))
   (when (window-live-p notmuch-pick-message-window)
-    (notmuch-pick-show-message)))
+    (notmuch-pick-show-message-in)))
 
 (defun notmuch-pick-refresh-view ()
   "Refresh view."
@@ -763,7 +753,7 @@ unchanged ADDRESS if parsing fails."
       (goto-char (point-max))
       (forward-line -1)
       (when notmuch-pick-open-target
-	(notmuch-pick-show-message)))))
+	(notmuch-pick-show-message-in)))))
 
 (defun notmuch-pick-insert-tree (tree depth tree-status first last)
   "Insert the message tree TREE at depth DEPTH in the current thread.
@@ -952,7 +942,6 @@ The arguments are:
 (define-key notmuch-search-mode-map "Z" 'notmuch-pick-from-search-current-query)
 (define-key notmuch-search-mode-map (kbd "M-RET") 'notmuch-pick-from-search-thread)
 (define-key notmuch-show-mode-map "Z" 'notmuch-pick-from-show-current-query)
-(notmuch-pick-setup-show-out)
 (message "Initialised notmuch-pick")
 
 (provide 'notmuch-pick)
