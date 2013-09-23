@@ -940,7 +940,6 @@ The arguments are:
 ;; Set up key bindings from the rest of notmuch.
 (define-key notmuch-common-keymap "z" 'notmuch-pick)
 (define-key notmuch-search-mode-map "Z" 'notmuch-pick-from-search-current-query)
-(define-key notmuch-search-mode-map (kbd "M-RET") 'notmuch-pick-from-search-thread)
 (define-key notmuch-show-mode-map "Z" 'notmuch-pick-from-show-current-query)
 (message "Initialised notmuch-pick")
 
