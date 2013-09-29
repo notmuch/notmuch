@@ -309,9 +309,9 @@ ruby << EOF
 				nm_m.start = b.count
 				b << "%s %s (%s)" % [msg['from'], date, msg.tags]
 				b << "Subject: %s" % [msg['subject']]
-				b << "To: %s" % m['to']
-				b << "Cc: %s" % m['cc']
-				b << "Date: %s" % m['date']
+				b << "To: %s" % msg['to']
+				b << "Cc: %s" % msg['cc']
+				b << "Date: %s" % msg['date']
 				nm_m.body_start = b.count
 				b << "--- %s ---" % part.mime_type
 				part.convert.each_line do |l|
