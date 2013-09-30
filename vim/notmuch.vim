@@ -80,6 +80,7 @@ function! s:new_file_buffer(type, fname)
 	exec printf('edit %s', a:fname)
 	execute printf('set filetype=notmuch-%s', a:type)
 	execute printf('set syntax=notmuch-%s', a:type)
+	ruby $curbuf.init(VIM::evaluate('a:type'))
 	ruby $buf_queue.push($curbuf.number)
 endfunction
 
@@ -195,6 +196,7 @@ function! s:search_search_prompt()
 	setlocal modifiable
 ruby << EOF
 	$cur_search = VIM::evaluate('text')
+	$curbuf.reopen
 	search_render($cur_search)
 EOF
 	setlocal nomodifiable
@@ -206,6 +208,7 @@ endfunction
 
 function! s:search_refresh()
 	setlocal modifiable
+	ruby $curbuf.reopen
 	ruby search_render($cur_search)
 	setlocal nomodifiable
 endfunction
@@ -227,6 +230,7 @@ endfunction
 
 function! s:folders_refresh()
 	setlocal modifiable
+	ruby $curbuf.reopen
 	ruby folders_render()
 	setlocal nomodifiable
 endfunction
@@ -254,6 +258,7 @@ function! s:show_next_thread()
 endfunction
 
 function! s:kill_this_buffer()
+	ruby $curbuf.close
 	bdelete!
 ruby << EOF
 	$buf_queue.pop
@@ -276,6 +281,7 @@ function! s:new_buffer(type)
 	keepjumps 0d
 	execute printf('set filetype=notmuch-%s', a:type)
 	execute printf('set syntax=notmuch-%s', a:type)
+	ruby $curbuf.init(VIM::evaluate('a:type'))
 	ruby $buf_queue.push($curbuf.number)
 endfunction
 
@@ -295,33 +301,31 @@ ruby << EOF
 	$cur_thread = thread_id
 	$messages.clear
 	$curbuf.render do |b|
-		do_read do |db|
-			q = db.query(get_cur_view)
-			q.sort = 0
-			msgs = q.search_messages
-			msgs.each do |msg|
-				m = Mail.read(msg.filename)
-				part = m.find_first_text
-				nm_m = Message.new(msg, m)
-				$messages << nm_m
-				date_fmt = VIM::evaluate('g:notmuch_rb_datetime_format')
-				date = Time.at(msg.date).strftime(date_fmt)
-				nm_m.start = b.count
-				b << "%s %s (%s)" % [msg['from'], date, msg.tags]
-				b << "Subject: %s" % [msg['subject']]
-				b << "To: %s" % msg['to']
-				b << "Cc: %s" % msg['cc']
-				b << "Date: %s" % msg['date']
-				nm_m.body_start = b.count
-				b << "--- %s ---" % part.mime_type
-				part.convert.each_line do |l|
-					b << l.chomp
-				end
-				b << ""
-				nm_m.end = b.count
+		q = $curbuf.query(get_cur_view)
+		q.sort = 0
+		msgs = q.search_messages
+		msgs.each do |msg|
+			m = Mail.read(msg.filename)
+			part = m.find_first_text
+			nm_m = Message.new(msg, m)
+			$messages << nm_m
+			date_fmt = VIM::evaluate('g:notmuch_rb_datetime_format')
+			date = Time.at(msg.date).strftime(date_fmt)
+			nm_m.start = b.count
+			b << "%s %s (%s)" % [msg['from'], date, msg.tags]
+			b << "Subject: %s" % [msg['subject']]
+			b << "To: %s" % msg['to']
+			b << "Cc: %s" % msg['cc']
+			b << "Date: %s" % msg['date']
+			nm_m.body_start = b.count
+			b << "--- %s ---" % part.mime_type
+			part.convert.each_line do |l|
+				b << l.chomp
 			end
-			b.delete(b.count)
+			b << ""
+			nm_m.end = b.count
 		end
+		b.delete(b.count)
 	end
 	$messages.each_with_index do |msg, i|
 		VIM::command("syntax region nmShowMsg#{i}Desc start='\\%%%il' end='\\%%%il' contains=@nmShowMsgDesc" % [msg.start, msg.start + 1])
@@ -469,24 +473,6 @@ ruby << EOF
 		end
 	end
 
-	def do_write
-		db = Notmuch::Database.new($db_name, :mode => Notmuch::MODE_READ_WRITE)
-		begin
-			yield db
-		ensure
-			db.close
-		end
-	end
-
-	def do_read
-		db = Notmuch::Database.new($db_name)
-		begin
-			yield db
-		ensure
-			db.close
-		end
-	end
-
 	def open_reply(orig)
 		help_lines = [
 			'Notmuch-Help: Type in your message here; to help you use these bindings:',
@@ -559,21 +545,18 @@ ruby << EOF
 			folders = VIM::evaluate('g:notmuch_rb_folders')
 			count_threads = VIM::evaluate('g:notmuch_rb_folders_count_threads')
 			$searches.clear
-			do_read do |db|
-				folders.each do |name, search|
-					q = db.query(search)
-					$searches << search
-					count = count_threads ? q.search_threads.count : q.search_messages.count
-					b << "%9d %-20s (%s)" % [count, name, search]
-				end
+			folders.each do |name, search|
+				q = $curbuf.query(search)
+				$searches << search
+				count = count_threads ? q.search_threads.count : q.search_messages.count
+				b << "%9d %-20s (%s)" % [count, name, search]
 			end
 		end
 	end
 
 	def search_render(search)
 		date_fmt = VIM::evaluate('g:notmuch_rb_date_format')
-		db = Notmuch::Database.new($db_name)
-		q = db.query(search)
+		q = $curbuf.query(search)
 		$threads.clear
 		t = q.search_threads
 
@@ -593,7 +576,7 @@ ruby << EOF
 	end
 
 	def do_tag(filter, tags)
-		do_write do |db|
+		$curbuf.do_write do |db|
 			q = db.query(filter)
 			q.search_messages.each do |e|
 				e.freeze
@@ -609,6 +592,40 @@ ruby << EOF
 				end
 				e.thaw
 				e.tags_to_maildir_flags
+			end
+			q.destroy!
+		end
+	end
+
+	module DbHelper
+		def init(name)
+			@name = name
+			@db = Notmuch::Database.new($db_name)
+			@queries = []
+		end
+
+		def query(*args)
+			q = @db.query(*args)
+			@queries << q
+			q
+		end
+
+		def close
+			@queries.delete_if { |q| ! q.destroy! }
+			@db.close
+		end
+
+		def reopen
+			close if @db
+			@db = Notmuch::Database.new($db_name)
+		end
+
+		def do_write
+			db = Notmuch::Database.new($db_name, :mode => Notmuch::MODE_READ_WRITE)
+			begin
+				yield db
+			ensure
+				db.close
 			end
 		end
 	end
@@ -658,6 +675,8 @@ ruby << EOF
 	end
 
 	class VIM::Buffer
+		include DbHelper
+
 		def <<(a)
 			append(count(), a)
 		end
