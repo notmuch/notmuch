@@ -204,6 +204,9 @@ notmuch_tag_command (notmuch_config_t *config, int argc, char *argv[]);
 int
 notmuch_config_command (notmuch_config_t *config, int argc, char *argv[]);
 
+int
+notmuch_compact_command (notmuch_config_t *config, int argc, char *argv[]);
+
 const char *
 notmuch_time_relative_date (const void *ctx, time_t then);
 

@@ -60,6 +60,8 @@ static command_t commands[] = {
       "Create a plain-text dump of the tags for each message." },
     { "restore", notmuch_restore_command, FALSE,
       "Restore the tags from the given dump file (see 'dump')." },
+    { "compact", notmuch_compact_command, FALSE,
+      "Compact the notmuch database." },
     { "config", notmuch_config_command, FALSE,
       "Get or set settings in the notmuch configuration file." },
     { "help", notmuch_help_command, TRUE, /* create but don't save config */
