@@ -101,6 +101,7 @@ typedef enum _notmuch_status {
     NOTMUCH_STATUS_TAG_TOO_LONG,
     NOTMUCH_STATUS_UNBALANCED_FREEZE_THAW,
     NOTMUCH_STATUS_UNBALANCED_ATOMIC,
+    NOTMUCH_STATUS_UNSUPPORTED_OPERATION,
 
     NOTMUCH_STATUS_LAST_STATUS
 } notmuch_status_t;
@@ -215,8 +216,26 @@ notmuch_database_open (const char *path,
 void
 notmuch_database_close (notmuch_database_t *database);
 
+/* A callback invoked by notmuch_database_compact to notify the user
+ * of the progress of the compaction process.
+ */
+typedef void (*notmuch_compact_status_cb_t)(const char*);
+
+/* Compact a notmuch database, backing up the original database to the
+ * given path.
+ *
+ * The database will be opened with NOTMUCH_DATABASE_MODE_READ_WRITE
+ * during the compaction process to ensure no writes are made.
+ *
+ */
+notmuch_status_t
+notmuch_database_compact (const char* path,
+			  const char* backup_path,
+			  notmuch_compact_status_cb_t status_cb);
+
 /* Destroy the notmuch database, closing it if necessary and freeing
-* all associated resources. */
+ * all associated resources.
+ */
 void
 notmuch_database_destroy (notmuch_database_t *database);
 

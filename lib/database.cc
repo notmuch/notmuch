@@ -24,7 +24,9 @@
 #include <iostream>
 
 #include <sys/time.h>
+#include <sys/stat.h>
 #include <signal.h>
+#include <ftw.h>
 
 #include <glib.h> /* g_free, GPtrArray, GHashTable */
 #include <glib-object.h> /* g_type_init */
@@ -268,6 +270,8 @@ notmuch_status_to_string (notmuch_status_t status)
 	return "Unbalanced number of calls to notmuch_message_freeze/thaw";
     case NOTMUCH_STATUS_UNBALANCED_ATOMIC:
 	return "Unbalanced number of calls to notmuch_database_begin_atomic/end_atomic";
+    case NOTMUCH_STATUS_UNSUPPORTED_OPERATION:
+	return "Unsupported operation";
     default:
     case NOTMUCH_STATUS_LAST_STATUS:
 	return "Unknown error status value";
@@ -799,6 +803,153 @@ notmuch_database_close (notmuch_database_t *notmuch)
     delete notmuch->date_range_processor;
     notmuch->date_range_processor = NULL;
 }
+
+#if HAVE_XAPIAN_COMPACT
+static int unlink_cb (const char *path,
+		      unused (const struct stat *sb),
+		      unused (int type),
+		      unused (struct FTW *ftw))
+{
+    return remove(path);
+}
+
+static int rmtree (const char *path)
+{
+    return nftw(path, unlink_cb, 64, FTW_DEPTH | FTW_PHYS);
+}
+
+class NotmuchCompactor : public Xapian::Compactor
+{
+    notmuch_compact_status_cb_t status_cb;
+
+public:
+    NotmuchCompactor(notmuch_compact_status_cb_t cb) : status_cb(cb) { }
+
+    virtual void
+    set_status (const std::string &table, const std::string &status)
+    {
+	char* msg;
+
+	if (status_cb == NULL)
+	    return;
+
+	if (status.length() == 0)
+	    msg = talloc_asprintf (NULL, "compacting table %s", table.c_str());
+	else
+	    msg = talloc_asprintf (NULL, "     %s", status.c_str());
+
+	if (msg == NULL) {
+	    return;
+	}
+
+	status_cb(msg);
+	talloc_free(msg);
+    }
+};
+
+/* Compacts the given database, optionally saving the original database
+ * in backup_path. Additionally, a callback function can be provided to
+ * give the user feedback on the progress of the (likely long-lived)
+ * compaction process.
+ *
+ * The backup path must point to a directory on the same volume as the
+ * original database. Passing a NULL backup_path will result in the
+ * uncompacted database being deleted after compaction has finished.
+ * Note that the database write lock will be held during the
+ * compaction process to protect data integrity.
+ */
+notmuch_status_t
+notmuch_database_compact (const char* path,
+			  const char* backup_path,
+			  notmuch_compact_status_cb_t status_cb)
+{
+    void *local = talloc_new (NULL);
+    NotmuchCompactor compactor(status_cb);
+    char *notmuch_path, *xapian_path, *compact_xapian_path;
+    char *old_xapian_path = NULL;
+    notmuch_status_t ret = NOTMUCH_STATUS_SUCCESS;
+    notmuch_database_t *notmuch = NULL;
+    struct stat statbuf;
+
+    ret = notmuch_database_open(path, NOTMUCH_DATABASE_MODE_READ_WRITE, &notmuch);
+    if (ret) {
+	goto DONE;
+    }
+
+    if (! (notmuch_path = talloc_asprintf (local, "%s/%s", path, ".notmuch"))) {
+	ret = NOTMUCH_STATUS_OUT_OF_MEMORY;
+	goto DONE;
+    }
+
+    if (! (xapian_path = talloc_asprintf (local, "%s/%s", notmuch_path, "xapian"))) {
+	ret = NOTMUCH_STATUS_OUT_OF_MEMORY;
+	goto DONE;
+    }
+
+    if (! (compact_xapian_path = talloc_asprintf (local, "%s.compact", xapian_path))) {
+	ret = NOTMUCH_STATUS_OUT_OF_MEMORY;
+	goto DONE;
+    }
+
+    if (backup_path != NULL) {
+	if (! (old_xapian_path = talloc_asprintf (local, "%s/xapian.old", backup_path))) {
+	    ret = NOTMUCH_STATUS_OUT_OF_MEMORY;
+	    goto DONE;
+	}
+
+	if (stat(old_xapian_path, &statbuf) != -1) {
+	    fprintf (stderr, "Backup path already exists: %s\n", old_xapian_path);
+	    ret = NOTMUCH_STATUS_FILE_ERROR;
+	    goto DONE;
+	}
+	if (errno != ENOENT) {
+	    fprintf (stderr, "Unknown error while stat()ing backup path: %s\n",
+		     strerror(errno));
+	    goto DONE;
+	}
+    }
+
+    try {
+	compactor.set_renumber(false);
+	compactor.add_source(xapian_path);
+	compactor.set_destdir(compact_xapian_path);
+	compactor.compact();
+    } catch (Xapian::InvalidArgumentError e) {
+	fprintf (stderr, "Error while compacting: %s\n", e.get_msg().c_str());
+	ret = NOTMUCH_STATUS_XAPIAN_EXCEPTION;
+	goto DONE;
+    }
+
+    if (old_xapian_path != NULL) {
+	if (rename(xapian_path, old_xapian_path)) {
+	    fprintf (stderr, "Error moving old database out of the way\n");
+	    ret = NOTMUCH_STATUS_FILE_ERROR;
+	    goto DONE;
+	}
+    } else {
+	rmtree(xapian_path);
+    }
+
+    if (rename(compact_xapian_path, xapian_path)) {
+	fprintf (stderr, "Error moving compacted database\n");
+	ret = NOTMUCH_STATUS_FILE_ERROR;
+	goto DONE;
+    }
+
+    notmuch_database_close(notmuch);
+
+DONE:
+    talloc_free(local);
+    return ret;
+}
+#else
+notmuch_status_t
+notmuch_database_compact_close (unused (notmuch_database_t *notmuch))
+{
+    fprintf (stderr, "notmuch was compiled against a xapian version lacking compaction support.\n");
+    return NOTMUCH_STATUS_UNSUPPORTED_OPERATION;
+}
+#endif
 
 void
 notmuch_database_destroy (notmuch_database_t *notmuch)
