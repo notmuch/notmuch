@@ -1,0 +1,36 @@
+.TH NOTMUCH-COMPACT 1 2013-08-23 "Notmuch 0.16"
+.SH NAME
+notmuch-compact \- compact the notmuch database
+.SH SYNOPSIS
+
+.B notmuch compact
+
+.SH DESCRIPTION
+
+The
+.B compact
+command can be used to compact the notmuch database. This can both reduce
+the space required by the database and improve lookup performance.
+
+The compacted database is built in a temporary directory and is later
+moved into the place of the origin database. The original uncompacted
+database is preserved to be deleted by the user as desired.
+
+Note that the database write lock will be held during the compaction
+process (which may be quite long) to protect data integrity.
+
+.RE
+.SH ENVIRONMENT
+The following environment variables can be used to control the
+behavior of notmuch.
+.TP
+.B NOTMUCH_CONFIG
+Specifies the location of the notmuch configuration file. Notmuch will
+use ${HOME}/.notmuch\-config if this variable is not set.
+.SH SEE ALSO
+
+\fBnotmuch\fR(1), \fBnotmuch-count\fR(1), \fBnotmuch-dump\fR(1),
+\fBnotmuch-hooks\fR(5), \fBnotmuch-insert\fR(1), \fBnotmuch-new\fR(1),
+\fBnotmuch-reply\fR(1), \fBnotmuch-restore\fR(1), \fBnotmuch-search\fR(1),
+\fBnotmuch-search-terms\fR(7), \fBnotmuch-show\fR(1),
+\fBnotmuch-tag\fR(1)
