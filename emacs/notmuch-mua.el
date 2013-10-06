@@ -327,9 +327,10 @@ the From: address first."
 (defun notmuch-mua-new-forward-message (&optional prompt-for-sender)
   "Invoke the notmuch message forwarding window.
 
+The current buffer must contain an RFC2822 message to forward.
+
 If PROMPT-FOR-SENDER is non-nil, the user will be prompted for
 the From: address first."
-  (interactive "P")
   (if (or prompt-for-sender notmuch-always-prompt-for-sender)
       (let* ((sender (notmuch-mua-prompt-for-sender))
 	     (address-components (mail-extract-address-components sender))
