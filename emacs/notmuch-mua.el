@@ -313,8 +313,9 @@ the From: header is already filled in by notmuch."
       (ido-completing-read "Send mail From: " notmuch-identities
 			   nil nil nil 'notmuch-mua-sender-history (car notmuch-identities)))))
 
+(put 'notmuch-mua-new-mail 'notmuch-prefix-doc "... and prompt for sender")
 (defun notmuch-mua-new-mail (&optional prompt-for-sender)
-  "Invoke the notmuch mail composition window.
+  "Compose new mail.
 
 If PROMPT-FOR-SENDER is non-nil, the user will be prompted for
 the From: address first."

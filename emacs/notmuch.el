@@ -575,15 +575,21 @@ See `notmuch-tag' for information on the format of TAG-CHANGES."
     (notmuch-search-tag-region beg end tag-changes)))
 
 (defun notmuch-search-add-tag ()
-  "Same as `notmuch-search-tag' but sets initial input to '+'."
+  "Change tags for the current thread (defaulting to add).
+
+Same as `notmuch-search-tag' but sets initial input to '+'."
   (interactive)
   (notmuch-search-tag "+"))
 
 (defun notmuch-search-remove-tag ()
-  "Same as `notmuch-search-tag' but sets initial input to '-'."
+  "Change tags for the current thread (defaulting to remove).
+
+Same as `notmuch-search-tag' but sets initial input to '-'."
   (interactive)
   (notmuch-search-tag "-"))
 
+(put 'notmuch-search-archive-thread 'notmuch-prefix-doc
+     "Un-archive the currently selected thread.")
 (defun notmuch-search-archive-thread (&optional unarchive)
   "Archive the currently selected thread.
 
@@ -887,6 +893,7 @@ PROMPT is the string to prompt with."
 			      'notmuch-search-history nil nil)))))
 
 ;;;###autoload
+(put 'notmuch-search 'notmuch-doc "Search for messages.")
 (defun notmuch-search (&optional query oldest-first target-thread target-line)
   "Display threads matching QUERY in a notmuch-search buffer.
 

@@ -1488,6 +1488,8 @@ current thread."
   "Are the headers of the current message visible?"
   (notmuch-show-get-prop :headers-visible))
 
+(put 'notmuch-show-mark-read 'notmuch-prefix-doc
+     "Mark the current message as unread.")
 (defun notmuch-show-mark-read (&optional unread)
   "Mark the current message as read.
 
@@ -1609,16 +1611,20 @@ any effects from previous calls to
       ;; Move to the previous message.
       (notmuch-show-previous-message)))))
 
+(put 'notmuch-show-reply 'notmuch-prefix-doc "... and prompt for sender")
 (defun notmuch-show-reply (&optional prompt-for-sender)
   "Reply to the sender and all recipients of the current message."
   (interactive "P")
   (notmuch-mua-new-reply (notmuch-show-get-message-id) prompt-for-sender t))
 
+(put 'notmuch-show-reply-sender 'notmuch-prefix-doc "... and prompt for sender")
 (defun notmuch-show-reply-sender (&optional prompt-for-sender)
   "Reply to the sender of the current message."
   (interactive "P")
   (notmuch-mua-new-reply (notmuch-show-get-message-id) prompt-for-sender nil))
 
+(put 'notmuch-show-forward-message 'notmuch-prefix-doc
+     "... and prompt for sender")
 (defun notmuch-show-forward-message (&optional prompt-for-sender)
   "Forward the current message."
   (interactive "P")
@@ -1722,6 +1728,10 @@ to show, nil otherwise."
     (set-buffer-modified-p nil)
     (view-buffer buf 'kill-buffer-if-not-modified)))
 
+(put 'notmuch-show-pipe-message 'notmuch-doc
+     "Pipe the contents of the current message to a command.")
+(put 'notmuch-show-pipe-message 'notmuch-prefix-doc
+     "Pipe the thread as an mbox to a command.")
 (defun notmuch-show-pipe-message (entire-thread command)
   "Pipe the contents of the current message (or thread) to COMMAND.
 
@@ -1795,12 +1805,16 @@ See `notmuch-tag' for information on the format of TAG-CHANGES."
 	 (notmuch-show-set-tags new-tags))))))
 
 (defun notmuch-show-add-tag ()
-  "Same as `notmuch-show-tag' but sets initial input to '+'."
+  "Change tags for the current message (defaulting to add).
+
+Same as `notmuch-show-tag' but sets initial input to '+'."
   (interactive)
   (notmuch-show-tag "+"))
 
 (defun notmuch-show-remove-tag ()
-  "Same as `notmuch-show-tag' but sets initial input to '-'."
+  "Change tags for the current message (defaulting to remove).
+
+Same as `notmuch-show-tag' but sets initial input to '-'."
   (interactive)
   (notmuch-show-tag "-"))
 
@@ -1822,6 +1836,8 @@ See `notmuch-tag' for information on the format of TAG-CHANGES."
      (not (plist-get props :message-visible))))
   (force-window-update))
 
+(put 'notmuch-show-open-or-close-all 'notmuch-doc "Show all messages.")
+(put 'notmuch-show-open-or-close-all 'notmuch-prefix-doc "Hide all messages.")
 (defun notmuch-show-open-or-close-all ()
   "Set the visibility all of the messages in the current thread.
 
@@ -1873,6 +1889,8 @@ search results instead."
   (interactive)
   (notmuch-show-next-thread t t))
 
+(put 'notmuch-show-archive-thread 'notmuch-prefix-doc
+     "Un-archive each message in thread.")
 (defun notmuch-show-archive-thread (&optional unarchive)
   "Archive each message in thread.
 
@@ -1902,6 +1920,8 @@ buffer."
   (notmuch-show-archive-thread)
   (notmuch-show-next-thread))
 
+(put 'notmuch-show-archive-message 'notmuch-prefix-doc
+     "Un-archive the current message.")
 (defun notmuch-show-archive-message (&optional unarchive)
   "Archive the current message.
 
@@ -1953,6 +1973,8 @@ thread from search."
   (interactive)
   (notmuch-common-do-stash (notmuch-show-get-from)))
 
+(put 'notmuch-show-stash-message-id 'notmuch-prefix-doc
+     "Copy thread: query matching current thread to kill-ring.")
 (defun notmuch-show-stash-message-id (&optional stash-thread-id)
   "Copy id: query matching the current message to kill-ring.
 
