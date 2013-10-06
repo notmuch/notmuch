@@ -17,6 +17,14 @@ New options to better support handling duplicate messages
   bigger than the number of matching messages due to duplicates
   (i.e. multiple files having the same message-id).
 
+Emacs Interface
+---------------
+
+Built-in help improvements
+
+  Documentation for many commands has been improved, as displayed by
+  `notmuch-help` (usually bound to "?").  The bindings listed by
+  `notmuch-help` also now include descriptions of prefixed commands.
 
 Notmuch 0.16 (2013-08-03)
 =========================
