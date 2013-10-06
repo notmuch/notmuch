@@ -340,8 +340,11 @@ the From: address first."
     (notmuch-mua-forward-message)))
 
 (defun notmuch-mua-new-reply (query-string &optional prompt-for-sender reply-all)
-  "Invoke the notmuch reply window."
-  (interactive "P")
+  "Compose a reply to the message identified by QUERY-STRING.
+
+If PROMPT-FOR-SENDER is non-nil, the user will be prompted for
+the From: address first.  If REPLY-ALL is non-nil, the message
+will be addressed to all recipients of the source message."
   (let ((sender
 	 (when prompt-for-sender
 	   (notmuch-mua-prompt-for-sender))))
