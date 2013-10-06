@@ -1575,7 +1575,7 @@ shown."
       (notmuch-show-archive-thread-then-next)))
 
 (defun notmuch-show-rewind ()
-  "Backup through the thread, (reverse scrolling compared to \\[notmuch-show-advance-and-archive]).
+  "Backup through the thread (reverse scrolling compared to \\[notmuch-show-advance-and-archive]).
 
 Specifically, if the beginning of the previous email is fewer
 than `window-height' lines from the current point, move to it
@@ -1723,15 +1723,16 @@ to show, nil otherwise."
     (view-buffer buf 'kill-buffer-if-not-modified)))
 
 (defun notmuch-show-pipe-message (entire-thread command)
-  "Pipe the contents of the current message (or thread) to the given command.
+  "Pipe the contents of the current message (or thread) to COMMAND.
 
-The given command will be executed with the raw contents of the
-current email message as stdin. Anything printed by the command
-to stdout or stderr will appear in the *notmuch-pipe* buffer.
+COMMAND will be executed with the raw contents of the current
+email message as stdin. Anything printed by the command to stdout
+or stderr will appear in the *notmuch-pipe* buffer.
 
-When invoked with a prefix argument, the command will receive all
-open messages in the current thread (formatted as an mbox) rather
-than only the current message."
+If ENTIRE-THREAD is non-nil (or when invoked with a prefix
+argument), COMMAND will receive all open messages in the current
+thread (formatted as an mbox) rather than only the current
+message."
   (interactive (let ((query-string (if current-prefix-arg
 				       "Pipe all open messages to command: "
 				     "Pipe message to command: ")))
@@ -1823,6 +1824,7 @@ See `notmuch-tag' for information on the format of TAG-CHANGES."
 
 (defun notmuch-show-open-or-close-all ()
   "Set the visibility all of the messages in the current thread.
+
 By default make all of the messages visible. With a prefix
 argument, hide all of the messages."
   (interactive)

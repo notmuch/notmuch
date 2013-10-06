@@ -869,15 +869,15 @@ PROMPT is the string to prompt with."
 
 ;;;###autoload
 (defun notmuch-search (&optional query oldest-first target-thread target-line)
-  "Run \"notmuch search\" with the given `query' and display results.
+  "Display threads matching QUERY in a notmuch-search buffer.
 
-If `query' is nil, it is read interactively from the minibuffer.
+If QUERY is nil, it is read interactively from the minibuffer.
 Other optional parameters are used as follows:
 
-  oldest-first: A Boolean controlling the sort order of returned threads
-  target-thread: A thread ID (without the thread: prefix) that will be made
+  OLDEST-FIRST: A Boolean controlling the sort order of returned threads
+  TARGET-THREAD: A thread ID (without the thread: prefix) that will be made
                  current if it appears in the search results.
-  target-line: The line number to move to if the target thread does not
+  TARGET-LINE: The line number to move to if the target thread does not
                appear in the search results.
 
 When called interactively, this will prompt for a query and use
