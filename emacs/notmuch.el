@@ -141,10 +141,15 @@ This is basically just `format-kbd-macro' but we also convert ESC to M-."
       (concat desc " "))))
 
 (defun notmuch-describe-keymap (keymap ua-keys &optional prefix tail)
-  "Return a list of strings, each describing one key in KEYMAP.
+  "Return a list of strings, each describing one binding in KEYMAP.
 
-Each string gives a human-readable description of the key and the
-first line of documentation for the bound function."
+Each string gives a human-readable description of the key and a
+one-line description of the bound function.  See `notmuch-help'
+for an overview of how this documentation is extracted.
+
+UA-KEYS should be a key sequence bound to `universal-argument'.
+It will be used to describe bindings of commands that support a
+prefix argument.  PREFIX and TAIL are used internally."
   (map-keymap
    (lambda (key binding)
      (cond ((mouse-event-p key) nil)
