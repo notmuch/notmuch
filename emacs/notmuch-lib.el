@@ -243,6 +243,12 @@ depending on the value of `notmuch-poll-script'."
 	"[No Subject]"
       subject)))
 
+(defun notmuch-sanitize (str)
+  "Sanitize control character in STR.
+
+This includes newlines, tabs, and other funny characters."
+  (replace-regexp-in-string "[[:cntrl:]\x7f\u2028\u2029]+" " " str))
+
 (defun notmuch-escape-boolean-term (term)
   "Escape a boolean term for use in a query.
 

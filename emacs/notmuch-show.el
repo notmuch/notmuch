@@ -407,7 +407,8 @@ unchanged ADDRESS if parsing fails."
 message at DEPTH in the current thread."
   (let ((start (point)))
     (insert (notmuch-show-spaces-n (* notmuch-show-indent-messages-width depth))
-	    (notmuch-show-clean-address (plist-get headers :From))
+	    (notmuch-sanitize
+	     (notmuch-show-clean-address (plist-get headers :From)))
 	    " ("
 	    date
 	    ") ("
@@ -417,7 +418,7 @@ message at DEPTH in the current thread."
 
 (defun notmuch-show-insert-header (header header-value)
   "Insert a single header."
-  (insert header ": " header-value "\n"))
+  (insert header ": " (notmuch-sanitize header-value) "\n"))
 
 (defun notmuch-show-insert-headers (headers)
   "Insert the headers of the current message."
@@ -1156,7 +1157,7 @@ function is used."
       (jit-lock-register #'notmuch-show-buttonise-links)
 
       ;; Set the header line to the subject of the first message.
-      (setq header-line-format (notmuch-show-strip-re (notmuch-show-get-subject)))
+      (setq header-line-format (notmuch-sanitize (notmuch-show-strip-re (notmuch-show-get-subject))))
 
       (run-hooks 'notmuch-show-hook))))
 

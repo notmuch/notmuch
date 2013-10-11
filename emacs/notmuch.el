@@ -811,11 +811,13 @@ non-authors is found, assume that all of the authors match."
 					(plist-get result :total)))
 			'face 'notmuch-search-count)))
    ((string-equal field "subject")
-    (insert (propertize (format format-string (plist-get result :subject))
+    (insert (propertize (format format-string
+				(notmuch-sanitize (plist-get result :subject)))
 			'face 'notmuch-search-subject)))
 
    ((string-equal field "authors")
-    (notmuch-search-insert-authors format-string (plist-get result :authors)))
+    (notmuch-search-insert-authors
+     format-string (notmuch-sanitize (plist-get result :authors))))
 
    ((string-equal field "tags")
     (let ((tags (plist-get result :tags)))
