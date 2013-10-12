@@ -557,6 +557,7 @@ ruby << EOF
 	def search_render(search)
 		date_fmt = VIM::evaluate('g:notmuch_rb_date_format')
 		q = $curbuf.query(search)
+		q.sort = Notmuch::SORT_NEWEST_FIRST
 		$threads.clear
 		t = q.search_threads
 
@@ -564,10 +565,11 @@ ruby << EOF
 			items.each do |e|
 				authors = e.authors.to_utf8.split(/[,|]/).map { |a| author_filter(a) }.join(",")
 				date = Time.at(e.newest_date).strftime(date_fmt)
+				subject = e.messages.first['subject']
 				if $mail_installed
-					subject = Mail::Field.new("Subject: " + e.subject).to_s
+					subject = Mail::Field.new("Subject: " + subject).to_s
 				else
-					subject = e.subject.force_encoding('utf-8')
+					subject = subject.force_encoding('utf-8')
 				end
 				b << "%-12s %3s %-20.20s | %s (%s)" % [date, e.matched_messages, authors, subject, e.tags]
 				$threads << e.thread_id
