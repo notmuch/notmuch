@@ -445,6 +445,7 @@ emacs_deliver_message ()
 
     test_emacs \
 	"(let ((message-send-mail-function 'message-smtpmail-send-it)
+               (mail-host-address \"example.com\")
 	       (smtpmail-smtp-server \"localhost\")
 	       (smtpmail-smtp-service \"25025\"))
 	   (notmuch-hello)
