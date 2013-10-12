@@ -302,7 +302,7 @@ ruby << EOF
 	$messages.clear
 	$curbuf.render do |b|
 		q = $curbuf.query(get_cur_view)
-		q.sort = 0
+		q.sort = Notmuch::SORT_OLDEST_FIRST
 		msgs = q.search_messages
 		msgs.each do |msg|
 			m = Mail.read(msg.filename)
