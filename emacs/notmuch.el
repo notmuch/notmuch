@@ -510,13 +510,14 @@ If BARE is set then do not prefix with \"thread:\""
   "Return a list of authors for the current region"
   (notmuch-search-properties-in-region :subject beg end))
 
-(defun notmuch-search-show-thread ()
+(defun notmuch-search-show-thread (&optional elide-toggle)
   "Display the currently selected thread."
-  (interactive)
+  (interactive "P")
   (let ((thread-id (notmuch-search-find-thread-id))
 	(subject (notmuch-search-find-subject)))
     (if (> (length thread-id) 0)
 	(notmuch-show thread-id
+		      elide-toggle
 		      (current-buffer)
 		      notmuch-search-query-string
 		      ;; Name the buffer based on the subject.

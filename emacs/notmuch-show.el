@@ -1080,14 +1080,16 @@ buttons for a corresponding notmuch search."
 	(make-text-button (first link) (second link)
 			  :type 'notmuch-button-type
 			  'action `(lambda (arg)
-				     (notmuch-show ,(third link)))
+				     (notmuch-show ,(third link) current-prefix-arg))
 			  'follow-link t
 			  'help-echo "Mouse-1, RET: search for this message"
 			  'face goto-address-mail-face)))))
 
 ;;;###autoload
-(defun notmuch-show (thread-id &optional parent-buffer query-context buffer-name)
+(defun notmuch-show (thread-id &optional elide-toggle parent-buffer query-context buffer-name)
   "Run \"notmuch show\" with the given thread ID and display results.
+
+ELIDE-TOGGLE, if non-nil, inverts the default elide behavior.
 
 The optional PARENT-BUFFER is the notmuch-search buffer from
 which this notmuch-show command was executed, (so that the
@@ -1102,7 +1104,7 @@ The optional BUFFER-NAME provides the name of the buffer in
 which the message thread is shown. If it is nil (which occurs
 when the command is called interactively) the argument to the
 function is used."
-  (interactive "sNotmuch show: ")
+  (interactive "sNotmuch show: \nP")
   (let ((buffer-name (generate-new-buffer-name
 		      (or buffer-name
 			  (concat "*notmuch-" thread-id "*")))))
@@ -1112,9 +1114,9 @@ function is used."
     (setq notmuch-show-process-crypto notmuch-crypto-process-mime)
     ;; Set the default value for
     ;; `notmuch-show-elide-non-matching-messages' in this buffer. If
-    ;; there is a prefix argument, invert the default.
+    ;; elide-toggle is set, invert the default.
     (setq notmuch-show-elide-non-matching-messages notmuch-show-only-matching-messages)
-    (if current-prefix-arg
+    (if elide-toggle
 	(setq notmuch-show-elide-non-matching-messages (not notmuch-show-elide-non-matching-messages)))
 
     (setq notmuch-show-thread-id thread-id
