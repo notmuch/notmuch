@@ -461,7 +461,7 @@ Does NOT change the database."
 	;; Since we are only displaying one message do not indent.
 	(let ((notmuch-show-indent-messages-width 0)
 	      (notmuch-show-only-matching-messages t))
-	  (setq buffer (notmuch-show id nil nil nil))))
+	  (setq buffer (notmuch-show id))))
       ;; We need the `let' as notmuch-pick-message-window is buffer local.
       (let ((window notmuch-pick-message-window))
 	(with-current-buffer buffer
@@ -480,7 +480,7 @@ Does NOT change the database."
     (when id
       ;; We close the window to kill off un-needed buffers.
       (notmuch-pick-close-message-window)
-      (notmuch-show id nil nil nil))))
+      (notmuch-show id))))
 
 (defun notmuch-pick-show-message (arg)
   "Show the current message.
