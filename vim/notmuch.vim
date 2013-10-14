@@ -208,6 +208,9 @@ endfunction
 
 function! s:search_search_prompt()
 	let text = input('Search: ')
+	if text == ""
+	  return
+	endif
 	setlocal modifiable
 ruby << EOF
 	$cur_search = VIM::evaluate('text')
