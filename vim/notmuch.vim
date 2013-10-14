@@ -34,6 +34,7 @@ let g:notmuch_rb_show_maps = {
 	\ 'o':		'show_open_msg()',
 	\ 'e':		'show_extract_msg()',
 	\ 's':		'show_save_msg()',
+	\ 'p':		'show_save_patches()',
 	\ 'r':		'show_reply()',
 	\ '?':		'show_info()',
 	\ '<Tab>':	'show_next_msg()',
@@ -178,6 +179,20 @@ ruby << EOF
 	file = VIM::evaluate('file')
 	m = get_message
 	system "notmuch show --format=mbox id:#{m.message_id} > #{file}"
+EOF
+endfunction
+
+function! s:show_save_patches()
+ruby << EOF
+	q = $curbuf.query($cur_thread)
+	t = q.search_threads.first
+	n = 0
+	t.toplevel_messages.first.replies.each do |m|
+		next if not m['subject'] =~ /^\[PATCH.*\]/
+		file = "%04d.patch" % [n += 1]
+		system "notmuch show --format=mbox id:#{m.message_id} > #{file}"
+	end
+	vim_puts "Saved #{n} patches"
 EOF
 endfunction
 
