@@ -273,12 +273,14 @@ function! s:show_next_thread()
 endfunction
 
 function! s:kill_this_buffer()
-	ruby $curbuf.close
-	bdelete!
 ruby << EOF
-	$buf_queue.pop
-	b = $buf_queue.last
-	VIM::command("buffer #{b}") if b
+	if $buf_queue.size > 1
+		$curbuf.close
+		VIM::command("bdelete!")
+		$buf_queue.pop
+		b = $buf_queue.last
+		VIM::command("buffer #{b}") if b
+	end
 EOF
 endfunction
 
@@ -412,7 +414,7 @@ function! s:set_defaults()
 	endif
 endfunction
 
-function! s:NotMuch()
+function! s:NotMuch(...)
 	call s:set_defaults()
 
 ruby << EOF
@@ -863,9 +865,13 @@ ruby << EOF
 
 	get_config
 EOF
-	call s:folders()
+	if a:0
+	  call s:search(join(a:000))
+	else
+	  call s:folders()
+	endif
 endfunction
 
-command NotMuch :call s:NotMuch()
+command -nargs=* NotMuch call s:NotMuch(<f-args>)
 
 " vim: set noexpandtab:
