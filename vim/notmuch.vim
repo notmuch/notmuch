@@ -566,7 +566,7 @@ ruby << EOF
 
 			f.flush
 
-			VIM::command("let s:reply_from='%s'" % reply.from.first.to_s)
+			VIM::command("let s:reply_from='%s'" % $email_address)
 			VIM::command("call s:new_file_buffer('compose', '#{f.path}')")
 			VIM::command("call cursor(#{old_count}, 0)")
 		end
