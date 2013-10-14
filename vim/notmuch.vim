@@ -12,6 +12,7 @@ let g:notmuch_rb_folders_maps = {
 	\ '<Enter>':	'folders_show_search()',
 	\ 's':		'folders_search_prompt()',
 	\ '=':		'folders_refresh()',
+	\ 'c':		'compose()',
 	\ }
 
 let g:notmuch_rb_search_maps = {
@@ -24,6 +25,7 @@ let g:notmuch_rb_search_maps = {
 	\ 's':		'search_search_prompt()',
 	\ '=':		'search_refresh()',
 	\ '?':		'search_info()',
+	\ 'c':		'compose()',
 	\ }
 
 let g:notmuch_rb_show_maps = {
@@ -38,6 +40,7 @@ let g:notmuch_rb_show_maps = {
 	\ 'r':		'show_reply()',
 	\ '?':		'show_info()',
 	\ '<Tab>':	'show_next_msg()',
+	\ 'c':		'compose()',
 	\ }
 
 let g:notmuch_rb_compose_maps = {
@@ -142,6 +145,14 @@ endfunction
 
 function! s:show_reply()
 	ruby open_reply get_message.mail
+	let b:compose_done = 0
+	call s:set_map(g:notmuch_rb_compose_maps)
+	autocmd BufUnload <buffer> call s:compose_unload()
+	startinsert!
+endfunction
+
+function! s:compose()
+	ruby open_compose
 	let b:compose_done = 0
 	call s:set_map(g:notmuch_rb_compose_maps)
 	autocmd BufUnload <buffer> call s:compose_unload()
@@ -574,6 +585,28 @@ ruby << EOF
 		lines << ""
 
 		cur = lines.count - 1
+
+		open_compose_helper(lines, cur)
+	end
+
+	def open_compose()
+		lines = []
+
+		lines << "Date: #{Time.now().strftime('%a, %-d %b %Y %T %z')}"
+		lines << "From: #{$email}"
+		lines << "To: "
+		cur = lines.count
+
+		lines << "Cc: "
+		lines << "Bcc: "
+		lines << "Message-Id: #{generate_message_id}"
+		lines << "Subject: "
+		lines << "Mime-Version: 1.0"
+		lines << "Content-Type: text/plain; charset=utf-8"
+		lines << "Content-Transfer-Encoding: 7bit"
+		lines << ""
+		lines << ""
+		lines << ""
 
 		open_compose_helper(lines, cur)
 	end
