@@ -427,7 +427,7 @@ ruby << EOF
 	end
 
 	$db_name = nil
-	$email_address = nil
+	$email = $email_name = $email_address = nil
 	$searches = []
 	$buf_queue = []
 	$threads = []
@@ -452,7 +452,9 @@ ruby << EOF
 		end
 
 		$db_name = $config['database.path']
-		$email_address = "%s <%s>" % [$config['user.name'], $config['user.primary_email']]
+		$email_name = $config['user.name']
+		$email_address = $config['user.primary_email']
+		$email = "%s <%s>" % [$email_name, $email_address]
 	end
 
 	def vim_puts(s)
@@ -502,7 +504,7 @@ ruby << EOF
 				m.to = [orig[:from].to_s, orig[:to].to_s]
 			end
 			m.cc = orig[:cc]
-			m.from = $email_address
+			m.from = $email
 			m.charset = 'utf-8'
 			m.content_transfer_encoding = '7bit'
 		end
