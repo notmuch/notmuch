@@ -421,6 +421,7 @@ ruby << EOF
 	require 'notmuch'
 	require 'rubygems'
 	require 'tempfile'
+	require 'socket'
 	begin
 		require 'mail'
 	rescue LoadError
@@ -492,6 +493,14 @@ ruby << EOF
 		end
 	end
 
+	def generate_message_id
+		t = Time.now
+		random_tag = sprintf('%x%x_%x%x%x',
+			t.to_i, t.tv_usec,
+			$$, Thread.current.object_id.abs, rand(255))
+		return "<#{random_tag}@#{Socket.gethostname}.notmuch>"
+	end
+
 	def open_reply(orig)
 		help_lines = [
 			'Notmuch-Help: Type in your message here; to help you use these bindings:',
@@ -505,6 +514,7 @@ ruby << EOF
 			end
 			m.cc = orig[:cc]
 			m.from = $email
+			m.message_id = generate_message_id
 			m.charset = 'utf-8'
 			m.content_transfer_encoding = '7bit'
 		end
