@@ -1782,23 +1782,28 @@ TAG-CHANGES is a list of tag operations for `notmuch-tag'."
       (notmuch-tag (notmuch-show-get-message-id) tag-changes)
       (notmuch-show-set-tags new-tags))))
 
-(defun notmuch-show-tag (&optional tag-changes)
+(defun notmuch-show-tag (tag-changes)
   "Change tags for the current message.
 
 See `notmuch-tag' for information on the format of TAG-CHANGES."
-  (interactive)
-  (let* ((tag-changes (notmuch-tag (notmuch-show-get-message-id) tag-changes))
-	 (current-tags (notmuch-show-get-tags))
+  (interactive (list (notmuch-read-tag-changes (notmuch-show-get-tags)
+					       "Tag message")))
+  (notmuch-tag (notmuch-show-get-message-id) tag-changes)
+  (let* ((current-tags (notmuch-show-get-tags))
 	 (new-tags (notmuch-update-tags current-tags tag-changes)))
     (unless (equal current-tags new-tags)
       (notmuch-show-set-tags new-tags))))
 
-(defun notmuch-show-tag-all (&optional tag-changes)
+(defun notmuch-show-tag-all (tag-changes)
   "Change tags for all messages in the current show buffer.
 
 See `notmuch-tag' for information on the format of TAG-CHANGES."
-  (interactive)
-  (setq tag-changes (notmuch-tag (notmuch-show-get-messages-ids-search) tag-changes))
+  (interactive
+   (list (let (tags)
+	   (notmuch-show-mapc
+	    (lambda () (setq tags (append (notmuch-show-get-tags) tags))))
+	   (notmuch-read-tag-changes tags "Tag thread"))))
+  (notmuch-tag (notmuch-show-get-messages-ids-search) tag-changes)
   (notmuch-show-mapc
    (lambda ()
      (let* ((current-tags (notmuch-show-get-tags))
@@ -1806,19 +1811,21 @@ See `notmuch-tag' for information on the format of TAG-CHANGES."
        (unless (equal current-tags new-tags)
 	 (notmuch-show-set-tags new-tags))))))
 
-(defun notmuch-show-add-tag ()
+(defun notmuch-show-add-tag (tag-changes)
   "Change tags for the current message (defaulting to add).
 
 Same as `notmuch-show-tag' but sets initial input to '+'."
-  (interactive)
-  (notmuch-show-tag "+"))
+  (interactive
+   (list (notmuch-read-tag-changes (notmuch-show-get-tags) "Tag message" "+")))
+  (notmuch-show-tag tag-changes))
 
-(defun notmuch-show-remove-tag ()
+(defun notmuch-show-remove-tag (tag-changes)
   "Change tags for the current message (defaulting to remove).
 
 Same as `notmuch-show-tag' but sets initial input to '-'."
-  (interactive)
-  (notmuch-show-tag "-"))
+  (interactive
+   (list (notmuch-read-tag-changes (notmuch-show-get-tags) "Tag message" "-")))
+  (notmuch-show-tag tag-changes))
 
 (defun notmuch-show-toggle-visibility-headers ()
   "Toggle the visibility of the current message headers."
