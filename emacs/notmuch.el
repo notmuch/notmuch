@@ -561,43 +561,62 @@ will be signaled."
 	(setq output (append output (notmuch-search-get-tags pos)))))
     output))
 
-(defun notmuch-search-tag-region (beg end &optional tag-changes)
-  "Change tags for threads in the given region."
+(defun notmuch-search-interactive-region ()
+  "Return the bounds of the current interactive region.
+
+This returns (BEG END), where BEG and END are the bounds of the
+region if the region is active, or both `point' otherwise."
+  (if (region-active-p)
+      (list (region-beginning) (region-end))
+    (list (point) (point))))
+
+(defun notmuch-search-interactive-tag-changes (&optional initial-input)
+  "Prompt for tag changes for the current thread or region.
+
+Returns (TAG-CHANGES REGION-BEGIN REGION-END)."
+  (let* ((region (notmuch-search-interactive-region))
+	 (beg (first region)) (end (second region))
+	 (prompt (if (= beg end) "Tag thread" "Tag region")))
+    (cons (notmuch-read-tag-changes
+	   (notmuch-search-get-tags-region beg end) prompt initial-input)
+	  region)))
+
+(defun notmuch-search-tag (tag-changes &optional beg end)
+  "Change tags for the currently selected thread or region.
+
+See `notmuch-tag' for information on the format of TAG-CHANGES.
+When called interactively, this uses the region if the region is
+active.  When called directly, BEG and END provide the region.
+If these are nil or not provided, this applies to the thread at
+point."
+  (interactive (notmuch-search-interactive-tag-changes))
+  (unless (and beg end) (setq beg (point) end (point)))
   (let ((search-string (notmuch-search-find-thread-id-region-search beg end)))
-    (setq tag-changes (notmuch-tag search-string tag-changes))
+    (notmuch-tag search-string tag-changes)
     (notmuch-search-foreach-result beg end
       (lambda (pos)
 	(notmuch-search-set-tags
 	 (notmuch-update-tags (notmuch-search-get-tags pos) tag-changes)
 	 pos)))))
 
-(defun notmuch-search-tag (&optional tag-changes)
-  "Change tags for the currently selected thread or region.
-
-See `notmuch-tag' for information on the format of TAG-CHANGES."
-  (interactive)
-  (let* ((beg (if (region-active-p) (region-beginning) (point)))
-	 (end (if (region-active-p) (region-end) (point))))
-    (notmuch-search-tag-region beg end tag-changes)))
-
-(defun notmuch-search-add-tag ()
-  "Change tags for the current thread (defaulting to add).
+(defun notmuch-search-add-tag (tag-changes &optional beg end)
+  "Change tags for the current thread or region (defaulting to add).
 
 Same as `notmuch-search-tag' but sets initial input to '+'."
-  (interactive)
-  (notmuch-search-tag "+"))
+  (interactive (notmuch-search-interactive-tag-changes "+"))
+  (notmuch-search-tag tag-changes beg end))
 
-(defun notmuch-search-remove-tag ()
-  "Change tags for the current thread (defaulting to remove).
+(defun notmuch-search-remove-tag (tag-changes &optional beg end)
+  "Change tags for the current thread or region (defaulting to remove).
 
 Same as `notmuch-search-tag' but sets initial input to '-'."
-  (interactive)
-  (notmuch-search-tag "-"))
+  (interactive (notmuch-search-interactive-tag-changes "-"))
+  (notmuch-search-tag tag-changes beg end))
 
 (put 'notmuch-search-archive-thread 'notmuch-prefix-doc
      "Un-archive the currently selected thread.")
-(defun notmuch-search-archive-thread (&optional unarchive)
-  "Archive the currently selected thread.
+(defun notmuch-search-archive-thread (&optional unarchive beg end)
+  "Archive the currently selected thread or region.
 
 Archive each message in the currently selected thread by applying
 the tag changes in `notmuch-archive-tags' to each (remove the
@@ -606,10 +625,10 @@ messages will be \"unarchived\" (i.e. the tag changes in
 `notmuch-archive-tags' will be reversed).
 
 This function advances the next thread when finished."
-  (interactive "P")
+  (interactive (cons current-prefix-arg (notmuch-search-interactive-region)))
   (when notmuch-archive-tags
     (notmuch-search-tag
-     (notmuch-tag-change-list notmuch-archive-tags unarchive)))
+     (notmuch-tag-change-list notmuch-archive-tags unarchive) beg end))
   (notmuch-search-next-thread))
 
 (defun notmuch-search-update-result (result &optional pos)
@@ -833,11 +852,13 @@ non-authors is found, assume that all of the authors match."
 	(notmuch-sexp-parse-partial-list 'notmuch-search-show-result
 					 results-buf)))))
 
-(defun notmuch-search-tag-all (&optional tag-changes)
+(defun notmuch-search-tag-all (tag-changes)
   "Add/remove tags from all messages in current search buffer.
 
 See `notmuch-tag' for information on the format of TAG-CHANGES."
-  (interactive)
+  (interactive
+   (list (notmuch-read-tag-changes
+	  (notmuch-search-get-tags-region (point-min) (point-max)) "Tag all")))
   (notmuch-tag notmuch-search-query-string tag-changes))
 
 (defun notmuch-search-buffer-title (query)
