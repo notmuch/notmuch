@@ -838,7 +838,7 @@ non-authors is found, assume that all of the authors match."
 
 See `notmuch-tag' for information on the format of TAG-CHANGES."
   (interactive)
-  (apply 'notmuch-tag notmuch-search-query-string tag-changes))
+  (notmuch-tag notmuch-search-query-string tag-changes))
 
 (defun notmuch-search-buffer-title (query)
   "Returns the title for a buffer with notmuch search results."
