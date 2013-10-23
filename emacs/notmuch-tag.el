@@ -189,7 +189,10 @@ the messages that were tagged"
   "Variable to store minibuffer history for
 `notmuch-read-tag-changes' function.")
 
-(defun notmuch-tag-completions (&optional search-terms)
+(defun notmuch-tag-completions (&rest search-terms)
+  "Return a list of tags for messages matching SEARCH-TERMS.
+
+Returns all tags if no search terms are given."
   (if (null search-terms)
       (setq search-terms (list "*")))
   (split-string
@@ -200,17 +203,24 @@ the messages that were tagged"
    "\n+" t))
 
 (defun notmuch-select-tag-with-completion (prompt &rest search-terms)
-  (let ((tag-list (notmuch-tag-completions search-terms)))
+  (let ((tag-list (apply #'notmuch-tag-completions search-terms)))
     (completing-read prompt tag-list nil nil nil 'notmuch-select-tag-history)))
 
-(defun notmuch-read-tag-changes (&optional initial-input &rest search-terms)
+(defun notmuch-read-tag-changes (current-tags &optional prompt initial-input)
+  "Prompt for tag changes in the minibuffer.
+
+CURRENT-TAGS is a list of tags that are present on the message or
+messages to be changed.  These are offered as tag removal
+completions.  CURRENT-TAGS may contain duplicates.  PROMPT, if
+non-nil, is the query string to present in the minibuffer.  It
+defaults to \"Tags\".  INITIAL-INPUT, if non-nil, will be the
+initial input in the minibuffer."
+
   (let* ((all-tag-list (notmuch-tag-completions))
 	 (add-tag-list (mapcar (apply-partially 'concat "+") all-tag-list))
-	 (remove-tag-list (mapcar (apply-partially 'concat "-")
-				  (if (null search-terms)
-				      all-tag-list
-				    (notmuch-tag-completions search-terms))))
+	 (remove-tag-list (mapcar (apply-partially 'concat "-") current-tags))
 	 (tag-list (append add-tag-list remove-tag-list))
+	 (prompt (concat (or prompt "Tags") " (+add -drop): "))
 	 (crm-separator " ")
 	 ;; By default, space is bound to "complete word" function.
 	 ;; Re-bind it to insert a space instead.  Note that <tab>
@@ -220,7 +230,7 @@ the messages that were tagged"
 	    (set-keymap-parent map crm-local-completion-map)
 	    (define-key map " " 'self-insert-command)
 	    map)))
-    (delete "" (completing-read-multiple "Tags (+add -drop): "
+    (delete "" (completing-read-multiple prompt
 		tag-list nil nil initial-input
 		'notmuch-read-tag-changes-history))))
 
@@ -261,7 +271,8 @@ notmuch-after-tag-hook will be run."
   ;; Perform some validation
   (if (string-or-null-p tag-changes)
       (if (or (string= tag-changes "-") (string= tag-changes "+") (null tag-changes))
-	  (setq tag-changes (notmuch-read-tag-changes tag-changes query))
+	  (setq tag-changes (notmuch-read-tag-changes
+			     (notmuch-tag-completions query) nil tag-changes))
 	(setq tag-changes (list tag-changes))))
   (mapc (lambda (tag-change)
 	  (unless (string-match-p "^[-+]\\S-+$" tag-change)
