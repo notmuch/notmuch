@@ -44,7 +44,7 @@ test_emacs '(add-to-list (quote load-path) "'$PICK_DIR'")
 	    (notmuch-pick "tag:inbox")
 	    (notmuch-test-wait)
 	    (forward-line)
-	    (notmuch-pick-tag "+test_tag")
+	    (notmuch-pick-tag (list "+test_tag"))
 	    (test-output)
 	    (delete-other-windows)'
 test_expect_equal_file OUTPUT $EXPECTED/notmuch-pick-tag-inbox-tagged
@@ -59,7 +59,7 @@ test_emacs '(add-to-list (quote load-path) "'$PICK_DIR'")
 	    (notmuch-pick "tag:inbox")
 	    (notmuch-test-wait)
 	    (forward-line)
-	    (notmuch-pick-tag "-test_tag")
+	    (notmuch-pick-tag (list "-test_tag"))
 	    (test-output)
 	    (delete-other-windows)'
 test_expect_equal_file OUTPUT $EXPECTED/notmuch-pick-tag-inbox
@@ -75,7 +75,7 @@ test_emacs '(add-to-list (quote load-path) "'$PICK_DIR'")
 	    (notmuch-test-wait)
 	    ;; move to a sizable thread
 	    (forward-line 26)
-	    (notmuch-pick-tag-thread "+test_thread_tag")
+	    (notmuch-pick-tag-thread (list "+test_thread_tag"))
 	    (test-output)
 	    (delete-other-windows)'
 test_expect_equal_file OUTPUT $EXPECTED/notmuch-pick-tag-inbox-thread-tagged
@@ -98,7 +98,7 @@ test_emacs '(add-to-list (quote load-path) "'$PICK_DIR'")
 	    (notmuch-test-wait)
 	    ;; move to the same sizable thread as above
 	    (forward-line 26)
-	    (notmuch-pick-tag-thread "-test_thread_tag")
+	    (notmuch-pick-tag-thread (list "-test_thread_tag"))
 	    (test-output)
 	    (delete-other-windows)'
 test_expect_equal_file OUTPUT $EXPECTED/notmuch-pick-tag-inbox
