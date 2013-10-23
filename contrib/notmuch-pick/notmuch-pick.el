@@ -542,8 +542,7 @@ message will be \"unarchived\", i.e. the tag changes in
 `notmuch-archive-tags' will be reversed."
   (interactive "P")
   (when notmuch-archive-tags
-    (apply 'notmuch-pick-tag
-	   (notmuch-tag-change-list notmuch-archive-tags unarchive))))
+    (notmuch-pick-tag (notmuch-tag-change-list notmuch-archive-tags unarchive))))
 
 (defun notmuch-pick-archive-message-then-next (&optional unarchive)
   "Archive the current message and move to next matching message."
