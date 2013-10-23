@@ -37,7 +37,7 @@
 (declare-function notmuch-show-strip-re "notmuch-show" (subject))
 (declare-function notmuch-show-spaces-n "notmuch-show" (n))
 (declare-function notmuch-read-query "notmuch" (prompt))
-(declare-function notmuch-read-tag-changes "notmuch" (&optional initial-input &rest search-terms))
+(declare-function notmuch-read-tag-changes "notmuch" (current-tags &optional prompt initial-input))
 (declare-function notmuch-update-tags "notmuch" (current-tags tag-changes))
 (declare-function notmuch-hello-trim "notmuch-hello" (search))
 (declare-function notmuch-search-find-thread-id "notmuch" ())
@@ -372,21 +372,24 @@ Does NOT change the database."
       (notmuch-pick-set-tags new-tags)
       (notmuch-pick-refresh-result))))
 
-(defun notmuch-pick-tag (&optional tag-changes)
+(defun notmuch-pick-tag (tag-changes)
   "Change tags for the current message"
-  (interactive)
-  (setq tag-changes (notmuch-tag (notmuch-pick-get-message-id) tag-changes))
+  (interactive
+   (list (notmuch-read-tag-changes (notmuch-pick-get-tags) "Tag message")))
+  (notmuch-tag (notmuch-pick-get-message-id) tag-changes)
   (notmuch-pick-tag-update-display tag-changes))
 
-(defun notmuch-pick-add-tag ()
+(defun notmuch-pick-add-tag (tag-changes)
   "Same as `notmuch-pick-tag' but sets initial input to '+'."
-  (interactive)
-  (notmuch-pick-tag "+"))
+  (interactive
+   (list (notmuch-read-tag-changes (notmuch-pick-get-tags) "Tag message" "+")))
+  (notmuch-pick-tag tag-changes))
 
-(defun notmuch-pick-remove-tag ()
+(defun notmuch-pick-remove-tag (tag-changes)
   "Same as `notmuch-pick-tag' but sets initial input to '-'."
-  (interactive)
-  (notmuch-pick-tag "-"))
+  (interactive
+   (list (notmuch-read-tag-changes (notmuch-pick-get-tags) "Tag message" "-")))
+  (notmuch-pick-tag tag-changes))
 
 ;; The next two functions close the message window before searching or
 ;; picking but they do so after the user has entered the query (in
@@ -626,13 +629,16 @@ message will be \"unarchived\", i.e. the tag changes in
 	     (notmuch-pick-thread-mapcar 'notmuch-pick-get-message-id)
 	     " or "))
 
-(defun notmuch-pick-tag-thread (&optional tag-changes)
+(defun notmuch-pick-tag-thread (tag-changes)
   "Tag all messages in the current thread"
-  (interactive)
+  (interactive
+   (let ((tags (apply #'append (notmuch-pick-thread-mapcar
+				(lambda () (notmuch-pick-get-tags))))))
+     (list (notmuch-read-tag-changes tags "Tag thread"))))
   (when (notmuch-pick-get-message-properties)
-    (let ((tag-changes (notmuch-tag (notmuch-pick-get-messages-ids-thread-search) tag-changes)))
-      (notmuch-pick-thread-mapcar
-       (lambda () (notmuch-pick-tag-update-display tag-changes))))))
+    (notmuch-tag (notmuch-pick-get-messages-ids-thread-search) tag-changes)
+    (notmuch-pick-thread-mapcar
+     (lambda () (notmuch-pick-tag-update-display tag-changes)))))
 
 (defun notmuch-pick-archive-thread (&optional unarchive)
   "Archive each message in thread.
