@@ -794,12 +794,16 @@ notmuch_thread_get_total_messages (notmuch_thread_t *thread);
  * This iterator will not necessarily iterate over all of the messages
  * in the thread. It will only iterate over the messages in the thread
  * which are not replies to other messages in the thread.
+ *
+ * The returned list will be destroyed when the thread is destroyed.
  */
 notmuch_messages_t *
 notmuch_thread_get_toplevel_messages (notmuch_thread_t *thread);
 
 /* Get a notmuch_thread_t iterator for all messages in 'thread' in
  * oldest-first order.
+ *
+ * The returned list will be destroyed when the thread is destroyed.
  */
 notmuch_messages_t *
 notmuch_thread_get_messages (notmuch_thread_t *thread);
