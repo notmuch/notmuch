@@ -122,21 +122,21 @@ notmuch search schema
 ---------------------
 
 # --output=summary
-summary = [thread*]
+search_summary = [thread_summary*]
 
 # --output=threads
-threads = [threadid*]
+search_threads = [threadid*]
 
 # --output=messages
-messages = [messageid*]
+search_messages = [messageid*]
 
 # --output=files
-files = [string*]
+search_files = [string*]
 
 # --output=tags
-tags = [string*]
+search_tags = [string*]
 
-thread = {
+thread_summary = {
     thread:         threadid,
     timestamp:      unix_time,
     date_relative:  string,   # user-friendly timestamp
