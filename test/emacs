@@ -864,6 +864,8 @@ EOF
 chmod a+x notmuch_fail
 test_emacs "(let ((notmuch-command \"$PWD/notmuch_fail\"))
 	       (with-current-buffer \"*Messages*\" (erase-buffer))
+	       (with-current-buffer (get-buffer-create \"*Notmuch errors*\")
+                 (erase-buffer))
 	       (notmuch-search \"tag:inbox\")
 	       (notmuch-test-wait)
 	       (with-current-buffer \"*Messages*\"
@@ -893,7 +895,8 @@ EOF
 chmod a+x notmuch_fail
 test_emacs "(let ((notmuch-command \"$PWD/notmuch_fail\"))
 	       (with-current-buffer \"*Messages*\" (erase-buffer))
-	       (with-current-buffer \"*Notmuch errors*\" (erase-buffer))
+	       (with-current-buffer (get-buffer-create \"*Notmuch errors*\")
+                 (erase-buffer))
 	       (notmuch-search \"tag:inbox\")
 	       (notmuch-test-wait)
 	       (with-current-buffer \"*Messages*\"
