@@ -628,6 +628,17 @@ You may need to restart Emacs or upgrade your notmuch package."))
 	;; `notmuch-logged-error' does not return.
 	))))
 
+(defun notmuch-call-notmuch-process (&rest args)
+  "Synchronously invoke \"notmuch\" with the given list of arguments.
+
+If notmuch exits with a non-zero status, output from the process
+will appear in a buffer named \"*Notmuch errors*\" and an error
+will be signaled."
+  (with-temp-buffer
+    (let ((status (apply #'call-process notmuch-command nil t nil args)))
+      (notmuch-check-exit-status status (cons notmuch-command args)
+				 (buffer-string)))))
+
 (defun notmuch-call-notmuch-sexp (&rest args)
   "Invoke `notmuch-command' with ARGS and return the parsed S-exp output.
 

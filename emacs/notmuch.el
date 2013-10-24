@@ -465,17 +465,6 @@ If BARE is set then do not prefix with \"thread:\""
   (let ((message-id (notmuch-search-find-thread-id)))
     (notmuch-mua-new-reply message-id prompt-for-sender nil)))
 
-(defun notmuch-call-notmuch-process (&rest args)
-  "Synchronously invoke \"notmuch\" with the given list of arguments.
-
-If notmuch exits with a non-zero status, output from the process
-will appear in a buffer named \"*Notmuch errors*\" and an error
-will be signaled."
-  (with-temp-buffer
-    (let ((status (apply #'call-process notmuch-command nil t nil args)))
-      (notmuch-check-exit-status status (cons notmuch-command args)
-				 (buffer-string)))))
-
 (defun notmuch-search-set-tags (tags &optional pos)
   (let ((new-result (plist-put (notmuch-search-get-result pos) :tags tags)))
     (notmuch-search-update-result new-result pos)))
