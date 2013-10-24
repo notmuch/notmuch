@@ -14,11 +14,6 @@ sender's name containing ';' which causes emacs to drop a search
 result.) This may require removing the outer array from the current
 "notmuch search --format=json" results.
 
-Fix '*' to work by simply calling '+' or '-' on a region consisting of
-the entire buffer, (this would avoid one race condition---while still
-leaving other race conditions---but could also potentially make '*' a
-very expensive operation).
-
 Add a global keybinding table for notmuch, and then view-specific
 tables that add to it.
 	

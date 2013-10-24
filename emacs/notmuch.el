@@ -400,14 +400,25 @@ If BARE is set then do not prefix with \"thread:\""
   (let ((thread (plist-get (notmuch-search-get-result) :thread)))
     (when thread (concat (unless bare "thread:") thread))))
 
-(defun notmuch-search-find-thread-id-region (beg end)
-  "Return a list of threads for the current region"
-  (mapcar (lambda (thread) (concat "thread:" thread))
-	  (notmuch-search-properties-in-region :thread beg end)))
+(defun notmuch-search-find-stable-query ()
+  "Return the stable queries for the current thread.
 
-(defun notmuch-search-find-thread-id-region-search (beg end)
-  "Return a search string for threads for the current region"
-  (mapconcat 'identity (notmuch-search-find-thread-id-region beg end) " or "))
+This returns a list (MATCHED-QUERY UNMATCHED-QUERY) for the
+matched and unmatched messages in the current thread."
+  (plist-get (notmuch-search-get-result) :query))
+
+(defun notmuch-search-find-stable-query-region (beg end &optional only-matched)
+  "Return the stable query for the current region.
+
+If ONLY-MATCHED is non-nil, include only matched messages.  If it
+is nil, include both matched and unmatched messages."
+  (let ((query-list nil) (all (not only-matched)))
+    (dolist (queries (notmuch-search-properties-in-region :query beg end))
+      (when (first queries)
+	(push (first queries) query-list))
+      (when (and all (second queries))
+	(push (second queries) query-list)))
+    (concat "(" (mapconcat 'identity query-list ") or (") ")")))
 
 (defun notmuch-search-find-authors ()
   "Return the authors for the current thread"
@@ -499,17 +510,20 @@ Returns (TAG-CHANGES REGION-BEGIN REGION-END)."
 	   (notmuch-search-get-tags-region beg end) prompt initial-input)
 	  region)))
 
-(defun notmuch-search-tag (tag-changes &optional beg end)
+(defun notmuch-search-tag (tag-changes &optional beg end only-matched)
   "Change tags for the currently selected thread or region.
 
 See `notmuch-tag' for information on the format of TAG-CHANGES.
 When called interactively, this uses the region if the region is
 active.  When called directly, BEG and END provide the region.
 If these are nil or not provided, this applies to the thread at
-point."
+point.
+
+If ONLY-MATCHED is non-nil, only tag matched messages."
   (interactive (notmuch-search-interactive-tag-changes))
   (unless (and beg end) (setq beg (point) end (point)))
-  (let ((search-string (notmuch-search-find-thread-id-region-search beg end)))
+  (let ((search-string (notmuch-search-find-stable-query-region
+			beg end only-matched)))
     (notmuch-tag search-string tag-changes)
     (notmuch-search-foreach-result beg end
       (lambda (pos)
@@ -779,7 +793,7 @@ See `notmuch-tag' for information on the format of TAG-CHANGES."
   (interactive
    (list (notmuch-read-tag-changes
 	  (notmuch-search-get-tags-region (point-min) (point-max)) "Tag all")))
-  (notmuch-tag notmuch-search-query-string tag-changes))
+  (notmuch-search-tag tag-changes (point-min) (point-max) t))
 
 (defun notmuch-search-buffer-title (query)
   "Returns the title for a buffer with notmuch search results."
@@ -883,7 +897,7 @@ the configured default sort order."
       (save-excursion
 	(let ((proc (notmuch-start-notmuch
 		     "notmuch-search" buffer #'notmuch-search-process-sentinel
-		     "search" "--format=sexp" "--format-version=1"
+		     "search" "--format=sexp" "--format-version=2"
 		     (if oldest-first
 			 "--sort=oldest-first"
 		       "--sort=newest-first")
