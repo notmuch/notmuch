@@ -26,6 +26,7 @@ test_expect_equal_json "$output" "[{\"thread\": \"XXX\",
  \"total\": 1,
  \"authors\": \"Notmuch Test Suite\",
  \"subject\": \"json-search-subject\",
+ \"query\": [\"id:$gen_msg_id\", null],
  \"tags\": [\"inbox\",
  \"unread\"]}]"
 
@@ -59,6 +60,7 @@ test_expect_equal_json "$output" "[{\"thread\": \"XXX\",
  \"total\": 1,
  \"authors\": \"Notmuch Test Suite\",
  \"subject\": \"json-search-utf8-body-sübjéct\",
+ \"query\": [\"id:$gen_msg_id\", null],
  \"tags\": [\"inbox\",
  \"unread\"]}]"
 

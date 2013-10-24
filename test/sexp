@@ -19,7 +19,7 @@ test_expect_equal "$output" "((((:id \"${gen_msg_id}\" :match t :excluded nil :f
 test_begin_subtest "Search message: sexp"
 add_message "[subject]=\"sexp-search-subject\"" "[date]=\"Sat, 01 Jan 2000 12:00:00 -0000\"" "[body]=\"sexp-search-message\""
 output=$(notmuch search --format=sexp "sexp-search-message" | notmuch_search_sanitize)
-test_expect_equal "$output" "((:thread \"0000000000000002\" :timestamp 946728000 :date_relative \"2000-01-01\" :matched 1 :total 1 :authors \"Notmuch Test Suite\" :subject \"sexp-search-subject\" :tags (\"inbox\" \"unread\")))"
+test_expect_equal "$output" "((:thread \"0000000000000002\" :timestamp 946728000 :date_relative \"2000-01-01\" :matched 1 :total 1 :authors \"Notmuch Test Suite\" :subject \"sexp-search-subject\" :query (\"id:$gen_msg_id\" nil) :tags (\"inbox\" \"unread\")))"
 
 test_begin_subtest "Show message: sexp, utf-8"
 add_message "[subject]=\"sexp-show-utf8-body-sübjéct\"" "[date]=\"Sat, 01 Jan 2000 12:00:00 -0000\"" "[body]=\"jsön-show-méssage\""
@@ -44,7 +44,7 @@ test_expect_equal "$output" "((((:id \"$id\" :match t :excluded nil :filename \"
 test_begin_subtest "Search message: sexp, utf-8"
 add_message "[subject]=\"sexp-search-utf8-body-sübjéct\"" "[date]=\"Sat, 01 Jan 2000 12:00:00 -0000\"" "[body]=\"jsön-search-méssage\""
 output=$(notmuch search --format=sexp "jsön-search-méssage" | notmuch_search_sanitize)
-test_expect_equal "$output" "((:thread \"0000000000000005\" :timestamp 946728000 :date_relative \"2000-01-01\" :matched 1 :total 1 :authors \"Notmuch Test Suite\" :subject \"sexp-search-utf8-body-sübjéct\" :tags (\"inbox\" \"unread\")))"
+test_expect_equal "$output" "((:thread \"0000000000000005\" :timestamp 946728000 :date_relative \"2000-01-01\" :matched 1 :total 1 :authors \"Notmuch Test Suite\" :subject \"sexp-search-utf8-body-sübjéct\" :query (\"id:$gen_msg_id\" nil) :tags (\"inbox\" \"unread\")))"
 
 
 test_done

@@ -20,6 +20,7 @@
 
 #include "notmuch-client.h"
 #include "sprinter.h"
+#include "string-util.h"
 
 typedef enum {
     OUTPUT_SUMMARY,
@@ -44,6 +45,45 @@ sanitize_string (const void *ctx, const char *str)
 	    *loop = '?';
     }
     return out;
+}
+
+/* Return two stable query strings that identify exactly the matched
+ * and unmatched messages currently in thread.  If there are no
+ * matched or unmatched messages, the returned buffers will be
+ * NULL. */
+static int
+get_thread_query (notmuch_thread_t *thread,
+		  char **matched_out, char **unmatched_out)
+{
+    notmuch_messages_t *messages;
+    char *escaped = NULL;
+    size_t escaped_len = 0;
+
+    *matched_out = *unmatched_out = NULL;
+
+    for (messages = notmuch_thread_get_messages (thread);
+	 notmuch_messages_valid (messages);
+	 notmuch_messages_move_to_next (messages))
+    {
+	notmuch_message_t *message = notmuch_messages_get (messages);
+	const char *mid = notmuch_message_get_message_id (message);
+	/* Determine which query buffer to extend */
+	char **buf = notmuch_message_get_flag (
+	    message, NOTMUCH_MESSAGE_FLAG_MATCH) ? matched_out : unmatched_out;
+	/* Add this message's id: query.  Since "id" is an exclusive
+	 * prefix, it is implicitly 'or'd together, so we only need to
+	 * join queries with a space. */
+	if (make_boolean_term (thread, "id", mid, &escaped, &escaped_len) < 0)
+	    return -1;
+	if (*buf)
+	    *buf = talloc_asprintf_append_buffer (*buf, " %s", escaped);
+	else
+	    *buf = talloc_strdup (thread, escaped);
+	if (!*buf)
+	    return -1;
+    }
+    talloc_free (escaped);
+    return 0;
 }
 
 static int
@@ -131,6 +171,25 @@ do_search_threads (sprinter_t *format,
 		format->string (format, authors);
 		format->map_key (format, "subject");
 		format->string (format, subject);
+		if (notmuch_format_version >= 2) {
+		    char *matched_query, *unmatched_query;
+		    if (get_thread_query (thread, &matched_query,
+					  &unmatched_query) < 0) {
+			fprintf (stderr, "Out of memory\n");
+			return 1;
+		    }
+		    format->map_key (format, "query");
+		    format->begin_list (format);
+		    if (matched_query)
+			format->string (format, matched_query);
+		    else
+			format->null (format);
+		    if (unmatched_query)
+			format->string (format, unmatched_query);
+		    else
+			format->null (format);
+		    format->end (format);
+		}
 	    }
 
 	    talloc_free (ctx_quote);
