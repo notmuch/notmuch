@@ -127,7 +127,7 @@ by the notmuch CLI (it requires at least version %d).  You may need to\n\
 upgrade your notmuch front-end.\n",
 		 notmuch_format_version, NOTMUCH_FORMAT_MIN);
 	exit (NOTMUCH_EXIT_FORMAT_TOO_OLD);
-    } else if (notmuch_format_version != NOTMUCH_FORMAT_CUR) {
+    } else if (notmuch_format_version < NOTMUCH_FORMAT_MIN_ACTIVE) {
 	/* Warn about old version requests so compatibility issues are
 	 * less likely when we drop support for a deprecated format
 	 * versions. */

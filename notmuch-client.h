@@ -142,6 +142,12 @@ chomp_newline (char *str)
 /* The minimum supported structured output format version.  Requests
  * for format versions below this will return an error. */
 #define NOTMUCH_FORMAT_MIN 1
+/* The minimum non-deprecated structured output format version.
+ * Requests for format versions below this will print a stern warning.
+ * Must be between NOTMUCH_FORMAT_MIN and NOTMUCH_FORMAT_CUR,
+ * inclusive.
+ */
+#define NOTMUCH_FORMAT_MIN_ACTIVE 1
 
 /* The output format version requested by the caller on the command
  * line.  If no format version is requested, this will be set to
