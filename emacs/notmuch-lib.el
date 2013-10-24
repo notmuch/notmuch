@@ -628,28 +628,55 @@ You may need to restart Emacs or upgrade your notmuch package."))
 	;; `notmuch-logged-error' does not return.
 	))))
 
+(defun notmuch-call-notmuch--helper (destination args)
+  "Helper for synchronous notmuch invocation commands.
+
+This wraps `call-process'.  DESTINATION has the same meaning as
+for `call-process'.  ARGS is as described for
+`notmuch-call-notmuch-process'."
+
+  (let (stdin-string)
+    (while (keywordp (car args))
+      (case (car args)
+	(:stdin-string (setq stdin-string (cadr args)
+			     args (cddr args)))
+	(otherwise
+	 (error "Unknown keyword argument: %s" (car args)))))
+    (if (null stdin-string)
+	(apply #'call-process notmuch-command nil destination nil args)
+      (insert stdin-string)
+      (apply #'call-process-region (point-min) (point-max)
+	     notmuch-command t destination nil args))))
+
 (defun notmuch-call-notmuch-process (&rest args)
-  "Synchronously invoke \"notmuch\" with the given list of arguments.
+  "Synchronously invoke `notmuch-command' with ARGS.
+
+The caller may provide keyword arguments before ARGS.  Currently
+supported keyword arguments are:
+
+  :stdin-string STRING - Write STRING to stdin
 
 If notmuch exits with a non-zero status, output from the process
 will appear in a buffer named \"*Notmuch errors*\" and an error
 will be signaled."
   (with-temp-buffer
-    (let ((status (apply #'call-process notmuch-command nil t nil args)))
+    (let ((status (notmuch-call-notmuch--helper t args)))
       (notmuch-check-exit-status status (cons notmuch-command args)
 				 (buffer-string)))))
 
 (defun notmuch-call-notmuch-sexp (&rest args)
   "Invoke `notmuch-command' with ARGS and return the parsed S-exp output.
 
-If notmuch exits with a non-zero status, this will pop up a
-buffer containing notmuch's output and signal an error."
+This is equivalent to `notmuch-call-notmuch-process', but parses
+notmuch's output as an S-expression and returns the parsed value.
+Like `notmuch-call-notmuch-process', if notmuch exits with a
+non-zero status, this will report its output and signal an
+error."
 
   (with-temp-buffer
     (let ((err-file (make-temp-file "nmerr")))
       (unwind-protect
-	  (let ((status (apply #'call-process
-			       notmuch-command nil (list t err-file) nil args)))
+	  (let ((status (notmuch-call-notmuch--helper (list t err-file) args)))
 	    (notmuch-check-exit-status status (cons notmuch-command args)
 				       (buffer-string) err-file)
 	    (goto-char (point-min))
