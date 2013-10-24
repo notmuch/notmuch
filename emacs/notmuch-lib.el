@@ -355,6 +355,14 @@ user-friendly queries."
   "Return a query that matches the message with id ID."
   (concat "id:" (notmuch-escape-boolean-term id)))
 
+(defun notmuch-hex-encode (str)
+  "Hex-encode STR (e.g., as used by batch tagging).
+
+This replaces spaces, percents, and double quotes in STR with
+%NN where NN is the hexadecimal value of the character."
+  (replace-regexp-in-string
+   "[ %\"]" (lambda (match) (format "%%%02x" (aref match 0))) str))
+
 ;;
 
 (defun notmuch-common-do-stash (text)

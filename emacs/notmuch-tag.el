@@ -261,6 +261,12 @@ from TAGS if present."
 	   (error "Changed tag must be of the form `+this_tag' or `-that_tag'")))))
     (sort result-tags 'string<)))
 
+(defconst notmuch-tag-argument-limit 1000
+  "Use batch tagging if the tagging query is longer than this.
+
+This limits the length of arguments passed to the notmuch CLI to
+avoid system argument length limits and performance problems.")
+
 (defun notmuch-tag (query tag-changes)
   "Add/remove tags in TAG-CHANGES to messages matching QUERY.
 
@@ -279,8 +285,13 @@ notmuch-after-tag-hook will be run."
 	tag-changes)
   (unless (null tag-changes)
     (run-hooks 'notmuch-before-tag-hook)
-    (apply 'notmuch-call-notmuch-process "tag"
-	   (append tag-changes (list "--" query)))
+    (if (<= (length query) notmuch-tag-argument-limit)
+	(apply 'notmuch-call-notmuch-process "tag"
+	       (append tag-changes (list "--" query)))
+      ;; Use batch tag mode to avoid argument length limitations
+      (let ((batch-op (concat (mapconcat #'notmuch-hex-encode tag-changes " ")
+			      " -- " query)))
+	(notmuch-call-notmuch-process :stdin-string batch-op "tag" "--batch")))
     (run-hooks 'notmuch-after-tag-hook)))
 
 (defun notmuch-tag-change-list (tags &optional reverse)
