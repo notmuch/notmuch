@@ -114,6 +114,12 @@ are multiple ideas that might make sense. Some consensus needs to be
 reached on this issue, and then both reply formats should be updated
 to be consistent.
 
+Return docid-based queries in thread search results, instead of
+message-id-based queries.  These are much more compact and much faster
+to later query.  This will require support from the library, both for
+retrieving docids (probably as an opaque "get a query that identifies
+this message") and for docid queries.
+
 notmuch library
 ---------------
 Add support for custom flag<->tag mappings. In the notmuch
