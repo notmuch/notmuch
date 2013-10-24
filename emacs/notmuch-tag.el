@@ -230,8 +230,16 @@ initial input in the minibuffer."
 	    (set-keymap-parent map crm-local-completion-map)
 	    (define-key map " " 'self-insert-command)
 	    map)))
-    (delete "" (completing-read-multiple prompt
-		tag-list nil nil initial-input
+    (delete "" (completing-read-multiple
+		prompt
+		;; Append the separator to each completion so when the
+		;; user completes a tag they can immediately begin
+		;; entering another.  `completing-read-multiple'
+		;; ultimately splits the input on crm-separator, so we
+		;; don't need to strip this back off (we just need to
+		;; delete "empty" entries caused by trailing spaces).
+		(mapcar (lambda (tag-op) (concat tag-op crm-separator)) tag-list)
+		nil nil initial-input
 		'notmuch-read-tag-changes-history))))
 
 (defun notmuch-update-tags (tags tag-changes)
