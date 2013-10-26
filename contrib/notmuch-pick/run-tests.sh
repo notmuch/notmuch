@@ -7,7 +7,7 @@ fail() {
     exit 1
 }
 
-TESTS="emacs-pick"
+TESTS="emacs-tree"
 TESTFILES="$TESTS tree.expected-output"
 
 export PICK_DIR="`cd \`dirname "$0"\` && pwd`"
