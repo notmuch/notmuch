@@ -16,8 +16,8 @@ test_expect_equal_file OUTPUT EXPECTED
 
 test_begin_subtest "Basic notmuch-pick view in emacs"
 test_emacs '(add-to-list (quote load-path) "'$PICK_DIR'")
-	    (require (quote notmuch-pick))
-	    (notmuch-pick "tag:inbox")
+	    (require (quote notmuch-tree))
+	    (notmuch-tree "tag:inbox")
 	    (notmuch-test-wait)
 	    (test-output)
 	    (delete-other-windows)'
@@ -25,10 +25,10 @@ test_expect_equal_file OUTPUT $EXPECTED/notmuch-pick-tag-inbox
 
 test_begin_subtest "Refreshed notmuch-pick view in emacs"
 test_emacs '(add-to-list (quote load-path) "'$PICK_DIR'")
-	    (require (quote notmuch-pick))
-	    (notmuch-pick "tag:inbox")
+	    (require (quote notmuch-tree))
+	    (notmuch-tree "tag:inbox")
 	    (notmuch-test-wait)
-	    (notmuch-pick-refresh-view)
+	    (notmuch-tree-refresh-view)
 	    (notmuch-test-wait)
 	    (test-output)
 	    (delete-other-windows)'
@@ -40,11 +40,11 @@ test_expect_equal_file OUTPUT $EXPECTED/notmuch-pick-tag-inbox
 
 test_begin_subtest "Tag message in notmuch pick view (display)"
 test_emacs '(add-to-list (quote load-path) "'$PICK_DIR'")
-	    (require (quote notmuch-pick))
-	    (notmuch-pick "tag:inbox")
+	    (require (quote notmuch-tree))
+	    (notmuch-tree "tag:inbox")
 	    (notmuch-test-wait)
 	    (forward-line)
-	    (notmuch-pick-tag (list "+test_tag"))
+	    (notmuch-tree-tag (list "+test_tag"))
 	    (test-output)
 	    (delete-other-windows)'
 test_expect_equal_file OUTPUT $EXPECTED/notmuch-pick-tag-inbox-tagged
@@ -55,11 +55,11 @@ test_expect_equal "$output" "id:877h1wv7mg.fsf@inf-8657.int-evry.fr"
 
 test_begin_subtest "Untag message in notmuch pick view"
 test_emacs '(add-to-list (quote load-path) "'$PICK_DIR'")
-	    (require (quote notmuch-pick))
-	    (notmuch-pick "tag:inbox")
+	    (require (quote notmuch-tree))
+	    (notmuch-tree "tag:inbox")
 	    (notmuch-test-wait)
 	    (forward-line)
-	    (notmuch-pick-tag (list "-test_tag"))
+	    (notmuch-tree-tag (list "-test_tag"))
 	    (test-output)
 	    (delete-other-windows)'
 test_expect_equal_file OUTPUT $EXPECTED/notmuch-pick-tag-inbox
@@ -70,12 +70,12 @@ test_expect_equal "$output" ""
 
 test_begin_subtest "Tag thread in notmuch pick view"
 test_emacs '(add-to-list (quote load-path) "'$PICK_DIR'")
-	    (require (quote notmuch-pick))
-	    (notmuch-pick "tag:inbox")
+	    (require (quote notmuch-tree))
+	    (notmuch-tree "tag:inbox")
 	    (notmuch-test-wait)
 	    ;; move to a sizable thread
 	    (forward-line 26)
-	    (notmuch-pick-tag-thread (list "+test_thread_tag"))
+	    (notmuch-tree-tag-thread (list "+test_thread_tag"))
 	    (test-output)
 	    (delete-other-windows)'
 test_expect_equal_file OUTPUT $EXPECTED/notmuch-pick-tag-inbox-thread-tagged
@@ -93,12 +93,12 @@ id:20091117190054.GU3165@dottiness.seas.harvard.edu"
 
 test_begin_subtest "Untag thread in notmuch pick view"
 test_emacs '(add-to-list (quote load-path) "'$PICK_DIR'")
-	    (require (quote notmuch-pick))
-	    (notmuch-pick "tag:inbox")
+	    (require (quote notmuch-tree))
+	    (notmuch-tree "tag:inbox")
 	    (notmuch-test-wait)
 	    ;; move to the same sizable thread as above
 	    (forward-line 26)
-	    (notmuch-pick-tag-thread (list "-test_thread_tag"))
+	    (notmuch-tree-tag-thread (list "-test_thread_tag"))
 	    (test-output)
 	    (delete-other-windows)'
 test_expect_equal_file OUTPUT $EXPECTED/notmuch-pick-tag-inbox
@@ -113,7 +113,7 @@ test_emacs '(notmuch-hello)
 	    (re-search-forward "inbox")
 	    (widget-button-press (1- (point)))
 	    (notmuch-test-wait)
-	    (notmuch-pick-from-search-current-query)
+	    (notmuch-tree-from-search-current-query)
 	    (notmuch-test-wait)
 	    (test-output)
 	    (delete-other-windows)'
@@ -125,7 +125,7 @@ test_emacs '(notmuch-hello)
 	    (re-search-forward "inbox")
 	    (widget-button-press (1- (point)))
 	    (notmuch-test-wait)
-	    (notmuch-pick-from-search-thread)
+	    (notmuch-tree-from-search-thread)
 	    (notmuch-test-wait)
 	    (test-output)
 	    (delete-other-windows)'
@@ -138,7 +138,7 @@ test_emacs '(notmuch-hello)
 	    (widget-button-press (1- (point)))
 	    (notmuch-test-wait)
 	    (notmuch-search-show-thread)
-	    (notmuch-pick-from-show-current-query)
+	    (notmuch-tree-from-show-current-query)
 	    (notmuch-test-wait)
 	    (test-output)
 	    (delete-other-windows)'
@@ -151,9 +151,9 @@ test_emacs '(notmuch-hello)
 	    (widget-button-press (1- (point)))
 	    (notmuch-test-wait)
 	    (notmuch-search-next-thread)
-	    (notmuch-pick-from-search-thread)
+	    (notmuch-tree-from-search-thread)
 	    (notmuch-test-wait)
-	    (select-window notmuch-pick-message-window)
+	    (select-window notmuch-tree-message-window)
 	    (test-output)
 	    (delete-other-windows)'
 cp OUTPUT /tmp/mjwout
@@ -161,49 +161,49 @@ test_expect_equal_file OUTPUT $EXPECTED/notmuch-pick-show-window
 
 test_begin_subtest "Stash id"
 output=$(test_emacs '(add-to-list (quote load-path) "'$PICK_DIR'")
-		     (require (quote notmuch-pick))
-		     (notmuch-pick "id:1258498485-sup-142@elly")
+		     (require (quote notmuch-tree))
+		     (notmuch-tree "id:1258498485-sup-142@elly")
 		     (notmuch-test-wait)
 		     (notmuch-show-stash-message-id)')
 test_expect_equal "$output" "\"Stashed: id:1258498485-sup-142@elly\""
 
 test_begin_subtest "Move to next matching message"
 output=$(test_emacs '(add-to-list (quote load-path) "'$PICK_DIR'")
-		     (require (quote notmuch-pick))
-		     (notmuch-pick "from:cworth")
+		     (require (quote notmuch-tree))
+		     (notmuch-tree "from:cworth")
 		     (notmuch-test-wait)
-		     (notmuch-pick-next-matching-message)
+		     (notmuch-tree-next-matching-message)
 		     (notmuch-show-stash-message-id)')
 test_expect_equal "$output" "\"Stashed: id:878we4qdqf.fsf@yoom.home.cworth.org\""
 
 test_begin_subtest "Move to next thread"
 output=$(test_emacs '(add-to-list (quote load-path) "'$PICK_DIR'")
-		     (require (quote notmuch-pick))
-		     (notmuch-pick "tag:inbox")
+		     (require (quote notmuch-tree))
+		     (notmuch-tree "tag:inbox")
 		     (notmuch-test-wait)
 		     (forward-line 26)
-		     (notmuch-pick-next-thread)
+		     (notmuch-tree-next-thread)
 		     (notmuch-show-stash-message-id)')
 test_expect_equal "$output" "\"Stashed: id:1258471718-6781-1-git-send-email-dottedmag@dottedmag.net\""
 
 test_begin_subtest "Move to previous thread"
 output=$(test_emacs '(add-to-list (quote load-path) "'$PICK_DIR'")
-		     (require (quote notmuch-pick))
-		     (notmuch-pick "tag:inbox")
+		     (require (quote notmuch-tree))
+		     (notmuch-tree "tag:inbox")
 		     (notmuch-test-wait)
 		     (forward-line 26)
-		     (notmuch-pick-prev-thread)
+		     (notmuch-tree-prev-thread)
 		     (notmuch-show-stash-message-id)')
 test_expect_equal "$output" "\"Stashed: id:20091117190054.GU3165@dottiness.seas.harvard.edu\""
 
 test_begin_subtest "Move to previous previous thread"
 output=$(test_emacs '(add-to-list (quote load-path) "'$PICK_DIR'")
-		     (require (quote notmuch-pick))
-		     (notmuch-pick "tag:inbox")
+		     (require (quote notmuch-tree))
+		     (notmuch-tree "tag:inbox")
 		     (notmuch-test-wait)
 		     (forward-line 26)
-		     (notmuch-pick-prev-thread)
-		     (notmuch-pick-prev-thread)
+		     (notmuch-tree-prev-thread)
+		     (notmuch-tree-prev-thread)
 		     (notmuch-show-stash-message-id)')
 test_expect_equal "$output" "\"Stashed: id:1258493565-13508-1-git-send-email-keithp@keithp.com\""
 
