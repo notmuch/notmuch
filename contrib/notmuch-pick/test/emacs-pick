@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-test_description="emacs pick interface"
+test_description="emacs tree view interface"
 . test-lib.sh
 
 EXPECTED=$TEST_DIRECTORY/pick.expected-output
@@ -14,7 +14,7 @@ hello
 EOF
 test_expect_equal_file OUTPUT EXPECTED
 
-test_begin_subtest "Basic notmuch-pick view in emacs"
+test_begin_subtest "Basic notmuch-tree view in emacs"
 test_emacs '(add-to-list (quote load-path) "'$PICK_DIR'")
 	    (require (quote notmuch-tree))
 	    (notmuch-tree "tag:inbox")
@@ -23,7 +23,7 @@ test_emacs '(add-to-list (quote load-path) "'$PICK_DIR'")
 	    (delete-other-windows)'
 test_expect_equal_file OUTPUT $EXPECTED/notmuch-pick-tag-inbox
 
-test_begin_subtest "Refreshed notmuch-pick view in emacs"
+test_begin_subtest "Refreshed notmuch-tree view in emacs"
 test_emacs '(add-to-list (quote load-path) "'$PICK_DIR'")
 	    (require (quote notmuch-tree))
 	    (notmuch-tree "tag:inbox")
@@ -38,7 +38,7 @@ test_expect_equal_file OUTPUT $EXPECTED/notmuch-pick-tag-inbox
 # correctly and, in a separate test, that the database is updated
 # correctly.
 
-test_begin_subtest "Tag message in notmuch pick view (display)"
+test_begin_subtest "Tag message in notmuch tree view (display)"
 test_emacs '(add-to-list (quote load-path) "'$PICK_DIR'")
 	    (require (quote notmuch-tree))
 	    (notmuch-tree "tag:inbox")
@@ -49,11 +49,11 @@ test_emacs '(add-to-list (quote load-path) "'$PICK_DIR'")
 	    (delete-other-windows)'
 test_expect_equal_file OUTPUT $EXPECTED/notmuch-pick-tag-inbox-tagged
 
-test_begin_subtest "Tag message in notmuch pick view (database)"
+test_begin_subtest "Tag message in notmuch tree view (database)"
 output=$(notmuch search --output=messages 'tag:test_tag')
 test_expect_equal "$output" "id:877h1wv7mg.fsf@inf-8657.int-evry.fr"
 
-test_begin_subtest "Untag message in notmuch pick view"
+test_begin_subtest "Untag message in notmuch tree view"
 test_emacs '(add-to-list (quote load-path) "'$PICK_DIR'")
 	    (require (quote notmuch-tree))
 	    (notmuch-tree "tag:inbox")
@@ -64,11 +64,11 @@ test_emacs '(add-to-list (quote load-path) "'$PICK_DIR'")
 	    (delete-other-windows)'
 test_expect_equal_file OUTPUT $EXPECTED/notmuch-pick-tag-inbox
 
-test_begin_subtest "Untag message in notmuch pick view (database)"
+test_begin_subtest "Untag message in notmuch tree view (database)"
 output=$(notmuch search --output=messages 'tag:test_tag')
 test_expect_equal "$output" ""
 
-test_begin_subtest "Tag thread in notmuch pick view"
+test_begin_subtest "Tag thread in notmuch tree view"
 test_emacs '(add-to-list (quote load-path) "'$PICK_DIR'")
 	    (require (quote notmuch-tree))
 	    (notmuch-tree "tag:inbox")
@@ -80,7 +80,7 @@ test_emacs '(add-to-list (quote load-path) "'$PICK_DIR'")
 	    (delete-other-windows)'
 test_expect_equal_file OUTPUT $EXPECTED/notmuch-pick-tag-inbox-thread-tagged
 
-test_begin_subtest "Tag message in notmuch pick view (database)"
+test_begin_subtest "Tag message in notmuch tree view (database)"
 output=$(notmuch search --output=messages 'tag:test_thread_tag')
 test_expect_equal "$output" \
 "id:87ocn0qh6d.fsf@yoom.home.cworth.org
@@ -91,7 +91,7 @@ id:20091117203301.GV3165@dottiness.seas.harvard.edu
 id:87iqd9rn3l.fsf@vertex.dottedmag
 id:20091117190054.GU3165@dottiness.seas.harvard.edu"
 
-test_begin_subtest "Untag thread in notmuch pick view"
+test_begin_subtest "Untag thread in notmuch tree view"
 test_emacs '(add-to-list (quote load-path) "'$PICK_DIR'")
 	    (require (quote notmuch-tree))
 	    (notmuch-tree "tag:inbox")
@@ -103,7 +103,7 @@ test_emacs '(add-to-list (quote load-path) "'$PICK_DIR'")
 	    (delete-other-windows)'
 test_expect_equal_file OUTPUT $EXPECTED/notmuch-pick-tag-inbox
 
-test_begin_subtest "Untag message in notmuch pick view (database)"
+test_begin_subtest "Untag message in notmuch tree view (database)"
 output=$(notmuch search --output=messages 'tag:test_thread_tag')
 test_expect_equal "$output" ""
 
@@ -119,7 +119,7 @@ test_emacs '(notmuch-hello)
 	    (delete-other-windows)'
 test_expect_equal_file OUTPUT $EXPECTED/notmuch-pick-tag-inbox
 
-test_begin_subtest "Pick of a single thread (from search)"
+test_begin_subtest "Tree view of a single thread (from search)"
 test_emacs '(notmuch-hello)
 	    (goto-char (point-min))
 	    (re-search-forward "inbox")
@@ -131,7 +131,7 @@ test_emacs '(notmuch-hello)
 	    (delete-other-windows)'
 test_expect_equal_file OUTPUT $EXPECTED/notmuch-pick-single-thread
 
-test_begin_subtest "Pick of a single thread (from show)"
+test_begin_subtest "Tree view of a single thread (from show)"
 test_emacs '(notmuch-hello)
 	    (goto-char (point-min))
 	    (re-search-forward "inbox")
@@ -144,7 +144,7 @@ test_emacs '(notmuch-hello)
 	    (delete-other-windows)'
 test_expect_equal_file OUTPUT $EXPECTED/notmuch-pick-single-thread
 
-test_begin_subtest "Message window of pick"
+test_begin_subtest "Message window of tree view"
 test_emacs '(notmuch-hello)
 	    (goto-char (point-min))
 	    (re-search-forward "inbox")
