@@ -944,7 +944,9 @@ DONE:
 }
 #else
 notmuch_status_t
-notmuch_database_compact_close (unused (notmuch_database_t *notmuch))
+notmuch_database_compact (unused (const char* path),
+			  unused (const char* backup_path),
+			  unused (notmuch_compact_status_cb_t status_cb))
 {
     fprintf (stderr, "notmuch was compiled against a xapian version lacking compaction support.\n");
     return NOTMUCH_STATUS_UNSUPPORTED_OPERATION;
