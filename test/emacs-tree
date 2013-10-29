@@ -6,13 +6,6 @@ test_description="emacs tree view interface"
 EXPECTED=$TEST_DIRECTORY/tree.expected-output
 
 add_email_corpus
-test_begin_subtest "Do we have emacs"
-test_emacs '(insert "hello\n")
-	    (test-output)'
-cat <<EOF >EXPECTED
-hello
-EOF
-test_expect_equal_file OUTPUT EXPECTED
 
 test_begin_subtest "Basic notmuch-tree view in emacs"
 test_emacs '(add-to-list (quote load-path) "'$PICK_DIR'")
