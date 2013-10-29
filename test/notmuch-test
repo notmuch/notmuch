@@ -63,6 +63,7 @@ TESTS="
   emacs-address-cleaning
   emacs-hello
   emacs-show
+  emacs-tree
   missing-headers
   hex-escaping
   parse-time-string
