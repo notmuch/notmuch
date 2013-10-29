@@ -27,20 +27,15 @@
 (require 'notmuch-lib)
 (require 'notmuch-query)
 (require 'notmuch-show)
+(require 'notmuch-tag)
+(require 'notmuch-parser)
 (require 'notmuch) ;; XXX ATM, as notmuch-search-mode-map is defined here
 
 (eval-when-compile (require 'cl))
-
+(declare-function notmuch-search "notmuch" (&optional query oldest-first target-thread target-line))
 (declare-function notmuch-call-notmuch-process "notmuch" (&rest args))
-(declare-function notmuch-show "notmuch-show" (&rest args))
-(declare-function notmuch-tag "notmuch" (query &rest tags))
-(declare-function notmuch-show-strip-re "notmuch-show" (subject))
-(declare-function notmuch-show-spaces-n "notmuch-show" (n))
 (declare-function notmuch-read-query "notmuch" (prompt))
-(declare-function notmuch-read-tag-changes "notmuch" (current-tags &optional prompt initial-input))
-(declare-function notmuch-update-tags "notmuch" (current-tags tag-changes))
-(declare-function notmuch-hello-trim "notmuch-hello" (search))
-(declare-function notmuch-search-find-thread-id "notmuch" ())
+(declare-function notmuch-search-find-thread-id "notmuch" (&optional bare))
 (declare-function notmuch-search-find-subject "notmuch" ())
 
 ;; the following variable is defined in notmuch.el
