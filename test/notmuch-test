@@ -19,6 +19,7 @@ cd $(dirname "$0")
 TESTS="
   basic
   help-test
+  compact
   config
   setup
   new
