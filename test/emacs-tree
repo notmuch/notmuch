@@ -9,7 +9,6 @@ add_email_corpus
 
 test_begin_subtest "Basic notmuch-tree view in emacs"
 test_emacs '(add-to-list (quote load-path) "'$PICK_DIR'")
-	    (require (quote notmuch-tree))
 	    (notmuch-tree "tag:inbox")
 	    (notmuch-test-wait)
 	    (test-output)
@@ -18,7 +17,6 @@ test_expect_equal_file OUTPUT $EXPECTED/notmuch-tree-tag-inbox
 
 test_begin_subtest "Refreshed notmuch-tree view in emacs"
 test_emacs '(add-to-list (quote load-path) "'$PICK_DIR'")
-	    (require (quote notmuch-tree))
 	    (notmuch-tree "tag:inbox")
 	    (notmuch-test-wait)
 	    (notmuch-tree-refresh-view)
@@ -33,7 +31,6 @@ test_expect_equal_file OUTPUT $EXPECTED/notmuch-tree-tag-inbox
 
 test_begin_subtest "Tag message in notmuch tree view (display)"
 test_emacs '(add-to-list (quote load-path) "'$PICK_DIR'")
-	    (require (quote notmuch-tree))
 	    (notmuch-tree "tag:inbox")
 	    (notmuch-test-wait)
 	    (forward-line)
@@ -48,7 +45,6 @@ test_expect_equal "$output" "id:877h1wv7mg.fsf@inf-8657.int-evry.fr"
 
 test_begin_subtest "Untag message in notmuch tree view"
 test_emacs '(add-to-list (quote load-path) "'$PICK_DIR'")
-	    (require (quote notmuch-tree))
 	    (notmuch-tree "tag:inbox")
 	    (notmuch-test-wait)
 	    (forward-line)
@@ -63,7 +59,6 @@ test_expect_equal "$output" ""
 
 test_begin_subtest "Tag thread in notmuch tree view"
 test_emacs '(add-to-list (quote load-path) "'$PICK_DIR'")
-	    (require (quote notmuch-tree))
 	    (notmuch-tree "tag:inbox")
 	    (notmuch-test-wait)
 	    ;; move to a sizable thread
@@ -86,7 +81,6 @@ id:20091117190054.GU3165@dottiness.seas.harvard.edu"
 
 test_begin_subtest "Untag thread in notmuch tree view"
 test_emacs '(add-to-list (quote load-path) "'$PICK_DIR'")
-	    (require (quote notmuch-tree))
 	    (notmuch-tree "tag:inbox")
 	    (notmuch-test-wait)
 	    ;; move to the same sizable thread as above
