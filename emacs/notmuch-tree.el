@@ -29,7 +29,6 @@
 (require 'notmuch-show)
 (require 'notmuch-tag)
 (require 'notmuch-parser)
-(require 'notmuch) ;; XXX ATM, as notmuch-search-mode-map is defined here
 
 (eval-when-compile (require 'cl))
 (declare-function notmuch-search "notmuch" (&optional query oldest-first target-thread target-line))
@@ -939,8 +938,6 @@ The arguments are:
 
 ;; Set up key bindings from the rest of notmuch.
 (define-key notmuch-common-keymap "z" 'notmuch-tree)
-(define-key notmuch-search-mode-map "Z" 'notmuch-tree-from-search-current-query)
 (define-key notmuch-show-mode-map "Z" 'notmuch-tree-from-show-current-query)
-(message "Initialised notmuch-tree")
 
 (provide 'notmuch-tree)
