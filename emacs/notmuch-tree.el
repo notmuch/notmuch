@@ -919,7 +919,6 @@ The arguments are:
 
 
 ;; Set up key bindings from the rest of notmuch.
-(define-key notmuch-common-keymap "z" 'notmuch-tree)
 (define-key notmuch-show-mode-map "Z" 'notmuch-tree-from-show-current-query)
 
 (provide 'notmuch-tree)
