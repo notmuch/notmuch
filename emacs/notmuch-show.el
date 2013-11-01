@@ -44,6 +44,8 @@
 (declare-function notmuch-foreach-mime-part "notmuch" (function mm-handle))
 (declare-function notmuch-count-attachments "notmuch" (mm-handle))
 (declare-function notmuch-save-attachments "notmuch" (mm-handle &optional queryp))
+(declare-function notmuch-tree "notmuch-tree"
+		  (&optional query query-context target buffer-name open-target))
 
 (defcustom notmuch-message-headers '("Subject" "To" "Cc" "Date")
   "Headers that should be shown in a message, in this order.
@@ -1247,6 +1249,7 @@ reset based on the original query."
 (defvar notmuch-show-mode-map
       (let ((map (make-sparse-keymap)))
 	(set-keymap-parent map notmuch-common-keymap)
+	(define-key map "Z" 'notmuch-tree-from-show-current-query)
 	(define-key map (kbd "<C-tab>") 'widget-backward)
 	(define-key map (kbd "M-TAB") 'notmuch-show-previous-button)
 	(define-key map (kbd "<backtab>") 'notmuch-show-previous-button)
@@ -1322,6 +1325,13 @@ All currently available key bindings:
 	mode-name "notmuch-show")
   (setq buffer-read-only t
 	truncate-lines t))
+
+(defun notmuch-tree-from-show-current-query ()
+  "Call notmuch tree with the current query"
+  (interactive)
+  (notmuch-tree notmuch-show-thread-id
+		notmuch-show-query-context
+		(notmuch-show-get-message-id)))
 
 (defun notmuch-show-move-to-message-top ()
   (goto-char (notmuch-show-message-top)))

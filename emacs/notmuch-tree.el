@@ -404,15 +404,6 @@ Does NOT change the database."
     (notmuch-tree-close-message-window)
     (notmuch-tree query)))
 
-;; This function should be in notmuch-show.el but be we trying to
-;; minimise impact on the rest of the codebase.
-(defun notmuch-tree-from-show-current-query ()
-  "Call notmuch tree with the current query"
-  (interactive)
-  (notmuch-tree notmuch-show-thread-id
-		notmuch-show-query-context
-		(notmuch-show-get-message-id)))
-
 (defun notmuch-tree-message-window-kill-hook ()
   "Close the message pane when exiting the show buffer."
   (let ((buffer (current-buffer)))
@@ -918,7 +909,6 @@ The arguments are:
   (setq truncate-lines t))
 
 
-;; Set up key bindings from the rest of notmuch.
-(define-key notmuch-show-mode-map "Z" 'notmuch-tree-from-show-current-query)
+;;
 
 (provide 'notmuch-tree)
