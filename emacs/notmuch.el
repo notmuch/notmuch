@@ -439,6 +439,20 @@ If BARE is set then do not prefix with \"thread:\""
 		      (concat "*" (truncate-string-to-width subject 30 nil nil t) "*"))
       (message "End of search results."))))
 
+(defun notmuch-tree-from-search-current-query ()
+  "Call notmuch tree with the current query"
+  (interactive)
+  (notmuch-tree notmuch-search-query-string))
+
+(defun notmuch-tree-from-search-thread ()
+  "Show the selected thread with notmuch-tree"
+  (interactive)
+  (notmuch-tree (notmuch-search-find-thread-id)
+                notmuch-search-query-string
+		nil
+                (notmuch-prettify-subject (notmuch-search-find-subject))
+		t))
+
 (defun notmuch-search-reply-to-thread (&optional prompt-for-sender)
   "Begin composing a reply-all to the entire current thread in a new buffer."
   (interactive "P")

@@ -413,24 +413,6 @@ Does NOT change the database."
 		notmuch-show-query-context
 		(notmuch-show-get-message-id)))
 
-;; This function should be in notmuch.el but be we trying to minimise
-;; impact on the rest of the codebase.
-(defun notmuch-tree-from-search-current-query ()
-  "Call notmuch tree with the current query"
-  (interactive)
-  (notmuch-tree notmuch-search-query-string))
-
-;; This function should be in notmuch.el but be we trying to minimise
-;; impact on the rest of the codebase.
-(defun notmuch-tree-from-search-thread ()
-  "Show the selected thread with notmuch-tree"
-  (interactive)
-  (notmuch-tree (notmuch-search-find-thread-id)
-                notmuch-search-query-string
-		nil
-                (notmuch-prettify-subject (notmuch-search-find-subject))
-		t))
-
 (defun notmuch-tree-message-window-kill-hook ()
   "Close the message pane when exiting the show buffer."
   (let ((buffer (current-buffer)))
