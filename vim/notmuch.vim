@@ -65,7 +65,6 @@ function! s:new_file_buffer(type, fname)
 	execute printf('set filetype=notmuch-%s', a:type)
 	execute printf('set syntax=notmuch-%s', a:type)
 	ruby $curbuf.init(VIM::evaluate('a:type'))
-	ruby $buf_queue.push($curbuf.number)
 endfunction
 
 function! s:compose_unload()
@@ -268,13 +267,8 @@ endfunction
 
 function! s:kill_this_buffer()
 ruby << EOF
-	if $buf_queue.size > 1
-		$curbuf.close
-		VIM::command("bdelete!")
-		$buf_queue.pop
-		b = $buf_queue.last
-		VIM::command("buffer #{b}") if b
-	end
+	$curbuf.close
+	VIM::command("bdelete!")
 EOF
 endfunction
 
@@ -293,7 +287,6 @@ function! s:new_buffer(type)
 	execute printf('set filetype=notmuch-%s', a:type)
 	execute printf('set syntax=notmuch-%s', a:type)
 	ruby $curbuf.init(VIM::evaluate('a:type'))
-	ruby $buf_queue.push($curbuf.number)
 endfunction
 
 function! s:set_menu_buffer()
@@ -471,7 +464,6 @@ ruby << EOF
 	$db_name = nil
 	$email = $email_name = $email_address = nil
 	$searches = []
-	$buf_queue = []
 	$threads = []
 	$messages = []
 	$config = {}
