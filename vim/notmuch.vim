@@ -60,26 +60,6 @@ let s:notmuch_reader_default = 'mutt -f %s'
 let s:notmuch_sendmail_default = 'sendmail'
 let s:notmuch_folders_count_threads_default = 0
 
-if !exists('g:notmuch_date_format')
-	let g:notmuch_date_format = s:notmuch_date_format_default
-endif
-
-if !exists('g:notmuch_datetime_format')
-	let g:notmuch_datetime_format = s:notmuch_datetime_format_default
-endif
-
-if !exists('g:notmuch_reader')
-	let g:notmuch_reader = s:notmuch_reader_default
-endif
-
-if !exists('g:notmuch_sendmail')
-	let g:notmuch_sendmail = s:notmuch_sendmail_default
-endif
-
-if !exists('g:notmuch_folders_count_threads')
-	let g:notmuch_folders_count_threads = s:notmuch_folders_count_threads_default
-endif
-
 function! s:new_file_buffer(type, fname)
 	exec printf('edit %s', a:fname)
 	execute printf('set filetype=notmuch-%s', a:type)
@@ -410,6 +390,26 @@ endfunction
 "" root
 
 function! s:set_defaults()
+	if !exists('g:notmuch_date_format')
+		let g:notmuch_date_format = s:notmuch_date_format_default
+	endif
+
+	if !exists('g:notmuch_datetime_format')
+		let g:notmuch_datetime_format = s:notmuch_datetime_format_default
+	endif
+
+	if !exists('g:notmuch_reader')
+		let g:notmuch_reader = s:notmuch_reader_default
+	endif
+
+	if !exists('g:notmuch_sendmail')
+		let g:notmuch_sendmail = s:notmuch_sendmail_default
+	endif
+
+	if !exists('g:notmuch_folders_count_threads')
+		let g:notmuch_folders_count_threads = s:notmuch_folders_count_threads_default
+	endif
+
 	if exists('g:notmuch_custom_search_maps')
 		call extend(g:notmuch_search_maps, g:notmuch_custom_search_maps)
 	endif
