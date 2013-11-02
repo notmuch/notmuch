@@ -67,7 +67,7 @@ function! s:new_file_buffer(type, fname)
 	ruby $curbuf.init(VIM::evaluate('a:type'))
 endfunction
 
-function! s:compose_unload()
+function! s:on_compose_delete()
 	if b:compose_done
 		return
 	endif
@@ -126,7 +126,7 @@ function! s:show_reply()
 	ruby open_reply get_message.mail
 	let b:compose_done = 0
 	call s:set_map(g:notmuch_compose_maps)
-	autocmd BufUnload <buffer> call s:compose_unload()
+	autocmd BufDelete <buffer> call s:on_compose_delete()
 	startinsert!
 endfunction
 
@@ -134,7 +134,7 @@ function! s:compose()
 	ruby open_compose
 	let b:compose_done = 0
 	call s:set_map(g:notmuch_compose_maps)
-	autocmd BufUnload <buffer> call s:compose_unload()
+	autocmd BufDelete <buffer> call s:on_compose_delete()
 	startinsert!
 endfunction
 
