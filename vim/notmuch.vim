@@ -60,24 +60,24 @@ let s:notmuch_reader_default = 'mutt -f %s'
 let s:notmuch_sendmail_default = 'sendmail'
 let s:notmuch_folders_count_threads_default = 0
 
-if !exists('g:notmuch_rb_date_format')
-	let g:notmuch_rb_date_format = s:notmuch_date_format_default
+if !exists('g:notmuch_date_format')
+	let g:notmuch_date_format = s:notmuch_date_format_default
 endif
 
-if !exists('g:notmuch_rb_datetime_format')
-	let g:notmuch_rb_datetime_format = s:notmuch_datetime_format_default
+if !exists('g:notmuch_datetime_format')
+	let g:notmuch_datetime_format = s:notmuch_datetime_format_default
 endif
 
-if !exists('g:notmuch_rb_reader')
-	let g:notmuch_rb_reader = s:notmuch_reader_default
+if !exists('g:notmuch_reader')
+	let g:notmuch_reader = s:notmuch_reader_default
 endif
 
-if !exists('g:notmuch_rb_sendmail')
-	let g:notmuch_rb_sendmail = s:notmuch_sendmail_default
+if !exists('g:notmuch_sendmail')
+	let g:notmuch_sendmail = s:notmuch_sendmail_default
 endif
 
-if !exists('g:notmuch_rb_folders_count_threads')
-	let g:notmuch_rb_folders_count_threads = s:notmuch_folders_count_threads_default
+if !exists('g:notmuch_folders_count_threads')
+	let g:notmuch_folders_count_threads = s:notmuch_folders_count_threads_default
 endif
 
 function! s:new_file_buffer(type, fname)
@@ -179,7 +179,7 @@ function! s:show_open_msg()
 ruby << EOF
 	m = get_message
 	mbox = File.expand_path('~/.notmuch/vim_mbox')
-	cmd = VIM::evaluate('g:notmuch_rb_reader') % mbox
+	cmd = VIM::evaluate('g:notmuch_reader') % mbox
 	system "notmuch show --format=mbox id:#{m.message_id} > #{mbox} && #{cmd}"
 EOF
 endfunction
@@ -340,7 +340,7 @@ ruby << EOF
 			part = m.find_first_text
 			nm_m = Message.new(msg, m)
 			$messages << nm_m
-			date_fmt = VIM::evaluate('g:notmuch_rb_datetime_format')
+			date_fmt = VIM::evaluate('g:notmuch_datetime_format')
 			date = Time.at(msg.date).strftime(date_fmt)
 			nm_m.start = b.count
 			b << "%s %s (%s)" % [msg['from'], date, msg.tags]
@@ -410,12 +410,12 @@ endfunction
 "" root
 
 function! s:set_defaults()
-	if exists('g:notmuch_rb_custom_search_maps')
-		call extend(g:notmuch_search_maps, g:notmuch_rb_custom_search_maps)
+	if exists('g:notmuch_custom_search_maps')
+		call extend(g:notmuch_search_maps, g:notmuch_custom_search_maps)
 	endif
 
-	if exists('g:notmuch_rb_custom_show_maps')
-		call extend(g:notmuch_show_maps, g:notmuch_rb_custom_show_maps)
+	if exists('g:notmuch_custom_show_maps')
+		call extend(g:notmuch_show_maps, g:notmuch_custom_show_maps)
 	endif
 
 	if !exists('g:notmuch_folders')
@@ -609,7 +609,7 @@ ruby << EOF
 	def folders_render()
 		$curbuf.render do |b|
 			folders = VIM::evaluate('g:notmuch_folders')
-			count_threads = VIM::evaluate('g:notmuch_rb_folders_count_threads')
+			count_threads = VIM::evaluate('g:notmuch_folders_count_threads')
 			$searches.clear
 			folders.each do |name, search|
 				q = $curbuf.query(search)
@@ -621,7 +621,7 @@ ruby << EOF
 	end
 
 	def search_render(search)
-		date_fmt = VIM::evaluate('g:notmuch_rb_date_format')
+		date_fmt = VIM::evaluate('g:notmuch_date_format')
 		q = $curbuf.query(search)
 		q.sort = Notmuch::SORT_NEWEST_FIRST
 		$threads.clear
