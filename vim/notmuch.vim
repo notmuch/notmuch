@@ -391,23 +391,51 @@ endfunction
 
 function! s:set_defaults()
 	if !exists('g:notmuch_date_format')
-		let g:notmuch_date_format = s:notmuch_date_format_default
+		if exists('g:notmuch_rb_date_format')
+			let g:notmuch_date_format = g:notmuch_rb_date_format
+		else
+			let g:notmuch_date_format = s:notmuch_date_format_default
+		endif
 	endif
 
 	if !exists('g:notmuch_datetime_format')
-		let g:notmuch_datetime_format = s:notmuch_datetime_format_default
+		if exists('g:notmuch_rb_datetime_format')
+			let g:notmuch_datetime_format = g:notmuch_rb_datetime_format
+		else
+			let g:notmuch_datetime_format = s:notmuch_datetime_format_default
+		endif
 	endif
 
 	if !exists('g:notmuch_reader')
-		let g:notmuch_reader = s:notmuch_reader_default
+		if exists('g:notmuch_rb_reader')
+			let g:notmuch_reader = g:notmuch_rb_reader
+		else
+			let g:notmuch_reader = s:notmuch_reader_default
+		endif
 	endif
 
 	if !exists('g:notmuch_sendmail')
-		let g:notmuch_sendmail = s:notmuch_sendmail_default
+		if exists('g:notmuch_rb_sendmail')
+			let g:notmuch_sendmail = g:notmuch_rb_sendmail
+		else
+			let g:notmuch_sendmail = s:notmuch_sendmail_default
+		endif
 	endif
 
 	if !exists('g:notmuch_folders_count_threads')
-		let g:notmuch_folders_count_threads = s:notmuch_folders_count_threads_default
+		if exists('g:notmuch_rb_count_threads')
+			let g:notmuch_count_threads = g:notmuch_rb_count_threads
+		else
+			let g:notmuch_folders_count_threads = s:notmuch_folders_count_threads_default
+		endif
+	endif
+
+	if !exists('g:notmuch_custom_search_maps') && exists('g:notmuch_rb_custom_search_maps')
+		let g:notmuch_custom_search_maps = g:notmuch_rb_custom_search_maps
+	endif
+
+	if !exists('g:notmuch_custom_show_maps') && exists('g:notmuch_rb_custom_show_maps')
+		let g:notmuch_custom_show_maps = g:notmuch_rb_custom_show_maps
 	endif
 
 	if exists('g:notmuch_custom_search_maps')
@@ -419,7 +447,11 @@ function! s:set_defaults()
 	endif
 
 	if !exists('g:notmuch_folders')
-		let g:notmuch_folders = s:notmuch_folders_default
+		if exists('g:notmuch_rb_folders')
+			let g:notmuch_folders = g:notmuch_rb_folders
+		else
+			let g:notmuch_folders = s:notmuch_folders_default
+		endif
 	endif
 endfunction
 
