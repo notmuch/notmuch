@@ -2,6 +2,7 @@ addon: notmuch
 description: "notmuch mail user interface"
 files:
   - plugin/notmuch.vim
+  - doc/notmuch.txt
   - syntax/notmuch-compose.vim
   - syntax/notmuch-folders.vim
   - syntax/notmuch-git-diff.vim
