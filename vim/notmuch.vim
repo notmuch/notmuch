@@ -1,4 +1,4 @@
-if exists("g:loaded_notmuch_rb")
+if exists("g:loaded_notmuch")
 	finish
 endif
 
@@ -6,16 +6,16 @@ if !has("ruby") || version < 700
 	finish
 endif
 
-let g:loaded_notmuch_rb = "yep"
+let g:loaded_notmuch = "yep"
 
-let g:notmuch_rb_folders_maps = {
+let g:notmuch_folders_maps = {
 	\ '<Enter>':	'folders_show_search()',
 	\ 's':		'folders_search_prompt()',
 	\ '=':		'folders_refresh()',
 	\ 'c':		'compose()',
 	\ }
 
-let g:notmuch_rb_search_maps = {
+let g:notmuch_search_maps = {
 	\ 'q':		'kill_this_buffer()',
 	\ '<Enter>':	'search_show_thread(1)',
 	\ '<Space>':	'search_show_thread(2)',
@@ -28,7 +28,7 @@ let g:notmuch_rb_search_maps = {
 	\ 'c':		'compose()',
 	\ }
 
-let g:notmuch_rb_show_maps = {
+let g:notmuch_show_maps = {
 	\ 'q':		'kill_this_buffer()',
 	\ 'A':		'show_tag("-inbox -unread")',
 	\ 'I':		'show_tag("-unread")',
@@ -43,41 +43,41 @@ let g:notmuch_rb_show_maps = {
 	\ 'c':		'compose()',
 	\ }
 
-let g:notmuch_rb_compose_maps = {
+let g:notmuch_compose_maps = {
 	\ ',s':		'compose_send()',
 	\ ',q':		'compose_quit()',
 	\ }
 
-let s:notmuch_rb_folders_default = [
+let s:notmuch_folders_default = [
 	\ [ 'new', 'tag:inbox and tag:unread' ],
 	\ [ 'inbox', 'tag:inbox' ],
 	\ [ 'unread', 'tag:unread' ],
 	\ ]
 
-let s:notmuch_rb_date_format_default = '%d.%m.%y'
-let s:notmuch_rb_datetime_format_default = '%d.%m.%y %H:%M:%S'
-let s:notmuch_rb_reader_default = 'mutt -f %s'
-let s:notmuch_rb_sendmail_default = 'sendmail'
-let s:notmuch_rb_folders_count_threads_default = 0
+let s:notmuch_date_format_default = '%d.%m.%y'
+let s:notmuch_datetime_format_default = '%d.%m.%y %H:%M:%S'
+let s:notmuch_reader_default = 'mutt -f %s'
+let s:notmuch_sendmail_default = 'sendmail'
+let s:notmuch_folders_count_threads_default = 0
 
 if !exists('g:notmuch_rb_date_format')
-	let g:notmuch_rb_date_format = s:notmuch_rb_date_format_default
+	let g:notmuch_rb_date_format = s:notmuch_date_format_default
 endif
 
 if !exists('g:notmuch_rb_datetime_format')
-	let g:notmuch_rb_datetime_format = s:notmuch_rb_datetime_format_default
+	let g:notmuch_rb_datetime_format = s:notmuch_datetime_format_default
 endif
 
 if !exists('g:notmuch_rb_reader')
-	let g:notmuch_rb_reader = s:notmuch_rb_reader_default
+	let g:notmuch_rb_reader = s:notmuch_reader_default
 endif
 
 if !exists('g:notmuch_rb_sendmail')
-	let g:notmuch_rb_sendmail = s:notmuch_rb_sendmail_default
+	let g:notmuch_rb_sendmail = s:notmuch_sendmail_default
 endif
 
 if !exists('g:notmuch_rb_folders_count_threads')
-	let g:notmuch_rb_folders_count_threads = s:notmuch_rb_folders_count_threads_default
+	let g:notmuch_rb_folders_count_threads = s:notmuch_folders_count_threads_default
 endif
 
 function! s:new_file_buffer(type, fname)
@@ -146,7 +146,7 @@ endfunction
 function! s:show_reply()
 	ruby open_reply get_message.mail
 	let b:compose_done = 0
-	call s:set_map(g:notmuch_rb_compose_maps)
+	call s:set_map(g:notmuch_compose_maps)
 	autocmd BufUnload <buffer> call s:compose_unload()
 	startinsert!
 endfunction
@@ -154,7 +154,7 @@ endfunction
 function! s:compose()
 	ruby open_compose
 	let b:compose_done = 0
-	call s:set_map(g:notmuch_rb_compose_maps)
+	call s:set_map(g:notmuch_compose_maps)
 	autocmd BufUnload <buffer> call s:compose_unload()
 	startinsert!
 endfunction
@@ -365,7 +365,7 @@ ruby << EOF
 	end
 EOF
 	setlocal nomodifiable
-	call s:set_map(g:notmuch_rb_show_maps)
+	call s:set_map(g:notmuch_show_maps)
 endfunction
 
 function! s:search_show_thread(mode)
@@ -388,7 +388,7 @@ ruby << EOF
 	search_render($cur_search)
 EOF
 	call s:set_menu_buffer()
-	call s:set_map(g:notmuch_rb_search_maps)
+	call s:set_map(g:notmuch_search_maps)
 	autocmd CursorMoved <buffer> call s:show_cursor_moved()
 endfunction
 
@@ -404,27 +404,22 @@ function! s:folders()
 	call s:new_buffer('folders')
 	ruby folders_render()
 	call s:set_menu_buffer()
-	call s:set_map(g:notmuch_rb_folders_maps)
+	call s:set_map(g:notmuch_folders_maps)
 endfunction
 
 "" root
 
 function! s:set_defaults()
 	if exists('g:notmuch_rb_custom_search_maps')
-		call extend(g:notmuch_rb_search_maps, g:notmuch_rb_custom_search_maps)
+		call extend(g:notmuch_search_maps, g:notmuch_rb_custom_search_maps)
 	endif
 
 	if exists('g:notmuch_rb_custom_show_maps')
-		call extend(g:notmuch_rb_show_maps, g:notmuch_rb_custom_show_maps)
+		call extend(g:notmuch_show_maps, g:notmuch_rb_custom_show_maps)
 	endif
 
-	" TODO for now lets check the old folders too
-	if !exists('g:notmuch_rb_folders')
-		if exists('g:notmuch_folders')
-			let g:notmuch_rb_folders = g:notmuch_folders
-		else
-			let g:notmuch_rb_folders = s:notmuch_rb_folders_default
-		endif
+	if !exists('g:notmuch_folders')
+		let g:notmuch_folders = s:notmuch_folders_default
 	endif
 endfunction
 
@@ -613,7 +608,7 @@ ruby << EOF
 
 	def folders_render()
 		$curbuf.render do |b|
-			folders = VIM::evaluate('g:notmuch_rb_folders')
+			folders = VIM::evaluate('g:notmuch_folders')
 			count_threads = VIM::evaluate('g:notmuch_rb_folders_count_threads')
 			$searches.clear
 			folders.each do |name, search|
