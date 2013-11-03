@@ -821,9 +821,11 @@ static int rmtree (const char *path)
 class NotmuchCompactor : public Xapian::Compactor
 {
     notmuch_compact_status_cb_t status_cb;
+    void *status_closure;
 
 public:
-    NotmuchCompactor(notmuch_compact_status_cb_t cb) : status_cb(cb) { }
+    NotmuchCompactor(notmuch_compact_status_cb_t cb, void *closure) :
+	status_cb(cb), status_closure(closure) { }
 
     virtual void
     set_status (const std::string &table, const std::string &status)
@@ -842,7 +844,7 @@ public:
 	    return;
 	}
 
-	status_cb(msg);
+	status_cb(msg, status_closure);
 	talloc_free(msg);
     }
 };
@@ -861,7 +863,8 @@ public:
 notmuch_status_t
 notmuch_database_compact (const char* path,
 			  const char* backup_path,
-			  notmuch_compact_status_cb_t status_cb)
+			  notmuch_compact_status_cb_t status_cb,
+			  void *closure)
 {
     void *local;
     char *notmuch_path, *xapian_path, *compact_xapian_path;
@@ -913,7 +916,7 @@ notmuch_database_compact (const char* path,
     }
 
     try {
-	NotmuchCompactor compactor(status_cb);
+	NotmuchCompactor compactor(status_cb, closure);
 
 	compactor.set_renumber(false);
 	compactor.add_source(xapian_path);
@@ -953,7 +956,8 @@ DONE:
 notmuch_status_t
 notmuch_database_compact (unused (const char* path),
 			  unused (const char* backup_path),
-			  unused (notmuch_compact_status_cb_t status_cb))
+			  unused (notmuch_compact_status_cb_t status_cb),
+			  unused (void *closure))
 {
     fprintf (stderr, "notmuch was compiled against a xapian version lacking compaction support.\n");
     return NOTMUCH_STATUS_UNSUPPORTED_OPERATION;

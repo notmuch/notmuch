@@ -219,7 +219,7 @@ notmuch_database_close (notmuch_database_t *database);
 /* A callback invoked by notmuch_database_compact to notify the user
  * of the progress of the compaction process.
  */
-typedef void (*notmuch_compact_status_cb_t)(const char*);
+typedef void (*notmuch_compact_status_cb_t)(const char *message, void *closure);
 
 /* Compact a notmuch database, backing up the original database to the
  * given path.
@@ -231,7 +231,8 @@ typedef void (*notmuch_compact_status_cb_t)(const char*);
 notmuch_status_t
 notmuch_database_compact (const char* path,
 			  const char* backup_path,
-			  notmuch_compact_status_cb_t status_cb);
+			  notmuch_compact_status_cb_t status_cb,
+			  void *closure);
 
 /* Destroy the notmuch database, closing it if necessary and freeing
  * all associated resources.

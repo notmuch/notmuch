@@ -20,10 +20,8 @@
 
 #include "notmuch-client.h"
 
-void status_update_cb (const char *msg);
-
-void
-status_update_cb (const char *msg)
+static void
+status_update_cb (const char *msg, unused (void *closure))
 {
     printf("%s\n", msg);
 }
@@ -38,7 +36,7 @@ notmuch_compact_command (notmuch_config_t *config,
     notmuch_status_t ret;
 
     printf ("Compacting database...\n");
-    ret = notmuch_database_compact (path, backup_path, status_update_cb);
+    ret = notmuch_database_compact (path, backup_path, status_update_cb, NULL);
     if (ret) {
 	fprintf (stderr, "Compaction failed: %s\n", notmuch_status_to_string(ret));
     } else {
