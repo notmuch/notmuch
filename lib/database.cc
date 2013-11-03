@@ -941,10 +941,12 @@ notmuch_database_compact (const char* path,
 	goto DONE;
     }
 
-    notmuch_database_close(notmuch);
-
 DONE:
+    if (notmuch)
+	notmuch_database_destroy (notmuch);
+
     talloc_free(local);
+
     return ret;
 }
 #else
