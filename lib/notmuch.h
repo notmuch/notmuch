@@ -227,6 +227,9 @@ typedef void (*notmuch_compact_status_cb_t)(const char *message, void *closure);
  * The database will be opened with NOTMUCH_DATABASE_MODE_READ_WRITE
  * during the compaction process to ensure no writes are made.
  *
+ * If the optional callback function 'status_cb' is non-NULL, it will
+ * be called with diagnostic and informational messages. The argument
+ * 'closure' is passed verbatim to any callback invoked.
  */
 notmuch_status_t
 notmuch_database_compact (const char* path,
@@ -270,7 +273,8 @@ notmuch_database_needs_upgrade (notmuch_database_t *database);
  * provide progress indication to the user. If non-NULL it will be
  * called periodically with 'progress' as a floating-point value in
  * the range of [0.0 .. 1.0] indicating the progress made so far in
- * the upgrade process.
+ * the upgrade process.  The argument 'closure' is passed verbatim to
+ * any callback invoked.
  */
 notmuch_status_t
 notmuch_database_upgrade (notmuch_database_t *database,
