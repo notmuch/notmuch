@@ -863,12 +863,16 @@ notmuch_database_compact (const char* path,
 			  const char* backup_path,
 			  notmuch_compact_status_cb_t status_cb)
 {
-    void *local = talloc_new (NULL);
+    void *local;
     char *notmuch_path, *xapian_path, *compact_xapian_path;
     char *old_xapian_path = NULL;
     notmuch_status_t ret = NOTMUCH_STATUS_SUCCESS;
     notmuch_database_t *notmuch = NULL;
     struct stat statbuf;
+
+    local = talloc_new (NULL);
+    if (! local)
+	return NOTMUCH_STATUS_OUT_OF_MEMORY;
 
     ret = notmuch_database_open(path, NOTMUCH_DATABASE_MODE_READ_WRITE, &notmuch);
     if (ret) {
