@@ -868,7 +868,6 @@ notmuch_database_compact (const char* path,
 {
     void *local;
     char *notmuch_path, *xapian_path, *compact_xapian_path;
-    char *old_xapian_path = NULL;
     notmuch_status_t ret = NOTMUCH_STATUS_SUCCESS;
     notmuch_database_t *notmuch = NULL;
     struct stat statbuf;
@@ -898,13 +897,8 @@ notmuch_database_compact (const char* path,
     }
 
     if (backup_path != NULL) {
-	if (! (old_xapian_path = talloc_asprintf (local, "%s/xapian.old", backup_path))) {
-	    ret = NOTMUCH_STATUS_OUT_OF_MEMORY;
-	    goto DONE;
-	}
-
-	if (stat(old_xapian_path, &statbuf) != -1) {
-	    fprintf (stderr, "Backup path already exists: %s\n", old_xapian_path);
+	if (stat(backup_path, &statbuf) != -1) {
+	    fprintf (stderr, "Backup path already exists: %s\n", backup_path);
 	    ret = NOTMUCH_STATUS_FILE_ERROR;
 	    goto DONE;
 	}
@@ -928,8 +922,8 @@ notmuch_database_compact (const char* path,
 	goto DONE;
     }
 
-    if (old_xapian_path != NULL) {
-	if (rename(xapian_path, old_xapian_path)) {
+    if (backup_path) {
+	if (rename(xapian_path, backup_path)) {
 	    fprintf (stderr, "Error moving old database out of the way\n");
 	    ret = NOTMUCH_STATUS_FILE_ERROR;
 	    goto DONE;

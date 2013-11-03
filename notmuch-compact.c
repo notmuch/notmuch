@@ -32,8 +32,12 @@ notmuch_compact_command (notmuch_config_t *config,
 			 unused (char *argv[]))
 {
     const char *path = notmuch_config_get_database_path (config);
-    const char *backup_path = path;
+    const char *backup_path;
     notmuch_status_t ret;
+
+    backup_path = talloc_asprintf (config, "%s/xapian.old", path);
+    if (! backup_path)
+	return 1;
 
     printf ("Compacting database...\n");
     ret = notmuch_database_compact (path, backup_path, status_update_cb, NULL);
@@ -42,11 +46,11 @@ notmuch_compact_command (notmuch_config_t *config,
     } else {
 	printf ("\n");
 	printf ("\n");
-	printf ("The old database has been moved to %s/xapian.old", backup_path);
+	printf ("The old database has been moved to %s", backup_path);
 	printf ("\n");
 	printf ("To delete run,\n");
 	printf ("\n");
-	printf ("    rm -R %s/xapian.old\n", backup_path);
+	printf ("    rm -R %s\n", backup_path);
 	printf ("\n");
     }
 
