@@ -864,7 +864,6 @@ notmuch_database_compact (const char* path,
 			  notmuch_compact_status_cb_t status_cb)
 {
     void *local = talloc_new (NULL);
-    NotmuchCompactor compactor(status_cb);
     char *notmuch_path, *xapian_path, *compact_xapian_path;
     char *old_xapian_path = NULL;
     notmuch_status_t ret = NOTMUCH_STATUS_SUCCESS;
@@ -910,6 +909,8 @@ notmuch_database_compact (const char* path,
     }
 
     try {
+	NotmuchCompactor compactor(status_cb);
+
 	compactor.set_renumber(false);
 	compactor.add_source(xapian_path);
 	compactor.set_destdir(compact_xapian_path);
