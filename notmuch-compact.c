@@ -43,16 +43,17 @@ notmuch_compact_command (notmuch_config_t *config,
     ret = notmuch_database_compact (path, backup_path, status_update_cb, NULL);
     if (ret) {
 	fprintf (stderr, "Compaction failed: %s\n", notmuch_status_to_string(ret));
-    } else {
-	printf ("\n");
-	printf ("\n");
-	printf ("The old database has been moved to %s", backup_path);
-	printf ("\n");
-	printf ("To delete run,\n");
-	printf ("\n");
-	printf ("    rm -R %s\n", backup_path);
-	printf ("\n");
+	return 1;
     }
+
+    printf ("\n");
+    printf ("\n");
+    printf ("The old database has been moved to %s", backup_path);
+    printf ("\n");
+    printf ("To delete run,\n");
+    printf ("\n");
+    printf ("    rm -R %s\n", backup_path);
+    printf ("\n");
 
     return 0;
 }
