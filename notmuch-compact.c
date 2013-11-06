@@ -32,27 +32,33 @@ notmuch_compact_command (notmuch_config_t *config, int argc, char *argv[])
     const char *path = notmuch_config_get_database_path (config);
     const char *backup_path = NULL;
     notmuch_status_t ret;
+    notmuch_bool_t quiet;
     int opt_index;
 
     notmuch_opt_desc_t options[] = {
 	{ NOTMUCH_OPT_STRING, &backup_path, "backup", 0, 0 },
+	{ NOTMUCH_OPT_BOOLEAN,  &quiet, "quiet", 'q', 0 },
     };
 
     opt_index = parse_arguments (argc, argv, options, 1);
     if (opt_index < 0)
 	return 1;
 
-    printf ("Compacting database...\n");
-    ret = notmuch_database_compact (path, backup_path, status_update_cb, NULL);
+    if (! quiet)
+	printf ("Compacting database...\n");
+    ret = notmuch_database_compact (path, backup_path,
+				    quiet ? NULL : status_update_cb, NULL);
     if (ret) {
 	fprintf (stderr, "Compaction failed: %s\n", notmuch_status_to_string(ret));
 	return 1;
     }
 
-    if (backup_path)
-	printf ("The old database has been moved to %s.\n", backup_path);
+    if (! quiet) {
+	if (backup_path)
+	    printf ("The old database has been moved to %s.\n", backup_path);
 
-    printf ("Done.\n");
+	printf ("Done.\n");
+    }
 
     return 0;
 }
