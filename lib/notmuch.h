@@ -41,6 +41,30 @@ NOTMUCH_BEGIN_DECLS
 #define TRUE 1
 #endif
 
+#define NOTMUCH_MAJOR_VERSION	0
+#define NOTMUCH_MINOR_VERSION	17
+#define NOTMUCH_MICRO_VERSION	0
+
+/*
+ * Check the version of the notmuch library being compiled against.
+ *
+ * Return true if the library being compiled against is of the
+ * specified version or above. For example:
+ *
+ * #if NOTMUCH_CHECK_VERSION(0, 18, 0)
+ *     (code requiring notmuch 0.18 or above)
+ * #endif
+ *
+ * NOTMUCH_CHECK_VERSION has been defined since version 0.17.0; you
+ * can use #if !defined(NOTMUCH_CHECK_VERSION) to check for versions
+ * prior to that.
+ */
+#define NOTMUCH_CHECK_VERSION (major, minor, micro)			\
+    (NOTMUCH_MAJOR_VERSION > (major) ||					\
+     (NOTMUCH_MAJOR_VERSION == (major) && NOTMUCH_MINOR_VERSION > (minor)) || \
+     (NOTMUCH_MAJOR_VERSION == (major) && NOTMUCH_MINOR_VERSION == (minor) && \
+      NOTMUCH_MICRO_VERSION >= (micro)))
+
 typedef int notmuch_bool_t;
 
 /* Status codes used for the return values of most functions.
