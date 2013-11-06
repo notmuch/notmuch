@@ -4,6 +4,8 @@ notmuch-compact \- compact the notmuch database
 .SH SYNOPSIS
 
 .B notmuch compact
+.RI "[ --quiet ]"
+.RI "[ --backup=<" directory "> ]"
 
 .SH DESCRIPTION
 
@@ -14,10 +16,34 @@ the space required by the database and improve lookup performance.
 
 The compacted database is built in a temporary directory and is later
 moved into the place of the origin database. The original uncompacted
-database is preserved to be deleted by the user as desired.
+database is discarded, unless the
+.BR "\-\-backup=" <directory>
+option is used.
 
 Note that the database write lock will be held during the compaction
 process (which may be quite long) to protect data integrity.
+
+Supported options for
+.B compact
+include
+
+.RS 4
+.TP 4
+.BR "\-\-backup=" <directory>
+
+Save the current database to the given directory before replacing it
+with the compacted database. The backup directory must not exist and
+it must reside on the same mounted filesystem as the current database.
+
+.RE
+
+.RS 4
+.TP 4
+.BR \-\-quiet
+
+Do not report database compaction progress to stdout.
+
+.RE
 
 .RE
 .SH ENVIRONMENT
