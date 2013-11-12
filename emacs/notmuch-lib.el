@@ -253,7 +253,7 @@ prefix argument.  PREFIX and TAIL are used internally."
 	    (setq tail
 		  (notmuch-describe-keymap
 		   binding ua-keys (notmuch-prefix-key-description key) tail)))
-	   (t
+	   (binding
 	    (when (and ua-keys (symbolp binding)
 		       (get binding 'notmuch-prefix-doc))
 	      ;; Documentation for prefixed command
