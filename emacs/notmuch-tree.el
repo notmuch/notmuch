@@ -220,13 +220,13 @@ FUNC."
     (set-keymap-parent map notmuch-common-keymap)
     ;; The following override the global keymap.
     ;; Override because we want to close message pane first.
-    (define-key map "?" (notmuch-tree-close-message-pane-and #'notmuch-help))
+    (define-key map [remap notmuch-help] (notmuch-tree-close-message-pane-and #'notmuch-help))
     ;; Override because we first close message pane and then close tree buffer.
-    (define-key map "q" 'notmuch-tree-quit)
+    (define-key map [remap notmuch-kill-this-buffer] 'notmuch-tree-quit)
     ;; Override because we close message pane after the search query is entered.
-    (define-key map "s" 'notmuch-tree-to-search)
+    (define-key map [remap notmuch-search] 'notmuch-tree-to-search)
     ;; Override because we want to close message pane first.
-    (define-key map "m" (notmuch-tree-close-message-pane-and #'notmuch-mua-new-mail))
+    (define-key map [remap notmuch-mua-new-mail] (notmuch-tree-close-message-pane-and #'notmuch-mua-new-mail))
 
     ;; these use notmuch-show functions directly
     (define-key map "|" 'notmuch-show-pipe-message)
