@@ -17,14 +17,66 @@ New options to better support handling duplicate messages
   bigger than the number of matching messages due to duplicates
   (i.e. multiple files having the same message-id).
 
+Improved `notmuch new` performance for unchanged folders
+
+  `notmuch new` now skips over unchanged folders more efficiently,
+  which can substantially improve the performance of checking for new
+  mail in some situations (like NFS-mounted Maildirs).
+
+`notmuch reply --format=text` RFC 2047-encodes headers
+
+  Previously, this used a mix of standard MIME encoding for the reply
+  body and UTF-8 for the headers.  Now, the text format reply template
+  RFC 2047-encodes the headers, making the output a valid RFC 2822
+  message.  The JSON/sexp format is unchanged.
+
 Emacs Interface
 ---------------
+
+Tagging threads in search is now race-free
+
+  Previously, adding or removing a tag from a thread in a search
+  buffer would affect messages that had arrived after the search was
+  performed, resulting in, for example, archiving messages that were
+  never seen.  Tagging now affects only the messages that were in the
+  thread when the search was performed.
+
+`notmuch-hello` refreshes when switching to the buffer
+
+  The hello buffer now refreshes whenever you switch to the buffer,
+  regardless of how you get there.  You can disable automatic
+  refreshing by customizing `notmuch-hello-auto-refresh`.
+
+Specific mini-buffer prompts for tagging operations
+
+  When entering tags to add or remove, the mini-buffer prompt now
+  indicates what operation will be performed (e.g., "Tag thread", "Tag
+  message", etc).
 
 Built-in help improvements
 
   Documentation for many commands has been improved, as displayed by
   `notmuch-help` (usually bound to "?").  The bindings listed by
   `notmuch-help` also now include descriptions of prefixed commands.
+
+Fixed inconsistent use of configured search order
+
+  All ways of interactively invoking search now honor the value of
+  `notmuch-search-oldest-first`.
+
+Common keymap for notmuch-wide bindings
+
+  Several key bindings have been moved from mode-specific keymaps to
+  the single `notmuch-common-keymap`, which is inherited by each
+  notmuch mode.  If you've customized your key bindings, you may want
+  to move some of them to the common keymap.
+
+The `notmuch-tag` function now requires a list of tag changes
+
+  For users who have scripted the Emacs interface: the `notmuch-tag`
+  API has changed.  Previously, it accepted either a list of tag
+  changes or a space-separated string of tag changes.  The latter is
+  no longer supported and the function now returns nothing.
 
 Notmuch 0.16 (2013-08-03)
 =========================
