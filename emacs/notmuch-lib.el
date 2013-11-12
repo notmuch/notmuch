@@ -273,11 +273,13 @@ prefix argument.  PREFIX and TAIL are used internally."
   "Like `substitute-command-keys' but with documentation, not function names."
   (let ((beg 0))
     (while (string-match "\\\\{\\([^}[:space:]]*\\)}" doc beg)
-      (let* ((keymap-name (substring doc (match-beginning 1) (match-end 1)))
-	     (keymap (symbol-value (intern keymap-name)))
-	     (ua-keys (where-is-internal 'universal-argument keymap t))
-	     (desc-list (notmuch-describe-keymap keymap ua-keys))
-	     (desc (mapconcat #'identity desc-list "\n")))
+      (let ((desc
+	     (save-match-data
+	       (let* ((keymap-name (substring doc (match-beginning 1) (match-end 1)))
+		      (keymap (symbol-value (intern keymap-name)))
+		      (ua-keys (where-is-internal 'universal-argument keymap t))
+		      (desc-list (notmuch-describe-keymap keymap ua-keys)))
+		 (mapconcat #'identity desc-list "\n")))))
 	(setq doc (replace-match desc 1 1 doc)))
       (setq beg (match-end 0)))
     doc))
