@@ -260,7 +260,7 @@ It does not prepend if ACTUAL-KEY is already listed in TAIL."
 	    tail)))
     tail)
 
-(defun notmuch-describe-keymap (keymap ua-keys &optional prefix tail)
+(defun notmuch-describe-keymap (keymap ua-keys base-keymap &optional prefix tail)
   "Return a list of cons cells, each describing one binding in KEYMAP.
 
 Each cons cell consists of a string giving a human-readable
@@ -277,7 +277,7 @@ prefix argument.  PREFIX and TAIL are used internally."
 	   ((keymapp binding)
 	    (setq tail
 		  (notmuch-describe-keymap
-		   binding ua-keys (notmuch-prefix-key-description key) tail)))
+		   binding ua-keys base-keymap (notmuch-prefix-key-description key) tail)))
 	   (binding
 	    (setq tail (notmuch-describe-key (vector key) binding prefix ua-keys tail)))))
    keymap)
@@ -292,7 +292,7 @@ prefix argument.  PREFIX and TAIL are used internally."
 	       (let* ((keymap-name (substring doc (match-beginning 1) (match-end 1)))
 		      (keymap (symbol-value (intern keymap-name)))
 		      (ua-keys (where-is-internal 'universal-argument keymap t))
-		      (desc-alist (notmuch-describe-keymap keymap ua-keys))
+		      (desc-alist (notmuch-describe-keymap keymap ua-keys keymap))
 		      (desc-list (mapcar (lambda (arg) (concat (car arg) "\t" (cdr arg))) desc-alist)))
 		 (mapconcat #'identity desc-list "\n")))))
 	(setq doc (replace-match desc 1 1 doc)))
