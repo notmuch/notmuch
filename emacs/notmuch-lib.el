@@ -237,11 +237,12 @@ This is basically just `format-kbd-macro' but we also convert ESC to M-."
       (concat desc " "))))
 
 (defun notmuch-describe-keymap (keymap ua-keys &optional prefix tail)
-  "Return a list of strings, each describing one binding in KEYMAP.
+  "Return a list of cons cells, each describing one binding in KEYMAP.
 
-Each string gives a human-readable description of the key and a
-one-line description of the bound function.  See `notmuch-help'
-for an overview of how this documentation is extracted.
+Each cons cell consists of a string giving a human-readable
+description of the key, and a one-line description of the bound
+function.  See `notmuch-help' for an overview of how this
+documentation is extracted.
 
 UA-KEYS should be a key sequence bound to `universal-argument'.
 It will be used to describe bindings of commands that support a
@@ -254,18 +255,23 @@ prefix argument.  PREFIX and TAIL are used internally."
 		  (notmuch-describe-keymap
 		   binding ua-keys (notmuch-prefix-key-description key) tail)))
 	   (binding
-	    (when (and ua-keys (symbolp binding)
-		       (get binding 'notmuch-prefix-doc))
-	      ;; Documentation for prefixed command
-	      (let ((ua-desc (key-description ua-keys)))
-		(push (concat ua-desc " " prefix (format-kbd-macro (vector key))
-			      "\t" (get binding 'notmuch-prefix-doc))
-		      tail)))
-	    ;; Documentation for command
-	    (push (concat prefix (format-kbd-macro (vector key)) "\t"
-			  (or (and (symbolp binding) (get binding 'notmuch-doc))
-			      (notmuch-documentation-first-line binding)))
-		  tail))))
+	    (let ((key-string (concat prefix (format-kbd-macro (vector key)))))
+	      ;; We don't include documentation if the key-binding is
+	      ;; over-ridden. Note, over-riding a binding
+	      ;; automatically hides the prefixed version too.
+	      (unless (assoc key-string tail)
+		(when (and ua-keys (symbolp binding)
+			   (get binding 'notmuch-prefix-doc))
+		  ;; Documentation for prefixed command
+		  (let ((ua-desc (key-description ua-keys)))
+		    (push (cons (concat ua-desc " " prefix (format-kbd-macro (vector key)))
+				(get binding 'notmuch-prefix-doc))
+			  tail)))
+		;; Documentation for command
+		(push (cons key-string
+			    (or (and (symbolp binding) (get binding 'notmuch-doc))
+				(notmuch-documentation-first-line binding)))
+		      tail))))))
    keymap)
   tail)
 
@@ -278,7 +284,8 @@ prefix argument.  PREFIX and TAIL are used internally."
 	       (let* ((keymap-name (substring doc (match-beginning 1) (match-end 1)))
 		      (keymap (symbol-value (intern keymap-name)))
 		      (ua-keys (where-is-internal 'universal-argument keymap t))
-		      (desc-list (notmuch-describe-keymap keymap ua-keys)))
+		      (desc-alist (notmuch-describe-keymap keymap ua-keys))
+		      (desc-list (mapcar (lambda (arg) (concat (car arg) "\t" (cdr arg))) desc-alist)))
 		 (mapconcat #'identity desc-list "\n")))))
 	(setq doc (replace-match desc 1 1 doc)))
       (setq beg (match-end 0)))
