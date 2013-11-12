@@ -260,6 +260,21 @@ It does not prepend if ACTUAL-KEY is already listed in TAIL."
 	    tail)))
     tail)
 
+(defun notmuch-describe-remaps (remap-keymap ua-keys base-keymap prefix tail)
+  ;; Remappings are represented as a binding whose first "event" is
+  ;; 'remap.  Hence, if the keymap has any remappings, it will have a
+  ;; binding whose "key" is 'remap, and whose "binding" is itself a
+  ;; keymap that maps not from keys to commands, but from old (remapped)
+  ;; functions to the commands to use in their stead.
+  (map-keymap
+   (lambda (command binding)
+     (mapc
+      (lambda (actual-key)
+	(setq tail (notmuch-describe-key actual-key binding prefix ua-keys tail)))
+      (where-is-internal command base-keymap)))
+   remap-keymap)
+  tail)
+
 (defun notmuch-describe-keymap (keymap ua-keys base-keymap &optional prefix tail)
   "Return a list of cons cells, each describing one binding in KEYMAP.
 
@@ -276,8 +291,11 @@ prefix argument.  PREFIX and TAIL are used internally."
      (cond ((mouse-event-p key) nil)
 	   ((keymapp binding)
 	    (setq tail
-		  (notmuch-describe-keymap
-		   binding ua-keys base-keymap (notmuch-prefix-key-description key) tail)))
+		  (if (eq key 'remap)
+		      (notmuch-describe-remaps
+		       binding ua-keys base-keymap prefix tail)
+		    (notmuch-describe-keymap
+		     binding ua-keys base-keymap (notmuch-prefix-key-description key) tail))))
 	   (binding
 	    (setq tail (notmuch-describe-key (vector key) binding prefix ua-keys tail)))))
    keymap)
