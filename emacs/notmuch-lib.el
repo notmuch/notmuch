@@ -236,6 +236,30 @@ This is basically just `format-kbd-macro' but we also convert ESC to M-."
 	"M-"
       (concat desc " "))))
 
+
+(defun notmuch-describe-key (actual-key binding prefix ua-keys tail)
+  "Prepend cons cells describing prefix-arg ACTUAL-KEY and ACTUAL-KEY to TAIL
+
+It does not prepend if ACTUAL-KEY is already listed in TAIL."
+  (let ((key-string (concat prefix (format-kbd-macro actual-key))))
+    ;; We don't include documentation if the key-binding is
+    ;; over-ridden. Note, over-riding a binding automatically hides the
+    ;; prefixed version too.
+    (unless (assoc key-string tail)
+      (when (and ua-keys (symbolp binding)
+		 (get binding 'notmuch-prefix-doc))
+	;; Documentation for prefixed command
+	(let ((ua-desc (key-description ua-keys)))
+	  (push (cons (concat ua-desc " " prefix (format-kbd-macro actual-key))
+		      (get binding 'notmuch-prefix-doc))
+		tail)))
+      ;; Documentation for command
+      (push (cons key-string
+		  (or (and (symbolp binding) (get binding 'notmuch-doc))
+		      (notmuch-documentation-first-line binding)))
+	    tail)))
+    tail)
+
 (defun notmuch-describe-keymap (keymap ua-keys &optional prefix tail)
   "Return a list of cons cells, each describing one binding in KEYMAP.
 
@@ -255,23 +279,7 @@ prefix argument.  PREFIX and TAIL are used internally."
 		  (notmuch-describe-keymap
 		   binding ua-keys (notmuch-prefix-key-description key) tail)))
 	   (binding
-	    (let ((key-string (concat prefix (format-kbd-macro (vector key)))))
-	      ;; We don't include documentation if the key-binding is
-	      ;; over-ridden. Note, over-riding a binding
-	      ;; automatically hides the prefixed version too.
-	      (unless (assoc key-string tail)
-		(when (and ua-keys (symbolp binding)
-			   (get binding 'notmuch-prefix-doc))
-		  ;; Documentation for prefixed command
-		  (let ((ua-desc (key-description ua-keys)))
-		    (push (cons (concat ua-desc " " prefix (format-kbd-macro (vector key)))
-				(get binding 'notmuch-prefix-doc))
-			  tail)))
-		;; Documentation for command
-		(push (cons key-string
-			    (or (and (symbolp binding) (get binding 'notmuch-doc))
-				(notmuch-documentation-first-line binding)))
-		      tail))))))
+	    (setq tail (notmuch-describe-key (vector key) binding prefix ua-keys tail)))))
    keymap)
   tail)
 
