@@ -78,6 +78,13 @@ The `notmuch-tag` function now requires a list of tag changes
   changes or a space-separated string of tag changes.  The latter is
   no longer supported and the function now returns nothing.
 
+Fixed `notmuch-mua-reply` point placement when signature involved
+
+  By restricting cursor movement to body section for cursor placement
+  after signature is inserted, the cursor cannot "leak" to header
+  section anymore. Now inserted citation content will definitely go to
+  the body part of the message.
+
 Notmuch 0.16 (2013-08-03)
 =========================
 
