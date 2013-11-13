@@ -23,7 +23,7 @@
 static void
 status_update_cb (const char *msg, unused (void *closure))
 {
-    printf("%s\n", msg);
+    printf ("%s\n", msg);
 }
 
 int
@@ -49,7 +49,7 @@ notmuch_compact_command (notmuch_config_t *config, int argc, char *argv[])
     ret = notmuch_database_compact (path, backup_path,
 				    quiet ? NULL : status_update_cb, NULL);
     if (ret) {
-	fprintf (stderr, "Compaction failed: %s\n", notmuch_status_to_string(ret));
+	fprintf (stderr, "Compaction failed: %s\n", notmuch_status_to_string (ret));
 	return 1;
     }
 

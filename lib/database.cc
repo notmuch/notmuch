@@ -805,17 +805,19 @@ notmuch_database_close (notmuch_database_t *notmuch)
 }
 
 #if HAVE_XAPIAN_COMPACT
-static int unlink_cb (const char *path,
-		      unused (const struct stat *sb),
-		      unused (int type),
-		      unused (struct FTW *ftw))
+static int
+unlink_cb (const char *path,
+	   unused (const struct stat *sb),
+	   unused (int type),
+	   unused (struct FTW *ftw))
 {
-    return remove(path);
+    return remove (path);
 }
 
-static int rmtree (const char *path)
+static int
+rmtree (const char *path)
 {
-    return nftw(path, unlink_cb, 64, FTW_DEPTH | FTW_PHYS);
+    return nftw (path, unlink_cb, 64, FTW_DEPTH | FTW_PHYS);
 }
 
 class NotmuchCompactor : public Xapian::Compactor
@@ -825,17 +827,17 @@ class NotmuchCompactor : public Xapian::Compactor
 
 public:
     NotmuchCompactor(notmuch_compact_status_cb_t cb, void *closure) :
-	status_cb(cb), status_closure(closure) { }
+	status_cb (cb), status_closure (closure) { }
 
     virtual void
     set_status (const std::string &table, const std::string &status)
     {
-	char* msg;
+	char *msg;
 
 	if (status_cb == NULL)
 	    return;
 
-	if (status.length() == 0)
+	if (status.length () == 0)
 	    msg = talloc_asprintf (NULL, "compacting table %s", table.c_str());
 	else
 	    msg = talloc_asprintf (NULL, "     %s", status.c_str());
@@ -844,8 +846,8 @@ public:
 	    return;
 	}
 
-	status_cb(msg, status_closure);
-	talloc_free(msg);
+	status_cb (msg, status_closure);
+	talloc_free (msg);
     }
 };
 
@@ -861,8 +863,8 @@ public:
  * compaction process to protect data integrity.
  */
 notmuch_status_t
-notmuch_database_compact (const char* path,
-			  const char* backup_path,
+notmuch_database_compact (const char *path,
+			  const char *backup_path,
 			  notmuch_compact_status_cb_t status_cb,
 			  void *closure)
 {
@@ -876,7 +878,7 @@ notmuch_database_compact (const char* path,
     if (! local)
 	return NOTMUCH_STATUS_OUT_OF_MEMORY;
 
-    ret = notmuch_database_open(path, NOTMUCH_DATABASE_MODE_READ_WRITE, &notmuch);
+    ret = notmuch_database_open (path, NOTMUCH_DATABASE_MODE_READ_WRITE, &notmuch);
     if (ret) {
 	goto DONE;
     }
@@ -897,25 +899,25 @@ notmuch_database_compact (const char* path,
     }
 
     if (backup_path != NULL) {
-	if (stat(backup_path, &statbuf) != -1) {
+	if (stat (backup_path, &statbuf) != -1) {
 	    fprintf (stderr, "Backup path already exists: %s\n", backup_path);
 	    ret = NOTMUCH_STATUS_FILE_ERROR;
 	    goto DONE;
 	}
 	if (errno != ENOENT) {
 	    fprintf (stderr, "Unknown error while stat()ing backup path: %s\n",
-		     strerror(errno));
+		     strerror (errno));
 	    goto DONE;
 	}
     }
 
     try {
-	NotmuchCompactor compactor(status_cb, closure);
+	NotmuchCompactor compactor (status_cb, closure);
 
-	compactor.set_renumber(false);
-	compactor.add_source(xapian_path);
-	compactor.set_destdir(compact_xapian_path);
-	compactor.compact();
+	compactor.set_renumber (false);
+	compactor.add_source (xapian_path);
+	compactor.set_destdir (compact_xapian_path);
+	compactor.compact ();
     } catch (Xapian::InvalidArgumentError e) {
 	fprintf (stderr, "Error while compacting: %s\n", e.get_msg().c_str());
 	ret = NOTMUCH_STATUS_XAPIAN_EXCEPTION;
@@ -923,33 +925,33 @@ notmuch_database_compact (const char* path,
     }
 
     if (backup_path) {
-	if (rename(xapian_path, backup_path)) {
+	if (rename (xapian_path, backup_path)) {
 	    fprintf (stderr, "Error moving old database out of the way\n");
 	    ret = NOTMUCH_STATUS_FILE_ERROR;
 	    goto DONE;
 	}
     } else {
-	rmtree(xapian_path);
+	rmtree (xapian_path);
     }
 
-    if (rename(compact_xapian_path, xapian_path)) {
+    if (rename (compact_xapian_path, xapian_path)) {
 	fprintf (stderr, "Error moving compacted database\n");
 	ret = NOTMUCH_STATUS_FILE_ERROR;
 	goto DONE;
     }
 
-DONE:
+  DONE:
     if (notmuch)
 	notmuch_database_destroy (notmuch);
 
-    talloc_free(local);
+    talloc_free (local);
 
     return ret;
 }
 #else
 notmuch_status_t
-notmuch_database_compact (unused (const char* path),
-			  unused (const char* backup_path),
+notmuch_database_compact (unused (const char *path),
+			  unused (const char *backup_path),
 			  unused (notmuch_compact_status_cb_t status_cb),
 			  unused (void *closure))
 {
@@ -1538,7 +1540,7 @@ _notmuch_database_generate_doc_id (notmuch_database_t *notmuch)
     notmuch->last_doc_id++;
 
     if (notmuch->last_doc_id == 0)
-	INTERNAL_ERROR ("Xapian document IDs are exhausted.\n");	
+	INTERNAL_ERROR ("Xapian document IDs are exhausted.\n");
 
     return notmuch->last_doc_id;
 }
