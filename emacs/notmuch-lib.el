@@ -80,9 +80,8 @@ search."
   "An external script to incorporate new mail into the notmuch database.
 
 This variable controls the action invoked by
-`notmuch-search-poll-and-refresh-view' and
-`notmuch-hello-poll-and-update' (each have a default keybinding
-of 'G') to incorporate new mail into the notmuch database.
+`notmuch-poll-and-refresh-this-buffer' (bound by default to 'G')
+to incorporate new mail into the notmuch database.
 
 If set to nil (the default), new mail is processed by invoking
 \"notmuch new\". Otherwise, this should be set to a string that
