@@ -918,8 +918,8 @@ notmuch_database_compact (const char *path,
 	compactor.add_source (xapian_path);
 	compactor.set_destdir (compact_xapian_path);
 	compactor.compact ();
-    } catch (Xapian::InvalidArgumentError e) {
-	fprintf (stderr, "Error while compacting: %s\n", e.get_msg().c_str());
+    } catch (const Xapian::Error &error) {
+	fprintf (stderr, "Error while compacting: %s\n", error.get_msg().c_str());
 	ret = NOTMUCH_STATUS_XAPIAN_EXCEPTION;
 	goto DONE;
     }
