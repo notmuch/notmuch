@@ -873,6 +873,7 @@ notmuch_database_compact (const char *path,
     notmuch_status_t ret = NOTMUCH_STATUS_SUCCESS;
     notmuch_database_t *notmuch = NULL;
     struct stat statbuf;
+    notmuch_bool_t keep_backup;
 
     local = talloc_new (NULL);
     if (! local)
@@ -898,17 +899,27 @@ notmuch_database_compact (const char *path,
 	goto DONE;
     }
 
-    if (backup_path != NULL) {
-	if (stat (backup_path, &statbuf) != -1) {
-	    fprintf (stderr, "Backup path already exists: %s\n", backup_path);
-	    ret = NOTMUCH_STATUS_FILE_ERROR;
+    if (backup_path == NULL) {
+	if (! (backup_path = talloc_asprintf (local, "%s.old", xapian_path))) {
+	    ret = NOTMUCH_STATUS_OUT_OF_MEMORY;
 	    goto DONE;
 	}
-	if (errno != ENOENT) {
-	    fprintf (stderr, "Unknown error while stat()ing backup path: %s\n",
-		     strerror (errno));
-	    goto DONE;
-	}
+	keep_backup = FALSE;
+    }
+    else {
+	keep_backup = TRUE;
+    }
+
+    if (stat (backup_path, &statbuf) != -1) {
+	fprintf (stderr, "Path already exists: %s\n", backup_path);
+	ret = NOTMUCH_STATUS_FILE_ERROR;
+	goto DONE;
+    }
+    if (errno != ENOENT) {
+	fprintf (stderr, "Unknown error while stat()ing path: %s\n",
+		 strerror (errno));
+	ret = NOTMUCH_STATUS_FILE_ERROR;
+	goto DONE;
     }
 
     try {
@@ -924,14 +935,10 @@ notmuch_database_compact (const char *path,
 	goto DONE;
     }
 
-    if (backup_path) {
-	if (rename (xapian_path, backup_path)) {
-	    fprintf (stderr, "Error moving old database out of the way\n");
-	    ret = NOTMUCH_STATUS_FILE_ERROR;
-	    goto DONE;
-	}
-    } else {
-	rmtree (xapian_path);
+    if (rename (xapian_path, backup_path)) {
+	fprintf (stderr, "Error moving old database out of the way\n");
+	ret = NOTMUCH_STATUS_FILE_ERROR;
+	goto DONE;
     }
 
     if (rename (compact_xapian_path, xapian_path)) {
@@ -939,6 +946,9 @@ notmuch_database_compact (const char *path,
 	ret = NOTMUCH_STATUS_FILE_ERROR;
 	goto DONE;
     }
+
+    if (! keep_backup)
+	rmtree (backup_path);
 
   DONE:
     if (notmuch)
