@@ -942,19 +942,27 @@ notmuch_database_compact (const char *path,
     }
 
     if (rename (xapian_path, backup_path)) {
-	fprintf (stderr, "Error moving old database out of the way\n");
+	fprintf (stderr, "Error moving %s to %s: %s\n",
+		 xapian_path, backup_path, strerror (errno));
 	ret = NOTMUCH_STATUS_FILE_ERROR;
 	goto DONE;
     }
 
     if (rename (compact_xapian_path, xapian_path)) {
-	fprintf (stderr, "Error moving compacted database\n");
+	fprintf (stderr, "Error moving %s to %s: %s\n",
+		 compact_xapian_path, xapian_path, strerror (errno));
 	ret = NOTMUCH_STATUS_FILE_ERROR;
 	goto DONE;
     }
 
-    if (! keep_backup)
-	rmtree (backup_path);
+    if (! keep_backup) {
+	if (rmtree (backup_path)) {
+	    fprintf (stderr, "Error removing old database %s: %s\n",
+		     backup_path, strerror (errno));
+	    ret = NOTMUCH_STATUS_FILE_ERROR;
+	    goto DONE;
+	}
+    }
 
   DONE:
     if (notmuch)
