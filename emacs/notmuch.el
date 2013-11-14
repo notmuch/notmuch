@@ -165,6 +165,7 @@ To enter a line break in customize, press \\[quoted-insert] C-j."
 (defvar notmuch-search-stash-map
   (let ((map (make-sparse-keymap)))
     (define-key map "i" 'notmuch-search-stash-thread-id)
+    (define-key map "?" 'notmuch-subkeymap-help)
     map)
   "Submap for stash commands")
 (fset 'notmuch-search-stash-map notmuch-search-stash-map)

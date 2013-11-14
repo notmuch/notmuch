@@ -231,7 +231,8 @@ depending on the value of `notmuch-poll-script'."
   "Given a prefix key code, return a human-readable string representation.
 
 This is basically just `format-kbd-macro' but we also convert ESC to M-."
-  (let ((desc (format-kbd-macro (vector key))))
+  (let* ((key-vector (if (vectorp key) key (vector key)))
+	 (desc (format-kbd-macro key-vector)))
     (if (string= desc "ESC")
 	"M-"
       (concat desc " "))))
@@ -336,6 +337,28 @@ of its command symbol."
       (goto-char (point-min))
       (set-buffer-modified-p nil)
       (view-buffer (current-buffer) 'kill-buffer-if-not-modified))))
+
+(defun notmuch-subkeymap-help ()
+  "Show help for a subkeymap."
+  (interactive)
+  (let* ((key (this-command-keys-vector))
+	(prefix (make-vector (1- (length key)) nil))
+	(i 0))
+    (while (< i (length prefix))
+      (aset prefix i (aref key i))
+      (setq i (1+ i)))
+
+    (let* ((subkeymap (key-binding prefix))
+	   (ua-keys (where-is-internal 'universal-argument nil t))
+	   (prefix-string (notmuch-prefix-key-description prefix))
+	   (desc-alist (notmuch-describe-keymap subkeymap ua-keys subkeymap prefix-string))
+	   (desc-list (mapcar (lambda (arg) (concat (car arg) "\t" (cdr arg))) desc-alist))
+	   (desc (mapconcat #'identity desc-list "\n")))
+      (with-help-window (help-buffer)
+	(with-current-buffer standard-output
+	  (insert "\nPress 'q' to quit this window.\n\n")
+	  (insert desc)))
+      (pop-to-buffer (help-buffer)))))
 
 (defvar notmuch-buffer-refresh-function nil
   "Function to call to refresh the current buffer.")
