@@ -922,6 +922,12 @@ notmuch_database_compact (const char *path,
 	goto DONE;
     }
 
+    /* Unconditionally attempt to remove old work-in-progress database (if
+     * any). This is "protected" by database lock. If this fails due to write
+     * errors (etc), the following code will fail and provide error message.
+     */
+    (void) rmtree (compact_xapian_path);
+
     try {
 	NotmuchCompactor compactor (status_cb, closure);
 
