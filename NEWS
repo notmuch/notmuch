@@ -33,6 +33,38 @@ Improved `notmuch new` performance for unchanged folders
 Emacs Interface
 ---------------
 
+`notmuch-tree` (formerly `notmuch-pick`) has been added to mainline
+
+  `notmuch-tree` is a threaded message view for the emacs
+  interface. Each message is one line in the results and the thread
+  structure is shown using UTF-8 box drawing characters (similar to
+  Mutt's threaded view). It comes between search and show in terms of
+  amount of output and can be useful for viewing both single threads
+  and multiple threads.
+
+  Using `notmuch-tree`
+
+  The main key entries to notmuch tree are
+
+  'z' enter a query to view using notmuch tree (works in hello,
+      search, show and tree mode itself)
+
+  'Z' view the current query in tree notmuch tree (works from search
+      and show)
+
+  Once in tree mode, keybindings are mostly in line with the rest of
+  notmuch and are all viewable with '?' as usual.
+
+  Customising `notmuch-tree`
+
+  `notmuch-tree` has several customisation variables. The most
+  significant is the first notmuch-tree-show-out which determines the
+  behaviour when selecting a message (with RET) in tree view. By
+  default tree view uses a split window showing the single message in
+  the bottom pane. However, if this option is set then it views the
+  whole thread in the complete window jumping to the selected message
+  in the thread. In either case command-prefix selects the other option.
+
 Tagging threads in search is now race-free
 
   Previously, adding or removing a tag from a thread in a search
