@@ -346,10 +346,25 @@ the From: address first."
 If PROMPT-FOR-SENDER is non-nil, the user will be prompted for
 the From: address first.  If REPLY-ALL is non-nil, the message
 will be addressed to all recipients of the source message."
+
+;; In current emacs (24.3) select-active-regions is set to t by
+;; default. The reply insertion code sets the region to the quoted
+;; message to make it easy to delete (kill-region or C-w). These two
+;; things combine to put the quoted message in the primary selection.
+;;
+;; This is not what the user wanted and is a privacy risk (accidental
+;; pasting of the quoted message). We can avoid some of the problems
+;; by let-binding select-active-regions to nil. This fixes if the
+;; primary selection was previously in a non-emacs window but not if
+;; it was in an emacs window. To avoid the problem in the latter case
+;; we deactivate mark.
+
   (let ((sender
 	 (when prompt-for-sender
-	   (notmuch-mua-prompt-for-sender))))
-    (notmuch-mua-reply query-string sender reply-all)))
+	   (notmuch-mua-prompt-for-sender)))
+	(select-active-regions nil))
+    (notmuch-mua-reply query-string sender reply-all)
+    (deactivate-mark)))
 
 (defun notmuch-mua-send-and-exit (&optional arg)
   (interactive "P")
