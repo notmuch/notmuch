@@ -91,6 +91,12 @@ Built-in help improvements
   `notmuch-help` (usually bound to "?").  The bindings listed by
   `notmuch-help` also now include descriptions of prefixed commands.
 
+Quote replies as they are displayed in show view
+
+  We now render the parts for reply quoting the same way they are
+  rendered for show. At this time, the notable change is that replies
+  to text/calendar are now pretty instead of raw vcalendar.
+
 Fixed inconsistent use of configured search order
 
   All ways of interactively invoking search now honor the value of
