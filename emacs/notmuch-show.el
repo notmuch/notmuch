@@ -159,6 +159,15 @@ indentation."
 (make-variable-buffer-local 'notmuch-show-indent-content)
 (put 'notmuch-show-indent-content 'permanent-local t)
 
+(defvar notmuch-show-attachment-debug nil
+  "If t log stdout and stderr from attachment handlers
+
+When set to nil (the default) stdout and stderr from attachment
+handlers is discarded. When set to t the stdout and stderr from
+each attachment handler is logged in buffers with names beginning
+\" *notmuch-part*\". This option requires emacs version at least
+24.3 to work.")
+
 (defcustom notmuch-show-stash-mlarchive-link-alist
   '(("Gmane" . "http://mid.gmane.org/")
     ("MARC" . "http://marc.info/?i=")
@@ -2089,8 +2098,16 @@ caller is responsible for killing this buffer as appropriate."
 This ensures that the temporary buffer created for the mm-handle
 is destroyed when FN returns."
   (let ((handle (notmuch-show-current-part-handle)))
+    ;; emacs 24.3+ puts stdout/stderr into the calling buffer so we
+    ;; call it from a temp-buffer, unless
+    ;; notmuch-show-attachment-debug is non-nil in which case we put
+    ;; it in " *notmuch-part*".
     (unwind-protect
-	(funcall fn handle)
+	(if notmuch-show-attachment-debug
+	    (with-current-buffer (generate-new-buffer " *notmuch-part*")
+	      (funcall fn handle))
+	  (with-temp-buffer
+	    (funcall fn handle)))
       (kill-buffer (mm-handle-buffer handle)))))
 
 (defun notmuch-show-part-button-default (&optional button)
