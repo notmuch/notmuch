@@ -412,19 +412,27 @@ _notmuch_message_ensure_message_file (notmuch_message_t *message)
 const char *
 notmuch_message_get_header (notmuch_message_t *message, const char *header)
 {
-    std::string value;
+    try {
+	    std::string value;
 
-    /* Fetch header from the appropriate xapian value field if
-     * available */
-    if (strcasecmp (header, "from") == 0)
-	value = message->doc.get_value (NOTMUCH_VALUE_FROM);
-    else if (strcasecmp (header, "subject") == 0)
-	value = message->doc.get_value (NOTMUCH_VALUE_SUBJECT);
-    else if (strcasecmp (header, "message-id") == 0)
-	value = message->doc.get_value (NOTMUCH_VALUE_MESSAGE_ID);
+	    /* Fetch header from the appropriate xapian value field if
+	     * available */
+	    if (strcasecmp (header, "from") == 0)
+		value = message->doc.get_value (NOTMUCH_VALUE_FROM);
+	    else if (strcasecmp (header, "subject") == 0)
+		value = message->doc.get_value (NOTMUCH_VALUE_SUBJECT);
+	    else if (strcasecmp (header, "message-id") == 0)
+		value = message->doc.get_value (NOTMUCH_VALUE_MESSAGE_ID);
 
-    if (!value.empty())
-	return talloc_strdup (message, value.c_str ());
+	    if (!value.empty())
+		return talloc_strdup (message, value.c_str ());
+
+    } catch (Xapian::Error &error) {
+	fprintf (stderr, "A Xapian exception occurred when reading header: %s\n",
+		 error.get_msg().c_str());
+	message->notmuch->exception_reported = TRUE;
+	return NULL;
+    }
 
     /* Otherwise fall back to parsing the file */
     _notmuch_message_ensure_message_file (message);
@@ -766,7 +774,9 @@ notmuch_message_get_date (notmuch_message_t *message)
     try {
 	value = message->doc.get_value (NOTMUCH_VALUE_TIMESTAMP);
     } catch (Xapian::Error &error) {
-	INTERNAL_ERROR ("Failed to read timestamp value from document.");
+	fprintf (stderr, "A Xapian exception occurred when reading date: %s\n",
+		 error.get_msg().c_str());
+	message->notmuch->exception_reported = TRUE;
 	return 0;
     }
 
