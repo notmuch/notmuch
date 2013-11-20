@@ -1,2 +1,2 @@
 # this file should be kept in sync with ../../../version
-__VERSION__ = '0.16'
+__VERSION__ = '0.17~rc1'
