@@ -29,6 +29,14 @@ Improved `notmuch new` performance for unchanged folders
   RFC 2047-encodes the headers, making the output a valid RFC 2822
   message.  The JSON/sexp format is unchanged.
 
+`notmuch compact` command
+
+  The new `compact` command exposes Xapian's compaction
+  functionality through a more convenient interface than
+  `xapian-compact`. `notmuch compact` will compact the database to a
+  temporary location, optionally backup the original database, and
+  move the compacted database into place.
+
 Emacs Interface
 ---------------
 
