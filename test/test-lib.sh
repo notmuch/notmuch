@@ -628,6 +628,17 @@ notmuch_json_show_sanitize ()
 	-e 's|"filename": "/[^"]*",|"filename": "YYYYY",|g'
 }
 
+notmuch_emacs_error_sanitize ()
+{
+    local command=$1
+    shift
+    for file in "$@"; do
+	echo "=== $file ==="
+	cat "$file"
+    done | sed  \
+	-e 's/^\[.*\]$/[XXX]/' \
+	-e "s|^\(command: \)\{0,1\}/.*/$command|\1YYY/$command|"
+}
 # End of notmuch helper functions
 
 # Use test_set_prereq to tell that a particular prerequisite is available.

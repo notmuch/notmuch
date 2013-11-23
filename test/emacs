@@ -881,15 +881,16 @@ test_emacs "(let ((notmuch-command \"$PWD/notmuch_fail\"))
 	       (with-current-buffer \"*Notmuch errors*\"
 		  (test-output \"ERROR\"))
 	       (test-output))"
-sed -i -e 's/^\[.*\]$/[XXX]/' ERROR
-test_expect_equal "$(cat OUTPUT; echo ---; cat MESSAGES; echo ---; cat ERROR)" "\
+
+test_expect_equal "$(notmuch_emacs_error_sanitize notmuch_fail OUTPUT MESSAGES ERROR)" "\
+=== OUTPUT ===
 End of search results.
----
-$PWD/notmuch_fail exited with status 1 (see *Notmuch errors* for more details)
----
+=== MESSAGES ===
+YYY/notmuch_fail exited with status 1 (see *Notmuch errors* for more details)
+=== ERROR ===
 [XXX]
-$PWD/notmuch_fail exited with status 1
-command: $PWD/notmuch_fail search --format\=sexp --format-version\=2 --sort\=newest-first tag\:inbox
+YYY/notmuch_fail exited with status 1
+command: YYY/notmuch_fail search --format\=sexp --format-version\=2 --sort\=newest-first tag\:inbox
 exit status: 1"
 
 test_begin_subtest "Search handles subprocess warnings"

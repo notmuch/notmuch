@@ -181,14 +181,14 @@ test_emacs "(let ((notmuch-command \"$PWD/notmuch_fail\"))
 	       (with-current-buffer \"*Notmuch errors*\"
 		  (test-output \"ERROR\"))
 	       (test-output))"
-sed -i -e 's/^\[.*\]$/[XXX]/' ERROR
-test_expect_equal "$(cat OUTPUT; echo ---; cat MESSAGES; echo ---; cat ERROR)" "\
----
+test_expect_equal "$(notmuch_emacs_error_sanitize notmuch_fail OUTPUT MESSAGES ERROR)" "\
+=== OUTPUT ===
+=== MESSAGES ===
 This is an error (see *Notmuch errors* for more details)
----
+=== ERROR ===
 [XXX]
 This is an error
-command: $PWD/notmuch_fail show --format\\=sexp --format-version\\=1 --exclude\\=false \\' \\* \\'
+command: YYY/notmuch_fail show --format\\=sexp --format-version\\=1 --exclude\\=false \\' \\* \\'
 exit status: 1
 stderr:
 This is an error
