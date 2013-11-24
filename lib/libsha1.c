@@ -49,11 +49,20 @@ extern "C"
 
 #define bswap_32(x) ((rotr32((x), 24) & 0x00ff00ff) | (rotr32((x), 8) & 0xff00ff00))
 
-#if (PLATFORM_BYTE_ORDER == IS_LITTLE_ENDIAN)
-#define bsw_32(p,n) \
-    { int _i = (n); while(_i--) ((uint32_t*)p)[_i] = bswap_32(((uint32_t*)p)[_i]); }
+/* The macros __BYTE_ORDER__ and __ORDER_*_ENDIAN__ are GNU C
+ * extensions. They are also supported by clang as of v3.2 */
+
+#ifdef __BYTE_ORDER__
+#  if (__BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__)
+#    define bsw_32(p,n) \
+       { int _i = (n); while(_i--) ((uint32_t*)p)[_i] = bswap_32(((uint32_t*)p)[_i]); }
+#  elif (__BYTE_ORDER__ == __ORDER_BIG_ENDIAN__)
+#    define bsw_32(p,n)
+#  else
+#    error "unknown byte order"
+#  endif
 #else
-#define bsw_32(p,n)
+#    error "macro __BYTE_ORDER__ is not defined"
 #endif
 
 #define SHA1_MASK   (SHA1_BLOCK_SIZE - 1)
