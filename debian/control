@@ -18,7 +18,7 @@ Build-Depends:
  ruby, ruby-dev (>>1:1.9.3~),
  emacs23-nox | emacs23 (>=23~) | emacs23-lucid (>=23~) |
  emacs24-nox | emacs24 (>=24~) | emacs24-lucid (>=24~),
- gdb,
+ gdb [!s390x],
  dtach (>= 0.8)
 Standards-Version: 3.9.4
 Homepage: http://notmuchmail.org/
