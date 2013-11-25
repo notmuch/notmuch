@@ -25,6 +25,9 @@ fi
 # Make sure echo builtin does not expand backslash-escape sequences by default.
 shopt -u xpg_echo
 
+this_test=${0##*/}
+this_test=${this_test%.sh}
+
 # if --tee was passed, write the output not only to the terminal, but
 # additionally to the file test-results/$BASENAME.out, too.
 case "$GIT_TEST_TEE_STARTED, $* " in
@@ -33,7 +36,7 @@ done,*)
 	;;
 *' --tee '*|*' --va'*)
 	mkdir -p test-results
-	BASE=test-results/$(basename "$0" .sh)
+	BASE=test-results/$this_test
 	(GIT_TEST_TEE_STARTED=done ${SHELL-sh} "$0" "$@" 2>&1;
 	 echo $? > $BASE.exit) | tee $BASE.out
 	test "$(cat $BASE.exit)" = 0
@@ -187,7 +190,7 @@ then
 	exit 0
 fi
 
-echo $(basename "$0"): "Testing ${test_description}"
+echo $this_test: "Testing ${test_description}"
 
 exec 5>&1
 
@@ -967,7 +970,7 @@ test_done () {
 	GIT_EXIT_OK=t
 	test_results_dir="$TEST_DIRECTORY/test-results"
 	mkdir -p "$test_results_dir"
-	test_results_path="$test_results_dir/${0%.sh}"
+	test_results_path="$test_results_dir/$this_test"
 
 	echo "total $test_count" >> $test_results_path
 	echo "success $test_success" >> $test_results_path
@@ -1026,7 +1029,7 @@ test_emacs () {
 	test -z "$missing_dependencies" || return
 
 	if [ -z "$EMACS_SERVER" ]; then
-		emacs_tests="$(basename $0).el"
+		emacs_tests="${this_test}.el"
 		if [ -f "$TEST_DIRECTORY/$emacs_tests" ]; then
 			load_emacs_tests="--eval '(load \"$emacs_tests\")'"
 		else
@@ -1140,7 +1143,6 @@ else
 	exec 4>test.output 3>&4
 fi
 
-this_test=${0##*/}
 for skp in $NOTMUCH_SKIP_TESTS
 do
 	to_skip=
