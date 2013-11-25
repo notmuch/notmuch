@@ -190,7 +190,15 @@ then
 	exit 0
 fi
 
-echo $this_test: "Testing ${test_description}"
+test_description_printed=
+print_test_description ()
+{
+	test -z "$test_description_printed" || return 0
+	echo
+	echo $this_test: "Testing ${test_description}"
+	test_description_printed=1
+}
+print_test_description
 
 exec 5>&1
 
@@ -978,8 +986,6 @@ test_done () {
 	echo "broken $test_broken" >> $test_results_path
 	echo "failed $test_failure" >> $test_results_path
 	echo "" >> $test_results_path
-
-	echo
 
 	[ -n "$EMACS_SERVER" ] && test_emacs '(kill-emacs)'
 

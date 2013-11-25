@@ -98,6 +98,7 @@ done
 trap - HUP INT TERM
 
 # Report results
+echo
 ./aggregate-results.sh test-results/*
 ev=$?
 
