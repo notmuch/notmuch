@@ -19,6 +19,7 @@ add_gnupg_home ()
     elif (gpg --debug-quick-random --version >/dev/null 2>&1) ; then
 	echo debug-quick-random >> "$GNUPGHOME"/gpg.conf
     fi
+    echo no-emit-version >> "$GNUPGHOME"/gpg.conf
 }
 
 ##################################################
@@ -62,7 +63,7 @@ expected='[[[{"id": "XXXXX",
  "content": "This is a test signed message.\n"},
  {"id": 3,
  "content-type": "application/pgp-signature",
- "content-length": 315}]}]},
+ "content-length": 280}]}]},
  []]]]'
 test_expect_equal_json \
     "$output" \
@@ -97,7 +98,7 @@ expected='[[[{"id": "XXXXX",
  "content": "This is a test signed message.\n"},
  {"id": 3,
  "content-type": "application/pgp-signature",
- "content-length": 315}]}]},
+ "content-length": 280}]}]},
  []]]]'
 test_expect_equal_json \
     "$output" \
@@ -130,7 +131,7 @@ expected='[[[{"id": "XXXXX",
  "content": "This is a test signed message.\n"},
  {"id": 3,
  "content-type": "application/pgp-signature",
- "content-length": 315}]}]},
+ "content-length": 280}]}]},
  []]]]'
 test_expect_equal_json \
     "$output" \
@@ -354,7 +355,7 @@ expected='[[[{"id": "XXXXX",
  "content": "This is a test signed message.\n"},
  {"id": 3,
  "content-type": "application/pgp-signature",
- "content-length": 315}]}]},
+ "content-length": 280}]}]},
  []]]]'
 test_expect_equal_json \
     "$output" \
