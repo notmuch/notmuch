@@ -146,6 +146,13 @@ Fixed `notmuch-mua-reply` point placement when signature involved
   section anymore. Now inserted citation content will definitely go to
   the body part of the message.
 
+Vim Interface
+-------------
+
+  It is now possible to compose new messages in the Vim interface, as
+  opposed reply to existing messages.  There is also support for
+  going straight to a search (bypassing the folders view).
+
 Notmuch 0.16 (2013-08-03)
 =========================
 
