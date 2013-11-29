@@ -1,5 +1,6 @@
-notmuch (0.17~rc1-2) experimental; urgency=low
+notmuch (0.17~rc2-1) experimental; urgency=low
 
+  * New upstream release candidate
   * Remove gdb as build-dep on s390x. This implicitly disables failing atomicity test.
     For more information, see #728705
 
