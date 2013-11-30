@@ -139,6 +139,26 @@ The `notmuch-tag` function now requires a list of tag changes
   changes or a space-separated string of tag changes.  The latter is
   no longer supported and the function now returns nothing.
 
+Fixed `notmuch-reply` putting reply in primary selection
+
+  On emacs 24 notmuch-reply used to put the cited text into the
+  primary selection (which could lead to inadvertently pasting this
+  cited text elsewhere). Now the primary-selection is not changed.
+
+Fixed `notmuch-show` invisible part handling
+
+  In some obscure cases part buttons and invisibility had strange
+  interactions: in particular, the default action for some parts gave
+  the wrong action. This has been fixed.
+
+Fixed `notmuch-show` attachment viewers and stderr
+
+  In emacs 24.3+ viewing an attachment could cause spurious text to
+  appear in the show buffer (any stderr or stdout the viewer
+  produced). By default this output is now discarded. For debugging,
+  setting `notmuch-show-attachment-debug` causes notmuch to keep the
+  viewer's stderr and stdout in a separate buffer.
+
 Fixed `notmuch-mua-reply` point placement when signature involved
 
   By restricting cursor movement to body section for cursor placement
