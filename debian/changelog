@@ -1,8 +1,8 @@
 notmuch (0.17~rc2-1) experimental; urgency=low
 
   * New upstream release candidate
-  * Remove gdb as build-dep on s390x. This implicitly disables failing atomicity test.
-    For more information, see #728705
+  * Remove gdb as build-dep on s390x. This implicitly disables failing
+    atomicity test.  For more information, see #728705
 
  -- David Bremner <bremner@debian.org>  Sun, 24 Nov 2013 19:34:28 -0400
 
