@@ -41,52 +41,70 @@ add_email_corpus ()
 {
     rm -rf ${MAIL_DIR}
 
-    case "$corpus_size" in
-	small)
-	    mail_subdir="mail/enron/bailey-s"
-	    check_for="${TEST_DIRECTORY}/corpus/$mail_subdir"
-	    ;;
-	medium)
-	    mail_subdir="mail/notmuch-archive"
-	    check_for="${TEST_DIRECTORY}/corpus/$mail_subdir"
-	    ;;
-	*)
-	    mail_subdir=mail
-	    check_for="${TEST_DIRECTORY}/corpus/$mail_subdir/enron/wolfe-j"
-    esac
+    CORPUS_DIR=${TEST_DIRECTORY}/corpus
+    mkdir -p "${CORPUS_DIR}"
 
-    MAIL_CORPUS="${TEST_DIRECTORY}/corpus/$mail_subdir"
-    TAG_CORPUS="${TEST_DIRECTORY}/corpus/tags"
+    MAIL_CORPUS="${CORPUS_DIR}/mail.${corpus_size}"
+    TAG_CORPUS="${CORPUS_DIR}/tags"
 
-    args=()
+    if command -v pixz > /dev/null; then
+	XZ=pixz
+    else
+	XZ=xz
+    fi
+
+    if [ ! -d "${CORPUS_DIR}/manifest" ]; then
+
+	printf "Unpacking manifests\n"
+	tar --extract --use-compress-program ${XZ} --strip-components=1 \
+	    --directory ${TEST_DIRECTORY}/corpus \
+	    --wildcards --file ../download/notmuch-email-corpus-${PERFTEST_VERSION}.tar.xz \
+	    'notmuch-email-corpus/manifest/*'
+    fi
+
+    file_list=$(mktemp file_listXXXXXX)
     if [ ! -d "$TAG_CORPUS" ] ; then
-	args+=("notmuch-email-corpus/tags")
+	echo "notmuch-email-corpus/tags" >> $file_list
     fi
 
-    if [ ! -d "$check_for" ] ; then
-	args+=("notmuch-email-corpus/$mail_subdir")
-    fi
-
-    if [[ ${#args[@]} > 0 ]]; then
-	if command -v pixz > /dev/null; then
-	    XZ=pixz
+    if [ ! -d "$MAIL_CORPUS" ] ; then
+	if [[ "$corpus_size" != "large" ]]; then
+	    sed s,^,notmuch-email-corpus/, < \
+		${TEST_DIRECTORY}/corpus/manifest/MANIFEST.${corpus_size} >> $file_list
 	else
-	    XZ=xz
+	    echo "notmuch-email-corpus/mail" >> $file_list
 	fi
+    fi
+
+    if [[ -s $file_list ]]; then
 
 	printf "Unpacking corpus\n"
-	mkdir -p "${TEST_DIRECTORY}/corpus"
-
 	tar --checkpoint=.5000 --extract --strip-components=1 \
 	    --directory ${TEST_DIRECTORY}/corpus \
 	    --use-compress-program ${XZ} \
 	    --file ../download/notmuch-email-corpus-${PERFTEST_VERSION}.tar.xz \
-	    "${args[@]}"
+	    --anchored --recursion \
+	    --files-from $file_list
 
 	printf "\n"
 
+	if [[ ! -d ${MAIL_CORPUS} ]]; then
+	    printf "creating link farm\n"
+
+	    if [[ "$corpus_size" = large ]]; then
+		cp -rl ${TEST_DIRECTORY}/corpus/mail ${MAIL_CORPUS}
+	    else
+		while read -r file; do
+		    tdir=${MAIL_CORPUS}/$(dirname $file)
+		    mkdir -p $tdir
+		    ln ${TEST_DIRECTORY}/corpus/$file $tdir
+		done <${TEST_DIRECTORY}/corpus/manifest/MANIFEST.${corpus_size}
+	    fi
+	fi
+
     fi
 
+    rm $file_list
     cp -lr $TAG_CORPUS $TMP_DIRECTORY/corpus.tags
     cp -lr $MAIL_CORPUS $MAIL_DIR
 }
