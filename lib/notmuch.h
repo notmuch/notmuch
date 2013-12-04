@@ -46,7 +46,7 @@ NOTMUCH_BEGIN_DECLS
  * version in Makefile.local.
  */
 #define LIBNOTMUCH_MAJOR_VERSION	3
-#define LIBNOTMUCH_MINOR_VERSION	0
+#define LIBNOTMUCH_MINOR_VERSION	1
 #define LIBNOTMUCH_MICRO_VERSION	0
 
 /*
@@ -55,11 +55,11 @@ NOTMUCH_BEGIN_DECLS
  * Return true if the library being compiled against is of the
  * specified version or above. For example:
  *
- * #if LIBNOTMUCH_CHECK_VERSION(3, 0, 0)
- *     (code requiring libnotmuch 3.0.0 or above)
+ * #if LIBNOTMUCH_CHECK_VERSION(3, 1, 0)
+ *     (code requiring libnotmuch 3.1.0 or above)
  * #endif
  *
- * LIBNOTMUCH_CHECK_VERSION has been defined since version 3.0.0; you
+ * LIBNOTMUCH_CHECK_VERSION has been defined since version 3.1.0; you
  * can use #if !defined(NOTMUCH_CHECK_VERSION) to check for versions
  * prior to that.
  */
