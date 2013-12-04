@@ -41,8 +41,12 @@ NOTMUCH_BEGIN_DECLS
 #define TRUE 1
 #endif
 
-#define NOTMUCH_MAJOR_VERSION	0
-#define NOTMUCH_MINOR_VERSION	17
+/*
+ * The library version number.  This must agree with the soname
+ * version in Makefile.local.
+ */
+#define NOTMUCH_MAJOR_VERSION	3
+#define NOTMUCH_MINOR_VERSION	0
 #define NOTMUCH_MICRO_VERSION	0
 
 /*

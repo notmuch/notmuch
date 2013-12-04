@@ -18,6 +18,9 @@ LIBNOTMUCH_VERSION_MINOR = 0
 # simply compatible changes to the implementation).
 LIBNOTMUCH_VERSION_RELEASE = 0
 
+# Note: Don't forget to change the VERSION macros in notmuch.h when
+# any of the above change.
+
 ifeq ($(PLATFORM),MACOSX)
 LIBRARY_SUFFIX = dylib
 # On OS X, library version numbers go before suffix.
