@@ -77,37 +77,36 @@ case $VERSION in
 	*)	verfail "'$VERSION' is a single number" ;;
 esac
 
-_set_version_components ()
-{
-	VERSION_MAJOR=$1
-	VERSION_MINOR=$2
-	VERSION_MICRO=${3:-0} # set to 0 in case $3 is unset or "null" (string)
-}
+echo -n "Checking that LIBNOTMUCH version macros & variables match ... "
+# lib/notmuch.h
+LIBNOTMUCH_MAJOR_VERSION=broken
+LIBNOTMUCH_MINOR_VERSION=broken
+LIBNOTMUCH_MICRO_VERSION=broken
+# lib/Makefile.local
+LIBNOTMUCH_VERSION_MAJOR=borken
+LIBNOTMUCH_VERSION_MINOR=borken
+LIBNOTMUCH_VERSION_RELEASE=borken
 
-IFS=.
-_set_version_components $VERSION
-IFS=$DEFAULT_IFS
-
-echo -n "Checking that libnotmuch version macros match $VERSION... "
-NOTMUCH_MAJOR_VERSION=broken
-NOTMUCH_MINOR_VERSION=broken
-NOTMUCH_MICRO_VERSION=broken
-eval `awk 'NF == 3 && $1 == "#define" && $2 ~ /^NOTMUCH_[A-Z]+_VERSION$/ \
+eval `awk 'NF == 3 && $1 == "#define" && $2 ~ /^LIBNOTMUCH_[A-Z]+_VERSION$/ \
 	&& $3 ~ /^[0-9]+$/ { print $2 "=" $3 }' lib/notmuch.h`
+
+eval `awk 'NF == 3 && $1 ~ /^LIBNOTMUCH_VERSION_[A-Z]+$/ && $2 == "=" \
+	&& $3 ~ /^[0-9]+$/ { print $1 "=" $3 }' lib/Makefile.local`
+
 
 check_version_component ()
 {
-	eval local v1=\$VERSION_$1
-	eval local v2=\$NOTMUCH_$1_VERSION
+	eval local v1=\$LIBNOTMUCH_$1_VERSION
+	eval local v2=\$LIBNOTMUCH_VERSION_$2
 	if [ $v1 != $v2 ]
-	then	append_emsg "NOTMUCH_$1_VERSION is defined as '$v2' in lib/notmuch.h instead of '$v1'"
+	then	append_emsg "LIBNOTMUCH_$1_VERSION ($v1) does not equal LIBNOTMUCH_VERSION_$2 ($v2)"
 	fi
 }
 
 old_emsg_count=$emsg_count
-check_version_component MAJOR
-check_version_component MINOR
-check_version_component MICRO
+check_version_component MAJOR MAJOR
+check_version_component MINOR MINOR
+check_version_component MICRO RELEASE
 [ $old_emsg_count = $emsg_count ] && echo Yes. || echo No.
 
 echo -n "Checking that this is Debian package for notmuch... "
