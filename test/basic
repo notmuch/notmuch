@@ -74,12 +74,12 @@ suppress_diff_date() {
 }
 
 test_begin_subtest "Ensure that test output is suppressed unless the test fails"
-output=$(cd $TEST_DIRECTORY; ./test-verbose 2>&1 | suppress_diff_date)
+output=$(cd $TEST_DIRECTORY; NOTMUCH_TEST_QUIET= ./test-verbose 2>&1 | suppress_diff_date)
 expected=$(cat $EXPECTED/test-verbose-no | suppress_diff_date)
 test_expect_equal "$output" "$expected"
 
 test_begin_subtest "Ensure that -v does not suppress test output"
-output=$(cd $TEST_DIRECTORY; ./test-verbose -v 2>&1 | suppress_diff_date)
+output=$(cd $TEST_DIRECTORY; NOTMUCH_TEST_QUIET= ./test-verbose -v 2>&1 | suppress_diff_date)
 expected=$(cat $EXPECTED/test-verbose-yes | suppress_diff_date)
 # Do not include the results of test-verbose in totals
 rm $TEST_DIRECTORY/test-results/test-verbose

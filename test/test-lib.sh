@@ -198,7 +198,10 @@ print_test_description ()
 	echo $this_test: "Testing ${test_description}"
 	test_description_printed=1
 }
-print_test_description
+if [ -z "$NOTMUCH_TEST_QUIET" ]
+then
+	print_test_description
+fi
 
 exec 5>&1
 
@@ -717,6 +720,9 @@ test_ok_ () {
 		return
 	fi
 	test_success=$(($test_success + 1))
+	if test -n "$NOTMUCH_TEST_QUIET"; then
+		return 0
+	fi
 	say_color pass "%-6s" "PASS"
 	echo " $test_subtest_name"
 }
@@ -727,6 +733,7 @@ test_failure_ () {
 		return
 	fi
 	test_failure=$(($test_failure + 1))
+	print_test_description
 	test_failure_message_ "FAIL" "$test_subtest_name" "$@"
 	test "$immediate" = "" || { GIT_EXIT_OK=t; exit 1; }
 	return 1

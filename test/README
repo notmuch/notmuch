@@ -76,6 +76,14 @@ the tests in one of the following ways.
 	TEST_EMACS=my-special-emacs TEST_EMACSCLIENT=my-emacsclient ./emacs
 	make test TEST_EMACS=my-special-emacs TEST_EMACSCLIENT=my-emacsclient
 
+Quiet Execution
+---------------
+
+Normally, when new script starts and when test PASSes you get a message
+printed on screen. This printing can be disabled by setting the
+NOTMUCH_TEST_QUIET variable to a non-null value. Message on test
+failures and skips are still printed.
+
 Skipping Tests
 --------------
 If, for any reason, you need to skip one or more tests, you can do so
