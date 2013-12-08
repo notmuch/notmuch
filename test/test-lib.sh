@@ -618,7 +618,8 @@ notmuch_show_sanitize_all ()
 {
     sed \
 	-e 's| filename:.*| filename:XXXXX|' \
-	-e 's| id:[^ ]* | id:XXXXX |'
+	-e 's| id:[^ ]* | id:XXXXX |' | \
+	notmuch_date_sanitize
 }
 
 notmuch_json_show_sanitize ()
@@ -640,6 +641,12 @@ notmuch_emacs_error_sanitize ()
     done | sed  \
 	-e 's/^\[.*\]$/[XXX]/' \
 	-e "s|^\(command: \)\{0,1\}/.*/$command|\1YYY/$command|"
+}
+
+notmuch_date_sanitize ()
+{
+    sed \
+	-e 's/^Date: Fri, 05 Jan 2001 .*0000/Date: GENERATED_DATE/'
 }
 # End of notmuch helper functions
 
