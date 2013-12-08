@@ -4,11 +4,6 @@ test_description="maildir synchronization"
 
 . ./test-lib.sh
 
-# Avoid including the local value of MAIL_DIR in the result.
-filter_show_json() {
-    sed -e "s|${MAIL_DIR}/|MAIL_DIR/|"
-}
-
 # Create the expected maildir structure
 mkdir $MAIL_DIR/cur
 mkdir $MAIL_DIR/new
@@ -40,18 +35,18 @@ output=$(cd ${MAIL_DIR}/cur; ls -1 adding-replied*)
 test_expect_equal "$output" "adding-replied-tag:2,RS"
 
 test_begin_subtest "notmuch show works with renamed file (without notmuch new)"
-output=$(notmuch show --format=json id:${gen_msg_id} | filter_show_json)
-test_expect_equal_json "$output" '[[[{"id": "adding-replied-tag@notmuch-test-suite",
+output=$(notmuch show --format=json id:${gen_msg_id} | notmuch_json_show_sanitize)
+test_expect_equal_json "$output" '[[[{"id": "XXXXX",
 "match": true,
 "excluded": false,
-"filename": "MAIL_DIR/cur/adding-replied-tag:2,RS",
-"timestamp": 978709437,
+"filename": "YYYYY",
+"timestamp": 42,
 "date_relative": "2001-01-05",
 "tags": ["inbox","replied"],
 "headers": {"Subject": "Adding replied tag",
 "From": "Notmuch Test Suite <test_suite@notmuchmail.org>",
 "To": "Notmuch Test Suite <test_suite@notmuchmail.org>",
-"Date": "Fri, 05 Jan 2001 15:43:57 +0000"},
+"Date": "GENERATED_DATE"},
 "body": [{"id": 1,
 "content-type": "text/plain",
 "content": "This is just a test message (#3)\n"}]},

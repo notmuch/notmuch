@@ -625,7 +625,9 @@ notmuch_json_show_sanitize ()
 {
     sed \
 	-e 's|"id": "[^"]*",|"id": "XXXXX",|g' \
-	-e 's|"filename": "/[^"]*",|"filename": "YYYYY",|g'
+	-e 's|"Date": "Fri, 05 Jan 2001 [^"]*0000"|"Date": "GENERATED_DATE"|g' \
+	-e 's|"filename": "/[^"]*",|"filename": "YYYYY",|g' \
+	-e 's|"timestamp": 97.......|"timestamp": 42|g'
 }
 
 notmuch_emacs_error_sanitize ()
