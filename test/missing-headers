@@ -95,7 +95,7 @@ Body
 
 test_begin_subtest "Show: json"
 output=$(notmuch show --format=json '*' | notmuch_json_show_sanitize)
-test_expect_equal_json "$output" '
+expected=$(notmuch_json_show_sanitize <<EOF
 [
     [
         [
@@ -156,7 +156,9 @@ test_expect_equal_json "$output" '
             []
         ]
     ]
-]'
-
+]
+EOF
+)
+test_expect_equal_json "$output" "$expected"
 
 test_done
