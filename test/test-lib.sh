@@ -356,7 +356,11 @@ generate_message ()
     fi
 
     if [ -z "${template[date]}" ]; then
-	template[date]="Fri, 05 Jan 2001 15:43:57 +0000"
+	# we use decreasing timestamps here for historical reasons;
+	# the existing test suite when we converted to unique timestamps just
+	# happened to have signicantly fewer failures with that choice.
+	template[date]=$(TZ=UTC printf "%(%a, %d %b %Y %T %z)T\n" \
+			$((978709437 - gen_msg_cnt)))
     fi
 
     additional_headers=""
