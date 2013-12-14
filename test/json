@@ -38,7 +38,7 @@ test_expect_equal_json "$output" "[[[{\"id\": \"${gen_msg_id}\", \"match\": true
 test_begin_subtest "Show message: json, inline attachment filename"
 subject='json-show-inline-attachment-filename'
 id="json-show-inline-attachment-filename@notmuchmail.org"
-emacs_deliver_message \
+emacs_fcc_message \
     "$subject" \
     'This is a test message with inline attachment with a filename' \
     "(mml-attach-file \"$TEST_DIRECTORY/README\" nil nil \"inline\")

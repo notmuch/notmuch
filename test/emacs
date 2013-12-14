@@ -771,7 +771,7 @@ test_expect_equal_file OUTPUT EXPECTED
 
 test_begin_subtest "Do not call notmuch for non-inlinable application/mpeg parts"
 id='message-with-application/mpeg-attachment@notmuchmail.org'
-emacs_deliver_message \
+emacs_fcc_message \
     'Message with application/mpeg attachment' \
     '' \
     "(message-goto-eoh)
@@ -786,7 +786,7 @@ test_expect_equal $(notmuch_counter_value) 1
 
 test_begin_subtest "Do not call notmuch for non-inlinable audio/mpeg parts"
 id='message-with-audio/mpeg-attachment@notmuchmail.org'
-emacs_deliver_message \
+emacs_fcc_message \
     'Message with audio/mpeg attachment' \
     '' \
     "(message-goto-eoh)

@@ -470,6 +470,36 @@ emacs_deliver_message ()
     notmuch new >/dev/null
 }
 
+# Pretend to deliver a message with emacs. Really save it to a file
+# and add it to the database
+#
+# Uses emacs to generate and deliver a message to the mail store.
+# Accepts arbitrary extra emacs/elisp functions to modify the message
+# before sending, which is useful to doing things like attaching files
+# to the message and encrypting/signing.
+emacs_fcc_message ()
+{
+    local subject="$1"
+    local body="$2"
+    shift 2
+    # before we can send a message, we have to prepare the FCC maildir
+    mkdir -p "$MAIL_DIR"/sent/{cur,new,tmp}
+
+    test_emacs \
+	"(let ((message-send-mail-function (lambda () t))
+               (mail-host-address \"example.com\"))
+	   (notmuch-mua-mail)
+	   (message-goto-to)
+	   (insert \"test_suite@notmuchmail.org\nDate: 01 Jan 2000 12:00:00 -0000\")
+	   (message-goto-subject)
+	   (insert \"${subject}\")
+	   (message-goto-body)
+	   (insert \"${body}\")
+	   $@
+	   (message-send-and-exit))" || return 1
+    notmuch new >/dev/null
+}
+
 # Generate a corpus of email and add it to the database.
 #
 # This corpus is fixed, (it happens to be 50 messages from early in

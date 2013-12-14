@@ -29,7 +29,7 @@ test_expect_equal "$output" "((((:id \"${gen_msg_id}\" :match t :excluded nil :f
 test_begin_subtest "Show message: sexp, inline attachment filename"
 subject='sexp-show-inline-attachment-filename'
 id="sexp-show-inline-attachment-filename@notmuchmail.org"
-emacs_deliver_message \
+emacs_fcc_message \
     "$subject" \
     'This is a test message with inline attachment with a filename' \
     "(mml-attach-file \"$TEST_DIRECTORY/README\" nil nil \"inline\")
