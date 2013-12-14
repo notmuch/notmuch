@@ -8,16 +8,14 @@ EXPECTED=$TEST_DIRECTORY/tree.expected-output
 add_email_corpus
 
 test_begin_subtest "Basic notmuch-tree view in emacs"
-test_emacs '(add-to-list (quote load-path) "'$PICK_DIR'")
-	    (notmuch-tree "tag:inbox")
+test_emacs '(notmuch-tree "tag:inbox")
 	    (notmuch-test-wait)
 	    (test-output)
 	    (delete-other-windows)'
 test_expect_equal_file OUTPUT $EXPECTED/notmuch-tree-tag-inbox
 
 test_begin_subtest "Refreshed notmuch-tree view in emacs"
-test_emacs '(add-to-list (quote load-path) "'$PICK_DIR'")
-	    (notmuch-tree "tag:inbox")
+test_emacs '(notmuch-tree "tag:inbox")
 	    (notmuch-test-wait)
 	    (notmuch-tree-refresh-view)
 	    (notmuch-test-wait)
@@ -30,8 +28,7 @@ test_expect_equal_file OUTPUT $EXPECTED/notmuch-tree-tag-inbox
 # correctly.
 
 test_begin_subtest "Tag message in notmuch tree view (display)"
-test_emacs '(add-to-list (quote load-path) "'$PICK_DIR'")
-	    (notmuch-tree "tag:inbox")
+test_emacs '(notmuch-tree "tag:inbox")
 	    (notmuch-test-wait)
 	    (forward-line)
 	    (notmuch-tree-tag (list "+test_tag"))
@@ -44,8 +41,7 @@ output=$(notmuch search --output=messages 'tag:test_tag')
 test_expect_equal "$output" "id:877h1wv7mg.fsf@inf-8657.int-evry.fr"
 
 test_begin_subtest "Untag message in notmuch tree view"
-test_emacs '(add-to-list (quote load-path) "'$PICK_DIR'")
-	    (notmuch-tree "tag:inbox")
+test_emacs '(notmuch-tree "tag:inbox")
 	    (notmuch-test-wait)
 	    (forward-line)
 	    (notmuch-tree-tag (list "-test_tag"))
@@ -58,8 +54,7 @@ output=$(notmuch search --output=messages 'tag:test_tag')
 test_expect_equal "$output" ""
 
 test_begin_subtest "Tag thread in notmuch tree view"
-test_emacs '(add-to-list (quote load-path) "'$PICK_DIR'")
-	    (notmuch-tree "tag:inbox")
+test_emacs '(notmuch-tree "tag:inbox")
 	    (notmuch-test-wait)
 	    ;; move to a sizable thread
 	    (forward-line 26)
@@ -80,8 +75,7 @@ id:87iqd9rn3l.fsf@vertex.dottedmag
 id:20091117190054.GU3165@dottiness.seas.harvard.edu"
 
 test_begin_subtest "Untag thread in notmuch tree view"
-test_emacs '(add-to-list (quote load-path) "'$PICK_DIR'")
-	    (notmuch-tree "tag:inbox")
+test_emacs '(notmuch-tree "tag:inbox")
 	    (notmuch-test-wait)
 	    ;; move to the same sizable thread as above
 	    (forward-line 26)
@@ -147,26 +141,20 @@ cp OUTPUT /tmp/mjwout
 test_expect_equal_file OUTPUT $EXPECTED/notmuch-tree-show-window
 
 test_begin_subtest "Stash id"
-output=$(test_emacs '(add-to-list (quote load-path) "'$PICK_DIR'")
-		     (require (quote notmuch-tree))
-		     (notmuch-tree "id:1258498485-sup-142@elly")
+output=$(test_emacs '(notmuch-tree "id:1258498485-sup-142@elly")
 		     (notmuch-test-wait)
 		     (notmuch-show-stash-message-id)')
 test_expect_equal "$output" "\"Stashed: id:1258498485-sup-142@elly\""
 
 test_begin_subtest "Move to next matching message"
-output=$(test_emacs '(add-to-list (quote load-path) "'$PICK_DIR'")
-		     (require (quote notmuch-tree))
-		     (notmuch-tree "from:cworth")
+output=$(test_emacs '(notmuch-tree "from:cworth")
 		     (notmuch-test-wait)
 		     (notmuch-tree-next-matching-message)
 		     (notmuch-show-stash-message-id)')
 test_expect_equal "$output" "\"Stashed: id:878we4qdqf.fsf@yoom.home.cworth.org\""
 
 test_begin_subtest "Move to next thread"
-output=$(test_emacs '(add-to-list (quote load-path) "'$PICK_DIR'")
-		     (require (quote notmuch-tree))
-		     (notmuch-tree "tag:inbox")
+output=$(test_emacs '(notmuch-tree "tag:inbox")
 		     (notmuch-test-wait)
 		     (forward-line 26)
 		     (notmuch-tree-next-thread)
@@ -174,9 +162,7 @@ output=$(test_emacs '(add-to-list (quote load-path) "'$PICK_DIR'")
 test_expect_equal "$output" "\"Stashed: id:1258471718-6781-1-git-send-email-dottedmag@dottedmag.net\""
 
 test_begin_subtest "Move to previous thread"
-output=$(test_emacs '(add-to-list (quote load-path) "'$PICK_DIR'")
-		     (require (quote notmuch-tree))
-		     (notmuch-tree "tag:inbox")
+output=$(test_emacs '(notmuch-tree "tag:inbox")
 		     (notmuch-test-wait)
 		     (forward-line 26)
 		     (notmuch-tree-prev-thread)
@@ -184,9 +170,7 @@ output=$(test_emacs '(add-to-list (quote load-path) "'$PICK_DIR'")
 test_expect_equal "$output" "\"Stashed: id:20091117190054.GU3165@dottiness.seas.harvard.edu\""
 
 test_begin_subtest "Move to previous previous thread"
-output=$(test_emacs '(add-to-list (quote load-path) "'$PICK_DIR'")
-		     (require (quote notmuch-tree))
-		     (notmuch-tree "tag:inbox")
+output=$(test_emacs '(notmuch-tree "tag:inbox")
 		     (notmuch-test-wait)
 		     (forward-line 26)
 		     (notmuch-tree-prev-thread)
