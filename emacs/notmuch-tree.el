@@ -693,7 +693,7 @@ unchanged ADDRESS if parsing fails."
 		      'notmuch-tree-match-tag-face
 		    'notmuch-tree-no-match-tag-face)))
 	(propertize (format format-string
-			    (mapconcat #'identity tags ", "))
+			    (mapconcat #'identity tags " "))
 		    'face face))))))
 
 
