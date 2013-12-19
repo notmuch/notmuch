@@ -319,11 +319,13 @@ correct message properties."
   "Return the tags of the current message."
   (notmuch-tree-get-prop :tags))
 
-(defun notmuch-tree-get-message-id ()
+(defun notmuch-tree-get-message-id (&optional bare)
   "Return the message id of the current message."
   (let ((id (notmuch-tree-get-prop :id)))
     (if id
-	(notmuch-id-to-query id)
+	(if bare
+	    id
+	  (notmuch-id-to-query id))
       nil)))
 
 (defun notmuch-tree-get-match ()
