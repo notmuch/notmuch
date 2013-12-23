@@ -218,9 +218,10 @@ test_expect_equal "$output" "Added 1 new message to the database."
 
 test_begin_subtest "Ignore files and directories specified in new.ignore (multiple occurrences)"
 notmuch config set new.ignore .git ignored_file .ignored_hidden_file
-touch "${MAIL_DIR}"/.git # change .git's mtime for notmuch new to rescan.
-mkdir -p "${MAIL_DIR}"/one/two/three/.git
 notmuch new > /dev/null # ensure that files/folders will be printed in ASCII order.
+touch "${MAIL_DIR}"/.git # change .git's mtime for notmuch new to rescan.
+touch "${MAIL_DIR}"      # likewise for MAIL_DIR
+mkdir -p "${MAIL_DIR}"/one/two/three/.git
 touch "${MAIL_DIR}"/{one,one/two,one/two/three}/ignored_file
 output=$(NOTMUCH_NEW --debug 2>&1 | sort)
 test_expect_equal "$output" \
