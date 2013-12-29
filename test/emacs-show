@@ -19,13 +19,14 @@ cat <<EOF >EXPECTED
 Notmuch Test Suite <test_suite@notmuchmail.org> (2001-01-05) (inbox)
 Subject: Hiding Original Message region at beginning of a message
 To: Notmuch Test Suite <test_suite@notmuchmail.org>
-Date: Fri, 05 Jan 2001 15:43:57 +0000
+Date: GENERATED_DATE
 
 [ 2-line hidden original message. Click/Enter to show. ]
 EOF
 
 test_emacs "(notmuch-show \"id:$message_id\")
-	    (test-visible-output)"
+	    (test-visible-output \"OUTPUT.raw\")"
+notmuch_date_sanitize < OUTPUT.raw > OUTPUT
 test_expect_equal_file OUTPUT EXPECTED
 
 test_begin_subtest "Bare subject #1"
@@ -130,12 +131,12 @@ mid:abc%20def
 mid:abc. mid:abc, mid:abc;"'
 test_emacs '(notmuch-show "id:'$gen_msg_id'")
 	(notmuch-test-mark-links)
-	(test-visible-output)'
+	(test-visible-output "OUTPUT.raw")'
 cat <<EOF >EXPECTED
 Notmuch Test Suite <test_suite@notmuchmail.org> (2001-01-05) (inbox)
 Subject: id buttonization
 To: Notmuch Test Suite <test_suite@notmuchmail.org>
-Date: Fri, 05 Jan 2001 15:43:57 +0000
+Date: GENERATED_DATE
 
 <<id:abc>>
 <<id:abc.def>>. <<id:abc,def>>, <<id:abc;def>>; <<id:abc:def>>:
@@ -159,6 +160,7 @@ cid:xxx
 <<mid:abc%20def>>
 <<mid:abc>>. <<mid:abc>>, <<mid:abc>>;
 EOF
+notmuch_date_sanitize < OUTPUT.raw > OUTPUT
 test_expect_equal_file OUTPUT EXPECTED
 
 

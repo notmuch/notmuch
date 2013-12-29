@@ -370,7 +370,11 @@ generate_message ()
     fi
 
     if [ -z "${template[date]}" ]; then
-	template[date]="Fri, 05 Jan 2001 15:43:57 +0000"
+	# we use decreasing timestamps here for historical reasons;
+	# the existing test suite when we converted to unique timestamps just
+	# happened to have signicantly fewer failures with that choice.
+	template[date]=$(TZ=UTC printf "%(%a, %d %b %Y %T %z)T\n" \
+			$((978709437 - gen_msg_cnt)))
     fi
 
     additional_headers=""
@@ -462,7 +466,6 @@ emacs_deliver_message ()
                (mail-host-address \"example.com\")
 	       (smtpmail-smtp-server \"localhost\")
 	       (smtpmail-smtp-service \"25025\"))
-	   (notmuch-hello)
 	   (notmuch-mua-mail)
 	   (message-goto-to)
 	   (insert \"test_suite@notmuchmail.org\nDate: 01 Jan 2000 12:00:00 -0000\")
@@ -477,6 +480,36 @@ emacs_deliver_message ()
     # before exiting and resuming control here; therefore making sure
     # that server exits by sending (KILL) signal to it is safe.
     kill -9 $smtp_dummy_pid
+    notmuch new >/dev/null
+}
+
+# Pretend to deliver a message with emacs. Really save it to a file
+# and add it to the database
+#
+# Uses emacs to generate and deliver a message to the mail store.
+# Accepts arbitrary extra emacs/elisp functions to modify the message
+# before sending, which is useful to doing things like attaching files
+# to the message and encrypting/signing.
+emacs_fcc_message ()
+{
+    local subject="$1"
+    local body="$2"
+    shift 2
+    # before we can send a message, we have to prepare the FCC maildir
+    mkdir -p "$MAIL_DIR"/sent/{cur,new,tmp}
+
+    test_emacs \
+	"(let ((message-send-mail-function (lambda () t))
+               (mail-host-address \"example.com\"))
+	   (notmuch-mua-mail)
+	   (message-goto-to)
+	   (insert \"test_suite@notmuchmail.org\nDate: 01 Jan 2000 12:00:00 -0000\")
+	   (message-goto-subject)
+	   (insert \"${subject}\")
+	   (message-goto-body)
+	   (insert \"${body}\")
+	   $@
+	   (message-send-and-exit))" || return 1
     notmuch new >/dev/null
 }
 
@@ -632,14 +665,17 @@ notmuch_show_sanitize_all ()
 {
     sed \
 	-e 's| filename:.*| filename:XXXXX|' \
-	-e 's| id:[^ ]* | id:XXXXX |'
+	-e 's| id:[^ ]* | id:XXXXX |' | \
+	notmuch_date_sanitize
 }
 
 notmuch_json_show_sanitize ()
 {
     sed \
 	-e 's|"id": "[^"]*",|"id": "XXXXX",|g' \
-	-e 's|"filename": "/[^"]*",|"filename": "YYYYY",|g'
+	-e 's|"Date": "Fri, 05 Jan 2001 [^"]*0000"|"Date": "GENERATED_DATE"|g' \
+	-e 's|"filename": "/[^"]*",|"filename": "YYYYY",|g' \
+	-e 's|"timestamp": 97.......|"timestamp": 42|g'
 }
 
 notmuch_emacs_error_sanitize ()
@@ -652,6 +688,12 @@ notmuch_emacs_error_sanitize ()
     done | sed  \
 	-e 's/^\[.*\]$/[XXX]/' \
 	-e "s|^\(command: \)\{0,1\}/.*/$command|\1YYY/$command|"
+}
+
+notmuch_date_sanitize ()
+{
+    sed \
+	-e 's/^Date: Fri, 05 Jan 2001 .*0000/Date: GENERATED_DATE/'
 }
 # End of notmuch helper functions
 

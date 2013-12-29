@@ -86,15 +86,16 @@ add_message "[subject]=\"message-with-invalid-from\"" \
 	    "[from]=\"\\\"Invalid \\\" From\\\" <test_suite@notmuchmail.org>\""
 thread=$(notmuch search --output=threads subject:message-with-invalid-from)
 test_emacs "(notmuch-show \"$thread\")
-	    (test-output)"
+	    (test-output \"OUTPUT.raw\")"
 cat <<EOF >EXPECTED
 "Invalid " (2001-01-05) (inbox)
 Subject: message-with-invalid-from
 To: Notmuch Test Suite <test_suite@notmuchmail.org>
-Date: Fri, 05 Jan 2001 15:43:57 +0000
+Date: GENERATED_DATE
 
 This is just a test message (#1)
 EOF
+notmuch_date_sanitize < OUTPUT.raw > OUTPUT
 test_expect_equal_file OUTPUT EXPECTED
 
 test_begin_subtest "Navigation of notmuch-search to thread view"
@@ -605,11 +606,11 @@ Q: Why is top-posting such a bad thing?
 A: Top-posting.
 Q: What is the most annoying thing in e-mail?"'
 test_emacs "(notmuch-show \"top-posting\")
-	    (test-visible-output)"
+	    (test-visible-output \"OUTPUT.raw\")"
 echo "Notmuch Test Suite <test_suite@notmuchmail.org> (2001-01-05) (inbox)
 Subject: The problem with top-posting
 To: Notmuch Test Suite <test_suite@notmuchmail.org>
-Date: Fri, 05 Jan 2001 15:43:57 +0000
+Date: GENERATED_DATE
 
 A: Because it messes up the order in which people normally read text.
 Q: Why is top-posting such a bad thing?
@@ -618,13 +619,14 @@ Q: What is the most annoying thing in e-mail?
 Top Poster <top@poster.com> (2001-01-05) (inbox unread)
 Subject: Re: The problem with top-posting
 To: Notmuch Test Suite <test_suite@notmuchmail.org>
-Date: Fri, 05 Jan 2001 15:43:57 +0000
+Date: GENERATED_DATE
 
 Thanks for the advice! I will be sure to put it to good use.
 
 -Top Poster
 
 [ 9-line hidden original message. Click/Enter to show. ]" > EXPECTED
+notmuch_date_sanitize < OUTPUT.raw > OUTPUT
 test_expect_equal_file OUTPUT EXPECTED
 
 test_begin_subtest "Hiding message in notmuch-show view"
@@ -769,7 +771,7 @@ test_expect_equal_file OUTPUT EXPECTED
 
 test_begin_subtest "Do not call notmuch for non-inlinable application/mpeg parts"
 id='message-with-application/mpeg-attachment@notmuchmail.org'
-emacs_deliver_message \
+emacs_fcc_message \
     'Message with application/mpeg attachment' \
     '' \
     "(message-goto-eoh)
@@ -784,7 +786,7 @@ test_expect_equal $(notmuch_counter_value) 1
 
 test_begin_subtest "Do not call notmuch for non-inlinable audio/mpeg parts"
 id='message-with-audio/mpeg-attachment@notmuchmail.org'
-emacs_deliver_message \
+emacs_fcc_message \
     'Message with audio/mpeg attachment' \
     '' \
     "(message-goto-eoh)
