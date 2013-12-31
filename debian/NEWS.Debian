@@ -1,3 +1,20 @@
+notmuch (0.17-1) unstable; urgency=low
+
+  * Previously on big endian architectures like sparc and powerpc the
+    computation of SHA1 hashes was incorrect. This meant that messages
+    with overlong or missing message-ids were given different computed
+    message-ids than on more common little endian architectures like
+    i386 and amd64.  If you use notmuch on a big endian architecture,
+    you are strongly advised to make a backup of your tags using
+    `notmuch dump` before this upgrade.  You can locate the affected
+    files using something like:
+
+    notmuch dump | \
+      awk '/^notmuch-sha1-[0-9a-f]{40} / \
+        {system("notmuch search --exclude=false --output=files id:" $1)}'
+
+ -- David Bremner <bremner@debian.org>  Mon, 30 Dec 2013 20:31:16 -0400
+
 notmuch (0.16-1) unstable; urgency=low
 
   * The vim interface has been rewritten from scratch. In particular
