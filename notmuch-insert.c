@@ -295,7 +295,7 @@ copy_stdin (int fdin, int fdout)
  * The file is renamed to encode notmuch tags as maildir flags. */
 static void
 add_file_to_database (notmuch_database_t *notmuch, const char *path,
-		      tag_op_list_t *tag_ops)
+		      tag_op_list_t *tag_ops, notmuch_bool_t synchronize_flags)
 {
     notmuch_message_t *message;
     notmuch_status_t status;
@@ -323,11 +323,15 @@ add_file_to_database (notmuch_database_t *notmuch, const char *path,
 
     if (status == NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID) {
 	/* Don't change tags of an existing message. */
-	status = notmuch_message_tags_to_maildir_flags (message);
-	if (status != NOTMUCH_STATUS_SUCCESS)
-	    fprintf (stderr, "Error: failed to sync tags to maildir flags\n");
+	if (synchronize_flags) {
+	    status = notmuch_message_tags_to_maildir_flags (message);
+	    if (status != NOTMUCH_STATUS_SUCCESS)
+		fprintf (stderr, "Error: failed to sync tags to maildir flags\n");
+	}
     } else {
-	tag_op_list_apply (message, tag_ops, TAG_FLAG_MAILDIR_SYNC);
+	tag_op_flag_t flags = synchronize_flags ? TAG_FLAG_MAILDIR_SYNC : 0;
+
+	tag_op_list_apply (message, tag_ops, flags);
     }
 
     notmuch_message_destroy (message);
@@ -335,7 +339,8 @@ add_file_to_database (notmuch_database_t *notmuch, const char *path,
 
 static notmuch_bool_t
 insert_message (void *ctx, notmuch_database_t *notmuch, int fdin,
-		const char *dir, tag_op_list_t *tag_ops)
+		const char *dir, tag_op_list_t *tag_ops,
+		notmuch_bool_t synchronize_flags)
 {
     char *tmppath;
     char *newpath;
@@ -377,7 +382,7 @@ insert_message (void *ctx, notmuch_database_t *notmuch, int fdin,
 
     /* Even if adding the message to the notmuch database fails,
      * the message is on disk and we consider the delivery completed. */
-    add_file_to_database (notmuch, newpath, tag_ops);
+    add_file_to_database (notmuch, newpath, tag_ops, synchronize_flags);
 
     return TRUE;
 
@@ -400,6 +405,7 @@ notmuch_insert_command (notmuch_config_t *config, int argc, char *argv[])
     char *query_string = NULL;
     const char *folder = NULL;
     notmuch_bool_t create_folder = FALSE;
+    notmuch_bool_t synchronize_flags;
     const char *maildir;
     int opt_index;
     unsigned int i;
@@ -420,6 +426,7 @@ notmuch_insert_command (notmuch_config_t *config, int argc, char *argv[])
 
     db_path = notmuch_config_get_database_path (config);
     new_tags = notmuch_config_get_new_tags (config, &new_tags_length);
+    synchronize_flags = notmuch_config_get_maildir_synchronize_flags (config);
 
     tag_ops = tag_op_list_create (config);
     if (tag_ops == NULL) {
@@ -471,7 +478,8 @@ notmuch_insert_command (notmuch_config_t *config, int argc, char *argv[])
 			       NOTMUCH_DATABASE_MODE_READ_WRITE, &notmuch))
 	return 1;
 
-    ret = insert_message (config, notmuch, STDIN_FILENO, maildir, tag_ops);
+    ret = insert_message (config, notmuch, STDIN_FILENO, maildir, tag_ops,
+			  synchronize_flags);
 
     notmuch_database_destroy (notmuch);
 
