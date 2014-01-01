@@ -113,6 +113,17 @@ output=$(notmuch search --output=files id:$gen_msg_id)
 dirname=$(dirname "$output")
 test_expect_equal "$dirname" "$MAIL_DIR/cur"
 
+test_begin_subtest "Insert message with maildir sync off goes to new/"
+test_subtest_known_broken
+OLDCONFIG=$(notmuch config get maildir.synchronize_flags)
+notmuch config set maildir.synchronize_flags false
+gen_insert_msg
+notmuch insert +flagged < "$gen_msg_filename"
+output=$(notmuch search --output=files id:$gen_msg_id)
+dirname=$(dirname "$output")
+notmuch config set maildir.synchronize_flags $OLDCONFIG
+test_expect_equal "$dirname" "$MAIL_DIR/new"
+
 test_begin_subtest "Insert message into folder"
 gen_insert_msg
 notmuch insert --folder=Drafts < "$gen_msg_filename"
