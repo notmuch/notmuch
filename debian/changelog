@@ -1,3 +1,10 @@
+notmuch (0.17-2) unstable; urgency=medium
+
+  * Bug fix: "package should warn in a NEWS.Debian file about possible
+    pre-upgrade action", thanks to Jonas Smedegaard (Closes: #733853).
+
+ -- David Bremner <bremner@debian.org>  Wed, 01 Jan 2014 07:44:25 -0400
+
 notmuch (0.17-1) unstable; urgency=low
 
   * New upstream feature release. See /usr/share/doc/notmuch/NEWS.gz
