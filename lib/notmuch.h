@@ -18,8 +18,18 @@
  * Author: Carl Worth <cworth@cworth.org>
  */
 
+/**
+ * @defgroup notmuch The notmuch API
+ *
+ * Not much of an email library, (just index and search)
+ *
+ * @{
+ */
+
 #ifndef NOTMUCH_H
 #define NOTMUCH_H
+
+#ifndef __DOXYGEN__
 
 #ifdef  __cplusplus
 # define NOTMUCH_BEGIN_DECLS  extern "C" {
@@ -49,19 +59,28 @@ NOTMUCH_BEGIN_DECLS
 #define LIBNOTMUCH_MINOR_VERSION	1
 #define LIBNOTMUCH_MICRO_VERSION	0
 
-/*
+#endif /* __DOXYGEN__ */
+
+/**
  * Check the version of the notmuch library being compiled against.
  *
  * Return true if the library being compiled against is of the
  * specified version or above. For example:
  *
+ * @code
  * #if LIBNOTMUCH_CHECK_VERSION(3, 1, 0)
  *     (code requiring libnotmuch 3.1.0 or above)
  * #endif
+ * @endcode
  *
- * LIBNOTMUCH_CHECK_VERSION has been defined since version 3.1.0; you
- * can use #if !defined(NOTMUCH_CHECK_VERSION) to check for versions
- * prior to that.
+ * LIBNOTMUCH_CHECK_VERSION has been defined since version 3.1.0; to
+ * check for versions prior to that, use:
+ *
+ * @code
+ * #if !defined(NOTMUCH_CHECK_VERSION)
+ *     (code requiring libnotmuch prior to 3.1.0)
+ * #endif
+ * @endcode
  */
 #define LIBNOTMUCH_CHECK_VERSION (major, minor, micro)			\
     (LIBNOTMUCH_MAJOR_VERSION > (major) ||					\
@@ -69,72 +88,86 @@ NOTMUCH_BEGIN_DECLS
      (LIBNOTMUCH_MAJOR_VERSION == (major) && LIBNOTMUCH_MINOR_VERSION == (minor) && \
       LIBNOTMUCH_MICRO_VERSION >= (micro)))
 
+/**
+ * Notmuch boolean type.
+ */
 typedef int notmuch_bool_t;
 
-/* Status codes used for the return values of most functions.
+/**
+ * Status codes used for the return values of most functions.
  *
  * A zero value (NOTMUCH_STATUS_SUCCESS) indicates that the function
- * completed without error. Any other value indicates an error as
- * follows:
- *
- * NOTMUCH_STATUS_SUCCESS: No error occurred.
- *
- * NOTMUCH_STATUS_OUT_OF_MEMORY: Out of memory
- *
- * XXX: We don't really want to expose this lame XAPIAN_EXCEPTION
- * value. Instead we should map to things like DATABASE_LOCKED or
- * whatever.
- *
- * NOTMUCH_STATUS_READ_ONLY_DATABASE: An attempt was made to write to
- *	a database opened in read-only mode.
- *
- * NOTMUCH_STATUS_XAPIAN_EXCEPTION: A Xapian exception occurred
- *
- * NOTMUCH_STATUS_FILE_ERROR: An error occurred trying to read or
- *	write to a file (this could be file not found, permission
- *	denied, etc.)
- *
- * NOTMUCH_STATUS_FILE_NOT_EMAIL: A file was presented that doesn't
- *	appear to be an email message.
- *
- * NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID: A file contains a message ID
- *	that is identical to a message already in the database.
- *
- * NOTMUCH_STATUS_NULL_POINTER: The user erroneously passed a NULL
- *	pointer to a notmuch function.
- *
- * NOTMUCH_STATUS_TAG_TOO_LONG: A tag value is too long (exceeds
- *	NOTMUCH_TAG_MAX)
- *
- * NOTMUCH_STATUS_UNBALANCED_FREEZE_THAW: The notmuch_message_thaw
- *	function has been called more times than notmuch_message_freeze.
- *
- * NOTMUCH_STATUS_UNBALANCED_ATOMIC: notmuch_database_end_atomic has
- *	been called more times than notmuch_database_begin_atomic.
- *
- * And finally:
- *
- * NOTMUCH_STATUS_LAST_STATUS: Not an actual status value. Just a way
- *	to find out how many valid status values there are.
+ * completed without error. Any other value indicates an error.
  */
 typedef enum _notmuch_status {
+    /**
+     * No error occurred.
+     */
     NOTMUCH_STATUS_SUCCESS = 0,
+    /**
+     * Out of memory.
+     */
     NOTMUCH_STATUS_OUT_OF_MEMORY,
+    /**
+     * An attempt was made to write to a database opened in read-only
+     * mode.
+     */
     NOTMUCH_STATUS_READ_ONLY_DATABASE,
+    /**
+     * A Xapian exception occurred.
+     */
     NOTMUCH_STATUS_XAPIAN_EXCEPTION,
+    /**
+     * An error occurred trying to read or write to a file (this could
+     * be file not found, permission denied, etc.)
+     *
+     * @todo We don't really want to expose this lame XAPIAN_EXCEPTION
+     * value. Instead we should map to things like DATABASE_LOCKED or
+     * whatever.
+     */
     NOTMUCH_STATUS_FILE_ERROR,
+    /**
+     * A file was presented that doesn't appear to be an email
+     * message.
+     */
     NOTMUCH_STATUS_FILE_NOT_EMAIL,
+    /**
+     * A file contains a message ID that is identical to a message
+     * already in the database.
+     */
     NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID,
+    /**
+     * The user erroneously passed a NULL pointer to a notmuch
+     * function.
+     */
     NOTMUCH_STATUS_NULL_POINTER,
+    /**
+     * A tag value is too long (exceeds NOTMUCH_TAG_MAX).
+     */
     NOTMUCH_STATUS_TAG_TOO_LONG,
+    /**
+     * The notmuch_message_thaw function has been called more times
+     * than notmuch_message_freeze.
+     */
     NOTMUCH_STATUS_UNBALANCED_FREEZE_THAW,
+    /**
+     * notmuch_database_end_atomic has been called more times than
+     * notmuch_database_begin_atomic.
+     */
     NOTMUCH_STATUS_UNBALANCED_ATOMIC,
+    /**
+     * The operation is not supported.
+     */
     NOTMUCH_STATUS_UNSUPPORTED_OPERATION,
-
+    /**
+     * Not an actual status value. Just a way to find out how many
+     * valid status values there are.
+     */
     NOTMUCH_STATUS_LAST_STATUS
 } notmuch_status_t;
 
-/* Get a string representation of a notmuch_status_t value.
+/**
+ * Get a string representation of a notmuch_status_t value.
  *
  * The result is read-only.
  */
@@ -143,6 +176,7 @@ notmuch_status_to_string (notmuch_status_t status);
 
 /* Various opaque data types. For each notmuch_<foo>_t see the various
  * notmuch_<foo> functions below. */
+#ifndef __DOXYGEN__
 typedef struct _notmuch_database notmuch_database_t;
 typedef struct _notmuch_query notmuch_query_t;
 typedef struct _notmuch_threads notmuch_threads_t;
@@ -152,8 +186,10 @@ typedef struct _notmuch_message notmuch_message_t;
 typedef struct _notmuch_tags notmuch_tags_t;
 typedef struct _notmuch_directory notmuch_directory_t;
 typedef struct _notmuch_filenames notmuch_filenames_t;
+#endif /* __DOXYGEN__ */
 
-/* Create a new, empty notmuch database located at 'path'.
+/**
+ * Create a new, empty notmuch database located at 'path'.
  *
  * The path should be a top-level directory to a collection of
  * plain-text email messages (one message per file). This call will
@@ -189,12 +225,22 @@ typedef struct _notmuch_filenames notmuch_filenames_t;
 notmuch_status_t
 notmuch_database_create (const char *path, notmuch_database_t **database);
 
+/**
+ * Database open mode for notmuch_database_open.
+ */
 typedef enum {
+    /**
+     * Open database for reading only.
+     */
     NOTMUCH_DATABASE_MODE_READ_ONLY = 0,
+    /**
+     * Open database for reading and writing.
+     */
     NOTMUCH_DATABASE_MODE_READ_WRITE
 } notmuch_database_mode_t;
 
-/* Open an existing notmuch database located at 'path'.
+/**
+ * Open an existing notmuch database located at 'path'.
  *
  * The database should have been created at some time in the past,
  * (not necessarily by this process), by calling
@@ -230,7 +276,8 @@ notmuch_database_open (const char *path,
 		       notmuch_database_mode_t mode,
 		       notmuch_database_t **database);
 
-/* Close the given notmuch database.
+/**
+ * Close the given notmuch database.
  *
  * After notmuch_database_close has been called, calls to other
  * functions on objects derived from this database may either behave
@@ -244,12 +291,14 @@ notmuch_database_open (const char *path,
 void
 notmuch_database_close (notmuch_database_t *database);
 
-/* A callback invoked by notmuch_database_compact to notify the user
+/**
+ * A callback invoked by notmuch_database_compact to notify the user
  * of the progress of the compaction process.
  */
 typedef void (*notmuch_compact_status_cb_t)(const char *message, void *closure);
 
-/* Compact a notmuch database, backing up the original database to the
+/**
+ * Compact a notmuch database, backing up the original database to the
  * given path.
  *
  * The database will be opened with NOTMUCH_DATABASE_MODE_READ_WRITE
@@ -265,33 +314,41 @@ notmuch_database_compact (const char* path,
 			  notmuch_compact_status_cb_t status_cb,
 			  void *closure);
 
-/* Destroy the notmuch database, closing it if necessary and freeing
+/**
+ * Destroy the notmuch database, closing it if necessary and freeing
  * all associated resources.
  */
 void
 notmuch_database_destroy (notmuch_database_t *database);
 
-/* Return the database path of the given database.
+/**
+ * Return the database path of the given database.
  *
  * The return value is a string owned by notmuch so should not be
- * modified nor freed by the caller. */
+ * modified nor freed by the caller.
+ */
 const char *
 notmuch_database_get_path (notmuch_database_t *database);
 
-/* Return the database format version of the given database. */
+/**
+ * Return the database format version of the given database.
+ */
 unsigned int
 notmuch_database_get_version (notmuch_database_t *database);
 
-/* Does this database need to be upgraded before writing to it?
+/**
+ * Does this database need to be upgraded before writing to it?
  *
  * If this function returns TRUE then no functions that modify the
  * database (notmuch_database_add_message, notmuch_message_add_tag,
  * notmuch_directory_set_mtime, etc.) will work unless the function
- * notmuch_database_upgrade is called successfully first. */
+ * notmuch_database_upgrade is called successfully first.
+ */
 notmuch_bool_t
 notmuch_database_needs_upgrade (notmuch_database_t *database);
 
-/* Upgrade the current database.
+/**
+ * Upgrade the current database.
  *
  * After opening a database in read-write mode, the client should
  * check if an upgrade is needed (notmuch_database_needs_upgrade) and
@@ -310,7 +367,8 @@ notmuch_database_upgrade (notmuch_database_t *database,
 						   double progress),
 			  void *closure);
 
-/* Begin an atomic database operation.
+/**
+ * Begin an atomic database operation.
  *
  * Any modifications performed between a successful begin and a
  * notmuch_database_end_atomic will be applied to the database
@@ -331,7 +389,8 @@ notmuch_database_upgrade (notmuch_database_t *database,
 notmuch_status_t
 notmuch_database_begin_atomic (notmuch_database_t *notmuch);
 
-/* Indicate the end of an atomic database operation.
+/**
+ * Indicate the end of an atomic database operation.
  *
  * Return value:
  *
@@ -346,7 +405,8 @@ notmuch_database_begin_atomic (notmuch_database_t *notmuch);
 notmuch_status_t
 notmuch_database_end_atomic (notmuch_database_t *notmuch);
 
-/* Retrieve a directory object from the database for 'path'.
+/**
+ * Retrieve a directory object from the database for 'path'.
  *
  * Here, 'path' should be a path relative to the path of 'database'
  * (see notmuch_database_get_path), or else should be an absolute path
@@ -369,7 +429,8 @@ notmuch_database_get_directory (notmuch_database_t *database,
 				const char *path,
 				notmuch_directory_t **directory);
 
-/* Add a new message to the given notmuch database or associate an
+/**
+ * Add a new message to the given notmuch database or associate an
  * additional filename with an existing message.
  *
  * Here, 'filename' should be a path relative to the path of
@@ -420,7 +481,8 @@ notmuch_database_add_message (notmuch_database_t *database,
 			      const char *filename,
 			      notmuch_message_t **message);
 
-/* Remove a message filename from the given notmuch database. If the
+/**
+ * Remove a message filename from the given notmuch database. If the
  * message has no more filenames, remove the message.
  *
  * If the same message (as determined by the message ID) is still
@@ -448,7 +510,8 @@ notmuch_status_t
 notmuch_database_remove_message (notmuch_database_t *database,
 				 const char *filename);
 
-/* Find a message with the given message_id.
+/**
+ * Find a message with the given message_id.
  *
  * If a message with the given message_id is found then, on successful return
  * (NOTMUCH_STATUS_SUCCESS) '*message' will be initialized to a message
@@ -475,7 +538,8 @@ notmuch_database_find_message (notmuch_database_t *database,
 			       const char *message_id,
 			       notmuch_message_t **message);
 
-/* Find a message with the given filename.
+/**
+ * Find a message with the given filename.
  *
  * If the database contains a message with the given filename then, on
  * successful return (NOTMUCH_STATUS_SUCCESS) '*message' will be initialized to
@@ -502,7 +566,8 @@ notmuch_database_find_message_by_filename (notmuch_database_t *notmuch,
 					   const char *filename,
 					   notmuch_message_t **message);
 
-/* Return a list of all tags found in the database.
+/**
+ * Return a list of all tags found in the database.
  *
  * This function creates a list of all tags found in the database. The
  * resulting list contains all tags from all messages found in the database.
@@ -512,7 +577,8 @@ notmuch_database_find_message_by_filename (notmuch_database_t *notmuch,
 notmuch_tags_t *
 notmuch_database_get_all_tags (notmuch_database_t *db);
 
-/* Create a new query for 'database'.
+/**
+ * Create a new query for 'database'.
  *
  * Here, 'database' should be an open database, (see
  * notmuch_database_open and notmuch_database_create).
@@ -540,19 +606,36 @@ notmuch_query_t *
 notmuch_query_create (notmuch_database_t *database,
 		      const char *query_string);
 
-/* Sort values for notmuch_query_set_sort */
+/**
+ * Sort values for notmuch_query_set_sort.
+ */
 typedef enum {
+    /**
+     * Oldest first.
+     */
     NOTMUCH_SORT_OLDEST_FIRST,
+    /**
+     * Newest first.
+     */
     NOTMUCH_SORT_NEWEST_FIRST,
+    /**
+     * Sort by message-id.
+     */
     NOTMUCH_SORT_MESSAGE_ID,
+    /**
+     * Do not sort.
+     */
     NOTMUCH_SORT_UNSORTED
 } notmuch_sort_t;
 
-/* Return the query_string of this query. See notmuch_query_create. */
+/**
+ * Return the query_string of this query. See notmuch_query_create.
+ */
 const char *
 notmuch_query_get_query_string (notmuch_query_t *query);
 
-/* Exclude values for notmuch_query_set_omit_excluded. The strange
+/**
+ * Exclude values for notmuch_query_set_omit_excluded. The strange
  * order is to maintain backward compatibility: the old FALSE/TRUE
  * options correspond to the new
  * NOTMUCH_EXCLUDE_FLAG/NOTMUCH_EXCLUDE_TRUE options.
@@ -564,7 +647,8 @@ typedef enum {
     NOTMUCH_EXCLUDE_ALL
 } notmuch_exclude_t;
 
-/* Specify whether to omit excluded results or simply flag them.  By
+/**
+ * Specify whether to omit excluded results or simply flag them.  By
  * default, this is set to TRUE.
  *
  * If set to TRUE or ALL, notmuch_query_search_messages will omit excluded
@@ -594,21 +678,29 @@ void
 notmuch_query_set_omit_excluded (notmuch_query_t *query,
 				 notmuch_exclude_t omit_excluded);
 
-/* Specify the sorting desired for this query. */
+/**
+ * Specify the sorting desired for this query.
+ */
 void
 notmuch_query_set_sort (notmuch_query_t *query, notmuch_sort_t sort);
 
-/* Return the sort specified for this query. See notmuch_query_set_sort. */
+/**
+ * Return the sort specified for this query. See
+ * notmuch_query_set_sort.
+ */
 notmuch_sort_t
 notmuch_query_get_sort (notmuch_query_t *query);
 
-/* Add a tag that will be excluded from the query results by default.
+/**
+ * Add a tag that will be excluded from the query results by default.
  * This exclusion will be overridden if this tag appears explicitly in
- * the query. */
+ * the query.
+ */
 void
 notmuch_query_add_tag_exclude (notmuch_query_t *query, const char *tag);
 
-/* Execute a query for threads, returning a notmuch_threads_t object
+/**
+ * Execute a query for threads, returning a notmuch_threads_t object
  * which can be used to iterate over the results. The returned threads
  * object is owned by the query and as such, will only be valid until
  * notmuch_query_destroy.
@@ -649,7 +741,8 @@ notmuch_query_add_tag_exclude (notmuch_query_t *query, const char *tag);
 notmuch_threads_t *
 notmuch_query_search_threads (notmuch_query_t *query);
 
-/* Execute a query for messages, returning a notmuch_messages_t object
+/**
+ * Execute a query for messages, returning a notmuch_messages_t object
  * which can be used to iterate over the results. The returned
  * messages object is owned by the query and as such, will only be
  * valid until notmuch_query_destroy.
@@ -690,7 +783,8 @@ notmuch_query_search_threads (notmuch_query_t *query);
 notmuch_messages_t *
 notmuch_query_search_messages (notmuch_query_t *query);
 
-/* Destroy a notmuch_query_t along with any associated resources.
+/**
+ * Destroy a notmuch_query_t along with any associated resources.
  *
  * This will in turn destroy any notmuch_threads_t and
  * notmuch_messages_t objects generated by this query, (and in
@@ -701,7 +795,8 @@ notmuch_query_search_messages (notmuch_query_t *query);
 void
 notmuch_query_destroy (notmuch_query_t *query);
 
-/* Is the given 'threads' iterator pointing at a valid thread.
+/**
+ * Is the given 'threads' iterator pointing at a valid thread.
  *
  * When this function returns TRUE, notmuch_threads_get will return a
  * valid object. Whereas when this function returns FALSE,
@@ -713,7 +808,8 @@ notmuch_query_destroy (notmuch_query_t *query);
 notmuch_bool_t
 notmuch_threads_valid (notmuch_threads_t *threads);
 
-/* Get the current thread from 'threads' as a notmuch_thread_t.
+/**
+ * Get the current thread from 'threads' as a notmuch_thread_t.
  *
  * Note: The returned thread belongs to 'threads' and has a lifetime
  * identical to it (and the query to which it belongs).
@@ -727,7 +823,8 @@ notmuch_threads_valid (notmuch_threads_t *threads);
 notmuch_thread_t *
 notmuch_threads_get (notmuch_threads_t *threads);
 
-/* Move the 'threads' iterator to the next thread.
+/**
+ * Move the 'threads' iterator to the next thread.
  *
  * If 'threads' is already pointing at the last thread then the
  * iterator will be moved to a point just beyond that last thread,
@@ -740,7 +837,8 @@ notmuch_threads_get (notmuch_threads_t *threads);
 void
 notmuch_threads_move_to_next (notmuch_threads_t *threads);
 
-/* Destroy a notmuch_threads_t object.
+/**
+ * Destroy a notmuch_threads_t object.
  *
  * It's not strictly necessary to call this function. All memory from
  * the notmuch_threads_t object will be reclaimed when the
@@ -749,7 +847,8 @@ notmuch_threads_move_to_next (notmuch_threads_t *threads);
 void
 notmuch_threads_destroy (notmuch_threads_t *threads);
 
-/* Return an estimate of the number of messages matching a search
+/**
+ * Return an estimate of the number of messages matching a search.
  *
  * This function performs a search and returns Xapian's best
  * guess as to number of matching messages.
@@ -759,8 +858,9 @@ notmuch_threads_destroy (notmuch_threads_t *threads);
  */
 unsigned
 notmuch_query_count_messages (notmuch_query_t *query);
- 
-/* Return the number of threads matching a search.
+
+/**
+ * Return the number of threads matching a search.
  *
  * This function performs a search and returns the number of unique thread IDs
  * in the matching messages. This is the same as number of threads matching a
@@ -774,7 +874,8 @@ notmuch_query_count_messages (notmuch_query_t *query);
 unsigned
 notmuch_query_count_threads (notmuch_query_t *query);
 
-/* Get the thread ID of 'thread'.
+/**
+ * Get the thread ID of 'thread'.
  *
  * The returned string belongs to 'thread' and as such, should not be
  * modified by the caller and will only be valid for as long as the
@@ -784,7 +885,8 @@ notmuch_query_count_threads (notmuch_query_t *query);
 const char *
 notmuch_thread_get_thread_id (notmuch_thread_t *thread);
 
-/* Get the total number of messages in 'thread'.
+/**
+ * Get the total number of messages in 'thread'.
  *
  * This count consists of all messages in the database belonging to
  * this thread. Contrast with notmuch_thread_get_matched_messages() .
@@ -792,7 +894,8 @@ notmuch_thread_get_thread_id (notmuch_thread_t *thread);
 int
 notmuch_thread_get_total_messages (notmuch_thread_t *thread);
 
-/* Get a notmuch_messages_t iterator for the top-level messages in
+/**
+ * Get a notmuch_messages_t iterator for the top-level messages in
  * 'thread' in oldest-first order.
  *
  * This iterator will not necessarily iterate over all of the messages
@@ -804,7 +907,8 @@ notmuch_thread_get_total_messages (notmuch_thread_t *thread);
 notmuch_messages_t *
 notmuch_thread_get_toplevel_messages (notmuch_thread_t *thread);
 
-/* Get a notmuch_thread_t iterator for all messages in 'thread' in
+/**
+ * Get a notmuch_thread_t iterator for all messages in 'thread' in
  * oldest-first order.
  *
  * The returned list will be destroyed when the thread is destroyed.
@@ -812,7 +916,8 @@ notmuch_thread_get_toplevel_messages (notmuch_thread_t *thread);
 notmuch_messages_t *
 notmuch_thread_get_messages (notmuch_thread_t *thread);
 
-/* Get the number of messages in 'thread' that matched the search.
+/**
+ * Get the number of messages in 'thread' that matched the search.
  *
  * This count includes only the messages in this thread that were
  * matched by the search from which the thread was created and were
@@ -823,7 +928,8 @@ notmuch_thread_get_messages (notmuch_thread_t *thread);
 int
 notmuch_thread_get_matched_messages (notmuch_thread_t *thread);
 
-/* Get the authors of 'thread' as a UTF-8 string.
+/**
+ * Get the authors of 'thread' as a UTF-8 string.
  *
  * The returned string is a comma-separated list of the names of the
  * authors of mail messages in the query results that belong to this
@@ -837,7 +943,8 @@ notmuch_thread_get_matched_messages (notmuch_thread_t *thread);
 const char *
 notmuch_thread_get_authors (notmuch_thread_t *thread);
 
-/* Get the subject of 'thread' as a UTF-8 string.
+/**
+ * Get the subject of 'thread' as a UTF-8 string.
  *
  * The subject is taken from the first message (according to the query
  * order---see notmuch_query_set_sort) in the query results that
@@ -851,17 +958,20 @@ notmuch_thread_get_authors (notmuch_thread_t *thread);
 const char *
 notmuch_thread_get_subject (notmuch_thread_t *thread);
 
-/* Get the date of the oldest message in 'thread' as a time_t value.
+/**
+ * Get the date of the oldest message in 'thread' as a time_t value.
  */
 time_t
 notmuch_thread_get_oldest_date (notmuch_thread_t *thread);
 
-/* Get the date of the newest message in 'thread' as a time_t value.
+/**
+ * Get the date of the newest message in 'thread' as a time_t value.
  */
 time_t
 notmuch_thread_get_newest_date (notmuch_thread_t *thread);
 
-/* Get the tags for 'thread', returning a notmuch_tags_t object which
+/**
+ * Get the tags for 'thread', returning a notmuch_tags_t object which
  * can be used to iterate over all tags.
  *
  * Note: In the Notmuch database, tags are stored on individual
@@ -900,11 +1010,14 @@ notmuch_thread_get_newest_date (notmuch_thread_t *thread);
 notmuch_tags_t *
 notmuch_thread_get_tags (notmuch_thread_t *thread);
 
-/* Destroy a notmuch_thread_t object. */
+/**
+ * Destroy a notmuch_thread_t object.
+ */
 void
 notmuch_thread_destroy (notmuch_thread_t *thread);
 
-/* Is the given 'messages' iterator pointing at a valid message.
+/**
+ * Is the given 'messages' iterator pointing at a valid message.
  *
  * When this function returns TRUE, notmuch_messages_get will return a
  * valid object. Whereas when this function returns FALSE,
@@ -916,7 +1029,8 @@ notmuch_thread_destroy (notmuch_thread_t *thread);
 notmuch_bool_t
 notmuch_messages_valid (notmuch_messages_t *messages);
 
-/* Get the current message from 'messages' as a notmuch_message_t.
+/**
+ * Get the current message from 'messages' as a notmuch_message_t.
  *
  * Note: The returned message belongs to 'messages' and has a lifetime
  * identical to it (and the query to which it belongs).
@@ -930,7 +1044,8 @@ notmuch_messages_valid (notmuch_messages_t *messages);
 notmuch_message_t *
 notmuch_messages_get (notmuch_messages_t *messages);
 
-/* Move the 'messages' iterator to the next message.
+/**
+ * Move the 'messages' iterator to the next message.
  *
  * If 'messages' is already pointing at the last message then the
  * iterator will be moved to a point just beyond that last message,
@@ -943,7 +1058,8 @@ notmuch_messages_get (notmuch_messages_t *messages);
 void
 notmuch_messages_move_to_next (notmuch_messages_t *messages);
 
-/* Destroy a notmuch_messages_t object.
+/**
+ * Destroy a notmuch_messages_t object.
  *
  * It's not strictly necessary to call this function. All memory from
  * the notmuch_messages_t object will be reclaimed when the containing
@@ -952,7 +1068,8 @@ notmuch_messages_move_to_next (notmuch_messages_t *messages);
 void
 notmuch_messages_destroy (notmuch_messages_t *messages);
 
-/* Return a list of tags from all messages.
+/**
+ * Return a list of tags from all messages.
  *
  * The resulting list is guaranteed not to contain duplicated tags.
  *
@@ -967,7 +1084,8 @@ notmuch_messages_destroy (notmuch_messages_t *messages);
 notmuch_tags_t *
 notmuch_messages_collect_tags (notmuch_messages_t *messages);
 
-/* Get the message ID of 'message'.
+/**
+ * Get the message ID of 'message'.
  *
  * The returned string belongs to 'message' and as such, should not be
  * modified by the caller and will only be valid for as long as the
@@ -981,7 +1099,8 @@ notmuch_messages_collect_tags (notmuch_messages_t *messages);
 const char *
 notmuch_message_get_message_id (notmuch_message_t *message);
 
-/* Get the thread ID of 'message'.
+/**
+ * Get the thread ID of 'message'.
  *
  * The returned string belongs to 'message' and as such, should not be
  * modified by the caller and will only be valid for as long as the
@@ -995,7 +1114,8 @@ notmuch_message_get_message_id (notmuch_message_t *message);
 const char *
 notmuch_message_get_thread_id (notmuch_message_t *message);
 
-/* Get a notmuch_messages_t iterator for all of the replies to
+/**
+ * Get a notmuch_messages_t iterator for all of the replies to
  * 'message'.
  *
  * Note: This call only makes sense if 'message' was ultimately
@@ -1015,7 +1135,8 @@ notmuch_message_get_thread_id (notmuch_message_t *message);
 notmuch_messages_t *
 notmuch_message_get_replies (notmuch_message_t *message);
 
-/* Get a filename for the email corresponding to 'message'.
+/**
+ * Get a filename for the email corresponding to 'message'.
  *
  * The returned filename is an absolute filename, (the initial
  * component will match notmuch_database_get_path() ).
@@ -1033,7 +1154,8 @@ notmuch_message_get_replies (notmuch_message_t *message);
 const char *
 notmuch_message_get_filename (notmuch_message_t *message);
 
-/* Get all filenames for the email corresponding to 'message'.
+/**
+ * Get all filenames for the email corresponding to 'message'.
  *
  * Returns a notmuch_filenames_t iterator listing all the filenames
  * associated with 'message'. These files may not have identical
@@ -1045,31 +1167,40 @@ notmuch_message_get_filename (notmuch_message_t *message);
 notmuch_filenames_t *
 notmuch_message_get_filenames (notmuch_message_t *message);
 
-/* Message flags */
+/**
+ * Message flags.
+ */
 typedef enum _notmuch_message_flag {
     NOTMUCH_MESSAGE_FLAG_MATCH,
     NOTMUCH_MESSAGE_FLAG_EXCLUDED
 } notmuch_message_flag_t;
 
-/* Get a value of a flag for the email corresponding to 'message'. */
+/**
+ * Get a value of a flag for the email corresponding to 'message'.
+ */
 notmuch_bool_t
 notmuch_message_get_flag (notmuch_message_t *message,
 			  notmuch_message_flag_t flag);
 
-/* Set a value of a flag for the email corresponding to 'message'. */
+/**
+ * Set a value of a flag for the email corresponding to 'message'.
+ */
 void
 notmuch_message_set_flag (notmuch_message_t *message,
 			  notmuch_message_flag_t flag, notmuch_bool_t value);
 
-/* Get the date of 'message' as a time_t value.
+/**
+ * Get the date of 'message' as a time_t value.
  *
  * For the original textual representation of the Date header from the
  * message call notmuch_message_get_header() with a header value of
- * "date". */
+ * "date".
+ */
 time_t
 notmuch_message_get_date  (notmuch_message_t *message);
 
-/* Get the value of the specified header from 'message' as a UTF-8 string.
+/**
+ * Get the value of the specified header from 'message' as a UTF-8 string.
  *
  * Common headers are stored in the database when the message is
  * indexed and will be returned from the database.  Other headers will
@@ -1087,7 +1218,8 @@ notmuch_message_get_date  (notmuch_message_t *message);
 const char *
 notmuch_message_get_header (notmuch_message_t *message, const char *header);
 
-/* Get the tags for 'message', returning a notmuch_tags_t object which
+/**
+ * Get the tags for 'message', returning a notmuch_tags_t object which
  * can be used to iterate over all tags.
  *
  * The tags object is owned by the message and as such, will only be
@@ -1120,10 +1252,13 @@ notmuch_message_get_header (notmuch_message_t *message, const char *header);
 notmuch_tags_t *
 notmuch_message_get_tags (notmuch_message_t *message);
 
-/* The longest possible tag value. */
+/**
+ * The longest possible tag value.
+ */
 #define NOTMUCH_TAG_MAX 200
 
-/* Add a tag to the given message.
+/**
+ * Add a tag to the given message.
  *
  * Return value:
  *
@@ -1140,7 +1275,8 @@ notmuch_message_get_tags (notmuch_message_t *message);
 notmuch_status_t
 notmuch_message_add_tag (notmuch_message_t *message, const char *tag);
 
-/* Remove a tag from the given message.
+/**
+ * Remove a tag from the given message.
  *
  * Return value:
  *
@@ -1157,7 +1293,8 @@ notmuch_message_add_tag (notmuch_message_t *message, const char *tag);
 notmuch_status_t
 notmuch_message_remove_tag (notmuch_message_t *message, const char *tag);
 
-/* Remove all tags from the given message.
+/**
+ * Remove all tags from the given message.
  *
  * See notmuch_message_freeze for an example showing how to safely
  * replace tag values.
@@ -1168,7 +1305,8 @@ notmuch_message_remove_tag (notmuch_message_t *message, const char *tag);
 notmuch_status_t
 notmuch_message_remove_all_tags (notmuch_message_t *message);
 
-/* Add/remove tags according to maildir flags in the message filename(s)
+/**
+ * Add/remove tags according to maildir flags in the message filename(s).
  *
  * This function examines the filenames of 'message' for maildir
  * flags, and adds or removes tags on 'message' as follows when these
@@ -1202,7 +1340,8 @@ notmuch_message_remove_all_tags (notmuch_message_t *message);
 notmuch_status_t
 notmuch_message_maildir_flags_to_tags (notmuch_message_t *message);
 
-/* Rename message filename(s) to encode tags as maildir flags
+/**
+ * Rename message filename(s) to encode tags as maildir flags.
  *
  * Specifically, for each filename corresponding to this message:
  *
@@ -1238,7 +1377,8 @@ notmuch_message_maildir_flags_to_tags (notmuch_message_t *message);
 notmuch_status_t
 notmuch_message_tags_to_maildir_flags (notmuch_message_t *message);
 
-/* Freeze the current state of 'message' within the database.
+/**
+ * Freeze the current state of 'message' within the database.
  *
  * This means that changes to the message state, (via
  * notmuch_message_add_tag, notmuch_message_remove_tag, and
@@ -1281,7 +1421,8 @@ notmuch_message_tags_to_maildir_flags (notmuch_message_t *message);
 notmuch_status_t
 notmuch_message_freeze (notmuch_message_t *message);
 
-/* Thaw the current 'message', synchronizing any changes that may have
+/**
+ * Thaw the current 'message', synchronizing any changes that may have
  * occurred while 'message' was frozen into the notmuch database.
  *
  * See notmuch_message_freeze for an example of how to use this
@@ -1304,7 +1445,8 @@ notmuch_message_freeze (notmuch_message_t *message);
 notmuch_status_t
 notmuch_message_thaw (notmuch_message_t *message);
 
-/* Destroy a notmuch_message_t object.
+/**
+ * Destroy a notmuch_message_t object.
  *
  * It can be useful to call this function in the case of a single
  * query object with many messages in the result, (such as iterating
@@ -1315,7 +1457,8 @@ notmuch_message_thaw (notmuch_message_t *message);
 void
 notmuch_message_destroy (notmuch_message_t *message);
 
-/* Is the given 'tags' iterator pointing at a valid tag.
+/**
+ * Is the given 'tags' iterator pointing at a valid tag.
  *
  * When this function returns TRUE, notmuch_tags_get will return a
  * valid string. Whereas when this function returns FALSE,
@@ -1327,7 +1470,8 @@ notmuch_message_destroy (notmuch_message_t *message);
 notmuch_bool_t
 notmuch_tags_valid (notmuch_tags_t *tags);
 
-/* Get the current tag from 'tags' as a string.
+/**
+ * Get the current tag from 'tags' as a string.
  *
  * Note: The returned string belongs to 'tags' and has a lifetime
  * identical to it (and the query to which it ultimately belongs).
@@ -1338,7 +1482,8 @@ notmuch_tags_valid (notmuch_tags_t *tags);
 const char *
 notmuch_tags_get (notmuch_tags_t *tags);
 
-/* Move the 'tags' iterator to the next tag.
+/**
+ * Move the 'tags' iterator to the next tag.
  *
  * If 'tags' is already pointing at the last tag then the iterator
  * will be moved to a point just beyond that last tag, (where
@@ -1351,7 +1496,8 @@ notmuch_tags_get (notmuch_tags_t *tags);
 void
 notmuch_tags_move_to_next (notmuch_tags_t *tags);
 
-/* Destroy a notmuch_tags_t object.
+/**
+ * Destroy a notmuch_tags_t object.
  *
  * It's not strictly necessary to call this function. All memory from
  * the notmuch_tags_t object will be reclaimed when the containing
@@ -1360,7 +1506,8 @@ notmuch_tags_move_to_next (notmuch_tags_t *tags);
 void
 notmuch_tags_destroy (notmuch_tags_t *tags);
 
-/* Store an mtime within the database for 'directory'.
+/**
+ * Store an mtime within the database for 'directory'.
  *
  * The 'directory' should be an object retrieved from the database
  * with notmuch_database_get_directory for a particular path.
@@ -1400,35 +1547,44 @@ notmuch_status_t
 notmuch_directory_set_mtime (notmuch_directory_t *directory,
 			     time_t mtime);
 
-/* Get the mtime of a directory, (as previously stored with
+/**
+ * Get the mtime of a directory, (as previously stored with
  * notmuch_directory_set_mtime).
  *
  * Returns 0 if no mtime has previously been stored for this
- * directory.*/
+ * directory.
+ */
 time_t
 notmuch_directory_get_mtime (notmuch_directory_t *directory);
 
-/* Get a notmuch_filenames_t iterator listing all the filenames of
+/**
+ * Get a notmuch_filenames_t iterator listing all the filenames of
  * messages in the database within the given directory.
  *
  * The returned filenames will be the basename-entries only (not
- * complete paths). */
+ * complete paths).
+ */
 notmuch_filenames_t *
 notmuch_directory_get_child_files (notmuch_directory_t *directory);
 
-/* Get a notmuch_filenams_t iterator listing all the filenames of
+/**
+ * Get a notmuch_filenams_t iterator listing all the filenames of
  * sub-directories in the database within the given directory.
  *
  * The returned filenames will be the basename-entries only (not
- * complete paths). */
+ * complete paths).
+ */
 notmuch_filenames_t *
 notmuch_directory_get_child_directories (notmuch_directory_t *directory);
 
-/* Destroy a notmuch_directory_t object. */
+/**
+ * Destroy a notmuch_directory_t object.
+ */
 void
 notmuch_directory_destroy (notmuch_directory_t *directory);
 
-/* Is the given 'filenames' iterator pointing at a valid filename.
+/**
+ * Is the given 'filenames' iterator pointing at a valid filename.
  *
  * When this function returns TRUE, notmuch_filenames_get will return
  * a valid string. Whereas when this function returns FALSE,
@@ -1440,7 +1596,8 @@ notmuch_directory_destroy (notmuch_directory_t *directory);
 notmuch_bool_t
 notmuch_filenames_valid (notmuch_filenames_t *filenames);
 
-/* Get the current filename from 'filenames' as a string.
+/**
+ * Get the current filename from 'filenames' as a string.
  *
  * Note: The returned string belongs to 'filenames' and has a lifetime
  * identical to it (and the directory to which it ultimately belongs).
@@ -1451,7 +1608,8 @@ notmuch_filenames_valid (notmuch_filenames_t *filenames);
 const char *
 notmuch_filenames_get (notmuch_filenames_t *filenames);
 
-/* Move the 'filenames' iterator to the next filename.
+/**
+ * Move the 'filenames' iterator to the next filename.
  *
  * If 'filenames' is already pointing at the last filename then the
  * iterator will be moved to a point just beyond that last filename,
@@ -1464,7 +1622,8 @@ notmuch_filenames_get (notmuch_filenames_t *filenames);
 void
 notmuch_filenames_move_to_next (notmuch_filenames_t *filenames);
 
-/* Destroy a notmuch_filenames_t object.
+/**
+ * Destroy a notmuch_filenames_t object.
  *
  * It's not strictly necessary to call this function. All memory from
  * the notmuch_filenames_t object will be reclaimed when the
@@ -1475,6 +1634,8 @@ notmuch_filenames_move_to_next (notmuch_filenames_t *filenames);
  */
 void
 notmuch_filenames_destroy (notmuch_filenames_t *filenames);
+
+/* @} */
 
 NOTMUCH_END_DECLS
 
