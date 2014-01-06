@@ -126,14 +126,14 @@ test_expect_equal "$dirname" "$MAIL_DIR/new"
 test_begin_subtest "Insert message into folder"
 gen_insert_msg
 notmuch insert --folder=Drafts < "$gen_msg_filename"
-output=$(notmuch search --output=files folder:Drafts)
+output=$(notmuch search --output=files path:Drafts/new)
 dirname=$(dirname "$output")
 test_expect_equal "$dirname" "$MAIL_DIR/Drafts/new"
 
 test_begin_subtest "Insert message into folder, add/remove tags"
 gen_insert_msg
 notmuch insert --folder=Drafts +draft -unread < "$gen_msg_filename"
-output=$(notmuch search --output=messages folder:Drafts tag:draft NOT tag:unread)
+output=$(notmuch search --output=messages path:Drafts/cur tag:draft NOT tag:unread)
 test_expect_equal "$output" "id:$gen_msg_id"
 
 gen_insert_msg
@@ -143,21 +143,21 @@ test_expect_code 1 "Insert message into non-existent folder" \
 test_begin_subtest "Insert message, create folder"
 gen_insert_msg
 notmuch insert --folder=F --create-folder +folder < "$gen_msg_filename"
-output=$(notmuch search --output=files folder:F tag:folder)
+output=$(notmuch search --output=files path:F/new tag:folder)
 basename=$(basename "$output")
 test_expect_equal_file "$gen_msg_filename" "$MAIL_DIR/F/new/${basename}"
 
 test_begin_subtest "Insert message, create subfolder"
 gen_insert_msg
 notmuch insert --folder=F/G/H/I/J --create-folder +folder < "$gen_msg_filename"
-output=$(notmuch search --output=files folder:F/G/H/I/J tag:folder)
+output=$(notmuch search --output=files path:F/G/H/I/J/new tag:folder)
 basename=$(basename "$output")
 test_expect_equal_file "$gen_msg_filename" "${MAIL_DIR}/F/G/H/I/J/new/${basename}"
 
 test_begin_subtest "Insert message, create existing subfolder"
 gen_insert_msg
 notmuch insert --folder=F/G/H/I/J --create-folder +folder < "$gen_msg_filename"
-output=$(notmuch count folder:F/G/H/I/J tag:folder)
+output=$(notmuch count path:F/G/H/I/J/new tag:folder)
 test_expect_equal "$output" "2"
 
 gen_insert_msg
