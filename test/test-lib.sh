@@ -27,6 +27,7 @@ shopt -u xpg_echo
 
 this_test=${0##*/}
 this_test=${this_test%.sh}
+this_test=${this_test#T[0-9][0-9][0-9]-}
 
 # if --tee was passed, write the output not only to the terminal, but
 # additionally to the file test-results/$BASENAME.out, too.

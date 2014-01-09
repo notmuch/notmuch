@@ -16,61 +16,7 @@ fi
 
 cd $(dirname "$0")
 
-TESTS="
-  basic
-  help-test
-  compact
-  config
-  setup
-  new
-  count
-  insert
-  search
-  search-output
-  search-by-folder
-  search-position-overlap-bug
-  search-insufficient-from-quoting
-  search-limiting
-  excludes
-  tagging
-  json
-  sexp
-  text
-  multipart
-  thread-naming
-  raw
-  reply
-  reply-to-sender
-  dump-restore
-  uuencode
-  thread-order
-  author-order
-  from-guessing
-  long-id
-  encoding
-  emacs
-  emacs-large-search-buffer
-  emacs-subject-to-filename
-  maildir-sync
-  crypto
-  symbol-hiding
-  search-folder-coherence
-  atomicity
-  python
-  hooks
-  argument-parsing
-  emacs-test-functions
-  emacs-address-cleaning
-  emacs-hello
-  emacs-show
-  emacs-tree
-  missing-headers
-  hex-escaping
-  parse-time-string
-  search-date
-  thread-replies
-"
-TESTS=${NOTMUCH_TESTS:=$TESTS}
+TESTS=${NOTMUCH_TESTS:-`echo T[0-9][0-9][0-9]-*.sh`}
 
 # Clean up any results from a previous run
 rm -r test-results >/dev/null 2>/dev/null
