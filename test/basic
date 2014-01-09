@@ -49,24 +49,6 @@ test_expect_code 2 'failure to clean up causes the test to fail' '
     test_when_finished "(exit 2)"
 '
 
-# Ensure that all tests are being run
-test_begin_subtest 'Ensure that all available tests will be run by notmuch-test'
-eval $(sed -n -e '/^TESTS="$/,/^"$/p' $TEST_DIRECTORY/notmuch-test)
-tests_in_suite=$(for i in $TESTS; do echo $i; done | sort)
-available=$(find "$TEST_DIRECTORY" -maxdepth 1 -type f \
-   '(' -perm -100 -o -perm -10 -o -perm -1 ')' \
-    ! -name aggregate-results.sh	\
-    ! -name arg-test			\
-    ! -name hex-xcode			\
-    ! -name notmuch-test		\
-    ! -name parse-time			\
-    ! -name random-corpus		\
-    ! -name smtp-dummy			\
-    ! -name symbol-test			\
-    ! -name test-verbose		\
-    | sed 's,.*/,,' | sort)
-test_expect_equal "$tests_in_suite" "$available"
-
 EXPECTED=$TEST_DIRECTORY/test.expected-output
 suppress_diff_date() {
     sed -e 's/\(.*\-\-\- test-verbose\.4\.\expected\).*/\1/' \
