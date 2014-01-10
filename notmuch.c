@@ -256,7 +256,7 @@ main (int argc, char *argv[])
     const char *command_name = NULL;
     command_t *command;
     char *config_file_name = NULL;
-    notmuch_config_t *config;
+    notmuch_config_t *config = NULL;
     notmuch_bool_t print_help=FALSE, print_version=FALSE;
     int opt_index;
     int ret;
@@ -316,7 +316,9 @@ main (int argc, char *argv[])
 
     ret = (command->function)(config, argc - opt_index, argv + opt_index);
 
-    notmuch_config_close (config);
+  DONE:
+    if (config)
+	notmuch_config_close (config);
 
     talloc_report = getenv ("NOTMUCH_TALLOC_REPORT");
     if (talloc_report && strcmp (talloc_report, "") != 0) {
@@ -334,7 +336,6 @@ main (int argc, char *argv[])
 	}
     }
 
-  DONE:
     talloc_free (local);
 
     return ret;
