@@ -32,7 +32,7 @@ notmuch_compact_command (notmuch_config_t *config, int argc, char *argv[])
     const char *path = notmuch_config_get_database_path (config);
     const char *backup_path = NULL;
     notmuch_status_t ret;
-    notmuch_bool_t quiet;
+    notmuch_bool_t quiet = FALSE;
     int opt_index;
 
     notmuch_opt_desc_t options[] = {
