@@ -22,6 +22,12 @@
 
 #include "notmuch-client.h"
 
+/*
+ * Notmuch subcommand hook.
+ *
+ * The return value will be used as notmuch exit status code,
+ * preferrably EXIT_SUCCESS or EXIT_FAILURE.
+ */
 typedef int (*command_function_t) (notmuch_config_t *config, int argc, char *argv[]);
 
 typedef struct command {
@@ -156,7 +162,7 @@ notmuch_help_command (notmuch_config_t *config, int argc, char *argv[])
     if (argc == 0) {
 	printf ("The notmuch mail system.\n\n");
 	usage (stdout);
-	return 0;
+	return EXIT_SUCCESS;
     }
 
     if (strcmp (argv[0], "help") == 0) {
@@ -165,7 +171,7 @@ notmuch_help_command (notmuch_config_t *config, int argc, char *argv[])
 		"\tof difficulties check that MANPATH includes the pages\n"
 		"\tinstalled by notmuch.\n\n"
 		"\tTry \"notmuch help\" for a list of topics.\n");
-	return 0;
+	return EXIT_SUCCESS;
     }
 
     command = find_command (argv[0]);
@@ -183,7 +189,7 @@ notmuch_help_command (notmuch_config_t *config, int argc, char *argv[])
     fprintf (stderr,
 	     "\nSorry, %s is not a known command. There's not much I can do to help.\n\n",
 	     argv[0]);
-    return 1;
+    return EXIT_FAILURE;
 }
 
 /* Handle the case of "notmuch" being invoked with no command
@@ -211,7 +217,7 @@ notmuch_command (notmuch_config_t *config,
 	if (errno != ENOENT) {
 	    fprintf (stderr, "Error looking for notmuch database at %s: %s\n",
 		     db_path, strerror (errno));
-	    return 1;
+	    return EXIT_FAILURE;
 	}
 	printf ("Notmuch is configured, but there's not yet a database at\n\n\t%s\n\n",
 		db_path);
@@ -219,7 +225,7 @@ notmuch_command (notmuch_config_t *config,
 		"Note that the first run of \"notmuch new\" can take a very long time\n"
 		"and that the resulting database will use roughly the same amount of\n"
 		"storage space as the email being indexed.\n\n");
-	return 0;
+	return EXIT_SUCCESS;
     }
 
     printf ("Notmuch is configured and appears to have a database. Excellent!\n\n"
@@ -239,7 +245,7 @@ notmuch_command (notmuch_config_t *config,
 	    notmuch_config_get_user_name (config),
 	    notmuch_config_get_user_primary_email (config));
 
-    return 0;
+    return EXIT_SUCCESS;
 }
 
 int
@@ -253,7 +259,7 @@ main (int argc, char *argv[])
     notmuch_config_t *config;
     notmuch_bool_t print_help=FALSE, print_version=FALSE;
     int opt_index;
-    int ret = 0;
+    int ret;
 
     notmuch_opt_desc_t options[] = {
 	{ NOTMUCH_OPT_BOOLEAN, &print_help, "help", 'h', 0 },
@@ -276,16 +282,19 @@ main (int argc, char *argv[])
 
     opt_index = parse_arguments (argc, argv, options, 1);
     if (opt_index < 0) {
-	/* diagnostics already printed */
-	return 1;
+	ret = EXIT_FAILURE;
+	goto DONE;
     }
 
-    if (print_help)
-	return notmuch_help_command (NULL, argc - 1, &argv[1]);
+    if (print_help) {
+	ret = notmuch_help_command (NULL, argc - 1, &argv[1]);
+	goto DONE;
+    }
 
     if (print_version) {
 	printf ("notmuch " STRINGIFY(NOTMUCH_VERSION) "\n");
-	return 0;
+	ret = EXIT_SUCCESS;
+	goto DONE;
     }
 
     if (opt_index < argc)
@@ -295,12 +304,15 @@ main (int argc, char *argv[])
     if (!command) {
 	fprintf (stderr, "Error: Unknown command '%s' (see \"notmuch help\")\n",
 		 command_name);
-	return 1;
+	ret = EXIT_FAILURE;
+	goto DONE;
     }
 
     config = notmuch_config_open (local, config_file_name, command->create_config);
-    if (!config)
-	return 1;
+    if (!config) {
+	ret = EXIT_FAILURE;
+	goto DONE;
+    }
 
     ret = (command->function)(config, argc - opt_index, argv + opt_index);
 
@@ -322,6 +334,7 @@ main (int argc, char *argv[])
 	}
     }
 
+  DONE:
     talloc_free (local);
 
     return ret;

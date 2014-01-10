@@ -35,7 +35,7 @@ notmuch_dump_command (notmuch_config_t *config, int argc, char *argv[])
 
     if (notmuch_database_open (notmuch_config_get_database_path (config),
 			       NOTMUCH_DATABASE_MODE_READ_ONLY, &notmuch))
-	return 1;
+	return EXIT_FAILURE;
 
     char *output_file_name = NULL;
     int opt_index;
@@ -52,18 +52,15 @@ notmuch_dump_command (notmuch_config_t *config, int argc, char *argv[])
     };
 
     opt_index = parse_arguments (argc, argv, options, 1);
-
-    if (opt_index < 0) {
-	/* diagnostics already printed */
-	return 1;
-    }
+    if (opt_index < 0)
+	return EXIT_FAILURE;
 
     if (output_file_name) {
 	output = fopen (output_file_name, "w");
 	if (output == NULL) {
 	    fprintf (stderr, "Error opening %s for writing: %s\n",
 		     output_file_name, strerror (errno));
-	    return 1;
+	    return EXIT_FAILURE;
 	}
     }
 
@@ -72,14 +69,14 @@ notmuch_dump_command (notmuch_config_t *config, int argc, char *argv[])
 	query_str = query_string_from_args (notmuch, argc - opt_index, argv + opt_index);
 	if (query_str == NULL) {
 	    fprintf (stderr, "Out of memory.\n");
-	    return 1;
+	    return EXIT_FAILURE;
 	}
     }
 
     query = notmuch_query_create (notmuch, query_str);
     if (query == NULL) {
 	fprintf (stderr, "Out of memory\n");
-	return 1;
+	return EXIT_FAILURE;
     }
     /* Don't ask xapian to sort by Message-ID. Xapian optimizes returning the
      * first results quickly at the expense of total time.
@@ -131,7 +128,7 @@ notmuch_dump_command (notmuch_config_t *config, int argc, char *argv[])
 				&buffer, &buffer_size) != HEX_SUCCESS) {
 		    fprintf (stderr, "Error: failed to hex-encode tag %s\n",
 			     tag_str);
-		    return 1;
+		    return EXIT_FAILURE;
 		}
 		fprintf (output, "+%s", buffer);
 	    }
@@ -144,7 +141,7 @@ notmuch_dump_command (notmuch_config_t *config, int argc, char *argv[])
 				   &buffer, &buffer_size)) {
 		    fprintf (stderr, "Error quoting message id %s: %s\n",
 			     message_id, strerror (errno));
-		    return 1;
+		    return EXIT_FAILURE;
 	    }
 	    fprintf (output, " -- %s\n", buffer);
 	}
@@ -158,5 +155,5 @@ notmuch_dump_command (notmuch_config_t *config, int argc, char *argv[])
     notmuch_query_destroy (query);
     notmuch_database_destroy (notmuch);
 
-    return 0;
+    return EXIT_SUCCESS;
 }

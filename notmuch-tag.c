@@ -193,7 +193,7 @@ notmuch_tag_command (notmuch_config_t *config, int argc, char *argv[])
     FILE *input = stdin;
     char *input_file_name = NULL;
     int opt_index;
-    int ret = 0;
+    int ret;
 
     /* Setup our handler for SIGINT */
     memset (&action, 0, sizeof (struct sigaction));
@@ -211,7 +211,7 @@ notmuch_tag_command (notmuch_config_t *config, int argc, char *argv[])
 
     opt_index = parse_arguments (argc, argv, options, 1);
     if (opt_index < 0)
-	return 1;
+	return EXIT_FAILURE;
 
     if (input_file_name) {
 	batch = TRUE;
@@ -219,44 +219,44 @@ notmuch_tag_command (notmuch_config_t *config, int argc, char *argv[])
 	if (input == NULL) {
 	    fprintf (stderr, "Error opening %s for reading: %s\n",
 		     input_file_name, strerror (errno));
-	    return 1;
+	    return EXIT_FAILURE;
 	}
     }
 
     if (batch) {
 	if (opt_index != argc) {
 	    fprintf (stderr, "Can't specify both cmdline and stdin!\n");
-	    return 1;
+	    return EXIT_FAILURE;
 	}
 	if (remove_all) {
 	    fprintf (stderr, "Can't specify both --remove-all and --batch\n");
-	    return 1;
+	    return EXIT_FAILURE;
 	}
     } else {
 	tag_ops = tag_op_list_create (config);
 	if (tag_ops == NULL) {
 	    fprintf (stderr, "Out of memory.\n");
-	    return 1;
+	    return EXIT_FAILURE;
 	}
 
 	if (parse_tag_command_line (config, argc - opt_index, argv + opt_index,
 				    &query_string, tag_ops))
-	    return 1;
+	    return EXIT_FAILURE;
 
 	if (tag_op_list_size (tag_ops) == 0 && ! remove_all) {
 	    fprintf (stderr, "Error: 'notmuch tag' requires at least one tag to add or remove.\n");
-	    return 1;
+	    return EXIT_FAILURE;
 	}
 
 	if (*query_string == '\0') {
 	    fprintf (stderr, "Error: notmuch tag requires at least one search term.\n");
-	    return 1;
+	    return EXIT_FAILURE;
 	}
     }
 
     if (notmuch_database_open (notmuch_config_get_database_path (config),
 			       NOTMUCH_DATABASE_MODE_READ_WRITE, &notmuch))
-	return 1;
+	return EXIT_FAILURE;
 
     if (notmuch_config_get_maildir_synchronize_flags (config))
 	tag_flags |= TAG_FLAG_MAILDIR_SYNC;
@@ -274,5 +274,5 @@ notmuch_tag_command (notmuch_config_t *config, int argc, char *argv[])
     if (input != stdin)
 	fclose (input);
 
-    return ret || interrupted;
+    return ret || interrupted ? EXIT_FAILURE : EXIT_SUCCESS;
 }

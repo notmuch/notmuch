@@ -401,10 +401,8 @@ notmuch_search_command (notmuch_config_t *config, int argc, char *argv[])
     };
 
     opt_index = parse_arguments (argc, argv, options, 1);
-
-    if (opt_index < 0) {
-	return 1;
-    }
+    if (opt_index < 0)
+	return EXIT_FAILURE;
 
     switch (format_sel) {
     case NOTMUCH_FORMAT_TEXT:
@@ -413,7 +411,7 @@ notmuch_search_command (notmuch_config_t *config, int argc, char *argv[])
     case NOTMUCH_FORMAT_TEXT0:
 	if (output == OUTPUT_SUMMARY) {
 	    fprintf (stderr, "Error: --format=text0 is not compatible with --output=summary.\n");
-	    return 1;
+	    return EXIT_FAILURE;
 	}
 	format = sprinter_text0_create (config, stdout);
 	break;
@@ -432,22 +430,22 @@ notmuch_search_command (notmuch_config_t *config, int argc, char *argv[])
 
     if (notmuch_database_open (notmuch_config_get_database_path (config),
 			       NOTMUCH_DATABASE_MODE_READ_ONLY, &notmuch))
-	return 1;
+	return EXIT_FAILURE;
 
     query_str = query_string_from_args (notmuch, argc-opt_index, argv+opt_index);
     if (query_str == NULL) {
 	fprintf (stderr, "Out of memory.\n");
-	return 1;
+	return EXIT_FAILURE;
     }
     if (*query_str == '\0') {
 	fprintf (stderr, "Error: notmuch search requires at least one search term.\n");
-	return 1;
+	return EXIT_FAILURE;
     }
 
     query = notmuch_query_create (notmuch, query_str);
     if (query == NULL) {
 	fprintf (stderr, "Out of memory\n");
-	return 1;
+	return EXIT_FAILURE;
     }
 
     notmuch_query_set_sort (query, sort);
@@ -491,5 +489,5 @@ notmuch_search_command (notmuch_config_t *config, int argc, char *argv[])
 
     talloc_free (format);
 
-    return ret;
+    return ret ? EXIT_FAILURE : EXIT_SUCCESS;
 }

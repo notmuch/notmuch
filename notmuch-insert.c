@@ -418,11 +418,8 @@ notmuch_insert_command (notmuch_config_t *config, int argc, char *argv[])
     };
 
     opt_index = parse_arguments (argc, argv, options, 1);
-
-    if (opt_index < 0) {
-	/* diagnostics already printed */
-	return 1;
-    }
+    if (opt_index < 0)
+	return EXIT_FAILURE;
 
     db_path = notmuch_config_get_database_path (config);
     new_tags = notmuch_config_get_new_tags (config, &new_tags_length);
@@ -431,20 +428,20 @@ notmuch_insert_command (notmuch_config_t *config, int argc, char *argv[])
     tag_ops = tag_op_list_create (config);
     if (tag_ops == NULL) {
 	fprintf (stderr, "Out of memory.\n");
-	return 1;
+	return EXIT_FAILURE;
     }
     for (i = 0; i < new_tags_length; i++) {
 	if (tag_op_list_append (tag_ops, new_tags[i], FALSE))
-	    return 1;
+	    return EXIT_FAILURE;
     }
 
     if (parse_tag_command_line (config, argc - opt_index, argv + opt_index,
 				&query_string, tag_ops))
-	return 1;
+	return EXIT_FAILURE;
 
     if (*query_string != '\0') {
 	fprintf (stderr, "Error: unexpected query string: %s\n", query_string);
-	return 1;
+	return EXIT_FAILURE;
     }
 
     if (folder == NULL) {
@@ -452,17 +449,17 @@ notmuch_insert_command (notmuch_config_t *config, int argc, char *argv[])
     } else {
 	if (! check_folder_name (folder)) {
 	    fprintf (stderr, "Error: bad folder name: %s\n", folder);
-	    return 1;
+	    return EXIT_FAILURE;
 	}
 	maildir = talloc_asprintf (config, "%s/%s", db_path, folder);
 	if (! maildir) {
 	    fprintf (stderr, "Out of memory\n");
-	    return 1;
+	    return EXIT_FAILURE;
 	}
 	if (create_folder && ! maildir_create_folder (config, maildir)) {
 	    fprintf (stderr, "Error: creating maildir %s: %s\n",
 		     maildir, strerror (errno));
-	    return 1;
+	    return EXIT_FAILURE;
 	}
     }
 
@@ -476,12 +473,12 @@ notmuch_insert_command (notmuch_config_t *config, int argc, char *argv[])
 
     if (notmuch_database_open (notmuch_config_get_database_path (config),
 			       NOTMUCH_DATABASE_MODE_READ_WRITE, &notmuch))
-	return 1;
+	return EXIT_FAILURE;
 
     ret = insert_message (config, notmuch, STDIN_FILENO, maildir, tag_ops,
 			  synchronize_flags);
 
     notmuch_database_destroy (notmuch);
 
-    return (ret) ? 0 : 1;
+    return ret ? EXIT_SUCCESS : EXIT_FAILURE;
 }

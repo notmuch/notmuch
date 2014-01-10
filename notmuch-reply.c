@@ -704,7 +704,7 @@ notmuch_reply_command (notmuch_config_t *config, int argc, char *argv[])
     notmuch_database_t *notmuch;
     notmuch_query_t *query;
     char *query_string;
-    int opt_index, ret = 0;
+    int opt_index;
     int (*reply_format_func) (void *ctx,
 			      notmuch_config_t *config,
 			      notmuch_query_t *query,
@@ -739,10 +739,8 @@ notmuch_reply_command (notmuch_config_t *config, int argc, char *argv[])
     };
 
     opt_index = parse_arguments (argc, argv, options, 1);
-    if (opt_index < 0) {
-	/* diagnostics already printed */
-	return 1;
-    }
+    if (opt_index < 0)
+	return EXIT_FAILURE;
 
     if (format == FORMAT_HEADERS_ONLY) {
 	reply_format_func = notmuch_reply_format_headers_only;
@@ -761,30 +759,30 @@ notmuch_reply_command (notmuch_config_t *config, int argc, char *argv[])
     query_string = query_string_from_args (config, argc-opt_index, argv+opt_index);
     if (query_string == NULL) {
 	fprintf (stderr, "Out of memory\n");
-	return 1;
+	return EXIT_FAILURE;
     }
 
     if (*query_string == '\0') {
 	fprintf (stderr, "Error: notmuch reply requires at least one search term.\n");
-	return 1;
+	return EXIT_FAILURE;
     }
 
     if (notmuch_database_open (notmuch_config_get_database_path (config),
 			       NOTMUCH_DATABASE_MODE_READ_ONLY, &notmuch))
-	return 1;
+	return EXIT_FAILURE;
 
     query = notmuch_query_create (notmuch, query_string);
     if (query == NULL) {
 	fprintf (stderr, "Out of memory\n");
-	return 1;
+	return EXIT_FAILURE;
     }
 
     if (reply_format_func (config, config, query, &params, reply_all, sp) != 0)
-	return 1;
+	return EXIT_FAILURE;
 
     notmuch_crypto_cleanup (&params.crypto);
     notmuch_query_destroy (query);
     notmuch_database_destroy (notmuch);
 
-    return ret;
+    return EXIT_SUCCESS;
 }

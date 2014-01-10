@@ -839,34 +839,39 @@ notmuch_config_command_list (notmuch_config_t *config)
 int
 notmuch_config_command (notmuch_config_t *config, int argc, char *argv[])
 {
+    int ret;
+
     argc--; argv++; /* skip subcommand argument */
 
     if (argc < 1) {
 	fprintf (stderr, "Error: notmuch config requires at least one argument.\n");
-	return 1;
+	return EXIT_FAILURE;
     }
 
     if (strcmp (argv[0], "get") == 0) {
 	if (argc != 2) {
 	    fprintf (stderr, "Error: notmuch config get requires exactly "
 		     "one argument.\n");
-	    return 1;
+	    return EXIT_FAILURE;
 	}
-	return notmuch_config_command_get (config, argv[1]);
+	ret = notmuch_config_command_get (config, argv[1]);
     } else if (strcmp (argv[0], "set") == 0) {
 	if (argc < 2) {
 	    fprintf (stderr, "Error: notmuch config set requires at least "
 		     "one argument.\n");
-	    return 1;
+	    return EXIT_FAILURE;
 	}
-	return notmuch_config_command_set (config, argv[1], argc - 2, argv + 2);
+	ret = notmuch_config_command_set (config, argv[1], argc - 2, argv + 2);
     } else if (strcmp (argv[0], "list") == 0) {
-	return notmuch_config_command_list (config);
+	ret = notmuch_config_command_list (config);
+    } else {
+	fprintf (stderr, "Unrecognized argument for notmuch config: %s\n",
+		 argv[0]);
+	return EXIT_FAILURE;
     }
 
-    fprintf (stderr, "Unrecognized argument for notmuch config: %s\n",
-	     argv[0]);
-    return 1;
+    return ret ? EXIT_FAILURE : EXIT_SUCCESS;
+
 }
 
 notmuch_bool_t

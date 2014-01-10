@@ -898,10 +898,8 @@ notmuch_new_command (notmuch_config_t *config, int argc, char *argv[])
     };
 
     opt_index = parse_arguments (argc, argv, options, 1);
-    if (opt_index < 0) {
-	/* diagnostics already printed */
-	return 1;
-    }
+    if (opt_index < 0)
+	return EXIT_FAILURE;
 
     add_files_state.new_tags = notmuch_config_get_new_tags (config, &add_files_state.new_tags_length);
     add_files_state.new_ignore = notmuch_config_get_new_ignore (config, &add_files_state.new_ignore_length);
@@ -911,7 +909,7 @@ notmuch_new_command (notmuch_config_t *config, int argc, char *argv[])
     if (!no_hooks) {
 	ret = notmuch_run_hook (db_path, "pre-new");
 	if (ret)
-	    return ret;
+	    return EXIT_FAILURE;
     }
 
     dot_notmuch_path = talloc_asprintf (config, "%s/%s", db_path, ".notmuch");
@@ -922,16 +920,16 @@ notmuch_new_command (notmuch_config_t *config, int argc, char *argv[])
 	count = 0;
 	count_files (db_path, &count, &add_files_state);
 	if (interrupted)
-	    return 1;
+	    return EXIT_FAILURE;
 
 	printf ("Found %d total files (that's not much mail).\n", count);
 	if (notmuch_database_create (db_path, &notmuch))
-	    return 1;
+	    return EXIT_FAILURE;
 	add_files_state.total_files = count;
     } else {
 	if (notmuch_database_open (db_path, NOTMUCH_DATABASE_MODE_READ_WRITE,
 				   &notmuch))
-	    return 1;
+	    return EXIT_FAILURE;
 
 	if (notmuch_database_needs_upgrade (notmuch)) {
 	    printf ("Welcome to a new version of notmuch! Your database will now be upgraded.\n");
@@ -946,7 +944,7 @@ notmuch_new_command (notmuch_config_t *config, int argc, char *argv[])
     }
 
     if (notmuch == NULL)
-	return 1;
+	return EXIT_FAILURE;
 
     /* Setup our handler for SIGINT. We do this after having
      * potentially done a database upgrade we this interrupt handler
@@ -1072,5 +1070,5 @@ notmuch_new_command (notmuch_config_t *config, int argc, char *argv[])
     if (!no_hooks && !ret && !interrupted)
 	ret = notmuch_run_hook (db_path, "post-new");
 
-    return ret || interrupted;
+    return ret || interrupted ? EXIT_FAILURE : EXIT_SUCCESS;
 }

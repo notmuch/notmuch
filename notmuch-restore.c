@@ -140,7 +140,7 @@ notmuch_restore_command (notmuch_config_t *config, int argc, char *argv[])
 
     if (notmuch_database_open (notmuch_config_get_database_path (config),
 			       NOTMUCH_DATABASE_MODE_READ_WRITE, &notmuch))
-	return 1;
+	return EXIT_FAILURE;
 
     if (notmuch_config_get_maildir_synchronize_flags (config))
 	flags |= TAG_FLAG_MAILDIR_SYNC;
@@ -157,11 +157,8 @@ notmuch_restore_command (notmuch_config_t *config, int argc, char *argv[])
     };
 
     opt_index = parse_arguments (argc, argv, options, 1);
-
-    if (opt_index < 0) {
-	/* diagnostics already printed */
-	return 1;
-    }
+    if (opt_index < 0)
+	return EXIT_FAILURE;
 
     if (! accumulate)
 	flags |= TAG_FLAG_REMOVE_ALL;
@@ -171,21 +168,19 @@ notmuch_restore_command (notmuch_config_t *config, int argc, char *argv[])
 	if (input == NULL) {
 	    fprintf (stderr, "Error opening %s for reading: %s\n",
 		     input_file_name, strerror (errno));
-	    return 1;
+	    return EXIT_FAILURE;
 	}
     }
 
     if (opt_index < argc) {
-	fprintf (stderr,
-		 "Unused positional parameter: %s\n",
-		 argv[opt_index]);
-	return 1;
+	fprintf (stderr, "Unused positional parameter: %s\n", argv[opt_index]);
+	return EXIT_FAILURE;
     }
 
     tag_ops = tag_op_list_create (config);
     if (tag_ops == NULL) {
 	fprintf (stderr, "Out of memory.\n");
-	return 1;
+	return EXIT_FAILURE;
     }
 
     do {
@@ -193,7 +188,7 @@ notmuch_restore_command (notmuch_config_t *config, int argc, char *argv[])
 
 	/* empty input file not considered an error */
 	if (line_len < 0)
-	    return 0;
+	    return EXIT_SUCCESS;
 
     } while ((line_len == 0) ||
 	     (line[0] == '#') ||
@@ -275,5 +270,5 @@ notmuch_restore_command (notmuch_config_t *config, int argc, char *argv[])
     if (input != stdin)
 	fclose (input);
 
-    return ret;
+    return ret ? EXIT_FAILURE : EXIT_SUCCESS;
 }
