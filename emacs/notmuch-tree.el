@@ -70,8 +70,14 @@ Note the author string should not contain
   :group 'notmuch-tree)
 
 ;; Faces for messages that match the query.
-(defface notmuch-tree-match-date-face
+(defface notmuch-tree-match-face
   '((t :inherit default))
+  "Default face used in tree mode face for matching messages"
+  :group 'notmuch-tree
+  :group 'notmuch-faces)
+
+(defface notmuch-tree-match-date-face
+  nil
   "Face used in tree mode for the date in messages matching the query."
   :group 'notmuch-tree
   :group 'notmuch-faces)
@@ -90,13 +96,13 @@ Note the author string should not contain
   :group 'notmuch-faces)
 
 (defface notmuch-tree-match-subject-face
-  '((t :inherit default))
+  nil
   "Face used in tree mode for the subject in messages matching the query."
   :group 'notmuch-tree
   :group 'notmuch-faces)
 
 (defface notmuch-tree-match-tree-face
-  '((t :inherit default))
+  nil
   "Face used in tree mode for the thread tree block graphics in messages matching the query."
   :group 'notmuch-tree
   :group 'notmuch-faces)
@@ -115,32 +121,38 @@ Note the author string should not contain
   :group 'notmuch-faces)
 
 ;; Faces for messages that do not match the query.
-(defface notmuch-tree-no-match-date-face
+(defface notmuch-tree-no-match-face
   '((t (:foreground "gray")))
+  "Default face used in tree mode face for non-matching messages"
+  :group 'notmuch-tree
+  :group 'notmuch-faces)
+
+(defface notmuch-tree-no-match-date-face
+  nil
   "Face used in tree mode for non-matching dates."
   :group 'notmuch-tree
   :group 'notmuch-faces)
 
 (defface notmuch-tree-no-match-subject-face
-  '((t (:foreground "gray")))
+  nil
   "Face used in tree mode for non-matching subjects."
   :group 'notmuch-tree
   :group 'notmuch-faces)
 
 (defface notmuch-tree-no-match-tree-face
-  '((t (:foreground "gray")))
+  nil
   "Face used in tree mode for the thread tree block graphics in messages matching the query."
   :group 'notmuch-tree
   :group 'notmuch-faces)
 
 (defface notmuch-tree-no-match-author-face
-  '((t (:foreground "gray")))
+  nil
   "Face used in tree mode for the date in messages matching the query."
   :group 'notmuch-tree
   :group 'notmuch-faces)
 
 (defface notmuch-tree-no-match-tag-face
-  '((t (:foreground "gray")))
+  nil
   "Face used in tree mode face for non-matching tags."
   :group 'notmuch-tree
   :group 'notmuch-faces)
@@ -699,10 +711,14 @@ unchanged ADDRESS if parsing fails."
 
 (defun notmuch-tree-format-field-list (field-list msg)
   "Format fields of MSG according to FIELD-LIST and return string"
-  (let (result-string)
+  (let ((face (if (plist-get msg :match)
+		  'notmuch-tree-match-face
+		'notmuch-tree-no-match-face))
+	(result-string))
     (dolist (spec field-list result-string)
       (let ((field-string (notmuch-tree-format-field (car spec) (cdr spec) msg)))
-	(setq result-string (concat result-string field-string))))))
+	(setq result-string (concat result-string field-string))))
+    (notmuch-combine-face-text-property-string result-string face t)))
 
 (defun notmuch-tree-insert-msg (msg)
   "Insert the message MSG according to notmuch-tree-result-format"
