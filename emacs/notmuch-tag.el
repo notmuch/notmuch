@@ -148,15 +148,16 @@ This can be used with `notmuch-tag-format-image-data'."
 	(dolist (format (cdr formats) tag)
 	  (setq tag (eval format))))))))
 
-(defun notmuch-tag-format-tags (tags)
+(defun notmuch-tag-format-tags (tags &optional face)
   "Return a string representing formatted TAGS."
-  (notmuch-combine-face-text-property-string
-   (mapconcat #'identity
-	      ;; nil indicated that the tag was deliberately hidden
-	      (delq nil (mapcar #'notmuch-tag-format-tag tags))
-	      " ")
-   'notmuch-tag-face
-   t))
+  (let ((face (or face 'notmuch-tag-face)))
+    (notmuch-combine-face-text-property-string
+     (mapconcat #'identity
+		;; nil indicated that the tag was deliberately hidden
+		(delq nil (mapcar #'notmuch-tag-format-tag tags))
+		" ")
+     face
+     t)))
 
 (defcustom notmuch-before-tag-hook nil
   "Hooks that are run before tags of a message are modified.
