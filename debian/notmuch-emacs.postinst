@@ -1,0 +1,4 @@
+dir="/var/lib/emacsen-common/state/package/installed"
+mkdir -p 0755 ${dir}
+touch ${dir}/notmuch-emacs
+#DEBHELPER#
