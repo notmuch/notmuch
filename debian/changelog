@@ -1,3 +1,10 @@
+notmuch (0.17-3) unstable; urgency=medium
+
+  * update notmuch-emacs for debian emacs policy 2.0.6
+  * Update emacs test suite for Hurd compatibility
+
+ -- David Bremner <bremner@debian.org>  Sun, 12 Jan 2014 17:07:16 -0400
+
 notmuch (0.17-2) unstable; urgency=medium
 
   * Bug fix: "package should warn in a NEWS.Debian file about possible

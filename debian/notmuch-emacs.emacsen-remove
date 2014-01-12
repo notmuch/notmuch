@@ -4,7 +4,5 @@
 FLAVOR=$1
 PACKAGE=notmuch
 
-if [ ${FLAVOR} != emacs ]; then
-    echo remove/${PACKAGE}: purging byte-compiled files for ${FLAVOR}
-    rm -rf /usr/share/${FLAVOR}/site-lisp/${PACKAGE}
-fi
+echo remove/${PACKAGE}: purging byte-compiled files for ${FLAVOR}
+rm -rf /usr/share/${FLAVOR}/site-lisp/${PACKAGE}

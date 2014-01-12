@@ -108,6 +108,7 @@ Architecture: all
 Section: mail
 Breaks: notmuch (<<0.6~254~)
 Replaces: notmuch (<<0.6~254~)
+Conflicts: emacsen-common (<< 2.0.0)
 Depends: ${misc:Depends}, notmuch (>= ${source:Version}),
  emacs23 (>= 23~) | emacs23-nox (>=23~) | emacs23-lucid (>=23~) |
  emacs24 (>= 24~) | emacs24-nox (>=24~) | emacs24-lucid (>=24~)
