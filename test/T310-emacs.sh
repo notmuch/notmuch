@@ -7,6 +7,10 @@ EXPECTED=$TEST_DIRECTORY/emacs.expected-output
 
 add_email_corpus
 
+# syntax errors in test-lib.el cause mysterious failures
+test_expect_success 'Syntax of emacs test library' \
+    "${TEST_EMACS} -Q --batch --load $TEST_DIRECTORY/test-lib.el"
+
 test_begin_subtest "Basic notmuch-hello view in emacs"
 test_emacs '(notmuch-hello)
 	    (test-output)'
