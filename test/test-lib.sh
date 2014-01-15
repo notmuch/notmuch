@@ -27,7 +27,7 @@ shopt -u xpg_echo
 
 this_test=${0##*/}
 this_test=${this_test%.sh}
-this_test=${this_test#T[0-9][0-9][0-9]-}
+this_test_bare=${this_test#T[0-9][0-9][0-9]-}
 
 # if --tee was passed, write the output not only to the terminal, but
 # additionally to the file test-results/$BASENAME.out, too.
@@ -196,7 +196,7 @@ print_test_description ()
 {
 	test -z "$test_description_printed" || return 0
 	echo
-	echo $this_test: "Testing ${test_description}"
+	echo $this_test_bare: "Testing ${test_description}"
 	test_description_printed=1
 }
 if [ -z "$NOTMUCH_TEST_QUIET" ]
@@ -1085,7 +1085,7 @@ test_emacs () {
 	test -z "$missing_dependencies" || return
 
 	if [ -z "$EMACS_SERVER" ]; then
-		emacs_tests="${this_test}.el"
+		emacs_tests="${this_test_bare}.el"
 		if [ -f "$TEST_DIRECTORY/$emacs_tests" ]; then
 			load_emacs_tests="--eval '(load \"$emacs_tests\")'"
 		else
