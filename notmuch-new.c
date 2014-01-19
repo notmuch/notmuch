@@ -704,8 +704,7 @@ count_files (const char *path, int *count, add_files_state_t *state)
     char *next;
     struct dirent **fs_entries = NULL;
     int num_fs_entries = scandir (path, &fs_entries, 0, dirent_sort_inode);
-    int entry_type;
-    int i = 0;
+    int entry_type, i;
 
     if (num_fs_entries == -1) {
 	fprintf (stderr, "Warning: failed to open directory %s: %s\n",
@@ -713,11 +712,8 @@ count_files (const char *path, int *count, add_files_state_t *state)
 	goto DONE;
     }
 
-    while (!interrupted) {
-        if (i == num_fs_entries)
-	    break;
-
-        entry = fs_entries[i++];
+    for (i = 0; i < num_fs_entries && ! interrupted; i++) {
+        entry = fs_entries[i];
 
 	/* Ignore special directories to avoid infinite recursion.
 	 * Also ignore the .notmuch directory and files/directories
