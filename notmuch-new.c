@@ -702,9 +702,9 @@ count_files (const char *path, int *count, add_files_state_t *state)
 {
     struct dirent *entry = NULL;
     char *next;
-    struct stat st;
     struct dirent **fs_entries = NULL;
     int num_fs_entries = scandir (path, &fs_entries, 0, dirent_sort_inode);
+    int entry_type;
     int i = 0;
 
     if (num_fs_entries == -1) {
@@ -742,15 +742,14 @@ count_files (const char *path, int *count, add_files_state_t *state)
 	    continue;
 	}
 
-	stat (next, &st);
-
-	if (S_ISREG (st.st_mode)) {
+	entry_type = dirent_type (path, entry);
+	if (entry_type == S_IFREG) {
 	    *count = *count + 1;
 	    if (*count % 1000 == 0) {
 		printf ("Found %d files so far.\r", *count);
 		fflush (stdout);
 	    }
-	} else if (S_ISDIR (st.st_mode)) {
+	} else if (entry_type == S_IFDIR) {
 	    count_files (next, count, state);
 	}
 
