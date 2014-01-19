@@ -34,9 +34,15 @@ typedef struct _filename_list {
     _filename_node_t **tail;
 } _filename_list_t;
 
+enum verbosity {
+    VERBOSITY_QUIET,
+    VERBOSITY_NORMAL,
+    VERBOSITY_VERBOSE,
+};
+
 typedef struct {
     int output_is_a_tty;
-    notmuch_bool_t verbose;
+    enum verbosity verbosity;
     notmuch_bool_t debug;
     const char **new_tags;
     size_t new_tags_length;
@@ -566,13 +572,11 @@ add_files (notmuch_database_t *notmuch,
 
 	state->processed_files++;
 
-	if (state->verbose) {
+	if (state->verbosity >= VERBOSITY_VERBOSE) {
 	    if (state->output_is_a_tty)
 		printf("\r\033[K");
 
-	    printf ("%i/%i: %s",
-		    state->processed_files,
-		    state->total_files,
+	    printf ("%i/%i: %s", state->processed_files, state->total_files,
 		    next);
 
 	    putchar((state->output_is_a_tty) ? '\r' : '\n');
@@ -741,7 +745,7 @@ count_files (const char *path, int *count, add_files_state_t *state)
 	entry_type = dirent_type (path, entry);
 	if (entry_type == S_IFREG) {
 	    *count = *count + 1;
-	    if (*count % 1000 == 0) {
+	    if (*count % 1000 == 0 && state->verbosity >= VERBOSITY_NORMAL) {
 		printf ("Found %d files so far.\r", *count);
 		fflush (stdout);
 	    }
@@ -917,13 +921,15 @@ notmuch_new_command (notmuch_config_t *config, int argc, char *argv[])
     int i;
     notmuch_bool_t timer_is_active = FALSE;
     notmuch_bool_t no_hooks = FALSE;
+    notmuch_bool_t quiet = FALSE, verbose = FALSE;
 
-    add_files_state.verbose = FALSE;
+    add_files_state.verbosity = VERBOSITY_NORMAL;
     add_files_state.debug = FALSE;
     add_files_state.output_is_a_tty = isatty (fileno (stdout));
 
     notmuch_opt_desc_t options[] = {
-	{ NOTMUCH_OPT_BOOLEAN,  &add_files_state.verbose, "verbose", 'v', 0 },
+	{ NOTMUCH_OPT_BOOLEAN,  &quiet, "quiet", 'q', 0 },
+	{ NOTMUCH_OPT_BOOLEAN,  &verbose, "verbose", 'v', 0 },
 	{ NOTMUCH_OPT_BOOLEAN,  &add_files_state.debug, "debug", 'd', 0 },
 	{ NOTMUCH_OPT_BOOLEAN,  &no_hooks, "no-hooks", 'n', 0 },
 	{ 0, 0, 0, 0, 0 }
@@ -932,6 +938,12 @@ notmuch_new_command (notmuch_config_t *config, int argc, char *argv[])
     opt_index = parse_arguments (argc, argv, options, 1);
     if (opt_index < 0)
 	return EXIT_FAILURE;
+
+    /* quiet trumps verbose */
+    if (quiet)
+	add_files_state.verbosity = VERBOSITY_QUIET;
+    else if (verbose)
+	add_files_state.verbosity = VERBOSITY_VERBOSE;
 
     add_files_state.new_tags = notmuch_config_get_new_tags (config, &add_files_state.new_tags_length);
     add_files_state.new_ignore = notmuch_config_get_new_ignore (config, &add_files_state.new_ignore_length);
@@ -954,7 +966,8 @@ notmuch_new_command (notmuch_config_t *config, int argc, char *argv[])
 	if (interrupted)
 	    return EXIT_FAILURE;
 
-	printf ("Found %d total files (that's not much mail).\n", count);
+	if (add_files_state.verbosity >= VERBOSITY_NORMAL)
+	    printf ("Found %d total files (that's not much mail).\n", count);
 	if (notmuch_database_create (db_path, &notmuch))
 	    return EXIT_FAILURE;
 	add_files_state.total_files = count;
@@ -964,11 +977,14 @@ notmuch_new_command (notmuch_config_t *config, int argc, char *argv[])
 	    return EXIT_FAILURE;
 
 	if (notmuch_database_needs_upgrade (notmuch)) {
-	    printf ("Welcome to a new version of notmuch! Your database will now be upgraded.\n");
+	    if (add_files_state.verbosity >= VERBOSITY_NORMAL)
+		printf ("Welcome to a new version of notmuch! Your database will now be upgraded.\n");
 	    gettimeofday (&add_files_state.tv_start, NULL);
-	    notmuch_database_upgrade (notmuch, upgrade_print_progress,
+	    notmuch_database_upgrade (notmuch,
+				      add_files_state.verbosity >= VERBOSITY_NORMAL ? upgrade_print_progress : NULL,
 				      &add_files_state);
-	    printf ("Your notmuch database has now been upgraded to database format version %u.\n",
+	    if (add_files_state.verbosity >= VERBOSITY_NORMAL)
+		printf ("Your notmuch database has now been upgraded to database format version %u.\n",
 		    notmuch_database_get_version (notmuch));
 	}
 
@@ -999,8 +1015,8 @@ notmuch_new_command (notmuch_config_t *config, int argc, char *argv[])
     add_files_state.removed_directories = _filename_list_create (config);
     add_files_state.directory_mtimes = _filename_list_create (config);
 
-    if (! debugger_is_active () && add_files_state.output_is_a_tty
-	&& ! add_files_state.verbose) {
+    if (add_files_state.verbosity == VERBOSITY_NORMAL &&
+	add_files_state.output_is_a_tty && ! debugger_is_active ()) {
 	setup_progress_printing_timer ();
 	timer_is_active = TRUE;
     }
@@ -1053,7 +1069,8 @@ notmuch_new_command (notmuch_config_t *config, int argc, char *argv[])
     if (timer_is_active)
 	stop_progress_printing_timer ();
 
-    print_results (&add_files_state);
+    if (add_files_state.verbosity >= VERBOSITY_NORMAL)
+	print_results (&add_files_state);
 
     if (ret)
 	fprintf (stderr, "Note: A fatal error was encountered: %s\n",
