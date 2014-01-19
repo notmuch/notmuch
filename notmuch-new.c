@@ -864,13 +864,49 @@ _remove_directory (void *ctx,
     return status;
 }
 
+static void
+print_results (const add_files_state_t *state)
+{
+    double elapsed;
+    struct timeval tv_now;
+
+    gettimeofday (&tv_now, NULL);
+    elapsed = notmuch_time_elapsed (state->tv_start, tv_now);
+
+    if (state->processed_files) {
+	printf ("Processed %d %s in ", state->processed_files,
+		state->processed_files == 1 ? "file" : "total files");
+	notmuch_time_print_formatted_seconds (elapsed);
+	if (elapsed > 1)
+	    printf (" (%d files/sec.).\033[K\n",
+		    (int) (state->processed_files / elapsed));
+	else
+	    printf (".\033[K\n");
+    }
+
+    if (state->added_messages)
+	printf ("Added %d new %s to the database.", state->added_messages,
+		state->added_messages == 1 ? "message" : "messages");
+    else
+	printf ("No new mail.");
+
+    if (state->removed_messages)
+	printf (" Removed %d %s.", state->removed_messages,
+		state->removed_messages == 1 ? "message" : "messages");
+
+    if (state->renamed_messages)
+	printf (" Detected %d file %s.", state->renamed_messages,
+		state->renamed_messages == 1 ? "rename" : "renames");
+
+    printf ("\n");
+}
+
 int
 notmuch_new_command (notmuch_config_t *config, int argc, char *argv[])
 {
     notmuch_database_t *notmuch;
     add_files_state_t add_files_state;
-    double elapsed;
-    struct timeval tv_now, tv_start;
+    struct timeval tv_start;
     int ret = 0;
     struct stat st;
     const char *db_path;
@@ -1017,45 +1053,7 @@ notmuch_new_command (notmuch_config_t *config, int argc, char *argv[])
     if (timer_is_active)
 	stop_progress_printing_timer ();
 
-    gettimeofday (&tv_now, NULL);
-    elapsed = notmuch_time_elapsed (add_files_state.tv_start,
-				    tv_now);
-
-    if (add_files_state.processed_files) {
-	printf ("Processed %d %s in ", add_files_state.processed_files,
-		add_files_state.processed_files == 1 ?
-		"file" : "total files");
-	notmuch_time_print_formatted_seconds (elapsed);
-	if (elapsed > 1) {
-	    printf (" (%d files/sec.).\033[K\n",
-		    (int) (add_files_state.processed_files / elapsed));
-	} else {
-	    printf (".\033[K\n");
-	}
-    }
-
-    if (add_files_state.added_messages) {
-	printf ("Added %d new %s to the database.",
-		add_files_state.added_messages,
-		add_files_state.added_messages == 1 ?
-		"message" : "messages");
-    } else {
-	printf ("No new mail.");
-    }
-
-    if (add_files_state.removed_messages) {
-	printf (" Removed %d %s.",
-		add_files_state.removed_messages,
-		add_files_state.removed_messages == 1 ? "message" : "messages");
-    }
-
-    if (add_files_state.renamed_messages) {
-	printf (" Detected %d file %s.",
-		add_files_state.renamed_messages,
-		add_files_state.renamed_messages == 1 ? "rename" : "renames");
-    }
-
-    printf ("\n");
+    print_results (&add_files_state);
 
     if (ret)
 	fprintf (stderr, "Note: A fatal error was encountered: %s\n",
