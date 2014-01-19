@@ -240,6 +240,60 @@ _entry_in_ignore_list (const char *entry, add_files_state_t *state)
     return FALSE;
 }
 
+/* Add a single file to the database. */
+static notmuch_status_t
+add_file (notmuch_database_t *notmuch, const char *filename,
+	  add_files_state_t *state)
+{
+    notmuch_message_t *message = NULL;
+    const char **tag;
+    notmuch_status_t status;
+
+    status = notmuch_database_begin_atomic (notmuch);
+    if (status)
+	goto DONE;
+
+    status = notmuch_database_add_message (notmuch, filename, &message);
+    switch (status) {
+    /* Success. */
+    case NOTMUCH_STATUS_SUCCESS:
+	state->added_messages++;
+	notmuch_message_freeze (message);
+	for (tag = state->new_tags; *tag != NULL; tag++)
+	    notmuch_message_add_tag (message, *tag);
+	if (state->synchronize_flags)
+	    notmuch_message_maildir_flags_to_tags (message);
+	notmuch_message_thaw (message);
+	break;
+    /* Non-fatal issues (go on to next file). */
+    case NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID:
+	if (state->synchronize_flags)
+	    notmuch_message_maildir_flags_to_tags (message);
+	break;
+    case NOTMUCH_STATUS_FILE_NOT_EMAIL:
+	fprintf (stderr, "Note: Ignoring non-mail file: %s\n", filename);
+	break;
+    /* Fatal issues. Don't process anymore. */
+    case NOTMUCH_STATUS_READ_ONLY_DATABASE:
+    case NOTMUCH_STATUS_XAPIAN_EXCEPTION:
+    case NOTMUCH_STATUS_OUT_OF_MEMORY:
+	fprintf (stderr, "Error: %s. Halting processing.\n",
+		 notmuch_status_to_string (status));
+	goto DONE;
+    default:
+	INTERNAL_ERROR ("add_message returned unexpected value: %d", status);
+	goto DONE;
+    }
+
+    status = notmuch_database_end_atomic (notmuch);
+
+  DONE:
+    if (message)
+	notmuch_message_destroy (message);
+
+    return status;
+}
+
 /* Examine 'path' recursively as follows:
  *
  *   o Ask the filesystem for the mtime of 'path' (fs_mtime)
@@ -291,7 +345,6 @@ add_files (notmuch_database_t *notmuch,
     char *next = NULL;
     time_t fs_mtime, db_mtime;
     notmuch_status_t status, ret = NOTMUCH_STATUS_SUCCESS;
-    notmuch_message_t *message = NULL;
     struct dirent **fs_entries = NULL;
     int i, num_fs_entries = 0, entry_type;
     notmuch_directory_t *directory;
@@ -300,7 +353,6 @@ add_files (notmuch_database_t *notmuch,
     time_t stat_time;
     struct stat st;
     notmuch_bool_t is_maildir;
-    const char **tag;
 
     if (stat (path, &st)) {
 	fprintf (stderr, "Error reading directory %s: %s\n",
@@ -527,61 +579,10 @@ add_files (notmuch_database_t *notmuch,
 	    fflush (stdout);
 	}
 
-	status = notmuch_database_begin_atomic (notmuch);
+	status = add_file (notmuch, next, state);
 	if (status) {
 	    ret = status;
 	    goto DONE;
-	}
-
-	status = notmuch_database_add_message (notmuch, next, &message);
-	switch (status) {
-	/* success */
-	case NOTMUCH_STATUS_SUCCESS:
-	    state->added_messages++;
-	    notmuch_message_freeze (message);
-	    for (tag=state->new_tags; *tag != NULL; tag++)
-	        notmuch_message_add_tag (message, *tag);
-	    if (state->synchronize_flags == TRUE)
-		notmuch_message_maildir_flags_to_tags (message);
-	    notmuch_message_thaw (message);
-	    break;
-	/* Non-fatal issues (go on to next file) */
-	case NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID:
-	    if (state->synchronize_flags == TRUE)
-		notmuch_message_maildir_flags_to_tags (message);
-	    break;
-	case NOTMUCH_STATUS_FILE_NOT_EMAIL:
-	    fprintf (stderr, "Note: Ignoring non-mail file: %s\n",
-		     next);
-	    break;
-	/* Fatal issues. Don't process anymore. */
-	case NOTMUCH_STATUS_READ_ONLY_DATABASE:
-	case NOTMUCH_STATUS_XAPIAN_EXCEPTION:
-	case NOTMUCH_STATUS_OUT_OF_MEMORY:
-	    fprintf (stderr, "Error: %s. Halting processing.\n",
-		     notmuch_status_to_string (status));
-	    ret = status;
-	    goto DONE;
-	default:
-	case NOTMUCH_STATUS_FILE_ERROR:
-	case NOTMUCH_STATUS_NULL_POINTER:
-	case NOTMUCH_STATUS_TAG_TOO_LONG:
-	case NOTMUCH_STATUS_UNBALANCED_FREEZE_THAW:
-	case NOTMUCH_STATUS_UNBALANCED_ATOMIC:
-	case NOTMUCH_STATUS_LAST_STATUS:
-	    INTERNAL_ERROR ("add_message returned unexpected value: %d",  status);
-	    goto DONE;
-	}
-
-	status = notmuch_database_end_atomic (notmuch);
-	if (status) {
-	    ret = status;
-	    goto DONE;
-	}
-
-	if (message) {
-	    notmuch_message_destroy (message);
-	    message = NULL;
 	}
 
 	if (do_print_progress) {
