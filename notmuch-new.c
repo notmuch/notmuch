@@ -728,7 +728,7 @@ count_files (const char *path, int *count, add_files_state_t *state)
 	    strcmp (entry->d_name, ".notmuch") == 0 ||
 	    _entry_in_ignore_list (entry->d_name, state))
 	{
-	    if (_entry_in_ignore_list (entry->d_name, state) && state->debug)
+	    if (state->debug && _entry_in_ignore_list (entry->d_name, state))
 		printf ("(D) count_files: explicitly ignoring %s/%s\n",
 			path,
 			entry->d_name);
