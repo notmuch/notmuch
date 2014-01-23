@@ -1015,9 +1015,13 @@ do_show (void *ctx,
     notmuch_messages_t *messages;
     notmuch_status_t status, res = NOTMUCH_STATUS_SUCCESS;
 
+    threads = notmuch_query_search_threads (query);
+    if (! threads)
+	return 1;
+
     sp->begin_list (sp);
 
-    for (threads = notmuch_query_search_threads (query);
+    for ( ;
 	 notmuch_threads_valid (threads);
 	 notmuch_threads_move_to_next (threads))
     {
