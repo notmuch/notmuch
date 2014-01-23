@@ -28,6 +28,34 @@ per line, followed by a list of tags.
 
 .RS 4
 .TP 4
+.B batch-tag
+
+The default
+.B batch-tag
+dump format is intended to more robust against malformed message-ids
+and tags containing whitespace or non-\fBascii\fR(7) characters.
+Each line has the form
+
+.RS 4
+.RI "+<" "encoded-tag" "> " "" "+<" "encoded-tag" "> ... -- " "" " id:<" quoted-message-id >
+
+Tags are hex-encoded by replacing every byte not matching the regex
+.B [A-Za-z0-9@=.,_+-]
+with
+.B %nn
+where nn is the two digit hex encoding.  The message ID is a valid Xapian
+query, quoted using Xapian boolean term quoting rules: if the ID contains
+whitespace or a close paren or starts with a double quote, it must be
+enclosed in double quotes and double quotes inside the ID must be doubled.
+The astute reader will notice this is a special case of the batch input
+format for \fBnotmuch-tag\fR(1); note that the single message-id query is
+mandatory for \fBnotmuch-restore\fR(1).
+
+.RE
+.RE
+
+.RS 4
+.TP 4
 .B sup
 
 The
@@ -51,32 +79,6 @@ message-ids may contain arbitrary non-null characters. Note also
 that tags with spaces will not be correctly restored with this format.
 
 .RE
-
-.RE
-.RS 4
-.TP 4
-.B batch-tag
-
-The
-.B batch-tag
-dump format is intended to more robust against malformed message-ids
-and tags containing whitespace or non-\fBascii\fR(7) characters.
-Each line has the form
-
-.RS 4
-.RI "+<" "encoded-tag" "> " "" "+<" "encoded-tag" "> ... -- " "" " id:<" quoted-message-id >
-
-Tags are hex-encoded by replacing every byte not matching the regex
-.B [A-Za-z0-9@=.,_+-]
-with
-.B %nn
-where nn is the two digit hex encoding.  The message ID is a valid Xapian
-query, quoted using Xapian boolean term quoting rules: if the ID contains
-whitespace or a close paren or starts with a double quote, it must be
-enclosed in double quotes and double quotes inside the ID must be doubled.
-The astute reader will notice this is a special case of the batch input
-format for \fBnotmuch-tag\fR(1); note that the single message-id query is
-mandatory for \fBnotmuch-restore\fR(1).
 
 .RE
 
