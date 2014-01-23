@@ -40,7 +40,7 @@ notmuch_dump_command (notmuch_config_t *config, int argc, char *argv[])
     char *output_file_name = NULL;
     int opt_index;
 
-    int output_format = DUMP_FORMAT_SUP;
+    int output_format = DUMP_FORMAT_BATCH_TAG;
 
     notmuch_opt_desc_t options[] = {
 	{ NOTMUCH_OPT_KEYWORD, &output_format, "format", 'f',

@@ -1,3 +1,13 @@
+Notmuch 0.18 (UNRELEASED)
+=========================
+
+Command-Line Interface
+----------------------
+
+`notmuch dump` now defaults to `batch-tag` format.
+
+  The old format is still available with `--format=sup`.
+
 Notmuch 0.17 (2013-12-30)
 =========================
 
