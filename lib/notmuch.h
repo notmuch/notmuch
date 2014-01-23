@@ -802,6 +802,8 @@ notmuch_query_destroy (notmuch_query_t *query);
  * valid object. Whereas when this function returns FALSE,
  * notmuch_threads_get will return NULL.
  *
+ * If passed a NULL pointer, this function returns FALSE
+ *
  * See the documentation of notmuch_query_search_threads for example
  * code showing how to iterate over a notmuch_threads_t object.
  */
