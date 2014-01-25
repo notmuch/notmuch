@@ -415,6 +415,10 @@ notmuch_database_end_atomic (notmuch_database_t *notmuch);
  * If this directory object does not exist in the database, this
  * returns NOTMUCH_STATUS_SUCCESS and sets *directory to NULL.
  *
+ * Otherwise the returned directory object is owned by the database
+ * and as such, will only be valid until notmuch_database_destroy is
+ * called.
+ *
  * Return value:
  *
  * NOTMUCH_STATUS_SUCCESS: Successfully retrieved directory.
