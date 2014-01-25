@@ -325,3 +325,5 @@ DISTCLEAN := $(DISTCLEAN) .first-build-message Makefile.config
 DEPS := $(SRCS:%.c=.deps/%.d)
 DEPS := $(DEPS:%.cc=.deps/%.d)
 -include $(DEPS)
+
+.SUFFIXES: # Delete the default suffixes. Old-Fashioned Suffix Rules not used.
