@@ -179,6 +179,13 @@ Otherwise the output will be returned"
       (setq notmuch--cli-sane-p (= status 0))))
   notmuch--cli-sane-p)
 
+(defun notmuch-assert-cli-sane ()
+  (unless (notmuch-cli-sane-p)
+    (notmuch-logged-error
+     "notmuch cli seems misconfigured or unconfigured."
+"Perhaps you haven't run \"notmuch setup\" yet? Try running this
+on the command line, and then retry your notmuch command")))
+
 (defun notmuch-version ()
   "Return a string with the notmuch version number."
   (let ((long-string
