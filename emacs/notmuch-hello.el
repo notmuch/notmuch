@@ -788,6 +788,7 @@ following:
   "Run notmuch and display saved searches, known tags, etc."
   (interactive)
 
+  (notmuch-assert-cli-sane)
   ;; This may cause a window configuration change, so if the
   ;; auto-refresh hook is already installed, avoid recursive refresh.
   (let ((notmuch-hello-auto-refresh nil))
