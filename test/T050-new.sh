@@ -248,4 +248,19 @@ ln -s i_do_not_exist "${MAIL_DIR}"/broken_link
 output=$(NOTMUCH_NEW 2>&1)
 test_expect_equal "$output" "No new mail."
 
+test_begin_subtest "Quiet: No new mail."
+output=$(NOTMUCH_NEW --quiet)
+test_expect_equal "$output" ""
+
+test_begin_subtest "Quiet: new, removed and renamed messages."
+# new
+generate_message
+# deleted
+notmuch search --format=text0 --output=files --limit=1 '*' | xargs -0 rm
+# moved
+mkdir "${MAIL_DIR}"/moved_messages
+notmuch search --format=text0 --output=files --offset=1 --limit=1 '*' | xargs -0 -I {} mv {} "${MAIL_DIR}"/moved_messages
+output=$(NOTMUCH_NEW --quiet)
+test_expect_equal "$output" ""
+
 test_done
