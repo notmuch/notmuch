@@ -168,6 +168,17 @@ Otherwise the output will be returned"
       (notmuch-check-exit-status status (cons notmuch-command args) output)
       output)))
 
+(defvar notmuch--cli-sane-p nil
+  "Cache whether the CLI seems to be configured sanely.")
+
+(defun notmuch-cli-sane-p ()
+  "Return t if the cli seems to be configured sanely."
+  (unless notmuch--cli-sane-p
+    (let ((status (call-process notmuch-command nil nil nil
+				"config" "get" "user.primary_email")))
+      (setq notmuch--cli-sane-p (= status 0))))
+  notmuch--cli-sane-p)
+
 (defun notmuch-version ()
   "Return a string with the notmuch version number."
   (let ((long-string
