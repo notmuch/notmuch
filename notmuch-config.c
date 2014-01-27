@@ -454,7 +454,7 @@ notmuch_config_save (notmuch_config_t *config)
     }
 
     /* Try not to overwrite symlinks. */
-    filename = realpath (config->filename, NULL);
+    filename = canonicalize_file_name (config->filename);
     if (! filename) {
 	if (errno == ENOENT) {
 	    filename = strdup (config->filename);
