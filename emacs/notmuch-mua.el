@@ -287,6 +287,19 @@ the From: header is already filled in by notmuch."
 
 (defvar notmuch-mua-sender-history nil)
 
+;; Workaround: Running `ido-completing-read' in emacs 23.1, 23.2 and 23.3
+;; without some explicit initialization fill freeze the operation.
+;; Hence, we advice `ido-completing-read' to ensure required initialization
+;; is done.
+(if (and (= emacs-major-version 23) (< emacs-minor-version 4))
+    (defadvice ido-completing-read (before notmuch-ido-mode-init activate)
+      (ido-init-completion-maps)
+      (add-hook 'minibuffer-setup-hook 'ido-minibuffer-setup)
+      (add-hook 'choose-completion-string-functions
+		'ido-choose-completion-string)
+      (ad-disable-advice 'ido-completing-read 'before 'notmuch-ido-mode-init)
+      (ad-activate 'ido-completing-read)))
+
 (defun notmuch-mua-prompt-for-sender ()
   (interactive)
   (let (name addresses one-name-only)
