@@ -531,7 +531,8 @@ the given type."
 (if (>= emacs-major-version 24)
     (defadvice mm-shr (before load-gnus-arts activate)
       (require 'gnus-art nil t)
-      (ad-disable-advice 'mm-shr 'before 'load-gnus-arts)))
+      (ad-disable-advice 'mm-shr 'before 'load-gnus-arts)
+      (ad-activate 'mm-shr)))
 
 (defun notmuch-mm-display-part-inline (msg part nth content-type process-crypto)
   "Use the mm-decode/mm-view functions to display a part in the
