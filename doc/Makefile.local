@@ -1,0 +1,27 @@
+# -*- makefile -*-
+
+dir := doc
+
+# You can set these variables from the command line.
+SPHINXOPTS    := -q -c $(dir)
+SPHINXBUILD   = sphinx-build
+DOCBUILDDIR      := $(dir)/_build
+
+# Internal variables.
+ALLSPHINXOPTS   := -d $(DOCBUILDDIR)/doctrees $(SPHINXOPTS) $(dir)
+
+.PHONY: sphinx-html sphinx-man sphinx-texinfo sphinx-info
+
+sphinx-html:
+	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(DOCBUILDDIR)/html
+
+sphinx-man:
+	$(SPHINXBUILD) -b man $(ALLSPHINXOPTS) $(DOCBUILDDIR)/man
+
+sphinx-texinfo:
+	$(SPHINXBUILD) -b texinfo $(ALLSPHINXOPTS) $(DOCBUILDDIR)/texinfo
+
+sphinx-info: sphinx-texinfo
+	make -C $(DOCBUILDDIR)/texinfo info
+
+CLEAN := $(CLEAN) $(DOCBUILDDIR)

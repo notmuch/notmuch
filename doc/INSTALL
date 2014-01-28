@@ -1,0 +1,24 @@
+This file contains some more detailed information about building and
+installing the documentation.
+
+Building with sphinx.
+---------------------
+
+- You need sphinx at least version 1.0.
+
+- You can build build and install man pages with 'make install-man'
+
+- You can build man, info, html, and pdf versions of the docs
+  (currently only the man pages) with
+
+     'make install-{man|info|html|pdf}'
+
+Building the man pages
+----------------------
+
+- You can build the man pages with rst2man (from python-docutils) with
+  'make rst2man'.
+
+- Currently there is no support to automagically install the resulting
+  nroff files, but it should work to modify the target install-man
+  in doc/Makefile.local.
