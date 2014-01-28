@@ -7,10 +7,13 @@ SPHINXOPTS    := -q -c $(dir)
 SPHINXBUILD   = sphinx-build
 DOCBUILDDIR      := $(dir)/_build
 
+prerst2man := python $(dir)/prerst2man.py
+
 # Internal variables.
 ALLSPHINXOPTS   := -d $(DOCBUILDDIR)/doctrees $(SPHINXOPTS) $(dir)
 
 .PHONY: sphinx-html sphinx-man sphinx-texinfo sphinx-info
+.PHONY: rst2man
 
 sphinx-html:
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(DOCBUILDDIR)/html
@@ -23,5 +26,9 @@ sphinx-texinfo:
 
 sphinx-info: sphinx-texinfo
 	make -C $(DOCBUILDDIR)/texinfo info
+
+# fallback target in case sphinx not installed
+rst2man:
+	$(prerst2man) $(DOCBUILDDIR)/.. $(DOCBUILDDIR)/man
 
 CLEAN := $(CLEAN) $(DOCBUILDDIR)
