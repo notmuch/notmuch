@@ -28,6 +28,8 @@
 
 (eval-when-compile (require 'cl))
 
+(declare-function notmuch-show-insert-bodypart "notmuch-show" (msg part depth &optional hide))
+
 ;;
 
 (defcustom notmuch-mua-send-hook '(notmuch-mua-message-send-hook)
@@ -128,12 +130,15 @@ list."
 	  collect part))
 
 (defun notmuch-mua-insert-quotable-part (message part)
-  (save-restriction
-    (narrow-to-region (point) (point))
-    (notmuch-mm-display-part-inline message part (plist-get part :id)
-				    (plist-get part :content-type)
-				    notmuch-show-process-crypto)
-    (goto-char (point-max))))
+  ;; We don't want text properties leaking from the show renderer into
+  ;; the reply so we use a temp buffer. Also we don't want hooks, such
+  ;; as notmuch-wash-*, to be run on the quotable part so we set
+  ;; notmuch-show-insert-text/plain-hook to nil.
+  (insert (with-temp-buffer
+	    (let ((notmuch-show-insert-text/plain-hook nil))
+	      ;; Show the part but do not add buttons.
+	      (notmuch-show-insert-bodypart message part 0 'no-buttons))
+	    (buffer-substring-no-properties (point-min) (point-max)))))
 
 ;; There is a bug in emacs 23's message.el that results in a newline
 ;; not being inserted after the References header, so the next header
@@ -191,11 +196,16 @@ list."
 			    nil (notmuch-mua-get-switch-function))))
 
       ;; Insert the message body - but put it in front of the signature
-      ;; if one is present
-      (goto-char (point-max))
-      (if (re-search-backward message-signature-separator nil t)
-	  (forward-line -1)
-	(goto-char (point-max)))
+      ;; if one is present, and after any other content
+      ;; message*setup-hooks may have added to the message body already.
+      (save-restriction
+	(message-goto-body)
+	(narrow-to-region (point) (point-max))
+	(goto-char (point-max))
+	(if (re-search-backward message-signature-separator nil t)
+	    (if message-signature-insert-empty-line
+		(forward-line -1))
+	  (goto-char (point-max))))
 
       (let ((from (plist-get original-headers :From))
 	    (date (plist-get original-headers :Date))
@@ -303,8 +313,9 @@ the From: header is already filled in by notmuch."
       (ido-completing-read "Send mail From: " notmuch-identities
 			   nil nil nil 'notmuch-mua-sender-history (car notmuch-identities)))))
 
+(put 'notmuch-mua-new-mail 'notmuch-prefix-doc "... and prompt for sender")
 (defun notmuch-mua-new-mail (&optional prompt-for-sender)
-  "Invoke the notmuch mail composition window.
+  "Compose new mail.
 
 If PROMPT-FOR-SENDER is non-nil, the user will be prompted for
 the From: address first."
@@ -317,9 +328,10 @@ the From: address first."
 (defun notmuch-mua-new-forward-message (&optional prompt-for-sender)
   "Invoke the notmuch message forwarding window.
 
+The current buffer must contain an RFC2822 message to forward.
+
 If PROMPT-FOR-SENDER is non-nil, the user will be prompted for
 the From: address first."
-  (interactive "P")
   (if (or prompt-for-sender notmuch-always-prompt-for-sender)
       (let* ((sender (notmuch-mua-prompt-for-sender))
 	     (address-components (mail-extract-address-components sender))
@@ -329,12 +341,30 @@ the From: address first."
     (notmuch-mua-forward-message)))
 
 (defun notmuch-mua-new-reply (query-string &optional prompt-for-sender reply-all)
-  "Invoke the notmuch reply window."
-  (interactive "P")
+  "Compose a reply to the message identified by QUERY-STRING.
+
+If PROMPT-FOR-SENDER is non-nil, the user will be prompted for
+the From: address first.  If REPLY-ALL is non-nil, the message
+will be addressed to all recipients of the source message."
+
+;; In current emacs (24.3) select-active-regions is set to t by
+;; default. The reply insertion code sets the region to the quoted
+;; message to make it easy to delete (kill-region or C-w). These two
+;; things combine to put the quoted message in the primary selection.
+;;
+;; This is not what the user wanted and is a privacy risk (accidental
+;; pasting of the quoted message). We can avoid some of the problems
+;; by let-binding select-active-regions to nil. This fixes if the
+;; primary selection was previously in a non-emacs window but not if
+;; it was in an emacs window. To avoid the problem in the latter case
+;; we deactivate mark.
+
   (let ((sender
 	 (when prompt-for-sender
-	   (notmuch-mua-prompt-for-sender))))
-    (notmuch-mua-reply query-string sender reply-all)))
+	   (notmuch-mua-prompt-for-sender)))
+	(select-active-regions nil))
+    (notmuch-mua-reply query-string sender reply-all)
+    (deactivate-mark)))
 
 (defun notmuch-mua-send-and-exit (&optional arg)
   (interactive "P")

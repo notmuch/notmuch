@@ -132,7 +132,9 @@ add_message '[subject]="This subject is exactly 200 bytes in length. Other than 
 	    '[body]="200-byte header"'
 output=$(notmuch reply id:${gen_msg_id})
 test_expect_equal "$output" "From: Notmuch Test Suite <test_suite@notmuchmail.org>
-Subject: Re: This subject is exactly 200 bytes in length. Other than its length there is not much of note here. Note that the length of 200 bytes includes the Subject: and Re: prefixes with two spaces
+Subject: Re: This subject is exactly 200 bytes in length. Other than its
+ length there is not much of note here. Note that the length of 200 bytes
+ includes the Subject: and Re: prefixes with two spaces
 In-Reply-To: <${gen_msg_id}>
 References: <${gen_msg_id}>
 
@@ -192,5 +194,64 @@ References: <${gen_msg_id}>
 
 On Tue, 05 Jan 2010 15:43:56 -0000, Sender <sender@example.com> wrote:
 > From guessing"
+
+test_begin_subtest "Reply with RFC 2047-encoded headers"
+add_message '[subject]="=?iso-8859-1?q?=e0=df=e7?="' \
+	    '[from]="=?utf-8?q?=e2=98=83?= <snowman@example.com>"' \
+	    '[date]="Tue, 05 Jan 2010 15:43:56 -0000"' \
+	    '[body]="Encoding"'
+
+# GMime happens to change from Q- to B-encoding.  We canonicalize the
+# case of the encoding and charset because different versions of GMime
+# capitalize the encoding differently.
+output=$(notmuch reply id:${gen_msg_id} | perl -pe 's/=\?[^?]+\?[bB]\?/lc($&)/ge')
+test_expect_equal "$output" "\
+From: Notmuch Test Suite <test_suite@notmuchmail.org>
+Subject: Re: =?iso-8859-1?b?4N/n?=
+To: =?utf-8?b?4piD?= <snowman@example.com>
+In-Reply-To: <${gen_msg_id}>
+References: <${gen_msg_id}>
+
+On Tue, 05 Jan 2010 15:43:56 -0000, ☃ <snowman@example.com> wrote:
+> Encoding"
+
+test_begin_subtest "Reply with RFC 2047-encoded headers (JSON)"
+output=$(notmuch reply --format=json id:${gen_msg_id})
+test_expect_equal_json "$output" '
+{
+    "original": {
+        "body": [
+            {
+                "content": "Encoding\n",
+                "content-type": "text/plain",
+                "id": 1
+            }
+        ],
+        "date_relative": "2010-01-05",
+        "excluded": false,
+        "filename": "'${MAIL_DIR}'/msg-012",
+        "headers": {
+            "Date": "Tue, 05 Jan 2010 15:43:56 +0000",
+            "From": "\u2603 <snowman@example.com>",
+            "Subject": "\u00e0\u00df\u00e7",
+            "To": "Notmuch Test Suite <test_suite@notmuchmail.org>"
+        },
+        "id": "'${gen_msg_id}'",
+        "match": false,
+        "tags": [
+            "inbox",
+            "unread"
+        ],
+        "timestamp": 1262706236
+    },
+    "reply-headers": {
+        "From": "Notmuch Test Suite <test_suite@notmuchmail.org>",
+        "In-reply-to": "<'${gen_msg_id}'>",
+        "References": "<'${gen_msg_id}'>",
+        "Subject": "Re: \u00e0\u00df\u00e7",
+        "To": "\u2603 <snowman@example.com>"
+    }
+}'
+
 
 test_done

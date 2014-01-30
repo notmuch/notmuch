@@ -1,4 +1,4 @@
-.TH NOTMUCH-SEARCH-TERMS 7 2013-08-03 "Notmuch 0.16"
+.TH NOTMUCH-SEARCH-TERMS 7 2013-12-30 "Notmuch 0.17"
 
 .SH NAME
 notmuch-search-terms \- syntax for notmuch queries
@@ -102,9 +102,11 @@ thread ID values can be seen in the first column of output from
 The
 .B folder:
 prefix can be used to search for email message files that are
-contained within particular directories within the mail store. Only
-the directory components below the top-level mail database path are
-available to be searched.
+contained within particular directories within the mail store. If the
+same email message has multiple message files associated with it, it's
+sufficient for a match that at least one of the files is contained
+within a matching directory. Only the directory components below the
+top-level mail database path are available to be searched.
 
 The
 .B date:

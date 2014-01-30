@@ -30,6 +30,13 @@
 extern "C" {
 #endif
 
+#if !STD_GETPWUID
+#define _POSIX_PTHREAD_SEMANTICS 1
+#endif
+#if !STD_ASCTIME
+#define _POSIX_PTHREAD_SEMANTICS 1
+#endif
+
 #if !HAVE_GETLINE
 #include <stdio.h>
 #include <unistd.h>
@@ -45,6 +52,15 @@ getdelim (char **lineptr, size_t *n, int delimiter, FILE *fp);
 #if !HAVE_STRCASESTR
 char* strcasestr(const char *haystack, const char *needle);
 #endif /* !HAVE_STRCASESTR */
+
+#if !HAVE_STRSEP
+char *strsep(char **stringp, const char *delim);
+#endif /* !HAVE_STRSEP */
+
+#if !HAVE_TIMEGM
+#include <time.h>
+time_t timegm (struct tm *tm);
+#endif /* !HAVE_TIMEGM */
 
 /* Silence gcc warnings about unused results.  These warnings exist
  * for a reason; any use of this needs to be justified. */

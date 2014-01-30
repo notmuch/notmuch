@@ -594,12 +594,12 @@ test_expect_equal_file OUTPUT EXPECTED
 
 test_begin_subtest "'notmuch reply' to a multipart message with json format"
 notmuch reply --format=json 'id:87liy5ap00.fsf@yoom.home.cworth.org' | notmuch_json_show_sanitize >OUTPUT
-cat <<EOF >EXPECTED
+notmuch_json_show_sanitize <<EOF >EXPECTED
 {"reply-headers": {"Subject": "Re: Multipart message",
  "From": "Notmuch Test Suite <test_suite@notmuchmail.org>",
  "To": "Carl Worth <cworth@cworth.org>, cworth@cworth.org",
  "In-reply-to": "<87liy5ap00.fsf@yoom.home.cworth.org>",
- "References": " <87liy5ap00.fsf@yoom.home.cworth.org>"},
+ "References": "<87liy5ap00.fsf@yoom.home.cworth.org>"},
  "original": {"id": "XXXXX",
  "match": false,
  "excluded": false,
@@ -646,5 +646,85 @@ test_begin_subtest "'notmuch show --part' does not corrupt a part with CRLF pair
 notmuch show --format=raw --part=3 id:base64-part-with-crlf > crlf.out
 echo -n -e "\xEF\x0D\x0A" > crlf.expected
 test_expect_equal_file crlf.out crlf.expected
+
+
+# The ISO-8859-1 encoding of U+00BD is a single byte: octal 275
+# (Portability note: Dollar-Single ($'...', ANSI C-style escape sequences)
+# quoting works on bash, ksh, zsh, *BSD sh but not on dash, ash nor busybox sh)
+readonly u_00bd_latin1=$'\275'
+
+# The Unicode fraction symbol 1/2 is U+00BD and is encoded
+# in UTF-8 as two bytes: octal 302 275
+readonly u_00bd_utf8=$'\302\275'
+
+cat <<EOF > ${MAIL_DIR}/include-html
+From: A <a@example.com>
+To: B <b@example.com>
+Subject: html message
+Date: Sat, 01 January 2000 00:00:00 +0000
+Message-ID: <htmlmessage>
+MIME-Version: 1.0
+Content-Type: multipart/alternative; boundary="==-=="
+
+--==-==
+Content-Type: text/html; charset=UTF-8
+
+<p>0.5 equals ${u_00bd_utf8}</p>
+
+--==-==
+Content-Type: text/html; charset=ISO-8859-1
+
+<p>0.5 equals ${u_00bd_latin1}</p>
+
+--==-==
+Content-Type: text/plain; charset=UTF-8
+
+0.5 equals ${u_00bd_utf8}
+
+--==-==--
+EOF
+
+notmuch new > /dev/null
+
+cat_expected_head ()
+{
+        cat <<EOF
+[[[{"id": "htmlmessage", "match":true, "excluded": false, "date_relative":"2000-01-01",
+   "timestamp": 946684800,
+   "filename": "${MAIL_DIR}/include-html",
+   "tags": ["inbox", "unread"],
+   "headers": { "Date": "Sat, 01 Jan 2000 00:00:00 +0000", "From": "A <a@example.com>",
+                "Subject": "html message", "To": "B <b@example.com>"},
+   "body": [{
+     "content-type": "multipart/alternative", "id": 1,
+EOF
+}
+
+cat_expected_head > EXPECTED.nohtml
+cat <<EOF >> EXPECTED.nohtml
+"content": [
+  { "id": 2, "content-charset": "UTF-8", "content-length": 21, "content-type": "text/html"},
+  { "id": 3, "content-charset": "ISO-8859-1", "content-length": 20, "content-type": "text/html"},
+  { "id": 4, "content-type": "text/plain", "content": "0.5 equals \\u00bd\\n"}
+]}]},[]]]]
+EOF
+
+# Both the UTF-8 and ISO-8859-1 part should have U+00BD
+cat_expected_head > EXPECTED.withhtml
+cat <<EOF >> EXPECTED.withhtml
+"content": [
+  { "id": 2, "content-type": "text/html", "content": "<p>0.5 equals \\u00bd</p>\\n"},
+  { "id": 3, "content-type": "text/html", "content": "<p>0.5 equals \\u00bd</p>\\n"},
+  { "id": 4, "content-type": "text/plain", "content": "0.5 equals \\u00bd\\n"}
+]}]},[]]]]
+EOF
+
+test_begin_subtest "html parts excluded by default"
+notmuch show --format=json id:htmlmessage > OUTPUT
+test_expect_equal_json "$(cat OUTPUT)" "$(cat EXPECTED.nohtml)"
+
+test_begin_subtest "html parts included"
+notmuch show --format=json --include-html id:htmlmessage > OUTPUT
+test_expect_equal_json "$(cat OUTPUT)" "$(cat EXPECTED.withhtml)"
 
 test_done

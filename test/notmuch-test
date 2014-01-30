@@ -19,6 +19,7 @@ cd $(dirname "$0")
 TESTS="
   basic
   help-test
+  compact
   config
   setup
   new
@@ -62,6 +63,7 @@ TESTS="
   emacs-address-cleaning
   emacs-hello
   emacs-show
+  emacs-tree
   missing-headers
   hex-escaping
   parse-time-string
@@ -97,6 +99,9 @@ trap - HUP INT TERM
 
 # Report results
 ./aggregate-results.sh test-results/*
+ev=$?
 
 # Clean up
 rm -rf test-results corpus.mail
+
+exit $ev

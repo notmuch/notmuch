@@ -30,7 +30,8 @@
 
 (defcustom notmuch-tag-formats
   '(("unread" (propertize tag 'face '(:foreground "red")))
-    ("flagged" (notmuch-tag-format-image-data tag (notmuch-tag-star-icon))))
+    ("flagged" (propertize tag 'face '(:foreground "blue"))
+     (notmuch-tag-format-image-data tag (notmuch-tag-star-icon))))
   "Custom formats for individual tags.
 
 This gives a list that maps from tag names to lists of formatting
@@ -188,7 +189,10 @@ the messages that were tagged"
   "Variable to store minibuffer history for
 `notmuch-read-tag-changes' function.")
 
-(defun notmuch-tag-completions (&optional search-terms)
+(defun notmuch-tag-completions (&rest search-terms)
+  "Return a list of tags for messages matching SEARCH-TERMS.
+
+Returns all tags if no search terms are given."
   (if (null search-terms)
       (setq search-terms (list "*")))
   (split-string
@@ -199,17 +203,24 @@ the messages that were tagged"
    "\n+" t))
 
 (defun notmuch-select-tag-with-completion (prompt &rest search-terms)
-  (let ((tag-list (notmuch-tag-completions search-terms)))
+  (let ((tag-list (apply #'notmuch-tag-completions search-terms)))
     (completing-read prompt tag-list nil nil nil 'notmuch-select-tag-history)))
 
-(defun notmuch-read-tag-changes (&optional initial-input &rest search-terms)
+(defun notmuch-read-tag-changes (current-tags &optional prompt initial-input)
+  "Prompt for tag changes in the minibuffer.
+
+CURRENT-TAGS is a list of tags that are present on the message or
+messages to be changed.  These are offered as tag removal
+completions.  CURRENT-TAGS may contain duplicates.  PROMPT, if
+non-nil, is the query string to present in the minibuffer.  It
+defaults to \"Tags\".  INITIAL-INPUT, if non-nil, will be the
+initial input in the minibuffer."
+
   (let* ((all-tag-list (notmuch-tag-completions))
 	 (add-tag-list (mapcar (apply-partially 'concat "+") all-tag-list))
-	 (remove-tag-list (mapcar (apply-partially 'concat "-")
-				  (if (null search-terms)
-				      all-tag-list
-				    (notmuch-tag-completions search-terms))))
+	 (remove-tag-list (mapcar (apply-partially 'concat "-") current-tags))
 	 (tag-list (append add-tag-list remove-tag-list))
+	 (prompt (concat (or prompt "Tags") " (+add -drop): "))
 	 (crm-separator " ")
 	 ;; By default, space is bound to "complete word" function.
 	 ;; Re-bind it to insert a space instead.  Note that <tab>
@@ -219,8 +230,16 @@ the messages that were tagged"
 	    (set-keymap-parent map crm-local-completion-map)
 	    (define-key map " " 'self-insert-command)
 	    map)))
-    (delete "" (completing-read-multiple "Tags (+add -drop): "
-		tag-list nil nil initial-input
+    (delete "" (completing-read-multiple
+		prompt
+		;; Append the separator to each completion so when the
+		;; user completes a tag they can immediately begin
+		;; entering another.  `completing-read-multiple'
+		;; ultimately splits the input on crm-separator, so we
+		;; don't need to strip this back off (we just need to
+		;; delete "empty" entries caused by trailing spaces).
+		(mapcar (lambda (tag-op) (concat tag-op crm-separator)) tag-list)
+		nil nil initial-input
 		'notmuch-read-tag-changes-history))))
 
 (defun notmuch-update-tags (tags tag-changes)
@@ -242,37 +261,38 @@ from TAGS if present."
 	   (error "Changed tag must be of the form `+this_tag' or `-that_tag'")))))
     (sort result-tags 'string<)))
 
-(defun notmuch-tag (query &optional tag-changes)
+(defconst notmuch-tag-argument-limit 1000
+  "Use batch tagging if the tagging query is longer than this.
+
+This limits the length of arguments passed to the notmuch CLI to
+avoid system argument length limits and performance problems.")
+
+(defun notmuch-tag (query tag-changes)
   "Add/remove tags in TAG-CHANGES to messages matching QUERY.
 
 QUERY should be a string containing the search-terms.
-TAG-CHANGES can take multiple forms.  If TAG-CHANGES is a list of
-strings of the form \"+tag\" or \"-tag\" then those are the tag
-changes applied.  If TAG-CHANGES is a string then it is
-interpreted as a single tag change.  If TAG-CHANGES is the string
-\"-\" or \"+\", or null, then the user is prompted to enter the
-tag changes.
+TAG-CHANGES is a list of strings of the form \"+tag\" or
+\"-tag\" to add or remove tags, respectively.
 
 Note: Other code should always use this function alter tags of
 messages instead of running (notmuch-call-notmuch-process \"tag\" ..)
 directly, so that hooks specified in notmuch-before-tag-hook and
 notmuch-after-tag-hook will be run."
   ;; Perform some validation
-  (if (string-or-null-p tag-changes)
-      (if (or (string= tag-changes "-") (string= tag-changes "+") (null tag-changes))
-	  (setq tag-changes (notmuch-read-tag-changes tag-changes query))
-	(setq tag-changes (list tag-changes))))
   (mapc (lambda (tag-change)
 	  (unless (string-match-p "^[-+]\\S-+$" tag-change)
 	    (error "Tag must be of the form `+this_tag' or `-that_tag'")))
 	tag-changes)
   (unless (null tag-changes)
     (run-hooks 'notmuch-before-tag-hook)
-    (apply 'notmuch-call-notmuch-process "tag"
-	   (append tag-changes (list "--" query)))
-    (run-hooks 'notmuch-after-tag-hook))
-  ;; in all cases we return tag-changes as a list
-  tag-changes)
+    (if (<= (length query) notmuch-tag-argument-limit)
+	(apply 'notmuch-call-notmuch-process "tag"
+	       (append tag-changes (list "--" query)))
+      ;; Use batch tag mode to avoid argument length limitations
+      (let ((batch-op (concat (mapconcat #'notmuch-hex-encode tag-changes " ")
+			      " -- " query)))
+	(notmuch-call-notmuch-process :stdin-string batch-op "tag" "--batch")))
+    (run-hooks 'notmuch-after-tag-hook)))
 
 (defun notmuch-tag-change-list (tags &optional reverse)
   "Convert TAGS into a list of tag changes.

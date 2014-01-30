@@ -7,6 +7,7 @@ emacs_sources := \
 	$(dir)/notmuch.el \
 	$(dir)/notmuch-query.el \
 	$(dir)/notmuch-show.el \
+	$(dir)/notmuch-tree.el \
 	$(dir)/notmuch-wash.el \
 	$(dir)/notmuch-hello.el \
 	$(dir)/notmuch-mua.el \

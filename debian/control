@@ -18,7 +18,7 @@ Build-Depends:
  ruby, ruby-dev (>>1:1.9.3~),
  emacs23-nox | emacs23 (>=23~) | emacs23-lucid (>=23~) |
  emacs24-nox | emacs24 (>=24~) | emacs24-lucid (>=24~),
- gdb,
+ gdb [!s390x !ia64],
  dtach (>= 0.8)
 Standards-Version: 3.9.4
 Homepage: http://notmuchmail.org/
@@ -108,6 +108,7 @@ Architecture: all
 Section: mail
 Breaks: notmuch (<<0.6~254~)
 Replaces: notmuch (<<0.6~254~)
+Conflicts: emacsen-common (<< 2.0.0)
 Depends: ${misc:Depends}, notmuch (>= ${source:Version}),
  emacs23 (>= 23~) | emacs23-nox (>=23~) | emacs23-lucid (>=23~) |
  emacs24 (>= 24~) | emacs24-nox (>=24~) | emacs24-lucid (>=24~)
@@ -142,9 +143,8 @@ Depends:
  notmuch (>= 0.4),
  libmail-box-perl, libmailtools-perl,
  libstring-shellquote-perl, libterm-readline-gnu-perl,
- libfile-which-perl,
  ${misc:Depends}
-Recommends: mutt, fdupes
+Recommends: mutt
 Enhances: notmuch, mutt
 Description: thread-based email index, search and tagging (Mutt interface)
  notmuch-mutt provides integration among the Mutt mail user agent and

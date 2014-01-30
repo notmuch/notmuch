@@ -630,7 +630,8 @@ format_omitted_part_meta_sprinter (sprinter_t *sp, GMimeObject *meta, GMimePart 
 
 void
 format_part_sprinter (const void *ctx, sprinter_t *sp, mime_node_t *node,
-		      notmuch_bool_t first, notmuch_bool_t output_body)
+		      notmuch_bool_t first, notmuch_bool_t output_body,
+		      notmuch_bool_t include_html)
 {
     /* Any changes to the JSON or S-Expression format should be
      * reflected in the file devel/schemata. */
@@ -645,7 +646,7 @@ format_part_sprinter (const void *ctx, sprinter_t *sp, mime_node_t *node,
 	if (output_body) {
 	    sp->map_key (sp, "body");
 	    sp->begin_list (sp);
-	    format_part_sprinter (ctx, sp, mime_node_child (node, 0), first, TRUE);
+	    format_part_sprinter (ctx, sp, mime_node_child (node, 0), first, TRUE, include_html);
 	    sp->end (sp);
 	}
 	sp->end (sp);
@@ -700,14 +701,15 @@ format_part_sprinter (const void *ctx, sprinter_t *sp, mime_node_t *node,
 	/* For non-HTML text parts, we include the content in the
 	 * JSON. Since JSON must be Unicode, we handle charset
 	 * decoding here and do not report a charset to the caller.
-	 * For text/html parts, we do not include the content. If a
-	 * caller is interested in text/html parts, it should retrieve
-	 * them separately and they will not be decoded. Since this
-	 * makes charset decoding the responsibility on the caller, we
+	 * For text/html parts, we do not include the content unless
+	 * the --include-html option has been passed. If a html part
+	 * is not included, it can be requested directly. This makes
+	 * charset decoding the responsibility on the caller so we
 	 * report the charset for text/html parts.
 	 */
 	if (g_mime_content_type_is_type (content_type, "text", "*") &&
-	    ! g_mime_content_type_is_type (content_type, "text", "html"))
+	    (include_html ||
+	     ! g_mime_content_type_is_type (content_type, "text", "html")))
 	{
 	    GMimeStream *stream_memory = g_mime_stream_mem_new ();
 	    GByteArray *part_content;
@@ -737,7 +739,7 @@ format_part_sprinter (const void *ctx, sprinter_t *sp, mime_node_t *node,
     }
 
     for (i = 0; i < node->nchildren; i++)
-	format_part_sprinter (ctx, sp, mime_node_child (node, i), i == 0, TRUE);
+	format_part_sprinter (ctx, sp, mime_node_child (node, i), i == 0, TRUE, include_html);
 
     /* Close content structures */
     for (i = 0; i < nclose; i++)
@@ -751,7 +753,7 @@ format_part_sprinter_entry (const void *ctx, sprinter_t *sp,
 			    mime_node_t *node, unused (int indent),
 			    const notmuch_show_params_t *params)
 {
-    format_part_sprinter (ctx, sp, node, TRUE, params->output_body);
+    format_part_sprinter (ctx, sp, node, TRUE, params->output_body, params->include_html);
 
     return NOTMUCH_STATUS_SUCCESS;
 }
@@ -1077,7 +1079,8 @@ notmuch_show_command (notmuch_config_t *config, int argc, char *argv[])
 	.crypto = {
 	    .verify = FALSE,
 	    .decrypt = FALSE
-	}
+	},
+	.include_html = FALSE
     };
     int format_sel = NOTMUCH_FORMAT_NOT_SPECIFIED;
     int exclude = EXCLUDE_TRUE;
@@ -1105,6 +1108,7 @@ notmuch_show_command (notmuch_config_t *config, int argc, char *argv[])
 	{ NOTMUCH_OPT_BOOLEAN, &params.crypto.decrypt, "decrypt", 'd', 0 },
 	{ NOTMUCH_OPT_BOOLEAN, &params.crypto.verify, "verify", 'v', 0 },
 	{ NOTMUCH_OPT_BOOLEAN, &params.output_body, "body", 'b', 0 },
+	{ NOTMUCH_OPT_BOOLEAN, &params.include_html, "include-html", 0, 0 },
 	{ 0, 0, 0, 0, 0 }
     };
 
@@ -1174,6 +1178,11 @@ notmuch_show_command (notmuch_config_t *config, int argc, char *argv[])
 		fprintf (stderr,
 			 "Warning: --body=false only implemented for format=json and format=sexp\n");
 	}
+    }
+
+    if (params.include_html &&
+        (format_sel != NOTMUCH_FORMAT_JSON && format_sel != NOTMUCH_FORMAT_SEXP)) {
+	fprintf (stderr, "Warning: --include-html only implemented for format=json and format=sexp\n");
     }
 
     if (entire_thread == ENTIRE_THREAD_TRUE)

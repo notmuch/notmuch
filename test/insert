@@ -68,27 +68,63 @@ test_expect_equal_json "$output" '["inbox", "unread"]'
 test_begin_subtest "Insert message, add tag"
 gen_insert_msg
 notmuch insert +custom < "$gen_msg_filename"
-output=$(notmuch count tag:custom)
-test_expect_equal "$output" "1"
+output=$(notmuch search --output=messages tag:custom)
+test_expect_equal "$output" "id:$gen_msg_id"
 
 test_begin_subtest "Insert message, add/remove tags"
 gen_insert_msg
 notmuch insert +custom -unread < "$gen_msg_filename"
-output=$(notmuch count tag:custom NOT tag:unread)
-test_expect_equal "$output" "1"
+output=$(notmuch search --output=messages tag:custom NOT tag:unread)
+test_expect_equal "$output" "id:$gen_msg_id"
+
+test_begin_subtest "Insert message with default tags stays in new/"
+gen_insert_msg
+notmuch insert < "$gen_msg_filename"
+output=$(notmuch search --output=files id:$gen_msg_id)
+dirname=$(dirname "$output")
+test_expect_equal "$dirname" "$MAIL_DIR/new"
+
+test_begin_subtest "Insert message with non-maildir synced tags stays in new/"
+gen_insert_msg
+notmuch insert +custom -inbox < "$gen_msg_filename"
+output=$(notmuch search --output=files id:$gen_msg_id)
+dirname=$(dirname "$output")
+test_expect_equal "$dirname" "$MAIL_DIR/new"
+
+test_begin_subtest "Insert message with custom new.tags goes to cur/"
+OLDCONFIG=$(notmuch config get new.tags)
+notmuch config set new.tags test
+gen_insert_msg
+notmuch insert < "$gen_msg_filename"
+output=$(notmuch search --output=files id:$gen_msg_id)
+dirname=$(dirname "$output")
+notmuch config set new.tags $OLDCONFIG
+test_expect_equal "$dirname" "$MAIL_DIR/cur"
+
+# additional check on the previous message
+test_begin_subtest "Insert message with custom new.tags actually gets the tags"
+output=$(notmuch search --output=tags id:$gen_msg_id)
+test_expect_equal "$output" "test"
+
+test_begin_subtest "Insert message with maildir synced tags goes to cur/"
+gen_insert_msg
+notmuch insert +flagged < "$gen_msg_filename"
+output=$(notmuch search --output=files id:$gen_msg_id)
+dirname=$(dirname "$output")
+test_expect_equal "$dirname" "$MAIL_DIR/cur"
 
 test_begin_subtest "Insert message into folder"
 gen_insert_msg
 notmuch insert --folder=Drafts < "$gen_msg_filename"
 output=$(notmuch search --output=files folder:Drafts)
 dirname=$(dirname "$output")
-test_expect_equal "$dirname" "$MAIL_DIR/Drafts/cur"
+test_expect_equal "$dirname" "$MAIL_DIR/Drafts/new"
 
 test_begin_subtest "Insert message into folder, add/remove tags"
 gen_insert_msg
 notmuch insert --folder=Drafts +draft -unread < "$gen_msg_filename"
-output=$(notmuch count folder:Drafts tag:draft NOT tag:unread)
-test_expect_equal "$output" "1"
+output=$(notmuch search --output=messages folder:Drafts tag:draft NOT tag:unread)
+test_expect_equal "$output" "id:$gen_msg_id"
 
 gen_insert_msg
 test_expect_code 1 "Insert message into non-existent folder" \
@@ -99,14 +135,14 @@ gen_insert_msg
 notmuch insert --folder=F --create-folder +folder < "$gen_msg_filename"
 output=$(notmuch search --output=files folder:F tag:folder)
 basename=$(basename "$output")
-test_expect_equal_file "$gen_msg_filename" "$MAIL_DIR/F/cur/${basename}"
+test_expect_equal_file "$gen_msg_filename" "$MAIL_DIR/F/new/${basename}"
 
 test_begin_subtest "Insert message, create subfolder"
 gen_insert_msg
 notmuch insert --folder=F/G/H/I/J --create-folder +folder < "$gen_msg_filename"
 output=$(notmuch search --output=files folder:F/G/H/I/J tag:folder)
 basename=$(basename "$output")
-test_expect_equal_file "$gen_msg_filename" "${MAIL_DIR}/F/G/H/I/J/cur/${basename}"
+test_expect_equal_file "$gen_msg_filename" "${MAIL_DIR}/F/G/H/I/J/new/${basename}"
 
 test_begin_subtest "Insert message, create existing subfolder"
 gen_insert_msg

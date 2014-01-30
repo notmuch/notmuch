@@ -32,6 +32,7 @@
 #include <sys/time.h>
 #include <sys/types.h>
 
+#include "compat.h"
 #include "parse-time-string.h"
 
 /*

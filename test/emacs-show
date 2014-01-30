@@ -19,13 +19,14 @@ cat <<EOF >EXPECTED
 Notmuch Test Suite <test_suite@notmuchmail.org> (2001-01-05) (inbox)
 Subject: Hiding Original Message region at beginning of a message
 To: Notmuch Test Suite <test_suite@notmuchmail.org>
-Date: Fri, 05 Jan 2001 15:43:57 +0000
+Date: GENERATED_DATE
 
 [ 2-line hidden original message. Click/Enter to show. ]
 EOF
 
 test_emacs "(notmuch-show \"id:$message_id\")
-	    (test-visible-output)"
+	    (test-visible-output \"OUTPUT.raw\")"
+notmuch_date_sanitize < OUTPUT.raw > OUTPUT
 test_expect_equal_file OUTPUT EXPECTED
 
 test_begin_subtest "Bare subject #1"
@@ -91,8 +92,7 @@ test_begin_subtest "notmuch-show: elide non-matching messages (w/ prefix arg to 
 test_emacs '(let ((notmuch-show-only-matching-messages nil))
 	(notmuch-search "from:lars@seas.harvard.edu and subject:\"Maildir storage\"")
 	(notmuch-test-wait)
-	(let ((current-prefix-arg t))
-	  (notmuch-search-show-thread))
+	(notmuch-search-show-thread t)
 	(notmuch-test-wait)
 	(test-visible-output))'
 test_expect_equal_file OUTPUT $EXPECTED/notmuch-show-elide-non-matching-messages-on
@@ -131,12 +131,12 @@ mid:abc%20def
 mid:abc. mid:abc, mid:abc;"'
 test_emacs '(notmuch-show "id:'$gen_msg_id'")
 	(notmuch-test-mark-links)
-	(test-visible-output)'
+	(test-visible-output "OUTPUT.raw")'
 cat <<EOF >EXPECTED
 Notmuch Test Suite <test_suite@notmuchmail.org> (2001-01-05) (inbox)
 Subject: id buttonization
 To: Notmuch Test Suite <test_suite@notmuchmail.org>
-Date: Fri, 05 Jan 2001 15:43:57 +0000
+Date: GENERATED_DATE
 
 <<id:abc>>
 <<id:abc.def>>. <<id:abc,def>>, <<id:abc;def>>; <<id:abc:def>>:
@@ -160,6 +160,7 @@ cid:xxx
 <<mid:abc%20def>>
 <<mid:abc>>. <<mid:abc>>, <<mid:abc>>;
 EOF
+notmuch_date_sanitize < OUTPUT.raw > OUTPUT
 test_expect_equal_file OUTPUT EXPECTED
 
 
@@ -182,14 +183,14 @@ test_emacs "(let ((notmuch-command \"$PWD/notmuch_fail\"))
 	       (with-current-buffer \"*Notmuch errors*\"
 		  (test-output \"ERROR\"))
 	       (test-output))"
-sed -i -e 's/^\[.*\]$/[XXX]/' ERROR
-test_expect_equal "$(cat OUTPUT; echo ---; cat MESSAGES; echo ---; cat ERROR)" "\
----
+test_expect_equal "$(notmuch_emacs_error_sanitize notmuch_fail OUTPUT MESSAGES ERROR)" "\
+=== OUTPUT ===
+=== MESSAGES ===
 This is an error (see *Notmuch errors* for more details)
----
+=== ERROR ===
 [XXX]
 This is an error
-command: $PWD/notmuch_fail show --format\\=sexp --format-version\\=1 --exclude\\=false \\' \\* \\'
+command: YYY/notmuch_fail show --format\\=sexp --format-version\\=1 --exclude\\=false \\' \\* \\'
 exit status: 1
 stderr:
 This is an error

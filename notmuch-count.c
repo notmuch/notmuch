@@ -24,6 +24,7 @@
 enum {
     OUTPUT_THREADS,
     OUTPUT_MESSAGES,
+    OUTPUT_FILES,
 };
 
 /* The following is to allow future options to be added more easily */
@@ -31,6 +32,38 @@ enum {
     EXCLUDE_TRUE,
     EXCLUDE_FALSE,
 };
+
+static unsigned int
+count_files (notmuch_query_t *query)
+{
+    notmuch_messages_t *messages;
+    notmuch_message_t *message;
+    notmuch_filenames_t *filenames;
+    unsigned int count = 0;
+
+    messages = notmuch_query_search_messages (query);
+    if (messages == NULL)
+	return 0;
+
+    for (;
+	 notmuch_messages_valid (messages);
+	 notmuch_messages_move_to_next (messages)) {
+	message = notmuch_messages_get (messages);
+	filenames = notmuch_message_get_filenames (message);
+
+	for (;
+	     notmuch_filenames_valid (filenames);
+	     notmuch_filenames_move_to_next (filenames))
+	    count++;
+
+	notmuch_filenames_destroy (filenames);
+	notmuch_message_destroy (message);
+    }
+
+    notmuch_messages_destroy (messages);
+
+    return count;
+}
 
 static int
 print_count (notmuch_database_t *notmuch, const char *query_str,
@@ -54,6 +87,9 @@ print_count (notmuch_database_t *notmuch, const char *query_str,
 	break;
     case OUTPUT_THREADS:
 	printf ("%u\n", notmuch_query_count_threads (query));
+	break;
+    case OUTPUT_FILES:
+	printf ("%u\n", count_files (query));
 	break;
     }
 
@@ -102,6 +138,7 @@ notmuch_count_command (notmuch_config_t *config, int argc, char *argv[])
 	{ NOTMUCH_OPT_KEYWORD, &output, "output", 'o',
 	  (notmuch_keyword_t []){ { "threads", OUTPUT_THREADS },
 				  { "messages", OUTPUT_MESSAGES },
+				  { "files", OUTPUT_FILES },
 				  { 0, 0 } } },
 	{ NOTMUCH_OPT_KEYWORD, &exclude, "exclude", 'x',
 	  (notmuch_keyword_t []){ { "true", EXCLUDE_TRUE },

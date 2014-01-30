@@ -8,6 +8,7 @@ MAIN_PAGE := $(dir)/man1/notmuch.1
 
 MAN1 := \
 	$(MAIN_PAGE) \
+	$(dir)/man1/notmuch-compact.1 \
 	$(dir)/man1/notmuch-config.1 \
 	$(dir)/man1/notmuch-count.1 \
 	$(dir)/man1/notmuch-dump.1 \

@@ -8,8 +8,6 @@
 FLAVOR=$1
 PACKAGE=notmuch
 
-if [ ${FLAVOR} = emacs ]; then exit 0; fi
-
 # We know that the notmuch emacs code doesn't work with emacs before emacs23
 if [ ${FLAVOR} = emacs21 ]; then exit 0; fi
 if [ ${FLAVOR} = emacs22 ]; then exit 0; fi

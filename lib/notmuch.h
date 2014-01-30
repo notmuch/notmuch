@@ -41,6 +41,34 @@ NOTMUCH_BEGIN_DECLS
 #define TRUE 1
 #endif
 
+/*
+ * The library version number.  This must agree with the soname
+ * version in Makefile.local.
+ */
+#define LIBNOTMUCH_MAJOR_VERSION	3
+#define LIBNOTMUCH_MINOR_VERSION	1
+#define LIBNOTMUCH_MICRO_VERSION	0
+
+/*
+ * Check the version of the notmuch library being compiled against.
+ *
+ * Return true if the library being compiled against is of the
+ * specified version or above. For example:
+ *
+ * #if LIBNOTMUCH_CHECK_VERSION(3, 1, 0)
+ *     (code requiring libnotmuch 3.1.0 or above)
+ * #endif
+ *
+ * LIBNOTMUCH_CHECK_VERSION has been defined since version 3.1.0; you
+ * can use #if !defined(NOTMUCH_CHECK_VERSION) to check for versions
+ * prior to that.
+ */
+#define LIBNOTMUCH_CHECK_VERSION (major, minor, micro)			\
+    (LIBNOTMUCH_MAJOR_VERSION > (major) ||					\
+     (LIBNOTMUCH_MAJOR_VERSION == (major) && LIBNOTMUCH_MINOR_VERSION > (minor)) || \
+     (LIBNOTMUCH_MAJOR_VERSION == (major) && LIBNOTMUCH_MINOR_VERSION == (minor) && \
+      LIBNOTMUCH_MICRO_VERSION >= (micro)))
+
 typedef int notmuch_bool_t;
 
 /* Status codes used for the return values of most functions.
@@ -101,6 +129,7 @@ typedef enum _notmuch_status {
     NOTMUCH_STATUS_TAG_TOO_LONG,
     NOTMUCH_STATUS_UNBALANCED_FREEZE_THAW,
     NOTMUCH_STATUS_UNBALANCED_ATOMIC,
+    NOTMUCH_STATUS_UNSUPPORTED_OPERATION,
 
     NOTMUCH_STATUS_LAST_STATUS
 } notmuch_status_t;
@@ -215,8 +244,30 @@ notmuch_database_open (const char *path,
 void
 notmuch_database_close (notmuch_database_t *database);
 
+/* A callback invoked by notmuch_database_compact to notify the user
+ * of the progress of the compaction process.
+ */
+typedef void (*notmuch_compact_status_cb_t)(const char *message, void *closure);
+
+/* Compact a notmuch database, backing up the original database to the
+ * given path.
+ *
+ * The database will be opened with NOTMUCH_DATABASE_MODE_READ_WRITE
+ * during the compaction process to ensure no writes are made.
+ *
+ * If the optional callback function 'status_cb' is non-NULL, it will
+ * be called with diagnostic and informational messages. The argument
+ * 'closure' is passed verbatim to any callback invoked.
+ */
+notmuch_status_t
+notmuch_database_compact (const char* path,
+			  const char* backup_path,
+			  notmuch_compact_status_cb_t status_cb,
+			  void *closure);
+
 /* Destroy the notmuch database, closing it if necessary and freeing
-* all associated resources. */
+ * all associated resources.
+ */
 void
 notmuch_database_destroy (notmuch_database_t *database);
 
@@ -250,7 +301,8 @@ notmuch_database_needs_upgrade (notmuch_database_t *database);
  * provide progress indication to the user. If non-NULL it will be
  * called periodically with 'progress' as a floating-point value in
  * the range of [0.0 .. 1.0] indicating the progress made so far in
- * the upgrade process.
+ * the upgrade process.  The argument 'closure' is passed verbatim to
+ * any callback invoked.
  */
 notmuch_status_t
 notmuch_database_upgrade (notmuch_database_t *database,
@@ -746,12 +798,16 @@ notmuch_thread_get_total_messages (notmuch_thread_t *thread);
  * This iterator will not necessarily iterate over all of the messages
  * in the thread. It will only iterate over the messages in the thread
  * which are not replies to other messages in the thread.
+ *
+ * The returned list will be destroyed when the thread is destroyed.
  */
 notmuch_messages_t *
 notmuch_thread_get_toplevel_messages (notmuch_thread_t *thread);
 
 /* Get a notmuch_thread_t iterator for all messages in 'thread' in
  * oldest-first order.
+ *
+ * The returned list will be destroyed when the thread is destroyed.
  */
 notmuch_messages_t *
 notmuch_thread_get_messages (notmuch_thread_t *thread);
@@ -767,7 +823,7 @@ notmuch_thread_get_messages (notmuch_thread_t *thread);
 int
 notmuch_thread_get_matched_messages (notmuch_thread_t *thread);
 
-/* Get the authors of 'thread'
+/* Get the authors of 'thread' as a UTF-8 string.
  *
  * The returned string is a comma-separated list of the names of the
  * authors of mail messages in the query results that belong to this
@@ -781,7 +837,7 @@ notmuch_thread_get_matched_messages (notmuch_thread_t *thread);
 const char *
 notmuch_thread_get_authors (notmuch_thread_t *thread);
 
-/* Get the subject of 'thread'
+/* Get the subject of 'thread' as a UTF-8 string.
  *
  * The subject is taken from the first message (according to the query
  * order---see notmuch_query_set_sort) in the query results that
@@ -1013,10 +1069,13 @@ notmuch_message_set_flag (notmuch_message_t *message,
 time_t
 notmuch_message_get_date  (notmuch_message_t *message);
 
-/* Get the value of the specified header from 'message'.
+/* Get the value of the specified header from 'message' as a UTF-8 string.
  *
- * The value will be read from the actual message file, not from the
- * notmuch database. The header name is case insensitive.
+ * Common headers are stored in the database when the message is
+ * indexed and will be returned from the database.  Other headers will
+ * be read from the actual message file.
+ *
+ * The header name is case insensitive.
  *
  * The returned string belongs to the message so should not be
  * modified or freed by the caller (nor should it be referenced after

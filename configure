@@ -277,7 +277,8 @@ printf "Checking for Xapian development files... "
 have_xapian=0
 for xapian_config in ${XAPIAN_CONFIG}; do
     if ${xapian_config} --version > /dev/null 2>&1; then
-	printf "Yes (%s).\n" $(${xapian_config} --version | sed -e 's/.* //')
+	xapian_version=$(${xapian_config} --version | sed -e 's/.* //')
+	printf "Yes (%s).\n" ${xapian_version}
 	have_xapian=1
 	xapian_cxxflags=$(${xapian_config} --cxxflags)
 	xapian_ldflags=$(${xapian_config} --libs)
@@ -287,6 +288,21 @@ done
 if [ ${have_xapian} = "0" ]; then
     printf "No.\n"
     errors=$((errors + 1))
+fi
+
+# Compaction is only supported on Xapian > 1.2.6
+have_xapian_compact=0
+if [ ${have_xapian} = "1" ]; then
+    printf "Checking for Xapian compaction support... "
+    case "${xapian_version}" in
+        0.*|1.[01].*|1.2.[0-5])
+            printf "No (only available with Xapian > 1.2.6).\n" ;;
+        [1-9]*.[0-9]*.[0-9]*)
+            have_xapian_compact=1
+            printf "Yes.\n" ;;
+        *)
+            printf "Unknown version.\n" ;;
+    esac
 fi
 
 printf "Checking for GMime development files... "
@@ -425,6 +441,19 @@ else
 EOF
 fi
 
+printf "Checking byte order... "
+cat> _byteorder.c <<EOF
+#include <stdio.h>
+#include <stdint.h>
+uint32_t test = 0x34333231;
+int main() { printf("%.4s\n", (const char*)&test); return 0; }
+EOF
+${CC} ${CFLAGS} _byteorder.c -o _byteorder > /dev/null 2>&1
+util_byte_order=$(./_byteorder)
+echo $util_byte_order
+
+rm -f _byteorder _byteorder.c
+
 if [ $errors -gt 0 ]; then
     cat <<EOF
 
@@ -518,6 +547,50 @@ else
     have_strcasestr=0
 fi
 rm -f compat/have_strcasestr
+
+printf "Checking for strsep... "
+if ${CC} -o compat/have_strsep "$srcdir"/compat/have_strsep.c > /dev/null 2>&1
+then
+    printf "Yes.\n"
+    have_strsep="1"
+else
+    printf "No (will use our own instead).\n"
+    have_strsep="0"
+fi
+rm -f compat/have_strsep
+
+printf "Checking for timegm... "
+if ${CC} -o compat/have_timegm "$srcdir"/compat/have_timegm.c > /dev/null 2>&1
+then
+    printf "Yes.\n"
+    have_timegm="1"
+else
+    printf "No (will use our own instead).\n"
+    have_timegm="0"
+fi
+rm -f compat/have_timegm
+
+printf "Checking for standard version of getpwuid_r... "
+if ${CC} -o compat/check_getpwuid "$srcdir"/compat/check_getpwuid.c > /dev/null 2>&1
+then
+    printf "Yes.\n"
+    std_getpwuid=1
+else
+    printf "No (will define _POSIX_PTHREAD_SEMANTICS to get it).\n"
+    std_getpwuid=0
+fi
+rm -f compat/check_getpwuid
+
+printf "Checking for standard version of asctime_r... "
+if ${CC} -o compat/check_asctime "$srcdir"/compat/check_asctime.c > /dev/null 2>&1
+then
+    printf "Yes.\n"
+    std_asctime=1
+else
+    printf "No (will define _POSIX_PTHREAD_SEMANTICS to get it).\n"
+    std_asctime=0
+fi
+rm -f compat/check_asctime
 
 printf "int main(void){return 0;}\n" > minimal.c
 
@@ -642,6 +715,9 @@ prefix = ${PREFIX}
 # LIBDIR_IN_LDCONFIG value below is still set correctly.
 libdir = ${LIBDIR:=\$(prefix)/lib}
 
+# byte order within a 32 bit word. 1234 = little, 4321 = big, 0 = guess
+UTIL_BYTE_ORDER = ${util_byte_order}
+
 # Whether libdir is in a path configured into ldconfig
 LIBDIR_IN_LDCONFIG = ${libdir_in_ldconfig}
 
@@ -680,6 +756,23 @@ HAVE_GETLINE = ${have_getline}
 # Whether the strcasestr function is available (if not, then notmuch will
 # build its own version)
 HAVE_STRCASESTR = ${have_strcasestr}
+
+# Whether the strsep function is available (if not, then notmuch will
+# build its own version)
+HAVE_STRSEP = ${have_strsep}
+
+# Whether the Xapian version in use supports compaction
+HAVE_XAPIAN_COMPACT = ${have_xapian_compact}
+
+# Whether the getpwuid_r function is standards-compliant
+# (if not, then notmuch will #define _POSIX_PTHREAD_SEMANTICS
+# to enable the standards-compliant version -- needed for Solaris)
+STD_GETPWUID = ${std_getpwuid}
+
+# Whether the asctime_r function is standards-compliant
+# (if not, then notmuch will #define _POSIX_PTHREAD_SEMANTICS
+# to enable the standards-compliant version -- needed for Solaris)
+STD_ASCTIME = ${std_asctime}
 
 # Supported platforms (so far) are: LINUX, MACOSX, SOLARIS, FREEBSD, OPENBSD
 PLATFORM = ${platform}
@@ -725,10 +818,23 @@ WITH_ZSH = ${WITH_ZSH}
 # Combined flags for compiling and linking against all of the above
 CONFIGURE_CFLAGS = -DHAVE_GETLINE=\$(HAVE_GETLINE) \$(GMIME_CFLAGS)      \\
 		   \$(TALLOC_CFLAGS) -DHAVE_VALGRIND=\$(HAVE_VALGRIND)   \\
-		   \$(VALGRIND_CFLAGS) -DHAVE_STRCASESTR=\$(HAVE_STRCASESTR)
+		   \$(VALGRIND_CFLAGS)                                   \\
+		   -DHAVE_STRCASESTR=\$(HAVE_STRCASESTR)                 \\
+		   -DHAVE_STRSEP=\$(HAVE_STRSEP)                         \\
+		   -DSTD_GETPWUID=\$(STD_GETPWUID)                       \\
+		   -DSTD_ASCTIME=\$(STD_ASCTIME)                         \\
+		   -DHAVE_XAPIAN_COMPACT=\$(HAVE_XAPIAN_COMPACT)	 \\
+		   -DUTIL_BYTE_ORDER=\$(UTIL_BYTE_ORDER)
+
 CONFIGURE_CXXFLAGS = -DHAVE_GETLINE=\$(HAVE_GETLINE) \$(GMIME_CFLAGS)    \\
 		     \$(TALLOC_CFLAGS) -DHAVE_VALGRIND=\$(HAVE_VALGRIND) \\
 		     \$(VALGRIND_CFLAGS) \$(XAPIAN_CXXFLAGS)             \\
-                     -DHAVE_STRCASESTR=\$(HAVE_STRCASESTR)
+		     -DHAVE_STRCASESTR=\$(HAVE_STRCASESTR)               \\
+		     -DHAVE_STRSEP=\$(HAVE_STRSEP)                       \\
+		     -DSTD_GETPWUID=\$(STD_GETPWUID)                     \\
+		     -DSTD_ASCTIME=\$(STD_ASCTIME)                       \\
+		     -DHAVE_XAPIAN_COMPACT=\$(HAVE_XAPIAN_COMPACT)       \\
+		     -DUTIL_BYTE_ORDER=\$(UTIL_BYTE_ORDER)
+
 CONFIGURE_LDFLAGS =  \$(GMIME_LDFLAGS) \$(TALLOC_LDFLAGS) \$(XAPIAN_LDFLAGS)
 EOF

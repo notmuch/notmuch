@@ -60,6 +60,8 @@ static command_t commands[] = {
       "Create a plain-text dump of the tags for each message." },
     { "restore", notmuch_restore_command, FALSE,
       "Restore the tags from the given dump file (see 'dump')." },
+    { "compact", notmuch_compact_command, FALSE,
+      "Compact the notmuch database." },
     { "config", notmuch_config_command, FALSE,
       "Get or set settings in the notmuch configuration file." },
     { "help", notmuch_help_command, TRUE, /* create but don't save config */
@@ -125,7 +127,7 @@ by the notmuch CLI (it requires at least version %d).  You may need to\n\
 upgrade your notmuch front-end.\n",
 		 notmuch_format_version, NOTMUCH_FORMAT_MIN);
 	exit (NOTMUCH_EXIT_FORMAT_TOO_OLD);
-    } else if (notmuch_format_version != NOTMUCH_FORMAT_CUR) {
+    } else if (notmuch_format_version < NOTMUCH_FORMAT_MIN_ACTIVE) {
 	/* Warn about old version requests so compatibility issues are
 	 * less likely when we drop support for a deprecated format
 	 * versions. */
@@ -264,7 +266,7 @@ main (int argc, char *argv[])
 
     local = talloc_new (NULL);
 
-    g_mime_init (0);
+    g_mime_init (GMIME_ENABLE_RFC2047_WORKAROUNDS);
 #if !GLIB_CHECK_VERSION(2, 35, 1)
     g_type_init ();
 #endif

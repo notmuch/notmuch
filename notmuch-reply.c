@@ -21,24 +21,18 @@
  */
 
 #include "notmuch-client.h"
-#include "gmime-filter-headers.h"
 #include "sprinter.h"
 
 static void
 show_reply_headers (GMimeMessage *message)
 {
-    GMimeStream *stream_stdout = NULL, *stream_filter = NULL;
+    GMimeStream *stream_stdout = NULL;
 
     stream_stdout = g_mime_stream_file_new (stdout);
     if (stream_stdout) {
 	g_mime_stream_file_set_owner (GMIME_STREAM_FILE (stream_stdout), FALSE);
-	stream_filter = g_mime_stream_filter_new(stream_stdout);
-	if (stream_filter) {
-		g_mime_stream_filter_add(GMIME_STREAM_FILTER(stream_filter),
-					 g_mime_filter_headers_new());
-		g_mime_object_write_to_stream(GMIME_OBJECT(message), stream_filter);
-		g_object_unref(stream_filter);
-	}
+	/* Output RFC 2822 formatted (and RFC 2047 encoded) headers. */
+	g_mime_object_write_to_stream (GMIME_OBJECT(message), stream_stdout);
 	g_object_unref(stream_stdout);
     }
 }
@@ -533,9 +527,12 @@ create_reply_message(void *ctx,
 			      "In-Reply-To", in_reply_to);
 
     orig_references = notmuch_message_get_header (message, "references");
+    if (!orig_references)
+	/* Treat errors like missing References headers. */
+	orig_references = "";
     references = talloc_asprintf (ctx, "%s%s%s",
-				  orig_references ? orig_references : "",
-				  orig_references ? " " : "",
+				  *orig_references ? orig_references : "",
+				  *orig_references ? " " : "",
 				  in_reply_to);
     g_mime_object_set_header (GMIME_OBJECT (reply),
 			      "References", references);
@@ -624,7 +621,7 @@ notmuch_reply_format_sprinter(void *ctx,
 
     /* Start the original */
     sp->map_key (sp, "original");
-    format_part_sprinter (ctx, sp, node, TRUE, TRUE);
+    format_part_sprinter (ctx, sp, node, TRUE, TRUE, FALSE);
 
     /* End */
     sp->end (sp);

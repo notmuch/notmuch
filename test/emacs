@@ -86,15 +86,16 @@ add_message "[subject]=\"message-with-invalid-from\"" \
 	    "[from]=\"\\\"Invalid \\\" From\\\" <test_suite@notmuchmail.org>\""
 thread=$(notmuch search --output=threads subject:message-with-invalid-from)
 test_emacs "(notmuch-show \"$thread\")
-	    (test-output)"
+	    (test-output \"OUTPUT.raw\")"
 cat <<EOF >EXPECTED
 "Invalid " (2001-01-05) (inbox)
 Subject: message-with-invalid-from
 To: Notmuch Test Suite <test_suite@notmuchmail.org>
-Date: Fri, 05 Jan 2001 15:43:57 +0000
+Date: GENERATED_DATE
 
 This is just a test message (#1)
 EOF
+notmuch_date_sanitize < OUTPUT.raw > OUTPUT
 test_expect_equal_file OUTPUT EXPECTED
 
 test_begin_subtest "Navigation of notmuch-search to thread view"
@@ -121,6 +122,14 @@ test_emacs "(notmuch-search \"$os_x_darwin_thread\")
 	    (execute-kbd-macro \"-tag-from-search-view\")"
 output=$(notmuch search $os_x_darwin_thread | notmuch_search_sanitize)
 test_expect_equal "$output" "thread:XXX   2009-11-18 [4/4] Jjgod Jiang, Alexander Botero-Lowry; [notmuch] Mac OS X/Darwin compatibility issues (inbox unread)"
+
+test_begin_subtest "Add tag (large query)"
+# We use a long query to force us into batch mode and use a funny tag
+# that requires escaping for batch tagging.
+test_emacs "(notmuch-tag (concat \"$os_x_darwin_thread\" \" or \" (make-string notmuch-tag-argument-limit ?x)) (list \"+tag-from-%-large-query\"))"
+output=$(notmuch search $os_x_darwin_thread | notmuch_search_sanitize)
+test_expect_equal "$output" "thread:XXX   2009-11-18 [4/4] Jjgod Jiang, Alexander Botero-Lowry; [notmuch] Mac OS X/Darwin compatibility issues (inbox tag-from-%-large-query unread)"
+notmuch tag -tag-from-%-large-query $os_x_darwin_thread
 
 test_begin_subtest "notmuch-show: add single tag to single message"
 test_emacs "(notmuch-show \"$os_x_darwin_thread\")
@@ -597,11 +606,11 @@ Q: Why is top-posting such a bad thing?
 A: Top-posting.
 Q: What is the most annoying thing in e-mail?"'
 test_emacs "(notmuch-show \"top-posting\")
-	    (test-visible-output)"
+	    (test-visible-output \"OUTPUT.raw\")"
 echo "Notmuch Test Suite <test_suite@notmuchmail.org> (2001-01-05) (inbox)
 Subject: The problem with top-posting
 To: Notmuch Test Suite <test_suite@notmuchmail.org>
-Date: Fri, 05 Jan 2001 15:43:57 +0000
+Date: GENERATED_DATE
 
 A: Because it messes up the order in which people normally read text.
 Q: Why is top-posting such a bad thing?
@@ -610,13 +619,14 @@ Q: What is the most annoying thing in e-mail?
 Top Poster <top@poster.com> (2001-01-05) (inbox unread)
 Subject: Re: The problem with top-posting
 To: Notmuch Test Suite <test_suite@notmuchmail.org>
-Date: Fri, 05 Jan 2001 15:43:57 +0000
+Date: GENERATED_DATE
 
 Thanks for the advice! I will be sure to put it to good use.
 
 -Top Poster
 
 [ 9-line hidden original message. Click/Enter to show. ]" > EXPECTED
+notmuch_date_sanitize < OUTPUT.raw > OUTPUT
 test_expect_equal_file OUTPUT EXPECTED
 
 test_begin_subtest "Hiding message in notmuch-show view"
@@ -761,7 +771,7 @@ test_expect_equal_file OUTPUT EXPECTED
 
 test_begin_subtest "Do not call notmuch for non-inlinable application/mpeg parts"
 id='message-with-application/mpeg-attachment@notmuchmail.org'
-emacs_deliver_message \
+emacs_fcc_message \
     'Message with application/mpeg attachment' \
     '' \
     "(message-goto-eoh)
@@ -776,7 +786,7 @@ test_expect_equal $(notmuch_counter_value) 1
 
 test_begin_subtest "Do not call notmuch for non-inlinable audio/mpeg parts"
 id='message-with-audio/mpeg-attachment@notmuchmail.org'
-emacs_deliver_message \
+emacs_fcc_message \
     'Message with audio/mpeg attachment' \
     '' \
     "(message-goto-eoh)
@@ -864,6 +874,8 @@ EOF
 chmod a+x notmuch_fail
 test_emacs "(let ((notmuch-command \"$PWD/notmuch_fail\"))
 	       (with-current-buffer \"*Messages*\" (erase-buffer))
+	       (with-current-buffer (get-buffer-create \"*Notmuch errors*\")
+                 (erase-buffer))
 	       (notmuch-search \"tag:inbox\")
 	       (notmuch-test-wait)
 	       (with-current-buffer \"*Messages*\"
@@ -871,15 +883,16 @@ test_emacs "(let ((notmuch-command \"$PWD/notmuch_fail\"))
 	       (with-current-buffer \"*Notmuch errors*\"
 		  (test-output \"ERROR\"))
 	       (test-output))"
-sed -i -e 's/^\[.*\]$/[XXX]/' ERROR
-test_expect_equal "$(cat OUTPUT; echo ---; cat MESSAGES; echo ---; cat ERROR)" "\
+
+test_expect_equal "$(notmuch_emacs_error_sanitize notmuch_fail OUTPUT MESSAGES ERROR)" "\
+=== OUTPUT ===
 End of search results.
----
-$PWD/notmuch_fail exited with status 1 (see *Notmuch errors* for more details)
----
+=== MESSAGES ===
+YYY/notmuch_fail exited with status 1 (see *Notmuch errors* for more details)
+=== ERROR ===
 [XXX]
-$PWD/notmuch_fail exited with status 1
-command: $PWD/notmuch_fail search --format\=sexp --format-version\=1 --sort\=newest-first tag\:inbox
+YYY/notmuch_fail exited with status 1
+command: YYY/notmuch_fail search --format\=sexp --format-version\=2 --sort\=newest-first tag\:inbox
 exit status: 1"
 
 test_begin_subtest "Search handles subprocess warnings"
@@ -893,7 +906,8 @@ EOF
 chmod a+x notmuch_fail
 test_emacs "(let ((notmuch-command \"$PWD/notmuch_fail\"))
 	       (with-current-buffer \"*Messages*\" (erase-buffer))
-	       (with-current-buffer \"*Notmuch errors*\" (erase-buffer))
+	       (with-current-buffer (get-buffer-create \"*Notmuch errors*\")
+                 (erase-buffer))
 	       (notmuch-search \"tag:inbox\")
 	       (notmuch-test-wait)
 	       (with-current-buffer \"*Messages*\"
@@ -910,5 +924,29 @@ This is a warning (see *Notmuch errors* for more details)
 [XXX]
 This is a warning
 This is another warning"
+
+test_begin_subtest "Search thread tag operations are race-free"
+add_message '[subject]="Search race test"'
+gen_msg_id_1=$gen_msg_id
+generate_message '[in-reply-to]="<'$gen_msg_id_1'>"' \
+	    '[references]="<'$gen_msg_id_1'>"' \
+	    '[subject]="Search race test two"'
+test_emacs '(notmuch-search "subject:\"search race test\"")
+	    (notmuch-test-wait)
+	    (notmuch-poll)
+	    (execute-kbd-macro "+search-thread-race-tag")'
+output=$(notmuch search --output=messages 'tag:search-thread-race-tag')
+test_expect_equal "$output" "id:$gen_msg_id_1"
+
+test_begin_subtest "Search global tag operations are race-free"
+generate_message '[in-reply-to]="<'$gen_msg_id_1'>"' \
+	    '[references]="<'$gen_msg_id_1'>"' \
+	    '[subject]="Re: Search race test"'
+test_emacs '(notmuch-search "subject:\"search race test\" -subject:two")
+	    (notmuch-test-wait)
+	    (notmuch-poll)
+	    (execute-kbd-macro "*+search-global-race-tag")'
+output=$(notmuch search --output=messages 'tag:search-global-race-tag')
+test_expect_equal "$output" "id:$gen_msg_id_1"
 
 test_done

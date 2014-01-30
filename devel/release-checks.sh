@@ -13,6 +13,8 @@ fi
 set -o posix
 set -o pipefail # bash feature
 
+readonly DEFAULT_IFS="$IFS" # Note: In this particular case quotes are needed.
+
 # Avoid locale-specific differences in output of executed commands
 LANG=C LC_ALL=C; export LANG LC_ALL
 
@@ -20,8 +22,10 @@ readonly PV_FILE='bindings/python/notmuch/version.py'
 
 # Using array here turned out to be unnecessarily complicated
 emsgs=''
+emsg_count=0
 append_emsg ()
 {
+	emsg_count=$((emsg_count + 1))
 	emsgs="${emsgs:+$emsgs\n}  $1"
 }
 
@@ -73,6 +77,37 @@ case $VERSION in
 	*)	verfail "'$VERSION' is a single number" ;;
 esac
 
+echo -n "Checking that LIBNOTMUCH version macros & variables match ... "
+# lib/notmuch.h
+LIBNOTMUCH_MAJOR_VERSION=broken
+LIBNOTMUCH_MINOR_VERSION=broken
+LIBNOTMUCH_MICRO_VERSION=broken
+# lib/Makefile.local
+LIBNOTMUCH_VERSION_MAJOR=borken
+LIBNOTMUCH_VERSION_MINOR=borken
+LIBNOTMUCH_VERSION_RELEASE=borken
+
+eval `awk 'NF == 3 && $1 == "#define" && $2 ~ /^LIBNOTMUCH_[A-Z]+_VERSION$/ \
+	&& $3 ~ /^[0-9]+$/ { print $2 "=" $3 }' lib/notmuch.h`
+
+eval `awk 'NF == 3 && $1 ~ /^LIBNOTMUCH_VERSION_[A-Z]+$/ && $2 == "=" \
+	&& $3 ~ /^[0-9]+$/ { print $1 "=" $3 }' lib/Makefile.local`
+
+
+check_version_component ()
+{
+	eval local v1=\$LIBNOTMUCH_$1_VERSION
+	eval local v2=\$LIBNOTMUCH_VERSION_$2
+	if [ $v1 != $v2 ]
+	then	append_emsg "LIBNOTMUCH_$1_VERSION ($v1) does not equal LIBNOTMUCH_VERSION_$2 ($v2)"
+	fi
+}
+
+old_emsg_count=$emsg_count
+check_version_component MAJOR MAJOR
+check_version_component MINOR MINOR
+check_version_component MICRO RELEASE
+[ $old_emsg_count = $emsg_count ] && echo Yes. || echo No.
 
 echo -n "Checking that this is Debian package for notmuch... "
 read deb_notmuch deb_version rest < debian/changelog

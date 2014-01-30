@@ -34,7 +34,7 @@
 */
 
 #include <string.h>     /* for memcpy() etc.        */
-
+#include "endian-util.h"
 #include "libsha1.h"
 
 #if defined(__cplusplus)
@@ -49,11 +49,13 @@ extern "C"
 
 #define bswap_32(x) ((rotr32((x), 24) & 0x00ff00ff) | (rotr32((x), 8) & 0xff00ff00))
 
-#if (PLATFORM_BYTE_ORDER == IS_LITTLE_ENDIAN)
-#define bsw_32(p,n) \
-    { int _i = (n); while(_i--) ((uint32_t*)p)[_i] = bswap_32(((uint32_t*)p)[_i]); }
+#if (UTIL_BYTE_ORDER == UTIL_ORDER_LITTLE_ENDIAN)
+#  define bsw_32(p,n) \
+     { int _i = (n); while(_i--) ((uint32_t*)p)[_i] = bswap_32(((uint32_t*)p)[_i]); }
+#elif (UTIL_BYTE_ORDER == UTIL_ORDER_BIG_ENDIAN)
+#  define bsw_32(p,n)
 #else
-#define bsw_32(p,n)
+#  error "Unsupported byte order"
 #endif
 
 #define SHA1_MASK   (SHA1_BLOCK_SIZE - 1)

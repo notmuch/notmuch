@@ -41,6 +41,11 @@
 (declare-function notmuch-search-next-thread "notmuch" nil)
 (declare-function notmuch-search-previous-thread "notmuch" nil)
 (declare-function notmuch-search-show-thread "notmuch" nil)
+(declare-function notmuch-foreach-mime-part "notmuch" (function mm-handle))
+(declare-function notmuch-count-attachments "notmuch" (mm-handle))
+(declare-function notmuch-save-attachments "notmuch" (mm-handle &optional queryp))
+(declare-function notmuch-tree "notmuch-tree"
+		  (&optional query query-context target buffer-name open-target))
 
 (defcustom notmuch-message-headers '("Subject" "To" "Cc" "Date")
   "Headers that should be shown in a message, in this order.
@@ -154,6 +159,15 @@ indentation."
 (make-variable-buffer-local 'notmuch-show-indent-content)
 (put 'notmuch-show-indent-content 'permanent-local t)
 
+(defvar notmuch-show-attachment-debug nil
+  "If t log stdout and stderr from attachment handlers
+
+When set to nil (the default) stdout and stderr from attachment
+handlers is discarded. When set to t the stdout and stderr from
+each attachment handler is logged in buffers with names beginning
+\" *notmuch-part*\". This option requires emacs version at least
+24.3 to work.")
+
 (defcustom notmuch-show-stash-mlarchive-link-alist
   '(("Gmane" . "http://mid.gmane.org/")
     ("MARC" . "http://marc.info/?i=")
@@ -236,42 +250,6 @@ For example, if you wanted to remove an \"unread\" tag and add a
 				  ("multipart/related" ignore identity)
 				 )))
      (mm-display-parts (mm-dissect-buffer)))))
-
-(defun notmuch-foreach-mime-part (function mm-handle)
-  (cond ((stringp (car mm-handle))
-         (dolist (part (cdr mm-handle))
-           (notmuch-foreach-mime-part function part)))
-        ((bufferp (car mm-handle))
-         (funcall function mm-handle))
-        (t (dolist (part mm-handle)
-             (notmuch-foreach-mime-part function part)))))
-
-(defun notmuch-count-attachments (mm-handle)
-  (let ((count 0))
-    (notmuch-foreach-mime-part
-     (lambda (p)
-       (let ((disposition (mm-handle-disposition p)))
-         (and (listp disposition)
-              (or (equal (car disposition) "attachment")
-                  (and (equal (car disposition) "inline")
-                       (assq 'filename disposition)))
-              (incf count))))
-     mm-handle)
-    count))
-
-(defun notmuch-save-attachments (mm-handle &optional queryp)
-  (notmuch-foreach-mime-part
-   (lambda (p)
-     (let ((disposition (mm-handle-disposition p)))
-       (and (listp disposition)
-            (or (equal (car disposition) "attachment")
-                (and (equal (car disposition) "inline")
-                     (assq 'filename disposition)))
-            (or (not queryp)
-                (y-or-n-p
-                 (concat "Save '" (cdr (assq 'filename disposition)) "' ")))
-            (mm-save-part p))))
-   mm-handle))
 
 (defun notmuch-show-save-attachments ()
   "Save all attachments from the current message."
@@ -440,7 +418,8 @@ unchanged ADDRESS if parsing fails."
 message at DEPTH in the current thread."
   (let ((start (point)))
     (insert (notmuch-show-spaces-n (* notmuch-show-indent-messages-width depth))
-	    (notmuch-show-clean-address (plist-get headers :From))
+	    (notmuch-sanitize
+	     (notmuch-show-clean-address (plist-get headers :From)))
 	    " ("
 	    date
 	    ") ("
@@ -450,7 +429,7 @@ message at DEPTH in the current thread."
 
 (defun notmuch-show-insert-header (header header-value)
   "Insert a single header."
-  (insert header ": " header-value "\n"))
+  (insert header ": " (notmuch-sanitize header-value) "\n"))
 
 (defun notmuch-show-insert-headers (headers)
   "Insert the headers of the current message."
@@ -503,7 +482,7 @@ message at DEPTH in the current thread."
 	     (new-start (button-start button))
 	     (button-label (button-get button :base-label))
 	     (old-point (point))
-	     (properties (text-properties-at (point)))
+	     (properties (text-properties-at (button-start button)))
 	     (inhibit-read-only t))
 	;; Toggle the button itself.
 	(button-put button :notmuch-part-hidden (not show))
@@ -621,6 +600,10 @@ message at DEPTH in the current thread."
 
     ;; Render the primary part.
     (notmuch-show-insert-bodypart msg (car inner-parts) depth)
+    ;; Add hidden buttons for the rest
+    (mapc (lambda (inner-part)
+	    (notmuch-show-insert-bodypart msg inner-part depth t))
+	  (cdr inner-parts))
 
     (when notmuch-show-indent-multipart
       (indent-rigidly start (point) 1)))
@@ -877,7 +860,11 @@ message at DEPTH in the current thread."
 (defun notmuch-show-insert-bodypart (msg part depth &optional hide)
   "Insert the body part PART at depth DEPTH in the current thread.
 
-If HIDE is non-nil then initially hide this part."
+HIDE determines whether to show or hide the part and the button
+as follows: If HIDE is nil, show the part and the button. If HIDE
+is t, hide the part initially and show the button. If HIDE is
+'no-buttons, show the part but do not add any buttons (this is
+useful for quoting in replies)."
 
   (let* ((content-type (downcase (plist-get part :content-type)))
 	 (mime-type (or (and (string= content-type "application/octet-stream")
@@ -887,15 +874,19 @@ If HIDE is non-nil then initially hide this part."
 			content-type))
 	 (nth (plist-get part :id))
 	 (beg (point))
-	 ;; We omit the part button for the first (or only) part if this is text/plain.
-	 (button (unless (and (string= mime-type "text/plain") (<= nth 1))
+	 ;; Hide the part initially if HIDE is t.
+	 (show-part (not (equal hide t)))
+	 ;; We omit the part button for the first (or only) part if
+	 ;; this is text/plain, or HIDE is 'no-buttons.
+	 (button (unless (or (equal hide 'no-buttons)
+			     (and (string= mime-type "text/plain") (<= nth 1)))
 		   (notmuch-show-insert-part-header nth mime-type content-type (plist-get part :filename))))
 	 (content-beg (point)))
 
     ;; Store the computed mime-type for later use (e.g. by attachment handlers).
     (plist-put part :computed-type mime-type)
 
-    (if (not hide)
+    (if show-part
         (notmuch-show-insert-bodypart-internal msg part mime-type nth depth button)
       (button-put button :notmuch-lazy-part
                   (list msg part mime-type nth depth button)))
@@ -908,7 +899,7 @@ If HIDE is non-nil then initially hide this part."
       (insert "\n"))
     ;; We do not create the overlay for hidden (lazy) parts until
     ;; they are inserted.
-    (if (not hide)
+    (if show-part
 	(notmuch-show-create-part-overlays button content-beg (point))
       (save-excursion
 	(notmuch-show-toggle-part-invisibility button)))
@@ -1101,14 +1092,16 @@ buttons for a corresponding notmuch search."
 	(make-text-button (first link) (second link)
 			  :type 'notmuch-button-type
 			  'action `(lambda (arg)
-				     (notmuch-show ,(third link)))
+				     (notmuch-show ,(third link) current-prefix-arg))
 			  'follow-link t
 			  'help-echo "Mouse-1, RET: search for this message"
 			  'face goto-address-mail-face)))))
 
 ;;;###autoload
-(defun notmuch-show (thread-id &optional parent-buffer query-context buffer-name)
+(defun notmuch-show (thread-id &optional elide-toggle parent-buffer query-context buffer-name)
   "Run \"notmuch show\" with the given thread ID and display results.
+
+ELIDE-TOGGLE, if non-nil, inverts the default elide behavior.
 
 The optional PARENT-BUFFER is the notmuch-search buffer from
 which this notmuch-show command was executed, (so that the
@@ -1123,7 +1116,7 @@ The optional BUFFER-NAME provides the name of the buffer in
 which the message thread is shown. If it is nil (which occurs
 when the command is called interactively) the argument to the
 function is used."
-  (interactive "sNotmuch show: ")
+  (interactive "sNotmuch show: \nP")
   (let ((buffer-name (generate-new-buffer-name
 		      (or buffer-name
 			  (concat "*notmuch-" thread-id "*")))))
@@ -1133,9 +1126,9 @@ function is used."
     (setq notmuch-show-process-crypto notmuch-crypto-process-mime)
     ;; Set the default value for
     ;; `notmuch-show-elide-non-matching-messages' in this buffer. If
-    ;; there is a prefix argument, invert the default.
+    ;; elide-toggle is set, invert the default.
     (setq notmuch-show-elide-non-matching-messages notmuch-show-only-matching-messages)
-    (if current-prefix-arg
+    (if elide-toggle
 	(setq notmuch-show-elide-non-matching-messages (not notmuch-show-elide-non-matching-messages)))
 
     (setq notmuch-show-thread-id thread-id
@@ -1175,7 +1168,7 @@ function is used."
       (jit-lock-register #'notmuch-show-buttonise-links)
 
       ;; Set the header line to the subject of the first message.
-      (setq header-line-format (notmuch-show-strip-re (notmuch-show-get-subject)))
+      (setq header-line-format (notmuch-sanitize (notmuch-show-strip-re (notmuch-show-get-subject))))
 
       (run-hooks 'notmuch-show-hook))))
 
@@ -1264,14 +1257,12 @@ reset based on the original query."
 
 (defvar notmuch-show-mode-map
       (let ((map (make-sparse-keymap)))
-	(define-key map "?" 'notmuch-help)
-	(define-key map "q" 'notmuch-kill-this-buffer)
+	(set-keymap-parent map notmuch-common-keymap)
+	(define-key map "Z" 'notmuch-tree-from-show-current-query)
 	(define-key map (kbd "<C-tab>") 'widget-backward)
 	(define-key map (kbd "M-TAB") 'notmuch-show-previous-button)
 	(define-key map (kbd "<backtab>") 'notmuch-show-previous-button)
 	(define-key map (kbd "TAB") 'notmuch-show-next-button)
-	(define-key map "s" 'notmuch-search)
-	(define-key map "m" 'notmuch-mua-new-mail)
 	(define-key map "f" 'notmuch-show-forward-message)
 	(define-key map "r" 'notmuch-show-reply-sender)
 	(define-key map "R" 'notmuch-show-reply)
@@ -1279,7 +1270,6 @@ reset based on the original query."
 	(define-key map "w" 'notmuch-show-save-attachments)
 	(define-key map "V" 'notmuch-show-view-raw-message)
 	(define-key map "c" 'notmuch-show-stash-map)
-	(define-key map "=" 'notmuch-show-refresh-view)
 	(define-key map "h" 'notmuch-show-toggle-visibility-headers)
 	(define-key map "*" 'notmuch-show-tag-all)
 	(define-key map "-" 'notmuch-show-remove-tag)
@@ -1338,11 +1328,19 @@ All currently available key bindings:
 \\{notmuch-show-mode-map}"
   (interactive)
   (kill-all-local-variables)
+  (setq notmuch-buffer-refresh-function #'notmuch-show-refresh-view)
   (use-local-map notmuch-show-mode-map)
   (setq major-mode 'notmuch-show-mode
 	mode-name "notmuch-show")
   (setq buffer-read-only t
 	truncate-lines t))
+
+(defun notmuch-tree-from-show-current-query ()
+  "Call notmuch tree with the current query"
+  (interactive)
+  (notmuch-tree notmuch-show-thread-id
+		notmuch-show-query-context
+		(notmuch-show-get-message-id)))
 
 (defun notmuch-show-move-to-message-top ()
   (goto-char (notmuch-show-message-top)))
@@ -1512,6 +1510,8 @@ current thread."
   "Are the headers of the current message visible?"
   (notmuch-show-get-prop :headers-visible))
 
+(put 'notmuch-show-mark-read 'notmuch-prefix-doc
+     "Mark the current message as unread.")
 (defun notmuch-show-mark-read (&optional unread)
   "Mark the current message as read.
 
@@ -1599,7 +1599,7 @@ shown."
       (notmuch-show-archive-thread-then-next)))
 
 (defun notmuch-show-rewind ()
-  "Backup through the thread, (reverse scrolling compared to \\[notmuch-show-advance-and-archive]).
+  "Backup through the thread (reverse scrolling compared to \\[notmuch-show-advance-and-archive]).
 
 Specifically, if the beginning of the previous email is fewer
 than `window-height' lines from the current point, move to it
@@ -1633,16 +1633,20 @@ any effects from previous calls to
       ;; Move to the previous message.
       (notmuch-show-previous-message)))))
 
+(put 'notmuch-show-reply 'notmuch-prefix-doc "... and prompt for sender")
 (defun notmuch-show-reply (&optional prompt-for-sender)
   "Reply to the sender and all recipients of the current message."
   (interactive "P")
   (notmuch-mua-new-reply (notmuch-show-get-message-id) prompt-for-sender t))
 
+(put 'notmuch-show-reply-sender 'notmuch-prefix-doc "... and prompt for sender")
 (defun notmuch-show-reply-sender (&optional prompt-for-sender)
   "Reply to the sender of the current message."
   (interactive "P")
   (notmuch-mua-new-reply (notmuch-show-get-message-id) prompt-for-sender nil))
 
+(put 'notmuch-show-forward-message 'notmuch-prefix-doc
+     "... and prompt for sender")
 (defun notmuch-show-forward-message (&optional prompt-for-sender)
   "Forward the current message."
   (interactive "P")
@@ -1746,16 +1750,21 @@ to show, nil otherwise."
     (set-buffer-modified-p nil)
     (view-buffer buf 'kill-buffer-if-not-modified)))
 
+(put 'notmuch-show-pipe-message 'notmuch-doc
+     "Pipe the contents of the current message to a command.")
+(put 'notmuch-show-pipe-message 'notmuch-prefix-doc
+     "Pipe the thread as an mbox to a command.")
 (defun notmuch-show-pipe-message (entire-thread command)
-  "Pipe the contents of the current message (or thread) to the given command.
+  "Pipe the contents of the current message (or thread) to COMMAND.
 
-The given command will be executed with the raw contents of the
-current email message as stdin. Anything printed by the command
-to stdout or stderr will appear in the *notmuch-pipe* buffer.
+COMMAND will be executed with the raw contents of the current
+email message as stdin. Anything printed by the command to stdout
+or stderr will appear in the *notmuch-pipe* buffer.
 
-When invoked with a prefix argument, the command will receive all
-open messages in the current thread (formatted as an mbox) rather
-than only the current message."
+If ENTIRE-THREAD is non-nil (or when invoked with a prefix
+argument), COMMAND will receive all open messages in the current
+thread (formatted as an mbox) rather than only the current
+message."
   (interactive (let ((query-string (if current-prefix-arg
 				       "Pipe all open messages to command: "
 				     "Pipe message to command: ")))
@@ -1793,23 +1802,28 @@ TAG-CHANGES is a list of tag operations for `notmuch-tag'."
       (notmuch-tag (notmuch-show-get-message-id) tag-changes)
       (notmuch-show-set-tags new-tags))))
 
-(defun notmuch-show-tag (&optional tag-changes)
+(defun notmuch-show-tag (tag-changes)
   "Change tags for the current message.
 
 See `notmuch-tag' for information on the format of TAG-CHANGES."
-  (interactive)
-  (let* ((tag-changes (notmuch-tag (notmuch-show-get-message-id) tag-changes))
-	 (current-tags (notmuch-show-get-tags))
+  (interactive (list (notmuch-read-tag-changes (notmuch-show-get-tags)
+					       "Tag message")))
+  (notmuch-tag (notmuch-show-get-message-id) tag-changes)
+  (let* ((current-tags (notmuch-show-get-tags))
 	 (new-tags (notmuch-update-tags current-tags tag-changes)))
     (unless (equal current-tags new-tags)
       (notmuch-show-set-tags new-tags))))
 
-(defun notmuch-show-tag-all (&optional tag-changes)
+(defun notmuch-show-tag-all (tag-changes)
   "Change tags for all messages in the current show buffer.
 
 See `notmuch-tag' for information on the format of TAG-CHANGES."
-  (interactive)
-  (setq tag-changes (notmuch-tag (notmuch-show-get-messages-ids-search) tag-changes))
+  (interactive
+   (list (let (tags)
+	   (notmuch-show-mapc
+	    (lambda () (setq tags (append (notmuch-show-get-tags) tags))))
+	   (notmuch-read-tag-changes tags "Tag thread"))))
+  (notmuch-tag (notmuch-show-get-messages-ids-search) tag-changes)
   (notmuch-show-mapc
    (lambda ()
      (let* ((current-tags (notmuch-show-get-tags))
@@ -1817,15 +1831,21 @@ See `notmuch-tag' for information on the format of TAG-CHANGES."
        (unless (equal current-tags new-tags)
 	 (notmuch-show-set-tags new-tags))))))
 
-(defun notmuch-show-add-tag ()
-  "Same as `notmuch-show-tag' but sets initial input to '+'."
-  (interactive)
-  (notmuch-show-tag "+"))
+(defun notmuch-show-add-tag (tag-changes)
+  "Change tags for the current message (defaulting to add).
 
-(defun notmuch-show-remove-tag ()
-  "Same as `notmuch-show-tag' but sets initial input to '-'."
-  (interactive)
-  (notmuch-show-tag "-"))
+Same as `notmuch-show-tag' but sets initial input to '+'."
+  (interactive
+   (list (notmuch-read-tag-changes (notmuch-show-get-tags) "Tag message" "+")))
+  (notmuch-show-tag tag-changes))
+
+(defun notmuch-show-remove-tag (tag-changes)
+  "Change tags for the current message (defaulting to remove).
+
+Same as `notmuch-show-tag' but sets initial input to '-'."
+  (interactive
+   (list (notmuch-read-tag-changes (notmuch-show-get-tags) "Tag message" "-")))
+  (notmuch-show-tag tag-changes))
 
 (defun notmuch-show-toggle-visibility-headers ()
   "Toggle the visibility of the current message headers."
@@ -1845,8 +1865,11 @@ See `notmuch-tag' for information on the format of TAG-CHANGES."
      (not (plist-get props :message-visible))))
   (force-window-update))
 
+(put 'notmuch-show-open-or-close-all 'notmuch-doc "Show all messages.")
+(put 'notmuch-show-open-or-close-all 'notmuch-prefix-doc "Hide all messages.")
 (defun notmuch-show-open-or-close-all ()
   "Set the visibility all of the messages in the current thread.
+
 By default make all of the messages visible. With a prefix
 argument, hide all of the messages."
   (interactive)
@@ -1895,6 +1918,8 @@ search results instead."
   (interactive)
   (notmuch-show-next-thread t t))
 
+(put 'notmuch-show-archive-thread 'notmuch-prefix-doc
+     "Un-archive each message in thread.")
 (defun notmuch-show-archive-thread (&optional unarchive)
   "Archive each message in thread.
 
@@ -1924,6 +1949,8 @@ buffer."
   (notmuch-show-archive-thread)
   (notmuch-show-next-thread))
 
+(put 'notmuch-show-archive-message 'notmuch-prefix-doc
+     "Un-archive the current message.")
 (defun notmuch-show-archive-message (&optional unarchive)
   "Archive the current message.
 
@@ -1975,6 +2002,8 @@ thread from search."
   (interactive)
   (notmuch-common-do-stash (notmuch-show-get-from)))
 
+(put 'notmuch-show-stash-message-id 'notmuch-prefix-doc
+     "Copy thread: query matching current thread to kill-ring.")
 (defun notmuch-show-stash-message-id (&optional stash-thread-id)
   "Copy id: query matching the current message to kill-ring.
 
@@ -2069,8 +2098,16 @@ caller is responsible for killing this buffer as appropriate."
 This ensures that the temporary buffer created for the mm-handle
 is destroyed when FN returns."
   (let ((handle (notmuch-show-current-part-handle)))
+    ;; emacs 24.3+ puts stdout/stderr into the calling buffer so we
+    ;; call it from a temp-buffer, unless
+    ;; notmuch-show-attachment-debug is non-nil in which case we put
+    ;; it in " *notmuch-part*".
     (unwind-protect
-	(funcall fn handle)
+	(if notmuch-show-attachment-debug
+	    (with-current-buffer (generate-new-buffer " *notmuch-part*")
+	      (funcall fn handle))
+	  (with-temp-buffer
+	    (funcall fn handle)))
       (kill-buffer (mm-handle-buffer handle)))))
 
 (defun notmuch-show-part-button-default (&optional button)

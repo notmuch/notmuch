@@ -232,6 +232,11 @@ supported for \"Customized queries section\" items."
 	    notmuch-hello-query-section
 	    (function :tag "Custom section"))))
 
+(defcustom notmuch-hello-auto-refresh t
+  "Automatically refresh when returning to the notmuch-hello buffer."
+  :group 'notmuch-hello
+  :type 'boolean)
+
 (defvar notmuch-hello-hidden-sections nil
   "List of sections titles whose contents are hidden")
 
@@ -258,13 +263,11 @@ afterwards.")
     search))
 
 (defun notmuch-hello-search (&optional search)
-  (interactive)
   (unless (null search)
     (setq search (notmuch-hello-trim search))
     (let ((history-delete-duplicates t))
       (add-to-history 'notmuch-search-history search)))
-  (notmuch-search search notmuch-search-oldest-first nil nil
-		  #'notmuch-hello-search-continuation))
+  (notmuch-search search notmuch-search-oldest-first))
 
 (defun notmuch-hello-add-saved-search (widget)
   (interactive)
@@ -322,8 +325,7 @@ diagonal."
 (defun notmuch-hello-widget-search (widget &rest ignore)
   (notmuch-search (widget-get widget
 			      :notmuch-search-terms)
-		  notmuch-search-oldest-first
-		  nil nil #'notmuch-hello-search-continuation))
+		  notmuch-search-oldest-first))
 
 (defun notmuch-saved-search-count (search)
   (car (process-lines notmuch-command "count" search)))
@@ -476,34 +478,54 @@ Such a list can be computed with `notmuch-hello-query-counts'."
 
 (defimage notmuch-hello-logo ((:type png :file "notmuch-logo.png")))
 
-(defun notmuch-hello-search-continuation()
-  (notmuch-hello-update t))
-
 (defun notmuch-hello-update (&optional no-display)
   "Update the current notmuch view."
   ;; Lazy - rebuild everything.
-  (interactive)
   (notmuch-hello no-display))
 
-(defun notmuch-hello-poll-and-update ()
-  "Invoke `notmuch-poll' to import mail, then refresh the current view."
-  (interactive)
-  (notmuch-poll)
-  (notmuch-hello-update))
+(defun notmuch-hello-window-configuration-change ()
+  "Hook function to update the hello buffer when it is switched to."
+  (let ((hello-buf (get-buffer "*notmuch-hello*"))
+	(do-refresh nil))
+    ;; Consider all windows in the currently selected frame, since
+    ;; that's where the configuration change happened.  This also
+    ;; refreshes our snapshot of all windows, so we have to do this
+    ;; even if we know we won't refresh (e.g., hello-buf is null).
+    (dolist (window (window-list))
+      (let ((last-buf (window-parameter window 'notmuch-hello-last-buffer))
+	    (cur-buf (window-buffer window)))
+	(when (not (eq last-buf cur-buf))
+	  ;; This window changed or is new.  Update recorded buffer
+	  ;; for next time.
+	  (set-window-parameter window 'notmuch-hello-last-buffer cur-buf)
+	  (when (and (eq cur-buf hello-buf) last-buf)
+	    ;; The user just switched to hello in this window (hello
+	    ;; is currently visible, was not visible on the last
+	    ;; configuration change, and this is not a new window)
+	    (setq do-refresh t)))))
+    (when (and do-refresh notmuch-hello-auto-refresh)
+      ;; Refresh hello as soon as we get back to redisplay.  On Emacs
+      ;; 24, we can't do it right here because something in this
+      ;; hook's call stack overrides hello's point placement.
+      (run-at-time nil nil #'notmuch-hello t))
+    (when (null hello-buf)
+      ;; Clean up hook
+      (remove-hook 'window-configuration-change-hook
+		   #'notmuch-hello-window-configuration-change))))
 
 
 (defvar notmuch-hello-mode-map
-  (let ((map (make-sparse-keymap)))
-    (set-keymap-parent map widget-keymap)
+  (let ((map (if (fboundp 'make-composed-keymap)
+		 ;; Inherit both widget-keymap and notmuch-common-keymap
+		 (make-composed-keymap widget-keymap)
+	       ;; Before Emacs 24, keymaps didn't support multiple
+	       ;; inheritance,, so just copy the widget keymap since
+	       ;; it's unlikely to change.
+	       (copy-keymap widget-keymap))))
+    (set-keymap-parent map notmuch-common-keymap)
     (define-key map "v" (lambda () "Display the notmuch version" (interactive)
 			  (message "notmuch version %s" (notmuch-version))))
-    (define-key map "?" 'notmuch-help)
-    (define-key map "q" 'notmuch-kill-this-buffer)
-    (define-key map "=" 'notmuch-hello-update)
-    (define-key map "G" 'notmuch-hello-poll-and-update)
     (define-key map (kbd "<C-tab>") 'widget-backward)
-    (define-key map "m" 'notmuch-mua-new-mail)
-    (define-key map "s" 'notmuch-hello-search)
     map)
   "Keymap for \"notmuch hello\" buffers.")
 (fset 'notmuch-hello-mode-map notmuch-hello-mode-map)
@@ -516,6 +538,7 @@ Complete list of currently available key bindings:
 \\{notmuch-hello-mode-map}"
  (interactive)
  (kill-all-local-variables)
+ (setq notmuch-buffer-refresh-function #'notmuch-hello-update)
  (use-local-map notmuch-hello-mode-map)
  (setq major-mode 'notmuch-hello-mode
 	mode-name "notmuch-hello")
@@ -765,9 +788,17 @@ following:
   "Run notmuch and display saved searches, known tags, etc."
   (interactive)
 
-  (if no-display
-      (set-buffer "*notmuch-hello*")
-    (switch-to-buffer "*notmuch-hello*"))
+  ;; This may cause a window configuration change, so if the
+  ;; auto-refresh hook is already installed, avoid recursive refresh.
+  (let ((notmuch-hello-auto-refresh nil))
+    (if no-display
+	(set-buffer "*notmuch-hello*")
+      (switch-to-buffer "*notmuch-hello*")))
+
+  ;; Install auto-refresh hook
+  (when notmuch-hello-auto-refresh
+    (add-hook 'window-configuration-change-hook
+	      #'notmuch-hello-window-configuration-change))
 
   (let ((target-line (line-number-at-pos))
 	(target-column (current-column))

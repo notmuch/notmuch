@@ -704,7 +704,7 @@ _item_split (char *item, char **group, char **key)
 
     *group = item;
 
-    period = index (item, '.');
+    period = strchr (item, '.');
     if (period == NULL || *(period+1) == '\0') {
 	fprintf (stderr,
 		 "Invalid configuration name: %s\n"

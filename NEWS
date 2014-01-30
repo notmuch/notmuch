@@ -1,3 +1,178 @@
+Notmuch 0.17 (2013-12-30)
+=========================
+
+Incompatible change in SHA1 computation
+---------------------------------------
+
+Previously on big endian architectures like sparc and powerpc the
+computation of SHA1 hashes was incorrect. This meant that messages
+with overlong or missing message-ids were given different computed
+message-ids than on more common little endian architectures like i386
+and amd64.  If you use notmuch on a big endian architecture, you are
+strongly advised to make a backup of your tags using `notmuch dump`
+before this upgrade. You can locate the affected files using something
+like:
+
+    notmuch dump | \
+      awk '/^notmuch-sha1-[0-9a-f]{40} / \
+        {system("notmuch search --exclude=false --output=files id:" $1)}'
+
+Command-Line Interface
+----------------------
+
+New options to better support handling duplicate messages
+
+  If more than one message file is associated with a message-id,
+  `notmuch search --output=files` will print all of them. A new
+  `--duplicate=N` option can be used to specify which duplicate to
+  print for each message.
+
+  `notmuch count` now supports `--output=files` option to output the
+  number of files associated with matching messages. This may be
+  bigger than the number of matching messages due to duplicates
+  (i.e. multiple files having the same message-id).
+
+Improved `notmuch new` performance for unchanged folders
+
+  `notmuch new` now skips over unchanged folders more efficiently,
+  which can substantially improve the performance of checking for new
+  mail in some situations (like NFS-mounted Maildirs).
+
+`notmuch reply --format=text` RFC 2047-encodes headers
+
+  Previously, this used a mix of standard MIME encoding for the reply
+  body and UTF-8 for the headers.  Now, the text format reply template
+  RFC 2047-encodes the headers, making the output a valid RFC 2822
+  message.  The JSON/sexp format is unchanged.
+
+`notmuch compact` command
+
+  The new `compact` command exposes Xapian's compaction
+  functionality through a more convenient interface than
+  `xapian-compact`. `notmuch compact` will compact the database to a
+  temporary location, optionally backup the original database, and
+  move the compacted database into place.
+
+Emacs Interface
+---------------
+
+`notmuch-tree` (formerly `notmuch-pick`) has been added to mainline
+
+  `notmuch-tree` is a threaded message view for the emacs
+  interface. Each message is one line in the results and the thread
+  structure is shown using UTF-8 box drawing characters (similar to
+  Mutt's threaded view). It comes between search and show in terms of
+  amount of output and can be useful for viewing both single threads
+  and multiple threads.
+
+  Using `notmuch-tree`
+
+  The main key entries to notmuch tree are
+
+  'z' enter a query to view using notmuch tree (works in hello,
+      search, show and tree mode itself)
+
+  'Z' view the current query in tree notmuch tree (works from search
+      and show)
+
+  Once in tree mode, keybindings are mostly in line with the rest of
+  notmuch and are all viewable with '?' as usual.
+
+  Customising `notmuch-tree`
+
+  `notmuch-tree` has several customisation variables. The most
+  significant is the first notmuch-tree-show-out which determines the
+  behaviour when selecting a message (with RET) in tree view. By
+  default tree view uses a split window showing the single message in
+  the bottom pane. However, if this option is set then it views the
+  whole thread in the complete window jumping to the selected message
+  in the thread. In either case command-prefix selects the other option.
+
+Tagging threads in search is now race-free
+
+  Previously, adding or removing a tag from a thread in a search
+  buffer would affect messages that had arrived after the search was
+  performed, resulting in, for example, archiving messages that were
+  never seen.  Tagging now affects only the messages that were in the
+  thread when the search was performed.
+
+`notmuch-hello` refreshes when switching to the buffer
+
+  The hello buffer now refreshes whenever you switch to the buffer,
+  regardless of how you get there.  You can disable automatic
+  refreshing by customizing `notmuch-hello-auto-refresh`.
+
+Specific mini-buffer prompts for tagging operations
+
+  When entering tags to add or remove, the mini-buffer prompt now
+  indicates what operation will be performed (e.g., "Tag thread", "Tag
+  message", etc).
+
+Built-in help improvements
+
+  Documentation for many commands has been improved, as displayed by
+  `notmuch-help` (usually bound to "?").  The bindings listed by
+  `notmuch-help` also now include descriptions of prefixed commands.
+
+Quote replies as they are displayed in show view
+
+  We now render the parts for reply quoting the same way they are
+  rendered for show. At this time, the notable change is that replies
+  to text/calendar are now pretty instead of raw vcalendar.
+
+Fixed inconsistent use of configured search order
+
+  All ways of interactively invoking search now honor the value of
+  `notmuch-search-oldest-first`.
+
+Common keymap for notmuch-wide bindings
+
+  Several key bindings have been moved from mode-specific keymaps to
+  the single `notmuch-common-keymap`, which is inherited by each
+  notmuch mode.  If you've customized your key bindings, you may want
+  to move some of them to the common keymap.
+
+The `notmuch-tag` function now requires a list of tag changes
+
+  For users who have scripted the Emacs interface: the `notmuch-tag`
+  API has changed.  Previously, it accepted either a list of tag
+  changes or a space-separated string of tag changes.  The latter is
+  no longer supported and the function now returns nothing.
+
+Fixed `notmuch-reply` putting reply in primary selection
+
+  On emacs 24 notmuch-reply used to put the cited text into the
+  primary selection (which could lead to inadvertently pasting this
+  cited text elsewhere). Now the primary-selection is not changed.
+
+Fixed `notmuch-show` invisible part handling
+
+  In some obscure cases part buttons and invisibility had strange
+  interactions: in particular, the default action for some parts gave
+  the wrong action. This has been fixed.
+
+Fixed `notmuch-show` attachment viewers and stderr
+
+  In emacs 24.3+ viewing an attachment could cause spurious text to
+  appear in the show buffer (any stderr or stdout the viewer
+  produced). By default this output is now discarded. For debugging,
+  setting `notmuch-show-attachment-debug` causes notmuch to keep the
+  viewer's stderr and stdout in a separate buffer.
+
+Fixed `notmuch-mua-reply` point placement when signature involved
+
+  By restricting cursor movement to body section for cursor placement
+  after signature is inserted, the cursor cannot "leak" to header
+  section anymore. Now inserted citation content will definitely go to
+  the body part of the message.
+
+Vim Interface
+-------------
+
+  It is now possible to compose new messages in the Vim interface, as
+  opposed reply to existing messages.  There is also support for
+  going straight to a search (bypassing the folders view).
+
 Notmuch 0.16 (2013-08-03)
 =========================
 

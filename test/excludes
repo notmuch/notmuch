@@ -67,7 +67,7 @@ thread:XXX   2001-01-05 [1/2] Notmuch Test Suite; Not deleted reply (deleted inb
 test_begin_subtest "Search, don't exclude \"deleted\" messages when --exclude=flag specified"
 output=$(notmuch search --exclude=flag subject:deleted | notmuch_search_sanitize)
 test_expect_equal "$output" "thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; Not deleted (inbox unread)
-thread:XXX   2001-01-05 [1/2] Notmuch Test Suite; Not deleted reply (deleted inbox unread)"
+thread:XXX   2001-01-05 [1/2] Notmuch Test Suite; Deleted (deleted inbox unread)"
 
 test_begin_subtest "Search, don't exclude \"deleted\" messages from search if not configured"
 notmuch config set search.exclude_tags
@@ -152,7 +152,7 @@ ${matching_message_ids[5]}"
 test_begin_subtest "Search, exclude=flag (thread summary)"
 output=$(notmuch search --exclude=flag tag:test | notmuch_search_sanitize)
 test_expect_equal "$output" "thread:XXX   2001-01-05 [0/6] Notmuch Test Suite; All messages excluded: single match: reply 2 (deleted inbox test unread)
-thread:XXX   2001-01-05 [0/6] Notmuch Test Suite; All messages excluded: double match: reply 4 (deleted inbox test unread)
+thread:XXX   2001-01-05 [0/6] Notmuch Test Suite; All messages excluded: double match: reply 2 (deleted inbox test unread)
 thread:XXX   2001-01-05 [0/6] Notmuch Test Suite; Some messages excluded: single excluded match: reply 3 (deleted inbox test unread)
 thread:XXX   2001-01-05 [1/6] Notmuch Test Suite; Some messages excluded: single non-excluded match: reply 4 (deleted inbox test unread)
 thread:XXX   2001-01-05 [1/6] Notmuch Test Suite; No messages excluded: single match: reply 3 (inbox test unread)"

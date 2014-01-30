@@ -200,7 +200,9 @@ add_message '[subject]="This subject is exactly 200 bytes in length. Other than 
             '[body]="200-byte header"'
 output=$(notmuch reply  --reply-to=sender id:${gen_msg_id})
 test_expect_equal "$output" "From: Notmuch Test Suite <test_suite@notmuchmail.org>
-Subject: Re: This subject is exactly 200 bytes in length. Other than its length there is not much of note here. Note that the length of 200 bytes includes the Subject: and Re: prefixes with two spaces
+Subject: Re: This subject is exactly 200 bytes in length. Other than its
+ length there is not much of note here. Note that the length of 200 bytes
+ includes the Subject: and Re: prefixes with two spaces
 In-Reply-To: <${gen_msg_id}>
 References: <${gen_msg_id}>
 

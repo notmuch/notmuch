@@ -8,6 +8,7 @@ all:
 
 install:
 	$(INSTALL) $(CURDIR)/notmuch.vim $(D)$(prefix)/plugin/notmuch.vim
+	$(INSTALL) $(CURDIR)/notmuch.txt $(D)$(prefix)/doc/notmuch.txt
 	@$(foreach file,$(wildcard syntax/*), \
 		$(INSTALL) $(CURDIR)/$(file) $(D)$(prefix)/$(file);)
 

@@ -89,6 +89,7 @@ typedef struct notmuch_show_params {
     notmuch_bool_t raw;
     int part;
     notmuch_crypto_t crypto;
+    notmuch_bool_t include_html;
 } notmuch_show_params_t;
 
 /* There's no point in continuing when we've detected that we've done
@@ -137,10 +138,16 @@ chomp_newline (char *str)
  * this.  New (required) map fields can be added without increasing
  * this.
  */
-#define NOTMUCH_FORMAT_CUR 1
+#define NOTMUCH_FORMAT_CUR 2
 /* The minimum supported structured output format version.  Requests
  * for format versions below this will return an error. */
 #define NOTMUCH_FORMAT_MIN 1
+/* The minimum non-deprecated structured output format version.
+ * Requests for format versions below this will print a stern warning.
+ * Must be between NOTMUCH_FORMAT_MIN and NOTMUCH_FORMAT_CUR,
+ * inclusive.
+ */
+#define NOTMUCH_FORMAT_MIN_ACTIVE 1
 
 /* The output format version requested by the caller on the command
  * line.  If no format version is requested, this will be set to
@@ -203,6 +210,9 @@ notmuch_tag_command (notmuch_config_t *config, int argc, char *argv[]);
 int
 notmuch_config_command (notmuch_config_t *config, int argc, char *argv[]);
 
+int
+notmuch_compact_command (notmuch_config_t *config, int argc, char *argv[]);
+
 const char *
 notmuch_time_relative_date (const void *ctx, time_t then);
 
@@ -220,7 +230,8 @@ show_one_part (const char *filename, int part);
 
 void
 format_part_sprinter (const void *ctx, struct sprinter *sp, mime_node_t *node,
-		      notmuch_bool_t first, notmuch_bool_t output_body);
+		      notmuch_bool_t first, notmuch_bool_t output_body,
+		      notmuch_bool_t include_html);
 
 void
 format_headers_sprinter (struct sprinter *sp, GMimeMessage *message,

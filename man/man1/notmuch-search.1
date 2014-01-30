@@ -1,4 +1,4 @@
-.TH NOTMUCH-SEARCH 1 2013-08-03 "Notmuch 0.16"
+.TH NOTMUCH-SEARCH 1 2013-12-30 "Notmuch 0.17"
 .SH NAME
 notmuch-search \- search for messages matching the given search terms
 .SH SYNOPSIS
@@ -80,6 +80,10 @@ Output the filenames of all messages matching the search terms, either
 one per line (\-\-format=text), separated by null characters
 (\-\-format=text0), as a JSON array (\-\-format=json), or as an
 S-Expression list (\-\-format=sexp).
+
+Note that each message may have multiple filenames associated with it.
+All of them are included in the output, unless limited with the
+\-\-duplicate=N option.
 .RE
 .RS 4
 .TP 4
@@ -156,6 +160,22 @@ The output is almost identical to
 .BR false ,
 but the "match count" is the number of matching non-excluded messages in the
 thread, rather than the number of matching messages.
+.RE
+
+.RS 4
+.TP 4
+.BR \-\-duplicate=N
+
+Effective with
+.BR --output=files ,
+output the Nth filename associated with each message matching the
+query (N is 1-based). If N is greater than the number of files
+associated with the message, don't print anything.
+
+Note that this option is orthogonal with the
+.BR folder:
+search prefix. The prefix matches messages based on filenames. This
+option filters filenames of the matching messages.
 .RE
 
 .SH EXIT STATUS

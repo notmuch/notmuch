@@ -80,7 +80,7 @@ notmuch_query_create (notmuch_database_t *notmuch,
     if (_debug_query ())
 	fprintf (stderr, "Query string is:\n%s\n", query_string);
 
-    query = talloc (NULL, notmuch_query_t);
+    query = talloc (notmuch, notmuch_query_t);
     if (unlikely (query == NULL))
 	return NULL;
 

@@ -18,8 +18,6 @@ use Mail::Box::Maildir;
 use Pod::Usage;
 use String::ShellQuote;
 use Term::ReadLine;
-use Digest::SHA;
-use File::Which;
 
 
 my $xdg_cache_dir = "$ENV{HOME}/.cache";
@@ -36,65 +34,22 @@ sub empty_maildir($) {
     $folder->close();
 }
 
-# Match files by size and SHA-256; then delete duplicates
-sub builtin_remove_dups($) {
-    my ($maildir) = @_;
-    my (%size_to_files, %sha_to_files);
-
-    # Group files by matching sizes
-    foreach my $file (glob("$maildir/cur/*")) {
-        my $size = -s $file;
-        push(@{$size_to_files{$size}}, $file) if $size;
-    }
-
-    foreach my $same_size_files (values %size_to_files) {
-        # Don't run sha unless there is another file of the same size
-        next if scalar(@$same_size_files) < 2;
-        %sha_to_files = ();
-
-        # Group files with matching sizes by SHA-256
-        foreach my $file (@$same_size_files) {
-            open(my $fh, '<', $file) or next;
-            binmode($fh);
-            my $sha256hash = Digest::SHA->new(256)->addfile($fh)->hexdigest;
-            close($fh);
-
-            push(@{$sha_to_files{$sha256hash}}, $file);
-        }
-
-        # Remove duplicates
-        foreach my $same_sha_files (values %sha_to_files) {
-            next if scalar(@$same_sha_files) < 2;
-            unlink(@{$same_sha_files}[1..$#$same_sha_files]);
-        }
-    }
-}
-
-# Use either fdupes or the built-in scanner to detect and remove duplicate
-# search results in the maildir
-sub remove_duplicates($) {
-    my ($maildir) = @_;
-
-    my $fdupes = which("fdupes");
-    if ($fdupes) {
-      system("$fdupes --hardlinks --symlinks --delete --noprompt"
-             . " --quiet $maildir/cur/ > /dev/null");
-    } else {
-        builtin_remove_dups($maildir);
-    }
-}
-
 # search($maildir, $remove_dups, $query)
 # search mails according to $query with notmuch; store results in $maildir
 sub search($$$) {
     my ($maildir, $remove_dups, $query) = @_;
+    my $dup_option = "";
+
     $query = shell_quote($query);
 
+    if ($remove_dups) {
+      $dup_option = "--duplicate=1";
+    }
+
     empty_maildir($maildir);
-    system("notmuch search --output=files $query"
+    system("notmuch search --output=files $dup_option $query"
 	   . " | sed -e 's: :\\\\ :g'"
 	   . " | xargs --no-run-if-empty ln -s -t $maildir/cur/");
-    remove_duplicates($maildir) if ($remove_dups);
 }
 
 sub prompt($$) {
@@ -158,9 +113,7 @@ sub tag_action(@) {
     my $mid = get_message_id();
     defined $mid or die "notmuch-mutt: cannot find Message-Id, abort.\n";
 
-    system("notmuch tag "
-	   . shell_quote(join(' ', @_))
-	   . " id:$mid");
+    system("notmuch", "tag", @_, "--", "id:$mid");
 }
 
 sub die_usage() {
@@ -252,7 +205,10 @@ Instead of using command line search terms, prompt the user for them (only for
 
 =item --remove-dups
 
-Remove duplicates from search results.
+Remove emails with duplicate message-ids from search results.  (Passes
+--duplicate=1 to notmuch search command.)  Note this can hide search
+results if an email accidentally or maliciously uses the same message-id
+as a different email.
 
 =item -h
 

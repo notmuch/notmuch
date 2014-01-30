@@ -1,9 +1,58 @@
+notmuch (0.17-3) unstable; urgency=medium
+
+  * update notmuch-emacs for debian emacs policy 2.0.6
+  * Update emacs test suite for Hurd compatibility
+
+ -- David Bremner <bremner@debian.org>  Sun, 12 Jan 2014 17:07:16 -0400
+
+notmuch (0.17-2) unstable; urgency=medium
+
+  * Bug fix: "package should warn in a NEWS.Debian file about possible
+    pre-upgrade action", thanks to Jonas Smedegaard (Closes: #733853).
+
+ -- David Bremner <bremner@debian.org>  Wed, 01 Jan 2014 07:44:25 -0400
+
+notmuch (0.17-1) unstable; urgency=low
+
+  * New upstream feature release. See /usr/share/doc/notmuch/NEWS.gz
+    for details.  Highlights include:
+    - notmuch compact command (Closes: #720543).
+    - emacs "tree" view
+  * Remove madduck from uploaders (Closes: #719100).
+
+ -- David Bremner <bremner@debian.org>  Mon, 30 Dec 2013 20:28:20 -0400
+
+notmuch (0.17~rc4-1) experimental; urgency=low
+
+  * New upstream release candidate
+
+ -- David Bremner <bremner@debian.org>  Sat, 28 Dec 2013 18:30:06 -0400
+
+notmuch (0.17~rc3-1) experimental; urgency=low
+
+  * New upstream release candidate
+
+ -- David Bremner <bremner@debian.org>  Sat, 07 Dec 2013 17:05:11 +0800
+
+notmuch (0.17~rc2-1) experimental; urgency=low
+
+  * New upstream release candidate
+  * Remove gdb as build-dep on s390x. This implicitly disables failing
+    atomicity test.  For more information, see #728705
+
+ -- David Bremner <bremner@debian.org>  Sun, 24 Nov 2013 19:34:28 -0400
+
+notmuch (0.17~rc1-1) experimental; urgency=low
+
+  * New upstream release candidate
+
+ -- David Bremner <bremner@debian.org>  Wed, 20 Nov 2013 19:27:48 -0400
+
 notmuch (0.16-1~bpo70+1) wheezy-backports; urgency=low
 
   * Rebuild for wheezy-backports.
 
  -- David Bremner <bremner@debian.org>  Sun, 01 Sep 2013 19:04:32 -0300
-
 notmuch (0.16-1) unstable; urgency=low
 
   * New upstream feature release

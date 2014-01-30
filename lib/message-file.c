@@ -228,7 +228,7 @@ notmuch_message_file_get_header (notmuch_message_file_t *message,
     is_received = (strcmp(header_desired,"received") == 0);
 
     if (! initialized) {
-	g_mime_init (0);
+	g_mime_init (GMIME_ENABLE_RFC2047_WORKAROUNDS);
 	initialized = 1;
     }
 

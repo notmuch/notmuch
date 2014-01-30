@@ -323,6 +323,35 @@ add_files (notmuch_database_t *notmuch,
     }
     db_mtime = directory ? notmuch_directory_get_mtime (directory) : 0;
 
+    /* If the directory is unchanged from our last scan and has no
+     * sub-directories, then return without scanning it at all.  In
+     * some situations, skipping the scan can substantially reduce the
+     * cost of notmuch new, especially since the huge numbers of files
+     * in Maildirs make scans expensive, but all files live in leaf
+     * directories.
+     *
+     * To check for sub-directories, we borrow a trick from find,
+     * kpathsea, and many other UNIX tools: since a directory's link
+     * count is the number of sub-directories (specifically, their
+     * '..' entries) plus 2 (the link from the parent and the link for
+     * '.').  This check is safe even on weird file systems, since
+     * file systems that can't compute this will return 0 or 1.  This
+     * is safe even on *really* weird file systems like HFS+ that
+     * mistakenly return the total number of directory entries, since
+     * that only inflates the count beyond 2.
+     */
+    if (directory && fs_mtime == db_mtime && st.st_nlink == 2) {
+	/* There's one catch: pass 1 below considers symlinks to
+	 * directories to be directories, but these don't increase the
+	 * file system link count.  So, only bail early if the
+	 * database agrees that there are no sub-directories. */
+	db_subdirs = notmuch_directory_get_child_directories (directory);
+	if (!notmuch_filenames_valid (db_subdirs))
+	    goto DONE;
+	notmuch_filenames_destroy (db_subdirs);
+	db_subdirs = NULL;
+    }
+
     /* If the database knows about this directory, then we sort based
      * on strcmp to match the database sorting. Otherwise, we can do
      * inode-based sorting for faster filesystem operation. */

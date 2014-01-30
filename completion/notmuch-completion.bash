@@ -59,6 +59,29 @@ _notmuch_search_terms()
     __ltrim_colon_completions "${cur}"
 }
 
+_notmuch_compact()
+{
+    local cur prev words cword split
+    _init_completion -s || return
+
+    $split &&
+    case "${prev}" in
+	--backup)
+	    _filedir
+	    return
+	    ;;
+    esac
+
+    ! $split &&
+    case "${cur}" in
+	-*)
+	    local options="--backup= --quiet"
+	    compopt -o nospace
+	    COMPREPLY=( $(compgen -W "$options" -- ${cur}) )
+	    ;;
+    esac
+}
+
 _notmuch_config()
 {
     local cur prev words cword split
@@ -89,11 +112,15 @@ _notmuch_count()
     $split &&
     case "${prev}" in
 	--output)
-	    COMPREPLY=( $( compgen -W "messages threads" -- "${cur}" ) )
+	    COMPREPLY=( $( compgen -W "messages threads files" -- "${cur}" ) )
 	    return
 	    ;;
 	--exclude)
 	    COMPREPLY=( $( compgen -W "true false" -- "${cur}" ) )
+	    return
+	    ;;
+	--input)
+	    _filedir
 	    return
 	    ;;
     esac
@@ -101,7 +128,7 @@ _notmuch_count()
     ! $split &&
     case "${cur}" in
 	-*)
-	    local options="--output= --exclude="
+	    local options="--output= --exclude= --batch --input="
 	    compopt -o nospace
 	    COMPREPLY=( $(compgen -W "$options" -- ${cur}) )
 	    ;;
@@ -139,6 +166,39 @@ _notmuch_dump()
 	    _notmuch_search_terms
 	    ;;
     esac
+}
+
+_notmuch_insert()
+{
+    local cur prev words cword split
+    # handle tags with colons and equal signs
+    _init_completion -s -n := || return
+
+    $split &&
+    case "${prev}" in
+	--folder)
+	    _filedir
+	    return
+	    ;;
+    esac
+
+    ! $split &&
+    case "${cur}" in
+	--*)
+	    local options="--create-folder --folder="
+	    compopt -o nospace
+	    COMPREPLY=( $(compgen -W "$options" -- ${cur}) )
+	    return
+	    ;;
+	+*)
+	    COMPREPLY=( $(compgen -P "+" -W "`notmuch search --output=tags \*`" -- ${cur##+}) )
+	    ;;
+	-*)
+	    COMPREPLY=( $(compgen -P "-" -W "`notmuch search --output=tags \*`" -- ${cur##-}) )
+	    ;;
+    esac
+    # handle tags with colons
+    __ltrim_colon_completions "${cur}"
 }
 
 _notmuch_new()
@@ -231,7 +291,7 @@ _notmuch_search()
 	    return
 	    ;;
 	--exclude)
-	    COMPREPLY=( $( compgen -W "true false flag" -- "${cur}" ) )
+	    COMPREPLY=( $( compgen -W "true false flag all" -- "${cur}" ) )
 	    return
 	    ;;
     esac
@@ -239,7 +299,7 @@ _notmuch_search()
     ! $split &&
     case "${cur}" in
 	-*)
-	    local options="--format= --output= --sort= --offset= --limit= --exclude="
+	    local options="--format= --output= --sort= --offset= --limit= --exclude= --duplicate="
 	    compopt -o nospace
 	    COMPREPLY=( $(compgen -W "$options" -- ${cur}) )
 	    ;;
@@ -273,7 +333,7 @@ _notmuch_show()
     ! $split &&
     case "${cur}" in
 	-*)
-	    local options="--entire-thread= --format= --exclude= --body= --format-version= --part= --verify --decrypt"
+	    local options="--entire-thread= --format= --exclude= --body= --format-version= --part= --verify --decrypt --include-html"
 	    compopt -o nospace
 	    COMPREPLY=( $(compgen -W "$options" -- ${cur}) )
 	    ;;
@@ -287,9 +347,24 @@ _notmuch_tag()
 {
     local cur prev words cword split
     # handle tags with colons and equal signs
-    _init_completion -n := || return
+    _init_completion -s -n := || return
 
+    $split &&
+    case "${prev}" in
+	--input)
+	    _filedir
+	    return
+	    ;;
+    esac
+
+    ! $split &&
     case "${cur}" in
+	--*)
+	    local options="--batch --input= --remove-all"
+	    compopt -o nospace
+	    COMPREPLY=( $(compgen -W "$options" -- ${cur}) )
+	    return
+	    ;;
 	+*)
 	    COMPREPLY=( $(compgen -P "+" -W "`notmuch search --output=tags \*`" -- ${cur##+}) )
 	    ;;
@@ -307,7 +382,7 @@ _notmuch_tag()
 
 _notmuch()
 {
-    local _notmuch_commands="config count dump help new reply restore search setup show tag"
+    local _notmuch_commands="compact config count dump help insert new reply restore search setup show tag"
     local arg cur prev words cword split
     _init_completion || return
 

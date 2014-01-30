@@ -1,4 +1,4 @@
-if exists("g:loaded_notmuch_rb")
+if exists("g:loaded_notmuch")
 	finish
 endif
 
@@ -6,15 +6,16 @@ if !has("ruby") || version < 700
 	finish
 endif
 
-let g:loaded_notmuch_rb = "yep"
+let g:loaded_notmuch = "yep"
 
-let g:notmuch_rb_folders_maps = {
+let g:notmuch_folders_maps = {
 	\ '<Enter>':	'folders_show_search()',
 	\ 's':		'folders_search_prompt()',
 	\ '=':		'folders_refresh()',
+	\ 'c':		'compose()',
 	\ }
 
-let g:notmuch_rb_search_maps = {
+let g:notmuch_search_maps = {
 	\ 'q':		'kill_this_buffer()',
 	\ '<Enter>':	'search_show_thread(1)',
 	\ '<Space>':	'search_show_thread(2)',
@@ -24,9 +25,10 @@ let g:notmuch_rb_search_maps = {
 	\ 's':		'search_search_prompt()',
 	\ '=':		'search_refresh()',
 	\ '?':		'search_info()',
+	\ 'c':		'compose()',
 	\ }
 
-let g:notmuch_rb_show_maps = {
+let g:notmuch_show_maps = {
 	\ 'q':		'kill_this_buffer()',
 	\ 'A':		'show_tag("-inbox -unread")',
 	\ 'I':		'show_tag("-unread")',
@@ -34,56 +36,38 @@ let g:notmuch_rb_show_maps = {
 	\ 'o':		'show_open_msg()',
 	\ 'e':		'show_extract_msg()',
 	\ 's':		'show_save_msg()',
+	\ 'p':		'show_save_patches()',
 	\ 'r':		'show_reply()',
 	\ '?':		'show_info()',
 	\ '<Tab>':	'show_next_msg()',
+	\ 'c':		'compose()',
 	\ }
 
-let g:notmuch_rb_compose_maps = {
+let g:notmuch_compose_maps = {
 	\ ',s':		'compose_send()',
 	\ ',q':		'compose_quit()',
 	\ }
 
-let s:notmuch_rb_folders_default = [
+let s:notmuch_folders_default = [
 	\ [ 'new', 'tag:inbox and tag:unread' ],
 	\ [ 'inbox', 'tag:inbox' ],
 	\ [ 'unread', 'tag:unread' ],
 	\ ]
 
-let s:notmuch_rb_date_format_default = '%d.%m.%y'
-let s:notmuch_rb_datetime_format_default = '%d.%m.%y %H:%M:%S'
-let s:notmuch_rb_reader_default = 'xfce4-terminal -e "mutt -f %s"'
-let s:notmuch_rb_sendmail_default = 'sendmail'
-let s:notmuch_rb_folders_count_threads_default = 0
-
-if !exists('g:notmuch_rb_date_format')
-	let g:notmuch_rb_date_format = s:notmuch_rb_date_format_default
-endif
-
-if !exists('g:notmuch_rb_datetime_format')
-	let g:notmuch_rb_datetime_format = s:notmuch_rb_datetime_format_default
-endif
-
-if !exists('g:notmuch_rb_reader')
-	let g:notmuch_rb_reader = s:notmuch_rb_reader_default
-endif
-
-if !exists('g:notmuch_rb_sendmail')
-	let g:notmuch_rb_sendmail = s:notmuch_rb_sendmail_default
-endif
-
-if !exists('g:notmuch_rb_folders_count_threads')
-	let g:notmuch_rb_folders_count_threads = s:notmuch_rb_folders_count_threads_default
-endif
+let s:notmuch_date_format_default = '%d.%m.%y'
+let s:notmuch_datetime_format_default = '%d.%m.%y %H:%M:%S'
+let s:notmuch_reader_default = 'mutt -f %s'
+let s:notmuch_sendmail_default = 'sendmail'
+let s:notmuch_folders_count_threads_default = 0
 
 function! s:new_file_buffer(type, fname)
 	exec printf('edit %s', a:fname)
 	execute printf('set filetype=notmuch-%s', a:type)
 	execute printf('set syntax=notmuch-%s', a:type)
-	ruby $buf_queue.push($curbuf.number)
+	ruby $curbuf.init(VIM::evaluate('a:type'))
 endfunction
 
-function! s:compose_unload()
+function! s:on_compose_delete()
 	if b:compose_done
 		return
 	endif
@@ -141,8 +125,16 @@ endfunction
 function! s:show_reply()
 	ruby open_reply get_message.mail
 	let b:compose_done = 0
-	call s:set_map(g:notmuch_rb_compose_maps)
-	autocmd BufUnload <buffer> call s:compose_unload()
+	call s:set_map(g:notmuch_compose_maps)
+	autocmd BufDelete <buffer> call s:on_compose_delete()
+	startinsert!
+endfunction
+
+function! s:compose()
+	ruby open_compose
+	let b:compose_done = 0
+	call s:set_map(g:notmuch_compose_maps)
+	autocmd BufDelete <buffer> call s:on_compose_delete()
 	startinsert!
 endfunction
 
@@ -166,7 +158,7 @@ function! s:show_open_msg()
 ruby << EOF
 	m = get_message
 	mbox = File.expand_path('~/.notmuch/vim_mbox')
-	cmd = VIM::evaluate('g:notmuch_rb_reader') % mbox
+	cmd = VIM::evaluate('g:notmuch_reader') % mbox
 	system "notmuch show --format=mbox id:#{m.message_id} > #{mbox} && #{cmd}"
 EOF
 endfunction
@@ -177,6 +169,20 @@ ruby << EOF
 	file = VIM::evaluate('file')
 	m = get_message
 	system "notmuch show --format=mbox id:#{m.message_id} > #{file}"
+EOF
+endfunction
+
+function! s:show_save_patches()
+ruby << EOF
+	q = $curbuf.query($cur_thread)
+	t = q.search_threads.first
+	n = 0
+	t.toplevel_messages.first.replies.each do |m|
+		next if not m['subject'] =~ /^\[PATCH.*\]/
+		file = "%04d.patch" % [n += 1]
+		system "notmuch show --format=mbox id:#{m.message_id} > #{file}"
+	end
+	vim_puts "Saved #{n} patches"
 EOF
 endfunction
 
@@ -192,9 +198,13 @@ endfunction
 
 function! s:search_search_prompt()
 	let text = input('Search: ')
+	if text == ""
+	  return
+	endif
 	setlocal modifiable
 ruby << EOF
 	$cur_search = VIM::evaluate('text')
+	$curbuf.reopen
 	search_render($cur_search)
 EOF
 	setlocal nomodifiable
@@ -206,6 +216,7 @@ endfunction
 
 function! s:search_refresh()
 	setlocal modifiable
+	ruby $curbuf.reopen
 	ruby search_render($cur_search)
 	setlocal nomodifiable
 endfunction
@@ -218,7 +229,6 @@ function! s:search_tag(intags)
 	endif
 	ruby do_tag(get_thread_id, VIM::evaluate('l:tags'))
 	norm j
-	call s:search_refresh()
 endfunction
 
 function! s:folders_search_prompt()
@@ -228,6 +238,7 @@ endfunction
 
 function! s:folders_refresh()
 	setlocal modifiable
+	ruby $curbuf.reopen
 	ruby folders_render()
 	setlocal nomodifiable
 endfunction
@@ -255,11 +266,9 @@ function! s:show_next_thread()
 endfunction
 
 function! s:kill_this_buffer()
-	bdelete!
 ruby << EOF
-	$buf_queue.pop
-	b = $buf_queue.last
-	VIM::command("buffer #{b}") if b
+	$curbuf.close
+	VIM::command("bdelete!")
 EOF
 endfunction
 
@@ -277,7 +286,7 @@ function! s:new_buffer(type)
 	keepjumps 0d
 	execute printf('set filetype=notmuch-%s', a:type)
 	execute printf('set syntax=notmuch-%s', a:type)
-	ruby $buf_queue.push($curbuf.number)
+	ruby $curbuf.init(VIM::evaluate('a:type'))
 endfunction
 
 function! s:set_menu_buffer()
@@ -296,33 +305,31 @@ ruby << EOF
 	$cur_thread = thread_id
 	$messages.clear
 	$curbuf.render do |b|
-		do_read do |db|
-			q = db.query(get_cur_view)
-			q.sort = 0
-			msgs = q.search_messages
-			msgs.each do |msg|
-				m = Mail.read(msg.filename)
-				part = m.find_first_text
-				nm_m = Message.new(msg, m)
-				$messages << nm_m
-				date_fmt = VIM::evaluate('g:notmuch_rb_datetime_format')
-				date = Time.at(msg.date).strftime(date_fmt)
-				nm_m.start = b.count
-				b << "%s %s (%s)" % [msg['from'], date, msg.tags]
-				b << "Subject: %s" % [msg['subject']]
-				b << "To: %s" % m['to']
-				b << "Cc: %s" % m['cc']
-				b << "Date: %s" % m['date']
-				nm_m.body_start = b.count
-				b << "--- %s ---" % part.mime_type
-				part.convert.each_line do |l|
-					b << l.chomp
-				end
-				b << ""
-				nm_m.end = b.count
+		q = $curbuf.query(get_cur_view)
+		q.sort = Notmuch::SORT_OLDEST_FIRST
+		msgs = q.search_messages
+		msgs.each do |msg|
+			m = Mail.read(msg.filename)
+			part = m.find_first_text
+			nm_m = Message.new(msg, m)
+			$messages << nm_m
+			date_fmt = VIM::evaluate('g:notmuch_datetime_format')
+			date = Time.at(msg.date).strftime(date_fmt)
+			nm_m.start = b.count
+			b << "%s %s (%s)" % [msg['from'], date, msg.tags]
+			b << "Subject: %s" % [msg['subject']]
+			b << "To: %s" % msg['to']
+			b << "Cc: %s" % msg['cc']
+			b << "Date: %s" % msg['date']
+			nm_m.body_start = b.count
+			b << "--- %s ---" % part.mime_type
+			part.convert.each_line do |l|
+				b << l.chomp
 			end
-			b.delete(b.count)
+			b << ""
+			nm_m.end = b.count
 		end
+		b.delete(b.count)
 	end
 	$messages.each_with_index do |msg, i|
 		VIM::command("syntax region nmShowMsg#{i}Desc start='\\%%%il' end='\\%%%il' contains=@nmShowMsgDesc" % [msg.start, msg.start + 1])
@@ -331,7 +338,7 @@ ruby << EOF
 	end
 EOF
 	setlocal nomodifiable
-	call s:set_map(g:notmuch_rb_show_maps)
+	call s:set_map(g:notmuch_show_maps)
 endfunction
 
 function! s:search_show_thread(mode)
@@ -354,7 +361,7 @@ ruby << EOF
 	search_render($cur_search)
 EOF
 	call s:set_menu_buffer()
-	call s:set_map(g:notmuch_rb_search_maps)
+	call s:set_map(g:notmuch_search_maps)
 	autocmd CursorMoved <buffer> call s:show_cursor_moved()
 endfunction
 
@@ -370,46 +377,93 @@ function! s:folders()
 	call s:new_buffer('folders')
 	ruby folders_render()
 	call s:set_menu_buffer()
-	call s:set_map(g:notmuch_rb_folders_maps)
+	call s:set_map(g:notmuch_folders_maps)
 endfunction
 
 "" root
 
 function! s:set_defaults()
-	if exists('g:notmuch_rb_custom_search_maps')
-		call extend(g:notmuch_rb_search_maps, g:notmuch_rb_custom_search_maps)
-	endif
-
-	if exists('g:notmuch_rb_custom_show_maps')
-		call extend(g:notmuch_rb_show_maps, g:notmuch_rb_custom_show_maps)
-	endif
-
-	" TODO for now lets check the old folders too
-	if !exists('g:notmuch_rb_folders')
-		if exists('g:notmuch_folders')
-			let g:notmuch_rb_folders = g:notmuch_folders
+	if !exists('g:notmuch_date_format')
+		if exists('g:notmuch_rb_date_format')
+			let g:notmuch_date_format = g:notmuch_rb_date_format
 		else
-			let g:notmuch_rb_folders = s:notmuch_rb_folders_default
+			let g:notmuch_date_format = s:notmuch_date_format_default
+		endif
+	endif
+
+	if !exists('g:notmuch_datetime_format')
+		if exists('g:notmuch_rb_datetime_format')
+			let g:notmuch_datetime_format = g:notmuch_rb_datetime_format
+		else
+			let g:notmuch_datetime_format = s:notmuch_datetime_format_default
+		endif
+	endif
+
+	if !exists('g:notmuch_reader')
+		if exists('g:notmuch_rb_reader')
+			let g:notmuch_reader = g:notmuch_rb_reader
+		else
+			let g:notmuch_reader = s:notmuch_reader_default
+		endif
+	endif
+
+	if !exists('g:notmuch_sendmail')
+		if exists('g:notmuch_rb_sendmail')
+			let g:notmuch_sendmail = g:notmuch_rb_sendmail
+		else
+			let g:notmuch_sendmail = s:notmuch_sendmail_default
+		endif
+	endif
+
+	if !exists('g:notmuch_folders_count_threads')
+		if exists('g:notmuch_rb_count_threads')
+			let g:notmuch_count_threads = g:notmuch_rb_count_threads
+		else
+			let g:notmuch_folders_count_threads = s:notmuch_folders_count_threads_default
+		endif
+	endif
+
+	if !exists('g:notmuch_custom_search_maps') && exists('g:notmuch_rb_custom_search_maps')
+		let g:notmuch_custom_search_maps = g:notmuch_rb_custom_search_maps
+	endif
+
+	if !exists('g:notmuch_custom_show_maps') && exists('g:notmuch_rb_custom_show_maps')
+		let g:notmuch_custom_show_maps = g:notmuch_rb_custom_show_maps
+	endif
+
+	if exists('g:notmuch_custom_search_maps')
+		call extend(g:notmuch_search_maps, g:notmuch_custom_search_maps)
+	endif
+
+	if exists('g:notmuch_custom_show_maps')
+		call extend(g:notmuch_show_maps, g:notmuch_custom_show_maps)
+	endif
+
+	if !exists('g:notmuch_folders')
+		if exists('g:notmuch_rb_folders')
+			let g:notmuch_folders = g:notmuch_rb_folders
+		else
+			let g:notmuch_folders = s:notmuch_folders_default
 		endif
 	endif
 endfunction
 
-function! s:NotMuch()
+function! s:NotMuch(...)
 	call s:set_defaults()
 
 ruby << EOF
 	require 'notmuch'
 	require 'rubygems'
 	require 'tempfile'
+	require 'socket'
 	begin
 		require 'mail'
 	rescue LoadError
 	end
 
 	$db_name = nil
-	$email_address = nil
+	$email = $email_name = $email_address = nil
 	$searches = []
-	$buf_queue = []
 	$threads = []
 	$messages = []
 	$config = {}
@@ -432,7 +486,9 @@ ruby << EOF
 		end
 
 		$db_name = $config['database.path']
-		$email_address = "%s <%s>" % [$config['user.name'], $config['user.primary_email']]
+		$email_name = $config['user.name']
+		$email_address = $config['user.primary_email']
+		$email = "%s <%s>" % [$email_name, $email_address]
 	end
 
 	def vim_puts(s)
@@ -470,75 +526,26 @@ ruby << EOF
 		end
 	end
 
-	def do_write
-		db = Notmuch::Database.new($db_name, :mode => Notmuch::MODE_READ_WRITE)
-		begin
-			yield db
-		ensure
-			db.close
-		end
+	def generate_message_id
+		t = Time.now
+		random_tag = sprintf('%x%x_%x%x%x',
+			t.to_i, t.tv_usec,
+			$$, Thread.current.object_id.abs, rand(255))
+		return "<#{random_tag}@#{Socket.gethostname}.notmuch>"
 	end
 
-	def do_read
-		db = Notmuch::Database.new($db_name)
-		begin
-			yield db
-		ensure
-			db.close
-		end
-	end
-
-	def open_reply(orig)
+	def open_compose_helper(lines, cur)
 		help_lines = [
 			'Notmuch-Help: Type in your message here; to help you use these bindings:',
 			'Notmuch-Help:   ,s    - send the message (Notmuch-Help lines will be removed)',
 			'Notmuch-Help:   ,q    - abort the message',
 			]
-		reply = orig.reply do |m|
-			# fix headers
-			if not m[:reply_to]
-				m.to = [orig[:from].to_s, orig[:to].to_s]
-			end
-			m.cc = orig[:cc]
-			m.from = $email_address
-			m.charset = 'utf-8'
-			m.content_transfer_encoding = '7bit'
-		end
 
 		dir = File.expand_path('~/.notmuch/compose')
 		FileUtils.mkdir_p(dir)
 		Tempfile.open(['nm-', '.mail'], dir) do |f|
-			lines = []
-
-			lines += help_lines
-			lines << ''
-
-			body_lines = []
-			if $mail_installed
-				addr = Mail::Address.new(orig[:from].value)
-				name = addr.name
-				name = addr.local + "@" if name.nil? && !addr.local.nil?
-			else
-				name = orig[:from]
-			end
-			name = "somebody" if name.nil?
-
-			body_lines << "%s wrote:" % name
-			part = orig.find_first_text
-			part.convert.each_line do |l|
-				body_lines << "> %s" % l.chomp
-			end
-			body_lines << ""
-			body_lines << ""
-			body_lines << ""
-
-			reply.body = body_lines.join("\n")
-
-			lines += reply.to_s.lines.map { |e| e.chomp }
-			lines << ""
-
-			old_count = lines.count - 1
-
+			f.puts(help_lines)
+			f.puts
 			f.puts(lines)
 
 			sig_file = File.expand_path('~/.signature')
@@ -549,32 +556,98 @@ ruby << EOF
 
 			f.flush
 
-			VIM::command("let s:reply_from='%s'" % reply.from.first.to_s)
+			cur += help_lines.size + 1
+
+			VIM::command("let s:reply_from='%s'" % $email_address)
 			VIM::command("call s:new_file_buffer('compose', '#{f.path}')")
-			VIM::command("call cursor(#{old_count}, 0)")
+			VIM::command("call cursor(#{cur}, 0)")
 		end
+	end
+
+	def open_reply(orig)
+		reply = orig.reply do |m|
+			# fix headers
+			if not m[:reply_to]
+				m.to = [orig[:from].to_s, orig[:to].to_s]
+			end
+			m.cc = orig[:cc]
+			m.from = $email
+			m.message_id = generate_message_id
+			m.charset = 'utf-8'
+			m.content_transfer_encoding = '7bit'
+		end
+
+		lines = []
+
+		body_lines = []
+		if $mail_installed
+			addr = Mail::Address.new(orig[:from].value)
+			name = addr.name
+			name = addr.local + "@" if name.nil? && !addr.local.nil?
+		else
+			name = orig[:from]
+		end
+		name = "somebody" if name.nil?
+
+		body_lines << "%s wrote:" % name
+		part = orig.find_first_text
+		part.convert.each_line do |l|
+			body_lines << "> %s" % l.chomp
+		end
+		body_lines << ""
+		body_lines << ""
+		body_lines << ""
+
+		reply.body = body_lines.join("\n")
+
+		lines += reply.to_s.lines.map { |e| e.chomp }
+		lines << ""
+
+		cur = lines.count - 1
+
+		open_compose_helper(lines, cur)
+	end
+
+	def open_compose()
+		lines = []
+
+		lines << "Date: #{Time.now().strftime('%a, %-d %b %Y %T %z')}"
+		lines << "From: #{$email}"
+		lines << "To: "
+		cur = lines.count
+
+		lines << "Cc: "
+		lines << "Bcc: "
+		lines << "Message-Id: #{generate_message_id}"
+		lines << "Subject: "
+		lines << "Mime-Version: 1.0"
+		lines << "Content-Type: text/plain; charset=utf-8"
+		lines << "Content-Transfer-Encoding: 7bit"
+		lines << ""
+		lines << ""
+		lines << ""
+
+		open_compose_helper(lines, cur)
 	end
 
 	def folders_render()
 		$curbuf.render do |b|
-			folders = VIM::evaluate('g:notmuch_rb_folders')
-			count_threads = VIM::evaluate('g:notmuch_rb_folders_count_threads')
+			folders = VIM::evaluate('g:notmuch_folders')
+			count_threads = VIM::evaluate('g:notmuch_folders_count_threads')
 			$searches.clear
-			do_read do |db|
-				folders.each do |name, search|
-					q = db.query(search)
-					$searches << search
-					count = count_threads ? q.search_threads.count : q.search_messages.count
-					b << "%9d %-20s (%s)" % [count, name, search]
-				end
+			folders.each do |name, search|
+				q = $curbuf.query(search)
+				$searches << search
+				count = count_threads ? q.search_threads.count : q.search_messages.count
+				b << "%9d %-20s (%s)" % [count, name, search]
 			end
 		end
 	end
 
 	def search_render(search)
-		date_fmt = VIM::evaluate('g:notmuch_rb_date_format')
-		db = Notmuch::Database.new($db_name)
-		q = db.query(search)
+		date_fmt = VIM::evaluate('g:notmuch_date_format')
+		q = $curbuf.query(search)
+		q.sort = Notmuch::SORT_NEWEST_FIRST
 		$threads.clear
 		t = q.search_threads
 
@@ -582,10 +655,11 @@ ruby << EOF
 			items.each do |e|
 				authors = e.authors.to_utf8.split(/[,|]/).map { |a| author_filter(a) }.join(",")
 				date = Time.at(e.newest_date).strftime(date_fmt)
+				subject = e.messages.first['subject']
 				if $mail_installed
-					subject = Mail::Field.new("Subject: " + e.subject).to_s
+					subject = Mail::Field.new("Subject: " + subject).to_s
 				else
-					subject = e.subject.force_encoding('utf-8')
+					subject = subject.force_encoding('utf-8')
 				end
 				b << "%-12s %3s %-20.20s | %s (%s)" % [date, e.matched_messages, authors, subject, e.tags]
 				$threads << e.thread_id
@@ -594,7 +668,7 @@ ruby << EOF
 	end
 
 	def do_tag(filter, tags)
-		do_write do |db|
+		$curbuf.do_write do |db|
 			q = db.query(filter)
 			q.search_messages.each do |e|
 				e.freeze
@@ -610,6 +684,40 @@ ruby << EOF
 				end
 				e.thaw
 				e.tags_to_maildir_flags
+			end
+			q.destroy!
+		end
+	end
+
+	module DbHelper
+		def init(name)
+			@name = name
+			@db = Notmuch::Database.new($db_name)
+			@queries = []
+		end
+
+		def query(*args)
+			q = @db.query(*args)
+			@queries << q
+			q
+		end
+
+		def close
+			@queries.delete_if { |q| ! q.destroy! }
+			@db.close
+		end
+
+		def reopen
+			close if @db
+			@db = Notmuch::Database.new($db_name)
+		end
+
+		def do_write
+			db = Notmuch::Database.new($db_name, :mode => Notmuch::MODE_READ_WRITE)
+			begin
+				yield db
+			ensure
+				db.close
 			end
 		end
 	end
@@ -659,6 +767,8 @@ ruby << EOF
 	end
 
 	class VIM::Buffer
+		include DbHelper
+
 		def <<(a)
 			append(count(), a)
 		end
@@ -828,9 +938,13 @@ ruby << EOF
 
 	get_config
 EOF
-	call s:folders()
+	if a:0
+	  call s:search(join(a:000))
+	else
+	  call s:folders()
+	endif
 endfunction
 
-command NotMuch :call s:NotMuch()
+command -nargs=* NotMuch call s:NotMuch(<f-args>)
 
 " vim: set noexpandtab:

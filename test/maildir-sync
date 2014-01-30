@@ -4,11 +4,6 @@ test_description="maildir synchronization"
 
 . ./test-lib.sh
 
-# Avoid including the local value of MAIL_DIR in the result.
-filter_show_json() {
-    sed -e "s|${MAIL_DIR}/|MAIL_DIR/|"
-}
-
 # Create the expected maildir structure
 mkdir $MAIL_DIR/cur
 mkdir $MAIL_DIR/new
@@ -40,18 +35,18 @@ output=$(cd ${MAIL_DIR}/cur; ls -1 adding-replied*)
 test_expect_equal "$output" "adding-replied-tag:2,RS"
 
 test_begin_subtest "notmuch show works with renamed file (without notmuch new)"
-output=$(notmuch show --format=json id:${gen_msg_id} | filter_show_json)
-test_expect_equal_json "$output" '[[[{"id": "adding-replied-tag@notmuch-test-suite",
+output=$(notmuch show --format=json id:${gen_msg_id} | notmuch_json_show_sanitize)
+test_expect_equal_json "$output" '[[[{"id": "XXXXX",
 "match": true,
 "excluded": false,
-"filename": "MAIL_DIR/cur/adding-replied-tag:2,RS",
-"timestamp": 978709437,
+"filename": "YYYYY",
+"timestamp": 42,
 "date_relative": "2001-01-05",
 "tags": ["inbox","replied"],
 "headers": {"Subject": "Adding replied tag",
 "From": "Notmuch Test Suite <test_suite@notmuchmail.org>",
 "To": "Notmuch Test Suite <test_suite@notmuchmail.org>",
-"Date": "Fri, 05 Jan 2001 15:43:57 +0000"},
+"Date": "GENERATED_DATE"},
 "body": [{"id": 1,
 "content-type": "text/plain",
 "content": "This is just a test message (#3)\n"}]},
@@ -82,6 +77,26 @@ test_expect_equal "$output" "No new mail."
 # XXX: The above sounds like a bug that should be fixed. If notmuch is
 # creating new directories in the mail store, then it should be
 # creating all necessary database state for those directories.
+
+test_begin_subtest "Adding non-maildir tags does not move message from new to cur"
+add_message [subject]='"Message to stay in new"' \
+    [date]='"Sat, 01 Jan 2000 12:00:00 -0000"' \
+    [filename]='message-to-stay-in-new' [dir]=new
+notmuch tag +donotmove subject:"Message to stay in new"
+output=$(cd "$MAIL_DIR"; ls */message-to-stay-in-new*)
+test_expect_equal "$output" "new/message-to-stay-in-new"
+
+test_begin_subtest "Message in cur lacking maildir info gets one on any tag change"
+add_message [filename]='message-to-get-maildir-info' [dir]=cur
+notmuch tag +anytag id:$gen_msg_id
+output=$(cd "$MAIL_DIR"; ls */message-to-get-maildir-info*)
+test_expect_equal "$output" "cur/message-to-get-maildir-info:2,"
+
+test_begin_subtest "Message in new with maildir info is moved to cur on any tag change"
+add_message [filename]='message-with-info-to-be-moved-to-cur:2,' [dir]=new
+notmuch tag +anytag id:$gen_msg_id
+output=$(cd "$MAIL_DIR"; ls */message-with-info-to-be-moved-to-cur*)
+test_expect_equal "$output" "cur/message-with-info-to-be-moved-to-cur:2,"
 
 test_begin_subtest "Removing 'S' flag from existing filename adds 'unread' tag"
 add_message [subject]='"Removing S flag"' [filename]='removing-s-flag:2,S' [dir]=cur

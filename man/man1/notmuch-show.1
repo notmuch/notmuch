@@ -1,4 +1,4 @@
-.TH NOTMUCH-SHOW 1 2013-08-03 "Notmuch 0.16"
+.TH NOTMUCH-SHOW 1 2013-12-30 "Notmuch 0.17"
 .SH NAME
 notmuch-show \- show messages matching the given search terms
 .SH SYNOPSIS
@@ -205,6 +205,20 @@ is only implemented for the json and sexp formats and it is incompatible with
 
 This is useful if the caller only needs the headers as body-less
 output is much faster and substantially smaller.
+.RE
+
+.RS 4
+.TP 4
+.B \-\-include-html
+
+Include "text/html" parts as part of the output (currently only supported with
+--format=json and --format=sexp).
+By default, unless
+.B --part=N
+is used to select a specific part or
+.B --include-html
+is used to include all "text/html" parts, no part with content type "text/html"
+is included in the output.
 .RE
 
 A common use of

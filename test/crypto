@@ -19,6 +19,7 @@ add_gnupg_home ()
     elif (gpg --debug-quick-random --version >/dev/null 2>&1) ; then
 	echo debug-quick-random >> "$GNUPGHOME"/gpg.conf
     fi
+    echo no-emit-version >> "$GNUPGHOME"/gpg.conf
 }
 
 ##################################################
@@ -27,12 +28,8 @@ add_gnupg_home
 # get key fingerprint
 FINGERPRINT=$(gpg --no-tty --list-secret-keys --with-colons --fingerprint | grep '^fpr:' | cut -d: -f10)
 
-# for some reason this is needed for emacs_deliver_message to work,
-# although I can't figure out why
-add_email_corpus
-
 test_expect_success 'emacs delivery of signed message' \
-'emacs_deliver_message \
+'emacs_fcc_message \
     "test signed message 001" \
     "This is a test signed message." \
     "(mml-secure-message-sign)"'
@@ -62,7 +59,7 @@ expected='[[[{"id": "XXXXX",
  "content": "This is a test signed message.\n"},
  {"id": 3,
  "content-type": "application/pgp-signature",
- "content-length": 315}]}]},
+ "content-length": 280}]}]},
  []]]]'
 test_expect_equal_json \
     "$output" \
@@ -97,7 +94,7 @@ expected='[[[{"id": "XXXXX",
  "content": "This is a test signed message.\n"},
  {"id": 3,
  "content-type": "application/pgp-signature",
- "content-length": 315}]}]},
+ "content-length": 280}]}]},
  []]]]'
 test_expect_equal_json \
     "$output" \
@@ -130,7 +127,7 @@ expected='[[[{"id": "XXXXX",
  "content": "This is a test signed message.\n"},
  {"id": 3,
  "content-type": "application/pgp-signature",
- "content-length": 315}]}]},
+ "content-length": 280}]}]},
  []]]]'
 test_expect_equal_json \
     "$output" \
@@ -142,7 +139,7 @@ cat <<EOF >TESTATTACHMENT
 This is a test file.
 EOF
 test_expect_success 'emacs delivery of encrypted message with attachment' \
-'emacs_deliver_message \
+'emacs_fcc_message \
     "test encrypted message 001" \
     "This is a test encrypted message.\n" \
     "(mml-attach-file \"TESTATTACHMENT\") (mml-secure-message-encrypt)"'
@@ -269,7 +266,7 @@ test_expect_equal_json \
 mv "${GNUPGHOME}"{.bak,}
 
 test_expect_success 'emacs delivery of encrypted + signed message' \
-'emacs_deliver_message \
+'emacs_fcc_message \
     "test encrypted message 002" \
     "This is another test encrypted message.\n" \
     "(mml-secure-message-sign-encrypt)"'
@@ -354,7 +351,7 @@ expected='[[[{"id": "XXXXX",
  "content": "This is a test signed message.\n"},
  {"id": 3,
  "content-type": "application/pgp-signature",
- "content-length": 315}]}]},
+ "content-length": 280}]}]},
  []]]]'
 test_expect_equal_json \
     "$output" \
