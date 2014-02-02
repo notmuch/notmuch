@@ -208,7 +208,7 @@ _notmuch_new()
 
     case "${cur}" in
 	-*)
-	    local options="--no-hooks"
+	    local options="--no-hooks --quiet"
 	    COMPREPLY=( $(compgen -W "${options}" -- ${cur}) )
 	    ;;
     esac
