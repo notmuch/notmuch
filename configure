@@ -360,6 +360,14 @@ else
     have_valgrind=0
 fi
 
+printf "Checking for bash-completion (>= 1.90)... "
+if pkg-config --atleast-version=1.90 bash-completion; then
+    printf "Yes.\n"
+else
+    printf "No (will not install bash completion).\n"
+    WITH_BASH=0
+fi
+
 if [ -z "${EMACSLISPDIR}" ]; then
     if pkg-config --exists emacs; then
 	EMACSLISPDIR=$(pkg-config emacs --variable sitepkglispdir)
