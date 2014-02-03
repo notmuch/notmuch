@@ -30,25 +30,6 @@ typedef enum {
     OUTPUT_TAGS
 } output_t;
 
-static char *
-sanitize_string (const void *ctx, const char *str)
-{
-    char *out, *loop;
-
-    if (NULL == str)
-	return NULL;
-
-    loop = out = talloc_strdup (ctx, str);
-
-    for (; *loop; loop++) {
-	if (*loop == '\t' || *loop == '\n')
-	    *loop = ' ';
-	else if ((unsigned char)(*loop) < 32)
-	    *loop = '?';
-    }
-    return out;
-}
-
 /* Return two stable query strings that identify exactly the matched
  * and unmatched messages currently in thread.  If there are no
  * matched or unmatched messages, the returned buffers will be

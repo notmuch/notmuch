@@ -19,6 +19,13 @@
 
 char *strtok_len (char *s, const char *delim, size_t *len);
 
+/* Return a talloced string with str sanitized.
+ *
+ * Whitespace characters (tabs and newlines) are replaced with spaces,
+ * non-printable characters with question marks.
+ */
+char *sanitize_string (const void *ctx, const char *str);
+
 /* Construct a boolean term query with the specified prefix (e.g.,
  * "id") and search term, quoting term as necessary.  Specifically, if
  * term contains any non-printable ASCII characters, non-ASCII

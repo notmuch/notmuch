@@ -37,6 +37,28 @@ strtok_len (char *s, const char *delim, size_t *len)
     return *len ? s : NULL;
 }
 
+char *
+sanitize_string (const void *ctx, const char *str)
+{
+    char *out, *loop;
+
+    if (! str)
+	return NULL;
+
+    out = talloc_strdup (ctx, str);
+    if (! out)
+	return NULL;
+
+    for (loop = out; *loop; loop++) {
+	if (*loop == '\t' || *loop == '\n')
+	    *loop = ' ';
+	else if ((unsigned char)(*loop) < 32)
+	    *loop = '?';
+    }
+
+    return out;
+}
+
 static int
 is_unquoted_terminator (unsigned char c)
 {
