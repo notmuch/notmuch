@@ -41,7 +41,9 @@ sanitize_string (const void *ctx, const char *str)
     loop = out = talloc_strdup (ctx, str);
 
     for (; *loop; loop++) {
-	if ((unsigned char)(*loop) < 32)
+	if (*loop == '\t' || *loop == '\n')
+	    *loop = ' ';
+	else if ((unsigned char)(*loop) < 32)
 	    *loop = '?';
     }
     return out;

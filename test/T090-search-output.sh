@@ -388,7 +388,7 @@ add_message "[subject]='two =?ISO-8859-1?Q?line=0A_subject?=
 	headers'"
 notmuch search id:"$gen_msg_id" | notmuch_search_sanitize >OUTPUT
 cat <<EOF >EXPECTED
-thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; two line? subject headers (inbox unread)
+thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; two line  subject headers (inbox unread)
 EOF
 test_expect_equal_file OUTPUT EXPECTED
 
