@@ -481,6 +481,68 @@ notmuch_message_get_replies (notmuch_message_t *message)
     return _notmuch_messages_create (message->replies);
 }
 
+static void
+_notmuch_message_remove_terms (notmuch_message_t *message, const char *prefix)
+{
+    Xapian::TermIterator i;
+    size_t prefix_len = strlen (prefix);
+
+    while (1) {
+	i = message->doc.termlist_begin ();
+	i.skip_to (prefix);
+
+	/* Terminate loop when no terms remain with desired prefix. */
+	if (i == message->doc.termlist_end () ||
+	    strncmp ((*i).c_str (), prefix, prefix_len))
+	    break;
+
+	try {
+	    message->doc.remove_term ((*i));
+	} catch (const Xapian::InvalidArgumentError) {
+	    /* Ignore failure to remove non-existent term. */
+	}
+    }
+}
+
+/* Add directory based terms for all filenames of the message. */
+static notmuch_status_t
+_notmuch_message_add_directory_terms (void *ctx, notmuch_message_t *message)
+{
+    const char *direntry_prefix = _find_prefix ("file-direntry");
+    int direntry_prefix_len = strlen (direntry_prefix);
+    Xapian::TermIterator i = message->doc.termlist_begin ();
+    notmuch_status_t status = NOTMUCH_STATUS_SUCCESS;
+
+    for (i.skip_to (direntry_prefix); i != message->doc.termlist_end (); i++) {
+	unsigned int directory_id;
+	const char *direntry, *directory;
+	char *colon;
+
+	/* Terminate loop at first term without desired prefix. */
+	if (strncmp ((*i).c_str (), direntry_prefix, direntry_prefix_len))
+	    break;
+
+	/* Indicate that there are filenames remaining. */
+	status = NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID;
+
+	direntry = (*i).c_str ();
+	direntry += direntry_prefix_len;
+
+	directory_id = strtol (direntry, &colon, 10);
+
+	if (colon == NULL || *colon != ':')
+	    INTERNAL_ERROR ("malformed direntry");
+
+	directory = _notmuch_database_get_directory_path (ctx,
+							  message->notmuch,
+							  directory_id);
+	if (strlen (directory))
+	    _notmuch_message_gen_terms (message, "folder", directory);
+    }
+
+    return status;
+}
+
 /* Add an additional 'filename' for 'message'.
  *
  * This change will not be reflected in the database until the next
@@ -536,17 +598,12 @@ notmuch_status_t
 _notmuch_message_remove_filename (notmuch_message_t *message,
 				  const char *filename)
 {
-    const char *direntry_prefix = _find_prefix ("file-direntry");
-    int direntry_prefix_len = strlen (direntry_prefix);
-    const char *folder_prefix = _find_prefix ("folder");
-    int folder_prefix_len = strlen (folder_prefix);
     void *local = talloc_new (message);
+    const char *folder_prefix = _find_prefix ("folder");
     char *zfolder_prefix = talloc_asprintf(local, "Z%s", folder_prefix);
-    int zfolder_prefix_len = strlen (zfolder_prefix);
     char *direntry;
     notmuch_private_status_t private_status;
     notmuch_status_t status;
-    Xapian::TermIterator i, last;
 
     status = _notmuch_database_filename_to_direntry (
 	local, message->notmuch, filename, NOTMUCH_FIND_LOOKUP, &direntry);
@@ -567,73 +624,13 @@ _notmuch_message_remove_filename (notmuch_message_t *message,
      *  3. adding back terms for all remaining filenames of the message. */
 
     /* 1. removing all "folder:" terms */
-    while (1) {
-	i = message->doc.termlist_begin ();
-	i.skip_to (folder_prefix);
-
-	/* Terminate loop when no terms remain with desired prefix. */
-	if (i == message->doc.termlist_end () ||
-	    strncmp ((*i).c_str (), folder_prefix, folder_prefix_len))
-	{
-	    break;
-	}
-
-	try {
-	    message->doc.remove_term ((*i));
-	} catch (const Xapian::InvalidArgumentError) {
-	    /* Ignore failure to remove non-existent term. */
-	}
-    }
+    _notmuch_message_remove_terms (message, folder_prefix);
 
     /* 2. removing all "folder:" stemmed terms */
-    while (1) {
-	i = message->doc.termlist_begin ();
-	i.skip_to (zfolder_prefix);
-
-	/* Terminate loop when no terms remain with desired prefix. */
-	if (i == message->doc.termlist_end () ||
-	    strncmp ((*i).c_str (), zfolder_prefix, zfolder_prefix_len))
-	{
-	    break;
-	}
-
-	try {
-	    message->doc.remove_term ((*i));
-	} catch (const Xapian::InvalidArgumentError) {
-	    /* Ignore failure to remove non-existent term. */
-	}
-    }
+    _notmuch_message_remove_terms (message, zfolder_prefix);
 
     /* 3. adding back terms for all remaining filenames of the message. */
-    i = message->doc.termlist_begin ();
-    i.skip_to (direntry_prefix);
-
-    for (; i != message->doc.termlist_end (); i++) {
-	unsigned int directory_id;
-	const char *direntry, *directory;
-	char *colon;
-
-	/* Terminate loop at first term without desired prefix. */
-	if (strncmp ((*i).c_str (), direntry_prefix, direntry_prefix_len))
-	    break;
-
-	/* Indicate that there are filenames remaining. */
-	status = NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID;
-
-	direntry = (*i).c_str ();
-	direntry += direntry_prefix_len;
-
-	directory_id = strtol (direntry, &colon, 10);
-
-	if (colon == NULL || *colon != ':')
-	    INTERNAL_ERROR ("malformed direntry");
-
-	directory = _notmuch_database_get_directory_path (local,
-							  message->notmuch,
-							  directory_id);
-	if (strlen (directory))
-	    _notmuch_message_gen_terms (message, "folder", directory);
-    }
+    status = _notmuch_message_add_directory_terms (local, message);
 
     talloc_free (local);
 
