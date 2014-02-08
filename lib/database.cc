@@ -100,8 +100,8 @@ typedef struct {
  * In addition, terms from the content of the message are added with
  * "from", "to", "attachment", and "subject" prefixes for use by the
  * user in searching. Similarly, terms from the path of the mail
- * message are added with a "folder" prefix. But the database doesn't
- * really care itself about any of these.
+ * message are added with "folder" and "path" prefixes. But the
+ * database doesn't really care itself about any of these.
  *
  * The data portion of a mail document is empty.
  *
@@ -208,7 +208,8 @@ static prefix_t BOOLEAN_PREFIX_EXTERNAL[] = {
     { "thread",			"G" },
     { "tag",			"K" },
     { "is",			"K" },
-    { "id",			"Q" }
+    { "id",			"Q" },
+    { "path",			"P" },
 };
 
 static prefix_t PROBABILISTIC_PREFIX[]= {

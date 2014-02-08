@@ -504,6 +504,40 @@ _notmuch_message_remove_terms (notmuch_message_t *message, const char *prefix)
     }
 }
 
+#define RECURSIVE_SUFFIX "/**"
+
+/* Add "path:" terms for directory. */
+static notmuch_status_t
+_notmuch_message_add_path_terms (notmuch_message_t *message,
+				 const char *directory)
+{
+    /* Add exact "path:" term. */
+    _notmuch_message_add_term (message, "path", directory);
+
+    if (strlen (directory)) {
+	char *path, *p;
+
+	path = talloc_asprintf (NULL, "%s%s", directory, RECURSIVE_SUFFIX);
+	if (! path)
+	    return NOTMUCH_STATUS_OUT_OF_MEMORY;
+
+	/* Add recursive "path:" terms for directory and all parents. */
+	for (p = path + strlen (path) - 1; p > path; p--) {
+	    if (*p == '/') {
+		strcpy (p, RECURSIVE_SUFFIX);
+		_notmuch_message_add_term (message, "path", path);
+	    }
+	}
+
+	talloc_free (path);
+    }
+
+    /* Recursive all-matching path:** for consistency. */
+    _notmuch_message_add_term (message, "path", "**");
+
+    return NOTMUCH_STATUS_SUCCESS;
+}
+
 /* Add directory based terms for all filenames of the message. */
 static notmuch_status_t
 _notmuch_message_add_directory_terms (void *ctx, notmuch_message_t *message)
@@ -538,6 +572,8 @@ _notmuch_message_add_directory_terms (void *ctx, notmuch_message_t *message)
 							  directory_id);
 	if (strlen (directory))
 	    _notmuch_message_gen_terms (message, "folder", directory);
+
+	_notmuch_message_add_path_terms (message, directory);
     }
 
     return status;
@@ -576,6 +612,8 @@ _notmuch_message_add_filename (notmuch_message_t *message,
 
     /* New terms allow user to search with folder: specification. */
     _notmuch_message_gen_terms (message, "folder", directory);
+
+    _notmuch_message_add_path_terms (message, directory);
 
     talloc_free (local);
 
@@ -618,18 +656,18 @@ _notmuch_message_remove_filename (notmuch_message_t *message,
     if (status)
 	return status;
 
-    /* Re-synchronize "folder:" terms for this message. This requires:
-     *  1. removing all "folder:" terms
-     *  2. removing all "folder:" stemmed terms
-     *  3. adding back terms for all remaining filenames of the message. */
+    /* Re-synchronize "folder:" and "path:" terms for this message. */
 
-    /* 1. removing all "folder:" terms */
+    /* Remove all "folder:" terms. */
     _notmuch_message_remove_terms (message, folder_prefix);
 
-    /* 2. removing all "folder:" stemmed terms */
+    /* Remove all "folder:" stemmed terms. */
     _notmuch_message_remove_terms (message, zfolder_prefix);
 
-    /* 3. adding back terms for all remaining filenames of the message. */
+    /* Remove all "path:" terms. */
+    _notmuch_message_remove_terms (message, _find_prefix ("path"));
+
+    /* Add back terms for all remaining filenames of the message. */
     status = _notmuch_message_add_directory_terms (local, message);
 
     talloc_free (local);
