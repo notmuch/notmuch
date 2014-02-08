@@ -263,6 +263,9 @@ _notmuch_message_gen_terms (notmuch_message_t *message,
 void
 _notmuch_message_upgrade_filename_storage (notmuch_message_t *message);
 
+void
+_notmuch_message_upgrade_folder (notmuch_message_t *message);
+
 notmuch_status_t
 _notmuch_message_add_filename (notmuch_message_t *message,
 			       const char *filename);

@@ -42,7 +42,7 @@ typedef struct {
     const char *prefix;
 } prefix_t;
 
-#define NOTMUCH_DATABASE_VERSION 1
+#define NOTMUCH_DATABASE_VERSION 2
 
 #define STRINGIFY(s) _SUB_STRINGIFY(s)
 #define _SUB_STRINGIFY(s) #s
@@ -210,6 +210,13 @@ static prefix_t BOOLEAN_PREFIX_EXTERNAL[] = {
     { "is",			"K" },
     { "id",			"Q" },
     { "path",			"P" },
+    /*
+     * Without the ":", since this is a multi-letter prefix, Xapian
+     * will add a colon itself if the first letter of the path is
+     * upper-case ASCII. Including the ":" forces there to always be a
+     * colon, which keeps our own logic simpler.
+     */
+    { "folder",			"XFOLDER:" },
 };
 
 static prefix_t PROBABILISTIC_PREFIX[]= {
@@ -217,7 +224,6 @@ static prefix_t PROBABILISTIC_PREFIX[]= {
     { "to",			"XTO" },
     { "attachment",		"XATTACHMENT" },
     { "subject",		"XSUBJECT"},
-    { "folder",			"XFOLDER"}
 };
 
 const char *
@@ -1166,6 +1172,40 @@ notmuch_database_upgrade (notmuch_database_t *notmuch,
 		notmuch_directory_destroy (directory);
 	    }
 	}
+    }
+
+    /*
+     * Prior to version 2, the "folder:" prefix was probabilistic and
+     * stemmed. Change it to the current boolean prefix. Add "path:"
+     * prefixes while at it.
+     */
+    if (version < 2) {
+	notmuch_query_t *query = notmuch_query_create (notmuch, "");
+	notmuch_messages_t *messages;
+	notmuch_message_t *message;
+
+	count = 0;
+	total = notmuch_query_count_messages (query);
+
+	for (messages = notmuch_query_search_messages (query);
+	     notmuch_messages_valid (messages);
+	     notmuch_messages_move_to_next (messages)) {
+	    if (do_progress_notify) {
+		progress_notify (closure, (double) count / total);
+		do_progress_notify = 0;
+	    }
+
+	    message = notmuch_messages_get (messages);
+
+	    _notmuch_message_upgrade_folder (message);
+	    _notmuch_message_sync (message);
+
+	    notmuch_message_destroy (message);
+
+	    count++;
+	}
+
+	notmuch_query_destroy (query);
     }
 
     db->set_metadata ("version", STRINGIFY (NOTMUCH_DATABASE_VERSION));

@@ -504,6 +504,56 @@ _notmuch_message_remove_terms (notmuch_message_t *message, const char *prefix)
     }
 }
 
+/* Return true if p points at "new" or "cur". */
+static bool is_maildir (const char *p)
+{
+    return strcmp (p, "cur") == 0 || strcmp (p, "new") == 0;
+}
+
+/* Add "folder:" term for directory. */
+static notmuch_status_t
+_notmuch_message_add_folder_terms (notmuch_message_t *message,
+				   const char *directory)
+{
+    char *folder, *last;
+
+    folder = talloc_strdup (NULL, directory);
+    if (! folder)
+	return NOTMUCH_STATUS_OUT_OF_MEMORY;
+
+    /*
+     * If the message file is in a leaf directory named "new" or
+     * "cur", presume maildir and index the parent directory. Thus a
+     * "folder:" prefix search matches messages in the specified
+     * maildir folder, i.e. in the specified directory and its "new"
+     * and "cur" subdirectories.
+     *
+     * Note that this means the "folder:" prefix can't be used for
+     * distinguishing between message files in "new" or "cur". The
+     * "path:" prefix needs to be used for that.
+     *
+     * Note the deliberate difference to _filename_is_in_maildir(). We
+     * don't want to index different things depending on the existence
+     * or non-existence of all maildir sibling directories "new",
+     * "cur", and "tmp". Doing so would be surprising, and difficult
+     * for the user to fix in case all subdirectories were not in
+     * place during indexing.
+     */
+    last = strrchr (folder, '/');
+    if (last) {
+	if (is_maildir (last + 1))
+	    *last = '\0';
+    } else if (is_maildir (folder)) {
+	*folder = '\0';
+    }
+
+    _notmuch_message_add_term (message, "folder", folder);
+
+    talloc_free (folder);
+
+    return NOTMUCH_STATUS_SUCCESS;
+}
+
 #define RECURSIVE_SUFFIX "/**"
 
 /* Add "path:" terms for directory. */
@@ -570,9 +620,8 @@ _notmuch_message_add_directory_terms (void *ctx, notmuch_message_t *message)
 	directory = _notmuch_database_get_directory_path (ctx,
 							  message->notmuch,
 							  directory_id);
-	if (strlen (directory))
-	    _notmuch_message_gen_terms (message, "folder", directory);
 
+	_notmuch_message_add_folder_terms (message, directory);
 	_notmuch_message_add_path_terms (message, directory);
     }
 
@@ -610,9 +659,7 @@ _notmuch_message_add_filename (notmuch_message_t *message,
      * notmuch_directory_get_child_files() . */
     _notmuch_message_add_term (message, "file-direntry", direntry);
 
-    /* New terms allow user to search with folder: specification. */
-    _notmuch_message_gen_terms (message, "folder", directory);
-
+    _notmuch_message_add_folder_terms (message, directory);
     _notmuch_message_add_path_terms (message, directory);
 
     talloc_free (local);
@@ -637,8 +684,6 @@ _notmuch_message_remove_filename (notmuch_message_t *message,
 				  const char *filename)
 {
     void *local = talloc_new (message);
-    const char *folder_prefix = _find_prefix ("folder");
-    char *zfolder_prefix = talloc_asprintf(local, "Z%s", folder_prefix);
     char *direntry;
     notmuch_private_status_t private_status;
     notmuch_status_t status;
@@ -659,10 +704,7 @@ _notmuch_message_remove_filename (notmuch_message_t *message,
     /* Re-synchronize "folder:" and "path:" terms for this message. */
 
     /* Remove all "folder:" terms. */
-    _notmuch_message_remove_terms (message, folder_prefix);
-
-    /* Remove all "folder:" stemmed terms. */
-    _notmuch_message_remove_terms (message, zfolder_prefix);
+    _notmuch_message_remove_terms (message, _find_prefix ("folder"));
 
     /* Remove all "path:" terms. */
     _notmuch_message_remove_terms (message, _find_prefix ("path"));
@@ -673,6 +715,22 @@ _notmuch_message_remove_filename (notmuch_message_t *message,
     talloc_free (local);
 
     return status;
+}
+
+/* Upgrade the "folder:" prefix from V1 to V2. */
+#define FOLDER_PREFIX_V1       "XFOLDER"
+#define ZFOLDER_PREFIX_V1      "Z" FOLDER_PREFIX_V1
+void
+_notmuch_message_upgrade_folder (notmuch_message_t *message)
+{
+    /* Remove all old "folder:" terms. */
+    _notmuch_message_remove_terms (message, FOLDER_PREFIX_V1);
+
+    /* Remove all old "folder:" stemmed terms. */
+    _notmuch_message_remove_terms (message, ZFOLDER_PREFIX_V1);
+
+    /* Add new boolean "folder:" and "path:" terms. */
+    _notmuch_message_add_directory_terms (message, message);
 }
 
 char *
