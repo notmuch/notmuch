@@ -64,8 +64,13 @@ Supported options for **search** include
             (--format=json), or as an S-Expression list (--format=sexp).
 
             Note that each message may have multiple filenames
-            associated with it. All of them are included in the output,
-            unless limited with the --duplicate=N option.
+            associated with it. All of them are included in the output
+            (unless limited with the --duplicate=N option). This may
+            be particularly confusing for **folder:** or **path:**
+            searches in a specified directory, as the messages may
+            have duplicates in other directories that are included in
+            the output, although these files alone would not match the
+            search.
 
         **tags**
             Output all tags that appear on any message matching the
