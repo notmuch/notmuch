@@ -399,10 +399,12 @@ options will be handled as specified for
 			     (third elem)
 			   (cdr elem))))
 	(insert
-	 (notmuch-hello-filtered-query count-query
-				       (or (plist-get options :filter-count)
-					   (plist-get options :filter)))
-	 "\n")))
+	 (replace-regexp-in-string
+	  "\n" " "
+	  (notmuch-hello-filtered-query count-query
+					(or (plist-get options :filter-count)
+					    (plist-get options :filter))))
+	  "\n")))
 
     (unless (= (call-process-region (point-min) (point-max) notmuch-command
 				    t t nil "count" "--batch") 0)
