@@ -1000,7 +1000,7 @@ notmuch_thread_get_newest_date (notmuch_thread_t *thread);
  *
  *     for (tags = notmuch_thread_get_tags (thread);
  *          notmuch_tags_valid (tags);
- *          notmuch_result_move_to_next (tags))
+ *          notmuch_tags_move_to_next (tags))
  *     {
  *         tag = notmuch_tags_get (tags);
  *         ....
@@ -1242,7 +1242,7 @@ notmuch_message_get_header (notmuch_message_t *message, const char *header);
  *
  *     for (tags = notmuch_message_get_tags (message);
  *          notmuch_tags_valid (tags);
- *          notmuch_result_move_to_next (tags))
+ *          notmuch_tags_move_to_next (tags))
  *     {
  *         tag = notmuch_tags_get (tags);
  *         ....
