@@ -190,13 +190,12 @@ if output_format == 'html':
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <title>Notmuch Patches</title>
 </head>
-<body>''')
-    print('<h2>Notmuch Patches</h2>')
-    print('Generated: %s<br />' % datetime.datetime.utcnow().date())
-    print('For more infomation see <a href="http://notmuchmail.org/nmbug">nmbug</a>')
-
-    print('<h3>Views</h3>')
-    print('<ul>')
+<body>
+<h2>Notmuch Patches</h2>
+Generated: {date}<br />
+For more infomation see <a href="http://notmuchmail.org/nmbug">nmbug</a>
+<h3>Views</h3>
+<ul>'''.format(date=datetime.datetime.utcnow().date()))
     for view in config['views']:
         print('<li><a href="#%(title)s">%(title)s</a></li>' % view)
     print('</ul>')
