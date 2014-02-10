@@ -6,6 +6,8 @@
 #       - python 2.6 for json
 #       - argparse; either python 2.7, or install separately
 
+from __future__ import print_function
+
 import datetime
 import rfc822
 import urllib
@@ -49,12 +51,12 @@ config = json.load(fp)
 
 if args.list_views:
     for view in config['views']:
-        print view['title']
+        print(view['title'])
     sys.exit(0)
 elif args.get_query != None:
     for view in config['views']:
         if args.get_query == view['title']:
-            print ' and '.join(view['query'])
+            print(' and '.join(view['query']))
     sys.exit(0)
 else:
     # only import notmuch if needed
@@ -75,7 +77,7 @@ class Thread:
 
 def output_with_separator(threadlist, sep):
     outputs = (thread.join_utf8_with_newlines() for thread in threadlist)
-    print sep.join(outputs)
+    print(sep.join(outputs))
 
 headers = ['date', 'from', 'subject']
 
@@ -93,13 +95,13 @@ def print_view(title, query, comment):
     lines = None
 
     if output_format == 'html':
-        print '<h3><a name="%s" />%s</h3>' % (title, title)
-        print comment
-        print 'The view is generated from the following query:'
-        print '<blockquote>'
-        print query_string
-        print '</blockquote>'
-        print '<table>\n'
+        print('<h3><a name="%s" />%s</h3>' % (title, title))
+        print(comment)
+        print('The view is generated from the following query:')
+        print('<blockquote>')
+        print(query_string)
+        print('</blockquote>')
+        print('<table>\n')
 
     for m in q_new.search_messages():
 
@@ -156,7 +158,7 @@ def print_view(title, query, comment):
     if output_format == 'html':
         output_with_separator(threadlist,
                               '\n<tr><td colspan="2"><br /></td></tr>\n')
-        print '</table>'
+        print('</table>')
     else:
         output_with_separator(threadlist, '\n\n')
 
@@ -165,26 +167,26 @@ def print_view(title, query, comment):
 db = notmuch.Database(mode=notmuch.Database.MODE.READ_WRITE)
 
 if output_format == 'html':
-    print '''<?xml version="1.0" encoding="utf-8" ?>
+    print('''<?xml version="1.0" encoding="utf-8" ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <title>Notmuch Patches</title>
 </head>
-<body>'''
-    print '<h2>Notmuch Patches</h2>'
-    print 'Generated: %s<br />' % datetime.datetime.utcnow().date()
-    print 'For more infomation see <a href="http://notmuchmail.org/nmbug">nmbug</a>'
+<body>''')
+    print('<h2>Notmuch Patches</h2>')
+    print('Generated: %s<br />' % datetime.datetime.utcnow().date())
+    print('For more infomation see <a href="http://notmuchmail.org/nmbug">nmbug</a>')
 
-    print '<h3>Views</h3>'
-    print '<ul>'
+    print('<h3>Views</h3>')
+    print('<ul>')
     for view in config['views']:
-        print '<li><a href="#%(title)s">%(title)s</a></li>' % view
-    print '</ul>'
+        print('<li><a href="#%(title)s">%(title)s</a></li>' % view)
+    print('</ul>')
 
 for view in config['views']:
     print_view(**view)
 
 if output_format == 'html':
-    print '</body>\n</html>'
+    print('</body>\n</html>')
