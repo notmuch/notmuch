@@ -374,8 +374,12 @@ generate_message ()
 	# we use decreasing timestamps here for historical reasons;
 	# the existing test suite when we converted to unique timestamps just
 	# happened to have signicantly fewer failures with that choice.
-	template[date]=$(TZ=UTC printf "%(%a, %d %b %Y %T %z)T\n" \
-			$((978709437 - gen_msg_cnt)))
+	local date_secs=$((978709437 - gen_msg_cnt))
+	# printf %(..)T is bash 4.2+ feature. use perl fallback if needed...
+	TZ=UTC printf -v template[date] "%(%a, %d %b %Y %T %z)T" $date_secs 2>/dev/null ||
+	    template[date]=`perl -le 'use POSIX "strftime";
+				@time = gmtime '"$date_secs"';
+				print strftime "%a, %d %b %Y %T +0000", @time'`
     fi
 
     additional_headers=""
