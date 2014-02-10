@@ -23,6 +23,30 @@ import subprocess
 _ENCODING = locale.getpreferredencoding() or sys.getdefaultencoding()
 
 
+def read_config(path=None, encoding=None):
+    "Read config from json file"
+    if not encoding:
+        encoding = _ENCODING
+    if path:
+        fp = open(path)
+    else:
+        nmbhome = os.getenv('NMBGIT', os.path.expanduser('~/.nmbug'))
+
+        # read only the first line from the pipe
+        sha1_bytes = subprocess.Popen(
+            ['git', '--git-dir', nmbhome, 'show-ref', '-s', 'config'],
+            stdout=subprocess.PIPE).stdout.readline()
+        sha1 = sha1_bytes.decode(encoding).rstrip()
+
+        fp_byte_stream = subprocess.Popen(
+            ['git', '--git-dir', nmbhome, 'cat-file', 'blob',
+             sha1+':status-config.json'],
+            stdout=subprocess.PIPE).stdout
+        fp = codecs.getreader(encoding=encoding)(stream=fp_byte_stream)
+
+    return json.load(fp)
+
+
 # parse command line arguments
 
 parser = argparse.ArgumentParser()
@@ -35,26 +59,7 @@ parser.add_argument('--get-query', help='get query for view')
 
 args = parser.parse_args()
 
-# read config from json file
-
-if args.config != None:
-    fp = open(args.config)
-else:
-    nmbhome = os.getenv('NMBGIT', os.path.expanduser('~/.nmbug'))
-
-    # read only the first line from the pipe
-    sha1_bytes = subprocess.Popen(
-        ['git', '--git-dir', nmbhome, 'show-ref', '-s', 'config'],
-        stdout=subprocess.PIPE).stdout.readline()
-    sha1 = sha1_bytes.decode(_ENCODING).rstrip()
-
-    fp_byte_stream = subprocess.Popen(
-        ['git', '--git-dir', nmbhome, 'cat-file', 'blob',
-         sha1+':status-config.json'],
-        stdout=subprocess.PIPE).stdout
-    fp = codecs.getreader(encoding=_ENCODING)(stream=fp_byte_stream)
-
-config = json.load(fp)
+config = read_config(path=args.config)
 
 if args.list_views:
     for view in config['views']:
