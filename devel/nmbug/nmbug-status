@@ -197,12 +197,14 @@ class HtmlPage (Page):
         for thread in threads:
             for message_display_data in thread:
                 stream.write((
-                    '<tr><td>{date}\n'
-                    '</td><td>{message-id-term}\n'
-                    '</td></tr>\n'
-                    '<tr><td>{from}\n'
-                    '</td><td>{subject}\n'
-                    '</td></tr>\n'
+                    '<tr>\n'
+                    '  <td>{date}</td>\n'
+                    '  <td>{message-id-term}</td>\n'
+                    '</tr>\n'
+                    '<tr>\n'
+                    '  <td>{from}</td>\n'
+                    '  <td>{subject}</td>\n'
+                    '</tr>\n'
                     ).format(**message_display_data))
             if thread != threads[-1]:
                 stream.write('<tr><td colspan="2"><br /></td></tr>\n')
