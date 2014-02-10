@@ -8,14 +8,20 @@
 
 from __future__ import print_function
 
+import codecs
 import datetime
 import email.utils
+import locale
 import urllib
 import json
 import argparse
 import os
 import sys
 import subprocess
+
+
+_ENCODING = locale.getpreferredencoding() or sys.getdefaultencoding()
+
 
 # parse command line arguments
 
@@ -37,15 +43,16 @@ else:
     nmbhome = os.getenv('NMBGIT', os.path.expanduser('~/.nmbug'))
 
     # read only the first line from the pipe
-    sha1 = subprocess.Popen(['git', '--git-dir', nmbhome,
-                             'show-ref', '-s', 'config'],
-                            stdout=subprocess.PIPE).stdout.readline()
+    sha1_bytes = subprocess.Popen(
+        ['git', '--git-dir', nmbhome, 'show-ref', '-s', 'config'],
+        stdout=subprocess.PIPE).stdout.readline()
+    sha1 = sha1_bytes.decode(_ENCODING).rstrip()
 
-    sha1 = sha1.rstrip()
-
-    fp = subprocess.Popen(['git', '--git-dir', nmbhome,
-                           'cat-file', 'blob', sha1+':status-config.json'],
-                          stdout=subprocess.PIPE).stdout
+    fp_byte_stream = subprocess.Popen(
+        ['git', '--git-dir', nmbhome, 'cat-file', 'blob',
+         sha1+':status-config.json'],
+        stdout=subprocess.PIPE).stdout
+    fp = codecs.getreader(encoding=_ENCODING)(stream=fp_byte_stream)
 
 config = json.load(fp)
 
