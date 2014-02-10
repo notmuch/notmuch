@@ -52,10 +52,12 @@ def read_config(path=None, encoding=None):
 parser = argparse.ArgumentParser()
 parser.add_argument('--text', help='output plain text format',
                     action='store_true')
-parser.add_argument('--config', help='load config from given file')
+parser.add_argument('--config', help='load config from given file',
+                    metavar='PATH')
 parser.add_argument('--list-views', help='list views',
                     action='store_true')
-parser.add_argument('--get-query', help='get query for view')
+parser.add_argument('--get-query', help='get query for view',
+                    metavar='VIEW')
 
 args = parser.parse_args()
 
