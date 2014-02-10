@@ -47,40 +47,6 @@ def read_config(path=None, encoding=None):
     return json.load(fp)
 
 
-# parse command line arguments
-
-parser = argparse.ArgumentParser()
-parser.add_argument('--text', help='output plain text format',
-                    action='store_true')
-parser.add_argument('--config', help='load config from given file',
-                    metavar='PATH')
-parser.add_argument('--list-views', help='list views',
-                    action='store_true')
-parser.add_argument('--get-query', help='get query for view',
-                    metavar='VIEW')
-
-args = parser.parse_args()
-
-config = read_config(path=args.config)
-
-if args.list_views:
-    for view in config['views']:
-        print(view['title'])
-    sys.exit(0)
-elif args.get_query != None:
-    for view in config['views']:
-        if args.get_query == view['title']:
-            print(' and '.join(view['query']))
-    sys.exit(0)
-else:
-    # only import notmuch if needed
-    import notmuch
-
-if args.text:
-    output_format = 'text'
-else:
-    output_format = 'html'
-
 class Thread:
     def __init__(self, last, lines):
         self.last = last
@@ -89,16 +55,17 @@ class Thread:
     def join_utf8_with_newlines(self):
         return '\n'.join( (line.encode('utf-8') for line in self.lines) )
 
+
 def output_with_separator(threadlist, sep):
     outputs = (thread.join_utf8_with_newlines() for thread in threadlist)
     print(sep.join(outputs))
 
-headers = ['date', 'from', 'subject']
 
-def print_view(title, query, comment):
+def print_view(database, title, query, comment,
+               headers=('date', 'from', 'subject')):
 
     query_string = ' and '.join(query)
-    q_new = notmuch.Query(db, query_string)
+    q_new = notmuch.Query(database, query_string)
     q_new.set_sort(notmuch.Query.SORT.OLDEST_FIRST)
 
     last_thread_id = ''
@@ -176,6 +143,41 @@ def print_view(title, query, comment):
     else:
         output_with_separator(threadlist, '\n\n')
 
+
+# parse command line arguments
+
+parser = argparse.ArgumentParser()
+parser.add_argument('--text', help='output plain text format',
+                    action='store_true')
+parser.add_argument('--config', help='load config from given file',
+                    metavar='PATH')
+parser.add_argument('--list-views', help='list views',
+                    action='store_true')
+parser.add_argument('--get-query', help='get query for view',
+                    metavar='VIEW')
+
+args = parser.parse_args()
+
+config = read_config(path=args.config)
+
+if args.list_views:
+    for view in config['views']:
+        print(view['title'])
+    sys.exit(0)
+elif args.get_query != None:
+    for view in config['views']:
+        if args.get_query == view['title']:
+            print(' and '.join(view['query']))
+    sys.exit(0)
+else:
+    # only import notmuch if needed
+    import notmuch
+
+if args.text:
+    output_format = 'text'
+else:
+    output_format = 'html'
+
 # main program
 
 db = notmuch.Database(mode=notmuch.Database.MODE.READ_WRITE)
@@ -200,7 +202,7 @@ if output_format == 'html':
     print('</ul>')
 
 for view in config['views']:
-    print_view(**view)
+    print_view(database=db, **view)
 
 if output_format == 'html':
     print('</body>\n</html>')
