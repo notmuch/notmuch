@@ -9,7 +9,7 @@
 from __future__ import print_function
 
 import datetime
-import rfc822
+import email.utils
 import urllib
 import json
 import argparse
@@ -128,7 +128,7 @@ def print_view(title, query, comment):
                 val = str.join(' ', val.split(None)[1:4])
                 val = str(datetime.datetime.strptime(val, '%d %b %Y').date())
             elif header == 'from':
-                (val, addr) = rfc822.parseaddr(val)
+                (val, addr) = email.utils.parseaddr(val)
                 if val == '':
                     val = addr.split('@')[0]
 
