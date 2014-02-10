@@ -180,7 +180,7 @@ else:
 
 # main program
 
-db = notmuch.Database(mode=notmuch.Database.MODE.READ_WRITE)
+db = notmuch.Database(mode=notmuch.Database.MODE.READ_ONLY)
 
 if output_format == 'html':
     print('''<?xml version="1.0" encoding="utf-8" ?>
