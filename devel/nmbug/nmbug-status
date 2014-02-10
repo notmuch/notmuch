@@ -5,10 +5,13 @@
 # dependencies
 #       - python 2.6 for json
 #       - argparse; either python 2.7, or install separately
+#       - collections.OrderedDict; python 2.7
 
 from __future__ import print_function
+from __future__ import unicode_literals
 
 import codecs
+import collections
 import datetime
 import email.utils
 import locale
@@ -24,6 +27,7 @@ import subprocess
 
 
 _ENCODING = locale.getpreferredencoding() or sys.getdefaultencoding()
+_PAGES = {}
 
 
 def read_config(path=None, encoding=None):
@@ -50,104 +54,175 @@ def read_config(path=None, encoding=None):
     return json.load(fp)
 
 
-class Thread:
-    def __init__(self, last, lines):
-        self.last = last
-        self.lines = lines
-
-    def join_utf8_with_newlines(self):
-        return '\n'.join( (line.encode('utf-8') for line in self.lines) )
+class Thread (list):
+    def __init__(self):
+        self.running_data = {}
 
 
-def output_with_separator(threadlist, sep):
-    outputs = (thread.join_utf8_with_newlines() for thread in threadlist)
-    print(sep.join(outputs))
+class Page (object):
+    def __init__(self, header=None, footer=None):
+        self.header = header
+        self.footer = footer
 
+    def write(self, database, views, stream=None):
+        if not stream:
+            try:  # Python 3
+                byte_stream = sys.stdout.buffer
+            except AttributeError:  # Python 2
+                byte_stream = sys.stdout
+            stream = codecs.getwriter(encoding='UTF-8')(stream=byte_stream)
+        self._write_header(views=views, stream=stream)
+        for view in views:
+            self._write_view(database=database, view=view, stream=stream)
+        self._write_footer(views=views, stream=stream)
 
-def print_view(database, title, query, comment,
-               headers=('date', 'from', 'subject')):
+    def _write_header(self, views, stream):
+        if self.header:
+            stream.write(self.header)
 
-    query_string = ' and '.join(query)
-    q_new = notmuch.Query(database, query_string)
-    q_new.set_sort(notmuch.Query.SORT.OLDEST_FIRST)
+    def _write_footer(self, views, stream):
+        if self.footer:
+            stream.write(self.footer)
 
-    last_thread_id = ''
-    threads = {}
-    threadlist = []
-    out = {}
-    last = None
-    lines = None
+    def _write_view(self, database, view, stream):
+        if 'query-string' not in view:
+            query = view['query']
+            view['query-string'] = ' and '.join(query)
+        q = notmuch.Query(database, view['query-string'])
+        q.set_sort(notmuch.Query.SORT.OLDEST_FIRST)
+        threads = self._get_threads(messages=q.search_messages())
+        self._write_view_header(view=view, stream=stream)
+        self._write_threads(threads=threads, stream=stream)
 
-    if output_format == 'html':
-        print('<h3><a name="%s" />%s</h3>' % (title, title))
-        print(comment)
-        print('The view is generated from the following query:')
-        print('<blockquote>')
-        print(query_string)
-        print('</blockquote>')
-        print('<table>\n')
-
-    for m in q_new.search_messages():
-
-        thread_id = m.get_thread_id()
-
-        if thread_id != last_thread_id:
-            if threads.has_key(thread_id):
-                last = threads[thread_id].last
-                lines = threads[thread_id].lines
+    def _get_threads(self, messages):
+        threads = collections.OrderedDict()
+        for message in messages:
+            thread_id = message.get_thread_id()
+            if thread_id in threads:
+                thread = threads[thread_id]
             else:
-                last = {}
-                lines = []
-                thread = Thread(last, lines)
+                thread = Thread()
                 threads[thread_id] = thread
-                for h in headers:
-                    last[h] = ''
-                threadlist.append(thread)
-            last_thread_id = thread_id
+            thread.running_data, display_data = self._message_display_data(
+                running_data=thread.running_data, message=message)
+            thread.append(display_data)
+        return list(threads.values())
 
+    def _write_view_header(self, view, stream):
+        pass
+
+    def _write_threads(self, threads, stream):
+        for thread in threads:
+            for message_display_data in thread:
+                stream.write(
+                    ('{date:10.10s} {from:20.20s} {subject:40.40s}\n'
+                     '{message-id-term:>72}\n'
+                     ).format(**message_display_data))
+            if thread != threads[-1]:
+                stream.write('\n')
+
+    def _message_display_data(self, running_data, message):
+        headers = ('thread-id', 'message-id', 'date', 'from', 'subject')
+        data = {}
         for header in headers:
-            val = m.get_header(header)
-
-            if header == 'date':
-                val = str.join(' ', val.split(None)[1:4])
-                val = str(datetime.datetime.strptime(val, '%d %b %Y').date())
-            elif header == 'from':
-                (val, addr) = email.utils.parseaddr(val)
-                if val == '':
-                    val = addr.split('@')[0]
-
-            if header != 'subject' and last[header] == val:
-                out[header] = ''
+            if header == 'thread-id':
+                value = message.get_thread_id()
+            elif header == 'message-id':
+                value = message.get_message_id()
+                data['message-id-term'] = 'id:"{0}"'.format(value)
+            elif header == 'date':
+                value = str(datetime.datetime.utcfromtimestamp(
+                    message.get_date()).date())
             else:
-                out[header] = val
-                last[header] = val
-
-        mid = m.get_message_id()
-        out['id'] = 'id:"%s"' % mid
-
-        if output_format == 'html':
-
-            out['subject'] = '<a href="http://mid.gmane.org/%s">%s</a>' % (
-                quote(mid), out['subject'])
-
-            lines.append(' <tr><td>%s' % out['date'])
-            lines.append('</td><td>%s' % out['id'])
-            lines.append('</td></tr>')
-            lines.append(' <tr><td>%s' % out['from'])
-            lines.append('</td><td>%s' % out['subject'])
-            lines.append('</td></tr>')
-        else:
-            lines.append('%(date)-10.10s %(from)-20.20s %(subject)-40.40s\n%(id)72s' % out)
-
-    if output_format == 'html':
-        output_with_separator(threadlist,
-                              '\n<tr><td colspan="2"><br /></td></tr>\n')
-        print('</table>')
-    else:
-        output_with_separator(threadlist, '\n\n')
+                value = message.get_header(header)
+            if header == 'from':
+                (value, addr) = email.utils.parseaddr(value)
+                if not value:
+                    value = addr.split('@')[0]
+            data[header] = value
+        next_running_data = data.copy()
+        for header, value in data.items():
+            if header in ['message-id', 'subject']:
+                continue
+            if value == running_data.get(header, None):
+                data[header] = ''
+        return (next_running_data, data)
 
 
-# parse command line arguments
+class HtmlPage (Page):
+    def _write_header(self, views, stream):
+        super(HtmlPage, self)._write_header(views=views, stream=stream)
+        stream.write('<ul>\n')
+        for view in views:
+            stream.write(
+                '<li><a href="#{title}">{title}</a></li>\n'.format(**view))
+        stream.write('</ul>\n')
+
+    def _write_view_header(self, view, stream):
+        stream.write('<h3><a name="{title}" />{title}</h3>\n'.format(**view))
+        if 'comment' in view:
+            stream.write(view['comment'])
+            stream.write('\n')
+        for line in [
+                'The view is generated from the following query:',
+                '<blockquote>',
+                view['query-string'],
+                '</blockquote>',
+                ]:
+            stream.write(line)
+            stream.write('\n')
+
+    def _write_threads(self, threads, stream):
+        if not threads:
+            return
+        stream.write('<table>\n')
+        for thread in threads:
+            for message_display_data in thread:
+                stream.write((
+                    '<tr><td>{date}\n'
+                    '</td><td>{message-id-term}\n'
+                    '</td></tr>\n'
+                    '<tr><td>{from}\n'
+                    '</td><td>{subject}\n'
+                    '</td></tr>\n'
+                    ).format(**message_display_data))
+            if thread != threads[-1]:
+                stream.write('<tr><td colspan="2"><br /></td></tr>\n')
+        stream.write('</table>\n')
+
+    def _message_display_data(self, *args, **kwargs):
+        running_data, display_data = super(
+            HtmlPage, self)._message_display_data(
+                *args, **kwargs)
+        if 'subject' in display_data and 'message-id' in display_data:
+            d = {
+                'message-id': quote(display_data['message-id']),
+                'subject': display_data['subject'],
+                }
+            display_data['subject'] = (
+                '<a href="http://mid.gmane.org/{message-id}">{subject}</a>'
+                ).format(**d)
+        return (running_data, display_data)
+
+
+_PAGES['text'] = Page()
+_PAGES['html'] = HtmlPage(
+    header='''<?xml version="1.0" encoding="utf-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Notmuch Patches</title>
+</head>
+<body>
+<h2>Notmuch Patches</h2>
+Generated: {date}<br />
+For more infomation see <a href="http://notmuchmail.org/nmbug">nmbug</a>
+<h3>Views</h3>
+'''.format(date=datetime.datetime.utcnow().date()),
+    footer='</body>\n</html>\n',
+    )
+
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--text', help='output plain text format',
@@ -177,34 +252,9 @@ else:
     import notmuch
 
 if args.text:
-    output_format = 'text'
+    page = _PAGES['text']
 else:
-    output_format = 'html'
-
-# main program
+    page = _PAGES['html']
 
 db = notmuch.Database(mode=notmuch.Database.MODE.READ_ONLY)
-
-if output_format == 'html':
-    print('''<?xml version="1.0" encoding="utf-8" ?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<head>
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<title>Notmuch Patches</title>
-</head>
-<body>
-<h2>Notmuch Patches</h2>
-Generated: {date}<br />
-For more infomation see <a href="http://notmuchmail.org/nmbug">nmbug</a>
-<h3>Views</h3>
-<ul>'''.format(date=datetime.datetime.utcnow().date()))
-    for view in config['views']:
-        print('<li><a href="#%(title)s">%(title)s</a></li>' % view)
-    print('</ul>')
-
-for view in config['views']:
-    print_view(database=db, **view)
-
-if output_format == 'html':
-    print('</body>\n</html>')
+page.write(database=db, views=config['views'])
