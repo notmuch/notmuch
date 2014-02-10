@@ -5,7 +5,6 @@
 # dependencies
 #       - python 2.6 for json
 #       - argparse; either python 2.7, or install separately
-#       - collections.OrderedDict; python 2.7
 
 from __future__ import print_function
 from __future__ import unicode_literals
@@ -28,6 +27,25 @@ import subprocess
 
 _ENCODING = locale.getpreferredencoding() or sys.getdefaultencoding()
 _PAGES = {}
+
+
+if not hasattr(collections, 'OrderedDict'):  # Python 2.6 or earlier
+    class _OrderedDict (dict):
+        "Just enough of a stub to get through Page._get_threads"
+        def __init__(self, *args, **kwargs):
+            super(_OrderedDict, self).__init__(*args, **kwargs)
+            self._keys = []  # record key order
+
+        def __setitem__(self, key, value):
+            super(_OrderedDict, self).__setitem__(key, value)
+            self._keys.append(key)
+
+        def __values__(self):
+            for key in self._keys:
+                yield self[key]
+
+
+    collections.OrderedDict = _OrderedDict
 
 
 def read_config(path=None, encoding=None):
