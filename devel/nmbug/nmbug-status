@@ -12,7 +12,10 @@ import codecs
 import datetime
 import email.utils
 import locale
-import urllib
+try:  # Python 3
+    from urllib.parse import quote
+except ImportError:  # Python 2
+    from urllib import quote
 import json
 import argparse
 import os
@@ -124,8 +127,8 @@ def print_view(database, title, query, comment,
 
         if output_format == 'html':
 
-            out['subject'] = '<a href="http://mid.gmane.org/%s">%s</a>' \
-                % (urllib.quote(mid), out['subject'])
+            out['subject'] = '<a href="http://mid.gmane.org/%s">%s</a>' % (
+                quote(mid), out['subject'])
 
             lines.append(' <tr><td>%s' % out['date'])
             lines.append('</td><td>%s' % out['id'])
