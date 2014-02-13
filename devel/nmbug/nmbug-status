@@ -24,6 +24,7 @@ import os
 import re
 import sys
 import subprocess
+import xml.sax.saxutils
 
 
 _ENCODING = locale.getpreferredencoding() or sys.getdefaultencoding()
@@ -226,11 +227,14 @@ class HtmlPage (Page):
         if 'subject' in display_data and 'message-id' in display_data:
             d = {
                 'message-id': quote(display_data['message-id']),
-                'subject': display_data['subject'],
+                'subject': xml.sax.saxutils.escape(display_data['subject']),
                 }
             display_data['subject'] = (
                 '<a href="http://mid.gmane.org/{message-id}">{subject}</a>'
                 ).format(**d)
+        for key in ['message-id', 'from']:
+            if key in display_data:
+                display_data[key] = xml.sax.saxutils.escape(display_data[key])
         return (running_data, display_data)
 
     def _slug(self, string):
