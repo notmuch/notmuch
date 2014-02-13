@@ -173,7 +173,7 @@ dirent_type (const char *path, const struct dirent *entry)
     char *abspath;
     int err, saved_errno;
 
-#ifdef _DIRENT_HAVE_D_TYPE
+#if HAVE_D_TYPE
     /* Mapping from d_type to stat mode_t.  We omit DT_LNK so that
      * we'll fall through to stat and get the real file type. */
     static const mode_t modes[] = {

@@ -578,6 +578,17 @@ else
 fi
 rm -f compat/have_timegm
 
+printf "Checking for dirent.d_type... "
+if ${CC} -o compat/have_d_type "$srcdir"/compat/have_d_type.c > /dev/null 2>&1
+then
+    printf "Yes.\n"
+    have_d_type="1"
+else
+    printf "No (will use stat instead).\n"
+    have_d_type="0"
+fi
+rm -f compat/have_d_type
+
 printf "Checking for standard version of getpwuid_r... "
 if ${CC} -o compat/check_getpwuid "$srcdir"/compat/check_getpwuid.c > /dev/null 2>&1
 then
@@ -769,6 +780,9 @@ HAVE_STRCASESTR = ${have_strcasestr}
 # build its own version)
 HAVE_STRSEP = ${have_strsep}
 
+# Whether struct dirent has d_type (if not, then notmuch will use stat)
+HAVE_D_TYPE = ${have_d_type}
+
 # Whether the Xapian version in use supports compaction
 HAVE_XAPIAN_COMPACT = ${have_xapian_compact}
 
@@ -829,6 +843,7 @@ CONFIGURE_CFLAGS = -DHAVE_GETLINE=\$(HAVE_GETLINE) \$(GMIME_CFLAGS)      \\
 		   \$(VALGRIND_CFLAGS)                                   \\
 		   -DHAVE_STRCASESTR=\$(HAVE_STRCASESTR)                 \\
 		   -DHAVE_STRSEP=\$(HAVE_STRSEP)                         \\
+		   -DHAVE_D_TYPE=\$(HAVE_D_TYPE)                         \\
 		   -DSTD_GETPWUID=\$(STD_GETPWUID)                       \\
 		   -DSTD_ASCTIME=\$(STD_ASCTIME)                         \\
 		   -DHAVE_XAPIAN_COMPACT=\$(HAVE_XAPIAN_COMPACT)	 \\
@@ -839,6 +854,7 @@ CONFIGURE_CXXFLAGS = -DHAVE_GETLINE=\$(HAVE_GETLINE) \$(GMIME_CFLAGS)    \\
 		     \$(VALGRIND_CFLAGS) \$(XAPIAN_CXXFLAGS)             \\
 		     -DHAVE_STRCASESTR=\$(HAVE_STRCASESTR)               \\
 		     -DHAVE_STRSEP=\$(HAVE_STRSEP)                       \\
+		     -DHAVE_D_TYPE=\$(HAVE_D_TYPE)                       \\
 		     -DSTD_GETPWUID=\$(STD_GETPWUID)                     \\
 		     -DSTD_ASCTIME=\$(STD_ASCTIME)                       \\
 		     -DHAVE_XAPIAN_COMPACT=\$(HAVE_XAPIAN_COMPACT)       \\
