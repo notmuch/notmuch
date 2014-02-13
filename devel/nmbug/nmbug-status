@@ -183,14 +183,18 @@ class HtmlPage (Page):
 
     def _write_view_header(self, view, stream):
         stream.write('<h3 id="{id}">{title}</h3>\n'.format(**view))
+        stream.write('<p>\n')
         if 'comment' in view:
             stream.write(view['comment'])
             stream.write('\n')
         for line in [
                 'The view is generated from the following query:',
-                '<blockquote>',
+                '</p>',
+                '<p>',
+                '  <code>',
                 view['query-string'],
-                '</blockquote>',
+                '  </code>',
+                '</p>',
                 ]:
             stream.write(line)
             stream.write('\n')
@@ -204,7 +208,7 @@ class HtmlPage (Page):
                 stream.write((
                     '<tr>\n'
                     '  <td>{date}</td>\n'
-                    '  <td>{message-id-term}</td>\n'
+                    '  <td><code>{message-id-term}</code></td>\n'
                     '</tr>\n'
                     '<tr>\n'
                     '  <td>{from}</td>\n'
@@ -243,8 +247,10 @@ _PAGES['html'] = HtmlPage(
 </head>
 <body>
 <h2>Notmuch Patches</h2>
+<p>
 Generated: {date}<br />
 For more infomation see <a href="http://notmuchmail.org/nmbug">nmbug</a>
+</p>
 <h3>Views</h3>
 '''.format(date=datetime.datetime.utcnow().date()),
     footer='</body>\n</html>\n',
