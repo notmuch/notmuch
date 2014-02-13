@@ -177,7 +177,7 @@ class HtmlPage (Page):
         stream.write('</ul>\n')
 
     def _write_view_header(self, view, stream):
-        stream.write('<h3><a name="{title}" />{title}</h3>\n'.format(**view))
+        stream.write('<h3 id="{title}">{title}</h3>\n'.format(**view))
         if 'comment' in view:
             stream.write(view['comment'])
             stream.write('\n')
