@@ -21,6 +21,7 @@ except ImportError:  # Python 2
 import json
 import argparse
 import os
+import re
 import sys
 import subprocess
 
@@ -168,16 +169,20 @@ class Page (object):
 
 
 class HtmlPage (Page):
+    _slug_regexp = re.compile('\W+')
+
     def _write_header(self, views, stream):
         super(HtmlPage, self)._write_header(views=views, stream=stream)
         stream.write('<ul>\n')
         for view in views:
+            if 'id' not in view:
+                view['id'] = self._slug(view['title'])
             stream.write(
-                '<li><a href="#{title}">{title}</a></li>\n'.format(**view))
+                '<li><a href="#{id}">{title}</a></li>\n'.format(**view))
         stream.write('</ul>\n')
 
     def _write_view_header(self, view, stream):
-        stream.write('<h3 id="{title}">{title}</h3>\n'.format(**view))
+        stream.write('<h3 id="{id}">{title}</h3>\n'.format(**view))
         if 'comment' in view:
             stream.write(view['comment'])
             stream.write('\n')
@@ -223,6 +228,9 @@ class HtmlPage (Page):
                 '<a href="http://mid.gmane.org/{message-id}">{subject}</a>'
                 ).format(**d)
         return (running_data, display_data)
+
+    def _slug(self, string):
+        return self._slug_regexp.sub('-', string)
 
 
 _PAGES['text'] = Page()
