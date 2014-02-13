@@ -727,7 +727,7 @@ inbox,stashtest
 ${gen_msg_filename}
 http://mid.gmane.org/bought
 http://marc.info/?i=bought
-http://mail-archive.com/search?l=mid&q=bought
+http://mid.mail-archive.com/bought
 EOF
 test_expect_equal_file OUTPUT EXPECTED
 

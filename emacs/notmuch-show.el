@@ -171,7 +171,7 @@ each attachment handler is logged in buffers with names beginning
 (defcustom notmuch-show-stash-mlarchive-link-alist
   '(("Gmane" . "http://mid.gmane.org/")
     ("MARC" . "http://marc.info/?i=")
-    ("Mail Archive, The" . "http://mail-archive.com/search?l=mid&q=")
+    ("Mail Archive, The" . "http://mid.mail-archive.com/")
     ("LKML" . "http://lkml.kernel.org/r/")
     ;; FIXME: can these services be searched by `Message-Id' ?
     ;; ("MarkMail" . "http://markmail.org/")
