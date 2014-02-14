@@ -13,7 +13,6 @@ import codecs
 import collections
 import datetime
 import email.utils
-import locale
 try:  # Python 3
     from urllib.parse import quote
 except ImportError:  # Python 2
@@ -27,7 +26,7 @@ import subprocess
 import xml.sax.saxutils
 
 
-_ENCODING = locale.getpreferredencoding() or sys.getdefaultencoding()
+_ENCODING = 'UTF-8'
 _PAGES = {}
 
 
