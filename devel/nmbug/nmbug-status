@@ -90,7 +90,7 @@ class Page (object):
                 byte_stream = sys.stdout.buffer
             except AttributeError:  # Python 2
                 byte_stream = sys.stdout
-            stream = codecs.getwriter(encoding='UTF-8')(stream=byte_stream)
+            stream = codecs.getwriter(encoding=_ENCODING)(stream=byte_stream)
         self._write_header(views=views, stream=stream)
         for view in views:
             self._write_view(database=database, view=view, stream=stream)
@@ -249,7 +249,7 @@ _PAGES['html'] = HtmlPage(
     header='''<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Type" content="text/html; charset={encoding}" />
   <title>Notmuch Patches</title>
   <style media="screen" type="text/css">
     table {{
@@ -293,6 +293,7 @@ For more infomation see <a href="http://notmuchmail.org/nmbug">nmbug</a>
 </p>
 <h3>Views</h3>
 '''.format(date=datetime.datetime.utcnow().date(),
+           encoding=_ENCODING,
            inter_message_padding='0.25em',
            border_radius='0.5em'),
     footer='</body>\n</html>\n',
