@@ -208,11 +208,11 @@ class HtmlPage (Page):
             stream.write('  <tbody>\n')
             for message_display_data in thread:
                 stream.write((
-                    '    <tr>\n'
+                    '    <tr class="message-first">\n'
                     '      <td>{date}</td>\n'
                     '      <td><code>{message-id-term}</code></td>\n'
                     '    </tr>\n'
-                    '    <tr>\n'
+                    '    <tr class="message-last">\n'
                     '      <td>{from}</td>\n'
                     '      <td>{subject}</td>\n'
                     '    </tr>\n'
@@ -255,6 +255,12 @@ _PAGES['html'] = HtmlPage(
     table {{
       border-spacing: 0;
     }}
+    tr.message-first td {{
+      padding-top: {inter_message_padding};
+    }}
+    tr.message-last td {{
+      padding-bottom: {inter_message_padding};
+    }}
     td {{
       padding-left: {border_radius};
       padding-right: {border_radius};
@@ -287,6 +293,7 @@ For more infomation see <a href="http://notmuchmail.org/nmbug">nmbug</a>
 </p>
 <h3>Views</h3>
 '''.format(date=datetime.datetime.utcnow().date(),
+           inter_message_padding='0.25em',
            border_radius='0.5em'),
     footer='</body>\n</html>\n',
     )
