@@ -205,19 +205,22 @@ class HtmlPage (Page):
             return
         stream.write('<table>\n')
         for thread in threads:
+            stream.write('  <tbody>\n')
             for message_display_data in thread:
                 stream.write((
-                    '<tr>\n'
-                    '  <td>{date}</td>\n'
-                    '  <td><code>{message-id-term}</code></td>\n'
-                    '</tr>\n'
-                    '<tr>\n'
-                    '  <td>{from}</td>\n'
-                    '  <td>{subject}</td>\n'
-                    '</tr>\n'
+                    '    <tr>\n'
+                    '      <td>{date}</td>\n'
+                    '      <td><code>{message-id-term}</code></td>\n'
+                    '    </tr>\n'
+                    '    <tr>\n'
+                    '      <td>{from}</td>\n'
+                    '      <td>{subject}</td>\n'
+                    '    </tr>\n'
                     ).format(**message_display_data))
+            stream.write('  </tbody>\n')
             if thread != threads[-1]:
-                stream.write('<tr><td colspan="2"><br /></td></tr>\n')
+                stream.write(
+                    '  <tbody><tr><td colspan="2"><br /></td></tr></tbody>\n')
         stream.write('</table>\n')
 
     def _message_display_data(self, *args, **kwargs):
@@ -246,8 +249,35 @@ _PAGES['html'] = HtmlPage(
     header='''<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<title>Notmuch Patches</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>Notmuch Patches</title>
+  <style media="screen" type="text/css">
+    table {{
+      border-spacing: 0;
+    }}
+    td {{
+      padding-left: {border_radius};
+      padding-right: {border_radius};
+    }}
+    tr:first-child td:first-child {{
+      border-top-left-radius: {border_radius};
+    }}
+    tr:first-child td:last-child {{
+      border-top-right-radius: {border_radius};
+    }}
+    tr:last-child td:first-child {{
+      border-bottom-left-radius: {border_radius};
+    }}
+    tr:last-child td:last-child {{
+      border-bottom-right-radius: {border_radius};
+    }}
+    tbody:nth-child(4n+1) tr td {{
+      background-color: #ffd96e;
+    }}
+    tbody:nth-child(4n+3) tr td {{
+      background-color: #bce;
+    }}
+  </style>
 </head>
 <body>
 <h2>Notmuch Patches</h2>
@@ -256,7 +286,8 @@ Generated: {date}<br />
 For more infomation see <a href="http://notmuchmail.org/nmbug">nmbug</a>
 </p>
 <h3>Views</h3>
-'''.format(date=datetime.datetime.utcnow().date()),
+'''.format(date=datetime.datetime.utcnow().date(),
+           border_radius='0.5em'),
     footer='</body>\n</html>\n',
     )
 
