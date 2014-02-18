@@ -41,7 +41,7 @@ if not hasattr(collections, 'OrderedDict'):  # Python 2.6 or earlier
             super(_OrderedDict, self).__setitem__(key, value)
             self._keys.append(key)
 
-        def __values__(self):
+        def values(self):
             for key in self._keys:
                 yield self[key]
 
