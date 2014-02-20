@@ -198,8 +198,13 @@ on the command line, and then retry your notmuch command")))
 
 (defun notmuch-config-get (item)
   "Return a value from the notmuch configuration."
-  ;; Trim off the trailing newline
-  (substring (notmuch-command-to-string "config" "get" item) 0 -1))
+  (let* ((val (notmuch-command-to-string "config" "get" item))
+	 (len (length val)))
+    ;; Trim off the trailing newline (if the value is empty or not
+    ;; configured, there will be no newline)
+    (if (and (> len 0) (= (aref val (- len 1)) ?\n))
+	(substring val 0 -1)
+      val)))
 
 (defun notmuch-database-path ()
   "Return the database.path value from the notmuch configuration."
