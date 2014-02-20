@@ -220,7 +220,7 @@ on the command line, and then retry your notmuch command")))
 
 (defun notmuch-user-other-email ()
   "Return the user.other_email value (as a list) from the notmuch configuration."
-  (split-string (notmuch-config-get "user.other_email") "\n"))
+  (split-string (notmuch-config-get "user.other_email") "\n" t))
 
 (defun notmuch-poll ()
   "Run \"notmuch new\" or an external script to import mail.
