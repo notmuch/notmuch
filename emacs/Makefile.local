@@ -33,10 +33,19 @@ ifeq ($(HAVE_EMACS),1)
 $(dir)/.eldeps: $(dir)/Makefile.local $(dir)/make-deps.el $(emacs_sources)
 	$(call quiet,EMACS) --directory emacs -batch -l make-deps.el \
 		-f batch-make-deps $(emacs_sources) > $@.tmp && \
-		(cmp -s $@.tmp $@ || mv $@.tmp $@)
--include $(dir)/.eldeps
+		mv $@.tmp $@
+# We could include .eldeps directly, but that would cause a make
+# restart whenever any .el file was modified, even if dependencies
+# didn't change, because the mtime of .eldeps will change.  Instead,
+# we include a second file, .eldeps.x, which we ensure always has the
+# same content as .eldeps, but its mtime only changes when dependency
+# information changes, in which case a make restart is necessary
+# anyway.
+$(dir)/.eldeps.x: $(dir)/.eldeps
+	@cmp -s $^ $@ || cp $^ $@
+-include $(dir)/.eldeps.x
 endif
-CLEAN+=$(dir)/.eldeps $(dir)/.eldeps.tmp
+CLEAN+=$(dir)/.eldeps $(dir)/.eldeps.tmp $(dir)/.eldeps.x
 
 ifeq ($(HAVE_EMACS),1)
 %.elc: %.el $(global_deps)
