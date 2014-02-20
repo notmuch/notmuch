@@ -231,21 +231,6 @@ list."
   (message-goto-body)
   (set-buffer-modified-p nil))
 
-(defun notmuch-mua-forward-message ()
-  (funcall (notmuch-mua-get-switch-function) (current-buffer))
-  (message-forward)
-
-  (when notmuch-mua-user-agent-function
-    (let ((user-agent (funcall notmuch-mua-user-agent-function)))
-      (when (not (string= "" user-agent))
-	(message-add-header (format "User-Agent: %s" user-agent)))))
-  (message-sort-headers)
-  (message-hide-headers)
-  (set-buffer-modified-p nil)
-  (notmuch-mua-maybe-set-window-dedicated)
-
-  (message-goto-to))
-
 (defun notmuch-mua-mail (&optional to subject other-headers &rest other-args)
   "Invoke the notmuch mail composition window.
 
@@ -345,13 +330,17 @@ The current buffer must contain an RFC2822 message to forward.
 
 If PROMPT-FOR-SENDER is non-nil, the user will be prompted for
 the From: address first."
-  (if (or prompt-for-sender notmuch-always-prompt-for-sender)
-      (let* ((sender (notmuch-mua-prompt-for-sender))
-	     (address-components (mail-extract-address-components sender))
-	     (user-full-name (car address-components))
-	     (user-mail-address (cadr address-components)))
-	(notmuch-mua-forward-message))
-    (notmuch-mua-forward-message)))
+  (let* ((cur (current-buffer))
+	 (message-forward-decoded-p nil)
+	 (subject (message-make-forward-subject))
+	 (other-headers
+	  (when (or prompt-for-sender notmuch-always-prompt-for-sender)
+	    (list (cons 'From (notmuch-mua-prompt-for-sender))))))
+    (notmuch-mua-mail nil subject other-headers nil (notmuch-mua-get-switch-function))
+    (message-forward-make-body cur)
+    ;; `message-forward-make-body' shows the User-agent header.  Hide
+    ;; it again.
+    (message-hide-headers)))
 
 (defun notmuch-mua-new-reply (query-string &optional prompt-for-sender reply-all)
   "Compose a reply to the message identified by QUERY-STRING.
