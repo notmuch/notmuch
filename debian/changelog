@@ -1,3 +1,10 @@
+notmuch (0.17-4) unstable; urgency=medium
+
+  * Bug fix: "Please update ruby binary extension install path",
+    thanks to Christian Hofstaedtler (Closes: #739120).
+
+ -- David Bremner <bremner@debian.org>  Tue, 18 Feb 2014 21:37:44 -0400
+
 notmuch (0.17-3) unstable; urgency=medium
 
   * update notmuch-emacs for debian emacs policy 2.0.6
