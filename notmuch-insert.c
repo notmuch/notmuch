@@ -431,6 +431,15 @@ notmuch_insert_command (notmuch_config_t *config, int argc, char *argv[])
 	return EXIT_FAILURE;
     }
     for (i = 0; i < new_tags_length; i++) {
+	const char *error_msg;
+
+	error_msg = illegal_tag (new_tags[i], FALSE);
+	if (error_msg) {
+	    fprintf (stderr, "Error: tag '%s' in new.tags: %s\n",
+		     new_tags[i],  error_msg);
+	    return EXIT_FAILURE;
+	}
+
 	if (tag_op_list_append (tag_ops, new_tags[i], FALSE))
 	    return EXIT_FAILURE;
     }

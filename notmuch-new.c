@@ -19,6 +19,7 @@
  */
 
 #include "notmuch-client.h"
+#include "tag-util.h"
 
 #include <unistd.h>
 
@@ -918,7 +919,7 @@ notmuch_new_command (notmuch_config_t *config, int argc, char *argv[])
     struct sigaction action;
     _filename_node_t *f;
     int opt_index;
-    int i;
+    unsigned int i;
     notmuch_bool_t timer_is_active = FALSE;
     notmuch_bool_t no_hooks = FALSE;
     notmuch_bool_t quiet = FALSE, verbose = FALSE;
@@ -949,6 +950,17 @@ notmuch_new_command (notmuch_config_t *config, int argc, char *argv[])
     add_files_state.new_ignore = notmuch_config_get_new_ignore (config, &add_files_state.new_ignore_length);
     add_files_state.synchronize_flags = notmuch_config_get_maildir_synchronize_flags (config);
     db_path = notmuch_config_get_database_path (config);
+
+    for (i = 0; i < add_files_state.new_tags_length; i++) {
+	const char *error_msg;
+
+	error_msg = illegal_tag (add_files_state.new_tags[i], FALSE);
+	if (error_msg) {
+	    fprintf (stderr, "Error: tag '%s' in new.tags: %s\n",
+		     add_files_state.new_tags[i], error_msg);
+	    return EXIT_FAILURE;
+	}
+    }
 
     if (!no_hooks) {
 	ret = notmuch_run_hook (db_path, "pre-new");
