@@ -263,4 +263,21 @@ notmuch search --format=text0 --output=files --offset=1 --limit=1 '*' | xargs -0
 output=$(NOTMUCH_NEW --quiet)
 test_expect_equal "$output" ""
 
+OLDCONFIG=$(notmuch config get new.tags)
+
+test_begin_subtest "Empty tags in new.tags are forbidden"
+notmuch config set new.tags "foo;;bar"
+output=$(NOTMUCH_NEW 2>&1)
+test_expect_equal "$output" "Error: tag '' in new.tags: empty tag forbidden"
+
+test_begin_subtest "Tags starting with '-' in new.tags are forbidden"
+notmuch config set new.tags "-foo;bar"
+output=$(NOTMUCH_NEW 2>&1)
+test_expect_equal "$output" "Error: tag '-foo' in new.tags: tag starting with '-' forbidden"
+
+test_expect_code 1 "Invalid tags set exit code" \
+    "NOTMUCH_NEW 2>&1"
+
+notmuch config set new.tags $OLDCONFIG
+
 test_done

@@ -164,4 +164,23 @@ gen_insert_msg
 test_expect_code 1 "Insert message, create invalid subfolder" \
     "notmuch insert --folder=../G --create-folder $gen_msg_filename"
 
+OLDCONFIG=$(notmuch config get new.tags)
+
+test_begin_subtest "Empty tags in new.tags are forbidden"
+notmuch config set new.tags "foo;;bar"
+gen_insert_msg
+output=$(notmuch insert $gen_msg_filename 2>&1)
+test_expect_equal "$output" "Error: tag '' in new.tags: empty tag forbidden"
+
+test_begin_subtest "Tags starting with '-' in new.tags are forbidden"
+notmuch config set new.tags "-foo;bar"
+gen_insert_msg
+output=$(notmuch insert $gen_msg_filename 2>&1)
+test_expect_equal "$output" "Error: tag '-foo' in new.tags: tag starting with '-' forbidden"
+
+test_expect_code 1 "Invalid tags set exit code" \
+    "notmuch insert $gen_msg_filename 2>&1"
+
+notmuch config set new.tags $OLDCONFIG
+
 test_done
