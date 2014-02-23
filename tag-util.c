@@ -31,14 +31,7 @@ line_error (tag_parse_status_t status,
     return status;
 }
 
-/*
- * Test tags for some forbidden cases.
- *
- * return: NULL if OK,
- *	   explanatory message otherwise.
- */
-
-static const char *
+const char *
 illegal_tag (const char *tag, notmuch_bool_t remove)
 {
 
