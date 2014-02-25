@@ -50,11 +50,6 @@ test:	all test-binaries
 check: test
 
 SRCS := $(SRCS) $(smtp_dummy_srcs)
-CLEAN := $(CLEAN) $(dir)/smtp-dummy $(dir)/smtp-dummy.o \
-	 $(dir)/symbol-test $(dir)/symbol-test.o \
-	 $(dir)/arg-test $(dir)/arg-test.o \
-	 $(dir)/hex-xcode $(dir)/hex-xcode.o \
+CLEAN += $(TEST_BINARIES) $(addsuffix .o,$(TEST_BINARIES)) \
 	 $(dir)/database-test.o \
-	 $(dir)/random-corpus $(dir)/random-corpus.o \
-	 $(dir)/parse-time $(dir)/parse-time.o \
 	 $(dir)/corpus.mail $(dir)/test-results $(dir)/tmp.*
