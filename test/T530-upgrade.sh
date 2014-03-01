@@ -7,7 +7,7 @@ dbtarball=database-v1.tar.xz
 
 # XXX: Accomplish the same with test lib helpers
 if [ ! -e ${TEST_DIRECTORY}/test-databases/${dbtarball} ]; then
-    test_subtest_missing_external_prereq_["${dbtarball}"]=t
+    test_subtest_missing_external_prereq_["${dbtarball} - fetch with 'make download-test-databases'"]=t
 fi
 
 test_expect_success \

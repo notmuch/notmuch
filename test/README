@@ -64,6 +64,14 @@ The following command-line options are available when running tests:
 	Pointing this argument at a tmpfs filesystem can improve the
 	speed of the test suite for some users.
 
+Certain tests require precomputed databases to complete. You can fetch these
+databases with
+
+	make download-test-databases
+
+If you do not download the test databases, the relevant tests will be
+skipped.
+
 When invoking the test suite via "make test" any of the above options
 can be specified as follows:
 

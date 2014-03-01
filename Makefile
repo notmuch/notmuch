@@ -5,7 +5,8 @@ all:
 # List all subdirectories here. Each contains its own Makefile.local.
 # Use of '=', without '+=', seems to be required for out-of-tree
 # builds to work.
-subdirs = compat completion doc emacs lib parse-time-string performance-test util test
+subdirs = compat completion doc emacs lib parse-time-string	\
+	performance-test util test test/test-databases
 
 # We make all targets depend on the Makefiles themselves.
 global_deps = Makefile Makefile.config Makefile.local \
