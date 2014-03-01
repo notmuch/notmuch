@@ -1781,10 +1781,14 @@ message."
       (setq shell-command
 	    (concat notmuch-command " show --format=raw "
 		    (shell-quote-argument (notmuch-show-get-message-id)) " | " command)))
-    (let ((buf (get-buffer-create (concat "*notmuch-pipe*"))))
+    (let ((cwd default-directory)
+	  (buf (get-buffer-create (concat "*notmuch-pipe*"))))
       (with-current-buffer buf
 	(setq buffer-read-only nil)
 	(erase-buffer)
+	;; Use the originating buffer's working directory instead of
+	;; that of the pipe buffer.
+	(cd cwd)
 	(let ((exit-code (call-process-shell-command shell-command nil buf)))
 	  (goto-char (point-max))
 	  (set-buffer-modified-p nil)
