@@ -8,6 +8,10 @@ Command-Line Interface
 
   The old format is still available with `--format=sup`.
 
+`notmuch new` has a --quiet option
+
+  This option suppresses the progress and summary reports.
+
 Emacs Interface
 ---------------
 
