@@ -2,8 +2,10 @@ notmuch (0.18-1) unstable; urgency=medium
 
   * Bug fix: "insufficient sanitization of arguments to notmuch CLI",
     thanks to Antoine Beaupré (Closes: #737496).
+  * Bug fix: "notmuch(1) manpage: typo: int -&gt; in", thanks to Jakub
+    Wilk (Closes: #739556).
 
- -- David Bremner <bremner@debian.org>  Mon, 03 Mar 2014 08:23:03 -0400
+ -- David Bremner <bremner@debian.org>  Mon, 03 Mar 2014 08:35:46 -0400
 
 notmuch (0.17-5) unstable; urgency=medium
 
