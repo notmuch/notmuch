@@ -1,3 +1,10 @@
+notmuch (0.17-5) unstable; urgency=medium
+
+  * Bug fix: "unowned directory after purge: /0755/", thanks to
+    Andreas Beckmann (Closes: #740325).
+
+ -- David Bremner <bremner@debian.org>  Mon, 03 Mar 2014 07:29:06 -0400
+
 notmuch (0.17-4) unstable; urgency=medium
 
   * Bug fix: "Please update ruby binary extension install path",
