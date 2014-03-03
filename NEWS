@@ -8,6 +8,14 @@ Command-Line Interface
 
   The old format is still available with `--format=sup`.
 
+Emacs Interface
+---------------
+
+Bug fix for saved searches with newlines in them.
+
+  Split lines confuse `notmuch count --batch`, so we remove embedded
+  newlines before calling notmuch count.
+
 Notmuch 0.17 (2013-12-30)
 =========================
 
