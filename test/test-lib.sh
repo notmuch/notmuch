@@ -196,7 +196,7 @@ print_test_description ()
 {
 	test -z "$test_description_printed" || return 0
 	echo
-	echo $this_test_bare: "Testing ${test_description}"
+	echo $this_test: "Testing ${test_description}"
 	test_description_printed=1
 }
 if [ -z "$NOTMUCH_TEST_QUIET" ]
