@@ -825,6 +825,12 @@ test_skip () {
 		case $this_test.$test_count in
 		$skp)
 			to_skip=t
+			break
+		esac
+		case $this_test_bare.$test_count in
+		$skp)
+			to_skip=t
+			break
 		esac
 	done
 	if test -z "$to_skip" && test -n "$prereq" &&
@@ -1207,6 +1213,12 @@ do
 		case "$this_test" in
 		$skp)
 			to_skip=t
+			break
+		esac
+		case "$this_test_bare" in
+		$skp)
+			to_skip=t
+			break
 		esac
 	done
 	case "$to_skip" in
