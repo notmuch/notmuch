@@ -172,7 +172,7 @@ parse_tag_command_line (void *ctx, int argc, char **argv,
 
 	msg = illegal_tag (argv[i] + 1, is_remove);
 	if (msg) {
-	    fprintf (stderr, "Error: %s", msg);
+	    fprintf (stderr, "Error: %s\n", msg);
 	    return TAG_PARSE_INVALID;
 	}
 
