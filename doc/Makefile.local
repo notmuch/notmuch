@@ -8,12 +8,18 @@ SPHINXBUILD   = sphinx-build
 DOCBUILDDIR      := $(dir)/_build
 
 prerst2man := python $(dir)/prerst2man.py
+mkdocdeps := python $(dir)/mkdocdeps.py
 
 # Internal variables.
 ALLSPHINXOPTS   := -d $(DOCBUILDDIR)/doctrees $(SPHINXOPTS) $(dir)
 
 .PHONY: sphinx-html sphinx-man sphinx-texinfo sphinx-info
 .PHONY: rst2man
+
+.PHONY: install-man
+
+%.gz: %
+	rm -f $@ && gzip --stdout $^ > $@
 
 sphinx-html:
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(DOCBUILDDIR)/html
@@ -31,4 +37,23 @@ sphinx-info: sphinx-texinfo
 rst2man:
 	$(prerst2man) $(DOCBUILDDIR)/.. $(DOCBUILDDIR)/man
 
-CLEAN := $(CLEAN) $(DOCBUILDDIR)
+-include $(dir)/docdeps.mk
+
+MAN_GZIP_FILES := $(addsuffix .gz,${MAN_ROFF_FILES})
+
+${MAN_ROFF_FILES} : sphinx-man
+
+install-man: ${MAN_GZIP_FILES}
+	mkdir -p "$(DESTDIR)$(mandir)/man1"
+	mkdir -p "$(DESTDIR)$(mandir)/man5"
+	mkdir -p "$(DESTDIR)$(mandir)/man7"
+	install -m0644 $(DOCBUILDDIR)/man/*.1.gz $(DESTDIR)/$(mandir)/man1
+	install -m0644 $(DOCBUILDDIR)/man/*.5.gz $(DESTDIR)/$(mandir)/man5
+	install -m0644 $(DOCBUILDDIR)/man/*.7.gz $(DESTDIR)/$(mandir)/man7
+	cd $(DESTDIR)/$(mandir)/man1 && ln -sf notmuch.1.gz notmuch-setup.1.gz
+
+
+$(dir)/docdeps.mk: $(dir)/conf.py $(dir)/mkdocdeps.py
+	$(mkdocdeps) $< $(DOCBUILDDIR) $@
+
+CLEAN := $(CLEAN) $(DOCBUILDDIR) $(dir)/docdeps.mk

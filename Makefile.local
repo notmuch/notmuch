@@ -95,7 +95,7 @@ dist: $(TAR_FILE)
 
 .PHONY: update-versions
 
-update-versions: update-man-versions
+update-versions:
 	sed -i "s/^__VERSION__[[:blank:]]*=.*$$/__VERSION__ = \'${VERSION}\'/" $(PV_FILE)
 
 # We invoke make recursively only to force ordering of our phony
