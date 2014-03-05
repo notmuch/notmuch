@@ -14,10 +14,16 @@ master_doc = 'index'
 project = u'notmuch'
 copyright = u'2014, Carl Worth and many others'
 
-# The short X.Y version.
-version = '0.17'
+location = os.path.dirname(__file__)
+
+for pathdir in ['.', '..']:
+    version_file = os.path.join(location,pathdir,'version')
+    if os.path.exists(version_file):
+        with open(version_file,'r') as infile:
+            version=infile.read().replace('\n','')
+
 # The full version, including alpha/beta/rc tags.
-release = '0.17'
+release = version
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
