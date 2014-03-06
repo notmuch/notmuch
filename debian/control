@@ -19,7 +19,8 @@ Build-Depends:
  emacs23-nox | emacs23 (>=23~) | emacs23-lucid (>=23~) |
  emacs24-nox | emacs24 (>=24~) | emacs24-lucid (>=24~),
  gdb [!s390x !ia64],
- dtach (>= 0.8)
+ dtach (>= 0.8),
+ bash-completion (>=1.9.0~)
 Standards-Version: 3.9.4
 Homepage: http://notmuchmail.org/
 Vcs-Git: git://notmuchmail.org/git/notmuch
