@@ -63,8 +63,9 @@ add_email_corpus ()
     fi
 
     file_list=$(mktemp file_listXXXXXX)
+    declare -a extract_dirs
     if [ ! -d "$TAG_CORPUS" ] ; then
-	echo "notmuch-email-corpus/tags" >> $file_list
+	extract_dirs=("${extract_dirs[@]}" notmuch-email-corpus/tags)
     fi
 
     if [ ! -d "$MAIL_CORPUS" ] ; then
@@ -72,11 +73,11 @@ add_email_corpus ()
 	    sed s,^,notmuch-email-corpus/, < \
 		${TEST_DIRECTORY}/corpus/manifest/MANIFEST.${corpus_size} >> $file_list
 	else
-	    echo "notmuch-email-corpus/mail" >> $file_list
+	    extract_dirs=("${extract_dirs[@]}" notmuch-email-corpus/mail)
 	fi
     fi
 
-    if [[ -s $file_list ]]; then
+    if [[ -s $file_list || -n "${extract_dirs[*]}" ]]; then
 
 	printf "Unpacking corpus\n"
 	tar --checkpoint=.5000 --extract --strip-components=1 \
@@ -84,7 +85,7 @@ add_email_corpus ()
 	    --use-compress-program ${XZ} \
 	    --file ../download/notmuch-email-corpus-${PERFTEST_VERSION}.tar.xz \
 	    --anchored --recursion \
-	    --files-from $file_list
+	    --files-from $file_list "${extract_dirs[@]}"
 
 	printf "\n"
 
