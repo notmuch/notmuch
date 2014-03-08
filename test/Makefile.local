@@ -2,6 +2,8 @@
 
 dir := test
 
+# save against changes in $(dir)
+test_src_dir := $(dir)
 extra_cflags += -I.
 
 smtp_dummy_srcs =		\
@@ -45,7 +47,7 @@ TEST_BINARIES=$(dir)/arg-test \
 test-binaries: $(TEST_BINARIES)
 
 test:	all test-binaries
-	@${dir}/notmuch-test $(OPTIONS)
+	@${test_src_dir}/notmuch-test $(OPTIONS)
 
 check: test
 
