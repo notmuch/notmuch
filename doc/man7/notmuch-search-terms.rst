@@ -46,7 +46,9 @@ indicate user-supplied values):
 
 -  thread:<thread-id>
 
--  folder:<directory-path>
+-  folder:<maildir-folder>
+
+-  path:<directory-path> or path:<directory-path>/**
 
 -  date:<since>..<until>
 
@@ -77,12 +79,28 @@ generated internally by notmuch (and do not appear in email messages).
 These thread ID values can be seen in the first column of output from
 **notmuch search**
 
-The **folder:** prefix can be used to search for email message files
-that are contained within particular directories within the mail store.
-If the same email message has multiple message files associated with it,
-it's sufficient for a match that at least one of the files is contained
-within a matching directory. Only the directory components below the
-top-level mail database path are available to be searched.
+The **path:** prefix searches for email messages that are in
+particular directories within the mail store. The directory must be
+specified relative to the top-level maildir (and without the leading
+slash). By default, **path:** matches messages in the specified
+directory only. The "/\*\*" suffix can be used to match messages in
+the specified directory and all its subdirectories recursively.
+**path:""** matches messages in the root of the mail store and,
+likewise, **path:\*\*** matches all messages.
+
+The **folder:** prefix searches for email messages by maildir or MH
+folder. For MH-style folders, this is equivalent to **path:**. For
+maildir, this includes messages in the "new" and "cur"
+subdirectories. The exact syntax for maildir folders depends on your
+mail configuration. For maildir++, **folder:""** matches the inbox
+folder (which is the root in maildir++), other folder names always
+start with ".", and nested folders are separated by "."s, such as
+**folder:.classes.topology**. For "file system" maildir, the inbox is
+typically **folder:INBOX** and nested folders are separated by
+slashes, such as **folder:classes/topology**.
+
+Both **path:** and **folder:** will find a message if *any* copy of
+that message is in the specific directory/folder.
 
 The **date:** prefix can be used to restrict the results to only
 messages within a particular time range (based on the Date: header) with
