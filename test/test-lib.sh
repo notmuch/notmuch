@@ -667,6 +667,11 @@ notmuch_search_sanitize ()
     perl -pe 's/("?thread"?: ?)("?)................("?)/\1\2XXX\3/'
 }
 
+notmuch_search_files_sanitize()
+{
+    sed -e "s,$MAIL_DIR,MAIL_DIR,"
+}
+
 NOTMUCH_SHOW_FILENAME_SQUELCH='s,filename:.*/mail,filename:/XXX/mail,'
 notmuch_show_sanitize ()
 {

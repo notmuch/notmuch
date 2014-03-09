@@ -181,7 +181,7 @@ EOF
 test_expect_equal_file OUTPUT EXPECTED
 
 test_begin_subtest "--output=files"
-notmuch search --output=files '*' | sed -e "s,$MAIL_DIR,MAIL_DIR," >OUTPUT
+notmuch search --output=files '*' | notmuch_search_files_sanitize >OUTPUT
 cat <<EOF >EXPECTED
 MAIL_DIR/cur/52:2,
 MAIL_DIR/cur/53:2,
@@ -240,7 +240,7 @@ EOF
 test_expect_equal_file OUTPUT EXPECTED
 
 test_begin_subtest "--output=files --duplicate=1"
-notmuch search --output=files --duplicate=1 '*' | sed -e "s,$MAIL_DIR,MAIL_DIR," >OUTPUT
+notmuch search --output=files --duplicate=1 '*' | notmuch_search_files_sanitize >OUTPUT
 cat <<EOF >EXPECTED
 MAIL_DIR/cur/52:2,
 MAIL_DIR/cur/53:2,
@@ -298,7 +298,7 @@ EOF
 test_expect_equal_file OUTPUT EXPECTED
 
 test_begin_subtest "--output=files --format=json"
-notmuch search --format=json --output=files '*' | sed -e "s,$MAIL_DIR,MAIL_DIR," >OUTPUT
+notmuch search --format=json --output=files '*' | notmuch_search_files_sanitize >OUTPUT
 cat <<EOF >EXPECTED
 ["MAIL_DIR/cur/52:2,",
 "MAIL_DIR/cur/53:2,",
@@ -357,7 +357,7 @@ EOF
 test_expect_equal_file OUTPUT EXPECTED
 
 test_begin_subtest "--output=files --format=json --duplicate=2"
-notmuch search --format=json --output=files --duplicate=2 '*' | sed -e "s,$MAIL_DIR,MAIL_DIR," >OUTPUT
+notmuch search --format=json --output=files --duplicate=2 '*' | notmuch_search_files_sanitize >OUTPUT
 cat <<EOF >EXPECTED
 ["MAIL_DIR/cur/51:2,"]
 EOF
