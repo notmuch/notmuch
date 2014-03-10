@@ -26,6 +26,7 @@ my $ESCAPED_RX =	qr{$ESCAPE_CHAR([A-Fa-f0-9]{2})};
 my %command = (
 	     archive	=> \&do_archive,
 	     checkout	=> \&do_checkout,
+	     clone	=> \&do_clone,
 	     commit	=> \&do_commit,
 	     fetch	=> \&do_fetch,
 	     help	=> \&do_help,
@@ -125,6 +126,15 @@ sub do_archive {
   system ('git', "--git-dir=$NMBGIT", 'archive', 'HEAD');
 }
 
+sub do_clone {
+  my $repository = shift;
+
+  my $tempwork = tempdir ('/tmp/nmbug-clone.XXXXXX', CLEANUP => 1);
+  system ('git', 'clone', '--no-checkout', '--separate-git-dir', $NMBGIT,
+          $repository, $tempwork) == 0
+    or die "'git clone' exited with nonzero value\n";
+  git ('config', '--unset', 'core.worktree');
+}
 
 sub is_committed {
   my $status = shift;
@@ -332,21 +342,24 @@ To discard your changes,  run 'nmbug checkout'
 
 sub do_pull {
   my $remote = shift || 'origin';
+  my $branch = shift || 'master';
 
   git ( 'fetch', $remote);
 
-  do_merge ();
+  do_merge ("$remote/$branch");
 }
 
 
 sub do_merge {
+  my $commit = shift || '@{upstream}';
+
   insist_committed ();
 
   my $tempwork = tempdir ('/tmp/nmbug-merge.XXXXXX', CLEANUP => 1);
 
   git ( { GIT_WORK_TREE => $tempwork }, 'checkout', '-f', 'HEAD');
 
-  git ( { GIT_WORK_TREE => $tempwork }, 'merge', 'FETCH_HEAD');
+  git ( { GIT_WORK_TREE => $tempwork }, 'merge', $commit);
 
   do_checkout ();
 }
@@ -407,11 +420,10 @@ sub do_status {
 
 
 sub is_unmerged {
+  my $commit = shift || '@{upstream}';
 
-  return 0 if (! -f $NMBGIT.'/FETCH_HEAD');
-
-  my $fetch_head = git ('rev-parse', 'FETCH_HEAD');
-  my $base = git ( 'merge-base', 'HEAD', 'FETCH_HEAD');
+  my $fetch_head = git ('rev-parse', $commit);
+  my $base = git ( 'merge-base', 'HEAD', $commit);
 
   return ($base ne $fetch_head);
 
@@ -473,7 +485,7 @@ sub diff_index {
 sub diff_refs {
   my $filter = shift;
   my $ref1 = shift || 'HEAD';
-  my $ref2 = shift || 'FETCH_HEAD';
+  my $ref2 = shift || '@{upstream}';
 
   my $fh= git_pipe ( 'diff', "--diff-filter=$filter", '--name-only',
 		 $ref1, $ref2);
@@ -561,16 +573,23 @@ git. Any extra arguments are used (one per line) as a commit message.
 
 push local nmbug git state to remote repo
 
-=item  B<pull> [remote]
+=item  B<pull> [remote] [branch]
 
 pull (merge) remote repo changes to notmuch. B<pull> is equivalent to
-B<fetch> followed by B<merge>.
+B<fetch> followed by B<merge>.  The default remote is C<origin>, and
+the default branch is C<master>.
 
 =back
 
 =head2 Other Useful Commands
 
 =over 8
+
+=item B<clone> repository
+
+Create a local nmbug repository from a remote source.  This wraps
+C<git clone>, adding some options to avoid creating a working tree
+while preserving remote-tracking branches and upstreams.
 
 =item B<checkout>
 
@@ -589,12 +608,12 @@ print help [for subcommand]
 =item B<log> [parameters]
 
 A simple wrapper for git log. After running C<nmbug fetch>, you can
-inspect the changes with C<nmbug log HEAD..FETCH_HEAD>
+inspect the changes with C<nmbug log HEAD..@{upstream}>
 
-=item B<merge>
+=item B<merge> [commit]
 
-Merge changes from FETCH_HEAD into HEAD, and load the result into
-notmuch.
+Merge changes from C<commit> into HEAD, and load the result into
+notmuch.  The default commit is C<@{upstream}>.
 
 =item  B<status>
 
