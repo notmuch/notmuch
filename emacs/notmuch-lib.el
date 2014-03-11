@@ -426,7 +426,10 @@ user-friendly queries."
 
   (save-match-data
     (if (or (equal term "")
-	    (string-match "[ ()]\\|^\"" term))
+	    ;; To be pessimistic, only pass through terms composed
+	    ;; entirely of ASCII printing characters other than ", (,
+	    ;; and ).
+	    (string-match "[^!#-'*-~]" term))
 	;; Requires escaping
 	(concat "\"" (replace-regexp-in-string "\"" "\"\"" term t t) "\"")
       term)))

@@ -954,7 +954,6 @@ output=$(notmuch search --output=messages 'tag:search-global-race-tag')
 test_expect_equal "$output" "id:$gen_msg_id_1"
 
 test_begin_subtest "Term escaping"
-test_subtest_known_broken
 output=$(test_emacs "(mapcar 'notmuch-escape-boolean-term (list
 	\"\"
 	\"abc\`~\!@#\$%^&*-=_+123\"
