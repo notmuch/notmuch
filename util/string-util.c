@@ -75,10 +75,12 @@ make_boolean_term (void *ctx, const char *prefix, const char *term,
     int need_quoting = 0;
 
     /* Do we need quoting?  To be paranoid, we quote anything
-     * containing a quote, even though it only matters at the
+     * containing a quote or '(', even though these only matter at the
      * beginning, and anything containing non-ASCII text. */
+    if (! term[0])
+	need_quoting = 1;
     for (in = term; *in && !need_quoting; in++)
-	if (is_unquoted_terminator (*in) || *in == '"'
+	if (is_unquoted_terminator (*in) || *in == '"' || *in == '('
 	    || (unsigned char)*in > 127)
 	    need_quoting = 1;
 
