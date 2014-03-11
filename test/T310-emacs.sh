@@ -953,4 +953,16 @@ test_emacs '(notmuch-search "subject:\"search race test\" -subject:two")
 output=$(notmuch search --output=messages 'tag:search-global-race-tag')
 test_expect_equal "$output" "id:$gen_msg_id_1"
 
+test_begin_subtest "Term escaping"
+test_subtest_known_broken
+output=$(test_emacs "(mapcar 'notmuch-escape-boolean-term (list
+	\"\"
+	\"abc\`~\!@#\$%^&*-=_+123\"
+	\"(abc\"
+	\")abc\"
+	\"\\\"abc\"
+	\"\x01xyz\"
+	\"\\x201cxyz\\x201d\"))")
+test_expect_equal "$output" '("\"\"" "abc`~!@#$%^&*-=_+123" "\"(abc\"" "\")abc\"" "\"\"\"abc\"" "\"'$'\x01''xyz\"" "\"“xyz”\"")'
+
 test_done
