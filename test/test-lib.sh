@@ -622,6 +622,12 @@ test_expect_equal_json () {
     test_expect_equal "$output" "$expected" "$@"
 }
 
+# Sort the top-level list of JSON data from stdin.
+test_sort_json () {
+    PYTHONIOENCODING=utf-8 python -c \
+        "import sys, json; json.dump(sorted(json.load(sys.stdin)),sys.stdout)"
+}
+
 test_emacs_expect_t () {
 	test "$#" = 2 && { prereq=$1; shift; } || prereq=
 	test "$#" = 1 ||
