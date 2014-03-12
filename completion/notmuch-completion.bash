@@ -49,8 +49,19 @@ _notmuch_search_terms()
 	from:*)
 	    COMPREPLY=( $(compgen -P "from:" -W "`_notmuch_user_emails`" -- ${cur##from:}) )
 	    ;;
+	path:*)
+	    local path=`notmuch config get database.path`
+	    compopt -o nospace
+	    COMPREPLY=( $(compgen -d "$path/${cur##path:}" | sed "s|^$path/||" ) )
+	    ;;
+	folder:*)
+	    local path=`notmuch config get database.path`
+	    compopt -o nospace
+	    COMPREPLY=( $(compgen -d "$path/${cur##folder:}" | \
+		sed "s|^$path/||" | grep -v "\(^\|/\)\(cur\|new\|tmp\)$" ) )
+	    ;;
 	*)
-	    local search_terms="from: to: subject: attachment: tag: id: thread: folder: date:"
+	    local search_terms="from: to: subject: attachment: tag: id: thread: folder: path: date:"
 	    compopt -o nospace
 	    COMPREPLY=( $(compgen -W "${search_terms}" -- ${cur}) )
 	    ;;
