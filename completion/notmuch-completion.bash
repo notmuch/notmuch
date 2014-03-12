@@ -78,7 +78,7 @@ _notmuch_compact()
     $split &&
     case "${prev}" in
 	--backup)
-	    _filedir
+	    _filedir -d
 	    return
 	    ;;
     esac
@@ -107,7 +107,7 @@ _notmuch_config()
 	    ;;
 	# these will also complete on config get, but we don't care
 	database.path)
-	    _filedir
+	    _filedir -d
 	    ;;
 	maildir.synchronize_flags)
 	    COMPREPLY=( $(compgen -W "true false" -- ${cur}) )
