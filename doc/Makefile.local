@@ -13,10 +13,9 @@ mkdocdeps := python $(dir)/mkdocdeps.py
 # Internal variables.
 ALLSPHINXOPTS   := -d $(DOCBUILDDIR)/doctrees $(SPHINXOPTS) $(dir)
 
-.PHONY: sphinx-html sphinx-man sphinx-texinfo sphinx-info
-.PHONY: rst2man
+.PHONY: sphinx-html sphinx-texinfo sphinx-info
 
-.PHONY: install-man
+.PHONY: install-man build-man
 
 %.gz: %
 	rm -f $@ && gzip --stdout $^ > $@
@@ -24,24 +23,30 @@ ALLSPHINXOPTS   := -d $(DOCBUILDDIR)/doctrees $(SPHINXOPTS) $(dir)
 sphinx-html:
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(DOCBUILDDIR)/html
 
-sphinx-man:
-	$(SPHINXBUILD) -b man $(ALLSPHINXOPTS) $(DOCBUILDDIR)/man
-
 sphinx-texinfo:
 	$(SPHINXBUILD) -b texinfo $(ALLSPHINXOPTS) $(DOCBUILDDIR)/texinfo
 
 sphinx-info: sphinx-texinfo
 	make -C $(DOCBUILDDIR)/texinfo info
 
-# fallback target in case sphinx not installed
-rst2man:
-	$(prerst2man) $(DOCBUILDDIR)/.. $(DOCBUILDDIR)/man
-
 -include $(dir)/docdeps.mk
 
 MAN_GZIP_FILES := $(addsuffix .gz,${MAN_ROFF_FILES})
 
-${MAN_ROFF_FILES} : sphinx-man
+build-man: ${MAN_GZIP_FILES}
+
+${MAN_ROFF_FILES}: ${dir}/man.stamp
+
+$(dir)/man.stamp: ${MAN_RST_FILES}
+ifeq ($(HAVE_SPHINX),1)
+	$(SPHINXBUILD) -b man $(ALLSPHINXOPTS) $(DOCBUILDDIR)/man
+	touch $@
+else ifeq ($(HAVE_RST2MAN),1)
+	$(prerst2man) $(DOCBUILDDIR)/.. $(DOCBUILDDIR)/man
+	touch $@
+else
+	@echo "No sphinx or rst2man, will not install man pages."
+endif
 
 install-man: ${MAN_GZIP_FILES}
 	mkdir -p "$(DESTDIR)$(mandir)/man1"
@@ -52,8 +57,8 @@ install-man: ${MAN_GZIP_FILES}
 	install -m0644 $(DOCBUILDDIR)/man/*.7.gz $(DESTDIR)/$(mandir)/man7
 	cd $(DESTDIR)/$(mandir)/man1 && ln -sf notmuch.1.gz notmuch-setup.1.gz
 
-
 $(dir)/docdeps.mk: $(dir)/conf.py $(dir)/mkdocdeps.py
 	$(mkdocdeps) $< $(DOCBUILDDIR) $@
 
-CLEAN := $(CLEAN) $(DOCBUILDDIR) $(dir)/docdeps.mk
+CLEAN := $(CLEAN) $(DOCBUILDDIR) $(dir)/docdeps.mk $(dir)/man.stamp
+CLEAN := $(CLEAN) $(MAN_GZIP_FILES) $(MAN_ROFF_FILES)
