@@ -40,7 +40,10 @@ ${MAN_ROFF_FILES}: ${dir}/man.stamp
 $(dir)/man.stamp: ${MAN_RST_FILES}
 ifeq ($(HAVE_SPHINX),1)
 	$(SPHINXBUILD) -b man $(ALLSPHINXOPTS) $(DOCBUILDDIR)/man
-	touch $@
+	for section in 1 5 7; do \
+	    mkdir -p $(DOCBUILDDIR)/man/man$${section}; \
+	    mv $(DOCBUILDDIR)/man/*.$${section} $(DOCBUILDDIR)/man/man$${section}; \
+	done
 else ifeq ($(HAVE_RST2MAN),1)
 	$(prerst2man) $(DOCBUILDDIR)/.. $(DOCBUILDDIR)/man
 	touch $@
@@ -52,9 +55,9 @@ install-man: ${MAN_GZIP_FILES}
 	mkdir -p "$(DESTDIR)$(mandir)/man1"
 	mkdir -p "$(DESTDIR)$(mandir)/man5"
 	mkdir -p "$(DESTDIR)$(mandir)/man7"
-	install -m0644 $(DOCBUILDDIR)/man/*.1.gz $(DESTDIR)/$(mandir)/man1
-	install -m0644 $(DOCBUILDDIR)/man/*.5.gz $(DESTDIR)/$(mandir)/man5
-	install -m0644 $(DOCBUILDDIR)/man/*.7.gz $(DESTDIR)/$(mandir)/man7
+	install -m0644 $(DOCBUILDDIR)/man/man1/*.1.gz $(DESTDIR)/$(mandir)/man1
+	install -m0644 $(DOCBUILDDIR)/man/man5/*.5.gz $(DESTDIR)/$(mandir)/man5
+	install -m0644 $(DOCBUILDDIR)/man/man7/*.7.gz $(DESTDIR)/$(mandir)/man7
 	cd $(DESTDIR)/$(mandir)/man1 && ln -sf notmuch.1.gz notmuch-setup.1.gz
 
 $(dir)/docdeps.mk: $(dir)/conf.py $(dir)/mkdocdeps.py

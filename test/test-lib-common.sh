@@ -98,12 +98,12 @@ then
 	PATH=$GIT_VALGRIND/bin:$PATH
 	GIT_EXEC_PATH=$GIT_VALGRIND/bin
 	export GIT_VALGRIND
-	test -n "$notmuch_path" && MANPATH="$notmuch_path/man:$MANPATH"
+	test -n "$notmuch_path" && MANPATH="$notmuch_path/doc/_build/man"
 else # normal case
 	if test -n "$notmuch_path"
 		then
 			PATH="$notmuch_path:$PATH"
-			MANPATH="$notmuch_path/man:$MANPATH"
+			MANPATH="$notmuch_path/doc/_build/man"
 		fi
 fi
 export PATH MANPATH
