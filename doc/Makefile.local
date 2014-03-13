@@ -33,11 +33,9 @@ sphinx-info: sphinx-texinfo
 
 MAN_GZIP_FILES := $(addsuffix .gz,${MAN_ROFF_FILES})
 
-build-man: ${MAN_GZIP_FILES}
-
-${MAN_ROFF_FILES}: ${dir}/man.stamp
-
-$(dir)/man.stamp: ${MAN_RST_FILES}
+# Use the man page converter that is available. We should never depend
+# on MAN_ROFF_FILES if a converter is not available.
+${MAN_ROFF_FILES}: ${MAN_RST_FILES}
 ifeq ($(HAVE_SPHINX),1)
 	$(SPHINXBUILD) -b man $(ALLSPHINXOPTS) $(DOCBUILDDIR)/man
 	for section in 1 5 7; do \
@@ -46,11 +44,19 @@ ifeq ($(HAVE_SPHINX),1)
 	done
 else ifeq ($(HAVE_RST2MAN),1)
 	$(prerst2man) $(DOCBUILDDIR)/.. $(DOCBUILDDIR)/man
-	touch $@
 else
-	@echo "No sphinx or rst2man, will not install man pages."
+	@echo "Fatal: build dependency fail."
+	@false
 endif
 
+# Do not try to build or install man pages if a man page converter is
+# not available.
+ifeq ($(HAVE_SPHINX)$(HAVE_RST2MAN),00)
+build-man:
+install-man:
+	@echo "No sphinx or rst2man, will not install man pages."
+else
+build-man: ${MAN_GZIP_FILES}
 install-man: ${MAN_GZIP_FILES}
 	mkdir -p "$(DESTDIR)$(mandir)/man1"
 	mkdir -p "$(DESTDIR)$(mandir)/man5"
@@ -59,6 +65,7 @@ install-man: ${MAN_GZIP_FILES}
 	install -m0644 $(DOCBUILDDIR)/man/man5/*.5.gz $(DESTDIR)/$(mandir)/man5
 	install -m0644 $(DOCBUILDDIR)/man/man7/*.7.gz $(DESTDIR)/$(mandir)/man7
 	cd $(DESTDIR)/$(mandir)/man1 && ln -sf notmuch.1.gz notmuch-setup.1.gz
+endif
 
 $(dir)/docdeps.mk: $(dir)/conf.py $(dir)/mkdocdeps.py
 	$(mkdocdeps) $< $(DOCBUILDDIR) $@
