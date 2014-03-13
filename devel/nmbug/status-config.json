@@ -1,4 +1,9 @@
 {
+    "meta": {
+        "title": "Notmuch Patches",
+        "blurb": "For more information see <a href=\"http://notmuchmail.org/nmbug\">nmbug</a>"
+    },
+
     "views": [
 	{
 	    "comment": "Unresolved bugs (or just need tag updating).",

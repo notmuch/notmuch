@@ -242,6 +242,19 @@ class HtmlPage (Page):
     def _slug(self, string):
         return self._slug_regexp.sub('-', string)
 
+parser = argparse.ArgumentParser()
+parser.add_argument('--text', help='output plain text format',
+                    action='store_true')
+parser.add_argument('--config', help='load config from given file',
+                    metavar='PATH')
+parser.add_argument('--list-views', help='list views',
+                    action='store_true')
+parser.add_argument('--get-query', help='get query for view',
+                    metavar='VIEW')
+
+args = parser.parse_args()
+
+config = read_config(path=args.config)
 
 _PAGES['text'] = Page()
 _PAGES['html'] = HtmlPage(
@@ -292,28 +305,13 @@ Generated: {date}<br />
 </p>
 <h3>Views</h3>
 '''.format(date=datetime.datetime.utcnow().date(),
-           title='Notmuch Patches',
-           blurb='For more infomation see <a href="http://notmuchmail.org/nmbug">nmbug</a>',
+           title=config['meta']['title'],
+           blurb=config['meta']['blurb'],
            encoding=_ENCODING,
            inter_message_padding='0.25em',
            border_radius='0.5em'),
     footer='</body>\n</html>\n',
     )
-
-
-parser = argparse.ArgumentParser()
-parser.add_argument('--text', help='output plain text format',
-                    action='store_true')
-parser.add_argument('--config', help='load config from given file',
-                    metavar='PATH')
-parser.add_argument('--list-views', help='list views',
-                    action='store_true')
-parser.add_argument('--get-query', help='get query for view',
-                    metavar='VIEW')
-
-args = parser.parse_args()
-
-config = read_config(path=args.config)
 
 if args.list_views:
     for view in config['views']:
