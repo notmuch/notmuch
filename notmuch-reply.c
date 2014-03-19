@@ -21,6 +21,7 @@
  */
 
 #include "notmuch-client.h"
+#include "string-util.h"
 #include "sprinter.h"
 
 static void
@@ -465,14 +466,21 @@ guess_from_in_received_headers (notmuch_config_t *config,
 				notmuch_message_t *message)
 {
     const char *received, *addr;
+    char *sanitized;
 
     received = notmuch_message_get_header (message, "received");
     if (! received)
 	return NULL;
 
-    addr = guess_from_in_received_for (config, received);
+    sanitized = sanitize_string (NULL, received);
+    if (! sanitized)
+	return NULL;
+
+    addr = guess_from_in_received_for (config, sanitized);
     if (! addr)
-	addr = guess_from_in_received_by (config, received);
+	addr = guess_from_in_received_by (config, sanitized);
+
+    talloc_free (sanitized);
 
     return addr;
 }
