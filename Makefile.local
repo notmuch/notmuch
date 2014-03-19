@@ -22,6 +22,11 @@ VERSION:=$(shell cat ${srcdir}/version)
 ifeq ($(filter release release-message pre-release update-versions,$(MAKECMDGOALS)),)
 ifeq ($(IS_GIT),yes)
 VERSION:=$(shell git describe --match '[0-9.]*'|sed -e s/_/~/ -e s/-/+/ -e s/-/~/)
+# Write the file 'version.stamp' in case its contents differ from $(VERSION)
+FILE_VERSION:=$(shell test -f version.stamp && read vs < version.stamp || vs=; echo $$vs)
+ifneq ($(FILE_VERSION),$(VERSION))
+       $(shell echo "$(VERSION)" > version.stamp)
+endif
 endif
 endif
 
@@ -68,6 +73,11 @@ ifeq ($(shell cat .first-build-message 2>/dev/null),)
 	@echo Printed > .first-build-message
 endif
 endif
+
+# Depend (also) on the file 'version'. In case of ifeq ($(IS_GIT),yes)
+# this file may already have been updated.
+version.stamp: $(srcdir)/version
+	echo $(VERSION) > $@
 
 $(TAR_FILE):
 	if git tag -v $(VERSION) >/dev/null 2>&1; then \
@@ -280,6 +290,8 @@ notmuch_client_srcs =		\
 
 notmuch_client_modules = $(notmuch_client_srcs:.c=.o)
 
+notmuch.o: version.stamp
+
 notmuch: $(notmuch_client_modules) lib/libnotmuch.a util/libutil.a parse-time-string/libparse-time-string.a
 	$(call quiet,CXX $(CFLAGS)) $^ $(FINAL_LIBNOTMUCH_LDFLAGS) -o $@
 
@@ -318,7 +330,7 @@ install-desktop:
 	desktop-file-install --mode 0644 --dir "$(DESTDIR)$(desktop_dir)" notmuch.desktop
 
 SRCS  := $(SRCS) $(notmuch_client_srcs)
-CLEAN := $(CLEAN) notmuch notmuch-shared $(notmuch_client_modules) notmuch.elc
+CLEAN := $(CLEAN) notmuch notmuch-shared $(notmuch_client_modules) version.stamp
 
 DISTCLEAN := $(DISTCLEAN) .first-build-message Makefile.config
 
