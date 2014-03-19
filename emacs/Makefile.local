@@ -17,7 +17,14 @@ emacs_sources := \
 	$(dir)/notmuch-crypto.el \
 	$(dir)/notmuch-tag.el \
 	$(dir)/coolj.el \
-	$(dir)/notmuch-print.el
+	$(dir)/notmuch-print.el \
+	$(dir)/notmuch-version.el
+
+$(dir)/notmuch-version.el: $(dir)/Makefile.local version.stamp
+$(dir)/notmuch-version.el: $(dir)/notmuch-version.el.tmpl
+	@sed -e 's/%AG%/Generated file (from $(<F)) -- do not edit!/' \
+	     -e 's/%VERSION%/"$(VERSION)"/' $< > $@
+
 
 emacs_images := \
 	$(srcdir)/$(dir)/notmuch-logo.png
@@ -71,4 +78,4 @@ endif
 	mkdir -p "$(DESTDIR)$(emacsetcdir)"
 	install -m0644 $(emacs_images) "$(DESTDIR)$(emacsetcdir)"
 
-CLEAN := $(CLEAN) $(emacs_bytecode)
+CLEAN := $(CLEAN) $(emacs_bytecode) $(dir)/notmuch-version.el
