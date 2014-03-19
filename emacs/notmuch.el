@@ -829,7 +829,7 @@ See `notmuch-tag' for information on the format of TAG-CHANGES."
 PROMPT is the string to prompt with."
   (lexical-let
       ((completions
-	(append (list "folder:" "thread:" "id:" "date:" "from:" "to:"
+	(append (list "folder:" "path:" "thread:" "id:" "date:" "from:" "to:"
 		      "subject:" "attachment:")
 		(mapcar (lambda (tag)
 			  (concat "tag:" (notmuch-escape-boolean-term tag)))
