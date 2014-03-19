@@ -515,6 +515,18 @@ Such a list can be computed with `notmuch-hello-query-counts'."
       (remove-hook 'window-configuration-change-hook
 		   #'notmuch-hello-window-configuration-change))))
 
+;; the following variable is defined as being defconst in notmuch-version.el
+(defvar notmuch-emacs-version)
+
+(defun notmuch-hello-versions ()
+  "Display the notmuch version(s)"
+  (interactive)
+  (let ((notmuch-cli-version (notmuch-version)))
+    (message "notmuch version %s"
+	     (if (string= notmuch-emacs-version notmuch-cli-version)
+		 notmuch-cli-version
+	       (concat notmuch-cli-version
+		       " (emacs mua version " notmuch-emacs-version ")")))))
 
 (defvar notmuch-hello-mode-map
   (let ((map (if (fboundp 'make-composed-keymap)
@@ -525,8 +537,7 @@ Such a list can be computed with `notmuch-hello-query-counts'."
 	       ;; it's unlikely to change.
 	       (copy-keymap widget-keymap))))
     (set-keymap-parent map notmuch-common-keymap)
-    (define-key map "v" (lambda () "Display the notmuch version" (interactive)
-			  (message "notmuch version %s" (notmuch-version))))
+    (define-key map "v" 'notmuch-hello-versions)
     (define-key map (kbd "<C-tab>") 'widget-backward)
     map)
   "Keymap for \"notmuch hello\" buffers.")
