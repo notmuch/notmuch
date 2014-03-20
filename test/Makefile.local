@@ -4,7 +4,7 @@ dir := test
 
 # save against changes in $(dir)
 test_src_dir := $(dir)
-extra_cflags += -I.
+extra_cflags += -I$(srcdir)
 
 smtp_dummy_srcs =		\
 	$(notmuch_compat_srcs)	\
@@ -13,10 +13,10 @@ smtp_dummy_srcs =		\
 smtp_dummy_modules = $(smtp_dummy_srcs:.c=.o)
 
 $(dir)/arg-test: $(dir)/arg-test.o command-line-arguments.o util/libutil.a
-	$(call quiet,CC) -I. $^ -o $@
+	$(call quiet,CC) $^ -o $@
 
 $(dir)/hex-xcode: $(dir)/hex-xcode.o command-line-arguments.o util/libutil.a
-	$(call quiet,CC) -I. $^ -o $@ -ltalloc
+	$(call quiet,CC) $^ -o $@ -ltalloc
 
 random_corpus_deps =  $(dir)/random-corpus.o  $(dir)/database-test.o \
 			notmuch-config.o command-line-arguments.o \
