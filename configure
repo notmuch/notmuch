@@ -719,8 +719,9 @@ configure_options = $@
 # files, (which is quite ugly).
 vpath %.c \$(srcdir)
 vpath %.cc \$(srcdir)
-vpath %.1 \$(srcdir)
 vpath Makefile.% \$(srcdir)
+vpath %.py \$(srcdir)
+vpath %.rst \$(srcdir)
 
 # The C compiler to use
 CC = ${CC}

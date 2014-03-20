@@ -3,15 +3,15 @@
 dir := doc
 
 # You can set these variables from the command line.
-SPHINXOPTS    := -q -c $(dir)
+SPHINXOPTS    := -q
 SPHINXBUILD   = sphinx-build
 DOCBUILDDIR      := $(dir)/_build
 
-prerst2man := python $(dir)/prerst2man.py
-mkdocdeps := python $(dir)/mkdocdeps.py
+prerst2man := python $(srcdir)/$(dir)/prerst2man.py
+mkdocdeps := python $(srcdir)/$(dir)/mkdocdeps.py
 
 # Internal variables.
-ALLSPHINXOPTS   := -d $(DOCBUILDDIR)/doctrees $(SPHINXOPTS) $(dir)
+ALLSPHINXOPTS   := -d $(DOCBUILDDIR)/doctrees $(SPHINXOPTS) $(srcdir)/$(dir)
 
 .PHONY: sphinx-html sphinx-texinfo sphinx-info
 
@@ -43,7 +43,7 @@ ifeq ($(HAVE_SPHINX),1)
 	    mv $(DOCBUILDDIR)/man/*.$${section} $(DOCBUILDDIR)/man/man$${section}; \
 	done
 else ifeq ($(HAVE_RST2MAN),1)
-	$(prerst2man) $(DOCBUILDDIR)/.. $(DOCBUILDDIR)/man
+	$(prerst2man) $(srcdir)/doc $(DOCBUILDDIR)/man
 else
 	@echo "Fatal: build dependency fail."
 	@false
@@ -68,7 +68,7 @@ install-man: ${MAN_GZIP_FILES}
 endif
 
 $(dir)/docdeps.mk: $(dir)/conf.py $(dir)/mkdocdeps.py
-	$(mkdocdeps) $< $(DOCBUILDDIR) $@
+	$(mkdocdeps) $(srcdir)/doc $(DOCBUILDDIR) $@
 
 CLEAN := $(CLEAN) $(DOCBUILDDIR) $(dir)/docdeps.mk $(dir)/man.stamp
 CLEAN := $(CLEAN) $(MAN_GZIP_FILES) $(MAN_ROFF_FILES)
