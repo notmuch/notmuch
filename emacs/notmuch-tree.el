@@ -881,6 +881,7 @@ the same as for the function notmuch-tree."
 	 (message-arg "--entire-thread"))
     (if (equal (car (process-lines notmuch-command "count" search-args)) "0")
 	(setq search-args basic-query))
+    (notmuch-tag-clear-cache)
     (let ((proc (notmuch-start-notmuch
 		 "notmuch-tree" (current-buffer) #'notmuch-tree-process-sentinel
 		 "show" "--body=false" "--format=sexp"

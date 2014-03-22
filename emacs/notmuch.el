@@ -888,6 +888,7 @@ the configured default sort order."
     (set 'notmuch-search-oldest-first oldest-first)
     (set 'notmuch-search-target-thread target-thread)
     (set 'notmuch-search-target-line target-line)
+    (notmuch-tag-clear-cache)
     (let ((proc (get-buffer-process (current-buffer)))
 	  (inhibit-read-only t))
       (if proc

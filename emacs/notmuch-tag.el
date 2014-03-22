@@ -34,17 +34,21 @@
      (notmuch-tag-format-image-data tag (notmuch-tag-star-icon))))
   "Custom formats for individual tags.
 
-This gives a list that maps from tag names to lists of formatting
-expressions.  The car of each element gives a tag name and the
-cdr gives a list of Elisp expressions that modify the tag.  If
-the list is empty, the tag will simply be hidden.  Otherwise,
-each expression will be evaluated in order: for the first
-expression, the variable `tag' will be bound to the tag name; for
-each later expression, the variable `tag' will be bound to the
-result of the previous expression.  In this way, each expression
-can build on the formatting performed by the previous expression.
-The result of the last expression will displayed in place of the
-tag.
+This is an association list that maps from tag name regexps to
+lists of formatting expressions.  The first entry whose car
+regexp-matches a tag will be used to format that tag.  The regexp
+is implicitly anchored, so to match a literal tag name, just use
+that tag name (if it contains special regexp characters like
+\".\" or \"*\", these have to be escaped).  The cdr of the
+matching entry gives a list of Elisp expressions that modify the
+tag.  If the list is empty, the tag will simply be hidden.
+Otherwise, each expression will be evaluated in order: for the
+first expression, the variable `tag' will be bound to the tag
+name; for each later expression, the variable `tag' will be bound
+to the result of the previous expression.  In this way, each
+expression can build on the formatting performed by the previous
+expression.  The result of the last expression will displayed in
+place of the tag.
 
 For example, to replace a tag with another string, simply use
 that string as a formatting expression.  To change the foreground
@@ -56,7 +60,7 @@ with images."
 
   :group 'notmuch-search
   :group 'notmuch-show
-  :type '(alist :key-type (string :tag "Tag")
+  :type '(alist :key-type (regexp :tag "Tag")
 		:extra-offset -3
 		:value-type
 		(radio :format "%v"
@@ -135,18 +139,44 @@ This can be used with `notmuch-tag-format-image-data'."
   </g>
 </svg>")
 
+(defvar notmuch-tag--format-cache (make-hash-table :test 'equal)
+  "Cache of tag format lookup.  Internal to `notmuch-tag-format-tag'.")
+
+(defun notmuch-tag-clear-cache ()
+  "Clear the internal cache of tag formats."
+  (clrhash notmuch-tag--format-cache))
+
 (defun notmuch-tag-format-tag (tag)
-  "Format TAG by looking into `notmuch-tag-formats'."
-  (let ((formats (assoc tag notmuch-tag-formats)))
-    (cond
-     ((null formats)		;; - Tag not in `notmuch-tag-formats',
-      tag)			;;   the format is the tag itself.
-     ((null (cdr formats))	;; - Tag was deliberately hidden,
-      nil)			;;   no format must be returned
-     (t				;; - Tag was found and has formats,
-      (let ((tag tag))		;;   we must apply all the formats.
-	(dolist (format (cdr formats) tag)
-	  (setq tag (eval format))))))))
+  "Format TAG by according to `notmuch-tag-formats'.
+
+Callers must ensure that the tag format cache has been recently cleared
+via `notmuch-tag-clear-cache' before using this function.  For example,
+it would be appropriate to clear the cache just prior to filling a
+buffer that uses formatted tags."
+
+  (let ((formatted (gethash tag notmuch-tag--format-cache 'missing)))
+    (when (eq formatted 'missing)
+      (let* ((formats
+	      (save-match-data
+		;; Don't use assoc-default since there's no way to
+		;; distinguish a missing key from a present key with a
+		;; null cdr:.
+		(assoc* tag notmuch-tag-formats
+			:test (lambda (tag key)
+				(and (eq (string-match key tag) 0)
+				     (= (match-end 0) (length tag))))))))
+	(setq formatted
+	      (cond
+	       ((null formats)		;; - Tag not in `notmuch-tag-formats',
+		tag)			;;   the format is the tag itself.
+	       ((null (cdr formats))	;; - Tag was deliberately hidden,
+		nil)			;;   no format must be returned
+	       (t			;; - Tag was found and has formats,
+		(let ((tag tag))	;;   we must apply all the formats.
+		  (dolist (format (cdr formats) tag)
+		    (setq tag (eval format)))))))
+	(puthash tag formatted notmuch-tag--format-cache)))
+    formatted))
 
 (defun notmuch-tag-format-tags (tags &optional face)
   "Return a string representing formatted TAGS."

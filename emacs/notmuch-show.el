@@ -1145,6 +1145,7 @@ function is used."
     ;; Don't track undo information for this buffer
     (set 'buffer-undo-list t)
 
+    (notmuch-tag-clear-cache)
     (erase-buffer)
     (goto-char (point-min))
     (save-excursion
