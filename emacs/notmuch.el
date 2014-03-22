@@ -753,24 +753,33 @@ non-authors is found, assume that all of the authors match."
      format-string (notmuch-sanitize (plist-get result :authors))))
 
    ((string-equal field "tags")
-    (let ((tags (plist-get result :tags)))
-      (insert (format format-string (notmuch-tag-format-tags tags tags)))))))
+    (let ((tags (plist-get result :tags))
+	  (orig-tags (plist-get result :orig-tags)))
+      (insert (format format-string (notmuch-tag-format-tags tags orig-tags)))))))
 
-(defun notmuch-search-show-result (result &optional pos)
-  "Insert RESULT at POS or the end of the buffer if POS is null."
+(defun notmuch-search-show-result (result pos)
+  "Insert RESULT at POS."
   ;; Ignore excluded matches
   (unless (= (plist-get result :matched) 0)
-    (let ((beg (or pos (point-max))))
-      (save-excursion
-	(goto-char beg)
-	(dolist (spec notmuch-search-result-format)
-	  (notmuch-search-insert-field (car spec) (cdr spec) result))
-	(insert "\n")
-	(notmuch-search-color-line beg (point) (plist-get result :tags))
-	(put-text-property beg (point) 'notmuch-search-result result))
-      (when (string= (plist-get result :thread) notmuch-search-target-thread)
-	(setq notmuch-search-target-thread "found")
-	(goto-char beg)))))
+    (save-excursion
+      (goto-char pos)
+      (dolist (spec notmuch-search-result-format)
+	(notmuch-search-insert-field (car spec) (cdr spec) result))
+      (insert "\n")
+      (notmuch-search-color-line pos (point) (plist-get result :tags))
+      (put-text-property pos (point) 'notmuch-search-result result))))
+
+(defun notmuch-search-append-result (result)
+  "Insert RESULT at the end of the buffer.
+
+This is only called when a result is first inserted so it also
+sets the :orig-tag property."
+  (let ((new-result (plist-put result :orig-tags (plist-get result :tags)))
+	(pos (point-max)))
+    (notmuch-search-show-result new-result pos)
+    (when (string= (plist-get result :thread) notmuch-search-target-thread)
+      (setq notmuch-search-target-thread "found")
+      (goto-char pos))))
 
 (defun notmuch-search-process-filter (proc string)
   "Process and filter the output of \"notmuch search\""
@@ -784,7 +793,7 @@ non-authors is found, assume that all of the authors match."
 	(save-excursion
 	  (goto-char (point-max))
 	  (insert string))
-	(notmuch-sexp-parse-partial-list 'notmuch-search-show-result
+	(notmuch-sexp-parse-partial-list 'notmuch-search-append-result
 					 results-buf)))))
 
 (defun notmuch-search-tag-all (tag-changes)
