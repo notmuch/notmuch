@@ -701,10 +701,11 @@ unchanged ADDRESS if parsing fails."
 
      ((string-equal field "tags")
       (let ((tags (plist-get msg :tags))
+	    (orig-tags (plist-get msg :orig-tags))
 	    (face (if match
 		      'notmuch-tree-match-tag-face
 		    'notmuch-tree-no-match-tag-face)))
-	(format format-string (notmuch-tag-format-tags tags tags face)))))))
+	(format format-string (notmuch-tag-format-tags tags orig-tags face)))))))
 
 (defun notmuch-tree-format-field-list (field-list msg)
   "Format fields of MSG according to FIELD-LIST and return string"
@@ -766,8 +767,10 @@ message together with all its descendents."
 	(push "├" tree-status)))
 
       (push (concat (if replies "┬" "─") "►") tree-status)
-      (plist-put msg :first (and first (eq 0 depth)))
-      (notmuch-tree-goto-and-insert-msg (plist-put msg :tree-status tree-status))
+      (setq msg (plist-put msg :first (and first (eq 0 depth))))
+      (setq msg (plist-put msg :tree-status tree-status))
+      (setq msg (plist-put msg :orig-tags (plist-get msg :tags)))
+      (notmuch-tree-goto-and-insert-msg msg)
       (pop tree-status)
       (pop tree-status)
 
