@@ -578,23 +578,32 @@ single element face list."
       face
     (list face)))
 
-(defun notmuch-combine-face-text-property (start end face &optional below object)
-  "Combine FACE into the 'face text property between START and END.
+(defun notmuch-apply-face (object face &optional below start end)
+  "Combine FACE into the 'face text property of OBJECT between START and END.
 
 This function combines FACE with any existing faces between START
-and END in OBJECT (which defaults to the current buffer).
-Attributes specified by FACE take precedence over existing
-attributes unless BELOW is non-nil.  FACE must be a face name (a
-symbol or string), a property list of face attributes, or a list
-of these.  For convenience when applied to strings, this returns
-OBJECT."
+and END in OBJECT.  Attributes specified by FACE take precedence
+over existing attributes unless BELOW is non-nil.
+
+OBJECT may be a string, a buffer, or nil (which means the current
+buffer).  If object is a string, START and END are 0-based;
+otherwise they are buffer positions (integers or markers).  FACE
+must be a face name (a symbol or string), a property list of face
+attributes, or a list of these.  If START and/or END are omitted,
+they default to the beginning/end of OBJECT.  For convenience
+when applied to strings, this returns OBJECT."
 
   ;; A face property can have three forms: a face name (a string or
   ;; symbol), a property list, or a list of these two forms.  In the
   ;; list case, the faces will be combined, with the earlier faces
   ;; taking precedent.  Here we canonicalize everything to list form
   ;; to make it easy to combine.
-  (let ((pos start)
+  (let ((pos (cond (start start)
+		   ((stringp object) 0)
+		   (t 1)))
+	(end (cond (end end)
+		   ((stringp object) (length object))
+		   (t (1+ (buffer-size object)))))
 	(face-list (notmuch-face-ensure-list-form face)))
     (while (< pos end)
       (let* ((cur (get-text-property pos 'face object))
@@ -606,14 +615,6 @@ OBJECT."
 	(put-text-property pos next 'face new object)
 	(setq pos next))))
   object)
-
-(defun notmuch-combine-face-text-property-string (string face &optional below)
-  (notmuch-combine-face-text-property
-   0
-   (length string)
-   face
-   below
-   string))
 
 (defun notmuch-map-text-property (start end prop func &optional object)
   "Transform text property PROP using FUNC.

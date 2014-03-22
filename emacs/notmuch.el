@@ -649,7 +649,7 @@ foreground and blue background."
 	  (let ((tag (car elem))
 		(attributes (cdr elem)))
 	    (when (member tag line-tag-list)
-	      (notmuch-combine-face-text-property start end attributes))))
+	      (notmuch-apply-face nil attributes nil start end))))
 	;; Reverse the list so earlier entries take precedence
 	(reverse notmuch-search-line-faces)))
 

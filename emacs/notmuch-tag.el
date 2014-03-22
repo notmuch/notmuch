@@ -151,7 +151,7 @@ This can be used with `notmuch-tag-format-image-data'."
 (defun notmuch-tag-format-tags (tags &optional face)
   "Return a string representing formatted TAGS."
   (let ((face (or face 'notmuch-tag-face)))
-    (notmuch-combine-face-text-property-string
+    (notmuch-apply-face
      (mapconcat #'identity
 		;; nil indicated that the tag was deliberately hidden
 		(delq nil (mapcar #'notmuch-tag-format-tag tags))

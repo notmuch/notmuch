@@ -715,7 +715,7 @@ unchanged ADDRESS if parsing fails."
     (dolist (spec field-list result-string)
       (let ((field-string (notmuch-tree-format-field (car spec) (cdr spec) msg)))
 	(setq result-string (concat result-string field-string))))
-    (notmuch-combine-face-text-property-string result-string face t)))
+    (notmuch-apply-face result-string face t)))
 
 (defun notmuch-tree-insert-msg (msg)
   "Insert the message MSG according to notmuch-tree-result-format"
