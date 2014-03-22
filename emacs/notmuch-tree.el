@@ -704,7 +704,7 @@ unchanged ADDRESS if parsing fails."
 	    (face (if match
 		      'notmuch-tree-match-tag-face
 		    'notmuch-tree-no-match-tag-face)))
-	(format format-string (notmuch-tag-format-tags tags face)))))))
+	(format format-string (notmuch-tag-format-tags tags tags face)))))))
 
 (defun notmuch-tree-format-field-list (field-list msg)
   "Format fields of MSG according to FIELD-LIST and return string"

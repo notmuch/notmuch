@@ -754,7 +754,7 @@ non-authors is found, assume that all of the authors match."
 
    ((string-equal field "tags")
     (let ((tags (plist-get result :tags)))
-      (insert (format format-string (notmuch-tag-format-tags tags)))))))
+      (insert (format format-string (notmuch-tag-format-tags tags tags)))))))
 
 (defun notmuch-search-show-result (result &optional pos)
   "Insert RESULT at POS or the end of the buffer if POS is null."

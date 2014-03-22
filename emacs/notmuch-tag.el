@@ -193,45 +193,71 @@ This can be used with `notmuch-tag-format-image-data'."
   "Clear the internal cache of tag formats."
   (clrhash notmuch-tag--format-cache))
 
-(defun notmuch-tag-format-tag (tag)
-  "Format TAG by according to `notmuch-tag-formats'.
+(defun notmuch-tag--get-formats (tag format-alist)
+  "Find the first item whose car regexp-matches TAG."
+  (save-match-data
+    ;; Don't use assoc-default since there's no way to distinguish a
+    ;; missing key from a present key with a null cdr.
+    (assoc* tag format-alist
+	    :test (lambda (tag key)
+		    (and (eq (string-match key tag) 0)
+			 (= (match-end 0) (length tag)))))))
 
-Callers must ensure that the tag format cache has been recently cleared
-via `notmuch-tag-clear-cache' before using this function.  For example,
-it would be appropriate to clear the cache just prior to filling a
-buffer that uses formatted tags."
+(defun notmuch-tag--do-format (tag formatted-tag formats)
+  "Apply a tag-formats entry to TAG."
+  (cond ((null formats)		;; - Tag not in `formats',
+	 formatted-tag)	       	;;   the format is the tag itself.
+	((null (cdr formats))	;; - Tag was deliberately hidden,
+	 nil)			;;   no format must be returned
+	(t
+	 ;; Tag was found and has formats, we must apply all the
+	 ;; formats.  TAG may be null so treat that as a special case.
+	 (let ((bare-tag tag)
+	       (tag (copy-sequence (or formatted-tag ""))))
+	   (dolist (format (cdr formats))
+	     (setq tag (eval format)))
+	   (if (and (null formatted-tag) (equal tag ""))
+	       nil
+	     tag)))))
 
-  (let ((formatted (gethash tag notmuch-tag--format-cache 'missing)))
-    (when (eq formatted 'missing)
-      (let* ((formats
-	      (save-match-data
-		;; Don't use assoc-default since there's no way to
-		;; distinguish a missing key from a present key with a
-		;; null cdr:.
-		(assoc* tag notmuch-tag-formats
-			:test (lambda (tag key)
-				(and (eq (string-match key tag) 0)
-				     (= (match-end 0) (length tag))))))))
-	(setq formatted
-	      (cond
-	       ((null formats)		;; - Tag not in `notmuch-tag-formats',
-		tag)			;;   the format is the tag itself.
-	       ((null (cdr formats))	;; - Tag was deliberately hidden,
-		nil)			;;   no format must be returned
-	       (t			;; - Tag was found and has formats,
-		(let ((tag tag))	;;   we must apply all the formats.
-		  (dolist (format (cdr formats) tag)
-		    (setq tag (eval format)))))))
-	(puthash tag formatted notmuch-tag--format-cache)))
-    formatted))
+(defun notmuch-tag-format-tag (tags orig-tags tag)
+  "Format TAG according to `notmuch-tag-formats'.
 
-(defun notmuch-tag-format-tags (tags &optional face)
+TAGS and ORIG-TAGS are lists of the current tags and the original
+tags; tags which have been deleted (i.e., are in ORIG-TAGS but
+are not in TAGS) are shown using formats from
+`notmuch-tag-deleted-formats'; tags which have been added (i.e.,
+are in TAGS but are not in ORIG-TAGS) are shown using formats
+from `notmuch-tag-added-formats' and tags which have not been
+changed (the normal case) are shown using formats from
+`notmuch-tag-formats'"
+  (let* ((tag-state (cond ((not (member tag tags)) 'deleted)
+			  ((not (member tag orig-tags)) 'added)))
+	 (formatted-tag (gethash (cons tag tag-state) notmuch-tag--format-cache 'missing)))
+    (when (eq formatted-tag 'missing)
+      (let ((base (notmuch-tag--get-formats tag notmuch-tag-formats))
+	    (over (case tag-state
+		    (deleted (notmuch-tag--get-formats
+			      tag notmuch-tag-deleted-formats))
+		    (added (notmuch-tag--get-formats
+			    tag notmuch-tag-added-formats))
+		    (otherwise nil))))
+	(setq formatted-tag (notmuch-tag--do-format tag tag base))
+	(setq formatted-tag (notmuch-tag--do-format tag formatted-tag over))
+
+	(puthash (cons tag tag-state) formatted-tag notmuch-tag--format-cache)))
+    formatted-tag))
+
+(defun notmuch-tag-format-tags (tags orig-tags &optional face)
   "Return a string representing formatted TAGS."
-  (let ((face (or face 'notmuch-tag-face)))
+  (let ((face (or face 'notmuch-tag-face))
+	(all-tags (sort (delete-dups (append tags orig-tags nil)) #'string<)))
     (notmuch-apply-face
      (mapconcat #'identity
 		;; nil indicated that the tag was deliberately hidden
-		(delq nil (mapcar #'notmuch-tag-format-tag tags))
+		(delq nil (mapcar
+			   (apply-partially #'notmuch-tag-format-tag tags orig-tags)
+			   all-tags))
 		" ")
      face
      t)))

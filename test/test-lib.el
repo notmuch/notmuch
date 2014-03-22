@@ -165,3 +165,8 @@ nothing."
 
      (t
       (notmuch-test-report-unexpected output expected)))))
+
+;; For historical reasons, we hide deleted tags by default in the test
+;; suite
+(setq notmuch-tag-deleted-formats
+      '((".*" nil)))
