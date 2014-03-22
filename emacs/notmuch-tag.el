@@ -28,6 +28,34 @@
 (require 'crm)
 (require 'notmuch-lib)
 
+(define-widget 'notmuch-tag-format-type 'lazy
+  "Customize widget for notmuch-tag-format and friends"
+  :type '(alist :key-type (regexp :tag "Tag")
+		:extra-offset -3
+		:value-type
+		(radio :format "%v"
+		       (const :tag "Hidden" nil)
+		       (set :tag "Modified"
+			    (string :tag "Display as")
+			    (list :tag "Face" :extra-offset -4
+				  (const :format "" :inline t
+					 (propertize tag 'face))
+				  (list :format "%v"
+					(const :format "" quote)
+					custom-face-edit))
+			    (list :format "%v" :extra-offset -4
+				  (const :format "" :inline t
+					 (notmuch-tag-format-image-data tag))
+				  (choice :tag "Image"
+					  (const :tag "Star"
+						 (notmuch-tag-star-icon))
+					  (const :tag "Empty star"
+						 (notmuch-tag-star-empty-icon))
+					  (const :tag "Tag"
+						 (notmuch-tag-tag-icon))
+					  (string :tag "Custom")))
+			    (sexp :tag "Custom")))))
+
 (defcustom notmuch-tag-formats
   '(("unread" (propertize tag 'face '(:foreground "red")))
     ("flagged" (propertize tag 'face '(:foreground "blue"))
@@ -57,34 +85,9 @@ of a tag to red, use the expression
 
 See also `notmuch-tag-format-image', which can help replace tags
 with images."
-
   :group 'notmuch-search
   :group 'notmuch-show
-  :type '(alist :key-type (regexp :tag "Tag")
-		:extra-offset -3
-		:value-type
-		(radio :format "%v"
-		       (const :tag "Hidden" nil)
-		       (set :tag "Modified"
-			    (string :tag "Display as")
-			    (list :tag "Face" :extra-offset -4
-				  (const :format "" :inline t
-					 (propertize tag 'face))
-				  (list :format "%v"
-					(const :format "" quote)
-					custom-face-edit))
-			    (list :format "%v" :extra-offset -4
-				  (const :format "" :inline t
-					 (notmuch-tag-format-image-data tag))
-				  (choice :tag "Image"
-					  (const :tag "Star"
-						 (notmuch-tag-star-icon))
-					  (const :tag "Empty star"
-						 (notmuch-tag-star-empty-icon))
-					  (const :tag "Tag"
-						 (notmuch-tag-tag-icon))
-					  (string :tag "Custom")))
-			    (sexp :tag "Custom")))))
+  :type 'notmuch-tag-format-type)
 
 (defun notmuch-tag-format-image-data (tag data)
   "Replace TAG with image DATA, if available.
