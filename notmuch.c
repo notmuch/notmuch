@@ -74,6 +74,18 @@ static command_t commands[] = {
       "This message, or more detailed help for the named command." }
 };
 
+typedef struct help_topic {
+    const char *name;
+    const char *summary;
+} help_topic_t;
+
+static help_topic_t help_topics[] = {
+    { "search-terms",
+      "Common search term syntax." },
+    { "hooks",
+      "Hooks that will be run before or after certain commands." },
+};
+
 static command_t *
 find_command (const char *name)
 {
@@ -93,6 +105,7 @@ static void
 usage (FILE *out)
 {
     command_t *command;
+    help_topic_t *topic;
     unsigned int i;
 
     fprintf (out,
@@ -107,13 +120,22 @@ usage (FILE *out)
 	command = &commands[i];
 
 	if (command->name)
-	    fprintf (out, "  %-11s  %s\n", command->name, command->summary);
+	    fprintf (out, "  %-12s  %s\n", command->name, command->summary);
+    }
+
+    fprintf (out, "\n");
+    fprintf (out, "Additional help topics are as follows:\n");
+    fprintf (out, "\n");
+
+    for (i = 0; i < ARRAY_SIZE (help_topics); i++) {
+	topic = &help_topics[i];
+	fprintf (out, "  %-12s  %s\n", topic->name, topic->summary);
     }
 
     fprintf (out, "\n");
     fprintf (out,
-    "Use \"notmuch help <command>\" for more details on each command\n"
-    "and \"notmuch help search-terms\" for the common search-terms syntax.\n\n");
+	     "Use \"notmuch help <command or topic>\" for more details "
+	     "on each command or topic.\n\n");
 }
 
 void
@@ -156,6 +178,8 @@ static int
 notmuch_help_command (notmuch_config_t *config, int argc, char *argv[])
 {
     command_t *command;
+    help_topic_t *topic;
+    unsigned int i;
 
     argc--; argv++; /* Ignore "help" */
 
@@ -180,10 +204,12 @@ notmuch_help_command (notmuch_config_t *config, int argc, char *argv[])
 	exec_man (page);
     }
 
-    if (strcmp (argv[0], "search-terms") == 0) {
-	exec_man ("notmuch-search-terms");
-    } else if (strcmp (argv[0], "hooks") == 0) {
-	exec_man ("notmuch-hooks");
+    for (i = 0; i < ARRAY_SIZE (help_topics); i++) {
+	topic = &help_topics[i];
+	if (strcmp (argv[0], topic->name) == 0) {
+	    char *page = talloc_asprintf (config, "notmuch-%s", topic->name);
+	    exec_man (page);
+	}
     }
 
     fprintf (stderr,
