@@ -39,7 +39,7 @@
 			    (string :tag "Display as")
 			    (list :tag "Face" :extra-offset -4
 				  (const :format "" :inline t
-					 (propertize tag 'face))
+					 (notmuch-apply-face tag))
 				  (list :format "%v"
 					(const :format "" quote)
 					custom-face-edit))
@@ -87,6 +87,50 @@ See also `notmuch-tag-format-image', which can help replace tags
 with images."
   :group 'notmuch-search
   :group 'notmuch-show
+  :group 'notmuch-faces
+  :type 'notmuch-tag-format-type)
+
+(defcustom notmuch-tag-deleted-formats
+  '(("unread" (notmuch-apply-face bare-tag
+				  (if (display-supports-face-attributes-p '(:strike-through "red"))
+				      '(:strike-through "red")
+				    '(:inverse-video t))))
+    (".*" (notmuch-apply-face tag
+			      (if (display-supports-face-attributes-p '(:strike-through "red"))
+				  '(:strike-through "red")
+				'(:inverse-video t)))))
+  "Custom formats for tags when deleted.
+
+For deleted tags the formats in `notmuch-tag-formats` are applied
+first and then these formats are applied on top; that is `tag'
+passed to the function is the tag with all these previous
+formattings applied. The formatted can access the original
+unformatted tag as `bare-tag'.
+
+By default this shows deleted tags with strike-through in red,
+unless strike-through is not available (e.g., emacs is running in
+a terminal) in which case it uses inverse video. To hide deleted
+tags completely set this to
+  '((\".*\" nil))
+
+See `notmuch-tag-formats' for full documentation."
+  :group 'notmuch-show
+  :group 'notmuch-faces
+  :type 'notmuch-tag-format-type)
+
+(defcustom notmuch-tag-added-formats
+  '((".*" (notmuch-apply-face tag '(:underline "green"))))
+  "Custom formats for tags when added.
+
+For added tags the formats in `notmuch-tag-formats` are applied
+first and then these formats are applied on top.
+
+To disable special formatting of added tags, set this variable to
+nil.
+
+See `notmuch-tag-formats' for full documentation."
+  :group 'notmuch-show
+  :group 'notmuch-faces
   :type 'notmuch-tag-format-type)
 
 (defun notmuch-tag-format-image-data (tag data)
