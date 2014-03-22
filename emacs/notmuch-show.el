@@ -344,7 +344,7 @@ operation on the contents of the current buffer."
     (if (re-search-forward "(\\([^()]*\\))$" (line-end-position) t)
 	(let ((inhibit-read-only t))
 	  (replace-match (concat "("
-				 (notmuch-tag-format-tags tags tags)
+				 (notmuch-tag-format-tags tags (notmuch-show-get-prop :orig-tags))
 				 ")"))))))
 
 (defun notmuch-clean-address (address)
@@ -1167,6 +1167,8 @@ function is used."
 	   (notmuch-query-get-threads (append cli-args basic-args)))))
 
       (jit-lock-register #'notmuch-show-buttonise-links)
+
+      (notmuch-show-mapc (lambda () (notmuch-show-set-prop :orig-tags (notmuch-show-get-tags))))
 
       ;; Set the header line to the subject of the first message.
       (setq header-line-format (notmuch-sanitize (notmuch-show-strip-re (notmuch-show-get-subject))))
