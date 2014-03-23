@@ -50,6 +50,9 @@ notmuch_run_hook (const char *db_path, const char *hook)
 	goto DONE;
     }
 
+    /* Flush any buffered output before forking. */
+    fflush (stdout);
+
     pid = fork();
     if (pid == -1) {
 	fprintf (stderr, "Error: %s hook fork failed: %s\n", hook,
