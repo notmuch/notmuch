@@ -22,56 +22,17 @@
 #include "dump-restore-private.h"
 #include "string-util.h"
 
-int
-notmuch_dump_command (notmuch_config_t *config, int argc, char *argv[])
+static int
+database_dump_file (notmuch_database_t *notmuch, FILE *output,
+		    const char *query_str, int output_format)
 {
-    notmuch_database_t *notmuch;
     notmuch_query_t *query;
-    FILE *output = stdout;
     notmuch_messages_t *messages;
     notmuch_message_t *message;
     notmuch_tags_t *tags;
-    const char *query_str = "";
 
-    if (notmuch_database_open (notmuch_config_get_database_path (config),
-			       NOTMUCH_DATABASE_MODE_READ_ONLY, &notmuch))
-	return EXIT_FAILURE;
-
-    char *output_file_name = NULL;
-    int opt_index;
-
-    int output_format = DUMP_FORMAT_BATCH_TAG;
-
-    notmuch_opt_desc_t options[] = {
-	{ NOTMUCH_OPT_KEYWORD, &output_format, "format", 'f',
-	  (notmuch_keyword_t []){ { "sup", DUMP_FORMAT_SUP },
-				  { "batch-tag", DUMP_FORMAT_BATCH_TAG },
-				  { 0, 0 } } },
-	{ NOTMUCH_OPT_STRING, &output_file_name, "output", 'o', 0  },
-	{ 0, 0, 0, 0, 0 }
-    };
-
-    opt_index = parse_arguments (argc, argv, options, 1);
-    if (opt_index < 0)
-	return EXIT_FAILURE;
-
-    if (output_file_name) {
-	output = fopen (output_file_name, "w");
-	if (output == NULL) {
-	    fprintf (stderr, "Error opening %s for writing: %s\n",
-		     output_file_name, strerror (errno));
-	    return EXIT_FAILURE;
-	}
-    }
-
-
-    if (opt_index < argc) {
-	query_str = query_string_from_args (notmuch, argc - opt_index, argv + opt_index);
-	if (query_str == NULL) {
-	    fprintf (stderr, "Out of memory.\n");
-	    return EXIT_FAILURE;
-	}
-    }
+    if (! query_str)
+	query_str = "";
 
     query = notmuch_query_create (notmuch, query_str);
     if (query == NULL) {
@@ -149,11 +110,65 @@ notmuch_dump_command (notmuch_config_t *config, int argc, char *argv[])
 	notmuch_message_destroy (message);
     }
 
+    notmuch_query_destroy (query);
+
+    return EXIT_SUCCESS;
+}
+
+int
+notmuch_dump_command (notmuch_config_t *config, int argc, char *argv[])
+{
+    notmuch_database_t *notmuch;
+    FILE *output = stdout;
+    const char *query_str = NULL;
+    int ret;
+
+    if (notmuch_database_open (notmuch_config_get_database_path (config),
+			       NOTMUCH_DATABASE_MODE_READ_ONLY, &notmuch))
+	return EXIT_FAILURE;
+
+    char *output_file_name = NULL;
+    int opt_index;
+
+    int output_format = DUMP_FORMAT_BATCH_TAG;
+
+    notmuch_opt_desc_t options[] = {
+	{ NOTMUCH_OPT_KEYWORD, &output_format, "format", 'f',
+	  (notmuch_keyword_t []){ { "sup", DUMP_FORMAT_SUP },
+				  { "batch-tag", DUMP_FORMAT_BATCH_TAG },
+				  { 0, 0 } } },
+	{ NOTMUCH_OPT_STRING, &output_file_name, "output", 'o', 0  },
+	{ 0, 0, 0, 0, 0 }
+    };
+
+    opt_index = parse_arguments (argc, argv, options, 1);
+    if (opt_index < 0)
+	return EXIT_FAILURE;
+
+    if (output_file_name) {
+	output = fopen (output_file_name, "w");
+	if (output == NULL) {
+	    fprintf (stderr, "Error opening %s for writing: %s\n",
+		     output_file_name, strerror (errno));
+	    return EXIT_FAILURE;
+	}
+    }
+
+
+    if (opt_index < argc) {
+	query_str = query_string_from_args (notmuch, argc - opt_index, argv + opt_index);
+	if (query_str == NULL) {
+	    fprintf (stderr, "Out of memory.\n");
+	    return EXIT_FAILURE;
+	}
+    }
+
+    ret = database_dump_file (notmuch, output, query_str, output_format);
+
     if (output != stdout)
 	fclose (output);
 
-    notmuch_query_destroy (query);
     notmuch_database_destroy (notmuch);
 
-    return EXIT_SUCCESS;
+    return ret;
 }
