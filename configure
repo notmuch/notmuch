@@ -19,11 +19,14 @@ readonly DEFAULT_IFS="$IFS"
 
 srcdir=$(dirname "$0")
 
+subdirs="util compat lib parse-time-string completion doc emacs"
+subdirs="${subdirs} performance-test test test/test-databases"
+
 # For a non-srcdir configure invocation (such as ../configure), create
 # the directory structure and copy Makefiles.
 if [ "$srcdir" != "." ]; then
 
-    for dir in . $(grep "^subdirs *=" "$srcdir"/Makefile | sed -e "s/subdirs *= *//"); do
+    for dir in . ${subdirs}; do
 	mkdir -p "$dir"
 	cp "$srcdir"/"$dir"/Makefile.local "$dir"
 	cp "$srcdir"/"$dir"/Makefile "$dir"
@@ -697,6 +700,9 @@ cat > Makefile.config <<EOF
 # the configure script). This may be different than the build
 # directory (the current directory at the time configure was run).
 srcdir = ${srcdir}
+
+# subdirectories to build
+subdirs = ${subdirs}
 
 configure_options = $@
 
