@@ -441,5 +441,16 @@ mime_node_child (mime_node_t *parent, int child);
 mime_node_t *
 mime_node_seek_dfs (mime_node_t *node, int n);
 
+typedef enum dump_formats {
+    DUMP_FORMAT_AUTO,
+    DUMP_FORMAT_BATCH_TAG,
+    DUMP_FORMAT_SUP
+} dump_format_t;
+
+int
+notmuch_database_dump (notmuch_database_t *notmuch,
+		       const char *output_file_name,
+		       const char *query_str, dump_format_t output_format);
+
 #include "command-line-arguments.h"
 #endif

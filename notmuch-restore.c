@@ -19,7 +19,7 @@
  */
 
 #include "notmuch-client.h"
-#include "dump-restore-private.h"
+#include "hex-escape.h"
 #include "tag-util.h"
 #include "string-util.h"
 

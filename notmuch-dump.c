@@ -19,7 +19,7 @@
  */
 
 #include "notmuch-client.h"
-#include "dump-restore-private.h"
+#include "hex-escape.h"
 #include "string-util.h"
 
 static int
@@ -115,11 +115,38 @@ database_dump_file (notmuch_database_t *notmuch, FILE *output,
     return EXIT_SUCCESS;
 }
 
+/* Dump database into output_file_name if it's non-NULL, stdout
+ * otherwise.
+ */
+int
+notmuch_database_dump (notmuch_database_t *notmuch,
+		       const char *output_file_name,
+		       const char *query_str, dump_format_t output_format)
+{
+    FILE *output = stdout;
+    int ret;
+
+    if (output_file_name) {
+	output = fopen (output_file_name, "w");
+	if (output == NULL) {
+	    fprintf (stderr, "Error opening %s for writing: %s\n",
+		     output_file_name, strerror (errno));
+	    return EXIT_FAILURE;
+	}
+    }
+
+    ret = database_dump_file (notmuch, output, query_str, output_format);
+
+    if (output != stdout)
+	fclose (output);
+
+    return ret;
+}
+
 int
 notmuch_dump_command (notmuch_config_t *config, int argc, char *argv[])
 {
     notmuch_database_t *notmuch;
-    FILE *output = stdout;
     const char *query_str = NULL;
     int ret;
 
@@ -145,16 +172,6 @@ notmuch_dump_command (notmuch_config_t *config, int argc, char *argv[])
     if (opt_index < 0)
 	return EXIT_FAILURE;
 
-    if (output_file_name) {
-	output = fopen (output_file_name, "w");
-	if (output == NULL) {
-	    fprintf (stderr, "Error opening %s for writing: %s\n",
-		     output_file_name, strerror (errno));
-	    return EXIT_FAILURE;
-	}
-    }
-
-
     if (opt_index < argc) {
 	query_str = query_string_from_args (notmuch, argc - opt_index, argv + opt_index);
 	if (query_str == NULL) {
@@ -163,10 +180,8 @@ notmuch_dump_command (notmuch_config_t *config, int argc, char *argv[])
 	}
     }
 
-    ret = database_dump_file (notmuch, output, query_str, output_format);
-
-    if (output != stdout)
-	fclose (output);
+    ret = notmuch_database_dump (notmuch, output_file_name, query_str,
+				 output_format);
 
     notmuch_database_destroy (notmuch);
 
