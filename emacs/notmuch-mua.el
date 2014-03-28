@@ -226,8 +226,12 @@ list."
 	;; Quote the original message according to the user's configured style.
 	(message-cite-original))))
 
-  (goto-char (point-max))
+  ;; Push mark right before signature, if any.
+  (message-goto-signature)
+  (unless (eobp)
+    (end-of-line -1))
   (push-mark)
+
   (message-goto-body)
   (set-buffer-modified-p nil))
 
