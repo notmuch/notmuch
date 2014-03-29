@@ -20,8 +20,8 @@ configure stage.
 
 Dependencies
 ------------
-Notmuch depends on three libraries: Xapian, GMime 2.4 or 2.6, and
-Talloc which are each described below:
+Notmuch depends on four libraries: Xapian, GMime 2.4 or 2.6,
+Talloc, and zlib which are each described below:
 
 	Xapian
 	------
@@ -60,6 +60,18 @@ Talloc which are each described below:
 
 	Talloc is available from http://talloc.samba.org/
 
+	zlib
+	----
+
+	zlib is an extremely popular compression library. It is used
+	by Xapian, so if you installed that you will already have
+	zlib. You may need to install the zlib headers separately.
+
+	Notmuch needs the transparent write feature of zlib introduced
+	in version 1.2.5.2 (Dec. 2011).
+
+	zlib is available from http://zlib.net
+
 Building Documentation
 ----------------------
 
@@ -79,11 +91,11 @@ dependencies with a simple simple command line. For example:
 
   For Debian and similar:
 
-        sudo apt-get install libxapian-dev libgmime-2.6-dev libtalloc-dev python-sphinx
+        sudo apt-get install libxapian-dev libgmime-2.6-dev libtalloc-dev zlib1g-dev python-sphinx
 
   For Fedora and similar:
 
-	sudo yum install xapian-core-devel gmime-devel libtalloc-devel python-sphinx
+	sudo yum install xapian-core-devel gmime-devel libtalloc-devel zlib-devel python-sphinx
 
 On other systems, a similar command can be used, but the details of
 the package names may be different.

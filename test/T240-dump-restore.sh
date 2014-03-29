@@ -68,6 +68,18 @@ test_begin_subtest "dump --output=outfile --"
 notmuch dump --output=dump-1-arg-dash.actual --
 test_expect_equal_file dump.expected dump-1-arg-dash.actual
 
+# gzipped output
+
+test_begin_subtest "dump --gzip"
+notmuch dump --gzip > dump-gzip.gz
+gunzip dump-gzip.gz
+test_expect_equal_file dump.expected dump-gzip
+
+test_begin_subtest "dump --gzip --output=outfile"
+notmuch dump --gzip --output=dump-gzip-outfile.gz
+gunzip dump-gzip-outfile.gz
+test_expect_equal_file dump.expected dump-gzip-outfile
+
 # Note, we assume all messages from cworth have a message-id
 # containing cworth.org
 

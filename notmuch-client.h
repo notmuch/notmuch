@@ -450,7 +450,9 @@ typedef enum dump_formats {
 int
 notmuch_database_dump (notmuch_database_t *notmuch,
 		       const char *output_file_name,
-		       const char *query_str, dump_format_t output_format);
+		       const char *query_str,
+		       dump_format_t output_format,
+		       notmuch_bool_t gzip_output);
 
 #include "command-line-arguments.h"
 #endif

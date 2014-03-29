@@ -19,6 +19,9 @@ recreated from the messages themselves. The output of notmuch dump is
 therefore the only critical thing to backup (and much more friendly to
 incremental backup than the native database files.)
 
+``--gzip``
+    Compress the output in a format compatible with **gzip(1)**.
+
 ``--format=(sup|batch-tag)``
     Notmuch restore supports two plain text dump formats, both with one
     message-id per line, followed by a list of tags.

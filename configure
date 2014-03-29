@@ -340,6 +340,18 @@ else
     errors=$((errors + 1))
 fi
 
+printf "Checking for zlib (>= 1.2.5.2)... "
+have_zlib=0
+if pkg-config --atleast-version=1.2.5.2 zlib; then
+    printf "Yes.\n"
+    have_zlib=1
+    zlib_cflags=$(pkg-config --cflags zlib)
+    zlib_ldflags=$(pkg-config --libs zlib)
+else
+    printf "No.\n"
+    errors=$((errors + 1))
+fi
+
 printf "Checking for talloc development files... "
 if pkg-config --exists talloc; then
     printf "Yes.\n"
@@ -496,6 +508,11 @@ EOF
 	echo "	Xapian library (including development files such as headers)"
 	echo "	http://xapian.org/"
     fi
+    if [ $have_zlib -eq 0 ]; then
+	echo "	zlib library (>= version 1.2.5.2, including development files such as headers)"
+	echo "	http://zlib.net/"
+	echo
+    fi
     if [ $have_gmime -eq 0 ]; then
 	echo "	Either GMime 2.4 library" $GMIME_24_VERSION_CTR "or GMime 2.6 library" $GMIME_26_VERSION_CTR
 	echo "	(including development files such as headers)"
@@ -519,11 +536,11 @@ case a simple command will install everything you need. For example:
 
 On Debian and similar systems:
 
-	sudo apt-get install libxapian-dev libgmime-2.6-dev libtalloc-dev
+	sudo apt-get install libxapian-dev libgmime-2.6-dev libtalloc-dev zlib1g-dev
 
 Or on Fedora and similar systems:
 
-	sudo yum install xapian-core-devel gmime-devel libtalloc-devel
+	sudo yum install xapian-core-devel gmime-devel libtalloc-devel zlib-devel
 
 On other systems, similar commands can be used, but the details of the
 package names may be different.
@@ -860,6 +877,10 @@ XAPIAN_LDFLAGS = ${xapian_ldflags}
 GMIME_CFLAGS = ${gmime_cflags}
 GMIME_LDFLAGS = ${gmime_ldflags}
 
+# Flags needed to compile and link against zlib
+ZLIB_CFLAGS = ${zlib_cflags}
+ZLIB_LDFLAGS = ${zlib_ldflags}
+
 # Flags needed to compile and link against talloc
 TALLOC_CFLAGS = ${talloc_cflags}
 TALLOC_LDFLAGS = ${talloc_ldflags}
@@ -898,6 +919,7 @@ CONFIGURE_CFLAGS = -DHAVE_GETLINE=\$(HAVE_GETLINE) \$(GMIME_CFLAGS)      \\
 		   -DUTIL_BYTE_ORDER=\$(UTIL_BYTE_ORDER)
 
 CONFIGURE_CXXFLAGS = -DHAVE_GETLINE=\$(HAVE_GETLINE) \$(GMIME_CFLAGS)    \\
+		     \$(ZLIB_CFLAGS)					 \\
 		     \$(TALLOC_CFLAGS) -DHAVE_VALGRIND=\$(HAVE_VALGRIND) \\
 		     \$(VALGRIND_CFLAGS) \$(XAPIAN_CXXFLAGS)             \\
 		     -DHAVE_STRCASESTR=\$(HAVE_STRCASESTR)               \\
@@ -908,5 +930,5 @@ CONFIGURE_CXXFLAGS = -DHAVE_GETLINE=\$(HAVE_GETLINE) \$(GMIME_CFLAGS)    \\
 		     -DHAVE_XAPIAN_COMPACT=\$(HAVE_XAPIAN_COMPACT)       \\
 		     -DUTIL_BYTE_ORDER=\$(UTIL_BYTE_ORDER)
 
-CONFIGURE_LDFLAGS =  \$(GMIME_LDFLAGS) \$(TALLOC_LDFLAGS) \$(XAPIAN_LDFLAGS)
+CONFIGURE_LDFLAGS =  \$(GMIME_LDFLAGS) \$(TALLOC_LDFLAGS) \$(ZLIB_LDFLAGS) \$(XAPIAN_LDFLAGS)
 EOF
