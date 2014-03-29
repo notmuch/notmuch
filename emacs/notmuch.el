@@ -81,6 +81,18 @@ To enter a line break in customize, press \\[quoted-insert] C-j."
   :type '(alist :key-type (string) :value-type (string))
   :group 'notmuch-search)
 
+;; The name of this variable `notmuch-init-file' is consistent with the
+;; convention used in e.g. emacs and gnus. The value, `notmuch-config[.el[c]]'
+;; is consistent with notmuch cli configuration file `~/.notmuch-config'.
+(defcustom notmuch-init-file (locate-user-emacs-file "notmuch-config")
+  "Your Notmuch Emacs-Lisp configuration file name.
+If a file with one of the suffixes defined by `get-load-suffixes' exists,
+it will be read instead.
+This file is read once when notmuch is loaded; the notmuch hooks added
+there will be called at other points of notmuch execution."
+  :type 'file
+  :group 'notmuch)
+
 (defvar notmuch-query-history nil
   "Variable to store minibuffer history for notmuch queries")
 
@@ -1013,3 +1025,9 @@ notmuch buffers exist, run `notmuch'."
 (setq mail-user-agent 'notmuch-user-agent)
 
 (provide 'notmuch)
+
+;; After provide to avoid loops if notmuch was require'd via notmuch-init-file.
+(if init-file-user ; don't load init file if the -q option was used.
+    (let ((init-file (locate-file notmuch-init-file '("/")
+				  (get-load-suffixes))))
+      (if init-file (load init-file nil t t))))
