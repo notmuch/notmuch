@@ -36,7 +36,7 @@
 ;;
 ;; Then, to actually run it, add:
 ;;
-;;	(require 'notmuch)
+;;	(autoload 'notmuch "notmuch" "Notmuch mail" t)
 ;;
 ;; to your ~/.emacs file, and then run "M-x notmuch" from within emacs,
 ;; or run:
