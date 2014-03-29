@@ -80,6 +80,20 @@ notmuch dump --gzip --output=dump-gzip-outfile.gz
 gunzip dump-gzip-outfile.gz
 test_expect_equal_file dump.expected dump-gzip-outfile
 
+test_begin_subtest "restoring gzipped stdin"
+notmuch dump --gzip --output=backup.gz
+notmuch tag +new_tag '*'
+notmuch restore < backup.gz
+notmuch dump --output=dump.actual
+test_expect_equal_file dump.expected dump.actual
+
+test_begin_subtest "restoring gzipped file"
+notmuch dump --gzip --output=backup.gz
+notmuch tag +new_tag '*'
+notmuch restore --input=backup.gz
+notmuch dump --output=dump.actual
+test_expect_equal_file dump.expected dump.actual
+
 # Note, we assume all messages from cworth have a message-id
 # containing cworth.org
 

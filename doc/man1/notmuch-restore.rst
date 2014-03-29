@@ -50,6 +50,14 @@ Supported options for **restore** include
             format, this heuristic, based the fact that batch-tag format
             contains no parentheses, should be accurate.
 
+GZIPPED INPUT
+=============
+
+\ **notmuch restore** will detect if the input is compressed in
+**gzip(1)** format and automatically decompress it while reading. This
+detection does not depend on file naming and in particular works for
+standard input.
+
 SEE ALSO
 ========
 

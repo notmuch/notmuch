@@ -22,6 +22,7 @@
 #include "hex-escape.h"
 #include "tag-util.h"
 #include "string-util.h"
+#include "zlib-extra.h"
 
 static regex_t regex;
 
@@ -128,10 +129,10 @@ notmuch_restore_command (notmuch_config_t *config, int argc, char *argv[])
     tag_op_list_t *tag_ops;
 
     char *input_file_name = NULL;
-    FILE *input = stdin;
+    const char *name_for_error = NULL;
+    gzFile input = NULL;
     char *line = NULL;
     void *line_ctx = NULL;
-    size_t line_size;
     ssize_t line_len;
 
     int ret = 0;
@@ -157,39 +158,69 @@ notmuch_restore_command (notmuch_config_t *config, int argc, char *argv[])
     };
 
     opt_index = parse_arguments (argc, argv, options, 1);
-    if (opt_index < 0)
-	return EXIT_FAILURE;
+    if (opt_index < 0) {
+	ret = EXIT_FAILURE;
+	goto DONE;
+    }
+
+    name_for_error = input_file_name ? input_file_name : "stdin";
 
     if (! accumulate)
 	flags |= TAG_FLAG_REMOVE_ALL;
 
-    if (input_file_name) {
-	input = fopen (input_file_name, "r");
-	if (input == NULL) {
-	    fprintf (stderr, "Error opening %s for reading: %s\n",
-		     input_file_name, strerror (errno));
-	    return EXIT_FAILURE;
+    errno = 0;
+    if (input_file_name)
+	input = gzopen (input_file_name, "r");
+    else {
+	int infd = dup (STDIN_FILENO);
+	if (infd < 0) {
+	    fprintf (stderr, "Error duping stdin: %s\n",
+		     strerror (errno));
+	    ret = EXIT_FAILURE;
+	    goto DONE;
 	}
+	input = gzdopen (infd, "r");
+	if (! input)
+	    close (infd);
+    }
+
+    if (input == NULL) {
+	fprintf (stderr, "Error opening %s for (gzip) reading: %s\n",
+		 name_for_error, strerror (errno));
+	ret = EXIT_FAILURE;
+	goto DONE;
     }
 
     if (opt_index < argc) {
 	fprintf (stderr, "Unused positional parameter: %s\n", argv[opt_index]);
-	return EXIT_FAILURE;
+	ret = EXIT_FAILURE;
+	goto DONE;
     }
 
     tag_ops = tag_op_list_create (config);
     if (tag_ops == NULL) {
 	fprintf (stderr, "Out of memory.\n");
-	return EXIT_FAILURE;
+	ret = EXIT_FAILURE;
+	goto DONE;
     }
 
     do {
-	line_len = getline (&line, &line_size, input);
+	util_status_t status;
+
+	status = gz_getline (line_ctx, &line, &line_len, input);
 
 	/* empty input file not considered an error */
-	if (line_len < 0)
-	    return EXIT_SUCCESS;
+	if (status == UTIL_EOF) {
+	    ret = EXIT_SUCCESS;
+	    goto DONE;
+	}
 
+	if (status) {
+	    fprintf (stderr, "Error reading (gzipped) input: %s\n",
+		     gz_error_string(status, input));
+	    ret = EXIT_FAILURE;
+	    goto DONE;
+	}
     } while ((line_len == 0) ||
 	     (line[0] == '#') ||
 	     /* the cast is safe because we checked about for line_len < 0 */
@@ -254,21 +285,38 @@ notmuch_restore_command (notmuch_config_t *config, int argc, char *argv[])
 	if (ret)
 	    break;
 
-    }  while ((line_len = getline (&line, &line_size, input)) != -1);
+    }  while (! (ret = gz_getline (line_ctx, &line, &line_len, input)));
+    
 
-    if (line_ctx != NULL)
-	talloc_free (line_ctx);
+    /* EOF is normal loop termination condition, UTIL_SUCCESS is
+     * impossible here */
+    if (ret == UTIL_EOF) {
+	ret = EXIT_SUCCESS;
+    } else {
+	fprintf (stderr, "Error reading (gzipped) input: %s\n",
+		 gz_error_string (ret, input));
+	ret = EXIT_FAILURE;
+    }
+
+    /* currently this should not be after DONE: since we don't 
+     * know if the xregcomp was reached
+     */
 
     if (input_format == DUMP_FORMAT_SUP)
 	regfree (&regex);
 
-    if (line)
-	free (line);
+ DONE:
+    if (line_ctx != NULL)
+	talloc_free (line_ctx);
 
-    notmuch_database_destroy (notmuch);
+    if (notmuch)
+	notmuch_database_destroy (notmuch);
 
-    if (input != stdin)
-	fclose (input);
+    if (input && gzclose_r (input)) {
+	fprintf (stderr, "Error closing %s: %s\n",
+		 name_for_error, gzerror (input, NULL));
+	ret = EXIT_FAILURE;
+    }
 
     return ret ? EXIT_FAILURE : EXIT_SUCCESS;
 }
