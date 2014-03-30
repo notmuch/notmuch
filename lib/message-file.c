@@ -26,30 +26,15 @@
 
 #include <glib.h> /* GHashTable */
 
-typedef struct {
-    char *str;
-    size_t size;
-    size_t len;
-} header_value_closure_t;
-
 struct _notmuch_message_file {
     /* File object */
     FILE *file;
+    char *filename;
 
-    /* Header storage */
-    int restrict_headers;
+    /* Cache for decoded headers */
     GHashTable *headers;
-    int broken_headers;
-    int good_headers;
-    size_t header_size; /* Length of full message header in bytes. */
 
-    /* Parsing state */
-    char *line;
-    size_t line_size;
-    header_value_closure_t value;
-
-    int parsing_started;
-    int parsing_finished;
+    GMimeMessage *message;
 };
 
 static int
@@ -76,14 +61,11 @@ strcase_hash (const void *ptr)
 static int
 _notmuch_message_file_destructor (notmuch_message_file_t *message)
 {
-    if (message->line)
-	free (message->line);
-
-    if (message->value.size)
-	free (message->value.str);
-
     if (message->headers)
 	g_hash_table_destroy (message->headers);
+
+    if (message->message)
+	g_object_unref (message->message);
 
     if (message->file)
 	fclose (message->file);
@@ -102,19 +84,16 @@ _notmuch_message_file_open_ctx (void *ctx, const char *filename)
     if (unlikely (message == NULL))
 	return NULL;
 
+    /* Only needed for error messages during parsing. */
+    message->filename = talloc_strdup (message, filename);
+    if (message->filename == NULL)
+	goto FAIL;
+
     talloc_set_destructor (message, _notmuch_message_file_destructor);
 
     message->file = fopen (filename, "r");
     if (message->file == NULL)
 	goto FAIL;
-
-    message->headers = g_hash_table_new_full (strcase_hash,
-					      strcase_equal,
-					      free,
-					      g_free);
-
-    message->parsing_started = 0;
-    message->parsing_finished = 0;
 
     return message;
 
@@ -137,264 +116,202 @@ notmuch_message_file_close (notmuch_message_file_t *message)
     talloc_free (message);
 }
 
-void
-notmuch_message_file_restrict_headersv (notmuch_message_file_t *message,
-					va_list va_headers)
+static notmuch_bool_t
+is_mbox (FILE *file)
 {
-    char *header;
+    char from_buf[5];
+    notmuch_bool_t ret = FALSE;
 
-    if (message->parsing_started)
-	INTERNAL_ERROR ("notmuch_message_file_restrict_headers called after parsing has started");
+    /* Is this mbox? */
+    if (fread (from_buf, sizeof (from_buf), 1, file) == 1 &&
+	strncmp (from_buf, "From ", 5) == 0)
+	ret = TRUE;
 
-    while (1) {
-	header = va_arg (va_headers, char*);
-	if (header == NULL)
-	    break;
-	g_hash_table_insert (message->headers,
-			     xstrdup (header), NULL);
-    }
+    rewind (file);
 
-    message->restrict_headers = 1;
+    return ret;
 }
 
-void
-notmuch_message_file_restrict_headers (notmuch_message_file_t *message, ...)
+notmuch_status_t
+_notmuch_message_file_parse (notmuch_message_file_t *message)
 {
-    va_list va_headers;
-
-    va_start (va_headers, message);
-
-    notmuch_message_file_restrict_headersv (message, va_headers);
-}
-
-static void
-copy_header_unfolding (header_value_closure_t *value,
-		       const char *chunk)
-{
-    char *last;
-
-    if (chunk == NULL)
-	return;
-
-    while (*chunk == ' ' || *chunk == '\t')
-	chunk++;
-
-    if (value->len + 1 + strlen (chunk) + 1 > value->size) {
-	unsigned int new_size = value->size;
-	if (value->size == 0)
-	    new_size = strlen (chunk) + 1;
-	else
-	    while (value->len + 1 + strlen (chunk) + 1 > new_size)
-		new_size *= 2;
-	value->str = xrealloc (value->str, new_size);
-	value->size = new_size;
-    }
-
-    last = value->str + value->len;
-    if (value->len) {
-	*last = ' ';
-	last++;
-	value->len++;
-    }
-
-    strcpy (last, chunk);
-    value->len += strlen (chunk);
-
-    last = value->str + value->len - 1;
-    if (*last == '\n') {
-	*last = '\0';
-	value->len--;
-    }
-}
-
-/* As a special-case, a value of NULL for header_desired will force
- * the entire header to be parsed if it is not parsed already. This is
- * used by the _notmuch_message_file_get_headers_end function.
- * Another special case is the Received: header. For this header we
- * want to concatenate all instances of the header instead of just
- * hashing the first instance as we use this when analyzing the path
- * the mail has taken from sender to recipient.
- */
-const char *
-notmuch_message_file_get_header (notmuch_message_file_t *message,
-				 const char *header_desired)
-{
-    int contains;
-    char *header, *decoded_value, *header_sofar, *combined_header;
-    const char *s, *colon;
-    int match, newhdr, hdrsofar, is_received;
+    GMimeStream *stream;
+    GMimeParser *parser;
+    notmuch_status_t status = NOTMUCH_STATUS_SUCCESS;
     static int initialized = 0;
 
-    is_received = (strcmp(header_desired,"received") == 0);
+    if (message->message)
+	return NOTMUCH_STATUS_SUCCESS;
+
+    /* We no longer support mboxes at all. */
+    if (is_mbox (message->file))
+	return NOTMUCH_STATUS_FILE_NOT_EMAIL;
 
     if (! initialized) {
 	g_mime_init (GMIME_ENABLE_RFC2047_WORKAROUNDS);
 	initialized = 1;
     }
 
-    message->parsing_started = 1;
+    message->headers = g_hash_table_new_full (strcase_hash, strcase_equal,
+					      free, g_free);
+    if (! message->headers)
+	return NOTMUCH_STATUS_OUT_OF_MEMORY;
 
-    if (header_desired == NULL)
-	contains = 0;
-    else
-	contains = g_hash_table_lookup_extended (message->headers,
-						 header_desired, NULL,
-						 (gpointer *) &decoded_value);
+    stream = g_mime_stream_file_new (message->file);
 
-    if (contains && decoded_value)
-	return decoded_value;
+    /* We'll own and fclose the FILE* ourselves. */
+    g_mime_stream_file_set_owner (GMIME_STREAM_FILE (stream), FALSE);
 
-    if (message->parsing_finished)
-	return "";
+    parser = g_mime_parser_new_with_stream (stream);
+    g_mime_parser_set_scan_from (parser, FALSE);
 
-#define NEXT_HEADER_LINE(closure)				\
-    while (1) {							\
-	ssize_t bytes_read = getline (&message->line,		\
-				      &message->line_size,	\
-				      message->file);		\
-	if (bytes_read == -1) {					\
-	    message->parsing_finished = 1;			\
-	    break;						\
-	}							\
-	if (*message->line == '\n') {				\
-	    message->parsing_finished = 1;			\
-	    break;						\
-	}							\
-	if (closure &&						\
-	    (*message->line == ' ' || *message->line == '\t'))	\
-	{							\
-	    copy_header_unfolding ((closure), message->line);	\
-	}							\
-	if (*message->line == ' ' || *message->line == '\t')	\
-	    message->header_size += strlen (message->line);	\
-	else							\
-	    break;						\
+    message->message = g_mime_parser_construct_message (parser);
+    if (! message->message) {
+	status = NOTMUCH_STATUS_FILE_NOT_EMAIL;
+	goto DONE;
     }
 
-    if (message->line == NULL)
-	NEXT_HEADER_LINE (NULL);
+  DONE:
+    g_object_unref (stream);
+    g_object_unref (parser);
 
-    while (1) {
+    if (status) {
+	g_hash_table_destroy (message->headers);
+	message->headers = NULL;
 
-	if (message->parsing_finished)
-	    break;
-
-	colon = strchr (message->line, ':');
-
-	if (colon == NULL) {
-	    message->broken_headers++;
-	    /* A simple heuristic for giving up on things that just
-	     * don't look like mail messages. */
-	    if (message->broken_headers >= 10 &&
-		message->good_headers < 5)
-	    {
-		message->parsing_finished = 1;
-		break;
-	    }
-	    NEXT_HEADER_LINE (NULL);
-	    continue;
+	if (message->message) {
+	    g_object_unref (message->message);
+	    message->message = NULL;
 	}
 
-	message->header_size += strlen (message->line);
+	rewind (message->file);
+    }
 
-	message->good_headers++;
+    return status;
+}
 
-	header = xstrndup (message->line, colon - message->line);
+notmuch_status_t
+_notmuch_message_file_get_mime_message (notmuch_message_file_t *message,
+					GMimeMessage **mime_message)
+{
+    notmuch_status_t status;
 
-	if (message->restrict_headers &&
-	    ! g_hash_table_lookup_extended (message->headers,
-					    header, NULL, NULL))
-	{
-	    free (header);
-	    NEXT_HEADER_LINE (NULL);
+    status = _notmuch_message_file_parse (message);
+    if (status)
+	return status;
+
+    *mime_message = message->message;
+
+    return NOTMUCH_STATUS_SUCCESS;
+}
+
+/*
+ * Get all instances of a header decoded and concatenated.
+ *
+ * The result must be freed using g_free().
+ *
+ * Return NULL on errors, empty string for non-existing headers.
+ */
+static char *
+_notmuch_message_file_get_combined_header (notmuch_message_file_t *message,
+					   const char *header)
+{
+    GMimeHeaderList *headers;
+    GMimeHeaderIter *iter;
+    char *combined = NULL;
+
+    headers = g_mime_object_get_header_list (GMIME_OBJECT (message->message));
+    if (! headers)
+	return NULL;
+
+    iter = g_mime_header_iter_new ();
+    if (! iter)
+	return NULL;
+
+    if (! g_mime_header_list_get_iter (headers, iter))
+	goto DONE;
+
+    do {
+	const char *value;
+	char *decoded;
+
+	if (strcasecmp (g_mime_header_iter_get_name (iter), header) != 0)
 	    continue;
+
+	/* Note that GMime retains ownership of value... */
+	value = g_mime_header_iter_get_value (iter);
+
+	/* ... while decoded needs to be freed with g_free(). */
+	decoded = g_mime_utils_header_decode_text (value);
+	if (! decoded) {
+	    if (combined) {
+		g_free (combined);
+		combined = NULL;
+	    }
+	    goto DONE;
 	}
 
-	s = colon + 1;
-	while (*s == ' ' || *s == '\t')
-	    s++;
-
-	message->value.len = 0;
-	copy_header_unfolding (&message->value, s);
-
-	NEXT_HEADER_LINE (&message->value);
-
-	if (header_desired == NULL)
-	    match = 0;
-	else
-	    match = (strcasecmp (header, header_desired) == 0);
-
-	decoded_value = g_mime_utils_header_decode_text (message->value.str);
-	header_sofar = (char *)g_hash_table_lookup (message->headers, header);
-	/* we treat the Received: header special - we want to concat ALL of 
-	 * the Received: headers we encounter.
-	 * for everything else we return the first instance of a header */
-	if (strcasecmp(header, "received") == 0) {
-	    if (header_sofar == NULL) {
-		/* first Received: header we encountered; just add it */
-		g_hash_table_insert (message->headers, header, decoded_value);
-	    } else {
-		/* we need to add the header to those we already collected */
-		newhdr = strlen(decoded_value);
-		hdrsofar = strlen(header_sofar);
-		combined_header = g_malloc(hdrsofar + newhdr + 2);
-		strncpy(combined_header,header_sofar,hdrsofar);
-		*(combined_header+hdrsofar) = ' ';
-		strncpy(combined_header+hdrsofar+1,decoded_value,newhdr+1);
-		g_free (decoded_value);
-		g_hash_table_insert (message->headers, header, combined_header);
+	if (combined) {
+	    char *tmp = g_strdup_printf ("%s %s", combined, decoded);
+	    g_free (decoded);
+	    g_free (combined);
+	    if (! tmp) {
+		combined = NULL;
+		goto DONE;
 	    }
+
+	    combined = tmp;
 	} else {
-	    if (header_sofar == NULL) {
-		/* Only insert if we don't have a value for this header, yet. */
-		g_hash_table_insert (message->headers, header, decoded_value);
-	    } else {
-		free (header);
-		g_free (decoded_value);
-		decoded_value = header_sofar;
-	    }
+	    combined = decoded;
 	}
-	/* if we found a match we can bail - unless of course we are
-	 * collecting all the Received: headers */
-	if (match && !is_received)
-	    return decoded_value;
+    } while (g_mime_header_iter_next (iter));
+
+    /* Return empty string for non-existing headers. */
+    if (! combined)
+	combined = g_strdup ("");
+
+  DONE:
+    g_mime_header_iter_free (iter);
+
+    return combined;
+}
+
+const char *
+notmuch_message_file_get_header (notmuch_message_file_t *message,
+				 const char *header)
+{
+    const char *value;
+    char *decoded;
+
+    if (_notmuch_message_file_parse (message))
+	return NULL;
+
+    /* If we have a cached decoded value, use it. */
+    value = g_hash_table_lookup (message->headers, header);
+    if (value)
+	return value;
+
+    if (strcasecmp (header, "received") == 0) {
+	/*
+	 * The Received: header is special. We concatenate all
+	 * instances of the header as we use this when analyzing the
+	 * path the mail has taken from sender to recipient.
+	 */
+	decoded = _notmuch_message_file_get_combined_header (message, header);
+    } else {
+	value = g_mime_object_get_header (GMIME_OBJECT (message->message),
+					  header);
+	if (value)
+	    decoded = g_mime_utils_header_decode_text (value);
+	else
+	    decoded = g_strdup ("");
     }
 
-    if (message->parsing_finished) {
-        fclose (message->file);
-        message->file = NULL;
-    }
+    if (! decoded)
+	return NULL;
 
-    if (message->line)
-	free (message->line);
-    message->line = NULL;
+    /* Cache the decoded value. We also own the strings. */
+    g_hash_table_insert (message->headers, xstrdup (header), decoded);
 
-    if (message->value.size) {
-	free (message->value.str);
-	message->value.str = NULL;
-	message->value.size = 0;
-	message->value.len = 0;
-    }
-
-    /* For the Received: header we actually might end up here even
-     * though we found the header (as we force continued parsing
-     * in that case). So let's check if that's the header we were
-     * looking for and return the value that we found (if any)
-     */
-    if (is_received)
-	return (char *)g_hash_table_lookup (message->headers, "received");
-
-    /* We've parsed all headers and never found the one we're looking
-     * for. It's probably just not there, but let's check that we
-     * didn't make a mistake preventing us from seeing it. */
-    if (message->restrict_headers && header_desired &&
-	! g_hash_table_lookup_extended (message->headers,
-					header_desired, NULL, NULL))
-    {
-	INTERNAL_ERROR ("Attempt to get header \"%s\" which was not\n"
-			"included in call to notmuch_message_file_restrict_headers\n",
-			header_desired);
-    }
-
-    return "";
+    return decoded;
 }

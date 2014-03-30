@@ -425,45 +425,17 @@ _index_mime_part (notmuch_message_t *message,
 
 notmuch_status_t
 _notmuch_message_index_file (notmuch_message_t *message,
-			     const char *filename)
+			     notmuch_message_file_t *message_file)
 {
-    GMimeStream *stream = NULL;
-    GMimeParser *parser = NULL;
-    GMimeMessage *mime_message = NULL;
+    GMimeMessage *mime_message;
     InternetAddressList *addresses;
-    FILE *file = NULL;
     const char *from, *subject;
-    notmuch_status_t ret = NOTMUCH_STATUS_SUCCESS;
-    static int initialized = 0;
-    char from_buf[5];
+    notmuch_status_t status;
 
-    if (! initialized) {
-	g_mime_init (GMIME_ENABLE_RFC2047_WORKAROUNDS);
-	initialized = 1;
-    }
-
-    file = fopen (filename, "r");
-    if (! file) {
-	fprintf (stderr, "Error opening %s: %s\n", filename, strerror (errno));
-	ret = NOTMUCH_STATUS_FILE_ERROR;
-	goto DONE;
-    }
-
-    /* Is this mbox? */
-    if (fread (from_buf, sizeof (from_buf), 1, file) == 1 &&
-	strncmp (from_buf, "From ", 5) == 0) {
-	ret = NOTMUCH_STATUS_FILE_NOT_EMAIL;
-	goto DONE;
-    }
-    rewind (file);
-
-    /* Evil GMime steals my FILE* here so I won't fclose it. */
-    stream = g_mime_stream_file_new (file);
-
-    parser = g_mime_parser_new_with_stream (stream);
-    g_mime_parser_set_scan_from (parser, FALSE);
-
-    mime_message = g_mime_parser_construct_message (parser);
+    status = _notmuch_message_file_get_mime_message (message_file,
+						     &mime_message);
+    if (status)
+	return status;
 
     from = g_mime_message_get_sender (mime_message);
 
@@ -484,15 +456,5 @@ _notmuch_message_index_file (notmuch_message_t *message,
 
     _index_mime_part (message, g_mime_message_get_mime_part (mime_message));
 
-  DONE:
-    if (mime_message)
-	g_object_unref (mime_message);
-
-    if (parser)
-	g_object_unref (parser);
-
-    if (stream)
-	g_object_unref (stream);
-
-    return ret;
+    return NOTMUCH_STATUS_SUCCESS;
 }

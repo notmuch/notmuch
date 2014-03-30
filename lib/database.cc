@@ -1971,15 +1971,10 @@ notmuch_database_add_message (notmuch_database_t *notmuch,
     if (ret)
 	goto DONE;
 
-    notmuch_message_file_restrict_headers (message_file,
-					   "date",
-					   "from",
-					   "in-reply-to",
-					   "message-id",
-					   "references",
-					   "subject",
-					   "to",
-					   (char *) NULL);
+    /* Parse message up front to get better error status. */
+    ret = _notmuch_message_file_parse (message_file);
+    if (ret)
+	goto DONE;
 
     try {
 	/* Before we do any real work, (especially before doing a
@@ -2066,7 +2061,7 @@ notmuch_database_add_message (notmuch_database_t *notmuch,
 	    date = notmuch_message_file_get_header (message_file, "date");
 	    _notmuch_message_set_header_values (message, date, from, subject);
 
-	    ret = _notmuch_message_index_file (message, filename);
+	    ret = _notmuch_message_index_file (message, message_file);
 	    if (ret)
 		goto DONE;
 	} else {
