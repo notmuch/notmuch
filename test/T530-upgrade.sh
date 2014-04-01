@@ -26,9 +26,11 @@ output=$(notmuch search path:foo)
 test_expect_equal "$output" ""
 
 test_begin_subtest "database upgrade from format version 1"
-output=$(notmuch new)
+output=$(notmuch new | sed -e 's/^Backing up tags to .*$/Backing up tags to FILENAME/')
 test_expect_equal "$output" "\
 Welcome to a new version of notmuch! Your database will now be upgraded.
+This process is safe to interrupt.
+Backing up tags to FILENAME
 Your notmuch database has now been upgraded to database format version 2.
 No new mail."
 
