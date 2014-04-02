@@ -25,6 +25,8 @@ test_begin_subtest "path: search does not work with old database version"
 output=$(notmuch search path:foo)
 test_expect_equal "$output" ""
 
+test_expect_success 'pre upgrade dump' 'notmuch dump | sort > pre-upgrade-dump'
+
 test_begin_subtest "database upgrade from format version 1"
 output=$(notmuch new | sed -e 's/^Backing up tags to .*$/Backing up tags to FILENAME/')
 test_expect_equal "$output" "\
@@ -33,6 +35,10 @@ This process is safe to interrupt.
 Backing up tags to FILENAME
 Your notmuch database has now been upgraded to database format version 2.
 No new mail."
+
+test_begin_subtest "tag backup matches pre-upgrade dump"
+gunzip -c ${MAIL_DIR}/.notmuch/dump-*.gz | sort > backup-dump
+test_expect_equal_file pre-upgrade-dump backup-dump
 
 test_begin_subtest "folder: no longer matches in the middle of path"
 output=$(notmuch search folder:baz)
