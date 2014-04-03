@@ -5,18 +5,18 @@ notmuch-emacs
 About this Manual
 =================
 
-This manual covers only the emacs interface to notmuch. For information
+This manual covers only the Emacs interface to Notmuch. For information
 on the command line interface, see See section “Description” in Notmuch
 Manual Pager. To save typing, we will sometimes use *notmuch* in this
-manual to refer to the Emacs interface to notmuch. If the distinction
-should every be important, we’ll refer to the Emacs inteface as
+manual to refer to the Emacs interface to Notmuch. If the distinction
+should every be important, we’ll refer to the Emacs interface as
 *notmuch-emacs*.
 
 Notmuch-emacs is highly customizable via the the Emacs customization
 framework (or just by setting the appropriate variables). We try to
 point out relevant variables in this manual, but in order to avoid
 duplication of information, but you can usually find the most detailed
-description in the varables docstring.
+description in the variables docstring.
 
 notmuch-hello
 =============
@@ -25,7 +25,7 @@ notmuch-hello
    single: notmuch-hello
    single: notmuch
 
-``notmuch-hello`` is the main entry point for notmuch. You can start it
+``notmuch-hello`` is the main entry point for Notmuch. You can start it
 with ``M-x notmuch`` or ``M-x notmuch-hello``. The startup screen looks
 something like the following. There are some hints at the bottom of the
 screen. There are three main parts to the notmuch-hello screen,
@@ -48,7 +48,7 @@ a mouse or by positioning the cursor and pressing ``<return>``
 |     ``=`` to refresh this screen. ``s`` to search messages. ``q`` to quit.
 |		    **Customize** this page.
 
-You can change the overall appearence of the notmuch-hello screen by
+You can change the overall appearance of the notmuch-hello screen by
 customizing the variable :index:`notmuch-hello-sections`.
 
 
@@ -59,7 +59,7 @@ notmuch-hello key bindings
 ``<tab>``
     Move to the next widget (button or text entry field)
 
-``<backtab>``
+``<backspace>``
     Move to the previous widget.
 
 ``<return>``
@@ -91,12 +91,12 @@ Saved Searches
 
 Notmuch replaces the static assignment of messages with the more dynamic
 notion of searching. Notmuch-hello presents the user with a customizable
-set of saved searchs. The initial defaults are ``tag:inbox`` and
+set of saved searches. The initial defaults are ``tag:inbox`` and
 ``tag:unread``, but you can customize the following variables
 
 :index:`notmuch-saved-searches`
     A list of cons pairs, the first being the name to display, the
-    second being a query string for notmuch. See section “Description”
+    second being a query string for Notmuch. See section “Description”
     in Notmuch Query Syntax.
 
 :index:`notmuch-saved-searches-sort-function`
@@ -110,8 +110,8 @@ set of saved searchs. The initial defaults are ``tag:inbox`` and
 Search Box
 ----------
 
-The search box lets the user enter an notmuch query. See section
-“Description” in Notmuch Query Syntax, for more info on notmuch query
+The search box lets the user enter a Notmuch query. See section
+“Description” in Notmuch Query Syntax, for more info on Notmuch query
 syntax. A history of recent searches is also displayed by default. The
 latter is controlled by the variable :index:`notmuch-hello-recent-searches-max`.
 
@@ -190,3 +190,15 @@ Importing Mail
 :index:`notmuch-poll`
 
 :index:`notmuch-poll-script`
+
+Init File
+---------
+
+When Notmuch is loaded, it will read the ``notmuch-init-file``
+(``~/.emacs.d/notmuch-config`` by default) file. This is normal Emacs Lisp
+file and can be used to avoid cluttering your ``~/.emacs`` with Notmuch
+stuff. If the file with ``.elc``, ``.elc.gz``, ``.el`` or ``.el.gz``
+suffix exist it will be read instead (just one of these, chosen in this
+order). Most often users create ``~/.emacs.d/notmuch-config.el`` and just
+work with it. If Emacs was invoked with the ``-q`` or ``--no-init-file``
+options, ``notmuch-init-file`` is not read.
