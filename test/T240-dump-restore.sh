@@ -110,6 +110,15 @@ notmuch dump --format=batch-tag from:cworth | sed 's/^.*-- id://' | \
     sort > OUTPUT.$test_count
 test_expect_equal_file EXPECTED.$test_count OUTPUT.$test_count
 
+test_begin_subtest "format=batch-tag, missing newline"
+printf "+a_tag_without_newline -- id:20091117232137.GA7669@griffis1.net" > IN
+notmuch restore --accumulate < IN
+notmuch dump id:20091117232137.GA7669@griffis1.net > OUT
+cat <<EOF > EXPECTED
++a_tag_without_newline +inbox +unread -- id:20091117232137.GA7669@griffis1.net
+EOF
+test_expect_equal_file EXPECTED OUT
+
 test_begin_subtest "format=batch-tag, # round-trip"
 notmuch dump --format=sup | sort > EXPECTED.$test_count
 notmuch dump --format=batch-tag | notmuch restore --format=batch-tag
