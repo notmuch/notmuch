@@ -59,5 +59,5 @@ for page in man_pages:
     outfile.write("".join(lines))
     outfile.close()
 
-    os.system('set -x; rst2man {0} {1}/{2}.{3}'
-              .format(filename, outdir, page[0],page[4]))
+    system('set -x; rst2man {0} {1}/{2}.{3}'
+           .format(filename, outdir, page[0], page[4]))
