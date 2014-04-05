@@ -8,7 +8,7 @@ sourcedir = argv[1]
 outdir = argv[2]
 
 if not isdir(outdir):
-    makedirs(outdir, 0755)
+    makedirs(outdir, 0o755)
 
 execfile(sourcedir + "/conf.py")
 
@@ -34,7 +34,7 @@ blankre = re.compile("^\s*$")
 for page in man_pages:
     outdirname = outdir + '/' + dirname(page[0])
     if not isdir(outdirname):
-        makedirs(outdirname, 0755)
+        makedirs(outdirname, 0o755)
     filename = outdir + '/' + page[0] + '.rst'
     outfile = open(filename, 'w')
     infile = open(sourcedir + '/' + page[0] + '.rst', 'r')
