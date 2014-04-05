@@ -115,6 +115,15 @@ list."
 	    (push header message-hidden-headers)))
 	notmuch-mua-hidden-headers))
 
+(defun notmuch-mua-reply-crypto (parts)
+  (loop for part in parts
+	if (notmuch-match-content-type (plist-get part :content-type) "multipart/signed")
+	  do (mml-secure-message-sign)
+	else if (notmuch-match-content-type (plist-get part :content-type) "multipart/encrypted")
+	  do (mml-secure-message-sign-encrypt)
+	else if (notmuch-match-content-type (plist-get part :content-type) "multipart/*")
+	  do (notmuch-mua-reply-crypto (plist-get part :content))))
+
 (defun notmuch-mua-get-quotable-parts (parts)
   (loop for part in parts
 	if (notmuch-match-content-type (plist-get part :content-type) "multipart/alternative")
@@ -151,9 +160,10 @@ list."
 
 (defun notmuch-mua-reply (query-string &optional sender reply-all)
   (let ((args '("reply" "--format=sexp" "--format-version=1"))
+	(process-crypto notmuch-show-process-crypto)
 	reply
 	original)
-    (when notmuch-show-process-crypto
+    (when process-crypto
       (setq args (append args '("--decrypt"))))
 
     (if reply-all
@@ -224,7 +234,11 @@ list."
 	(set-mark (point))
 	(goto-char start)
 	;; Quote the original message according to the user's configured style.
-	(message-cite-original))))
+	(message-cite-original)))
+
+    ;; Sign and/or encrypt replies to signed and/or encrypted messages.
+    (when process-crypto
+      (notmuch-mua-reply-crypto (plist-get original :body))))
 
   ;; Push mark right before signature, if any.
   (message-goto-signature)
