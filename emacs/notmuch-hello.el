@@ -318,7 +318,7 @@ return that."
     (setq notmuch-saved-searches
 	  (loop for elem in notmuch-saved-searches
 		if (not (equal name
-			       (car elem)))
+			       (notmuch-saved-search-get elem :name)))
 		collect elem))
     ;; Add the new one.
     (customize-save-variable 'notmuch-saved-searches
@@ -338,7 +338,7 @@ return that."
 
 (defun notmuch-hello-longest-label (searches-alist)
   (or (loop for elem in searches-alist
-	    maximize (length (car elem)))
+	    maximize (length (notmuch-saved-search-get elem :name)))
       0))
 
 (defun notmuch-hello-reflect-generate-row (ncols nrows row list)
@@ -417,13 +417,12 @@ Otherwise, FILTER is ignored.
     (concat "(" query ") and (" filter ")"))
    (t query)))
 
-(defun notmuch-hello-query-counts (query-alist &rest options)
-  "Compute list of counts of matched messages from QUERY-ALIST.
+(defun notmuch-hello-query-counts (query-list &rest options)
+  "Compute list of counts of matched messages from QUERY-LIST.
 
-QUERY-ALIST must be a list containing elements of the form (NAME . QUERY)
-or (NAME QUERY COUNT-QUERY). If the latter form is used,
-COUNT-QUERY specifies an alternate query to be used to generate
-the count for the associated query.
+QUERY-LIST must be a list of saved-searches. Ideally each of
+these is a plist but other options are available for backwards
+compatibility: see `notmuch-saved-searches' for details.
 
 The result is the list of elements of the form (NAME QUERY COUNT).
 
@@ -431,11 +430,9 @@ The values :show-empty-searches, :filter and :filter-count from
 options will be handled as specified for
 `notmuch-hello-insert-searches'."
   (with-temp-buffer
-    (dolist (elem query-alist nil)
-      (let ((count-query (if (consp (cdr elem))
-			     ;; do we have a different query for the message count?
-			     (third elem)
-			   (cdr elem))))
+    (dolist (elem query-list nil)
+      (let ((count-query (or (notmuch-saved-search-get elem :count-query)
+			     (notmuch-saved-search-get elem :query))))
 	(insert
 	 (replace-regexp-in-string
 	  "\n" " "
@@ -457,18 +454,15 @@ the CLI and emacs interface."))
      #'identity
      (mapcar
       (lambda (elem)
-	(let ((name (car elem))
-	      (search-query (if (consp (cdr elem))
-				 ;; do we have a different query for the message count?
-				 (second elem)
-			      (cdr elem)))
+	(let ((name (notmuch-saved-search-get elem :name))
+	      (search-query (notmuch-saved-search-get elem :query))
 	      (message-count (prog1 (read (current-buffer))
 				(forward-line 1))))
 	  (and (or (plist-get options :show-empty-searches) (> message-count 0))
 	       (list name (notmuch-hello-filtered-query
 			   search-query (plist-get options :filter))
 		     message-count))))
-      query-alist))))
+      query-list))))
 
 (defun notmuch-hello-insert-buttons (searches)
   "Insert buttons for SEARCHES.
@@ -738,13 +732,15 @@ Complete list of currently available key bindings:
       (indent-rigidly start (point) notmuch-hello-indent))
     nil))
 
-(defun notmuch-hello-insert-searches (title query-alist &rest options)
-  "Insert a section with TITLE showing a list of buttons made from QUERY-ALIST.
+(defun notmuch-hello-insert-searches (title query-list &rest options)
+  "Insert a section with TITLE showing a list of buttons made from QUERY-LIST.
 
-QUERY-ALIST must be a list containing elements of the form (NAME . QUERY)
-or (NAME QUERY COUNT-QUERY). If the latter form is used,
-COUNT-QUERY specifies an alternate query to be used to generate
-the count for the associated item.
+QUERY-LIST should ideally be a plist but for backwards
+compatibility other forms are also accepted (see
+`notmuch-saved-searches' for details).  The plist should
+contain keys :name and :query; if :count-query is also present
+then it specifies an alternate query to be used to generate the
+count for the associated search.
 
 Supports the following entries in OPTIONS as a plist:
 :initially-hidden - if non-nil, section will be hidden on startup
@@ -778,7 +774,7 @@ Supports the following entries in OPTIONS as a plist:
 		     "hide"))
     (widget-insert "\n")
     (when (not is-hidden)
-      (let ((searches (apply 'notmuch-hello-query-counts query-alist options)))
+      (let ((searches (apply 'notmuch-hello-query-counts query-list options)))
 	(when (or (not (plist-get options :hide-if-empty))
 		  searches)
 	  (widget-insert "\n")

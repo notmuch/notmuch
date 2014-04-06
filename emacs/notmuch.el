@@ -827,14 +827,14 @@ See `notmuch-tag' for information on the format of TAG-CHANGES."
 	  (let (longest
 		(longest-length 0))
 	    (loop for tuple in notmuch-saved-searches
-		  if (let ((quoted-query (regexp-quote (cdr tuple))))
+		  if (let ((quoted-query (regexp-quote (notmuch-saved-search-get tuple :query))))
 		       (and (string-match (concat "^" quoted-query) query)
 			    (> (length (match-string 0 query))
 			       longest-length)))
 		  do (setq longest tuple))
 	    longest))
-	 (saved-search-name (car saved-search))
-	 (saved-search-query (cdr saved-search)))
+	 (saved-search-name (notmuch-saved-search-get saved-search :name))
+	 (saved-search-query (notmuch-saved-search-get saved-search :query)))
     (cond ((and saved-search (equal saved-search-query query))
 	   ;; Query is the same as saved search (ignoring case)
 	   (concat "*notmuch-saved-search-" saved-search-name "*"))
