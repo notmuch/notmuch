@@ -5,6 +5,7 @@ Maintainer: Carl Worth <cworth@debian.org>
 Uploaders:
  Jameson Graef Rollins <jrollins@finestructure.net>,
  David Bremner <bremner@debian.org>
+Build-Conflicts: ruby1.8
 Build-Depends:
  debhelper (>= 9),
  pkg-config,
