@@ -125,7 +125,12 @@ searches so they still work in customize."
 		(group :format "%v" :inline t (const :format "  Query: " :query) (string :format "%v")))
 	  (checklist :inline t
 		     :format "%v"
-		     (group :format "%v" :inline t (const :format "Count-Query: " :count-query) (string :format "%v")))))
+		     (group :format "%v" :inline t (const :format "Count-Query: " :count-query) (string :format "%v"))
+		     (group :format "%v" :inline t (const :format "" :sort-order)
+			    (choice :tag " Sort Order"
+				    (const :tag "Default" nil)
+				    (const :tag "Oldest-first" oldest-first)
+				    (const :tag "Newest-first" newest-first))))))
 
 (defcustom notmuch-saved-searches '((:name "inbox" :query "tag:inbox")
 				    (:name "unread" :query "tag:unread"))
@@ -139,6 +144,9 @@ a plist. Supported properties are
   :count-query     Optional extra query to generate the count
                    shown. If not present then the :query property
                    is used.
+  :sort-order      Specify the sort order to be used for the search.
+                   Possible values are 'oldest-first 'newest-first or
+                   nil. Nil means use the default sort order.
 
 Other accepted forms are a cons cell of the form (NAME . QUERY)
 or a list of the form (NAME QUERY COUNT-QUERY)."

@@ -363,7 +363,8 @@ diagonal."
 (defun notmuch-hello-widget-search (widget &rest ignore)
   (notmuch-search (widget-get widget
 			      :notmuch-search-terms)
-		  notmuch-search-oldest-first))
+		  (widget-get widget
+			      :notmuch-search-oldest-first)))
 
 (defun notmuch-saved-search-count (search)
   (car (process-lines notmuch-command "count" search)))
@@ -495,12 +496,17 @@ with `notmuch-hello-query-counts'."
 		  (widget-insert (make-string column-indent ? )))
 	      (let* ((name (plist-get elem :name))
 		     (query (plist-get elem :query))
+		     (oldest-first (case (plist-get elem :sort-order)
+				     (newest-first nil)
+				     (oldest-first t)
+				     (otherwise notmuch-search-oldest-first)))
 		     (msg-count (plist-get elem :count)))
 		(widget-insert (format "%8s "
 				       (notmuch-hello-nice-number msg-count)))
 		(widget-create 'push-button
 			       :notify #'notmuch-hello-widget-search
 			       :notmuch-search-terms query
+			       :notmuch-search-oldest-first oldest-first
 			       name)
 		(setq column-indent
 		      (1+ (max 0 (- column-width (length name)))))))
