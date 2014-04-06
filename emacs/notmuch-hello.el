@@ -269,6 +269,44 @@ afterwards.")
       (add-to-history 'notmuch-search-history search)))
   (notmuch-search search notmuch-search-oldest-first))
 
+(defun notmuch-saved-search-get (saved-search field)
+  "Get FIELD from SAVED-SEARCH.
+
+If SAVED-SEARCH is a plist, this is just `plist-get', but for
+backwards compatibility, this also deals with the two other
+possible formats for SAVED-SEARCH: cons cells (NAME . QUERY) and
+lists (NAME QUERY COUNT-QUERY)."
+  (cond
+   ((keywordp (car saved-search))
+    (plist-get saved-search field))
+   ;; It is not a plist so it is an old-style entry.
+   ((consp (cdr saved-search)) ;; It is a list (NAME QUERY COUNT-QUERY)
+    (case field
+      (:name (first saved-search))
+      (:query (second saved-search))
+      (:count-query (third saved-search))
+      (t nil)))
+   (t  ;; It is a cons-cell (NAME . QUERY)
+    (case field
+      (:name (car saved-search))
+      (:query (cdr saved-search))
+      (t nil)))))
+
+(defun notmuch-hello-saved-search-to-plist (saved-search)
+  "Return a copy of SAVED-SEARCH in plist form.
+
+If saved search is a plist then just return a copy. In other
+cases, for backwards compatability, convert to plist form and
+return that."
+  (if (keywordp (car saved-search))
+      (copy-seq saved-search)
+    (let ((fields (list :name :query :count-query))
+	  plist-search)
+      (dolist (field fields plist-search)
+	(let ((string (notmuch-saved-search-get saved-search field)))
+	  (when string
+	    (setq plist-search (append plist-search (list field string)))))))))
+
 (defun notmuch-hello-add-saved-search (widget)
   (interactive)
   (let ((search (widget-value
