@@ -424,7 +424,9 @@ QUERY-LIST must be a list of saved-searches. Ideally each of
 these is a plist but other options are available for backwards
 compatibility: see `notmuch-saved-searches' for details.
 
-The result is the list of elements of the form (NAME QUERY COUNT).
+The result is a list of plists each of which includes the
+properties :name NAME, :query QUERY and :count COUNT, together
+with any properties in the original saved-search.
 
 The values :show-empty-searches, :filter and :filter-count from
 options will be handled as specified for
@@ -454,23 +456,26 @@ the CLI and emacs interface."))
      #'identity
      (mapcar
       (lambda (elem)
-	(let ((name (notmuch-saved-search-get elem :name))
-	      (search-query (notmuch-saved-search-get elem :query))
-	      (message-count (prog1 (read (current-buffer))
+	(let* ((elem-plist (notmuch-hello-saved-search-to-plist elem))
+	       (search-query (plist-get elem-plist :query))
+	       (filtered-query (notmuch-hello-filtered-query
+				search-query (plist-get options :filter)))
+	       (message-count (prog1 (read (current-buffer))
 				(forward-line 1))))
-	  (and (or (plist-get options :show-empty-searches) (> message-count 0))
-	       (list name (notmuch-hello-filtered-query
-			   search-query (plist-get options :filter))
-		     message-count))))
+	  (when (and filtered-query (or (plist-get options :show-empty-searches) (> message-count 0)))
+	    (setq elem-plist (plist-put elem-plist :query filtered-query))
+	    (plist-put elem-plist :count message-count))))
       query-list))))
 
 (defun notmuch-hello-insert-buttons (searches)
   "Insert buttons for SEARCHES.
 
-SEARCHES must be a list containing lists of the form (NAME QUERY COUNT), where
-QUERY is the query to start when the button for the corresponding entry is
-activated. COUNT should be the number of messages matching the query.
-Such a list can be computed with `notmuch-hello-query-counts'."
+SEARCHES must be a list of plists each of which should contain at
+least the properties :name NAME :query QUERY and :count COUNT,
+where QUERY is the query to start when the button for the
+corresponding entry is activated, and COUNT should be the number
+of messages matching the query.  Such a plist can be computed
+with `notmuch-hello-query-counts'."
   (let* ((widest (notmuch-hello-longest-label searches))
 	 (tags-and-width (notmuch-hello-tags-per-line widest))
 	 (tags-per-line (car tags-and-width))
@@ -488,9 +493,9 @@ Such a list can be computed with `notmuch-hello-query-counts'."
 	    (when elem
 	      (if (> column-indent 0)
 		  (widget-insert (make-string column-indent ? )))
-	      (let* ((name (first elem))
-		     (query (second elem))
-		     (msg-count (third elem)))
+	      (let* ((name (plist-get elem :name))
+		     (query (plist-get elem :query))
+		     (msg-count (plist-get elem :count)))
 		(widget-insert (format "%8s "
 				       (notmuch-hello-nice-number msg-count)))
 		(widget-create 'push-button
