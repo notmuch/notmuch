@@ -323,7 +323,7 @@ return that."
     ;; Add the new one.
     (customize-save-variable 'notmuch-saved-searches
 			     (add-to-list 'notmuch-saved-searches
-					  (cons name search) t))
+					  (list :name name :query search) t))
     (message "Saved '%s' as '%s'." search name)
     (notmuch-hello-update)))
 
