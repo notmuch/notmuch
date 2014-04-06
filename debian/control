@@ -4,7 +4,6 @@ Priority: optional
 Maintainer: Carl Worth <cworth@debian.org>
 Uploaders:
  Jameson Graef Rollins <jrollins@finestructure.net>,
- martin f. krafft <madduck@debian.org>,
  David Bremner <bremner@debian.org>
 Build-Depends:
  debhelper (>= 9),
