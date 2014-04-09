@@ -15,6 +15,23 @@ Command-Line Interface
 Emacs Interface
 ---------------
 
+Changed format for saved searches.
+
+  The format for `notmuch-saved-searches` has changed, but old style
+  saved searches are still supported. The new style means that a saved
+  search can store the desired sort order for the search, and it can
+  store a separate query to use for generating the count notmuch
+  shows.
+
+  The variable is fully customizable and any configuration done
+  through customize should `just work', with the additional options
+  mentioned above. For manual customization see the documentation for
+  `notmuch-saved-searches`.
+
+  IMPORTANT: a new style notmuch-saved-searches variable will break
+  previous versions of notmuch-emacs (even search will not work); to
+  fix remove the customization for notmuch-saved-searches.
+
 Bug fix for saved searches with newlines in them.
 
   Split lines confuse `notmuch count --batch`, so we remove embedded
