@@ -134,6 +134,7 @@ sub do_clone {
           $repository, $tempwork) == 0
     or die "'git clone' exited with nonzero value\n";
   git ('config', '--unset', 'core.worktree');
+  git ('config', 'core.bare', 'true');
 }
 
 sub is_committed {
