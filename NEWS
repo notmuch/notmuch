@@ -15,7 +15,7 @@ Command-Line Interface
 Emacs Interface
 ---------------
 
-Changed format for saved searches.
+Changed format for saved searches
 
   The format for `notmuch-saved-searches` has changed, but old style
   saved searches are still supported. The new style means that a saved
@@ -24,7 +24,7 @@ Changed format for saved searches.
   shows.
 
   The variable is fully customizable and any configuration done
-  through customize should `just work', with the additional options
+  through customize should *just work*, with the additional options
   mentioned above. For manual customization see the documentation for
   `notmuch-saved-searches`.
 
@@ -32,7 +32,13 @@ Changed format for saved searches.
   previous versions of notmuch-emacs (even search will not work); to
   fix remove the customization for notmuch-saved-searches.
 
-Bug fix for saved searches with newlines in them.
+  If you have a custom saved search sort function (not unsorted or
+  alphabetical) then the sort function will need to be
+  modified. Replacing (car saved-search) by (notmuch-saved-search-get
+  saved-search :name) and (cdr saved-search) by
+  (notmuch-saved-search-get saved-search :query) should be sufficient.
+
+Bug fix for saved searches with newlines in them
 
   Split lines confuse `notmuch count --batch`, so we remove embedded
   newlines before calling notmuch count.
