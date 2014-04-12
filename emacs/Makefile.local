@@ -21,7 +21,7 @@ emacs_sources := \
 	$(dir)/notmuch-version.el
 
 $(dir)/notmuch-version.el: $(dir)/Makefile.local version.stamp
-$(dir)/notmuch-version.el: $(dir)/notmuch-version.el.tmpl
+$(dir)/notmuch-version.el: $(srcdir)/$(dir)/notmuch-version.el.tmpl
 	@sed -e 's/%AG%/Generated file (from $(<F)) -- do not edit!/' \
 	     -e 's/%VERSION%/"$(VERSION)"/' $< > $@
 
