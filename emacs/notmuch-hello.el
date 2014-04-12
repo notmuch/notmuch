@@ -39,9 +39,12 @@
   :type 'boolean
   :group 'notmuch-hello)
 
-(defun notmuch-sort-saved-searches (alist)
-  "Generate an alphabetically sorted saved searches alist."
-  (sort (copy-sequence alist) (lambda (a b) (string< (car a) (car b)))))
+(defun notmuch-sort-saved-searches (saved-searches)
+  "Generate an alphabetically sorted saved searches list."
+  (sort (copy-sequence saved-searches)
+	(lambda (a b)
+	  (string< (notmuch-saved-search-get a :name)
+		   (notmuch-saved-search-get b :name)))))
 
 (defcustom notmuch-saved-search-sort-function nil
   "Function used to sort the saved searches for the notmuch-hello view.
@@ -51,8 +54,10 @@ sorting (nil) displays the saved searches in the order they are
 stored in `notmuch-saved-searches'. Sort alphabetically sorts the
 saved searches in alphabetical order. Custom sort function should
 be a function or a lambda expression that takes the saved
-searches alist as a parameter, and returns a new saved searches
-alist to be used."
+searches list as a parameter, and returns a new saved searches
+list to be used. For compatibility with the various saved-search
+formats it should use notmuch-saved-search-get to access the
+fields of the search."
   :type '(choice (const :tag "No sorting" nil)
 		 (const :tag "Sort alphabetically" notmuch-sort-saved-searches)
 		 (function :tag "Custom sort function"
