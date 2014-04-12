@@ -908,6 +908,7 @@ WITH_ZSH = ${WITH_ZSH}
 
 # Combined flags for compiling and linking against all of the above
 CONFIGURE_CFLAGS = -DHAVE_GETLINE=\$(HAVE_GETLINE) \$(GMIME_CFLAGS)      \\
+		   \$(ZLIB_CFLAGS)					 \\
 		   \$(TALLOC_CFLAGS) -DHAVE_VALGRIND=\$(HAVE_VALGRIND)   \\
 		   \$(VALGRIND_CFLAGS)                                   \\
 		   -DHAVE_STRCASESTR=\$(HAVE_STRCASESTR)                 \\
