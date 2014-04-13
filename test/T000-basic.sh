@@ -86,8 +86,9 @@ test_expect_success \
     'NOTMUCH_CONFIG is set and points to an existing file' \
     'test -f "${NOTMUCH_CONFIG}"'
 
-test_expect_success \
-    'PATH is set to this repository' \
-    'test "`echo $PATH|cut -f1 -d: | sed -e 's,/test/valgrind/bin$,,'`" = "`dirname ${TEST_DIRECTORY}`"'
+test_begin_subtest 'PATH is set to build directory'
+test_expect_equal \
+    "$(dirname ${TEST_DIRECTORY})" \
+    "$(echo $PATH|cut -f1 -d: | sed -e 's,/test/valgrind/bin$,,')"
 
 test_done
