@@ -116,10 +116,9 @@ list."
 	notmuch-mua-hidden-headers))
 
 (defun notmuch-mua-reply-crypto (parts)
+  "Add mml sign-encrypt flag if any part of original message is encrypted."
   (loop for part in parts
-	if (notmuch-match-content-type (plist-get part :content-type) "multipart/signed")
-	  do (mml-secure-message-sign)
-	else if (notmuch-match-content-type (plist-get part :content-type) "multipart/encrypted")
+	if (notmuch-match-content-type (plist-get part :content-type) "multipart/encrypted")
 	  do (mml-secure-message-sign-encrypt)
 	else if (notmuch-match-content-type (plist-get part :content-type) "multipart/*")
 	  do (notmuch-mua-reply-crypto (plist-get part :content))))
@@ -236,7 +235,7 @@ list."
 	;; Quote the original message according to the user's configured style.
 	(message-cite-original)))
 
-    ;; Sign and/or encrypt replies to signed and/or encrypted messages.
+    ;; Crypto processing based crypto content of the original message
     (when process-crypto
       (notmuch-mua-reply-crypto (plist-get original :body))))
 
