@@ -4,7 +4,7 @@ Notmuch 0.18 (UNRELEASED)
 Command-Line Interface
 ----------------------
 
-`notmuch dump` now defaults to `batch-tag` format.
+`notmuch dump` now defaults to `batch-tag` format
 
   The old format is still available with `--format=sup`.
 
@@ -14,6 +14,14 @@ Command-Line Interface
 
 Emacs Interface
 ---------------
+
+Init file
+
+  If the file pointed by new variable `notmuch-init-file` (typically
+  `~/.emacs.d/notmuch-config.el`) exists, it is loaded at the end of
+  `notmuch.el`. Users can put their personal notmuch emacs lisp based
+  configuration/customization items there instead of filling
+  `~/.emacs` with these.
 
 Changed format for saved searches
 
@@ -37,6 +45,15 @@ Changed format for saved searches
   modified. Replacing (car saved-search) by (notmuch-saved-search-get
   saved-search :name) and (cdr saved-search) by
   (notmuch-saved-search-get saved-search :query) should be sufficient.
+
+Version variable
+
+  The new, build-time generated variable `notmuch-emacs-version` is used
+  to distinguish between notmuch cli and notmuch emacs versions.
+  The function `notmuch-hello-versions` (bound to 'v' in notmuch-hello
+  window) prints both notmuch cli and notmuch emacs versions in case
+  these differ from each other.
+  This is especially useful when using notmuch remotely.
 
 Bug fix for saved searches with newlines in them
 
