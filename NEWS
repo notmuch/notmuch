@@ -43,6 +43,28 @@ Bug fix for saved searches with newlines in them
   Split lines confuse `notmuch count --batch`, so we remove embedded
   newlines before calling notmuch count.
 
+nmbug
+-----
+
+nmbug adds a `clone` command for setting up the initial repository and
+uses `@{upstream}` instead of `FETCH_HEAD` to track upstream changes.
+
+  The `@{upstream}` change reduces ambiguity when fetching multiple
+  branches, but requires existing users update their `NMBGIT`
+  repository (usually `~/.nmbug`) to distinguish between local and
+  remote-tracking branches.  The easiest way to do this is:
+
+  1. If you have any purely local commits (i.e. they aren't in the
+     nmbug repository on nmbug.tethera.net), push them to a remote
+     repository.  We'll restore them from the backup in step 4.
+  2. Remove your `NMBGIT` repository (e.g. `mv .nmbug .nmbug.bak`).
+  3. Use the new `clone` command to create a fresh clone:
+
+        nmbug clone http://nmbug.tethera.net/git/nmbug-tags.git
+
+  4. If you had local commits in step 1, add a remote for that
+     repository and fetch them into the new repository.
+
 Notmuch 0.17 (2013-12-30)
 =========================
 
