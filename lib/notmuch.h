@@ -287,8 +287,16 @@ notmuch_database_open (const char *path,
  *
  * notmuch_database_close can be called multiple times.  Later calls
  * have no effect.
+ *
+ * Return value:
+ *
+ * NOTMUCH_STATUS_SUCCESS: Successfully closed the database.
+ *
+ * NOTMUCH_STATUS_XAPIAN_EXCEPTION: A Xapian exception occurred; the
+ *	database has been closed but there are no guarantees the
+ *	changes to the database, if any, have been flushed to disk.
  */
-void
+notmuch_status_t
 notmuch_database_close (notmuch_database_t *database);
 
 /**
@@ -317,8 +325,11 @@ notmuch_database_compact (const char* path,
 /**
  * Destroy the notmuch database, closing it if necessary and freeing
  * all associated resources.
+ *
+ * Return value as in notmuch_database_close if the database was open;
+ * notmuch_database_destroy itself has no failure modes.
  */
-void
+notmuch_status_t
 notmuch_database_destroy (notmuch_database_t *database);
 
 /**

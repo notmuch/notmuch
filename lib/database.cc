@@ -774,14 +774,17 @@ notmuch_database_open (const char *path,
     return status;
 }
 
-void
+notmuch_status_t
 notmuch_database_close (notmuch_database_t *notmuch)
 {
+    notmuch_status_t status = NOTMUCH_STATUS_SUCCESS;
+
     try {
 	if (notmuch->xapian_db != NULL &&
 	    notmuch->mode == NOTMUCH_DATABASE_MODE_READ_WRITE)
 	    (static_cast <Xapian::WritableDatabase *> (notmuch->xapian_db))->flush ();
     } catch (const Xapian::Error &error) {
+	status = NOTMUCH_STATUS_XAPIAN_EXCEPTION;
 	if (! notmuch->exception_reported) {
 	    fprintf (stderr, "Error: A Xapian exception occurred flushing database: %s\n",
 		     error.get_msg().c_str());
@@ -795,7 +798,9 @@ notmuch_database_close (notmuch_database_t *notmuch)
 	try {
 	    notmuch->xapian_db->close();
 	} catch (const Xapian::Error &error) {
-	    /* do nothing */
+	    /* don't clobber previous error status */
+	    if (status == NOTMUCH_STATUS_SUCCESS)
+		status = NOTMUCH_STATUS_XAPIAN_EXCEPTION;
 	}
     }
 
@@ -809,6 +814,8 @@ notmuch_database_close (notmuch_database_t *notmuch)
     notmuch->value_range_processor = NULL;
     delete notmuch->date_range_processor;
     notmuch->date_range_processor = NULL;
+
+    return status;
 }
 
 #if HAVE_XAPIAN_COMPACT
@@ -972,8 +979,15 @@ notmuch_database_compact (const char *path,
     }
 
   DONE:
-    if (notmuch)
-	notmuch_database_destroy (notmuch);
+    if (notmuch) {
+	notmuch_status_t ret2;
+
+	ret2 = notmuch_database_destroy (notmuch);
+
+	/* don't clobber previous error status */
+	if (ret == NOTMUCH_STATUS_SUCCESS && ret2 != NOTMUCH_STATUS_SUCCESS)
+	    ret = ret2;
+    }
 
     talloc_free (local);
 
@@ -991,11 +1005,15 @@ notmuch_database_compact (unused (const char *path),
 }
 #endif
 
-void
+notmuch_status_t
 notmuch_database_destroy (notmuch_database_t *notmuch)
 {
-    notmuch_database_close (notmuch);
+    notmuch_status_t status;
+
+    status = notmuch_database_close (notmuch);
     talloc_free (notmuch);
+
+    return status;
 }
 
 const char *
