@@ -5,7 +5,7 @@
 # the library interface, (such as the deletion of an API or a major
 # semantic change that breaks formerly functioning code).
 #
-LIBNOTMUCH_VERSION_MAJOR = 3
+LIBNOTMUCH_VERSION_MAJOR = 4
 
 # The minor version of the library interface. This should be incremented at
 # the time of release for any additions to the library interface,
