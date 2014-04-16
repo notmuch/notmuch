@@ -338,17 +338,14 @@ add_file_to_database (notmuch_database_t *notmuch, const char *path,
 }
 
 static notmuch_bool_t
-insert_message (void *ctx, notmuch_database_t *notmuch, int fdin,
-		const char *dir, tag_op_list_t *tag_ops,
-		notmuch_bool_t synchronize_flags)
+write_message (void *ctx, int fdin, const char *dir, char **newpath)
 {
     char *tmppath;
-    char *newpath;
     char *newdir;
-    int fdout;
     char *cleanup_path;
+    int fdout;
 
-    fdout = maildir_open_tmp_file (ctx, dir, &tmppath, &newpath, &newdir);
+    fdout = maildir_open_tmp_file (ctx, dir, &tmppath, newpath, &newdir);
     if (fdout < 0)
 	return FALSE;
 
@@ -370,19 +367,15 @@ insert_message (void *ctx, notmuch_database_t *notmuch, int fdin,
      * simply use rename() instead of link() and unlink().
      * See also: http://wiki.dovecot.org/MailboxFormat/Maildir#Mail_delivery
      */
-    if (rename (tmppath, newpath) != 0) {
+    if (rename (tmppath, *newpath) != 0) {
 	fprintf (stderr, "Error: rename() failed: %s\n", strerror (errno));
 	goto FAIL;
     }
 
-    cleanup_path = newpath;
+    cleanup_path = *newpath;
 
     if (! sync_dir (newdir))
 	goto FAIL;
-
-    /* Even if adding the message to the notmuch database fails,
-     * the message is on disk and we consider the delivery completed. */
-    add_file_to_database (notmuch, newpath, tag_ops, synchronize_flags);
 
     return TRUE;
 
@@ -407,9 +400,9 @@ notmuch_insert_command (notmuch_config_t *config, int argc, char *argv[])
     notmuch_bool_t create_folder = FALSE;
     notmuch_bool_t synchronize_flags;
     const char *maildir;
+    char *newpath;
     int opt_index;
     unsigned int i;
-    notmuch_bool_t ret;
 
     notmuch_opt_desc_t options[] = {
 	{ NOTMUCH_OPT_STRING, &folder, "folder", 0, 0 },
@@ -484,10 +477,18 @@ notmuch_insert_command (notmuch_config_t *config, int argc, char *argv[])
 			       NOTMUCH_DATABASE_MODE_READ_WRITE, &notmuch))
 	return EXIT_FAILURE;
 
-    ret = insert_message (config, notmuch, STDIN_FILENO, maildir, tag_ops,
-			  synchronize_flags);
+    /* Write the message to the Maildir new directory. */
+    if (! write_message (config, STDIN_FILENO, maildir, &newpath)) {
+	notmuch_database_destroy (notmuch);
+	return EXIT_FAILURE;
+    }
+
+    /* Add the message to the index.
+     * Even if adding the message to the notmuch database fails,
+     * the message is on disk and we consider the delivery completed. */
+    add_file_to_database (notmuch, newpath, tag_ops,
+				    synchronize_flags);
 
     notmuch_database_destroy (notmuch);
-
-    return ret ? EXIT_SUCCESS : EXIT_FAILURE;
+    return EXIT_SUCCESS;
 }
