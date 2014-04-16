@@ -157,11 +157,13 @@ class Database(object):
 
     _destroy = nmlib.notmuch_database_destroy
     _destroy.argtypes = [NotmuchDatabaseP]
-    _destroy.restype = None
+    _destroy.restype = c_uint
 
     def __del__(self):
         if self._db:
-            self._destroy(self._db)
+            status = self._destroy(self._db)
+            if status != STATUS.SUCCESS:
+                raise NotmuchError(status)
 
     def _assert_db_is_initialized(self):
         """Raises :exc:`NotInitializedError` if self._db is `None`"""
@@ -217,7 +219,7 @@ class Database(object):
 
     _close = nmlib.notmuch_database_close
     _close.argtypes = [NotmuchDatabaseP]
-    _close.restype = None
+    _close.restype = c_uint
 
     def close(self):
         '''
@@ -231,7 +233,9 @@ class Database(object):
             NotmuchError.
         '''
         if self._db:
-            self._close(self._db)
+            status = self._close(self._db)
+            if status != STATUS.SUCCESS:
+                raise NotmuchError(status)
 
     def __enter__(self):
         '''
