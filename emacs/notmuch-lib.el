@@ -107,58 +107,6 @@ Note that the recommended way of achieving the same is using
 (defvar notmuch-search-history nil
   "Variable to store notmuch searches history.")
 
-(defun notmuch--saved-searches-to-plist (symbol)
-  "Extract a saved-search variable into plist form.
-
-The new style saved search is just a plist, but for backwards
-compatatibility we use this function to extract old style saved
-searches so they still work in customize."
-  (let ((saved-searches (default-value symbol)))
-    (mapcar #'notmuch-hello-saved-search-to-plist saved-searches)))
-
-(define-widget 'notmuch-saved-search-plist 'list
-  "A single saved search property list."
-  :tag "Saved Search"
-  :args '((list :inline t
-		:format "%v"
-		(group :format "%v" :inline t (const :format "   Name: " :name) (string :format "%v"))
-		(group :format "%v" :inline t (const :format "  Query: " :query) (string :format "%v")))
-	  (checklist :inline t
-		     :format "%v"
-		     (group :format "%v" :inline t (const :format "Count-Query: " :count-query) (string :format "%v"))
-		     (group :format "%v" :inline t (const :format "" :sort-order)
-			    (choice :tag " Sort Order"
-				    (const :tag "Default" nil)
-				    (const :tag "Oldest-first" oldest-first)
-				    (const :tag "Newest-first" newest-first))))))
-
-(defcustom notmuch-saved-searches '((:name "inbox" :query "tag:inbox")
-				    (:name "unread" :query "tag:unread"))
-  "A list of saved searches to display.
-
-The saved search can be given in 3 forms. The preferred way is as
-a plist. Supported properties are
-
-  :name            Name of the search (required).
-  :query           Search to run (required).
-  :count-query     Optional extra query to generate the count
-                   shown. If not present then the :query property
-                   is used.
-  :sort-order      Specify the sort order to be used for the search.
-                   Possible values are 'oldest-first 'newest-first or
-                   nil. Nil means use the default sort order.
-
-Other accepted forms are a cons cell of the form (NAME . QUERY)
-or a list of the form (NAME QUERY COUNT-QUERY)."
-;; The saved-search format is also used by the all-tags notmuch-hello
-;; section. This section generates its own saved-search list in one of
-;; the latter two forms.
-
-  :get 'notmuch--saved-searches-to-plist
-  :type '(repeat notmuch-saved-search-plist)
-  :tag "List of Saved Searches"
-  :group 'notmuch-hello)
-
 (defcustom notmuch-archive-tags '("-inbox")
   "List of tag changes to apply to a message or a thread when it is archived.
 
