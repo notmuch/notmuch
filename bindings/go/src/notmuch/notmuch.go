@@ -144,8 +144,8 @@ func OpenDatabase(path string, mode DatabaseMode) (*Database, Status) {
 
 /* Close the given notmuch database, freeing all associated
  * resources. See notmuch_database_open. */
-func (self *Database) Close() {
-	C.notmuch_database_destroy(self.db)
+func (self *Database) Close() Status {
+	return Status(C.notmuch_database_destroy(self.db))
 }
 
 /* Return the database path of the given database.
