@@ -829,7 +829,7 @@ bash_completion_dir = ${BASHCOMPLETIONDIR:=\$(sysconfdir)/bash_completion.d}
 # The directory to which zsh completions files should be installed
 zsh_completion_dir = ${ZSHCOMLETIONDIR:=\$(prefix)/share/zsh/functions/Completion/Unix}
 
-# Whether the getline function is available (if not, then notmuch will
+# Whether the canonicalize_file_name function is available (if not, then notmuch will
 # build its own version)
 HAVE_CANONICALIZE_FILE_NAME = ${have_canonicalize_file_name}
 
@@ -908,6 +908,7 @@ WITH_ZSH = ${WITH_ZSH}
 
 # Combined flags for compiling and linking against all of the above
 CONFIGURE_CFLAGS = -DHAVE_GETLINE=\$(HAVE_GETLINE) \$(GMIME_CFLAGS)      \\
+		   -DHAVE_CANONICALIZE_FILE_NAME=\$(HAVE_CANONICALIZE_FILE_NAME) \\
 		   \$(ZLIB_CFLAGS)					 \\
 		   \$(TALLOC_CFLAGS) -DHAVE_VALGRIND=\$(HAVE_VALGRIND)   \\
 		   \$(VALGRIND_CFLAGS)                                   \\
@@ -920,6 +921,7 @@ CONFIGURE_CFLAGS = -DHAVE_GETLINE=\$(HAVE_GETLINE) \$(GMIME_CFLAGS)      \\
 		   -DUTIL_BYTE_ORDER=\$(UTIL_BYTE_ORDER)
 
 CONFIGURE_CXXFLAGS = -DHAVE_GETLINE=\$(HAVE_GETLINE) \$(GMIME_CFLAGS)    \\
+		     -DHAVE_CANONICALIZE_FILE_NAME=\$(HAVE_CANONICALIZE_FILE_NAME) \\
 		     \$(ZLIB_CFLAGS)					 \\
 		     \$(TALLOC_CFLAGS) -DHAVE_VALGRIND=\$(HAVE_VALGRIND) \\
 		     \$(VALGRIND_CFLAGS) \$(XAPIAN_CXXFLAGS)             \\
