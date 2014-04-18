@@ -57,14 +57,12 @@ Supported options for **show** include
             UTF-8.
 
         **sexp**
-            The output is formatted as an S-Expression (sexp). This
-            format is more robust than the text format for automated
-            processing. The nested structure of multipart MIME messages
-            is reflected in nested S-Expression output. By default,
-            S-Expression output includes all messages in a matching
-            thread; that is, by default,
-            ``--format=sexp`` sets ``--entire-thread``. The caller can
-            disable this behaviour by setting ``--entire-thread=false``.
+            The output is formatted as the Lisp s-expression (sexp)
+            equivalent of the JSON format above. Objects are formatted
+            as property lists whose keys are keywords (symbols preceded
+            by a colon). True is formatted as ``t`` and both false and
+            null are formatted as ``nil``. As for JSON, the s-expression
+            output is always encoded as UTF-8.
 
         **mbox**
             All matching messages are output in the traditional, Unix
