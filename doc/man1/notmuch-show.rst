@@ -52,6 +52,9 @@ Supported options for **show** include
             by default,
             ``--format=json`` sets ``--entire-thread``. The caller can
             disable this behaviour by setting ``--entire-thread=false``.
+            The JSON output is always encoded as UTF-8 and any message
+            content included in the output will be charset-converted to
+            UTF-8.
 
         **sexp**
             The output is formatted as an S-Expression (sexp). This
