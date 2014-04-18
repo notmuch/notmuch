@@ -785,7 +785,10 @@ message at DEPTH in the current thread."
     (while (and handlers
 		(not (condition-case err
 			 (funcall (car handlers) msg part content-type nth depth button)
-		       (error (progn
+		       ;; Specifying `debug' here lets the debugger
+		       ;; run if `debug-on-error' is non-nil.
+		       ((debug error)
+			(progn
 				(insert "!!! Bodypart insert error: ")
 				(insert (error-message-string err))
 				(insert " !!!\n") nil)))))
