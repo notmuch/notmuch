@@ -50,9 +50,8 @@ Supported options for **show** include
             messages is reflected in nested JSON output. By default JSON
             output includes all messages in a matching thread; that is,
             by default,
-
-            ``--format=json`` sets ``--entire-thread`` The caller can
-            disable this behaviour by setting ``--entire-thread=false``
+            ``--format=json`` sets ``--entire-thread``. The caller can
+            disable this behaviour by setting ``--entire-thread=false``.
 
         **sexp**
             The output is formatted as an S-Expression (sexp). This
@@ -61,9 +60,8 @@ Supported options for **show** include
             is reflected in nested S-Expression output. By default,
             S-Expression output includes all messages in a matching
             thread; that is, by default,
-
-            ``--format=sexp`` sets ``--entire-thread`` The caller can
-            disable this behaviour by setting ``--entire-thread=false``
+            ``--format=sexp`` sets ``--entire-thread``. The caller can
+            disable this behaviour by setting ``--entire-thread=false``.
 
         **mbox**
             All matching messages are output in the traditional, Unix
