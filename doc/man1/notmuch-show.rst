@@ -76,22 +76,22 @@ Supported options for **show** include
 
 	    http://homepage.ntlworld.com/jonathan.deboynepollard/FGA/mail-mbox-formats.html
 
-        **raw** (default for a single part, see --part)
-            For a message or an attached message part, the original, raw
-            content of the email message is output. Consumers of this
-            format should expect to implement MIME decoding and similar
-            functions.
+        **raw** (default if --part is given)
+            Write the raw bytes of the given MIME part of a message to
+            standard out. For this format, it is an error to specify a
+            query that matches more than one message.
 
-            For a single part (--part) the raw part content is output
-            after performing any necessary MIME decoding. Note that
-            messages with a simple body still have two parts: part 0 is
-            the whole message and part 1 is the body.
+            If the specified part is a leaf part, this outputs the
+            body of the part after performing content transfer
+            decoding (but no charset conversion). This is suitable for
+            saving attachments, for example.
 
-            For a multipart part, the part headers and body (including
-            all child parts) is output.
-
-            The raw format must only be used with search terms matching
-            single message.
+            For a multipart or message part, the output includes the
+            part headers as well as the body (including all child
+            parts). No decoding is performed because multipart and
+            message parts cannot have non-trivial content transfer
+            encoding. Consumers of this may need to implement MIME
+            decoding and similar functions.
 
     ``--format-version=N``
         Use the specified structured output format version. This is
@@ -104,6 +104,10 @@ Supported options for **show** include
         numbered in a depth-first walk of the message MIME structure,
         and are identified in the 'json', 'sexp' or 'text' output
         formats.
+
+        Note that even a message with no MIME structure or a single
+        body part still has two MIME parts: part 0 is the whole
+        message (headers and body) and part 1 is just the body.
 
     ``--verify``
         Compute and report the validity of any MIME cryptographic
