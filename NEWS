@@ -52,6 +52,27 @@ The keys of `notmuch-tag-formats` are now regexps
   `notmuch-tag-formats` will continue to work as before unless tags
   contain regexp special characters like `.` or `*`.
 
+Changed tags are now shown in the buffer
+
+  Previously tag changes made in a buffer were shown immediately. In
+  some cases (particularly automatic tag changes like marking read)
+  this made it hard to see what had happened (e.g., whether the
+  message had been unread).
+
+  The changes are now shown explicitly in the buffer: by default
+  deleted tags are displayed with red strike-through and added tags
+  are displayed underlined in green (inverse video is used for deleted
+  tags if the terminal does not support strike-through).
+
+  The variables `notmuch-tag-deleted-formats` and
+  `notmuch-tag-added-formats`, which have the same syntax as
+  `notmuch-tag-formats`, allow this to be customized.
+
+  Setting `notmuch-tag-deleted-formats` to `'((".*" nil))` and
+  `notmuch-tag-added-formats` to `'((".*" tag))` will give the old
+  behavior of hiding deleted tags and showing added tags identically
+  to tags already present.
+
 Version variable
 
   The new, build-time generated variable `notmuch-emacs-version` is used
