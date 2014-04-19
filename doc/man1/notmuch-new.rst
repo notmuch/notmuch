@@ -5,7 +5,7 @@ notmuch-new
 SYNOPSIS
 ========
 
-**notmuch** **new** [--no-hooks]
+**notmuch** **new** [options]
 
 DESCRIPTION
 ===========
