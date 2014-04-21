@@ -59,7 +59,9 @@
   "Save visible text in current buffer to file FILENAME.  Default
 FILENAME is OUTPUT."
   (notmuch-post-command)
-  (let ((text (visible-buffer-string)))
+  (let ((text (visible-buffer-string))
+	;; Tests expect output in UTF-8 encoding
+	(coding-system-for-write 'utf-8))
     (with-temp-file (or filename "OUTPUT") (insert text))))
 
 (defun visible-buffer-string ()
