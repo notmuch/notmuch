@@ -1792,11 +1792,12 @@ to show, nil otherwise."
   (notmuch-show-message-adjust))
 
 (defun notmuch-show-view-raw-message ()
-  "View the file holding the current message."
+  "View the original source of the current message."
   (interactive)
   (let* ((id (notmuch-show-get-message-id))
 	 (buf (get-buffer-create (concat "*notmuch-raw-" id "*"))))
-    (call-process notmuch-command nil buf nil "show" "--format=raw" id)
+    (let ((coding-system-for-read 'no-conversion))
+      (call-process notmuch-command nil buf nil "show" "--format=raw" id))
     (switch-to-buffer buf)
     (goto-char (point-min))
     (set-buffer-modified-p nil)

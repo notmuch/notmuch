@@ -128,7 +128,6 @@ EOF
 test_expect_equal_file OUTPUT EXPECTED
 
 test_begin_subtest "8bit text message are not decoded when viewing"
-test_subtest_known_broken
 test_emacs '(notmuch-show "id:test-plain-8bit@example.com")
 	    (notmuch-show-view-raw-message)
 	    (test-visible-output "OUTPUT.raw")'
