@@ -539,9 +539,10 @@ the given type."
 	  (apply 'call-process (append (list notmuch-command nil (list t nil) nil) args))
 	  (buffer-string))))))
 
-(defun notmuch-get-bodypart-content (msg part nth process-crypto)
+(defun notmuch-get-bodypart-content (msg part process-crypto)
   (or (plist-get part :content)
-      (notmuch-get-bodypart-internal (notmuch-id-to-query (plist-get msg :id)) nth process-crypto)))
+      (notmuch-get-bodypart-internal (notmuch-id-to-query (plist-get msg :id))
+				     (plist-get part :id) process-crypto)))
 
 ;; Workaround: The call to `mm-display-part' below triggers a bug in
 ;; Emacs 24 if it attempts to use the shr renderer to display an HTML
@@ -557,7 +558,7 @@ the given type."
       (ad-disable-advice 'mm-shr 'before 'load-gnus-arts)
       (ad-activate 'mm-shr)))
 
-(defun notmuch-mm-display-part-inline (msg part nth content-type process-crypto)
+(defun notmuch-mm-display-part-inline (msg part content-type process-crypto)
   "Use the mm-decode/mm-view functions to display a part in the
 current buffer, if possible."
   (let ((display-buffer (current-buffer)))
@@ -573,7 +574,7 @@ current buffer, if possible."
 	;; test whether we are able to inline it (which includes both
 	;; capability and suitability tests).
 	(when (mm-inlined-p handle)
-	  (insert (notmuch-get-bodypart-content msg part nth process-crypto))
+	  (insert (notmuch-get-bodypart-content msg part process-crypto))
 	  (when (mm-inlinable-p handle)
 	    (set-buffer display-buffer)
 	    (mm-display-part handle)

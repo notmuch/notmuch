@@ -711,7 +711,7 @@ message at DEPTH in the current thread."
   (let ((start (if button
 		   (button-start button)
 		 (point))))
-    (insert (notmuch-get-bodypart-content msg part nth notmuch-show-process-crypto))
+    (insert (notmuch-get-bodypart-content msg part notmuch-show-process-crypto))
     (save-excursion
       (save-restriction
 	(narrow-to-region start (point-max))
@@ -720,7 +720,7 @@ message at DEPTH in the current thread."
 
 (defun notmuch-show-insert-part-text/calendar (msg part content-type nth depth button)
   (insert (with-temp-buffer
-	    (insert (notmuch-get-bodypart-content msg part nth notmuch-show-process-crypto))
+	    (insert (notmuch-get-bodypart-content msg part notmuch-show-process-crypto))
 	    ;; notmuch-get-bodypart-content provides "raw", non-converted
 	    ;; data. Replace CRLF with LF before icalendar can use it.
 	    (goto-char (point-min))
@@ -772,7 +772,7 @@ message at DEPTH in the current thread."
 
 (defun notmuch-show-insert-part-*/* (msg part content-type nth depth button)
   ;; This handler _must_ succeed - it is the handler of last resort.
-  (notmuch-mm-display-part-inline msg part nth content-type notmuch-show-process-crypto)
+  (notmuch-mm-display-part-inline msg part content-type notmuch-show-process-crypto)
   t)
 
 ;; Functions for determining how to handle MIME parts.
