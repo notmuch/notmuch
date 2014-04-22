@@ -78,4 +78,4 @@ $(dir)/docdeps.mk: $(dir)/conf.py $(dir)/mkdocdeps.py
 	$(mkdocdeps) $(srcdir)/doc $(DOCBUILDDIR) $@
 
 CLEAN := $(CLEAN) $(DOCBUILDDIR) $(dir)/docdeps.mk $(DOCBUILDDIR)/.roff.stamp
-CLEAN := $(CLEAN) $(MAN_GZIP_FILES) $(MAN_ROFF_FILES)
+CLEAN := $(CLEAN) $(MAN_GZIP_FILES) $(MAN_ROFF_FILES) $(dir)/conf.pyc
