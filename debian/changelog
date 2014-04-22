@@ -1,13 +1,19 @@
-notmuch (0.18-1) unstable; urgency=medium
+notmuch (0.18~rc0-1) experimental; urgency=low
 
+  * Upstream release candidate.
   * Bug fix: "insufficient sanitization of arguments to notmuch CLI",
     thanks to Antoine Beaupré (Closes: #737496).
-  * Bug fix: "notmuch(1) manpage: typo: int -&gt; in", thanks to Jakub
+  * Bug fix: "notmuch(1) manpage: typo: int -> in", thanks to Jakub
     Wilk (Closes: #739556).
   * Bug fix: "get a quiet option", thanks to Joerg Jaspert (Closes:
     #666027).
+  * Bug fix: "Please remove me from Uploaders", thanks to martin f
+    krafft (Closes: #719100).
+  * Bug fix: "M-x notmuch-show-reply on an encrypted message should
+    insert encryption tags into the mml buffer", thanks to Daniel Kahn
+    Gillmor (Closes: #704648).
 
- -- David Bremner <bremner@debian.org>  Mon, 03 Mar 2014 08:43:03 -0400
+ -- David Bremner <bremner@debian.org>  Tue, 22 Apr 2014 09:27:29 +0900
 
 notmuch (0.17-5) unstable; urgency=medium
 
