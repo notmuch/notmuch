@@ -1,3 +1,13 @@
+notmuch (0.18~rc0-1) experimental; urgency=low
+
+  * This release of notmuch requires a non-reversable database upgrade
+    to support the new path: and updated folder: prefixes. Notmuch
+    will backup your tags for your before doing the upgrade, but it
+    never hurts to make your own backup with notmuch dump before
+    next running 'notmuch new'
+
+ -- David Bremner <bremner@debian.org>  Tue, 22 Apr 2014 09:32:11 +0900
+
 notmuch (0.17-1) unstable; urgency=low
 
   * Previously on big endian architectures like sparc and powerpc the
