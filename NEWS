@@ -82,6 +82,12 @@ Version variable
   these differ from each other.
   This is especially useful when using notmuch remotely.
 
+Ido-completing-read initialization in Emacs 23
+
+  `ido-completing-read` in Emacs 23 versions 1 through 3 freezes unless
+  it is initialized. Defadvice-based *Ido* initialization is defined
+  for these Emacs versions.
+
 Bug fix for saved searches with newlines in them
 
   Split lines confuse `notmuch count --batch`, so we remove embedded
