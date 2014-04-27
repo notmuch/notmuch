@@ -99,6 +99,13 @@ Bug fixes for sender identities
   and undesirable ways.  Now it will use identities exactly as
   configured in `notmuch-identities`.
 
+Replies to encrypted messages will be encrypted by default
+
+  In the interest of maintaining confidentiality of communications,
+  the Notmuch Emacs interface now automatically adds the mml tag to
+  encrypt replies to encrypted messages. This should make it less
+  likely to accidentally reply to encrypted messages in plain text.
+
 nmbug
 -----
 
