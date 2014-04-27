@@ -1,6 +1,49 @@
 Notmuch 0.18~rc0 (2014-04-22)
 =============================
 
+General
+-------
+
+The `folder:` search prefix now requires an exact match
+
+  The `folder:` prefix has been changed to search for email messages
+  by the exact, case sensitive maildir or MH folder name. The new
+  behaviour allows for more accurate mail folder based searches, and
+  should lead to less surprising results than the old behaviour. Users
+  are advised to see the `notmuch-search-terms` manual page for
+  details, and review how the change affects their existing `folder:`
+  searches.
+
+There is a new `path:` search prefix.
+
+  The new `path:` search prefix complements the `folder:` prefix. The
+  `path:` prefix searches for email messages that are in particular
+  directories within the mail store, optionally recursively using a
+  special syntax. See the `notmuch-search-terms` manual page for
+  details.
+
+Notmuch database upgrade due to `folder:` and `path:` changes
+
+  The above mentioned changes to the `folder:` prefix and the addition
+  of `path:` prefix require a Notmuch database upgrade. This will be
+  done automatically, without prompting on the next time `notmuch new`
+  is run after the upgrade. The upgrade is not reversible, and the
+  upgraded database will not be readable by older versions of
+  Notmuch. As a safeguard, a database dump will be created in the
+  `.notmuch` directory before upgrading.
+
+Library changes
+---------------
+
+Notmuch database upgrade
+
+  The libnotmuch consumers are reminded to handle database upgrades
+  properly, either by relying on running `notmuch new`, or checking
+  `notmuch_database_needs_upgrade()` and calling
+  `notmuch_database_upgrade()` as necessary. This has always been the
+  case, but in practise there have been no database upgrades in any
+  released version of Notmuch before now.
+
 Command-Line Interface
 ----------------------
 
