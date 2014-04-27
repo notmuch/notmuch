@@ -44,6 +44,13 @@ Notmuch database upgrade
   case, but in practise there have been no database upgrades in any
   released version of Notmuch before now.
 
+Support for indexing mbox files has been dropped
+
+  There has never been proper support for mbox files containing
+  multiple messages, and the support for single-message mbox files has
+  been deprecated since Notmuch 0.15. The support has now been
+  dropped, and all mbox files will be rejected during indexing.
+
 Command-Line Interface
 ----------------------
 
