@@ -51,6 +51,15 @@ Support for indexing mbox files has been dropped
   been deprecated since Notmuch 0.15. The support has now been
   dropped, and all mbox files will be rejected during indexing.
 
+Message header parsing changes
+
+  Notmuch previously had an internal parser for message headers. The
+  parser has now been dropped in favour of letting GMime parse both
+  the headers and the message MIME structure at the same pass. This is
+  mostly an internal change, but the GMime parser is stricter in its
+  interpretation of the headers. This may result in messages with
+  slightly malformed message headers being now rejected.
+
 Command-Line Interface
 ----------------------
 
