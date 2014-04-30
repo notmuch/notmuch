@@ -1,6 +1,20 @@
 Notmuch 0.18~rc0 (2014-04-22)
 =============================
 
+Overview
+--------
+
+This new release includes some enhancements to searching for messages
+by filesystem location (`folder:` and `path:` prefixes under *General*
+below).  Saved searches in *Emacs* have also been enhanced to allow
+distinct search orders for each one.  Another enhancement to the
+*Emacs* interface is that replies to encrypted messages are now
+encrypted, reducing the risk of unintentional information disclosure.
+The default dump output format has changed to the more robust
+`batch-tag` format. The previously deprecated parsing of single
+message mboxes has been removed. For detailed release notes, see
+below.
+
 General
 -------
 
