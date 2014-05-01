@@ -197,6 +197,12 @@ Reply pushes mark before signature
   the quoted text. The mark is now pushed before the signature, if
   any, instead of end of buffer so the signature is preserved.
 
+Message piping uses the originating buffer's working directory
+
+  `notmuch-show-pipe-message` now uses the originating buffer's
+  current default directory instead of that of the `*notmuch-pipe*`
+  buffer's.
+
 nmbug
 -----
 
