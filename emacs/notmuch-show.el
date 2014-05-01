@@ -180,10 +180,21 @@ each attachment handler is logged in buffers with names beginning
     )
   "List of Mailing List Archives to use when stashing links.
 
-These URIs are concatenated with the current message's
-Message-Id in `notmuch-show-stash-mlarchive-link'."
+This list is used for generating a Mailing List Archive reference
+URI with the current message's Message-Id in
+`notmuch-show-stash-mlarchive-link'.
+
+If the cdr of the alist element is not a function, the cdr is
+expected to contain a URI that is concatenated with the current
+message's Message-Id to create a ML archive reference URI.
+
+If the cdr is a function, the function is called with the
+Message-Id as the argument, and the function is expected to
+return the ML archive reference URI."
   :type '(alist :key-type (string :tag "Name")
-		:value-type (string :tag "URL"))
+		:value-type (choice
+			     (string :tag "URL")
+			     (function :tag "Function returning the URL")))
   :group 'notmuch-show)
 
 (defcustom notmuch-show-stash-mlarchive-link-default "Gmane"
@@ -2055,16 +2066,19 @@ This presumes that the message is available at the selected Mailing List Archive
 If optional argument MLA is non-nil, use the provided key instead of prompting
 the user (see `notmuch-show-stash-mlarchive-link-alist')."
   (interactive)
-  (notmuch-common-do-stash
-   (concat (cdr (assoc
-		 (or mla
-		     (let ((completion-ignore-case t))
-		       (completing-read
-			"Mailing List Archive: "
-			notmuch-show-stash-mlarchive-link-alist
-			nil t nil nil notmuch-show-stash-mlarchive-link-default)))
-		 notmuch-show-stash-mlarchive-link-alist))
-	   (notmuch-show-get-message-id t))))
+  (let ((url (cdr (assoc
+		   (or mla
+		       (let ((completion-ignore-case t))
+			 (completing-read
+			  "Mailing List Archive: "
+			  notmuch-show-stash-mlarchive-link-alist
+			  nil t nil nil
+			  notmuch-show-stash-mlarchive-link-default)))
+		   notmuch-show-stash-mlarchive-link-alist))))
+    (notmuch-common-do-stash
+     (if (functionp url)
+	 (funcall url (notmuch-show-get-message-id t))
+       (concat url (notmuch-show-get-message-id t))))))
 
 (defun notmuch-show-stash-mlarchive-link-and-go (&optional mla)
   "Copy an ML Archive URI for the current message to the kill-ring and visit it.
