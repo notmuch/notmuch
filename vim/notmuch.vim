@@ -633,7 +633,7 @@ ruby << EOF
 	def folders_render()
 		$curbuf.render do |b|
 			folders = VIM::evaluate('g:notmuch_folders')
-			count_threads = VIM::evaluate('g:notmuch_folders_count_threads')
+			count_threads = VIM::evaluate('g:notmuch_folders_count_threads') == 1
 			$searches.clear
 			folders.each do |name, search|
 				q = $curbuf.query(search)
