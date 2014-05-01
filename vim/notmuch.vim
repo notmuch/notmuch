@@ -919,7 +919,8 @@ ruby << EOF
 				if mime_type != "text/html"
 					text = decoded
 				else
-					IO.popen("elinks --dump", "w+") do |pipe|
+					IO.popen(VIM::evaluate('exists("g:notmuch_html_converter") ? ' +
+							'g:notmuch_html_converter : "elinks --dump"'), "w+") do |pipe|
 						pipe.write(decode_body)
 						pipe.close_write
 						text = pipe.read
