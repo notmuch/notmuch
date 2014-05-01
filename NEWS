@@ -97,6 +97,13 @@ The commands set consistent exit status codes on failures
   the status codes for format version mismatches for commands that
   support formatted output.
 
+Bug fix for checking configured new.tags for invalid tags
+
+  `notmuch new` and `notmuch insert` now check the user configured
+  new.tags for invalid tags, and refuse to apply them, similar to
+  `notmuch tag`. Invalid tags are currently the empty string and tags
+  starting with `-`.
+
 Emacs Interface
 ---------------
 
