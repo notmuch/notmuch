@@ -191,6 +191,12 @@ Replies to encrypted messages will be encrypted by default
   encrypt replies to encrypted messages. This should make it less
   likely to accidentally reply to encrypted messages in plain text.
 
+Reply pushes mark before signature
+
+  We push mark and set point on reply so that the user can easily cut
+  the quoted text. The mark is now pushed before the signature, if
+  any, instead of end of buffer so the signature is preserved.
+
 nmbug
 -----
 
