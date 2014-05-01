@@ -90,6 +90,13 @@ Command-Line Interface
   Do not synchronize tags to maildir flags in `notmuch insert` if the
   user does not want it.
 
+The commands set consistent exit status codes on failures
+
+  The cli commands now consistently set exit status of 1 on failures,
+  except where explicitly otherwise noted. The notable expections are
+  the status codes for format version mismatches for commands that
+  support formatted output.
+
 Emacs Interface
 ---------------
 
