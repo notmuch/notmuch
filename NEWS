@@ -85,6 +85,11 @@ Command-Line Interface
 
   This option suppresses the progress and summary reports.
 
+`notmuch insert` respects maildir.synchronize_flags config option
+
+  Do not synchronize tags to maildir flags in `notmuch insert` if the
+  user does not want it.
+
 Emacs Interface
 ---------------
 
