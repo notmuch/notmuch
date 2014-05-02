@@ -1,9 +1,11 @@
-test-results
+arg-test
 corpus.mail
+have-compact
+have-man
+hex-xcode
+parse-time
+random-corpus
 smtp-dummy
 symbol-test
-arg-test
-hex-xcode
-random-corpus
-parse-time
+test-results
 tmp.*
