@@ -21,12 +21,13 @@ General
 The `folder:` search prefix now requires an exact match
 
   The `folder:` prefix has been changed to search for email messages
-  by the exact, case sensitive maildir or MH folder name. The new
-  behaviour allows for more accurate mail folder based searches, and
-  should lead to less surprising results than the old behaviour. Users
-  are advised to see the `notmuch-search-terms` manual page for
-  details, and review how the change affects their existing `folder:`
-  searches.
+  by the exact, case sensitive maildir or MH folder name. Wildcard
+  matching (`folder:foo*`) is no longer supported. The new behaviour
+  allows for more accurate mail folder based searches, makes it
+  possible to search for messages in the top-level folder, and should
+  lead to less surprising results than the old behaviour. Users are
+  advised to see the `notmuch-search-terms` manual page for details,
+  and review how the change affects their existing `folder:` searches.
 
 There is a new `path:` search prefix.
 
