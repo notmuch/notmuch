@@ -80,8 +80,8 @@ version.stamp: $(srcdir)/version
 	echo $(VERSION) > $@
 
 $(TAR_FILE):
-	if git tag -v $(VERSION) >/dev/null 2>&1; then \
-           ref=$(VERSION); \
+	if git tag -v $(UPSTREAM_TAG) >/dev/null 2>&1; then \
+           ref=$(UPSTREAM_TAG); \
         else \
            ref="HEAD" ; \
 	   echo "Warning: No signed tag for $(VERSION)"; \
