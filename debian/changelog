@@ -1,3 +1,10 @@
+notmuch (0.18~rc1-1) experimental; urgency=low
+
+  * Upstream release candidate
+    - include encoding fix for vim client.
+
+ -- David Bremner <bremner@debian.org>  Sun, 04 May 2014 07:29:51 +0900
+
 notmuch (0.18~rc0-1) experimental; urgency=low
 
   * Upstream release candidate.
