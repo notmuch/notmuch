@@ -40,4 +40,4 @@ download-corpus:
 	wget -O ${TXZFILE} ${DEFAULT_URL}
 
 CLEAN := $(CLEAN) $(dir)/tmp.* $(dir)/log.*
-DISTCLEAN := $(dir)/corpus $(dir)/notmuch.cache.*
+DISTCLEAN := $(DISTCLEAN) $(dir)/corpus $(dir)/notmuch.cache.*
