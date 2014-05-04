@@ -331,7 +331,8 @@ install-desktop:
 	desktop-file-install --mode 0644 --dir "$(DESTDIR)$(desktop_dir)" notmuch.desktop
 
 SRCS  := $(SRCS) $(notmuch_client_srcs)
-CLEAN := $(CLEAN) notmuch notmuch-shared $(notmuch_client_modules) version.stamp
+CLEAN := $(CLEAN) notmuch notmuch-shared $(notmuch_client_modules)
+CLEAN := $(CLEAN) version.stamp notmuch-*.tar.gz.tmp
 
 DISTCLEAN := $(DISTCLEAN) .first-build-message Makefile.config
 
