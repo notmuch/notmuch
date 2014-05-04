@@ -262,6 +262,10 @@ clean:
 distclean: clean
 	rm -rf $(DISTCLEAN)
 
+.PHONY: dataclean
+dataclean: distclean
+	rm -rf $(DATACLEAN)
+
 notmuch_client_srcs =		\
 	command-line-arguments.c\
 	debugger.c		\

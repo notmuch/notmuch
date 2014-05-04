@@ -41,3 +41,4 @@ download-corpus:
 
 CLEAN := $(CLEAN) $(dir)/tmp.* $(dir)/log.*
 DISTCLEAN := $(DISTCLEAN) $(dir)/corpus $(dir)/notmuch.cache.*
+DATACLEAN := $(DATACLEAN) $(TXZFILE)

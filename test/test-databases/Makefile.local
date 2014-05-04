@@ -11,4 +11,4 @@ test_databases := $(dir)/database-v1.tar.xz
 
 download-test-databases: ${test_databases}
 
-DISTCLEAN := $(DISTCLEAN) ${test_databases}
+DATACLEAN := $(DATACLEAN) ${test_databases}
