@@ -647,12 +647,12 @@ of the result."
 Here is an example of how to color search results based on tags.
  (the following text would be placed in your ~/.emacs file):
 
- (setq notmuch-search-line-faces '((\"deleted\" . (:foreground \"red\"
-						  :background \"blue\"))
-                                   (\"unread\" . (:foreground \"green\"))))
+ (setq notmuch-search-line-faces '((\"unread\" . (:foreground \"green\"))
+                                   (\"deleted\" . (:foreground \"red\"
+						  :background \"blue\"))))
 
-The attributes defined for matching tags are merged, with later
-attributes overriding earlier. A message having both \"deleted\"
+The attributes defined for matching tags are merged, with earlier
+attributes overriding later. A message having both \"deleted\"
 and \"unread\" tags with the above settings would have a green
 foreground and blue background."
   :type '(alist :key-type (string) :value-type (custom-face-edit))
