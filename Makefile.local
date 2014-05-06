@@ -10,10 +10,10 @@
 # repository), we let git append identification of the actual commit.
 PACKAGE=notmuch
 
-IS_GIT=$(shell if [ -d .git ] ; then echo yes ; else echo no; fi)
+IS_GIT=$(shell if [ -d ${srcdir}/.git ] ; then echo yes ; else echo no; fi)
 
 ifeq ($(IS_GIT),yes)
-DATE:=$(shell git log --date=short -1 --pretty=format:%cd)
+DATE:=$(shell git --git-dir=${srcdir}/.git log --date=short -1 --pretty=format:%cd)
 else
 DATE:=$(shell date +%F)
 endif
@@ -21,7 +21,7 @@ endif
 VERSION:=$(shell cat ${srcdir}/version)
 ifeq ($(filter release release-message pre-release update-versions,$(MAKECMDGOALS)),)
 ifeq ($(IS_GIT),yes)
-VERSION:=$(shell git describe --abbrev=7 --match '[0-9.]*'|sed -e s/_/~/ -e s/-/+/ -e s/-/~/)
+VERSION:=$(shell git --git-dir=${srcdir}/.git describe --abbrev=7 --match '[0-9.]*'|sed -e s/_/~/ -e s/-/+/ -e s/-/~/)
 # Write the file 'version.stamp' in case its contents differ from $(VERSION)
 FILE_VERSION:=$(shell test -f version.stamp && read vs < version.stamp || vs=; echo $$vs)
 ifneq ($(FILE_VERSION),$(VERSION))
@@ -201,11 +201,11 @@ verify-source-tree-and-version: verify-no-dirty-code
 verify-no-dirty-code: release-checks
 ifeq ($(IS_GIT),yes)
 	@printf "Checking that source tree is clean..."
-ifneq ($(shell git ls-files -m),)
+ifneq ($(shell git --git-dir=${srcdir}/.git ls-files -m),)
 	@echo "No"
 	@echo "The following files have been modified since the most recent git commit:"
 	@echo ""
-	@git ls-files -m
+	@git --git-dir=${srcdir}/.git ls-files -m
 	@echo ""
 	@echo "The release will be made from the committed state, but perhaps you meant"
 	@echo "to commit this code first? Please clean this up to make it more clear."
