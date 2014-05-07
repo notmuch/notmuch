@@ -32,8 +32,7 @@ while (<I>)
 {
     warn "$ARGV[0]:$.: tab(s) in line!\n" if /\t/;
     warn "$ARGV[0]:$.: trailing whitespace\n" if /\s\s$/;
-    # The date part in regex recognizes wip version dates like: (201x-xx-xx).
-    if (/^Notmuch\s+(\S+)\s+\((\w\w\w\w-\w\w-\w\w)\)\s*$/) {
+    if (/^Notmuch\s+(\S+)\s+\((\d\d\d\d-\d\d-\d\d|UNRELEASED)\)\s*$/) {
 	# open O... autocloses previously opened file.
 	open O, '>', "$ARGV[1]/release-$1.mdwn" or die $!;
 	print "+ release-$1.mdwn...\n";
