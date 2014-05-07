@@ -1,3 +1,10 @@
+notmuch (0.18-2) unstable; urgency=medium
+
+  * Disable atomicity tests on armhf. These should be re-enabled when
+    upstream relases a fix for this (in progress).
+
+ -- David Bremner <bremner@debian.org>  Thu, 08 May 2014 08:28:33 +0900
+
 notmuch (0.18-1) unstable; urgency=medium
 
   * New upstream release. For detailed release notes see
