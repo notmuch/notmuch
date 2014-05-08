@@ -169,7 +169,7 @@ notmuch_database_dump (notmuch_database_t *notmuch,
     }
 
     if (output_file_name) {
-	ret = fdatasync (outfd);
+	ret = fsync (outfd);
 	if (ret) {
 	    fprintf (stderr, "Error syncing %s to disk: %s\n",
 		     name_for_error, strerror (errno));
