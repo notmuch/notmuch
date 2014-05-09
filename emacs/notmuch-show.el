@@ -222,6 +222,10 @@ For example, if you wanted to remove an \"unread\" tag and add a
   :type '(repeat string)
   :group 'notmuch-show)
 
+(defcustom notmuch-show-mark-read-function #'notmuch-show-seen-current-message
+  "Function to control which messages are marked read."
+  :type 'function
+  :group 'notmuch-show)
 
 (defmacro with-current-notmuch-show-message (&rest body)
   "Evaluate body with current buffer set to the text of current message"
@@ -1156,6 +1160,8 @@ function is used."
   (let ((inhibit-read-only t))
 
     (notmuch-show-mode)
+    (add-hook 'post-command-hook #'notmuch-show-command-hook nil t)
+
     ;; Don't track undo information for this buffer
     (set 'buffer-undo-list t)
 
@@ -1544,6 +1550,23 @@ marked as unread, i.e. the tag changes in
     (apply 'notmuch-show-tag-message
 	   (notmuch-tag-change-list notmuch-show-mark-read-tags unread))))
 
+(defun notmuch-show-seen-current-message (start end)
+  "Mark the current message read if it is open.
+
+We only mark it read once: if it is changed back then that is a
+user decision and we should not override it."
+  (when (and (notmuch-show-message-visible-p)
+	     (not (notmuch-show-get-prop :seen)))
+	(notmuch-show-mark-read)
+	(notmuch-show-set-prop :seen t)))
+
+(defun notmuch-show-command-hook ()
+  (when (eq major-mode 'notmuch-show-mode)
+    ;; We need to redisplay to get window-start and window-end correct.
+    (redisplay)
+    (save-excursion
+      (funcall notmuch-show-mark-read-function (window-start) (window-end)))))
+
 ;; Functions for getting attributes of several messages in the current
 ;; thread.
 
@@ -1679,9 +1702,7 @@ If a prefix argument is given and this is the last message in the
 thread, navigate to the next thread in the parent search buffer."
   (interactive "P")
   (if (notmuch-show-goto-message-next)
-      (progn
-	(notmuch-show-mark-read)
-	(notmuch-show-message-adjust))
+      (notmuch-show-message-adjust)
     (if pop-at-end
 	(notmuch-show-next-thread)
       (goto-char (point-max)))))
@@ -1692,7 +1713,6 @@ thread, navigate to the next thread in the parent search buffer."
   (if (= (point) (notmuch-show-message-top))
       (notmuch-show-goto-message-previous)
     (notmuch-show-move-to-message-top))
-  (notmuch-show-mark-read)
   (notmuch-show-message-adjust))
 
 (defun notmuch-show-next-open-message (&optional pop-at-end)
@@ -1707,9 +1727,7 @@ to show, nil otherwise."
     (while (and (setq r (notmuch-show-goto-message-next))
 		(not (notmuch-show-message-visible-p))))
     (if r
-	(progn
-	  (notmuch-show-mark-read)
-	  (notmuch-show-message-adjust))
+	(notmuch-show-message-adjust)
       (if pop-at-end
 	  (notmuch-show-next-thread)
 	(goto-char (point-max))))
@@ -1722,9 +1740,7 @@ to show, nil otherwise."
     (while (and (setq r (notmuch-show-goto-message-next))
 		(not (notmuch-show-get-prop :match))))
     (if r
-	(progn
-	  (notmuch-show-mark-read)
-	  (notmuch-show-message-adjust))
+	(notmuch-show-message-adjust)
       (goto-char (point-max)))))
 
 (defun notmuch-show-open-if-matched ()
@@ -1735,8 +1751,7 @@ to show, nil otherwise."
 (defun notmuch-show-goto-first-wanted-message ()
   "Move to the first open message and mark it read"
   (goto-char (point-min))
-  (if (notmuch-show-message-visible-p)
-      (notmuch-show-mark-read)
+  (unless (notmuch-show-message-visible-p)
     (notmuch-show-next-open-message))
   (when (eobp)
     ;; There are no matched non-excluded messages so open all matched
@@ -1744,8 +1759,7 @@ to show, nil otherwise."
     (notmuch-show-mapc 'notmuch-show-open-if-matched)
     (force-window-update)
     (goto-char (point-min))
-    (if (notmuch-show-message-visible-p)
-	(notmuch-show-mark-read)
+    (unless (notmuch-show-message-visible-p)
       (notmuch-show-next-open-message))))
 
 (defun notmuch-show-previous-open-message ()
@@ -1755,7 +1769,6 @@ to show, nil otherwise."
 		  (notmuch-show-goto-message-previous)
 		(notmuch-show-move-to-message-top))
 	      (not (notmuch-show-message-visible-p))))
-  (notmuch-show-mark-read)
   (notmuch-show-message-adjust))
 
 (defun notmuch-show-view-raw-message ()
