@@ -1138,7 +1138,7 @@ test_emacs () {
 	rm -f OUTPUT
 	touch OUTPUT
 
-	${TEST_EMACSCLIENT} --socket-name="$EMACS_SERVER" --eval "(progn $@)"
+	${TEST_EMACSCLIENT} --socket-name="$EMACS_SERVER" --eval "(notmuch-test-progn $@)"
 }
 
 test_python() {

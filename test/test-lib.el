@@ -52,11 +52,13 @@
 
 (defun test-output (&optional filename)
   "Save current buffer to file FILENAME.  Default FILENAME is OUTPUT."
+  (notmuch-post-command)
   (write-region (point-min) (point-max) (or filename "OUTPUT")))
 
 (defun test-visible-output (&optional filename)
   "Save visible text in current buffer to file FILENAME.  Default
 FILENAME is OUTPUT."
+  (notmuch-post-command)
   (let ((text (visible-buffer-string)))
     (with-temp-file (or filename "OUTPUT") (insert text))))
 
@@ -165,6 +167,15 @@ nothing."
 
      (t
       (notmuch-test-report-unexpected output expected)))))
+
+(defun notmuch-post-command ()
+  (run-hooks 'post-command-hook))
+
+(defmacro notmuch-test-progn (&rest body)
+  (cons 'progn
+	(mapcar
+	 (lambda (x) `(prog1 ,x (notmuch-post-command)))
+	 body)))
 
 ;; For historical reasons, we hide deleted tags by default in the test
 ;; suite
