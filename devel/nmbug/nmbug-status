@@ -69,28 +69,60 @@ if not hasattr(collections, 'OrderedDict'):  # Python 2.6 or earlier
     collections.OrderedDict = _OrderedDict
 
 
+class ConfigError (Exception):
+    """Errors with config file usage
+    """
+    pass
+
+
 def read_config(path=None, encoding=None):
     "Read config from json file"
     if not encoding:
         encoding = _ENCODING
     if path:
-        fp = open(path)
+        try:
+            with open(path, 'rb') as f:
+                config_bytes = f.read()
+        except IOError as e:
+            raise ConfigError('Could not read config from {}'.format(path))
     else:
         nmbhome = os.getenv('NMBGIT', os.path.expanduser('~/.nmbug'))
+        branch = 'config'
+        filename = 'status-config.json'
 
         # read only the first line from the pipe
         sha1_bytes = subprocess.Popen(
-            ['git', '--git-dir', nmbhome, 'show-ref', '-s', 'config'],
+            ['git', '--git-dir', nmbhome, 'show-ref', '-s', branch],
             stdout=subprocess.PIPE).stdout.readline()
         sha1 = sha1_bytes.decode(encoding).rstrip()
+        if not sha1:
+            raise ConfigError(
+                ("No local branch '{branch}' in {nmbgit}.  "
+                 'Checkout a local {branch} branch or explicitly set --config.'
+                ).format(branch=branch, nmbgit=nmbhome))
 
-        fp_byte_stream = subprocess.Popen(
+        p = subprocess.Popen(
             ['git', '--git-dir', nmbhome, 'cat-file', 'blob',
-             sha1+':status-config.json'],
-            stdout=subprocess.PIPE).stdout
-        fp = codecs.getreader(encoding=encoding)(stream=fp_byte_stream)
+             '{}:{}'.format(sha1, filename)],
+            stdout=subprocess.PIPE)
+        config_bytes, err = p.communicate()
+        status = p.wait()
+        if status != 0:
+            raise ConfigError(
+                ("Missing status-config.json in branch '{branch}' of"
+                 '{nmbgit}.  Add the file or explicitly set --config.'
+                ).format(branch=branch, nmbgit=nmbhome))
 
-    return json.load(fp)
+    config_json = config_bytes.decode(encoding)
+    try:
+        return json.loads(config_json)
+    except ValueError as e:
+        if not path:
+            path = "{} in branch '{}' of {}".format(
+                filename, branch, nmbhome)
+        raise ConfigError(
+            'Could not parse JSON from the config file {}:\n{}'.format(
+                path, e))
 
 
 class Thread (list):
@@ -274,7 +306,11 @@ parser.add_argument('--get-query', help='get query for view',
 
 args = parser.parse_args()
 
-config = read_config(path=args.config)
+try:
+    config = read_config(path=args.config)
+except ConfigError as e:
+    print(e)
+    sys.exit(1)
 
 header_template = config['meta'].get('header', '''<!DOCTYPE html>
 <html lang="en">
