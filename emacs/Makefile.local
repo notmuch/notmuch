@@ -69,7 +69,7 @@ install: install-emacs
 endif
 
 .PHONY: install-emacs
-install-emacs:
+install-emacs: $(emacs_sources) $(emacs_images)
 	mkdir -p "$(DESTDIR)$(emacslispdir)"
 	install -m0644 $(emacs_sources) "$(DESTDIR)$(emacslispdir)"
 ifeq ($(HAVE_EMACS),1)
