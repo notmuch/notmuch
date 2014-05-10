@@ -271,6 +271,7 @@ Init_notmuch (void)
     rb_define_method (notmuch_rb_cQuery, "search_threads", notmuch_rb_query_search_threads, 0); /* in query.c */
     rb_define_method (notmuch_rb_cQuery, "search_messages", notmuch_rb_query_search_messages, 0); /* in query.c */
     rb_define_method (notmuch_rb_cQuery, "count_messages", notmuch_rb_query_count_messages, 0); /* in query.c */
+    rb_define_method (notmuch_rb_cQuery, "count_threads", notmuch_rb_query_count_threads, 0); /* in query.c */
 
     /*
      * Document-class: Notmuch::Threads

@@ -182,3 +182,22 @@ notmuch_rb_query_count_messages (VALUE self)
      */
     return UINT2NUM(notmuch_query_count_messages(query));
 }
+
+/*
+ * call-seq: QUERY.count_threads => Fixnum
+ *
+ * Return an estimate of the number of threads matching a search
+ */
+VALUE
+notmuch_rb_query_count_threads (VALUE self)
+{
+    notmuch_query_t *query;
+
+    Data_Get_Notmuch_Query (self, query);
+
+    /* Xapian exceptions are not handled properly.
+     * (function may return 0 after printing a message)
+     * Thus there is nothing we can do here...
+     */
+    return UINT2NUM(notmuch_query_count_threads(query));
+}
