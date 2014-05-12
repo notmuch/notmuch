@@ -340,6 +340,15 @@ else
     errors=$((errors + 1))
 fi
 
+if ! pkg-config --exists zlib; then
+  ${CC} ${zlib_cflags} -o compat/gen_zlib_pc \
+	  "$srcdir"/compat/gen_zlib_pc.c ${zlib_ldflags} > /dev/null 2>&1 &&
+  compat/gen_zlib_pc > compat/zlib.pc &&
+  PKG_CONFIG_PATH="$PKG_CONFIG_PATH":compat &&
+  export PKG_CONFIG_PATH
+  rm -f compat/gen_zlib_pc
+fi
+
 printf "Checking for zlib (>= 1.2.5.2)... "
 have_zlib=0
 if pkg-config --atleast-version=1.2.5.2 zlib; then
