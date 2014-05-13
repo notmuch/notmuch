@@ -50,7 +50,7 @@ _hex_of_sha1_digest (const unsigned char digest[SHA1_DIGEST_SIZE])
  * should free() when finished.
  */
 char *
-notmuch_sha1_of_string (const char *str)
+_notmuch_sha1_of_string (const char *str)
 {
     sha1_ctx sha1;
     unsigned char digest[SHA1_DIGEST_SIZE];
@@ -74,7 +74,7 @@ notmuch_sha1_of_string (const char *str)
  * file not found, etc.), this function returns NULL.
  */
 char *
-notmuch_sha1_of_file (const char *filename)
+_notmuch_sha1_of_file (const char *filename)
 {
     FILE *file;
 #define BLOCK_SIZE 4096

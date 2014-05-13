@@ -284,7 +284,7 @@ _thread_add_message (notmuch_thread_t *thread,
 	    }
 	    clean_author = _thread_cleanup_author (thread, author, from);
 	    _thread_add_author (thread, clean_author);
-	    notmuch_message_set_author (message, clean_author);
+	    _notmuch_message_set_author (message, clean_author);
 	}
 	g_object_unref (G_OBJECT (list));
     }
@@ -373,7 +373,7 @@ _thread_add_matched_message (notmuch_thread_t *thread,
 				  NOTMUCH_MESSAGE_FLAG_MATCH, 1);
     }
 
-    _thread_add_matched_author (thread, notmuch_message_get_author (hashed_message));
+    _thread_add_matched_author (thread, _notmuch_message_get_author (hashed_message));
 }
 
 static void

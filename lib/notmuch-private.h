@@ -316,11 +316,11 @@ _notmuch_message_clear_data (notmuch_message_t *message);
 /* Set the author member of 'message' - this is the representation used
  * when displaying the message */
 void
-notmuch_message_set_author (notmuch_message_t *message, const char *author);
+_notmuch_message_set_author (notmuch_message_t *message, const char *author);
 
 /* Get the author member of 'message' */
 const char *
-notmuch_message_get_author (notmuch_message_t *message);
+_notmuch_message_get_author (notmuch_message_t *message);
 
 /* message-file.c */
 
@@ -337,7 +337,7 @@ typedef struct _notmuch_message_file notmuch_message_file_t;
  * Returns NULL if any error occurs.
  */
 notmuch_message_file_t *
-notmuch_message_file_open (const char *filename);
+_notmuch_message_file_open (const char *filename);
 
 /* Like notmuch_message_file_open but with 'ctx' as the talloc owner. */
 notmuch_message_file_t *
@@ -345,7 +345,7 @@ _notmuch_message_file_open_ctx (void *ctx, const char *filename);
 
 /* Close a notmuch message previously opened with notmuch_message_open. */
 void
-notmuch_message_file_close (notmuch_message_file_t *message);
+_notmuch_message_file_close (notmuch_message_file_t *message);
 
 /* Parse the message.
  *
@@ -386,7 +386,7 @@ _notmuch_message_file_get_mime_message (notmuch_message_file_t *message,
  * contain a header line matching 'header'.
  */
 const char *
-notmuch_message_file_get_header (notmuch_message_file_t *message,
+_notmuch_message_file_get_header (notmuch_message_file_t *message,
 				 const char *header);
 
 /* index.cc */
@@ -455,10 +455,10 @@ _notmuch_message_add_reply (notmuch_message_t *message,
 /* sha1.c */
 
 char *
-notmuch_sha1_of_string (const char *str);
+_notmuch_sha1_of_string (const char *str);
 
 char *
-notmuch_sha1_of_file (const char *filename);
+_notmuch_sha1_of_file (const char *filename);
 
 /* string-list.c */
 

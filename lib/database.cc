@@ -356,7 +356,7 @@ _message_id_compressed (void *ctx, const char *message_id)
 {
     char *sha1, *compressed;
 
-    sha1 = notmuch_sha1_of_string (message_id);
+    sha1 = _notmuch_sha1_of_string (message_id);
 
     compressed = talloc_asprintf (ctx, "notmuch-sha1-%s", sha1);
     free (sha1);
@@ -1374,7 +1374,7 @@ _notmuch_database_get_directory_db_path (const char *path)
     int term_len = strlen (_find_prefix ("directory")) + strlen (path);
 
     if (term_len > NOTMUCH_TERM_MAX)
-	return notmuch_sha1_of_string (path);
+	return _notmuch_sha1_of_string (path);
     else
 	return path;
 }
@@ -1776,12 +1776,12 @@ _notmuch_database_link_message_to_parents (notmuch_database_t *notmuch,
 				     _my_talloc_free_for_g_hash, NULL);
     this_message_id = notmuch_message_get_message_id (message);
 
-    refs = notmuch_message_file_get_header (message_file, "references");
+    refs = _notmuch_message_file_get_header (message_file, "references");
     last_ref_message_id = parse_references (message,
 					    this_message_id,
 					    parents, refs);
 
-    in_reply_to = notmuch_message_file_get_header (message_file, "in-reply-to");
+    in_reply_to = _notmuch_message_file_get_header (message_file, "in-reply-to");
     in_reply_to_message_id = parse_references (message,
 					       this_message_id,
 					       parents, in_reply_to);
@@ -1979,7 +1979,7 @@ notmuch_database_add_message (notmuch_database_t *notmuch,
     if (ret)
 	return ret;
 
-    message_file = notmuch_message_file_open (filename);
+    message_file = _notmuch_message_file_open (filename);
     if (message_file == NULL)
 	return NOTMUCH_STATUS_FILE_ERROR;
 
@@ -2000,9 +2000,9 @@ notmuch_database_add_message (notmuch_database_t *notmuch,
 	 * let's make sure that what we're looking at looks like an
 	 * actual email message.
 	 */
-	from = notmuch_message_file_get_header (message_file, "from");
-	subject = notmuch_message_file_get_header (message_file, "subject");
-	to = notmuch_message_file_get_header (message_file, "to");
+	from = _notmuch_message_file_get_header (message_file, "from");
+	subject = _notmuch_message_file_get_header (message_file, "subject");
+	to = _notmuch_message_file_get_header (message_file, "to");
 
 	if ((from == NULL || *from == '\0') &&
 	    (subject == NULL || *subject == '\0') &&
@@ -2015,7 +2015,7 @@ notmuch_database_add_message (notmuch_database_t *notmuch,
 	/* Now that we're sure it's mail, the first order of business
 	 * is to find a message ID (or else create one ourselves). */
 
-	header = notmuch_message_file_get_header (message_file, "message-id");
+	header = _notmuch_message_file_get_header (message_file, "message-id");
 	if (header && *header != '\0') {
 	    message_id = _parse_message_id (message_file, header, NULL);
 
@@ -2036,7 +2036,7 @@ notmuch_database_add_message (notmuch_database_t *notmuch,
 	if (message_id == NULL ) {
 	    /* No message-id at all, let's generate one by taking a
 	     * hash over the file's contents. */
-	    char *sha1 = notmuch_sha1_of_file (filename);
+	    char *sha1 = _notmuch_sha1_of_file (filename);
 
 	    /* If that failed too, something is really wrong. Give up. */
 	    if (sha1 == NULL) {
@@ -2076,7 +2076,7 @@ notmuch_database_add_message (notmuch_database_t *notmuch,
 	    if (ret)
 		goto DONE;
 
-	    date = notmuch_message_file_get_header (message_file, "date");
+	    date = _notmuch_message_file_get_header (message_file, "date");
 	    _notmuch_message_set_header_values (message, date, from, subject);
 
 	    ret = _notmuch_message_index_file (message, message_file);
@@ -2105,7 +2105,7 @@ notmuch_database_add_message (notmuch_database_t *notmuch,
     }
 
     if (message_file)
-	notmuch_message_file_close (message_file);
+	_notmuch_message_file_close (message_file);
 
     ret2 = notmuch_database_end_atomic (notmuch);
     if ((ret == NOTMUCH_STATUS_SUCCESS ||

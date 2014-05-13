@@ -99,19 +99,19 @@ _notmuch_message_file_open_ctx (void *ctx, const char *filename)
 
   FAIL:
     fprintf (stderr, "Error opening %s: %s\n", filename, strerror (errno));
-    notmuch_message_file_close (message);
+    _notmuch_message_file_close (message);
 
     return NULL;
 }
 
 notmuch_message_file_t *
-notmuch_message_file_open (const char *filename)
+_notmuch_message_file_open (const char *filename)
 {
     return _notmuch_message_file_open_ctx (NULL, filename);
 }
 
 void
-notmuch_message_file_close (notmuch_message_file_t *message)
+_notmuch_message_file_close (notmuch_message_file_t *message)
 {
     talloc_free (message);
 }
@@ -297,7 +297,7 @@ _notmuch_message_file_get_combined_header (notmuch_message_file_t *message,
 }
 
 const char *
-notmuch_message_file_get_header (notmuch_message_file_t *message,
+_notmuch_message_file_get_header (notmuch_message_file_t *message,
 				 const char *header)
 {
     const char *value;

@@ -439,7 +439,7 @@ notmuch_message_get_header (notmuch_message_t *message, const char *header)
     if (message->message_file == NULL)
 	return NULL;
 
-    return notmuch_message_file_get_header (message->message_file, header);
+    return _notmuch_message_file_get_header (message->message_file, header);
 }
 
 /* Return the message ID from the In-Reply-To header of 'message'.
@@ -898,13 +898,13 @@ notmuch_message_get_tags (notmuch_message_t *message)
 }
 
 const char *
-notmuch_message_get_author (notmuch_message_t *message)
+_notmuch_message_get_author (notmuch_message_t *message)
 {
     return message->author;
 }
 
 void
-notmuch_message_set_author (notmuch_message_t *message,
+_notmuch_message_set_author (notmuch_message_t *message,
 			    const char *author)
 {
     if (message->author)
@@ -971,7 +971,7 @@ void
 _notmuch_message_close (notmuch_message_t *message)
 {
     if (message->message_file) {
-	notmuch_message_file_close (message->message_file);
+	_notmuch_message_file_close (message->message_file);
 	message->message_file = NULL;
     }
 }
