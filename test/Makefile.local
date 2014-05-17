@@ -16,7 +16,7 @@ $(dir)/arg-test: $(dir)/arg-test.o command-line-arguments.o util/libutil.a
 	$(call quiet,CC) $^ -o $@
 
 $(dir)/hex-xcode: $(dir)/hex-xcode.o command-line-arguments.o util/libutil.a
-	$(call quiet,CC) $^ -o $@ -ltalloc
+	$(call quiet,CC) $^ $(TALLOC_LDFLAGS) -o $@
 
 random_corpus_deps =  $(dir)/random-corpus.o  $(dir)/database-test.o \
 			notmuch-config.o command-line-arguments.o \
