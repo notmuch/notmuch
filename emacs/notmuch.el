@@ -428,14 +428,16 @@ matched and unmatched messages in the current thread."
   "Return the stable query for the current region.
 
 If ONLY-MATCHED is non-nil, include only matched messages.  If it
-is nil, include both matched and unmatched messages."
+is nil, include both matched and unmatched messages. If there are
+no messages in the region then return nil."
   (let ((query-list nil) (all (not only-matched)))
     (dolist (queries (notmuch-search-properties-in-region :query beg end))
       (when (first queries)
 	(push (first queries) query-list))
       (when (and all (second queries))
 	(push (second queries) query-list)))
-    (concat "(" (mapconcat 'identity query-list ") or (") ")")))
+    (when query-list
+      (concat "(" (mapconcat 'identity query-list ") or (") ")"))))
 
 (defun notmuch-search-find-authors ()
   "Return the authors for the current thread"

@@ -387,6 +387,8 @@ notmuch-after-tag-hook will be run."
 	  (unless (string-match-p "^[-+]\\S-+$" tag-change)
 	    (error "Tag must be of the form `+this_tag' or `-that_tag'")))
 	tag-changes)
+  (unless query
+    (error "Nothing to tag!"))
   (unless (null tag-changes)
     (run-hooks 'notmuch-before-tag-hook)
     (if (<= (length query) notmuch-tag-argument-limit)
