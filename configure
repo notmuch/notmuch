@@ -43,8 +43,8 @@ fi
 
 # Set several defaults (optionally specified by the user in
 # environment variables)
-CC=${CC:-gcc}
-CXX=${CXX:-g++}
+CC=${CC:-cc}
+CXX=${CXX:-c++}
 CFLAGS=${CFLAGS:--O2}
 CPPFLAGS=${CPPFLAGS:-}
 CXXFLAGS=${CXXFLAGS:-\$(CFLAGS)}
