@@ -1,0 +1,19 @@
+language: c
+before_install:
+  - sudo apt-get update -qq
+  - sudo apt-get install dtach libxapian-dev libgmime-2.6-dev libtalloc-dev python-sphinx
+
+  # Notmuch requires zlib 1.2.5.2, unfortunately travis runs on Ubuntu 12.04LTS which
+  # ships with zlib 1.2.3.3. We need to update to zlib 1.2.5.2 to be able to build.
+  # TODO: Watch https://github.com/travis-ci/travis-ci/issues/2046 and remove
+  #       this hack once travis-ci switches to Ubuntu 14.04
+  - wget 'https://github.com/notmuch/travis-files/raw/master/zlib1g-dev_1.2.8.dfsg-1ubuntu1_amd64.deb'
+  - wget 'https://github.com/notmuch/travis-files/raw/master/zlib1g_1.2.8.dfsg-1ubuntu1_amd64.deb'
+  - sudo dpkg -i zlib1g-dev_1.2.8.dfsg-1ubuntu1_amd64.deb zlib1g_1.2.8.dfsg-1ubuntu1_amd64.deb
+  - sudo apt-get install -f
+
+script:
+  - ./configure
+  - make test
+notifications:
+  irc: "chat.freenode.net#notmuch"
