@@ -137,5 +137,33 @@ expected='[[[{"id": "foo@four.com", "match": true, "excluded": false,
 expected=`echo "$expected" | notmuch_json_show_sanitize`
 test_expect_equal_json "$output" "$expected"
 
+test_begin_subtest "Ignore garbage at the end of References"
+test_subtest_known_broken
+add_message '[id]="foo@five.com"' \
+    '[subject]="five"'
+add_message '[id]="bar@five.com"' \
+    '[references]="<foo@five.com> (garbage)"' \
+    '[subject]="not-five"'
+output=$(notmuch show --format=json 'subject:five' | notmuch_json_show_sanitize)
+expected='[[[{"id": "XXXXX", "match": true, "excluded": false,
+ "filename": "YYYYY", "timestamp": 42, "date_relative": "2001-01-05",
+ "tags": ["inbox", "unread"], "headers": {"Subject": "five",
+ "From": "Notmuch Test Suite <test_suite@notmuchmail.org>",
+ "To": "Notmuch Test Suite <test_suite@notmuchmail.org>",
+ "Date": "GENERATED_DATE"}, "body": [{"id": 1,
+ "content-type": "text/plain",
+ "content": "This is just a test message (#10)\n"}]},
+ [[{"id": "XXXXX", "match": true, "excluded": false,
+ "filename": "YYYYY", "timestamp": 42, "date_relative": "2001-01-05",
+ "tags": ["inbox", "unread"],
+ "headers": {"Subject": "not-five",
+ "From": "Notmuch Test Suite <test_suite@notmuchmail.org>",
+ "To": "Notmuch Test Suite <test_suite@notmuchmail.org>",
+ "Date": "GENERATED_DATE"},
+ "body": [{"id": 1, "content-type": "text/plain",
+ "content": "This is just a test message (#11)\n"}]}, []]]]]]'
+expected=`echo "$expected" | notmuch_json_show_sanitize`
+test_expect_equal_json "$output" "$expected"
+
 
 test_done
