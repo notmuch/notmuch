@@ -524,7 +524,7 @@ parse_references (void *ctx,
 		  GHashTable *hash,
 		  const char *refs)
 {
-    char *ref;
+    char *ref, *last_ref = NULL;
 
     if (refs == NULL || *refs == '\0')
 	return NULL;
@@ -532,20 +532,17 @@ parse_references (void *ctx,
     while (*refs) {
 	ref = _parse_message_id (ctx, refs, &refs);
 
-	if (ref && strcmp (ref, message_id))
+	if (ref && strcmp (ref, message_id)) {
 	    g_hash_table_insert (hash, ref, NULL);
+	    last_ref = ref;
+	}
     }
 
     /* The return value of this function is used to add a parent
      * reference to the database.  We should avoid making a message
-     * its own parent, thus the following check.
+     * its own parent, thus the above check.
      */
-
-    if (ref && strcmp(ref, message_id)) {
-	return ref;
-    } else {
-	return NULL;
-    }
+    return last_ref;
 }
 
 notmuch_status_t

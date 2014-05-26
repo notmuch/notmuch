@@ -138,7 +138,6 @@ expected=`echo "$expected" | notmuch_json_show_sanitize`
 test_expect_equal_json "$output" "$expected"
 
 test_begin_subtest "Ignore garbage at the end of References"
-test_subtest_known_broken
 add_message '[id]="foo@five.com"' \
     '[subject]="five"'
 add_message '[id]="bar@five.com"' \
