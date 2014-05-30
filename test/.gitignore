@@ -1,7 +1,5 @@
 arg-test
 corpus.mail
-have-compact
-have-man
 hex-xcode
 parse-time
 random-corpus

@@ -38,6 +38,10 @@ find_notmuch_path ()
 # test/ subdirectory and are run in 'trash directory' subdirectory.
 TEST_DIRECTORY=$(pwd)
 notmuch_path=`find_notmuch_path "$TEST_DIRECTORY"`
+
+# configure output
+. $notmuch_path/sh.config
+
 if test -n "$valgrind"
 then
 	make_symlink () {

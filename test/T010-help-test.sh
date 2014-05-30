@@ -7,7 +7,7 @@ test_expect_success 'notmuch --help' 'notmuch --help'
 test_expect_success 'notmuch help' 'notmuch help'
 test_expect_success 'notmuch --version' 'notmuch --version'
 
-if ${TEST_DIRECTORY}/have-man; then
+if [ $NOTMUCH_HAVE_MAN -eq 1 ]; then
     test_expect_success 'notmuch --help tag' 'notmuch --help tag'
     test_expect_success 'notmuch help tag' 'notmuch help tag'
 else

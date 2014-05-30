@@ -10,7 +10,7 @@ notmuch tag +tag1 \*
 notmuch tag +tag2 subject:Two
 notmuch tag -tag1 +tag3 subject:Three
 
-if ! ${TEST_DIRECTORY}/have-compact; then
+if [ $NOTMUCH_HAVE_XAPIAN_COMPACT -eq 0 ]; then
     test_begin_subtest "Compact unsupported: error message"
     output=$(notmuch compact --quiet 2>&1)
     test_expect_equal "$output" "notmuch was compiled against a xapian version lacking compaction support.

@@ -35,25 +35,9 @@ $(dir)/symbol-test: $(dir)/symbol-test.o lib/$(LINKER_NAME)
 $(dir)/parse-time: $(dir)/parse-time.o parse-time-string/parse-time-string.o
 	$(call quiet,CC) $^ -o $@
 
-$(dir)/have-compact: Makefile.config
-ifeq ($(HAVE_XAPIAN_COMPACT),1)
-	ln -sf /bin/true $@
-else
-	ln -sf /bin/false $@
-endif
-
-$(dir)/have-man: Makefile.config
-ifeq ($(HAVE_SPHINX)$(HAVE_RST2MAN),00)
-	ln -sf /bin/false $@
-else
-	ln -sf /bin/true $@
-endif
-
 .PHONY: test check
 
 TEST_BINARIES=$(dir)/arg-test \
-	      $(dir)/have-compact \
-	      $(dir)/have-man \
 	      $(dir)/hex-xcode \
 	      $(dir)/random-corpus \
 	      $(dir)/parse-time \
