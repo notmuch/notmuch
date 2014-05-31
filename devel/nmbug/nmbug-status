@@ -275,20 +275,8 @@ parser.add_argument('--get-query', help='get query for view',
 args = parser.parse_args()
 
 config = read_config(path=args.config)
-now = datetime.datetime.utcnow()
-context = {
-    'date': now,
-    'datetime': now.strftime('%Y-%m-%d %H:%M:%SZ'),
-    'title': config['meta']['title'],
-    'blurb': config['meta']['blurb'],
-    'encoding': _ENCODING,
-    'inter_message_padding': '0.25em',
-    'border_radius': '0.5em',
-    }
 
-_PAGES['text'] = Page()
-_PAGES['html'] = HtmlPage(
-    header='''<!DOCTYPE html>
+header_template = config['meta'].get('header', '''<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset={encoding}" />
@@ -338,13 +326,30 @@ _PAGES['html'] = HtmlPage(
 {blurb}
 </p>
 <h3>Views</h3>
-'''.format(**context),
-    footer='''
+''')
+
+footer_template = config['meta'].get('footer', '''
 <hr>
 <p>Generated: {datetime}
 </body>
 </html>
-'''.format(**context),
+''')
+
+now = datetime.datetime.utcnow()
+context = {
+    'date': now,
+    'datetime': now.strftime('%Y-%m-%d %H:%M:%SZ'),
+    'title': config['meta']['title'],
+    'blurb': config['meta']['blurb'],
+    'encoding': _ENCODING,
+    'inter_message_padding': '0.25em',
+    'border_radius': '0.5em',
+    }
+
+_PAGES['text'] = Page()
+_PAGES['html'] = HtmlPage(
+    header=header_template.format(**context),
+    footer=footer_template.format(**context),
     )
 
 if args.list_views:

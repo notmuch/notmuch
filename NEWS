@@ -7,6 +7,21 @@ Library changes
 Add return status to notmuch_database_close and
 notmuch_database_destroy
 
+nmbug-status
+------------
+
+`nmbug-status` can now optionally load header and footer templates
+from the config file.  Use something like:
+
+    {
+      "meta": {
+        "header": "<!DOCTYPE html>\n<html lang="en">\n...",
+        "footer": "</body></html>",
+         ...
+      },
+      ...
+    },
+
 Notmuch 0.18.1 (2014-06-25)
 ===========================
 
