@@ -19,6 +19,13 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see http://www.gnu.org/licenses/ .
 
+"""Generate HTML for one or more notmuch searches.
+
+Messages matching each search are grouped by thread.  Each message
+that contains both a subject and message-id will have the displayed
+subject link to the Gmane view of the message.
+"""
+
 from __future__ import print_function
 from __future__ import unicode_literals
 
@@ -255,7 +262,7 @@ class HtmlPage (Page):
     def _slug(self, string):
         return self._slug_regexp.sub('-', string)
 
-parser = argparse.ArgumentParser()
+parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--text', help='output plain text format',
                     action='store_true')
 parser.add_argument('--config', help='load config from given file',
