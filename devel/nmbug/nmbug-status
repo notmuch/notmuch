@@ -275,6 +275,14 @@ parser.add_argument('--get-query', help='get query for view',
 args = parser.parse_args()
 
 config = read_config(path=args.config)
+context = {
+    'date': datetime.datetime.utcnow(),
+    'title': config['meta']['title'],
+    'blurb': config['meta']['blurb'],
+    'encoding': _ENCODING,
+    'inter_message_padding': '0.25em',
+    'border_radius': '0.5em',
+    }
 
 _PAGES['text'] = Page()
 _PAGES['html'] = HtmlPage(
@@ -328,17 +336,13 @@ _PAGES['html'] = HtmlPage(
 {blurb}
 </p>
 <h3>Views</h3>
-'''.format(title=config['meta']['title'],
-           blurb=config['meta']['blurb'],
-           encoding=_ENCODING,
-           inter_message_padding='0.25em',
-           border_radius='0.5em'),
+'''.format(**context),
     footer='''
 <hr>
 <p>Generated: {date}
 </body>
 </html>
-'''.format(date=datetime.datetime.utcnow().date())
+'''.format(**context),
     )
 
 if args.list_views:
