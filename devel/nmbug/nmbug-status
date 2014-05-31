@@ -315,22 +315,30 @@ _PAGES['html'] = HtmlPage(
     tbody:nth-child(4n+3) tr td {{
       background-color: #bce;
     }}
+    hr {{
+      border: 0;
+      height: 1px;
+      color: #ccc;
+      background-color: #ccc;
+    }}
   </style>
 </head>
 <body>
 <h2>{title}</h2>
-<p>
-Generated: {date}<br />
 {blurb}
 </p>
 <h3>Views</h3>
-'''.format(date=datetime.datetime.utcnow().date(),
-           title=config['meta']['title'],
+'''.format(title=config['meta']['title'],
            blurb=config['meta']['blurb'],
            encoding=_ENCODING,
            inter_message_padding='0.25em',
            border_radius='0.5em'),
-    footer='</body>\n</html>\n',
+    footer='''
+<hr>
+<p>Generated: {date}
+</body>
+</html>
+'''.format(date=datetime.datetime.utcnow().date())
     )
 
 if args.list_views:
