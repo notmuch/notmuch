@@ -163,6 +163,22 @@ rm -rf "${MAIL_DIR}"/two
 output=$(NOTMUCH_NEW)
 test_expect_equal "$output" "No new mail. Removed 3 messages."
 
+test_begin_subtest "Support single-message mbox (deprecated)"
+cat > "${MAIL_DIR}"/mbox_file1 <<EOF
+From test_suite@notmuchmail.org Fri Jan  5 15:43:57 2001
+From: Notmuch Test Suite <test_suite@notmuchmail.org>
+To: Notmuch Test Suite <test_suite@notmuchmail.org>
+Subject: Test mbox message 1
+
+Body.
+EOF
+output=$(NOTMUCH_NEW 2>&1)
+test_expect_equal "$output" \
+"Warning: ${MAIL_DIR}/mbox_file1 is an mbox containing a single message,
+likely caused by misconfigured mail delivery.  Support for single-message
+mboxes is deprecated and may be removed in the future.
+Added 1 new message to the database."
+
 # This test requires that notmuch new has been run at least once.
 test_begin_subtest "Skip and report non-mail files"
 generate_message
@@ -184,24 +200,14 @@ Subject: Test mbox message 2
 
 Body 2.
 EOF
-cat > "${MAIL_DIR}"/mbox_file1 <<EOF
-From test_suite@notmuchmail.org Fri Jan  5 15:43:57 2001
-From: Notmuch Test Suite <test_suite@notmuchmail.org>
-To: Notmuch Test Suite <test_suite@notmuchmail.org>
-Subject: Test mbox message 1
-
-Body.
-EOF
 output=$(NOTMUCH_NEW 2>&1)
 test_expect_equal "$output" \
 "Note: Ignoring non-mail file: ${MAIL_DIR}/.git/config
 Note: Ignoring non-mail file: ${MAIL_DIR}/.ignored_hidden_file
 Note: Ignoring non-mail file: ${MAIL_DIR}/ignored_file
 Note: Ignoring non-mail file: ${MAIL_DIR}/mbox_file
-Note: Ignoring non-mail file: ${MAIL_DIR}/mbox_file1
 Added 1 new message to the database."
 rm "${MAIL_DIR}"/mbox_file
-rm "${MAIL_DIR}"/mbox_file1
 
 test_begin_subtest "Ignore files and directories specified in new.ignore"
 generate_message

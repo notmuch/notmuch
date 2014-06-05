@@ -117,7 +117,7 @@ notmuch_message_file_close (notmuch_message_file_t *message)
 }
 
 static notmuch_bool_t
-is_mbox (FILE *file)
+_is_mbox (FILE *file)
 {
     char from_buf[5];
     notmuch_bool_t ret = FALSE;
@@ -139,13 +139,12 @@ _notmuch_message_file_parse (notmuch_message_file_t *message)
     GMimeParser *parser;
     notmuch_status_t status = NOTMUCH_STATUS_SUCCESS;
     static int initialized = 0;
+    notmuch_bool_t is_mbox;
 
     if (message->message)
 	return NOTMUCH_STATUS_SUCCESS;
 
-    /* We no longer support mboxes at all. */
-    if (is_mbox (message->file))
-	return NOTMUCH_STATUS_FILE_NOT_EMAIL;
+    is_mbox = _is_mbox (message->file);
 
     if (! initialized) {
 	g_mime_init (GMIME_ENABLE_RFC2047_WORKAROUNDS);
@@ -163,12 +162,33 @@ _notmuch_message_file_parse (notmuch_message_file_t *message)
     g_mime_stream_file_set_owner (GMIME_STREAM_FILE (stream), FALSE);
 
     parser = g_mime_parser_new_with_stream (stream);
-    g_mime_parser_set_scan_from (parser, FALSE);
+    g_mime_parser_set_scan_from (parser, is_mbox);
 
     message->message = g_mime_parser_construct_message (parser);
     if (! message->message) {
 	status = NOTMUCH_STATUS_FILE_NOT_EMAIL;
 	goto DONE;
+    }
+
+    if (is_mbox) {
+	if (! g_mime_parser_eos (parser)) {
+	    /* This is a multi-message mbox. */
+	    status = NOTMUCH_STATUS_FILE_NOT_EMAIL;
+	    goto DONE;
+	}
+	/*
+	 * For historical reasons, we support single-message mboxes,
+	 * but this behavior is likely to change in the future, so
+	 * warn.
+	 */
+	static notmuch_bool_t mbox_warning = FALSE;
+	if (! mbox_warning) {
+	    mbox_warning = TRUE;
+	    fprintf (stderr, "\
+Warning: %s is an mbox containing a single message,\n\
+likely caused by misconfigured mail delivery.  Support for single-message\n\
+mboxes is deprecated and may be removed in the future.\n", message->filename);
+	}
     }
 
   DONE:
