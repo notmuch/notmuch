@@ -580,7 +580,8 @@ This function advances the next thread when finished."
   (when notmuch-archive-tags
     (notmuch-search-tag
      (notmuch-tag-change-list notmuch-archive-tags unarchive) beg end))
-  (notmuch-search-next-thread))
+  (when (eq beg end)
+    (notmuch-search-next-thread)))
 
 (defun notmuch-search-update-result (result &optional pos)
   "Replace the result object of the thread at POS (or point) by
