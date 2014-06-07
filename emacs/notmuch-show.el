@@ -46,6 +46,7 @@
 (declare-function notmuch-save-attachments "notmuch" (mm-handle &optional queryp))
 (declare-function notmuch-tree "notmuch-tree"
 		  (&optional query query-context target buffer-name open-target))
+(declare-function notmuch-tree-get-message-properties "notmuch-tree" nil)
 
 (defcustom notmuch-message-headers '("Subject" "To" "Cc" "Date")
   "Headers that should be shown in a message, in this order.
@@ -1474,8 +1475,17 @@ an error if there is no part containing point."
     (notmuch-show-set-message-properties props)))
 
 (defun notmuch-show-get-prop (prop &optional props)
+  "Get property PROP from current message in show or tree mode.
+
+It gets property PROP from PROPS or, if PROPS is nil, the current
+message in either tree or show. This means that several utility
+functions in notmuch-show can be used directly by notmuch-tree as
+they just need the correct message properties."
   (let ((props (or props
-		   (notmuch-show-get-message-properties))))
+		   (cond ((eq major-mode 'notmuch-show-mode)
+			  (notmuch-show-get-message-properties))
+			 ((eq major-mode 'notmuch-tree-mode)
+			  (notmuch-tree-get-message-properties))))))
     (plist-get props prop)))
 
 (defun notmuch-show-get-message-id (&optional bare)
