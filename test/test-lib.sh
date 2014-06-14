@@ -1081,15 +1081,14 @@ export NOTMUCH_CONFIG=$NOTMUCH_CONFIG
 
 # Here's what we are using here:
 #
-# --no-init-file	Don't load users ~/.emacs
-#
-# --no-site-file	Don't load the site-wide startup stuff
+# --quick              Use minimal customization. This implies --no-init-file,
+#		       --no-site-file and (emacs 24) --no-site-lisp
 #
 # --directory		Ensure that the local elisp sources are found
 #
 # --load		Force loading of notmuch.el and test-lib.el
 
-exec ${TEST_EMACS} --no-init-file --no-site-file \
+exec ${TEST_EMACS} --quick \
 	--directory "$TEST_DIRECTORY/../emacs" --load notmuch.el \
 	--directory "$TEST_DIRECTORY" --load test-lib.el \
 	"\$@"
