@@ -3,8 +3,10 @@ notmuch (0.18.1-1) unstable; urgency=medium
   * New upstream bug fix release
   * Tighten dependence of python packages on libnotmuch
     (Closes: #749881).
+  * Redo emacsen-install script from sample in emacsen-common
+    (Closes: #739839).
 
- -- David Bremner <bremner@debian.org>  Sat, 14 Jun 2014 07:17:18 -0300
+ -- David Bremner <bremner@debian.org>  Sat, 14 Jun 2014 07:50:28 -0300
 
 notmuch (0.18-3) unstable; urgency=medium
 
