@@ -1,45 +1,48 @@
-#! /bin/sh -e
+#!/bin/sh
 # /usr/lib/emacsen-common/packages/install/notmuch-emacs
-
-# Written by Jim Van Zandt <jrv@debian.org>, borrowing heavily
-# from the install scripts for gettext by Santiago Vila
-# <sanvila@ctv.es> and octave by Dirk Eddelbuettel <edd@debian.org>.
+set -e
 
 FLAVOR=$1
 PACKAGE=notmuch
 
-# We know that the notmuch emacs code doesn't work with emacs before emacs23
-if [ ${FLAVOR} = emacs21 ]; then exit 0; fi
-if [ ${FLAVOR} = emacs22 ]; then exit 0; fi
-if [ ${FLAVOR} = xemacs21 ]; then exit 0; fi
-if [ ${FLAVOR} = xemacs22 ]; then exit 0; fi
+case "${FLAVOR}" in
+    emacs)
+	return 0
+	;;
+    xemacs*|emacs2[12])
+	# patches welcome.
+	echo install/${PACKAGE}: skipping install for unsupported emacsen flavor ${FLAVOR}
+	exit 0
+	;;
+    *)
+	echo install/${PACKAGE}: Handling install for emacsen flavor ${FLAVOR}
+esac
 
-echo install/${PACKAGE}: Handling install for emacsen flavor ${FLAVOR}
 
-#FLAVORTEST=`echo $FLAVOR | cut -c-6`
-#if [ ${FLAVORTEST} = xemacs ] ; then
-#    SITEFLAG="-no-site-file"
-#else
-#    SITEFLAG="--no-site-file"
-#fi
-#FLAGS="${SITEFLAG} -q -batch -l path.el -f batch-byte-compile"
-FLAGS="--no-site-file -q -batch -l path.el -f batch-byte-compile"
+elc_dir=/usr/share/${FLAVOR}/site-lisp/${PACKAGE}
+el_dir=/usr/share/emacs/site-lisp/${PACKAGE}
 
-ELDIR=/usr/share/emacs/site-lisp/${PACKAGE}
-ELCDIR=/usr/share/${FLAVOR}/site-lisp/${PACKAGE}
+byte_compile_options="--quick --directory=${el_dir} -batch -f batch-byte-compile"
 
-install -m 755 -d ${ELCDIR}
-cd ${ELDIR}
-FILES=`echo *.el`
-cd ${ELCDIR}
-for file in ${FILES}; do
-	ln -sf ${ELDIR}/${file} .
-done
+echo install/${PACKAGE}: byte-compiling for ${FLAVOR}
 
-cat << EOF > path.el
-(setq load-path (cons "." load-path) byte-compile-warnings nil)
-EOF
-${FLAVOR} ${FLAGS} ${FILES}
-rm -f *.el
+[ -d ${elc_dir} ] || mkdir ${elc_dir}
 
-exit 0
+# Create symlinks to the .el files (see section 6E in debian-emacs
+# polcy).  This makes complation easy, and also allows find-function
+# and find-library to work properly.
+(cd ${elc_dir} && cp -s ${el_dir}/*.el .)
+
+# Byte compile them
+(cd ${elc_dir}
+ set +e
+ ${FLAVOR} ${byte_compile_options} *.el > Install.log 2>&1
+ if test $? -ne 0
+ then
+   cat Install.log
+   exit 1
+ fi
+ set -e
+ gzip -9 Install.log)
+
+exit 0;
