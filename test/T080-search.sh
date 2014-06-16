@@ -62,6 +62,15 @@ add_message '[subject]="search by from (name)"' '[date]="Sat, 01 Jan 2000 12:00:
 output=$(notmuch search 'from:"Search By From Name"' | notmuch_search_sanitize)
 test_expect_equal "$output" "thread:XXX   2000-01-01 [1/1] Search By From Name; search by from (name) (inbox unread)"
 
+test_begin_subtest "Search by from: (name and address)"
+output=$(notmuch search 'from:"Search By From Name <test@example.com>"' | notmuch_search_sanitize)
+test_expect_equal "$output" "thread:XXX   2000-01-01 [1/1] Search By From Name; search by from (name) (inbox unread)"
+
+test_begin_subtest "Search by from: without prefix (name and address)"
+test_subtest_known_broken
+output=$(notmuch search '"Search By From Name <test@example.com>"' | notmuch_search_sanitize)
+test_expect_equal "$output" "thread:XXX   2000-01-01 [1/1] Search By From Name; search by from (name) (inbox unread)"
+
 test_begin_subtest "Search by to: (address)"
 add_message '[subject]="search by to (address)"' '[date]="Sat, 01 Jan 2000 12:00:00 -0000"' [to]=searchbyto@example.com
 output=$(notmuch search to:searchbyto@example.com | notmuch_search_sanitize)
@@ -70,6 +79,15 @@ test_expect_equal "$output" "thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; s
 test_begin_subtest "Search by to: (name)"
 add_message '[subject]="search by to (name)"' '[date]="Sat, 01 Jan 2000 12:00:00 -0000"' '[to]="Search By To Name <test@example.com>"'
 output=$(notmuch search 'to:"Search By To Name"' | notmuch_search_sanitize)
+test_expect_equal "$output" "thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; search by to (name) (inbox unread)"
+
+test_begin_subtest "Search by to: (name and adress)"
+output=$(notmuch search 'to:"Search By To Name <test@example.com>"' | notmuch_search_sanitize)
+test_expect_equal "$output" "thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; search by to (name) (inbox unread)"
+
+test_begin_subtest "Search by to: without prefix (name and adress)"
+test_subtest_known_broken
+output=$(notmuch search '"Search By To Name <test@example.com>"' | notmuch_search_sanitize)
 test_expect_equal "$output" "thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; search by to (name) (inbox unread)"
 
 test_begin_subtest "Search by subject: (phrase)"
