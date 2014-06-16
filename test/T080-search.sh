@@ -145,4 +145,44 @@ add_message '[subject]="utf8-message-body-subject"' '[date]="Sat, 01 Jan 2000 12
 output=$(notmuch search "bödý" | notmuch_search_sanitize)
 test_expect_equal "$output" "thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; utf8-message-body-subject (inbox unread)"
 
+
+cat <<EOF > ${MAIL_DIR}/termpos
+From: Source <source@example.com>
+To: Dest <dest@example.com>
+Subject: part overlap test
+Date: Sat, 01 January 2000 00:00:00 +0000
+Message-ID: <termpos>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="==-=="
+
+--==-==
+Content-Type: text/plain
+
+a b c
+
+--==-==
+Content-Type: text/plain
+
+x y z
+
+--==-==--
+EOF
+notmuch new > /dev/null
+
+test_begin_subtest "headers do not have adjacent term positions"
+test_subtest_known_broken
+# Regression test for a bug where term positions for non-prefixed
+# terms weren't updated
+output=$(notmuch search id:termpos and '"com dest"')
+test_expect_equal "$output" ""
+
+test_begin_subtest "parts have non-overlapping term positions"
+test_subtest_known_broken
+output=$(notmuch search id:termpos and '"a y c"')
+test_expect_equal "$output" ""
+
+test_begin_subtest "parts do not have adjacent term positions"
+output=$(notmuch search id:termpos and '"c x"')
+test_expect_equal "$output" ""
+
 test_done
