@@ -346,7 +346,8 @@ the From: address first."
     (message-forward-make-body cur)
     ;; `message-forward-make-body' shows the User-agent header.  Hide
     ;; it again.
-    (message-hide-headers)))
+    (message-hide-headers)
+    (set-buffer-modified-p nil)))
 
 (defun notmuch-mua-new-reply (query-string &optional prompt-for-sender reply-all)
   "Compose a reply to the message identified by QUERY-STRING.
