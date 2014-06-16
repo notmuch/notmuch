@@ -170,14 +170,12 @@ EOF
 notmuch new > /dev/null
 
 test_begin_subtest "headers do not have adjacent term positions"
-test_subtest_known_broken
 # Regression test for a bug where term positions for non-prefixed
 # terms weren't updated
 output=$(notmuch search id:termpos and '"com dest"')
 test_expect_equal "$output" ""
 
 test_begin_subtest "parts have non-overlapping term positions"
-test_subtest_known_broken
 output=$(notmuch search id:termpos and '"a y c"')
 test_expect_equal "$output" ""
 
