@@ -231,26 +231,22 @@ _index_address_mailbox (notmuch_message_t *message,
 			InternetAddress *address)
 {
     InternetAddressMailbox *mailbox = INTERNET_ADDRESS_MAILBOX (address);
-    const char *name, *addr;
+    const char *name, *addr, *combined;
     void *local = talloc_new (message);
 
     name = internet_address_get_name (address);
     addr = internet_address_mailbox_get_addr (mailbox);
 
-    /* In the absence of a name, we'll strip the part before the @
-     * from the address. */
-    if (! name) {
-	const char *at;
+    /* Combine the name and address and index them as a phrase. */
+    if (name && addr)
+	combined = talloc_asprintf (local, "%s %s", name, addr);
+    else if (name)
+	combined = name;
+    else
+	combined = addr;
 
-	at = strchr (addr, '@');
-	if (at)
-	    name = talloc_strndup (local, addr, at - addr);
-    }
-
-    if (name)
-	_notmuch_message_gen_terms (message, prefix_name, name);
-    if (addr)
-	_notmuch_message_gen_terms (message, prefix_name, addr);
+    if (combined)
+	_notmuch_message_gen_terms (message, prefix_name, combined);
 
     talloc_free (local);
 }

@@ -67,7 +67,6 @@ output=$(notmuch search 'from:"Search By From Name <test@example.com>"' | notmuc
 test_expect_equal "$output" "thread:XXX   2000-01-01 [1/1] Search By From Name; search by from (name) (inbox unread)"
 
 test_begin_subtest "Search by from: without prefix (name and address)"
-test_subtest_known_broken
 output=$(notmuch search '"Search By From Name <test@example.com>"' | notmuch_search_sanitize)
 test_expect_equal "$output" "thread:XXX   2000-01-01 [1/1] Search By From Name; search by from (name) (inbox unread)"
 
@@ -86,7 +85,6 @@ output=$(notmuch search 'to:"Search By To Name <test@example.com>"' | notmuch_se
 test_expect_equal "$output" "thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; search by to (name) (inbox unread)"
 
 test_begin_subtest "Search by to: without prefix (name and adress)"
-test_subtest_known_broken
 output=$(notmuch search '"Search By To Name <test@example.com>"' | notmuch_search_sanitize)
 test_expect_equal "$output" "thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; search by to (name) (inbox unread)"
 
