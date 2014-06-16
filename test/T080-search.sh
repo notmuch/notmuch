@@ -59,7 +59,7 @@ test_expect_equal "$output" "thread:XXX   2000-01-01 [1/1] searchbyfrom@example.
 
 test_begin_subtest "Search by from: (name)"
 add_message '[subject]="search by from (name)"' '[date]="Sat, 01 Jan 2000 12:00:00 -0000"' '[from]="Search By From Name <test@example.com>"'
-output=$(notmuch search from:"Search By From Name" | notmuch_search_sanitize)
+output=$(notmuch search 'from:"Search By From Name"' | notmuch_search_sanitize)
 test_expect_equal "$output" "thread:XXX   2000-01-01 [1/1] Search By From Name; search by from (name) (inbox unread)"
 
 test_begin_subtest "Search by to: (address)"
@@ -69,7 +69,7 @@ test_expect_equal "$output" "thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; s
 
 test_begin_subtest "Search by to: (name)"
 add_message '[subject]="search by to (name)"' '[date]="Sat, 01 Jan 2000 12:00:00 -0000"' '[to]="Search By To Name <test@example.com>"'
-output=$(notmuch search to:"Search By To Name" | notmuch_search_sanitize)
+output=$(notmuch search 'to:"Search By To Name"' | notmuch_search_sanitize)
 test_expect_equal "$output" "thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; search by to (name) (inbox unread)"
 
 test_begin_subtest "Search by subject: (phrase)"
