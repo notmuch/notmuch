@@ -1,3 +1,62 @@
+Notmuch 0.18.1 (2014-06-25)
+===========================
+
+This is a bug fix and portability release.
+
+Build System
+------------
+
+Add a workaround for systems without zlib.pc.
+
+Make emacs install robust against the non-existence of emacs.
+
+Put notmuch lib directory first in RPATH.
+
+Fix handling of html_static_path in sphinx
+
+  Both the python bindings and the main docs had spurious settings of
+  this variable.
+
+Test Suite
+----------
+
+Use --quick when starting emacs
+
+  This avoids a hang in the T160-json tests.
+
+Allow pending break points in atomicity script
+
+  This allows the atomicity tests to run on several more architectures/OSes.
+
+Command-Line Interface
+----------------------
+
+To improve portability use fsync instead of fdatasync in
+`notmuch-dump`. There should be no functional difference.
+
+Library changes
+---------------
+
+Resurrect support for single-message mbox files
+
+  The removal introduced a bug with previously indexed single-message
+  mboxes.  This support remains deprecated.
+
+Fix for phrase indexing
+
+  There were several bugs involving overlapping "phrases" accross
+  header and mime part boundaries.  This fix will effect only newly
+  (re)-indexed messages.
+
+Emacs Interface
+---------------
+
+Make sure tagging on an empty query is harmless
+
+  Previously tagging an empty query could lead to tags being
+  unintentionally removed.
+
+
 Notmuch 0.18 (2014-05-06)
 =========================
 
