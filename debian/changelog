@@ -1,4 +1,4 @@
-notmuch (0.18.1-1) unstable; urgency=medium
+notmuch (0.18.1~rc0-1) experimental; urgency=medium
 
   * New upstream bug fix release
   * Tighten dependence of python packages on libnotmuch
