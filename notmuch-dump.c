@@ -212,7 +212,7 @@ notmuch_dump_command (notmuch_config_t *config, int argc, char *argv[])
     int ret;
 
     if (notmuch_database_open (notmuch_config_get_database_path (config),
-			       NOTMUCH_DATABASE_MODE_READ_ONLY, &notmuch))
+			       NOTMUCH_DATABASE_MODE_READ_WRITE, &notmuch))
 	return EXIT_FAILURE;
 
     char *output_file_name = NULL;

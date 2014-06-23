@@ -247,8 +247,8 @@ ${TEST_DIRECTORY}/random-corpus --config-path=${NOTMUCH_CONFIG} \
 notmuch dump --format=batch-tag | sed 's/^.* -- /+common_tag -- /' | \
     sort > EXPECTED
 
-notmuch dump --format=batch-tag | sed 's/^.* -- /  -- /' | \
-    notmuch restore --format=batch-tag
+notmuch dump --format=batch-tag | sed 's/^.* -- /  -- /' > INTERMEDIATE_STEP
+notmuch restore --format=batch-tag < INTERMEDIATE_STEP
 
 notmuch tag --batch < EXPECTED
 
