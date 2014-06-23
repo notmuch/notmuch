@@ -44,9 +44,9 @@ Resurrect support for single-message mbox files
 
 Fix for phrase indexing
 
-  There were several bugs involving overlapping "phrases" accross
-  header and mime part boundaries.  This fix will effect only newly
-  (re)-indexed messages.
+  There were several bugs where words intermingled from different
+  headers and MIME parts could match a single phrase query.  This fix
+  will affect only newly indexed messages.
 
 Emacs Interface
 ---------------
