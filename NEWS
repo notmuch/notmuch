@@ -6,11 +6,11 @@ This is a bug fix and portability release.
 Build System
 ------------
 
-Add a workaround for systems without zlib.pc.
+Add a workaround for systems without zlib.pc
 
-Make emacs install robust against the non-existence of emacs.
+Make emacs install robust against the non-existence of emacs
 
-Put notmuch lib directory first in RPATH.
+Put notmuch lib directory first in RPATH
 
 Fix handling of html_static_path in sphinx
 
@@ -55,7 +55,6 @@ Make sure tagging on an empty query is harmless
 
   Previously tagging an empty query could lead to tags being
   unintentionally removed.
-
 
 Notmuch 0.18 (2014-05-06)
 =========================
