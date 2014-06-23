@@ -1203,6 +1203,15 @@ This includes:
  - the current message."
   (list (notmuch-show-get-message-id) (notmuch-show-get-message-ids-for-open-messages)))
 
+(defun notmuch-show-get-query ()
+  "Return the current query in this show buffer"
+  (if notmuch-show-query-context
+      (concat notmuch-show-thread-id
+	      " and ("
+	      notmuch-show-query-context
+	      ")")
+    notmuch-show-thread-id))
+
 (defun notmuch-show-apply-state (state)
   "Apply STATE to the current buffer.
 

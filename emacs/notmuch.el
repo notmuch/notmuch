@@ -863,6 +863,10 @@ PROMPT is the string to prompt with."
 			  (concat "tag:" (notmuch-escape-boolean-term tag)))
 			(process-lines notmuch-command "search" "--output=tags" "*")))))
     (let ((keymap (copy-keymap minibuffer-local-map))
+	  (current-query (case major-mode
+			   (notmuch-search-mode (notmuch-search-get-query))
+			   (notmuch-show-mode (notmuch-show-get-query))
+			   (notmuch-tree-mode (notmuch-tree-get-query))))
 	  (minibuffer-completion-table
 	   (completion-table-dynamic
 	    (lambda (string)
@@ -880,7 +884,11 @@ PROMPT is the string to prompt with."
       (define-key keymap (kbd "TAB") 'minibuffer-complete)
       (let ((history-delete-duplicates t))
 	(read-from-minibuffer prompt nil keymap nil
-			      'notmuch-search-history nil nil)))))
+			      'notmuch-search-history current-query nil)))))
+
+(defun notmuch-search-get-query ()
+  "Return the current query in this search buffer"
+  notmuch-search-query-string)
 
 ;;;###autoload
 (put 'notmuch-search 'notmuch-doc "Search for messages.")

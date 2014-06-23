@@ -897,6 +897,15 @@ the same as for the function notmuch-tree."
       (set-process-filter proc 'notmuch-tree-process-filter)
       (set-process-query-on-exit-flag proc nil))))
 
+(defun notmuch-tree-get-query ()
+  "Return the current query in this tree buffer"
+  (if notmuch-tree-query-context
+      (concat notmuch-tree-basic-query
+	      " and ("
+	      notmuch-tree-query-context
+	      ")")
+    notmuch-tree-basic-query))
+
 (defun notmuch-tree (&optional query query-context target buffer-name open-target)
   "Display threads matching QUERY in Tree View.
 
