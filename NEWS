@@ -1,16 +1,16 @@
-Notmuch 0.18.1~rc0 (2014-06-22)
-===============================
+Notmuch 0.18.1 (2014-06-25)
+===========================
 
 This is a bug fix and portability release.
 
 Build System
 ------------
 
-Add a workaround for systems without zlib.pc.
+Add a workaround for systems without zlib.pc
 
-Make emacs install robust against the non-existence of emacs.
+Make emacs install robust against the non-existence of emacs
 
-Put notmuch lib directory first in RPATH.
+Put notmuch lib directory first in RPATH
 
 Fix handling of html_static_path in sphinx
 
@@ -44,9 +44,9 @@ Resurrect support for single-message mbox files
 
 Fix for phrase indexing
 
-  There were several bugs involving overlapping "phrases" accross
-  header and mime part boundaries.  This fix will effect only newly
-  (re)-indexed messages.
+  There were several bugs where words intermingled from different
+  headers and MIME parts could match a single phrase query.  This fix
+  will affect only newly indexed messages.
 
 Emacs Interface
 ---------------
@@ -55,7 +55,6 @@ Make sure tagging on an empty query is harmless
 
   Previously tagging an empty query could lead to tags being
   unintentionally removed.
-
 
 Notmuch 0.18 (2014-05-06)
 =========================

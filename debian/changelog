@@ -1,6 +1,15 @@
-notmuch (0.18.1~rc0-1) experimental; urgency=medium
+notmuch (0.18.1-1) unstable; urgency=medium
 
   * New upstream bug fix release
+    - Re-enable support for single-message mbox files
+    - Fix for phrase indexing
+    - Make tagging empty query in Emacs harmless
+
+ -- David Bremner <bremner@debian.org>  Wed, 25 Jun 2014 07:20:45 -0300
+
+notmuch (0.18.1~rc0-1) experimental; urgency=medium
+
+  * New upstream bug fix release (candidate)
   * Tighten dependence of python packages on libnotmuch
     (Closes: #749881).
   * Redo emacsen-install script from sample in emacsen-common
