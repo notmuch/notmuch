@@ -417,6 +417,15 @@ else
     have_emacs=0
 fi
 
+printf "Checking if doxygen is available... "
+if command -v doxygen > /dev/null 2>&1; then
+    printf "Yes.\n"
+    have_doxygen=1
+else
+    printf "No (so will not install api docs)\n"
+    have_doxygen=0
+fi
+
 printf "Checking if sphinx is available and supports nroff output... "
 if hash sphinx-build > /dev/null 2>&1 && python -m sphinx.writers.manpage > /dev/null 2>&1 ; then
     printf "Yes.\n"
@@ -828,6 +837,9 @@ HAVE_SPHINX=${have_sphinx}
 
 # Whether there's a rst2man binary available for building documentation
 HAVE_RST2MAN=${have_rst2man}
+
+# Whether there's a doxygen binary available for building api documentation
+HAVE_DOXYGEN=${have_doxygen}
 
 # The directory to which desktop files should be installed
 desktop_dir = \$(prefix)/share/applications

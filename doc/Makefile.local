@@ -12,10 +12,12 @@ mkdocdeps := python $(srcdir)/$(dir)/mkdocdeps.py
 
 # Internal variables.
 ALLSPHINXOPTS   := -d $(DOCBUILDDIR)/doctrees $(SPHINXOPTS) $(srcdir)/$(dir)
+APIMAN		:= $(DOCBUILDDIR)/man/man3/notmuch.3
+DOXYFILE	:= $(srcdir)/$(dir)/doxygen.cfg
 
 .PHONY: sphinx-html sphinx-texinfo sphinx-info
 
-.PHONY: install-man build-man
+.PHONY: install-man build-man apidocs install-apidocs
 
 %.gz: %
 	rm -f $@ && gzip --stdout $^ > $@
@@ -56,6 +58,23 @@ else
 endif
 	touch ${MAN_ROFF_FILES} $@
 
+install-man: install-apidocs
+
+ifeq ($(HAVE_DOXYGEN),1)
+MAN_GZIP_FILES += ${APIMAN}.gz
+apidocs: $(APIMAN)
+install-apidocs: apidocs
+	mkdir -p "$(DESTDIR)$(mandir)/man3"
+	install -m0644  $(DOCBUILDDIR)/man/man3/*.3.gz  $(DESTDIR)/$(mandir)/man3
+
+$(APIMAN): $(dir)/config.dox $(srcdir)/$(dir)/doxygen.cfg $(srcdir)/lib/notmuch.h
+	mkdir -p $(DOCBUILDDIR)/man/man3
+	doxygen $(DOXYFILE)
+else
+apidocs:
+install-apidocs:
+endif
+
 # Do not try to build or install man pages if a man page converter is
 # not available.
 ifeq ($(HAVE_SPHINX)$(HAVE_RST2MAN),00)
@@ -74,8 +93,12 @@ install-man: ${MAN_GZIP_FILES}
 	cd $(DESTDIR)/$(mandir)/man1 && ln -sf notmuch.1.gz notmuch-setup.1.gz
 endif
 
+$(dir)/config.dox: version.stamp
+	echo "PROJECT_NAME = \"Notmuch $(VERSION)\"" > $@
+	echo "INPUT=${srcdir}/lib/notmuch.h" >> $@
+
 $(dir)/docdeps.mk: $(dir)/conf.py $(dir)/mkdocdeps.py
 	$(mkdocdeps) $(srcdir)/doc $(DOCBUILDDIR) $@
 
 CLEAN := $(CLEAN) $(DOCBUILDDIR) $(dir)/docdeps.mk $(DOCBUILDDIR)/.roff.stamp
-CLEAN := $(CLEAN) $(MAN_GZIP_FILES) $(MAN_ROFF_FILES) $(dir)/conf.pyc
+CLEAN := $(CLEAN) $(MAN_GZIP_FILES) $(MAN_ROFF_FILES) $(dir)/conf.pyc $(dir)/config.dox
