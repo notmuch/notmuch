@@ -430,7 +430,10 @@ sub do_status {
 sub is_unmerged {
   my $commit = shift || '@{upstream}';
 
-  my $fetch_head = git ('rev-parse', $commit);
+  my ($fetch_head, $status) = git_with_status ('rev-parse', $commit);
+  if ($status) {
+    return 0;
+  }
   my $base = git ( 'merge-base', 'HEAD', $commit);
 
   return ($base ne $fetch_head);
