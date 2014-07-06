@@ -63,13 +63,20 @@ sub git_pipe {
   spawn ($envref, defined $ioref ? $ioref : (), defined $dir ? $dir : (), @_);
 }
 
-sub git {
+sub git_with_status {
   my $fh = git_pipe (@_);
   my $str = join ('', <$fh>);
-  unless (close $fh) {
+  close $fh;
+  my $status = $?;
+  chomp($str);
+  return ($str, $status);
+}
+
+sub git {
+  my ($str, $status) = git_with_status (@_);
+  if ($status) {
     die "'git @_' exited with nonzero value\n";
   }
-  chomp($str);
   return $str;
 }
 
