@@ -1485,7 +1485,8 @@ they just need the correct message properties."
 		   (cond ((eq major-mode 'notmuch-show-mode)
 			  (notmuch-show-get-message-properties))
 			 ((eq major-mode 'notmuch-tree-mode)
-			  (notmuch-tree-get-message-properties))))))
+			  (notmuch-tree-get-message-properties))
+			 (t nil)))))
     (plist-get props prop)))
 
 (defun notmuch-show-get-message-id (&optional bare)
