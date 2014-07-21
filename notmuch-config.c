@@ -217,7 +217,7 @@ get_username_from_passwd_file (void *ctx)
  * 	These default configuration settings are determined as
  * 	follows:
  *
- *		database_path:		$HOME/mail
+ *		database_path:		$MAILDIR, otherwise $HOME/mail
  *
  *		user_name:		$NAME variable if set, otherwise
  *					read from /etc/passwd
@@ -323,8 +323,10 @@ notmuch_config_open (void *ctx,
 
 
     if (notmuch_config_get_database_path (config) == NULL) {
-	char *path = talloc_asprintf (config, "%s/mail",
-				      getenv ("HOME"));
+	char *path = getenv ("MAILDIR");
+	if (! path)
+	    path = talloc_asprintf (config, "%s/mail",
+				    getenv ("HOME"));
 	notmuch_config_set_database_path (config, path);
 	talloc_free (path);
     }
