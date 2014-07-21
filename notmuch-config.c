@@ -219,7 +219,8 @@ get_username_from_passwd_file (void *ctx)
  *
  *		database_path:		$HOME/mail
  *
- *		user_name:		From /etc/passwd
+ *		user_name:		$NAME variable if set, otherwise
+ *					read from /etc/passwd
  *
  *		user_primary_mail: 	$EMAIL variable if set, otherwise
  *					constructed from the username and
@@ -329,7 +330,9 @@ notmuch_config_open (void *ctx,
     }
 
     if (notmuch_config_get_user_name (config) == NULL) {
-	char *name = get_name_from_passwd_file (config);
+	char *name = getenv ("NAME");
+	if (! name)
+	    name = get_name_from_passwd_file (config);
 	notmuch_config_set_user_name (config, name);
 	talloc_free (name);
     }
