@@ -25,9 +25,6 @@
 (require 'mm-decode)
 (require 'cl)
 
-(defvar notmuch-command "notmuch"
-  "Command to run the notmuch binary.")
-
 (defgroup notmuch nil
   "Notmuch mail reader for Emacs."
   :group 'mail)
@@ -66,6 +63,16 @@
   "Graphical attributes for displaying text"
   :group 'notmuch)
 
+(defcustom notmuch-command "notmuch"
+  "Name of the notmuch binary.
+
+This can be a relative or absolute path to the notmuch binary.
+If this is a relative path, it will be searched for in all of the
+directories given in `exec-path' (which is, by default, based on
+$PATH)."
+  :type 'string
+  :group 'notmuch-external)
+
 (defcustom notmuch-search-oldest-first t
   "Show the oldest mail first when searching.
 
@@ -77,7 +84,11 @@ search."
   :group 'notmuch-search)
 
 (defcustom notmuch-poll-script nil
-  "An external script to incorporate new mail into the notmuch database.
+  "[Deprecated] Command to run to incorporate new mail into the notmuch database.
+
+This option has been deprecated in favor of \"notmuch new\"
+hooks (see man notmuch-hooks).  To change the path to the notmuch
+binary, customize `notmuch-command'.
 
 This variable controls the action invoked by
 `notmuch-poll-and-refresh-this-buffer' (bound by default to 'G')
@@ -93,10 +104,7 @@ the user's needs:
 
 1. Invoke a program to transfer mail to the local mail store
 2. Invoke \"notmuch new\" to incorporate the new mail
-3. Invoke one or more \"notmuch tag\" commands to classify the mail
-
-Note that the recommended way of achieving the same is using
-\"notmuch new\" hooks."
+3. Invoke one or more \"notmuch tag\" commands to classify the mail"
   :type '(choice (const :tag "notmuch new" nil)
 		 (const :tag "Disabled" "")
 		 (string :tag "Custom script"))
