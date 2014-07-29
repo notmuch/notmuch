@@ -3,6 +3,10 @@
 
 #include <string.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* like strtok(3), but without state, and doesn't modify s.  Return
  * value is indicated by pointer and length, not null terminator.
  *
@@ -56,5 +60,9 @@ int make_boolean_term (void *talloc_ctx, const char *prefix, const char *term,
 int
 parse_boolean_term (void *ctx, const char *str,
 		    char **prefix_out, char **term_out);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
