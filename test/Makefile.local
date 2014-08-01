@@ -37,12 +37,17 @@ $(dir)/parse-time: $(dir)/parse-time.o parse-time-string/parse-time-string.o
 
 .PHONY: test check
 
-TEST_BINARIES=$(dir)/arg-test \
-	      $(dir)/hex-xcode \
-	      $(dir)/random-corpus \
-	      $(dir)/parse-time \
-	      $(dir)/smtp-dummy \
-	      $(dir)/symbol-test
+test_main_srcs=$(dir)/arg-test.c \
+	      $(dir)/hex-xcode.c \
+	      $(dir)/random-corpus.c \
+	      $(dir)/parse-time.c \
+	      $(dir)/smtp-dummy.c \
+	      $(dir)/symbol-test.cc \
+
+test_srcs=$(test_main_srcs) $(dir)/database-test.c
+
+TEST_BINARIES := $(test_main_srcs:.c=)
+TEST_BINARIES := $(TEST_BINARIES:.cc=)
 
 test-binaries: $(TEST_BINARIES)
 
@@ -51,7 +56,7 @@ test:	all test-binaries
 
 check: test
 
-SRCS := $(SRCS) $(smtp_dummy_srcs)
+SRCS := $(SRCS) $(test_srcs)
 CLEAN += $(TEST_BINARIES) $(addsuffix .o,$(TEST_BINARIES)) \
 	 $(dir)/database-test.o \
 	 $(dir)/corpus.mail $(dir)/test-results $(dir)/tmp.*
