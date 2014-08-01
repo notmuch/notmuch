@@ -37,6 +37,14 @@ strtok_len (char *s, const char *delim, size_t *len)
     return *len ? s : NULL;
 }
 
+const char *
+strtok_len_c (const char *s, const char *delim, size_t *len)
+{
+    /* strtok_len is already const-safe, but we can't express both
+     * versions in the C type system. */
+    return strtok_len ((char*)s, delim, len);
+}
+
 char *
 sanitize_string (const void *ctx, const char *str)
 {

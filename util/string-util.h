@@ -23,6 +23,9 @@ extern "C" {
 
 char *strtok_len (char *s, const char *delim, size_t *len);
 
+/* Const version of strtok_len. */
+const char *strtok_len_c (const char *s, const char *delim, size_t *len);
+
 /* Return a talloced string with str sanitized.
  *
  * Whitespace characters (tabs and newlines) are replaced with spaces,
