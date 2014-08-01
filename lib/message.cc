@@ -1032,6 +1032,8 @@ _notmuch_message_gen_terms (notmuch_message_t *message,
 	/* Create a gap between this an the next terms so they don't
 	 * appear to be a phrase. */
 	message->termpos = term_gen->get_termpos () + 100;
+
+	_notmuch_message_invalidate_metadata (message, prefix_name);
     }
 
     term_gen->set_termpos (message->termpos);
