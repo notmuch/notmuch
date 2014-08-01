@@ -54,9 +54,12 @@ typedef struct {
  *
  * Mail document
  * -------------
- * A mail document is associated with a particular email message file
- * on disk. It is indexed with the following prefixed terms which the
- * database uses to construct threads, etc.:
+ * A mail document is associated with a particular email message. It
+ * is stored in one or more files on disk (though only one has its
+ * content indexed) and is uniquely identified  by its "id" field
+ * (which is generally the message ID). It is indexed with the
+ * following prefixed terms which the database uses to construct
+ * threads, etc.:
  *
  *    Single terms of given prefix:
  *
