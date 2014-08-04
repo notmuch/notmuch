@@ -6,18 +6,18 @@
 # This program is used to generate mdwn-formatted notmuch manual pages
 # for notmuch wiki. Example run:
 #
-# $ ./devel/man-to-mdwn.pl man ../notmuch-wiki
+# $ ./devel/man-to-mdwn.pl doc/_build/man ../notmuch-wiki
 #
 # In case taken into more generic use, modify these comments and examples.
 
-use 5.8.1;
+use 5.10.1;
 use strict;
 use warnings;
 
 unless (@ARGV == 2) {
     warn "\n$0 <source-directory> <destination-directory>\n\n";
     # Remove/edit this comment if this script is taken into generic use.
-    warn "Example: ./devel/man-to-mdwn.pl man ../notmuch-wiki\n\n";
+    warn "Example: ./devel/man-to-mdwn.pl doc/_build/man ../notmuch-wiki\n\n";
     exit 1;
 }
 
@@ -48,11 +48,6 @@ while (<P>)
 }
 close P;
 
-#undef $ENV{'GROFF_NO_SGR'};
-#delete $ENV{'GROFF_NO_SGR'};
-$ENV{'GROFF_NO_SGR'} = '1';
-$ENV{'TERM'} = 'vt100'; # does this matter ?
-
 my %htmlqh = qw/& &amp;   < &lt;   > &gt;   ' &apos;   " &quot;/;
 # do html quotation to $_[0] (which is an alias to the given arg)
 sub htmlquote($)
@@ -70,8 +65,11 @@ while (my ($k, $v) = each %fhash)
     #next if -l $v; # skip symlinks here. -- not... references there may be.
 
     my @lines;
-    #open I, '-|', qw/groff -man -T utf8/, $v;
-    open I, '-|', qw/groff -man -T latin1/, $v; # this and GROFF_NO_SGR='1'
+    open I, '-|', qw/env -i/, "PATH=$ENV{PATH}",
+	qw/TERM=vt100 LANG=en_US.utf8 LC_ALL=en_US.utf8/,
+	qw/GROFF_NO_SGR=1 MAN_KEEP_FORMATTING=1 MANWIDTH=80/,
+	qw/man/, $v or die "$!";
+    binmode I, ':utf8';
 
     my ($emptyline, $pre, $hl) = (0, 0, 'h1');
     while (<I>) {
@@ -79,13 +77,15 @@ while (my ($k, $v) = each %fhash)
 	    $emptyline = 1;
 	    next;
 	}
-	s/(?<=\S)\s{8,}.*//; # $hl = 'h1' if s/(?<=\S)\s{8,}.*//;
-	htmlquote $_;
+	# keep only leftmost in lines like 'NOTMUCH(1)   notmuch   NOTMUCH(1)'
+	s/\S\K\s{8,}\S.+\s{8,}\S.*//; # $hl = 'h1' if s/(?<=\S)\s{8,}.*//;
 	s/[_&]\010&/&/g;
-	s/((?:_\010[^_])+)/<u>$1<\/u>/g;
+	s/((?:_\010[^_])+)/\001u\002$1\001\/u\002/g;
 	s/_\010(.)/$1/g;
-	s/((?:.\010.)+)/<b>$1<\/b>/g;
+	s/((?:.\010.)+)/\001b\002$1\001\/b\002/g;
 	s/.\010(.)/$1/g;
+	htmlquote $_;
+	s/\001/</g; s/\002/>/g;
 
 	if (/^\S/) {
 	    $pre = 0, push @lines, "</pre>\n" if $pre;
@@ -111,16 +111,18 @@ while (my ($k, $v) = each %fhash)
     $lines[0] =~ s/^\n//;
     $k = "$ARGV[1]/manpages/$k.mdwn";
     open O, '>', $k or die;
+    binmode O, ':utf8';
     print STDOUT 'Writing ', "'$k'\n";
     select O;
-    my $pe = '';
+    my ($pe, $hyphen) = ('', '');
     foreach (@lines) {
+	#print $_; next;
 	if ($pe) {
-	    if (s/^(\s+)<b>([^<]+)<\/b>\((\d+)\)//) {
+	    if (s/^(\s+)<b>([^<]+)\((\d+)\)<\/b>//) {
 		my $link = maymakelink "$pe-$2-$3";
 		$link = maymakelink "$pe$2-$3" unless $link;
 		if ($link) {
-		    print "<a href='$link'>$pe-</a>\n";
+		    print "<a href='$link'>$pe$hyphen</a>\n";
 		    print "$1<a href='$link'>$2</a>($3)";
 		}
 		else {
@@ -132,8 +134,8 @@ while (my ($k, $v) = each %fhash)
 	    }
 	    $pe = '';
 	}
-	s/<b>([^<]+)<\/b>\((\d+)\)/mayconvert($1, $2)/ge;
-	$pe = $1 if s/<b>([^<]+)-<\/b>\s*$//;
+	s/<b>([^<]+)\((\d+)\)<\/b>/mayconvert($1, $2)/ge;
+	($pe, $hyphen) = ($1, $2) if s/<b>([^<]+)([-\x{2010}])<\/b>\s*$//;
 	print $_;
     }
 }
@@ -169,7 +171,7 @@ foreach (sort srt values %fhash)
     open I, '<', $in or die $!;
     my $s;
     while (<I>) {
-	if (/^\s*[.]TH\s+\S+\s+(\S+)/) {
+	if (/^\s*[.]TH\s+\S+\s+"?(\S+?)"?\s/) {
 	    $s = $1;
 	    last;
 	}
