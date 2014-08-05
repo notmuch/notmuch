@@ -25,6 +25,9 @@
 (require 'mm-decode)
 (require 'cl)
 
+(autoload 'notmuch-jump-search "notmuch-jump"
+  "Jump to a saved search by shortcut key." t)
+
 (defgroup notmuch nil
   "Notmuch mail reader for Emacs."
   :group 'mail)
@@ -138,6 +141,7 @@ For example, if you wanted to remove an \"inbox\" tag and add an
     (define-key map "m" 'notmuch-mua-new-mail)
     (define-key map "=" 'notmuch-refresh-this-buffer)
     (define-key map "G" 'notmuch-poll-and-refresh-this-buffer)
+    (define-key map "j" 'notmuch-jump-search)
     map)
   "Keymap shared by all notmuch modes.")
 
@@ -471,6 +475,15 @@ This replaces spaces, percents, and double quotes in STR with
         (push (car list) out))
       (setq list (cdr list)))
     (nreverse out)))
+
+(defun notmuch-plist-delete (plist property)
+  (let* ((xplist (cons nil plist))
+	 (pred xplist))
+    (while (cdr pred)
+      (when (eq (cadr pred) property)
+	(setcdr pred (cdddr pred)))
+      (setq pred (cddr pred)))
+    (cdr xplist)))
 
 (defun notmuch-split-content-type (content-type)
   "Split content/type into 'content' and 'type'"

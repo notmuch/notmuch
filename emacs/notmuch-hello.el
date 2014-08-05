@@ -85,6 +85,7 @@ searches so they still work in customize."
 		(group :format "%v" :inline t (const :format "  Query: " :query) (string :format "%v")))
 	  (checklist :inline t
 		     :format "%v"
+		     (group :format "%v" :inline t (const :format "Shortcut key: " :key) (key-sequence :format "%v"))
 		     (group :format "%v" :inline t (const :format "Count-Query: " :count-query) (string :format "%v"))
 		     (group :format "%v" :inline t (const :format "" :sort-order)
 			    (choice :tag " Sort Order"
@@ -101,6 +102,7 @@ a plist. Supported properties are
 
   :name            Name of the search (required).
   :query           Search to run (required).
+  :key             Optional shortcut key for `notmuch-jump-search'.
   :count-query     Optional extra query to generate the count
                    shown. If not present then the :query property
                    is used.
