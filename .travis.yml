@@ -15,5 +15,9 @@ before_install:
 script:
   - ./configure
   - make test
+
 notifications:
-  irc: "chat.freenode.net#notmuch"
+  irc:
+    channels:
+      - "chat.freenode.net#notmuch"
+    on_success: change
