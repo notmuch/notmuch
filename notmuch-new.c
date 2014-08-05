@@ -923,6 +923,7 @@ notmuch_new_command (notmuch_config_t *config, int argc, char *argv[])
     notmuch_bool_t timer_is_active = FALSE;
     notmuch_bool_t no_hooks = FALSE;
     notmuch_bool_t quiet = FALSE, verbose = FALSE;
+    notmuch_status_t status;
 
     add_files_state.verbosity = VERBOSITY_NORMAL;
     add_files_state.debug = FALSE;
@@ -1019,9 +1020,16 @@ notmuch_new_command (notmuch_config_t *config, int argc, char *argv[])
 	    }
 
 	    gettimeofday (&add_files_state.tv_start, NULL);
-	    notmuch_database_upgrade (notmuch,
-				      add_files_state.verbosity >= VERBOSITY_NORMAL ? upgrade_print_progress : NULL,
-				      &add_files_state);
+	    status = notmuch_database_upgrade (
+		notmuch,
+		add_files_state.verbosity >= VERBOSITY_NORMAL ? upgrade_print_progress : NULL,
+		&add_files_state);
+	    if (status) {
+		printf ("Upgrade failed: %s\n",
+			notmuch_status_to_string (status));
+		notmuch_database_destroy (notmuch);
+		return EXIT_FAILURE;
+	    }
 	    if (add_files_state.verbosity >= VERBOSITY_NORMAL)
 		printf ("Your notmuch database has now been upgraded to database format version %u.\n",
 		    notmuch_database_get_version (notmuch));
@@ -1091,7 +1099,6 @@ notmuch_new_command (notmuch_config_t *config, int argc, char *argv[])
     }
 
     for (f = add_files_state.directory_mtimes->head; f && !interrupted; f = f->next) {
-	notmuch_status_t status;
 	notmuch_directory_t *directory;
 	status = notmuch_database_get_directory (notmuch, f->filename, &directory);
 	if (status == NOTMUCH_STATUS_SUCCESS && directory) {
