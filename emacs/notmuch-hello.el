@@ -93,8 +93,13 @@ searches so they still work in customize."
 				    (const :tag "Oldest-first" oldest-first)
 				    (const :tag "Newest-first" newest-first))))))
 
-(defcustom notmuch-saved-searches '((:name "inbox" :query "tag:inbox")
-				    (:name "unread" :query "tag:unread"))
+(defcustom notmuch-saved-searches
+  `((:name "inbox" :query "tag:inbox" :key ,(kbd "i"))
+    (:name "unread" :query "tag:unread" :key ,(kbd "u"))
+    (:name "flagged" :query "tag:flagged" :key ,(kbd "f"))
+    (:name "sent" :query "tag:sent" :key ,(kbd "t"))
+    (:name "drafts" :query "tag:draft" :key ,(kbd "d"))
+    (:name "all mail" :query "*" :key ,(kbd "a")))
   "A list of saved searches to display.
 
 The saved search can be given in 3 forms. The preferred way is as
