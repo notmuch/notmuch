@@ -193,14 +193,16 @@ _notmuch_message_create (const void *talloc_owner,
  *     There is already a document with message ID 'message_id' in the
  *     database. The returned message can be used to query/modify the
  *     document.
+ *
  *   NOTMUCH_PRIVATE_STATUS_NO_DOCUMENT_FOUND:
  *
  *     No document with 'message_id' exists in the database. The
  *     returned message contains a newly created document (not yet
  *     added to the database) and a document ID that is known not to
- *     exist in the database. The caller can modify the message, and a
- *     call to _notmuch_message_sync will add * the document to the
- *     database.
+ *     exist in the database.  This message is "blank"; that is, it
+ *     contains only a message ID and no other metadata. The caller
+ *     can modify the message, and a call to _notmuch_message_sync
+ *     will add the document to the database.
  *
  * If an error occurs, this function will return NULL and *status
  * will be set as appropriate. (The status pointer argument must
