@@ -324,7 +324,9 @@ notmuch_config_open (void *ctx,
 
     if (notmuch_config_get_database_path (config) == NULL) {
 	char *path = getenv ("MAILDIR");
-	if (! path)
+	if (path)
+	    path = talloc_strdup (config, path);
+	else
 	    path = talloc_asprintf (config, "%s/mail",
 				    getenv ("HOME"));
 	notmuch_config_set_database_path (config, path);
@@ -333,7 +335,9 @@ notmuch_config_open (void *ctx,
 
     if (notmuch_config_get_user_name (config) == NULL) {
 	char *name = getenv ("NAME");
-	if (! name)
+	if (name)
+	    name = talloc_strdup (config, name);
+	else
 	    name = get_name_from_passwd_file (config);
 	notmuch_config_set_user_name (config, name);
 	talloc_free (name);
