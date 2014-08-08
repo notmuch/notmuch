@@ -25,6 +25,10 @@
 (require 'notmuch-lib)
 (require 'notmuch-hello)
 
+(unless (fboundp 'window-body-width)
+  ;; Compatibility for Emacs pre-24
+  (defalias 'window-body-width 'window-width))
+
 ;;;###autoload
 (defun notmuch-jump-search ()
   "Jump to a saved search by shortcut key.
@@ -165,9 +169,3 @@ buffer."
 	   (setq notmuch-jump--action ',(third action))
 	   (exit-minibuffer))))
     map))
-
-(unless (fboundp 'window-body-width)
-  ;; Compatibility for Emacs pre-24
-  (defun window-body-width (&optional window)
-    (let ((edges (window-inside-edges window)))
-      (- (caddr edges) (car edges)))))
