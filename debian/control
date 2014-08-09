@@ -17,9 +17,9 @@ Build-Depends:
  python3-all (>= 3.1.2-7~),
  python-sphinx (>= 1.0),
  ruby, ruby-dev (>>1:1.9.3~),
- emacs23-nox | emacs23 (>=23~) | emacs23-lucid (>=23~) |
- emacs24-nox | emacs24 (>=24~) | emacs24-lucid (>=24~),
- gdb [!s390x !ia64 !armhf !armel],
+ emacs24-nox | emacs24 (>=24~) | emacs24-lucid (>=24~) |
+ emacs23-nox | emacs23 (>=23~) | emacs23-lucid (>=23~),
+ gdb [!s390x !ia64 !armel !arm64],
  dtach (>= 0.8),
  bash-completion (>=1.9.0~)
 Standards-Version: 3.9.4
