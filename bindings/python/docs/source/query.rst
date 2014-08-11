@@ -32,6 +32,8 @@
       :attr:`Query.SORT`) if explicitely specified via
       :meth:`set_sort`. By default it is set to `None`.
 
+   .. automethod:: exclude_tag
+
    .. automethod:: search_threads
 
    .. automethod:: search_messages

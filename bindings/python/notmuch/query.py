@@ -118,6 +118,21 @@ class Query(object):
         self.sort = sort
         self._set_sort(self._query, sort)
 
+    _exclude_tag = nmlib.notmuch_query_add_tag_exclude
+    _exclude_tag.argtypes = [NotmuchQueryP, c_char_p]
+    _exclude_tag.resttype = None
+
+    def exclude_tag(self, tagname):
+        """Add a tag that will be excluded from the query results by default.
+
+        This exclusion will be overridden if this tag appears explicitly in the
+        query.
+
+        :param tagname: Name of the tag to be excluded
+        """
+        self._assert_query_is_initialized()
+        self._exclude_tag(self._query, _str(tagname))
+
     """notmuch_query_search_threads"""
     _search_threads = nmlib.notmuch_query_search_threads
     _search_threads.argtypes = [NotmuchQueryP]
