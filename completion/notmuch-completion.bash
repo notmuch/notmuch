@@ -395,6 +395,10 @@ _notmuch()
 {
     local _notmuch_commands="compact config count dump help insert new reply restore search setup show tag"
     local arg cur prev words cword split
+
+    # require bash-completion with _init_completion
+    type -t _init_completion >/dev/null 2>&1 || return
+
     _init_completion || return
 
     COMPREPLY=()
