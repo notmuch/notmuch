@@ -1248,11 +1248,9 @@ notmuch_database_upgrade (notmuch_database_t *notmuch,
      * format. */
     notmuch->features = target_features;
 
-    /* Before version 1, each message document had its filename in the
-     * data field. Copy that into the new format by calling
-     * notmuch_message_add_filename.
-     */
-    if (new_features & NOTMUCH_FEATURE_FILE_TERMS) {
+    /* Perform per-message upgrades. */
+    if (new_features &
+	(NOTMUCH_FEATURE_FILE_TERMS | NOTMUCH_FEATURE_BOOL_FOLDER)) {
 	notmuch_query_t *query = notmuch_query_create (notmuch, "");
 	notmuch_messages_t *messages;
 	notmuch_message_t *message;
@@ -1271,13 +1269,27 @@ notmuch_database_upgrade (notmuch_database_t *notmuch,
 
 	    message = notmuch_messages_get (messages);
 
-	    filename = _notmuch_message_talloc_copy_data (message);
-	    if (filename && *filename != '\0') {
-		_notmuch_message_add_filename (message, filename);
-		_notmuch_message_clear_data (message);
-		_notmuch_message_sync (message);
+	    /* Before version 1, each message document had its
+	     * filename in the data field. Copy that into the new
+	     * format by calling notmuch_message_add_filename.
+	     */
+	    if (new_features & NOTMUCH_FEATURE_FILE_TERMS) {
+		filename = _notmuch_message_talloc_copy_data (message);
+		if (filename && *filename != '\0') {
+		    _notmuch_message_add_filename (message, filename);
+		    _notmuch_message_clear_data (message);
+		}
+		talloc_free (filename);
 	    }
-	    talloc_free (filename);
+
+	    /* Prior to version 2, the "folder:" prefix was
+	     * probabilistic and stemmed. Change it to the current
+	     * boolean prefix. Add "path:" prefixes while at it.
+	     */
+	    if (new_features & NOTMUCH_FEATURE_BOOL_FOLDER)
+		_notmuch_message_upgrade_folder (message);
+
+	    _notmuch_message_sync (message);
 
 	    notmuch_message_destroy (message);
 
@@ -1287,7 +1299,9 @@ notmuch_database_upgrade (notmuch_database_t *notmuch,
 	notmuch_query_destroy (query);
     }
 
-    /* Also, before version 1 we stored directory timestamps in
+    /* Perform per-directory upgrades. */
+
+    /* Before version 1 we stored directory timestamps in
      * XTIMESTAMP documents instead of the current XDIRECTORY
      * documents. So copy those as well. */
     if (new_features & NOTMUCH_FEATURE_DIRECTORY_DOCS) {
@@ -1327,40 +1341,6 @@ notmuch_database_upgrade (notmuch_database_t *notmuch,
 		db->delete_document (*p);
 	    }
 	}
-    }
-
-    /*
-     * Prior to version 2, the "folder:" prefix was probabilistic and
-     * stemmed. Change it to the current boolean prefix. Add "path:"
-     * prefixes while at it.
-     */
-    if (new_features & NOTMUCH_FEATURE_BOOL_FOLDER) {
-	notmuch_query_t *query = notmuch_query_create (notmuch, "");
-	notmuch_messages_t *messages;
-	notmuch_message_t *message;
-
-	count = 0;
-	total = notmuch_query_count_messages (query);
-
-	for (messages = notmuch_query_search_messages (query);
-	     notmuch_messages_valid (messages);
-	     notmuch_messages_move_to_next (messages)) {
-	    if (do_progress_notify) {
-		progress_notify (closure, (double) count / total);
-		do_progress_notify = 0;
-	    }
-
-	    message = notmuch_messages_get (messages);
-
-	    _notmuch_message_upgrade_folder (message);
-	    _notmuch_message_sync (message);
-
-	    notmuch_message_destroy (message);
-
-	    count++;
-	}
-
-	notmuch_query_destroy (query);
     }
 
     db->set_metadata ("features", _print_features (local, notmuch->features));
