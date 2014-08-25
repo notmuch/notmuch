@@ -414,26 +414,35 @@ _notmuch_message_ensure_message_file (notmuch_message_t *message)
 const char *
 notmuch_message_get_header (notmuch_message_t *message, const char *header)
 {
-    try {
-	    std::string value;
+    Xapian::valueno slot = Xapian::BAD_VALUENO;
 
-	    /* Fetch header from the appropriate xapian value field if
-	     * available */
-	    if (strcasecmp (header, "from") == 0)
-		value = message->doc.get_value (NOTMUCH_VALUE_FROM);
-	    else if (strcasecmp (header, "subject") == 0)
-		value = message->doc.get_value (NOTMUCH_VALUE_SUBJECT);
-	    else if (strcasecmp (header, "message-id") == 0)
-		value = message->doc.get_value (NOTMUCH_VALUE_MESSAGE_ID);
+    /* Fetch header from the appropriate xapian value field if
+     * available */
+    if (strcasecmp (header, "from") == 0)
+	slot = NOTMUCH_VALUE_FROM;
+    else if (strcasecmp (header, "subject") == 0)
+	slot = NOTMUCH_VALUE_SUBJECT;
+    else if (strcasecmp (header, "message-id") == 0)
+	slot = NOTMUCH_VALUE_MESSAGE_ID;
 
-	    if (!value.empty())
+    if (slot != Xapian::BAD_VALUENO) {
+	try {
+	    std::string value = message->doc.get_value (slot);
+
+	    /* If we have NOTMUCH_FEATURE_FROM_SUBJECT_ID_VALUES, then
+	     * empty values indicate empty headers.  If we don't, then
+	     * it could just mean we didn't record the header. */
+	    if ((message->notmuch->features &
+		 NOTMUCH_FEATURE_FROM_SUBJECT_ID_VALUES) ||
+		! value.empty())
 		return talloc_strdup (message, value.c_str ());
 
-    } catch (Xapian::Error &error) {
-	fprintf (stderr, "A Xapian exception occurred when reading header: %s\n",
-		 error.get_msg().c_str());
-	message->notmuch->exception_reported = TRUE;
-	return NULL;
+	} catch (Xapian::Error &error) {
+	    fprintf (stderr, "A Xapian exception occurred when reading header: %s\n",
+		     error.get_msg().c_str());
+	    message->notmuch->exception_reported = TRUE;
+	    return NULL;
+	}
     }
 
     /* Otherwise fall back to parsing the file */
