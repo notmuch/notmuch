@@ -20,6 +20,7 @@
 
 #include "database-private.h"
 #include "parse-time-vrp.h"
+#include "string-util.h"
 
 #include <iostream>
 
@@ -42,7 +43,7 @@ typedef struct {
     const char *prefix;
 } prefix_t;
 
-#define NOTMUCH_DATABASE_VERSION 2
+#define NOTMUCH_DATABASE_VERSION 3
 
 #define STRINGIFY(s) _SUB_STRINGIFY(s)
 #define _SUB_STRINGIFY(s) #s
@@ -154,6 +155,17 @@ typedef struct {
  *			changes are made to the database (such as by
  *			indexing new fields).
  *
+ *	features	The set of features supported by this
+ *			database. This consists of a set of
+ *			'\n'-separated lines, where each is a feature
+ *			name, a '\t', and compatibility flags.  If the
+ *			compatibility flags contain 'w', then the
+ *			opener must support this feature to safely
+ *			write this database.  If the compatibility
+ *			flags contain 'r', then the opener must
+ *			support this feature to read this database.
+ *			Introduced in database version 3.
+ *
  *	last_thread_id	The last thread ID generated. This is stored
  *			as a 16-byte hexadecimal ASCII representation
  *			of a 64-bit unsigned integer. The first ID
@@ -253,6 +265,28 @@ _find_prefix (const char *name)
 
     return "";
 }
+
+static const struct {
+    /* NOTMUCH_FEATURE_* value. */
+    _notmuch_features value;
+    /* Feature name as it appears in the database.  This name should
+     * be appropriate for displaying to the user if an older version
+     * of notmuch doesn't support this feature. */
+    const char *name;
+    /* Compatibility flags when this feature is declared. */
+    const char *flags;
+} feature_names[] = {
+    { NOTMUCH_FEATURE_FILE_TERMS,
+      "multiple paths per message", "rw" },
+    { NOTMUCH_FEATURE_DIRECTORY_DOCS,
+      "relative directory paths", "rw" },
+    /* Header values are not required for reading a database because a
+     * reader can just refer to the message file. */
+    { NOTMUCH_FEATURE_FROM_SUBJECT_ID_VALUES,
+      "from/subject/message-ID in database", "w" },
+    { NOTMUCH_FEATURE_BOOL_FOLDER,
+      "exact folder:/path: search", "rw" },
+};
 
 const char *
 notmuch_status_to_string (notmuch_status_t status)
@@ -591,6 +625,11 @@ notmuch_database_create (const char *path, notmuch_database_t **database)
 				    &notmuch);
     if (status)
 	goto DONE;
+
+    /* Upgrade doesn't add this feature to existing databases, but new
+     * databases have it. */
+    notmuch->features |= NOTMUCH_FEATURE_FROM_SUBJECT_ID_VALUES;
+
     status = notmuch_database_upgrade (notmuch, NULL, NULL);
     if (status) {
 	notmuch_database_close(notmuch);
@@ -619,6 +658,83 @@ _notmuch_database_ensure_writable (notmuch_database_t *notmuch)
     return NOTMUCH_STATUS_SUCCESS;
 }
 
+/* Parse a database features string from the given database version.
+ * Returns the feature bit set.
+ *
+ * For version < 3, this ignores the features string and returns a
+ * hard-coded set of features.
+ *
+ * If there are unrecognized features that are required to open the
+ * database in mode (which should be 'r' or 'w'), return a
+ * comma-separated list of unrecognized but required features in
+ * *incompat_out suitable for presenting to the user.  *incompat_out
+ * will be allocated from ctx.
+ */
+static _notmuch_features
+_parse_features (const void *ctx, const char *features, unsigned int version,
+		 char mode, char **incompat_out)
+{
+    _notmuch_features res = static_cast<_notmuch_features>(0);
+    unsigned int namelen, i;
+    size_t llen = 0;
+    const char *flags;
+
+    /* Prior to database version 3, features were implied by the
+     * version number. */
+    if (version == 0)
+	return NOTMUCH_FEATURES_V0;
+    else if (version == 1)
+	return NOTMUCH_FEATURES_V1;
+    else if (version == 2)
+	return NOTMUCH_FEATURES_V2;
+
+    /* Parse the features string */
+    while ((features = strtok_len_c (features + llen, "\n", &llen)) != NULL) {
+	flags = strchr (features, '\t');
+	if (! flags || flags > features + llen)
+	    continue;
+	namelen = flags - features;
+
+	for (i = 0; i < ARRAY_SIZE (feature_names); ++i) {
+	    if (strlen (feature_names[i].name) == namelen &&
+		strncmp (feature_names[i].name, features, namelen) == 0) {
+		res |= feature_names[i].value;
+		break;
+	    }
+	}
+
+	if (i == ARRAY_SIZE (feature_names) && incompat_out) {
+	    /* Unrecognized feature */
+	    const char *have = strchr (flags, mode);
+	    if (have && have < features + llen) {
+		/* This feature is required to access this database in
+		 * 'mode', but we don't understand it. */
+		if (! *incompat_out)
+		    *incompat_out = talloc_strdup (ctx, "");
+		*incompat_out = talloc_asprintf_append_buffer (
+		    *incompat_out, "%s%.*s", **incompat_out ? ", " : "",
+		    namelen, features);
+	    }
+	}
+    }
+
+    return res;
+}
+
+static char *
+_print_features (const void *ctx, unsigned int features)
+{
+    unsigned int i;
+    char *res = talloc_strdup (ctx, "");
+
+    for (i = 0; i < ARRAY_SIZE (feature_names); ++i)
+	if (features & feature_names[i].value)
+	    res = talloc_asprintf_append_buffer (
+		res, "%s\t%s\n", feature_names[i].name, feature_names[i].flags);
+
+    return res;
+}
+
 notmuch_status_t
 notmuch_database_open (const char *path,
 		       notmuch_database_mode_t mode,
@@ -627,7 +743,7 @@ notmuch_database_open (const char *path,
     notmuch_status_t status = NOTMUCH_STATUS_SUCCESS;
     void *local = talloc_new (NULL);
     notmuch_database_t *notmuch = NULL;
-    char *notmuch_path, *xapian_path;
+    char *notmuch_path, *xapian_path, *incompat_features;
     struct stat st;
     int err;
     unsigned int i, version;
@@ -677,7 +793,6 @@ notmuch_database_open (const char *path,
     if (notmuch->path[strlen (notmuch->path) - 1] == '/')
 	notmuch->path[strlen (notmuch->path) - 1] = '\0';
 
-    notmuch->needs_upgrade = FALSE;
     notmuch->mode = mode;
     notmuch->atomic_nesting = 0;
     try {
@@ -686,37 +801,44 @@ notmuch_database_open (const char *path,
 	if (mode == NOTMUCH_DATABASE_MODE_READ_WRITE) {
 	    notmuch->xapian_db = new Xapian::WritableDatabase (xapian_path,
 							       Xapian::DB_CREATE_OR_OPEN);
-	    version = notmuch_database_get_version (notmuch);
-
-	    if (version > NOTMUCH_DATABASE_VERSION) {
-		fprintf (stderr,
-			 "Error: Notmuch database at %s\n"
-			 "       has a newer database format version (%u) than supported by this\n"
-			 "       version of notmuch (%u). Refusing to open this database in\n"
-			 "       read-write mode.\n",
-			 notmuch_path, version, NOTMUCH_DATABASE_VERSION);
-		notmuch->mode = NOTMUCH_DATABASE_MODE_READ_ONLY;
-		notmuch_database_destroy (notmuch);
-		notmuch = NULL;
-		status = NOTMUCH_STATUS_FILE_ERROR;
-		goto DONE;
-	    }
-
-	    if (version < NOTMUCH_DATABASE_VERSION)
-		notmuch->needs_upgrade = TRUE;
 	} else {
 	    notmuch->xapian_db = new Xapian::Database (xapian_path);
-	    version = notmuch_database_get_version (notmuch);
-	    if (version > NOTMUCH_DATABASE_VERSION)
-	    {
-		fprintf (stderr,
-			 "Warning: Notmuch database at %s\n"
-			 "         has a newer database format version (%u) than supported by this\n"
-			 "         version of notmuch (%u). Some operations may behave incorrectly,\n"
-			 "         (but the database will not be harmed since it is being opened\n"
-			 "         in read-only mode).\n",
-			 notmuch_path, version, NOTMUCH_DATABASE_VERSION);
-	    }
+	}
+
+	/* Check version.  As of database version 3, we represent
+	 * changes in terms of features, so assume a version bump
+	 * means a dramatically incompatible change. */
+	version = notmuch_database_get_version (notmuch);
+	if (version > NOTMUCH_DATABASE_VERSION) {
+	    fprintf (stderr,
+		     "Error: Notmuch database at %s\n"
+		     "       has a newer database format version (%u) than supported by this\n"
+		     "       version of notmuch (%u).\n",
+		     notmuch_path, version, NOTMUCH_DATABASE_VERSION);
+	    notmuch->mode = NOTMUCH_DATABASE_MODE_READ_ONLY;
+	    notmuch_database_destroy (notmuch);
+	    notmuch = NULL;
+	    status = NOTMUCH_STATUS_FILE_ERROR;
+	    goto DONE;
+	}
+
+	/* Check features. */
+	incompat_features = NULL;
+	notmuch->features = _parse_features (
+	    local, notmuch->xapian_db->get_metadata ("features").c_str (),
+	    version, mode == NOTMUCH_DATABASE_MODE_READ_WRITE ? 'w' : 'r',
+	    &incompat_features);
+	if (incompat_features) {
+	    fprintf (stderr,
+		     "Error: Notmuch database at %s\n"
+		     "       requires features (%s)\n"
+		     "       not supported by this version of notmuch.\n",
+		     notmuch_path, incompat_features);
+	    notmuch->mode = NOTMUCH_DATABASE_MODE_READ_ONLY;
+	    notmuch_database_destroy (notmuch);
+	    notmuch = NULL;
+	    status = NOTMUCH_STATUS_FILE_ERROR;
+	    goto DONE;
 	}
 
 	notmuch->last_doc_id = notmuch->xapian_db->get_lastdocid ();
@@ -1048,7 +1170,9 @@ notmuch_database_get_version (notmuch_database_t *notmuch)
 notmuch_bool_t
 notmuch_database_needs_upgrade (notmuch_database_t *notmuch)
 {
-    return notmuch->needs_upgrade;
+    return notmuch->mode == NOTMUCH_DATABASE_MODE_READ_WRITE &&
+	((NOTMUCH_FEATURES_CURRENT & ~notmuch->features) ||
+	 (notmuch_database_get_version (notmuch) < NOTMUCH_DATABASE_VERSION));
 }
 
 static volatile sig_atomic_t do_progress_notify = 0;
@@ -1077,6 +1201,7 @@ notmuch_database_upgrade (notmuch_database_t *notmuch,
 						   double progress),
 			  void *closure)
 {
+    void *local = talloc_new (NULL);
     Xapian::WritableDatabase *db;
     struct sigaction action;
     struct itimerval timerval;
@@ -1113,6 +1238,10 @@ notmuch_database_upgrade (notmuch_database_t *notmuch,
 
 	timer_is_active = TRUE;
     }
+
+    /* Set the target features so we write out changes in the desired
+     * format. */
+    notmuch->features |= NOTMUCH_FEATURES_CURRENT;
 
     /* Before version 1, each message document had its filename in the
      * data field. Copy that into the new format by calling
@@ -1226,6 +1355,7 @@ notmuch_database_upgrade (notmuch_database_t *notmuch,
 	notmuch_query_destroy (query);
     }
 
+    db->set_metadata ("features", _print_features (local, notmuch->features));
     db->set_metadata ("version", STRINGIFY (NOTMUCH_DATABASE_VERSION));
     db->flush ();
 
@@ -1302,6 +1432,7 @@ notmuch_database_upgrade (notmuch_database_t *notmuch,
 	sigaction (SIGALRM, &action, NULL);
     }
 
+    talloc_free (local);
     return NOTMUCH_STATUS_SUCCESS;
 }
 
