@@ -352,22 +352,27 @@ unsigned int
 notmuch_database_get_version (notmuch_database_t *database);
 
 /**
- * Does this database need to be upgraded before writing to it?
+ * Can the database be upgraded to a newer database version?
  *
- * If this function returns TRUE then no functions that modify the
- * database (notmuch_database_add_message, notmuch_message_add_tag,
- * notmuch_directory_set_mtime, etc.) will work unless the function
- * notmuch_database_upgrade is called successfully first.
+ * If this function returns TRUE, then the caller may call
+ * notmuch_database_upgrade to upgrade the database.  If the caller
+ * does not upgrade an out-of-date database, then some functions may
+ * fail with NOTMUCH_STATUS_UPGRADE_REQUIRED.  This always returns
+ * FALSE for a read-only database because there's no way to upgrade a
+ * read-only database.
  */
 notmuch_bool_t
 notmuch_database_needs_upgrade (notmuch_database_t *database);
 
 /**
- * Upgrade the current database.
+ * Upgrade the current database to the latest supported version.
  *
- * After opening a database in read-write mode, the client should
- * check if an upgrade is needed (notmuch_database_needs_upgrade) and
- * if so, upgrade with this function before making any modifications.
+ * This ensures that all current notmuch functionality will be
+ * available on the database.  After opening a database in read-write
+ * mode, it is recommended that clients check if an upgrade is needed
+ * (notmuch_database_needs_upgrade) and if so, upgrade with this
+ * function before making any modifications.  If
+ * notmuch_database_needs_upgrade returns FALSE, this will be a no-op.
  *
  * The optional progress_notify callback can be used by the caller to
  * provide progress indication to the user. If non-NULL it will be
