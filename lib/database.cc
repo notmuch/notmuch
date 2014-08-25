@@ -1202,11 +1202,12 @@ notmuch_database_upgrade (notmuch_database_t *notmuch,
 			  void *closure)
 {
     void *local = talloc_new (NULL);
+    Xapian::TermIterator t, t_end;
     Xapian::WritableDatabase *db;
     struct sigaction action;
     struct itimerval timerval;
     notmuch_bool_t timer_is_active = FALSE;
-    unsigned int version;
+    enum _notmuch_features target_features, new_features;
     notmuch_status_t status;
     unsigned int count = 0, total = 0;
 
@@ -1216,9 +1217,10 @@ notmuch_database_upgrade (notmuch_database_t *notmuch,
 
     db = static_cast <Xapian::WritableDatabase *> (notmuch->xapian_db);
 
-    version = notmuch_database_get_version (notmuch);
+    target_features = notmuch->features | NOTMUCH_FEATURES_CURRENT;
+    new_features = NOTMUCH_FEATURES_CURRENT & ~notmuch->features;
 
-    if (version >= NOTMUCH_DATABASE_VERSION)
+    if (! new_features)
 	return NOTMUCH_STATUS_SUCCESS;
 
     if (progress_notify) {
@@ -1244,18 +1246,17 @@ notmuch_database_upgrade (notmuch_database_t *notmuch,
 
     /* Set the target features so we write out changes in the desired
      * format. */
-    notmuch->features |= NOTMUCH_FEATURES_CURRENT;
+    notmuch->features = target_features;
 
     /* Before version 1, each message document had its filename in the
      * data field. Copy that into the new format by calling
      * notmuch_message_add_filename.
      */
-    if (version < 1) {
+    if (new_features & NOTMUCH_FEATURE_FILE_TERMS) {
 	notmuch_query_t *query = notmuch_query_create (notmuch, "");
 	notmuch_messages_t *messages;
 	notmuch_message_t *message;
 	char *filename;
-	Xapian::TermIterator t, t_end;
 
 	total = notmuch_query_count_messages (query);
 
@@ -1284,11 +1285,12 @@ notmuch_database_upgrade (notmuch_database_t *notmuch,
 	}
 
 	notmuch_query_destroy (query);
+    }
 
-	/* Also, before version 1 we stored directory timestamps in
-	 * XTIMESTAMP documents instead of the current XDIRECTORY
-	 * documents. So copy those as well. */
-
+    /* Also, before version 1 we stored directory timestamps in
+     * XTIMESTAMP documents instead of the current XDIRECTORY
+     * documents. So copy those as well. */
+    if (new_features & NOTMUCH_FEATURE_DIRECTORY_DOCS) {
 	t_end = notmuch->xapian_db->allterms_end ("XTIMESTAMP");
 
 	for (t = notmuch->xapian_db->allterms_begin ("XTIMESTAMP");
@@ -1332,7 +1334,7 @@ notmuch_database_upgrade (notmuch_database_t *notmuch,
      * stemmed. Change it to the current boolean prefix. Add "path:"
      * prefixes while at it.
      */
-    if (version < 2) {
+    if (new_features & NOTMUCH_FEATURE_BOOL_FOLDER) {
 	notmuch_query_t *query = notmuch_query_create (notmuch, "");
 	notmuch_messages_t *messages;
 	notmuch_message_t *message;
