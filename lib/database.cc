@@ -1239,6 +1239,9 @@ notmuch_database_upgrade (notmuch_database_t *notmuch,
 	timer_is_active = TRUE;
     }
 
+    /* Perform the upgrade in a transaction. */
+    db->begin_transaction (true);
+
     /* Set the target features so we write out changes in the desired
      * format. */
     notmuch->features |= NOTMUCH_FEATURES_CURRENT;
@@ -1270,6 +1273,7 @@ notmuch_database_upgrade (notmuch_database_t *notmuch,
 	    filename = _notmuch_message_talloc_copy_data (message);
 	    if (filename && *filename != '\0') {
 		_notmuch_message_add_filename (message, filename);
+		_notmuch_message_clear_data (message);
 		_notmuch_message_sync (message);
 	    }
 	    talloc_free (filename);
@@ -1317,6 +1321,8 @@ notmuch_database_upgrade (notmuch_database_t *notmuch,
 						       NOTMUCH_FIND_CREATE, &status);
 		notmuch_directory_set_mtime (directory, mtime);
 		notmuch_directory_destroy (directory);
+
+		db->delete_document (*p);
 	    }
 	}
     }
@@ -1357,67 +1363,8 @@ notmuch_database_upgrade (notmuch_database_t *notmuch,
 
     db->set_metadata ("features", _print_features (local, notmuch->features));
     db->set_metadata ("version", STRINGIFY (NOTMUCH_DATABASE_VERSION));
-    db->flush ();
 
-    /* Now that the upgrade is complete we can remove the old data
-     * and documents that are no longer needed. */
-    if (version < 1) {
-	notmuch_query_t *query = notmuch_query_create (notmuch, "");
-	notmuch_messages_t *messages;
-	notmuch_message_t *message;
-	char *filename;
-
-	for (messages = notmuch_query_search_messages (query);
-	     notmuch_messages_valid (messages);
-	     notmuch_messages_move_to_next (messages))
-	{
-	    if (do_progress_notify) {
-		progress_notify (closure, (double) count / total);
-		do_progress_notify = 0;
-	    }
-
-	    message = notmuch_messages_get (messages);
-
-	    filename = _notmuch_message_talloc_copy_data (message);
-	    if (filename && *filename != '\0') {
-		_notmuch_message_clear_data (message);
-		_notmuch_message_sync (message);
-	    }
-	    talloc_free (filename);
-
-	    notmuch_message_destroy (message);
-	}
-
-	notmuch_query_destroy (query);
-    }
-
-    if (version < 1) {
-	Xapian::TermIterator t, t_end;
-
-	t_end = notmuch->xapian_db->allterms_end ("XTIMESTAMP");
-
-	for (t = notmuch->xapian_db->allterms_begin ("XTIMESTAMP");
-	     t != t_end;
-	     t++)
-	{
-	    Xapian::PostingIterator p, p_end;
-	    std::string term = *t;
-
-	    p_end = notmuch->xapian_db->postlist_end (term);
-
-	    for (p = notmuch->xapian_db->postlist_begin (term);
-		 p != p_end;
-		 p++)
-	    {
-		if (do_progress_notify) {
-		    progress_notify (closure, (double) count / total);
-		    do_progress_notify = 0;
-		}
-
-		db->delete_document (*p);
-	    }
-	}
-    }
+    db->commit_transaction ();
 
     if (timer_is_active) {
 	/* Now stop the timer. */
