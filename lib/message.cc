@@ -655,6 +655,10 @@ _notmuch_message_add_filename (notmuch_message_t *message,
     if (filename == NULL)
 	INTERNAL_ERROR ("Message filename cannot be NULL.");
 
+    if (! (message->notmuch->features & NOTMUCH_FEATURE_FILE_TERMS) ||
+	! (message->notmuch->features & NOTMUCH_FEATURE_BOOL_FOLDER))
+	return NOTMUCH_STATUS_UPGRADE_REQUIRED;
+
     relative = _notmuch_database_relative_path (message->notmuch, filename);
 
     status = _notmuch_database_split_path (local, relative, &directory, NULL);
@@ -698,6 +702,10 @@ _notmuch_message_remove_filename (notmuch_message_t *message,
     char *direntry;
     notmuch_private_status_t private_status;
     notmuch_status_t status;
+
+    if (! (message->notmuch->features & NOTMUCH_FEATURE_FILE_TERMS) ||
+	! (message->notmuch->features & NOTMUCH_FEATURE_BOOL_FOLDER))
+	return NOTMUCH_STATUS_UPGRADE_REQUIRED;
 
     status = _notmuch_database_filename_to_direntry (
 	local, message->notmuch, filename, NOTMUCH_FIND_LOOKUP, &direntry);

@@ -316,6 +316,8 @@ notmuch_status_to_string (notmuch_status_t status)
 	return "Unbalanced number of calls to notmuch_database_begin_atomic/end_atomic";
     case NOTMUCH_STATUS_UNSUPPORTED_OPERATION:
 	return "Unsupported operation";
+    case NOTMUCH_STATUS_UPGRADE_REQUIRED:
+	return "Operation requires a database upgrade";
     default:
     case NOTMUCH_STATUS_LAST_STATUS:
 	return "Unknown error status value";
@@ -2225,6 +2227,9 @@ notmuch_database_find_message_by_filename (notmuch_database_t *notmuch,
 
     if (message_ret == NULL)
 	return NOTMUCH_STATUS_NULL_POINTER;
+
+    if (! (notmuch->features & NOTMUCH_FEATURE_FILE_TERMS))
+	return NOTMUCH_STATUS_UPGRADE_REQUIRED;
 
     /* return NULL on any failure */
     *message_ret = NULL;

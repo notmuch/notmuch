@@ -160,6 +160,10 @@ typedef enum _notmuch_status {
      */
     NOTMUCH_STATUS_UNSUPPORTED_OPERATION,
     /**
+     * The operation requires a database upgrade.
+     */
+    NOTMUCH_STATUS_UPGRADE_REQUIRED,
+    /**
      * Not an actual status value. Just a way to find out how many
      * valid status values there are.
      */
@@ -438,6 +442,9 @@ notmuch_database_end_atomic (notmuch_database_t *notmuch);
  *
  * NOTMUCH_STATUS_XAPIAN_EXCEPTION: A Xapian exception occurred;
  *	directory not retrieved.
+ *
+ * NOTMUCH_STATUS_UPGRADE_REQUIRED: The caller must upgrade the
+ * 	database to use this function.
  */
 notmuch_status_t
 notmuch_database_get_directory (notmuch_database_t *database,
@@ -490,6 +497,9 @@ notmuch_database_get_directory (notmuch_database_t *database,
  *
  * NOTMUCH_STATUS_READ_ONLY_DATABASE: Database was opened in read-only
  *	mode so no message can be added.
+ *
+ * NOTMUCH_STATUS_UPGRADE_REQUIRED: The caller must upgrade the
+ * 	database to use this function.
  */
 notmuch_status_t
 notmuch_database_add_message (notmuch_database_t *database,
@@ -520,6 +530,9 @@ notmuch_database_add_message (notmuch_database_t *database,
  *
  * NOTMUCH_STATUS_READ_ONLY_DATABASE: Database was opened in read-only
  *	mode so no message can be removed.
+ *
+ * NOTMUCH_STATUS_UPGRADE_REQUIRED: The caller must upgrade the
+ * 	database to use this function.
  */
 notmuch_status_t
 notmuch_database_remove_message (notmuch_database_t *database,
@@ -575,6 +588,9 @@ notmuch_database_find_message (notmuch_database_t *database,
  * NOTMUCH_STATUS_OUT_OF_MEMORY: Out of memory, creating the message object
  *
  * NOTMUCH_STATUS_XAPIAN_EXCEPTION: A Xapian exception occurred
+ *
+ * NOTMUCH_STATUS_UPGRADE_REQUIRED: The caller must upgrade the
+ * 	database to use this function.
  */
 notmuch_status_t
 notmuch_database_find_message_by_filename (notmuch_database_t *notmuch,

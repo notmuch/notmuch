@@ -105,6 +105,11 @@ _notmuch_directory_create (notmuch_database_t *notmuch,
     const char *db_path;
     notmuch_bool_t create = (flags & NOTMUCH_FIND_CREATE);
 
+    if (! (notmuch->features & NOTMUCH_FEATURE_DIRECTORY_DOCS)) {
+	*status_ret = NOTMUCH_STATUS_UPGRADE_REQUIRED;
+	return NULL;
+    }
+
     *status_ret = NOTMUCH_STATUS_SUCCESS;
 
     path = _notmuch_database_relative_path (notmuch, path);
