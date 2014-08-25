@@ -1031,8 +1031,7 @@ notmuch_new_command (notmuch_config_t *config, int argc, char *argv[])
 		return EXIT_FAILURE;
 	    }
 	    if (add_files_state.verbosity >= VERBOSITY_NORMAL)
-		printf ("Your notmuch database has now been upgraded to database format version %u.\n",
-		    notmuch_database_get_version (notmuch));
+		printf ("Your notmuch database has now been upgraded.\n");
 	}
 
 	add_files_state.total_files = 0;
