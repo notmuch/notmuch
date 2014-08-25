@@ -35,6 +35,9 @@ $(dir)/symbol-test: $(dir)/symbol-test.o lib/$(LINKER_NAME)
 $(dir)/parse-time: $(dir)/parse-time.o parse-time-string/parse-time-string.o
 	$(call quiet,CC) $^ -o $@
 
+$(dir)/make-db-version: $(dir)/make-db-version.o
+	$(call quiet,CXX) $^ -o $@ $(XAPIAN_LDFLAGS)
+
 .PHONY: test check
 
 test_main_srcs=$(dir)/arg-test.c \
@@ -43,6 +46,7 @@ test_main_srcs=$(dir)/arg-test.c \
 	      $(dir)/parse-time.c \
 	      $(dir)/smtp-dummy.c \
 	      $(dir)/symbol-test.cc \
+	      $(dir)/make-db-version.cc \
 
 test_srcs=$(test_main_srcs) $(dir)/database-test.c
 
