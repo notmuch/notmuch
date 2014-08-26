@@ -1,3 +1,9 @@
+notmuch (0.18.1-2~bpo70+1) wheezy-backports; urgency=medium
+
+  * Rebuild for wheezy-backports.
+
+ -- David Bremner <bremner@debian.org>  Tue, 26 Aug 2014 10:57:51 -0700
+
 notmuch (0.18.1-2) unstable; urgency=medium
 
   * Update build-deps to use emacs24 on buildd (Closes: #756085)
