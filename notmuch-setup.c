@@ -140,7 +140,7 @@ notmuch_setup_command (notmuch_config_t *config,
 	fflush (stdout);					\
 	if (getline (&response, &response_size, stdin) < 0) {	\
 	    printf ("Exiting.\n");				\
-	    exit (1);						\
+	    exit (EXIT_FAILURE);				\
 	}							\
 	chomp_newline (response);				\
     } while (0)
@@ -223,12 +223,11 @@ notmuch_setup_command (notmuch_config_t *config,
 	g_ptr_array_free (tags, TRUE);
     }
 
+    if (notmuch_config_save (config))
+	return EXIT_FAILURE;
 
-    if (! notmuch_config_save (config)) {
-	if (notmuch_config_is_new (config))
-	  welcome_message_post_setup ();
-	return 0;
-    } else {
-	return 1;
-    }
+    if (notmuch_config_is_new (config))
+	welcome_message_post_setup ();
+
+    return EXIT_SUCCESS;
 }

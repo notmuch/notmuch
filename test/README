@@ -64,6 +64,14 @@ The following command-line options are available when running tests:
 	Pointing this argument at a tmpfs filesystem can improve the
 	speed of the test suite for some users.
 
+Certain tests require precomputed databases to complete. You can fetch these
+databases with
+
+	make download-test-databases
+
+If you do not download the test databases, the relevant tests will be
+skipped.
+
 When invoking the test suite via "make test" any of the above options
 can be specified as follows:
 
@@ -75,6 +83,14 @@ the tests in one of the following ways.
 	TEST_EMACS=my-special-emacs TEST_EMACSCLIENT=my-emacsclient make test
 	TEST_EMACS=my-special-emacs TEST_EMACSCLIENT=my-emacsclient ./emacs
 	make test TEST_EMACS=my-special-emacs TEST_EMACSCLIENT=my-emacsclient
+
+Quiet Execution
+---------------
+
+Normally, when new script starts and when test PASSes you get a message
+printed on screen. This printing can be disabled by setting the
+NOTMUCH_TEST_QUIET variable to a non-null value. Message on test
+failures and skips are still printed.
 
 Skipping Tests
 --------------

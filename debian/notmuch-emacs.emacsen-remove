@@ -1,8 +1,34 @@
-#!/bin/sh -e
-# /usr/lib/emacsen-common/packages/remove/notmuch-emacs
+#!/bin/sh
+# /usr/lib/emacsen-common/packages/remove/notmuch
+
+set -e
 
 FLAVOR=$1
 PACKAGE=notmuch
+elc_dir=/usr/share/${FLAVOR}/site-lisp/${PACKAGE}
 
-echo remove/${PACKAGE}: purging byte-compiled files for ${FLAVOR}
-rm -rf /usr/share/${FLAVOR}/site-lisp/${PACKAGE}
+case "${FLAVOR}" in
+    emacs)
+	return 0
+	;;
+    xemacs*|emacs2[12])
+	# patches welcome.
+	echo install/${PACKAGE}: skipping removal for unsupported emacsen flavor ${FLAVOR}
+	exit 0
+	;;
+    *)
+	echo remove/${PACKAGE}: Handling removal for emacsen flavor ${FLAVOR}
+esac
+
+echo remove/${PACKAGE}: Handling removal of emacsen flavor ${FLAVOR}
+
+echo emacsen-common: purging byte-compiled files for ${FLAVOR}
+rm -f ${elc_dir}/*.elc
+rm -f ${elc_dir}/*.el
+rm -f ${elc_dir}/Install.log*
+if test -e "${elc_dir}"
+then
+  rmdir --ignore-fail-on-non-empty "${elc_dir}"
+fi
+
+exit 0;

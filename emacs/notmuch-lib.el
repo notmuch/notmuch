@@ -107,12 +107,6 @@ Note that the recommended way of achieving the same is using
 (defvar notmuch-search-history nil
   "Variable to store notmuch searches history.")
 
-(defcustom notmuch-saved-searches '(("inbox" . "tag:inbox")
-				    ("unread" . "tag:unread"))
-  "A list of saved searches to display."
-  :type '(alist :key-type string :value-type string)
-  :group 'notmuch-hello)
-
 (defcustom notmuch-archive-tags '("-inbox")
   "List of tag changes to apply to a message or a thread when it is archived.
 
@@ -168,6 +162,24 @@ Otherwise the output will be returned"
       (notmuch-check-exit-status status (cons notmuch-command args) output)
       output)))
 
+(defvar notmuch--cli-sane-p nil
+  "Cache whether the CLI seems to be configured sanely.")
+
+(defun notmuch-cli-sane-p ()
+  "Return t if the cli seems to be configured sanely."
+  (unless notmuch--cli-sane-p
+    (let ((status (call-process notmuch-command nil nil nil
+				"config" "get" "user.primary_email")))
+      (setq notmuch--cli-sane-p (= status 0))))
+  notmuch--cli-sane-p)
+
+(defun notmuch-assert-cli-sane ()
+  (unless (notmuch-cli-sane-p)
+    (notmuch-logged-error
+     "notmuch cli seems misconfigured or unconfigured."
+"Perhaps you haven't run \"notmuch setup\" yet? Try running this
+on the command line, and then retry your notmuch command")))
+
 (defun notmuch-version ()
   "Return a string with the notmuch version number."
   (let ((long-string
@@ -180,8 +192,13 @@ Otherwise the output will be returned"
 
 (defun notmuch-config-get (item)
   "Return a value from the notmuch configuration."
-  ;; Trim off the trailing newline
-  (substring (notmuch-command-to-string "config" "get" item) 0 -1))
+  (let* ((val (notmuch-command-to-string "config" "get" item))
+	 (len (length val)))
+    ;; Trim off the trailing newline (if the value is empty or not
+    ;; configured, there will be no newline)
+    (if (and (> len 0) (= (aref val (- len 1)) ?\n))
+	(substring val 0 -1)
+      val)))
 
 (defun notmuch-database-path ()
   "Return the database.path value from the notmuch configuration."
@@ -197,7 +214,7 @@ Otherwise the output will be returned"
 
 (defun notmuch-user-other-email ()
   "Return the user.other_email value (as a list) from the notmuch configuration."
-  (split-string (notmuch-config-get "user.other_email") "\n"))
+  (split-string (notmuch-config-get "user.other_email") "\n" t))
 
 (defun notmuch-poll ()
   "Run \"notmuch new\" or an external script to import mail.
@@ -231,7 +248,8 @@ depending on the value of `notmuch-poll-script'."
   "Given a prefix key code, return a human-readable string representation.
 
 This is basically just `format-kbd-macro' but we also convert ESC to M-."
-  (let ((desc (format-kbd-macro (vector key))))
+  (let* ((key-vector (if (vectorp key) key (vector key)))
+	 (desc (format-kbd-macro key-vector)))
     (if (string= desc "ESC")
 	"M-"
       (concat desc " "))))
@@ -337,6 +355,28 @@ of its command symbol."
       (set-buffer-modified-p nil)
       (view-buffer (current-buffer) 'kill-buffer-if-not-modified))))
 
+(defun notmuch-subkeymap-help ()
+  "Show help for a subkeymap."
+  (interactive)
+  (let* ((key (this-command-keys-vector))
+	(prefix (make-vector (1- (length key)) nil))
+	(i 0))
+    (while (< i (length prefix))
+      (aset prefix i (aref key i))
+      (setq i (1+ i)))
+
+    (let* ((subkeymap (key-binding prefix))
+	   (ua-keys (where-is-internal 'universal-argument nil t))
+	   (prefix-string (notmuch-prefix-key-description prefix))
+	   (desc-alist (notmuch-describe-keymap subkeymap ua-keys subkeymap prefix-string))
+	   (desc-list (mapcar (lambda (arg) (concat (car arg) "\t" (cdr arg))) desc-alist))
+	   (desc (mapconcat #'identity desc-list "\n")))
+      (with-help-window (help-buffer)
+	(with-current-buffer standard-output
+	  (insert "\nPress 'q' to quit this window.\n\n")
+	  (insert desc)))
+      (pop-to-buffer (help-buffer)))))
+
 (defvar notmuch-buffer-refresh-function nil
   "Function to call to refresh the current buffer.")
 (make-variable-buffer-local 'notmuch-buffer-refresh-function)
@@ -380,7 +420,10 @@ user-friendly queries."
 
   (save-match-data
     (if (or (equal term "")
-	    (string-match "[ ()]\\|^\"" term))
+	    ;; To be pessimistic, only pass through terms composed
+	    ;; entirely of ASCII printing characters other than ", (,
+	    ;; and ).
+	    (string-match "[^!#-'*-~]" term))
 	;; Requires escaping
 	(concat "\"" (replace-regexp-in-string "\"" "\"\"" term t t) "\"")
       term)))
@@ -490,7 +533,8 @@ the given type."
 (if (>= emacs-major-version 24)
     (defadvice mm-shr (before load-gnus-arts activate)
       (require 'gnus-art nil t)
-      (ad-disable-advice 'mm-shr 'before 'load-gnus-arts)))
+      (ad-disable-advice 'mm-shr 'before 'load-gnus-arts)
+      (ad-activate 'mm-shr)))
 
 (defun notmuch-mm-display-part-inline (msg part nth content-type process-crypto)
   "Use the mm-decode/mm-view functions to display a part in the
@@ -531,23 +575,32 @@ single element face list."
       face
     (list face)))
 
-(defun notmuch-combine-face-text-property (start end face &optional below object)
-  "Combine FACE into the 'face text property between START and END.
+(defun notmuch-apply-face (object face &optional below start end)
+  "Combine FACE into the 'face text property of OBJECT between START and END.
 
 This function combines FACE with any existing faces between START
-and END in OBJECT (which defaults to the current buffer).
-Attributes specified by FACE take precedence over existing
-attributes unless BELOW is non-nil.  FACE must be a face name (a
-symbol or string), a property list of face attributes, or a list
-of these.  For convenience when applied to strings, this returns
-OBJECT."
+and END in OBJECT.  Attributes specified by FACE take precedence
+over existing attributes unless BELOW is non-nil.
+
+OBJECT may be a string, a buffer, or nil (which means the current
+buffer).  If object is a string, START and END are 0-based;
+otherwise they are buffer positions (integers or markers).  FACE
+must be a face name (a symbol or string), a property list of face
+attributes, or a list of these.  If START and/or END are omitted,
+they default to the beginning/end of OBJECT.  For convenience
+when applied to strings, this returns OBJECT."
 
   ;; A face property can have three forms: a face name (a string or
   ;; symbol), a property list, or a list of these two forms.  In the
   ;; list case, the faces will be combined, with the earlier faces
   ;; taking precedent.  Here we canonicalize everything to list form
   ;; to make it easy to combine.
-  (let ((pos start)
+  (let ((pos (cond (start start)
+		   ((stringp object) 0)
+		   (t 1)))
+	(end (cond (end end)
+		   ((stringp object) (length object))
+		   (t (1+ (buffer-size object)))))
 	(face-list (notmuch-face-ensure-list-form face)))
     (while (< pos end)
       (let* ((cur (get-text-property pos 'face object))
@@ -559,14 +612,6 @@ OBJECT."
 	(put-text-property pos next 'face new object)
 	(setq pos next))))
   object)
-
-(defun notmuch-combine-face-text-property-string (string face &optional below)
-  (notmuch-combine-face-text-property
-   0
-   (length string)
-   face
-   below
-   string))
 
 (defun notmuch-map-text-property (start end prop func &optional object)
   "Transform text property PROP using FUNC.

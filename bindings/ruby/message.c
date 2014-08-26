@@ -111,7 +111,7 @@ notmuch_rb_message_get_filename (VALUE self)
 }
 
 /*
- * call-seq: MESSAGE.filanames => FILENAMES
+ * call-seq: MESSAGE.filenames => FILENAMES
  *
  * Get all filenames for the email corresponding to MESSAGE.
  */

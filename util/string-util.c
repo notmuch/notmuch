@@ -37,6 +37,28 @@ strtok_len (char *s, const char *delim, size_t *len)
     return *len ? s : NULL;
 }
 
+char *
+sanitize_string (const void *ctx, const char *str)
+{
+    char *out, *loop;
+
+    if (! str)
+	return NULL;
+
+    out = talloc_strdup (ctx, str);
+    if (! out)
+	return NULL;
+
+    for (loop = out; *loop; loop++) {
+	if (*loop == '\t' || *loop == '\n')
+	    *loop = ' ';
+	else if ((unsigned char)(*loop) < 32)
+	    *loop = '?';
+    }
+
+    return out;
+}
+
 static int
 is_unquoted_terminator (unsigned char c)
 {
@@ -53,10 +75,12 @@ make_boolean_term (void *ctx, const char *prefix, const char *term,
     int need_quoting = 0;
 
     /* Do we need quoting?  To be paranoid, we quote anything
-     * containing a quote, even though it only matters at the
+     * containing a quote or '(', even though these only matter at the
      * beginning, and anything containing non-ASCII text. */
+    if (! term[0])
+	need_quoting = 1;
     for (in = term; *in && !need_quoting; in++)
-	if (is_unquoted_terminator (*in) || *in == '"'
+	if (is_unquoted_terminator (*in) || *in == '"' || *in == '('
 	    || (unsigned char)*in > 127)
 	    need_quoting = 1;
 

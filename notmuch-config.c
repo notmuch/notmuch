@@ -454,7 +454,7 @@ notmuch_config_save (notmuch_config_t *config)
     }
 
     /* Try not to overwrite symlinks. */
-    filename = realpath (config->filename, NULL);
+    filename = canonicalize_file_name (config->filename);
     if (! filename) {
 	if (errno == ENOENT) {
 	    filename = strdup (config->filename);
@@ -496,6 +496,32 @@ notmuch_config_is_new (notmuch_config_t *config)
     return config->is_new;
 }
 
+static const char *
+_config_get (notmuch_config_t *config, char **field,
+	     const char *group, const char *key)
+{
+    /* read from config file and cache value, if not cached already */
+    if (*field == NULL) {
+	char *value;
+	value = g_key_file_get_string (config->key_file, group, key, NULL);
+	if (value) {
+	    *field = talloc_strdup (config, value);
+	    free (value);
+	}
+    }
+    return *field;
+}
+
+static void
+_config_set (notmuch_config_t *config, char **field,
+	     const char *group, const char *key, const char *value)
+{
+    g_key_file_set_string (config->key_file, group, key, value);
+
+    /* drop the cached value */
+    talloc_free (*field);
+    *field = NULL;
+}
 
 static const char **
 _config_get_list (notmuch_config_t *config,
@@ -504,6 +530,7 @@ _config_get_list (notmuch_config_t *config,
 {
     assert(outlist);
 
+    /* read from config file and cache value, if not cached already */
     if (*outlist == NULL) {
 
 	char **inlist = g_key_file_get_string_list (config->key_file,
@@ -535,6 +562,8 @@ _config_set_list (notmuch_config_t *config,
 		  size_t length, const char ***config_var )
 {
     g_key_file_set_string_list (config->key_file, group, name, list, length);
+
+    /* drop the cached value */
     talloc_free (*config_var);
     *config_var = NULL;
 }
@@ -542,85 +571,40 @@ _config_set_list (notmuch_config_t *config,
 const char *
 notmuch_config_get_database_path (notmuch_config_t *config)
 {
-    char *path;
-
-    if (config->database_path == NULL) {
-	path = g_key_file_get_string (config->key_file,
-				      "database", "path", NULL);
-	if (path) {
-	    config->database_path = talloc_strdup (config, path);
-	    free (path);
-	}
-    }
-
-    return config->database_path;
+    return _config_get (config, &config->database_path, "database", "path");
 }
 
 void
 notmuch_config_set_database_path (notmuch_config_t *config,
 				  const char *database_path)
 {
-    g_key_file_set_string (config->key_file,
-			   "database", "path", database_path);
-
-    talloc_free (config->database_path);
-    config->database_path = NULL;
+    _config_set (config, &config->database_path, "database", "path", database_path);
 }
 
 const char *
 notmuch_config_get_user_name (notmuch_config_t *config)
 {
-    char *name;
-
-    if (config->user_name == NULL) {
-	name = g_key_file_get_string (config->key_file,
-				      "user", "name", NULL);
-	if (name) {
-	    config->user_name = talloc_strdup (config, name);
-	    free (name);
-	}
-    }
-
-    return config->user_name;
+    return _config_get (config, &config->user_name, "user", "name");
 }
 
 void
 notmuch_config_set_user_name (notmuch_config_t *config,
 			      const char *user_name)
 {
-    g_key_file_set_string (config->key_file,
-			   "user", "name", user_name);
-
-    talloc_free (config->user_name);
-    config->user_name = NULL;
+    _config_set (config, &config->user_name, "user", "name", user_name);
 }
 
 const char *
 notmuch_config_get_user_primary_email (notmuch_config_t *config)
 {
-    char *email;
-
-    if (config->user_primary_email == NULL) {
-	email = g_key_file_get_string (config->key_file,
-				       "user", "primary_email", NULL);
-	if (email) {
-	    config->user_primary_email = talloc_strdup (config, email);
-	    free (email);
-	}
-    }
-
-    return config->user_primary_email;
+    return _config_get (config, &config->user_primary_email, "user", "primary_email");
 }
 
 void
 notmuch_config_set_user_primary_email (notmuch_config_t *config,
 				       const char *primary_email)
 {
-    g_key_file_set_string (config->key_file,
-			   "user", "primary_email", primary_email);
-
-    talloc_free (config->user_primary_email);
-    config->user_primary_email = NULL;
+    _config_set (config, &config->user_primary_email, "user", "primary_email", primary_email);
 }
 
 const char **
@@ -839,34 +823,39 @@ notmuch_config_command_list (notmuch_config_t *config)
 int
 notmuch_config_command (notmuch_config_t *config, int argc, char *argv[])
 {
+    int ret;
+
     argc--; argv++; /* skip subcommand argument */
 
     if (argc < 1) {
 	fprintf (stderr, "Error: notmuch config requires at least one argument.\n");
-	return 1;
+	return EXIT_FAILURE;
     }
 
     if (strcmp (argv[0], "get") == 0) {
 	if (argc != 2) {
 	    fprintf (stderr, "Error: notmuch config get requires exactly "
 		     "one argument.\n");
-	    return 1;
+	    return EXIT_FAILURE;
 	}
-	return notmuch_config_command_get (config, argv[1]);
+	ret = notmuch_config_command_get (config, argv[1]);
     } else if (strcmp (argv[0], "set") == 0) {
 	if (argc < 2) {
 	    fprintf (stderr, "Error: notmuch config set requires at least "
 		     "one argument.\n");
-	    return 1;
+	    return EXIT_FAILURE;
 	}
-	return notmuch_config_command_set (config, argv[1], argc - 2, argv + 2);
+	ret = notmuch_config_command_set (config, argv[1], argc - 2, argv + 2);
     } else if (strcmp (argv[0], "list") == 0) {
-	return notmuch_config_command_list (config);
+	ret = notmuch_config_command_list (config);
+    } else {
+	fprintf (stderr, "Unrecognized argument for notmuch config: %s\n",
+		 argv[0]);
+	return EXIT_FAILURE;
     }
 
-    fprintf (stderr, "Unrecognized argument for notmuch config: %s\n",
-	     argv[0]);
-    return 1;
+    return ret ? EXIT_FAILURE : EXIT_SUCCESS;
+
 }
 
 notmuch_bool_t

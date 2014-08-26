@@ -19,11 +19,14 @@ readonly DEFAULT_IFS="$IFS"
 
 srcdir=$(dirname "$0")
 
+subdirs="util compat lib parse-time-string completion doc emacs"
+subdirs="${subdirs} performance-test test test/test-databases"
+
 # For a non-srcdir configure invocation (such as ../configure), create
 # the directory structure and copy Makefiles.
 if [ "$srcdir" != "." ]; then
 
-    for dir in . $(grep "^subdirs *=" "$srcdir"/Makefile | sed -e "s/subdirs *= *//"); do
+    for dir in . ${subdirs}; do
 	mkdir -p "$dir"
 	cp "$srcdir"/"$dir"/Makefile.local "$dir"
 	cp "$srcdir"/"$dir"/Makefile "$dir"
@@ -337,6 +340,27 @@ else
     errors=$((errors + 1))
 fi
 
+if ! pkg-config --exists zlib; then
+  ${CC} ${zlib_cflags} -o compat/gen_zlib_pc \
+	  "$srcdir"/compat/gen_zlib_pc.c ${zlib_ldflags} > /dev/null 2>&1 &&
+  compat/gen_zlib_pc > compat/zlib.pc &&
+  PKG_CONFIG_PATH="$PKG_CONFIG_PATH":compat &&
+  export PKG_CONFIG_PATH
+  rm -f compat/gen_zlib_pc
+fi
+
+printf "Checking for zlib (>= 1.2.5.2)... "
+have_zlib=0
+if pkg-config --atleast-version=1.2.5.2 zlib; then
+    printf "Yes.\n"
+    have_zlib=1
+    zlib_cflags=$(pkg-config --cflags zlib)
+    zlib_ldflags=$(pkg-config --libs zlib)
+else
+    printf "No.\n"
+    errors=$((errors + 1))
+fi
+
 printf "Checking for talloc development files... "
 if pkg-config --exists talloc; then
     printf "Yes.\n"
@@ -358,6 +382,14 @@ if pkg-config --exists valgrind; then
 else
     printf "No (but that's fine).\n"
     have_valgrind=0
+fi
+
+printf "Checking for bash-completion (>= 1.90)... "
+if pkg-config --atleast-version=1.90 bash-completion; then
+    printf "Yes.\n"
+else
+    printf "No (will not install bash completion).\n"
+    WITH_BASH=0
 fi
 
 if [ -z "${EMACSLISPDIR}" ]; then
@@ -383,6 +415,25 @@ if emacs --quick --batch > /dev/null 2>&1; then
 else
     printf "No (so will not byte-compile emacs code)\n"
     have_emacs=0
+fi
+
+printf "Checking if sphinx is available and supports nroff output... "
+if hash sphinx-build > /dev/null 2>&1 && python -m sphinx.writers.manpage > /dev/null 2>&1 ; then
+    printf "Yes.\n"
+    have_sphinx=1
+    have_rst2man=0
+else
+    printf "No (falling back to rst2man).\n"
+    have_sphinx=0
+
+    printf "Checking if rst2man is available... "
+    if rst2man -V > /dev/null 2>&1; then
+       printf "Yes.\n"
+       have_rst2man=1
+    else
+       printf "No (so will not install man pages).\n"
+       have_rst2man=0
+    fi
 fi
 
 libdir_in_ldconfig=0
@@ -466,6 +517,11 @@ EOF
 	echo "	Xapian library (including development files such as headers)"
 	echo "	http://xapian.org/"
     fi
+    if [ $have_zlib -eq 0 ]; then
+	echo "	zlib library (>= version 1.2.5.2, including development files such as headers)"
+	echo "	http://zlib.net/"
+	echo
+    fi
     if [ $have_gmime -eq 0 ]; then
 	echo "	Either GMime 2.4 library" $GMIME_24_VERSION_CTR "or GMime 2.6 library" $GMIME_26_VERSION_CTR
 	echo "	(including development files such as headers)"
@@ -489,11 +545,11 @@ case a simple command will install everything you need. For example:
 
 On Debian and similar systems:
 
-	sudo apt-get install libxapian-dev libgmime-2.6-dev libtalloc-dev
+	sudo apt-get install libxapian-dev libgmime-2.6-dev libtalloc-dev zlib1g-dev
 
 Or on Fedora and similar systems:
 
-	sudo yum install xapian-core-devel gmime-devel libtalloc-devel
+	sudo yum install xapian-core-devel gmime-devel libtalloc-devel zlib-devel
 
 On other systems, similar commands can be used, but the details of the
 package names may be different.
@@ -525,6 +581,18 @@ configure again to ensure the packages can be found, or simply run
 EOF
     exit 1
 fi
+
+printf "Checking for canonicalize_file_name... "
+if ${CC} -o compat/have_canonicalize_file_name "$srcdir"/compat/have_canonicalize_file_name.c > /dev/null 2>&1
+then
+    printf "Yes.\n"
+    have_canonicalize_file_name=1
+else
+    printf "No (will use our own instead).\n"
+    have_canonicalize_file_name=0
+fi
+rm -f compat/have_canonicalize_file_name
+
 
 printf "Checking for getline... "
 if ${CC} -o compat/have_getline "$srcdir"/compat/have_getline.c > /dev/null 2>&1
@@ -569,6 +637,17 @@ else
     have_timegm="0"
 fi
 rm -f compat/have_timegm
+
+printf "Checking for dirent.d_type... "
+if ${CC} -o compat/have_d_type "$srcdir"/compat/have_d_type.c > /dev/null 2>&1
+then
+    printf "Yes.\n"
+    have_d_type="1"
+else
+    printf "No (will use stat instead).\n"
+    have_d_type="0"
+fi
+rm -f compat/have_d_type
 
 printf "Checking for standard version of getpwuid_r... "
 if ${CC} -o compat/check_getpwuid "$srcdir"/compat/check_getpwuid.c > /dev/null 2>&1
@@ -660,6 +739,9 @@ cat > Makefile.config <<EOF
 # directory (the current directory at the time configure was run).
 srcdir = ${srcdir}
 
+# subdirectories to build
+subdirs = ${subdirs}
+
 configure_options = $@
 
 # We use vpath directives (rather than the VPATH variable) since the
@@ -675,8 +757,9 @@ configure_options = $@
 # files, (which is quite ugly).
 vpath %.c \$(srcdir)
 vpath %.cc \$(srcdir)
-vpath %.1 \$(srcdir)
 vpath Makefile.% \$(srcdir)
+vpath %.py \$(srcdir)
+vpath %.rst \$(srcdir)
 
 # The C compiler to use
 CC = ${CC}
@@ -740,6 +823,12 @@ emacsetcdir=${EMACSETCDIR}
 # Whether there's an emacs binary available for byte-compiling
 HAVE_EMACS = ${have_emacs}
 
+# Whether there's a sphinx-build binary available for building documentation
+HAVE_SPHINX=${have_sphinx}
+
+# Whether there's a rst2man binary available for building documentation
+HAVE_RST2MAN=${have_rst2man}
+
 # The directory to which desktop files should be installed
 desktop_dir = \$(prefix)/share/applications
 
@@ -748,6 +837,10 @@ bash_completion_dir = ${BASHCOMPLETIONDIR:=\$(sysconfdir)/bash_completion.d}
 
 # The directory to which zsh completions files should be installed
 zsh_completion_dir = ${ZSHCOMLETIONDIR:=\$(prefix)/share/zsh/functions/Completion/Unix}
+
+# Whether the canonicalize_file_name function is available (if not, then notmuch will
+# build its own version)
+HAVE_CANONICALIZE_FILE_NAME = ${have_canonicalize_file_name}
 
 # Whether the getline function is available (if not, then notmuch will
 # build its own version)
@@ -760,6 +853,9 @@ HAVE_STRCASESTR = ${have_strcasestr}
 # Whether the strsep function is available (if not, then notmuch will
 # build its own version)
 HAVE_STRSEP = ${have_strsep}
+
+# Whether struct dirent has d_type (if not, then notmuch will use stat)
+HAVE_D_TYPE = ${have_d_type}
 
 # Whether the Xapian version in use supports compaction
 HAVE_XAPIAN_COMPACT = ${have_xapian_compact}
@@ -790,6 +886,10 @@ XAPIAN_LDFLAGS = ${xapian_ldflags}
 GMIME_CFLAGS = ${gmime_cflags}
 GMIME_LDFLAGS = ${gmime_ldflags}
 
+# Flags needed to compile and link against zlib
+ZLIB_CFLAGS = ${zlib_cflags}
+ZLIB_LDFLAGS = ${zlib_ldflags}
+
 # Flags needed to compile and link against talloc
 TALLOC_CFLAGS = ${talloc_cflags}
 TALLOC_LDFLAGS = ${talloc_ldflags}
@@ -817,24 +917,30 @@ WITH_ZSH = ${WITH_ZSH}
 
 # Combined flags for compiling and linking against all of the above
 CONFIGURE_CFLAGS = -DHAVE_GETLINE=\$(HAVE_GETLINE) \$(GMIME_CFLAGS)      \\
+		   -DHAVE_CANONICALIZE_FILE_NAME=\$(HAVE_CANONICALIZE_FILE_NAME) \\
+		   \$(ZLIB_CFLAGS)					 \\
 		   \$(TALLOC_CFLAGS) -DHAVE_VALGRIND=\$(HAVE_VALGRIND)   \\
 		   \$(VALGRIND_CFLAGS)                                   \\
 		   -DHAVE_STRCASESTR=\$(HAVE_STRCASESTR)                 \\
 		   -DHAVE_STRSEP=\$(HAVE_STRSEP)                         \\
+		   -DHAVE_D_TYPE=\$(HAVE_D_TYPE)                         \\
 		   -DSTD_GETPWUID=\$(STD_GETPWUID)                       \\
 		   -DSTD_ASCTIME=\$(STD_ASCTIME)                         \\
 		   -DHAVE_XAPIAN_COMPACT=\$(HAVE_XAPIAN_COMPACT)	 \\
 		   -DUTIL_BYTE_ORDER=\$(UTIL_BYTE_ORDER)
 
 CONFIGURE_CXXFLAGS = -DHAVE_GETLINE=\$(HAVE_GETLINE) \$(GMIME_CFLAGS)    \\
+		     -DHAVE_CANONICALIZE_FILE_NAME=\$(HAVE_CANONICALIZE_FILE_NAME) \\
+		     \$(ZLIB_CFLAGS)					 \\
 		     \$(TALLOC_CFLAGS) -DHAVE_VALGRIND=\$(HAVE_VALGRIND) \\
 		     \$(VALGRIND_CFLAGS) \$(XAPIAN_CXXFLAGS)             \\
 		     -DHAVE_STRCASESTR=\$(HAVE_STRCASESTR)               \\
 		     -DHAVE_STRSEP=\$(HAVE_STRSEP)                       \\
+		     -DHAVE_D_TYPE=\$(HAVE_D_TYPE)                       \\
 		     -DSTD_GETPWUID=\$(STD_GETPWUID)                     \\
 		     -DSTD_ASCTIME=\$(STD_ASCTIME)                       \\
 		     -DHAVE_XAPIAN_COMPACT=\$(HAVE_XAPIAN_COMPACT)       \\
 		     -DUTIL_BYTE_ORDER=\$(UTIL_BYTE_ORDER)
 
-CONFIGURE_LDFLAGS =  \$(GMIME_LDFLAGS) \$(TALLOC_LDFLAGS) \$(XAPIAN_LDFLAGS)
+CONFIGURE_LDFLAGS =  \$(GMIME_LDFLAGS) \$(TALLOC_LDFLAGS) \$(ZLIB_LDFLAGS) \$(XAPIAN_LDFLAGS)
 EOF

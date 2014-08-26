@@ -129,40 +129,41 @@ parse_option (const char *arg,
 
     const notmuch_opt_desc_t *try;
     for (try = options; try->opt_type != NOTMUCH_OPT_END; try++) {
-	if (try->name && strncmp (arg, try->name, strlen (try->name)) == 0) {
-	    char next = arg[strlen (try->name)];
-	    const char *value= arg+strlen(try->name)+1;
+	if (! try->name)
+	    continue;
 
-	    /* If we have not reached the end of the argument
-	       (i.e. the next character is not a space or delimiter)
-	       then the argument could still match a longer option
-	       name later in the option table.
-	    */
-	    if (next != '=' && next != ':' && next != '\0')
-		continue;
+	if (strncmp (arg, try->name, strlen (try->name)) != 0)
+	    continue;
 
-	    if (try->output_var == NULL)
-		INTERNAL_ERROR ("output pointer NULL for option %s", try->name);
+	char next = arg[strlen (try->name)];
+	const char *value = arg + strlen(try->name) + 1;
 
-	    switch (try->opt_type) {
-	    case NOTMUCH_OPT_KEYWORD:
-		return _process_keyword_arg (try, next, value);
-		break;
-	    case NOTMUCH_OPT_BOOLEAN:
-		return _process_boolean_arg (try, next, value);
-		break;
-	    case NOTMUCH_OPT_INT:
-		return _process_int_arg (try, next, value);
-		break;
-	    case NOTMUCH_OPT_STRING:
-		return _process_string_arg (try, next, value);
-		break;
-	    case NOTMUCH_OPT_POSITION:
-	    case NOTMUCH_OPT_END:
-	    default:
-		INTERNAL_ERROR ("unknown or unhandled option type %d", try->opt_type);
-		/*UNREACHED*/
-	    }
+	/*
+	 * If we have not reached the end of the argument (i.e. the
+	 * next character is not a space or delimiter) then the
+	 * argument could still match a longer option name later in
+	 * the option table.
+	 */
+	if (next != '=' && next != ':' && next != '\0')
+	    continue;
+
+	if (try->output_var == NULL)
+	    INTERNAL_ERROR ("output pointer NULL for option %s", try->name);
+
+	switch (try->opt_type) {
+	case NOTMUCH_OPT_KEYWORD:
+	    return _process_keyword_arg (try, next, value);
+	case NOTMUCH_OPT_BOOLEAN:
+	    return _process_boolean_arg (try, next, value);
+	case NOTMUCH_OPT_INT:
+	    return _process_int_arg (try, next, value);
+	case NOTMUCH_OPT_STRING:
+	    return _process_string_arg (try, next, value);
+	case NOTMUCH_OPT_POSITION:
+	case NOTMUCH_OPT_END:
+	default:
+	    INTERNAL_ERROR ("unknown or unhandled option type %d", try->opt_type);
+	    /*UNREACHED*/
 	}
     }
     fprintf (stderr, "Unrecognized option: --%s\n", arg);

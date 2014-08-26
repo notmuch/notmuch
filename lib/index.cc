@@ -231,26 +231,22 @@ _index_address_mailbox (notmuch_message_t *message,
 			InternetAddress *address)
 {
     InternetAddressMailbox *mailbox = INTERNET_ADDRESS_MAILBOX (address);
-    const char *name, *addr;
+    const char *name, *addr, *combined;
     void *local = talloc_new (message);
 
     name = internet_address_get_name (address);
     addr = internet_address_mailbox_get_addr (mailbox);
 
-    /* In the absence of a name, we'll strip the part before the @
-     * from the address. */
-    if (! name) {
-	const char *at;
+    /* Combine the name and address and index them as a phrase. */
+    if (name && addr)
+	combined = talloc_asprintf (local, "%s %s", name, addr);
+    else if (name)
+	combined = name;
+    else
+	combined = addr;
 
-	at = strchr (addr, '@');
-	if (at)
-	    name = talloc_strndup (local, addr, at - addr);
-    }
-
-    if (name)
-	_notmuch_message_gen_terms (message, prefix_name, name);
-    if (addr)
-	_notmuch_message_gen_terms (message, prefix_name, addr);
+    if (combined)
+	_notmuch_message_gen_terms (message, prefix_name, combined);
 
     talloc_free (local);
 }
@@ -425,63 +421,17 @@ _index_mime_part (notmuch_message_t *message,
 
 notmuch_status_t
 _notmuch_message_index_file (notmuch_message_t *message,
-			     const char *filename)
+			     notmuch_message_file_t *message_file)
 {
-    GMimeStream *stream = NULL;
-    GMimeParser *parser = NULL;
-    GMimeMessage *mime_message = NULL;
+    GMimeMessage *mime_message;
     InternetAddressList *addresses;
-    FILE *file = NULL;
     const char *from, *subject;
-    notmuch_status_t ret = NOTMUCH_STATUS_SUCCESS;
-    static int initialized = 0;
-    char from_buf[5];
-    bool is_mbox = false;
-    static bool mbox_warning = false;
+    notmuch_status_t status;
 
-    if (! initialized) {
-	g_mime_init (GMIME_ENABLE_RFC2047_WORKAROUNDS);
-	initialized = 1;
-    }
-
-    file = fopen (filename, "r");
-    if (! file) {
-	fprintf (stderr, "Error opening %s: %s\n", filename, strerror (errno));
-	ret = NOTMUCH_STATUS_FILE_ERROR;
-	goto DONE;
-    }
-
-    /* Is this mbox? */
-    if (fread (from_buf, sizeof (from_buf), 1, file) == 1 &&
-	strncmp (from_buf, "From ", 5) == 0)
-	is_mbox = true;
-    rewind (file);
-
-    /* Evil GMime steals my FILE* here so I won't fclose it. */
-    stream = g_mime_stream_file_new (file);
-
-    parser = g_mime_parser_new_with_stream (stream);
-    g_mime_parser_set_scan_from (parser, is_mbox);
-
-    mime_message = g_mime_parser_construct_message (parser);
-
-    if (is_mbox) {
-	if (!g_mime_parser_eos (parser)) {
-	    /* This is a multi-message mbox. */
-	    ret = NOTMUCH_STATUS_FILE_NOT_EMAIL;
-	    goto DONE;
-	}
-	/* For historical reasons, we support single-message mboxes,
-	 * but this behavior is likely to change in the future, so
-	 * warn. */
-	if (!mbox_warning) {
-	    mbox_warning = true;
-	    fprintf (stderr, "\
-Warning: %s is an mbox containing a single message,\n\
-likely caused by misconfigured mail delivery.  Support for single-message\n\
-mboxes is deprecated and may be removed in the future.\n", filename);
-	}
-    }
+    status = _notmuch_message_file_get_mime_message (message_file,
+						     &mime_message);
+    if (status)
+	return status;
 
     from = g_mime_message_get_sender (mime_message);
 
@@ -502,15 +452,5 @@ mboxes is deprecated and may be removed in the future.\n", filename);
 
     _index_mime_part (message, g_mime_message_get_mime_part (mime_message));
 
-  DONE:
-    if (mime_message)
-	g_object_unref (mime_message);
-
-    if (parser)
-	g_object_unref (parser);
-
-    if (stream)
-	g_object_unref (stream);
-
-    return ret;
+    return NOTMUCH_STATUS_SUCCESS;
 }

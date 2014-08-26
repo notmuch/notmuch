@@ -1,0 +1,81 @@
+# -*- makefile -*-
+
+dir := doc
+
+# You can set these variables from the command line.
+SPHINXOPTS    := -q
+SPHINXBUILD   = sphinx-build
+DOCBUILDDIR      := $(dir)/_build
+
+prerst2man := python $(srcdir)/$(dir)/prerst2man.py
+mkdocdeps := python $(srcdir)/$(dir)/mkdocdeps.py
+
+# Internal variables.
+ALLSPHINXOPTS   := -d $(DOCBUILDDIR)/doctrees $(SPHINXOPTS) $(srcdir)/$(dir)
+
+.PHONY: sphinx-html sphinx-texinfo sphinx-info
+
+.PHONY: install-man build-man
+
+%.gz: %
+	rm -f $@ && gzip --stdout $^ > $@
+
+sphinx-html:
+	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(DOCBUILDDIR)/html
+
+sphinx-texinfo:
+	$(SPHINXBUILD) -b texinfo $(ALLSPHINXOPTS) $(DOCBUILDDIR)/texinfo
+
+sphinx-info: sphinx-texinfo
+	make -C $(DOCBUILDDIR)/texinfo info
+
+-include $(dir)/docdeps.mk
+
+MAN_GZIP_FILES := $(addsuffix .gz,${MAN_ROFF_FILES})
+
+# Use the man page converter that is available. We should never depend
+# on MAN_ROFF_FILES if a converter is not available.
+${MAN_ROFF_FILES}: $(DOCBUILDDIR)/.roff.stamp
+
+# By using $(DOCBUILDDIR)/.roff.stamp instead of ${MAN_ROFF_FILES}, we
+# convey to make that a single invocation of this recipe builds all
+# of the roff files.  This prevents parallel make from starting an
+# instance of this recipe for each roff file.
+$(DOCBUILDDIR)/.roff.stamp: ${MAN_RST_FILES}
+ifeq ($(HAVE_SPHINX),1)
+	$(SPHINXBUILD) -b man $(ALLSPHINXOPTS) $(DOCBUILDDIR)/man
+	for section in 1 5 7; do \
+	    mkdir -p $(DOCBUILDDIR)/man/man$${section}; \
+	    mv $(DOCBUILDDIR)/man/*.$${section} $(DOCBUILDDIR)/man/man$${section}; \
+	done
+else ifeq ($(HAVE_RST2MAN),1)
+	$(prerst2man) $(srcdir)/doc $(DOCBUILDDIR)/man
+else
+	@echo "Fatal: build dependency fail."
+	@false
+endif
+	touch ${MAN_ROFF_FILES} $@
+
+# Do not try to build or install man pages if a man page converter is
+# not available.
+ifeq ($(HAVE_SPHINX)$(HAVE_RST2MAN),00)
+build-man:
+install-man:
+	@echo "No sphinx or rst2man, will not install man pages."
+else
+build-man: ${MAN_GZIP_FILES}
+install-man: ${MAN_GZIP_FILES}
+	mkdir -p "$(DESTDIR)$(mandir)/man1"
+	mkdir -p "$(DESTDIR)$(mandir)/man5"
+	mkdir -p "$(DESTDIR)$(mandir)/man7"
+	install -m0644 $(DOCBUILDDIR)/man/man1/*.1.gz $(DESTDIR)/$(mandir)/man1
+	install -m0644 $(DOCBUILDDIR)/man/man5/*.5.gz $(DESTDIR)/$(mandir)/man5
+	install -m0644 $(DOCBUILDDIR)/man/man7/*.7.gz $(DESTDIR)/$(mandir)/man7
+	cd $(DESTDIR)/$(mandir)/man1 && ln -sf notmuch.1.gz notmuch-setup.1.gz
+endif
+
+$(dir)/docdeps.mk: $(dir)/conf.py $(dir)/mkdocdeps.py
+	$(mkdocdeps) $(srcdir)/doc $(DOCBUILDDIR) $@
+
+CLEAN := $(CLEAN) $(DOCBUILDDIR) $(dir)/docdeps.mk $(DOCBUILDDIR)/.roff.stamp
+CLEAN := $(CLEAN) $(MAN_GZIP_FILES) $(MAN_ROFF_FILES) $(dir)/conf.pyc

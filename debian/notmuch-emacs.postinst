@@ -1,4 +1,7 @@
 dir="/var/lib/emacsen-common/state/package/installed"
-mkdir -p 0755 ${dir}
+mkdir -p -m 0755 ${dir}
 touch ${dir}/notmuch-emacs
 #DEBHELPER#
+if [ -d /0755 ]; then
+   rmdir /0755 || true
+fi

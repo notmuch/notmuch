@@ -17,7 +17,14 @@ emacs_sources := \
 	$(dir)/notmuch-crypto.el \
 	$(dir)/notmuch-tag.el \
 	$(dir)/coolj.el \
-	$(dir)/notmuch-print.el
+	$(dir)/notmuch-print.el \
+	$(dir)/notmuch-version.el
+
+$(dir)/notmuch-version.el: $(dir)/Makefile.local version.stamp
+$(dir)/notmuch-version.el: $(srcdir)/$(dir)/notmuch-version.el.tmpl
+	@sed -e 's/%AG%/Generated file (from $(<F)) -- do not edit!/' \
+	     -e 's/%VERSION%/"$(VERSION)"/' $< > $@
+
 
 emacs_images := \
 	$(srcdir)/$(dir)/notmuch-logo.png
@@ -29,26 +36,40 @@ emacs_bytecode = $(emacs_sources:.el=.elc)
 # the byte compiler may load an old .elc file when processing a
 # "require" or we may fail to rebuild a .elc that depended on a macro
 # from an updated file.
+ifeq ($(HAVE_EMACS),1)
 $(dir)/.eldeps: $(dir)/Makefile.local $(dir)/make-deps.el $(emacs_sources)
 	$(call quiet,EMACS) --directory emacs -batch -l make-deps.el \
 		-f batch-make-deps $(emacs_sources) > $@.tmp && \
-		(cmp -s $@.tmp $@ || mv $@.tmp $@)
--include $(dir)/.eldeps
-CLEAN+=$(dir)/.eldeps $(dir)/.eldeps.tmp
+		mv $@.tmp $@
+# We could include .eldeps directly, but that would cause a make
+# restart whenever any .el file was modified, even if dependencies
+# didn't change, because the mtime of .eldeps will change.  Instead,
+# we include a second file, .eldeps.x, which we ensure always has the
+# same content as .eldeps, but its mtime only changes when dependency
+# information changes, in which case a make restart is necessary
+# anyway.
+$(dir)/.eldeps.x: $(dir)/.eldeps
+	@cmp -s $^ $@ || cp $^ $@
+-include $(dir)/.eldeps.x
+endif
+CLEAN+=$(dir)/.eldeps $(dir)/.eldeps.tmp $(dir)/.eldeps.x
 
+ifeq ($(HAVE_EMACS),1)
 %.elc: %.el $(global_deps)
 	$(call quiet,EMACS) --directory emacs -batch -f batch-byte-compile $<
+endif
 
 ifeq ($(WITH_EMACS),1)
 ifeq ($(HAVE_EMACS),1)
 all: $(emacs_bytecode)
+install-emacs: $(emacs_bytecode)
 endif
 
 install: install-emacs
 endif
 
 .PHONY: install-emacs
-install-emacs:
+install-emacs: $(emacs_sources) $(emacs_images)
 	mkdir -p "$(DESTDIR)$(emacslispdir)"
 	install -m0644 $(emacs_sources) "$(DESTDIR)$(emacslispdir)"
 ifeq ($(HAVE_EMACS),1)
@@ -57,4 +78,4 @@ endif
 	mkdir -p "$(DESTDIR)$(emacsetcdir)"
 	install -m0644 $(emacs_images) "$(DESTDIR)$(emacsetcdir)"
 
-CLEAN := $(CLEAN) $(emacs_bytecode)
+CLEAN := $(CLEAN) $(emacs_bytecode) $(dir)/notmuch-version.el

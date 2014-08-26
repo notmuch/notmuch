@@ -46,6 +46,8 @@ NOTMUCH_BEGIN_DECLS
 
 #include <talloc.h>
 
+#include <gmime/gmime.h>
+
 #include "xutil.h"
 #include "error_util.h"
 
@@ -263,6 +265,9 @@ _notmuch_message_gen_terms (notmuch_message_t *message,
 void
 _notmuch_message_upgrade_filename_storage (notmuch_message_t *message);
 
+void
+_notmuch_message_upgrade_folder (notmuch_message_t *message);
+
 notmuch_status_t
 _notmuch_message_add_filename (notmuch_message_t *message,
 			       const char *filename);
@@ -317,13 +322,6 @@ notmuch_message_set_author (notmuch_message_t *message, const char *author);
 const char *
 notmuch_message_get_author (notmuch_message_t *message);
 
-
-/* index.cc */
-
-notmuch_status_t
-_notmuch_message_index_file (notmuch_message_t *message,
-			     const char *filename);
-
 /* message-file.c */
 
 /* XXX: I haven't decided yet whether these will actually get exported
@@ -349,31 +347,31 @@ _notmuch_message_file_open_ctx (void *ctx, const char *filename);
 void
 notmuch_message_file_close (notmuch_message_file_t *message);
 
-/* Restrict 'message' to only save the named headers.
+/* Parse the message.
  *
- * When the caller is only interested in a short list of headers,
- * known in advance, calling this function can avoid wasted time and
- * memory parsing/saving header values that will never be needed.
- *
- * The variable arguments should be a list of const char * with a
- * final '(const char *) NULL' to terminate the list.
- *
- * If this function is called, it must be called before any calls to
- * notmuch_message_get_header for this message.
- *
- * After calling this function, if notmuch_message_get_header is
- * called with a header name not in this list, then NULL will be
- * returned even if that header exists in the actual message.
+ * This will be done automatically as necessary on other calls
+ * depending on it, but an explicit call allows for better error
+ * status reporting.
  */
-void
-notmuch_message_file_restrict_headers (notmuch_message_file_t *message, ...);
+notmuch_status_t
+_notmuch_message_file_parse (notmuch_message_file_t *message);
 
-/* Identical to notmuch_message_restrict_headers but accepting a va_list. */
-void
-notmuch_message_file_restrict_headersv (notmuch_message_file_t *message,
-					va_list va_headers);
+/* Get the gmime message of a message file.
+ *
+ * The message file is parsed as necessary.
+ *
+ * The GMimeMessage* is set to *mime_message on success (which the
+ * caller must not unref).
+ *
+ * XXX: Would be nice to not have to expose GMimeMessage here.
+ */
+notmuch_status_t
+_notmuch_message_file_get_mime_message (notmuch_message_file_t *message,
+					GMimeMessage **mime_message);
 
 /* Get the value of the specified header from the message as a UTF-8 string.
+ *
+ * The message file is parsed as necessary.
  *
  * The header name is case insensitive.
  *
@@ -384,12 +382,18 @@ notmuch_message_file_restrict_headersv (notmuch_message_file_t *message,
  * only until the message is closed. The caller should copy it if
  * needing to modify the value or to hold onto it for longer.
  *
- * Returns NULL if the message does not contain a header line matching
- * 'header'.
+ * Returns NULL on errors, empty string if the message does not
+ * contain a header line matching 'header'.
  */
 const char *
 notmuch_message_file_get_header (notmuch_message_file_t *message,
 				 const char *header);
+
+/* index.cc */
+
+notmuch_status_t
+_notmuch_message_index_file (notmuch_message_t *message,
+			     notmuch_message_file_t *message_file);
 
 /* messages.c */
 

@@ -412,19 +412,27 @@ _notmuch_message_ensure_message_file (notmuch_message_t *message)
 const char *
 notmuch_message_get_header (notmuch_message_t *message, const char *header)
 {
-    std::string value;
+    try {
+	    std::string value;
 
-    /* Fetch header from the appropriate xapian value field if
-     * available */
-    if (strcasecmp (header, "from") == 0)
-	value = message->doc.get_value (NOTMUCH_VALUE_FROM);
-    else if (strcasecmp (header, "subject") == 0)
-	value = message->doc.get_value (NOTMUCH_VALUE_SUBJECT);
-    else if (strcasecmp (header, "message-id") == 0)
-	value = message->doc.get_value (NOTMUCH_VALUE_MESSAGE_ID);
+	    /* Fetch header from the appropriate xapian value field if
+	     * available */
+	    if (strcasecmp (header, "from") == 0)
+		value = message->doc.get_value (NOTMUCH_VALUE_FROM);
+	    else if (strcasecmp (header, "subject") == 0)
+		value = message->doc.get_value (NOTMUCH_VALUE_SUBJECT);
+	    else if (strcasecmp (header, "message-id") == 0)
+		value = message->doc.get_value (NOTMUCH_VALUE_MESSAGE_ID);
 
-    if (!value.empty())
-	return talloc_strdup (message, value.c_str ());
+	    if (!value.empty())
+		return talloc_strdup (message, value.c_str ());
+
+    } catch (Xapian::Error &error) {
+	fprintf (stderr, "A Xapian exception occurred when reading header: %s\n",
+		 error.get_msg().c_str());
+	message->notmuch->exception_reported = TRUE;
+	return NULL;
+    }
 
     /* Otherwise fall back to parsing the file */
     _notmuch_message_ensure_message_file (message);
@@ -473,6 +481,153 @@ notmuch_message_get_replies (notmuch_message_t *message)
     return _notmuch_messages_create (message->replies);
 }
 
+static void
+_notmuch_message_remove_terms (notmuch_message_t *message, const char *prefix)
+{
+    Xapian::TermIterator i;
+    size_t prefix_len = strlen (prefix);
+
+    while (1) {
+	i = message->doc.termlist_begin ();
+	i.skip_to (prefix);
+
+	/* Terminate loop when no terms remain with desired prefix. */
+	if (i == message->doc.termlist_end () ||
+	    strncmp ((*i).c_str (), prefix, prefix_len))
+	    break;
+
+	try {
+	    message->doc.remove_term ((*i));
+	} catch (const Xapian::InvalidArgumentError) {
+	    /* Ignore failure to remove non-existent term. */
+	}
+    }
+}
+
+/* Return true if p points at "new" or "cur". */
+static bool is_maildir (const char *p)
+{
+    return strcmp (p, "cur") == 0 || strcmp (p, "new") == 0;
+}
+
+/* Add "folder:" term for directory. */
+static notmuch_status_t
+_notmuch_message_add_folder_terms (notmuch_message_t *message,
+				   const char *directory)
+{
+    char *folder, *last;
+
+    folder = talloc_strdup (NULL, directory);
+    if (! folder)
+	return NOTMUCH_STATUS_OUT_OF_MEMORY;
+
+    /*
+     * If the message file is in a leaf directory named "new" or
+     * "cur", presume maildir and index the parent directory. Thus a
+     * "folder:" prefix search matches messages in the specified
+     * maildir folder, i.e. in the specified directory and its "new"
+     * and "cur" subdirectories.
+     *
+     * Note that this means the "folder:" prefix can't be used for
+     * distinguishing between message files in "new" or "cur". The
+     * "path:" prefix needs to be used for that.
+     *
+     * Note the deliberate difference to _filename_is_in_maildir(). We
+     * don't want to index different things depending on the existence
+     * or non-existence of all maildir sibling directories "new",
+     * "cur", and "tmp". Doing so would be surprising, and difficult
+     * for the user to fix in case all subdirectories were not in
+     * place during indexing.
+     */
+    last = strrchr (folder, '/');
+    if (last) {
+	if (is_maildir (last + 1))
+	    *last = '\0';
+    } else if (is_maildir (folder)) {
+	*folder = '\0';
+    }
+
+    _notmuch_message_add_term (message, "folder", folder);
+
+    talloc_free (folder);
+
+    return NOTMUCH_STATUS_SUCCESS;
+}
+
+#define RECURSIVE_SUFFIX "/**"
+
+/* Add "path:" terms for directory. */
+static notmuch_status_t
+_notmuch_message_add_path_terms (notmuch_message_t *message,
+				 const char *directory)
+{
+    /* Add exact "path:" term. */
+    _notmuch_message_add_term (message, "path", directory);
+
+    if (strlen (directory)) {
+	char *path, *p;
+
+	path = talloc_asprintf (NULL, "%s%s", directory, RECURSIVE_SUFFIX);
+	if (! path)
+	    return NOTMUCH_STATUS_OUT_OF_MEMORY;
+
+	/* Add recursive "path:" terms for directory and all parents. */
+	for (p = path + strlen (path) - 1; p > path; p--) {
+	    if (*p == '/') {
+		strcpy (p, RECURSIVE_SUFFIX);
+		_notmuch_message_add_term (message, "path", path);
+	    }
+	}
+
+	talloc_free (path);
+    }
+
+    /* Recursive all-matching path:** for consistency. */
+    _notmuch_message_add_term (message, "path", "**");
+
+    return NOTMUCH_STATUS_SUCCESS;
+}
+
+/* Add directory based terms for all filenames of the message. */
+static notmuch_status_t
+_notmuch_message_add_directory_terms (void *ctx, notmuch_message_t *message)
+{
+    const char *direntry_prefix = _find_prefix ("file-direntry");
+    int direntry_prefix_len = strlen (direntry_prefix);
+    Xapian::TermIterator i = message->doc.termlist_begin ();
+    notmuch_status_t status = NOTMUCH_STATUS_SUCCESS;
+
+    for (i.skip_to (direntry_prefix); i != message->doc.termlist_end (); i++) {
+	unsigned int directory_id;
+	const char *direntry, *directory;
+	char *colon;
+
+	/* Terminate loop at first term without desired prefix. */
+	if (strncmp ((*i).c_str (), direntry_prefix, direntry_prefix_len))
+	    break;
+
+	/* Indicate that there are filenames remaining. */
+	status = NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID;
+
+	direntry = (*i).c_str ();
+	direntry += direntry_prefix_len;
+
+	directory_id = strtol (direntry, &colon, 10);
+
+	if (colon == NULL || *colon != ':')
+	    INTERNAL_ERROR ("malformed direntry");
+
+	directory = _notmuch_database_get_directory_path (ctx,
+							  message->notmuch,
+							  directory_id);
+
+	_notmuch_message_add_folder_terms (message, directory);
+	_notmuch_message_add_path_terms (message, directory);
+    }
+
+    return status;
+}
+
 /* Add an additional 'filename' for 'message'.
  *
  * This change will not be reflected in the database until the next
@@ -504,8 +659,8 @@ _notmuch_message_add_filename (notmuch_message_t *message,
      * notmuch_directory_get_child_files() . */
     _notmuch_message_add_term (message, "file-direntry", direntry);
 
-    /* New terms allow user to search with folder: specification. */
-    _notmuch_message_gen_terms (message, "folder", directory);
+    _notmuch_message_add_folder_terms (message, directory);
+    _notmuch_message_add_path_terms (message, directory);
 
     talloc_free (local);
 
@@ -528,17 +683,10 @@ notmuch_status_t
 _notmuch_message_remove_filename (notmuch_message_t *message,
 				  const char *filename)
 {
-    const char *direntry_prefix = _find_prefix ("file-direntry");
-    int direntry_prefix_len = strlen (direntry_prefix);
-    const char *folder_prefix = _find_prefix ("folder");
-    int folder_prefix_len = strlen (folder_prefix);
     void *local = talloc_new (message);
-    char *zfolder_prefix = talloc_asprintf(local, "Z%s", folder_prefix);
-    int zfolder_prefix_len = strlen (zfolder_prefix);
     char *direntry;
     notmuch_private_status_t private_status;
     notmuch_status_t status;
-    Xapian::TermIterator i, last;
 
     status = _notmuch_database_filename_to_direntry (
 	local, message->notmuch, filename, NOTMUCH_FIND_LOOKUP, &direntry);
@@ -553,83 +701,36 @@ _notmuch_message_remove_filename (notmuch_message_t *message,
     if (status)
 	return status;
 
-    /* Re-synchronize "folder:" terms for this message. This requires:
-     *  1. removing all "folder:" terms
-     *  2. removing all "folder:" stemmed terms
-     *  3. adding back terms for all remaining filenames of the message. */
+    /* Re-synchronize "folder:" and "path:" terms for this message. */
 
-    /* 1. removing all "folder:" terms */
-    while (1) {
-	i = message->doc.termlist_begin ();
-	i.skip_to (folder_prefix);
+    /* Remove all "folder:" terms. */
+    _notmuch_message_remove_terms (message, _find_prefix ("folder"));
 
-	/* Terminate loop when no terms remain with desired prefix. */
-	if (i == message->doc.termlist_end () ||
-	    strncmp ((*i).c_str (), folder_prefix, folder_prefix_len))
-	{
-	    break;
-	}
+    /* Remove all "path:" terms. */
+    _notmuch_message_remove_terms (message, _find_prefix ("path"));
 
-	try {
-	    message->doc.remove_term ((*i));
-	} catch (const Xapian::InvalidArgumentError) {
-	    /* Ignore failure to remove non-existent term. */
-	}
-    }
-
-    /* 2. removing all "folder:" stemmed terms */
-    while (1) {
-	i = message->doc.termlist_begin ();
-	i.skip_to (zfolder_prefix);
-
-	/* Terminate loop when no terms remain with desired prefix. */
-	if (i == message->doc.termlist_end () ||
-	    strncmp ((*i).c_str (), zfolder_prefix, zfolder_prefix_len))
-	{
-	    break;
-	}
-
-	try {
-	    message->doc.remove_term ((*i));
-	} catch (const Xapian::InvalidArgumentError) {
-	    /* Ignore failure to remove non-existent term. */
-	}
-    }
-
-    /* 3. adding back terms for all remaining filenames of the message. */
-    i = message->doc.termlist_begin ();
-    i.skip_to (direntry_prefix);
-
-    for (; i != message->doc.termlist_end (); i++) {
-	unsigned int directory_id;
-	const char *direntry, *directory;
-	char *colon;
-
-	/* Terminate loop at first term without desired prefix. */
-	if (strncmp ((*i).c_str (), direntry_prefix, direntry_prefix_len))
-	    break;
-
-	/* Indicate that there are filenames remaining. */
-	status = NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID;
-
-	direntry = (*i).c_str ();
-	direntry += direntry_prefix_len;
-
-	directory_id = strtol (direntry, &colon, 10);
-
-	if (colon == NULL || *colon != ':')
-	    INTERNAL_ERROR ("malformed direntry");
-
-	directory = _notmuch_database_get_directory_path (local,
-							  message->notmuch,
-							  directory_id);
-	if (strlen (directory))
-	    _notmuch_message_gen_terms (message, "folder", directory);
-    }
+    /* Add back terms for all remaining filenames of the message. */
+    status = _notmuch_message_add_directory_terms (local, message);
 
     talloc_free (local);
 
     return status;
+}
+
+/* Upgrade the "folder:" prefix from V1 to V2. */
+#define FOLDER_PREFIX_V1       "XFOLDER"
+#define ZFOLDER_PREFIX_V1      "Z" FOLDER_PREFIX_V1
+void
+_notmuch_message_upgrade_folder (notmuch_message_t *message)
+{
+    /* Remove all old "folder:" terms. */
+    _notmuch_message_remove_terms (message, FOLDER_PREFIX_V1);
+
+    /* Remove all old "folder:" stemmed terms. */
+    _notmuch_message_remove_terms (message, ZFOLDER_PREFIX_V1);
+
+    /* Add new boolean "folder:" and "path:" terms. */
+    _notmuch_message_add_directory_terms (message, message);
 }
 
 char *
@@ -766,7 +867,9 @@ notmuch_message_get_date (notmuch_message_t *message)
     try {
 	value = message->doc.get_value (NOTMUCH_VALUE_TIMESTAMP);
     } catch (Xapian::Error &error) {
-	INTERNAL_ERROR ("Failed to read timestamp value from document.");
+	fprintf (stderr, "A Xapian exception occurred when reading date: %s\n",
+		 error.get_msg().c_str());
+	message->notmuch->exception_reported = TRUE;
 	return 0;
     }
 
@@ -920,16 +1023,21 @@ _notmuch_message_gen_terms (notmuch_message_t *message,
 	return NOTMUCH_PRIVATE_STATUS_NULL_POINTER;
 
     term_gen->set_document (message->doc);
-    term_gen->set_termpos (message->termpos);
 
     if (prefix_name) {
 	const char *prefix = _find_prefix (prefix_name);
 
+	term_gen->set_termpos (message->termpos);
 	term_gen->index_text (text, 1, prefix);
-	message->termpos = term_gen->get_termpos ();
+	/* Create a gap between this an the next terms so they don't
+	 * appear to be a phrase. */
+	message->termpos = term_gen->get_termpos () + 100;
     }
 
+    term_gen->set_termpos (message->termpos);
     term_gen->index_text (text);
+    /* Create a term gap, as above. */
+    message->termpos = term_gen->get_termpos () + 100;
 
     return NOTMUCH_PRIVATE_STATUS_SUCCESS;
 }

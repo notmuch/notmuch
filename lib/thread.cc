@@ -524,7 +524,7 @@ _notmuch_thread_create (void *ctx,
     _resolve_thread_relationships (thread);
 
     /* Commit to returning thread. */
-    talloc_steal (ctx, thread);
+    (void) talloc_steal (ctx, thread);
 
   DONE:
     talloc_free (local);

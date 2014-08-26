@@ -1,8 +1,100 @@
-notmuch (0.17-3~bpo70+1) wheezy-backports; urgency=medium
+notmuch (0.18.1-2) unstable; urgency=medium
 
-  * Rebuild for wheezy-backports.
+  * Update build-deps to use emacs24 on buildd (Closes: #756085)
+  * Disable gdb atomicity test for arm64 as gdb is currently broken on
+    the (unofficial) buildds
+  * Re-enable atomicity test on armhf; upstream fix seems to have
+    worked.
 
- -- David Bremner <bremner@debian.org>  Wed, 29 Jan 2014 20:20:56 -0400
+ -- David Bremner <bremner@debian.org>  Sat, 09 Aug 2014 11:48:10 -0300
+
+notmuch (0.18.1-1) unstable; urgency=medium
+
+  * New upstream bug fix release
+    - Re-enable support for single-message mbox files
+    - Fix for phrase indexing
+    - Make tagging empty query in Emacs harmless
+
+ -- David Bremner <bremner@debian.org>  Wed, 25 Jun 2014 07:20:45 -0300
+
+notmuch (0.18.1~rc0-1) experimental; urgency=medium
+
+  * New upstream bug fix release (candidate)
+  * Tighten dependence of python packages on libnotmuch
+    (Closes: #749881).
+  * Redo emacsen-install script from sample in emacsen-common
+    (Closes: #739839).
+
+ -- David Bremner <bremner@debian.org>  Sat, 14 Jun 2014 07:50:28 -0300
+
+notmuch (0.18-3) unstable; urgency=medium
+
+  * Disable atomicity tests on armel.
+
+ -- David Bremner <bremner@debian.org>  Thu, 08 May 2014 14:26:45 +0900
+
+notmuch (0.18-2) unstable; urgency=medium
+
+  * Disable atomicity tests on armhf. These should be re-enabled when
+    upstream relases a fix for this (in progress).
+
+ -- David Bremner <bremner@debian.org>  Thu, 08 May 2014 08:28:33 +0900
+
+notmuch (0.18-1) unstable; urgency=medium
+
+  * New upstream release. For detailed release notes see
+    see /usr/share/doc/notmuch/NEWS.gz. Some highlights:
+    - Changes/enhancements to searching for messages by filesystem
+      location ('folder:' and 'path:' prefixes).
+    - Saved searches in Emacs have also been enhanced to allow
+      distinct search orders for each one.
+    - Another enhancement to the Emacs interface is that replies to
+      encrypted messages are now encrypted, reducing the risk of
+      unintentional information disclosure.
+    - The default dump output format has changed to the more robust
+      'batch-tag' format.
+    - The previously deprecated parsing of single message mboxes has
+      been removed.
+
+ -- David Bremner <bremner@debian.org>  Tue, 06 May 2014 16:20:39 +0900
+
+notmuch (0.18~rc1-1) experimental; urgency=low
+
+  * Upstream release candidate
+    - include encoding fix for vim client.
+
+ -- David Bremner <bremner@debian.org>  Sun, 04 May 2014 07:29:51 +0900
+
+notmuch (0.18~rc0-1) experimental; urgency=low
+
+  * Upstream release candidate.
+  * Bug fix: "insufficient sanitization of arguments to notmuch CLI",
+    thanks to Antoine Beaupré (Closes: #737496).
+  * Bug fix: "notmuch(1) manpage: typo: int -> in", thanks to Jakub
+    Wilk (Closes: #739556).
+  * Bug fix: "get a quiet option", thanks to Joerg Jaspert (Closes:
+    #666027).
+  * Bug fix: "Please remove me from Uploaders", thanks to martin f
+    krafft (Closes: #719100).
+  * Bug fix: "M-x notmuch-show-reply on an encrypted message should
+    insert encryption tags into the mml buffer", thanks to Daniel Kahn
+    Gillmor (Closes: #704648).
+
+ -- David Bremner <bremner@debian.org>  Tue, 22 Apr 2014 09:27:29 +0900
+
+notmuch (0.17-5) unstable; urgency=medium
+
+  * Bug fix: "unowned directory after purge: /0755/", thanks to
+    Andreas Beckmann (Closes: #740325).
+
+ -- David Bremner <bremner@debian.org>  Mon, 03 Mar 2014 07:29:06 -0400
+
+notmuch (0.17-4) unstable; urgency=medium
+
+  * Bug fix: "Please update ruby binary extension install path",
+    thanks to Christian Hofstaedtler (Closes: #739120).
+
+ -- David Bremner <bremner@debian.org>  Tue, 18 Feb 2014 21:37:44 -0400
 
 notmuch (0.17-3) unstable; urgency=medium
 
@@ -59,6 +151,7 @@ notmuch (0.16-1~bpo70+1) wheezy-backports; urgency=low
   * Rebuild for wheezy-backports.
 
  -- David Bremner <bremner@debian.org>  Sun, 01 Sep 2013 19:04:32 -0300
+
 notmuch (0.16-1) unstable; urgency=low
 
   * New upstream feature release

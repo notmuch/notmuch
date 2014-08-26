@@ -18,6 +18,10 @@ shell echo 0 > outcount
 
 shell touch inodes
 
+# work around apparent issue with lazy library loading on some
+# platforms
+set breakpoint pending on
+
 break rename
 commands
 # As an optimization, only consider snapshots after a Xapian commit.

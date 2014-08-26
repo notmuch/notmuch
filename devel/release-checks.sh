@@ -68,7 +68,7 @@ verfail ()
 
 echo -n "Checking that '$VERSION' is good with digits and periods... "
 case $VERSION in
-	*[^0-9.]*)
+	*[!0-9.]*)
 		verfail "'$VERSION' contains other characters than digits and periods" ;;
 	.*)	verfail "'$VERSION' begins with a period" ;;
 	*.)	verfail "'$VERSION' ends with a period" ;;
@@ -195,46 +195,6 @@ case $news_date in
 	echo No.
 	append_emsg "Date '$news_date' in NEWS file is not in format (yyyy-mm-dd)"
 esac
-
-readonly DATE=${news_date//[()]/} # bash feature
-manthdata ()
-{
-	set x $*
-	if [ $# != 7 ]
-	then
-		append_emsg "'$mp' has too many '.TH' lines"
-		man_mismatch=1
-	fi
-	man_date=${5-} man_version=${7-}
-}
-
-echo -n "Checking that manual page dates and versions are $DATE and $VERSION... "
-manfiles=`find man -type f | sort`
-man_pages_ok=Yes
-for mp in $manfiles
-do
-	case $mp in
-		*.[0-9]) ;; # fall below this 'case ... esac'
-
-		*/Makefile.local | */Makefile ) continue ;;
-		*/.gitignore)	continue ;;
-		*.bak)		continue ;;
-
-		*)	append_emsg "'$mp': extra file"
-			man_pages_ok=No
-			continue
-	esac
-	manthdata `sed -n '/^[.]TH NOTMUCH/ { y/"/ /; p; }' "$mp"`
-	if [ "$man_version" != "$VERSION" ]
-	then	append_emsg "Version '$man_version' is not '$VERSION' in $mp"
-		mman_pages_ok=No
-	fi
-	if [ "$man_date" != "$DATE" ]
-	then	append_emsg "DATE '$man_date' is not '$DATE' in $mp"
-		man_pages_ok=No
-	fi
-done
-echo $man_pages_ok.
 
 if [ -n "$emsgs" ]
 then

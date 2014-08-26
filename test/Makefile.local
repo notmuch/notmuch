@@ -2,7 +2,9 @@
 
 dir := test
 
-extra_cflags += -I.
+# save against changes in $(dir)
+test_src_dir := $(dir)
+extra_cflags += -I$(srcdir)
 
 smtp_dummy_srcs =		\
 	$(notmuch_compat_srcs)	\
@@ -11,10 +13,10 @@ smtp_dummy_srcs =		\
 smtp_dummy_modules = $(smtp_dummy_srcs:.c=.o)
 
 $(dir)/arg-test: $(dir)/arg-test.o command-line-arguments.o util/libutil.a
-	$(call quiet,CC) -I. $^ -o $@
+	$(call quiet,CC) $^ -o $@
 
 $(dir)/hex-xcode: $(dir)/hex-xcode.o command-line-arguments.o util/libutil.a
-	$(call quiet,CC) -I. $^ -o $@ -ltalloc
+	$(call quiet,CC) $^ $(TALLOC_LDFLAGS) -o $@
 
 random_corpus_deps =  $(dir)/random-corpus.o  $(dir)/database-test.o \
 			notmuch-config.o command-line-arguments.o \
@@ -33,9 +35,25 @@ $(dir)/symbol-test: $(dir)/symbol-test.o lib/$(LINKER_NAME)
 $(dir)/parse-time: $(dir)/parse-time.o parse-time-string/parse-time-string.o
 	$(call quiet,CC) $^ -o $@
 
+$(dir)/have-compact: Makefile.config
+ifeq ($(HAVE_XAPIAN_COMPACT),1)
+	ln -sf /bin/true $@
+else
+	ln -sf /bin/false $@
+endif
+
+$(dir)/have-man: Makefile.config
+ifeq ($(HAVE_SPHINX)$(HAVE_RST2MAN),00)
+	ln -sf /bin/false $@
+else
+	ln -sf /bin/true $@
+endif
+
 .PHONY: test check
 
 TEST_BINARIES=$(dir)/arg-test \
+	      $(dir)/have-compact \
+	      $(dir)/have-man \
 	      $(dir)/hex-xcode \
 	      $(dir)/random-corpus \
 	      $(dir)/parse-time \
@@ -45,16 +63,11 @@ TEST_BINARIES=$(dir)/arg-test \
 test-binaries: $(TEST_BINARIES)
 
 test:	all test-binaries
-	@${dir}/notmuch-test $(OPTIONS)
+	@${test_src_dir}/notmuch-test $(OPTIONS)
 
 check: test
 
 SRCS := $(SRCS) $(smtp_dummy_srcs)
-CLEAN := $(CLEAN) $(dir)/smtp-dummy $(dir)/smtp-dummy.o \
-	 $(dir)/symbol-test $(dir)/symbol-test.o \
-	 $(dir)/arg-test $(dir)/arg-test.o \
-	 $(dir)/hex-xcode $(dir)/hex-xcode.o \
+CLEAN += $(TEST_BINARIES) $(addsuffix .o,$(TEST_BINARIES)) \
 	 $(dir)/database-test.o \
-	 $(dir)/random-corpus $(dir)/random-corpus.o \
-	 $(dir)/parse-time $(dir)/parse-time.o \
 	 $(dir)/corpus.mail $(dir)/test-results $(dir)/tmp.*

@@ -1,0 +1,14 @@
+# -*- makefile -*-
+
+TEST_DATABASE_MIRROR=http://notmuchmail.org/releases/test-databases
+
+dir := test/test-databases
+
+test_databases := $(dir)/database-v1.tar.xz
+
+%.tar.xz:
+	wget -nv -O $@ ${TEST_DATABASE_MIRROR}/$(notdir $@);
+
+download-test-databases: ${test_databases}
+
+DISTCLEAN := $(DISTCLEAN) ${test_databases}

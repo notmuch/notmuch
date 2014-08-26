@@ -36,7 +36,7 @@
 ;;
 ;; Then, to actually run it, add:
 ;;
-;;	(require 'notmuch)
+;;	(autoload 'notmuch "notmuch" "Notmuch mail" t)
 ;;
 ;; to your ~/.emacs file, and then run "M-x notmuch" from within emacs,
 ;; or run:
@@ -61,6 +61,10 @@
 (require 'notmuch-message)
 (require 'notmuch-parser)
 
+(unless (require 'notmuch-version nil t)
+  (defconst notmuch-emacs-version "unknown"
+    "Placeholder variable when notmuch-version.el[c] is not available."))
+
 (defcustom notmuch-search-result-format
   `(("date" . "%12s ")
     ("count" . "%-7s ")
@@ -80,6 +84,18 @@ enter a line break when setting this variable with setq, use \\n.
 To enter a line break in customize, press \\[quoted-insert] C-j."
   :type '(alist :key-type (string) :value-type (string))
   :group 'notmuch-search)
+
+;; The name of this variable `notmuch-init-file' is consistent with the
+;; convention used in e.g. emacs and gnus. The value, `notmuch-config[.el[c]]'
+;; is consistent with notmuch cli configuration file `~/.notmuch-config'.
+(defcustom notmuch-init-file (locate-user-emacs-file "notmuch-config")
+  "Your Notmuch Emacs-Lisp configuration file name.
+If a file with one of the suffixes defined by `get-load-suffixes' exists,
+it will be read instead.
+This file is read once when notmuch is loaded; the notmuch hooks added
+there will be called at other points of notmuch execution."
+  :type 'file
+  :group 'notmuch)
 
 (defvar notmuch-query-history nil
   "Variable to store minibuffer history for notmuch queries")
@@ -165,6 +181,7 @@ To enter a line break in customize, press \\[quoted-insert] C-j."
 (defvar notmuch-search-stash-map
   (let ((map (make-sparse-keymap)))
     (define-key map "i" 'notmuch-search-stash-thread-id)
+    (define-key map "?" 'notmuch-subkeymap-help)
     map)
   "Submap for stash commands")
 (fset 'notmuch-search-stash-map notmuch-search-stash-map)
@@ -411,14 +428,16 @@ matched and unmatched messages in the current thread."
   "Return the stable query for the current region.
 
 If ONLY-MATCHED is non-nil, include only matched messages.  If it
-is nil, include both matched and unmatched messages."
+is nil, include both matched and unmatched messages. If there are
+no messages in the region then return nil."
   (let ((query-list nil) (all (not only-matched)))
     (dolist (queries (notmuch-search-properties-in-region :query beg end))
       (when (first queries)
 	(push (first queries) query-list))
       (when (and all (second queries))
 	(push (second queries) query-list)))
-    (concat "(" (mapconcat 'identity query-list ") or (") ")")))
+    (when query-list
+      (concat "(" (mapconcat 'identity query-list ") or (") ")"))))
 
 (defun notmuch-search-find-authors ()
   "Return the authors for the current thread"
@@ -648,7 +667,7 @@ foreground and blue background."
 	  (let ((tag (car elem))
 		(attributes (cdr elem)))
 	    (when (member tag line-tag-list)
-	      (notmuch-combine-face-text-property start end attributes))))
+	      (notmuch-apply-face nil attributes nil start end))))
 	;; Reverse the list so earlier entries take precedence
 	(reverse notmuch-search-line-faces)))
 
@@ -752,24 +771,33 @@ non-authors is found, assume that all of the authors match."
      format-string (notmuch-sanitize (plist-get result :authors))))
 
    ((string-equal field "tags")
-    (let ((tags (plist-get result :tags)))
-      (insert (format format-string (notmuch-tag-format-tags tags)))))))
+    (let ((tags (plist-get result :tags))
+	  (orig-tags (plist-get result :orig-tags)))
+      (insert (format format-string (notmuch-tag-format-tags tags orig-tags)))))))
 
-(defun notmuch-search-show-result (result &optional pos)
-  "Insert RESULT at POS or the end of the buffer if POS is null."
+(defun notmuch-search-show-result (result pos)
+  "Insert RESULT at POS."
   ;; Ignore excluded matches
   (unless (= (plist-get result :matched) 0)
-    (let ((beg (or pos (point-max))))
-      (save-excursion
-	(goto-char beg)
-	(dolist (spec notmuch-search-result-format)
-	  (notmuch-search-insert-field (car spec) (cdr spec) result))
-	(insert "\n")
-	(notmuch-search-color-line beg (point) (plist-get result :tags))
-	(put-text-property beg (point) 'notmuch-search-result result))
-      (when (string= (plist-get result :thread) notmuch-search-target-thread)
-	(setq notmuch-search-target-thread "found")
-	(goto-char beg)))))
+    (save-excursion
+      (goto-char pos)
+      (dolist (spec notmuch-search-result-format)
+	(notmuch-search-insert-field (car spec) (cdr spec) result))
+      (insert "\n")
+      (notmuch-search-color-line pos (point) (plist-get result :tags))
+      (put-text-property pos (point) 'notmuch-search-result result))))
+
+(defun notmuch-search-append-result (result)
+  "Insert RESULT at the end of the buffer.
+
+This is only called when a result is first inserted so it also
+sets the :orig-tag property."
+  (let ((new-result (plist-put result :orig-tags (plist-get result :tags)))
+	(pos (point-max)))
+    (notmuch-search-show-result new-result pos)
+    (when (string= (plist-get result :thread) notmuch-search-target-thread)
+      (setq notmuch-search-target-thread "found")
+      (goto-char pos))))
 
 (defun notmuch-search-process-filter (proc string)
   "Process and filter the output of \"notmuch search\""
@@ -783,7 +811,7 @@ non-authors is found, assume that all of the authors match."
 	(save-excursion
 	  (goto-char (point-max))
 	  (insert string))
-	(notmuch-sexp-parse-partial-list 'notmuch-search-show-result
+	(notmuch-sexp-parse-partial-list 'notmuch-search-append-result
 					 results-buf)))))
 
 (defun notmuch-search-tag-all (tag-changes)
@@ -801,14 +829,14 @@ See `notmuch-tag' for information on the format of TAG-CHANGES."
 	  (let (longest
 		(longest-length 0))
 	    (loop for tuple in notmuch-saved-searches
-		  if (let ((quoted-query (regexp-quote (cdr tuple))))
+		  if (let ((quoted-query (regexp-quote (notmuch-saved-search-get tuple :query))))
 		       (and (string-match (concat "^" quoted-query) query)
 			    (> (length (match-string 0 query))
 			       longest-length)))
 		  do (setq longest tuple))
 	    longest))
-	 (saved-search-name (car saved-search))
-	 (saved-search-query (cdr saved-search)))
+	 (saved-search-name (notmuch-saved-search-get saved-search :name))
+	 (saved-search-query (notmuch-saved-search-get saved-search :query)))
     (cond ((and saved-search (equal saved-search-query query))
 	   ;; Query is the same as saved search (ignoring case)
 	   (concat "*notmuch-saved-search-" saved-search-name "*"))
@@ -828,7 +856,7 @@ See `notmuch-tag' for information on the format of TAG-CHANGES."
 PROMPT is the string to prompt with."
   (lexical-let
       ((completions
-	(append (list "folder:" "thread:" "id:" "date:" "from:" "to:"
+	(append (list "folder:" "path:" "thread:" "id:" "date:" "from:" "to:"
 		      "subject:" "attachment:")
 		(mapcar (lambda (tag)
 			  (concat "tag:" (notmuch-escape-boolean-term tag)))
@@ -887,6 +915,7 @@ the configured default sort order."
     (set 'notmuch-search-oldest-first oldest-first)
     (set 'notmuch-search-target-thread target-thread)
     (set 'notmuch-search-target-line target-line)
+    (notmuch-tag-clear-cache)
     (let ((proc (get-buffer-process (current-buffer)))
 	  (inhibit-read-only t))
       (if proc
@@ -1002,3 +1031,9 @@ notmuch buffers exist, run `notmuch'."
 (setq mail-user-agent 'notmuch-user-agent)
 
 (provide 'notmuch)
+
+;; After provide to avoid loops if notmuch was require'd via notmuch-init-file.
+(if init-file-user ; don't load init file if the -q option was used.
+    (let ((init-file (locate-file notmuch-init-file '("/")
+				  (get-load-suffixes))))
+      (if init-file (load init-file nil t t))))

@@ -4,8 +4,8 @@ Priority: optional
 Maintainer: Carl Worth <cworth@debian.org>
 Uploaders:
  Jameson Graef Rollins <jrollins@finestructure.net>,
- martin f. krafft <madduck@debian.org>,
  David Bremner <bremner@debian.org>
+Build-Conflicts: ruby1.8
 Build-Depends:
  debhelper (>= 9),
  pkg-config,
@@ -15,11 +15,13 @@ Build-Depends:
  libz-dev,
  python-all (>= 2.6.6-3~),
  python3-all (>= 3.1.2-7~),
+ python-sphinx (>= 1.0),
  ruby, ruby-dev (>>1:1.9.3~),
- emacs23-nox | emacs23 (>=23~) | emacs23-lucid (>=23~) |
- emacs24-nox | emacs24 (>=24~) | emacs24-lucid (>=24~),
- gdb [!s390x !ia64],
- dtach (>= 0.8)
+ emacs24-nox | emacs24 (>=24~) | emacs24-lucid (>=24~) |
+ emacs23-nox | emacs23 (>=23~) | emacs23-lucid (>=23~),
+ gdb [!s390x !ia64 !armel !arm64],
+ dtach (>= 0.8),
+ bash-completion (>=1.9.0~)
 Standards-Version: 3.9.4
 Homepage: http://notmuchmail.org/
 Vcs-Git: git://notmuchmail.org/git/notmuch
@@ -67,7 +69,7 @@ Description: thread-based email index, search and tagging (development)
 Package: python-notmuch
 Architecture: all
 Section: python
-Depends: ${misc:Depends}, ${python:Depends}, libnotmuch3
+Depends: ${misc:Depends}, ${python:Depends}, libnotmuch3 (>= ${source:Version})
 Description: python interface to the notmuch mail search and index library
  Notmuch is a system for indexing, searching, reading, and tagging
  large collections of email messages in maildir or mh format. It uses
@@ -80,7 +82,7 @@ Description: python interface to the notmuch mail search and index library
 Package: python3-notmuch
 Architecture: all
 Section: python
-Depends: ${misc:Depends}, ${python3:Depends}, libnotmuch3
+Depends: ${misc:Depends}, ${python3:Depends}, libnotmuch3 (>= ${source:Version})
 Description: Python 3 interface to the notmuch mail search and index library
  Notmuch is a system for indexing, searching, reading, and tagging
  large collections of email messages in maildir or mh format. It uses
@@ -108,10 +110,10 @@ Architecture: all
 Section: mail
 Breaks: notmuch (<<0.6~254~)
 Replaces: notmuch (<<0.6~254~)
-Conflicts: emacsen-common (<< 2.0.0)
 Depends: ${misc:Depends}, notmuch (>= ${source:Version}),
  emacs23 (>= 23~) | emacs23-nox (>=23~) | emacs23-lucid (>=23~) |
- emacs24 (>= 24~) | emacs24-nox (>=24~) | emacs24-lucid (>=24~)
+ emacs24 (>= 24~) | emacs24-nox (>=24~) | emacs24-lucid (>=24~),
+ emacsen-common (>= 2.0.8)
 Description: thread-based email index, search and tagging (emacs interface)
  Notmuch is a system for indexing, searching, reading, and tagging
  large collections of email messages in maildir or mh format. It uses

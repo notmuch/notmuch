@@ -115,6 +115,14 @@ list."
 	    (push header message-hidden-headers)))
 	notmuch-mua-hidden-headers))
 
+(defun notmuch-mua-reply-crypto (parts)
+  "Add mml sign-encrypt flag if any part of original message is encrypted."
+  (loop for part in parts
+	if (notmuch-match-content-type (plist-get part :content-type) "multipart/encrypted")
+	  do (mml-secure-message-sign-encrypt)
+	else if (notmuch-match-content-type (plist-get part :content-type) "multipart/*")
+	  do (notmuch-mua-reply-crypto (plist-get part :content))))
+
 (defun notmuch-mua-get-quotable-parts (parts)
   (loop for part in parts
 	if (notmuch-match-content-type (plist-get part :content-type) "multipart/alternative")
@@ -151,9 +159,10 @@ list."
 
 (defun notmuch-mua-reply (query-string &optional sender reply-all)
   (let ((args '("reply" "--format=sexp" "--format-version=1"))
+	(process-crypto notmuch-show-process-crypto)
 	reply
 	original)
-    (when notmuch-show-process-crypto
+    (when process-crypto
       (setq args (append args '("--decrypt"))))
 
     (if reply-all
@@ -224,27 +233,20 @@ list."
 	(set-mark (point))
 	(goto-char start)
 	;; Quote the original message according to the user's configured style.
-	(message-cite-original))))
+	(message-cite-original)))
 
-  (goto-char (point-max))
+    ;; Crypto processing based crypto content of the original message
+    (when process-crypto
+      (notmuch-mua-reply-crypto (plist-get original :body))))
+
+  ;; Push mark right before signature, if any.
+  (message-goto-signature)
+  (unless (eobp)
+    (end-of-line -1))
   (push-mark)
+
   (message-goto-body)
   (set-buffer-modified-p nil))
-
-(defun notmuch-mua-forward-message ()
-  (funcall (notmuch-mua-get-switch-function) (current-buffer))
-  (message-forward)
-
-  (when notmuch-mua-user-agent-function
-    (let ((user-agent (funcall notmuch-mua-user-agent-function)))
-      (when (not (string= "" user-agent))
-	(message-add-header (format "User-Agent: %s" user-agent)))))
-  (message-sort-headers)
-  (message-hide-headers)
-  (set-buffer-modified-p nil)
-  (notmuch-mua-maybe-set-window-dedicated)
-
-  (message-goto-to))
 
 (defun notmuch-mua-mail (&optional to subject other-headers &rest other-args)
   "Invoke the notmuch mail composition window.
@@ -287,31 +289,33 @@ the From: header is already filled in by notmuch."
 
 (defvar notmuch-mua-sender-history nil)
 
+;; Workaround: Running `ido-completing-read' in emacs 23.1, 23.2 and 23.3
+;; without some explicit initialization fill freeze the operation.
+;; Hence, we advice `ido-completing-read' to ensure required initialization
+;; is done.
+(if (and (= emacs-major-version 23) (< emacs-minor-version 4))
+    (defadvice ido-completing-read (before notmuch-ido-mode-init activate)
+      (ido-init-completion-maps)
+      (add-hook 'minibuffer-setup-hook 'ido-minibuffer-setup)
+      (add-hook 'choose-completion-string-functions
+		'ido-choose-completion-string)
+      (ad-disable-advice 'ido-completing-read 'before 'notmuch-ido-mode-init)
+      (ad-activate 'ido-completing-read)))
+
 (defun notmuch-mua-prompt-for-sender ()
-  (interactive)
-  (let (name addresses one-name-only)
-    ;; If notmuch-identities is non-nil, check if there is a fixed user name.
-    (if notmuch-identities
-	(let ((components (mapcar 'mail-extract-address-components notmuch-identities)))
-	  (setq name          (caar components)
-		addresses     (mapcar 'cadr components)
-		one-name-only (eval
-			       (cons 'and
-				     (mapcar (lambda (identity)
-					       (string-equal name (car identity)))
-					     components)))))
-      ;; If notmuch-identities is nil, use values from the notmuch configuration file.
-      (setq name          (notmuch-user-name)
-	    addresses     (cons (notmuch-user-primary-email) (notmuch-user-other-email))
-	    one-name-only t))
-    ;; Now prompt the user, either for an email address only or for a full identity.
-    (if one-name-only
-	(let ((address
-	       (ido-completing-read (concat "Sender address for " name ": ") addresses
-				    nil nil nil 'notmuch-mua-sender-history (car addresses))))
-	  (concat name " <" address ">"))
-      (ido-completing-read "Send mail From: " notmuch-identities
-			   nil nil nil 'notmuch-mua-sender-history (car notmuch-identities)))))
+  "Prompt for a sender from the user's configured identities."
+  (if notmuch-identities
+      (ido-completing-read "Send mail from: " notmuch-identities
+			   nil nil nil 'notmuch-mua-sender-history
+			   (car notmuch-identities))
+    (let* ((name (notmuch-user-name))
+	   (addrs (cons (notmuch-user-primary-email)
+			(notmuch-user-other-email)))
+	   (address
+	    (ido-completing-read (concat "Sender address for " name ": ") addrs
+				 nil nil nil 'notmuch-mua-sender-history
+				 (car addrs))))
+      (concat name " <" address ">"))))
 
 (put 'notmuch-mua-new-mail 'notmuch-prefix-doc "... and prompt for sender")
 (defun notmuch-mua-new-mail (&optional prompt-for-sender)
@@ -332,13 +336,17 @@ The current buffer must contain an RFC2822 message to forward.
 
 If PROMPT-FOR-SENDER is non-nil, the user will be prompted for
 the From: address first."
-  (if (or prompt-for-sender notmuch-always-prompt-for-sender)
-      (let* ((sender (notmuch-mua-prompt-for-sender))
-	     (address-components (mail-extract-address-components sender))
-	     (user-full-name (car address-components))
-	     (user-mail-address (cadr address-components)))
-	(notmuch-mua-forward-message))
-    (notmuch-mua-forward-message)))
+  (let* ((cur (current-buffer))
+	 (message-forward-decoded-p nil)
+	 (subject (message-make-forward-subject))
+	 (other-headers
+	  (when (or prompt-for-sender notmuch-always-prompt-for-sender)
+	    (list (cons 'From (notmuch-mua-prompt-for-sender))))))
+    (notmuch-mua-mail nil subject other-headers nil (notmuch-mua-get-switch-function))
+    (message-forward-make-body cur)
+    ;; `message-forward-make-body' shows the User-agent header.  Hide
+    ;; it again.
+    (message-hide-headers)))
 
 (defun notmuch-mua-new-reply (query-string &optional prompt-for-sender reply-all)
   "Compose a reply to the message identified by QUERY-STRING.

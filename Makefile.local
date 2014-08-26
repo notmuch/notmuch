@@ -22,6 +22,11 @@ VERSION:=$(shell cat ${srcdir}/version)
 ifeq ($(filter release release-message pre-release update-versions,$(MAKECMDGOALS)),)
 ifeq ($(IS_GIT),yes)
 VERSION:=$(shell git describe --match '[0-9.]*'|sed -e s/_/~/ -e s/-/+/ -e s/-/~/)
+# Write the file 'version.stamp' in case its contents differ from $(VERSION)
+FILE_VERSION:=$(shell test -f version.stamp && read vs < version.stamp || vs=; echo $$vs)
+ifneq ($(FILE_VERSION),$(VERSION))
+       $(shell echo "$(VERSION)" > version.stamp)
+endif
 endif
 endif
 
@@ -41,19 +46,20 @@ PV_FILE=bindings/python/notmuch/version.py
 # Smash together user's values with our extra values
 FINAL_CFLAGS = -DNOTMUCH_VERSION=$(VERSION) $(CPPFLAGS) $(CFLAGS) $(WARN_CFLAGS) $(extra_cflags) $(CONFIGURE_CFLAGS)
 FINAL_CXXFLAGS = $(CPPFLAGS) $(CXXFLAGS) $(WARN_CXXFLAGS) $(extra_cflags) $(extra_cxxflags) $(CONFIGURE_CXXFLAGS)
-FINAL_NOTMUCH_LDFLAGS = $(LDFLAGS) -Lutil -lutil -Llib -lnotmuch $(AS_NEEDED_LDFLAGS) $(GMIME_LDFLAGS) $(TALLOC_LDFLAGS)
+FINAL_NOTMUCH_LDFLAGS = $(LDFLAGS) -Lutil -lutil -Llib -lnotmuch
+ifeq ($(LIBDIR_IN_LDCONFIG),0)
+FINAL_NOTMUCH_LDFLAGS += $(RPATH_LDFLAGS)
+endif
+FINAL_NOTMUCH_LDFLAGS += $(AS_NEEDED_LDFLAGS) $(GMIME_LDFLAGS) $(TALLOC_LDFLAGS) $(ZLIB_LDFLAGS)
 FINAL_NOTMUCH_LINKER = CC
 ifneq ($(LINKER_RESOLVES_LIBRARY_DEPENDENCIES),1)
 FINAL_NOTMUCH_LDFLAGS += $(CONFIGURE_LDFLAGS)
 FINAL_NOTMUCH_LINKER = CXX
 endif
-ifeq ($(LIBDIR_IN_LDCONFIG),0)
-FINAL_NOTMUCH_LDFLAGS += $(RPATH_LDFLAGS)
-endif
 FINAL_LIBNOTMUCH_LDFLAGS = $(LDFLAGS) $(AS_NEEDED_LDFLAGS) $(CONFIGURE_LDFLAGS)
 
 .PHONY: all
-all: notmuch notmuch-shared
+all: notmuch notmuch-shared build-man
 ifeq ($(MAKECMDGOALS),)
 ifeq ($(shell cat .first-build-message 2>/dev/null),)
 	@NOTMUCH_FIRST_BUILD=1 $(MAKE) --no-print-directory all
@@ -69,9 +75,14 @@ ifeq ($(shell cat .first-build-message 2>/dev/null),)
 endif
 endif
 
+# Depend (also) on the file 'version'. In case of ifeq ($(IS_GIT),yes)
+# this file may already have been updated.
+version.stamp: $(srcdir)/version
+	echo $(VERSION) > $@
+
 $(TAR_FILE):
-	if git tag -v $(VERSION) >/dev/null 2>&1; then \
-           ref=$(VERSION); \
+	if git tag -v $(UPSTREAM_TAG) >/dev/null 2>&1; then \
+           ref=$(UPSTREAM_TAG); \
         else \
            ref="HEAD" ; \
 	   echo "Warning: No signed tag for $(VERSION)"; \
@@ -95,7 +106,7 @@ dist: $(TAR_FILE)
 
 .PHONY: update-versions
 
-update-versions: update-man-versions
+update-versions:
 	sed -i "s/^__VERSION__[[:blank:]]*=.*$$/__VERSION__ = \'${VERSION}\'/" $(PV_FILE)
 
 # We invoke make recursively only to force ordering of our phony
@@ -236,11 +247,11 @@ endif
 quiet ?= $($(shell echo $1 | sed -e s'/ .*//'))
 
 %.o: %.cc $(global_deps)
-	@mkdir -p .deps/$(@D)
+	@mkdir -p $(patsubst %/.,%,.deps/$(@D))
 	$(call quiet,CXX $(CPPFLAGS) $(CXXFLAGS)) -c $(FINAL_CXXFLAGS) $< -o $@ -MD -MP -MF .deps/$*.d
 
 %.o: %.c $(global_deps)
-	@mkdir -p .deps/$(@D)
+	@mkdir -p $(patsubst %/.,%,.deps/$(@D))
 	$(call quiet,CC $(CPPFLAGS) $(CFLAGS)) -c $(FINAL_CFLAGS) $< -o $@ -MD -MP -MF .deps/$*.d
 
 .PHONY : clean
@@ -280,6 +291,8 @@ notmuch_client_srcs =		\
 
 notmuch_client_modules = $(notmuch_client_srcs:.c=.o)
 
+notmuch.o: version.stamp
+
 notmuch: $(notmuch_client_modules) lib/libnotmuch.a util/libutil.a parse-time-string/libparse-time-string.a
 	$(call quiet,CXX $(CFLAGS)) $^ $(FINAL_LIBNOTMUCH_LDFLAGS) -o $@
 
@@ -318,10 +331,12 @@ install-desktop:
 	desktop-file-install --mode 0644 --dir "$(DESTDIR)$(desktop_dir)" notmuch.desktop
 
 SRCS  := $(SRCS) $(notmuch_client_srcs)
-CLEAN := $(CLEAN) notmuch notmuch-shared $(notmuch_client_modules) notmuch.elc
+CLEAN := $(CLEAN) notmuch notmuch-shared $(notmuch_client_modules) version.stamp
 
 DISTCLEAN := $(DISTCLEAN) .first-build-message Makefile.config
 
 DEPS := $(SRCS:%.c=.deps/%.d)
 DEPS := $(DEPS:%.cc=.deps/%.d)
 -include $(DEPS)
+
+.SUFFIXES: # Delete the default suffixes. Old-Fashioned Suffix Rules not used.

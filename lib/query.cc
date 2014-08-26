@@ -462,6 +462,9 @@ notmuch_threads_valid (notmuch_threads_t *threads)
 {
     unsigned int doc_id;
 
+    if (! threads)
+	return FALSE;
+
     while (threads->doc_id_pos < threads->doc_ids->len) {
 	doc_id = g_array_index (threads->doc_ids, unsigned int,
 				threads->doc_id_pos);

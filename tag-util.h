@@ -90,6 +90,18 @@ parse_tag_command_line (void *ctx, int argc, char **argv,
 			char **query_str, tag_op_list_t *ops);
 
 /*
+ * Test tags for some forbidden cases.
+ *
+ * Relax the checks if 'remove' is true to allow removal of previously
+ * added forbidden tags.
+ *
+ * return: NULL if OK,
+ *	   explanatory message otherwise.
+ */
+const char *
+illegal_tag (const char *tag, notmuch_bool_t remove);
+
+/*
  * Create an empty list of tag operations
  *
  * ctx is passed to talloc

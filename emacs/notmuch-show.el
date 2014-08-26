@@ -171,7 +171,7 @@ each attachment handler is logged in buffers with names beginning
 (defcustom notmuch-show-stash-mlarchive-link-alist
   '(("Gmane" . "http://mid.gmane.org/")
     ("MARC" . "http://marc.info/?i=")
-    ("Mail Archive, The" . "http://mail-archive.com/search?l=mid&q=")
+    ("Mail Archive, The" . "http://mid.mail-archive.com/")
     ("LKML" . "http://lkml.kernel.org/r/")
     ;; FIXME: can these services be searched by `Message-Id' ?
     ;; ("MarkMail" . "http://markmail.org/")
@@ -344,7 +344,7 @@ operation on the contents of the current buffer."
     (if (re-search-forward "(\\([^()]*\\))$" (line-end-position) t)
 	(let ((inhibit-read-only t))
 	  (replace-match (concat "("
-				 (notmuch-tag-format-tags tags)
+				 (notmuch-tag-format-tags tags (notmuch-show-get-prop :orig-tags))
 				 ")"))))))
 
 (defun notmuch-clean-address (address)
@@ -423,7 +423,7 @@ message at DEPTH in the current thread."
 	    " ("
 	    date
 	    ") ("
-	    (notmuch-tag-format-tags tags)
+	    (notmuch-tag-format-tags tags tags)
 	    ")\n")
     (overlay-put (make-overlay start (point)) 'face 'notmuch-message-summary-face)))
 
@@ -785,7 +785,10 @@ message at DEPTH in the current thread."
     (while (and handlers
 		(not (condition-case err
 			 (funcall (car handlers) msg part content-type nth depth button)
-		       (error (progn
+		       ;; Specifying `debug' here lets the debugger
+		       ;; run if `debug-on-error' is non-nil.
+		       ((debug error)
+			(progn
 				(insert "!!! Bodypart insert error: ")
 				(insert (error-message-string err))
 				(insert " !!!\n") nil)))))
@@ -1145,6 +1148,7 @@ function is used."
     ;; Don't track undo information for this buffer
     (set 'buffer-undo-list t)
 
+    (notmuch-tag-clear-cache)
     (erase-buffer)
     (goto-char (point-min))
     (save-excursion
@@ -1166,6 +1170,8 @@ function is used."
 	   (notmuch-query-get-threads (append cli-args basic-args)))))
 
       (jit-lock-register #'notmuch-show-buttonise-links)
+
+      (notmuch-show-mapc (lambda () (notmuch-show-set-prop :orig-tags (notmuch-show-get-tags))))
 
       ;; Set the header line to the subject of the first message.
       (setq header-line-format (notmuch-sanitize (notmuch-show-strip-re (notmuch-show-get-subject))))
@@ -1241,6 +1247,7 @@ reset based on the original query."
     (define-key map "t" 'notmuch-show-stash-to)
     (define-key map "l" 'notmuch-show-stash-mlarchive-link)
     (define-key map "L" 'notmuch-show-stash-mlarchive-link-and-go)
+    (define-key map "?" 'notmuch-subkeymap-help)
     map)
   "Submap for stash commands")
 (fset 'notmuch-show-stash-map notmuch-show-stash-map)
@@ -1251,6 +1258,7 @@ reset based on the original query."
     (define-key map "v" 'notmuch-show-view-part)
     (define-key map "o" 'notmuch-show-interactively-view-part)
     (define-key map "|" 'notmuch-show-pipe-part)
+    (define-key map "?" 'notmuch-subkeymap-help)
     map)
   "Submap for part commands")
 (fset 'notmuch-show-part-map notmuch-show-part-map)
@@ -1779,10 +1787,14 @@ message."
       (setq shell-command
 	    (concat notmuch-command " show --format=raw "
 		    (shell-quote-argument (notmuch-show-get-message-id)) " | " command)))
-    (let ((buf (get-buffer-create (concat "*notmuch-pipe*"))))
+    (let ((cwd default-directory)
+	  (buf (get-buffer-create (concat "*notmuch-pipe*"))))
       (with-current-buffer buf
 	(setq buffer-read-only nil)
 	(erase-buffer)
+	;; Use the originating buffer's working directory instead of
+	;; that of the pipe buffer.
+	(cd cwd)
 	(let ((exit-code (call-process-shell-command shell-command nil buf)))
 	  (goto-char (point-max))
 	  (set-buffer-modified-p nil)

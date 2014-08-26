@@ -150,10 +150,8 @@ notmuch_count_command (notmuch_config_t *config, int argc, char *argv[])
     };
 
     opt_index = parse_arguments (argc, argv, options, 1);
-
-    if (opt_index < 0) {
-	return 1;
-    }
+    if (opt_index < 0)
+	return EXIT_FAILURE;
 
     if (input_file_name) {
 	batch = TRUE;
@@ -161,23 +159,23 @@ notmuch_count_command (notmuch_config_t *config, int argc, char *argv[])
 	if (input == NULL) {
 	    fprintf (stderr, "Error opening %s for reading: %s\n",
 		     input_file_name, strerror (errno));
-	    return 1;
+	    return EXIT_FAILURE;
 	}
     }
 
     if (batch && opt_index != argc) {
 	fprintf (stderr, "--batch and query string are not compatible\n");
-	return 1;
+	return EXIT_FAILURE;
     }
 
     if (notmuch_database_open (notmuch_config_get_database_path (config),
 			       NOTMUCH_DATABASE_MODE_READ_ONLY, &notmuch))
-	return 1;
+	return EXIT_FAILURE;
 
     query_str = query_string_from_args (config, argc-opt_index, argv+opt_index);
     if (query_str == NULL) {
 	fprintf (stderr, "Out of memory.\n");
-	return 1;
+	return EXIT_FAILURE;
     }
 
     if (exclude == EXCLUDE_TRUE) {
@@ -197,5 +195,5 @@ notmuch_count_command (notmuch_config_t *config, int argc, char *argv[])
     if (input != stdin)
 	fclose (input);
 
-    return ret;
+    return ret ? EXIT_FAILURE : EXIT_SUCCESS;
 }

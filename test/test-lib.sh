@@ -25,6 +25,10 @@ fi
 # Make sure echo builtin does not expand backslash-escape sequences by default.
 shopt -u xpg_echo
 
+this_test=${0##*/}
+this_test=${this_test%.sh}
+this_test_bare=${this_test#T[0-9][0-9][0-9]-}
+
 # if --tee was passed, write the output not only to the terminal, but
 # additionally to the file test-results/$BASENAME.out, too.
 case "$GIT_TEST_TEE_STARTED, $* " in
@@ -33,7 +37,7 @@ done,*)
 	;;
 *' --tee '*|*' --va'*)
 	mkdir -p test-results
-	BASE=test-results/$(basename "$0" .sh)
+	BASE=test-results/$this_test
 	(GIT_TEST_TEE_STARTED=done ${SHELL-sh} "$0" "$@" 2>&1;
 	 echo $? > $BASE.exit) | tee $BASE.out
 	test "$(cat $BASE.exit)" = 0
@@ -187,7 +191,18 @@ then
 	exit 0
 fi
 
-echo $(basename "$0"): "Testing ${test_description}"
+test_description_printed=
+print_test_description ()
+{
+	test -z "$test_description_printed" || return 0
+	echo
+	echo $this_test: "Testing ${test_description}"
+	test_description_printed=1
+}
+if [ -z "$NOTMUCH_TEST_QUIET" ]
+then
+	print_test_description
+fi
 
 exec 5>&1
 
@@ -359,8 +374,12 @@ generate_message ()
 	# we use decreasing timestamps here for historical reasons;
 	# the existing test suite when we converted to unique timestamps just
 	# happened to have signicantly fewer failures with that choice.
-	template[date]=$(TZ=UTC printf "%(%a, %d %b %Y %T %z)T\n" \
-			$((978709437 - gen_msg_cnt)))
+	local date_secs=$((978709437 - gen_msg_cnt))
+	# printf %(..)T is bash 4.2+ feature. use perl fallback if needed...
+	TZ=UTC printf -v template[date] "%(%a, %d %b %Y %T %z)T" $date_secs 2>/dev/null ||
+	    template[date]=`perl -le 'use POSIX "strftime";
+				@time = gmtime '"$date_secs"';
+				print strftime "%a, %d %b %Y %T +0000", @time'`
     fi
 
     additional_headers=""
@@ -603,6 +622,12 @@ test_expect_equal_json () {
     test_expect_equal "$output" "$expected" "$@"
 }
 
+# Sort the top-level list of JSON data from stdin.
+test_sort_json () {
+    PYTHONIOENCODING=utf-8 python -c \
+        "import sys, json; json.dump(sorted(json.load(sys.stdin)),sys.stdout)"
+}
+
 test_emacs_expect_t () {
 	test "$#" = 2 && { prereq=$1; shift; } || prereq=
 	test "$#" = 1 ||
@@ -640,6 +665,11 @@ NOTMUCH_NEW ()
 notmuch_search_sanitize ()
 {
     perl -pe 's/("?thread"?: ?)("?)................("?)/\1\2XXX\3/'
+}
+
+notmuch_search_files_sanitize()
+{
+    sed -e "s,$MAIL_DIR,MAIL_DIR,"
 }
 
 NOTMUCH_SHOW_FILENAME_SQUELCH='s,filename:.*/mail,filename:/XXX/mail,'
@@ -748,6 +778,9 @@ test_ok_ () {
 		return
 	fi
 	test_success=$(($test_success + 1))
+	if test -n "$NOTMUCH_TEST_QUIET"; then
+		return 0
+	fi
 	say_color pass "%-6s" "PASS"
 	echo " $test_subtest_name"
 }
@@ -758,6 +791,7 @@ test_failure_ () {
 		return
 	fi
 	test_failure=$(($test_failure + 1))
+	print_test_description
 	test_failure_message_ "FAIL" "$test_subtest_name" "$@"
 	test "$immediate" = "" || { GIT_EXIT_OK=t; exit 1; }
 	return 1
@@ -806,6 +840,12 @@ test_skip () {
 		case $this_test.$test_count in
 		$skp)
 			to_skip=t
+			break
+		esac
+		case $this_test_bare.$test_count in
+		$skp)
+			to_skip=t
+			break
 		esac
 	done
 	if test -z "$to_skip" && test -n "$prereq" &&
@@ -1009,7 +1049,7 @@ test_done () {
 	GIT_EXIT_OK=t
 	test_results_dir="$TEST_DIRECTORY/test-results"
 	mkdir -p "$test_results_dir"
-	test_results_path="$test_results_dir/${0%.sh}"
+	test_results_path="$test_results_dir/$this_test"
 
 	echo "total $test_count" >> $test_results_path
 	echo "success $test_success" >> $test_results_path
@@ -1017,8 +1057,6 @@ test_done () {
 	echo "broken $test_broken" >> $test_results_path
 	echo "failed $test_failure" >> $test_results_path
 	echo "" >> $test_results_path
-
-	echo
 
 	[ -n "$EMACS_SERVER" ] && test_emacs '(kill-emacs)'
 
@@ -1043,15 +1081,14 @@ export NOTMUCH_CONFIG=$NOTMUCH_CONFIG
 
 # Here's what we are using here:
 #
-# --no-init-file	Don't load users ~/.emacs
-#
-# --no-site-file	Don't load the site-wide startup stuff
+# --quick              Use minimal customization. This implies --no-init-file,
+#		       --no-site-file and (emacs 24) --no-site-lisp
 #
 # --directory		Ensure that the local elisp sources are found
 #
 # --load		Force loading of notmuch.el and test-lib.el
 
-exec ${TEST_EMACS} --no-init-file --no-site-file \
+exec ${TEST_EMACS} --quick \
 	--directory "$TEST_DIRECTORY/../emacs" --load notmuch.el \
 	--directory "$TEST_DIRECTORY" --load test-lib.el \
 	"\$@"
@@ -1068,7 +1105,7 @@ test_emacs () {
 	test -z "$missing_dependencies" || return
 
 	if [ -z "$EMACS_SERVER" ]; then
-		emacs_tests="$(basename $0).el"
+		emacs_tests="${this_test_bare}.el"
 		if [ -f "$TEST_DIRECTORY/$emacs_tests" ]; then
 			load_emacs_tests="--eval '(load \"$emacs_tests\")'"
 		else
@@ -1182,7 +1219,6 @@ else
 	exec 4>test.output 3>&4
 fi
 
-this_test=${0##*/}
 for skp in $NOTMUCH_SKIP_TESTS
 do
 	to_skip=
@@ -1191,6 +1227,12 @@ do
 		case "$this_test" in
 		$skp)
 			to_skip=t
+			break
+		esac
+		case "$this_test_bare" in
+		$skp)
+			to_skip=t
+			break
 		esac
 	done
 	case "$to_skip" in

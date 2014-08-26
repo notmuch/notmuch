@@ -42,7 +42,7 @@ the libnotmuch library.
 Notmuch installs a full-featured email interface for use within
 emacs. To use this, first add the following line to your .emacs file:
 
-	(require 'notmuch)
+	(autoload 'notmuch "notmuch" "Notmuch mail" t)
 
 Then, either run "emacs -f notmuch" or execute the command "M-x
 notmuch" from within a running emacs.

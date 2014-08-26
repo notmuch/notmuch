@@ -28,35 +28,9 @@
 (require 'crm)
 (require 'notmuch-lib)
 
-(defcustom notmuch-tag-formats
-  '(("unread" (propertize tag 'face '(:foreground "red")))
-    ("flagged" (propertize tag 'face '(:foreground "blue"))
-     (notmuch-tag-format-image-data tag (notmuch-tag-star-icon))))
-  "Custom formats for individual tags.
-
-This gives a list that maps from tag names to lists of formatting
-expressions.  The car of each element gives a tag name and the
-cdr gives a list of Elisp expressions that modify the tag.  If
-the list is empty, the tag will simply be hidden.  Otherwise,
-each expression will be evaluated in order: for the first
-expression, the variable `tag' will be bound to the tag name; for
-each later expression, the variable `tag' will be bound to the
-result of the previous expression.  In this way, each expression
-can build on the formatting performed by the previous expression.
-The result of the last expression will displayed in place of the
-tag.
-
-For example, to replace a tag with another string, simply use
-that string as a formatting expression.  To change the foreground
-of a tag to red, use the expression
-  (propertize tag 'face '(:foreground \"red\"))
-
-See also `notmuch-tag-format-image', which can help replace tags
-with images."
-
-  :group 'notmuch-search
-  :group 'notmuch-show
-  :type '(alist :key-type (string :tag "Tag")
+(define-widget 'notmuch-tag-format-type 'lazy
+  "Customize widget for notmuch-tag-format and friends"
+  :type '(alist :key-type (regexp :tag "Tag")
 		:extra-offset -3
 		:value-type
 		(radio :format "%v"
@@ -65,7 +39,7 @@ with images."
 			    (string :tag "Display as")
 			    (list :tag "Face" :extra-offset -4
 				  (const :format "" :inline t
-					 (propertize tag 'face))
+					 (notmuch-apply-face tag))
 				  (list :format "%v"
 					(const :format "" quote)
 					custom-face-edit))
@@ -81,6 +55,83 @@ with images."
 						 (notmuch-tag-tag-icon))
 					  (string :tag "Custom")))
 			    (sexp :tag "Custom")))))
+
+(defcustom notmuch-tag-formats
+  '(("unread" (propertize tag 'face '(:foreground "red")))
+    ("flagged" (propertize tag 'face '(:foreground "blue"))
+     (notmuch-tag-format-image-data tag (notmuch-tag-star-icon))))
+  "Custom formats for individual tags.
+
+This is an association list that maps from tag name regexps to
+lists of formatting expressions.  The first entry whose car
+regexp-matches a tag will be used to format that tag.  The regexp
+is implicitly anchored, so to match a literal tag name, just use
+that tag name (if it contains special regexp characters like
+\".\" or \"*\", these have to be escaped).  The cdr of the
+matching entry gives a list of Elisp expressions that modify the
+tag.  If the list is empty, the tag will simply be hidden.
+Otherwise, each expression will be evaluated in order: for the
+first expression, the variable `tag' will be bound to the tag
+name; for each later expression, the variable `tag' will be bound
+to the result of the previous expression.  In this way, each
+expression can build on the formatting performed by the previous
+expression.  The result of the last expression will displayed in
+place of the tag.
+
+For example, to replace a tag with another string, simply use
+that string as a formatting expression.  To change the foreground
+of a tag to red, use the expression
+  (propertize tag 'face '(:foreground \"red\"))
+
+See also `notmuch-tag-format-image', which can help replace tags
+with images."
+  :group 'notmuch-search
+  :group 'notmuch-show
+  :group 'notmuch-faces
+  :type 'notmuch-tag-format-type)
+
+(defcustom notmuch-tag-deleted-formats
+  '(("unread" (notmuch-apply-face bare-tag
+				  (if (display-supports-face-attributes-p '(:strike-through "red"))
+				      '(:strike-through "red")
+				    '(:inverse-video t))))
+    (".*" (notmuch-apply-face tag
+			      (if (display-supports-face-attributes-p '(:strike-through "red"))
+				  '(:strike-through "red")
+				'(:inverse-video t)))))
+  "Custom formats for tags when deleted.
+
+For deleted tags the formats in `notmuch-tag-formats` are applied
+first and then these formats are applied on top; that is `tag'
+passed to the function is the tag with all these previous
+formattings applied. The formatted can access the original
+unformatted tag as `bare-tag'.
+
+By default this shows deleted tags with strike-through in red,
+unless strike-through is not available (e.g., emacs is running in
+a terminal) in which case it uses inverse video. To hide deleted
+tags completely set this to
+  '((\".*\" nil))
+
+See `notmuch-tag-formats' for full documentation."
+  :group 'notmuch-show
+  :group 'notmuch-faces
+  :type 'notmuch-tag-format-type)
+
+(defcustom notmuch-tag-added-formats
+  '((".*" (notmuch-apply-face tag '(:underline "green"))))
+  "Custom formats for tags when added.
+
+For added tags the formats in `notmuch-tag-formats` are applied
+first and then these formats are applied on top.
+
+To disable special formatting of added tags, set this variable to
+nil.
+
+See `notmuch-tag-formats' for full documentation."
+  :group 'notmuch-show
+  :group 'notmuch-faces
+  :type 'notmuch-tag-format-type)
 
 (defun notmuch-tag-format-image-data (tag data)
   "Replace TAG with image DATA, if available.
@@ -135,28 +186,81 @@ This can be used with `notmuch-tag-format-image-data'."
   </g>
 </svg>")
 
-(defun notmuch-tag-format-tag (tag)
-  "Format TAG by looking into `notmuch-tag-formats'."
-  (let ((formats (assoc tag notmuch-tag-formats)))
-    (cond
-     ((null formats)		;; - Tag not in `notmuch-tag-formats',
-      tag)			;;   the format is the tag itself.
-     ((null (cdr formats))	;; - Tag was deliberately hidden,
-      nil)			;;   no format must be returned
-     (t				;; - Tag was found and has formats,
-      (let ((tag tag))		;;   we must apply all the formats.
-	(dolist (format (cdr formats) tag)
-	  (setq tag (eval format))))))))
+(defvar notmuch-tag--format-cache (make-hash-table :test 'equal)
+  "Cache of tag format lookup.  Internal to `notmuch-tag-format-tag'.")
 
-(defun notmuch-tag-format-tags (tags)
+(defun notmuch-tag-clear-cache ()
+  "Clear the internal cache of tag formats."
+  (clrhash notmuch-tag--format-cache))
+
+(defun notmuch-tag--get-formats (tag format-alist)
+  "Find the first item whose car regexp-matches TAG."
+  (save-match-data
+    ;; Don't use assoc-default since there's no way to distinguish a
+    ;; missing key from a present key with a null cdr.
+    (assoc* tag format-alist
+	    :test (lambda (tag key)
+		    (and (eq (string-match key tag) 0)
+			 (= (match-end 0) (length tag)))))))
+
+(defun notmuch-tag--do-format (tag formatted-tag formats)
+  "Apply a tag-formats entry to TAG."
+  (cond ((null formats)		;; - Tag not in `formats',
+	 formatted-tag)	       	;;   the format is the tag itself.
+	((null (cdr formats))	;; - Tag was deliberately hidden,
+	 nil)			;;   no format must be returned
+	(t
+	 ;; Tag was found and has formats, we must apply all the
+	 ;; formats.  TAG may be null so treat that as a special case.
+	 (let ((bare-tag tag)
+	       (tag (copy-sequence (or formatted-tag ""))))
+	   (dolist (format (cdr formats))
+	     (setq tag (eval format)))
+	   (if (and (null formatted-tag) (equal tag ""))
+	       nil
+	     tag)))))
+
+(defun notmuch-tag-format-tag (tags orig-tags tag)
+  "Format TAG according to `notmuch-tag-formats'.
+
+TAGS and ORIG-TAGS are lists of the current tags and the original
+tags; tags which have been deleted (i.e., are in ORIG-TAGS but
+are not in TAGS) are shown using formats from
+`notmuch-tag-deleted-formats'; tags which have been added (i.e.,
+are in TAGS but are not in ORIG-TAGS) are shown using formats
+from `notmuch-tag-added-formats' and tags which have not been
+changed (the normal case) are shown using formats from
+`notmuch-tag-formats'"
+  (let* ((tag-state (cond ((not (member tag tags)) 'deleted)
+			  ((not (member tag orig-tags)) 'added)))
+	 (formatted-tag (gethash (cons tag tag-state) notmuch-tag--format-cache 'missing)))
+    (when (eq formatted-tag 'missing)
+      (let ((base (notmuch-tag--get-formats tag notmuch-tag-formats))
+	    (over (case tag-state
+		    (deleted (notmuch-tag--get-formats
+			      tag notmuch-tag-deleted-formats))
+		    (added (notmuch-tag--get-formats
+			    tag notmuch-tag-added-formats))
+		    (otherwise nil))))
+	(setq formatted-tag (notmuch-tag--do-format tag tag base))
+	(setq formatted-tag (notmuch-tag--do-format tag formatted-tag over))
+
+	(puthash (cons tag tag-state) formatted-tag notmuch-tag--format-cache)))
+    formatted-tag))
+
+(defun notmuch-tag-format-tags (tags orig-tags &optional face)
   "Return a string representing formatted TAGS."
-  (notmuch-combine-face-text-property-string
-   (mapconcat #'identity
-	      ;; nil indicated that the tag was deliberately hidden
-	      (delq nil (mapcar #'notmuch-tag-format-tag tags))
-	      " ")
-   'notmuch-tag-face
-   t))
+  (let ((face (or face 'notmuch-tag-face))
+	(all-tags (sort (delete-dups (append tags orig-tags nil)) #'string<)))
+    (notmuch-apply-face
+     (mapconcat #'identity
+		;; nil indicated that the tag was deliberately hidden
+		(delq nil (mapcar
+			   (apply-partially #'notmuch-tag-format-tag tags orig-tags)
+			   all-tags))
+		" ")
+     face
+     t)))
 
 (defcustom notmuch-before-tag-hook nil
   "Hooks that are run before tags of a message are modified.
@@ -283,6 +387,8 @@ notmuch-after-tag-hook will be run."
 	  (unless (string-match-p "^[-+]\\S-+$" tag-change)
 	    (error "Tag must be of the form `+this_tag' or `-that_tag'")))
 	tag-changes)
+  (unless query
+    (error "Nothing to tag!"))
   (unless (null tag-changes)
     (run-hooks 'notmuch-before-tag-hook)
     (if (<= (length query) notmuch-tag-argument-limit)

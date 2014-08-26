@@ -29,6 +29,96 @@
 (declare-function notmuch-search "notmuch" (&optional query oldest-first target-thread target-line continuation))
 (declare-function notmuch-poll "notmuch" ())
 
+(defun notmuch-saved-search-get (saved-search field)
+  "Get FIELD from SAVED-SEARCH.
+
+If SAVED-SEARCH is a plist, this is just `plist-get', but for
+backwards compatibility, this also deals with the two other
+possible formats for SAVED-SEARCH: cons cells (NAME . QUERY) and
+lists (NAME QUERY COUNT-QUERY)."
+  (cond
+   ((keywordp (car saved-search))
+    (plist-get saved-search field))
+   ;; It is not a plist so it is an old-style entry.
+   ((consp (cdr saved-search)) ;; It is a list (NAME QUERY COUNT-QUERY)
+    (case field
+      (:name (first saved-search))
+      (:query (second saved-search))
+      (:count-query (third saved-search))
+      (t nil)))
+   (t  ;; It is a cons-cell (NAME . QUERY)
+    (case field
+      (:name (car saved-search))
+      (:query (cdr saved-search))
+      (t nil)))))
+
+(defun notmuch-hello-saved-search-to-plist (saved-search)
+  "Return a copy of SAVED-SEARCH in plist form.
+
+If saved search is a plist then just return a copy. In other
+cases, for backwards compatibility, convert to plist form and
+return that."
+  (if (keywordp (car saved-search))
+      (copy-seq saved-search)
+    (let ((fields (list :name :query :count-query))
+	  plist-search)
+      (dolist (field fields plist-search)
+	(let ((string (notmuch-saved-search-get saved-search field)))
+	  (when string
+	    (setq plist-search (append plist-search (list field string)))))))))
+
+(defun notmuch-hello--saved-searches-to-plist (symbol)
+  "Extract a saved-search variable into plist form.
+
+The new style saved search is just a plist, but for backwards
+compatibility we use this function to extract old style saved
+searches so they still work in customize."
+  (let ((saved-searches (default-value symbol)))
+    (mapcar #'notmuch-hello-saved-search-to-plist saved-searches)))
+
+(define-widget 'notmuch-saved-search-plist 'list
+  "A single saved search property list."
+  :tag "Saved Search"
+  :args '((list :inline t
+		:format "%v"
+		(group :format "%v" :inline t (const :format "   Name: " :name) (string :format "%v"))
+		(group :format "%v" :inline t (const :format "  Query: " :query) (string :format "%v")))
+	  (checklist :inline t
+		     :format "%v"
+		     (group :format "%v" :inline t (const :format "Count-Query: " :count-query) (string :format "%v"))
+		     (group :format "%v" :inline t (const :format "" :sort-order)
+			    (choice :tag " Sort Order"
+				    (const :tag "Default" nil)
+				    (const :tag "Oldest-first" oldest-first)
+				    (const :tag "Newest-first" newest-first))))))
+
+(defcustom notmuch-saved-searches '((:name "inbox" :query "tag:inbox")
+				    (:name "unread" :query "tag:unread"))
+  "A list of saved searches to display.
+
+The saved search can be given in 3 forms. The preferred way is as
+a plist. Supported properties are
+
+  :name            Name of the search (required).
+  :query           Search to run (required).
+  :count-query     Optional extra query to generate the count
+                   shown. If not present then the :query property
+                   is used.
+  :sort-order      Specify the sort order to be used for the search.
+                   Possible values are 'oldest-first 'newest-first or
+                   nil. Nil means use the default sort order.
+
+Other accepted forms are a cons cell of the form (NAME . QUERY)
+or a list of the form (NAME QUERY COUNT-QUERY)."
+;; The saved-search format is also used by the all-tags notmuch-hello
+;; section. This section generates its own saved-search list in one of
+;; the latter two forms.
+
+  :get 'notmuch-hello--saved-searches-to-plist
+  :type '(repeat notmuch-saved-search-plist)
+  :tag "List of Saved Searches"
+  :group 'notmuch-hello)
+
 (defcustom notmuch-hello-recent-searches-max 10
   "The number of recent searches to display."
   :type 'integer
@@ -39,9 +129,12 @@
   :type 'boolean
   :group 'notmuch-hello)
 
-(defun notmuch-sort-saved-searches (alist)
-  "Generate an alphabetically sorted saved searches alist."
-  (sort (copy-sequence alist) (lambda (a b) (string< (car a) (car b)))))
+(defun notmuch-sort-saved-searches (saved-searches)
+  "Generate an alphabetically sorted saved searches list."
+  (sort (copy-sequence saved-searches)
+	(lambda (a b)
+	  (string< (notmuch-saved-search-get a :name)
+		   (notmuch-saved-search-get b :name)))))
 
 (defcustom notmuch-saved-search-sort-function nil
   "Function used to sort the saved searches for the notmuch-hello view.
@@ -51,8 +144,10 @@ sorting (nil) displays the saved searches in the order they are
 stored in `notmuch-saved-searches'. Sort alphabetically sorts the
 saved searches in alphabetical order. Custom sort function should
 be a function or a lambda expression that takes the saved
-searches alist as a parameter, and returns a new saved searches
-alist to be used."
+searches list as a parameter, and returns a new saved searches
+list to be used. For compatibility with the various saved-search
+formats it should use notmuch-saved-search-get to access the
+fields of the search."
   :type '(choice (const :tag "No sorting" nil)
 		 (const :tag "Sort alphabetically" notmuch-sort-saved-searches)
 		 (function :tag "Custom sort function"
@@ -280,12 +375,12 @@ afterwards.")
     (setq notmuch-saved-searches
 	  (loop for elem in notmuch-saved-searches
 		if (not (equal name
-			       (car elem)))
+			       (notmuch-saved-search-get elem :name)))
 		collect elem))
     ;; Add the new one.
     (customize-save-variable 'notmuch-saved-searches
 			     (add-to-list 'notmuch-saved-searches
-					  (cons name search) t))
+					  (list :name name :query search) t))
     (message "Saved '%s' as '%s'." search name)
     (notmuch-hello-update)))
 
@@ -300,7 +395,7 @@ afterwards.")
 
 (defun notmuch-hello-longest-label (searches-alist)
   (or (loop for elem in searches-alist
-	    maximize (length (car elem)))
+	    maximize (length (notmuch-saved-search-get elem :name)))
       0))
 
 (defun notmuch-hello-reflect-generate-row (ncols nrows row list)
@@ -325,7 +420,8 @@ diagonal."
 (defun notmuch-hello-widget-search (widget &rest ignore)
   (notmuch-search (widget-get widget
 			      :notmuch-search-terms)
-		  notmuch-search-oldest-first))
+		  (widget-get widget
+			      :notmuch-search-oldest-first)))
 
 (defun notmuch-saved-search-count (search)
   (car (process-lines notmuch-command "count" search)))
@@ -379,30 +475,31 @@ Otherwise, FILTER is ignored.
     (concat "(" query ") and (" filter ")"))
    (t query)))
 
-(defun notmuch-hello-query-counts (query-alist &rest options)
-  "Compute list of counts of matched messages from QUERY-ALIST.
+(defun notmuch-hello-query-counts (query-list &rest options)
+  "Compute list of counts of matched messages from QUERY-LIST.
 
-QUERY-ALIST must be a list containing elements of the form (NAME . QUERY)
-or (NAME QUERY COUNT-QUERY). If the latter form is used,
-COUNT-QUERY specifies an alternate query to be used to generate
-the count for the associated query.
+QUERY-LIST must be a list of saved-searches. Ideally each of
+these is a plist but other options are available for backwards
+compatibility: see `notmuch-saved-searches' for details.
 
-The result is the list of elements of the form (NAME QUERY COUNT).
+The result is a list of plists each of which includes the
+properties :name NAME, :query QUERY and :count COUNT, together
+with any properties in the original saved-search.
 
 The values :show-empty-searches, :filter and :filter-count from
 options will be handled as specified for
 `notmuch-hello-insert-searches'."
   (with-temp-buffer
-    (dolist (elem query-alist nil)
-      (let ((count-query (if (consp (cdr elem))
-			     ;; do we have a different query for the message count?
-			     (third elem)
-			   (cdr elem))))
+    (dolist (elem query-list nil)
+      (let ((count-query (or (notmuch-saved-search-get elem :count-query)
+			     (notmuch-saved-search-get elem :query))))
 	(insert
-	 (notmuch-hello-filtered-query count-query
-				       (or (plist-get options :filter-count)
-					   (plist-get options :filter)))
-	 "\n")))
+	 (replace-regexp-in-string
+	  "\n" " "
+	  (notmuch-hello-filtered-query count-query
+					(or (plist-get options :filter-count)
+					    (plist-get options :filter))))
+	  "\n")))
 
     (unless (= (call-process-region (point-min) (point-max) notmuch-command
 				    t t nil "count" "--batch") 0)
@@ -417,26 +514,26 @@ the CLI and emacs interface."))
      #'identity
      (mapcar
       (lambda (elem)
-	(let ((name (car elem))
-	      (search-query (if (consp (cdr elem))
-				 ;; do we have a different query for the message count?
-				 (second elem)
-			      (cdr elem)))
-	      (message-count (prog1 (read (current-buffer))
+	(let* ((elem-plist (notmuch-hello-saved-search-to-plist elem))
+	       (search-query (plist-get elem-plist :query))
+	       (filtered-query (notmuch-hello-filtered-query
+				search-query (plist-get options :filter)))
+	       (message-count (prog1 (read (current-buffer))
 				(forward-line 1))))
-	  (and (or (plist-get options :show-empty-searches) (> message-count 0))
-	       (list name (notmuch-hello-filtered-query
-			   search-query (plist-get options :filter))
-		     message-count))))
-      query-alist))))
+	  (when (and filtered-query (or (plist-get options :show-empty-searches) (> message-count 0)))
+	    (setq elem-plist (plist-put elem-plist :query filtered-query))
+	    (plist-put elem-plist :count message-count))))
+      query-list))))
 
 (defun notmuch-hello-insert-buttons (searches)
   "Insert buttons for SEARCHES.
 
-SEARCHES must be a list containing lists of the form (NAME QUERY COUNT), where
-QUERY is the query to start when the button for the corresponding entry is
-activated. COUNT should be the number of messages matching the query.
-Such a list can be computed with `notmuch-hello-query-counts'."
+SEARCHES must be a list of plists each of which should contain at
+least the properties :name NAME :query QUERY and :count COUNT,
+where QUERY is the query to start when the button for the
+corresponding entry is activated, and COUNT should be the number
+of messages matching the query.  Such a plist can be computed
+with `notmuch-hello-query-counts'."
   (let* ((widest (notmuch-hello-longest-label searches))
 	 (tags-and-width (notmuch-hello-tags-per-line widest))
 	 (tags-per-line (car tags-and-width))
@@ -454,14 +551,19 @@ Such a list can be computed with `notmuch-hello-query-counts'."
 	    (when elem
 	      (if (> column-indent 0)
 		  (widget-insert (make-string column-indent ? )))
-	      (let* ((name (first elem))
-		     (query (second elem))
-		     (msg-count (third elem)))
+	      (let* ((name (plist-get elem :name))
+		     (query (plist-get elem :query))
+		     (oldest-first (case (plist-get elem :sort-order)
+				     (newest-first nil)
+				     (oldest-first t)
+				     (otherwise notmuch-search-oldest-first)))
+		     (msg-count (plist-get elem :count)))
 		(widget-insert (format "%8s "
 				       (notmuch-hello-nice-number msg-count)))
 		(widget-create 'push-button
 			       :notify #'notmuch-hello-widget-search
 			       :notmuch-search-terms query
+			       :notmuch-search-oldest-first oldest-first
 			       name)
 		(setq column-indent
 		      (1+ (max 0 (- column-width (length name)))))))
@@ -513,6 +615,18 @@ Such a list can be computed with `notmuch-hello-query-counts'."
       (remove-hook 'window-configuration-change-hook
 		   #'notmuch-hello-window-configuration-change))))
 
+;; the following variable is defined as being defconst in notmuch-version.el
+(defvar notmuch-emacs-version)
+
+(defun notmuch-hello-versions ()
+  "Display the notmuch version(s)"
+  (interactive)
+  (let ((notmuch-cli-version (notmuch-version)))
+    (message "notmuch version %s"
+	     (if (string= notmuch-emacs-version notmuch-cli-version)
+		 notmuch-cli-version
+	       (concat notmuch-cli-version
+		       " (emacs mua version " notmuch-emacs-version ")")))))
 
 (defvar notmuch-hello-mode-map
   (let ((map (if (fboundp 'make-composed-keymap)
@@ -523,8 +637,7 @@ Such a list can be computed with `notmuch-hello-query-counts'."
 	       ;; it's unlikely to change.
 	       (copy-keymap widget-keymap))))
     (set-keymap-parent map notmuch-common-keymap)
-    (define-key map "v" (lambda () "Display the notmuch version" (interactive)
-			  (message "notmuch version %s" (notmuch-version))))
+    (define-key map "v" 'notmuch-hello-versions)
     (define-key map (kbd "<C-tab>") 'widget-backward)
     map)
   "Keymap for \"notmuch hello\" buffers.")
@@ -687,13 +800,15 @@ Complete list of currently available key bindings:
       (indent-rigidly start (point) notmuch-hello-indent))
     nil))
 
-(defun notmuch-hello-insert-searches (title query-alist &rest options)
-  "Insert a section with TITLE showing a list of buttons made from QUERY-ALIST.
+(defun notmuch-hello-insert-searches (title query-list &rest options)
+  "Insert a section with TITLE showing a list of buttons made from QUERY-LIST.
 
-QUERY-ALIST must be a list containing elements of the form (NAME . QUERY)
-or (NAME QUERY COUNT-QUERY). If the latter form is used,
-COUNT-QUERY specifies an alternate query to be used to generate
-the count for the associated item.
+QUERY-LIST should ideally be a plist but for backwards
+compatibility other forms are also accepted (see
+`notmuch-saved-searches' for details).  The plist should
+contain keys :name and :query; if :count-query is also present
+then it specifies an alternate query to be used to generate the
+count for the associated search.
 
 Supports the following entries in OPTIONS as a plist:
 :initially-hidden - if non-nil, section will be hidden on startup
@@ -727,7 +842,7 @@ Supports the following entries in OPTIONS as a plist:
 		     "hide"))
     (widget-insert "\n")
     (when (not is-hidden)
-      (let ((searches (apply 'notmuch-hello-query-counts query-alist options)))
+      (let ((searches (apply 'notmuch-hello-query-counts query-list options)))
 	(when (or (not (plist-get options :hide-if-empty))
 		  searches)
 	  (widget-insert "\n")
@@ -788,6 +903,7 @@ following:
   "Run notmuch and display saved searches, known tags, etc."
   (interactive)
 
+  (notmuch-assert-cli-sane)
   ;; This may cause a window configuration change, so if the
   ;; auto-refresh hook is already installed, avoid recursive refresh.
   (let ((notmuch-hello-auto-refresh nil))

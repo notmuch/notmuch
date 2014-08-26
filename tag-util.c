@@ -31,14 +31,7 @@ line_error (tag_parse_status_t status,
     return status;
 }
 
-/*
- * Test tags for some forbidden cases.
- *
- * return: NULL if OK,
- *	   explanatory message otherwise.
- */
-
-static const char *
+const char *
 illegal_tag (const char *tag, notmuch_bool_t remove)
 {
 
@@ -179,7 +172,7 @@ parse_tag_command_line (void *ctx, int argc, char **argv,
 
 	msg = illegal_tag (argv[i] + 1, is_remove);
 	if (msg) {
-	    fprintf (stderr, "Error: %s", msg);
+	    fprintf (stderr, "Error: %s\n", msg);
 	    return TAG_PARSE_INVALID;
 	}
 

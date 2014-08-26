@@ -1015,9 +1015,13 @@ do_show (void *ctx,
     notmuch_messages_t *messages;
     notmuch_status_t status, res = NOTMUCH_STATUS_SUCCESS;
 
+    threads = notmuch_query_search_threads (query);
+    if (! threads)
+	return 1;
+
     sp->begin_list (sp);
 
-    for (threads = notmuch_query_search_threads (query);
+    for ( ;
 	 notmuch_threads_valid (threads);
 	 notmuch_threads_move_to_next (threads))
     {
@@ -1113,10 +1117,8 @@ notmuch_show_command (notmuch_config_t *config, int argc, char *argv[])
     };
 
     opt_index = parse_arguments (argc, argv, options, 1);
-    if (opt_index < 0) {
-	/* diagnostics already printed */
-	return 1;
-    }
+    if (opt_index < 0)
+	return EXIT_FAILURE;
 
     /* decryption implies verification */
     if (params.crypto.decrypt)
@@ -1143,7 +1145,7 @@ notmuch_show_command (notmuch_config_t *config, int argc, char *argv[])
     case NOTMUCH_FORMAT_MBOX:
 	if (params.part > 0) {
 	    fprintf (stderr, "Error: specifying parts is incompatible with mbox output format.\n");
-	    return 1;
+	    return EXIT_FAILURE;
 	}
 
 	format = &format_mbox;
@@ -1193,22 +1195,22 @@ notmuch_show_command (notmuch_config_t *config, int argc, char *argv[])
     query_string = query_string_from_args (config, argc-opt_index, argv+opt_index);
     if (query_string == NULL) {
 	fprintf (stderr, "Out of memory\n");
-	return 1;
+	return EXIT_FAILURE;
     }
 
     if (*query_string == '\0') {
 	fprintf (stderr, "Error: notmuch show requires at least one search term.\n");
-	return 1;
+	return EXIT_FAILURE;
     }
 
     if (notmuch_database_open (notmuch_config_get_database_path (config),
 			       NOTMUCH_DATABASE_MODE_READ_ONLY, &notmuch))
-	return 1;
+	return EXIT_FAILURE;
 
     query = notmuch_query_create (notmuch, query_string);
     if (query == NULL) {
 	fprintf (stderr, "Out of memory\n");
-	return 1;
+	return EXIT_FAILURE;
     }
 
     /* Create structure printer. */
@@ -1242,5 +1244,5 @@ notmuch_show_command (notmuch_config_t *config, int argc, char *argv[])
     notmuch_query_destroy (query);
     notmuch_database_destroy (notmuch);
 
-    return ret;
+    return ret ? EXIT_FAILURE : EXIT_SUCCESS;
 }

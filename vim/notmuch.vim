@@ -86,17 +86,22 @@ endfunction
 function! s:compose_send()
 	let b:compose_done = 1
 	let fname = expand('%')
+	let lines = getline(5, '$')
 
-	" remove headers
-	0,4d
-	write
+ruby << EOF
+	# Generate proper mail to send
+	text = VIM::evaluate('lines').join("\n")
+	fname = VIM::evaluate('fname')
+	transport = Mail.new(text)
+	transport.message_id = generate_message_id
+	transport.charset = 'utf-8'
+	File.write(fname, transport.to_s)
+EOF
 
 	let cmdtxt = g:notmuch_sendmail . ' -t -f ' . s:reply_from . ' < ' . fname
 	let out = system(cmdtxt)
 	let err = v:shell_error
 	if err
-		undo
-		write
 		echohl Error
 		echo 'Eeek! unable to send mail'
 		echo out
@@ -572,9 +577,7 @@ ruby << EOF
 			end
 			m.cc = orig[:cc]
 			m.from = $email
-			m.message_id = generate_message_id
 			m.charset = 'utf-8'
-			m.content_transfer_encoding = '7bit'
 		end
 
 		lines = []
@@ -600,7 +603,7 @@ ruby << EOF
 
 		reply.body = body_lines.join("\n")
 
-		lines += reply.to_s.lines.map { |e| e.chomp }
+		lines += reply.present.lines.map { |e| e.chomp }
 		lines << ""
 
 		cur = lines.count - 1
@@ -611,18 +614,13 @@ ruby << EOF
 	def open_compose()
 		lines = []
 
-		lines << "Date: #{Time.now().strftime('%a, %-d %b %Y %T %z')}"
 		lines << "From: #{$email}"
 		lines << "To: "
 		cur = lines.count
 
 		lines << "Cc: "
 		lines << "Bcc: "
-		lines << "Message-Id: #{generate_message_id}"
 		lines << "Subject: "
-		lines << "Mime-Version: 1.0"
-		lines << "Content-Type: text/plain; charset=utf-8"
-		lines << "Content-Transfer-Encoding: 7bit"
 		lines << ""
 		lines << ""
 		lines << ""
@@ -633,7 +631,7 @@ ruby << EOF
 	def folders_render()
 		$curbuf.render do |b|
 			folders = VIM::evaluate('g:notmuch_folders')
-			count_threads = VIM::evaluate('g:notmuch_folders_count_threads')
+			count_threads = VIM::evaluate('g:notmuch_folders_count_threads') == 1
 			$searches.clear
 			folders.each do |name, search|
 				q = $curbuf.query(search)
@@ -919,13 +917,24 @@ ruby << EOF
 				if mime_type != "text/html"
 					text = decoded
 				else
-					IO.popen("elinks --dump", "w+") do |pipe|
+					IO.popen(VIM::evaluate('exists("g:notmuch_html_converter") ? ' +
+							'g:notmuch_html_converter : "elinks --dump"'), "w+") do |pipe|
 						pipe.write(decode_body)
 						pipe.close_write
 						text = pipe.read
 					end
 				end
 				text
+			end
+
+			def present
+				buffer = ''
+				header.fields.each do |f|
+					buffer << "%s: %s\r\n" % [f.name, f.to_s]
+				end
+				buffer << "\r\n"
+				buffer << body.to_s
+				buffer
 			end
 		end
 	end

@@ -21,6 +21,7 @@
  */
 
 #include "notmuch-client.h"
+#include "string-util.h"
 #include "sprinter.h"
 
 static void
@@ -369,78 +370,44 @@ add_recipients_from_message (GMimeMessage *reply,
     return from_addr;
 }
 
+/*
+ * Look for the user's address in " for <email@add.res>" in the
+ * received headers.
+ *
+ * Return the address that was found, if any, and NULL otherwise.
+ */
 static const char *
-guess_from_received_header (notmuch_config_t *config, notmuch_message_t *message)
+guess_from_in_received_for (notmuch_config_t *config, const char *received)
 {
-    const char *addr, *received, *by;
-    char *mta,*ptr,*token;
-    char *domain=NULL;
-    char *tld=NULL;
-    const char *delim=". \t";
-    size_t i;
+    const char *ptr;
 
-    const char *to_headers[] = {
-	"Envelope-to",
-	"X-Original-To",
-	"Delivered-To",
-    };
-
-    /* sadly, there is no standard way to find out to which email
-     * address a mail was delivered - what is in the headers depends
-     * on the MTAs used along the way. So we are trying a number of
-     * heuristics which hopefully will answer this question.
-
-     * We only got here if none of the users email addresses are in
-     * the To: or Cc: header. From here we try the following in order:
-     * 1) check for an Envelope-to: header
-     * 2) check for an X-Original-To: header
-     * 3) check for a Delivered-To: header
-     * 4) check for a (for <email@add.res>) clause in Received: headers
-     * 5) check for the domain part of known email addresses in the
-     *    'by' part of Received headers
-     * If none of these work, we give up and return NULL
-     */
-    for (i = 0; i < ARRAY_SIZE (to_headers); i++) {
-	const char *tohdr = notmuch_message_get_header (message, to_headers[i]);
-
-	/* Note: tohdr potentially contains a list of email addresses. */
-	addr = user_address_in_string (tohdr, config);
-	if (addr)
-	    return addr;
-    }
-
-    /* We get the concatenated Received: headers and search from the
-     * front (last Received: header added) and try to extract from
-     * them indications to which email address this message was
-     * delivered.
-     * The Received: header is special in our get_header function
-     * and is always concatenated.
-     */
-    received = notmuch_message_get_header (message, "received");
-    if (received == NULL)
+    ptr = strstr (received, " for ");
+    if (! ptr)
 	return NULL;
 
-    /* First we look for a " for <email@add.res>" in the received
-     * header
-     */
-    ptr = strstr (received, " for ");
+    return user_address_in_string (ptr, config);
+}
 
-    /* Note: ptr potentially contains a list of email addresses. */
-    addr = user_address_in_string (ptr, config);
-    if (addr)
-	return addr;
+/*
+ * Parse all the " by MTA ..." parts in received headers to guess the
+ * email address that this was originally delivered to.
+ *
+ * Extract just the MTA here by removing leading whitespace and
+ * assuming that the MTA name ends at the next whitespace. Test for
+ * *(by+4) to be non-'\0' to make sure there's something there at all
+ * - and then assume that the first whitespace delimited token that
+ * follows is the receiving system in this step of the receive chain.
+ *
+ * Return the address that was found, if any, and NULL otherwise.
+ */
+static const char *
+guess_from_in_received_by (notmuch_config_t *config, const char *received)
+{
+    const char *addr;
+    const char *by = received;
+    char *domain, *tld, *mta, *ptr, *token;
 
-    /* Finally, we parse all the " by MTA ..." headers to guess the
-     * email address that this was originally delivered to.
-     * We extract just the MTA here by removing leading whitespace and
-     * assuming that the MTA name ends at the next whitespace.
-     * We test for *(by+4) to be non-'\0' to make sure there's
-     * something there at all - and then assume that the first
-     * whitespace delimited token that follows is the receiving
-     * system in this step of the receive chain
-     */
-    by = received;
-    while((by = strstr (by, " by ")) != NULL) {
+    while ((by = strstr (by, " by ")) != NULL) {
 	by += 4;
 	if (*by == '\0')
 	    break;
@@ -450,11 +417,12 @@ guess_from_received_header (notmuch_config_t *config, notmuch_message_t *message
 	    free (mta);
 	    break;
 	}
-	/* Now extract the last two components of the MTA host name
-	 * as domain and tld.
+	/*
+	 * Now extract the last two components of the MTA host name as
+	 * domain and tld.
 	 */
 	domain = tld = NULL;
-	while ((ptr = strsep (&token, delim)) != NULL) {
+	while ((ptr = strsep (&token, ". \t")) != NULL) {
 	    if (*ptr == '\0')
 		continue;
 	    domain = tld;
@@ -462,13 +430,14 @@ guess_from_received_header (notmuch_config_t *config, notmuch_message_t *message
 	}
 
 	if (domain) {
-	    /* Recombine domain and tld and look for it among the configured
-	     * email addresses.
-	     * This time we have a known domain name and nothing else - so
-	     * the test is the other way around: we check if this is a
-	     * substring of one of the email addresses.
+	    /*
+	     * Recombine domain and tld and look for it among the
+	     * configured email addresses. This time we have a known
+	     * domain name and nothing else - so the test is the other
+	     * way around: we check if this is a substring of one of
+	     * the email addresses.
 	     */
-	    *(tld-1) = '.';
+	    *(tld - 1) = '.';
 
 	    addr = string_in_user_address (domain, config);
 	    if (addr) {
@@ -477,6 +446,70 @@ guess_from_received_header (notmuch_config_t *config, notmuch_message_t *message
 	    }
 	}
 	free (mta);
+    }
+
+    return NULL;
+}
+
+/*
+ * Get the concatenated Received: headers and search from the front
+ * (last Received: header added) and try to extract from them
+ * indications to which email address this message was delivered.
+ *
+ * The Received: header is special in our get_header function and is
+ * always concatenated.
+ *
+ * Return the address that was found, if any, and NULL otherwise.
+ */
+static const char *
+guess_from_in_received_headers (notmuch_config_t *config,
+				notmuch_message_t *message)
+{
+    const char *received, *addr;
+    char *sanitized;
+
+    received = notmuch_message_get_header (message, "received");
+    if (! received)
+	return NULL;
+
+    sanitized = sanitize_string (NULL, received);
+    if (! sanitized)
+	return NULL;
+
+    addr = guess_from_in_received_for (config, sanitized);
+    if (! addr)
+	addr = guess_from_in_received_by (config, sanitized);
+
+    talloc_free (sanitized);
+
+    return addr;
+}
+
+/*
+ * Try to find user's email address in one of the extra To-like
+ * headers: Envelope-To, X-Original-To, and Delivered-To (searched in
+ * that order).
+ *
+ * Return the address that was found, if any, and NULL otherwise.
+ */
+static const char *
+get_from_in_to_headers (notmuch_config_t *config, notmuch_message_t *message)
+{
+    size_t i;
+    const char *tohdr, *addr;
+    const char *to_headers[] = {
+	"Envelope-to",
+	"X-Original-To",
+	"Delivered-To",
+    };
+
+    for (i = 0; i < ARRAY_SIZE (to_headers); i++) {
+	tohdr = notmuch_message_get_header (message, to_headers[i]);
+
+	/* Note: tohdr potentially contains a list of email addresses. */
+	addr = user_address_in_string (tohdr, config);
+	if (addr)
+	    return addr;
     }
 
     return NULL;
@@ -508,9 +541,30 @@ create_reply_message(void *ctx,
     from_addr = add_recipients_from_message (reply, config,
 					     message, reply_all);
 
+    /*
+     * Sadly, there is no standard way to find out to which email
+     * address a mail was delivered - what is in the headers depends
+     * on the MTAs used along the way.
+     *
+     * If none of the user's email addresses are in the To: or Cc:
+     * headers, we try a number of heuristics which hopefully will
+     * answer this question.
+     *
+     * First, check for Envelope-To:, X-Original-To:, and
+     * Delivered-To: headers.
+     */
     if (from_addr == NULL)
-	from_addr = guess_from_received_header (config, message);
+	from_addr = get_from_in_to_headers (config, message);
 
+    /*
+     * Check for a (for <email@add.res>) clause in Received: headers,
+     * and the domain part of known email addresses in the 'by' part
+     * of Received: headers
+     */
+    if (from_addr == NULL)
+	from_addr = guess_from_in_received_headers (config, message);
+
+    /* Default to user's primary address. */
     if (from_addr == NULL)
 	from_addr = notmuch_config_get_user_primary_email (config);
 
@@ -704,7 +758,7 @@ notmuch_reply_command (notmuch_config_t *config, int argc, char *argv[])
     notmuch_database_t *notmuch;
     notmuch_query_t *query;
     char *query_string;
-    int opt_index, ret = 0;
+    int opt_index;
     int (*reply_format_func) (void *ctx,
 			      notmuch_config_t *config,
 			      notmuch_query_t *query,
@@ -739,10 +793,8 @@ notmuch_reply_command (notmuch_config_t *config, int argc, char *argv[])
     };
 
     opt_index = parse_arguments (argc, argv, options, 1);
-    if (opt_index < 0) {
-	/* diagnostics already printed */
-	return 1;
-    }
+    if (opt_index < 0)
+	return EXIT_FAILURE;
 
     if (format == FORMAT_HEADERS_ONLY) {
 	reply_format_func = notmuch_reply_format_headers_only;
@@ -761,30 +813,30 @@ notmuch_reply_command (notmuch_config_t *config, int argc, char *argv[])
     query_string = query_string_from_args (config, argc-opt_index, argv+opt_index);
     if (query_string == NULL) {
 	fprintf (stderr, "Out of memory\n");
-	return 1;
+	return EXIT_FAILURE;
     }
 
     if (*query_string == '\0') {
 	fprintf (stderr, "Error: notmuch reply requires at least one search term.\n");
-	return 1;
+	return EXIT_FAILURE;
     }
 
     if (notmuch_database_open (notmuch_config_get_database_path (config),
 			       NOTMUCH_DATABASE_MODE_READ_ONLY, &notmuch))
-	return 1;
+	return EXIT_FAILURE;
 
     query = notmuch_query_create (notmuch, query_string);
     if (query == NULL) {
 	fprintf (stderr, "Out of memory\n");
-	return 1;
+	return EXIT_FAILURE;
     }
 
     if (reply_format_func (config, config, query, &params, reply_all, sp) != 0)
-	return 1;
+	return EXIT_FAILURE;
 
     notmuch_crypto_cleanup (&params.crypto);
     notmuch_query_destroy (query);
     notmuch_database_destroy (notmuch);
 
-    return ret;
+    return EXIT_SUCCESS;
 }
