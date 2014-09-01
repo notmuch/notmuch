@@ -1222,7 +1222,7 @@ notmuch_database_upgrade (notmuch_database_t *notmuch,
     target_features = notmuch->features | NOTMUCH_FEATURES_CURRENT;
     new_features = NOTMUCH_FEATURES_CURRENT & ~notmuch->features;
 
-    if (! new_features)
+    if (! notmuch_database_needs_upgrade (notmuch))
 	return NOTMUCH_STATUS_SUCCESS;
 
     if (progress_notify) {
