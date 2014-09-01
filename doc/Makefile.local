@@ -70,7 +70,7 @@ install-apidocs: apidocs
 $(APIMAN): $(dir)/config.dox $(srcdir)/$(dir)/doxygen.cfg $(srcdir)/lib/notmuch.h
 	mkdir -p $(DOCBUILDDIR)/man/man3
 	doxygen $(DOXYFILE)
-	rm $(DOCBUILDDIR)/man/man3/_*.3
+	rm -f $(DOCBUILDDIR)/man/man3/_*.3
 	perl -pi -e 's/^[.]RI "\\fI/.RI "\\fP/' $(APIMAN)
 else
 apidocs:
