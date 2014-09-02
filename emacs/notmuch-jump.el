@@ -51,7 +51,7 @@ fast way to jump to a saved search from anywhere in Notmuch."
 		 (case (plist-get saved-search :sort-order)
 		   (newest-first nil)
 		   (oldest-first t)
-		   (otherwise (default-value notmuch-search-oldest-first)))))
+		   (otherwise (default-value 'notmuch-search-oldest-first)))))
 	    (push (list key name
 			`(lambda () (notmuch-search ',query ',oldest-first)))
 		  action-map)))))
