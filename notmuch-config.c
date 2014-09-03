@@ -283,16 +283,22 @@ notmuch_config_open (void *ctx,
 				     G_KEY_FILE_KEEP_COMMENTS,
 				     &error))
     {
-	/* If create_new is true, then the caller is prepared for a
-	 * default configuration file in the case of FILE NOT
-	 * FOUND. Otherwise, any read failure is an error.
-	 */
-	if (create_new &&
-	    error->domain == G_FILE_ERROR &&
-	    error->code == G_FILE_ERROR_NOENT)
-	{
-	    g_error_free (error);
-	    config->is_new = TRUE;
+	if (error->domain == G_FILE_ERROR && error->code == G_FILE_ERROR_NOENT) {
+	    /* If create_new is true, then the caller is prepared for a
+	     * default configuration file in the case of FILE NOT
+	     * FOUND.
+	     */
+	    if (create_new) {
+		g_error_free (error);
+		config->is_new = TRUE;
+	    } else {
+		fprintf (stderr, "Configuration file %s not found.\n"
+			 "Try running 'notmuch setup' to create a configuration.\n",
+			 config->filename);
+		talloc_free (config);
+		g_error_free (error);
+		return NULL;
+	    }
 	}
 	else
 	{

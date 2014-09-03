@@ -3,6 +3,12 @@
 test_description='"notmuch setup"'
 . ./test-lib.sh
 
+test_begin_subtest "Notmuch new without a config suggests notmuch setup"
+output=$(notmuch --config=new-notmuch-config new 2>&1)
+test_expect_equal "$output" "\
+Configuration file new-notmuch-config not found.
+Try running 'notmuch setup' to create a configuration."
+
 test_begin_subtest "Create a new config interactively"
 notmuch --config=new-notmuch-config > /dev/null <<EOF
 Test Suite
