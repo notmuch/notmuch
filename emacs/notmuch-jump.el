@@ -25,9 +25,10 @@
 (require 'notmuch-lib)
 (require 'notmuch-hello)
 
-(unless (fboundp 'window-body-width)
-  ;; Compatibility for Emacs pre-24
-  (defalias 'window-body-width 'window-width))
+(eval-and-compile
+  (unless (fboundp 'window-body-width)
+    ;; Compatibility for Emacs pre-24
+    (defalias 'window-body-width 'window-width)))
 
 ;;;###autoload
 (defun notmuch-jump-search ()
