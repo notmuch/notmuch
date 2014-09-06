@@ -224,7 +224,13 @@ For example, if you wanted to remove an \"unread\" tag and add a
   :group 'notmuch-show)
 
 (defcustom notmuch-show-mark-read-function #'notmuch-show-seen-current-message
-  "Function to control which messages are marked read."
+  "Function to control which messages are marked read.
+
+The function should take two arguments START and END which will
+be the start and end of the visible portion of the buffer and
+should mark the appropriate messages read by applying
+`notmuch-show-mark-read'. This function will be called after
+every user interaction with notmuch."
   :type 'function
   :group 'notmuch-show)
 
