@@ -973,6 +973,10 @@ notmuch_thread_get_matched_messages (notmuch_thread_t *thread);
  * authors of mail messages in the query results that belong to this
  * thread.
  *
+ * The string contains authors of messages matching the query first, then
+ * non-matched authors (with the two groups separated by '|'). Within
+ * each group, authors are ordered by date.
+ *
  * The returned string belongs to 'thread' and as such, should not be
  * modified by the caller and will only be valid for as long as the
  * thread is valid, (which is until notmuch_thread_destroy or until
