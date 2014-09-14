@@ -113,7 +113,7 @@ Replaces: notmuch (<<0.6~254~)
 Depends: ${misc:Depends}, notmuch (>= ${source:Version}),
  emacs23 (>= 23~) | emacs23-nox (>=23~) | emacs23-lucid (>=23~) |
  emacs24 (>= 24~) | emacs24-nox (>=24~) | emacs24-lucid (>=24~),
- emacsen-common (>= 2.0.8)
+ emacsen-common (>= 2.0.5)
 Description: thread-based email index, search and tagging (emacs interface)
  Notmuch is a system for indexing, searching, reading, and tagging
  large collections of email messages in maildir or mh format. It uses

@@ -1,5 +1,6 @@
 notmuch (0.18.1-2~bpo70+1) wheezy-backports; urgency=medium
 
+  * Downgrade dependency on emacsen-common to 2.0.5
   * Rebuild for wheezy-backports.
 
  -- David Bremner <bremner@debian.org>  Tue, 26 Aug 2014 10:57:51 -0700
