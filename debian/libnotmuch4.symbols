@@ -1,4 +1,4 @@
-libnotmuch.so.3 libnotmuch3 #MINVER#
+libnotmuch.so.4 libnotmuch4 #MINVER#
  notmuch_database_add_message@Base 0.3
  notmuch_database_begin_atomic@Base 0.9~rc1
  notmuch_database_close@Base 0.13~rc1

@@ -29,7 +29,7 @@ Vcs-Browser: http://git.notmuchmail.org/git/notmuch
 
 Package: notmuch
 Architecture: any
-Depends: libnotmuch3 (= ${binary:Version}), ${shlibs:Depends}, ${misc:Depends}
+Depends: libnotmuch4 (= ${binary:Version}), ${shlibs:Depends}, ${misc:Depends}
 Recommends: notmuch-emacs | notmuch-vim | notmuch-mutt | alot,  gnupg-agent
 Description: thread-based email index, search and tagging
  Notmuch is a system for indexing, searching, reading, and tagging
@@ -39,7 +39,7 @@ Description: thread-based email index, search and tagging
  .
  This package contains the notmuch command-line interface
 
-Package: libnotmuch3
+Package: libnotmuch4
 Section: libs
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
@@ -56,7 +56,7 @@ Description: thread-based email index, search and tagging (runtime)
 Package: libnotmuch-dev
 Section: libdevel
 Architecture: any
-Depends: ${misc:Depends}, libnotmuch3 (= ${binary:Version})
+Depends: ${misc:Depends}, libnotmuch4 (= ${binary:Version})
 Description: thread-based email index, search and tagging (development)
  Notmuch is a system for indexing, searching, reading, and tagging
  large collections of email messages in maildir or mh format. It uses
@@ -69,7 +69,7 @@ Description: thread-based email index, search and tagging (development)
 Package: python-notmuch
 Architecture: all
 Section: python
-Depends: ${misc:Depends}, ${python:Depends}, libnotmuch3 (>= ${source:Version})
+Depends: ${misc:Depends}, ${python:Depends}, libnotmuch4 (>= ${source:Version})
 Description: python interface to the notmuch mail search and index library
  Notmuch is a system for indexing, searching, reading, and tagging
  large collections of email messages in maildir or mh format. It uses
@@ -82,7 +82,7 @@ Description: python interface to the notmuch mail search and index library
 Package: python3-notmuch
 Architecture: all
 Section: python
-Depends: ${misc:Depends}, ${python3:Depends}, libnotmuch3 (>= ${source:Version})
+Depends: ${misc:Depends}, ${python3:Depends}, libnotmuch4 (>= ${source:Version})
 Description: Python 3 interface to the notmuch mail search and index library
  Notmuch is a system for indexing, searching, reading, and tagging
  large collections of email messages in maildir or mh format. It uses
@@ -162,7 +162,7 @@ Package: notmuch-dbg
 Architecture: any
 Section: debug
 Priority: extra
-Depends: ${shlibs:Depends}, ${misc:Depends}, libnotmuch3 (= ${binary:Version})
+Depends: ${shlibs:Depends}, ${misc:Depends}, libnotmuch4 (= ${binary:Version})
 Description: thread-based email index, search and tagging - debugging symbols
  Notmuch is a system for indexing, searching, reading, and tagging
  large collections of email messages in maildir or mh format. It uses
