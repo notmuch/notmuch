@@ -24,9 +24,9 @@ from ctypes import CDLL, Structure, POINTER
 try:
     from os import uname
     if uname()[0] == 'Darwin':
-        nmlib = CDLL("libnotmuch.3.dylib")
+        nmlib = CDLL("libnotmuch.4.dylib")
     else:
-        nmlib = CDLL("libnotmuch.so.3")
+        nmlib = CDLL("libnotmuch.so.4")
 except:
     raise ImportError("Could not find shared 'notmuch' library.")
 
