@@ -70,7 +70,8 @@ to know how address selection is made by default."
 		(point)))
 	 (orig (buffer-substring-no-properties beg end))
 	 (completion-ignore-case t)
-	 (options (notmuch-address-options orig))
+	 (options (with-temp-message "Looking for completion candidates..."
+		    (notmuch-address-options orig)))
 	 (num-options (length options))
 	 (chosen (cond
 		  ((eq num-options 0)
