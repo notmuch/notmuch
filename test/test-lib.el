@@ -181,3 +181,8 @@ nothing."
 ;; suite
 (setq notmuch-tag-deleted-formats
       '((".*" nil)))
+
+;; force a common html renderer, to avoid test variations between
+;; environments
+
+(setq mm-text-html-renderer 'html2text)

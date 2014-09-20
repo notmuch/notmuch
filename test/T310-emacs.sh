@@ -483,7 +483,7 @@ test_expect_equal_file OUTPUT EXPECTED
 test_begin_subtest "Reply within emacs to an html-only message"
 add_message '[content-type]="text/html"' \
 	    '[body]="Hi,<br />This is an <b>HTML</b> test message.<br /><br />OK?"'
-test_emacs "(let ((message-hidden-headers '()) (mm-text-html-renderer 'html2text))
+test_emacs "(let ((message-hidden-headers '()))
 	    (notmuch-show \"id:${gen_msg_id}\")
 	    (notmuch-show-reply)
 	    (test-output))"
