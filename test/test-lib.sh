@@ -45,6 +45,12 @@ done,*)
 	;;
 esac
 
+# Save STDOUT to fd 6 and STDERR to fd 7.
+exec 6>&1 7>&2
+# Make xtrace debugging (when used) use redirected STDERR, with verbose lead:
+BASH_XTRACEFD=7
+export PS4='+(${BASH_SOURCE}:${LINENO}): ${FUNCNAME[0]:+${FUNCNAME[0]}(): }'
+
 # Keep the original TERM for say_color and test_emacs
 ORIGINAL_TERM=$TERM
 
@@ -204,8 +210,6 @@ then
 	print_test_description
 fi
 
-exec 5>&1
-
 test_failure=0
 test_count=0
 test_fixed=0
@@ -225,7 +229,7 @@ die () {
 	then
 		exit $code
 	else
-		exec >&5
+		exec >&6
 		say_color error '%-6s' FATAL
 		echo " $test_subtest_name"
 		echo
@@ -236,7 +240,7 @@ die () {
 
 die_signal () {
 	_die_common
-	echo >&5 "FATAL: $0: interrupted by signal" $((code - 128))
+	echo >&6 "FATAL: $0: interrupted by signal" $((code - 128))
 	exit $code
 }
 
@@ -546,11 +550,10 @@ test_begin_subtest ()
     fi
     test_subtest_name="$1"
     test_reset_state_
-    # Remember stdout and stderr file descriptors and redirect test
-    # output to the previously prepared file descriptors 3 and 4 (see
-    # below)
+    # Redirect test output to the previously prepared file descriptors
+    # 3 and 4 (see below)
     if test "$verbose" != "t"; then exec 4>test.output 3>&4; fi
-    exec 6>&1 7>&2 >&3 2>&4
+    exec >&3 2>&4
     inside_subtest=t
 }
 
@@ -941,7 +944,7 @@ test_expect_code () {
 test_external () {
 	test "$#" = 4 && { prereq=$1; shift; } || prereq=
 	test "$#" = 3 ||
-	error >&5 "bug in the test script: not 3 or 4 parameters to test_external"
+	error >&6 "bug in the test script: not 3 or 4 parameters to test_external"
 	test_subtest_name="$1"
 	shift
 	test_reset_state_

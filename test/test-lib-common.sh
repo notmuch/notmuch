@@ -122,7 +122,7 @@ esac
 test ! -z "$debug" || remove_tmp=$TMP_DIRECTORY
 rm -fr "$test" || {
 	GIT_EXIT_OK=t
-	echo >&5 "FATAL: Cannot prepare test area"
+	echo >&6 "FATAL: Cannot prepare test area"
 	exit 1
 }
 
