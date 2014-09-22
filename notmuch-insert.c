@@ -179,6 +179,31 @@ maildir_create_folder (const void *ctx, const char *maildir)
     return TRUE;
 }
 
+/*
+ * Generate a temporary file basename, no path, do not create an
+ * actual file. Return the basename, or NULL on errors.
+ */
+static char *
+tempfilename (const void *ctx)
+{
+    char *filename;
+    char hostname[256];
+    struct timeval tv;
+    pid_t pid;
+
+    /* We follow the Dovecot file name generation algorithm. */
+    pid = getpid ();
+    safe_gethostname (hostname, sizeof (hostname));
+    gettimeofday (&tv, NULL);
+
+    filename = talloc_asprintf (ctx, "%ld.M%ldP%d.%s",
+				tv.tv_sec, tv.tv_usec, pid, hostname);
+    if (! filename)
+	fprintf (stderr, "Error: %s\n", strerror (ENOMEM));
+
+    return filename;
+}
+
 /* Open a unique file in the 'tmp' sub-directory of dir.
  * Returns the file descriptor on success, or -1 on failure.
  * On success, file paths for the message in the 'tmp' and 'new'
@@ -188,23 +213,13 @@ static int
 maildir_open_tmp_file (void *ctx, const char *dir,
 		       char **tmppath, char **newpath, char **newdir)
 {
-    pid_t pid;
-    char hostname[256];
-    struct timeval tv;
     char *filename;
     int fd = -1;
 
-    /* We follow the Dovecot file name generation algorithm. */
-    pid = getpid ();
-    safe_gethostname (hostname, sizeof (hostname));
     do {
-	gettimeofday (&tv, NULL);
-	filename = talloc_asprintf (ctx, "%ld.M%ldP%d.%s",
-				    tv.tv_sec, tv.tv_usec, pid, hostname);
-	if (! filename) {
-	    fprintf (stderr, "Out of memory\n");
+	filename = tempfilename (ctx);
+	if (! filename)
 	    return -1;
-	}
 
 	*tmppath = talloc_asprintf (ctx, "%s/tmp/%s", dir, filename);
 	if (! *tmppath) {
