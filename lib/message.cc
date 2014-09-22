@@ -1497,7 +1497,7 @@ notmuch_message_tags_to_maildir_flags (notmuch_message_t *message)
     talloc_free (to_set);
     talloc_free (to_clear);
 
-    return NOTMUCH_STATUS_SUCCESS;
+    return status;
 }
 
 notmuch_status_t
