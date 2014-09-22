@@ -67,20 +67,21 @@ safe_gethostname (char *hostname, size_t len)
 static notmuch_bool_t
 sync_dir (const char *dir)
 {
-    notmuch_bool_t ret;
-    int fd;
+    int fd, r;
 
     fd = open (dir, O_RDONLY);
     if (fd == -1) {
-	fprintf (stderr, "Error: open() dir failed: %s\n", strerror (errno));
+	fprintf (stderr, "Error: open %s: %s\n", dir, strerror (errno));
 	return FALSE;
     }
-    ret = (fsync (fd) == 0);
-    if (! ret) {
-	fprintf (stderr, "Error: fsync() dir failed: %s\n", strerror (errno));
-    }
+
+    r = fsync (fd);
+    if (r)
+	fprintf (stderr, "Error: fsync %s: %s\n", dir, strerror (errno));
+
     close (fd);
-    return ret;
+
+    return r == 0;
 }
 
 /*
