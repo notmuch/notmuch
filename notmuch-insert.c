@@ -204,47 +204,37 @@ tempfilename (const void *ctx)
     return filename;
 }
 
-/* Open a unique file in the 'tmp' sub-directory of dir.
- * Returns the file descriptor on success, or -1 on failure.
- * On success, file paths for the message in the 'tmp' and 'new'
- * directories are returned via tmppath and newpath,
- * and the path of the 'new' directory itself in newdir. */
+/*
+ * Create a unique temporary file in maildir/tmp, return fd and full
+ * path to file in *path_out, or -1 on errors (in which case *path_out
+ * is not touched).
+ */
 static int
-maildir_open_tmp_file (void *ctx, const char *dir,
-		       char **tmppath, char **newpath, char **newdir)
+maildir_mktemp (const void *ctx, const char *maildir, char **path_out)
 {
-    char *filename;
-    int fd = -1;
+    char *filename, *path;
+    int fd;
 
     do {
 	filename = tempfilename (ctx);
 	if (! filename)
 	    return -1;
 
-	*tmppath = talloc_asprintf (ctx, "%s/tmp/%s", dir, filename);
-	if (! *tmppath) {
-	    fprintf (stderr, "Out of memory\n");
+	path = talloc_asprintf (ctx, "%s/tmp/%s", maildir, filename);
+	if (! path) {
+	    fprintf (stderr, "Error: %s\n", strerror (ENOMEM));
 	    return -1;
 	}
 
-	fd = open (*tmppath, O_WRONLY | O_CREAT | O_TRUNC | O_EXCL, 0600);
+	fd = open (path, O_WRONLY | O_CREAT | O_TRUNC | O_EXCL, 0600);
     } while (fd == -1 && errno == EEXIST);
 
     if (fd == -1) {
-	fprintf (stderr, "Error: opening %s: %s\n", *tmppath, strerror (errno));
+	fprintf (stderr, "Error: open '%s': %s\n", path, strerror (errno));
 	return -1;
     }
 
-    *newdir = talloc_asprintf (ctx, "%s/new", dir);
-    *newpath = talloc_asprintf (ctx, "%s/new/%s", dir, filename);
-    if (! *newdir || ! *newpath) {
-	fprintf (stderr, "Out of memory\n");
-	close (fd);
-	unlink (*tmppath);
-	return -1;
-    }
-
-    talloc_free (filename);
+    *path_out = path;
 
     return fd;
 }
@@ -293,53 +283,85 @@ copy_fd (int fdout, int fdin)
     return (!interrupted && !empty);
 }
 
-static notmuch_bool_t
-write_message (void *ctx, int fdin, const char *dir, char **newpath)
+/*
+ * Write fdin to a new temp file in maildir/tmp, return full path to
+ * the file, or NULL on errors.
+ */
+static char *
+maildir_write_tmp (const void *ctx, int fdin, const char *maildir)
 {
-    char *tmppath;
-    char *newdir;
-    char *cleanup_path;
+    char *path;
     int fdout;
 
-    fdout = maildir_open_tmp_file (ctx, dir, &tmppath, newpath, &newdir);
+    fdout = maildir_mktemp (ctx, maildir, &path);
     if (fdout < 0)
-	return FALSE;
-
-    cleanup_path = tmppath;
+	return NULL;
 
     if (! copy_fd (fdout, fdin))
 	goto FAIL;
 
-    if (fsync (fdout) != 0) {
-	fprintf (stderr, "Error: fsync failed: %s\n", strerror (errno));
+    if (fsync (fdout)) {
+	fprintf (stderr, "Error: fsync '%s': %s\n", path, strerror (errno));
 	goto FAIL;
     }
 
     close (fdout);
-    fdout = -1;
 
-    /* Atomically move the new message file from the Maildir 'tmp' directory
-     * to the 'new' directory.  We follow the Dovecot recommendation to
-     * simply use rename() instead of link() and unlink().
-     * See also: http://wiki.dovecot.org/MailboxFormat/Maildir#Mail_delivery
-     */
-    if (rename (tmppath, *newpath) != 0) {
-	fprintf (stderr, "Error: rename() failed: %s\n", strerror (errno));
+    return path;
+
+FAIL:
+    close (fdout);
+    unlink (path);
+
+    return NULL;
+}
+
+/*
+ * Write fdin to a new file in maildir/new, using an intermediate temp
+ * file in maildir/tmp, return full path to the new file, or NULL on
+ * errors.
+ */
+static char *
+maildir_write_new (const void *ctx, int fdin, const char *maildir)
+{
+    char *cleanpath, *tmppath, *newpath, *newdir;
+
+    tmppath = maildir_write_tmp (ctx, fdin, maildir);
+    if (! tmppath)
+	return NULL;
+    cleanpath = tmppath;
+
+    newpath = talloc_strdup (ctx, tmppath);
+    if (! newpath) {
+	fprintf (stderr, "Error: %s\n", strerror (ENOMEM));
 	goto FAIL;
     }
 
-    cleanup_path = *newpath;
+    /* sanity checks needed? */
+    memcpy (newpath + strlen (maildir) + 1, "new", 3);
+
+    if (rename (tmppath, newpath)) {
+	fprintf (stderr, "Error: rename '%s' '%s': %s\n",
+		 tmppath, newpath, strerror (errno));
+	goto FAIL;
+    }
+    cleanpath = newpath;
+
+    newdir = talloc_asprintf (ctx, "%s/%s", maildir, "new");
+    if (! newdir) {
+	fprintf (stderr, "Error: %s\n", strerror (ENOMEM));
+	goto FAIL;
+    }
 
     if (! sync_dir (newdir))
 	goto FAIL;
 
-    return TRUE;
+    return newpath;
 
-  FAIL:
-    if (fdout >= 0)
-	close (fdout);
-    unlink (cleanup_path);
-    return FALSE;
+FAIL:
+    unlink (cleanpath);
+
+    return NULL;
 }
 
 /* Add the specified message file to the notmuch database, applying tags.
@@ -477,7 +499,8 @@ notmuch_insert_command (notmuch_config_t *config, int argc, char *argv[])
 	return EXIT_FAILURE;
 
     /* Write the message to the Maildir new directory. */
-    if (! write_message (config, STDIN_FILENO, maildir, &newpath)) {
+    newpath = maildir_write_new (config, STDIN_FILENO, maildir);
+    if (! newpath) {
 	notmuch_database_destroy (notmuch);
 	return EXIT_FAILURE;
     }
