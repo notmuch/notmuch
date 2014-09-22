@@ -83,10 +83,13 @@ sync_dir (const char *dir)
     return ret;
 }
 
-/* Check the specified folder name does not contain a directory
- * component ".." to prevent writes outside of the Maildir hierarchy. */
+/*
+ * Check the specified folder name does not contain a directory
+ * component ".." to prevent writes outside of the Maildir
+ * hierarchy. Return TRUE on valid folder name, FALSE otherwise.
+ */
 static notmuch_bool_t
-check_folder_name (const char *folder)
+is_valid_folder_name (const char *folder)
 {
     const char *p = folder;
 
@@ -449,8 +452,8 @@ notmuch_insert_command (notmuch_config_t *config, int argc, char *argv[])
     if (folder == NULL) {
 	maildir = db_path;
     } else {
-	if (! check_folder_name (folder)) {
-	    fprintf (stderr, "Error: bad folder name: %s\n", folder);
+	if (! is_valid_folder_name (folder)) {
+	    fprintf (stderr, "Error: invalid folder name: '%s'\n", folder);
 	    return EXIT_FAILURE;
 	}
 	maildir = talloc_asprintf (config, "%s/%s", db_path, folder);
