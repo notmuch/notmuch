@@ -104,96 +104,78 @@ is_valid_folder_name (const char *folder)
     }
 }
 
-/* Make the given directory, succeeding if it already exists. */
+/*
+ * Make the given directory and its parents as necessary, using the
+ * given mode. Return TRUE on success, FALSE otherwise. Partial
+ * results are not cleaned up on errors.
+ */
 static notmuch_bool_t
-make_directory (char *path, int mode)
-{
-    notmuch_bool_t ret;
-    char *slash;
-
-    if (mkdir (path, mode) != 0)
-	return (errno == EEXIST);
-
-    /* Sync the parent directory for durability. */
-    ret = TRUE;
-    slash = strrchr (path, '/');
-    if (slash) {
-	*slash = '\0';
-	ret = sync_dir (path);
-	*slash = '/';
-    }
-    return ret;
-}
-
-/* Make the given directory including its parent directories as necessary.
- * Return TRUE on success, FALSE on error. */
-static notmuch_bool_t
-make_directory_and_parents (char *path, int mode)
+mkdir_recursive (const void *ctx, const char *path, int mode)
 {
     struct stat st;
-    char *start;
-    char *end;
-    notmuch_bool_t ret;
+    int r;
+    char *parent = NULL, *slash;
 
     /* First check the common case: directory already exists. */
-    if (stat (path, &st) == 0)
-	return S_ISDIR (st.st_mode) ? TRUE : FALSE;
-
-    for (start = path; *start != '\0'; start = end + 1) {
-	/* start points to the first unprocessed character.
-	 * Find the next slash from start onwards. */
-	end = strchr (start, '/');
-
-	/* If there are no more slashes then all the parent directories
-	 * have been made.  Now attempt to make the whole path. */
-	if (end == NULL)
-	    return make_directory (path, mode);
-
-	/* Make the path up to the next slash, unless the current
-	 * directory component is actually empty. */
-	if (end > start) {
-	    *end = '\0';
-	    ret = make_directory (path, mode);
-	    *end = '/';
-	    if (! ret)
-		return FALSE;
+    r = stat (path, &st);
+    if (r == 0) {
+        if (! S_ISDIR (st.st_mode)) {
+	    fprintf (stderr, "Error: '%s' is not a directory: %s\n",
+		     path, strerror (EEXIST));
+	    return FALSE;
 	}
+
+	return TRUE;
+    } else if (errno != ENOENT) {
+	fprintf (stderr, "Error: stat '%s': %s\n", path, strerror (errno));
+	return FALSE;
     }
 
-    return TRUE;
+    /* mkdir parents, if any */
+    slash = strrchr (path, '/');
+    if (slash && slash != path) {
+	parent = talloc_strndup (ctx, path, slash - path);
+	if (! parent) {
+	    fprintf (stderr, "Error: %s\n", strerror (ENOMEM));
+	    return FALSE;
+	}
+
+	if (! mkdir_recursive (ctx, parent, mode))
+	    return FALSE;
+    }
+
+    if (mkdir (path, mode)) {
+	fprintf (stderr, "Error: mkdir '%s': %s\n", path, strerror (errno));
+	return FALSE;
+    }
+
+    return parent ? sync_dir (parent) : TRUE;
 }
 
-/* Create the given maildir folder, i.e. dir and its subdirectories
- * 'cur', 'new', 'tmp'. */
+/*
+ * Create the given maildir folder, i.e. maildir and its
+ * subdirectories cur/new/tmp. Return TRUE on success, FALSE
+ * otherwise. Partial results are not cleaned up on errors.
+ */
 static notmuch_bool_t
-maildir_create_folder (void *ctx, const char *dir)
+maildir_create_folder (const void *ctx, const char *maildir)
 {
+    const char *subdirs[] = { "cur", "new", "tmp" };
     const int mode = 0700;
     char *subdir;
-    char *tail;
+    unsigned int i;
 
-    /* Create 'cur' directory, including parent directories. */
-    subdir = talloc_asprintf (ctx, "%s/cur", dir);
-    if (! subdir) {
-	fprintf (stderr, "Out of memory.\n");
-	return FALSE;
+    for (i = 0; i < ARRAY_SIZE (subdirs); i++) {
+	subdir = talloc_asprintf (ctx, "%s/%s", maildir, subdirs[i]);
+	if (! subdir) {
+	    fprintf (stderr, "Error: %s\n", strerror (ENOMEM));
+	    return FALSE;
+	}
+
+	if (! mkdir_recursive (ctx, subdir, mode))
+	    return FALSE;
     }
-    if (! make_directory_and_parents (subdir, mode))
-	return FALSE;
 
-    tail = subdir + strlen (subdir) - 3;
-
-    /* Create 'new' directory. */
-    strcpy (tail, "new");
-    if (! make_directory (subdir, mode))
-	return FALSE;
-
-    /* Create 'tmp' directory. */
-    strcpy (tail, "tmp");
-    if (! make_directory (subdir, mode))
-	return FALSE;
-
-    talloc_free (subdir);
     return TRUE;
 }
 
@@ -463,11 +445,8 @@ notmuch_insert_command (notmuch_config_t *config, int argc, char *argv[])
 	    fprintf (stderr, "Out of memory\n");
 	    return EXIT_FAILURE;
 	}
-	if (create_folder && ! maildir_create_folder (config, maildir)) {
-	    fprintf (stderr, "Error: creating maildir %s: %s\n",
-		     maildir, strerror (errno));
+	if (create_folder && ! maildir_create_folder (config, maildir))
 	    return EXIT_FAILURE;
-	}
     }
 
     /* Setup our handler for SIGINT. We do not set SA_RESTART so that copying
