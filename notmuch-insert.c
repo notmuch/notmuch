@@ -251,11 +251,12 @@ maildir_open_tmp_file (void *ctx, const char *dir,
     return fd;
 }
 
-/* Copy the contents of standard input (fdin) into fdout.
- * Returns TRUE if a non-empty file was written successfully.
- * Otherwise, return FALSE. */
+/*
+ * Copy fdin to fdout, return TRUE on success, and FALSE on errors and
+ * empty input.
+ */
 static notmuch_bool_t
-copy_stdin (int fdin, int fdout)
+copy_fd (int fdout, int fdin)
 {
     notmuch_bool_t empty = TRUE;
 
@@ -308,7 +309,7 @@ write_message (void *ctx, int fdin, const char *dir, char **newpath)
 
     cleanup_path = tmppath;
 
-    if (! copy_stdin (fdin, fdout))
+    if (! copy_fd (fdout, fdin))
 	goto FAIL;
 
     if (fsync (fdout) != 0) {
