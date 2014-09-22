@@ -294,52 +294,6 @@ copy_stdin (int fdin, int fdout)
     return (!interrupted && !empty);
 }
 
-/* Add the specified message file to the notmuch database, applying tags.
- * The file is renamed to encode notmuch tags as maildir flags. */
-static void
-add_file_to_database (notmuch_database_t *notmuch, const char *path,
-		      tag_op_list_t *tag_ops, notmuch_bool_t synchronize_flags)
-{
-    notmuch_message_t *message;
-    notmuch_status_t status;
-
-    status = notmuch_database_add_message (notmuch, path, &message);
-    switch (status) {
-    case NOTMUCH_STATUS_SUCCESS:
-    case NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID:
-	break;
-    default:
-    case NOTMUCH_STATUS_FILE_NOT_EMAIL:
-    case NOTMUCH_STATUS_READ_ONLY_DATABASE:
-    case NOTMUCH_STATUS_XAPIAN_EXCEPTION:
-    case NOTMUCH_STATUS_OUT_OF_MEMORY:
-    case NOTMUCH_STATUS_FILE_ERROR:
-    case NOTMUCH_STATUS_NULL_POINTER:
-    case NOTMUCH_STATUS_TAG_TOO_LONG:
-    case NOTMUCH_STATUS_UNBALANCED_FREEZE_THAW:
-    case NOTMUCH_STATUS_UNBALANCED_ATOMIC:
-    case NOTMUCH_STATUS_LAST_STATUS:
-	fprintf (stderr, "Error: failed to add `%s' to notmuch database: %s\n",
-		 path, notmuch_status_to_string (status));
-	return;
-    }
-
-    if (status == NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID) {
-	/* Don't change tags of an existing message. */
-	if (synchronize_flags) {
-	    status = notmuch_message_tags_to_maildir_flags (message);
-	    if (status != NOTMUCH_STATUS_SUCCESS)
-		fprintf (stderr, "Error: failed to sync tags to maildir flags\n");
-	}
-    } else {
-	tag_op_flag_t flags = synchronize_flags ? TAG_FLAG_MAILDIR_SYNC : 0;
-
-	tag_op_list_apply (message, tag_ops, flags);
-    }
-
-    notmuch_message_destroy (message);
-}
-
 static notmuch_bool_t
 write_message (void *ctx, int fdin, const char *dir, char **newpath)
 {
@@ -387,6 +341,52 @@ write_message (void *ctx, int fdin, const char *dir, char **newpath)
 	close (fdout);
     unlink (cleanup_path);
     return FALSE;
+}
+
+/* Add the specified message file to the notmuch database, applying tags.
+ * The file is renamed to encode notmuch tags as maildir flags. */
+static void
+add_file_to_database (notmuch_database_t *notmuch, const char *path,
+		      tag_op_list_t *tag_ops, notmuch_bool_t synchronize_flags)
+{
+    notmuch_message_t *message;
+    notmuch_status_t status;
+
+    status = notmuch_database_add_message (notmuch, path, &message);
+    switch (status) {
+    case NOTMUCH_STATUS_SUCCESS:
+    case NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID:
+	break;
+    default:
+    case NOTMUCH_STATUS_FILE_NOT_EMAIL:
+    case NOTMUCH_STATUS_READ_ONLY_DATABASE:
+    case NOTMUCH_STATUS_XAPIAN_EXCEPTION:
+    case NOTMUCH_STATUS_OUT_OF_MEMORY:
+    case NOTMUCH_STATUS_FILE_ERROR:
+    case NOTMUCH_STATUS_NULL_POINTER:
+    case NOTMUCH_STATUS_TAG_TOO_LONG:
+    case NOTMUCH_STATUS_UNBALANCED_FREEZE_THAW:
+    case NOTMUCH_STATUS_UNBALANCED_ATOMIC:
+    case NOTMUCH_STATUS_LAST_STATUS:
+	fprintf (stderr, "Error: failed to add `%s' to notmuch database: %s\n",
+		 path, notmuch_status_to_string (status));
+	return;
+    }
+
+    if (status == NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID) {
+	/* Don't change tags of an existing message. */
+	if (synchronize_flags) {
+	    status = notmuch_message_tags_to_maildir_flags (message);
+	    if (status != NOTMUCH_STATUS_SUCCESS)
+		fprintf (stderr, "Error: failed to sync tags to maildir flags\n");
+	}
+    } else {
+	tag_op_flag_t flags = synchronize_flags ? TAG_FLAG_MAILDIR_SYNC : 0;
+
+	tag_op_list_apply (message, tag_ops, flags);
+    }
+
+    notmuch_message_destroy (message);
 }
 
 int
