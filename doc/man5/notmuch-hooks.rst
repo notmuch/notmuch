@@ -35,6 +35,17 @@ The currently available hooks are described below.
         Typically this hook is used to perform additional query-based
         tagging on the imported messages.
 
+    **post-insert**
+
+        This hook is invoked by the **insert** command after the
+        message has been delivered, added to the database, and initial
+        tags have been applied. The hook will not be run if there have
+        been any errors during the message delivery; what is regarded
+        as succesful delivery depends on the ``--keep`` option.
+
+        Typically this hook is used to perform additional query-based
+        tagging on the delivered messages.
+
 SEE ALSO
 ========
 

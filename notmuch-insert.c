@@ -454,6 +454,7 @@ notmuch_insert_command (notmuch_config_t *config, int argc, char *argv[])
     const char *folder = NULL;
     notmuch_bool_t create_folder = FALSE;
     notmuch_bool_t keep = FALSE;
+    notmuch_bool_t no_hooks = FALSE;
     notmuch_bool_t synchronize_flags;
     const char *maildir;
     char *newpath;
@@ -464,6 +465,7 @@ notmuch_insert_command (notmuch_config_t *config, int argc, char *argv[])
 	{ NOTMUCH_OPT_STRING, &folder, "folder", 0, 0 },
 	{ NOTMUCH_OPT_BOOLEAN, &create_folder, "create-folder", 0, 0 },
 	{ NOTMUCH_OPT_BOOLEAN, &keep, "keep", 0, 0 },
+	{ NOTMUCH_OPT_BOOLEAN,  &no_hooks, "no-hooks", 'n', 0 },
 	{ NOTMUCH_OPT_END, 0, 0, 0, 0 }
     };
 
@@ -563,6 +565,11 @@ notmuch_insert_command (notmuch_config_t *config, int argc, char *argv[])
 			 newpath, strerror (errno));
 	    }
 	}
+    }
+
+    if (! no_hooks && status == NOTMUCH_STATUS_SUCCESS) {
+	/* Ignore hook failures. */
+	notmuch_run_hook (db_path, "post-insert");
     }
 
     return status ? EXIT_FAILURE : EXIT_SUCCESS;

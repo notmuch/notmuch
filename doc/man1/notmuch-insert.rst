@@ -25,6 +25,9 @@ If the new message is a duplicate of an existing message in the database
 (it has same Message-ID), it will be added to the maildir folder and
 notmuch database, but the tags will not be changed.
 
+The **insert** command supports hooks. See **notmuch-hooks(5)** for
+more details on hooks.
+
 Option arguments must appear before any tag operation arguments.
 Supported options for **insert** include
 
@@ -44,6 +47,9 @@ Supported options for **insert** include
         fails. Ignore these errors and return exit status 0 to
         indicate succesful mail delivery.
 
+    ``--no-hooks``
+        Prevent hooks from being run.
+
 EXIT STATUS
 ===========
 
@@ -53,6 +59,9 @@ any errors, including message file delivery to the filesystem, message
 indexing to Notmuch database, changing tags, and synchronizing tags to
 maildir flags. The ``--keep`` option may be used to settle for
 successful message file delivery.
+
+The exit status of the **post-insert** hook does not affect the exit
+status of the **insert** command.
 
 SEE ALSO
 ========
