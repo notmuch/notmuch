@@ -59,6 +59,7 @@ let s:notmuch_datetime_format_default = '%d.%m.%y %H:%M:%S'
 let s:notmuch_reader_default = 'mutt -f %s'
 let s:notmuch_sendmail_default = 'sendmail'
 let s:notmuch_folders_count_threads_default = 0
+let s:notmuch_compose_start_insert_default = 1
 
 function! s:new_file_buffer(type, fname)
 	exec printf('edit %s', a:fname)
@@ -132,7 +133,9 @@ function! s:show_reply()
 	let b:compose_done = 0
 	call s:set_map(g:notmuch_compose_maps)
 	autocmd BufDelete <buffer> call s:on_compose_delete()
-	startinsert!
+	if g:notmuch_compose_start_insert
+		startinsert!
+	end
 endfunction
 
 function! s:compose()
@@ -140,7 +143,9 @@ function! s:compose()
 	let b:compose_done = 0
 	call s:set_map(g:notmuch_compose_maps)
 	autocmd BufDelete <buffer> call s:on_compose_delete()
-	startinsert!
+	if g:notmuch_compose_start_insert
+		startinsert!
+	end
 endfunction
 
 function! s:show_info()
@@ -426,6 +431,10 @@ function! s:set_defaults()
 		else
 			let g:notmuch_folders_count_threads = s:notmuch_folders_count_threads_default
 		endif
+	endif
+
+	if !exists('g:notmuch_compose_start_insert')
+		let g:notmuch_compose_start_insert = s:notmuch_compose_start_insert_default
 	endif
 
 	if !exists('g:notmuch_custom_search_maps') && exists('g:notmuch_rb_custom_search_maps')
