@@ -471,28 +471,21 @@ ruby << EOF
 	$searches = []
 	$threads = []
 	$messages = []
-	$config = {}
 	$mail_installed = defined?(Mail)
 
-	def get_config
-		group = nil
-		config = ENV['NOTMUCH_CONFIG'] || '~/.notmuch-config'
-		File.open(File.expand_path(config)).each do |l|
-			l.chomp!
-			case l
-			when /^\[(.*)\]$/
-				group = $1
-			when ''
-			when /^(.*)=(.*)$/
-				key = "%s.%s" % [group, $1]
-				value = $2
-				$config[key] = value
-			end
-		end
+	def get_config_item(item)
+		result = ''
+		IO.popen(['notmuch', 'config', 'get', item]) { |out|
+			result = out.read
+		}
+		return result.rstrip
+	end
 
-		$db_name = $config['database.path']
-		$email_name = $config['user.name']
-		$email_address = $config['user.primary_email']
+	def get_config
+		$db_name = get_config_item('database.path')
+		$email_name = get_config_item('user.name')
+		$email_address = get_config_item('user.primary_email')
+		$email_name = get_config_item('user.name')
 		$email = "%s <%s>" % [$email_name, $email_address]
 	end
 
