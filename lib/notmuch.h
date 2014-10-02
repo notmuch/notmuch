@@ -281,7 +281,7 @@ notmuch_database_open (const char *path,
 		       notmuch_database_t **database);
 
 /**
- * Close the given notmuch database.
+ * Commit changes and close the given notmuch database.
  *
  * After notmuch_database_close has been called, calls to other
  * functions on objects derived from this database may either behave
@@ -291,6 +291,13 @@ notmuch_database_open (const char *path,
  *
  * notmuch_database_close can be called multiple times.  Later calls
  * have no effect.
+ *
+ * For writable databases, notmuch_database_close commits all changes
+ * to disk before closing the database.  If the caller is currently in
+ * an atomic section (there was a notmuch_database_begin_atomic
+ * without a matching notmuch_database_end_atomic), this will discard
+ * changes made in that atomic section (but still commit changes made
+ * prior to entering the atomic section).
  *
  * Return value:
  *

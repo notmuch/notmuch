@@ -903,28 +903,30 @@ notmuch_database_close (notmuch_database_t *notmuch)
 {
     notmuch_status_t status = NOTMUCH_STATUS_SUCCESS;
 
-    try {
-	if (notmuch->xapian_db != NULL &&
-	    notmuch->mode == NOTMUCH_DATABASE_MODE_READ_WRITE)
-	    (static_cast <Xapian::WritableDatabase *> (notmuch->xapian_db))->flush ();
-    } catch (const Xapian::Error &error) {
-	status = NOTMUCH_STATUS_XAPIAN_EXCEPTION;
-	if (! notmuch->exception_reported) {
-	    fprintf (stderr, "Error: A Xapian exception occurred flushing database: %s\n",
-		     error.get_msg().c_str());
-	}
-    }
-
     /* Many Xapian objects (and thus notmuch objects) hold references to
      * the database, so merely deleting the database may not suffice to
      * close it.  Thus, we explicitly close it here. */
     if (notmuch->xapian_db != NULL) {
 	try {
+	    /* If there's an outstanding transaction, it's unclear if
+	     * closing the Xapian database commits everything up to
+	     * that transaction, or may discard committed (but
+	     * unflushed) transactions.  To be certain, explicitly
+	     * cancel any outstanding transaction before closing. */
+	    if (notmuch->mode == NOTMUCH_DATABASE_MODE_READ_WRITE &&
+		notmuch->atomic_nesting)
+		(static_cast <Xapian::WritableDatabase *> (notmuch->xapian_db))
+		    ->cancel_transaction ();
+
+	    /* Close the database.  This implicitly flushes
+	     * outstanding changes. */
 	    notmuch->xapian_db->close();
 	} catch (const Xapian::Error &error) {
-	    /* don't clobber previous error status */
-	    if (status == NOTMUCH_STATUS_SUCCESS)
-		status = NOTMUCH_STATUS_XAPIAN_EXCEPTION;
+	    status = NOTMUCH_STATUS_XAPIAN_EXCEPTION;
+	    if (! notmuch->exception_reported) {
+		fprintf (stderr, "Error: A Xapian exception occurred closing database: %s\n",
+			 error.get_msg().c_str());
+	    }
 	}
     }
 
