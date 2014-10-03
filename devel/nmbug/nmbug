@@ -32,6 +32,7 @@ from __future__ import unicode_literals
 
 import codecs as _codecs
 import collections as _collections
+import functools as _functools
 import inspect as _inspect
 import locale as _locale
 import logging as _logging
@@ -677,6 +678,24 @@ def _unpack_diff_lines(stream):
         yield (id, tag)
 
 
+def _help(parser, command=None):
+    """
+    Show help for an nmbug command.
+
+    Because some folks prefer:
+
+      $ nmbug help COMMAND
+
+    to
+
+      $ nmbug COMMAND --help
+    """
+    if command:
+        parser.parse_args([command, '--help'])
+    else:
+        parser.parse_args(['--help'])
+
+
 if __name__ == '__main__':
     import argparse
 
@@ -692,6 +711,8 @@ if __name__ == '__main__':
         help='Log verbosity.  Defaults to {!r}.'.format(
             _logging.getLevelName(_LOG.level).lower()))
 
+    help = _functools.partial(_help, parser=parser)
+    help.__doc__ = _help.__doc__
     subparsers = parser.add_subparsers(
         title='commands',
         description=(
@@ -703,6 +724,7 @@ if __name__ == '__main__':
             'clone',
             'commit',
             'fetch',
+            'help',
             'log',
             'merge',
             'pull',
@@ -746,6 +768,10 @@ if __name__ == '__main__':
                     'Override the default configured in branch.<name>.remote '
                     'to fetch from a particular remote repository (e.g. '
                     "'origin')."))
+        elif command == 'help':
+            subparser.add_argument(
+                'command', metavar='COMMAND', nargs='?',
+                help='The command to show help for.')
         elif command == 'log':
             subparser.add_argument(
                 'args', metavar='ARG', nargs='*',
@@ -796,7 +822,10 @@ if __name__ == '__main__':
         parser.print_usage()
         _sys.exit(1)
 
-    (arg_names, varargs, varkw) = _inspect.getargs(args.func.__code__)
+    if args.func == help:
+        arg_names = ['command']
+    else:
+        (arg_names, varargs, varkw) = _inspect.getargs(args.func.__code__)
     kwargs = {key: getattr(args, key) for key in arg_names if key in args}
     try:
         args.func(**kwargs)
