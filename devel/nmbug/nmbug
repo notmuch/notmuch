@@ -1,708 +1,807 @@
-#!/usr/bin/env perl
-# Copyright (c) 2011 David Bremner
-# License: same as notmuch
-
-use strict;
-use warnings;
-use File::Temp qw(tempdir);
-use Pod::Usage;
-
-no encoding;
-
-my $NMBGIT = $ENV{NMBGIT} || $ENV{HOME}.'/.nmbug';
-
-$NMBGIT .= '/.git' if (-d $NMBGIT.'/.git');
-
-my $TAGPREFIX = defined($ENV{NMBPREFIX}) ? $ENV{NMBPREFIX} : 'notmuch::';
-
-# for encoding
-
-my $ESCAPE_CHAR =	'%';
-my $NO_ESCAPE =		'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'.
-			'0123456789+-_@=.:,';
-my $MUST_ENCODE =	qr{[^\Q$NO_ESCAPE\E]};
-my $ESCAPED_RX =	qr{$ESCAPE_CHAR([A-Fa-f0-9]{2})};
-
-my %command = (
-	     archive	=> \&do_archive,
-	     checkout	=> \&do_checkout,
-	     clone	=> \&do_clone,
-	     commit	=> \&do_commit,
-	     fetch	=> \&do_fetch,
-	     help	=> \&do_help,
-	     log	=> \&do_log,
-	     merge	=> \&do_merge,
-	     pull	=> \&do_pull,
-	     push	=> \&do_push,
-	     status	=> \&do_status,
-	     );
-
-# Convert prefix into form suitable for literal matching against
-# notmuch dump --format=batch-tag output.
-my $ENCPREFIX = encode_for_fs ($TAGPREFIX);
-$ENCPREFIX =~ s/:/%3a/g;
-
-my $subcommand = shift || usage ();
-
-if (!exists $command{$subcommand}) {
-  usage ();
-}
-
-# magic hash for git
-my $EMPTYBLOB = git (qw{hash-object -t blob /dev/null});
-
-&{$command{$subcommand}}(@ARGV);
-
-sub git_pipe {
-  my $envref = (ref $_[0] eq 'HASH') ? shift : {};
-  my $ioref  = (ref $_[0] eq 'ARRAY') ? shift : undef;
-  my $dir = ($_[0] eq '-|' or $_[0] eq '|-') ? shift : undef;
-
-  unshift @_, 'git';
-  $envref->{GIT_DIR} ||= $NMBGIT;
-  spawn ($envref, defined $ioref ? $ioref : (), defined $dir ? $dir : (), @_);
-}
-
-sub git_with_status {
-  my $fh = git_pipe (@_);
-  my $str = join ('', <$fh>);
-  close $fh;
-  my $status = $?;
-  chomp($str);
-  return ($str, $status);
-}
-
-sub git {
-  my ($str, $status) = git_with_status (@_);
-  if ($status) {
-    die "'git @_' exited with nonzero value\n";
-  }
-  return $str;
-}
-
-sub spawn {
-  my $envref = (ref $_[0] eq 'HASH') ? shift : {};
-  my $ioref  = (ref $_[0] eq 'ARRAY') ? shift : undef;
-  my $dir = ($_[0] eq '-|' or $_[0] eq '|-') ? shift : '-|';
-
-  die unless @_;
-
-  if (open my $child, $dir) {
-    return $child;
-  }
-  # child
-  while (my ($key, $value) = each %{$envref}) {
-    $ENV{$key} = $value;
-  }
-
-  if (defined $ioref && $dir eq '-|') {
-      open my $fh, '|-', @_ or die "open |- @_: $!";
-      foreach my $line (@{$ioref}) {
-	print $fh $line, "\n";
-      }
-      exit ! close $fh;
-    } else {
-      if ($dir ne '|-') {
-	open STDIN, '<', '/dev/null' or die "reopening stdin: $!"
-      }
-      exec @_;
-      die "exec @_: $!";
-    }
-}
-
-
-sub get_tags {
-  my $prefix = shift;
-  my @tags;
-
-  my $fh = spawn ('-|', qw/notmuch search --output=tags/, "*")
-    or die 'error dumping tags';
-
-  while (<$fh>) {
-    chomp ();
-    push @tags, $_ if (m/^$prefix/);
-  }
-  unless (close $fh) {
-    die "'notmuch search --output=tags *' exited with nonzero value\n";
-  }
-  return @tags;
-}
-
-
-sub do_archive {
-  system ('git', "--git-dir=$NMBGIT", 'archive', 'HEAD');
-}
-
-sub do_clone {
-  my $repository = shift;
-
-  my $tempwork = tempdir ('/tmp/nmbug-clone.XXXXXX', CLEANUP => 1);
-  system ('git', 'clone', '--no-checkout', '--separate-git-dir', $NMBGIT,
-          $repository, $tempwork) == 0
-    or die "'git clone' exited with nonzero value\n";
-  git ('config', '--unset', 'core.worktree');
-  git ('config', 'core.bare', 'true');
-}
-
-sub is_committed {
-  my $status = shift;
-  return scalar (@{$status->{added}} ) + scalar (@{$status->{deleted}} ) == 0;
-}
-
-
-sub do_commit {
-  my @args = @_;
-
-  my $status = compute_status ();
-
-  if ( is_committed ($status) ) {
-    print "Nothing to commit\n";
-    return;
-  }
-
-  my $index = read_tree ('HEAD');
-
-  update_index ($index, $status);
-
-  my $tree = git ( { GIT_INDEX_FILE => $index }, 'write-tree')
-    or die 'no output from write-tree';
-
-  my $parent = git ( 'rev-parse', 'HEAD'  )
-    or die 'no output from rev-parse';
-
-  my $commit = git ([ @args ], 'commit-tree', $tree, '-p', $parent)
-    or die 'commit-tree';
-
-  git ('update-ref', 'HEAD', $commit);
-
-  unlink $index || die "unlink: $!";
-
-}
-
-sub read_tree {
-  my $treeish = shift;
-  my $index = $NMBGIT.'/nmbug.index';
-  git ({ GIT_INDEX_FILE => $index }, 'read-tree', '--empty');
-  git ({ GIT_INDEX_FILE => $index }, 'read-tree', $treeish);
-  return $index;
-}
-
-sub update_index {
-  my $index = shift;
-  my $status = shift;
-
-  my $git = spawn ({ GIT_DIR => $NMBGIT, GIT_INDEX_FILE => $index },
-		     '|-', qw/git update-index --index-info/)
-    or die 'git update-index';
-
-  foreach my $pair (@{$status->{deleted}}) {
-    index_tags_for_msg ($git, $pair->{id}, 'D', $pair->{tag});
-  }
-
-  foreach my $pair (@{$status->{added}}) {
-    index_tags_for_msg ($git, $pair->{id}, 'A', $pair->{tag});
-  }
-  unless (close $git) {
-    die "'git update-index --index-info' exited with nonzero value\n";
-  }
-
-}
-
-
-sub do_fetch {
-  my $remote = shift || 'origin';
-
-  git ('fetch', $remote);
-}
-
-
-sub notmuch {
-  my @args = @_;
-  system ('notmuch', @args) == 0 or die  "notmuch @args failed: $?";
-}
-
-
-sub index_tags {
-
-  my $index = $NMBGIT.'/nmbug.index';
-
-  my $query = join ' ', map ("tag:\"$_\"", get_tags ($TAGPREFIX));
-
-  my $fh = spawn ('-|', qw/notmuch dump --format=batch-tag --/, $query)
-    or die "notmuch dump: $!";
-
-  git ('read-tree', '--empty');
-  my $git = spawn ({ GIT_DIR => $NMBGIT, GIT_INDEX_FILE => $index },
-		     '|-', qw/git update-index --index-info/)
-    or die 'git update-index';
-
-  while (<$fh>) {
-
-    chomp();
-    my ($rest,$id) = split(/ -- id:/);
-
-    if ($id =~ s/^"(.*)"\s*$/$1/) {
-      # xapian quoted string, dequote.
-      $id =~ s/""/"/g;
-    }
-
-    #strip prefixes from tags before writing
-    my @tags = grep { s/^[+]$ENCPREFIX//; } split (' ', $rest);
-    index_tags_for_msg ($git,$id, 'A', @tags);
-  }
-  unless (close $git) {
-    die "'git update-index --index-info' exited with nonzero value\n";
-  }
-  unless (close $fh) {
-    die "'notmuch dump --format=batch-tag -- $query' exited with nonzero value\n";
-  }
-  return $index;
-}
-
-# update the git index to either create or delete an empty file.
-# Neither argument should be encoded/escaped.
-sub index_tags_for_msg {
-  my $fh = shift;
-  my $msgid = shift;
-  my $mode = shift;
-
-  my $hash = $EMPTYBLOB;
-  my $blobmode = '100644';
-
-  if ($mode eq 'D') {
-    $blobmode = '0';
-    $hash = '0000000000000000000000000000000000000000';
-  }
-
-  foreach my $tag (@_) {
-    my $tagpath = 'tags/' . encode_for_fs ($msgid) . '/' . encode_for_fs ($tag);
-    print $fh "$blobmode $hash\t$tagpath\n";
-  }
-}
-
-
-sub do_checkout {
-  do_sync (action => 'checkout');
-}
-
-sub quote_for_xapian {
-  my $str = shift;
-  $str =~ s/"/""/g;
-  return '"' . $str . '"';
-}
-
-sub pair_to_batch_line {
-  my ($action, $pair) = @_;
-
-  # the tag should already be suitably encoded
-
-  return $action . $ENCPREFIX . $pair->{tag} .
-    ' -- id:' . quote_for_xapian ($pair->{id})."\n";
-}
-
-sub do_sync {
-
-  my %args = @_;
-
-  my $status = compute_status ();
-  my ($A_action, $D_action);
-
-  if ($args{action} eq 'checkout') {
-    $A_action = '-';
-    $D_action = '+';
-  } else {
-    $A_action = '+';
-    $D_action = '-';
-  }
-
-  my $notmuch = spawn ({}, '|-', qw/notmuch tag --batch/)
-    or die 'notmuch tag --batch';
-
-  foreach my $pair (@{$status->{added}}) {
-    print $notmuch pair_to_batch_line ($A_action, $pair);
-  }
-
-  foreach my $pair (@{$status->{deleted}}) {
-    print $notmuch pair_to_batch_line ($D_action, $pair);
-  }
-
-  unless (close $notmuch) {
-    die "'notmuch tag --batch' exited with nonzero value\n";
-  }
-}
-
-
-sub insist_committed {
-
-  my $status=compute_status();
-  if ( !is_committed ($status) ) {
-    print "Uncommitted changes to $TAGPREFIX* tags in notmuch
-
-For a summary of changes, run 'nmbug status'
-To save your changes,     run 'nmbug commit' before merging/pull
-To discard your changes,  run 'nmbug checkout'
-";
-    exit (1);
-  }
-
-}
-
-
-sub do_pull {
-  my $remote = shift || 'origin';
-  my $branch = shift || 'master';
-
-  git ( 'fetch', $remote);
-
-  do_merge ("$remote/$branch");
-}
-
-
-sub do_merge {
-  my $commit = shift || '@{upstream}';
-
-  insist_committed ();
-
-  my $tempwork = tempdir ('/tmp/nmbug-merge.XXXXXX', CLEANUP => 1);
-
-  git ( { GIT_WORK_TREE => $tempwork }, 'checkout', '-f', 'HEAD');
-
-  git ( { GIT_WORK_TREE => $tempwork }, 'merge', $commit);
-
-  do_checkout ();
-}
-
-
-sub do_log {
-  # we don't want output trapping here, because we want the pager.
-  system ( 'git', "--git-dir=$NMBGIT", 'log', '--name-status', @_);
-}
-
-
-sub do_push {
-  my $remote = shift || 'origin';
-
-  git ('push', $remote, 'master');
-}
-
-
-sub do_status {
-  my $status = compute_status ();
-
-  my %output = ();
-  foreach my $pair (@{$status->{added}}) {
-    $output{$pair->{id}} ||= {};
-    $output{$pair->{id}}{$pair->{tag}} = 'A'
-  }
-
-  foreach my $pair (@{$status->{deleted}}) {
-    $output{$pair->{id}} ||= {};
-    $output{$pair->{id}}{$pair->{tag}} = 'D'
-  }
-
-  foreach my $pair (@{$status->{missing}}) {
-    $output{$pair->{id}} ||= {};
-    $output{$pair->{id}}{$pair->{tag}} = 'U'
-  }
-
-  if (is_unmerged ()) {
-    foreach my $pair (diff_refs ('A')) {
-      $output{$pair->{id}} ||= {};
-      $output{$pair->{id}}{$pair->{tag}} ||= ' ';
-      $output{$pair->{id}}{$pair->{tag}} .= 'a';
-    }
-
-    foreach my $pair (diff_refs ('D')) {
-      $output{$pair->{id}} ||= {};
-      $output{$pair->{id}}{$pair->{tag}} ||= ' ';
-      $output{$pair->{id}}{$pair->{tag}} .= 'd';
-    }
-  }
-
-  foreach my $id (sort keys %output) {
-    foreach my $tag (sort keys %{$output{$id}}) {
-      printf "%s\t%s\t%s\n", $output{$id}{$tag}, $id, $tag;
-    }
-  }
-}
-
-
-sub is_unmerged {
-  my $commit = shift || '@{upstream}';
-
-  my ($fetch_head, $status) = git_with_status ('rev-parse', $commit);
-  if ($status) {
-    return 0;
-  }
-  my $base = git ( 'merge-base', 'HEAD', $commit);
-
-  return ($base ne $fetch_head);
-
-}
-
-sub compute_status {
-  my %args = @_;
-
-  my @added;
-  my @deleted;
-  my @missing;
-
-  my $index = index_tags ();
-
-  my @maybe_deleted = diff_index ($index, 'D');
-
-  foreach my $pair (@maybe_deleted) {
-
-    my $id = $pair->{id};
-
-    my $fh = spawn ('-|', qw/notmuch search --output=files/,"id:$id")
-      or die "searching for $id";
-    if (!<$fh>) {
-      push @missing, $pair;
-    } else {
-      push @deleted, $pair;
-    }
-    unless (close $fh) {
-      die "'notmuch search --output=files id:$id' exited with nonzero value\n";
-    }
-  }
-
-
-  @added = diff_index ($index, 'A');
-
-  unlink $index || die "unlink $index: $!";
-
-  return { added => [@added], deleted => [@deleted], missing => [@missing] };
-}
-
-
-sub diff_index {
-  my $index = shift;
-  my $filter = shift;
-
-  my $fh = git_pipe ({ GIT_INDEX_FILE => $index },
-		  qw/diff-index --cached/,
-		 "--diff-filter=$filter", qw/--name-only HEAD/ );
-
-  my @lines = unpack_diff_lines ($fh);
-  unless (close $fh) {
-    die "'git diff-index --cached --diff-filter=$filter --name-only HEAD' ",
-	"exited with nonzero value\n";
-  }
-  return @lines;
-}
-
-
-sub diff_refs {
-  my $filter = shift;
-  my $ref1 = shift || 'HEAD';
-  my $ref2 = shift || '@{upstream}';
-
-  my $fh= git_pipe ( 'diff', "--diff-filter=$filter", '--name-only',
-		 $ref1, $ref2);
-
-  my @lines = unpack_diff_lines ($fh);
-  unless (close $fh) {
-    die "'git diff --diff-filter=$filter --name-only $ref1 $ref2' ",
-	"exited with nonzero value\n";
-  }
-  return @lines;
-}
-
-
-sub unpack_diff_lines {
-  my $fh = shift;
-
-  my @found;
-  while(<$fh>) {
-    chomp ();
-    my ($id,$tag) = m|tags/ ([^/]+) / ([^/]+) |x;
-
-    $id = decode_from_fs ($id);
-    $tag = decode_from_fs ($tag);
-
-    push @found, { id => $id, tag => $tag };
-  }
-
-  return @found;
-}
-
-
-sub encode_for_fs {
-  my $str = shift;
-
-  $str =~ s/($MUST_ENCODE)/"$ESCAPE_CHAR".sprintf ("%02x",ord ($1))/ge;
-  return $str;
-}
-
-
-sub decode_from_fs {
-  my $str = shift;
-
-  $str =~ s/$ESCAPED_RX/ chr (hex ($1))/eg;
-
-  return $str;
-
-}
-
-
-sub usage {
-  pod2usage ();
-  exit (1);
-}
-
-
-sub do_help {
-  pod2usage ( -verbose => 2 );
-  exit (0);
-}
-
-__END__
-
-=head1 NAME
-
-nmbug - manage notmuch tags about notmuch
-
-=head1 SYNOPSIS
-
-nmbug subcommand [options]
-
-B<nmbug help> for more help
-
-=head1 OPTIONS
-
-=head2 Most common commands
-
-=over 8
-
-=item B<commit> [message]
-
-Commit appropriately prefixed tags from the notmuch database to
-git. Any extra arguments are used (one per line) as a commit message.
-
-=item  B<push> [remote]
-
-push local nmbug git state to remote repo
-
-=item  B<pull> [remote] [branch]
-
-pull (merge) remote repo changes to notmuch. B<pull> is equivalent to
-B<fetch> followed by B<merge>.  The default remote is C<origin>, and
-the default branch is C<master>.
-
-=back
-
-=head2 Other Useful Commands
-
-=over 8
-
-=item B<clone> repository
-
-Create a local nmbug repository from a remote source.  This wraps
-C<git clone>, adding some options to avoid creating a working tree
-while preserving remote-tracking branches and upstreams.
-
-=item B<checkout>
-
-Update the notmuch database from git. This is mainly useful to discard
-your changes in notmuch relative to git.
-
-=item B<fetch> [remote]
-
-Fetch changes from the remote repo (see merge to bring those changes
-into notmuch).
-
-=item B<help> [subcommand]
-
-print help [for subcommand]
-
-=item B<log> [parameters]
-
-A simple wrapper for git log. After running C<nmbug fetch>, you can
-inspect the changes with C<nmbug log HEAD..@{upstream}>
-
-=item B<merge> [commit]
-
-Merge changes from C<commit> into HEAD, and load the result into
-notmuch.  The default commit is C<@{upstream}>.
-
-=item  B<status>
-
-Show pending updates in notmuch or git repo. See below for more
-information about the output format.
-
-=back
-
-=head2 Less common commands
-
-=over 8
-
-=item B<archive>
-
-Dump a tar archive (using git archive) of the current nmbug tag set.
-
-=back
-
-=head1 STATUS FORMAT
-
-B<nmbug status> prints lines of the form
-
-   ng Message-Id tag
-
-where n is a single character representing notmuch database status
-
-=over 8
-
-=item B<A>
-
-Tag is present in notmuch database, but not committed to nmbug
-(equivalently, tag has been deleted in nmbug repo, e.g. by a pull, but
-not restored to notmuch database).
-
-=item B<D>
-
-Tag is present in nmbug repo, but not restored to notmuch database
-(equivalently, tag has been deleted in notmuch)
-
-=item B<U>
-
-Message is unknown (missing from local notmuch database)
-
-=back
-
-The second character (if present) represents a difference between remote
-git and local. Typically C<nmbug fetch> needs to be run to update this.
-
-=over 8
-
-
-=item B<a>
-
-Tag is present in remote, but not in local git.
-
-
-=item B<d>
-
-Tag is present in local git, but not in remote git.
-
-
-=back
-
-=head1 DUMP FORMAT
-
-Each tag $tag for message with Message-Id $id is written to
-an empty file
-
-	tags/encode($id)/encode($tag)
-
-The encoding preserves alphanumerics, and the characters "+-_@=.:,"
-(not the quotes).  All other octets are replaced with '%' followed by
-a two digit hex number.
-
-=head1 ENVIRONMENT
-
-B<NMBGIT> specifies the location of the git repository used by nmbug.
-If not specified $HOME/.nmbug is used.
-
-B<NMBPREFIX> specifies the prefix in the notmuch database for tags of
-interest to nmbug. If not specified 'notmuch::' is used.
+#!/usr/bin/env python
+#
+# Copyright (c) 2011-2014 David Bremner <david@tethera.net>
+#                         W. Trevor King <wking@tremily.us>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see http://www.gnu.org/licenses/ .
+
+"""
+Manage notmuch tags with Git
+
+Environment variables:
+
+* NMBGIT specifies the location of the git repository used by nmbug.
+  If not specified $HOME/.nmbug is used.
+* NMBPREFIX specifies the prefix in the notmuch database for tags of
+  interest to nmbug. If not specified 'notmuch::' is used.
+"""
+
+from __future__ import print_function
+from __future__ import unicode_literals
+
+import codecs as _codecs
+import collections as _collections
+import inspect as _inspect
+import locale as _locale
+import logging as _logging
+import os as _os
+import re as _re
+import shutil as _shutil
+import subprocess as _subprocess
+import sys as _sys
+import tempfile as _tempfile
+import textwrap as _textwrap
+try:  # Python 3
+    from urllib.parse import quote as _quote
+    from urllib.parse import unquote as _unquote
+except ImportError:  # Python 2
+    from urllib import quote as _quote
+    from urllib import unquote as _unquote
+
+
+__version__ = '0.2'
+
+_LOG = _logging.getLogger('nmbug')
+_LOG.setLevel(_logging.ERROR)
+_LOG.addHandler(_logging.StreamHandler())
+
+NMBGIT = _os.path.expanduser(
+    _os.getenv('NMBGIT', _os.path.join('~', '.nmbug')))
+_NMBGIT = _os.path.join(NMBGIT, '.git')
+if _os.path.isdir(_NMBGIT):
+    NMBGIT = _NMBGIT
+
+TAG_PREFIX = _os.getenv('NMBPREFIX', 'notmuch::')
+_HEX_ESCAPE_REGEX = _re.compile('%[0-9A-F]{2}')
+_TAG_FILE_REGEX = _re.compile('tags/(?P<id>[^/]*)/(?P<tag>[^/]*)')
+
+# magic hash for Git (git hash-object -t blob /dev/null)
+_EMPTYBLOB = 'e69de29bb2d1d6434b8b29ae775ad8c2e48c5391'
+
+
+try:
+    getattr(_tempfile, 'TemporaryDirectory')
+except AttributeError:  # Python < 3.2
+    class _TemporaryDirectory(object):
+        """
+        Fallback context manager for Python < 3.2
+
+        See PEP 343 for details on context managers [1].
+
+        [1]: http://legacy.python.org/dev/peps/pep-0343/
+        """
+        def __init__(self, **kwargs):
+            self.name = _tempfile.mkdtemp(**kwargs)
+
+        def __enter__(self):
+            return self.name
+
+        def __exit__(self, type, value, traceback):
+            _shutil.rmtree(self.name)
+
+
+    _tempfile.TemporaryDirectory = _TemporaryDirectory
+
+
+def _hex_quote(string, safe='+@=:,'):
+    """
+    quote('abc def') -> 'abc%20def'.
+
+    Wrap urllib.parse.quote with additional safe characters (in
+    addition to letters, digits, and '_.-') and lowercase hex digits
+    (e.g. '%3a' instead of '%3A').
+    """
+    uppercase_escapes = _quote(string, safe)
+    return _HEX_ESCAPE_REGEX.sub(
+        lambda match: match.group(0).lower(),
+        uppercase_escapes)
+
+
+_ENCODED_TAG_PREFIX = _hex_quote(TAG_PREFIX, safe='+@=,')  # quote ':'
+
+
+def _xapian_quote(string):
+    """
+    Quote a string for Xapian's QueryParser.
+
+    Xapian uses double-quotes for quoting strings.  You can escape
+    internal quotes by repeating them [1,2,3].
+
+    [1]: http://trac.xapian.org/ticket/128#comment:2
+    [2]: http://trac.xapian.org/ticket/128#comment:17
+    [3]: http://trac.xapian.org/changeset/13823/svn
+    """
+    return '"{0}"'.format(string.replace('"', '""'))
+
+
+def _xapian_unquote(string):
+    """
+    Unquote a Xapian-quoted string.
+    """
+    if string.startswith('"') and string.endswith('"'):
+        return string[1:-1].replace('""', '"')
+    return string
+
+
+class SubprocessError(RuntimeError):
+    "A subprocess exited with a nonzero status"
+    def __init__(self, args, status, stdout=None, stderr=None):
+        self.status = status
+        self.stdout = stdout
+        self.stderr = stderr
+        msg = '{args} exited with {status}'.format(args=args, status=status)
+        if stderr:
+            msg = '{msg}: {stderr}'.format(msg=msg, stderr=stderr)
+        super(SubprocessError, self).__init__(msg)
+
+
+class _SubprocessContextManager(object):
+    """
+    PEP 343 context manager for subprocesses.
+
+    'expect' holds a tuple of acceptable exit codes, otherwise we'll
+    raise a SubprocessError in __exit__.
+    """
+    def __init__(self, process, args, expect=(0,)):
+        self._process = process
+        self._args = args
+        self._expect = expect
+
+    def __enter__(self):
+        return self._process
+
+    def __exit__(self, type, value, traceback):
+        for name in ['stdin', 'stdout', 'stderr']:
+            stream = getattr(self._process, name)
+            if stream:
+                stream.close()
+                setattr(self._process, name, None)
+        status = self._process.wait()
+        _LOG.debug('collect {args} with status {status}'.format(
+            args=self._args, status=status))
+        if status not in self._expect:
+            raise SubprocessError(args=self._args, status=status)
+
+    def wait(self):
+        return self._process.wait()
+
+
+def _spawn(args, input=None, additional_env=None, wait=False, stdin=None,
+           stdout=None, stderr=None, encoding=_locale.getpreferredencoding(),
+           expect=(0,), **kwargs):
+    """Spawn a subprocess, and optionally wait for it to finish.
+
+    This wrapper around subprocess.Popen has two modes, depending on
+    the truthiness of 'wait'.  If 'wait' is true, we use p.communicate
+    internally to write 'input' to the subprocess's stdin and read
+    from it's stdout/stderr.  If 'wait' is False, we return a
+    _SubprocessContextManager instance for fancier handling
+    (e.g. piping between processes).
+
+    For 'wait' calls when you want to write to the subprocess's stdin,
+    you only need to set 'input' to your content.  When 'input' is not
+    None but 'stdin' is, we'll automatically set 'stdin' to PIPE
+    before calling Popen.  This avoids having the subprocess
+    accidentally inherit the launching process's stdin.
+    """
+    _LOG.debug('spawn {args} (additional env. var.: {env})'.format(
+        args=args, env=additional_env))
+    if not stdin and input is not None:
+        stdin = _subprocess.PIPE
+    if additional_env:
+        if not kwargs.get('env'):
+            kwargs['env'] = dict(_os.environ)
+        kwargs['env'].update(additional_env)
+    p = _subprocess.Popen(
+        args, stdin=stdin, stdout=stdout, stderr=stderr, **kwargs)
+    if wait:
+        if hasattr(input, 'encode'):
+            input = input.encode(encoding)
+        (stdout, stderr) = p.communicate(input=input)
+        status = p.wait()
+        _LOG.debug('collect {args} with status {status}'.format(
+            args=args, status=status))
+        if stdout is not None:
+            stdout = stdout.decode(encoding)
+        if stderr is not None:
+            stderr = stderr.decode(encoding)
+        if status:
+            raise SubprocessError(
+                args=args, status=status, stdout=stdout, stderr=stderr)
+        return (status, stdout, stderr)
+    if p.stdin and not stdin:
+        p.stdin.close()
+        p.stdin = None
+    if p.stdin:
+        p.stdin = _codecs.getwriter(encoding=encoding)(stream=p.stdin)
+    stream_reader = _codecs.getreader(encoding=encoding)
+    if p.stdout:
+        p.stdout = stream_reader(stream=p.stdout)
+    if p.stderr:
+        p.stderr = stream_reader(stream=p.stderr)
+    return _SubprocessContextManager(args=args, process=p, expect=expect)
+
+
+def _git(args, **kwargs):
+    args = ['git', '--git-dir', NMBGIT] + list(args)
+    return _spawn(args=args, **kwargs)
+
+
+def _get_current_branch():
+    """Get the name of the current branch.
+
+    Return 'None' if we're not on a branch.
+    """
+    try:
+        (status, branch, stderr) = _git(
+            args=['symbolic-ref', '--short', 'HEAD'],
+            stdout=_subprocess.PIPE, stderr=_subprocess.PIPE, wait=True)
+    except SubprocessError as e:
+        if 'not a symbolic ref' in e:
+            return None
+        raise
+    return branch.strip()
+
+
+def _get_remote():
+    "Get the default remote for the current branch."
+    local_branch = _get_current_branch()
+    (status, remote, stderr) = _git(
+        args=['config', 'branch.{0}.remote'.format(local_branch)],
+        stdout=_subprocess.PIPE, wait=True)
+    return remote.strip()
+
+
+def get_tags(prefix=None):
+    "Get a list of tags with a given prefix."
+    if prefix is None:
+        prefix = TAG_PREFIX
+    (status, stdout, stderr) = _spawn(
+        args=['notmuch', 'search', '--output=tags', '*'],
+        stdout=_subprocess.PIPE, wait=True)
+    return [tag for tag in stdout.splitlines() if tag.startswith(prefix)]
+
+
+def archive(treeish='HEAD', args=()):
+    """
+    Dump a tar archive of the current nmbug tag set.
+
+    Using 'git archive'.
+
+    Each tag $tag for message with Message-Id $id is written to
+    an empty file
+
+      tags/encode($id)/encode($tag)
+
+    The encoding preserves alphanumerics, and the characters
+    "+-_@=.:," (not the quotes).  All other octets are replaced with
+    '%' followed by a two digit hex number.
+    """
+    _git(args=['archive', treeish] + list(args), wait=True)
+
+
+def clone(repository):
+    """
+    Create a local nmbug repository from a remote source.
+
+    This wraps 'git clone', adding some options to avoid creating a
+    working tree while preserving remote-tracking branches and
+    upstreams.
+    """
+    with _tempfile.TemporaryDirectory(prefix='nmbug-clone.') as workdir:
+        _spawn(
+            args=[
+                'git', 'clone', '--no-checkout', '--separate-git-dir', NMBGIT,
+                repository, workdir],
+            wait=True)
+    _git(args=['config', '--unset', 'core.worktree'], wait=True)
+    _git(args=['config', 'core.bare', 'true'], wait=True)
+
+
+def _is_committed(status):
+    return len(status['added']) + len(status['deleted']) == 0
+
+
+def commit(treeish='HEAD', message=None):
+    """
+    Commit prefix-matching tags from the notmuch database to Git.
+    """
+    status = get_status()
+
+    if _is_committed(status=status):
+        _LOG.warning('Nothing to commit')
+        return
+
+    _git(args=['read-tree', '--empty'], wait=True)
+    _git(args=['read-tree', treeish], wait=True)
+    try:
+        _update_index(status=status)
+        (_, tree, _) = _git(
+            args=['write-tree'],
+            stdout=_subprocess.PIPE,
+            wait=True)
+        (_, parent, _) = _git(
+            args=['rev-parse', treeish],
+            stdout=_subprocess.PIPE,
+            wait=True)
+        (_, commit, _) = _git(
+            args=['commit-tree', tree.strip(), '-p', parent.strip()],
+            input=message,
+            stdout=_subprocess.PIPE,
+            wait=True)
+        _git(
+            args=['update-ref', treeish, commit.strip()],
+            stdout=_subprocess.PIPE,
+            wait=True)
+    except Exception as e:
+        _git(args=['read-tree', '--empty'], wait=True)
+        _git(args=['read-tree', treeish], wait=True)
+        raise
+
+def _update_index(status):
+    with _git(
+            args=['update-index', '--index-info'],
+            stdin=_subprocess.PIPE) as p:
+        for id, tags in status['deleted'].items():
+            for line in _index_tags_for_message(id=id, status='D', tags=tags):
+                p.stdin.write(line)
+        for id, tags in status['added'].items():
+            for line in _index_tags_for_message(id=id, status='A', tags=tags):
+                p.stdin.write(line)
+
+
+def fetch(remote=None):
+    """
+    Fetch changes from the remote repository.
+
+    See 'merge' to bring those changes into notmuch.
+    """
+    args = ['fetch']
+    if remote:
+        args.append(remote)
+    _git(args=args, wait=True)
+
+
+def checkout():
+    """
+    Update the notmuch database from Git.
+
+    This is mainly useful to discard your changes in notmuch relative
+    to Git.
+    """
+    status = get_status()
+    with _spawn(
+            args=['notmuch', 'tag', '--batch'], stdin=_subprocess.PIPE) as p:
+        for id, tags in status['added'].items():
+            p.stdin.write(_batch_line(action='-', id=id, tags=tags))
+        for id, tags in status['deleted'].items():
+            p.stdin.write(_batch_line(action='+', id=id, tags=tags))
+
+
+def _batch_line(action, id, tags):
+    """
+    'notmuch tag --batch' line for adding/removing tags.
+
+    Set 'action' to '-' to remove a tag or '+' to add the tags to a
+    given message id.
+    """
+    tag_string = ' '.join(
+        '{action}{prefix}{tag}'.format(
+            action=action, prefix=_ENCODED_TAG_PREFIX, tag=_hex_quote(tag))
+        for tag in tags)
+    line = '{tags} -- id:{id}\n'.format(
+        tags=tag_string, id=_xapian_quote(string=id))
+    return line
+
+
+def _insist_committed():
+    "Die if the the notmuch tags don't match the current HEAD."
+    status = get_status()
+    if not _is_committed(status=status):
+        _LOG.error('\n'.join([
+            'Uncommitted changes to {prefix}* tags in notmuch',
+            '',
+            "For a summary of changes, run 'nmbug status'",
+            "To save your changes,     run 'nmbug commit' before merging/pull",
+            "To discard your changes,  run 'nmbug checkout'",
+            ]).format(prefix=TAG_PREFIX))
+        _sys.exit(1)
+
+
+def pull(repository=None, refspecs=None):
+    """
+    Pull (merge) remote repository changes to notmuch.
+
+    'pull' is equivalent to 'fetch' followed by 'merge'.  We use the
+    Git-configured repository for your current branch
+    (branch.<name>.repository, likely 'origin', and
+    branch.<name>.merge, likely 'master').
+    """
+    _insist_committed()
+    if refspecs and not repository:
+        repository = _get_remote()
+    args = ['pull']
+    if repository:
+        args.append(repository)
+    if refspecs:
+        args.extend(refspecs)
+    with _tempfile.TemporaryDirectory(prefix='nmbug-pull.') as workdir:
+        for command in [
+                ['reset', '--hard'],
+                args]:
+            _git(
+                args=command,
+                additional_env={'GIT_WORK_TREE': workdir},
+                wait=True)
+    checkout()
+
+
+def merge(reference='@{upstream}'):
+    """
+    Merge changes from 'reference' into HEAD and load the result into notmuch.
+
+    The default reference is '@{upstream}'.
+    """
+    _insist_committed()
+    with _tempfile.TemporaryDirectory(prefix='nmbug-merge.') as workdir:
+        for command in [
+                ['reset', '--hard'],
+                ['merge', reference]]:
+            _git(
+                args=command,
+                additional_env={'GIT_WORK_TREE': workdir},
+                wait=True)
+    checkout()
+
+
+def log(args=()):
+    """
+    A simple wrapper for 'git log'.
+
+    After running 'nmbug fetch', you can inspect the changes with
+    'nmbug log HEAD..@{upstream}'.
+    """
+    # we don't want output trapping here, because we want the pager.
+    args = ['log', '--name-status'] + list(args)
+    with _git(args=args, expect=(0, 1, -13)) as p:
+        p.wait()
+
+
+def push(repository=None, refspecs=None):
+    "Push the local nmbug Git state to a remote repository."
+    if refspecs and not repository:
+        repository = _get_remote()
+    args = ['push']
+    if repository:
+        args.append(repository)
+    if refspecs:
+        args.extend(refspecs)
+    _git(args=args, wait=True)
+
+
+def status():
+    """
+    Show pending updates in notmuch or git repo.
+
+    Prints lines of the form
+
+      ng Message-Id tag
+
+    where n is a single character representing notmuch database status
+
+    * A
+
+      Tag is present in notmuch database, but not committed to nmbug
+      (equivalently, tag has been deleted in nmbug repo, e.g. by a
+      pull, but not restored to notmuch database).
+
+    * D
+
+      Tag is present in nmbug repo, but not restored to notmuch
+      database (equivalently, tag has been deleted in notmuch).
+
+    * U
+
+      Message is unknown (missing from local notmuch database).
+
+    The second character (if present) represents a difference between
+    local and upstream branches. Typically 'nmbug fetch' needs to be
+    run to update this.
+
+    * a
+
+      Tag is present in upstream, but not in the local Git branch.
+
+    * d
+
+      Tag is present in local Git branch, but not upstream.
+    """
+    status = get_status()
+    # 'output' is a nested defaultdict for message status:
+    # * The outer dict is keyed by message id.
+    # * The inner dict is keyed by tag name.
+    # * The inner dict values are status strings (' a', 'Dd', ...).
+    output = _collections.defaultdict(
+        lambda : _collections.defaultdict(lambda : ' '))
+    for id, tags in status['added'].items():
+        for tag in tags:
+            output[id][tag] = 'A'
+    for id, tags in status['deleted'].items():
+        for tag in tags:
+            output[id][tag] = 'D'
+    for id, tags in status['missing'].items():
+        for tag in tags:
+            output[id][tag] = 'U'
+    if _is_unmerged():
+        for id, tag in _diff_refs(filter='A'):
+            output[id][tag] += 'a'
+        for id, tag in _diff_refs(filter='D'):
+            output[id][tag] += 'd'
+    for id, tag_status in sorted(output.items()):
+        for tag, status in sorted(tag_status.items()):
+            print('{status}\t{id}\t{tag}'.format(
+                status=status, id=id, tag=tag))
+
+
+def _is_unmerged(ref='@{upstream}'):
+    try:
+        (status, fetch_head, stderr) = _git(
+            args=['rev-parse', ref],
+            stdout=_subprocess.PIPE, stderr=_subprocess.PIPE, wait=True)
+    except SubprocessError as e:
+        if 'No upstream configured' in e.stderr:
+            return
+        raise
+    (status, base, stderr) = _git(
+        args=['merge-base', 'HEAD', ref],
+        stdout=_subprocess.PIPE, wait=True)
+    return base != fetch_head
+
+
+def get_status():
+    status = {
+        'deleted': {},
+        'missing': {},
+        }
+    index = _index_tags()
+    maybe_deleted = _diff_index(index=index, filter='D')
+    for id, tags in maybe_deleted.items():
+        (_, stdout, stderr) = _spawn(
+            args=['notmuch', 'search', '--output=files', 'id:{0}'.format(id)],
+            stdout=_subprocess.PIPE,
+            wait=True)
+        if stdout:
+            status['deleted'][id] = tags
+        else:
+            status['missing'][id] = tags
+    status['added'] = _diff_index(index=index, filter='A')
+    _os.remove(index)
+    return status
+
+
+def _index_tags():
+    "Write notmuch tags to the nmbug.index."
+    path = _os.path.join(NMBGIT, 'nmbug.index')
+    query = ' '.join('tag:"{tag}"'.format(tag=tag) for tag in get_tags())
+    prefix = '+{0}'.format(_ENCODED_TAG_PREFIX)
+    _git(
+        args=['read-tree', '--empty'],
+        additional_env={'GIT_INDEX_FILE': path}, wait=True)
+    with _spawn(
+            args=['notmuch', 'dump', '--format=batch-tag', '--', query],
+            stdout=_subprocess.PIPE) as notmuch:
+        with _git(
+                args=['update-index', '--index-info'],
+                stdin=_subprocess.PIPE,
+                additional_env={'GIT_INDEX_FILE': path}) as git:
+            for line in notmuch.stdout:
+                (tags_string, id) = [_.strip() for _ in line.split(' -- id:')]
+                tags = [
+                    _unquote(tag[len(prefix):])
+                    for tag in tags_string.split()
+                    if tag.startswith(prefix)]
+                id = _xapian_unquote(string=id)
+                for line in _index_tags_for_message(
+                        id=id, status='A', tags=tags):
+                    git.stdin.write(line)
+    return path
+
+
+def _index_tags_for_message(id, status, tags):
+    """
+    Update the Git index to either create or delete an empty file.
+
+    Neither 'id' nor the tags in 'tags' should be encoded/escaped.
+    """
+    mode = '100644'
+    hash = _EMPTYBLOB
+
+    if status == 'D':
+        mode = '0'
+        hash = '0000000000000000000000000000000000000000'
+
+    for tag in tags:
+        path = 'tags/{id}/{tag}'.format(
+            id=_hex_quote(string=id), tag=_hex_quote(string=tag))
+        yield '{mode} {hash}\t{path}\n'.format(mode=mode, hash=hash, path=path)
+
+
+def _diff_index(index, filter):
+    """
+    Get an {id: {tag, ...}} dict for a given filter.
+
+    For example, use 'A' to find added tags, and 'D' to find deleted tags.
+    """
+    s = _collections.defaultdict(set)
+    with _git(
+            args=[
+                'diff-index', '--cached', '--diff-filter', filter,
+                '--name-only', 'HEAD'],
+            additional_env={'GIT_INDEX_FILE': index},
+            stdout=_subprocess.PIPE) as p:
+        # Once we drop Python < 3.3, we can use 'yield from' here
+        for id, tag in _unpack_diff_lines(stream=p.stdout):
+            s[id].add(tag)
+    return s
+
+
+def _diff_refs(filter, a='HEAD', b='@{upstream}'):
+    with _git(
+            args=['diff', '--diff-filter', filter, '--name-only', a, b],
+            stdout=_subprocess.PIPE) as p:
+        # Once we drop Python < 3.3, we can use 'yield from' here
+        for id, tag in _unpack_diff_lines(stream=p.stdout):
+            yield id, tag
+
+
+def _unpack_diff_lines(stream):
+    "Iterate through (id, tag) tuples in a diff stream."
+    for line in stream:
+        match = _TAG_FILE_REGEX.match(line.strip())
+        if not match:
+            raise ValueError(
+                'Invalid line in diff: {!r}'.format(line.strip()))
+        id = _unquote(match.group('id'))
+        tag = _unquote(match.group('tag'))
+        yield (id, tag)
+
+
+if __name__ == '__main__':
+    import argparse
+
+    parser = argparse.ArgumentParser(
+        description=__doc__.strip(),
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument(
+        '-v', '--version', action='version',
+        version='%(prog)s {}'.format(__version__))
+    parser.add_argument(
+        '-l', '--log-level',
+        choices=['critical', 'error', 'warning', 'info', 'debug'],
+        help='Log verbosity.  Defaults to {!r}.'.format(
+            _logging.getLevelName(_LOG.level).lower()))
+
+    subparsers = parser.add_subparsers(
+        title='commands',
+        description=(
+            'For help on a particular command, run: '
+            "'%(prog)s ... <command> --help'."))
+    for command in [
+            'archive',
+            'checkout',
+            'clone',
+            'commit',
+            'fetch',
+            'log',
+            'merge',
+            'pull',
+            'push',
+            'status',
+            ]:
+        func = locals()[command]
+        doc = _textwrap.dedent(func.__doc__).strip().replace('%', '%%')
+        subparser = subparsers.add_parser(
+            command,
+            help=doc.splitlines()[0],
+            description=doc,
+            formatter_class=argparse.RawDescriptionHelpFormatter)
+        subparser.set_defaults(func=func)
+        if command == 'archive':
+            subparser.add_argument(
+                'treeish', metavar='TREE-ISH', nargs='?', default='HEAD',
+                help=(
+                    'The tree or commit to produce an archive for.  Defaults '
+                    "to 'HEAD'."))
+            subparser.add_argument(
+                'args', metavar='ARG', nargs='*',
+                help=(
+                    "Argument passed through to 'git archive'.  Set anything "
+                    'before <tree-ish>, see git-archive(1) for details.'))
+        elif command == 'clone':
+            subparser.add_argument(
+                'repository',
+                help=(
+                    'The (possibly remote) repository to clone from.  See the '
+                    'URLS section of git-clone(1) for more information on '
+                    'specifying repositories.'))
+        elif command == 'commit':
+            subparser.add_argument(
+                'message', metavar='MESSAGE', default='', nargs='?',
+                help='Text for the commit message.')
+        elif command == 'fetch':
+            subparser.add_argument(
+                'remote', metavar='REMOTE', nargs='?',
+                help=(
+                    'Override the default configured in branch.<name>.remote '
+                    'to fetch from a particular remote repository (e.g. '
+                    "'origin')."))
+        elif command == 'log':
+            subparser.add_argument(
+                'args', metavar='ARG', nargs='*',
+                help="Additional argument passed through to 'git log'.")
+        elif command == 'merge':
+            subparser.add_argument(
+                'reference', metavar='REFERENCE', default='@{upstream}',
+                nargs='?',
+                help=(
+                    'Reference, usually other branch heads, to merge into '
+                    "our branch.  Defaults to '@{upstream}'."))
+        elif command == 'pull':
+            subparser.add_argument(
+                'repository', metavar='REPOSITORY', default=None, nargs='?',
+                help=(
+                    'The "remote" repository that is the source of the pull.  '
+                    'This parameter can be either a URL (see the section GIT '
+                    'URLS in git-pull(1)) or the name of a remote (see the '
+                    'section REMOTES in git-pull(1)).'))
+            subparser.add_argument(
+                'refspecs', metavar='REFSPEC', default=None, nargs='*',
+                help=(
+                    'Refspec (usually a branch name) to fetch and merge.  See '
+                    'the <refspec> entry in the OPTIONS section of '
+                    'git-pull(1) for other possibilities.'))
+        elif command == 'push':
+            subparser.add_argument(
+               'repository', metavar='REPOSITORY', default=None, nargs='?',
+                help=(
+                    'The "remote" repository that is the destination of the '
+                    'push.  This parameter can be either a URL (see the '
+                    'section GIT URLS in git-push(1)) or the name of a remote '
+                    '(see the section REMOTES in git-push(1)).'))
+            subparser.add_argument(
+                'refspecs', metavar='REFSPEC', default=None, nargs='*',
+                help=(
+                    'Refspec (usually a branch name) to push.  See '
+                    'the <refspec> entry in the OPTIONS section of '
+                    'git-push(1) for other possibilities.'))
+
+    args = parser.parse_args()
+
+    if args.log_level:
+        level = getattr(_logging, args.log_level.upper())
+        _LOG.setLevel(level)
+
+    if not getattr(args, 'func', None):
+        parser.print_usage()
+        _sys.exit(1)
+
+    (arg_names, varargs, varkw) = _inspect.getargs(args.func.__code__)
+    kwargs = {key: getattr(args, key) for key in arg_names if key in args}
+    try:
+        args.func(**kwargs)
+    except SubprocessError as e:
+        if _LOG.level == _logging.DEBUG:
+            raise  # don't mask the traceback
+        _LOG.error(str(e))
+        _sys.exit(1)
