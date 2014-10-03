@@ -1,6 +1,21 @@
 Notmuch 0.19 (UNRELEASED)
 =========================
 
+Emacs Interface
+---------------
+
+Use the `j` key to access saved searches from anywhere in notmuch
+
+  `j` is now globally bound to `notmuch-jump`, which provides fast,
+  interactive keyboard shortcuts to saved searches.  For example,
+  with the default saved searches `j i` from anywhere in notmuch will
+  bring up the inbox.
+
+Expanded default saved search settings
+
+  The default saved searches now include several more common searches,
+  as well as shortcut keys for `notmuch-jump`.
+
 Library changes
 ---------------
 
