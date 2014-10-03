@@ -202,6 +202,11 @@ test_begin_subtest "error exit when add_message returns $code"
 gdb --batch-silent --return-child-result -x index-file-$code.gdb \
     --args notmuch insert  < $gen_msg_filename
 test_expect_equal $? 1
+
+test_begin_subtest "success exit with --keep when add_message returns $code"
+gdb --batch-silent --return-child-result -x index-file-$code.gdb \
+    --args notmuch insert --keep  < $gen_msg_filename
+test_expect_equal $? 0
 done
 
 test_done
