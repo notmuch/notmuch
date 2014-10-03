@@ -6,17 +6,17 @@ About this Manual
 =================
 
 This manual covers only the Emacs interface to Notmuch. For information
-on the command line interface, see See section “Description” in Notmuch
-Manual Pager. To save typing, we will sometimes use *notmuch* in this
-manual to refer to the Emacs interface to Notmuch. If the distinction
-should every be important, we’ll refer to the Emacs interface as
+on the command line interface, see section “Description” in the Notmuch
+Manual Pages. To save typing, we will sometimes use *notmuch* in this
+manual to refer to the Emacs interface to Notmuch. When this distinction
+is important, we’ll refer to the Emacs interface as
 *notmuch-emacs*.
 
 Notmuch-emacs is highly customizable via the the Emacs customization
 framework (or just by setting the appropriate variables). We try to
 point out relevant variables in this manual, but in order to avoid
-duplication of information, but you can usually find the most detailed
-description in the variables docstring.
+duplication of information, you can usually find the most detailed
+description in the variables' docstring.
 
 notmuch-hello
 =============
@@ -89,15 +89,19 @@ notmuch-hello key bindings
 Saved Searches
 --------------
 
-Notmuch replaces the static assignment of messages with the more dynamic
-notion of searching. Notmuch-hello presents the user with a customizable
-set of saved searches. The initial defaults are ``tag:inbox`` and
-``tag:unread``, but you can customize the following variables
+Since notmuch is entirely search-based, it's often useful to organize
+mail around common searches.  To facilitate this, the first section of
+notmuch-hello presents a customizable set of saved searches.  Saved
+searches can also be accessed from anywhere in notmuch by pressing
+``j`` to access :ref:`notmuch-jump`.
+
+The saved searches default to various common searches such as
+``tag:inbox`` to access the inbox and ``tag:unread`` to access all
+unread mail, but there are several options for customization:
 
 :index:`notmuch-saved-searches`
-    A list of cons pairs, the first being the name to display, the
-    second being a query string for Notmuch. See section “Description”
-    in Notmuch Query Syntax.
+    The list of saved searches, including names, queries, and
+    additional per-query options.
 
 :index:`notmuch-saved-searches-sort-function`
     This variable controls how saved searches should be sorted. A value
@@ -178,6 +182,26 @@ notmuch-show
 
 notmuch-tree
 ============
+
+Global key bindings
+===================
+
+Several features are accessible from anywhere in notmuch through the
+following key bindings:
+
+``j``
+    Jump to saved searches using :ref:`notmuch-jump`.
+
+notmuch-jump
+------------
+
+Saved searches configured through :ref:`notmuch-saved-searches` can
+include a "shortcut key" that's accessible through notmuch-jump.
+Pressing ``j`` anywhere in notmuch followed by the configured shortcut
+key of a saved search will immediately jump to that saved search.  For
+example, in the default configuration ``j i`` jumps immediately to the
+inbox search.  When you press ``j``, notmuch-jump shows the saved
+searches and their shortcut keys in the mini-buffer.
 
 Configuration
 =============
