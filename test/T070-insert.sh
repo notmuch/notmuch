@@ -183,4 +183,26 @@ test_expect_code 1 "Invalid tags set exit code" \
 
 notmuch config set new.tags $OLDCONFIG
 
+# DUPLICATE_MESSAGE_ID is not tested here, because it should actually pass.
+
+for code in OUT_OF_MEMORY XAPIAN_EXCEPTION FILE_NOT_EMAIL \
+    READ_ONLY_DATABASE UPGRADE_REQUIRED; do
+gen_insert_msg
+cat <<EOF > index-file-$code.gdb
+file notmuch
+set breakpoint pending on
+break notmuch_database_add_message
+commands
+return NOTMUCH_STATUS_$code
+continue
+end
+run
+EOF
+test_begin_subtest "error exit when add_message returns $code"
+test_subtest_known_broken
+gdb --batch-silent --return-child-result -x index-file-$code.gdb \
+    --args notmuch insert  < $gen_msg_filename
+test_expect_equal $? 1
+done
+
 test_done
