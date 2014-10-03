@@ -364,50 +364,80 @@ FAIL:
     return NULL;
 }
 
-/* Add the specified message file to the notmuch database, applying tags.
- * The file is renamed to encode notmuch tags as maildir flags. */
-static void
-add_file_to_database (notmuch_database_t *notmuch, const char *path,
-		      tag_op_list_t *tag_ops, notmuch_bool_t synchronize_flags)
+/*
+ * Add the specified message file to the notmuch database, applying
+ * tags in tag_ops. If synchronize_flags is TRUE, the tags are
+ * synchronized to maildir flags (which may result in message file
+ * rename).
+ *
+ * Return NOTMUCH_STATUS_SUCCESS on success, errors otherwise. If keep
+ * is TRUE, errors in tag changes and flag syncing are ignored and
+ * success status is returned; otherwise such errors cause the message
+ * to be removed from the database. Failure to add the message to the
+ * database results in error status regardless of keep.
+ */
+static notmuch_status_t
+add_file (notmuch_database_t *notmuch, const char *path, tag_op_list_t *tag_ops,
+	  notmuch_bool_t synchronize_flags, notmuch_bool_t keep)
 {
     notmuch_message_t *message;
     notmuch_status_t status;
 
     status = notmuch_database_add_message (notmuch, path, &message);
-    switch (status) {
-    case NOTMUCH_STATUS_SUCCESS:
-    case NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID:
-	break;
-    default:
-    case NOTMUCH_STATUS_FILE_NOT_EMAIL:
-    case NOTMUCH_STATUS_READ_ONLY_DATABASE:
-    case NOTMUCH_STATUS_XAPIAN_EXCEPTION:
-    case NOTMUCH_STATUS_OUT_OF_MEMORY:
-    case NOTMUCH_STATUS_FILE_ERROR:
-    case NOTMUCH_STATUS_NULL_POINTER:
-    case NOTMUCH_STATUS_TAG_TOO_LONG:
-    case NOTMUCH_STATUS_UNBALANCED_FREEZE_THAW:
-    case NOTMUCH_STATUS_UNBALANCED_ATOMIC:
-    case NOTMUCH_STATUS_LAST_STATUS:
-	fprintf (stderr, "Error: failed to add `%s' to notmuch database: %s\n",
-		 path, notmuch_status_to_string (status));
-	return;
-    }
-
-    if (status == NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID) {
-	/* Don't change tags of an existing message. */
-	if (synchronize_flags) {
-	    status = notmuch_message_tags_to_maildir_flags (message);
-	    if (status != NOTMUCH_STATUS_SUCCESS)
-		fprintf (stderr, "Error: failed to sync tags to maildir flags\n");
+    if (status == NOTMUCH_STATUS_SUCCESS) {
+	status = tag_op_list_apply (message, tag_ops, 0);
+	if (status) {
+	    fprintf (stderr, "%s: failed to apply tags to file '%s': %s\n",
+		     keep ? "Warning" : "Error",
+		     path, notmuch_status_to_string (status));
+	    goto DONE;
 	}
+    } else if (status == NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID) {
+	status = NOTMUCH_STATUS_SUCCESS;
+    } else if (status == NOTMUCH_STATUS_FILE_NOT_EMAIL) {
+	fprintf (stderr, "Error: delivery of non-mail file: '%s'\n", path);
+	goto FAIL;
     } else {
-	tag_op_flag_t flags = synchronize_flags ? TAG_FLAG_MAILDIR_SYNC : 0;
-
-	tag_op_list_apply (message, tag_ops, flags);
+	fprintf (stderr, "Error: failed to add '%s' to notmuch database: %s\n",
+		 path, notmuch_status_to_string (status));
+	goto FAIL;
     }
 
+    if (synchronize_flags) {
+	status = notmuch_message_tags_to_maildir_flags (message);
+	if (status != NOTMUCH_STATUS_SUCCESS)
+	    fprintf (stderr, "%s: failed to sync tags to maildir flags for '%s': %s\n",
+		     keep ? "Warning" : "Error",
+		     path, notmuch_status_to_string (status));
+
+	/*
+	 * Note: Unfortunately a failed maildir flag sync might
+	 * already have renamed the file, in which case the cleanup
+	 * path may fail.
+	 */
+    }
+
+  DONE:
     notmuch_message_destroy (message);
+
+    if (status) {
+	if (keep) {
+	    status = NOTMUCH_STATUS_SUCCESS;
+	} else {
+	    notmuch_status_t cleanup_status;
+
+	    cleanup_status = notmuch_database_remove_message (notmuch, path);
+	    if (cleanup_status != NOTMUCH_STATUS_SUCCESS &&
+		cleanup_status != NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID) {
+		fprintf (stderr, "Warning: failed to remove '%s' from database "
+			 "after errors: %s. Please run 'notmuch new' to fix.\n",
+			 path, notmuch_status_to_string (cleanup_status));
+	    }
+	}
+    }
+
+  FAIL:
+    return status;
 }
 
 int
@@ -508,8 +538,7 @@ notmuch_insert_command (notmuch_config_t *config, int argc, char *argv[])
     /* Add the message to the index.
      * Even if adding the message to the notmuch database fails,
      * the message is on disk and we consider the delivery completed. */
-    add_file_to_database (notmuch, newpath, tag_ops,
-				    synchronize_flags);
+    add_file (notmuch, newpath, tag_ops, synchronize_flags, TRUE);
 
     notmuch_database_destroy (notmuch);
     return EXIT_SUCCESS;
