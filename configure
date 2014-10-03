@@ -45,7 +45,7 @@ fi
 # environment variables)
 CC=${CC:-cc}
 CXX=${CXX:-c++}
-CFLAGS=${CFLAGS:--O2}
+CFLAGS=${CFLAGS:--g -O2}
 CPPFLAGS=${CPPFLAGS:-}
 CXXFLAGS=${CXXFLAGS:-\$(CFLAGS)}
 LDFLAGS=${LDFLAGS:-}
