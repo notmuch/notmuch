@@ -23,7 +23,7 @@ test_expect_code 1 "Insert zero-length file" \
 
 # This test is a proxy for other errors that may occur while trying to
 # add a message to the notmuch database, e.g. database locked.
-test_expect_code 0 "Insert non-message" \
+test_expect_code 1 "Insert non-message" \
     "echo bad_message | notmuch insert"
 
 test_begin_subtest "Database empty so far"
@@ -199,7 +199,6 @@ end
 run
 EOF
 test_begin_subtest "error exit when add_message returns $code"
-test_subtest_known_broken
 gdb --batch-silent --return-child-result -x index-file-$code.gdb \
     --args notmuch insert  < $gen_msg_filename
 test_expect_equal $? 1

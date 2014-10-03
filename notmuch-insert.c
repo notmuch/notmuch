@@ -443,6 +443,7 @@ add_file (notmuch_database_t *notmuch, const char *path, tag_op_list_t *tag_ops,
 int
 notmuch_insert_command (notmuch_config_t *config, int argc, char *argv[])
 {
+    notmuch_status_t status, close_status;
     notmuch_database_t *notmuch;
     struct sigaction action;
     const char *db_path;
@@ -452,6 +453,7 @@ notmuch_insert_command (notmuch_config_t *config, int argc, char *argv[])
     char *query_string = NULL;
     const char *folder = NULL;
     notmuch_bool_t create_folder = FALSE;
+    notmuch_bool_t keep = FALSE;
     notmuch_bool_t synchronize_flags;
     const char *maildir;
     char *newpath;
@@ -461,6 +463,7 @@ notmuch_insert_command (notmuch_config_t *config, int argc, char *argv[])
     notmuch_opt_desc_t options[] = {
 	{ NOTMUCH_OPT_STRING, &folder, "folder", 0, 0 },
 	{ NOTMUCH_OPT_BOOLEAN, &create_folder, "create-folder", 0, 0 },
+	{ NOTMUCH_OPT_BOOLEAN, &keep, "keep", 0, 0 },
 	{ NOTMUCH_OPT_END, 0, 0, 0, 0 }
     };
 
@@ -535,11 +538,32 @@ notmuch_insert_command (notmuch_config_t *config, int argc, char *argv[])
 	return EXIT_FAILURE;
     }
 
-    /* Add the message to the index.
-     * Even if adding the message to the notmuch database fails,
-     * the message is on disk and we consider the delivery completed. */
-    add_file (notmuch, newpath, tag_ops, synchronize_flags, TRUE);
+    /* Index the message. */
+    status = add_file (notmuch, newpath, tag_ops, synchronize_flags, keep);
 
-    notmuch_database_destroy (notmuch);
-    return EXIT_SUCCESS;
+    /* Commit changes. */
+    close_status = notmuch_database_destroy (notmuch);
+    if (close_status) {
+	/* Hold on to the first error, if any. */
+	if (! status)
+	    status = close_status;
+	fprintf (stderr, "%s: failed to commit database changes: %s\n",
+		 keep ? "Warning" : "Error",
+		 notmuch_status_to_string (close_status));
+    }
+
+    if (status) {
+	if (keep) {
+	    status = NOTMUCH_STATUS_SUCCESS;
+	} else {
+	    /* If maildir flag sync failed, this might fail. */
+	    if (unlink (newpath)) {
+		fprintf (stderr, "Warning: failed to remove '%s' from maildir "
+			 "after errors: %s. Please run 'notmuch new' to fix.\n",
+			 newpath, strerror (errno));
+	    }
+	}
+    }
+
+    return status ? EXIT_FAILURE : EXIT_SUCCESS;
 }

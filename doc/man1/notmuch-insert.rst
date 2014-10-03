@@ -38,16 +38,21 @@ Supported options for **insert** include
         does not exist. Otherwise the folder must already exist for mail
         delivery to succeed.
 
+    ``--keep``
+        Keep the message file if indexing fails, and keep the message
+        indexed if applying tags or maildir flag synchronization
+        fails. Ignore these errors and return exit status 0 to
+        indicate succesful mail delivery.
+
 EXIT STATUS
 ===========
 
-This command returns exit status 0 if the message was successfully added
-to the mail directory, even if the message could not be indexed and
-added to the notmuch database. In the latter case, a warning will be
-printed to standard error but the message file will be left on disk.
-
-If the message could not be written to disk then a non-zero exit status
-is returned.
+This command returns exit status 0 on succesful mail delivery,
+non-zero otherwise. The default is to indicate failed mail delivery on
+any errors, including message file delivery to the filesystem, message
+indexing to Notmuch database, changing tags, and synchronizing tags to
+maildir flags. The ``--keep`` option may be used to settle for
+successful message file delivery.
 
 SEE ALSO
 ========
