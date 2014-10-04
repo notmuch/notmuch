@@ -25,8 +25,6 @@
 #include "error_util.h"
 #include "hex-escape.h"
 
-static const size_t default_buf_size = 1024;
-
 static const char *output_charset =
     "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+-_@=.,";
 
