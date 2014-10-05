@@ -52,6 +52,13 @@ Python Bindings
 
 Add support for `notmuch_query_add_tag_exclude`
 
+Build System
+------------
+
+The notmuch binaries and libraries are now build with debugging symbols
+by default.  Users concerned with disk space should change the
+defaults when configuring or use the strip(1) command.
+
 Notmuch 0.18.1 (2014-06-25)
 ===========================
 
