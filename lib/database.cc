@@ -1958,6 +1958,37 @@ _notmuch_database_link_message_to_children (notmuch_database_t *notmuch,
     return ret;
 }
 
+/* Fetch and clear the stored thread_id for message, or NULL if none. */
+static char *
+_consume_metadata_thread_id (void *ctx, notmuch_database_t *notmuch,
+			     notmuch_message_t *message)
+{
+    const char *message_id;
+    string stored_id;
+    char *metadata_key;
+
+    message_id = notmuch_message_get_message_id (message);
+    metadata_key = _get_metadata_thread_id_key (ctx, message_id);
+
+    /* Check if we have already seen related messages to this one.
+     * If we have then use the thread_id that we stored at that time.
+     */
+    stored_id = notmuch->xapian_db->get_metadata (metadata_key);
+    if (stored_id.empty ()) {
+	return NULL;
+    } else {
+        Xapian::WritableDatabase *db;
+
+	db = static_cast <Xapian::WritableDatabase *> (notmuch->xapian_db);
+
+	/* Clear the metadata for this message ID. We don't need it
+	 * anymore. */
+        db->set_metadata (metadata_key, "");
+
+        return talloc_strdup (ctx, stored_id.c_str ());
+    }
+}
+
 /* Given a (mostly empty) 'message' and its corresponding
  * 'message_file' link it to existing threads in the database.
  *
@@ -1988,42 +2019,25 @@ _notmuch_database_link_message (notmuch_database_t *notmuch,
 				notmuch_message_t *message,
 				notmuch_message_file_t *message_file)
 {
+    void *local = talloc_new (NULL);
     notmuch_status_t status;
-    const char *message_id, *thread_id = NULL;
-    char *metadata_key;
-    string stored_id;
+    const char *thread_id;
 
-    message_id = notmuch_message_get_message_id (message);
-    metadata_key = _get_metadata_thread_id_key (message, message_id);
-
-    /* Check if we have already seen related messages to this one.
-     * If we have then use the thread_id that we stored at that time.
-     */
-    stored_id = notmuch->xapian_db->get_metadata (metadata_key);
-    if (! stored_id.empty()) {
-        Xapian::WritableDatabase *db;
-
-	db = static_cast <Xapian::WritableDatabase *> (notmuch->xapian_db);
-
-	/* Clear the metadata for this message ID. We don't need it
-	 * anymore. */
-        db->set_metadata (metadata_key, "");
-        thread_id = stored_id.c_str();
-
-        _notmuch_message_add_term (message, "thread", thread_id);
-    }
-    talloc_free (metadata_key);
+    /* Check if the message already had a thread ID */
+    thread_id = _consume_metadata_thread_id (local, notmuch, message);
+    if (thread_id)
+	_notmuch_message_add_term (message, "thread", thread_id);
 
     status = _notmuch_database_link_message_to_parents (notmuch, message,
 							message_file,
 							&thread_id);
     if (status)
-	return status;
+	goto DONE;
 
     status = _notmuch_database_link_message_to_children (notmuch, message,
 							 &thread_id);
     if (status)
-	return status;
+	goto DONE;
 
     /* If not part of any existing thread, generate a new thread ID. */
     if (thread_id == NULL) {
@@ -2032,7 +2046,10 @@ _notmuch_database_link_message (notmuch_database_t *notmuch,
 	_notmuch_message_add_term (message, "thread", thread_id);
     }
 
-    return NOTMUCH_STATUS_SUCCESS;
+ DONE:
+    talloc_free (local);
+
+    return status;
 }
 
 notmuch_status_t
