@@ -896,6 +896,9 @@ notmuch_message_get_date (notmuch_message_t *message)
 	return 0;
     }
 
+    if (value.empty ())
+	/* sortable_unserialise is undefined on empty string */
+	return 0;
     return Xapian::sortable_unserialise (value);
 }
 
