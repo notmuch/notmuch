@@ -390,8 +390,8 @@ find_document_for_doc_id (notmuch_database_t *notmuch, unsigned doc_id)
  *
  *	notmuch-sha1-<sha1_sum_of_message_id>
  */
-static char *
-_message_id_compressed (void *ctx, const char *message_id)
+char *
+_notmuch_message_id_compressed (void *ctx, const char *message_id)
 {
     char *sha1, *compressed;
 
@@ -415,7 +415,7 @@ notmuch_database_find_message (notmuch_database_t *notmuch,
 	return NOTMUCH_STATUS_NULL_POINTER;
 
     if (strlen (message_id) > NOTMUCH_MESSAGE_ID_MAX)
-	message_id = _message_id_compressed (notmuch, message_id);
+	message_id = _notmuch_message_id_compressed (notmuch, message_id);
 
     try {
 	status = _notmuch_database_find_unique_doc_id (notmuch, "id",
@@ -1728,7 +1728,7 @@ static char *
 _get_metadata_thread_id_key (void *ctx, const char *message_id)
 {
     if (strlen (message_id) > NOTMUCH_MESSAGE_ID_MAX)
-	message_id = _message_id_compressed (ctx, message_id);
+	message_id = _notmuch_message_id_compressed (ctx, message_id);
 
     return talloc_asprintf (ctx, NOTMUCH_METADATA_THREAD_ID_PREFIX "%s",
 			    message_id);
@@ -2100,14 +2100,6 @@ notmuch_database_add_message (notmuch_database_t *notmuch,
 	     * better than no message-id at all. */
 	    if (message_id == NULL)
 		message_id = talloc_strdup (message_file, header);
-
-	    /* If a message ID is too long, substitute its sha1 instead. */
-	    if (message_id && strlen (message_id) > NOTMUCH_MESSAGE_ID_MAX) {
-		char *compressed = _message_id_compressed (message_file,
-							   message_id);
-		talloc_free (message_id);
-		message_id = compressed;
-	    }
 	}
 
 	if (message_id == NULL ) {

@@ -226,6 +226,10 @@ _notmuch_message_create_for_message_id (notmuch_database_t *notmuch,
     else if (*status_ret)
 	return NULL;
 
+    /* If the message ID is too long, substitute its sha1 instead. */
+    if (strlen (message_id) > NOTMUCH_MESSAGE_ID_MAX)
+	message_id = _notmuch_message_id_compressed (message, message_id);
+
     term = talloc_asprintf (NULL, "%s%s",
 			    _find_prefix ("id"), message_id);
     if (term == NULL) {

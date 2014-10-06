@@ -174,6 +174,9 @@ typedef struct _notmuch_doc_id_set notmuch_doc_id_set_t;
 const char *
 _find_prefix (const char *name);
 
+char *
+_notmuch_message_id_compressed (void *ctx, const char *message_id);
+
 notmuch_status_t
 _notmuch_database_ensure_writable (notmuch_database_t *notmuch);
 
