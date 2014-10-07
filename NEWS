@@ -22,6 +22,16 @@ Library changes
 Add return status to notmuch_database_close and
 notmuch_database_destroy
 
+nmbug
+-----
+
+The Perl script has been translated to Python; you'll need Python 2.7
+or anything from the 3.x line.  Most of the user-facing interface is
+the same, but `nmbug help` is not `nmbug --help`, and the following nmbug
+commands have slightly different interfaces: `archive`, `commit`,
+`fetch`, `log`, `pull`, `push`, and `status`.  For details on the
+new interface for a given command, run `nmbug COMMAND --help`.
+
 nmbug-status
 ------------
 
