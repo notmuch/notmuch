@@ -101,6 +101,9 @@ typedef struct {
  *
  *	SUBJECT:	The value of the "Subject" header
  *
+ *	LAST_MOD:	The revision number as of the last tag or
+ *			filename change.
+ *
  * In addition, terms from the content of the message are added with
  * "from", "to", "attachment", and "subject" prefixes for use by the
  * user in searching. Similarly, terms from the path of the mail
@@ -310,6 +313,8 @@ static const struct {
      * them. */
     { NOTMUCH_FEATURE_INDEXED_MIMETYPES,
       "indexed MIME types", "w"},
+    { NOTMUCH_FEATURE_LAST_MOD,
+      "modification tracking", "w"},
 };
 
 const char *
@@ -737,6 +742,23 @@ _notmuch_database_ensure_writable (notmuch_database_t *notmuch)
     return NOTMUCH_STATUS_SUCCESS;
 }
 
+/* Allocate a revision number for the next change. */
+unsigned long
+_notmuch_database_new_revision (notmuch_database_t *notmuch)
+{
+    unsigned long new_revision = notmuch->revision + 1;
+
+    /* If we're in an atomic section, hold off on updating the
+     * committed revision number until we commit the atomic section.
+     */
+    if (notmuch->atomic_nesting)
+	notmuch->atomic_dirty = TRUE;
+    else
+	notmuch->revision = new_revision;
+
+    return new_revision;
+}
+
 /* Parse a database features string from the given database version.
  * Returns the feature bit set.
  *
@@ -904,6 +926,7 @@ notmuch_database_open_verbose (const char *path,
     notmuch->atomic_nesting = 0;
     try {
 	string last_thread_id;
+	string last_mod;
 
 	if (mode == NOTMUCH_DATABASE_MODE_READ_WRITE) {
 	    notmuch->xapian_db = new Xapian::WritableDatabase (xapian_path,
@@ -961,6 +984,14 @@ notmuch_database_open_verbose (const char *path,
 	    if (*end != '\0')
 		INTERNAL_ERROR ("Malformed database last_thread_id: %s", str);
 	}
+
+	/* Get current highest revision number. */
+	last_mod = notmuch->xapian_db->get_value_upper_bound (
+	    NOTMUCH_VALUE_LAST_MOD);
+	if (last_mod.empty ())
+	    notmuch->revision = 0;
+	else
+	    notmuch->revision = Xapian::sortable_unserialise (last_mod);
 
 	notmuch->query_parser = new Xapian::QueryParser;
 	notmuch->term_gen = new Xapian::TermGenerator;
@@ -1369,7 +1400,8 @@ notmuch_database_upgrade (notmuch_database_t *notmuch,
 
     /* Figure out how much total work we need to do. */
     if (new_features &
-	(NOTMUCH_FEATURE_FILE_TERMS | NOTMUCH_FEATURE_BOOL_FOLDER)) {
+	(NOTMUCH_FEATURE_FILE_TERMS | NOTMUCH_FEATURE_BOOL_FOLDER |
+	 NOTMUCH_FEATURE_LAST_MOD)) {
 	notmuch_query_t *query = notmuch_query_create (notmuch, "");
 	total += notmuch_query_count_messages (query);
 	notmuch_query_destroy (query);
@@ -1396,7 +1428,8 @@ notmuch_database_upgrade (notmuch_database_t *notmuch,
 
     /* Perform per-message upgrades. */
     if (new_features &
-	(NOTMUCH_FEATURE_FILE_TERMS | NOTMUCH_FEATURE_BOOL_FOLDER)) {
+	(NOTMUCH_FEATURE_FILE_TERMS | NOTMUCH_FEATURE_BOOL_FOLDER |
+	 NOTMUCH_FEATURE_LAST_MOD)) {
 	notmuch_query_t *query = notmuch_query_create (notmuch, "");
 	notmuch_messages_t *messages;
 	notmuch_message_t *message;
@@ -1432,6 +1465,14 @@ notmuch_database_upgrade (notmuch_database_t *notmuch,
 	     */
 	    if (new_features & NOTMUCH_FEATURE_BOOL_FOLDER)
 		_notmuch_message_upgrade_folder (message);
+
+	    /* Prior to NOTMUCH_FEATURE_LAST_MOD, messages did not
+	     * track modification revisions.  Give all messages the
+	     * next available revision; since we just started tracking
+	     * revisions for this database, that will be 1.
+	     */
+	    if (new_features & NOTMUCH_FEATURE_LAST_MOD)
+		_notmuch_message_upgrade_last_mod (message);
 
 	    _notmuch_message_sync (message);
 
@@ -1613,6 +1654,11 @@ notmuch_database_end_atomic (notmuch_database_t *notmuch)
 		 error.get_msg().c_str());
 	notmuch->exception_reported = TRUE;
 	return NOTMUCH_STATUS_XAPIAN_EXCEPTION;
+    }
+
+    if (notmuch->atomic_dirty) {
+	++notmuch->revision;
+	notmuch->atomic_dirty = FALSE;
     }
 
 DONE:

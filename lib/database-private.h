@@ -100,6 +100,12 @@ enum _notmuch_features {
      *
      * Introduced: version 3. */
     NOTMUCH_FEATURE_INDEXED_MIMETYPES = 1 << 5,
+
+    /* If set, messages store the revision number of the last
+     * modification in NOTMUCH_VALUE_LAST_MOD.
+     *
+     * Introduced: version 3. */
+    NOTMUCH_FEATURE_LAST_MOD = 1 << 6,
 };
 
 /* In C++, a named enum is its own type, so define bitwise operators
@@ -145,6 +151,8 @@ struct _notmuch_database {
 
     notmuch_database_mode_t mode;
     int atomic_nesting;
+    /* TRUE if changes have been made in this atomic section */
+    notmuch_bool_t atomic_dirty;
     Xapian::Database *xapian_db;
 
     /* Bit mask of features used by this database.  This is a
@@ -157,6 +165,11 @@ struct _notmuch_database {
     /* error reporting; this value persists only until the
      * next library call. May be NULL */
     char *status_string;
+
+    /* Highest committed revision number.  Modifications are recorded
+     * under a higher revision number, which can be generated with
+     * notmuch_database_new_revision. */
+    unsigned long revision;
 
     Xapian::QueryParser *query_parser;
     Xapian::TermGenerator *term_gen;
@@ -179,7 +192,8 @@ struct _notmuch_database {
  * will have it). */
 #define NOTMUCH_FEATURES_CURRENT \
     (NOTMUCH_FEATURE_FILE_TERMS | NOTMUCH_FEATURE_DIRECTORY_DOCS | \
-     NOTMUCH_FEATURE_BOOL_FOLDER | NOTMUCH_FEATURE_GHOSTS)
+     NOTMUCH_FEATURE_BOOL_FOLDER | NOTMUCH_FEATURE_GHOSTS | \
+     NOTMUCH_FEATURE_LAST_MOD)
 
 /* Return the list of terms from the given iterator matching a prefix.
  * The prefix will be stripped from the strings in the returned list.

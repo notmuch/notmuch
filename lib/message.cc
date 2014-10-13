@@ -998,6 +998,16 @@ _notmuch_message_set_header_values (notmuch_message_t *message,
     message->modified = TRUE;
 }
 
+/* Upgrade a message to support NOTMUCH_FEATURE_LAST_MOD.  The caller
+ * must call _notmuch_message_sync. */
+void
+_notmuch_message_upgrade_last_mod (notmuch_message_t *message)
+{
+    /* _notmuch_message_sync will update the last modification
+     * revision; we just have to ask it to. */
+    message->modified = TRUE;
+}
+
 /* Synchronize changes made to message->doc out into the database. */
 void
 _notmuch_message_sync (notmuch_message_t *message)
@@ -1009,6 +1019,18 @@ _notmuch_message_sync (notmuch_message_t *message)
 
     if (! message->modified)
 	return;
+
+    /* Update the last modification of this message. */
+    if (message->notmuch->features & NOTMUCH_FEATURE_LAST_MOD)
+	/* sortable_serialise gives a reasonably compact encoding,
+	 * which directly translates to reduced IO when scanning the
+	 * value stream.  Since it's built for doubles, we only get 53
+	 * effective bits, but that's still enough for the database to
+	 * last a few centuries at 1 million revisions per second. */
+	message->doc.add_value (NOTMUCH_VALUE_LAST_MOD,
+				Xapian::sortable_serialise (
+				    _notmuch_database_new_revision (
+					message->notmuch)));
 
     db = static_cast <Xapian::WritableDatabase *> (message->notmuch->xapian_db);
     db->replace_document (message->doc_id, message->doc);
