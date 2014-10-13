@@ -1000,6 +1000,7 @@ notmuch_database_open_verbose (const char *path,
 	notmuch->term_gen->set_stemmer (Xapian::Stem ("english"));
 	notmuch->value_range_processor = new Xapian::NumberValueRangeProcessor (NOTMUCH_VALUE_TIMESTAMP);
 	notmuch->date_range_processor = new ParseTimeValueRangeProcessor (NOTMUCH_VALUE_TIMESTAMP);
+	notmuch->last_mod_range_processor = new Xapian::NumberValueRangeProcessor (NOTMUCH_VALUE_LAST_MOD, "lastmod:");
 
 	notmuch->query_parser->set_default_op (Xapian::Query::OP_AND);
 	notmuch->query_parser->set_database (*notmuch->xapian_db);
@@ -1007,6 +1008,7 @@ notmuch_database_open_verbose (const char *path,
 	notmuch->query_parser->set_stemming_strategy (Xapian::QueryParser::STEM_SOME);
 	notmuch->query_parser->add_valuerangeprocessor (notmuch->value_range_processor);
 	notmuch->query_parser->add_valuerangeprocessor (notmuch->date_range_processor);
+	notmuch->query_parser->add_valuerangeprocessor (notmuch->last_mod_range_processor);
 
 	for (i = 0; i < ARRAY_SIZE (BOOLEAN_PREFIX_EXTERNAL); i++) {
 	    prefix_t *prefix = &BOOLEAN_PREFIX_EXTERNAL[i];
@@ -1085,6 +1087,8 @@ notmuch_database_close (notmuch_database_t *notmuch)
     notmuch->value_range_processor = NULL;
     delete notmuch->date_range_processor;
     notmuch->date_range_processor = NULL;
+    delete notmuch->last_mod_range_processor;
+    notmuch->last_mod_range_processor = NULL;
 
     return status;
 }

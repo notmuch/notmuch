@@ -73,4 +73,21 @@ test_expect_success 'tag succeeds with correct uuid' \
 test_expect_code 1 'tag fails with incorrect uuid' \
 		 "notmuch tag --uuid=this-is-no-uuid '*' +test2"
 
+test_begin_subtest 'lastmod:0.. matches everything'
+total=$(notmuch count '*')
+modtotal=$(notmuch count lastmod:0..)
+test_expect_equal "$total" "$modtotal"
+
+test_begin_subtest 'lastmod:1000000.. matches nothing'
+modtotal=$(notmuch count lastmod:1000000..)
+test_expect_equal 0 "$modtotal"
+
+test_begin_subtest 'exclude one message using lastmod'
+lastmod=$(notmuch count --lastmod '*' | cut -f3)
+total=$(notmuch count '*')
+notmuch tag +4EFC743A.3060609@april.org id:4EFC743A.3060609@april.org
+subtotal=$(notmuch count lastmod:..$lastmod)
+result=$(($subtotal == $total-1))
+test_expect_equal 1 "$result"
+
 test_done
