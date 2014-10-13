@@ -468,6 +468,24 @@ notmuch_status_t
 notmuch_database_end_atomic (notmuch_database_t *notmuch);
 
 /**
+ * Return the committed database revision and UUID.
+ *
+ * The database revision number increases monotonically with each
+ * commit to the database.  Hence, all messages and message changes
+ * committed to the database (that is, visible to readers) have a last
+ * modification revision <= the committed database revision.  Any
+ * messages committed in the future will be assigned a modification
+ * revision > the committed database revision.
+ *
+ * The UUID is a NUL-terminated opaque string that uniquely identifies
+ * this database.  Two revision numbers are only comparable if they
+ * have the same database UUID.
+ */
+unsigned long
+notmuch_database_get_revision (notmuch_database_t *notmuch,
+				const char **uuid);
+
+/**
  * Retrieve a directory object from the database for 'path'.
  *
  * Here, 'path' should be a path relative to the path of 'database'

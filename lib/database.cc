@@ -992,6 +992,8 @@ notmuch_database_open_verbose (const char *path,
 	    notmuch->revision = 0;
 	else
 	    notmuch->revision = Xapian::sortable_unserialise (last_mod);
+	notmuch->uuid = talloc_strdup (
+	    notmuch, notmuch->xapian_db->get_uuid ().c_str ());
 
 	notmuch->query_parser = new Xapian::QueryParser;
 	notmuch->term_gen = new Xapian::TermGenerator;
@@ -1664,6 +1666,15 @@ notmuch_database_end_atomic (notmuch_database_t *notmuch)
 DONE:
     notmuch->atomic_nesting--;
     return NOTMUCH_STATUS_SUCCESS;
+}
+
+unsigned long
+notmuch_database_get_revision (notmuch_database_t *notmuch,
+				const char **uuid)
+{
+    if (uuid)
+	*uuid = notmuch->uuid;
+    return notmuch->revision;
 }
 
 /* We allow the user to use arbitrarily long paths for directories. But

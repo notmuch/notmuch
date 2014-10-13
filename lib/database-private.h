@@ -170,6 +170,7 @@ struct _notmuch_database {
      * under a higher revision number, which can be generated with
      * notmuch_database_new_revision. */
     unsigned long revision;
+    const char *uuid;
 
     Xapian::QueryParser *query_parser;
     Xapian::TermGenerator *term_gen;

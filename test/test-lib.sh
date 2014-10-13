@@ -720,6 +720,11 @@ notmuch_date_sanitize ()
     sed \
 	-e 's/^Date: Fri, 05 Jan 2001 .*0000/Date: GENERATED_DATE/'
 }
+
+notmuch_uuid_sanitize ()
+{
+    sed 's/[0-9a-f]\{8\}-[0-9a-f]\{4\}-[0-9a-f]\{4\}-[0-9a-f]\{4\}-[0-9a-f]\{12\}/UUID/g'
+}
 # End of notmuch helper functions
 
 # Use test_set_prereq to tell that a particular prerequisite is available.
