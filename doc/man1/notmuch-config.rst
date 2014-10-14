@@ -49,18 +49,30 @@ The available configuration items are described below.
         within a sub-directory of the path configured here named
         ``.notmuch``.
 
+        Default: ``$MAILDIR`` variable if set, otherwise ``$HOME/mail``.
+
     **user.name**
         Your full name.
+
+        Default: ``$NAME`` variable if set, otherwise read from
+        ``/etc/passwd``.
 
     **user.primary\_email**
         Your primary email address.
 
+        Default: ``$EMAIL`` variable if set, otherwise constructed from the
+        username and hostname of the current machine.
+
     **user.other\_email**
         A list of other email addresses at which you receive email.
+
+        Default: not set.
 
     **new.tags**
         A list of tags that will be added to all messages incorporated
         by **notmuch new**.
+
+        Default: ``unread;inbox``.
 
     **new.ignore**
         A list of file and directory names, without path, that will not
@@ -69,10 +81,17 @@ The available configuration items are described below.
         ignored, regardless of the location in the mail store directory
         hierarchy.
 
+        Default: empty list.
+
     **search.exclude\_tags**
         A list of tags that will be excluded from search results by
         default. Using an excluded tag in a query will override that
         exclusion.
+
+        Default: empty list. Note that **notmuch-setup(1)** puts
+        ``deleted;spam`` here when creating new configuration file.
+
+
 
     **maildir.synchronize\_flags**
         If true, then the following maildir flags (in message filenames)
@@ -103,6 +122,8 @@ The available configuration items are described below.
         tag** or **notmuch restore** commands to ensure the tag changes
         are properly synchronized to the maildir flags, as the commands
         expect the database and maildir to be in sync.
+
+        Default: ``true``.
 
 ENVIRONMENT
 ===========
