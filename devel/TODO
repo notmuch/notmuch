@@ -188,11 +188,6 @@ into the shared-library interface.
 Audit all libnotmuch entry points to ensure that all Xapian calls are
 wrapped in a try/catch block.
 
-Fix the "count" functionality to be exact as Olly explained in IRC:
-
-	ojwb> cworth: if you set the check_at_least parameter to the
-	database size, get_matches_estimated() will be exact
-
 Fix the threading of a message that has a References: header but no
 In-Reply-To: header (see id:"87lixxnxpb.fsf@yoom.home.cworth.org").
 

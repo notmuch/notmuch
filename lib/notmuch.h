@@ -909,10 +909,10 @@ void
 notmuch_threads_destroy (notmuch_threads_t *threads);
 
 /**
- * Return an estimate of the number of messages matching a search.
+ * Return the number of messages matching a search.
  *
- * This function performs a search and returns Xapian's best
- * guess as to number of matching messages.
+ * This function performs a search and returns the number of matching
+ * messages.
  *
  * If a Xapian exception occurs, this function may return 0 (after
  * printing a message).

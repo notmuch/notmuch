@@ -587,7 +587,12 @@ notmuch_query_count_messages (notmuch_query_t *query)
 
 	enquire.set_query (final_query);
 
-	mset = enquire.get_mset (0, notmuch->xapian_db->get_doccount ());
+	/*
+	 * Set the checkatleast parameter to the number of documents
+	 * in the database to make get_matches_estimated() exact.
+	 */
+	mset = enquire.get_mset (0, notmuch->xapian_db->get_doccount (),
+				 notmuch->xapian_db->get_doccount ());
 
 	count = mset.get_matches_estimated();
 
