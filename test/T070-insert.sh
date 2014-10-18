@@ -2,6 +2,8 @@
 test_description='"notmuch insert"'
 . ./test-lib.sh
 
+test_require_external_prereq gdb
+
 # Create directories and database before inserting.
 mkdir -p "$MAIL_DIR"/{cur,new,tmp}
 mkdir -p "$MAIL_DIR"/Drafts/{cur,new,tmp}
