@@ -30,6 +30,8 @@ rm_hooks () {
 
 # add a message to generate mail dir and database
 add_message
+# create maildir structure for notmuch-insert
+mkdir -p "$MAIL_DIR"/{cur,new,tmp}
 
 test_begin_subtest "pre-new is run"
 rm_hooks
@@ -43,6 +45,13 @@ rm_hooks
 generate_message
 create_echo_hook "post-new" expected output
 notmuch new > /dev/null
+test_expect_equal_file expected output
+
+test_begin_subtest "post-insert hook is run"
+rm_hooks
+generate_message
+create_echo_hook "post-insert" expected output
+notmuch insert < "$gen_msg_filename"
 test_expect_equal_file expected output
 
 test_begin_subtest "pre-new is run before post-new"
@@ -81,6 +90,12 @@ test_expect_equal_file expected output
 
 # depends on the previous subtest leaving broken hook behind
 test_expect_code 1 "post-new non-zero exit status (notmuch status)" "notmuch new"
+
+rm_hooks
+generate_message
+create_failing_hook "post-insert"
+test_expect_success "post-insert hook does not affect insert status" \
+    "notmuch insert < \"$gen_msg_filename\" > /dev/null"
 
 # test_begin_subtest "hook without executable permissions"
 rm_hooks
