@@ -170,3 +170,7 @@ buffer."
 	   (setq notmuch-jump--action ',(third action))
 	   (exit-minibuffer))))
     map))
+
+;;
+
+(provide 'notmuch-jump)
