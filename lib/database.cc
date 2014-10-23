@@ -50,8 +50,8 @@ typedef struct {
 
 /* Here's the current schema for our database (for NOTMUCH_DATABASE_VERSION):
  *
- * We currently have two different types of documents (mail and
- * directory) and also some metadata.
+ * We currently have three different types of documents (mail, ghost,
+ * and directory) and also some metadata.
  *
  * Mail document
  * -------------
@@ -108,6 +108,15 @@ typedef struct {
  * database doesn't really care itself about any of these.
  *
  * The data portion of a mail document is empty.
+ *
+ * Ghost mail document [if NOTMUCH_FEATURE_GHOSTS]
+ * -----------------------------------------------
+ * A ghost mail document is like a mail document, but where we don't
+ * have the message content.  These are used to track thread reference
+ * information for messages we haven't received.
+ *
+ * A ghost mail document has type: ghost; id and thread fields that
+ * are identical to the mail document fields; and a MESSAGE_ID value.
  *
  * Directory document
  * ------------------
@@ -171,6 +180,13 @@ typedef struct {
  *			of a 64-bit unsigned integer. The first ID
  *			generated is 1 and the value will be
  *			incremented for each thread ID.
+ *
+ * Obsolete metadata
+ * -----------------
+ *
+ * If ! NOTMUCH_FEATURE_GHOSTS, there are no ghost mail documents.
+ * Instead, the database has the following additional database
+ * metadata:
  *
  *	thread_id_*	A pre-allocated thread ID for a particular
  *			message. This is actually an arbitrarily large
