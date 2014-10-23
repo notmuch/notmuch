@@ -1221,7 +1221,14 @@ notmuch_message_get_filenames (notmuch_message_t *message);
  */
 typedef enum _notmuch_message_flag {
     NOTMUCH_MESSAGE_FLAG_MATCH,
-    NOTMUCH_MESSAGE_FLAG_EXCLUDED
+    NOTMUCH_MESSAGE_FLAG_EXCLUDED,
+
+    /* This message is a "ghost message", meaning it has no filenames
+     * or content, but we know it exists because it was referenced by
+     * some other message.  A ghost message has only a message ID and
+     * thread ID.
+     */
+    NOTMUCH_MESSAGE_FLAG_GHOST,
 } notmuch_message_flag_t;
 
 /**

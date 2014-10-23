@@ -39,6 +39,9 @@ struct visible _notmuch_message {
     notmuch_message_file_t *message_file;
     notmuch_message_list_t *replies;
     unsigned long flags;
+    /* For flags that are initialized on-demand, lazy_flags indicates
+     * if each flag has been initialized. */
+    unsigned long lazy_flags;
 
     Xapian::Document doc;
     Xapian::termcount termpos;
@@ -99,6 +102,7 @@ _notmuch_message_create_for_document (const void *talloc_owner,
 
     message->frozen = 0;
     message->flags = 0;
+    message->lazy_flags = 0;
 
     /* Each of these will be lazily created as needed. */
     message->message_id = NULL;
@@ -192,7 +196,7 @@ _notmuch_message_create (const void *talloc_owner,
  *
  *     There is already a document with message ID 'message_id' in the
  *     database. The returned message can be used to query/modify the
- *     document.
+ *     document. The message may be a ghost message.
  *
  *   NOTMUCH_PRIVATE_STATUS_NO_DOCUMENT_FOUND:
  *
@@ -305,6 +309,7 @@ _notmuch_message_ensure_metadata (notmuch_message_t *message)
     const char *thread_prefix = _find_prefix ("thread"),
 	*tag_prefix = _find_prefix ("tag"),
 	*id_prefix = _find_prefix ("id"),
+	*type_prefix = _find_prefix ("type"),
 	*filename_prefix = _find_prefix ("file-direntry"),
 	*replyto_prefix = _find_prefix ("replyto");
 
@@ -337,10 +342,25 @@ _notmuch_message_ensure_metadata (notmuch_message_t *message)
 	message->message_id =
 	    _notmuch_message_get_term (message, i, end, id_prefix);
 
+    /* Get document type */
+    assert (strcmp (id_prefix, type_prefix) < 0);
+    if (! NOTMUCH_TEST_BIT (message->lazy_flags, NOTMUCH_MESSAGE_FLAG_GHOST)) {
+	i.skip_to (type_prefix);
+	/* "T" is the prefix "type" fields.  See
+	 * BOOLEAN_PREFIX_INTERNAL. */
+	if (*i == "Tmail")
+	    NOTMUCH_CLEAR_BIT (&message->flags, NOTMUCH_MESSAGE_FLAG_GHOST);
+	else if (*i == "Tghost")
+	    NOTMUCH_SET_BIT (&message->flags, NOTMUCH_MESSAGE_FLAG_GHOST);
+	else
+	    INTERNAL_ERROR ("Message without type term");
+	NOTMUCH_SET_BIT (&message->lazy_flags, NOTMUCH_MESSAGE_FLAG_GHOST);
+    }
+
     /* Get filename list.  Here we get only the terms.  We lazily
      * expand them to full file names when needed in
      * _notmuch_message_ensure_filename_list. */
-    assert (strcmp (id_prefix, filename_prefix) < 0);
+    assert (strcmp (type_prefix, filename_prefix) < 0);
     if (!message->filename_term_list && !message->filename_list)
 	message->filename_term_list =
 	    _notmuch_database_get_terms_with_prefix (message, i, end,
@@ -369,6 +389,11 @@ _notmuch_message_invalidate_metadata (notmuch_message_t *message,
     if (strcmp ("tag", prefix_name) == 0) {
 	talloc_unlink (message, message->tag_list);
 	message->tag_list = NULL;
+    }
+
+    if (strcmp ("type", prefix_name) == 0) {
+	NOTMUCH_CLEAR_BIT (&message->flags, NOTMUCH_MESSAGE_FLAG_GHOST);
+	NOTMUCH_CLEAR_BIT (&message->lazy_flags, NOTMUCH_MESSAGE_FLAG_GHOST);
     }
 
     if (strcmp ("file-direntry", prefix_name) == 0) {
@@ -869,6 +894,10 @@ notmuch_bool_t
 notmuch_message_get_flag (notmuch_message_t *message,
 			  notmuch_message_flag_t flag)
 {
+    if (flag == NOTMUCH_MESSAGE_FLAG_GHOST &&
+	! NOTMUCH_TEST_BIT (message->lazy_flags, flag))
+	_notmuch_message_ensure_metadata (message);
+
     return NOTMUCH_TEST_BIT (message->flags, flag);
 }
 
@@ -880,6 +909,7 @@ notmuch_message_set_flag (notmuch_message_t *message,
 	NOTMUCH_SET_BIT (&message->flags, flag);
     else
 	NOTMUCH_CLEAR_BIT (&message->flags, flag);
+    NOTMUCH_SET_BIT (&message->lazy_flags, flag);
 }
 
 time_t
@@ -987,6 +1017,24 @@ _notmuch_message_delete (notmuch_message_t *message)
     db = static_cast <Xapian::WritableDatabase *> (message->notmuch->xapian_db);
     db->delete_document (message->doc_id);
     return NOTMUCH_STATUS_SUCCESS;
+}
+
+/* Transform a blank message into a ghost message.  The caller must
+ * _notmuch_message_sync the message. */
+notmuch_private_status_t
+_notmuch_message_initialize_ghost (notmuch_message_t *message,
+				   const char *thread_id)
+{
+    notmuch_private_status_t status;
+
+    status = _notmuch_message_add_term (message, "type", "ghost");
+    if (status)
+	return status;
+    status = _notmuch_message_add_term (message, "thread", thread_id);
+    if (status)
+	return status;
+
+    return NOTMUCH_PRIVATE_STATUS_SUCCESS;
 }
 
 /* Ensure that 'message' is not holding any file object open. Future

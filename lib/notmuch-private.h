@@ -308,6 +308,10 @@ _notmuch_message_sync (notmuch_message_t *message);
 notmuch_status_t
 _notmuch_message_delete (notmuch_message_t *message);
 
+notmuch_private_status_t
+_notmuch_message_initialize_ghost (notmuch_message_t *message,
+				   const char *thread_id);
+
 void
 _notmuch_message_close (notmuch_message_t *message);
 
