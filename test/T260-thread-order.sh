@@ -30,7 +30,6 @@ expected=$(for ((i = 0; i < $nthreads; i++)); do
 test_expect_equal "$output" "$expected"
 
 test_begin_subtest "Messages with all parents get linked in all delivery orders"
-test_subtest_known_broken
 # Here we do the same thing as the previous test, but each message
 # references all of its parents.  Since every message references the
 # root of the thread, each thread should always be fully joined.  This

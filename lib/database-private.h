@@ -166,7 +166,7 @@ struct _notmuch_database {
  * databases will have it). */
 #define NOTMUCH_FEATURES_CURRENT \
     (NOTMUCH_FEATURE_FILE_TERMS | NOTMUCH_FEATURE_DIRECTORY_DOCS | \
-     NOTMUCH_FEATURE_BOOL_FOLDER)
+     NOTMUCH_FEATURE_BOOL_FOLDER | NOTMUCH_FEATURE_GHOSTS)
 
 /* Return the list of terms from the given iterator matching a prefix.
  * The prefix will be stripped from the strings in the returned list.
