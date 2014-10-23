@@ -1752,6 +1752,12 @@ _get_metadata_thread_id_key (void *ctx, const char *message_id)
 			    message_id);
 }
 
+static notmuch_status_t
+_resolve_message_id_to_thread_id_old (notmuch_database_t *notmuch,
+				      void *ctx,
+				      const char *message_id,
+				      const char **thread_id_ret);
+
 /* Find the thread ID to which the message with 'message_id' belongs.
  *
  * Note: 'thread_id_ret' must not be NULL!
@@ -1760,15 +1766,58 @@ _get_metadata_thread_id_key (void *ctx, const char *message_id)
  *
  * Note: If there is no message in the database with the given
  * 'message_id' then a new thread_id will be allocated for this
- * message and stored in the database metadata, (where this same
+ * message ID and stored in the database metadata so that the
  * thread ID can be looked up if the message is added to the database
- * later).
+ * later.
  */
 static notmuch_status_t
 _resolve_message_id_to_thread_id (notmuch_database_t *notmuch,
 				  void *ctx,
 				  const char *message_id,
 				  const char **thread_id_ret)
+{
+    notmuch_private_status_t status;
+    notmuch_message_t *message;
+
+    if (! (notmuch->features & NOTMUCH_FEATURE_GHOSTS))
+	return _resolve_message_id_to_thread_id_old (notmuch, ctx, message_id,
+						     thread_id_ret);
+
+    /* Look for this message (regular or ghost) */
+    message = _notmuch_message_create_for_message_id (
+	notmuch, message_id, &status);
+    if (status == NOTMUCH_PRIVATE_STATUS_SUCCESS) {
+	/* Message exists */
+	*thread_id_ret = talloc_steal (
+	    ctx, notmuch_message_get_thread_id (message));
+    } else if (status == NOTMUCH_PRIVATE_STATUS_NO_DOCUMENT_FOUND) {
+	/* Message did not exist.  Give it a fresh thread ID and
+	 * populate this message as a ghost message. */
+	*thread_id_ret = talloc_strdup (
+	    ctx, _notmuch_database_generate_thread_id (notmuch));
+	if (! *thread_id_ret) {
+	    status = NOTMUCH_PRIVATE_STATUS_OUT_OF_MEMORY;
+	} else {
+	    status = _notmuch_message_initialize_ghost (message, *thread_id_ret);
+	    if (status == 0)
+		/* Commit the new ghost message */
+		_notmuch_message_sync (message);
+	}
+    } else {
+	/* Create failed. Fall through. */
+    }
+
+    notmuch_message_destroy (message);
+
+    return COERCE_STATUS (status, "Error creating ghost message");
+}
+
+/* Pre-ghost messages _resolve_message_id_to_thread_id */
+static notmuch_status_t
+_resolve_message_id_to_thread_id_old (notmuch_database_t *notmuch,
+				      void *ctx,
+				      const char *message_id,
+				      const char **thread_id_ret)
 {
     notmuch_status_t status;
     notmuch_message_t *message;
@@ -2007,13 +2056,16 @@ _consume_metadata_thread_id (void *ctx, notmuch_database_t *notmuch,
     }
 }
 
-/* Given a (mostly empty) 'message' and its corresponding
+/* Given a blank or ghost 'message' and its corresponding
  * 'message_file' link it to existing threads in the database.
  *
- * The first check is in the metadata of the database to see if we
- * have pre-allocated a thread_id in advance for this message, (which
- * would have happened if a message was previously added that
- * referenced this one).
+ * First, if is_ghost, this retrieves the thread ID already stored in
+ * the message (which will be the case if a message was previously
+ * added that referenced this one).  If the message is blank
+ * (!is_ghost), it doesn't have a thread ID yet (we'll generate one
+ * later in this function).  If the database does not support ghost
+ * messages, this checks for a thread ID stored in database metadata
+ * for this message ID.
  *
  * Second, we look at 'message_file' and its link-relevant headers
  * (References and In-Reply-To) for message IDs.
@@ -2021,7 +2073,7 @@ _consume_metadata_thread_id (void *ctx, notmuch_database_t *notmuch,
  * Finally, we look in the database for existing message that
  * reference 'message'.
  *
- * In all cases, we assign to the current message the first thread_id
+ * In all cases, we assign to the current message the first thread ID
  * found (through either parent or child). We will also merge any
  * existing, distinct threads where this message belongs to both,
  * (which is not uncommon when messages are processed out of order).
@@ -2035,16 +2087,22 @@ _consume_metadata_thread_id (void *ctx, notmuch_database_t *notmuch,
 static notmuch_status_t
 _notmuch_database_link_message (notmuch_database_t *notmuch,
 				notmuch_message_t *message,
-				notmuch_message_file_t *message_file)
+				notmuch_message_file_t *message_file,
+				notmuch_bool_t is_ghost)
 {
     void *local = talloc_new (NULL);
     notmuch_status_t status;
-    const char *thread_id;
+    const char *thread_id = NULL;
 
     /* Check if the message already had a thread ID */
-    thread_id = _consume_metadata_thread_id (local, notmuch, message);
-    if (thread_id)
-	_notmuch_message_add_term (message, "thread", thread_id);
+    if (notmuch->features & NOTMUCH_FEATURE_GHOSTS) {
+	if (is_ghost)
+	    thread_id = notmuch_message_get_thread_id (message);
+    } else {
+	thread_id = _consume_metadata_thread_id (local, notmuch, message);
+	if (thread_id)
+	    _notmuch_message_add_term (message, "thread", thread_id);
+    }
 
     status = _notmuch_database_link_message_to_parents (notmuch, message,
 							message_file,
@@ -2079,6 +2137,7 @@ notmuch_database_add_message (notmuch_database_t *notmuch,
     notmuch_message_t *message = NULL;
     notmuch_status_t ret = NOTMUCH_STATUS_SUCCESS, ret2;
     notmuch_private_status_t private_status;
+    notmuch_bool_t is_ghost = false;
 
     const char *date, *header;
     const char *from, *to, *subject;
@@ -2171,12 +2230,20 @@ notmuch_database_add_message (notmuch_database_t *notmuch,
 
 	_notmuch_message_add_filename (message, filename);
 
-	/* Is this a newly created message object? */
-	if (private_status == NOTMUCH_PRIVATE_STATUS_NO_DOCUMENT_FOUND) {
+	/* Is this a newly created message object or a ghost
+	 * message?  We have to be slightly careful: if this is a
+	 * blank message, it's not safe to call
+	 * notmuch_message_get_flag yet. */
+	if (private_status == NOTMUCH_PRIVATE_STATUS_NO_DOCUMENT_FOUND ||
+	    (is_ghost = notmuch_message_get_flag (
+		message, NOTMUCH_MESSAGE_FLAG_GHOST))) {
 	    _notmuch_message_add_term (message, "type", "mail");
+	    if (is_ghost)
+		/* Convert ghost message to a regular message */
+		_notmuch_message_remove_term (message, "type", "ghost");
 
 	    ret = _notmuch_database_link_message (notmuch, message,
-						  message_file);
+						  message_file, is_ghost);
 	    if (ret)
 		goto DONE;
 
