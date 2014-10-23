@@ -286,6 +286,8 @@ static const struct {
       "from/subject/message-ID in database", "w" },
     { NOTMUCH_FEATURE_BOOL_FOLDER,
       "exact folder:/path: search", "rw" },
+    { NOTMUCH_FEATURE_GHOSTS,
+      "mail documents for missing messages", "w"},
 };
 
 const char *

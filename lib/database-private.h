@@ -85,6 +85,13 @@ enum _notmuch_features {
      *
      * Introduced: version 2. */
     NOTMUCH_FEATURE_BOOL_FOLDER = 1 << 3,
+
+    /* If set, missing messages are stored in ghost mail documents.
+     * If unset, thread IDs of ghost messages are stored as database
+     * metadata instead of in ghost documents.
+     *
+     * Introduced: version 3. */
+    NOTMUCH_FEATURE_GHOSTS = 1 << 4,
 };
 
 /* In C++, a named enum is its own type, so define bitwise operators
