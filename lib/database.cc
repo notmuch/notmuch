@@ -1231,6 +1231,7 @@ notmuch_database_upgrade (notmuch_database_t *notmuch,
     notmuch_bool_t timer_is_active = FALSE;
     enum _notmuch_features target_features, new_features;
     notmuch_status_t status;
+    notmuch_private_status_t private_status;
     unsigned int count = 0, total = 0;
 
     status = _notmuch_database_ensure_writable (notmuch);
@@ -1273,6 +1274,13 @@ notmuch_database_upgrade (notmuch_database_t *notmuch,
     if (new_features & NOTMUCH_FEATURE_DIRECTORY_DOCS) {
 	t_end = db->allterms_end ("XTIMESTAMP");
 	for (t = db->allterms_begin ("XTIMESTAMP"); t != t_end; t++)
+	    ++total;
+    }
+    if (new_features & NOTMUCH_FEATURE_GHOSTS) {
+	/* The ghost message upgrade converts all thread_id_*
+	 * metadata values into ghost message documents. */
+	t_end = db->metadata_keys_end ("thread_id_");
+	for (t = db->metadata_keys_begin ("thread_id_"); t != t_end; ++t)
 	    ++total;
     }
 
@@ -1378,10 +1386,64 @@ notmuch_database_upgrade (notmuch_database_t *notmuch,
 	}
     }
 
+    /* Perform metadata upgrades. */
+
+    /* Prior to NOTMUCH_FEATURE_GHOSTS, thread IDs for missing
+     * messages were stored as database metadata. Change these to
+     * ghost messages.
+     */
+    if (new_features & NOTMUCH_FEATURE_GHOSTS) {
+	notmuch_message_t *message;
+	std::string message_id, thread_id;
+
+	t_end = db->metadata_keys_end (NOTMUCH_METADATA_THREAD_ID_PREFIX);
+	for (t = db->metadata_keys_begin (NOTMUCH_METADATA_THREAD_ID_PREFIX);
+	     t != t_end; ++t) {
+	    if (do_progress_notify) {
+		progress_notify (closure, (double) count / total);
+		do_progress_notify = 0;
+	    }
+
+	    message_id = (*t).substr (
+		strlen (NOTMUCH_METADATA_THREAD_ID_PREFIX));
+	    thread_id = db->get_metadata (*t);
+
+	    /* Create ghost message */
+	    message = _notmuch_message_create_for_message_id (
+		notmuch, message_id.c_str (), &private_status);
+	    if (private_status == NOTMUCH_PRIVATE_STATUS_SUCCESS) {
+		/* Document already exists; ignore the stored thread ID */
+	    } else if (private_status ==
+		       NOTMUCH_PRIVATE_STATUS_NO_DOCUMENT_FOUND) {
+		private_status = _notmuch_message_initialize_ghost (
+		    message, thread_id.c_str ());
+		if (! private_status)
+		    _notmuch_message_sync (message);
+	    }
+
+	    if (private_status) {
+		fprintf (stderr,
+			 "Upgrade failed while creating ghost messages.\n");
+		status = COERCE_STATUS (private_status, "Unexpected status from _notmuch_message_initialize_ghost");
+		goto DONE;
+	    }
+
+	    /* Clear saved metadata thread ID */
+	    db->set_metadata (*t, "");
+
+	    ++count;
+	}
+    }
+
+    status = NOTMUCH_STATUS_SUCCESS;
     db->set_metadata ("features", _print_features (local, notmuch->features));
     db->set_metadata ("version", STRINGIFY (NOTMUCH_DATABASE_VERSION));
 
-    db->commit_transaction ();
+ DONE:
+    if (status == NOTMUCH_STATUS_SUCCESS)
+	db->commit_transaction ();
+    else
+	db->cancel_transaction ();
 
     if (timer_is_active) {
 	/* Now stop the timer. */
@@ -1397,7 +1459,7 @@ notmuch_database_upgrade (notmuch_database_t *notmuch,
     }
 
     talloc_free (local);
-    return NOTMUCH_STATUS_SUCCESS;
+    return status;
 }
 
 notmuch_status_t
