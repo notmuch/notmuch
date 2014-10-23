@@ -116,4 +116,25 @@ MAIL_DIR/bar/new/21:2,
 MAIL_DIR/bar/new/22:2,
 MAIL_DIR/cur/51:2,"
 
+# Ghost messages are difficult to test since they're nearly invisible.
+# However, if the upgrade works correctly, the ghost message should
+# retain the right thread ID even if all of the original messages in
+# the thread are deleted.  That's what we test.  This won't detect if
+# the upgrade just plain didn't happen, but it should detect if
+# something went wrong.
+test_begin_subtest "ghost message retains thread ID"
+# Upgrade database
+notmuch new
+# Get thread ID of real message
+thread=$(notmuch search --output=threads id:4EFC743A.3060609@april.org)
+# Delete all real messages in that thread
+rm $(notmuch search --output=files $thread)
+notmuch new
+# "Deliver" ghost message
+add_message '[subject]=Ghost' '[id]=4EFC3931.6030007@april.org'
+# If the ghost upgrade worked, the new message should be attached to
+# the existing thread ID.
+nthread=$(notmuch search --output=threads id:4EFC3931.6030007@april.org)
+test_expect_equal "$thread" "$nthread"
+
 test_done
