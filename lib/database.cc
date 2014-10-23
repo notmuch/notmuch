@@ -2136,11 +2136,11 @@ _consume_metadata_thread_id (void *ctx, notmuch_database_t *notmuch,
  * reference 'message'.
  *
  * In all cases, we assign to the current message the first thread ID
- * found (through either parent or child). We will also merge any
- * existing, distinct threads where this message belongs to both,
- * (which is not uncommon when messages are processed out of order).
+ * found. We will also merge any existing, distinct threads where this
+ * message belongs to both, (which is not uncommon when messages are
+ * processed out of order).
  *
- * Finally, if no thread ID has been found through parent or child, we
+ * Finally, if no thread ID has been found through referenced messages, we
  * call _notmuch_message_generate_thread_id to generate a new thread
  * ID. This should only happen for new, top-level messages, (no
  * References or In-Reply-To header in this message, and no previously
@@ -2172,10 +2172,23 @@ _notmuch_database_link_message (notmuch_database_t *notmuch,
     if (status)
 	goto DONE;
 
-    status = _notmuch_database_link_message_to_children (notmuch, message,
-							 &thread_id);
-    if (status)
-	goto DONE;
+    if (! (notmuch->features & NOTMUCH_FEATURE_GHOSTS)) {
+	/* In general, it shouldn't be necessary to link children,
+	 * since the earlier indexing of those children will have
+	 * stored a thread ID for the missing parent.  However, prior
+	 * to ghost messages, these stored thread IDs were NOT
+	 * rewritten during thread merging (and there was no
+	 * performant way to do so), so if indexed children were
+	 * pulled into a different thread ID by a merge, it was
+	 * necessary to pull them *back* into the stored thread ID of
+	 * the parent.  With ghost messages, we just rewrite the
+	 * stored thread IDs during merging, so this workaround isn't
+	 * necessary. */
+	status = _notmuch_database_link_message_to_children (notmuch, message,
+							     &thread_id);
+	if (status)
+	    goto DONE;
+    }
 
     /* If not part of any existing thread, generate a new thread ID. */
     if (thread_id == NULL) {
