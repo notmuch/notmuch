@@ -869,7 +869,7 @@ notmuch_bool_t
 notmuch_message_get_flag (notmuch_message_t *message,
 			  notmuch_message_flag_t flag)
 {
-    return message->flags & (1 << flag);
+    return NOTMUCH_TEST_BIT (message->flags, flag);
 }
 
 void
@@ -877,9 +877,9 @@ notmuch_message_set_flag (notmuch_message_t *message,
 			  notmuch_message_flag_t flag, notmuch_bool_t enable)
 {
     if (enable)
-	message->flags |= (1 << flag);
+	NOTMUCH_SET_BIT (&message->flags, flag);
     else
-	message->flags &= ~(1 << flag);
+	NOTMUCH_CLEAR_BIT (&message->flags, flag);
 }
 
 time_t

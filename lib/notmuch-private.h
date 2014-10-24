@@ -63,6 +63,17 @@ NOTMUCH_BEGIN_DECLS
 #define STRNCMP_LITERAL(var, literal) \
     strncmp ((var), (literal), sizeof (literal) - 1)
 
+/* Robust bit test/set/reset macros */
+#define NOTMUCH_TEST_BIT(val, bit) \
+    (((bit) < 0 || (bit) >= CHAR_BIT * sizeof (unsigned long long)) ? 0	\
+     : !!((val) & (1ull << (bit))))
+#define NOTMUCH_SET_BIT(valp, bit) \
+    (((bit) < 0 || (bit) >= CHAR_BIT * sizeof (unsigned long long)) ? *(valp) \
+     : (*(valp) |= (1ull << (bit))))
+#define NOTMUCH_CLEAR_BIT(valp,  bit) \
+    (((bit) < 0 || (bit) >= CHAR_BIT * sizeof (unsigned long long)) ? *(valp) \
+     : (*(valp) &= ~(1ull << (bit))))
+
 #define unused(x) x __attribute__ ((unused))
 
 #ifdef __cplusplus
