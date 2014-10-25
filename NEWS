@@ -59,6 +59,14 @@ The notmuch binaries and libraries are now build with debugging symbols
 by default.  Users concerned with disk space should change the
 defaults when configuring or use the strip(1) command.
 
+Notmuch 0.18.2 (2014-10-25)
+===========================
+
+Test Suite
+----------
+
+Portability and bug fixes for test suite to improve compatibility with Emacs 24.4, gdb 7.8, and the ppc64el architecture.
+
 Notmuch 0.18.1 (2014-06-25)
 ===========================
 

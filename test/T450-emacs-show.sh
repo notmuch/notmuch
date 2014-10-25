@@ -173,7 +173,8 @@ exit 1
 EOF
 chmod a+x notmuch_fail
 test_emacs "(let ((notmuch-command \"$PWD/notmuch_fail\"))
-	       (with-current-buffer \"*Messages*\" (erase-buffer))
+	       (with-current-buffer \"*Messages*\"
+                  (let ((inhibit-read-only t)) (erase-buffer)))
 	       (condition-case err
 		   (notmuch-show \"*\")
 		 (error (message \"%s\" (second err))))
