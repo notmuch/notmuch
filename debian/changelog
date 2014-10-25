@@ -1,3 +1,9 @@
+notmuch (0.18.2~rc1-1) experimental; urgency=medium
+
+  * Test suite bug and portability fix release.
+
+ -- David Bremner <bremner@debian.org>  Sat, 25 Oct 2014 10:48:16 +0200
+
 notmuch (0.18.1-2) unstable; urgency=medium
 
   * Update build-deps to use emacs24 on buildd (Closes: #756085)
