@@ -65,7 +65,19 @@ Notmuch 0.18.2 (2014-10-25)
 Test Suite
 ----------
 
-Portability and bug fixes for test suite to improve compatibility with Emacs 24.4, gdb 7.8, and the ppc64el architecture.
+Translate T380-atomicity to use gdb/python
+
+  The new version is compatible with gdb 7.8
+
+Emacs 24.4 related bug fixes
+
+  The Messages buffer became read-only, and the generated mime
+  structure for signatures changed slightly.
+
+Simplify T360-symbol-hiding
+
+   Replace the use of `objdump` on the object files with `nm` on the
+   resulting lib.
 
 Notmuch 0.18.1 (2014-06-25)
 ===========================
