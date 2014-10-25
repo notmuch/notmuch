@@ -1,3 +1,11 @@
+Notmuch 0.18.2 (2014-10-25)
+===========================
+
+Test Suite
+----------
+
+Portability and bug fixes for test suite to improve compatibility with Emacs 24.4, gdb 7.8, and the ppc64el architecture.
+
 Notmuch 0.18.1 (2014-06-25)
 ===========================
 
