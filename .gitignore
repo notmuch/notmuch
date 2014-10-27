@@ -1,5 +1,6 @@
 .first-build-message
 Makefile.config
+sh.config
 version.stamp
 TAGS
 tags
