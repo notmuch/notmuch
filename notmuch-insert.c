@@ -197,7 +197,7 @@ tempfilename (const void *ctx)
     gettimeofday (&tv, NULL);
 
     filename = talloc_asprintf (ctx, "%ld.M%ldP%d.%s",
-				tv.tv_sec, tv.tv_usec, pid, hostname);
+				(long) tv.tv_sec, (long) tv.tv_usec, pid, hostname);
     if (! filename)
 	fprintf (stderr, "Error: %s\n", strerror (ENOMEM));
 
