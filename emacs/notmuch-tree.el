@@ -234,7 +234,7 @@ FUNC."
     ;; Override because we want to close message pane first.
     (define-key map [remap notmuch-help] (notmuch-tree-close-message-pane-and #'notmuch-help))
     ;; Override because we first close message pane and then close tree buffer.
-    (define-key map [remap notmuch-kill-this-buffer] 'notmuch-tree-quit)
+    (define-key map [remap notmuch-bury-or-kill-this-buffer] 'notmuch-tree-quit)
     ;; Override because we close message pane after the search query is entered.
     (define-key map [remap notmuch-search] 'notmuch-tree-to-search)
     ;; Override because we want to close message pane first.

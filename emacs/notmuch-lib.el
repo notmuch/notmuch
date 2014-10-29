@@ -135,7 +135,7 @@ For example, if you wanted to remove an \"inbox\" tag and add an
 (defvar notmuch-common-keymap
   (let ((map (make-sparse-keymap)))
     (define-key map "?" 'notmuch-help)
-    (define-key map "q" 'notmuch-kill-this-buffer)
+    (define-key map "q" 'notmuch-bury-or-kill-this-buffer)
     (define-key map "s" 'notmuch-search)
     (define-key map "z" 'notmuch-tree)
     (define-key map "m" 'notmuch-mua-new-mail)
@@ -239,10 +239,15 @@ depending on the value of `notmuch-poll-script'."
 	(call-process notmuch-poll-script nil nil))
     (call-process notmuch-command nil nil nil "new")))
 
-(defun notmuch-kill-this-buffer ()
-  "Kill the current buffer."
+(defun notmuch-bury-or-kill-this-buffer ()
+  "Undisplay the current buffer.
+
+Bury the current buffer, unless there is only one window showing
+it, in which case it is killed."
   (interactive)
-  (kill-buffer (current-buffer)))
+  (if (> (length (get-buffer-window-list nil nil t)) 1)
+      (bury-buffer)
+    (kill-buffer)))
 
 (defun notmuch-documentation-first-line (symbol)
   "Return the first line of the documentation string for SYMBOL."

@@ -1956,7 +1956,7 @@ buffer. If PREVIOUS is non-nil, move to the previous item in the
 search results instead."
   (interactive "P")
   (let ((parent-buffer notmuch-show-parent-buffer))
-    (notmuch-kill-this-buffer)
+    (notmuch-bury-or-kill-this-buffer)
     (when (buffer-live-p parent-buffer)
       (switch-to-buffer parent-buffer)
       (and (if previous

@@ -153,7 +153,7 @@ there will be called at other points of notmuch execution."
 (defvar notmuch-search-mode-map
   (let ((map (make-sparse-keymap)))
     (set-keymap-parent map notmuch-common-keymap)
-    (define-key map "x" 'notmuch-kill-this-buffer)
+    (define-key map "x" 'notmuch-bury-or-kill-this-buffer)
     (define-key map (kbd "<DEL>") 'notmuch-search-scroll-down)
     (define-key map "b" 'notmuch-search-scroll-down)
     (define-key map " " 'notmuch-search-scroll-up)
@@ -961,7 +961,7 @@ same relative position within the new buffer."
 	(oldest-first notmuch-search-oldest-first)
 	(target-thread (notmuch-search-find-thread-id 'bare))
 	(query notmuch-search-query-string))
-    (notmuch-kill-this-buffer)
+    (notmuch-bury-or-kill-this-buffer)
     (notmuch-search query oldest-first target-thread target-line)
     (goto-char (point-min))))
 
