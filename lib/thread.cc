@@ -24,6 +24,8 @@
 #include <gmime/gmime.h>
 #include <glib.h> /* GHashTable */
 
+#define EMPTY_STRING(s) ((s)[0] == '\0')
+
 struct visible _notmuch_thread {
     notmuch_database_t *notmuch;
     char *thread_id;
@@ -332,10 +334,12 @@ _thread_set_subject_from_message (notmuch_thread_t *thread,
 	cleaned_subject = talloc_strdup (thread, subject);
     }
 
-    if (thread->subject)
-	talloc_free (thread->subject);
+    if (! EMPTY_STRING(cleaned_subject)) {
+	if (thread->subject)
+	    talloc_free (thread->subject);
 
-    thread->subject = talloc_strdup (thread, cleaned_subject);
+	thread->subject = talloc_strdup (thread, cleaned_subject);
+    }
 }
 
 /* Add a message to this thread which is known to match the original
@@ -349,8 +353,10 @@ _thread_add_matched_message (notmuch_thread_t *thread,
 {
     time_t date;
     notmuch_message_t *hashed_message;
+    const char *cur_subject;
 
     date = notmuch_message_get_date (message);
+    cur_subject = notmuch_thread_get_subject(thread);
 
     if (date < thread->oldest || ! thread->matched_messages) {
 	thread->oldest = date;
@@ -360,7 +366,7 @@ _thread_add_matched_message (notmuch_thread_t *thread,
 
     if (date > thread->newest || ! thread->matched_messages) {
 	thread->newest = date;
-	if (sort != NOTMUCH_SORT_OLDEST_FIRST)
+	if (sort != NOTMUCH_SORT_OLDEST_FIRST || EMPTY_STRING(cur_subject))
 	    _thread_set_subject_from_message (thread, message);
     }
 
