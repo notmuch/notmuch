@@ -368,6 +368,8 @@ generate_message ()
 	else
 	    template[subject]="Test message #${gen_msg_cnt}"
 	fi
+    elif [ "${template[subject]}" = "@FORCE_EMPTY" ]; then
+	template[subject]=""
     fi
 
     if [ -z "${template[date]}" ]; then
