@@ -63,6 +63,38 @@ add_message '[subject]="Sv: thread-naming: Initial thread subject"' \
 output=$(notmuch search --sort=newest-first thread-naming and tag:inbox | notmuch_search_sanitize)
 test_expect_equal "$output" "thread:XXX   2001-01-12 [6/8] Notmuch Test Suite; thread-naming: Initial thread subject (inbox unread)"
 
+test_begin_subtest "Use empty subjects if necessary."
+add_message '[subject]="@FORCE_EMPTY"' \
+	    '[date]="Sat, 13 Jan 2001 15:43:45 -0000"' \
+            '[from]="Empty Sender \<empty_test@notmuchmail.org\>"'
+empty_parent=${gen_msg_id}
+add_message '[subject]="@FORCE_EMPTY"' \
+	    '[date]="Sun, 14 Jan 2001 15:43:45 -0000"' \
+            '[from]="Empty Sender \<empty_test@notmuchmail.org\>"' \
+            "[in-reply-to]=\<$empty_parent\>"
+output=$(notmuch search --sort=newest-first from:empty_test@notmuchmail.org | notmuch_search_sanitize)
+test_expect_equal "$output" "thread:XXX   2001-01-14 [2/2] Empty Sender;  (inbox unread)"
+
+test_begin_subtest "Avoid empty subjects if possible (newest-first)."
+add_message '[subject]="Non-empty subject (1)"' \
+	    '[date]="Mon, 15 Jan 2001 15:43:45 -0000"' \
+            '[from]="Empty Sender \<empty_test@notmuchmail.org\>"' \
+            "[in-reply-to]=\<$empty_parent\>"
+add_message '[subject]="Non-empty subject (2)"' \
+	    '[date]="Mon, 16 Jan 2001 15:43:45 -0000"' \
+            '[from]="Empty Sender \<empty_test@notmuchmail.org\>"' \
+            "[in-reply-to]=\<$empty_parent\>"
+add_message '[subject]="@FORCE_EMPTY"' \
+	    '[date]="Tue, 17 Jan 2001 15:43:45 -0000"' \
+            '[from]="Empty Sender \<empty_test@notmuchmail.org\>"' \
+            "[in-reply-to]=\<$empty_parent\>"
+output=$(notmuch search --sort=newest-first from:Empty | notmuch_search_sanitize)
+test_expect_equal "$output" "thread:XXX   2001-01-17 [5/5] Empty Sender; Non-empty subject (2) (inbox unread)"
+
+test_begin_subtest "Avoid empty subjects if possible (oldest-first)."
+output=$(notmuch search --sort=oldest-first from:Empty | notmuch_search_sanitize)
+test_expect_equal "$output" "thread:XXX   2001-01-13 [5/5] Empty Sender; Non-empty subject (1) (inbox unread)"
+
 test_begin_subtest 'Test order of messages in "notmuch show"'
 output=$(notmuch show thread-naming | notmuch_show_sanitize)
 test_expect_equal "$output" "message{ id:msg-$(printf "%03d" $first)@notmuch-test-suite depth:0 match:1 excluded:0 filename:/XXX/mail/msg-$(printf "%03d" $first)
