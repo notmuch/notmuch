@@ -16,6 +16,12 @@ Expanded default saved search settings
   The default saved searches now include several more common searches,
   as well as shortcut keys for `notmuch-jump`.
 
+Improved `q` binding in notmuch buffers
+
+  `q` will now bury rather than kill a notmuch search, show or tree
+  buffer if there are multiple windows showing the buffer. If only a
+  single window is showing the buffer, it is killed.
+
 Library changes
 ---------------
 
