@@ -27,6 +27,10 @@
 
 ;;
 
+(defgroup notmuch-wash nil
+  "Cleaning up messages for display."
+  :group 'notmuch)
+
 (defvar notmuch-wash-signature-regexp
   "^\\(-- ?\\|_+\\)$"
   "Pattern to match a line that separates content from signature.")
@@ -95,6 +99,19 @@ current window. If this is a number, lines will be wrapped after
 this many characters or at the window width (whichever one is
 lower).")
 
+(defface notmuch-wash-toggle-button
+  '((t (:inherit font-lock-comment-face)))
+  "Face used for buttons toggling the visibility of washed away
+message parts."
+  :group 'notmuch-wash
+  :group 'notmuch-faces)
+
+(defface notmuch-wash-cited-text
+  '((t (:inherit message-cited-text)))
+  "Face used for cited text."
+  :group 'notmuch-wash
+  :group 'notmuch-faces)
+
 (defun notmuch-wash-toggle-invisible-action (cite-button)
   ;; Toggle overlay visibility
   (let ((overlay (button-get cite-button 'overlay)))
@@ -117,7 +134,7 @@ lower).")
 (define-button-type 'notmuch-wash-button-invisibility-toggle-type
   'action 'notmuch-wash-toggle-invisible-action
   'follow-link t
-  'face 'font-lock-comment-face
+  'face 'notmuch-wash-toggle-button
   :supertype 'notmuch-button-type)
 
 (define-button-type 'notmuch-wash-button-citation-toggle-type
@@ -192,7 +209,7 @@ that PREFIX should not include a newline."
     (let* ((cite-start (match-beginning 0))
 	   (cite-end (match-end 0))
 	   (cite-lines (count-lines cite-start cite-end)))
-      (overlay-put (make-overlay cite-start cite-end) 'face 'message-cited-text)
+      (overlay-put (make-overlay cite-start cite-end) 'face 'notmuch-wash-cited-text)
       (when (> cite-lines (+ notmuch-wash-citation-lines-prefix
 			     notmuch-wash-citation-lines-suffix
 			     1))
