@@ -30,6 +30,16 @@ typedef enum {
     OUTPUT_TAGS
 } output_t;
 
+typedef struct {
+    sprinter_t *format;
+    notmuch_query_t *query;
+    notmuch_sort_t sort;
+    output_t output;
+    int offset;
+    int limit;
+    int dupe;
+} search_options_t;
+
 /* Return two stable query strings that identify exactly the matched
  * and unmatched messages currently in thread.  If there are no
  * matched or unmatched messages, the returned buffers will be
@@ -70,43 +80,39 @@ get_thread_query (notmuch_thread_t *thread,
 }
 
 static int
-do_search_threads (sprinter_t *format,
-		   notmuch_query_t *query,
-		   notmuch_sort_t sort,
-		   output_t output,
-		   int offset,
-		   int limit)
+do_search_threads (search_options_t *opt)
 {
     notmuch_thread_t *thread;
     notmuch_threads_t *threads;
     notmuch_tags_t *tags;
+    sprinter_t *format = opt->format;
     time_t date;
     int i;
 
-    if (offset < 0) {
-	offset += notmuch_query_count_threads (query);
-	if (offset < 0)
-	    offset = 0;
+    if (opt->offset < 0) {
+	opt->offset += notmuch_query_count_threads (opt->query);
+	if (opt->offset < 0)
+	    opt->offset = 0;
     }
 
-    threads = notmuch_query_search_threads (query);
+    threads = notmuch_query_search_threads (opt->query);
     if (threads == NULL)
 	return 1;
 
     format->begin_list (format);
 
     for (i = 0;
-	 notmuch_threads_valid (threads) && (limit < 0 || i < offset + limit);
+	 notmuch_threads_valid (threads) && (opt->limit < 0 || i < opt->offset + opt->limit);
 	 notmuch_threads_move_to_next (threads), i++)
     {
 	thread = notmuch_threads_get (threads);
 
-	if (i < offset) {
+	if (i < opt->offset) {
 	    notmuch_thread_destroy (thread);
 	    continue;
 	}
 
-	if (output == OUTPUT_THREADS) {
+	if (opt->output == OUTPUT_THREADS) {
 	    format->set_prefix (format, "thread");
 	    format->string (format,
 			    notmuch_thread_get_thread_id (thread));
@@ -123,7 +129,7 @@ do_search_threads (sprinter_t *format,
 
 	    format->begin_map (format);
 
-	    if (sort == NOTMUCH_SORT_OLDEST_FIRST)
+	    if (opt->sort == NOTMUCH_SORT_OLDEST_FIRST)
 		date = notmuch_thread_get_oldest_date (thread);
 	    else
 		date = notmuch_thread_get_newest_date (thread);
@@ -215,40 +221,36 @@ do_search_threads (sprinter_t *format,
 }
 
 static int
-do_search_messages (sprinter_t *format,
-		    notmuch_query_t *query,
-		    output_t output,
-		    int offset,
-		    int limit,
-		    int dupe)
+do_search_messages (search_options_t *opt)
 {
     notmuch_message_t *message;
     notmuch_messages_t *messages;
     notmuch_filenames_t *filenames;
+    sprinter_t *format = opt->format;
     int i;
 
-    if (offset < 0) {
-	offset += notmuch_query_count_messages (query);
-	if (offset < 0)
-	    offset = 0;
+    if (opt->offset < 0) {
+	opt->offset += notmuch_query_count_messages (opt->query);
+	if (opt->offset < 0)
+	    opt->offset = 0;
     }
 
-    messages = notmuch_query_search_messages (query);
+    messages = notmuch_query_search_messages (opt->query);
     if (messages == NULL)
 	return 1;
 
     format->begin_list (format);
 
     for (i = 0;
-	 notmuch_messages_valid (messages) && (limit < 0 || i < offset + limit);
+	 notmuch_messages_valid (messages) && (opt->limit < 0 || i < opt->offset + opt->limit);
 	 notmuch_messages_move_to_next (messages), i++)
     {
-	if (i < offset)
+	if (i < opt->offset)
 	    continue;
 
 	message = notmuch_messages_get (messages);
 
-	if (output == OUTPUT_FILES) {
+	if (opt->output == OUTPUT_FILES) {
 	    int j;
 	    filenames = notmuch_message_get_filenames (message);
 
@@ -256,7 +258,7 @@ do_search_messages (sprinter_t *format,
 		 notmuch_filenames_valid (filenames);
 		 notmuch_filenames_move_to_next (filenames), j++)
 	    {
-		if (dupe < 0 || dupe == j) {
+		if (opt->dupe < 0 || opt->dupe == j) {
 		    format->string (format, notmuch_filenames_get (filenames));
 		    format->separator (format);
 		}
@@ -283,12 +285,13 @@ do_search_messages (sprinter_t *format,
 
 static int
 do_search_tags (notmuch_database_t *notmuch,
-		sprinter_t *format,
-		notmuch_query_t *query)
+		const search_options_t *opt)
 {
     notmuch_messages_t *messages = NULL;
     notmuch_tags_t *tags;
     const char *tag;
+    sprinter_t *format = opt->format;
+    notmuch_query_t *query = opt->query;
 
     /* should the following only special case if no excluded terms
      * specified? */
@@ -333,16 +336,16 @@ int
 notmuch_search_command (notmuch_config_t *config, int argc, char *argv[])
 {
     notmuch_database_t *notmuch;
-    notmuch_query_t *query;
+    search_options_t opt = {
+	.sort = NOTMUCH_SORT_NEWEST_FIRST,
+	.output = OUTPUT_SUMMARY,
+	.offset = 0,
+	.limit = -1, /* unlimited */
+	.dupe = -1,
+    };
     char *query_str;
-    notmuch_sort_t sort = NOTMUCH_SORT_NEWEST_FIRST;
-    sprinter_t *format = NULL;
     int opt_index, ret;
-    output_t output = OUTPUT_SUMMARY;
-    int offset = 0;
-    int limit = -1; /* unlimited */
     notmuch_exclude_t exclude = NOTMUCH_EXCLUDE_TRUE;
-    int dupe = -1;
     unsigned int i;
 
     enum {
@@ -353,7 +356,7 @@ notmuch_search_command (notmuch_config_t *config, int argc, char *argv[])
     } format_sel = NOTMUCH_FORMAT_TEXT;
 
     notmuch_opt_desc_t options[] = {
-	{ NOTMUCH_OPT_KEYWORD, &sort, "sort", 's',
+	{ NOTMUCH_OPT_KEYWORD, &opt.sort, "sort", 's',
 	  (notmuch_keyword_t []){ { "oldest-first", NOTMUCH_SORT_OLDEST_FIRST },
 				  { "newest-first", NOTMUCH_SORT_NEWEST_FIRST },
 				  { 0, 0 } } },
@@ -364,7 +367,7 @@ notmuch_search_command (notmuch_config_t *config, int argc, char *argv[])
 				  { "text0", NOTMUCH_FORMAT_TEXT0 },
 				  { 0, 0 } } },
 	{ NOTMUCH_OPT_INT, &notmuch_format_version, "format-version", 0, 0 },
-	{ NOTMUCH_OPT_KEYWORD, &output, "output", 'o',
+	{ NOTMUCH_OPT_KEYWORD, &opt.output, "output", 'o',
 	  (notmuch_keyword_t []){ { "summary", OUTPUT_SUMMARY },
 				  { "threads", OUTPUT_THREADS },
 				  { "messages", OUTPUT_MESSAGES },
@@ -377,9 +380,9 @@ notmuch_search_command (notmuch_config_t *config, int argc, char *argv[])
                                   { "flag", NOTMUCH_EXCLUDE_FLAG },
                                   { "all", NOTMUCH_EXCLUDE_ALL },
                                   { 0, 0 } } },
-	{ NOTMUCH_OPT_INT, &offset, "offset", 'O', 0 },
-	{ NOTMUCH_OPT_INT, &limit, "limit", 'L', 0  },
-	{ NOTMUCH_OPT_INT, &dupe, "duplicate", 'D', 0  },
+	{ NOTMUCH_OPT_INT, &opt.offset, "offset", 'O', 0 },
+	{ NOTMUCH_OPT_INT, &opt.limit, "limit", 'L', 0  },
+	{ NOTMUCH_OPT_INT, &opt.dupe, "duplicate", 'D', 0  },
 	{ 0, 0, 0, 0, 0 }
     };
 
@@ -389,20 +392,20 @@ notmuch_search_command (notmuch_config_t *config, int argc, char *argv[])
 
     switch (format_sel) {
     case NOTMUCH_FORMAT_TEXT:
-	format = sprinter_text_create (config, stdout);
+	opt.format = sprinter_text_create (config, stdout);
 	break;
     case NOTMUCH_FORMAT_TEXT0:
-	if (output == OUTPUT_SUMMARY) {
+	if (opt.output == OUTPUT_SUMMARY) {
 	    fprintf (stderr, "Error: --format=text0 is not compatible with --output=summary.\n");
 	    return EXIT_FAILURE;
 	}
-	format = sprinter_text0_create (config, stdout);
+	opt.format = sprinter_text0_create (config, stdout);
 	break;
     case NOTMUCH_FORMAT_JSON:
-	format = sprinter_json_create (config, stdout);
+	opt.format = sprinter_json_create (config, stdout);
 	break;
     case NOTMUCH_FORMAT_SEXP:
-	format = sprinter_sexp_create (config, stdout);
+	opt.format = sprinter_sexp_create (config, stdout);
 	break;
     default:
 	/* this should never happen */
@@ -425,15 +428,15 @@ notmuch_search_command (notmuch_config_t *config, int argc, char *argv[])
 	return EXIT_FAILURE;
     }
 
-    query = notmuch_query_create (notmuch, query_str);
-    if (query == NULL) {
+    opt.query = notmuch_query_create (notmuch, query_str);
+    if (opt.query == NULL) {
 	fprintf (stderr, "Out of memory\n");
 	return EXIT_FAILURE;
     }
 
-    notmuch_query_set_sort (query, sort);
+    notmuch_query_set_sort (opt.query, opt.sort);
 
-    if (exclude == NOTMUCH_EXCLUDE_FLAG && output != OUTPUT_SUMMARY) {
+    if (exclude == NOTMUCH_EXCLUDE_FLAG && opt.output != OUTPUT_SUMMARY) {
 	/* If we are not doing summary output there is nowhere to
 	 * print the excluded flag so fall back on including the
 	 * excluded messages. */
@@ -448,29 +451,29 @@ notmuch_search_command (notmuch_config_t *config, int argc, char *argv[])
 	search_exclude_tags = notmuch_config_get_search_exclude_tags
 	    (config, &search_exclude_tags_length);
 	for (i = 0; i < search_exclude_tags_length; i++)
-	    notmuch_query_add_tag_exclude (query, search_exclude_tags[i]);
-	notmuch_query_set_omit_excluded (query, exclude);
+	    notmuch_query_add_tag_exclude (opt.query, search_exclude_tags[i]);
+	notmuch_query_set_omit_excluded (opt.query, exclude);
     }
 
-    switch (output) {
+    switch (opt.output) {
     default:
     case OUTPUT_SUMMARY:
     case OUTPUT_THREADS:
-	ret = do_search_threads (format, query, sort, output, offset, limit);
+	ret = do_search_threads (&opt);
 	break;
     case OUTPUT_MESSAGES:
     case OUTPUT_FILES:
-	ret = do_search_messages (format, query, output, offset, limit, dupe);
+	ret = do_search_messages (&opt);
 	break;
     case OUTPUT_TAGS:
-	ret = do_search_tags (notmuch, format, query);
+	ret = do_search_tags (notmuch, &opt);
 	break;
     }
 
-    notmuch_query_destroy (query);
+    notmuch_query_destroy (opt.query);
     notmuch_database_destroy (notmuch);
 
-    talloc_free (format);
+    talloc_free (opt.format);
 
     return ret ? EXIT_FAILURE : EXIT_SUCCESS;
 }
