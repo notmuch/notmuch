@@ -23,11 +23,11 @@
 #include "string-util.h"
 
 typedef enum {
-    OUTPUT_SUMMARY,
-    OUTPUT_THREADS,
-    OUTPUT_MESSAGES,
-    OUTPUT_FILES,
-    OUTPUT_TAGS
+    OUTPUT_SUMMARY	= 1 << 0,
+    OUTPUT_THREADS	= 1 << 1,
+    OUTPUT_MESSAGES	= 1 << 2,
+    OUTPUT_FILES	= 1 << 3,
+    OUTPUT_TAGS		= 1 << 4,
 } output_t;
 
 typedef struct {
@@ -338,7 +338,7 @@ notmuch_search_command (notmuch_config_t *config, int argc, char *argv[])
     notmuch_database_t *notmuch;
     search_options_t opt = {
 	.sort = NOTMUCH_SORT_NEWEST_FIRST,
-	.output = OUTPUT_SUMMARY,
+	.output = 0,
 	.offset = 0,
 	.limit = -1, /* unlimited */
 	.dupe = -1,
@@ -367,7 +367,7 @@ notmuch_search_command (notmuch_config_t *config, int argc, char *argv[])
 				  { "text0", NOTMUCH_FORMAT_TEXT0 },
 				  { 0, 0 } } },
 	{ NOTMUCH_OPT_INT, &notmuch_format_version, "format-version", 0, 0 },
-	{ NOTMUCH_OPT_KEYWORD, &opt.output, "output", 'o',
+	{ NOTMUCH_OPT_KEYWORD_FLAGS, &opt.output, "output", 'o',
 	  (notmuch_keyword_t []){ { "summary", OUTPUT_SUMMARY },
 				  { "threads", OUTPUT_THREADS },
 				  { "messages", OUTPUT_MESSAGES },
@@ -389,6 +389,9 @@ notmuch_search_command (notmuch_config_t *config, int argc, char *argv[])
     opt_index = parse_arguments (argc, argv, options, 1);
     if (opt_index < 0)
 	return EXIT_FAILURE;
+
+    if (! opt.output)
+	opt.output = OUTPUT_SUMMARY;
 
     switch (format_sel) {
     case NOTMUCH_FORMAT_TEXT:
@@ -455,19 +458,17 @@ notmuch_search_command (notmuch_config_t *config, int argc, char *argv[])
 	notmuch_query_set_omit_excluded (opt.query, exclude);
     }
 
-    switch (opt.output) {
-    default:
-    case OUTPUT_SUMMARY:
-    case OUTPUT_THREADS:
+    if (opt.output == OUTPUT_SUMMARY ||
+	opt.output == OUTPUT_THREADS)
 	ret = do_search_threads (&opt);
-	break;
-    case OUTPUT_MESSAGES:
-    case OUTPUT_FILES:
+    else if (opt.output == OUTPUT_MESSAGES ||
+	     opt.output == OUTPUT_FILES)
 	ret = do_search_messages (&opt);
-	break;
-    case OUTPUT_TAGS:
+    else if (opt.output == OUTPUT_TAGS)
 	ret = do_search_tags (notmuch, &opt);
-	break;
+    else {
+	fprintf (stderr, "Error: the combination of outputs is not supported.\n");
+	ret = 1;
     }
 
     notmuch_query_destroy (opt.query);
