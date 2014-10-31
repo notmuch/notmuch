@@ -8,6 +8,7 @@ enum notmuch_opt_type {
     NOTMUCH_OPT_BOOLEAN,	/* --verbose              */
     NOTMUCH_OPT_INT,		/* --frob=8               */
     NOTMUCH_OPT_KEYWORD,	/* --format=raw|json|text */
+    NOTMUCH_OPT_KEYWORD_FLAGS,	/* the above with values OR'd together */
     NOTMUCH_OPT_STRING,		/* --file=/tmp/gnarf.txt  */
     NOTMUCH_OPT_POSITION	/* notmuch dump pos_arg   */
 };

@@ -23,7 +23,10 @@ _process_keyword_arg (const notmuch_opt_desc_t *arg_desc, char next, const char 
     while (keywords->name) {
 	if (strcmp (arg_str, keywords->name) == 0) {
 	    if (arg_desc->output_var) {
-		*((int *)arg_desc->output_var) = keywords->value;
+		if (arg_desc->opt_type == NOTMUCH_OPT_KEYWORD_FLAGS)
+		    *((int *)arg_desc->output_var) |= keywords->value;
+		else
+		    *((int *)arg_desc->output_var) = keywords->value;
 	    }
 	    return TRUE;
 	}
@@ -152,6 +155,7 @@ parse_option (const char *arg,
 
 	switch (try->opt_type) {
 	case NOTMUCH_OPT_KEYWORD:
+	case NOTMUCH_OPT_KEYWORD_FLAGS:
 	    return _process_keyword_arg (try, next, value);
 	case NOTMUCH_OPT_BOOLEAN:
 	    return _process_boolean_arg (try, next, value);

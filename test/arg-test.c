@@ -7,6 +7,7 @@ int main(int argc, char **argv){
     int opt_index=1;
 
     int kw_val=0;
+    int fl_val=0;
     int int_val=0;
     char *pos_arg1=NULL;
     char *pos_arg2=NULL;
@@ -16,6 +17,11 @@ int main(int argc, char **argv){
 	{ NOTMUCH_OPT_KEYWORD, &kw_val, "keyword", 'k',
 	  (notmuch_keyword_t []){ { "one", 1 },
 				  { "two", 2 },
+				  { 0, 0 } } },
+	{ NOTMUCH_OPT_KEYWORD_FLAGS, &fl_val, "flag", 'f',
+	  (notmuch_keyword_t []){ { "one",   1 << 0},
+				  { "two",   1 << 1 },
+				  { "three", 1 << 2 },
 				  { 0, 0 } } },
 	{ NOTMUCH_OPT_INT, &int_val, "int", 'i', 0},
 	{ NOTMUCH_OPT_STRING, &string_val, "string", 's', 0},
@@ -30,6 +36,9 @@ int main(int argc, char **argv){
 
     if (kw_val)
 	printf("keyword %d\n", kw_val);
+
+    if (fl_val)
+	printf("flags %d\n", fl_val);
 
     if (int_val)
 	printf("int %d\n", int_val);
