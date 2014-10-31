@@ -52,7 +52,8 @@ _notmuch_search()
   _arguments -s : \
     '--max-threads=[display only the first x threads from the search results]:number of threads to show: ' \
     '--first=[omit the first x threads from the search results]:number of threads to omit: ' \
-    '--sort=[sort results]:sorting:((newest-first\:"reverse chronological order" oldest-first\:"chronological order"))'
+    '--sort=[sort results]:sorting:((newest-first\:"reverse chronological order" oldest-first\:"chronological order"))' \
+    '--output=[select what to output]:output:((summary threads messages files tags sender recipients))'
 }
 
 _notmuch()

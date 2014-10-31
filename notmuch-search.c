@@ -28,7 +28,11 @@ typedef enum {
     OUTPUT_MESSAGES	= 1 << 2,
     OUTPUT_FILES	= 1 << 3,
     OUTPUT_TAGS		= 1 << 4,
+    OUTPUT_SENDER	= 1 << 5,
+    OUTPUT_RECIPIENTS	= 1 << 6,
 } output_t;
+
+#define OUTPUT_ADDRESS_FLAGS (OUTPUT_SENDER | OUTPUT_RECIPIENTS)
 
 typedef struct {
     sprinter_t *format;
@@ -39,6 +43,11 @@ typedef struct {
     int limit;
     int dupe;
 } search_options_t;
+
+typedef struct {
+    const char *name;
+    const char *addr;
+} mailbox_t;
 
 /* Return two stable query strings that identify exactly the matched
  * and unmatched messages currently in thread.  If there are no
@@ -220,6 +229,87 @@ do_search_threads (search_options_t *opt)
     return 0;
 }
 
+static void
+print_mailbox (const search_options_t *opt, const mailbox_t *mailbox)
+{
+    const char *name = mailbox->name;
+    const char *addr = mailbox->addr;
+    sprinter_t *format = opt->format;
+    InternetAddress *ia = internet_address_mailbox_new (name, addr);
+    char *name_addr;
+
+    /* name_addr has the name part quoted if necessary. Compare
+     * 'John Doe <john@doe.com>' vs. '"Doe, John" <john@doe.com>' */
+    name_addr = internet_address_to_string (ia, FALSE);
+
+    if (format->is_text_printer) {
+	format->string (format, name_addr);
+	format->separator (format);
+    } else {
+	format->begin_map (format);
+	format->map_key (format, "name");
+	format->string (format, name);
+	format->map_key (format, "address");
+	format->string (format, addr);
+	format->map_key (format, "name-addr");
+	format->string (format, name_addr);
+	format->end (format);
+	format->separator (format);
+    }
+
+    g_object_unref (ia);
+    g_free (name_addr);
+}
+
+/* Print addresses from InternetAddressList.  */
+static void
+process_address_list (const search_options_t *opt, InternetAddressList *list)
+{
+    InternetAddress *address;
+    int i;
+
+    for (i = 0; i < internet_address_list_length (list); i++) {
+	address = internet_address_list_get_address (list, i);
+	if (INTERNET_ADDRESS_IS_GROUP (address)) {
+	    InternetAddressGroup *group;
+	    InternetAddressList *group_list;
+
+	    group = INTERNET_ADDRESS_GROUP (address);
+	    group_list = internet_address_group_get_members (group);
+	    if (group_list == NULL)
+		continue;
+
+	    process_address_list (opt, group_list);
+	} else {
+	    InternetAddressMailbox *mailbox = INTERNET_ADDRESS_MAILBOX (address);
+	    mailbox_t mbx = {
+		.name = internet_address_get_name (address),
+		.addr = internet_address_mailbox_get_addr (mailbox),
+	    };
+
+	    print_mailbox (opt, &mbx);
+	}
+    }
+}
+
+/* Print addresses from a message header.  */
+static void
+process_address_header (const search_options_t *opt, const char *value)
+{
+    InternetAddressList *list;
+
+    if (value == NULL)
+	return;
+
+    list = internet_address_list_parse_string (value);
+    if (list == NULL)
+	return;
+
+    process_address_list (opt, list);
+
+    g_object_unref (list);
+}
+
 static int
 do_search_messages (search_options_t *opt)
 {
@@ -266,11 +356,29 @@ do_search_messages (search_options_t *opt)
 	    
 	    notmuch_filenames_destroy( filenames );
 
-	} else { /* output == OUTPUT_MESSAGES */
+	} else if (opt->output == OUTPUT_MESSAGES) {
 	    format->set_prefix (format, "id");
 	    format->string (format,
 			    notmuch_message_get_message_id (message));
 	    format->separator (format);
+	} else {
+	    if (opt->output & OUTPUT_SENDER) {
+		const char *addrs;
+
+		addrs = notmuch_message_get_header (message, "from");
+		process_address_header (opt, addrs);
+	    }
+
+	    if (opt->output & OUTPUT_RECIPIENTS) {
+		const char *hdrs[] = { "to", "cc", "bcc" };
+		const char *addrs;
+		size_t j;
+
+		for (j = 0; j < ARRAY_SIZE (hdrs); j++) {
+		    addrs = notmuch_message_get_header (message, hdrs[j]);
+		    process_address_header (opt, addrs);
+		}
+	    }
 	}
 
 	notmuch_message_destroy (message);
@@ -371,6 +479,8 @@ notmuch_search_command (notmuch_config_t *config, int argc, char *argv[])
 	  (notmuch_keyword_t []){ { "summary", OUTPUT_SUMMARY },
 				  { "threads", OUTPUT_THREADS },
 				  { "messages", OUTPUT_MESSAGES },
+				  { "sender", OUTPUT_SENDER },
+				  { "recipients", OUTPUT_RECIPIENTS },
 				  { "files", OUTPUT_FILES },
 				  { "tags", OUTPUT_TAGS },
 				  { 0, 0 } } },
@@ -462,7 +572,8 @@ notmuch_search_command (notmuch_config_t *config, int argc, char *argv[])
 	opt.output == OUTPUT_THREADS)
 	ret = do_search_threads (&opt);
     else if (opt.output == OUTPUT_MESSAGES ||
-	     opt.output == OUTPUT_FILES)
+	     opt.output == OUTPUT_FILES ||
+	     (opt.output & OUTPUT_ADDRESS_FLAGS && !(opt.output & ~OUTPUT_ADDRESS_FLAGS)))
 	ret = do_search_messages (&opt);
     else if (opt.output == OUTPUT_TAGS)
 	ret = do_search_tags (notmuch, &opt);

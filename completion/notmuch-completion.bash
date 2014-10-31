@@ -294,7 +294,7 @@ _notmuch_search()
 	    return
 	    ;;
 	--output)
-	    COMPREPLY=( $( compgen -W "summary threads messages files tags" -- "${cur}" ) )
+	    COMPREPLY=( $( compgen -W "summary threads messages files tags sender recipients" -- "${cur}" ) )
 	    return
 	    ;;
 	--sort)
