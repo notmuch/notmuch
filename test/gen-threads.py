@@ -2,7 +2,6 @@
 # argv[1].  Each output line is a thread structure, where the n'th
 # field is either a number giving the parent of message n or "None"
 # for the root.
-
 import sys
 from itertools import chain, combinations
 
@@ -28,6 +27,7 @@ while queue:
     else:
         # Expand node to_expand[0] with each possible set of children
         for children in subsets(free):
-            ntree = dict(tree, **{child: to_expand[0] for child in children})
+            ntree = {child: to_expand[0] for child in children}
+            ntree.update(tree)
             nfree = free.difference(children)
             queue.append((ntree, nfree, to_expand[1:] + tuple(children)))
