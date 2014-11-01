@@ -122,6 +122,24 @@ id:1258471718-6781-1-git-send-email-dottedmag@dottedmag.net
 EOF
 test_expect_equal_file OUTPUT EXPECTED
 
+test_begin_subtest "--output=messages --duplicate=1"
+notmuch search --output=messages --duplicate=1 '*' >OUTPUT
+# reuse same EXPECTED as above
+test_expect_equal_file OUTPUT EXPECTED
+
+test_begin_subtest "--output=messages --duplicate=2"
+notmuch search --output=messages --duplicate=2 '*' >OUTPUT
+cat <<EOF >EXPECTED
+id:20091117232137.GA7669@griffis1.net
+EOF
+test_expect_equal_file OUTPUT EXPECTED
+
+test_begin_subtest "--output=messages --duplicate=3"
+notmuch search --output=messages --duplicate=3 '*' >OUTPUT
+cat <<EOF >EXPECTED
+EOF
+test_expect_equal_file OUTPUT EXPECTED
+
 test_begin_subtest "--output=messages --format=json"
 notmuch search --format=json --output=messages '*' >OUTPUT
 cat <<EOF >EXPECTED
@@ -177,6 +195,25 @@ cat <<EOF >EXPECTED
 "87lji5cbwo.fsf@yoom.home.cworth.org",
 "1258471718-6781-2-git-send-email-dottedmag@dottedmag.net",
 "1258471718-6781-1-git-send-email-dottedmag@dottedmag.net"]
+EOF
+test_expect_equal_file OUTPUT EXPECTED
+
+test_begin_subtest "--output=messages --format=json --duplicate=1"
+notmuch search --output=messages --format=json --duplicate=1 '*' >OUTPUT
+# reuse same EXPECTED as above
+test_expect_equal_file OUTPUT EXPECTED
+
+test_begin_subtest "--output=messages --format=json --duplicate=2"
+notmuch search --output=messages --format=json --duplicate=2 '*' >OUTPUT
+cat <<EOF >EXPECTED
+["20091117232137.GA7669@griffis1.net"]
+EOF
+test_expect_equal_file OUTPUT EXPECTED
+
+test_begin_subtest "--output=messages --format=json --duplicate=3"
+notmuch search --output=messages --format=json --duplicate=3 '*' >OUTPUT
+cat <<EOF >EXPECTED
+[]
 EOF
 test_expect_equal_file OUTPUT EXPECTED
 
