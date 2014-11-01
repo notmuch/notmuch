@@ -197,3 +197,9 @@ foreach (sort srt values %fhash)
     print "* $line";
     #warn $line;
 }
+print <<'EOF';
+
+The manual pages are licensed under
+[the GNU General Public License](http://www.gnu.org/licenses/gpl.txt),
+either version 3.0 or at your option any later version.
+EOF
