@@ -311,6 +311,24 @@ process_address_header (const search_options_t *opt, const char *value)
 }
 
 static int
+_count_filenames (notmuch_message_t *message)
+{
+    notmuch_filenames_t *filenames;
+    int i = 0;
+
+    filenames = notmuch_message_get_filenames (message);
+
+    while (notmuch_filenames_valid (filenames)) {
+        notmuch_filenames_move_to_next (filenames);
+        i++;
+    }
+
+    notmuch_filenames_destroy (filenames);
+
+    return i;
+}
+
+static int
 do_search_messages (search_options_t *opt)
 {
     notmuch_message_t *message;
@@ -357,10 +375,13 @@ do_search_messages (search_options_t *opt)
 	    notmuch_filenames_destroy( filenames );
 
 	} else if (opt->output == OUTPUT_MESSAGES) {
-	    format->set_prefix (format, "id");
-	    format->string (format,
-			    notmuch_message_get_message_id (message));
-	    format->separator (format);
+            /* special case 1 for speed */
+            if (opt->dupe <= 1 || opt->dupe <= _count_filenames (message)) {
+                format->set_prefix (format, "id");
+                format->string (format,
+                                notmuch_message_get_message_id (message));
+                format->separator (format);
+            }
 	} else {
 	    if (opt->output & OUTPUT_SENDER) {
 		const char *addrs;
@@ -502,6 +523,12 @@ notmuch_search_command (notmuch_config_t *config, int argc, char *argv[])
 
     if (! opt.output)
 	opt.output = OUTPUT_SUMMARY;
+
+    if (opt.output != OUTPUT_FILES && opt.output != OUTPUT_MESSAGES &&
+	opt.dupe != -1) {
+        fprintf (stderr, "Error: --duplicate=N is only supported with --output=files and --output=messages.\n");
+        return EXIT_FAILURE;
+    }
 
     switch (format_sel) {
     case NOTMUCH_FORMAT_TEXT:

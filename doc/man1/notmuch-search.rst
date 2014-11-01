@@ -142,10 +142,14 @@ Supported options for **search** include
         rather than the number of matching messages.
 
     ``--duplicate=N``
-        Effective with ``--output=files``, output the Nth filename
-        associated with each message matching the query (N is 1-based).
-        If N is greater than the number of files associated with the
-        message, don't print anything.
+        For ``--output=files``, output the Nth filename associated
+        with each message matching the query (N is 1-based). If N is
+        greater than the number of files associated with the message,
+        don't print anything.
+
+        For ``--output=messages``, only output message IDs of messages
+        matching the search terms that have at least N filenames
+        associated with them.
 
         Note that this option is orthogonal with the **folder:** search
         prefix. The prefix matches messages based on filenames. This
