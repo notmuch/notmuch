@@ -53,6 +53,7 @@ typedef struct {
     int offset;
     int limit;
     int dupe;
+    GHashTable *addresses;
 } search_context_t;
 
 typedef struct {
@@ -240,6 +241,28 @@ do_search_threads (search_context_t *ctx)
     return 0;
 }
 
+/* Returns TRUE iff name and addr is duplicate. If not, stores the
+ * name/addr pair in order to detect subsequent duplicates. */
+static notmuch_bool_t
+is_duplicate (const search_context_t *ctx, const char *name, const char *addr)
+{
+    notmuch_bool_t duplicate;
+    char *key;
+
+    key = talloc_asprintf (ctx->format, "%s <%s>", name, addr);
+    if (! key)
+	return FALSE;
+
+    duplicate = g_hash_table_lookup_extended (ctx->addresses, key, NULL, NULL);
+
+    if (! duplicate)
+	g_hash_table_insert (ctx->addresses, key, NULL);
+    else
+	talloc_free (key);
+
+    return duplicate;
+}
+
 static void
 print_mailbox (const search_context_t *ctx, const mailbox_t *mailbox)
 {
@@ -274,7 +297,8 @@ print_mailbox (const search_context_t *ctx, const mailbox_t *mailbox)
 
 /* Print addresses from InternetAddressList.  */
 static void
-process_address_list (const search_context_t *ctx, InternetAddressList *list)
+process_address_list (const search_context_t *ctx,
+		      InternetAddressList *list)
 {
     InternetAddress *address;
     int i;
@@ -298,6 +322,9 @@ process_address_list (const search_context_t *ctx, InternetAddressList *list)
 		.addr = internet_address_mailbox_get_addr (mailbox),
 	    };
 
+	    if (is_duplicate (ctx, mbx.name, mbx.addr))
+		continue;
+
 	    print_mailbox (ctx, &mbx);
 	}
     }
@@ -319,6 +346,13 @@ process_address_header (const search_context_t *ctx, const char *value)
     process_address_list (ctx, list);
 
     g_object_unref (list);
+}
+
+/* Destructor for talloc-allocated GHashTable keys and values. */
+static void
+_talloc_free_for_g_hash (void *ptr)
+{
+    talloc_free (ptr);
 }
 
 static int
@@ -673,7 +707,13 @@ notmuch_address_command (notmuch_config_t *config, int argc, char *argv[])
 				 argc - opt_index, argv + opt_index))
 	return EXIT_FAILURE;
 
+    ctx->addresses = g_hash_table_new_full (g_str_hash, g_str_equal,
+					    _talloc_free_for_g_hash, NULL);
+
     ret = do_search_messages (ctx);
+
+    g_hash_table_unref (ctx->addresses);
+
 
     _notmuch_search_cleanup (ctx);
 

@@ -11,7 +11,7 @@ DESCRIPTION
 ===========
 
 Search for messages matching the given search terms, and display the
-addresses from them.
+addresses from them. Duplicate addresses are filtered out.
 
 See **notmuch-search-terms(7)** for details of the supported syntax for
 <search-terms>.
