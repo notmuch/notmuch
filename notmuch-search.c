@@ -587,7 +587,7 @@ notmuch_search_command (notmuch_config_t *config, int argc, char *argv[])
     int opt_index, ret;
 
     notmuch_opt_desc_t options[] = {
-	{ NOTMUCH_OPT_KEYWORD_FLAGS, &ctx->output, "output", 'o',
+	{ NOTMUCH_OPT_KEYWORD, &ctx->output, "output", 'o',
 	  (notmuch_keyword_t []){ { "summary", OUTPUT_SUMMARY },
 				  { "threads", OUTPUT_THREADS },
 				  { "messages", OUTPUT_MESSAGES },
@@ -607,12 +607,10 @@ notmuch_search_command (notmuch_config_t *config, int argc, char *argv[])
 	{ 0, 0, 0, 0, 0 }
     };
 
+    ctx->output = OUTPUT_SUMMARY;
     opt_index = parse_arguments (argc, argv, options, 1);
     if (opt_index < 0)
 	return EXIT_FAILURE;
-
-    if (! ctx->output)
-	ctx->output = OUTPUT_SUMMARY;
 
     if (ctx->output != OUTPUT_FILES && ctx->output != OUTPUT_MESSAGES &&
 	ctx->dupe != -1) {
@@ -624,17 +622,20 @@ notmuch_search_command (notmuch_config_t *config, int argc, char *argv[])
 				 argc - opt_index, argv + opt_index))
 	return EXIT_FAILURE;
 
-    if (ctx->output == OUTPUT_SUMMARY ||
-	ctx->output == OUTPUT_THREADS)
+    switch (ctx->output) {
+    case OUTPUT_SUMMARY:
+    case OUTPUT_THREADS:
 	ret = do_search_threads (ctx);
-    else if (ctx->output == OUTPUT_MESSAGES ||
-	     ctx->output == OUTPUT_FILES)
+	break;
+    case OUTPUT_MESSAGES:
+    case OUTPUT_FILES:
 	ret = do_search_messages (ctx);
-    else if (ctx->output == OUTPUT_TAGS)
+	break;
+    case OUTPUT_TAGS:
 	ret = do_search_tags (ctx);
-    else {
-	fprintf (stderr, "Error: the combination of outputs is not supported.\n");
-	ret = 1;
+	break;
+    default:
+	INTERNAL_ERROR ("Unexpected output");
     }
 
     _notmuch_search_cleanup (ctx);

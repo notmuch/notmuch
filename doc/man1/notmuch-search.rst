@@ -78,9 +78,6 @@ Supported options for **search** include
             by null characters (--format=text0), as a JSON array
             (--format=json), or as an S-Expression list (--format=sexp).
 
-	This option can be given multiple times to combine different
-	outputs.
-
     ``--sort=``\ (**newest-first**\ \|\ **oldest-first**)
         This option can be used to present results in either
         chronological order (**oldest-first**) or reverse chronological
