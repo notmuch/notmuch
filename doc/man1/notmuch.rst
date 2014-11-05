@@ -88,8 +88,8 @@ Several of the notmuch commands accept search terms with a common
 syntax. See **notmuch-search-terms**\ (7) for more details on the
 supported syntax.
 
-The **search**, **show** and **count** commands are used to query the
-email database.
+The **search**, **show**, **address** and **count** commands are used
+to query the email database.
 
 The **reply** command is useful for preparing a template for an email
 reply.
@@ -128,7 +128,8 @@ SEE ALSO
 **notmuch-config(1)**, **notmuch-count(1)**, **notmuch-dump(1)**,
 **notmuch-hooks(5)**, **notmuch-insert(1)**, **notmuch-new(1)**,
 **notmuch-reply(1)**, **notmuch-restore(1)**, **notmuch-search(1)**,
-**notmuch-search-terms(7)**, **notmuch-show(1)**, **notmuch-tag(1)**
+**notmuch-search-terms(7)**, **notmuch-show(1)**, **notmuch-tag(1)**,
+***notmuch-address(1)**
 
 The notmuch website: **http://notmuchmail.org**
 

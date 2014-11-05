@@ -54,6 +54,8 @@ static command_t commands[] = {
       "Add a new message into the maildir and notmuch database." },
     { "search", notmuch_search_command, FALSE,
       "Search for messages matching the given search terms." },
+    { "address", notmuch_address_command, FALSE,
+      "Get addresses from messages matching the given search terms." },
     { "show", notmuch_show_command, FALSE,
       "Show all messages matching the search terms." },
     { "count", notmuch_count_command, FALSE,

@@ -1,0 +1,89 @@
+===============
+notmuch-address
+===============
+
+SYNOPSIS
+========
+
+**notmuch** **address** [*option* ...] <*search-term*> ...
+
+DESCRIPTION
+===========
+
+Search for messages matching the given search terms, and display the
+addresses from them.
+
+See **notmuch-search-terms(7)** for details of the supported syntax for
+<search-terms>.
+
+Supported options for **address** include
+
+    ``--format=``\ (**json**\ \|\ **sexp**\ \|\ **text**\ \|\ **text0**)
+        Presents the results in either JSON, S-Expressions, newline
+        character separated plain-text (default), or null character
+        separated plain-text (compatible with **xargs(1)** -0 option
+        where available).
+
+    ``--format-version=N``
+        Use the specified structured output format version. This is
+        intended for programs that invoke **notmuch(1)** internally. If
+        omitted, the latest supported version will be used.
+
+    ``--output=(sender|recipients)``
+
+        Controls which information appears in the output. This option
+	can be given multiple times to combine different outputs.
+	Omitting this option is equivalent to
+	--output=sender --output=recipients.
+
+	**sender**
+            Output all addresses from the *From* header.
+
+	    Note: Searching for **sender** should be much faster than
+	    searching for **recipients**, because sender addresses are
+	    cached directly in the database whereas other addresses
+	    need to be fetched from message files.
+
+	**recipients**
+            Output all addresses from the *To*, *Cc* and *Bcc*
+            headers.
+
+    ``--sort=``\ (**newest-first**\ \|\ **oldest-first**)
+        This option can be used to present results in either
+        chronological order (**oldest-first**) or reverse chronological
+        order (**newest-first**).
+
+        By default, results will be displayed in reverse chronological
+        order, (that is, the newest results will be displayed first).
+
+    ``--exclude=(true|false)``
+        A message is called "excluded" if it matches at least one tag in
+        search.tag\_exclude that does not appear explicitly in the
+        search terms. This option specifies whether to omit excluded
+        messages in the search process.
+
+        The default value, **true**, prevents excluded messages from
+        matching the search terms.
+
+        **false** allows excluded messages to match search terms and
+        appear in displayed results.
+
+EXIT STATUS
+===========
+
+This command supports the following special exit status codes
+
+``20``
+    The requested format version is too old.
+
+``21``
+    The requested format version is too new.
+
+SEE ALSO
+========
+
+**notmuch(1)**, **notmuch-config(1)**, **notmuch-count(1)**,
+**notmuch-dump(1)**, **notmuch-hooks(5)**, **notmuch-insert(1)**,
+**notmuch-new(1)**, **notmuch-reply(1)**, **notmuch-restore(1)**,
+**notmuch-search-terms(7)**, **notmuch-show(1)**, **notmuch-tag(1)**,
+***notmuch-search(1)**

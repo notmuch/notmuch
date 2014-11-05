@@ -78,25 +78,8 @@ Supported options for **search** include
             by null characters (--format=text0), as a JSON array
             (--format=json), or as an S-Expression list (--format=sexp).
 
-	**sender**
-            Output all addresses from the *From* header that appear on
-            any message matching the search terms, either one per line
-            (--format=text), separated by null characters
-            (--format=text0), as a JSON array (--format=json), or as
-            an S-Expression list (--format=sexp).
-
-	    Note: Searching for **sender** should be much faster than
-	    searching for **recipients**, because sender addresses are
-	    cached directly in the database whereas other addresses
-	    need to be fetched from message files.
-
-	**recipients**
-            Like **sender** but for addresses from *To*, *Cc* and
-	    *Bcc* headers.
-
 	This option can be given multiple times to combine different
-	outputs. Currently, this is only supported for **sender** and
-	**recipients** outputs.
+	outputs.
 
     ``--sort=``\ (**newest-first**\ \|\ **oldest-first**)
         This option can be used to present results in either
@@ -173,3 +156,4 @@ SEE ALSO
 **notmuch-dump(1)**, **notmuch-hooks(5)**, **notmuch-insert(1)**,
 **notmuch-new(1)**, **notmuch-reply(1)**, **notmuch-restore(1)**,
 **notmuch-search-terms(7)**, **notmuch-show(1)**, **notmuch-tag(1)**
+***notmuch-address(1)**

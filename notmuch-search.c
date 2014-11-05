@@ -23,16 +23,17 @@
 #include "string-util.h"
 
 typedef enum {
+    /* Search command */
     OUTPUT_SUMMARY	= 1 << 0,
     OUTPUT_THREADS	= 1 << 1,
     OUTPUT_MESSAGES	= 1 << 2,
     OUTPUT_FILES	= 1 << 3,
     OUTPUT_TAGS		= 1 << 4,
+
+    /* Address command */
     OUTPUT_SENDER	= 1 << 5,
     OUTPUT_RECIPIENTS	= 1 << 6,
 } output_t;
-
-#define OUTPUT_ADDRESS_FLAGS (OUTPUT_SENDER | OUTPUT_RECIPIENTS)
 
 typedef enum {
     NOTMUCH_FORMAT_JSON,
@@ -554,39 +555,42 @@ _notmuch_search_cleanup (search_context_t *ctx)
     talloc_free (ctx->format);
 }
 
+static search_context_t search_context = {
+    .format_sel = NOTMUCH_FORMAT_TEXT,
+    .exclude = NOTMUCH_EXCLUDE_TRUE,
+    .sort = NOTMUCH_SORT_NEWEST_FIRST,
+    .output = 0,
+    .offset = 0,
+    .limit = -1, /* unlimited */
+    .dupe = -1,
+};
+
+static const notmuch_opt_desc_t common_options[] = {
+    { NOTMUCH_OPT_KEYWORD, &search_context.sort, "sort", 's',
+      (notmuch_keyword_t []){ { "oldest-first", NOTMUCH_SORT_OLDEST_FIRST },
+			      { "newest-first", NOTMUCH_SORT_NEWEST_FIRST },
+			      { 0, 0 } } },
+    { NOTMUCH_OPT_KEYWORD, &search_context.format_sel, "format", 'f',
+      (notmuch_keyword_t []){ { "json", NOTMUCH_FORMAT_JSON },
+			      { "sexp", NOTMUCH_FORMAT_SEXP },
+			      { "text", NOTMUCH_FORMAT_TEXT },
+			      { "text0", NOTMUCH_FORMAT_TEXT0 },
+			      { 0, 0 } } },
+    { NOTMUCH_OPT_INT, &notmuch_format_version, "format-version", 0, 0 },
+    { 0, 0, 0, 0, 0 }
+};
+
 int
 notmuch_search_command (notmuch_config_t *config, int argc, char *argv[])
 {
-    search_context_t search_context = {
-	.format_sel = NOTMUCH_FORMAT_TEXT,
-	.exclude = NOTMUCH_EXCLUDE_TRUE,
-	.sort = NOTMUCH_SORT_NEWEST_FIRST,
-	.output = 0,
-	.offset = 0,
-	.limit = -1, /* unlimited */
-	.dupe = -1,
-    };
     search_context_t *ctx = &search_context;
     int opt_index, ret;
 
     notmuch_opt_desc_t options[] = {
-	{ NOTMUCH_OPT_KEYWORD, &ctx->sort, "sort", 's',
-	  (notmuch_keyword_t []){ { "oldest-first", NOTMUCH_SORT_OLDEST_FIRST },
-				  { "newest-first", NOTMUCH_SORT_NEWEST_FIRST },
-				  { 0, 0 } } },
-	{ NOTMUCH_OPT_KEYWORD, &ctx->format_sel, "format", 'f',
-	  (notmuch_keyword_t []){ { "json", NOTMUCH_FORMAT_JSON },
-				  { "sexp", NOTMUCH_FORMAT_SEXP },
-				  { "text", NOTMUCH_FORMAT_TEXT },
-				  { "text0", NOTMUCH_FORMAT_TEXT0 },
-				  { 0, 0 } } },
-	{ NOTMUCH_OPT_INT, &notmuch_format_version, "format-version", 0, 0 },
 	{ NOTMUCH_OPT_KEYWORD_FLAGS, &ctx->output, "output", 'o',
 	  (notmuch_keyword_t []){ { "summary", OUTPUT_SUMMARY },
 				  { "threads", OUTPUT_THREADS },
 				  { "messages", OUTPUT_MESSAGES },
-				  { "sender", OUTPUT_SENDER },
-				  { "recipients", OUTPUT_RECIPIENTS },
 				  { "files", OUTPUT_FILES },
 				  { "tags", OUTPUT_TAGS },
 				  { 0, 0 } } },
@@ -599,6 +603,7 @@ notmuch_search_command (notmuch_config_t *config, int argc, char *argv[])
 	{ NOTMUCH_OPT_INT, &ctx->offset, "offset", 'O', 0 },
 	{ NOTMUCH_OPT_INT, &ctx->limit, "limit", 'L', 0  },
 	{ NOTMUCH_OPT_INT, &ctx->dupe, "duplicate", 'D', 0  },
+	{ NOTMUCH_OPT_INHERIT, &common_options, NULL, 0, 0 },
 	{ 0, 0, 0, 0, 0 }
     };
 
@@ -623,8 +628,7 @@ notmuch_search_command (notmuch_config_t *config, int argc, char *argv[])
 	ctx->output == OUTPUT_THREADS)
 	ret = do_search_threads (ctx);
     else if (ctx->output == OUTPUT_MESSAGES ||
-	     ctx->output == OUTPUT_FILES ||
-	     (ctx->output & OUTPUT_ADDRESS_FLAGS && !(ctx->output & ~OUTPUT_ADDRESS_FLAGS)))
+	     ctx->output == OUTPUT_FILES)
 	ret = do_search_messages (ctx);
     else if (ctx->output == OUTPUT_TAGS)
 	ret = do_search_tags (ctx);
@@ -632,6 +636,43 @@ notmuch_search_command (notmuch_config_t *config, int argc, char *argv[])
 	fprintf (stderr, "Error: the combination of outputs is not supported.\n");
 	ret = 1;
     }
+
+    _notmuch_search_cleanup (ctx);
+
+    return ret ? EXIT_FAILURE : EXIT_SUCCESS;
+}
+
+int
+notmuch_address_command (notmuch_config_t *config, int argc, char *argv[])
+{
+    search_context_t *ctx = &search_context;
+    int opt_index, ret;
+
+    notmuch_opt_desc_t options[] = {
+	{ NOTMUCH_OPT_KEYWORD_FLAGS, &ctx->output, "output", 'o',
+	  (notmuch_keyword_t []){ { "sender", OUTPUT_SENDER },
+				  { "recipients", OUTPUT_RECIPIENTS },
+				  { 0, 0 } } },
+	{ NOTMUCH_OPT_KEYWORD, &ctx->exclude, "exclude", 'x',
+	  (notmuch_keyword_t []){ { "true", NOTMUCH_EXCLUDE_TRUE },
+				  { "false", NOTMUCH_EXCLUDE_FALSE },
+				  { 0, 0 } } },
+	{ NOTMUCH_OPT_INHERIT, &common_options, NULL, 0, 0 },
+	{ 0, 0, 0, 0, 0 }
+    };
+
+    opt_index = parse_arguments (argc, argv, options, 1);
+    if (opt_index < 0)
+	return EXIT_FAILURE;
+
+    if (! ctx->output)
+	ctx->output = OUTPUT_SENDER | OUTPUT_RECIPIENTS;
+
+    if (_notmuch_search_prepare (ctx, config,
+				 argc - opt_index, argv + opt_index))
+	return EXIT_FAILURE;
+
+    ret = do_search_messages (ctx);
 
     _notmuch_search_cleanup (ctx);
 

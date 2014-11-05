@@ -199,6 +199,9 @@ int
 notmuch_search_command (notmuch_config_t *config, int argc, char *argv[]);
 
 int
+notmuch_address_command (notmuch_config_t *config, int argc, char *argv[]);
+
+int
 notmuch_setup_command (notmuch_config_t *config, int argc, char *argv[]);
 
 int

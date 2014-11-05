@@ -294,7 +294,7 @@ _notmuch_search()
 	    return
 	    ;;
 	--output)
-	    COMPREPLY=( $( compgen -W "summary threads messages files tags sender recipients" -- "${cur}" ) )
+	    COMPREPLY=( $( compgen -W "summary threads messages files tags" -- "${cur}" ) )
 	    return
 	    ;;
 	--sort)
@@ -311,6 +311,44 @@ _notmuch_search()
     case "${cur}" in
 	-*)
 	    local options="--format= --output= --sort= --offset= --limit= --exclude= --duplicate="
+	    compopt -o nospace
+	    COMPREPLY=( $(compgen -W "$options" -- ${cur}) )
+	    ;;
+	*)
+	    _notmuch_search_terms
+	    ;;
+    esac
+}
+
+_notmuch_address()
+{
+    local cur prev words cword split
+    _init_completion -s || return
+
+    $split &&
+    case "${prev}" in
+	--format)
+	    COMPREPLY=( $( compgen -W "json sexp text text0" -- "${cur}" ) )
+	    return
+	    ;;
+	--output)
+	    COMPREPLY=( $( compgen -W "sender recipients" -- "${cur}" ) )
+	    return
+	    ;;
+	--sort)
+	    COMPREPLY=( $( compgen -W "newest-first oldest-first" -- "${cur}" ) )
+	    return
+	    ;;
+	--exclude)
+	    COMPREPLY=( $( compgen -W "true false flag all" -- "${cur}" ) )
+	    return
+	    ;;
+    esac
+
+    ! $split &&
+    case "${cur}" in
+	-*)
+	    local options="--format= --output= --sort= --exclude="
 	    compopt -o nospace
 	    COMPREPLY=( $(compgen -W "$options" -- ${cur}) )
 	    ;;
@@ -393,7 +431,7 @@ _notmuch_tag()
 
 _notmuch()
 {
-    local _notmuch_commands="compact config count dump help insert new reply restore search setup show tag"
+    local _notmuch_commands="compact config count dump help insert new reply restore search address setup show tag"
     local arg cur prev words cword split
 
     # require bash-completion with _init_completion

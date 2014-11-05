@@ -10,6 +10,7 @@ _notmuch_commands()
     'setup:interactively set up notmuch for first use'
     'new:find and import any new message to the database'
     'search:search for messages matching the search terms, display matching threads as results'
+    'address:get addresses from messages matching the given search terms'
     'reply:constructs a reply template for a set of messages'
     'show:show all messages matching the search terms'
     'tag:add or remove tags for all messages matching the search terms'
@@ -53,7 +54,14 @@ _notmuch_search()
     '--max-threads=[display only the first x threads from the search results]:number of threads to show: ' \
     '--first=[omit the first x threads from the search results]:number of threads to omit: ' \
     '--sort=[sort results]:sorting:((newest-first\:"reverse chronological order" oldest-first\:"chronological order"))' \
-    '--output=[select what to output]:output:((summary threads messages files tags sender recipients))'
+    '--output=[select what to output]:output:((summary threads messages files tags))'
+}
+
+_notmuch_address()
+{
+  _arguments -s : \
+    '--sort=[sort results]:sorting:((newest-first\:"reverse chronological order" oldest-first\:"chronological order"))' \
+    '--output=[select what to output]:output:((sender recipients))'
 }
 
 _notmuch()
