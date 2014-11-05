@@ -1,6 +1,6 @@
-notmuch (0.19-1) UNRELEASED; urgency=low
+notmuch (0.19~rc1-1) experimental; urgency=low
 
-  * New upstream version
+  * New upstream release candidate
   * Bump libnotmuch SONAME because of API changes
 
  -- David Bremner <bremner@debian.org>  Tue, 16 Sep 2014 21:02:17 +0200
