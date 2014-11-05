@@ -58,6 +58,10 @@ man_pages = [
         u'thread-based email index, search, and tagging',
         [u'Carl Worth and many others'], 1),
 
+('man1/notmuch-address','notmuch-address',
+        u'output addresses from matching messages',
+        [u'Carl Worth and many others'], 1),
+
 ('man1/notmuch-compact','notmuch-compact',
         u'compact the notmuch database',
         [u'Carl Worth and many others'], 1),
@@ -130,6 +134,9 @@ texinfo_documents = [
 ('man1/notmuch','notmuch',u'notmuch Documentation',
       u'Carl Worth and many others', 'notmuch',
       'thread-based email index, search, and tagging','Miscellaneous'),
+('man1/notmuch-address','notmuch-address',u'notmuch Documentation',
+      u'Carl Worth and many others', 'notmuch-address',
+      'output addresses from matching messages','Miscellaneous'),
 ('man1/notmuch-compact','notmuch-compact',u'notmuch Documentation',
       u'Carl Worth and many others', 'notmuch-compact',
       'compact the notmuch database','Miscellaneous'),
