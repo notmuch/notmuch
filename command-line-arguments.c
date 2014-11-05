@@ -122,16 +122,18 @@ parse_position_arg (const char *arg_str, int pos_arg_index,
  */
 
 notmuch_bool_t
-parse_option (const char *arg,
-	      const notmuch_opt_desc_t *options) {
-
-    assert(arg);
+parse_option (const char *_arg, const notmuch_opt_desc_t *options)
+{
+    assert(_arg);
     assert(options);
 
-    arg += 2;
-
+    const char *arg = _arg + 2; /* _arg starts with -- */
     const notmuch_opt_desc_t *try;
     for (try = options; try->opt_type != NOTMUCH_OPT_END; try++) {
+	if (try->opt_type == NOTMUCH_OPT_INHERIT &&
+	    parse_option (_arg, try->output_var))
+	    return TRUE;
+
 	if (! try->name)
 	    continue;
 
@@ -170,7 +172,6 @@ parse_option (const char *arg,
 	    /*UNREACHED*/
 	}
     }
-    fprintf (stderr, "Unrecognized option: --%s\n", arg);
     return FALSE;
 }
 
@@ -201,6 +202,7 @@ parse_arguments (int argc, char **argv,
 	    if (more_args) {
 		opt_index++;
 	    } else {
+		fprintf (stderr, "Unrecognized option: %s\n", argv[opt_index]);
 		opt_index = -1;
 	    }
 

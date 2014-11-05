@@ -5,6 +5,7 @@
 
 enum notmuch_opt_type {
     NOTMUCH_OPT_END = 0,
+    NOTMUCH_OPT_INHERIT,	/* another options table */
     NOTMUCH_OPT_BOOLEAN,	/* --verbose              */
     NOTMUCH_OPT_INT,		/* --frob=8               */
     NOTMUCH_OPT_KEYWORD,	/* --format=raw|json|text */
