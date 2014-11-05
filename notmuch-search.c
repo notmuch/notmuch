@@ -471,6 +471,89 @@ do_search_tags (const search_context_t *ctx)
     return 0;
 }
 
+static int
+_notmuch_search_prepare (search_context_t *ctx, notmuch_config_t *config, int argc, char *argv[])
+{
+    char *query_str;
+    unsigned int i;
+
+    switch (ctx->format_sel) {
+    case NOTMUCH_FORMAT_TEXT:
+	ctx->format = sprinter_text_create (config, stdout);
+	break;
+    case NOTMUCH_FORMAT_TEXT0:
+	if (ctx->output == OUTPUT_SUMMARY) {
+	    fprintf (stderr, "Error: --format=text0 is not compatible with --output=summary.\n");
+	    return EXIT_FAILURE;
+	}
+	ctx->format = sprinter_text0_create (config, stdout);
+	break;
+    case NOTMUCH_FORMAT_JSON:
+	ctx->format = sprinter_json_create (config, stdout);
+	break;
+    case NOTMUCH_FORMAT_SEXP:
+	ctx->format = sprinter_sexp_create (config, stdout);
+	break;
+    default:
+	/* this should never happen */
+	INTERNAL_ERROR("no output format selected");
+    }
+
+    notmuch_exit_if_unsupported_format ();
+
+    if (notmuch_database_open (notmuch_config_get_database_path (config),
+			       NOTMUCH_DATABASE_MODE_READ_ONLY, &ctx->notmuch))
+	return EXIT_FAILURE;
+
+    query_str = query_string_from_args (ctx->notmuch, argc, argv);
+    if (query_str == NULL) {
+	fprintf (stderr, "Out of memory.\n");
+	return EXIT_FAILURE;
+    }
+    if (*query_str == '\0') {
+	fprintf (stderr, "Error: notmuch search requires at least one search term.\n");
+	return EXIT_FAILURE;
+    }
+
+    ctx->query = notmuch_query_create (ctx->notmuch, query_str);
+    if (ctx->query == NULL) {
+	fprintf (stderr, "Out of memory\n");
+	return EXIT_FAILURE;
+    }
+
+    notmuch_query_set_sort (ctx->query, ctx->sort);
+
+    if (ctx->exclude == NOTMUCH_EXCLUDE_FLAG && ctx->output != OUTPUT_SUMMARY) {
+	/* If we are not doing summary output there is nowhere to
+	 * print the excluded flag so fall back on including the
+	 * excluded messages. */
+	fprintf (stderr, "Warning: this output format cannot flag excluded messages.\n");
+	ctx->exclude = NOTMUCH_EXCLUDE_FALSE;
+    }
+
+    if (ctx->exclude != NOTMUCH_EXCLUDE_FALSE) {
+	const char **search_exclude_tags;
+	size_t search_exclude_tags_length;
+
+	search_exclude_tags = notmuch_config_get_search_exclude_tags
+	    (config, &search_exclude_tags_length);
+	for (i = 0; i < search_exclude_tags_length; i++)
+	    notmuch_query_add_tag_exclude (ctx->query, search_exclude_tags[i]);
+	notmuch_query_set_omit_excluded (ctx->query, ctx->exclude);
+    }
+
+    return 0;
+}
+
+static void
+_notmuch_search_cleanup (search_context_t *ctx)
+{
+    notmuch_query_destroy (ctx->query);
+    notmuch_database_destroy (ctx->notmuch);
+
+    talloc_free (ctx->format);
+}
+
 int
 notmuch_search_command (notmuch_config_t *config, int argc, char *argv[])
 {
@@ -484,9 +567,7 @@ notmuch_search_command (notmuch_config_t *config, int argc, char *argv[])
 	.dupe = -1,
     };
     search_context_t *ctx = &search_context;
-    char *query_str;
     int opt_index, ret;
-    unsigned int i;
 
     notmuch_opt_desc_t options[] = {
 	{ NOTMUCH_OPT_KEYWORD, &ctx->sort, "sort", 's',
@@ -534,70 +615,9 @@ notmuch_search_command (notmuch_config_t *config, int argc, char *argv[])
         return EXIT_FAILURE;
     }
 
-    switch (ctx->format_sel) {
-    case NOTMUCH_FORMAT_TEXT:
-	ctx->format = sprinter_text_create (config, stdout);
-	break;
-    case NOTMUCH_FORMAT_TEXT0:
-	if (ctx->output == OUTPUT_SUMMARY) {
-	    fprintf (stderr, "Error: --format=text0 is not compatible with --output=summary.\n");
-	    return EXIT_FAILURE;
-	}
-	ctx->format = sprinter_text0_create (config, stdout);
-	break;
-    case NOTMUCH_FORMAT_JSON:
-	ctx->format = sprinter_json_create (config, stdout);
-	break;
-    case NOTMUCH_FORMAT_SEXP:
-	ctx->format = sprinter_sexp_create (config, stdout);
-	break;
-    default:
-	/* this should never happen */
-	INTERNAL_ERROR("no output format selected");
-    }
-
-    notmuch_exit_if_unsupported_format ();
-
-    if (notmuch_database_open (notmuch_config_get_database_path (config),
-			       NOTMUCH_DATABASE_MODE_READ_ONLY, &ctx->notmuch))
+    if (_notmuch_search_prepare (ctx, config,
+				 argc - opt_index, argv + opt_index))
 	return EXIT_FAILURE;
-
-    query_str = query_string_from_args (ctx->notmuch, argc-opt_index, argv+opt_index);
-    if (query_str == NULL) {
-	fprintf (stderr, "Out of memory.\n");
-	return EXIT_FAILURE;
-    }
-    if (*query_str == '\0') {
-	fprintf (stderr, "Error: notmuch search requires at least one search term.\n");
-	return EXIT_FAILURE;
-    }
-
-    ctx->query = notmuch_query_create (ctx->notmuch, query_str);
-    if (ctx->query == NULL) {
-	fprintf (stderr, "Out of memory\n");
-	return EXIT_FAILURE;
-    }
-
-    notmuch_query_set_sort (ctx->query, ctx->sort);
-
-    if (ctx->exclude == NOTMUCH_EXCLUDE_FLAG && ctx->output != OUTPUT_SUMMARY) {
-	/* If we are not doing summary output there is nowhere to
-	 * print the excluded flag so fall back on including the
-	 * excluded messages. */
-	fprintf (stderr, "Warning: this output format cannot flag excluded messages.\n");
-	ctx->exclude = NOTMUCH_EXCLUDE_FALSE;
-    }
-
-    if (ctx->exclude != NOTMUCH_EXCLUDE_FALSE) {
-	const char **search_exclude_tags;
-	size_t search_exclude_tags_length;
-
-	search_exclude_tags = notmuch_config_get_search_exclude_tags
-	    (config, &search_exclude_tags_length);
-	for (i = 0; i < search_exclude_tags_length; i++)
-	    notmuch_query_add_tag_exclude (ctx->query, search_exclude_tags[i]);
-	notmuch_query_set_omit_excluded (ctx->query, ctx->exclude);
-    }
 
     if (ctx->output == OUTPUT_SUMMARY ||
 	ctx->output == OUTPUT_THREADS)
@@ -613,10 +633,7 @@ notmuch_search_command (notmuch_config_t *config, int argc, char *argv[])
 	ret = 1;
     }
 
-    notmuch_query_destroy (ctx->query);
-    notmuch_database_destroy (ctx->notmuch);
-
-    talloc_free (ctx->format);
+    _notmuch_search_cleanup (ctx);
 
     return ret ? EXIT_FAILURE : EXIT_SUCCESS;
 }
