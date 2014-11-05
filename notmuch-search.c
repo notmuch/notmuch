@@ -42,7 +42,7 @@ typedef struct {
     int offset;
     int limit;
     int dupe;
-} search_options_t;
+} search_context_t;
 
 typedef struct {
     const char *name;
@@ -89,39 +89,39 @@ get_thread_query (notmuch_thread_t *thread,
 }
 
 static int
-do_search_threads (search_options_t *opt)
+do_search_threads (search_context_t *ctx)
 {
     notmuch_thread_t *thread;
     notmuch_threads_t *threads;
     notmuch_tags_t *tags;
-    sprinter_t *format = opt->format;
+    sprinter_t *format = ctx->format;
     time_t date;
     int i;
 
-    if (opt->offset < 0) {
-	opt->offset += notmuch_query_count_threads (opt->query);
-	if (opt->offset < 0)
-	    opt->offset = 0;
+    if (ctx->offset < 0) {
+	ctx->offset += notmuch_query_count_threads (ctx->query);
+	if (ctx->offset < 0)
+	    ctx->offset = 0;
     }
 
-    threads = notmuch_query_search_threads (opt->query);
+    threads = notmuch_query_search_threads (ctx->query);
     if (threads == NULL)
 	return 1;
 
     format->begin_list (format);
 
     for (i = 0;
-	 notmuch_threads_valid (threads) && (opt->limit < 0 || i < opt->offset + opt->limit);
+	 notmuch_threads_valid (threads) && (ctx->limit < 0 || i < ctx->offset + ctx->limit);
 	 notmuch_threads_move_to_next (threads), i++)
     {
 	thread = notmuch_threads_get (threads);
 
-	if (i < opt->offset) {
+	if (i < ctx->offset) {
 	    notmuch_thread_destroy (thread);
 	    continue;
 	}
 
-	if (opt->output == OUTPUT_THREADS) {
+	if (ctx->output == OUTPUT_THREADS) {
 	    format->set_prefix (format, "thread");
 	    format->string (format,
 			    notmuch_thread_get_thread_id (thread));
@@ -138,7 +138,7 @@ do_search_threads (search_options_t *opt)
 
 	    format->begin_map (format);
 
-	    if (opt->sort == NOTMUCH_SORT_OLDEST_FIRST)
+	    if (ctx->sort == NOTMUCH_SORT_OLDEST_FIRST)
 		date = notmuch_thread_get_oldest_date (thread);
 	    else
 		date = notmuch_thread_get_newest_date (thread);
@@ -230,11 +230,11 @@ do_search_threads (search_options_t *opt)
 }
 
 static void
-print_mailbox (const search_options_t *opt, const mailbox_t *mailbox)
+print_mailbox (const search_context_t *ctx, const mailbox_t *mailbox)
 {
     const char *name = mailbox->name;
     const char *addr = mailbox->addr;
-    sprinter_t *format = opt->format;
+    sprinter_t *format = ctx->format;
     InternetAddress *ia = internet_address_mailbox_new (name, addr);
     char *name_addr;
 
@@ -263,7 +263,7 @@ print_mailbox (const search_options_t *opt, const mailbox_t *mailbox)
 
 /* Print addresses from InternetAddressList.  */
 static void
-process_address_list (const search_options_t *opt, InternetAddressList *list)
+process_address_list (const search_context_t *ctx, InternetAddressList *list)
 {
     InternetAddress *address;
     int i;
@@ -279,7 +279,7 @@ process_address_list (const search_options_t *opt, InternetAddressList *list)
 	    if (group_list == NULL)
 		continue;
 
-	    process_address_list (opt, group_list);
+	    process_address_list (ctx, group_list);
 	} else {
 	    InternetAddressMailbox *mailbox = INTERNET_ADDRESS_MAILBOX (address);
 	    mailbox_t mbx = {
@@ -287,14 +287,14 @@ process_address_list (const search_options_t *opt, InternetAddressList *list)
 		.addr = internet_address_mailbox_get_addr (mailbox),
 	    };
 
-	    print_mailbox (opt, &mbx);
+	    print_mailbox (ctx, &mbx);
 	}
     }
 }
 
 /* Print addresses from a message header.  */
 static void
-process_address_header (const search_options_t *opt, const char *value)
+process_address_header (const search_context_t *ctx, const char *value)
 {
     InternetAddressList *list;
 
@@ -305,7 +305,7 @@ process_address_header (const search_options_t *opt, const char *value)
     if (list == NULL)
 	return;
 
-    process_address_list (opt, list);
+    process_address_list (ctx, list);
 
     g_object_unref (list);
 }
@@ -329,36 +329,36 @@ _count_filenames (notmuch_message_t *message)
 }
 
 static int
-do_search_messages (search_options_t *opt)
+do_search_messages (search_context_t *ctx)
 {
     notmuch_message_t *message;
     notmuch_messages_t *messages;
     notmuch_filenames_t *filenames;
-    sprinter_t *format = opt->format;
+    sprinter_t *format = ctx->format;
     int i;
 
-    if (opt->offset < 0) {
-	opt->offset += notmuch_query_count_messages (opt->query);
-	if (opt->offset < 0)
-	    opt->offset = 0;
+    if (ctx->offset < 0) {
+	ctx->offset += notmuch_query_count_messages (ctx->query);
+	if (ctx->offset < 0)
+	    ctx->offset = 0;
     }
 
-    messages = notmuch_query_search_messages (opt->query);
+    messages = notmuch_query_search_messages (ctx->query);
     if (messages == NULL)
 	return 1;
 
     format->begin_list (format);
 
     for (i = 0;
-	 notmuch_messages_valid (messages) && (opt->limit < 0 || i < opt->offset + opt->limit);
+	 notmuch_messages_valid (messages) && (ctx->limit < 0 || i < ctx->offset + ctx->limit);
 	 notmuch_messages_move_to_next (messages), i++)
     {
-	if (i < opt->offset)
+	if (i < ctx->offset)
 	    continue;
 
 	message = notmuch_messages_get (messages);
 
-	if (opt->output == OUTPUT_FILES) {
+	if (ctx->output == OUTPUT_FILES) {
 	    int j;
 	    filenames = notmuch_message_get_filenames (message);
 
@@ -366,7 +366,7 @@ do_search_messages (search_options_t *opt)
 		 notmuch_filenames_valid (filenames);
 		 notmuch_filenames_move_to_next (filenames), j++)
 	    {
-		if (opt->dupe < 0 || opt->dupe == j) {
+		if (ctx->dupe < 0 || ctx->dupe == j) {
 		    format->string (format, notmuch_filenames_get (filenames));
 		    format->separator (format);
 		}
@@ -374,30 +374,30 @@ do_search_messages (search_options_t *opt)
 	    
 	    notmuch_filenames_destroy( filenames );
 
-	} else if (opt->output == OUTPUT_MESSAGES) {
+	} else if (ctx->output == OUTPUT_MESSAGES) {
             /* special case 1 for speed */
-            if (opt->dupe <= 1 || opt->dupe <= _count_filenames (message)) {
+            if (ctx->dupe <= 1 || ctx->dupe <= _count_filenames (message)) {
                 format->set_prefix (format, "id");
                 format->string (format,
                                 notmuch_message_get_message_id (message));
                 format->separator (format);
             }
 	} else {
-	    if (opt->output & OUTPUT_SENDER) {
+	    if (ctx->output & OUTPUT_SENDER) {
 		const char *addrs;
 
 		addrs = notmuch_message_get_header (message, "from");
-		process_address_header (opt, addrs);
+		process_address_header (ctx, addrs);
 	    }
 
-	    if (opt->output & OUTPUT_RECIPIENTS) {
+	    if (ctx->output & OUTPUT_RECIPIENTS) {
 		const char *hdrs[] = { "to", "cc", "bcc" };
 		const char *addrs;
 		size_t j;
 
 		for (j = 0; j < ARRAY_SIZE (hdrs); j++) {
 		    addrs = notmuch_message_get_header (message, hdrs[j]);
-		    process_address_header (opt, addrs);
+		    process_address_header (ctx, addrs);
 		}
 	    }
 	}
@@ -414,13 +414,13 @@ do_search_messages (search_options_t *opt)
 
 static int
 do_search_tags (notmuch_database_t *notmuch,
-		const search_options_t *opt)
+		const search_context_t *ctx)
 {
     notmuch_messages_t *messages = NULL;
     notmuch_tags_t *tags;
     const char *tag;
-    sprinter_t *format = opt->format;
-    notmuch_query_t *query = opt->query;
+    sprinter_t *format = ctx->format;
+    notmuch_query_t *query = ctx->query;
 
     /* should the following only special case if no excluded terms
      * specified? */
@@ -465,7 +465,7 @@ int
 notmuch_search_command (notmuch_config_t *config, int argc, char *argv[])
 {
     notmuch_database_t *notmuch;
-    search_options_t opt = {
+    search_context_t ctx = {
 	.sort = NOTMUCH_SORT_NEWEST_FIRST,
 	.output = 0,
 	.offset = 0,
@@ -485,7 +485,7 @@ notmuch_search_command (notmuch_config_t *config, int argc, char *argv[])
     } format_sel = NOTMUCH_FORMAT_TEXT;
 
     notmuch_opt_desc_t options[] = {
-	{ NOTMUCH_OPT_KEYWORD, &opt.sort, "sort", 's',
+	{ NOTMUCH_OPT_KEYWORD, &ctx.sort, "sort", 's',
 	  (notmuch_keyword_t []){ { "oldest-first", NOTMUCH_SORT_OLDEST_FIRST },
 				  { "newest-first", NOTMUCH_SORT_NEWEST_FIRST },
 				  { 0, 0 } } },
@@ -496,7 +496,7 @@ notmuch_search_command (notmuch_config_t *config, int argc, char *argv[])
 				  { "text0", NOTMUCH_FORMAT_TEXT0 },
 				  { 0, 0 } } },
 	{ NOTMUCH_OPT_INT, &notmuch_format_version, "format-version", 0, 0 },
-	{ NOTMUCH_OPT_KEYWORD_FLAGS, &opt.output, "output", 'o',
+	{ NOTMUCH_OPT_KEYWORD_FLAGS, &ctx.output, "output", 'o',
 	  (notmuch_keyword_t []){ { "summary", OUTPUT_SUMMARY },
 				  { "threads", OUTPUT_THREADS },
 				  { "messages", OUTPUT_MESSAGES },
@@ -511,9 +511,9 @@ notmuch_search_command (notmuch_config_t *config, int argc, char *argv[])
                                   { "flag", NOTMUCH_EXCLUDE_FLAG },
                                   { "all", NOTMUCH_EXCLUDE_ALL },
                                   { 0, 0 } } },
-	{ NOTMUCH_OPT_INT, &opt.offset, "offset", 'O', 0 },
-	{ NOTMUCH_OPT_INT, &opt.limit, "limit", 'L', 0  },
-	{ NOTMUCH_OPT_INT, &opt.dupe, "duplicate", 'D', 0  },
+	{ NOTMUCH_OPT_INT, &ctx.offset, "offset", 'O', 0 },
+	{ NOTMUCH_OPT_INT, &ctx.limit, "limit", 'L', 0  },
+	{ NOTMUCH_OPT_INT, &ctx.dupe, "duplicate", 'D', 0  },
 	{ 0, 0, 0, 0, 0 }
     };
 
@@ -521,31 +521,31 @@ notmuch_search_command (notmuch_config_t *config, int argc, char *argv[])
     if (opt_index < 0)
 	return EXIT_FAILURE;
 
-    if (! opt.output)
-	opt.output = OUTPUT_SUMMARY;
+    if (! ctx.output)
+	ctx.output = OUTPUT_SUMMARY;
 
-    if (opt.output != OUTPUT_FILES && opt.output != OUTPUT_MESSAGES &&
-	opt.dupe != -1) {
+    if (ctx.output != OUTPUT_FILES && ctx.output != OUTPUT_MESSAGES &&
+	ctx.dupe != -1) {
         fprintf (stderr, "Error: --duplicate=N is only supported with --output=files and --output=messages.\n");
         return EXIT_FAILURE;
     }
 
     switch (format_sel) {
     case NOTMUCH_FORMAT_TEXT:
-	opt.format = sprinter_text_create (config, stdout);
+	ctx.format = sprinter_text_create (config, stdout);
 	break;
     case NOTMUCH_FORMAT_TEXT0:
-	if (opt.output == OUTPUT_SUMMARY) {
+	if (ctx.output == OUTPUT_SUMMARY) {
 	    fprintf (stderr, "Error: --format=text0 is not compatible with --output=summary.\n");
 	    return EXIT_FAILURE;
 	}
-	opt.format = sprinter_text0_create (config, stdout);
+	ctx.format = sprinter_text0_create (config, stdout);
 	break;
     case NOTMUCH_FORMAT_JSON:
-	opt.format = sprinter_json_create (config, stdout);
+	ctx.format = sprinter_json_create (config, stdout);
 	break;
     case NOTMUCH_FORMAT_SEXP:
-	opt.format = sprinter_sexp_create (config, stdout);
+	ctx.format = sprinter_sexp_create (config, stdout);
 	break;
     default:
 	/* this should never happen */
@@ -568,15 +568,15 @@ notmuch_search_command (notmuch_config_t *config, int argc, char *argv[])
 	return EXIT_FAILURE;
     }
 
-    opt.query = notmuch_query_create (notmuch, query_str);
-    if (opt.query == NULL) {
+    ctx.query = notmuch_query_create (notmuch, query_str);
+    if (ctx.query == NULL) {
 	fprintf (stderr, "Out of memory\n");
 	return EXIT_FAILURE;
     }
 
-    notmuch_query_set_sort (opt.query, opt.sort);
+    notmuch_query_set_sort (ctx.query, ctx.sort);
 
-    if (exclude == NOTMUCH_EXCLUDE_FLAG && opt.output != OUTPUT_SUMMARY) {
+    if (exclude == NOTMUCH_EXCLUDE_FLAG && ctx.output != OUTPUT_SUMMARY) {
 	/* If we are not doing summary output there is nowhere to
 	 * print the excluded flag so fall back on including the
 	 * excluded messages. */
@@ -591,28 +591,28 @@ notmuch_search_command (notmuch_config_t *config, int argc, char *argv[])
 	search_exclude_tags = notmuch_config_get_search_exclude_tags
 	    (config, &search_exclude_tags_length);
 	for (i = 0; i < search_exclude_tags_length; i++)
-	    notmuch_query_add_tag_exclude (opt.query, search_exclude_tags[i]);
-	notmuch_query_set_omit_excluded (opt.query, exclude);
+	    notmuch_query_add_tag_exclude (ctx.query, search_exclude_tags[i]);
+	notmuch_query_set_omit_excluded (ctx.query, exclude);
     }
 
-    if (opt.output == OUTPUT_SUMMARY ||
-	opt.output == OUTPUT_THREADS)
-	ret = do_search_threads (&opt);
-    else if (opt.output == OUTPUT_MESSAGES ||
-	     opt.output == OUTPUT_FILES ||
-	     (opt.output & OUTPUT_ADDRESS_FLAGS && !(opt.output & ~OUTPUT_ADDRESS_FLAGS)))
-	ret = do_search_messages (&opt);
-    else if (opt.output == OUTPUT_TAGS)
-	ret = do_search_tags (notmuch, &opt);
+    if (ctx.output == OUTPUT_SUMMARY ||
+	ctx.output == OUTPUT_THREADS)
+	ret = do_search_threads (&ctx);
+    else if (ctx.output == OUTPUT_MESSAGES ||
+	     ctx.output == OUTPUT_FILES ||
+	     (ctx.output & OUTPUT_ADDRESS_FLAGS && !(ctx.output & ~OUTPUT_ADDRESS_FLAGS)))
+	ret = do_search_messages (&ctx);
+    else if (ctx.output == OUTPUT_TAGS)
+	ret = do_search_tags (notmuch, &ctx);
     else {
 	fprintf (stderr, "Error: the combination of outputs is not supported.\n");
 	ret = 1;
     }
 
-    notmuch_query_destroy (opt.query);
+    notmuch_query_destroy (ctx.query);
     notmuch_database_destroy (notmuch);
 
-    talloc_free (opt.format);
+    talloc_free (ctx.format);
 
     return ret ? EXIT_FAILURE : EXIT_SUCCESS;
 }
