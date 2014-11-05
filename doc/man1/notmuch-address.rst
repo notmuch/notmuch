@@ -29,7 +29,7 @@ Supported options for **address** include
         intended for programs that invoke **notmuch(1)** internally. If
         omitted, the latest supported version will be used.
 
-    ``--output=(sender|recipients)``
+    ``--output=(sender|recipients|count)``
 
         Controls which information appears in the output. This option
 	can be given multiple times to combine different outputs.
@@ -48,6 +48,13 @@ Supported options for **address** include
             Output all addresses from the *To*, *Cc* and *Bcc*
             headers.
 
+	**count**
+	    Print the count of how many times was the address
+	    encountered during search.
+
+	    Note: With this option, addresses are printed only after
+	    the whole search is finished. This may take long time.
+
     ``--sort=``\ (**newest-first**\ \|\ **oldest-first**)
         This option can be used to present results in either
         chronological order (**oldest-first**) or reverse chronological
@@ -55,6 +62,8 @@ Supported options for **address** include
 
         By default, results will be displayed in reverse chronological
         order, (that is, the newest results will be displayed first).
+
+	This option has no effect when used with --output=count.
 
     ``--exclude=(true|false)``
         A message is called "excluded" if it matches at least one tag in

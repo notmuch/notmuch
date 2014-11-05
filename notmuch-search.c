@@ -33,6 +33,7 @@ typedef enum {
     /* Address command */
     OUTPUT_SENDER	= 1 << 5,
     OUTPUT_RECIPIENTS	= 1 << 6,
+    OUTPUT_COUNT	= 1 << 7,
 } output_t;
 
 typedef enum {
@@ -59,6 +60,7 @@ typedef struct {
 typedef struct {
     const char *name;
     const char *addr;
+    int count;
 } mailbox_t;
 
 /* Return two stable query strings that identify exactly the matched
@@ -248,17 +250,24 @@ is_duplicate (const search_context_t *ctx, const char *name, const char *addr)
 {
     notmuch_bool_t duplicate;
     char *key;
+    mailbox_t *mailbox;
 
     key = talloc_asprintf (ctx->format, "%s <%s>", name, addr);
     if (! key)
 	return FALSE;
 
-    duplicate = g_hash_table_lookup_extended (ctx->addresses, key, NULL, NULL);
+    duplicate = g_hash_table_lookup_extended (ctx->addresses, key, NULL, (gpointer)&mailbox);
 
-    if (! duplicate)
-	g_hash_table_insert (ctx->addresses, key, NULL);
-    else
+    if (! duplicate) {
+	mailbox = talloc (ctx->format, mailbox_t);
+	mailbox->name = talloc_strdup (mailbox, name);
+	mailbox->addr = talloc_strdup (mailbox, addr);
+	mailbox->count = 1;
+	g_hash_table_insert (ctx->addresses, key, mailbox);
+    } else {
+	mailbox->count++;
 	talloc_free (key);
+    }
 
     return duplicate;
 }
@@ -268,6 +277,7 @@ print_mailbox (const search_context_t *ctx, const mailbox_t *mailbox)
 {
     const char *name = mailbox->name;
     const char *addr = mailbox->addr;
+    int count = mailbox->count;
     sprinter_t *format = ctx->format;
     InternetAddress *ia = internet_address_mailbox_new (name, addr);
     char *name_addr;
@@ -277,6 +287,10 @@ print_mailbox (const search_context_t *ctx, const mailbox_t *mailbox)
     name_addr = internet_address_to_string (ia, FALSE);
 
     if (format->is_text_printer) {
+	if (count > 0) {
+	    format->integer (format, count);
+	    format->string (format, "\t");
+	}
 	format->string (format, name_addr);
 	format->separator (format);
     } else {
@@ -287,6 +301,10 @@ print_mailbox (const search_context_t *ctx, const mailbox_t *mailbox)
 	format->string (format, addr);
 	format->map_key (format, "name-addr");
 	format->string (format, name_addr);
+	if (count > 0) {
+	    format->map_key (format, "count");
+	    format->integer (format, count);
+	}
 	format->end (format);
 	format->separator (format);
     }
@@ -295,7 +313,7 @@ print_mailbox (const search_context_t *ctx, const mailbox_t *mailbox)
     g_free (name_addr);
 }
 
-/* Print addresses from InternetAddressList.  */
+/* Print or prepare for printing addresses from InternetAddressList. */
 static void
 process_address_list (const search_context_t *ctx,
 		      InternetAddressList *list)
@@ -320,9 +338,13 @@ process_address_list (const search_context_t *ctx,
 	    mailbox_t mbx = {
 		.name = internet_address_get_name (address),
 		.addr = internet_address_mailbox_get_addr (mailbox),
+		.count = 0,
 	    };
 
 	    if (is_duplicate (ctx, mbx.name, mbx.addr))
+		continue;
+
+	    if (ctx->output & OUTPUT_COUNT)
 		continue;
 
 	    print_mailbox (ctx, &mbx);
@@ -330,7 +352,7 @@ process_address_list (const search_context_t *ctx,
     }
 }
 
-/* Print addresses from a message header.  */
+/* Print or prepare for printing addresses from a message header. */
 static void
 process_address_header (const search_context_t *ctx, const char *value)
 {
@@ -353,6 +375,15 @@ static void
 _talloc_free_for_g_hash (void *ptr)
 {
     talloc_free (ptr);
+}
+
+static void
+print_hash_value (unused (gpointer key), gpointer value, gpointer user_data)
+{
+    const mailbox_t *mailbox = value;
+    search_context_t *ctx = user_data;
+
+    print_mailbox (ctx, mailbox);
 }
 
 static int
@@ -449,6 +480,9 @@ do_search_messages (search_context_t *ctx)
 
 	notmuch_message_destroy (message);
     }
+
+    if (ctx->addresses && ctx->output & OUTPUT_COUNT)
+	g_hash_table_foreach (ctx->addresses, print_hash_value, ctx);
 
     notmuch_messages_destroy (messages);
 
@@ -687,6 +721,7 @@ notmuch_address_command (notmuch_config_t *config, int argc, char *argv[])
 	{ NOTMUCH_OPT_KEYWORD_FLAGS, &ctx->output, "output", 'o',
 	  (notmuch_keyword_t []){ { "sender", OUTPUT_SENDER },
 				  { "recipients", OUTPUT_RECIPIENTS },
+				  { "count", OUTPUT_COUNT },
 				  { 0, 0 } } },
 	{ NOTMUCH_OPT_KEYWORD, &ctx->exclude, "exclude", 'x',
 	  (notmuch_keyword_t []){ { "true", NOTMUCH_EXCLUDE_TRUE },
@@ -708,7 +743,7 @@ notmuch_address_command (notmuch_config_t *config, int argc, char *argv[])
 	return EXIT_FAILURE;
 
     ctx->addresses = g_hash_table_new_full (g_str_hash, g_str_equal,
-					    _talloc_free_for_g_hash, NULL);
+					    _talloc_free_for_g_hash, _talloc_free_for_g_hash);
 
     ret = do_search_messages (ctx);
 

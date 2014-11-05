@@ -61,7 +61,7 @@ _notmuch_address()
 {
   _arguments -s : \
     '--sort=[sort results]:sorting:((newest-first\:"reverse chronological order" oldest-first\:"chronological order"))' \
-    '--output=[select what to output]:output:((sender recipients))'
+    '--output=[select what to output]:output:((sender recipients count))'
 }
 
 _notmuch()
