@@ -34,8 +34,18 @@ typedef enum {
 
 #define OUTPUT_ADDRESS_FLAGS (OUTPUT_SENDER | OUTPUT_RECIPIENTS)
 
+typedef enum {
+    NOTMUCH_FORMAT_JSON,
+    NOTMUCH_FORMAT_TEXT,
+    NOTMUCH_FORMAT_TEXT0,
+    NOTMUCH_FORMAT_SEXP
+} format_sel_t;
+
 typedef struct {
+    notmuch_database_t *notmuch;
+    format_sel_t format_sel;
     sprinter_t *format;
+    notmuch_exclude_t exclude;
     notmuch_query_t *query;
     notmuch_sort_t sort;
     output_t output;
@@ -413,14 +423,14 @@ do_search_messages (search_context_t *ctx)
 }
 
 static int
-do_search_tags (notmuch_database_t *notmuch,
-		const search_context_t *ctx)
+do_search_tags (const search_context_t *ctx)
 {
     notmuch_messages_t *messages = NULL;
     notmuch_tags_t *tags;
     const char *tag;
     sprinter_t *format = ctx->format;
     notmuch_query_t *query = ctx->query;
+    notmuch_database_t *notmuch = ctx->notmuch;
 
     /* should the following only special case if no excluded terms
      * specified? */
@@ -464,8 +474,9 @@ do_search_tags (notmuch_database_t *notmuch,
 int
 notmuch_search_command (notmuch_config_t *config, int argc, char *argv[])
 {
-    notmuch_database_t *notmuch;
     search_context_t ctx = {
+	.format_sel = NOTMUCH_FORMAT_TEXT,
+	.exclude = NOTMUCH_EXCLUDE_TRUE,
 	.sort = NOTMUCH_SORT_NEWEST_FIRST,
 	.output = 0,
 	.offset = 0,
@@ -474,22 +485,14 @@ notmuch_search_command (notmuch_config_t *config, int argc, char *argv[])
     };
     char *query_str;
     int opt_index, ret;
-    notmuch_exclude_t exclude = NOTMUCH_EXCLUDE_TRUE;
     unsigned int i;
-
-    enum {
-	NOTMUCH_FORMAT_JSON,
-	NOTMUCH_FORMAT_TEXT,
-	NOTMUCH_FORMAT_TEXT0,
-	NOTMUCH_FORMAT_SEXP
-    } format_sel = NOTMUCH_FORMAT_TEXT;
 
     notmuch_opt_desc_t options[] = {
 	{ NOTMUCH_OPT_KEYWORD, &ctx.sort, "sort", 's',
 	  (notmuch_keyword_t []){ { "oldest-first", NOTMUCH_SORT_OLDEST_FIRST },
 				  { "newest-first", NOTMUCH_SORT_NEWEST_FIRST },
 				  { 0, 0 } } },
-	{ NOTMUCH_OPT_KEYWORD, &format_sel, "format", 'f',
+	{ NOTMUCH_OPT_KEYWORD, &ctx.format_sel, "format", 'f',
 	  (notmuch_keyword_t []){ { "json", NOTMUCH_FORMAT_JSON },
 				  { "sexp", NOTMUCH_FORMAT_SEXP },
 				  { "text", NOTMUCH_FORMAT_TEXT },
@@ -505,7 +508,7 @@ notmuch_search_command (notmuch_config_t *config, int argc, char *argv[])
 				  { "files", OUTPUT_FILES },
 				  { "tags", OUTPUT_TAGS },
 				  { 0, 0 } } },
-        { NOTMUCH_OPT_KEYWORD, &exclude, "exclude", 'x',
+        { NOTMUCH_OPT_KEYWORD, &ctx.exclude, "exclude", 'x',
           (notmuch_keyword_t []){ { "true", NOTMUCH_EXCLUDE_TRUE },
                                   { "false", NOTMUCH_EXCLUDE_FALSE },
                                   { "flag", NOTMUCH_EXCLUDE_FLAG },
@@ -530,7 +533,7 @@ notmuch_search_command (notmuch_config_t *config, int argc, char *argv[])
         return EXIT_FAILURE;
     }
 
-    switch (format_sel) {
+    switch (ctx.format_sel) {
     case NOTMUCH_FORMAT_TEXT:
 	ctx.format = sprinter_text_create (config, stdout);
 	break;
@@ -555,10 +558,10 @@ notmuch_search_command (notmuch_config_t *config, int argc, char *argv[])
     notmuch_exit_if_unsupported_format ();
 
     if (notmuch_database_open (notmuch_config_get_database_path (config),
-			       NOTMUCH_DATABASE_MODE_READ_ONLY, &notmuch))
+			       NOTMUCH_DATABASE_MODE_READ_ONLY, &ctx.notmuch))
 	return EXIT_FAILURE;
 
-    query_str = query_string_from_args (notmuch, argc-opt_index, argv+opt_index);
+    query_str = query_string_from_args (ctx.notmuch, argc-opt_index, argv+opt_index);
     if (query_str == NULL) {
 	fprintf (stderr, "Out of memory.\n");
 	return EXIT_FAILURE;
@@ -568,7 +571,7 @@ notmuch_search_command (notmuch_config_t *config, int argc, char *argv[])
 	return EXIT_FAILURE;
     }
 
-    ctx.query = notmuch_query_create (notmuch, query_str);
+    ctx.query = notmuch_query_create (ctx.notmuch, query_str);
     if (ctx.query == NULL) {
 	fprintf (stderr, "Out of memory\n");
 	return EXIT_FAILURE;
@@ -576,15 +579,15 @@ notmuch_search_command (notmuch_config_t *config, int argc, char *argv[])
 
     notmuch_query_set_sort (ctx.query, ctx.sort);
 
-    if (exclude == NOTMUCH_EXCLUDE_FLAG && ctx.output != OUTPUT_SUMMARY) {
+    if (ctx.exclude == NOTMUCH_EXCLUDE_FLAG && ctx.output != OUTPUT_SUMMARY) {
 	/* If we are not doing summary output there is nowhere to
 	 * print the excluded flag so fall back on including the
 	 * excluded messages. */
 	fprintf (stderr, "Warning: this output format cannot flag excluded messages.\n");
-	exclude = NOTMUCH_EXCLUDE_FALSE;
+	ctx.exclude = NOTMUCH_EXCLUDE_FALSE;
     }
 
-    if (exclude != NOTMUCH_EXCLUDE_FALSE) {
+    if (ctx.exclude != NOTMUCH_EXCLUDE_FALSE) {
 	const char **search_exclude_tags;
 	size_t search_exclude_tags_length;
 
@@ -592,7 +595,7 @@ notmuch_search_command (notmuch_config_t *config, int argc, char *argv[])
 	    (config, &search_exclude_tags_length);
 	for (i = 0; i < search_exclude_tags_length; i++)
 	    notmuch_query_add_tag_exclude (ctx.query, search_exclude_tags[i]);
-	notmuch_query_set_omit_excluded (ctx.query, exclude);
+	notmuch_query_set_omit_excluded (ctx.query, ctx.exclude);
     }
 
     if (ctx.output == OUTPUT_SUMMARY ||
@@ -603,14 +606,14 @@ notmuch_search_command (notmuch_config_t *config, int argc, char *argv[])
 	     (ctx.output & OUTPUT_ADDRESS_FLAGS && !(ctx.output & ~OUTPUT_ADDRESS_FLAGS)))
 	ret = do_search_messages (&ctx);
     else if (ctx.output == OUTPUT_TAGS)
-	ret = do_search_tags (notmuch, &ctx);
+	ret = do_search_tags (&ctx);
     else {
 	fprintf (stderr, "Error: the combination of outputs is not supported.\n");
 	ret = 1;
     }
 
     notmuch_query_destroy (ctx.query);
-    notmuch_database_destroy (notmuch);
+    notmuch_database_destroy (ctx.notmuch);
 
     talloc_free (ctx.format);
 
