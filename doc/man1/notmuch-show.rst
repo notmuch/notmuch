@@ -73,7 +73,7 @@ Supported options for **show** include
             '>' character added. This reversible escaping is termed
             "mboxrd" format and described in detail here:
 
-	    http://homepage.ntlworld.com/jonathan.deboynepollard/FGA/mail-mbox-formats.html
+            http://homepage.ntlworld.com/jonathan.deboynepollard/FGA/mail-mbox-formats.html
 
         **raw** (default if --part is given)
             Write the raw bytes of the given MIME part of a message to

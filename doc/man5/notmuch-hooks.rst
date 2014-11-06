@@ -5,7 +5,7 @@ notmuch-hooks
 SYNOPSIS
 ========
 
-	$DATABASEDIR/.notmuch/hooks/*
+$DATABASEDIR/.notmuch/hooks/*
 
 DESCRIPTION
 ===========
