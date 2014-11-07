@@ -32,28 +32,28 @@ Supported options for **address** include
     ``--output=(sender|recipients|count)``
 
         Controls which information appears in the output. This option
-	can be given multiple times to combine different outputs.
-	Omitting this option is equivalent to
-	--output=sender --output=recipients.
+        can be given multiple times to combine different outputs.
+        When neither --output=sender nor --output=recipients is
+        given, --output=sender is implied.
 
-	**sender**
+        **sender**
             Output all addresses from the *From* header.
 
-	    Note: Searching for **sender** should be much faster than
-	    searching for **recipients**, because sender addresses are
-	    cached directly in the database whereas other addresses
-	    need to be fetched from message files.
+            Note: Searching for **sender** should be much faster than
+            searching for **recipients**, because sender addresses are
+            cached directly in the database whereas other addresses
+            need to be fetched from message files.
 
-	**recipients**
+        **recipients**
             Output all addresses from the *To*, *Cc* and *Bcc*
             headers.
 
-	**count**
-	    Print the count of how many times was the address
-	    encountered during search.
+        **count**
+            Print the count of how many times was the address
+            encountered during search.
 
-	    Note: With this option, addresses are printed only after
-	    the whole search is finished. This may take long time.
+            Note: With this option, addresses are printed only after
+            the whole search is finished. This may take long time.
 
     ``--sort=``\ (**newest-first**\ \|\ **oldest-first**)
         This option can be used to present results in either
@@ -63,7 +63,7 @@ Supported options for **address** include
         By default, results will be displayed in reverse chronological
         order, (that is, the newest results will be displayed first).
 
-	This option has no effect when used with --output=count.
+        This option is not supported with --output=count.
 
     ``--exclude=(true|false)``
         A message is called "excluded" if it matches at least one tag in
@@ -95,4 +95,4 @@ SEE ALSO
 **notmuch-dump(1)**, **notmuch-hooks(5)**, **notmuch-insert(1)**,
 **notmuch-new(1)**, **notmuch-reply(1)**, **notmuch-restore(1)**,
 **notmuch-search-terms(7)**, **notmuch-show(1)**, **notmuch-tag(1)**,
-***notmuch-search(1)**
+**notmuch-search(1)**

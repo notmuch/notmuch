@@ -735,8 +735,8 @@ notmuch_address_command (notmuch_config_t *config, int argc, char *argv[])
     if (opt_index < 0)
 	return EXIT_FAILURE;
 
-    if (! ctx->output)
-	ctx->output = OUTPUT_SENDER | OUTPUT_RECIPIENTS;
+    if (! (ctx->output & (OUTPUT_SENDER | OUTPUT_RECIPIENTS)))
+	ctx->output |= OUTPUT_SENDER;
 
     if (_notmuch_search_prepare (ctx, config,
 				 argc - opt_index, argv + opt_index))

@@ -27,6 +27,11 @@ Mikhail Gusarov <dottedmag@dottedmag.net>
 EOF
 test_expect_equal_file OUTPUT EXPECTED
 
+test_begin_subtest "without --output"
+notmuch address '*' >OUTPUT
+# Use EXPECTED from previous subtest
+test_expect_equal_file OUTPUT EXPECTED
+
 test_begin_subtest "--output=sender --format=json"
 notmuch address --output=sender --format=json '*' >OUTPUT
 cat <<EOF >EXPECTED
@@ -91,11 +96,6 @@ Mikhail Gusarov <dottedmag@dottedmag.net>
 EOF
 test_expect_equal_file OUTPUT EXPECTED
 
-test_begin_subtest "without --output"
-notmuch address '*' >OUTPUT
-# Use EXPECTED from previous subtest
-test_expect_equal_file OUTPUT EXPECTED
-
 test_begin_subtest "--output=sender --output=count"
 notmuch address --output=sender --output=count '*' | sort -n >OUTPUT
 cat <<EOF >EXPECTED
@@ -119,10 +119,10 @@ cat <<EOF >EXPECTED
 EOF
 test_expect_equal_file OUTPUT EXPECTED
 
-test_begin_subtest "--output=sender --output=count --format=json"
+test_begin_subtest "--output=count --format=json"
 # Since the iteration order of GHashTable is not specified, we
 # preprocess and sort the results to keep the order stable here.
-notmuch address --output=sender --output=count --format=json '*' | \
+notmuch address --output=count --format=json '*' | \
     sed -e 's/^\[//' -e 's/]$//' -e 's/,$//' | sort >OUTPUT
 cat <<EOF >EXPECTED
 {"name": "Adrian Perez de Castro", "address": "aperez@igalia.com", "name-addr": "Adrian Perez de Castro <aperez@igalia.com>", "count": 1}
