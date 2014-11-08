@@ -1,6 +1,17 @@
 Notmuch 0.19~rc1 (2014-11-06)
 =============================
 
+Command-Line Interface
+----------------------
+
+Stopped `notmuch dump` failing if someone writes to the database
+
+  The dump command now takes the write lock when running. This
+  prevents other processes from writing to the database during the
+  dump which would cause the dump to fail. Note, if another notmuch
+  process already has the write lock the dump will not start, so
+  script callers should still check the return value.
+
 Emacs Interface
 ---------------
 
