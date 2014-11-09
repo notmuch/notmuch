@@ -2,8 +2,9 @@ notmuch (0.19~rc2-1) experimental; urgency=medium
 
   * New upstream release candidate
   * Updated defaults for "notmuch address"
+  * Assert compliance with policy 3.9.6
 
- -- David Bremner <bremner@debian.org>  Sun, 09 Nov 2014 16:23:30 +0100
+ -- David Bremner <bremner@debian.org>  Sun, 09 Nov 2014 16:46:31 +0100
 
 notmuch (0.19~rc1-1) experimental; urgency=low
 

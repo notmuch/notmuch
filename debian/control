@@ -23,7 +23,7 @@ Build-Depends:
  gdb [!s390x !ia64 !armel],
  dtach (>= 0.8),
  bash-completion (>=1.9.0~)
-Standards-Version: 3.9.4
+Standards-Version: 3.9.6
 Homepage: http://notmuchmail.org/
 Vcs-Git: git://notmuchmail.org/git/notmuch
 Vcs-Browser: http://git.notmuchmail.org/git/notmuch
