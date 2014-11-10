@@ -56,6 +56,15 @@ Improved `q` binding in notmuch buffers
   buffer if there are multiple windows showing the buffer. If only a
   single window is showing the buffer, it is killed.
 
+`notmuch-show-stash-mlarchive-link-alist` now supports functions
+
+  Some list archives may use a more complicated scheme for referring
+  to messages than just concatenated URL and message ID. For example,
+  patchwork requires a query to translate message ID to a patchwork
+  patch ID. `notmuch-show-stash-mlarchive-link-alist` now supports
+  functions to better cover such cases. See the help documentation for
+  the variable for details.
+
 Library changes
 ---------------
 
