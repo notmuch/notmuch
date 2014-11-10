@@ -36,8 +36,38 @@ Improved `q` binding in notmuch buffers
 Library changes
 ---------------
 
+Introduced database version 3 with support for "database features."
+
+  Features are independent aspects of the database schema.
+  Representing these independently of the database version number will
+  let us evolve the database format faster and more incrementally,
+  while maintaining better forwards and backwards compatibility.
+
+Library users are no longer required to call `notmuch_database_upgrade`
+
+  Previously, library users were required to call
+  `notmuch_database_needs_upgrade` and `notmuch_database_upgrade`
+  before using a writable database.  Even the CLI didn't get this
+  right, and it is no longer required.  Now, individual APIs may
+  return `NOTMUCH_STATUS_UPGRADE_REQUIRED` if the database format is
+  too out of date for that API.
+
+Library users can now abort an atomic section by closing the database
+
+  Previously there was no supported way to abort an atomic section.
+  Callers can now simply close the database, and any outstanding
+  atomic section will be aborted.
+
 Add return status to notmuch_database_close and
 notmuch_database_destroy
+
+Bug fixes and performance improvements for thread linking
+
+  The database now represents missing-but-referenced messages ("ghost
+  messages") similarly to how it represents regular messages.  This
+  enables an improved thread linking algorithm that performs better
+  and fixes a bug that sometimes prevented notmuch from linking
+  messages into the same thread.
 
 nmbug
 -----
