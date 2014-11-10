@@ -12,6 +12,29 @@ Stopped `notmuch dump` failing if someone writes to the database
   process already has the write lock the dump will not start, so
   script callers should still check the return value.
 
+`notmuch insert` requires succesful message indexing for success status
+
+  Previously the `notmuch insert` subcommand indicated success even if
+  the message indexing failed, as long as the message was delivered to
+  file system. This could have lead to delivered messages missing
+  tags, etc. `notmuch insert` is now more strict, also requiring
+  succesful indexing for success status. Use the new `--keep` option
+  to revert to the old behaviour (keeping the delivered message file
+  and returning success even if indexing fails).
+
+`notmuch insert` has gained support for `post-insert` hook
+
+  The new `post-insert` hook is run after message delivery, similar to
+  `post-new`. There's also a new option `notmuch insert --no-hooks` to
+  skip the hook. See the notmuch-hooks(1) man page for details.
+
+`notmuch search` now supports `--duplicate=N` option with `--output=messages`
+
+  Complementing the `notmuch search --duplicate=N --output=files`
+  options, the new `--duplicate=N --output=messages` combination
+  limits output of message IDs to messages matching search terms that
+  have at least `N` files associated with them.
+
 Emacs Interface
 ---------------
 
