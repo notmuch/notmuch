@@ -196,7 +196,7 @@ _notmuch_insert()
     ! $split &&
     case "${cur}" in
 	--*)
-	    local options="--create-folder --folder="
+	    local options="--create-folder --folder= --keep --no-hooks"
 	    compopt -o nospace
 	    COMPREPLY=( $(compgen -W "$options" -- ${cur}) )
 	    return
