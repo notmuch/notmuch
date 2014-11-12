@@ -35,6 +35,14 @@ Stopped `notmuch dump` failing if someone writes to the database
   limits output of message IDs to messages matching search terms that
   have at least `N` files associated with them.
 
+Added `notmuch address` subcommand
+
+  This new subcommand searches for messages matching the given search
+  terms, and prints the addresses from them. Duplicate addresses are
+  filtered out. The `--output` option controls which of the following
+  information is printed: sender addresses, recipient addresses and
+  count of duplicate addresses.
+
 Emacs Interface
 ---------------
 
