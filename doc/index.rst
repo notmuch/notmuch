@@ -8,6 +8,7 @@ Contents:
    :titlesonly:
 
    man1/notmuch
+   man1/notmuch-address
    man1/notmuch-compact
    man1/notmuch-config
    man1/notmuch-count
