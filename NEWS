@@ -53,6 +53,16 @@ Use the `j` key to access saved searches from anywhere in notmuch
   with the default saved searches `j i` from anywhere in notmuch will
   bring up the inbox.
 
+Improved handling of the unread tag
+
+  Notmuch now marks an open message read (i.e., removes the unread
+  tag) if point enters the message at any time in a show buffer
+  regardless of how point got there (mouse click, cursor command, page
+  up/down, notmuch commands such as n,N etc). This fixes various
+  anomalies or bugs in the previous handling. Additionally it is
+  possible to customize the mark read handling by setting
+  `notmuch-show-mark-read-function` to a custom function.
+
 Expanded default saved search settings
 
   The default saved searches now include several more common searches,
