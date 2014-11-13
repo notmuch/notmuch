@@ -1,6 +1,17 @@
 Notmuch 0.19~rc2 (2014-11-09)
 =============================
 
+Overview
+--------
+
+This release improves the reliability of `notmuch dump` and the error
+handling for `notmuch insert`. The new `notmuch address` command is
+intended to make searching for email addresses more convenient. At the
+library level the revised handling of missing messages fixes at least
+one bug in threading. The release also includes several interface
+improvements to the emacs interface, most notably the ability to bind
+keyboard shortcuts to saved searches.
+
 Command-Line Interface
 ----------------------
 
