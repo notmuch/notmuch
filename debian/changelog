@@ -1,3 +1,17 @@
+notmuch (0.19-1) experimental; urgency=medium
+
+  * New upstream release.
+    - Improvements to reliability of 'notmuch dump' and the error
+    handling for 'notmuch insert'.
+    - The new 'notmuch address' command is intended to make searching
+    for email addresses more convenient.
+    - At the library level the revised handling of missing messages
+    fixes at least one bug in threading.
+    - Interface improvements to the emacs interface, most notably the
+    ability to bindkeyboard shortcuts to saved searches.
+
+ -- David Bremner <bremner@debian.org>  Fri, 14 Nov 2014 19:34:12 +0100
+
 notmuch (0.19~rc2-1) experimental; urgency=medium
 
   * New upstream release candidate

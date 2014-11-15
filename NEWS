@@ -1,5 +1,16 @@
-Notmuch 0.19~rc2 (2014-11-09)
-=============================
+Notmuch 0.19 (2014-11-14)
+=========================
+
+Overview
+--------
+
+This release improves the reliability of `notmuch dump` and the error
+handling for `notmuch insert`. The new `notmuch address` command is
+intended to make searching for email addresses more convenient. At the
+library level the revised handling of missing messages fixes at least
+one bug in threading. The release also includes several interface
+improvements to the emacs interface, most notably the ability to bind
+keyboard shortcuts to saved searches.
 
 Command-Line Interface
 ----------------------
@@ -27,6 +38,13 @@ Stopped `notmuch dump` failing if someone writes to the database
   The new `post-insert` hook is run after message delivery, similar to
   `post-new`. There's also a new option `notmuch insert --no-hooks` to
   skip the hook. See the notmuch-hooks(1) man page for details.
+
+`notmuch deliver` is deprecated
+
+  With this release we believe that `notmuch insert` has reached
+  parity with `notmuch deliver`. We recommend that all users of
+  `notmuch deliver` switch to `notmuch insert` as the former is
+  currently unmaintained.
 
 `notmuch search` now supports `--duplicate=N` option with `--output=messages`
 
