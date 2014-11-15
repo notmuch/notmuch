@@ -126,8 +126,8 @@ Library users can now abort an atomic section by closing the database
   Callers can now simply close the database, and any outstanding
   atomic section will be aborted.
 
-Add return status to notmuch_database_close and
-notmuch_database_destroy
+Add return status to `notmuch_database_close` and
+`notmuch_database_destroy`
 
 Bug fixes and performance improvements for thread linking
 
@@ -208,7 +208,7 @@ Make emacs install robust against the non-existence of emacs
 
 Put notmuch lib directory first in RPATH
 
-Fix handling of html_static_path in sphinx
+Fix handling of `html_static_path` in sphinx
 
   Both the python bindings and the main docs had spurious settings of
   this variable.
@@ -283,7 +283,7 @@ The `folder:` search prefix now requires an exact match
   advised to see the `notmuch-search-terms` manual page for details,
   and review how the change affects their existing `folder:` searches.
 
-There is a new `path:` search prefix.
+There is a new `path:` search prefix
 
   The new `path:` search prefix complements the `folder:` prefix. The
   `path:` prefix searches for email messages that are in particular
