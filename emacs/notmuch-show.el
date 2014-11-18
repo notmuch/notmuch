@@ -241,9 +241,9 @@ every user interaction with notmuch."
        (let ((buf (generate-new-buffer (concat "*notmuch-msg-" id "*"))))
          (with-current-buffer buf
 	   (let ((coding-system-for-read 'no-conversion))
-	     (call-process notmuch-command nil t nil "show" "--format=raw" id)
-	     ,@body)
-	   (kill-buffer buf))))))
+	     (call-process notmuch-command nil t nil "show" "--format=raw" id))
+	   ,@body)
+	 (kill-buffer buf)))))
 
 (defun notmuch-show-turn-on-visual-line-mode ()
   "Enable Visual Line mode."
