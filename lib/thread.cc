@@ -277,7 +277,8 @@ _thread_add_message (notmuch_thread_t *thread,
 	address = internet_address_list_get_address (list, 0);
 	if (address) {
 	    author = internet_address_get_name (address);
-	    if (author == NULL) {
+	    /* We treat quoted empty names as if they were empty. */
+	    if (author == NULL || author[0] == '\0') {
 		InternetAddressMailbox *mailbox;
 		mailbox = INTERNET_ADDRESS_MAILBOX (address);
 		author = internet_address_mailbox_get_addr (mailbox);

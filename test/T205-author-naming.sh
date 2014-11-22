@@ -3,7 +3,6 @@ test_description="naming of authors with unusual addresses"
 . ./test-lib.sh
 
 test_begin_subtest "Add author with empty quoted real name"
-test_subtest_known_broken
 add_message '[subject]="author-naming: Initial thread subject"' \
 	    '[date]="Fri, 05 Jan 2001 15:43:56 -0000"' \
 	    '[from]="\"\" <address@example.com>"'
