@@ -170,25 +170,12 @@ _notmuch_message_file_parse (notmuch_message_file_t *message)
 	goto DONE;
     }
 
-    if (is_mbox) {
-	if (! g_mime_parser_eos (parser)) {
-	    /* This is a multi-message mbox. */
-	    status = NOTMUCH_STATUS_FILE_NOT_EMAIL;
-	    goto DONE;
-	}
+    if (is_mbox && ! g_mime_parser_eos (parser)) {
 	/*
-	 * For historical reasons, we support single-message mboxes,
-	 * but this behavior is likely to change in the future, so
-	 * warn.
+	 * This is a multi-message mbox. (For historical reasons, we
+	 * do support single-message mboxes.)
 	 */
-	static notmuch_bool_t mbox_warning = FALSE;
-	if (! mbox_warning) {
-	    mbox_warning = TRUE;
-	    fprintf (stderr, "\
-Warning: %s is an mbox containing a single message,\n\
-likely caused by misconfigured mail delivery.  Support for single-message\n\
-mboxes is deprecated and may be removed in the future.\n", message->filename);
-	}
+	status = NOTMUCH_STATUS_FILE_NOT_EMAIL;
     }
 
   DONE:

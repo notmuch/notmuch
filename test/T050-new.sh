@@ -173,11 +173,7 @@ Subject: Test mbox message 1
 Body.
 EOF
 output=$(NOTMUCH_NEW 2>&1)
-test_expect_equal "$output" \
-"Warning: ${MAIL_DIR}/mbox_file1 is an mbox containing a single message,
-likely caused by misconfigured mail delivery.  Support for single-message
-mboxes is deprecated and may be removed in the future.
-Added 1 new message to the database."
+test_expect_equal "$output" "Added 1 new message to the database."
 
 # This test requires that notmuch new has been run at least once.
 test_begin_subtest "Skip and report non-mail files"
