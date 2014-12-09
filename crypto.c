@@ -24,12 +24,12 @@
 
 /* Create a GPG context (GMime 2.6) */
 static notmuch_crypto_context_t *
-create_gpg_context (void)
+create_gpg_context (const char *gpgpath)
 {
     notmuch_crypto_context_t *gpgctx;
 
     /* TODO: GMimePasswordRequestFunc */
-    gpgctx = g_mime_gpg_context_new (NULL, "gpg");
+    gpgctx = g_mime_gpg_context_new (NULL, gpgpath ? gpgpath : "gpg");
     if (! gpgctx)
 	return NULL;
 
@@ -43,13 +43,13 @@ create_gpg_context (void)
 
 /* Create a GPG context (GMime 2.4) */
 static notmuch_crypto_context_t *
-create_gpg_context (void)
+create_gpg_context (const char* gpgpath)
 {
     GMimeSession *session;
     notmuch_crypto_context_t *gpgctx;
 
     session = g_object_new (g_mime_session_get_type (), NULL);
-    gpgctx = g_mime_gpg_context_new (session, "gpg");
+    gpgctx = g_mime_gpg_context_new (session, gpgpath ? gpgpath : "gpg");
     g_object_unref (session);
 
     if (! gpgctx)
@@ -83,7 +83,7 @@ notmuch_crypto_get_context (notmuch_crypto_t *crypto, const char *protocol)
     if (strcasecmp (protocol, "application/pgp-signature") == 0 ||
 	strcasecmp (protocol, "application/pgp-encrypted") == 0) {
 	if (! crypto->gpgctx) {
-	    crypto->gpgctx = create_gpg_context ();
+	    crypto->gpgctx = create_gpg_context (crypto->gpgpath);
 	    if (! crypto->gpgctx)
 		fprintf (stderr, "Failed to construct gpg context.\n");
 	}

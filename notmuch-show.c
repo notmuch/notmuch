@@ -1082,7 +1082,8 @@ notmuch_show_command (notmuch_config_t *config, int argc, char *argv[])
 	.output_body = TRUE,
 	.crypto = {
 	    .verify = FALSE,
-	    .decrypt = FALSE
+	    .decrypt = FALSE,
+	    .gpgpath = NULL
 	},
 	.include_html = FALSE
     };

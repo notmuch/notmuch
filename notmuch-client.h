@@ -80,6 +80,7 @@ typedef struct notmuch_crypto {
     notmuch_crypto_context_t* gpgctx;
     notmuch_bool_t verify;
     notmuch_bool_t decrypt;
+    const char *gpgpath;
 } notmuch_crypto_t;
 
 typedef struct notmuch_show_params {

@@ -769,7 +769,8 @@ notmuch_reply_command (notmuch_config_t *config, int argc, char *argv[])
 	.part = -1,
 	.crypto = {
 	    .verify = FALSE,
-	    .decrypt = FALSE
+	    .decrypt = FALSE,
+	    .gpgpath = NULL
 	}
     };
     int format = FORMAT_DEFAULT;
