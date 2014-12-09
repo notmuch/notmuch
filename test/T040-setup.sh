@@ -28,6 +28,7 @@ user.other_email=another.suite@example.com;
 new.tags=foo;bar;
 new.ignore=
 search.exclude_tags=baz;
-maildir.synchronize_flags=true"
+maildir.synchronize_flags=true
+crypto.gpg_path=gpg"
 
 test_done

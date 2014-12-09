@@ -822,6 +822,8 @@ notmuch_reply_command (notmuch_config_t *config, int argc, char *argv[])
 	return EXIT_FAILURE;
     }
 
+    params.crypto.gpgpath = notmuch_config_get_crypto_gpg_path (config);
+
     if (notmuch_database_open (notmuch_config_get_database_path (config),
 			       NOTMUCH_DATABASE_MODE_READ_ONLY, &notmuch))
 	return EXIT_FAILURE;

@@ -279,6 +279,13 @@ notmuch_config_set_database_path (notmuch_config_t *config,
 				  const char *database_path);
 
 const char *
+notmuch_config_get_crypto_gpg_path (notmuch_config_t *config);
+
+void
+notmuch_config_set_crypto_gpg_path (notmuch_config_t *config,
+				  const char *gpg_path);
+
+const char *
 notmuch_config_get_user_name (notmuch_config_t *config);
 
 void

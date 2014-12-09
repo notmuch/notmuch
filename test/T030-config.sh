@@ -54,6 +54,7 @@ new.tags=unread;inbox;
 new.ignore=
 search.exclude_tags=
 maildir.synchronize_flags=true
+crypto.gpg_path=gpg
 foo.string=this is another string value
 foo.list=this;is another;list value;"
 

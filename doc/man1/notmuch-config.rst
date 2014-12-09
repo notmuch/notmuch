@@ -125,6 +125,14 @@ The available configuration items are described below.
 
         Default: ``true``.
 
+    **crypto.gpg_path**
+
+        Name (or full path) of gpg binary to use in verification and
+        decryption of PGP/MIME messages.
+    
+        Default: ``gpg``.
+
+
 ENVIRONMENT
 ===========
 

@@ -101,12 +101,21 @@ static const char search_config_comment[] =
     "\t\tsearch results by default.  Using an excluded tag in a\n"
     "\t\tquery will override that exclusion.\n";
 
+static const char crypto_config_comment[] =
+    " Cryptography related configuration\n"
+    "\n"
+    " The following option is supported here:\n"
+    "\n"
+    "\tgpg_path\n"
+    "\t\tbinary name or full path to invoke gpg.\n";
+
 struct _notmuch_config {
     char *filename;
     GKeyFile *key_file;
     notmuch_bool_t is_new;
 
     char *database_path;
+    char *crypto_gpg_path;
     char *user_name;
     char *user_primary_email;
     const char **user_other_email;
@@ -244,6 +253,7 @@ notmuch_config_open (void *ctx,
     int file_had_user_group;
     int file_had_maildir_group;
     int file_had_search_group;
+    int file_had_crypto_group;
 
     notmuch_config_t *config = talloc (ctx, notmuch_config_t);
     if (config == NULL) {
@@ -277,6 +287,7 @@ notmuch_config_open (void *ctx,
     config->maildir_synchronize_flags = TRUE;
     config->search_exclude_tags = NULL;
     config->search_exclude_tags_length = 0;
+    config->crypto_gpg_path = NULL;
 
     if (! g_key_file_load_from_file (config->key_file,
 				     config->filename,
@@ -326,7 +337,7 @@ notmuch_config_open (void *ctx,
     file_had_user_group = g_key_file_has_group (config->key_file, "user");
     file_had_maildir_group = g_key_file_has_group (config->key_file, "maildir");
     file_had_search_group = g_key_file_has_group (config->key_file, "search");
-
+    file_had_crypto_group = g_key_file_has_group (config->key_file, "crypto");
 
     if (notmuch_config_get_database_path (config) == NULL) {
 	char *path = getenv ("MAILDIR");
@@ -406,6 +417,10 @@ notmuch_config_open (void *ctx,
 	g_error_free (error);
     }
 
+    if (notmuch_config_get_crypto_gpg_path (config) == NULL) {
+	notmuch_config_set_crypto_gpg_path (config, "gpg");
+    }
+    
     /* Whenever we know of configuration sections that don't appear in
      * the configuration file, we add some comments to help the user
      * understand what can be done. */
@@ -432,6 +447,10 @@ notmuch_config_open (void *ctx,
     if (! file_had_search_group)
 	g_key_file_set_comment (config->key_file, "search", NULL,
 				search_config_comment, NULL);
+
+    if (! file_had_crypto_group)
+	g_key_file_set_comment (config->key_file, "crypto", NULL,
+				crypto_config_comment, NULL);
 
     return config;
 }
@@ -689,6 +708,20 @@ notmuch_config_set_search_exclude_tags (notmuch_config_t *config,
     _config_set_list (config, "search", "exclude_tags", list, length,
 		      &(config->search_exclude_tags));
 }
+
+const char *
+notmuch_config_get_crypto_gpg_path (notmuch_config_t *config)
+{
+    return _config_get (config, &config->crypto_gpg_path, "crypto", "gpg_path");
+}
+
+void
+notmuch_config_set_crypto_gpg_path (notmuch_config_t *config,
+			      const char *gpg_path)
+{
+    _config_set (config, &config->crypto_gpg_path, "crypto", "gpg_path", gpg_path);
+}
+
 
 /* Given a configuration item of the form <group>.<key> return the
  * component group and key. If any error occurs, print a message on
