@@ -154,6 +154,10 @@ struct _notmuch_database {
     unsigned int last_doc_id;
     uint64_t last_thread_id;
 
+    /* error reporting; this value persists only until the
+     * next library call. May be NULL */
+    char *status_string;
+
     Xapian::QueryParser *query_parser;
     Xapian::TermGenerator *term_gen;
     Xapian::ValueRangeProcessor *value_range_processor;

@@ -348,6 +348,23 @@ notmuch_status_to_string (notmuch_status_t status)
     }
 }
 
+void
+_notmuch_database_log (notmuch_database_t *notmuch,
+		      const char *format,
+		      ...)
+{
+    va_list va_args;
+
+    va_start (va_args, format);
+
+    if (notmuch->status_string)
+	talloc_free (notmuch->status_string);
+
+    notmuch->status_string = talloc_vasprintf (notmuch, format, va_args);
+
+    va_end (va_args);
+}
+
 static void
 find_doc_ids_for_term (notmuch_database_t *notmuch,
 		       const char *term,
@@ -863,6 +880,7 @@ notmuch_database_open_verbose (const char *path,
 
     notmuch = talloc_zero (NULL, notmuch_database_t);
     notmuch->exception_reported = FALSE;
+    notmuch->status_string = NULL;
     notmuch->path = talloc_strdup (notmuch, path);
 
     if (notmuch->path[strlen (notmuch->path) - 1] == '/')
@@ -2551,4 +2569,10 @@ notmuch_database_get_all_tags (notmuch_database_t *db)
 	db->exception_reported = TRUE;
 	return NULL;
     }
+}
+
+const char *
+notmuch_database_status_string (notmuch_database_t *notmuch)
+{
+    return notmuch->status_string;
 }

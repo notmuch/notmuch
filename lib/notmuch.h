@@ -302,6 +302,13 @@ notmuch_database_open_verbose (const char *path,
 			       char **error_message);
 
 /**
+ * Retrieve last status string for given database.
+ *
+ */
+const char *
+notmuch_database_status_string (notmuch_database_t *notmuch);
+
+/**
  * Commit changes and close the given notmuch database.
  *
  * After notmuch_database_close has been called, calls to other
