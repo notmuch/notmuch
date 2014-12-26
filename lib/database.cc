@@ -473,7 +473,7 @@ notmuch_database_find_message (notmuch_database_t *notmuch,
 
 	return NOTMUCH_STATUS_SUCCESS;
     } catch (const Xapian::Error &error) {
-	fprintf (stderr, "A Xapian exception occurred finding message: %s.\n",
+	_notmuch_database_log (notmuch, "A Xapian exception occurred finding message: %s.\n",
 		 error.get_msg().c_str());
 	notmuch->exception_reported = TRUE;
 	*message_ret = NULL;
@@ -722,7 +722,7 @@ notmuch_status_t
 _notmuch_database_ensure_writable (notmuch_database_t *notmuch)
 {
     if (notmuch->mode == NOTMUCH_DATABASE_MODE_READ_ONLY) {
-	fprintf (stderr, "Cannot write to a read-only database.\n");
+	_notmuch_database_log (notmuch, "Cannot write to a read-only database.\n");
 	return NOTMUCH_STATUS_READ_ONLY_DATABASE;
     }
 
@@ -1022,7 +1022,7 @@ notmuch_database_close (notmuch_database_t *notmuch)
 	} catch (const Xapian::Error &error) {
 	    status = NOTMUCH_STATUS_XAPIAN_EXCEPTION;
 	    if (! notmuch->exception_reported) {
-		fprintf (stderr, "Error: A Xapian exception occurred closing database: %s\n",
+		_notmuch_database_log (notmuch, "Error: A Xapian exception occurred closing database: %s\n",
 			 error.get_msg().c_str());
 	    }
 	}
@@ -1154,12 +1154,12 @@ notmuch_database_compact (const char *path,
     }
 
     if (stat (backup_path, &statbuf) != -1) {
-	fprintf (stderr, "Path already exists: %s\n", backup_path);
+	_notmuch_database_log (notmuch, "Path already exists: %s\n", backup_path);
 	ret = NOTMUCH_STATUS_FILE_ERROR;
 	goto DONE;
     }
     if (errno != ENOENT) {
-	fprintf (stderr, "Unknown error while stat()ing path: %s\n",
+	_notmuch_database_log (notmuch, "Unknown error while stat()ing path: %s\n",
 		 strerror (errno));
 	ret = NOTMUCH_STATUS_FILE_ERROR;
 	goto DONE;
@@ -1179,20 +1179,20 @@ notmuch_database_compact (const char *path,
 	compactor.set_destdir (compact_xapian_path);
 	compactor.compact ();
     } catch (const Xapian::Error &error) {
-	fprintf (stderr, "Error while compacting: %s\n", error.get_msg().c_str());
+	_notmuch_database_log (notmuch, "Error while compacting: %s\n", error.get_msg().c_str());
 	ret = NOTMUCH_STATUS_XAPIAN_EXCEPTION;
 	goto DONE;
     }
 
     if (rename (xapian_path, backup_path)) {
-	fprintf (stderr, "Error moving %s to %s: %s\n",
+	_notmuch_database_log (notmuch, "Error moving %s to %s: %s\n",
 		 xapian_path, backup_path, strerror (errno));
 	ret = NOTMUCH_STATUS_FILE_ERROR;
 	goto DONE;
     }
 
     if (rename (compact_xapian_path, xapian_path)) {
-	fprintf (stderr, "Error moving %s to %s: %s\n",
+	_notmuch_database_log (notmuch, "Error moving %s to %s: %s\n",
 		 compact_xapian_path, xapian_path, strerror (errno));
 	ret = NOTMUCH_STATUS_FILE_ERROR;
 	goto DONE;
@@ -1200,7 +1200,7 @@ notmuch_database_compact (const char *path,
 
     if (! keep_backup) {
 	if (rmtree (backup_path)) {
-	    fprintf (stderr, "Error removing old database %s: %s\n",
+	    _notmuch_database_log (notmuch, "Error removing old database %s: %s\n",
 		     backup_path, strerror (errno));
 	    ret = NOTMUCH_STATUS_FILE_ERROR;
 	    goto DONE;
@@ -1210,6 +1210,10 @@ notmuch_database_compact (const char *path,
   DONE:
     if (notmuch) {
 	notmuch_status_t ret2;
+
+	const char *str = notmuch_database_status_string (notmuch);
+	if (status_cb && str)
+	    status_cb (str, closure);
 
 	ret2 = notmuch_database_destroy (notmuch);
 
@@ -1229,7 +1233,7 @@ notmuch_database_compact (unused (const char *path),
 			  unused (notmuch_compact_status_cb_t status_cb),
 			  unused (void *closure))
 {
-    fprintf (stderr, "notmuch was compiled against a xapian version lacking compaction support.\n");
+    _notmuch_database_log (notmuch, "notmuch was compiled against a xapian version lacking compaction support.\n");
     return NOTMUCH_STATUS_UNSUPPORTED_OPERATION;
 }
 #endif
@@ -1507,7 +1511,7 @@ notmuch_database_upgrade (notmuch_database_t *notmuch,
 	    }
 
 	    if (private_status) {
-		fprintf (stderr,
+		_notmuch_database_log (notmuch,
 			 "Upgrade failed while creating ghost messages.\n");
 		status = COERCE_STATUS (private_status, "Unexpected status from _notmuch_message_initialize_ghost");
 		goto DONE;
@@ -1557,7 +1561,7 @@ notmuch_database_begin_atomic (notmuch_database_t *notmuch)
     try {
 	(static_cast <Xapian::WritableDatabase *> (notmuch->xapian_db))->begin_transaction (false);
     } catch (const Xapian::Error &error) {
-	fprintf (stderr, "A Xapian exception occurred beginning transaction: %s.\n",
+	_notmuch_database_log (notmuch, "A Xapian exception occurred beginning transaction: %s.\n",
 		 error.get_msg().c_str());
 	notmuch->exception_reported = TRUE;
 	return NOTMUCH_STATUS_XAPIAN_EXCEPTION;
@@ -1591,7 +1595,7 @@ notmuch_database_end_atomic (notmuch_database_t *notmuch)
 	if (thresh && atoi (thresh) == 1)
 	    db->flush ();
     } catch (const Xapian::Error &error) {
-	fprintf (stderr, "A Xapian exception occurred committing transaction: %s.\n",
+	_notmuch_database_log (notmuch, "A Xapian exception occurred committing transaction: %s.\n",
 		 error.get_msg().c_str());
 	notmuch->exception_reported = TRUE;
 	return NOTMUCH_STATUS_XAPIAN_EXCEPTION;
@@ -1837,7 +1841,7 @@ notmuch_database_get_directory (notmuch_database_t *notmuch,
 	*directory = _notmuch_directory_create (notmuch, path,
 						NOTMUCH_FIND_LOOKUP, &status);
     } catch (const Xapian::Error &error) {
-	fprintf (stderr, "A Xapian exception occurred getting directory: %s.\n",
+	_notmuch_database_log (notmuch, "A Xapian exception occurred getting directory: %s.\n",
 		 error.get_msg().c_str());
 	notmuch->exception_reported = TRUE;
 	status = NOTMUCH_STATUS_XAPIAN_EXCEPTION;
@@ -2419,7 +2423,7 @@ notmuch_database_add_message (notmuch_database_t *notmuch,
 
 	_notmuch_message_sync (message);
     } catch (const Xapian::Error &error) {
-	fprintf (stderr, "A Xapian exception occurred adding message: %s.\n",
+	_notmuch_database_log (notmuch, "A Xapian exception occurred adding message: %s.\n",
 		 error.get_msg().c_str());
 	notmuch->exception_reported = TRUE;
 	ret = NOTMUCH_STATUS_XAPIAN_EXCEPTION;
@@ -2511,7 +2515,7 @@ notmuch_database_find_message_by_filename (notmuch_database_t *notmuch,
 		status = NOTMUCH_STATUS_OUT_OF_MEMORY;
 	}
     } catch (const Xapian::Error &error) {
-	fprintf (stderr, "Error: A Xapian exception occurred finding message by filename: %s\n",
+	_notmuch_database_log (notmuch, "Error: A Xapian exception occurred finding message by filename: %s\n",
 		 error.get_msg().c_str());
 	notmuch->exception_reported = TRUE;
 	status = NOTMUCH_STATUS_XAPIAN_EXCEPTION;
@@ -2564,7 +2568,7 @@ notmuch_database_get_all_tags (notmuch_database_t *db)
 	_notmuch_string_list_sort (tags);
 	return _notmuch_tags_create (db, tags);
     } catch (const Xapian::Error &error) {
-	fprintf (stderr, "A Xapian exception occurred getting tags: %s.\n",
+	_notmuch_database_log (db, "A Xapian exception occurred getting tags: %s.\n",
 		 error.get_msg().c_str());
 	db->exception_reported = TRUE;
 	return NULL;

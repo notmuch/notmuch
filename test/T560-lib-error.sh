@@ -101,6 +101,9 @@ int main (int argc, char** argv)
      fprintf (stderr, "error opening database: %d\n", stat);
    }
    stat = notmuch_database_add_message (db, "/dev/null", NULL);
+   if (stat)
+       fputs (notmuch_database_status_string (db), stderr);
+
 }
 EOF
 cat <<'EOF' >EXPECTED
@@ -128,8 +131,9 @@ int main (int argc, char** argv)
 EOF
 cat <<'EOF' >EXPECTED
 == stdout ==
-== stderr ==
 Path already exists: CWD/mail
+
+== stderr ==
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 

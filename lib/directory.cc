@@ -186,7 +186,7 @@ _notmuch_directory_create (notmuch_database_t *notmuch,
 	directory->mtime = Xapian::sortable_unserialise (
 	    directory->doc.get_value (NOTMUCH_VALUE_TIMESTAMP));
     } catch (const Xapian::Error &error) {
-	fprintf (stderr,
+	_notmuch_database_log (notmuch,
 		 "A Xapian exception occurred creating a directory: %s.\n",
 		 error.get_msg().c_str());
 	notmuch->exception_reported = TRUE;
@@ -228,7 +228,7 @@ notmuch_directory_set_mtime (notmuch_directory_t *directory,
 
 	db->replace_document (directory->document_id, directory->doc);
     } catch (const Xapian::Error &error) {
-	fprintf (stderr,
+	_notmuch_database_log (notmuch,
 		 "A Xapian exception occurred setting directory mtime: %s.\n",
 		 error.get_msg().c_str());
 	notmuch->exception_reported = TRUE;

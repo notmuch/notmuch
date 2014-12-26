@@ -252,7 +252,7 @@ _notmuch_message_create_for_message_id (notmuch_database_t *notmuch,
 
 	doc_id = _notmuch_database_generate_doc_id (notmuch);
     } catch (const Xapian::Error &error) {
-	fprintf (stderr, "A Xapian exception occurred creating message: %s\n",
+	_notmuch_database_log(_notmuch_message_database (message), "A Xapian exception occurred creating message: %s\n",
 		 error.get_msg().c_str());
 	notmuch->exception_reported = TRUE;
 	*status_ret = NOTMUCH_PRIVATE_STATUS_XAPIAN_EXCEPTION;
@@ -467,7 +467,7 @@ notmuch_message_get_header (notmuch_message_t *message, const char *header)
 		return talloc_strdup (message, value.c_str ());
 
 	} catch (Xapian::Error &error) {
-	    fprintf (stderr, "A Xapian exception occurred when reading header: %s\n",
+	    _notmuch_database_log(_notmuch_message_database (message), "A Xapian exception occurred when reading header: %s\n",
 		     error.get_msg().c_str());
 	    message->notmuch->exception_reported = TRUE;
 	    return NULL;
@@ -921,7 +921,7 @@ notmuch_message_get_date (notmuch_message_t *message)
     try {
 	value = message->doc.get_value (NOTMUCH_VALUE_TIMESTAMP);
     } catch (Xapian::Error &error) {
-	fprintf (stderr, "A Xapian exception occurred when reading date: %s\n",
+	_notmuch_database_log(_notmuch_message_database (message), "A Xapian exception occurred when reading date: %s\n",
 		 error.get_msg().c_str());
 	message->notmuch->exception_reported = TRUE;
 	return 0;

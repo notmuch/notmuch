@@ -296,9 +296,12 @@ notmuch_query_search_messages_st (notmuch_query_t *query,
 	return NOTMUCH_STATUS_SUCCESS;
 
     } catch (const Xapian::Error &error) {
-	fprintf (stderr, "A Xapian exception occurred performing query: %s\n",
-		 error.get_msg().c_str());
-	fprintf (stderr, "Query string was: %s\n", query->query_string);
+	_notmuch_database_log (notmuch,
+			       "A Xapian exception occurred performing query: %s\n"
+			       "Query string was: %s\n",
+			       error.get_msg().c_str(),
+			       query->query_string);
+
 	notmuch->exception_reported = TRUE;
 	talloc_free (messages);
 	return NOTMUCH_STATUS_XAPIAN_EXCEPTION;
@@ -597,9 +600,12 @@ notmuch_query_count_messages (notmuch_query_t *query)
 	count = mset.get_matches_estimated();
 
     } catch (const Xapian::Error &error) {
-	fprintf (stderr, "A Xapian exception occurred: %s\n",
-		 error.get_msg().c_str());
-	fprintf (stderr, "Query string was: %s\n", query->query_string);
+	_notmuch_database_log (notmuch,
+			       "A Xapian exception occurred performing query: %s\n"
+			       "Query string was: %s\n",
+			       error.get_msg().c_str(),
+			       query->query_string);
+
     }
 
     return count;
