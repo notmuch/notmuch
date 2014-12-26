@@ -1626,3 +1626,9 @@ notmuch_message_destroy (notmuch_message_t *message)
 {
     talloc_free (message);
 }
+
+notmuch_database_t *
+_notmuch_message_database (notmuch_message_t *message)
+{
+    return message->notmuch;
+}
