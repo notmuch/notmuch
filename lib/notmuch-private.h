@@ -358,11 +358,12 @@ typedef struct _notmuch_message_file notmuch_message_file_t;
  * Returns NULL if any error occurs.
  */
 notmuch_message_file_t *
-_notmuch_message_file_open (const char *filename);
+_notmuch_message_file_open (notmuch_database_t *notmuch, const char *filename);
 
 /* Like notmuch_message_file_open but with 'ctx' as the talloc owner. */
 notmuch_message_file_t *
-_notmuch_message_file_open_ctx (void *ctx, const char *filename);
+_notmuch_message_file_open_ctx (notmuch_database_t *notmuch,
+				void *ctx, const char *filename);
 
 /* Close a notmuch message previously opened with notmuch_message_open. */
 void

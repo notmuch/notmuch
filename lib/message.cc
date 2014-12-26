@@ -437,7 +437,8 @@ _notmuch_message_ensure_message_file (notmuch_message_t *message)
     if (unlikely (filename == NULL))
 	return;
 
-    message->message_file = _notmuch_message_file_open_ctx (message, filename);
+    message->message_file = _notmuch_message_file_open_ctx (
+	_notmuch_message_database (message), message, filename);
 }
 
 const char *

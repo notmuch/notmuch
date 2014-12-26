@@ -2314,7 +2314,7 @@ notmuch_database_add_message (notmuch_database_t *notmuch,
     if (ret)
 	return ret;
 
-    message_file = _notmuch_message_file_open (filename);
+    message_file = _notmuch_message_file_open (notmuch, filename);
     if (message_file == NULL)
 	return NOTMUCH_STATUS_FILE_ERROR;
 
