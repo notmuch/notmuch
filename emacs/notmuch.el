@@ -855,13 +855,15 @@ See `notmuch-tag' for information on the format of TAG-CHANGES."
   "Read a notmuch-query from the minibuffer with completion.
 
 PROMPT is the string to prompt with."
-  (lexical-let
-      ((completions
-	(append (list "folder:" "path:" "thread:" "id:" "date:" "from:" "to:"
-		      "subject:" "attachment:" "mimetype:")
-		(mapcar (lambda (tag)
-			  (concat "tag:" (notmuch-escape-boolean-term tag)))
-			(process-lines notmuch-command "search" "--output=tags" "*")))))
+  (lexical-let*
+      ((all-tags
+        (mapcar (lambda (tag) (notmuch-escape-boolean-term tag))
+                (process-lines notmuch-command "search" "--output=tags" "*")))
+       (completions
+	 (append (list "folder:" "path:" "thread:" "id:" "date:" "from:" "to:"
+		       "subject:" "attachment:" "mimetype:")
+		 (mapcar (lambda (tag) (concat "tag:" tag)) all-tags)
+		 (mapcar (lambda (tag) (concat "is:" tag)) all-tags))))
     (let ((keymap (copy-keymap minibuffer-local-map))
 	  (current-query (case major-mode
 			   (notmuch-search-mode (notmuch-search-get-query))
