@@ -985,9 +985,16 @@ notmuch_new_command (notmuch_config_t *config, int argc, char *argv[])
 	    return EXIT_FAILURE;
 	add_files_state.total_files = count;
     } else {
-	if (notmuch_database_open (db_path, NOTMUCH_DATABASE_MODE_READ_WRITE,
-				   &notmuch))
+	char *status_string = NULL;
+	if (notmuch_database_open_verbose (db_path, NOTMUCH_DATABASE_MODE_READ_WRITE,
+					   &notmuch, &status_string)) {
+	    if (status_string) {
+		fputs (status_string, stderr);
+		free (status_string);
+	    }
+
 	    return EXIT_FAILURE;
+	}
 
 	if (notmuch_database_needs_upgrade (notmuch)) {
 	    time_t now = time (NULL);

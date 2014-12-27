@@ -230,6 +230,16 @@ notmuch_status_t
 notmuch_database_create (const char *path, notmuch_database_t **database);
 
 /**
+ * Like notmuch_database_create, except optionally return an error
+ * message. This message is allocated by malloc and should be freed by
+ * the caller.
+ */
+notmuch_status_t
+notmuch_database_create_verbose (const char *path,
+				 notmuch_database_t **database,
+				 char **error_message);
+
+/**
  * Database open mode for notmuch_database_open.
  */
 typedef enum {
@@ -279,6 +289,17 @@ notmuch_status_t
 notmuch_database_open (const char *path,
 		       notmuch_database_mode_t mode,
 		       notmuch_database_t **database);
+/**
+ * Like notmuch_database_open, except optionally return an error
+ * message. This message is allocated by malloc and should be freed by
+ * the caller.
+ */
+
+notmuch_status_t
+notmuch_database_open_verbose (const char *path,
+			       notmuch_database_mode_t mode,
+			       notmuch_database_t **database,
+			       char **error_message);
 
 /**
  * Commit changes and close the given notmuch database.

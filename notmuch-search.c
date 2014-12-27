@@ -545,6 +545,7 @@ _notmuch_search_prepare (search_context_t *ctx, notmuch_config_t *config, int ar
 {
     char *query_str;
     unsigned int i;
+    char *status_string = NULL;
 
     switch (ctx->format_sel) {
     case NOTMUCH_FORMAT_TEXT:
@@ -570,9 +571,17 @@ _notmuch_search_prepare (search_context_t *ctx, notmuch_config_t *config, int ar
 
     notmuch_exit_if_unsupported_format ();
 
-    if (notmuch_database_open (notmuch_config_get_database_path (config),
-			       NOTMUCH_DATABASE_MODE_READ_ONLY, &ctx->notmuch))
+    if (notmuch_database_open_verbose (
+	    notmuch_config_get_database_path (config),
+	    NOTMUCH_DATABASE_MODE_READ_ONLY, &ctx->notmuch, &status_string)) {
+
+	if (status_string) {
+	    fputs (status_string, stderr);
+	    free (status_string);
+	}
+
 	return EXIT_FAILURE;
+    }
 
     query_str = query_string_from_args (ctx->notmuch, argc, argv);
     if (query_str == NULL) {
