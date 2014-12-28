@@ -641,15 +641,16 @@ _notmuch_message_add_directory_terms (void *ctx, notmuch_message_t *message)
 	unsigned int directory_id;
 	const char *direntry, *directory;
 	char *colon;
+	const std::string term = *i;
 
 	/* Terminate loop at first term without desired prefix. */
-	if (strncmp ((*i).c_str (), direntry_prefix, direntry_prefix_len))
+	if (strncmp (term.c_str (), direntry_prefix, direntry_prefix_len))
 	    break;
 
 	/* Indicate that there are filenames remaining. */
 	status = NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID;
 
-	direntry = (*i).c_str ();
+	direntry = term.c_str ();
 	direntry += direntry_prefix_len;
 
 	directory_id = strtol (direntry, &colon, 10);
