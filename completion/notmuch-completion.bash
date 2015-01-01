@@ -188,7 +188,10 @@ _notmuch_insert()
     $split &&
     case "${prev}" in
 	--folder)
-	    _filedir
+	    local path=`notmuch config get database.path`
+	    compopt -o nospace
+	    COMPREPLY=( $(compgen -d "$path/${cur}" | \
+		sed "s|^$path/||" | grep -v "\(^\|/\)\(cur\|new\|tmp\)$" ) )
 	    return
 	    ;;
     esac
