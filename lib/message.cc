@@ -283,7 +283,7 @@ _notmuch_message_get_term (notmuch_message_t *message,
     if (i == end)
 	return NULL;
 
-    std::string term = *i;
+    const std::string &term = *i;
     if (strncmp (term.c_str(), prefix, prefix_len))
 	return NULL;
 
@@ -641,7 +641,7 @@ _notmuch_message_add_directory_terms (void *ctx, notmuch_message_t *message)
 	unsigned int directory_id;
 	const char *direntry, *directory;
 	char *colon;
-	const std::string term = *i;
+	const std::string &term = *i;
 
 	/* Terminate loop at first term without desired prefix. */
 	if (strncmp (term.c_str (), direntry_prefix, direntry_prefix_len))
