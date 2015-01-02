@@ -11,10 +11,6 @@ notmuch-completion.bash
 
   [1] http://bash-completion.alioth.debian.org/
 
-notmuch-completion.tcsh
-
-  Command-line completion for the tcsh shell.
-
 notmuch-completion.zsh
 
   Command-line completion for the zsh shell.
