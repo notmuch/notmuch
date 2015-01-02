@@ -1280,6 +1280,7 @@ reset based on the original query."
     (define-key map "t" 'notmuch-show-stash-to)
     (define-key map "l" 'notmuch-show-stash-mlarchive-link)
     (define-key map "L" 'notmuch-show-stash-mlarchive-link-and-go)
+    (define-key map "G" 'notmuch-show-stash-git-send-email)
     (define-key map "?" 'notmuch-subkeymap-help)
     map)
   "Submap for stash commands")
@@ -2130,6 +2131,43 @@ the user (see `notmuch-show-stash-mlarchive-link-alist')."
   (interactive)
   (notmuch-show-stash-mlarchive-link mla)
   (browse-url (current-kill 0 t)))
+
+(defun notmuch-show-stash-git-helper (addresses prefix)
+  "Escape, trim, quote, and add PREFIX to each address in list of ADDRESSES, and return the result as a single string."
+  (mapconcat (lambda (x)
+	       (concat prefix "\""
+		       ;; escape double-quotes
+		       (replace-regexp-in-string
+			"\"" "\\\\\""
+			;; trim leading and trailing spaces
+			(replace-regexp-in-string
+			 "\\(^ *\\| *$\\)" ""
+			 x)) "\""))
+	     addresses " "))
+
+(put 'notmuch-show-stash-git-send-email 'notmuch-prefix-doc
+     "Copy From/To/Cc of current message to kill-ring in a form suitable for pasting to git send-email command line.")
+
+(defun notmuch-show-stash-git-send-email (&optional no-in-reply-to)
+  "Copy From/To/Cc/Message-Id of current message to kill-ring in a form suitable for pasting to git send-email command line.
+
+If invoked with a prefix argument (or NO-IN-REPLY-TO is non-nil),
+omit --in-reply-to=<Message-Id>."
+  (interactive "P")
+  (notmuch-common-do-stash
+   (mapconcat 'identity
+	      (remove ""
+		      (list
+		       (notmuch-show-stash-git-helper
+			(message-tokenize-header (notmuch-show-get-from)) "--to=")
+		       (notmuch-show-stash-git-helper
+			(message-tokenize-header (notmuch-show-get-to)) "--to=")
+		       (notmuch-show-stash-git-helper
+			(message-tokenize-header (notmuch-show-get-cc)) "--cc=")
+		       (unless no-in-reply-to
+			 (notmuch-show-stash-git-helper
+			  (list (notmuch-show-get-message-id t)) "--in-reply-to="))))
+	      " ")))
 
 ;; Interactive part functions and their helpers
 
