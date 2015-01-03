@@ -3,8 +3,10 @@ libnotmuch-dev/
 libnotmuch*/
 notmuch-emacs/
 notmuch/
+notmuch-dbg/
 notmuch-mutt/
-notmuch-ruby/
+notmuch-vim/
+ruby-notmuch/
 python*-notmuch/
 *.debhelper
 *.debhelper.log
