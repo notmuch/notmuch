@@ -10,7 +10,8 @@ outdir = argv[2]
 if not isdir(outdir):
     makedirs(outdir, 0o755)
 
-execfile(sourcedir + "/conf.py")
+with open(sourcedir + "/conf.py") as cf:
+    exec(cf.read())
 
 
 def header(file, startdocname, command, description, authors, section):
