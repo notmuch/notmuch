@@ -374,6 +374,23 @@ else
     errors=$((errors + 1))
 fi
 
+printf "Checking for python... "
+have_python=0
+
+for name in python python2 python3; do
+    if command -v $name > /dev/null 2>&1; then
+	have_python=1
+	python=$name
+	printf "Yes ($name).\n"
+	break
+    fi
+done
+
+if [ $have_python -eq 0 ]; then
+    printf "No.\n"
+    errors=$((errors + 1))
+fi
+
 printf "Checking for valgrind development files... "
 if pkg-config --exists valgrind; then
     printf "Yes.\n"
@@ -427,7 +444,7 @@ else
 fi
 
 printf "Checking if sphinx is available and supports nroff output... "
-if hash sphinx-build > /dev/null 2>&1 && python -m sphinx.writers.manpage > /dev/null 2>&1 ; then
+if hash sphinx-build > /dev/null 2>&1 && ${python} -m sphinx.writers.manpage > /dev/null 2>&1 ; then
     printf "Yes.\n"
     have_sphinx=1
     have_rst2man=0
@@ -522,6 +539,9 @@ need to install the following packages before being able to compile
 notmuch:
 
 EOF
+    if [ $have_python -eq 0 ]; then
+	echo "  python interpreter"
+    fi
     if [ $have_xapian -eq 0 ]; then
 	echo "	Xapian library (including development files such as headers)"
 	echo "	http://xapian.org/"
@@ -787,6 +807,9 @@ WARN_CXXFLAGS=${WARN_CXXFLAGS}
 # Flags to enable warnings when using the C compiler
 WARN_CFLAGS=${WARN_CFLAGS}
 
+# Name of python interpreter
+PYTHON = ${python}
+
 # The prefix to which notmuch should be installed
 # Note: If you change this value here, be sure to ensure that the
 # LIBDIR_IN_LDCONFIG value below is still set correctly.
@@ -958,6 +981,9 @@ NOTMUCH_HAVE_XAPIAN_COMPACT=${have_xapian_compact}
 # Whether there's either sphinx or rst2man available for building
 # documentation
 NOTMUCH_HAVE_MAN=$((have_sphinx || have_rst2man))
+
+# Name of python interpreter
+NOTMUCH_PYTHON=${python}
 EOF
 
 # Finally, after everything configured, inform the user how to continue.
