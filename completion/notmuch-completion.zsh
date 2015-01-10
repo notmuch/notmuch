@@ -7,16 +7,21 @@ _notmuch_commands()
 {
   local -a notmuch_commands
   notmuch_commands=(
-    'setup:interactively set up notmuch for first use'
-    'new:find and import any new message to the database'
-    'search:search for messages matching the search terms, display matching threads as results'
-    'address:get addresses from messages matching the given search terms'
-    'reply:constructs a reply template for a set of messages'
-    'show:show all messages matching the search terms'
-    'tag:add or remove tags for all messages matching the search terms'
+    'help:display documentation for a subcommand'
+    'setup:interactively configure notmuch'
+
+    'address:output addresses from matching messages'
+    'compact:compact the notmuch database'
+    'config:access notmuch configuration file'
+    'count:count messages matching the given search terms'
     'dump:creates a plain-text dump of the tags of each message'
-    'restore:restores the tags from the given file'
-    'help:show details on a command'
+    'insert:add a message to the maildir and notmuch database'
+    'new:incorporate new mail into the notmuch database'
+    'reply:constructs a reply template for a set of messages'
+    'restore:restores the tags from the given file (see notmuch dump)'
+    'search:search for messages matching the given search terms'
+    'show:show messages matching the given search terms'
+    'tag:add/remove tags for all messages matching the search terms'
   )
 
   _describe -t command 'command' notmuch_commands
