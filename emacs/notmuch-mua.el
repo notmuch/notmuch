@@ -75,6 +75,22 @@ list."
   :type '(repeat string)
   :group 'notmuch-send)
 
+(defgroup notmuch-reply nil
+  "Replying to messages in notmuch"
+  :group 'notmuch)
+
+(defcustom notmuch-mua-cite-function 'message-cite-original
+  "*Function for citing an original message.
+Predefined functions include `message-cite-original' and
+`message-cite-original-without-signature'.
+Note that these functions use `mail-citation-hook' if that is non-nil."
+  :type '(radio (function-item message-cite-original)
+		(function-item message-cite-original-without-signature)
+		(function-item sc-cite-original)
+		(function :tag "Other"))
+  :link '(custom-manual "(message)Insertion Variables")
+  :group 'notmuch-reply)
+
 ;;
 
 (defun notmuch-mua-get-switch-function ()
@@ -220,8 +236,9 @@ list."
 	    (date (plist-get original-headers :Date))
 	    (start (point)))
 
-	;; message-cite-original constructs a citation line based on the From and Date
-	;; headers of the original message, which are assumed to be in the buffer.
+	;; notmuch-mua-cite-function constructs a citation line based
+	;; on the From and Date headers of the original message, which
+	;; are assumed to be in the buffer.
 	(insert "From: " from "\n")
 	(insert "Date: " date "\n\n")
 
@@ -233,7 +250,7 @@ list."
 	(set-mark (point))
 	(goto-char start)
 	;; Quote the original message according to the user's configured style.
-	(message-cite-original)))
+	(funcall notmuch-mua-cite-function)))
 
     ;; Crypto processing based crypto content of the original message
     (when process-crypto
