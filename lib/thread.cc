@@ -353,10 +353,8 @@ _thread_add_matched_message (notmuch_thread_t *thread,
 {
     time_t date;
     notmuch_message_t *hashed_message;
-    const char *cur_subject;
 
     date = notmuch_message_get_date (message);
-    cur_subject = notmuch_thread_get_subject(thread);
 
     if (date < thread->oldest || ! thread->matched_messages) {
 	thread->oldest = date;
@@ -366,6 +364,7 @@ _thread_add_matched_message (notmuch_thread_t *thread,
 
     if (date > thread->newest || ! thread->matched_messages) {
 	thread->newest = date;
+	const char *cur_subject = notmuch_thread_get_subject(thread);
 	if (sort != NOTMUCH_SORT_OLDEST_FIRST || EMPTY_STRING(cur_subject))
 	    _thread_set_subject_from_message (thread, message);
     }
