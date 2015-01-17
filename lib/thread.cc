@@ -251,8 +251,8 @@ _thread_add_message (notmuch_thread_t *thread,
 		 term != NULL;
 		 term = term->next)
 	    {
-		/* We ignore initial 'K'. */
-		if (strcmp(tag, (term->string + 1)) == 0) {
+		/* Check for an empty string, and then ignore initial 'K'. */
+		if (*(term->string) && strcmp(tag, (term->string + 1)) == 0) {
 		    message_excluded = TRUE;
 		    break;
 		}
