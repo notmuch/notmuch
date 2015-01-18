@@ -124,16 +124,48 @@ The time range can also be specified using timestamps with a syntax of:
 Each timestamp is a number representing the number of seconds since
 1970-01-01 00:00:00 UTC.
 
-In addition to individual terms, multiple terms can be combined with
-Boolean operators ( **and**, **or**, **not** , etc.). Each term in the
-query will be implicitly connected by a logical AND if no explicit
-operator is provided, (except that terms with a common prefix will be
-implicitly combined with OR until we get Xapian defect #402 fixed).
+Operators
+---------
 
-Parentheses can also be used to control the combination of the Boolean
-operators, but will have to be protected from interpretation by the
-shell, (such as by putting quotation marks around any parenthesized
-expression).
+In addition to individual terms, multiple terms can be combined with
+Boolean operators (**and**, **or**, **not**, and **xor**). Each term
+in the query will be implicitly connected by a logical AND if no
+explicit operator is provided (except that terms with a common prefix
+will be implicitly combined with OR).  The shorthand '-<term>' can be
+used for 'not <term>' but unfortunately this does not work at the
+start of an expression.  Parentheses can also be used to control the
+combination of the Boolean operators, but will have to be protected
+from interpretation by the shell, (such as by putting quotation marks
+around any parenthesized expression).
+
+In addition to the standard boolean operators, Xapian provides several
+operators specific to text searching.
+
+::
+
+        notmuch search term1 NEAR term2
+
+will return results where term1 is within 10 words of term2. The
+threshold can be set like this:
+
+::
+
+        notmuch search term1 NEAR/2 term2
+
+The search
+
+::
+
+        notmuch search term1 ADJ term2
+
+will return results where term1 is within 10 words of term2, but in the
+same order as in the query. The threshold can be set the same as with
+NEAR:
+
+::
+
+        notmuch search term1 ADJ/7 term2
+
 
 Stemming
 --------
