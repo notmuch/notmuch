@@ -1,5 +1,11 @@
 Notmuch 0.20 (UNRELEASED)
 
+Documentation
+-------------
+
+Support for using rst2man in place of sphinx to build the
+docmumentation has been removed.
+
 Contrib
 -------
 

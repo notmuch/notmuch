@@ -447,19 +447,9 @@ printf "Checking if sphinx is available and supports nroff output... "
 if hash sphinx-build > /dev/null 2>&1 && ${python} -m sphinx.writers.manpage > /dev/null 2>&1 ; then
     printf "Yes.\n"
     have_sphinx=1
-    have_rst2man=0
 else
-    printf "No (falling back to rst2man).\n"
+    printf "No (so will not install man pages).\n"
     have_sphinx=0
-
-    printf "Checking if rst2man is available... "
-    if rst2man -V > /dev/null 2>&1; then
-       printf "Yes.\n"
-       have_rst2man=1
-    else
-       printf "No (so will not install man pages).\n"
-       have_rst2man=0
-    fi
 fi
 
 libdir_in_ldconfig=0
@@ -848,9 +838,6 @@ HAVE_EMACS = ${have_emacs}
 # Whether there's a sphinx-build binary available for building documentation
 HAVE_SPHINX=${have_sphinx}
 
-# Whether there's a rst2man binary available for building documentation
-HAVE_RST2MAN=${have_rst2man}
-
 # Whether there's a doxygen binary available for building api documentation
 HAVE_DOXYGEN=${have_doxygen}
 
@@ -978,9 +965,8 @@ cat > sh.config <<EOF
 # Whether the Xapian version in use supports compaction
 NOTMUCH_HAVE_XAPIAN_COMPACT=${have_xapian_compact}
 
-# Whether there's either sphinx or rst2man available for building
-# documentation
-NOTMUCH_HAVE_MAN=$((have_sphinx || have_rst2man))
+# do we have man pages?
+NOTMUCH_HAVE_MAN=$((have_sphinx))
 
 # Name of python interpreter
 NOTMUCH_PYTHON=${python}

@@ -7,7 +7,6 @@ SPHINXOPTS    := -q
 SPHINXBUILD   = sphinx-build
 DOCBUILDDIR      := $(dir)/_build
 
-prerst2man := python $(srcdir)/$(dir)/prerst2man.py
 mkdocdeps := python $(srcdir)/$(dir)/mkdocdeps.py
 
 # Internal variables.
@@ -50,8 +49,6 @@ ifeq ($(HAVE_SPHINX),1)
 	    mkdir -p $(DOCBUILDDIR)/man/man$${section}; \
 	    mv $(DOCBUILDDIR)/man/*.$${section} $(DOCBUILDDIR)/man/man$${section}; \
 	done
-else ifeq ($(HAVE_RST2MAN),1)
-	$(prerst2man) $(srcdir)/doc $(DOCBUILDDIR)/man
 else
 	@echo "Fatal: build dependency fail."
 	@false
@@ -79,10 +76,10 @@ endif
 
 # Do not try to build or install man pages if a man page converter is
 # not available.
-ifeq ($(HAVE_SPHINX)$(HAVE_RST2MAN),00)
+ifeq ($(HAVE_SPHINX),0)
 build-man:
 install-man:
-	@echo "No sphinx or rst2man, will not install man pages."
+	@echo "No sphinx, will not install man pages."
 else
 build-man: ${MAN_GZIP_FILES}
 install-man: ${MAN_GZIP_FILES}

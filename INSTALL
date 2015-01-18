@@ -75,13 +75,10 @@ Talloc, and zlib which are each described below:
 Building Documentation
 ----------------------
 
-By default the documentation for notmuch is built using sphinx.
+To build the documentation for notmuch you need at least version 1.0
+of sphinx (Jul. 2010).
 
 Sphinx is available from www.sphinx-doc.org.
-
-If you prefer, you can build the man pages using rst2man, from the
-python docutils package. See doc/INSTALL for details.
-
 
 Installing Dependencies from Packages
 -------------------------------------
