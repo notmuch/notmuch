@@ -135,6 +135,33 @@ operators, but will have to be protected from interpretation by the
 shell, (such as by putting quotation marks around any parenthesized
 expression).
 
+Stemming
+--------
+
+**Stemming** in notmuch means that these searches
+
+::
+
+        notmuch search detailed
+        notmuch search details
+        notmuch search detail
+
+will all return identical results, because Xapian first "reduces" the
+term to the common stem (here 'detail') and then performs the search.
+
+There are two ways to turn this off: a search for a capitalized word
+will be performed unstemmed, so that one can search for "John" and not
+get results for "Johnson"; phrase searches are also unstemmed (see
+below for details).  Stemming is currently only supported for
+English. Searches for words in other languages will be performed unstemmed.
+
+Wildcards
+---------
+
+It is possible to use a trailing '\*' as a wildcard. A search for
+'wildc\*' will match 'wildcard', 'wildcat', etc.
+
+
 Boolean and Probabilistic Prefixes
 ----------------------------------
 
