@@ -135,6 +135,58 @@ operators, but will have to be protected from interpretation by the
 shell, (such as by putting quotation marks around any parenthesized
 expression).
 
+Boolean and Probabilistic Prefixes
+----------------------------------
+
+Xapian (and hence notmuch) prefixes are either **boolean**, supporting
+exact matches like "tag:inbox"  or **probabilistic**, supporting a most flexible **term** based searching. The prefixes currently supported by notmuch are as follows.
+
++------------------+-----------------------+
+|Boolean           |Probabilistic          |
++------------------+-----------------------+
+| **tag:** **id:** | **from:** **to:**     |
+|**thread:**       |**subject:**           |
+|**folder:**       |**attachment**         |
+|**path:**         |                       |
+|                  |                       |
++------------------+-----------------------+
+
+Terms and phrases
+-----------------
+
+In general Xapian distinguishes between lists of terms and
+**phrases**. Phrases are indicated by double quotes (but beware you
+probably need to protect those from your shell) and insist that those
+unstemmed words occur in that order. One useful, but initially
+surprising feature is that the following are equivalant ways to write
+the same phrase.
+
+- "a list of words"
+- a-list-of-words
+- a/list/of/words
+- a.list.of.words
+
+Both parenthesised lists of terms and quoted phrases are ok with
+probabilisitic prefixes such as **to:**, **from:**, and **subject:**. In particular
+
+::
+
+   subject:(pizza free)
+
+is equivalent to
+
+::
+
+   subject:pizza and subject:free
+
+Both of these will match a subject "Free Delicious Pizza" while
+
+::
+
+   subject:"pizza free"
+
+will not.
+
 DATE AND TIME SEARCH
 ====================
 
