@@ -351,6 +351,25 @@ def fetch(remote=None):
     _git(args=args, wait=True)
 
 
+def init(remote=None):
+    """
+    Create an empty nmbug repository.
+
+    This wraps 'git init' with a few extra steps to support subsequent
+    status and commit commands.
+    """
+    _spawn(args=['git', '--git-dir', NMBGIT, 'init', '--bare'], wait=True)
+    _git(args=['config', 'core.logallrefupdates', 'true'], wait=True)
+    # create an empty blob (e69de29bb2d1d6434b8b29ae775ad8c2e48c5391)
+    _git(args=['hash-object', '-w', '--stdin'], input='', wait=True)
+    _git(
+        args=[
+            'commit', '--allow-empty', '-m', 'Start a new nmbug repository'
+        ],
+        additional_env={'GIT_WORK_TREE': NMBGIT},
+        wait=True)
+
+
 def checkout():
     """
     Update the notmuch database from Git.
@@ -711,6 +730,7 @@ if __name__ == '__main__':
             'commit',
             'fetch',
             'help',
+            'init',
             'log',
             'merge',
             'pull',
