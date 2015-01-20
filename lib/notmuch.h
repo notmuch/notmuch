@@ -780,9 +780,17 @@ notmuch_query_add_tag_exclude (notmuch_query_t *query, const char *tag);
  * to call it if the query is about to be destroyed).
  *
  * If a Xapian exception occurs this function will return NULL.
+ * For better error reporting, use the _st variant.
  */
 notmuch_threads_t *
 notmuch_query_search_threads (notmuch_query_t *query);
+
+/**
+ * Like notmuch_query_search_threads, but with a status return.
+ */
+notmuch_status_t
+notmuch_query_search_threads_st (notmuch_query_t *query,
+				 notmuch_threads_t **out);
 
 /**
  * Execute a query for messages, returning a notmuch_messages_t object
@@ -822,9 +830,17 @@ notmuch_query_search_threads (notmuch_query_t *query);
  * reason to call it if the query is about to be destroyed).
  *
  * If a Xapian exception occurs this function will return NULL.
+ * For better error reporting, use the _st variant.
  */
 notmuch_messages_t *
 notmuch_query_search_messages (notmuch_query_t *query);
+
+/**
+ * Like notmuch_query_search_messages, but with a status return.
+ */
+notmuch_status_t
+notmuch_query_search_messages_st (notmuch_query_t *query,
+				  notmuch_messages_t **out);
 
 /**
  * Destroy a notmuch_query_t along with any associated resources.
