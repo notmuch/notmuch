@@ -477,6 +477,7 @@ ruby << EOF
 
 	$db_name = nil
 	$email = $email_name = $email_address = nil
+	$exclude_tags = []
 	$searches = []
 	$threads = []
 	$messages = []
@@ -496,6 +497,8 @@ ruby << EOF
 		$email_address = get_config_item('user.primary_email')
 		$email_name = get_config_item('user.name')
 		$email = "%s <%s>" % [$email_name, $email_address]
+		ignore_tags = get_config_item('search.exclude_tags')
+		$exclude_tags = ignore_tags.split("\n")
 	end
 
 	def vim_puts(s)
@@ -637,6 +640,9 @@ ruby << EOF
 			$searches.clear
 			folders.each do |name, search|
 				q = $curbuf.query(search)
+				$exclude_tags.each { |t|
+					q.add_tag_exclude(t)
+				}
 				$searches << search
 				count = count_threads ? q.search_threads.count : q.search_messages.count
 				b << "%9d %-20s (%s)" % [count, name, search]
@@ -648,6 +654,9 @@ ruby << EOF
 		date_fmt = VIM::evaluate('g:notmuch_date_format')
 		q = $curbuf.query(search)
 		q.sort = Notmuch::SORT_NEWEST_FIRST
+		$exclude_tags.each { |t|
+			q.add_tag_exclude(t)
+		}
 		$threads.clear
 		t = q.search_threads
 
