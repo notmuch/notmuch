@@ -304,6 +304,11 @@ static const struct {
       "exact folder:/path: search", "rw" },
     { NOTMUCH_FEATURE_GHOSTS,
       "mail documents for missing messages", "w"},
+    /* Knowledge of the index mime-types are not required for reading
+     * a database because a reader will just be unable to query
+     * them. */
+    { NOTMUCH_FEATURE_INDEXED_MIMETYPES,
+      "indexed MIME types", "w"},
 };
 
 const char *
@@ -646,9 +651,10 @@ notmuch_database_create (const char *path, notmuch_database_t **database)
     if (status)
 	goto DONE;
 
-    /* Upgrade doesn't add this feature to existing databases, but new
-     * databases have it. */
+    /* Upgrade doesn't add these feature to existing databases, but
+     * new databases have them. */
     notmuch->features |= NOTMUCH_FEATURE_FROM_SUBJECT_ID_VALUES;
+    notmuch->features |= NOTMUCH_FEATURE_INDEXED_MIMETYPES;
 
     status = notmuch_database_upgrade (notmuch, NULL, NULL);
     if (status) {
