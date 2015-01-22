@@ -644,7 +644,7 @@ ruby << EOF
 					q.add_tag_exclude(t)
 				}
 				$searches << search
-				count = count_threads ? q.search_threads.count : q.search_messages.count
+				count = count_threads ? q.count_threads : q.count_messages
 				b << "%9d %-20s (%s)" % [count, name, search]
 			end
 		end
