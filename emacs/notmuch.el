@@ -858,7 +858,7 @@ PROMPT is the string to prompt with."
   (lexical-let
       ((completions
 	(append (list "folder:" "path:" "thread:" "id:" "date:" "from:" "to:"
-		      "subject:" "attachment:")
+		      "subject:" "attachment:" "mimetype:")
 		(mapcar (lambda (tag)
 			  (concat "tag:" (notmuch-escape-boolean-term tag)))
 			(process-lines notmuch-command "search" "--output=tags" "*")))))
