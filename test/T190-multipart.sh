@@ -752,17 +752,14 @@ notmuch show --format=json --include-html id:htmlmessage > OUTPUT
 test_expect_equal_json "$(cat OUTPUT)" "$(cat EXPECTED.withhtml)"
 
 test_begin_subtest "indexes mime-type #1"
-test_subtest_known_broken
 output=$(notmuch search mimetype:application/unique_identifier | notmuch_search_sanitize)
 test_expect_equal "$output" "thread:XXX   2014-01-12 [1/1] Todd; odd content types (inbox unread)"
 
 test_begin_subtest "indexes mime-type #2"
-test_subtest_known_broken
 output=$(notmuch search mimetype:text/some_other_identifier | notmuch_search_sanitize)
 test_expect_equal "$output" "thread:XXX   2014-01-12 [1/1] Todd; odd content types (inbox unread)"
 
 test_begin_subtest "indexes mime-type #3"
-test_subtest_known_broken
 output=$(notmuch search from:todd and mimetype:multipart/alternative | notmuch_search_sanitize)
 test_expect_equal "$output" "thread:XXX   2014-01-12 [1/1] Todd; odd content types (inbox unread)"
 

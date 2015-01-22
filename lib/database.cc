@@ -254,6 +254,7 @@ static prefix_t PROBABILISTIC_PREFIX[]= {
     { "from",			"XFROM" },
     { "to",			"XTO" },
     { "attachment",		"XATTACHMENT" },
+    { "mimetype",		"XMIMETYPE"},
     { "subject",		"XSUBJECT"},
 };
 

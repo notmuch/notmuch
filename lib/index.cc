@@ -318,6 +318,16 @@ _index_mime_part (notmuch_message_t *message,
 	return;
     }
 
+    GMimeContentType *content_type = g_mime_object_get_content_type(part);
+    if (content_type) {
+	char *mime_string = g_mime_content_type_to_string(content_type);
+	if (mime_string)
+	{
+	    _notmuch_message_gen_terms (message, "mimetype", mime_string);
+	    g_free(mime_string);
+	}
+    }
+
     if (GMIME_IS_MULTIPART (part)) {
 	GMimeMultipart *multipart = GMIME_MULTIPART (part);
 	int i;
