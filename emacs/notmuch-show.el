@@ -1198,7 +1198,11 @@ function is used."
       (notmuch-show-mapc (lambda () (notmuch-show-set-prop :orig-tags (notmuch-show-get-tags))))
 
       ;; Set the header line to the subject of the first message.
-      (setq header-line-format (notmuch-sanitize (notmuch-show-strip-re (notmuch-show-get-subject))))
+      (setq header-line-format
+	    (replace-regexp-in-string "%" "%%"
+			    (notmuch-sanitize
+			     (notmuch-show-strip-re
+			      (notmuch-show-get-subject)))))
 
       (run-hooks 'notmuch-show-hook))))
 
