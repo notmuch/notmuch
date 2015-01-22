@@ -104,6 +104,30 @@ Content-Transfer-Encoding: base64
 7w0K
 --==-=-=--
 EOF
+
+cat <<EOF > content_types
+From: Todd <todd@example.com>
+To: todd@example.com
+Subject: odd content types
+Date: Mon, 12 Jan 2014 18:12:32 +0000
+User-Agent: Notmuch/0.5 (http://notmuchmail.org) Emacs/23.3.1 (i486-pc-linux-gnu)
+Message-ID: <KfjfO2WJBw2hrV2p0gjT@example.com>
+MIME-Version: 1.0
+Content-Type: multipart/alternative; boundary="==-=-=="
+
+--==-=-==
+Content-Type: application/unique_identifier
+
+<p>This is an embedded message, with a multipart/alternative part.</p>
+
+--==-=-==
+Content-Type: text/some_other_identifier
+
+This is an embedded message, with a multipart/alternative part.
+
+--==-=-==--
+EOF
+cat content_types >> ${MAIL_DIR}/odd_content_type
 notmuch new > /dev/null
 
 test_begin_subtest "--format=text --part=0, full message"
@@ -726,5 +750,20 @@ test_expect_equal_json "$(cat OUTPUT)" "$(cat EXPECTED.nohtml)"
 test_begin_subtest "html parts included"
 notmuch show --format=json --include-html id:htmlmessage > OUTPUT
 test_expect_equal_json "$(cat OUTPUT)" "$(cat EXPECTED.withhtml)"
+
+test_begin_subtest "indexes mime-type #1"
+test_subtest_known_broken
+output=$(notmuch search mimetype:application/unique_identifier | notmuch_search_sanitize)
+test_expect_equal "$output" "thread:XXX   2014-01-12 [1/1] Todd; odd content types (inbox unread)"
+
+test_begin_subtest "indexes mime-type #2"
+test_subtest_known_broken
+output=$(notmuch search mimetype:text/some_other_identifier | notmuch_search_sanitize)
+test_expect_equal "$output" "thread:XXX   2014-01-12 [1/1] Todd; odd content types (inbox unread)"
+
+test_begin_subtest "indexes mime-type #3"
+test_subtest_known_broken
+output=$(notmuch search from:todd and mimetype:multipart/alternative | notmuch_search_sanitize)
+test_expect_equal "$output" "thread:XXX   2014-01-12 [1/1] Todd; odd content types (inbox unread)"
 
 test_done
