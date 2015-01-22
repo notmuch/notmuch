@@ -40,6 +40,8 @@ indicate user-supplied values):
 
 -  attachment:<word>
 
+-  mimetype:<word>
+
 -  tag:<tag> (or is:<tag>)
 
 -  id:<message-id>
@@ -65,6 +67,10 @@ by including quotation marks around the phrase, immediately following
 
 The **attachment:** prefix can be used to search for specific filenames
 (or extensions) of attachments to email messages.
+
+The **mimetype:** prefix will be used to match text from the
+content-types of MIME parts within email messages (as specified by the
+sender).
 
 For **tag:** and **is:** valid tag values include **inbox** and
 **unread** by default for new messages added by **notmuch new** as well

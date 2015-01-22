@@ -1,4 +1,14 @@
 Notmuch 0.20 (UNRELEASED)
+=========================
+
+Command-Line Interface
+----------------------
+
+There is a new `mimetype:` search prefix
+
+  The new `mimetype:` search prefix allows searching for the
+  content-type of attachments, which is now indexed. See the
+  `notmuch-search-terms` manual page for details.
 
 Documentation
 -------------
