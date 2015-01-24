@@ -530,7 +530,7 @@ the given type."
    parts))
 
 (defun notmuch-get-bodypart-binary (msg part process-crypto)
-  "Return the unprocessed content of PART in MSG.
+  "Return the unprocessed content of PART in MSG as a unibyte string.
 
 This returns the \"raw\" content of the given part after content
 transfer decoding, but with no further processing (see the
@@ -541,6 +541,16 @@ this does no charset conversion."
 		,@(when process-crypto '("--decrypt"))
 		,(notmuch-id-to-query (plist-get msg :id)))))
     (with-temp-buffer
+      ;; Emacs internally uses a UTF-8-like multibyte string
+      ;; representation by default (regardless of the coding system,
+      ;; which only affects how it goes from outside data to this
+      ;; internal representation).  This *almost* never matters.
+      ;; Annoyingly, it does matter if we use this data in an image
+      ;; descriptor, since Emacs will use its internal data buffer
+      ;; directly and this multibyte representation corrupts binary
+      ;; image formats.  Since the caller is asking for binary data, a
+      ;; unibyte string is a more appropriate representation anyway.
+      (set-buffer-multibyte nil)
       (let ((coding-system-for-read 'no-conversion))
 	(apply #'call-process notmuch-command nil '(t nil) nil args)
 	(buffer-string)))))
