@@ -562,15 +562,14 @@ message at DEPTH in the current thread."
 (defvar notmuch-show-w3m-cid-store nil)
 (make-variable-buffer-local 'notmuch-show-w3m-cid-store)
 
-(defun notmuch-show-w3m-cid-store-internal (content-id msg part content)
-  (push (list content-id msg part content)
-	notmuch-show-w3m-cid-store))
+(defun notmuch-show-w3m-cid-store-internal (content-id msg part)
+  (push (list content-id msg part) notmuch-show-w3m-cid-store))
 
 (defun notmuch-show-w3m-cid-store (msg part)
   (let ((content-id (plist-get part :content-id)))
     (when content-id
       (notmuch-show-w3m-cid-store-internal (concat "cid:" content-id)
-					   msg part nil))))
+					   msg part))))
 
 (defun notmuch-show-w3m-cid-retrieve (url &rest args)
   (let ((matching-part (with-current-buffer w3m-current-buffer
@@ -578,18 +577,12 @@ message at DEPTH in the current thread."
     (if matching-part
 	(let* ((msg (nth 1 matching-part))
 	       (part (nth 2 matching-part))
-	       (content (nth 3 matching-part))
 	       (content-type (plist-get part :content-type)))
-	  ;; If we don't already have the content, get it and cache
-	  ;; it, as some messages reference the same cid: part many
-	  ;; times (hundreds!), which results in many calls to
-	  ;; `notmuch part'.
-	  (unless content
-	    (setq content (notmuch-get-bodypart-binary
-			   msg part notmuch-show-process-crypto))
-	    (with-current-buffer w3m-current-buffer
-	      (notmuch-show-w3m-cid-store-internal url msg part content)))
-	  (insert content)
+	  ;; Request content caching, as some messages reference the
+	  ;; same cid: part many times (hundreds!), which results in
+	  ;; many calls to `notmuch show'.
+	  (insert (notmuch-get-bodypart-binary
+		   msg part notmuch-show-process-crypto 'cache))
 	  content-type)
       nil)))
 
