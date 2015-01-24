@@ -579,16 +579,14 @@ message at DEPTH in the current thread."
 	(let* ((msg (nth 1 matching-part))
 	       (part (nth 2 matching-part))
 	       (content (nth 3 matching-part))
-	       (message-id (plist-get msg :id))
-	       (part-number (plist-get part :id))
 	       (content-type (plist-get part :content-type)))
 	  ;; If we don't already have the content, get it and cache
 	  ;; it, as some messages reference the same cid: part many
 	  ;; times (hundreds!), which results in many calls to
 	  ;; `notmuch part'.
 	  (unless content
-	    (setq content (notmuch-get-bodypart-internal (notmuch-id-to-query message-id)
-							      part-number notmuch-show-process-crypto))
+	    (setq content (notmuch-get-bodypart-binary
+			   msg part notmuch-show-process-crypto))
 	    (with-current-buffer w3m-current-buffer
 	      (notmuch-show-w3m-cid-store-internal url msg part content)))
 	  (insert content)
@@ -2162,15 +2160,14 @@ omit --in-reply-to=<Message-Id>."
 
 ;; Interactive part functions and their helpers
 
-(defun notmuch-show-generate-part-buffer (message-id nth)
+(defun notmuch-show-generate-part-buffer (msg part)
   "Return a temporary buffer containing the specified part's content."
   (let ((buf (generate-new-buffer " *notmuch-part*"))
 	(process-crypto notmuch-show-process-crypto))
     (with-current-buffer buf
-      (setq notmuch-show-process-crypto process-crypto)
-      ;; Always acquires the part via `notmuch part', even if it is
-      ;; available in the SEXP output.
-      (insert (notmuch-get-bodypart-internal message-id nth notmuch-show-process-crypto)))
+      ;; This is always used in the content of mm handles, which
+      ;; expect undecoded, binary part content.
+      (insert (notmuch-get-bodypart-binary msg part process-crypto)))
     buf))
 
 (defun notmuch-show-current-part-handle ()
@@ -2178,10 +2175,9 @@ omit --in-reply-to=<Message-Id>."
 
 This creates a temporary buffer for the part's content; the
 caller is responsible for killing this buffer as appropriate."
-  (let* ((part (notmuch-show-get-part-properties))
-	 (message-id (notmuch-show-get-message-id))
-	 (nth (plist-get part :id))
-	 (buf (notmuch-show-generate-part-buffer message-id nth))
+  (let* ((msg (notmuch-show-get-message-properties))
+	 (part (notmuch-show-get-part-properties))
+	 (buf (notmuch-show-generate-part-buffer msg part))
 	 (computed-type (plist-get part :computed-type))
 	 (filename (plist-get part :filename))
 	 (disposition (if filename `(attachment (filename . ,filename)))))

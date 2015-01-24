@@ -529,25 +529,25 @@ the given type."
    (lambda (part) (notmuch-match-content-type (plist-get part :content-type) type))
    parts))
 
-;; Helper for parts which are generally not included in the default
-;; SEXP output.
-(defun notmuch-get-bodypart-internal (query part-number process-crypto)
-  (let ((args '("show" "--format=raw"))
-	(part-arg (format "--part=%s" part-number)))
-    (setq args (append args (list part-arg)))
-    (if process-crypto
-	(setq args (append args '("--decrypt"))))
-    (setq args (append args (list query)))
+(defun notmuch-get-bodypart-binary (msg part process-crypto)
+  "Return the unprocessed content of PART in MSG.
+
+This returns the \"raw\" content of the given part after content
+transfer decoding, but with no further processing (see the
+discussion of --format=raw in man notmuch-show).  In particular,
+this does no charset conversion."
+  (let ((args `("show" "--format=raw"
+		,(format "--part=%d" (plist-get part :id))
+		,@(when process-crypto '("--decrypt"))
+		,(notmuch-id-to-query (plist-get msg :id)))))
     (with-temp-buffer
       (let ((coding-system-for-read 'no-conversion))
-	(progn
-	  (apply 'call-process (append (list notmuch-command nil (list t nil) nil) args))
-	  (buffer-string))))))
+	(apply #'call-process notmuch-command nil '(t nil) nil args)
+	(buffer-string)))))
 
 (defun notmuch-get-bodypart-content (msg part process-crypto)
   (or (plist-get part :content)
-      (notmuch-get-bodypart-internal (notmuch-id-to-query (plist-get msg :id))
-				     (plist-get part :id) process-crypto)))
+      (notmuch-get-bodypart-binary msg part process-crypto)))
 
 ;; Workaround: The call to `mm-display-part' below triggers a bug in
 ;; Emacs 24 if it attempts to use the shr renderer to display an HTML
