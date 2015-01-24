@@ -562,35 +562,26 @@ message at DEPTH in the current thread."
 (defvar notmuch-show-w3m-cid-store nil)
 (make-variable-buffer-local 'notmuch-show-w3m-cid-store)
 
-(defun notmuch-show-w3m-cid-store-internal (content-id
-					    message-id
-					    part-number
-					    content-type
-					    content)
-  (push (list content-id
-	      message-id
-	      part-number
-	      content-type
-	      content)
+(defun notmuch-show-w3m-cid-store-internal (content-id msg part content)
+  (push (list content-id msg part content)
 	notmuch-show-w3m-cid-store))
 
 (defun notmuch-show-w3m-cid-store (msg part)
   (let ((content-id (plist-get part :content-id)))
     (when content-id
       (notmuch-show-w3m-cid-store-internal (concat "cid:" content-id)
-					   (plist-get msg :id)
-					   (plist-get part :id)
-					   (plist-get part :content-type)
-					   nil))))
+					   msg part nil))))
 
 (defun notmuch-show-w3m-cid-retrieve (url &rest args)
   (let ((matching-part (with-current-buffer w3m-current-buffer
 			 (assoc url notmuch-show-w3m-cid-store))))
     (if matching-part
-	(let ((message-id (nth 1 matching-part))
-	      (part-number (nth 2 matching-part))
-	      (content-type (nth 3 matching-part))
-	      (content (nth 4 matching-part)))
+	(let* ((msg (nth 1 matching-part))
+	       (part (nth 2 matching-part))
+	       (content (nth 3 matching-part))
+	       (message-id (plist-get msg :id))
+	       (part-number (plist-get part :id))
+	       (content-type (plist-get part :content-type)))
 	  ;; If we don't already have the content, get it and cache
 	  ;; it, as some messages reference the same cid: part many
 	  ;; times (hundreds!), which results in many calls to
@@ -599,11 +590,7 @@ message at DEPTH in the current thread."
 	    (setq content (notmuch-get-bodypart-internal (notmuch-id-to-query message-id)
 							      part-number notmuch-show-process-crypto))
 	    (with-current-buffer w3m-current-buffer
-	      (notmuch-show-w3m-cid-store-internal url
-						   message-id
-						   part-number
-						   content-type
-						   content)))
+	      (notmuch-show-w3m-cid-store-internal url msg part content)))
 	  (insert content)
 	  content-type)
       nil)))
