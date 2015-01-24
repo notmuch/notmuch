@@ -529,39 +529,53 @@ the given type."
    (lambda (part) (notmuch-match-content-type (plist-get part :content-type) type))
    parts))
 
-(defun notmuch-get-bodypart-binary (msg part process-crypto)
+(defun notmuch-get-bodypart-binary (msg part process-crypto &optional cache)
   "Return the unprocessed content of PART in MSG as a unibyte string.
 
 This returns the \"raw\" content of the given part after content
 transfer decoding, but with no further processing (see the
 discussion of --format=raw in man notmuch-show).  In particular,
-this does no charset conversion."
-  (let ((args `("show" "--format=raw"
-		,(format "--part=%d" (plist-get part :id))
-		,@(when process-crypto '("--decrypt"))
-		,(notmuch-id-to-query (plist-get msg :id)))))
-    (with-temp-buffer
-      ;; Emacs internally uses a UTF-8-like multibyte string
-      ;; representation by default (regardless of the coding system,
-      ;; which only affects how it goes from outside data to this
-      ;; internal representation).  This *almost* never matters.
-      ;; Annoyingly, it does matter if we use this data in an image
-      ;; descriptor, since Emacs will use its internal data buffer
-      ;; directly and this multibyte representation corrupts binary
-      ;; image formats.  Since the caller is asking for binary data, a
-      ;; unibyte string is a more appropriate representation anyway.
-      (set-buffer-multibyte nil)
-      (let ((coding-system-for-read 'no-conversion))
-	(apply #'call-process notmuch-command nil '(t nil) nil args)
-	(buffer-string)))))
+this does no charset conversion.
 
-(defun notmuch-get-bodypart-text (msg part process-crypto)
+If CACHE is non-nil, the content of this part will be saved in
+MSG (if it isn't already)."
+  (let ((data (plist-get part :binary-content)))
+    (when (not data)
+      (let ((args `("show" "--format=raw"
+		    ,(format "--part=%d" (plist-get part :id))
+		    ,@(when process-crypto '("--decrypt"))
+		    ,(notmuch-id-to-query (plist-get msg :id)))))
+	(with-temp-buffer
+	  ;; Emacs internally uses a UTF-8-like multibyte string
+	  ;; representation by default (regardless of the coding
+	  ;; system, which only affects how it goes from outside data
+	  ;; to this internal representation).  This *almost* never
+	  ;; matters.  Annoyingly, it does matter if we use this data
+	  ;; in an image descriptor, since Emacs will use its internal
+	  ;; data buffer directly and this multibyte representation
+	  ;; corrupts binary image formats.  Since the caller is
+	  ;; asking for binary data, a unibyte string is a more
+	  ;; appropriate representation anyway.
+	  (set-buffer-multibyte nil)
+	  (let ((coding-system-for-read 'no-conversion))
+	    (apply #'call-process notmuch-command nil '(t nil) nil args)
+	    (setq data (buffer-string)))))
+      (when cache
+	;; Cheat.  part is non-nil, and `plist-put' always modifies
+	;; the list in place if it's non-nil.
+	(plist-put part :binary-content data)))
+    data))
+
+(defun notmuch-get-bodypart-text (msg part process-crypto &optional cache)
   "Return the text content of PART in MSG.
 
 This returns the content of the given part as a multibyte Lisp
 string after performing content transfer decoding and any
 necessary charset decoding.  It is an error to use this for
-non-text/* parts."
+non-text/* parts.
+
+If CACHE is non-nil, the content of this part will be saved in
+MSG (if it isn't already)."
   (let ((content (plist-get part :content)))
     (when (not content)
       ;; Use show --format=sexp to fetch decoded content
@@ -572,7 +586,9 @@ non-text/* parts."
 	     (npart (apply #'notmuch-call-notmuch-sexp args)))
 	(setq content (plist-get npart :content))
 	(when (not content)
-	  (error "Internal error: No :content from %S" args))))
+	  (error "Internal error: No :content from %S" args)))
+      (when cache
+	(plist-put part :content content)))
     content))
 
 ;; Workaround: The call to `mm-display-part' below triggers a bug in
