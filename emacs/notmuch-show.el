@@ -767,14 +767,43 @@ will return nil if the CID is unknown or cannot be retrieved."
 	  nil))))
 
 (defun notmuch-show-insert-part-text/html (msg part content-type nth depth button)
-  ;; text/html handler to work around bugs in renderers and our
-  ;; invisibile parts code. In particular w3m sets up a keymap which
-  ;; "leaks" outside the invisible region and causes strange effects
-  ;; in notmuch. We set mm-inline-text-html-with-w3m-keymap to nil to
-  ;; tell w3m not to set a keymap (so the normal notmuch-show-mode-map
-  ;; remains).
-  (let ((mm-inline-text-html-with-w3m-keymap nil))
-    (notmuch-show-insert-part-*/* msg part content-type nth depth button)))
+  (if (eq mm-text-html-renderer 'shr)
+      ;; It's easier to drive shr ourselves than to work around the
+      ;; goofy things `mm-shr' does (like irreversibly taking over
+      ;; content ID handling).
+      (notmuch-show--insert-part-text/html-shr msg part)
+    ;; Otherwise, let message-mode do the heavy lifting
+    ;;
+    ;; w3m sets up a keymap which "leaks" outside the invisible region
+    ;; and causes strange effects in notmuch. We set
+    ;; mm-inline-text-html-with-w3m-keymap to nil to tell w3m not to
+    ;; set a keymap (so the normal notmuch-show-mode-map remains).
+    (let ((mm-inline-text-html-with-w3m-keymap nil))
+      (notmuch-show-insert-part-*/* msg part content-type nth depth button))))
+
+;; These functions are used by notmuch-show--insert-part-text/html-shr
+(declare-function libxml-parse-html-region "xml.c")
+(declare-function shr-insert-document "shr")
+
+(defun notmuch-show--insert-part-text/html-shr (msg part)
+  ;; Make sure shr is loaded before we start let-binding its globals
+  (require 'shr)
+  (let ((dom (let ((process-crypto notmuch-show-process-crypto))
+	       (with-temp-buffer
+		 (insert (notmuch-get-bodypart-text msg part process-crypto))
+		 (libxml-parse-html-region (point-min) (point-max)))))
+	(shr-content-function
+	 (lambda (url)
+	   ;; shr strips the "cid:" part of URL, but doesn't
+	   ;; URL-decode it (see RFC 2392).
+	   (let ((cid (url-unhex-string url)))
+	     (first (notmuch-show--get-cid-content cid)))))
+	;; Block all external images to prevent privacy leaks and
+	;; potential attacks.  FIXME: If we block an image, offer a
+	;; button to load external images.
+	(shr-blocked-images "."))
+    (shr-insert-document dom)
+    t))
 
 (defun notmuch-show-insert-part-*/* (msg part content-type nth depth button)
   ;; This handler _must_ succeed - it is the handler of last resort.
