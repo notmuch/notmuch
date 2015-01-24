@@ -525,6 +525,73 @@ message at DEPTH in the current thread."
 	  (overlay-put overlay 'invisible (not show))
 	  t)))))
 
+;; Part content ID handling
+
+(defvar notmuch-show--cids nil
+  "Alist from raw content ID to (MSG PART).")
+(make-variable-buffer-local 'notmuch-show--cids)
+
+(defun notmuch-show--register-cids (msg part)
+  "Register content-IDs in PART and all of PART's sub-parts."
+  (let ((content-id (plist-get part :content-id)))
+    (when content-id
+      ;; Note that content-IDs are globally unique, except when they
+      ;; aren't: RFC 2046 section 5.1.4 permits children of a
+      ;; multipart/alternative to have the same content-ID, in which
+      ;; case the MUA is supposed to pick the best one it can render.
+      ;; We simply add the content-ID to the beginning of our alist;
+      ;; so if this happens, we'll take the last (and "best")
+      ;; alternative (even if we can't render it).
+      (push (list content-id msg part) notmuch-show--cids)))
+  ;; Recurse on sub-parts
+  (let ((ctype (notmuch-split-content-type
+		(downcase (plist-get part :content-type)))))
+    (cond ((equal (first ctype) "multipart")
+	   (mapc (apply-partially #'notmuch-show--register-cids msg)
+		 (plist-get part :content)))
+	  ((equal ctype '("message" "rfc822"))
+	   (notmuch-show--register-cids
+	    msg
+	    (first (plist-get (first (plist-get part :content)) :body)))))))
+
+(defun notmuch-show--get-cid-content (cid)
+  "Return a list (CID-content content-type) or nil.
+
+This will only find parts from messages that have been inserted
+into the current buffer.  CID must be a raw content ID, without
+enclosing angle brackets, a cid: prefix, or URL encoding.  This
+will return nil if the CID is unknown or cannot be retrieved."
+  (let ((descriptor (cdr (assoc cid notmuch-show--cids))))
+    (when descriptor
+      (let* ((msg (first descriptor))
+	     (part (second descriptor))
+	     ;; Request caching for this content, as some messages
+	     ;; reference the same cid: part many times (hundreds!).
+	     (content (notmuch-get-bodypart-binary
+		       msg part notmuch-show-process-crypto 'cache))
+	     (content-type (plist-get part :content-type)))
+	(list content content-type)))))
+
+(defun notmuch-show-setup-w3m ()
+  "Instruct w3m how to retrieve content from a \"related\" part of a message."
+  (interactive)
+  (if (boundp 'w3m-cid-retrieve-function-alist)
+    (unless (assq 'notmuch-show-mode w3m-cid-retrieve-function-alist)
+      (push (cons 'notmuch-show-mode #'notmuch-show--cid-w3m-retrieve)
+	    w3m-cid-retrieve-function-alist)))
+  (setq mm-inline-text-html-with-images t))
+
+(defvar w3m-current-buffer) ;; From `w3m.el'.
+(defun notmuch-show--cid-w3m-retrieve (url &rest args)
+  ;; url includes the cid: prefix and is URL encoded (see RFC 2392).
+  (let* ((cid (url-unhex-string (substring url 4)))
+	 (content-and-type
+	  (with-current-buffer w3m-current-buffer
+	    (notmuch-show--get-cid-content cid))))
+    (when content-and-type
+      (insert (first content-and-type))
+      (second content-and-type))))
+
 ;; MIME part renderers
 
 (defun notmuch-show-multipart/*-to-list (part)
@@ -549,56 +616,11 @@ message at DEPTH in the current thread."
       (indent-rigidly start (point) 1)))
   t)
 
-(defun notmuch-show-setup-w3m ()
-  "Instruct w3m how to retrieve content from a \"related\" part of a message."
-  (interactive)
-  (if (boundp 'w3m-cid-retrieve-function-alist)
-    (unless (assq 'notmuch-show-mode w3m-cid-retrieve-function-alist)
-      (push (cons 'notmuch-show-mode 'notmuch-show-w3m-cid-retrieve)
-	    w3m-cid-retrieve-function-alist)))
-  (setq mm-inline-text-html-with-images t))
-
-(defvar w3m-current-buffer) ;; From `w3m.el'.
-(defvar notmuch-show-w3m-cid-store nil)
-(make-variable-buffer-local 'notmuch-show-w3m-cid-store)
-
-(defun notmuch-show-w3m-cid-store-internal (content-id msg part)
-  (push (list content-id msg part) notmuch-show-w3m-cid-store))
-
-(defun notmuch-show-w3m-cid-store (msg part)
-  (let ((content-id (plist-get part :content-id)))
-    (when content-id
-      (notmuch-show-w3m-cid-store-internal (concat "cid:" content-id)
-					   msg part))))
-
-(defun notmuch-show-w3m-cid-retrieve (url &rest args)
-  (let ((matching-part (with-current-buffer w3m-current-buffer
-			 (assoc url notmuch-show-w3m-cid-store))))
-    (if matching-part
-	(let* ((msg (nth 1 matching-part))
-	       (part (nth 2 matching-part))
-	       (content-type (plist-get part :content-type)))
-	  ;; Request content caching, as some messages reference the
-	  ;; same cid: part many times (hundreds!), which results in
-	  ;; many calls to `notmuch show'.
-	  (insert (notmuch-get-bodypart-binary
-		   msg part notmuch-show-process-crypto 'cache))
-	  content-type)
-      nil)))
-
 (defun notmuch-show-insert-part-multipart/related (msg part content-type nth depth button)
   (let ((inner-parts (plist-get part :content))
 	(start (point)))
 
-    ;; We assume that the first part is text/html and the remainder
-    ;; things that it references.
-
-    ;; Stash the non-primary parts.
-    (mapc (lambda (part)
-	    (notmuch-show-w3m-cid-store msg part))
-	  (cdr inner-parts))
-
-    ;; Render the primary part.
+    ;; Render the primary part.  FIXME: Support RFC 2387 Start header.
     (notmuch-show-insert-bodypart msg (car inner-parts) depth)
     ;; Add hidden buttons for the rest
     (mapc (lambda (inner-part)
@@ -910,6 +932,12 @@ useful for quoting in replies)."
 
 (defun notmuch-show-insert-body (msg body depth)
   "Insert the body BODY at depth DEPTH in the current thread."
+
+  ;; Register all content IDs for this message.  According to RFC
+  ;; 2392, content IDs are *global*, but it's okay if an MUA treats
+  ;; them as only global within a message.
+  (notmuch-show--register-cids msg (first body))
+
   (mapc (lambda (part) (notmuch-show-insert-bodypart msg part depth)) body))
 
 (defun notmuch-show-make-symbol (type)
