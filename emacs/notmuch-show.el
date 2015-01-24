@@ -702,7 +702,7 @@ message at DEPTH in the current thread."
   (let ((start (if button
 		   (button-start button)
 		 (point))))
-    (insert (notmuch-get-bodypart-content msg part notmuch-show-process-crypto))
+    (insert (notmuch-get-bodypart-text msg part notmuch-show-process-crypto))
     (save-excursion
       (save-restriction
 	(narrow-to-region start (point-max))
@@ -711,9 +711,9 @@ message at DEPTH in the current thread."
 
 (defun notmuch-show-insert-part-text/calendar (msg part content-type nth depth button)
   (insert (with-temp-buffer
-	    (insert (notmuch-get-bodypart-content msg part notmuch-show-process-crypto))
-	    ;; notmuch-get-bodypart-content provides "raw", non-converted
-	    ;; data. Replace CRLF with LF before icalendar can use it.
+	    (insert (notmuch-get-bodypart-text msg part notmuch-show-process-crypto))
+	    ;; notmuch-get-bodypart-text does no newline conversion.
+	    ;; Replace CRLF with LF before icalendar can use it.
 	    (goto-char (point-min))
 	    (while (re-search-forward "\r\n" nil t)
 	      (replace-match "\n" nil nil))
