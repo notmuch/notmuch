@@ -60,7 +60,7 @@ install-man: install-apidocs
 ifeq ($(HAVE_DOXYGEN),1)
 MAN_GZIP_FILES += ${APIMAN}.gz
 apidocs: $(APIMAN)
-install-apidocs: apidocs
+install-apidocs: ${APIMAN}.gz
 	mkdir -p "$(DESTDIR)$(mandir)/man3"
 	install -m0644  $(DOCBUILDDIR)/man/man3/*.3.gz  $(DESTDIR)/$(mandir)/man3
 
