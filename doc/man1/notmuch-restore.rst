@@ -50,6 +50,9 @@ Supported options for **restore** include
             format, this heuristic, based the fact that batch-tag format
             contains no parentheses, should be accurate.
 
+    ``--input=``\ <filename>
+        Read input from given file instead of stdin.
+
 GZIPPED INPUT
 =============
 
