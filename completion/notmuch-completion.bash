@@ -169,7 +169,7 @@ _notmuch_dump()
     ! $split &&
     case "${cur}" in
 	-*)
-	    local options="--format= --output="
+	    local options="--gzip --format= --output="
 	    compopt -o nospace
 	    COMPREPLY=( $(compgen -W "$options" -- ${cur}) )
 	    ;;
