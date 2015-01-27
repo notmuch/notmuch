@@ -71,6 +71,8 @@ Supported options for **dump** include
             characters. Note also that tags with spaces will not be
             correctly restored with this format.
 
+    ``--output=``\ <filename>
+        Write output to given file instead of stdout.
 
 SEE ALSO
 ========
