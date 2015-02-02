@@ -136,6 +136,13 @@ indentation."
   :type 'boolean
   :group 'notmuch-show)
 
+;; By default, block all external images to prevent privacy leaks and
+;; potential attacks.
+(defcustom notmuch-show-text/html-blocked-images "."
+  "Remote images that have URLs matching this regexp will be blocked."
+  :type '(choice (const nil) regexp)
+  :group 'notmuch-show)
+
 (defvar notmuch-show-thread-id nil)
 (make-variable-buffer-local 'notmuch-show-thread-id)
 (put 'notmuch-show-thread-id 'permanent-local t)
@@ -771,14 +778,21 @@ will return nil if the CID is unknown or cannot be retrieved."
       ;; It's easier to drive shr ourselves than to work around the
       ;; goofy things `mm-shr' does (like irreversibly taking over
       ;; content ID handling).
-      (notmuch-show--insert-part-text/html-shr msg part)
+
+      ;; FIXME: If we block an image, offer a button to load external
+      ;; images.
+      (let ((shr-blocked-images notmuch-show-text/html-blocked-images))
+	(notmuch-show--insert-part-text/html-shr msg part))
     ;; Otherwise, let message-mode do the heavy lifting
     ;;
     ;; w3m sets up a keymap which "leaks" outside the invisible region
     ;; and causes strange effects in notmuch. We set
     ;; mm-inline-text-html-with-w3m-keymap to nil to tell w3m not to
     ;; set a keymap (so the normal notmuch-show-mode-map remains).
-    (let ((mm-inline-text-html-with-w3m-keymap nil))
+    (let ((mm-inline-text-html-with-w3m-keymap nil)
+	  ;; FIXME: If we block an image, offer a button to load external
+	  ;; images.
+	  (gnus-blocked-images notmuch-show-text/html-blocked-images))
       (notmuch-show-insert-part-*/* msg part content-type nth depth button))))
 
 ;; These functions are used by notmuch-show--insert-part-text/html-shr
@@ -797,11 +811,7 @@ will return nil if the CID is unknown or cannot be retrieved."
 	   ;; shr strips the "cid:" part of URL, but doesn't
 	   ;; URL-decode it (see RFC 2392).
 	   (let ((cid (url-unhex-string url)))
-	     (first (notmuch-show--get-cid-content cid)))))
-	;; Block all external images to prevent privacy leaks and
-	;; potential attacks.  FIXME: If we block an image, offer a
-	;; button to load external images.
-	(shr-blocked-images "."))
+	     (first (notmuch-show--get-cid-content cid))))))
     (shr-insert-document dom)
     t))
 
