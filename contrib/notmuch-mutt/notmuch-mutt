@@ -13,11 +13,12 @@ use warnings;
 
 use File::Path;
 use Getopt::Long qw(:config no_getopt_compat);
-use Mail::Internet;
+use Mail::Header;
 use Mail::Box::Maildir;
 use Pod::Usage;
 use String::ShellQuote;
 use Term::ReadLine;
+use Digest::SHA;
 
 
 my $xdg_cache_dir = "$ENV{HOME}/.cache";
@@ -75,10 +76,29 @@ sub prompt($$) {
 }
 
 sub get_message_id() {
-    my $mail = Mail::Internet->new(\*STDIN);
-    my $mid = $mail->head->get("message-id") or return undef;
-    $mid =~ /^<(.*)>$/;	# get message-id value
-    return $1;
+    my $mid = undef;
+    my @headers = ();
+
+    while (<STDIN>) {  # collect header lines in @headers
+	push(@headers, $_);
+	last if $_ =~ /^$/;
+    }
+    my $head = Mail::Header->new(\@headers);
+    $mid = $head->get("message-id") or undef;
+
+    if ($mid) {  # Message-ID header found
+	$mid =~ /^<(.*)>$/;  # extract message id
+	$mid = $1;
+    } else {  # Message-ID header not found, synthesize a message id
+	      # based on SHA1, as notmuch would do.  See:
+	      # http://git.notmuchmail.org/git/notmuch/blob/HEAD:/lib/sha1.c
+	my $sha = Digest::SHA->new(1);
+	$sha->add($_) foreach(@headers);
+	$sha->addfile(\*STDIN);
+	$mid = 'notmuch-sha1-' . $sha->hexdigest;
+    }
+
+    return $mid;
 }
 
 sub search_action($$$@) {

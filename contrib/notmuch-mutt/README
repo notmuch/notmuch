@@ -33,9 +33,11 @@ Requirements
 
 To *run* notmuch-mutt you will need Perl with the following libraries:
 
+- Digest::SHA <https://metacpan.org/release/Digest-SHA>
+  (Debian package: libdigest-sha-perl)
 - Mail::Box <https://metacpan.org/pod/Mail::Box>
   (Debian package: libmail-box-perl)
-- Mail::Internet <https://metacpan.org/pod/Mail::Internet>
+- Mail::Header <https://metacpan.org/pod/Mail::Header>
   (Debian package: libmailtools-perl)
 - String::ShellQuote <https://metacpan.org/pod/String::ShellQuote>
   (Debian package: libstring-shellquote-perl)
