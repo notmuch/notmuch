@@ -33,13 +33,13 @@ Requirements
 
 To *run* notmuch-mutt you will need Perl with the following libraries:
 
-- Mail::Box <http://search.cpan.org/~markov/Mail-Box/>
+- Mail::Box <https://metacpan.org/pod/Mail::Box>
   (Debian package: libmail-box-perl)
-- Mail::Internet <http://search.cpan.org/~markov/MailTools/>
+- Mail::Internet <https://metacpan.org/pod/Mail::Internet>
   (Debian package: libmailtools-perl)
-- String::ShellQuote <http://search.cpan.org/~rosch/String-ShellQuote/ShellQuote.pm>
+- String::ShellQuote <https://metacpan.org/pod/String::ShellQuote>
   (Debian package: libstring-shellquote-perl)
-- Term::ReadLine <http://search.cpan.org/~hayashi/Term-ReadLine-Gnu/>
+- Term::ReadLine::Gnu <https://metacpan.org/pod/Term::ReadLine::Gnu>
   (Debian package: libterm-readline-gnu-perl)
 
 To *build* notmuch-mutt documentation you will need:
