@@ -378,7 +378,7 @@ printf "Checking for python... "
 have_python=0
 
 for name in python python2 python3; do
-    if command -v $name > /dev/null 2>&1; then
+    if command -v $name > /dev/null; then
 	have_python=1
 	python=$name
 	printf "Yes ($name).\n"
@@ -435,7 +435,7 @@ else
 fi
 
 printf "Checking if doxygen is available... "
-if command -v doxygen > /dev/null 2>&1; then
+if command -v doxygen > /dev/null; then
     printf "Yes.\n"
     have_doxygen=1
 else
@@ -444,7 +444,7 @@ else
 fi
 
 printf "Checking if sphinx is available and supports nroff output... "
-if hash sphinx-build > /dev/null 2>&1 && ${python} -m sphinx.writers.manpage > /dev/null 2>&1 ; then
+if command -v sphinx-build > /dev/null && ${python} -m sphinx.writers.manpage > /dev/null 2>&1 ; then
     printf "Yes.\n"
     have_sphinx=1
 else
