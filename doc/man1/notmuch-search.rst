@@ -35,7 +35,7 @@ Supported options for **search** include
         intended for programs that invoke **notmuch(1)** internally. If
         omitted, the latest supported version will be used.
 
-    ``--output=(summary|threads|messages|files|tags|sender|recipients)``
+    ``--output=(summary|threads|messages|files|tags)``
 
         **summary**
             Output a summary of each thread with any message matching
