@@ -1,0 +1,136 @@
+#!/usr/bin/env bash
+#
+# notmuch-emacs-mua - start composing a mail on the command line
+#
+# Copyright © 2014 Jani Nikula
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see http://www.gnu.org/licenses/ .
+#
+# Authors: Jani Nikula <jani@nikula.org>
+#
+
+set -eu
+
+escape ()
+{
+    echo "${1//\"/\\\"}"
+}
+
+EMACS=${EMACS-emacs}
+EMACSCLIENT=${EMACSCLIENT-emacsclient}
+
+PRINT_ONLY=
+USE_EMACSCLIENT=
+CLIENT_TYPE="-c"
+
+# The crux of it all: construct an elisp progn and eval it.
+ELISP="(prog1 'done (require 'notmuch) (notmuch-mua-new-mail)"
+ELISP="${ELISP} (setq message-exit-actions (list #'save-buffers-kill-terminal))"
+
+while getopts :s:c:b:i:hC opt; do
+    # Handle errors and long options.
+    case "${opt}" in
+	:)
+	    echo "$0: short option -${OPTARG} requires an argument." >&2
+	    exit 1
+	    ;;
+	\?)
+	    opt=$1
+	    if [ "${OPTARG}" != "-" ]; then
+		echo "$0: unknown short option -${OPTARG}." >&2
+		exit 1
+	    fi
+
+	    case "${opt}" in
+		# Long options with arguments.
+		--subject=*|--to=*|--cc=*|--bcc=*|--body=*)
+		    OPTARG=${opt#--*=}
+		    opt=${opt%%=*}
+		    ;;
+		# Long options without arguments.
+		--help|--print|--no-window-system|--client)
+		    ;;
+		*)
+		    echo "$0: unknown long option ${opt}, or argument mismatch." >&2
+		    exit 1
+		    ;;
+	    esac
+	    # getopts does not do this for what it considers errors.
+	    OPTIND=$((OPTIND + 1))
+	    ;;
+    esac
+
+
+    OPTARG="${OPTARG-none}"
+    OPTARG="$(escape "${OPTARG}")"
+
+    case "${opt}" in
+	--help|h)
+	    exec man notmuch-emacs-mua
+	    ;;
+	--client|C)
+	    USE_EMACSCLIENT="yes"
+	    ;;
+	--subject|s)
+	    ELISP="${ELISP} (message-goto-subject) (insert \"${OPTARG}\")"
+	    ;;
+	--to)
+	    ELISP="${ELISP} (message-goto-to) (insert \"${OPTARG}, \")"
+	    ;;
+	--cc|c)
+	    ELISP="${ELISP} (message-goto-cc) (insert \"${OPTARG}, \")"
+	    ;;
+	--bcc|b)
+	    ELISP="${ELISP} (message-goto-bcc) (insert \"${OPTARG}, \")"
+	    ;;
+	--body|i)
+	    ELISP="${ELISP} (message-goto-body) (cd \"${PWD}\") (insert-file \"${OPTARG}\")"
+	    ;;
+	--print)
+	    PRINT_ONLY=1
+	    ;;
+	--no-window-system)
+	    CLIENT_TYPE="-t"
+	    ;;
+	*)
+	    # We should never end up here.
+	    echo "$0: internal error (option ${opt})." >&2
+	    exit 1
+	    ;;
+    esac
+
+    shift $((OPTIND - 1))
+    OPTIND=1
+done
+
+# Positional parameters.
+for arg; do
+    arg="$(escape "${arg}")"
+    ELISP="${ELISP} (message-goto-to) (insert \"${arg}, \")"
+done
+
+# End progn.
+ELISP="${ELISP})"
+
+if [ -n "$PRINT_ONLY" ]; then
+    echo ${ELISP}
+    exit 0
+fi
+
+if [ -n "$USE_EMACSCLIENT" ]; then
+    # Evaluate the progn.
+    exec ${EMACSCLIENT} ${CLIENT_TYPE} -a '' --eval "${ELISP}"
+else
+    exec ${EMACS} --eval "${ELISP}"
+fi

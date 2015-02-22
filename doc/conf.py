@@ -78,6 +78,10 @@ man_pages = [
         u'creates a plain-text dump of the tags of each message',
         [u'Carl Worth and many others'], 1),
 
+('man1/notmuch-emacs-mua','notmuch-emacs-mua',
+        u'send mail with notmuch and emacs',
+        [u'Carl Worth and many others'], 1),
+
 ('man5/notmuch-hooks','notmuch-hooks',
         u'hooks for notmuch',
         [u'Carl Worth and many others'], 5),
