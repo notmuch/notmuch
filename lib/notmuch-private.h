@@ -65,7 +65,7 @@ NOTMUCH_BEGIN_DECLS
 
 /* Robust bit test/set/reset macros */
 #define _NOTMUCH_VALID_BIT(bit) \
-    ((bit) >= 0 && (bit) < CHAR_BIT * sizeof (unsigned long long))
+    ((bit) >= 0 && ((unsigned long) bit) < CHAR_BIT * sizeof (unsigned long long))
 #define NOTMUCH_TEST_BIT(val, bit) \
     (_NOTMUCH_VALID_BIT(bit) ? !!((val) & (1ull << (bit))) : 0)
 #define NOTMUCH_SET_BIT(valp, bit) \
