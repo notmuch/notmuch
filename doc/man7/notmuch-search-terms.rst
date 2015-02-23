@@ -205,8 +205,8 @@ exact matches like "tag:inbox"  or **probabilistic**, supporting a more flexible
 +------------------+-----------------------+
 | **tag:** **id:** | **from:** **to:**     |
 |**thread:**       |**subject:**           |
-|**folder:**       |**attachment**         |
-|**path:**         |                       |
+|**folder:**       |**attachment:**        |
+|**path:**         |**mimetype:**          |
 |                  |                       |
 +------------------+-----------------------+
 
