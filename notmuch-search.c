@@ -671,7 +671,7 @@ notmuch_search_command (notmuch_config_t *config, int argc, char *argv[])
 	{ NOTMUCH_OPT_INT, &ctx->offset, "offset", 'O', 0 },
 	{ NOTMUCH_OPT_INT, &ctx->limit, "limit", 'L', 0  },
 	{ NOTMUCH_OPT_INT, &ctx->dupe, "duplicate", 'D', 0  },
-	{ NOTMUCH_OPT_INHERIT, &common_options, NULL, 0, 0 },
+	{ NOTMUCH_OPT_INHERIT, (void *) &common_options, NULL, 0, 0 },
 	{ 0, 0, 0, 0, 0 }
     };
 
@@ -727,7 +727,7 @@ notmuch_address_command (notmuch_config_t *config, int argc, char *argv[])
 	  (notmuch_keyword_t []){ { "true", NOTMUCH_EXCLUDE_TRUE },
 				  { "false", NOTMUCH_EXCLUDE_FALSE },
 				  { 0, 0 } } },
-	{ NOTMUCH_OPT_INHERIT, &common_options, NULL, 0, 0 },
+	{ NOTMUCH_OPT_INHERIT, (void *) &common_options, NULL, 0, 0 },
 	{ 0, 0, 0, 0, 0 }
     };
 
