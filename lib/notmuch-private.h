@@ -64,15 +64,14 @@ NOTMUCH_BEGIN_DECLS
     strncmp ((var), (literal), sizeof (literal) - 1)
 
 /* Robust bit test/set/reset macros */
+#define _NOTMUCH_VALID_BIT(bit) \
+    ((bit) >= 0 && (bit) < CHAR_BIT * sizeof (unsigned long long))
 #define NOTMUCH_TEST_BIT(val, bit) \
-    (((bit) < 0 || (bit) >= CHAR_BIT * sizeof (unsigned long long)) ? 0	\
-     : !!((val) & (1ull << (bit))))
+    (_NOTMUCH_VALID_BIT(bit) ? !!((val) & (1ull << (bit))) : 0)
 #define NOTMUCH_SET_BIT(valp, bit) \
-    (((bit) < 0 || (bit) >= CHAR_BIT * sizeof (unsigned long long)) ? *(valp) \
-     : (*(valp) |= (1ull << (bit))))
+    (_NOTMUCH_VALID_BIT(bit) ? (*(valp) |= (1ull << (bit))) : *(valp))
 #define NOTMUCH_CLEAR_BIT(valp,  bit) \
-    (((bit) < 0 || (bit) >= CHAR_BIT * sizeof (unsigned long long)) ? *(valp) \
-     : (*(valp) &= ~(1ull << (bit))))
+    (_NOTMUCH_VALID_BIT(bit) ? (*(valp) &= ~(1ull << (bit))) : *(valp))
 
 #define unused(x) x __attribute__ ((unused))
 
