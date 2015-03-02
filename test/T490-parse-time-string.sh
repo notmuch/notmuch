@@ -40,8 +40,6 @@ two mo       ==> Thu Nov 11 12:13:14 +0000 2010
 5m           ==> Tue Jan 11 12:08:14 +0000 2011
 dozen mi     ==> Tue Jan 11 12:01:14 +0000 2011
 8am          ==> Tue Jan 11 08:00:00 +0000 2011
-9:15         ==> Tue Jan 11 09:15:00 +0000 2011
-12:34        ==> Tue Jan 11 12:34:00 +0000 2011
 monday       ==> Mon Jan 10 12:13:14 +0000 2011
 yesterday    ==> Mon Jan 10 12:13:14 +0000 2011
 tomorrow     ==> ERROR: KEYWORD
@@ -77,6 +75,20 @@ two months ==> Thu Nov 11 12:13:14 +0000 2010
 @10 ==> Thu Jan 01 00:00:10 +0000 1970
 EOF
 
+${TEST_DIRECTORY}/parse-time --ref=${REFERENCE} < INPUT > OUTPUT
+test_expect_equal_file INPUT OUTPUT
+
+test_begin_subtest "Second rounding tests"
+test_subtest_known_broken
+REFERENCE=$(_date Tue Jan 11 12:13:14 +0000 2011)
+cat <<EOF > INPUT
+9:15         ==> Tue Jan 11 09:15:14 +0000 2011
+12:34        ==> Tue Jan 11 12:34:14 +0000 2011
+10:30        ==> Tue Jan 11 10:30:14 +0000 2011
+10:30        ==^> Tue Jan 11 10:30:59 +0000 2011
+10:30        ==^^> Tue Jan 11 10:31:00 +0000 2011
+10:30        ==_> Tue Jan 11 10:30:00 +0000 2011
+EOF
 ${TEST_DIRECTORY}/parse-time --ref=${REFERENCE} < INPUT > OUTPUT
 test_expect_equal_file INPUT OUTPUT
 
