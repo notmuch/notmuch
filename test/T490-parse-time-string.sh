@@ -79,7 +79,6 @@ ${TEST_DIRECTORY}/parse-time --ref=${REFERENCE} < INPUT > OUTPUT
 test_expect_equal_file INPUT OUTPUT
 
 test_begin_subtest "Second rounding tests"
-test_subtest_known_broken
 REFERENCE=$(_date Tue Jan 11 12:13:14 +0000 2011)
 cat <<EOF > INPUT
 9:15         ==> Tue Jan 11 09:15:14 +0000 2011

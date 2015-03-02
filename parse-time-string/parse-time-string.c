@@ -1081,10 +1081,10 @@ parse_time (struct state *state, char sep,
 	return set_user_tz (state, state->delim, v1, v2);
     }
 
-    if (!is_valid_time (v1, v2, v3))
+    if (!is_valid_time (v1, v2, n3 ? v3 : 0))
 	return -PARSE_TIME_ERR_INVALIDTIME;
 
-    return set_abs_time (state, v1, v2, n3 ? v3 : 0);
+    return set_abs_time (state, v1, v2, n3 ? (int) v3 : UNSET);
 }
 
 /* strtoul helper that assigns length. */
