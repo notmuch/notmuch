@@ -38,7 +38,8 @@ CLIENT_TYPE="-c"
 ELISP="(prog1 'done (require 'notmuch) (notmuch-mua-new-mail)"
 ELISP="${ELISP} (setq message-exit-actions (list #'save-buffers-kill-terminal))"
 
-while getopts :s:c:b:i:hC opt; do
+# Short options compatible with mutt(1).
+while getopts :s:c:b:i:h opt; do
     # Handle errors and long options.
     case "${opt}" in
 	:)
@@ -79,7 +80,7 @@ while getopts :s:c:b:i:hC opt; do
 	--help|h)
 	    exec man notmuch-emacs-mua
 	    ;;
-	--client|C)
+	--client)
 	    USE_EMACSCLIENT="yes"
 	    ;;
 	--subject|s)

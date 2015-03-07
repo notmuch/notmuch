@@ -18,7 +18,7 @@ Supported options for **notmuch-emacs-mua** include
     ``-h, --help``
         Display help.
 
-    ``-C, --client``
+    ``--client``
         Use emacsclient, rather than emacs. This will start
         an emacs daemon process if necessary.
 
