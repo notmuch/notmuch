@@ -51,11 +51,11 @@ Options may be specified multiple times.
 ENVIRONMENT VARIABLES
 =====================
 
-``EMACS``
-Name of emacs command to invoke
+**EMACS**
+    Name of emacs command to invoke. Defaults to "emacs".
 
-``EMACSCLIENT``
-Name of emacsclient comment to invoke
+**EMACSCLIENT**
+    Name of emacsclient command to invoke. Defaults to "emacsclient".
 
 SEE ALSO
 ========
