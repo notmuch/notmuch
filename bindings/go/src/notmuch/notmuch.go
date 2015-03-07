@@ -801,7 +801,22 @@ func (self *Message) SetFlag(flag Flag, value bool) {
 	C.notmuch_message_set_flag(self.message, C.notmuch_message_flag_t(flag), v)
 }
 
-// TODO: wrap notmuch_message_get_date
+/* Get the timestamp (seconds since the epoch) of 'message'.
+ *
+ * Return status:
+ *
+ * NOTMUCH_STATUS_SUCCESS: Timestamp successfully retrieved
+ *
+ * NOTMUCH_STATUS_NULL_POINTER: The 'message' argument is NULL
+ *
+ */
+func (self *Message) GetDate() (int64, Status) {
+	if self.message == nil {
+		return -1, STATUS_NULL_POINTER
+	}
+	timestamp := C.notmuch_message_get_date(self.message)
+	return int64(timestamp), STATUS_SUCCESS
+}
 
 /* Get the value of the specified header from 'message'.
  *
