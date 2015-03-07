@@ -18,15 +18,16 @@ Copyright 2010 Sebastian Spaeth <Sebastian@SSpaeth.de>
 """
 
 from ctypes import CDLL, Structure, POINTER
+from version import SOVERSION
 
 #-----------------------------------------------------------------------------
 #package-global instance of the notmuch library
 try:
     from os import uname
     if uname()[0] == 'Darwin':
-        nmlib = CDLL("libnotmuch.4.dylib")
+        nmlib = CDLL("libnotmuch.{0:s}.dylib".format(SOVERSION))
     else:
-        nmlib = CDLL("libnotmuch.so.4")
+        nmlib = CDLL("libnotmuch.so.{0:s}".format(SOVERSION))
 except:
     raise ImportError("Could not find shared 'notmuch' library.")
 
