@@ -73,6 +73,8 @@ if [[ ( -n "$TEST_EMACS" && -z "$TEST_EMACSCLIENT" ) || \
 fi
 TEST_EMACS=${TEST_EMACS:-${EMACS:-emacs}}
 TEST_EMACSCLIENT=${TEST_EMACSCLIENT:-emacsclient}
+TEST_CC=${TEST_CC:-cc}
+TEST_CFLAGS=${TEST_CFLAGS:-"-g -O0"}
 
 # Protect ourselves from common misconfiguration to export
 # CDPATH into the environment
@@ -1160,6 +1162,19 @@ test_python() {
 	(echo "import sys; _orig_stdout=sys.stdout; sys.stdout=open('OUTPUT', 'w')"; cat) \
 		| $cmd -
 }
+
+test_C () {
+    exec_file="test${test_count}"
+    test_file="${exec_file}.c"
+    cat > ${test_file}
+    export LD_LIBRARY_PATH=${TEST_DIRECTORY}/../lib
+    ${TEST_CC} ${TEST_CFLAGS} -I${TEST_DIRECTORY}/../lib -o ${exec_file} ${test_file} -L${TEST_DIRECTORY}/../lib/ -lnotmuch -ltalloc
+    echo "== stdout ==" > OUTPUT.stdout
+    echo "== stderr ==" > OUTPUT.stderr
+    ./${exec_file} "$@" 1>>OUTPUT.stdout 2>>OUTPUT.stderr
+    sed "s,${PWD},CWD,g"  OUTPUT.stdout OUTPUT.stderr > OUTPUT
+}
+
 
 # Creates a script that counts how much time it is executed and calls
 # notmuch.  $notmuch_counter_command is set to the path to the

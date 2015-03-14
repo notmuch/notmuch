@@ -84,6 +84,11 @@ the tests in one of the following ways.
 	TEST_EMACS=my-special-emacs TEST_EMACSCLIENT=my-emacsclient ./emacs
 	make test TEST_EMACS=my-special-emacs TEST_EMACSCLIENT=my-emacsclient
 
+Some tests may require a c compiler. You can choose the name and flags similarly
+to with emacs, e.g.
+
+     make test TEST_CC=gcc TEST_CFLAGS="-g -O2"
+
 Quiet Execution
 ---------------
 
