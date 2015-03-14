@@ -276,4 +276,11 @@ test_expect_code 1 "Invalid tags set exit code" \
 
 notmuch config set new.tags $OLDCONFIG
 
+
+test_begin_subtest "Xapian exception: read only files"
+chmod u-w  ${MAIL_DIR}/.notmuch/xapian/*.DB
+output=$(NOTMUCH_NEW 2>&1 | sed 's/: .*$//' )
+chmod u+w  ${MAIL_DIR}/.notmuch/xapian/*.DB
+test_expect_equal "$output" "A Xapian exception occurred opening database"
+
 test_done
