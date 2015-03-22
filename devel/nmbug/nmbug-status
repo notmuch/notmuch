@@ -92,7 +92,7 @@ def read_config(path=None, encoding=None):
 
         # read only the first line from the pipe
         sha1_bytes = subprocess.Popen(
-            ['git', '--git-dir', nmbhome, 'show-ref', '-s', branch],
+            ['git', '--git-dir', nmbhome, 'show-ref', '-s', '--heads', branch],
             stdout=subprocess.PIPE).stdout.readline()
         sha1 = sha1_bytes.decode(encoding).rstrip()
         if not sha1:

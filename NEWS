@@ -23,6 +23,21 @@ Contrib
 previously provided by `notmuch-deliver` should now be provided by
 `notmuch insert`, provided by the main notmuch binary.
 
+nmbug-status
+------------
+
+`nmbug-status` now only matches local branches when reading
+`status-config.json` from the `config` branch of the `NMBGIT`
+repository.  To help new users running `nmbug-status`, `nmbug clone`
+now creates a local `config` branch tracking `origin/config`.  Folks
+who use `nmbug-status` with an in-Git config (i.e. you don't use the
+`--config` option) who already have `NMBGIT` set up are encouraged to
+run:
+
+    git checkout config origin/config
+
+in their `NMBGIT` repository (usually `~/.nmbug`).
+
 Notmuch 0.19 (2014-11-14)
 =========================
 

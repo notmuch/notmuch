@@ -308,6 +308,7 @@ def clone(repository):
             wait=True)
     _git(args=['config', '--unset', 'core.worktree'], wait=True)
     _git(args=['config', 'core.bare', 'true'], wait=True)
+    _git(args=['branch', 'config', 'origin/config'], wait=True)
 
 
 def _is_committed(status):
