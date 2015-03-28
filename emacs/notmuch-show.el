@@ -99,6 +99,13 @@ visible for any given message."
   :group 'notmuch-show
   :group 'notmuch-hooks)
 
+(defcustom notmuch-show-max-text-part-size 10000
+  "Maximum size of a text part to be shown by default in characters.
+
+Set to 0 to show the part regardless of size."
+  :type 'integer
+  :group 'notmuch-show)
+
 ;; Mostly useful for debugging.
 (defcustom notmuch-show-all-multipart/alternative-parts nil
   "Should all parts of multipart/alternative parts be shown?"
@@ -937,14 +944,20 @@ useful for quoting in replies)."
 			     "text/x-diff")
 			content-type))
 	 (nth (plist-get part :id))
+	 (long (and (notmuch-match-content-type mime-type "text/*")
+		    (> notmuch-show-max-text-part-size 0)
+		    (> (length (plist-get part :content)) notmuch-show-max-text-part-size)))
 	 (beg (point))
-	 ;; Hide the part initially if HIDE is t.
-	 (show-part (not (equal hide t)))
 	 ;; We omit the part button for the first (or only) part if
 	 ;; this is text/plain, or HIDE is 'no-buttons.
 	 (button (unless (or (equal hide 'no-buttons)
 			     (and (string= mime-type "text/plain") (<= nth 1)))
 		   (notmuch-show-insert-part-header nth mime-type content-type (plist-get part :filename))))
+	 ;; Hide the part initially if HIDE is t, or if it is too long
+	 ;; and we have a button to allow toggling (thus reply which
+	 ;; uses 'no-buttons automatically includes long parts)
+	 (show-part (not (or (equal hide t)
+			     (and long button))))
 	 (content-beg (point)))
 
     ;; Store the computed mime-type for later use (e.g. by attachment handlers).
