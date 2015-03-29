@@ -45,9 +45,12 @@ for ((n = 0; n < 4; n++)); do
     while read -a parents; do
         references=""
         parent=${parents[$n]}
-        while [[ $parent != None ]]; do
+        while [[ ${parent:-None} != None ]]; do
             references="<m$parent@t$thread> $references"
+            pp=$parent
             parent=${parents[$parent]}
+            # Avoid looping over broken input (if ever)
+            parents[$pp]="None"
         done
 
         generate_message \
