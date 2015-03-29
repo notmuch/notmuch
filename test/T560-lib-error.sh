@@ -126,9 +126,10 @@ int main (int argc, char** argv)
      fprintf (stderr, "error opening database: %d\n", stat);
    }
    stat = notmuch_database_add_message (db, "/nonexistent", NULL);
-   if (stat)
-       fputs (notmuch_database_status_string (db), stderr);
-
+   if (stat) {
+       char *status_string = notmuch_database_status_string (db);
+       if (status_string) fputs (status_string, stderr);
+   }
 }
 EOF
 cat <<'EOF' >EXPECTED
