@@ -22,9 +22,12 @@
 
 set -eu
 
+# escape: "expand" '\' as '\\' and '"' as '\"'
+# calling convention: escape -v var "$arg" (like in bash printf).
 escape ()
 {
-    echo "${1//\"/\\\"}"
+    local __escape_arg__=${3//\\/\\\\}
+    printf -v $2 '%s' "${__escape_arg__//\"/\\\"}"
 }
 
 EMACS=${EMACS-emacs}
@@ -72,9 +75,7 @@ while getopts :s:c:b:i:h opt; do
 	    ;;
     esac
 
-
-    OPTARG="${OPTARG-none}"
-    OPTARG="$(escape "${OPTARG}")"
+    escape -v OPTARG "${OPTARG-none}"
 
     case "${opt}" in
 	--help|h)
@@ -117,7 +118,7 @@ done
 
 # Positional parameters.
 for arg; do
-    arg="$(escape "${arg}")"
+    escape -v arg "${arg}"
     ELISP="${ELISP} (message-goto-to) (insert \"${arg}, \")"
 done
 
