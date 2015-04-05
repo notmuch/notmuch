@@ -466,4 +466,6 @@ notmuch_database_dump (notmuch_database_t *notmuch,
 		       notmuch_bool_t gzip_output);
 
 #include "command-line-arguments.h"
+extern const notmuch_opt_desc_t  notmuch_shared_options [];
+void notmuch_process_shared_options (const char* subcommand_name);
 #endif

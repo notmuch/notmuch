@@ -1114,12 +1114,15 @@ notmuch_show_command (notmuch_config_t *config, int argc, char *argv[])
 	{ NOTMUCH_OPT_BOOLEAN, &params.crypto.verify, "verify", 'v', 0 },
 	{ NOTMUCH_OPT_BOOLEAN, &params.output_body, "body", 'b', 0 },
 	{ NOTMUCH_OPT_BOOLEAN, &params.include_html, "include-html", 0, 0 },
+	{ NOTMUCH_OPT_INHERIT, (void *) &notmuch_shared_options, NULL, 0, 0 },
 	{ 0, 0, 0, 0, 0 }
     };
 
     opt_index = parse_arguments (argc, argv, options, 1);
     if (opt_index < 0)
 	return EXIT_FAILURE;
+
+    notmuch_process_shared_options (argv[0]);
 
     /* decryption implies verification */
     if (params.crypto.decrypt)

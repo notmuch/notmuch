@@ -43,6 +43,35 @@ notmuch_help_command (notmuch_config_t *config, int argc, char *argv[]);
 static int
 notmuch_command (notmuch_config_t *config, int argc, char *argv[]);
 
+static int
+_help_for (const char *topic);
+
+static notmuch_bool_t print_version = FALSE, print_help = FALSE;
+
+const notmuch_opt_desc_t notmuch_shared_options [] = {
+    { NOTMUCH_OPT_BOOLEAN, &print_version, "version", 'v', 0 },
+    { NOTMUCH_OPT_BOOLEAN, &print_help, "help", 'h', 0 },
+    {0, 0, 0, 0, 0}
+};
+
+/* any subcommand wanting to support these options should call
+ * inherit notmuch_shared_options and call
+ * notmuch_process_shared_options (subcommand_name);
+ */
+void
+notmuch_process_shared_options (const char *subcommand_name) {
+    if (print_version) {
+	printf ("notmuch " STRINGIFY(NOTMUCH_VERSION) "\n");
+	exit (EXIT_SUCCESS);
+    }
+
+    if (print_help) {
+	int ret = _help_for (subcommand_name);
+	exit (ret);
+    }
+}
+
+
 static command_t commands[] = {
     { NULL, notmuch_command, TRUE,
       "Notmuch main command." },
@@ -295,14 +324,12 @@ main (int argc, char *argv[])
     command_t *command;
     char *config_file_name = NULL;
     notmuch_config_t *config = NULL;
-    notmuch_bool_t print_help=FALSE, print_version=FALSE;
     int opt_index;
     int ret;
 
     notmuch_opt_desc_t options[] = {
-	{ NOTMUCH_OPT_BOOLEAN, &print_help, "help", 'h', 0 },
-	{ NOTMUCH_OPT_BOOLEAN, &print_version, "version", 'v', 0 },
 	{ NOTMUCH_OPT_STRING, &config_file_name, "config", 'c', 0 },
+	{ NOTMUCH_OPT_INHERIT, (void *) &notmuch_shared_options, NULL, 0, 0 },
 	{ 0, 0, 0, 0, 0 }
     };
 
@@ -324,24 +351,7 @@ main (int argc, char *argv[])
 	goto DONE;
     }
 
-    /* Handle notmuch --help [command] and notmuch command --help. */
-    if (print_help ||
-	(opt_index + 1 < argc && strcmp (argv[opt_index + 1], "--help") == 0)) {
-	/*
-	 * Pass the first positional argument as argv[1] so the help
-	 * command can give help for it. The help command ignores the
-	 * argv[0] passed to it.
-	 */
-	ret = notmuch_help_command (NULL, argc - opt_index + 1,
-				    argv + opt_index - 1);
-	goto DONE;
-    }
-
-    if (print_version) {
-	printf ("notmuch " STRINGIFY(NOTMUCH_VERSION) "\n");
-	ret = EXIT_SUCCESS;
-	goto DONE;
-    }
+    notmuch_process_shared_options (NULL);
 
     if (opt_index < argc)
 	command_name = argv[opt_index];

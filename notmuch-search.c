@@ -681,6 +681,7 @@ notmuch_search_command (notmuch_config_t *config, int argc, char *argv[])
 	{ NOTMUCH_OPT_INT, &ctx->limit, "limit", 'L', 0  },
 	{ NOTMUCH_OPT_INT, &ctx->dupe, "duplicate", 'D', 0  },
 	{ NOTMUCH_OPT_INHERIT, (void *) &common_options, NULL, 0, 0 },
+	{ NOTMUCH_OPT_INHERIT, (void *) &notmuch_shared_options, NULL, 0, 0 },
 	{ 0, 0, 0, 0, 0 }
     };
 
@@ -688,6 +689,8 @@ notmuch_search_command (notmuch_config_t *config, int argc, char *argv[])
     opt_index = parse_arguments (argc, argv, options, 1);
     if (opt_index < 0)
 	return EXIT_FAILURE;
+
+    notmuch_process_shared_options (argv[0]);
 
     if (ctx->output != OUTPUT_FILES && ctx->output != OUTPUT_MESSAGES &&
 	ctx->dupe != -1) {
@@ -737,12 +740,15 @@ notmuch_address_command (notmuch_config_t *config, int argc, char *argv[])
 				  { "false", NOTMUCH_EXCLUDE_FALSE },
 				  { 0, 0 } } },
 	{ NOTMUCH_OPT_INHERIT, (void *) &common_options, NULL, 0, 0 },
+	{ NOTMUCH_OPT_INHERIT, (void *) &notmuch_shared_options, NULL, 0, 0 },
 	{ 0, 0, 0, 0, 0 }
     };
 
     opt_index = parse_arguments (argc, argv, options, 1);
     if (opt_index < 0)
 	return EXIT_FAILURE;
+
+    notmuch_process_shared_options (argv[0]);
 
     if (! (ctx->output & (OUTPUT_SENDER | OUTPUT_RECIPIENTS)))
 	ctx->output |= OUTPUT_SENDER;
