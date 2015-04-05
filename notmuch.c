@@ -177,7 +177,7 @@ exec_man (const char *page)
 }
 
 static int
-notmuch_help_command (notmuch_config_t *config, int argc, char *argv[])
+notmuch_help_command (unused (notmuch_config_t * config), int argc, char *argv[])
 {
     command_t *command;
     help_topic_t *topic;
@@ -202,14 +202,14 @@ notmuch_help_command (notmuch_config_t *config, int argc, char *argv[])
 
     command = find_command (argv[0]);
     if (command) {
-	char *page = talloc_asprintf (config, "notmuch-%s", command->name);
+	char *page = talloc_asprintf (NULL, "notmuch-%s", command->name);
 	exec_man (page);
     }
 
     for (i = 0; i < ARRAY_SIZE (help_topics); i++) {
 	topic = &help_topics[i];
 	if (strcmp (argv[0], topic->name) == 0) {
-	    char *page = talloc_asprintf (config, "notmuch-%s", topic->name);
+	    char *page = talloc_asprintf (NULL, "notmuch-%s", topic->name);
 	    exec_man (page);
 	}
     }
