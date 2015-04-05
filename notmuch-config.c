@@ -872,8 +872,15 @@ int
 notmuch_config_command (notmuch_config_t *config, int argc, char *argv[])
 {
     int ret;
+    int opt_index;
 
-    argc--; argv++; /* skip subcommand argument */
+    opt_index = notmuch_minimal_options ("config", argc, argv);
+    if (opt_index < 0)
+	return EXIT_FAILURE;
+
+    /* skip at least subcommand argument */
+    argc-= opt_index;
+    argv+= opt_index;
 
     if (argc < 1) {
 	fprintf (stderr, "Error: notmuch config requires at least one argument.\n");

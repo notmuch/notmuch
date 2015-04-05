@@ -71,6 +71,28 @@ notmuch_process_shared_options (const char *subcommand_name) {
     }
 }
 
+/* This is suitable for subcommands that do not actually open the
+ * database.
+ */
+int notmuch_minimal_options (const char *subcommand_name,
+				  int argc, char **argv)
+{
+    int opt_index;
+
+    notmuch_opt_desc_t options[] = {
+	{ NOTMUCH_OPT_INHERIT, (void *) &notmuch_shared_options, NULL, 0, 0 },
+	{ 0, 0, 0, 0, 0 }
+    };
+
+    opt_index = parse_arguments (argc, argv, options, 1);
+
+    if (opt_index < 0)
+	return -1;
+
+    /* We can't use argv here as it is sometimes NULL */
+    notmuch_process_shared_options (subcommand_name);
+    return opt_index;
+}
 
 static command_t commands[] = {
     { NULL, notmuch_command, TRUE,
@@ -250,7 +272,15 @@ _help_for (const char *topic_name)
 static int
 notmuch_help_command (unused (notmuch_config_t * config), int argc, char *argv[])
 {
-    argc--; argv++; /* Ignore "help" */
+    int opt_index;
+
+    opt_index = notmuch_minimal_options ("help", argc, argv);
+    if (opt_index < 0)
+	return EXIT_FAILURE;
+
+    /* skip at least subcommand argument */
+    argc-= opt_index;
+    argv+= opt_index;
 
     if (argc == 0) {
 	return _help_for (NULL);

@@ -468,4 +468,6 @@ notmuch_database_dump (notmuch_database_t *notmuch,
 #include "command-line-arguments.h"
 extern const notmuch_opt_desc_t  notmuch_shared_options [];
 void notmuch_process_shared_options (const char* subcommand_name);
+int notmuch_minimal_options (const char* subcommand_name,
+			     int argc, char **argv);
 #endif

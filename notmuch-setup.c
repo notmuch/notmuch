@@ -145,6 +145,9 @@ notmuch_setup_command (notmuch_config_t *config,
 	chomp_newline (response);				\
     } while (0)
 
+    if (notmuch_minimal_options ("setup", argc, argv) < 0)
+	return EXIT_FAILURE;
+
     if (notmuch_config_is_new (config))
 	welcome_message_pre_setup ();
 
