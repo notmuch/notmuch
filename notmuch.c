@@ -177,21 +177,19 @@ exec_man (const char *page)
 }
 
 static int
-notmuch_help_command (unused (notmuch_config_t * config), int argc, char *argv[])
+_help_for (const char *topic_name)
 {
     command_t *command;
     help_topic_t *topic;
     unsigned int i;
 
-    argc--; argv++; /* Ignore "help" */
-
-    if (argc == 0) {
+    if (!topic_name) {
 	printf ("The notmuch mail system.\n\n");
 	usage (stdout);
 	return EXIT_SUCCESS;
     }
 
-    if (strcmp (argv[0], "help") == 0) {
+    if (strcmp (topic_name, "help") == 0) {
 	printf ("The notmuch help system.\n\n"
 		"\tNotmuch uses the man command to display help. In case\n"
 		"\tof difficulties check that MANPATH includes the pages\n"
@@ -200,7 +198,7 @@ notmuch_help_command (unused (notmuch_config_t * config), int argc, char *argv[]
 	return EXIT_SUCCESS;
     }
 
-    command = find_command (argv[0]);
+    command = find_command (topic_name);
     if (command) {
 	char *page = talloc_asprintf (NULL, "notmuch-%s", command->name);
 	exec_man (page);
@@ -208,7 +206,7 @@ notmuch_help_command (unused (notmuch_config_t * config), int argc, char *argv[]
 
     for (i = 0; i < ARRAY_SIZE (help_topics); i++) {
 	topic = &help_topics[i];
-	if (strcmp (argv[0], topic->name) == 0) {
+	if (strcmp (topic_name, topic->name) == 0) {
 	    char *page = talloc_asprintf (NULL, "notmuch-%s", topic->name);
 	    exec_man (page);
 	}
@@ -216,8 +214,20 @@ notmuch_help_command (unused (notmuch_config_t * config), int argc, char *argv[]
 
     fprintf (stderr,
 	     "\nSorry, %s is not a known command. There's not much I can do to help.\n\n",
-	     argv[0]);
+	     topic_name);
     return EXIT_FAILURE;
+}
+
+static int
+notmuch_help_command (unused (notmuch_config_t * config), int argc, char *argv[])
+{
+    argc--; argv++; /* Ignore "help" */
+
+    if (argc == 0) {
+	return _help_for (NULL);
+    }
+
+    return _help_for (argv[0]);
 }
 
 /* Handle the case of "notmuch" being invoked with no command
