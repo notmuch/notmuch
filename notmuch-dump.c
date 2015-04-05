@@ -215,6 +215,8 @@ notmuch_dump_command (notmuch_config_t *config, int argc, char *argv[])
 			       NOTMUCH_DATABASE_MODE_READ_WRITE, &notmuch))
 	return EXIT_FAILURE;
 
+    notmuch_exit_if_unmatched_db_uuid (notmuch);
+
     char *output_file_name = NULL;
     int opt_index;
 

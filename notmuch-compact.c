@@ -46,6 +46,11 @@ notmuch_compact_command (notmuch_config_t *config, int argc, char *argv[])
     if (opt_index < 0)
 	return EXIT_FAILURE;
 
+    if (notmuch_requested_db_uuid) {
+	fprintf (stderr, "Error: --uuid not implemented for compact\n");
+	return EXIT_FAILURE;
+    }
+
     notmuch_process_shared_options (argv[0]);
 
     if (! quiet)

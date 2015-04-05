@@ -1009,9 +1009,10 @@ notmuch_new_command (notmuch_config_t *config, int argc, char *argv[])
 		fputs (status_string, stderr);
 		free (status_string);
 	    }
-
 	    return EXIT_FAILURE;
 	}
+
+	notmuch_exit_if_unmatched_db_uuid (notmuch);
 
 	if (notmuch_database_needs_upgrade (notmuch)) {
 	    time_t now = time (NULL);

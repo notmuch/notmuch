@@ -148,6 +148,10 @@ notmuch_setup_command (notmuch_config_t *config,
     if (notmuch_minimal_options ("setup", argc, argv) < 0)
 	return EXIT_FAILURE;
 
+    if (notmuch_requested_db_uuid)
+	fprintf (stderr, "Warning: ignoring --uuid=%s\n",
+		 notmuch_requested_db_uuid);
+
     if (notmuch_config_is_new (config))
 	welcome_message_pre_setup ();
 

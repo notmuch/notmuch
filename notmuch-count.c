@@ -189,6 +189,8 @@ notmuch_count_command (notmuch_config_t *config, int argc, char *argv[])
 			       NOTMUCH_DATABASE_MODE_READ_ONLY, &notmuch))
 	return EXIT_FAILURE;
 
+    notmuch_exit_if_unmatched_db_uuid (notmuch);
+
     query_str = query_string_from_args (config, argc-opt_index, argv+opt_index);
     if (query_str == NULL) {
 	fprintf (stderr, "Out of memory.\n");

@@ -536,6 +536,8 @@ notmuch_insert_command (notmuch_config_t *config, int argc, char *argv[])
 			       NOTMUCH_DATABASE_MODE_READ_WRITE, &notmuch))
 	return EXIT_FAILURE;
 
+    notmuch_exit_if_unmatched_db_uuid (notmuch);
+
     /* Write the message to the Maildir new directory. */
     newpath = maildir_write_new (config, STDIN_FILENO, maildir);
     if (! newpath) {

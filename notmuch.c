@@ -47,10 +47,12 @@ static int
 _help_for (const char *topic);
 
 static notmuch_bool_t print_version = FALSE, print_help = FALSE;
+char *notmuch_requested_db_uuid = NULL;
 
 const notmuch_opt_desc_t notmuch_shared_options [] = {
     { NOTMUCH_OPT_BOOLEAN, &print_version, "version", 'v', 0 },
     { NOTMUCH_OPT_BOOLEAN, &print_help, "help", 'h', 0 },
+    { NOTMUCH_OPT_STRING, &notmuch_requested_db_uuid, "uuid", 'u', 0 },
     {0, 0, 0, 0, 0}
 };
 
@@ -215,6 +217,22 @@ upgrade your notmuch front-end.\n",
 	fprintf (stderr, "\
 A caller requested deprecated output format version %d, which may not\n\
 be supported in the future.\n", notmuch_format_version);
+    }
+}
+
+void
+notmuch_exit_if_unmatched_db_uuid (notmuch_database_t *notmuch)
+{
+    const char *uuid = NULL;
+
+    if (!notmuch_requested_db_uuid)
+	return;
+    IGNORE_RESULT (notmuch_database_get_revision (notmuch, &uuid));
+
+    if (strcmp (notmuch_requested_db_uuid, uuid) != 0){
+	fprintf (stderr, "Error: requested database revision %s does not match %s\n",
+		 notmuch_requested_db_uuid, uuid);
+	exit (1);
     }
 }
 

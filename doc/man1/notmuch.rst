@@ -51,9 +51,16 @@ Supported global options for ``notmuch`` include
 	Specify the configuration file to use. This overrides any
 	configuration file specified by ${NOTMUCH\_CONFIG}.
 
+    ``--uuid=HEX``
+       Enforce that the database UUID (a unique identifier which
+       persists until e.g. the database is compacted)
+       is HEX; exit with an error if it is not. This is useful to
+       detect rollover in modification counts on messages. You can
+       find this UUID using e.g. ``notmuch count --lastmod``
+
 All global options except ``--config`` can also be specified after the
-command. For example, ``notmuch subcommand --version`` is equivalent to
-``notmuch --version subcommand``.
+command. For example, ``notmuch subcommand --uuid=HEX`` is
+equivalent to ``notmuch --uuid=HEX subcommand``.
 
 COMMANDS
 ========

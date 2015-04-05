@@ -583,6 +583,8 @@ _notmuch_search_prepare (search_context_t *ctx, notmuch_config_t *config, int ar
 	return EXIT_FAILURE;
     }
 
+    notmuch_exit_if_unmatched_db_uuid (ctx->notmuch);
+
     query_str = query_string_from_args (ctx->notmuch, argc, argv);
     if (query_str == NULL) {
 	fprintf (stderr, "Out of memory.\n");

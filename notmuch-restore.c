@@ -165,6 +165,8 @@ notmuch_restore_command (notmuch_config_t *config, int argc, char *argv[])
     }
 
     notmuch_process_shared_options (argv[0]);
+    notmuch_exit_if_unmatched_db_uuid (notmuch);
+
     name_for_error = input_file_name ? input_file_name : "stdin";
 
     if (! accumulate)
