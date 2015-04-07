@@ -43,13 +43,13 @@ int main (int argc, char** argv)
 {
     notmuch_database_t *db;
     notmuch_status_t stat;
-    stat = notmuch_database_open ("/nonexistent/foo", 0, 0);
+    stat = notmuch_database_open ("./nonexistent/foo", 0, 0);
 }
 EOF
 cat <<'EOF' >EXPECTED
 == stdout ==
 == stderr ==
-Error opening database at /nonexistent/foo/.notmuch: No such file or directory
+Error opening database at ./nonexistent/foo/.notmuch: No such file or directory
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
@@ -78,13 +78,13 @@ int main (int argc, char** argv)
 {
     notmuch_database_t *db;
     notmuch_status_t stat;
-    stat = notmuch_database_create ("/nonexistent/foo", &db);
+    stat = notmuch_database_create ("./nonexistent/foo", &db);
 }
 EOF
 cat <<'EOF' >EXPECTED
 == stdout ==
 == stderr ==
-Error: Cannot create database at /nonexistent/foo: No such file or directory.
+Error: Cannot create database at ./nonexistent/foo: No such file or directory.
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
@@ -125,7 +125,7 @@ int main (int argc, char** argv)
    if (stat != NOTMUCH_STATUS_SUCCESS) {
      fprintf (stderr, "error opening database: %d\n", stat);
    }
-   stat = notmuch_database_add_message (db, "/nonexistent", NULL);
+   stat = notmuch_database_add_message (db, "./nonexistent", NULL);
    if (stat) {
        char *status_string = notmuch_database_status_string (db);
        if (status_string) fputs (status_string, stderr);
@@ -135,7 +135,7 @@ EOF
 cat <<'EOF' >EXPECTED
 == stdout ==
 == stderr ==
-Error opening /nonexistent: No such file or directory
+Error opening ./nonexistent: No such file or directory
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
