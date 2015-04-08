@@ -202,7 +202,7 @@ test_begin_subtest "Xapian exception finding message"
 cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR}
    {
        notmuch_message_t *message = NULL;
-       stat = notmuch_database_find_message (db, "id:nonexistant", &message);
+       stat = notmuch_database_find_message (db, "id:nonexistent", &message);
    }
 EOF
 sed 's/^\(A Xapian exception [^:]*\):.*$/\1/' < OUTPUT > OUTPUT.clean

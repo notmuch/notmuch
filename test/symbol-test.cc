@@ -15,7 +15,7 @@ int main() {
       }
 
   try {
-    (void) new Xapian::WritableDatabase("./nonexistant", Xapian::DB_OPEN);
+    (void) new Xapian::WritableDatabase("./nonexistent", Xapian::DB_OPEN);
   } catch (const Xapian::Error &error) {
     printf("caught %s\n", error.get_msg().c_str());
     return 0;

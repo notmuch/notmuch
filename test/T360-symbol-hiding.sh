@@ -16,7 +16,7 @@ run_test(){
 }
 
 output="A Xapian exception occurred opening database: Couldn't stat 'fakedb/.notmuch/xapian'
-caught No chert database found at path \`./nonexistant'"
+caught No chert database found at path \`./nonexistent'"
 
 mkdir -p fakedb/.notmuch
 
