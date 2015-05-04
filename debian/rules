@@ -6,7 +6,14 @@ python3_all = py3versions -s | xargs -n1 | xargs -t -I {} env {}
 	dh $@ --with python2,python3
 
 override_dh_auto_configure:
-	dh_auto_configure -- --emacslispdir=/usr/share/emacs/site-lisp/notmuch
+	./configure --prefix=/usr \
+		--libdir=/usr/lib/$$(dpkg-architecture -q DEB_TARGET_MULTIARCH) \
+		--includedir=/usr/include \
+		--mandir=/usr/share/man \
+		--infodir=/usr/share/info \
+		--sysconfdir=/etc \
+		--localstatedir=/var \
+		--emacslispdir=/usr/share/emacs/site-lisp/notmuch
 
 override_dh_auto_build:
 	dh_auto_build -- V=1

@@ -4,6 +4,7 @@ libnotmuch.so.4 libnotmuch4 #MINVER#
  notmuch_database_close@Base 0.13~rc1
  notmuch_database_compact@Base 0.17~rc1
  notmuch_database_create@Base 0.3
+ notmuch_database_create_verbose@Base 0.20~rc1
  notmuch_database_destroy@Base 0.13~rc1
  notmuch_database_end_atomic@Base 0.9~rc1
  notmuch_database_find_message@Base 0.9~rc2
@@ -14,7 +15,9 @@ libnotmuch.so.4 libnotmuch4 #MINVER#
  notmuch_database_get_version@Base 0.3
  notmuch_database_needs_upgrade@Base 0.3
  notmuch_database_open@Base 0.3
+ notmuch_database_open_verbose@Base 0.20~rc1
  notmuch_database_remove_message@Base 0.3
+ notmuch_database_status_string@Base 0.20~rc1
  notmuch_database_upgrade@Base 0.3
  notmuch_directory_destroy@Base 0.3
  notmuch_directory_get_child_directories@Base 0.3
@@ -56,7 +59,9 @@ libnotmuch.so.4 libnotmuch4 #MINVER#
  notmuch_query_get_query_string@Base 0.4
  notmuch_query_get_sort@Base 0.4
  notmuch_query_search_messages@Base 0.3
+ notmuch_query_search_messages_st@Base 0.20~rc1
  notmuch_query_search_threads@Base 0.3
+ notmuch_query_search_threads_st@Base 0.20~rc1
  notmuch_query_set_omit_excluded@Base 0.13~rc1
  notmuch_query_set_sort@Base 0.3
  notmuch_status_to_string@Base 0.3
