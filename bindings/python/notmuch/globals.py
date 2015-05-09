@@ -18,7 +18,7 @@ Copyright 2010 Sebastian Spaeth <Sebastian@SSpaeth.de>
 """
 
 from ctypes import CDLL, Structure, POINTER
-from version import SOVERSION
+from notmuch.version import SOVERSION
 
 #-----------------------------------------------------------------------------
 #package-global instance of the notmuch library
