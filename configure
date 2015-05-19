@@ -47,6 +47,7 @@ CC=${CC:-cc}
 CXX=${CXX:-c++}
 CFLAGS=${CFLAGS:--g -O2}
 CPPFLAGS=${CPPFLAGS:-}
+CXXFLAGS_for_sh=${CXXFLAGS:-${CFLAGS}}
 CXXFLAGS=${CXXFLAGS:-\$(CFLAGS)}
 LDFLAGS=${LDFLAGS:-}
 XAPIAN_CONFIG=${XAPIAN_CONFIG:-xapian-config}
@@ -269,6 +270,35 @@ dependencies are available:
 EOF
 
 errors=0
+printf "int main(void){return 0;}\n" > minimal.c
+
+printf "Sanity checking C compilation environment... "
+if ${CC} ${CFLAGS} ${CPPFLAGS} minimal.c ${LDFLAGS} -o minimal > /dev/null 2>&1
+then
+    printf "OK.\n"
+else
+    printf "Fail.\n"
+    errors=$((errors + 1))
+fi
+
+printf "Sanity checking C++ compilation environment... "
+if ${CXX} ${CXXFLAGS_for_sh} ${CPPFLAGS} minimal.c ${LDFLAGS} -o minimal > /dev/null 2>&1
+then
+    printf "OK.\n"
+else
+    printf "Fail.\n"
+    errors=$((errors + 1))
+fi
+
+if [ $errors -gt 0 ]; then
+    cat <<EOF
+*** Error: Initial sanity checking of environment failed.  Please try
+running configure in a clean environment, and if the problem persists,
+report a bug.
+EOF
+    rm -f minimal minimal.c
+    exit 1
+fi
 
 if pkg-config --version > /dev/null 2>&1; then
     have_pkg_config=1
@@ -689,8 +719,6 @@ else
     std_asctime=0
 fi
 rm -f compat/check_asctime
-
-printf "int main(void){return 0;}\n" > minimal.c
 
 printf "Checking for rpath support... "
 if ${CC} -Wl,--enable-new-dtags -Wl,-rpath,/tmp/ -o minimal minimal.c >/dev/null 2>&1
