@@ -1,3 +1,10 @@
+notmuch (0.20~rc2-1) experimental; urgency=medium
+
+  * New upstream release candidate.
+  * Fix breakage of python bindings under python3
+
+ -- David Bremner <bremner@debian.org>  Sat, 23 May 2015 21:05:03 +0200
+
 notmuch (0.20~rc1-1) experimental; urgency=medium
 
   * New upstream release candidate
