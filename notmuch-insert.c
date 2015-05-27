@@ -521,7 +521,7 @@ notmuch_insert_command (notmuch_config_t *config, int argc, char *argv[])
 	    return EXIT_FAILURE;
     }
 
-    /* Setup our handler for SIGINT. We do not set SA_RESTART so that copying
+    /* Set up our handler for SIGINT. We do not set SA_RESTART so that copying
      * from standard input may be interrupted. */
     memset (&action, 0, sizeof (struct sigaction));
     action.sa_handler = handle_sigint;

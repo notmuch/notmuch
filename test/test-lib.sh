@@ -1231,7 +1231,7 @@ emacs_generate_script
 
 # Use -P to resolve symlinks in our working directory so that the cwd
 # in subprocesses like git equals our $PWD (for pathname comparisons).
-cd -P "$test" || error "Cannot setup test environment"
+cd -P "$test" || error "Cannot set up test environment"
 
 if test "$verbose" = "t"
 then

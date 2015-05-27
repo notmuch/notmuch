@@ -47,7 +47,7 @@ static command_t commands[] = {
     { NULL, notmuch_command, TRUE,
       "Notmuch main command." },
     { "setup", notmuch_setup_command, TRUE,
-      "Interactively setup notmuch for first use." },
+      "Interactively set up notmuch for first use." },
     { "new", notmuch_new_command, FALSE,
       "Find and import new messages to the notmuch database." },
     { "insert", notmuch_insert_command, FALSE,

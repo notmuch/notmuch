@@ -662,7 +662,7 @@ setup_progress_printing_timer (void)
     struct sigaction action;
     struct itimerval timerval;
 
-    /* Setup our handler for SIGALRM */
+    /* Set up our handler for SIGALRM */
     memset (&action, 0, sizeof (struct sigaction));
     action.sa_handler = handle_sigalrm;
     sigemptyset (&action.sa_mask);
@@ -1047,7 +1047,7 @@ notmuch_new_command (notmuch_config_t *config, int argc, char *argv[])
     if (notmuch == NULL)
 	return EXIT_FAILURE;
 
-    /* Setup our handler for SIGINT. We do this after having
+    /* Set up our handler for SIGINT. We do this after having
      * potentially done a database upgrade we this interrupt handler
      * won't support. */
     memset (&action, 0, sizeof (struct sigaction));

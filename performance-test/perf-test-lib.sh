@@ -203,7 +203,7 @@ time_done ()
     fi
 }
 
-cd -P "$test" || error "Cannot setup test environment"
+cd -P "$test" || error "Cannot set up test environment"
 test_failure=0
 test_count=0
 

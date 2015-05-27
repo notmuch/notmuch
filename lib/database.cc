@@ -1336,7 +1336,7 @@ notmuch_database_upgrade (notmuch_database_t *notmuch,
 	return NOTMUCH_STATUS_SUCCESS;
 
     if (progress_notify) {
-	/* Setup our handler for SIGALRM */
+	/* Set up our handler for SIGALRM */
 	memset (&action, 0, sizeof (struct sigaction));
 	action.sa_handler = handle_sigalrm;
 	sigemptyset (&action.sa_mask);

@@ -195,7 +195,7 @@ notmuch_tag_command (notmuch_config_t *config, int argc, char *argv[])
     int opt_index;
     int ret;
 
-    /* Setup our handler for SIGINT */
+    /* Set up our handler for SIGINT */
     memset (&action, 0, sizeof (struct sigaction));
     action.sa_handler = handle_sigint;
     sigemptyset (&action.sa_mask);

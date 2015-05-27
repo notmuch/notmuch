@@ -2751,7 +2751,7 @@ New 'G' key binding to trigger mail refresh (G == "Get new mail")
 
   The 'G' key works wherever '=' works. Before refreshing the screen
   it calls an external program that can be used to poll email servers,
-  run notmuch new and setup specific tags for the new emails. The
+  run notmuch new and set up specific tags for the new emails. The
   script to be called should be configured with the "Notmuch Poll
   Script" setting in the customize interface. This script will
   typically invoke "notmuch new" and then perhaps several "notmuch
