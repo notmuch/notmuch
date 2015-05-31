@@ -1,3 +1,14 @@
+notmuch (0.20-1) unstable; urgency=medium
+
+  * New upstream release
+    - new mimetype search prefix
+    - improvements to emacs, vim, and mutt front-ends
+    - undeprecate single message mboxes.
+    - reduced noise on stderr from the library
+    - improved API for notmuch_query_search_{messages, thread}
+
+ -- David Bremner <bremner@debian.org>  Sun, 31 May 2015 11:21:14 +0200
+
 notmuch (0.20~rc2-1) experimental; urgency=medium
 
   * New upstream release candidate.
