@@ -191,7 +191,6 @@ for code in OUT_OF_MEMORY XAPIAN_EXCEPTION FILE_NOT_EMAIL \
     READ_ONLY_DATABASE UPGRADE_REQUIRED; do
 gen_insert_msg
 cat <<EOF > index-file-$code.gdb
-file notmuch
 set breakpoint pending on
 break notmuch_database_add_message
 commands
