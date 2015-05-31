@@ -86,7 +86,7 @@ type Filenames struct {
 type DatabaseMode C.notmuch_database_mode_t
 
 const (
-	DATABASE_MODE_READ_ONLY DatabaseMode = 0
+	DATABASE_MODE_READ_ONLY DatabaseMode = iota
 	DATABASE_MODE_READ_WRITE
 )
 
