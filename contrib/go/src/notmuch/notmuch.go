@@ -534,8 +534,6 @@ func (self *Query) CountMessages() uint {
 	return uint(C.notmuch_query_count_messages(self.query))
 }
 
-// TODO: wrap threads and thread
-
 /* Is the given 'threads' iterator pointing at a valid thread.
  *
  * When this function returns TRUE, notmuch_threads_get will return a
@@ -556,6 +554,45 @@ func (self *Threads) Valid() bool {
 	return true
 }
 
+/* Get the current thread from 'threads' as a notmuch_thread_t.
+ *
+ * Note: The returned thread belongs to 'threads' and has a lifetime
+ * identical to it (and the query to which it belongs).
+ *
+ * See the documentation of notmuch_query_search_threads for example
+ * code showing how to iterate over a notmuch_threads_t object.
+ *
+ * If an out-of-memory situation occurs, this function will return
+ * NULL.
+ */
+func (self *Threads) Get() *Thread {
+	if self.threads == nil {
+		return nil
+	}
+	thread := C.notmuch_threads_get(self.threads)
+	if thread == nil {
+		return nil
+	}
+	return &Thread{thread}
+}
+
+/* Move the 'threads' iterator to the next thread.
+ *
+ * If 'threads' is already pointing at the last thread then the
+ * iterator will be moved to a point just beyond that last thread,
+ * (where notmuch_threads_valid will return FALSE and
+ * notmuch_threads_get will return NULL).
+ *
+ * See the documentation of notmuch_query_search_threads for example
+ * code showing how to iterate over a notmuch_threads_t object.
+ */
+func (self *Threads) MoveToNext() {
+	if self.threads == nil {
+		return
+	}
+	C.notmuch_threads_move_to_next(self.threads)
+}
+
 /* Destroy a notmuch_threads_t object.
  *
  * It's not strictly necessary to call this function. All memory from
@@ -565,6 +602,227 @@ func (self *Threads) Valid() bool {
 func (self *Threads) Destroy() {
 	if self.threads != nil {
 		C.notmuch_threads_destroy(self.threads)
+	}
+}
+
+/**
+ * Get the thread ID of 'thread'.
+ *
+ * The returned string belongs to 'thread' and as such, should not be
+ * modified by the caller and will only be valid for as long as the
+ * thread is valid, (which is until notmuch_thread_destroy or until
+ * the query from which it derived is destroyed).
+ */
+func (self *Thread) GetThreadId() string {
+	if self.thread == nil {
+		return ""
+	}
+	id := C.notmuch_thread_get_thread_id(self.thread)
+	if id == nil {
+		return ""
+	}
+	return C.GoString(id)
+}
+
+/**
+ * Get the total number of messages in 'thread'.
+ *
+ * This count consists of all messages in the database belonging to
+ * this thread. Contrast with notmuch_thread_get_matched_messages() .
+ */
+func (self *Thread) GetTotalMessages() int {
+	if self.thread == nil {
+		return 0
+	}
+	return int(C.notmuch_thread_get_total_messages(self.thread))
+}
+
+/**
+ * Get a notmuch_messages_t iterator for the top-level messages in
+ * 'thread' in oldest-first order.
+ *
+ * This iterator will not necessarily iterate over all of the messages
+ * in the thread. It will only iterate over the messages in the thread
+ * which are not replies to other messages in the thread.
+ *
+ * The returned list will be destroyed when the thread is destroyed.
+ */
+func (self *Thread) GetToplevelMessages() (*Messages, Status) {
+	if self.thread == nil {
+		return nil, STATUS_NULL_POINTER
+	}
+
+	msgs := C.notmuch_thread_get_toplevel_messages(self.thread)
+	if msgs == nil {
+		return nil, STATUS_NULL_POINTER
+	}
+	return &Messages{msgs}, STATUS_SUCCESS
+}
+
+/**
+ * Get a notmuch_thread_t iterator for all messages in 'thread' in
+ * oldest-first order.
+ *
+ * The returned list will be destroyed when the thread is destroyed.
+ */
+func (self *Thread) GetMessages() (*Messages, Status) {
+	if self.thread == nil {
+		return nil, STATUS_NULL_POINTER
+	}
+
+	msgs := C.notmuch_thread_get_messages(self.thread)
+	if msgs == nil {
+		return nil, STATUS_NULL_POINTER
+	}
+	return &Messages{msgs}, STATUS_SUCCESS
+}
+
+/**
+ * Get the number of messages in 'thread' that matched the search.
+ *
+ * This count includes only the messages in this thread that were
+ * matched by the search from which the thread was created and were
+ * not excluded by any exclude tags passed in with the query (see
+ * notmuch_query_add_tag_exclude). Contrast with
+ * notmuch_thread_get_total_messages() .
+ */
+func (self *Thread) GetMatchedMessages() int {
+	if self.thread == nil {
+		return 0
+	}
+	return int(C.notmuch_thread_get_matched_messages(self.thread))
+}
+
+/**
+ * Get the authors of 'thread' as a UTF-8 string.
+ *
+ * The returned string is a comma-separated list of the names of the
+ * authors of mail messages in the query results that belong to this
+ * thread.
+ *
+ * The string contains authors of messages matching the query first, then
+ * non-matched authors (with the two groups separated by '|'). Within
+ * each group, authors are ordered by date.
+ *
+ * The returned string belongs to 'thread' and as such, should not be
+ * modified by the caller and will only be valid for as long as the
+ * thread is valid, (which is until notmuch_thread_destroy or until
+ * the query from which it derived is destroyed).
+ */
+func (self *Thread) GetAuthors() string {
+	if self.thread == nil {
+		return ""
+	}
+	str := C.notmuch_thread_get_authors(self.thread)
+	if str == nil {
+		return ""
+	}
+	return C.GoString(str)
+}
+
+/**
+ * Get the subject of 'thread' as a UTF-8 string.
+ *
+ * The subject is taken from the first message (according to the query
+ * order---see notmuch_query_set_sort) in the query results that
+ * belongs to this thread.
+ *
+ * The returned string belongs to 'thread' and as such, should not be
+ * modified by the caller and will only be valid for as long as the
+ * thread is valid, (which is until notmuch_thread_destroy or until
+ * the query from which it derived is destroyed).
+ */
+func (self *Thread) GetSubject() string {
+	if self.thread == nil {
+		return ""
+	}
+	str := C.notmuch_thread_get_subject(self.thread)
+	if str == nil {
+		return ""
+	}
+	return C.GoString(str)
+}
+
+/**
+ * Get the date of the oldest message in 'thread' as a time_t value.
+ */
+func (self *Thread) GetOldestDate() int64 {
+	if self.thread == nil {
+		return 0
+	}
+	date := C.notmuch_thread_get_oldest_date(self.thread)
+
+	return int64(date)
+}
+
+/**
+ * Get the date of the newest message in 'thread' as a time_t value.
+ */
+func (self *Thread) GetNewestDate() int64 {
+	if self.thread == nil {
+		return 0
+	}
+	date := C.notmuch_thread_get_newest_date(self.thread)
+
+	return int64(date)
+}
+
+/**
+ * Get the tags for 'thread', returning a notmuch_tags_t object which
+ * can be used to iterate over all tags.
+ *
+ * Note: In the Notmuch database, tags are stored on individual
+ * messages, not on threads. So the tags returned here will be all
+ * tags of the messages which matched the search and which belong to
+ * this thread.
+ *
+ * The tags object is owned by the thread and as such, will only be
+ * valid for as long as the thread is valid, (for example, until
+ * notmuch_thread_destroy or until the query from which it derived is
+ * destroyed).
+ *
+ * Typical usage might be:
+ *
+ *     notmuch_thread_t *thread;
+ *     notmuch_tags_t *tags;
+ *     const char *tag;
+ *
+ *     thread = notmuch_threads_get (threads);
+ *
+ *     for (tags = notmuch_thread_get_tags (thread);
+ *          notmuch_tags_valid (tags);
+ *          notmuch_tags_move_to_next (tags))
+ *     {
+ *         tag = notmuch_tags_get (tags);
+ *         ....
+ *     }
+ *
+ *     notmuch_thread_destroy (thread);
+ *
+ * Note that there's no explicit destructor needed for the
+ * notmuch_tags_t object. (For consistency, we do provide a
+ * notmuch_tags_destroy function, but there's no good reason to call
+ * it if the message is about to be destroyed).
+ */
+func (self *Thread) GetTags() *Tags {
+	if self.thread == nil {
+		return nil
+	}
+
+	tags := C.notmuch_thread_get_tags(self.thread)
+	if tags == nil {
+		return nil
+	}
+
+	return &Tags{tags}
+}
+
+/**
+ * Destroy a notmuch_thread_t object.
+ */
+func (self *Thread) Destroy() {
+	if self.thread != nil {
+		C.notmuch_thread_destroy(self.thread)
 	}
 }
 
