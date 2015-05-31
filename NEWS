@@ -15,11 +15,6 @@ Path to gpg is now configurable
   On systems with multiple versions of gpg, you can tell
   notmuch which one to use by setting `crypto.gpg_path`
 
-New command, `notmuch-emacs-mua`
-
-  This new wrapper script is intended to be a drop in replacement for
-  mutt to compose and send mail using `notmuch-emacs`
-
 Emacs
 -----
 
