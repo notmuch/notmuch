@@ -21,6 +21,7 @@ srcdir=$(dirname "$0")
 
 subdirs="util compat lib parse-time-string completion doc emacs"
 subdirs="${subdirs} performance-test test test/test-databases"
+subdirs="${subdirs} bindings"
 
 # For a non-srcdir configure invocation (such as ../configure), create
 # the directory structure and copy Makefiles.
@@ -474,6 +475,15 @@ else
     have_doxygen=0
 fi
 
+printf "Checking for ruby development files... "
+if ruby -e "require 'mkmf'"> /dev/null 2>&1; then
+    printf "Yes.\n"
+    have_ruby_dev=1
+else
+    printf "No (skipping ruby bindings)\n"
+    have_ruby_dev=0
+fi
+
 printf "Checking if sphinx is available and supports nroff output... "
 if command -v sphinx-build > /dev/null && ${python} -m sphinx.writers.manpage > /dev/null 2>&1 ; then
     printf "Yes.\n"
@@ -887,6 +897,10 @@ HAVE_CANONICALIZE_FILE_NAME = ${have_canonicalize_file_name}
 # build its own version)
 HAVE_GETLINE = ${have_getline}
 
+# Are the ruby development files (and ruby) available? If not skip
+# building/testing ruby bindings.
+HAVE_RUBY_DEV = ${have_ruby_dev}
+
 # Whether the strcasestr function is available (if not, then notmuch will
 # build its own version)
 HAVE_STRCASESTR = ${have_strcasestr}
@@ -999,6 +1013,10 @@ NOTMUCH_HAVE_MAN=$((have_sphinx))
 
 # Name of python interpreter
 NOTMUCH_PYTHON=${python}
+
+# Are the ruby development files (and ruby) available? If not skip
+# building/testing ruby bindings.
+NOTMUCH_HAVE_RUBY_DEV=${have_ruby_dev}
 EOF
 
 # Finally, after everything configured, inform the user how to continue.
