@@ -1163,6 +1163,11 @@ test_python() {
 		| $cmd -
 }
 
+test_ruby() {
+    export LD_LIBRARY_PATH=$TEST_DIRECTORY/../lib
+    MAIL_DIR=$MAIL_DIR ruby -I $TEST_DIRECTORY/../bindings/ruby> OUTPUT
+}
+
 test_C () {
     exec_file="test${test_count}"
     test_file="${exec_file}.c"
