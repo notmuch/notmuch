@@ -1,3 +1,10 @@
+notmuch (0.20.1-1) unstable; urgency=medium
+
+  * Bug fix: "FTBFS on arm64", thanks to Edmund Grimley Evans (Closes:
+    #787341).
+
+ -- David Bremner <bremner@debian.org>  Mon, 01 Jun 2015 21:58:54 +0200
+
 notmuch (0.20-1) unstable; urgency=medium
 
   * New upstream release
