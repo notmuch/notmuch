@@ -10,8 +10,9 @@ dir = File.join('..', '..', 'lib')
 # includes
 $INCFLAGS = "-I#{dir} #{$INCFLAGS}"
 
-# make sure there are no undefined symbols
-$LDFLAGS += ' -Wl,--no-undefined'
+if ENV['EXTRA_LDFLAGS']
+  $LDFLAGS += " " + ENV['EXTRA_LDFLAGS']
+end
 
 def have_local_library(lib, path, func, headers = nil)
   checking_for checking_message(func, lib) do

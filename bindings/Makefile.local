@@ -5,7 +5,9 @@ dir := bindings
 # force the shared library to be built
 ruby-bindings: lib/libnotmuch.so
 ifeq ($(HAVE_RUBY_DEV),1)
-	cd $(dir)/ruby && ruby extconf.rb --vendor
+	cd $(dir)/ruby && \
+		EXTRA_LDFLAGS="$(NO_UNDEFINED_LDFLAGS)" \
+		ruby extconf.rb --vendor
 	$(MAKE) -C $(dir)/ruby
 else
 	@echo Missing dependency, skipping ruby bindings
