@@ -59,6 +59,17 @@ readonly VERSION
 
 # In the rest of this file, tests collect list of errors to be fixed
 
+echo -n "Checking that git working directory is clean... "
+git_status=`git status --porcelain`
+if [ "$git_status" = '' ]
+then
+	echo Yes.
+else
+	echo No.
+	append_emsg "Git working directory is not clean (git status --porcelain)."
+fi
+unset git_status
+
 verfail ()
 {
 	echo No.
