@@ -1,3 +1,11 @@
+Notmuch 0.20.1 (2015-06-01)
+===========================
+
+Test Suite
+----------
+
+Work around apparent gdb bug on arm64
+
 Notmuch 0.20 (2015-05-31)
 =========================
 
