@@ -49,6 +49,10 @@ Supported global options for ``notmuch`` include
         Specify the configuration file to use. This overrides any
         configuration file specified by ${NOTMUCH\_CONFIG}.
 
+All global options except ``--config`` can also be specified after the
+command. For example, ``notmuch subcommand --version`` is equivalent to
+``notmuch --version subcommand``.
+
 COMMANDS
 ========
 
