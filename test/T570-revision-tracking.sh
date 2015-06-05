@@ -34,4 +34,16 @@ UUID	53
 EOF
 test_expect_equal_file EXPECTED CLEAN
 
+grep '^[0-9a-f]' OUTPUT > INITIAL_OUTPUT
+
+test_begin_subtest "output of count matches test code"
+notmuch count --lastmod '*' | cut -f2-3 > OUTPUT
+test_expect_equal_file INITIAL_OUTPUT OUTPUT
+
+test_begin_subtest "modification count increases"
+before=$(notmuch count --lastmod '*' | cut -f3)
+notmuch tag +a-random-tag-8743632 '*'
+after=$(notmuch count --lastmod '*' | cut -f3)
+result=$(($before < $after))
+test_expect_equal 1 ${result}
 test_done
