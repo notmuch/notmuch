@@ -3,16 +3,6 @@ test_description="error reporting for library"
 
 . ./test-lib.sh || exit 1
 
-backup_database () {
-    rm -rf notmuch-dir-backup
-    cp -pR ${MAIL_DIR}/.notmuch notmuch-dir-backup
-}
-restore_database () {
-    rm -rf ${MAIL_DIR}/.notmuch
-    cp -pR notmuch-dir-backup ${MAIL_DIR}/.notmuch
-}
-
-
 add_email_corpus
 
 test_expect_success "building database" "NOTMUCH_NEW"

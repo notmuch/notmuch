@@ -34,6 +34,18 @@ find_notmuch_path ()
     done
 }
 
+backup_database () {
+    test_name=$(basename $0 .sh)
+    rm -rf notmuch-dir-backup."$test_name"
+    cp -pR ${MAIL_DIR}/.notmuch notmuch-dir-backup."${test_name}"
+}
+
+restore_database () {
+    test_name=$(basename $0 .sh)
+    rm -rf ${MAIL_DIR}/.notmuch
+    cp -pR notmuch-dir-backup."${test_name}" ${MAIL_DIR}/.notmuch
+}
+
 # Test the binaries we have just built.  The tests are kept in
 # test/ subdirectory and are run in 'trash directory' subdirectory.
 TEST_DIRECTORY=$(pwd)
