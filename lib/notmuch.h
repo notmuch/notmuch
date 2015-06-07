@@ -713,6 +713,12 @@ const char *
 notmuch_query_get_query_string (notmuch_query_t *query);
 
 /**
+ * Return the notmuch database of this query. See notmuch_query_create.
+ */
+notmuch_database_t *
+notmuch_query_get_database (notmuch_query_t *query);
+
+/**
  * Exclude values for notmuch_query_set_omit_excluded. The strange
  * order is to maintain backward compatibility: the old FALSE/TRUE
  * options correspond to the new
