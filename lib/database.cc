@@ -1441,6 +1441,8 @@ notmuch_database_upgrade (notmuch_database_t *notmuch,
 	notmuch_message_t *message;
 	char *filename;
 
+	/* XXX: this should use the _st version, but needs an error
+	   path */
 	for (messages = notmuch_query_search_messages (query);
 	     notmuch_messages_valid (messages);
 	     notmuch_messages_move_to_next (messages))

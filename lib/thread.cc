@@ -504,6 +504,8 @@ _notmuch_thread_create (void *ctx,
      * oldest or newest subject is desired. */
     notmuch_query_set_sort (thread_id_query, NOTMUCH_SORT_OLDEST_FIRST);
 
+    /* XXX: this should use the _st version, but it needs an error path
+     */
     for (messages = notmuch_query_search_messages (thread_id_query);
 	 notmuch_messages_valid (messages);
 	 notmuch_messages_move_to_next (messages))
