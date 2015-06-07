@@ -93,3 +93,13 @@ libnotmuch conventions
 
 * Code which needs to be accessed from both the CLI and from
   libnotmuch should be factored out into libutil (under util/).
+
+* Deprecated functions should be marked with the NOTMUCH_DEPRECATED
+  macro which generates run time warnings with gcc and clang. In order
+  not to confuse doxygen this should go at the beginning of the
+  declaration like:
+
+  NOTMUCH_DEPRECATED(major,minor) notmuch_status_t notmuch_dwim(void *arg);
+
+  The @deprecated doxygen command can be used to generate markup in
+  the API docs.

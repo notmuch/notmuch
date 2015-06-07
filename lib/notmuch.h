@@ -59,6 +59,8 @@ NOTMUCH_BEGIN_DECLS
 #define LIBNOTMUCH_MINOR_VERSION	2
 #define LIBNOTMUCH_MICRO_VERSION	0
 
+#define NOTMUCH_DEPRECATED(major,minor) \
+    __attribute__ ((deprecated ("function deprecated as of libnotmuch " #major "." #minor)))
 #endif /* __DOXYGEN__ */
 
 /**
