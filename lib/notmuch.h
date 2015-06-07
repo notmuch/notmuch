@@ -313,7 +313,7 @@ notmuch_database_open_verbose (const char *path,
  *
  */
 const char *
-notmuch_database_status_string (notmuch_database_t *notmuch);
+notmuch_database_status_string (const notmuch_database_t *notmuch);
 
 /**
  * Commit changes and close the given notmuch database.

@@ -2653,7 +2653,7 @@ notmuch_database_get_all_tags (notmuch_database_t *db)
 }
 
 const char *
-notmuch_database_status_string (notmuch_database_t *notmuch)
+notmuch_database_status_string (const notmuch_database_t *notmuch)
 {
     return notmuch->status_string;
 }
