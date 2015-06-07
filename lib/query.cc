@@ -618,10 +618,14 @@ notmuch_query_count_threads (notmuch_query_t *query)
     GHashTable *hash;
     unsigned int count;
     notmuch_sort_t sort;
+    notmuch_status_t status;
 
     sort = query->sort;
     query->sort = NOTMUCH_SORT_UNSORTED;
-    messages = notmuch_query_search_messages (query);
+    status = notmuch_query_search_messages_st (query, &messages);
+    if (status)
+	return 0;
+
     query->sort = sort;
     if (messages == NULL)
 	return 0;
