@@ -1,3 +1,12 @@
+Notmuch 0.21 (UNRELEASED)
+=========================
+
+Library
+-------
+
+The use of absolute paths is now enforced when calling notmuch_database_{open, create}
+
+
 Notmuch 0.20.1 (2015-06-01)
 ===========================
 

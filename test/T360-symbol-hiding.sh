@@ -11,16 +11,17 @@ test_description='exception symbol hiding'
 
 . ./test-lib.sh
 
-run_test(){
-    result=$(LD_LIBRARY_PATH="$TEST_DIRECTORY/../lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}" $TEST_DIRECTORY/symbol-test 2>&1)
-}
+test_begin_subtest 'running test' run_test
+mkdir -p ${PWD}/fakedb/.notmuch
+( LD_LIBRARY_PATH="$TEST_DIRECTORY/../lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}" \
+		 $TEST_DIRECTORY/symbol-test ${PWD}/fakedb ${PWD}/nonexistent \
+		 2>&1 | sed "s,${PWD},CWD,g") > OUTPUT
 
-output="A Xapian exception occurred opening database: Couldn't stat 'fakedb/.notmuch/xapian'
-caught No chert database found at path \`./nonexistent'"
-
-mkdir -p fakedb/.notmuch
-
-test_expect_success 'running test' run_test
+cat <<EOF > EXPECTED
+A Xapian exception occurred opening database: Couldn't stat 'CWD/fakedb/.notmuch/xapian'
+caught No chert database found at path \`CWD/nonexistent'
+EOF
+test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest 'checking output'
 test_expect_equal "$result" "$output"

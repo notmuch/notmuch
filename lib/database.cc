@@ -659,6 +659,12 @@ notmuch_database_create_verbose (const char *path,
 	goto DONE;
     }
 
+    if (path[0] != '/') {
+	message = strdup ("Error: Database path must be absolute.\n");
+	status = NOTMUCH_STATUS_PATH_ERROR;
+	goto DONE;
+    }
+
     err = stat (path, &st);
     if (err) {
 	IGNORE_RESULT (asprintf (&message, "Error: Cannot create database at %s: %s.\n",
@@ -846,6 +852,12 @@ notmuch_database_open_verbose (const char *path,
     if (path == NULL) {
 	message = strdup ("Error: Cannot open a database for a NULL path.\n");
 	status = NOTMUCH_STATUS_NULL_POINTER;
+	goto DONE;
+    }
+
+    if (path[0] != '/') {
+	message = strdup ("Error: Database path must be absolute.\n");
+	status = NOTMUCH_STATUS_PATH_ERROR;
 	goto DONE;
     }
 

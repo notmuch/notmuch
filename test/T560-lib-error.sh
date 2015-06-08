@@ -36,7 +36,6 @@ EOF
 test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "Open relative path"
-test_subtest_known_broken
 test_C <<'EOF'
 #include <stdio.h>
 #include <notmuch.h>
@@ -55,7 +54,6 @@ EOF
 test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "Create database in relative path"
-test_subtest_known_broken
 test_C <<'EOF'
 #include <stdio.h>
 #include <notmuch.h>
@@ -108,21 +106,21 @@ Error: Cannot create a database for a NULL path.
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
-test_begin_subtest "Create database in non-existant directory"
-test_C <<'EOF'
+test_begin_subtest "Create database in nonexistent directory"
+test_C ${PWD}/nonexistent/foo<<'EOF'
 #include <stdio.h>
 #include <notmuch.h>
 int main (int argc, char** argv)
 {
     notmuch_database_t *db;
     notmuch_status_t stat;
-    stat = notmuch_database_create ("./nonexistent/foo", &db);
+    stat = notmuch_database_create (argv[1], &db);
 }
 EOF
 cat <<'EOF' >EXPECTED
 == stdout ==
 == stderr ==
-Error: Cannot create database at ./nonexistent/foo: No such file or directory.
+Error: Cannot create database at CWD/nonexistent/foo: No such file or directory.
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
