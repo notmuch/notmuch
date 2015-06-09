@@ -413,6 +413,13 @@ Does NOT change the database."
       (ignore-errors
 	(delete-window notmuch-tree-message-window)))))
 
+(defun notmuch-tree-command-hook ()
+  (when (eq major-mode 'notmuch-tree-mode)
+    ;; We just run the notmuch-show-command-hook on the message pane.
+    (when (buffer-live-p notmuch-tree-message-buffer)
+      (with-current-buffer notmuch-tree-message-buffer
+	(notmuch-show-command-hook)))))
+
 (defun notmuch-tree-show-message-in ()
   "Show the current message (in split-pane)."
   (interactive)
@@ -855,6 +862,7 @@ This is is a helper function for notmuch-tree. The arguments are
 the same as for the function notmuch-tree."
   (interactive)
   (notmuch-tree-mode)
+  (add-hook 'post-command-hook #'notmuch-tree-command-hook t t)
   (setq notmuch-tree-basic-query basic-query)
   (setq notmuch-tree-query-context query-context)
   (setq notmuch-tree-target-msg target)
