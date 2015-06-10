@@ -188,7 +188,7 @@ notmuch config set new.tags $OLDCONFIG
 # DUPLICATE_MESSAGE_ID is not tested here, because it should actually pass.
 
 for code in OUT_OF_MEMORY XAPIAN_EXCEPTION FILE_NOT_EMAIL \
-    READ_ONLY_DATABASE UPGRADE_REQUIRED; do
+    READ_ONLY_DATABASE UPGRADE_REQUIRED PATH_ERROR; do
 gen_insert_msg
 cat <<EOF > index-file-$code.gdb
 set breakpoint pending on

@@ -342,6 +342,8 @@ notmuch_status_to_string (notmuch_status_t status)
 	return "Unsupported operation";
     case NOTMUCH_STATUS_UPGRADE_REQUIRED:
 	return "Operation requires a database upgrade";
+    case NOTMUCH_STATUS_PATH_ERROR:
+	return "Path supplied is illegal for this function";
     default:
     case NOTMUCH_STATUS_LAST_STATUS:
 	return "Unknown error status value";

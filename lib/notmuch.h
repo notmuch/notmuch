@@ -164,6 +164,11 @@ typedef enum _notmuch_status {
      */
     NOTMUCH_STATUS_UPGRADE_REQUIRED,
     /**
+     * There is a problem with the proposed path, e.g. a relative path
+     * passed to a function expecting an absolute path.
+     */
+    NOTMUCH_STATUS_PATH_ERROR,
+    /**
      * Not an actual status value. Just a way to find out how many
      * valid status values there are.
      */

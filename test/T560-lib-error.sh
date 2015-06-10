@@ -35,7 +35,8 @@ Error: Cannot open a database for a NULL path.
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
-test_begin_subtest "Open nonexistent database"
+test_begin_subtest "Open relative path"
+test_subtest_known_broken
 test_C <<'EOF'
 #include <stdio.h>
 #include <notmuch.h>
@@ -49,7 +50,44 @@ EOF
 cat <<'EOF' >EXPECTED
 == stdout ==
 == stderr ==
-Error opening database at ./nonexistent/foo/.notmuch: No such file or directory
+Error: Database path must be absolute.
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "Create database in relative path"
+test_subtest_known_broken
+test_C <<'EOF'
+#include <stdio.h>
+#include <notmuch.h>
+int main (int argc, char** argv)
+{
+    notmuch_database_t *db;
+    notmuch_status_t stat;
+    stat = notmuch_database_create ("./nonexistent/foo", &db);
+}
+EOF
+cat <<'EOF' >EXPECTED
+== stdout ==
+== stderr ==
+Error: Database path must be absolute.
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "Open nonexistent database"
+test_C ${PWD}/nonexistent/foo <<'EOF'
+#include <stdio.h>
+#include <notmuch.h>
+int main (int argc, char** argv)
+{
+    notmuch_database_t *db;
+    notmuch_status_t stat;
+    stat = notmuch_database_open (argv[1], 0, 0);
+}
+EOF
+cat <<'EOF' >EXPECTED
+== stdout ==
+== stderr ==
+Error opening database at CWD/nonexistent/foo/.notmuch: No such file or directory
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
