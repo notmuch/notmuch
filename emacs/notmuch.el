@@ -181,6 +181,7 @@ there will be called at other points of notmuch execution."
 (defvar notmuch-search-stash-map
   (let ((map (make-sparse-keymap)))
     (define-key map "i" 'notmuch-search-stash-thread-id)
+    (define-key map "q" 'notmuch-stash-query)
     (define-key map "?" 'notmuch-subkeymap-help)
     map)
   "Submap for stash commands")
@@ -190,6 +191,11 @@ there will be called at other points of notmuch execution."
   "Copy thread ID of current thread to kill-ring."
   (interactive)
   (notmuch-common-do-stash (notmuch-search-find-thread-id)))
+
+(defun notmuch-stash-query ()
+  "Copy current query to kill-ring."
+  (interactive)
+  (notmuch-common-do-stash (notmuch-search-get-query)))
 
 (defvar notmuch-search-query-string)
 (defvar notmuch-search-target-thread)
