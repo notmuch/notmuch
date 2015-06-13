@@ -47,6 +47,7 @@
 (declare-function notmuch-tree "notmuch-tree"
 		  (&optional query query-context target buffer-name open-target))
 (declare-function notmuch-tree-get-message-properties "notmuch-tree" nil)
+(declare-function notmuch-read-query "notmuch" (prompt))
 
 (defcustom notmuch-message-headers '("Subject" "To" "Cc" "Date")
   "Headers that should be shown in a message, in this order.
@@ -1372,6 +1373,7 @@ reset based on the original query."
     (define-key map (kbd "<backtab>") 'notmuch-show-previous-button)
     (define-key map (kbd "TAB") 'notmuch-show-next-button)
     (define-key map "f" 'notmuch-show-forward-message)
+    (define-key map "l" 'notmuch-show-filter-thread)
     (define-key map "r" 'notmuch-show-reply-sender)
     (define-key map "R" 'notmuch-show-reply)
     (define-key map "|" 'notmuch-show-pipe-message)
@@ -1659,6 +1661,16 @@ user decision and we should not override it."
     (redisplay)
     (save-excursion
       (funcall notmuch-show-mark-read-function (window-start) (window-end)))))
+
+(defun notmuch-show-filter-thread (query)
+  "Filter or LIMIT the current thread based on a new query string.
+
+Reshows the current thread with matches defined by the new query-string."
+  (interactive (list (notmuch-read-query "Filter thread: ")))
+  (let ((msg-id (notmuch-show-get-message-id)))
+    (setq notmuch-show-query-context (if (string= query "") nil query))
+    (notmuch-show-refresh-view t)
+    (notmuch-show-goto-message msg-id)))
 
 ;; Functions for getting attributes of several messages in the current
 ;; thread.
