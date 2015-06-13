@@ -1281,6 +1281,16 @@ This includes:
 	      ")")
     notmuch-show-thread-id))
 
+(defun notmuch-show-goto-message (msg-id)
+  "Go to message with msg-id."
+  (goto-char (point-min))
+  (unless (loop if (string= msg-id (notmuch-show-get-message-id))
+		return t
+		until (not (notmuch-show-goto-message-next)))
+    (goto-char (point-min))
+    (message "Message-id not found."))
+  (notmuch-show-message-adjust))
+
 (defun notmuch-show-apply-state (state)
   "Apply STATE to the current buffer.
 
@@ -1298,13 +1308,7 @@ This includes:
 	  until (not (notmuch-show-goto-message-next)))
 
     ;; Go to the previously open message.
-    (goto-char (point-min))
-    (unless (loop if (string= current (notmuch-show-get-message-id))
-		  return t
-		  until (not (notmuch-show-goto-message-next)))
-      (goto-char (point-min))
-      (message "Previously current message not found."))
-    (notmuch-show-message-adjust)))
+    (notmuch-show-goto-message current)))
 
 (defun notmuch-show-refresh-view (&optional reset-state)
   "Refresh the current view.
