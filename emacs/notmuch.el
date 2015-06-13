@@ -162,7 +162,7 @@ there will be called at other points of notmuch execution."
     (define-key map "o" 'notmuch-search-toggle-order)
     (define-key map "c" 'notmuch-search-stash-map)
     (define-key map "t" 'notmuch-search-filter-by-tag)
-    (define-key map "f" 'notmuch-search-filter)
+    (define-key map "l" 'notmuch-search-filter)
     (define-key map [mouse-1] 'notmuch-search-show-thread)
     (define-key map "*" 'notmuch-search-tag-all)
     (define-key map "a" 'notmuch-search-archive-thread)
@@ -988,7 +988,7 @@ Enclose QUERY-STRING in parentheses if it matches
     query-string))
 
 (defun notmuch-search-filter (query)
-  "Filter the current search results based on an additional query string.
+  "Filter or LIMIT the current search results based on an additional query string.
 
 Runs a new search matching only messages that match both the
 current search results AND the additional query string provided."
