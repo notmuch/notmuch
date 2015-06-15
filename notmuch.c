@@ -381,10 +381,10 @@ main (int argc, char *argv[])
 	goto DONE;
     }
 
-    notmuch_process_shared_options (NULL);
-
     if (opt_index < argc)
 	command_name = argv[opt_index];
+
+    notmuch_process_shared_options (command_name);
 
     command = find_command (command_name);
     if (!command) {

@@ -39,8 +39,10 @@ OPTIONS
 
 Supported global options for ``notmuch`` include
 
-    ``--help``
+    ``--help`` [command-name]
 	Print a synopsis of available commands and exit.
+	With an optional command name, show the man page
+	for that subcommand.
 
     ``--version``
 	Print the installed version of notmuch, and exit.
