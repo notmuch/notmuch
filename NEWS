@@ -6,6 +6,13 @@ Library
 
 The use of absolute paths is now enforced when calling notmuch_database_{open, create}
 
+Notmuch 0.20.2 (2015-06-27)
+===========================
+
+Emacs Interface
+---------------
+
+Bug fix for marking messages read in `notmuch-tree` mode.
 
 Notmuch 0.20.1 (2015-06-01)
 ===========================
