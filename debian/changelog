@@ -1,3 +1,10 @@
+notmuch (0.20.2-1) unstable; urgency=medium
+
+  * Bug fix: "notmuch-tree does not mark messages as read", thanks to
+    Raúl Benencia (Closes: #789693).
+
+ -- David Bremner <bremner@debian.org>  Sat, 27 Jun 2015 15:03:33 +0200
+
 notmuch (0.20.1-1) unstable; urgency=medium
 
   * Bug fix: "FTBFS on arm64", thanks to Edmund Grimley Evans (Closes:
