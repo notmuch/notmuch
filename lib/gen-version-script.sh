@@ -1,3 +1,4 @@
+set -eu
 
 # we go through a bit of work to get the unmangled names of the
 # typeinfo symbols because of
