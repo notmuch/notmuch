@@ -65,6 +65,7 @@ PYTHON=${PYTHON:-}
 # options.
 PREFIX=/usr/local
 LIBDIR=
+WITH_DOCS=1
 WITH_EMACS=1
 WITH_BASH=1
 WITH_ZSH=1
@@ -143,6 +144,7 @@ Some specific library versions can be specified (auto-detected otherwise):
 Some features can be disabled (--with-feature=no is equivalent to
 --without-feature) :
 
+	--without-docs			Do not install documentation and man pages
 	--without-emacs			Do not install lisp file
 	--without-bash-completion	Do not install bash completions files
 	--without-zsh-completion	Do not install zsh completions files
@@ -185,6 +187,8 @@ for option; do
 	BASHCOMPLETIONDIR="${option#*=}"
     elif [ "${option%%=*}" = '--zshcompletiondir' ] ; then
 	ZSHCOMLETIONDIR="${option#*=}"
+    elif [ "${option}" = '--without-docs' ] ; then
+	WITH_DOCS=0
     elif [ "${option%%=*}" = '--with-emacs' ]; then
 	if [ "${option#*=}" = 'no' ]; then
 	    WITH_EMACS=0
@@ -466,13 +470,15 @@ else
     have_emacs=0
 fi
 
-printf "Checking if doxygen is available... "
-if command -v doxygen > /dev/null; then
-    printf "Yes.\n"
-    have_doxygen=1
-else
-    printf "No (so will not install api docs)\n"
-    have_doxygen=0
+have_doxygen=0
+if [ $WITH_DOCS = "1" ] ; then
+    printf "Checking if doxygen is available... "
+    if command -v doxygen > /dev/null; then
+        printf "Yes.\n"
+        have_doxygen=1
+    else
+        printf "No (so will not install api docs)\n"
+    fi
 fi
 
 printf "Checking for ruby development files... "
@@ -484,13 +490,15 @@ else
     have_ruby_dev=0
 fi
 
-printf "Checking if sphinx is available and supports nroff output... "
-if command -v sphinx-build > /dev/null && ${python} -m sphinx.writers.manpage > /dev/null 2>&1 ; then
-    printf "Yes.\n"
-    have_sphinx=1
-else
-    printf "No (so will not install man pages).\n"
-    have_sphinx=0
+have_sphinx=0
+if [ $WITH_DOCS = "1" ] ; then
+    printf "Checking if sphinx is available and supports nroff output... "
+    if command -v sphinx-build > /dev/null && ${python} -m sphinx.writers.manpage > /dev/null 2>&1 ; then
+        printf "Yes.\n"
+        have_sphinx=1
+    else
+        printf "No (so will not install man pages).\n"
+    fi
 fi
 
 libdir_in_ldconfig=0
