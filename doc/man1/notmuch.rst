@@ -40,14 +40,14 @@ OPTIONS
 Supported global options for ``notmuch`` include
 
     ``--help``
-        Print a synopsis of available commands and exit.
+	Print a synopsis of available commands and exit.
 
     ``--version``
-        Print the installed version of notmuch, and exit.
+	Print the installed version of notmuch, and exit.
 
     ``--config=FILE``
-        Specify the configuration file to use. This overrides any
-        configuration file specified by ${NOTMUCH\_CONFIG}.
+	Specify the configuration file to use. This overrides any
+	configuration file specified by ${NOTMUCH\_CONFIG}.
 
 All global options except ``--config`` can also be specified after the
 command. For example, ``notmuch subcommand --version`` is equivalent to
