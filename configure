@@ -99,7 +99,7 @@ First, some common variables can specified via environment variables:
 
 	CC		The C compiler to use
 	CFLAGS		Flags to pass to the C compiler
-        CPPFLAGS	Flags to pass to the C preprocessor
+	CPPFLAGS	Flags to pass to the C preprocessor
 	CXX		The C++ compiler to use
 	CXXFLAGS	Flags to pass to the C compiler
 	LDFLAGS		Flags to pass when linking
@@ -139,7 +139,7 @@ Fine tuning of some installation directories is available:
 
 Some specific library versions can be specified (auto-detected otherwise):
 
-        --with-gmime-version=VERS       Specify GMIME version (2.4 or 2.6)
+	--with-gmime-version=VERS       Specify GMIME version (2.4 or 2.6)
 
 Some features can be disabled (--with-feature=no is equivalent to
 --without-feature) :
@@ -334,13 +334,13 @@ have_xapian_compact=0
 if [ ${have_xapian} = "1" ]; then
     printf "Checking for Xapian compaction support... "
     case "${xapian_version}" in
-        0.*|1.[01].*|1.2.[0-5])
-            printf "No (only available with Xapian > 1.2.6).\n" ;;
-        [1-9]*.[0-9]*.[0-9]*)
-            have_xapian_compact=1
-            printf "Yes.\n" ;;
-        *)
-            printf "Unknown version.\n" ;;
+	0.*|1.[01].*|1.2.[0-5])
+	    printf "No (only available with Xapian > 1.2.6).\n" ;;
+	[1-9]*.[0-9]*.[0-9]*)
+	    have_xapian_compact=1
+	    printf "Yes.\n" ;;
+	*)
+	    printf "Unknown version.\n" ;;
     esac
 fi
 
@@ -474,10 +474,10 @@ have_doxygen=0
 if [ $WITH_DOCS = "1" ] ; then
     printf "Checking if doxygen is available... "
     if command -v doxygen > /dev/null; then
-        printf "Yes.\n"
-        have_doxygen=1
+	printf "Yes.\n"
+	have_doxygen=1
     else
-        printf "No (so will not install api docs)\n"
+	printf "No (so will not install api docs)\n"
     fi
 fi
 
@@ -494,10 +494,10 @@ have_sphinx=0
 if [ $WITH_DOCS = "1" ] ; then
     printf "Checking if sphinx is available and supports nroff output... "
     if command -v sphinx-build > /dev/null && ${python} -m sphinx.writers.manpage > /dev/null 2>&1 ; then
-        printf "Yes.\n"
-        have_sphinx=1
+	printf "Yes.\n"
+	have_sphinx=1
     else
-        printf "No (so will not install man pages).\n"
+	printf "No (so will not install man pages).\n"
     fi
 fi
 
