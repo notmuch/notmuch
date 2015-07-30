@@ -144,9 +144,9 @@ Some specific library versions can be specified (auto-detected otherwise):
 Some features can be disabled (--with-feature=no is equivalent to
 --without-feature) :
 
+	--without-bash-completion	Do not install bash completions files
 	--without-docs			Do not install documentation and man pages
 	--without-emacs			Do not install lisp file
-	--without-bash-completion	Do not install bash completions files
 	--without-zsh-completion	Do not install zsh completions files
 
 Additional options are accepted for compatibility with other
