@@ -187,6 +187,12 @@ for option; do
 	BASHCOMPLETIONDIR="${option#*=}"
     elif [ "${option%%=*}" = '--zshcompletiondir' ] ; then
 	ZSHCOMLETIONDIR="${option#*=}"
+    elif [ "${option%%=*}" = '--with-docs' ]; then
+	if [ "${option#*=}" = 'no' ]; then
+	    WITH_DOCS=0
+	else
+	    WITH_DOCS=1
+	fi
     elif [ "${option}" = '--without-docs' ] ; then
 	WITH_DOCS=0
     elif [ "${option%%=*}" = '--with-emacs' ]; then
