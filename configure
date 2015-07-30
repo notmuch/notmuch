@@ -38,7 +38,7 @@ if [ "$srcdir" != "." ]; then
     cp -a "$srcdir"/test/* test
 
     # Emacs only likes to generate compiled files next to the .el files
-    # by default so copy these as well (which is not ideal0.
+    # by default so copy these as well (which is not ideal).
     cp -a "$srcdir"/emacs/*.el emacs
 fi
 
