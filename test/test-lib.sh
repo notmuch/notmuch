@@ -487,7 +487,7 @@ emacs_deliver_message ()
 	   (message-goto-body)
 	   (insert \"${body}\")
 	   $@
-	   (message-send-and-exit))"
+	   (notmuch-mua-send-and-exit))"
 
     # In case message was sent properly, client waits for confirmation
     # before exiting and resuming control here; therefore making sure
@@ -522,7 +522,7 @@ emacs_fcc_message ()
 	   (message-goto-body)
 	   (insert \"${body}\")
 	   $@
-	   (message-send-and-exit))" || return 1
+	   (notmuch-mua-send-and-exit))" || return 1
     notmuch new >/dev/null
 }
 

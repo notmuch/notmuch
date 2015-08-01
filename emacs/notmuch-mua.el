@@ -268,8 +268,12 @@ Note that these functions use `mail-citation-hook' if that is non-nil."
   (message-goto-body)
   (set-buffer-modified-p nil))
 
-(define-derived-mode notmuch-message-mode message-mode "Notmuch Message"
+(define-derived-mode notmuch-message-mode message-mode "Message[Notmuch]"
   "Notmuch message composition mode. Mostly like `message-mode'")
+
+(define-key notmuch-message-mode-map (kbd "C-c C-c") #'notmuch-mua-send-and-exit)
+(define-key notmuch-message-mode-map (kbd "C-c C-s") #'notmuch-mua-send)
+
 
 (defun notmuch-mua-mail (&optional to subject other-headers &rest other-args)
   "Invoke the notmuch mail composition window.
@@ -288,6 +292,7 @@ OTHER-ARGS are passed through to `message-mail'."
 
   (apply #'message-mail to subject other-headers other-args)
   (notmuch-message-mode)
+  (notmuch-fcc-header-setup)
   (message-sort-headers)
   (message-hide-headers)
   (set-buffer-modified-p nil)
@@ -401,7 +406,13 @@ will be addressed to all recipients of the source message."
 
 (defun notmuch-mua-send-and-exit (&optional arg)
   (interactive "P")
-  (message-send-and-exit arg))
+  (let ((message-fcc-handler-function #'notmuch-fcc-handler))
+    (message-send-and-exit arg)))
+
+(defun notmuch-mua-send (&optional arg)
+  (interactive "P")
+  (let ((message-fcc-handler-function #'notmuch-fcc-handler))
+    (message-send arg)))
 
 (defun notmuch-mua-kill-buffer ()
   (interactive)
