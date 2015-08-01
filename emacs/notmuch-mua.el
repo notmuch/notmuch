@@ -268,6 +268,9 @@ Note that these functions use `mail-citation-hook' if that is non-nil."
   (message-goto-body)
   (set-buffer-modified-p nil))
 
+(define-derived-mode notmuch-message-mode message-mode "Notmuch Message"
+  "Notmuch message composition mode. Mostly like `message-mode'")
+
 (defun notmuch-mua-mail (&optional to subject other-headers &rest other-args)
   "Invoke the notmuch mail composition window.
 
@@ -284,6 +287,7 @@ OTHER-ARGS are passed through to `message-mail'."
 		       (notmuch-user-name) " <" (notmuch-user-primary-email) ">")) other-headers))
 
   (apply #'message-mail to subject other-headers other-args)
+  (notmuch-message-mode)
   (message-sort-headers)
   (message-hide-headers)
   (set-buffer-modified-p nil)
