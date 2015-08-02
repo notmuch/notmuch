@@ -621,9 +621,9 @@ test_expect_equal_json () {
     # The test suite forces LC_ALL=C, but this causes Python 3 to
     # decode stdin as ASCII.  We need to read JSON in UTF-8, so
     # override Python's stdio encoding defaults.
-    output=$(echo "$1" | PYTHONIOENCODING=utf-8 python -mjson.tool \
+    output=$(echo "$1" | PYTHONIOENCODING=utf-8 $NOTMUCH_PYTHON -mjson.tool \
         || echo "$1")
-    expected=$(echo "$2" | PYTHONIOENCODING=utf-8 python -mjson.tool \
+    expected=$(echo "$2" | PYTHONIOENCODING=utf-8 $NOTMUCH_PYTHON -mjson.tool \
         || echo "$2")
     shift 2
     test_expect_equal "$output" "$expected" "$@"
@@ -1153,14 +1153,8 @@ test_python() {
 	export LD_LIBRARY_PATH=$TEST_DIRECTORY/../lib
 	export PYTHONPATH=$TEST_DIRECTORY/../bindings/python
 
-	# Some distros (e.g. Arch Linux) ship Python 2.* as /usr/bin/python2,
-	# most others as /usr/bin/python. So first try python2, and fallback to
-	# python if python2 doesn't exist.
-	cmd=python2
-	[[ ${test_missing_external_prereq_[python2]} == t ]] && cmd=python
-
 	(echo "import sys; _orig_stdout=sys.stdout; sys.stdout=open('OUTPUT', 'w')"; cat) \
-		| $cmd -
+		| $NOTMUCH_PYTHON -
 }
 
 test_ruby() {
@@ -1325,5 +1319,4 @@ test_declare_external_prereq emacs
 test_declare_external_prereq ${TEST_EMACSCLIENT}
 test_declare_external_prereq gdb
 test_declare_external_prereq gpg
-test_declare_external_prereq python
-test_declare_external_prereq python2
+test_declare_external_prereq ${NOTMUCH_PYTHON}

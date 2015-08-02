@@ -114,6 +114,8 @@ Other environment variables can be used to control configure itself,
 	XAPIAN_CONFIG	The program to use to determine flags for
 			compiling and linking against the Xapian
 			library. [$XAPIAN_CONFIG]
+	PYTHON		Name of python command to use in
+			configure and the test suite.
 
 Additionally, various options can be specified on the configure
 command line.

@@ -2,6 +2,8 @@
 test_description="python bindings"
 . ./test-lib.sh
 
+test_require_external_prereq ${NOTMUCH_PYTHON}
+
 add_email_corpus
 
 test_begin_subtest "compare thread ids"
