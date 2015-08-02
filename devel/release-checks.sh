@@ -141,7 +141,7 @@ else
 fi
 
 echo -n "Checking that python bindings version is $VERSION... "
-py_version=`python -c "with open('$PV_FILE') as vf: exec(vf.read()); print __VERSION__"`
+py_version=`python -c "with open('$PV_FILE') as vf: exec(vf.read()); print(__VERSION__)"`
 if [ "$py_version" = "$VERSION" ]
 then
 	echo Yes.
