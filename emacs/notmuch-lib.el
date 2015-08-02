@@ -192,8 +192,8 @@ Otherwise the output will be returned"
 "Perhaps you haven't run \"notmuch setup\" yet? Try running this
 on the command line, and then retry your notmuch command")))
 
-(defun notmuch-version ()
-  "Return a string with the notmuch version number."
+(defun notmuch-cli-version ()
+  "Return a string with the notmuch cli command version number."
   (let ((long-string
 	 ;; Trim off the trailing newline.
 	 (substring (notmuch-command-to-string "--version") 0 -1)))

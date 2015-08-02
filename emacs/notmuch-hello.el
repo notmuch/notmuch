@@ -628,7 +628,7 @@ with `notmuch-hello-query-counts'."
 (defun notmuch-hello-versions ()
   "Display the notmuch version(s)"
   (interactive)
-  (let ((notmuch-cli-version (notmuch-version)))
+  (let ((notmuch-cli-version (notmuch-cli-version)))
     (message "notmuch version %s"
 	     (if (string= notmuch-emacs-version notmuch-cli-version)
 		 notmuch-cli-version

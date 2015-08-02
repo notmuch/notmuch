@@ -118,7 +118,7 @@ Note that these functions use `mail-citation-hook' if that is non-nil."
 
 (defun notmuch-mua-user-agent-notmuch ()
   "Generate a `User-Agent:' string suitable for notmuch."
-  (concat "Notmuch/" (notmuch-version) " (http://notmuchmail.org)"))
+  (concat "Notmuch/" (notmuch-cli-version) " (http://notmuchmail.org)"))
 
 (defun notmuch-mua-user-agent-emacs ()
   "Generate a `User-Agent:' string suitable for notmuch."
