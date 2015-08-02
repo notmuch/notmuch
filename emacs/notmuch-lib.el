@@ -25,6 +25,10 @@
 (require 'mm-decode)
 (require 'cl)
 
+(unless (require 'notmuch-version nil t)
+  (defconst notmuch-emacs-version "unknown"
+    "Placeholder variable when notmuch-version.el[c] is not available."))
+
 (autoload 'notmuch-jump-search "notmuch-jump"
   "Jump to a saved search by shortcut key." t)
 

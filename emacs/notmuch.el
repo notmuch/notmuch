@@ -61,10 +61,6 @@
 (require 'notmuch-message)
 (require 'notmuch-parser)
 
-(unless (require 'notmuch-version nil t)
-  (defconst notmuch-emacs-version "unknown"
-    "Placeholder variable when notmuch-version.el[c] is not available."))
-
 (defcustom notmuch-search-result-format
   `(("date" . "%12s ")
     ("count" . "%-7s ")
