@@ -63,15 +63,18 @@ test_begin_subtest "Renamed message"
 generate_message
 notmuch new > /dev/null
 mv "$gen_msg_filename" "${gen_msg_filename}"-renamed
-output=$(NOTMUCH_NEW)
-test_expect_equal "$output" "No new mail. Detected 1 file rename."
+output=$(NOTMUCH_NEW --debug)
+test_expect_equal "$output" "(D) add_files_recursive, pass 2: queuing passed file ${gen_msg_filename} for deletion from database
+No new mail. Detected 1 file rename."
 
 
 test_begin_subtest "Deleted message"
 
 rm "${gen_msg_filename}"-renamed
-output=$(NOTMUCH_NEW)
-test_expect_equal "$output" "No new mail. Removed 1 message."
+output=$(NOTMUCH_NEW --debug)
+test_expect_equal "$output" "(D) add_files_recursive, pass 3: queuing leftover file ${gen_msg_filename}-renamed for deletion from database
+No new mail. Removed 1 message."
+
 
 
 test_begin_subtest "Renamed directory"
@@ -163,7 +166,7 @@ rm -rf "${MAIL_DIR}"/two
 output=$(NOTMUCH_NEW)
 test_expect_equal "$output" "No new mail. Removed 3 messages."
 
-test_begin_subtest "Support single-message mbox (deprecated)"
+test_begin_subtest "Support single-message mbox"
 cat > "${MAIL_DIR}"/mbox_file1 <<EOF
 From test_suite@notmuchmail.org Fri Jan  5 15:43:57 2001
 From: Notmuch Test Suite <test_suite@notmuchmail.org>
