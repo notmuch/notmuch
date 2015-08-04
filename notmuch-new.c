@@ -528,6 +528,10 @@ add_files (notmuch_database_t *notmuch,
 					      "%s/%s", path,
 					      notmuch_filenames_get (db_files));
 
+	    if (state->debug)
+		printf ("(D) add_files_recursive, pass 2: queuing passed file %s for deletion from database\n",
+			absolute);
+
 	    _filename_list_add (state->removed_files, absolute);
 
 	    notmuch_filenames_move_to_next (db_files);
@@ -542,6 +546,9 @@ add_files (notmuch_database_t *notmuch,
 	    {
 		char *absolute = talloc_asprintf (state->removed_directories,
 						  "%s/%s", path, filename);
+		if (state->debug)
+		    printf ("(D) add_files_recursive, pass 2: queuing passed directory %s for deletion from database\n",
+			absolute);
 
 		_filename_list_add (state->removed_directories, absolute);
 	    }
@@ -610,6 +617,9 @@ add_files (notmuch_database_t *notmuch,
 	char *absolute = talloc_asprintf (state->removed_files,
 					  "%s/%s", path,
 					  notmuch_filenames_get (db_files));
+	if (state->debug)
+	    printf ("(D) add_files_recursive, pass 3: queuing leftover file %s for deletion from database\n",
+		    absolute);
 
 	_filename_list_add (state->removed_files, absolute);
 
@@ -621,6 +631,10 @@ add_files (notmuch_database_t *notmuch,
 	char *absolute = talloc_asprintf (state->removed_directories,
 					  "%s/%s", path,
 					  notmuch_filenames_get (db_subdirs));
+
+	if (state->debug)
+	    printf ("(D) add_files_recursive, pass 3: queuing leftover directory %s for deletion from database\n",
+		    absolute);
 
 	_filename_list_add (state->removed_directories, absolute);
 

@@ -238,6 +238,7 @@ test_expect_equal "$output" \
 (D) add_files_recursive, pass 2: explicitly ignoring ${MAIL_DIR}/one/two/ignored_file
 (D) add_files_recursive, pass 2: explicitly ignoring ${MAIL_DIR}/one/two/three/.git
 (D) add_files_recursive, pass 2: explicitly ignoring ${MAIL_DIR}/one/two/three/ignored_file
+(D) add_files_recursive, pass 3: queuing leftover directory ${MAIL_DIR}/two for deletion from database
 No new mail."
 
 
