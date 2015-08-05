@@ -1,10 +1,25 @@
 Notmuch 0.21 (UNRELEASED)
 =========================
 
+Emacs Interface
+---------------
+
+`notmuch-emacs-version` is used in `User-Agent` header
+
+  The value of recently introduced variable `notmuch-emacs-version` is
+  now used as a part of `User-Agent` header when sending emails.
+
+Removed `notmuch-version` function by renaming it to `notmuch-cli-version`
+
+  With existing variable `notmuch-emacs-version` the accompanied
+  function which retrieves the version of `notmuch-command` is
+  better named as `notmuch-cli-version`.
+
 Library
 -------
 
-The use of absolute paths is now enforced when calling notmuch_database_{open, create}
+The use of absolute paths is now enforced when calling
+`notmuch_database_{open, create}`.
 
 Notmuch 0.20.2 (2015-06-27)
 ===========================
@@ -20,7 +35,7 @@ Notmuch 0.20.1 (2015-06-01)
 Test Suite
 ----------
 
-Work around apparent gdb bug on arm64
+Work around apparent gdb bug on arm64.
 
 Notmuch 0.20 (2015-05-31)
 =========================
