@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 test_description='"notmuch search, count and show" with excludes in several variations'
-. ./test-lib.sh
+. ./test-lib.sh || exit 1
 
 # Generates a thread consisting of a top level message and 'length'
 # replies. The subject of the top message 'subject: top message"

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 test_description='"notmuch setup"'
-. ./test-lib.sh
+. ./test-lib.sh || exit 1
 
 test_begin_subtest "Notmuch new without a config suggests notmuch setup"
 output=$(notmuch --config=new-notmuch-config new 2>&1)

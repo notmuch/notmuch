@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 test_description="online help"
-. ./test-lib.sh
+. ./test-lib.sh || exit 1
 
 test_expect_success 'notmuch --help' 'notmuch --help'
 test_expect_success 'notmuch help' 'notmuch help'

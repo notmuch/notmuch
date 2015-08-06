@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 test_description="error reporting for library"
 
-. ./test-lib.sh
+. ./test-lib.sh || exit 1
 
 backup_database () {
     rm -rf notmuch-dir-backup

@@ -9,7 +9,7 @@ test_description='test of proper handling of in-reply-to and references headers'
 # database is constructed properly, even in the presence of
 # non-RFC-compliant headers'
 
-. ./test-lib.sh
+. ./test-lib.sh || exit 1
 
 test_begin_subtest "Use References when In-Reply-To is broken"
 add_message '[id]="foo@one.com"' \

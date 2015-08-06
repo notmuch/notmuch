@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 test_description="python bindings"
-. ./test-lib.sh
+. ./test-lib.sh || exit 1
 
 test_require_external_prereq ${NOTMUCH_PYTHON}
 

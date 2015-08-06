@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 test_description="database version and feature compatibility"
 
-. ./test-lib.sh
+. ./test-lib.sh || exit 1
 
 test_begin_subtest "future database versions abort open"
 ${TEST_DIRECTORY}/make-db-version ${MAIL_DIR} 9999 ""

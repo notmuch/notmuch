@@ -138,7 +138,7 @@ Source 'test-lib.sh'
 After assigning test_description, the test script should source
 test-lib.sh like this:
 
-	. ./test-lib.sh
+	. ./test-lib.sh || exit 1
 
 This test harness library does the following things:
 

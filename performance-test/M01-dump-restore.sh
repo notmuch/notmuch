@@ -2,7 +2,7 @@
 
 test_description='dump and restore'
 
-. ./perf-test-lib.sh
+. ./perf-test-lib.sh || exit 1
 
 memory_start
 

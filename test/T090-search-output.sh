@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 test_description='various settings for "notmuch search --output="'
-. ./test-lib.sh
+. ./test-lib.sh || exit 1
 
 add_email_corpus
 

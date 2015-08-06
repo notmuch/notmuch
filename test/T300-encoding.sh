@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 test_description="encoding issues"
-. ./test-lib.sh
+. ./test-lib.sh || exit 1
 
 test_begin_subtest "Message with text of unknown charset"
 add_message '[content-type]="text/plain; charset=unknown-8bit"' \

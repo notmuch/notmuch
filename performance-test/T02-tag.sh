@@ -2,7 +2,7 @@
 
 test_description='tagging'
 
-. ./perf-test-lib.sh
+. ./perf-test-lib.sh || exit 1
 
 time_start
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 test_description='messages with unquoted . in name'
-. ./test-lib.sh
+. ./test-lib.sh || exit 1
 
 add_message \
   '[from]="Some.Name for Someone <bugs@quoting.com>"' \

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 test_description="ruby bindings"
-. ./test-lib.sh
+. ./test-lib.sh || exit 1
 
 if [ "${NOTMUCH_HAVE_RUBY_DEV}" = "0" ]; then
     test_subtest_missing_external_prereq_["ruby development files"]=t

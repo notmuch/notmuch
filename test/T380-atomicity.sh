@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 test_description='atomicity'
-. ./test-lib.sh
+. ./test-lib.sh || exit 1
 
 # This script tests the effects of killing and restarting "notmuch
 # new" at arbitrary points.  If notmuch new is properly atomic, the

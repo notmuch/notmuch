@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 test_description="date:since..until queries"
-. ./test-lib.sh
+. ./test-lib.sh || exit 1
 
 add_email_corpus
 

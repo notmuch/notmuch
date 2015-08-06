@@ -96,7 +96,8 @@ _x32="$_x04$_x04$_x04$_x04$_x04$_x04$_x04$_x04"
 # test_description='Description of this test...
 # This test checks if command xyzzy does the right thing...
 # '
-# . ./test-lib.sh
+# . ./test-lib.sh || exit 1
+
 [ "x$ORIGINAL_TERM" != "xdumb" ] && (
 		TERM=$ORIGINAL_TERM &&
 		export TERM &&
@@ -1223,7 +1224,7 @@ test_init_ () {
 }
 
 
-. ./test-lib-common.sh
+. ./test-lib-common.sh || exit 1
 
 emacs_generate_script
 

@@ -18,7 +18,7 @@
 # id:3wd4o8wa7fx.fsf@testarossa.amd.com
 
 test_description='that notmuch does not overlap term positions'
-. ./test-lib.sh
+. ./test-lib.sh || exit 1
 
 add_message '[to]="a@b.c, x@y.z"'
 

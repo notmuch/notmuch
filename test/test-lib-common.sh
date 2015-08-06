@@ -40,7 +40,7 @@ TEST_DIRECTORY=$(pwd)
 notmuch_path=`find_notmuch_path "$TEST_DIRECTORY"`
 
 # configure output
-. $notmuch_path/sh.config
+. $notmuch_path/sh.config || exit 1
 
 if test -n "$valgrind"
 then

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 test_description="naming of authors with unusual addresses"
-. ./test-lib.sh
+. ./test-lib.sh || exit 1
 
 test_begin_subtest "Add author with empty quoted real name"
 add_message '[subject]="author-naming: Initial thread subject"' \

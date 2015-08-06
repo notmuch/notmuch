@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 test_description="handling of uuencoded data"
-. ./test-lib.sh
+. ./test-lib.sh || exit 1
 
 add_message [subject]=uuencodetest '[date]="Sat, 01 Jan 2000 12:00:00 -0000"' \
 '[body]="This message is used to ensure that notmuch correctly handles a

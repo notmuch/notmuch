@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 test_description='"notmuch config"'
-. ./test-lib.sh
+. ./test-lib.sh || exit 1
 
 test_begin_subtest "Get string value"
 test_expect_equal "$(notmuch config get user.name)" "Notmuch Test Suite"
