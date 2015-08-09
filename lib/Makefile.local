@@ -1,26 +1,5 @@
 # -*- makefile -*-
 
-# The major version of the library interface. This will control the soname.
-# As such, this number must be incremented for any incompatible change to
-# the library interface, (such as the deletion of an API or a major
-# semantic change that breaks formerly functioning code).
-#
-LIBNOTMUCH_VERSION_MAJOR = 4
-
-# The minor version of the library interface. This should be incremented at
-# the time of release for any additions to the library interface,
-# (and when it is incremented, the release version of the library should
-#  be reset to 0).
-LIBNOTMUCH_VERSION_MINOR = 3
-
-# The release version the library interface. This should be incremented at
-# the time of release if there have been no changes to the interface, (but
-# simply compatible changes to the implementation).
-LIBNOTMUCH_VERSION_RELEASE = 0
-
-# Note: Don't forget to change the VERSION macros in notmuch.h when
-# any of the above change.
-
 ifeq ($(PLATFORM),MACOSX)
 LIBRARY_SUFFIX = dylib
 # On OS X, library version numbers go before suffix.

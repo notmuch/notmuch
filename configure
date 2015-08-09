@@ -324,6 +324,35 @@ EOF
     exit 1
 fi
 
+printf "Reading libnotmuch version from source..."
+cat > _libversion.c <<EOF
+#include <stdio.h>
+#include "lib/notmuch.h"
+int main(void) {
+    printf("libnotmuch_version_major=%d\n",
+		LIBNOTMUCH_MAJOR_VERSION);
+    printf("libnotmuch_version_minor=%d\n",
+		LIBNOTMUCH_MINOR_VERSION);
+    printf("libnotmuch_version_release=%d\n",
+		LIBNOTMUCH_MICRO_VERSION);
+    return 0;
+}
+EOF
+if ${CC} ${CFLAGS} _libversion.c -o _libversion > /dev/null 2>&1 && \
+       ./_libversion > _libversion.sh && . ./_libversion.sh
+then
+    printf  "OK"
+else
+    cat <<EOF
+
+*** Error: Reading lib/notmuch.h failed.
+Please try running configure again in a clean environment, and if the
+problem persists, report a bug.
+EOF
+    rm -f _libversion _libversion.c _libversion.sh
+    exit 1
+fi
+
 if pkg-config --version > /dev/null 2>&1; then
     have_pkg_config=1
 else
@@ -809,7 +838,7 @@ for flag in -Wmissing-declarations; do
 done
 printf "\n\t${WARN_CFLAGS}\n"
 
-rm -f minimal minimal.c
+rm -f minimal minimal.c _libversion.c _libversion _libversion.sh
 
 # construct the Makefile.config
 cat > Makefile.config <<EOF
@@ -846,6 +875,28 @@ vpath %.cc \$(srcdir)
 vpath Makefile.% \$(srcdir)
 vpath %.py \$(srcdir)
 vpath %.rst \$(srcdir)
+
+# Library versions (used to make SONAME)
+# The major version of the library interface. This will control the soname.
+# As such, this number must be incremented for any incompatible change to
+# the library interface, (such as the deletion of an API or a major
+# semantic change that breaks formerly functioning code).
+#
+LIBNOTMUCH_VERSION_MAJOR = ${libnotmuch_version_major}
+
+# The minor version of the library interface. This should be incremented at
+# the time of release for any additions to the library interface,
+# (and when it is incremented, the release version of the library should
+#  be reset to 0).
+LIBNOTMUCH_VERSION_MINOR = ${libnotmuch_version_minor}
+
+# The release version the library interface. This should be incremented at
+# the time of release if there have been no changes to the interface, (but
+# simply compatible changes to the implementation).
+LIBNOTMUCH_VERSION_RELEASE = ${libnotmuch_version_release}
+
+# These are derived from the VERSION macros in lib/notmuch.h so
+# if you have to change them, something is wrong.
 
 # The C compiler to use
 CC = ${CC}
