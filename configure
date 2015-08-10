@@ -324,7 +324,7 @@ EOF
     exit 1
 fi
 
-printf "Reading libnotmuch version from source..."
+printf "Reading libnotmuch version from source... "
 cat > _libversion.c <<EOF
 #include <stdio.h>
 #include "lib/notmuch.h"
@@ -341,7 +341,7 @@ EOF
 if ${CC} ${CFLAGS} _libversion.c -o _libversion > /dev/null 2>&1 && \
        ./_libversion > _libversion.sh && . ./_libversion.sh
 then
-    printf  "OK"
+    printf "OK.\n"
 else
     cat <<EOF
 
