@@ -237,10 +237,6 @@ notmuch_tag_command (notmuch_config_t *config, int argc, char *argv[])
 	    fprintf (stderr, "Can't specify both cmdline and stdin!\n");
 	    return EXIT_FAILURE;
 	}
-	if (remove_all) {
-	    fprintf (stderr, "Can't specify both --remove-all and --batch\n");
-	    return EXIT_FAILURE;
-	}
     } else {
 	tag_ops = tag_op_list_create (config);
 	if (tag_ops == NULL) {
