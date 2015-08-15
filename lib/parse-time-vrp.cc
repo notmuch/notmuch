@@ -31,6 +31,7 @@ Xapian::valueno
 ParseTimeValueRangeProcessor::operator() (std::string &begin, std::string &end)
 {
     time_t t, now;
+    std::string b;
 
     /* Require date: prefix in start of the range... */
     if (STRNCMP_LITERAL (begin.c_str (), PREFIX))
@@ -38,6 +39,7 @@ ParseTimeValueRangeProcessor::operator() (std::string &begin, std::string &end)
 
     /* ...and remove it. */
     begin.erase (0, sizeof (PREFIX) - 1);
+    b = begin;
 
     /* Use the same 'now' for begin and end. */
     if (time (&now) == (time_t) -1)
@@ -51,6 +53,9 @@ ParseTimeValueRangeProcessor::operator() (std::string &begin, std::string &end)
     }
 
     if (!end.empty ()) {
+	if (end == "!" && ! b.empty ())
+	    end = b;
+
 	if (parse_time_string (end.c_str (), &t, &now, PARSE_TIME_ROUND_UP_INCLUSIVE))
 	    return Xapian::BAD_VALUENO;
 
