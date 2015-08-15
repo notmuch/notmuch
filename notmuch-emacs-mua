@@ -37,11 +37,10 @@ PRINT_ONLY=
 NO_WINDOW=
 USE_EMACSCLIENT=
 AUTO_DAEMON=
-CREATE_FRAME="-c"
+CREATE_FRAME=
 
 # The crux of it all: construct an elisp progn and eval it.
 ELISP="(prog1 'done (require 'notmuch) (notmuch-mua-new-mail)"
-ELISP="${ELISP} (setq message-exit-actions (list #'save-buffers-kill-terminal))"
 
 # Short options compatible with mutt(1).
 while getopts :s:c:b:i:h opt; do
@@ -65,7 +64,7 @@ while getopts :s:c:b:i:h opt; do
 		    opt=${opt%%=*}
 		    ;;
 		# Long options without arguments.
-		--help|--print|--no-window-system|--client|--auto-daemon)
+		--help|--print|--no-window-system|--client|--auto-daemon|--create-frame)
 		    ;;
 		*)
 		    echo "$0: unknown long option ${opt}, or argument mismatch." >&2
@@ -103,13 +102,15 @@ while getopts :s:c:b:i:h opt; do
 	    ;;
 	--no-window-system)
 	    NO_WINDOW="-nw"
-	    CREATE_FRAME=
 	    ;;
 	--client)
 	    USE_EMACSCLIENT="yes"
 	    ;;
 	--auto-daemon)
 	    AUTO_DAEMON="--alternate-editor="
+	    ;;
+	--create-frame)
+	    CREATE_FRAME="-c"
 	    ;;
 	*)
 	    # We should never end up here.
@@ -127,6 +128,11 @@ for arg; do
     escape -v arg "${arg}"
     ELISP="${ELISP} (message-goto-to) (insert \"${arg}, \")"
 done
+
+# Kill the terminal/frame if we're creating one.
+if [ -z "$USE_EMACSCLIENT" -o -n "$CREATE_FRAME" -o -n "$NO_WINDOW" ]; then
+    ELISP="${ELISP} (setq message-exit-actions (list #'save-buffers-kill-terminal))"
+fi
 
 # End progn.
 ELISP="${ELISP})"

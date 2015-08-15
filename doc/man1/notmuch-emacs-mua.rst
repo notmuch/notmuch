@@ -45,6 +45,12 @@ Supported options for **notmuch-emacs-mua** include
         Automatically start Emacs in daemon mode, if the Emacs server
         is not running. Applicable with ``--client``.
 
+    ``--create-frame``
+        Create a new frame instead of trying to use the current Emacs
+        frame. Applicable with ``--client``. This will be required
+        when Emacs is running (or automatically started with
+        ``--auto-daemon``) in daemon mode.
+
     ``--print``
         Output the resulting elisp to stdout instead of evaluating it.
 
