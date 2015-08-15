@@ -82,9 +82,6 @@ while getopts :s:c:b:i:h opt; do
 	--help|h)
 	    exec man notmuch-emacs-mua
 	    ;;
-	--client)
-	    USE_EMACSCLIENT="yes"
-	    ;;
 	--subject|s)
 	    ELISP="${ELISP} (message-goto-subject) (insert \"${OPTARG}\")"
 	    ;;
@@ -106,6 +103,9 @@ while getopts :s:c:b:i:h opt; do
 	--no-window-system)
 	    NO_WINDOW="-nw"
 	    CREATE_FRAME=
+	    ;;
+	--client)
+	    USE_EMACSCLIENT="yes"
 	    ;;
 	*)
 	    # We should never end up here.
