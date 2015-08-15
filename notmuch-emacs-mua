@@ -34,8 +34,9 @@ EMACS=${EMACS-emacs}
 EMACSCLIENT=${EMACSCLIENT-emacsclient}
 
 PRINT_ONLY=
+NO_WINDOW=
 USE_EMACSCLIENT=
-CLIENT_TYPE="-c"
+CREATE_FRAME="-c"
 
 # The crux of it all: construct an elisp progn and eval it.
 ELISP="(prog1 'done (require 'notmuch) (notmuch-mua-new-mail)"
@@ -103,7 +104,8 @@ while getopts :s:c:b:i:h opt; do
 	    PRINT_ONLY=1
 	    ;;
 	--no-window-system)
-	    CLIENT_TYPE="-t"
+	    NO_WINDOW="-nw"
+	    CREATE_FRAME=
 	    ;;
 	*)
 	    # We should never end up here.
@@ -132,7 +134,7 @@ fi
 
 if [ -n "$USE_EMACSCLIENT" ]; then
     # Evaluate the progn.
-    exec ${EMACSCLIENT} ${CLIENT_TYPE} -a '' --eval "${ELISP}"
+    exec ${EMACSCLIENT} ${NO_WINDOW} ${CREATE_FRAME} -a '' --eval "${ELISP}"
 else
-    exec ${EMACS} --eval "${ELISP}"
+    exec ${EMACS} ${NO_WINDOW} --eval "${ELISP}"
 fi
