@@ -36,6 +36,7 @@ EMACSCLIENT=${EMACSCLIENT-emacsclient}
 PRINT_ONLY=
 NO_WINDOW=
 USE_EMACSCLIENT=
+AUTO_DAEMON=
 CREATE_FRAME="-c"
 
 # The crux of it all: construct an elisp progn and eval it.
@@ -64,7 +65,7 @@ while getopts :s:c:b:i:h opt; do
 		    opt=${opt%%=*}
 		    ;;
 		# Long options without arguments.
-		--help|--print|--no-window-system|--client)
+		--help|--print|--no-window-system|--client|--auto-daemon)
 		    ;;
 		*)
 		    echo "$0: unknown long option ${opt}, or argument mismatch." >&2
@@ -107,6 +108,9 @@ while getopts :s:c:b:i:h opt; do
 	--client)
 	    USE_EMACSCLIENT="yes"
 	    ;;
+	--auto-daemon)
+	    AUTO_DAEMON="--alternate-editor="
+	    ;;
 	*)
 	    # We should never end up here.
 	    echo "$0: internal error (option ${opt})." >&2
@@ -134,7 +138,7 @@ fi
 
 if [ -n "$USE_EMACSCLIENT" ]; then
     # Evaluate the progn.
-    exec ${EMACSCLIENT} ${NO_WINDOW} ${CREATE_FRAME} -a '' --eval "${ELISP}"
+    exec ${EMACSCLIENT} ${NO_WINDOW} ${CREATE_FRAME} ${AUTO_DAEMON} --eval "${ELISP}"
 else
     exec ${EMACS} ${NO_WINDOW} --eval "${ELISP}"
 fi

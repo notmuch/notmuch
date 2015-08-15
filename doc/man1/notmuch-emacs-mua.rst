@@ -37,8 +37,13 @@ Supported options for **notmuch-emacs-mua** include
         Even if a window system is available, use the current terminal.
 
     ``--client``
-        Use **emacsclient**, rather than **emacs**. This will start
-        an Emacs daemon process if necessary.
+        Use **emacsclient**, rather than **emacs**. For
+        **emacsclient** to work, you need an already running Emacs
+        with a server, or use ``--auto-daemon``.
+
+    ``--auto-daemon``
+        Automatically start Emacs in daemon mode, if the Emacs server
+        is not running. Applicable with ``--client``.
 
     ``--print``
         Output the resulting elisp to stdout instead of evaluating it.
