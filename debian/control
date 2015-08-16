@@ -22,6 +22,7 @@ Build-Depends:
  emacs23-nox | emacs23 (>=23~) | emacs23-lucid (>=23~),
  gdb [!s390x !ia64 !armel !ppc64el !mips !mipsel !mips64el],
  dtach (>= 0.8),
+ gpgsm <!nocheck>,
  bash-completion (>=1.9.0~)
 Standards-Version: 3.9.6
 Homepage: http://notmuchmail.org/
