@@ -1333,4 +1333,5 @@ test_declare_external_prereq emacs
 test_declare_external_prereq ${TEST_EMACSCLIENT}
 test_declare_external_prereq gdb
 test_declare_external_prereq gpg
+test_declare_external_prereq openssl
 test_declare_external_prereq ${NOTMUCH_PYTHON}

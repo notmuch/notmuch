@@ -188,3 +188,13 @@ nothing."
 ;; environments
 
 (setq mm-text-html-renderer 'html2text)
+
+;; Set some variables for S/MIME tests.
+
+(setq smime-keys '(("" "test_suite.pem" nil)))
+
+(setq mml-smime-use 'openssl)
+
+;; all test keys are without passphrase
+(eval-after-load 'smime
+  '(defun smime-ask-passphrase (cache)  nil))

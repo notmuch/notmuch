@@ -1,0 +1,7 @@
+test.crt: self signed certificated
+    % gpgsm --gen-key # needs gpgsm 2.1
+
+key+cert.pem: cert + unencryped private
+    % gpsm --import test.crt
+    % gpgsm --export-private-key-p12 -out foo.p12  (no passphrase)
+    % openssl pkcs12 -in ns.p12 -clcerts -nodes > key+cert.pem
