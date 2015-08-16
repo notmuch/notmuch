@@ -1,6 +1,12 @@
 Notmuch 0.21 (UNRELEASED)
 =========================
 
+General
+-------
+
+Notmuch now requires gmime >= 2.6.7. The gmime 2.4 series is no longer
+supported.
+
 Emacs Interface
 ---------------
 

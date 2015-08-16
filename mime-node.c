@@ -129,8 +129,6 @@ DONE:
     return status;
 }
 
-#ifdef GMIME_ATLEAST_26
-
 /* Signature list destructor (GMime 2.6) */
 static int
 _signature_list_free (GMimeSignatureList **proxy)
@@ -204,87 +202,6 @@ node_decrypt_and_verify (mime_node_t *node, GMimeObject *part,
     if (err)
 	g_error_free (err);
 }
-
-#else /* GMIME_ATLEAST_26 */
-
-/* Signature validity destructor (GMime 2.4) */
-static int
-_signature_validity_free (GMimeSignatureValidity **proxy)
-{
-    g_mime_signature_validity_free (*proxy);
-    return 0;
-}
-
-/* Set up signature validity destructor (GMime 2.4) */
-static void
-set_signature_validity_destructor (mime_node_t *node,
-				   GMimeSignatureValidity *sig_validity)
-{
-    GMimeSignatureValidity **proxy = talloc (node, GMimeSignatureValidity *);
-    if (proxy) {
-	*proxy = sig_validity;
-	talloc_set_destructor (proxy, _signature_validity_free);
-    }
-}
-
-/* Verify a signed mime node (GMime 2.4) */
-static void
-node_verify (mime_node_t *node, GMimeObject *part,
-	     notmuch_crypto_context_t *cryptoctx)
-{
-    GError *err = NULL;
-    GMimeSignatureValidity *sig_validity;
-
-    node->verify_attempted = TRUE;
-    sig_validity = g_mime_multipart_signed_verify
-	(GMIME_MULTIPART_SIGNED (part), cryptoctx, &err);
-    node->sig_validity = sig_validity;
-    if (sig_validity) {
-	set_signature_validity_destructor (node, sig_validity);
-    } else {
-	fprintf (stderr, "Failed to verify signed part: %s\n",
-		 err ? err->message : "no error explanation given");
-    }
-
-    if (err)
-	g_error_free (err);
-}
-
-/* Decrypt and optionally verify an encrypted mime node (GMime 2.4) */
-static void
-node_decrypt_and_verify (mime_node_t *node, GMimeObject *part,
-			 notmuch_crypto_context_t *cryptoctx)
-{
-    GError *err = NULL;
-    GMimeMultipartEncrypted *encrypteddata = GMIME_MULTIPART_ENCRYPTED (part);
-
-    node->decrypt_attempted = TRUE;
-    node->decrypted_child = g_mime_multipart_encrypted_decrypt
-	(encrypteddata, cryptoctx, &err);
-    if (! node->decrypted_child) {
-	fprintf (stderr, "Failed to decrypt part: %s\n",
-		 err ? err->message : "no error explanation given");
-	goto DONE;
-    }
-
-    node->decrypt_success = TRUE;
-    node->verify_attempted = TRUE;
-
-    /* The GMimeSignatureValidity returned here is a const, unlike the
-     * one returned by g_mime_multipart_signed_verify() in
-     * node_verify() above, so the destructor is not needed.
-     */
-    node->sig_validity = g_mime_multipart_encrypted_get_signature_validity (encrypteddata);
-    if (! node->sig_validity)
-	fprintf (stderr, "Failed to verify encrypted signed part: %s\n",
-		 err ? err->message : "no error explanation given");
-
- DONE:
-    if (err)
-	g_error_free (err);
-}
-
-#endif  /* GMIME_ATLEAST_26 */
 
 static mime_node_t *
 _mime_node_create (mime_node_t *parent, GMimeObject *part)

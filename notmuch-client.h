@@ -30,16 +30,7 @@
 
 #include <gmime/gmime.h>
 
-/* GMIME_CHECK_VERSION in gmime 2.4 is not usable from the
- * preprocessor (it calls a runtime function). But since
- * GMIME_MAJOR_VERSION and friends were added in gmime 2.6, we can use
- * these to check the version number. */
-#ifdef GMIME_MAJOR_VERSION
-#define GMIME_ATLEAST_26
 typedef GMimeCryptoContext notmuch_crypto_context_t;
-#else
-typedef GMimeCipherContext notmuch_crypto_context_t;
-#endif
 
 #include "notmuch.h"
 
@@ -394,17 +385,10 @@ struct mime_node {
 
     /* True if signature verification on this part was attempted. */
     notmuch_bool_t verify_attempted;
-#ifdef GMIME_ATLEAST_26
+
     /* The list of signatures for signed or encrypted containers. If
      * there are no signatures, this will be NULL. */
     GMimeSignatureList* sig_list;
-#else
-    /* For signed or encrypted containers, the validity of the
-     * signature.  May be NULL if signature verification failed.  If
-     * there are simply no signatures, this will be non-NULL with an
-     * empty signers list. */
-    const GMimeSignatureValidity *sig_validity;
-#endif
 
     /* Internal: Context inherited from the root iterator. */
     struct mime_node_context *ctx;
