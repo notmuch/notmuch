@@ -31,6 +31,8 @@
 #include <gmime/gmime.h>
 
 typedef GMimeCryptoContext notmuch_crypto_context_t;
+/* This is automatically included only since gmime 2.6.10 */
+#include <gmime/gmime-pkcs7-context.h>
 
 #include "notmuch.h"
 
@@ -70,6 +72,7 @@ typedef struct notmuch_show_format {
 
 typedef struct notmuch_crypto {
     notmuch_crypto_context_t* gpgctx;
+    notmuch_crypto_context_t* pkcs7ctx;
     notmuch_bool_t verify;
     notmuch_bool_t decrypt;
     const char *gpgpath;
@@ -407,8 +410,8 @@ struct mime_node {
 /* Construct a new MIME node pointing to the root message part of
  * message. If crypto->verify is true, signed child parts will be
  * verified. If crypto->decrypt is true, encrypted child parts will be
- * decrypted.  If crypto->gpgctx is NULL, it will be lazily
- * initialized.
+ * decrypted.  If the crypto contexts (crypto->gpgctx or
+ * crypto->pkcs7) are NULL, they will be lazily initialized.
  *
  * Return value:
  *

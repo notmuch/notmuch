@@ -44,7 +44,6 @@ EOF
 test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "signature verification (notmuch CLI)"
-test_subtest_known_broken
 output=$(notmuch show --format=json --verify subject:"test signed message 001" \
     | notmuch_json_show_sanitize \
     | sed -e 's|"created": [-1234567890]*|"created": 946728000|' \

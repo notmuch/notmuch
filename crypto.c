@@ -43,6 +43,28 @@ create_gpg_context (notmuch_crypto_t *crypto)
     return gpgctx;
 }
 
+/* Create a PKCS7 context (GMime 2.6) */
+static notmuch_crypto_context_t *
+create_pkcs7_context (notmuch_crypto_t *crypto)
+{
+    notmuch_crypto_context_t *pkcs7ctx;
+
+    if (crypto->pkcs7ctx)
+	return crypto->pkcs7ctx;
+
+    /* TODO: GMimePasswordRequestFunc */
+    pkcs7ctx = g_mime_pkcs7_context_new (NULL);
+    if (! pkcs7ctx) {
+	fprintf (stderr, "Failed to construct pkcs7 context.\n");
+	return NULL;
+    }
+    crypto->pkcs7ctx = pkcs7ctx;
+
+    g_mime_pkcs7_context_set_always_trust ((GMimePkcs7Context *) pkcs7ctx,
+					   FALSE);
+
+    return pkcs7ctx;
+}
 static const struct {
     const char *protocol;
     notmuch_crypto_context_t *(*get_context) (notmuch_crypto_t *crypto);
@@ -54,6 +76,14 @@ static const struct {
     {
 	.protocol = "application/pgp-encrypted",
 	.get_context = create_gpg_context,
+    },
+    {
+	.protocol = "application/pkcs7-signature",
+	.get_context = create_pkcs7_context,
+    },
+    {
+	.protocol = "application/x-pkcs7-signature",
+	.get_context = create_pkcs7_context,
     },
 };
 
@@ -93,6 +123,11 @@ notmuch_crypto_cleanup (notmuch_crypto_t *crypto)
     if (crypto->gpgctx) {
 	g_object_unref (crypto->gpgctx);
 	crypto->gpgctx = NULL;
+    }
+
+    if (crypto->pkcs7ctx) {
+	g_object_unref (crypto->pkcs7ctx);
+	crypto->pkcs7ctx = NULL;
     }
 
     return 0;
