@@ -1878,12 +1878,15 @@ to show, nil otherwise."
   "View the original source of the current message."
   (interactive)
   (let* ((id (notmuch-show-get-message-id))
-	 (buf (get-buffer-create (concat "*notmuch-raw-" id "*"))))
-    (let ((coding-system-for-read 'no-conversion))
-      (call-process notmuch-command nil buf nil "show" "--format=raw" id))
+	 (buf (get-buffer-create (concat "*notmuch-raw-" id "*")))
+	 (inhibit-read-only t))
     (switch-to-buffer buf)
+    (erase-buffer)
+    (let ((coding-system-for-read 'no-conversion))
+      (call-process notmuch-command nil t nil "show" "--format=raw" id))
     (goto-char (point-min))
     (set-buffer-modified-p nil)
+    (setq buffer-read-only t)
     (view-buffer buf 'kill-buffer-if-not-modified)))
 
 (put 'notmuch-show-pipe-message 'notmuch-doc
