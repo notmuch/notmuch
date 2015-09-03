@@ -39,6 +39,7 @@ typedef enum {
 typedef enum {
     DEDUP_NONE,
     DEDUP_MAILBOX,
+    DEDUP_ADDRESS,
 } dedup_t;
 
 typedef enum {
@@ -348,7 +349,7 @@ print_mailbox (const search_context_t *ctx, const mailbox_t *mailbox)
     name_addr = internet_address_to_string (ia, FALSE);
 
     if (format->is_text_printer) {
-	if (count > 0) {
+	if (ctx->output & OUTPUT_COUNT) {
 	    format->integer (format, count);
 	    format->string (format, "\t");
 	}
@@ -362,7 +363,7 @@ print_mailbox (const search_context_t *ctx, const mailbox_t *mailbox)
 	format->string (format, addr);
 	format->map_key (format, "name-addr");
 	format->string (format, name_addr);
-	if (count > 0) {
+	if (ctx->output & OUTPUT_COUNT) {
 	    format->map_key (format, "count");
 	    format->integer (format, count);
 	}
@@ -399,7 +400,6 @@ process_address_list (const search_context_t *ctx,
 	    mailbox_t mbx = {
 		.name = internet_address_get_name (address),
 		.addr = internet_address_mailbox_get_addr (mailbox),
-		.count = 0,
 	    };
 
 	    /* OUTPUT_COUNT only works with deduplication */
@@ -407,7 +407,8 @@ process_address_list (const search_context_t *ctx,
 		is_duplicate (ctx, mbx.name, mbx.addr))
 		continue;
 
-	    if (ctx->output & OUTPUT_COUNT)
+	    /* OUTPUT_COUNT and DEDUP_ADDRESS require a full pass. */
+	    if (ctx->output & OUTPUT_COUNT || ctx->dedup == DEDUP_ADDRESS)
 		continue;
 
 	    print_mailbox (ctx, &mbx);
@@ -446,6 +447,34 @@ _list_free_for_g_hash (void *ptr)
     g_list_free_full (ptr, _talloc_free_for_g_hash);
 }
 
+/* Print the most common variant of a list of unique mailboxes, and
+ * conflate the counts. */
+static void
+print_popular (const search_context_t *ctx, GList *list)
+{
+    GList *l;
+    mailbox_t *mailbox = NULL, *m;
+    int max = 0;
+    int total = 0;
+
+    for (l = list; l; l = l->next) {
+	m = l->data;
+	total += m->count;
+	if (m->count > max) {
+	    mailbox = m;
+	    max = m->count;
+	}
+    }
+
+    if (! mailbox)
+	INTERNAL_ERROR("Empty list in address hash table\n");
+
+    /* The original count is no longer needed, so overwrite. */
+    mailbox->count = total;
+
+    print_mailbox (ctx, mailbox);
+}
+
 static void
 print_list_value (void *mailbox, void *context)
 {
@@ -455,7 +484,12 @@ print_list_value (void *mailbox, void *context)
 static void
 print_hash_value (unused (void *key), void *list, void *context)
 {
-    g_list_foreach (list, print_list_value, context);
+    const search_context_t *ctx = context;
+
+    if (ctx->dedup == DEDUP_ADDRESS)
+	print_popular (ctx, list);
+    else
+	g_list_foreach (list, print_list_value, context);
 }
 
 static int
@@ -554,7 +588,8 @@ do_search_messages (search_context_t *ctx)
 	notmuch_message_destroy (message);
     }
 
-    if (ctx->addresses && ctx->output & OUTPUT_COUNT)
+    if (ctx->addresses &&
+	(ctx->output & OUTPUT_COUNT || ctx->dedup == DEDUP_ADDRESS))
 	g_hash_table_foreach (ctx->addresses, print_hash_value, ctx);
 
     notmuch_messages_destroy (messages);
@@ -819,6 +854,7 @@ notmuch_address_command (notmuch_config_t *config, int argc, char *argv[])
 	{ NOTMUCH_OPT_KEYWORD, &ctx->dedup, "deduplicate", 'D',
 	  (notmuch_keyword_t []){ { "no", DEDUP_NONE },
 				  { "mailbox", DEDUP_MAILBOX },
+				  { "address", DEDUP_ADDRESS },
 				  { 0, 0 } } },
 	{ NOTMUCH_OPT_INHERIT, (void *) &common_options, NULL, 0, 0 },
 	{ NOTMUCH_OPT_INHERIT, (void *) &notmuch_shared_options, NULL, 0, 0 },
