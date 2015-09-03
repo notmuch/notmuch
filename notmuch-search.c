@@ -37,6 +37,11 @@ typedef enum {
 } output_t;
 
 typedef enum {
+    DEDUP_NONE,
+    DEDUP_MAILBOX,
+} dedup_t;
+
+typedef enum {
     NOTMUCH_FORMAT_JSON,
     NOTMUCH_FORMAT_TEXT,
     NOTMUCH_FORMAT_TEXT0,
@@ -55,6 +60,7 @@ typedef struct {
     int limit;
     int dupe;
     GHashTable *addresses;
+    dedup_t dedup;
 } search_context_t;
 
 typedef struct {
@@ -356,7 +362,9 @@ process_address_list (const search_context_t *ctx,
 		.count = 0,
 	    };
 
-	    if (is_duplicate (ctx, mbx.name, mbx.addr))
+	    /* OUTPUT_COUNT only works with deduplication */
+	    if (ctx->dedup != DEDUP_NONE &&
+		is_duplicate (ctx, mbx.name, mbx.addr))
 		continue;
 
 	    if (ctx->output & OUTPUT_COUNT)
@@ -659,6 +667,7 @@ static search_context_t search_context = {
     .offset = 0,
     .limit = -1, /* unlimited */
     .dupe = -1,
+    .dedup = DEDUP_MAILBOX,
 };
 
 static const notmuch_opt_desc_t common_options[] = {
@@ -758,6 +767,10 @@ notmuch_address_command (notmuch_config_t *config, int argc, char *argv[])
 	  (notmuch_keyword_t []){ { "true", NOTMUCH_EXCLUDE_TRUE },
 				  { "false", NOTMUCH_EXCLUDE_FALSE },
 				  { 0, 0 } } },
+	{ NOTMUCH_OPT_KEYWORD, &ctx->dedup, "deduplicate", 'D',
+	  (notmuch_keyword_t []){ { "no", DEDUP_NONE },
+				  { "mailbox", DEDUP_MAILBOX },
+				  { 0, 0 } } },
 	{ NOTMUCH_OPT_INHERIT, (void *) &common_options, NULL, 0, 0 },
 	{ NOTMUCH_OPT_INHERIT, (void *) &notmuch_shared_options, NULL, 0, 0 },
 	{ 0, 0, 0, 0, 0 }
@@ -771,6 +784,11 @@ notmuch_address_command (notmuch_config_t *config, int argc, char *argv[])
 
     if (! (ctx->output & (OUTPUT_SENDER | OUTPUT_RECIPIENTS)))
 	ctx->output |= OUTPUT_SENDER;
+
+    if (ctx->output & OUTPUT_COUNT && ctx->dedup == DEDUP_NONE) {
+	fprintf (stderr, "--output=count is not applicable with --deduplicate=no\n");
+	return EXIT_FAILURE;
+    }
 
     if (_notmuch_search_prepare (ctx, config,
 				 argc - opt_index, argv + opt_index))
