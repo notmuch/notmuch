@@ -883,6 +883,11 @@ notmuch_address_command (notmuch_config_t *config, int argc, char *argv[])
 					    _talloc_free_for_g_hash,
 					    _list_free_for_g_hash);
 
+    /* The order is not guaranteed if a full pass is required, so go
+     * for fastest. */
+    if (ctx->output & OUTPUT_COUNT || ctx->dedup == DEDUP_ADDRESS)
+	notmuch_query_set_sort (ctx->query, NOTMUCH_SORT_UNSORTED);
+
     ret = do_search_messages (ctx);
 
     g_hash_table_unref (ctx->addresses);

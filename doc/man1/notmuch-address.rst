@@ -85,7 +85,9 @@ Supported options for **address** include
         By default, results will be displayed in reverse chronological
         order, (that is, the newest results will be displayed first).
 
-        This option is not supported with --output=count.
+        However, if either --output=count or --deduplicate=address is
+        specified, this option is ignored and the order of the results
+        is unspecified.
 
     ``--exclude=(true|false)``
         A message is called "excluded" if it matches at least one tag in
