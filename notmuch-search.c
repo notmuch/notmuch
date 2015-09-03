@@ -248,7 +248,6 @@ do_search_threads (search_context_t *ctx)
 static notmuch_bool_t
 is_duplicate (const search_context_t *ctx, const char *name, const char *addr)
 {
-    notmuch_bool_t duplicate;
     char *key;
     mailbox_t *mailbox;
 
@@ -256,20 +255,20 @@ is_duplicate (const search_context_t *ctx, const char *name, const char *addr)
     if (! key)
 	return FALSE;
 
-    duplicate = g_hash_table_lookup_extended (ctx->addresses, key, NULL, (gpointer)&mailbox);
-
-    if (! duplicate) {
-	mailbox = talloc (ctx->format, mailbox_t);
-	mailbox->name = talloc_strdup (mailbox, name);
-	mailbox->addr = talloc_strdup (mailbox, addr);
-	mailbox->count = 1;
-	g_hash_table_insert (ctx->addresses, key, mailbox);
-    } else {
+    mailbox = g_hash_table_lookup (ctx->addresses, key);
+    if (mailbox) {
 	mailbox->count++;
 	talloc_free (key);
+	return TRUE;
     }
 
-    return duplicate;
+    mailbox = talloc (ctx->format, mailbox_t);
+    mailbox->name = talloc_strdup (mailbox, name);
+    mailbox->addr = talloc_strdup (mailbox, addr);
+    mailbox->count = 1;
+    g_hash_table_insert (ctx->addresses, key, mailbox);
+
+    return FALSE;
 }
 
 static void
