@@ -221,3 +221,24 @@ parse_boolean_term (void *ctx, const char *str,
     errno = err;
     return -1;
 }
+
+int
+strcase_equal (const void *a, const void *b)
+{
+    return strcasecmp (a, b) == 0;
+}
+
+unsigned int
+strcase_hash (const void *ptr)
+{
+    const char *s = ptr;
+
+    /* This is the djb2 hash. */
+    unsigned int hash = 5381;
+    while (s && *s) {
+	hash = ((hash << 5) + hash) + tolower (*s);
+	s++;
+    }
+
+    return hash;
+}

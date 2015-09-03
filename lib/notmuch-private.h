@@ -50,6 +50,7 @@ NOTMUCH_BEGIN_DECLS
 
 #include "xutil.h"
 #include "error_util.h"
+#include "string-util.h"
 
 #pragma GCC visibility push(hidden)
 

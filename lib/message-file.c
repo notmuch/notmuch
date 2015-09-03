@@ -38,27 +38,6 @@ struct _notmuch_message_file {
 };
 
 static int
-strcase_equal (const void *a, const void *b)
-{
-    return strcasecmp (a, b) == 0;
-}
-
-static unsigned int
-strcase_hash (const void *ptr)
-{
-    const char *s = ptr;
-
-    /* This is the djb2 hash. */
-    unsigned int hash = 5381;
-    while (s && *s) {
-	hash = ((hash << 5) + hash) + tolower (*s);
-	s++;
-    }
-
-    return hash;
-}
-
-static int
 _notmuch_message_file_destructor (notmuch_message_file_t *message)
 {
     if (message->headers)
