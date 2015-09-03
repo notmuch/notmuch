@@ -243,6 +243,21 @@ do_search_threads (search_context_t *ctx)
     return 0;
 }
 
+static mailbox_t *new_mailbox (void *ctx, const char *name, const char *addr)
+{
+    mailbox_t *mailbox;
+
+    mailbox = talloc (ctx, mailbox_t);
+    if (! mailbox)
+	return NULL;
+
+    mailbox->name = talloc_strdup (mailbox, name);
+    mailbox->addr = talloc_strdup (mailbox, addr);
+    mailbox->count = 1;
+
+    return mailbox;
+}
+
 /* Returns TRUE iff name and addr is duplicate. If not, stores the
  * name/addr pair in order to detect subsequent duplicates. */
 static notmuch_bool_t
@@ -262,10 +277,10 @@ is_duplicate (const search_context_t *ctx, const char *name, const char *addr)
 	return TRUE;
     }
 
-    mailbox = talloc (ctx->format, mailbox_t);
-    mailbox->name = talloc_strdup (mailbox, name);
-    mailbox->addr = talloc_strdup (mailbox, addr);
-    mailbox->count = 1;
+    mailbox = new_mailbox (ctx->format, name, addr);
+    if (! mailbox)
+	return FALSE;
+
     g_hash_table_insert (ctx->addresses, key, mailbox);
 
     return FALSE;
