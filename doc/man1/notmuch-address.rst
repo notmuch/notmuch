@@ -55,7 +55,7 @@ Supported options for **address** include
             Note: With this option, addresses are printed only after
             the whole search is finished. This may take long time.
 
-    ``--deduplicate=(no|mailbox)``
+    ``--deduplicate=(no|mailbox|address)``
 
         Control the deduplication of results.
 
@@ -69,6 +69,13 @@ Supported options for **address** include
 	    the same as piping the --deduplicate=no output to **sort |
 	    uniq**, except for the order of results. This is the
 	    default.
+
+        **address**
+            Deduplicate addresses based on the case insensitive
+            address part of the mailbox. Of all the variants (with
+            different name or case), print the one occurring most
+            frequently among the matching messages. If --output=count
+            is specified, include all variants in the count.
 
     ``--sort=``\ (**newest-first**\ \|\ **oldest-first**)
         This option can be used to present results in either
