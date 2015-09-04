@@ -1,3 +1,9 @@
+notmuch (0.20.2-1~bpo8+1) jessie-backports; urgency=medium
+
+  * Rebuild for jessie-backports.
+
+ -- David Bremner <bremner@debian.org>  Fri, 04 Sep 2015 08:52:23 -0300
+
 notmuch (0.20.2-1) unstable; urgency=medium
 
   * Bug fix: "notmuch-tree does not mark messages as read", thanks to
