@@ -145,4 +145,74 @@ cat <<EOF >EXPECTED
 EOF
 test_expect_equal_file OUTPUT EXPECTED
 
+test_begin_subtest "--deduplicate=no --sort=oldest-first --output=sender"
+notmuch address --deduplicate=no --sort=oldest-first --output=sender '*' >OUTPUT
+cat <<EOF >EXPECTED
+Mikhail Gusarov <dottedmag@dottedmag.net>
+Mikhail Gusarov <dottedmag@dottedmag.net>
+Carl Worth <cworth@cworth.org>
+Lars Kellogg-Stedman <lars@seas.harvard.edu>
+Mikhail Gusarov <dottedmag@dottedmag.net>
+Alex Botero-Lowry <alex.boterolowry@gmail.com>
+Carl Worth <cworth@cworth.org>
+Lars Kellogg-Stedman <lars@seas.harvard.edu>
+Mikhail Gusarov <dottedmag@dottedmag.net>
+Mikhail Gusarov <dottedmag@dottedmag.net>
+Keith Packard <keithp@keithp.com>
+Keith Packard <keithp@keithp.com>
+Keith Packard <keithp@keithp.com>
+Jan Janak <jan@ryngle.com>
+Jan Janak <jan@ryngle.com>
+Jan Janak <jan@ryngle.com>
+Israel Herraiz <isra@herraiz.org>
+Adrian Perez de Castro <aperez@igalia.com>
+Aron Griffis <agriffis@n01se.net>
+Ingmar Vanhassel <ingmar@exherbo.org>
+Alex Botero-Lowry <alex.boterolowry@gmail.com>
+Lars Kellogg-Stedman <lars@seas.harvard.edu>
+Lars Kellogg-Stedman <lars@seas.harvard.edu>
+Lars Kellogg-Stedman <lars@seas.harvard.edu>
+Stewart Smith <stewart@flamingspork.com>
+Stewart Smith <stewart@flamingspork.com>
+Keith Packard <keithp@keithp.com>
+Keith Packard <keithp@keithp.com>
+Keith Packard <keithp@keithp.com>
+Stewart Smith <stewart@flamingspork.com>
+Jjgod Jiang <gzjjgod@gmail.com>
+Jan Janak <jan@ryngle.com>
+Rolland Santimano <rollandsantimano@yahoo.com>
+Alexander Botero-Lowry <alex.boterolowry@gmail.com>
+Jjgod Jiang <gzjjgod@gmail.com>
+Alexander Botero-Lowry <alex.boterolowry@gmail.com>
+Alexander Botero-Lowry <alex.boterolowry@gmail.com>
+Keith Packard <keithp@keithp.com>
+Alexander Botero-Lowry <alex.boterolowry@gmail.com>
+Carl Worth <cworth@cworth.org>
+Carl Worth <cworth@cworth.org>
+Carl Worth <cworth@cworth.org>
+Carl Worth <cworth@cworth.org>
+Carl Worth <cworth@cworth.org>
+Carl Worth <cworth@cworth.org>
+Carl Worth <cworth@cworth.org>
+Carl Worth <cworth@cworth.org>
+Carl Worth <cworth@cworth.org>
+Carl Worth <cworth@cworth.org>
+Chris Wilson <chris@chris-wilson.co.uk>
+Olivier Berger <olivier.berger@it-sudparis.eu>
+François Boulogne <boulogne.f@gmail.com>
+EOF
+test_expect_equal_file OUTPUT EXPECTED
+
+test_begin_subtest "--deduplicate=no --sort=newest-first --output=sender --output=recipients"
+notmuch address --deduplicate=no --sort=newest-first --output=sender --output=recipients path:foo/new >OUTPUT
+cat <<EOF >EXPECTED
+Mikhail Gusarov <dottedmag@dottedmag.net>
+notmuch@notmuchmail.org
+Mikhail Gusarov <dottedmag@dottedmag.net>
+notmuch@notmuchmail.org
+Lars Kellogg-Stedman <lars@seas.harvard.edu>
+notmuch@notmuchmail.org
+EOF
+test_expect_equal_file OUTPUT EXPECTED
+
 test_done
