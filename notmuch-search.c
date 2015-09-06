@@ -111,6 +111,7 @@ do_search_threads (search_context_t *ctx)
     sprinter_t *format = ctx->format;
     time_t date;
     int i;
+    notmuch_status_t status;
 
     if (ctx->offset < 0) {
 	ctx->offset += notmuch_query_count_threads (ctx->query);
@@ -118,8 +119,8 @@ do_search_threads (search_context_t *ctx)
 	    ctx->offset = 0;
     }
 
-    threads = notmuch_query_search_threads (ctx->query);
-    if (threads == NULL)
+    status = notmuch_query_search_threads_st (ctx->query, &threads);
+    if (print_status_query("notmuch search", ctx->query, status))
 	return 1;
 
     format->begin_list (format);
@@ -426,6 +427,7 @@ do_search_messages (search_context_t *ctx)
     notmuch_filenames_t *filenames;
     sprinter_t *format = ctx->format;
     int i;
+    notmuch_status_t status;
 
     if (ctx->offset < 0) {
 	ctx->offset += notmuch_query_count_messages (ctx->query);
@@ -433,8 +435,8 @@ do_search_messages (search_context_t *ctx)
 	    ctx->offset = 0;
     }
 
-    messages = notmuch_query_search_messages (ctx->query);
-    if (messages == NULL)
+    status = notmuch_query_search_messages_st (ctx->query, &messages);
+    if (print_status_query ("notmuch search", ctx->query, status))
 	return 1;
 
     format->begin_list (format);
@@ -522,8 +524,9 @@ do_search_tags (const search_context_t *ctx)
     if (strcmp (notmuch_query_get_query_string (query), "*") == 0) {
 	tags = notmuch_database_get_all_tags (notmuch);
     } else {
-	messages = notmuch_query_search_messages (query);
-	if (messages == NULL)
+	notmuch_status_t status;
+	status = notmuch_query_search_messages_st (query, &messages);
+	if (print_status_query ("notmuch search", query, status))
 	    return 1;
 
 	tags = notmuch_messages_collect_tags (messages);

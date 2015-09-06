@@ -895,13 +895,17 @@ do_show_single (void *ctx,
 {
     notmuch_messages_t *messages;
     notmuch_message_t *message;
+    notmuch_status_t status;
 
     if (notmuch_query_count_messages (query) != 1) {
 	fprintf (stderr, "Error: search term did not match precisely one message.\n");
 	return 1;
     }
 
-    messages = notmuch_query_search_messages (query);
+    status = notmuch_query_search_messages_st (query, &messages);
+    if (print_status_query ("notmuch show", query, status))
+	return 1;
+
     message = notmuch_messages_get (messages);
 
     if (message == NULL) {
@@ -928,8 +932,8 @@ do_show (void *ctx,
     notmuch_messages_t *messages;
     notmuch_status_t status, res = NOTMUCH_STATUS_SUCCESS;
 
-    threads = notmuch_query_search_threads (query);
-    if (! threads)
+    status= notmuch_query_search_threads_st (query, &threads);
+    if (print_status_query ("notmuch show", query, status))
 	return 1;
 
     sp->begin_list (sp);

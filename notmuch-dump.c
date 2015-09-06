@@ -48,8 +48,13 @@ database_dump_file (notmuch_database_t *notmuch, gzFile output,
 
     char *buffer = NULL;
     size_t buffer_size = 0;
+    notmuch_status_t status;
 
-    for (messages = notmuch_query_search_messages (query);
+    status = notmuch_query_search_messages_st (query, &messages);
+    if (print_status_query ("notmuch dump", query, status))
+	return EXIT_FAILURE;
+
+    for (;
 	 notmuch_messages_valid (messages);
 	 notmuch_messages_move_to_next (messages)) {
 	int first = 1;

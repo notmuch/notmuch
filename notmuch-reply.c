@@ -606,8 +606,13 @@ notmuch_reply_format_default(void *ctx,
     notmuch_messages_t *messages;
     notmuch_message_t *message;
     mime_node_t *root;
+    notmuch_status_t status;
 
-    for (messages = notmuch_query_search_messages (query);
+    status = notmuch_query_search_messages_st (query, &messages);
+    if (print_status_query ("notmuch reply", query, status))
+	return 1;
+
+    for (;
 	 notmuch_messages_valid (messages);
 	 notmuch_messages_move_to_next (messages))
     {
@@ -650,13 +655,17 @@ notmuch_reply_format_sprinter(void *ctx,
     notmuch_messages_t *messages;
     notmuch_message_t *message;
     mime_node_t *node;
+    notmuch_status_t status;
 
     if (notmuch_query_count_messages (query) != 1) {
 	fprintf (stderr, "Error: search term did not match precisely one message.\n");
 	return 1;
     }
 
-    messages = notmuch_query_search_messages (query);
+    status = notmuch_query_search_messages_st (query, &messages);
+    if (print_status_query ("notmuch reply", query, status))
+	return 1;
+
     message = notmuch_messages_get (messages);
     if (mime_node_open (ctx, message, &(params->crypto), &node) != NOTMUCH_STATUS_SUCCESS)
 	return 1;
@@ -698,8 +707,13 @@ notmuch_reply_format_headers_only(void *ctx,
     notmuch_message_t *message;
     const char *in_reply_to, *orig_references, *references;
     char *reply_headers;
+    notmuch_status_t status;
 
-    for (messages = notmuch_query_search_messages (query);
+    status = notmuch_query_search_messages_st (query, &messages);
+    if (print_status_query ("notmuch reply", query, status))
+	return 1;
+
+    for (;
 	 notmuch_messages_valid (messages);
 	 notmuch_messages_move_to_next (messages))
     {

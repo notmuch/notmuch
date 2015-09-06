@@ -97,6 +97,8 @@ tag_query (void *ctx, notmuch_database_t *notmuch, const char *query_string,
     notmuch_query_t *query;
     notmuch_messages_t *messages;
     notmuch_message_t *message;
+    notmuch_status_t status;
+
     int ret = NOTMUCH_STATUS_SUCCESS;
 
     if (! (flags & TAG_FLAG_REMOVE_ALL)) {
@@ -119,7 +121,11 @@ tag_query (void *ctx, notmuch_database_t *notmuch, const char *query_string,
     /* tagging is not interested in any special sort order */
     notmuch_query_set_sort (query, NOTMUCH_SORT_UNSORTED);
 
-    for (messages = notmuch_query_search_messages (query);
+    status = notmuch_query_search_messages_st (query, &messages);
+    if (print_status_query ("notmuch tag", query, status))
+	return status;
+
+    for (;
 	 notmuch_messages_valid (messages) && ! interrupted;
 	 notmuch_messages_move_to_next (messages)) {
 	message = notmuch_messages_get (messages);
