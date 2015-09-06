@@ -271,6 +271,7 @@ dataclean: distclean
 notmuch_client_srcs =		\
 	command-line-arguments.c\
 	debugger.c		\
+	status.c		\
 	gmime-filter-reply.c	\
 	hooks.c			\
 	notmuch.c		\

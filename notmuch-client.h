@@ -449,6 +449,15 @@ notmuch_database_dump (notmuch_database_t *notmuch,
 		       dump_format_t output_format,
 		       notmuch_bool_t gzip_output);
 
+/* If status is non-zero (i.e. error) print appropriate
+   messages to stderr.
+*/
+
+notmuch_status_t
+print_status_query (const char *loc,
+		    const notmuch_query_t *query,
+		    notmuch_status_t status);
+
 #include "command-line-arguments.h"
 
 extern char *notmuch_requested_db_uuid;
