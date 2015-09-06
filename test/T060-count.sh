@@ -93,5 +93,35 @@ notmuch count --output=messages >>EXPECTED
 notmuch count --output=messages tag:inbox >>EXPECTED
 test_expect_equal_file EXPECTED OUTPUT
 
+backup_database
+test_begin_subtest "error message for database open"
+dd if=/dev/zero of="${MAIL_DIR}/.notmuch/xapian/postlist.DB" count=3
+notmuch count '*' 2>OUTPUT 1>/dev/null
+output=$(sed 's/^\(A Xapian exception [^:]*\):.*$/\1/' OUTPUT)
+test_expect_equal "${output}" "A Xapian exception occurred opening database"
+restore_database
+
+cat <<EOF > count-files.gdb
+set breakpoint pending on
+break count_files
+commands
+shell cp /dev/null ${MAIL_DIR}/.notmuch/xapian/postlist.DB
+continue
+end
+run
+EOF
+
+backup_database
+test_begin_subtest "error message from query_search_messages"
+gdb --batch-silent --return-child-result -x count-files.gdb \
+    --args notmuch count --output=files '*' 2>OUTPUT 1>/dev/null
+cat <<EOF > EXPECTED
+notmuch count: A Xapian exception occurred
+A Xapian exception occurred performing query
+Query string was: *
+EOF
+sed 's/^\(A Xapian exception [^:]*\):.*$/\1/' < OUTPUT > OUTPUT.clean
+test_expect_equal_file EXPECTED OUTPUT.clean
+restore_database
 
 test_done

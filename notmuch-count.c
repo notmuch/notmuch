@@ -33,17 +33,19 @@ enum {
     EXCLUDE_FALSE,
 };
 
-static unsigned int
+/* Return the number of files matching the query, or -1 for an error */
+static int
 count_files (notmuch_query_t *query)
 {
     notmuch_messages_t *messages;
     notmuch_message_t *message;
     notmuch_filenames_t *filenames;
-    unsigned int count = 0;
+    notmuch_status_t status;
+    int count = 0;
 
-    messages = notmuch_query_search_messages (query);
-    if (messages == NULL)
-	return 0;
+    status = notmuch_query_search_messages_st (query, &messages);
+    if (print_status_query ("notmuch count", query, status))
+	return -1;
 
     for (;
 	 notmuch_messages_valid (messages);
@@ -71,6 +73,7 @@ print_count (notmuch_database_t *notmuch, const char *query_str,
 {
     notmuch_query_t *query;
     size_t i;
+    int count;
     unsigned long revision;
     const char *uuid;
     int ret = 0;
@@ -92,7 +95,13 @@ print_count (notmuch_database_t *notmuch, const char *query_str,
 	printf ("%u", notmuch_query_count_threads (query));
 	break;
     case OUTPUT_FILES:
-	printf ("%u", count_files (query));
+	count = count_files (query);
+	if (count >= 0) {
+	    printf ("%u", count);
+	} else {
+	    ret = -1;
+	    goto DONE;
+	}
 	break;
     }
 
@@ -103,6 +112,7 @@ print_count (notmuch_database_t *notmuch, const char *query_str,
 	fputs ("\n", stdout);
     }
 
+  DONE:
     notmuch_query_destroy (query);
 
     return ret;
