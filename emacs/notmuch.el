@@ -978,18 +978,28 @@ default sort order is defined by `notmuch-search-oldest-first'."
   (set 'notmuch-search-oldest-first (not notmuch-search-oldest-first))
   (notmuch-search-refresh-view))
 
+(defun notmuch-group-disjunctive-query-string (query-string)
+  "Group query if it contains a complex expression.
+
+Enclose QUERY-STRING in parentheses if it matches
+`notmuch-search-disjunctive-regexp'."
+  (if (string-match-p notmuch-search-disjunctive-regexp query-string)
+      (concat "( " query-string " )")
+    query-string))
+
 (defun notmuch-search-filter (query)
   "Filter the current search results based on an additional query string.
 
 Runs a new search matching only messages that match both the
 current search results AND the additional query string provided."
   (interactive (list (notmuch-read-query "Filter search: ")))
-  (let ((grouped-query (if (string-match-p notmuch-search-disjunctive-regexp query)
-			   (concat "( " query " )")
-			 query)))
-    (notmuch-search (if (string= notmuch-search-query-string "*")
+  (let ((grouped-query (notmuch-group-disjunctive-query-string query))
+	(grouped-original-query (notmuch-group-disjunctive-query-string
+				 notmuch-search-query-string)))
+    (notmuch-search (if (string= grouped-original-query "*")
 			grouped-query
-		      (concat notmuch-search-query-string " and " grouped-query)) notmuch-search-oldest-first)))
+		      (concat grouped-original-query " and " grouped-query))
+		    notmuch-search-oldest-first)))
 
 (defun notmuch-search-filter-by-tag (tag)
   "Filter the current search results based on a single tag.
