@@ -25,7 +25,6 @@ enum {
     OUTPUT_THREADS,
     OUTPUT_MESSAGES,
     OUTPUT_FILES,
-    OUTPUT_LASTMOD,
 };
 
 /* The following is to allow future options to be added more easily */
@@ -151,7 +150,6 @@ notmuch_count_command (notmuch_config_t *config, int argc, char *argv[])
 	  (notmuch_keyword_t []){ { "threads", OUTPUT_THREADS },
 				  { "messages", OUTPUT_MESSAGES },
 				  { "files", OUTPUT_FILES },
-				  { "modifications", OUTPUT_LASTMOD },
 				  { 0, 0 } } },
 	{ NOTMUCH_OPT_KEYWORD, &exclude, "exclude", 'x',
 	  (notmuch_keyword_t []){ { "true", EXCLUDE_TRUE },
