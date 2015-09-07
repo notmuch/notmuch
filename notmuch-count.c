@@ -117,7 +117,7 @@ count_file (notmuch_database_t *notmuch, FILE *input, const char **exclude_tags,
     size_t line_size;
     int ret = 0;
 
-    while (!ret && (line_len = getline (&line, &line_size, input)) != -1) {
+    while (! ret && (line_len = getline (&line, &line_size, input)) != -1) {
 	chomp_newline (line);
 	ret = print_count (notmuch, line, exclude_tags, exclude_tags_length,
 			   output, print_lastmod);
@@ -189,7 +189,7 @@ notmuch_count_command (notmuch_config_t *config, int argc, char *argv[])
 
     notmuch_exit_if_unmatched_db_uuid (notmuch);
 
-    query_str = query_string_from_args (config, argc-opt_index, argv+opt_index);
+    query_str = query_string_from_args (config, argc - opt_index, argv + opt_index);
     if (query_str == NULL) {
 	fprintf (stderr, "Out of memory.\n");
 	return EXIT_FAILURE;
