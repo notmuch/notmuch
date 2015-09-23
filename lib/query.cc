@@ -98,7 +98,7 @@ notmuch_query_create (notmuch_database_t *notmuch,
 }
 
 const char *
-notmuch_query_get_query_string (notmuch_query_t *query)
+notmuch_query_get_query_string (const notmuch_query_t *query)
 {
     return query->query_string;
 }
@@ -117,7 +117,7 @@ notmuch_query_set_sort (notmuch_query_t *query, notmuch_sort_t sort)
 }
 
 notmuch_sort_t
-notmuch_query_get_sort (notmuch_query_t *query)
+notmuch_query_get_sort (const notmuch_query_t *query)
 {
     return query->sort;
 }
@@ -660,7 +660,7 @@ notmuch_query_count_threads (notmuch_query_t *query)
 }
 
 notmuch_database_t *
-notmuch_query_get_database (notmuch_query_t *query)
+notmuch_query_get_database (const notmuch_query_t *query)
 {
     return query->notmuch;
 }

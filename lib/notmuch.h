@@ -728,13 +728,13 @@ typedef enum {
  * Return the query_string of this query. See notmuch_query_create.
  */
 const char *
-notmuch_query_get_query_string (notmuch_query_t *query);
+notmuch_query_get_query_string (const notmuch_query_t *query);
 
 /**
  * Return the notmuch database of this query. See notmuch_query_create.
  */
 notmuch_database_t *
-notmuch_query_get_database (notmuch_query_t *query);
+notmuch_query_get_database (const notmuch_query_t *query);
 
 /**
  * Exclude values for notmuch_query_set_omit_excluded. The strange
@@ -791,7 +791,7 @@ notmuch_query_set_sort (notmuch_query_t *query, notmuch_sort_t sort);
  * notmuch_query_set_sort.
  */
 notmuch_sort_t
-notmuch_query_get_sort (notmuch_query_t *query);
+notmuch_query_get_sort (const notmuch_query_t *query);
 
 /**
  * Add a tag that will be excluded from the query results by default.
