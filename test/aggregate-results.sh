@@ -82,7 +82,10 @@ if [ "$skipped" != "0" ]; then
     echo "$skipped $tests skipped."
 fi
 
-if [ $success -gt 0 -a $fixed -eq 0 -a $failed -eq 0 -a $skipped -eq 0 ]
+# Note that we currently do not consider skipped tests as failing the
+# build.
+
+if [ $success -gt 0 -a $fixed -eq 0 -a $failed -eq 0 ]
 then
     exit 0
 else
