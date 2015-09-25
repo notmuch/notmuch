@@ -223,6 +223,19 @@ parse_boolean_term (void *ctx, const char *str,
 }
 
 int
+strcmp_null (const char *s1, const char *s2)
+{
+    if (s1 && s2)
+	return strcmp (s1, s2);
+    else if (! s1 && ! s2)
+	return 0;
+    else if (s1)
+	return 1;	/* s1 (non-NULL) is greater than s2 (NULL) */
+    else
+	return -1;	/* s1 (NULL) is less than s2 (non-NULL) */
+}
+
+int
 strcase_equal (const void *a, const void *b)
 {
     return strcasecmp (a, b) == 0;
