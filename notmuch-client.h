@@ -48,6 +48,7 @@ typedef GMimeCryptoContext notmuch_crypto_context_t;
 #include <dirent.h>
 #include <errno.h>
 #include <signal.h>
+#include <ctype.h>
 
 #include "talloc-extra.h"
 

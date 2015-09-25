@@ -265,30 +265,70 @@ static mailbox_t *new_mailbox (void *ctx, const char *name, const char *addr)
     return mailbox;
 }
 
+static int mailbox_compare (const void *v1, const void *v2)
+{
+    const mailbox_t *m1 = v1, *m2 = v2;
+    int ret;
+
+    ret = strcmp_null (m1->name, m2->name);
+    if (! ret)
+	ret = strcmp (m1->addr, m2->addr);
+
+    return ret;
+}
+
 /* Returns TRUE iff name and addr is duplicate. If not, stores the
  * name/addr pair in order to detect subsequent duplicates. */
 static notmuch_bool_t
 is_duplicate (const search_context_t *ctx, const char *name, const char *addr)
 {
     char *key;
+    GList *list, *l;
     mailbox_t *mailbox;
 
-    key = talloc_asprintf (ctx->format, "%s <%s>", name, addr);
+    list = g_hash_table_lookup (ctx->addresses, addr);
+    if (list) {
+	mailbox_t find = {
+	    .name = name,
+	    .addr = addr,
+	};
+
+	l = g_list_find_custom (list, &find, mailbox_compare);
+	if (l) {
+	    mailbox = l->data;
+	    mailbox->count++;
+	    return TRUE;
+	}
+
+	mailbox = new_mailbox (ctx->format, name, addr);
+	if (! mailbox)
+	    return FALSE;
+
+	/*
+	 * XXX: It would be more efficient to prepend to the list, but
+	 * then we'd have to store the changed list head back to the
+	 * hash table. This check is here just to avoid the compiler
+	 * warning for unused result.
+	 */
+	if (list != g_list_append (list, mailbox))
+	    INTERNAL_ERROR ("appending to list changed list head\n");
+
+	return FALSE;
+    }
+
+    key = talloc_strdup (ctx->format, addr);
     if (! key)
 	return FALSE;
-
-    mailbox = g_hash_table_lookup (ctx->addresses, key);
-    if (mailbox) {
-	mailbox->count++;
-	talloc_free (key);
-	return TRUE;
-    }
 
     mailbox = new_mailbox (ctx->format, name, addr);
     if (! mailbox)
 	return FALSE;
 
-    g_hash_table_insert (ctx->addresses, key, mailbox);
+    list = g_list_append (NULL, mailbox);
+    if (! list)
+	return FALSE;
+
+    g_hash_table_insert (ctx->addresses, key, list);
 
     return FALSE;
 }
@@ -401,12 +441,21 @@ _talloc_free_for_g_hash (void *ptr)
 }
 
 static void
-print_hash_value (unused (gpointer key), gpointer value, gpointer user_data)
+_list_free_for_g_hash (void *ptr)
 {
-    const mailbox_t *mailbox = value;
-    search_context_t *ctx = user_data;
+    g_list_free_full (ptr, _talloc_free_for_g_hash);
+}
 
-    print_mailbox (ctx, mailbox);
+static void
+print_list_value (void *mailbox, void *context)
+{
+    print_mailbox (context, mailbox);
+}
+
+static void
+print_hash_value (unused (void *key), void *list, void *context)
+{
+    g_list_foreach (list, print_list_value, context);
 }
 
 static int
@@ -794,8 +843,9 @@ notmuch_address_command (notmuch_config_t *config, int argc, char *argv[])
 				 argc - opt_index, argv + opt_index))
 	return EXIT_FAILURE;
 
-    ctx->addresses = g_hash_table_new_full (g_str_hash, g_str_equal,
-					    _talloc_free_for_g_hash, _talloc_free_for_g_hash);
+    ctx->addresses = g_hash_table_new_full (strcase_hash, strcase_equal,
+					    _talloc_free_for_g_hash,
+					    _list_free_for_g_hash);
 
     ret = do_search_messages (ctx);
 
