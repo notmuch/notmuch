@@ -933,7 +933,11 @@ int
 notmuch_new_command (notmuch_config_t *config, int argc, char *argv[])
 {
     notmuch_database_t *notmuch;
-    add_files_state_t add_files_state;
+    add_files_state_t add_files_state = {
+	.verbosity = VERBOSITY_NORMAL,
+	.debug = FALSE,
+	.output_is_a_tty = isatty (fileno (stdout)),
+    };
     struct timeval tv_start;
     int ret = 0;
     struct stat st;
@@ -947,10 +951,6 @@ notmuch_new_command (notmuch_config_t *config, int argc, char *argv[])
     notmuch_bool_t no_hooks = FALSE;
     notmuch_bool_t quiet = FALSE, verbose = FALSE;
     notmuch_status_t status;
-
-    add_files_state.verbosity = VERBOSITY_NORMAL;
-    add_files_state.debug = FALSE;
-    add_files_state.output_is_a_tty = isatty (fileno (stdout));
 
     notmuch_opt_desc_t options[] = {
 	{ NOTMUCH_OPT_BOOLEAN,  &quiet, "quiet", 'q', 0 },
@@ -1086,9 +1086,6 @@ notmuch_new_command (notmuch_config_t *config, int argc, char *argv[])
     talloc_free (dot_notmuch_path);
     dot_notmuch_path = NULL;
 
-    add_files_state.processed_files = 0;
-    add_files_state.added_messages = 0;
-    add_files_state.removed_messages = add_files_state.renamed_messages = 0;
     gettimeofday (&add_files_state.tv_start, NULL);
 
     add_files_state.removed_files = _filename_list_create (config);
