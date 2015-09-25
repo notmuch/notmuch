@@ -53,6 +53,10 @@ $(dir)/.eldeps: $(dir)/Makefile.local $(dir)/make-deps.el $(emacs_sources)
 $(dir)/.eldeps.x: $(dir)/.eldeps
 	@cmp -s $^ $@ || cp $^ $@
 -include $(dir)/.eldeps.x
+
+# Add the one dependency make-deps.el does not have visibility to.
+$(dir)/notmuch-lib.elc: $(dir)/notmuch-version.elc
+
 endif
 CLEAN+=$(dir)/.eldeps $(dir)/.eldeps.tmp $(dir)/.eldeps.x
 
