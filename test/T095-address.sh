@@ -215,4 +215,78 @@ notmuch@notmuchmail.org
 EOF
 test_expect_equal_file OUTPUT EXPECTED
 
+test_begin_subtest "--deduplicate=address --output=sender --output=recipients"
+notmuch address --deduplicate=address --output=sender --output=recipients '*' | sort >OUTPUT
+cat <<EOF >EXPECTED
+"Discussion about the Arch User Repository (AUR)" <aur-general@archlinux.org>
+Adrian Perez de Castro <aperez@igalia.com>
+Alexander Botero-Lowry <alex.boterolowry@gmail.com>
+Allan McRae <allan@archlinux.org>
+Aron Griffis <agriffis@n01se.net>
+Carl Worth <cworth@cworth.org>
+Chris Wilson <chris@chris-wilson.co.uk>
+François Boulogne <boulogne.f@gmail.com>
+Ingmar Vanhassel <ingmar@exherbo.org>
+Israel Herraiz <isra@herraiz.org>
+Jan Janak <jan@ryngle.com>
+Jjgod Jiang <gzjjgod@gmail.com>
+Keith Packard <keithp@keithp.com>
+Lars Kellogg-Stedman <lars@seas.harvard.edu>
+Mikhail Gusarov <dottedmag@dottedmag.net>
+Olivier Berger <olivier.berger@it-sudparis.eu>
+Rolland Santimano <rollandsantimano@yahoo.com>
+Stewart Smith <stewart@flamingspork.com>
+notmuch@notmuchmail.org
+EOF
+test_expect_equal_file OUTPUT EXPECTED
+
+generate_message '[from]="Foo Bar <foo.bar@example.com>"'
+generate_message '[from]="Foo Bar <Foo.Bar@Example.Com>"'
+generate_message '[from]="Foo Bar <foo.bar@example.com>"'
+generate_message '[from]="Bar <Foo.Bar@Example.Com>"'
+generate_message '[from]="Foo <foo.bar@example.com>"'
+generate_message '[from]="<foo.bar@example.com>"'
+generate_message '[from]="foo.bar@example.com"'
+generate_message '[from]="Baz <foo.bar+baz@example.com>"'
+generate_message '[from]="Foo Bar <foo.bar+baz@example.com>"'
+generate_message '[from]="Baz <foo.bar+baz@example.com>"'
+notmuch new > /dev/null
+
+test_begin_subtest "--deduplicate=no --output=sender"
+notmuch address --deduplicate=no --output=sender from:example.com | sort >OUTPUT
+cat <<EOF >EXPECTED
+Bar <Foo.Bar@Example.Com>
+Baz <foo.bar+baz@example.com>
+Baz <foo.bar+baz@example.com>
+Foo <foo.bar@example.com>
+Foo Bar <Foo.Bar@Example.Com>
+Foo Bar <foo.bar+baz@example.com>
+Foo Bar <foo.bar@example.com>
+Foo Bar <foo.bar@example.com>
+foo.bar@example.com
+foo.bar@example.com
+EOF
+test_expect_equal_file OUTPUT EXPECTED
+
+test_begin_subtest "--deduplicate=mailbox --output=sender --output=count"
+notmuch address --deduplicate=mailbox --output=sender --output=count from:example.com | sort -n >OUTPUT
+cat <<EOF >EXPECTED
+1	Bar <Foo.Bar@Example.Com>
+1	Foo <foo.bar@example.com>
+1	Foo Bar <Foo.Bar@Example.Com>
+1	Foo Bar <foo.bar+baz@example.com>
+2	Baz <foo.bar+baz@example.com>
+2	Foo Bar <foo.bar@example.com>
+2	foo.bar@example.com
+EOF
+test_expect_equal_file OUTPUT EXPECTED
+
+test_begin_subtest "--deduplicate=address --output=sender --output=count"
+notmuch address --deduplicate=address --output=sender --output=count from:example.com | sort -n >OUTPUT
+cat <<EOF >EXPECTED
+3	Baz <foo.bar+baz@example.com>
+7	Foo Bar <foo.bar@example.com>
+EOF
+test_expect_equal_file OUTPUT EXPECTED
+
 test_done
