@@ -224,6 +224,7 @@ output=$(NOTMUCH_NEW 2>&1)
 test_expect_equal "$output" "Added 1 new message to the database."
 
 test_begin_subtest "Ignore files and directories specified in new.ignore (multiple occurrences)"
+test_subtest_known_broken
 notmuch config set new.ignore .git ignored_file .ignored_hidden_file
 notmuch new > /dev/null # ensure that files/folders will be printed in ASCII order.
 touch "${MAIL_DIR}"/.git # change .git's mtime for notmuch new to rescan.
@@ -246,7 +247,6 @@ test_expect_equal "$output" \
 (D) add_files_recursive, pass 2: explicitly ignoring ${MAIL_DIR}/one/two/ignored_file
 (D) add_files_recursive, pass 2: explicitly ignoring ${MAIL_DIR}/one/two/three/.git
 (D) add_files_recursive, pass 2: explicitly ignoring ${MAIL_DIR}/one/two/three/ignored_file
-(D) add_files_recursive, pass 3: queuing leftover directory ${MAIL_DIR}/two for deletion from database
 No new mail."
 
 
