@@ -878,17 +878,11 @@ _remove_directory (void *ctx,
 	    goto DONE;
     }
 
-    /*
-     * XXX: The library does not have a function to remove a directory
-     * document for a path. Usually this doesn't matter except for a
-     * slight waste of space. However, if the directory gets added to
-     * the filesystem again, the old directory document is found with
-     * the old mtime. Reset the directory mtime to avoid problems.
-     */
-    notmuch_directory_set_mtime (directory, 0);
+    status = notmuch_directory_delete (directory);
 
   DONE:
-    notmuch_directory_destroy (directory);
+    if (status)
+	notmuch_directory_destroy (directory);
     return status;
 }
 

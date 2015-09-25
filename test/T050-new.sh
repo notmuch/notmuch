@@ -93,7 +93,6 @@ No new mail. Detected 3 file renames."
 
 
 test_begin_subtest "Deleted directory"
-test_subtest_known_broken
 rm -rf "${MAIL_DIR}"/dir-renamed
 
 output=$(NOTMUCH_NEW --debug)
@@ -102,7 +101,6 @@ No new mail. Removed 3 messages."
 
 
 test_begin_subtest "New directory (at end of list)"
-test_subtest_known_broken
 
 generate_message [dir]=zzz
 generate_message [dir]=zzz
@@ -114,7 +112,6 @@ test_expect_equal "$output" "Added 3 new messages to the database."
 
 test_begin_subtest "Deleted directory (end of list)"
 
-test_subtest_known_broken
 rm -rf "${MAIL_DIR}"/zzz
 
 output=$(NOTMUCH_NEW --debug)
@@ -173,7 +170,6 @@ test_expect_equal "$output" "(D) add_files_recursive, pass 3: queuing leftover d
 No new mail. Removed 3 messages."
 
 test_begin_subtest "Support single-message mbox"
-test_subtest_known_broken
 cat > "${MAIL_DIR}"/mbox_file1 <<EOF
 From test_suite@notmuchmail.org Fri Jan  5 15:43:57 2001
 From: Notmuch Test Suite <test_suite@notmuchmail.org>
@@ -187,7 +183,6 @@ test_expect_equal "$output" "Added 1 new message to the database."
 
 # This test requires that notmuch new has been run at least once.
 test_begin_subtest "Skip and report non-mail files"
-test_subtest_known_broken
 generate_message
 mkdir -p "${MAIL_DIR}"/.git && touch "${MAIL_DIR}"/.git/config
 touch "${MAIL_DIR}"/ignored_file
@@ -224,7 +219,6 @@ output=$(NOTMUCH_NEW 2>&1)
 test_expect_equal "$output" "Added 1 new message to the database."
 
 test_begin_subtest "Ignore files and directories specified in new.ignore (multiple occurrences)"
-test_subtest_known_broken
 notmuch config set new.ignore .git ignored_file .ignored_hidden_file
 notmuch new > /dev/null # ensure that files/folders will be printed in ASCII order.
 touch "${MAIL_DIR}"/.git # change .git's mtime for notmuch new to rescan.
