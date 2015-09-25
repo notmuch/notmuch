@@ -1762,6 +1762,16 @@ notmuch_filenames_t *
 notmuch_directory_get_child_directories (notmuch_directory_t *directory);
 
 /**
+ * Delete directory document from the database, and destroy the
+ * notmuch_directory_t object. Assumes any child directories and files
+ * have been deleted by the caller.
+ *
+ * @since libnotmuch 4.3 (notmuch 0.21)
+ */
+notmuch_status_t
+notmuch_directory_delete (notmuch_directory_t *directory);
+
+/**
  * Destroy a notmuch_directory_t object.
  */
 void

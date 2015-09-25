@@ -281,6 +281,31 @@ notmuch_directory_get_child_directories (notmuch_directory_t *directory)
     return child_directories;
 }
 
+notmuch_status_t
+notmuch_directory_delete (notmuch_directory_t *directory)
+{
+    notmuch_status_t status;
+    Xapian::WritableDatabase *db;
+
+    status = _notmuch_database_ensure_writable (directory->notmuch);
+    if (status)
+	return status;
+
+    try {
+	db = static_cast <Xapian::WritableDatabase *> (directory->notmuch->xapian_db);
+	db->delete_document (directory->document_id);
+    } catch (const Xapian::Error &error) {
+	_notmuch_database_log (directory->notmuch,
+			       "A Xapian exception occurred deleting directory entry: %s.\n",
+			       error.get_msg().c_str());
+	directory->notmuch->exception_reported = TRUE;
+	status = NOTMUCH_STATUS_XAPIAN_EXCEPTION;
+    }
+    notmuch_directory_destroy (directory);
+
+    return NOTMUCH_STATUS_SUCCESS;
+}
+
 void
 notmuch_directory_destroy (notmuch_directory_t *directory)
 {
