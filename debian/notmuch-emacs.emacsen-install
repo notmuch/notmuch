@@ -31,7 +31,7 @@ echo install/${PACKAGE}: byte-compiling for ${FLAVOR}
 # Create symlinks to the .el files (see section 6E in debian-emacs
 # polcy).  This makes complation easy, and also allows find-function
 # and find-library to work properly.
-(cd ${elc_dir} && cp -s ${el_dir}/*.el .)
+(cd ${elc_dir} && ln -sf ${el_dir}/*.el .)
 
 # Byte compile them
 (cd ${elc_dir}
