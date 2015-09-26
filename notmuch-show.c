@@ -456,7 +456,8 @@ format_part_text (const void *ctx, sprinter_t *sp, mime_node_t *node,
 	    g_mime_part_get_filename (GMIME_PART (node->part)) : NULL;
 
 	if (disposition &&
-	    strcmp (disposition->disposition, GMIME_DISPOSITION_ATTACHMENT) == 0)
+	    strcasecmp (g_mime_content_disposition_get_disposition (disposition),
+			GMIME_DISPOSITION_ATTACHMENT) == 0)
 	    part_type = "attachment";
 	else
 	    part_type = "part";

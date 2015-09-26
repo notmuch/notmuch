@@ -80,7 +80,8 @@ format_part_reply (mime_node_t *node)
 	    show_text_part_content (node->part, stream_stdout, NOTMUCH_SHOW_TEXT_PART_REPLY);
 	    g_object_unref(stream_stdout);
 	} else if (disposition &&
-		   strcmp (disposition->disposition, GMIME_DISPOSITION_ATTACHMENT) == 0) {
+		   strcasecmp (g_mime_content_disposition_get_disposition (disposition),
+			       GMIME_DISPOSITION_ATTACHMENT) == 0) {
 	    const char *filename = g_mime_part_get_filename (GMIME_PART (node->part));
 	    printf ("Attachment: %s (%s)\n", filename,
 		    g_mime_content_type_to_string (content_type));
