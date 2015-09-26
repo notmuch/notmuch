@@ -369,12 +369,16 @@ _notmuch_address()
 	    COMPREPLY=( $( compgen -W "true false flag all" -- "${cur}" ) )
 	    return
 	    ;;
+	--deduplicate)
+	    COMPREPLY=( $( compgen -W "no mailbox address" -- "${cur}" ) )
+	    return
+	    ;;
     esac
 
     ! $split &&
     case "${cur}" in
 	-*)
-	    local options="--format= --output= --sort= --exclude="
+	    local options="--format= --output= --sort= --exclude= --deduplicate="
 	    compopt -o nospace
 	    COMPREPLY=( $(compgen -W "$options" -- ${cur}) )
 	    ;;
