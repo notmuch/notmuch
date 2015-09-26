@@ -764,7 +764,6 @@ output=$(notmuch search from:todd and mimetype:multipart/alternative | notmuch_s
 test_expect_equal "$output" "thread:XXX   2014-01-12 [1/1] Todd; odd content types (inbox unread)"
 
 test_begin_subtest "case of Content-Disposition doesn't matter for indexing"
-test_subtest_known_broken
 cat <<EOF > ${MAIL_DIR}/content-disposition
 Return-path: <david@tethera.net>
 Envelope-to: david@tethera.net
