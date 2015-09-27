@@ -1410,8 +1410,15 @@ notmuch_database_upgrade (notmuch_database_t *notmuch,
 	(NOTMUCH_FEATURE_FILE_TERMS | NOTMUCH_FEATURE_BOOL_FOLDER |
 	 NOTMUCH_FEATURE_LAST_MOD)) {
 	query = notmuch_query_create (notmuch, "");
-	total += notmuch_query_count_messages (query);
+	unsigned msg_count;
+
+	status = notmuch_query_count_messages_st (query, &msg_count);
+	if (status)
+	    goto DONE;
+
+	total += msg_count;
 	notmuch_query_destroy (query);
+	query = NULL;
     }
     if (new_features & NOTMUCH_FEATURE_DIRECTORY_DOCS) {
 	t_end = db->allterms_end ("XTIMESTAMP");
@@ -1492,6 +1499,7 @@ notmuch_database_upgrade (notmuch_database_t *notmuch,
 	}
 
 	notmuch_query_destroy (query);
+	query = NULL;
     }
 
     /* Perform per-directory upgrades. */
@@ -1611,6 +1619,9 @@ notmuch_database_upgrade (notmuch_database_t *notmuch,
 	action.sa_handler = SIG_IGN;
 	sigaction (SIGALRM, &action, NULL);
     }
+
+    if (query)
+	notmuch_query_destroy (query);
 
     talloc_free (local);
     return status;
