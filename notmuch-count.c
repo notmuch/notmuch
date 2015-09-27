@@ -67,6 +67,7 @@ count_files (notmuch_query_t *query)
     return count;
 }
 
+/* return 0 on success, -1 on failure */
 static int
 print_count (notmuch_database_t *notmuch, const char *query_str,
 	     const char **exclude_tags, size_t exclude_tags_length, int output, int print_lastmod)
@@ -81,7 +82,7 @@ print_count (notmuch_database_t *notmuch, const char *query_str,
     query = notmuch_query_create (notmuch, query_str);
     if (query == NULL) {
 	fprintf (stderr, "Out of memory\n");
-	return 1;
+	return -1;
     }
 
     for (i = 0; i < exclude_tags_length; i++)
