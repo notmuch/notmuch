@@ -1372,6 +1372,7 @@ notmuch_database_upgrade (notmuch_database_t *notmuch,
     enum _notmuch_features target_features, new_features;
     notmuch_status_t status;
     notmuch_private_status_t private_status;
+    notmuch_query_t *query = NULL;
     unsigned int count = 0, total = 0;
 
     status = _notmuch_database_ensure_writable (notmuch);
@@ -1408,7 +1409,7 @@ notmuch_database_upgrade (notmuch_database_t *notmuch,
     if (new_features &
 	(NOTMUCH_FEATURE_FILE_TERMS | NOTMUCH_FEATURE_BOOL_FOLDER |
 	 NOTMUCH_FEATURE_LAST_MOD)) {
-	notmuch_query_t *query = notmuch_query_create (notmuch, "");
+	query = notmuch_query_create (notmuch, "");
 	total += notmuch_query_count_messages (query);
 	notmuch_query_destroy (query);
     }
@@ -1436,10 +1437,11 @@ notmuch_database_upgrade (notmuch_database_t *notmuch,
     if (new_features &
 	(NOTMUCH_FEATURE_FILE_TERMS | NOTMUCH_FEATURE_BOOL_FOLDER |
 	 NOTMUCH_FEATURE_LAST_MOD)) {
-	notmuch_query_t *query = notmuch_query_create (notmuch, "");
 	notmuch_messages_t *messages;
 	notmuch_message_t *message;
 	char *filename;
+
+	query = notmuch_query_create (notmuch, "");
 
 	/* XXX: this should use the _st version, but needs an error
 	   path */
