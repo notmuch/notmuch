@@ -655,9 +655,14 @@ notmuch_reply_format_sprinter(void *ctx,
     notmuch_messages_t *messages;
     notmuch_message_t *message;
     mime_node_t *node;
+    unsigned count;
     notmuch_status_t status;
 
-    if (notmuch_query_count_messages (query) != 1) {
+    status = notmuch_query_count_messages_st (query, &count);
+    if (print_status_query ("notmuch reply", query, status))
+	return 1;
+
+    if (count != 1) {
 	fprintf (stderr, "Error: search term did not match precisely one message.\n");
 	return 1;
     }

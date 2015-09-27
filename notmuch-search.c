@@ -121,7 +121,13 @@ do_search_threads (search_context_t *ctx)
     notmuch_status_t status;
 
     if (ctx->offset < 0) {
-	ctx->offset += notmuch_query_count_threads (ctx->query);
+	unsigned count;
+	notmuch_status_t status;
+	status = notmuch_query_count_threads_st (ctx->query, &count);
+	if (print_status_query ("notmuch search", ctx->query, status))
+	    return 1;
+
+	ctx->offset += count;
 	if (ctx->offset < 0)
 	    ctx->offset = 0;
     }
@@ -521,7 +527,13 @@ do_search_messages (search_context_t *ctx)
     notmuch_status_t status;
 
     if (ctx->offset < 0) {
-	ctx->offset += notmuch_query_count_messages (ctx->query);
+	unsigned count;
+	notmuch_status_t status;
+	status = notmuch_query_count_messages_st (ctx->query, &count);
+	if (print_status_query ("notmuch search", ctx->query, status))
+	    return 1;
+
+	ctx->offset += count;
 	if (ctx->offset < 0)
 	    ctx->offset = 0;
     }
