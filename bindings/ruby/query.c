@@ -173,14 +173,16 @@ VALUE
 notmuch_rb_query_count_messages (VALUE self)
 {
     notmuch_query_t *query;
+    notmuch_status_t status;
+    unsigned int count;
 
     Data_Get_Notmuch_Query (self, query);
 
-    /* Xapian exceptions are not handled properly.
-     * (function may return 0 after printing a message)
-     * Thus there is nothing we can do here...
-     */
-    return UINT2NUM(notmuch_query_count_messages(query));
+    status = notmuch_query_count_messages_st (query, &count);
+    if (status)
+	notmuch_rb_status_raise (status);
+
+    return UINT2NUM(count);
 }
 
 /*
@@ -192,12 +194,14 @@ VALUE
 notmuch_rb_query_count_threads (VALUE self)
 {
     notmuch_query_t *query;
+    notmuch_status_t status;
+    unsigned int count;
 
     Data_Get_Notmuch_Query (self, query);
 
-    /* Xapian exceptions are not handled properly.
-     * (function may return 0 after printing a message)
-     * Thus there is nothing we can do here...
-     */
-    return UINT2NUM(notmuch_query_count_threads(query));
+    status = notmuch_query_count_threads_st (query, &count);
+    if (status)
+	notmuch_rb_status_raise (status);
+
+    return UINT2NUM(count);
 }
