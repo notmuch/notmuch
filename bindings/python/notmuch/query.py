@@ -17,7 +17,7 @@ along with notmuch.  If not, see <http://www.gnu.org/licenses/>.
 Copyright 2010 Sebastian Spaeth <Sebastian@SSpaeth.de>
 """
 
-from ctypes import c_char_p, c_uint
+from ctypes import c_char_p, c_uint, POINTER, byref
 from .globals import (
     nmlib,
     Enum,
@@ -178,8 +178,8 @@ class Query(object):
             raise NullPointerError
         return Messages(msgs_p, self)
 
-    _count_messages = nmlib.notmuch_query_count_messages
-    _count_messages.argtypes = [NotmuchQueryP]
+    _count_messages = nmlib.notmuch_query_count_messages_st
+    _count_messages.argtypes = [NotmuchQueryP, POINTER(c_uint)]
     _count_messages.restype = c_uint
 
     def count_messages(self):
@@ -191,10 +191,14 @@ class Query(object):
         :rtype:   int
         '''
         self._assert_query_is_initialized()
-        return Query._count_messages(self._query)
+        count = c_uint(0)
+        status = Query._count_messages(self._query, byref(count))
+        if status != 0:
+            raise NotmuchError(status)
+        return count.value
 
-    _count_threads = nmlib.notmuch_query_count_threads
-    _count_threads.argtypes = [NotmuchQueryP]
+    _count_threads = nmlib.notmuch_query_count_threads_st
+    _count_threads.argtypes = [NotmuchQueryP, POINTER(c_uint)]
     _count_threads.restype = c_uint
 
     def count_threads(self):
@@ -210,7 +214,11 @@ class Query(object):
         :rtype:   int
         '''
         self._assert_query_is_initialized()
-        return Query._count_threads(self._query)
+        count = c_uint(0)
+        status = Query._count_threads(self._query, byref(count))
+        if status != 0:
+            raise NotmuchError(status)
+        return count.value
 
     _destroy = nmlib.notmuch_query_destroy
     _destroy.argtypes = [NotmuchQueryP]
