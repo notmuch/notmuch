@@ -1450,9 +1450,10 @@ notmuch_database_upgrade (notmuch_database_t *notmuch,
 
 	query = notmuch_query_create (notmuch, "");
 
-	/* XXX: this should use the _st version, but needs an error
-	   path */
-	for (messages = notmuch_query_search_messages (query);
+	status = notmuch_query_search_messages_st (query, &messages);
+	if (status)
+	    goto DONE;
+	for (;
 	     notmuch_messages_valid (messages);
 	     notmuch_messages_move_to_next (messages))
 	{
