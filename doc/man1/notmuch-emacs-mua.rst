@@ -43,7 +43,8 @@ Supported options for **notmuch-emacs-mua** include
 
     ``--auto-daemon``
         Automatically start Emacs in daemon mode, if the Emacs server
-        is not running. Applicable with ``--client``.
+        is not running. Applicable with ``--client``. Implies
+        ``--create-frame``.
 
     ``--create-frame``
         Create a new frame instead of trying to use the current Emacs

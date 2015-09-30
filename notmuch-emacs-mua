@@ -108,6 +108,7 @@ while getopts :s:c:b:i:h opt; do
 	    ;;
 	--auto-daemon)
 	    AUTO_DAEMON="--alternate-editor="
+	    CREATE_FRAME="-c"
 	    ;;
 	--create-frame)
 	    CREATE_FRAME="-c"
