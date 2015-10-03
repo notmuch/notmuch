@@ -318,7 +318,7 @@ args = parser.parse_args()
 try:
     config = read_config(path=args.config)
 except ConfigError as e:
-    print(e)
+    print(e, file=sys.stderr)
     sys.exit(1)
 
 header_template = config['meta'].get('header', '''<!DOCTYPE html>
