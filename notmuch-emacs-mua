@@ -30,8 +30,8 @@ escape ()
     printf -v $2 '%s' "${__escape_arg__//\"/\\\"}"
 }
 
-EMACS=${EMACS-emacs}
-EMACSCLIENT=${EMACSCLIENT-emacsclient}
+EMACS=${EMACS:-emacs}
+EMACSCLIENT=${EMACSCLIENT:-emacsclient}
 
 PRINT_ONLY=
 NO_WINDOW=
