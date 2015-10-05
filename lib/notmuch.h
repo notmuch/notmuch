@@ -838,6 +838,7 @@ notmuch_query_add_tag_exclude (notmuch_query_t *query, const char *tag);
  * notmuch_threads_destroy function, but there's no good reason
  * to call it if the query is about to be destroyed).
  *
+ * @since libnotmuch 4.2 (notmuch 0.20)
  */
 notmuch_status_t
 notmuch_query_search_threads_st (notmuch_query_t *query,
@@ -895,6 +896,7 @@ notmuch_query_search_threads (notmuch_query_t *query);
  *
  * If a Xapian exception occurs this function will return NULL.
  *
+ * @since libnotmuch 4.2 (notmuch 0.20)
  */
 notmuch_status_t
 notmuch_query_search_messages_st (notmuch_query_t *query,
@@ -990,6 +992,8 @@ notmuch_threads_destroy (notmuch_threads_t *threads);
  *
  * NOTMUCH_STATUS_XAPIAN_EXCEPTION: a Xapian exception occured. The
  *      value of *count is not defined.
+ *
+ * @since libnotmuch 4.3 (notmuch 0.21)
  */
 notmuch_status_t
 notmuch_query_count_messages_st (notmuch_query_t *query, unsigned int *count);
@@ -1025,6 +1029,8 @@ notmuch_query_count_messages (notmuch_query_t *query);
  *
  * NOTMUCH_STATUS_XAPIAN_EXCEPTION: a Xapian exception occured. The
  *      value of *count is not defined.
+ *
+ * @since libnotmuch 4.3 (notmuch 0.21)
  */
 notmuch_status_t
 notmuch_query_count_threads_st (notmuch_query_t *query, unsigned *count);
