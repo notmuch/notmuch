@@ -240,6 +240,8 @@ FUNC."
     ;; Override because we want to close message pane first.
     (define-key map [remap notmuch-mua-new-mail] (notmuch-tree-close-message-pane-and #'notmuch-mua-new-mail))
 
+    (define-key map "S" 'notmuch-search-from-tree-current-query)
+
     ;; these use notmuch-show functions directly
     (define-key map "|" 'notmuch-show-pipe-message)
     (define-key map "w" 'notmuch-show-save-attachments)
@@ -401,6 +403,12 @@ Does NOT change the database."
   (let ((query (notmuch-read-query "Notmuch tree view search: ")))
     (notmuch-tree-close-message-window)
     (notmuch-tree query)))
+
+(defun notmuch-search-from-tree-current-query ()
+  "Call notmuch search with the current query"
+  (interactive)
+  (notmuch-tree-close-message-window)
+  (notmuch-search (notmuch-tree-get-query)))
 
 (defun notmuch-tree-message-window-kill-hook ()
   "Close the message pane when exiting the show buffer."
