@@ -1,3 +1,13 @@
+notmuch (0.21~rc0-1) experimental; urgency=medium
+
+  * This release of notmuch requires a non-reversible database upgrade
+    to support database revision tracking. This upgrade will happen on
+    the first run of 'notmuch-new' after updating. Notmuch will backup
+    your tags for your before doing the upgrade, but it never hurts to
+    make your own backup with notmuch dump.
+
+ -- David Bremner <bremner@debian.org>  Thu, 15 Oct 2015 08:13:04 -0300
+
 notmuch (0.19-1) experimental; urgency=medium
 
   * This release of notmuch again requires a non-reversable database

@@ -1,3 +1,9 @@
+notmuch (0.21~rc0-1) experimental; urgency=medium
+
+  * new upstream release candidate
+
+ -- David Bremner <bremner@debian.org>  Thu, 15 Oct 2015 08:08:17 -0300
+
 notmuch (0.20.2-2) unstable; urgency=medium
 
   * Fix linking in emacsen-install script. The previous version can
