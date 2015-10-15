@@ -867,6 +867,11 @@ the same as for the function notmuch-tree."
   (setq notmuch-tree-query-context query-context)
   (setq notmuch-tree-target-msg target)
   (setq notmuch-tree-open-target open-target)
+  ;; Set the default value for `notmuch-show-process-crypto' in this
+  ;; buffer. Although we don't use this some of the functions we call
+  ;; (such as reply) do. It is a buffer local variable so setting it
+  ;; will not affect genuine show buffers.
+  (setq notmuch-show-process-crypto notmuch-crypto-process-mime)
 
   (erase-buffer)
   (goto-char (point-min))
