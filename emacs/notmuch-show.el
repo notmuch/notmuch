@@ -100,7 +100,7 @@ visible for any given message."
   :group 'notmuch-show
   :group 'notmuch-hooks)
 
-(defcustom notmuch-show-max-text-part-size 10000
+(defcustom notmuch-show-max-text-part-size 100000
   "Maximum size of a text part to be shown by default in characters.
 
 Set to 0 to show the part regardless of size."
