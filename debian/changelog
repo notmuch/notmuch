@@ -1,6 +1,6 @@
-notmuch (0.21~rc0-1) experimental; urgency=medium
+notmuch (0.21~rc1-1) experimental; urgency=medium
 
-  * new upstream release candidate
+  * New upstream release candidate
 
  -- David Bremner <bremner@debian.org>  Thu, 15 Oct 2015 08:08:17 -0300
 

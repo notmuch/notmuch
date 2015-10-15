@@ -1,4 +1,4 @@
-notmuch (0.21~rc0-1) experimental; urgency=medium
+notmuch (0.21~rc1-1) experimental; urgency=medium
 
   * This release of notmuch requires a non-reversible database upgrade
     to support database revision tracking. This upgrade will happen on
