@@ -7,6 +7,31 @@ General
 Notmuch now requires gmime >= 2.6.7. The gmime 2.4 series is no longer
 supported.
 
+Database revision tracking: `lastmod:` queries
+
+  Each message now has a metadata revision number that increases with
+  every tagging operation. See the discussion of `lastmod:` in
+  `notmuch-search-terms(7)` for more information.
+
+Notmuch database upgrade to support `lastmod:` queries
+
+  The above mentioned `lastmod:` prefix. This will be done
+  automatically, without prompting on the next time `notmuch new` is
+  run after the upgrade. The upgrade is not reversible, and the
+  upgraded database will not be readable by older versions of
+  Notmuch. As a safeguard, a database dump will be created in the
+  `.notmuch` directory before upgrading.
+
+Command Line Interface
+----------------------
+
+Database revision tracking
+
+  Two new options were added to support revision tracking. A global
+  option "--uuid" (`notmuch(1)`) was added for to detect counter
+  rollover and reinitialization, and `notmuch-count(1)` gained a
+  `--lastmod` option to query database revision tracking data.
+
 Emacs Interface
 ---------------
 
@@ -26,6 +51,12 @@ Library
 
 The use of absolute paths is now enforced when calling
 `notmuch_database_{open, create}`.
+
+Database revision tracking
+
+  Revision tracking is supported via a new prefix "lastmod:" in the
+  query parser and the new function
+  `notmuch_database_get_revision`. For the latter, see `notmuch(3)`.
 
 Notmuch 0.20.2 (2015-06-27)
 ===========================
