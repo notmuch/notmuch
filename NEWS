@@ -86,6 +86,11 @@ Deprecated functions
   are all deprecated as of this release.  Clients are encouraged to
   transition to the `_st` variants supporting better error reporting.
 
+nmbug-status
+------------
+
+nmbug-status now supports specifying the sort order for each view
+
 Notmuch 0.20.2 (2015-06-27)
 ===========================
 
