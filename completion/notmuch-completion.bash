@@ -86,7 +86,7 @@ _notmuch_search_terms()
 		sed "s|^$path/||" | grep -v "\(^\|/\)\(cur\|new\|tmp\)$" ) )
 	    ;;
 	*)
-	    local search_terms="from: to: subject: attachment: mimetype: tag: id: thread: folder: path: date:"
+	    local search_terms="from: to: subject: attachment: mimetype: tag: id: thread: folder: path: date: lastmod:"
 	    compopt -o nospace
 	    COMPREPLY=( $(compgen -W "${search_terms}" -- ${cur}) )
 	    ;;
