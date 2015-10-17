@@ -54,7 +54,7 @@ indicate user-supplied values):
 
 -  date:<since>..<until>
 
--  lastmod:<since>..<until>
+-  lastmod:<initial-revision>..<final-revision>
 
 The **from:** prefix is used to match the name or address of the sender
 of an email message.
