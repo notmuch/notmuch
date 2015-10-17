@@ -162,7 +162,7 @@ _notmuch_count()
     ! $split &&
     case "${cur}" in
 	-*)
-	    local options="--output= --exclude= --batch --input="
+	    local options="--output= --exclude= --batch --input= --lastmod"
 	    compopt -o nospace
 	    COMPREPLY=( $(compgen -W "$options" -- ${cur}) )
 	    ;;
