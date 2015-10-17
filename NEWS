@@ -22,6 +22,18 @@ Notmuch database upgrade to support `lastmod:` queries
   Notmuch. As a safeguard, a database dump will be created in the
   `.notmuch` directory before upgrading.
 
+Build System
+------------
+
+The ruby bindings are now built as part of the main notmuch build
+process. This can be disabled with the `--without-ruby` option to
+configure.
+
+Building the documentation can be disabled with the `--without-docs`
+option to configure.
+
+Skipped individual tests are no longer considered as failures.
+
 Command Line Interface
 ----------------------
 
