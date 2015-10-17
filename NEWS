@@ -13,6 +13,13 @@ Database revision tracking: `lastmod:` queries
   every tagging operation. See the discussion of `lastmod:` in
   `notmuch-search-terms(7)` for more information.
 
+Date queries now support `date:<expr>..!` shorthand for
+`date:<expr>..<expr>`
+
+  You can use, for example, `date:yesterday..!` to match from the
+  beginning of yesterday to the end of yesterday. For further details,
+  please refer to the `notmuch-search-terms` manual page.
+
 Notmuch database upgrade to support `lastmod:` queries
 
   The above mentioned `lastmod:` prefix. This will be done
