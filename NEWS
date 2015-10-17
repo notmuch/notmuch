@@ -88,6 +88,19 @@ Library
 The use of absolute paths is now enforced when calling
 `notmuch_database_{open, create}`.
 
+New function `notmuch_directory_delete` to delete directory documents
+
+  Previously there was no way to delete directory documents from the
+  database, leading to confusing results when the "ghost" directory
+  document of a renamed or deleted filesystem directory was
+  encountered every time the parent directory was being scanned by
+  `notmuch new`. The mtime of the old directory document was also used
+  if a directory by the same name was added again in the filesystem,
+  potentially bypassing the scan for the directory. The issues are
+  fixed by providing a library call to delete directory documents, and
+  deleting the old documents in `notmuch new` on filesystem directory
+  removal or rename.
+
 Database revision tracking
 
   Revision tracking is supported via a new prefix "lastmod:" in the
