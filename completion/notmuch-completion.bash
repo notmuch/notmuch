@@ -484,10 +484,15 @@ _notmuch()
 
     if [ -z "${arg}" ]; then
 	# top level completion
-	local top_options="--help --version"
 	case "${cur}" in
-	    -*) COMPREPLY=( $(compgen -W "${top_options}" -- ${cur}) ) ;;
-	    *) COMPREPLY=( $(compgen -W "${_notmuch_commands}" -- ${cur}) ) ;;
+	    -*)
+		# XXX: handle ${_notmuch_shared_options} and --config=
+		local options="--help --version"
+		COMPREPLY=( $(compgen -W "${options}" -- ${cur}) )
+		;;
+	    *)
+		COMPREPLY=( $(compgen -W "${_notmuch_commands}" -- ${cur}) )
+		;;
 	esac
     elif [ "${arg}" = "help" ]; then
 	# handle help command specially due to _notmuch_commands usage
