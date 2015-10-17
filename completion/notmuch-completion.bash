@@ -27,6 +27,8 @@
 # on completion.
 #
 
+_notmuch_shared_options="--help --uuid= --version"
+
 # $1: current input of the form prefix:partialinput, where prefix is
 # to or from.
 _notmuch_email()
@@ -109,7 +111,7 @@ _notmuch_compact()
     ! $split &&
     case "${cur}" in
 	-*)
-	    local options="--backup= --quiet"
+	    local options="--backup= --quiet ${_notmuch_shared_options}"
 	    compopt -o nospace
 	    COMPREPLY=( $(compgen -W "$options" -- ${cur}) )
 	    ;;
@@ -162,7 +164,7 @@ _notmuch_count()
     ! $split &&
     case "${cur}" in
 	-*)
-	    local options="--output= --exclude= --batch --input= --lastmod"
+	    local options="--output= --exclude= --batch --input= --lastmod ${_notmuch_shared_options}"
 	    compopt -o nospace
 	    COMPREPLY=( $(compgen -W "$options" -- ${cur}) )
 	    ;;
@@ -192,7 +194,7 @@ _notmuch_dump()
     ! $split &&
     case "${cur}" in
 	-*)
-	    local options="--gzip --format= --output="
+	    local options="--gzip --format= --output= ${_notmuch_shared_options}"
 	    compopt -o nospace
 	    COMPREPLY=( $(compgen -W "$options" -- ${cur}) )
 	    ;;
@@ -222,7 +224,7 @@ _notmuch_insert()
     ! $split &&
     case "${cur}" in
 	--*)
-	    local options="--create-folder --folder= --keep --no-hooks"
+	    local options="--create-folder --folder= --keep --no-hooks ${_notmuch_shared_options}"
 	    compopt -o nospace
 	    COMPREPLY=( $(compgen -W "$options" -- ${cur}) )
 	    return
@@ -245,7 +247,8 @@ _notmuch_new()
 
     case "${cur}" in
 	-*)
-	    local options="--no-hooks --quiet"
+	    local options="--no-hooks --quiet ${_notmuch_shared_options}"
+	    compopt -o nospace
 	    COMPREPLY=( $(compgen -W "${options}" -- ${cur}) )
 	    ;;
     esac
@@ -271,7 +274,7 @@ _notmuch_reply()
     ! $split &&
     case "${cur}" in
 	-*)
-	    local options="--format= --format-version= --reply-to= --decrypt"
+	    local options="--format= --format-version= --reply-to= --decrypt ${_notmuch_shared_options}"
 	    compopt -o nospace
 	    COMPREPLY=( $(compgen -W "$options" -- ${cur}) )
 	    ;;
@@ -301,7 +304,7 @@ _notmuch_restore()
     ! $split &&
     case "${cur}" in
 	-*)
-	    local options="--format= --accumulate --input="
+	    local options="--format= --accumulate --input= ${_notmuch_shared_options}"
 	    compopt -o nospace
 	    COMPREPLY=( $(compgen -W "$options" -- ${cur}) )
 	    ;;
@@ -336,7 +339,7 @@ _notmuch_search()
     ! $split &&
     case "${cur}" in
 	-*)
-	    local options="--format= --output= --sort= --offset= --limit= --exclude= --duplicate="
+	    local options="--format= --output= --sort= --offset= --limit= --exclude= --duplicate= ${_notmuch_shared_options}"
 	    compopt -o nospace
 	    COMPREPLY=( $(compgen -W "$options" -- ${cur}) )
 	    ;;
@@ -378,7 +381,7 @@ _notmuch_address()
     ! $split &&
     case "${cur}" in
 	-*)
-	    local options="--format= --output= --sort= --exclude= --deduplicate="
+	    local options="--format= --output= --sort= --exclude= --deduplicate= ${_notmuch_shared_options}"
 	    compopt -o nospace
 	    COMPREPLY=( $(compgen -W "$options" -- ${cur}) )
 	    ;;
@@ -412,7 +415,7 @@ _notmuch_show()
     ! $split &&
     case "${cur}" in
 	-*)
-	    local options="--entire-thread= --format= --exclude= --body= --format-version= --part= --verify --decrypt --include-html"
+	    local options="--entire-thread= --format= --exclude= --body= --format-version= --part= --verify --decrypt --include-html ${_notmuch_shared_options}"
 	    compopt -o nospace
 	    COMPREPLY=( $(compgen -W "$options" -- ${cur}) )
 	    ;;
@@ -439,7 +442,7 @@ _notmuch_tag()
     ! $split &&
     case "${cur}" in
 	--*)
-	    local options="--batch --input= --remove-all"
+	    local options="--batch --input= --remove-all ${_notmuch_shared_options}"
 	    compopt -o nospace
 	    COMPREPLY=( $(compgen -W "$options" -- ${cur}) )
 	    return
