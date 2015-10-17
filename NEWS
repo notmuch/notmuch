@@ -51,6 +51,16 @@ Database revision tracking
   rollover and reinitialization, and `notmuch-count(1)` gained a
   `--lastmod` option to query database revision tracking data.
 
+The `notmuch address` command supports new deduplication schemes
+
+  `notmuch address` has gained a new `--deduplicate` option to specify
+  how the results should be deduplicated, if at all. The alternatives
+  are `no` (do not deduplicate, useful for processing the results with
+  external tools), `mailbox` (deduplicate based on the full, case
+  sensitive name and email address), and `address` (deduplicate based
+  on the case insensitive address part). See the `notmuch-address`
+  manual page for further information.
+
 Emacs Interface
 ---------------
 
