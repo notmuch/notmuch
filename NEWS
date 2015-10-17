@@ -58,6 +58,13 @@ Removed `notmuch-version` function by renaming it to `notmuch-cli-version`
   function which retrieves the version of `notmuch-command` is
   better named as `notmuch-cli-version`.
 
+Query input now supports completion for "is:<tag>".
+
+New message composition mode: `notmuch-compose-mode`
+
+  This is mainly to fix fcc handling, but may be useful for user
+  customization as well.
+
 Library
 -------
 
