@@ -70,6 +70,15 @@ Database revision tracking
   query parser and the new function
   `notmuch_database_get_revision`. For the latter, see `notmuch(3)`.
 
+New status code returning API for n_query_count_{messages,threads}.
+
+Deprecated functions
+
+  `notmuch_query_search_threads`, `notmuch_query_search_messages`,
+  `notmuch_query_count_messages`, and `notmuch_query_count_threads`
+  are all deprecated as of this release.  Clients are encouraged to
+  transition to the `_st` variants supporting better error reporting.
+
 Notmuch 0.20.2 (2015-06-27)
 ===========================
 
