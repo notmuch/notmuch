@@ -75,7 +75,7 @@ Removed `notmuch-version` function by renaming it to `notmuch-cli-version`
   function which retrieves the version of `notmuch-command` is
   better named as `notmuch-cli-version`.
 
-Query input now supports completion for "is:<tag>".
+Query input now supports completion for "is:<tag>"
 
 New message composition mode: `notmuch-compose-mode`
 
@@ -86,7 +86,7 @@ Library
 -------
 
 The use of absolute paths is now enforced when calling
-`notmuch_database_{open, create}`.
+`notmuch_database_{open, create}`
 
 New function `notmuch_directory_delete` to delete directory documents
 
@@ -107,7 +107,7 @@ Database revision tracking
   query parser and the new function
   `notmuch_database_get_revision`. For the latter, see `notmuch(3)`.
 
-New status code returning API for n_query_count_{messages,threads}.
+New status code returning API for n_query_count_{messages,threads}
 
 Deprecated functions
 
@@ -119,7 +119,7 @@ Deprecated functions
 nmbug-status
 ------------
 
-nmbug-status now supports specifying the sort order for each view
+`nmbug-status` now supports specifying the sort order for each view.
 
 Notmuch 0.20.2 (2015-06-27)
 ===========================
