@@ -120,6 +120,10 @@ a plist. Supported properties are
   :sort-order      Specify the sort order to be used for the search.
                    Possible values are 'oldest-first 'newest-first or
                    nil. Nil means use the default sort order.
+  :search-type     Specify whether to run the search in search-mode
+                   or tree mode. Set to 'tree to specify tree
+                   mode, set to nil (or anything except tree) to
+                   specify search mode.
 
 Other accepted forms are a cons cell of the form (NAME . QUERY)
 or a list of the form (NAME QUERY COUNT-QUERY)."
