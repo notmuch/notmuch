@@ -82,6 +82,32 @@ New message composition mode: `notmuch-compose-mode`
   This is mainly to fix fcc handling, but may be useful for user
   customization as well.
 
+Bug fix for replying to encrypted messages in `notmuch-tree` mode
+
+Bind `l` in `notmuch-show` to limit or filter
+
+  Use this to narrow the search query in show buffers.
+
+Allow saved searched to specify tree view rather than search view
+
+  Applies to saved searches run from `notmuch-hello`, or by a keyboard
+  shortcut (`notmuch-jump`).  Can be set in the customize interface, or
+  by adding :search-type tree to the appropriate saved search plist in
+  `notmuch-saved-searches`.
+
+Bind `S` in `notmuch-tree` to run the same search in `notmuch-search`
+
+  Analogous with `Z` in search view (which runs the current search in
+  tree view). It is particularly useful with saved searches that
+  specify tree view.
+
+Increase maximum size of rendered text parts
+
+  The variable `notmuch-show-max-text-part-size` controls the maximum
+  size (in bytes) which is automatically rendered. This may make
+  rendering large threads slower. To get the previous behaviour set
+  this variable to 10000.
+
 Library
 -------
 
