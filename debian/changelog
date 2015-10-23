@@ -1,3 +1,12 @@
+notmuch (0.21-1) unstable; urgency=medium
+
+  * New upstream release
+  * Bug fix: "reply-to encrypted messages in tree view fails to quote
+    and defaults to unencrypted message", thanks to Vagrant Cascadian
+    (Closes: #795243).
+
+ -- David Bremner <bremner@debian.org>  Fri, 23 Oct 2015 07:54:02 -0300
+
 notmuch (0.21~rc3-1) experimental; urgency=medium
 
   * New upstream release candidate
