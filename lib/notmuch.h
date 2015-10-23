@@ -1752,7 +1752,7 @@ notmuch_filenames_t *
 notmuch_directory_get_child_files (notmuch_directory_t *directory);
 
 /**
- * Get a notmuch_filenams_t iterator listing all the filenames of
+ * Get a notmuch_filenames_t iterator listing all the filenames of
  * sub-directories in the database within the given directory.
  *
  * The returned filenames will be the basename-entries only (not
