@@ -1,11 +1,12 @@
-notmuch (0.21-1) unstable; urgency=medium
+notmuch (0.21~rc3-2) experimental; urgency=medium
 
-  * New upstream release
   * Bug fix: "reply-to encrypted messages in tree view fails to quote
     and defaults to unencrypted message", thanks to Vagrant Cascadian
     (Closes: #795243).
+  * Bug fix: "install/notmuch-emacs may interact with console, fail
+    emacs24 upgrade", thanks to Hilko Bengen (Closes: #802952).
 
- -- David Bremner <bremner@debian.org>  Fri, 23 Oct 2015 07:54:02 -0300
+ -- David Bremner <bremner@debian.org>  Sun, 25 Oct 2015 13:42:57 -0300
 
 notmuch (0.21~rc3-1) experimental; urgency=medium
 

@@ -43,6 +43,6 @@ echo install/${PACKAGE}: byte-compiling for ${FLAVOR}
    exit 1
  fi
  set -e
- gzip -9 Install.log)
+ gzip -9f Install.log)
 
 exit 0;
