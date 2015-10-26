@@ -269,7 +269,9 @@ Note that these functions use `mail-citation-hook' if that is non-nil."
   (set-buffer-modified-p nil))
 
 (define-derived-mode notmuch-message-mode message-mode "Message[Notmuch]"
-  "Notmuch message composition mode. Mostly like `message-mode'")
+  "Notmuch message composition mode. Mostly like `message-mode'"
+  (when notmuch-address-command
+    (notmuch-address-setup)))
 
 (define-key notmuch-message-mode-map (kbd "C-c C-c") #'notmuch-mua-send-and-exit)
 (define-key notmuch-message-mode-map (kbd "C-c C-s") #'notmuch-mua-send)

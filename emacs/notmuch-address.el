@@ -23,11 +23,13 @@
 
 ;;
 
-(defcustom notmuch-address-command "notmuch-addresses"
+(defcustom notmuch-address-command nil
   "The command which generates possible addresses. It must take a
 single argument and output a list of possible matches, one per
-line."
-  :type 'string
+line. The default value of nil disables address completion."
+  :type '(radio
+	  (const :tag "Disable address completion" nil)
+	  (string :tag "Use external completion command" "notmuch-addresses"))
   :group 'notmuch-send
   :group 'notmuch-external)
 
@@ -55,10 +57,12 @@ to know how address selection is made by default."
 (defvar notmuch-address-history nil)
 
 (defun notmuch-address-message-insinuate ()
+  (message "calling notmuch-address-message-insinuate is no longer needed"))
+
+(defun notmuch-address-setup ()
   (unless (memq notmuch-address-message-alist-member message-completion-alist)
     (setq message-completion-alist
 	  (push notmuch-address-message-alist-member message-completion-alist))))
-
 (defun notmuch-address-options (original)
   (process-lines notmuch-address-command original))
 
@@ -108,12 +112,5 @@ to know how address selection is made by default."
 		      (and (file-executable-p (setq bin (concat bin ".exe")))
 			   (not (file-directory-p bin))))
 	      (throw 'found-command bin))))))))
-
-;; If we can find the program specified by `notmuch-address-command',
-;; insinuate ourselves into `message-mode'.
-(when (notmuch-address-locate-command notmuch-address-command)
-  (notmuch-address-message-insinuate))
-
-;;
 
 (provide 'notmuch-address)
