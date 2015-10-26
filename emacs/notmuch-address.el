@@ -22,7 +22,9 @@
 (require 'message)
 (require 'notmuch-parser)
 (require 'notmuch-lib)
+(require 'notmuch-company)
 ;;
+(declare-function company-manual-begin "company")
 
 (defcustom notmuch-address-command 'internal
   "The command which generates possible addresses. It must take a
@@ -72,9 +74,21 @@ finished")
 (defun notmuch-address-message-insinuate ()
   (message "calling notmuch-address-message-insinuate is no longer needed"))
 
+(defcustom notmuch-address-use-company t
+  "If available, use company mode for address completion"
+  :type 'boolean
+  :group 'notmuch-send)
+
 (defun notmuch-address-setup ()
-  (let ((pair (cons notmuch-address-completion-headers-regexp
-		    #'notmuch-address-expand-name)))
+  (let* ((use-company (and notmuch-address-use-company
+			   (eq notmuch-address-command 'internal)
+			   (require 'company nil t)))
+	 (pair (cons notmuch-address-completion-headers-regexp
+		     (if use-company
+			 #'company-manual-begin
+		       #'notmuch-address-expand-name))))
+      (when use-company
+	(notmuch-company-setup))
       (unless (memq pair message-completion-alist)
 	(setq message-completion-alist
 	      (push pair message-completion-alist)))))

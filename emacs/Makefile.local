@@ -20,6 +20,7 @@ emacs_sources := \
 	$(dir)/notmuch-print.el \
 	$(dir)/notmuch-version.el \
 	$(dir)/notmuch-jump.el \
+	$(dir)/notmuch-company.el
 
 $(dir)/notmuch-version.el: $(dir)/Makefile.local version.stamp
 $(dir)/notmuch-version.el: $(srcdir)/$(dir)/notmuch-version.el.tmpl
