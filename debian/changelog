@@ -1,3 +1,10 @@
+notmuch (0.21~rc3-3) experimental; urgency=medium
+
+  * Build-conflict with gdb-minimal. gdb python scripts are needed for
+    the test suite
+
+ -- David Bremner <bremner@debian.org>  Sun, 25 Oct 2015 22:08:56 -0300
+
 notmuch (0.21~rc3-2) experimental; urgency=medium
 
   * Bug fix: "reply-to encrypted messages in tree view fails to quote
