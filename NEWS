@@ -82,6 +82,10 @@ New message composition mode: `notmuch-compose-mode`
   This is mainly to fix fcc handling, but may be useful for user
   customization as well.
 
+Allow filtering of search results in `notmuch-show`
+
+Add function to rerun current tree-view search in search mode
+
 Bug fix for replying to encrypted messages in `notmuch-tree` mode
 
 Allow saved searched to specify tree view rather than search view
