@@ -224,7 +224,7 @@ release-checks:
 .PHONY: verify-newer
 verify-newer:
 	@echo -n "Checking that no $(VERSION) release already exists..."
-	@wget -q -O /dev/null $(RELEASE_URL)/$(TAR_FILE) ; \
+	@wget -q --no-check-certificate -O /dev/null $(RELEASE_URL)/$(TAR_FILE) ; \
 	case $$? in \
           8) echo "Good." ;; \
           0) echo "Ouch."; \
