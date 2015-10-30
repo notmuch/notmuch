@@ -1,3 +1,12 @@
+notmuch (0.21-1) unstable; urgency=medium
+
+  * New upstream release. Highlights include
+    - revision tracking for metadata
+    - new features and bug fixes for emacs interface
+    See /usr/share/doc/notmuch/NEWS for more details.
+
+ -- David Bremner <bremner@debian.org>  Thu, 29 Oct 2015 20:04:42 -0300
+
 notmuch (0.21~rc3-3) experimental; urgency=medium
 
   * Build-conflict with gdb-minimal. gdb python scripts are needed for
