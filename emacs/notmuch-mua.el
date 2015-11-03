@@ -273,6 +273,8 @@ Note that these functions use `mail-citation-hook' if that is non-nil."
   (when notmuch-address-command
     (notmuch-address-setup)))
 
+(put 'notmuch-message-mode 'flyspell-mode-predicate 'mail-mode-flyspell-verify)
+
 (define-key notmuch-message-mode-map (kbd "C-c C-c") #'notmuch-mua-send-and-exit)
 (define-key notmuch-message-mode-map (kbd "C-c C-s") #'notmuch-mua-send)
 
