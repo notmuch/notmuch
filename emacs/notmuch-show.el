@@ -353,8 +353,6 @@ operation on the contents of the current buffer."
 		'message-header-cc)
 	       ((looking-at "[Ss]ubject:")
 		'message-header-subject)
-	       ((looking-at "[Ff]rom:")
-		'message-header-from)
 	       (t
 		'message-header-other))))
 
