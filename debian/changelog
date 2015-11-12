@@ -1,3 +1,10 @@
+notmuch (0.21-2) unstable; urgency=medium
+
+  * Build-conflict with gdb on ppc64el and mipsel. Workaround gdb breakage on those
+    architectures (Closes: #804792).
+
+ -- David Bremner <bremner@debian.org>  Thu, 12 Nov 2015 08:54:23 -0400
+
 notmuch (0.21-1) unstable; urgency=medium
 
   * New upstream release. Highlights include
