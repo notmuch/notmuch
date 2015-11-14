@@ -1,3 +1,9 @@
+notmuch (0.21-3) unstable; urgency=medium
+
+  * Add mips and mips64el to gdb build-dep blacklist
+
+ -- David Bremner <bremner@debian.org>  Sat, 14 Nov 2015 19:07:06 -0400
+
 notmuch (0.21-2) unstable; urgency=medium
 
   * Build-conflict with gdb on ppc64el and mipsel. Workaround gdb breakage on those
