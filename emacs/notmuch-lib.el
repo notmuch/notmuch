@@ -243,8 +243,9 @@ depending on the value of `notmuch-poll-script'."
   (interactive)
   (if (stringp notmuch-poll-script)
       (unless (string= notmuch-poll-script "")
-	(call-process notmuch-poll-script nil nil))
-    (call-process notmuch-command nil nil nil "new")))
+	(unless (equal (call-process notmuch-poll-script nil nil) 0)
+	  (error "Notmuch: poll script `%s' failed!" notmuch-poll-script)))
+    (notmuch-call-notmuch-process "new")))
 
 (defun notmuch-bury-or-kill-this-buffer ()
   "Undisplay the current buffer.

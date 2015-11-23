@@ -652,8 +652,12 @@ with `notmuch-hello-query-counts'."
 
 (defvar notmuch-hello-mode-map
   (let ((map (if (fboundp 'make-composed-keymap)
-		 ;; Inherit both widget-keymap and notmuch-common-keymap
-		 (make-composed-keymap widget-keymap)
+		 ;; Inherit both widget-keymap and
+		 ;; notmuch-common-keymap. We have to use
+		 ;; make-sparse-keymap to force this to be a new
+		 ;; keymap (so that when we modify map it does not
+		 ;; modify widget-keymap).
+		 (make-composed-keymap (list (make-sparse-keymap) widget-keymap))
 	       ;; Before Emacs 24, keymaps didn't support multiple
 	       ;; inheritance,, so just copy the widget keymap since
 	       ;; it's unlikely to change.
