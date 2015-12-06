@@ -472,19 +472,11 @@ else
 fi
 
 if [ -z "${EMACSLISPDIR}" ]; then
-    if pkg-config --exists emacs; then
-	EMACSLISPDIR=$(pkg-config emacs --variable sitepkglispdir)
-    else
-	EMACSLISPDIR='$(prefix)/share/emacs/site-lisp'
-    fi
+    EMACSLISPDIR='$(prefix)/share/emacs/site-lisp'
 fi
 
 if [ -z "${EMACSETCDIR}" ]; then
-    if pkg-config --exists emacs; then
-	EMACSETCDIR=$(pkg-config emacs --variable sitepkglispdir)
-    else
-	EMACSETCDIR='$(prefix)/share/emacs/site-lisp'
-    fi
+    EMACSETCDIR='$(prefix)/share/emacs/site-lisp'
 fi
 
 printf "Checking if emacs is available... "
