@@ -575,6 +575,22 @@ class Database(object):
         """
         return Query(self, querystring)
 
+    """notmuch_database_status_string"""
+    _status_string = nmlib.notmuch_database_status_string
+    _status_string.argtypes = [NotmuchDatabaseP]
+    _status_string.restype = c_char_p
+
+    def status_string(self):
+        """Returns the status string of the database
+
+        This is sometimes used for additional error reporting
+        """
+        self._assert_db_is_initialized()
+        s = Database._status_string(self._db)
+        if s:
+            return s.decode('utf-8', 'ignore')
+        return s
+
     def __repr__(self):
         return "'Notmuch DB " + self.get_path() + "'"
 
