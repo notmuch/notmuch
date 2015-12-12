@@ -123,7 +123,7 @@ class Filenames(Python3StringMixIn):
         return "\n".join(self)
 
     _destroy = nmlib.notmuch_filenames_destroy
-    _destroy.argtypes = [NotmuchMessageP]
+    _destroy.argtypes = [NotmuchFilenamesP]
     _destroy.restype = None
 
     def __del__(self):
