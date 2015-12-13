@@ -1,3 +1,9 @@
+notmuch (0.21-3~bpo8+1) jessie-backports; urgency=medium
+
+  * Rebuild for jessie-backports.
+
+ -- David Bremner <bremner@debian.org>  Sun, 13 Dec 2015 08:40:37 -0400
+
 notmuch (0.21-3) unstable; urgency=medium
 
   * Add mips and mips64el to gdb build-dep blacklist
