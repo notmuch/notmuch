@@ -61,10 +61,6 @@
 (require 'notmuch-message)
 (require 'notmuch-parser)
 
-(unless (require 'notmuch-version nil t)
-  (defconst notmuch-emacs-version "unknown"
-    "Placeholder variable when notmuch-version.el[c] is not available."))
-
 (defcustom notmuch-search-result-format
   `(("date" . "%12s ")
     ("count" . "%-7s ")
@@ -181,6 +177,7 @@ there will be called at other points of notmuch execution."
 (defvar notmuch-search-stash-map
   (let ((map (make-sparse-keymap)))
     (define-key map "i" 'notmuch-search-stash-thread-id)
+    (define-key map "q" 'notmuch-stash-query)
     (define-key map "?" 'notmuch-subkeymap-help)
     map)
   "Submap for stash commands")
@@ -190,6 +187,11 @@ there will be called at other points of notmuch execution."
   "Copy thread ID of current thread to kill-ring."
   (interactive)
   (notmuch-common-do-stash (notmuch-search-find-thread-id)))
+
+(defun notmuch-stash-query ()
+  "Copy current query to kill-ring."
+  (interactive)
+  (notmuch-common-do-stash (notmuch-search-get-query)))
 
 (defvar notmuch-search-query-string)
 (defvar notmuch-search-target-thread)
@@ -855,13 +857,15 @@ See `notmuch-tag' for information on the format of TAG-CHANGES."
   "Read a notmuch-query from the minibuffer with completion.
 
 PROMPT is the string to prompt with."
-  (lexical-let
-      ((completions
-	(append (list "folder:" "path:" "thread:" "id:" "date:" "from:" "to:"
-		      "subject:" "attachment:" "mimetype:")
-		(mapcar (lambda (tag)
-			  (concat "tag:" (notmuch-escape-boolean-term tag)))
-			(process-lines notmuch-command "search" "--output=tags" "*")))))
+  (lexical-let*
+      ((all-tags
+        (mapcar (lambda (tag) (notmuch-escape-boolean-term tag))
+                (process-lines notmuch-command "search" "--output=tags" "*")))
+       (completions
+	 (append (list "folder:" "path:" "thread:" "id:" "date:" "from:" "to:"
+		       "subject:" "attachment:" "mimetype:")
+		 (mapcar (lambda (tag) (concat "tag:" tag)) all-tags)
+		 (mapcar (lambda (tag) (concat "is:" tag)) all-tags))))
     (let ((keymap (copy-keymap minibuffer-local-map))
 	  (current-query (case major-mode
 			   (notmuch-search-mode (notmuch-search-get-query))
@@ -974,18 +978,28 @@ default sort order is defined by `notmuch-search-oldest-first'."
   (set 'notmuch-search-oldest-first (not notmuch-search-oldest-first))
   (notmuch-search-refresh-view))
 
+(defun notmuch-group-disjunctive-query-string (query-string)
+  "Group query if it contains a complex expression.
+
+Enclose QUERY-STRING in parentheses if it matches
+`notmuch-search-disjunctive-regexp'."
+  (if (string-match-p notmuch-search-disjunctive-regexp query-string)
+      (concat "( " query-string " )")
+    query-string))
+
 (defun notmuch-search-filter (query)
   "Filter the current search results based on an additional query string.
 
 Runs a new search matching only messages that match both the
 current search results AND the additional query string provided."
   (interactive (list (notmuch-read-query "Filter search: ")))
-  (let ((grouped-query (if (string-match-p notmuch-search-disjunctive-regexp query)
-			   (concat "( " query " )")
-			 query)))
-    (notmuch-search (if (string= notmuch-search-query-string "*")
+  (let ((grouped-query (notmuch-group-disjunctive-query-string query))
+	(grouped-original-query (notmuch-group-disjunctive-query-string
+				 notmuch-search-query-string)))
+    (notmuch-search (if (string= grouped-original-query "*")
 			grouped-query
-		      (concat notmuch-search-query-string " and " grouped-query)) notmuch-search-oldest-first)))
+		      (concat grouped-original-query " and " grouped-query))
+		    notmuch-search-oldest-first)))
 
 (defun notmuch-search-filter-by-tag (tag)
   "Filter the current search results based on a single tag.

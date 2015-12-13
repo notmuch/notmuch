@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 test_description="emacs notmuch-show charset handling"
-. ./test-lib.sh
+. ./test-lib.sh || exit 1
 
 
 UTF8_YEN=$'\xef\xbf\xa5'

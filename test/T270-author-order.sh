@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 test_description="author reordering;"
-. ./test-lib.sh
+. ./test-lib.sh || exit 1
 
 test_begin_subtest "Adding parent message"
 generate_message [body]=findme [id]=new-parent-id [subject]=author-reorder-threadtest '[from]="User <user@example.com>"' '[date]="Sat, 01 Jan 2000 12:00:00 -0000"'

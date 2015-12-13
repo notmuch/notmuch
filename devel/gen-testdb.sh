@@ -79,7 +79,7 @@ while getopts v:c:s: opt; do
 done
 shift `expr $OPTIND - 1`
 
-. ./test-lib.sh
+. ./test-lib.sh || exit 1
 
 SHORT_CORPUS=$(basename ${CORPUS:-database})
 DBNAME=${SHORT_CORPUS}${SUFFIX}

@@ -2,7 +2,7 @@
 
 test_description="maildir synchronization"
 
-. ./test-lib.sh
+. ./test-lib.sh || exit 1
 
 # Create the expected maildir structure
 mkdir $MAIL_DIR/cur

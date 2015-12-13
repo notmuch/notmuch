@@ -1,0 +1,21 @@
+# -*- makefile -*-
+
+dir := bindings
+
+# force the shared library to be built
+ruby-bindings: lib/$(LINKER_NAME)
+ifeq ($(HAVE_RUBY_DEV),1)
+	cd $(dir)/ruby && \
+		EXTRA_LDFLAGS="$(NO_UNDEFINED_LDFLAGS)" \
+		LIBNOTMUCH="../../lib/$(LINKER_NAME)" \
+		ruby extconf.rb --vendor
+	$(MAKE) -C $(dir)/ruby
+else
+	@echo Missing dependency, skipping ruby bindings
+endif
+
+CLEAN += $(patsubst %,$(dir)/ruby/%, \
+	.RUBYARCHDIR.time \
+	Makefile database.o directory.o filenames.o\
+	init.o message.o messages.o mkmf.log notmuch.so query.o \
+	status.o tags.o thread.o threads.o)

@@ -21,6 +21,7 @@ srcdir=$(dirname "$0")
 
 subdirs="util compat lib parse-time-string completion doc emacs"
 subdirs="${subdirs} performance-test test test/test-databases"
+subdirs="${subdirs} bindings"
 
 # For a non-srcdir configure invocation (such as ../configure), create
 # the directory structure and copy Makefiles.
@@ -37,7 +38,7 @@ if [ "$srcdir" != "." ]; then
     cp -a "$srcdir"/test/* test
 
     # Emacs only likes to generate compiled files next to the .el files
-    # by default so copy these as well (which is not ideal0.
+    # by default so copy these as well (which is not ideal).
     cp -a "$srcdir"/emacs/*.el emacs
 fi
 
@@ -47,9 +48,11 @@ CC=${CC:-cc}
 CXX=${CXX:-c++}
 CFLAGS=${CFLAGS:--g -O2}
 CPPFLAGS=${CPPFLAGS:-}
+CXXFLAGS_for_sh=${CXXFLAGS:-${CFLAGS}}
 CXXFLAGS=${CXXFLAGS:-\$(CFLAGS)}
 LDFLAGS=${LDFLAGS:-}
 XAPIAN_CONFIG=${XAPIAN_CONFIG:-xapian-config}
+PYTHON=${PYTHON:-}
 
 # We don't allow the EMACS or GZIP Makefile variables inherit values
 # from the environment as we do with CC and CXX above. The reason is
@@ -62,19 +65,11 @@ XAPIAN_CONFIG=${XAPIAN_CONFIG:-xapian-config}
 # options.
 PREFIX=/usr/local
 LIBDIR=
+WITH_DOCS=1
 WITH_EMACS=1
 WITH_BASH=1
+WITH_RUBY=1
 WITH_ZSH=1
-
-# Compatible GMime versions (with constraints).
-# If using GMime 2.6, we need to have a version >= 2.6.5 to avoid a
-# crypto bug. We need 2.6.7 for permissive "From " header handling.
-GMIME_24_VERSION_CTR=''
-GMIME_24_VERSION="gmime-2.4 $GMIME_24_VERSION_CTR"
-GMIME_26_VERSION_CTR='>= 2.6.7'
-GMIME_26_VERSION="gmime-2.6 $GMIME_26_VERSION_CTR"
-
-WITH_GMIME_VERSIONS="$GMIME_26_VERSION;$GMIME_24_VERSION"
 
 usage ()
 {
@@ -95,7 +90,7 @@ First, some common variables can specified via environment variables:
 
 	CC		The C compiler to use
 	CFLAGS		Flags to pass to the C compiler
-        CPPFLAGS	Flags to pass to the C preprocessor
+	CPPFLAGS	Flags to pass to the C preprocessor
 	CXX		The C++ compiler to use
 	CXXFLAGS	Flags to pass to the C compiler
 	LDFLAGS		Flags to pass when linking
@@ -109,6 +104,8 @@ Other environment variables can be used to control configure itself,
 	XAPIAN_CONFIG	The program to use to determine flags for
 			compiling and linking against the Xapian
 			library. [$XAPIAN_CONFIG]
+	PYTHON		Name of python command to use in
+			configure and the test suite.
 
 Additionally, various options can be specified on the configure
 command line.
@@ -133,15 +130,13 @@ Fine tuning of some installation directories is available:
 	--bashcompletiondir=DIR Bash completions files [SYSCONFDIR/bash_completion.d]
 	--zshcompletiondir=DIR	Zsh completions files [PREFIX/share/zsh/functions/Completion/Unix]
 
-Some specific library versions can be specified (auto-detected otherwise):
-
-        --with-gmime-version=VERS       Specify GMIME version (2.4 or 2.6)
-
 Some features can be disabled (--with-feature=no is equivalent to
 --without-feature) :
 
-	--without-emacs			Do not install lisp file
 	--without-bash-completion	Do not install bash completions files
+	--without-docs			Do not install documentation and man pages
+	--without-emacs			Do not install lisp file
+	--without-ruby			Do not install ruby bindings
 	--without-zsh-completion	Do not install zsh completions files
 
 Additional options are accepted for compatibility with other
@@ -182,6 +177,14 @@ for option; do
 	BASHCOMPLETIONDIR="${option#*=}"
     elif [ "${option%%=*}" = '--zshcompletiondir' ] ; then
 	ZSHCOMLETIONDIR="${option#*=}"
+    elif [ "${option%%=*}" = '--with-docs' ]; then
+	if [ "${option#*=}" = 'no' ]; then
+	    WITH_DOCS=0
+	else
+	    WITH_DOCS=1
+	fi
+    elif [ "${option}" = '--without-docs' ] ; then
+	WITH_DOCS=0
     elif [ "${option%%=*}" = '--with-emacs' ]; then
 	if [ "${option#*=}" = 'no' ]; then
 	    WITH_EMACS=0
@@ -198,6 +201,14 @@ for option; do
 	fi
     elif [ "${option}" = '--without-bash-completion' ] ; then
 	WITH_BASH=0
+    elif [ "${option%%=*}" = '--with-ruby' ]; then
+	if [ "${option#*=}" = 'no' ]; then
+	    WITH_RUBY=0
+	else
+	    WITH_RUBY=1
+	fi
+    elif [ "${option}" = '--without-ruby' ] ; then
+	WITH_RUBY=0
     elif [ "${option%%=*}" = '--with-zsh-completion' ]; then
 	if [ "${option#*=}" = 'no' ]; then
 	    WITH_ZSH=0
@@ -206,12 +217,6 @@ for option; do
 	fi
     elif [ "${option}" = '--without-zsh-completion' ] ; then
 	WITH_ZSH=0
-    elif [ "${option%%=*}" = '--with-gmime-version' ] ; then
-	if [ "${option#*=}" = '2.4' ]; then
-	     WITH_GMIME_VERSIONS=$GMIME_24_VERSION
-	 elif [ "${option#*=}" = '2.6' ]; then
-	     WITH_GMIME_VERSIONS=$GMIME_26_VERSION
-	fi
     elif [ "${option%%=*}" = '--build' ] ; then
 	true
     elif [ "${option%%=*}" = '--host' ] ; then
@@ -269,6 +274,64 @@ dependencies are available:
 EOF
 
 errors=0
+printf "int main(void){return 0;}\n" > minimal.c
+
+printf "Sanity checking C compilation environment... "
+if ${CC} ${CFLAGS} ${CPPFLAGS} minimal.c ${LDFLAGS} -o minimal > /dev/null 2>&1
+then
+    printf "OK.\n"
+else
+    printf "Fail.\n"
+    errors=$((errors + 1))
+fi
+
+printf "Sanity checking C++ compilation environment... "
+if ${CXX} ${CXXFLAGS_for_sh} ${CPPFLAGS} minimal.c ${LDFLAGS} -o minimal > /dev/null 2>&1
+then
+    printf "OK.\n"
+else
+    printf "Fail.\n"
+    errors=$((errors + 1))
+fi
+
+if [ $errors -gt 0 ]; then
+    cat <<EOF
+*** Error: Initial sanity checking of environment failed.  Please try
+running configure in a clean environment, and if the problem persists,
+report a bug.
+EOF
+    rm -f minimal minimal.c
+    exit 1
+fi
+
+printf "Reading libnotmuch version from source... "
+cat > _libversion.c <<EOF
+#include <stdio.h>
+#include "lib/notmuch.h"
+int main(void) {
+    printf("libnotmuch_version_major=%d\n",
+		LIBNOTMUCH_MAJOR_VERSION);
+    printf("libnotmuch_version_minor=%d\n",
+		LIBNOTMUCH_MINOR_VERSION);
+    printf("libnotmuch_version_release=%d\n",
+		LIBNOTMUCH_MICRO_VERSION);
+    return 0;
+}
+EOF
+if ${CC} ${CFLAGS} _libversion.c -o _libversion > /dev/null 2>&1 && \
+       ./_libversion > _libversion.sh && . ./_libversion.sh
+then
+    printf "OK.\n"
+else
+    cat <<EOF
+
+*** Error: Reading lib/notmuch.h failed.
+Please try running configure again in a clean environment, and if the
+problem persists, report a bug.
+EOF
+    rm -f _libversion _libversion.c _libversion.sh
+    exit 1
+fi
 
 if pkg-config --version > /dev/null 2>&1; then
     have_pkg_config=1
@@ -298,30 +361,29 @@ have_xapian_compact=0
 if [ ${have_xapian} = "1" ]; then
     printf "Checking for Xapian compaction support... "
     case "${xapian_version}" in
-        0.*|1.[01].*|1.2.[0-5])
-            printf "No (only available with Xapian > 1.2.6).\n" ;;
-        [1-9]*.[0-9]*.[0-9]*)
-            have_xapian_compact=1
-            printf "Yes.\n" ;;
-        *)
-            printf "Unknown version.\n" ;;
+	0.*|1.[01].*|1.2.[0-5])
+	    printf "No (only available with Xapian > 1.2.6).\n" ;;
+	[1-9]*.[0-9]*.[0-9]*)
+	    have_xapian_compact=1
+	    printf "Yes.\n" ;;
+	*)
+	    printf "Unknown version.\n" ;;
     esac
 fi
 
+
+# we need to have a version >= 2.6.5 to avoid a crypto bug. We need
+# 2.6.7 for permissive "From " header handling.
+GMIME_MINVER=2.6.7
+
 printf "Checking for GMime development files... "
-have_gmime=0
-IFS=';'
-for gmimepc in $WITH_GMIME_VERSIONS; do
-    if pkg-config --exists $gmimepc; then
-	printf "Yes ($gmimepc).\n"
-	have_gmime=1
-	gmime_cflags=$(pkg-config --cflags $gmimepc)
-	gmime_ldflags=$(pkg-config --libs $gmimepc)
-	break
-    fi
-done
-IFS=$DEFAULT_IFS
-if [ "$have_gmime" = "0" ]; then
+if pkg-config --exists "gmime-2.6 >= $GMIME_MINVER"; then
+    printf "Yes.\n"
+    have_gmime=1
+    gmime_cflags=$(pkg-config --cflags gmime-2.6)
+    gmime_ldflags=$(pkg-config --libs gmime-2.6)
+else
+    have_gmime=0
     printf "No.\n"
     errors=$((errors + 1))
 fi
@@ -377,7 +439,7 @@ fi
 printf "Checking for python... "
 have_python=0
 
-for name in python python2 python3; do
+for name in ${PYTHON} python python2 python3; do
     if command -v $name > /dev/null; then
 	have_python=1
 	python=$name
@@ -434,22 +496,37 @@ else
     have_emacs=0
 fi
 
-printf "Checking if doxygen is available... "
-if command -v doxygen > /dev/null; then
-    printf "Yes.\n"
-    have_doxygen=1
-else
-    printf "No (so will not install api docs)\n"
-    have_doxygen=0
+have_doxygen=0
+if [ $WITH_DOCS = "1" ] ; then
+    printf "Checking if doxygen is available... "
+    if command -v doxygen > /dev/null; then
+	printf "Yes.\n"
+	have_doxygen=1
+    else
+	printf "No (so will not install api docs)\n"
+    fi
 fi
 
-printf "Checking if sphinx is available and supports nroff output... "
-if command -v sphinx-build > /dev/null && ${python} -m sphinx.writers.manpage > /dev/null 2>&1 ; then
-    printf "Yes.\n"
-    have_sphinx=1
-else
-    printf "No (so will not install man pages).\n"
-    have_sphinx=0
+have_ruby_dev=0
+if [ $WITH_RUBY = "1" ] ; then
+    printf "Checking for ruby development files... "
+    if ruby -e "require 'mkmf'"> /dev/null 2>&1; then
+	printf "Yes.\n"
+	have_ruby_dev=1
+    else
+	printf "No (skipping ruby bindings)\n"
+    fi
+fi
+
+have_sphinx=0
+if [ $WITH_DOCS = "1" ] ; then
+    printf "Checking if sphinx is available and supports nroff output... "
+    if command -v sphinx-build > /dev/null && ${python} -m sphinx.writers.manpage > /dev/null 2>&1 ; then
+	printf "Yes.\n"
+	have_sphinx=1
+    else
+	printf "No (so will not install man pages).\n"
+    fi
 fi
 
 libdir_in_ldconfig=0
@@ -542,7 +619,7 @@ EOF
 	echo
     fi
     if [ $have_gmime -eq 0 ]; then
-	echo "	Either GMime 2.4 library" $GMIME_24_VERSION_CTR "or GMime 2.6 library" $GMIME_26_VERSION_CTR
+	echo "	GMime 2.6 library >= $GMIME_MINVER"
 	echo "	(including development files such as headers)"
 	echo "	http://spruce.sourceforge.net/gmime/"
 	echo
@@ -690,8 +767,6 @@ else
 fi
 rm -f compat/check_asctime
 
-printf "int main(void){return 0;}\n" > minimal.c
-
 printf "Checking for rpath support... "
 if ${CC} -Wl,--enable-new-dtags -Wl,-rpath,/tmp/ -o minimal minimal.c >/dev/null 2>&1
 then
@@ -710,6 +785,16 @@ then
 else
     printf "No (nothing to worry about).\n"
     as_needed_ldflags=""
+fi
+
+printf "Checking for -Wl,--no-undefined... "
+if ${CC} -Wl,--no-undefined -o minimal minimal.c >/dev/null 2>&1
+then
+    printf "Yes.\n"
+    no_undefined_ldflags="-Wl,--no-undefined"
+else
+    printf "No (nothing to worry about).\n"
+    no_undefined_ldflags=""
 fi
 
 WARN_CXXFLAGS=""
@@ -732,7 +817,7 @@ for flag in -Wmissing-declarations; do
 done
 printf "\n\t${WARN_CFLAGS}\n"
 
-rm -f minimal minimal.c
+rm -f minimal minimal.c _libversion.c _libversion _libversion.sh
 
 # construct the Makefile.config
 cat > Makefile.config <<EOF
@@ -769,6 +854,28 @@ vpath %.cc \$(srcdir)
 vpath Makefile.% \$(srcdir)
 vpath %.py \$(srcdir)
 vpath %.rst \$(srcdir)
+
+# Library versions (used to make SONAME)
+# The major version of the library interface. This will control the soname.
+# As such, this number must be incremented for any incompatible change to
+# the library interface, (such as the deletion of an API or a major
+# semantic change that breaks formerly functioning code).
+#
+LIBNOTMUCH_VERSION_MAJOR = ${libnotmuch_version_major}
+
+# The minor version of the library interface. This should be incremented at
+# the time of release for any additions to the library interface,
+# (and when it is incremented, the release version of the library should
+#  be reset to 0).
+LIBNOTMUCH_VERSION_MINOR = ${libnotmuch_version_minor}
+
+# The release version the library interface. This should be incremented at
+# the time of release if there have been no changes to the interface, (but
+# simply compatible changes to the implementation).
+LIBNOTMUCH_VERSION_RELEASE = ${libnotmuch_version_release}
+
+# These are derived from the VERSION macros in lib/notmuch.h so
+# if you have to change them, something is wrong.
 
 # The C compiler to use
 CC = ${CC}
@@ -858,6 +965,10 @@ HAVE_CANONICALIZE_FILE_NAME = ${have_canonicalize_file_name}
 # build its own version)
 HAVE_GETLINE = ${have_getline}
 
+# Are the ruby development files (and ruby) available? If not skip
+# building/testing ruby bindings.
+HAVE_RUBY_DEV = ${have_ruby_dev}
+
 # Whether the strcasestr function is available (if not, then notmuch will
 # build its own version)
 HAVE_STRCASESTR = ${have_strcasestr}
@@ -894,7 +1005,7 @@ LINKER_RESOLVES_LIBRARY_DEPENDENCIES = ${linker_resolves_library_dependencies}
 XAPIAN_CXXFLAGS = ${xapian_cxxflags}
 XAPIAN_LDFLAGS = ${xapian_ldflags}
 
-# Flags needed to compile and link against GMime-2.4
+# Flags needed to compile and link against GMime
 GMIME_CFLAGS = ${gmime_cflags}
 GMIME_LDFLAGS = ${gmime_ldflags}
 
@@ -911,6 +1022,9 @@ RPATH_LDFLAGS = ${rpath_ldflags}
 
 # Flags needed to have linker link only to necessary libraries
 AS_NEEDED_LDFLAGS = ${as_needed_ldflags}
+
+# Flags to have the linker flag undefined symbols in object files
+NO_UNDEFINED_LDFLAGS = ${no_undefined_ldflags}
 
 # Whether valgrind header files are available
 HAVE_VALGRIND = ${have_valgrind}
@@ -970,6 +1084,10 @@ NOTMUCH_HAVE_MAN=$((have_sphinx))
 
 # Name of python interpreter
 NOTMUCH_PYTHON=${python}
+
+# Are the ruby development files (and ruby) available? If not skip
+# building/testing ruby bindings.
+NOTMUCH_HAVE_RUBY_DEV=${have_ruby_dev}
 EOF
 
 # Finally, after everything configured, inform the user how to continue.

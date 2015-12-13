@@ -33,17 +33,19 @@ enum {
     EXCLUDE_FALSE,
 };
 
-static unsigned int
+/* Return the number of files matching the query, or -1 for an error */
+static int
 count_files (notmuch_query_t *query)
 {
     notmuch_messages_t *messages;
     notmuch_message_t *message;
     notmuch_filenames_t *filenames;
-    unsigned int count = 0;
+    notmuch_status_t status;
+    int count = 0;
 
-    messages = notmuch_query_search_messages (query);
-    if (messages == NULL)
-	return 0;
+    status = notmuch_query_search_messages_st (query, &messages);
+    if (print_status_query ("notmuch count", query, status))
+	return -1;
 
     for (;
 	 notmuch_messages_valid (messages);
@@ -65,17 +67,24 @@ count_files (notmuch_query_t *query)
     return count;
 }
 
+/* return 0 on success, -1 on failure */
 static int
 print_count (notmuch_database_t *notmuch, const char *query_str,
-	     const char **exclude_tags, size_t exclude_tags_length, int output)
+	     const char **exclude_tags, size_t exclude_tags_length, int output, int print_lastmod)
 {
     notmuch_query_t *query;
     size_t i;
+    int count;
+    unsigned int ucount;
+    unsigned long revision;
+    const char *uuid;
+    int ret = 0;
+    notmuch_status_t status;
 
     query = notmuch_query_create (notmuch, query_str);
     if (query == NULL) {
 	fprintf (stderr, "Out of memory\n");
-	return 1;
+	return -1;
     }
 
     for (i = 0; i < exclude_tags_length; i++)
@@ -83,34 +92,54 @@ print_count (notmuch_database_t *notmuch, const char *query_str,
 
     switch (output) {
     case OUTPUT_MESSAGES:
-	printf ("%u\n", notmuch_query_count_messages (query));
+	status = notmuch_query_count_messages_st (query, &ucount);
+	if (print_status_query ("notmuch count", query, status))
+	    return -1;
+	printf ("%u", ucount);
 	break;
     case OUTPUT_THREADS:
-	printf ("%u\n", notmuch_query_count_threads (query));
+	status = notmuch_query_count_threads_st (query, &ucount);
+	if (print_status_query ("notmuch count", query, status))
+	    return -1;
+	printf ("%u", ucount);
 	break;
     case OUTPUT_FILES:
-	printf ("%u\n", count_files (query));
+	count = count_files (query);
+	if (count >= 0) {
+	    printf ("%u", count);
+	} else {
+	    ret = -1;
+	    goto DONE;
+	}
 	break;
     }
 
+    if (print_lastmod) {
+	revision = notmuch_database_get_revision (notmuch, &uuid);
+	printf ("\t%s\t%lu\n", uuid, revision);
+    } else {
+	fputs ("\n", stdout);
+    }
+
+  DONE:
     notmuch_query_destroy (query);
 
-    return 0;
+    return ret;
 }
 
 static int
 count_file (notmuch_database_t *notmuch, FILE *input, const char **exclude_tags,
-	    size_t exclude_tags_length, int output)
+	    size_t exclude_tags_length, int output, int print_lastmod)
 {
     char *line = NULL;
     ssize_t line_len;
     size_t line_size;
     int ret = 0;
 
-    while (!ret && (line_len = getline (&line, &line_size, input)) != -1) {
+    while (! ret && (line_len = getline (&line, &line_size, input)) != -1) {
 	chomp_newline (line);
 	ret = print_count (notmuch, line, exclude_tags, exclude_tags_length,
-			   output);
+			   output, print_lastmod);
     }
 
     if (line)
@@ -130,6 +159,7 @@ notmuch_count_command (notmuch_config_t *config, int argc, char *argv[])
     const char **search_exclude_tags = NULL;
     size_t search_exclude_tags_length = 0;
     notmuch_bool_t batch = FALSE;
+    notmuch_bool_t print_lastmod = FALSE;
     FILE *input = stdin;
     char *input_file_name = NULL;
     int ret;
@@ -144,14 +174,18 @@ notmuch_count_command (notmuch_config_t *config, int argc, char *argv[])
 	  (notmuch_keyword_t []){ { "true", EXCLUDE_TRUE },
 				  { "false", EXCLUDE_FALSE },
 				  { 0, 0 } } },
+	{ NOTMUCH_OPT_BOOLEAN, &print_lastmod, "lastmod", 'l', 0 },
 	{ NOTMUCH_OPT_BOOLEAN, &batch, "batch", 0, 0 },
 	{ NOTMUCH_OPT_STRING, &input_file_name, "input", 'i', 0 },
+	{ NOTMUCH_OPT_INHERIT, (void *) &notmuch_shared_options, NULL, 0, 0 },
 	{ 0, 0, 0, 0, 0 }
     };
 
     opt_index = parse_arguments (argc, argv, options, 1);
     if (opt_index < 0)
 	return EXIT_FAILURE;
+
+    notmuch_process_shared_options (argv[0]);
 
     if (input_file_name) {
 	batch = TRUE;
@@ -172,7 +206,9 @@ notmuch_count_command (notmuch_config_t *config, int argc, char *argv[])
 			       NOTMUCH_DATABASE_MODE_READ_ONLY, &notmuch))
 	return EXIT_FAILURE;
 
-    query_str = query_string_from_args (config, argc-opt_index, argv+opt_index);
+    notmuch_exit_if_unmatched_db_uuid (notmuch);
+
+    query_str = query_string_from_args (config, argc - opt_index, argv + opt_index);
     if (query_str == NULL) {
 	fprintf (stderr, "Out of memory.\n");
 	return EXIT_FAILURE;
@@ -185,10 +221,10 @@ notmuch_count_command (notmuch_config_t *config, int argc, char *argv[])
 
     if (batch)
 	ret = count_file (notmuch, input, search_exclude_tags,
-			  search_exclude_tags_length, output);
+			  search_exclude_tags_length, output, print_lastmod);
     else
 	ret = print_count (notmuch, query_str, search_exclude_tags,
-			   search_exclude_tags_length, output);
+			   search_exclude_tags_length, output, print_lastmod);
 
     notmuch_database_destroy (notmuch);
 

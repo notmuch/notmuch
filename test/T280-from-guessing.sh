@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 test_description="From line heuristics (with multiple configured addresses)"
-. ./test-lib.sh
+. ./test-lib.sh || exit 1
 
 test_begin_subtest "Magic from guessing (nothing to go on)"
 add_message '[from]="Sender <sender@example.com>"' \

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 test_description='"notmuch search" by folder: and path: (with variations)'
-. ./test-lib.sh
+. ./test-lib.sh || exit 1
 
 add_message '[dir]=bad' '[subject]="To the bone"'
 add_message '[dir]=.' '[subject]="Top level"'

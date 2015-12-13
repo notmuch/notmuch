@@ -1,27 +1,27 @@
 #!/usr/bin/env bash
 test_description='"notmuch new" in several variations'
-. ./test-lib.sh
+. ./test-lib.sh || exit 1
 
 test_begin_subtest "No new messages"
-output=$(NOTMUCH_NEW)
+output=$(NOTMUCH_NEW --debug)
 test_expect_equal "$output" "No new mail."
 
 
 test_begin_subtest "Single new message"
 generate_message
-output=$(NOTMUCH_NEW)
+output=$(NOTMUCH_NEW --debug)
 test_expect_equal "$output" "Added 1 new message to the database."
 
 
 test_begin_subtest "Multiple new messages"
 generate_message
 generate_message
-output=$(NOTMUCH_NEW)
+output=$(NOTMUCH_NEW --debug)
 test_expect_equal "$output" "Added 2 new messages to the database."
 
 
 test_begin_subtest "No new messages (non-empty DB)"
-output=$(NOTMUCH_NEW)
+output=$(NOTMUCH_NEW --debug)
 test_expect_equal "$output" "No new mail."
 
 
@@ -31,7 +31,7 @@ mkdir "${MAIL_DIR}"/def
 mkdir "${MAIL_DIR}"/ghi
 generate_message [dir]=def
 
-output=$(NOTMUCH_NEW)
+output=$(NOTMUCH_NEW --debug)
 test_expect_equal "$output" "Added 1 new message to the database."
 
 
@@ -42,7 +42,7 @@ mv "${MAIL_DIR}"/ghi "${MAIL_DIR}"/abc
 rm "${MAIL_DIR}"/def/*
 generate_message [dir]=abc
 
-output=$(NOTMUCH_NEW)
+output=$(NOTMUCH_NEW --debug)
 test_expect_equal "$output" "Added 1 new message to the database."
 
 
@@ -54,7 +54,7 @@ mkdir -p "$(dirname "$tmp_msg_filename")"
 mv "$gen_msg_filename" "$tmp_msg_filename"
 notmuch new > /dev/null
 mv "$tmp_msg_filename" "$gen_msg_filename"
-output=$(NOTMUCH_NEW)
+output=$(NOTMUCH_NEW --debug)
 test_expect_equal "$output" "Added 1 new message to the database."
 
 
@@ -63,15 +63,18 @@ test_begin_subtest "Renamed message"
 generate_message
 notmuch new > /dev/null
 mv "$gen_msg_filename" "${gen_msg_filename}"-renamed
-output=$(NOTMUCH_NEW)
-test_expect_equal "$output" "No new mail. Detected 1 file rename."
+output=$(NOTMUCH_NEW --debug)
+test_expect_equal "$output" "(D) add_files_recursive, pass 2: queuing passed file ${gen_msg_filename} for deletion from database
+No new mail. Detected 1 file rename."
 
 
 test_begin_subtest "Deleted message"
 
 rm "${gen_msg_filename}"-renamed
-output=$(NOTMUCH_NEW)
-test_expect_equal "$output" "No new mail. Removed 1 message."
+output=$(NOTMUCH_NEW --debug)
+test_expect_equal "$output" "(D) add_files_recursive, pass 3: queuing leftover file ${gen_msg_filename}-renamed for deletion from database
+No new mail. Removed 1 message."
+
 
 
 test_begin_subtest "Renamed directory"
@@ -84,16 +87,17 @@ notmuch new > /dev/null
 
 mv "${MAIL_DIR}"/dir "${MAIL_DIR}"/dir-renamed
 
-output=$(NOTMUCH_NEW)
-test_expect_equal "$output" "No new mail. Detected 3 file renames."
+output=$(NOTMUCH_NEW --debug)
+test_expect_equal "$output" "(D) add_files_recursive, pass 2: queuing passed directory ${MAIL_DIR}/dir for deletion from database
+No new mail. Detected 3 file renames."
 
 
 test_begin_subtest "Deleted directory"
-
 rm -rf "${MAIL_DIR}"/dir-renamed
 
-output=$(NOTMUCH_NEW)
-test_expect_equal "$output" "No new mail. Removed 3 messages."
+output=$(NOTMUCH_NEW --debug)
+test_expect_equal "$output" "(D) add_files_recursive, pass 2: queuing passed directory ${MAIL_DIR}/dir-renamed for deletion from database
+No new mail. Removed 3 messages."
 
 
 test_begin_subtest "New directory (at end of list)"
@@ -102,7 +106,7 @@ generate_message [dir]=zzz
 generate_message [dir]=zzz
 generate_message [dir]=zzz
 
-output=$(NOTMUCH_NEW)
+output=$(NOTMUCH_NEW --debug)
 test_expect_equal "$output" "Added 3 new messages to the database."
 
 
@@ -110,8 +114,9 @@ test_begin_subtest "Deleted directory (end of list)"
 
 rm -rf "${MAIL_DIR}"/zzz
 
-output=$(NOTMUCH_NEW)
-test_expect_equal "$output" "No new mail. Removed 3 messages."
+output=$(NOTMUCH_NEW --debug)
+test_expect_equal "$output" "(D) add_files_recursive, pass 3: queuing leftover directory ${MAIL_DIR}/zzz for deletion from database
+No new mail. Removed 3 messages."
 
 
 test_begin_subtest "New symlink to directory"
@@ -122,7 +127,7 @@ mv "${MAIL_DIR}" "${TMP_DIRECTORY}"/actual_maildir
 mkdir "${MAIL_DIR}"
 ln -s "${TMP_DIRECTORY}"/actual_maildir "${MAIL_DIR}"/symlink
 
-output=$(NOTMUCH_NEW)
+output=$(NOTMUCH_NEW --debug)
 test_expect_equal "$output" "Added 1 new message to the database."
 
 
@@ -132,13 +137,13 @@ external_msg_filename="${TMP_DIRECTORY}"/external/"$(basename "$gen_msg_filename
 mkdir -p "$(dirname "$external_msg_filename")"
 mv "$gen_msg_filename" "$external_msg_filename"
 ln -s "$external_msg_filename" "$gen_msg_filename"
-output=$(NOTMUCH_NEW)
+output=$(NOTMUCH_NEW --debug)
 test_expect_equal "$output" "Added 1 new message to the database."
 
 
 test_begin_subtest "Broken symlink aborts"
 ln -s does-not-exist "${MAIL_DIR}/broken"
-output=$(NOTMUCH_NEW 2>&1)
+output=$(NOTMUCH_NEW --debug 2>&1)
 test_expect_equal "$output" \
 "Error reading file ${MAIL_DIR}/broken: No such file or directory
 Note: A fatal error was encountered: Something went wrong trying to read or write a file
@@ -152,7 +157,7 @@ generate_message [dir]=two/levels
 generate_message [dir]=two/levels
 generate_message [dir]=two/levels
 
-output=$(NOTMUCH_NEW)
+output=$(NOTMUCH_NEW --debug)
 test_expect_equal "$output" "Added 3 new messages to the database."
 
 
@@ -160,10 +165,11 @@ test_begin_subtest "Deleted two-level directory"
 
 rm -rf "${MAIL_DIR}"/two
 
-output=$(NOTMUCH_NEW)
-test_expect_equal "$output" "No new mail. Removed 3 messages."
+output=$(NOTMUCH_NEW --debug)
+test_expect_equal "$output" "(D) add_files_recursive, pass 3: queuing leftover directory ${MAIL_DIR}/two for deletion from database
+No new mail. Removed 3 messages."
 
-test_begin_subtest "Support single-message mbox (deprecated)"
+test_begin_subtest "Support single-message mbox"
 cat > "${MAIL_DIR}"/mbox_file1 <<EOF
 From test_suite@notmuchmail.org Fri Jan  5 15:43:57 2001
 From: Notmuch Test Suite <test_suite@notmuchmail.org>
@@ -172,7 +178,7 @@ Subject: Test mbox message 1
 
 Body.
 EOF
-output=$(NOTMUCH_NEW 2>&1)
+output=$(NOTMUCH_NEW --debug 2>&1)
 test_expect_equal "$output" "Added 1 new message to the database."
 
 # This test requires that notmuch new has been run at least once.
@@ -196,7 +202,7 @@ Subject: Test mbox message 2
 
 Body 2.
 EOF
-output=$(NOTMUCH_NEW 2>&1)
+output=$(NOTMUCH_NEW --debug 2>&1)
 test_expect_equal "$output" \
 "Note: Ignoring non-mail file: ${MAIL_DIR}/.git/config
 Note: Ignoring non-mail file: ${MAIL_DIR}/.ignored_hidden_file
@@ -263,23 +269,23 @@ OLDCONFIG=$(notmuch config get new.tags)
 
 test_begin_subtest "Empty tags in new.tags are forbidden"
 notmuch config set new.tags "foo;;bar"
-output=$(NOTMUCH_NEW 2>&1)
+output=$(NOTMUCH_NEW --debug 2>&1)
 test_expect_equal "$output" "Error: tag '' in new.tags: empty tag forbidden"
 
 test_begin_subtest "Tags starting with '-' in new.tags are forbidden"
 notmuch config set new.tags "-foo;bar"
-output=$(NOTMUCH_NEW 2>&1)
+output=$(NOTMUCH_NEW --debug 2>&1)
 test_expect_equal "$output" "Error: tag '-foo' in new.tags: tag starting with '-' forbidden"
 
 test_expect_code 1 "Invalid tags set exit code" \
-    "NOTMUCH_NEW 2>&1"
+    "NOTMUCH_NEW --debug 2>&1"
 
 notmuch config set new.tags $OLDCONFIG
 
 
 test_begin_subtest "Xapian exception: read only files"
 chmod u-w  ${MAIL_DIR}/.notmuch/xapian/*.DB
-output=$(NOTMUCH_NEW 2>&1 | sed 's/: .*$//' )
+output=$(NOTMUCH_NEW --debug 2>&1 | sed 's/: .*$//' )
 chmod u+w  ${MAIL_DIR}/.notmuch/xapian/*.DB
 test_expect_equal "$output" "A Xapian exception occurred opening database"
 

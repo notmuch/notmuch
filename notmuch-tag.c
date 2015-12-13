@@ -97,6 +97,8 @@ tag_query (void *ctx, notmuch_database_t *notmuch, const char *query_string,
     notmuch_query_t *query;
     notmuch_messages_t *messages;
     notmuch_message_t *message;
+    notmuch_status_t status;
+
     int ret = NOTMUCH_STATUS_SUCCESS;
 
     if (! (flags & TAG_FLAG_REMOVE_ALL)) {
@@ -119,7 +121,11 @@ tag_query (void *ctx, notmuch_database_t *notmuch, const char *query_string,
     /* tagging is not interested in any special sort order */
     notmuch_query_set_sort (query, NOTMUCH_SORT_UNSORTED);
 
-    for (messages = notmuch_query_search_messages (query);
+    status = notmuch_query_search_messages_st (query, &messages);
+    if (print_status_query ("notmuch tag", query, status))
+	return status;
+
+    for (;
 	 notmuch_messages_valid (messages) && ! interrupted;
 	 notmuch_messages_move_to_next (messages)) {
 	message = notmuch_messages_get (messages);
@@ -195,7 +201,7 @@ notmuch_tag_command (notmuch_config_t *config, int argc, char *argv[])
     int opt_index;
     int ret;
 
-    /* Setup our handler for SIGINT */
+    /* Set up our handler for SIGINT */
     memset (&action, 0, sizeof (struct sigaction));
     action.sa_handler = handle_sigint;
     sigemptyset (&action.sa_mask);
@@ -206,12 +212,15 @@ notmuch_tag_command (notmuch_config_t *config, int argc, char *argv[])
 	{ NOTMUCH_OPT_BOOLEAN, &batch, "batch", 0, 0 },
 	{ NOTMUCH_OPT_STRING, &input_file_name, "input", 'i', 0 },
 	{ NOTMUCH_OPT_BOOLEAN, &remove_all, "remove-all", 0, 0 },
+	{ NOTMUCH_OPT_INHERIT, (void *) &notmuch_shared_options, NULL, 0, 0 },
 	{ 0, 0, 0, 0, 0 }
     };
 
     opt_index = parse_arguments (argc, argv, options, 1);
     if (opt_index < 0)
 	return EXIT_FAILURE;
+
+    notmuch_process_shared_options (argv[0]);
 
     if (input_file_name) {
 	batch = TRUE;
@@ -257,6 +266,8 @@ notmuch_tag_command (notmuch_config_t *config, int argc, char *argv[])
     if (notmuch_database_open (notmuch_config_get_database_path (config),
 			       NOTMUCH_DATABASE_MODE_READ_WRITE, &notmuch))
 	return EXIT_FAILURE;
+
+    notmuch_exit_if_unmatched_db_uuid (notmuch);
 
     if (notmuch_config_get_maildir_synchronize_flags (config))
 	tag_flags |= TAG_FLAG_MAILDIR_SYNC;

@@ -265,7 +265,7 @@ changed (the normal case) are shown using formats from
 (defcustom notmuch-before-tag-hook nil
   "Hooks that are run before tags of a message are modified.
 
-'tags' will contain the tags that are about to be added or removed as
+'tag-changes' will contain the tags that are about to be added or removed as
 a list of strings of the form \"+TAG\" or \"-TAG\".
 'query' will be a string containing the search query that determines
 the messages that are about to be tagged"
@@ -277,7 +277,7 @@ the messages that are about to be tagged"
 (defcustom notmuch-after-tag-hook nil
   "Hooks that are run after tags of a message are modified.
 
-'tags' will contain the tags that were added or removed as
+'tag-changes' will contain the tags that were added or removed as
 a list of strings of the form \"+TAG\" or \"-TAG\".
 'query' will be a string containing the search query that determines
 the messages that were tagged"

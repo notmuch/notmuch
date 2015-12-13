@@ -56,9 +56,11 @@ NOTMUCH_BEGIN_DECLS
  * version in Makefile.local.
  */
 #define LIBNOTMUCH_MAJOR_VERSION	4
-#define LIBNOTMUCH_MINOR_VERSION	2
+#define LIBNOTMUCH_MINOR_VERSION	3
 #define LIBNOTMUCH_MICRO_VERSION	0
 
+#define NOTMUCH_DEPRECATED(major,minor) \
+    __attribute__ ((deprecated ("function deprecated as of libnotmuch " #major "." #minor)))
 #endif /* __DOXYGEN__ */
 
 /**
@@ -163,6 +165,11 @@ typedef enum _notmuch_status {
      * The operation requires a database upgrade.
      */
     NOTMUCH_STATUS_UPGRADE_REQUIRED,
+    /**
+     * There is a problem with the proposed path, e.g. a relative path
+     * passed to a function expecting an absolute path.
+     */
+    NOTMUCH_STATUS_PATH_ERROR,
     /**
      * Not an actual status value. Just a way to find out how many
      * valid status values there are.
@@ -306,7 +313,7 @@ notmuch_database_open_verbose (const char *path,
  *
  */
 const char *
-notmuch_database_status_string (notmuch_database_t *notmuch);
+notmuch_database_status_string (const notmuch_database_t *notmuch);
 
 /**
  * Commit changes and close the given notmuch database.
@@ -459,6 +466,24 @@ notmuch_database_begin_atomic (notmuch_database_t *notmuch);
  */
 notmuch_status_t
 notmuch_database_end_atomic (notmuch_database_t *notmuch);
+
+/**
+ * Return the committed database revision and UUID.
+ *
+ * The database revision number increases monotonically with each
+ * commit to the database.  Hence, all messages and message changes
+ * committed to the database (that is, visible to readers) have a last
+ * modification revision <= the committed database revision.  Any
+ * messages committed in the future will be assigned a modification
+ * revision > the committed database revision.
+ *
+ * The UUID is a NUL-terminated opaque string that uniquely identifies
+ * this database.  Two revision numbers are only comparable if they
+ * have the same database UUID.
+ */
+unsigned long
+notmuch_database_get_revision (notmuch_database_t *notmuch,
+				const char **uuid);
 
 /**
  * Retrieve a directory object from the database for 'path'.
@@ -703,7 +728,13 @@ typedef enum {
  * Return the query_string of this query. See notmuch_query_create.
  */
 const char *
-notmuch_query_get_query_string (notmuch_query_t *query);
+notmuch_query_get_query_string (const notmuch_query_t *query);
+
+/**
+ * Return the notmuch database of this query. See notmuch_query_create.
+ */
+notmuch_database_t *
+notmuch_query_get_database (const notmuch_query_t *query);
 
 /**
  * Exclude values for notmuch_query_set_omit_excluded. The strange
@@ -760,7 +791,7 @@ notmuch_query_set_sort (notmuch_query_t *query, notmuch_sort_t sort);
  * notmuch_query_set_sort.
  */
 notmuch_sort_t
-notmuch_query_get_sort (notmuch_query_t *query);
+notmuch_query_get_sort (const notmuch_query_t *query);
 
 /**
  * Add a tag that will be excluded from the query results by default.
@@ -807,18 +838,24 @@ notmuch_query_add_tag_exclude (notmuch_query_t *query, const char *tag);
  * notmuch_threads_destroy function, but there's no good reason
  * to call it if the query is about to be destroyed).
  *
- * If a Xapian exception occurs this function will return NULL.
- * For better error reporting, use the _st variant.
- */
-notmuch_threads_t *
-notmuch_query_search_threads (notmuch_query_t *query);
-
-/**
- * Like notmuch_query_search_threads, but with a status return.
+ * @since libnotmuch 4.2 (notmuch 0.20)
  */
 notmuch_status_t
 notmuch_query_search_threads_st (notmuch_query_t *query,
 				 notmuch_threads_t **out);
+
+/**
+ * Like notmuch_query_search_threads_st, but without a status return.
+ *
+ * If a Xapian exception occurs this function will return NULL.
+ *
+ * @deprecated Deprecated as of libnotmuch 4.3 (notmuch 0.21). Please
+ * use notmuch_query_search_threads_st instead.
+ *
+ */
+NOTMUCH_DEPRECATED(4,3)
+notmuch_threads_t *
+notmuch_query_search_threads (notmuch_query_t *query);
 
 /**
  * Execute a query for messages, returning a notmuch_messages_t object
@@ -858,17 +895,24 @@ notmuch_query_search_threads_st (notmuch_query_t *query,
  * reason to call it if the query is about to be destroyed).
  *
  * If a Xapian exception occurs this function will return NULL.
- * For better error reporting, use the _st variant.
- */
-notmuch_messages_t *
-notmuch_query_search_messages (notmuch_query_t *query);
-
-/**
- * Like notmuch_query_search_messages, but with a status return.
+ *
+ * @since libnotmuch 4.2 (notmuch 0.20)
  */
 notmuch_status_t
 notmuch_query_search_messages_st (notmuch_query_t *query,
 				  notmuch_messages_t **out);
+/**
+ * Like notmuch_query_search_messages, but without a status return.
+ *
+ * If a Xapian exception occurs this function will return NULL.
+ *
+ * @deprecated Deprecated as of libnotmuch 4.3 (notmuch 0.21). Please use
+ * notmuch_query_search_messages_st instead.
+ *
+ */
+NOTMUCH_DEPRECATED(4,3)
+notmuch_messages_t *
+notmuch_query_search_messages (notmuch_query_t *query);
 
 /**
  * Destroy a notmuch_query_t along with any associated resources.
@@ -942,10 +986,28 @@ notmuch_threads_destroy (notmuch_threads_t *threads);
  * This function performs a search and returns the number of matching
  * messages.
  *
- * If a Xapian exception occurs, this function may return 0 (after
- * printing a message).
+ * @returns
+ *
+ * NOTMUCH_STATUS_SUCCESS: query completed successfully.
+ *
+ * NOTMUCH_STATUS_XAPIAN_EXCEPTION: a Xapian exception occured. The
+ *      value of *count is not defined.
+ *
+ * @since libnotmuch 4.3 (notmuch 0.21)
  */
-unsigned
+notmuch_status_t
+notmuch_query_count_messages_st (notmuch_query_t *query, unsigned int *count);
+
+/**
+ * like notmuch_query_count_messages_st, but without a status return.
+ *
+ * May return 0 in the case of errors.
+ *
+ * @deprecated Deprecated since libnotmuch 4.3 (notmuch 0.21). Please
+ * use notmuch_query_count_messages_st instead.
+ */
+NOTMUCH_DEPRECATED(4,3)
+unsigned int
 notmuch_query_count_messages (notmuch_query_t *query);
 
 /**
@@ -956,11 +1018,33 @@ notmuch_query_count_messages (notmuch_query_t *query);
  * search.
  *
  * Note that this is a significantly heavier operation than
- * notmuch_query_count_messages().
+ * notmuch_query_count_messages{_st}().
  *
- * If an error occurs, this function may return 0.
+ * @returns
+ *
+ * NOTMUCH_STATUS_OUT_OF_MEMORY: Memory allocation failed. The value
+ *      of *count is not defined
+
+ * NOTMUCH_STATUS_SUCCESS: query completed successfully.
+ *
+ * NOTMUCH_STATUS_XAPIAN_EXCEPTION: a Xapian exception occured. The
+ *      value of *count is not defined.
+ *
+ * @since libnotmuch 4.3 (notmuch 0.21)
  */
-unsigned
+notmuch_status_t
+notmuch_query_count_threads_st (notmuch_query_t *query, unsigned *count);
+
+/**
+ * like notmuch_query_count_threads, but without a status return.
+ *
+ * May return 0 in case of errors.
+ *
+ * @deprecated Deprecated as of libnotmuch 4.3 (notmuch 0.21). Please
+ * use notmuch_query_count_threads_st instead.
+ */
+NOTMUCH_DEPRECATED(4,3)
+unsigned int
 notmuch_query_count_threads (notmuch_query_t *query);
 
 /**
@@ -1676,6 +1760,16 @@ notmuch_directory_get_child_files (notmuch_directory_t *directory);
  */
 notmuch_filenames_t *
 notmuch_directory_get_child_directories (notmuch_directory_t *directory);
+
+/**
+ * Delete directory document from the database, and destroy the
+ * notmuch_directory_t object. Assumes any child directories and files
+ * have been deleted by the caller.
+ *
+ * @since libnotmuch 4.3 (notmuch 0.21)
+ */
+notmuch_status_t
+notmuch_directory_delete (notmuch_directory_t *directory);
 
 /**
  * Destroy a notmuch_directory_t object.

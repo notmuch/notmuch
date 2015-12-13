@@ -64,6 +64,17 @@ int
 parse_boolean_term (void *ctx, const char *str,
 		    char **prefix_out, char **term_out);
 
+/* strcmp that handles NULL strings; in strcmp terms a NULL string is
+ * considered to be less than a non-NULL string.
+ */
+int strcmp_null (const char *s1, const char *s2);
+
+/* GLib GEqualFunc compatible strcasecmp wrapper */
+int strcase_equal (const void *a, const void *b);
+
+/* GLib GHashFunc compatible case insensitive hash function */
+unsigned int strcase_hash (const void *ptr);
+
 #ifdef __cplusplus
 }
 #endif

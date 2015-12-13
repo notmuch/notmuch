@@ -30,16 +30,7 @@
 
 #include <gmime/gmime.h>
 
-/* GMIME_CHECK_VERSION in gmime 2.4 is not usable from the
- * preprocessor (it calls a runtime function). But since
- * GMIME_MAJOR_VERSION and friends were added in gmime 2.6, we can use
- * these to check the version number. */
-#ifdef GMIME_MAJOR_VERSION
-#define GMIME_ATLEAST_26
 typedef GMimeCryptoContext notmuch_crypto_context_t;
-#else
-typedef GMimeCipherContext notmuch_crypto_context_t;
-#endif
 
 #include "notmuch.h"
 
@@ -57,6 +48,7 @@ typedef GMimeCipherContext notmuch_crypto_context_t;
 #include <dirent.h>
 #include <errno.h>
 #include <signal.h>
+#include <ctype.h>
 
 #include "talloc-extra.h"
 
@@ -394,17 +386,10 @@ struct mime_node {
 
     /* True if signature verification on this part was attempted. */
     notmuch_bool_t verify_attempted;
-#ifdef GMIME_ATLEAST_26
+
     /* The list of signatures for signed or encrypted containers. If
      * there are no signatures, this will be NULL. */
     GMimeSignatureList* sig_list;
-#else
-    /* For signed or encrypted containers, the validity of the
-     * signature.  May be NULL if signature verification failed.  If
-     * there are simply no signatures, this will be non-NULL with an
-     * empty signers list. */
-    const GMimeSignatureValidity *sig_validity;
-#endif
 
     /* Internal: Context inherited from the root iterator. */
     struct mime_node_context *ctx;
@@ -465,5 +450,22 @@ notmuch_database_dump (notmuch_database_t *notmuch,
 		       dump_format_t output_format,
 		       notmuch_bool_t gzip_output);
 
+/* If status is non-zero (i.e. error) print appropriate
+   messages to stderr.
+*/
+
+notmuch_status_t
+print_status_query (const char *loc,
+		    const notmuch_query_t *query,
+		    notmuch_status_t status);
+
 #include "command-line-arguments.h"
+
+extern char *notmuch_requested_db_uuid;
+extern const notmuch_opt_desc_t  notmuch_shared_options [];
+void notmuch_exit_if_unmatched_db_uuid (notmuch_database_t *notmuch);
+
+void notmuch_process_shared_options (const char* subcommand_name);
+int notmuch_minimal_options (const char* subcommand_name,
+			     int argc, char **argv);
 #endif

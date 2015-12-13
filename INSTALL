@@ -20,7 +20,7 @@ configure stage.
 
 Dependencies
 ------------
-Notmuch depends on four libraries: Xapian, GMime 2.4 or 2.6,
+Notmuch depends on four libraries: Xapian, GMime 2.6,
 Talloc, and zlib which are each described below:
 
 	Xapian
@@ -39,8 +39,8 @@ Talloc, and zlib which are each described below:
 	reading mail while notmuch would wait for Xapian when removing
 	the "inbox" and "unread" tags from messages in a thread.
 
-	GMime 2.4 or 2.6
-	----------------
+	GMime  2.6
+	----------
 	GMime provides decoding of MIME email messages for Notmuch.
 
 	Without GMime, Notmuch would not be able to extract and index

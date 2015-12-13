@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 test_description='messages with missing headers'
-. ./test-lib.sh
+. ./test-lib.sh || exit 1
 
 # Notmuch requires at least one of from, subject, or to or it will
 # ignore the file.  Generate two messages so that together they cover

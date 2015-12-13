@@ -55,6 +55,28 @@ Supported options for **address** include
             Note: With this option, addresses are printed only after
             the whole search is finished. This may take long time.
 
+    ``--deduplicate=(no|mailbox|address)``
+
+        Control the deduplication of results.
+
+        **no**
+            Output all occurences of addresses in the matching
+            messages. This is not applicable with --output=count.
+
+        **mailbox**
+	    Deduplicate addresses based on the full, case sensitive
+	    name and email address, or mailbox. This is effectively
+	    the same as piping the --deduplicate=no output to **sort |
+	    uniq**, except for the order of results. This is the
+	    default.
+
+        **address**
+            Deduplicate addresses based on the case insensitive
+            address part of the mailbox. Of all the variants (with
+            different name or case), print the one occurring most
+            frequently among the matching messages. If --output=count
+            is specified, include all variants in the count.
+
     ``--sort=``\ (**newest-first**\ \|\ **oldest-first**)
         This option can be used to present results in either
         chronological order (**oldest-first**) or reverse chronological
@@ -63,7 +85,9 @@ Supported options for **address** include
         By default, results will be displayed in reverse chronological
         order, (that is, the newest results will be displayed first).
 
-        This option is not supported with --output=count.
+        However, if either --output=count or --deduplicate=address is
+        specified, this option is ignored and the order of the results
+        is unspecified.
 
     ``--exclude=(true|false)``
         A message is called "excluded" if it matches at least one tag in

@@ -528,6 +528,10 @@ add_files (notmuch_database_t *notmuch,
 					      "%s/%s", path,
 					      notmuch_filenames_get (db_files));
 
+	    if (state->debug)
+		printf ("(D) add_files_recursive, pass 2: queuing passed file %s for deletion from database\n",
+			absolute);
+
 	    _filename_list_add (state->removed_files, absolute);
 
 	    notmuch_filenames_move_to_next (db_files);
@@ -542,6 +546,9 @@ add_files (notmuch_database_t *notmuch,
 	    {
 		char *absolute = talloc_asprintf (state->removed_directories,
 						  "%s/%s", path, filename);
+		if (state->debug)
+		    printf ("(D) add_files_recursive, pass 2: queuing passed directory %s for deletion from database\n",
+			absolute);
 
 		_filename_list_add (state->removed_directories, absolute);
 	    }
@@ -610,6 +617,9 @@ add_files (notmuch_database_t *notmuch,
 	char *absolute = talloc_asprintf (state->removed_files,
 					  "%s/%s", path,
 					  notmuch_filenames_get (db_files));
+	if (state->debug)
+	    printf ("(D) add_files_recursive, pass 3: queuing leftover file %s for deletion from database\n",
+		    absolute);
 
 	_filename_list_add (state->removed_files, absolute);
 
@@ -621,6 +631,10 @@ add_files (notmuch_database_t *notmuch,
 	char *absolute = talloc_asprintf (state->removed_directories,
 					  "%s/%s", path,
 					  notmuch_filenames_get (db_subdirs));
+
+	if (state->debug)
+	    printf ("(D) add_files_recursive, pass 3: queuing leftover directory %s for deletion from database\n",
+		    absolute);
 
 	_filename_list_add (state->removed_directories, absolute);
 
@@ -662,7 +676,7 @@ setup_progress_printing_timer (void)
     struct sigaction action;
     struct itimerval timerval;
 
-    /* Setup our handler for SIGALRM */
+    /* Set up our handler for SIGALRM */
     memset (&action, 0, sizeof (struct sigaction));
     action.sa_handler = handle_sigalrm;
     sigemptyset (&action.sa_mask);
@@ -864,8 +878,11 @@ _remove_directory (void *ctx,
 	    goto DONE;
     }
 
+    status = notmuch_directory_delete (directory);
+
   DONE:
-    notmuch_directory_destroy (directory);
+    if (status)
+	notmuch_directory_destroy (directory);
     return status;
 }
 
@@ -910,7 +927,11 @@ int
 notmuch_new_command (notmuch_config_t *config, int argc, char *argv[])
 {
     notmuch_database_t *notmuch;
-    add_files_state_t add_files_state;
+    add_files_state_t add_files_state = {
+	.verbosity = VERBOSITY_NORMAL,
+	.debug = FALSE,
+	.output_is_a_tty = isatty (fileno (stdout)),
+    };
     struct timeval tv_start;
     int ret = 0;
     struct stat st;
@@ -925,21 +946,20 @@ notmuch_new_command (notmuch_config_t *config, int argc, char *argv[])
     notmuch_bool_t quiet = FALSE, verbose = FALSE;
     notmuch_status_t status;
 
-    add_files_state.verbosity = VERBOSITY_NORMAL;
-    add_files_state.debug = FALSE;
-    add_files_state.output_is_a_tty = isatty (fileno (stdout));
-
     notmuch_opt_desc_t options[] = {
 	{ NOTMUCH_OPT_BOOLEAN,  &quiet, "quiet", 'q', 0 },
 	{ NOTMUCH_OPT_BOOLEAN,  &verbose, "verbose", 'v', 0 },
 	{ NOTMUCH_OPT_BOOLEAN,  &add_files_state.debug, "debug", 'd', 0 },
 	{ NOTMUCH_OPT_BOOLEAN,  &no_hooks, "no-hooks", 'n', 0 },
+	{ NOTMUCH_OPT_INHERIT, (void *) &notmuch_shared_options, NULL, 0, 0 },
 	{ 0, 0, 0, 0, 0 }
     };
 
     opt_index = parse_arguments (argc, argv, options, 1);
     if (opt_index < 0)
 	return EXIT_FAILURE;
+
+    notmuch_process_shared_options (argv[0]);
 
     /* quiet trumps verbose */
     if (quiet)
@@ -992,9 +1012,10 @@ notmuch_new_command (notmuch_config_t *config, int argc, char *argv[])
 		fputs (status_string, stderr);
 		free (status_string);
 	    }
-
 	    return EXIT_FAILURE;
 	}
+
+	notmuch_exit_if_unmatched_db_uuid (notmuch);
 
 	if (notmuch_database_needs_upgrade (notmuch)) {
 	    time_t now = time (NULL);
@@ -1047,7 +1068,7 @@ notmuch_new_command (notmuch_config_t *config, int argc, char *argv[])
     if (notmuch == NULL)
 	return EXIT_FAILURE;
 
-    /* Setup our handler for SIGINT. We do this after having
+    /* Set up our handler for SIGINT. We do this after having
      * potentially done a database upgrade we this interrupt handler
      * won't support. */
     memset (&action, 0, sizeof (struct sigaction));
@@ -1059,9 +1080,6 @@ notmuch_new_command (notmuch_config_t *config, int argc, char *argv[])
     talloc_free (dot_notmuch_path);
     dot_notmuch_path = NULL;
 
-    add_files_state.processed_files = 0;
-    add_files_state.added_messages = 0;
-    add_files_state.removed_messages = add_files_state.renamed_messages = 0;
     gettimeofday (&add_files_state.tv_start, NULL);
 
     add_files_state.removed_files = _filename_list_create (config);

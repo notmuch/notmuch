@@ -38,11 +38,20 @@ notmuch_compact_command (notmuch_config_t *config, int argc, char *argv[])
     notmuch_opt_desc_t options[] = {
 	{ NOTMUCH_OPT_STRING, &backup_path, "backup", 0, 0 },
 	{ NOTMUCH_OPT_BOOLEAN,  &quiet, "quiet", 'q', 0 },
+	{ NOTMUCH_OPT_INHERIT, (void *) &notmuch_shared_options, NULL, 0, 0 },
+	{ 0, 0, 0, 0, 0}
     };
 
     opt_index = parse_arguments (argc, argv, options, 1);
     if (opt_index < 0)
 	return EXIT_FAILURE;
+
+    if (notmuch_requested_db_uuid) {
+	fprintf (stderr, "Error: --uuid not implemented for compact\n");
+	return EXIT_FAILURE;
+    }
+
+    notmuch_process_shared_options (argv[0]);
 
     if (! quiet)
 	printf ("Compacting database...\n");

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 test_description="\"notmuch dump\" and \"notmuch restore\""
-. ./test-lib.sh
+. ./test-lib.sh || exit 1
 
 add_email_corpus
 

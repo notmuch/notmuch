@@ -5,7 +5,7 @@
 # - verification of signatures from expired/revoked keys
 
 test_description='PGP/MIME signature verification and decryption'
-. ./test-lib.sh
+. ./test-lib.sh || exit 1
 
 add_gnupg_home ()
 {

@@ -117,6 +117,13 @@ Note that some tests in the existing test suite rely on previous test
 items, so you cannot arbitrarily skip any test and expect the
 remaining tests to be unaffected.
 
+Currently we do not consider skipped tests as build failures. For
+maximum robustness, when setting up automated build processes, you
+should explicitely skip tests, rather than relying on notmuch's
+detection of missing prerequisites. In the future we may treat tests
+unable to run because of missing prerequisites, but not explicitely
+skipped by the user, as failures.
+
 Writing Tests
 -------------
 The test script is written as a shell script.  It should start with
@@ -138,7 +145,7 @@ Source 'test-lib.sh'
 After assigning test_description, the test script should source
 test-lib.sh like this:
 
-	. ./test-lib.sh
+	. ./test-lib.sh || exit 1
 
 This test harness library does the following things:
 

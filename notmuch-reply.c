@@ -606,8 +606,13 @@ notmuch_reply_format_default(void *ctx,
     notmuch_messages_t *messages;
     notmuch_message_t *message;
     mime_node_t *root;
+    notmuch_status_t status;
 
-    for (messages = notmuch_query_search_messages (query);
+    status = notmuch_query_search_messages_st (query, &messages);
+    if (print_status_query ("notmuch reply", query, status))
+	return 1;
+
+    for (;
 	 notmuch_messages_valid (messages);
 	 notmuch_messages_move_to_next (messages))
     {
@@ -650,13 +655,22 @@ notmuch_reply_format_sprinter(void *ctx,
     notmuch_messages_t *messages;
     notmuch_message_t *message;
     mime_node_t *node;
+    unsigned count;
+    notmuch_status_t status;
 
-    if (notmuch_query_count_messages (query) != 1) {
+    status = notmuch_query_count_messages_st (query, &count);
+    if (print_status_query ("notmuch reply", query, status))
+	return 1;
+
+    if (count != 1) {
 	fprintf (stderr, "Error: search term did not match precisely one message.\n");
 	return 1;
     }
 
-    messages = notmuch_query_search_messages (query);
+    status = notmuch_query_search_messages_st (query, &messages);
+    if (print_status_query ("notmuch reply", query, status))
+	return 1;
+
     message = notmuch_messages_get (messages);
     if (mime_node_open (ctx, message, &(params->crypto), &node) != NOTMUCH_STATUS_SUCCESS)
 	return 1;
@@ -698,8 +712,13 @@ notmuch_reply_format_headers_only(void *ctx,
     notmuch_message_t *message;
     const char *in_reply_to, *orig_references, *references;
     char *reply_headers;
+    notmuch_status_t status;
 
-    for (messages = notmuch_query_search_messages (query);
+    status = notmuch_query_search_messages_st (query, &messages);
+    if (print_status_query ("notmuch reply", query, status))
+	return 1;
+
+    for (;
 	 notmuch_messages_valid (messages);
 	 notmuch_messages_move_to_next (messages))
     {
@@ -790,12 +809,15 @@ notmuch_reply_command (notmuch_config_t *config, int argc, char *argv[])
 				  { "sender", FALSE },
 				  { 0, 0 } } },
 	{ NOTMUCH_OPT_BOOLEAN, &params.crypto.decrypt, "decrypt", 'd', 0 },
+	{ NOTMUCH_OPT_INHERIT, (void *) &notmuch_shared_options, NULL, 0, 0 },
 	{ 0, 0, 0, 0, 0 }
     };
 
     opt_index = parse_arguments (argc, argv, options, 1);
     if (opt_index < 0)
 	return EXIT_FAILURE;
+
+    notmuch_process_shared_options (argv[0]);
 
     if (format == FORMAT_HEADERS_ONLY) {
 	reply_format_func = notmuch_reply_format_headers_only;
@@ -827,6 +849,8 @@ notmuch_reply_command (notmuch_config_t *config, int argc, char *argv[])
     if (notmuch_database_open (notmuch_config_get_database_path (config),
 			       NOTMUCH_DATABASE_MODE_READ_ONLY, &notmuch))
 	return EXIT_FAILURE;
+
+    notmuch_exit_if_unmatched_db_uuid (notmuch);
 
     query = notmuch_query_create (notmuch, query_string);
     if (query == NULL) {

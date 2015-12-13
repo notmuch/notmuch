@@ -1,11 +1,15 @@
 #!/usr/bin/env bash
 test_description="date:since..until queries"
-. ./test-lib.sh
+. ./test-lib.sh || exit 1
 
 add_email_corpus
 
 test_begin_subtest "Absolute date range"
 output=$(notmuch search date:2010-12-16..12/16/2010 | notmuch_search_sanitize)
+test_expect_equal "$output" "thread:XXX   2010-12-16 [1/1] Olivier Berger; Essai accentué (inbox unread)"
+
+test_begin_subtest "Absolute date range with 'same' operator"
+output=$(notmuch search date:2010-12-16..! | notmuch_search_sanitize)
 test_expect_equal "$output" "thread:XXX   2010-12-16 [1/1] Olivier Berger; Essai accentué (inbox unread)"
 
 test_begin_subtest "Absolute time range with TZ"

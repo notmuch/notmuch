@@ -240,6 +240,8 @@ FUNC."
     ;; Override because we want to close message pane first.
     (define-key map [remap notmuch-mua-new-mail] (notmuch-tree-close-message-pane-and #'notmuch-mua-new-mail))
 
+    (define-key map "S" 'notmuch-search-from-tree-current-query)
+
     ;; these use notmuch-show functions directly
     (define-key map "|" 'notmuch-show-pipe-message)
     (define-key map "w" 'notmuch-show-save-attachments)
@@ -401,6 +403,12 @@ Does NOT change the database."
   (let ((query (notmuch-read-query "Notmuch tree view search: ")))
     (notmuch-tree-close-message-window)
     (notmuch-tree query)))
+
+(defun notmuch-search-from-tree-current-query ()
+  "Call notmuch search with the current query"
+  (interactive)
+  (notmuch-tree-close-message-window)
+  (notmuch-search (notmuch-tree-get-query)))
 
 (defun notmuch-tree-message-window-kill-hook ()
   "Close the message pane when exiting the show buffer."
@@ -867,6 +875,11 @@ the same as for the function notmuch-tree."
   (setq notmuch-tree-query-context query-context)
   (setq notmuch-tree-target-msg target)
   (setq notmuch-tree-open-target open-target)
+  ;; Set the default value for `notmuch-show-process-crypto' in this
+  ;; buffer. Although we don't use this some of the functions we call
+  ;; (such as reply) do. It is a buffer local variable so setting it
+  ;; will not affect genuine show buffers.
+  (setq notmuch-show-process-crypto notmuch-crypto-process-mime)
 
   (erase-buffer)
   (goto-char (point-min))

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 test_description="argument parsing"
-. ./test-lib.sh
+. ./test-lib.sh || exit 1
 
 test_begin_subtest "sanity check"
 $TEST_DIRECTORY/arg-test  pos1  --keyword=one --string=foo pos2 --int=7 --flag=one --flag=three > OUTPUT

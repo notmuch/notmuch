@@ -1,3 +1,146 @@
+Notmuch 0.21 (2015-10-29)
+=========================
+
+General
+-------
+
+Notmuch now requires gmime >= 2.6.7. The gmime 2.4 series is no longer
+supported.
+
+Database revision tracking: `lastmod:` queries
+
+  Each message now has a metadata revision number that increases with
+  every tagging operation. See the discussion of `lastmod:` in
+  `notmuch-search-terms(7)` for more information.
+
+Date queries now support `date:<expr>..!` shorthand for
+`date:<expr>..<expr>`
+
+  You can use, for example, `date:yesterday..!` to match from the
+  beginning of yesterday to the end of yesterday. For further details,
+  please refer to the `notmuch-search-terms` manual page.
+
+Notmuch database upgrade to support `lastmod:` queries
+
+  The above mentioned `lastmod:` prefix. This will be done
+  automatically, without prompting on the next time `notmuch new` is
+  run after the upgrade. The upgrade is not reversible, and the
+  upgraded database will not be readable by older versions of
+  Notmuch. As a safeguard, a database dump will be created in the
+  `.notmuch` directory before upgrading.
+
+Build System
+------------
+
+The ruby bindings are now built as part of the main notmuch build
+process. This can be disabled with the `--without-ruby` option to
+configure.
+
+Building the documentation can be disabled with the `--without-docs`
+option to configure.
+
+Skipped individual tests are no longer considered as failures.
+
+Command Line Interface
+----------------------
+
+Database revision tracking
+
+  Two new options were added to support revision tracking. A global
+  option "--uuid" (`notmuch(1)`) was added for to detect counter
+  rollover and reinitialization, and `notmuch-count(1)` gained a
+  `--lastmod` option to query database revision tracking data.
+
+The `notmuch address` command supports new deduplication schemes
+
+  `notmuch address` has gained a new `--deduplicate` option to specify
+  how the results should be deduplicated, if at all. The alternatives
+  are `no` (do not deduplicate, useful for processing the results with
+  external tools), `mailbox` (deduplicate based on the full, case
+  sensitive name and email address), and `address` (deduplicate based
+  on the case insensitive address part). See the `notmuch-address`
+  manual page for further information.
+
+Emacs Interface
+---------------
+
+`notmuch-emacs-version` is used in `User-Agent` header
+
+  The value of recently introduced variable `notmuch-emacs-version` is
+  now used as a part of `User-Agent` header when sending emails.
+
+Removed `notmuch-version` function by renaming it to `notmuch-cli-version`
+
+  With existing variable `notmuch-emacs-version` the accompanied
+  function which retrieves the version of `notmuch-command` is
+  better named as `notmuch-cli-version`.
+
+Query input now supports completion for "is:<tag>"
+
+New message composition mode: `notmuch-compose-mode`
+
+  This is mainly to fix fcc handling, but may be useful for user
+  customization as well.
+
+Allow filtering of search results in `notmuch-show`
+
+Add function to rerun current tree-view search in search mode
+
+Bug fix for replying to encrypted messages in `notmuch-tree` mode
+
+Allow saved searched to specify tree view rather than search view
+
+  Applies to saved searches run from `notmuch-hello`, or by a keyboard
+  shortcut (`notmuch-jump`).  Can be set in the customize interface, or
+  by adding :search-type tree to the appropriate saved search plist in
+  `notmuch-saved-searches`.
+
+Increase maximum size of rendered text parts
+
+  The variable `notmuch-show-max-text-part-size` controls the maximum
+  size (in bytes) which is automatically rendered. This may make
+  rendering large threads slower. To get the previous behaviour set
+  this variable to 10000.
+
+Library
+-------
+
+The use of absolute paths is now enforced when calling
+`notmuch_database_{open, create}`
+
+New function `notmuch_directory_delete` to delete directory documents
+
+  Previously there was no way to delete directory documents from the
+  database, leading to confusing results when the "ghost" directory
+  document of a renamed or deleted filesystem directory was
+  encountered every time the parent directory was being scanned by
+  `notmuch new`. The mtime of the old directory document was also used
+  if a directory by the same name was added again in the filesystem,
+  potentially bypassing the scan for the directory. The issues are
+  fixed by providing a library call to delete directory documents, and
+  deleting the old documents in `notmuch new` on filesystem directory
+  removal or rename.
+
+Database revision tracking
+
+  Revision tracking is supported via a new prefix "lastmod:" in the
+  query parser and the new function
+  `notmuch_database_get_revision`. For the latter, see `notmuch(3)`.
+
+New status code returning API for n_query_count_{messages,threads}
+
+Deprecated functions
+
+  `notmuch_query_search_threads`, `notmuch_query_search_messages`,
+  `notmuch_query_count_messages`, and `notmuch_query_count_threads`
+  are all deprecated as of this release.  Clients are encouraged to
+  transition to the `_st` variants supporting better error reporting.
+
+nmbug-status
+------------
+
+`nmbug-status` now supports specifying the sort order for each view.
+
 Notmuch 0.20.2 (2015-06-27)
 ===========================
 
@@ -12,7 +155,7 @@ Notmuch 0.20.1 (2015-06-01)
 Test Suite
 ----------
 
-Work around apparent gdb bug on arm64
+Work around apparent gdb bug on arm64.
 
 Notmuch 0.20 (2015-05-31)
 =========================
@@ -2767,7 +2910,7 @@ New 'G' key binding to trigger mail refresh (G == "Get new mail")
 
   The 'G' key works wherever '=' works. Before refreshing the screen
   it calls an external program that can be used to poll email servers,
-  run notmuch new and setup specific tags for the new emails. The
+  run notmuch new and set up specific tags for the new emails. The
   script to be called should be configured with the "Notmuch Poll
   Script" setting in the customize interface. This script will
   typically invoke "notmuch new" and then perhaps several "notmuch

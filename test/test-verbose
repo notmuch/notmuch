@@ -2,7 +2,7 @@
 
 test_description='the verbosity options of the test framework itself.'
 
-. ./test-lib.sh
+. ./test-lib.sh || exit 1
 
 test_expect_success 'print something in test_expect_success and pass' '
   echo "hello stdout" &&

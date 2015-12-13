@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 test_description="\"notmuch reply\" in several variations"
-. ./test-lib.sh
+. ./test-lib.sh || exit 1
 
 test_begin_subtest "Basic reply"
 add_message '[from]="Sender <sender@example.com>"' \

@@ -47,6 +47,11 @@ Supported options for **count** include
         (or threads) in the database will be output. This option is not
         compatible with specifying search terms on the command line.
 
+    ``--lastmod``
+	Append lastmod (counter for number of database updates) and UUID
+	to the output. lastmod values are only comparable between databases
+	with the same UUID.
+
     ``--input=``\ <filename>
         Read input from given file, instead of from stdin. Implies
         ``--batch``.

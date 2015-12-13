@@ -466,12 +466,15 @@ notmuch_insert_command (notmuch_config_t *config, int argc, char *argv[])
 	{ NOTMUCH_OPT_BOOLEAN, &create_folder, "create-folder", 0, 0 },
 	{ NOTMUCH_OPT_BOOLEAN, &keep, "keep", 0, 0 },
 	{ NOTMUCH_OPT_BOOLEAN,  &no_hooks, "no-hooks", 'n', 0 },
+	{ NOTMUCH_OPT_INHERIT, (void *) &notmuch_shared_options, NULL, 0, 0 },
 	{ NOTMUCH_OPT_END, 0, 0, 0, 0 }
     };
 
     opt_index = parse_arguments (argc, argv, options, 1);
     if (opt_index < 0)
 	return EXIT_FAILURE;
+
+    notmuch_process_shared_options (argv[0]);
 
     db_path = notmuch_config_get_database_path (config);
     new_tags = notmuch_config_get_new_tags (config, &new_tags_length);
@@ -521,7 +524,7 @@ notmuch_insert_command (notmuch_config_t *config, int argc, char *argv[])
 	    return EXIT_FAILURE;
     }
 
-    /* Setup our handler for SIGINT. We do not set SA_RESTART so that copying
+    /* Set up our handler for SIGINT. We do not set SA_RESTART so that copying
      * from standard input may be interrupted. */
     memset (&action, 0, sizeof (struct sigaction));
     action.sa_handler = handle_sigint;
@@ -532,6 +535,8 @@ notmuch_insert_command (notmuch_config_t *config, int argc, char *argv[])
     if (notmuch_database_open (notmuch_config_get_database_path (config),
 			       NOTMUCH_DATABASE_MODE_READ_WRITE, &notmuch))
 	return EXIT_FAILURE;
+
+    notmuch_exit_if_unmatched_db_uuid (notmuch);
 
     /* Write the message to the Maildir new directory. */
     newpath = maildir_write_new (config, STDIN_FILENO, maildir);

@@ -1,0 +1,7 @@
+To build the the notmuch ruby extension, run the following commands
+from the *top level* notmuch source directory:
+
+% ./configure
+% make ruby-bindings
+
+The generic documentation about building notmuch also applies.

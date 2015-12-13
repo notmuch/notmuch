@@ -156,11 +156,20 @@ class Page (object):
             stream.write(self.footer)
 
     def _write_view(self, database, view, stream):
+        # sort order, default to oldest-first
+        sort_key = view.get('sort', 'oldest-first')
+        # dynamically accept all values in Query.SORT
+        sort_attribute = sort_key.upper().replace('-', '_')
+        try:
+            sort = getattr(notmuch.Query.SORT, sort_attribute)
+        except AttributeError:
+            raise ConfigError('Invalid sort setting for {}: {!r}'.format(
+                view['title'], sort_key))
         if 'query-string' not in view:
             query = view['query']
             view['query-string'] = ' and '.join(query)
         q = notmuch.Query(database, view['query-string'])
-        q.set_sort(notmuch.Query.SORT.OLDEST_FIRST)
+        q.set_sort(sort)
         threads = self._get_threads(messages=q.search_messages())
         self._write_view_header(view=view, stream=stream)
         self._write_threads(threads=threads, stream=stream)
@@ -309,7 +318,7 @@ args = parser.parse_args()
 try:
     config = read_config(path=args.config)
 except ConfigError as e:
-    print(e)
+    print(e, file=sys.stderr)
     sys.exit(1)
 
 header_template = config['meta'].get('header', '''<!DOCTYPE html>

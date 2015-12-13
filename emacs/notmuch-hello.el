@@ -28,6 +28,8 @@
 
 (declare-function notmuch-search "notmuch" (&optional query oldest-first target-thread target-line continuation))
 (declare-function notmuch-poll "notmuch" ())
+(declare-function notmuch-tree "notmuch-tree"
+                  (&optional query query-context target buffer-name open-target))
 
 (defun notmuch-saved-search-get (saved-search field)
   "Get FIELD from SAVED-SEARCH.
@@ -91,7 +93,11 @@ searches so they still work in customize."
 			    (choice :tag " Sort Order"
 				    (const :tag "Default" nil)
 				    (const :tag "Oldest-first" oldest-first)
-				    (const :tag "Newest-first" newest-first))))))
+				    (const :tag "Newest-first" newest-first)))
+		     (group :format "%v" :inline t (const :format "" :search-type)
+			    (choice :tag " Search Type"
+				    (const :tag "Search mode" nil)
+				    (const :tag "Tree mode" tree))))))
 
 (defcustom notmuch-saved-searches
   `((:name "inbox" :query "tag:inbox" :key ,(kbd "i"))
@@ -114,6 +120,10 @@ a plist. Supported properties are
   :sort-order      Specify the sort order to be used for the search.
                    Possible values are 'oldest-first 'newest-first or
                    nil. Nil means use the default sort order.
+  :search-type     Specify whether to run the search in search-mode
+                   or tree mode. Set to 'tree to specify tree
+                   mode, set to nil (or anything except tree) to
+                   specify search mode.
 
 Other accepted forms are a cons cell of the form (NAME . QUERY)
 or a list of the form (NAME QUERY COUNT-QUERY)."
@@ -425,10 +435,13 @@ diagonal."
 	  append (notmuch-hello-reflect-generate-row ncols nrows row list))))
 
 (defun notmuch-hello-widget-search (widget &rest ignore)
-  (notmuch-search (widget-get widget
-			      :notmuch-search-terms)
-		  (widget-get widget
-			      :notmuch-search-oldest-first)))
+  (if (widget-get widget :notmuch-search-type)
+      (notmuch-tree (widget-get widget
+				:notmuch-search-terms))
+    (notmuch-search (widget-get widget
+				:notmuch-search-terms)
+		    (widget-get widget
+				:notmuch-search-oldest-first))))
 
 (defun notmuch-saved-search-count (search)
   (car (process-lines notmuch-command "count" search)))
@@ -564,6 +577,7 @@ with `notmuch-hello-query-counts'."
 				     (newest-first nil)
 				     (oldest-first t)
 				     (otherwise notmuch-search-oldest-first)))
+		     (search-type (eq (plist-get elem :search-type) 'tree))
 		     (msg-count (plist-get elem :count)))
 		(widget-insert (format "%8s "
 				       (notmuch-hello-nice-number msg-count)))
@@ -571,6 +585,7 @@ with `notmuch-hello-query-counts'."
 			       :notify #'notmuch-hello-widget-search
 			       :notmuch-search-terms query
 			       :notmuch-search-oldest-first oldest-first
+			       :notmuch-search-type search-type
 			       name)
 		(setq column-indent
 		      (1+ (max 0 (- column-width (length name)))))))
@@ -628,7 +643,7 @@ with `notmuch-hello-query-counts'."
 (defun notmuch-hello-versions ()
   "Display the notmuch version(s)"
   (interactive)
-  (let ((notmuch-cli-version (notmuch-version)))
+  (let ((notmuch-cli-version (notmuch-cli-version)))
     (message "notmuch version %s"
 	     (if (string= notmuch-emacs-version notmuch-cli-version)
 		 notmuch-cli-version

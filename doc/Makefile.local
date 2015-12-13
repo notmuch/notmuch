@@ -7,7 +7,7 @@ SPHINXOPTS    := -q
 SPHINXBUILD   = sphinx-build
 DOCBUILDDIR      := $(dir)/_build
 
-mkdocdeps := python $(srcdir)/$(dir)/mkdocdeps.py
+mkdocdeps := $(PYTHON) $(srcdir)/$(dir)/mkdocdeps.py
 
 # Internal variables.
 ALLSPHINXOPTS   := -d $(DOCBUILDDIR)/doctrees $(SPHINXOPTS) $(srcdir)/$(dir)

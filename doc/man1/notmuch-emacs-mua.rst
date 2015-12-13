@@ -18,10 +18,6 @@ Supported options for **notmuch-emacs-mua** include
     ``-h, --help``
         Display help.
 
-    ``--client``
-        Use emacsclient, rather than emacs. This will start
-        an emacs daemon process if necessary.
-
     ``-s, --subject=``\ <subject>
         Specify the subject of the message.
 
@@ -38,7 +34,23 @@ Supported options for **notmuch-emacs-mua** include
         Specify a file to include into the body of the message.
 
     ``--no-window-system``
-        Even if a window system is available, use the current terminal
+        Even if a window system is available, use the current terminal.
+
+    ``--client``
+        Use **emacsclient**, rather than **emacs**. For
+        **emacsclient** to work, you need an already running Emacs
+        with a server, or use ``--auto-daemon``.
+
+    ``--auto-daemon``
+        Automatically start Emacs in daemon mode, if the Emacs server
+        is not running. Applicable with ``--client``. Implies
+        ``--create-frame``.
+
+    ``--create-frame``
+        Create a new frame instead of trying to use the current Emacs
+        frame. Applicable with ``--client``. This will be required
+        when Emacs is running (or automatically started with
+        ``--auto-daemon``) in daemon mode.
 
     ``--print``
         Output the resulting elisp to stdout instead of evaluating it.

@@ -447,6 +447,7 @@ _notmuch_thread_create (void *ctx,
 
     notmuch_messages_t *messages;
     notmuch_message_t *message;
+    notmuch_status_t status;
 
     seed_message = _notmuch_message_create (local, notmuch, seed_doc_id, NULL);
     if (! seed_message)
@@ -504,7 +505,11 @@ _notmuch_thread_create (void *ctx,
      * oldest or newest subject is desired. */
     notmuch_query_set_sort (thread_id_query, NOTMUCH_SORT_OLDEST_FIRST);
 
-    for (messages = notmuch_query_search_messages (thread_id_query);
+    status = notmuch_query_search_messages_st (thread_id_query, &messages);
+    if (status)
+	goto DONE;
+
+    for (;
 	 notmuch_messages_valid (messages);
 	 notmuch_messages_move_to_next (messages))
     {

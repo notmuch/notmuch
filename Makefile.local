@@ -59,7 +59,7 @@ endif
 FINAL_LIBNOTMUCH_LDFLAGS = $(LDFLAGS) $(AS_NEEDED_LDFLAGS) $(CONFIGURE_LDFLAGS)
 
 .PHONY: all
-all: notmuch notmuch-shared build-man
+all: notmuch notmuch-shared build-man ruby-bindings
 ifeq ($(MAKECMDGOALS),)
 ifeq ($(shell cat .first-build-message 2>/dev/null),)
 	@NOTMUCH_FIRST_BUILD=1 $(MAKE) --no-print-directory all
@@ -224,7 +224,7 @@ release-checks:
 .PHONY: verify-newer
 verify-newer:
 	@echo -n "Checking that no $(VERSION) release already exists..."
-	@wget -q -O /dev/null $(RELEASE_URL)/$(TAR_FILE) ; \
+	@wget -q --no-check-certificate -O /dev/null $(RELEASE_URL)/$(TAR_FILE) ; \
 	case $$? in \
           8) echo "Good." ;; \
           0) echo "Ouch."; \
@@ -271,6 +271,7 @@ dataclean: distclean
 notmuch_client_srcs =		\
 	command-line-arguments.c\
 	debugger.c		\
+	status.c		\
 	gmime-filter-reply.c	\
 	hooks.c			\
 	notmuch.c		\

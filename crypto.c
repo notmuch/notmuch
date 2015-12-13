@@ -20,8 +20,6 @@
 
 #include "notmuch-client.h"
 
-#ifdef GMIME_ATLEAST_26
-
 /* Create a GPG context (GMime 2.6) */
 static notmuch_crypto_context_t *
 create_gpg_context (const char *gpgpath)
@@ -38,29 +36,6 @@ create_gpg_context (const char *gpgpath)
 
     return gpgctx;
 }
-
-#else /* GMIME_ATLEAST_26 */
-
-/* Create a GPG context (GMime 2.4) */
-static notmuch_crypto_context_t *
-create_gpg_context (const char* gpgpath)
-{
-    GMimeSession *session;
-    notmuch_crypto_context_t *gpgctx;
-
-    session = g_object_new (g_mime_session_get_type (), NULL);
-    gpgctx = g_mime_gpg_context_new (session, gpgpath ? gpgpath : "gpg");
-    g_object_unref (session);
-
-    if (! gpgctx)
-	return NULL;
-
-    g_mime_gpg_context_set_always_trust ((GMimeGpgContext *) gpgctx, FALSE);
-
-    return gpgctx;
-}
-
-#endif /* GMIME_ATLEAST_26 */
 
 /* for the specified protocol return the context pointer (initializing
  * if needed) */

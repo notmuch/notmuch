@@ -43,11 +43,64 @@ notmuch_help_command (notmuch_config_t *config, int argc, char *argv[]);
 static int
 notmuch_command (notmuch_config_t *config, int argc, char *argv[]);
 
+static int
+_help_for (const char *topic);
+
+static notmuch_bool_t print_version = FALSE, print_help = FALSE;
+char *notmuch_requested_db_uuid = NULL;
+
+const notmuch_opt_desc_t notmuch_shared_options [] = {
+    { NOTMUCH_OPT_BOOLEAN, &print_version, "version", 'v', 0 },
+    { NOTMUCH_OPT_BOOLEAN, &print_help, "help", 'h', 0 },
+    { NOTMUCH_OPT_STRING, &notmuch_requested_db_uuid, "uuid", 'u', 0 },
+    {0, 0, 0, 0, 0}
+};
+
+/* any subcommand wanting to support these options should call
+ * inherit notmuch_shared_options and call
+ * notmuch_process_shared_options (subcommand_name);
+ */
+void
+notmuch_process_shared_options (const char *subcommand_name) {
+    if (print_version) {
+	printf ("notmuch " STRINGIFY(NOTMUCH_VERSION) "\n");
+	exit (EXIT_SUCCESS);
+    }
+
+    if (print_help) {
+	int ret = _help_for (subcommand_name);
+	exit (ret);
+    }
+}
+
+/* This is suitable for subcommands that do not actually open the
+ * database.
+ */
+int notmuch_minimal_options (const char *subcommand_name,
+				  int argc, char **argv)
+{
+    int opt_index;
+
+    notmuch_opt_desc_t options[] = {
+	{ NOTMUCH_OPT_INHERIT, (void *) &notmuch_shared_options, NULL, 0, 0 },
+	{ 0, 0, 0, 0, 0 }
+    };
+
+    opt_index = parse_arguments (argc, argv, options, 1);
+
+    if (opt_index < 0)
+	return -1;
+
+    /* We can't use argv here as it is sometimes NULL */
+    notmuch_process_shared_options (subcommand_name);
+    return opt_index;
+}
+
 static command_t commands[] = {
     { NULL, notmuch_command, TRUE,
       "Notmuch main command." },
     { "setup", notmuch_setup_command, TRUE,
-      "Interactively setup notmuch for first use." },
+      "Interactively set up notmuch for first use." },
     { "new", notmuch_new_command, FALSE,
       "Find and import new messages to the notmuch database." },
     { "insert", notmuch_insert_command, FALSE,
@@ -167,6 +220,22 @@ be supported in the future.\n", notmuch_format_version);
     }
 }
 
+void
+notmuch_exit_if_unmatched_db_uuid (notmuch_database_t *notmuch)
+{
+    const char *uuid = NULL;
+
+    if (!notmuch_requested_db_uuid)
+	return;
+    IGNORE_RESULT (notmuch_database_get_revision (notmuch, &uuid));
+
+    if (strcmp (notmuch_requested_db_uuid, uuid) != 0){
+	fprintf (stderr, "Error: requested database revision %s does not match %s\n",
+		 notmuch_requested_db_uuid, uuid);
+	exit (1);
+    }
+}
+
 static void
 exec_man (const char *page)
 {
@@ -177,21 +246,19 @@ exec_man (const char *page)
 }
 
 static int
-notmuch_help_command (notmuch_config_t *config, int argc, char *argv[])
+_help_for (const char *topic_name)
 {
     command_t *command;
     help_topic_t *topic;
     unsigned int i;
 
-    argc--; argv++; /* Ignore "help" */
-
-    if (argc == 0) {
+    if (!topic_name) {
 	printf ("The notmuch mail system.\n\n");
 	usage (stdout);
 	return EXIT_SUCCESS;
     }
 
-    if (strcmp (argv[0], "help") == 0) {
+    if (strcmp (topic_name, "help") == 0) {
 	printf ("The notmuch help system.\n\n"
 		"\tNotmuch uses the man command to display help. In case\n"
 		"\tof difficulties check that MANPATH includes the pages\n"
@@ -200,24 +267,44 @@ notmuch_help_command (notmuch_config_t *config, int argc, char *argv[])
 	return EXIT_SUCCESS;
     }
 
-    command = find_command (argv[0]);
+    command = find_command (topic_name);
     if (command) {
-	char *page = talloc_asprintf (config, "notmuch-%s", command->name);
+	char *page = talloc_asprintf (NULL, "notmuch-%s", command->name);
 	exec_man (page);
     }
 
     for (i = 0; i < ARRAY_SIZE (help_topics); i++) {
 	topic = &help_topics[i];
-	if (strcmp (argv[0], topic->name) == 0) {
-	    char *page = talloc_asprintf (config, "notmuch-%s", topic->name);
+	if (strcmp (topic_name, topic->name) == 0) {
+	    char *page = talloc_asprintf (NULL, "notmuch-%s", topic->name);
 	    exec_man (page);
 	}
     }
 
     fprintf (stderr,
 	     "\nSorry, %s is not a known command. There's not much I can do to help.\n\n",
-	     argv[0]);
+	     topic_name);
     return EXIT_FAILURE;
+}
+
+static int
+notmuch_help_command (unused (notmuch_config_t * config), int argc, char *argv[])
+{
+    int opt_index;
+
+    opt_index = notmuch_minimal_options ("help", argc, argv);
+    if (opt_index < 0)
+	return EXIT_FAILURE;
+
+    /* skip at least subcommand argument */
+    argc-= opt_index;
+    argv+= opt_index;
+
+    if (argc == 0) {
+	return _help_for (NULL);
+    }
+
+    return _help_for (argv[0]);
 }
 
 /* Handle the case of "notmuch" being invoked with no command
@@ -285,14 +372,12 @@ main (int argc, char *argv[])
     command_t *command;
     char *config_file_name = NULL;
     notmuch_config_t *config = NULL;
-    notmuch_bool_t print_help=FALSE, print_version=FALSE;
     int opt_index;
     int ret;
 
     notmuch_opt_desc_t options[] = {
-	{ NOTMUCH_OPT_BOOLEAN, &print_help, "help", 'h', 0 },
-	{ NOTMUCH_OPT_BOOLEAN, &print_version, "version", 'v', 0 },
 	{ NOTMUCH_OPT_STRING, &config_file_name, "config", 'c', 0 },
+	{ NOTMUCH_OPT_INHERIT, (void *) &notmuch_shared_options, NULL, 0, 0 },
 	{ 0, 0, 0, 0, 0 }
     };
 
@@ -314,27 +399,10 @@ main (int argc, char *argv[])
 	goto DONE;
     }
 
-    /* Handle notmuch --help [command] and notmuch command --help. */
-    if (print_help ||
-	(opt_index + 1 < argc && strcmp (argv[opt_index + 1], "--help") == 0)) {
-	/*
-	 * Pass the first positional argument as argv[1] so the help
-	 * command can give help for it. The help command ignores the
-	 * argv[0] passed to it.
-	 */
-	ret = notmuch_help_command (NULL, argc - opt_index + 1,
-				    argv + opt_index - 1);
-	goto DONE;
-    }
-
-    if (print_version) {
-	printf ("notmuch " STRINGIFY(NOTMUCH_VERSION) "\n");
-	ret = EXIT_SUCCESS;
-	goto DONE;
-    }
-
     if (opt_index < argc)
 	command_name = argv[opt_index];
+
+    notmuch_process_shared_options (command_name);
 
     command = find_command (command_name);
     if (!command) {

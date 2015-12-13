@@ -50,7 +50,7 @@ window/frame that will be destroyed when the buffer is killed.
 You may want to customize `message-kill-buffer-on-exit'
 accordingly."
    (when (< emacs-major-version 24)
-           " Due to a known bug in Emacs 23, you should not set
+	   " Due to a known bug in Emacs 23, you should not set
 this to `new-window' if `message-kill-buffer-on-exit' is
 disabled: this would result in an incorrect behavior."))
   :group 'notmuch-send
@@ -118,7 +118,10 @@ Note that these functions use `mail-citation-hook' if that is non-nil."
 
 (defun notmuch-mua-user-agent-notmuch ()
   "Generate a `User-Agent:' string suitable for notmuch."
-  (concat "Notmuch/" (notmuch-version) " (http://notmuchmail.org)"))
+  (let ((notmuch-version (if (string= notmuch-emacs-version "unknown")
+			     (notmuch-cli-version)
+			   notmuch-emacs-version)))
+    (concat "Notmuch/" notmuch-version " (http://notmuchmail.org)")))
 
 (defun notmuch-mua-user-agent-emacs ()
   "Generate a `User-Agent:' string suitable for notmuch."
@@ -265,6 +268,12 @@ Note that these functions use `mail-citation-hook' if that is non-nil."
   (message-goto-body)
   (set-buffer-modified-p nil))
 
+(define-derived-mode notmuch-message-mode message-mode "Message[Notmuch]"
+  "Notmuch message composition mode. Mostly like `message-mode'")
+
+(define-key notmuch-message-mode-map (kbd "C-c C-c") #'notmuch-mua-send-and-exit)
+(define-key notmuch-message-mode-map (kbd "C-c C-s") #'notmuch-mua-send)
+
 (defun notmuch-mua-mail (&optional to subject other-headers &rest other-args)
   "Invoke the notmuch mail composition window.
 
@@ -281,6 +290,8 @@ OTHER-ARGS are passed through to `message-mail'."
 		       (notmuch-user-name) " <" (notmuch-user-primary-email) ">")) other-headers))
 
   (apply #'message-mail to subject other-headers other-args)
+  (notmuch-message-mode)
+  (notmuch-fcc-header-setup)
   (message-sort-headers)
   (message-hide-headers)
   (set-buffer-modified-p nil)
@@ -394,7 +405,13 @@ will be addressed to all recipients of the source message."
 
 (defun notmuch-mua-send-and-exit (&optional arg)
   (interactive "P")
-  (message-send-and-exit arg))
+  (let ((message-fcc-handler-function #'notmuch-fcc-handler))
+    (message-send-and-exit arg)))
+
+(defun notmuch-mua-send (&optional arg)
+  (interactive "P")
+  (let ((message-fcc-handler-function #'notmuch-fcc-handler))
+    (message-send arg)))
 
 (defun notmuch-mua-kill-buffer ()
   (interactive)

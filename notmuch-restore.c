@@ -154,6 +154,7 @@ notmuch_restore_command (notmuch_config_t *config, int argc, char *argv[])
 				  { 0, 0 } } },
 	{ NOTMUCH_OPT_STRING, &input_file_name, "input", 'i', 0 },
 	{ NOTMUCH_OPT_BOOLEAN,  &accumulate, "accumulate", 'a', 0 },
+	{ NOTMUCH_OPT_INHERIT, (void *) &notmuch_shared_options, NULL, 0, 0 },
 	{ 0, 0, 0, 0, 0 }
     };
 
@@ -162,6 +163,9 @@ notmuch_restore_command (notmuch_config_t *config, int argc, char *argv[])
 	ret = EXIT_FAILURE;
 	goto DONE;
     }
+
+    notmuch_process_shared_options (argv[0]);
+    notmuch_exit_if_unmatched_db_uuid (notmuch);
 
     name_for_error = input_file_name ? input_file_name : "stdin";
 

@@ -14,7 +14,7 @@ then
 	exit 1
 fi
 
-. ./test-lib.sh
+. ./test-lib.sh || exit 1
 
 ################################################################
 # Test harness

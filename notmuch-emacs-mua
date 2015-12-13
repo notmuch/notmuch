@@ -34,12 +34,13 @@ EMACS=${EMACS-emacs}
 EMACSCLIENT=${EMACSCLIENT-emacsclient}
 
 PRINT_ONLY=
+NO_WINDOW=
 USE_EMACSCLIENT=
-CLIENT_TYPE="-c"
+AUTO_DAEMON=
+CREATE_FRAME=
 
 # The crux of it all: construct an elisp progn and eval it.
 ELISP="(prog1 'done (require 'notmuch) (notmuch-mua-new-mail)"
-ELISP="${ELISP} (setq message-exit-actions (list #'save-buffers-kill-terminal))"
 
 # Short options compatible with mutt(1).
 while getopts :s:c:b:i:h opt; do
@@ -63,7 +64,7 @@ while getopts :s:c:b:i:h opt; do
 		    opt=${opt%%=*}
 		    ;;
 		# Long options without arguments.
-		--help|--print|--no-window-system|--client)
+		--help|--print|--no-window-system|--client|--auto-daemon|--create-frame)
 		    ;;
 		*)
 		    echo "$0: unknown long option ${opt}, or argument mismatch." >&2
@@ -80,9 +81,6 @@ while getopts :s:c:b:i:h opt; do
     case "${opt}" in
 	--help|h)
 	    exec man notmuch-emacs-mua
-	    ;;
-	--client)
-	    USE_EMACSCLIENT="yes"
 	    ;;
 	--subject|s)
 	    ELISP="${ELISP} (message-goto-subject) (insert \"${OPTARG}\")"
@@ -103,7 +101,17 @@ while getopts :s:c:b:i:h opt; do
 	    PRINT_ONLY=1
 	    ;;
 	--no-window-system)
-	    CLIENT_TYPE="-t"
+	    NO_WINDOW="-nw"
+	    ;;
+	--client)
+	    USE_EMACSCLIENT="yes"
+	    ;;
+	--auto-daemon)
+	    AUTO_DAEMON="--alternate-editor="
+	    CREATE_FRAME="-c"
+	    ;;
+	--create-frame)
+	    CREATE_FRAME="-c"
 	    ;;
 	*)
 	    # We should never end up here.
@@ -122,6 +130,11 @@ for arg; do
     ELISP="${ELISP} (message-goto-to) (insert \"${arg}, \")"
 done
 
+# Kill the terminal/frame if we're creating one.
+if [ -z "$USE_EMACSCLIENT" -o -n "$CREATE_FRAME" -o -n "$NO_WINDOW" ]; then
+    ELISP="${ELISP} (setq message-exit-actions (list #'save-buffers-kill-terminal))"
+fi
+
 # End progn.
 ELISP="${ELISP})"
 
@@ -132,7 +145,7 @@ fi
 
 if [ -n "$USE_EMACSCLIENT" ]; then
     # Evaluate the progn.
-    exec ${EMACSCLIENT} ${CLIENT_TYPE} -a '' --eval "${ELISP}"
+    exec ${EMACSCLIENT} ${NO_WINDOW} ${CREATE_FRAME} ${AUTO_DAEMON} --eval "${ELISP}"
 else
-    exec ${EMACS} --eval "${ELISP}"
+    exec ${EMACS} ${NO_WINDOW} --eval "${ELISP}"
 fi

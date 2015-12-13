@@ -54,6 +54,8 @@ indicate user-supplied values):
 
 -  date:<since>..<until>
 
+-  lastmod:<initial-revision>..<final-revision>
+
 The **from:** prefix is used to match the name or address of the sender
 of an email message.
 
@@ -123,6 +125,12 @@ The time range can also be specified using timestamps with a syntax of:
 
 Each timestamp is a number representing the number of seconds since
 1970-01-01 00:00:00 UTC.
+
+The **lastmod:** prefix can be used to restrict the result by the
+database revision number of when messages were last modified (tags
+were added/removed or filenames changed).  This is usually used in
+conjunction with the **--uuid** argument to **notmuch search**
+to find messages that have changed since an earlier query.
 
 Operators
 ---------
@@ -270,6 +278,13 @@ In this case, <since> is taken as the earliest time it could describe
 could describe (the end of yesterday). Similarly, date:january..february
 matches from the beginning of January to the end of February.
 
+date:<expr>..! can be used as a shorthand for date:<expr>..<expr>. The
+expansion takes place before interpretation, and thus, for example,
+date:monday..! matches from the beginning of Monday until the end of
+Monday. (Note that entering date:<expr> without "..", for example
+date:yesterday, won't work, as it's not interpreted as a range
+expression at all. Again, use date:yesterday..!)
+
 Currently, we do not support spaces in range expressions. You can
 replace the spaces with '\_', or (in most cases) '-', or (in some cases)
 leave the spaces out altogether. Examples in this man page use spaces
@@ -279,11 +294,6 @@ Open-ended ranges are supported (since Xapian 1.2.1), i.e. it's possible
 to specify date:..<until> or date:<since>.. to not limit the start or
 end time, respectively. Pre-1.2.1 Xapian does not report an error on
 open ended ranges, but it does not work as expected either.
-
-Entering date:expr without ".." (for example date:yesterday) won't work,
-as it's not interpreted as a range expression at all. You can achieve
-the expected result by duplicating the expr both sides of ".." (for
-example date:yesterday..yesterday).
 
 Relative date and time
 ----------------------

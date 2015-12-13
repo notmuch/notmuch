@@ -43,6 +43,9 @@ struct visible _notmuch_message {
      * if each flag has been initialized. */
     unsigned long lazy_flags;
 
+    /* Message document modified since last sync */
+    notmuch_bool_t modified;
+
     Xapian::Document doc;
     Xapian::termcount termpos;
 };
@@ -539,6 +542,7 @@ _notmuch_message_remove_terms (notmuch_message_t *message, const char *prefix)
 
 	try {
 	    message->doc.remove_term ((*i));
+	    message->modified = TRUE;
 	} catch (const Xapian::InvalidArgumentError) {
 	    /* Ignore failure to remove non-existent term. */
 	}
@@ -793,6 +797,7 @@ void
 _notmuch_message_clear_data (notmuch_message_t *message)
 {
     message->doc.set_data ("");
+    message->modified = TRUE;
 }
 
 static void
@@ -990,6 +995,17 @@ _notmuch_message_set_header_values (notmuch_message_t *message,
 			    Xapian::sortable_serialise (time_value));
     message->doc.add_value (NOTMUCH_VALUE_FROM, from);
     message->doc.add_value (NOTMUCH_VALUE_SUBJECT, subject);
+    message->modified = TRUE;
+}
+
+/* Upgrade a message to support NOTMUCH_FEATURE_LAST_MOD.  The caller
+ * must call _notmuch_message_sync. */
+void
+_notmuch_message_upgrade_last_mod (notmuch_message_t *message)
+{
+    /* _notmuch_message_sync will update the last modification
+     * revision; we just have to ask it to. */
+    message->modified = TRUE;
 }
 
 /* Synchronize changes made to message->doc out into the database. */
@@ -1001,8 +1017,24 @@ _notmuch_message_sync (notmuch_message_t *message)
     if (message->notmuch->mode == NOTMUCH_DATABASE_MODE_READ_ONLY)
 	return;
 
+    if (! message->modified)
+	return;
+
+    /* Update the last modification of this message. */
+    if (message->notmuch->features & NOTMUCH_FEATURE_LAST_MOD)
+	/* sortable_serialise gives a reasonably compact encoding,
+	 * which directly translates to reduced IO when scanning the
+	 * value stream.  Since it's built for doubles, we only get 53
+	 * effective bits, but that's still enough for the database to
+	 * last a few centuries at 1 million revisions per second. */
+	message->doc.add_value (NOTMUCH_VALUE_LAST_MOD,
+				Xapian::sortable_serialise (
+				    _notmuch_database_new_revision (
+					message->notmuch)));
+
     db = static_cast <Xapian::WritableDatabase *> (message->notmuch->xapian_db);
     db->replace_document (message->doc_id, message->doc);
+    message->modified = FALSE;
 }
 
 /* Delete a message document from the database. */
@@ -1077,6 +1109,7 @@ _notmuch_message_add_term (notmuch_message_t *message,
 	return NOTMUCH_PRIVATE_STATUS_TERM_TOO_LONG;
 
     message->doc.add_term (term, 0);
+    message->modified = TRUE;
 
     talloc_free (term);
 
@@ -1145,6 +1178,7 @@ _notmuch_message_remove_term (notmuch_message_t *message,
 
     try {
 	message->doc.remove_term (term);
+	message->modified = TRUE;
     } catch (const Xapian::InvalidArgumentError) {
 	/* We'll let the philosopher's try to wrestle with the
 	 * question of whether failing to remove that which was not

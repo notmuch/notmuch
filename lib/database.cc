@@ -101,6 +101,9 @@ typedef struct {
  *
  *	SUBJECT:	The value of the "Subject" header
  *
+ *	LAST_MOD:	The revision number as of the last tag or
+ *			filename change.
+ *
  * In addition, terms from the content of the message are added with
  * "from", "to", "attachment", and "subject" prefixes for use by the
  * user in searching. Similarly, terms from the path of the mail
@@ -310,6 +313,8 @@ static const struct {
      * them. */
     { NOTMUCH_FEATURE_INDEXED_MIMETYPES,
       "indexed MIME types", "w"},
+    { NOTMUCH_FEATURE_LAST_MOD,
+      "modification tracking", "w"},
 };
 
 const char *
@@ -342,6 +347,8 @@ notmuch_status_to_string (notmuch_status_t status)
 	return "Unsupported operation";
     case NOTMUCH_STATUS_UPGRADE_REQUIRED:
 	return "Operation requires a database upgrade";
+    case NOTMUCH_STATUS_PATH_ERROR:
+	return "Path supplied is illegal for this function";
     default:
     case NOTMUCH_STATUS_LAST_STATUS:
 	return "Unknown error status value";
@@ -657,6 +664,12 @@ notmuch_database_create_verbose (const char *path,
 	goto DONE;
     }
 
+    if (path[0] != '/') {
+	message = strdup ("Error: Database path must be absolute.\n");
+	status = NOTMUCH_STATUS_PATH_ERROR;
+	goto DONE;
+    }
+
     err = stat (path, &st);
     if (err) {
 	IGNORE_RESULT (asprintf (&message, "Error: Cannot create database at %s: %s.\n",
@@ -727,6 +740,23 @@ _notmuch_database_ensure_writable (notmuch_database_t *notmuch)
     }
 
     return NOTMUCH_STATUS_SUCCESS;
+}
+
+/* Allocate a revision number for the next change. */
+unsigned long
+_notmuch_database_new_revision (notmuch_database_t *notmuch)
+{
+    unsigned long new_revision = notmuch->revision + 1;
+
+    /* If we're in an atomic section, hold off on updating the
+     * committed revision number until we commit the atomic section.
+     */
+    if (notmuch->atomic_nesting)
+	notmuch->atomic_dirty = TRUE;
+    else
+	notmuch->revision = new_revision;
+
+    return new_revision;
 }
 
 /* Parse a database features string from the given database version.
@@ -847,6 +877,12 @@ notmuch_database_open_verbose (const char *path,
 	goto DONE;
     }
 
+    if (path[0] != '/') {
+	message = strdup ("Error: Database path must be absolute.\n");
+	status = NOTMUCH_STATUS_PATH_ERROR;
+	goto DONE;
+    }
+
     if (! (notmuch_path = talloc_asprintf (local, "%s/%s", path, ".notmuch"))) {
 	message = strdup ("Out of memory\n");
 	status = NOTMUCH_STATUS_OUT_OF_MEMORY;
@@ -890,6 +926,7 @@ notmuch_database_open_verbose (const char *path,
     notmuch->atomic_nesting = 0;
     try {
 	string last_thread_id;
+	string last_mod;
 
 	if (mode == NOTMUCH_DATABASE_MODE_READ_WRITE) {
 	    notmuch->xapian_db = new Xapian::WritableDatabase (xapian_path,
@@ -948,11 +985,22 @@ notmuch_database_open_verbose (const char *path,
 		INTERNAL_ERROR ("Malformed database last_thread_id: %s", str);
 	}
 
+	/* Get current highest revision number. */
+	last_mod = notmuch->xapian_db->get_value_upper_bound (
+	    NOTMUCH_VALUE_LAST_MOD);
+	if (last_mod.empty ())
+	    notmuch->revision = 0;
+	else
+	    notmuch->revision = Xapian::sortable_unserialise (last_mod);
+	notmuch->uuid = talloc_strdup (
+	    notmuch, notmuch->xapian_db->get_uuid ().c_str ());
+
 	notmuch->query_parser = new Xapian::QueryParser;
 	notmuch->term_gen = new Xapian::TermGenerator;
 	notmuch->term_gen->set_stemmer (Xapian::Stem ("english"));
 	notmuch->value_range_processor = new Xapian::NumberValueRangeProcessor (NOTMUCH_VALUE_TIMESTAMP);
 	notmuch->date_range_processor = new ParseTimeValueRangeProcessor (NOTMUCH_VALUE_TIMESTAMP);
+	notmuch->last_mod_range_processor = new Xapian::NumberValueRangeProcessor (NOTMUCH_VALUE_LAST_MOD, "lastmod:");
 
 	notmuch->query_parser->set_default_op (Xapian::Query::OP_AND);
 	notmuch->query_parser->set_database (*notmuch->xapian_db);
@@ -960,6 +1008,7 @@ notmuch_database_open_verbose (const char *path,
 	notmuch->query_parser->set_stemming_strategy (Xapian::QueryParser::STEM_SOME);
 	notmuch->query_parser->add_valuerangeprocessor (notmuch->value_range_processor);
 	notmuch->query_parser->add_valuerangeprocessor (notmuch->date_range_processor);
+	notmuch->query_parser->add_valuerangeprocessor (notmuch->last_mod_range_processor);
 
 	for (i = 0; i < ARRAY_SIZE (BOOLEAN_PREFIX_EXTERNAL); i++) {
 	    prefix_t *prefix = &BOOLEAN_PREFIX_EXTERNAL[i];
@@ -1038,6 +1087,8 @@ notmuch_database_close (notmuch_database_t *notmuch)
     notmuch->value_range_processor = NULL;
     delete notmuch->date_range_processor;
     notmuch->date_range_processor = NULL;
+    delete notmuch->last_mod_range_processor;
+    notmuch->last_mod_range_processor = NULL;
 
     return status;
 }
@@ -1321,6 +1372,7 @@ notmuch_database_upgrade (notmuch_database_t *notmuch,
     enum _notmuch_features target_features, new_features;
     notmuch_status_t status;
     notmuch_private_status_t private_status;
+    notmuch_query_t *query = NULL;
     unsigned int count = 0, total = 0;
 
     status = _notmuch_database_ensure_writable (notmuch);
@@ -1336,7 +1388,7 @@ notmuch_database_upgrade (notmuch_database_t *notmuch,
 	return NOTMUCH_STATUS_SUCCESS;
 
     if (progress_notify) {
-	/* Setup our handler for SIGALRM */
+	/* Set up our handler for SIGALRM */
 	memset (&action, 0, sizeof (struct sigaction));
 	action.sa_handler = handle_sigalrm;
 	sigemptyset (&action.sa_mask);
@@ -1355,10 +1407,18 @@ notmuch_database_upgrade (notmuch_database_t *notmuch,
 
     /* Figure out how much total work we need to do. */
     if (new_features &
-	(NOTMUCH_FEATURE_FILE_TERMS | NOTMUCH_FEATURE_BOOL_FOLDER)) {
-	notmuch_query_t *query = notmuch_query_create (notmuch, "");
-	total += notmuch_query_count_messages (query);
+	(NOTMUCH_FEATURE_FILE_TERMS | NOTMUCH_FEATURE_BOOL_FOLDER |
+	 NOTMUCH_FEATURE_LAST_MOD)) {
+	query = notmuch_query_create (notmuch, "");
+	unsigned msg_count;
+
+	status = notmuch_query_count_messages_st (query, &msg_count);
+	if (status)
+	    goto DONE;
+
+	total += msg_count;
 	notmuch_query_destroy (query);
+	query = NULL;
     }
     if (new_features & NOTMUCH_FEATURE_DIRECTORY_DOCS) {
 	t_end = db->allterms_end ("XTIMESTAMP");
@@ -1382,13 +1442,18 @@ notmuch_database_upgrade (notmuch_database_t *notmuch,
 
     /* Perform per-message upgrades. */
     if (new_features &
-	(NOTMUCH_FEATURE_FILE_TERMS | NOTMUCH_FEATURE_BOOL_FOLDER)) {
-	notmuch_query_t *query = notmuch_query_create (notmuch, "");
+	(NOTMUCH_FEATURE_FILE_TERMS | NOTMUCH_FEATURE_BOOL_FOLDER |
+	 NOTMUCH_FEATURE_LAST_MOD)) {
 	notmuch_messages_t *messages;
 	notmuch_message_t *message;
 	char *filename;
 
-	for (messages = notmuch_query_search_messages (query);
+	query = notmuch_query_create (notmuch, "");
+
+	status = notmuch_query_search_messages_st (query, &messages);
+	if (status)
+	    goto DONE;
+	for (;
 	     notmuch_messages_valid (messages);
 	     notmuch_messages_move_to_next (messages))
 	{
@@ -1419,6 +1484,14 @@ notmuch_database_upgrade (notmuch_database_t *notmuch,
 	    if (new_features & NOTMUCH_FEATURE_BOOL_FOLDER)
 		_notmuch_message_upgrade_folder (message);
 
+	    /* Prior to NOTMUCH_FEATURE_LAST_MOD, messages did not
+	     * track modification revisions.  Give all messages the
+	     * next available revision; since we just started tracking
+	     * revisions for this database, that will be 1.
+	     */
+	    if (new_features & NOTMUCH_FEATURE_LAST_MOD)
+		_notmuch_message_upgrade_last_mod (message);
+
 	    _notmuch_message_sync (message);
 
 	    notmuch_message_destroy (message);
@@ -1427,6 +1500,7 @@ notmuch_database_upgrade (notmuch_database_t *notmuch,
 	}
 
 	notmuch_query_destroy (query);
+	query = NULL;
     }
 
     /* Perform per-directory upgrades. */
@@ -1547,6 +1621,9 @@ notmuch_database_upgrade (notmuch_database_t *notmuch,
 	sigaction (SIGALRM, &action, NULL);
     }
 
+    if (query)
+	notmuch_query_destroy (query);
+
     talloc_free (local);
     return status;
 }
@@ -1601,9 +1678,23 @@ notmuch_database_end_atomic (notmuch_database_t *notmuch)
 	return NOTMUCH_STATUS_XAPIAN_EXCEPTION;
     }
 
+    if (notmuch->atomic_dirty) {
+	++notmuch->revision;
+	notmuch->atomic_dirty = FALSE;
+    }
+
 DONE:
     notmuch->atomic_nesting--;
     return NOTMUCH_STATUS_SUCCESS;
+}
+
+unsigned long
+notmuch_database_get_revision (notmuch_database_t *notmuch,
+				const char **uuid)
+{
+    if (uuid)
+	*uuid = notmuch->uuid;
+    return notmuch->revision;
 }
 
 /* We allow the user to use arbitrarily long paths for directories. But
@@ -2576,7 +2667,7 @@ notmuch_database_get_all_tags (notmuch_database_t *db)
 }
 
 const char *
-notmuch_database_status_string (notmuch_database_t *notmuch)
+notmuch_database_status_string (const notmuch_database_t *notmuch)
 {
     return notmuch->status_string;
 }

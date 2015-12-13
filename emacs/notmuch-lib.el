@@ -25,6 +25,10 @@
 (require 'mm-decode)
 (require 'cl)
 
+(unless (require 'notmuch-version nil t)
+  (defconst notmuch-emacs-version "unknown"
+    "Placeholder variable when notmuch-version.el[c] is not available."))
+
 (autoload 'notmuch-jump-search "notmuch-jump"
   "Jump to a saved search by shortcut key." t)
 
@@ -192,8 +196,8 @@ Otherwise the output will be returned"
 "Perhaps you haven't run \"notmuch setup\" yet? Try running this
 on the command line, and then retry your notmuch command")))
 
-(defun notmuch-version ()
-  "Return a string with the notmuch version number."
+(defun notmuch-cli-version ()
+  "Return a string with the notmuch cli command version number."
   (let ((long-string
 	 ;; Trim off the trailing newline.
 	 (substring (notmuch-command-to-string "--version") 0 -1)))

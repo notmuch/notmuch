@@ -134,12 +134,13 @@ notmuch_rb_query_search_threads (VALUE self)
 {
     notmuch_query_t *query;
     notmuch_threads_t *threads;
+    notmuch_status_t status;
 
     Data_Get_Notmuch_Query (self, query);
 
-    threads = notmuch_query_search_threads (query);
-    if (!threads)
-	rb_raise (notmuch_rb_eMemoryError, "Out of memory");
+    status = notmuch_query_search_threads_st (query, &threads);
+    if (status)
+	notmuch_rb_status_raise (status);
 
     return Data_Wrap_Struct (notmuch_rb_cThreads, NULL, NULL, threads);
 }
@@ -154,12 +155,13 @@ notmuch_rb_query_search_messages (VALUE self)
 {
     notmuch_query_t *query;
     notmuch_messages_t *messages;
+    notmuch_status_t status;
 
     Data_Get_Notmuch_Query (self, query);
 
-    messages = notmuch_query_search_messages (query);
-    if (!messages)
-	rb_raise (notmuch_rb_eMemoryError, "Out of memory");
+    status = notmuch_query_search_messages_st (query, &messages);
+    if (status)
+	notmuch_rb_status_raise (status);
 
     return Data_Wrap_Struct (notmuch_rb_cMessages, NULL, NULL, messages);
 }
@@ -173,14 +175,16 @@ VALUE
 notmuch_rb_query_count_messages (VALUE self)
 {
     notmuch_query_t *query;
+    notmuch_status_t status;
+    unsigned int count;
 
     Data_Get_Notmuch_Query (self, query);
 
-    /* Xapian exceptions are not handled properly.
-     * (function may return 0 after printing a message)
-     * Thus there is nothing we can do here...
-     */
-    return UINT2NUM(notmuch_query_count_messages(query));
+    status = notmuch_query_count_messages_st (query, &count);
+    if (status)
+	notmuch_rb_status_raise (status);
+
+    return UINT2NUM(count);
 }
 
 /*
@@ -192,12 +196,14 @@ VALUE
 notmuch_rb_query_count_threads (VALUE self)
 {
     notmuch_query_t *query;
+    notmuch_status_t status;
+    unsigned int count;
 
     Data_Get_Notmuch_Query (self, query);
 
-    /* Xapian exceptions are not handled properly.
-     * (function may return 0 after printing a message)
-     * Thus there is nothing we can do here...
-     */
-    return UINT2NUM(notmuch_query_count_threads(query));
+    status = notmuch_query_count_threads_st (query, &count);
+    if (status)
+	notmuch_rb_status_raise (status);
+
+    return UINT2NUM(count);
 }

@@ -37,6 +37,12 @@ typedef enum {
 } output_t;
 
 typedef enum {
+    DEDUP_NONE,
+    DEDUP_MAILBOX,
+    DEDUP_ADDRESS,
+} dedup_t;
+
+typedef enum {
     NOTMUCH_FORMAT_JSON,
     NOTMUCH_FORMAT_TEXT,
     NOTMUCH_FORMAT_TEXT0,
@@ -55,6 +61,7 @@ typedef struct {
     int limit;
     int dupe;
     GHashTable *addresses;
+    dedup_t dedup;
 } search_context_t;
 
 typedef struct {
@@ -111,15 +118,22 @@ do_search_threads (search_context_t *ctx)
     sprinter_t *format = ctx->format;
     time_t date;
     int i;
+    notmuch_status_t status;
 
     if (ctx->offset < 0) {
-	ctx->offset += notmuch_query_count_threads (ctx->query);
+	unsigned count;
+	notmuch_status_t status;
+	status = notmuch_query_count_threads_st (ctx->query, &count);
+	if (print_status_query ("notmuch search", ctx->query, status))
+	    return 1;
+
+	ctx->offset += count;
 	if (ctx->offset < 0)
 	    ctx->offset = 0;
     }
 
-    threads = notmuch_query_search_threads (ctx->query);
-    if (threads == NULL)
+    status = notmuch_query_search_threads_st (ctx->query, &threads);
+    if (print_status_query("notmuch search", ctx->query, status))
 	return 1;
 
     format->begin_list (format);
@@ -243,33 +257,87 @@ do_search_threads (search_context_t *ctx)
     return 0;
 }
 
+static mailbox_t *new_mailbox (void *ctx, const char *name, const char *addr)
+{
+    mailbox_t *mailbox;
+
+    mailbox = talloc (ctx, mailbox_t);
+    if (! mailbox)
+	return NULL;
+
+    mailbox->name = talloc_strdup (mailbox, name);
+    mailbox->addr = talloc_strdup (mailbox, addr);
+    mailbox->count = 1;
+
+    return mailbox;
+}
+
+static int mailbox_compare (const void *v1, const void *v2)
+{
+    const mailbox_t *m1 = v1, *m2 = v2;
+    int ret;
+
+    ret = strcmp_null (m1->name, m2->name);
+    if (! ret)
+	ret = strcmp (m1->addr, m2->addr);
+
+    return ret;
+}
+
 /* Returns TRUE iff name and addr is duplicate. If not, stores the
  * name/addr pair in order to detect subsequent duplicates. */
 static notmuch_bool_t
 is_duplicate (const search_context_t *ctx, const char *name, const char *addr)
 {
-    notmuch_bool_t duplicate;
     char *key;
+    GList *list, *l;
     mailbox_t *mailbox;
 
-    key = talloc_asprintf (ctx->format, "%s <%s>", name, addr);
+    list = g_hash_table_lookup (ctx->addresses, addr);
+    if (list) {
+	mailbox_t find = {
+	    .name = name,
+	    .addr = addr,
+	};
+
+	l = g_list_find_custom (list, &find, mailbox_compare);
+	if (l) {
+	    mailbox = l->data;
+	    mailbox->count++;
+	    return TRUE;
+	}
+
+	mailbox = new_mailbox (ctx->format, name, addr);
+	if (! mailbox)
+	    return FALSE;
+
+	/*
+	 * XXX: It would be more efficient to prepend to the list, but
+	 * then we'd have to store the changed list head back to the
+	 * hash table. This check is here just to avoid the compiler
+	 * warning for unused result.
+	 */
+	if (list != g_list_append (list, mailbox))
+	    INTERNAL_ERROR ("appending to list changed list head\n");
+
+	return FALSE;
+    }
+
+    key = talloc_strdup (ctx->format, addr);
     if (! key)
 	return FALSE;
 
-    duplicate = g_hash_table_lookup_extended (ctx->addresses, key, NULL, (gpointer)&mailbox);
+    mailbox = new_mailbox (ctx->format, name, addr);
+    if (! mailbox)
+	return FALSE;
 
-    if (! duplicate) {
-	mailbox = talloc (ctx->format, mailbox_t);
-	mailbox->name = talloc_strdup (mailbox, name);
-	mailbox->addr = talloc_strdup (mailbox, addr);
-	mailbox->count = 1;
-	g_hash_table_insert (ctx->addresses, key, mailbox);
-    } else {
-	mailbox->count++;
-	talloc_free (key);
-    }
+    list = g_list_append (NULL, mailbox);
+    if (! list)
+	return FALSE;
 
-    return duplicate;
+    g_hash_table_insert (ctx->addresses, key, list);
+
+    return FALSE;
 }
 
 static void
@@ -287,7 +355,7 @@ print_mailbox (const search_context_t *ctx, const mailbox_t *mailbox)
     name_addr = internet_address_to_string (ia, FALSE);
 
     if (format->is_text_printer) {
-	if (count > 0) {
+	if (ctx->output & OUTPUT_COUNT) {
 	    format->integer (format, count);
 	    format->string (format, "\t");
 	}
@@ -301,7 +369,7 @@ print_mailbox (const search_context_t *ctx, const mailbox_t *mailbox)
 	format->string (format, addr);
 	format->map_key (format, "name-addr");
 	format->string (format, name_addr);
-	if (count > 0) {
+	if (ctx->output & OUTPUT_COUNT) {
 	    format->map_key (format, "count");
 	    format->integer (format, count);
 	}
@@ -338,13 +406,15 @@ process_address_list (const search_context_t *ctx,
 	    mailbox_t mbx = {
 		.name = internet_address_get_name (address),
 		.addr = internet_address_mailbox_get_addr (mailbox),
-		.count = 0,
 	    };
 
-	    if (is_duplicate (ctx, mbx.name, mbx.addr))
+	    /* OUTPUT_COUNT only works with deduplication */
+	    if (ctx->dedup != DEDUP_NONE &&
+		is_duplicate (ctx, mbx.name, mbx.addr))
 		continue;
 
-	    if (ctx->output & OUTPUT_COUNT)
+	    /* OUTPUT_COUNT and DEDUP_ADDRESS require a full pass. */
+	    if (ctx->output & OUTPUT_COUNT || ctx->dedup == DEDUP_ADDRESS)
 		continue;
 
 	    print_mailbox (ctx, &mbx);
@@ -378,12 +448,54 @@ _talloc_free_for_g_hash (void *ptr)
 }
 
 static void
-print_hash_value (unused (gpointer key), gpointer value, gpointer user_data)
+_list_free_for_g_hash (void *ptr)
 {
-    const mailbox_t *mailbox = value;
-    search_context_t *ctx = user_data;
+    g_list_free_full (ptr, _talloc_free_for_g_hash);
+}
+
+/* Print the most common variant of a list of unique mailboxes, and
+ * conflate the counts. */
+static void
+print_popular (const search_context_t *ctx, GList *list)
+{
+    GList *l;
+    mailbox_t *mailbox = NULL, *m;
+    int max = 0;
+    int total = 0;
+
+    for (l = list; l; l = l->next) {
+	m = l->data;
+	total += m->count;
+	if (m->count > max) {
+	    mailbox = m;
+	    max = m->count;
+	}
+    }
+
+    if (! mailbox)
+	INTERNAL_ERROR("Empty list in address hash table\n");
+
+    /* The original count is no longer needed, so overwrite. */
+    mailbox->count = total;
 
     print_mailbox (ctx, mailbox);
+}
+
+static void
+print_list_value (void *mailbox, void *context)
+{
+    print_mailbox (context, mailbox);
+}
+
+static void
+print_hash_value (unused (void *key), void *list, void *context)
+{
+    const search_context_t *ctx = context;
+
+    if (ctx->dedup == DEDUP_ADDRESS)
+	print_popular (ctx, list);
+    else
+	g_list_foreach (list, print_list_value, context);
 }
 
 static int
@@ -412,15 +524,22 @@ do_search_messages (search_context_t *ctx)
     notmuch_filenames_t *filenames;
     sprinter_t *format = ctx->format;
     int i;
+    notmuch_status_t status;
 
     if (ctx->offset < 0) {
-	ctx->offset += notmuch_query_count_messages (ctx->query);
+	unsigned count;
+	notmuch_status_t status;
+	status = notmuch_query_count_messages_st (ctx->query, &count);
+	if (print_status_query ("notmuch search", ctx->query, status))
+	    return 1;
+
+	ctx->offset += count;
 	if (ctx->offset < 0)
 	    ctx->offset = 0;
     }
 
-    messages = notmuch_query_search_messages (ctx->query);
-    if (messages == NULL)
+    status = notmuch_query_search_messages_st (ctx->query, &messages);
+    if (print_status_query ("notmuch search", ctx->query, status))
 	return 1;
 
     format->begin_list (format);
@@ -481,7 +600,8 @@ do_search_messages (search_context_t *ctx)
 	notmuch_message_destroy (message);
     }
 
-    if (ctx->addresses && ctx->output & OUTPUT_COUNT)
+    if (ctx->addresses &&
+	(ctx->output & OUTPUT_COUNT || ctx->dedup == DEDUP_ADDRESS))
 	g_hash_table_foreach (ctx->addresses, print_hash_value, ctx);
 
     notmuch_messages_destroy (messages);
@@ -508,8 +628,9 @@ do_search_tags (const search_context_t *ctx)
     if (strcmp (notmuch_query_get_query_string (query), "*") == 0) {
 	tags = notmuch_database_get_all_tags (notmuch);
     } else {
-	messages = notmuch_query_search_messages (query);
-	if (messages == NULL)
+	notmuch_status_t status;
+	status = notmuch_query_search_messages_st (query, &messages);
+	if (print_status_query ("notmuch search", query, status))
 	    return 1;
 
 	tags = notmuch_messages_collect_tags (messages);
@@ -583,6 +704,8 @@ _notmuch_search_prepare (search_context_t *ctx, notmuch_config_t *config, int ar
 	return EXIT_FAILURE;
     }
 
+    notmuch_exit_if_unmatched_db_uuid (ctx->notmuch);
+
     query_str = query_string_from_args (ctx->notmuch, argc, argv);
     if (query_str == NULL) {
 	fprintf (stderr, "Out of memory.\n");
@@ -640,6 +763,7 @@ static search_context_t search_context = {
     .offset = 0,
     .limit = -1, /* unlimited */
     .dupe = -1,
+    .dedup = DEDUP_MAILBOX,
 };
 
 static const notmuch_opt_desc_t common_options[] = {
@@ -681,6 +805,7 @@ notmuch_search_command (notmuch_config_t *config, int argc, char *argv[])
 	{ NOTMUCH_OPT_INT, &ctx->limit, "limit", 'L', 0  },
 	{ NOTMUCH_OPT_INT, &ctx->dupe, "duplicate", 'D', 0  },
 	{ NOTMUCH_OPT_INHERIT, (void *) &common_options, NULL, 0, 0 },
+	{ NOTMUCH_OPT_INHERIT, (void *) &notmuch_shared_options, NULL, 0, 0 },
 	{ 0, 0, 0, 0, 0 }
     };
 
@@ -688,6 +813,8 @@ notmuch_search_command (notmuch_config_t *config, int argc, char *argv[])
     opt_index = parse_arguments (argc, argv, options, 1);
     if (opt_index < 0)
 	return EXIT_FAILURE;
+
+    notmuch_process_shared_options (argv[0]);
 
     if (ctx->output != OUTPUT_FILES && ctx->output != OUTPUT_MESSAGES &&
 	ctx->dupe != -1) {
@@ -736,7 +863,13 @@ notmuch_address_command (notmuch_config_t *config, int argc, char *argv[])
 	  (notmuch_keyword_t []){ { "true", NOTMUCH_EXCLUDE_TRUE },
 				  { "false", NOTMUCH_EXCLUDE_FALSE },
 				  { 0, 0 } } },
+	{ NOTMUCH_OPT_KEYWORD, &ctx->dedup, "deduplicate", 'D',
+	  (notmuch_keyword_t []){ { "no", DEDUP_NONE },
+				  { "mailbox", DEDUP_MAILBOX },
+				  { "address", DEDUP_ADDRESS },
+				  { 0, 0 } } },
 	{ NOTMUCH_OPT_INHERIT, (void *) &common_options, NULL, 0, 0 },
+	{ NOTMUCH_OPT_INHERIT, (void *) &notmuch_shared_options, NULL, 0, 0 },
 	{ 0, 0, 0, 0, 0 }
     };
 
@@ -744,15 +877,28 @@ notmuch_address_command (notmuch_config_t *config, int argc, char *argv[])
     if (opt_index < 0)
 	return EXIT_FAILURE;
 
+    notmuch_process_shared_options (argv[0]);
+
     if (! (ctx->output & (OUTPUT_SENDER | OUTPUT_RECIPIENTS)))
 	ctx->output |= OUTPUT_SENDER;
+
+    if (ctx->output & OUTPUT_COUNT && ctx->dedup == DEDUP_NONE) {
+	fprintf (stderr, "--output=count is not applicable with --deduplicate=no\n");
+	return EXIT_FAILURE;
+    }
 
     if (_notmuch_search_prepare (ctx, config,
 				 argc - opt_index, argv + opt_index))
 	return EXIT_FAILURE;
 
-    ctx->addresses = g_hash_table_new_full (g_str_hash, g_str_equal,
-					    _talloc_free_for_g_hash, _talloc_free_for_g_hash);
+    ctx->addresses = g_hash_table_new_full (strcase_hash, strcase_equal,
+					    _talloc_free_for_g_hash,
+					    _list_free_for_g_hash);
+
+    /* The order is not guaranteed if a full pass is required, so go
+     * for fastest. */
+    if (ctx->output & OUTPUT_COUNT || ctx->dedup == DEDUP_ADDRESS)
+	notmuch_query_set_sort (ctx->query, NOTMUCH_SORT_UNSORTED);
 
     ret = do_search_messages (ctx);
 

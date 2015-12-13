@@ -96,7 +96,8 @@ _x32="$_x04$_x04$_x04$_x04$_x04$_x04$_x04$_x04"
 # test_description='Description of this test...
 # This test checks if command xyzzy does the right thing...
 # '
-# . ./test-lib.sh
+# . ./test-lib.sh || exit 1
+
 [ "x$ORIGINAL_TERM" != "xdumb" ] && (
 		TERM=$ORIGINAL_TERM &&
 		export TERM &&
@@ -487,7 +488,7 @@ emacs_deliver_message ()
 	   (message-goto-body)
 	   (insert \"${body}\")
 	   $@
-	   (message-send-and-exit))"
+	   (notmuch-mua-send-and-exit))"
 
     # In case message was sent properly, client waits for confirmation
     # before exiting and resuming control here; therefore making sure
@@ -522,7 +523,7 @@ emacs_fcc_message ()
 	   (message-goto-body)
 	   (insert \"${body}\")
 	   $@
-	   (message-send-and-exit))" || return 1
+	   (notmuch-mua-send-and-exit))" || return 1
     notmuch new >/dev/null
 }
 
@@ -621,9 +622,9 @@ test_expect_equal_json () {
     # The test suite forces LC_ALL=C, but this causes Python 3 to
     # decode stdin as ASCII.  We need to read JSON in UTF-8, so
     # override Python's stdio encoding defaults.
-    output=$(echo "$1" | PYTHONIOENCODING=utf-8 python -mjson.tool \
+    output=$(echo "$1" | PYTHONIOENCODING=utf-8 $NOTMUCH_PYTHON -mjson.tool \
         || echo "$1")
-    expected=$(echo "$2" | PYTHONIOENCODING=utf-8 python -mjson.tool \
+    expected=$(echo "$2" | PYTHONIOENCODING=utf-8 $NOTMUCH_PYTHON -mjson.tool \
         || echo "$2")
     shift 2
     test_expect_equal "$output" "$expected" "$@"
@@ -718,6 +719,11 @@ notmuch_date_sanitize ()
 {
     sed \
 	-e 's/^Date: Fri, 05 Jan 2001 .*0000/Date: GENERATED_DATE/'
+}
+
+notmuch_uuid_sanitize ()
+{
+    sed 's/[0-9a-f]\{8\}-[0-9a-f]\{4\}-[0-9a-f]\{4\}-[0-9a-f]\{4\}-[0-9a-f]\{12\}/UUID/g'
 }
 # End of notmuch helper functions
 
@@ -1153,14 +1159,13 @@ test_python() {
 	export LD_LIBRARY_PATH=$TEST_DIRECTORY/../lib
 	export PYTHONPATH=$TEST_DIRECTORY/../bindings/python
 
-	# Some distros (e.g. Arch Linux) ship Python 2.* as /usr/bin/python2,
-	# most others as /usr/bin/python. So first try python2, and fallback to
-	# python if python2 doesn't exist.
-	cmd=python2
-	[[ ${test_missing_external_prereq_[python2]} == t ]] && cmd=python
-
 	(echo "import sys; _orig_stdout=sys.stdout; sys.stdout=open('OUTPUT', 'w')"; cat) \
-		| $cmd -
+		| $NOTMUCH_PYTHON -
+}
+
+test_ruby() {
+    export LD_LIBRARY_PATH=$TEST_DIRECTORY/../lib
+    MAIL_DIR=$MAIL_DIR ruby -I $TEST_DIRECTORY/../bindings/ruby> OUTPUT
 }
 
 test_C () {
@@ -1224,14 +1229,14 @@ test_init_ () {
 }
 
 
-. ./test-lib-common.sh
+. ./test-lib-common.sh || exit 1
 
 emacs_generate_script
 
 
 # Use -P to resolve symlinks in our working directory so that the cwd
 # in subprocesses like git equals our $PWD (for pathname comparisons).
-cd -P "$test" || error "Cannot setup test environment"
+cd -P "$test" || error "Cannot set up test environment"
 
 if test "$verbose" = "t"
 then
@@ -1320,5 +1325,4 @@ test_declare_external_prereq emacs
 test_declare_external_prereq ${TEST_EMACSCLIENT}
 test_declare_external_prereq gdb
 test_declare_external_prereq gpg
-test_declare_external_prereq python
-test_declare_external_prereq python2
+test_declare_external_prereq ${NOTMUCH_PYTHON}

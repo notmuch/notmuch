@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 test_description="naming of threads with changing subject"
-. ./test-lib.sh
+. ./test-lib.sh || exit 1
 
 test_begin_subtest "Initial thread name (oldest-first search)"
 add_message '[subject]="thread-naming: Initial thread subject"' \

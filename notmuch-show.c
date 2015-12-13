@@ -334,8 +334,6 @@ show_text_part_content (GMimeObject *part, GMimeStream *stream_out,
 	g_object_unref(stream_filter);
 }
 
-#ifdef GMIME_ATLEAST_26
-
 /* Get signature status string (GMime 2.6) */
 static const char*
 signature_status_to_string (GMimeSignatureStatus x)
@@ -426,91 +424,6 @@ format_part_sigstatus_sprinter (sprinter_t *sp, mime_node_t *node)
 
     sp->end (sp);
 }
-
-#else /* GMIME_ATLEAST_26 */
-
-/* Get signature status string (GMime 2.4) */
-static const char*
-signer_status_to_string (GMimeSignerStatus x)
-{
-    switch (x) {
-    case GMIME_SIGNER_STATUS_NONE:
-	return "none";
-    case GMIME_SIGNER_STATUS_GOOD:
-	return "good";
-    case GMIME_SIGNER_STATUS_BAD:
-	return "bad";
-    case GMIME_SIGNER_STATUS_ERROR:
-	return "error";
-    }
-    return "unknown";
-}
-
-/* Signature status sprinter (GMime 2.4) */
-static void
-format_part_sigstatus_sprinter (sprinter_t *sp, mime_node_t *node)
-{
-    const GMimeSignatureValidity* validity = node->sig_validity;
-
-    sp->begin_list (sp);
-
-    if (!validity) {
-	sp->end (sp);
-	return;
-    }
-
-    const GMimeSigner *signer = g_mime_signature_validity_get_signers (validity);
-    while (signer) {
-	sp->begin_map (sp);
-
-	/* status */
-	sp->map_key (sp, "status");
-	sp->string (sp, signer_status_to_string (signer->status));
-
-	if (signer->status == GMIME_SIGNER_STATUS_GOOD)
-	{
-	    if (signer->fingerprint) {
-		sp->map_key (sp, "fingerprint");
-		sp->string (sp, signer->fingerprint);
-	    }
-	    /* these dates are seconds since the epoch; should we
-	     * provide a more human-readable format string? */
-	    if (signer->created) {
-		sp->map_key (sp, "created");
-		sp->integer (sp, signer->created);
-	    }
-	    if (signer->expires) {
-		sp->map_key (sp, "expires");
-		sp->integer (sp, signer->expires);
-	    }
-	    /* output user id only if validity is FULL or ULTIMATE. */
-	    /* note that gmime is using the term "trust" here, which
-	     * is WRONG.  It's actually user id "validity". */
-	    if ((signer->name) && (signer->trust)) {
-		if ((signer->trust == GMIME_SIGNER_TRUST_FULLY) || (signer->trust == GMIME_SIGNER_TRUST_ULTIMATE)) {
-		    sp->map_key (sp, "userid");
-		    sp->string (sp, signer->name);
-		}
-           }
-       } else {
-           if (signer->keyid) {
-	       sp->map_key (sp, "keyid");
-	       sp->string (sp, signer->keyid);
-	   }
-       }
-       if (signer->errors != GMIME_SIGNER_ERROR_NONE) {
-	   sp->map_key (sp, "errors");
-	   sp->integer (sp, signer->errors);
-       }
-
-       sp->end (sp);
-       signer = signer->next;
-    }
-
-    sp->end (sp);
-}
-
-#endif /* GMIME_ATLEAST_26 */
 
 static notmuch_status_t
 format_part_text (const void *ctx, sprinter_t *sp, mime_node_t *node,
@@ -982,13 +895,22 @@ do_show_single (void *ctx,
 {
     notmuch_messages_t *messages;
     notmuch_message_t *message;
+    notmuch_status_t status;
+    unsigned int count;
 
-    if (notmuch_query_count_messages (query) != 1) {
+    status = notmuch_query_count_messages_st (query, &count);
+    if (print_status_query ("notmuch show", query, status))
+	return 1;
+
+    if (count != 1) {
 	fprintf (stderr, "Error: search term did not match precisely one message.\n");
 	return 1;
     }
 
-    messages = notmuch_query_search_messages (query);
+    status = notmuch_query_search_messages_st (query, &messages);
+    if (print_status_query ("notmuch show", query, status))
+	return 1;
+
     message = notmuch_messages_get (messages);
 
     if (message == NULL) {
@@ -1015,8 +937,8 @@ do_show (void *ctx,
     notmuch_messages_t *messages;
     notmuch_status_t status, res = NOTMUCH_STATUS_SUCCESS;
 
-    threads = notmuch_query_search_threads (query);
-    if (! threads)
+    status= notmuch_query_search_threads_st (query, &threads);
+    if (print_status_query ("notmuch show", query, status))
 	return 1;
 
     sp->begin_list (sp);
@@ -1114,12 +1036,15 @@ notmuch_show_command (notmuch_config_t *config, int argc, char *argv[])
 	{ NOTMUCH_OPT_BOOLEAN, &params.crypto.verify, "verify", 'v', 0 },
 	{ NOTMUCH_OPT_BOOLEAN, &params.output_body, "body", 'b', 0 },
 	{ NOTMUCH_OPT_BOOLEAN, &params.include_html, "include-html", 0, 0 },
+	{ NOTMUCH_OPT_INHERIT, (void *) &notmuch_shared_options, NULL, 0, 0 },
 	{ 0, 0, 0, 0, 0 }
     };
 
     opt_index = parse_arguments (argc, argv, options, 1);
     if (opt_index < 0)
 	return EXIT_FAILURE;
+
+    notmuch_process_shared_options (argv[0]);
 
     /* decryption implies verification */
     if (params.crypto.decrypt)
@@ -1209,6 +1134,8 @@ notmuch_show_command (notmuch_config_t *config, int argc, char *argv[])
     if (notmuch_database_open (notmuch_config_get_database_path (config),
 			       NOTMUCH_DATABASE_MODE_READ_ONLY, &notmuch))
 	return EXIT_FAILURE;
+
+    notmuch_exit_if_unmatched_db_uuid (notmuch);
 
     query = notmuch_query_create (notmuch, query_string);
     if (query == NULL) {

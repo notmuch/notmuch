@@ -59,23 +59,19 @@ yet when sending a mail."
  :require 'notmuch-fcc-initialization
  :group 'notmuch-send)
 
-(defun notmuch-fcc-initialization ()
-  "If notmuch-fcc-directories is set,
-   hook them into the message-fcc-handler-function"
-    ;; Set up the message-fcc-handler to move mails to the maildir in Fcc
-    ;; The parameter is set to mark messages as "seen"
-    (setq message-fcc-handler-function
-          (lambda (destdir)
-	    (notmuch-maildir-fcc-write-buffer-to-maildir destdir t)))
-    ;; add a hook to actually insert the Fcc header when sending
-    (add-hook 'message-header-setup-hook 'notmuch-fcc-header-setup))
+(defun notmuch-fcc-handler (destdir)
+  "Write buffer to `destdir', marking it as sent
+
+Intended to be dynamically bound to `message-fcc-handler-function'"
+    (notmuch-maildir-fcc-write-buffer-to-maildir destdir t))
 
 (defun notmuch-fcc-header-setup ()
   "Add an Fcc header to the current message buffer.
 
-Can be added to `message-send-hook' and will set the Fcc header
-based on the values of `notmuch-fcc-dirs'. An existing Fcc header
-will NOT be removed or replaced."
+Sets the Fcc header based on the values of `notmuch-fcc-dirs'.
+
+Originally intended to be use a hook function, but now called directly
+by notmuch-mua-mail"
 
   (let ((subdir
 	 (cond
@@ -213,6 +209,5 @@ return t if successful, and nil otherwise."
 	  (delete-file (concat destdir "/tmp/" msg-id))))
       t)))
 
-(notmuch-fcc-initialization)
 (provide 'notmuch-maildir-fcc)
 

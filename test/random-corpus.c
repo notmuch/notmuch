@@ -114,6 +114,25 @@ random_utf8_string (void *ctx, size_t char_count)
     return buf;
 }
 
+/* stubs since we cannot link with notmuch.o */
+const notmuch_opt_desc_t notmuch_shared_options[] = {
+	{ 0, 0, 0, 0, 0 }
+};
+
+char *notmuch_requested_db_uuid = NULL;
+
+void
+notmuch_process_shared_options (unused (const char *dummy))
+{
+}
+
+int
+notmuch_minimal_options (unused (const char *subcommand),
+			 unused (int argc),
+			 unused (char **argv))
+{
+    return 0;
+}
 
 int
 main (int argc, char **argv)

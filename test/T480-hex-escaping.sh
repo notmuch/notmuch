@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 test_description="hex encoding and decoding"
-. ./test-lib.sh
+. ./test-lib.sh || exit 1
 
 test_begin_subtest "round trip"
 find $TEST_DIRECTORY/corpus -type f -print | sort | xargs cat > EXPECTED

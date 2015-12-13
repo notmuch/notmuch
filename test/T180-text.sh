@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 test_description="--format=text output"
-. ./test-lib.sh
+. ./test-lib.sh || exit 1
 
 test_begin_subtest "Show message: text"
 add_message "[subject]=\"text-show-subject\"" "[date]=\"Sat, 01 Jan 2000 12:00:00 -0000\"" "[body]=\"text-show-message\""

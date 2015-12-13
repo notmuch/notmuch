@@ -50,6 +50,7 @@ NOTMUCH_BEGIN_DECLS
 
 #include "xutil.h"
 #include "error_util.h"
+#include "string-util.h"
 
 #pragma GCC visibility push(hidden)
 
@@ -107,7 +108,8 @@ typedef enum {
     NOTMUCH_VALUE_TIMESTAMP = 0,
     NOTMUCH_VALUE_MESSAGE_ID,
     NOTMUCH_VALUE_FROM,
-    NOTMUCH_VALUE_SUBJECT
+    NOTMUCH_VALUE_SUBJECT,
+    NOTMUCH_VALUE_LAST_MOD,
 } notmuch_value_t;
 
 /* Xapian (with flint backend) complains if we provide a term longer
@@ -193,6 +195,9 @@ _notmuch_database_ensure_writable (notmuch_database_t *notmuch);
 void
 _notmuch_database_log (notmuch_database_t *notmuch,
 		       const char *format, ...);
+
+unsigned long
+_notmuch_database_new_revision (notmuch_database_t *notmuch);
 
 const char *
 _notmuch_database_relative_path (notmuch_database_t *notmuch,
@@ -305,6 +310,10 @@ _notmuch_message_set_header_values (notmuch_message_t *message,
 				    const char *date,
 				    const char *from,
 				    const char *subject);
+
+void
+_notmuch_message_upgrade_last_mod (notmuch_message_t *message);
+
 void
 _notmuch_message_sync (notmuch_message_t *message);
 

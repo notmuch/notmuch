@@ -56,7 +56,17 @@ TEST_BINARIES := $(TEST_BINARIES:.cc=)
 test-binaries: $(TEST_BINARIES)
 
 test:	all test-binaries
+ifeq ($V,)
+	@echo 'Use "$(MAKE) V=1" to print test headings and PASSIng results.'
+	@env NOTMUCH_TEST_QUIET=1 ${test_src_dir}/notmuch-test $(OPTIONS)
+else
+# The user has explicitly enabled quiet execution.
+ifeq ($V,0)
+	@env NOTMUCH_TEST_QUIET=1 ${test_src_dir}/notmuch-test $(OPTIONS)
+else
 	@${test_src_dir}/notmuch-test $(OPTIONS)
+endif
+endif
 
 check: test
 

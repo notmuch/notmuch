@@ -1,17 +1,7 @@
 #!/usr/bin/env bash
 test_description="error reporting for library"
 
-. ./test-lib.sh
-
-backup_database () {
-    rm -rf notmuch-dir-backup
-    cp -pR ${MAIL_DIR}/.notmuch notmuch-dir-backup
-}
-restore_database () {
-    rm -rf ${MAIL_DIR}/.notmuch
-    cp -pR notmuch-dir-backup ${MAIL_DIR}/.notmuch
-}
-
+. ./test-lib.sh || exit 1
 
 add_email_corpus
 
@@ -35,7 +25,7 @@ Error: Cannot open a database for a NULL path.
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
-test_begin_subtest "Open nonexistent database"
+test_begin_subtest "Open relative path"
 test_C <<'EOF'
 #include <stdio.h>
 #include <notmuch.h>
@@ -49,7 +39,43 @@ EOF
 cat <<'EOF' >EXPECTED
 == stdout ==
 == stderr ==
-Error opening database at ./nonexistent/foo/.notmuch: No such file or directory
+Error: Database path must be absolute.
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "Create database in relative path"
+test_C <<'EOF'
+#include <stdio.h>
+#include <notmuch.h>
+int main (int argc, char** argv)
+{
+    notmuch_database_t *db;
+    notmuch_status_t stat;
+    stat = notmuch_database_create ("./nonexistent/foo", &db);
+}
+EOF
+cat <<'EOF' >EXPECTED
+== stdout ==
+== stderr ==
+Error: Database path must be absolute.
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "Open nonexistent database"
+test_C ${PWD}/nonexistent/foo <<'EOF'
+#include <stdio.h>
+#include <notmuch.h>
+int main (int argc, char** argv)
+{
+    notmuch_database_t *db;
+    notmuch_status_t stat;
+    stat = notmuch_database_open (argv[1], 0, 0);
+}
+EOF
+cat <<'EOF' >EXPECTED
+== stdout ==
+== stderr ==
+Error opening database at CWD/nonexistent/foo/.notmuch: No such file or directory
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
@@ -70,21 +96,21 @@ Error: Cannot create a database for a NULL path.
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
-test_begin_subtest "Create database in non-existant directory"
-test_C <<'EOF'
+test_begin_subtest "Create database in nonexistent directory"
+test_C ${PWD}/nonexistent/foo<<'EOF'
 #include <stdio.h>
 #include <notmuch.h>
 int main (int argc, char** argv)
 {
     notmuch_database_t *db;
     notmuch_status_t stat;
-    stat = notmuch_database_create ("./nonexistent/foo", &db);
+    stat = notmuch_database_create (argv[1], &db);
 }
 EOF
 cat <<'EOF' >EXPECTED
 == stdout ==
 == stderr ==
-Error: Cannot create database at ./nonexistent/foo: No such file or directory.
+Error: Cannot create database at CWD/nonexistent/foo: No such file or directory.
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 

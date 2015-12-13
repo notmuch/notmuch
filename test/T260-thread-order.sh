@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 test_description="threading when messages received out of order"
-. ./test-lib.sh
+. ./test-lib.sh || exit 1
 
 # Generate all single-root four message thread structures.  We'll use
 # this for multiple tests below.

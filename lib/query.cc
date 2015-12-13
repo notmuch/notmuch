@@ -98,7 +98,7 @@ notmuch_query_create (notmuch_database_t *notmuch,
 }
 
 const char *
-notmuch_query_get_query_string (notmuch_query_t *query)
+notmuch_query_get_query_string (const notmuch_query_t *query)
 {
     return query->query_string;
 }
@@ -117,7 +117,7 @@ notmuch_query_set_sort (notmuch_query_t *query, notmuch_sort_t sort)
 }
 
 notmuch_sort_t
-notmuch_query_get_sort (notmuch_query_t *query)
+notmuch_query_get_sort (const notmuch_query_t *query)
 {
     return query->sort;
 }
@@ -541,8 +541,18 @@ notmuch_threads_destroy (notmuch_threads_t *threads)
     talloc_free (threads);
 }
 
-unsigned
+unsigned int
 notmuch_query_count_messages (notmuch_query_t *query)
+{
+    notmuch_status_t status;
+    unsigned int count;
+
+    status = notmuch_query_count_messages_st (query, &count);
+    return status ? 0 : count;
+}
+
+notmuch_status_t
+notmuch_query_count_messages_st (notmuch_query_t *query, unsigned *count_out)
 {
     notmuch_database_t *notmuch = query->notmuch;
     const char *query_string = query->query_string;
@@ -605,31 +615,44 @@ notmuch_query_count_messages (notmuch_query_t *query)
 			       "Query string was: %s\n",
 			       error.get_msg().c_str(),
 			       query->query_string);
-
+	return NOTMUCH_STATUS_XAPIAN_EXCEPTION;
     }
 
-    return count;
+    *count_out = count;
+    return NOTMUCH_STATUS_SUCCESS;
 }
 
 unsigned
 notmuch_query_count_threads (notmuch_query_t *query)
 {
+    notmuch_status_t status;
+    unsigned int count;
+
+    status = notmuch_query_count_threads_st (query, &count);
+    return status ? 0 : count;
+}
+
+notmuch_status_t
+notmuch_query_count_threads_st (notmuch_query_t *query, unsigned *count)
+{
     notmuch_messages_t *messages;
     GHashTable *hash;
-    unsigned int count;
     notmuch_sort_t sort;
+    notmuch_status_t ret = NOTMUCH_STATUS_SUCCESS;
 
     sort = query->sort;
     query->sort = NOTMUCH_SORT_UNSORTED;
-    messages = notmuch_query_search_messages (query);
+    ret = notmuch_query_search_messages_st (query, &messages);
+    if (ret)
+	return ret;
     query->sort = sort;
     if (messages == NULL)
-	return 0;
+	return NOTMUCH_STATUS_XAPIAN_EXCEPTION;
 
     hash = g_hash_table_new_full (g_str_hash, g_str_equal, NULL, NULL);
     if (hash == NULL) {
 	talloc_free (messages);
-	return 0;
+	return NOTMUCH_STATUS_OUT_OF_MEMORY;
     }
 
     while (notmuch_messages_valid (messages)) {
@@ -638,7 +661,7 @@ notmuch_query_count_threads (notmuch_query_t *query)
 	char *thread_id_copy = talloc_strdup (messages, thread_id);
 	if (unlikely (thread_id_copy == NULL)) {
 	    notmuch_message_destroy (message);
-	    count = 0;
+	    ret = NOTMUCH_STATUS_OUT_OF_MEMORY;
 	    goto DONE;
 	}
 	g_hash_table_insert (hash, thread_id_copy, NULL);
@@ -646,11 +669,17 @@ notmuch_query_count_threads (notmuch_query_t *query)
 	notmuch_messages_move_to_next (messages);
     }
 
-    count = g_hash_table_size (hash);
+    *count = g_hash_table_size (hash);
 
   DONE:
     g_hash_table_unref (hash);
     talloc_free (messages);
 
-    return count;
+    return ret;
+}
+
+notmuch_database_t *
+notmuch_query_get_database (const notmuch_query_t *query)
+{
+    return query->notmuch;
 }

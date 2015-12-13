@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 test_description='notmuch show --format=raw'
-. ./test-lib.sh
+. ./test-lib.sh || exit 1
 
 add_message
 add_message

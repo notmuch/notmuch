@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 test_description="messages with ridiculously-long message IDs"
-. ./test-lib.sh
+. ./test-lib.sh || exit 1
 
 test_begin_subtest "Referencing long ID before adding"
 generate_message '[subject]="Reference of ridiculously-long message ID"' \

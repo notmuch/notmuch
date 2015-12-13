@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 test_description='folder tags removed and added through file renames remain consistent'
-. ./test-lib.sh
+. ./test-lib.sh || exit 1
 
 test_begin_subtest "No new messages"
 output=$(NOTMUCH_NEW)

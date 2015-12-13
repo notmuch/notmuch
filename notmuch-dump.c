@@ -48,8 +48,13 @@ database_dump_file (notmuch_database_t *notmuch, gzFile output,
 
     char *buffer = NULL;
     size_t buffer_size = 0;
+    notmuch_status_t status;
 
-    for (messages = notmuch_query_search_messages (query);
+    status = notmuch_query_search_messages_st (query, &messages);
+    if (print_status_query ("notmuch dump", query, status))
+	return EXIT_FAILURE;
+
+    for (;
 	 notmuch_messages_valid (messages);
 	 notmuch_messages_move_to_next (messages)) {
 	int first = 1;
@@ -215,6 +220,8 @@ notmuch_dump_command (notmuch_config_t *config, int argc, char *argv[])
 			       NOTMUCH_DATABASE_MODE_READ_WRITE, &notmuch))
 	return EXIT_FAILURE;
 
+    notmuch_exit_if_unmatched_db_uuid (notmuch);
+
     char *output_file_name = NULL;
     int opt_index;
 
@@ -228,12 +235,15 @@ notmuch_dump_command (notmuch_config_t *config, int argc, char *argv[])
 				  { 0, 0 } } },
 	{ NOTMUCH_OPT_STRING, &output_file_name, "output", 'o', 0  },
 	{ NOTMUCH_OPT_BOOLEAN, &gzip_output, "gzip", 'z', 0 },
+	{ NOTMUCH_OPT_INHERIT, (void *) &notmuch_shared_options, NULL, 0, 0 },
 	{ 0, 0, 0, 0, 0 }
     };
 
     opt_index = parse_arguments (argc, argv, options, 1);
     if (opt_index < 0)
 	return EXIT_FAILURE;
+
+    notmuch_process_shared_options (argv[0]);
 
     if (opt_index < argc) {
 	query_str = query_string_from_args (notmuch, argc - opt_index, argv + opt_index);

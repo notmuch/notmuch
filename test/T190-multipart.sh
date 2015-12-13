@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 test_description="output of multipart message"
-. ./test-lib.sh
+. ./test-lib.sh || exit 1
 
 cat <<EOF > embedded_message
 From: Carl Worth <cworth@cworth.org>
