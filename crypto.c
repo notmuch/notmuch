@@ -81,7 +81,8 @@ notmuch_crypto_get_context (notmuch_crypto_t *crypto, const char *protocol)
 	    return protocols[i].get_context (crypto);
     }
 
-    fprintf (stderr, "Unknown or unsupported cryptographic protocol.\n");
+    fprintf (stderr, "Unknown or unsupported cryptographic protocol %s.\n",
+	     protocol);
 
     return NULL;
 }
