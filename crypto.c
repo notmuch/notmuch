@@ -43,12 +43,27 @@ create_gpg_context (notmuch_crypto_t *crypto)
     return gpgctx;
 }
 
+static const struct {
+    const char *protocol;
+    notmuch_crypto_context_t *(*get_context) (notmuch_crypto_t *crypto);
+} protocols[] = {
+    {
+	.protocol = "application/pgp-signature",
+	.get_context = create_gpg_context,
+    },
+    {
+	.protocol = "application/pgp-encrypted",
+	.get_context = create_gpg_context,
+    },
+};
+
 /* for the specified protocol return the context pointer (initializing
  * if needed) */
 notmuch_crypto_context_t *
 notmuch_crypto_get_context (notmuch_crypto_t *crypto, const char *protocol)
 {
     notmuch_crypto_context_t *cryptoctx = NULL;
+    size_t i;
 
     if (! protocol) {
 	fprintf (stderr, "Cryptographic protocol is empty.\n");
@@ -61,14 +76,14 @@ notmuch_crypto_get_context (notmuch_crypto_t *crypto, const char *protocol)
      * parameter names as defined in this document are
      * case-insensitive."  Thus, we use strcasecmp for the protocol.
      */
-    if (strcasecmp (protocol, "application/pgp-signature") == 0 ||
-	strcasecmp (protocol, "application/pgp-encrypted") == 0) {
-	cryptoctx = create_gpg_context (crypto);
-    } else {
-	fprintf (stderr, "Unknown or unsupported cryptographic protocol.\n");
+    for (i = 0; i < ARRAY_SIZE (protocols); i++) {
+	if (strcasecmp (protocol, protocols[i].protocol) == 0)
+	    return protocols[i].get_context (crypto);
     }
 
-    return cryptoctx;
+    fprintf (stderr, "Unknown or unsupported cryptographic protocol.\n");
+
+    return NULL;
 }
 
 int
