@@ -22,14 +22,20 @@
 
 /* Create a GPG context (GMime 2.6) */
 static notmuch_crypto_context_t *
-create_gpg_context (const char *gpgpath)
+create_gpg_context (notmuch_crypto_t *crypto)
 {
     notmuch_crypto_context_t *gpgctx;
 
+    if (crypto->gpgctx)
+	return crypto->gpgctx;
+
     /* TODO: GMimePasswordRequestFunc */
-    gpgctx = g_mime_gpg_context_new (NULL, gpgpath ? gpgpath : "gpg");
-    if (! gpgctx)
+    gpgctx = g_mime_gpg_context_new (NULL, crypto->gpgpath ? crypto->gpgpath : "gpg");
+    if (! gpgctx) {
+	fprintf (stderr, "Failed to construct gpg context.\n");
 	return NULL;
+    }
+    crypto->gpgctx = gpgctx;
 
     g_mime_gpg_context_set_use_agent ((GMimeGpgContext *) gpgctx, TRUE);
     g_mime_gpg_context_set_always_trust ((GMimeGpgContext *) gpgctx, FALSE);
@@ -57,12 +63,7 @@ notmuch_crypto_get_context (notmuch_crypto_t *crypto, const char *protocol)
      */
     if (strcasecmp (protocol, "application/pgp-signature") == 0 ||
 	strcasecmp (protocol, "application/pgp-encrypted") == 0) {
-	if (! crypto->gpgctx) {
-	    crypto->gpgctx = create_gpg_context (crypto->gpgpath);
-	    if (! crypto->gpgctx)
-		fprintf (stderr, "Failed to construct gpg context.\n");
-	}
-	cryptoctx = crypto->gpgctx;
+	cryptoctx = create_gpg_context (crypto);
     } else {
 	fprintf (stderr, "Unknown or unsupported cryptographic protocol.\n");
     }
