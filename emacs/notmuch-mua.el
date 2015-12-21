@@ -278,10 +278,36 @@ Note that these functions use `mail-citation-hook' if that is non-nil."
 (define-key notmuch-message-mode-map (kbd "C-c C-c") #'notmuch-mua-send-and-exit)
 (define-key notmuch-message-mode-map (kbd "C-c C-s") #'notmuch-mua-send)
 
-(defun notmuch-mua-mail (&optional to subject other-headers &rest other-args)
-  "Invoke the notmuch mail composition window.
+(defun notmuch-mua-pop-to-buffer (name)
+  "Pop to buffer NAME, and warn if it already exists and is
+modified. This function is notmuch addaptation of
+`message-pop-to-buffer'."
+  (let ((buffer (get-buffer name)))
+    (if (and buffer
+	     (buffer-name buffer))
+	(let ((window (get-buffer-window buffer 0)))
+	  (if window
+	      ;; Raise the frame already displaying the message buffer.
+	      (progn
+		(gnus-select-frame-set-input-focus (window-frame window))
+		(select-window window))
+	    (funcall (notmuch-mua-get-switch-function) buffer)
+	    (set-buffer buffer))
+	  (when (and (buffer-modified-p)
+		     (not (prog1
+			      (y-or-n-p
+			       "Message already being composed; erase? ")
+			    (message nil))))
+	    (error "Message being composed")))
+      (funcall (notmuch-mua-get-switch-function) name)
+      (set-buffer name))
+    (erase-buffer)
+    (notmuch-message-mode)))
 
-OTHER-ARGS are passed through to `message-mail'."
+(defun notmuch-mua-mail (&optional to subject other-headers continue
+				   switch-function yank-action send-actions
+				   return-action &rest ignored)
+  "Invoke the notmuch mail composition window."
   (interactive)
 
   (when notmuch-mua-user-agent-function
@@ -293,8 +319,19 @@ OTHER-ARGS are passed through to `message-mail'."
     (push (cons 'From (concat
 		       (notmuch-user-name) " <" (notmuch-user-primary-email) ">")) other-headers))
 
-  (apply #'message-mail to subject other-headers other-args)
-  (notmuch-message-mode)
+  (notmuch-mua-pop-to-buffer (message-buffer-name "mail" to))
+  (message-setup-1
+   ;; The following sexp is copied from `message-mail'
+   (nconc
+    `((To . ,(or to "")) (Subject . ,(or subject "")))
+    ;; C-h f compose-mail says that headers should be specified as
+    ;; (string . value); however all the rest of message expects
+    ;; headers to be symbols, not strings (eg message-header-format-alist).
+    ;; http://lists.gnu.org/archive/html/emacs-devel/2011-01/msg00337.html
+    ;; We need to convert any string input, eg from rmail-start-mail.
+    (dolist (h other-headers other-headers)
+      (if (stringp (car h)) (setcar h (intern (capitalize (car h)))))))
+   yank-action send-actions return-action)
   (notmuch-fcc-header-setup)
   (message-sort-headers)
   (message-hide-headers)
