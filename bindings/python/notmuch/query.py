@@ -28,6 +28,7 @@ from .globals import (
     NotmuchMessagesP,
 )
 from .errors import (
+    NotmuchError,
     NullPointerError,
     NotInitializedError,
 )
