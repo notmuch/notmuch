@@ -47,5 +47,11 @@ The following exceptions are all directly derived from NotmuchError. Each of the
    :members:
 .. autoexception:: UnbalancedAtomicError(message=None)
    :members:
+.. autoexception:: UnsupportedOperationError(message=None)
+   :members:
+.. autoexception:: UpgradeRequiredError(message=None)
+   :members:
+.. autoexception:: PathError(message=None)
+   :members:
 .. autoexception:: NotInitializedError(message=None)
    :members:

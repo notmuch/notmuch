@@ -75,6 +75,9 @@ from .errors import (
     UnbalancedFreezeThawError,
     UnbalancedAtomicError,
     NotInitializedError,
+    UnsupportedOperationError,
+    UpgradeRequiredError,
+    PathError,
 )
 from .version import __VERSION__
 __LICENSE__ = "GPL v3+"
