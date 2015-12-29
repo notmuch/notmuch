@@ -82,6 +82,9 @@ unset CDPATH
 
 unset GREP_OPTIONS
 
+# For emacsclient
+unset ALTERNATE_EDITOR
+
 # Convenience
 #
 # A regexp to match 5 and 40 hexdigits
