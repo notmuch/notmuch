@@ -48,7 +48,7 @@ restore_database () {
 
 # Test the binaries we have just built.  The tests are kept in
 # test/ subdirectory and are run in 'trash directory' subdirectory.
-TEST_DIRECTORY=$(pwd)
+TEST_DIRECTORY=$(pwd -P)
 notmuch_path=`find_notmuch_path "$TEST_DIRECTORY"`
 
 # configure output
