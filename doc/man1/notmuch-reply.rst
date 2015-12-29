@@ -13,8 +13,10 @@ DESCRIPTION
 Constructs a reply template for a set of messages.
 
 To make replying to email easier, **notmuch reply** takes an existing
-set of messages and constructs a suitable mail template. The Reply-to:
-header (if any, otherwise From:) is used for the To: address. Unless
+set of messages and constructs a suitable mail template. Its To:
+address is set according to the original email in this way: if the
+Reply-to: header is present and different from any To:/Cc: address it
+is used, otherwise From: header is used. Unless
 ``--reply-to=sender`` is specified, values from the To: and Cc: headers
 are copied, but not including any of the current user's email addresses
 (as configured in primary\_mail or other\_email in the .notmuch-config

@@ -332,7 +332,7 @@ add_recipients_from_message (GMimeMessage *reply,
      * field and use the From header. This ensures the original sender
      * will get the reply even if not subscribed to the list. Note
      * that the address in the Reply-To header will always appear in
-     * the reply.
+     * the reply if reply_all is true.
      */
     if (reply_to_header_is_redundant (message)) {
 	reply_to_map[0].header = "from";
