@@ -377,6 +377,7 @@ header_template = config['meta'].get('header', '''<!DOCTYPE html>
 </head>
 <body>
 <h1>{title}</h1>
+<p>
 {blurb}
 </p>
 <h2>Views</h2>
@@ -384,7 +385,7 @@ header_template = config['meta'].get('header', '''<!DOCTYPE html>
 
 footer_template = config['meta'].get('footer', '''
 <hr>
-<p>Generated: {datetime}
+<p>Generated: {datetime}</p>
 </body>
 </html>
 ''')
