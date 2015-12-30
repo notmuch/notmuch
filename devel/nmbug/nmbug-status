@@ -367,10 +367,10 @@ header_template = config['meta'].get('header', '''<!DOCTYPE html>
   </style>
 </head>
 <body>
-<h2>{title}</h2>
+<h1>{title}</h1>
 {blurb}
 </p>
-<h3>Views</h3>
+<h2>Views</h2>
 ''')
 
 footer_template = config['meta'].get('footer', '''
