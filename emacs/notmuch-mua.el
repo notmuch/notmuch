@@ -320,18 +320,24 @@ modified. This function is notmuch addaptation of
 		       (notmuch-user-name) " <" (notmuch-user-primary-email) ">")) other-headers))
 
   (notmuch-mua-pop-to-buffer (message-buffer-name "mail" to))
-  (message-setup-1
-   ;; The following sexp is copied from `message-mail'
-   (nconc
-    `((To . ,(or to "")) (Subject . ,(or subject "")))
-    ;; C-h f compose-mail says that headers should be specified as
-    ;; (string . value); however all the rest of message expects
-    ;; headers to be symbols, not strings (eg message-header-format-alist).
-    ;; http://lists.gnu.org/archive/html/emacs-devel/2011-01/msg00337.html
-    ;; We need to convert any string input, eg from rmail-start-mail.
-    (dolist (h other-headers other-headers)
-      (if (stringp (car h)) (setcar h (intern (capitalize (car h)))))))
-   yank-action send-actions return-action)
+  (let ((args (list yank-action send-actions)))
+    ;; message-setup-1 in Emacs 23 does not accept return-action
+    ;; argument. Pass it only if it is supplied by the caller. This
+    ;; will never be the case when we're called by `compose-mail' in
+    ;; Emacs 23.
+    (when return-action (nconc args '(return-action)))
+    (apply 'message-setup-1
+	   ;; The following sexp is copied from `message-mail'
+	   (nconc
+	    `((To . ,(or to "")) (Subject . ,(or subject "")))
+	    ;; C-h f compose-mail says that headers should be specified as
+	    ;; (string . value); however all the rest of message expects
+	    ;; headers to be symbols, not strings (eg message-header-format-alist).
+	    ;; http://lists.gnu.org/archive/html/emacs-devel/2011-01/msg00337.html
+	    ;; We need to convert any string input, eg from rmail-start-mail.
+	    (dolist (h other-headers other-headers)
+	      (if (stringp (car h)) (setcar h (intern (capitalize (car h)))))))
+	   args))
   (notmuch-fcc-header-setup)
   (message-sort-headers)
   (message-hide-headers)
