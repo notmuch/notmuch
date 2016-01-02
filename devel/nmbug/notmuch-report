@@ -88,7 +88,7 @@ def read_config(path=None, encoding=None):
     else:
         nmbhome = os.getenv('NMBGIT', os.path.expanduser('~/.nmbug'))
         branch = 'config'
-        filename = 'status-config.json'
+        filename = 'notmuch-report.json'
 
         # read only the first line from the pipe
         sha1_bytes = subprocess.Popen(
