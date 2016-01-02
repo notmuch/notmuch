@@ -109,9 +109,9 @@ def read_config(path=None, encoding=None):
         status = p.wait()
         if status != 0:
             raise ConfigError(
-                ("Missing status-config.json in branch '{branch}' of"
-                 '{nmbgit}.  Add the file or explicitly set --config.'
-                ).format(branch=branch, nmbgit=nmbhome))
+                ("Missing {filename} in branch '{branch}' of {nmbgit}.  "
+                 'Add the file or explicitly set --config.'
+                ).format(filename=filename, branch=branch, nmbgit=nmbhome))
 
     config_json = config_bytes.decode(encoding)
     try:
