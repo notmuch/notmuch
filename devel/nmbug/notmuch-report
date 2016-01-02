@@ -310,14 +310,17 @@ class HtmlPage (Page):
         return self._slug_regexp.sub('-', string)
 
 parser = argparse.ArgumentParser(description=__doc__)
-parser.add_argument('--text', help='output plain text format',
-                    action='store_true')
-parser.add_argument('--config', help='load config from given file',
-                    metavar='PATH')
-parser.add_argument('--list-views', help='list views',
-                    action='store_true')
-parser.add_argument('--get-query', help='get query for view',
-                    metavar='VIEW')
+parser.add_argument(
+    '--text', action='store_true', help='output plain text format')
+parser.add_argument(
+    '--config', metavar='PATH',
+    help='load config from given file.  '
+        'The format is described in notmuch-report.json(5).')
+parser.add_argument(
+    '--list-views', action='store_true', help='list views')
+parser.add_argument(
+    '--get-query', metavar='VIEW', help='get query for view')
+
 
 args = parser.parse_args()
 
