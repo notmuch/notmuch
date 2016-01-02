@@ -19,11 +19,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see http://www.gnu.org/licenses/ .
 
-"""Generate HTML for one or more notmuch searches.
+"""Generate text and/or HTML for one or more notmuch searches.
 
 Messages matching each search are grouped by thread.  Each message
 that contains both a subject and message-id will have the displayed
-subject link to the Gmane view of the message.
+subject link to an archive view of the message (defaulting to Gmane).
 """
 
 from __future__ import print_function
@@ -232,6 +232,10 @@ class Page (object):
 class HtmlPage (Page):
     _slug_regexp = re.compile('\W+')
 
+    def __init__(self, message_url_template, **kwargs):
+        self.message_url_template = message_url_template
+        super(HtmlPage, self).__init__(**kwargs)
+
     def _write_header(self, views, stream):
         super(HtmlPage, self)._write_header(views=views, stream=stream)
         stream.write('<ul>\n')
@@ -292,8 +296,9 @@ class HtmlPage (Page):
                 'message-id': quote(display_data['message-id']),
                 'subject': xml.sax.saxutils.escape(display_data['subject']),
                 }
+            d['url'] = self.message_url_template.format(**d)
             display_data['subject'] = (
-                '<a href="http://mid.gmane.org/{message-id}">{subject}</a>'
+                '<a href="{url}">{subject}</a>'
                 ).format(**d)
         for key in ['message-id', 'from']:
             if key in display_data:
@@ -405,6 +410,8 @@ _PAGES['text'] = Page()
 _PAGES['html'] = HtmlPage(
     header=header_template.format(**context),
     footer=footer_template.format(**context),
+    message_url_template=config['meta'].get(
+        'message-url', 'http://mid.gmane.org/{message-id}'),
     )
 
 if args.list_views:

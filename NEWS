@@ -1,6 +1,23 @@
 Notmuch 0.22 (UNRELEASED)
 =========================
 
+nmbug-status
+------------
+
+`nmbug-status` now supports `meta.message-url` to override the Gmane
+template.  For example, you can use:
+
+    {
+      "meta": {
+        "message-url": "https://groups.google.com/a/opencontainers.org/forum/#!search/messageid$3A%22{message-id}%22"
+         ...
+      },
+      ...
+    }
+
+To link to messages in the [opencontainers.org Google
+Groups](https://groups.google.com/a/opencontainers.org/forum/#!overview).
+
 Emacs Interface
 ---------------
 
