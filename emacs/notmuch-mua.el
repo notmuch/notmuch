@@ -278,7 +278,7 @@ Note that these functions use `mail-citation-hook' if that is non-nil."
 (define-key notmuch-message-mode-map (kbd "C-c C-c") #'notmuch-mua-send-and-exit)
 (define-key notmuch-message-mode-map (kbd "C-c C-s") #'notmuch-mua-send)
 
-(defun notmuch-mua-pop-to-buffer (name)
+(defun notmuch-mua-pop-to-buffer (name switch-function)
   "Pop to buffer NAME, and warn if it already exists and is
 modified. This function is notmuch addaptation of
 `message-pop-to-buffer'."
@@ -291,7 +291,7 @@ modified. This function is notmuch addaptation of
 	      (progn
 		(gnus-select-frame-set-input-focus (window-frame window))
 		(select-window window))
-	    (funcall (notmuch-mua-get-switch-function) buffer)
+	    (funcall switch-function buffer)
 	    (set-buffer buffer))
 	  (when (and (buffer-modified-p)
 		     (not (prog1
@@ -299,7 +299,7 @@ modified. This function is notmuch addaptation of
 			       "Message already being composed; erase? ")
 			    (message nil))))
 	    (error "Message being composed")))
-      (funcall (notmuch-mua-get-switch-function) name)
+      (funcall switch-function name)
       (set-buffer name))
     (erase-buffer)
     (notmuch-message-mode)))
@@ -319,7 +319,8 @@ modified. This function is notmuch addaptation of
     (push (cons 'From (concat
 		       (notmuch-user-name) " <" (notmuch-user-primary-email) ">")) other-headers))
 
-  (notmuch-mua-pop-to-buffer (message-buffer-name "mail" to))
+  (notmuch-mua-pop-to-buffer (message-buffer-name "mail" to)
+			     (or switch-function (notmuch-mua-get-switch-function)))
   (let ((headers
 	 ;; The following sexp is copied from `message-mail'
 	 (nconc
