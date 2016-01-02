@@ -4,6 +4,9 @@ Notmuch 0.22 (UNRELEASED)
 nmbug-status
 ------------
 
+`nmbug-status` now wraps query phrases in parentheses when and-ing
+them together, to avoid confusion about clause grouping.
+
 `nmbug-status` now supports `meta.message-url` to override the Gmane
 template.  For example, you can use:
 

@@ -167,7 +167,8 @@ class Page (object):
                 view['title'], sort_key))
         if 'query-string' not in view:
             query = view['query']
-            view['query-string'] = ' and '.join(query)
+            view['query-string'] = ' and '.join(
+                '( {} )'.format(q) for q in query)
         q = notmuch.Query(database, view['query-string'])
         q.set_sort(sort)
         threads = self._get_threads(messages=q.search_messages())
@@ -421,7 +422,7 @@ if args.list_views:
 elif args.get_query != None:
     for view in config['views']:
         if args.get_query == view['title']:
-            print(' and '.join(view['query']))
+            print(' and '.join('( {} )'.format(q) for q in view['query']))
     sys.exit(0)
 else:
     # only import notmuch if needed
