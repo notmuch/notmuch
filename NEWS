@@ -1,6 +1,46 @@
 Notmuch 0.22 (UNRELEASED)
 =========================
 
+Emacs Interface
+---------------
+
+Notmuch replies now include all parts shown in the show view
+
+  There are two main user visible changes. The first is that rfc822
+  parts are now included in replies.
+
+  The second change is that part headers are now included in the reply
+  buffer to provide visible separation of the parts. The choice of
+  which part headers to show is customizable via the variable
+  `notmuch-mua-reply-insert-header-p-function`.
+
+Filtering or Limiting messages is now bound to `l` in the search view
+
+  This binding now matches the analogous binding in show view.
+
+Documentation
+-------------
+
+New `notmuch-report(1)` and `notmuch-report.json(5)` man pages
+describe `notmuch-report` and its JSON configuration file.  You can
+build these files by running `make` in the `devel/nmbug/doc`
+directory.
+
+notmuch-report
+--------------
+
+Renamed from `nmbug-status`.  This script generates reports based on
+notmuch queries, and doesn't really have anything to do with nmbug,
+except for sharing the `NMBGIT` environment variable.  The new name
+focuses on the script's action, instead of its historical association
+with the nmbug workflow.  This should make it more discoverable for
+users looking for generic notmuch reporting tools.
+
+The default configuration file name (extracted from the `config`
+branch of `NBMGIT` has changed from `status-config.json` to
+`notmuch-report.json` so it is more obviously associated with the
+report-generating script.
+
 nmbug-status
 ------------
 
@@ -20,23 +60,6 @@ template.  For example, you can use:
 
 To link to messages in the [opencontainers.org Google
 Groups](https://groups.google.com/a/opencontainers.org/forum/#!overview).
-
-Emacs Interface
----------------
-
-Notmuch replies now include all parts shown in the show view
-
-  There are two main user visible changes. The first is that rfc822
-  parts are now included in replies.
-
-  The second change is that part headers are now included in the reply
-  buffer to provide visible separation of the parts. The choice of
-  which part headers to show is customizable via the variable
-  `notmuch-mua-reply-insert-header-p-function`.
-
-Filtering or Limiting messages is now bound to `l` in the search view
-
-  This binding now matches the analogous binding in show view.
 
 Notmuch 0.21 (2015-10-29)
 =========================
