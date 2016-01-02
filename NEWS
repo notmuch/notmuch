@@ -409,7 +409,7 @@ from the config file.  Use something like:
          ...
       },
       ...
-    },
+    }
 
 Python Bindings
 ---------------
