@@ -322,8 +322,8 @@ modified. This function is notmuch addaptation of
   (notmuch-mua-pop-to-buffer (message-buffer-name "mail" to)
 			     (or switch-function (notmuch-mua-get-switch-function)))
   (let ((headers
-	 ;; The following sexp is copied from `message-mail'
-	 (nconc
+	 (append
+	  ;; The following is copied from `message-mail'
 	  `((To . ,(or to "")) (Subject . ,(or subject "")))
 	  ;; C-h f compose-mail says that headers should be specified as
 	  ;; (string . value); however all the rest of message expects
