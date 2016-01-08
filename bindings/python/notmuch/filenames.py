@@ -19,7 +19,6 @@ Copyright 2010 Sebastian Spaeth <Sebastian@SSpaeth.de>
 from ctypes import c_char_p
 from .globals import (
     nmlib,
-    NotmuchMessageP,
     NotmuchFilenamesP,
     Python3StringMixIn,
 )

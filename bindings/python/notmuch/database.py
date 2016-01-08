@@ -36,7 +36,6 @@ from .errors import (
     NotmuchError,
     NullPointerError,
     NotInitializedError,
-    ReadOnlyDatabaseError,
 )
 from .message import Message
 from .tag import Tags
