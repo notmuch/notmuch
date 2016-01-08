@@ -48,7 +48,7 @@ class Filenames(Python3StringMixIn):
 
         as well as::
 
-           number_of_names = len(names)
+           list_of_names = list(names)
 
         and even a simple::
 
@@ -130,21 +130,3 @@ class Filenames(Python3StringMixIn):
         """Close and free the notmuch filenames"""
         if self._files_p:
             self._destroy(self._files_p)
-
-    def __len__(self):
-        """len(:class:`Filenames`) returns the number of contained files
-
-        .. note::
-
-            This method exhausts the iterator object, so you will not be able to
-            iterate over them again.
-        """
-        if not self._files_p:
-            raise NotInitializedError()
-
-        i = 0
-        while self._valid(self._files_p):
-            self._move_to_next(self._files_p)
-            i += 1
-        self._files_p = None
-        return i
