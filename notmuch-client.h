@@ -462,6 +462,11 @@ print_status_query (const char *loc,
 		    const notmuch_query_t *query,
 		    notmuch_status_t status);
 
+notmuch_status_t
+print_status_database (const char *loc,
+		       const notmuch_database_t *database,
+		       notmuch_status_t status);
+
 #include "command-line-arguments.h"
 
 extern char *notmuch_requested_db_uuid;
