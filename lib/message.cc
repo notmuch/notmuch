@@ -1180,7 +1180,7 @@ _notmuch_message_remove_term (notmuch_message_t *message,
 	message->doc.remove_term (term);
 	message->modified = TRUE;
     } catch (const Xapian::InvalidArgumentError) {
-	/* We'll let the philosopher's try to wrestle with the
+	/* We'll let the philosophers try to wrestle with the
 	 * question of whether failing to remove that which was not
 	 * there in the first place is failure. For us, we'll silently
 	 * consider it all good. */
