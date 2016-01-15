@@ -728,7 +728,7 @@ _notmuch_message_add_filename (notmuch_message_t *message,
  * Note: This function does not remove a document from the database,
  * even if the specified filename is the only filename for this
  * message. For that functionality, see
- * _notmuch_database_remove_message. */
+ * notmuch_database_remove_message. */
 notmuch_status_t
 _notmuch_message_remove_filename (notmuch_message_t *message,
 				  const char *filename)
