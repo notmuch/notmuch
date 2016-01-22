@@ -969,6 +969,10 @@ HAVE_STRCASESTR = ${have_strcasestr}
 # build its own version)
 HAVE_STRSEP = ${have_strsep}
 
+# Whether the timegm function is available (if not, then notmuch will
+# build its own version)
+HAVE_TIMEGM = ${have_timegm}
+
 # Whether struct dirent has d_type (if not, then notmuch will use stat)
 HAVE_D_TYPE = ${have_d_type}
 
@@ -1041,6 +1045,7 @@ CONFIGURE_CFLAGS = -DHAVE_GETLINE=\$(HAVE_GETLINE) \$(GMIME_CFLAGS)      \\
 		   \$(VALGRIND_CFLAGS)                                   \\
 		   -DHAVE_STRCASESTR=\$(HAVE_STRCASESTR)                 \\
 		   -DHAVE_STRSEP=\$(HAVE_STRSEP)                         \\
+		   -DHAVE_TIMEGM=\$(HAVE_TIMEGM)                         \\
 		   -DHAVE_D_TYPE=\$(HAVE_D_TYPE)                         \\
 		   -DSTD_GETPWUID=\$(STD_GETPWUID)                       \\
 		   -DSTD_ASCTIME=\$(STD_ASCTIME)                         \\
@@ -1054,6 +1059,7 @@ CONFIGURE_CXXFLAGS = -DHAVE_GETLINE=\$(HAVE_GETLINE) \$(GMIME_CFLAGS)    \\
 		     \$(VALGRIND_CFLAGS) \$(XAPIAN_CXXFLAGS)             \\
 		     -DHAVE_STRCASESTR=\$(HAVE_STRCASESTR)               \\
 		     -DHAVE_STRSEP=\$(HAVE_STRSEP)                       \\
+		     -DHAVE_TIMEGM=\$(HAVE_TIMEGM)                       \\
 		     -DHAVE_D_TYPE=\$(HAVE_D_TYPE)                       \\
 		     -DSTD_GETPWUID=\$(STD_GETPWUID)                     \\
 		     -DSTD_ASCTIME=\$(STD_ASCTIME)                       \\
