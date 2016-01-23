@@ -183,7 +183,7 @@ int main (int argc, char** argv)
 EOF
 cat <<'EOF' >EXPECTED
 == stdout ==
-Path already exists: CWD/mail
+Path already exists: MAIL_DIR
 
 == stderr ==
 EOF

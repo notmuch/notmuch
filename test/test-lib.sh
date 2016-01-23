@@ -678,9 +678,14 @@ notmuch_search_sanitize ()
     perl -pe 's/("?thread"?: ?)("?)................("?)/\1\2XXX\3/'
 }
 
-notmuch_search_files_sanitize()
+notmuch_search_files_sanitize ()
 {
-    sed -e "s,$MAIL_DIR,MAIL_DIR,"
+    notmuch_dir_sanitize
+}
+
+notmuch_dir_sanitize ()
+{
+    sed -e "s,$MAIL_DIR,MAIL_DIR," -e "s,${PWD},CWD,g" "$@"
 }
 
 NOTMUCH_SHOW_FILENAME_SQUELCH='s,filename:.*/mail,filename:/XXX/mail,'
@@ -1180,7 +1185,7 @@ test_C () {
     echo "== stdout ==" > OUTPUT.stdout
     echo "== stderr ==" > OUTPUT.stderr
     ./${exec_file} "$@" 1>>OUTPUT.stdout 2>>OUTPUT.stderr
-    sed "s,${PWD},CWD,g"  OUTPUT.stdout OUTPUT.stderr > OUTPUT
+    notmuch_dir_sanitize OUTPUT.stdout OUTPUT.stderr > OUTPUT
 }
 
 
