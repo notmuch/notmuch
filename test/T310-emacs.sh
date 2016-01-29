@@ -130,7 +130,7 @@ test_expect_equal "$output" "thread:XXX   2009-11-18 [4/4] Jjgod Jiang, Alexande
 test_begin_subtest "Add tag (large query)"
 # We use a long query to force us into batch mode and use a funny tag
 # that requires escaping for batch tagging.
-test_emacs "(notmuch-tag (concat \"$os_x_darwin_thread\" \" or \" (make-string notmuch-tag-argument-limit ?x)) (list \"+tag-from-%-large-query\"))"
+test_emacs "(notmuch-tag (concat \"$os_x_darwin_thread\" \" or \" (mapconcat #'identity (make-list notmuch-tag-argument-limit \"x\") \"-\")) (list \"+tag-from-%-large-query\"))"
 output=$(notmuch search $os_x_darwin_thread | notmuch_search_sanitize)
 test_expect_equal "$output" "thread:XXX   2009-11-18 [4/4] Jjgod Jiang, Alexander Botero-Lowry; [notmuch] Mac OS X/Darwin compatibility issues (inbox tag-from-%-large-query unread)"
 notmuch tag -tag-from-%-large-query $os_x_darwin_thread
