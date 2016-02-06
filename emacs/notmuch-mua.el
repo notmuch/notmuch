@@ -29,6 +29,8 @@
 (eval-when-compile (require 'cl))
 
 (declare-function notmuch-show-insert-bodypart "notmuch-show" (msg part depth &optional hide))
+(declare-function notmuch-fcc-header-setup "notmuch-maildir-fcc" ())
+(declare-function notmuch-fcc-handler "notmuch-maildir-fcc" (destdir))
 
 ;;
 
