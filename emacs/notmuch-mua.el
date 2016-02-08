@@ -427,6 +427,54 @@ the From: address first."
     (message-hide-headers)
     (set-buffer-modified-p nil)))
 
+(defun notmuch-mua-new-forward-messages (messages &optional prompt-for-sender)
+  "Compose a new message forwarding MESSAGES.
+
+If PROMPT-FOR-SENDER is non-nil, the user will be prompteed for
+the From: address."
+  (let* ((other-headers
+	  (when (or prompt-for-sender notmuch-always-prompt-for-sender)
+	    (list (cons 'From (notmuch-mua-prompt-for-sender)))))
+	 forward-subject) ;; Comes from the first message and is
+			  ;; applied later.
+
+    ;; Generate the template for the outgoing message.
+    (notmuch-mua-mail nil "" other-headers nil (notmuch-mua-get-switch-function))
+
+    (save-excursion
+      ;; Insert all of the forwarded messages.
+      (mapc (lambda (id)
+	      (let ((temp-buffer (get-buffer-create
+				  (concat "*notmuch-fwd-raw-" id "*"))))
+		;; Get the raw version of this message in the buffer.
+		(with-current-buffer temp-buffer
+		  (erase-buffer)
+		  (let ((coding-system-for-read 'no-conversion))
+		    (call-process notmuch-command nil t nil "show" "--format=raw" id))
+		  ;; Because we process the messages in reverse order,
+		  ;; always generate a forwarded subject, then use the
+		  ;; last (i.e. first) one.
+		  (setq forward-subject (message-make-forward-subject)))
+		;; Make a copy ready to be forwarded in the
+		;; composition buffer.
+		(message-forward-make-body temp-buffer)
+		;; Kill the temporary buffer.
+		(kill-buffer temp-buffer)))
+	    ;; `message-forward-make-body' always puts the message at
+	    ;; the top, so do them in reverse order.
+	    (reverse messages))
+
+      ;; Add in the appropriate subject.
+      (save-restriction
+	(message-narrow-to-headers)
+	(message-remove-header "Subject")
+	(message-add-header (concat "Subject: " forward-subject)))
+
+      ;; `message-forward-make-body' shows the User-agent header.  Hide
+      ;; it again.
+      (message-hide-headers)
+      (set-buffer-modified-p nil))))
+
 (defun notmuch-mua-new-reply (query-string &optional prompt-for-sender reply-all)
   "Compose a reply to the message identified by QUERY-STRING.
 

@@ -1431,6 +1431,7 @@ reset based on the original query."
     (define-key map (kbd "<backtab>") 'notmuch-show-previous-button)
     (define-key map (kbd "TAB") 'notmuch-show-next-button)
     (define-key map "f" 'notmuch-show-forward-message)
+    (define-key map "F" 'notmuch-show-forward-open-messages)
     (define-key map "l" 'notmuch-show-filter-thread)
     (define-key map "r" 'notmuch-show-reply-sender)
     (define-key map "R" 'notmuch-show-reply)
@@ -1857,6 +1858,16 @@ any effects from previous calls to
   (interactive "P")
   (with-current-notmuch-show-message
    (notmuch-mua-new-forward-message prompt-for-sender)))
+
+(put 'notmuch-show-forward-open-messages 'notmuch-prefix-doc
+     "... and prompt for sender")
+(defun notmuch-show-forward-open-messages (&optional prompt-for-sender)
+  "Forward the currently open messages."
+  (interactive "P")
+  (let ((open-messages (notmuch-show-get-message-ids-for-open-messages)))
+    (unless open-messages
+      (error "No open messages to forward."))
+    (notmuch-mua-new-forward-messages open-messages prompt-for-sender)))
 
 (defun notmuch-show-next-message (&optional pop-at-end)
   "Show the next message.
