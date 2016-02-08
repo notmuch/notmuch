@@ -407,26 +407,6 @@ the From: address first."
 	   (list (cons 'From (notmuch-mua-prompt-for-sender))))))
     (notmuch-mua-mail nil nil other-headers nil (notmuch-mua-get-switch-function))))
 
-(defun notmuch-mua-new-forward-message (&optional prompt-for-sender)
-  "Invoke the notmuch message forwarding window.
-
-The current buffer must contain an RFC2822 message to forward.
-
-If PROMPT-FOR-SENDER is non-nil, the user will be prompted for
-the From: address first."
-  (let* ((cur (current-buffer))
-	 (message-forward-decoded-p nil)
-	 (subject (message-make-forward-subject))
-	 (other-headers
-	  (when (or prompt-for-sender notmuch-always-prompt-for-sender)
-	    (list (cons 'From (notmuch-mua-prompt-for-sender))))))
-    (notmuch-mua-mail nil subject other-headers nil (notmuch-mua-get-switch-function))
-    (message-forward-make-body cur)
-    ;; `message-forward-make-body' shows the User-agent header.  Hide
-    ;; it again.
-    (message-hide-headers)
-    (set-buffer-modified-p nil)))
-
 (defun notmuch-mua-new-forward-messages (messages &optional prompt-for-sender)
   "Compose a new message forwarding MESSAGES.
 

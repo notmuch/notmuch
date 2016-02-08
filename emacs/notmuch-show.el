@@ -1856,8 +1856,8 @@ any effects from previous calls to
 (defun notmuch-show-forward-message (&optional prompt-for-sender)
   "Forward the current message."
   (interactive "P")
-  (with-current-notmuch-show-message
-   (notmuch-mua-new-forward-message prompt-for-sender)))
+  (notmuch-mua-new-forward-messages (list (notmuch-show-get-message-id))
+				    prompt-for-sender))
 
 (put 'notmuch-show-forward-open-messages 'notmuch-prefix-doc
      "... and prompt for sender")
