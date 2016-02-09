@@ -110,8 +110,8 @@ mode."
 	(setq label (concat "Bad signature (claimed key ID " keyid ")"))
 	(setq face 'notmuch-crypto-signature-bad)))
      (t
-      (setq label "Unknown signature status")
-      (if status (setq label (concat label " \"" status "\"")))))
+      (setq label (concat "Unknown signature status"
+			  (if status (concat ": " status))))))
     (insert-button
      (concat "[ " label " ]")
      :type 'notmuch-crypto-status-button-type
@@ -161,7 +161,8 @@ mode."
      ((string= status "bad")
       (setq label "Decryption error"))
      (t
-      (setq label (concat "Unknown encstatus \"" status "\""))))
+      (setq label (concat "Unknown encryption status"
+			  (if status (concat ": " status))))))
     (insert-button
      (concat "[ " label " ]")
      :type 'notmuch-crypto-status-button-type
