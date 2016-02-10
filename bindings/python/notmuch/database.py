@@ -483,7 +483,10 @@ class Database(object):
                removed.
         """
         self._assert_db_is_initialized()
-        return self._remove_message(self._db, _str(filename))
+        status = self._remove_message(self._db, _str(filename))
+        if status not in [STATUS.SUCCESS, STATUS.DUPLICATE_MESSAGE_ID]:
+            raise NotmuchError(status)
+        return status
 
     def find_message(self, msgid):
         """Returns a :class:`Message` as identified by its message ID
