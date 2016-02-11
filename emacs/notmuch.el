@@ -458,7 +458,11 @@ no messages in the region then return nil."
   (notmuch-search-properties-in-region :subject beg end))
 
 (defun notmuch-search-show-thread (&optional elide-toggle)
-  "Display the currently selected thread."
+  "Display the currently selected thread.
+
+With a prefix argument, invert the default value of
+`notmuch-show-only-matching-messages' when displaying the
+thread."
   (interactive "P")
   (let ((thread-id (notmuch-search-find-thread-id))
 	(subject (notmuch-search-find-subject)))

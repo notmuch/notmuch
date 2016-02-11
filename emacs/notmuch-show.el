@@ -153,27 +153,21 @@ indentation."
 
 (defvar notmuch-show-thread-id nil)
 (make-variable-buffer-local 'notmuch-show-thread-id)
-(put 'notmuch-show-thread-id 'permanent-local t)
 
 (defvar notmuch-show-parent-buffer nil)
 (make-variable-buffer-local 'notmuch-show-parent-buffer)
-(put 'notmuch-show-parent-buffer 'permanent-local t)
 
 (defvar notmuch-show-query-context nil)
 (make-variable-buffer-local 'notmuch-show-query-context)
-(put 'notmuch-show-query-context 'permanent-local t)
 
 (defvar notmuch-show-process-crypto nil)
 (make-variable-buffer-local 'notmuch-show-process-crypto)
-(put 'notmuch-show-process-crypto 'permanent-local t)
 
 (defvar notmuch-show-elide-non-matching-messages nil)
 (make-variable-buffer-local 'notmuch-show-elide-non-matching-messages)
-(put 'notmuch-show-elide-non-matching-messages 'permanent-local t)
 
 (defvar notmuch-show-indent-content t)
 (make-variable-buffer-local 'notmuch-show-indent-content)
-(put 'notmuch-show-indent-content 'permanent-local t)
 
 (defvar notmuch-show-attachment-debug nil
   "If t log stdout and stderr from attachment handlers
@@ -1197,71 +1191,101 @@ non-nil.
 The optional BUFFER-NAME provides the name of the buffer in
 which the message thread is shown. If it is nil (which occurs
 when the command is called interactively) the argument to the
-function is used."
+function is used.
+
+Returns the buffer containing the messages, or NIL if no messages
+matched."
   (interactive "sNotmuch show: \nP")
   (let ((buffer-name (generate-new-buffer-name
 		      (or buffer-name
 			  (concat "*notmuch-" thread-id "*")))))
     (switch-to-buffer (get-buffer-create buffer-name))
-    ;; Set the default value for `notmuch-show-process-crypto' in this
-    ;; buffer.
-    (setq notmuch-show-process-crypto notmuch-crypto-process-mime)
-    ;; Set the default value for
-    ;; `notmuch-show-elide-non-matching-messages' in this buffer. If
-    ;; elide-toggle is set, invert the default.
-    (setq notmuch-show-elide-non-matching-messages notmuch-show-only-matching-messages)
-    (if elide-toggle
-	(setq notmuch-show-elide-non-matching-messages (not notmuch-show-elide-non-matching-messages)))
-
-    (setq notmuch-show-thread-id thread-id
-	  notmuch-show-parent-buffer parent-buffer
-	  notmuch-show-query-context query-context)
-    (notmuch-show-build-buffer)
-    (notmuch-show-goto-first-wanted-message)
-    (current-buffer)))
-
-(defun notmuch-show-build-buffer ()
-  (let ((inhibit-read-only t))
+    ;; No need to track undo information for this buffer.
+    (setq buffer-undo-list t)
 
     (notmuch-show-mode)
-    (add-hook 'post-command-hook #'notmuch-show-command-hook nil t)
 
-    ;; Don't track undo information for this buffer
-    (set 'buffer-undo-list t)
+    ;; Set various buffer local variables to their appropriate initial
+    ;; state. Do this after enabling `notmuch-show-mode' so that they
+    ;; aren't wiped out.
+    (setq notmuch-show-thread-id thread-id
+	  notmuch-show-parent-buffer parent-buffer
+	  notmuch-show-query-context query-context
+
+	  notmuch-show-process-crypto notmuch-crypto-process-mime
+	  ;; If `elide-toggle', invert the default value.
+	  notmuch-show-elide-non-matching-messages
+	  (if elide-toggle
+	      (not notmuch-show-only-matching-messages)
+	    notmuch-show-only-matching-messages))
+
+    (add-hook 'post-command-hook #'notmuch-show-command-hook nil t)
+    (jit-lock-register #'notmuch-show-buttonise-links)
 
     (notmuch-tag-clear-cache)
-    (erase-buffer)
-    (goto-char (point-min))
-    (save-excursion
-      (let* ((basic-args (list notmuch-show-thread-id))
-	     (args (if notmuch-show-query-context
-		       (append (list "\'") basic-args
-			       (list "and (" notmuch-show-query-context ")\'"))
-		     (append (list "\'") basic-args (list "\'"))))
-	     (cli-args (cons "--exclude=false"
-			     (when notmuch-show-elide-non-matching-messages
-			       (list "--entire-thread=false")))))
 
-	(notmuch-show-insert-forest (notmuch-query-get-threads (append cli-args args)))
-	;; If the query context reduced the results to nothing, run
-	;; the basic query.
-	(when (and (eq (buffer-size) 0)
-		   notmuch-show-query-context)
-	  (notmuch-show-insert-forest
-	   (notmuch-query-get-threads (append cli-args basic-args)))))
+    (let ((inhibit-read-only t))
+      (if (notmuch-show--build-buffer)
+	  ;; Messages were inserted into the buffer.
+	  (current-buffer)
 
-      (jit-lock-register #'notmuch-show-buttonise-links)
+	;; No messages were inserted - presumably none matched the
+	;; query.
+	(kill-buffer (current-buffer))
+	(ding)
+	(message "No messages matched the query!")
+	nil))))
 
-      (notmuch-show-mapc (lambda () (notmuch-show-set-prop :orig-tags (notmuch-show-get-tags))))
+(defun notmuch-show--build-buffer (&optional state)
+  "Display messages matching the current buffer context.
+
+Apply the previously saved STATE if supplied, otherwise show the
+first relevant message.
+
+If no messages match the query return NIL."
+  (let* ((basic-args (list notmuch-show-thread-id))
+	 (args (if notmuch-show-query-context
+		   (append (list "\'") basic-args
+			   (list "and (" notmuch-show-query-context ")\'"))
+		 (append (list "\'") basic-args (list "\'"))))
+	 (cli-args (cons "--exclude=false"
+			 (when notmuch-show-elide-non-matching-messages
+			   (list "--entire-thread=false"))))
+
+	 (forest (or (notmuch-query-get-threads (append cli-args args))
+		     ;; If a query context reduced the number of
+		     ;; results to zero, try again without it.
+		     (and notmuch-show-query-context
+			  (notmuch-query-get-threads (append cli-args basic-args)))))
+
+	 ;; Must be reset every time we are going to start inserting
+	 ;; messages into the buffer.
+	 (notmuch-show-previous-subject ""))
+
+    (when forest
+      (notmuch-show-insert-forest forest)
+
+      ;; Store the original tags for each message so that we can
+      ;; display changes.
+      (notmuch-show-mapc
+       (lambda () (notmuch-show-set-prop :orig-tags (notmuch-show-get-tags))))
 
       ;; Set the header line to the subject of the first message.
       (setq header-line-format
 	    (replace-regexp-in-string "%" "%%"
-			    (notmuch-sanitize
-			     (notmuch-show-strip-re
-			      (notmuch-show-get-subject)))))
+				      (notmuch-sanitize
+				       (notmuch-show-strip-re
+					(notmuch-show-get-subject)))))
 
-      (run-hooks 'notmuch-show-hook))))
+      (run-hooks 'notmuch-show-hook)
+
+      (if state
+	  (notmuch-show-apply-state state)
+	;; With no state to apply, just go to the first message.
+	(notmuch-show-goto-first-wanted-message)))
+
+    ;; Report back to the caller whether any messages matched.
+    forest))
 
 (defun notmuch-show-capture-state ()
   "Capture the state of the current buffer.
@@ -1320,17 +1344,17 @@ reset based on the original query."
   (let ((inhibit-read-only t)
 	(state (unless reset-state
 		 (notmuch-show-capture-state))))
-    ;; erase-buffer does not seem to remove overlays, which can lead
+    ;; `erase-buffer' does not seem to remove overlays, which can lead
     ;; to weird effects such as remaining images, so remove them
     ;; manually.
     (remove-overlays)
     (erase-buffer)
-    (notmuch-show-build-buffer)
-    (if state
-	(notmuch-show-apply-state state)
-      ;; We're resetting state, so navigate to the first open message
-      ;; and mark it read, just like opening a new show buffer.
-      (notmuch-show-goto-first-wanted-message))))
+
+    (unless (notmuch-show--build-buffer state)
+      ;; No messages were inserted.
+      (kill-buffer (current-buffer))
+      (ding)
+      (message "Refreshing the buffer resulted in no messages!"))))
 
 (defvar notmuch-show-stash-map
   (let ((map (make-sparse-keymap)))
