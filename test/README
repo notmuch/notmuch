@@ -8,10 +8,17 @@ enhance.
 
 Prerequisites
 -------------
+The test system itself requires:
+
+  - bash(1) version 4.0 or newer
+
+Without bash 4.0+ the tests just refuse to run.
+
 Some tests require external dependencies to run. Without them, they
 will be skipped, or (rarely) marked failed. Please install these, so
 that you know if you break anything.
 
+  - GNU tar(1)
   - dtach(1)
   - emacs(1)
   - emacsclient(1)
@@ -19,14 +26,21 @@ that you know if you break anything.
   - gpg(1)
   - python(1)
 
+If your system lacks these tools or have older, non-upgreable versions
+of these, please (possibly compile and) install these to some other
+path, for example /usr/local/bin or /opt/gnu/bin. Then prepend the
+chosen directory to your PATH before running the tests.
+
+e.g. env PATH=/opt/gnu/bin:$PATH make test
+
 Running Tests
 -------------
 The easiest way to run tests is to say "make test", (or simply run the
 notmuch-test script). Either command will run all available tests.
 
 Alternately, you can run a specific subset of tests by simply invoking
-one of the executable scripts in this directory, (such as ./search,
-./reply, etc). Note that you will probably want "make test-binaries"
+one of the executable scripts in this directory, (such as ./T*-search.sh,
+./T*-reply.sh, etc). Note that you will probably want "make test-binaries"
 before running individual tests.
 
 The following command-line options are available when running tests:
@@ -80,9 +94,9 @@ can be specified as follows:
 You can choose an emacs binary (and corresponding emacsclient) to run
 the tests in one of the following ways.
 
-	TEST_EMACS=my-special-emacs TEST_EMACSCLIENT=my-emacsclient make test
-	TEST_EMACS=my-special-emacs TEST_EMACSCLIENT=my-emacsclient ./emacs
-	make test TEST_EMACS=my-special-emacs TEST_EMACSCLIENT=my-emacsclient
+	TEST_EMACS=my-emacs TEST_EMACSCLIENT=my-emacsclient make test
+	TEST_EMACS=my-emacs TEST_EMACSCLIENT=my-emacsclient ./T*-emacs.sh
+	make test TEST_EMACS=my-emacs TEST_EMACSCLIENT=my-emacsclient
 
 Some tests may require a c compiler. You can choose the name and flags similarly
 to with emacs, e.g.
@@ -126,9 +140,13 @@ skipped by the user, as failures.
 
 Writing Tests
 -------------
-The test script is written as a shell script.  It should start with
-the standard "#!/usr/bin/env bash" with copyright notices, and an
-assignment to variable 'test_description', like this:
+The test script is written as a shell script. It is to be named as
+Tddd-testname.sh where 'ddd' is three digits and 'testname' the "bare"
+name of your test. Tests will be run in order the 'ddd' part determines.
+
+The test script should start with the standard "#!/usr/bin/env bash"
+with copyright notices, and an assignment to variable 'test_description',
+like this:
 
 	#!/usr/bin/env bash
 	#
