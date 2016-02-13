@@ -71,6 +71,10 @@ Naming
 * Use lowercase_with_underscores for function, variable, and type
   names.
 
+* Except for variables with extremely small scope, and perhaps loop
+  indices, when naming variables and functions, err on the side of
+  verbosity.
+
 * All structs should be typedef'd to a name ending with _t.  If the
   struct has a tag, it should be the same as the typedef name, minus
   the trailing _t.
