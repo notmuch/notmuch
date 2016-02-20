@@ -93,6 +93,23 @@ Note that these functions use `mail-citation-hook' if that is non-nil."
   :link '(custom-manual "(message)Insertion Variables")
   :group 'notmuch-reply)
 
+(defcustom notmuch-mua-reply-insert-header-p-function
+  'notmuch-show-reply-insert-header-p-trimmed
+  "Function to decide which parts get a header when replying.
+
+This function specifies which parts of a mime message with
+mutiple parts get a header."
+  :type '(radio (const :tag "All except multipart/* and hidden parts"
+			       notmuch-show-reply-insert-header-p-trimmed)
+		(const :tag "Only for included text parts"
+			       notmuch-show-reply-insert-header-p-minimal)
+		(const :tag "Exactly as in show view"
+			       notmuch-show-insert-header-p)
+		(const :tag "No part headers"
+			       notmuch-show-reply-insert-header-p-never)
+		(function :tag "Other"))
+  :group 'notmuch-reply)
+
 ;;
 
 (defun notmuch-mua-get-switch-function ()
@@ -231,7 +248,7 @@ Note that these functions use `mail-citation-hook' if that is non-nil."
 		       ;; Don't omit long parts.
 		       (notmuch-show-max-text-part-size 0)
 		       ;; Insert headers for parts as appropriate for replying.
-		       (notmuch-show-insert-header-p-function #'notmuch-show-reply-insert-header-p-never))
+		       (notmuch-show-insert-header-p-function notmuch-mua-reply-insert-header-p-function))
 		    (notmuch-show-insert-body original (plist-get original :body) 0)
 		    (buffer-substring-no-properties (point-min) (point-max)))))
 

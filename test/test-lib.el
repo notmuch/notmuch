@@ -184,6 +184,10 @@ nothing."
 (setq notmuch-tag-deleted-formats
       '((".*" nil)))
 
+;; For historical reasonse we don't print part headers when replying
+;; in the tests suite
+(setq notmuch-mua-reply-insert-header-p-function 'notmuch-show-reply-insert-header-p-never)
+
 ;; force a common html renderer, to avoid test variations between
 ;; environments
 

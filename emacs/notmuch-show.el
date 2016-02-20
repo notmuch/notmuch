@@ -954,6 +954,16 @@ this part.")
 (defun notmuch-show-reply-insert-header-p-never (part hide)
   nil)
 
+(defun notmuch-show-reply-insert-header-p-trimmed (part hide)
+  (let ((mime-type (notmuch-show-mime-type part)))
+    (and (not (notmuch-match-content-type mime-type "multipart/*"))
+	 (not hide))))
+
+(defun notmuch-show-reply-insert-header-p-minimal (part hide)
+  (let ((mime-type (notmuch-show-mime-type part)))
+    (and (notmuch-match-content-type mime-type "text/*")
+	 (not hide))))
+
 (defun notmuch-show-insert-bodypart (msg part depth &optional hide)
   "Insert the body part PART at depth DEPTH in the current thread.
 
