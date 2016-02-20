@@ -28,7 +28,7 @@
 
 (eval-when-compile (require 'cl))
 
-(declare-function notmuch-show-insert-bodypart "notmuch-show" (msg part depth &optional hide))
+(declare-function notmuch-show-insert-body "notmuch-show" (msg body depth))
 (declare-function notmuch-fcc-header-setup "notmuch-maildir-fcc" ())
 (declare-function notmuch-fcc-handler "notmuch-maildir-fcc" (destdir))
 
@@ -144,31 +144,6 @@ Note that these functions use `mail-citation-hook' if that is non-nil."
 	else if (notmuch-match-content-type (plist-get part :content-type) "multipart/*")
 	  do (notmuch-mua-reply-crypto (plist-get part :content))))
 
-(defun notmuch-mua-get-quotable-parts (parts)
-  (loop for part in parts
-	if (notmuch-match-content-type (plist-get part :content-type) "multipart/alternative")
-	  collect (let* ((subparts (plist-get part :content))
-			(types (mapcar (lambda (part) (plist-get part :content-type)) subparts))
-			(chosen-type (car (notmuch-multipart/alternative-choose types))))
-		   (loop for part in (reverse subparts)
-			 if (notmuch-match-content-type (plist-get part :content-type) chosen-type)
-			 return part))
-	else if (notmuch-match-content-type (plist-get part :content-type) "multipart/*")
-	  append (notmuch-mua-get-quotable-parts (plist-get part :content))
-	else if (notmuch-match-content-type (plist-get part :content-type) "text/*")
-	  collect part))
-
-(defun notmuch-mua-insert-quotable-part (message part)
-  ;; We don't want text properties leaking from the show renderer into
-  ;; the reply so we use a temp buffer. Also we don't want hooks, such
-  ;; as notmuch-wash-*, to be run on the quotable part so we set
-  ;; notmuch-show-insert-text/plain-hook to nil.
-  (insert (with-temp-buffer
-	    (let ((notmuch-show-insert-text/plain-hook nil))
-	      ;; Show the part but do not add buttons.
-	      (notmuch-show-insert-bodypart message part 0 'no-buttons))
-	    (buffer-substring-no-properties (point-min) (point-max)))))
-
 ;; There is a bug in emacs 23's message.el that results in a newline
 ;; not being inserted after the References header, so the next header
 ;; is concatenated to the end of it. This function fixes the problem,
@@ -247,10 +222,18 @@ Note that these functions use `mail-citation-hook' if that is non-nil."
 	(insert "From: " from "\n")
 	(insert "Date: " date "\n\n")
 
-	;; Get the parts of the original message that should be quoted; this includes
-	;; all the text parts, except the non-preferred ones in a multipart/alternative.
-	(let ((quotable-parts (notmuch-mua-get-quotable-parts (plist-get original :body))))
-	  (mapc (apply-partially 'notmuch-mua-insert-quotable-part original) quotable-parts))
+	(insert (with-temp-buffer
+		  (let
+		      ;; Don't attempt to clean up messages, excerpt
+		      ;; citations, etc. in the original message before
+		      ;; quoting.
+		      ((notmuch-show-insert-text/plain-hook nil)
+		       ;; Don't omit long parts.
+		       (notmuch-show-max-text-part-size 0)
+		       ;; Insert headers for parts as appropriate for replying.
+		       (notmuch-show-insert-header-p-function #'notmuch-show-reply-insert-header-p-never))
+		    (notmuch-show-insert-body original (plist-get original :body) 0)
+		    (buffer-substring-no-properties (point-min) (point-max)))))
 
 	(set-mark (point))
 	(goto-char start)
