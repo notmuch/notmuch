@@ -921,6 +921,22 @@ will return nil if the CID is unknown or cannot be retrieved."
       ;; showable this returns nil.
       (notmuch-show-create-part-overlays button part-beg part-end))))
 
+(defun notmuch-show-mime-type (part)
+  "Return the correct mime-type to use for PART."
+  (let ((content-type (downcase (plist-get part :content-type))))
+    (or (and (string= content-type "application/octet-stream")
+	     (notmuch-show-get-mime-type-of-application/octet-stream part))
+	(and (string= content-type "inline patch")
+	     "text/x-diff")
+	content-type)))
+
+(defun notmuch-show-insert-header-p (part hide)
+  "Return non-NIL if a header button should be inserted for this part."
+  ;; Show all part buttons except for the first part if it is text/plain.
+  (let ((mime-type (notmuch-show-mime-type part)))
+    (not (and (string= mime-type "text/plain")
+	      (<= (plist-get part :id) 1)))))
+
 (defun notmuch-show-insert-bodypart (msg part depth &optional hide)
   "Insert the body part PART at depth DEPTH in the current thread.
 
@@ -931,20 +947,16 @@ is t, hide the part initially and show the button. If HIDE is
 useful for quoting in replies)."
 
   (let* ((content-type (downcase (plist-get part :content-type)))
-	 (mime-type (or (and (string= content-type "application/octet-stream")
-			     (notmuch-show-get-mime-type-of-application/octet-stream part))
-			(and (string= content-type "inline patch")
-			     "text/x-diff")
-			content-type))
+	 (mime-type (notmuch-show-mime-type part))
 	 (nth (plist-get part :id))
 	 (long (and (notmuch-match-content-type mime-type "text/*")
 		    (> notmuch-show-max-text-part-size 0)
 		    (> (length (plist-get part :content)) notmuch-show-max-text-part-size)))
 	 (beg (point))
-	 ;; We omit the part button for the first (or only) part if
-	 ;; this is text/plain, or HIDE is 'no-buttons.
-	 (button (unless (or (equal hide 'no-buttons)
-			     (and (string= mime-type "text/plain") (<= nth 1)))
+	 ;; We show the part button if notmuch-show-insert-header-p
+	 ;; says to, unless HIDE is 'no-buttons.
+	 (button (when (and (not (equal hide 'no-buttons))
+			    (notmuch-show-insert-header-p part hide))
 		   (notmuch-show-insert-part-header nth mime-type content-type (plist-get part :filename))))
 	 ;; Hide the part initially if HIDE is t, or if it is too long
 	 ;; and we have a button to allow toggling (thus reply which
