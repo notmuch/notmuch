@@ -930,12 +930,22 @@ will return nil if the CID is unknown or cannot be retrieved."
 	     "text/x-diff")
 	content-type)))
 
+;; The following variable can be overridden by let bindings.
+(defvar notmuch-show-insert-header-p-function 'notmuch-show-insert-header-p
+  "Specify which function decides which part headers get inserted.
+
+The function should take two parameters, PART and HIDE, and
+should return non-NIL if a header button should be inserted for
+this part.")
+
 (defun notmuch-show-insert-header-p (part hide)
-  "Return non-NIL if a header button should be inserted for this part."
   ;; Show all part buttons except for the first part if it is text/plain.
   (let ((mime-type (notmuch-show-mime-type part)))
     (not (and (string= mime-type "text/plain")
 	      (<= (plist-get part :id) 1)))))
+
+(defun notmuch-show-reply-insert-header-p-never (part hide)
+  nil)
 
 (defun notmuch-show-insert-bodypart (msg part depth &optional hide)
   "Insert the body part PART at depth DEPTH in the current thread.
@@ -953,10 +963,10 @@ useful for quoting in replies)."
 		    (> notmuch-show-max-text-part-size 0)
 		    (> (length (plist-get part :content)) notmuch-show-max-text-part-size)))
 	 (beg (point))
-	 ;; We show the part button if notmuch-show-insert-header-p
-	 ;; says to, unless HIDE is 'no-buttons.
+	 ;; This default header-p function omits the part button for
+	 ;; the first (or only) part if this is text/plain.
 	 (button (when (and (not (equal hide 'no-buttons))
-			    (notmuch-show-insert-header-p part hide))
+		     (funcall notmuch-show-insert-header-p-function part hide))
 		   (notmuch-show-insert-part-header nth mime-type content-type (plist-get part :filename))))
 	 ;; Hide the part initially if HIDE is t, or if it is too long
 	 ;; and we have a button to allow toggling (thus reply which
