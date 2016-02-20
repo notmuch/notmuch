@@ -501,36 +501,37 @@ message at DEPTH in the current thread."
 
 (defun notmuch-show-toggle-part-invisibility (&optional button)
   (interactive)
-  (let* ((button (or button (button-at (point))))
-	 (overlay (button-get button 'overlay))
-	 (lazy-part (button-get button :notmuch-lazy-part)))
-    ;; We have a part to toggle if there is an overlay or if there is a lazy part.
-    ;; If neither is present we cannot toggle the part so we just return nil.
-    (when (or overlay lazy-part)
-      (let* ((show (button-get button :notmuch-part-hidden))
-	     (new-start (button-start button))
-	     (button-label (button-get button :base-label))
-	     (old-point (point))
-	     (properties (text-properties-at (button-start button)))
-	     (inhibit-read-only t))
-	;; Toggle the button itself.
-	(button-put button :notmuch-part-hidden (not show))
-	(goto-char new-start)
-	(insert "[ " button-label (if show " ]" " (hidden) ]"))
-	(set-text-properties new-start (point) properties)
-	(let ((old-end (button-end button)))
-	  (move-overlay button new-start (point))
-	  (delete-region (point) old-end))
-	(goto-char (min old-point (1- (button-end button))))
-	;; Return nil if there is a lazy-part, it is empty, and we are
-	;; trying to show it.  In all other cases return t.
-	(if lazy-part
-	    (when show
-	      (button-put button :notmuch-lazy-part nil)
-	      (notmuch-show-lazy-part lazy-part button))
-	  ;; else there must be an overlay.
-	  (overlay-put overlay 'invisible (not show))
-	  t)))))
+  (let ((button (or button (button-at (point)))))
+    (when button
+      (let ((overlay (button-get button 'overlay))
+	    (lazy-part (button-get button :notmuch-lazy-part)))
+	;; We have a part to toggle if there is an overlay or if there is a lazy part.
+	;; If neither is present we cannot toggle the part so we just return nil.
+	(when (or overlay lazy-part)
+	  (let* ((show (button-get button :notmuch-part-hidden))
+		 (new-start (button-start button))
+		 (button-label (button-get button :base-label))
+		 (old-point (point))
+		 (properties (text-properties-at (button-start button)))
+		 (inhibit-read-only t))
+	    ;; Toggle the button itself.
+	    (button-put button :notmuch-part-hidden (not show))
+	    (goto-char new-start)
+	    (insert "[ " button-label (if show " ]" " (hidden) ]"))
+	    (set-text-properties new-start (point) properties)
+	    (let ((old-end (button-end button)))
+	      (move-overlay button new-start (point))
+	      (delete-region (point) old-end))
+	    (goto-char (min old-point (1- (button-end button))))
+	    ;; Return nil if there is a lazy-part, it is empty, and we are
+	    ;; trying to show it.  In all other cases return t.
+	    (if lazy-part
+		(when show
+		  (button-put button :notmuch-lazy-part nil)
+		  (notmuch-show-lazy-part lazy-part button))
+	      ;; else there must be an overlay.
+	      (overlay-put overlay 'invisible (not show))
+	      t)))))))
 
 ;; Part content ID handling
 
@@ -639,14 +640,17 @@ will return nil if the CID is unknown or cannot be retrieved."
   t)
 
 (defun notmuch-show-insert-part-multipart/signed (msg part content-type nth depth button)
-  (button-put button 'face 'notmuch-crypto-part-header)
-  ;; add signature status button if sigstatus provided
+  (when button
+    (button-put button 'face 'notmuch-crypto-part-header))
+  ;; Add signature status button if sigstatus provided.
   (if (plist-member part :sigstatus)
       (let* ((from (notmuch-show-get-header :From msg))
 	     (sigstatus (car (plist-get part :sigstatus))))
 	(notmuch-crypto-insert-sigstatus-button sigstatus from))
-    ;; if we're not adding sigstatus, tell the user how they can get it
-    (button-put button 'help-echo "Set notmuch-crypto-process-mime to process cryptographic MIME parts."))
+    ;; If we're not adding the signature status, tell the user how
+    ;; they can get it.
+    (when button
+      (button-put button 'help-echo "Set notmuch-crypto-process-mime to process cryptographic MIME parts.")))
 
   (let ((inner-parts (plist-get part :content))
 	(start (point)))
@@ -660,17 +664,20 @@ will return nil if the CID is unknown or cannot be retrieved."
   t)
 
 (defun notmuch-show-insert-part-multipart/encrypted (msg part content-type nth depth button)
-  (button-put button 'face 'notmuch-crypto-part-header)
-  ;; add encryption status button if encstatus specified
+  (when button
+    (button-put button 'face 'notmuch-crypto-part-header))
+  ;; Add encryption status button if encryption status is specified.
   (if (plist-member part :encstatus)
       (let ((encstatus (car (plist-get part :encstatus))))
 	(notmuch-crypto-insert-encstatus-button encstatus)
-	;; add signature status button if sigstatus specified
+	;; Add signature status button if signature status is
+	;; specified.
 	(if (plist-member part :sigstatus)
 	    (let* ((from (notmuch-show-get-header :From msg))
 		   (sigstatus (car (plist-get part :sigstatus))))
 	      (notmuch-crypto-insert-sigstatus-button sigstatus from))))
-    ;; if we're not adding encstatus, tell the user how they can get it
+    ;; If we're not adding the encryption status, tell the user how
+    ;; they can get it.
     (button-put button 'help-echo "Set notmuch-crypto-process-mime to process cryptographic MIME parts."))
 
   (let ((inner-parts (plist-get part :content))
@@ -980,8 +987,9 @@ useful for quoting in replies)."
 
     (if show-part
         (notmuch-show-insert-bodypart-internal msg part mime-type nth depth button)
-      (button-put button :notmuch-lazy-part
-                  (list msg part mime-type nth depth button)))
+      (when button
+	(button-put button :notmuch-lazy-part
+		    (list msg part mime-type nth depth button))))
 
     ;; Some of the body part handlers leave point somewhere up in the
     ;; part, so we make sure that we're down at the end.
