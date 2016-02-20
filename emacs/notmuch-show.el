@@ -959,9 +959,7 @@ this part.")
 
 HIDE determines whether to show or hide the part and the button
 as follows: If HIDE is nil, show the part and the button. If HIDE
-is t, hide the part initially and show the button. If HIDE is
-'no-buttons, show the part but do not add any buttons (this is
-useful for quoting in replies)."
+is t, hide the part initially and show the button."
 
   (let* ((content-type (downcase (plist-get part :content-type)))
 	 (mime-type (notmuch-show-mime-type part))
@@ -972,12 +970,10 @@ useful for quoting in replies)."
 	 (beg (point))
 	 ;; This default header-p function omits the part button for
 	 ;; the first (or only) part if this is text/plain.
-	 (button (when (and (not (equal hide 'no-buttons))
-		     (funcall notmuch-show-insert-header-p-function part hide))
+	 (button (when (funcall notmuch-show-insert-header-p-function part hide)
 		   (notmuch-show-insert-part-header nth mime-type content-type (plist-get part :filename))))
 	 ;; Hide the part initially if HIDE is t, or if it is too long
-	 ;; and we have a button to allow toggling (thus reply which
-	 ;; uses 'no-buttons automatically includes long parts)
+	 ;; and we have a button to allow toggling.
 	 (show-part (not (or (equal hide t)
 			     (and long button))))
 	 (content-beg (point)))
