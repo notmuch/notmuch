@@ -1,3 +1,23 @@
+Notmuch 0.22 (UNRELEASED)
+=========================
+
+Emacs Interface
+---------------
+
+Notmuch replies now include all parts shown in the show view
+
+  There are two main user visible changes. The first is that rfc822
+  parts are now included in replies.
+
+  The second change is that part headers are now included in the reply
+  buffer to provide visible separation of the parts. The choice of
+  which part headers to show is customizable via the variable
+  `notmuch-mua-reply-insert-header-p-function`.
+
+Filtering or Limiting messages is now bound to `l` in the search view
+
+  This binding now matches the analogous binding in show view.
+
 Notmuch 0.21 (2015-10-29)
 =========================
 
