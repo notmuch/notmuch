@@ -1,3 +1,11 @@
+Notmuch 0.23 (UNRELEASED)
+=========================
+
+Ruby Bindings
+-------------
+
+Add support for `notmuch_database_get_all_tags`
+
 Notmuch 0.22 (2016-04-26)
 =========================
 

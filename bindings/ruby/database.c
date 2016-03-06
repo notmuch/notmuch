@@ -375,6 +375,30 @@ notmuch_rb_database_find_message_by_filename (VALUE self, VALUE pathv)
 }
 
 /*
+ * call-seq: DB.get_all_tags() => TAGS
+ *
+ * Returns a list of all tags found in the database.
+ */
+VALUE
+notmuch_rb_database_get_all_tags (VALUE self)
+{
+    notmuch_database_t *db;
+    notmuch_tags_t *tags;
+
+    Data_Get_Notmuch_Database (self, db);
+
+    tags = notmuch_database_get_all_tags (db);
+    if (!tags) {
+	const char *msg = notmuch_database_status_string (db);
+	if (!msg)
+	    msg = "Unknown notmuch error";
+
+	rb_raise (notmuch_rb_eBaseError, "%s", msg);
+    }
+    return Data_Wrap_Struct (notmuch_rb_cTags, NULL, NULL, tags);
+}
+
+/*
  * call-seq: DB.query(query) => QUERY
  *
  * Retrieve a query object for the query string 'query'

@@ -178,6 +178,9 @@ VALUE
 notmuch_rb_database_find_message_by_filename (VALUE self, VALUE pathv);
 
 VALUE
+notmuch_rb_database_get_all_tags (VALUE self);
+
+VALUE
 notmuch_rb_database_query_create (VALUE self, VALUE qstrv);
 
 /* directory.c */

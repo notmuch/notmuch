@@ -229,6 +229,7 @@ Init_notmuch (void)
 		      notmuch_rb_database_find_message, 1); /* in database.c */
     rb_define_method (notmuch_rb_cDatabase, "find_message_by_filename",
 		      notmuch_rb_database_find_message_by_filename, 1); /* in database.c */
+    rb_define_method (notmuch_rb_cDatabase, "all_tags", notmuch_rb_database_get_all_tags, 0); /* in database.c */
     rb_define_method (notmuch_rb_cDatabase, "query", notmuch_rb_database_query_create, 1); /* in database.c */
 
     /*
