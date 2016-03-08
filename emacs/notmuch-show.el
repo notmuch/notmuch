@@ -848,21 +848,16 @@ will return nil if the CID is unknown or cannot be retrieved."
 ;; 
 
 (defun notmuch-show-insert-bodypart-internal (msg part content-type nth depth button)
-  (let ((handlers (notmuch-show-handlers-for content-type)))
-    ;; Run the content handlers until one of them returns a non-nil
-    ;; value.
-    (while (and handlers
-		(not (condition-case err
-			 (funcall (car handlers) msg part content-type nth depth button)
-		       ;; Specifying `debug' here lets the debugger
-		       ;; run if `debug-on-error' is non-nil.
-		       ((debug error)
-			(progn
-				(insert "!!! Bodypart insert error: ")
-				(insert (error-message-string err))
-				(insert " !!!\n") nil)))))
-      (setq handlers (cdr handlers))))
-  t)
+  ;; Run the handlers until one of them succeeds.
+  (loop for handler in (notmuch-show-handlers-for content-type)
+	until (condition-case err
+		  (funcall handler msg part content-type nth depth button)
+		;; Specifying `debug' here lets the debugger run if
+		;; `debug-on-error' is non-nil.
+		((debug error)
+		 (insert "!!! Bodypart handler `" (prin1-to-string handler) "' threw an error:\n"
+			 "!!! " (error-message-string err) "\n")
+		 nil))))
 
 (defun notmuch-show-create-part-overlays (button beg end)
   "Add an overlay to the part between BEG and END"
