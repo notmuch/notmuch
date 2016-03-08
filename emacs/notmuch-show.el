@@ -678,7 +678,8 @@ will return nil if the CID is unknown or cannot be retrieved."
 	      (notmuch-crypto-insert-sigstatus-button sigstatus from))))
     ;; If we're not adding the encryption status, tell the user how
     ;; they can get it.
-    (button-put button 'help-echo "Set notmuch-crypto-process-mime to process cryptographic MIME parts."))
+    (when button
+      (button-put button 'help-echo "Set notmuch-crypto-process-mime to process cryptographic MIME parts.")))
 
   (let ((inner-parts (plist-get part :content))
 	(start (point)))
