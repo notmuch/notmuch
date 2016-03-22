@@ -12,6 +12,12 @@ test_begin_subtest "Absolute date range with 'same' operator"
 output=$(notmuch search date:2010-12-16..! | notmuch_search_sanitize)
 test_expect_equal "$output" "thread:XXX   2010-12-16 [1/1] Olivier Berger; Essai accentué (inbox unread)"
 
+if [ "${NOTMUCH_HAVE_XAPIAN_FIELD_PROCESSOR}" = "1" ]; then
+    test_begin_subtest "Absolute date field"
+    output=$(notmuch search date:2010-12-16 | notmuch_search_sanitize)
+    test_expect_equal "$output" "thread:XXX   2010-12-16 [1/1] Olivier Berger; Essai accentué (inbox unread)"
+fi
+
 test_begin_subtest "Absolute time range with TZ"
 notmuch search date:18-Nov-2009_02:19:26-0800..2009-11-18_04:49:52-06:00 | notmuch_search_sanitize > OUTPUT
 cat <<EOF >EXPECTED

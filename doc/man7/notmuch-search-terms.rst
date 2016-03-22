@@ -281,9 +281,10 @@ matches from the beginning of January to the end of February.
 date:<expr>..! can be used as a shorthand for date:<expr>..<expr>. The
 expansion takes place before interpretation, and thus, for example,
 date:monday..! matches from the beginning of Monday until the end of
-Monday. (Note that entering date:<expr> without "..", for example
-date:yesterday, won't work, as it's not interpreted as a range
-expression at all. Again, use date:yesterday..!)
+Monday.
+With **Xapian Field Processor** support (see below), non-range
+date queries such as date:yesterday will work, but otherwise
+will give unexpected results; if in doubt use date:yesterday..!
 
 Currently, we do not support spaces in range expressions. You can
 replace the spaces with '\_', or (in most cases) '-', or (in some cases)
@@ -369,6 +370,21 @@ Time zones
 -  (+\|-)HH[MM]
 
 Some time zone codes, e.g. UTC, EET.
+
+XAPIAN FIELD PROCESSORS
+=======================
+
+Certain optional features of the notmuch query processor rely on the
+presence of the Xapian field processor API. You can determine if your
+notmuch was built against a sufficiently recent version of Xapian by running
+
+::
+
+  % notmuch config get built_with.field_processor
+
+Currently the following features require field processor support:
+
+- non-range date queries, e.g. "date:today"
 
 SEE ALSO
 ========

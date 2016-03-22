@@ -64,3 +64,24 @@ ParseTimeValueRangeProcessor::operator() (std::string &begin, std::string &end)
 
     return valno;
 }
+
+#if HAVE_XAPIAN_FIELD_PROCESSOR
+/* XXX TODO: is throwing an exception the right thing to do here? */
+Xapian::Query DateFieldProcessor::operator()(const std::string & str) {
+    time_t from, to, now;
+
+    /* Use the same 'now' for begin and end. */
+    if (time (&now) == (time_t) -1)
+	throw Xapian::QueryParserError("Unable to get current time");
+
+    if (parse_time_string (str.c_str (), &from, &now, PARSE_TIME_ROUND_DOWN))
+	throw Xapian::QueryParserError ("Didn't understand date specification '" + str + "'");
+
+    if (parse_time_string (str.c_str (), &to, &now, PARSE_TIME_ROUND_UP_INCLUSIVE))
+	throw Xapian::QueryParserError ("Didn't understand date specification '" + str + "'");
+
+    return Xapian::Query(Xapian::Query::OP_AND,
+			 Xapian::Query(Xapian::Query::OP_VALUE_GE, 0, Xapian::sortable_serialise ((double) from)),
+			 Xapian::Query(Xapian::Query::OP_VALUE_LE, 0, Xapian::sortable_serialise ((double) to)));
+}
+#endif

@@ -1000,6 +1000,12 @@ notmuch_database_open_verbose (const char *path,
 	notmuch->term_gen->set_stemmer (Xapian::Stem ("english"));
 	notmuch->value_range_processor = new Xapian::NumberValueRangeProcessor (NOTMUCH_VALUE_TIMESTAMP);
 	notmuch->date_range_processor = new ParseTimeValueRangeProcessor (NOTMUCH_VALUE_TIMESTAMP);
+#if HAVE_XAPIAN_FIELD_PROCESSOR
+	/* This currently relies on the query parser to pass anything
+	 * with a .. to the range processor */
+	notmuch->date_field_processor = new DateFieldProcessor();
+	notmuch->query_parser->add_boolean_prefix("date", notmuch->date_field_processor);
+#endif
 	notmuch->last_mod_range_processor = new Xapian::NumberValueRangeProcessor (NOTMUCH_VALUE_LAST_MOD, "lastmod:");
 
 	notmuch->query_parser->set_default_op (Xapian::Query::OP_AND);

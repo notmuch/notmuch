@@ -176,6 +176,9 @@ struct _notmuch_database {
     Xapian::TermGenerator *term_gen;
     Xapian::ValueRangeProcessor *value_range_processor;
     Xapian::ValueRangeProcessor *date_range_processor;
+#if HAVE_XAPIAN_FIELD_PROCESSOR
+    Xapian::FieldProcessor *date_field_processor;
+#endif
     Xapian::ValueRangeProcessor *last_mod_range_processor;
 };
 
