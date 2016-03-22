@@ -56,6 +56,8 @@ indicate user-supplied values):
 
 -  lastmod:<initial-revision>..<final-revision>
 
+-  query:<name>
+
 The **from:** prefix is used to match the name or address of the sender
 of an email message.
 
@@ -131,6 +133,11 @@ database revision number of when messages were last modified (tags
 were added/removed or filenames changed).  This is usually used in
 conjunction with the **--uuid** argument to **notmuch search**
 to find messages that have changed since an earlier query.
+
+The **query:** prefix allows queries to refer to previously saved
+queries added with **notmuch-config(1)**. Named queries are only
+available if notmuch is built with **Xapian Field Processors** (see
+below).
 
 Operators
 ---------
@@ -385,6 +392,7 @@ notmuch was built against a sufficiently recent version of Xapian by running
 Currently the following features require field processor support:
 
 - non-range date queries, e.g. "date:today"
+- named queries e.g. "query:my_special_query"
 
 SEE ALSO
 ========

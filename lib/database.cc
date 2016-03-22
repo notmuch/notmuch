@@ -20,6 +20,7 @@
 
 #include "database-private.h"
 #include "parse-time-vrp.h"
+#include "query-fp.h"
 #include "string-util.h"
 
 #include <iostream>
@@ -1005,6 +1006,8 @@ notmuch_database_open_verbose (const char *path,
 	 * with a .. to the range processor */
 	notmuch->date_field_processor = new DateFieldProcessor();
 	notmuch->query_parser->add_boolean_prefix("date", notmuch->date_field_processor);
+	notmuch->query_field_processor = new QueryFieldProcessor (*notmuch->query_parser, notmuch);
+	notmuch->query_parser->add_boolean_prefix("query", notmuch->query_field_processor);
 #endif
 	notmuch->last_mod_range_processor = new Xapian::NumberValueRangeProcessor (NOTMUCH_VALUE_LAST_MOD, "lastmod:");
 
