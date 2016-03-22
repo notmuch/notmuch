@@ -358,9 +358,10 @@ if [ ${have_xapian} = "0" ]; then
     errors=$((errors + 1))
 fi
 
-# Compaction is only supported on Xapian > 1.2.6
 have_xapian_compact=0
+have_xapian_field_processor=0
 if [ ${have_xapian} = "1" ]; then
+    # Compaction is only supported on Xapian > 1.2.6
     printf "Checking for Xapian compaction support... "
     case "${xapian_version}" in
 	0.*|1.[01].*|1.2.[0-5])
@@ -371,10 +372,23 @@ if [ ${have_xapian} = "1" ]; then
 	*)
 	    printf "Unknown version.\n" ;;
     esac
-fi
 
-default_xapian_backend=""
-if [ ${have_xapian} = "1" ]; then
+    printf "Checking for Xapian FieldProcessor API... "
+    cat>_field_processor.cc<<EOF
+#include <xapian.h>
+class TitleFieldProcessor : public Xapian::FieldProcessor { };
+EOF
+    if ${CXX} ${CXXFLAGS_for_sh} ${xapian_cxxflags} -c _field_processor.cc -o _field_processor.o > /dev/null 2>&1
+    then
+	have_xapian_field_processor=1
+	printf "Yes.\n"
+    else
+	printf "No. (optional)\n"
+    fi
+
+    rm -f _field_processor.o _field_processor.cc
+
+    default_xapian_backend=""
     printf "Testing default Xapian backend... "
     cat >_default_backend.cc <<EOF
 #include <xapian.h>
@@ -392,6 +406,7 @@ EOF
     printf "%s\n" "${default_xapian_backend}";
     rm -rf test.db _default_backend _default_backend.cc
 fi
+
 # we need to have a version >= 2.6.5 to avoid a crypto bug. We need
 # 2.6.7 for permissive "From " header handling.
 GMIME_MINVER=2.6.7
@@ -1001,6 +1016,9 @@ HAVE_D_TYPE = ${have_d_type}
 # Whether the Xapian version in use supports compaction
 HAVE_XAPIAN_COMPACT = ${have_xapian_compact}
 
+# Whether the Xapian version in use supports field processors
+HAVE_XAPIAN_FIELD_PROCESSOR = ${have_xapian_field_processor}
+
 # Whether the getpwuid_r function is standards-compliant
 # (if not, then notmuch will #define _POSIX_PTHREAD_SEMANTICS
 # to enable the standards-compliant version -- needed for Solaris)
@@ -1075,6 +1093,7 @@ CONFIGURE_CFLAGS = -DHAVE_GETLINE=\$(HAVE_GETLINE) \$(GMIME_CFLAGS)      \\
 		   -DSTD_GETPWUID=\$(STD_GETPWUID)                       \\
 		   -DSTD_ASCTIME=\$(STD_ASCTIME)                         \\
 		   -DHAVE_XAPIAN_COMPACT=\$(HAVE_XAPIAN_COMPACT)	 \\
+		   -DHAVE_XAPIAN_FIELD_PROCESSOR=\$(HAVE_XAPIAN_FIELD_PROCESSOR) \\
 		   -DUTIL_BYTE_ORDER=\$(UTIL_BYTE_ORDER)
 
 CONFIGURE_CXXFLAGS = -DHAVE_GETLINE=\$(HAVE_GETLINE) \$(GMIME_CFLAGS)    \\
@@ -1089,6 +1108,7 @@ CONFIGURE_CXXFLAGS = -DHAVE_GETLINE=\$(HAVE_GETLINE) \$(GMIME_CFLAGS)    \\
 		     -DSTD_GETPWUID=\$(STD_GETPWUID)                     \\
 		     -DSTD_ASCTIME=\$(STD_ASCTIME)                       \\
 		     -DHAVE_XAPIAN_COMPACT=\$(HAVE_XAPIAN_COMPACT)       \\
+		     -DHAVE_XAPIAN_FIELD_PROCESSOR=\$(HAVE_XAPIAN_FIELD_PROCESSOR) \\
 		     -DUTIL_BYTE_ORDER=\$(UTIL_BYTE_ORDER)
 
 CONFIGURE_LDFLAGS =  \$(GMIME_LDFLAGS) \$(TALLOC_LDFLAGS) \$(ZLIB_LDFLAGS) \$(XAPIAN_LDFLAGS)
@@ -1101,6 +1121,9 @@ cat > sh.config <<EOF
 
 # Whether the Xapian version in use supports compaction
 NOTMUCH_HAVE_XAPIAN_COMPACT=${have_xapian_compact}
+
+# Whether the Xapian version in use supports field processors
+NOTMUCH_HAVE_XAPIAN_FIELD_PROCESSOR=${have_xapian_field_processor}
 
 # Which backend will Xapian use by default?
 NOTMUCH_DEFAULT_XAPIAN_BACKEND=${default_xapian_backend}
