@@ -50,6 +50,24 @@ Supported options for **restore** include
             format, this heuristic, based the fact that batch-tag format
             contains no parentheses, should be accurate.
 
+    ``--include=(config|tags)``
+
+      Control what kind of metadata is restored.
+
+	**config**
+
+	  Restore configuration data to the database. Each configuration line starts
+	  with "#@ ", followed by a space seperated key-value pair.
+	  Both key and value are hex encoded if needed.
+
+	**tags**
+
+	  Output per-message metadata, namely tags. See *format* above
+	  for more details.
+
+      The default is to restore both tags and configuration
+      information
+
     ``--input=``\ <filename>
         Read input from given file instead of stdin.
 

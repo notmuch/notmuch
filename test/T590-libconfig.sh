@@ -132,4 +132,15 @@ cat <<'EOF' >EXPECTED
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
+test_begin_subtest "restore config"
+notmuch dump --include=config >EXPECTED
+cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR}
+{
+    RUN(notmuch_database_set_config (db, "testkey1", "mutatedvalue"));
+}
+EOF
+notmuch restore --include=config <EXPECTED
+notmuch dump --include=config >OUTPUT
+test_expect_equal_file EXPECTED OUTPUT
+
 test_done
