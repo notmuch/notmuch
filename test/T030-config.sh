@@ -43,10 +43,10 @@ notmuch config set foo.nonexistent
 test_expect_equal "$(notmuch config get foo.nonexistent)" ""
 
 test_begin_subtest "List all items"
-notmuch config set database.path "/canonical/path"
-output=$(notmuch config list | notmuch_built_with_sanitize)
-test_expect_equal "$output" "\
-database.path=/canonical/path
+notmuch config list 2>&1 | notmuch_config_sanitize > OUTPUT
+cat <<EOF > EXPECTED
+Error opening database at MAIL_DIR/.notmuch: No such file or directory
+database.path=MAIL_DIR
 user.name=Notmuch Test Suite
 user.primary_email=test_suite@notmuchmail.org
 user.other_email=test_suite_other@notmuchmail.org;test_suite@otherdomain.org
@@ -58,7 +58,9 @@ crypto.gpg_path=gpg
 foo.string=this is another string value
 foo.list=this;is another;list value;
 built_with.compact=something
-built_with.field_processor=something"
+built_with.field_processor=something
+EOF
+test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "Top level --config=FILE option"
 cp "${NOTMUCH_CONFIG}" alt-config

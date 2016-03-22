@@ -746,6 +746,11 @@ notmuch_built_with_sanitize ()
     sed 's/^built_with[.]\(.*\)=.*$/built_with.\1=something/'
 }
 
+notmuch_config_sanitize ()
+{
+    notmuch_dir_sanitize | notmuch_built_with_sanitize
+}
+
 # End of notmuch helper functions
 
 # Use test_set_prereq to tell that a particular prerequisite is available.

@@ -138,6 +138,12 @@ The available configuration items are described below.
 	"compact" (see **notmuch-compact(1)**)
 	and "field_processor" (see **notmuch-search-terms(7)**).
 
+    **query.<name>**
+
+        Expansion for named query called <name>. See
+        **notmuch-search-terms(7)** for more information about named
+        queries.
+
 ENVIRONMENT
 ===========
 
