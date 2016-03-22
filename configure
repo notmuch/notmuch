@@ -361,17 +361,20 @@ fi
 have_xapian_compact=0
 have_xapian_field_processor=0
 if [ ${have_xapian} = "1" ]; then
-    # Compaction is only supported on Xapian > 1.2.6
     printf "Checking for Xapian compaction support... "
-    case "${xapian_version}" in
-	0.*|1.[01].*|1.2.[0-5])
-	    printf "No (only available with Xapian > 1.2.6).\n" ;;
-	[1-9]*.[0-9]*.[0-9]*)
-	    have_xapian_compact=1
-	    printf "Yes.\n" ;;
-	*)
-	    printf "Unknown version.\n" ;;
-    esac
+    cat>_compact.cc<<EOF
+#include <xapian.h>
+class TestCompactor : public Xapian::Compactor { };
+EOF
+    if ${CXX} ${CXXFLAGS_for_sh} ${xapian_cxxflags} -c _compact.cc -o _compact.o > /dev/null 2>&1
+    then
+	have_xapian_compact=1
+	printf "Yes.\n"
+    else
+	printf "No.\n"
+    fi
+
+    rm -f _compact.o _compact.cc
 
     printf "Checking for Xapian FieldProcessor API... "
     cat>_field_processor.cc<<EOF
