@@ -1042,7 +1042,7 @@ notmuch_new_command (notmuch_config_t *config, int argc, char *argv[])
 	    }
 
 	    if (notmuch_database_dump (notmuch, backup_name, "",
-				       DUMP_FORMAT_BATCH_TAG, TRUE)) {
+				       DUMP_FORMAT_BATCH_TAG, DUMP_INCLUDE_CONFIG | DUMP_INCLUDE_TAGS, TRUE)) {
 		fprintf (stderr, "Backup failed. Aborting upgrade.");
 		return EXIT_FAILURE;
 	    }

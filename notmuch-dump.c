@@ -23,15 +23,79 @@
 #include "string-util.h"
 #include <zlib.h>
 
+static int
+database_dump_config (notmuch_database_t *notmuch, gzFile output)
+{
+    notmuch_config_list_t *list;
+    int ret = EXIT_FAILURE;
+    char *buffer = NULL;
+    size_t buffer_size = 0;
+
+    if (print_status_database ("notmuch dump", notmuch,
+			       notmuch_database_get_config_list (notmuch, NULL, &list)))
+	goto DONE;
+
+    for (; notmuch_config_list_valid (list); notmuch_config_list_move_to_next (list)) {
+	if (hex_encode (notmuch, notmuch_config_list_key (list),
+			&buffer, &buffer_size) != HEX_SUCCESS) {
+	    fprintf (stderr, "Error: failed to hex-encode config key %s\n",
+		     notmuch_config_list_key (list));
+	    goto DONE;
+	}
+	gzprintf (output, "#@ %s", buffer);
+
+	if (hex_encode (notmuch, notmuch_config_list_value (list),
+			&buffer, &buffer_size) != HEX_SUCCESS) {
+	    fprintf (stderr, "Error: failed to hex-encode config value %s\n",
+		     notmuch_config_list_value (list) );
+	    goto DONE;
+	}
+
+	gzprintf (output, " %s\n", buffer);
+    }
+
+    ret = EXIT_SUCCESS;
+
+ DONE:
+    if (list)
+	notmuch_config_list_destroy (list);
+
+    if (buffer)
+	talloc_free (buffer);
+
+    return ret;
+}
+
+static void
+print_dump_header (gzFile output, int output_format, int include)
+{
+    gzprintf (output, "#notmuch-dump %s:%d %s%s%s\n",
+	      (output_format == DUMP_FORMAT_SUP) ? "sup" : "batch-tag",
+	      NOTMUCH_DUMP_VERSION,
+	      (include & DUMP_INCLUDE_CONFIG) ? "config" : "",
+	      (include & DUMP_INCLUDE_TAGS) && (include & DUMP_INCLUDE_CONFIG) ? "," : "",
+	      (include & DUMP_INCLUDE_TAGS) ? "tags" : "");
+}
 
 static int
 database_dump_file (notmuch_database_t *notmuch, gzFile output,
-		    const char *query_str, int output_format)
+		    const char *query_str, int output_format, int include)
 {
     notmuch_query_t *query;
     notmuch_messages_t *messages;
     notmuch_message_t *message;
     notmuch_tags_t *tags;
+
+    print_dump_header (output, output_format, include);
+
+    if (include & DUMP_INCLUDE_CONFIG) {
+	if (print_status_database ("notmuch dump", notmuch,
+				   database_dump_config(notmuch,output)))
+	    return EXIT_FAILURE;
+    }
+
+    if (! (include & DUMP_INCLUDE_TAGS))
+	return EXIT_SUCCESS;
 
     if (! query_str)
 	query_str = "";
@@ -130,6 +194,7 @@ notmuch_database_dump (notmuch_database_t *notmuch,
 		       const char *output_file_name,
 		       const char *query_str,
 		       dump_format_t output_format,
+		       dump_include_t include,
 		       notmuch_bool_t gzip_output)
 {
     gzFile output = NULL;
@@ -164,7 +229,7 @@ notmuch_database_dump (notmuch_database_t *notmuch,
 	goto DONE;
     }
 
-    ret = database_dump_file (notmuch, output, query_str, output_format);
+    ret = database_dump_file (notmuch, output, query_str, output_format, include);
     if (ret) goto DONE;
 
     ret = gzflush (output, Z_FINISH);
@@ -226,6 +291,7 @@ notmuch_dump_command (notmuch_config_t *config, int argc, char *argv[])
     int opt_index;
 
     int output_format = DUMP_FORMAT_BATCH_TAG;
+    int include = 0;
     notmuch_bool_t gzip_output = 0;
 
     notmuch_opt_desc_t options[] = {
@@ -233,6 +299,9 @@ notmuch_dump_command (notmuch_config_t *config, int argc, char *argv[])
 	  (notmuch_keyword_t []){ { "sup", DUMP_FORMAT_SUP },
 				  { "batch-tag", DUMP_FORMAT_BATCH_TAG },
 				  { 0, 0 } } },
+	{ NOTMUCH_OPT_KEYWORD_FLAGS, &include, "include", 'I',
+	  (notmuch_keyword_t []){ { "config", DUMP_INCLUDE_CONFIG },
+				  { "tags", DUMP_INCLUDE_TAGS} } },
 	{ NOTMUCH_OPT_STRING, &output_file_name, "output", 'o', 0  },
 	{ NOTMUCH_OPT_BOOLEAN, &gzip_output, "gzip", 'z', 0 },
 	{ NOTMUCH_OPT_INHERIT, (void *) &notmuch_shared_options, NULL, 0, 0 },
@@ -245,6 +314,9 @@ notmuch_dump_command (notmuch_config_t *config, int argc, char *argv[])
 
     notmuch_process_shared_options (argv[0]);
 
+    if (include == 0)
+	include = DUMP_INCLUDE_CONFIG | DUMP_INCLUDE_TAGS;
+
     if (opt_index < argc) {
 	query_str = query_string_from_args (notmuch, argc - opt_index, argv + opt_index);
 	if (query_str == NULL) {
@@ -254,7 +326,7 @@ notmuch_dump_command (notmuch_config_t *config, int argc, char *argv[])
     }
 
     ret = notmuch_database_dump (notmuch, output_file_name, query_str,
-				 output_format, gzip_output);
+				 output_format, include, gzip_output);
 
     notmuch_database_destroy (notmuch);
 

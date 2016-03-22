@@ -446,11 +446,19 @@ typedef enum dump_formats {
     DUMP_FORMAT_SUP
 } dump_format_t;
 
+typedef enum dump_includes {
+    DUMP_INCLUDE_TAGS = 1,
+    DUMP_INCLUDE_CONFIG = 2,
+} dump_include_t;
+
+#define NOTMUCH_DUMP_VERSION 2
+
 int
 notmuch_database_dump (notmuch_database_t *notmuch,
 		       const char *output_file_name,
 		       const char *query_str,
 		       dump_format_t output_format,
+		       dump_include_t include,
 		       notmuch_bool_t gzip_output);
 
 /* If status is non-zero (i.e. error) print appropriate

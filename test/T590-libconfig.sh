@@ -115,4 +115,21 @@ testkey2 testvalue2
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
+test_begin_subtest "dump config"
+cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR}
+{
+    RUN(notmuch_database_set_config (db, "key with spaces", "value, with, spaces!"));
+}
+EOF
+notmuch dump --include=config >OUTPUT
+cat <<'EOF' >EXPECTED
+#notmuch-dump batch-tag:2 config
+#@ aaabefore beforeval
+#@ key%20with%20spaces value,%20with,%20spaces%21
+#@ testkey1 testvalue1
+#@ testkey2 testvalue2
+#@ zzzafter afterval
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
 test_done

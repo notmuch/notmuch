@@ -674,6 +674,12 @@ NOTMUCH_NEW ()
     notmuch new "${@}" | grep -v -E -e '^Processed [0-9]*( total)? file|Found [0-9]* total file'
 }
 
+NOTMUCH_DUMP_TAGS ()
+{
+    # this relies on the default format being batch-tag, otherwise some tests will break
+    notmuch dump --include=tags "${@}" | sed '/^#/d' | sort
+}
+
 notmuch_search_sanitize ()
 {
     perl -pe 's/("?thread"?: ?)("?)................("?)/\1\2XXX\3/'

@@ -71,6 +71,23 @@ Supported options for **dump** include
             characters. Note also that tags with spaces will not be
             correctly restored with this format.
 
+    ``--include=(config|tags)``
+
+    Control what kind of metadata is included in the output.
+
+      **config**
+
+	Output configuration data stored in the database. Each line
+	starts with "#@ ", followed by a space seperated key-value
+	pair.  Both key and value are hex encoded if needed.
+
+      **tags**
+
+	Output per-message metadata, namely tags. See *format* above
+	for description of the output.
+
+      The default is to include both tags and configuration information
+
     ``--output=``\ <filename>
         Write output to given file instead of stdout.
 

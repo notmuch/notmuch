@@ -97,7 +97,7 @@ test_expect_equal_file dump.expected dump.actual
 # Note, we assume all messages from cworth have a message-id
 # containing cworth.org
 
-grep 'cworth[.]org' dump.expected > dump-cworth.expected
+{ head -1 dump.expected ; grep 'cworth[.]org' dump.expected; } > dump-cworth.expected
 
 test_begin_subtest "dump -- from:cworth"
 notmuch dump -- from:cworth > dump-dash-cworth.actual
@@ -118,16 +118,16 @@ notmuch search --output=messages from:cworth | sed s/^id:// |\
 test_expect_equal_file OUTPUT EXPECTED
 
 test_begin_subtest "format=batch-tag, dump sanity check."
-notmuch dump --format=sup from:cworth | cut -f1 -d' ' | \
+NOTMUCH_DUMP_TAGS --format=sup from:cworth | cut -f1 -d' ' | \
     sort > EXPECTED.$test_count
-notmuch dump --format=batch-tag from:cworth | sed 's/^.*-- id://' | \
+NOTMUCH_DUMP_TAGS --format=batch-tag from:cworth | sed 's/^.*-- id://' | \
     sort > OUTPUT.$test_count
 test_expect_equal_file EXPECTED.$test_count OUTPUT.$test_count
 
 test_begin_subtest "format=batch-tag, missing newline"
 printf "+a_tag_without_newline -- id:20091117232137.GA7669@griffis1.net" > IN
 notmuch restore --accumulate < IN
-notmuch dump id:20091117232137.GA7669@griffis1.net > OUT
+NOTMUCH_DUMP_TAGS id:20091117232137.GA7669@griffis1.net > OUT
 cat <<EOF > EXPECTED
 +a_tag_without_newline +inbox +unread -- id:20091117232137.GA7669@griffis1.net
 EOF
@@ -155,7 +155,7 @@ cat <<EOF >EXPECTED.$test_count
 + -- id:20091117232137.GA7669@griffis1.net
 EOF
 notmuch restore --format=batch-tag < EXPECTED.$test_count
-notmuch dump --format=batch-tag id:20091117232137.GA7669@griffis1.net > OUTPUT.$test_count
+NOTMUCH_DUMP_TAGS --format=batch-tag id:20091117232137.GA7669@griffis1.net > OUTPUT.$test_count
 test_expect_equal_file EXPECTED.$test_count OUTPUT.$test_count
 
 tag1='comic_swear=$&^%$^%\\//-+$^%$'
@@ -217,9 +217,9 @@ notmuch dump --format=batch-tag > OUTPUT.$test_count
 test_expect_equal_file EXPECTED.$test_count OUTPUT.$test_count
 
 test_begin_subtest 'format=batch-tag, checking encoded output'
-notmuch dump --format=batch-tag -- from:cworth |\
+NOTMUCH_DUMP_TAGS --format=batch-tag -- from:cworth |\
 	 awk "{ print \"+$enc1 +$enc2 +$enc3 -- \" \$5 }" > EXPECTED.$test_count
-notmuch dump --format=batch-tag -- from:cworth  > OUTPUT.$test_count
+NOTMUCH_DUMP_TAGS --format=batch-tag -- from:cworth  > OUTPUT.$test_count
 test_expect_equal_file EXPECTED.$test_count OUTPUT.$test_count
 
 test_begin_subtest 'restoring sane tags'
