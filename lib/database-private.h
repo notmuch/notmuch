@@ -144,6 +144,13 @@ operator&=(_notmuch_features &a, _notmuch_features b)
     return a;
 }
 
+#define NOTMUCH_QUERY_PARSER_FLAGS (Xapian::QueryParser::FLAG_BOOLEAN | \
+				    Xapian::QueryParser::FLAG_PHRASE | \
+				    Xapian::QueryParser::FLAG_LOVEHATE | \
+				    Xapian::QueryParser::FLAG_BOOLEAN_ANY_CASE | \
+				    Xapian::QueryParser::FLAG_WILDCARD | \
+				    Xapian::QueryParser::FLAG_PURE_NOT)
+
 struct _notmuch_database {
     notmuch_bool_t exception_reported;
 

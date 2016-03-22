@@ -220,12 +220,6 @@ _notmuch_query_search_documents (notmuch_query_t *query,
 	Xapian::Query string_query, final_query, exclude_query;
 	Xapian::MSet mset;
 	Xapian::MSetIterator iterator;
-	unsigned int flags = (Xapian::QueryParser::FLAG_BOOLEAN |
-			      Xapian::QueryParser::FLAG_PHRASE |
-			      Xapian::QueryParser::FLAG_LOVEHATE |
-			      Xapian::QueryParser::FLAG_BOOLEAN_ANY_CASE |
-			      Xapian::QueryParser::FLAG_WILDCARD |
-			      Xapian::QueryParser::FLAG_PURE_NOT);
 
 	if (strcmp (query_string, "") == 0 ||
 	    strcmp (query_string, "*") == 0)
@@ -233,7 +227,7 @@ _notmuch_query_search_documents (notmuch_query_t *query,
 	    final_query = mail_query;
 	} else {
 	    string_query = notmuch->query_parser->
-		parse_query (query_string, flags);
+		parse_query (query_string, NOTMUCH_QUERY_PARSER_FLAGS);
 	    final_query = Xapian::Query (Xapian::Query::OP_AND,
 					 mail_query, string_query);
 	}
@@ -579,12 +573,6 @@ _notmuch_query_count_documents (notmuch_query_t *query, const char *type, unsign
 						   type));
 	Xapian::Query string_query, final_query, exclude_query;
 	Xapian::MSet mset;
-	unsigned int flags = (Xapian::QueryParser::FLAG_BOOLEAN |
-			      Xapian::QueryParser::FLAG_PHRASE |
-			      Xapian::QueryParser::FLAG_LOVEHATE |
-			      Xapian::QueryParser::FLAG_BOOLEAN_ANY_CASE |
-			      Xapian::QueryParser::FLAG_WILDCARD |
-			      Xapian::QueryParser::FLAG_PURE_NOT);
 
 	if (strcmp (query_string, "") == 0 ||
 	    strcmp (query_string, "*") == 0)
@@ -592,7 +580,7 @@ _notmuch_query_count_documents (notmuch_query_t *query, const char *type, unsign
 	    final_query = mail_query;
 	} else {
 	    string_query = notmuch->query_parser->
-		parse_query (query_string, flags);
+		parse_query (query_string, NOTMUCH_QUERY_PARSER_FLAGS);
 	    final_query = Xapian::Query (Xapian::Query::OP_AND,
 					 mail_query, string_query);
 	}
