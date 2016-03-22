@@ -55,4 +55,64 @@ testkey2 = testvalue2
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
+
+test_begin_subtest "notmuch_database_get_config_list: empty list"
+cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR}
+{
+   notmuch_config_list_t *list;
+   RUN(notmuch_database_get_config_list (db, "nonexistent", &list));
+   printf("valid = %d\n", notmuch_config_list_valid (list));
+   notmuch_config_list_destroy (list);
+}
+EOF
+cat <<'EOF' >EXPECTED
+== stdout ==
+valid = 0
+== stderr ==
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+
+test_begin_subtest "notmuch_database_get_config_list: all pairs"
+cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR}
+{
+   notmuch_config_list_t *list;
+   RUN(notmuch_database_set_config (db, "zzzafter", "afterval"));
+   RUN(notmuch_database_set_config (db, "aaabefore", "beforeval"));
+   RUN(notmuch_database_get_config_list (db, "", &list));
+   for (; notmuch_config_list_valid (list); notmuch_config_list_move_to_next (list)) {
+      printf("%s %s\n", notmuch_config_list_key (list), notmuch_config_list_value(list));
+   }
+   notmuch_config_list_destroy (list);
+}
+EOF
+cat <<'EOF' >EXPECTED
+== stdout ==
+aaabefore beforeval
+testkey1 testvalue1
+testkey2 testvalue2
+zzzafter afterval
+== stderr ==
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "notmuch_database_get_config_list: one prefix"
+cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR}
+{
+   notmuch_config_list_t *list;
+   RUN(notmuch_database_get_config_list (db, "testkey", &list));
+   for (; notmuch_config_list_valid (list); notmuch_config_list_move_to_next (list)) {
+      printf("%s %s\n", notmuch_config_list_key (list), notmuch_config_list_value(list));
+   }
+   notmuch_config_list_destroy (list);
+}
+EOF
+cat <<'EOF' >EXPECTED
+== stdout ==
+testkey1 testvalue1
+testkey2 testvalue2
+== stderr ==
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
 test_done

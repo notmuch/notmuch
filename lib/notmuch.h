@@ -206,6 +206,7 @@ typedef struct _notmuch_message notmuch_message_t;
 typedef struct _notmuch_tags notmuch_tags_t;
 typedef struct _notmuch_directory notmuch_directory_t;
 typedef struct _notmuch_filenames notmuch_filenames_t;
+typedef struct _notmuch_config_list notmuch_config_list_t;
 #endif /* __DOXYGEN__ */
 
 /**
@@ -1857,6 +1858,49 @@ notmuch_database_set_config (notmuch_database_t *db, const char *key, const char
  */
 notmuch_status_t
 notmuch_database_get_config (notmuch_database_t *db, const char *key, char **value);
+
+/**
+ * Create an iterator for all config items with keys matching a given prefix
+ */
+notmuch_status_t
+notmuch_database_get_config_list (notmuch_database_t *db, const char *prefix, notmuch_config_list_t **out);
+
+/**
+ * Is 'config_list' iterator valid (i.e. _key, _value, _move_to_next can be called).
+ */
+notmuch_bool_t
+notmuch_config_list_valid (notmuch_config_list_t *config_list);
+
+/**
+ * return key for current config pair
+ *
+ * return value is owned by the iterator, and will be destroyed by the
+ * next call to notmuch_config_list_key or notmuch_config_list_destroy.
+ */
+const char *
+notmuch_config_list_key (notmuch_config_list_t *config_list);
+
+/**
+ * return 'value' for current config pair
+ *
+ * return value is owned by the iterator, and will be destroyed by the
+ * next call to notmuch_config_list_value or notmuch config_list_destroy
+ */
+const char *
+notmuch_config_list_value (notmuch_config_list_t *config_list);
+
+
+/**
+ * move 'config_list' iterator to the next pair
+ */
+void
+notmuch_config_list_move_to_next (notmuch_config_list_t *config_list);
+
+/**
+ * free any resources held by 'config_list'
+ */
+void
+notmuch_config_list_destroy (notmuch_config_list_t *config_list);
 
 /**
  * interrogate the library for compile time features
