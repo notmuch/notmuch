@@ -1838,6 +1838,11 @@ notmuch_filenames_move_to_next (notmuch_filenames_t *filenames);
 void
 notmuch_filenames_destroy (notmuch_filenames_t *filenames);
 
+/**
+ * interrogate the library for compile time features
+ */
+notmuch_bool_t
+notmuch_built_with (const char *name);
 /* @} */
 
 NOTMUCH_END_DECLS

@@ -19,7 +19,7 @@ another.suite@example.com
 foo bar
 baz
 EOF
-output=$(notmuch --config=new-notmuch-config config list)
+output=$(notmuch --config=new-notmuch-config config list | notmuch_built_with_sanitize)
 test_expect_equal "$output" "\
 database.path=/path/to/maildir
 user.name=Test Suite
@@ -29,6 +29,8 @@ new.tags=foo;bar;
 new.ignore=
 search.exclude_tags=baz;
 maildir.synchronize_flags=true
-crypto.gpg_path=gpg"
+crypto.gpg_path=gpg
+built_with.compact=something
+built_with.field_processor=something"
 
 test_done

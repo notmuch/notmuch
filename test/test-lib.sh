@@ -733,6 +733,12 @@ notmuch_uuid_sanitize ()
 {
     sed 's/[0-9a-f]\{8\}-[0-9a-f]\{4\}-[0-9a-f]\{4\}-[0-9a-f]\{4\}-[0-9a-f]\{12\}/UUID/g'
 }
+
+notmuch_built_with_sanitize ()
+{
+    sed 's/^built_with[.]\(.*\)=.*$/built_with.\1=something/'
+}
+
 # End of notmuch helper functions
 
 # Use test_set_prereq to tell that a particular prerequisite is available.

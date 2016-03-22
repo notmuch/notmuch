@@ -44,7 +44,7 @@ test_expect_equal "$(notmuch config get foo.nonexistent)" ""
 
 test_begin_subtest "List all items"
 notmuch config set database.path "/canonical/path"
-output=$(notmuch config list)
+output=$(notmuch config list | notmuch_built_with_sanitize)
 test_expect_equal "$output" "\
 database.path=/canonical/path
 user.name=Notmuch Test Suite
@@ -56,7 +56,9 @@ search.exclude_tags=
 maildir.synchronize_flags=true
 crypto.gpg_path=gpg
 foo.string=this is another string value
-foo.list=this;is another;list value;"
+foo.list=this;is another;list value;
+built_with.compact=something
+built_with.field_processor=something"
 
 test_begin_subtest "Top level --config=FILE option"
 cp "${NOTMUCH_CONFIG}" alt-config

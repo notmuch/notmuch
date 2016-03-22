@@ -750,6 +750,8 @@ _item_split (char *item, char **group, char **key)
     return 0;
 }
 
+#define BUILT_WITH_PREFIX "built_with."
+
 static int
 notmuch_config_command_get (notmuch_config_t *config, char *item)
 {
@@ -773,6 +775,9 @@ notmuch_config_command_get (notmuch_config_t *config, char *item)
 	tags = notmuch_config_get_new_tags (config, &length);
 	for (i = 0; i < length; i++)
 	    printf ("%s\n", tags[i]);
+    } else if (STRNCMP_LITERAL (item, BUILT_WITH_PREFIX) == 0) {
+	printf ("%s\n",
+		notmuch_built_with (item + strlen (BUILT_WITH_PREFIX)) ? "true" : "false");
     } else {
 	char **value;
 	size_t i, length;
@@ -804,6 +809,11 @@ notmuch_config_command_set (notmuch_config_t *config, char *item, int argc, char
 {
     char *group, *key;
 
+    if (STRNCMP_LITERAL (item, BUILT_WITH_PREFIX) == 0) {
+	fprintf (stderr, "Error: read only option: %s\n", item);
+	return 1;
+    }
+
     if (_item_split (item, &group, &key))
 	return 1;
 
@@ -828,6 +838,18 @@ notmuch_config_command_set (notmuch_config_t *config, char *item, int argc, char
     }
 
     return notmuch_config_save (config);
+}
+
+static
+void
+_notmuch_config_list_built_with ()
+{
+    printf("%scompact=%s\n",
+	   BUILT_WITH_PREFIX,
+	   notmuch_built_with ("compact") ? "true" : "false");
+    printf("%sfield_processor=%s\n",
+	   BUILT_WITH_PREFIX,
+	   notmuch_built_with ("field_processor") ? "true" : "false");
 }
 
 static int
@@ -865,6 +887,7 @@ notmuch_config_command_list (notmuch_config_t *config)
 
     g_strfreev (groups);
 
+    _notmuch_config_list_built_with ();
     return 0;
 }
 

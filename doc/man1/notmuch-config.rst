@@ -132,6 +132,11 @@ The available configuration items are described below.
     
         Default: ``gpg``.
 
+    **built_with.<name>**
+
+	Compile time feature <name>. Current possibilities include
+	"compact" (see **notmuch-compact(1)**)
+	and "field_processor" (see **notmuch-search-terms(7)**).
 
 ENVIRONMENT
 ===========
