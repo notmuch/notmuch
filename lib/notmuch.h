@@ -1838,6 +1838,26 @@ notmuch_filenames_move_to_next (notmuch_filenames_t *filenames);
 void
 notmuch_filenames_destroy (notmuch_filenames_t *filenames);
 
+
+/**
+ * set config 'key' to 'value'
+ *
+ */
+notmuch_status_t
+notmuch_database_set_config (notmuch_database_t *db, const char *key, const char *value);
+
+/**
+ * retrieve config item 'key', assign to  'value'
+ *
+ * keys which have not been previously set with n_d_set_config will
+ * return an empty string.
+ *
+ * return value is allocated by malloc and should be freed by the
+ * caller.
+ */
+notmuch_status_t
+notmuch_database_get_config (notmuch_database_t *db, const char *key, char **value);
+
 /**
  * interrogate the library for compile time features
  */
