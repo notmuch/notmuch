@@ -39,27 +39,12 @@ users looking for generic notmuch reporting tools.
 The default configuration file name (extracted from the `config`
 branch of `NBMGIT` has changed from `status-config.json` to
 `notmuch-report.json` so it is more obviously associated with the
-report-generating script.
+report-generating script.  The configuration file also has a new
+`meta.message-url` setting, which is documented in
+`notmuch-report.json(5)`.
 
-nmbug-status
-------------
-
-`nmbug-status` now wraps query phrases in parentheses when and-ing
+`notmuch-report` now wraps query phrases in parentheses when and-ing
 them together, to avoid confusion about clause grouping.
-
-`nmbug-status` now supports `meta.message-url` to override the Gmane
-template.  For example, you can use:
-
-    {
-      "meta": {
-        "message-url": "https://groups.google.com/a/opencontainers.org/forum/#!search/messageid$3A%22{message-id}%22"
-         ...
-      },
-      ...
-    }
-
-To link to messages in the [opencontainers.org Google
-Groups](https://groups.google.com/a/opencontainers.org/forum/#!overview).
 
 Notmuch 0.21 (2015-10-29)
 =========================
