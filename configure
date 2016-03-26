@@ -51,7 +51,7 @@ CPPFLAGS=${CPPFLAGS:-}
 CXXFLAGS_for_sh=${CXXFLAGS:-${CFLAGS}}
 CXXFLAGS=${CXXFLAGS:-\$(CFLAGS)}
 LDFLAGS=${LDFLAGS:-}
-XAPIAN_CONFIG=${XAPIAN_CONFIG:-xapian-config}
+XAPIAN_CONFIG=${XAPIAN_CONFIG:-}
 PYTHON=${PYTHON:-}
 
 # We don't allow the EMACS or GZIP Makefile variables inherit values
@@ -341,7 +341,7 @@ fi
 
 printf "Checking for Xapian development files... "
 have_xapian=0
-for xapian_config in ${XAPIAN_CONFIG}; do
+for xapian_config in ${XAPIAN_CONFIG} xapian-config xapian-config-1.3; do
     if ${xapian_config} --version > /dev/null 2>&1; then
 	xapian_version=$(${xapian_config} --version | sed -e 's/.* //')
 	printf "Yes (%s).\n" ${xapian_version}
