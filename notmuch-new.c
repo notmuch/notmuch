@@ -281,6 +281,10 @@ add_file (notmuch_database_t *notmuch, const char *filename,
 	fprintf (stderr, "Note: Ignoring non-mail file: %s\n", filename);
 	break;
     /* Fatal issues. Don't process anymore. */
+    case NOTMUCH_STATUS_FILE_ERROR:
+	fprintf (stderr, "Unexpected error with file %s\n", filename);
+	(void) print_status_database ("add_file", notmuch, status);
+	goto DONE;
     case NOTMUCH_STATUS_READ_ONLY_DATABASE:
     case NOTMUCH_STATUS_XAPIAN_EXCEPTION:
     case NOTMUCH_STATUS_OUT_OF_MEMORY:
