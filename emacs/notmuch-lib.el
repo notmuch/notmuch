@@ -520,11 +520,23 @@ This replaces spaces, percents, and double quotes in STR with
     "multipart/related"
     ))
 
-(defun notmuch-multipart/alternative-choose (types)
-  "Return a list of preferred types from the given list of types"
+(defun notmuch-multipart/alternative-determine-discouraged (msg)
+  "Return the discouraged alternatives for the specified message."
+  ;; If a function, return the result of calling it.
+  (if (functionp notmuch-multipart/alternative-discouraged)
+      (funcall notmuch-multipart/alternative-discouraged msg)
+    ;; Otherwise simply return the value of the variable, which is
+    ;; assumed to be a list of discouraged alternatives. This is the
+    ;; default behaviour.
+    notmuch-multipart/alternative-discouraged))
+
+(defun notmuch-multipart/alternative-choose (msg types)
+  "Return a list of preferred types from the given list of types
+for this message, if present."
   ;; Based on `mm-preferred-alternative-precedence'.
-  (let ((seq types))
-    (dolist (pref (reverse notmuch-multipart/alternative-discouraged))
+  (let ((discouraged (notmuch-multipart/alternative-determine-discouraged msg))
+	(seq types))
+    (dolist (pref (reverse discouraged))
       (dolist (elem (copy-sequence seq))
 	(when (string-match pref elem)
 	  (setq seq (nconc (delete elem seq) (list elem))))))

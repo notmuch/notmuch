@@ -607,7 +607,7 @@ will return nil if the CID is unknown or cannot be retrieved."
 	  (plist-get part :content)))
 
 (defun notmuch-show-insert-part-multipart/alternative (msg part content-type nth depth button)
-  (let ((chosen-type (car (notmuch-multipart/alternative-choose (notmuch-show-multipart/*-to-list part))))
+  (let ((chosen-type (car (notmuch-multipart/alternative-choose msg (notmuch-show-multipart/*-to-list part))))
 	(inner-parts (plist-get part :content))
 	(start (point)))
     ;; This inserts all parts of the chosen type rather than just one,
