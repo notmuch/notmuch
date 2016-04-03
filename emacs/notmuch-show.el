@@ -642,15 +642,10 @@ will return nil if the CID is unknown or cannot be retrieved."
 (defun notmuch-show-insert-part-multipart/signed (msg part content-type nth depth button)
   (when button
     (button-put button 'face 'notmuch-crypto-part-header))
-  ;; Add signature status button if sigstatus provided.
-  (if (plist-member part :sigstatus)
-      (let* ((from (notmuch-show-get-header :From msg))
-	     (sigstatus (car (plist-get part :sigstatus))))
-	(notmuch-crypto-insert-sigstatus-button sigstatus from))
-    ;; If we're not adding the signature status, tell the user how
-    ;; they can get it.
-    (when button
-      (button-put button 'help-echo "Set notmuch-crypto-process-mime to process cryptographic MIME parts.")))
+
+  ;; Insert a button detailing the signature status.
+  (notmuch-crypto-insert-sigstatus-button (car (plist-get part :sigstatus))
+					  (notmuch-show-get-header :From msg))
 
   (let ((inner-parts (plist-get part :content))
 	(start (point)))
@@ -666,20 +661,13 @@ will return nil if the CID is unknown or cannot be retrieved."
 (defun notmuch-show-insert-part-multipart/encrypted (msg part content-type nth depth button)
   (when button
     (button-put button 'face 'notmuch-crypto-part-header))
-  ;; Add encryption status button if encryption status is specified.
-  (if (plist-member part :encstatus)
-      (let ((encstatus (car (plist-get part :encstatus))))
-	(notmuch-crypto-insert-encstatus-button encstatus)
-	;; Add signature status button if signature status is
-	;; specified.
-	(if (plist-member part :sigstatus)
-	    (let* ((from (notmuch-show-get-header :From msg))
-		   (sigstatus (car (plist-get part :sigstatus))))
-	      (notmuch-crypto-insert-sigstatus-button sigstatus from))))
-    ;; If we're not adding the encryption status, tell the user how
-    ;; they can get it.
-    (when button
-      (button-put button 'help-echo "Set notmuch-crypto-process-mime to process cryptographic MIME parts.")))
+
+  ;; Insert a button detailing the encryption status.
+  (notmuch-crypto-insert-encstatus-button (car (plist-get part :encstatus)))
+
+  ;; Insert a button detailing the signature status.
+  (notmuch-crypto-insert-sigstatus-button (car (plist-get part :sigstatus))
+					  (notmuch-show-get-header :From msg))
 
   (let ((inner-parts (plist-get part :content))
 	(start (point)))

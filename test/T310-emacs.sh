@@ -394,6 +394,8 @@ User-Agent: Notmuch/XXX Emacs/XXX
 --text follows this line--
 Adrian Perez de Castro <aperez@igalia.com> writes:
 
+> [ Unknown signature status ]
+>
 > Hello to all,
 >
 > I have just heard about Not Much today in some random Linux-related news
