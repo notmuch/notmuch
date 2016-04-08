@@ -318,8 +318,8 @@ modified. This function is notmuch addaptation of
 	(push (cons 'User-Agent user-agent) other-headers))))
 
   (unless (assq 'From other-headers)
-    (push (cons 'From (concat
-		       (notmuch-user-name) " <" (notmuch-user-primary-email) ">")) other-headers))
+    (push (cons 'From (message-make-from
+		       (notmuch-user-name) (notmuch-user-primary-email))) other-headers))
 
   (notmuch-mua-pop-to-buffer (message-buffer-name "mail" to)
 			     (or switch-function (notmuch-mua-get-switch-function)))
@@ -393,7 +393,7 @@ the From: header is already filled in by notmuch."
 	    (ido-completing-read (concat "Sender address for " name ": ") addrs
 				 nil nil nil 'notmuch-mua-sender-history
 				 (car addrs))))
-      (concat name " <" address ">"))))
+      (message-make-from name address))))
 
 (put 'notmuch-mua-new-mail 'notmuch-prefix-doc "... and prompt for sender")
 (defun notmuch-mua-new-mail (&optional prompt-for-sender)
