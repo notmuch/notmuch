@@ -280,6 +280,12 @@ _notmuch_message_remove_term (notmuch_message_t *message,
 			      const char *value);
 
 notmuch_private_status_t
+_notmuch_message_has_term (notmuch_message_t *message,
+			   const char *prefix_name,
+			   const char *value,
+			   notmuch_bool_t *result);
+
+notmuch_private_status_t
 _notmuch_message_gen_terms (notmuch_message_t *message,
 			    const char *prefix_name,
 			    const char *text);

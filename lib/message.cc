@@ -1217,6 +1217,41 @@ _notmuch_message_remove_term (notmuch_message_t *message,
     return NOTMUCH_PRIVATE_STATUS_SUCCESS;
 }
 
+notmuch_private_status_t
+_notmuch_message_has_term (notmuch_message_t *message,
+			   const char *prefix_name,
+			   const char *value,
+			   notmuch_bool_t *result)
+{
+    char *term;
+    notmuch_bool_t out = FALSE;
+    notmuch_private_status_t status = NOTMUCH_PRIVATE_STATUS_SUCCESS;
+
+    if (value == NULL)
+	return NOTMUCH_PRIVATE_STATUS_NULL_POINTER;
+
+    term = talloc_asprintf (message, "%s%s",
+			    _find_prefix (prefix_name), value);
+
+    if (strlen (term) > NOTMUCH_TERM_MAX)
+	return NOTMUCH_PRIVATE_STATUS_TERM_TOO_LONG;
+
+    try {
+	/* Look for the exact term */
+	Xapian::TermIterator i = message->doc.termlist_begin ();
+	i.skip_to (term);
+	if (i != message->doc.termlist_end () &&
+	    !strcmp ((*i).c_str (), term))
+	    out = TRUE;
+    } catch (Xapian::Error &error) {
+	status = NOTMUCH_PRIVATE_STATUS_XAPIAN_EXCEPTION;
+    }
+    talloc_free (term);
+
+    *result = out;
+    return status;
+}
+
 notmuch_status_t
 notmuch_message_add_tag (notmuch_message_t *message, const char *tag)
 {
