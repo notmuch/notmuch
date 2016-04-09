@@ -287,9 +287,9 @@ test_expect_code 1 "Empty tag names" 'notmuch tag + One'
 test_expect_code 1 "Tag name beginning with -" 'notmuch tag +- One'
 
 test_begin_subtest "Xapian exception: read only files"
-chmod u-w  ${MAIL_DIR}/.notmuch/xapian/*.DB
+chmod u-w  ${MAIL_DIR}/.notmuch/xapian/*.${db_ending}
 output=$(notmuch tag +something '*' 2>&1 | sed 's/: .*$//' )
-chmod u+w  ${MAIL_DIR}/.notmuch/xapian/*.DB
+chmod u+w  ${MAIL_DIR}/.notmuch/xapian/*.${db_ending}
 test_expect_equal "$output" "A Xapian exception occurred opening database"
 
 test_done

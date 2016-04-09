@@ -95,7 +95,7 @@ test_expect_equal_file EXPECTED OUTPUT
 
 backup_database
 test_begin_subtest "error message for database open"
-dd if=/dev/zero of="${MAIL_DIR}/.notmuch/xapian/postlist.DB" count=3
+dd if=/dev/zero of="${MAIL_DIR}/.notmuch/xapian/postlist.${db_ending}" count=3
 notmuch count '*' 2>OUTPUT 1>/dev/null
 output=$(sed 's/^\(A Xapian exception [^:]*\):.*$/\1/' OUTPUT)
 test_expect_equal "${output}" "A Xapian exception occurred opening database"
@@ -105,7 +105,7 @@ cat <<EOF > count-files.gdb
 set breakpoint pending on
 break count_files
 commands
-shell cp /dev/null ${MAIL_DIR}/.notmuch/xapian/postlist.DB
+shell cp /dev/null ${MAIL_DIR}/.notmuch/xapian/postlist.${db_ending}
 continue
 end
 run
