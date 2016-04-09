@@ -94,20 +94,11 @@ notmuch new >/dev/null
 test_thread_count 1 'First message removed: still only one thread'
 test_content_count apple 0
 test_content_count banana 1
-test_begin_subtest 'should be one ghost after first message removed'
-test_subtest_known_broken
-ghosts=$(../ghost-report ${MAIL_DIR}/.notmuch/xapian)
-test_expect_equal "$ghosts" "1"
+test_ghost_count 1 'should be one ghost after first message removed'
 
 message_a
 notmuch new >/dev/null
-# this is known to fail (it shows 2 threads) because no "ghost
-# message" was created for message A when it was removed from the
-# index, despite message B still pointing to it.
-test_begin_subtest 'First message reappears: should return to the same thread'
-test_subtest_known_broken
-count=$(notmuch count --output=threads)
-test_expect_equal "$count" "1"
+test_thread_count 1 'First message reappears: should return to the same thread'
 test_content_count apple 1
 test_content_count banana 1
 test_ghost_count 0
@@ -117,13 +108,21 @@ notmuch new >/dev/null
 test_thread_count 1 'Removing second message: still only one thread'
 test_content_count apple 1
 test_content_count banana 0
-test_ghost_count 0 'No ghosts should remain after deletion of second message'
+test_begin_subtest 'No ghosts should remain after deletion of second message'
+# this is known to fail; we are leaking ghost messages deliberately
+test_subtest_known_broken
+ghosts=$(../ghost-report ${MAIL_DIR}/.notmuch/xapian)
+test_expect_equal "$ghosts" "0"
 
 rm -f ${MAIL_DIR}/cur/a
 notmuch new >/dev/null
 test_thread_count 0 'All messages gone: no threads'
 test_content_count apple 0
 test_content_count banana 0
-test_ghost_count 0
+test_begin_subtest 'No ghosts should remain after full thread deletion'
+# this is known to fail; we are leaking ghost messages deliberately
+test_subtest_known_broken
+ghosts=$(../ghost-report ${MAIL_DIR}/.notmuch/xapian)
+test_expect_equal "$ghosts" "0"
 
 test_done

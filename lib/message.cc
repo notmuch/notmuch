@@ -1037,20 +1037,44 @@ _notmuch_message_sync (notmuch_message_t *message)
     message->modified = FALSE;
 }
 
-/* Delete a message document from the database. */
+/* Delete a message document from the database, leaving a ghost
+ * message in its place */
 notmuch_status_t
 _notmuch_message_delete (notmuch_message_t *message)
 {
     notmuch_status_t status;
     Xapian::WritableDatabase *db;
+    const char *mid, *tid;
+    notmuch_message_t *ghost;
+    notmuch_private_status_t private_status;
+    notmuch_database_t *notmuch;
+
+    mid = notmuch_message_get_message_id (message);
+    tid = notmuch_message_get_thread_id (message);
+    notmuch = message->notmuch;
 
     status = _notmuch_database_ensure_writable (message->notmuch);
     if (status)
 	return status;
 
-    db = static_cast <Xapian::WritableDatabase *> (message->notmuch->xapian_db);
+    db = static_cast <Xapian::WritableDatabase *> (notmuch->xapian_db);
     db->delete_document (message->doc_id);
-    return NOTMUCH_STATUS_SUCCESS;
+
+    /* and reintroduce a ghost in its place */
+    ghost = _notmuch_message_create_for_message_id (notmuch, mid, &private_status);
+    if (private_status == NOTMUCH_PRIVATE_STATUS_NO_DOCUMENT_FOUND) {
+	private_status = _notmuch_message_initialize_ghost (ghost, tid);
+	if (! private_status)
+	    _notmuch_message_sync (ghost);
+    } else if (private_status == NOTMUCH_PRIVATE_STATUS_SUCCESS) {
+	/* this is deeply weird, and we should not have gotten into
+	   this state.  is there a better error message to return
+	   here? */
+	return NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID;
+    }
+
+    notmuch_message_destroy (ghost);
+    return COERCE_STATUS (private_status, "Error converting to ghost message");
 }
 
 /* Transform a blank message into a ghost message.  The caller must
