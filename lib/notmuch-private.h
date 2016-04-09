@@ -477,6 +477,17 @@ void
 _notmuch_doc_id_set_remove (notmuch_doc_id_set_t *doc_ids,
                             unsigned int doc_id);
 
+/* querying xapian documents by type (e.g. "mail" or "ghost"): */
+notmuch_status_t
+_notmuch_query_search_documents (notmuch_query_t *query,
+				 const char *type,
+				 notmuch_messages_t **out);
+
+notmuch_status_t
+_notmuch_query_count_documents (notmuch_query_t *query,
+				const char *type,
+				unsigned *count_out);
+
 /* message.cc */
 
 void
