@@ -29,16 +29,19 @@ class RenameBreakpoint(gdb.Breakpoint):
         self.n = 0
 
     def stop(self):
-        # As an optimization, only consider snapshots after a Xapian
-        # has really committed.  Xapian overwrites record.base? as the
-        # last step in the commit, so keep an eye on their inumbers.
-        inodes = {}
-        for path in glob.glob('%s/.notmuch/xapian/record.base*' % maildir):
-            inodes[path] = os.stat(path).st_ino
-        if inodes == self.last_inodes:
-            # Continue
-            return False
-        self.last_inodes = inodes
+        xapiandir = '%s/.notmuch/xapian' % maildir
+        if os.path.isfile('%s/iamchert' % xapiandir):
+            # As an optimization, only consider snapshots after a
+            # Xapian has really committed.  The chert backend
+            # overwrites record.base? as the last step in the commit,
+            # so keep an eye on their inumbers.
+            inodes = {}
+            for path in glob.glob('%s/record.base*' % xapiandir):
+                inodes[path] = os.stat(path).st_ino
+            if inodes == self.last_inodes:
+                # Continue
+                return False
+            self.last_inodes = inodes
 
         # Save a backtrace in case the test does fail
         backtrace = gdb.execute('backtrace', to_string=True)
