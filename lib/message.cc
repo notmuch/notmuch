@@ -1044,10 +1044,13 @@ _notmuch_message_delete (notmuch_message_t *message)
 {
     notmuch_status_t status;
     Xapian::WritableDatabase *db;
-    const char *mid, *tid;
+    const char *mid, *tid, *query_string;
     notmuch_message_t *ghost;
     notmuch_private_status_t private_status;
     notmuch_database_t *notmuch;
+    notmuch_query_t *query;
+    unsigned int count = 0;
+    notmuch_bool_t is_ghost;
 
     mid = notmuch_message_get_message_id (message);
     tid = notmuch_message_get_thread_id (message);
@@ -1060,21 +1063,44 @@ _notmuch_message_delete (notmuch_message_t *message)
     db = static_cast <Xapian::WritableDatabase *> (notmuch->xapian_db);
     db->delete_document (message->doc_id);
 
-    /* and reintroduce a ghost in its place */
-    ghost = _notmuch_message_create_for_message_id (notmuch, mid, &private_status);
-    if (private_status == NOTMUCH_PRIVATE_STATUS_NO_DOCUMENT_FOUND) {
-	private_status = _notmuch_message_initialize_ghost (ghost, tid);
-	if (! private_status)
-	    _notmuch_message_sync (ghost);
-    } else if (private_status == NOTMUCH_PRIVATE_STATUS_SUCCESS) {
-	/* this is deeply weird, and we should not have gotten into
-	   this state.  is there a better error message to return
-	   here? */
-	return NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID;
+    /* if this was a ghost to begin with, we are done */
+    private_status = _notmuch_message_has_term (message, "type", "ghost", &is_ghost);
+    if (private_status)
+	return COERCE_STATUS (private_status,
+			      "Error trying to determine whether message was a ghost");
+    if (is_ghost)
+	return NOTMUCH_STATUS_SUCCESS;
+
+    query_string = talloc_asprintf (message, "thread:%s", tid);
+    query = notmuch_query_create (notmuch, query_string);
+    if (query == NULL)
+	return NOTMUCH_STATUS_OUT_OF_MEMORY;
+    status = notmuch_query_count_messages_st (query, &count);
+    if (status) {
+	notmuch_query_destroy (query);
+	return status;
     }
 
-    notmuch_message_destroy (ghost);
-    return COERCE_STATUS (private_status, "Error converting to ghost message");
+    if (count > 0) {
+	/* reintroduce a ghost in its place because there are still
+	 * other active messages in this thread: */
+	ghost = _notmuch_message_create_for_message_id (notmuch, mid, &private_status);
+	if (private_status == NOTMUCH_PRIVATE_STATUS_NO_DOCUMENT_FOUND) {
+	    private_status = _notmuch_message_initialize_ghost (ghost, tid);
+	    if (! private_status)
+		_notmuch_message_sync (ghost);
+	} else if (private_status == NOTMUCH_PRIVATE_STATUS_SUCCESS) {
+	    /* this is deeply weird, and we should not have gotten
+	       into this state.  is there a better error message to
+	       return here? */
+	    status = NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID;
+	}
+
+	notmuch_message_destroy (ghost);
+	status = COERCE_STATUS (private_status, "Error converting to ghost message");
+    }
+    notmuch_query_destroy (query);
+    return status;
 }
 
 /* Transform a blank message into a ghost message.  The caller must
