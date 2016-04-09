@@ -1098,6 +1098,26 @@ _notmuch_message_delete (notmuch_message_t *message)
 
 	notmuch_message_destroy (ghost);
 	status = COERCE_STATUS (private_status, "Error converting to ghost message");
+    } else {
+	/* the thread is empty; drop all ghost messages from it */
+	notmuch_messages_t *messages;
+	status = _notmuch_query_search_documents (query,
+						  "ghost",
+						  &messages);
+	if (status == NOTMUCH_STATUS_SUCCESS) {
+	    notmuch_status_t last_error = NOTMUCH_STATUS_SUCCESS;
+	    while (notmuch_messages_valid (messages)) {
+		message = notmuch_messages_get (messages);
+		status = _notmuch_message_delete (message);
+		if (status) /* we'll report the last failure we see;
+			     * if there is more than one failure, we
+			     * forget about previous ones */
+		    last_error = status;
+		notmuch_message_destroy (message);
+		notmuch_messages_move_to_next (messages);
+	    }
+	    status = last_error;
+	}
     }
     notmuch_query_destroy (query);
     return status;

@@ -119,10 +119,6 @@ notmuch new >/dev/null
 test_thread_count 0 'All messages gone: no threads'
 test_content_count apple 0
 test_content_count banana 0
-test_begin_subtest 'No ghosts should remain after full thread deletion'
-# this is known to fail; we are leaking ghost messages deliberately
-test_subtest_known_broken
-ghosts=$(../ghost-report ${MAIL_DIR}/.notmuch/xapian)
-test_expect_equal "$ghosts" "0"
+test_ghost_count 0 'No ghosts should remain after full thread deletion'
 
 test_done
