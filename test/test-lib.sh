@@ -1327,6 +1327,17 @@ test -z "$NO_PYTHON" && test_set_prereq PYTHON
 ln -s x y 2>/dev/null && test -h y 2>/dev/null && test_set_prereq SYMLINKS
 rm -f y
 
+# convert variable from configure to more convenient form
+case "$NOTMUCH_DEFAULT_XAPIAN_BACKEND" in
+    glass)
+	db_ending=glass
+    ;;
+    chert)
+	db_ending=DB
+    ;;
+    *)
+	error "Unknown Xapian backend $NOTMUCH_DEFAULT_XAPIAN_BACKEND"
+esac
 # declare prerequisites for external binaries used in tests
 test_declare_external_prereq dtach
 test_declare_external_prereq emacs

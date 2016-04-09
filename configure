@@ -371,7 +371,25 @@ if [ ${have_xapian} = "1" ]; then
     esac
 fi
 
-
+default_xapian_backend=""
+if [ ${have_xapian} = "1" ]; then
+    printf "Testing default Xapian backend... "
+    cat >_default_backend.cc <<EOF
+#include <xapian.h>
+int main(int argc, char** argv) {
+   Xapian::WritableDatabase db("test.db",Xapian::DB_CREATE_OR_OPEN);
+}
+EOF
+    ${CXX} ${CXXLAGS} ${xapian_cxxflags} _default_backend.cc -o _default_backend ${xapian_ldflags}
+    ./_default_backend
+    if [ -f test.db/iamglass ]; then
+	default_xapian_backend=glass
+    else
+	default_xapian_backend=chert
+    fi
+    printf "${default_xapian_backend}\n";
+    rm -rf test.db _default_backend _default_backend.cc
+fi
 # we need to have a version >= 2.6.5 to avoid a crypto bug. We need
 # 2.6.7 for permissive "From " header handling.
 GMIME_MINVER=2.6.7
@@ -1001,6 +1019,9 @@ LINKER_RESOLVES_LIBRARY_DEPENDENCIES = ${linker_resolves_library_dependencies}
 XAPIAN_CXXFLAGS = ${xapian_cxxflags}
 XAPIAN_LDFLAGS = ${xapian_ldflags}
 
+# Which backend will Xapian use by default?
+DEFAULT_XAPIAN_BACKEND = ${default_xapian_backend}
+
 # Flags needed to compile and link against GMime
 GMIME_CFLAGS = ${gmime_cflags}
 GMIME_LDFLAGS = ${gmime_ldflags}
@@ -1076,6 +1097,9 @@ cat > sh.config <<EOF
 
 # Whether the Xapian version in use supports compaction
 NOTMUCH_HAVE_XAPIAN_COMPACT=${have_xapian_compact}
+
+# Which backend will Xapian use by default?
+NOTMUCH_DEFAULT_XAPIAN_BACKEND=${default_xapian_backend}
 
 # do we have man pages?
 NOTMUCH_HAVE_MAN=$((have_sphinx))
