@@ -38,6 +38,9 @@ $(dir)/parse-time: $(dir)/parse-time.o parse-time-string/parse-time-string.o
 $(dir)/make-db-version: $(dir)/make-db-version.o
 	$(call quiet,CXX) $^ -o $@ $(LDFLAGS) $(XAPIAN_LDFLAGS)
 
+$(dir)/ghost-report: $(dir)/ghost-report.o
+	$(call quiet,CXX) $^ -o $@ $(LDFLAGS) $(XAPIAN_LDFLAGS)
+
 .PHONY: test check
 
 test_main_srcs=$(dir)/arg-test.c \
@@ -47,6 +50,7 @@ test_main_srcs=$(dir)/arg-test.c \
 	      $(dir)/smtp-dummy.c \
 	      $(dir)/symbol-test.cc \
 	      $(dir)/make-db-version.cc \
+	      $(dir)/ghost-report.cc
 
 test_srcs=$(test_main_srcs) $(dir)/database-test.c
 
