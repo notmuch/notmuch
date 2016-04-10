@@ -1761,18 +1761,11 @@ _notmuch_database_split_path (void *ctx,
     slash = path + strlen (path) - 1;
 
     /* First, skip trailing slashes. */
-    while (slash != path) {
-	if (*slash != '/')
-	    break;
-
+    while (slash != path && *slash == '/')
 	--slash;
-    }
 
     /* Then, find a slash. */
-    while (slash != path) {
-	if (*slash == '/')
-	    break;
-
+    while (slash != path && *slash != '/') {
 	if (basename)
 	    *basename = slash;
 
@@ -1780,12 +1773,8 @@ _notmuch_database_split_path (void *ctx,
     }
 
     /* Finally, skip multiple slashes. */
-    while (slash != path) {
-	if (*(slash - 1) != '/')
-	    break;
-
+    while (slash != path && *(slash - 1) == '/')
 	--slash;
-    }
 
     if (slash == path) {
 	if (directory)
