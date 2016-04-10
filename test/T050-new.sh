@@ -170,7 +170,6 @@ test_expect_equal "$output" "(D) add_files, pass 3: queuing leftover directory $
 No new mail. Removed 3 messages."
 
 test_begin_subtest "One character directory at top level"
-test_subtest_known_broken
 
 generate_message [dir]=A
 generate_message [dir]=A/B
@@ -178,10 +177,6 @@ generate_message [dir]=A/B/C
 
 output=$(NOTMUCH_NEW --debug)
 test_expect_equal "$output" "Added 3 new messages to the database."
-
-# clean up after the broken test to not mess up other tests
-rm -rf "${MAIL_DIR}"/A
-NOTMUCH_NEW 2>&1 > /dev/null
 
 test_begin_subtest "Support single-message mbox"
 cat > "${MAIL_DIR}"/mbox_file1 <<EOF

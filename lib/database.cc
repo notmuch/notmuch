@@ -1781,7 +1781,7 @@ _notmuch_database_split_path (void *ctx,
 
     /* Finally, skip multiple slashes. */
     while (slash != path) {
-	if (*slash != '/')
+	if (*(slash - 1) != '/')
 	    break;
 
 	--slash;
@@ -1794,7 +1794,7 @@ _notmuch_database_split_path (void *ctx,
 	    *basename = path;
     } else {
 	if (directory)
-	    *directory = talloc_strndup (ctx, path, slash - path + 1);
+	    *directory = talloc_strndup (ctx, path, slash - path);
     }
 
     return NOTMUCH_STATUS_SUCCESS;
