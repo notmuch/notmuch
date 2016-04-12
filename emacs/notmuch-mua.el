@@ -250,7 +250,9 @@ mutiple parts get a header."
 		       ;; Don't omit long parts.
 		       (notmuch-show-max-text-part-size 0)
 		       ;; Insert headers for parts as appropriate for replying.
-		       (notmuch-show-insert-header-p-function notmuch-mua-reply-insert-header-p-function))
+		       (notmuch-show-insert-header-p-function notmuch-mua-reply-insert-header-p-function)
+		       ;; Don't indent multipart sub-parts.
+		       (notmuch-show-indent-multipart nil))
 		    (notmuch-show-insert-body original (plist-get original :body) 0)
 		    (buffer-substring-no-properties (point-min) (point-max)))))
 
