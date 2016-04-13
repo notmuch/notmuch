@@ -1,3 +1,5 @@
+;;; notmuch-maildir-fcc.el ---
+
 ;; This file is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published
 ;; by the Free Software Foundation; either version 2, or (at your
@@ -12,9 +14,13 @@
 ;; along with GNU Emacs; see the file COPYING.  If not, write to the
 ;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
 ;; Boston, MA 02110-1301, USA.
-;;
+
+;;; Commentary:
+
 ;; To use this as the fcc handler for message-mode,
 ;; customize the notmuch-fcc-dirs variable
+
+;;; Code:
 
 (eval-when-compile (require 'cl))
 (require 'message)
@@ -211,3 +217,4 @@ return t if successful, and nil otherwise."
 
 (provide 'notmuch-maildir-fcc)
 
+;;; notmuch-maildir-fcc.el ends here

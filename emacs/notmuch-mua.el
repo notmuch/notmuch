@@ -1,4 +1,4 @@
-;; notmuch-mua.el --- emacs style mail-user-agent
+;;; notmuch-mua.el --- emacs style mail-user-agent
 ;;
 ;; Copyright © David Edmondson
 ;;
@@ -18,6 +18,8 @@
 ;; along with Notmuch.  If not, see <http://www.gnu.org/licenses/>.
 ;;
 ;; Authors: David Edmondson <dme@dme.org>
+
+;;; Code:
 
 (require 'message)
 (require 'mm-view)
@@ -513,3 +515,5 @@ simply runs the corresponding `message-mode' hook functions."
 ;;
 
 (provide 'notmuch-mua)
+
+;;; notmuch-mua.el ends here

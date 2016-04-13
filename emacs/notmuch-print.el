@@ -1,4 +1,4 @@
-;; notmuch-print.el --- printing messages from notmuch.
+;;; notmuch-print.el --- printing messages from notmuch.
 ;;
 ;; Copyright © David Edmondson
 ;;
@@ -18,6 +18,8 @@
 ;; along with Notmuch.  If not, see <http://www.gnu.org/licenses/>.
 ;;
 ;; Authors: David Edmondson <dme@dme.org>
+
+;;; Code:
 
 (require 'notmuch-lib)
 
@@ -90,3 +92,5 @@ Optional OUTPUT allows passing a list of flags to muttprint."
   (funcall notmuch-print-mechanism msg))
 
 (provide 'notmuch-print)
+
+;;; notmuch-print.el ends here

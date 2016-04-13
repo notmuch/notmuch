@@ -1,4 +1,4 @@
-;; notmuch-query.el --- provide an emacs api to query notmuch
+;;; notmuch-query.el --- provide an emacs api to query notmuch
 ;;
 ;; Copyright © David Bremner
 ;;
@@ -18,6 +18,8 @@
 ;; along with Notmuch.  If not, see <http://www.gnu.org/licenses/>.
 ;;
 ;; Authors: David Bremner <david@tethera.net>
+
+;;; Code:
 
 (require 'notmuch-lib)
 
@@ -74,3 +76,5 @@ See the function notmuch-query-get-threads for more information."
    (notmuch-query-get-threads search-terms)))
 
 (provide 'notmuch-query)
+
+;;; notmuch-query.el ends here

@@ -1,4 +1,4 @@
-;; notmuch-show.el --- displaying notmuch forests.
+;;; notmuch-show.el --- displaying notmuch forests.
 ;;
 ;; Copyright © Carl Worth
 ;; Copyright © David Edmondson
@@ -20,6 +20,8 @@
 ;;
 ;; Authors: Carl Worth <cworth@cworth.org>
 ;;          David Edmondson <dme@dme.org>
+
+;;; Code:
 
 (eval-when-compile (require 'cl))
 (require 'mm-view)
@@ -2379,3 +2381,5 @@ is destroyed when FN returns."
 
 
 (provide 'notmuch-show)
+
+;;; notmuch-show.el ends here

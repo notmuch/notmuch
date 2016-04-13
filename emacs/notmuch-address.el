@@ -1,4 +1,4 @@
-;; notmuch-address.el --- address completion with notmuch
+;;; notmuch-address.el --- address completion with notmuch
 ;;
 ;; Copyright © David Edmondson
 ;;
@@ -18,6 +18,8 @@
 ;; along with Notmuch.  If not, see <http://www.gnu.org/licenses/>.
 ;;
 ;; Authors: David Edmondson <dme@dme.org>
+
+;;; Code:
 
 (require 'message)
 (require 'notmuch-parser)
@@ -248,3 +250,5 @@ called when harvesting finishes."
 ;;
 
 (provide 'notmuch-address)
+
+;;; notmuch-address.el ends here

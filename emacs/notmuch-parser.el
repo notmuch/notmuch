@@ -1,4 +1,4 @@
-;; notmuch-parser.el --- streaming S-expression parser
+;;; notmuch-parser.el --- streaming S-expression parser
 ;;
 ;; Copyright © Austin Clements
 ;;
@@ -18,6 +18,8 @@
 ;; along with Notmuch.  If not, see <http://www.gnu.org/licenses/>.
 ;;
 ;; Authors: Austin Clements <aclements@csail.mit.edu>
+
+;;; Code:
 
 (require 'cl)
 
@@ -205,3 +207,5 @@ move point in the input buffer."
 ;; Local Variables:
 ;; byte-compile-warnings: (not cl-functions)
 ;; End:
+
+;;; notmuch-parser.el ends here

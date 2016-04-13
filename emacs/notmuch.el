@@ -1,4 +1,4 @@
-;; notmuch.el --- run notmuch within emacs
+;;; notmuch.el --- run notmuch within emacs
 ;;
 ;; Copyright © Carl Worth
 ;;
@@ -18,6 +18,8 @@
 ;; along with Notmuch.  If not, see <http://www.gnu.org/licenses/>.
 ;;
 ;; Authors: Carl Worth <cworth@cworth.org>
+
+;;; Commentary:
 
 ;; This is an emacs-based interface to the notmuch mail system.
 ;;
@@ -46,6 +48,8 @@
 ;; Have fun, and let us know if you have any comment, questions, or
 ;; kudos: Notmuch list <notmuch@notmuchmail.org> (subscription is not
 ;; required, but is available from http://notmuchmail.org).
+
+;;; Code:
 
 (eval-when-compile (require 'cl))
 (require 'mm-view)
@@ -1064,3 +1068,5 @@ notmuch buffers exist, run `notmuch'."
     (let ((init-file (locate-file notmuch-init-file '("/")
 				  (get-load-suffixes))))
       (if init-file (load init-file nil t t))))
+
+;;; notmuch.el ends here

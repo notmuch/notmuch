@@ -1,4 +1,4 @@
-;; notmuch-crypto.el --- functions for handling display of cryptographic metadata.
+;;; notmuch-crypto.el --- functions for handling display of cryptographic metadata.
 ;;
 ;; Copyright © Jameson Rollins
 ;;
@@ -18,6 +18,8 @@
 ;; along with Notmuch.  If not, see <http://www.gnu.org/licenses/>.
 ;;
 ;; Authors: Jameson Rollins <jrollins@finestructure.net>
+
+;;; Code:
 
 (require 'notmuch-lib)
 
@@ -174,3 +176,5 @@ mode."
 ;;
 
 (provide 'notmuch-crypto)
+
+;;; notmuch-crypto.el ends here

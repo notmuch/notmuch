@@ -1,4 +1,4 @@
-;; notmuch-tree.el --- displaying notmuch forests.
+;;; notmuch-tree.el --- displaying notmuch forests.
 ;;
 ;; Copyright © Carl Worth
 ;; Copyright © David Edmondson
@@ -21,6 +21,8 @@
 ;;
 ;; Authors: David Edmondson <dme@dme.org>
 ;;          Mark Walters <markwalters1009@gmail.com>
+
+;;; Code:
 
 (require 'mail-parse)
 
@@ -945,3 +947,5 @@ The arguments are:
 ;;
 
 (provide 'notmuch-tree)
+
+;;; notmuch-tree.el ends here

@@ -1,4 +1,4 @@
-;; notmuch-message.el --- message-mode functions specific to notmuch
+;;; notmuch-message.el --- message-mode functions specific to notmuch
 ;;
 ;; Copyright © Jesse Rosenthal
 ;;
@@ -18,6 +18,8 @@
 ;; along with Notmuch.  If not, see <http://www.gnu.org/licenses/>.
 ;;
 ;; Authors: Jesse Rosenthal <jrosenthal@jhu.edu>
+
+;;; Code:
 
 (require 'message)
 (require 'notmuch-tag)
@@ -46,3 +48,5 @@ the \"inbox\" and \"todo\" tags, you would set:
 (add-hook 'message-send-hook 'notmuch-message-mark-replied)
 
 (provide 'notmuch-message)
+
+;;; notmuch-message.el ends here

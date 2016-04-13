@@ -1,4 +1,4 @@
-;; notmuch-lib.el --- common variables, functions and function declarations
+;;; notmuch-lib.el --- common variables, functions and function declarations
 ;;
 ;; Copyright © Carl Worth
 ;;
@@ -20,6 +20,8 @@
 ;; Authors: Carl Worth <cworth@cworth.org>
 
 ;; This is an part of an emacs-based interface to the notmuch mail system.
+
+;;; Code:
 
 (require 'mm-view)
 (require 'mm-decode)
@@ -931,3 +933,5 @@ status."
 ;; Local Variables:
 ;; byte-compile-warnings: (not cl-functions)
 ;; End:
+
+;;; notmuch-lib.el ends here

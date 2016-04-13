@@ -143,3 +143,5 @@ If no break point is found, return nil."
          t)))
 
 (provide 'coolj)
+
+;;; coolj.el ends here

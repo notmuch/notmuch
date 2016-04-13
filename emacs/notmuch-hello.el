@@ -1,4 +1,4 @@
-;; notmuch-hello.el --- welcome to notmuch, a frontend
+;;; notmuch-hello.el --- welcome to notmuch, a frontend
 ;;
 ;; Copyright © David Edmondson
 ;;
@@ -18,6 +18,8 @@
 ;; along with Notmuch.  If not, see <http://www.gnu.org/licenses/>.
 ;;
 ;; Authors: David Edmondson <dme@dme.org>
+
+;;; Code:
 
 (eval-when-compile (require 'cl))
 (require 'widget)
@@ -1016,3 +1018,5 @@ following:
 ;;
 
 (provide 'notmuch-hello)
+
+;;; notmuch-hello.el ends here

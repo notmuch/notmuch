@@ -1,4 +1,4 @@
-;; notmuch-company.el --- Mail address completion for notmuch via company-mode  -*- lexical-binding: t -*-
+;;; notmuch-company.el --- Mail address completion for notmuch via company-mode  -*- lexical-binding: t -*-
 
 ;; Authors: Trevor Jim <tjim@mac.com>
 ;; 	    Michal Sojka <sojkam1@fel.cvut.cz>
@@ -84,3 +84,5 @@
 
 
 (provide 'notmuch-company)
+
+;;; notmuch-company.el ends here
