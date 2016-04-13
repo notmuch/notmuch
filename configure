@@ -491,11 +491,11 @@ else
 fi
 
 if [ -z "${EMACSLISPDIR}" ]; then
-    EMACSLISPDIR='$(prefix)/share/emacs/site-lisp'
+    EMACSLISPDIR="\$(prefix)/share/emacs/site-lisp"
 fi
 
 if [ -z "${EMACSETCDIR}" ]; then
-    EMACSETCDIR='$(prefix)/share/emacs/site-lisp'
+    EMACSETCDIR="\$(prefix)/share/emacs/site-lisp"
 fi
 
 printf "Checking if emacs is available... "
