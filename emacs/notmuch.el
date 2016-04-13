@@ -18,6 +18,7 @@
 ;; along with Notmuch.  If not, see <http://www.gnu.org/licenses/>.
 ;;
 ;; Authors: Carl Worth <cworth@cworth.org>
+;; Homepage: https://notmuchmail.org/
 
 ;;; Commentary:
 
