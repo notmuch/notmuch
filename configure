@@ -250,7 +250,7 @@ if [ -z "$LIBDIR" ] ; then
     libdir_expanded="${PREFIX}/lib"
 else
     # very non-general variable expansion
-    libdir_expanded=`echo "$LIBDIR" | sed "s|\\${prefix}|${PREFIX}|g; s|\\$prefix/|${PREFIX}/|; s|//*|/|g"`
+    libdir_expanded=$(echo "$LIBDIR" | sed "s|\\${prefix}|${PREFIX}|g; s|\\$prefix/|${PREFIX}/|; s|//*|/|g")
 fi
 
 cat <<EOF
@@ -542,7 +542,7 @@ fi
 libdir_in_ldconfig=0
 
 printf "Checking which platform we are on... "
-uname=`uname`
+uname=$(uname)
 if [ $uname = "Darwin" ] ; then
     printf "Mac OS X.\n"
     platform=MACOSX
