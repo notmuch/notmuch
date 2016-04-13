@@ -413,8 +413,9 @@ have_glib=0
 if pkg-config --exists 'glib-2.0 >= 2.22'; then
     printf "Yes.\n"
     have_glib=1
-    glib_cflags=$(pkg-config --cflags glib-2.0)
-    glib_ldflags=$(pkg-config --libs glib-2.0)
+    # these are included in gmime cflags and ldflags
+    # glib_cflags=$(pkg-config --cflags glib-2.0)
+    # glib_ldflags=$(pkg-config --libs glib-2.0)
 else
     printf "No.\n"
     errors=$((errors + 1))
