@@ -10,8 +10,6 @@ ifeq ($(HAVE_RUBY_DEV),1)
 		LIBNOTMUCH="../../lib/$(LINKER_NAME)" \
 		ruby extconf.rb --vendor
 	$(MAKE) -C $(dir)/ruby
-else
-	@echo Missing dependency, skipping ruby bindings
 endif
 
 CLEAN += $(patsubst %,$(dir)/ruby/%, \
