@@ -387,7 +387,7 @@ EOF
     else
 	default_xapian_backend=chert
     fi
-    printf "${default_xapian_backend}\n";
+    printf "%s\n" "${default_xapian_backend}";
     rm -rf test.db _default_backend _default_backend.cc
 fi
 # we need to have a version >= 2.6.5 to avoid a crypto bug. We need
@@ -461,7 +461,7 @@ for name in ${PYTHON} python python2 python3; do
     if command -v $name > /dev/null; then
 	have_python=1
 	python=$name
-	printf "Yes ($name).\n"
+	printf "Yes (%s).\n" "$name"
 	break
     fi
 done
@@ -560,11 +560,11 @@ elif [ $uname = "OpenBSD" ] ; then
     platform=OPENBSD
     linker_resolves_library_dependencies=0
 elif [ $uname = "Linux" ] || [ $uname = "GNU" ] ; then
-    printf "$uname\n"
+    printf "%s\n" "$uname"
     platform="$uname"
     linker_resolves_library_dependencies=1
 
-    printf "Checking for $libdir_expanded in ldconfig... "
+    printf "Checking for %s in ldconfig... " "$libdir_expanded"
     ldconfig_paths=$(/sbin/ldconfig -N -X -v 2>/dev/null | sed -n -e 's,^\(/.*\):\( (.*)\)\?$,\1,p')
     # Separate ldconfig_paths only on newline (not on any potential
     # embedded space characters in any filenames). Note, we use a
@@ -815,7 +815,7 @@ for flag in -Wall -Wextra -Wwrite-strings; do
 	WARN_CXXFLAGS="${WARN_CXXFLAGS}${WARN_CXXFLAGS:+ }${flag}"
     fi
 done
-printf "\n\t${WARN_CXXFLAGS}\n"
+printf "\n\t%s\n" "${WARN_CXXFLAGS}"
 
 WARN_CFLAGS="${WARN_CXXFLAGS}"
 printf "Checking for available C compiler warning flags... "
@@ -825,7 +825,7 @@ for flag in -Wmissing-declarations; do
 	WARN_CFLAGS="${WARN_CFLAGS}${WARN_CFLAGS:+ }${flag}"
     fi
 done
-printf "\n\t${WARN_CFLAGS}\n"
+printf "\n\t%s\n" "${WARN_CFLAGS}"
 
 rm -f minimal minimal.c _libversion.c _libversion _libversion.sh
 
