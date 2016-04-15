@@ -351,7 +351,6 @@ add_files (notmuch_database_t *notmuch,
 	   const char *path,
 	   add_files_state_t *state)
 {
-    DIR *dir = NULL;
     struct dirent *entry = NULL;
     char *next = NULL;
     time_t fs_mtime, db_mtime;
@@ -655,8 +654,6 @@ add_files (notmuch_database_t *notmuch,
   DONE:
     if (next)
 	talloc_free (next);
-    if (dir)
-	closedir (dir);
     if (fs_entries) {
 	for (i = 0; i < num_fs_entries; i++)
 	    free (fs_entries[i]);
