@@ -9,6 +9,11 @@ Xapian 1.3 support
   Notmuch should now build (and the test suite should pass) on recent
   releases of Xapian 1.3.x. It has been tested with Xapian 1.3.5.
 
+Build System
+------------
+
+Drop dependency on "pkg-config emacs".
+
 Emacs Interface
 ---------------
 
