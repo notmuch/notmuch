@@ -59,6 +59,11 @@ longer generate empty buffers
   (or, in some cases, displaying an empty buffer and throwing an
   error). This also affects re-display of the current thread.
 
+`notmuch-message-address-insinuate` is now a no-op
+
+  This reduces the amount of interference with non-notmuch uses of
+  message-mode.
+
 Documentation
 -------------
 
