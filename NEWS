@@ -18,6 +18,34 @@ Filtering or Limiting messages is now bound to `l` in the search view
 
   This binding now matches the analogous binding in show view.
 
+`F` forwards all open messages in a thread
+
+  When viewing a thread of messages, the new binding `F` can be used
+  to generate a new outgoing message which forwards all of the open
+  messages in the thread. This is analogous to the `f` binding, which
+  forwards only the current message.
+
+Preferred content type can be determined from the message content
+
+  More flexibility in choosing which sub-part of a
+  multipart/alternative part is initially shown is available by
+  setting `notmuch-multipart/alternative-discouraged` to a function
+  that returns a list of discouraged types. The function so specified
+  is passed the message as an argument and can examine the message
+  content to determine which content types should be discouraged. This
+  is in addition to the current capabilities (i.e. setting
+  `notmuch-multipart/alternative-discouraged` to a list of discouraged
+  types).
+
+When viewing a thread ("show" mode), queries that match no messages no
+longer generate empty buffers
+
+  Should an attempt be made to view the thread corresponding to a
+  query that matches no messages, a warning message is now displayed
+  and the terminal bell rung rather than displaying an empty buffer
+  (or, in some cases, displaying an empty buffer and throwing an
+  error). This also affects re-display of the current thread.
+
 Documentation
 -------------
 
