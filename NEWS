@@ -16,6 +16,12 @@ Limited support for S/MIME messages
   support in Emacs. S/MIME support is not extensively tested at this
   time.
 
+Bug Fixes
+
+   Fix for threading bug involving deleting and re-adding
+   messages. Fix for case-sensitive content disposition headers. Fix
+   handling of 1 character directory names at top level.
+
 Command Line Interface
 ----------------------
 
