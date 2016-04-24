@@ -9,6 +9,20 @@ Xapian 1.3 support
   Notmuch should now build (and the test suite should pass) on recent
   releases of Xapian 1.3.x. It has been tested with Xapian 1.3.5.
 
+Limited support for S/MIME messages
+
+  Signature verification is supported, but not decryption. S/MIME
+  signature creation and S/MIME encryption are supported via built-in
+  support in Emacs. S/MIME support is not extensively tested at this
+  time.
+
+Command Line Interface
+----------------------
+
+`notmuch show` now supports verifying S/MIME signatures
+
+  This support relies on an appropriately configured `gpgsm`.
+
 Build System
 ------------
 
@@ -58,6 +72,11 @@ longer generate empty buffers
   and the terminal bell rung rather than displaying an empty buffer
   (or, in some cases, displaying an empty buffer and throwing an
   error). This also affects re-display of the current thread.
+
+Handle S/MIME signatures in emacs
+
+  The emacs interface is now capable making and verifying S/MIME
+  signatures.
 
 `notmuch-message-address-insinuate` is now a no-op
 
