@@ -89,6 +89,14 @@ Handle S/MIME signatures in emacs
   This reduces the amount of interference with non-notmuch uses of
   message-mode.
 
+Address completion improvements
+
+  An external script is no longer needed for address completion; if
+  you previously configured one, customize the variable
+  `notmuch-address-command` to try the internal completion. If
+  `company-mode` is available, notmuch uses it by default for
+  interactive address completion.
+
 Documentation
 -------------
 
