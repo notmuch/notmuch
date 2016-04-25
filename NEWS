@@ -97,6 +97,12 @@ Address completion improvements
   `company-mode` is available, notmuch uses it by default for
   interactive address completion.
 
+Test and experiment with the emacs MUA available in source tree
+
+  `./devel/try-emacs-mua` runs emacs and fills the window with
+  information how to try the MUA safely. Emacs is configured to use
+  the notmuch (lisp) files located in `./emacs` directory.
+
 Documentation
 -------------
 
