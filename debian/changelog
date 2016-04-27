@@ -1,3 +1,10 @@
+notmuch (0.22-1) unstable; urgency=medium
+
+  * New upstream release.  See /usr/share/doc/notmuch/NEWS for new
+    features and bug fixes.
+
+ -- David Bremner <bremner@debian.org>  Tue, 26 Apr 2016 21:31:44 -0300
+
 notmuch (0.22~rc1-1) experimental; urgency=medium
 
   * Upstream release candidate
