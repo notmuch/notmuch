@@ -338,7 +338,10 @@ modified. This function is notmuch addaptation of
 	  ;; We need to convert any string input, eg from rmail-start-mail.
 	  (dolist (h other-headers other-headers)
 	    (if (stringp (car h)) (setcar h (intern (capitalize (car h))))))))
-	(args (list yank-action send-actions)))
+	(args (list yank-action send-actions))
+	;; Cause `message-setup-1' to do things relevant for mail,
+	;; such as observe `message-default-mail-headers'.
+	(message-this-is-mail t))
     ;; message-setup-1 in Emacs 23 does not accept return-action
     ;; argument. Pass it only if it is supplied by the caller. This
     ;; will never be the case when we're called by `compose-mail' in
