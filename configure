@@ -380,7 +380,7 @@ int main(int argc, char** argv) {
    Xapian::WritableDatabase db("test.db",Xapian::DB_CREATE_OR_OPEN);
 }
 EOF
-    ${CXX} ${CXXLAGS} ${xapian_cxxflags} _default_backend.cc -o _default_backend ${xapian_ldflags}
+    ${CXX} ${CXXFLAGS_for_sh} ${xapian_cxxflags} _default_backend.cc -o _default_backend ${xapian_ldflags}
     ./_default_backend
     if [ -f test.db/iamglass ]; then
 	default_xapian_backend=glass
