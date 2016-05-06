@@ -145,13 +145,9 @@ Tddd-testname.sh where 'ddd' is three digits and 'testname' the "bare"
 name of your test. Tests will be run in order the 'ddd' part determines.
 
 The test script should start with the standard "#!/usr/bin/env bash"
-with copyright notices, and an assignment to variable 'test_description',
-like this:
+and an assignment to variable 'test_description', like this:
 
 	#!/usr/bin/env bash
-	#
-	# Copyright (c) 2005 Junio C Hamano
-	#
 
 	test_description='xxx test (option --frotz)
 

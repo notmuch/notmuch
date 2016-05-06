@@ -3,6 +3,7 @@
 # Run tests
 #
 # Copyright (c) 2005 Junio C Hamano
+# Copyright (c) 2010 Notmuch Developers
 #
 # Adapted from a Makefile to a shell script by Carl Worth (2010)
 
@@ -14,7 +15,7 @@ if [ ${BASH_VERSINFO[0]} -lt 4 ]; then
     exit 1
 fi
 
-cd $(dirname "$0")
+cd "$(dirname "$0")"
 
 for test in T*.sh; do
     ./"$test" "$@"
