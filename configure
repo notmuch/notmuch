@@ -1,5 +1,7 @@
 #! /bin/sh
 
+set -u
+
 # Test whether this shell is capable of parameter substring processing.
 ( option='a/b'; : ${option#*/} ) 2>/dev/null || {
     echo "
@@ -480,6 +482,7 @@ if pkg-config --exists valgrind; then
 else
     printf "No (but that's fine).\n"
     have_valgrind=0
+    valgrind_cflags=
 fi
 
 printf "Checking for bash-completion (>= 1.90)... "
@@ -490,11 +493,11 @@ else
     WITH_BASH=0
 fi
 
-if [ -z "${EMACSLISPDIR}" ]; then
+if [ -z "${EMACSLISPDIR-}" ]; then
     EMACSLISPDIR="\$(prefix)/share/emacs/site-lisp"
 fi
 
-if [ -z "${EMACSETCDIR}" ]; then
+if [ -z "${EMACSETCDIR-}" ]; then
     EMACSETCDIR="\$(prefix)/share/emacs/site-lisp"
 fi
 
