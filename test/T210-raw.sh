@@ -8,7 +8,7 @@ add_message
 
 test_begin_subtest "Attempt to show multiple raw messages"
 output=$(notmuch show --format=raw "*" 2>&1)
-test_expect_equal "$output" "Error: search term did not match precisely one message."
+test_expect_equal "$output" "Error: search term did not match precisely one message (matched 2 messages)."
 
 test_begin_subtest "Show a raw message"
 output=$(notmuch show --format=raw id:msg-001@notmuch-test-suite | notmuch_date_sanitize)
