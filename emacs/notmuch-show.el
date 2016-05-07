@@ -1418,6 +1418,7 @@ reset based on the original query."
     (define-key map (kbd "TAB") 'notmuch-show-next-button)
     (define-key map "f" 'notmuch-show-forward-message)
     (define-key map "F" 'notmuch-show-forward-open-messages)
+    (define-key map "b" 'notmuch-show-resend-message)
     (define-key map "l" 'notmuch-show-filter-thread)
     (define-key map "r" 'notmuch-show-reply-sender)
     (define-key map "R" 'notmuch-show-reply)
