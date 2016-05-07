@@ -1855,6 +1855,14 @@ any effects from previous calls to
       (error "No open messages to forward."))
     (notmuch-mua-new-forward-messages open-messages prompt-for-sender)))
 
+(defun notmuch-show-resend-message (addresses)
+  "Resend the current message."
+  (interactive (list (notmuch-address-from-minibuffer "Resend to: ")))
+  (when (y-or-n-p (concat "Confirm resend to " addresses " "))
+    (notmuch-show-view-raw-message)
+    (message-resend addresses)
+    (notmuch-bury-or-kill-this-buffer)))
+
 (defun notmuch-show-next-message (&optional pop-at-end)
   "Show the next message.
 

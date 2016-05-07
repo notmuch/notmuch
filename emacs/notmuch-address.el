@@ -249,6 +249,25 @@ called when harvesting finishes."
 
 ;;
 
+(defun notmuch-address-from-minibuffer (prompt)
+  (if (not notmuch-address-command)
+      (read-string prompt)
+    (let ((rmap (copy-keymap minibuffer-local-map))
+	  (omap minibuffer-local-map))
+      ;; Configure TAB to start completion when executing read-string.
+      ;; "Original" minibuffer keymap is restored just before calling
+      ;; notmuch-address-expand-name as it may also use minibuffer-local-map
+      ;; (completing-read probably does not but if something else is used there).
+      (define-key rmap (kbd "TAB") (lambda ()
+				     (interactive)
+				     (let ((enable-recursive-minibuffers t)
+					   (minibuffer-local-map omap))
+				       (notmuch-address-expand-name))))
+      (let ((minibuffer-local-map rmap))
+	(read-string prompt)))))
+
+;;
+
 (provide 'notmuch-address)
 
 ;;; notmuch-address.el ends here
