@@ -72,7 +72,7 @@
 			  (lambda (callback)
 			    ;; First run quick asynchronous harvest based on what the user entered so far
 			    (notmuch-address-harvest
-			     (format "to:%s*" arg) nil
+			     arg nil
 			     (lambda (_proc _event)
 			       (funcall callback (notmuch-address-matching arg))
 			       ;; Then start the (potentially long-running) full asynchronous harvest if necessary

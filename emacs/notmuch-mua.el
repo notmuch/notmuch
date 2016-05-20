@@ -276,8 +276,7 @@ mutiple parts get a header."
 
 (define-derived-mode notmuch-message-mode message-mode "Message[Notmuch]"
   "Notmuch message composition mode. Mostly like `message-mode'"
-  (when notmuch-address-command
-    (notmuch-address-setup)))
+  (notmuch-address-setup))
 
 (put 'notmuch-message-mode 'flyspell-mode-predicate 'mail-mode-flyspell-verify)
 
