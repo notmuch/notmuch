@@ -118,16 +118,29 @@ to know how address selection is made by default."
   :group 'notmuch-send)
 
 (defun notmuch-address-setup ()
-  (let* ((use-company (and notmuch-address-use-company
-			   (eq notmuch-address-command 'internal)
+  (let* ((setup-company (and notmuch-address-use-company
 			   (require 'company nil t)))
 	 (pair (cons notmuch-address-completion-headers-regexp
 		       #'notmuch-address-expand-name)))
-      (when use-company
+      (when setup-company
 	(notmuch-company-setup))
       (unless (memq pair message-completion-alist)
 	(setq message-completion-alist
 	      (push pair message-completion-alist)))))
+
+(defun notmuch-address-toggle-internal-completion ()
+  "Toggle use of internal completion for current buffer.
+
+This overrides the global setting for address completion and
+toggles the setting in this buffer."
+  (interactive)
+  (if (local-variable-p 'notmuch-address-command)
+      (kill-local-variable 'notmuch-address-command)
+    (setq-local notmuch-address-command 'internal))
+  (if (boundp 'company-idle-delay)
+      (if (local-variable-p 'company-idle-delay)
+	  (kill-local-variable 'company-idle-delay)
+	(setq-local company-idle-delay nil))))
 
 (defun notmuch-address-matching (substring)
   "Returns a list of completion candidates matching SUBSTRING.

@@ -47,7 +47,13 @@
 (defun notmuch-company-setup ()
   (company-mode)
   (make-local-variable 'company-backends)
-  (setq company-backends '(notmuch-company)))
+  (setq company-backends '(notmuch-company))
+  ;; Disable automatic company completion unless an internal
+  ;; completion method is configured. Company completion (using
+  ;; internal completion) can still be accessed via standard company
+  ;; functions, e.g., company-complete.
+  (unless (eq notmuch-address-command 'internal)
+    (setq-local company-idle-delay nil)))
 
 ;;;###autoload
 (defun notmuch-company (command &optional arg &rest _ignore)
