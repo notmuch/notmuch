@@ -13,9 +13,8 @@ test_description='exception symbol hiding'
 
 test_begin_subtest 'running test' run_test
 mkdir -p ${PWD}/fakedb/.notmuch
-( LD_LIBRARY_PATH="$TEST_DIRECTORY/../lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}" \
-		 $TEST_DIRECTORY/symbol-test ${PWD}/fakedb ${PWD}/nonexistent \
-		 2>&1 | notmuch_dir_sanitize | sed -e "s,\`,\',g" -e "s,${NOTMUCH_DEFAULT_XAPIAN_BACKEND},backend,g") > OUTPUT
+$TEST_DIRECTORY/symbol-test ${PWD}/fakedb ${PWD}/nonexistent 2>&1 \
+	| notmuch_dir_sanitize | sed -e "s,\`,\',g" -e "s,${NOTMUCH_DEFAULT_XAPIAN_BACKEND},backend,g" > OUTPUT
 
 cat <<EOF > EXPECTED
 A Xapian exception occurred opening database: Couldn't stat 'CWD/fakedb/.notmuch/xapian'

@@ -58,6 +58,11 @@ restore_database () {
 TEST_DIRECTORY=$(pwd -P)
 notmuch_path=`find_notmuch_path "$TEST_DIRECTORY"`
 
+# Prepend $TEST_DIRECTORY/../lib to LD_LIBRARY_PATH, to make tests work
+# on systems where ../notmuch depends on LD_LIBRARY_PATH.
+LD_LIBRARY_PATH=${TEST_DIRECTORY%/*}/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}
+export LD_LIBRARY_PATH
+
 # configure output
 . $notmuch_path/sh.config || exit 1
 

@@ -1192,7 +1192,6 @@ test_emacs () {
 }
 
 test_python() {
-	export LD_LIBRARY_PATH=$TEST_DIRECTORY/../lib
 	export PYTHONPATH=$TEST_DIRECTORY/../bindings/python
 
 	(echo "import sys; _orig_stdout=sys.stdout; sys.stdout=open('OUTPUT', 'w')"; cat) \
@@ -1200,7 +1199,6 @@ test_python() {
 }
 
 test_ruby() {
-    export LD_LIBRARY_PATH=$TEST_DIRECTORY/../lib
     MAIL_DIR=$MAIL_DIR ruby -I $TEST_DIRECTORY/../bindings/ruby> OUTPUT
 }
 
@@ -1208,7 +1206,6 @@ test_C () {
     exec_file="test${test_count}"
     test_file="${exec_file}.c"
     cat > ${test_file}
-    export LD_LIBRARY_PATH=${TEST_DIRECTORY}/../lib
     ${TEST_CC} ${TEST_CFLAGS} -I${TEST_DIRECTORY}/../lib -o ${exec_file} ${test_file} -L${TEST_DIRECTORY}/../lib/ -lnotmuch -ltalloc
     echo "== stdout ==" > OUTPUT.stdout
     echo "== stderr ==" > OUTPUT.stderr
