@@ -10,7 +10,7 @@
 # repository), we let git append identification of the actual commit.
 PACKAGE=notmuch
 
-IS_GIT=$(shell if [ -d ${srcdir}/.git ] ; then echo yes ; else echo no; fi)
+IS_GIT=$(shell if [ -d ${srcdir}/.git -o -f ${srcdir}/.git ] ; then echo yes ; else echo no; fi)
 
 ifeq ($(IS_GIT),yes)
 DATE:=$(shell git --git-dir=${srcdir}/.git log --date=short -1 --pretty=format:%cd)
