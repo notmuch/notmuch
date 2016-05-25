@@ -1192,10 +1192,10 @@ test_emacs () {
 }
 
 test_python() {
-	export PYTHONPATH=$TEST_DIRECTORY/../bindings/python
-
-	(echo "import sys; _orig_stdout=sys.stdout; sys.stdout=open('OUTPUT', 'w')"; cat) \
-		| $NOTMUCH_PYTHON -
+    # Note: if there is need to print debug information from python program,
+    # use stdout = os.fdopen(6, 'w') or stderr = os.fdopen(7, 'w')
+    PYTHONPATH="$TEST_DIRECTORY/../bindings/python${PYTHONPATH:+:$PYTHONPATH}" \
+	$NOTMUCH_PYTHON -B - > OUTPUT
 }
 
 test_ruby() {
