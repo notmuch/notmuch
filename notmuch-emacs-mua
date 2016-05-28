@@ -132,7 +132,7 @@ done
 
 # Kill the terminal/frame if we're creating one.
 if [ -z "$USE_EMACSCLIENT" -o -n "$CREATE_FRAME" -o -n "$NO_WINDOW" ]; then
-    ELISP="${ELISP} (setq message-exit-actions (list #'save-buffers-kill-terminal))"
+    ELISP="${ELISP} (message-add-action #'save-buffers-kill-terminal 'exit)"
 fi
 
 # End progn.
