@@ -251,6 +251,16 @@ trap_signal () {
 	exit $code
 }
 
+die () {
+	_exit_common
+	exec >&6
+	say_color error '%-6s' FATAL
+	echo " $*"
+	echo
+	echo "Unexpected exit while executing $0."
+	exit 1
+}
+
 GIT_EXIT_OK=
 # Note: TEST_TMPDIR *NOT* exported!
 TEST_TMPDIR=$(mktemp -d "${TMPDIR:-/tmp}/notmuch-test-$$.XXXXXX")
@@ -544,7 +554,7 @@ add_email_corpus ()
 	cp -a $TEST_DIRECTORY/corpus.mail ${MAIL_DIR}
     else
 	cp -a $TEST_DIRECTORY/corpus ${MAIL_DIR}
-	notmuch new >/dev/null
+	notmuch new >/dev/null || die "'notmuch new' failed while adding email corpus"
 	cp -a ${MAIL_DIR} $TEST_DIRECTORY/corpus.mail
     fi
 }
