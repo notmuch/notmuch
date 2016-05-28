@@ -18,6 +18,12 @@
 # This file contains common code to be used by both the regular
 # (correctness) tests and the performance tests.
 
+# test-lib.sh defines die() which echoes to nonstandard fd where
+# output was redirected earlier in that file. If test-lib.sh is not
+# loaded, neither this redirection nor die() function were defined.
+#
+type die >/dev/null 2>&1 || die () { echo "$@" >&2; exit 1; }
+
 find_notmuch_path ()
 {
     dir="$1"
