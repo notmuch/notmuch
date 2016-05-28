@@ -39,8 +39,10 @@ USE_EMACSCLIENT=
 AUTO_DAEMON=
 CREATE_FRAME=
 
+escape -v pwd "$PWD"
+
 # The crux of it all: construct an elisp progn and eval it.
-ELISP="(prog1 'done (require 'notmuch) (notmuch-mua-new-mail)"
+ELISP="(prog1 'done (require 'notmuch) (cd \"$pwd\") (notmuch-mua-new-mail)"
 
 # Short options compatible with mutt(1).
 while getopts :s:c:b:i:h opt; do
@@ -95,7 +97,7 @@ while getopts :s:c:b:i:h opt; do
 	    ELISP="${ELISP} (message-goto-bcc) (insert \"${OPTARG}, \")"
 	    ;;
 	--body|i)
-	    ELISP="${ELISP} (message-goto-body) (cd \"${PWD}\") (insert-file \"${OPTARG}\")"
+	    ELISP="${ELISP} (message-goto-body) (insert-file \"${OPTARG}\")"
 	    ;;
 	--print)
 	    PRINT_ONLY=1
