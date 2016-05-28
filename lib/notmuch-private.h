@@ -158,8 +158,8 @@ typedef enum _notmuch_private_status {
     ((private_status >= (notmuch_private_status_t) NOTMUCH_STATUS_LAST_STATUS)\
      ?									\
      _internal_error (format " (%s).\n",				\
-                      ##__VA_ARGS__,					\
-                      __location__),					\
+		      ##__VA_ARGS__,					\
+		      __location__),					\
      (notmuch_status_t) NOTMUCH_PRIVATE_STATUS_SUCCESS			\
      :									\
      (notmuch_status_t) private_status)
@@ -477,11 +477,11 @@ _notmuch_mset_messages_move_to_next (notmuch_messages_t *messages);
 
 notmuch_bool_t
 _notmuch_doc_id_set_contains (notmuch_doc_id_set_t *doc_ids,
-                              unsigned int doc_id);
+			      unsigned int doc_id);
 
 void
 _notmuch_doc_id_set_remove (notmuch_doc_id_set_t *doc_ids,
-                            unsigned int doc_id);
+			    unsigned int doc_id);
 
 /* querying xapian documents by type (e.g. "mail" or "ghost"): */
 notmuch_status_t

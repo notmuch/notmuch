@@ -112,4 +112,3 @@ _notmuch_sha1_of_file (const char *filename)
 
     return result;
 }
-

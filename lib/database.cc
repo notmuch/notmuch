@@ -2177,8 +2177,8 @@ _notmuch_database_link_message_to_parents (notmuch_database_t *notmuch,
      * References header, if available.  If not, fall back to the
      * first message ID in the In-Reply-To header. */
     if (last_ref_message_id) {
-        _notmuch_message_add_term (message, "replyto",
-                                   last_ref_message_id);
+	_notmuch_message_add_term (message, "replyto",
+				   last_ref_message_id);
     } else if (in_reply_to_message_id) {
 	_notmuch_message_add_term (message, "replyto",
 			     in_reply_to_message_id);
@@ -2287,15 +2287,15 @@ _consume_metadata_thread_id (void *ctx, notmuch_database_t *notmuch,
     if (stored_id.empty ()) {
 	return NULL;
     } else {
-        Xapian::WritableDatabase *db;
+	Xapian::WritableDatabase *db;
 
 	db = static_cast <Xapian::WritableDatabase *> (notmuch->xapian_db);
 
 	/* Clear the metadata for this message ID. We don't need it
 	 * anymore. */
-        db->set_metadata (metadata_key, "");
+	db->set_metadata (metadata_key, "");
 
-        return talloc_strdup (ctx, stored_id.c_str ());
+	return talloc_strdup (ctx, stored_id.c_str ());
     }
 }
 

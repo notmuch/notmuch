@@ -1444,7 +1444,7 @@ notmuch_message_maildir_flags_to_tags (notmuch_message_t *message)
 
     for (i = 0; i < ARRAY_SIZE(flag2tag); i++) {
 	if ((strchr (combined_flags, flag2tag[i].flag) != NULL)
-	    ^ 
+	    ^
 	    flag2tag[i].inverse)
 	{
 	    status = notmuch_message_add_tag (message, flag2tag[i].tag);

@@ -276,7 +276,7 @@ _notmuch_query_search_documents (notmuch_query_t *query,
 	case NOTMUCH_SORT_MESSAGE_ID:
 	    enquire.set_sort_by_value (NOTMUCH_VALUE_MESSAGE_ID, FALSE);
 	    break;
-        case NOTMUCH_SORT_UNSORTED:
+	case NOTMUCH_SORT_UNSORTED:
 	    break;
 	}
 
@@ -412,7 +412,7 @@ _notmuch_doc_id_set_contains (notmuch_doc_id_set_t *doc_ids,
 
 void
 _notmuch_doc_id_set_remove (notmuch_doc_id_set_t *doc_ids,
-                            unsigned int doc_id)
+			    unsigned int doc_id)
 {
     if (doc_id < doc_ids->bound)
 	doc_ids->bitmap[DOCIDSET_WORD(doc_id)] &= ~(1 << DOCIDSET_BIT(doc_id));

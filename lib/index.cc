@@ -144,7 +144,7 @@ filter_filter (GMimeFilter *gmime_filter, char *inbuf, size_t inlen, size_t pres
 	{9,  ' ',  ' ',  10, 0},
 	{10, '\n', '\n', 11, 10},
 	{11, 'M',  'M',  12, 0},
-	{12, ' ',  '`',  12, 11}  
+	{12, ' ',  '`',  12, 11}
     };
     int next;
 

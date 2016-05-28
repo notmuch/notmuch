@@ -17,7 +17,7 @@ nm  $* | awk '$1 ~ "^[0-9a-fA-F][0-9a-fA-F]*$" && $3 ~ "Xapian.*Error" {print $3
 while read sym; do
     demangled=$(c++filt $sym)
     case $demangled in
-	typeinfo*) 
+	typeinfo*)
 	    printf "\t$sym;\n"
 	    ;;
 	*)
