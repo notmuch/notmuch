@@ -215,15 +215,11 @@ Boolean and Probabilistic Prefixes
 Xapian (and hence notmuch) prefixes are either **boolean**, supporting
 exact matches like "tag:inbox"  or **probabilistic**, supporting a more flexible **term** based searching. The prefixes currently supported by notmuch are as follows.
 
-+------------------+-----------------------+
-|Boolean           |Probabilistic          |
-+------------------+-----------------------+
-| **tag:** **id:** | **from:** **to:**     |
-|**thread:**       |**subject:**           |
-|**folder:**       |**attachment:**        |
-|**path:**         |**mimetype:**          |
-|                  |                       |
-+------------------+-----------------------+
+
+Boolean
+   **tag:**, **id:**, **thread:**, **folder:**, **path:**
+Probabilistic
+   **from:**, **to:**, **subject:**, **attachment:**, **mimetype:**
 
 Terms and phrases
 -----------------
