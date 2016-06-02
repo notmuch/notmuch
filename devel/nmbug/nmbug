@@ -14,7 +14,7 @@
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with this program.  If not, see http://www.gnu.org/licenses/ .
+# along with this program.  If not, see https://www.gnu.org/licenses/ .
 
 """
 Manage notmuch tags with Git
@@ -119,9 +119,9 @@ def _xapian_quote(string):
     Xapian uses double-quotes for quoting strings.  You can escape
     internal quotes by repeating them [1,2,3].
 
-    [1]: http://trac.xapian.org/ticket/128#comment:2
-    [2]: http://trac.xapian.org/ticket/128#comment:17
-    [3]: http://trac.xapian.org/changeset/13823/svn
+    [1]: https://trac.xapian.org/ticket/128#comment:2
+    [2]: https://trac.xapian.org/ticket/128#comment:17
+    [3]: https://trac.xapian.org/changeset/13823/svn
     """
     return '"{0}"'.format(string.replace('"', '""'))
 

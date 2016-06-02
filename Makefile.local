@@ -35,7 +35,7 @@ DEB_TAG=debian/$(UPSTREAM_TAG)-1
 
 RELEASE_HOST=notmuchmail.org
 RELEASE_DIR=/srv/notmuchmail.org/www/releases
-RELEASE_URL=http://notmuchmail.org/releases
+RELEASE_URL=https://notmuchmail.org/releases
 TAR_FILE=$(PACKAGE)-$(VERSION).tar.gz
 DEB_TAR_FILE=$(PACKAGE)_$(VERSION).orig.tar.gz
 SHA1_FILE=$(TAR_FILE).sha1
@@ -191,7 +191,7 @@ release-message:
 	@echo "the Xapian library to provide fast, full-text search with a convenient"
 	@echo "search syntax."
 	@echo ""
-	@echo "For more about notmuch, see http://notmuchmail.org"
+	@echo "For more about notmuch, see https://notmuchmail.org"
 
 # This is a chain of dependencies rather than a simple list simply to
 # avoid the messages getting interleaved in the case of a parallel

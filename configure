@@ -643,7 +643,7 @@ EOF
     fi
     if [ $have_xapian -eq 0 ]; then
 	echo "	Xapian library (including development files such as headers)"
-	echo "	http://xapian.org/"
+	echo "	https://xapian.org/"
     fi
     if [ $have_zlib -eq 0 ]; then
 	echo "	zlib library (>= version 1.2.5.2, including development files such as headers)"
@@ -663,7 +663,7 @@ EOF
     fi
     if [ $have_talloc -eq 0 ]; then
 	echo "	The talloc library (including development files such as headers)"
-	echo "	http://talloc.samba.org/"
+	echo "	https://talloc.samba.org/"
 	echo
     fi
     cat <<EOF

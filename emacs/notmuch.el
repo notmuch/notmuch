@@ -15,7 +15,7 @@
 ;; General Public License for more details.
 ;;
 ;; You should have received a copy of the GNU General Public License
-;; along with Notmuch.  If not, see <http://www.gnu.org/licenses/>.
+;; along with Notmuch.  If not, see <https://www.gnu.org/licenses/>.
 ;;
 ;; Authors: Carl Worth <cworth@cworth.org>
 ;; Homepage: https://notmuchmail.org/
@@ -26,7 +26,7 @@
 ;;
 ;; You will first need to have the notmuch program installed and have a
 ;; notmuch database built in order to use this. See
-;; http://notmuchmail.org for details.
+;; https://notmuchmail.org for details.
 ;;
 ;; To install this software, copy it to a directory that is on the
 ;; `load-path' variable within emacs (a good candidate is
@@ -48,7 +48,7 @@
 ;;
 ;; Have fun, and let us know if you have any comment, questions, or
 ;; kudos: Notmuch list <notmuch@notmuchmail.org> (subscription is not
-;; required, but is available from http://notmuchmail.org).
+;; required, but is available from https://notmuchmail.org).
 
 ;;; Code:
 

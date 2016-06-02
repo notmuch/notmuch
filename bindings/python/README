@@ -2,7 +2,7 @@ notmuch -- The python interface to notmuch
 ==========================================
 
 This module makes the functionality of the notmuch library
-(`http://notmuchmail.org`_) available to python. Successful import of
+(`https://notmuchmail.org`_) available to python. Successful import of
 this modul depends on a libnotmuch.so|dll being available on the
 user's system.
 

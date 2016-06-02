@@ -15,7 +15,7 @@
 ;; General Public License for more details.
 ;;
 ;; You should have received a copy of the GNU General Public License
-;; along with Notmuch.  If not, see <http://www.gnu.org/licenses/>.
+;; along with Notmuch.  If not, see <https://www.gnu.org/licenses/>.
 ;;
 ;; Authors: David Edmondson <dme@dme.org>
 
@@ -142,7 +142,7 @@ mutiple parts get a header."
   (let ((notmuch-version (if (string= notmuch-emacs-version "unknown")
 			     (notmuch-cli-version)
 			   notmuch-emacs-version)))
-    (concat "Notmuch/" notmuch-version " (http://notmuchmail.org)")))
+    (concat "Notmuch/" notmuch-version " (https://notmuchmail.org)")))
 
 (defun notmuch-mua-user-agent-emacs ()
   "Generate a `User-Agent:' string suitable for notmuch."
@@ -334,7 +334,7 @@ modified. This function is notmuch addaptation of
 	  ;; C-h f compose-mail says that headers should be specified as
 	  ;; (string . value); however all the rest of message expects
 	  ;; headers to be symbols, not strings (eg message-header-format-alist).
-	  ;; http://lists.gnu.org/archive/html/emacs-devel/2011-01/msg00337.html
+	  ;; https://lists.gnu.org/archive/html/emacs-devel/2011-01/msg00337.html
 	  ;; We need to convert any string input, eg from rmail-start-mail.
 	  (dolist (h other-headers other-headers)
 	    (if (stringp (car h)) (setcar h (intern (capitalize (car h))))))))

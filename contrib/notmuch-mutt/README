@@ -24,8 +24,8 @@ for a --output=symlinks flag to notmuch.
 
 
 [1]: http://www.mutt.org/
-[2]: http://notmuchmail.org/
-[3]: http://upsilon.cc/~zack/blog/posts/2011/01/how_to_use_Notmuch_with_Mutt/
+[2]: https://notmuchmail.org/
+[3]: https://upsilon.cc/~zack/blog/posts/2011/01/how_to_use_Notmuch_with_Mutt/
 
 
 Requirements
@@ -57,5 +57,5 @@ notmuch-mutt is copyright (C) 2011-2012 Stefano Zacchiroli <zack@upsilon.cc>.
 
 notmuch-mutt is released under the terms of the GNU General Public License
 (GPL), version 3 or above. A copy of the license is available online at
-<http://www.gnu.org/licenses/>.
+<https://www.gnu.org/licenses/>.
 

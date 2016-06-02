@@ -13,7 +13,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/ .
+ * along with this program.  If not, see https://www.gnu.org/licenses/ .
  *
  * Author: Carl Worth <cworth@cworth.org>
  */
@@ -27,7 +27,7 @@
 static const char toplevel_config_comment[] =
     " .notmuch-config - Configuration file for the notmuch mail system\n"
     "\n"
-    " For more information about notmuch, see http://notmuchmail.org";
+    " For more information about notmuch, see https://notmuchmail.org";
 
 static const char database_config_comment[] =
     " Database configuration\n"

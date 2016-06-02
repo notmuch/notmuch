@@ -5,7 +5,7 @@
 
 # This test tests whether hiding Xapian::Error symbols in libnotmuch
 # also hides them for other users of libxapian. This is motivated by
-# the discussion in http://gcc.gnu.org/wiki/Visibility'
+# the discussion in https://gcc.gnu.org/wiki/Visibility'
 
 test_description='exception symbol hiding'
 

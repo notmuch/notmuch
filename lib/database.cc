@@ -13,7 +13,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/ .
+ * along with this program.  If not, see https://www.gnu.org/licenses/ .
  *
  * Author: Carl Worth <cworth@cworth.org>
  */
@@ -217,7 +217,7 @@ typedef struct {
 
 /* With these prefix values we follow the conventions published here:
  *
- * http://xapian.org/docs/omega/termprefixes.html
+ * https://xapian.org/docs/omega/termprefixes.html
  *
  * as much as makes sense. Note that I took some liberty in matching
  * the reserved prefix values to notmuch concepts, (for example, 'G'

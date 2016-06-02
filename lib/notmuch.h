@@ -13,7 +13,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/ .
+ * along with this program.  If not, see https://www.gnu.org/licenses/ .
  *
  * Author: Carl Worth <cworth@cworth.org>
  */
@@ -693,7 +693,7 @@ notmuch_database_get_all_tags (notmuch_database_t *db);
  * completely in the future, but it's likely to be a specialized
  * version of the general Xapian query syntax:
  *
- * http://xapian.org/docs/queryparser.html
+ * https://xapian.org/docs/queryparser.html
  *
  * As a special case, passing either a length-zero string, (that is ""),
  * or a string consisting of a single asterisk (that is "*"), will

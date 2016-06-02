@@ -91,7 +91,7 @@ sub get_message_id() {
 	$mid = $1;
     } else {  # Message-ID header not found, synthesize a message id
 	      # based on SHA1, as notmuch would do.  See:
-	      # http://git.notmuchmail.org/git/notmuch/blob/HEAD:/lib/sha1.c
+	      # https://git.notmuchmail.org/git/notmuch/blob/HEAD:/lib/sha1.c
 	my $sha = Digest::SHA->new(1);
 	$sha->add($_) foreach(@headers);
 	$sha->addfile(\*STDIN);

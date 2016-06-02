@@ -16,7 +16,7 @@
 ;; General Public License for more details.
 ;;
 ;; You should have received a copy of the GNU General Public License
-;; along with Notmuch.  If not, see <http://www.gnu.org/licenses/>.
+;; along with Notmuch.  If not, see <https://www.gnu.org/licenses/>.
 ;;
 ;; Authors: Carl Worth <cworth@cworth.org>
 ;;          David Edmondson <dme@dme.org>
@@ -182,9 +182,9 @@ each attachment handler is logged in buffers with names beginning
 
 (defcustom notmuch-show-stash-mlarchive-link-alist
   '(("Gmane" . "http://mid.gmane.org/")
-    ("MARC" . "http://marc.info/?i=")
-    ("Mail Archive, The" . "http://mid.mail-archive.com/")
-    ("LKML" . "http://lkml.kernel.org/r/")
+    ("MARC" . "https://marc.info/?i=")
+    ("Mail Archive, The" . "https://mid.mail-archive.com/")
+    ("LKML" . "https://lkml.kernel.org/r/")
     ;; FIXME: can these services be searched by `Message-Id' ?
     ;; ("MarkMail" . "http://markmail.org/")
     ;; ("Nabble" . "http://nabble.com/")

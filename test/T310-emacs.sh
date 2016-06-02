@@ -760,8 +760,8 @@ bought
 inbox,stashtest
 ${gen_msg_filename}
 http://mid.gmane.org/bought
-http://marc.info/?i=bought
-http://mid.mail-archive.com/bought
+https://marc.info/?i=bought
+https://mid.mail-archive.com/bought
 EOF
 test_expect_equal_file OUTPUT EXPECTED
 

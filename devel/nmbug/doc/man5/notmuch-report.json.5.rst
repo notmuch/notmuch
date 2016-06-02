@@ -92,7 +92,7 @@ EXAMPLE
   {
     "meta": {
       "title": "Notmuch Patches",
-      "blurb": "For more information see <a href=\"http://notmuchmail.org/nmbug\">nmbug</a>",
+      "blurb": "For more information see <a href=\"https://notmuchmail.org/nmbug\">nmbug</a>",
       "header": "<html><head></head><body><h1>{title}</h1><p>{blurb}</p><h2>Views</h2>",
       "footer": "<hr><p>Generated: {datetime}</p></html>",
       "message-url": "http://mid.gmane.org/{message-id}"

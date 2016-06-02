@@ -2,7 +2,7 @@ set -eu
 
 # we go through a bit of work to get the unmangled names of the
 # typeinfo symbols because of
-# http://sourceware.org/bugzilla/show_bug.cgi?id=10326
+# https://sourceware.org/bugzilla/show_bug.cgi?id=10326
 
 if [ $# -lt 2 ]; then
     echo Usage: $0 header obj1 obj2 obj3

@@ -351,7 +351,7 @@ func (self *Database) GetAllTags() *Tags {
  * completely in the future, but it's likely to be a specialized
  * version of the general Xapian query syntax:
  *
- * http://xapian.org/docs/queryparser.html
+ * https://xapian.org/docs/queryparser.html
  *
  * As a special case, passing either a length-zero string, (that is ""),
  * or a string consisting of a single asterisk (that is "*"), will

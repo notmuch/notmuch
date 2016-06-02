@@ -15,7 +15,7 @@
 " General Public License for more details.
 "
 " You should have received a copy of the GNU General Public License
-" along with Notmuch.  If not, see <http://www.gnu.org/licenses/>.
+" along with Notmuch.  If not, see <https://www.gnu.org/licenses/>.
 "
 " Authors: Bart Trojanowski <bart@jukie.net>
 " Contributors: Felipe Contreras <felipe.contreras@gmail.com>,
@@ -1198,7 +1198,7 @@ function! s:NM_shell_escape(word)
 endfunction
 
 " this function was taken from git.vim, then fixed up
-" http://github.com/motemen/git-vim
+" https://github.com/motemen/git-vim
 function! s:NM_shell_split(cmd)
         let l:split_cmd = []
         let cmd = a:cmd

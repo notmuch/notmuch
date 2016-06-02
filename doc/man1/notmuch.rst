@@ -29,7 +29,7 @@ While the command-line program ``notmuch`` provides powerful
 functionality, it does not provide the most convenient interface for
 that functionality. More sophisticated interfaces are expected to be
 built on top of either the command-line interface, or more likely, on
-top of the notmuch library interface. See http://notmuchmail.org for
+top of the notmuch library interface. See https://notmuchmail.org for
 more about alternate interfaces to notmuch. The emacs-based interface to
 notmuch (available under **emacs/** in the Notmuch source distribution)
 is probably the most widely used at this time.
@@ -144,7 +144,7 @@ SEE ALSO
 **notmuch-search-terms(7)**, **notmuch-show(1)**, **notmuch-tag(1)**,
 **notmuch-address(1)**
 
-The notmuch website: **http://notmuchmail.org**
+The notmuch website: **https://notmuchmail.org**
 
 CONTACT
 =======

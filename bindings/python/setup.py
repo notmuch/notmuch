@@ -14,7 +14,7 @@ FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
 for more details.
 
 You should have received a copy of the GNU General Public License
-along with notmuch.  If not, see <http://www.gnu.org/licenses/>.
+along with notmuch.  If not, see <https://www.gnu.org/licenses/>.
 
 Copyright 2010 Sebastian Spaeth <Sebastian@SSpaeth.de>
 """
@@ -34,15 +34,15 @@ setup(name='notmuch',
       description='Python binding of the notmuch mail search and indexing library.',
       author='Sebastian Spaeth',
       author_email='Sebastian@SSpaeth.de',
-      url='http://notmuchmail.org/',
-      download_url='http://notmuchmail.org/releases/notmuch-%s.tar.gz' % __VERSION__,
+      url='https://notmuchmail.org/',
+      download_url='https://notmuchmail.org/releases/notmuch-%s.tar.gz' % __VERSION__,
       packages=['notmuch'],
       keywords=['library', 'email'],
       long_description='''Overview
 ========
 
 The notmuch module provides an interface to the `notmuch
-<http://notmuchmail.org>`_ functionality, directly interfacing with a
+<https://notmuchmail.org>`_ functionality, directly interfacing with a
 shared notmuch library. Notmuch provides a maildatabase that allows
 for extremely quick searching and filtering of your email according to
 various criteria.
@@ -66,5 +66,5 @@ python >= 2.5. It will not work on earlier python versions.
                    'Topic :: Software Development :: Libraries'
                    ],
       platforms='',
-      license='http://www.gnu.org/licenses/gpl-3.0.txt',
+      license='https://www.gnu.org/licenses/gpl-3.0.txt',
      )

@@ -21,9 +21,9 @@ Summary:        Thread-based email index, search and tagging
 
 Group:          Applications/Internet
 License:        GPLv3+
-URL:            http://notmuchmail.org/
+URL:            https://notmuchmail.org/
 
-Source0:        http://notmuchmail.org/releases/notmuch-%{version}.tar.gz
+Source0:        https://notmuchmail.org/releases/notmuch-%{version}.tar.gz
 
 BuildRequires:  xapian-core-devel gmime-devel libtalloc-devel
 BuildRequires:  zlib-devel emacs-el emacs-nox python ruby ruby-devel perl

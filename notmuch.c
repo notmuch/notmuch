@@ -14,7 +14,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/ .
+ * along with this program.  If not, see https://www.gnu.org/licenses/ .
  *
  * Authors: Carl Worth <cworth@cworth.org>
  *	    Keith Packard <keithp@keithp.com>
@@ -354,7 +354,7 @@ notmuch_command (notmuch_config_t *config,
 	    "You can also use \"notmuch show\" with any of the thread IDs resulting\n"
 	    "from a search. Finally, you may want to explore using a more sophisticated\n"
 	    "interface to notmuch such as the emacs interface implemented in notmuch.el\n"
-	    "or any other interface described at http://notmuchmail.org\n\n"
+	    "or any other interface described at https://notmuchmail.org\n\n"
 	    "And don't forget to run \"notmuch new\" whenever new mail arrives.\n\n"
 	    "Have fun, and may your inbox never have much mail.\n\n",
 	    notmuch_config_get_user_name (config),
