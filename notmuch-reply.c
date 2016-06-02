@@ -324,7 +324,7 @@ add_recipients_from_message (GMimeMessage *reply,
     unsigned int n = 0;
 
     /* Some mailing lists munge the Reply-To header despite it being A Bad
-     * Thing, see http://www.unicom.com/pw/reply-to-harmful.html
+     * Thing, see http://marc.merlins.org/netrants/reply-to-harmful.html
      *
      * The munging is easy to detect, because it results in a
      * redundant reply-to header, (with an address that already exists
