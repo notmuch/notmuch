@@ -3,7 +3,7 @@
 # Copyright © 2013 Jani Nikula
 #
 # Based on the bash-completion package:
-# http://bash-completion.alioth.debian.org/
+# https://github.com/scop/bash-completion
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
