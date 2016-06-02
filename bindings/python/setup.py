@@ -48,7 +48,7 @@ for extremely quick searching and filtering of your email according to
 various criteria.
 
 The documentation for the latest notmuch release can be `viewed
-online <http://notmuch.readthedocs.org/>`_.
+online <https://notmuch.readthedocs.io/>`_.
 
 Requirements
 ------------

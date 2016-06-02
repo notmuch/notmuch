@@ -2361,7 +2361,7 @@ Ruby bindings are now much more complete
 
 Python bindings have been updated and extended
 
-  (docs online at http://packages.python.org/notmuch/)
+  (docs online at https://notmuch.readthedocs.io/)
 
   New bindings:
 

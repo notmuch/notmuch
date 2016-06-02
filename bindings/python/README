@@ -10,7 +10,7 @@ If you have downloaded the full source tarball, you can create the
 documentation with sphinx installed, go to the docs directory and
 "make html". A static version of the documentation is available at:
 
-  https://notmuch.readthedocs.org/projects/notmuch-python/
+  https://notmuch.readthedocs.io/projects/notmuch-python/
 
 To build the python bindings, do
 
