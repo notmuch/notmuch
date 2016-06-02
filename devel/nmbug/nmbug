@@ -80,7 +80,7 @@ except AttributeError:  # Python < 3.2
 
         See PEP 343 for details on context managers [1].
 
-        [1]: http://legacy.python.org/dev/peps/pep-0343/
+        [1]: https://www.python.org/dev/peps/pep-0343/
         """
         def __init__(self, **kwargs):
             self.name = _tempfile.mkdtemp(**kwargs)
