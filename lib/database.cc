@@ -185,6 +185,14 @@ typedef struct {
  *			generated is 1 and the value will be
  *			incremented for each thread ID.
  *
+ *	C*		metadata keys starting with C indicate
+ *			configuration data. It can be managed with the
+ *			n_database_*config* API.  There is a convention
+ *			of hierarchical keys separated by '.' (e.g.
+ *			query.notmuch stores the value for the named
+ *			query 'notmuch'), but it is not enforced by the
+ *			API.
+ *
  * Obsolete metadata
  * -----------------
  *
