@@ -1206,7 +1206,7 @@ test_C () {
     exec_file="test${test_count}"
     test_file="${exec_file}.c"
     cat > ${test_file}
-    ${TEST_CC} ${TEST_CFLAGS} -I${TEST_DIRECTORY}/../lib -o ${exec_file} ${test_file} -L${TEST_DIRECTORY}/../lib/ -lnotmuch -ltalloc
+    ${TEST_CC} ${TEST_CFLAGS} -I${TEST_DIRECTORY} -I${TEST_DIRECTORY}/../lib -o ${exec_file} ${test_file} -L${TEST_DIRECTORY}/../lib/ -lnotmuch -ltalloc
     echo "== stdout ==" > OUTPUT.stdout
     echo "== stderr ==" > OUTPUT.stderr
     ./${exec_file} "$@" 1>>OUTPUT.stdout 2>>OUTPUT.stderr
