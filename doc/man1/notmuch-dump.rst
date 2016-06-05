@@ -86,7 +86,15 @@ Supported options for **dump** include
 	Output per-message metadata, namely tags. See *format* above
 	for description of the output.
 
-      The default is to include both tags and configuration information
+      The default is to include both tags and configuration
+      information. As of version 2 of the dump format, there is a
+      header line of the following form
+
+      |
+      |  #notmuch-dump <*format*>:<*version*> <*included*>
+
+      where <*included*> is a comma separated list of the above
+      options.
 
     ``--output=``\ <filename>
         Write output to given file instead of stdout.
