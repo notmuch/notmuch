@@ -42,11 +42,8 @@ a mouse or by positioning the cursor and pressing ``<return>``
 |
 | All tags: **[show]**
 |
-|	 Type a search query and hit RET to view matching threads.
-|		Edit saved searches with the ``edit`` button.
-| Hit RET or click on a saved search or tag name to view matching threads.
-|     ``=`` to refresh this screen. ``s`` to search messages. ``q`` to quit.
-|		    **Customize** this page.
+|	 Hit \`?' for context-sensitive help in any Notmuch screen.
+|		      Customize Notmuch or this page.
 
 You can change the overall appearance of the notmuch-hello screen by
 customizing the variable :index:`notmuch-hello-sections`.
