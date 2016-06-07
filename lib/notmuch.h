@@ -93,7 +93,7 @@ NOTMUCH_BEGIN_DECLS
  * #endif
  * @endcode
  */
-#define LIBNOTMUCH_CHECK_VERSION (major, minor, micro)			\
+#define LIBNOTMUCH_CHECK_VERSION(major, minor, micro)			\
     (LIBNOTMUCH_MAJOR_VERSION > (major) ||					\
      (LIBNOTMUCH_MAJOR_VERSION == (major) && LIBNOTMUCH_MINOR_VERSION > (minor)) || \
      (LIBNOTMUCH_MAJOR_VERSION == (major) && LIBNOTMUCH_MINOR_VERSION == (minor) && \
