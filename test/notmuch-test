@@ -17,14 +17,14 @@ fi
 
 cd "$(dirname "$0")"
 
-TESTS=${NOTMUCH_TESTS:-`echo T[0-9][0-9][0-9]-*.sh`}
+TESTS=${NOTMUCH_TESTS:-T[0-9][0-9][0-9]-*.sh}
 
 # Clean up any results from a previous run
-rm -r test-results >/dev/null 2>/dev/null
+rm -rf test-results
 
-# test for timeout utility
+# Test for timeout utility
 if command -v timeout >/dev/null; then
-    TEST_TIMEOUT_CMD="timeout 2m "
+    TEST_TIMEOUT_CMD="timeout 2m"
     echo "INFO: using 2 minute timeout for tests"
 else
     TEST_TIMEOUT_CMD=""
