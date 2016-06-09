@@ -66,7 +66,7 @@ while (my ($k, $v) = each %fhash)
 
     my @lines;
     open I, '-|', qw/env -i/, "PATH=$ENV{PATH}",
-	qw/TERM=vt100 LANG=en_US.utf8 LC_ALL=en_US.utf8/,
+	qw/TERM=vt100 LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8/,
 	qw/GROFF_NO_SGR=1 MAN_KEEP_FORMATTING=1 MANWIDTH=80/,
 	qw/man/, $v or die "$!";
     binmode I, ':utf8';
