@@ -1701,12 +1701,23 @@ user decision and we should not override it."
 	(notmuch-show-mark-read)
 	(notmuch-show-set-prop :seen t)))
 
+(defvar notmuch-show--seen-has-errored nil)
+(make-variable-buffer-local 'notmuch-show--seen-has-errored)
+
 (defun notmuch-show-command-hook ()
   (when (eq major-mode 'notmuch-show-mode)
     ;; We need to redisplay to get window-start and window-end correct.
     (redisplay)
     (save-excursion
-      (funcall notmuch-show-mark-read-function (window-start) (window-end)))))
+      (condition-case err
+	  (funcall notmuch-show-mark-read-function (window-start) (window-end))
+	((debug error)
+	 (unless notmuch-show--seen-has-errored
+	   (setq notmuch-show--seen-has-errored 't)
+	   (setq header-line-format
+		 (concat header-line-format
+			 (propertize "  [some mark read tag changes may have failed]"
+				     'face font-lock-warning-face)))))))))
 
 (defun notmuch-show-filter-thread (query)
   "Filter or LIMIT the current thread based on a new query string.
