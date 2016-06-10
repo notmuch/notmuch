@@ -1107,6 +1107,13 @@ notmuch_database_close (notmuch_database_t *notmuch)
     delete notmuch->last_mod_range_processor;
     notmuch->last_mod_range_processor = NULL;
 
+#if HAVE_XAPIAN_FIELD_PROCESSOR
+    delete notmuch->date_field_processor;
+    notmuch->date_field_processor = NULL;
+    delete notmuch->query_field_processor;
+    notmuch->query_field_processor = NULL;
+#endif
+
     return status;
 }
 
