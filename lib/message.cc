@@ -37,6 +37,8 @@ struct visible _notmuch_message {
     notmuch_string_list_t *filename_list;
     char *author;
     notmuch_message_file_t *message_file;
+    notmuch_string_list_t *property_term_list;
+    notmuch_string_map_t *property_map;
     notmuch_message_list_t *replies;
     unsigned long flags;
     /* For flags that are initialized on-demand, lazy_flags indicates
@@ -116,6 +118,8 @@ _notmuch_message_create_for_document (const void *talloc_owner,
     message->filename_list = NULL;
     message->message_file = NULL;
     message->author = NULL;
+    message->property_term_list = NULL;
+    message->property_map = NULL;
 
     message->replies = _notmuch_message_list_create (message);
     if (unlikely (message->replies == NULL)) {
@@ -314,6 +318,7 @@ _notmuch_message_ensure_metadata (notmuch_message_t *message)
 	*id_prefix = _find_prefix ("id"),
 	*type_prefix = _find_prefix ("type"),
 	*filename_prefix = _find_prefix ("file-direntry"),
+	*property_prefix = _find_prefix ("property"),
 	*replyto_prefix = _find_prefix ("replyto");
 
     /* We do this all in a single pass because Xapian decompresses the
@@ -369,11 +374,21 @@ _notmuch_message_ensure_metadata (notmuch_message_t *message)
 	    _notmuch_database_get_terms_with_prefix (message, i, end,
 						     filename_prefix);
 
+
+    /* Get property terms. Mimic the setup with filenames above */
+    assert (strcmp (filename_prefix, property_prefix) < 0);
+    if (!message->property_map && !message->property_term_list)
+	message->property_term_list =
+	    _notmuch_database_get_terms_with_prefix (message, i, end,
+						     property_prefix);
+
     /* Get reply to */
-    assert (strcmp (filename_prefix, replyto_prefix) < 0);
+    assert (strcmp (property_prefix, replyto_prefix) < 0);
     if (!message->in_reply_to)
 	message->in_reply_to =
 	    _notmuch_message_get_term (message, i, end, replyto_prefix);
+
+
     /* It's perfectly valid for a message to have no In-Reply-To
      * header. For these cases, we return an empty string. */
     if (!message->in_reply_to)
@@ -403,6 +418,18 @@ _notmuch_message_invalidate_metadata (notmuch_message_t *message,
 	talloc_free (message->filename_term_list);
 	talloc_free (message->filename_list);
 	message->filename_term_list = message->filename_list = NULL;
+    }
+
+    if (strcmp ("property", prefix_name) == 0) {
+
+	if (message->property_term_list)
+	    talloc_free (message->property_term_list);
+	message->property_term_list = NULL;
+
+	if (message->property_map)
+	    talloc_unlink (message, message->property_map);
+
+	message->property_map = NULL;
     }
 
     if (strcmp ("replyto", prefix_name) == 0) {

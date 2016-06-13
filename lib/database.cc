@@ -251,6 +251,7 @@ static prefix_t BOOLEAN_PREFIX_INTERNAL[] = {
     { "directory",		"XDIRECTORY" },
     { "file-direntry",		"XFDIRENTRY" },
     { "directory-direntry",	"XDDIRENTRY" },
+    { "property",               "XPROPERTY"  },
 };
 
 static prefix_t BOOLEAN_PREFIX_EXTERNAL[] = {

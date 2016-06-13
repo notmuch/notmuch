@@ -541,6 +541,9 @@ _notmuch_string_list_append (notmuch_string_list_t *list,
 void
 _notmuch_string_list_sort (notmuch_string_list_t *list);
 
+/* string-map.c */
+typedef struct _notmuch_string_map  notmuch_string_map_t;
+
 /* tags.c */
 
 notmuch_tags_t *
