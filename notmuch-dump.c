@@ -78,13 +78,78 @@ print_dump_header (gzFile output, int output_format, int include)
 }
 
 static int
+dump_tags_message (void *ctx,
+		   notmuch_message_t *message, int output_format,
+		   gzFile output,
+		   char **buffer_p, size_t *size_p)
+{
+    int first = 1;
+    const char *message_id;
+
+    message_id = notmuch_message_get_message_id (message);
+
+    if (output_format == DUMP_FORMAT_BATCH_TAG &&
+	strchr (message_id, '\n')) {
+	/* This will produce a line break in the output, which
+	 * would be difficult to handle in tools.  However, it's
+	 * also impossible to produce an email containing a line
+	 * break in a message ID because of unfolding, so we can
+	 * safely disallow it. */
+	fprintf (stderr, "Warning: skipping message id containing line break: \"%s\"\n", message_id);
+	return EXIT_SUCCESS;
+    }
+
+    if (output_format == DUMP_FORMAT_SUP) {
+	gzprintf (output, "%s (", message_id);
+    }
+
+    for (notmuch_tags_t *tags = notmuch_message_get_tags (message);
+	 notmuch_tags_valid (tags);
+	 notmuch_tags_move_to_next (tags)) {
+	const char *tag_str = notmuch_tags_get (tags);
+
+	if (! first)
+	    gzputs (output, " ");
+
+	first = 0;
+
+	if (output_format == DUMP_FORMAT_SUP) {
+	    gzputs (output, tag_str);
+	} else {
+	    if (hex_encode (ctx, tag_str,
+			    buffer_p, size_p) != HEX_SUCCESS) {
+		fprintf (stderr, "Error: failed to hex-encode tag %s\n",
+			 tag_str);
+		return EXIT_FAILURE;
+	    }
+	    gzprintf (output, "+%s", *buffer_p);
+	}
+    }
+
+    if (output_format == DUMP_FORMAT_SUP) {
+	gzputs (output, ")\n");
+    } else {
+	if (make_boolean_term (ctx, "id", message_id,
+			       buffer_p, size_p)) {
+	    fprintf (stderr, "Error quoting message id %s: %s\n",
+		     message_id, strerror (errno));
+	    return EXIT_FAILURE;
+	}
+	gzprintf (output, " -- %s\n", *buffer_p);
+    }
+    return EXIT_SUCCESS;
+}
+
+static int
 database_dump_file (notmuch_database_t *notmuch, gzFile output,
 		    const char *query_str, int output_format, int include)
 {
     notmuch_query_t *query;
     notmuch_messages_t *messages;
     notmuch_message_t *message;
-    notmuch_tags_t *tags;
+    notmuch_status_t status;
+    char *buffer = NULL;
+    size_t buffer_size = 0;
 
     print_dump_header (output, output_format, include);
 
@@ -110,10 +175,6 @@ database_dump_file (notmuch_database_t *notmuch, gzFile output,
      */
     notmuch_query_set_sort (query, NOTMUCH_SORT_UNSORTED);
 
-    char *buffer = NULL;
-    size_t buffer_size = 0;
-    notmuch_status_t status;
-
     status = notmuch_query_search_messages_st (query, &messages);
     if (print_status_query ("notmuch dump", query, status))
 	return EXIT_FAILURE;
@@ -121,62 +182,12 @@ database_dump_file (notmuch_database_t *notmuch, gzFile output,
     for (;
 	 notmuch_messages_valid (messages);
 	 notmuch_messages_move_to_next (messages)) {
-	int first = 1;
-	const char *message_id;
 
 	message = notmuch_messages_get (messages);
-	message_id = notmuch_message_get_message_id (message);
 
-	if (output_format == DUMP_FORMAT_BATCH_TAG &&
-	    strchr (message_id, '\n')) {
-	    /* This will produce a line break in the output, which
-	     * would be difficult to handle in tools.  However, it's
-	     * also impossible to produce an email containing a line
-	     * break in a message ID because of unfolding, so we can
-	     * safely disallow it. */
-	    fprintf (stderr, "Warning: skipping message id containing line break: \"%s\"\n", message_id);
-	    notmuch_message_destroy (message);
-	    continue;
-	}
-
-	if (output_format == DUMP_FORMAT_SUP) {
-	    gzprintf (output, "%s (", message_id);
-	}
-
-	for (tags = notmuch_message_get_tags (message);
-	     notmuch_tags_valid (tags);
-	     notmuch_tags_move_to_next (tags)) {
-	    const char *tag_str = notmuch_tags_get (tags);
-
-	    if (! first)
-		gzputs (output, " ");
-
-	    first = 0;
-
-	    if (output_format == DUMP_FORMAT_SUP) {
-		gzputs (output, tag_str);
-	    } else {
-		if (hex_encode (notmuch, tag_str,
-				&buffer, &buffer_size) != HEX_SUCCESS) {
-		    fprintf (stderr, "Error: failed to hex-encode tag %s\n",
-			     tag_str);
-		    return EXIT_FAILURE;
-		}
-		gzprintf (output, "+%s", buffer);
-	    }
-	}
-
-	if (output_format == DUMP_FORMAT_SUP) {
-	    gzputs (output, ")\n");
-	} else {
-	    if (make_boolean_term (notmuch, "id", message_id,
-				   &buffer, &buffer_size)) {
-		    fprintf (stderr, "Error quoting message id %s: %s\n",
-			     message_id, strerror (errno));
-		    return EXIT_FAILURE;
-	    }
-	    gzprintf (output, " -- %s\n", buffer);
-	}
+	if (dump_tags_message (notmuch, message, output_format, output,
+			       &buffer, &buffer_size))
+	    return EXIT_FAILURE;
 
 	notmuch_message_destroy (message);
     }
