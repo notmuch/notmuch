@@ -40,6 +40,7 @@ libnotmuch_c_srcs =		\
 	$(dir)/messages.c	\
 	$(dir)/sha1.c		\
 	$(dir)/built-with.c	\
+	$(dir)/string-map.c	\
 	$(dir)/tags.c
 
 libnotmuch_cxx_srcs =		\

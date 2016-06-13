@@ -544,6 +544,17 @@ _notmuch_string_list_sort (notmuch_string_list_t *list);
 /* string-map.c */
 typedef struct _notmuch_string_map  notmuch_string_map_t;
 
+notmuch_string_map_t *
+_notmuch_string_map_create (const void *ctx);
+
+void
+_notmuch_string_map_append (notmuch_string_map_t *map,
+			    const char *key,
+			    const char *value);
+
+const char *
+_notmuch_string_map_get (notmuch_string_map_t *map, const char *key);
+
 /* tags.c */
 
 notmuch_tags_t *
