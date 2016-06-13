@@ -543,7 +543,7 @@ _notmuch_string_list_sort (notmuch_string_list_t *list);
 
 /* string-map.c */
 typedef struct _notmuch_string_map  notmuch_string_map_t;
-
+typedef struct _notmuch_string_map_iterator notmuch_string_map_iterator_t;
 notmuch_string_map_t *
 _notmuch_string_map_create (const void *ctx);
 
@@ -554,6 +554,25 @@ _notmuch_string_map_append (notmuch_string_map_t *map,
 
 const char *
 _notmuch_string_map_get (notmuch_string_map_t *map, const char *key);
+
+notmuch_string_map_iterator_t *
+_notmuch_string_map_iterator_create (notmuch_string_map_t *map, const char *key,
+				     notmuch_bool_t exact);
+
+notmuch_bool_t
+_notmuch_string_map_iterator_valid (notmuch_string_map_iterator_t *iter);
+
+void
+_notmuch_string_map_iterator_move_to_next (notmuch_string_map_iterator_t *iter);
+
+const char *
+_notmuch_string_map_iterator_key (notmuch_string_map_iterator_t *iterator);
+
+const char *
+_notmuch_string_map_iterator_value (notmuch_string_map_iterator_t *iterator);
+
+void
+_notmuch_string_map_iterator_destroy (notmuch_string_map_iterator_t *iterator);
 
 /* tags.c */
 

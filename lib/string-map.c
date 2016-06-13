@@ -38,6 +38,12 @@ struct _notmuch_string_map {
     notmuch_string_pair_t *pairs;
 };
 
+struct _notmuch_string_map_iterator {
+    notmuch_string_pair_t *current;
+    notmuch_bool_t exact;
+    const char *key;
+};
+
 notmuch_string_map_t *
 _notmuch_string_map_create (const void *ctx)
 {
@@ -150,4 +156,70 @@ _notmuch_string_map_get (notmuch_string_map_t *map, const char *key)
 	return NULL;
 
     return pair->value;
+}
+
+notmuch_string_map_iterator_t *
+_notmuch_string_map_iterator_create (notmuch_string_map_t *map, const char *key,
+				     notmuch_bool_t exact)
+{
+    notmuch_string_map_iterator_t *iter;
+
+    _notmuch_string_map_sort (map);
+
+    iter = talloc (map, notmuch_string_map_iterator_t);
+    if (unlikely (iter == NULL))
+	return NULL;
+
+    iter->key = talloc_strdup (iter, key);
+    iter->exact = exact;
+    iter->current = bsearch_first (map->pairs, map->length, key, exact);
+    return iter;
+}
+
+notmuch_bool_t
+_notmuch_string_map_iterator_valid (notmuch_string_map_iterator_t *iterator)
+{
+    if (iterator->current == NULL)
+	return FALSE;
+
+    /* sentinel */
+    if (iterator->current->key == NULL)
+	return FALSE;
+
+    return (0 == string_cmp (iterator->key, iterator->current->key, iterator->exact));
+
+}
+
+void
+_notmuch_string_map_iterator_move_to_next (notmuch_string_map_iterator_t *iterator)
+{
+
+    if (! _notmuch_string_map_iterator_valid (iterator))
+	return;
+
+    (iterator->current)++;
+}
+
+const char *
+_notmuch_string_map_iterator_key (notmuch_string_map_iterator_t *iterator)
+{
+    if (! _notmuch_string_map_iterator_valid (iterator))
+	return NULL;
+
+    return iterator->current->key;
+}
+
+const char *
+_notmuch_string_map_iterator_value (notmuch_string_map_iterator_t *iterator)
+{
+    if (! _notmuch_string_map_iterator_valid (iterator))
+	return NULL;
+
+    return iterator->current->value;
+}
+
+void
+_notmuch_string_map_iterator_destroy (notmuch_string_map_iterator_t *iterator)
+{
+    talloc_free (iterator);
 }
