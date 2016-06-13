@@ -69,12 +69,77 @@ database_dump_config (notmuch_database_t *notmuch, gzFile output)
 static void
 print_dump_header (gzFile output, int output_format, int include)
 {
-    gzprintf (output, "#notmuch-dump %s:%d %s%s%s\n",
+    const char *sep = "";
+
+    gzprintf (output, "#notmuch-dump %s:%d ",
 	      (output_format == DUMP_FORMAT_SUP) ? "sup" : "batch-tag",
-	      NOTMUCH_DUMP_VERSION,
-	      (include & DUMP_INCLUDE_CONFIG) ? "config" : "",
-	      (include & DUMP_INCLUDE_TAGS) && (include & DUMP_INCLUDE_CONFIG) ? "," : "",
-	      (include & DUMP_INCLUDE_TAGS) ? "tags" : "");
+	      NOTMUCH_DUMP_VERSION);
+
+    if (include & DUMP_INCLUDE_CONFIG) {
+	gzputs (output, "config");
+	sep = ",";
+    }
+    if (include & DUMP_INCLUDE_PROPERTIES) {
+	gzprintf (output, "%sproperties", sep);
+	sep = ",";
+    }
+    if (include & DUMP_INCLUDE_TAGS) {
+	gzprintf (output, "%sproperties", sep);
+    }
+    gzputs (output, "\n");
+}
+
+static int
+dump_properties_message (void *ctx,
+			 notmuch_message_t *message,
+			 gzFile output,
+			 char **buffer_p, size_t *size_p)
+{
+    const char *message_id;
+    notmuch_message_properties_t *list;
+    notmuch_bool_t first = TRUE;
+
+    message_id = notmuch_message_get_message_id (message);
+
+    if (strchr (message_id, '\n')) {
+	fprintf (stderr, "Warning: skipping message id containing line break: \"%s\"\n", message_id);
+	return 0;
+    }
+
+    for (list = notmuch_message_get_properties (message, "", FALSE);
+	 notmuch_message_properties_valid (list); notmuch_message_properties_move_to_next (list)) {
+	const char *key, *val;
+
+	if (first) {
+	    if (hex_encode (ctx, message_id, buffer_p, size_p) != HEX_SUCCESS) {
+		fprintf (stderr, "Error: failed to hex-encode message-id %s\n", message_id);
+		return 1;
+	    }
+	    gzprintf (output, "#= %s", *buffer_p);
+	    first = FALSE;
+	}
+
+	key = notmuch_message_properties_key (list);
+	val = notmuch_message_properties_value (list);
+
+	if (hex_encode (ctx, key, buffer_p, size_p) != HEX_SUCCESS) {
+	    fprintf (stderr, "Error: failed to hex-encode key %s\n", key);
+	    return 1;
+	}
+	gzprintf (output, " %s", *buffer_p);
+
+	if (hex_encode (ctx, val, buffer_p, size_p) != HEX_SUCCESS) {
+	    fprintf (stderr, "Error: failed to hex-encode value %s\n", val);
+	    return 1;
+	}
+	gzprintf (output, "=%s", *buffer_p);
+    }
+    notmuch_message_properties_destroy (list);
+
+    if (! first)
+	gzprintf (output, "\n", *buffer_p);
+
+    return 0;
 }
 
 static int
@@ -159,7 +224,7 @@ database_dump_file (notmuch_database_t *notmuch, gzFile output,
 	    return EXIT_FAILURE;
     }
 
-    if (! (include & DUMP_INCLUDE_TAGS))
+    if (! (include & (DUMP_INCLUDE_TAGS | DUMP_INCLUDE_PROPERTIES)))
 	return EXIT_SUCCESS;
 
     if (! query_str)
@@ -187,6 +252,11 @@ database_dump_file (notmuch_database_t *notmuch, gzFile output,
 
 	if (dump_tags_message (notmuch, message, output_format, output,
 			       &buffer, &buffer_size))
+	    return EXIT_FAILURE;
+
+	if ((include & DUMP_INCLUDE_PROPERTIES) &&
+	    dump_properties_message (notmuch, message, output,
+				     &buffer, &buffer_size))
 	    return EXIT_FAILURE;
 
 	notmuch_message_destroy (message);
@@ -312,6 +382,7 @@ notmuch_dump_command (notmuch_config_t *config, int argc, char *argv[])
 				  { 0, 0 } } },
 	{ NOTMUCH_OPT_KEYWORD_FLAGS, &include, "include", 'I',
 	  (notmuch_keyword_t []){ { "config", DUMP_INCLUDE_CONFIG },
+				  { "properties", DUMP_INCLUDE_PROPERTIES },
 				  { "tags", DUMP_INCLUDE_TAGS} } },
 	{ NOTMUCH_OPT_STRING, &output_file_name, "output", 'o', 0  },
 	{ NOTMUCH_OPT_BOOLEAN, &gzip_output, "gzip", 'z', 0 },
@@ -326,7 +397,7 @@ notmuch_dump_command (notmuch_config_t *config, int argc, char *argv[])
     notmuch_process_shared_options (argv[0]);
 
     if (include == 0)
-	include = DUMP_INCLUDE_CONFIG | DUMP_INCLUDE_TAGS;
+	include = DUMP_INCLUDE_CONFIG | DUMP_INCLUDE_TAGS | DUMP_INCLUDE_PROPERTIES;
 
     if (opt_index < argc) {
 	query_str = query_string_from_args (notmuch, argc - opt_index, argv + opt_index);

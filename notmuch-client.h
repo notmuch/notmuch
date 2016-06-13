@@ -449,7 +449,10 @@ typedef enum dump_formats {
 typedef enum dump_includes {
     DUMP_INCLUDE_TAGS = 1,
     DUMP_INCLUDE_CONFIG = 2,
+    DUMP_INCLUDE_PROPERTIES = 4
 } dump_include_t;
+
+#define DUMP_INCLUDE_DEFAULT (DUMP_INCLUDE_TAGS | DUMP_INCLUDE_CONFIG | DUMP_INCLUDE_PROPERTIES)
 
 #define NOTMUCH_DUMP_VERSION 2
 

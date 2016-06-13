@@ -71,7 +71,7 @@ Supported options for **dump** include
             characters. Note also that tags with spaces will not be
             correctly restored with this format.
 
-    ``--include=(config|tags)``
+    ``--include=(config|properties|tags)``
 
     Control what kind of metadata is included in the output.
 
@@ -81,14 +81,22 @@ Supported options for **dump** include
 	starts with "#@ ", followed by a space separated key-value
 	pair.  Both key and value are hex encoded if needed.
 
+      **properties**
+
+	Output per-message (key,value) metadata.  Each line starts
+	with "#= ", followed by a message id, and a space separated
+	list of key=value pairs.  pair.  Ids, keys and values are hex
+	encoded if needed.
+
       **tags**
 
-	Output per-message metadata, namely tags. See *format* above
+	Output per-message boolean metadata, namely tags. See *format* above
 	for description of the output.
 
-      The default is to include both tags and configuration
-      information. As of version 2 of the dump format, there is a
-      header line of the following form
+      The default is to include all available types of data.  The
+      option can be specified multiple times to select some subset. As
+      of version 2 of the dump format, there is a header line of the
+      following form
 
       |
       |  #notmuch-dump <*format*>:<*version*> <*included*>
