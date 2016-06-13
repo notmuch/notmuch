@@ -20,6 +20,7 @@
 
 #include "notmuch-private.h"
 #include "database-private.h"
+#include "message-private.h"
 
 #include <stdint.h>
 
@@ -395,7 +396,7 @@ _notmuch_message_ensure_metadata (notmuch_message_t *message)
 	message->in_reply_to = talloc_strdup (message, "");
 }
 
-static void
+void
 _notmuch_message_invalidate_metadata (notmuch_message_t *message,
 				      const char *prefix_name)
 {
@@ -552,7 +553,7 @@ notmuch_message_get_replies (notmuch_message_t *message)
     return _notmuch_messages_create (message->replies);
 }
 
-static void
+void
 _notmuch_message_remove_terms (notmuch_message_t *message, const char *prefix)
 {
     Xapian::TermIterator i;
@@ -1798,4 +1799,51 @@ notmuch_database_t *
 _notmuch_message_database (notmuch_message_t *message)
 {
     return message->notmuch;
+}
+
+void
+_notmuch_message_ensure_property_map (notmuch_message_t *message)
+{
+    notmuch_string_node_t *node;
+
+    if (message->property_map)
+	return;
+
+    if (!message->property_term_list)
+	_notmuch_message_ensure_metadata (message);
+
+    message->property_map = _notmuch_string_map_create (message);
+
+    for (node = message->property_term_list->head; node; node = node->next) {
+	const char *key;
+	char *value;
+
+	value = index(node->string, '=');
+	if (!value)
+	    INTERNAL_ERROR ("malformed property term");
+
+	*value = '\0';
+	value++;
+	key = node->string;
+
+	_notmuch_string_map_append (message->property_map, key, value);
+
+    }
+
+    talloc_free (message->property_term_list);
+    message->property_term_list = NULL;
+}
+
+notmuch_string_map_t *
+_notmuch_message_property_map (notmuch_message_t *message)
+{
+    _notmuch_message_ensure_property_map (message);
+
+    return message->property_map;
+}
+
+notmuch_bool_t
+_notmuch_message_frozen (notmuch_message_t *message)
+{
+    return message->frozen;
 }

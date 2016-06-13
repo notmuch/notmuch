@@ -180,6 +180,11 @@ typedef enum _notmuch_status {
      */
     NOTMUCH_STATUS_PATH_ERROR,
     /**
+     * One of the arguments violates the preconditions for the
+     * function, in a way not covered by a more specific argument.
+     */
+    NOTMUCH_STATUS_ILLEGAL_ARGUMENT,
+    /**
      * Not an actual status value. Just a way to find out how many
      * valid status values there are.
      */
@@ -1652,6 +1657,73 @@ notmuch_message_thaw (notmuch_message_t *message);
  */
 void
 notmuch_message_destroy (notmuch_message_t *message);
+
+/**
+ * @name Message Properties
+ *
+ * This interface provides the ability to attach arbitrary (key,value)
+ * string pairs to a message, to remove such pairs, and to iterate
+ * over them.  The caller should take some care as to what keys they
+ * add or delete values for, as other subsystems or extensions may
+ * depend on these properties.
+ *
+ */
+/**@{*/
+/**
+ * Retrieve the value for a single property key
+ *
+ * *value* is set to a string owned by the message or NULL if there is
+ * no such key. In the case of multiple values for the given key, the
+ * first one is retrieved.
+ *
+ * @returns
+ * - NOTMUCH_STATUS_NULL_POINTER: *value* may not be NULL.
+ * - NOTMUCH_STATUS_SUCCESS: No error occured.
+
+ */
+notmuch_status_t
+notmuch_message_get_property (notmuch_message_t *message, const char *key, const char **value);
+
+/**
+ * Add a (key,value) pair to a message
+ *
+ * @returns
+ * - NOTMUCH_STATUS_ILLEGAL_ARGUMENT: *key* may not contain an '=' character.
+ * - NOTMUCH_STATUS_NULL_POINTER: Neither *key* nor *value* may be NULL.
+ * - NOTMUCH_STATUS_SUCCESS: No error occured.
+ */
+notmuch_status_t
+notmuch_message_add_property (notmuch_message_t *message, const char *key, const char *value);
+
+/**
+ * Remove a (key,value) pair from a message.
+ *
+ * It is not an error to remove a non-existant (key,value) pair
+ *
+ * @returns
+ * - NOTMUCH_STATUS_ILLEGAL_ARGUMENT: *key* may not contain an '=' character.
+ * - NOTMUCH_STATUS_NULL_POINTER: Neither *key* nor *value* may be NULL.
+ * - NOTMUCH_STATUS_SUCCESS: No error occured.
+ */
+notmuch_status_t
+notmuch_message_remove_property (notmuch_message_t *message, const char *key, const char *value);
+
+/**
+ * Remove all (key,value) pairs from the given message.
+ *
+ * @param[in,out] message  message to operate on.
+ * @param[in]     key      key to delete properties for. If NULL, delete
+ *			   properties for all keys
+ * @returns
+ * - NOTMUCH_STATUS_READ_ONLY_DATABASE: Database was opened in
+ *   read-only mode so message cannot be modified.
+ * - NOTMUCH_STATUS_SUCCESS: No error occured.
+ *
+ */
+notmuch_status_t
+notmuch_message_remove_all_properties (notmuch_message_t *message, const char *key);
+
+/**@}*/
 
 /**
  * Is the given 'tags' iterator pointing at a valid tag.
