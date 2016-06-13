@@ -106,3 +106,41 @@ notmuch_message_remove_all_properties (notmuch_message_t *message, const char *k
 
     return NOTMUCH_STATUS_SUCCESS;
 }
+
+notmuch_message_properties_t *
+notmuch_message_get_properties (notmuch_message_t *message, const char *key, notmuch_bool_t exact)
+{
+    notmuch_string_map_t *map;
+    map = _notmuch_message_property_map (message);
+    return _notmuch_string_map_iterator_create (map, key, exact);
+}
+
+notmuch_bool_t
+notmuch_message_properties_valid (notmuch_message_properties_t *properties)
+{
+    return _notmuch_string_map_iterator_valid (properties);
+}
+
+void
+notmuch_message_properties_move_to_next (notmuch_message_properties_t *properties)
+{
+    return _notmuch_string_map_iterator_move_to_next (properties);
+}
+
+const char *
+notmuch_message_properties_key (notmuch_message_properties_t *properties)
+{
+    return _notmuch_string_map_iterator_key (properties);
+}
+
+const char *
+notmuch_message_properties_value (notmuch_message_properties_t *properties)
+{
+    return _notmuch_string_map_iterator_value (properties);
+}
+
+void
+notmuch_message_properties_destroy (notmuch_message_properties_t *properties)
+{
+    _notmuch_string_map_iterator_destroy (properties);
+}

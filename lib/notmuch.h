@@ -1723,6 +1723,101 @@ notmuch_message_remove_property (notmuch_message_t *message, const char *key, co
 notmuch_status_t
 notmuch_message_remove_all_properties (notmuch_message_t *message, const char *key);
 
+/**
+ * Opaque message property iterator
+ */
+typedef struct _notmuch_string_map_iterator notmuch_message_properties_t;
+
+/**
+ * Get the properties for *message*, returning a
+ * notmuch_message_properties_t object which can be used to iterate
+ * over all properties.
+ *
+ * The notmuch_message_properties_t object is owned by the message and
+ * as such, will only be valid for as long as the message is valid,
+ * (which is until the query from which it derived is destroyed).
+ *
+ * @param[in] message  The message to examine
+ * @param[in] key      key or key prefix
+ * @param[in] exact    if TRUE, require exact match with key. Otherwise
+ *		       treat as prefix.
+ *
+ * Typical usage might be:
+ *
+ *     notmuch_message_properties_t *list;
+ *
+ *     for (list = notmuch_message_get_properties (message, "testkey1", TRUE);
+ *          notmuch_message_properties_valid (list); notmuch_message_properties_move_to_next (list)) {
+ *        printf("%s\n", notmuch_message_properties_value(list));
+ *     }
+ *
+ *     notmuch_message_properties_destroy (list);
+ *
+ * Note that there's no explicit destructor needed for the
+ * notmuch_message_properties_t object. (For consistency, we do
+ * provide a notmuch_message_properities_destroy function, but there's
+ * no good reason to call it if the message is about to be destroyed).
+ */
+notmuch_message_properties_t *
+notmuch_message_get_properties (notmuch_message_t *message, const char *key, notmuch_bool_t exact);
+
+/**
+ * Is the given *properties* iterator pointing at a valid (key,value)
+ * pair.
+ *
+ * When this function returns TRUE,
+ * notmuch_message_properties_{key,value} will return a valid string,
+ * and notmuch_message_properties_move_to_next will do what it
+ * says. Whereas when this function returns FALSE, calling any of
+ * these functions results in undefined behaviour.
+ *
+ * See the documentation of notmuch_message_properties_get for example
+ * code showing how to iterate over a notmuch_message_properties_t
+ * object.
+ */
+notmuch_bool_t
+notmuch_message_properties_valid (notmuch_message_properties_t *properties);
+
+/**
+ * Move the *properties* iterator to the next (key,value) pair
+ *
+ * If *properties* is already pointing at the last pair then the iterator
+ * will be moved to a point just beyond that last pair, (where
+ * notmuch_message_properties_valid will return FALSE).
+ *
+ * See the documentation of notmuch_message_get_properties for example
+ * code showing how to iterate over a notmuch_message_properties_t object.
+ */
+void
+notmuch_message_properties_move_to_next (notmuch_message_properties_t *properties);
+
+/**
+ * Return the key from the current (key,value) pair.
+ *
+ * this could be useful if iterating for a prefix
+ */
+const char *
+notmuch_message_properties_key (notmuch_message_properties_t *properties);
+
+/**
+ * Return the key from the current (key,value) pair.
+ *
+ * This could be useful if iterating for a prefix.
+ */
+const char *
+notmuch_message_properties_value (notmuch_message_properties_t *properties);
+
+
+/**
+ * Destroy a notmuch_message_properties_t object.
+ *
+ * It's not strictly necessary to call this function. All memory from
+ * the notmuch_message_properties_t object will be reclaimed when the
+ * containing message object is destroyed.
+ */
+void
+notmuch_message_properties_destroy (notmuch_message_properties_t *properties);
+
 /**@}*/
 
 /**
