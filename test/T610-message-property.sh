@@ -209,4 +209,32 @@ EOF
 notmuch dump | grep '^#=' > OUTPUT
 test_expect_equal_file PROPERTIES OUTPUT
 
+
+test_begin_subtest "restore missing message property (single line)"
+notmuch dump | grep '^#=' > BEFORE1
+cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR}
+EXPECT0(notmuch_message_remove_property (message, "testkey1", "bob"));
+EOF
+notmuch restore < BEFORE1
+notmuch dump | grep '^#=' > OUTPUT
+test_expect_equal_file PROPERTIES OUTPUT
+
+
+test_begin_subtest "restore missing message property (full dump)"
+notmuch dump > BEFORE2
+cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR}
+EXPECT0(notmuch_message_remove_property (message, "testkey1", "bob"));
+EOF
+notmuch restore < BEFORE2
+notmuch dump | grep '^#=' > OUTPUT
+test_expect_equal_file PROPERTIES OUTPUT
+
+test_begin_subtest "restore clear extra message property"
+cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR}
+EXPECT0(notmuch_message_add_property (message, "testkey1", "charles"));
+EOF
+notmuch restore < BEFORE2
+notmuch dump | grep '^#=' > OUTPUT
+test_expect_equal_file PROPERTIES OUTPUT
+
 test_done

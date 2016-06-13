@@ -57,6 +57,72 @@ process_config_line (notmuch_database_t *notmuch, const char* line)
     return ret;
 }
 
+static int
+process_properties_line (notmuch_database_t *notmuch, const char* line)
+
+{
+    const char *id_p, *tok;
+    size_t id_len = 0, tok_len = 0;
+    char *id;
+
+    notmuch_message_t *message = NULL;
+    const char *delim = " \t\n";
+    int ret = EXIT_FAILURE;
+
+    void *local = talloc_new (NULL);
+
+    id_p = strtok_len_c (line, delim, &id_len);
+    id = talloc_strndup (local, id_p, id_len);
+    if (hex_decode_inplace (id) != HEX_SUCCESS) {
+	fprintf (stderr, "hex decoding failure on line %s\n", line);
+	goto DONE;
+    }
+
+    if (print_status_database ("notmuch restore", notmuch,
+			       notmuch_database_find_message (notmuch, id, &message)))
+	goto DONE;
+
+    if (print_status_database ("notmuch restore", notmuch,
+			       notmuch_message_remove_all_properties (message, NULL)))
+	goto DONE;
+
+    tok = id_p + id_len;
+
+    while ((tok = strtok_len_c (tok + tok_len, delim, &tok_len)) != NULL) {
+	char *key, *value;
+	size_t off = strcspn (tok, "=");
+	if (off > tok_len) {
+	    fprintf (stderr, "unparsable token %s\n", tok);
+	    goto DONE;
+	}
+
+	key = talloc_strndup (local, tok, off);
+	value = talloc_strndup (local, tok + off + 1, tok_len - off - 1);
+
+	if (hex_decode_inplace (key) != HEX_SUCCESS) {
+	    fprintf (stderr, "hex decoding failure on key %s\n", key);
+	    goto DONE;
+	}
+
+	if (hex_decode_inplace (value) != HEX_SUCCESS) {
+	    fprintf (stderr, "hex decoding failure on value %s\n", value);
+	    goto DONE;
+	}
+
+	if (print_status_database ("notmuch restore", notmuch,
+				   notmuch_message_add_property (message, key, value)))
+	    goto DONE;
+
+    }
+
+    ret = EXIT_SUCCESS;
+
+  DONE:
+    talloc_free (local);
+    return ret;
+}
+
+
 static regex_t regex;
 
 /* Non-zero return indicates an error in retrieving the message,
@@ -188,6 +254,7 @@ notmuch_restore_command (notmuch_config_t *config, int argc, char *argv[])
 				  { 0, 0 } } },
 	{ NOTMUCH_OPT_KEYWORD_FLAGS, &include, "include", 'I',
 	  (notmuch_keyword_t []){ { "config", DUMP_INCLUDE_CONFIG },
+				  { "properties", DUMP_INCLUDE_PROPERTIES },
 				  { "tags", DUMP_INCLUDE_TAGS} } },
 
 	{ NOTMUCH_OPT_STRING, &input_file_name, "input", 'i', 0 },
@@ -206,7 +273,7 @@ notmuch_restore_command (notmuch_config_t *config, int argc, char *argv[])
     notmuch_exit_if_unmatched_db_uuid (notmuch);
 
     if (include == 0) {
-	include = DUMP_INCLUDE_CONFIG | DUMP_INCLUDE_TAGS;
+	include = DUMP_INCLUDE_CONFIG | DUMP_INCLUDE_PROPERTIES | DUMP_INCLUDE_TAGS;
     }
 
     name_for_error = input_file_name ? input_file_name : "stdin";
@@ -273,13 +340,18 @@ notmuch_restore_command (notmuch_config_t *config, int argc, char *argv[])
 	    if (ret)
 		goto DONE;
 	}
+	if ((include & DUMP_INCLUDE_PROPERTIES) && line_len >= 2 && line[0] == '#' && line[1] == '=') {
+	    ret = process_properties_line (notmuch, line + 2);
+	    if (ret)
+		goto DONE;
+	}
 
     } while ((line_len == 0) ||
 	     (line[0] == '#') ||
 	     /* the cast is safe because we checked about for line_len < 0 */
 	     (strspn (line, " \t\n") == (unsigned)line_len));
 
-    if (! (include & DUMP_INCLUDE_TAGS)) {
+    if (! ((include & DUMP_INCLUDE_TAGS) || (include & DUMP_INCLUDE_PROPERTIES))) {
 	ret = EXIT_SUCCESS;
 	goto DONE;
     }
@@ -306,6 +378,13 @@ notmuch_restore_command (notmuch_config_t *config, int argc, char *argv[])
 	    talloc_free (line_ctx);
 
 	line_ctx = talloc_new (config);
+
+	if ((include & DUMP_INCLUDE_PROPERTIES) && line_len >= 2 && line[0] == '#' && line[1] == '=') {
+	    ret = process_properties_line (notmuch, line + 2);
+	    if (ret)
+		goto DONE;
+	}
+
 	if (input_format == DUMP_FORMAT_SUP) {
 	    ret = parse_sup_line (line_ctx, line, &query_string, tag_ops);
 	} else {
@@ -344,7 +423,7 @@ notmuch_restore_command (notmuch_config_t *config, int argc, char *argv[])
 	    break;
 
     }  while (! (ret = gz_getline (line_ctx, &line, &line_len, input)));
-    
+
 
     /* EOF is normal loop termination condition, UTIL_SUCCESS is
      * impossible here */
