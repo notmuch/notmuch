@@ -911,6 +911,9 @@ _notmuch_config_list_built_with ()
     printf("%sfield_processor=%s\n",
 	   BUILT_WITH_PREFIX,
 	   notmuch_built_with ("field_processor") ? "true" : "false");
+    printf("%sretry_lock=%s\n",
+	   BUILT_WITH_PREFIX,
+	   notmuch_built_with ("retry_lock") ? "true" : "false");
 }
 
 static int

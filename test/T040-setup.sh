@@ -31,6 +31,7 @@ search.exclude_tags=baz;
 maildir.synchronize_flags=true
 crypto.gpg_path=gpg
 built_with.compact=something
-built_with.field_processor=something"
+built_with.field_processor=something
+built_with.retry_lock=something"
 
 test_done

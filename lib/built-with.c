@@ -28,6 +28,8 @@ notmuch_built_with (const char *name)
 	return HAVE_XAPIAN_COMPACT;
     } else if (STRNCMP_LITERAL (name, "field_processor") == 0) {
 	return HAVE_XAPIAN_FIELD_PROCESSOR;
+    } else if (STRNCMP_LITERAL (name, "retry_lock") == 0) {
+	return HAVE_XAPIAN_DB_RETRY_LOCK;
     } else {
 	return FALSE;
     }

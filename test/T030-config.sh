@@ -59,6 +59,7 @@ foo.string=this is another string value
 foo.list=this;is another;list value;
 built_with.compact=something
 built_with.field_processor=something
+built_with.retry_lock=something
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
