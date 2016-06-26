@@ -49,6 +49,12 @@ typedef struct {
 #define STRINGIFY(s) _SUB_STRINGIFY(s)
 #define _SUB_STRINGIFY(s) #s
 
+#if HAVE_XAPIAN_DB_RETRY_LOCK
+#define DB_ACTION (Xapian::DB_CREATE_OR_OPEN | Xapian::DB_RETRY_LOCK)
+#else
+#define DB_ACTION Xapian::DB_CREATE_OR_OPEN
+#endif
+
 /* Here's the current schema for our database (for NOTMUCH_DATABASE_VERSION):
  *
  * We currently have three different types of documents (mail, ghost,
@@ -939,7 +945,7 @@ notmuch_database_open_verbose (const char *path,
 
 	if (mode == NOTMUCH_DATABASE_MODE_READ_WRITE) {
 	    notmuch->xapian_db = new Xapian::WritableDatabase (xapian_path,
-							       Xapian::DB_CREATE_OR_OPEN);
+							       DB_ACTION);
 	} else {
 	    notmuch->xapian_db = new Xapian::Database (xapian_path);
 	}
