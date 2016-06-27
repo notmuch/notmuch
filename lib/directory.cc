@@ -227,6 +227,9 @@ notmuch_directory_set_mtime (notmuch_directory_t *directory,
 				   Xapian::sortable_serialise (mtime));
 
 	db->replace_document (directory->document_id, directory->doc);
+
+	directory->mtime = mtime;
+
     } catch (const Xapian::Error &error) {
 	_notmuch_database_log (notmuch,
 		 "A Xapian exception occurred setting directory mtime: %s.\n",
