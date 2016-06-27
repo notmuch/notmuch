@@ -332,7 +332,9 @@ notmuch_database_status_string (const notmuch_database_t *notmuch);
  * functions on objects derived from this database may either behave
  * as if the database had not been closed (e.g., if the required data
  * has been cached) or may fail with a
- * NOTMUCH_STATUS_XAPIAN_EXCEPTION.
+ * NOTMUCH_STATUS_XAPIAN_EXCEPTION. The only further operation
+ * permitted on the database itself is to call
+ * notmuch_database_destroy.
  *
  * notmuch_database_close can be called multiple times.  Later calls
  * have no effect.
