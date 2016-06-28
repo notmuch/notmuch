@@ -135,7 +135,8 @@ test_expect_equal_file EXPECTED OUT
 
 test_begin_subtest "format=batch-tag, # round-trip"
 notmuch dump --format=sup | sort > EXPECTED.$test_count
-notmuch dump --format=batch-tag | notmuch restore --format=batch-tag
+notmuch dump --format=batch-tag > DUMPFILE
+notmuch restore --format=batch-tag < DUMPFILE
 notmuch dump --format=sup | sort > OUTPUT.$test_count
 test_expect_equal_file EXPECTED.$test_count OUTPUT.$test_count
 
@@ -212,7 +213,8 @@ test_expect_equal_file EXPECTED OUTPUT.$test_count
 
 test_begin_subtest 'format=batch-tag, round trip with strange tags'
 notmuch dump --format=batch-tag > EXPECTED.$test_count
-notmuch dump --format=batch-tag | notmuch restore --format=batch-tag
+notmuch dump --format=batch-tag > DUMPFILE
+notmuch restore --format=batch-tag < DUMPFILE
 notmuch dump --format=batch-tag > OUTPUT.$test_count
 test_expect_equal_file EXPECTED.$test_count OUTPUT.$test_count
 
