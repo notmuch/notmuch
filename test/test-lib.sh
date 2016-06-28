@@ -82,6 +82,9 @@ unset CDPATH
 
 unset GREP_OPTIONS
 
+# For emacsclient
+unset ALTERNATE_EDITOR
+
 # Convenience
 #
 # A regexp to match 5 and 40 hexdigits
@@ -675,9 +678,14 @@ notmuch_search_sanitize ()
     perl -pe 's/("?thread"?: ?)("?)................("?)/\1\2XXX\3/'
 }
 
-notmuch_search_files_sanitize()
+notmuch_search_files_sanitize ()
 {
-    sed -e "s,$MAIL_DIR,MAIL_DIR,"
+    notmuch_dir_sanitize
+}
+
+notmuch_dir_sanitize ()
+{
+    sed -e "s,$MAIL_DIR,MAIL_DIR," -e "s,${PWD},CWD,g" "$@"
 }
 
 NOTMUCH_SHOW_FILENAME_SQUELCH='s,filename:.*/mail,filename:/XXX/mail,'
@@ -1177,7 +1185,7 @@ test_C () {
     echo "== stdout ==" > OUTPUT.stdout
     echo "== stderr ==" > OUTPUT.stderr
     ./${exec_file} "$@" 1>>OUTPUT.stdout 2>>OUTPUT.stderr
-    sed "s,${PWD},CWD,g"  OUTPUT.stdout OUTPUT.stderr > OUTPUT
+    notmuch_dir_sanitize OUTPUT.stdout OUTPUT.stderr > OUTPUT
 }
 
 
@@ -1319,10 +1327,23 @@ test -z "$NO_PYTHON" && test_set_prereq PYTHON
 ln -s x y 2>/dev/null && test -h y 2>/dev/null && test_set_prereq SYMLINKS
 rm -f y
 
+# convert variable from configure to more convenient form
+case "$NOTMUCH_DEFAULT_XAPIAN_BACKEND" in
+    glass)
+	db_ending=glass
+    ;;
+    chert)
+	db_ending=DB
+    ;;
+    *)
+	error "Unknown Xapian backend $NOTMUCH_DEFAULT_XAPIAN_BACKEND"
+esac
 # declare prerequisites for external binaries used in tests
 test_declare_external_prereq dtach
 test_declare_external_prereq emacs
 test_declare_external_prereq ${TEST_EMACSCLIENT}
 test_declare_external_prereq gdb
 test_declare_external_prereq gpg
+test_declare_external_prereq openssl
+test_declare_external_prereq gpgsm
 test_declare_external_prereq ${NOTMUCH_PYTHON}

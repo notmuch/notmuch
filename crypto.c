@@ -22,14 +22,20 @@
 
 /* Create a GPG context (GMime 2.6) */
 static notmuch_crypto_context_t *
-create_gpg_context (const char *gpgpath)
+create_gpg_context (notmuch_crypto_t *crypto)
 {
     notmuch_crypto_context_t *gpgctx;
 
+    if (crypto->gpgctx)
+	return crypto->gpgctx;
+
     /* TODO: GMimePasswordRequestFunc */
-    gpgctx = g_mime_gpg_context_new (NULL, gpgpath ? gpgpath : "gpg");
-    if (! gpgctx)
+    gpgctx = g_mime_gpg_context_new (NULL, crypto->gpgpath ? crypto->gpgpath : "gpg");
+    if (! gpgctx) {
+	fprintf (stderr, "Failed to construct gpg context.\n");
 	return NULL;
+    }
+    crypto->gpgctx = gpgctx;
 
     g_mime_gpg_context_set_use_agent ((GMimeGpgContext *) gpgctx, TRUE);
     g_mime_gpg_context_set_always_trust ((GMimeGpgContext *) gpgctx, FALSE);
@@ -37,12 +43,57 @@ create_gpg_context (const char *gpgpath)
     return gpgctx;
 }
 
+/* Create a PKCS7 context (GMime 2.6) */
+static notmuch_crypto_context_t *
+create_pkcs7_context (notmuch_crypto_t *crypto)
+{
+    notmuch_crypto_context_t *pkcs7ctx;
+
+    if (crypto->pkcs7ctx)
+	return crypto->pkcs7ctx;
+
+    /* TODO: GMimePasswordRequestFunc */
+    pkcs7ctx = g_mime_pkcs7_context_new (NULL);
+    if (! pkcs7ctx) {
+	fprintf (stderr, "Failed to construct pkcs7 context.\n");
+	return NULL;
+    }
+    crypto->pkcs7ctx = pkcs7ctx;
+
+    g_mime_pkcs7_context_set_always_trust ((GMimePkcs7Context *) pkcs7ctx,
+					   FALSE);
+
+    return pkcs7ctx;
+}
+static const struct {
+    const char *protocol;
+    notmuch_crypto_context_t *(*get_context) (notmuch_crypto_t *crypto);
+} protocols[] = {
+    {
+	.protocol = "application/pgp-signature",
+	.get_context = create_gpg_context,
+    },
+    {
+	.protocol = "application/pgp-encrypted",
+	.get_context = create_gpg_context,
+    },
+    {
+	.protocol = "application/pkcs7-signature",
+	.get_context = create_pkcs7_context,
+    },
+    {
+	.protocol = "application/x-pkcs7-signature",
+	.get_context = create_pkcs7_context,
+    },
+};
+
 /* for the specified protocol return the context pointer (initializing
  * if needed) */
 notmuch_crypto_context_t *
 notmuch_crypto_get_context (notmuch_crypto_t *crypto, const char *protocol)
 {
     notmuch_crypto_context_t *cryptoctx = NULL;
+    size_t i;
 
     if (! protocol) {
 	fprintf (stderr, "Cryptographic protocol is empty.\n");
@@ -55,19 +106,15 @@ notmuch_crypto_get_context (notmuch_crypto_t *crypto, const char *protocol)
      * parameter names as defined in this document are
      * case-insensitive."  Thus, we use strcasecmp for the protocol.
      */
-    if (strcasecmp (protocol, "application/pgp-signature") == 0 ||
-	strcasecmp (protocol, "application/pgp-encrypted") == 0) {
-	if (! crypto->gpgctx) {
-	    crypto->gpgctx = create_gpg_context (crypto->gpgpath);
-	    if (! crypto->gpgctx)
-		fprintf (stderr, "Failed to construct gpg context.\n");
-	}
-	cryptoctx = crypto->gpgctx;
-    } else {
-	fprintf (stderr, "Unknown or unsupported cryptographic protocol.\n");
+    for (i = 0; i < ARRAY_SIZE (protocols); i++) {
+	if (strcasecmp (protocol, protocols[i].protocol) == 0)
+	    return protocols[i].get_context (crypto);
     }
 
-    return cryptoctx;
+    fprintf (stderr, "Unknown or unsupported cryptographic protocol %s.\n",
+	     protocol);
+
+    return NULL;
 }
 
 int
@@ -76,6 +123,11 @@ notmuch_crypto_cleanup (notmuch_crypto_t *crypto)
     if (crypto->gpgctx) {
 	g_object_unref (crypto->gpgctx);
 	crypto->gpgctx = NULL;
+    }
+
+    if (crypto->pkcs7ctx) {
+	g_object_unref (crypto->pkcs7ctx);
+	crypto->pkcs7ctx = NULL;
     }
 
     return 0;

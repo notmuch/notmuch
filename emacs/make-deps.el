@@ -19,6 +19,8 @@
 ;;
 ;; Authors: Austin Clements <aclements@csail.mit.edu>
 
+;;; Code:
+
 (defun batch-make-deps ()
   "Invoke `make-deps' for each file on the command line."
 
@@ -64,3 +66,5 @@ rules will be given relative to DIR, or `default-directory'."
 				 (file-name-sans-extension
 				  (file-relative-name fname dir)))))))))
       (end-of-file nil))))
+
+;;; make-deps.el ends here

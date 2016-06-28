@@ -728,7 +728,7 @@ _notmuch_message_add_filename (notmuch_message_t *message,
  * Note: This function does not remove a document from the database,
  * even if the specified filename is the only filename for this
  * message. For that functionality, see
- * _notmuch_database_remove_message. */
+ * notmuch_database_remove_message. */
 notmuch_status_t
 _notmuch_message_remove_filename (notmuch_message_t *message,
 				  const char *filename)
@@ -1037,20 +1037,90 @@ _notmuch_message_sync (notmuch_message_t *message)
     message->modified = FALSE;
 }
 
-/* Delete a message document from the database. */
+/* Delete a message document from the database, leaving a ghost
+ * message in its place */
 notmuch_status_t
 _notmuch_message_delete (notmuch_message_t *message)
 {
     notmuch_status_t status;
     Xapian::WritableDatabase *db;
+    const char *mid, *tid, *query_string;
+    notmuch_message_t *ghost;
+    notmuch_private_status_t private_status;
+    notmuch_database_t *notmuch;
+    notmuch_query_t *query;
+    unsigned int count = 0;
+    notmuch_bool_t is_ghost;
+
+    mid = notmuch_message_get_message_id (message);
+    tid = notmuch_message_get_thread_id (message);
+    notmuch = message->notmuch;
 
     status = _notmuch_database_ensure_writable (message->notmuch);
     if (status)
 	return status;
 
-    db = static_cast <Xapian::WritableDatabase *> (message->notmuch->xapian_db);
+    db = static_cast <Xapian::WritableDatabase *> (notmuch->xapian_db);
     db->delete_document (message->doc_id);
-    return NOTMUCH_STATUS_SUCCESS;
+
+    /* if this was a ghost to begin with, we are done */
+    private_status = _notmuch_message_has_term (message, "type", "ghost", &is_ghost);
+    if (private_status)
+	return COERCE_STATUS (private_status,
+			      "Error trying to determine whether message was a ghost");
+    if (is_ghost)
+	return NOTMUCH_STATUS_SUCCESS;
+
+    query_string = talloc_asprintf (message, "thread:%s", tid);
+    query = notmuch_query_create (notmuch, query_string);
+    if (query == NULL)
+	return NOTMUCH_STATUS_OUT_OF_MEMORY;
+    status = notmuch_query_count_messages_st (query, &count);
+    if (status) {
+	notmuch_query_destroy (query);
+	return status;
+    }
+
+    if (count > 0) {
+	/* reintroduce a ghost in its place because there are still
+	 * other active messages in this thread: */
+	ghost = _notmuch_message_create_for_message_id (notmuch, mid, &private_status);
+	if (private_status == NOTMUCH_PRIVATE_STATUS_NO_DOCUMENT_FOUND) {
+	    private_status = _notmuch_message_initialize_ghost (ghost, tid);
+	    if (! private_status)
+		_notmuch_message_sync (ghost);
+	} else if (private_status == NOTMUCH_PRIVATE_STATUS_SUCCESS) {
+	    /* this is deeply weird, and we should not have gotten
+	       into this state.  is there a better error message to
+	       return here? */
+	    status = NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID;
+	}
+
+	notmuch_message_destroy (ghost);
+	status = COERCE_STATUS (private_status, "Error converting to ghost message");
+    } else {
+	/* the thread is empty; drop all ghost messages from it */
+	notmuch_messages_t *messages;
+	status = _notmuch_query_search_documents (query,
+						  "ghost",
+						  &messages);
+	if (status == NOTMUCH_STATUS_SUCCESS) {
+	    notmuch_status_t last_error = NOTMUCH_STATUS_SUCCESS;
+	    while (notmuch_messages_valid (messages)) {
+		message = notmuch_messages_get (messages);
+		status = _notmuch_message_delete (message);
+		if (status) /* we'll report the last failure we see;
+			     * if there is more than one failure, we
+			     * forget about previous ones */
+		    last_error = status;
+		notmuch_message_destroy (message);
+		notmuch_messages_move_to_next (messages);
+	    }
+	    status = last_error;
+	}
+    }
+    notmuch_query_destroy (query);
+    return status;
 }
 
 /* Transform a blank message into a ghost message.  The caller must
@@ -1180,7 +1250,7 @@ _notmuch_message_remove_term (notmuch_message_t *message,
 	message->doc.remove_term (term);
 	message->modified = TRUE;
     } catch (const Xapian::InvalidArgumentError) {
-	/* We'll let the philosopher's try to wrestle with the
+	/* We'll let the philosophers try to wrestle with the
 	 * question of whether failing to remove that which was not
 	 * there in the first place is failure. For us, we'll silently
 	 * consider it all good. */
@@ -1191,6 +1261,41 @@ _notmuch_message_remove_term (notmuch_message_t *message,
     _notmuch_message_invalidate_metadata (message, prefix_name);
 
     return NOTMUCH_PRIVATE_STATUS_SUCCESS;
+}
+
+notmuch_private_status_t
+_notmuch_message_has_term (notmuch_message_t *message,
+			   const char *prefix_name,
+			   const char *value,
+			   notmuch_bool_t *result)
+{
+    char *term;
+    notmuch_bool_t out = FALSE;
+    notmuch_private_status_t status = NOTMUCH_PRIVATE_STATUS_SUCCESS;
+
+    if (value == NULL)
+	return NOTMUCH_PRIVATE_STATUS_NULL_POINTER;
+
+    term = talloc_asprintf (message, "%s%s",
+			    _find_prefix (prefix_name), value);
+
+    if (strlen (term) > NOTMUCH_TERM_MAX)
+	return NOTMUCH_PRIVATE_STATUS_TERM_TOO_LONG;
+
+    try {
+	/* Look for the exact term */
+	Xapian::TermIterator i = message->doc.termlist_begin ();
+	i.skip_to (term);
+	if (i != message->doc.termlist_end () &&
+	    !strcmp ((*i).c_str (), term))
+	    out = TRUE;
+    } catch (Xapian::Error &error) {
+	status = NOTMUCH_PRIVATE_STATUS_XAPIAN_EXCEPTION;
+    }
+    talloc_free (term);
+
+    *result = out;
+    return status;
 }
 
 notmuch_status_t

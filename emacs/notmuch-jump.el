@@ -1,4 +1,4 @@
-;; notmuch-jump.el --- User-friendly shortcut keys
+;;; notmuch-jump.el --- User-friendly shortcut keys
 ;;
 ;; Copyright © Austin Clements
 ;;
@@ -19,6 +19,8 @@
 ;;
 ;; Authors: Austin Clements <aclements@csail.mit.edu>
 ;;          David Edmondson <dme@dme.org>
+
+;;; Code:
 
 (eval-when-compile (require 'cl))
 
@@ -176,3 +178,5 @@ buffer."
 ;;
 
 (provide 'notmuch-jump)
+
+;;; notmuch-jump.el ends here

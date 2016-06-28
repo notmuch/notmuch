@@ -187,6 +187,14 @@ notmuch_status_t
 notmuch_query_search_messages_st (notmuch_query_t *query,
 				  notmuch_messages_t **out)
 {
+    return _notmuch_query_search_documents (query, "mail", out);
+}
+
+notmuch_status_t
+_notmuch_query_search_documents (notmuch_query_t *query,
+				 const char *type,
+				 notmuch_messages_t **out)
+{
     notmuch_database_t *notmuch = query->notmuch;
     const char *query_string = query->query_string;
     notmuch_mset_messages_t *messages;
@@ -208,7 +216,7 @@ notmuch_query_search_messages_st (notmuch_query_t *query,
 	Xapian::Enquire enquire (*notmuch->xapian_db);
 	Xapian::Query mail_query (talloc_asprintf (query, "%s%s",
 						   _find_prefix ("type"),
-						   "mail"));
+						   type));
 	Xapian::Query string_query, final_query, exclude_query;
 	Xapian::MSet mset;
 	Xapian::MSetIterator iterator;
@@ -554,6 +562,12 @@ notmuch_query_count_messages (notmuch_query_t *query)
 notmuch_status_t
 notmuch_query_count_messages_st (notmuch_query_t *query, unsigned *count_out)
 {
+    return _notmuch_query_count_documents (query, "mail", count_out);
+}
+
+notmuch_status_t
+_notmuch_query_count_documents (notmuch_query_t *query, const char *type, unsigned *count_out)
+{
     notmuch_database_t *notmuch = query->notmuch;
     const char *query_string = query->query_string;
     Xapian::doccount count = 0;
@@ -562,7 +576,7 @@ notmuch_query_count_messages_st (notmuch_query_t *query, unsigned *count_out)
 	Xapian::Enquire enquire (*notmuch->xapian_db);
 	Xapian::Query mail_query (talloc_asprintf (query, "%s%s",
 						   _find_prefix ("type"),
-						   "mail"));
+						   type));
 	Xapian::Query string_query, final_query, exclude_query;
 	Xapian::MSet mset;
 	unsigned int flags = (Xapian::QueryParser::FLAG_BOOLEAN |

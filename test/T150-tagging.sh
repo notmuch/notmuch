@@ -38,6 +38,17 @@ test_expect_equal "$output" "\
 thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; One ()
 thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; Two (tag5 tag6 unread)"
 
+test_begin_subtest "Remove all with batch"
+notmuch tag +tag1 One
+notmuch tag --remove-all --batch <<EOF
+-- One
++tag3 +tag4 +inbox -- Two
+EOF
+output=$(notmuch search \* | notmuch_search_sanitize)
+test_expect_equal "$output" "\
+thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; One ()
+thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; Two (inbox tag3 tag4)"
+
 test_begin_subtest "Remove all with a no-op"
 notmuch tag +inbox +tag1 +unread One
 notmuch tag --remove-all +foo +inbox +tag1 -foo +unread Two
@@ -101,6 +112,20 @@ notmuch tag --batch --input=batch.in
 notmuch search \* | notmuch_search_sanitize > OUTPUT
 notmuch restore --format=batch-tag < backup.tags
 test_expect_equal_file batch.expected OUTPUT
+
+test_begin_subtest "--batch --input --remove-all"
+notmuch dump --format=batch-tag > backup.tags
+notmuch tag +foo +bar -- One
+notmuch tag +tag7 -- Two
+notmuch tag --batch --input=batch.in --remove-all
+notmuch search \* | notmuch_search_sanitize > OUTPUT
+notmuch restore --format=batch-tag < backup.tags
+cat > batch_removeall.expected <<EOF
+thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; One (@ tag6)
+thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; Two (tag6)
+EOF
+test_expect_equal_file batch_removeall.expected OUTPUT
+rm batch_removeall.expected
 
 test_begin_subtest "--batch, blank lines and comments"
 notmuch dump | sort > EXPECTED
@@ -262,9 +287,9 @@ test_expect_code 1 "Empty tag names" 'notmuch tag + One'
 test_expect_code 1 "Tag name beginning with -" 'notmuch tag +- One'
 
 test_begin_subtest "Xapian exception: read only files"
-chmod u-w  ${MAIL_DIR}/.notmuch/xapian/*.DB
+chmod u-w  ${MAIL_DIR}/.notmuch/xapian/*.${db_ending}
 output=$(notmuch tag +something '*' 2>&1 | sed 's/: .*$//' )
-chmod u+w  ${MAIL_DIR}/.notmuch/xapian/*.DB
+chmod u+w  ${MAIL_DIR}/.notmuch/xapian/*.${db_ending}
 test_expect_equal "$output" "A Xapian exception occurred opening database"
 
 test_done

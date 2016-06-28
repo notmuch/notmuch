@@ -20,6 +20,7 @@ emacs_sources := \
 	$(dir)/notmuch-print.el \
 	$(dir)/notmuch-version.el \
 	$(dir)/notmuch-jump.el \
+	$(dir)/notmuch-company.el
 
 $(dir)/notmuch-version.el: $(dir)/Makefile.local version.stamp
 $(dir)/notmuch-version.el: $(srcdir)/$(dir)/notmuch-version.el.tmpl
@@ -52,6 +53,10 @@ $(dir)/.eldeps: $(dir)/Makefile.local $(dir)/make-deps.el $(emacs_sources)
 $(dir)/.eldeps.x: $(dir)/.eldeps
 	@cmp -s $^ $@ || cp $^ $@
 -include $(dir)/.eldeps.x
+
+# Add the one dependency make-deps.el does not have visibility to.
+$(dir)/notmuch-lib.elc: $(dir)/notmuch-version.elc
+
 endif
 CLEAN+=$(dir)/.eldeps $(dir)/.eldeps.tmp $(dir)/.eldeps.x
 

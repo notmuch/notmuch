@@ -1,4 +1,4 @@
-;; notmuch-show.el --- displaying notmuch forests.
+;;; notmuch-show.el --- displaying notmuch forests.
 ;;
 ;; Copyright © Carl Worth
 ;; Copyright © David Edmondson
@@ -20,6 +20,8 @@
 ;;
 ;; Authors: Carl Worth <cworth@cworth.org>
 ;;          David Edmondson <dme@dme.org>
+
+;;; Code:
 
 (eval-when-compile (require 'cl))
 (require 'mm-view)
@@ -153,27 +155,21 @@ indentation."
 
 (defvar notmuch-show-thread-id nil)
 (make-variable-buffer-local 'notmuch-show-thread-id)
-(put 'notmuch-show-thread-id 'permanent-local t)
 
 (defvar notmuch-show-parent-buffer nil)
 (make-variable-buffer-local 'notmuch-show-parent-buffer)
-(put 'notmuch-show-parent-buffer 'permanent-local t)
 
 (defvar notmuch-show-query-context nil)
 (make-variable-buffer-local 'notmuch-show-query-context)
-(put 'notmuch-show-query-context 'permanent-local t)
 
 (defvar notmuch-show-process-crypto nil)
 (make-variable-buffer-local 'notmuch-show-process-crypto)
-(put 'notmuch-show-process-crypto 'permanent-local t)
 
 (defvar notmuch-show-elide-non-matching-messages nil)
 (make-variable-buffer-local 'notmuch-show-elide-non-matching-messages)
-(put 'notmuch-show-elide-non-matching-messages 'permanent-local t)
 
 (defvar notmuch-show-indent-content t)
 (make-variable-buffer-local 'notmuch-show-indent-content)
-(put 'notmuch-show-indent-content 'permanent-local t)
 
 (defvar notmuch-show-attachment-debug nil
   "If t log stdout and stderr from attachment handlers
@@ -353,8 +349,6 @@ operation on the contents of the current buffer."
 		'message-header-cc)
 	       ((looking-at "[Ss]ubject:")
 		'message-header-subject)
-	       ((looking-at "[Ff]rom:")
-		'message-header-from)
 	       (t
 		'message-header-other))))
 
@@ -509,36 +503,37 @@ message at DEPTH in the current thread."
 
 (defun notmuch-show-toggle-part-invisibility (&optional button)
   (interactive)
-  (let* ((button (or button (button-at (point))))
-	 (overlay (button-get button 'overlay))
-	 (lazy-part (button-get button :notmuch-lazy-part)))
-    ;; We have a part to toggle if there is an overlay or if there is a lazy part.
-    ;; If neither is present we cannot toggle the part so we just return nil.
-    (when (or overlay lazy-part)
-      (let* ((show (button-get button :notmuch-part-hidden))
-	     (new-start (button-start button))
-	     (button-label (button-get button :base-label))
-	     (old-point (point))
-	     (properties (text-properties-at (button-start button)))
-	     (inhibit-read-only t))
-	;; Toggle the button itself.
-	(button-put button :notmuch-part-hidden (not show))
-	(goto-char new-start)
-	(insert "[ " button-label (if show " ]" " (hidden) ]"))
-	(set-text-properties new-start (point) properties)
-	(let ((old-end (button-end button)))
-	  (move-overlay button new-start (point))
-	  (delete-region (point) old-end))
-	(goto-char (min old-point (1- (button-end button))))
-	;; Return nil if there is a lazy-part, it is empty, and we are
-	;; trying to show it.  In all other cases return t.
-	(if lazy-part
-	    (when show
-	      (button-put button :notmuch-lazy-part nil)
-	      (notmuch-show-lazy-part lazy-part button))
-	  ;; else there must be an overlay.
-	  (overlay-put overlay 'invisible (not show))
-	  t)))))
+  (let ((button (or button (button-at (point)))))
+    (when button
+      (let ((overlay (button-get button 'overlay))
+	    (lazy-part (button-get button :notmuch-lazy-part)))
+	;; We have a part to toggle if there is an overlay or if there is a lazy part.
+	;; If neither is present we cannot toggle the part so we just return nil.
+	(when (or overlay lazy-part)
+	  (let* ((show (button-get button :notmuch-part-hidden))
+		 (new-start (button-start button))
+		 (button-label (button-get button :base-label))
+		 (old-point (point))
+		 (properties (text-properties-at (button-start button)))
+		 (inhibit-read-only t))
+	    ;; Toggle the button itself.
+	    (button-put button :notmuch-part-hidden (not show))
+	    (goto-char new-start)
+	    (insert "[ " button-label (if show " ]" " (hidden) ]"))
+	    (set-text-properties new-start (point) properties)
+	    (let ((old-end (button-end button)))
+	      (move-overlay button new-start (point))
+	      (delete-region (point) old-end))
+	    (goto-char (min old-point (1- (button-end button))))
+	    ;; Return nil if there is a lazy-part, it is empty, and we are
+	    ;; trying to show it.  In all other cases return t.
+	    (if lazy-part
+		(when show
+		  (button-put button :notmuch-lazy-part nil)
+		  (notmuch-show-lazy-part lazy-part button))
+	      ;; else there must be an overlay.
+	      (overlay-put overlay 'invisible (not show))
+	      t)))))))
 
 ;; Part content ID handling
 
@@ -614,7 +609,7 @@ will return nil if the CID is unknown or cannot be retrieved."
 	  (plist-get part :content)))
 
 (defun notmuch-show-insert-part-multipart/alternative (msg part content-type nth depth button)
-  (let ((chosen-type (car (notmuch-multipart/alternative-choose (notmuch-show-multipart/*-to-list part))))
+  (let ((chosen-type (car (notmuch-multipart/alternative-choose msg (notmuch-show-multipart/*-to-list part))))
 	(inner-parts (plist-get part :content))
 	(start (point)))
     ;; This inserts all parts of the chosen type rather than just one,
@@ -647,14 +642,12 @@ will return nil if the CID is unknown or cannot be retrieved."
   t)
 
 (defun notmuch-show-insert-part-multipart/signed (msg part content-type nth depth button)
-  (button-put button 'face 'notmuch-crypto-part-header)
-  ;; add signature status button if sigstatus provided
-  (if (plist-member part :sigstatus)
-      (let* ((from (notmuch-show-get-header :From msg))
-	     (sigstatus (car (plist-get part :sigstatus))))
-	(notmuch-crypto-insert-sigstatus-button sigstatus from))
-    ;; if we're not adding sigstatus, tell the user how they can get it
-    (button-put button 'help-echo "Set notmuch-crypto-process-mime to process cryptographic MIME parts."))
+  (when button
+    (button-put button 'face 'notmuch-crypto-part-header))
+
+  ;; Insert a button detailing the signature status.
+  (notmuch-crypto-insert-sigstatus-button (car (plist-get part :sigstatus))
+					  (notmuch-show-get-header :From msg))
 
   (let ((inner-parts (plist-get part :content))
 	(start (point)))
@@ -668,18 +661,15 @@ will return nil if the CID is unknown or cannot be retrieved."
   t)
 
 (defun notmuch-show-insert-part-multipart/encrypted (msg part content-type nth depth button)
-  (button-put button 'face 'notmuch-crypto-part-header)
-  ;; add encryption status button if encstatus specified
-  (if (plist-member part :encstatus)
-      (let ((encstatus (car (plist-get part :encstatus))))
-	(notmuch-crypto-insert-encstatus-button encstatus)
-	;; add signature status button if sigstatus specified
-	(if (plist-member part :sigstatus)
-	    (let* ((from (notmuch-show-get-header :From msg))
-		   (sigstatus (car (plist-get part :sigstatus))))
-	      (notmuch-crypto-insert-sigstatus-button sigstatus from))))
-    ;; if we're not adding encstatus, tell the user how they can get it
-    (button-put button 'help-echo "Set notmuch-crypto-process-mime to process cryptographic MIME parts."))
+  (when button
+    (button-put button 'face 'notmuch-crypto-part-header))
+
+  ;; Insert a button detailing the encryption status.
+  (notmuch-crypto-insert-encstatus-button (car (plist-get part :encstatus)))
+
+  ;; Insert a button detailing the signature status.
+  (notmuch-crypto-insert-sigstatus-button (car (plist-get part :sigstatus))
+					  (notmuch-show-get-header :From msg))
 
   (let ((inner-parts (plist-get part :content))
 	(start (point)))
@@ -848,21 +838,16 @@ will return nil if the CID is unknown or cannot be retrieved."
 ;; 
 
 (defun notmuch-show-insert-bodypart-internal (msg part content-type nth depth button)
-  (let ((handlers (notmuch-show-handlers-for content-type)))
-    ;; Run the content handlers until one of them returns a non-nil
-    ;; value.
-    (while (and handlers
-		(not (condition-case err
-			 (funcall (car handlers) msg part content-type nth depth button)
-		       ;; Specifying `debug' here lets the debugger
-		       ;; run if `debug-on-error' is non-nil.
-		       ((debug error)
-			(progn
-				(insert "!!! Bodypart insert error: ")
-				(insert (error-message-string err))
-				(insert " !!!\n") nil)))))
-      (setq handlers (cdr handlers))))
-  t)
+  ;; Run the handlers until one of them succeeds.
+  (loop for handler in (notmuch-show-handlers-for content-type)
+	until (condition-case err
+		  (funcall handler msg part content-type nth depth button)
+		;; Specifying `debug' here lets the debugger run if
+		;; `debug-on-error' is non-nil.
+		((debug error)
+		 (insert "!!! Bodypart handler `" (prin1-to-string handler) "' threw an error:\n"
+			 "!!! " (error-message-string err) "\n")
+		 nil))))
 
 (defun notmuch-show-create-part-overlays (button beg end)
   "Add an overlay to the part between BEG and END"
@@ -929,34 +914,62 @@ will return nil if the CID is unknown or cannot be retrieved."
       ;; showable this returns nil.
       (notmuch-show-create-part-overlays button part-beg part-end))))
 
+(defun notmuch-show-mime-type (part)
+  "Return the correct mime-type to use for PART."
+  (let ((content-type (downcase (plist-get part :content-type))))
+    (or (and (string= content-type "application/octet-stream")
+	     (notmuch-show-get-mime-type-of-application/octet-stream part))
+	(and (string= content-type "inline patch")
+	     "text/x-diff")
+	content-type)))
+
+;; The following variable can be overridden by let bindings.
+(defvar notmuch-show-insert-header-p-function 'notmuch-show-insert-header-p
+  "Specify which function decides which part headers get inserted.
+
+The function should take two parameters, PART and HIDE, and
+should return non-NIL if a header button should be inserted for
+this part.")
+
+(defun notmuch-show-insert-header-p (part hide)
+  ;; Show all part buttons except for the first part if it is text/plain.
+  (let ((mime-type (notmuch-show-mime-type part)))
+    (not (and (string= mime-type "text/plain")
+	      (<= (plist-get part :id) 1)))))
+
+(defun notmuch-show-reply-insert-header-p-never (part hide)
+  nil)
+
+(defun notmuch-show-reply-insert-header-p-trimmed (part hide)
+  (let ((mime-type (notmuch-show-mime-type part)))
+    (and (not (notmuch-match-content-type mime-type "multipart/*"))
+	 (not hide))))
+
+(defun notmuch-show-reply-insert-header-p-minimal (part hide)
+  (let ((mime-type (notmuch-show-mime-type part)))
+    (and (notmuch-match-content-type mime-type "text/*")
+	 (not hide))))
+
 (defun notmuch-show-insert-bodypart (msg part depth &optional hide)
   "Insert the body part PART at depth DEPTH in the current thread.
 
 HIDE determines whether to show or hide the part and the button
 as follows: If HIDE is nil, show the part and the button. If HIDE
-is t, hide the part initially and show the button. If HIDE is
-'no-buttons, show the part but do not add any buttons (this is
-useful for quoting in replies)."
+is t, hide the part initially and show the button."
 
   (let* ((content-type (downcase (plist-get part :content-type)))
-	 (mime-type (or (and (string= content-type "application/octet-stream")
-			     (notmuch-show-get-mime-type-of-application/octet-stream part))
-			(and (string= content-type "inline patch")
-			     "text/x-diff")
-			content-type))
+	 (mime-type (notmuch-show-mime-type part))
 	 (nth (plist-get part :id))
 	 (long (and (notmuch-match-content-type mime-type "text/*")
 		    (> notmuch-show-max-text-part-size 0)
 		    (> (length (plist-get part :content)) notmuch-show-max-text-part-size)))
 	 (beg (point))
-	 ;; We omit the part button for the first (or only) part if
-	 ;; this is text/plain, or HIDE is 'no-buttons.
-	 (button (unless (or (equal hide 'no-buttons)
-			     (and (string= mime-type "text/plain") (<= nth 1)))
+	 ;; This default header-p function omits the part button for
+	 ;; the first (or only) part if this is text/plain.
+	 (button (when (funcall notmuch-show-insert-header-p-function part hide)
 		   (notmuch-show-insert-part-header nth mime-type content-type (plist-get part :filename))))
 	 ;; Hide the part initially if HIDE is t, or if it is too long
-	 ;; and we have a button to allow toggling (thus reply which
-	 ;; uses 'no-buttons automatically includes long parts)
+	 ;; and we have a button to allow toggling.
 	 (show-part (not (or (equal hide t)
 			     (and long button))))
 	 (content-beg (point)))
@@ -966,8 +979,9 @@ useful for quoting in replies)."
 
     (if show-part
         (notmuch-show-insert-bodypart-internal msg part mime-type nth depth button)
-      (button-put button :notmuch-lazy-part
-                  (list msg part mime-type nth depth button)))
+      (when button
+	(button-put button :notmuch-lazy-part
+		    (list msg part mime-type nth depth button))))
 
     ;; Some of the body part handlers leave point somewhere up in the
     ;; part, so we make sure that we're down at the end.
@@ -1199,71 +1213,101 @@ non-nil.
 The optional BUFFER-NAME provides the name of the buffer in
 which the message thread is shown. If it is nil (which occurs
 when the command is called interactively) the argument to the
-function is used."
+function is used.
+
+Returns the buffer containing the messages, or NIL if no messages
+matched."
   (interactive "sNotmuch show: \nP")
   (let ((buffer-name (generate-new-buffer-name
 		      (or buffer-name
 			  (concat "*notmuch-" thread-id "*")))))
     (switch-to-buffer (get-buffer-create buffer-name))
-    ;; Set the default value for `notmuch-show-process-crypto' in this
-    ;; buffer.
-    (setq notmuch-show-process-crypto notmuch-crypto-process-mime)
-    ;; Set the default value for
-    ;; `notmuch-show-elide-non-matching-messages' in this buffer. If
-    ;; elide-toggle is set, invert the default.
-    (setq notmuch-show-elide-non-matching-messages notmuch-show-only-matching-messages)
-    (if elide-toggle
-	(setq notmuch-show-elide-non-matching-messages (not notmuch-show-elide-non-matching-messages)))
-
-    (setq notmuch-show-thread-id thread-id
-	  notmuch-show-parent-buffer parent-buffer
-	  notmuch-show-query-context query-context)
-    (notmuch-show-build-buffer)
-    (notmuch-show-goto-first-wanted-message)
-    (current-buffer)))
-
-(defun notmuch-show-build-buffer ()
-  (let ((inhibit-read-only t))
+    ;; No need to track undo information for this buffer.
+    (setq buffer-undo-list t)
 
     (notmuch-show-mode)
-    (add-hook 'post-command-hook #'notmuch-show-command-hook nil t)
 
-    ;; Don't track undo information for this buffer
-    (set 'buffer-undo-list t)
+    ;; Set various buffer local variables to their appropriate initial
+    ;; state. Do this after enabling `notmuch-show-mode' so that they
+    ;; aren't wiped out.
+    (setq notmuch-show-thread-id thread-id
+	  notmuch-show-parent-buffer parent-buffer
+	  notmuch-show-query-context query-context
+
+	  notmuch-show-process-crypto notmuch-crypto-process-mime
+	  ;; If `elide-toggle', invert the default value.
+	  notmuch-show-elide-non-matching-messages
+	  (if elide-toggle
+	      (not notmuch-show-only-matching-messages)
+	    notmuch-show-only-matching-messages))
+
+    (add-hook 'post-command-hook #'notmuch-show-command-hook nil t)
+    (jit-lock-register #'notmuch-show-buttonise-links)
 
     (notmuch-tag-clear-cache)
-    (erase-buffer)
-    (goto-char (point-min))
-    (save-excursion
-      (let* ((basic-args (list notmuch-show-thread-id))
-	     (args (if notmuch-show-query-context
-		       (append (list "\'") basic-args
-			       (list "and (" notmuch-show-query-context ")\'"))
-		     (append (list "\'") basic-args (list "\'"))))
-	     (cli-args (cons "--exclude=false"
-			     (when notmuch-show-elide-non-matching-messages
-			       (list "--entire-thread=false")))))
 
-	(notmuch-show-insert-forest (notmuch-query-get-threads (append cli-args args)))
-	;; If the query context reduced the results to nothing, run
-	;; the basic query.
-	(when (and (eq (buffer-size) 0)
-		   notmuch-show-query-context)
-	  (notmuch-show-insert-forest
-	   (notmuch-query-get-threads (append cli-args basic-args)))))
+    (let ((inhibit-read-only t))
+      (if (notmuch-show--build-buffer)
+	  ;; Messages were inserted into the buffer.
+	  (current-buffer)
 
-      (jit-lock-register #'notmuch-show-buttonise-links)
+	;; No messages were inserted - presumably none matched the
+	;; query.
+	(kill-buffer (current-buffer))
+	(ding)
+	(message "No messages matched the query!")
+	nil))))
 
-      (notmuch-show-mapc (lambda () (notmuch-show-set-prop :orig-tags (notmuch-show-get-tags))))
+(defun notmuch-show--build-buffer (&optional state)
+  "Display messages matching the current buffer context.
+
+Apply the previously saved STATE if supplied, otherwise show the
+first relevant message.
+
+If no messages match the query return NIL."
+  (let* ((basic-args (list notmuch-show-thread-id))
+	 (args (if notmuch-show-query-context
+		   (append (list "\'") basic-args
+			   (list "and (" notmuch-show-query-context ")\'"))
+		 (append (list "\'") basic-args (list "\'"))))
+	 (cli-args (cons "--exclude=false"
+			 (when notmuch-show-elide-non-matching-messages
+			   (list "--entire-thread=false"))))
+
+	 (forest (or (notmuch-query-get-threads (append cli-args args))
+		     ;; If a query context reduced the number of
+		     ;; results to zero, try again without it.
+		     (and notmuch-show-query-context
+			  (notmuch-query-get-threads (append cli-args basic-args)))))
+
+	 ;; Must be reset every time we are going to start inserting
+	 ;; messages into the buffer.
+	 (notmuch-show-previous-subject ""))
+
+    (when forest
+      (notmuch-show-insert-forest forest)
+
+      ;; Store the original tags for each message so that we can
+      ;; display changes.
+      (notmuch-show-mapc
+       (lambda () (notmuch-show-set-prop :orig-tags (notmuch-show-get-tags))))
 
       ;; Set the header line to the subject of the first message.
       (setq header-line-format
 	    (replace-regexp-in-string "%" "%%"
-			    (notmuch-sanitize
-			     (notmuch-show-strip-re
-			      (notmuch-show-get-subject)))))
+				      (notmuch-sanitize
+				       (notmuch-show-strip-re
+					(notmuch-show-get-subject)))))
 
-      (run-hooks 'notmuch-show-hook))))
+      (run-hooks 'notmuch-show-hook)
+
+      (if state
+	  (notmuch-show-apply-state state)
+	;; With no state to apply, just go to the first message.
+	(notmuch-show-goto-first-wanted-message)))
+
+    ;; Report back to the caller whether any messages matched.
+    forest))
 
 (defun notmuch-show-capture-state ()
   "Capture the state of the current buffer.
@@ -1322,17 +1366,17 @@ reset based on the original query."
   (let ((inhibit-read-only t)
 	(state (unless reset-state
 		 (notmuch-show-capture-state))))
-    ;; erase-buffer does not seem to remove overlays, which can lead
+    ;; `erase-buffer' does not seem to remove overlays, which can lead
     ;; to weird effects such as remaining images, so remove them
     ;; manually.
     (remove-overlays)
     (erase-buffer)
-    (notmuch-show-build-buffer)
-    (if state
-	(notmuch-show-apply-state state)
-      ;; We're resetting state, so navigate to the first open message
-      ;; and mark it read, just like opening a new show buffer.
-      (notmuch-show-goto-first-wanted-message))))
+
+    (unless (notmuch-show--build-buffer state)
+      ;; No messages were inserted.
+      (kill-buffer (current-buffer))
+      (ding)
+      (message "Refreshing the buffer resulted in no messages!"))))
 
 (defvar notmuch-show-stash-map
   (let ((map (make-sparse-keymap)))
@@ -1373,6 +1417,7 @@ reset based on the original query."
     (define-key map (kbd "<backtab>") 'notmuch-show-previous-button)
     (define-key map (kbd "TAB") 'notmuch-show-next-button)
     (define-key map "f" 'notmuch-show-forward-message)
+    (define-key map "F" 'notmuch-show-forward-open-messages)
     (define-key map "l" 'notmuch-show-filter-thread)
     (define-key map "r" 'notmuch-show-reply-sender)
     (define-key map "R" 'notmuch-show-reply)
@@ -1797,8 +1842,18 @@ any effects from previous calls to
 (defun notmuch-show-forward-message (&optional prompt-for-sender)
   "Forward the current message."
   (interactive "P")
-  (with-current-notmuch-show-message
-   (notmuch-mua-new-forward-message prompt-for-sender)))
+  (notmuch-mua-new-forward-messages (list (notmuch-show-get-message-id))
+				    prompt-for-sender))
+
+(put 'notmuch-show-forward-open-messages 'notmuch-prefix-doc
+     "... and prompt for sender")
+(defun notmuch-show-forward-open-messages (&optional prompt-for-sender)
+  "Forward the currently open messages."
+  (interactive "P")
+  (let ((open-messages (notmuch-show-get-message-ids-for-open-messages)))
+    (unless open-messages
+      (error "No open messages to forward."))
+    (notmuch-mua-new-forward-messages open-messages prompt-for-sender)))
 
 (defun notmuch-show-next-message (&optional pop-at-end)
   "Show the next message.
@@ -1880,12 +1935,15 @@ to show, nil otherwise."
   "View the original source of the current message."
   (interactive)
   (let* ((id (notmuch-show-get-message-id))
-	 (buf (get-buffer-create (concat "*notmuch-raw-" id "*"))))
-    (let ((coding-system-for-read 'no-conversion))
-      (call-process notmuch-command nil buf nil "show" "--format=raw" id))
+	 (buf (get-buffer-create (concat "*notmuch-raw-" id "*")))
+	 (inhibit-read-only t))
     (switch-to-buffer buf)
+    (erase-buffer)
+    (let ((coding-system-for-read 'no-conversion))
+      (call-process notmuch-command nil t nil "show" "--format=raw" id))
     (goto-char (point-min))
     (set-buffer-modified-p nil)
+    (setq buffer-read-only t)
     (view-buffer buf 'kill-buffer-if-not-modified)))
 
 (put 'notmuch-show-pipe-message 'notmuch-doc
@@ -2323,3 +2381,5 @@ is destroyed when FN returns."
 
 
 (provide 'notmuch-show)
+
+;;; notmuch-show.el ends here

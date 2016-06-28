@@ -51,7 +51,7 @@ CPPFLAGS=${CPPFLAGS:-}
 CXXFLAGS_for_sh=${CXXFLAGS:-${CFLAGS}}
 CXXFLAGS=${CXXFLAGS:-\$(CFLAGS)}
 LDFLAGS=${LDFLAGS:-}
-XAPIAN_CONFIG=${XAPIAN_CONFIG:-xapian-config}
+XAPIAN_CONFIG=${XAPIAN_CONFIG:-}
 PYTHON=${PYTHON:-}
 
 # We don't allow the EMACS or GZIP Makefile variables inherit values
@@ -341,7 +341,7 @@ fi
 
 printf "Checking for Xapian development files... "
 have_xapian=0
-for xapian_config in ${XAPIAN_CONFIG}; do
+for xapian_config in ${XAPIAN_CONFIG} xapian-config xapian-config-1.3; do
     if ${xapian_config} --version > /dev/null 2>&1; then
 	xapian_version=$(${xapian_config} --version | sed -e 's/.* //')
 	printf "Yes (%s).\n" ${xapian_version}
@@ -371,7 +371,25 @@ if [ ${have_xapian} = "1" ]; then
     esac
 fi
 
-
+default_xapian_backend=""
+if [ ${have_xapian} = "1" ]; then
+    printf "Testing default Xapian backend... "
+    cat >_default_backend.cc <<EOF
+#include <xapian.h>
+int main(int argc, char** argv) {
+   Xapian::WritableDatabase db("test.db",Xapian::DB_CREATE_OR_OPEN);
+}
+EOF
+    ${CXX} ${CXXLAGS} ${xapian_cxxflags} _default_backend.cc -o _default_backend ${xapian_ldflags}
+    ./_default_backend
+    if [ -f test.db/iamglass ]; then
+	default_xapian_backend=glass
+    else
+	default_xapian_backend=chert
+    fi
+    printf "${default_xapian_backend}\n";
+    rm -rf test.db _default_backend _default_backend.cc
+fi
 # we need to have a version >= 2.6.5 to avoid a crypto bug. We need
 # 2.6.7 for permissive "From " header handling.
 GMIME_MINVER=2.6.7
@@ -472,19 +490,11 @@ else
 fi
 
 if [ -z "${EMACSLISPDIR}" ]; then
-    if pkg-config --exists emacs; then
-	EMACSLISPDIR=$(pkg-config emacs --variable sitepkglispdir)
-    else
-	EMACSLISPDIR='$(prefix)/share/emacs/site-lisp'
-    fi
+    EMACSLISPDIR='$(prefix)/share/emacs/site-lisp'
 fi
 
 if [ -z "${EMACSETCDIR}" ]; then
-    if pkg-config --exists emacs; then
-	EMACSETCDIR=$(pkg-config emacs --variable sitepkglispdir)
-    else
-	EMACSETCDIR='$(prefix)/share/emacs/site-lisp'
-    fi
+    EMACSETCDIR='$(prefix)/share/emacs/site-lisp'
 fi
 
 printf "Checking if emacs is available... "
@@ -977,6 +987,10 @@ HAVE_STRCASESTR = ${have_strcasestr}
 # build its own version)
 HAVE_STRSEP = ${have_strsep}
 
+# Whether the timegm function is available (if not, then notmuch will
+# build its own version)
+HAVE_TIMEGM = ${have_timegm}
+
 # Whether struct dirent has d_type (if not, then notmuch will use stat)
 HAVE_D_TYPE = ${have_d_type}
 
@@ -1004,6 +1018,9 @@ LINKER_RESOLVES_LIBRARY_DEPENDENCIES = ${linker_resolves_library_dependencies}
 # Flags needed to compile and link against Xapian
 XAPIAN_CXXFLAGS = ${xapian_cxxflags}
 XAPIAN_LDFLAGS = ${xapian_ldflags}
+
+# Which backend will Xapian use by default?
+DEFAULT_XAPIAN_BACKEND = ${default_xapian_backend}
 
 # Flags needed to compile and link against GMime
 GMIME_CFLAGS = ${gmime_cflags}
@@ -1049,6 +1066,7 @@ CONFIGURE_CFLAGS = -DHAVE_GETLINE=\$(HAVE_GETLINE) \$(GMIME_CFLAGS)      \\
 		   \$(VALGRIND_CFLAGS)                                   \\
 		   -DHAVE_STRCASESTR=\$(HAVE_STRCASESTR)                 \\
 		   -DHAVE_STRSEP=\$(HAVE_STRSEP)                         \\
+		   -DHAVE_TIMEGM=\$(HAVE_TIMEGM)                         \\
 		   -DHAVE_D_TYPE=\$(HAVE_D_TYPE)                         \\
 		   -DSTD_GETPWUID=\$(STD_GETPWUID)                       \\
 		   -DSTD_ASCTIME=\$(STD_ASCTIME)                         \\
@@ -1062,6 +1080,7 @@ CONFIGURE_CXXFLAGS = -DHAVE_GETLINE=\$(HAVE_GETLINE) \$(GMIME_CFLAGS)    \\
 		     \$(VALGRIND_CFLAGS) \$(XAPIAN_CXXFLAGS)             \\
 		     -DHAVE_STRCASESTR=\$(HAVE_STRCASESTR)               \\
 		     -DHAVE_STRSEP=\$(HAVE_STRSEP)                       \\
+		     -DHAVE_TIMEGM=\$(HAVE_TIMEGM)                       \\
 		     -DHAVE_D_TYPE=\$(HAVE_D_TYPE)                       \\
 		     -DSTD_GETPWUID=\$(STD_GETPWUID)                     \\
 		     -DSTD_ASCTIME=\$(STD_ASCTIME)                       \\
@@ -1078,6 +1097,9 @@ cat > sh.config <<EOF
 
 # Whether the Xapian version in use supports compaction
 NOTMUCH_HAVE_XAPIAN_COMPACT=${have_xapian_compact}
+
+# Which backend will Xapian use by default?
+NOTMUCH_DEFAULT_XAPIAN_BACKEND=${default_xapian_backend}
 
 # do we have man pages?
 NOTMUCH_HAVE_MAN=$((have_sphinx))

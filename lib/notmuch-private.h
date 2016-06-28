@@ -280,6 +280,12 @@ _notmuch_message_remove_term (notmuch_message_t *message,
 			      const char *value);
 
 notmuch_private_status_t
+_notmuch_message_has_term (notmuch_message_t *message,
+			   const char *prefix_name,
+			   const char *value,
+			   notmuch_bool_t *result);
+
+notmuch_private_status_t
 _notmuch_message_gen_terms (notmuch_message_t *message,
 			    const char *prefix_name,
 			    const char *text);
@@ -476,6 +482,17 @@ _notmuch_doc_id_set_contains (notmuch_doc_id_set_t *doc_ids,
 void
 _notmuch_doc_id_set_remove (notmuch_doc_id_set_t *doc_ids,
                             unsigned int doc_id);
+
+/* querying xapian documents by type (e.g. "mail" or "ghost"): */
+notmuch_status_t
+_notmuch_query_search_documents (notmuch_query_t *query,
+				 const char *type,
+				 notmuch_messages_t **out);
+
+notmuch_status_t
+_notmuch_query_count_documents (notmuch_query_t *query,
+				const char *type,
+				unsigned *count_out);
 
 /* message.cc */
 

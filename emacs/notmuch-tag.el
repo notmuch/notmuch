@@ -1,4 +1,4 @@
-;; notmuch-tag.el --- tag messages within emacs
+;;; notmuch-tag.el --- tag messages within emacs
 ;;
 ;; Copyright © Damien Cassou
 ;; Copyright © Carl Worth

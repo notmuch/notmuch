@@ -608,6 +608,8 @@ def _index_tags():
                 stdin=_subprocess.PIPE,
                 additional_env={'GIT_INDEX_FILE': path}) as git:
             for line in notmuch.stdout:
+                if line.strip().startswith('#'):
+                    continue
                 (tags_string, id) = [_.strip() for _ in line.split(' -- id:')]
                 tags = [
                     _unquote(tag[len(prefix):])

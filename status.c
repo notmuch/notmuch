@@ -19,3 +19,20 @@ print_status_query (const char *loc,
     }
     return status;
 }
+
+notmuch_status_t
+print_status_database (const char *loc,
+		    const notmuch_database_t *notmuch,
+		    notmuch_status_t status)
+{
+    if (status) {
+	const char *msg;
+
+	fprintf (stderr, "%s: %s\n", loc,
+		 notmuch_status_to_string (status));
+	msg = notmuch_database_status_string (notmuch);
+	if (msg)
+	    fputs (msg, stderr);
+    }
+    return status;
+}

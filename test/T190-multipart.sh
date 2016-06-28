@@ -763,4 +763,56 @@ test_begin_subtest "indexes mime-type #3"
 output=$(notmuch search from:todd and mimetype:multipart/alternative | notmuch_search_sanitize)
 test_expect_equal "$output" "thread:XXX   2014-01-12 [1/1] Todd; odd content types (inbox unread)"
 
+test_begin_subtest "case of Content-Disposition doesn't matter for indexing"
+cat <<EOF > ${MAIL_DIR}/content-disposition
+Return-path: <david@tethera.net>
+Envelope-to: david@tethera.net
+Delivery-date: Sun, 04 Oct 2015 09:16:03 -0300
+Received: from gitolite.debian.net ([87.98.215.224])
+	by yantan.tethera.net with esmtps (TLS1.2:DHE_RSA_AES_128_CBC_SHA1:128)
+	(Exim 4.80)
+	(envelope-from <david@tethera.net>)
+	id 1ZiiCx-0007iz-RK
+	for david@tethera.net; Sun, 04 Oct 2015 09:16:03 -0300
+Received: from remotemail by gitolite.debian.net with local (Exim 4.80)
+	(envelope-from <david@tethera.net>)
+	id 1ZiiC8-0002Rz-Uf; Sun, 04 Oct 2015 12:15:12 +0000
+Received: (nullmailer pid 28621 invoked by uid 1000); Sun, 04 Oct 2015
+ 12:14:53 -0000
+From: David Bremner <david@tethera.net>
+To: David Bremner <david@tethera.net>
+Subject: test attachment
+User-Agent: Notmuch/0.20.2+93~g33c8777 (http://notmuchmail.org) Emacs/24.5.1
+ (x86_64-pc-linux-gnu)
+Date: Sun, 04 Oct 2015 09:14:53 -0300
+Message-ID: <87io6m96f6.fsf@zancas.localnet>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="=-=-="
+
+--=-=-=
+Content-Type: text/plain
+Content-Disposition: ATTACHMENT; filename=hello.txt
+Content-Description: this is a very exciting file
+
+hello
+
+--=-=-=
+Content-Type: text/plain
+
+
+world
+
+--=-=-=--
+
+EOF
+NOTMUCH_NEW
+
+cat <<EOF > EXPECTED
+attachment
+inbox
+unread
+EOF
+
+notmuch search --output=tags id:87io6m96f6.fsf@zancas.localnet > OUTPUT
+test_expect_equal_file EXPECTED OUTPUT
 test_done

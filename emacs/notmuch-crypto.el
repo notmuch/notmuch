@@ -1,4 +1,4 @@
-;; notmuch-crypto.el --- functions for handling display of cryptographic metadata.
+;;; notmuch-crypto.el --- functions for handling display of cryptographic metadata.
 ;;
 ;; Copyright © Jameson Rollins
 ;;
@@ -18,6 +18,8 @@
 ;; along with Notmuch.  If not, see <http://www.gnu.org/licenses/>.
 ;;
 ;; Authors: Jameson Rollins <jrollins@finestructure.net>
+
+;;; Code:
 
 (require 'notmuch-lib)
 
@@ -110,8 +112,8 @@ mode."
 	(setq label (concat "Bad signature (claimed key ID " keyid ")"))
 	(setq face 'notmuch-crypto-signature-bad)))
      (t
-      (setq label "Unknown signature status")
-      (if status (setq label (concat label " \"" status "\"")))))
+      (setq label (concat "Unknown signature status"
+			  (if status (concat ": " status))))))
     (insert-button
      (concat "[ " label " ]")
      :type 'notmuch-crypto-status-button-type
@@ -161,7 +163,8 @@ mode."
      ((string= status "bad")
       (setq label "Decryption error"))
      (t
-      (setq label (concat "Unknown encstatus \"" status "\""))))
+      (setq label (concat "Unknown encryption status"
+			  (if status (concat ": " status))))))
     (insert-button
      (concat "[ " label " ]")
      :type 'notmuch-crypto-status-button-type
@@ -173,3 +176,5 @@ mode."
 ;;
 
 (provide 'notmuch-crypto)
+
+;;; notmuch-crypto.el ends here

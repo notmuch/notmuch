@@ -64,7 +64,7 @@ generate_message
 notmuch new > /dev/null
 mv "$gen_msg_filename" "${gen_msg_filename}"-renamed
 output=$(NOTMUCH_NEW --debug)
-test_expect_equal "$output" "(D) add_files_recursive, pass 2: queuing passed file ${gen_msg_filename} for deletion from database
+test_expect_equal "$output" "(D) add_files, pass 2: queuing passed file ${gen_msg_filename} for deletion from database
 No new mail. Detected 1 file rename."
 
 
@@ -72,7 +72,7 @@ test_begin_subtest "Deleted message"
 
 rm "${gen_msg_filename}"-renamed
 output=$(NOTMUCH_NEW --debug)
-test_expect_equal "$output" "(D) add_files_recursive, pass 3: queuing leftover file ${gen_msg_filename}-renamed for deletion from database
+test_expect_equal "$output" "(D) add_files, pass 3: queuing leftover file ${gen_msg_filename}-renamed for deletion from database
 No new mail. Removed 1 message."
 
 
@@ -88,7 +88,7 @@ notmuch new > /dev/null
 mv "${MAIL_DIR}"/dir "${MAIL_DIR}"/dir-renamed
 
 output=$(NOTMUCH_NEW --debug)
-test_expect_equal "$output" "(D) add_files_recursive, pass 2: queuing passed directory ${MAIL_DIR}/dir for deletion from database
+test_expect_equal "$output" "(D) add_files, pass 2: queuing passed directory ${MAIL_DIR}/dir for deletion from database
 No new mail. Detected 3 file renames."
 
 
@@ -96,7 +96,7 @@ test_begin_subtest "Deleted directory"
 rm -rf "${MAIL_DIR}"/dir-renamed
 
 output=$(NOTMUCH_NEW --debug)
-test_expect_equal "$output" "(D) add_files_recursive, pass 2: queuing passed directory ${MAIL_DIR}/dir-renamed for deletion from database
+test_expect_equal "$output" "(D) add_files, pass 2: queuing passed directory ${MAIL_DIR}/dir-renamed for deletion from database
 No new mail. Removed 3 messages."
 
 
@@ -115,7 +115,7 @@ test_begin_subtest "Deleted directory (end of list)"
 rm -rf "${MAIL_DIR}"/zzz
 
 output=$(NOTMUCH_NEW --debug)
-test_expect_equal "$output" "(D) add_files_recursive, pass 3: queuing leftover directory ${MAIL_DIR}/zzz for deletion from database
+test_expect_equal "$output" "(D) add_files, pass 3: queuing leftover directory ${MAIL_DIR}/zzz for deletion from database
 No new mail. Removed 3 messages."
 
 
@@ -166,8 +166,17 @@ test_begin_subtest "Deleted two-level directory"
 rm -rf "${MAIL_DIR}"/two
 
 output=$(NOTMUCH_NEW --debug)
-test_expect_equal "$output" "(D) add_files_recursive, pass 3: queuing leftover directory ${MAIL_DIR}/two for deletion from database
+test_expect_equal "$output" "(D) add_files, pass 3: queuing leftover directory ${MAIL_DIR}/two for deletion from database
 No new mail. Removed 3 messages."
+
+test_begin_subtest "One character directory at top level"
+
+generate_message [dir]=A
+generate_message [dir]=A/B
+generate_message [dir]=A/B/C
+
+output=$(NOTMUCH_NEW --debug)
+test_expect_equal "$output" "Added 3 new messages to the database."
 
 test_begin_subtest "Support single-message mbox"
 cat > "${MAIL_DIR}"/mbox_file1 <<EOF
@@ -227,20 +236,20 @@ mkdir -p "${MAIL_DIR}"/one/two/three/.git
 touch "${MAIL_DIR}"/{one,one/two,one/two/three}/ignored_file
 output=$(NOTMUCH_NEW --debug 2>&1 | sort)
 test_expect_equal "$output" \
-"(D) add_files_recursive, pass 1: explicitly ignoring ${MAIL_DIR}/.git
-(D) add_files_recursive, pass 1: explicitly ignoring ${MAIL_DIR}/.ignored_hidden_file
-(D) add_files_recursive, pass 1: explicitly ignoring ${MAIL_DIR}/ignored_file
-(D) add_files_recursive, pass 1: explicitly ignoring ${MAIL_DIR}/one/ignored_file
-(D) add_files_recursive, pass 1: explicitly ignoring ${MAIL_DIR}/one/two/ignored_file
-(D) add_files_recursive, pass 1: explicitly ignoring ${MAIL_DIR}/one/two/three/.git
-(D) add_files_recursive, pass 1: explicitly ignoring ${MAIL_DIR}/one/two/three/ignored_file
-(D) add_files_recursive, pass 2: explicitly ignoring ${MAIL_DIR}/.git
-(D) add_files_recursive, pass 2: explicitly ignoring ${MAIL_DIR}/.ignored_hidden_file
-(D) add_files_recursive, pass 2: explicitly ignoring ${MAIL_DIR}/ignored_file
-(D) add_files_recursive, pass 2: explicitly ignoring ${MAIL_DIR}/one/ignored_file
-(D) add_files_recursive, pass 2: explicitly ignoring ${MAIL_DIR}/one/two/ignored_file
-(D) add_files_recursive, pass 2: explicitly ignoring ${MAIL_DIR}/one/two/three/.git
-(D) add_files_recursive, pass 2: explicitly ignoring ${MAIL_DIR}/one/two/three/ignored_file
+"(D) add_files, pass 1: explicitly ignoring ${MAIL_DIR}/.git
+(D) add_files, pass 1: explicitly ignoring ${MAIL_DIR}/.ignored_hidden_file
+(D) add_files, pass 1: explicitly ignoring ${MAIL_DIR}/ignored_file
+(D) add_files, pass 1: explicitly ignoring ${MAIL_DIR}/one/ignored_file
+(D) add_files, pass 1: explicitly ignoring ${MAIL_DIR}/one/two/ignored_file
+(D) add_files, pass 1: explicitly ignoring ${MAIL_DIR}/one/two/three/.git
+(D) add_files, pass 1: explicitly ignoring ${MAIL_DIR}/one/two/three/ignored_file
+(D) add_files, pass 2: explicitly ignoring ${MAIL_DIR}/.git
+(D) add_files, pass 2: explicitly ignoring ${MAIL_DIR}/.ignored_hidden_file
+(D) add_files, pass 2: explicitly ignoring ${MAIL_DIR}/ignored_file
+(D) add_files, pass 2: explicitly ignoring ${MAIL_DIR}/one/ignored_file
+(D) add_files, pass 2: explicitly ignoring ${MAIL_DIR}/one/two/ignored_file
+(D) add_files, pass 2: explicitly ignoring ${MAIL_DIR}/one/two/three/.git
+(D) add_files, pass 2: explicitly ignoring ${MAIL_DIR}/one/two/three/ignored_file
 No new mail."
 
 
@@ -284,9 +293,9 @@ notmuch config set new.tags $OLDCONFIG
 
 
 test_begin_subtest "Xapian exception: read only files"
-chmod u-w  ${MAIL_DIR}/.notmuch/xapian/*.DB
+chmod u-w  ${MAIL_DIR}/.notmuch/xapian/*.${db_ending}
 output=$(NOTMUCH_NEW --debug 2>&1 | sed 's/: .*$//' )
-chmod u+w  ${MAIL_DIR}/.notmuch/xapian/*.DB
+chmod u+w  ${MAIL_DIR}/.notmuch/xapian/*.${db_ending}
 test_expect_equal "$output" "A Xapian exception occurred opening database"
 
 test_done

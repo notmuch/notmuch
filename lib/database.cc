@@ -1635,6 +1635,9 @@ notmuch_database_begin_atomic (notmuch_database_t *notmuch)
 	notmuch->atomic_nesting > 0)
 	goto DONE;
 
+	if (notmuch_database_needs_upgrade(notmuch))
+		return NOTMUCH_STATUS_UPGRADE_REQUIRED;
+
     try {
 	(static_cast <Xapian::WritableDatabase *> (notmuch->xapian_db))->begin_transaction (false);
     } catch (const Xapian::Error &error) {
@@ -1758,18 +1761,11 @@ _notmuch_database_split_path (void *ctx,
     slash = path + strlen (path) - 1;
 
     /* First, skip trailing slashes. */
-    while (slash != path) {
-	if (*slash != '/')
-	    break;
-
+    while (slash != path && *slash == '/')
 	--slash;
-    }
 
     /* Then, find a slash. */
-    while (slash != path) {
-	if (*slash == '/')
-	    break;
-
+    while (slash != path && *slash != '/') {
 	if (basename)
 	    *basename = slash;
 
@@ -1777,12 +1773,8 @@ _notmuch_database_split_path (void *ctx,
     }
 
     /* Finally, skip multiple slashes. */
-    while (slash != path) {
-	if (*slash != '/')
-	    break;
-
+    while (slash != path && *(slash - 1) == '/')
 	--slash;
-    }
 
     if (slash == path) {
 	if (directory)
@@ -1791,7 +1783,7 @@ _notmuch_database_split_path (void *ctx,
 	    *basename = path;
     } else {
 	if (directory)
-	    *directory = talloc_strndup (ctx, path, slash - path + 1);
+	    *directory = talloc_strndup (ctx, path, slash - path);
     }
 
     return NOTMUCH_STATUS_SUCCESS;

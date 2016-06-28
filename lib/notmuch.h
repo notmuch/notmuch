@@ -59,8 +59,17 @@ NOTMUCH_BEGIN_DECLS
 #define LIBNOTMUCH_MINOR_VERSION	3
 #define LIBNOTMUCH_MICRO_VERSION	0
 
+
+#if defined (__clang_major__) && __clang_major__ >= 3 \
+    || defined (__GNUC__) && __GNUC__ >= 5 \
+    || defined (__GNUC__) && __GNUC__ == 4 && __GNUC_MINOR__ >= 5
 #define NOTMUCH_DEPRECATED(major,minor) \
     __attribute__ ((deprecated ("function deprecated as of libnotmuch " #major "." #minor)))
+#else
+#define NOTMUCH_DEPRECATED(major,minor) __attribute__ ((deprecated))
+#endif
+
+
 #endif /* __DOXYGEN__ */
 
 /**
@@ -1752,7 +1761,7 @@ notmuch_filenames_t *
 notmuch_directory_get_child_files (notmuch_directory_t *directory);
 
 /**
- * Get a notmuch_filenams_t iterator listing all the filenames of
+ * Get a notmuch_filenames_t iterator listing all the filenames of
  * sub-directories in the database within the given directory.
  *
  * The returned filenames will be the basename-entries only (not

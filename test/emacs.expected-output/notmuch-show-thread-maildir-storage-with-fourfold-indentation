@@ -5,6 +5,7 @@ Date: Tue, 17 Nov 2009 14:00:54 -0500
 
 [ multipart/mixed ]
 [ multipart/signed ]
+[ Unknown signature status ]
 [ text/plain ]
 I saw the LWN article and decided to take a look at notmuch.  I'm
 currently using mutt and mairix to index and read a collection of
@@ -45,6 +46,7 @@ http://notmuchmail.org/mailman/listinfo/notmuch
 
     [ multipart/mixed ]
     [ multipart/signed ]
+    [ Unknown signature status ]
     [ text/plain ]
 
     Twas brillig at 14:00:54 17.11.2009 UTC-05 when lars@seas.harvard.edu did
@@ -77,6 +79,7 @@ http://notmuchmail.org/mailman/listinfo/notmuch
 
 	[ multipart/mixed ]
 	[ multipart/signed ]
+	[ Unknown signature status ]
 	[ text/plain ]
 	> See the patch just posted here.
 
@@ -159,6 +162,7 @@ http://notmuchmail.org/mailman/listinfo/notmuch
 
 		[ multipart/mixed ]
 		[ multipart/signed ]
+		[ Unknown signature status ]
 		[ text/plain ]
 		> I've also pushed a slightly more complicated (and complete) fix to my
 		> private notmuch repository

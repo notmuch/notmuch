@@ -19,11 +19,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see http://www.gnu.org/licenses/ .
 
-"""Generate HTML for one or more notmuch searches.
+"""Generate text and/or HTML for one or more notmuch searches.
 
 Messages matching each search are grouped by thread.  Each message
 that contains both a subject and message-id will have the displayed
-subject link to the Gmane view of the message.
+subject link to an archive view of the message (defaulting to Gmane).
 """
 
 from __future__ import print_function
@@ -88,7 +88,7 @@ def read_config(path=None, encoding=None):
     else:
         nmbhome = os.getenv('NMBGIT', os.path.expanduser('~/.nmbug'))
         branch = 'config'
-        filename = 'status-config.json'
+        filename = 'notmuch-report.json'
 
         # read only the first line from the pipe
         sha1_bytes = subprocess.Popen(
@@ -109,9 +109,9 @@ def read_config(path=None, encoding=None):
         status = p.wait()
         if status != 0:
             raise ConfigError(
-                ("Missing status-config.json in branch '{branch}' of"
-                 '{nmbgit}.  Add the file or explicitly set --config.'
-                ).format(branch=branch, nmbgit=nmbhome))
+                ("Missing {filename} in branch '{branch}' of {nmbgit}.  "
+                 'Add the file or explicitly set --config.'
+                ).format(filename=filename, branch=branch, nmbgit=nmbhome))
 
     config_json = config_bytes.decode(encoding)
     try:
@@ -167,7 +167,8 @@ class Page (object):
                 view['title'], sort_key))
         if 'query-string' not in view:
             query = view['query']
-            view['query-string'] = ' and '.join(query)
+            view['query-string'] = ' and '.join(
+                '( {} )'.format(q) for q in query)
         q = notmuch.Query(database, view['query-string'])
         q.set_sort(sort)
         threads = self._get_threads(messages=q.search_messages())
@@ -232,6 +233,10 @@ class Page (object):
 class HtmlPage (Page):
     _slug_regexp = re.compile('\W+')
 
+    def __init__(self, message_url_template, **kwargs):
+        self.message_url_template = message_url_template
+        super(HtmlPage, self).__init__(**kwargs)
+
     def _write_header(self, views, stream):
         super(HtmlPage, self)._write_header(views=views, stream=stream)
         stream.write('<ul>\n')
@@ -292,8 +297,9 @@ class HtmlPage (Page):
                 'message-id': quote(display_data['message-id']),
                 'subject': xml.sax.saxutils.escape(display_data['subject']),
                 }
+            d['url'] = self.message_url_template.format(**d)
             display_data['subject'] = (
-                '<a href="http://mid.gmane.org/{message-id}">{subject}</a>'
+                '<a href="{url}">{subject}</a>'
                 ).format(**d)
         for key in ['message-id', 'from']:
             if key in display_data:
@@ -304,14 +310,17 @@ class HtmlPage (Page):
         return self._slug_regexp.sub('-', string)
 
 parser = argparse.ArgumentParser(description=__doc__)
-parser.add_argument('--text', help='output plain text format',
-                    action='store_true')
-parser.add_argument('--config', help='load config from given file',
-                    metavar='PATH')
-parser.add_argument('--list-views', help='list views',
-                    action='store_true')
-parser.add_argument('--get-query', help='get query for view',
-                    metavar='VIEW')
+parser.add_argument(
+    '--text', action='store_true', help='output plain text format')
+parser.add_argument(
+    '--config', metavar='PATH',
+    help='load config from given file.  '
+        'The format is described in notmuch-report.json(5).')
+parser.add_argument(
+    '--list-views', action='store_true', help='list views')
+parser.add_argument(
+    '--get-query', metavar='VIEW', help='get query for view')
+
 
 args = parser.parse_args()
 
@@ -327,6 +336,15 @@ header_template = config['meta'].get('header', '''<!DOCTYPE html>
   <meta http-equiv="Content-Type" content="text/html; charset={encoding}" />
   <title>{title}</title>
   <style media="screen" type="text/css">
+    h1 {{
+      font-size: 1.5em;
+    }}
+    h2 {{
+      font-size: 1.17em;
+    }}
+    h3 {{
+      font-size: 100%;
+    }}
     table {{
       border-spacing: 0;
     }}
@@ -367,15 +385,16 @@ header_template = config['meta'].get('header', '''<!DOCTYPE html>
   </style>
 </head>
 <body>
-<h2>{title}</h2>
+<h1>{title}</h1>
+<p>
 {blurb}
 </p>
-<h3>Views</h3>
+<h2>Views</h2>
 ''')
 
 footer_template = config['meta'].get('footer', '''
 <hr>
-<p>Generated: {datetime}
+<p>Generated: {datetime}</p>
 </body>
 </html>
 ''')
@@ -395,6 +414,8 @@ _PAGES['text'] = Page()
 _PAGES['html'] = HtmlPage(
     header=header_template.format(**context),
     footer=footer_template.format(**context),
+    message_url_template=config['meta'].get(
+        'message-url', 'http://mid.gmane.org/{message-id}'),
     )
 
 if args.list_views:
@@ -404,7 +425,7 @@ if args.list_views:
 elif args.get_query != None:
     for view in config['views']:
         if args.get_query == view['title']:
-            print(' and '.join(view['query']))
+            print(' and '.join('( {} )'.format(q) for q in view['query']))
     sys.exit(0)
 else:
     # only import notmuch if needed

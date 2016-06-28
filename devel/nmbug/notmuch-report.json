@@ -62,7 +62,7 @@
 		"not tag:notmuch::obsolete",
 		"not tag:notmuch::stale",
 		"not tag:notmuch::wontfix",
-		"(tag:notmuch::moreinfo or tag:notmuch::needs-review)"
+		"tag:notmuch::moreinfo or tag:notmuch::needs-review"
 	    ],
 	    "title": "Review"
 	}

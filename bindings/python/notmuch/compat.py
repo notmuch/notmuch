@@ -65,3 +65,7 @@ else:
             raise TypeError('Expected str, got %s' % type(value))
 
         return value.encode('utf-8', 'replace')
+
+# We import the SafeConfigParser class on behalf of other code to cope
+# with the differences between Python 2 and 3.
+SafeConfigParser # avoid warning about unused import

@@ -1,4 +1,4 @@
-;; notmuch-hello.el --- welcome to notmuch, a frontend
+;;; notmuch-hello.el --- welcome to notmuch, a frontend
 ;;
 ;; Copyright © David Edmondson
 ;;
@@ -18,6 +18,8 @@
 ;; along with Notmuch.  If not, see <http://www.gnu.org/licenses/>.
 ;;
 ;; Authors: David Edmondson <dme@dme.org>
+
+;;; Code:
 
 (eval-when-compile (require 'cl))
 (require 'widget)
@@ -652,8 +654,12 @@ with `notmuch-hello-query-counts'."
 
 (defvar notmuch-hello-mode-map
   (let ((map (if (fboundp 'make-composed-keymap)
-		 ;; Inherit both widget-keymap and notmuch-common-keymap
-		 (make-composed-keymap widget-keymap)
+		 ;; Inherit both widget-keymap and
+		 ;; notmuch-common-keymap. We have to use
+		 ;; make-sparse-keymap to force this to be a new
+		 ;; keymap (so that when we modify map it does not
+		 ;; modify widget-keymap).
+		 (make-composed-keymap (list (make-sparse-keymap) widget-keymap))
 	       ;; Before Emacs 24, keymaps didn't support multiple
 	       ;; inheritance,, so just copy the widget keymap since
 	       ;; it's unlikely to change.
@@ -667,6 +673,31 @@ with `notmuch-hello-query-counts'."
 
 (defun notmuch-hello-mode ()
  "Major mode for convenient notmuch navigation. This is your entry portal into notmuch.
+
+Saved searches are \"bookmarks\" for arbitrary queries. Hit RET
+or click on a saved search to view matching threads. Edit saved
+searches with the `edit' button. Type `\\[notmuch-jump-search]'
+in any Notmuch screen for quick access to saved searches that
+have shortcut keys.
+
+Type new searches in the search box and hit RET to view matching
+threads. Hit RET in a recent search box to re-submit a previous
+search. Edit it first if you like. Save a recent search to saved
+searches with the `save' button.
+
+Hit `\\[notmuch-search]' or `\\[notmuch-tree]' in any Notmuch
+screen to search for messages and view matching threads or
+messages, respectively. Recent searches are available in the
+minibuffer history.
+
+Expand the all tags view with the `show' button (and collapse
+again with the `hide' button). Hit RET or click on a tag name to
+view matching threads.
+
+Hit `\\[notmuch-refresh-this-buffer]' to refresh the screen and
+`\\[notmuch-bury-or-kill-this-buffer]' to quit.
+
+The screen may be customized via `\\[customize]'.
 
 Complete list of currently available key bindings:
 
@@ -903,20 +934,19 @@ following:
 (defun notmuch-hello-insert-footer ()
   "Insert the notmuch-hello footer."
   (let ((start (point)))
-    (widget-insert "Type a search query and hit RET to view matching threads.\n")
-    (when notmuch-search-history
-      (widget-insert "Hit RET to re-submit a previous search. Edit it first if you like.\n")
-      (widget-insert "Save recent searches with the `save' button.\n"))
-    (when notmuch-saved-searches
-      (widget-insert "Edit saved searches with the `edit' button.\n"))
-    (widget-insert "Hit RET or click on a saved search or tag name to view matching threads.\n")
-    (widget-insert "`=' to refresh this screen. `s' to search messages. `q' to quit.\n")
+    (widget-insert "Hit `?' for context-sensitive help in any Notmuch screen.\n")
+    (widget-insert "Customize ")
+    (widget-create 'link
+		   :notify (lambda (&rest ignore)
+			     (customize-group 'notmuch))
+		   :button-prefix "" :button-suffix ""
+		   "Notmuch")
+    (widget-insert " or ")
     (widget-create 'link
 		   :notify (lambda (&rest ignore)
 			     (customize-variable 'notmuch-hello-sections))
 		   :button-prefix "" :button-suffix ""
-		   "Customize")
-    (widget-insert " this page.")
+		   "this page.")
     (let ((fill-column (- (window-width) notmuch-hello-indent)))
       (center-region start (point)))))
 
@@ -988,3 +1018,5 @@ following:
 ;;
 
 (provide 'notmuch-hello)
+
+;;; notmuch-hello.el ends here

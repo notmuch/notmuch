@@ -46,7 +46,7 @@ class Threads(Python3StringMixIn):
 
     as well as::
 
-       number_of_msgs = len(threads)
+       list_of_threads = list(threads)
 
     will "exhaust" the threads. If you need to re-iterate over a list of
     messages you will need to retrieve a new :class:`Threads` object.
@@ -64,8 +64,7 @@ class Threads(Python3StringMixIn):
       for thread in threads:
          threadlist.append(thread)
 
-      # threads is "exhausted" now and even len(threads) will raise an
-      # exception.
+      # threads is "exhausted" now.
       # However it will be kept around until all retrieved Thread() objects are
       # also deleted. If you did e.g. an explicit del(threads) here, the
       # following lines would fail.
@@ -131,30 +130,6 @@ class Threads(Python3StringMixIn):
         self._move_to_next(self._threads)
         return thread
     next = __next__ # python2.x iterator protocol compatibility
-
-    def __len__(self):
-        """len(:class:`Threads`) returns the number of contained Threads
-
-        .. note:: As this iterates over the threads, we will not be able to
-               iterate over them again! So this will fail::
-
-                 #THIS FAILS
-                 threads = Database().create_query('').search_threads()
-                 if len(threads) > 0:              #this 'exhausts' threads
-                     # next line raises :exc:`NotInitializedError`!!!
-                     for thread in threads: print thread
-        """
-        if not self._threads:
-            raise NotInitializedError()
-
-        i = 0
-        # returns 'bool'. On out-of-memory it returns None
-        while self._valid(self._threads):
-            self._move_to_next(self._threads)
-            i += 1
-        # reset self._threads to mark as "exhausted"
-        self._threads = None
-        return i
 
     def __nonzero__(self):
         '''

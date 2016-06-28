@@ -183,13 +183,13 @@ int main (int argc, char** argv)
 EOF
 cat <<'EOF' >EXPECTED
 == stdout ==
-Path already exists: CWD/mail
+Path already exists: MAIL_DIR
 
 == stderr ==
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
-cat <<'EOF' > c_head
+cat <<EOF > c_head
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -202,16 +202,20 @@ int main (int argc, char** argv)
    notmuch_database_t *db;
    notmuch_status_t stat;
    char *path;
+   char *msg = NULL;
    int fd;
 
-   stat = notmuch_database_open (argv[1], NOTMUCH_DATABASE_MODE_READ_WRITE, &db);
+   stat = notmuch_database_open_verbose (argv[1], NOTMUCH_DATABASE_MODE_READ_WRITE, &db, &msg);
    if (stat != NOTMUCH_STATUS_SUCCESS) {
-     fprintf (stderr, "error opening database: %d\n", stat);
+     fprintf (stderr, "error opening database: %d %s\n", stat, msg ? msg : "");
+     exit (1);
    }
-   path = talloc_asprintf (db, "%s/.notmuch/xapian/postlist.DB", argv[1]);
+   path = talloc_asprintf (db, "%s/.notmuch/xapian/postlist.${db_ending}", argv[1]);
    fd = open(path,O_WRONLY|O_TRUNC);
-   if (fd < 0)
-       fprintf (stderr, "error opening %s\n");
+   if (fd < 0) {
+       fprintf (stderr, "error opening %s\n", argv[1]);
+       exit (1);
+   }
 EOF
 cat <<'EOF' > c_tail
    if (stat) {

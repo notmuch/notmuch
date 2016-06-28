@@ -1,4 +1,4 @@
-;; notmuch.el --- run notmuch within emacs
+;;; notmuch.el --- run notmuch within emacs
 ;;
 ;; Copyright © Carl Worth
 ;;
@@ -18,6 +18,9 @@
 ;; along with Notmuch.  If not, see <http://www.gnu.org/licenses/>.
 ;;
 ;; Authors: Carl Worth <cworth@cworth.org>
+;; Homepage: https://notmuchmail.org/
+
+;;; Commentary:
 
 ;; This is an emacs-based interface to the notmuch mail system.
 ;;
@@ -46,6 +49,8 @@
 ;; Have fun, and let us know if you have any comment, questions, or
 ;; kudos: Notmuch list <notmuch@notmuchmail.org> (subscription is not
 ;; required, but is available from http://notmuchmail.org).
+
+;;; Code:
 
 (eval-when-compile (require 'cl))
 (require 'mm-view)
@@ -162,7 +167,7 @@ there will be called at other points of notmuch execution."
     (define-key map "o" 'notmuch-search-toggle-order)
     (define-key map "c" 'notmuch-search-stash-map)
     (define-key map "t" 'notmuch-search-filter-by-tag)
-    (define-key map "f" 'notmuch-search-filter)
+    (define-key map "l" 'notmuch-search-filter)
     (define-key map [mouse-1] 'notmuch-search-show-thread)
     (define-key map "*" 'notmuch-search-tag-all)
     (define-key map "a" 'notmuch-search-archive-thread)
@@ -458,7 +463,11 @@ no messages in the region then return nil."
   (notmuch-search-properties-in-region :subject beg end))
 
 (defun notmuch-search-show-thread (&optional elide-toggle)
-  "Display the currently selected thread."
+  "Display the currently selected thread.
+
+With a prefix argument, invert the default value of
+`notmuch-show-only-matching-messages' when displaying the
+thread."
   (interactive "P")
   (let ((thread-id (notmuch-search-find-thread-id))
 	(subject (notmuch-search-find-subject)))
@@ -988,7 +997,7 @@ Enclose QUERY-STRING in parentheses if it matches
     query-string))
 
 (defun notmuch-search-filter (query)
-  "Filter the current search results based on an additional query string.
+  "Filter or LIMIT the current search results based on an additional query string.
 
 Runs a new search matching only messages that match both the
 current search results AND the additional query string provided."
@@ -1060,3 +1069,5 @@ notmuch buffers exist, run `notmuch'."
     (let ((init-file (locate-file notmuch-init-file '("/")
 				  (get-load-suffixes))))
       (if init-file (load init-file nil t t))))
+
+;;; notmuch.el ends here

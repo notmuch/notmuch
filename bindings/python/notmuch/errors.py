@@ -56,6 +56,9 @@ STATUS = Status(['SUCCESS',
   'TAG_TOO_LONG',
   'UNBALANCED_FREEZE_THAW',
   'UNBALANCED_ATOMIC',
+  'UNSUPPORTED_OPERATION',
+  'UPGRADE_REQUIRED',
+  'PATH_ERROR',
   'NOT_INITIALIZED'])
 """STATUS is a class, whose attributes provide constants that serve as return
 indicators for notmuch functions. Currently the following ones are defined. For
@@ -73,6 +76,9 @@ description.
   * TAG_TOO_LONG
   * UNBALANCED_FREEZE_THAW
   * UNBALANCED_ATOMIC
+  * UNSUPPORTED_OPERATION
+  * UPGRADE_REQUIRED
+  * PATH_ERROR
   * NOT_INITIALIZED
 
 Invoke the class method `notmuch.STATUS.status2str` with a status value as
@@ -101,6 +107,9 @@ class NotmuchError(Exception, Python3StringMixIn):
             STATUS.TAG_TOO_LONG: TagTooLongError,
             STATUS.UNBALANCED_FREEZE_THAW: UnbalancedFreezeThawError,
             STATUS.UNBALANCED_ATOMIC: UnbalancedAtomicError,
+            STATUS.UNSUPPORTED_OPERATION: UnsupportedOperationError,
+            STATUS.UPGRADE_REQUIRED: UpgradeRequiredError,
+            STATUS.PATH_ERROR: PathError,
             STATUS.NOT_INITIALIZED: NotInitializedError,
         }
         assert 0 < status <= len(subclasses)
@@ -173,6 +182,18 @@ class UnbalancedFreezeThawError(NotmuchError):
 
 class UnbalancedAtomicError(NotmuchError):
     status = STATUS.UNBALANCED_ATOMIC
+
+
+class UnsupportedOperationError(NotmuchError):
+    status = STATUS.UNSUPPORTED_OPERATION
+
+
+class UpgradeRequiredError(NotmuchError):
+    status = STATUS.UPGRADE_REQUIRED
+
+
+class PathError(NotmuchError):
+    status = STATUS.PATH_ERROR
 
 
 class NotInitializedError(NotmuchError):

@@ -1,3 +1,136 @@
+Notmuch 0.22 (2016-04-26)
+=========================
+
+General
+-------
+
+Xapian 1.3 support
+
+  Notmuch should now build (and the test suite should pass) on recent
+  releases of Xapian 1.3.x. It has been tested with Xapian 1.3.5.
+
+Limited support for S/MIME messages
+
+  Signature verification is supported, but not decryption. S/MIME
+  signature creation and S/MIME encryption are supported via built-in
+  support in Emacs. S/MIME support is not extensively tested at this
+  time.
+
+Bug Fixes
+
+   Fix for threading bug involving deleting and re-adding
+   messages. Fix for case-sensitive content disposition headers. Fix
+   handling of 1 character directory names at top level.
+
+Command Line Interface
+----------------------
+
+`notmuch show` now supports verifying S/MIME signatures
+
+  This support relies on an appropriately configured `gpgsm`.
+
+Build System
+------------
+
+Drop dependency on "pkg-config emacs".
+
+Emacs Interface
+---------------
+
+Notmuch replies now include all parts shown in the show view
+
+  There are two main user visible changes. The first is that rfc822
+  parts are now included in replies.
+
+  The second change is that part headers are now included in the reply
+  buffer to provide visible separation of the parts. The choice of
+  which part headers to show is customizable via the variable
+  `notmuch-mua-reply-insert-header-p-function`.
+
+Filtering or Limiting messages is now bound to `l` in the search view
+
+  This binding now matches the analogous binding in show view.
+
+`F` forwards all open messages in a thread
+
+  When viewing a thread of messages, the new binding `F` can be used
+  to generate a new outgoing message which forwards all of the open
+  messages in the thread. This is analogous to the `f` binding, which
+  forwards only the current message.
+
+Preferred content type can be determined from the message content
+
+  More flexibility in choosing which sub-part of a
+  multipart/alternative part is initially shown is available by
+  setting `notmuch-multipart/alternative-discouraged` to a function
+  that returns a list of discouraged types. The function so specified
+  is passed the message as an argument and can examine the message
+  content to determine which content types should be discouraged. This
+  is in addition to the current capabilities (i.e. setting
+  `notmuch-multipart/alternative-discouraged` to a list of discouraged
+  types).
+
+When viewing a thread ("show" mode), queries that match no messages no
+longer generate empty buffers
+
+  Should an attempt be made to view the thread corresponding to a
+  query that matches no messages, a warning message is now displayed
+  and the terminal bell rung rather than displaying an empty buffer
+  (or, in some cases, displaying an empty buffer and throwing an
+  error). This also affects re-display of the current thread.
+
+Handle S/MIME signatures in emacs
+
+  The emacs interface is now capable making and verifying S/MIME
+  signatures.
+
+`notmuch-message-address-insinuate` is now a no-op
+
+  This reduces the amount of interference with non-notmuch uses of
+  message-mode.
+
+Address completion improvements
+
+  An external script is no longer needed for address completion; if
+  you previously configured one, customize the variable
+  `notmuch-address-command` to try the internal completion. If
+  `company-mode` is available, notmuch uses it by default for
+  interactive address completion.
+
+Test and experiment with the emacs MUA available in source tree
+
+  `./devel/try-emacs-mua` runs emacs and fills the window with
+  information how to try the MUA safely. Emacs is configured to use
+  the notmuch (lisp) files located in `./emacs` directory.
+
+Documentation
+-------------
+
+New `notmuch-report(1)` and `notmuch-report.json(5)` man pages
+describe `notmuch-report` and its JSON configuration file.  You can
+build these files by running `make` in the `devel/nmbug/doc`
+directory.
+
+notmuch-report
+--------------
+
+Renamed from `nmbug-status`.  This script generates reports based on
+notmuch queries, and doesn't really have anything to do with nmbug,
+except for sharing the `NMBGIT` environment variable.  The new name
+focuses on the script's action, instead of its historical association
+with the nmbug workflow.  This should make it more discoverable for
+users looking for generic notmuch reporting tools.
+
+The default configuration file name (extracted from the `config`
+branch of `NBMGIT` has changed from `status-config.json` to
+`notmuch-report.json` so it is more obviously associated with the
+report-generating script.  The configuration file also has a new
+`meta.message-url` setting, which is documented in
+`notmuch-report.json(5)`.
+
+`notmuch-report` now wraps query phrases in parentheses when and-ing
+them together, to avoid confusion about clause grouping.
+
 Notmuch 0.21 (2015-10-29)
 =========================
 
@@ -409,7 +542,7 @@ from the config file.  Use something like:
          ...
       },
       ...
-    },
+    }
 
 Python Bindings
 ---------------

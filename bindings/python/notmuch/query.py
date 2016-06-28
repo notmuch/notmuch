@@ -28,6 +28,7 @@ from .globals import (
     NotmuchMessagesP,
 )
 from .errors import (
+    NotmuchError,
     NullPointerError,
     NotInitializedError,
 )
@@ -133,10 +134,10 @@ class Query(object):
         self._assert_query_is_initialized()
         self._exclude_tag(self._query, _str(tagname))
 
-    """notmuch_query_search_threads"""
-    _search_threads = nmlib.notmuch_query_search_threads
-    _search_threads.argtypes = [NotmuchQueryP]
-    _search_threads.restype = NotmuchThreadsP
+    """notmuch_query_search_threads_st"""
+    _search_threads_st = nmlib.notmuch_query_search_threads_st
+    _search_threads_st.argtypes = [NotmuchQueryP, POINTER(NotmuchThreadsP)]
+    _search_threads_st.restype = c_uint
 
     def search_threads(self):
         """Execute a query for threads
@@ -153,16 +154,19 @@ class Query(object):
         :raises: :exc:`NullPointerError` if search_threads failed
         """
         self._assert_query_is_initialized()
-        threads_p = Query._search_threads(self._query)
+        threads_p = NotmuchThreadsP() # == NULL
+        status = Query._search_threads_st(self._query, byref(threads_p))
+        if status != 0:
+            raise NotmuchError(status)
 
         if not threads_p:
             raise NullPointerError
         return Threads(threads_p, self)
 
-    """notmuch_query_search_messages"""
-    _search_messages = nmlib.notmuch_query_search_messages
-    _search_messages.argtypes = [NotmuchQueryP]
-    _search_messages.restype = NotmuchMessagesP
+    """notmuch_query_search_messages_st"""
+    _search_messages_st = nmlib.notmuch_query_search_messages_st
+    _search_messages_st.argtypes = [NotmuchQueryP, POINTER(NotmuchMessagesP)]
+    _search_messages_st.restype = c_uint
 
     def search_messages(self):
         """Filter messages according to the query and return
@@ -172,7 +176,10 @@ class Query(object):
         :raises: :exc:`NullPointerError` if search_messages failed
         """
         self._assert_query_is_initialized()
-        msgs_p = Query._search_messages(self._query)
+        msgs_p = NotmuchMessagesP() # == NULL
+        status = Query._search_messages_st(self._query, byref(msgs_p))
+        if status != 0:
+            raise NotmuchError(status)
 
         if not msgs_p:
             raise NullPointerError

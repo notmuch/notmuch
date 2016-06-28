@@ -36,7 +36,6 @@ from .errors import (
     NotmuchError,
     NullPointerError,
     NotInitializedError,
-    ReadOnlyDatabaseError,
 )
 from .message import Message
 from .tag import Tags
@@ -484,7 +483,10 @@ class Database(object):
                removed.
         """
         self._assert_db_is_initialized()
-        return self._remove_message(self._db, _str(filename))
+        status = self._remove_message(self._db, _str(filename))
+        if status not in [STATUS.SUCCESS, STATUS.DUPLICATE_MESSAGE_ID]:
+            raise NotmuchError(status)
+        return status
 
     def find_message(self, msgid):
         """Returns a :class:`Message` as identified by its message ID
@@ -574,6 +576,22 @@ class Database(object):
         This function is a python extension and not in the underlying C API.
         """
         return Query(self, querystring)
+
+    """notmuch_database_status_string"""
+    _status_string = nmlib.notmuch_database_status_string
+    _status_string.argtypes = [NotmuchDatabaseP]
+    _status_string.restype = c_char_p
+
+    def status_string(self):
+        """Returns the status string of the database
+
+        This is sometimes used for additional error reporting
+        """
+        self._assert_db_is_initialized()
+        s = Database._status_string(self._db)
+        if s:
+            return s.decode('utf-8', 'ignore')
+        return s
 
     def __repr__(self):
         return "'Notmuch DB " + self.get_path() + "'"

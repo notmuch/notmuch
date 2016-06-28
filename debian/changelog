@@ -1,3 +1,22 @@
+notmuch (0.22-1) unstable; urgency=medium
+
+  * New upstream release.  See /usr/share/doc/notmuch/NEWS for new
+    features and bug fixes.
+
+ -- David Bremner <bremner@debian.org>  Tue, 26 Apr 2016 21:31:44 -0300
+
+notmuch (0.22~rc1-1) experimental; urgency=medium
+
+  * Upstream release candidate
+
+ -- David Bremner <bremner@debian.org>  Sun, 24 Apr 2016 18:03:15 -0300
+
+notmuch (0.22~rc0-1) experimental; urgency=medium
+
+  * Upstream release candidate
+
+ -- David Bremner <bremner@debian.org>  Sat, 16 Apr 2016 08:45:32 -0300
+
 notmuch (0.21-3~bpo8+1) jessie-backports; urgency=medium
 
   * Rebuild for jessie-backports.

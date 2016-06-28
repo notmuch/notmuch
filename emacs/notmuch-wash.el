@@ -1,4 +1,4 @@
-;; notmuch-wash.el --- cleaning up message bodies
+;;; notmuch-wash.el --- cleaning up message bodies
 ;;
 ;; Copyright © Carl Worth
 ;; Copyright © David Edmondson
@@ -20,6 +20,8 @@
 ;;
 ;; Authors: Carl Worth <cworth@cworth.org>
 ;;          David Edmondson <dme@dme.org>
+
+;;; Code:
 
 (require 'coolj)
 
@@ -423,3 +425,5 @@ for error."
 ;;
 
 (provide 'notmuch-wash)
+
+;;; notmuch-wash.el ends here

@@ -1,4 +1,4 @@
-;; notmuch-mua.el --- emacs style mail-user-agent
+;;; notmuch-mua.el --- emacs style mail-user-agent
 ;;
 ;; Copyright © David Edmondson
 ;;
@@ -19,6 +19,8 @@
 ;;
 ;; Authors: David Edmondson <dme@dme.org>
 
+;;; Code:
+
 (require 'message)
 (require 'mm-view)
 (require 'format-spec)
@@ -28,7 +30,9 @@
 
 (eval-when-compile (require 'cl))
 
-(declare-function notmuch-show-insert-bodypart "notmuch-show" (msg part depth &optional hide))
+(declare-function notmuch-show-insert-body "notmuch-show" (msg body depth))
+(declare-function notmuch-fcc-header-setup "notmuch-maildir-fcc" ())
+(declare-function notmuch-fcc-handler "notmuch-maildir-fcc" (destdir))
 
 ;;
 
@@ -91,6 +95,23 @@ Note that these functions use `mail-citation-hook' if that is non-nil."
   :link '(custom-manual "(message)Insertion Variables")
   :group 'notmuch-reply)
 
+(defcustom notmuch-mua-reply-insert-header-p-function
+  'notmuch-show-reply-insert-header-p-never
+  "Function to decide which parts get a header when replying.
+
+This function specifies which parts of a mime message with
+mutiple parts get a header."
+  :type '(radio (const :tag "No part headers"
+		               notmuch-show-reply-insert-header-p-never)
+		(const :tag "All except multipart/* and hidden parts"
+		               notmuch-show-reply-insert-header-p-trimmed)
+		(const :tag "Only for included text parts"
+			       notmuch-show-reply-insert-header-p-minimal)
+		(const :tag "Exactly as in show view"
+			       notmuch-show-insert-header-p)
+		(function :tag "Other"))
+  :group 'notmuch-reply)
+
 ;;
 
 (defun notmuch-mua-get-switch-function ()
@@ -141,31 +162,6 @@ Note that these functions use `mail-citation-hook' if that is non-nil."
 	  do (mml-secure-message-sign-encrypt)
 	else if (notmuch-match-content-type (plist-get part :content-type) "multipart/*")
 	  do (notmuch-mua-reply-crypto (plist-get part :content))))
-
-(defun notmuch-mua-get-quotable-parts (parts)
-  (loop for part in parts
-	if (notmuch-match-content-type (plist-get part :content-type) "multipart/alternative")
-	  collect (let* ((subparts (plist-get part :content))
-			(types (mapcar (lambda (part) (plist-get part :content-type)) subparts))
-			(chosen-type (car (notmuch-multipart/alternative-choose types))))
-		   (loop for part in (reverse subparts)
-			 if (notmuch-match-content-type (plist-get part :content-type) chosen-type)
-			 return part))
-	else if (notmuch-match-content-type (plist-get part :content-type) "multipart/*")
-	  append (notmuch-mua-get-quotable-parts (plist-get part :content))
-	else if (notmuch-match-content-type (plist-get part :content-type) "text/*")
-	  collect part))
-
-(defun notmuch-mua-insert-quotable-part (message part)
-  ;; We don't want text properties leaking from the show renderer into
-  ;; the reply so we use a temp buffer. Also we don't want hooks, such
-  ;; as notmuch-wash-*, to be run on the quotable part so we set
-  ;; notmuch-show-insert-text/plain-hook to nil.
-  (insert (with-temp-buffer
-	    (let ((notmuch-show-insert-text/plain-hook nil))
-	      ;; Show the part but do not add buttons.
-	      (notmuch-show-insert-bodypart message part 0 'no-buttons))
-	    (buffer-substring-no-properties (point-min) (point-max)))))
 
 ;; There is a bug in emacs 23's message.el that results in a newline
 ;; not being inserted after the References header, so the next header
@@ -245,10 +241,20 @@ Note that these functions use `mail-citation-hook' if that is non-nil."
 	(insert "From: " from "\n")
 	(insert "Date: " date "\n\n")
 
-	;; Get the parts of the original message that should be quoted; this includes
-	;; all the text parts, except the non-preferred ones in a multipart/alternative.
-	(let ((quotable-parts (notmuch-mua-get-quotable-parts (plist-get original :body))))
-	  (mapc (apply-partially 'notmuch-mua-insert-quotable-part original) quotable-parts))
+	(insert (with-temp-buffer
+		  (let
+		      ;; Don't attempt to clean up messages, excerpt
+		      ;; citations, etc. in the original message before
+		      ;; quoting.
+		      ((notmuch-show-insert-text/plain-hook nil)
+		       ;; Don't omit long parts.
+		       (notmuch-show-max-text-part-size 0)
+		       ;; Insert headers for parts as appropriate for replying.
+		       (notmuch-show-insert-header-p-function notmuch-mua-reply-insert-header-p-function)
+		       ;; Don't indent multipart sub-parts.
+		       (notmuch-show-indent-multipart nil))
+		    (notmuch-show-insert-body original (plist-get original :body) 0)
+		    (buffer-substring-no-properties (point-min) (point-max)))))
 
 	(set-mark (point))
 	(goto-char start)
@@ -269,15 +275,45 @@ Note that these functions use `mail-citation-hook' if that is non-nil."
   (set-buffer-modified-p nil))
 
 (define-derived-mode notmuch-message-mode message-mode "Message[Notmuch]"
-  "Notmuch message composition mode. Mostly like `message-mode'")
+  "Notmuch message composition mode. Mostly like `message-mode'"
+  (when notmuch-address-command
+    (notmuch-address-setup)))
+
+(put 'notmuch-message-mode 'flyspell-mode-predicate 'mail-mode-flyspell-verify)
 
 (define-key notmuch-message-mode-map (kbd "C-c C-c") #'notmuch-mua-send-and-exit)
 (define-key notmuch-message-mode-map (kbd "C-c C-s") #'notmuch-mua-send)
 
-(defun notmuch-mua-mail (&optional to subject other-headers &rest other-args)
-  "Invoke the notmuch mail composition window.
+(defun notmuch-mua-pop-to-buffer (name switch-function)
+  "Pop to buffer NAME, and warn if it already exists and is
+modified. This function is notmuch addaptation of
+`message-pop-to-buffer'."
+  (let ((buffer (get-buffer name)))
+    (if (and buffer
+	     (buffer-name buffer))
+	(let ((window (get-buffer-window buffer 0)))
+	  (if window
+	      ;; Raise the frame already displaying the message buffer.
+	      (progn
+		(gnus-select-frame-set-input-focus (window-frame window))
+		(select-window window))
+	    (funcall switch-function buffer)
+	    (set-buffer buffer))
+	  (when (and (buffer-modified-p)
+		     (not (prog1
+			      (y-or-n-p
+			       "Message already being composed; erase? ")
+			    (message nil))))
+	    (error "Message being composed")))
+      (funcall switch-function name)
+      (set-buffer name))
+    (erase-buffer)
+    (notmuch-message-mode)))
 
-OTHER-ARGS are passed through to `message-mail'."
+(defun notmuch-mua-mail (&optional to subject other-headers continue
+				   switch-function yank-action send-actions
+				   return-action &rest ignored)
+  "Invoke the notmuch mail composition window."
   (interactive)
 
   (when notmuch-mua-user-agent-function
@@ -286,11 +322,29 @@ OTHER-ARGS are passed through to `message-mail'."
 	(push (cons 'User-Agent user-agent) other-headers))))
 
   (unless (assq 'From other-headers)
-    (push (cons 'From (concat
-		       (notmuch-user-name) " <" (notmuch-user-primary-email) ">")) other-headers))
+    (push (cons 'From (message-make-from
+		       (notmuch-user-name) (notmuch-user-primary-email))) other-headers))
 
-  (apply #'message-mail to subject other-headers other-args)
-  (notmuch-message-mode)
+  (notmuch-mua-pop-to-buffer (message-buffer-name "mail" to)
+			     (or switch-function (notmuch-mua-get-switch-function)))
+  (let ((headers
+	 (append
+	  ;; The following is copied from `message-mail'
+	  `((To . ,(or to "")) (Subject . ,(or subject "")))
+	  ;; C-h f compose-mail says that headers should be specified as
+	  ;; (string . value); however all the rest of message expects
+	  ;; headers to be symbols, not strings (eg message-header-format-alist).
+	  ;; http://lists.gnu.org/archive/html/emacs-devel/2011-01/msg00337.html
+	  ;; We need to convert any string input, eg from rmail-start-mail.
+	  (dolist (h other-headers other-headers)
+	    (if (stringp (car h)) (setcar h (intern (capitalize (car h))))))))
+	(args (list yank-action send-actions)))
+    ;; message-setup-1 in Emacs 23 does not accept return-action
+    ;; argument. Pass it only if it is supplied by the caller. This
+    ;; will never be the case when we're called by `compose-mail' in
+    ;; Emacs 23.
+    (when return-action (nconc args '(return-action)))
+    (apply 'message-setup-1 headers args))
   (notmuch-fcc-header-setup)
   (message-sort-headers)
   (message-hide-headers)
@@ -343,7 +397,7 @@ the From: header is already filled in by notmuch."
 	    (ido-completing-read (concat "Sender address for " name ": ") addrs
 				 nil nil nil 'notmuch-mua-sender-history
 				 (car addrs))))
-      (concat name " <" address ">"))))
+      (message-make-from name address))))
 
 (put 'notmuch-mua-new-mail 'notmuch-prefix-doc "... and prompt for sender")
 (defun notmuch-mua-new-mail (&optional prompt-for-sender)
@@ -357,25 +411,53 @@ the From: address first."
 	   (list (cons 'From (notmuch-mua-prompt-for-sender))))))
     (notmuch-mua-mail nil nil other-headers nil (notmuch-mua-get-switch-function))))
 
-(defun notmuch-mua-new-forward-message (&optional prompt-for-sender)
-  "Invoke the notmuch message forwarding window.
+(defun notmuch-mua-new-forward-messages (messages &optional prompt-for-sender)
+  "Compose a new message forwarding MESSAGES.
 
-The current buffer must contain an RFC2822 message to forward.
-
-If PROMPT-FOR-SENDER is non-nil, the user will be prompted for
-the From: address first."
-  (let* ((cur (current-buffer))
-	 (message-forward-decoded-p nil)
-	 (subject (message-make-forward-subject))
-	 (other-headers
+If PROMPT-FOR-SENDER is non-nil, the user will be prompteed for
+the From: address."
+  (let* ((other-headers
 	  (when (or prompt-for-sender notmuch-always-prompt-for-sender)
-	    (list (cons 'From (notmuch-mua-prompt-for-sender))))))
-    (notmuch-mua-mail nil subject other-headers nil (notmuch-mua-get-switch-function))
-    (message-forward-make-body cur)
-    ;; `message-forward-make-body' shows the User-agent header.  Hide
-    ;; it again.
-    (message-hide-headers)
-    (set-buffer-modified-p nil)))
+	    (list (cons 'From (notmuch-mua-prompt-for-sender)))))
+	 forward-subject) ;; Comes from the first message and is
+			  ;; applied later.
+
+    ;; Generate the template for the outgoing message.
+    (notmuch-mua-mail nil "" other-headers nil (notmuch-mua-get-switch-function))
+
+    (save-excursion
+      ;; Insert all of the forwarded messages.
+      (mapc (lambda (id)
+	      (let ((temp-buffer (get-buffer-create
+				  (concat "*notmuch-fwd-raw-" id "*"))))
+		;; Get the raw version of this message in the buffer.
+		(with-current-buffer temp-buffer
+		  (erase-buffer)
+		  (let ((coding-system-for-read 'no-conversion))
+		    (call-process notmuch-command nil t nil "show" "--format=raw" id))
+		  ;; Because we process the messages in reverse order,
+		  ;; always generate a forwarded subject, then use the
+		  ;; last (i.e. first) one.
+		  (setq forward-subject (message-make-forward-subject)))
+		;; Make a copy ready to be forwarded in the
+		;; composition buffer.
+		(message-forward-make-body temp-buffer)
+		;; Kill the temporary buffer.
+		(kill-buffer temp-buffer)))
+	    ;; `message-forward-make-body' always puts the message at
+	    ;; the top, so do them in reverse order.
+	    (reverse messages))
+
+      ;; Add in the appropriate subject.
+      (save-restriction
+	(message-narrow-to-headers)
+	(message-remove-header "Subject")
+	(message-add-header (concat "Subject: " forward-subject)))
+
+      ;; `message-forward-make-body' shows the User-agent header.  Hide
+      ;; it again.
+      (message-hide-headers)
+      (set-buffer-modified-p nil))))
 
 (defun notmuch-mua-new-reply (query-string &optional prompt-for-sender reply-all)
   "Compose a reply to the message identified by QUERY-STRING.
@@ -435,3 +517,5 @@ simply runs the corresponding `message-mode' hook functions."
 ;;
 
 (provide 'notmuch-mua)
+
+;;; notmuch-mua.el ends here

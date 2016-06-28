@@ -25,9 +25,7 @@ The following nonsense code demonstrates many aspects of the style:
 static some_type
 function (param_type param, param_type param)
 {
-   int i;
-
-   for (i = 0; i < 10; i++) {
+   for (int i = 0; i < 10; i++) {
        int j;
 
        j = i + 10;
@@ -64,11 +62,18 @@ function (param_type param, param_type param)
 * Code lines should be less than 80 columns and comments should be
   wrapped at 70 columns.
 
+* Variable declarations should be at the top of a block; C99 style
+  control variable declarations in for loops are also OK.
+
 Naming
 ------
 
 * Use lowercase_with_underscores for function, variable, and type
   names.
+
+* Except for variables with extremely small scope, and perhaps loop
+  indices, when naming variables and functions, err on the side of
+  verbosity.
 
 * All structs should be typedef'd to a name ending with _t.  If the
   struct has a tag, it should be the same as the typedef name, minus

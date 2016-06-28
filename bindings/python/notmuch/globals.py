@@ -33,6 +33,11 @@ except:
 
 from .compat import Python3StringMixIn, encode_utf8 as _str
 
+# We import these on behalf of other modules.  Silence warning about
+# these symbols not being used.
+Python3StringMixIn
+_str
+
 class Enum(object):
     """Provides ENUMS as "code=Enum(['a','b','c'])" where code.a=0 etc..."""
     def __init__(self, names):

@@ -175,6 +175,21 @@ case $news_date in
 	append_emsg "Date '$news_date' in NEWS file is not in format (yyyy-mm-dd)"
 esac
 
+year=`exec date +%Y`
+echo -n "Checking that copyright in documentation contains 2009-$year... "
+# Read the value of variable `copyright' defined in 'doc/conf.py'.
+# As __file__ is not defined when python command is given from command line,
+# it is defined before contents of 'doc/conf.py' (which dereferences __file__)
+# is executed.
+copyrightline=`exec python -c "with open('doc/conf.py') as cf: __file__ = ''; exec(cf.read()); print(copyright)"`
+case $copyrightline in
+	*2009-$year*)
+		echo Yes. ;;
+	*)
+		echo No.
+		append_emsg "The copyright in doc/conf.py line '$copyrightline' does not contain '2009-$year'"
+esac
+
 if [ -n "$emsgs" ]
 then
 	echo

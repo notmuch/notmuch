@@ -377,7 +377,8 @@ _index_mime_part (notmuch_message_t *message,
 
     disposition = g_mime_object_get_content_disposition (part);
     if (disposition &&
-	strcmp (disposition->disposition, GMIME_DISPOSITION_ATTACHMENT) == 0)
+	strcasecmp (g_mime_content_disposition_get_disposition (disposition),
+		    GMIME_DISPOSITION_ATTACHMENT) == 0)
     {
 	const char *filename = g_mime_part_get_filename (GMIME_PART (part));
 

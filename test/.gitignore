@@ -7,4 +7,5 @@ smtp-dummy
 symbol-test
 make-db-version
 test-results
+ghost-report
 tmp.*
