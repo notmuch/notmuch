@@ -572,7 +572,7 @@ class Message(Python3StringMixIn):
             notmuch.STATUS.SUCCESS here. See there for details."""
         if not self._msg:
             raise NotInitializedError()
-        return Message._tags_to_maildir_flags(self._msg)
+        return Message._maildir_flags_to_tags(self._msg)
 
     def __repr__(self):
         """Represent a Message() object by str()"""
