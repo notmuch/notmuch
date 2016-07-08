@@ -97,6 +97,9 @@ typedef struct {
  *		        STRING is the name of a file within that
  *		        directory for this mail message.
  *
+ *      property:       Has a property with key=value
+ *                 FIXME: if no = is present, should match on any value
+ *
  *    A mail document also has four values:
  *
  *	TIMESTAMP:	The time_t value corresponding to the message's
@@ -251,7 +254,6 @@ static prefix_t BOOLEAN_PREFIX_INTERNAL[] = {
     { "directory",		"XDIRECTORY" },
     { "file-direntry",		"XFDIRENTRY" },
     { "directory-direntry",	"XDDIRENTRY" },
-    { "property",               "XPROPERTY"  },
 };
 
 static prefix_t BOOLEAN_PREFIX_EXTERNAL[] = {
@@ -260,6 +262,7 @@ static prefix_t BOOLEAN_PREFIX_EXTERNAL[] = {
     { "is",			"K" },
     { "id",			"Q" },
     { "path",			"P" },
+    { "property",		"XPROPERTY" },
     /*
      * Unconditionally add ':' to reduce potential ambiguity with
      * overlapping prefixes and/or terms that start with capital

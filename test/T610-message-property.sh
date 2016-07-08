@@ -237,4 +237,15 @@ notmuch restore < BEFORE2
 notmuch dump | grep '^#=' > OUTPUT
 test_expect_equal_file PROPERTIES OUTPUT
 
+test_begin_subtest "test 'property:' queries: empty"
+notmuch search property:testkey1=charles > OUTPUT
+test_expect_equal_file /dev/null OUTPUT
+
+test_begin_subtest "test 'property:' queries: single message"
+notmuch search --output=messages property:testkey1=alice > OUTPUT
+cat <<EOF >EXPECTED
+id:4EFC743A.3060609@april.org
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
 test_done

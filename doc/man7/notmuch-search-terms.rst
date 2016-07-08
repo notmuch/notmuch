@@ -58,6 +58,8 @@ indicate user-supplied values):
 
 -  query:<name>
 
+-  property:<key>=<value>
+
 The **from:** prefix is used to match the name or address of the sender
 of an email message.
 
@@ -139,6 +141,11 @@ queries added with **notmuch-config(1)**. Named queries are only
 available if notmuch is built with **Xapian Field Processors** (see
 below).
 
+The **property:** prefix searches for messages with a particular
+<key>=<value> property pair. Properties are used internally by notmuch
+(and extensions) to add metadata to messages. A given key can be
+present on a given message with several different values.
+
 Operators
 ---------
 
@@ -217,7 +224,7 @@ exact matches like "tag:inbox"  or **probabilistic**, supporting a more flexible
 
 
 Boolean
-   **tag:**, **id:**, **thread:**, **folder:**, **path:**
+   **tag:**, **id:**, **thread:**, **folder:**, **path:**, **property:**
 Probabilistic
    **from:**, **to:**, **subject:**, **attachment:**, **mimetype:**
 
