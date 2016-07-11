@@ -1403,6 +1403,7 @@ reset based on the original query."
     (define-key map "v" 'notmuch-show-view-part)
     (define-key map "o" 'notmuch-show-interactively-view-part)
     (define-key map "|" 'notmuch-show-pipe-part)
+    (define-key map "m" 'notmuch-show-choose-mime-of-part)
     (define-key map "?" 'notmuch-subkeymap-help)
     map)
   "Submap for part commands")
@@ -2332,25 +2333,27 @@ omit --in-reply-to=<Message-Id>."
       (insert (notmuch-get-bodypart-binary msg part process-crypto)))
     buf))
 
-(defun notmuch-show-current-part-handle ()
+(defun notmuch-show-current-part-handle (&optional mime-type)
   "Return an mm-handle for the part containing point.
 
 This creates a temporary buffer for the part's content; the
-caller is responsible for killing this buffer as appropriate."
+caller is responsible for killing this buffer as appropriate.  If
+MIME-TYPE is given then set the handle's mime-type to MIME-TYPE."
   (let* ((msg (notmuch-show-get-message-properties))
 	 (part (notmuch-show-get-part-properties))
 	 (buf (notmuch-show-generate-part-buffer msg part))
-	 (computed-type (plist-get part :computed-type))
+	 (computed-type (or mime-type (plist-get part :computed-type)))
 	 (filename (plist-get part :filename))
 	 (disposition (if filename `(attachment (filename . ,filename)))))
     (mm-make-handle buf (list computed-type) nil nil disposition)))
 
-(defun notmuch-show-apply-to-current-part-handle (fn)
+(defun notmuch-show-apply-to-current-part-handle (fn &optional mime-type)
   "Apply FN to an mm-handle for the part containing point.
 
 This ensures that the temporary buffer created for the mm-handle
-is destroyed when FN returns."
-  (let ((handle (notmuch-show-current-part-handle)))
+is destroyed when FN returns. If MIME-TYPE is given then force
+part to be treated as if it had that mime-type."
+  (let ((handle (notmuch-show-current-part-handle mime-type)))
     ;; emacs 24.3+ puts stdout/stderr into the calling buffer so we
     ;; call it from a temp-buffer, unless
     ;; notmuch-show-attachment-debug is non-nil in which case we put
@@ -2394,6 +2397,27 @@ is destroyed when FN returns."
   (interactive)
   (notmuch-show-apply-to-current-part-handle #'mm-pipe-part))
 
+
+(defun notmuch-show--mm-display-part (handle)
+  "Use mm-display-part to display HANDLE in a new buffer.
+
+If the part is displayed in an external application then close
+the new buffer."
+  (let ((buf (get-buffer-create (generate-new-buffer-name
+				 (concat " *notmuch-internal-part*")))))
+    (switch-to-buffer buf)
+    (if (eq (mm-display-part handle) 'external)
+	(kill-buffer buf)
+      (goto-char (point-min))
+      (set-buffer-modified-p nil)
+      (view-buffer buf 'kill-buffer-if-not-modified))))
+
+(defun notmuch-show-choose-mime-of-part (mime-type)
+  "Choose the mime type to use for displaying part"
+  (interactive
+   (list (completing-read "Mime type to use (default text/plain): "
+			  (mailcap-mime-types) nil nil nil nil "text/plain")))
+  (notmuch-show-apply-to-current-part-handle #'notmuch-show--mm-display-part mime-type))
 
 (provide 'notmuch-show)
 
