@@ -383,6 +383,22 @@ _notmuch_database_log (notmuch_database_t *notmuch,
 	talloc_free (notmuch->status_string);
 
     notmuch->status_string = talloc_vasprintf (notmuch, format, va_args);
+    va_end (va_args);
+}
+
+void
+_notmuch_database_log_append (notmuch_database_t *notmuch,
+		      const char *format,
+		      ...)
+{
+    va_list va_args;
+
+    va_start (va_args, format);
+
+    if (notmuch->status_string)
+	notmuch->status_string = talloc_vasprintf_append (notmuch->status_string, format, va_args);
+    else
+	notmuch->status_string = talloc_vasprintf (notmuch, format, va_args);
 
     va_end (va_args);
 }

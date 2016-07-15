@@ -196,6 +196,10 @@ void
 _notmuch_database_log (notmuch_database_t *notmuch,
 		       const char *format, ...);
 
+void
+_notmuch_database_log_append (notmuch_database_t *notmuch,
+			      const char *format, ...);
+
 unsigned long
 _notmuch_database_new_revision (notmuch_database_t *notmuch);
 
