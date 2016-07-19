@@ -1,3 +1,9 @@
+notmuch (0.22.1-2) unstable; urgency=medium
+
+  * Add explicit build-depends on gnupg, for the test suite.
+
+ -- David Bremner <bremner@debian.org>  Tue, 19 Jul 2016 08:50:13 -0300
+
 notmuch (0.22.1-1) unstable; urgency=medium
 
   * Correct the definition of `LIBNOTMUCH_CHECK_VERSION`.
