@@ -1,3 +1,26 @@
+notmuch (0.22.1-2) unstable; urgency=medium
+
+  * Add explicit build-depends on gnupg, for the test suite.
+
+ -- David Bremner <bremner@debian.org>  Tue, 19 Jul 2016 08:50:13 -0300
+
+notmuch (0.22.1-1) unstable; urgency=medium
+
+  * Correct the definition of `LIBNOTMUCH_CHECK_VERSION`.
+  * Document the (lack of) operations permitted on a closed database
+    (Closes: #826843).
+  * Fix race condition in dump / restore tests.
+  * [notmuch-emacs] Tell `message-mode` mode that outgoing messages are mail
+  * [notmuch-emacs] Respect charset of MIME parts when reading them
+
+ -- David Bremner <bremner@debian.org>  Tue, 19 Jul 2016 06:42:09 -0300
+
+notmuch (0.22.1~rc0-1) experimental; urgency=medium
+
+  * release candidate for bugfix release
+
+ -- David Bremner <bremner@debian.org>  Thu, 30 Jun 2016 21:28:13 +0200
+
 notmuch (0.22-1) unstable; urgency=medium
 
   * New upstream release.  See /usr/share/doc/notmuch/NEWS for new

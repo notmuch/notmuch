@@ -24,6 +24,7 @@ Build-Depends:
  gdb [!s390x !ia64 !armel !ppc64el !mips !mipsel !mips64el],
  dtach (>= 0.8),
  gpgsm <!nocheck>,
+ gnupg <!nocheck>,
  bash-completion (>=1.9.0~)
 Standards-Version: 3.9.6
 Homepage: https://notmuchmail.org/
