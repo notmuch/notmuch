@@ -311,6 +311,26 @@ there will be called at other points of notmuch execution."
   :group 'notmuch-search
   :group 'notmuch-faces)
 
+(defface notmuch-search-flagged-face
+  '((t
+     (:weight bold)))
+  "Face used in search mode face for flagged threads.
+
+This face is the default value for the \"flagged\" tag in
+`notmuch-search-line-faces`."
+  :group 'notmuch-search
+  :group 'notmuch-faces)
+
+(defface notmuch-search-unread-face
+  '((t
+     (:foreground "blue")))
+  "Face used in search mode for unread threads.
+
+This face is the default value for the \"unread\" tag in
+`notmuch-search-line-faces`."
+  :group 'notmuch-search
+  :group 'notmuch-faces)
+
 (defun notmuch-search-mode ()
   "Major mode displaying results of a notmuch search.
 
@@ -654,9 +674,12 @@ of the result."
 		  (goto-char (point-min))
 		  (forward-line (1- notmuch-search-target-line)))))))))
 
-(defcustom notmuch-search-line-faces '(("unread" :weight bold)
-				       ("flagged" :foreground "blue"))
-  "Tag/face mapping for line highlighting in notmuch-search.
+(defcustom notmuch-search-line-faces
+  '(("unread" 'notmuch-search-unread-face)
+    ("flagged" 'notmuch-search-flagged-face))
+  "Alist of tags to faces for line highlighting in notmuch-search.
+Each element looks like (TAG . FACE).
+A thread with TAG will have FACE applied.
 
 Here is an example of how to color search results based on tags.
  (the following text would be placed in your ~/.emacs file):
@@ -665,10 +688,12 @@ Here is an example of how to color search results based on tags.
                                    (\"deleted\" . (:foreground \"red\"
 						  :background \"blue\"))))
 
-The attributes defined for matching tags are merged, with earlier
-attributes overriding later. A message having both \"deleted\"
-and \"unread\" tags with the above settings would have a green
-foreground and blue background."
+The FACE must be a face name (a symbol or string), a property
+list of face attributes, or a list of these.  The faces for
+matching tags are merged, with earlier attributes overriding
+later. A message having both \"deleted\" and \"unread\" tags with
+the above settings would have a green foreground and blue
+background."
   :type '(alist :key-type (string) :value-type (custom-face-edit))
   :group 'notmuch-search
   :group 'notmuch-faces)
