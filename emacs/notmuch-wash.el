@@ -26,6 +26,7 @@
 (require 'coolj)
 
 (declare-function notmuch-show-insert-bodypart "notmuch-show" (msg part depth &optional hide))
+(defvar notmuch-show-indent-messages-width)
 
 ;;
 
@@ -335,12 +336,13 @@ message at the window width. When doing so, citation leaders in
 the wrapped text are maintained."
 
   (let* ((coolj-wrap-follows-window-size nil)
+	 (indent (* depth notmuch-show-indent-messages-width))
 	 (limit (if (numberp notmuch-wash-wrap-lines-length)
 		    (min notmuch-wash-wrap-lines-length
 			 (window-width))
 		  (window-width)))
 	 (fill-column (- limit
-			 depth
+			 indent
 			 ;; 2 to avoid poor interaction with
 			 ;; `word-wrap'.
 			 2)))
