@@ -122,8 +122,8 @@ collapse the remaining lines into a button."
 
 If this is nil, lines in messages will be wrapped to fit in the
 current window. If this is a number, lines will be wrapped after
-this many characters or at the window width (whichever one is
-lower)."
+this many characters (ignoring indentation due to thread depth)
+or at the window width (whichever one is lower)."
   :type '(choice (const :tag "window width" nil)
 		 (integer :tag "number of characters"))
   :group 'notmuch-wash)
@@ -338,7 +338,7 @@ the wrapped text are maintained."
   (let* ((coolj-wrap-follows-window-size nil)
 	 (indent (* depth notmuch-show-indent-messages-width))
 	 (limit (if (numberp notmuch-wash-wrap-lines-length)
-		    (min notmuch-wash-wrap-lines-length
+		    (min (+ notmuch-wash-wrap-lines-length indent)
 			 (window-width))
 		  (window-width)))
 	 (fill-column (- limit
