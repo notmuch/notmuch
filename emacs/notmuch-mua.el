@@ -62,7 +62,7 @@ disabled: this would result in an incorrect behavior."))
 		 (const :tag "Compose mail in a new window"  new-window)
 		 (const :tag "Compose mail in a new frame"   new-frame)))
 
-(defcustom notmuch-mua-user-agent-function 'notmuch-mua-user-agent-full
+(defcustom notmuch-mua-user-agent-function nil
   "Function used to generate a `User-Agent:' string. If this is
 `nil' then no `User-Agent:' will be generated."
   :type '(choice (const :tag "No user agent string" nil)
@@ -73,7 +73,7 @@ disabled: this would result in an incorrect behavior."))
 			   :value notmuch-mua-user-agent-full))
   :group 'notmuch-send)
 
-(defcustom notmuch-mua-hidden-headers '("^User-Agent:")
+(defcustom notmuch-mua-hidden-headers nil
   "Headers that are added to the `message-mode' hidden headers
 list."
   :type '(repeat string)

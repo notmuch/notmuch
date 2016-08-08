@@ -193,7 +193,6 @@ emacs_deliver_message \
      (kill-whole-line)
      (insert "To: user@example.com\n")'
 sed \
-    -e s',^User-Agent: Notmuch/.* Emacs/.*,User-Agent: Notmuch/XXX Emacs/XXX,' \
     -e s',^Message-ID: <.*>$,Message-ID: <XXX>,' \
     -e s',^\(Content-Type: text/plain\); charset=us-ascii$,\1,' < sent_message >OUTPUT
 cat <<EOF >EXPECTED
@@ -201,7 +200,6 @@ From: Notmuch Test Suite <test_suite@notmuchmail.org>
 To: user@example.com
 Subject: Testing message sent via SMTP
 Date: 01 Jan 2000 12:00:00 -0000
-User-Agent: Notmuch/XXX Emacs/XXX
 Message-ID: <XXX>
 MIME-Version: 1.0
 Content-Type: text/plain
@@ -310,7 +308,6 @@ test_emacs '(let ((message-hidden-headers ''()))
 	    (test-output))'
 sed -i -e 's/^In-Reply-To: <.*>$/In-Reply-To: <XXX>/' OUTPUT
 sed -i -e 's/^References: <.*>$/References: <XXX>/' OUTPUT
-sed -i -e 's,^User-Agent: Notmuch/.* Emacs/.*,User-Agent: Notmuch/XXX Emacs/XXX,' OUTPUT
 cat <<EOF >EXPECTED
 From: Notmuch Test Suite <test_suite@notmuchmail.org>
 To: user@example.com
@@ -318,7 +315,6 @@ Subject: Re: Testing message sent via SMTP
 In-Reply-To: <XXX>
 Fcc: ${MAIL_DIR}/sent
 References: <XXX>
-User-Agent: Notmuch/XXX Emacs/XXX
 --text follows this line--
 Notmuch Test Suite <test_suite@notmuchmail.org> writes:
 
@@ -335,7 +331,6 @@ test_emacs "(let ((message-hidden-headers '()))
 	    (notmuch-test-wait)
 	    (notmuch-search-reply-to-thread)
 	    (test-output))"
-sed -i -e 's,^User-Agent: Notmuch/.* Emacs/.*,User-Agent: Notmuch/XXX Emacs/XXX,' OUTPUT
 cat <<EOF >EXPECTED
 From: Notmuch Test Suite <test_suite_other@notmuchmail.org>
 To: Sender <sender@example.com>
@@ -343,7 +338,6 @@ Subject: Re: ${test_subtest_name}
 In-Reply-To: <${gen_msg_id}>
 Fcc: ${MAIL_DIR}/sent
 References: <${gen_msg_id}>
-User-Agent: Notmuch/XXX Emacs/XXX
 --text follows this line--
 Sender <sender@example.com> writes:
 
@@ -361,7 +355,6 @@ test_emacs "(let ((message-hidden-headers '()))
 	    (notmuch-test-wait)
 	    (notmuch-search-reply-to-thread)
 	    (test-output))"
-sed -i -e 's,^User-Agent: Notmuch/.* Emacs/.*,User-Agent: Notmuch/XXX Emacs/XXX,' OUTPUT
 cat <<EOF >EXPECTED
 From: Notmuch Test Suite <test_suite@notmuchmail.org>
 To: Sender <sender@example.com>, someone@example.com
@@ -369,7 +362,6 @@ Subject: Re: ${test_subtest_name}
 In-Reply-To: <${gen_msg_id}>
 Fcc: ${MAIL_DIR}/sent
 References: <${gen_msg_id}>
-User-Agent: Notmuch/XXX Emacs/XXX
 --text follows this line--
 Sender <sender@example.com> writes:
 
@@ -382,7 +374,6 @@ test_emacs '(let ((message-hidden-headers ''()))
 	    (notmuch-show "id:20091118002059.067214ed@hikari")
 		(notmuch-show-reply)
 		(test-output))'
-sed -i -e 's,^User-Agent: Notmuch/.* Emacs/.*,User-Agent: Notmuch/XXX Emacs/XXX,' OUTPUT
 cat <<EOF >EXPECTED
 From: Notmuch Test Suite <test_suite@notmuchmail.org>
 To: Adrian Perez de Castro <aperez@igalia.com>, notmuch@notmuchmail.org
@@ -390,7 +381,6 @@ Subject: Re: [notmuch] Introducing myself
 In-Reply-To: <20091118002059.067214ed@hikari>
 Fcc: ${MAIL_DIR}/sent
 References: <20091118002059.067214ed@hikari>
-User-Agent: Notmuch/XXX Emacs/XXX
 --text follows this line--
 Adrian Perez de Castro <aperez@igalia.com> writes:
 
@@ -447,7 +437,6 @@ test_emacs '(let ((message-hidden-headers ''()))
 	    (notmuch-show "id:cf0c4d610911171136h1713aa59w9cf9aa31f052ad0a@mail.gmail.com")
 		(notmuch-show-reply)
 		(test-output))'
-sed -i -e 's,^User-Agent: Notmuch/.* Emacs/.*,User-Agent: Notmuch/XXX Emacs/XXX,' OUTPUT
 cat <<EOF >EXPECTED
 From: Notmuch Test Suite <test_suite@notmuchmail.org>
 To: Alex Botero-Lowry <alex.boterolowry@gmail.com>, notmuch@notmuchmail.org
@@ -455,7 +444,6 @@ Subject: Re: [notmuch] preliminary FreeBSD support
 In-Reply-To: <cf0c4d610911171136h1713aa59w9cf9aa31f052ad0a@mail.gmail.com>
 Fcc: ${MAIL_DIR}/sent
 References: <cf0c4d610911171136h1713aa59w9cf9aa31f052ad0a@mail.gmail.com>
-User-Agent: Notmuch/XXX Emacs/XXX
 --text follows this line--
 Alex Botero-Lowry <alex.boterolowry@gmail.com> writes:
 
@@ -521,7 +509,6 @@ test_emacs "(let ((message-hidden-headers '()))
 	    (notmuch-show \"id:${gen_msg_id}\")
 	    (notmuch-show-reply)
 	    (test-output))"
-sed -i -e 's,^User-Agent: Notmuch/.* Emacs/.*,User-Agent: Notmuch/XXX Emacs/XXX,' OUTPUT
 cat <<EOF >EXPECTED
 From: Notmuch Test Suite <test_suite@notmuchmail.org>
 To: 
@@ -529,7 +516,6 @@ Subject: Re: Reply within emacs to an html-only message
 In-Reply-To: <${gen_msg_id}>
 Fcc: ${MAIL_DIR}/sent
 References: <${gen_msg_id}>
-User-Agent: Notmuch/XXX Emacs/XXX
 --text follows this line--
 Notmuch Test Suite <test_suite@notmuchmail.org> writes:
 
@@ -546,7 +532,6 @@ test_emacs "(let ((message-hidden-headers '()))
 	      (notmuch-show \"id:$message_id\")
 	      (notmuch-show-reply)
 	      (test-output))"
-sed -i -e 's,^User-Agent: Notmuch/.* Emacs/.*,User-Agent: Notmuch/XXX Emacs/XXX,' OUTPUT
 cat <<EOF >EXPECTED
 From: Notmuch Test Suite <test_suite@notmuchmail.org>
 To: 
@@ -554,7 +539,6 @@ Subject: Re: Quote MML tags in reply
 In-Reply-To: <test-emacs-mml-quoting@message.id>
 Fcc: ${MAIL_DIR}/sent
 References: <test-emacs-mml-quoting@message.id>
-User-Agent: Notmuch/XXX Emacs/XXX
 --text follows this line--
 Notmuch Test Suite <test_suite@notmuchmail.org> writes:
 
