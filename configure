@@ -68,6 +68,7 @@ PYTHON=${PYTHON:-}
 PREFIX=/usr/local
 LIBDIR=
 WITH_DOCS=1
+WITH_API_DOCS=1
 WITH_EMACS=1
 WITH_BASH=1
 WITH_RUBY=1
@@ -137,7 +138,8 @@ Some features can be disabled (--with-feature=no is equivalent to
 --without-feature) :
 
 	--without-bash-completion	Do not install bash completions files
-	--without-docs			Do not install documentation and man pages
+	--without-docs			Do not install documentation
+	--without-api-docs		Do not install API man page
 	--without-emacs			Do not install lisp file
 	--without-ruby			Do not install ruby bindings
 	--without-zsh-completion	Do not install zsh completions files
@@ -184,11 +186,21 @@ for option; do
     elif [ "${option%%=*}" = '--with-docs' ]; then
 	if [ "${option#*=}" = 'no' ]; then
 	    WITH_DOCS=0
+	    WITH_API_DOCS=0
 	else
 	    WITH_DOCS=1
 	fi
     elif [ "${option}" = '--without-docs' ] ; then
 	WITH_DOCS=0
+	WITH_API_DOCS=0
+    elif [ "${option%%=*}" = '--with-api-docs' ]; then
+	if [ "${option#*=}" = 'no' ]; then
+	    WITH_API_DOCS=0
+	else
+	    WITH_API_DOCS=1
+	fi
+    elif [ "${option}" = '--without-api-docs' ] ; then
+	WITH_API_DOCS=0
     elif [ "${option%%=*}" = '--with-emacs' ]; then
 	if [ "${option#*=}" = 'no' ]; then
 	    WITH_EMACS=0
@@ -557,7 +569,7 @@ else
 fi
 
 have_doxygen=0
-if [ $WITH_DOCS = "1" ] ; then
+if [ $WITH_API_DOCS = "1" ] ; then
     printf "Checking if doxygen is available... "
     if command -v doxygen > /dev/null; then
 	printf "Yes.\n"
