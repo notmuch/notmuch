@@ -695,13 +695,12 @@ background."
 
 (defun notmuch-search-color-line (start end line-tag-list)
   "Colorize lines in `notmuch-show' based on tags."
-  (mapc (lambda (elem)
-	  (let ((tag (car elem))
-		(attributes (cdr elem)))
-	    (when (member tag line-tag-list)
-	      (notmuch-apply-face nil attributes nil start end))))
-	;; Reverse the list so earlier entries take precedence
-	(reverse notmuch-search-line-faces)))
+  ;; Reverse the list so earlier entries take precedence
+  (dolist (elem (reverse notmuch-search-line-faces))
+    (let ((tag (car elem))
+	  (face (cdr elem)))
+      (when (member tag line-tag-list)
+	(notmuch-apply-face nil face nil start end)))))
 
 (defun notmuch-search-author-propertize (authors)
   "Split `authors' into matching and non-matching authors and
