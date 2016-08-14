@@ -6,10 +6,10 @@ Emacs
 
 Face customization is easier
 
-  New faces `notmuch-search-flagged-face` and
-  `notmuch-search-unread-face` are used by default by
-  `notmuch-search-line-faces`. Customize `notmuch-faces` to modify
-  them.
+  New faces `notmuch-tag-unread`, `notmuch-tag-flagged`,
+  `notmuch-tag-deleted`, `notmuch-tag-added`,
+  `notmuch-search-flagged-face` and `notmuch-search-unread-face` are
+  now used by default. Customize `notmuch-faces` to modify them.
 
 Ruby Bindings
 -------------
