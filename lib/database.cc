@@ -260,10 +260,10 @@ static prefix_t BOOLEAN_PREFIX_EXTERNAL[] = {
     { "id",			"Q" },
     { "path",			"P" },
     /*
-     * Without the ":", since this is a multi-letter prefix, Xapian
-     * will add a colon itself if the first letter of the path is
-     * upper-case ASCII. Including the ":" forces there to always be a
-     * colon, which keeps our own logic simpler.
+     * Unconditionally add ':' to reduce potential ambiguity with
+     * overlapping prefixes and/or terms that start with capital
+     * letters. See Xapian document termprefixes.html for related
+     * discussion.
      */
     { "folder",			"XFOLDER:" },
 };
