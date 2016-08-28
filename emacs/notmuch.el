@@ -331,7 +331,7 @@ This face is the default value for the \"unread\" tag in
   :group 'notmuch-search
   :group 'notmuch-faces)
 
-(defun notmuch-search-mode ()
+(define-derived-mode notmuch-search-mode fundamental-mode "notmuch-search"
   "Major mode displaying results of a notmuch search.
 
 This buffer contains the results of a \"notmuch search\" of your
@@ -361,8 +361,6 @@ new, global search.
 Complete list of currently available key bindings:
 
 \\{notmuch-search-mode-map}"
-  (interactive)
-  (kill-all-local-variables)
   (make-local-variable 'notmuch-search-query-string)
   (make-local-variable 'notmuch-search-oldest-first)
   (make-local-variable 'notmuch-search-target-thread)
@@ -370,10 +368,7 @@ Complete list of currently available key bindings:
   (setq notmuch-buffer-refresh-function #'notmuch-search-refresh-view)
   (set (make-local-variable 'scroll-preserve-screen-position) t)
   (add-to-invisibility-spec (cons 'ellipsis t))
-  (use-local-map notmuch-search-mode-map)
   (setq truncate-lines t)
-  (setq major-mode 'notmuch-search-mode
-	mode-name "notmuch-search")
   (setq buffer-read-only t))
 
 (defun notmuch-search-get-result (&optional pos)

@@ -671,7 +671,7 @@ with `notmuch-hello-query-counts'."
   "Keymap for \"notmuch hello\" buffers.")
 (fset 'notmuch-hello-mode-map notmuch-hello-mode-map)
 
-(defun notmuch-hello-mode ()
+(define-derived-mode notmuch-hello-mode fundamental-mode "notmuch-hello"
  "Major mode for convenient notmuch navigation. This is your entry portal into notmuch.
 
 Saved searches are \"bookmarks\" for arbitrary queries. Hit RET
@@ -702,13 +702,7 @@ The screen may be customized via `\\[customize]'.
 Complete list of currently available key bindings:
 
 \\{notmuch-hello-mode-map}"
- (interactive)
- (kill-all-local-variables)
  (setq notmuch-buffer-refresh-function #'notmuch-hello-update)
- (use-local-map notmuch-hello-mode-map)
- (setq major-mode 'notmuch-hello-mode
-	mode-name "notmuch-hello")
- (run-mode-hooks 'notmuch-hello-mode-hook)
  ;;(setq buffer-read-only t)
 )
 

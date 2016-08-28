@@ -803,7 +803,7 @@ This function inserts a collection of several complete threads as
 passed to it by notmuch-tree-process-filter."
   (mapc 'notmuch-tree-insert-forest-thread forest))
 
-(defun notmuch-tree-mode ()
+(define-derived-mode notmuch-tree-mode fundamental-mode "notmuch-tree"
   "Major mode displaying messages (as opposed to threads) of of a notmuch search.
 
 This buffer contains the results of a \"notmuch tree\" of your
@@ -817,12 +817,7 @@ Complete list of currently available key bindings:
 
 \\{notmuch-tree-mode-map}"
 
-  (interactive)
-  (kill-all-local-variables)
   (setq notmuch-buffer-refresh-function #'notmuch-tree-refresh-view)
-  (use-local-map notmuch-tree-mode-map)
-  (setq major-mode 'notmuch-tree-mode
-	mode-name "notmuch-tree")
   (hl-line-mode 1)
   (setq buffer-read-only t
 	truncate-lines t))

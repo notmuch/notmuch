@@ -1454,7 +1454,7 @@ reset based on the original query."
   "Keymap for \"notmuch show\" buffers.")
 (fset 'notmuch-show-mode-map notmuch-show-mode-map)
 
-(defun notmuch-show-mode ()
+(define-derived-mode notmuch-show-mode fundamental-mode "notmuch-show"
   "Major mode for viewing a thread with notmuch.
 
 This buffer contains the results of the \"notmuch show\" command
@@ -1482,12 +1482,7 @@ You can add or remove arbitrary tags from the current message with
 All currently available key bindings:
 
 \\{notmuch-show-mode-map}"
-  (interactive)
-  (kill-all-local-variables)
   (setq notmuch-buffer-refresh-function #'notmuch-show-refresh-view)
-  (use-local-map notmuch-show-mode-map)
-  (setq major-mode 'notmuch-show-mode
-	mode-name "notmuch-show")
   (setq buffer-read-only t
 	truncate-lines t))
 
