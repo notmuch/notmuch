@@ -790,9 +790,15 @@ You may need to restart Emacs or upgrade your notmuch package."))
 		    (insert-file-contents err-file)
 		    (unless (eobp)
 		      (buffer-string)))))
+	   (command-string
+	    (mapconcat (lambda (arg)
+			 (shell-quote-argument
+			  (cond ((stringp arg) arg)
+				((symbolp arg) (symbol-name arg))
+				(t "*UNKNOWN ARGUMENT*"))))
+		       command " "))
 	   (extra
-	    (concat
-	     "command: " (mapconcat #'shell-quote-argument command " ") "\n"
+	    (concat "command: " command-string "\n"
 	     (if (integerp exit-status)
 		 (format "exit status: %s\n" exit-status)
 	       (format "exit signal: %s\n" exit-status))
