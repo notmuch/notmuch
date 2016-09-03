@@ -127,7 +127,7 @@ by notmuch-mua-mail"
 (defun notmuch-maildir-message-do-fcc ()
   "Process Fcc headers in the current buffer.
 
-This is a direct copy from message-mode's message-do-fcc."
+This is a rearranged version of message mode's message-do-fcc."
   (let ((case-fold-search t)
 	(buf (current-buffer))
 	list file
@@ -146,10 +146,7 @@ This is a direct copy from message-mode's message-do-fcc."
 	  (while (setq file (message-fetch-field "fcc" t))
 	    (push file list)
 	    (message-remove-header "fcc" nil t))
-	  (let ((mail-parse-charset message-default-charset)
-		(rfc2047-header-encoding-alist
-		 (cons '("Newsgroups" . default)
-		       rfc2047-header-encoding-alist)))
+	  (let ((mail-parse-charset message-default-charset))
 	    (mail-encode-encoded-word-buffer)))
 	(goto-char (point-min))
 	(when (re-search-forward
@@ -159,29 +156,7 @@ This is a direct copy from message-mode's message-do-fcc."
 	;; Process FCC operations.
 	(while list
 	  (setq file (pop list))
-	  (if (string-match "^[ \t]*|[ \t]*\\(.*\\)[ \t]*$" file)
-	      ;; Pipe the article to the program in question.
-	      (call-process-region (point-min) (point-max) shell-file-name
-				   nil nil nil shell-command-switch
-				   (match-string 1 file))
-	    ;; Save the article.
-	    (setq file (expand-file-name file))
-	    (unless (file-exists-p (file-name-directory file))
-	      (make-directory (file-name-directory file) t))
-	    (if (and message-fcc-handler-function
-		     (not (eq message-fcc-handler-function 'rmail-output)))
-		(funcall message-fcc-handler-function file)
-	      ;; FIXME this option, rmail-output (also used if
-	      ;; message-fcc-handler-function is nil) is not
-	      ;; documented anywhere AFAICS.  It should work in Emacs
-	      ;; 23; I suspect it does not work in Emacs 22.
-	      ;; FIXME I don't see the need for the two different cases here.
-	      ;; mail-use-rfc822 makes no difference (in Emacs 23),and
-	      ;; the third argument just controls \"Wrote file\" message.
-	      (if (and (file-readable-p file) (mail-file-babyl-p file))
-		  (rmail-output file 1 nil t)
-		(let ((mail-use-rfc822 t))
-		  (rmail-output file 1 t t))))))
+	  (notmuch-fcc-handler file))
 	(kill-buffer (current-buffer))))))
 
 (defun notmuch-fcc-handler (fcc-header)
