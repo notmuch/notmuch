@@ -124,40 +124,53 @@ by notmuch-mua-mail"
 ;; Functions for saving a message either using notmuch insert or file
 ;; fcc. First functions common to the two cases.
 
+(defmacro with-temporary-notmuch-message-buffer (&rest body)
+  "Set-up a temporary copy of the current message-mode buffer."
+  `(let ((case-fold-search t)
+	 (buf (current-buffer))
+	 (mml-externalize-attachments message-fcc-externalize-attachments))
+     (with-current-buffer (get-buffer-create " *message temp*")
+       (erase-buffer)
+       (insert-buffer-substring buf)
+       ,@body)))
+
+(defun notmuch-maildir-setup-message-for-saving ()
+  "Setup message for saving. Should be called on a temporary copy.
+
+This is taken from the function message-do-fcc."
+  (message-encode-message-body)
+  (save-restriction
+    (message-narrow-to-headers)
+    (let ((mail-parse-charset message-default-charset))
+      (mail-encode-encoded-word-buffer)))
+  (goto-char (point-min))
+  (when (re-search-forward
+	 (concat "^" (regexp-quote mail-header-separator) "$")
+	 nil t)
+    (replace-match "" t t )))
+
 (defun notmuch-maildir-message-do-fcc ()
   "Process Fcc headers in the current buffer.
 
 This is a rearranged version of message mode's message-do-fcc."
-  (let ((case-fold-search t)
-	(buf (current-buffer))
-	list file
-	(mml-externalize-attachments message-fcc-externalize-attachments))
+  (let (list file)
     (save-excursion
       (save-restriction
 	(message-narrow-to-headers)
 	(setq file (message-fetch-field "fcc" t)))
       (when file
-	(set-buffer (get-buffer-create " *message temp*"))
-	(erase-buffer)
-	(insert-buffer-substring buf)
-	(message-encode-message-body)
-	(save-restriction
-	  (message-narrow-to-headers)
-	  (while (setq file (message-fetch-field "fcc" t))
-	    (push file list)
-	    (message-remove-header "fcc" nil t))
-	  (let ((mail-parse-charset message-default-charset))
-	    (mail-encode-encoded-word-buffer)))
-	(goto-char (point-min))
-	(when (re-search-forward
-	       (concat "^" (regexp-quote mail-header-separator) "$")
-	       nil t)
-	  (replace-match "" t t ))
-	;; Process FCC operations.
-	(while list
-	  (setq file (pop list))
-	  (notmuch-fcc-handler file))
-	(kill-buffer (current-buffer))))))
+	(with-temporary-notmuch-message-buffer
+	 (save-restriction
+	   (message-narrow-to-headers)
+	   (while (setq file (message-fetch-field "fcc" t))
+	     (push file list)
+	     (message-remove-header "fcc" nil t)))
+	 (notmuch-maildir-setup-message-for-saving)
+	 ;; Process FCC operations.
+	 (while list
+	   (setq file (pop list))
+	   (notmuch-fcc-handler file))
+	 (kill-buffer (current-buffer)))))))
 
 (defun notmuch-fcc-handler (fcc-header)
   "Store message with file fcc."
