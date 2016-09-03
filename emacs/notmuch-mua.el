@@ -33,6 +33,7 @@
 (declare-function notmuch-show-insert-body "notmuch-show" (msg body depth))
 (declare-function notmuch-fcc-header-setup "notmuch-maildir-fcc" ())
 (declare-function notmuch-fcc-handler "notmuch-maildir-fcc" (destdir))
+(declare-function notmuch-maildir-message-do-fcc "notmuch-maildir-fcc" ())
 
 ;;
 
@@ -490,12 +491,14 @@ will be addressed to all recipients of the source message."
 (defun notmuch-mua-send-and-exit (&optional arg)
   (interactive "P")
   (let ((message-fcc-handler-function #'notmuch-fcc-handler))
-    (message-send-and-exit arg)))
+    (letf (((symbol-function 'message-do-fcc) #'notmuch-maildir-message-do-fcc))
+	  (message-send-and-exit arg))))
 
 (defun notmuch-mua-send (&optional arg)
   (interactive "P")
   (let ((message-fcc-handler-function #'notmuch-fcc-handler))
-    (message-send arg)))
+    (letf (((symbol-function 'message-do-fcc) #'notmuch-maildir-message-do-fcc))
+	  (message-send arg))))
 
 (defun notmuch-mua-kill-buffer ()
   (interactive)

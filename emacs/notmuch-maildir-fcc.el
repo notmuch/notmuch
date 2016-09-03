@@ -120,6 +120,70 @@ by notmuch-mua-mail"
 		subdir
 	      (concat (notmuch-database-path) "/" subdir))))))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Functions for saving a message either using notmuch insert or file
+;; fcc. First functions common to the two cases.
+
+(defun notmuch-maildir-message-do-fcc ()
+  "Process Fcc headers in the current buffer.
+
+This is a direct copy from message-mode's message-do-fcc."
+  (let ((case-fold-search t)
+	(buf (current-buffer))
+	list file
+	(mml-externalize-attachments message-fcc-externalize-attachments))
+    (save-excursion
+      (save-restriction
+	(message-narrow-to-headers)
+	(setq file (message-fetch-field "fcc" t)))
+      (when file
+	(set-buffer (get-buffer-create " *message temp*"))
+	(erase-buffer)
+	(insert-buffer-substring buf)
+	(message-encode-message-body)
+	(save-restriction
+	  (message-narrow-to-headers)
+	  (while (setq file (message-fetch-field "fcc" t))
+	    (push file list)
+	    (message-remove-header "fcc" nil t))
+	  (let ((mail-parse-charset message-default-charset)
+		(rfc2047-header-encoding-alist
+		 (cons '("Newsgroups" . default)
+		       rfc2047-header-encoding-alist)))
+	    (mail-encode-encoded-word-buffer)))
+	(goto-char (point-min))
+	(when (re-search-forward
+	       (concat "^" (regexp-quote mail-header-separator) "$")
+	       nil t)
+	  (replace-match "" t t ))
+	;; Process FCC operations.
+	(while list
+	  (setq file (pop list))
+	  (if (string-match "^[ \t]*|[ \t]*\\(.*\\)[ \t]*$" file)
+	      ;; Pipe the article to the program in question.
+	      (call-process-region (point-min) (point-max) shell-file-name
+				   nil nil nil shell-command-switch
+				   (match-string 1 file))
+	    ;; Save the article.
+	    (setq file (expand-file-name file))
+	    (unless (file-exists-p (file-name-directory file))
+	      (make-directory (file-name-directory file) t))
+	    (if (and message-fcc-handler-function
+		     (not (eq message-fcc-handler-function 'rmail-output)))
+		(funcall message-fcc-handler-function file)
+	      ;; FIXME this option, rmail-output (also used if
+	      ;; message-fcc-handler-function is nil) is not
+	      ;; documented anywhere AFAICS.  It should work in Emacs
+	      ;; 23; I suspect it does not work in Emacs 22.
+	      ;; FIXME I don't see the need for the two different cases here.
+	      ;; mail-use-rfc822 makes no difference (in Emacs 23),and
+	      ;; the third argument just controls \"Wrote file\" message.
+	      (if (and (file-readable-p file) (mail-file-babyl-p file))
+		  (rmail-output file 1 nil t)
+		(let ((mail-use-rfc822 t))
+		  (rmail-output file 1 t t))))))
+	(kill-buffer (current-buffer))))))
+
 (defun notmuch-fcc-handler (fcc-header)
   "Store message with file fcc."
   (notmuch-maildir-fcc-file-fcc fcc-header))
