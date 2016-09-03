@@ -184,6 +184,11 @@ nothing."
 (setq notmuch-tag-deleted-formats
       '((".*" nil)))
 
+;; Also for historical reasons, we set the fcc handler to file not
+;; insert.
+
+(setq notmuch-maildir-use-notmuch-insert nil)
+
 ;; force a common html renderer, to avoid test variations between
 ;; environments
 

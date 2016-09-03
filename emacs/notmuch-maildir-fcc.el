@@ -65,6 +65,12 @@ yet when sending a mail."
  :require 'notmuch-fcc-initialization
  :group 'notmuch-send)
 
+(defcustom notmuch-maildir-use-notmuch-insert 't
+  "Should fcc use notmuch insert instead of simple fcc"
+  :type '(choice :tag "Fcc Method"
+		 (const :tag "Use notmuch insert" t)
+		 (const :tag "Use simple fcc" nil))
+  :group 'notmuch-send)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Functions which set up the fcc header in the message buffer.
@@ -108,7 +114,18 @@ by notmuch-mua-mail"
 	   (error "Invalid `notmuch-fcc-dirs' setting (neither string nor list)")))))
 
     (when subdir
-      (notmuch-maildir-add-file-style-fcc-header subdir))))
+      (if notmuch-maildir-use-notmuch-insert
+	  (notmuch-maildir-add-notmuch-insert-style-fcc-header subdir)
+	(notmuch-maildir-add-file-style-fcc-header subdir)))))
+
+(defun notmuch-maildir-add-notmuch-insert-style-fcc-header (subdir)
+  ;; Notmuch insert does not accept absolute paths, so check the user
+  ;; really want this header inserted.
+
+  (when (or (not (= (elt subdir 0) ?/))
+	    (y-or-n-p (format "Fcc header %s is an absolute path and notmuch insert is requested.\nInsert header anyway? "
+			      subdir)))
+    (message-add-header (concat "Fcc: " subdir))))
 
 (defun notmuch-maildir-add-file-style-fcc-header (subdir)
   (message-add-header
@@ -173,8 +190,59 @@ This is a rearranged version of message mode's message-do-fcc."
 	 (kill-buffer (current-buffer)))))))
 
 (defun notmuch-fcc-handler (fcc-header)
-  "Store message with file fcc."
-  (notmuch-maildir-fcc-file-fcc fcc-header))
+  "Store message with notmuch insert or normal (file) fcc.
+
+If `notmuch-maildir-use-notmuch-insert` is set then store the
+message using notmuch insert. Otherwise store the message using
+normal fcc."
+  (if notmuch-maildir-use-notmuch-insert
+      (notmuch-maildir-fcc-with-notmuch-insert fcc-header)
+    (notmuch-maildir-fcc-file-fcc fcc-header)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Functions for saving a message using notmuch insert.
+
+(defun notmuch-maildir-notmuch-insert-current-buffer (folder &optional create tags)
+  "Use notmuch insert to put the current buffer in the database.
+
+This inserts the current buffer as a message into the notmuch
+database in folder FOLDER. If CREATE is non-nil it will supply
+the --create-folder flag to create the folder if necessary. TAGS
+should be a list of tag changes to apply to the inserted message."
+  (let* ((args (append (when create (list "--create-folder"))
+		       (list (concat "--folder=" folder))
+		       tags)))
+    (apply 'notmuch-call-notmuch-process
+	   :stdin-string (buffer-string) "insert" args)))
+
+(defun notmuch-maildir-fcc-with-notmuch-insert (fcc-header &optional create)
+  "Store message with notmuch insert.
+
+The fcc-header should be of the form \"folder +tag1 -tag2\" where
+folder is the folder (relative to the notmuch mailstore) to store
+the message in, and tag1 and tag2 are tag changes to apply to the
+stored message. If CREATE is non-nil then create the folder if
+necessary."
+  (let* ((args (split-string-and-unquote fcc-header))
+	 (folder (car args))
+	 (tags (cdr args)))
+    (condition-case nil
+	(notmuch-maildir-notmuch-insert-current-buffer folder create tags)
+      ;; Since there are many reasons notmuch insert could fail, e.g.,
+      ;; locked database, non-existent folder (which could be due to a
+      ;; typo, or just the user want a new folder, let the user decide
+      ;; how to deal with it.
+      (error
+       (let ((response (read-char-choice
+			"Insert failed: (r)etry, (c)reate folder, (i)gnore, or  (e)dit the header? "
+			'(?r ?c ?i ?e))))
+	 (case response
+	       (?r (notmuch-maildir-fcc-with-notmuch-insert fcc-header))
+	       (?c (notmuch-maildir-fcc-with-notmuch-insert fcc-header 't))
+	       (?i 't)
+	       (?e (notmuch-maildir-fcc-with-notmuch-insert
+		    (read-from-minibuffer "Fcc header: " fcc-header)))))))))
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Functions for saving a message using file fcc.
