@@ -16,6 +16,20 @@ Ruby Bindings
 
 Add support for `notmuch_database_get_all_tags`
 
+Go Bindings
+-----------
+
+Go bindings moved to contrib
+
+Add support for `notmuch_threads_t` and `notmuch_thread_t`
+
+Fixed constant values so they are not all zero anymore.
+
+  Previously, it was impossible to open writable database handles,
+  because DATABASE_MODE_READ_ONLY and DATABASE_MODE_READ_WRITE were
+  both set to zero.
+  The same issue occured with sort modes.
+
 Notmuch 0.22.1 (2016-07-19)
 ===========================
 
@@ -597,20 +611,6 @@ Python Bindings
 ---------------
 
 Add support for `notmuch_query_add_tag_exclude`
-
-Go Bindings
------------
-
-Add support for `notmuch_threads_t` and `notmuch_thread_t`
-
-Fixed constant values so they are not all zero anymore.
-
-  Previously, it was impossible to open writable database handles,
-  because DATABASE_MODE_READ_ONLY and DATABASE_MODE_READ_WRITE were
-  both set to zero.
-  The same issue occured with sort modes.
-
-Formatting improvements for Godoc generated documentation
 
 Build System
 ------------
