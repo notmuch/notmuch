@@ -1,3 +1,18 @@
+Notmuch 0.22.2 (2016-09-08)
+===========================
+
+Test Suite
+----------
+
+Silence gdb more
+
+  Have gdb write to a log file instead of stdout, hiding some more
+  (harmless) stderr chatter which causes test failures.
+
+Hardcode fingerprint in PGP/MIME tests
+
+  Make the tests more robust against changing GnuPG output formats.
+
 Notmuch 0.22.1 (2016-07-19)
 ===========================
 
