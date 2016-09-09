@@ -25,8 +25,8 @@ add_gnupg_home ()
 ##################################################
 
 add_gnupg_home
-# get key fingerprint
-FINGERPRINT=$(gpg --no-tty --list-secret-keys --with-colons --fingerprint | grep '^fpr:' | cut -d: -f10)
+# Change this if we ship a new test key
+FINGERPRINT="5AEAB11F5E33DCE875DDB75B6D92612D94E46381"
 
 test_expect_success 'emacs delivery of signed message' \
 'emacs_fcc_message \
