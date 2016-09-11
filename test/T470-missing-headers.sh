@@ -20,7 +20,7 @@ From: Notmuch Test Suite <test_suite@notmuchmail.org>
 Body
 EOF
 
-NOTMUCH_NEW
+NOTMUCH_NEW >/dev/null
 
 test_begin_subtest "Search: text"
 output=$(notmuch search '*' | notmuch_search_sanitize)
