@@ -483,13 +483,13 @@ Stopped `notmuch dump` failing if someone writes to the database
   process already has the write lock the dump will not start, so
   script callers should still check the return value.
 
-`notmuch insert` requires succesful message indexing for success status
+`notmuch insert` requires successful message indexing for success status
 
   Previously the `notmuch insert` subcommand indicated success even if
   the message indexing failed, as long as the message was delivered to
   file system. This could have lead to delivered messages missing
   tags, etc. `notmuch insert` is now more strict, also requiring
-  succesful indexing for success status. Use the new `--keep` option
+  successful indexing for success status. Use the new `--keep` option
   to revert to the old behaviour (keeping the delivered message file
   and returning success even if indexing fails).
 

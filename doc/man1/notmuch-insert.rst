@@ -45,7 +45,7 @@ Supported options for **insert** include
         Keep the message file if indexing fails, and keep the message
         indexed if applying tags or maildir flag synchronization
         fails. Ignore these errors and return exit status 0 to
-        indicate succesful mail delivery.
+        indicate successful mail delivery.
 
     ``--no-hooks``
         Prevent hooks from being run.
@@ -53,7 +53,7 @@ Supported options for **insert** include
 EXIT STATUS
 ===========
 
-This command returns exit status 0 on succesful mail delivery,
+This command returns exit status 0 on successful mail delivery,
 non-zero otherwise. The default is to indicate failed mail delivery on
 any errors, including message file delivery to the filesystem, message
 indexing to Notmuch database, changing tags, and synchronizing tags to

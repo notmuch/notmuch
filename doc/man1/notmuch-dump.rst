@@ -78,7 +78,7 @@ Supported options for **dump** include
       **config**
 
 	Output configuration data stored in the database. Each line
-	starts with "#@ ", followed by a space seperated key-value
+	starts with "#@ ", followed by a space separated key-value
 	pair.  Both key and value are hex encoded if needed.
 
       **tags**

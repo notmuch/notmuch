@@ -57,7 +57,7 @@ Supported options for **restore** include
 	**config**
 
 	  Restore configuration data to the database. Each configuration line starts
-	  with "#@ ", followed by a space seperated key-value pair.
+	  with "#@ ", followed by a space separated key-value pair.
 	  Both key and value are hex encoded if needed.
 
 	**tags**
