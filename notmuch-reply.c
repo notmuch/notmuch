@@ -192,6 +192,9 @@ scan_address_list (InternetAddressList *list,
     int i;
     unsigned int n = 0;
 
+    if (list == NULL)
+	return 0;
+
     for (i = 0; i < internet_address_list_length (list); i++) {
 	address = internet_address_list_get_address (list, i);
 	if (INTERNET_ADDRESS_IS_GROUP (address)) {
@@ -200,9 +203,6 @@ scan_address_list (InternetAddressList *list,
 
 	    group = INTERNET_ADDRESS_GROUP (address);
 	    group_list = internet_address_group_get_members (group);
-	    if (group_list == NULL)
-		continue;
-
 	    n += scan_address_list (group_list, config, message, type, user_from);
 	} else {
 	    InternetAddressMailbox *mailbox;
