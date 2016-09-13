@@ -598,82 +598,42 @@ create_reply_message(void *ctx,
 static int
 notmuch_reply_format_default(void *ctx,
 			     notmuch_config_t *config,
-			     notmuch_query_t *query,
+			     notmuch_message_t *message,
 			     notmuch_show_params_t *params,
 			     notmuch_bool_t reply_all,
 			     unused (sprinter_t *sp))
 {
     GMimeMessage *reply;
-    notmuch_messages_t *messages;
-    notmuch_message_t *message;
     mime_node_t *root;
-    notmuch_status_t status;
 
-    status = notmuch_query_search_messages_st (query, &messages);
-    if (print_status_query ("notmuch reply", query, status))
+    reply = create_reply_message (ctx, config, message, reply_all);
+    if (!reply)
 	return 1;
 
-    for (;
-	 notmuch_messages_valid (messages);
-	 notmuch_messages_move_to_next (messages))
-    {
-	message = notmuch_messages_get (messages);
+    show_reply_headers (reply);
 
-	reply = create_reply_message (ctx, config, message, reply_all);
+    g_object_unref (G_OBJECT (reply));
 
-	/* If reply creation failed, we're out of memory, so don't
-	 * bother trying any more messages.
-	 */
-	if (!reply) {
-	    notmuch_message_destroy (message);
-	    return 1;
-	}
-
-	show_reply_headers (reply);
-
-	g_object_unref (G_OBJECT (reply));
-	reply = NULL;
-
-	if (mime_node_open (ctx, message, &(params->crypto), &root) == NOTMUCH_STATUS_SUCCESS) {
-	    format_part_reply (root);
-	    talloc_free (root);
-	}
-
-	notmuch_message_destroy (message);
+    if (mime_node_open (ctx, message, &params->crypto, &root) == NOTMUCH_STATUS_SUCCESS) {
+	format_part_reply (root);
+	talloc_free (root);
     }
+
     return 0;
 }
 
 static int
 notmuch_reply_format_sprinter(void *ctx,
 			      notmuch_config_t *config,
-			      notmuch_query_t *query,
+			      notmuch_message_t *message,
 			      notmuch_show_params_t *params,
 			      notmuch_bool_t reply_all,
 			      sprinter_t *sp)
 {
     GMimeMessage *reply;
-    notmuch_messages_t *messages;
-    notmuch_message_t *message;
     mime_node_t *node;
-    unsigned count;
-    notmuch_status_t status;
 
-    status = notmuch_query_count_messages_st (query, &count);
-    if (print_status_query ("notmuch reply", query, status))
-	return 1;
-
-    if (count != 1) {
-	fprintf (stderr, "Error: search term did not match precisely one message (matched %d messages).\n", count);
-	return 1;
-    }
-
-    status = notmuch_query_search_messages_st (query, &messages);
-    if (print_status_query ("notmuch reply", query, status))
-	return 1;
-
-    message = notmuch_messages_get (messages);
-    if (mime_node_open (ctx, message, &(params->crypto), &node) != NOTMUCH_STATUS_SUCCESS)
+    if (mime_node_open (ctx, message, &params->crypto, &node) != NOTMUCH_STATUS_SUCCESS)
 	return 1;
 
     reply = create_reply_message (ctx, config, message, reply_all);
@@ -686,7 +646,6 @@ notmuch_reply_format_sprinter(void *ctx,
     sp->map_key (sp, "reply-headers");
     format_headers_sprinter (sp, reply, TRUE);
     g_object_unref (G_OBJECT (reply));
-    reply = NULL;
 
     /* Start the original */
     sp->map_key (sp, "original");
@@ -694,7 +653,6 @@ notmuch_reply_format_sprinter(void *ctx,
 
     /* End */
     sp->end (sp);
-    notmuch_message_destroy (message);
 
     return 0;
 }
@@ -703,17 +661,100 @@ notmuch_reply_format_sprinter(void *ctx,
 static int
 notmuch_reply_format_headers_only(void *ctx,
 				  notmuch_config_t *config,
-				  notmuch_query_t *query,
+				  notmuch_message_t *message,
 				  unused (notmuch_show_params_t *params),
 				  notmuch_bool_t reply_all,
 				  unused (sprinter_t *sp))
 {
     GMimeMessage *reply;
-    notmuch_messages_t *messages;
-    notmuch_message_t *message;
     const char *in_reply_to, *orig_references, *references;
     char *reply_headers;
+
+    /* The 0 means we do not want headers in a "pretty" order. */
+    reply = g_mime_message_new (0);
+    if (reply == NULL) {
+	fprintf (stderr, "Out of memory\n");
+	return 1;
+    }
+
+    in_reply_to = talloc_asprintf (ctx, "<%s>",
+				   notmuch_message_get_message_id (message));
+
+    g_mime_object_set_header (GMIME_OBJECT (reply), "In-Reply-To", in_reply_to);
+
+    orig_references = notmuch_message_get_header (message, "references");
+
+    /*
+     * We print In-Reply-To followed by References because git
+     * format-patch treats them specially. Git does not interpret the
+     * other headers specially.
+     */
+    references = talloc_asprintf (ctx, "%s%s%s",
+				  orig_references ? orig_references : "",
+				  orig_references ? " " : "",
+				  in_reply_to);
+    g_mime_object_set_header (GMIME_OBJECT (reply), "References", references);
+
+    (void)add_recipients_from_message (reply, config, message, reply_all);
+
+    reply_headers = g_mime_object_to_string (GMIME_OBJECT (reply));
+    printf ("%s", reply_headers);
+    free (reply_headers);
+
+    g_object_unref (G_OBJECT (reply));
+
+    return 0;
+}
+
+enum {
+    FORMAT_DEFAULT,
+    FORMAT_JSON,
+    FORMAT_SEXP,
+    FORMAT_HEADERS_ONLY,
+};
+
+static int do_reply(notmuch_config_t *config,
+		    notmuch_query_t *query,
+		    notmuch_show_params_t *params,
+		    int format,
+		    notmuch_bool_t reply_all)
+{
+    notmuch_messages_t *messages;
+    notmuch_message_t *message;
     notmuch_status_t status;
+    struct sprinter *sp = NULL;
+    int ret = 0;
+    int (*reply_format_func) (void *ctx,
+			      notmuch_config_t *config,
+			      notmuch_message_t *message,
+			      notmuch_show_params_t *params,
+			      notmuch_bool_t reply_all,
+			      struct sprinter *sp);
+
+    if (format == FORMAT_JSON || format == FORMAT_SEXP) {
+	unsigned count;
+
+	status = notmuch_query_count_messages_st (query, &count);
+	if (print_status_query ("notmuch reply", query, status))
+	    return 1;
+
+	if (count != 1) {
+	    fprintf (stderr, "Error: search term did not match precisely one message (matched %d messages).\n", count);
+	    return 1;
+	}
+    }
+
+    if (format == FORMAT_HEADERS_ONLY) {
+	reply_format_func = notmuch_reply_format_headers_only;
+    } else if (format == FORMAT_JSON) {
+	reply_format_func = notmuch_reply_format_sprinter;
+	sp = sprinter_json_create (config, stdout);
+    } else if (format == FORMAT_SEXP) {
+	reply_format_func = notmuch_reply_format_sprinter;
+	sp = sprinter_sexp_create (config, stdout);
+    } else {
+	reply_format_func = notmuch_reply_format_default;
+    }
 
     status = notmuch_query_search_messages_st (query, &messages);
     if (print_status_query ("notmuch reply", query, status))
@@ -725,52 +766,16 @@ notmuch_reply_format_headers_only(void *ctx,
     {
 	message = notmuch_messages_get (messages);
 
-	/* The 0 means we do not want headers in a "pretty" order. */
-	reply = g_mime_message_new (0);
-	if (reply == NULL) {
-	    fprintf (stderr, "Out of memory\n");
-	    return 1;
-	}
-
-	in_reply_to = talloc_asprintf (ctx, "<%s>",
-			     notmuch_message_get_message_id (message));
-
-        g_mime_object_set_header (GMIME_OBJECT (reply),
-				  "In-Reply-To", in_reply_to);
-
-
-	orig_references = notmuch_message_get_header (message, "references");
-
-	/* We print In-Reply-To followed by References because git format-patch treats them
-         * specially.  Git does not interpret the other headers specially
-	 */
-	references = talloc_asprintf (ctx, "%s%s%s",
-				      orig_references ? orig_references : "",
-				      orig_references ? " " : "",
-				      in_reply_to);
-	g_mime_object_set_header (GMIME_OBJECT (reply),
-				  "References", references);
-
-	(void)add_recipients_from_message (reply, config, message, reply_all);
-
-	reply_headers = g_mime_object_to_string (GMIME_OBJECT (reply));
-	printf ("%s", reply_headers);
-	free (reply_headers);
-
-	g_object_unref (G_OBJECT (reply));
-	reply = NULL;
+	ret = reply_format_func(config, config, message, params, reply_all, sp);
 
 	notmuch_message_destroy (message);
-    }
-    return 0;
-}
 
-enum {
-    FORMAT_DEFAULT,
-    FORMAT_JSON,
-    FORMAT_SEXP,
-    FORMAT_HEADERS_ONLY,
-};
+	if (ret)
+	    break;
+    }
+
+    return ret;
+}
 
 int
 notmuch_reply_command (notmuch_config_t *config, int argc, char *argv[])
@@ -779,12 +784,6 @@ notmuch_reply_command (notmuch_config_t *config, int argc, char *argv[])
     notmuch_query_t *query;
     char *query_string;
     int opt_index;
-    int (*reply_format_func) (void *ctx,
-			      notmuch_config_t *config,
-			      notmuch_query_t *query,
-			      notmuch_show_params_t *params,
-			      notmuch_bool_t reply_all,
-			      struct sprinter *sp);
     notmuch_show_params_t params = {
 	.part = -1,
 	.crypto = {
@@ -795,7 +794,6 @@ notmuch_reply_command (notmuch_config_t *config, int argc, char *argv[])
     };
     int format = FORMAT_DEFAULT;
     int reply_all = TRUE;
-    struct sprinter *sp = NULL;
 
     notmuch_opt_desc_t options[] = {
 	{ NOTMUCH_OPT_KEYWORD, &format, "format", 'f',
@@ -819,18 +817,6 @@ notmuch_reply_command (notmuch_config_t *config, int argc, char *argv[])
 	return EXIT_FAILURE;
 
     notmuch_process_shared_options (argv[0]);
-
-    if (format == FORMAT_HEADERS_ONLY) {
-	reply_format_func = notmuch_reply_format_headers_only;
-    } else if (format == FORMAT_JSON) {
-	reply_format_func = notmuch_reply_format_sprinter;
-	sp = sprinter_json_create (config, stdout);
-    } else if (format == FORMAT_SEXP) {
-	reply_format_func = notmuch_reply_format_sprinter;
-	sp = sprinter_sexp_create (config, stdout);
-    } else {
-	reply_format_func = notmuch_reply_format_default;
-    }
 
     notmuch_exit_if_unsupported_format ();
 
@@ -859,7 +845,7 @@ notmuch_reply_command (notmuch_config_t *config, int argc, char *argv[])
 	return EXIT_FAILURE;
     }
 
-    if (reply_format_func (config, config, query, &params, reply_all, sp) != 0)
+    if (do_reply (config, query, &params, format, reply_all) != 0)
 	return EXIT_FAILURE;
 
     notmuch_crypto_cleanup (&params.crypto);
