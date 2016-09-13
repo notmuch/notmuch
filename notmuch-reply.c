@@ -520,13 +520,17 @@ static GMimeMessage *
 create_reply_message(void *ctx,
 		     notmuch_config_t *config,
 		     notmuch_message_t *message,
-		     notmuch_bool_t reply_all)
+		     notmuch_bool_t reply_all,
+		     notmuch_bool_t limited)
 {
     const char *subject, *from_addr = NULL;
     const char *in_reply_to, *orig_references, *references;
 
-    /* The 1 means we want headers in a "pretty" order. */
-    GMimeMessage *reply = g_mime_message_new (1);
+    /*
+     * Use the below header order for limited headers, "pretty" order
+     * otherwise.
+     */
+    GMimeMessage *reply = g_mime_message_new (limited ? 0 : 1);
     if (reply == NULL) {
 	fprintf (stderr, "Out of memory\n");
 	return NULL;
@@ -548,6 +552,10 @@ create_reply_message(void *ctx,
 
     from_addr = add_recipients_from_message (reply, config,
 					     message, reply_all);
+
+    /* The above is all that is needed for limited headers. */
+    if (limited)
+	return reply;
 
     /*
      * Sadly, there is no standard way to find out to which email
@@ -605,7 +613,7 @@ notmuch_reply_format_default(void *ctx,
     if (mime_node_open (ctx, message, &params->crypto, &node))
 	return 1;
 
-    reply = create_reply_message (ctx, config, message, reply_all);
+    reply = create_reply_message (ctx, config, message, reply_all, FALSE);
     if (!reply)
 	return 1;
 
@@ -632,7 +640,7 @@ notmuch_reply_format_sprinter(void *ctx,
     if (mime_node_open (ctx, message, &params->crypto, &node))
 	return 1;
 
-    reply = create_reply_message (ctx, config, message, reply_all);
+    reply = create_reply_message (ctx, config, message, reply_all, FALSE);
     if (!reply)
 	return 1;
 
@@ -665,34 +673,10 @@ notmuch_reply_format_headers_only(void *ctx,
 				  unused (sprinter_t *sp))
 {
     GMimeMessage *reply;
-    const char *in_reply_to, *orig_references, *references;
 
-    /* The 0 means we do not want headers in a "pretty" order. */
-    reply = g_mime_message_new (0);
-    if (reply == NULL) {
-	fprintf (stderr, "Out of memory\n");
+    reply = create_reply_message (ctx, config, message, reply_all, TRUE);
+    if (!reply)
 	return 1;
-    }
-
-    in_reply_to = talloc_asprintf (ctx, "<%s>",
-				   notmuch_message_get_message_id (message));
-
-    g_mime_object_set_header (GMIME_OBJECT (reply), "In-Reply-To", in_reply_to);
-
-    orig_references = notmuch_message_get_header (message, "references");
-
-    /*
-     * We print In-Reply-To followed by References because git
-     * format-patch treats them specially. Git does not interpret the
-     * other headers specially.
-     */
-    references = talloc_asprintf (ctx, "%s%s%s",
-				  orig_references ? orig_references : "",
-				  orig_references ? " " : "",
-				  in_reply_to);
-    g_mime_object_set_header (GMIME_OBJECT (reply), "References", references);
-
-    (void)add_recipients_from_message (reply, config, message, reply_all);
 
     show_reply_headers (reply);
 
