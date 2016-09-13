@@ -272,12 +272,11 @@ reply_to_header_is_redundant (GMimeMessage *message,
     return ret;
 }
 
-static InternetAddressList *get_sender(unused(notmuch_message_t *message),
-				       GMimeMessage *mime_message)
+static InternetAddressList *get_sender(GMimeMessage *message)
 {
     const char *reply_to;
 
-    reply_to = g_mime_message_get_reply_to (mime_message);
+    reply_to = g_mime_message_get_reply_to (message);
     if (reply_to && *reply_to) {
 	InternetAddressList *reply_to_list;
 
@@ -295,35 +294,29 @@ static InternetAddressList *get_sender(unused(notmuch_message_t *message),
 	 * will always appear in the reply if reply_all is true.
 	 */
 	reply_to_list = internet_address_list_parse_string (reply_to);
-	if (! reply_to_header_is_redundant (mime_message, reply_to_list))
+	if (! reply_to_header_is_redundant (message, reply_to_list))
 	    return reply_to_list;
 
 	g_object_unref (G_OBJECT (reply_to_list));
     }
 
     return internet_address_list_parse_string (
-	g_mime_message_get_sender (mime_message));
+	g_mime_message_get_sender (message));
 }
 
-static InternetAddressList *get_to(unused(notmuch_message_t *message),
-				   GMimeMessage *mime_message)
+static InternetAddressList *get_to(GMimeMessage *message)
 {
-    return g_mime_message_get_recipients (mime_message,
-					  GMIME_RECIPIENT_TYPE_TO);
+    return g_mime_message_get_recipients (message, GMIME_RECIPIENT_TYPE_TO);
 }
 
-static InternetAddressList *get_cc(unused(notmuch_message_t *message),
-				   GMimeMessage *mime_message)
+static InternetAddressList *get_cc(GMimeMessage *message)
 {
-    return g_mime_message_get_recipients (mime_message,
-					  GMIME_RECIPIENT_TYPE_CC);
+    return g_mime_message_get_recipients (message, GMIME_RECIPIENT_TYPE_CC);
 }
 
-static InternetAddressList *get_bcc(unused(notmuch_message_t *message),
-				    GMimeMessage *mime_message)
+static InternetAddressList *get_bcc(GMimeMessage *message)
 {
-    return g_mime_message_get_recipients (mime_message,
-					  GMIME_RECIPIENT_TYPE_BCC);
+    return g_mime_message_get_recipients (message, GMIME_RECIPIENT_TYPE_BCC);
 }
 
 /* Augment the recipients of 'reply' from the "Reply-to:", "From:",
@@ -341,13 +334,11 @@ static InternetAddressList *get_bcc(unused(notmuch_message_t *message),
 static const char *
 add_recipients_from_message (GMimeMessage *reply,
 			     notmuch_config_t *config,
-			     notmuch_message_t *message,
-			     GMimeMessage *mime_message,
+			     GMimeMessage *message,
 			     notmuch_bool_t reply_all)
 {
     struct {
-	InternetAddressList * (*get_header)(notmuch_message_t *message,
-					    GMimeMessage *mime_message);
+	InternetAddressList * (*get_header)(GMimeMessage *message);
 	GMimeRecipientType recipient_type;
     } reply_to_map[] = {
 	{ get_sender,	GMIME_RECIPIENT_TYPE_TO },
@@ -362,7 +353,7 @@ add_recipients_from_message (GMimeMessage *reply,
     for (i = 0; i < ARRAY_SIZE (reply_to_map); i++) {
 	InternetAddressList *recipients;
 
-	recipients = reply_to_map[i].get_header (message, mime_message);
+	recipients = reply_to_map[i].get_header (message);
 
 	n += scan_address_list (recipients, config, reply,
 				reply_to_map[i].recipient_type, &from_addr);
@@ -567,7 +558,7 @@ create_reply_message(void *ctx,
 
     g_mime_object_set_header (GMIME_OBJECT (reply), "References", references);
 
-    from_addr = add_recipients_from_message (reply, config, message,
+    from_addr = add_recipients_from_message (reply, config,
 					     mime_message, reply_all);
 
     /* The above is all that is needed for limited headers. */
