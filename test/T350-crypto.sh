@@ -316,6 +316,26 @@ test_expect_equal \
     "$output" \
     "$expected"
 
+test_begin_subtest "Reply within emacs to an encrypted message"
+test_subtest_known_broken
+test_emacs "(let ((message-hidden-headers '())
+      (notmuch-crypto-process-mime 't))
+  (notmuch-show \"subject:test.encrypted.message.002\")
+  (notmuch-show-reply)
+  (test-output))"
+# the empty To: is probably a bug, but it's not to do with encryption
+grep -v -e '^In-Reply-To:' -e '^References:' -e '^Fcc:' -e 'To:' < OUTPUT > OUTPUT.clean
+cat <<EOF >EXPECTED
+From: Notmuch Test Suite <test_suite@notmuchmail.org>
+Subject: Re: test encrypted message 002
+--text follows this line--
+<#secure method=pgpmime mode=signencrypt>
+Notmuch Test Suite <test_suite@notmuchmail.org> writes:
+
+> This is another test encrypted message.
+EOF
+test_expect_equal_file EXPECTED OUTPUT.clean
+
 test_begin_subtest "signature verification with revoked key"
 # generate revocation certificate and load it to revoke key
 echo "y
