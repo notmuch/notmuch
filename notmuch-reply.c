@@ -231,19 +231,18 @@ scan_address_list (InternetAddressList *list,
  * in either the 'To' or 'Cc' header of the message?
  */
 static int
-reply_to_header_is_redundant (notmuch_message_t *message, const char *reply_to)
+reply_to_header_is_redundant (notmuch_message_t *message,
+			      InternetAddressList *reply_to_list)
 {
     const char *to, *cc, *addr;
-    InternetAddressList *list;
     InternetAddress *address;
     InternetAddressMailbox *mailbox;
 
-    list = internet_address_list_parse_string (reply_to);
-
-    if (internet_address_list_length (list) != 1)
+    if (reply_to_list == NULL ||
+	internet_address_list_length (reply_to_list) != 1)
 	return 0;
 
-    address = internet_address_list_get_address (list, 0);
+    address = internet_address_list_get_address (reply_to_list, 0);
     if (INTERNET_ADDRESS_IS_GROUP (address))
 	return 0;
 
@@ -269,6 +268,8 @@ static InternetAddressList *get_sender(notmuch_message_t *message,
 
     reply_to = g_mime_message_get_reply_to (mime_message);
     if (reply_to && *reply_to) {
+	InternetAddressList *reply_to_list;
+
         /*
 	 * Some mailing lists munge the Reply-To header despite it
 	 * being A Bad Thing, see
@@ -282,8 +283,11 @@ static InternetAddressList *get_sender(notmuch_message_t *message,
 	 * to the list. Note that the address in the Reply-To header
 	 * will always appear in the reply if reply_all is true.
 	 */
-	if (! reply_to_header_is_redundant (message, reply_to))
-	    return internet_address_list_parse_string (reply_to);
+	reply_to_list = internet_address_list_parse_string (reply_to);
+	if (! reply_to_header_is_redundant (message, reply_to_list))
+	    return reply_to_list;
+
+	g_object_unref (G_OBJECT (reply_to_list));
     }
 
     return internet_address_list_parse_string (
