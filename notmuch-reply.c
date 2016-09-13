@@ -256,16 +256,12 @@ scan_address_string (const char *recipients,
  * in either the 'To' or 'Cc' header of the message?
  */
 static int
-reply_to_header_is_redundant (notmuch_message_t *message)
+reply_to_header_is_redundant (notmuch_message_t *message, const char *reply_to)
 {
-    const char *reply_to, *to, *cc, *addr;
+    const char *to, *cc, *addr;
     InternetAddressList *list;
     InternetAddress *address;
     InternetAddressMailbox *mailbox;
-
-    reply_to = notmuch_message_get_header (message, "reply-to");
-    if (reply_to == NULL || *reply_to == '\0')
-	return 0;
 
     list = internet_address_list_parse_string (reply_to);
 
@@ -291,6 +287,47 @@ reply_to_header_is_redundant (notmuch_message_t *message)
     return 0;
 }
 
+static const char *get_sender(notmuch_message_t *message)
+{
+    const char *reply_to;
+
+    reply_to = notmuch_message_get_header (message, "reply-to");
+    if (reply_to && *reply_to) {
+        /*
+	 * Some mailing lists munge the Reply-To header despite it
+	 * being A Bad Thing, see
+	 * http://marc.merlins.org/netrants/reply-to-harmful.html
+	 *
+	 * The munging is easy to detect, because it results in a
+	 * redundant reply-to header, (with an address that already
+	 * exists in either To or Cc). So in this case, we ignore the
+	 * Reply-To field and use the From header. This ensures the
+	 * original sender will get the reply even if not subscribed
+	 * to the list. Note that the address in the Reply-To header
+	 * will always appear in the reply if reply_all is true.
+	 */
+	if (! reply_to_header_is_redundant (message, reply_to))
+	    return reply_to;
+    }
+
+    return notmuch_message_get_header (message, "from");
+}
+
+static const char *get_to(notmuch_message_t *message)
+{
+    return notmuch_message_get_header (message, "to");
+}
+
+static const char *get_cc(notmuch_message_t *message)
+{
+    return notmuch_message_get_header (message, "cc");
+}
+
+static const char *get_bcc(notmuch_message_t *message)
+{
+    return notmuch_message_get_header (message, "bcc");
+}
+
 /* Augment the recipients of 'reply' from the "Reply-to:", "From:",
  * "To:", "Cc:", and "Bcc:" headers of 'message'.
  *
@@ -310,43 +347,22 @@ add_recipients_from_message (GMimeMessage *reply,
 			     notmuch_bool_t reply_all)
 {
     struct {
-	const char *header;
-	const char *fallback;
+	const char * (*get_header)(notmuch_message_t *message);
 	GMimeRecipientType recipient_type;
     } reply_to_map[] = {
-	{ "reply-to", "from", GMIME_RECIPIENT_TYPE_TO  },
-	{ "to",         NULL, GMIME_RECIPIENT_TYPE_TO  },
-	{ "cc",         NULL, GMIME_RECIPIENT_TYPE_CC  },
-	{ "bcc",        NULL, GMIME_RECIPIENT_TYPE_BCC }
+	{ get_sender,	GMIME_RECIPIENT_TYPE_TO },
+	{ get_to,	GMIME_RECIPIENT_TYPE_TO },
+	{ get_cc,	GMIME_RECIPIENT_TYPE_CC },
+	{ get_bcc,	GMIME_RECIPIENT_TYPE_BCC },
     };
     const char *from_addr = NULL;
     unsigned int i;
     unsigned int n = 0;
 
-    /* Some mailing lists munge the Reply-To header despite it being A Bad
-     * Thing, see http://marc.merlins.org/netrants/reply-to-harmful.html
-     *
-     * The munging is easy to detect, because it results in a
-     * redundant reply-to header, (with an address that already exists
-     * in either To or Cc). So in this case, we ignore the Reply-To
-     * field and use the From header. This ensures the original sender
-     * will get the reply even if not subscribed to the list. Note
-     * that the address in the Reply-To header will always appear in
-     * the reply if reply_all is true.
-     */
-    if (reply_to_header_is_redundant (message)) {
-	reply_to_map[0].header = "from";
-	reply_to_map[0].fallback = NULL;
-    }
-
     for (i = 0; i < ARRAY_SIZE (reply_to_map); i++) {
 	const char *recipients;
 
-	recipients = notmuch_message_get_header (message,
-						 reply_to_map[i].header);
-	if ((recipients == NULL || recipients[0] == '\0') && reply_to_map[i].fallback)
-	    recipients = notmuch_message_get_header (message,
-						     reply_to_map[i].fallback);
+	recipients = reply_to_map[i].get_header (message);
 
 	n += scan_address_string (recipients, config, reply,
 				  reply_to_map[i].recipient_type, &from_addr);
