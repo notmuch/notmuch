@@ -599,92 +599,6 @@ create_reply_message(void *ctx,
     return reply;
 }
 
-static int
-notmuch_reply_format_default(void *ctx,
-			     notmuch_config_t *config,
-			     notmuch_message_t *message,
-			     notmuch_show_params_t *params,
-			     notmuch_bool_t reply_all,
-			     unused (sprinter_t *sp))
-{
-    GMimeMessage *reply;
-    mime_node_t *node;
-
-    if (mime_node_open (ctx, message, &params->crypto, &node))
-	return 1;
-
-    reply = create_reply_message (ctx, config, message, reply_all, FALSE);
-    if (!reply)
-	return 1;
-
-    show_reply_headers (reply);
-    format_part_reply (node);
-
-    g_object_unref (G_OBJECT (reply));
-    talloc_free (node);
-
-    return 0;
-}
-
-static int
-notmuch_reply_format_sprinter(void *ctx,
-			      notmuch_config_t *config,
-			      notmuch_message_t *message,
-			      notmuch_show_params_t *params,
-			      notmuch_bool_t reply_all,
-			      sprinter_t *sp)
-{
-    GMimeMessage *reply;
-    mime_node_t *node;
-
-    if (mime_node_open (ctx, message, &params->crypto, &node))
-	return 1;
-
-    reply = create_reply_message (ctx, config, message, reply_all, FALSE);
-    if (!reply)
-	return 1;
-
-    sp->begin_map (sp);
-
-    /* The headers of the reply message we've created */
-    sp->map_key (sp, "reply-headers");
-    format_headers_sprinter (sp, reply, TRUE);
-
-    /* Start the original */
-    sp->map_key (sp, "original");
-    format_part_sprinter (ctx, sp, node, TRUE, TRUE, FALSE);
-
-    /* End */
-    sp->end (sp);
-
-    g_object_unref (G_OBJECT (reply));
-    talloc_free (node);
-
-    return 0;
-}
-
-/* This format is currently tuned for a git send-email --notmuch hook */
-static int
-notmuch_reply_format_headers_only(void *ctx,
-				  notmuch_config_t *config,
-				  notmuch_message_t *message,
-				  unused (notmuch_show_params_t *params),
-				  notmuch_bool_t reply_all,
-				  unused (sprinter_t *sp))
-{
-    GMimeMessage *reply;
-
-    reply = create_reply_message (ctx, config, message, reply_all, TRUE);
-    if (!reply)
-	return 1;
-
-    show_reply_headers (reply);
-
-    g_object_unref (G_OBJECT (reply));
-
-    return 0;
-}
-
 enum {
     FORMAT_DEFAULT,
     FORMAT_JSON,
@@ -698,17 +612,12 @@ static int do_reply(notmuch_config_t *config,
 		    int format,
 		    notmuch_bool_t reply_all)
 {
+    GMimeMessage *reply;
+    mime_node_t *node;
     notmuch_messages_t *messages;
     notmuch_message_t *message;
     notmuch_status_t status;
     struct sprinter *sp = NULL;
-    int ret = 0;
-    int (*reply_format_func) (void *ctx,
-			      notmuch_config_t *config,
-			      notmuch_message_t *message,
-			      notmuch_show_params_t *params,
-			      notmuch_bool_t reply_all,
-			      struct sprinter *sp);
 
     if (format == FORMAT_JSON || format == FORMAT_SEXP) {
 	unsigned count;
@@ -721,18 +630,11 @@ static int do_reply(notmuch_config_t *config,
 	    fprintf (stderr, "Error: search term did not match precisely one message (matched %d messages).\n", count);
 	    return 1;
 	}
-    }
 
-    if (format == FORMAT_HEADERS_ONLY) {
-	reply_format_func = notmuch_reply_format_headers_only;
-    } else if (format == FORMAT_JSON) {
-	reply_format_func = notmuch_reply_format_sprinter;
-	sp = sprinter_json_create (config, stdout);
-    } else if (format == FORMAT_SEXP) {
-	reply_format_func = notmuch_reply_format_sprinter;
-	sp = sprinter_sexp_create (config, stdout);
-    } else {
-	reply_format_func = notmuch_reply_format_default;
+	if (format == FORMAT_JSON)
+	    sp = sprinter_json_create (config, stdout);
+	else
+	    sp = sprinter_sexp_create (config, stdout);
     }
 
     status = notmuch_query_search_messages_st (query, &messages);
@@ -745,15 +647,40 @@ static int do_reply(notmuch_config_t *config,
     {
 	message = notmuch_messages_get (messages);
 
-	ret = reply_format_func(config, config, message, params, reply_all, sp);
+	if (mime_node_open (config, message, &params->crypto, &node))
+	    return 1;
+
+	reply = create_reply_message (config, config, message, reply_all,
+				      format == FORMAT_HEADERS_ONLY);
+	if (!reply)
+	    return 1;
+
+	if (format == FORMAT_JSON || format == FORMAT_SEXP) {
+	    sp->begin_map (sp);
+
+	    /* The headers of the reply message we've created */
+	    sp->map_key (sp, "reply-headers");
+	    format_headers_sprinter (sp, reply, TRUE);
+
+	    /* Start the original */
+	    sp->map_key (sp, "original");
+	    format_part_sprinter (config, sp, node, TRUE, TRUE, FALSE);
+
+	    /* End */
+	    sp->end (sp);
+	} else {
+	    show_reply_headers (reply);
+	    if (format == FORMAT_DEFAULT)
+		format_part_reply (node);
+	}
+
+	g_object_unref (G_OBJECT (reply));
+	talloc_free (node);
 
 	notmuch_message_destroy (message);
-
-	if (ret)
-	    break;
     }
 
-    return ret;
+    return 0;
 }
 
 int
