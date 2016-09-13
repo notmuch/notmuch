@@ -230,13 +230,16 @@ scan_address_list (InternetAddressList *list,
 /* Does the address in the Reply-To header of 'message' already appear
  * in either the 'To' or 'Cc' header of the message?
  */
-static int
-reply_to_header_is_redundant (notmuch_message_t *message,
+static notmuch_bool_t
+reply_to_header_is_redundant (GMimeMessage *message,
 			      InternetAddressList *reply_to_list)
 {
-    const char *to, *cc, *addr;
+    const char *addr, *reply_to;
     InternetAddress *address;
     InternetAddressMailbox *mailbox;
+    InternetAddressList *recipients;
+    notmuch_bool_t ret = FALSE;
+    int i;
 
     if (reply_to_list == NULL ||
 	internet_address_list_length (reply_to_list) != 1)
@@ -247,21 +250,29 @@ reply_to_header_is_redundant (notmuch_message_t *message,
 	return 0;
 
     mailbox = INTERNET_ADDRESS_MAILBOX (address);
-    addr = internet_address_mailbox_get_addr (mailbox);
+    reply_to = internet_address_mailbox_get_addr (mailbox);
 
-    to = notmuch_message_get_header (message, "to");
-    cc = notmuch_message_get_header (message, "cc");
+    recipients = g_mime_message_get_all_recipients (message);
 
-    if ((to && strstr (to, addr) != 0) ||
-	(cc && strstr (cc, addr) != 0))
-    {
-	return 1;
+    for (i = 0; i < internet_address_list_length (recipients); i++) {
+	address = internet_address_list_get_address (recipients, i);
+	if (INTERNET_ADDRESS_IS_GROUP (address))
+	    continue;
+
+	mailbox = INTERNET_ADDRESS_MAILBOX (address);
+	addr = internet_address_mailbox_get_addr (mailbox);
+	if (strcmp (addr, reply_to) == 0) {
+	    ret = TRUE;
+	    break;
+	}
     }
 
-    return 0;
+    g_object_unref (G_OBJECT (recipients));
+
+    return ret;
 }
 
-static InternetAddressList *get_sender(notmuch_message_t *message,
+static InternetAddressList *get_sender(unused(notmuch_message_t *message),
 				       GMimeMessage *mime_message)
 {
     const char *reply_to;
@@ -284,7 +295,7 @@ static InternetAddressList *get_sender(notmuch_message_t *message,
 	 * will always appear in the reply if reply_all is true.
 	 */
 	reply_to_list = internet_address_list_parse_string (reply_to);
-	if (! reply_to_header_is_redundant (message, reply_to_list))
+	if (! reply_to_header_is_redundant (mime_message, reply_to_list))
 	    return reply_to_list;
 
 	g_object_unref (G_OBJECT (reply_to_list));
