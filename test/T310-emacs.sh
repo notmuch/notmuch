@@ -521,6 +521,30 @@ Notmuch Test Suite <test_suite@notmuchmail.org> writes:
 EOF
 test_expect_equal_file OUTPUT EXPECTED
 
+test_begin_subtest "Reply within emacs to message from self"
+test_subtest_known_broken
+add_message '[from]="test_suite@notmuchmail.org"' \
+	    '[to]="test_suite@notmuchmail.org"'
+test_emacs "(let ((message-hidden-headers '()))
+	    (notmuch-show \"id:${gen_msg_id}\")
+	    (notmuch-show-reply)
+	    (test-output))"
+sed -i -e 's/^In-Reply-To: <.*>$/In-Reply-To: <XXX>/' OUTPUT
+sed -i -e 's/^References: <.*>$/References: <XXX>/' OUTPUT
+cat <<EOF >EXPECTED
+From: Notmuch Test Suite <test_suite@notmuchmail.org>
+To: test_suite@notmuchmail.org
+Subject: Re: Reply within emacs to message from self
+In-Reply-To: <XXX>
+Fcc: ${MAIL_DIR}/sent
+References: <XXX>
+--text follows this line--
+test_suite@notmuchmail.org writes:
+
+> This is just a test message (#7)
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
 test_begin_subtest "Quote MML tags in reply"
 message_id='test-emacs-mml-quoting@message.id'
 add_message [id]="$message_id" \
