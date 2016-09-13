@@ -317,7 +317,6 @@ test_expect_equal \
     "$expected"
 
 test_begin_subtest "Reply within emacs to an encrypted message"
-test_subtest_known_broken
 test_emacs "(let ((message-hidden-headers '())
       (notmuch-crypto-process-mime 't))
   (notmuch-show \"subject:test.encrypted.message.002\")

@@ -682,6 +682,9 @@ will return nil if the CID is unknown or cannot be retrieved."
       (indent-rigidly start (point) 1)))
   t)
 
+(defun notmuch-show-insert-part-application/pgp-encrypted (msg part content-type nth depth button)
+  t)
+
 (defun notmuch-show-insert-part-multipart/* (msg part content-type nth depth button)
   (let ((inner-parts (plist-get part :content))
 	(start (point)))

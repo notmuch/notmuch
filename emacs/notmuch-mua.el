@@ -253,8 +253,11 @@ mutiple parts get a header."
 		       (notmuch-show-insert-header-p-function notmuch-mua-reply-insert-header-p-function)
 		       ;; Don't indent multipart sub-parts.
 		       (notmuch-show-indent-multipart nil))
-		    (notmuch-show-insert-body original (plist-get original :body) 0)
-		    (buffer-substring-no-properties (point-min) (point-max)))))
+		    ;; We don't want sigstatus buttons (an information leak and usually wrong anyway).
+		    (letf (((symbol-function 'notmuch-crypto-insert-sigstatus-button) #'ignore)
+			   ((symbol-function 'notmuch-crypto-insert-encstatus-button) #'ignore))
+			  (notmuch-show-insert-body original (plist-get original :body) 0)
+			  (buffer-substring-no-properties (point-min) (point-max))))))
 
 	(set-mark (point))
 	(goto-char start)
