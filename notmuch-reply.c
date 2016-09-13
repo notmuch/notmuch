@@ -668,7 +668,6 @@ notmuch_reply_format_headers_only(void *ctx,
 {
     GMimeMessage *reply;
     const char *in_reply_to, *orig_references, *references;
-    char *reply_headers;
 
     /* The 0 means we do not want headers in a "pretty" order. */
     reply = g_mime_message_new (0);
@@ -697,9 +696,7 @@ notmuch_reply_format_headers_only(void *ctx,
 
     (void)add_recipients_from_message (reply, config, message, reply_all);
 
-    reply_headers = g_mime_object_to_string (GMIME_OBJECT (reply));
-    printf ("%s", reply_headers);
-    free (reply_headers);
+    show_reply_headers (reply);
 
     g_object_unref (G_OBJECT (reply));
 
