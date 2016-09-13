@@ -532,12 +532,20 @@ create_reply_message(void *ctx,
 	return NULL;
     }
 
-    subject = notmuch_message_get_header (message, "subject");
-    if (subject) {
-	if (strncasecmp (subject, "Re:", 3))
-	    subject = talloc_asprintf (ctx, "Re: %s", subject);
-	g_mime_message_set_subject (reply, subject);
-    }
+    in_reply_to = talloc_asprintf (ctx, "<%s>",
+				   notmuch_message_get_message_id (message));
+
+    g_mime_object_set_header (GMIME_OBJECT (reply), "In-Reply-To", in_reply_to);
+
+    orig_references = notmuch_message_get_header (message, "references");
+    if (!orig_references)
+	/* Treat errors like missing References headers. */
+	orig_references = "";
+    references = talloc_asprintf (ctx, "%s%s%s",
+				  *orig_references ? orig_references : "",
+				  *orig_references ? " " : "",
+				  in_reply_to);
+    g_mime_object_set_header (GMIME_OBJECT (reply), "References", references);
 
     from_addr = add_recipients_from_message (reply, config,
 					     message, reply_all);
@@ -572,25 +580,14 @@ create_reply_message(void *ctx,
     from_addr = talloc_asprintf (ctx, "%s <%s>",
 				 notmuch_config_get_user_name (config),
 				 from_addr);
-    g_mime_object_set_header (GMIME_OBJECT (reply),
-			      "From", from_addr);
+    g_mime_object_set_header (GMIME_OBJECT (reply), "From", from_addr);
 
-    in_reply_to = talloc_asprintf (ctx, "<%s>",
-				   notmuch_message_get_message_id (message));
-
-    g_mime_object_set_header (GMIME_OBJECT (reply),
-			      "In-Reply-To", in_reply_to);
-
-    orig_references = notmuch_message_get_header (message, "references");
-    if (!orig_references)
-	/* Treat errors like missing References headers. */
-	orig_references = "";
-    references = talloc_asprintf (ctx, "%s%s%s",
-				  *orig_references ? orig_references : "",
-				  *orig_references ? " " : "",
-				  in_reply_to);
-    g_mime_object_set_header (GMIME_OBJECT (reply),
-			      "References", references);
+    subject = notmuch_message_get_header (message, "subject");
+    if (subject) {
+	if (strncasecmp (subject, "Re:", 3))
+	    subject = talloc_asprintf (ctx, "Re: %s", subject);
+	g_mime_message_set_subject (reply, subject);
+    }
 
     return reply;
 }
