@@ -541,21 +541,26 @@ emacs_fcc_message ()
     notmuch new >/dev/null
 }
 
-# Generate a corpus of email and add it to the database.
+# Add an existing, fixed corpus of email to the database.
 #
-# This corpus is fixed, (it happens to be 50 messages from early in
-# the history of the notmuch mailing list), which allows for reliably
+# $1 is the corpus dir under corpora to add, using "default" if unset.
+#
+# The default corpus is based on about 50 messages from early in the
+# history of the notmuch mailing list, which allows for reliably
 # testing commands that need to operate on a not-totally-trivial
 # number of messages.
 add_email_corpus ()
 {
+    corpus=${1:-default}
+
     rm -rf ${MAIL_DIR}
-    if [ -d $TEST_DIRECTORY/corpus.mail ]; then
-	cp -a $TEST_DIRECTORY/corpus.mail ${MAIL_DIR}
+    if [ -d $TEST_DIRECTORY/corpora.mail/$corpus ]; then
+	cp -a $TEST_DIRECTORY/corpora.mail/$corpus ${MAIL_DIR}
     else
-	cp -a $TEST_DIRECTORY/corpus ${MAIL_DIR}
+	cp -a $TEST_DIRECTORY/corpora/$corpus ${MAIL_DIR}
 	notmuch new >/dev/null || die "'notmuch new' failed while adding email corpus"
-	cp -a ${MAIL_DIR} $TEST_DIRECTORY/corpus.mail
+	mkdir -p $TEST_DIRECTORY/corpora.mail
+	cp -a ${MAIL_DIR} $TEST_DIRECTORY/corpora.mail/$corpus
     fi
 }
 
