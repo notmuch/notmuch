@@ -227,31 +227,6 @@ scan_address_list (InternetAddressList *list,
     return n;
 }
 
-/* Scan addresses in 'recipients'.
- *
- * See the documentation of scan_address_list() above. This function
- * does exactly the same, but converts 'recipients' to an
- * InternetAddressList first.
- */
-static unsigned int
-scan_address_string (const char *recipients,
-		     notmuch_config_t *config,
-		     GMimeMessage *message,
-		     GMimeRecipientType type,
-		     const char **user_from)
-{
-    InternetAddressList *list;
-
-    if (recipients == NULL)
-	return 0;
-
-    list = internet_address_list_parse_string (recipients);
-    if (list == NULL)
-	return 0;
-
-    return scan_address_list (list, config, message, type, user_from);
-}
-
 /* Does the address in the Reply-To header of 'message' already appear
  * in either the 'To' or 'Cc' header of the message?
  */
@@ -287,11 +262,12 @@ reply_to_header_is_redundant (notmuch_message_t *message, const char *reply_to)
     return 0;
 }
 
-static const char *get_sender(notmuch_message_t *message)
+static InternetAddressList *get_sender(notmuch_message_t *message,
+				       GMimeMessage *mime_message)
 {
     const char *reply_to;
 
-    reply_to = notmuch_message_get_header (message, "reply-to");
+    reply_to = g_mime_message_get_reply_to (mime_message);
     if (reply_to && *reply_to) {
         /*
 	 * Some mailing lists munge the Reply-To header despite it
@@ -307,25 +283,32 @@ static const char *get_sender(notmuch_message_t *message)
 	 * will always appear in the reply if reply_all is true.
 	 */
 	if (! reply_to_header_is_redundant (message, reply_to))
-	    return reply_to;
+	    return internet_address_list_parse_string (reply_to);
     }
 
-    return notmuch_message_get_header (message, "from");
+    return internet_address_list_parse_string (
+	g_mime_message_get_sender (mime_message));
 }
 
-static const char *get_to(notmuch_message_t *message)
+static InternetAddressList *get_to(unused(notmuch_message_t *message),
+				   GMimeMessage *mime_message)
 {
-    return notmuch_message_get_header (message, "to");
+    return g_mime_message_get_recipients (mime_message,
+					  GMIME_RECIPIENT_TYPE_TO);
 }
 
-static const char *get_cc(notmuch_message_t *message)
+static InternetAddressList *get_cc(unused(notmuch_message_t *message),
+				   GMimeMessage *mime_message)
 {
-    return notmuch_message_get_header (message, "cc");
+    return g_mime_message_get_recipients (mime_message,
+					  GMIME_RECIPIENT_TYPE_CC);
 }
 
-static const char *get_bcc(notmuch_message_t *message)
+static InternetAddressList *get_bcc(unused(notmuch_message_t *message),
+				    GMimeMessage *mime_message)
 {
-    return notmuch_message_get_header (message, "bcc");
+    return g_mime_message_get_recipients (mime_message,
+					  GMIME_RECIPIENT_TYPE_BCC);
 }
 
 /* Augment the recipients of 'reply' from the "Reply-to:", "From:",
@@ -344,10 +327,12 @@ static const char *
 add_recipients_from_message (GMimeMessage *reply,
 			     notmuch_config_t *config,
 			     notmuch_message_t *message,
+			     GMimeMessage *mime_message,
 			     notmuch_bool_t reply_all)
 {
     struct {
-	const char * (*get_header)(notmuch_message_t *message);
+	InternetAddressList * (*get_header)(notmuch_message_t *message,
+					    GMimeMessage *mime_message);
 	GMimeRecipientType recipient_type;
     } reply_to_map[] = {
 	{ get_sender,	GMIME_RECIPIENT_TYPE_TO },
@@ -360,12 +345,12 @@ add_recipients_from_message (GMimeMessage *reply,
     unsigned int n = 0;
 
     for (i = 0; i < ARRAY_SIZE (reply_to_map); i++) {
-	const char *recipients;
+	InternetAddressList *recipients;
 
-	recipients = reply_to_map[i].get_header (message);
+	recipients = reply_to_map[i].get_header (message, mime_message);
 
-	n += scan_address_string (recipients, config, reply,
-				  reply_to_map[i].recipient_type, &from_addr);
+	n += scan_address_list (recipients, config, reply,
+				reply_to_map[i].recipient_type, &from_addr);
 
 	if (!reply_all && n) {
 	    /* Stop adding new recipients in reply-to-sender mode if
@@ -536,6 +521,7 @@ static GMimeMessage *
 create_reply_message(void *ctx,
 		     notmuch_config_t *config,
 		     notmuch_message_t *message,
+		     GMimeMessage *mime_message,
 		     notmuch_bool_t reply_all,
 		     notmuch_bool_t limited)
 {
@@ -566,8 +552,8 @@ create_reply_message(void *ctx,
 
     g_mime_object_set_header (GMIME_OBJECT (reply), "References", references);
 
-    from_addr = add_recipients_from_message (reply, config,
-					     message, reply_all);
+    from_addr = add_recipients_from_message (reply, config, message,
+					     mime_message, reply_all);
 
     /* The above is all that is needed for limited headers. */
     if (limited)
@@ -666,7 +652,8 @@ static int do_reply(notmuch_config_t *config,
 	if (mime_node_open (config, message, &params->crypto, &node))
 	    return 1;
 
-	reply = create_reply_message (config, config, message, reply_all,
+	reply = create_reply_message (config, config, message,
+				      GMIME_MESSAGE (node->part), reply_all,
 				      format == FORMAT_HEADERS_ONLY);
 	if (!reply)
 	    return 1;

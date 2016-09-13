@@ -254,7 +254,6 @@ test_expect_equal_json "$output" '
 }'
 
 test_begin_subtest "Reply to a message with multiple Cc headers"
-test_subtest_known_broken
 add_email_corpus broken
 output=$(notmuch reply id:multiple-cc@example.org)
 test_expect_equal "$output" "From: Notmuch Test Suite <test_suite@notmuchmail.org>
