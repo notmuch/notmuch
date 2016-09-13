@@ -604,20 +604,20 @@ notmuch_reply_format_default(void *ctx,
 			     unused (sprinter_t *sp))
 {
     GMimeMessage *reply;
-    mime_node_t *root;
+    mime_node_t *node;
+
+    if (mime_node_open (ctx, message, &params->crypto, &node))
+	return 1;
 
     reply = create_reply_message (ctx, config, message, reply_all);
     if (!reply)
 	return 1;
 
     show_reply_headers (reply);
+    format_part_reply (node);
 
     g_object_unref (G_OBJECT (reply));
-
-    if (mime_node_open (ctx, message, &params->crypto, &root) == NOTMUCH_STATUS_SUCCESS) {
-	format_part_reply (root);
-	talloc_free (root);
-    }
+    talloc_free (node);
 
     return 0;
 }
@@ -633,7 +633,7 @@ notmuch_reply_format_sprinter(void *ctx,
     GMimeMessage *reply;
     mime_node_t *node;
 
-    if (mime_node_open (ctx, message, &params->crypto, &node) != NOTMUCH_STATUS_SUCCESS)
+    if (mime_node_open (ctx, message, &params->crypto, &node))
 	return 1;
 
     reply = create_reply_message (ctx, config, message, reply_all);
@@ -645,7 +645,6 @@ notmuch_reply_format_sprinter(void *ctx,
     /* The headers of the reply message we've created */
     sp->map_key (sp, "reply-headers");
     format_headers_sprinter (sp, reply, TRUE);
-    g_object_unref (G_OBJECT (reply));
 
     /* Start the original */
     sp->map_key (sp, "original");
@@ -653,6 +652,9 @@ notmuch_reply_format_sprinter(void *ctx,
 
     /* End */
     sp->end (sp);
+
+    g_object_unref (G_OBJECT (reply));
+    talloc_free (node);
 
     return 0;
 }
