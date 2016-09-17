@@ -1,6 +1,42 @@
 Notmuch 0.23 (UNRELEASED)
 =========================
 
+General (Xapian 1.4+)
+---------------------
+
+Compiling against Xapian 1.4 enables several new features.
+
+Support for single argument date: queries
+
+  `date:<expr>` is equivalent to  `date:<expr>..<expr>`.
+
+Support for blocking opens
+
+  When opening a database notmuch by default will wait for another
+  process to release a write lock, rather than returning an error.
+
+Support for named queries
+
+  Named queries (also known as 'saved searches') can be defined with a
+  `query:name` format. The expansion of these queries is stored in the
+  database and they can be used from any notmuch client.
+
+CLI
+---
+
+Support for compile time options
+
+  A group of `built_with` keys is now supported for notmuch
+  config. Initial keys in this group are `compact`, `field_processor`,
+  and `retry_lock`.
+
+Dump/Restore support for configuration information
+
+  Any configuration information stored in the database (initially just
+  named queries) is dumped and restored. Any new information in the
+  dump format is prefixed by '#' to allow existing scripts to ignore
+  it.
+
 Emacs
 -----
 
