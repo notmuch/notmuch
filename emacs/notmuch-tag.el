@@ -105,7 +105,7 @@ with images."
   :type 'notmuch-tag-format-type)
 
 (defface notmuch-tag-deleted
-  '((((class color) (supports :strike-through)) :strike-through "red")
+  '((((class color) (supports :strike-through "red")) :strike-through "red")
     (t :inverse-video t))
   "Face used to display deleted tags.
 
