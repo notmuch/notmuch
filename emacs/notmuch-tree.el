@@ -241,6 +241,8 @@ FUNC."
     (define-key map [remap notmuch-search] 'notmuch-tree-to-search)
     ;; Override because we want to close message pane first.
     (define-key map [remap notmuch-mua-new-mail] (notmuch-tree-close-message-pane-and #'notmuch-mua-new-mail))
+    ;; Override because we want to close message pane first.
+    (define-key map [remap notmuch-jump-search] (notmuch-tree-close-message-pane-and #'notmuch-jump-search))
 
     (define-key map "S" 'notmuch-search-from-tree-current-query)
 
