@@ -57,6 +57,10 @@
 
 (custom-add-to-group 'notmuch-send 'message 'custom-group)
 
+(defgroup notmuch-tag nil
+  "Tags and tagging in Notmuch."
+  :group 'notmuch)
+
 (defgroup notmuch-crypto nil
   "Processing and display of cryptographic MIME parts."
   :group 'notmuch)

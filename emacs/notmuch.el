@@ -169,6 +169,7 @@ there will be called at other points of notmuch execution."
     (define-key map "t" 'notmuch-search-filter-by-tag)
     (define-key map "l" 'notmuch-search-filter)
     (define-key map [mouse-1] 'notmuch-search-show-thread)
+    (define-key map "k" 'notmuch-tag-jump)
     (define-key map "*" 'notmuch-search-tag-all)
     (define-key map "a" 'notmuch-search-archive-thread)
     (define-key map "-" 'notmuch-search-remove-tag)

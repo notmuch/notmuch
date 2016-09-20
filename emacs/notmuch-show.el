@@ -1431,6 +1431,7 @@ reset based on the original query."
     (define-key map "V" 'notmuch-show-view-raw-message)
     (define-key map "c" 'notmuch-show-stash-map)
     (define-key map "h" 'notmuch-show-toggle-visibility-headers)
+    (define-key map "k" 'notmuch-tag-jump)
     (define-key map "*" 'notmuch-show-tag-all)
     (define-key map "-" 'notmuch-show-remove-tag)
     (define-key map "+" 'notmuch-show-add-tag)

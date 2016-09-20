@@ -279,6 +279,7 @@ FUNC."
     (define-key map "P" 'notmuch-tree-prev-message)
     (define-key map (kbd "M-p") 'notmuch-tree-prev-thread)
     (define-key map (kbd "M-n") 'notmuch-tree-next-thread)
+    (define-key map "k" 'notmuch-tag-jump)
     (define-key map "-" 'notmuch-tree-remove-tag)
     (define-key map "+" 'notmuch-tree-add-tag)
     (define-key map "*" 'notmuch-tree-tag-thread)

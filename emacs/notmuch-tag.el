@@ -28,6 +28,54 @@
 (require 'crm)
 (require 'notmuch-lib)
 
+(declare-function notmuch-search-tag "notmuch" tag-changes)
+(declare-function notmuch-show-tag "notmuch-show" tag-changes)
+(declare-function notmuch-tree-tag "notmuch-tree" tag-changes)
+
+(autoload 'notmuch-jump "notmuch-jump")
+
+(define-widget 'notmuch-tag-key-type 'list
+  "A single key tagging binding."
+  :format "%v"
+  :args '((list :inline t
+		:format "%v"
+		(key-sequence :tag "Key")
+		(radio :tag "Tag operations" (repeat :tag "Tag list" (string :format "%v" :tag "change"))
+		       (variable :tag "Tag variable"))
+		(string :tag "Name"))))
+
+(defcustom notmuch-tagging-keys
+  `((,(kbd "a") notmuch-archive-tags "Archive")
+    (,(kbd "u") notmuch-show-mark-read-tags "Mark read")
+    (,(kbd "f") ("+flagged") "Flag")
+    (,(kbd "s") ("+spam" "-inbox") "Mark as spam")
+    (,(kbd "d") ("+deleted" "-inbox") "Delete"))
+  "A list of keys and corresponding tagging operations.
+
+For each key (or key sequence) you can specify a sequence of
+tagging operations to apply, or a variable which contains a list
+of tagging operations such as `notmuch-archive-tags'. The final
+element is a name for this tagging operation. If the name is
+omitted or empty then the list of tag changes, or the variable
+name is used as the name. The key `r` should not be used as that
+is already bound: it switches the menu to a menu of the reverse
+tagging operations. The reverse of a tagging operation is the
+same list of individual tag-ops but with `+tag` replaced by
+`-tag` and vice versa.
+
+If setting this variable outside of customize then it should be a
+list of triples (lists of three elements). Each triple should be
+of the form (key-binding tagging-operations name). KEY-BINDING
+can be a single character or a key sequence; TAGGING-OPERATIONS
+should either be a list of individual tag operations each of the
+form `+tag` or `-tag`, or the variable name of a variable that is
+a list of tagging operations; NAME should be a name for the
+tagging operation, if omitted or empty than then name is taken
+from TAGGING-OPERATIONS."
+  :tag "List of tagging bindings"
+  :type '(repeat notmuch-tag-key-type)
+  :group 'notmuch-tag)
+
 (define-widget 'notmuch-tag-format-type 'lazy
   "Customize widget for notmuch-tag-format and friends"
   :type '(alist :key-type (regexp :tag "Tag")
@@ -437,6 +485,51 @@ begin with a \"+\" or a \"-\". If REVERSE is non-nil, replace all
 		s)))
 	  tags))
 
+(defun notmuch-tag-jump (reverse)
+  "Create a jump menu for tagging operations.
+
+Creates and displays a jump menu for the tagging operations
+specified in `notmuch-tagging-keys'. If REVERSE is set then it
+offers a menu of the reverses of the operations specified in
+`notmuch-tagging-keys'; i.e. each `+tag` is replaced by `-tag`
+and vice versa."
+  ;; In principle this function is simple, but it has to deal with
+  ;; lots of cases: different modes (search/show/tree), whether a name
+  ;; is specified, whether the tagging operations is a list of
+  ;; tag-ops, or a symbol that evaluates to such a list, and whether
+  ;; REVERSE is specified.
+  (interactive "P")
+  (let (action-map)
+    (dolist (binding notmuch-tagging-keys)
+      (let* ((tag-function (case major-mode
+			     (notmuch-search-mode #'notmuch-search-tag)
+			     (notmuch-show-mode #'notmuch-show-tag)
+			     (notmuch-tree-mode #'notmuch-tree-tag)))
+	     (key (first binding))
+	     (forward-tag-change (if (symbolp (second binding))
+				     (symbol-value (second binding))
+				   (second binding)))
+	     (tag-change (if reverse
+			     (notmuch-tag-change-list forward-tag-change 't)
+			   forward-tag-change))
+	     (name (or (and (not (string= (third binding) ""))
+			    (third binding))
+		       (and (symbolp (second binding))
+			    (symbol-name (second binding)))))
+	     (name-string (if name
+			      (if reverse (concat "Reverse " name)
+				name)
+			    (mapconcat #'identity tag-change " "))))
+	(push (list key name-string
+		     `(lambda () (,tag-function ',tag-change)))
+	      action-map)))
+    (push (list "r" (if reverse
+			"Forward tag changes "
+		      "Reverse tag changes")
+		(apply-partially 'notmuch-tag-jump (not reverse)))
+	  action-map)
+    (setq action-map (nreverse action-map))
+    (notmuch-jump action-map "Tag: ")))
 
 ;;
 
