@@ -209,6 +209,13 @@ open (if the message pane is closed it does nothing)."
        (with-selected-window notmuch-tree-message-window
 	 (call-interactively #',func)))))
 
+(defun notmuch-tree-inherit-from-message-pane (sym)
+  "Return value of SYM in message-pane if open, or tree-pane if not"
+  (if (window-live-p notmuch-tree-message-window)
+      (with-selected-window notmuch-tree-message-window
+	(symbol-value sym))
+    (symbol-value sym)))
+
 (defun notmuch-tree-button-activate (&optional button)
   "Activate BUTTON or button at point
 
@@ -226,8 +233,10 @@ FUNC."
   `(lambda ()
       ,(concat "(Close message pane and) " (documentation func t))
      (interactive)
-     (notmuch-tree-close-message-window)
-     (call-interactively #',func)))
+     (let ((notmuch-show-process-crypto
+	    (notmuch-tree-inherit-from-message-pane 'notmuch-show-process-crypto)))
+       (notmuch-tree-close-message-window)
+       (call-interactively #',func))))
 
 (defvar notmuch-tree-mode-map
   (let ((map (make-sparse-keymap)))
