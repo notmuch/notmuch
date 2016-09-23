@@ -170,6 +170,9 @@ _notmuch_string_map_iterator_create (notmuch_string_map_t *map, const char *key,
     if (unlikely (iter == NULL))
 	return NULL;
 
+    if (unlikely (talloc_reference (iter, map) == NULL))
+	return NULL;
+
     iter->key = talloc_strdup (iter, key);
     iter->exact = exact;
     iter->current = bsearch_first (map->pairs, map->length, key, exact);
