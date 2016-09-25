@@ -21,6 +21,13 @@ Support for named queries
   `query:name` format. The expansion of these queries is stored in the
   database and they can be used from any notmuch client.
 
+Library
+-------
+
+Bug fix for `notmuch_directory_set_mtime`
+
+  Update cached mtime to match on-disk mtime.
+
 CLI
 ---
 
