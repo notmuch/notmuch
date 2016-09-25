@@ -54,6 +54,8 @@ Face customization is easier
   `notmuch-search-flagged-face` and `notmuch-search-unread-face` are
   now used by default. Customize `notmuch-faces` to modify them.
 
+Omit User-Agent header by default when sending mail
+
 Ruby Bindings
 -------------
 
