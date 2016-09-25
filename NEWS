@@ -70,7 +70,7 @@ Go bindings moved to contrib
 
 Add support for `notmuch_threads_t` and `notmuch_thread_t`
 
-Fixed constant values so they are not all zero anymore.
+Fixed constant values so they are not all zero anymore
 
   Previously, it was impossible to open writable database handles,
   because `DATABASE_MODE_READ_ONLY` and `DATABASE_MODE_READ_WRITE` were
