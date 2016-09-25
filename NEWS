@@ -24,6 +24,13 @@ Support for named queries
 Library
 -------
 
+Message property API
+
+  libnotmuch now supports the attachment of arbitrary key-value pairs
+  to messages. These can be used by various tools to manage their
+  private data without polluting the user tag space. They also support
+  iteration of values with the same key or same key prefix.
+
 Bug fix for `notmuch_directory_set_mtime`
 
   Update cached mtime to match on-disk mtime.
@@ -37,14 +44,13 @@ Support for compile time options
   config. Initial keys in this group are `compact`, `field_processor`,
   and `retry_lock`.
 
-Dump/Restore support for configuration information
+Dump/Restore support for configuration information and properties
 
   Any configuration information stored in the database (initially just
-  named queries) is dumped and restored. Any new information in the
-  dump format is prefixed by '#' to allow existing scripts to ignore
-  it.
-
-Refactor notmuch-reply, make handling of duplicate headers consistent
+  named queries) is dumped and restored. Similarly any properties
+  attached to messages are also dumped and restored. Any new
+  information in the dump format is prefixed by '#' to allow existing
+  scripts to ignore it.
 
 Emacs
 -----
