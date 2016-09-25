@@ -251,6 +251,7 @@ FUNC."
     (define-key map "w" 'notmuch-show-save-attachments)
     (define-key map "v" 'notmuch-show-view-all-mime-parts)
     (define-key map "c" 'notmuch-show-stash-map)
+    (define-key map "b" 'notmuch-show-resend-message)
 
     ;; these apply to the message pane
     (define-key map (kbd "M-TAB") (notmuch-tree-to-message-pane #'notmuch-show-previous-button))
@@ -282,7 +283,7 @@ FUNC."
     (define-key map "+" 'notmuch-tree-add-tag)
     (define-key map "*" 'notmuch-tree-tag-thread)
     (define-key map " " 'notmuch-tree-scroll-or-next)
-    (define-key map "b" 'notmuch-tree-scroll-message-window-back)
+    (define-key map (kbd "DEL") 'notmuch-tree-scroll-message-window-back)
     map))
 (fset 'notmuch-tree-mode-map notmuch-tree-mode-map)
 
