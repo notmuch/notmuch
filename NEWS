@@ -44,6 +44,8 @@ Dump/Restore support for configuration information
   dump format is prefixed by '#' to allow existing scripts to ignore
   it.
 
+Refactor notmuch-reply, make handling of duplicate headers consistent
+
 Emacs
 -----
 
