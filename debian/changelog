@@ -1,3 +1,13 @@
+notmuch (0.23~rc0-1) experimental; urgency=medium
+
+  * New upstream release candidate
+  * Bug fix: "Calls to notmuch_directory_get_mtime() don't return
+    the recently set mtime", thanks to Lars Luthman (Closes: #826881).
+  * Bug fix: "Please document compact command", thanks to Olivier
+    Berger (Closes: #825884).
+
+ -- David Bremner <bremner@debian.org>  Mon, 26 Sep 2016 07:28:06 -0300
+
 notmuch (0.22.2-1) unstable; urgency=medium
 
   * Fix test suite compatibility with GnuPG 2.1.15.  Bug fix: "FTBFS:
