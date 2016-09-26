@@ -1,4 +1,10 @@
 libnotmuch.so.4 libnotmuch4 #MINVER#
+ notmuch_built_with@Base 0.23~rc0
+ notmuch_config_list_destroy@Base 0.23~rc0
+ notmuch_config_list_key@Base 0.23~rc0
+ notmuch_config_list_move_to_next@Base 0.23~rc0
+ notmuch_config_list_valid@Base 0.23~rc0
+ notmuch_config_list_value@Base 0.23~rc0
  notmuch_database_add_message@Base 0.3
  notmuch_database_begin_atomic@Base 0.9~rc1
  notmuch_database_close@Base 0.13~rc1
@@ -10,6 +16,8 @@ libnotmuch.so.4 libnotmuch4 #MINVER#
  notmuch_database_find_message@Base 0.9~rc2
  notmuch_database_find_message_by_filename@Base 0.9~rc2
  notmuch_database_get_all_tags@Base 0.3
+ notmuch_database_get_config@Base 0.23~rc0
+ notmuch_database_get_config_list@Base 0.23~rc0
  notmuch_database_get_directory@Base 0.3
  notmuch_database_get_path@Base 0.3
  notmuch_database_get_revision@Base 0.21~rc1
@@ -18,6 +26,7 @@ libnotmuch.so.4 libnotmuch4 #MINVER#
  notmuch_database_open@Base 0.3
  notmuch_database_open_verbose@Base 0.20~rc1
  notmuch_database_remove_message@Base 0.3
+ notmuch_database_set_config@Base 0.23~rc0
  notmuch_database_status_string@Base 0.20~rc1
  notmuch_database_upgrade@Base 0.3
  notmuch_directory_delete@Base 0.21~rc1
@@ -30,6 +39,7 @@ libnotmuch.so.4 libnotmuch4 #MINVER#
  notmuch_filenames_get@Base 0.3
  notmuch_filenames_move_to_next@Base 0.3
  notmuch_filenames_valid@Base 0.3
+ notmuch_message_add_property@Base 0.23~rc0
  notmuch_message_add_tag@Base 0.3
  notmuch_message_destroy@Base 0.3
  notmuch_message_freeze@Base 0.3
@@ -39,11 +49,20 @@ libnotmuch.so.4 libnotmuch4 #MINVER#
  notmuch_message_get_flag@Base 0.3
  notmuch_message_get_header@Base 0.3
  notmuch_message_get_message_id@Base 0.3
+ notmuch_message_get_properties@Base 0.23~rc0
+ notmuch_message_get_property@Base 0.23~rc0
  notmuch_message_get_replies@Base 0.3
  notmuch_message_get_tags@Base 0.3
  notmuch_message_get_thread_id@Base 0.3
  notmuch_message_maildir_flags_to_tags@Base 0.5
+ notmuch_message_properties_destroy@Base 0.23~rc0
+ notmuch_message_properties_key@Base 0.23~rc0
+ notmuch_message_properties_move_to_next@Base 0.23~rc0
+ notmuch_message_properties_valid@Base 0.23~rc0
+ notmuch_message_properties_value@Base 0.23~rc0
+ notmuch_message_remove_all_properties@Base 0.23~rc0
  notmuch_message_remove_all_tags@Base 0.3
+ notmuch_message_remove_property@Base 0.23~rc0
  notmuch_message_remove_tag@Base 0.3
  notmuch_message_set_flag@Base 0.3
  notmuch_message_tags_to_maildir_flags@Base 0.5
@@ -94,8 +113,10 @@ libnotmuch.so.4 libnotmuch4 #MINVER#
  (c++)"typeinfo for Xapian::DocNotFoundError@Base" 0.6.1
  (c++)"typeinfo for Xapian::InvalidArgumentError@Base" 0.6.1
  (c++)"typeinfo for Xapian::Error@Base" 0.6.1
+ (c++|optional=present with Xapian 1.4)"typeinfo for Xapian::QueryParserError@Base" 0.23~rc0
  (c++)"typeinfo name for Xapian::LogicError@Base" 0.6.1
  (c++)"typeinfo name for Xapian::RuntimeError@Base" 0.6.1
  (c++)"typeinfo name for Xapian::DocNotFoundError@Base" 0.6.1
  (c++)"typeinfo name for Xapian::InvalidArgumentError@Base" 0.6.1
  (c++)"typeinfo name for Xapian::Error@Base" 0.6.1
+ (c++|optional=present with Xapian 1.4)"typeinfo name for Xapian::QueryParserError@Base" 0.23~rc0
