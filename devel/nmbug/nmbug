@@ -475,7 +475,7 @@ def log(args=()):
     'nmbug log HEAD..@{upstream}'.
     """
     # we don't want output trapping here, because we want the pager.
-    args = ['log', '--name-status'] + list(args)
+    args = ['log', '--name-status', '--no-renames'] + list(args)
     with _git(args=args, expect=(0, 1, -13)) as p:
         p.wait()
 
