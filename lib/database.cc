@@ -1685,8 +1685,8 @@ notmuch_database_begin_atomic (notmuch_database_t *notmuch)
 	notmuch->atomic_nesting > 0)
 	goto DONE;
 
-	if (notmuch_database_needs_upgrade(notmuch))
-		return NOTMUCH_STATUS_UPGRADE_REQUIRED;
+    if (notmuch_database_needs_upgrade (notmuch))
+	return NOTMUCH_STATUS_UPGRADE_REQUIRED;
 
     try {
 	(static_cast <Xapian::WritableDatabase *> (notmuch->xapian_db))->begin_transaction (false);
