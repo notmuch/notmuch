@@ -892,9 +892,10 @@ PROMPT is the string to prompt with."
                 (process-lines notmuch-command "search" "--output=tags" "*")))
        (completions
 	 (append (list "folder:" "path:" "thread:" "id:" "date:" "from:" "to:"
-		       "subject:" "attachment:" "mimetype:")
+		       "subject:" "attachment:")
 		 (mapcar (lambda (tag) (concat "tag:" tag)) all-tags)
-		 (mapcar (lambda (tag) (concat "is:" tag)) all-tags))))
+		 (mapcar (lambda (tag) (concat "is:" tag)) all-tags)
+		 (mapcar (lambda (mimetype) (concat "mimetype:" mimetype)) (mailcap-mime-types)))))
     (let ((keymap (copy-keymap minibuffer-local-map))
 	  (current-query (case major-mode
 			   (notmuch-search-mode (notmuch-search-get-query))
