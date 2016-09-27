@@ -55,6 +55,14 @@ Dump/Restore support for configuration information and properties
 Emacs
 -----
 
+Resend messages
+
+  The function `notmuch-show-resend-message` (bound to `b` in show
+  and tree modes) will (attempt to) send current message to new
+  recipients. The headers of the message won't be altered (e.g. `To:`
+  may point to yourself). New `Resent-To:`, `Resent-From:` and so on
+  will be added instead.
+
 Face customization is easier
 
   New faces `notmuch-tag-unread`, `notmuch-tag-flagged`,
