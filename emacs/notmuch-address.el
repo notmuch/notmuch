@@ -194,7 +194,14 @@ external commands."
 		    (t
 		     (funcall notmuch-address-selection-function
 			      (format "Address (%s matches): " num-options)
-			      (cdr options) (car options))))))
+			      ;; We put the first match as the initial
+			      ;; input; we put all the matches as
+			      ;; possible completions, moving the
+			      ;; first match to the end of the list
+			      ;; makes cursor up/down in the list work
+			      ;; better.
+			      (append (cdr options) (list (car options)))
+			      (car options))))))
       (if chosen
 	  (progn
 	    (push chosen notmuch-address-history)
