@@ -55,6 +55,43 @@ Dump/Restore support for configuration information and properties
 Emacs
 -----
 
+Make notmuch-message-mode use insert for fcc
+
+  Notmuch-message-mode now defaults to using notmuch insert for
+  fcc. The old file based fcc behaviour can be restored by setting the
+  defcustom `notmuch-maildir-use-notmuch-insert` to nil.
+
+  When using notmuch insert, `notmuch-fcc-dirs` must be a subdirectory
+  of the mailstore (absolute paths are not permitted) followed by any
+  tag changes to be applied to the inserted message. The tag changes
+  are applied after the default tagging for new messages. For example
+  setting the header to "sentmail -inbox +sent" would insert the
+  message in the subdirectory sentmail of the mailstore, add the tag
+  "sent", and not add the (normally added) "inbox" tag.
+
+  Finally, if the insert fails (e.g. if the database is locked) the
+  user is presented with the option to retry, ignore, or edit the
+  header.
+
+Make internal address completion customizable
+
+  There is a new defcustom `notmuch-address-internal-completion` which
+  controls how the internal completion works: it allows the user to
+  choose whether to match on messages the user sent, or the user
+  received, and to filter the messages used for the match, for example
+  by date.
+
+Allow internal address completion on an individual basis
+
+  There is a new function `notmuch-address-toggle-internal-completion`
+  (by default it has no keybinding) which allows users who normally
+  use an external completion command to use the builtin internal
+  completion for the current buffer.
+
+  Alternatively, if the user has company-mode enabled, then the user
+  can use company mode commands such as `company-complete` to
+  activate the builtin completion for an individual completion.
+
 Resend messages
 
   The function `notmuch-show-resend-message` (bound to `b` in show
