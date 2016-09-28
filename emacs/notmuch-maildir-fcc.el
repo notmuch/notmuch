@@ -30,14 +30,14 @@
 (defvar notmuch-maildir-fcc-count 0)
 
 (defcustom notmuch-fcc-dirs "sent"
- "Determines the maildir directory in which to save outgoing mail.
+ "Determines the Fcc Header which says where to save outgoing mail.
 
 Three types of values are permitted:
 
 - nil: no Fcc header is added,
 
-- a string: the value of `notmuch-fcc-dirs' is the name of the
-  folder to use,
+- a string: the value of `notmuch-fcc-dirs' is the Fcc header to
+  be used.
 
 - a list: the folder is chosen based on the From address of the
   current message using a list of regular expressions and
@@ -50,12 +50,20 @@ Three types of values are permitted:
   If none of the regular expressions match the From address, no
   Fcc header will be added.
 
-In all cases, a relative FCC directory will be understood to
-specify a directory within the notmuch mail store, (as set by
-the database.path option in the notmuch configuration file).
+If `notmuch-maildir-use-notmuch-insert' is set (the default) then
+the header should be of the form \"folder +tag1 -tag2\" where
+folder is the folder (relative to the notmuch mailstore) to store
+the message in, and tag1 and tag2 are tag changes to apply to the
+stored message.
 
-You will be prompted to create the directory if it does not exist
-yet when sending a mail."
+If `notmuch-maildir-use-notmuch-insert' is nil then the Fcc
+header should be the directory where the message should be
+saved. A relative directory will be understood to specify a
+directory within the notmuch mail store, (as set by the
+database.path option in the notmuch configuration file).
+
+In all cases you will be prompted to create the folder or
+directory if it does not exist yet when sending a mail."
 
  :type '(choice
 	 (const :tag "No FCC header" nil)
