@@ -203,6 +203,7 @@ This is a rearranged version of message mode's message-do-fcc."
 If `notmuch-maildir-use-notmuch-insert` is set then store the
 message using notmuch insert. Otherwise store the message using
 normal fcc."
+  (message "Doing Fcc...")
   (if notmuch-maildir-use-notmuch-insert
       (notmuch-maildir-fcc-with-notmuch-insert fcc-header)
     (notmuch-maildir-fcc-file-fcc fcc-header)))
