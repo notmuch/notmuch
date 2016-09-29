@@ -650,6 +650,8 @@ elif [ $uname = "Linux" ] || [ $uname = "GNU" ] ; then
     fi
 else
     printf "Unknown.\n"
+    platform="$uname"
+    linker_resolves_library_dependencies=0
     cat <<EOF
 
 *** Warning: Unknown platform. Notmuch might or might not build correctly.
