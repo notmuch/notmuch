@@ -1,3 +1,11 @@
+notmuch (0.23~rc1-1) experimental; urgency=medium
+
+  * New upstream release candidate
+  * Make configure more robust on "unknown" platforms. Fixes FTBFS on
+    kfreebsd.
+
+ -- David Bremner <bremner@debian.org>  Fri, 30 Sep 2016 07:19:26 -0300
+
 notmuch (0.23~rc0-1) experimental; urgency=medium
 
   * New upstream release candidate
