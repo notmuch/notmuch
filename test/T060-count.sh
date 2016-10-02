@@ -126,4 +126,32 @@ sed 's/^\(A Xapian exception [^:]*\):.*$/\1/' < OUTPUT > OUTPUT.clean
 test_expect_equal_file EXPECTED OUTPUT.clean
 restore_database
 
+test_begin_subtest "count library function is non-destructive"
+test_subtest_known_broken
+cat<<EOF > EXPECTED
+1: 52 messages
+2: 52 messages
+Exclude 'spam'
+3: 52 messages
+4: 52 messages
+EOF
+test_python <<EOF
+import sys
+import notmuch
+
+query_string = 'tag:inbox or tag:spam'
+tag_string = 'spam'
+
+database = notmuch.Database(mode=notmuch.Database.MODE.READ_ONLY)
+query = notmuch.Query(database, query_string)
+
+print("1: {} messages".format(query.count_messages()))
+print("2: {} messages".format(query.count_messages()))
+print("Exclude '{}'".format(tag_string))
+query.exclude_tag(tag_string)
+print("3: {} messages".format(query.count_messages()))
+print("4: {} messages".format(query.count_messages()))
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
 test_done
