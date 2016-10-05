@@ -394,6 +394,7 @@ EOF
 	printf "Yes.\n"
     else
 	printf "No.\n"
+	errors=$((errors + 1))
     fi
 
     rm -f _compact.o _compact.cc
@@ -683,8 +684,8 @@ EOF
     if [ $have_python -eq 0 ]; then
 	echo "  python interpreter"
     fi
-    if [ $have_xapian -eq 0 ]; then
-	echo "	Xapian library (including development files such as headers)"
+    if [ $have_xapian -eq 0 -o $have_xapian_compact -eq 0 ]; then
+	echo "	Xapian library (>= version 1.2.6, including development files such as headers)"
 	echo "	https://xapian.org/"
     fi
     if [ $have_zlib -eq 0 ]; then
