@@ -1711,7 +1711,7 @@ notmuch_database_end_atomic (notmuch_database_t *notmuch)
 	 * However, we rely on flushing to test atomicity. */
 	const char *thresh = getenv ("XAPIAN_FLUSH_THRESHOLD");
 	if (thresh && atoi (thresh) == 1)
-	    db->flush ();
+	    db->commit ();
     } catch (const Xapian::Error &error) {
 	_notmuch_database_log (notmuch, "A Xapian exception occurred committing transaction: %s.\n",
 		 error.get_msg().c_str());
