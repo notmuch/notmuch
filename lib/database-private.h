@@ -32,6 +32,10 @@
 
 #include "notmuch-private.h"
 
+#ifdef SILENCE_XAPIAN_DEPRECATION_WARNINGS
+#define XAPIAN_DEPRECATED(D) D
+#endif
+
 #include <xapian.h>
 
 #pragma GCC visibility push(hidden)
