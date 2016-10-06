@@ -485,6 +485,9 @@ begin with a \"+\" or a \"-\". If REVERSE is non-nil, replace all
 		s)))
 	  tags))
 
+(defvar notmuch-tag-jump-reverse-key "k"
+  "The key in tag-jump to switch to the reverse tag changes.")
+
 (defun notmuch-tag-jump (reverse)
   "Create a jump menu for tagging operations.
 
@@ -523,9 +526,10 @@ and vice versa."
 	(push (list key name-string
 		     `(lambda () (,tag-function ',tag-change)))
 	      action-map)))
-    (push (list "r" (if reverse
-			"Forward tag changes "
-		      "Reverse tag changes")
+    (push (list notmuch-tag-jump-reverse-key
+		(if reverse
+		    "Forward tag changes "
+		  "Reverse tag changes")
 		(apply-partially 'notmuch-tag-jump (not reverse)))
 	  action-map)
     (setq action-map (nreverse action-map))
