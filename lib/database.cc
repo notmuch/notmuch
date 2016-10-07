@@ -1143,7 +1143,6 @@ notmuch_database_close (notmuch_database_t *notmuch)
     return status;
 }
 
-#if HAVE_XAPIAN_COMPACT
 static int
 unlink_cb (const char *path,
 	   unused (const struct stat *sb),
@@ -1327,17 +1326,6 @@ notmuch_database_compact (const char *path,
 
     return ret;
 }
-#else
-notmuch_status_t
-notmuch_database_compact (unused (const char *path),
-			  unused (const char *backup_path),
-			  unused (notmuch_compact_status_cb_t status_cb),
-			  unused (void *closure))
-{
-    _notmuch_database_log (notmuch, "notmuch was compiled against a xapian version lacking compaction support.\n");
-    return NOTMUCH_STATUS_UNSUPPORTED_OPERATION;
-}
-#endif
 
 notmuch_status_t
 notmuch_database_destroy (notmuch_database_t *notmuch)

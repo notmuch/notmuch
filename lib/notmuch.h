@@ -1679,7 +1679,7 @@ notmuch_message_destroy (notmuch_message_t *message);
  * @returns
  * - NOTMUCH_STATUS_NULL_POINTER: *value* may not be NULL.
  * - NOTMUCH_STATUS_SUCCESS: No error occured.
-
+ * @since libnotmuch 4.4 (notmuch 0.23)
  */
 notmuch_status_t
 notmuch_message_get_property (notmuch_message_t *message, const char *key, const char **value);
@@ -1691,6 +1691,7 @@ notmuch_message_get_property (notmuch_message_t *message, const char *key, const
  * - NOTMUCH_STATUS_ILLEGAL_ARGUMENT: *key* may not contain an '=' character.
  * - NOTMUCH_STATUS_NULL_POINTER: Neither *key* nor *value* may be NULL.
  * - NOTMUCH_STATUS_SUCCESS: No error occured.
+ * @since libnotmuch 4.4 (notmuch 0.23)
  */
 notmuch_status_t
 notmuch_message_add_property (notmuch_message_t *message, const char *key, const char *value);
@@ -1704,6 +1705,7 @@ notmuch_message_add_property (notmuch_message_t *message, const char *key, const
  * - NOTMUCH_STATUS_ILLEGAL_ARGUMENT: *key* may not contain an '=' character.
  * - NOTMUCH_STATUS_NULL_POINTER: Neither *key* nor *value* may be NULL.
  * - NOTMUCH_STATUS_SUCCESS: No error occured.
+ * @since libnotmuch 4.4 (notmuch 0.23)
  */
 notmuch_status_t
 notmuch_message_remove_property (notmuch_message_t *message, const char *key, const char *value);
@@ -1719,6 +1721,7 @@ notmuch_message_remove_property (notmuch_message_t *message, const char *key, co
  *   read-only mode so message cannot be modified.
  * - NOTMUCH_STATUS_SUCCESS: No error occured.
  *
+ * @since libnotmuch 4.4 (notmuch 0.23)
  */
 notmuch_status_t
 notmuch_message_remove_all_properties (notmuch_message_t *message, const char *key);
@@ -1757,6 +1760,8 @@ typedef struct _notmuch_string_map_iterator notmuch_message_properties_t;
  * notmuch_message_properties_t object. (For consistency, we do
  * provide a notmuch_message_properities_destroy function, but there's
  * no good reason to call it if the message is about to be destroyed).
+ *
+ * @since libnotmuch 4.4 (notmuch 0.23)
  */
 notmuch_message_properties_t *
 notmuch_message_get_properties (notmuch_message_t *message, const char *key, notmuch_bool_t exact);
@@ -1774,6 +1779,8 @@ notmuch_message_get_properties (notmuch_message_t *message, const char *key, not
  * See the documentation of notmuch_message_properties_get for example
  * code showing how to iterate over a notmuch_message_properties_t
  * object.
+ *
+ * @since libnotmuch 4.4 (notmuch 0.23)
  */
 notmuch_bool_t
 notmuch_message_properties_valid (notmuch_message_properties_t *properties);
@@ -1787,6 +1794,8 @@ notmuch_message_properties_valid (notmuch_message_properties_t *properties);
  *
  * See the documentation of notmuch_message_get_properties for example
  * code showing how to iterate over a notmuch_message_properties_t object.
+ *
+ * @since libnotmuch 4.4 (notmuch 0.23)
  */
 void
 notmuch_message_properties_move_to_next (notmuch_message_properties_t *properties);
@@ -1795,6 +1804,8 @@ notmuch_message_properties_move_to_next (notmuch_message_properties_t *propertie
  * Return the key from the current (key,value) pair.
  *
  * this could be useful if iterating for a prefix
+ *
+ * @since libnotmuch 4.4 (notmuch 0.23)
  */
 const char *
 notmuch_message_properties_key (notmuch_message_properties_t *properties);
@@ -1803,6 +1814,8 @@ notmuch_message_properties_key (notmuch_message_properties_t *properties);
  * Return the key from the current (key,value) pair.
  *
  * This could be useful if iterating for a prefix.
+ *
+ * @since libnotmuch 4.4 (notmuch 0.23)
  */
 const char *
 notmuch_message_properties_value (notmuch_message_properties_t *properties);
@@ -1814,6 +1827,8 @@ notmuch_message_properties_value (notmuch_message_properties_t *properties);
  * It's not strictly necessary to call this function. All memory from
  * the notmuch_message_properties_t object will be reclaimed when the
  * containing message object is destroyed.
+ *
+ * @since libnotmuch 4.4 (notmuch 0.23)
  */
 void
 notmuch_message_properties_destroy (notmuch_message_properties_t *properties);
@@ -2012,6 +2027,7 @@ notmuch_filenames_destroy (notmuch_filenames_t *filenames);
 /**
  * set config 'key' to 'value'
  *
+ * @since libnotmuch 4.4 (notmuch 0.23)
  */
 notmuch_status_t
 notmuch_database_set_config (notmuch_database_t *db, const char *key, const char *value);
@@ -2024,18 +2040,24 @@ notmuch_database_set_config (notmuch_database_t *db, const char *key, const char
  *
  * return value is allocated by malloc and should be freed by the
  * caller.
+ *
+ * @since libnotmuch 4.4 (notmuch 0.23)
  */
 notmuch_status_t
 notmuch_database_get_config (notmuch_database_t *db, const char *key, char **value);
 
 /**
  * Create an iterator for all config items with keys matching a given prefix
+ *
+ * @since libnotmuch 4.4 (notmuch 0.23)
  */
 notmuch_status_t
 notmuch_database_get_config_list (notmuch_database_t *db, const char *prefix, notmuch_config_list_t **out);
 
 /**
  * Is 'config_list' iterator valid (i.e. _key, _value, _move_to_next can be called).
+ *
+ * @since libnotmuch 4.4 (notmuch 0.23)
  */
 notmuch_bool_t
 notmuch_config_list_valid (notmuch_config_list_t *config_list);
@@ -2045,6 +2067,8 @@ notmuch_config_list_valid (notmuch_config_list_t *config_list);
  *
  * return value is owned by the iterator, and will be destroyed by the
  * next call to notmuch_config_list_key or notmuch_config_list_destroy.
+ *
+ * @since libnotmuch 4.4 (notmuch 0.23)
  */
 const char *
 notmuch_config_list_key (notmuch_config_list_t *config_list);
@@ -2054,6 +2078,8 @@ notmuch_config_list_key (notmuch_config_list_t *config_list);
  *
  * return value is owned by the iterator, and will be destroyed by the
  * next call to notmuch_config_list_value or notmuch config_list_destroy
+ *
+ * @since libnotmuch 4.4 (notmuch 0.23)
  */
 const char *
 notmuch_config_list_value (notmuch_config_list_t *config_list);
@@ -2061,18 +2087,24 @@ notmuch_config_list_value (notmuch_config_list_t *config_list);
 
 /**
  * move 'config_list' iterator to the next pair
+ *
+ * @since libnotmuch 4.4 (notmuch 0.23)
  */
 void
 notmuch_config_list_move_to_next (notmuch_config_list_t *config_list);
 
 /**
  * free any resources held by 'config_list'
+ *
+ * @since libnotmuch 4.4 (notmuch 0.23)
  */
 void
 notmuch_config_list_destroy (notmuch_config_list_t *config_list);
 
 /**
  * interrogate the library for compile time features
+ *
+ * @since libnotmuch 4.4 (notmuch 0.23)
  */
 notmuch_bool_t
 notmuch_built_with (const char *name);
