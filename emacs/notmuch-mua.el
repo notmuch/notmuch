@@ -490,15 +490,20 @@ will be addressed to all recipients of the source message."
     (notmuch-mua-reply query-string sender reply-all)
     (deactivate-mark)))
 
-(defun notmuch-mua-send-and-exit (&optional arg)
+(defun notmuch-mua-send-common (arg &optional exit)
   (interactive "P")
   (letf (((symbol-function 'message-do-fcc) #'notmuch-maildir-message-do-fcc))
-	(message-send-and-exit arg)))
+	(if exit
+	    (message-send-and-exit arg)
+	  (message-send arg))))
+
+(defun notmuch-mua-send-and-exit (&optional arg)
+  (interactive "P")
+  (notmuch-mua-send-common arg 't))
 
 (defun notmuch-mua-send (&optional arg)
   (interactive "P")
-  (letf (((symbol-function 'message-do-fcc) #'notmuch-maildir-message-do-fcc))
-	(message-send arg)))
+  (notmuch-mua-send-common arg))
 
 (defun notmuch-mua-kill-buffer ()
   (interactive)
