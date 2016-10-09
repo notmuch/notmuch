@@ -92,7 +92,7 @@ test_expect_equal \
     "$(echo $PATH|cut -f1 -d: | sed -e 's,/test/valgrind/bin$,,')"
 
 test_begin_subtest 'notmuch is compiled with debugging symbols'
-readelf --sections $(which notmuch) | grep \.debug
+readelf --sections $(command -v notmuch) | grep \.debug
 test_expect_equal 0 $?
 
 test_done
