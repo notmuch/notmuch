@@ -251,6 +251,10 @@ mutiple parts get a header."
 		       (notmuch-show-max-text-part-size 0)
 		       ;; Insert headers for parts as appropriate for replying.
 		       (notmuch-show-insert-header-p-function notmuch-mua-reply-insert-header-p-function)
+		       ;; Ensure that any encrypted parts are
+		       ;; decrypted during the generation of the reply
+		       ;; text.
+		       (notmuch-show-process-crypto process-crypto)
 		       ;; Don't indent multipart sub-parts.
 		       (notmuch-show-indent-multipart nil))
 		    ;; We don't want sigstatus buttons (an information leak and usually wrong anyway).
