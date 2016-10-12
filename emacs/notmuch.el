@@ -313,7 +313,7 @@ there will be called at other points of notmuch execution."
 
 (defface notmuch-search-flagged-face
   '((t
-     (:weight bold)))
+     (:foreground "blue")))
   "Face used in search mode face for flagged threads.
 
 This face is the default value for the \"flagged\" tag in
@@ -323,7 +323,7 @@ This face is the default value for the \"flagged\" tag in
 
 (defface notmuch-search-unread-face
   '((t
-     (:foreground "blue")))
+     (:weight bold)))
   "Face used in search mode for unread threads.
 
 This face is the default value for the \"unread\" tag in
