@@ -271,7 +271,6 @@ FUNC."
     (define-key map "x" 'notmuch-tree-quit)
     (define-key map "A" 'notmuch-tree-archive-thread)
     (define-key map "a" 'notmuch-tree-archive-message-then-next)
-    (define-key map "=" 'notmuch-tree-refresh-view)
     (define-key map "z" 'notmuch-tree-to-tree)
     (define-key map "n" 'notmuch-tree-next-matching-message)
     (define-key map "p" 'notmuch-tree-prev-matching-message)
