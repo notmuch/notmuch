@@ -1319,8 +1319,13 @@ If no messages match the query return NIL."
 
 This includes:
  - the list of open messages,
- - the current message."
-  (list (notmuch-show-get-message-id) (notmuch-show-get-message-ids-for-open-messages)))
+ - the combination of current message id with/for each visible window."
+  (let* ((win-list (get-buffer-window-list (current-buffer) nil t))
+	 (win-id-combo (mapcar (lambda (win)
+				 (with-selected-window win
+				   (list win (notmuch-show-get-message-id))))
+			       win-list)))
+    (list win-id-combo (notmuch-show-get-message-ids-for-open-messages))))
 
 (defun notmuch-show-get-query ()
   "Return the current query in this show buffer"
@@ -1347,8 +1352,8 @@ This includes:
 This includes:
  - opening the messages previously opened,
  - closing all other messages,
- - moving to the correct current message."
-  (let ((current (car state))
+ - moving to the correct current message in every displayed window."
+  (let ((win-msg-alist (car state))
 	(open (cadr state)))
 
     ;; Open those that were open.
@@ -1357,8 +1362,10 @@ This includes:
 					   (member (notmuch-show-get-message-id) open))
 	  until (not (notmuch-show-goto-message-next)))
 
-    ;; Go to the previously open message.
-    (notmuch-show-goto-message current)))
+    (dolist (win-msg-pair win-msg-alist)
+      (with-selected-window (car win-msg-pair)
+	;; Go to the previously open message in this window
+	(notmuch-show-goto-message (cadr win-msg-pair))))))
 
 (defun notmuch-show-refresh-view (&optional reset-state)
   "Refresh the current view.
