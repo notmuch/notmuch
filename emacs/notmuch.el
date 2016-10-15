@@ -926,7 +926,7 @@ PROMPT is the string to prompt with."
 
 ;;;###autoload
 (put 'notmuch-search 'notmuch-doc "Search for messages.")
-(defun notmuch-search (&optional query oldest-first target-thread target-line)
+(defun notmuch-search (&optional query oldest-first target-thread target-line no-display)
   "Display threads matching QUERY in a notmuch-search buffer.
 
 If QUERY is nil, it is read interactively from the minibuffer.
@@ -937,6 +937,9 @@ Other optional parameters are used as follows:
                  current if it appears in the search results.
   TARGET-LINE: The line number to move to if the target thread does not
                appear in the search results.
+  NO-DISPLAY: Do not try to foreground the search results buffer. If it is
+              already foregrounded i.e. displayed in a window, this has no
+              effect, meaning the buffer will remain visible.
 
 When called interactively, this will prompt for a query and use
 the configured default sort order."
@@ -950,7 +953,9 @@ the configured default sort order."
 
   (let* ((query (or query (notmuch-read-query "Notmuch search: ")))
 	 (buffer (get-buffer-create (notmuch-search-buffer-title query))))
-    (switch-to-buffer buffer)
+    (if no-display
+	(set-buffer buffer)
+      (switch-to-buffer buffer))
     (notmuch-search-mode)
     ;; Don't track undo information for this buffer
     (set 'buffer-undo-list t)
