@@ -57,10 +57,13 @@ tagging operations to apply, or a variable which contains a list
 of tagging operations such as `notmuch-archive-tags'. The final
 element is a name for this tagging operation. If the name is
 omitted or empty then the list of tag changes, or the variable
-name is used as the name. The key `r` should not be used as that
-is already bound: it switches the menu to a menu of the reverse
-tagging operations. The reverse of a tagging operation is the
-same list of individual tag-ops but with `+tag` replaced by
+name is used as the name.
+
+The key `notmuch-tag-jump-reverse-key' (k by default) should not
+be used (either as a key, or as the start of a key sequence) as
+it is already bound: it switches the menu to a menu of the
+reverse tagging operations. The reverse of a tagging operation is
+the same list of individual tag-ops but with `+tag` replaced by
 `-tag` and vice versa.
 
 If setting this variable outside of customize then it should be a
