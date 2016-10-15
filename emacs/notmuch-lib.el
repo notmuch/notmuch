@@ -417,10 +417,8 @@ of its command symbol."
   "Refresh the current buffer."
   (interactive)
   (when notmuch-buffer-refresh-function
-    (if (commandp notmuch-buffer-refresh-function)
-	;; Pass prefix argument, etc.
-	(call-interactively notmuch-buffer-refresh-function)
-      (funcall notmuch-buffer-refresh-function))))
+    ;; Pass prefix argument, etc.
+    (call-interactively notmuch-buffer-refresh-function)))
 
 (defun notmuch-poll-and-refresh-this-buffer ()
   "Invoke `notmuch-poll' to import mail, then refresh the current buffer."
