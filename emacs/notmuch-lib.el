@@ -426,6 +426,21 @@ of its command symbol."
   (notmuch-poll)
   (notmuch-refresh-this-buffer))
 
+(defun notmuch-refresh-all-buffers ()
+  "Invoke `notmuch-refresh-this-buffer' on all notmuch major-mode buffers.
+
+The buffers are silently refreshed, i.e. they are not forced to
+be displayed."
+  (interactive)
+  (dolist (buffer (buffer-list))
+    (let ((buffer-mode (buffer-local-value 'major-mode buffer)))
+      (when (memq buffer-mode '(notmuch-show-mode
+				notmuch-tree-mode
+				notmuch-search-mode
+				notmuch-hello-mode))
+	(with-current-buffer buffer
+	  (notmuch-refresh-this-buffer))))))
+
 (defun notmuch-prettify-subject (subject)
   ;; This function is used by `notmuch-search-process-filter' which
   ;; requires that we not disrupt its' matching state.
