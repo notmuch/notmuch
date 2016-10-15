@@ -991,7 +991,7 @@ the configured default sort order."
 (defun notmuch-search-refresh-view ()
   "Refresh the current view.
 
-Kills the current buffer and runs a new search with the same
+Erases the current buffer and runs a new search with the same
 query string as the current search. If the current thread is in
 the new search results, then point will be placed on the same
 thread. Otherwise, point will be moved to attempt to be in the
@@ -1001,8 +1001,8 @@ same relative position within the new buffer."
 	(oldest-first notmuch-search-oldest-first)
 	(target-thread (notmuch-search-find-thread-id 'bare))
 	(query notmuch-search-query-string))
-    (notmuch-bury-or-kill-this-buffer)
-    (notmuch-search query oldest-first target-thread target-line)
+    ;; notmuch-search erases the current buffer.
+    (notmuch-search query oldest-first target-thread target-line t)
     (goto-char (point-min))))
 
 (defun notmuch-search-toggle-order ()
