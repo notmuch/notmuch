@@ -151,6 +151,7 @@ For example, if you wanted to remove an \"inbox\" tag and add an
     (define-key map "z" 'notmuch-tree)
     (define-key map "m" 'notmuch-mua-new-mail)
     (define-key map "=" 'notmuch-refresh-this-buffer)
+    (define-key map (kbd "M-=") 'notmuch-refresh-all-buffers)
     (define-key map "G" 'notmuch-poll-and-refresh-this-buffer)
     (define-key map "j" 'notmuch-jump-search)
     map)
