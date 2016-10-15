@@ -364,12 +364,18 @@ updated."
 (defun notmuch-tree-tag-update-display (&optional tag-changes)
   "Update display for TAG-CHANGES to current message.
 
-Does NOT change the database."
+Updates the message in the message pane if appropriate, but does
+NOT change the database."
   (let* ((current-tags (notmuch-tree-get-tags))
-	 (new-tags (notmuch-update-tags current-tags tag-changes)))
+	 (new-tags (notmuch-update-tags current-tags tag-changes))
+	 (tree-msg-id (notmuch-tree-get-message-id)))
     (unless (equal current-tags new-tags)
       (notmuch-tree-set-tags new-tags)
-      (notmuch-tree-refresh-result))))
+      (notmuch-tree-refresh-result)
+      (when (window-live-p notmuch-tree-message-window)
+	(with-selected-window notmuch-tree-message-window
+	  (when (string= tree-msg-id (notmuch-show-get-message-id))
+	    (notmuch-show-update-tags new-tags)))))))
 
 (defun notmuch-tree-tag (tag-changes)
   "Change tags for the current message"
