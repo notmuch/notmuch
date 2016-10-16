@@ -562,12 +562,15 @@ Returns (TAG-CHANGES REGION-BEGIN REGION-END)."
 See `notmuch-tag' for information on the format of TAG-CHANGES.
 When called interactively, this uses the region if the region is
 active.  When called directly, BEG and END provide the region.
-If these are nil or not provided, this applies to the thread at
-point.
+If these are nil or not provided, then, if the region is active
+this applied to all threads meeting the region, and if the region
+is inactive this applies to the thread at point.
 
 If ONLY-MATCHED is non-nil, only tag matched messages."
   (interactive (notmuch-search-interactive-tag-changes))
-  (unless (and beg end) (setq beg (point) end (point)))
+  (unless (and beg end)
+    (setq beg (car (notmuch-search-interactive-region))
+	  end (cadr (notmuch-search-interactive-region))))
   (let ((search-string (notmuch-search-find-stable-query-region
 			beg end only-matched)))
     (notmuch-tag search-string tag-changes)
