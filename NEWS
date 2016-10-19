@@ -1,3 +1,22 @@
+Notmuch 0.23.1 (UNRELEASED)
+===========================
+
+General
+-------
+
+Require Xapian >= 1.2.6
+
+  The ifdef branch for older Xapian (pre-compact API) had bit-rotted.
+
+Emacs
+-----
+
+Fix test failure with Emacs 25.1
+
+  A previously undiscovered jit-lock related bug was exposed by Emacs
+  25, causing a notmuch-show mode test to fail. This release fixes the
+  bug, and hence the test.
+
 Notmuch 0.23 (2016-10-03)
 =========================
 
