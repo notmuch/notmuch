@@ -1263,6 +1263,18 @@ matched."
 	(message "No messages matched the query!")
 	nil))))
 
+(defun notmuch-show--build-queries (thread context)
+  "Return a list of queries to try for this search.
+
+THREAD and CONTEXT are both strings, though CONTEXT may be nil.
+When CONTEXT is not nil, the first query is the conjunction of it
+and THREAD.  The next query is THREAD alone, and serves as a
+fallback if the prior matches no messages."
+  (let (queries)
+    (push (list thread) queries)
+    (if context (push (list thread "and (" context ")") queries))
+    queries))
+
 (defun notmuch-show--build-buffer (&optional state)
   "Display messages matching the current buffer context.
 
@@ -1270,25 +1282,20 @@ Apply the previously saved STATE if supplied, otherwise show the
 first relevant message.
 
 If no messages match the query return NIL."
-  (let* ((basic-args (list notmuch-show-thread-id))
-	 (args (if notmuch-show-query-context
-		   (append (list "\'") basic-args
-			   (list "and (" notmuch-show-query-context ")\'"))
-		 (append (list "\'") basic-args (list "\'"))))
-	 (cli-args (cons "--exclude=false"
+  (let* ((cli-args (cons "--exclude=false"
 			 (when notmuch-show-elide-non-matching-messages
 			   (list "--entire-thread=false"))))
-
-	 (forest (or (notmuch-query-get-threads (append cli-args args))
-		     ;; If a query context reduced the number of
-		     ;; results to zero, try again without it.
-		     (and notmuch-show-query-context
-			  (notmuch-query-get-threads (append cli-args basic-args)))))
-
+	 (queries (notmuch-show--build-queries
+		   notmuch-show-thread-id notmuch-show-query-context))
+	 (forest nil)
 	 ;; Must be reset every time we are going to start inserting
 	 ;; messages into the buffer.
 	 (notmuch-show-previous-subject ""))
-
+    ;; Use results from the first query that returns some.
+    (while (and (not forest) queries)
+      (setq forest (notmuch-query-get-threads
+		    (append cli-args (list "'") (car queries) (list "'"))))
+      (setq queries (cdr queries)))
     (when forest
       (notmuch-show-insert-forest forest)
 
