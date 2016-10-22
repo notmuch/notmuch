@@ -11,6 +11,15 @@ Require Xapian >= 1.2.6
 Emacs
 -----
 
+Fix default colours for unread and flagged messages
+
+  In 0.23 the default colours for unread and flagged messages in
+  search view were accidentally swapped. This release returns them to
+  the original colours.
+
+  A related change in 0.23 broke the customize widget for
+  notmuch-search-line-faces. This is now fixed.
+
 Fix test failure with Emacs 25.1
 
   A previously undiscovered jit-lock related bug was exposed by Emacs
