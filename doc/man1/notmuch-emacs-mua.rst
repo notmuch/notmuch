@@ -5,13 +5,13 @@ notmuch-emacs-mua
 SYNOPSIS
 ========
 
-**notmuch-emacs-mua** [options ...] [<to-address> ...]
+**notmuch-emacs-mua** [options ...] [<to-address> ... | <mailto-url>]
 
 DESCRIPTION
 ===========
 
 Start composing an email in the Notmuch Emacs UI with the specified
-subject, recipients, and message body.
+subject, recipients, and message body, or mailto: URL.
 
 Supported options for **notmuch-emacs-mua** include
 
@@ -56,7 +56,9 @@ Supported options for **notmuch-emacs-mua** include
         Output the resulting elisp to stdout instead of evaluating it.
 
 The supported positional parameters and short options are a compatible
-subset of the **mutt** MUA command-line options.
+subset of the **mutt** MUA command-line options. The options and
+positional parameters modifying the message can't be combined with the
+mailto: URL.
 
 Options may be specified multiple times.
 

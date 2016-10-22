@@ -38,11 +38,8 @@ NO_WINDOW=
 USE_EMACSCLIENT=
 AUTO_DAEMON=
 CREATE_FRAME=
-
-escape -v pwd "$PWD"
-
-# The crux of it all: construct an elisp progn and eval it.
-ELISP="(prog1 'done (require 'notmuch) (cd \"$pwd\") (notmuch-mua-new-mail)"
+ELISP=
+MAILTO=
 
 # Short options compatible with mutt(1).
 while getopts :s:c:b:i:h opt; do
@@ -129,16 +126,39 @@ done
 # Positional parameters.
 for arg; do
     escape -v arg "${arg}"
-    ELISP="${ELISP} (message-goto-to) (insert \"${arg}, \")"
+    case $arg in
+	mailto:*)
+	    if [ -n "${MAILTO}" ]; then
+		echo "$0: more than one mailto: argument." >&2
+		exit 1
+	    fi
+	    MAILTO="${arg}"
+	    ;;
+	*)
+	    ELISP="${ELISP} (message-goto-to) (insert \"${arg}, \")"
+	    ;;
+    esac
 done
+
+if [ -n "${MAILTO}" ]; then
+    if [ -n "${ELISP}" ]; then
+	echo "$0: mailto: is not compatible with other message parameters." >&2
+	exit 1
+    fi
+    ELISP="(browse-url-mail \"${MAILTO}\")"
+else
+    ELISP="(notmuch-mua-new-mail) ${ELISP}"
+fi
 
 # Kill the terminal/frame if we're creating one.
 if [ -z "$USE_EMACSCLIENT" -o -n "$CREATE_FRAME" -o -n "$NO_WINDOW" ]; then
     ELISP="${ELISP} (message-add-action #'save-buffers-kill-terminal 'exit)"
 fi
 
-# End progn.
-ELISP="${ELISP})"
+escape -v pwd "$PWD"
+
+# The crux of it all: construct an elisp progn and eval it.
+ELISP="(prog1 'done (require 'notmuch) (cd \"$pwd\") ${ELISP})"
 
 if [ -n "$PRINT_ONLY" ]; then
     echo ${ELISP}
