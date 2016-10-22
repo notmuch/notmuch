@@ -363,6 +363,39 @@ notmuch_command (notmuch_config_t *config,
     return EXIT_SUCCESS;
 }
 
+/*
+ * Try to run subcommand in argv[0] as notmuch- prefixed external
+ * command. argv must be NULL terminated (argv passed to main always
+ * is).
+ *
+ * Does not return if the external command is found and
+ * executed. Return TRUE if external command is not found. Return
+ * FALSE on errors.
+ */
+static notmuch_bool_t try_external_command(char *argv[])
+{
+    char *old_argv0 = argv[0];
+    notmuch_bool_t ret = TRUE;
+
+    argv[0] = talloc_asprintf (NULL, "notmuch-%s", old_argv0);
+
+    /*
+     * This will only return on errors. Not finding an external
+     * command (ENOENT) is not an error from our perspective.
+     */
+    execvp (argv[0], argv);
+    if (errno != ENOENT) {
+	fprintf (stderr, "Error: Running external command '%s' failed: %s\n",
+		 argv[0], strerror(errno));
+	ret = FALSE;
+    }
+
+    talloc_free (argv[0]);
+    argv[0] = old_argv0;
+
+    return ret;
+}
+
 int
 main (int argc, char *argv[])
 {
@@ -406,8 +439,10 @@ main (int argc, char *argv[])
 
     command = find_command (command_name);
     if (!command) {
-	fprintf (stderr, "Error: Unknown command '%s' (see \"notmuch help\")\n",
-		 command_name);
+	/* This won't return if the external command is found. */
+	if (try_external_command(argv + opt_index))
+	    fprintf (stderr, "Error: Unknown command '%s' (see \"notmuch help\")\n",
+		     command_name);
 	ret = EXIT_FAILURE;
 	goto DONE;
     }
