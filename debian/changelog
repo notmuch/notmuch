@@ -1,3 +1,13 @@
+notmuch (0.23.1-1) UNRELEASED; urgency=medium
+
+  * New upstream bugfix release
+  * Fix test suite for Emacs 25.1
+  * Fix some Emacs customization regressions introduced in 0.23
+  * Bug fix: "testsuite fails with TERM=unknown", thanks to Gianfranco
+    Costamagna (Closes: #841319).
+
+ -- David Bremner <bremner@debian.org>  Sat, 22 Oct 2016 12:37:49 -0300
+
 notmuch (0.23-2) unstable; urgency=medium
 
   * upload to unstable
