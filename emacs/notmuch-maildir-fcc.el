@@ -54,7 +54,10 @@ If `notmuch-maildir-use-notmuch-insert' is set (the default) then
 the header should be of the form \"folder +tag1 -tag2\" where
 folder is the folder (relative to the notmuch mailstore) to store
 the message in, and tag1 and tag2 are tag changes to apply to the
-stored message.
+stored message. This string is split using `split-string-and-unquote',
+so a folder name containing spaces can be specified by
+quoting each space with an immediately preceding backslash
+or surrounding the entire folder name in double quotes.
 
 If `notmuch-maildir-use-notmuch-insert' is nil then the Fcc
 header should be the directory where the message should be
@@ -230,8 +233,12 @@ should be a list of tag changes to apply to the inserted message."
 The fcc-header should be of the form \"folder +tag1 -tag2\" where
 folder is the folder (relative to the notmuch mailstore) to store
 the message in, and tag1 and tag2 are tag changes to apply to the
-stored message. If CREATE is non-nil then create the folder if
-necessary."
+stored message. This string is split using `split-string-and-unquote',
+so a folder name containing spaces can be specified by
+quoting each space with an immediately preceding backslash
+or surrounding the entire folder name in double quotes.
+
+If CREATE is non-nil then create the folder if necessary."
   (let* ((args (split-string-and-unquote fcc-header))
 	 (folder (car args))
 	 (tags (cdr args)))

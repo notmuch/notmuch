@@ -55,9 +55,15 @@ export PS4='+(${BASH_SOURCE}:${LINENO}): ${FUNCNAME[0]:+${FUNCNAME[0]}(): }'
 # Keep the original TERM for say_color and test_emacs
 ORIGINAL_TERM=$TERM
 
-# dtach(1) provides more capable terminal environment to anything
-# that requires more than dumb terminal...
-[ x"${TERM:-dumb}" = xdumb ] && DTACH_TERM=vt100 || DTACH_TERM=$TERM
+# Set SMART_TERM to vt100 for known dumb/unknown terminal.
+# Otherwise use whatever TERM is currently used so that
+# users' actual TERM environments are being used in tests.
+case ${TERM-} in
+	'' | dumb | unknown )
+		SMART_TERM=vt100 ;;
+	*)
+		SMART_TERM=$TERM ;;
+esac
 
 # For repeatability, reset the environment to known value.
 LANG=C
@@ -1168,10 +1174,10 @@ test_emacs () {
 		fi
 		server_name="notmuch-test-suite-$$"
 		# start a detached session with an emacs server
-		# user's TERM (or 'vt100' in case user's TERM is unset, empty
-		# or 'dumb') is given to dtach which assumes a minimally
+		# user's TERM (or 'vt100' in case user's TERM is known dumb
+		# or unknown) is given to dtach which assumes a minimally
 		# VT100-compatible terminal -- and emacs inherits that
-		TERM=$DTACH_TERM dtach -n "$TEST_TMPDIR/emacs-dtach-socket.$$" \
+		TERM=$SMART_TERM dtach -n "$TEST_TMPDIR/emacs-dtach-socket.$$" \
 			sh -c "stty rows 24 cols 80; exec '$TMP_DIRECTORY/run_emacs' \
 				--no-window-system \
 				$load_emacs_tests \
