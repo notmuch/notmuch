@@ -1066,8 +1066,9 @@ current search results AND that are tagged with the given tag."
   (with-current-buffer b
     (memq major-mode '(notmuch-show-mode
 		       notmuch-search-mode
+		       notmuch-tree-mode
 		       notmuch-hello-mode
-		       message-mode))))
+		       notmuch-message-mode))))
 
 ;;;###autoload
 (defun notmuch-cycle-notmuch-buffers ()
