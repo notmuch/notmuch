@@ -313,7 +313,11 @@ there will be called at other points of notmuch execution."
   :group 'notmuch-faces)
 
 (defface notmuch-search-flagged-face
-  '((t
+  '((((class color)
+      (background dark))
+     (:foreground "LightBlue1"))
+    (((class color)
+      (background light))
      (:foreground "blue")))
   "Face used in search mode face for flagged threads.
 

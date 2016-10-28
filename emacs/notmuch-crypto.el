@@ -42,7 +42,12 @@ mode."
   :group 'notmuch-crypto)
 
 (defface notmuch-crypto-part-header
-  '((t (:foreground "blue")))
+  '((((class color)
+      (background dark))
+     (:foreground "LightBlue1"))
+    (((class color)
+      (background light))
+     (:foreground "blue")))
   "Face used for crypto parts headers."
   :group 'notmuch-crypto
   :group 'notmuch-faces)

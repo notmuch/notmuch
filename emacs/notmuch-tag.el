@@ -115,7 +115,12 @@ Used in the default value of `notmuch-tag-formats`."
   :group 'notmuch-faces)
 
 (defface notmuch-tag-flagged
-  '((t :foreground "blue"))
+  '((((class color)
+      (background dark))
+     (:foreground "LightBlue1"))
+    (((class color)
+      (background light))
+     (:foreground "blue")))
   "Face used for the flagged tag.
 
 Used in the default value of `notmuch-tag-formats`."
