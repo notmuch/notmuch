@@ -13,7 +13,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/ .
+ * along with this program.  If not, see https://www.gnu.org/licenses/ .
  *
  * Author: Carl Worth <cworth@cworth.org>
  */
@@ -27,7 +27,7 @@
 static const char toplevel_config_comment[] =
     " .notmuch-config - Configuration file for the notmuch mail system\n"
     "\n"
-    " For more information about notmuch, see http://notmuchmail.org";
+    " For more information about notmuch, see https://notmuchmail.org";
 
 static const char database_config_comment[] =
     " Database configuration\n"
@@ -750,6 +750,30 @@ _item_split (char *item, char **group, char **key)
     return 0;
 }
 
+#define BUILT_WITH_PREFIX "built_with."
+#define QUERY_PREFIX "query."
+
+static int
+_print_db_config(notmuch_config_t *config, const char *name)
+{
+    notmuch_database_t *notmuch;
+    char *val;
+
+    if (notmuch_database_open (notmuch_config_get_database_path (config),
+			       NOTMUCH_DATABASE_MODE_READ_ONLY, &notmuch))
+	return EXIT_FAILURE;
+
+    /* XXX Handle UUID mismatch? */
+
+    if (print_status_database ("notmuch config", notmuch,
+			       notmuch_database_get_config (notmuch, name, &val)))
+	return EXIT_FAILURE;
+
+     puts (val);
+
+    return EXIT_SUCCESS;
+}
+
 static int
 notmuch_config_command_get (notmuch_config_t *config, char *item)
 {
@@ -773,6 +797,11 @@ notmuch_config_command_get (notmuch_config_t *config, char *item)
 	tags = notmuch_config_get_new_tags (config, &length);
 	for (i = 0; i < length; i++)
 	    printf ("%s\n", tags[i]);
+    } else if (STRNCMP_LITERAL (item, BUILT_WITH_PREFIX) == 0) {
+	printf ("%s\n",
+		notmuch_built_with (item + strlen (BUILT_WITH_PREFIX)) ? "true" : "false");
+    } else if (STRNCMP_LITERAL (item, QUERY_PREFIX) == 0) {
+	return _print_db_config (config, item);
     } else {
 	char **value;
 	size_t i, length;
@@ -800,9 +829,51 @@ notmuch_config_command_get (notmuch_config_t *config, char *item)
 }
 
 static int
+_set_db_config(notmuch_config_t *config, const char *key, int argc, char **argv)
+{
+    notmuch_database_t *notmuch;
+    const char *val = "";
+
+    if (argc > 1) {
+	/* XXX handle lists? */
+	fprintf (stderr, "notmuch config set: at most one value expected for %s\n", key);
+	return EXIT_FAILURE;
+    }
+
+    if (argc > 0) {
+	val = argv[0];
+    }
+
+    if (notmuch_database_open (notmuch_config_get_database_path (config),
+			       NOTMUCH_DATABASE_MODE_READ_WRITE, &notmuch))
+	return EXIT_FAILURE;
+
+    /* XXX Handle UUID mismatch? */
+
+    if (print_status_database ("notmuch config", notmuch,
+			       notmuch_database_set_config (notmuch, key, val)))
+	return EXIT_FAILURE;
+
+    if (print_status_database ("notmuch config", notmuch,
+			       notmuch_database_close (notmuch)))
+	return EXIT_FAILURE;
+
+    return EXIT_SUCCESS;
+}
+
+static int
 notmuch_config_command_set (notmuch_config_t *config, char *item, int argc, char *argv[])
 {
     char *group, *key;
+
+    if (STRNCMP_LITERAL (item, BUILT_WITH_PREFIX) == 0) {
+	fprintf (stderr, "Error: read only option: %s\n", item);
+	return 1;
+    }
+
+    if (STRNCMP_LITERAL (item, QUERY_PREFIX) == 0) {
+	return _set_db_config (config, item, argc, argv);
+    }
 
     if (_item_split (item, &group, &key))
 	return 1;
@@ -828,6 +899,46 @@ notmuch_config_command_set (notmuch_config_t *config, char *item, int argc, char
     }
 
     return notmuch_config_save (config);
+}
+
+static
+void
+_notmuch_config_list_built_with ()
+{
+    printf("%scompact=%s\n",
+	   BUILT_WITH_PREFIX,
+	   notmuch_built_with ("compact") ? "true" : "false");
+    printf("%sfield_processor=%s\n",
+	   BUILT_WITH_PREFIX,
+	   notmuch_built_with ("field_processor") ? "true" : "false");
+    printf("%sretry_lock=%s\n",
+	   BUILT_WITH_PREFIX,
+	   notmuch_built_with ("retry_lock") ? "true" : "false");
+}
+
+static int
+_list_db_config (notmuch_config_t *config)
+{
+    notmuch_database_t *notmuch;
+    notmuch_config_list_t *list;
+
+    if (notmuch_database_open (notmuch_config_get_database_path (config),
+			       NOTMUCH_DATABASE_MODE_READ_ONLY, &notmuch))
+	return EXIT_FAILURE;
+
+    /* XXX Handle UUID mismatch? */
+
+
+    if (print_status_database ("notmuch config", notmuch,
+			       notmuch_database_get_config_list (notmuch, "", &list)))
+	return EXIT_FAILURE;
+
+    for (; notmuch_config_list_valid (list); notmuch_config_list_move_to_next (list)) {
+	printf("%s=%s\n", notmuch_config_list_key (list), notmuch_config_list_value(list));
+    }
+    notmuch_config_list_destroy (list);
+
+   return EXIT_SUCCESS;
 }
 
 static int
@@ -865,7 +976,8 @@ notmuch_config_command_list (notmuch_config_t *config)
 
     g_strfreev (groups);
 
-    return 0;
+    _notmuch_config_list_built_with ();
+    return _list_db_config (config);
 }
 
 int

@@ -13,13 +13,14 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/ .
+ * along with this program.  If not, see https://www.gnu.org/licenses/ .
  *
  * Author: Carl Worth <cworth@cworth.org>
  */
 
 #include "notmuch-private.h"
 #include "database-private.h"
+#include "message-private.h"
 
 #include <stdint.h>
 
@@ -37,6 +38,8 @@ struct visible _notmuch_message {
     notmuch_string_list_t *filename_list;
     char *author;
     notmuch_message_file_t *message_file;
+    notmuch_string_list_t *property_term_list;
+    notmuch_string_map_t *property_map;
     notmuch_message_list_t *replies;
     unsigned long flags;
     /* For flags that are initialized on-demand, lazy_flags indicates
@@ -116,6 +119,8 @@ _notmuch_message_create_for_document (const void *talloc_owner,
     message->filename_list = NULL;
     message->message_file = NULL;
     message->author = NULL;
+    message->property_term_list = NULL;
+    message->property_map = NULL;
 
     message->replies = _notmuch_message_list_create (message);
     if (unlikely (message->replies == NULL)) {
@@ -314,6 +319,7 @@ _notmuch_message_ensure_metadata (notmuch_message_t *message)
 	*id_prefix = _find_prefix ("id"),
 	*type_prefix = _find_prefix ("type"),
 	*filename_prefix = _find_prefix ("file-direntry"),
+	*property_prefix = _find_prefix ("property"),
 	*replyto_prefix = _find_prefix ("replyto");
 
     /* We do this all in a single pass because Xapian decompresses the
@@ -369,18 +375,28 @@ _notmuch_message_ensure_metadata (notmuch_message_t *message)
 	    _notmuch_database_get_terms_with_prefix (message, i, end,
 						     filename_prefix);
 
+
+    /* Get property terms. Mimic the setup with filenames above */
+    assert (strcmp (filename_prefix, property_prefix) < 0);
+    if (!message->property_map && !message->property_term_list)
+	message->property_term_list =
+	    _notmuch_database_get_terms_with_prefix (message, i, end,
+						     property_prefix);
+
     /* Get reply to */
-    assert (strcmp (filename_prefix, replyto_prefix) < 0);
+    assert (strcmp (property_prefix, replyto_prefix) < 0);
     if (!message->in_reply_to)
 	message->in_reply_to =
 	    _notmuch_message_get_term (message, i, end, replyto_prefix);
+
+
     /* It's perfectly valid for a message to have no In-Reply-To
      * header. For these cases, we return an empty string. */
     if (!message->in_reply_to)
 	message->in_reply_to = talloc_strdup (message, "");
 }
 
-static void
+void
 _notmuch_message_invalidate_metadata (notmuch_message_t *message,
 				      const char *prefix_name)
 {
@@ -403,6 +419,18 @@ _notmuch_message_invalidate_metadata (notmuch_message_t *message,
 	talloc_free (message->filename_term_list);
 	talloc_free (message->filename_list);
 	message->filename_term_list = message->filename_list = NULL;
+    }
+
+    if (strcmp ("property", prefix_name) == 0) {
+
+	if (message->property_term_list)
+	    talloc_free (message->property_term_list);
+	message->property_term_list = NULL;
+
+	if (message->property_map)
+	    talloc_unlink (message, message->property_map);
+
+	message->property_map = NULL;
     }
 
     if (strcmp ("replyto", prefix_name) == 0) {
@@ -525,7 +553,7 @@ notmuch_message_get_replies (notmuch_message_t *message)
     return _notmuch_messages_create (message->replies);
 }
 
-static void
+void
 _notmuch_message_remove_terms (notmuch_message_t *message, const char *prefix)
 {
     Xapian::TermIterator i;
@@ -1444,7 +1472,7 @@ notmuch_message_maildir_flags_to_tags (notmuch_message_t *message)
 
     for (i = 0; i < ARRAY_SIZE(flag2tag); i++) {
 	if ((strchr (combined_flags, flag2tag[i].flag) != NULL)
-	    ^ 
+	    ^
 	    flag2tag[i].inverse)
 	{
 	    status = notmuch_message_add_tag (message, flag2tag[i].tag);
@@ -1771,4 +1799,51 @@ notmuch_database_t *
 _notmuch_message_database (notmuch_message_t *message)
 {
     return message->notmuch;
+}
+
+void
+_notmuch_message_ensure_property_map (notmuch_message_t *message)
+{
+    notmuch_string_node_t *node;
+
+    if (message->property_map)
+	return;
+
+    if (!message->property_term_list)
+	_notmuch_message_ensure_metadata (message);
+
+    message->property_map = _notmuch_string_map_create (message);
+
+    for (node = message->property_term_list->head; node; node = node->next) {
+	const char *key;
+	char *value;
+
+	value = index(node->string, '=');
+	if (!value)
+	    INTERNAL_ERROR ("malformed property term");
+
+	*value = '\0';
+	value++;
+	key = node->string;
+
+	_notmuch_string_map_append (message->property_map, key, value);
+
+    }
+
+    talloc_free (message->property_term_list);
+    message->property_term_list = NULL;
+}
+
+notmuch_string_map_t *
+_notmuch_message_property_map (notmuch_message_t *message)
+{
+    _notmuch_message_ensure_property_map (message);
+
+    return message->property_map;
+}
+
+notmuch_bool_t
+_notmuch_message_frozen (notmuch_message_t *message)
+{
+    return message->frozen;
 }

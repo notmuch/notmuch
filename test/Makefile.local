@@ -19,7 +19,7 @@ $(dir)/hex-xcode: $(dir)/hex-xcode.o command-line-arguments.o util/libutil.a
 	$(call quiet,CC) $^ -o $@ $(LDFLAGS) $(TALLOC_LDFLAGS)
 
 random_corpus_deps =  $(dir)/random-corpus.o  $(dir)/database-test.o \
-			notmuch-config.o command-line-arguments.o \
+			notmuch-config.o status.o command-line-arguments.o \
 			lib/libnotmuch.a util/libutil.a \
 			parse-time-string/libparse-time-string.a
 

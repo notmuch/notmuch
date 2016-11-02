@@ -16,7 +16,7 @@
 ;; General Public License for more details.
 ;;
 ;; You should have received a copy of the GNU General Public License
-;; along with Notmuch.  If not, see <http://www.gnu.org/licenses/>.
+;; along with Notmuch.  If not, see <https://www.gnu.org/licenses/>.
 ;;
 ;; Authors: Dmitry Kurochkin <dmitry.kurochkin@gmail.com>
 
@@ -183,6 +183,11 @@ nothing."
 ;; suite
 (setq notmuch-tag-deleted-formats
       '((".*" nil)))
+
+;; Also for historical reasons, we set the fcc handler to file not
+;; insert.
+
+(setq notmuch-maildir-use-notmuch-insert nil)
 
 ;; force a common html renderer, to avoid test variations between
 ;; environments

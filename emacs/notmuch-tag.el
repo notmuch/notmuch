@@ -16,7 +16,7 @@
 ;; General Public License for more details.
 ;;
 ;; You should have received a copy of the GNU General Public License
-;; along with Notmuch.  If not, see <http://www.gnu.org/licenses/>.
+;; along with Notmuch.  If not, see <https://www.gnu.org/licenses/>.
 ;;
 ;; Authors: Carl Worth <cworth@cworth.org>
 ;;          Damien Cassou <damien.cassou@gmail.com>
@@ -56,9 +56,23 @@
 					  (string :tag "Custom")))
 			    (sexp :tag "Custom")))))
 
+(defface notmuch-tag-unread
+  '((t :foreground "red"))
+  "Default face used for the unread tag.
+
+Used in the default value of `notmuch-tag-formats`."
+  :group 'notmuch-faces)
+
+(defface notmuch-tag-flagged
+  '((t :foreground "blue"))
+  "Face used for the flagged tag.
+
+Used in the default value of `notmuch-tag-formats`."
+  :group 'notmuch-faces)
+
 (defcustom notmuch-tag-formats
-  '(("unread" (propertize tag 'face '(:foreground "red")))
-    ("flagged" (propertize tag 'face '(:foreground "blue"))
+  '(("unread" (propertize tag 'face 'notmuch-tag-unread))
+    ("flagged" (propertize tag 'face 'notmuch-tag-flagged)
      (notmuch-tag-format-image-data tag (notmuch-tag-star-icon))))
   "Custom formats for individual tags.
 
@@ -90,15 +104,17 @@ with images."
   :group 'notmuch-faces
   :type 'notmuch-tag-format-type)
 
+(defface notmuch-tag-deleted
+  '((((class color) (supports :strike-through "red")) :strike-through "red")
+    (t :inverse-video t))
+  "Face used to display deleted tags.
+
+Used in the default value of `notmuch-tag-deleted-formats`."
+  :group 'notmuch-faces)
+
 (defcustom notmuch-tag-deleted-formats
-  '(("unread" (notmuch-apply-face bare-tag
-				  (if (display-supports-face-attributes-p '(:strike-through "red"))
-				      '(:strike-through "red")
-				    '(:inverse-video t))))
-    (".*" (notmuch-apply-face tag
-			      (if (display-supports-face-attributes-p '(:strike-through "red"))
-				  '(:strike-through "red")
-				'(:inverse-video t)))))
+  '(("unread" (notmuch-apply-face bare-tag `notmuch-tag-deleted))
+    (".*" (notmuch-apply-face tag `notmuch-tag-deleted)))
   "Custom formats for tags when deleted.
 
 For deleted tags the formats in `notmuch-tag-formats` are applied
@@ -118,8 +134,15 @@ See `notmuch-tag-formats' for full documentation."
   :group 'notmuch-faces
   :type 'notmuch-tag-format-type)
 
+(defface notmuch-tag-added
+  '((t :underline "green"))
+  "Default face used for added tags.
+
+Used in the default value for `notmuch-tag-added-formats`."
+  :group 'notmuch-faces)
+
 (defcustom notmuch-tag-added-formats
-  '((".*" (notmuch-apply-face tag '(:underline "green"))))
+  '((".*" (notmuch-apply-face tag 'notmuch-tag-added)))
   "Custom formats for tags when added.
 
 For added tags the formats in `notmuch-tag-formats` are applied

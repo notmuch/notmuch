@@ -39,6 +39,8 @@ libnotmuch_c_srcs =		\
 	$(dir)/message-file.c	\
 	$(dir)/messages.c	\
 	$(dir)/sha1.c		\
+	$(dir)/built-with.c	\
+	$(dir)/string-map.c	\
 	$(dir)/tags.c
 
 libnotmuch_cxx_srcs =		\
@@ -47,7 +49,10 @@ libnotmuch_cxx_srcs =		\
 	$(dir)/directory.cc	\
 	$(dir)/index.cc		\
 	$(dir)/message.cc	\
+	$(dir)/message-property.cc \
 	$(dir)/query.cc		\
+	$(dir)/query-fp.cc      \
+	$(dir)/config.cc	\
 	$(dir)/thread.cc
 
 libnotmuch_modules := $(libnotmuch_c_srcs:.c=.o) $(libnotmuch_cxx_srcs:.cc=.o)

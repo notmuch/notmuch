@@ -1,5 +1,7 @@
 #! /bin/sh
 
+set -u
+
 # Test whether this shell is capable of parameter substring processing.
 ( option='a/b'; : ${option#*/} ) 2>/dev/null || {
     echo "
@@ -66,10 +68,12 @@ PYTHON=${PYTHON:-}
 PREFIX=/usr/local
 LIBDIR=
 WITH_DOCS=1
+WITH_API_DOCS=1
 WITH_EMACS=1
 WITH_BASH=1
 WITH_RUBY=1
 WITH_ZSH=1
+WITH_RETRY_LOCK=1
 
 usage ()
 {
@@ -134,10 +138,12 @@ Some features can be disabled (--with-feature=no is equivalent to
 --without-feature) :
 
 	--without-bash-completion	Do not install bash completions files
-	--without-docs			Do not install documentation and man pages
+	--without-docs			Do not install documentation
+	--without-api-docs		Do not install API man page
 	--without-emacs			Do not install lisp file
 	--without-ruby			Do not install ruby bindings
 	--without-zsh-completion	Do not install zsh completions files
+	--without-retry-lock		Do not use blocking xapian opens, even if available
 
 Additional options are accepted for compatibility with other
 configure-script calling conventions, but don't do anything yet:
@@ -180,11 +186,21 @@ for option; do
     elif [ "${option%%=*}" = '--with-docs' ]; then
 	if [ "${option#*=}" = 'no' ]; then
 	    WITH_DOCS=0
+	    WITH_API_DOCS=0
 	else
 	    WITH_DOCS=1
 	fi
     elif [ "${option}" = '--without-docs' ] ; then
 	WITH_DOCS=0
+	WITH_API_DOCS=0
+    elif [ "${option%%=*}" = '--with-api-docs' ]; then
+	if [ "${option#*=}" = 'no' ]; then
+	    WITH_API_DOCS=0
+	else
+	    WITH_API_DOCS=1
+	fi
+    elif [ "${option}" = '--without-api-docs' ] ; then
+	WITH_API_DOCS=0
     elif [ "${option%%=*}" = '--with-emacs' ]; then
 	if [ "${option#*=}" = 'no' ]; then
 	    WITH_EMACS=0
@@ -209,6 +225,14 @@ for option; do
 	fi
     elif [ "${option}" = '--without-ruby' ] ; then
 	WITH_RUBY=0
+    elif [ "${option%%=*}" = '--with-retry-lock' ]; then
+	if [ "${option#*=}" = 'no' ]; then
+	    WITH_RETRY_LOCK=0
+	else
+	    WITH_RETRY_LOCK=1
+	fi
+    elif [ "${option}" = '--without-retry-lock' ] ; then
+	WITH_RETRY_LOCK=0
     elif [ "${option%%=*}" = '--with-zsh-completion' ]; then
 	if [ "${option#*=}" = 'no' ]; then
 	    WITH_ZSH=0
@@ -250,7 +274,7 @@ if [ -z "$LIBDIR" ] ; then
     libdir_expanded="${PREFIX}/lib"
 else
     # very non-general variable expansion
-    libdir_expanded=`echo "$LIBDIR" | sed "s|\\${prefix}|${PREFIX}|g; s|\\$prefix/|${PREFIX}/|; s|//*|/|g"`
+    libdir_expanded=$(echo "$LIBDIR" | sed "s|\\${prefix}|${PREFIX}|g; s|\\$prefix/|${PREFIX}/|; s|//*|/|g")
 fi
 
 cat <<EOF
@@ -356,23 +380,59 @@ if [ ${have_xapian} = "0" ]; then
     errors=$((errors + 1))
 fi
 
-# Compaction is only supported on Xapian > 1.2.6
 have_xapian_compact=0
+have_xapian_field_processor=0
 if [ ${have_xapian} = "1" ]; then
     printf "Checking for Xapian compaction support... "
-    case "${xapian_version}" in
-	0.*|1.[01].*|1.2.[0-5])
-	    printf "No (only available with Xapian > 1.2.6).\n" ;;
-	[1-9]*.[0-9]*.[0-9]*)
-	    have_xapian_compact=1
-	    printf "Yes.\n" ;;
-	*)
-	    printf "Unknown version.\n" ;;
-    esac
-fi
+    cat>_compact.cc<<EOF
+#include <xapian.h>
+class TestCompactor : public Xapian::Compactor { };
+EOF
+    if ${CXX} ${CXXFLAGS_for_sh} ${xapian_cxxflags} -c _compact.cc -o _compact.o > /dev/null 2>&1
+    then
+	have_xapian_compact=1
+	printf "Yes.\n"
+    else
+	printf "No.\n"
+	errors=$((errors + 1))
+    fi
 
-default_xapian_backend=""
-if [ ${have_xapian} = "1" ]; then
+    rm -f _compact.o _compact.cc
+
+    printf "Checking for Xapian FieldProcessor API... "
+    cat>_field_processor.cc<<EOF
+#include <xapian.h>
+class TitleFieldProcessor : public Xapian::FieldProcessor { };
+EOF
+    if ${CXX} ${CXXFLAGS_for_sh} ${xapian_cxxflags} -c _field_processor.cc -o _field_processor.o > /dev/null 2>&1
+    then
+	have_xapian_field_processor=1
+	printf "Yes.\n"
+    else
+	printf "No. (optional)\n"
+    fi
+
+    rm -f _field_processor.o _field_processor.cc
+
+    default_xapian_backend=""
+    # DB_RETRY_LOCK is only supported on Xapian > 1.3.2
+    have_xapian_db_retry_lock=0
+    if [ $WITH_RETRY_LOCK = "1" ]; then
+	printf "Checking for Xapian lock retry support... "
+	cat>_retry.cc<<EOF
+#include <xapian.h>
+int flag = Xapian::DB_RETRY_LOCK;
+EOF
+	if ${CXX} ${CXXFLAGS_for_sh} ${xapian_cxxflags} -c _retry.cc -o _retry.o > /dev/null 2>&1
+	then
+	    have_xapian_db_retry_lock=1
+	    printf "Yes.\n"
+	else
+	    printf "No. (optional)\n"
+	fi
+	rm -f _retry.o _retry.cc
+    fi
+
     printf "Testing default Xapian backend... "
     cat >_default_backend.cc <<EOF
 #include <xapian.h>
@@ -380,16 +440,17 @@ int main(int argc, char** argv) {
    Xapian::WritableDatabase db("test.db",Xapian::DB_CREATE_OR_OPEN);
 }
 EOF
-    ${CXX} ${CXXLAGS} ${xapian_cxxflags} _default_backend.cc -o _default_backend ${xapian_ldflags}
+    ${CXX} ${CXXFLAGS_for_sh} ${xapian_cxxflags} _default_backend.cc -o _default_backend ${xapian_ldflags}
     ./_default_backend
     if [ -f test.db/iamglass ]; then
 	default_xapian_backend=glass
     else
 	default_xapian_backend=chert
     fi
-    printf "${default_xapian_backend}\n";
+    printf "%s\n" "${default_xapian_backend}";
     rm -rf test.db _default_backend _default_backend.cc
 fi
+
 # we need to have a version >= 2.6.5 to avoid a crypto bug. We need
 # 2.6.7 for permissive "From " header handling.
 GMIME_MINVER=2.6.7
@@ -413,8 +474,9 @@ have_glib=0
 if pkg-config --exists 'glib-2.0 >= 2.22'; then
     printf "Yes.\n"
     have_glib=1
-    glib_cflags=$(pkg-config --cflags glib-2.0)
-    glib_ldflags=$(pkg-config --libs glib-2.0)
+    # these are included in gmime cflags and ldflags
+    # glib_cflags=$(pkg-config --cflags glib-2.0)
+    # glib_ldflags=$(pkg-config --libs glib-2.0)
 else
     printf "No.\n"
     errors=$((errors + 1))
@@ -461,7 +523,7 @@ for name in ${PYTHON} python python2 python3; do
     if command -v $name > /dev/null; then
 	have_python=1
 	python=$name
-	printf "Yes ($name).\n"
+	printf "Yes (%s).\n" "$name"
 	break
     fi
 done
@@ -479,6 +541,7 @@ if pkg-config --exists valgrind; then
 else
     printf "No (but that's fine).\n"
     have_valgrind=0
+    valgrind_cflags=
 fi
 
 printf "Checking for bash-completion (>= 1.90)... "
@@ -489,12 +552,12 @@ else
     WITH_BASH=0
 fi
 
-if [ -z "${EMACSLISPDIR}" ]; then
-    EMACSLISPDIR='$(prefix)/share/emacs/site-lisp'
+if [ -z "${EMACSLISPDIR-}" ]; then
+    EMACSLISPDIR="\$(prefix)/share/emacs/site-lisp"
 fi
 
-if [ -z "${EMACSETCDIR}" ]; then
-    EMACSETCDIR='$(prefix)/share/emacs/site-lisp'
+if [ -z "${EMACSETCDIR-}" ]; then
+    EMACSETCDIR="\$(prefix)/share/emacs/site-lisp"
 fi
 
 printf "Checking if emacs is available... "
@@ -507,7 +570,7 @@ else
 fi
 
 have_doxygen=0
-if [ $WITH_DOCS = "1" ] ; then
+if [ $WITH_API_DOCS = "1" ] ; then
     printf "Checking if doxygen is available... "
     if command -v doxygen > /dev/null; then
 	printf "Yes.\n"
@@ -542,7 +605,7 @@ fi
 libdir_in_ldconfig=0
 
 printf "Checking which platform we are on... "
-uname=`uname`
+uname=$(uname)
 if [ $uname = "Darwin" ] ; then
     printf "Mac OS X.\n"
     platform=MACOSX
@@ -560,11 +623,11 @@ elif [ $uname = "OpenBSD" ] ; then
     platform=OPENBSD
     linker_resolves_library_dependencies=0
 elif [ $uname = "Linux" ] || [ $uname = "GNU" ] ; then
-    printf "$uname\n"
+    printf "%s\n" "$uname"
     platform="$uname"
     linker_resolves_library_dependencies=1
 
-    printf "Checking for $libdir_expanded in ldconfig... "
+    printf "Checking for %s in ldconfig... " "$libdir_expanded"
     ldconfig_paths=$(/sbin/ldconfig -N -X -v 2>/dev/null | sed -n -e 's,^\(/.*\):\( (.*)\)\?$,\1,p')
     # Separate ldconfig_paths only on newline (not on any potential
     # embedded space characters in any filenames). Note, we use a
@@ -588,6 +651,8 @@ elif [ $uname = "Linux" ] || [ $uname = "GNU" ] ; then
     fi
 else
     printf "Unknown.\n"
+    platform="$uname"
+    linker_resolves_library_dependencies=0
     cat <<EOF
 
 *** Warning: Unknown platform. Notmuch might or might not build correctly.
@@ -619,9 +684,9 @@ EOF
     if [ $have_python -eq 0 ]; then
 	echo "  python interpreter"
     fi
-    if [ $have_xapian -eq 0 ]; then
-	echo "	Xapian library (including development files such as headers)"
-	echo "	http://xapian.org/"
+    if [ $have_xapian -eq 0 -o $have_xapian_compact -eq 0 ]; then
+	echo "	Xapian library (>= version 1.2.6, including development files such as headers)"
+	echo "	https://xapian.org/"
     fi
     if [ $have_zlib -eq 0 ]; then
 	echo "	zlib library (>= version 1.2.5.2, including development files such as headers)"
@@ -641,7 +706,7 @@ EOF
     fi
     if [ $have_talloc -eq 0 ]; then
 	echo "	The talloc library (including development files such as headers)"
-	echo "	http://talloc.samba.org/"
+	echo "	https://talloc.samba.org/"
 	echo
     fi
     cat <<EOF
@@ -815,7 +880,7 @@ for flag in -Wall -Wextra -Wwrite-strings; do
 	WARN_CXXFLAGS="${WARN_CXXFLAGS}${WARN_CXXFLAGS:+ }${flag}"
     fi
 done
-printf "\n\t${WARN_CXXFLAGS}\n"
+printf "\n\t%s\n" "${WARN_CXXFLAGS}"
 
 WARN_CFLAGS="${WARN_CXXFLAGS}"
 printf "Checking for available C compiler warning flags... "
@@ -825,7 +890,7 @@ for flag in -Wmissing-declarations; do
 	WARN_CFLAGS="${WARN_CFLAGS}${WARN_CFLAGS:+ }${flag}"
     fi
 done
-printf "\n\t${WARN_CFLAGS}\n"
+printf "\n\t%s\n" "${WARN_CFLAGS}"
 
 rm -f minimal minimal.c _libversion.c _libversion _libversion.sh
 
@@ -997,6 +1062,12 @@ HAVE_D_TYPE = ${have_d_type}
 # Whether the Xapian version in use supports compaction
 HAVE_XAPIAN_COMPACT = ${have_xapian_compact}
 
+# Whether the Xapian version in use supports field processors
+HAVE_XAPIAN_FIELD_PROCESSOR = ${have_xapian_field_processor}
+
+# Whether the Xapian version in use supports DB_RETRY_LOCK
+HAVE_XAPIAN_DB_RETRY_LOCK = ${have_xapian_db_retry_lock}
+
 # Whether the getpwuid_r function is standards-compliant
 # (if not, then notmuch will #define _POSIX_PTHREAD_SEMANTICS
 # to enable the standards-compliant version -- needed for Solaris)
@@ -1059,33 +1130,25 @@ WITH_BASH = ${WITH_BASH}
 WITH_ZSH = ${WITH_ZSH}
 
 # Combined flags for compiling and linking against all of the above
-CONFIGURE_CFLAGS = -DHAVE_GETLINE=\$(HAVE_GETLINE) \$(GMIME_CFLAGS)      \\
-		   -DHAVE_CANONICALIZE_FILE_NAME=\$(HAVE_CANONICALIZE_FILE_NAME) \\
-		   \$(ZLIB_CFLAGS)					 \\
-		   \$(TALLOC_CFLAGS) -DHAVE_VALGRIND=\$(HAVE_VALGRIND)   \\
-		   \$(VALGRIND_CFLAGS)                                   \\
-		   -DHAVE_STRCASESTR=\$(HAVE_STRCASESTR)                 \\
-		   -DHAVE_STRSEP=\$(HAVE_STRSEP)                         \\
-		   -DHAVE_TIMEGM=\$(HAVE_TIMEGM)                         \\
-		   -DHAVE_D_TYPE=\$(HAVE_D_TYPE)                         \\
-		   -DSTD_GETPWUID=\$(STD_GETPWUID)                       \\
-		   -DSTD_ASCTIME=\$(STD_ASCTIME)                         \\
-		   -DHAVE_XAPIAN_COMPACT=\$(HAVE_XAPIAN_COMPACT)	 \\
-		   -DUTIL_BYTE_ORDER=\$(UTIL_BYTE_ORDER)
+COMMON_CONFIGURE_CFLAGS = \\
+	\$(GMIME_CFLAGS) \$(TALLOC_CFLAGS) \$(ZLIB_CFLAGS)	\\
+	-DHAVE_VALGRIND=\$(HAVE_VALGRIND) \$(VALGRIND_CFLAGS)	\\
+	-DHAVE_GETLINE=\$(HAVE_GETLINE)				\\
+	-DHAVE_CANONICALIZE_FILE_NAME=\$(HAVE_CANONICALIZE_FILE_NAME) \\
+	-DHAVE_STRCASESTR=\$(HAVE_STRCASESTR)			\\
+	-DHAVE_STRSEP=\$(HAVE_STRSEP)				\\
+	-DHAVE_TIMEGM=\$(HAVE_TIMEGM)				\\
+	-DHAVE_D_TYPE=\$(HAVE_D_TYPE)				\\
+	-DSTD_GETPWUID=\$(STD_GETPWUID)				\\
+	-DSTD_ASCTIME=\$(STD_ASCTIME)				\\
+	-DHAVE_XAPIAN_COMPACT=\$(HAVE_XAPIAN_COMPACT)		\\
+	-DHAVE_XAPIAN_FIELD_PROCESSOR=\$(HAVE_XAPIAN_FIELD_PROCESSOR) \\
+	-DHAVE_XAPIAN_DB_RETRY_LOCK=\$(HAVE_XAPIAN_DB_RETRY_LOCK) \\
+	-DUTIL_BYTE_ORDER=\$(UTIL_BYTE_ORDER)
 
-CONFIGURE_CXXFLAGS = -DHAVE_GETLINE=\$(HAVE_GETLINE) \$(GMIME_CFLAGS)    \\
-		     -DHAVE_CANONICALIZE_FILE_NAME=\$(HAVE_CANONICALIZE_FILE_NAME) \\
-		     \$(ZLIB_CFLAGS)					 \\
-		     \$(TALLOC_CFLAGS) -DHAVE_VALGRIND=\$(HAVE_VALGRIND) \\
-		     \$(VALGRIND_CFLAGS) \$(XAPIAN_CXXFLAGS)             \\
-		     -DHAVE_STRCASESTR=\$(HAVE_STRCASESTR)               \\
-		     -DHAVE_STRSEP=\$(HAVE_STRSEP)                       \\
-		     -DHAVE_TIMEGM=\$(HAVE_TIMEGM)                       \\
-		     -DHAVE_D_TYPE=\$(HAVE_D_TYPE)                       \\
-		     -DSTD_GETPWUID=\$(STD_GETPWUID)                     \\
-		     -DSTD_ASCTIME=\$(STD_ASCTIME)                       \\
-		     -DHAVE_XAPIAN_COMPACT=\$(HAVE_XAPIAN_COMPACT)       \\
-		     -DUTIL_BYTE_ORDER=\$(UTIL_BYTE_ORDER)
+CONFIGURE_CFLAGS = \$(COMMON_CONFIGURE_CFLAGS)
+
+CONFIGURE_CXXFLAGS = \$(COMMON_CONFIGURE_CFLAGS) \$(XAPIAN_CXXFLAGS)
 
 CONFIGURE_LDFLAGS =  \$(GMIME_LDFLAGS) \$(TALLOC_LDFLAGS) \$(ZLIB_LDFLAGS) \$(XAPIAN_LDFLAGS)
 EOF
@@ -1097,6 +1160,12 @@ cat > sh.config <<EOF
 
 # Whether the Xapian version in use supports compaction
 NOTMUCH_HAVE_XAPIAN_COMPACT=${have_xapian_compact}
+
+# Whether the Xapian version in use supports field processors
+NOTMUCH_HAVE_XAPIAN_FIELD_PROCESSOR=${have_xapian_field_processor}
+
+# Whether the Xapian version in use supports lock retry
+NOTMUCH_HAVE_XAPIAN_DB_RETRY_LOCK=${have_xapian_db_retry_lock}
 
 # Which backend will Xapian use by default?
 NOTMUCH_DEFAULT_XAPIAN_BACKEND=${default_xapian_backend}

@@ -13,7 +13,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/ .
+ * along with this program.  If not, see https://www.gnu.org/licenses/ .
  *
  * Author: Carl Worth <cworth@cworth.org>
  */
@@ -904,7 +904,7 @@ do_show_single (void *ctx,
 	return 1;
 
     if (count != 1) {
-	fprintf (stderr, "Error: search term did not match precisely one message.\n");
+	fprintf (stderr, "Error: search term did not match precisely one message (matched %d messages).\n", count);
 	return 1;
     }
 

@@ -15,7 +15,7 @@
 ;; General Public License for more details.
 ;;
 ;; You should have received a copy of the GNU General Public License
-;; along with Notmuch.  If not, see <http://www.gnu.org/licenses/>.
+;; along with Notmuch.  If not, see <https://www.gnu.org/licenses/>.
 ;;
 ;; Authors: Carl Worth <cworth@cworth.org>
 
@@ -23,6 +23,7 @@
 
 ;;; Code:
 
+(require 'mm-util)
 (require 'mm-view)
 (require 'mm-decode)
 (require 'cl)
@@ -572,7 +573,20 @@ the given type."
 				   ,@(when process-crypto '("--decrypt"))
 				   ,(notmuch-id-to-query (plist-get msg :id))))
 			   (coding-system-for-read
-			    (if binaryp 'no-conversion 'utf-8)))
+			    (if binaryp 'no-conversion
+			      (let ((coding-system (mm-charset-to-coding-system
+						    (plist-get part :content-charset))))
+				;; Sadly,
+				;; `mm-charset-to-coding-system' seems
+				;; to return things that are not
+				;; considered acceptable values for
+				;; `coding-system-for-read'.
+				(if (coding-system-p coding-system)
+				    coding-system
+				  ;; RFC 2047 says that the default
+				  ;; charset is US-ASCII. RFC6657
+				  ;; complicates this somewhat.
+				  'us-ascii)))))
 		       (apply #'call-process notmuch-command nil '(t nil) nil args)
 		       (buffer-string))))))
     (when (and cache data)
@@ -776,9 +790,15 @@ You may need to restart Emacs or upgrade your notmuch package."))
 		    (insert-file-contents err-file)
 		    (unless (eobp)
 		      (buffer-string)))))
+	   (command-string
+	    (mapconcat (lambda (arg)
+			 (shell-quote-argument
+			  (cond ((stringp arg) arg)
+				((symbolp arg) (symbol-name arg))
+				(t "*UNKNOWN ARGUMENT*"))))
+		       command " "))
 	   (extra
-	    (concat
-	     "command: " (mapconcat #'shell-quote-argument command " ") "\n"
+	    (concat "command: " command-string "\n"
 	     (if (integerp exit-status)
 		 (format "exit status: %s\n" exit-status)
 	       (format "exit signal: %s\n" exit-status))

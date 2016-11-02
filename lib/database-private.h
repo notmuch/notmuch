@@ -13,7 +13,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/ .
+ * along with this program.  If not, see https://www.gnu.org/licenses/ .
  *
  * Author: Carl Worth <cworth@cworth.org>
  */
@@ -144,6 +144,13 @@ operator&=(_notmuch_features &a, _notmuch_features b)
     return a;
 }
 
+#define NOTMUCH_QUERY_PARSER_FLAGS (Xapian::QueryParser::FLAG_BOOLEAN | \
+				    Xapian::QueryParser::FLAG_PHRASE | \
+				    Xapian::QueryParser::FLAG_LOVEHATE | \
+				    Xapian::QueryParser::FLAG_BOOLEAN_ANY_CASE | \
+				    Xapian::QueryParser::FLAG_WILDCARD | \
+				    Xapian::QueryParser::FLAG_PURE_NOT)
+
 struct _notmuch_database {
     notmuch_bool_t exception_reported;
 
@@ -176,6 +183,10 @@ struct _notmuch_database {
     Xapian::TermGenerator *term_gen;
     Xapian::ValueRangeProcessor *value_range_processor;
     Xapian::ValueRangeProcessor *date_range_processor;
+#if HAVE_XAPIAN_FIELD_PROCESSOR
+    Xapian::FieldProcessor *date_field_processor;
+    Xapian::FieldProcessor *query_field_processor;
+#endif
     Xapian::ValueRangeProcessor *last_mod_range_processor;
 };
 

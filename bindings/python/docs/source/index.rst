@@ -4,7 +4,7 @@ Welcome to :mod:`notmuch`'s documentation
 .. currentmodule:: notmuch
 
 The :mod:`notmuch` module provides an interface to the `notmuch
-<http://notmuchmail.org>`_ functionality, directly interfacing to a
+<https://notmuchmail.org>`_ functionality, directly interfacing to a
 shared notmuch library.  Within :mod:`notmuch`, the classes
 :class:`Database`, :class:`Query` provide most of the core
 functionality, returning :class:`Threads`, :class:`Messages` and

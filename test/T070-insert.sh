@@ -192,6 +192,8 @@ for code in OUT_OF_MEMORY XAPIAN_EXCEPTION FILE_NOT_EMAIL \
 gen_insert_msg
 cat <<EOF > index-file-$code.gdb
 set breakpoint pending on
+set logging file index-file-$code.log
+set logging on
 break notmuch_database_add_message
 commands
 return NOTMUCH_STATUS_$code

@@ -14,6 +14,7 @@ Contents:
    man1/notmuch-count
    man1/notmuch-dump
    notmuch-emacs
+   man1/notmuch-emacs-mua
    man5/notmuch-hooks
    man1/notmuch-insert
    man1/notmuch-new

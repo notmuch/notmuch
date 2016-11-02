@@ -1,5 +1,6 @@
 #
 # Copyright (c) 2005 Junio C Hamano
+# Copyright (c) 2010 Notmuch Developers
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -12,7 +13,7 @@
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with this program.  If not, see http://www.gnu.org/licenses/ .
+# along with this program.  If not, see https://www.gnu.org/licenses/ .
 
 if [ ${BASH_VERSINFO[0]} -lt 4 ]; then
     echo "Error: The notmuch test suite requires a bash version >= 4.0"
@@ -38,7 +39,7 @@ done,*)
 *' --tee '*|*' --va'*)
 	mkdir -p test-results
 	BASE=test-results/$this_test
-	(GIT_TEST_TEE_STARTED=done ${SHELL-sh} "$0" "$@" 2>&1;
+	(GIT_TEST_TEE_STARTED=done "$BASH" "$0" "$@" 2>&1;
 	 echo $? > $BASE.exit) | tee $BASE.out
 	test "$(cat $BASE.exit)" = 0
 	exit
@@ -54,9 +55,15 @@ export PS4='+(${BASH_SOURCE}:${LINENO}): ${FUNCNAME[0]:+${FUNCNAME[0]}(): }'
 # Keep the original TERM for say_color and test_emacs
 ORIGINAL_TERM=$TERM
 
-# dtach(1) provides more capable terminal environment to anything
-# that requires more than dumb terminal...
-[ x"${TERM:-dumb}" = xdumb ] && DTACH_TERM=vt100 || DTACH_TERM=$TERM
+# Set SMART_TERM to vt100 for known dumb/unknown terminal.
+# Otherwise use whatever TERM is currently used so that
+# users' actual TERM environments are being used in tests.
+case ${TERM-} in
+	'' | dumb | unknown )
+		SMART_TERM=vt100 ;;
+	*)
+		SMART_TERM=$TERM ;;
+esac
 
 # For repeatability, reset the environment to known value.
 LANG=C
@@ -222,15 +229,15 @@ test_fixed=0
 test_broken=0
 test_success=0
 
-_die_common () {
+_exit_common () {
 	code=$?
 	trap - EXIT
 	set +ex
 	rm -rf "$TEST_TMPDIR"
 }
 
-die () {
-	_die_common
+trap_exit () {
+	_exit_common
 	if test -n "$GIT_EXIT_OK"
 	then
 		exit $code
@@ -244,17 +251,27 @@ die () {
 	fi
 }
 
-die_signal () {
-	_die_common
+trap_signal () {
+	_exit_common
 	echo >&6 "FATAL: $0: interrupted by signal" $((code - 128))
 	exit $code
+}
+
+die () {
+	_exit_common
+	exec >&6
+	say_color error '%-6s' FATAL
+	echo " $*"
+	echo
+	echo "Unexpected exit while executing $0."
+	exit 1
 }
 
 GIT_EXIT_OK=
 # Note: TEST_TMPDIR *NOT* exported!
 TEST_TMPDIR=$(mktemp -d "${TMPDIR:-/tmp}/notmuch-test-$$.XXXXXX")
-trap 'die' EXIT
-trap 'die_signal' HUP INT TERM
+trap 'trap_exit' EXIT
+trap 'trap_signal' HUP INT TERM
 
 test_decode_color () {
 	sed	-e 's/.\[1m/<WHITE>/g' \
@@ -530,21 +547,26 @@ emacs_fcc_message ()
     notmuch new >/dev/null
 }
 
-# Generate a corpus of email and add it to the database.
+# Add an existing, fixed corpus of email to the database.
 #
-# This corpus is fixed, (it happens to be 50 messages from early in
-# the history of the notmuch mailing list), which allows for reliably
+# $1 is the corpus dir under corpora to add, using "default" if unset.
+#
+# The default corpus is based on about 50 messages from early in the
+# history of the notmuch mailing list, which allows for reliably
 # testing commands that need to operate on a not-totally-trivial
 # number of messages.
 add_email_corpus ()
 {
+    corpus=${1:-default}
+
     rm -rf ${MAIL_DIR}
-    if [ -d $TEST_DIRECTORY/corpus.mail ]; then
-	cp -a $TEST_DIRECTORY/corpus.mail ${MAIL_DIR}
+    if [ -d $TEST_DIRECTORY/corpora.mail/$corpus ]; then
+	cp -a $TEST_DIRECTORY/corpora.mail/$corpus ${MAIL_DIR}
     else
-	cp -a $TEST_DIRECTORY/corpus ${MAIL_DIR}
-	notmuch new >/dev/null
-	cp -a ${MAIL_DIR} $TEST_DIRECTORY/corpus.mail
+	cp -a $TEST_DIRECTORY/corpora/$corpus ${MAIL_DIR}
+	notmuch new >/dev/null || die "'notmuch new' failed while adding email corpus"
+	mkdir -p $TEST_DIRECTORY/corpora.mail
+	cp -a ${MAIL_DIR} $TEST_DIRECTORY/corpora.mail/$corpus
     fi
 }
 
@@ -673,6 +695,12 @@ NOTMUCH_NEW ()
     notmuch new "${@}" | grep -v -E -e '^Processed [0-9]*( total)? file|Found [0-9]* total file'
 }
 
+NOTMUCH_DUMP_TAGS ()
+{
+    # this relies on the default format being batch-tag, otherwise some tests will break
+    notmuch dump --include=tags "${@}" | sed '/^#/d' | sort
+}
+
 notmuch_search_sanitize ()
 {
     perl -pe 's/("?thread"?: ?)("?)................("?)/\1\2XXX\3/'
@@ -733,6 +761,17 @@ notmuch_uuid_sanitize ()
 {
     sed 's/[0-9a-f]\{8\}-[0-9a-f]\{4\}-[0-9a-f]\{4\}-[0-9a-f]\{4\}-[0-9a-f]\{12\}/UUID/g'
 }
+
+notmuch_built_with_sanitize ()
+{
+    sed 's/^built_with[.]\(.*\)=.*$/built_with.\1=something/'
+}
+
+notmuch_config_sanitize ()
+{
+    notmuch_dir_sanitize | notmuch_built_with_sanitize
+}
+
 # End of notmuch helper functions
 
 # Use test_set_prereq to tell that a particular prerequisite is available.
@@ -1135,10 +1174,10 @@ test_emacs () {
 		fi
 		server_name="notmuch-test-suite-$$"
 		# start a detached session with an emacs server
-		# user's TERM (or 'vt100' in case user's TERM is unset, empty
-		# or 'dumb') is given to dtach which assumes a minimally
+		# user's TERM (or 'vt100' in case user's TERM is known dumb
+		# or unknown) is given to dtach which assumes a minimally
 		# VT100-compatible terminal -- and emacs inherits that
-		TERM=$DTACH_TERM dtach -n "$TEST_TMPDIR/emacs-dtach-socket.$$" \
+		TERM=$SMART_TERM dtach -n "$TEST_TMPDIR/emacs-dtach-socket.$$" \
 			sh -c "stty rows 24 cols 80; exec '$TMP_DIRECTORY/run_emacs' \
 				--no-window-system \
 				$load_emacs_tests \
@@ -1164,15 +1203,13 @@ test_emacs () {
 }
 
 test_python() {
-	export LD_LIBRARY_PATH=$TEST_DIRECTORY/../lib
-	export PYTHONPATH=$TEST_DIRECTORY/../bindings/python
-
-	(echo "import sys; _orig_stdout=sys.stdout; sys.stdout=open('OUTPUT', 'w')"; cat) \
-		| $NOTMUCH_PYTHON -
+    # Note: if there is need to print debug information from python program,
+    # use stdout = os.fdopen(6, 'w') or stderr = os.fdopen(7, 'w')
+    PYTHONPATH="$TEST_DIRECTORY/../bindings/python${PYTHONPATH:+:$PYTHONPATH}" \
+	$NOTMUCH_PYTHON -B - > OUTPUT
 }
 
 test_ruby() {
-    export LD_LIBRARY_PATH=$TEST_DIRECTORY/../lib
     MAIL_DIR=$MAIL_DIR ruby -I $TEST_DIRECTORY/../bindings/ruby> OUTPUT
 }
 
@@ -1180,8 +1217,7 @@ test_C () {
     exec_file="test${test_count}"
     test_file="${exec_file}.c"
     cat > ${test_file}
-    export LD_LIBRARY_PATH=${TEST_DIRECTORY}/../lib
-    ${TEST_CC} ${TEST_CFLAGS} -I${TEST_DIRECTORY}/../lib -o ${exec_file} ${test_file} -L${TEST_DIRECTORY}/../lib/ -lnotmuch -ltalloc
+    ${TEST_CC} ${TEST_CFLAGS} -I${TEST_DIRECTORY} -I${TEST_DIRECTORY}/../lib -o ${exec_file} ${test_file} -L${TEST_DIRECTORY}/../lib/ -lnotmuch -ltalloc
     echo "== stdout ==" > OUTPUT.stdout
     echo "== stderr ==" > OUTPUT.stderr
     ./${exec_file} "$@" 1>>OUTPUT.stdout 2>>OUTPUT.stderr

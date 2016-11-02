@@ -15,7 +15,7 @@
 ;; General Public License for more details.
 ;;
 ;; You should have received a copy of the GNU General Public License
-;; along with Notmuch.  If not, see <http://www.gnu.org/licenses/>.
+;; along with Notmuch.  If not, see <https://www.gnu.org/licenses/>.
 ;;
 ;; Authors: David Edmondson <dme@dme.org>
 
@@ -32,7 +32,7 @@
 
 (declare-function notmuch-show-insert-body "notmuch-show" (msg body depth))
 (declare-function notmuch-fcc-header-setup "notmuch-maildir-fcc" ())
-(declare-function notmuch-fcc-handler "notmuch-maildir-fcc" (destdir))
+(declare-function notmuch-maildir-message-do-fcc "notmuch-maildir-fcc" ())
 
 ;;
 
@@ -62,7 +62,7 @@ disabled: this would result in an incorrect behavior."))
 		 (const :tag "Compose mail in a new window"  new-window)
 		 (const :tag "Compose mail in a new frame"   new-frame)))
 
-(defcustom notmuch-mua-user-agent-function 'notmuch-mua-user-agent-full
+(defcustom notmuch-mua-user-agent-function nil
   "Function used to generate a `User-Agent:' string. If this is
 `nil' then no `User-Agent:' will be generated."
   :type '(choice (const :tag "No user agent string" nil)
@@ -73,7 +73,7 @@ disabled: this would result in an incorrect behavior."))
 			   :value notmuch-mua-user-agent-full))
   :group 'notmuch-send)
 
-(defcustom notmuch-mua-hidden-headers '("^User-Agent:")
+(defcustom notmuch-mua-hidden-headers nil
   "Headers that are added to the `message-mode' hidden headers
 list."
   :type '(repeat string)
@@ -142,7 +142,7 @@ mutiple parts get a header."
   (let ((notmuch-version (if (string= notmuch-emacs-version "unknown")
 			     (notmuch-cli-version)
 			   notmuch-emacs-version)))
-    (concat "Notmuch/" notmuch-version " (http://notmuchmail.org)")))
+    (concat "Notmuch/" notmuch-version " (https://notmuchmail.org)")))
 
 (defun notmuch-mua-user-agent-emacs ()
   "Generate a `User-Agent:' string suitable for notmuch."
@@ -253,8 +253,11 @@ mutiple parts get a header."
 		       (notmuch-show-insert-header-p-function notmuch-mua-reply-insert-header-p-function)
 		       ;; Don't indent multipart sub-parts.
 		       (notmuch-show-indent-multipart nil))
-		    (notmuch-show-insert-body original (plist-get original :body) 0)
-		    (buffer-substring-no-properties (point-min) (point-max)))))
+		    ;; We don't want sigstatus buttons (an information leak and usually wrong anyway).
+		    (letf (((symbol-function 'notmuch-crypto-insert-sigstatus-button) #'ignore)
+			   ((symbol-function 'notmuch-crypto-insert-encstatus-button) #'ignore))
+			  (notmuch-show-insert-body original (plist-get original :body) 0)
+			  (buffer-substring-no-properties (point-min) (point-max))))))
 
 	(set-mark (point))
 	(goto-char start)
@@ -276,8 +279,7 @@ mutiple parts get a header."
 
 (define-derived-mode notmuch-message-mode message-mode "Message[Notmuch]"
   "Notmuch message composition mode. Mostly like `message-mode'"
-  (when notmuch-address-command
-    (notmuch-address-setup)))
+  (notmuch-address-setup))
 
 (put 'notmuch-message-mode 'flyspell-mode-predicate 'mail-mode-flyspell-verify)
 
@@ -334,11 +336,14 @@ modified. This function is notmuch addaptation of
 	  ;; C-h f compose-mail says that headers should be specified as
 	  ;; (string . value); however all the rest of message expects
 	  ;; headers to be symbols, not strings (eg message-header-format-alist).
-	  ;; http://lists.gnu.org/archive/html/emacs-devel/2011-01/msg00337.html
+	  ;; https://lists.gnu.org/archive/html/emacs-devel/2011-01/msg00337.html
 	  ;; We need to convert any string input, eg from rmail-start-mail.
 	  (dolist (h other-headers other-headers)
 	    (if (stringp (car h)) (setcar h (intern (capitalize (car h))))))))
-	(args (list yank-action send-actions)))
+	(args (list yank-action send-actions))
+	;; Cause `message-setup-1' to do things relevant for mail,
+	;; such as observe `message-default-mail-headers'.
+	(message-this-is-mail t))
     ;; message-setup-1 in Emacs 23 does not accept return-action
     ;; argument. Pass it only if it is supplied by the caller. This
     ;; will never be the case when we're called by `compose-mail' in
@@ -487,13 +492,13 @@ will be addressed to all recipients of the source message."
 
 (defun notmuch-mua-send-and-exit (&optional arg)
   (interactive "P")
-  (let ((message-fcc-handler-function #'notmuch-fcc-handler))
-    (message-send-and-exit arg)))
+  (letf (((symbol-function 'message-do-fcc) #'notmuch-maildir-message-do-fcc))
+	(message-send-and-exit arg)))
 
 (defun notmuch-mua-send (&optional arg)
   (interactive "P")
-  (let ((message-fcc-handler-function #'notmuch-fcc-handler))
-    (message-send arg)))
+  (letf (((symbol-function 'message-do-fcc) #'notmuch-maildir-message-do-fcc))
+	(message-send arg)))
 
 (defun notmuch-mua-kill-buffer ()
   (interactive)

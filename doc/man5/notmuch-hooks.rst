@@ -41,7 +41,7 @@ The currently available hooks are described below.
         message has been delivered, added to the database, and initial
         tags have been applied. The hook will not be run if there have
         been any errors during the message delivery; what is regarded
-        as succesful delivery depends on the ``--keep`` option.
+        as successful delivery depends on the ``--keep`` option.
 
         Typically this hook is used to perform additional query-based
         tagging on the delivered messages.

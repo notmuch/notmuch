@@ -13,7 +13,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/ .
+ * along with this program.  If not, see https://www.gnu.org/licenses/ .
  *
  * Author: Carl Worth <cworth@cworth.org>
  */
@@ -158,8 +158,8 @@ typedef enum _notmuch_private_status {
     ((private_status >= (notmuch_private_status_t) NOTMUCH_STATUS_LAST_STATUS)\
      ?									\
      _internal_error (format " (%s).\n",				\
-                      ##__VA_ARGS__,					\
-                      __location__),					\
+		      ##__VA_ARGS__,					\
+		      __location__),					\
      (notmuch_status_t) NOTMUCH_PRIVATE_STATUS_SUCCESS			\
      :									\
      (notmuch_status_t) private_status)
@@ -195,6 +195,10 @@ _notmuch_database_ensure_writable (notmuch_database_t *notmuch);
 void
 _notmuch_database_log (notmuch_database_t *notmuch,
 		       const char *format, ...);
+
+void
+_notmuch_database_log_append (notmuch_database_t *notmuch,
+			      const char *format, ...);
 
 unsigned long
 _notmuch_database_new_revision (notmuch_database_t *notmuch);
@@ -477,11 +481,11 @@ _notmuch_mset_messages_move_to_next (notmuch_messages_t *messages);
 
 notmuch_bool_t
 _notmuch_doc_id_set_contains (notmuch_doc_id_set_t *doc_ids,
-                              unsigned int doc_id);
+			      unsigned int doc_id);
 
 void
 _notmuch_doc_id_set_remove (notmuch_doc_id_set_t *doc_ids,
-                            unsigned int doc_id);
+			    unsigned int doc_id);
 
 /* querying xapian documents by type (e.g. "mail" or "ghost"): */
 notmuch_status_t
@@ -536,6 +540,39 @@ _notmuch_string_list_append (notmuch_string_list_t *list,
 
 void
 _notmuch_string_list_sort (notmuch_string_list_t *list);
+
+/* string-map.c */
+typedef struct _notmuch_string_map  notmuch_string_map_t;
+typedef struct _notmuch_string_map_iterator notmuch_string_map_iterator_t;
+notmuch_string_map_t *
+_notmuch_string_map_create (const void *ctx);
+
+void
+_notmuch_string_map_append (notmuch_string_map_t *map,
+			    const char *key,
+			    const char *value);
+
+const char *
+_notmuch_string_map_get (notmuch_string_map_t *map, const char *key);
+
+notmuch_string_map_iterator_t *
+_notmuch_string_map_iterator_create (notmuch_string_map_t *map, const char *key,
+				     notmuch_bool_t exact);
+
+notmuch_bool_t
+_notmuch_string_map_iterator_valid (notmuch_string_map_iterator_t *iter);
+
+void
+_notmuch_string_map_iterator_move_to_next (notmuch_string_map_iterator_t *iter);
+
+const char *
+_notmuch_string_map_iterator_key (notmuch_string_map_iterator_t *iterator);
+
+const char *
+_notmuch_string_map_iterator_value (notmuch_string_map_iterator_t *iterator);
+
+void
+_notmuch_string_map_iterator_destroy (notmuch_string_map_iterator_t *iterator);
 
 /* tags.c */
 

@@ -13,7 +13,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/ .
+ * along with this program.  If not, see https://www.gnu.org/licenses/ .
  *
  * Author: Carl Worth <cworth@cworth.org>
  */
@@ -351,7 +351,6 @@ add_files (notmuch_database_t *notmuch,
 	   const char *path,
 	   add_files_state_t *state)
 {
-    DIR *dir = NULL;
     struct dirent *entry = NULL;
     char *next = NULL;
     time_t fs_mtime, db_mtime;
@@ -655,8 +654,6 @@ add_files (notmuch_database_t *notmuch,
   DONE:
     if (next)
 	talloc_free (next);
-    if (dir)
-	closedir (dir);
     if (fs_entries) {
 	for (i = 0; i < num_fs_entries; i++)
 	    free (fs_entries[i]);
@@ -1045,7 +1042,7 @@ notmuch_new_command (notmuch_config_t *config, int argc, char *argv[])
 	    }
 
 	    if (notmuch_database_dump (notmuch, backup_name, "",
-				       DUMP_FORMAT_BATCH_TAG, TRUE)) {
+				       DUMP_FORMAT_BATCH_TAG, DUMP_INCLUDE_DEFAULT, TRUE)) {
 		fprintf (stderr, "Backup failed. Aborting upgrade.");
 		return EXIT_FAILURE;
 	    }

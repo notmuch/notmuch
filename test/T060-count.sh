@@ -103,6 +103,8 @@ restore_database
 
 cat <<EOF > count-files.gdb
 set breakpoint pending on
+set logging file count-files-gdb.log
+set logging on
 break count_files
 commands
 shell cp /dev/null ${MAIL_DIR}/.notmuch/xapian/postlist.${db_ending}

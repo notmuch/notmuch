@@ -17,7 +17,7 @@
 ;; General Public License for more details.
 ;;
 ;; You should have received a copy of the GNU General Public License
-;; along with Notmuch.  If not, see <http://www.gnu.org/licenses/>.
+;; along with Notmuch.  If not, see <https://www.gnu.org/licenses/>.
 ;;
 ;; Authors: David Edmondson <dme@dme.org>
 ;;          Mark Walters <markwalters1009@gmail.com>
@@ -241,6 +241,8 @@ FUNC."
     (define-key map [remap notmuch-search] 'notmuch-tree-to-search)
     ;; Override because we want to close message pane first.
     (define-key map [remap notmuch-mua-new-mail] (notmuch-tree-close-message-pane-and #'notmuch-mua-new-mail))
+    ;; Override because we want to close message pane first.
+    (define-key map [remap notmuch-jump-search] (notmuch-tree-close-message-pane-and #'notmuch-jump-search))
 
     (define-key map "S" 'notmuch-search-from-tree-current-query)
 
@@ -249,6 +251,7 @@ FUNC."
     (define-key map "w" 'notmuch-show-save-attachments)
     (define-key map "v" 'notmuch-show-view-all-mime-parts)
     (define-key map "c" 'notmuch-show-stash-map)
+    (define-key map "b" 'notmuch-show-resend-message)
 
     ;; these apply to the message pane
     (define-key map (kbd "M-TAB") (notmuch-tree-to-message-pane #'notmuch-show-previous-button))
@@ -280,7 +283,7 @@ FUNC."
     (define-key map "+" 'notmuch-tree-add-tag)
     (define-key map "*" 'notmuch-tree-tag-thread)
     (define-key map " " 'notmuch-tree-scroll-or-next)
-    (define-key map "b" 'notmuch-tree-scroll-message-window-back)
+    (define-key map (kbd "DEL") 'notmuch-tree-scroll-message-window-back)
     map))
 (fset 'notmuch-tree-mode-map notmuch-tree-mode-map)
 
@@ -803,7 +806,7 @@ This function inserts a collection of several complete threads as
 passed to it by notmuch-tree-process-filter."
   (mapc 'notmuch-tree-insert-forest-thread forest))
 
-(defun notmuch-tree-mode ()
+(define-derived-mode notmuch-tree-mode fundamental-mode "notmuch-tree"
   "Major mode displaying messages (as opposed to threads) of of a notmuch search.
 
 This buffer contains the results of a \"notmuch tree\" of your
@@ -817,12 +820,7 @@ Complete list of currently available key bindings:
 
 \\{notmuch-tree-mode-map}"
 
-  (interactive)
-  (kill-all-local-variables)
   (setq notmuch-buffer-refresh-function #'notmuch-tree-refresh-view)
-  (use-local-map notmuch-tree-mode-map)
-  (setq major-mode 'notmuch-tree-mode
-	mode-name "notmuch-tree")
   (hl-line-mode 1)
   (setq buffer-read-only t
 	truncate-lines t))

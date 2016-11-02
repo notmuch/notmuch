@@ -10,7 +10,7 @@ MEMORY_TEST_SCRIPT := ${dir}/notmuch-memory-test
 CORPUS_NAME := notmuch-email-corpus-$(PERFTEST_VERSION).tar.xz
 TXZFILE := ${dir}/download/${CORPUS_NAME}
 SIGFILE := ${TXZFILE}.asc
-DEFAULT_URL :=  http://notmuchmail.org/releases/${CORPUS_NAME}
+DEFAULT_URL :=  https://notmuchmail.org/releases/${CORPUS_NAME}
 
 perf-test: time-test memory-test
 
@@ -32,7 +32,7 @@ setup-perf-test: $(TXZFILE)
 $(TXZFILE):
 	@printf "\nPlease download ${TXZFILE} using:\n\n"
 	@printf "\t%% make download-corpus\n\n"
-	@echo or see http://notmuchmail.org/corpus for download locations
+	@echo or see https://notmuchmail.org/corpus for download locations
 	@echo
 	@false
 

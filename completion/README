@@ -9,7 +9,7 @@ notmuch-completion.bash
   bash-completion package [1] version 2.0, which depends on bash
   version 3.2 or later.
 
-  [1] http://bash-completion.alioth.debian.org/
+  [1] https://github.com/scop/bash-completion
 
 notmuch-completion.zsh
 

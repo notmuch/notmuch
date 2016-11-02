@@ -15,7 +15,7 @@
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with this program.  If not, see http://www.gnu.org/licenses/ .
+# along with this program.  If not, see https://www.gnu.org/licenses/ .
 #
 # Authors: Jani Nikula <jani@nikula.org>
 #
@@ -39,8 +39,10 @@ USE_EMACSCLIENT=
 AUTO_DAEMON=
 CREATE_FRAME=
 
+escape -v pwd "$PWD"
+
 # The crux of it all: construct an elisp progn and eval it.
-ELISP="(prog1 'done (require 'notmuch) (notmuch-mua-new-mail)"
+ELISP="(prog1 'done (require 'notmuch) (cd \"$pwd\") (notmuch-mua-new-mail)"
 
 # Short options compatible with mutt(1).
 while getopts :s:c:b:i:h opt; do
@@ -95,7 +97,7 @@ while getopts :s:c:b:i:h opt; do
 	    ELISP="${ELISP} (message-goto-bcc) (insert \"${OPTARG}, \")"
 	    ;;
 	--body|i)
-	    ELISP="${ELISP} (message-goto-body) (cd \"${PWD}\") (insert-file \"${OPTARG}\")"
+	    ELISP="${ELISP} (message-goto-body) (insert-file \"${OPTARG}\")"
 	    ;;
 	--print)
 	    PRINT_ONLY=1
@@ -132,7 +134,7 @@ done
 
 # Kill the terminal/frame if we're creating one.
 if [ -z "$USE_EMACSCLIENT" -o -n "$CREATE_FRAME" -o -n "$NO_WINDOW" ]; then
-    ELISP="${ELISP} (setq message-exit-actions (list #'save-buffers-kill-terminal))"
+    ELISP="${ELISP} (message-add-action #'save-buffers-kill-terminal 'exit)"
 fi
 
 # End progn.

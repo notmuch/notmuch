@@ -13,7 +13,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/ .
+ * along with this program.  If not, see https://www.gnu.org/licenses/ .
  *
  * Author: Carl Worth <cworth@cworth.org>
  */
@@ -227,6 +227,9 @@ notmuch_directory_set_mtime (notmuch_directory_t *directory,
 				   Xapian::sortable_serialise (mtime));
 
 	db->replace_document (directory->document_id, directory->doc);
+
+	directory->mtime = mtime;
+
     } catch (const Xapian::Error &error) {
 	_notmuch_database_log (notmuch,
 		 "A Xapian exception occurred setting directory mtime: %s.\n",

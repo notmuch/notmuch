@@ -15,7 +15,7 @@
 ;; General Public License for more details.
 ;;
 ;; You should have received a copy of the GNU General Public License
-;; along with Notmuch.  If not, see <http://www.gnu.org/licenses/>.
+;; along with Notmuch.  If not, see <https://www.gnu.org/licenses/>.
 ;;
 ;; Authors: Carl Worth <cworth@cworth.org>
 ;; Homepage: https://notmuchmail.org/
@@ -26,7 +26,7 @@
 ;;
 ;; You will first need to have the notmuch program installed and have a
 ;; notmuch database built in order to use this. See
-;; http://notmuchmail.org for details.
+;; https://notmuchmail.org for details.
 ;;
 ;; To install this software, copy it to a directory that is on the
 ;; `load-path' variable within emacs (a good candidate is
@@ -48,7 +48,7 @@
 ;;
 ;; Have fun, and let us know if you have any comment, questions, or
 ;; kudos: Notmuch list <notmuch@notmuchmail.org> (subscription is not
-;; required, but is available from http://notmuchmail.org).
+;; required, but is available from https://notmuchmail.org).
 
 ;;; Code:
 
@@ -311,7 +311,27 @@ there will be called at other points of notmuch execution."
   :group 'notmuch-search
   :group 'notmuch-faces)
 
-(defun notmuch-search-mode ()
+(defface notmuch-search-flagged-face
+  '((t
+     (:foreground "blue")))
+  "Face used in search mode face for flagged threads.
+
+This face is the default value for the \"flagged\" tag in
+`notmuch-search-line-faces`."
+  :group 'notmuch-search
+  :group 'notmuch-faces)
+
+(defface notmuch-search-unread-face
+  '((t
+     (:weight bold)))
+  "Face used in search mode for unread threads.
+
+This face is the default value for the \"unread\" tag in
+`notmuch-search-line-faces`."
+  :group 'notmuch-search
+  :group 'notmuch-faces)
+
+(define-derived-mode notmuch-search-mode fundamental-mode "notmuch-search"
   "Major mode displaying results of a notmuch search.
 
 This buffer contains the results of a \"notmuch search\" of your
@@ -341,8 +361,6 @@ new, global search.
 Complete list of currently available key bindings:
 
 \\{notmuch-search-mode-map}"
-  (interactive)
-  (kill-all-local-variables)
   (make-local-variable 'notmuch-search-query-string)
   (make-local-variable 'notmuch-search-oldest-first)
   (make-local-variable 'notmuch-search-target-thread)
@@ -350,10 +368,7 @@ Complete list of currently available key bindings:
   (setq notmuch-buffer-refresh-function #'notmuch-search-refresh-view)
   (set (make-local-variable 'scroll-preserve-screen-position) t)
   (add-to-invisibility-spec (cons 'ellipsis t))
-  (use-local-map notmuch-search-mode-map)
   (setq truncate-lines t)
-  (setq major-mode 'notmuch-search-mode
-	mode-name "notmuch-search")
   (setq buffer-read-only t))
 
 (defun notmuch-search-get-result (&optional pos)
@@ -654,9 +669,19 @@ of the result."
 		  (goto-char (point-min))
 		  (forward-line (1- notmuch-search-target-line)))))))))
 
-(defcustom notmuch-search-line-faces '(("unread" :weight bold)
-				       ("flagged" :foreground "blue"))
-  "Tag/face mapping for line highlighting in notmuch-search.
+(define-widget 'notmuch--custom-face-edit 'lazy
+  "Custom face edit with a tag Edit Face"
+  ;; I could not persuage custom-face-edit to respect the :tag
+  ;; property so create a widget specially
+  :tag "Manually specify face"
+  :type 'custom-face-edit)
+
+(defcustom notmuch-search-line-faces
+  '(("unread" . notmuch-search-unread-face)
+    ("flagged" . notmuch-search-flagged-face))
+  "Alist of tags to faces for line highlighting in notmuch-search.
+Each element looks like (TAG . FACE).
+A thread with TAG will have FACE applied.
 
 Here is an example of how to color search results based on tags.
  (the following text would be placed in your ~/.emacs file):
@@ -665,23 +690,26 @@ Here is an example of how to color search results based on tags.
                                    (\"deleted\" . (:foreground \"red\"
 						  :background \"blue\"))))
 
-The attributes defined for matching tags are merged, with earlier
-attributes overriding later. A message having both \"deleted\"
-and \"unread\" tags with the above settings would have a green
-foreground and blue background."
-  :type '(alist :key-type (string) :value-type (custom-face-edit))
+The FACE must be a face name (a symbol or string), a property
+list of face attributes, or a list of these.  The faces for
+matching tags are merged, with earlier attributes overriding
+later. A message having both \"deleted\" and \"unread\" tags with
+the above settings would have a green foreground and blue
+background."
+  :type '(alist :key-type (string)
+		:value-type (radio (face :tag "Face name")
+				    (notmuch--custom-face-edit)))
   :group 'notmuch-search
   :group 'notmuch-faces)
 
 (defun notmuch-search-color-line (start end line-tag-list)
   "Colorize lines in `notmuch-show' based on tags."
-  (mapc (lambda (elem)
-	  (let ((tag (car elem))
-		(attributes (cdr elem)))
-	    (when (member tag line-tag-list)
-	      (notmuch-apply-face nil attributes nil start end))))
-	;; Reverse the list so earlier entries take precedence
-	(reverse notmuch-search-line-faces)))
+  ;; Reverse the list so earlier entries take precedence
+  (dolist (elem (reverse notmuch-search-line-faces))
+    (let ((tag (car elem))
+	  (face (cdr elem)))
+      (when (member tag line-tag-list)
+	(notmuch-apply-face nil face nil start end)))))
 
 (defun notmuch-search-author-propertize (authors)
   "Split `authors' into matching and non-matching authors and

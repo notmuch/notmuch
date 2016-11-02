@@ -13,7 +13,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/ .
+ * along with this program.  If not, see https://www.gnu.org/licenses/ .
  *
  * Author: Carl Worth <cworth@cworth.org>
  */
@@ -220,12 +220,6 @@ _notmuch_query_search_documents (notmuch_query_t *query,
 	Xapian::Query string_query, final_query, exclude_query;
 	Xapian::MSet mset;
 	Xapian::MSetIterator iterator;
-	unsigned int flags = (Xapian::QueryParser::FLAG_BOOLEAN |
-			      Xapian::QueryParser::FLAG_PHRASE |
-			      Xapian::QueryParser::FLAG_LOVEHATE |
-			      Xapian::QueryParser::FLAG_BOOLEAN_ANY_CASE |
-			      Xapian::QueryParser::FLAG_WILDCARD |
-			      Xapian::QueryParser::FLAG_PURE_NOT);
 
 	if (strcmp (query_string, "") == 0 ||
 	    strcmp (query_string, "*") == 0)
@@ -233,7 +227,7 @@ _notmuch_query_search_documents (notmuch_query_t *query,
 	    final_query = mail_query;
 	} else {
 	    string_query = notmuch->query_parser->
-		parse_query (query_string, flags);
+		parse_query (query_string, NOTMUCH_QUERY_PARSER_FLAGS);
 	    final_query = Xapian::Query (Xapian::Query::OP_AND,
 					 mail_query, string_query);
 	}
@@ -282,7 +276,7 @@ _notmuch_query_search_documents (notmuch_query_t *query,
 	case NOTMUCH_SORT_MESSAGE_ID:
 	    enquire.set_sort_by_value (NOTMUCH_VALUE_MESSAGE_ID, FALSE);
 	    break;
-        case NOTMUCH_SORT_UNSORTED:
+	case NOTMUCH_SORT_UNSORTED:
 	    break;
 	}
 
@@ -305,9 +299,10 @@ _notmuch_query_search_documents (notmuch_query_t *query,
 
     } catch (const Xapian::Error &error) {
 	_notmuch_database_log (notmuch,
-			       "A Xapian exception occurred performing query: %s\n"
+			       "A Xapian exception occurred performing query: %s\n",
+			       error.get_msg().c_str());
+	_notmuch_database_log_append (notmuch,
 			       "Query string was: %s\n",
-			       error.get_msg().c_str(),
 			       query->query_string);
 
 	notmuch->exception_reported = TRUE;
@@ -418,7 +413,7 @@ _notmuch_doc_id_set_contains (notmuch_doc_id_set_t *doc_ids,
 
 void
 _notmuch_doc_id_set_remove (notmuch_doc_id_set_t *doc_ids,
-                            unsigned int doc_id)
+			    unsigned int doc_id)
 {
     if (doc_id < doc_ids->bound)
 	doc_ids->bitmap[DOCIDSET_WORD(doc_id)] &= ~(1 << DOCIDSET_BIT(doc_id));
@@ -579,12 +574,6 @@ _notmuch_query_count_documents (notmuch_query_t *query, const char *type, unsign
 						   type));
 	Xapian::Query string_query, final_query, exclude_query;
 	Xapian::MSet mset;
-	unsigned int flags = (Xapian::QueryParser::FLAG_BOOLEAN |
-			      Xapian::QueryParser::FLAG_PHRASE |
-			      Xapian::QueryParser::FLAG_LOVEHATE |
-			      Xapian::QueryParser::FLAG_BOOLEAN_ANY_CASE |
-			      Xapian::QueryParser::FLAG_WILDCARD |
-			      Xapian::QueryParser::FLAG_PURE_NOT);
 
 	if (strcmp (query_string, "") == 0 ||
 	    strcmp (query_string, "*") == 0)
@@ -592,7 +581,7 @@ _notmuch_query_count_documents (notmuch_query_t *query, const char *type, unsign
 	    final_query = mail_query;
 	} else {
 	    string_query = notmuch->query_parser->
-		parse_query (query_string, flags);
+		parse_query (query_string, NOTMUCH_QUERY_PARSER_FLAGS);
 	    final_query = Xapian::Query (Xapian::Query::OP_AND,
 					 mail_query, string_query);
 	}
@@ -625,10 +614,11 @@ _notmuch_query_count_documents (notmuch_query_t *query, const char *type, unsign
 
     } catch (const Xapian::Error &error) {
 	_notmuch_database_log (notmuch,
-			       "A Xapian exception occurred performing query: %s\n"
-			       "Query string was: %s\n",
-			       error.get_msg().c_str(),
-			       query->query_string);
+			       "A Xapian exception occurred performing query: %s\n",
+			       error.get_msg().c_str());
+	_notmuch_database_log_append (notmuch,
+				      "Query string was: %s\n",
+				      query->query_string);
 	return NOTMUCH_STATUS_XAPIAN_EXCEPTION;
     }
 

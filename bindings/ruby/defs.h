@@ -13,7 +13,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/ .
+ * along with this program.  If not, see https://www.gnu.org/licenses/ .
  *
  * Author: Ali Polatel <alip@exherbo.org>
  */
@@ -176,6 +176,9 @@ notmuch_rb_database_find_message (VALUE self, VALUE idv);
 
 VALUE
 notmuch_rb_database_find_message_by_filename (VALUE self, VALUE pathv);
+
+VALUE
+notmuch_rb_database_get_all_tags (VALUE self);
 
 VALUE
 notmuch_rb_database_query_create (VALUE self, VALUE qstrv);

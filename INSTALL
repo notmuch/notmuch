@@ -30,7 +30,7 @@ Talloc, and zlib which are each described below:
 	It provides all the real machinery of indexing and searching,
 	(including the very nice parsing of the query string).
 
-	Xapian is available from http://xapian.org
+	Xapian is available from https://xapian.org
 
 	Note: Notmuch will work best with Xapian 1.0.18 (or later) or
 	Xapian 1.1.4 (or later). Previous versions of Xapian (whether
@@ -58,7 +58,7 @@ Talloc, and zlib which are each described below:
 	made development of Notmuch much easier and much less prone to
 	memory leaks.
 
-	Talloc is available from http://talloc.samba.org/
+	Talloc is available from https://talloc.samba.org/
 
 	zlib
 	----

@@ -1,5 +1,6 @@
 #
 # Copyright (c) 2005 Junio C Hamano
+# Copyright (c) 2010 Notmuch Developers
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -12,10 +13,16 @@
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with this program.  If not, see http://www.gnu.org/licenses/ .
+# along with this program.  If not, see https://www.gnu.org/licenses/ .
 
 # This file contains common code to be used by both the regular
 # (correctness) tests and the performance tests.
+
+# test-lib.sh defines die() which echoes to nonstandard fd where
+# output was redirected earlier in that file. If test-lib.sh is not
+# loaded, neither this redirection nor die() function were defined.
+#
+type die >/dev/null 2>&1 || die () { echo "$@" >&2; exit 1; }
 
 find_notmuch_path ()
 {
@@ -50,6 +57,11 @@ restore_database () {
 # test/ subdirectory and are run in 'trash directory' subdirectory.
 TEST_DIRECTORY=$(pwd -P)
 notmuch_path=`find_notmuch_path "$TEST_DIRECTORY"`
+
+# Prepend $TEST_DIRECTORY/../lib to LD_LIBRARY_PATH, to make tests work
+# on systems where ../notmuch depends on LD_LIBRARY_PATH.
+LD_LIBRARY_PATH=${TEST_DIRECTORY%/*}/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}
+export LD_LIBRARY_PATH
 
 # configure output
 . $notmuch_path/sh.config || exit 1

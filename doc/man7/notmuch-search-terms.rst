@@ -56,6 +56,10 @@ indicate user-supplied values):
 
 -  lastmod:<initial-revision>..<final-revision>
 
+-  query:<name>
+
+-  property:<key>=<value>
+
 The **from:** prefix is used to match the name or address of the sender
 of an email message.
 
@@ -131,6 +135,16 @@ database revision number of when messages were last modified (tags
 were added/removed or filenames changed).  This is usually used in
 conjunction with the **--uuid** argument to **notmuch search**
 to find messages that have changed since an earlier query.
+
+The **query:** prefix allows queries to refer to previously saved
+queries added with **notmuch-config(1)**. Named queries are only
+available if notmuch is built with **Xapian Field Processors** (see
+below).
+
+The **property:** prefix searches for messages with a particular
+<key>=<value> property pair. Properties are used internally by notmuch
+(and extensions) to add metadata to messages. A given key can be
+present on a given message with several different values.
 
 Operators
 ---------
@@ -208,15 +222,11 @@ Boolean and Probabilistic Prefixes
 Xapian (and hence notmuch) prefixes are either **boolean**, supporting
 exact matches like "tag:inbox"  or **probabilistic**, supporting a more flexible **term** based searching. The prefixes currently supported by notmuch are as follows.
 
-+------------------+-----------------------+
-|Boolean           |Probabilistic          |
-+------------------+-----------------------+
-| **tag:** **id:** | **from:** **to:**     |
-|**thread:**       |**subject:**           |
-|**folder:**       |**attachment:**        |
-|**path:**         |**mimetype:**          |
-|                  |                       |
-+------------------+-----------------------+
+
+Boolean
+   **tag:**, **id:**, **thread:**, **folder:**, **path:**, **property:**
+Probabilistic
+   **from:**, **to:**, **subject:**, **attachment:**, **mimetype:**
 
 Terms and phrases
 -----------------
@@ -281,9 +291,10 @@ matches from the beginning of January to the end of February.
 date:<expr>..! can be used as a shorthand for date:<expr>..<expr>. The
 expansion takes place before interpretation, and thus, for example,
 date:monday..! matches from the beginning of Monday until the end of
-Monday. (Note that entering date:<expr> without "..", for example
-date:yesterday, won't work, as it's not interpreted as a range
-expression at all. Again, use date:yesterday..!)
+Monday.
+With **Xapian Field Processor** support (see below), non-range
+date queries such as date:yesterday will work, but otherwise
+will give unexpected results; if in doubt use date:yesterday..!
 
 Currently, we do not support spaces in range expressions. You can
 replace the spaces with '\_', or (in most cases) '-', or (in some cases)
@@ -369,6 +380,22 @@ Time zones
 -  (+\|-)HH[MM]
 
 Some time zone codes, e.g. UTC, EET.
+
+XAPIAN FIELD PROCESSORS
+=======================
+
+Certain optional features of the notmuch query processor rely on the
+presence of the Xapian field processor API. You can determine if your
+notmuch was built against a sufficiently recent version of Xapian by running
+
+::
+
+  % notmuch config get built_with.field_processor
+
+Currently the following features require field processor support:
+
+- non-range date queries, e.g. "date:today"
+- named queries e.g. "query:my_special_query"
 
 SEE ALSO
 ========

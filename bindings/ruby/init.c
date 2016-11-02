@@ -13,7 +13,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/ .
+ * along with this program.  If not, see https://www.gnu.org/licenses/ .
  *
  * Author: Ali Polatel <alip@exherbo.org>
  */
@@ -229,6 +229,7 @@ Init_notmuch (void)
 		      notmuch_rb_database_find_message, 1); /* in database.c */
     rb_define_method (notmuch_rb_cDatabase, "find_message_by_filename",
 		      notmuch_rb_database_find_message_by_filename, 1); /* in database.c */
+    rb_define_method (notmuch_rb_cDatabase, "all_tags", notmuch_rb_database_get_all_tags, 0); /* in database.c */
     rb_define_method (notmuch_rb_cDatabase, "query", notmuch_rb_database_query_create, 1); /* in database.c */
 
     /*

@@ -109,12 +109,14 @@ http://notmuchmail.org/mailman/listinfo/notmuch
 	    To: notmuch@notmuchmail.org
 	    Date: Wed, 18 Nov 2009 02:50:48 +0600
 
-	    Twas brillig at 15:33:01 17.11.2009 UTC-05 when lars at seas.harvard.edu
-	    did gyre and gimble:
+	    Twas brillig at 15:33:01 17.11.2009 UTC-05 when lars at
+	    seas.harvard.edu did gyre and gimble:
 
 	     LK> Is the list archived anywhere?  The obvious archives
-	     LK> (http://notmuchmail.org/pipermail/notmuch/) aren't available, and I
-	     LK> think I subscribed too late to get the patch (I only just saw the
+	     LK> (http://notmuchmail.org/pipermail/notmuch/) aren't available,
+	    and I
+	     LK> think I subscribed too late to get the patch (I only just saw
+	    the
 	     LK> discussion about it).
 
 	     LK> It doesn't look like the patch is in git yet.
@@ -141,7 +143,8 @@ http://notmuchmail.org/mailman/listinfo/notmuch
 	    seas.harvard.edu> wrote:
 	    > > See the patch just posted here.
 
-	    I've also pushed a slightly more complicated (and complete) fix to my
+	    I've also pushed a slightly more complicated (and complete) fix to
+	    my
 	    private notmuch repository
 
 	    git://keithp.com/git/notmuch
@@ -164,10 +167,12 @@ http://notmuchmail.org/mailman/listinfo/notmuch
 		[ multipart/signed ]
 		[ Unknown signature status ]
 		[ text/plain ]
-		> I've also pushed a slightly more complicated (and complete) fix to my
+		> I've also pushed a slightly more complicated (and complete)
+		> fix to my
 		> private notmuch repository
 
-		The version of lib/messages.cc in your repo doesn't build because it's
+		The version of lib/messages.cc in your repo doesn't build
+		because it's
 		missing "#include <stdint.h>" (for the uint32_t on line 466).
 
 		[ 4-line signature. Click/Enter to show. ]

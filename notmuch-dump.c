@@ -13,7 +13,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/ .
+ * along with this program.  If not, see https://www.gnu.org/licenses/ .
  *
  * Author: Carl Worth <cworth@cworth.org>
  */
@@ -23,15 +23,209 @@
 #include "string-util.h"
 #include <zlib.h>
 
+static int
+database_dump_config (notmuch_database_t *notmuch, gzFile output)
+{
+    notmuch_config_list_t *list;
+    int ret = EXIT_FAILURE;
+    char *buffer = NULL;
+    size_t buffer_size = 0;
+
+    if (print_status_database ("notmuch dump", notmuch,
+			       notmuch_database_get_config_list (notmuch, NULL, &list)))
+	goto DONE;
+
+    for (; notmuch_config_list_valid (list); notmuch_config_list_move_to_next (list)) {
+	if (hex_encode (notmuch, notmuch_config_list_key (list),
+			&buffer, &buffer_size) != HEX_SUCCESS) {
+	    fprintf (stderr, "Error: failed to hex-encode config key %s\n",
+		     notmuch_config_list_key (list));
+	    goto DONE;
+	}
+	gzprintf (output, "#@ %s", buffer);
+
+	if (hex_encode (notmuch, notmuch_config_list_value (list),
+			&buffer, &buffer_size) != HEX_SUCCESS) {
+	    fprintf (stderr, "Error: failed to hex-encode config value %s\n",
+		     notmuch_config_list_value (list) );
+	    goto DONE;
+	}
+
+	gzprintf (output, " %s\n", buffer);
+    }
+
+    ret = EXIT_SUCCESS;
+
+ DONE:
+    if (list)
+	notmuch_config_list_destroy (list);
+
+    if (buffer)
+	talloc_free (buffer);
+
+    return ret;
+}
+
+static void
+print_dump_header (gzFile output, int output_format, int include)
+{
+    const char *sep = "";
+
+    gzprintf (output, "#notmuch-dump %s:%d ",
+	      (output_format == DUMP_FORMAT_SUP) ? "sup" : "batch-tag",
+	      NOTMUCH_DUMP_VERSION);
+
+    if (include & DUMP_INCLUDE_CONFIG) {
+	gzputs (output, "config");
+	sep = ",";
+    }
+    if (include & DUMP_INCLUDE_PROPERTIES) {
+	gzprintf (output, "%sproperties", sep);
+	sep = ",";
+    }
+    if (include & DUMP_INCLUDE_TAGS) {
+	gzprintf (output, "%sproperties", sep);
+    }
+    gzputs (output, "\n");
+}
+
+static int
+dump_properties_message (void *ctx,
+			 notmuch_message_t *message,
+			 gzFile output,
+			 char **buffer_p, size_t *size_p)
+{
+    const char *message_id;
+    notmuch_message_properties_t *list;
+    notmuch_bool_t first = TRUE;
+
+    message_id = notmuch_message_get_message_id (message);
+
+    if (strchr (message_id, '\n')) {
+	fprintf (stderr, "Warning: skipping message id containing line break: \"%s\"\n", message_id);
+	return 0;
+    }
+
+    for (list = notmuch_message_get_properties (message, "", FALSE);
+	 notmuch_message_properties_valid (list); notmuch_message_properties_move_to_next (list)) {
+	const char *key, *val;
+
+	if (first) {
+	    if (hex_encode (ctx, message_id, buffer_p, size_p) != HEX_SUCCESS) {
+		fprintf (stderr, "Error: failed to hex-encode message-id %s\n", message_id);
+		return 1;
+	    }
+	    gzprintf (output, "#= %s", *buffer_p);
+	    first = FALSE;
+	}
+
+	key = notmuch_message_properties_key (list);
+	val = notmuch_message_properties_value (list);
+
+	if (hex_encode (ctx, key, buffer_p, size_p) != HEX_SUCCESS) {
+	    fprintf (stderr, "Error: failed to hex-encode key %s\n", key);
+	    return 1;
+	}
+	gzprintf (output, " %s", *buffer_p);
+
+	if (hex_encode (ctx, val, buffer_p, size_p) != HEX_SUCCESS) {
+	    fprintf (stderr, "Error: failed to hex-encode value %s\n", val);
+	    return 1;
+	}
+	gzprintf (output, "=%s", *buffer_p);
+    }
+    notmuch_message_properties_destroy (list);
+
+    if (! first)
+	gzprintf (output, "\n", *buffer_p);
+
+    return 0;
+}
+
+static int
+dump_tags_message (void *ctx,
+		   notmuch_message_t *message, int output_format,
+		   gzFile output,
+		   char **buffer_p, size_t *size_p)
+{
+    int first = 1;
+    const char *message_id;
+
+    message_id = notmuch_message_get_message_id (message);
+
+    if (output_format == DUMP_FORMAT_BATCH_TAG &&
+	strchr (message_id, '\n')) {
+	/* This will produce a line break in the output, which
+	 * would be difficult to handle in tools.  However, it's
+	 * also impossible to produce an email containing a line
+	 * break in a message ID because of unfolding, so we can
+	 * safely disallow it. */
+	fprintf (stderr, "Warning: skipping message id containing line break: \"%s\"\n", message_id);
+	return EXIT_SUCCESS;
+    }
+
+    if (output_format == DUMP_FORMAT_SUP) {
+	gzprintf (output, "%s (", message_id);
+    }
+
+    for (notmuch_tags_t *tags = notmuch_message_get_tags (message);
+	 notmuch_tags_valid (tags);
+	 notmuch_tags_move_to_next (tags)) {
+	const char *tag_str = notmuch_tags_get (tags);
+
+	if (! first)
+	    gzputs (output, " ");
+
+	first = 0;
+
+	if (output_format == DUMP_FORMAT_SUP) {
+	    gzputs (output, tag_str);
+	} else {
+	    if (hex_encode (ctx, tag_str,
+			    buffer_p, size_p) != HEX_SUCCESS) {
+		fprintf (stderr, "Error: failed to hex-encode tag %s\n",
+			 tag_str);
+		return EXIT_FAILURE;
+	    }
+	    gzprintf (output, "+%s", *buffer_p);
+	}
+    }
+
+    if (output_format == DUMP_FORMAT_SUP) {
+	gzputs (output, ")\n");
+    } else {
+	if (make_boolean_term (ctx, "id", message_id,
+			       buffer_p, size_p)) {
+	    fprintf (stderr, "Error quoting message id %s: %s\n",
+		     message_id, strerror (errno));
+	    return EXIT_FAILURE;
+	}
+	gzprintf (output, " -- %s\n", *buffer_p);
+    }
+    return EXIT_SUCCESS;
+}
 
 static int
 database_dump_file (notmuch_database_t *notmuch, gzFile output,
-		    const char *query_str, int output_format)
+		    const char *query_str, int output_format, int include)
 {
     notmuch_query_t *query;
     notmuch_messages_t *messages;
     notmuch_message_t *message;
-    notmuch_tags_t *tags;
+    notmuch_status_t status;
+    char *buffer = NULL;
+    size_t buffer_size = 0;
+
+    print_dump_header (output, output_format, include);
+
+    if (include & DUMP_INCLUDE_CONFIG) {
+	if (print_status_database ("notmuch dump", notmuch,
+				   database_dump_config(notmuch,output)))
+	    return EXIT_FAILURE;
+    }
+
+    if (! (include & (DUMP_INCLUDE_TAGS | DUMP_INCLUDE_PROPERTIES)))
+	return EXIT_SUCCESS;
 
     if (! query_str)
 	query_str = "";
@@ -46,10 +240,6 @@ database_dump_file (notmuch_database_t *notmuch, gzFile output,
      */
     notmuch_query_set_sort (query, NOTMUCH_SORT_UNSORTED);
 
-    char *buffer = NULL;
-    size_t buffer_size = 0;
-    notmuch_status_t status;
-
     status = notmuch_query_search_messages_st (query, &messages);
     if (print_status_query ("notmuch dump", query, status))
 	return EXIT_FAILURE;
@@ -57,62 +247,17 @@ database_dump_file (notmuch_database_t *notmuch, gzFile output,
     for (;
 	 notmuch_messages_valid (messages);
 	 notmuch_messages_move_to_next (messages)) {
-	int first = 1;
-	const char *message_id;
 
 	message = notmuch_messages_get (messages);
-	message_id = notmuch_message_get_message_id (message);
 
-	if (output_format == DUMP_FORMAT_BATCH_TAG &&
-	    strchr (message_id, '\n')) {
-	    /* This will produce a line break in the output, which
-	     * would be difficult to handle in tools.  However, it's
-	     * also impossible to produce an email containing a line
-	     * break in a message ID because of unfolding, so we can
-	     * safely disallow it. */
-	    fprintf (stderr, "Warning: skipping message id containing line break: \"%s\"\n", message_id);
-	    notmuch_message_destroy (message);
-	    continue;
-	}
+	if (dump_tags_message (notmuch, message, output_format, output,
+			       &buffer, &buffer_size))
+	    return EXIT_FAILURE;
 
-	if (output_format == DUMP_FORMAT_SUP) {
-	    gzprintf (output, "%s (", message_id);
-	}
-
-	for (tags = notmuch_message_get_tags (message);
-	     notmuch_tags_valid (tags);
-	     notmuch_tags_move_to_next (tags)) {
-	    const char *tag_str = notmuch_tags_get (tags);
-
-	    if (! first)
-		gzputs (output, " ");
-
-	    first = 0;
-
-	    if (output_format == DUMP_FORMAT_SUP) {
-		gzputs (output, tag_str);
-	    } else {
-		if (hex_encode (notmuch, tag_str,
-				&buffer, &buffer_size) != HEX_SUCCESS) {
-		    fprintf (stderr, "Error: failed to hex-encode tag %s\n",
-			     tag_str);
-		    return EXIT_FAILURE;
-		}
-		gzprintf (output, "+%s", buffer);
-	    }
-	}
-
-	if (output_format == DUMP_FORMAT_SUP) {
-	    gzputs (output, ")\n");
-	} else {
-	    if (make_boolean_term (notmuch, "id", message_id,
-				   &buffer, &buffer_size)) {
-		    fprintf (stderr, "Error quoting message id %s: %s\n",
-			     message_id, strerror (errno));
-		    return EXIT_FAILURE;
-	    }
-	    gzprintf (output, " -- %s\n", buffer);
-	}
+	if ((include & DUMP_INCLUDE_PROPERTIES) &&
+	    dump_properties_message (notmuch, message, output,
+				     &buffer, &buffer_size))
+	    return EXIT_FAILURE;
 
 	notmuch_message_destroy (message);
     }
@@ -130,6 +275,7 @@ notmuch_database_dump (notmuch_database_t *notmuch,
 		       const char *output_file_name,
 		       const char *query_str,
 		       dump_format_t output_format,
+		       dump_include_t include,
 		       notmuch_bool_t gzip_output)
 {
     gzFile output = NULL;
@@ -164,7 +310,7 @@ notmuch_database_dump (notmuch_database_t *notmuch,
 	goto DONE;
     }
 
-    ret = database_dump_file (notmuch, output, query_str, output_format);
+    ret = database_dump_file (notmuch, output, query_str, output_format, include);
     if (ret) goto DONE;
 
     ret = gzflush (output, Z_FINISH);
@@ -226,6 +372,7 @@ notmuch_dump_command (notmuch_config_t *config, int argc, char *argv[])
     int opt_index;
 
     int output_format = DUMP_FORMAT_BATCH_TAG;
+    int include = 0;
     notmuch_bool_t gzip_output = 0;
 
     notmuch_opt_desc_t options[] = {
@@ -233,6 +380,10 @@ notmuch_dump_command (notmuch_config_t *config, int argc, char *argv[])
 	  (notmuch_keyword_t []){ { "sup", DUMP_FORMAT_SUP },
 				  { "batch-tag", DUMP_FORMAT_BATCH_TAG },
 				  { 0, 0 } } },
+	{ NOTMUCH_OPT_KEYWORD_FLAGS, &include, "include", 'I',
+	  (notmuch_keyword_t []){ { "config", DUMP_INCLUDE_CONFIG },
+				  { "properties", DUMP_INCLUDE_PROPERTIES },
+				  { "tags", DUMP_INCLUDE_TAGS} } },
 	{ NOTMUCH_OPT_STRING, &output_file_name, "output", 'o', 0  },
 	{ NOTMUCH_OPT_BOOLEAN, &gzip_output, "gzip", 'z', 0 },
 	{ NOTMUCH_OPT_INHERIT, (void *) &notmuch_shared_options, NULL, 0, 0 },
@@ -245,6 +396,9 @@ notmuch_dump_command (notmuch_config_t *config, int argc, char *argv[])
 
     notmuch_process_shared_options (argv[0]);
 
+    if (include == 0)
+	include = DUMP_INCLUDE_CONFIG | DUMP_INCLUDE_TAGS | DUMP_INCLUDE_PROPERTIES;
+
     if (opt_index < argc) {
 	query_str = query_string_from_args (notmuch, argc - opt_index, argv + opt_index);
 	if (query_str == NULL) {
@@ -254,7 +408,7 @@ notmuch_dump_command (notmuch_config_t *config, int argc, char *argv[])
     }
 
     ret = notmuch_database_dump (notmuch, output_file_name, query_str,
-				 output_format, gzip_output);
+				 output_format, include, gzip_output);
 
     notmuch_database_destroy (notmuch);
 

@@ -1,6 +1,6 @@
 # -*- makefile -*-
 
-TEST_DATABASE_MIRROR=http://notmuchmail.org/releases/test-databases
+TEST_DATABASE_MIRROR=https://notmuchmail.org/releases/test-databases
 
 dir := test/test-databases
 

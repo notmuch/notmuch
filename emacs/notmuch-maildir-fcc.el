@@ -30,14 +30,14 @@
 (defvar notmuch-maildir-fcc-count 0)
 
 (defcustom notmuch-fcc-dirs "sent"
- "Determines the maildir directory in which to save outgoing mail.
+ "Determines the Fcc Header which says where to save outgoing mail.
 
 Three types of values are permitted:
 
 - nil: no Fcc header is added,
 
-- a string: the value of `notmuch-fcc-dirs' is the name of the
-  folder to use,
+- a string: the value of `notmuch-fcc-dirs' is the Fcc header to
+  be used.
 
 - a list: the folder is chosen based on the From address of the
   current message using a list of regular expressions and
@@ -50,12 +50,23 @@ Three types of values are permitted:
   If none of the regular expressions match the From address, no
   Fcc header will be added.
 
-In all cases, a relative FCC directory will be understood to
-specify a directory within the notmuch mail store, (as set by
-the database.path option in the notmuch configuration file).
+If `notmuch-maildir-use-notmuch-insert' is set (the default) then
+the header should be of the form \"folder +tag1 -tag2\" where
+folder is the folder (relative to the notmuch mailstore) to store
+the message in, and tag1 and tag2 are tag changes to apply to the
+stored message. This string is split using `split-string-and-unquote',
+so a folder name containing spaces can be specified by
+quoting each space with an immediately preceding backslash
+or surrounding the entire folder name in double quotes.
 
-You will be prompted to create the directory if it does not exist
-yet when sending a mail."
+If `notmuch-maildir-use-notmuch-insert' is nil then the Fcc
+header should be the directory where the message should be
+saved. A relative directory will be understood to specify a
+directory within the notmuch mail store, (as set by the
+database.path option in the notmuch configuration file).
+
+In all cases you will be prompted to create the folder or
+directory if it does not exist yet when sending a mail."
 
  :type '(choice
 	 (const :tag "No FCC header" nil)
@@ -65,11 +76,15 @@ yet when sending a mail."
  :require 'notmuch-fcc-initialization
  :group 'notmuch-send)
 
-(defun notmuch-fcc-handler (destdir)
-  "Write buffer to `destdir', marking it as sent
+(defcustom notmuch-maildir-use-notmuch-insert 't
+  "Should fcc use notmuch insert instead of simple fcc"
+  :type '(choice :tag "Fcc Method"
+		 (const :tag "Use notmuch insert" t)
+		 (const :tag "Use simple fcc" nil))
+  :group 'notmuch-send)
 
-Intended to be dynamically bound to `message-fcc-handler-function'"
-    (notmuch-maildir-fcc-write-buffer-to-maildir destdir t))
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Functions which set up the fcc header in the message buffer.
 
 (defun notmuch-fcc-header-setup ()
   "Add an Fcc header to the current message buffer.
@@ -110,27 +125,144 @@ by notmuch-mua-mail"
 	   (error "Invalid `notmuch-fcc-dirs' setting (neither string nor list)")))))
 
     (when subdir
-      (message-add-header
-       (concat "Fcc: "
-	       (file-truename
-		;; If the resulting directory is not an absolute path,
-		;; prepend the standard notmuch database path.
-		(if (= (elt subdir 0) ?/)
-		    subdir
-		  (concat (notmuch-database-path) "/" subdir)))))
-      
-      ;; finally test if fcc points to a valid maildir
-      (let ((fcc-header (message-field-value "Fcc")))
-	(unless (notmuch-maildir-fcc-dir-is-maildir-p fcc-header)
-	  (cond ((not (file-writable-p fcc-header))
-		 (error (format "No permission to create %s, which does not exist"
-				fcc-header)))
-		((y-or-n-p (format "%s is not a maildir. Create it? "
-				   fcc-header))
-		 (notmuch-maildir-fcc-create-maildir fcc-header))
-		(t
-		 (error "Message not sent"))))))))
- 
+      (if notmuch-maildir-use-notmuch-insert
+	  (notmuch-maildir-add-notmuch-insert-style-fcc-header subdir)
+	(notmuch-maildir-add-file-style-fcc-header subdir)))))
+
+(defun notmuch-maildir-add-notmuch-insert-style-fcc-header (subdir)
+  ;; Notmuch insert does not accept absolute paths, so check the user
+  ;; really want this header inserted.
+
+  (when (or (not (= (elt subdir 0) ?/))
+	    (y-or-n-p (format "Fcc header %s is an absolute path and notmuch insert is requested.\nInsert header anyway? "
+			      subdir)))
+    (message-add-header (concat "Fcc: " subdir))))
+
+(defun notmuch-maildir-add-file-style-fcc-header (subdir)
+  (message-add-header
+   (concat "Fcc: "
+	   (file-truename
+	    ;; If the resulting directory is not an absolute path,
+	    ;; prepend the standard notmuch database path.
+	    (if (= (elt subdir 0) ?/)
+		subdir
+	      (concat (notmuch-database-path) "/" subdir))))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Functions for saving a message either using notmuch insert or file
+;; fcc. First functions common to the two cases.
+
+(defmacro with-temporary-notmuch-message-buffer (&rest body)
+  "Set-up a temporary copy of the current message-mode buffer."
+  `(let ((case-fold-search t)
+	 (buf (current-buffer))
+	 (mml-externalize-attachments message-fcc-externalize-attachments))
+     (with-current-buffer (get-buffer-create " *message temp*")
+       (erase-buffer)
+       (insert-buffer-substring buf)
+       ,@body)))
+
+(defun notmuch-maildir-setup-message-for-saving ()
+  "Setup message for saving. Should be called on a temporary copy.
+
+This is taken from the function message-do-fcc."
+  (message-encode-message-body)
+  (save-restriction
+    (message-narrow-to-headers)
+    (let ((mail-parse-charset message-default-charset))
+      (mail-encode-encoded-word-buffer)))
+  (goto-char (point-min))
+  (when (re-search-forward
+	 (concat "^" (regexp-quote mail-header-separator) "$")
+	 nil t)
+    (replace-match "" t t )))
+
+(defun notmuch-maildir-message-do-fcc ()
+  "Process Fcc headers in the current buffer.
+
+This is a rearranged version of message mode's message-do-fcc."
+  (let (list file)
+    (save-excursion
+      (save-restriction
+	(message-narrow-to-headers)
+	(setq file (message-fetch-field "fcc" t)))
+      (when file
+	(with-temporary-notmuch-message-buffer
+	 (save-restriction
+	   (message-narrow-to-headers)
+	   (while (setq file (message-fetch-field "fcc" t))
+	     (push file list)
+	     (message-remove-header "fcc" nil t)))
+	 (notmuch-maildir-setup-message-for-saving)
+	 ;; Process FCC operations.
+	 (while list
+	   (setq file (pop list))
+	   (notmuch-fcc-handler file))
+	 (kill-buffer (current-buffer)))))))
+
+(defun notmuch-fcc-handler (fcc-header)
+  "Store message with notmuch insert or normal (file) fcc.
+
+If `notmuch-maildir-use-notmuch-insert` is set then store the
+message using notmuch insert. Otherwise store the message using
+normal fcc."
+  (message "Doing Fcc...")
+  (if notmuch-maildir-use-notmuch-insert
+      (notmuch-maildir-fcc-with-notmuch-insert fcc-header)
+    (notmuch-maildir-fcc-file-fcc fcc-header)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Functions for saving a message using notmuch insert.
+
+(defun notmuch-maildir-notmuch-insert-current-buffer (folder &optional create tags)
+  "Use notmuch insert to put the current buffer in the database.
+
+This inserts the current buffer as a message into the notmuch
+database in folder FOLDER. If CREATE is non-nil it will supply
+the --create-folder flag to create the folder if necessary. TAGS
+should be a list of tag changes to apply to the inserted message."
+  (let* ((args (append (when create (list "--create-folder"))
+		       (list (concat "--folder=" folder))
+		       tags)))
+    (apply 'notmuch-call-notmuch-process
+	   :stdin-string (buffer-string) "insert" args)))
+
+(defun notmuch-maildir-fcc-with-notmuch-insert (fcc-header &optional create)
+  "Store message with notmuch insert.
+
+The fcc-header should be of the form \"folder +tag1 -tag2\" where
+folder is the folder (relative to the notmuch mailstore) to store
+the message in, and tag1 and tag2 are tag changes to apply to the
+stored message. This string is split using `split-string-and-unquote',
+so a folder name containing spaces can be specified by
+quoting each space with an immediately preceding backslash
+or surrounding the entire folder name in double quotes.
+
+If CREATE is non-nil then create the folder if necessary."
+  (let* ((args (split-string-and-unquote fcc-header))
+	 (folder (car args))
+	 (tags (cdr args)))
+    (condition-case nil
+	(notmuch-maildir-notmuch-insert-current-buffer folder create tags)
+      ;; Since there are many reasons notmuch insert could fail, e.g.,
+      ;; locked database, non-existent folder (which could be due to a
+      ;; typo, or just the user want a new folder, let the user decide
+      ;; how to deal with it.
+      (error
+       (let ((response (read-char-choice
+			"Insert failed: (r)etry, (c)reate folder, (i)gnore, or  (e)dit the header? "
+			'(?r ?c ?i ?e))))
+	 (case response
+	       (?r (notmuch-maildir-fcc-with-notmuch-insert fcc-header))
+	       (?c (notmuch-maildir-fcc-with-notmuch-insert fcc-header 't))
+	       (?i 't)
+	       (?e (notmuch-maildir-fcc-with-notmuch-insert
+		    (read-from-minibuffer "Fcc header: " fcc-header)))))))))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Functions for saving a message using file fcc.
+
 (defun notmuch-maildir-fcc-host-fixer (hostname)
   (replace-regexp-in-string "/\\|:"
 			    (lambda (s)
@@ -191,6 +323,29 @@ if successful, nil if not."
   (add-name-to-file
    (concat destdir "/tmp/" msg-id)
    (concat destdir "/cur/" msg-id ":2," (when mark-seen "S"))))
+
+(defun notmuch-maildir-fcc-file-fcc (fcc-header)
+  "Write the message to the file specified by FCC-HEADER.
+
+It offers the user a chance to correct the header, or filesystem,
+if needed."
+  (if (notmuch-maildir-fcc-dir-is-maildir-p fcc-header)
+      (notmuch-maildir-fcc-write-buffer-to-maildir fcc-header 't)
+    ;; The fcc-header is not a valid maildir see if the user wants to
+    ;; fix it in some way.
+    (let* ((prompt (format "Fcc %s is not a maildir: (r)etry, (c)reate folder, (i)gnore, or  (e)dit the header? "
+			   fcc-header))
+	    (response (read-char-choice prompt '(?r ?c ?i ?e))))
+	 (case response
+	       (?r (notmuch-maildir-fcc-file-fcc fcc-header))
+	       (?c (if (file-writable-p fcc-header)
+		       (notmuch-maildir-fcc-create-maildir fcc-header)
+		     (message "No permission to create %s." fcc-header)
+		     (sit-for 2))
+		   (notmuch-maildir-fcc-file-fcc fcc-header))
+	       (?i 't)
+	       (?e (notmuch-maildir-fcc-file-fcc
+		    (read-from-minibuffer "Fcc header: " fcc-header)))))))
 
 (defun notmuch-maildir-fcc-write-buffer-to-maildir (destdir &optional mark-seen)
   "Writes the current buffer to maildir destdir. If mark-seen is

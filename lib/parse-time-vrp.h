@@ -15,7 +15,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/ .
+ * along with this program.  If not, see https://www.gnu.org/licenses/ .
  *
  * Author: Jani Nikula <jani@nikula.org>
  */
@@ -37,4 +37,9 @@ public:
     Xapian::valueno operator() (std::string &begin, std::string &end);
 };
 
+#if HAVE_XAPIAN_FIELD_PROCESSOR
+class DateFieldProcessor : public Xapian::FieldProcessor {
+    Xapian::Query operator()(const std::string & str);
+};
+#endif
 #endif /* NOTMUCH_PARSE_TIME_VRP_H */

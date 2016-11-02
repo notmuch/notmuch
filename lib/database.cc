@@ -13,13 +13,14 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/ .
+ * along with this program.  If not, see https://www.gnu.org/licenses/ .
  *
  * Author: Carl Worth <cworth@cworth.org>
  */
 
 #include "database-private.h"
 #include "parse-time-vrp.h"
+#include "query-fp.h"
 #include "string-util.h"
 
 #include <iostream>
@@ -47,6 +48,12 @@ typedef struct {
 
 #define STRINGIFY(s) _SUB_STRINGIFY(s)
 #define _SUB_STRINGIFY(s) #s
+
+#if HAVE_XAPIAN_DB_RETRY_LOCK
+#define DB_ACTION (Xapian::DB_CREATE_OR_OPEN | Xapian::DB_RETRY_LOCK)
+#else
+#define DB_ACTION Xapian::DB_CREATE_OR_OPEN
+#endif
 
 /* Here's the current schema for our database (for NOTMUCH_DATABASE_VERSION):
  *
@@ -89,6 +96,9 @@ typedef struct {
  *		        document ID of a directory document, and
  *		        STRING is the name of a file within that
  *		        directory for this mail message.
+ *
+ *      property:       Has a property with key=value
+ *                 FIXME: if no = is present, should match on any value
  *
  *    A mail document also has four values:
  *
@@ -184,6 +194,14 @@ typedef struct {
  *			generated is 1 and the value will be
  *			incremented for each thread ID.
  *
+ *	C*		metadata keys starting with C indicate
+ *			configuration data. It can be managed with the
+ *			n_database_*config* API.  There is a convention
+ *			of hierarchical keys separated by '.' (e.g.
+ *			query.notmuch stores the value for the named
+ *			query 'notmuch'), but it is not enforced by the
+ *			API.
+ *
  * Obsolete metadata
  * -----------------
  *
@@ -216,7 +234,7 @@ typedef struct {
 
 /* With these prefix values we follow the conventions published here:
  *
- * http://xapian.org/docs/omega/termprefixes.html
+ * https://xapian.org/docs/omega/termprefixes.html
  *
  * as much as makes sense. Note that I took some liberty in matching
  * the reserved prefix values to notmuch concepts, (for example, 'G'
@@ -244,11 +262,12 @@ static prefix_t BOOLEAN_PREFIX_EXTERNAL[] = {
     { "is",			"K" },
     { "id",			"Q" },
     { "path",			"P" },
+    { "property",		"XPROPERTY" },
     /*
-     * Without the ":", since this is a multi-letter prefix, Xapian
-     * will add a colon itself if the first letter of the path is
-     * upper-case ASCII. Including the ":" forces there to always be a
-     * colon, which keeps our own logic simpler.
+     * Unconditionally add ':' to reduce potential ambiguity with
+     * overlapping prefixes and/or terms that start with capital
+     * letters. See Xapian document termprefixes.html for related
+     * discussion.
      */
     { "folder",			"XFOLDER:" },
 };
@@ -368,6 +387,22 @@ _notmuch_database_log (notmuch_database_t *notmuch,
 	talloc_free (notmuch->status_string);
 
     notmuch->status_string = talloc_vasprintf (notmuch, format, va_args);
+    va_end (va_args);
+}
+
+void
+_notmuch_database_log_append (notmuch_database_t *notmuch,
+		      const char *format,
+		      ...)
+{
+    va_list va_args;
+
+    va_start (va_args, format);
+
+    if (notmuch->status_string)
+	notmuch->status_string = talloc_vasprintf_append (notmuch->status_string, format, va_args);
+    else
+	notmuch->status_string = talloc_vasprintf (notmuch, format, va_args);
 
     va_end (va_args);
 }
@@ -930,7 +965,7 @@ notmuch_database_open_verbose (const char *path,
 
 	if (mode == NOTMUCH_DATABASE_MODE_READ_WRITE) {
 	    notmuch->xapian_db = new Xapian::WritableDatabase (xapian_path,
-							       Xapian::DB_CREATE_OR_OPEN);
+							       DB_ACTION);
 	} else {
 	    notmuch->xapian_db = new Xapian::Database (xapian_path);
 	}
@@ -1000,6 +1035,14 @@ notmuch_database_open_verbose (const char *path,
 	notmuch->term_gen->set_stemmer (Xapian::Stem ("english"));
 	notmuch->value_range_processor = new Xapian::NumberValueRangeProcessor (NOTMUCH_VALUE_TIMESTAMP);
 	notmuch->date_range_processor = new ParseTimeValueRangeProcessor (NOTMUCH_VALUE_TIMESTAMP);
+#if HAVE_XAPIAN_FIELD_PROCESSOR
+	/* This currently relies on the query parser to pass anything
+	 * with a .. to the range processor */
+	notmuch->date_field_processor = new DateFieldProcessor();
+	notmuch->query_parser->add_boolean_prefix("date", notmuch->date_field_processor);
+	notmuch->query_field_processor = new QueryFieldProcessor (*notmuch->query_parser, notmuch);
+	notmuch->query_parser->add_boolean_prefix("query", notmuch->query_field_processor);
+#endif
 	notmuch->last_mod_range_processor = new Xapian::NumberValueRangeProcessor (NOTMUCH_VALUE_LAST_MOD, "lastmod:");
 
 	notmuch->query_parser->set_default_op (Xapian::Query::OP_AND);
@@ -1090,10 +1133,16 @@ notmuch_database_close (notmuch_database_t *notmuch)
     delete notmuch->last_mod_range_processor;
     notmuch->last_mod_range_processor = NULL;
 
+#if HAVE_XAPIAN_FIELD_PROCESSOR
+    delete notmuch->date_field_processor;
+    notmuch->date_field_processor = NULL;
+    delete notmuch->query_field_processor;
+    notmuch->query_field_processor = NULL;
+#endif
+
     return status;
 }
 
-#if HAVE_XAPIAN_COMPACT
 static int
 unlink_cb (const char *path,
 	   unused (const struct stat *sb),
@@ -1277,17 +1326,6 @@ notmuch_database_compact (const char *path,
 
     return ret;
 }
-#else
-notmuch_status_t
-notmuch_database_compact (unused (const char *path),
-			  unused (const char *backup_path),
-			  unused (notmuch_compact_status_cb_t status_cb),
-			  unused (void *closure))
-{
-    _notmuch_database_log (notmuch, "notmuch was compiled against a xapian version lacking compaction support.\n");
-    return NOTMUCH_STATUS_UNSUPPORTED_OPERATION;
-}
-#endif
 
 notmuch_status_t
 notmuch_database_destroy (notmuch_database_t *notmuch)
@@ -1635,8 +1673,8 @@ notmuch_database_begin_atomic (notmuch_database_t *notmuch)
 	notmuch->atomic_nesting > 0)
 	goto DONE;
 
-	if (notmuch_database_needs_upgrade(notmuch))
-		return NOTMUCH_STATUS_UPGRADE_REQUIRED;
+    if (notmuch_database_needs_upgrade (notmuch))
+	return NOTMUCH_STATUS_UPGRADE_REQUIRED;
 
     try {
 	(static_cast <Xapian::WritableDatabase *> (notmuch->xapian_db))->begin_transaction (false);
@@ -2168,8 +2206,8 @@ _notmuch_database_link_message_to_parents (notmuch_database_t *notmuch,
      * References header, if available.  If not, fall back to the
      * first message ID in the In-Reply-To header. */
     if (last_ref_message_id) {
-        _notmuch_message_add_term (message, "replyto",
-                                   last_ref_message_id);
+	_notmuch_message_add_term (message, "replyto",
+				   last_ref_message_id);
     } else if (in_reply_to_message_id) {
 	_notmuch_message_add_term (message, "replyto",
 			     in_reply_to_message_id);
@@ -2278,15 +2316,15 @@ _consume_metadata_thread_id (void *ctx, notmuch_database_t *notmuch,
     if (stored_id.empty ()) {
 	return NULL;
     } else {
-        Xapian::WritableDatabase *db;
+	Xapian::WritableDatabase *db;
 
 	db = static_cast <Xapian::WritableDatabase *> (notmuch->xapian_db);
 
 	/* Clear the metadata for this message ID. We don't need it
 	 * anymore. */
-        db->set_metadata (metadata_key, "");
+	db->set_metadata (metadata_key, "");
 
-        return talloc_strdup (ctx, stored_id.c_str ());
+	return talloc_strdup (ctx, stored_id.c_str ());
     }
 }
 

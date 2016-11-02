@@ -14,7 +14,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see http://www.gnu.org/licenses/ .
+ * along with this program.  If not, see https://www.gnu.org/licenses/ .
  *
  * Authors: Carl Worth <cworth@cworth.org>
  *	    Keith Packard <keithp@keithp.com>
@@ -192,6 +192,9 @@ scan_address_list (InternetAddressList *list,
     int i;
     unsigned int n = 0;
 
+    if (list == NULL)
+	return 0;
+
     for (i = 0; i < internet_address_list_length (list); i++) {
 	address = internet_address_list_get_address (list, i);
 	if (INTERNET_ADDRESS_IS_GROUP (address)) {
@@ -200,9 +203,6 @@ scan_address_list (InternetAddressList *list,
 
 	    group = INTERNET_ADDRESS_GROUP (address);
 	    group_list = internet_address_group_get_members (group);
-	    if (group_list == NULL)
-		continue;
-
 	    n += scan_address_list (group_list, config, message, type, user_from);
 	} else {
 	    InternetAddressMailbox *mailbox;
@@ -227,68 +227,96 @@ scan_address_list (InternetAddressList *list,
     return n;
 }
 
-/* Scan addresses in 'recipients'.
- *
- * See the documentation of scan_address_list() above. This function
- * does exactly the same, but converts 'recipients' to an
- * InternetAddressList first.
- */
-static unsigned int
-scan_address_string (const char *recipients,
-		     notmuch_config_t *config,
-		     GMimeMessage *message,
-		     GMimeRecipientType type,
-		     const char **user_from)
-{
-    InternetAddressList *list;
-
-    if (recipients == NULL)
-	return 0;
-
-    list = internet_address_list_parse_string (recipients);
-    if (list == NULL)
-	return 0;
-
-    return scan_address_list (list, config, message, type, user_from);
-}
-
 /* Does the address in the Reply-To header of 'message' already appear
  * in either the 'To' or 'Cc' header of the message?
  */
-static int
-reply_to_header_is_redundant (notmuch_message_t *message)
+static notmuch_bool_t
+reply_to_header_is_redundant (GMimeMessage *message,
+			      InternetAddressList *reply_to_list)
 {
-    const char *reply_to, *to, *cc, *addr;
-    InternetAddressList *list;
+    const char *addr, *reply_to;
     InternetAddress *address;
     InternetAddressMailbox *mailbox;
+    InternetAddressList *recipients;
+    notmuch_bool_t ret = FALSE;
+    int i;
 
-    reply_to = notmuch_message_get_header (message, "reply-to");
-    if (reply_to == NULL || *reply_to == '\0')
+    if (reply_to_list == NULL ||
+	internet_address_list_length (reply_to_list) != 1)
 	return 0;
 
-    list = internet_address_list_parse_string (reply_to);
-
-    if (internet_address_list_length (list) != 1)
-	return 0;
-
-    address = internet_address_list_get_address (list, 0);
+    address = internet_address_list_get_address (reply_to_list, 0);
     if (INTERNET_ADDRESS_IS_GROUP (address))
 	return 0;
 
     mailbox = INTERNET_ADDRESS_MAILBOX (address);
-    addr = internet_address_mailbox_get_addr (mailbox);
+    reply_to = internet_address_mailbox_get_addr (mailbox);
 
-    to = notmuch_message_get_header (message, "to");
-    cc = notmuch_message_get_header (message, "cc");
+    recipients = g_mime_message_get_all_recipients (message);
 
-    if ((to && strstr (to, addr) != 0) ||
-	(cc && strstr (cc, addr) != 0))
-    {
-	return 1;
+    for (i = 0; i < internet_address_list_length (recipients); i++) {
+	address = internet_address_list_get_address (recipients, i);
+	if (INTERNET_ADDRESS_IS_GROUP (address))
+	    continue;
+
+	mailbox = INTERNET_ADDRESS_MAILBOX (address);
+	addr = internet_address_mailbox_get_addr (mailbox);
+	if (strcmp (addr, reply_to) == 0) {
+	    ret = TRUE;
+	    break;
+	}
     }
 
-    return 0;
+    g_object_unref (G_OBJECT (recipients));
+
+    return ret;
+}
+
+static InternetAddressList *get_sender(GMimeMessage *message)
+{
+    const char *reply_to;
+
+    reply_to = g_mime_message_get_reply_to (message);
+    if (reply_to && *reply_to) {
+	InternetAddressList *reply_to_list;
+
+        /*
+	 * Some mailing lists munge the Reply-To header despite it
+	 * being A Bad Thing, see
+	 * http://marc.merlins.org/netrants/reply-to-harmful.html
+	 *
+	 * The munging is easy to detect, because it results in a
+	 * redundant reply-to header, (with an address that already
+	 * exists in either To or Cc). So in this case, we ignore the
+	 * Reply-To field and use the From header. This ensures the
+	 * original sender will get the reply even if not subscribed
+	 * to the list. Note that the address in the Reply-To header
+	 * will always appear in the reply if reply_all is true.
+	 */
+	reply_to_list = internet_address_list_parse_string (reply_to);
+	if (! reply_to_header_is_redundant (message, reply_to_list))
+	    return reply_to_list;
+
+	g_object_unref (G_OBJECT (reply_to_list));
+    }
+
+    return internet_address_list_parse_string (
+	g_mime_message_get_sender (message));
+}
+
+static InternetAddressList *get_to(GMimeMessage *message)
+{
+    return g_mime_message_get_recipients (message, GMIME_RECIPIENT_TYPE_TO);
+}
+
+static InternetAddressList *get_cc(GMimeMessage *message)
+{
+    return g_mime_message_get_recipients (message, GMIME_RECIPIENT_TYPE_CC);
+}
+
+static InternetAddressList *get_bcc(GMimeMessage *message)
+{
+    return g_mime_message_get_recipients (message, GMIME_RECIPIENT_TYPE_BCC);
 }
 
 /* Augment the recipients of 'reply' from the "Reply-to:", "From:",
@@ -306,50 +334,29 @@ reply_to_header_is_redundant (notmuch_message_t *message)
 static const char *
 add_recipients_from_message (GMimeMessage *reply,
 			     notmuch_config_t *config,
-			     notmuch_message_t *message,
+			     GMimeMessage *message,
 			     notmuch_bool_t reply_all)
 {
     struct {
-	const char *header;
-	const char *fallback;
+	InternetAddressList * (*get_header)(GMimeMessage *message);
 	GMimeRecipientType recipient_type;
     } reply_to_map[] = {
-	{ "reply-to", "from", GMIME_RECIPIENT_TYPE_TO  },
-	{ "to",         NULL, GMIME_RECIPIENT_TYPE_TO  },
-	{ "cc",         NULL, GMIME_RECIPIENT_TYPE_CC  },
-	{ "bcc",        NULL, GMIME_RECIPIENT_TYPE_BCC }
+	{ get_sender,	GMIME_RECIPIENT_TYPE_TO },
+	{ get_to,	GMIME_RECIPIENT_TYPE_TO },
+	{ get_cc,	GMIME_RECIPIENT_TYPE_CC },
+	{ get_bcc,	GMIME_RECIPIENT_TYPE_BCC },
     };
     const char *from_addr = NULL;
     unsigned int i;
     unsigned int n = 0;
 
-    /* Some mailing lists munge the Reply-To header despite it being A Bad
-     * Thing, see http://www.unicom.com/pw/reply-to-harmful.html
-     *
-     * The munging is easy to detect, because it results in a
-     * redundant reply-to header, (with an address that already exists
-     * in either To or Cc). So in this case, we ignore the Reply-To
-     * field and use the From header. This ensures the original sender
-     * will get the reply even if not subscribed to the list. Note
-     * that the address in the Reply-To header will always appear in
-     * the reply if reply_all is true.
-     */
-    if (reply_to_header_is_redundant (message)) {
-	reply_to_map[0].header = "from";
-	reply_to_map[0].fallback = NULL;
-    }
-
     for (i = 0; i < ARRAY_SIZE (reply_to_map); i++) {
-	const char *recipients;
+	InternetAddressList *recipients;
 
-	recipients = notmuch_message_get_header (message,
-						 reply_to_map[i].header);
-	if ((recipients == NULL || recipients[0] == '\0') && reply_to_map[i].fallback)
-	    recipients = notmuch_message_get_header (message,
-						     reply_to_map[i].fallback);
+	recipients = reply_to_map[i].get_header (message);
 
-	n += scan_address_string (recipients, config, reply,
-				  reply_to_map[i].recipient_type, &from_addr);
+	n += scan_address_list (recipients, config, reply,
+				reply_to_map[i].recipient_type, &from_addr);
 
 	if (!reply_all && n) {
 	    /* Stop adding new recipients in reply-to-sender mode if
@@ -520,27 +527,43 @@ static GMimeMessage *
 create_reply_message(void *ctx,
 		     notmuch_config_t *config,
 		     notmuch_message_t *message,
-		     notmuch_bool_t reply_all)
+		     GMimeMessage *mime_message,
+		     notmuch_bool_t reply_all,
+		     notmuch_bool_t limited)
 {
     const char *subject, *from_addr = NULL;
     const char *in_reply_to, *orig_references, *references;
 
-    /* The 1 means we want headers in a "pretty" order. */
-    GMimeMessage *reply = g_mime_message_new (1);
+    /*
+     * Use the below header order for limited headers, "pretty" order
+     * otherwise.
+     */
+    GMimeMessage *reply = g_mime_message_new (limited ? 0 : 1);
     if (reply == NULL) {
 	fprintf (stderr, "Out of memory\n");
 	return NULL;
     }
 
-    subject = notmuch_message_get_header (message, "subject");
-    if (subject) {
-	if (strncasecmp (subject, "Re:", 3))
-	    subject = talloc_asprintf (ctx, "Re: %s", subject);
-	g_mime_message_set_subject (reply, subject);
-    }
+    in_reply_to = talloc_asprintf (ctx, "<%s>",
+				   notmuch_message_get_message_id (message));
+
+    g_mime_object_set_header (GMIME_OBJECT (reply), "In-Reply-To", in_reply_to);
+
+    orig_references = notmuch_message_get_header (message, "references");
+    if (orig_references && *orig_references)
+	references = talloc_asprintf (ctx, "%s %s", orig_references,
+				      in_reply_to);
+    else
+	references = talloc_strdup (ctx, in_reply_to);
+
+    g_mime_object_set_header (GMIME_OBJECT (reply), "References", references);
 
     from_addr = add_recipients_from_message (reply, config,
-					     message, reply_all);
+					     mime_message, reply_all);
+
+    /* The above is all that is needed for limited headers. */
+    if (limited)
+	return reply;
 
     /*
      * Sadly, there is no standard way to find out to which email
@@ -572,197 +595,16 @@ create_reply_message(void *ctx,
     from_addr = talloc_asprintf (ctx, "%s <%s>",
 				 notmuch_config_get_user_name (config),
 				 from_addr);
-    g_mime_object_set_header (GMIME_OBJECT (reply),
-			      "From", from_addr);
+    g_mime_object_set_header (GMIME_OBJECT (reply), "From", from_addr);
 
-    in_reply_to = talloc_asprintf (ctx, "<%s>",
-				   notmuch_message_get_message_id (message));
-
-    g_mime_object_set_header (GMIME_OBJECT (reply),
-			      "In-Reply-To", in_reply_to);
-
-    orig_references = notmuch_message_get_header (message, "references");
-    if (!orig_references)
-	/* Treat errors like missing References headers. */
-	orig_references = "";
-    references = talloc_asprintf (ctx, "%s%s%s",
-				  *orig_references ? orig_references : "",
-				  *orig_references ? " " : "",
-				  in_reply_to);
-    g_mime_object_set_header (GMIME_OBJECT (reply),
-			      "References", references);
+    subject = notmuch_message_get_header (message, "subject");
+    if (subject) {
+	if (strncasecmp (subject, "Re:", 3))
+	    subject = talloc_asprintf (ctx, "Re: %s", subject);
+	g_mime_message_set_subject (reply, subject);
+    }
 
     return reply;
-}
-
-static int
-notmuch_reply_format_default(void *ctx,
-			     notmuch_config_t *config,
-			     notmuch_query_t *query,
-			     notmuch_show_params_t *params,
-			     notmuch_bool_t reply_all,
-			     unused (sprinter_t *sp))
-{
-    GMimeMessage *reply;
-    notmuch_messages_t *messages;
-    notmuch_message_t *message;
-    mime_node_t *root;
-    notmuch_status_t status;
-
-    status = notmuch_query_search_messages_st (query, &messages);
-    if (print_status_query ("notmuch reply", query, status))
-	return 1;
-
-    for (;
-	 notmuch_messages_valid (messages);
-	 notmuch_messages_move_to_next (messages))
-    {
-	message = notmuch_messages_get (messages);
-
-	reply = create_reply_message (ctx, config, message, reply_all);
-
-	/* If reply creation failed, we're out of memory, so don't
-	 * bother trying any more messages.
-	 */
-	if (!reply) {
-	    notmuch_message_destroy (message);
-	    return 1;
-	}
-
-	show_reply_headers (reply);
-
-	g_object_unref (G_OBJECT (reply));
-	reply = NULL;
-
-	if (mime_node_open (ctx, message, &(params->crypto), &root) == NOTMUCH_STATUS_SUCCESS) {
-	    format_part_reply (root);
-	    talloc_free (root);
-	}
-
-	notmuch_message_destroy (message);
-    }
-    return 0;
-}
-
-static int
-notmuch_reply_format_sprinter(void *ctx,
-			      notmuch_config_t *config,
-			      notmuch_query_t *query,
-			      notmuch_show_params_t *params,
-			      notmuch_bool_t reply_all,
-			      sprinter_t *sp)
-{
-    GMimeMessage *reply;
-    notmuch_messages_t *messages;
-    notmuch_message_t *message;
-    mime_node_t *node;
-    unsigned count;
-    notmuch_status_t status;
-
-    status = notmuch_query_count_messages_st (query, &count);
-    if (print_status_query ("notmuch reply", query, status))
-	return 1;
-
-    if (count != 1) {
-	fprintf (stderr, "Error: search term did not match precisely one message.\n");
-	return 1;
-    }
-
-    status = notmuch_query_search_messages_st (query, &messages);
-    if (print_status_query ("notmuch reply", query, status))
-	return 1;
-
-    message = notmuch_messages_get (messages);
-    if (mime_node_open (ctx, message, &(params->crypto), &node) != NOTMUCH_STATUS_SUCCESS)
-	return 1;
-
-    reply = create_reply_message (ctx, config, message, reply_all);
-    if (!reply)
-	return 1;
-
-    sp->begin_map (sp);
-
-    /* The headers of the reply message we've created */
-    sp->map_key (sp, "reply-headers");
-    format_headers_sprinter (sp, reply, TRUE);
-    g_object_unref (G_OBJECT (reply));
-    reply = NULL;
-
-    /* Start the original */
-    sp->map_key (sp, "original");
-    format_part_sprinter (ctx, sp, node, TRUE, TRUE, FALSE);
-
-    /* End */
-    sp->end (sp);
-    notmuch_message_destroy (message);
-
-    return 0;
-}
-
-/* This format is currently tuned for a git send-email --notmuch hook */
-static int
-notmuch_reply_format_headers_only(void *ctx,
-				  notmuch_config_t *config,
-				  notmuch_query_t *query,
-				  unused (notmuch_show_params_t *params),
-				  notmuch_bool_t reply_all,
-				  unused (sprinter_t *sp))
-{
-    GMimeMessage *reply;
-    notmuch_messages_t *messages;
-    notmuch_message_t *message;
-    const char *in_reply_to, *orig_references, *references;
-    char *reply_headers;
-    notmuch_status_t status;
-
-    status = notmuch_query_search_messages_st (query, &messages);
-    if (print_status_query ("notmuch reply", query, status))
-	return 1;
-
-    for (;
-	 notmuch_messages_valid (messages);
-	 notmuch_messages_move_to_next (messages))
-    {
-	message = notmuch_messages_get (messages);
-
-	/* The 0 means we do not want headers in a "pretty" order. */
-	reply = g_mime_message_new (0);
-	if (reply == NULL) {
-	    fprintf (stderr, "Out of memory\n");
-	    return 1;
-	}
-
-	in_reply_to = talloc_asprintf (ctx, "<%s>",
-			     notmuch_message_get_message_id (message));
-
-        g_mime_object_set_header (GMIME_OBJECT (reply),
-				  "In-Reply-To", in_reply_to);
-
-
-	orig_references = notmuch_message_get_header (message, "references");
-
-	/* We print In-Reply-To followed by References because git format-patch treats them
-         * specially.  Git does not interpret the other headers specially
-	 */
-	references = talloc_asprintf (ctx, "%s%s%s",
-				      orig_references ? orig_references : "",
-				      orig_references ? " " : "",
-				      in_reply_to);
-	g_mime_object_set_header (GMIME_OBJECT (reply),
-				  "References", references);
-
-	(void)add_recipients_from_message (reply, config, message, reply_all);
-
-	reply_headers = g_mime_object_to_string (GMIME_OBJECT (reply));
-	printf ("%s", reply_headers);
-	free (reply_headers);
-
-	g_object_unref (G_OBJECT (reply));
-	reply = NULL;
-
-	notmuch_message_destroy (message);
-    }
-    return 0;
 }
 
 enum {
@@ -772,6 +614,84 @@ enum {
     FORMAT_HEADERS_ONLY,
 };
 
+static int do_reply(notmuch_config_t *config,
+		    notmuch_query_t *query,
+		    notmuch_show_params_t *params,
+		    int format,
+		    notmuch_bool_t reply_all)
+{
+    GMimeMessage *reply;
+    mime_node_t *node;
+    notmuch_messages_t *messages;
+    notmuch_message_t *message;
+    notmuch_status_t status;
+    struct sprinter *sp = NULL;
+
+    if (format == FORMAT_JSON || format == FORMAT_SEXP) {
+	unsigned count;
+
+	status = notmuch_query_count_messages_st (query, &count);
+	if (print_status_query ("notmuch reply", query, status))
+	    return 1;
+
+	if (count != 1) {
+	    fprintf (stderr, "Error: search term did not match precisely one message (matched %d messages).\n", count);
+	    return 1;
+	}
+
+	if (format == FORMAT_JSON)
+	    sp = sprinter_json_create (config, stdout);
+	else
+	    sp = sprinter_sexp_create (config, stdout);
+    }
+
+    status = notmuch_query_search_messages_st (query, &messages);
+    if (print_status_query ("notmuch reply", query, status))
+	return 1;
+
+    for (;
+	 notmuch_messages_valid (messages);
+	 notmuch_messages_move_to_next (messages))
+    {
+	message = notmuch_messages_get (messages);
+
+	if (mime_node_open (config, message, &params->crypto, &node))
+	    return 1;
+
+	reply = create_reply_message (config, config, message,
+				      GMIME_MESSAGE (node->part), reply_all,
+				      format == FORMAT_HEADERS_ONLY);
+	if (!reply)
+	    return 1;
+
+	if (format == FORMAT_JSON || format == FORMAT_SEXP) {
+	    sp->begin_map (sp);
+
+	    /* The headers of the reply message we've created */
+	    sp->map_key (sp, "reply-headers");
+	    format_headers_sprinter (sp, reply, TRUE);
+
+	    /* Start the original */
+	    sp->map_key (sp, "original");
+	    format_part_sprinter (config, sp, node, TRUE, TRUE, FALSE);
+
+	    /* End */
+	    sp->end (sp);
+	} else {
+	    show_reply_headers (reply);
+	    if (format == FORMAT_DEFAULT)
+		format_part_reply (node);
+	}
+
+	g_object_unref (G_OBJECT (reply));
+	talloc_free (node);
+
+	notmuch_message_destroy (message);
+    }
+
+    return 0;
+}
+
 int
 notmuch_reply_command (notmuch_config_t *config, int argc, char *argv[])
 {
@@ -779,12 +699,6 @@ notmuch_reply_command (notmuch_config_t *config, int argc, char *argv[])
     notmuch_query_t *query;
     char *query_string;
     int opt_index;
-    int (*reply_format_func) (void *ctx,
-			      notmuch_config_t *config,
-			      notmuch_query_t *query,
-			      notmuch_show_params_t *params,
-			      notmuch_bool_t reply_all,
-			      struct sprinter *sp);
     notmuch_show_params_t params = {
 	.part = -1,
 	.crypto = {
@@ -795,7 +709,6 @@ notmuch_reply_command (notmuch_config_t *config, int argc, char *argv[])
     };
     int format = FORMAT_DEFAULT;
     int reply_all = TRUE;
-    struct sprinter *sp = NULL;
 
     notmuch_opt_desc_t options[] = {
 	{ NOTMUCH_OPT_KEYWORD, &format, "format", 'f',
@@ -819,18 +732,6 @@ notmuch_reply_command (notmuch_config_t *config, int argc, char *argv[])
 	return EXIT_FAILURE;
 
     notmuch_process_shared_options (argv[0]);
-
-    if (format == FORMAT_HEADERS_ONLY) {
-	reply_format_func = notmuch_reply_format_headers_only;
-    } else if (format == FORMAT_JSON) {
-	reply_format_func = notmuch_reply_format_sprinter;
-	sp = sprinter_json_create (config, stdout);
-    } else if (format == FORMAT_SEXP) {
-	reply_format_func = notmuch_reply_format_sprinter;
-	sp = sprinter_sexp_create (config, stdout);
-    } else {
-	reply_format_func = notmuch_reply_format_default;
-    }
 
     notmuch_exit_if_unsupported_format ();
 
@@ -859,7 +760,7 @@ notmuch_reply_command (notmuch_config_t *config, int argc, char *argv[])
 	return EXIT_FAILURE;
     }
 
-    if (reply_format_func (config, config, query, &params, reply_all, sp) != 0)
+    if (do_reply (config, query, &params, format, reply_all) != 0)
 	return EXIT_FAILURE;
 
     notmuch_crypto_cleanup (&params.crypto);

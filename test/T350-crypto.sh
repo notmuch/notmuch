@@ -25,8 +25,8 @@ add_gnupg_home ()
 ##################################################
 
 add_gnupg_home
-# get key fingerprint
-FINGERPRINT=$(gpg --no-tty --list-secret-keys --with-colons --fingerprint | grep '^fpr:' | cut -d: -f10)
+# Change this if we ship a new test key
+FINGERPRINT="5AEAB11F5E33DCE875DDB75B6D92612D94E46381"
 
 test_expect_success 'emacs delivery of signed message' \
 'emacs_fcc_message \
@@ -315,6 +315,25 @@ On 01 Jan 2000 12:00:00 -0000, Notmuch Test Suite <test_suite@notmuchmail.org> w
 test_expect_equal \
     "$output" \
     "$expected"
+
+test_begin_subtest "Reply within emacs to an encrypted message"
+test_emacs "(let ((message-hidden-headers '())
+      (notmuch-crypto-process-mime 't))
+  (notmuch-show \"subject:test.encrypted.message.002\")
+  (notmuch-show-reply)
+  (test-output))"
+# the empty To: is probably a bug, but it's not to do with encryption
+grep -v -e '^In-Reply-To:' -e '^References:' -e '^Fcc:' -e 'To:' < OUTPUT > OUTPUT.clean
+cat <<EOF >EXPECTED
+From: Notmuch Test Suite <test_suite@notmuchmail.org>
+Subject: Re: test encrypted message 002
+--text follows this line--
+<#secure method=pgpmime mode=signencrypt>
+Notmuch Test Suite <test_suite@notmuchmail.org> writes:
+
+> This is another test encrypted message.
+EOF
+test_expect_equal_file EXPECTED OUTPUT.clean
 
 test_begin_subtest "signature verification with revoked key"
 # generate revocation certificate and load it to revoke key

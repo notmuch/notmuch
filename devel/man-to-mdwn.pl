@@ -66,7 +66,7 @@ while (my ($k, $v) = each %fhash)
 
     my @lines;
     open I, '-|', qw/env -i/, "PATH=$ENV{PATH}",
-	qw/TERM=vt100 LANG=en_US.utf8 LC_ALL=en_US.utf8/,
+	qw/TERM=vt100 LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8/,
 	qw/GROFF_NO_SGR=1 MAN_KEEP_FORMATTING=1 MANWIDTH=80/,
 	qw/man/, $v or die "$!";
     binmode I, ':utf8';
@@ -200,6 +200,6 @@ foreach (sort srt values %fhash)
 print <<'EOF';
 
 The manual pages are licensed under
-[the GNU General Public License](http://www.gnu.org/licenses/gpl.txt),
+[the GNU General Public License](https://www.gnu.org/licenses/gpl.txt),
 either version 3.0 or at your option any later version.
 EOF

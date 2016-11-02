@@ -1,3 +1,207 @@
+Notmuch 0.23.1 (2016-10-23)
+===========================
+
+General
+-------
+
+Require Xapian >= 1.2.6
+
+  The ifdef branch for older Xapian (pre-compact API) had bit-rotted.
+
+Emacs
+-----
+
+Fix default colours for unread and flagged messages
+
+  In 0.23 the default colours for unread and flagged messages in
+  search view were accidentally swapped. This release returns them to
+  the original colours.
+
+  A related change in 0.23 broke the customize widget for
+  notmuch-search-line-faces. This is now fixed.
+
+Fix test failure with Emacs 25.1
+
+  A previously undiscovered jit-lock related bug was exposed by Emacs
+  25, causing a notmuch-show mode test to fail. This release fixes the
+  bug, and hence the test.
+
+Notmuch 0.23 (2016-10-03)
+=========================
+
+General (Xapian 1.4+)
+---------------------
+
+Compiling against Xapian 1.4 enables several new features.
+
+Support for single argument date: queries
+
+  `date:<expr>` is equivalent to  `date:<expr>..<expr>`.
+
+Support for blocking opens
+
+  When opening a database notmuch by default will wait for another
+  process to release a write lock, rather than returning an error.
+
+Support for named queries
+
+  Named queries (also known as 'saved searches') can be defined with a
+  `query:name` format. The expansion of these queries is stored in the
+  database and they can be used from any notmuch client.
+
+Library
+-------
+
+Message property API
+
+  libnotmuch now supports the attachment of arbitrary key-value pairs
+  to messages. These can be used by various tools to manage their
+  private data without polluting the user tag space. They also support
+  iteration of values with the same key or same key prefix.
+
+Bug fix for `notmuch_directory_set_mtime`
+
+  Update cached mtime to match on-disk mtime.
+
+CLI
+---
+
+Support for compile time options
+
+  A group of `built_with` keys is now supported for notmuch
+  config. Initial keys in this group are `compact`, `field_processor`,
+  and `retry_lock`.
+
+Dump/Restore support for configuration information and properties
+
+  Any configuration information stored in the database (initially just
+  named queries) is dumped and restored. Similarly any properties
+  attached to messages are also dumped and restored. Any new
+  information in the dump format is prefixed by '#' to allow existing
+  scripts to ignore it.
+
+Emacs
+-----
+
+Make notmuch-message-mode use insert for fcc
+
+  Notmuch-message-mode now defaults to using notmuch insert for
+  fcc. The old file based fcc behaviour can be restored by setting the
+  defcustom `notmuch-maildir-use-notmuch-insert` to nil.
+
+  When using notmuch insert, `notmuch-fcc-dirs` must be a subdirectory
+  of the mailstore (absolute paths are not permitted) followed by any
+  tag changes to be applied to the inserted message. The tag changes
+  are applied after the default tagging for new messages. For example
+  setting the header to "sentmail -inbox +sent" would insert the
+  message in the subdirectory sentmail of the mailstore, add the tag
+  "sent", and not add the (normally added) "inbox" tag.
+
+  Finally, if the insert fails (e.g. if the database is locked) the
+  user is presented with the option to retry, ignore, or edit the
+  header.
+
+Make internal address completion customizable
+
+  There is a new defcustom `notmuch-address-internal-completion` which
+  controls how the internal completion works: it allows the user to
+  choose whether to match on messages the user sent, or the user
+  received, and to filter the messages used for the match, for example
+  by date.
+
+Allow internal address completion on an individual basis
+
+  There is a new function `notmuch-address-toggle-internal-completion`
+  (by default it has no keybinding) which allows users who normally
+  use an external completion command to use the builtin internal
+  completion for the current buffer.
+
+  Alternatively, if the user has company-mode enabled, then the user
+  can use company mode commands such as `company-complete` to
+  activate the builtin completion for an individual completion.
+
+Resend messages
+
+  The function `notmuch-show-resend-message` (bound to `b` in show
+  and tree modes) will (attempt to) send current message to new
+  recipients. The headers of the message won't be altered (e.g. `To:`
+  may point to yourself). New `Resent-To:`, `Resent-From:` and so on
+  will be added instead.
+
+Face customization is easier
+
+  New faces `notmuch-tag-unread`, `notmuch-tag-flagged`,
+  `notmuch-tag-deleted`, `notmuch-tag-added`,
+  `notmuch-search-flagged-face` and `notmuch-search-unread-face` are
+  now used by default. Customize `notmuch-faces` to modify them.
+
+Omit User-Agent header by default when sending mail
+
+Ruby Bindings
+-------------
+
+Add support for `notmuch_database_get_all_tags`
+
+Go Bindings
+-----------
+
+Go bindings moved to contrib
+
+Add support for `notmuch_threads_t` and `notmuch_thread_t`
+
+Fixed constant values so they are not all zero anymore
+
+  Previously, it was impossible to open writable database handles,
+  because `DATABASE_MODE_READ_ONLY` and `DATABASE_MODE_READ_WRITE` were
+  both set to zero.
+  The same issue occured with sort modes.
+
+Notmuch 0.22.2 (2016-09-08)
+===========================
+
+Test Suite
+----------
+
+Silence gdb more
+
+  Have gdb write to a log file instead of stdout, hiding some more
+  (harmless) stderr chatter which causes test failures.
+
+Hardcode fingerprint in PGP/MIME tests
+
+  Make the tests more robust against changing GnuPG output formats.
+
+Notmuch 0.22.1 (2016-07-19)
+===========================
+
+Library
+-------
+
+Correct the definition of `LIBNOTMUCH_CHECK_VERSION`.
+
+Document the (lack of) operations permitted on a closed database.
+
+Test Suite
+----------
+
+Fix race condition in dump / restore tests.
+
+Notmuch-Mutt
+------------
+
+Use `env` to locate perl.
+
+Emacs
+-----
+
+Tell `message-mode` mode that outgoing messages are mail
+
+  This makes message-mode configuration behave more predictably.
+
+Respect charset of MIME parts when reading them
+
+  Fix previous assumption that everyone uses UTF-8.
+
 Notmuch 0.22 (2016-04-26)
 =========================
 
@@ -405,13 +609,13 @@ Stopped `notmuch dump` failing if someone writes to the database
   process already has the write lock the dump will not start, so
   script callers should still check the return value.
 
-`notmuch insert` requires succesful message indexing for success status
+`notmuch insert` requires successful message indexing for success status
 
   Previously the `notmuch insert` subcommand indicated success even if
   the message indexing failed, as long as the message was delivered to
   file system. This could have lead to delivered messages missing
   tags, etc. `notmuch insert` is now more strict, also requiring
-  succesful indexing for success status. Use the new `--keep` option
+  successful indexing for success status. Use the new `--keep` option
   to revert to the old behaviour (keeping the delivered message file
   and returning success even if indexing fails).
 
@@ -2353,7 +2557,7 @@ Ruby bindings are now much more complete
 
 Python bindings have been updated and extended
 
-  (docs online at http://packages.python.org/notmuch/)
+  (docs online at https://notmuch.readthedocs.io/)
 
   New bindings:
 

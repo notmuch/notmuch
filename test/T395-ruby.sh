@@ -83,4 +83,20 @@ EOF
 notmuch count --output=threads tag:inbox > EXPECTED
 test_expect_equal_file OUTPUT EXPECTED
 
+test_begin_subtest "get all tags"
+test_ruby <<"EOF"
+require 'notmuch'
+$maildir = ENV['MAIL_DIR']
+if not $maildir then
+  abort('environment variable MAIL_DIR must be set')
+end
+@db = Notmuch::Database.new($maildir)
+@t = @db.all_tags()
+for tag in @t do
+   print tag,"\n"
+end
+EOF
+notmuch search --output=tags '*' > EXPECTED
+test_expect_equal_file OUTPUT EXPECTED
+
 test_done

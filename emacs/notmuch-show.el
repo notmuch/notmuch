@@ -16,7 +16,7 @@
 ;; General Public License for more details.
 ;;
 ;; You should have received a copy of the GNU General Public License
-;; along with Notmuch.  If not, see <http://www.gnu.org/licenses/>.
+;; along with Notmuch.  If not, see <https://www.gnu.org/licenses/>.
 ;;
 ;; Authors: Carl Worth <cworth@cworth.org>
 ;;          David Edmondson <dme@dme.org>
@@ -182,9 +182,9 @@ each attachment handler is logged in buffers with names beginning
 
 (defcustom notmuch-show-stash-mlarchive-link-alist
   '(("Gmane" . "http://mid.gmane.org/")
-    ("MARC" . "http://marc.info/?i=")
-    ("Mail Archive, The" . "http://mid.mail-archive.com/")
-    ("LKML" . "http://lkml.kernel.org/r/")
+    ("MARC" . "https://marc.info/?i=")
+    ("Mail Archive, The" . "https://mid.mail-archive.com/")
+    ("LKML" . "https://lkml.kernel.org/r/")
     ;; FIXME: can these services be searched by `Message-Id' ?
     ;; ("MarkMail" . "http://markmail.org/")
     ;; ("Nabble" . "http://nabble.com/")
@@ -682,6 +682,9 @@ will return nil if the CID is unknown or cannot be retrieved."
       (indent-rigidly start (point) 1)))
   t)
 
+(defun notmuch-show-insert-part-application/pgp-encrypted (msg part content-type nth depth button)
+  t)
+
 (defun notmuch-show-insert-part-multipart/* (msg part content-type nth depth button)
   (let ((inner-parts (plist-get part :content))
 	(start (point)))
@@ -1171,13 +1174,15 @@ This also turns id:\"<message id>\"-parts and mid: links into
 buttons for a corresponding notmuch search."
   (goto-address-fontify-region start end)
   (save-excursion
-    (let (links)
-      (goto-char start)
-      (while (re-search-forward notmuch-id-regexp end t)
+    (let (links
+	  (beg-line (progn (goto-char start) (line-beginning-position)))
+	  (end-line (progn (goto-char end) (line-end-position))))
+      (goto-char beg-line)
+      (while (re-search-forward notmuch-id-regexp end-line t)
 	(push (list (match-beginning 0) (match-end 0)
 		    (match-string-no-properties 0)) links))
-      (goto-char start)
-      (while (re-search-forward notmuch-mid-regexp end t)
+      (goto-char beg-line)
+      (while (re-search-forward notmuch-mid-regexp end-line t)
 	(let* ((mid-cid (match-string-no-properties 1))
 	       (mid (save-match-data
 		      (string-match "^[^/]*" mid-cid)
@@ -1403,6 +1408,7 @@ reset based on the original query."
     (define-key map "v" 'notmuch-show-view-part)
     (define-key map "o" 'notmuch-show-interactively-view-part)
     (define-key map "|" 'notmuch-show-pipe-part)
+    (define-key map "m" 'notmuch-show-choose-mime-of-part)
     (define-key map "?" 'notmuch-subkeymap-help)
     map)
   "Submap for part commands")
@@ -1418,6 +1424,7 @@ reset based on the original query."
     (define-key map (kbd "TAB") 'notmuch-show-next-button)
     (define-key map "f" 'notmuch-show-forward-message)
     (define-key map "F" 'notmuch-show-forward-open-messages)
+    (define-key map "b" 'notmuch-show-resend-message)
     (define-key map "l" 'notmuch-show-filter-thread)
     (define-key map "r" 'notmuch-show-reply-sender)
     (define-key map "R" 'notmuch-show-reply)
@@ -1453,7 +1460,7 @@ reset based on the original query."
   "Keymap for \"notmuch show\" buffers.")
 (fset 'notmuch-show-mode-map notmuch-show-mode-map)
 
-(defun notmuch-show-mode ()
+(define-derived-mode notmuch-show-mode fundamental-mode "notmuch-show"
   "Major mode for viewing a thread with notmuch.
 
 This buffer contains the results of the \"notmuch show\" command
@@ -1481,12 +1488,7 @@ You can add or remove arbitrary tags from the current message with
 All currently available key bindings:
 
 \\{notmuch-show-mode-map}"
-  (interactive)
-  (kill-all-local-variables)
   (setq notmuch-buffer-refresh-function #'notmuch-show-refresh-view)
-  (use-local-map notmuch-show-mode-map)
-  (setq major-mode 'notmuch-show-mode
-	mode-name "notmuch-show")
   (setq buffer-read-only t
 	truncate-lines t))
 
@@ -1700,12 +1702,23 @@ user decision and we should not override it."
 	(notmuch-show-mark-read)
 	(notmuch-show-set-prop :seen t)))
 
+(defvar notmuch-show--seen-has-errored nil)
+(make-variable-buffer-local 'notmuch-show--seen-has-errored)
+
 (defun notmuch-show-command-hook ()
   (when (eq major-mode 'notmuch-show-mode)
     ;; We need to redisplay to get window-start and window-end correct.
     (redisplay)
     (save-excursion
-      (funcall notmuch-show-mark-read-function (window-start) (window-end)))))
+      (condition-case err
+	  (funcall notmuch-show-mark-read-function (window-start) (window-end))
+	((debug error)
+	 (unless notmuch-show--seen-has-errored
+	   (setq notmuch-show--seen-has-errored 't)
+	   (setq header-line-format
+		 (concat header-line-format
+			 (propertize "  [some mark read tag changes may have failed]"
+				     'face font-lock-warning-face)))))))))
 
 (defun notmuch-show-filter-thread (query)
   "Filter or LIMIT the current thread based on a new query string.
@@ -1854,6 +1867,14 @@ any effects from previous calls to
     (unless open-messages
       (error "No open messages to forward."))
     (notmuch-mua-new-forward-messages open-messages prompt-for-sender)))
+
+(defun notmuch-show-resend-message (addresses)
+  "Resend the current message."
+  (interactive (list (notmuch-address-from-minibuffer "Resend to: ")))
+  (when (y-or-n-p (concat "Confirm resend to " addresses " "))
+    (notmuch-show-view-raw-message)
+    (message-resend addresses)
+    (notmuch-bury-or-kill-this-buffer)))
 
 (defun notmuch-show-next-message (&optional pop-at-end)
   "Show the next message.
@@ -2317,25 +2338,27 @@ omit --in-reply-to=<Message-Id>."
       (insert (notmuch-get-bodypart-binary msg part process-crypto)))
     buf))
 
-(defun notmuch-show-current-part-handle ()
+(defun notmuch-show-current-part-handle (&optional mime-type)
   "Return an mm-handle for the part containing point.
 
 This creates a temporary buffer for the part's content; the
-caller is responsible for killing this buffer as appropriate."
+caller is responsible for killing this buffer as appropriate.  If
+MIME-TYPE is given then set the handle's mime-type to MIME-TYPE."
   (let* ((msg (notmuch-show-get-message-properties))
 	 (part (notmuch-show-get-part-properties))
 	 (buf (notmuch-show-generate-part-buffer msg part))
-	 (computed-type (plist-get part :computed-type))
+	 (computed-type (or mime-type (plist-get part :computed-type)))
 	 (filename (plist-get part :filename))
 	 (disposition (if filename `(attachment (filename . ,filename)))))
     (mm-make-handle buf (list computed-type) nil nil disposition)))
 
-(defun notmuch-show-apply-to-current-part-handle (fn)
+(defun notmuch-show-apply-to-current-part-handle (fn &optional mime-type)
   "Apply FN to an mm-handle for the part containing point.
 
 This ensures that the temporary buffer created for the mm-handle
-is destroyed when FN returns."
-  (let ((handle (notmuch-show-current-part-handle)))
+is destroyed when FN returns. If MIME-TYPE is given then force
+part to be treated as if it had that mime-type."
+  (let ((handle (notmuch-show-current-part-handle mime-type)))
     ;; emacs 24.3+ puts stdout/stderr into the calling buffer so we
     ;; call it from a temp-buffer, unless
     ;; notmuch-show-attachment-debug is non-nil in which case we put
@@ -2379,6 +2402,27 @@ is destroyed when FN returns."
   (interactive)
   (notmuch-show-apply-to-current-part-handle #'mm-pipe-part))
 
+
+(defun notmuch-show--mm-display-part (handle)
+  "Use mm-display-part to display HANDLE in a new buffer.
+
+If the part is displayed in an external application then close
+the new buffer."
+  (let ((buf (get-buffer-create (generate-new-buffer-name
+				 (concat " *notmuch-internal-part*")))))
+    (switch-to-buffer buf)
+    (if (eq (mm-display-part handle) 'external)
+	(kill-buffer buf)
+      (goto-char (point-min))
+      (set-buffer-modified-p nil)
+      (view-buffer buf 'kill-buffer-if-not-modified))))
+
+(defun notmuch-show-choose-mime-of-part (mime-type)
+  "Choose the mime type to use for displaying part"
+  (interactive
+   (list (completing-read "Mime type to use (default text/plain): "
+			  (mailcap-mime-types) nil nil nil nil "text/plain")))
+  (notmuch-show-apply-to-current-part-handle #'notmuch-show--mm-display-part mime-type))
 
 (provide 'notmuch-show)
 
