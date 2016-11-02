@@ -1,3 +1,9 @@
+notmuch (0.23.1-1~bpo8+1) jessie-backports; urgency=medium
+
+  * Rebuild for jessie-backports.
+
+ -- David Bremner <bremner@debian.org>  Wed, 02 Nov 2016 08:09:41 -0300
+
 notmuch (0.23.1-1) unstable; urgency=medium
 
   * New upstream bugfix release
