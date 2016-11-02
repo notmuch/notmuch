@@ -58,6 +58,34 @@ _notmuch_email()
 	sed 's/[^<]*<\([^>]*\)>/\1/' | tr "[:upper:]" "[:lower:]" | sort -u
 }
 
+_notmuch_mimetype()
+{
+    # use mime types from mime-support package if available, and fall
+    # back to a handful of common ones otherwise
+    if [ -r "/etc/mime.types" ]; then
+	sed -n '/^[[:alpha:]]/{s/[[:space:]].*//;p;}' /etc/mime.types
+    else
+	cat <<EOF
+application/gzip
+application/msword
+application/pdf
+application/zip
+audio/mpeg
+audio/ogg
+image/gif
+image/jpeg
+image/png
+message/rfc822
+text/calendar
+text/html
+text/plain
+text/vcard
+text/x-diff
+text/x-vcalendar
+EOF
+    fi
+}
+
 _notmuch_search_terms()
 {
     local cur prev words cword split
@@ -84,6 +112,10 @@ _notmuch_search_terms()
 	    compopt -o nospace
 	    COMPREPLY=( $(compgen -d "$path/${cur##folder:}" | \
 		sed "s|^$path/||" | grep -v "\(^\|/\)\(cur\|new\|tmp\)$" ) )
+	    ;;
+	mimetype:*)
+	    compopt -o nospace
+	    COMPREPLY=( $(compgen -P "mimetype:" -W "`_notmuch_mimetype ${cur}`" -- ${cur##mimetype:}) )
 	    ;;
 	*)
 	    local search_terms="from: to: subject: attachment: mimetype: tag: id: thread: folder: path: date: lastmod:"
