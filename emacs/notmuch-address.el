@@ -98,6 +98,17 @@ to know how address selection is made by default."
   :group 'notmuch-send
   :group 'notmuch-external)
 
+(defcustom notmuch-address-completion-hook nil
+  "Functions called after completing address.
+
+The completed address is passed as an argument to each function.
+Note that this hook will be invoked for completion in headers
+matching `notmuch-address-completion-headers-regexp'.
+"
+  :type 'hook
+  :group 'notmuch-address
+  :group 'notmuch-hooks)
+
 (defun notmuch-address-selection-function (prompt collection initial-input)
   "Call (`completing-read'
       PROMPT COLLECTION nil nil INITIAL-INPUT 'notmuch-address-history)"
@@ -206,7 +217,8 @@ external commands."
 	  (progn
 	    (push chosen notmuch-address-history)
 	    (delete-region beg end)
-	    (insert chosen))
+	    (insert chosen)
+	    (run-hook-with-args 'notmuch-address-completion-hook chosen))
 	(message "No matches.")
 	(ding))))
    (t nil)))
