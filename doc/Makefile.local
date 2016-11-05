@@ -68,7 +68,7 @@ MAN_GZIP_FILES += ${APIMAN}.gz
 apidocs: $(APIMAN)
 install-apidocs: ${APIMAN}.gz
 	mkdir -p "$(DESTDIR)$(mandir)/man3"
-	install -m0644  $(DOCBUILDDIR)/man/man3/*.3.gz  $(DESTDIR)/$(mandir)/man3
+	install -m0644 $(filter %.3.gz,$(MAN_GZIP_FILES)) $(DESTDIR)/$(mandir)/man3
 
 $(APIMAN): $(dir)/config.dox $(srcdir)/$(dir)/doxygen.cfg $(srcdir)/lib/notmuch.h
 	mkdir -p $(DOCBUILDDIR)/man/man3
@@ -92,9 +92,9 @@ install-man: ${MAN_GZIP_FILES}
 	mkdir -p "$(DESTDIR)$(mandir)/man1"
 	mkdir -p "$(DESTDIR)$(mandir)/man5"
 	mkdir -p "$(DESTDIR)$(mandir)/man7"
-	install -m0644 $(DOCBUILDDIR)/man/man1/*.1.gz $(DESTDIR)/$(mandir)/man1
-	install -m0644 $(DOCBUILDDIR)/man/man5/*.5.gz $(DESTDIR)/$(mandir)/man5
-	install -m0644 $(DOCBUILDDIR)/man/man7/*.7.gz $(DESTDIR)/$(mandir)/man7
+	install -m0644 $(filter %.1.gz,$(MAN_GZIP_FILES)) $(DESTDIR)/$(mandir)/man1
+	install -m0644 $(filter %.5.gz,$(MAN_GZIP_FILES)) $(DESTDIR)/$(mandir)/man5
+	install -m0644 $(filter %.7.gz,$(MAN_GZIP_FILES)) $(DESTDIR)/$(mandir)/man7
 	cd $(DESTDIR)/$(mandir)/man1 && ln -sf notmuch.1.gz notmuch-setup.1.gz
 endif
 
