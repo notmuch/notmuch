@@ -55,73 +55,71 @@ htmlhelp_basename = 'notmuchdoc'
 notmuch_authors = u'Carl Worth and many others'
 
 man_pages = [
+    ('man1/notmuch', 'notmuch',
+     u'thread-based email index, search, and tagging',
+     [notmuch_authors], 1),
 
-('man1/notmuch','notmuch',
-        u'thread-based email index, search, and tagging',
-        [notmuch_authors], 1),
+    ('man1/notmuch-address', 'notmuch-address',
+     u'output addresses from matching messages',
+     [notmuch_authors], 1),
 
-('man1/notmuch-address','notmuch-address',
-        u'output addresses from matching messages',
-        [notmuch_authors], 1),
+    ('man1/notmuch-compact', 'notmuch-compact',
+     u'compact the notmuch database',
+     [notmuch_authors], 1),
 
-('man1/notmuch-compact','notmuch-compact',
-        u'compact the notmuch database',
-        [notmuch_authors], 1),
+    ('man1/notmuch-config', 'notmuch-config',
+     u'access notmuch configuration file',
+     [notmuch_authors], 1),
 
-('man1/notmuch-config','notmuch-config',
-        u'access notmuch configuration file',
-        [notmuch_authors], 1),
+    ('man1/notmuch-count', 'notmuch-count',
+     u'count messages matching the given search terms',
+     [notmuch_authors], 1),
 
-('man1/notmuch-count','notmuch-count',
-        u'count messages matching the given search terms',
-        [notmuch_authors], 1),
+    ('man1/notmuch-dump', 'notmuch-dump',
+     u'creates a plain-text dump of the tags of each message',
+     [notmuch_authors], 1),
 
-('man1/notmuch-dump','notmuch-dump',
-        u'creates a plain-text dump of the tags of each message',
-        [notmuch_authors], 1),
+    ('man1/notmuch-emacs-mua', 'notmuch-emacs-mua',
+     u'send mail with notmuch and emacs',
+     [notmuch_authors], 1),
 
-('man1/notmuch-emacs-mua','notmuch-emacs-mua',
-        u'send mail with notmuch and emacs',
-        [notmuch_authors], 1),
+    ('man5/notmuch-hooks', 'notmuch-hooks',
+     u'hooks for notmuch',
+     [notmuch_authors], 5),
 
-('man5/notmuch-hooks','notmuch-hooks',
-        u'hooks for notmuch',
-        [notmuch_authors], 5),
+    ('man1/notmuch-insert', 'notmuch-insert',
+     u'add a message to the maildir and notmuch database',
+     [notmuch_authors], 1),
 
-('man1/notmuch-insert','notmuch-insert',
-        u'add a message to the maildir and notmuch database',
-        [notmuch_authors], 1),
+    ('man1/notmuch-new', 'notmuch-new',
+     u'incorporate new mail into the notmuch database',
+     [notmuch_authors], 1),
 
-('man1/notmuch-new','notmuch-new',
-        u'incorporate new mail into the notmuch database',
-        [notmuch_authors], 1),
+    ('man1/notmuch-reply', 'notmuch-reply',
+     u'constructs a reply template for a set of messages',
+     [notmuch_authors], 1),
 
-('man1/notmuch-reply','notmuch-reply',
-        u'constructs a reply template for a set of messages',
-        [notmuch_authors], 1),
+    ('man1/notmuch-restore', 'notmuch-restore',
+     u'restores the tags from the given file (see notmuch dump)',
+     [notmuch_authors], 1),
 
-('man1/notmuch-restore','notmuch-restore',
-        u'restores the tags from the given file (see notmuch dump)',
-        [notmuch_authors], 1),
+    ('man1/notmuch-search', 'notmuch-search',
+     u'search for messages matching the given search terms',
+     [notmuch_authors], 1),
 
-('man1/notmuch-search','notmuch-search',
-        u'search for messages matching the given search terms',
-        [notmuch_authors], 1),
+    ('man7/notmuch-search-terms', 'notmuch-search-terms',
+     u'syntax for notmuch queries',
+     [notmuch_authors], 7),
 
-('man7/notmuch-search-terms','notmuch-search-terms',
-        u'syntax for notmuch queries',
-        [notmuch_authors], 7),
+    ('man1/notmuch-show', 'notmuch-show',
+     u'show messages matching the given search terms',
+     [notmuch_authors], 1),
 
-('man1/notmuch-show','notmuch-show',
-        u'show messages matching the given search terms',
-        [notmuch_authors], 1),
-
-('man1/notmuch-tag','notmuch-tag',
-        u'add/remove tags for all messages matching the search terms',
-        [notmuch_authors], 1),
-
-
+    ('man1/notmuch-tag', 'notmuch-tag',
+     u'add/remove tags for all messages matching the search terms',
+     [notmuch_authors], 1),
 ]
+
 # If true, show URL addresses after external links.
 #man_show_urls = False
 
@@ -134,9 +132,9 @@ man_pages = [
 texinfo_no_detailmenu = True
 
 texinfo_documents = [
- ('notmuch-emacs', 'notmuch-emacs', u'notmuch Documentation',
-   notmuch_authors, 'notmuch-emacs',
-   'emacs based front-end for notmuch', 'Miscellaneous'),
+    ('notmuch-emacs', 'notmuch-emacs', u'notmuch Documentation',
+     notmuch_authors, 'notmuch-emacs',
+     'emacs based front-end for notmuch', 'Miscellaneous'),
 ]
 
 # generate texinfo list from man page list
