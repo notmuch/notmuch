@@ -53,7 +53,7 @@ else
 	@echo "Fatal: build dependency fail."
 	@false
 endif
-	touch ${MAN_ROFF_FILES} $@
+	touch $@
 
 install-man: install-apidocs
 
