@@ -52,71 +52,73 @@ htmlhelp_basename = 'notmuchdoc'
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 
+notmuch_authors = u'Carl Worth and many others'
+
 man_pages = [
 
 ('man1/notmuch','notmuch',
         u'thread-based email index, search, and tagging',
-        [u'Carl Worth and many others'], 1),
+        [notmuch_authors], 1),
 
 ('man1/notmuch-address','notmuch-address',
         u'output addresses from matching messages',
-        [u'Carl Worth and many others'], 1),
+        [notmuch_authors], 1),
 
 ('man1/notmuch-compact','notmuch-compact',
         u'compact the notmuch database',
-        [u'Carl Worth and many others'], 1),
+        [notmuch_authors], 1),
 
 ('man1/notmuch-config','notmuch-config',
         u'access notmuch configuration file',
-        [u'Carl Worth and many others'], 1),
+        [notmuch_authors], 1),
 
 ('man1/notmuch-count','notmuch-count',
         u'count messages matching the given search terms',
-        [u'Carl Worth and many others'], 1),
+        [notmuch_authors], 1),
 
 ('man1/notmuch-dump','notmuch-dump',
         u'creates a plain-text dump of the tags of each message',
-        [u'Carl Worth and many others'], 1),
+        [notmuch_authors], 1),
 
 ('man1/notmuch-emacs-mua','notmuch-emacs-mua',
         u'send mail with notmuch and emacs',
-        [u'Carl Worth and many others'], 1),
+        [notmuch_authors], 1),
 
 ('man5/notmuch-hooks','notmuch-hooks',
         u'hooks for notmuch',
-        [u'Carl Worth and many others'], 5),
+        [notmuch_authors], 5),
 
 ('man1/notmuch-insert','notmuch-insert',
         u'add a message to the maildir and notmuch database',
-        [u'Carl Worth and many others'], 1),
+        [notmuch_authors], 1),
 
 ('man1/notmuch-new','notmuch-new',
         u'incorporate new mail into the notmuch database',
-        [u'Carl Worth and many others'], 1),
+        [notmuch_authors], 1),
 
 ('man1/notmuch-reply','notmuch-reply',
         u'constructs a reply template for a set of messages',
-        [u'Carl Worth and many others'], 1),
+        [notmuch_authors], 1),
 
 ('man1/notmuch-restore','notmuch-restore',
         u'restores the tags from the given file (see notmuch dump)',
-        [u'Carl Worth and many others'], 1),
+        [notmuch_authors], 1),
 
 ('man1/notmuch-search','notmuch-search',
         u'search for messages matching the given search terms',
-        [u'Carl Worth and many others'], 1),
+        [notmuch_authors], 1),
 
 ('man7/notmuch-search-terms','notmuch-search-terms',
         u'syntax for notmuch queries',
-        [u'Carl Worth and many others'], 7),
+        [notmuch_authors], 7),
 
 ('man1/notmuch-show','notmuch-show',
         u'show messages matching the given search terms',
-        [u'Carl Worth and many others'], 1),
+        [notmuch_authors], 1),
 
 ('man1/notmuch-tag','notmuch-tag',
         u'add/remove tags for all messages matching the search terms',
-        [u'Carl Worth and many others'], 1),
+        [notmuch_authors], 1),
 
 
 ]
@@ -133,7 +135,7 @@ texinfo_no_detailmenu = True
 
 texinfo_documents = [
  ('notmuch-emacs', 'notmuch-emacs', u'notmuch Documentation',
-   u'Carl Worth and many others', 'notmuch-emacs',
+   notmuch_authors, 'notmuch-emacs',
    'emacs based front-end for notmuch', 'Miscellaneous'),
 ]
 
