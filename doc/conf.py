@@ -132,7 +132,7 @@ man_pages = [
 texinfo_no_detailmenu = True
 
 texinfo_documents = [
-    ('notmuch-emacs', 'notmuch-emacs', u'notmuch Documentation',
+    ('notmuch-emacs', 'notmuch-emacs', u'notmuch-emacs documentation',
      notmuch_authors, 'notmuch-emacs',
      'emacs based front-end for notmuch', 'Miscellaneous'),
 ]
@@ -142,7 +142,7 @@ texinfo_documents += [
     (
         x[0],				# source start file
         x[1],				# target name
-        u'notmuch Documentation',	# title
+        x[1] + u' documentation',	# title
         x[3][0],			# author
         x[1],				# dir menu entry
         x[2],				# description
