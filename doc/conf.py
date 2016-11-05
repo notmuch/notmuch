@@ -135,52 +135,16 @@ texinfo_documents = [
  ('notmuch-emacs', 'notmuch-emacs', u'notmuch Documentation',
    u'Carl Worth and many others', 'notmuch-emacs',
    'emacs based front-end for notmuch', 'Miscellaneous'),
-('man1/notmuch','notmuch',u'notmuch Documentation',
-      u'Carl Worth and many others', 'notmuch',
-      'thread-based email index, search, and tagging','Miscellaneous'),
-('man1/notmuch-address','notmuch-address',u'notmuch Documentation',
-      u'Carl Worth and many others', 'notmuch-address',
-      'output addresses from matching messages','Miscellaneous'),
-('man1/notmuch-compact','notmuch-compact',u'notmuch Documentation',
-      u'Carl Worth and many others', 'notmuch-compact',
-      'compact the notmuch database','Miscellaneous'),
-('man1/notmuch-config','notmuch-config',u'notmuch Documentation',
-      u'Carl Worth and many others', 'notmuch-config',
-      'access notmuch configuration file','Miscellaneous'),
-('man1/notmuch-count','notmuch-count',u'notmuch Documentation',
-      u'Carl Worth and many others', 'notmuch-count',
-      'count messages matching the given search terms','Miscellaneous'),
-('man1/notmuch-dump','notmuch-dump',u'notmuch Documentation',
-      u'Carl Worth and many others', 'notmuch-dump',
-      'creates a plain-text dump of the tags of each message','Miscellaneous'),
-('man1/notmuch-emacs-mua','notmuch-emacs-mua',u'notmuch Documentation',
-      u'Carl Worth and many others', 'notmuch-emacs-mua',
-      u'send mail with notmuch and emacs','Miscellaneous'),
-('man5/notmuch-hooks','notmuch-hooks',u'notmuch Documentation',
-      u'Carl Worth and many others', 'notmuch-hooks',
-      'hooks for notmuch','Miscellaneous'),
-('man1/notmuch-insert','notmuch-insert',u'notmuch Documentation',
-      u'Carl Worth and many others', 'notmuch-insert',
-      'add a message to the maildir and notmuch database','Miscellaneous'),
-('man1/notmuch-new','notmuch-new',u'notmuch Documentation',
-      u'Carl Worth and many others', 'notmuch-new',
-      'incorporate new mail into the notmuch database','Miscellaneous'),
-('man1/notmuch-reply','notmuch-reply',u'notmuch Documentation',
-      u'Carl Worth and many others', 'notmuch-reply',
-      'constructs a reply template for a set of messages','Miscellaneous'),
-('man1/notmuch-restore','notmuch-restore',u'notmuch Documentation',
-      u'Carl Worth and many others', 'notmuch-restore',
-      'restores the tags from the given file (see notmuch dump)','Miscellaneous'),
-('man1/notmuch-search','notmuch-search',u'notmuch Documentation',
-      u'Carl Worth and many others', 'notmuch-search',
-      'search for messages matching the given search terms','Miscellaneous'),
-('man7/notmuch-search-terms','notmuch-search-terms',u'notmuch Documentation',
-      u'Carl Worth and many others', 'notmuch-search-terms',
-      'syntax for notmuch queries','Miscellaneous'),
-('man1/notmuch-show','notmuch-show',u'notmuch Documentation',
-      u'Carl Worth and many others', 'notmuch-show',
-      'show messages matching the given search terms','Miscellaneous'),
-('man1/notmuch-tag','notmuch-tag',u'notmuch Documentation',
-      u'Carl Worth and many others', 'notmuch-tag',
-      'add/remove tags for all messages matching the search terms','Miscellaneous'),
 ]
+
+# generate texinfo list from man page list
+texinfo_documents += [
+    (
+        x[0],				# source start file
+        x[1],				# target name
+        u'notmuch Documentation',	# title
+        x[3][0],			# author
+        x[1],				# dir menu entry
+        x[2],				# description
+        'Miscellaneous'			# category
+    ) for x in man_pages]
