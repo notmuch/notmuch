@@ -1,4 +1,3 @@
 *.pyc
-docdeps.mk
 _build
 config.dox

@@ -7,12 +7,22 @@ SPHINXOPTS    := -q
 SPHINXBUILD   = sphinx-build
 DOCBUILDDIR      := $(dir)/_build
 
-mkdocdeps := $(PYTHON) $(srcdir)/$(dir)/mkdocdeps.py
-
 # Internal variables.
 ALLSPHINXOPTS   := -d $(DOCBUILDDIR)/doctrees $(SPHINXOPTS) $(srcdir)/$(dir)
 APIMAN		:= $(DOCBUILDDIR)/man/man3/notmuch.3
 DOXYFILE	:= $(srcdir)/$(dir)/doxygen.cfg
+
+MAN1_RST := $(wildcard $(srcdir)/doc/man1/*.rst)
+MAN5_RST := $(wildcard $(srcdir)/doc/man5/*.rst)
+MAN7_RST := $(wildcard $(srcdir)/doc/man7/*.rst)
+MAN_RST_FILES := $(MAN1_RST) $(MAN5_RST) $(MAN7_RST)
+
+MAN1_ROFF := $(patsubst $(srcdir)/doc/%,$(DOCBUILDDIR)/man/%,$(MAN1_RST:.rst=.1))
+MAN5_ROFF := $(patsubst $(srcdir)/doc/%,$(DOCBUILDDIR)/man/%,$(MAN5_RST:.rst=.5))
+MAN7_ROFF := $(patsubst $(srcdir)/doc/%,$(DOCBUILDDIR)/man/%,$(MAN7_RST:.rst=.7))
+MAN_ROFF_FILES := $(MAN1_ROFF) $(MAN5_ROFF) $(MAN7_ROFF)
+
+MAN_GZIP_FILES := $(addsuffix .gz,${MAN_ROFF_FILES})
 
 .PHONY: sphinx-html sphinx-texinfo sphinx-info
 
@@ -29,10 +39,6 @@ sphinx-texinfo:
 
 sphinx-info: sphinx-texinfo
 	make -C $(DOCBUILDDIR)/texinfo info
-
--include $(dir)/docdeps.mk
-
-MAN_GZIP_FILES := $(addsuffix .gz,${MAN_ROFF_FILES})
 
 # Use the man page converter that is available. We should never depend
 # on MAN_ROFF_FILES if a converter is not available.
@@ -96,8 +102,5 @@ $(dir)/config.dox: version.stamp
 	echo "PROJECT_NAME = \"Notmuch $(VERSION)\"" > $@
 	echo "INPUT=${srcdir}/lib/notmuch.h" >> $@
 
-$(dir)/docdeps.mk: $(dir)/conf.py $(dir)/mkdocdeps.py
-	$(mkdocdeps) $(srcdir)/doc $(DOCBUILDDIR) $@
-
-CLEAN := $(CLEAN) $(DOCBUILDDIR) $(dir)/docdeps.mk $(DOCBUILDDIR)/.roff.stamp
+CLEAN := $(CLEAN) $(DOCBUILDDIR) $(DOCBUILDDIR)/.roff.stamp
 CLEAN := $(CLEAN) $(MAN_GZIP_FILES) $(MAN_ROFF_FILES) $(dir)/conf.pyc $(dir)/config.dox
