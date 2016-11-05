@@ -189,10 +189,12 @@ following key bindings:
 ``j``
     Jump to saved searches using :ref:`notmuch-jump`.
 
+.. _notmuch-jump:
+
 notmuch-jump
 ------------
 
-Saved searches configured through :ref:`notmuch-saved-searches` can
+Saved searches configured through :ref:`saved-searches` can
 include a "shortcut key" that's accessible through notmuch-jump.
 Pressing ``j`` anywhere in notmuch followed by the configured shortcut
 key of a saved search will immediately jump to that saved search.  For
