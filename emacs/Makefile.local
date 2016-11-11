@@ -28,6 +28,12 @@ $(dir)/notmuch-version.el: $(srcdir)/$(dir)/notmuch-version.el.tmpl
 	@sed -e 's/%AG%/Generated file (from $(<F)) -- do not edit!/' \
 	     -e 's/%VERSION%/"$(VERSION)"/' $< > $@
 
+$(dir)/notmuch-pkg.el: $(srcdir)/$(dir)/notmuch-pkg.el.tmpl
+	@sed -e 's/%AG%/Generated file (from $(<F)) -- do not edit!/' \
+	     -e 's/%VERSION%/"$(ELPA_VERSION)"/' $< > $@
+
+all: $(dir)/notmuch-pkg.el
+install-emacs: $(dir)/notmuch-pkg.el
 
 emacs_images := \
 	$(srcdir)/$(dir)/notmuch-logo.png
@@ -85,4 +91,4 @@ endif
 	mkdir -p "$(DESTDIR)$(emacsetcdir)"
 	install -m0644 $(emacs_images) "$(DESTDIR)$(emacsetcdir)"
 
-CLEAN := $(CLEAN) $(emacs_bytecode) $(dir)/notmuch-version.el
+CLEAN := $(CLEAN) $(emacs_bytecode) $(dir)/notmuch-version.el $(dir)/notmuch-pkg.el
