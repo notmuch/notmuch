@@ -1,3 +1,12 @@
+notmuch (0.23.2-1) unstable; urgency=medium
+
+  * New upstream bugfix release
+  * Convert notmuch-emacs to dh-elpa, new binary package elpa-notmuch
+  * Bug fix: "maintainer script(s) do not start on #!", thanks to
+    treinen@debian.org; (Closes: #843287).
+
+ -- David Bremner <bremner@debian.org>  Thu, 10 Nov 2016 22:36:04 -0400
+
 notmuch (0.23.1-1) unstable; urgency=medium
 
   * New upstream bugfix release
