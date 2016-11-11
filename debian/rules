@@ -3,7 +3,7 @@
 python3_all = py3versions -s | xargs -n1 | xargs -t -I {} env {}
 
 %:
-	dh $@ --with python2,python3
+	dh $@ --with python2,python3,elpa
 
 override_dh_auto_configure:
 	./configure --prefix=/usr \
