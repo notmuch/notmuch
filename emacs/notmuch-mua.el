@@ -33,6 +33,8 @@
 (declare-function notmuch-show-insert-body "notmuch-show" (msg body depth))
 (declare-function notmuch-fcc-header-setup "notmuch-maildir-fcc" ())
 (declare-function notmuch-maildir-message-do-fcc "notmuch-maildir-fcc" ())
+(declare-function notmuch-draft-postpone "notmuch-draft" ())
+(declare-function notmuch-draft-save "notmuch-draft" ())
 
 ;;
 
@@ -289,6 +291,8 @@ mutiple parts get a header."
 
 (define-key notmuch-message-mode-map (kbd "C-c C-c") #'notmuch-mua-send-and-exit)
 (define-key notmuch-message-mode-map (kbd "C-c C-s") #'notmuch-mua-send)
+(define-key notmuch-message-mode-map (kbd "C-c C-p") #'notmuch-draft-postpone)
+(define-key notmuch-message-mode-map (kbd "C-x C-s") #'notmuch-draft-save)
 
 (defun notmuch-mua-pop-to-buffer (name switch-function)
   "Pop to buffer NAME, and warn if it already exists and is
