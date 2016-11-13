@@ -98,7 +98,7 @@ to know how address selection is made by default."
   :group 'notmuch-send
   :group 'notmuch-external)
 
-(defcustom notmuch-address-completion-hook nil
+(defcustom notmuch-address-post-completion-functions nil
   "Functions called after completing address.
 
 The completed address is passed as an argument to each function.
@@ -218,7 +218,7 @@ external commands."
 	    (push chosen notmuch-address-history)
 	    (delete-region beg end)
 	    (insert chosen)
-	    (run-hook-with-args 'notmuch-address-completion-hook chosen))
+	    (run-hook-with-args 'notmuch-address-post-completion-functions chosen))
 	(message "No matches.")
 	(ding))))
    (t nil)))

@@ -86,7 +86,7 @@
       (match (if (string-match notmuch-company-last-prefix arg)
 		 (match-end 0)
 	       0))
-      (post-completion (run-hook-with-args 'notmuch-address-completion-hook arg))
+      (post-completion (run-hook-with-args 'notmuch-address-post-completion-functions arg))
       (no-cache t))))
 
 
