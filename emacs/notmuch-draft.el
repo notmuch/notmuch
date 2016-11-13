@@ -71,6 +71,21 @@ postponing and resuming a message."
   :type '(repeat string)
   :group 'notmuch-send)
 
+(defcustom notmuch-draft-save-plaintext 'ask
+  "Should notmuch save/postpone in plaintext messages that seem
+  like they are intended to be sent encrypted
+(i.e with an mml encryption tag in it)."
+  :type '(radio
+	  (const :tag "Never" nil)
+	  (const :tag "Ask every time" ask)
+	  (const :tag "Always" t))
+  :group 'notmuch-draft
+  :group 'notmuch-crypto)
+
+(defvar notmuch-draft-encryption-tag-regex
+  "<#\\(part encrypt\\|secure.*mode=.*encrypt>\\)"
+  "Regular expression matching mml tags indicating encryption of part or message")
+
 (defvar notmuch-draft-id nil
   "Message-id of the most recent saved draft of this message")
 (make-variable-buffer-local 'notmuch-draft-id)
@@ -103,6 +118,27 @@ Used when a new version is saved, or the message is sent."
 	  (goto-char (+ (match-beginning 0) 2))
 	  (insert "!"))))))
 
+(defun notmuch-draft--has-encryption-tag ()
+  "Returns t if there is an mml secure tag."
+  (save-excursion
+    (message-goto-body)
+    (re-search-forward notmuch-draft-encryption-tag-regex nil 't)))
+
+(defun notmuch-draft--query-encryption ()
+  "Checks if we should save a message that should be encrypted.
+
+`notmuch-draft-save-plaintext' controls the behaviour."
+  (case notmuch-draft-save-plaintext
+	((ask)
+	 (unless (yes-or-no-p "(Customize `notmuch-draft-save-plaintext' to avoid this warning)
+This message contains mml tags that suggest it is intended to be encrypted.
+Really save and index an unencrypted copy? ")
+	   (error "Save aborted")))
+	((nil)
+	 (error "Refusing to save draft with encryption tags (see `notmuch-draft-save-plaintext')"))
+	((t)
+	 (ignore))))
+
 (defun notmuch-draft--make-message-id ()
   ;; message-make-message-id gives the id inside a "<" ">" pair,
   ;; but notmuch doesn't want that form, so remove them.
@@ -115,6 +151,8 @@ This saves the current message in the database with tags
 `notmuch-draft-tags` (in addition to any default tags
 applied to newly inserted messages)."
   (interactive)
+  (when (notmuch-draft--has-encryption-tag)
+    (notmuch-draft--query-encryption))
   (let ((id (notmuch-draft--make-message-id)))
     (with-temporary-notmuch-message-buffer
      ;; We insert a Date header and a Message-ID header, the former

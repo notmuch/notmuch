@@ -39,4 +39,17 @@ header_count=$(notmuch show --format=raw subject:draft-test-0003 | grep -c ^X-No
 body_count=$(notmuch notmuch show --format=raw subject:draft-test-0003 | grep -c '^\<#secure')
 test_expect_equal "$header_count,$body_count" "1,0"
 
+test_begin_subtest "Refusing to save an encrypted draft"
+test_emacs '(notmuch-mua-mail)
+	    (message-goto-subject)
+	    (insert "draft-test-0004")
+	    (mml-secure-message-sign-encrypt)
+	    (let ((notmuch-draft-save-plaintext nil))
+		     (notmuch-draft-save))
+	    (test-output)'
+count1=$(notmuch count tag:draft)
+count2=$(notmuch count subject:draft-test-0004)
+
+test_expect_equal "$count1,$count2" "3,0"
+
 test_done

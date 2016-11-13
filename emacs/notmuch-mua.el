@@ -27,6 +27,7 @@
 
 (require 'notmuch-lib)
 (require 'notmuch-address)
+(require 'notmuch-draft)
 
 (eval-when-compile (require 'cl))
 
