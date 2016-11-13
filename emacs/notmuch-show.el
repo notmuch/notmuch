@@ -38,6 +38,7 @@
 (require 'notmuch-mua)
 (require 'notmuch-crypto)
 (require 'notmuch-print)
+(require 'notmuch-draft)
 
 (declare-function notmuch-call-notmuch-process "notmuch" (&rest args))
 (declare-function notmuch-search-next-thread "notmuch" nil)
@@ -50,6 +51,7 @@
 		  (&optional query query-context target buffer-name open-target))
 (declare-function notmuch-tree-get-message-properties "notmuch-tree" nil)
 (declare-function notmuch-read-query "notmuch" (prompt))
+(declare-function notmuch-draft-resume "notmuch-draft" (id))
 
 (defcustom notmuch-message-headers '("Subject" "To" "Cc" "Date")
   "Headers that should be shown in a message, in this order.
@@ -1445,6 +1447,7 @@ reset based on the original query."
     (define-key map "|" 'notmuch-show-pipe-message)
     (define-key map "w" 'notmuch-show-save-attachments)
     (define-key map "V" 'notmuch-show-view-raw-message)
+    (define-key map "e" 'notmuch-show-resume-message)
     (define-key map "c" 'notmuch-show-stash-map)
     (define-key map "h" 'notmuch-show-toggle-visibility-headers)
     (define-key map "k" 'notmuch-tag-jump)
@@ -1981,6 +1984,11 @@ to show, nil otherwise."
     (set-buffer-modified-p nil)
     (setq buffer-read-only t)
     (view-buffer buf 'kill-buffer-if-not-modified)))
+
+(defun notmuch-show-resume-message ()
+  "Resume EDITING the current draft message."
+  (interactive)
+  (notmuch-draft-resume (notmuch-show-get-message-id)))
 
 (put 'notmuch-show-pipe-message 'notmuch-doc
      "Pipe the contents of the current message to a command.")

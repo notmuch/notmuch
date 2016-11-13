@@ -27,6 +27,7 @@
 (require 'notmuch-tag)
 
 (declare-function notmuch-show-get-message-id "notmuch-show" (&optional bare))
+(declare-function notmuch-message-mode "notmuch-mua")
 
 (defgroup notmuch-draft nil
   "Saving and editing drafts in Notmuch."
@@ -118,6 +119,27 @@ Used when a new version is saved, or the message is sent."
 	  (goto-char (+ (match-beginning 0) 2))
 	  (insert "!"))))))
 
+(defun notmuch-draft-unquote-some-mml ()
+  "Unquote the mml tags in `notmuch-draft-quoted-tags`."
+  (save-excursion
+    (when notmuch-draft-quoted-tags
+      (let ((re (concat "<#!+/?\\("
+			(mapconcat 'regexp-quote notmuch-draft-quoted-tags "\\|")
+			"\\)")))
+	(message-goto-body)
+	(while (re-search-forward re nil t)
+	  ;; Remove one ! from after the #.
+	  (goto-char (+ (match-beginning 0) 2))
+	  (delete-char 1))))
+    (let (secure-tag)
+      (save-restriction
+	(message-narrow-to-headers)
+	(setq secure-tag (message-fetch-field "X-Notmuch-Emacs-Secure" 't))
+	(message-remove-header "X-Notmuch-Emacs-Secure"))
+      (message-goto-body)
+      (when secure-tag
+	(insert secure-tag "\n")))))
+
 (defun notmuch-draft--has-encryption-tag ()
   "Returns t if there is an mml secure tag."
   (save-excursion
@@ -196,6 +218,46 @@ applied to newly inserted messages)."
   (interactive)
   (notmuch-draft-save)
   (kill-buffer))
+
+(defun notmuch-draft-resume (id)
+  "Resume editing of message with id ID."
+  (let* ((tags (process-lines notmuch-command "search" "--output=tags"
+			      "--exclude=false" id))
+	 (draft (equal tags (notmuch-update-tags tags notmuch-draft-tags))))
+    (when (or draft
+	      (yes-or-no-p "Message does not appear to be a draft: really resume? "))
+      (switch-to-buffer (get-buffer-create (concat "*notmuch-draft-" id "*")))
+      (setq buffer-read-only nil)
+      (erase-buffer)
+      (let ((coding-system-for-read 'no-conversion))
+	(call-process notmuch-command nil t nil "show" "--format=raw" id))
+      (mime-to-mml)
+      (goto-char (point-min))
+      (when (re-search-forward "^$" nil t)
+	(replace-match mail-header-separator t t))
+      ;; Remove the Date and Message-ID headers (unless the user has
+      ;; explicitly customized emacs to tell us not to) as they will
+      ;; be replaced when the message is sent.
+      (save-restriction
+	(message-narrow-to-headers)
+	(when (member 'Message-ID message-deletable-headers)
+	  (message-remove-header "Message-ID"))
+	(when (member 'Date message-deletable-headers)
+	  (message-remove-header "Date"))
+	;; The X-Notmuch-Emacs-Draft header is a more reliable
+	;; indication of whether the message really is a draft.
+	(setq draft (> (message-remove-header "X-Notmuch-Emacs-Draft") 0)))
+      ;; If the message is not a draft we should not unquote any mml.
+      (when draft
+	(notmuch-draft-unquote-some-mml))
+      (notmuch-message-mode)
+      (message-goto-body)
+      (set-buffer-modified-p nil)
+      ;; If the resumed message was a draft then set the draft
+      ;; message-id so that we can delete the current saved draft if the
+      ;; message is resaved or sent.
+      (setq notmuch-draft-id (when draft id)))))
+
 
 (add-hook 'message-send-hook 'notmuch-draft--mark-deleted)
 

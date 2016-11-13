@@ -52,4 +52,19 @@ count2=$(notmuch count subject:draft-test-0004)
 
 test_expect_equal "$count1,$count2" "3,0"
 
+test_begin_subtest "Resuming a signed draft"
+
+test_emacs '(notmuch-show "subject:draft-test-0003")
+	    (notmuch-show-resume-message)
+	    (test-output)'
+notmuch_dir_sanitize OUTPUT > OUTPUT.clean
+cat <<EOF | notmuch_dir_sanitize >EXPECTED
+From: Notmuch Test Suite <test_suite@notmuchmail.org>
+To: 
+Subject: draft-test-0003
+Fcc: MAIL_DIR/sent
+--text follows this line--
+<#secure method=pgpmime mode=sign>
+EOF
+test_expect_equal_file EXPECTED OUTPUT.clean
 test_done
