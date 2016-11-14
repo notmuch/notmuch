@@ -32,7 +32,9 @@ test_begin_subtest "Saving a signed draft adds header"
 test_emacs '(notmuch-mua-mail)
 	    (message-goto-subject)
 	    (insert "draft-test-0003")
-	    (mml-secure-message-sign)
+            ;; We would use (mml-secure-message-sign) but on emacs23
+            ;; that only signs the part, not the whole message.
+            (mml-secure-message mml-secure-method '\''sign)
 	    (notmuch-draft-save)
 	    (test-output)'
 header_count=$(notmuch show --format=raw subject:draft-test-0003 | grep -c ^X-Notmuch-Emacs-Secure)
