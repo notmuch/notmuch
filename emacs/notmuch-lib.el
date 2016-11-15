@@ -27,6 +27,7 @@
 (require 'mm-view)
 (require 'mm-decode)
 (require 'cl)
+(require 'notmuch-compat)
 
 (unless (require 'notmuch-version nil t)
   (defconst notmuch-emacs-version "unknown"
