@@ -1,3 +1,0 @@
-#DEBHELPER#
-dir="/var/lib/emacsen-common/state/package/installed"
-rm -f ${dir}/notmuch-emacs

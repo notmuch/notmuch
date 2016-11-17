@@ -147,11 +147,11 @@ toggles the setting in this buffer."
   (interactive)
   (if (local-variable-p 'notmuch-address-command)
       (kill-local-variable 'notmuch-address-command)
-    (setq-local notmuch-address-command 'internal))
+    (notmuch-setq-local notmuch-address-command 'internal))
   (if (boundp 'company-idle-delay)
       (if (local-variable-p 'company-idle-delay)
 	  (kill-local-variable 'company-idle-delay)
-	(setq-local company-idle-delay nil))))
+	(notmuch-setq-local company-idle-delay nil))))
 
 (defun notmuch-address-matching (substring)
   "Returns a list of completion candidates matching SUBSTRING.
