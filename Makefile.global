@@ -23,6 +23,8 @@ ifeq ($(IS_GIT),yes)
 VERSION:=$(shell git --git-dir=${srcdir}/.git describe --abbrev=7 --match '[0-9.]*'|sed -e s/_/~/ -e s/-/+/ -e s/-/~/)
 # drop the ~g$sha1 part
 ELPA_VERSION:=$(word 1,$(subst ~, ,$(VERSION)))
+# convert git version to package.el friendly form
+ELPA_VERSION:=$(subst +,snapshot,$(ELPA_VERSION))
 
 # Write the file 'version.stamp' in case its contents differ from $(VERSION)
 FILE_VERSION:=$(shell test -f version.stamp && read vs < version.stamp || vs=; echo $$vs)

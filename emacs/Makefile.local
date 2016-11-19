@@ -24,6 +24,8 @@ emacs_sources := \
 	$(dir)/notmuch-company.el \
 	$(dir)/notmuch-draft.el
 
+elpa_sources := ${emacs_sources} $(dir)/notmuch-pkg.el
+
 $(dir)/notmuch-version.el: $(dir)/Makefile.local version.stamp
 $(dir)/notmuch-version.el: $(srcdir)/$(dir)/notmuch-version.el.tmpl
 	@sed -e 's/%AG%/Generated file (from $(<F)) -- do not edit!/' \
@@ -72,6 +74,14 @@ ifeq ($(HAVE_EMACS),1)
 %.elc: %.el $(global_deps)
 	$(call quiet,EMACS) --directory emacs -batch -f batch-byte-compile $<
 endif
+
+elpa: $(ELPA_FILE)
+
+notmuch-emacs-%.tar: ${elpa_sources}
+	mkdir -p .elpa-build/notmuch-${ELPA_VERSION}
+	cp ${elpa_sources} .elpa-build/notmuch-${ELPA_VERSION}
+	tar -C .elpa-build -cf $@ notmuch-${ELPA_VERSION}
+	rm -r .elpa-build
 
 ifeq ($(WITH_EMACS),1)
 ifeq ($(HAVE_EMACS),1)
