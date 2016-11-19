@@ -33,6 +33,8 @@ ifeq ($(configure_options),)
 endif
 	$(srcdir)/configure $(configure_options)
 
+# runtime variable definitions available in all subdirs
+include $(srcdir)/Makefile.global
 # Finally, include all of the Makefile.local fragments where all the
 # real work is done.
 
