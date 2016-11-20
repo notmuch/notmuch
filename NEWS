@@ -1,3 +1,19 @@
+Notmuch 0.23.2 (2016-11-20)
+===========================
+
+Emacs
+-----
+
+Fix notmuch-interesting-buffer and notmuch-cycle-notmuch-buffers.
+
+  notmuch-tree-mode and notmuch-message-mode buffers are now
+  considered interesting by `notmuch-interesting-buffer` and
+  `notmuch-cycle-notmuch-buffers`.
+
+Restore compatibility with Emacs 23.
+
+  Notmuch support for Emacs 23 is now deprecated.
+
 Notmuch 0.23.1 (2016-10-23)
 ===========================
 
