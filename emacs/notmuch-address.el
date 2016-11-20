@@ -37,11 +37,15 @@
 
 (defvar notmuch-address-full-harvest-finished nil
   "t indicates that full completion address harvesting has been
-finished. Use notmuch-address--harvest-ready to access.")
+finished. Use notmuch-address--harvest-ready to access as that
+will load a saved hash if necessary (and available).")
 
 (defun notmuch-address--harvest-ready ()
-  "Return t if there is a full address hash available."
-  notmuch-address-full-harvest-finished)
+  "Return t if there is a full address hash available.
+
+If the hash is not present it attempts to load a saved hash."
+  (or notmuch-address-full-harvest-finished
+      (notmuch-address--load-address-hash)))
 
 (defcustom notmuch-address-command 'internal
   "Determines how address completion candidates are generated.
@@ -88,6 +92,17 @@ This should be a list of the form '(DIRECTION FILTER), where
 	 (setq notmuch-address-last-harvest 0)
 	 (setq notmuch-address-completions (clrhash notmuch-address-completions))
 	 (setq notmuch-address-full-harvest-finished nil))
+  :group 'notmuch-send
+  :group 'notmuch-external)
+
+(defcustom notmuch-address-save-filename nil
+  "Filename to save the cached completion addresses.
+
+All the addresses notmuch uses for address completion will be
+cached in this file. This has obvious privacy implications so you
+should make sure it is not somewhere publicly readable."
+  :type '(choice (const :tag "Off" nil)
+		 (file :tag "Filename"))
   :group 'notmuch-send
   :group 'notmuch-external)
 
@@ -327,6 +342,64 @@ execution, CALLBACK is called when harvesting finishes."
   ;; return value
   nil)
 
+(defvar notmuch-address--save-hash-version 1
+  "Version format of the save hash.")
+
+(defun notmuch-address--get-address-hash ()
+  "Returns the saved address hash as a plist.
+
+Returns nil if the save file does not exist, or it does not seem
+to be a saved address hash."
+  (when notmuch-address-save-filename
+    (condition-case nil
+	(with-temp-buffer
+	  (insert-file-contents notmuch-address-save-filename)
+	  (let ((name (read (current-buffer)))
+		(plist (read (current-buffer))))
+	    ;; We do two simple sanity checks on the loaded file. We just
+	    ;; check a version is specified, not that it is the current
+	    ;; version, as we are allowed to over-write and a save-file with
+	    ;; an older version.
+	    (when (and (string= name "notmuch-address-hash")
+		       (plist-get plist :version))
+	      plist)))
+      ;; The error case catches any of the reads failing.
+      (error nil))))
+
+(defun notmuch-address--load-address-hash ()
+  "Read the saved address hash and set the corresponding variables."
+  (let ((load-plist (notmuch-address--get-address-hash)))
+    (when (and load-plist
+	       ;; If the user's setting have changed, or the version
+	       ;; has changed, return nil to make sure the new settings
+	       ;; take effect.
+	       (equal (plist-get load-plist :completion-settings)
+		      notmuch-address-internal-completion)
+	       (equal (plist-get load-plist :version)
+		      notmuch-address--save-hash-version))
+      (setq notmuch-address-last-harvest (plist-get load-plist :last-harvest)
+	    notmuch-address-completions (plist-get load-plist :completions)
+	    notmuch-address-full-harvest-finished t)
+      ;; Return t to say load was successful.
+      t)))
+
+(defun notmuch-address--save-address-hash ()
+  (when notmuch-address-save-filename
+    (if (or (not (file-exists-p notmuch-address-save-filename))
+	      ;; The file exists, check it is a file we saved
+	    (notmuch-address--get-address-hash))
+	(with-temp-file notmuch-address-save-filename
+	  (let ((save-plist (list :version notmuch-address--save-hash-version
+				  :completion-settings notmuch-address-internal-completion
+				  :last-harvest notmuch-address-last-harvest
+				  :completions notmuch-address-completions)))
+	    (print "notmuch-address-hash" (current-buffer))
+	    (print save-plist (current-buffer))))
+      (message "\
+Warning: notmuch-address-save-filename %s exists but doesn't
+appear to be an address savefile.  Not overwriting."
+	       notmuch-address-save-filename))))
+
 (defun notmuch-address-harvest-trigger ()
   (let ((now (float-time)))
     (when (> (- now notmuch-address-last-harvest) 86400)
@@ -337,7 +410,9 @@ execution, CALLBACK is called when harvesting finishes."
 				 ;; again when the trigger is next
 				 ;; called
 				 (if (string= event "finished\n")
-				     (setq notmuch-address-full-harvest-finished t)
+				     (progn
+				       (notmuch-address--save-address-hash)
+				       (setq notmuch-address-full-harvest-finished t))
 				   (setq notmuch-address-last-harvest 0)))))))
 
 ;;
