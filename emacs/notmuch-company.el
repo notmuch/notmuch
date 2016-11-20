@@ -41,7 +41,7 @@
 (declare-function notmuch-address-harvest "notmuch-address")
 (declare-function notmuch-address-harvest-trigger "notmuch-address")
 (declare-function notmuch-address-matching "notmuch-address")
-(defvar notmuch-address-full-harvest-finished)
+(declare-function notmuch-address--harvest-ready "notmuch-address")
 (defvar notmuch-address-completion-headers-regexp)
 
 ;;;###autoload
@@ -70,7 +70,7 @@
 				 (line-beginning-position))
 		   (setq notmuch-company-last-prefix (company-grab "[:,][ \t]*\\(.*\\)" 1 (point-at-bol)))))
       (candidates (cond
-		   (notmuch-address-full-harvest-finished
+		   ((notmuch-address--harvest-ready)
 		    ;; Update harvested addressed from time to time
 		    (notmuch-address-harvest-trigger)
 		    (notmuch-address-matching arg))

@@ -37,7 +37,11 @@
 
 (defvar notmuch-address-full-harvest-finished nil
   "t indicates that full completion address harvesting has been
-finished")
+finished. Use notmuch-address--harvest-ready to access.")
+
+(defun notmuch-address--harvest-ready ()
+  "Return t if there is a full address hash available."
+  notmuch-address-full-harvest-finished)
 
 (defcustom notmuch-address-command 'internal
   "Determines how address completion candidates are generated.
@@ -170,7 +174,7 @@ elisp-based implementation or older implementation requiring
 external commands."
   (cond
    ((eq notmuch-address-command 'internal)
-    (when (not notmuch-address-full-harvest-finished)
+    (unless (notmuch-address--harvest-ready)
       ;; First, run quick synchronous harvest based on what the user
       ;; entered so far
       (notmuch-address-harvest original t))
