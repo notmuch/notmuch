@@ -5,7 +5,7 @@ notmuch-emacs-mua
 SYNOPSIS
 ========
 
-**notmuch-emacs-mua** [options ...] [<to-address> ... | <mailto-url>]
+**notmuch** **emacs-mua** [options ...] [<to-address> ... | <mailto-url>]
 
 DESCRIPTION
 ===========
@@ -13,7 +13,7 @@ DESCRIPTION
 Start composing an email in the Notmuch Emacs UI with the specified
 subject, recipients, and message body, or mailto: URL.
 
-Supported options for **notmuch-emacs-mua** include
+Supported options for **emacs-mua** include
 
     ``-h, --help``
         Display help.
