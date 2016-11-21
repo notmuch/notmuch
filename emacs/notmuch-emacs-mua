@@ -40,6 +40,7 @@ AUTO_DAEMON=
 CREATE_FRAME=
 ELISP=
 MAILTO=
+HELLO=
 
 # Short options compatible with mutt(1).
 while getopts :s:c:b:i:h opt; do
@@ -63,7 +64,7 @@ while getopts :s:c:b:i:h opt; do
 		    opt=${opt%%=*}
 		    ;;
 		# Long options without arguments.
-		--help|--print|--no-window-system|--client|--auto-daemon|--create-frame)
+		--help|--print|--no-window-system|--client|--auto-daemon|--create-frame|--hello)
 		    ;;
 		*)
 		    echo "$0: unknown long option ${opt}, or argument mismatch." >&2
@@ -112,6 +113,9 @@ while getopts :s:c:b:i:h opt; do
 	--create-frame)
 	    CREATE_FRAME="-c"
 	    ;;
+	--hello)
+	    HELLO=1
+	    ;;
 	*)
 	    # We should never end up here.
 	    echo "$0: internal error (option ${opt})." >&2
@@ -146,6 +150,8 @@ if [ -n "${MAILTO}" ]; then
 	exit 1
     fi
     ELISP="(browse-url-mail \"${MAILTO}\")"
+elif [ -z "${ELISP}" -a -n "${HELLO}" ]; then
+    ELISP="(notmuch)"
 else
     ELISP="(notmuch-mua-new-mail) ${ELISP}"
 fi

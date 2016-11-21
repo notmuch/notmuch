@@ -33,6 +33,10 @@ Supported options for **emacs-mua** include
     ``-i, --body=``\ <file>
         Specify a file to include into the body of the message.
 
+    ``--hello``
+        Go to the Notmuch hello screen instead of the message composition
+        window if no message composition parameters are given.
+
     ``--no-window-system``
         Even if a window system is available, use the current terminal.
 
