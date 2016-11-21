@@ -274,11 +274,6 @@ ifeq ($(WITH_EMACS), 1)
 endif
 endif
 
-.PHONY: install-desktop
-install-desktop:
-	mkdir -p "$(DESTDIR)$(desktop_dir)"
-	desktop-file-install --mode 0644 --dir "$(DESTDIR)$(desktop_dir)" notmuch.desktop
-
 SRCS  := $(SRCS) $(notmuch_client_srcs)
 CLEAN := $(CLEAN) notmuch notmuch-shared $(notmuch_client_modules)
 CLEAN := $(CLEAN) version.stamp notmuch-*.tar.gz.tmp

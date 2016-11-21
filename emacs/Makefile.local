@@ -39,6 +39,7 @@ all: $(dir)/notmuch-pkg.el
 install-emacs: $(dir)/notmuch-pkg.el
 
 emacs_mua := $(dir)/notmuch-emacs-mua
+emacs_mua_desktop := $(dir)/notmuch-emacs-mua.desktop
 
 emacs_images := \
 	$(srcdir)/$(dir)/notmuch-logo.png
@@ -105,5 +106,10 @@ endif
 	install -m0644 $(emacs_images) "$(DESTDIR)$(emacsetcdir)"
 	mkdir -p "$(DESTDIR)$(prefix)/bin/"
 	install $(emacs_mua) "$(DESTDIR)$(prefix)/bin"
+
+.PHONY: install-desktop
+install-desktop:
+	mkdir -p "$(DESTDIR)$(desktop_dir)"
+	desktop-file-install --mode 0644 --dir "$(DESTDIR)$(desktop_dir)" $(emacs_mua_desktop)
 
 CLEAN := $(CLEAN) $(emacs_bytecode) $(dir)/notmuch-version.el $(dir)/notmuch-pkg.el
