@@ -38,6 +38,8 @@ $(dir)/notmuch-pkg.el: $(srcdir)/$(dir)/notmuch-pkg.el.tmpl
 all: $(dir)/notmuch-pkg.el
 install-emacs: $(dir)/notmuch-pkg.el
 
+emacs_mua := $(dir)/notmuch-emacs-mua
+
 emacs_images := \
 	$(srcdir)/$(dir)/notmuch-logo.png
 
@@ -101,5 +103,7 @@ ifeq ($(HAVE_EMACS),1)
 endif
 	mkdir -p "$(DESTDIR)$(emacsetcdir)"
 	install -m0644 $(emacs_images) "$(DESTDIR)$(emacsetcdir)"
+	mkdir -p "$(DESTDIR)$(prefix)/bin/"
+	install $(emacs_mua) "$(DESTDIR)$(prefix)/bin"
 
 CLEAN := $(CLEAN) $(emacs_bytecode) $(dir)/notmuch-version.el $(dir)/notmuch-pkg.el
