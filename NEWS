@@ -1,3 +1,10 @@
+Notmuch 0.23.3 (UNRELEASED)
+
+Test Suite
+----------
+
+Fix incompatibility (related to signature size) with gnupg 2.1.16.
+
 Notmuch 0.23.2 (2016-11-20)
 ===========================
 
