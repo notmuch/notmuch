@@ -1,3 +1,10 @@
+notmuch (0.23.3-1) UNRELEASED; urgency=medium
+
+  * Re-enable test suite
+  * Fix test suite compatibility with gnupg 2.1.16
+
+ -- David Bremner <bremner@debian.org>  Thu, 24 Nov 2016 20:29:35 -0400
+
 notmuch (0.23.2-1) unstable; urgency=medium
 
   * New upstream bugfix release
