@@ -59,7 +59,7 @@ expected='[[[{"id": "XXXXX",
  "content": "This is a test signed message.\n"},
  {"id": 3,
  "content-type": "application/pgp-signature",
- "content-length": 280}]}]},
+ "content-length": "NONZERO"}]}]},
  []]]]'
 test_expect_equal_json \
     "$output" \
@@ -94,7 +94,7 @@ expected='[[[{"id": "XXXXX",
  "content": "This is a test signed message.\n"},
  {"id": 3,
  "content-type": "application/pgp-signature",
- "content-length": 280}]}]},
+ "content-length": "NONZERO"}]}]},
  []]]]'
 test_expect_equal_json \
     "$output" \
@@ -127,7 +127,7 @@ expected='[[[{"id": "XXXXX",
  "content": "This is a test signed message.\n"},
  {"id": 3,
  "content-type": "application/pgp-signature",
- "content-length": 280}]}]},
+ "content-length": "NONZERO"}]}]},
  []]]]'
 test_expect_equal_json \
     "$output" \
@@ -197,7 +197,7 @@ expected='[[[{"id": "XXXXX",
  "content-type": "multipart/encrypted",
  "content": [{"id": 2,
  "content-type": "application/pgp-encrypted",
- "content-length": 11},
+ "content-length": "NONZERO"},
  {"id": 3,
  "content-type": "multipart/mixed",
  "content": [{"id": 4,
@@ -205,7 +205,7 @@ expected='[[[{"id": "XXXXX",
  "content": "This is a test encrypted message.\n"},
  {"id": 5,
  "content-type": "application/octet-stream",
- "content-length": 28,
+ "content-length": "NONZERO",
  "content-transfer-encoding": "base64",
  "filename": "TESTATTACHMENT"}]}]}]},
  []]]]'
@@ -234,11 +234,9 @@ test_expect_equal_file OUTPUT TESTATTACHMENT
 
 test_begin_subtest "decryption failure with missing key"
 mv "${GNUPGHOME}"{,.bak}
-# The length of the encrypted attachment varies so must be normalized.
 output=$(notmuch show --format=json --decrypt subject:"test encrypted message 001" \
     | notmuch_json_show_sanitize \
-    | sed -e 's|"created": [1234567890]*|"created": 946728000|' \
-    | sed -e 's|"content-length": 6[1234567890]*|"content-length": 652|')
+    | sed -e 's|"created": [1234567890]*|"created": 946728000|')
 expected='[[[{"id": "XXXXX",
  "match": true,
  "excluded": false,
@@ -255,10 +253,10 @@ expected='[[[{"id": "XXXXX",
  "content-type": "multipart/encrypted",
  "content": [{"id": 2,
  "content-type": "application/pgp-encrypted",
- "content-length": 11},
+ "content-length": "NONZERO"},
  {"id": 3,
  "content-type": "application/octet-stream",
- "content-length": 652}]}]},
+ "content-length": "NONZERO"}]}]},
  []]]]'
 test_expect_equal_json \
     "$output" \
@@ -295,7 +293,7 @@ expected='[[[{"id": "XXXXX",
  "content-type": "multipart/encrypted",
  "content": [{"id": 2,
  "content-type": "application/pgp-encrypted",
- "content-length": 11},
+ "content-length": "NONZERO"},
  {"id": 3,
  "content-type": "text/plain",
  "content": "This is another test encrypted message.\n"}]}]},
@@ -370,7 +368,7 @@ expected='[[[{"id": "XXXXX",
  "content": "This is a test signed message.\n"},
  {"id": 3,
  "content-type": "application/pgp-signature",
- "content-length": 280}]}]},
+ "content-length": "NONZERO"}]}]},
  []]]]'
 test_expect_equal_json \
     "$output" \
