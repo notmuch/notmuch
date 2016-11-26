@@ -1,9 +1,12 @@
-notmuch (0.23.3-1) UNRELEASED; urgency=medium
+notmuch (0.23.3-1) unstable; urgency=medium
 
   * Re-enable test suite
-  * Fix test suite compatibility with gnupg 2.1.16
+  * Fix test suite compatibility with gnupg 2.1.16. Fixes: "FTBFS:
+    Tests failures", thanks to Lucas Nussbaum (Closes: #844915).
+  * Bug fix: "race condition in `notmuch new`?", thanks to Paul Wise
+    (Closes: #843127).
 
- -- David Bremner <bremner@debian.org>  Thu, 24 Nov 2016 20:29:35 -0400
+ -- David Bremner <bremner@debian.org>  Sat, 26 Nov 2016 08:37:39 -0400
 
 notmuch (0.23.2-1) unstable; urgency=medium
 

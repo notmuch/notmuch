@@ -25,6 +25,7 @@
 #define _GNU_SOURCE /* for getline */
 #endif
 #include <stdio.h>
+#include <sysexits.h>
 
 #include "compat.h"
 
@@ -113,6 +114,16 @@ chomp_newline (char *str)
     if (str && str[strlen(str)-1] == '\n')
 	str[strlen(str)-1] = '\0';
 }
+
+/* Exit status code indicating temporary failure; user is invited to
+ * retry.
+ *
+ * For example, file(s) in the mail store were removed or renamed
+ * after notmuch new scanned the directories but before indexing the
+ * file(s). If the file was renamed, the indexing might not be
+ * complete, and the user is advised to re-run notmuch new.
+ */
+#define NOTMUCH_EXIT_TEMPFAIL EX_TEMPFAIL
 
 /* Exit status code indicating the requested format version is too old
  * (support for that version has been dropped).  CLI code should use

@@ -53,6 +53,7 @@ typedef struct {
     int total_files;
     int processed_files;
     int added_messages, removed_messages, renamed_messages;
+    int vanished_files;
     struct timeval tv_start;
 
     _filename_list_t *removed_files;
@@ -280,11 +281,13 @@ add_file (notmuch_database_t *notmuch, const char *filename,
     case NOTMUCH_STATUS_FILE_NOT_EMAIL:
 	fprintf (stderr, "Note: Ignoring non-mail file: %s\n", filename);
 	break;
-    /* Fatal issues. Don't process anymore. */
     case NOTMUCH_STATUS_FILE_ERROR:
+	/* Someone renamed/removed the file between scandir and now. */
+	state->vanished_files++;
 	fprintf (stderr, "Unexpected error with file %s\n", filename);
 	(void) print_status_database ("add_file", notmuch, status);
-	goto DONE;
+	break;
+    /* Fatal issues. Don't process anymore. */
     case NOTMUCH_STATUS_READ_ONLY_DATABASE:
     case NOTMUCH_STATUS_XAPIAN_EXCEPTION:
     case NOTMUCH_STATUS_OUT_OF_MEMORY:
@@ -1151,5 +1154,11 @@ notmuch_new_command (notmuch_config_t *config, int argc, char *argv[])
     if (!no_hooks && !ret && !interrupted)
 	ret = notmuch_run_hook (db_path, "post-new");
 
-    return ret || interrupted ? EXIT_FAILURE : EXIT_SUCCESS;
+    if (ret || interrupted)
+	return EXIT_FAILURE;
+
+    if (add_files_state.vanished_files)
+	return NOTMUCH_EXIT_TEMPFAIL;
+
+    return EXIT_SUCCESS;
 }
