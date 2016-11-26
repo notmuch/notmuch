@@ -70,6 +70,7 @@ LIBDIR=
 WITH_DOCS=1
 WITH_API_DOCS=1
 WITH_EMACS=1
+WITH_DESKTOP=1
 WITH_BASH=1
 WITH_RUBY=1
 WITH_ZSH=1
@@ -141,6 +142,7 @@ Some features can be disabled (--with-feature=no is equivalent to
 	--without-docs			Do not install documentation
 	--without-api-docs		Do not install API man page
 	--without-emacs			Do not install lisp file
+	--without-desktop		Do not install desktop file
 	--without-ruby			Do not install ruby bindings
 	--without-zsh-completion	Do not install zsh completions files
 	--without-retry-lock		Do not use blocking xapian opens, even if available
@@ -209,6 +211,14 @@ for option; do
 	fi
     elif [ "${option}" = '--without-emacs' ] ; then
 	WITH_EMACS=0
+    elif [ "${option%%=*}" = '--with-desktop' ]; then
+	if [ "${option#*=}" = 'no' ]; then
+	    WITH_DESKTOP=0
+	else
+	    WITH_DESKTOP=1
+	fi
+    elif [ "${option}" = '--without-desktop' ] ; then
+	WITH_DESKTOP=0
     elif [ "${option%%=*}" = '--with-bash-completion' ]; then
 	if [ "${option#*=}" = 'no' ]; then
 	    WITH_BASH=0
@@ -599,6 +609,16 @@ if [ $WITH_DOCS = "1" ] ; then
 	have_sphinx=1
     else
 	printf "No (so will not install man pages).\n"
+    fi
+fi
+
+if [ $WITH_DESKTOP = "1" ]; then
+    printf "Checking if desktop-file-install is available... "
+    if command -v desktop-file-install > /dev/null; then
+	printf "Yes.\n"
+    else
+	printf "No (so will not install .desktop file).\n"
+	WITH_DESKTOP=0
     fi
 fi
 
@@ -1122,6 +1142,9 @@ VALGRIND_CFLAGS = ${valgrind_cflags}
 
 # Support for emacs
 WITH_EMACS = ${WITH_EMACS}
+
+# Support for desktop file
+WITH_DESKTOP = ${WITH_DESKTOP}
 
 # Support for bash completion
 WITH_BASH = ${WITH_BASH}

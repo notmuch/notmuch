@@ -106,10 +106,9 @@ endif
 	install -m0644 $(emacs_images) "$(DESTDIR)$(emacsetcdir)"
 	mkdir -p "$(DESTDIR)$(prefix)/bin/"
 	install $(emacs_mua) "$(DESTDIR)$(prefix)/bin"
-
-.PHONY: install-desktop
-install-desktop:
+ifeq ($(WITH_DESKTOP),1)
 	mkdir -p "$(DESTDIR)$(desktop_dir)"
 	desktop-file-install --mode 0644 --dir "$(DESTDIR)$(desktop_dir)" $(emacs_mua_desktop)
+endif
 
 CLEAN := $(CLEAN) $(emacs_bytecode) $(dir)/notmuch-version.el $(dir)/notmuch-pkg.el
