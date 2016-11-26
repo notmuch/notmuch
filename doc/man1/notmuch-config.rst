@@ -129,14 +129,14 @@ The available configuration items are described below.
 
         Name (or full path) of gpg binary to use in verification and
         decryption of PGP/MIME messages.
-    
+
         Default: ``gpg``.
 
     **built_with.<name>**
 
-	Compile time feature <name>. Current possibilities include
-	"compact" (see **notmuch-compact(1)**)
-	and "field_processor" (see **notmuch-search-terms(7)**).
+        Compile time feature <name>. Current possibilities include
+        "compact" (see **notmuch-compact(1)**)
+        and "field_processor" (see **notmuch-search-terms(7)**).
 
     **query.<name>**
 

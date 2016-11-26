@@ -64,11 +64,11 @@ Supported options for **address** include
             messages. This is not applicable with --output=count.
 
         **mailbox**
-	    Deduplicate addresses based on the full, case sensitive
-	    name and email address, or mailbox. This is effectively
-	    the same as piping the --deduplicate=no output to **sort |
-	    uniq**, except for the order of results. This is the
-	    default.
+            Deduplicate addresses based on the full, case sensitive
+            name and email address, or mailbox. This is effectively
+            the same as piping the --deduplicate=no output to **sort |
+            uniq**, except for the order of results. This is the
+            default.
 
         **address**
             Deduplicate addresses based on the case insensitive

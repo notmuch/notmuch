@@ -77,21 +77,21 @@ Supported options for **dump** include
 
       **config**
 
-	Output configuration data stored in the database. Each line
-	starts with "#@ ", followed by a space separated key-value
-	pair.  Both key and value are hex encoded if needed.
+        Output configuration data stored in the database. Each line
+        starts with "#@ ", followed by a space separated key-value
+        pair.  Both key and value are hex encoded if needed.
 
       **properties**
 
-	Output per-message (key,value) metadata.  Each line starts
-	with "#= ", followed by a message id, and a space separated
-	list of key=value pairs.  pair.  Ids, keys and values are hex
-	encoded if needed.
+        Output per-message (key,value) metadata.  Each line starts
+        with "#= ", followed by a message id, and a space separated
+        list of key=value pairs.  pair.  Ids, keys and values are hex
+        encoded if needed.
 
       **tags**
 
-	Output per-message boolean metadata, namely tags. See *format* above
-	for description of the output.
+        Output per-message boolean metadata, namely tags. See *format* above
+        for description of the output.
 
       The default is to include all available types of data.  The
       option can be specified multiple times to select some subset. As
