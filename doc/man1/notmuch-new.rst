@@ -43,6 +43,14 @@ Supported options for **new** include
     ``--quiet``
         Do not print progress or results.
 
+EXIT STATUS
+===========
+
+This command supports the following special exit status code
+
+``75 (EX_TEMPFAIL)``
+    A temporary failure occured; the user is invited to retry.
+
 SEE ALSO
 ========
 
