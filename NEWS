@@ -1,5 +1,10 @@
 Notmuch 0.23.3 (2016-11-26)
 
+Command Line Interface
+----------------------
+
+Treat disappearing files during notmuch new as non-fatal.
+
 Test Suite
 ----------
 
