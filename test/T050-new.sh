@@ -298,4 +298,38 @@ output=$(NOTMUCH_NEW --debug 2>&1 | sed 's/: .*$//' )
 chmod u+w  ${MAIL_DIR}/.notmuch/xapian/*.${db_ending}
 test_expect_equal "$output" "A Xapian exception occurred opening database"
 
+
+test_begin_subtest "Handle files vanishing between scandir and add_file"
+
+# A file for scandir to find. It won't get indexed, so can be empty.
+touch ${MAIL_DIR}/vanish
+
+# Breakpoint to remove the file before indexing
+cat <<EOF > notmuch-new-vanish.gdb
+set breakpoint pending on
+set logging file notmuch-new-vanish-gdb.log
+set logging on
+break add_file
+commands
+shell rm -f ${MAIL_DIR}/vanish
+continue
+end
+run
+EOF
+
+gdb --batch-silent --return-child-result -x notmuch-new-vanish.gdb \
+    --args notmuch new 2>OUTPUT 1>/dev/null
+echo "exit status: $?" >> OUTPUT
+
+# Clean up the file in case gdb isn't available.
+rm -f ${MAIL_DIR}/vanish
+
+cat <<EOF > EXPECTED
+Unexpected error with file ${MAIL_DIR}/vanish
+add_file: Something went wrong trying to read or write a file
+Error opening ${MAIL_DIR}/vanish: No such file or directory
+exit status: 75
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
 test_done
