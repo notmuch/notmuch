@@ -538,9 +538,10 @@ notmuch_insert_command (notmuch_config_t *config, int argc, char *argv[])
 	return EXIT_FAILURE;
     }
 
-   if (notmuch_database_open (notmuch_config_get_database_path (config),
-			       NOTMUCH_DATABASE_MODE_READ_WRITE, &notmuch))
-	return EXIT_FAILURE;
+    status = notmuch_database_open (notmuch_config_get_database_path (config),
+				    NOTMUCH_DATABASE_MODE_READ_WRITE, &notmuch);
+    if (status)
+	return keep ? NOTMUCH_STATUS_SUCCESS : status_to_exit (status);
 
     notmuch_exit_if_unmatched_db_uuid (notmuch);
 
@@ -577,5 +578,5 @@ notmuch_insert_command (notmuch_config_t *config, int argc, char *argv[])
 	notmuch_run_hook (db_path, "post-insert");
     }
 
-    return status ? EXIT_FAILURE : EXIT_SUCCESS;
+    return status_to_exit (status);
 }

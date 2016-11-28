@@ -189,7 +189,6 @@ notmuch config set new.tags $OLDCONFIG
 
 for code in OUT_OF_MEMORY XAPIAN_EXCEPTION FILE_NOT_EMAIL \
     READ_ONLY_DATABASE UPGRADE_REQUIRED PATH_ERROR; do
-gen_insert_msg
 cat <<EOF > index-file-$code.gdb
 set breakpoint pending on
 set logging file index-file-$code.log
@@ -201,17 +200,30 @@ continue
 end
 run
 EOF
-test_begin_subtest "error exit when add_message returns $code"
-gdb --batch-silent --return-child-result \
-    -ex "set args insert < $gen_msg_filename" \
-    -x index-file-$code.gdb notmuch
-test_expect_equal $? 1
+done
 
-test_begin_subtest "success exit with --keep when add_message returns $code"
-gdb --batch-silent --return-child-result \
-    -ex "set args insert --keep < $gen_msg_filename" \
-    -x index-file-$code.gdb notmuch
-test_expect_equal $? 0
+gen_insert_msg
+
+for code in  FILE_NOT_EMAIL READ_ONLY_DATABASE UPGRADE_REQUIRED PATH_ERROR; do
+    test_expect_code 1 "EXIT_FAILURE when add_message returns $code" \
+         "gdb --batch-silent --return-child-result \
+	     -ex 'set args insert < $gen_msg_filename' \
+	     -x index-file-$code.gdb notmuch"
+    test_expect_code 0 "success exit with --keep when add_message returns $code" \
+         "gdb --batch-silent --return-child-result \
+	     -ex 'set args insert --keep < $gen_msg_filename' \
+	     -x index-file-$code.gdb notmuch"
+done
+
+for code in OUT_OF_MEMORY XAPIAN_EXCEPTION ; do
+    test_expect_code 75 "EX_TEMPFAIL when add_message returns $code" \
+         "gdb --batch-silent --return-child-result \
+	     -ex 'set args insert < $gen_msg_filename' \
+	     -x index-file-$code.gdb notmuch"
+    test_expect_code 0 "success exit with --keep when add_message returns $code" \
+         "gdb --batch-silent --return-child-result \
+	     -ex 'set args insert --keep < $gen_msg_filename' \
+	     -x index-file-$code.gdb notmuch"
 done
 
 test_done
