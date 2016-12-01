@@ -1,3 +1,10 @@
+notmuch (0.23.3-2) unstable; urgency=medium
+
+  * Add missing depends to notmuch-emacs. Thanks to micah for the
+    report.
+
+ -- David Bremner <bremner@debian.org>  Thu, 01 Dec 2016 08:06:59 -0400
+
 notmuch (0.23.3-1) unstable; urgency=medium
 
   * Re-enable test suite
