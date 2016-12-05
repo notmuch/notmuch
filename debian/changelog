@@ -1,3 +1,9 @@
+notmuch (0.23.3-3) unstable; urgency=medium
+
+  * Disable gdb using tests on kfreebsd-*, due to apparent gdb breakage
+
+ -- David Bremner <bremner@debian.org>  Mon, 05 Dec 2016 08:25:32 -0400
+
 notmuch (0.23.3-2) unstable; urgency=medium
 
   * Add missing depends to notmuch-emacs. Thanks to micah for the
