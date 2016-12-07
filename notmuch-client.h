@@ -489,6 +489,9 @@ print_status_database (const char *loc,
 		       const notmuch_database_t *database,
 		       notmuch_status_t status);
 
+int
+status_to_exit (notmuch_status_t status);
+
 #include "command-line-arguments.h"
 
 extern char *notmuch_requested_db_uuid;

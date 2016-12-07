@@ -532,18 +532,19 @@ notmuch_insert_command (notmuch_config_t *config, int argc, char *argv[])
     action.sa_flags = 0;
     sigaction (SIGINT, &action, NULL);
 
-    if (notmuch_database_open (notmuch_config_get_database_path (config),
-			       NOTMUCH_DATABASE_MODE_READ_WRITE, &notmuch))
-	return EXIT_FAILURE;
-
-    notmuch_exit_if_unmatched_db_uuid (notmuch);
-
     /* Write the message to the Maildir new directory. */
     newpath = maildir_write_new (config, STDIN_FILENO, maildir);
     if (! newpath) {
-	notmuch_database_destroy (notmuch);
 	return EXIT_FAILURE;
     }
+
+    status = notmuch_database_open (notmuch_config_get_database_path (config),
+				    NOTMUCH_DATABASE_MODE_READ_WRITE, &notmuch);
+    if (status)
+	return keep ? NOTMUCH_STATUS_SUCCESS : status_to_exit (status);
+
+    notmuch_exit_if_unmatched_db_uuid (notmuch);
+
 
     /* Index the message. */
     status = add_file (notmuch, newpath, tag_ops, synchronize_flags, keep);
@@ -577,5 +578,5 @@ notmuch_insert_command (notmuch_config_t *config, int argc, char *argv[])
 	notmuch_run_hook (db_path, "post-insert");
     }
 
-    return status ? EXIT_FAILURE : EXIT_SUCCESS;
+    return status_to_exit (status);
 }

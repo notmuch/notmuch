@@ -36,3 +36,19 @@ print_status_database (const char *loc,
     }
     return status;
 }
+
+int
+status_to_exit (notmuch_status_t status)
+{
+    switch (status) {
+    case NOTMUCH_STATUS_SUCCESS:
+	return EXIT_SUCCESS;
+    case NOTMUCH_STATUS_OUT_OF_MEMORY:
+    case NOTMUCH_STATUS_XAPIAN_EXCEPTION:
+    case NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID:
+    case NOTMUCH_STATUS_FILE_ERROR:
+	return EX_TEMPFAIL;
+    default:
+	return EXIT_FAILURE;
+    }
+}
