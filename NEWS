@@ -1,3 +1,15 @@
+Notmuch 0.23.4 (UNRELEASED)
+===========================
+
+Command Line Interface
+----------------------
+
+Improve error handling in notmuch insert
+
+  Database lock errors no longer prevent message file delivery to the
+  filesystem.  Certain errors during `notmuch insert` most likely to
+  be temporary return EX_TEMPFAIL.
+
 Notmuch 0.23.3 (2016-11-27)
 ===========================
 
