@@ -931,8 +931,8 @@ PROMPT is the string to prompt with."
   "Return the current query in this search buffer"
   notmuch-search-query-string)
 
-;;;###autoload
 (put 'notmuch-search 'notmuch-doc "Search for messages.")
+;;;###autoload
 (defun notmuch-search (&optional query oldest-first target-thread target-line)
   "Display threads matching QUERY in a notmuch-search buffer.
 
