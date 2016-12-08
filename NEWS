@@ -10,6 +10,11 @@ Improve error handling in notmuch insert
   filesystem.  Certain errors during `notmuch insert` most likely to
   be temporary return EX_TEMPFAIL.
 
+Emacs
+-----
+
+Restore autoload cookie for notmuch-search.
+
 Notmuch 0.23.3 (2016-11-27)
 ===========================
 
