@@ -205,31 +205,78 @@ get_username_from_passwd_file (void *ctx)
 static notmuch_bool_t
 get_config_from_file (notmuch_config_t *config, notmuch_bool_t create_new)
 {
+    #define BUF_SIZE 4096
+    char *config_str = NULL;
+    int config_len = 0;
+    int config_bufsize = BUF_SIZE;
+    size_t len;
     GError *error = NULL;
     notmuch_bool_t ret = FALSE;
 
-    if (g_key_file_load_from_file (config->key_file, config->filename,
-				   G_KEY_FILE_KEEP_COMMENTS, &error))
-	return TRUE;
-
-    if (error->domain == G_FILE_ERROR && error->code == G_FILE_ERROR_NOENT) {
+    FILE *fp = fopen(config->filename, "r");
+    if (fp == NULL) {
 	/* If create_new is true, then the caller is prepared for a
 	 * default configuration file in the case of FILE NOT FOUND.
 	 */
 	if (create_new) {
 	    config->is_new = TRUE;
 	    ret = TRUE;
-	} else {
+	    goto out;
+	} else if (errno == ENOENT) {
 	    fprintf (stderr, "Configuration file %s not found.\n"
 		     "Try running 'notmuch setup' to create a configuration.\n",
 		     config->filename);
+	    goto out;
+	} else {
+	    fprintf (stderr, "Error opening config file '%s': %s\n"
+		     "Try running 'notmuch setup' to create a configuration.\n",
+		     config->filename, strerror(errno));
+	    goto out;
 	}
-    } else {
-	fprintf (stderr, "Error reading configuration file %s: %s\n",
-		 config->filename, error->message);
     }
 
+    config_str = talloc_zero_array (config, char, config_bufsize);
+    if (config_str == NULL) {
+	fprintf (stderr, "Error reading '%s': Out of memory\n", config->filename);
+	goto out;
+    }
+
+    while ((len = fread (config_str + config_len, 1,
+			 config_bufsize - config_len, fp)) > 0) {
+	config_len += len;
+	if (config_len == config_bufsize) {
+	    config_bufsize += BUF_SIZE;
+	    config_str = talloc_realloc (config, config_str, char, config_bufsize);
+	    if (config_str == NULL) {
+		fprintf (stderr, "Error reading '%s': Failed to reallocate memory\n",
+			 config->filename);
+		goto out;
+	    }
+	}
+    }
+
+    if (ferror (fp)) {
+	fprintf (stderr, "Error reading '%s': I/O error\n", config->filename);
+	goto out;
+    }
+
+    if (g_key_file_load_from_data (config->key_file, config_str, config_len,
+				   G_KEY_FILE_KEEP_COMMENTS, &error)) {
+	ret = TRUE;
+	goto out;
+    }
+
+    fprintf (stderr, "Error parsing config file '%s': %s\n",
+	     config->filename, error->message);
+
     g_error_free (error);
+
+out:
+    if (fp)
+	fclose(fp);
+
+    if (config_str)
+	talloc_free(config_str);
 
     return ret;
 }
