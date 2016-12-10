@@ -202,6 +202,38 @@ get_username_from_passwd_file (void *ctx)
     return name;
 }
 
+static notmuch_bool_t
+get_config_from_file (notmuch_config_t *config, notmuch_bool_t create_new)
+{
+    GError *error = NULL;
+    notmuch_bool_t ret = FALSE;
+
+    if (g_key_file_load_from_file (config->key_file, config->filename,
+				   G_KEY_FILE_KEEP_COMMENTS, &error))
+	return TRUE;
+
+    if (error->domain == G_FILE_ERROR && error->code == G_FILE_ERROR_NOENT) {
+	/* If create_new is true, then the caller is prepared for a
+	 * default configuration file in the case of FILE NOT FOUND.
+	 */
+	if (create_new) {
+	    config->is_new = TRUE;
+	    ret = TRUE;
+	} else {
+	    fprintf (stderr, "Configuration file %s not found.\n"
+		     "Try running 'notmuch setup' to create a configuration.\n",
+		     config->filename);
+	}
+    } else {
+	fprintf (stderr, "Error reading configuration file %s: %s\n",
+		 config->filename, error->message);
+    }
+
+    g_error_free (error);
+
+    return ret;
+}
+
 /* Open the named notmuch configuration file. If the filename is NULL,
  * the value of the environment variable $NOTMUCH_CONFIG will be used.
  * If $NOTMUCH_CONFIG is unset, the default configuration file
@@ -289,36 +321,9 @@ notmuch_config_open (void *ctx,
     config->search_exclude_tags_length = 0;
     config->crypto_gpg_path = NULL;
 
-    if (! g_key_file_load_from_file (config->key_file,
-				     config->filename,
-				     G_KEY_FILE_KEEP_COMMENTS,
-				     &error))
-    {
-	if (error->domain == G_FILE_ERROR && error->code == G_FILE_ERROR_NOENT) {
-	    /* If create_new is true, then the caller is prepared for a
-	     * default configuration file in the case of FILE NOT
-	     * FOUND.
-	     */
-	    if (create_new) {
-		g_error_free (error);
-		config->is_new = TRUE;
-	    } else {
-		fprintf (stderr, "Configuration file %s not found.\n"
-			 "Try running 'notmuch setup' to create a configuration.\n",
-			 config->filename);
-		talloc_free (config);
-		g_error_free (error);
-		return NULL;
-	    }
-	}
-	else
-	{
-	    fprintf (stderr, "Error reading configuration file %s: %s\n",
-		     config->filename, error->message);
-	    talloc_free (config);
-	    g_error_free (error);
-	    return NULL;
-	}
+    if (! get_config_from_file (config, create_new)) {
+	talloc_free (config);
+	return NULL;
     }
 
     /* Whenever we know of configuration sections that don't appear in
