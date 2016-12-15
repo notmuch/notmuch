@@ -60,6 +60,13 @@ indexing to Notmuch database, changing tags, and synchronizing tags to
 maildir flags. The ``--keep`` option may be used to settle for
 successful message file delivery.
 
+This command supports the following special exit status code for
+errors most likely to be temporary in nature, e.g. failure to get a
+database write lock.
+
+``75 (EX_TEMPFAIL)``
+    A temporary failure occured; the user is invited to retry.
+
 The exit status of the **post-insert** hook does not affect the exit
 status of the **insert** command.
 
