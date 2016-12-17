@@ -334,13 +334,16 @@ notmuch_config_open (void *ctx,
     int file_had_search_group;
     int file_had_crypto_group;
 
-    notmuch_config_t *config = talloc (ctx, notmuch_config_t);
+    notmuch_config_t *config = talloc_zero (ctx, notmuch_config_t);
     if (config == NULL) {
 	fprintf (stderr, "Out of memory.\n");
 	return NULL;
     }
     
     talloc_set_destructor (config, notmuch_config_destructor);
+
+    /* non-zero defaults */
+    config->maildir_synchronize_flags = TRUE;
 
     if (filename) {
 	config->filename = talloc_strdup (config, filename);
@@ -352,21 +355,6 @@ notmuch_config_open (void *ctx,
     }
 
     config->key_file = g_key_file_new ();
-
-    config->is_new = FALSE;
-    config->database_path = NULL;
-    config->user_name = NULL;
-    config->user_primary_email = NULL;
-    config->user_other_email = NULL;
-    config->user_other_email_length = 0;
-    config->new_tags = NULL;
-    config->new_tags_length = 0;
-    config->new_ignore = NULL;
-    config->new_ignore_length = 0;
-    config->maildir_synchronize_flags = TRUE;
-    config->search_exclude_tags = NULL;
-    config->search_exclude_tags_length = 0;
-    config->crypto_gpg_path = NULL;
 
     if (! get_config_from_file (config, create_new)) {
 	talloc_free (config);
