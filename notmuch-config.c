@@ -631,11 +631,11 @@ _config_get_list (notmuch_config_t *config,
 
 static void
 _config_set_list (notmuch_config_t *config,
-		  const char *group, const char *name,
+		  const char *group, const char *key,
 		  const char *list[],
 		  size_t length, const char ***config_var )
 {
-    g_key_file_set_string_list (config->key_file, group, name, list, length);
+    g_key_file_set_string_list (config->key_file, group, key, list, length);
 
     /* drop the cached value */
     talloc_free (*config_var);
