@@ -738,18 +738,20 @@ count_files (const char *path, int *count, add_files_state_t *state)
         entry = fs_entries[i];
 
 	/* Ignore special directories to avoid infinite recursion.
-	 * Also ignore the .notmuch directory and files/directories
-	 * the user has configured to be ignored.
+	 * Also ignore the .notmuch directory.
 	 */
 	if (strcmp (entry->d_name, ".") == 0 ||
 	    strcmp (entry->d_name, "..") == 0 ||
-	    strcmp (entry->d_name, ".notmuch") == 0 ||
-	    _entry_in_ignore_list (entry->d_name, state))
-	{
-	    if (state->debug && _entry_in_ignore_list (entry->d_name, state))
+	    strcmp (entry->d_name, ".notmuch") == 0)
+	    continue;
+
+	/* Ignore any files/directories the user has configured to be
+	 * ignored
+	 */
+	if (_entry_in_ignore_list (entry->d_name, state)) {
+	    if (state->debug)
 		printf ("(D) count_files: explicitly ignoring %s/%s\n",
-			path,
-			entry->d_name);
+			path, entry->d_name);
 	    continue;
 	}
 
