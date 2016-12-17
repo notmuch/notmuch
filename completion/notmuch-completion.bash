@@ -117,8 +117,12 @@ _notmuch_search_terms()
 	    compopt -o nospace
 	    COMPREPLY=( $(compgen -P "mimetype:" -W "`_notmuch_mimetype ${cur}`" -- ${cur##mimetype:}) )
 	    ;;
+	query:*)
+	    compopt -o nospace
+	    COMPREPLY=( $(compgen -P "query:" -W "`notmuch config list | sed -n '/^query\./s/^query\.\([^=]*\)=.*/\1/p'`" -- ${cur##query:}) )
+	    ;;
 	*)
-	    local search_terms="from: to: subject: attachment: mimetype: tag: id: thread: folder: path: date: lastmod:"
+	    local search_terms="from: to: subject: attachment: mimetype: tag: id: thread: folder: path: date: lastmod: query: property:"
 	    compopt -o nospace
 	    COMPREPLY=( $(compgen -W "${search_terms}" -- ${cur}) )
 	    ;;
