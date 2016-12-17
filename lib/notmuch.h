@@ -126,15 +126,15 @@ typedef enum _notmuch_status {
     NOTMUCH_STATUS_READ_ONLY_DATABASE,
     /**
      * A Xapian exception occurred.
+     *
+     * @todo We don't really want to expose this lame XAPIAN_EXCEPTION
+     * value. Instead we should map to things like DATABASE_LOCKED or
+     * whatever.
      */
     NOTMUCH_STATUS_XAPIAN_EXCEPTION,
     /**
      * An error occurred trying to read or write to a file (this could
      * be file not found, permission denied, etc.)
-     *
-     * @todo We don't really want to expose this lame XAPIAN_EXCEPTION
-     * value. Instead we should map to things like DATABASE_LOCKED or
-     * whatever.
      */
     NOTMUCH_STATUS_FILE_ERROR,
     /**
