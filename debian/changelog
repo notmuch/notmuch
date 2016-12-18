@@ -1,3 +1,10 @@
+notmuch (0.23.4-1) UNRELEASED; urgency=medium
+
+  * Improve error handling in notmuch insert
+  * Restore autoload cookie for notmuch-search (notmuch-emacs)
+
+ -- David Bremner <bremner@debian.org>  Sun, 18 Dec 2016 20:46:40 +0900
+
 notmuch (0.23.3-3) unstable; urgency=medium
 
   * Disable gdb using tests on kfreebsd-*, due to apparent gdb breakage
