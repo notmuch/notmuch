@@ -12,8 +12,7 @@ override_dh_auto_configure:
 		--mandir=/usr/share/man \
 		--infodir=/usr/share/info \
 		--sysconfdir=/etc \
-		--localstatedir=/var \
-		--emacslispdir=/usr/share/emacs/site-lisp/notmuch
+		--localstatedir=/var
 
 override_dh_auto_build:
 	dh_auto_build -- V=1
