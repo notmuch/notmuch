@@ -60,7 +60,7 @@ test_expect_equal_json "$output" "$expected"
 
 test_begin_subtest "Insert duplicate message"
 notmuch insert +duptag -unread < "$gen_msg_filename"
-output=$(notmuch search --output=files "subject:insert-subject" | wc -l)
+output=$((`notmuch search --output=files "subject:insert-subject" | wc -l`))
 test_expect_equal "$output" 2
 
 test_begin_subtest "Duplicate message does not change tags"

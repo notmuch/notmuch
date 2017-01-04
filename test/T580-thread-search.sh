@@ -15,7 +15,7 @@ count=0
 success=0
 for id in $(notmuch search --output=messages '*'); do
     count=$((count +1))
-    matches=$(notmuch search --output=threads "$id" | wc -l)
+    matches=$((`notmuch search --output=threads "$id" | wc -l`))
     if [ "$matches" = 1 ]; then
 	success=$((success + 1))
     fi
