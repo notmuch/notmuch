@@ -71,4 +71,8 @@ class RenameBreakpoint(gdb.Breakpoint):
         return False
 RenameBreakpoint('rename')
 
-gdb.execute('run')
+try:
+    gdb.execute('run')
+except Exception:
+    import traceback
+    raise SystemExit(traceback.format_exc())
