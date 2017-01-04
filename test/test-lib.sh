@@ -667,7 +667,7 @@ test_expect_equal_json () {
 
 # Sort the top-level list of JSON data from stdin.
 test_sort_json () {
-    PYTHONIOENCODING=utf-8 python -c \
+    PYTHONIOENCODING=utf-8 $NOTMUCH_PYTHON -c \
         "import sys, json; json.dump(sorted(json.load(sys.stdin)),sys.stdout)"
 }
 
