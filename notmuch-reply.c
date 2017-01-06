@@ -701,11 +701,6 @@ notmuch_reply_command (notmuch_config_t *config, int argc, char *argv[])
     int opt_index;
     notmuch_show_params_t params = {
 	.part = -1,
-	.crypto = {
-	    .verify = FALSE,
-	    .decrypt = FALSE,
-	    .gpgpath = NULL
-	}
     };
     int format = FORMAT_DEFAULT;
     int reply_all = TRUE;

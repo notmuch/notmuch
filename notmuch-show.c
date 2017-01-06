@@ -1023,12 +1023,6 @@ notmuch_show_command (notmuch_config_t *config, int argc, char *argv[])
 	.part = -1,
 	.omit_excluded = TRUE,
 	.output_body = TRUE,
-	.crypto = {
-	    .verify = FALSE,
-	    .decrypt = FALSE,
-	    .gpgpath = NULL
-	},
-	.include_html = FALSE
     };
     int format = NOTMUCH_FORMAT_NOT_SPECIFIED;
     int exclude = EXCLUDE_TRUE;
