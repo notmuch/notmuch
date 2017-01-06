@@ -1047,13 +1047,13 @@ notmuch_show_command (notmuch_config_t *config, int argc, char *argv[])
 	},
 	.include_html = FALSE
     };
-    int format_sel = NOTMUCH_FORMAT_NOT_SPECIFIED;
+    int format = NOTMUCH_FORMAT_NOT_SPECIFIED;
     int exclude = EXCLUDE_TRUE;
     int entire_thread = ENTIRE_THREAD_DEFAULT;
     notmuch_bool_t single_message;
 
     notmuch_opt_desc_t options[] = {
-	{ NOTMUCH_OPT_KEYWORD, &format_sel, "format", 'f',
+	{ NOTMUCH_OPT_KEYWORD, &format, "format", 'f',
 	  (notmuch_keyword_t []){ { "json", NOTMUCH_FORMAT_JSON },
 				  { "text", NOTMUCH_FORMAT_TEXT },
 				  { "sexp", NOTMUCH_FORMAT_SEXP },
@@ -1092,20 +1092,20 @@ notmuch_show_command (notmuch_config_t *config, int argc, char *argv[])
     /* specifying a part implies single message display */
     single_message = params.part >= 0;
 
-    if (format_sel == NOTMUCH_FORMAT_NOT_SPECIFIED) {
+    if (format == NOTMUCH_FORMAT_NOT_SPECIFIED) {
 	/* if part was requested and format was not specified, use format=raw */
 	if (params.part >= 0)
-	    format_sel = NOTMUCH_FORMAT_RAW;
+	    format = NOTMUCH_FORMAT_RAW;
 	else
-	    format_sel = NOTMUCH_FORMAT_TEXT;
+	    format = NOTMUCH_FORMAT_TEXT;
     }
 
-    if (format_sel == NOTMUCH_FORMAT_MBOX) {
+    if (format == NOTMUCH_FORMAT_MBOX) {
 	if (params.part > 0) {
 	    fprintf (stderr, "Error: specifying parts is incompatible with mbox output format.\n");
 	    return EXIT_FAILURE;
 	}
-    } else if (format_sel == NOTMUCH_FORMAT_RAW) {
+    } else if (format == NOTMUCH_FORMAT_RAW) {
 	/* raw format only supports single message display */
 	single_message = TRUE;
     }
@@ -1115,8 +1115,7 @@ notmuch_show_command (notmuch_config_t *config, int argc, char *argv[])
     /* Default is entire-thread = FALSE except for format=json and
      * format=sexp. */
     if (entire_thread == ENTIRE_THREAD_DEFAULT) {
-	if (format_sel == NOTMUCH_FORMAT_JSON ||
-	    format_sel == NOTMUCH_FORMAT_SEXP)
+	if (format == NOTMUCH_FORMAT_JSON || format == NOTMUCH_FORMAT_SEXP)
 	    entire_thread = ENTIRE_THREAD_TRUE;
 	else
 	    entire_thread = ENTIRE_THREAD_FALSE;
@@ -1127,15 +1126,14 @@ notmuch_show_command (notmuch_config_t *config, int argc, char *argv[])
 	    fprintf (stderr, "Warning: --body=false is incompatible with --part > 0. Disabling.\n");
 	    params.output_body = TRUE;
 	} else {
-	    if (format_sel != NOTMUCH_FORMAT_JSON &&
-		format_sel != NOTMUCH_FORMAT_SEXP)
+	    if (format != NOTMUCH_FORMAT_JSON && format != NOTMUCH_FORMAT_SEXP)
 		fprintf (stderr,
 			 "Warning: --body=false only implemented for format=json and format=sexp\n");
 	}
     }
 
     if (params.include_html &&
-        (format_sel != NOTMUCH_FORMAT_JSON && format_sel != NOTMUCH_FORMAT_SEXP)) {
+        (format != NOTMUCH_FORMAT_JSON && format != NOTMUCH_FORMAT_SEXP)) {
 	fprintf (stderr, "Warning: --include-html only implemented for format=json and format=sexp\n");
     }
 
@@ -1170,7 +1168,7 @@ notmuch_show_command (notmuch_config_t *config, int argc, char *argv[])
     }
 
     /* Create structure printer. */
-    formatter = formatters[format_sel];
+    formatter = formatters[format];
     sprinter = formatter->new_sprinter(config, stdout);
 
     /* If a single message is requested we do not use search_excludes. */
