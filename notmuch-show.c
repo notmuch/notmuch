@@ -1007,6 +1007,14 @@ enum {
     NOTMUCH_FORMAT_RAW
 };
 
+static const notmuch_show_format_t *formatters[] = {
+    [NOTMUCH_FORMAT_JSON] = &format_json,
+    [NOTMUCH_FORMAT_SEXP] = &format_sexp,
+    [NOTMUCH_FORMAT_TEXT] = &format_text,
+    [NOTMUCH_FORMAT_MBOX] = &format_mbox,
+    [NOTMUCH_FORMAT_RAW] = &format_raw,
+};
+
 enum {
     ENTIRE_THREAD_DEFAULT,
     ENTIRE_THREAD_TRUE,
@@ -1026,7 +1034,7 @@ notmuch_show_command (notmuch_config_t *config, int argc, char *argv[])
     notmuch_query_t *query;
     char *query_string;
     int opt_index, ret;
-    const notmuch_show_format_t *format = &format_text;
+    const notmuch_show_format_t *formatter;
     sprinter_t *sprinter;
     notmuch_show_params_t params = {
 	.part = -1,
@@ -1092,29 +1100,14 @@ notmuch_show_command (notmuch_config_t *config, int argc, char *argv[])
 	    format_sel = NOTMUCH_FORMAT_TEXT;
     }
 
-    switch (format_sel) {
-    case NOTMUCH_FORMAT_JSON:
-	format = &format_json;
-	break;
-    case NOTMUCH_FORMAT_TEXT:
-	format = &format_text;
-	break;
-    case NOTMUCH_FORMAT_SEXP:
-	format = &format_sexp;
-	break;
-    case NOTMUCH_FORMAT_MBOX:
+    if (format_sel == NOTMUCH_FORMAT_MBOX) {
 	if (params.part > 0) {
 	    fprintf (stderr, "Error: specifying parts is incompatible with mbox output format.\n");
 	    return EXIT_FAILURE;
 	}
-
-	format = &format_mbox;
-	break;
-    case NOTMUCH_FORMAT_RAW:
-	format = &format_raw;
+    } else if (format_sel == NOTMUCH_FORMAT_RAW) {
 	/* raw format only supports single message display */
 	single_message = TRUE;
-	break;
     }
 
     notmuch_exit_if_unsupported_format ();
@@ -1177,11 +1170,12 @@ notmuch_show_command (notmuch_config_t *config, int argc, char *argv[])
     }
 
     /* Create structure printer. */
-    sprinter = format->new_sprinter(config, stdout);
+    formatter = formatters[format_sel];
+    sprinter = formatter->new_sprinter(config, stdout);
 
     /* If a single message is requested we do not use search_excludes. */
     if (single_message) {
-	ret = do_show_single (config, query, format, sprinter, &params);
+	ret = do_show_single (config, query, formatter, sprinter, &params);
     } else {
 	/* We always apply set the exclude flag. The
 	 * exclude=true|false option controls whether or not we return
@@ -1200,7 +1194,7 @@ notmuch_show_command (notmuch_config_t *config, int argc, char *argv[])
 	    params.omit_excluded = FALSE;
 	}
 
-	ret = do_show (config, query, format, sprinter, &params);
+	ret = do_show (config, query, formatter, sprinter, &params);
     }
 
     notmuch_crypto_cleanup (&params.crypto);
