@@ -680,17 +680,6 @@ else
 EOF
 fi
 
-printf "Checking byte order... "
-cat> _byteorder.c <<EOF
-#include <stdio.h>
-#include <stdint.h>
-uint32_t test = 0x34333231;
-int main() { printf("%.4s\n", (const char*)&test); return 0; }
-EOF
-${CC} ${CFLAGS} _byteorder.c -o _byteorder > /dev/null 2>&1
-util_byte_order=$(./_byteorder)
-echo $util_byte_order
-
 rm -f _byteorder _byteorder.c
 
 if [ $errors -gt 0 ]; then
@@ -1012,9 +1001,6 @@ prefix = ${PREFIX}
 # LIBDIR_IN_LDCONFIG value below is still set correctly.
 libdir = ${LIBDIR:=\$(prefix)/lib}
 
-# byte order within a 32 bit word. 1234 = little, 4321 = big, 0 = guess
-UTIL_BYTE_ORDER = ${util_byte_order}
-
 # Whether libdir is in a path configured into ldconfig
 LIBDIR_IN_LDCONFIG = ${libdir_in_ldconfig}
 
@@ -1167,8 +1153,7 @@ COMMON_CONFIGURE_CFLAGS = \\
 	-DHAVE_XAPIAN_COMPACT=\$(HAVE_XAPIAN_COMPACT)		\\
 	-DSILENCE_XAPIAN_DEPRECATION_WARNINGS			\\
 	-DHAVE_XAPIAN_FIELD_PROCESSOR=\$(HAVE_XAPIAN_FIELD_PROCESSOR) \\
-	-DHAVE_XAPIAN_DB_RETRY_LOCK=\$(HAVE_XAPIAN_DB_RETRY_LOCK) \\
-	-DUTIL_BYTE_ORDER=\$(UTIL_BYTE_ORDER)
+	-DHAVE_XAPIAN_DB_RETRY_LOCK=\$(HAVE_XAPIAN_DB_RETRY_LOCK)
 
 CONFIGURE_CFLAGS = \$(COMMON_CONFIGURE_CFLAGS)
 
