@@ -22,48 +22,6 @@
 #include "gmime-filter-reply.h"
 #include "sprinter.h"
 
-static notmuch_status_t
-format_part_text (const void *ctx, sprinter_t *sp, mime_node_t *node,
-		  int indent, const notmuch_show_params_t *params);
-
-static const notmuch_show_format_t format_text = {
-    .new_sprinter = sprinter_text_create,
-    .part = format_part_text,
-};
-
-static notmuch_status_t
-format_part_sprinter_entry (const void *ctx, sprinter_t *sp, mime_node_t *node,
-			    int indent, const notmuch_show_params_t *params);
-
-static const notmuch_show_format_t format_json = {
-    .new_sprinter = sprinter_json_create,
-    .part = format_part_sprinter_entry,
-};
-
-static const notmuch_show_format_t format_sexp = {
-    .new_sprinter = sprinter_sexp_create,
-    .part = format_part_sprinter_entry,
-};
-
-static notmuch_status_t
-format_part_mbox (const void *ctx, sprinter_t *sp, mime_node_t *node,
-		  int indent, const notmuch_show_params_t *params);
-
-static const notmuch_show_format_t format_mbox = {
-    .new_sprinter = sprinter_text_create,
-    .part = format_part_mbox,
-};
-
-static notmuch_status_t
-format_part_raw (unused (const void *ctx), sprinter_t *sp, mime_node_t *node,
-		 unused (int indent),
-		 unused (const notmuch_show_params_t *params));
-
-static const notmuch_show_format_t format_raw = {
-    .new_sprinter = sprinter_text_create,
-    .part = format_part_raw,
-};
-
 static const char *
 _get_tags_as_string (const void *ctx, notmuch_message_t *message)
 {
@@ -1005,6 +963,31 @@ enum {
     NOTMUCH_FORMAT_TEXT,
     NOTMUCH_FORMAT_MBOX,
     NOTMUCH_FORMAT_RAW
+};
+
+static const notmuch_show_format_t format_json = {
+    .new_sprinter = sprinter_json_create,
+    .part = format_part_sprinter_entry,
+};
+
+static const notmuch_show_format_t format_sexp = {
+    .new_sprinter = sprinter_sexp_create,
+    .part = format_part_sprinter_entry,
+};
+
+static const notmuch_show_format_t format_text = {
+    .new_sprinter = sprinter_text_create,
+    .part = format_part_text,
+};
+
+static const notmuch_show_format_t format_mbox = {
+    .new_sprinter = sprinter_text_create,
+    .part = format_part_mbox,
+};
+
+static const notmuch_show_format_t format_raw = {
+    .new_sprinter = sprinter_text_create,
+    .part = format_part_raw,
 };
 
 static const notmuch_show_format_t *formatters[] = {
