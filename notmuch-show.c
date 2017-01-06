@@ -1042,6 +1042,7 @@ notmuch_show_command (notmuch_config_t *config, int argc, char *argv[])
     int format_sel = NOTMUCH_FORMAT_NOT_SPECIFIED;
     int exclude = EXCLUDE_TRUE;
     int entire_thread = ENTIRE_THREAD_DEFAULT;
+    notmuch_bool_t single_message;
 
     notmuch_opt_desc_t options[] = {
 	{ NOTMUCH_OPT_KEYWORD, &format_sel, "format", 'f',
@@ -1080,6 +1081,9 @@ notmuch_show_command (notmuch_config_t *config, int argc, char *argv[])
     if (params.crypto.decrypt)
 	params.crypto.verify = TRUE;
 
+    /* specifying a part implies single message display */
+    single_message = params.part >= 0;
+
     if (format_sel == NOTMUCH_FORMAT_NOT_SPECIFIED) {
 	/* if part was requested and format was not specified, use format=raw */
 	if (params.part >= 0)
@@ -1108,10 +1112,8 @@ notmuch_show_command (notmuch_config_t *config, int argc, char *argv[])
 	break;
     case NOTMUCH_FORMAT_RAW:
 	format = &format_raw;
-	/* If --format=raw specified without specifying part, we can only
-	 * output single message, so set part=0 */
-	if (params.part < 0)
-	    params.part = 0;
+	/* raw format only supports single message display */
+	single_message = TRUE;
 	params.raw = TRUE;
 	break;
     }
@@ -1177,9 +1179,9 @@ notmuch_show_command (notmuch_config_t *config, int argc, char *argv[])
     sprinter = format->new_sprinter(config, stdout);
 
     /* If a single message is requested we do not use search_excludes. */
-    if (params.part >= 0)
+    if (single_message) {
 	ret = do_show_single (config, query, format, sprinter, &params);
-    else {
+    } else {
 	/* We always apply set the exclude flag. The
 	 * exclude=true|false option controls whether or not we return
 	 * threads that only match in an excluded message */
