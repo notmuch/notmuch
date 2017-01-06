@@ -1114,7 +1114,6 @@ notmuch_show_command (notmuch_config_t *config, int argc, char *argv[])
 	format = &format_raw;
 	/* raw format only supports single message display */
 	single_message = TRUE;
-	params.raw = TRUE;
 	break;
     }
 

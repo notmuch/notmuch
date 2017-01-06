@@ -83,7 +83,6 @@ typedef struct notmuch_show_params {
     notmuch_bool_t entire_thread;
     notmuch_bool_t omit_excluded;
     notmuch_bool_t output_body;
-    notmuch_bool_t raw;
     int part;
     notmuch_crypto_t crypto;
     notmuch_bool_t include_html;
