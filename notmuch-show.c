@@ -1016,9 +1016,9 @@ static const notmuch_show_format_t *formatters[] = {
 };
 
 enum {
-    ENTIRE_THREAD_DEFAULT,
-    ENTIRE_THREAD_TRUE,
-    ENTIRE_THREAD_FALSE,
+    ENTIRE_THREAD_DEFAULT = -1,
+    ENTIRE_THREAD_FALSE = FALSE,
+    ENTIRE_THREAD_TRUE = TRUE,
 };
 
 /* The following is to allow future options to be added more easily */
@@ -1116,9 +1116,11 @@ notmuch_show_command (notmuch_config_t *config, int argc, char *argv[])
      * format=sexp. */
     if (entire_thread == ENTIRE_THREAD_DEFAULT) {
 	if (format == NOTMUCH_FORMAT_JSON || format == NOTMUCH_FORMAT_SEXP)
-	    entire_thread = ENTIRE_THREAD_TRUE;
+	    params.entire_thread = TRUE;
 	else
-	    entire_thread = ENTIRE_THREAD_FALSE;
+	    params.entire_thread = FALSE;
+    } else {
+	params.entire_thread = entire_thread;
     }
 
     if (!params.output_body) {
@@ -1136,11 +1138,6 @@ notmuch_show_command (notmuch_config_t *config, int argc, char *argv[])
         (format != NOTMUCH_FORMAT_JSON && format != NOTMUCH_FORMAT_SEXP)) {
 	fprintf (stderr, "Warning: --include-html only implemented for format=json and format=sexp\n");
     }
-
-    if (entire_thread == ENTIRE_THREAD_TRUE)
-	params.entire_thread = TRUE;
-    else
-	params.entire_thread = FALSE;
 
     query_string = query_string_from_args (config, argc-opt_index, argv+opt_index);
     if (query_string == NULL) {
