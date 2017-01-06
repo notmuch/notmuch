@@ -1122,7 +1122,8 @@ notmuch_show_command (notmuch_config_t *config, int argc, char *argv[])
     /* Default is entire-thread = FALSE except for format=json and
      * format=sexp. */
     if (entire_thread == ENTIRE_THREAD_DEFAULT) {
-	if (format == &format_json || format == &format_sexp)
+	if (format_sel == NOTMUCH_FORMAT_JSON ||
+	    format_sel == NOTMUCH_FORMAT_SEXP)
 	    entire_thread = ENTIRE_THREAD_TRUE;
 	else
 	    entire_thread = ENTIRE_THREAD_FALSE;
@@ -1133,7 +1134,8 @@ notmuch_show_command (notmuch_config_t *config, int argc, char *argv[])
 	    fprintf (stderr, "Warning: --body=false is incompatible with --part > 0. Disabling.\n");
 	    params.output_body = TRUE;
 	} else {
-	    if (format != &format_json && format != &format_sexp)
+	    if (format_sel != NOTMUCH_FORMAT_JSON &&
+		format_sel != NOTMUCH_FORMAT_SEXP)
 		fprintf (stderr,
 			 "Warning: --body=false only implemented for format=json and format=sexp\n");
 	}
