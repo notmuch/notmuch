@@ -322,20 +322,21 @@ mime_node_child (mime_node_t *parent, int child)
 static mime_node_t *
 _mime_node_seek_dfs_walk (mime_node_t *node, int *n)
 {
-    mime_node_t *ret = NULL;
     int i;
 
     if (*n == 0)
 	return node;
 
     *n -= 1;
-    for (i = 0; i < node->nchildren && !ret; i++) {
+    for (i = 0; i < node->nchildren; i++) {
 	mime_node_t *child = mime_node_child (node, i);
-	ret = _mime_node_seek_dfs_walk (child, n);
-	if (!ret)
-	    talloc_free (child);
+	mime_node_t *ret = _mime_node_seek_dfs_walk (child, n);
+	if (ret)
+	    return ret;
+
+	talloc_free (child);
     }
-    return ret;
+    return NULL;
 }
 
 mime_node_t *
