@@ -20,28 +20,7 @@
 
 #include "notmuch-private.h"
 
-#include "libsha1.h"
-
-/* Just some simple interfaces on top of libsha1 so that we can leave
- * libsha1 as untouched as possible. */
-
-static char *
-_hex_of_sha1_digest (const unsigned char digest[SHA1_DIGEST_SIZE])
-{
-    char *result, *r;
-    int i;
-
-    result = xcalloc (SHA1_DIGEST_SIZE * 2 + 1, 1);
-
-    for (r = result, i = 0;
-	 i < SHA1_DIGEST_SIZE;
-	 r += 2, i++)
-    {
-	sprintf (r, "%02x", digest[i]);
-    }
-
-    return result;
-}
+#include <glib.h>
 
 /* Create a hexadecimal string version of the SHA-1 digest of 'str'
  * (including its null terminating character).
@@ -52,16 +31,15 @@ _hex_of_sha1_digest (const unsigned char digest[SHA1_DIGEST_SIZE])
 char *
 _notmuch_sha1_of_string (const char *str)
 {
-    sha1_ctx sha1;
-    unsigned char digest[SHA1_DIGEST_SIZE];
+    GChecksum *sha1;
+    char *digest;
 
-    sha1_begin (&sha1);
+    sha1 = g_checksum_new (G_CHECKSUM_SHA1);
+    g_checksum_update (sha1, (const guchar *) str, strlen (str) + 1);
+    digest = xstrdup (g_checksum_get_string (sha1));
+    g_checksum_free (sha1);
 
-    sha1_hash ((unsigned char *) str, strlen (str) + 1, &sha1);
-
-    sha1_end (digest, &sha1);
-
-    return _hex_of_sha1_digest (digest);
+    return digest;
 }
 
 /* Create a hexadecimal string version of the SHA-1 digest of the
@@ -80,35 +58,36 @@ _notmuch_sha1_of_file (const char *filename)
 #define BLOCK_SIZE 4096
     unsigned char block[BLOCK_SIZE];
     size_t bytes_read;
-    sha1_ctx sha1;
-    unsigned char digest[SHA1_DIGEST_SIZE];
-    char *result;
+    GChecksum *sha1;
+    char *digest = NULL;
 
     file = fopen (filename, "r");
     if (file == NULL)
 	return NULL;
 
-    sha1_begin (&sha1);
+    sha1 = g_checksum_new (G_CHECKSUM_SHA1);
+    if (sha1 == NULL)
+	goto DONE;
 
     while (1) {
 	bytes_read = fread (block, 1, 4096, file);
 	if (bytes_read == 0) {
-	    if (feof (file)) {
+	    if (feof (file))
 		break;
-	    } else if (ferror (file)) {
-		fclose (file);
-		return NULL;
-	    }
+	    else if (ferror (file))
+		goto DONE;
 	} else {
-	    sha1_hash (block, bytes_read, &sha1);
+	    g_checksum_update (sha1, block, bytes_read);
 	}
     }
 
-    sha1_end (digest, &sha1);
+    digest = xstrdup (g_checksum_get_string (sha1));
 
-    result = _hex_of_sha1_digest (digest);
+  DONE:
+    if (sha1)
+	g_checksum_free (sha1);
+    if (file)
+	fclose (file);
 
-    fclose (file);
-
-    return result;
+    return digest;
 }
