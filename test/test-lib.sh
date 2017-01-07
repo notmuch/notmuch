@@ -80,6 +80,7 @@ if [[ ( -n "$TEST_EMACS" && -z "$TEST_EMACSCLIENT" ) || \
 fi
 TEST_EMACS=${TEST_EMACS:-${EMACS:-emacs}}
 TEST_EMACSCLIENT=${TEST_EMACSCLIENT:-emacsclient}
+TEST_GDB=${TEST_GDB:-gdb}
 TEST_CC=${TEST_CC:-cc}
 TEST_CFLAGS=${TEST_CFLAGS:-"-g -O0"}
 
@@ -1379,7 +1380,7 @@ esac
 test_declare_external_prereq dtach
 test_declare_external_prereq emacs
 test_declare_external_prereq ${TEST_EMACSCLIENT}
-test_declare_external_prereq gdb
+test_declare_external_prereq ${TEST_GDB}
 test_declare_external_prereq gpg
 test_declare_external_prereq openssl
 test_declare_external_prereq gpgsm

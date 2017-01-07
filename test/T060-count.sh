@@ -115,7 +115,7 @@ EOF
 
 backup_database
 test_begin_subtest "error message from query_search_messages"
-gdb --batch-silent --return-child-result -x count-files.gdb \
+${TEST_GDB} --batch-silent --return-child-result -x count-files.gdb \
     --args notmuch count --output=files '*' 2>OUTPUT 1>/dev/null
 cat <<EOF > EXPECTED
 notmuch count: A Xapian exception occurred

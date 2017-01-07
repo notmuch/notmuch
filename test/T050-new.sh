@@ -317,7 +317,7 @@ end
 run
 EOF
 
-gdb --batch-silent --return-child-result -x notmuch-new-vanish.gdb \
+${TEST_GDB} --batch-silent --return-child-result -x notmuch-new-vanish.gdb \
     --args notmuch new 2>OUTPUT 1>/dev/null
 echo "exit status: $?" >> OUTPUT
 
