@@ -680,8 +680,6 @@ else
 EOF
 fi
 
-rm -f _byteorder _byteorder.c
-
 if [ $errors -gt 0 ]; then
     cat <<EOF
 
