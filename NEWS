@@ -1,3 +1,12 @@
+Notmuch 0.23.5 (UNRELEASED)
+===========================
+
+Build system
+------------
+
+Fix quoting bug in configure. This had introduced a RUNPATH into the
+notmuch binary in cases where it was not not needed.
+
 Notmuch 0.23.4 (2016-12-24)
 ===========================
 
