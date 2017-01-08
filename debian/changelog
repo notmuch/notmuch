@@ -1,3 +1,9 @@
+notmuch (0.23.5-1) unstable; urgency=medium
+
+  * Remove RUNPATH from /usr/bin/notmuch
+
+ -- David Bremner <bremner@debian.org>  Sun, 08 Jan 2017 08:31:03 -0400
+
 notmuch (0.23.4-1) unstable; urgency=medium
 
   * Improve error handling in notmuch insert

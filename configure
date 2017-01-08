@@ -284,7 +284,7 @@ if [ -z "$LIBDIR" ] ; then
     libdir_expanded="${PREFIX}/lib"
 else
     # very non-general variable expansion
-    libdir_expanded=$(echo "$LIBDIR" | sed "s|\\${prefix}|${PREFIX}|g; s|\\$prefix/|${PREFIX}/|; s|//*|/|g")
+    libdir_expanded=$(printf %s "$LIBDIR" | sed "s|\${prefix}|${PREFIX}|; s|\$prefix\>|${PREFIX}|; s|//*|/|g")
 fi
 
 cat <<EOF
