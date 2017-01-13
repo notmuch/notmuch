@@ -1811,7 +1811,7 @@ const char *
 notmuch_message_properties_key (notmuch_message_properties_t *properties);
 
 /**
- * Return the key from the current (key,value) pair.
+ * Return the value from the current (key,value) pair.
  *
  * This could be useful if iterating for a prefix.
  *
