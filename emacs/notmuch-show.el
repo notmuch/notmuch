@@ -1227,7 +1227,15 @@ matched."
   (interactive "sNotmuch show: \nP")
   (let ((buffer-name (generate-new-buffer-name
 		      (or buffer-name
-			  (concat "*notmuch-" thread-id "*")))))
+			  (concat "*notmuch-" thread-id "*"))))
+	;; We override mm-inline-override-types to stop application/*
+	;; parts from being displayed unless the user has customized
+	;; it themselves.
+	(mm-inline-override-types
+	 (if (equal mm-inline-override-types
+		    (eval (car (get 'mm-inline-override-types 'standard-value))))
+	     (cons "application/*" mm-inline-override-types)
+	   mm-inline-override-types)))
     (switch-to-buffer (get-buffer-create buffer-name))
     ;; No need to track undo information for this buffer.
     (setq buffer-undo-list t)
