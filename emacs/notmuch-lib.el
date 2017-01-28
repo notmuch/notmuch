@@ -74,6 +74,10 @@
   "Running external commands from within Notmuch."
   :group 'notmuch)
 
+(defgroup notmuch-address nil
+  "Address completion."
+  :group 'notmuch)
+
 (defgroup notmuch-faces nil
   "Graphical attributes for displaying text"
   :group 'notmuch)

@@ -66,6 +66,7 @@ disabled."
 	  (const :tag "Disable address completion" nil)
 	  (string :tag "Use external completion command"))
   :group 'notmuch-send
+  :group 'notmuch-address
   :group 'notmuch-external)
 
 (defcustom notmuch-address-internal-completion '(sent nil)
@@ -93,6 +94,7 @@ This should be a list of the form '(DIRECTION FILTER), where
 	 (setq notmuch-address-completions (clrhash notmuch-address-completions))
 	 (setq notmuch-address-full-harvest-finished nil))
   :group 'notmuch-send
+  :group 'notmuch-address
   :group 'notmuch-external)
 
 (defcustom notmuch-address-save-filename nil
@@ -104,6 +106,7 @@ should make sure it is not somewhere publicly readable."
   :type '(choice (const :tag "Off" nil)
 		 (file :tag "Filename"))
   :group 'notmuch-send
+  :group 'notmuch-address
   :group 'notmuch-external)
 
 (defcustom notmuch-address-selection-function 'notmuch-address-selection-function
@@ -115,6 +118,7 @@ See documentation of function `notmuch-address-selection-function'
 to know how address selection is made by default."
   :type 'function
   :group 'notmuch-send
+  :group 'notmuch-address
   :group 'notmuch-external)
 
 (defcustom notmuch-address-post-completion-functions nil
@@ -145,7 +149,8 @@ matching `notmuch-address-completion-headers-regexp'.
 (defcustom notmuch-address-use-company t
   "If available, use company mode for address completion"
   :type 'boolean
-  :group 'notmuch-send)
+  :group 'notmuch-send
+  :group 'notmuch-address)
 
 (defun notmuch-address-setup ()
   (let* ((setup-company (and notmuch-address-use-company
