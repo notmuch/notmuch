@@ -37,12 +37,14 @@
 (declare-function company-mode "company")
 (declare-function company-manual-begin "company")
 (defvar company-backends)
+(defvar company-idle-delay)
 
 (declare-function notmuch-address-harvest "notmuch-address")
 (declare-function notmuch-address-harvest-trigger "notmuch-address")
 (declare-function notmuch-address-matching "notmuch-address")
 (declare-function notmuch-address--harvest-ready "notmuch-address")
 (defvar notmuch-address-completion-headers-regexp)
+(defvar notmuch-address-command)
 
 ;;;###autoload
 (defun notmuch-company-setup ()
