@@ -135,13 +135,21 @@ static inline Xapian::valueno _find_slot (std::string prefix)
 	return NOTMUCH_VALUE_FROM;
     else if (prefix == "subject")
 	return NOTMUCH_VALUE_SUBJECT;
+    else if (prefix == "mid")
+	return NOTMUCH_VALUE_MESSAGE_ID;
     else
 	throw Xapian::QueryParserError ("unsupported regexp field '" + prefix + "'");
 }
 
-RegexpFieldProcessor::RegexpFieldProcessor (std::string prefix, Xapian::QueryParser &parser_, notmuch_database_t *notmuch_)
-	: slot (_find_slot (prefix)), term_prefix (_find_prefix (prefix.c_str ())),
-	  parser (parser_), notmuch (notmuch_)
+RegexpFieldProcessor::RegexpFieldProcessor (std::string prefix,
+					    notmuch_field_flag_t options_,
+					    Xapian::QueryParser &parser_,
+					    notmuch_database_t *notmuch_)
+	: slot (_find_slot (prefix)),
+	  term_prefix (_find_prefix (prefix.c_str ())),
+	  options (options_),
+	  parser (parser_),
+	  notmuch (notmuch_)
 {
 };
 
@@ -161,16 +169,22 @@ RegexpFieldProcessor::operator() (const std::string & str)
 	    throw Xapian::QueryParserError ("unmatched regex delimiter in '" + str + "'");
 	}
     } else {
-	/* TODO replace this with a nicer API level triggering of
-	 * phrase parsing, when possible */
-	std::string query_str;
+	if (options & NOTMUCH_FIELD_PROBABILISTIC) {
+	    /* TODO replace this with a nicer API level triggering of
+	     * phrase parsing, when possible */
+	    std::string query_str;
 
-	if (str.find (' ') != std::string::npos)
-	    query_str = '"' + str + '"';
-	else
-	    query_str = str;
+	    if (str.find (' ') != std::string::npos)
+		query_str = '"' + str + '"';
+	    else
+		query_str = str;
 
-	return parser.parse_query (query_str, NOTMUCH_QUERY_PARSER_FLAGS, term_prefix);
+	    return parser.parse_query (query_str, NOTMUCH_QUERY_PARSER_FLAGS, term_prefix);
+	} else {
+	    /* Boolean prefix */
+	    std::string term = term_prefix + str;
+	    return Xapian::Query (term);
+	}
     }
 }
 #endif

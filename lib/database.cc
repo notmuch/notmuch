@@ -262,7 +262,8 @@ prefix_t prefix_table[] = {
     { "tag",			"K",		NOTMUCH_FIELD_EXTERNAL },
     { "is",			"K",		NOTMUCH_FIELD_EXTERNAL },
     { "id",			"Q",		NOTMUCH_FIELD_EXTERNAL },
-    { "mid",			"Q",		NOTMUCH_FIELD_EXTERNAL },
+    { "mid",			"Q",		NOTMUCH_FIELD_EXTERNAL |
+						NOTMUCH_FIELD_PROCESSOR },
     { "path",			"P",		NOTMUCH_FIELD_EXTERNAL },
     { "property",		"XPROPERTY",	NOTMUCH_FIELD_EXTERNAL },
     /*
@@ -313,7 +314,8 @@ _setup_query_field (const prefix_t *prefix, notmuch_database_t *notmuch)
 	else if (STRNCMP_LITERAL(prefix->name, "query") == 0)
 	    fp = (new QueryFieldProcessor (*notmuch->query_parser, notmuch))->release ();
 	else
-	    fp = (new RegexpFieldProcessor (prefix->name, *notmuch->query_parser, notmuch))->release ();
+	    fp = (new RegexpFieldProcessor (prefix->name, prefix->flags,
+					    *notmuch->query_parser, notmuch))->release ();
 
 	/* we treat all field-processor fields as boolean in order to get the raw input */
 	notmuch->query_parser->add_boolean_prefix (prefix->name, fp);

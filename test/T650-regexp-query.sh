@@ -104,4 +104,20 @@ Query string was: from:/unbalanced[/
 EOF
 test_expect_equal_file EXPECTED OUTPUT
 
+test_begin_subtest "empty mid search"
+notmuch search --output=messages mid:yoom > OUTPUT
+cp /dev/null EXPECTED
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "non-empty mid regex search"
+notmuch search --output=messages mid:/yoom/ > OUTPUT
+test_expect_equal_file cworth.msg-ids OUTPUT
+
+test_begin_subtest "combine regexp mid and subject"
+notmuch search  subject:/-C/ and mid:/y..m/ | notmuch_search_sanitize > OUTPUT
+cat <<EOF > EXPECTED
+thread:XXX   2009-11-18 [1/2] Carl Worth| Jan Janak; [notmuch] [PATCH] Older versions of install do not support -C. (inbox unread)
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
 test_done
