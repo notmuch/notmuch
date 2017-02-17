@@ -148,6 +148,30 @@ operator&=(_notmuch_features &a, _notmuch_features b)
     return a;
 }
 
+/*
+ * Configuration options for xapian database fields */
+typedef enum notmuch_field_flags {
+    NOTMUCH_FIELD_NO_FLAGS = 0,
+    NOTMUCH_FIELD_EXTERNAL = 1 << 0,
+    NOTMUCH_FIELD_PROBABILISTIC = 1 << 1
+} notmuch_field_flag_t;
+
+/*
+ * define bitwise operators to hide casts */
+inline notmuch_field_flag_t
+operator|(notmuch_field_flag_t a, notmuch_field_flag_t b)
+{
+    return static_cast<notmuch_field_flag_t>(
+	static_cast<unsigned>(a) | static_cast<unsigned>(b));
+}
+
+inline notmuch_field_flag_t
+operator&(notmuch_field_flag_t a, notmuch_field_flag_t b)
+{
+    return static_cast<notmuch_field_flag_t>(
+	static_cast<unsigned>(a) & static_cast<unsigned>(b));
+}
+
 #define NOTMUCH_QUERY_PARSER_FLAGS (Xapian::QueryParser::FLAG_BOOLEAN | \
 				    Xapian::QueryParser::FLAG_PHRASE | \
 				    Xapian::QueryParser::FLAG_LOVEHATE | \

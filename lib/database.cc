@@ -42,6 +42,7 @@ using namespace std;
 typedef struct {
     const char *name;
     const char *prefix;
+    notmuch_field_flag_t flags;
 } prefix_t;
 
 #define NOTMUCH_DATABASE_VERSION 3
@@ -247,37 +248,38 @@ typedef struct {
  * nearly universal to all mail messages).
  */
 
-static prefix_t BOOLEAN_PREFIX_INTERNAL[] = {
-    { "type",			"T" },
-    { "reference",		"XREFERENCE" },
-    { "replyto",		"XREPLYTO" },
-    { "directory",		"XDIRECTORY" },
-    { "file-direntry",		"XFDIRENTRY" },
-    { "directory-direntry",	"XDDIRENTRY" },
-};
-
-static prefix_t BOOLEAN_PREFIX_EXTERNAL[] = {
-    { "thread",			"G" },
-    { "tag",			"K" },
-    { "is",			"K" },
-    { "id",			"Q" },
-    { "path",			"P" },
-    { "property",		"XPROPERTY" },
+static const
+prefix_t prefix_table[] = {
+    /* name			term prefix	flags */
+    { "type",			"T",		NOTMUCH_FIELD_NO_FLAGS },
+    { "reference",		"XREFERENCE",	NOTMUCH_FIELD_NO_FLAGS },
+    { "replyto",		"XREPLYTO",	NOTMUCH_FIELD_NO_FLAGS },
+    { "directory",		"XDIRECTORY",	NOTMUCH_FIELD_NO_FLAGS },
+    { "file-direntry",		"XFDIRENTRY",	NOTMUCH_FIELD_NO_FLAGS },
+    { "directory-direntry",	"XDDIRENTRY",	NOTMUCH_FIELD_NO_FLAGS },
+    { "thread",			"G",		NOTMUCH_FIELD_EXTERNAL },
+    { "tag",			"K",		NOTMUCH_FIELD_EXTERNAL },
+    { "is",			"K",		NOTMUCH_FIELD_EXTERNAL },
+    { "id",			"Q",		NOTMUCH_FIELD_EXTERNAL },
+    { "path",			"P",		NOTMUCH_FIELD_EXTERNAL },
+    { "property",		"XPROPERTY",	NOTMUCH_FIELD_EXTERNAL },
     /*
      * Unconditionally add ':' to reduce potential ambiguity with
      * overlapping prefixes and/or terms that start with capital
      * letters. See Xapian document termprefixes.html for related
      * discussion.
      */
-    { "folder",			"XFOLDER:" },
-};
-
-static prefix_t PROBABILISTIC_PREFIX[]= {
-    { "from",			"XFROM" },
-    { "to",			"XTO" },
-    { "attachment",		"XATTACHMENT" },
-    { "mimetype",		"XMIMETYPE"},
-    { "subject",		"XSUBJECT"},
+    { "folder",			"XFOLDER:",	NOTMUCH_FIELD_EXTERNAL },
+    { "from",			"XFROM",	NOTMUCH_FIELD_EXTERNAL |
+						NOTMUCH_FIELD_PROBABILISTIC },
+    { "to",			"XTO",		NOTMUCH_FIELD_EXTERNAL |
+						NOTMUCH_FIELD_PROBABILISTIC },
+    { "attachment",		"XATTACHMENT",	NOTMUCH_FIELD_EXTERNAL |
+						NOTMUCH_FIELD_PROBABILISTIC },
+    { "mimetype",		"XMIMETYPE",	NOTMUCH_FIELD_EXTERNAL |
+						NOTMUCH_FIELD_PROBABILISTIC },
+    { "subject",		"XSUBJECT",	NOTMUCH_FIELD_EXTERNAL |
+						NOTMUCH_FIELD_PROBABILISTIC },
 };
 
 const char *
@@ -285,19 +287,9 @@ _find_prefix (const char *name)
 {
     unsigned int i;
 
-    for (i = 0; i < ARRAY_SIZE (BOOLEAN_PREFIX_INTERNAL); i++) {
-	if (strcmp (name, BOOLEAN_PREFIX_INTERNAL[i].name) == 0)
-	    return BOOLEAN_PREFIX_INTERNAL[i].prefix;
-    }
-
-    for (i = 0; i < ARRAY_SIZE (BOOLEAN_PREFIX_EXTERNAL); i++) {
-	if (strcmp (name, BOOLEAN_PREFIX_EXTERNAL[i].name) == 0)
-	    return BOOLEAN_PREFIX_EXTERNAL[i].prefix;
-    }
-
-    for (i = 0; i < ARRAY_SIZE (PROBABILISTIC_PREFIX); i++) {
-	if (strcmp (name, PROBABILISTIC_PREFIX[i].name) == 0)
-	    return PROBABILISTIC_PREFIX[i].prefix;
+    for (i = 0; i < ARRAY_SIZE (prefix_table); i++) {
+	if (strcmp (name, prefix_table[i].name) == 0)
+	    return prefix_table[i].prefix;
     }
 
     INTERNAL_ERROR ("No prefix exists for '%s'\n", name);
@@ -1053,15 +1045,16 @@ notmuch_database_open_verbose (const char *path,
 	notmuch->query_parser->add_valuerangeprocessor (notmuch->date_range_processor);
 	notmuch->query_parser->add_valuerangeprocessor (notmuch->last_mod_range_processor);
 
-	for (i = 0; i < ARRAY_SIZE (BOOLEAN_PREFIX_EXTERNAL); i++) {
-	    prefix_t *prefix = &BOOLEAN_PREFIX_EXTERNAL[i];
-	    notmuch->query_parser->add_boolean_prefix (prefix->name,
-						       prefix->prefix);
-	}
-
-	for (i = 0; i < ARRAY_SIZE (PROBABILISTIC_PREFIX); i++) {
-	    prefix_t *prefix = &PROBABILISTIC_PREFIX[i];
-	    notmuch->query_parser->add_prefix (prefix->name, prefix->prefix);
+	for (i = 0; i < ARRAY_SIZE (prefix_table); i++) {
+	    const prefix_t *prefix = &prefix_table[i];
+	    if (prefix->flags & NOTMUCH_FIELD_EXTERNAL) {
+		if (prefix->flags & NOTMUCH_FIELD_PROBABILISTIC) {
+		    notmuch->query_parser->add_prefix (prefix->name, prefix->prefix);
+		} else {
+		    notmuch->query_parser->add_boolean_prefix (prefix->name,
+							       prefix->prefix);
+		}
+	    }
 	}
     } catch (const Xapian::Error &error) {
 	IGNORE_RESULT (asprintf (&message, "A Xapian exception occurred opening database: %s\n",
