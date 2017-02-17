@@ -1030,10 +1030,14 @@ notmuch_database_open_verbose (const char *path,
 #if HAVE_XAPIAN_FIELD_PROCESSOR
 	/* This currently relies on the query parser to pass anything
 	 * with a .. to the range processor */
-	notmuch->date_field_processor = new DateFieldProcessor();
-	notmuch->query_parser->add_boolean_prefix("date", notmuch->date_field_processor);
-	notmuch->query_field_processor = new QueryFieldProcessor (*notmuch->query_parser, notmuch);
-	notmuch->query_parser->add_boolean_prefix("query", notmuch->query_field_processor);
+	{
+	    Xapian::FieldProcessor * date_fp = new DateFieldProcessor();
+	    Xapian::FieldProcessor * query_fp =
+		new QueryFieldProcessor (*notmuch->query_parser, notmuch);
+
+	    notmuch->query_parser->add_boolean_prefix("date", date_fp->release ());
+	    notmuch->query_parser->add_boolean_prefix("query", query_fp->release ());
+	}
 #endif
 	notmuch->last_mod_range_processor = new Xapian::NumberValueRangeProcessor (NOTMUCH_VALUE_LAST_MOD, "lastmod:");
 
@@ -1125,13 +1129,6 @@ notmuch_database_close (notmuch_database_t *notmuch)
     notmuch->date_range_processor = NULL;
     delete notmuch->last_mod_range_processor;
     notmuch->last_mod_range_processor = NULL;
-
-#if HAVE_XAPIAN_FIELD_PROCESSOR
-    delete notmuch->date_field_processor;
-    notmuch->date_field_processor = NULL;
-    delete notmuch->query_field_processor;
-    notmuch->query_field_processor = NULL;
-#endif
 
     return status;
 }
