@@ -310,7 +310,7 @@ _notmuch_message_get_term (notmuch_message_t *message,
     return value;
 }
 
-void
+static void
 _notmuch_message_ensure_metadata (notmuch_message_t *message)
 {
     Xapian::TermIterator i, end;
