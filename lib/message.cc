@@ -49,6 +49,9 @@ struct visible _notmuch_message {
     /* Message document modified since last sync */
     notmuch_bool_t modified;
 
+    /* last view of database the struct is synced with */
+    unsigned long last_view;
+
     Xapian::Document doc;
     Xapian::termcount termpos;
 };
@@ -109,6 +112,9 @@ _notmuch_message_create_for_document (const void *talloc_owner,
     message->frozen = 0;
     message->flags = 0;
     message->lazy_flags = 0;
+
+    /* the message is initially not synchronized with Xapian */
+    message->last_view = 0;
 
     /* Each of these will be lazily created as needed. */
     message->message_id = NULL;
@@ -314,6 +320,7 @@ static void
 _notmuch_message_ensure_metadata (notmuch_message_t *message)
 {
     Xapian::TermIterator i, end;
+
     const char *thread_prefix = _find_prefix ("thread"),
 	*tag_prefix = _find_prefix ("tag"),
 	*id_prefix = _find_prefix ("id"),
@@ -327,73 +334,88 @@ _notmuch_message_ensure_metadata (notmuch_message_t *message)
      * slightly more costly than looking up individual fields if only
      * one field of the message object is actually used, it's a huge
      * win as more fields are used. */
+    for (int count=0; count < 3; count++) {
+	try {
+	    i = message->doc.termlist_begin ();
+	    end = message->doc.termlist_end ();
 
-    i = message->doc.termlist_begin ();
-    end = message->doc.termlist_end ();
+	    /* Get thread */
+	    if (!message->thread_id)
+		message->thread_id =
+		    _notmuch_message_get_term (message, i, end, thread_prefix);
 
-    /* Get thread */
-    if (!message->thread_id)
-	message->thread_id =
-	    _notmuch_message_get_term (message, i, end, thread_prefix);
+	    /* Get tags */
+	    assert (strcmp (thread_prefix, tag_prefix) < 0);
+	    if (!message->tag_list) {
+		message->tag_list =
+		    _notmuch_database_get_terms_with_prefix (message, i, end,
+							     tag_prefix);
+		_notmuch_string_list_sort (message->tag_list);
+	    }
 
-    /* Get tags */
-    assert (strcmp (thread_prefix, tag_prefix) < 0);
-    if (!message->tag_list) {
-	message->tag_list =
-	    _notmuch_database_get_terms_with_prefix (message, i, end,
-						     tag_prefix);
-	_notmuch_string_list_sort (message->tag_list);
+	    /* Get id */
+	    assert (strcmp (tag_prefix, id_prefix) < 0);
+	    if (!message->message_id)
+		message->message_id =
+		    _notmuch_message_get_term (message, i, end, id_prefix);
+
+	    /* Get document type */
+	    assert (strcmp (id_prefix, type_prefix) < 0);
+	    if (! NOTMUCH_TEST_BIT (message->lazy_flags, NOTMUCH_MESSAGE_FLAG_GHOST)) {
+		i.skip_to (type_prefix);
+		/* "T" is the prefix "type" fields.  See
+		 * BOOLEAN_PREFIX_INTERNAL. */
+		if (*i == "Tmail")
+		    NOTMUCH_CLEAR_BIT (&message->flags, NOTMUCH_MESSAGE_FLAG_GHOST);
+		else if (*i == "Tghost")
+		    NOTMUCH_SET_BIT (&message->flags, NOTMUCH_MESSAGE_FLAG_GHOST);
+		else
+		    INTERNAL_ERROR ("Message without type term");
+		NOTMUCH_SET_BIT (&message->lazy_flags, NOTMUCH_MESSAGE_FLAG_GHOST);
+	    }
+
+	    /* Get filename list.  Here we get only the terms.  We lazily
+	     * expand them to full file names when needed in
+	     * _notmuch_message_ensure_filename_list. */
+	    assert (strcmp (type_prefix, filename_prefix) < 0);
+	    if (!message->filename_term_list && !message->filename_list)
+		message->filename_term_list =
+		    _notmuch_database_get_terms_with_prefix (message, i, end,
+							     filename_prefix);
+
+
+	    /* Get property terms. Mimic the setup with filenames above */
+	    assert (strcmp (filename_prefix, property_prefix) < 0);
+	    if (!message->property_map && !message->property_term_list)
+		message->property_term_list =
+		    _notmuch_database_get_terms_with_prefix (message, i, end,
+							 property_prefix);
+
+	    /* Get reply to */
+	    assert (strcmp (property_prefix, replyto_prefix) < 0);
+	    if (!message->in_reply_to)
+		message->in_reply_to =
+		    _notmuch_message_get_term (message, i, end, replyto_prefix);
+
+
+	    /* It's perfectly valid for a message to have no In-Reply-To
+	     * header. For these cases, we return an empty string. */
+	    if (!message->in_reply_to)
+		message->in_reply_to = talloc_strdup (message, "");
+
+	    /* all the way without an exception */
+	    break;
+	} catch (const Xapian::DatabaseModifiedError &error) {
+	    notmuch_status_t status = _notmuch_database_reopen (message->notmuch);
+	    if (status != NOTMUCH_STATUS_SUCCESS)
+		INTERNAL_ERROR ("unhandled error from notmuch_database_reopen: %s\n",
+				notmuch_status_to_string (status));
+	} catch (const Xapian::Error &error) {
+	    INTERNAL_ERROR ("A Xapian exception occurred fetching message metadata: %s\n",
+			    error.get_msg().c_str());
+	}
     }
-
-    /* Get id */
-    assert (strcmp (tag_prefix, id_prefix) < 0);
-    if (!message->message_id)
-	message->message_id =
-	    _notmuch_message_get_term (message, i, end, id_prefix);
-
-    /* Get document type */
-    assert (strcmp (id_prefix, type_prefix) < 0);
-    if (! NOTMUCH_TEST_BIT (message->lazy_flags, NOTMUCH_MESSAGE_FLAG_GHOST)) {
-	i.skip_to (type_prefix);
-	/* "T" is the prefix "type" fields.  See
-	 * BOOLEAN_PREFIX_INTERNAL. */
-	if (*i == "Tmail")
-	    NOTMUCH_CLEAR_BIT (&message->flags, NOTMUCH_MESSAGE_FLAG_GHOST);
-	else if (*i == "Tghost")
-	    NOTMUCH_SET_BIT (&message->flags, NOTMUCH_MESSAGE_FLAG_GHOST);
-	else
-	    INTERNAL_ERROR ("Message without type term");
-	NOTMUCH_SET_BIT (&message->lazy_flags, NOTMUCH_MESSAGE_FLAG_GHOST);
-    }
-
-    /* Get filename list.  Here we get only the terms.  We lazily
-     * expand them to full file names when needed in
-     * _notmuch_message_ensure_filename_list. */
-    assert (strcmp (type_prefix, filename_prefix) < 0);
-    if (!message->filename_term_list && !message->filename_list)
-	message->filename_term_list =
-	    _notmuch_database_get_terms_with_prefix (message, i, end,
-						     filename_prefix);
-
-
-    /* Get property terms. Mimic the setup with filenames above */
-    assert (strcmp (filename_prefix, property_prefix) < 0);
-    if (!message->property_map && !message->property_term_list)
-	message->property_term_list =
-	    _notmuch_database_get_terms_with_prefix (message, i, end,
-						     property_prefix);
-
-    /* Get reply to */
-    assert (strcmp (property_prefix, replyto_prefix) < 0);
-    if (!message->in_reply_to)
-	message->in_reply_to =
-	    _notmuch_message_get_term (message, i, end, replyto_prefix);
-
-
-    /* It's perfectly valid for a message to have no In-Reply-To
-     * header. For these cases, we return an empty string. */
-    if (!message->in_reply_to)
-	message->in_reply_to = talloc_strdup (message, "");
+    message->last_view = message->notmuch->view;
 }
 
 void

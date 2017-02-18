@@ -6,7 +6,6 @@ test_description="DatabaseModifiedError handling"
 add_email_corpus
 
 test_begin_subtest "catching DatabaseModifiedError in _notmuch_message_ensure_metadata"
-test_subtest_known_broken
 # it seems to need to be an early document to trigger the exception
 first_id=$(notmuch search --output=messages '*'| head -1 | sed s/^id://)
 
