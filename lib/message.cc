@@ -1801,7 +1801,7 @@ _notmuch_message_database (notmuch_message_t *message)
     return message->notmuch;
 }
 
-void
+static void
 _notmuch_message_ensure_property_map (notmuch_message_t *message)
 {
     notmuch_string_node_t *node;
