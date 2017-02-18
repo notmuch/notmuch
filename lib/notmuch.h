@@ -180,6 +180,11 @@ typedef enum _notmuch_status {
      */
     NOTMUCH_STATUS_PATH_ERROR,
     /**
+     * The requested operation was ignored. Depending on the function,
+     * this may not be an actual error.
+     */
+    NOTMUCH_STATUS_IGNORED,
+    /**
      * One of the arguments violates the preconditions for the
      * function, in a way not covered by a more specific argument.
      */
@@ -812,10 +817,20 @@ notmuch_query_get_sort (const notmuch_query_t *query);
 
 /**
  * Add a tag that will be excluded from the query results by default.
- * This exclusion will be overridden if this tag appears explicitly in
+ * This exclusion will be ignored if this tag appears explicitly in
  * the query.
+ *
+ * @returns
+ *
+ * NOTMUCH_STATUS_SUCCESS: excluded was added successfully.
+ *
+ * NOTMUCH_STATUS_XAPIAN_EXCEPTION: a Xapian exception occured.
+ *      Most likely a problem lazily parsing the query string.
+ *
+ * NOTMUCH_STATUS_IGNORED: tag is explicitely present in the query, so
+ *		not excluded.
  */
-void
+notmuch_status_t
 notmuch_query_add_tag_exclude (notmuch_query_t *query, const char *tag);
 
 /**

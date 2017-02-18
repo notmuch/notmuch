@@ -87,8 +87,13 @@ print_count (notmuch_database_t *notmuch, const char *query_str,
 	return -1;
     }
 
-    for (i = 0; i < exclude_tags_length; i++)
-	notmuch_query_add_tag_exclude (query, exclude_tags[i]);
+    for (i = 0; i < exclude_tags_length; i++) {
+	status = notmuch_query_add_tag_exclude (query, exclude_tags[i]);
+	if (status && status != NOTMUCH_STATUS_IGNORED) {
+	    print_status_query ("notmuch count", query, status);
+	    return -1;
+	}
+    }
 
     switch (output) {
     case OUTPUT_MESSAGES:

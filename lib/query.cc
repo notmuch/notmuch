@@ -177,29 +177,22 @@ notmuch_query_get_sort (const notmuch_query_t *query)
     return query->sort;
 }
 
-void
+notmuch_status_t
 notmuch_query_add_tag_exclude (notmuch_query_t *query, const char *tag)
 {
     notmuch_status_t status;
     char *term;
 
     status = _notmuch_query_ensure_parsed (query);
-    /* The following is not ideal error handling, but to avoid
-     * breaking the ABI, we can live with it for now. In particular at
-     * least in the notmuch CLI, any syntax error in the query is
-     * caught in a later call to _notmuch_query_ensure_parsed with a
-     * better error path.
-     *
-     * TODO: add status return to this function.
-     */
     if (status)
-	return;
+	return status;
 
     term = talloc_asprintf (query, "%s%s", _find_prefix ("tag"), tag);
     if (query->terms.count(term) != 0)
-	return; /* XXX report ignoring exclude? */
+	return NOTMUCH_STATUS_IGNORED;
 
     _notmuch_string_list_append (query->exclude_terms, term);
+    return NOTMUCH_STATUS_SUCCESS;
 }
 
 /* We end up having to call the destructors explicitly because we had

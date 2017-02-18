@@ -735,11 +735,19 @@ _notmuch_search_prepare (search_context_t *ctx, notmuch_config_t *config, int ar
     if (ctx->exclude != NOTMUCH_EXCLUDE_FALSE) {
 	const char **search_exclude_tags;
 	size_t search_exclude_tags_length;
+	notmuch_status_t status;
 
 	search_exclude_tags = notmuch_config_get_search_exclude_tags
 	    (config, &search_exclude_tags_length);
-	for (i = 0; i < search_exclude_tags_length; i++)
-	    notmuch_query_add_tag_exclude (ctx->query, search_exclude_tags[i]);
+
+	for (i = 0; i < search_exclude_tags_length; i++) {
+	    status = notmuch_query_add_tag_exclude (ctx->query, search_exclude_tags[i]);
+	    if (status && status != NOTMUCH_STATUS_IGNORED) {
+		print_status_query ("notmuch search", ctx->query, status);
+		return EXIT_FAILURE;
+	    }
+	}
+
 	notmuch_query_set_omit_excluded (ctx->query, ctx->exclude);
     }
 

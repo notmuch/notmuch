@@ -1177,11 +1177,19 @@ notmuch_show_command (notmuch_config_t *config, int argc, char *argv[])
 	const char **search_exclude_tags;
 	size_t search_exclude_tags_length;
 	unsigned int i;
+	notmuch_status_t status;
 
 	search_exclude_tags = notmuch_config_get_search_exclude_tags
 	    (config, &search_exclude_tags_length);
-	for (i = 0; i < search_exclude_tags_length; i++)
-	    notmuch_query_add_tag_exclude (query, search_exclude_tags[i]);
+
+	for (i = 0; i < search_exclude_tags_length; i++) {
+	    status = notmuch_query_add_tag_exclude (query, search_exclude_tags[i]);
+	    if (status && status != NOTMUCH_STATUS_IGNORED) {
+		print_status_query ("notmuch show", query, status);
+		ret = -1;
+		goto DONE;
+	    }
+	}
 
 	if (exclude == EXCLUDE_FALSE) {
 	    notmuch_query_set_omit_excluded (query, FALSE);
@@ -1191,6 +1199,7 @@ notmuch_show_command (notmuch_config_t *config, int argc, char *argv[])
 	ret = do_show (config, query, formatter, sprinter, &params);
     }
 
+ DONE:
     notmuch_crypto_cleanup (&params.crypto);
     notmuch_query_destroy (query);
     notmuch_database_destroy (notmuch);
