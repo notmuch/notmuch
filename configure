@@ -612,6 +612,19 @@ if [ $WITH_DOCS = "1" ] ; then
     fi
 fi
 
+have_gpgconf_socketdir=0
+printf "Checking for gpgconf --{create,remove}-socketdir... "
+if gpgconf --dump-options > /dev/null ; then
+    if gpgconf --dump-options | grep -q create-socketdir ; then
+	printf "Yes.\n"
+	have_gpgconf_socketdir=1
+    else
+	printf "No.\n"
+    fi
+else
+    printf "No. (missing or broken gpgconf?)\n"
+fi
+
 if [ $WITH_DESKTOP = "1" ]; then
     printf "Checking if desktop-file-install is available... "
     if command -v desktop-file-install > /dev/null; then
@@ -1186,6 +1199,9 @@ NOTMUCH_PYTHON=${python}
 # Are the ruby development files (and ruby) available? If not skip
 # building/testing ruby bindings.
 NOTMUCH_HAVE_RUBY_DEV=${have_ruby_dev}
+
+# Recent enough gnupg to support gpgconf --create-socketdir?
+NOTMUCH_HAVE_GPGCONF_SOCKETDIR=${have_gpgconf_socketdir}
 EOF
 
 # Finally, after everything configured, inform the user how to continue.

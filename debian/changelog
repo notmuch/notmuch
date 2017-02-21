@@ -1,3 +1,10 @@
+notmuch (0.23.5-2) UNRELEASED; urgency=medium
+
+  * Use gpgconf --create-socketdir to create gpg-agent sockets for
+    test suite.
+
+ -- David Bremner <bremner@debian.org>  Tue, 21 Feb 2017 07:51:08 -0400
+
 notmuch (0.23.5-1) unstable; urgency=medium
 
   * Remove RUNPATH from /usr/bin/notmuch
