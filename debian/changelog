@@ -1,3 +1,48 @@
+notmuch (0.23.5-1) unstable; urgency=medium
+
+  * Remove RUNPATH from /usr/bin/notmuch
+
+ -- David Bremner <bremner@debian.org>  Mon, 09 Jan 2017 06:24:39 -0400
+
+notmuch (0.23.4-1) unstable; urgency=medium
+
+  * Improve error handling in notmuch insert
+  * Restore autoload cookie for notmuch-search (notmuch-emacs)
+
+ -- David Bremner <bremner@debian.org>  Sat, 24 Dec 2016 17:47:48 +0900
+
+notmuch (0.23.3-3) unstable; urgency=medium
+
+  * Disable gdb using tests on kfreebsd-*, due to apparent gdb breakage
+
+ -- David Bremner <bremner@debian.org>  Mon, 05 Dec 2016 08:25:32 -0400
+
+notmuch (0.23.3-2) unstable; urgency=medium
+
+  * Add missing depends to notmuch-emacs. Thanks to micah for the
+    report.
+
+ -- David Bremner <bremner@debian.org>  Thu, 01 Dec 2016 08:06:59 -0400
+
+notmuch (0.23.3-1) unstable; urgency=medium
+
+  * Re-enable test suite
+  * Fix test suite compatibility with gnupg 2.1.16. Fixes: "FTBFS:
+    Tests failures", thanks to Lucas Nussbaum (Closes: #844915).
+  * Bug fix: "race condition in `notmuch new`?", thanks to Paul Wise
+    (Closes: #843127).
+
+ -- David Bremner <bremner@debian.org>  Sat, 26 Nov 2016 08:37:39 -0400
+
+notmuch (0.23.2-1) unstable; urgency=medium
+
+  * New upstream bugfix release
+  * Convert notmuch-emacs to dh-elpa, new binary package elpa-notmuch
+  * Bug fix: "maintainer script(s) do not start on #!", thanks to
+    treinen@debian.org; (Closes: #843287).
+
+ -- David Bremner <bremner@debian.org>  Thu, 10 Nov 2016 22:36:04 -0400
+
 notmuch (0.23.1-1~bpo8+1) jessie-backports; urgency=medium
 
   * Rebuild for jessie-backports.

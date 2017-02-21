@@ -736,7 +736,8 @@ notmuch_json_show_sanitize ()
 	-e 's|"Date": "Fri, 05 Jan 2001 [^"]*0000"|"Date": "GENERATED_DATE"|g' \
 	-e 's|"filename": "signature.asc",||g' \
 	-e 's|"filename": "/[^"]*",|"filename": "YYYYY",|g' \
-	-e 's|"timestamp": 97.......|"timestamp": 42|g'
+	-e 's|"timestamp": 97.......|"timestamp": 42|g' \
+        -e 's|"content-length": [1-9][0-9]*|"content-length": "NONZERO"|g'
 }
 
 notmuch_emacs_error_sanitize ()
