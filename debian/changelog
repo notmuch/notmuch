@@ -1,3 +1,9 @@
+notmuch (0.23.5-1~bpo8+1) jessie-backports; urgency=medium
+
+  * Rebuild for jessie-backports.
+
+ -- David Bremner <bremner@debian.org>  Tue, 21 Feb 2017 18:31:10 -0400
+
 notmuch (0.23.5-1) unstable; urgency=medium
 
   * Remove RUNPATH from /usr/bin/notmuch
