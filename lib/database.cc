@@ -652,7 +652,7 @@ parse_references (void *ctx,
 	ref = _parse_message_id (ctx, refs, &refs);
 
 	if (ref && strcmp (ref, message_id)) {
-	    g_hash_table_insert (hash, ref, NULL);
+	    g_hash_table_add (hash, ref);
 	    last_ref = ref;
 	}
     }
@@ -661,7 +661,7 @@ parse_references (void *ctx,
      * reference to the database.  We should avoid making a message
      * its own parent, thus the above check.
      */
-    return last_ref;
+    return talloc_strdup(ctx, last_ref);
 }
 
 notmuch_status_t
