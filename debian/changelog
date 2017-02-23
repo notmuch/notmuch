@@ -1,4 +1,4 @@
-notmuch (0.23.5-2) UNRELEASED; urgency=medium
+notmuch (0.23.6-1) UNRELEASED; urgency=medium
 
   * Use gpgconf --create-socketdir to create gpg-agent sockets for
     test suite.
