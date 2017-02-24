@@ -207,6 +207,10 @@ struct _notmuch_database {
     unsigned long revision;
     const char *uuid;
 
+    /* Keep track of the number of times the database has been re-opened
+     * (or other global invalidations of notmuch's caching)
+     */
+    unsigned long view;
     Xapian::QueryParser *query_parser;
     Xapian::TermGenerator *term_gen;
     Xapian::ValueRangeProcessor *value_range_processor;

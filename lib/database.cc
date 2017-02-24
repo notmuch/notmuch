@@ -951,6 +951,7 @@ notmuch_database_open_verbose (const char *path,
 
     notmuch->mode = mode;
     notmuch->atomic_nesting = 0;
+    notmuch->view = 1;
     try {
 	string last_thread_id;
 	string last_mod;
@@ -1131,6 +1132,28 @@ notmuch_database_close (notmuch_database_t *notmuch)
     notmuch->last_mod_range_processor = NULL;
 
     return status;
+}
+
+notmuch_status_t
+_notmuch_database_reopen (notmuch_database_t *notmuch)
+{
+    if (notmuch->mode != NOTMUCH_DATABASE_MODE_READ_ONLY)
+	return NOTMUCH_STATUS_UNSUPPORTED_OPERATION;
+
+    try {
+	notmuch->xapian_db->reopen ();
+    } catch (const Xapian::Error &error) {
+	if (! notmuch->exception_reported) {
+	    _notmuch_database_log (notmuch, "Error: A Xapian exception reopening database: %s\n",
+				   error.get_msg ().c_str ());
+	    notmuch->exception_reported = TRUE;
+	}
+	return NOTMUCH_STATUS_XAPIAN_EXCEPTION;
+    }
+
+    notmuch->view++;
+
+    return NOTMUCH_STATUS_SUCCESS;
 }
 
 static int
