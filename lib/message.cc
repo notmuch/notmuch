@@ -317,9 +317,12 @@ _notmuch_message_get_term (notmuch_message_t *message,
 }
 
 static void
-_notmuch_message_ensure_metadata (notmuch_message_t *message)
+_notmuch_message_ensure_metadata (notmuch_message_t *message, void *field)
 {
     Xapian::TermIterator i, end;
+
+    if (field && (message->last_view >= message->notmuch->view))
+	return;
 
     const char *thread_prefix = _find_prefix ("thread"),
 	*tag_prefix = _find_prefix ("tag"),
@@ -470,8 +473,7 @@ _notmuch_message_get_doc_id (notmuch_message_t *message)
 const char *
 notmuch_message_get_message_id (notmuch_message_t *message)
 {
-    if (!message->message_id)
-	_notmuch_message_ensure_metadata (message);
+    _notmuch_message_ensure_metadata (message, message->message_id);
     if (!message->message_id)
 	INTERNAL_ERROR ("Message with document ID of %u has no message ID.\n",
 			message->doc_id);
@@ -546,16 +548,14 @@ notmuch_message_get_header (notmuch_message_t *message, const char *header)
 const char *
 _notmuch_message_get_in_reply_to (notmuch_message_t *message)
 {
-    if (!message->in_reply_to)
-	_notmuch_message_ensure_metadata (message);
+    _notmuch_message_ensure_metadata (message, message->in_reply_to);
     return message->in_reply_to;
 }
 
 const char *
 notmuch_message_get_thread_id (notmuch_message_t *message)
 {
-    if (!message->thread_id)
-	_notmuch_message_ensure_metadata (message);
+    _notmuch_message_ensure_metadata (message, message->thread_id);
     if (!message->thread_id)
 	INTERNAL_ERROR ("Message with document ID of %u has no thread ID.\n",
 			message->doc_id);
@@ -858,8 +858,7 @@ _notmuch_message_ensure_filename_list (notmuch_message_t *message)
     if (message->filename_list)
 	return;
 
-    if (!message->filename_term_list)
-	_notmuch_message_ensure_metadata (message);
+    _notmuch_message_ensure_metadata (message, message->filename_term_list);
 
     message->filename_list = _notmuch_string_list_create (message);
     node = message->filename_term_list->head;
@@ -953,7 +952,7 @@ notmuch_message_get_flag (notmuch_message_t *message,
 {
     if (flag == NOTMUCH_MESSAGE_FLAG_GHOST &&
 	! NOTMUCH_TEST_BIT (message->lazy_flags, flag))
-	_notmuch_message_ensure_metadata (message);
+	_notmuch_message_ensure_metadata (message, NULL);
 
     return NOTMUCH_TEST_BIT (message->flags, flag);
 }
@@ -994,8 +993,7 @@ notmuch_message_get_tags (notmuch_message_t *message)
 {
     notmuch_tags_t *tags;
 
-    if (!message->tag_list)
-	_notmuch_message_ensure_metadata (message);
+    _notmuch_message_ensure_metadata (message, message->tag_list);
 
     tags = _notmuch_tags_create (message, message->tag_list);
     /* _notmuch_tags_create steals the reference to the tag_list, but
@@ -1831,8 +1829,7 @@ _notmuch_message_ensure_property_map (notmuch_message_t *message)
     if (message->property_map)
 	return;
 
-    if (!message->property_term_list)
-	_notmuch_message_ensure_metadata (message);
+    _notmuch_message_ensure_metadata (message, message->property_term_list);
 
     message->property_map = _notmuch_string_map_create (message);
 
