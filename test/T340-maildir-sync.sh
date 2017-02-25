@@ -39,7 +39,7 @@ output=$(notmuch show --format=json id:${gen_msg_id} | notmuch_json_show_sanitiz
 test_expect_equal_json "$output" '[[[{"id": "XXXXX",
 "match": true,
 "excluded": false,
-"filename": "YYYYY",
+"filename": ["YYYYY"],
 "timestamp": 42,
 "date_relative": "2001-01-05",
 "tags": ["inbox","replied"],

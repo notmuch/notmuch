@@ -229,7 +229,7 @@ test_expect_equal_json "$output" '
         ],
         "date_relative": "2010-01-05",
         "excluded": false,
-        "filename": "'${MAIL_DIR}'/msg-012",
+        "filename": ["'${MAIL_DIR}'/msg-012"],
         "headers": {
             "Date": "Tue, 05 Jan 2010 15:43:56 +0000",
             "From": "\u2603 <snowman@example.com>",

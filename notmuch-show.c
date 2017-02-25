@@ -133,7 +133,20 @@ format_message_sprinter (sprinter_t *sp, notmuch_message_t *message)
     sp->boolean (sp, notmuch_message_get_flag (message, NOTMUCH_MESSAGE_FLAG_EXCLUDED));
 
     sp->map_key (sp, "filename");
-    sp->string (sp, notmuch_message_get_filename (message));
+    if (notmuch_format_version >= 3) {
+	notmuch_filenames_t *filenames;
+
+	sp->begin_list (sp);
+	for (filenames = notmuch_message_get_filenames (message);
+	     notmuch_filenames_valid (filenames);
+	     notmuch_filenames_move_to_next (filenames)) {
+	    sp->string (sp, notmuch_filenames_get (filenames));
+	}
+	notmuch_filenames_destroy (filenames);
+	sp->end (sp);
+    } else {
+	sp->string (sp, notmuch_message_get_filename (message));
+    }
 
     sp->map_key (sp, "timestamp");
     date = notmuch_message_get_date (message);

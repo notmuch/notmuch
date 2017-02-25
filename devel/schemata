@@ -26,6 +26,9 @@ v1
 v2
 - Added the thread_summary.query field.
 
+v3
+- Replaced message.filename string with a list of filenames.
+
 Common non-terminals
 --------------------
 
@@ -59,7 +62,7 @@ message = {
     # (format_message_sprinter)
     id:             messageid,
     match:          bool,
-    filename:	    string,
+    filename:	    [string*],
     timestamp:      unix_time, # date header as unix time
     date_relative:  string,   # user-friendly timestamp
     tags:           [string*],

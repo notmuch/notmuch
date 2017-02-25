@@ -109,7 +109,7 @@ expected=$(notmuch_json_show_sanitize <<EOF
                 ],
                 "date_relative": "2001-01-05",
                 "excluded": false,
-                "filename": "YYYYY",
+                "filename": ["YYYYY"],
                 "headers": {
                     "Date": "Fri, 05 Jan 2001 15:43:57 +0000",
                     "From": "",
@@ -139,7 +139,7 @@ expected=$(notmuch_json_show_sanitize <<EOF
                 ],
                 "date_relative": "1970-01-01",
                 "excluded": false,
-                "filename": "YYYYY",
+                "filename": ["YYYYY"],
                 "headers": {
                     "Date": "Thu, 01 Jan 1970 00:00:00 +0000",
                     "From": "Notmuch Test Suite <test_suite@notmuchmail.org>",

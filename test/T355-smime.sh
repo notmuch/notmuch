@@ -51,7 +51,7 @@ output=$(notmuch show --format=json --verify subject:"test signed message 001" \
 expected='[[[{"id": "XXXXX",
  "match": true,
  "excluded": false,
- "filename": "YYYYY",
+ "filename": ["YYYYY"],
  "timestamp": 946728000,
  "date_relative": "2000-01-01",
  "tags": ["inbox","signed"],

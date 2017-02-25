@@ -43,7 +43,7 @@ expected='[[[{
  "id": "'"${gen_msg_id}"'",
  "match": true,
  "excluded": false,
- "filename": "'"${cur_msg_filename}"'",
+ "filename": ["'"${cur_msg_filename}"'"],
  "timestamp": 946728000,
  "date_relative": "2000-01-01",
  "tags": ["inbox","unread"],
