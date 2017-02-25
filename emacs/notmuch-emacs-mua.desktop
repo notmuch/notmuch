@@ -1,6 +1,9 @@
 [Desktop Entry]
 Name=Notmuch (emacs interface)
-Exec=emacs -f notmuch
+GenericName=Email Client
+Comment=Emacs based email client
+Exec=notmuch-emacs-mua --hello %u
+MimeType=x-scheme-handler/mailto;
 Icon=emblem-mail
 Terminal=false
 Type=Application
