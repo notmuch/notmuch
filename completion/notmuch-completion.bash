@@ -240,6 +240,38 @@ _notmuch_dump()
     esac
 }
 
+_notmuch_emacs_mua()
+{
+    local cur prev words cword split
+    _init_completion -s || return
+
+    $split &&
+    case "${prev}" in
+	--to|--cc|--bcc)
+	    COMPREPLY=( $(compgen -W "`_notmuch_email to:${cur}`" -- ${cur}) )
+	    return
+	    ;;
+	--body)
+	    _filedir
+	    return
+	    ;;
+    esac
+
+    ! $split &&
+    case "${cur}" in
+        -*)
+	    local options="--subject= --to= --cc= --bcc= --body= --no-window-system --client --auto-daemon --create-frame --print --help --hello"
+
+	    compopt -o nospace
+	    COMPREPLY=( $(compgen -W "$options" -- ${cur}) )
+	    ;;
+	*)
+	    COMPREPLY=( $(compgen -W "`_notmuch_email to:${cur}`" -- ${cur}) )
+	    return
+	    ;;
+    esac
+}
+
 _notmuch_insert()
 {
     local cur prev words cword split
@@ -500,7 +532,7 @@ _notmuch_tag()
 
 _notmuch()
 {
-    local _notmuch_commands="compact config count dump help insert new reply restore search address setup show tag"
+    local _notmuch_commands="compact config count dump help insert new reply restore search address setup show tag emacs-mua"
     local arg cur prev words cword split
 
     # require bash-completion with _init_completion
