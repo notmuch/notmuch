@@ -74,7 +74,7 @@ test_begin_subtest "regexp error reporting"
 notmuch search 'from:/unbalanced[/' 1>OUTPUT 2>&1
 cat <<EOF > EXPECTED
 notmuch search: A Xapian exception occurred
-A Xapian exception occurred performing query: Invalid regular expression
+A Xapian exception occurred parsing query: Invalid regular expression
 Query string was: from:/unbalanced[/
 EOF
 test_expect_equal_file EXPECTED OUTPUT
