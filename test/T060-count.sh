@@ -127,7 +127,6 @@ test_expect_equal_file EXPECTED OUTPUT.clean
 restore_database
 
 test_begin_subtest "count library function is non-destructive"
-test_subtest_known_broken
 cat<<EOF > EXPECTED
 1: 52 messages
 2: 52 messages

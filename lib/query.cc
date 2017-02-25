@@ -31,6 +31,7 @@ struct _notmuch_query {
     notmuch_exclude_t omit_excluded;
     notmuch_bool_t parsed;
     Xapian::Query xapian_query;
+    std::set<std::string> terms;
 };
 
 typedef struct _notmuch_mset_messages {
@@ -77,6 +78,7 @@ _debug_query (void)
 static int
 _notmuch_query_destructor (notmuch_query_t *query) {
     query->xapian_query.~Query();
+    query->terms.~set<std::string>();
     return 0;
 }
 
@@ -94,6 +96,7 @@ notmuch_query_create (notmuch_database_t *notmuch,
 	return NULL;
 
     new (&query->xapian_query) Xapian::Query ();
+    new (&query->terms) std::set<std::string> ();
     query->parsed = FALSE;
 
     talloc_set_destructor (query, _notmuch_query_destructor);
@@ -121,6 +124,15 @@ _notmuch_query_ensure_parsed (notmuch_query_t *query)
 	query->xapian_query =
 	    query->notmuch->query_parser->
 		parse_query (query->query_string, NOTMUCH_QUERY_PARSER_FLAGS);
+
+       /* Xapian doesn't support skip_to on terms from a query since
+	*  they are unordered, so cache a copy of all terms in
+	*  something searchable.
+	*/
+
+	for (Xapian::TermIterator t = query->xapian_query.get_terms_begin ();
+	     t != query->xapian_query.get_terms_end (); ++t)
+	    query->terms.insert (*t);
 
 	query->parsed = TRUE;
 
@@ -168,7 +180,25 @@ notmuch_query_get_sort (const notmuch_query_t *query)
 void
 notmuch_query_add_tag_exclude (notmuch_query_t *query, const char *tag)
 {
-    char *term = talloc_asprintf (query, "%s%s", _find_prefix ("tag"), tag);
+    notmuch_status_t status;
+    char *term;
+
+    status = _notmuch_query_ensure_parsed (query);
+    /* The following is not ideal error handling, but to avoid
+     * breaking the ABI, we can live with it for now. In particular at
+     * least in the notmuch CLI, any syntax error in the query is
+     * caught in a later call to _notmuch_query_ensure_parsed with a
+     * better error path.
+     *
+     * TODO: add status return to this function.
+     */
+    if (status)
+	return;
+
+    term = talloc_asprintf (query, "%s%s", _find_prefix ("tag"), tag);
+    if (query->terms.count(term) != 0)
+	return; /* XXX report ignoring exclude? */
+
     _notmuch_string_list_append (query->exclude_terms, term);
 }
 
@@ -188,28 +218,17 @@ _notmuch_messages_destructor (notmuch_mset_messages_t *messages)
 }
 
 /* Return a query that matches messages with the excluded tags
- * registered with query.  Any tags that explicitly appear in xquery
- * will not be excluded, and will be removed from the list of exclude
- * tags.  The caller of this function has to combine the returned
+ * registered with query. The caller of this function has to combine the returned
  * query appropriately.*/
 static Xapian::Query
-_notmuch_exclude_tags (notmuch_query_t *query, Xapian::Query xquery)
+_notmuch_exclude_tags (notmuch_query_t *query)
 {
     Xapian::Query exclude_query = Xapian::Query::MatchNothing;
 
     for (notmuch_string_node_t *term = query->exclude_terms->head; term;
 	 term = term->next) {
-	Xapian::TermIterator it = xquery.get_terms_begin ();
-	Xapian::TermIterator end = xquery.get_terms_end ();
-	for (; it != end; it++) {
-	    if ((*it).compare (term->string) == 0)
-		break;
-	}
-	if (it == end)
-	    exclude_query = Xapian::Query (Xapian::Query::OP_OR,
-				    exclude_query, Xapian::Query (term->string));
-	else
-	    term->string = talloc_strdup (query, "");
+	exclude_query = Xapian::Query (Xapian::Query::OP_OR,
+				       exclude_query, Xapian::Query (term->string));
     }
     return exclude_query;
 }
@@ -280,7 +299,7 @@ _notmuch_query_search_documents (notmuch_query_t *query,
 	messages->base.excluded_doc_ids = NULL;
 
 	if ((query->omit_excluded != NOTMUCH_EXCLUDE_FALSE) && (query->exclude_terms)) {
-	    exclude_query = _notmuch_exclude_tags (query, final_query);
+	    exclude_query = _notmuch_exclude_tags (query);
 
 	    if (query->omit_excluded == NOTMUCH_EXCLUDE_TRUE ||
 		query->omit_excluded == NOTMUCH_EXCLUDE_ALL)
@@ -635,7 +654,7 @@ _notmuch_query_count_documents (notmuch_query_t *query, const char *type, unsign
 					 mail_query, query->xapian_query);
 	}
 
-	exclude_query = _notmuch_exclude_tags (query, final_query);
+	exclude_query = _notmuch_exclude_tags (query);
 
 	final_query = Xapian::Query (Xapian::Query::OP_AND_NOT,
 					 final_query, exclude_query);
