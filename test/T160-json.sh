@@ -70,4 +70,71 @@ test_expect_code 20 "Format version: too low" \
 test_expect_code 21 "Format version: too high" \
     "notmuch search --format-version=999 \\*"
 
+test_begin_subtest "Show message: multiple filenames"
+add_message "[id]=message-id@example.com [filename]=copy1"
+add_message "[id]=message-id@example.com [filename]=copy2"
+cat <<EOF > EXPECTED
+[
+    [
+        [
+            {
+                "date_relative": "2001-01-05",
+                "excluded": false,
+                "filename": [
+                    "${MAIL_DIR}/copy1",
+                    "${MAIL_DIR}/copy2"
+                ],
+                "headers": {
+                    "Date": "Fri, 05 Jan 2001 15:43:52 +0000",
+                    "From": "Notmuch Test Suite <test_suite@notmuchmail.org>",
+                    "Subject": "Show message: multiple filenames",
+                    "To": "Notmuch Test Suite <test_suite@notmuchmail.org>"
+                },
+                "id": "message-id@example.com",
+                "match": true,
+                "tags": [
+                    "inbox",
+                    "unread"
+                ],
+                "timestamp": 978709432
+            },
+            []
+        ]
+    ]
+]
+EOF
+output=$(notmuch show --format=json --body=false id:message-id@example.com)
+test_expect_equal_json "$output" "$(cat EXPECTED)"
+
+test_begin_subtest "Show message: multiple filenames, format version 2"
+cat <<EOF > EXPECTED
+[
+    [
+        [
+            {
+                "date_relative": "2001-01-05",
+                "excluded": false,
+                "filename": "${MAIL_DIR}/copy1",
+                "headers": {
+                    "Date": "Fri, 05 Jan 2001 15:43:52 +0000",
+                    "From": "Notmuch Test Suite <test_suite@notmuchmail.org>",
+                    "Subject": "Show message: multiple filenames",
+                    "To": "Notmuch Test Suite <test_suite@notmuchmail.org>"
+                },
+                "id": "message-id@example.com",
+                "match": true,
+                "tags": [
+                    "inbox",
+                    "unread"
+                ],
+                "timestamp": 978709432
+            },
+            []
+        ]
+    ]
+]
+EOF
+output=$(notmuch show --format=json --body=false --format-version=2 id:message-id@example.com)
+test_expect_equal_json "$output" "$(cat EXPECTED)"
+
 test_done
