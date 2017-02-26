@@ -559,6 +559,9 @@ test_begin_subtest ()
 test_expect_equal ()
 {
 	exec 1>&6 2>&7		# Restore stdout and stderr
+	if [ -z "$inside_subtest" ]; then
+		error "bug in the test script: test_expect_equal without test_begin_subtest"
+	fi
 	inside_subtest=
 	test "$#" = 3 && { prereq=$1; shift; } || prereq=
 	test "$#" = 2 ||
@@ -583,6 +586,9 @@ test_expect_equal ()
 test_expect_equal_file ()
 {
 	exec 1>&6 2>&7		# Restore stdout and stderr
+	if [ -z "$inside_subtest" ]; then
+		error "bug in the test script: test_expect_equal_file without test_begin_subtest"
+	fi
 	inside_subtest=
 	test "$#" = 3 && { prereq=$1; shift; } || prereq=
 	test "$#" = 2 ||
@@ -630,6 +636,9 @@ test_emacs_expect_t () {
 	test "$#" = 2 && { prereq=$1; shift; } || prereq=
 	test "$#" = 1 ||
 	error "bug in the test script: not 1 or 2 parameters to test_emacs_expect_t"
+	if [ -z "$inside_subtest" ]; then
+		error "bug in the test script: test_emacs_expect_t without test_begin_subtest"
+	fi
 
 	# Run the test.
 	if ! test_skip "$test_subtest_name"
