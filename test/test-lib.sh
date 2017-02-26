@@ -93,15 +93,6 @@ unset GREP_OPTIONS
 # For emacsclient
 unset ALTERNATE_EDITOR
 
-# Convenience
-#
-# A regexp to match 5 and 40 hexdigits
-_x05='[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]'
-_x40="$_x05$_x05$_x05$_x05$_x05$_x05$_x05$_x05"
-
-_x04='[0-9a-f][0-9a-f][0-9a-f][0-9a-f]'
-_x32="$_x04$_x04$_x04$_x04$_x04$_x04$_x04$_x04"
-
 # Each test should start with something like this, after copyright notices:
 #
 # test_description='Description of this test...
