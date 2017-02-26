@@ -23,7 +23,7 @@ test_expect_success 'success is reported like this' '
 '
 test_set_prereq HAVEIT
 haveit=no
-test_expect_success HAVEIT 'test runs if prerequisite is satisfied' '
+test_expect_success 'test runs if prerequisite is satisfied' '
     test_have_prereq HAVEIT &&
     haveit=yes
 '

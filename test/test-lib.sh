@@ -563,9 +563,8 @@ test_expect_equal ()
 		error "bug in the test script: test_expect_equal without test_begin_subtest"
 	fi
 	inside_subtest=
-	test "$#" = 3 && { prereq=$1; shift; } || prereq=
 	test "$#" = 2 ||
-	error "bug in the test script: not 2 or 3 parameters to test_expect_equal"
+	error "bug in the test script: not 2 parameters to test_expect_equal"
 
 	output="$1"
 	expected="$2"
@@ -590,9 +589,8 @@ test_expect_equal_file ()
 		error "bug in the test script: test_expect_equal_file without test_begin_subtest"
 	fi
 	inside_subtest=
-	test "$#" = 3 && { prereq=$1; shift; } || prereq=
 	test "$#" = 2 ||
-	error "bug in the test script: not 2 or 3 parameters to test_expect_equal"
+	error "bug in the test script: not 2 parameters to test_expect_equal_file"
 
 	file1="$1"
 	file2="$2"
@@ -633,9 +631,8 @@ test_sort_json () {
 }
 
 test_emacs_expect_t () {
-	test "$#" = 2 && { prereq=$1; shift; } || prereq=
 	test "$#" = 1 ||
-	error "bug in the test script: not 1 or 2 parameters to test_emacs_expect_t"
+	error "bug in the test script: not 1 parameter to test_emacs_expect_t"
 	if [ -z "$inside_subtest" ]; then
 		error "bug in the test script: test_emacs_expect_t without test_begin_subtest"
 	fi
@@ -750,12 +747,8 @@ notmuch_config_sanitize ()
 # End of notmuch helper functions
 
 # Use test_set_prereq to tell that a particular prerequisite is available.
-# The prerequisite can later be checked for in two ways:
 #
-# - Explicitly using test_have_prereq.
-#
-# - Implicitly by specifying the prerequisite tag in the calls to
-#   test_expect_{success,failure,code}.
+# The prerequisite can later be checked for by using test_have_prereq.
 #
 # The single parameter is the prerequisite tag (a simple word, in all
 # capital letters by convention).
@@ -890,11 +883,6 @@ test_skip () {
 			break
 		esac
 	done
-	if test -z "$to_skip" && test -n "$prereq" &&
-	   ! test_have_prereq "$prereq"
-	then
-		to_skip=t
-	fi
 	case "$to_skip" in
 	t)
 		test_report_skip_ "$@"
@@ -928,9 +916,8 @@ test_subtest_known_broken () {
 }
 
 test_expect_success () {
-	test "$#" = 3 && { prereq=$1; shift; } || prereq=
 	test "$#" = 2 ||
-	error "bug in the test script: not 2 or 3 parameters to test-expect-success"
+	error "bug in the test script: not 2 parameters to test_expect_success"
 	test_subtest_name="$1"
 	test_reset_state_
 	if ! test_skip "$@"
@@ -949,9 +936,8 @@ test_expect_success () {
 }
 
 test_expect_code () {
-	test "$#" = 4 && { prereq=$1; shift; } || prereq=
 	test "$#" = 3 ||
-	error "bug in the test script: not 3 or 4 parameters to test-expect-code"
+	error "bug in the test script: not 3 parameters to test_expect_code"
 	test_subtest_name="$2"
 	test_reset_state_
 	if ! test_skip "$@"
