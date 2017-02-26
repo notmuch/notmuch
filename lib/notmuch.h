@@ -55,8 +55,8 @@ NOTMUCH_BEGIN_DECLS
  * The library version number.  This must agree with the soname
  * version in Makefile.local.
  */
-#define LIBNOTMUCH_MAJOR_VERSION	4
-#define LIBNOTMUCH_MINOR_VERSION	4
+#define LIBNOTMUCH_MAJOR_VERSION	5
+#define LIBNOTMUCH_MINOR_VERSION	0
 #define LIBNOTMUCH_MICRO_VERSION	0
 
 
