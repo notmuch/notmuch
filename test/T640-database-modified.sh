@@ -25,6 +25,7 @@ main (int argc, char **argv)
     notmuch_message_t *message, *ro_message;
     notmuch_query_t *query;
     notmuch_tags_t *tags;
+    int i;
 
     EXPECT0 (notmuch_database_open (path, NOTMUCH_DATABASE_MODE_READ_ONLY, &ro_db));
     assert(ro_db);
@@ -36,11 +37,11 @@ main (int argc, char **argv)
     query = notmuch_query_create(rw_db, "");
     EXPECT0 (notmuch_query_search_messages_st (query, &messages));
 
-    for (int count=0;
+    for (;
 	 notmuch_messages_valid (messages);
-	 notmuch_messages_move_to_next (messages), count++) {
+	 notmuch_messages_move_to_next (messages)) {
 	message = notmuch_messages_get (messages);
-	for (int i=0; i<200; i++) {
+	for (i=0; i<200; i++) {
 	    char *tag_str = talloc_asprintf(rw_db, "%d", i);
 	    EXPECT0 (notmuch_message_add_tag (message, tag_str));
 	    talloc_free (tag_str);
