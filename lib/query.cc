@@ -680,18 +680,14 @@ _notmuch_query_count_documents (notmuch_query_t *query, const char *type, unsign
     return NOTMUCH_STATUS_SUCCESS;
 }
 
-unsigned
-notmuch_query_count_threads (notmuch_query_t *query)
+notmuch_status_t
+notmuch_query_count_threads_st (notmuch_query_t *query, unsigned *count)
 {
-    notmuch_status_t status;
-    unsigned int count;
-
-    status = notmuch_query_count_threads_st (query, &count);
-    return status ? 0 : count;
+    return notmuch_query_count_threads (query, count);
 }
 
 notmuch_status_t
-notmuch_query_count_threads_st (notmuch_query_t *query, unsigned *count)
+notmuch_query_count_threads (notmuch_query_t *query, unsigned *count)
 {
     notmuch_messages_t *messages;
     GHashTable *hash;

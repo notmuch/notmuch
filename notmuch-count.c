@@ -98,7 +98,7 @@ print_count (notmuch_database_t *notmuch, const char *query_str,
 	printf ("%u", ucount);
 	break;
     case OUTPUT_THREADS:
-	status = notmuch_query_count_threads_st (query, &ucount);
+	status = notmuch_query_count_threads (query, &ucount);
 	if (print_status_query ("notmuch count", query, status))
 	    return -1;
 	printf ("%u", ucount);

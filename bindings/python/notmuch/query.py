@@ -204,7 +204,7 @@ class Query(object):
             raise NotmuchError(status)
         return count.value
 
-    _count_threads = nmlib.notmuch_query_count_threads_st
+    _count_threads = nmlib.notmuch_query_count_threads
     _count_threads.argtypes = [NotmuchQueryP, POINTER(c_uint)]
     _count_threads.restype = c_uint
 

@@ -123,7 +123,7 @@ do_search_threads (search_context_t *ctx)
     if (ctx->offset < 0) {
 	unsigned count;
 	notmuch_status_t status;
-	status = notmuch_query_count_threads_st (ctx->query, &count);
+	status = notmuch_query_count_threads (ctx->query, &count);
 	if (print_status_query ("notmuch search", ctx->query, status))
 	    return 1;
 

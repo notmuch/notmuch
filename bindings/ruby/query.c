@@ -201,7 +201,7 @@ notmuch_rb_query_count_threads (VALUE self)
 
     Data_Get_Notmuch_Query (self, query);
 
-    status = notmuch_query_count_threads_st (query, &count);
+    status = notmuch_query_count_threads (query, &count);
     if (status)
 	notmuch_rb_status_raise (status);
 
