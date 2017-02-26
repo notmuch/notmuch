@@ -322,7 +322,7 @@ out:
 notmuch_config_t *
 notmuch_config_open (void *ctx,
 		     const char *filename,
-		     notmuch_bool_t create_new)
+		     notmuch_config_mode_t config_mode)
 {
     GError *error = NULL;
     size_t tmp;
@@ -356,9 +356,13 @@ notmuch_config_open (void *ctx,
 
     config->key_file = g_key_file_new ();
 
-    if (! get_config_from_file (config, create_new)) {
-	talloc_free (config);
-	return NULL;
+    if (config_mode & NOTMUCH_CONFIG_OPEN) {
+	notmuch_bool_t create_new = (config_mode & NOTMUCH_CONFIG_CREATE) != 0;
+
+	if (! get_config_from_file (config, create_new)) {
+	    talloc_free (config);
+	    return NULL;
+	}
     }
 
     /* Whenever we know of configuration sections that don't appear in

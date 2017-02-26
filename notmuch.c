@@ -33,7 +33,7 @@ typedef int (*command_function_t) (notmuch_config_t *config, int argc, char *arg
 typedef struct command {
     const char *name;
     command_function_t function;
-    notmuch_bool_t create_config;
+    notmuch_config_mode_t config_mode;
     const char *summary;
 } command_t;
 
@@ -97,35 +97,35 @@ int notmuch_minimal_options (const char *subcommand_name,
 }
 
 static command_t commands[] = {
-    { NULL, notmuch_command, TRUE,
+    { NULL, notmuch_command, NOTMUCH_CONFIG_OPEN | NOTMUCH_CONFIG_CREATE,
       "Notmuch main command." },
-    { "setup", notmuch_setup_command, TRUE,
+    { "setup", notmuch_setup_command, NOTMUCH_CONFIG_OPEN | NOTMUCH_CONFIG_CREATE,
       "Interactively set up notmuch for first use." },
-    { "new", notmuch_new_command, FALSE,
+    { "new", notmuch_new_command, NOTMUCH_CONFIG_OPEN,
       "Find and import new messages to the notmuch database." },
-    { "insert", notmuch_insert_command, FALSE,
+    { "insert", notmuch_insert_command, NOTMUCH_CONFIG_OPEN,
       "Add a new message into the maildir and notmuch database." },
-    { "search", notmuch_search_command, FALSE,
+    { "search", notmuch_search_command, NOTMUCH_CONFIG_OPEN,
       "Search for messages matching the given search terms." },
-    { "address", notmuch_address_command, FALSE,
+    { "address", notmuch_address_command, NOTMUCH_CONFIG_OPEN,
       "Get addresses from messages matching the given search terms." },
-    { "show", notmuch_show_command, FALSE,
+    { "show", notmuch_show_command, NOTMUCH_CONFIG_OPEN,
       "Show all messages matching the search terms." },
-    { "count", notmuch_count_command, FALSE,
+    { "count", notmuch_count_command, NOTMUCH_CONFIG_OPEN,
       "Count messages matching the search terms." },
-    { "reply", notmuch_reply_command, FALSE,
+    { "reply", notmuch_reply_command, NOTMUCH_CONFIG_OPEN,
       "Construct a reply template for a set of messages." },
-    { "tag", notmuch_tag_command, FALSE,
+    { "tag", notmuch_tag_command, NOTMUCH_CONFIG_OPEN,
       "Add/remove tags for all messages matching the search terms." },
-    { "dump", notmuch_dump_command, FALSE,
+    { "dump", notmuch_dump_command, NOTMUCH_CONFIG_OPEN,
       "Create a plain-text dump of the tags for each message." },
-    { "restore", notmuch_restore_command, FALSE,
+    { "restore", notmuch_restore_command, NOTMUCH_CONFIG_OPEN,
       "Restore the tags from the given dump file (see 'dump')." },
-    { "compact", notmuch_compact_command, FALSE,
+    { "compact", notmuch_compact_command, NOTMUCH_CONFIG_OPEN,
       "Compact the notmuch database." },
-    { "config", notmuch_config_command, FALSE,
+    { "config", notmuch_config_command, NOTMUCH_CONFIG_OPEN,
       "Get or set settings in the notmuch configuration file." },
-    { "help", notmuch_help_command, TRUE, /* create but don't save config */
+    { "help", notmuch_help_command, NOTMUCH_CONFIG_CREATE, /* create but don't save config */
       "This message, or more detailed help for the named command." }
 };
 
@@ -447,7 +447,7 @@ main (int argc, char *argv[])
 	goto DONE;
     }
 
-    config = notmuch_config_open (local, config_file_name, command->create_config);
+    config = notmuch_config_open (local, config_file_name, command->config_mode);
     if (!config) {
 	ret = EXIT_FAILURE;
 	goto DONE;
