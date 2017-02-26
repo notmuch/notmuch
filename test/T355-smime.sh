@@ -23,14 +23,16 @@ FINGERPRINT=$(openssl x509 -fingerprint -in test_suite.pem -noout | sed -e 's/^.
 
 add_gpgsm_home
 
-test_expect_success 'emacs delivery of S/MIME signed message' \
+test_begin_subtest "emacs delivery of S/MIME signed message"
+test_expect_success \
      'emacs_fcc_message \
      "test signed message 001" \
      "This is a test signed message." \
      "(mml-secure-message-sign \"smime\")"'
 
+test_begin_subtest "emacs delivery of S/MIME encrypted + signed message"
 # Hard code the MML to avoid several interactive questions
-test_expect_success 'emacs delivery of S/MIME encrypted + signed message' \
+test_expect_success \
 'emacs_fcc_message \
     "test encrypted message 001" \
     "<#secure method=smime mode=signencrypt keyfile=\\\"test_suite.pem\\\" certfile=\\\"test_suite.pem\\\">\nThis is a test encrypted message.\n"'

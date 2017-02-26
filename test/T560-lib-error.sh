@@ -5,7 +5,8 @@ test_description="error reporting for library"
 
 add_email_corpus
 
-test_expect_success "building database" "NOTMUCH_NEW"
+test_begin_subtest "building database"
+test_expect_success "NOTMUCH_NEW"
 
 test_begin_subtest "Open null pointer"
 test_C <<'EOF'

@@ -91,11 +91,11 @@ test_expect_equal_file expected output
 # depends on the previous subtest leaving broken hook behind
 test_expect_code 1 "post-new non-zero exit status (notmuch status)" "notmuch new"
 
+test_begin_subtest "post-insert hook does not affect insert status"
 rm_hooks
 generate_message
 create_failing_hook "post-insert"
-test_expect_success "post-insert hook does not affect insert status" \
-    "notmuch insert < \"$gen_msg_filename\" > /dev/null"
+test_expect_success "notmuch insert < \"$gen_msg_filename\" > /dev/null"
 
 # test_begin_subtest "hook without executable permissions"
 rm_hooks

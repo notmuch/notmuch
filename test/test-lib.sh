@@ -916,13 +916,17 @@ test_subtest_known_broken () {
 }
 
 test_expect_success () {
-	test "$#" = 2 ||
-	error "bug in the test script: not 2 parameters to test_expect_success"
-	test_subtest_name="$1"
-	test_reset_state_
-	if ! test_skip "$@"
+	exec 1>&6 2>&7		# Restore stdout and stderr
+	if [ -z "$inside_subtest" ]; then
+		error "bug in the test script: test_expect_success without test_begin_subtest"
+	fi
+	inside_subtest=
+	test "$#" = 1 ||
+	error "bug in the test script: not 1 parameters to test_expect_success"
+
+	if ! test_skip "$test_subtest_name"
 	then
-		test_run_ "$2"
+		test_run_ "$1"
 		run_ret="$?"
 		# test_run_ may update missing external prerequisites
 		test_check_missing_external_prereqs_ "$@" ||
@@ -930,7 +934,7 @@ test_expect_success () {
 		then
 			test_ok_
 		else
-			test_failure_ "$2"
+			test_failure_ "$1"
 		fi
 	fi
 }

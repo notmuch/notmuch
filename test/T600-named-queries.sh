@@ -9,12 +9,12 @@ test_expect_code 1 "error adding named query before initializing DB" \
 
 add_email_corpus
 
-test_expect_success "adding named query" \
-		    "notmuch config set query.test \"$QUERYSTR\""
+test_begin_subtest "adding named query"
+test_expect_success "notmuch config set query.test \"$QUERYSTR\""
 
+test_begin_subtest "adding nested named query"
 QUERYSTR2="query:test and subject:Maildir"
-test_expect_success "adding nested named query" \
-		    "notmuch config set query.test2 \"$QUERYSTR2\""
+test_expect_success "notmuch config set query.test2 \"$QUERYSTR2\""
 
 test_begin_subtest "retrieve named query"
 output=$(notmuch config get query.test)

@@ -28,7 +28,8 @@ add_gnupg_home
 # Change this if we ship a new test key
 FINGERPRINT="5AEAB11F5E33DCE875DDB75B6D92612D94E46381"
 
-test_expect_success 'emacs delivery of signed message' \
+test_begin_subtest "emacs delivery of signed message"
+test_expect_success \
 'emacs_fcc_message \
     "test signed message 001" \
     "This is a test signed message." \
@@ -134,11 +135,12 @@ test_expect_equal_json \
     "$expected"
 mv "${GNUPGHOME}"{.bak,}
 
+test_begin_subtest "emacs delivery of encrypted message with attachment"
 # create a test encrypted message with attachment
 cat <<EOF >TESTATTACHMENT
 This is a test file.
 EOF
-test_expect_success 'emacs delivery of encrypted message with attachment' \
+test_expect_success \
 'emacs_fcc_message \
     "test encrypted message 001" \
     "This is a test encrypted message.\n" \
@@ -264,7 +266,8 @@ test_expect_equal_json \
     "$expected"
 mv "${GNUPGHOME}"{.bak,}
 
-test_expect_success 'emacs delivery of encrypted + signed message' \
+test_begin_subtest "emacs delivery of encrypted + signed message"
+test_expect_success \
 'emacs_fcc_message \
     "test encrypted message 002" \
     "This is another test encrypted message.\n" \

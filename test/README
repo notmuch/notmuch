@@ -189,16 +189,16 @@ Test harness library
 There are a handful helper functions defined in the test harness
 library for your script to use.
 
- test_expect_success <message> <script>
-
-   This takes two strings as parameter, and evaluates the
-   <script>.  If it yields success, test is considered
-   successful.  <message> should state what it is testing.
-
  test_begin_subtest <message>
 
-   Set the test description message for a subsequent test_expect_equal
+   Set the test description message for a subsequent test_expect_*
    invocation (see below).
+
+ test_expect_success <script>
+
+   This takes a string as parameter, and evaluates the
+   <script>.  If it yields success, test is considered
+   successful.
 
  test_subtest_known_broken
 

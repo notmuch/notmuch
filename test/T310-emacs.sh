@@ -8,8 +8,8 @@ EXPECTED=$TEST_DIRECTORY/emacs.expected-output
 add_email_corpus
 
 # syntax errors in test-lib.el cause mysterious failures
-test_expect_success 'Syntax of emacs test library' \
-    "${TEST_EMACS} -Q --batch --load $TEST_DIRECTORY/test-lib.el"
+test_begin_subtest "Syntax of emacs test library"
+test_expect_success "${TEST_EMACS} -Q --batch --load $TEST_DIRECTORY/test-lib.el"
 
 test_begin_subtest "Basic notmuch-hello view in emacs"
 test_emacs '(notmuch-hello)
@@ -983,9 +983,8 @@ test_emacs "(let ((mm-text-html-renderer
 # Different Emacs versions and renderers give very different results,
 # so just check that something reasonable showed up.  We first cat the
 # output so the test framework will print it if the test fails.
-test_expect_success "Rendering HTML mail with images" \
-    'cat OUTPUT && grep -q smiley OUTPUT'
-
+test_begin_subtest "Rendering HTML mail with images"
+test_expect_success 'cat OUTPUT && grep -q smiley OUTPUT'
 
 test_begin_subtest "Search handles subprocess error exit codes"
 cat > notmuch_fail <<EOF

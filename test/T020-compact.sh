@@ -21,7 +21,8 @@ Compaction failed: Unsupported operation"
     test_done
 fi
 
-test_expect_success "Running compact" "notmuch compact --backup=${TEST_DIRECTORY}/xapian.old"
+test_begin_subtest "Running compact"
+test_expect_success "notmuch compact --backup=${TEST_DIRECTORY}/xapian.old"
 
 test_begin_subtest "Compact preserves database"
 output=$(notmuch search \* | notmuch_search_sanitize)
@@ -30,8 +31,8 @@ thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; One (inbox tag1 unread)
 thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; Two (inbox tag1 tag2 unread)
 thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; Three (inbox tag3 unread)"
 
-test_expect_success 'Restoring Backup' \
-    'rm -Rf ${MAIL_DIR}/.notmuch/xapian &&
+test_begin_subtest "Restoring Backup"
+test_expect_success 'rm -Rf ${MAIL_DIR}/.notmuch/xapian &&
      mv ${TEST_DIRECTORY}/xapian.old ${MAIL_DIR}/.notmuch/xapian'
 
 test_begin_subtest "Checking restored backup"

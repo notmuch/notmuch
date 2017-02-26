@@ -338,9 +338,8 @@ Non-text part: application/pgp-signature
 EOF
 test_expect_equal_file OUTPUT EXPECTED
 
-test_expect_success \
-    "--format=text --part=8, no part, expect error" \
-    "notmuch show --format=text --part=8 'id:87liy5ap00.fsf@yoom.home.cworth.org'"
+test_begin_subtest "--format=text --part=8, no part, expect error"
+test_expect_success "notmuch show --format=text --part=8 'id:87liy5ap00.fsf@yoom.home.cworth.org'"
 
 test_begin_subtest "--format=json --part=0, full message"
 notmuch show --format=json --part=0 'id:87liy5ap00.fsf@yoom.home.cworth.org' >OUTPUT
@@ -444,9 +443,8 @@ cat <<EOF >EXPECTED
 EOF
 test_expect_equal_json "$(cat OUTPUT)" "$(cat EXPECTED)"
 
-test_expect_success \
-    "--format=json --part=10, no part, expect error" \
-    "notmuch show --format=json --part=10 'id:87liy5ap00.fsf@yoom.home.cworth.org'"
+test_begin_subtest "--format=json --part=10, no part, expect error"
+test_expect_success "notmuch show --format=json --part=10 'id:87liy5ap00.fsf@yoom.home.cworth.org'"
 
 test_begin_subtest "--format=raw"
 notmuch show --format=raw 'id:87liy5ap00.fsf@yoom.home.cworth.org' >OUTPUT
@@ -580,9 +578,8 @@ W6cAmQE4dcYrx/LPLtYLZm1jsGauE5hE
 EOF
 test_expect_equal_file OUTPUT EXPECTED
 
-test_expect_success \
-    "--format=raw --part=10, no part, expect error" \
-    "notmuch show --format=raw --part=8 'id:87liy5ap00.fsf@yoom.home.cworth.org'"
+test_begin_subtest "--format=raw --part=10, no part, expect error"
+test_expect_success "notmuch show --format=raw --part=8 'id:87liy5ap00.fsf@yoom.home.cworth.org'"
 
 test_begin_subtest "--format=mbox"
 notmuch show --format=mbox 'id:87liy5ap00.fsf@yoom.home.cworth.org' >OUTPUT
@@ -592,9 +589,8 @@ cat "${MAIL_DIR}"/multipart >>EXPECTED
 echo >>EXPECTED
 test_expect_equal_file OUTPUT EXPECTED
 
-test_expect_success \
-    "--format=mbox --part=1, incompatible, expect error" \
-    "! notmuch show --format=mbox --part=1 'id:87liy5ap00.fsf@yoom.home.cworth.org'"
+test_begin_subtest "--format=mbox --part=1, incompatible, expect error"
+test_expect_success "! notmuch show --format=mbox --part=1 'id:87liy5ap00.fsf@yoom.home.cworth.org'"
 
 test_begin_subtest "'notmuch reply' to a multipart message"
 notmuch reply 'id:87liy5ap00.fsf@yoom.home.cworth.org' >OUTPUT

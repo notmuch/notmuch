@@ -4,52 +4,58 @@ test_description="\"notmuch dump\" and \"notmuch restore\""
 
 add_email_corpus
 
-test_expect_success 'Dumping all tags' \
-  'generate_message &&
-  notmuch new &&
-  notmuch dump > dump.expected'
+test_begin_subtest "Dumping all tags"
+test_expect_success 'generate_message && notmuch new && notmuch dump > dump.expected'
 
 # The use of from:cworth is rather arbitrary: it matches some of the
 # email corpus' messages, but not all of them.
 
-test_expect_success 'Dumping all tags II' \
+test_begin_subtest "Dumping all tags II"
+test_expect_success \
   'notmuch tag +ABC +DEF -- from:cworth &&
   notmuch dump > dump-ABC_DEF.expected &&
   ! cmp dump.expected dump-ABC_DEF.expected'
 
-test_expect_success 'Clearing all tags' \
+test_begin_subtest "Clearing all tags"
+test_expect_success \
   'sed -e "s/(\([^(]*\))$/()/" < dump.expected > clear.expected &&
   notmuch restore --input=clear.expected &&
   notmuch dump > clear.actual &&
   test_cmp clear.expected clear.actual'
 
-test_expect_success 'Accumulate original tags' \
+test_begin_subtest "Clearing all tags"
+test_expect_success \
   'notmuch tag +ABC +DEF -- from:cworth &&
   notmuch restore --accumulate < dump.expected &&
   notmuch dump > dump.actual &&
   test_cmp dump-ABC_DEF.expected dump.actual'
 
-test_expect_success 'Restoring original tags' \
+test_begin_subtest "Restoring original tags"
+test_expect_success \
   'notmuch restore --input=dump.expected &&
   notmuch dump > dump.actual &&
   test_cmp dump.expected dump.actual'
 
-test_expect_success 'Restore with nothing to do' \
+test_begin_subtest "Restore with nothing to do"
+test_expect_success \
   'notmuch restore < dump.expected &&
   notmuch dump > dump.actual &&
   test_cmp dump.expected dump.actual'
 
-test_expect_success 'Accumulate with existing tags' \
+test_begin_subtest "Accumulate with existing tags"
+test_expect_success \
   'notmuch restore --accumulate --input=dump.expected &&
   notmuch dump > dump.actual &&
   test_cmp dump.expected dump.actual'
 
-test_expect_success 'Accumulate with no tags' \
+test_begin_subtest "Accumulate with no tags"
+test_expect_success \
   'notmuch restore --accumulate < clear.expected &&
   notmuch dump > dump.actual &&
   test_cmp dump.expected dump.actual'
 
-test_expect_success 'Accumulate with new tags' \
+test_begin_subtest "Accumulate with new tags"
+test_expect_success \
   'notmuch restore --input=dump.expected &&
   notmuch restore --accumulate --input=dump-ABC_DEF.expected &&
   notmuch dump >  OUTPUT.$test_count &&
@@ -57,7 +63,8 @@ test_expect_success 'Accumulate with new tags' \
   test_cmp dump-ABC_DEF.expected OUTPUT.$test_count'
 
 # notmuch restore currently only considers the first argument.
-test_expect_success 'Invalid restore invocation' \
+test_begin_subtest "Invalid restore invocation"
+test_expect_success \
   'test_must_fail notmuch restore --input=dump.expected another_one'
 
 test_begin_subtest "dump --output=outfile"

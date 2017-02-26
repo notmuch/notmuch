@@ -49,11 +49,11 @@ test_expect_equal 1 ${result}
 
 notmuch count --lastmod '*' | cut -f2 > UUID
 
-test_expect_success 'search succeeds with correct uuid' \
-		    "notmuch search --uuid=$(cat UUID) '*'"
+test_begin_subtest "search succeeds with correct uuid"
+test_expect_success "notmuch search --uuid=$(cat UUID) '*'"
 
-test_expect_success 'uuid works as global option ' \
-		    "notmuch --uuid=$(cat UUID) search '*'"
+test_begin_subtest "uuid works as global option"
+test_expect_success "notmuch --uuid=$(cat UUID) search '*'"
 
 test_expect_code 1 'uuid works as global option II' \
 		    "notmuch --uuid=this-is-no-uuid search '*'"
@@ -61,14 +61,14 @@ test_expect_code 1 'uuid works as global option II' \
 test_expect_code 1 'search fails with incorrect uuid' \
 		 "notmuch search --uuid=this-is-no-uuid '*'"
 
-test_expect_success 'show succeeds with correct uuid' \
-		    "notmuch show --uuid=$(cat UUID) '*'"
+test_begin_subtest "show succeeds with correct uuid"
+test_expect_success "notmuch show --uuid=$(cat UUID) '*'"
 
 test_expect_code 1 'show fails with incorrect uuid' \
 		 "notmuch show --uuid=this-is-no-uuid '*'"
 
-test_expect_success 'tag succeeds with correct uuid' \
-		    "notmuch tag --uuid=$(cat UUID) +test '*'"
+test_begin_subtest "tag succeeds with correct uuid"
+test_expect_success "notmuch tag --uuid=$(cat UUID) +test '*'"
 
 test_expect_code 1 'tag fails with incorrect uuid' \
 		 "notmuch tag --uuid=this-is-no-uuid '*' +test2"
