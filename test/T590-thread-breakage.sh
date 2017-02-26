@@ -3,21 +3,21 @@
 # Copyright (c) 2016 Daniel Kahn Gillmor
 #
 
-test_description='thread breakage during reindexing
+test_description='thread breakage during reindexing'
 
-notmuch uses ghost documents to track messages we have seen references
-to but have never seen.  Regardless of the order of delivery, message
-deletion, and reindexing, the list of ghost messages for a given
-stored corpus should not vary, so that threads can be reassmebled
-cleanly.
-
-In practice, we accept a small amount of variation (and therefore
-traffic pattern metadata leakage to be stored in the index) for the
-sake of efficiency.
-
-This test also embeds some subtests to ensure that indexing actually
-works properly and attempted fixes to threading issues do not break
-the expected contents of the index.'
+# notmuch uses ghost documents to track messages we have seen references
+# to but have never seen.  Regardless of the order of delivery, message
+# deletion, and reindexing, the list of ghost messages for a given
+# stored corpus should not vary, so that threads can be reassmebled
+# cleanly.
+#
+# In practice, we accept a small amount of variation (and therefore
+# traffic pattern metadata leakage to be stored in the index) for the
+# sake of efficiency.
+#
+# This test also embeds some subtests to ensure that indexing actually
+# works properly and attempted fixes to threading issues do not break
+# the expected contents of the index.
 
 . ./test-lib.sh || exit 1
 
