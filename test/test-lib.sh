@@ -851,12 +851,12 @@ test_ok_ () {
 }
 
 test_failure_ () {
+	print_test_description
 	if test "$test_subtest_known_broken_" = "t"; then
 		test_known_broken_failure_ "$@"
 		return
 	fi
 	test_failure=$(($test_failure + 1))
-	print_test_description
 	test_failure_message_ "FAIL" "$test_subtest_name" "$@"
 	test "$immediate" = "" || { GIT_EXIT_OK=t; exit 1; }
 	return 1
