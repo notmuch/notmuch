@@ -215,24 +215,23 @@ get_config_from_file (notmuch_config_t *config, notmuch_bool_t create_new)
 
     FILE *fp = fopen(config->filename, "r");
     if (fp == NULL) {
-	/* If create_new is true, then the caller is prepared for a
-	 * default configuration file in the case of FILE NOT FOUND.
-	 */
-	if (create_new) {
-	    config->is_new = TRUE;
-	    ret = TRUE;
-	    goto out;
-	} else if (errno == ENOENT) {
-	    fprintf (stderr, "Configuration file %s not found.\n"
-		     "Try running 'notmuch setup' to create a configuration.\n",
-		     config->filename);
-	    goto out;
+	if (errno == ENOENT) {
+	    /* If create_new is true, then the caller is prepared for a
+	     * default configuration file in the case of FILE NOT FOUND.
+	     */
+	    if (create_new) {
+		config->is_new = TRUE;
+		ret = TRUE;
+	    } else {
+		fprintf (stderr, "Configuration file %s not found.\n"
+			 "Try running 'notmuch setup' to create a configuration.\n",
+			 config->filename);
+	    }
 	} else {
-	    fprintf (stderr, "Error opening config file '%s': %s\n"
-		     "Try running 'notmuch setup' to create a configuration.\n",
+	    fprintf (stderr, "Error opening config file '%s': %s\n",
 		     config->filename, strerror(errno));
-	    goto out;
 	}
+	goto out;
     }
 
     config_str = talloc_zero_array (config, char, config_bufsize);
