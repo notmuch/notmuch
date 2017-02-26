@@ -303,9 +303,9 @@ backup_database
 test_begin_subtest "Xapian exception counting messages"
 cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR}
    {
+       int count;
        notmuch_query_t *query=notmuch_query_create (db, "id:87ocn0qh6d.fsf@yoom.home.cworth.org");
-       int count = notmuch_query_count_messages (query);
-       stat = (count == 0);
+       stat = notmuch_query_count_messages (query, &count);
    }
 EOF
 sed 's/^\(A Xapian exception [^:]*\):.*$/\1/' < OUTPUT > OUTPUT.clean

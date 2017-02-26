@@ -908,7 +908,7 @@ do_show_single (void *ctx,
     notmuch_status_t status;
     unsigned int count;
 
-    status = notmuch_query_count_messages_st (query, &count);
+    status = notmuch_query_count_messages (query, &count);
     if (print_status_query ("notmuch show", query, status))
 	return 1;
 

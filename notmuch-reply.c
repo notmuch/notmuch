@@ -630,7 +630,7 @@ static int do_reply(notmuch_config_t *config,
     if (format == FORMAT_JSON || format == FORMAT_SEXP) {
 	unsigned count;
 
-	status = notmuch_query_count_messages_st (query, &count);
+	status = notmuch_query_count_messages (query, &count);
 	if (print_status_query ("notmuch reply", query, status))
 	    return 1;
 

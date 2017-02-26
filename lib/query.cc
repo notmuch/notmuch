@@ -598,18 +598,14 @@ notmuch_threads_destroy (notmuch_threads_t *threads)
     talloc_free (threads);
 }
 
-unsigned int
-notmuch_query_count_messages (notmuch_query_t *query)
+notmuch_status_t
+notmuch_query_count_messages_st (notmuch_query_t *query, unsigned *count_out)
 {
-    notmuch_status_t status;
-    unsigned int count;
-
-    status = notmuch_query_count_messages_st (query, &count);
-    return status ? 0 : count;
+    return notmuch_query_count_messages (query, count_out);
 }
 
 notmuch_status_t
-notmuch_query_count_messages_st (notmuch_query_t *query, unsigned *count_out)
+notmuch_query_count_messages (notmuch_query_t *query, unsigned *count_out)
 {
     return _notmuch_query_count_documents (query, "mail", count_out);
 }

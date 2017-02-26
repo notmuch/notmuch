@@ -92,7 +92,7 @@ print_count (notmuch_database_t *notmuch, const char *query_str,
 
     switch (output) {
     case OUTPUT_MESSAGES:
-	status = notmuch_query_count_messages_st (query, &ucount);
+	status = notmuch_query_count_messages (query, &ucount);
 	if (print_status_query ("notmuch count", query, status))
 	    return -1;
 	printf ("%u", ucount);

@@ -1129,7 +1129,7 @@ _notmuch_message_delete (notmuch_message_t *message)
     query = notmuch_query_create (notmuch, query_string);
     if (query == NULL)
 	return NOTMUCH_STATUS_OUT_OF_MEMORY;
-    status = notmuch_query_count_messages_st (query, &count);
+    status = notmuch_query_count_messages (query, &count);
     if (status) {
 	notmuch_query_destroy (query);
 	return status;

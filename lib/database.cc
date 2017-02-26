@@ -1493,7 +1493,7 @@ notmuch_database_upgrade (notmuch_database_t *notmuch,
 	query = notmuch_query_create (notmuch, "");
 	unsigned msg_count;
 
-	status = notmuch_query_count_messages_st (query, &msg_count);
+	status = notmuch_query_count_messages (query, &msg_count);
 	if (status)
 	    goto DONE;
 

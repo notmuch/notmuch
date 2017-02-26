@@ -1008,22 +1008,21 @@ notmuch_threads_destroy (notmuch_threads_t *threads);
  * NOTMUCH_STATUS_XAPIAN_EXCEPTION: a Xapian exception occured. The
  *      value of *count is not defined.
  *
- * @since libnotmuch 4.3 (notmuch 0.21)
+ * @since libnotmuch 5 (notmuch 0.25)
  */
 notmuch_status_t
-notmuch_query_count_messages_st (notmuch_query_t *query, unsigned int *count);
+notmuch_query_count_messages (notmuch_query_t *query, unsigned int *count);
 
 /**
- * like notmuch_query_count_messages_st, but without a status return.
+ * Deprecated alias for notmuch_query_count_messages
  *
- * May return 0 in the case of errors.
  *
- * @deprecated Deprecated since libnotmuch 4.3 (notmuch 0.21). Please
- * use notmuch_query_count_messages_st instead.
+ * @deprecated Deprecated since libnotmuch 5.0 (notmuch 0.25). Please
+ * use notmuch_query_count_messages instead.
  */
-NOTMUCH_DEPRECATED(4,3)
-unsigned int
-notmuch_query_count_messages (notmuch_query_t *query);
+NOTMUCH_DEPRECATED(5,0)
+notmuch_status_t
+notmuch_query_count_messages_st (notmuch_query_t *query, unsigned int *count);
 
 /**
  * Return the number of threads matching a search.

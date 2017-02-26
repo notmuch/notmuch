@@ -185,7 +185,7 @@ class Query(object):
             raise NullPointerError
         return Messages(msgs_p, self)
 
-    _count_messages = nmlib.notmuch_query_count_messages_st
+    _count_messages = nmlib.notmuch_query_count_messages
     _count_messages.argtypes = [NotmuchQueryP, POINTER(c_uint)]
     _count_messages.restype = c_uint
 

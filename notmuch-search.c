@@ -529,7 +529,7 @@ do_search_messages (search_context_t *ctx)
     if (ctx->offset < 0) {
 	unsigned count;
 	notmuch_status_t status;
-	status = notmuch_query_count_messages_st (ctx->query, &count);
+	status = notmuch_query_count_messages (ctx->query, &count);
 	if (print_status_query ("notmuch search", ctx->query, status))
 	    return 1;
 
