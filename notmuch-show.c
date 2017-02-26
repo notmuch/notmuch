@@ -595,6 +595,7 @@ format_part_sprinter (const void *ctx, sprinter_t *sp, mime_node_t *node,
     GMimeObject *meta = node->envelope_part ?
 	GMIME_OBJECT (node->envelope_part) : node->part;
     GMimeContentType *content_type = g_mime_object_get_content_type (meta);
+    const char *disposition = _get_disposition (meta);
     const char *cid = g_mime_object_get_content_id (meta);
     const char *filename = GMIME_IS_PART (node->part) ?
 	g_mime_part_get_filename (GMIME_PART (node->part)) : NULL;
@@ -623,6 +624,11 @@ format_part_sprinter (const void *ctx, sprinter_t *sp, mime_node_t *node,
 
     sp->map_key (sp, "content-type");
     sp->string (sp, g_mime_content_type_to_string (content_type));
+
+    if (disposition) {
+	sp->map_key (sp, "content-disposition");
+	sp->string (sp, disposition);
+    }
 
     if (cid) {
 	sp->map_key (sp, "content-id");

@@ -28,6 +28,7 @@ v2
 
 v3
 - Replaced message.filename string with a list of filenames.
+- Added part.content-disposition field.
 
 Common non-terminals
 --------------------
@@ -79,6 +80,7 @@ part = {
     sigstatus?:     sigstatus,
 
     content-type:   string,
+    content-disposition?:       string,
     content-id?:    string,
     # if content-type starts with "multipart/":
     content:        [part*],

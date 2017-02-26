@@ -348,11 +348,11 @@ cat <<EOF >EXPECTED
 {"id": "87liy5ap00.fsf@yoom.home.cworth.org", "match": true, "excluded": false, "filename": ["${MAIL_DIR}/multipart"], "timestamp": 978709437, "date_relative": "2001-01-05", "tags": ["attachment","inbox","signed","unread"], "headers": {"Subject": "Multipart message", "From": "Carl Worth <cworth@cworth.org>", "To": "cworth@cworth.org", "Date": "Fri, 05 Jan 2001 15:43:57 +0000"}, "body": [
 {"id": 1, "content-type": "multipart/signed", "content": [
 {"id": 2, "content-type": "multipart/mixed", "content": [
-{"id": 3, "content-type": "message/rfc822", "content": [{"headers": {"Subject": "html message", "From": "Carl Worth <cworth@cworth.org>", "To": "cworth@cworth.org", "Date": "Fri, 05 Jan 2001 15:42:57 +0000"}, "body": [
+{"id": 3, "content-type": "message/rfc822", "content-disposition": "inline", "content": [{"headers": {"Subject": "html message", "From": "Carl Worth <cworth@cworth.org>", "To": "cworth@cworth.org", "Date": "Fri, 05 Jan 2001 15:42:57 +0000"}, "body": [
 {"id": 4, "content-type": "multipart/alternative", "content": [
 {"id": 5, "content-type": "text/html", "content-length": 71},
 {"id": 6, "content-type": "text/plain", "content": "This is an embedded message, with a multipart/alternative part.\n"}]}]}]}, 
-{"id": 7, "content-type": "text/plain", "filename": "attachment", "content": "This is a text attachment.\n"}, 
+{"id": 7, "content-type": "text/plain", "content-disposition": "attachment", "filename": "attachment", "content": "This is a text attachment.\n"},
 {"id": 8, "content-type": "text/plain", "content": "And this message is signed.\n\n-Carl\n"}]}, 
 {"id": 9, "content-type": "application/pgp-signature", "content-length": 197}]}]}
 EOF
@@ -363,11 +363,11 @@ notmuch show --format=json --part=1 'id:87liy5ap00.fsf@yoom.home.cworth.org' >OU
 cat <<EOF >EXPECTED
 {"id": 1, "content-type": "multipart/signed", "content": [
 {"id": 2, "content-type": "multipart/mixed", "content": [
-{"id": 3, "content-type": "message/rfc822", "content": [{"headers": {"Subject": "html message", "From": "Carl Worth <cworth@cworth.org>", "To": "cworth@cworth.org", "Date": "Fri, 05 Jan 2001 15:42:57 +0000"}, "body": [
+{"id": 3, "content-type": "message/rfc822", "content-disposition": "inline", "content": [{"headers": {"Subject": "html message", "From": "Carl Worth <cworth@cworth.org>", "To": "cworth@cworth.org", "Date": "Fri, 05 Jan 2001 15:42:57 +0000"}, "body": [
 {"id": 4, "content-type": "multipart/alternative", "content": [
 {"id": 5, "content-type": "text/html", "content-length": 71},
 {"id": 6, "content-type": "text/plain", "content": "This is an embedded message, with a multipart/alternative part.\n"}]}]}]}, 
-{"id": 7, "content-type": "text/plain", "filename": "attachment", "content": "This is a text attachment.\n"}, 
+{"id": 7, "content-type": "text/plain", "content-disposition": "attachment", "filename": "attachment", "content": "This is a text attachment.\n"},
 {"id": 8, "content-type": "text/plain", "content": "And this message is signed.\n\n-Carl\n"}]}, 
 {"id": 9, "content-type": "application/pgp-signature", "content-length": 197}]}
 EOF
@@ -377,11 +377,11 @@ test_begin_subtest "--format=json --part=2, multipart/mixed"
 notmuch show --format=json --part=2 'id:87liy5ap00.fsf@yoom.home.cworth.org' >OUTPUT
 cat <<EOF >EXPECTED
 {"id": 2, "content-type": "multipart/mixed", "content": [
-{"id": 3, "content-type": "message/rfc822", "content": [{"headers": {"Subject": "html message", "From": "Carl Worth <cworth@cworth.org>", "To": "cworth@cworth.org", "Date": "Fri, 05 Jan 2001 15:42:57 +0000"}, "body": [
+{"id": 3, "content-type": "message/rfc822", "content-disposition": "inline", "content": [{"headers": {"Subject": "html message", "From": "Carl Worth <cworth@cworth.org>", "To": "cworth@cworth.org", "Date": "Fri, 05 Jan 2001 15:42:57 +0000"}, "body": [
 {"id": 4, "content-type": "multipart/alternative", "content": [
 {"id": 5, "content-type": "text/html", "content-length": 71},
 {"id": 6, "content-type": "text/plain", "content": "This is an embedded message, with a multipart/alternative part.\n"}]}]}]}, 
-{"id": 7, "content-type": "text/plain", "filename": "attachment", "content": "This is a text attachment.\n"}, 
+{"id": 7, "content-type": "text/plain", "content-disposition": "attachment", "filename": "attachment", "content": "This is a text attachment.\n"},
 {"id": 8, "content-type": "text/plain", "content": "And this message is signed.\n\n-Carl\n"}]}
 EOF
 test_expect_equal_json "$(cat OUTPUT)" "$(cat EXPECTED)"
@@ -389,7 +389,7 @@ test_expect_equal_json "$(cat OUTPUT)" "$(cat EXPECTED)"
 test_begin_subtest "--format=json --part=3, rfc822 part"
 notmuch show --format=json --part=3 'id:87liy5ap00.fsf@yoom.home.cworth.org' >OUTPUT
 cat <<EOF >EXPECTED
-{"id": 3, "content-type": "message/rfc822", "content": [{"headers": {"Subject": "html message", "From": "Carl Worth <cworth@cworth.org>", "To": "cworth@cworth.org", "Date": "Fri, 05 Jan 2001 15:42:57 +0000"}, "body": [
+{"id": 3, "content-type": "message/rfc822", "content-disposition": "inline", "content": [{"headers": {"Subject": "html message", "From": "Carl Worth <cworth@cworth.org>", "To": "cworth@cworth.org", "Date": "Fri, 05 Jan 2001 15:42:57 +0000"}, "body": [
 {"id": 4, "content-type": "multipart/alternative", "content": [
 {"id": 5, "content-type": "text/html", "content-length": 71},
 {"id": 6, "content-type": "text/plain", "content": "This is an embedded message, with a multipart/alternative part.\n"}]}]}]}
@@ -422,7 +422,11 @@ test_expect_equal_json "$(cat OUTPUT)" "$(cat EXPECTED)"
 test_begin_subtest "--format=json --part=7, inline attachment"
 notmuch show --format=json --part=7 'id:87liy5ap00.fsf@yoom.home.cworth.org' >OUTPUT
 cat <<EOF >EXPECTED
-{"id": 7, "content-type": "text/plain", "filename": "attachment", "content": "This is a text attachment.\n"}
+{"id": 7,
+ "content-type": "text/plain",
+ "filename": "attachment",
+ "content": "This is a text attachment.\n",
+ "content-disposition": "attachment"}
 EOF
 test_expect_equal_json "$(cat OUTPUT)" "$(cat EXPECTED)"
 
@@ -641,6 +645,7 @@ notmuch_json_show_sanitize <<EOF >EXPECTED
  "content-type": "multipart/mixed",
  "content": [{"id": 3,
  "content-type": "message/rfc822",
+ "content-disposition": "inline",
  "content": [{"headers": {"Subject": "html message",
  "From": "Carl Worth <cworth@cworth.org>",
  "To": "cworth@cworth.org",
@@ -655,6 +660,7 @@ notmuch_json_show_sanitize <<EOF >EXPECTED
  "content": "This is an embedded message, with a multipart/alternative part.\n"}]}]}]},
  {"id": 7,
  "content-type": "text/plain",
+ "content-disposition": "attachment",
  "filename": "attachment",
  "content": "This is a text attachment.\n"},
  {"id": 8,
