@@ -505,7 +505,7 @@ _notmuch_thread_create (void *ctx,
      * oldest or newest subject is desired. */
     notmuch_query_set_sort (thread_id_query, NOTMUCH_SORT_OLDEST_FIRST);
 
-    status = notmuch_query_search_messages_st (thread_id_query, &messages);
+    status = notmuch_query_search_messages (thread_id_query, &messages);
     if (status)
 	goto DONE;
 

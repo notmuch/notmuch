@@ -121,7 +121,7 @@ tag_query (void *ctx, notmuch_database_t *notmuch, const char *query_string,
     /* tagging is not interested in any special sort order */
     notmuch_query_set_sort (query, NOTMUCH_SORT_UNSORTED);
 
-    status = notmuch_query_search_messages_st (query, &messages);
+    status = notmuch_query_search_messages (query, &messages);
     if (print_status_query ("notmuch tag", query, status))
 	return status;
 

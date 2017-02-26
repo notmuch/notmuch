@@ -911,23 +911,23 @@ notmuch_query_search_threads_st (notmuch_query_t *query, notmuch_threads_t **out
  *
  * If a Xapian exception occurs this function will return NULL.
  *
- * @since libnotmuch 4.2 (notmuch 0.20)
+ * @since libnotmuch 5 (notmuch 0.25)
  */
+notmuch_status_t
+notmuch_query_search_messages (notmuch_query_t *query,
+			       notmuch_messages_t **out);
+/**
+ * Deprecated alias for notmuch_query_search_messages
+ *
+ * @deprecated Deprecated as of libnotmuch 5 (notmuch 0.25). Please use
+ * notmuch_query_search_messages instead.
+ *
+ */
+
+NOTMUCH_DEPRECATED(5,0)
 notmuch_status_t
 notmuch_query_search_messages_st (notmuch_query_t *query,
 				  notmuch_messages_t **out);
-/**
- * Like notmuch_query_search_messages, but without a status return.
- *
- * If a Xapian exception occurs this function will return NULL.
- *
- * @deprecated Deprecated as of libnotmuch 4.3 (notmuch 0.21). Please use
- * notmuch_query_search_messages_st instead.
- *
- */
-NOTMUCH_DEPRECATED(4,3)
-notmuch_messages_t *
-notmuch_query_search_messages (notmuch_query_t *query);
 
 /**
  * Destroy a notmuch_query_t along with any associated resources.

@@ -286,7 +286,7 @@ cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR}
    {
        notmuch_messages_t *messages = NULL;
        notmuch_query_t *query=notmuch_query_create (db, "*");
-       stat = notmuch_query_search_messages_st (query, &messages);
+       stat = notmuch_query_search_messages (query, &messages);
    }
 EOF
 sed 's/^\(A Xapian exception [^:]*\):.*$/\1/' < OUTPUT > OUTPUT.clean

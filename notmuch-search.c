@@ -538,7 +538,7 @@ do_search_messages (search_context_t *ctx)
 	    ctx->offset = 0;
     }
 
-    status = notmuch_query_search_messages_st (ctx->query, &messages);
+    status = notmuch_query_search_messages (ctx->query, &messages);
     if (print_status_query ("notmuch search", ctx->query, status))
 	return 1;
 
@@ -629,7 +629,7 @@ do_search_tags (const search_context_t *ctx)
 	tags = notmuch_database_get_all_tags (notmuch);
     } else {
 	notmuch_status_t status;
-	status = notmuch_query_search_messages_st (query, &messages);
+	status = notmuch_query_search_messages (query, &messages);
 	if (print_status_query ("notmuch search", query, status))
 	    return 1;
 

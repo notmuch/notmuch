@@ -917,7 +917,7 @@ do_show_single (void *ctx,
 	return 1;
     }
 
-    status = notmuch_query_search_messages_st (query, &messages);
+    status = notmuch_query_search_messages (query, &messages);
     if (print_status_query ("notmuch show", query, status))
 	return 1;
 

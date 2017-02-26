@@ -35,7 +35,7 @@ main (int argc, char **argv)
 
     EXPECT0 (notmuch_database_open (path, NOTMUCH_DATABASE_MODE_READ_WRITE, &rw_db));
     query = notmuch_query_create(rw_db, "");
-    EXPECT0 (notmuch_query_search_messages_st (query, &messages));
+    EXPECT0 (notmuch_query_search_messages (query, &messages));
 
     for (;
 	 notmuch_messages_valid (messages);

@@ -1531,7 +1531,7 @@ notmuch_database_upgrade (notmuch_database_t *notmuch,
 
 	query = notmuch_query_create (notmuch, "");
 
-	status = notmuch_query_search_messages_st (query, &messages);
+	status = notmuch_query_search_messages (query, &messages);
 	if (status)
 	    goto DONE;
 	for (;

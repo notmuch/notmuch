@@ -164,9 +164,9 @@ class Query(object):
         return Threads(threads_p, self)
 
     """notmuch_query_search_messages_st"""
-    _search_messages_st = nmlib.notmuch_query_search_messages_st
-    _search_messages_st.argtypes = [NotmuchQueryP, POINTER(NotmuchMessagesP)]
-    _search_messages_st.restype = c_uint
+    _search_messages = nmlib.notmuch_query_search_messages
+    _search_messages.argtypes = [NotmuchQueryP, POINTER(NotmuchMessagesP)]
+    _search_messages.restype = c_uint
 
     def search_messages(self):
         """Filter messages according to the query and return
@@ -177,7 +177,7 @@ class Query(object):
         """
         self._assert_query_is_initialized()
         msgs_p = NotmuchMessagesP() # == NULL
-        status = Query._search_messages_st(self._query, byref(msgs_p))
+        status = Query._search_messages(self._query, byref(msgs_p))
         if status != 0:
             raise NotmuchError(status)
 

@@ -43,7 +43,7 @@ count_files (notmuch_query_t *query)
     notmuch_status_t status;
     int count = 0;
 
-    status = notmuch_query_search_messages_st (query, &messages);
+    status = notmuch_query_search_messages (query, &messages);
     if (print_status_query ("notmuch count", query, status))
 	return -1;
 

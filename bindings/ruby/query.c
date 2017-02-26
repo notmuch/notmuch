@@ -159,7 +159,7 @@ notmuch_rb_query_search_messages (VALUE self)
 
     Data_Get_Notmuch_Query (self, query);
 
-    status = notmuch_query_search_messages_st (query, &messages);
+    status = notmuch_query_search_messages (query, &messages);
     if (status)
 	notmuch_rb_status_raise (status);
 

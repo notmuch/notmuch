@@ -233,20 +233,16 @@ _notmuch_exclude_tags (notmuch_query_t *query)
     return exclude_query;
 }
 
-notmuch_messages_t *
-notmuch_query_search_messages (notmuch_query_t *query)
-{
-    notmuch_status_t status;
-    notmuch_messages_t *messages;
-    status = notmuch_query_search_messages_st (query, &messages);
-    if (status)
-	return NULL;
-    else
-	return messages;
-}
 
 notmuch_status_t
 notmuch_query_search_messages_st (notmuch_query_t *query,
+				  notmuch_messages_t **out)
+{
+    return notmuch_query_search_messages (query, out);
+}
+
+notmuch_status_t
+notmuch_query_search_messages (notmuch_query_t *query,
 				  notmuch_messages_t **out)
 {
     return _notmuch_query_search_documents (query, "mail", out);
@@ -519,7 +515,7 @@ notmuch_query_search_threads (notmuch_query_t *query,
 
     threads->query = query;
 
-    status = notmuch_query_search_messages_st (query, &messages);
+    status = notmuch_query_search_messages (query, &messages);
     if (status) {
 	talloc_free (threads);
 	return status;
@@ -708,7 +704,7 @@ notmuch_query_count_threads_st (notmuch_query_t *query, unsigned *count)
 
     sort = query->sort;
     query->sort = NOTMUCH_SORT_UNSORTED;
-    ret = notmuch_query_search_messages_st (query, &messages);
+    ret = notmuch_query_search_messages (query, &messages);
     if (ret)
 	return ret;
     query->sort = sort;

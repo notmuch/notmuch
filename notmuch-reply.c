@@ -645,7 +645,7 @@ static int do_reply(notmuch_config_t *config,
 	    sp = sprinter_sexp_create (config, stdout);
     }
 
-    status = notmuch_query_search_messages_st (query, &messages);
+    status = notmuch_query_search_messages (query, &messages);
     if (print_status_query ("notmuch reply", query, status))
 	return 1;
 
