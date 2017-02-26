@@ -276,7 +276,7 @@ If CREATE is non-nil then create the folder if necessary."
 (defun notmuch-maildir-fcc-make-uniq-maildir-id ()
    (let* ((ftime (float-time))
 	  (microseconds (mod (* 1000000 ftime) 1000000))
-	  (hostname (notmuch-maildir-fcc-host-fixer system-name)))
+	  (hostname (notmuch-maildir-fcc-host-fixer (system-name))))
      (setq notmuch-maildir-fcc-count (+ notmuch-maildir-fcc-count 1))
      (format "%d.%d_%d_%d.%s"
 	     ftime
