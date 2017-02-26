@@ -134,10 +134,10 @@ class Query(object):
         self._assert_query_is_initialized()
         self._exclude_tag(self._query, _str(tagname))
 
-    """notmuch_query_search_threads_st"""
-    _search_threads_st = nmlib.notmuch_query_search_threads_st
-    _search_threads_st.argtypes = [NotmuchQueryP, POINTER(NotmuchThreadsP)]
-    _search_threads_st.restype = c_uint
+    """notmuch_query_search_threads"""
+    _search_threads = nmlib.notmuch_query_search_threads
+    _search_threads.argtypes = [NotmuchQueryP, POINTER(NotmuchThreadsP)]
+    _search_threads.restype = c_uint
 
     def search_threads(self):
         """Execute a query for threads
@@ -155,7 +155,7 @@ class Query(object):
         """
         self._assert_query_is_initialized()
         threads_p = NotmuchThreadsP() # == NULL
-        status = Query._search_threads_st(self._query, byref(threads_p))
+        status = Query._search_threads(self._query, byref(threads_p))
         if status != 0:
             raise NotmuchError(status)
 

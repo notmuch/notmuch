@@ -947,7 +947,7 @@ do_show (void *ctx,
     notmuch_messages_t *messages;
     notmuch_status_t status, res = NOTMUCH_STATUS_SUCCESS;
 
-    status= notmuch_query_search_threads_st (query, &threads);
+    status= notmuch_query_search_threads (query, &threads);
     if (print_status_query ("notmuch show", query, status))
 	return 1;
 

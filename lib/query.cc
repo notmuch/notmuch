@@ -497,22 +497,15 @@ _notmuch_threads_destructor (notmuch_threads_t *threads)
     return 0;
 }
 
-
-notmuch_threads_t *
-notmuch_query_search_threads (notmuch_query_t *query)
+notmuch_status_t
+notmuch_query_search_threads_st (notmuch_query_t *query, notmuch_threads_t **out)
 {
-    notmuch_status_t status;
-    notmuch_threads_t *threads;
-    status = notmuch_query_search_threads_st (query, &threads);
-    if (status)
-	return NULL;
-    else
-	return threads;
+    return notmuch_query_search_threads(query, out);
 }
 
 notmuch_status_t
-notmuch_query_search_threads_st (notmuch_query_t *query,
-				 notmuch_threads_t **out)
+notmuch_query_search_threads (notmuch_query_t *query,
+			      notmuch_threads_t **out)
 {
     notmuch_threads_t *threads;
     notmuch_messages_t *messages;

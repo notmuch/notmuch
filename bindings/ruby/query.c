@@ -138,7 +138,7 @@ notmuch_rb_query_search_threads (VALUE self)
 
     Data_Get_Notmuch_Query (self, query);
 
-    status = notmuch_query_search_threads_st (query, &threads);
+    status = notmuch_query_search_threads (query, &threads);
     if (status)
 	notmuch_rb_status_raise (status);
 

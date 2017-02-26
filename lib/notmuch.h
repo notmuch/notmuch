@@ -855,24 +855,22 @@ notmuch_query_add_tag_exclude (notmuch_query_t *query, const char *tag);
  * notmuch_threads_destroy function, but there's no good reason
  * to call it if the query is about to be destroyed).
  *
- * @since libnotmuch 4.2 (notmuch 0.20)
+ * @since libnotmuch 5.0 (notmuch 0.25)
  */
 notmuch_status_t
-notmuch_query_search_threads_st (notmuch_query_t *query,
-				 notmuch_threads_t **out);
+notmuch_query_search_threads (notmuch_query_t *query,
+			      notmuch_threads_t **out);
 
 /**
- * Like notmuch_query_search_threads_st, but without a status return.
+ * Deprecated alias for notmuch_query_search_threads.
  *
- * If a Xapian exception occurs this function will return NULL.
- *
- * @deprecated Deprecated as of libnotmuch 4.3 (notmuch 0.21). Please
- * use notmuch_query_search_threads_st instead.
+ * @deprecated Deprecated as of libnotmuch 5 (notmuch 0.25). Please
+ * use notmuch_query_search_threads instead.
  *
  */
-NOTMUCH_DEPRECATED(4,3)
-notmuch_threads_t *
-notmuch_query_search_threads (notmuch_query_t *query);
+NOTMUCH_DEPRECATED(5,0)
+notmuch_status_t
+notmuch_query_search_threads_st (notmuch_query_t *query, notmuch_threads_t **out);
 
 /**
  * Execute a query for messages, returning a notmuch_messages_t object

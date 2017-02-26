@@ -132,7 +132,7 @@ do_search_threads (search_context_t *ctx)
 	    ctx->offset = 0;
     }
 
-    status = notmuch_query_search_threads_st (ctx->query, &threads);
+    status = notmuch_query_search_threads (ctx->query, &threads);
     if (print_status_query("notmuch search", ctx->query, status))
 	return 1;
 
