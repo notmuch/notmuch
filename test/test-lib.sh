@@ -940,13 +940,17 @@ test_expect_success () {
 }
 
 test_expect_code () {
-	test "$#" = 3 ||
-	error "bug in the test script: not 3 parameters to test_expect_code"
-	test_subtest_name="$2"
-	test_reset_state_
-	if ! test_skip "$@"
+	exec 1>&6 2>&7		# Restore stdout and stderr
+	if [ -z "$inside_subtest" ]; then
+		error "bug in the test script: test_expect_code without test_begin_subtest"
+	fi
+	inside_subtest=
+	test "$#" = 2 ||
+	error "bug in the test script: not 2 parameters to test_expect_code"
+
+	if ! test_skip "$test_subtest_name"
 	then
-		test_run_ "$3"
+		test_run_ "$2"
 		run_ret="$?"
 		# test_run_ may update missing external prerequisites,
 		test_check_missing_external_prereqs_ "$@" ||
@@ -954,7 +958,7 @@ test_expect_code () {
 		then
 			test_ok_
 		else
-			test_failure_ "exit code $eval_ret, expected $1" "$3"
+			test_failure_ "exit code $eval_ret, expected $1" "$2"
 		fi
 	fi
 }

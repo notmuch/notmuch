@@ -4,8 +4,8 @@ test_description='named queries'
 
 QUERYSTR="date:2009-11-18..2009-11-18 and tag:unread"
 
-test_expect_code 1 "error adding named query before initializing DB" \
-		 "notmuch config set query.test \"$QUERYSTR\""
+test_begin_subtest "error adding named query before initializing DB"
+test_expect_code 1 "notmuch config set query.test \"$QUERYSTR\""
 
 add_email_corpus
 

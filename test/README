@@ -200,6 +200,11 @@ library for your script to use.
    <script>.  If it yields success, test is considered
    successful.
 
+ test_expect_code <code> <script>
+
+   This takes two strings as parameter, and evaluates the <script>.
+   If it yields <code> exit status, test is considered successful.
+
  test_subtest_known_broken
 
    Mark the current test as broken.  Such tests are expected to fail.

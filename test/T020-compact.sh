@@ -16,7 +16,8 @@ if [ $NOTMUCH_HAVE_XAPIAN_COMPACT -eq 0 ]; then
     test_expect_equal "$output" "notmuch was compiled against a xapian version lacking compaction support.
 Compaction failed: Unsupported operation"
 
-    test_expect_code 1 "Compact unsupported: status code" "notmuch compact"
+    test_begin_subtest "Compact unsupported: status code"
+    test_expect_code 1 "notmuch compact"
 
     test_done
 fi

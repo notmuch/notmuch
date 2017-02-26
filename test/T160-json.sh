@@ -64,11 +64,11 @@ test_expect_equal_json "$output" "[{\"thread\": \"XXX\",
  \"tags\": [\"inbox\",
  \"unread\"]}]"
 
-test_expect_code 20 "Format version: too low" \
-    "notmuch search --format-version=0 \\*"
+test_begin_subtest "Format version: too low"
+test_expect_code 20 "notmuch search --format-version=0 \\*"
 
-test_expect_code 21 "Format version: too high" \
-    "notmuch search --format-version=999 \\*"
+test_begin_subtest "Format version: too high"
+test_expect_code 21 "notmuch search --format-version=999 \\*"
 
 test_begin_subtest "Show message: multiple filenames"
 add_message "[id]=message-id@example.com [filename]=copy1"

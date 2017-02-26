@@ -30,11 +30,9 @@ test_begin_subtest 'tests clean up after themselves'
 clean=no
 test_expect_success 'test_when_finished clean=yes'
 
+test_begin_subtest 'tests clean up even after a failure'
 cleaner=no
-test_expect_code 1 'tests clean up even after a failure' '
-    test_when_finished cleaner=yes &&
-    (exit 1)
-'
+test_expect_code 1 'test_when_finished cleaner=yes && (exit 1)'
 
 if test $clean$cleaner != yesyes
 then
@@ -42,9 +40,8 @@ then
 	exit 1
 fi
 
-test_expect_code 2 'failure to clean up causes the test to fail' '
-    test_when_finished "(exit 2)"
-'
+test_begin_subtest 'failure to clean up causes the test to fail'
+test_expect_code 2 'test_when_finished "(exit 2)"'
 
 EXPECTED=$TEST_DIRECTORY/test.expected-output
 suppress_diff_date() {

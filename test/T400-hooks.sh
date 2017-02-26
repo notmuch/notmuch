@@ -70,7 +70,8 @@ output=`notmuch new 2>&1`
 test_expect_equal "$output" "Error: pre-new hook failed with status 13"
 
 # depends on the previous subtest leaving broken hook behind
-test_expect_code 1 "pre-new non-zero exit status (notmuch status)" "notmuch new"
+test_begin_subtest "pre-new non-zero exit status (notmuch status)"
+test_expect_code 1 "notmuch new"
 
 # depends on the previous subtests leaving 1 new message behind
 test_begin_subtest "pre-new non-zero exit status aborts new"
@@ -89,7 +90,8 @@ echo "Error: post-new hook failed with status 13" >> expected
 test_expect_equal_file expected output
 
 # depends on the previous subtest leaving broken hook behind
-test_expect_code 1 "post-new non-zero exit status (notmuch status)" "notmuch new"
+test_begin_subtest "post-new non-zero exit status (notmuch status)"
+test_expect_code 1 "notmuch new"
 
 test_begin_subtest "post-insert hook does not affect insert status"
 rm_hooks
@@ -97,7 +99,7 @@ generate_message
 create_failing_hook "post-insert"
 test_expect_success "notmuch insert < \"$gen_msg_filename\" > /dev/null"
 
-# test_begin_subtest "hook without executable permissions"
+test_begin_subtest "hook without executable permissions"
 rm_hooks
 mkdir -p ${HOOK_DIR}
 cat <<EOF >"${HOOK_DIR}/pre-new"
@@ -105,15 +107,15 @@ cat <<EOF >"${HOOK_DIR}/pre-new"
 echo foo
 EOF
 output=`notmuch new 2>&1`
-test_expect_code 1 "hook without executable permissions" "notmuch new"
+test_expect_code 1 "notmuch new"
 
-# test_begin_subtest "hook execution failure"
+test_begin_subtest "hook execution failure"
 rm_hooks
 mkdir -p ${HOOK_DIR}
 cat <<EOF >"${HOOK_DIR}/pre-new"
 no hashbang, execl fails
 EOF
 chmod +x "${HOOK_DIR}/pre-new"
-test_expect_code 1 "hook execution failure" "notmuch new"
+test_expect_code 1 "notmuch new"
 
 test_done
