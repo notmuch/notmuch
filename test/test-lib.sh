@@ -866,7 +866,9 @@ test_failure_message_ () {
 	say_color error "%-6s" "$1"
 	echo " $2"
 	shift 2
-	echo "$@" | sed -e 's/^/	/'
+	if [ "$#" != "0" ]; then
+		echo "$@" | sed -e 's/^/	/'
+	fi
 	if test "$verbose" != "t"; then cat test.output; fi
 }
 
@@ -880,7 +882,11 @@ test_known_broken_ok_ () {
 test_known_broken_failure_ () {
 	test_reset_state_
 	test_broken=$(($test_broken+1))
-	test_failure_message_ "BROKEN" "$test_subtest_name" "$@"
+	if [ -z "$NOTMUCH_TEST_QUIET" ]; then
+		test_failure_message_ "BROKEN" "$test_subtest_name" "$@"
+	else
+		test_failure_message_ "BROKEN" "$test_subtest_name"
+	fi
 	return 1
 }
 
