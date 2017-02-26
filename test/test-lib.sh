@@ -113,15 +113,15 @@ unset ALTERNATE_EDITOR
 while test "$#" -ne 0
 do
 	case "$1" in
-	-d|--d|--de|--deb|--debu|--debug)
+	-d|--debug)
 		debug=t; shift ;;
-	-i|--i|--im|--imm|--imme|--immed|--immedi|--immedia|--immediat|--immediate)
+	-i|--immediate)
 		immediate=t; shift ;;
-	-h|--h|--he|--hel|--help)
+	-h|--help)
 		help=t; shift ;;
-	-v|--v|--ve|--ver|--verb|--verbo|--verbos|--verbose)
+	-v|--verbose)
 		verbose=t; shift ;;
-	-q|--q|--qu|--qui|--quie|--quiet)
+	-q|--quiet)
 		quiet=t; shift ;;
 	--with-dashes)
 		with_dashes=t; shift ;;
@@ -130,7 +130,7 @@ do
 	--no-python)
 		# noop now...
 		shift ;;
-	--va|--val|--valg|--valgr|--valgri|--valgrin|--valgrind)
+	--valgrind)
 		valgrind=t; verbose=t; shift ;;
 	--tee)
 		shift ;; # was handled already
