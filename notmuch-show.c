@@ -110,6 +110,17 @@ _get_one_line_summary (const void *ctx, notmuch_message_t *message)
 			    from, relative_date, tags);
 }
 
+static const char *_get_disposition(GMimeObject *meta)
+{
+    GMimeContentDisposition *disposition;
+
+    disposition = g_mime_object_get_content_disposition (meta);
+    if (!disposition)
+	return NULL;
+
+    return g_mime_content_disposition_get_disposition (disposition);
+}
+
 /* Emit a sequence of key/value pairs for the metadata of message.
  * The caller should begin a map before calling this. */
 static void
@@ -463,14 +474,13 @@ format_part_text (const void *ctx, sprinter_t *sp, mime_node_t *node,
 		notmuch_message_get_flag (message, NOTMUCH_MESSAGE_FLAG_EXCLUDED) ? 1 : 0,
 		notmuch_message_get_filename (message));
     } else {
-	GMimeContentDisposition *disposition = g_mime_object_get_content_disposition (meta);
+	const char *disposition = _get_disposition (meta);
 	const char *cid = g_mime_object_get_content_id (meta);
 	const char *filename = leaf ?
 	    g_mime_part_get_filename (GMIME_PART (node->part)) : NULL;
 
 	if (disposition &&
-	    strcasecmp (g_mime_content_disposition_get_disposition (disposition),
-			GMIME_DISPOSITION_ATTACHMENT) == 0)
+	    strcasecmp (disposition, GMIME_DISPOSITION_ATTACHMENT) == 0)
 	    part_type = "attachment";
 	else
 	    part_type = "part";
