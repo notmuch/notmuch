@@ -21,6 +21,7 @@
 #include "database-private.h"
 #include "parse-time-vrp.h"
 #include "query-fp.h"
+#include "regexp-fields.h"
 #include "string-util.h"
 
 #include <iostream>
@@ -277,7 +278,8 @@ prefix_t prefix_table[] = {
 						NOTMUCH_FIELD_PROCESSOR },
 #endif
     { "from",			"XFROM",	NOTMUCH_FIELD_EXTERNAL |
-						NOTMUCH_FIELD_PROBABILISTIC },
+						NOTMUCH_FIELD_PROBABILISTIC |
+						NOTMUCH_FIELD_PROCESSOR },
     { "to",			"XTO",		NOTMUCH_FIELD_EXTERNAL |
 						NOTMUCH_FIELD_PROBABILISTIC },
     { "attachment",		"XATTACHMENT",	NOTMUCH_FIELD_EXTERNAL |
@@ -285,7 +287,8 @@ prefix_t prefix_table[] = {
     { "mimetype",		"XMIMETYPE",	NOTMUCH_FIELD_EXTERNAL |
 						NOTMUCH_FIELD_PROBABILISTIC },
     { "subject",		"XSUBJECT",	NOTMUCH_FIELD_EXTERNAL |
-						NOTMUCH_FIELD_PROBABILISTIC },
+						NOTMUCH_FIELD_PROBABILISTIC |
+						NOTMUCH_FIELD_PROCESSOR},
 };
 
 static void
@@ -309,7 +312,7 @@ _setup_query_field (const prefix_t *prefix, notmuch_database_t *notmuch)
 	else if (STRNCMP_LITERAL(prefix->name, "query") == 0)
 	    fp = (new QueryFieldProcessor (*notmuch->query_parser, notmuch))->release ();
 	else
-	    INTERNAL_ERROR("unsupported field processor prefix: %s\n", prefix->name);
+	    fp = (new RegexpFieldProcessor (prefix->name, *notmuch->query_parser, notmuch))->release ();
 
 	/* we treat all field-processor fields as boolean in order to get the raw input */
 	notmuch->query_parser->add_boolean_prefix (prefix->name, fp);

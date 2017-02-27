@@ -34,9 +34,13 @@ indicate user-supplied values):
 
 -  from:<name-or-address>
 
+-  from:/<regex>/
+
 -  to:<name-or-address>
 
 -  subject:<word-or-quoted-phrase>
+
+-  subject:/<regex>/
 
 -  attachment:<word>
 
@@ -70,6 +74,15 @@ Any term prefixed with **subject:** will match only text from the
 subject of an email. Searching for a phrase in the subject is supported
 by including quotation marks around the phrase, immediately following
 **subject:**.
+
+If notmuch is built with **Xapian Field Processors** (see below) the
+**from:** and **subject** prefix can be also used to restrict the
+results to those whose from/subject value matches a regular expression
+(see **regex(7)**) delimited with //.
+
+::
+
+   notmuch search 'from:/bob@.*[.]example[.]com/'
 
 The **attachment:** prefix can be used to search for specific filenames
 (or extensions) of attachments to email messages.
@@ -220,13 +233,18 @@ Boolean and Probabilistic Prefixes
 ----------------------------------
 
 Xapian (and hence notmuch) prefixes are either **boolean**, supporting
-exact matches like "tag:inbox"  or **probabilistic**, supporting a more flexible **term** based searching. The prefixes currently supported by notmuch are as follows.
-
+exact matches like "tag:inbox" or **probabilistic**, supporting a more
+flexible **term** based searching. Certain **special** prefixes are
+processed by notmuch in a way not stricly fitting either of Xapian's
+built in styles. The prefixes currently supported by notmuch are as
+follows.
 
 Boolean
    **tag:**, **id:**, **thread:**, **folder:**, **path:**, **property:**
 Probabilistic
-   **from:**, **to:**, **subject:**, **attachment:**, **mimetype:**
+  **to:**, **attachment:**, **mimetype:**
+Special
+   **from:**, **query:**, **subject:**
 
 Terms and phrases
 -----------------
@@ -396,6 +414,7 @@ Currently the following features require field processor support:
 
 - non-range date queries, e.g. "date:today"
 - named queries e.g. "query:my_special_query"
+- regular expression searches, e.g. "subject:/^\\[SPAM\\]/"
 
 SEE ALSO
 ========
