@@ -270,6 +270,8 @@ die () {
 GIT_EXIT_OK=
 # Note: TEST_TMPDIR *NOT* exported!
 TEST_TMPDIR=$(mktemp -d "${TMPDIR:-/tmp}/notmuch-test-$$.XXXXXX")
+# Put GNUPGHOME in TMPDIR to avoid problems with long paths.
+export GNUPGHOME="${TEST_TMPDIR}/gnupg"
 trap 'trap_exit' EXIT
 trap 'trap_signal' HUP INT TERM
 
