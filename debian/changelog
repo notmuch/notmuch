@@ -1,10 +1,10 @@
-notmuch (0.23.6-1) UNRELEASED; urgency=medium
+notmuch (0.23.6-1) unstable; urgency=medium
 
   * Use gpgconf --create-socketdir to create gpg-agent sockets for
     test suite.
   * Fix read-after-free bug in `notmuch new`.
 
- -- David Bremner <bremner@debian.org>  Tue, 21 Feb 2017 07:51:08 -0400
+ -- David Bremner <bremner@debian.org>  Mon, 27 Feb 2017 06:56:28 -0400
 
 notmuch (0.23.5-1) unstable; urgency=medium
 
