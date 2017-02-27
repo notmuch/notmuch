@@ -34,6 +34,11 @@ add_message '[subject]="search by id"' '[date]="Sat, 01 Jan 2000 12:00:00 -0000"
 output=$(notmuch search id:${gen_msg_id} | notmuch_search_sanitize)
 test_expect_equal "$output" "thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; search by id (inbox unread)"
 
+test_begin_subtest "Search by mid:"
+add_message '[subject]="search by mid"' '[date]="Sat, 01 Jan 2000 12:00:00 -0000"'
+output=$(notmuch search mid:${gen_msg_id} | notmuch_search_sanitize)
+test_expect_equal "$output" "thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; search by mid (inbox unread)"
+
 test_begin_subtest "Search by tag:"
 add_message '[subject]="search by tag"' '[date]="Sat, 01 Jan 2000 12:00:00 -0000"'
 notmuch tag +searchbytag id:${gen_msg_id}
@@ -127,6 +132,7 @@ thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; search by to (inbox unread)
 thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; subjectsearchtest (inbox unread)
 thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; utf8-sübjéct (inbox unread)
 thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; search by id (inbox unread)
+thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; search by mid (inbox unread)
 thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; search by tag (inbox searchbytag unread)
 thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; search by thread (inbox unread)
 thread:XXX   2000-01-01 [1/1] Notmuch Test Suite; body search (phrase) (inbox unread)

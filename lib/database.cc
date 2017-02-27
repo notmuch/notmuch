@@ -262,6 +262,7 @@ prefix_t prefix_table[] = {
     { "tag",			"K",		NOTMUCH_FIELD_EXTERNAL },
     { "is",			"K",		NOTMUCH_FIELD_EXTERNAL },
     { "id",			"Q",		NOTMUCH_FIELD_EXTERNAL },
+    { "mid",			"Q",		NOTMUCH_FIELD_EXTERNAL },
     { "path",			"P",		NOTMUCH_FIELD_EXTERNAL },
     { "property",		"XPROPERTY",	NOTMUCH_FIELD_EXTERNAL },
     /*
