@@ -270,6 +270,12 @@ prefix_t prefix_table[] = {
      * discussion.
      */
     { "folder",			"XFOLDER:",	NOTMUCH_FIELD_EXTERNAL },
+#if HAVE_XAPIAN_FIELD_PROCESSOR
+    { "date",			NULL,		NOTMUCH_FIELD_EXTERNAL |
+						NOTMUCH_FIELD_PROCESSOR },
+    { "query",			NULL,		NOTMUCH_FIELD_EXTERNAL |
+						NOTMUCH_FIELD_PROCESSOR },
+#endif
     { "from",			"XFROM",	NOTMUCH_FIELD_EXTERNAL |
 						NOTMUCH_FIELD_PROBABILISTIC },
     { "to",			"XTO",		NOTMUCH_FIELD_EXTERNAL |
@@ -281,6 +287,43 @@ prefix_t prefix_table[] = {
     { "subject",		"XSUBJECT",	NOTMUCH_FIELD_EXTERNAL |
 						NOTMUCH_FIELD_PROBABILISTIC },
 };
+
+static void
+_setup_query_field_default (const prefix_t *prefix, notmuch_database_t *notmuch)
+{
+    if (prefix->flags & NOTMUCH_FIELD_PROBABILISTIC)
+	notmuch->query_parser->add_prefix (prefix->name, prefix->prefix);
+    else
+	notmuch->query_parser->add_boolean_prefix (prefix->name, prefix->prefix);
+}
+
+#if HAVE_XAPIAN_FIELD_PROCESSOR
+static void
+_setup_query_field (const prefix_t *prefix, notmuch_database_t *notmuch)
+{
+    if (prefix->flags & NOTMUCH_FIELD_PROCESSOR) {
+	Xapian::FieldProcessor *fp;
+
+	if (STRNCMP_LITERAL (prefix->name, "date") == 0)
+	    fp = (new DateFieldProcessor())->release ();
+	else if (STRNCMP_LITERAL(prefix->name, "query") == 0)
+	    fp = (new QueryFieldProcessor (*notmuch->query_parser, notmuch))->release ();
+	else
+	    INTERNAL_ERROR("unsupported field processor prefix: %s\n", prefix->name);
+
+	/* we treat all field-processor fields as boolean in order to get the raw input */
+	notmuch->query_parser->add_boolean_prefix (prefix->name, fp);
+    } else {
+	_setup_query_field_default (prefix, notmuch);
+    }
+}
+#else
+static inline void
+_setup_query_field (const prefix_t *prefix, notmuch_database_t *notmuch)
+{
+    _setup_query_field_default (prefix, notmuch);
+}
+#endif
 
 const char *
 _find_prefix (const char *name)
@@ -1028,18 +1071,6 @@ notmuch_database_open_verbose (const char *path,
 	notmuch->term_gen->set_stemmer (Xapian::Stem ("english"));
 	notmuch->value_range_processor = new Xapian::NumberValueRangeProcessor (NOTMUCH_VALUE_TIMESTAMP);
 	notmuch->date_range_processor = new ParseTimeValueRangeProcessor (NOTMUCH_VALUE_TIMESTAMP);
-#if HAVE_XAPIAN_FIELD_PROCESSOR
-	/* This currently relies on the query parser to pass anything
-	 * with a .. to the range processor */
-	{
-	    Xapian::FieldProcessor * date_fp = new DateFieldProcessor();
-	    Xapian::FieldProcessor * query_fp =
-		new QueryFieldProcessor (*notmuch->query_parser, notmuch);
-
-	    notmuch->query_parser->add_boolean_prefix("date", date_fp->release ());
-	    notmuch->query_parser->add_boolean_prefix("query", query_fp->release ());
-	}
-#endif
 	notmuch->last_mod_range_processor = new Xapian::NumberValueRangeProcessor (NOTMUCH_VALUE_LAST_MOD, "lastmod:");
 
 	notmuch->query_parser->set_default_op (Xapian::Query::OP_AND);
@@ -1053,12 +1084,7 @@ notmuch_database_open_verbose (const char *path,
 	for (i = 0; i < ARRAY_SIZE (prefix_table); i++) {
 	    const prefix_t *prefix = &prefix_table[i];
 	    if (prefix->flags & NOTMUCH_FIELD_EXTERNAL) {
-		if (prefix->flags & NOTMUCH_FIELD_PROBABILISTIC) {
-		    notmuch->query_parser->add_prefix (prefix->name, prefix->prefix);
-		} else {
-		    notmuch->query_parser->add_boolean_prefix (prefix->name,
-							       prefix->prefix);
-		}
+		_setup_query_field (prefix, notmuch);
 	    }
 	}
     } catch (const Xapian::Error &error) {

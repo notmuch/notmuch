@@ -153,7 +153,8 @@ operator&=(_notmuch_features &a, _notmuch_features b)
 typedef enum notmuch_field_flags {
     NOTMUCH_FIELD_NO_FLAGS = 0,
     NOTMUCH_FIELD_EXTERNAL = 1 << 0,
-    NOTMUCH_FIELD_PROBABILISTIC = 1 << 1
+    NOTMUCH_FIELD_PROBABILISTIC = 1 << 1,
+    NOTMUCH_FIELD_PROCESSOR = 1 << 2,
 } notmuch_field_flag_t;
 
 /*
