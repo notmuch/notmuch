@@ -1,5 +1,10 @@
-Notmuch 0.23.6 (UNRELEASED)
+Notmuch 0.23.6 (2017-02-27)
 ===========================
+
+Command Line Interface
+----------------------
+
+Fix read-after-free bug in `notmuch new`.
 
 Test Suite
 ----------
