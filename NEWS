@@ -1,3 +1,16 @@
+Notmuch 0.23.7 (2017-02-28)
+===========================
+
+Test Suite
+----------
+
+Drop use of gpgconf --create-socketdir. Move $GNUPGHOME to /tmp.
+
+  It turns out the hardcoded use of /run/user in gpg doesn't work out
+  that well in some environments. The more low tech fix is to move all
+  of $GNUPGHOME to somewhere where we can control the length of the
+  paths.
+
 Notmuch 0.23.6 (2017-02-27)
 ===========================
 
