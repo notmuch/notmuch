@@ -1,10 +1,9 @@
-notmuch (0.23.6-1) unstable; urgency=medium
+notmuch (0.23.7-1) unstable; urgency=medium
 
-  * Use gpgconf --create-socketdir to create gpg-agent sockets for
-    test suite.
+  * Move test suite $GNUPGHOME to /tmp to avoid problems with long build paths.
   * Fix read-after-free bug in `notmuch new`.
 
- -- David Bremner <bremner@debian.org>  Mon, 27 Feb 2017 06:56:28 -0400
+ -- David Bremner <bremner@debian.org>  Tue, 28 Feb 2017 20:39:30 -0400
 
 notmuch (0.23.5-1) unstable; urgency=medium
 

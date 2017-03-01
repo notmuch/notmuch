@@ -230,19 +230,10 @@ test_fixed=0
 test_broken=0
 test_success=0
 
-
-_shutdown_gpg_agent () {
-    if [ ${NOTMUCH_HAVE_GPGCONF_SOCKETDIR} = 1 ]; then
-	gpgconf --kill gpg-agent
-	gpgconf --remove-socketdir
-    fi
-}
-
 _exit_common () {
 	code=$?
 	trap - EXIT
 	set +ex
-	_shutdown_gpg_agent
 	rm -rf "$TEST_TMPDIR"
 }
 
@@ -280,6 +271,8 @@ die () {
 GIT_EXIT_OK=
 # Note: TEST_TMPDIR *NOT* exported!
 TEST_TMPDIR=$(mktemp -d "${TMPDIR:-/tmp}/notmuch-test-$$.XXXXXX")
+# Put GNUPGHOME in TMPDIR to avoid problems with long paths.
+export GNUPGHOME="${TEST_TMPDIR}/gnupg"
 trap 'trap_exit' EXIT
 trap 'trap_signal' HUP INT TERM
 
@@ -1285,11 +1278,6 @@ test_init_ () {
 
 
 . ./test-lib-common.sh || exit 1
-
-# we need the setting of GNUPGHOME in test-lib-common.sh
-if [ ${NOTMUCH_HAVE_GPGCONF_SOCKETDIR} = 1 ]; then
-    gpgconf --create-socketdir
-fi
 
 emacs_generate_script
 

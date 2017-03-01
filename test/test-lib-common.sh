@@ -158,7 +158,6 @@ export HOME="${TMP_DIRECTORY}/home"
 mkdir -p "${HOME}"
 
 MAIL_DIR="${TMP_DIRECTORY}/mail"
-export GNUPGHOME="${TMP_DIRECTORY}/gnupg"
 export NOTMUCH_CONFIG="${TMP_DIRECTORY}/notmuch-config"
 
 mkdir -p "${test}"
