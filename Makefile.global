@@ -43,8 +43,8 @@ RELEASE_URL=https://notmuchmail.org/releases
 TAR_FILE=$(PACKAGE)-$(VERSION).tar.gz
 ELPA_FILE:=$(PACKAGE)-emacs-$(ELPA_VERSION).tar
 DEB_TAR_FILE=$(PACKAGE)_$(VERSION).orig.tar.gz
-SHA1_FILE=$(TAR_FILE).sha1
-GPG_FILE=$(SHA1_FILE).asc
+SHA256_FILE=$(TAR_FILE).sha256
+GPG_FILE=$(SHA256_FILE).asc
 
 PV_FILE=bindings/python/notmuch/version.py
 

@@ -36,12 +36,11 @@ $(TAR_FILE):
 	gzip < $(TAR_FILE).tmp > $(TAR_FILE)
 	@echo "Source is ready for release in $(TAR_FILE)"
 
-$(SHA1_FILE): $(TAR_FILE)
-	sha1sum $^ > $@
+$(SHA256_FILE): $(TAR_FILE)
+	sha256sum $^ > $@
 
-$(GPG_FILE): $(SHA1_FILE)
-	@echo "Please enter your GPG password to sign the checksum."
-	gpg --armor --sign $^ 
+$(GPG_FILE): $(SHA256_FILE)
+	gpg --armor --sign $^
 
 .PHONY: dist
 dist: $(TAR_FILE)
