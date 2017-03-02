@@ -905,10 +905,9 @@ print_results (const add_files_state_t *state)
 		state->processed_files == 1 ? "file" : "total files");
 	notmuch_time_print_formatted_seconds (elapsed);
 	if (elapsed > 1)
-	    printf (" (%d files/sec.).\033[K\n",
+	    printf (" (%d files/sec.)",
 		    (int) (state->processed_files / elapsed));
-	else
-	    printf (".\033[K\n");
+	printf (".%s\n", (state->output_is_a_tty) ? "\033[K" : "");
     }
 
     if (state->added_messages)
