@@ -1,8 +1,28 @@
-;; Compatibility functions for emacs 23 and 24 pre 24.4
+;; Compatibility functions for earlier versions of emacs
 
-;; The functions in this file are copied from eamcs 24.4 and are
-;; Copyright (C) 1985-1986, 1992, 1994-1995, 1999-2014 Free Software
-;; Foundation, Inc.
+;; The functions in this file are copied from more modern versions of
+;; emacs and are Copyright (C) 1985-1986, 1992, 1994-1995, 1999-2017
+;; Free Software Foundation, Inc.
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; emacs master has a bugfix for folding long headers when sending
+;; messages. Include the fix for earlier versions of emacs. To avoid
+;; interfering with gnus we only run the hook when called from
+;; notmuch-message-mode.
+
+(declare-function mail-header-fold-field "mail-parse" nil)
+
+(defun notmuch-message--fold-long-headers ()
+  (when (eq major-mode 'notmuch-message-mode)
+    (goto-char (point-min))
+    (while (not (eobp))
+      (when (and (looking-at "[^:]+:")
+		 (> (- (line-end-position) (point)) 998))
+	(mail-header-fold-field))
+      (forward-line 1))))
+
+(unless (fboundp 'message--fold-long-headers)
+  (add-hook 'message-header-hook 'notmuch-message--fold-long-headers))
 
 (if (fboundp 'setq-local)
     (defalias 'notmuch-setq-local 'setq-local)
