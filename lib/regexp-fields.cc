@@ -38,7 +38,7 @@ compile_regex (regex_t &regexp, const char *str)
 	std::string msg;
 	(void) regerror (err, &regexp, buffer, len);
 	msg.assign (buffer, len);
-	delete buffer;
+	delete[] buffer;
 
 	throw Xapian::QueryParserError (msg);
     }
