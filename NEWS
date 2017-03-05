@@ -1,3 +1,32 @@
+Notmuch 0.24 (UNRELEASED)
+=========================
+
+General
+-------
+
+Regular expression searches supported for `from:` and `subject:`.
+
+  This requires recent Xapian (1.4+) See notmuch-search-terms(7) for
+  details.
+
+Emacs Interface
+---------------
+
+  Save and resume messages in `notmuch-message-mode` (composition).
+
+Library changes
+---------------
+
+`notmuch_query_count_messages` is now non-destructive.
+
+  Internally the implementation of excludes has changed to make this
+  possible.
+
+Improved handling of DatabaseModifiedError
+
+  Previously uncaught exceptions reading message metadata are now
+  handled.
+
 Notmuch 0.23.7 (2017-02-28)
 ===========================
 
