@@ -86,6 +86,11 @@ class Database(object):
     _get_version.argtypes = [NotmuchDatabaseP]
     _get_version.restype = c_uint
 
+    """notmuch_database_get_revision"""
+    _get_revision = nmlib.notmuch_database_get_revision
+    _get_revision.argtypes = [NotmuchDatabaseP, POINTER(c_char_p)]
+    _get_revision.restype = c_uint
+
     """notmuch_database_open"""
     _open = nmlib.notmuch_database_open
     _open.argtypes = [c_char_p, c_uint, POINTER(NotmuchDatabaseP)]
@@ -260,6 +265,17 @@ class Database(object):
         """
         self._assert_db_is_initialized()
         return Database._get_version(self._db)
+
+    def get_revision (self):
+        """Returns the committed database revison and UUID
+
+        :returns: (revison, uuid) The database revision as a positive integer
+        and the UUID of the database.
+        """
+        self._assert_db_is_initialized()
+        uuid = c_char_p ()
+        revision = Database._get_revision(self._db, byref (uuid))
+        return (revision, uuid.value.decode ('utf-8'))
 
     _needs_upgrade = nmlib.notmuch_database_needs_upgrade
     _needs_upgrade.argtypes = [NotmuchDatabaseP]
