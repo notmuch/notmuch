@@ -82,6 +82,22 @@ Bugfix for sending messages with very long headers.
   could cause the MTA to refuse to send the message. This makes sure
   it does fold any long headers so the message is RFC compliant.
 
+`notmuch emacs-mua` command installed with the Emacs interface
+
+  We've carried a `notmuch-emacs-mua` script in the source tree for
+  quite some time. It can be used to launch the Notmuch Emacs
+  interface from the command line in many different ways. Starting
+  with this release, it will be installed with the Emacs
+  interface. With the new external subcommand support, the script
+  transparently becomes a new notmuch command. See the
+  `notmuch-emacs-mua(1)` man page for details.
+
+Notmuch Emacs desktop integration
+
+  The desktop integration file will now be installed with the Notmuch
+  Emacs interface, adding a Notmuch menu item and configuration to
+  allow the user to set up Notmuch Emacs as the `mailto:` URL handler.
+
 Library changes
 ---------------
 
