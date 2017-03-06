@@ -9,6 +9,15 @@ Regular expression searches supported for `from:` and `subject:`.
   This requires recent Xapian (1.4+) See notmuch-search-terms(7) for
   details.
 
+Command Line Interface
+----------------------
+
+Run external `notmuch-` prefixed commands as subcommands
+
+  You can now add your own `notmuch-` prefixed commands in PATH, and
+  have notmuch run them as if they were notmuch commands. See the
+  `notmuch(1)` man page for details
+
 Emacs
 -----
 
