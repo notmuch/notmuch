@@ -9,10 +9,94 @@ Regular expression searches supported for `from:` and `subject:`.
   This requires recent Xapian (1.4+) See notmuch-search-terms(7) for
   details.
 
-Emacs Interface
----------------
+Command Line Interface
+----------------------
 
-  Save and resume messages in `notmuch-message-mode` (composition).
+Run external `notmuch-` prefixed commands as subcommands
+
+  You can now add your own `notmuch-` prefixed commands in PATH, and
+  have notmuch run them as if they were notmuch commands. See the
+  `notmuch(1)` man page for details
+
+Emacs
+-----
+
+Postpone and resume messages in `notmuch-message-mode` (composition)
+
+  Notmuch now has built in support for postponing, saving and resuming
+  messages. The default bindings are C-x C-s to save a draft, C-c C-p
+  to postpone a draft (save and exit compose buffer), and "e" in show
+  or tree view to resume.
+
+  Draft messages are tagged with `notmuch-draft-tags` (draft by
+  default) so you may wish to add that to the excluded tags list. When
+  saving a previously saved draft message the earlier draft gets
+  tagged deleted.
+
+  Note that attachments added before postponing will be included as
+  they were when you postponed in the final message.
+
+Address Completion
+
+  It is now possible to save the list of address completions for
+  notmuch's internal completion between runs of emacs. This makes the
+  first calls to address completion much better and faster. For
+  privacy reasons it is disabled by default, to enable set or
+  customize `notmuch-address-save-filename`.
+
+Tag jump menu
+
+  It is now possible to configure tagging shortcuts (with an interface
+  like notmuch jump). For example (by default) k u will remove the
+  unread tag, and k s will add a tag "spam" and remove the inbox
+  tag. Pressing k twice will do the reverse operation so, for example,
+  k k s removes the spam tag and adds the inbox tag. See the customize
+  variable `notmuch-tagging-keys` for more information.
+
+Refresh all buffers
+
+  It is now possible to refresh all notmuch buffers to reflect the
+  current state of the database with a single command, `M-=`.
+
+Stop display of application/* parts
+
+  By default gnus displays all application/* parts such as
+  application/zip in the message buffer. This has several undesirable
+  effects for notmuch (security, triggering errors etc). Notmuch now
+  overrides this and does not display them by default. If you have
+  customized `mm-inline-override-types` then we assume you know what
+  you want and do not interfere; if you do want to stop the display of
+  application/* add application/* to your customization. If you want
+  to allow application/* then set `mm-inline-override-types` to
+  "non/existent".
+
+Small change in the api for notmuch-search-tag
+
+  When `notmuch-search-tag` is called non-interactively and the region
+  is set, then it only tags the threads in the region. (Previously it
+  only tagged the current thread.)
+
+Bugfix for sending messages with very long headers.
+
+  Previously emacs didn't fold very long headers when sending which
+  could cause the MTA to refuse to send the message. This makes sure
+  it does fold any long headers so the message is RFC compliant.
+
+`notmuch emacs-mua` command installed with the Emacs interface
+
+  We've carried a `notmuch-emacs-mua` script in the source tree for
+  quite some time. It can be used to launch the Notmuch Emacs
+  interface from the command line in many different ways. Starting
+  with this release, it will be installed with the Emacs
+  interface. With the new external subcommand support, the script
+  transparently becomes a new notmuch command. See the
+  `notmuch-emacs-mua(1)` man page for details.
+
+Notmuch Emacs desktop integration
+
+  The desktop integration file will now be installed with the Notmuch
+  Emacs interface, adding a Notmuch menu item and configuration to
+  allow the user to set up Notmuch Emacs as the `mailto:` URL handler.
 
 Library changes
 ---------------
