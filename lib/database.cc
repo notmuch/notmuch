@@ -259,12 +259,15 @@ prefix_t prefix_table[] = {
     { "file-direntry",		"XFDIRENTRY",	NOTMUCH_FIELD_NO_FLAGS },
     { "directory-direntry",	"XDDIRENTRY",	NOTMUCH_FIELD_NO_FLAGS },
     { "thread",			"G",		NOTMUCH_FIELD_EXTERNAL },
-    { "tag",			"K",		NOTMUCH_FIELD_EXTERNAL },
-    { "is",			"K",		NOTMUCH_FIELD_EXTERNAL },
+    { "tag",			"K",		NOTMUCH_FIELD_EXTERNAL |
+						NOTMUCH_FIELD_PROCESSOR },
+    { "is",			"K",		NOTMUCH_FIELD_EXTERNAL |
+					        NOTMUCH_FIELD_PROCESSOR },
     { "id",			"Q",		NOTMUCH_FIELD_EXTERNAL },
     { "mid",			"Q",		NOTMUCH_FIELD_EXTERNAL |
 						NOTMUCH_FIELD_PROCESSOR },
-    { "path",			"P",		NOTMUCH_FIELD_EXTERNAL },
+    { "path",			"P",		NOTMUCH_FIELD_EXTERNAL|
+						NOTMUCH_FIELD_PROCESSOR },
     { "property",		"XPROPERTY",	NOTMUCH_FIELD_EXTERNAL },
     /*
      * Unconditionally add ':' to reduce potential ambiguity with
@@ -272,7 +275,8 @@ prefix_t prefix_table[] = {
      * letters. See Xapian document termprefixes.html for related
      * discussion.
      */
-    { "folder",			"XFOLDER:",	NOTMUCH_FIELD_EXTERNAL },
+    { "folder",			"XFOLDER:",	NOTMUCH_FIELD_EXTERNAL |
+						NOTMUCH_FIELD_PROCESSOR },
 #if HAVE_XAPIAN_FIELD_PROCESSOR
     { "date",			NULL,		NOTMUCH_FIELD_EXTERNAL |
 						NOTMUCH_FIELD_PROCESSOR },

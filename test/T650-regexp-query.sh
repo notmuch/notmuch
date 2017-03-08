@@ -2,12 +2,53 @@
 test_description='regular expression searches'
 . ./test-lib.sh || exit 1
 
-add_email_corpus
-
-
 if [ $NOTMUCH_HAVE_XAPIAN_FIELD_PROCESSOR -eq 0 ]; then
     test_done
 fi
+
+add_message '[dir]=bad' '[subject]="To the bone"'
+add_message '[dir]=.' '[subject]="Top level"'
+add_message '[dir]=bad/news' '[subject]="Bears"'
+mkdir -p "${MAIL_DIR}/duplicate/bad/news"
+cp "$gen_msg_filename" "${MAIL_DIR}/duplicate/bad/news"
+
+add_message '[dir]=things' '[subject]="These are a few"'
+add_message '[dir]=things/favorite' '[subject]="Raindrops, whiskers, kettles"'
+add_message '[dir]=things/bad' '[subject]="Bites, stings, sad feelings"'
+
+test_begin_subtest "empty path:// search"
+notmuch search 'path:""' > EXPECTED
+notmuch search 'path:/^$/' > OUTPUT
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "empty folder:// search"
+notmuch search 'folder:""' > EXPECTED
+notmuch search 'folder:/^$/' > OUTPUT
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "unanchored folder:// specification"
+output=$(notmuch search folder:/bad/ | notmuch_search_sanitize)
+test_expect_equal "$output" "thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; To the bone (inbox unread)
+thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; Bears (inbox unread)
+thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; Bites, stings, sad feelings (inbox unread)"
+
+test_begin_subtest "anchored folder:// search"
+output=$(notmuch search 'folder:/^bad$/' | notmuch_search_sanitize)
+test_expect_equal "$output" "thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; To the bone (inbox unread)"
+
+test_begin_subtest "unanchored path:// specification"
+output=$(notmuch search path:/bad/ | notmuch_search_sanitize)
+test_expect_equal "$output" "thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; To the bone (inbox unread)
+thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; Bears (inbox unread)
+thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; Bites, stings, sad feelings (inbox unread)"
+
+test_begin_subtest "anchored path:// search"
+output=$(notmuch search 'path:/^bad$/' | notmuch_search_sanitize)
+test_expect_equal "$output" "thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; To the bone (inbox unread)"
+
+# Use "standard" corpus from here on.
+rm -rf $MAIL_DIR
+add_email_corpus
 
 notmuch search --output=messages from:cworth > cworth.msg-ids
 
@@ -118,6 +159,17 @@ notmuch search  subject:/-C/ and mid:/y..m/ | notmuch_search_sanitize > OUTPUT
 cat <<EOF > EXPECTED
 thread:XXX   2009-11-18 [1/2] Carl Worth| Jan Janak; [notmuch] [PATCH] Older versions of install do not support -C. (inbox unread)
 EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "unanchored tag search"
+notmuch search tag:signed or tag:inbox > EXPECTED
+notmuch search tag:/i/ > OUTPUT
+test_expect_equal_file EXPECTED OUTPUT
+
+notmuch tag +testsi '*'
+test_begin_subtest "anchored tag search"
+notmuch search tag:signed > EXPECTED
+notmuch search tag:/^si/ > OUTPUT
 test_expect_equal_file EXPECTED OUTPUT
 
 test_done

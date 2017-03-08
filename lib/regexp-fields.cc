@@ -138,7 +138,7 @@ static inline Xapian::valueno _find_slot (std::string prefix)
     else if (prefix == "mid")
 	return NOTMUCH_VALUE_MESSAGE_ID;
     else
-	throw Xapian::QueryParserError ("unsupported regexp field '" + prefix + "'");
+	return Xapian::BAD_VALUENO;
 }
 
 RegexpFieldProcessor::RegexpFieldProcessor (std::string prefix,
@@ -156,15 +156,35 @@ RegexpFieldProcessor::RegexpFieldProcessor (std::string prefix,
 Xapian::Query
 RegexpFieldProcessor::operator() (const std::string & str)
 {
-    if (str.size () == 0)
-	return Xapian::Query(Xapian::Query::OP_AND_NOT,
+    if (str.empty ()) {
+	if (options & NOTMUCH_FIELD_PROBABILISTIC) {
+	    return Xapian::Query(Xapian::Query::OP_AND_NOT,
 			     Xapian::Query::MatchAll,
 			     Xapian::Query (Xapian::Query::OP_WILDCARD, term_prefix));
+	} else {
+	    return Xapian::Query (term_prefix);
+	}
+    }
 
     if (str.at (0) == '/') {
-	if (str.at (str.size () - 1) == '/'){
-	    RegexpPostingSource *postings = new RegexpPostingSource (slot, str.substr(1,str.size () - 2));
-	    return Xapian::Query (postings->release ());
+	if (str.length() > 1 && str.at (str.size () - 1) == '/'){
+	    std::string regexp_str = str.substr(1,str.size () - 2);
+	    if (slot != Xapian::BAD_VALUENO) {
+		RegexpPostingSource *postings = new RegexpPostingSource (slot, regexp_str);
+		return Xapian::Query (postings->release ());
+	    } else {
+		std::vector<std::string> terms;
+		regex_t regexp;
+
+		compile_regex(regexp, regexp_str.c_str ());
+		for (Xapian::TermIterator it = notmuch->xapian_db->allterms_begin (term_prefix);
+		     it != notmuch->xapian_db->allterms_end (); ++it) {
+		    if (regexec (&regexp, (*it).c_str () + term_prefix.size(),
+				 0, NULL, 0) == 0)
+			terms.push_back(*it);
+		}
+		return Xapian::Query (Xapian::Query::OP_OR, terms.begin(), terms.end());
+	    }
 	} else {
 	    throw Xapian::QueryParserError ("unmatched regex delimiter in '" + str + "'");
 	}
