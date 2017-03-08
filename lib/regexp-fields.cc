@@ -62,11 +62,6 @@ RegexpPostingSource::init (const Xapian::Database &db)
     it_ = db_.valuestream_begin (slot_);
     end_ = db.valuestream_end (slot_);
     started_ = false;
-
-    /* make sure we start on a matching value */
-    while (!at_end() && regexec (&regexp_, (*it_).c_str (), 0, NULL, 0) != 0) {
-	++it_;
-    }
 }
 
 Xapian::doccount
@@ -111,6 +106,27 @@ RegexpPostingSource::next (unused (double min_wt))
 	if (regexec (&regexp_, value.c_str (), 0, NULL, 0) == 0)
 	    break;
     }
+}
+
+void
+RegexpPostingSource::skip_to (Xapian::docid did, unused (double min_wt))
+{
+    started_ = true;
+    it_.skip_to (did);
+    for (; ! at_end (); ++it_) {
+	std::string value = *it_;
+	if (regexec (&regexp_, value.c_str (), 0, NULL, 0) == 0)
+	    break;
+    }
+}
+
+bool
+RegexpPostingSource::check (Xapian::docid did, unused (double min_wt))
+{
+    started_ = true;
+    if (!it_.check (did) || at_end ())
+	return false;
+    return (regexec (&regexp_, (*it_).c_str (), 0, NULL, 0) == 0);
 }
 
 static inline Xapian::valueno _find_slot (std::string prefix)

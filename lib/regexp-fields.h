@@ -56,6 +56,8 @@ class RegexpPostingSource : public Xapian::PostingSource
     Xapian::docid get_docid () const;
     bool at_end () const;
     void next (unused (double min_wt));
+    void skip_to (Xapian::docid did, unused (double min_wt));
+    bool check (Xapian::docid did, unused (double min_wt));
 };
 
 
