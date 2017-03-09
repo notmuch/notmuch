@@ -33,6 +33,17 @@ chosen directory to your PATH before running the tests.
 
 e.g. env PATH=/opt/gnu/bin:$PATH make test
 
+For FreeBSD you need to install latest gdb from ports or packages and
+provide path to it in TEST_GDB environment variable before executing
+the tests, native FreeBSD gdb does not not work.  If you install
+coreutils, which provides GNU versions of basic utils like 'date' and
+'base64' on FreeBSD, the test suite will use these instead of the
+native ones. This provides robustness against portability issues with
+these system tools. Most often the tests are written, reviewed and
+tested on Linux system so such portability issues arise from time to
+time.
+
+
 Running Tests
 -------------
 The easiest way to run tests is to say "make test", (or simply run the

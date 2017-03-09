@@ -1199,6 +1199,9 @@ NOTMUCH_PYTHON=${python}
 # Are the ruby development files (and ruby) available? If not skip
 # building/testing ruby bindings.
 NOTMUCH_HAVE_RUBY_DEV=${have_ruby_dev}
+
+# Platform we are run on
+PLATFORM=${platform}
 EOF
 
 # Finally, after everything configured, inform the user how to continue.
