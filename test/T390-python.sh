@@ -38,4 +38,23 @@ print (db.find_message_by_filename("i-dont-exist"))
 EOF
 test_expect_equal "$(cat OUTPUT)" "None"
 
+test_begin_subtest "get revision"
+test_python ${MAIL_DIR} <<'EOF'
+import notmuch
+db = notmuch.Database(mode=notmuch.Database.MODE.READ_ONLY)
+(revision, uuid) = db.get_revision()
+print ("%s\t%lu" % (uuid, revision))
+EOF
+notmuch_uuid_sanitize < OUTPUT > CLEAN
+cat <<'EOF' >EXPECTED
+UUID	53
+EOF
+test_expect_equal_file EXPECTED CLEAN
+
+grep '^[0-9a-f]' OUTPUT > INITIAL_OUTPUT
+
+test_begin_subtest "output of count matches test code"
+notmuch count --lastmod '*' | cut -f2-3 > OUTPUT
+test_expect_equal_file INITIAL_OUTPUT OUTPUT
+
 test_done
