@@ -1121,7 +1121,7 @@ test_emacs () {
 test_python() {
     # Note: if there is need to print debug information from python program,
     # use stdout = os.fdopen(6, 'w') or stderr = os.fdopen(7, 'w')
-    PYTHONPATH="$TEST_DIRECTORY/../bindings/python${PYTHONPATH:+:$PYTHONPATH}" \
+    PYTHONPATH="$NOTMUCH_SRCDIR/bindings/python${PYTHONPATH:+:$PYTHONPATH}" \
 	$NOTMUCH_PYTHON -B - > OUTPUT
 }
 
@@ -1133,7 +1133,7 @@ test_C () {
     exec_file="test${test_count}"
     test_file="${exec_file}.c"
     cat > ${test_file}
-    ${TEST_CC} ${TEST_CFLAGS} -I${TEST_DIRECTORY} -I${TEST_DIRECTORY}/../lib -o ${exec_file} ${test_file} -L${TEST_DIRECTORY}/../lib/ -lnotmuch -ltalloc
+    ${TEST_CC} ${TEST_CFLAGS} -I${TEST_DIRECTORY} -I${NOTMUCH_SRCDIR}/lib -o ${exec_file} ${test_file} -L${TEST_DIRECTORY}/../lib/ -lnotmuch -ltalloc
     echo "== stdout ==" > OUTPUT.stdout
     echo "== stderr ==" > OUTPUT.stderr
     ./${exec_file} "$@" 1>>OUTPUT.stdout 2>>OUTPUT.stderr
