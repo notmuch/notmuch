@@ -143,7 +143,7 @@ Fine tuning of some installation directories is available:
 	--sysconfdir=DIR	Read-only single-machine data [PREFIX/etc]
 	--emacslispdir=DIR	Emacs code [PREFIX/share/emacs/site-lisp]
 	--emacsetcdir=DIR	Emacs miscellaneous files [PREFIX/share/emacs/site-lisp]
-	--bashcompletiondir=DIR Bash completions files [SYSCONFDIR/bash_completion.d]
+	--bashcompletiondir=DIR Bash completions files [PREFIX/share/bash-completion/completions]
 	--zshcompletiondir=DIR	Zsh completions files [PREFIX/share/zsh/functions/Completion/Unix]
 
 Some features can be disabled (--with-feature=no is equivalent to
@@ -1042,7 +1042,7 @@ HAVE_DOXYGEN=${have_doxygen}
 desktop_dir = \$(prefix)/share/applications
 
 # The directory to which bash completions files should be installed
-bash_completion_dir = ${BASHCOMPLETIONDIR:=\$(sysconfdir)/bash_completion.d}
+bash_completion_dir = ${BASHCOMPLETIONDIR:=\$(prefix)/share/bash-completion/completions}
 
 # The directory to which zsh completions files should be installed
 zsh_completion_dir = ${ZSHCOMLETIONDIR:=\$(prefix)/share/zsh/functions/Completion/Unix}
