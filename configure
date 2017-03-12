@@ -47,6 +47,12 @@ if [ "$srcdir" != "." ]; then
     # Emacs only likes to generate compiled files next to the .el files
     # by default so copy these as well (which is not ideal).
     cp -a "$srcdir"/emacs/*.el emacs
+
+    # We were not able to create fully working Makefile using ruby mkmf.rb
+    # so ruby bindings source files are copied as well (ditto -- not ideal).
+    mkdir bindings/ruby
+    cp -a "$srcdir"/bindings/ruby/*.[ch] bindings/ruby
+    cp -a "$srcdir"/bindings/ruby/extconf.rb bindings/ruby
 fi
 
 # Set several defaults (optionally specified by the user in
@@ -357,8 +363,8 @@ int main(void) {
     return 0;
 }
 EOF
-if ${CC} ${CFLAGS} _libversion.c -o _libversion > /dev/null 2>&1 && \
-       ./_libversion > _libversion.sh && . ./_libversion.sh
+if ${CC} ${CFLAGS} -I"$srcdir" _libversion.c -o _libversion > /dev/null 2>&1 \
+       && ./_libversion > _libversion.sh && . ./_libversion.sh
 then
     printf "OK.\n"
 else
