@@ -1034,10 +1034,16 @@ _notmuch_message_set_header_values (notmuch_message_t *message,
 
     /* GMime really doesn't want to see a NULL date, so protect its
      * sensibilities. */
-    if (date == NULL || *date == '\0')
+    if (date == NULL || *date == '\0') {
 	time_value = 0;
-    else
+    } else {
 	time_value = g_mime_utils_header_decode_date (date, NULL);
+	/*
+	 * Workaround for https://bugzilla.gnome.org/show_bug.cgi?id=779923
+	 */
+	if (time_value < 0)
+	    time_value = 0;
+    }
 
     message->doc.add_value (NOTMUCH_VALUE_TIMESTAMP,
 			    Xapian::sortable_serialise (time_value));
