@@ -21,6 +21,7 @@
 
 ;;; Code:
 
+(require 'epg)
 (require 'notmuch-lib)
 
 (defcustom notmuch-crypto-process-mime nil
@@ -140,7 +141,7 @@ mode."
     (with-selected-window window
       (with-current-buffer buffer
 	(goto-char (point-max))
-	(call-process "gpg" nil t t "--list-keys" fingerprint))
+	(call-process epg-gpg-program nil t t "--list-keys" fingerprint))
       (recenter -1))))
 
 (defun notmuch-crypto-sigstatus-error-callback (button)
@@ -151,9 +152,9 @@ mode."
     (with-selected-window window
       (with-current-buffer buffer
 	(goto-char (point-max))
-	(call-process "gpg" nil t t "--recv-keys" keyid)
+	(call-process epg-gpg-program nil t t "--recv-keys" keyid)
 	(insert "\n")
-	(call-process "gpg" nil t t "--list-keys" keyid))
+	(call-process epg-gpg-program nil t t "--list-keys" keyid))
       (recenter -1))
     (notmuch-show-refresh-view)))
 
