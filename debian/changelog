@@ -1,3 +1,18 @@
+notmuch (0.24-1) experimental; urgency=medium
+
+  * New upstream release
+    - regexp search for from: and subject:
+    - Emacs interface improvements:
+      - draft handling
+      - don't automatically expand application/*
+      - jump (shortcut) menu for tagging.
+      - fold long headers when sending
+    - library improvements
+      - catch some stray DatabaseModifiedErrors
+      - make exclude handling non-destructive.
+
+ -- David Bremner <bremner@debian.org>  Sun, 12 Mar 2017 22:14:25 -0300
+
 notmuch (0.24~rc1-1) experimental; urgency=medium
 
   * New upstream release candidate
