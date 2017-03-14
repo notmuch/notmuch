@@ -12,15 +12,15 @@ smtp_dummy_srcs =		\
 
 smtp_dummy_modules = $(smtp_dummy_srcs:.c=.o)
 
-$(dir)/arg-test: $(dir)/arg-test.o command-line-arguments.o util/libutil.a
+$(dir)/arg-test: $(dir)/arg-test.o command-line-arguments.o util/libnotmuch_util.a
 	$(call quiet,CC) $^ -o $@ $(LDFLAGS)
 
-$(dir)/hex-xcode: $(dir)/hex-xcode.o command-line-arguments.o util/libutil.a
+$(dir)/hex-xcode: $(dir)/hex-xcode.o command-line-arguments.o util/libnotmuch_util.a
 	$(call quiet,CC) $^ -o $@ $(LDFLAGS) $(TALLOC_LDFLAGS)
 
 random_corpus_deps =  $(dir)/random-corpus.o  $(dir)/database-test.o \
 			notmuch-config.o status.o command-line-arguments.o \
-			lib/libnotmuch.a util/libutil.a \
+			lib/libnotmuch.a util/libnotmuch_util.a \
 			parse-time-string/libparse-time-string.a
 
 $(dir)/random-corpus: $(random_corpus_deps)
