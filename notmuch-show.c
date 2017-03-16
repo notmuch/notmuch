@@ -244,8 +244,9 @@ format_headers_sprinter (sprinter_t *sp, GMimeMessage *message,
      * reflected in the file devel/schemata. */
 
     InternetAddressList *recipients;
-    const char *recipients_string;
+    char *recipients_string;
     const char *reply_to_string;
+    char *date_string;
 
     sp->begin_map (sp);
 
@@ -260,6 +261,7 @@ format_headers_sprinter (sprinter_t *sp, GMimeMessage *message,
     if (recipients_string) {
 	sp->map_key (sp, "To");
 	sp->string (sp, recipients_string);
+	g_free (recipients_string);
     }
 
     recipients = g_mime_message_get_recipients (message, GMIME_RECIPIENT_TYPE_CC);
@@ -267,6 +269,7 @@ format_headers_sprinter (sprinter_t *sp, GMimeMessage *message,
     if (recipients_string) {
 	sp->map_key (sp, "Cc");
 	sp->string (sp, recipients_string);
+	g_free (recipients_string);
     }
 
     recipients = g_mime_message_get_recipients (message, GMIME_RECIPIENT_TYPE_BCC);
@@ -274,6 +277,7 @@ format_headers_sprinter (sprinter_t *sp, GMimeMessage *message,
     if (recipients_string) {
 	sp->map_key (sp, "Bcc");
 	sp->string (sp, recipients_string);
+	g_free (recipients_string);
     }
 
     reply_to_string = g_mime_message_get_reply_to (message);
@@ -290,7 +294,9 @@ format_headers_sprinter (sprinter_t *sp, GMimeMessage *message,
 	sp->string (sp, g_mime_object_get_header (GMIME_OBJECT (message), "References"));
     } else {
 	sp->map_key (sp, "Date");
-	sp->string (sp, g_mime_message_get_date_as_string (message));
+	date_string = g_mime_message_get_date_as_string (message);
+	sp->string (sp, date_string);
+	g_free (date_string);
     }
 
     sp->end (sp);
