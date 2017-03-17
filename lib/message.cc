@@ -849,9 +849,9 @@ _notmuch_message_ensure_filename_list (notmuch_message_t *message)
 	 *
 	 * It would be nice to do the upgrade of the document directly
 	 * here, but the database is likely open in read-only mode. */
-	const char *data;
 
-	data = message->doc.get_data ().c_str ();
+	std::string datastr = message->doc.get_data ();
+	const char *data = datastr.c_str ();
 
 	if (data == NULL)
 	    INTERNAL_ERROR ("message with no filename");
