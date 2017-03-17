@@ -11,6 +11,15 @@ fi
 
 notmuch search --output=messages from:cworth > cworth.msg-ids
 
+test_begin_subtest "xapian wildcard search for from:"
+test_subtest_known_broken
+notmuch search --output=messages 'from:cwo*' > OUTPUT
+test_expect_equal_file cworth.msg-ids OUTPUT
+
+test_begin_subtest "xapian wildcard search for subject:"
+test_subtest_known_broken
+test_expect_equal $(notmuch count 'subject:count*') 1
+
 test_begin_subtest "regexp from search, case sensitive"
 notmuch search --output=messages from:/carl/ > OUTPUT
 test_expect_equal_file /dev/null OUTPUT
