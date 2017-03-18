@@ -318,6 +318,7 @@ show_text_part_content (GMimeObject *part, GMimeStream *stream_out,
 {
     GMimeContentType *content_type = g_mime_object_get_content_type (GMIME_OBJECT (part));
     GMimeStream *stream_filter = NULL;
+    GMimeFilter *crlf_filter = NULL;
     GMimeDataWrapper *wrapper;
     const char *charset;
 
@@ -329,8 +330,10 @@ show_text_part_content (GMimeObject *part, GMimeStream *stream_out,
 	return;
 
     stream_filter = g_mime_stream_filter_new (stream_out);
+    crlf_filter = g_mime_filter_crlf_new (FALSE, FALSE);
     g_mime_stream_filter_add(GMIME_STREAM_FILTER (stream_filter),
-			     g_mime_filter_crlf_new (FALSE, FALSE));
+			     crlf_filter);
+    g_object_unref (crlf_filter);
 
     charset = g_mime_object_get_content_type_parameter (part, "charset");
     if (charset) {
