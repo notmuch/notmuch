@@ -502,7 +502,8 @@ format_part_text (const void *ctx, sprinter_t *sp, mime_node_t *node,
     if (GMIME_IS_MESSAGE (node->part)) {
 	GMimeMessage *message = GMIME_MESSAGE (node->part);
 	InternetAddressList *recipients;
-	const char *recipients_string;
+	char *recipients_string;
+	char *date_string;
 
 	printf ("\fheader{\n");
 	if (node->envelope_file)
@@ -513,11 +514,15 @@ format_part_text (const void *ctx, sprinter_t *sp, mime_node_t *node,
 	recipients_string = internet_address_list_to_string (recipients, 0);
 	if (recipients_string)
 	    printf ("To: %s\n", recipients_string);
+	g_free (recipients_string);
 	recipients = g_mime_message_get_recipients (message, GMIME_RECIPIENT_TYPE_CC);
 	recipients_string = internet_address_list_to_string (recipients, 0);
 	if (recipients_string)
 	    printf ("Cc: %s\n", recipients_string);
-	printf ("Date: %s\n", g_mime_message_get_date_as_string (message));
+	g_free (recipients_string);
+	date_string = g_mime_message_get_date_as_string (message);
+	printf ("Date: %s\n", date_string);
+	g_free (date_string);
 	printf ("\fheader}\n");
 
 	printf ("\fbody{\n");
