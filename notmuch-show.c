@@ -480,6 +480,7 @@ format_part_text (const void *ctx, sprinter_t *sp, mime_node_t *node,
 		notmuch_message_get_flag (message, NOTMUCH_MESSAGE_FLAG_EXCLUDED) ? 1 : 0,
 		notmuch_message_get_filename (message));
     } else {
+	char *content_string;
 	const char *disposition = _get_disposition (meta);
 	const char *cid = g_mime_object_get_content_id (meta);
 	const char *filename = leaf ?
@@ -496,7 +497,10 @@ format_part_text (const void *ctx, sprinter_t *sp, mime_node_t *node,
 	    printf (", Filename: %s", filename);
 	if (cid)
 	    printf (", Content-id: %s", cid);
-	printf (", Content-type: %s\n", g_mime_content_type_to_string (content_type));
+
+	content_string = g_mime_content_type_to_string (content_type);
+	printf (", Content-type: %s\n", content_string);
+	g_free (content_string);
     }
 
     if (GMIME_IS_MESSAGE (node->part)) {
@@ -537,8 +541,9 @@ format_part_text (const void *ctx, sprinter_t *sp, mime_node_t *node,
 	    show_text_part_content (node->part, stream_stdout, 0);
 	    g_object_unref(stream_stdout);
 	} else {
-	    printf ("Non-text part: %s\n",
-		    g_mime_content_type_to_string (content_type));
+	    char *content_string = g_mime_content_type_to_string (content_type);
+	    printf ("Non-text part: %s\n", content_string);
+	    g_free (content_string);
 	}
     }
 
@@ -606,6 +611,7 @@ format_part_sprinter (const void *ctx, sprinter_t *sp, mime_node_t *node,
     GMimeObject *meta = node->envelope_part ?
 	GMIME_OBJECT (node->envelope_part) : node->part;
     GMimeContentType *content_type = g_mime_object_get_content_type (meta);
+    char *content_string;
     const char *disposition = _get_disposition (meta);
     const char *cid = g_mime_object_get_content_id (meta);
     const char *filename = GMIME_IS_PART (node->part) ?
@@ -634,7 +640,9 @@ format_part_sprinter (const void *ctx, sprinter_t *sp, mime_node_t *node,
     }
 
     sp->map_key (sp, "content-type");
-    sp->string (sp, g_mime_content_type_to_string (content_type));
+    content_string = g_mime_content_type_to_string (content_type);
+    sp->string (sp, content_string);
+    g_free (content_string);
 
     if (disposition) {
 	sp->map_key (sp, "content-disposition");
