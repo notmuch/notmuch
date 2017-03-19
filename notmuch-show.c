@@ -202,8 +202,9 @@ format_headers_sprinter (sprinter_t *sp, GMimeMessage *message,
      * reflected in the file devel/schemata. */
 
     InternetAddressList *recipients;
-    const char *recipients_string;
+    char *recipients_string;
     const char *reply_to_string;
+    char *date_string;
 
     sp->begin_map (sp);
 
@@ -218,6 +219,7 @@ format_headers_sprinter (sprinter_t *sp, GMimeMessage *message,
     if (recipients_string) {
 	sp->map_key (sp, "To");
 	sp->string (sp, recipients_string);
+	g_free (recipients_string);
     }
 
     recipients = g_mime_message_get_recipients (message, GMIME_RECIPIENT_TYPE_CC);
@@ -225,6 +227,7 @@ format_headers_sprinter (sprinter_t *sp, GMimeMessage *message,
     if (recipients_string) {
 	sp->map_key (sp, "Cc");
 	sp->string (sp, recipients_string);
+	g_free (recipients_string);
     }
 
     recipients = g_mime_message_get_recipients (message, GMIME_RECIPIENT_TYPE_BCC);
@@ -232,6 +235,7 @@ format_headers_sprinter (sprinter_t *sp, GMimeMessage *message,
     if (recipients_string) {
 	sp->map_key (sp, "Bcc");
 	sp->string (sp, recipients_string);
+	g_free (recipients_string);
     }
 
     reply_to_string = g_mime_message_get_reply_to (message);
@@ -248,7 +252,9 @@ format_headers_sprinter (sprinter_t *sp, GMimeMessage *message,
 	sp->string (sp, g_mime_object_get_header (GMIME_OBJECT (message), "References"));
     } else {
 	sp->map_key (sp, "Date");
-	sp->string (sp, g_mime_message_get_date_as_string (message));
+	date_string = g_mime_message_get_date_as_string (message);
+	sp->string (sp, date_string);
+	g_free (date_string);
     }
 
     sp->end (sp);
@@ -270,6 +276,7 @@ show_text_part_content (GMimeObject *part, GMimeStream *stream_out,
 {
     GMimeContentType *content_type = g_mime_object_get_content_type (GMIME_OBJECT (part));
     GMimeStream *stream_filter = NULL;
+    GMimeFilter *crlf_filter = NULL;
     GMimeDataWrapper *wrapper;
     const char *charset;
 
@@ -281,8 +288,10 @@ show_text_part_content (GMimeObject *part, GMimeStream *stream_out,
 	return;
 
     stream_filter = g_mime_stream_filter_new (stream_out);
+    crlf_filter = g_mime_filter_crlf_new (FALSE, FALSE);
     g_mime_stream_filter_add(GMIME_STREAM_FILTER (stream_filter),
-			     g_mime_filter_crlf_new (FALSE, FALSE));
+			     crlf_filter);
+    g_object_unref (crlf_filter);
 
     charset = g_mime_object_get_content_type_parameter (part, "charset");
     if (charset) {
@@ -432,6 +441,7 @@ format_part_text (const void *ctx, sprinter_t *sp, mime_node_t *node,
 		notmuch_message_get_flag (message, NOTMUCH_MESSAGE_FLAG_EXCLUDED) ? 1 : 0,
 		notmuch_message_get_filename (message));
     } else {
+	char *content_string;
 	const char *disposition = _get_disposition (meta);
 	const char *cid = g_mime_object_get_content_id (meta);
 	const char *filename = leaf ?
@@ -448,13 +458,17 @@ format_part_text (const void *ctx, sprinter_t *sp, mime_node_t *node,
 	    printf (", Filename: %s", filename);
 	if (cid)
 	    printf (", Content-id: %s", cid);
-	printf (", Content-type: %s\n", g_mime_content_type_to_string (content_type));
+
+	content_string = g_mime_content_type_to_string (content_type);
+	printf (", Content-type: %s\n", content_string);
+	g_free (content_string);
     }
 
     if (GMIME_IS_MESSAGE (node->part)) {
 	GMimeMessage *message = GMIME_MESSAGE (node->part);
 	InternetAddressList *recipients;
-	const char *recipients_string;
+	char *recipients_string;
+	char *date_string;
 
 	printf ("\fheader{\n");
 	if (node->envelope_file)
@@ -465,11 +479,15 @@ format_part_text (const void *ctx, sprinter_t *sp, mime_node_t *node,
 	recipients_string = internet_address_list_to_string (recipients, 0);
 	if (recipients_string)
 	    printf ("To: %s\n", recipients_string);
+	g_free (recipients_string);
 	recipients = g_mime_message_get_recipients (message, GMIME_RECIPIENT_TYPE_CC);
 	recipients_string = internet_address_list_to_string (recipients, 0);
 	if (recipients_string)
 	    printf ("Cc: %s\n", recipients_string);
-	printf ("Date: %s\n", g_mime_message_get_date_as_string (message));
+	g_free (recipients_string);
+	date_string = g_mime_message_get_date_as_string (message);
+	printf ("Date: %s\n", date_string);
+	g_free (date_string);
 	printf ("\fheader}\n");
 
 	printf ("\fbody{\n");
@@ -484,8 +502,9 @@ format_part_text (const void *ctx, sprinter_t *sp, mime_node_t *node,
 	    show_text_part_content (node->part, stream_stdout, 0);
 	    g_object_unref(stream_stdout);
 	} else {
-	    printf ("Non-text part: %s\n",
-		    g_mime_content_type_to_string (content_type));
+	    char *content_string = g_mime_content_type_to_string (content_type);
+	    printf ("Non-text part: %s\n", content_string);
+	    g_free (content_string);
 	}
     }
 
@@ -553,6 +572,7 @@ format_part_sprinter (const void *ctx, sprinter_t *sp, mime_node_t *node,
     GMimeObject *meta = node->envelope_part ?
 	GMIME_OBJECT (node->envelope_part) : node->part;
     GMimeContentType *content_type = g_mime_object_get_content_type (meta);
+    char *content_string;
     const char *disposition = _get_disposition (meta);
     const char *cid = g_mime_object_get_content_id (meta);
     const char *filename = GMIME_IS_PART (node->part) ?
@@ -581,7 +601,9 @@ format_part_sprinter (const void *ctx, sprinter_t *sp, mime_node_t *node,
     }
 
     sp->map_key (sp, "content-type");
-    sp->string (sp, g_mime_content_type_to_string (content_type));
+    content_string = g_mime_content_type_to_string (content_type);
+    sp->string (sp, content_string);
+    g_free (content_string);
 
     if (disposition) {
 	sp->map_key (sp, "content-disposition");
