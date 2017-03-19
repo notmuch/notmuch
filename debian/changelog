@@ -1,3 +1,9 @@
+notmuch (0.23.7-2) unstable; urgency=medium
+
+  * Cherry pick 06adc276, fix use after free in libnotmuch4
+
+ -- David Bremner <bremner@debian.org>  Sun, 19 Mar 2017 09:38:17 -0300
+
 notmuch (0.23.7-1) unstable; urgency=medium
 
   * Move test suite $GNUPGHOME to /tmp to avoid problems with long build paths.
