@@ -1,4 +1,4 @@
-libnotmuch.so.4 libnotmuch4 #MINVER#
+libnotmuch.so.5 libnotmuch5 #MINVER#
  notmuch_built_with@Base 0.23~rc0
  notmuch_config_list_destroy@Base 0.23~rc0
  notmuch_config_list_key@Base 0.23~rc0
