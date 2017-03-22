@@ -9,3 +9,6 @@ default
 broken
   The broken corpus contains messages that are broken and/or RFC
   non-compliant, ensuring we deal with them in a sane way.
+
+html
+  The html corpus contains html parts
