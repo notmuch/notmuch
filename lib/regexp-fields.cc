@@ -148,6 +148,11 @@ RegexpFieldProcessor::RegexpFieldProcessor (std::string prefix, Xapian::QueryPar
 Xapian::Query
 RegexpFieldProcessor::operator() (const std::string & str)
 {
+    if (str.size () == 0)
+	return Xapian::Query(Xapian::Query::OP_AND_NOT,
+			     Xapian::Query::MatchAll,
+			     Xapian::Query (Xapian::Query::OP_WILDCARD, term_prefix));
+
     if (str.at (0) == '/') {
 	if (str.at (str.size () - 1) == '/'){
 	    RegexpPostingSource *postings = new RegexpPostingSource (slot, str.substr(1,str.size () - 2));

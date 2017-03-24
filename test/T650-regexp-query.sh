@@ -16,7 +16,6 @@ add_message '[from]="-" [subject]="empty from"'
 add_message '[subject]="-"'
 
 test_begin_subtest "null from: search"
-test_subtest_known_broken
 notmuch search 'from:""' | notmuch_search_sanitize > OUTPUT
 cat <<EOF > EXPECTED
 thread:XXX   2001-01-05 [1/1] -; empty from (inbox unread)
@@ -24,7 +23,6 @@ EOF
 test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "null subject: search"
-test_subtest_known_broken
 notmuch search 'subject:""' | notmuch_search_sanitize > OUTPUT
 cat <<EOF > EXPECTED
 thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; - (inbox unread)
