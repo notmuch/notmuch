@@ -158,8 +158,14 @@ RegexpFieldProcessor::operator() (const std::string & str)
     } else {
 	/* TODO replace this with a nicer API level triggering of
 	 * phrase parsing, when possible */
-	std::string quoted='"' + str + '"';
-	return parser.parse_query (quoted, NOTMUCH_QUERY_PARSER_FLAGS, term_prefix);
+	std::string query_str;
+
+	if (str.find (' ') != std::string::npos)
+	    query_str = '"' + str + '"';
+	else
+	    query_str = str;
+
+	return parser.parse_query (query_str, NOTMUCH_QUERY_PARSER_FLAGS, term_prefix);
     }
 }
 #endif

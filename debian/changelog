@@ -1,3 +1,9 @@
+notmuch (0.24.1-1) UNRELEASED; urgency=medium
+
+  * Restore Xapian wildcard queries to from: and subject:
+
+ -- David Bremner <bremner@debian.org>  Sat, 25 Mar 2017 11:21:34 -0300
+
 notmuch (0.24-1) experimental; urgency=medium
 
   * New upstream release
