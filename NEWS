@@ -1,3 +1,27 @@
+Notmuch 0.24.1 (UNRELEASED)
+===========================
+
+General
+-------
+
+Fix regressions in non-regexp search for `from:` and `subject:`.
+
+  The regexp search code in 0.24 introduced a regression in the
+  handling of empty queries and wildcards. These are both corrected in
+  this release.
+
+Command Line Interface
+----------------------
+
+Fix several memory leaks in `notmuch show`.
+
+Update NEWS for 0.24 to mention schema changes.
+
+Library Changes
+---------------
+
+Fix a read-after-free in the library.
+
 Notmuch 0.24 (2017-03-12)
 =========================
 
@@ -17,6 +41,13 @@ Run external `notmuch-` prefixed commands as subcommands
   You can now add your own `notmuch-` prefixed commands in PATH, and
   have notmuch run them as if they were notmuch commands. See the
   `notmuch(1)` man page for details
+
+New default output format to 3
+
+  See devel/schemata for details. Users of the structured output
+  format are reminded of the `--format-version` argument to `notmuch
+  show` and `notmuch search` which can prevent breakage when the
+  default format changes.
 
 Emacs
 -----
