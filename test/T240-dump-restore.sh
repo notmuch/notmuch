@@ -4,7 +4,6 @@ test_description="\"notmuch dump\" and \"notmuch restore\""
 
 NOTMUCH_NEW > /dev/null
 test_begin_subtest "dump header"
-test_subtest_known_broken
 cat <<EOF > EXPECTED
 #notmuch-dump batch-tag:2 config,properties,tags
 EOF
