@@ -2,6 +2,14 @@
 test_description="\"notmuch dump\" and \"notmuch restore\""
 . ./test-lib.sh || exit 1
 
+NOTMUCH_NEW > /dev/null
+test_begin_subtest "dump header"
+test_subtest_known_broken
+cat <<EOF > EXPECTED
+#notmuch-dump batch-tag:2 config,properties,tags
+EOF
+notmuch dump > OUTPUT
+test_expect_equal_file EXPECTED OUTPUT
 add_email_corpus
 
 test_begin_subtest "Dumping all tags"
