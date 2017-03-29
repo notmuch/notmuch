@@ -11,6 +11,24 @@ fi
 
 notmuch search --output=messages from:cworth > cworth.msg-ids
 
+# these headers will generate no document terms
+add_message '[from]="-" [subject]="empty from"'
+add_message '[subject]="-"'
+
+test_begin_subtest "null from: search"
+notmuch search 'from:""' | notmuch_search_sanitize > OUTPUT
+cat <<EOF > EXPECTED
+thread:XXX   2001-01-05 [1/1] -; empty from (inbox unread)
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
+test_begin_subtest "null subject: search"
+notmuch search 'subject:""' | notmuch_search_sanitize > OUTPUT
+cat <<EOF > EXPECTED
+thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; - (inbox unread)
+EOF
+test_expect_equal_file EXPECTED OUTPUT
+
 test_begin_subtest "xapian wildcard search for from:"
 notmuch search --output=messages 'from:cwo*' > OUTPUT
 test_expect_equal_file cworth.msg-ids OUTPUT
