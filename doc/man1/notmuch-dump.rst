@@ -95,7 +95,7 @@ Supported options for **dump** include
 
       The default is to include all available types of data.  The
       option can be specified multiple times to select some subset. As
-      of version 2 of the dump format, there is a header line of the
+      of version 3 of the dump format, there is a header line of the
       following form
 
       |
