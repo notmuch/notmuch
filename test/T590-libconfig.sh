@@ -112,7 +112,7 @@ cat c_head - c_tail <<'EOF' | test_C ${MAIL_DIR}
 EOF
 notmuch dump --include=config >OUTPUT
 cat <<'EOF' >EXPECTED
-#notmuch-dump batch-tag:2 config
+#notmuch-dump batch-tag:3 config
 #@ aaabefore beforeval
 #@ key%20with%20spaces value,%20with,%20spaces%21
 #@ testkey1 testvalue1

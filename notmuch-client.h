@@ -470,7 +470,7 @@ typedef enum dump_includes {
 
 #define DUMP_INCLUDE_DEFAULT (DUMP_INCLUDE_TAGS | DUMP_INCLUDE_CONFIG | DUMP_INCLUDE_PROPERTIES)
 
-#define NOTMUCH_DUMP_VERSION 2
+#define NOTMUCH_DUMP_VERSION 3
 
 int
 notmuch_database_dump (notmuch_database_t *notmuch,
