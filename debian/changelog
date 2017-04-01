@@ -1,8 +1,11 @@
-notmuch (0.24.1-1) UNRELEASED; urgency=medium
+notmuch (0.24.1-1) experimental; urgency=medium
 
   * Restore Xapian wildcard queries to from: and subject:
+  * Handle empty queries for from: and subject:
+  * Memory leaks in notmuch show fixed
+  * Fix bug notmuch dump header generation
 
- -- David Bremner <bremner@debian.org>  Sat, 25 Mar 2017 11:21:34 -0300
+ -- David Bremner <bremner@debian.org>  Sat, 01 Apr 2017 09:17:47 -0300
 
 notmuch (0.24-1) experimental; urgency=medium
 
