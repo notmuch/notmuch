@@ -84,7 +84,7 @@ print_dump_header (gzFile output, int output_format, int include)
 	sep = ",";
     }
     if (include & DUMP_INCLUDE_TAGS) {
-	gzprintf (output, "%sproperties", sep);
+	gzprintf (output, "%stags", sep);
     }
     gzputs (output, "\n");
 }
