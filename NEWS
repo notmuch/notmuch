@@ -17,6 +17,12 @@ Fix several memory leaks in `notmuch show`.
 
 Update NEWS for 0.24 to mention schema changes.
 
+Fix bug in dump header.
+
+  The previous version of the dump header failed to mention the
+  inclusion of tags. This fix bumps the version number of the dump
+  format to 3. There are no other changes to the format.
+
 Library Changes
 ---------------
 
