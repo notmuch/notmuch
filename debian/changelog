@@ -1,3 +1,9 @@
+notmuch (0.23.7-3) unstable; urgency=medium
+
+  * Cherry pick fixes to dump header from 0.24.1
+
+ -- David Bremner <bremner@debian.org>  Sat, 01 Apr 2017 21:09:36 -0300
+
 notmuch (0.23.7-2) unstable; urgency=medium
 
   * Cherry pick 06adc276, fix use after free in libnotmuch4
