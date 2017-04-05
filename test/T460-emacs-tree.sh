@@ -137,7 +137,6 @@ test_emacs '(notmuch-hello)
 	    (select-window notmuch-tree-message-window)
 	    (test-output)
 	    (delete-other-windows)'
-cp OUTPUT /tmp/mjwout
 test_expect_equal_file $EXPECTED/notmuch-tree-show-window OUTPUT
 
 test_begin_subtest "Stash id"
