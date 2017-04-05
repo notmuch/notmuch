@@ -26,6 +26,6 @@ thread:XXX   2009-11-18 [1/2] Carl Worth| Jan Janak; [notmuch] [PATCH] Older ver
 thread:XXX   2009-11-18 [1/3] Carl Worth| Aron Griffis, Keith Packard; [notmuch] archive (inbox unread)
 thread:XXX   2009-11-18 [1/2] Carl Worth| Keith Packard; [notmuch] [PATCH] Make notmuch-show 'X' (and 'x') commands remove inbox (and unread) tags (inbox unread)
 EOF
-test_expect_equal_file OUTPUT EXPECTED
+test_expect_equal_file EXPECTED OUTPUT
 
 test_done

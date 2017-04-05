@@ -178,7 +178,7 @@ Non-text part: application/pgp-signature
 body}
 message}
 EOF
-test_expect_equal_file OUTPUT EXPECTED
+test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "--format=text --part=1, message body"
 notmuch show --format=text --part=1 'id:87liy5ap00.fsf@yoom.home.cworth.org' >OUTPUT
@@ -217,7 +217,7 @@ Non-text part: application/pgp-signature
 part}
 part}
 EOF
-test_expect_equal_file OUTPUT EXPECTED
+test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "--format=text --part=2, multipart/mixed"
 notmuch show --format=text --part=2 'id:87liy5ap00.fsf@yoom.home.cworth.org' >OUTPUT
@@ -251,7 +251,7 @@ And this message is signed.
 part}
 part}
 EOF
-test_expect_equal_file OUTPUT EXPECTED
+test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "--format=text --part=3, rfc822 part"
 notmuch show --format=text --part=3 'id:87liy5ap00.fsf@yoom.home.cworth.org' >OUTPUT
@@ -275,7 +275,7 @@ This is an embedded message, with a multipart/alternative part.
 body}
 part}
 EOF
-test_expect_equal_file OUTPUT EXPECTED
+test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "--format=text --part=4, rfc822's multipart"
 notmuch show --format=text --part=4 'id:87liy5ap00.fsf@yoom.home.cworth.org' >OUTPUT
@@ -289,7 +289,7 @@ This is an embedded message, with a multipart/alternative part.
 part}
 part}
 EOF
-test_expect_equal_file OUTPUT EXPECTED
+test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "--format=text --part=5, rfc822's html part"
 notmuch show --format=text --part=5 'id:87liy5ap00.fsf@yoom.home.cworth.org' >OUTPUT
@@ -298,7 +298,7 @@ cat <<EOF >EXPECTED
 Non-text part: text/html
 part}
 EOF
-test_expect_equal_file OUTPUT EXPECTED
+test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "--format=text --part=6, rfc822's text part"
 notmuch show --format=text --part=6 'id:87liy5ap00.fsf@yoom.home.cworth.org' >OUTPUT
@@ -307,7 +307,7 @@ cat <<EOF >EXPECTED
 This is an embedded message, with a multipart/alternative part.
 part}
 EOF
-test_expect_equal_file OUTPUT EXPECTED
+test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "--format=text --part=7, inline attachement"
 notmuch show --format=text --part=7 'id:87liy5ap00.fsf@yoom.home.cworth.org' >OUTPUT
@@ -316,7 +316,7 @@ cat <<EOF >EXPECTED
 This is a text attachment.
 attachment}
 EOF
-test_expect_equal_file OUTPUT EXPECTED
+test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "--format=text --part=8, plain text part"
 notmuch show --format=text --part=8 'id:87liy5ap00.fsf@yoom.home.cworth.org' >OUTPUT
@@ -327,7 +327,7 @@ And this message is signed.
 -Carl
 part}
 EOF
-test_expect_equal_file OUTPUT EXPECTED
+test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "--format=text --part=9, pgp signature (unverified)"
 notmuch show --format=text --part=9 'id:87liy5ap00.fsf@yoom.home.cworth.org' >OUTPUT
@@ -336,7 +336,7 @@ cat <<EOF >EXPECTED
 Non-text part: application/pgp-signature
 part}
 EOF
-test_expect_equal_file OUTPUT EXPECTED
+test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "--format=text --part=8, no part, expect error"
 test_expect_success "notmuch show --format=text --part=8 'id:87liy5ap00.fsf@yoom.home.cworth.org'"
@@ -448,15 +448,15 @@ test_expect_success "notmuch show --format=json --part=10 'id:87liy5ap00.fsf@yoo
 
 test_begin_subtest "--format=raw"
 notmuch show --format=raw 'id:87liy5ap00.fsf@yoom.home.cworth.org' >OUTPUT
-test_expect_equal_file OUTPUT "${MAIL_DIR}"/multipart
+test_expect_equal_file "${MAIL_DIR}"/multipart  OUTPUT
 
 test_begin_subtest "--format=raw --part=0, full message"
 notmuch show --format=raw --part=0 'id:87liy5ap00.fsf@yoom.home.cworth.org' >OUTPUT
-test_expect_equal_file OUTPUT "${MAIL_DIR}"/multipart
+test_expect_equal_file "${MAIL_DIR}"/multipart OUTPUT
 
 test_begin_subtest "--format=raw --part=1, message body"
 notmuch show --format=raw --part=1 'id:87liy5ap00.fsf@yoom.home.cworth.org' >OUTPUT
-test_expect_equal_file OUTPUT "${MAIL_DIR}"/multipart
+test_expect_equal_file "${MAIL_DIR}"/multipart OUTPUT
 
 test_begin_subtest "--format=raw --part=2, multipart/mixed"
 notmuch show --format=raw --part=2 'id:87liy5ap00.fsf@yoom.home.cworth.org' >OUTPUT
@@ -501,11 +501,11 @@ And this message is signed.
 
 --=-=-=--
 EOF
-test_expect_equal_file OUTPUT EXPECTED
+test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "--format=raw --part=3, rfc822 part"
 notmuch show --format=raw --part=3 'id:87liy5ap00.fsf@yoom.home.cworth.org' >OUTPUT
-test_expect_equal_file OUTPUT embedded_message
+test_expect_equal_file embedded_message OUTPUT
 
 test_begin_subtest "--format=raw --part=4, rfc822's multipart"
 notmuch show --format=raw --part=4 'id:87liy5ap00.fsf@yoom.home.cworth.org' >OUTPUT
@@ -531,28 +531,28 @@ This is an embedded message, with a multipart/alternative part.
 
 --==-=-==--
 EOF
-test_expect_equal_file OUTPUT EXPECTED
+test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "--format=raw --part=5, rfc822's html part"
 notmuch show --format=raw --part=5 'id:87liy5ap00.fsf@yoom.home.cworth.org' >OUTPUT
 cat <<EOF >EXPECTED
 <p>This is an embedded message, with a multipart/alternative part.</p>
 EOF
-test_expect_equal_file OUTPUT EXPECTED
+test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "--format=raw --part=6, rfc822's text part"
 notmuch show --format=raw --part=6 'id:87liy5ap00.fsf@yoom.home.cworth.org' >OUTPUT
 cat <<EOF >EXPECTED
 This is an embedded message, with a multipart/alternative part.
 EOF
-test_expect_equal_file OUTPUT EXPECTED
+test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "--format=raw --part=7, inline attachment"
 notmuch show --format=raw --part=7 'id:87liy5ap00.fsf@yoom.home.cworth.org' >OUTPUT
 cat <<EOF >EXPECTED
 This is a text attachment.
 EOF
-test_expect_equal_file OUTPUT EXPECTED
+test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "--format=raw --part=8, plain text part"
 notmuch show --format=raw --part=8 'id:87liy5ap00.fsf@yoom.home.cworth.org' >OUTPUT
@@ -561,7 +561,7 @@ And this message is signed.
 
 -Carl
 EOF
-test_expect_equal_file OUTPUT EXPECTED
+test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "--format=raw --part=9, pgp signature (unverified)"
 notmuch show --format=raw --part=9 'id:87liy5ap00.fsf@yoom.home.cworth.org' >OUTPUT
@@ -576,7 +576,7 @@ W6cAmQE4dcYrx/LPLtYLZm1jsGauE5hE
 =zkga
 -----END PGP SIGNATURE-----
 EOF
-test_expect_equal_file OUTPUT EXPECTED
+test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "--format=raw --part=10, no part, expect error"
 test_expect_success "notmuch show --format=raw --part=8 'id:87liy5ap00.fsf@yoom.home.cworth.org'"
@@ -587,7 +587,7 @@ printf "From cworth@cworth.org Fri Jan  5 15:43:57 2001\n" >EXPECTED
 cat "${MAIL_DIR}"/multipart >>EXPECTED
 # mbox output is expected to include a blank line
 echo >>EXPECTED
-test_expect_equal_file OUTPUT EXPECTED
+test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "--format=mbox --part=1, incompatible, expect error"
 test_expect_success "! notmuch show --format=mbox --part=1 'id:87liy5ap00.fsf@yoom.home.cworth.org'"
@@ -614,7 +614,7 @@ Non-text part: text/html
 > 
 > -Carl
 EOF
-test_expect_equal_file OUTPUT EXPECTED
+test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "'notmuch reply' to a multipart message with json format"
 notmuch reply --format=json 'id:87liy5ap00.fsf@yoom.home.cworth.org' | notmuch_json_show_sanitize >OUTPUT

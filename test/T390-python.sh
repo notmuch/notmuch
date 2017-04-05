@@ -16,7 +16,7 @@ for t in q_new.search_threads():
     print (t.get_thread_id())
 EOF
 notmuch search --sort=oldest-first --output=threads tag:inbox | sed s/^thread:// > EXPECTED
-test_expect_equal_file OUTPUT EXPECTED
+test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "compare message ids"
 test_python <<EOF
@@ -28,7 +28,7 @@ for m in q_new.search_messages():
     print (m.get_message_id())
 EOF
 notmuch search --sort=oldest-first --output=messages tag:inbox | sed s/^id:// > EXPECTED
-test_expect_equal_file OUTPUT EXPECTED
+test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "get non-existent file"
 test_python <<EOF

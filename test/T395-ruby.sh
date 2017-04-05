@@ -23,7 +23,7 @@ for t in @q.search_threads do
 end
 EOF
 notmuch search --sort=oldest-first --output=threads tag:inbox | sed s/^thread:// > EXPECTED
-test_expect_equal_file OUTPUT EXPECTED
+test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "compare message ids"
 test_ruby <<"EOF"
@@ -40,7 +40,7 @@ for m in @q.search_messages do
 end
 EOF
 notmuch search --sort=oldest-first --output=messages tag:inbox | sed s/^id:// > EXPECTED
-test_expect_equal_file OUTPUT EXPECTED
+test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "get non-existent file"
 test_ruby <<"EOF"
@@ -67,7 +67,7 @@ end
 print @q.count_messages(),"\n"
 EOF
 notmuch count --output=messages tag:inbox > EXPECTED
-test_expect_equal_file OUTPUT EXPECTED
+test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "count threads"
 test_ruby <<"EOF"
@@ -81,7 +81,7 @@ end
 print @q.count_threads(),"\n"
 EOF
 notmuch count --output=threads tag:inbox > EXPECTED
-test_expect_equal_file OUTPUT EXPECTED
+test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "get all tags"
 test_ruby <<"EOF"
@@ -97,6 +97,6 @@ for tag in @t do
 end
 EOF
 notmuch search --output=tags '*' > EXPECTED
-test_expect_equal_file OUTPUT EXPECTED
+test_expect_equal_file EXPECTED OUTPUT
 
 test_done

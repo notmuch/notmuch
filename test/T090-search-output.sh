@@ -32,7 +32,7 @@ thread:THREADID
 thread:THREADID
 thread:THREADID
 EOF
-test_expect_equal_file OUTPUT EXPECTED
+test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "--output=threads --format=json"
 notmuch search --format=json --output=threads '*' | sed -e s/\".*\"/\"THREADID\"/ >OUTPUT
@@ -120,25 +120,25 @@ id:87lji5cbwo.fsf@yoom.home.cworth.org
 id:1258471718-6781-2-git-send-email-dottedmag@dottedmag.net
 id:1258471718-6781-1-git-send-email-dottedmag@dottedmag.net
 EOF
-test_expect_equal_file OUTPUT EXPECTED
+test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "--output=messages --duplicate=1"
 notmuch search --output=messages --duplicate=1 '*' >OUTPUT
 # reuse same EXPECTED as above
-test_expect_equal_file OUTPUT EXPECTED
+test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "--output=messages --duplicate=2"
 notmuch search --output=messages --duplicate=2 '*' >OUTPUT
 cat <<EOF >EXPECTED
 id:20091117232137.GA7669@griffis1.net
 EOF
-test_expect_equal_file OUTPUT EXPECTED
+test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "--output=messages --duplicate=3"
 notmuch search --output=messages --duplicate=3 '*' >OUTPUT
 cat <<EOF >EXPECTED
 EOF
-test_expect_equal_file OUTPUT EXPECTED
+test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "--output=messages --format=json"
 notmuch search --format=json --output=messages '*' >OUTPUT
@@ -196,26 +196,26 @@ cat <<EOF >EXPECTED
 "1258471718-6781-2-git-send-email-dottedmag@dottedmag.net",
 "1258471718-6781-1-git-send-email-dottedmag@dottedmag.net"]
 EOF
-test_expect_equal_file OUTPUT EXPECTED
+test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "--output=messages --format=json --duplicate=1"
 notmuch search --output=messages --format=json --duplicate=1 '*' >OUTPUT
 # reuse same EXPECTED as above
-test_expect_equal_file OUTPUT EXPECTED
+test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "--output=messages --format=json --duplicate=2"
 notmuch search --output=messages --format=json --duplicate=2 '*' >OUTPUT
 cat <<EOF >EXPECTED
 ["20091117232137.GA7669@griffis1.net"]
 EOF
-test_expect_equal_file OUTPUT EXPECTED
+test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "--output=messages --format=json --duplicate=3"
 notmuch search --output=messages --format=json --duplicate=3 '*' >OUTPUT
 cat <<EOF >EXPECTED
 []
 EOF
-test_expect_equal_file OUTPUT EXPECTED
+test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "--output=files"
 notmuch search --output=files '*' | notmuch_search_files_sanitize | sort >OUTPUT
@@ -274,7 +274,7 @@ MAIL_DIR/foo/new/09:2,
 MAIL_DIR/foo/new/10:2,
 MAIL_DIR/new/04:2,
 EOF
-test_expect_equal_file OUTPUT EXPECTED
+test_expect_equal_file EXPECTED OUTPUT
 
 dup1=$(notmuch search --output=files id:20091117232137.GA7669@griffis1.net | head -n 1 | sed -e "s,$MAIL_DIR,MAIL_DIR,")
 dup2=$(notmuch search --output=files id:20091117232137.GA7669@griffis1.net | tail -n 1 | sed -e "s,$MAIL_DIR,MAIL_DIR,")
@@ -335,7 +335,7 @@ MAIL_DIR/foo/cur/07:2,
 MAIL_DIR/02:2,
 MAIL_DIR/01:2,
 EOF
-test_expect_equal_file OUTPUT EXPECTED
+test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "--output=files --format=json"
 notmuch search --format=json --output=files '*' | notmuch_search_files_sanitize \
@@ -395,14 +395,14 @@ cat <<EOF | test_sort_json >EXPECTED
 "MAIL_DIR/02:2,",
 "MAIL_DIR/01:2,"]
 EOF
-test_expect_equal_file OUTPUT EXPECTED
+test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "--output=files --format=json --duplicate=2"
 notmuch search --format=json --output=files --duplicate=2 '*' | notmuch_search_files_sanitize >OUTPUT
 cat <<EOF >EXPECTED
 ["$dup2"]
 EOF
-test_expect_equal_file OUTPUT EXPECTED
+test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "--output=tags"
 notmuch search --output=tags '*' >OUTPUT
@@ -412,7 +412,7 @@ inbox
 signed
 unread
 EOF
-test_expect_equal_file OUTPUT EXPECTED
+test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "--output=tags --format=json"
 notmuch search --format=json --output=tags '*' >OUTPUT
@@ -422,7 +422,7 @@ cat <<EOF >EXPECTED
 "signed",
 "unread"]
 EOF
-test_expect_equal_file OUTPUT EXPECTED
+test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "sanitize output for quoted-printable line-breaks in author and subject"
 add_message "[subject]='two =?ISO-8859-1?Q?line=0A_subject?=
@@ -431,16 +431,16 @@ notmuch search id:"$gen_msg_id" | notmuch_search_sanitize >OUTPUT
 cat <<EOF >EXPECTED
 thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; two line  subject headers (inbox unread)
 EOF
-test_expect_equal_file OUTPUT EXPECTED
+test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "search for non-existent message prints nothing"
 notmuch search "no-message-matches-this" > OUTPUT
 echo -n >EXPECTED
-test_expect_equal_file OUTPUT EXPECTED
+test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "search --format=json for non-existent message prints proper empty json"
 notmuch search --format=json "no-message-matches-this" > OUTPUT
 echo "[]" >EXPECTED
-test_expect_equal_file OUTPUT EXPECTED
+test_expect_equal_file EXPECTED OUTPUT
 
 test_done

@@ -233,7 +233,7 @@ notmuch show \
     --part=5 \
     --decrypt \
     subject:"test encrypted message 001" >OUTPUT
-test_expect_equal_file OUTPUT TESTATTACHMENT
+test_expect_equal_file TESTATTACHMENT OUTPUT
 
 test_begin_subtest "decryption failure with missing key"
 mv "${GNUPGHOME}"{,.bak}

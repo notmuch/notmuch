@@ -129,7 +129,7 @@ test_begin_subtest "Check for a safe set of message-ids"
 notmuch search --output=messages from:cworth | sed s/^id:// > EXPECTED
 notmuch search --output=messages from:cworth | sed s/^id:// |\
 	$TEST_DIRECTORY/hex-xcode --direction=encode > OUTPUT
-test_expect_equal_file OUTPUT EXPECTED
+test_expect_equal_file EXPECTED OUTPUT
 
 test_begin_subtest "format=batch-tag, dump sanity check."
 NOTMUCH_DUMP_TAGS --format=sup from:cworth | cut -f1 -d' ' | \
