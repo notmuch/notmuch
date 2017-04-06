@@ -1843,7 +1843,7 @@ _notmuch_message_ensure_property_map (notmuch_message_t *message)
 	const char *key;
 	char *value;
 
-	value = index(node->string, '=');
+	value = strchr(node->string, '=');
 	if (!value)
 	    INTERNAL_ERROR ("malformed property term");
 

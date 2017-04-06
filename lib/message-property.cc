@@ -51,7 +51,7 @@ _notmuch_message_modify_property (notmuch_message_t *message, const char *key, c
     if (key == NULL || value == NULL)
 	return NOTMUCH_STATUS_NULL_POINTER;
 
-    if (index (key, '='))
+    if (strchr (key, '='))
 	return NOTMUCH_STATUS_ILLEGAL_ARGUMENT;
 
     term = talloc_asprintf (message, "%s=%s", key, value);
