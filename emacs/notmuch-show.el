@@ -1674,6 +1674,9 @@ current thread."
 (defun notmuch-show-get-date ()
   (notmuch-show-get-header :Date))
 
+(defun notmuch-show-get-timestamp ()
+  (notmuch-show-get-prop :timestamp))
+
 (defun notmuch-show-get-from ()
   (notmuch-show-get-header :From))
 
@@ -2239,10 +2242,17 @@ thread from search."
   (interactive)
   (notmuch-common-do-stash (notmuch-show-get-cc)))
 
-(defun notmuch-show-stash-date ()
-  "Copy date of current message to kill-ring."
-  (interactive)
-  (notmuch-common-do-stash (notmuch-show-get-date)))
+(put 'notmuch-show-stash-date 'notmuch-prefix-doc
+     "Copy timestamp of current message to kill-ring.")
+(defun notmuch-show-stash-date (&optional stash-timestamp)
+  "Copy date of current message to kill-ring.
+
+If invoked with a prefix argument, copy timestamp of current
+message to kill-ring."
+  (interactive "P")
+  (if stash-timestamp
+      (notmuch-common-do-stash (format "%d" (notmuch-show-get-timestamp)))
+    (notmuch-common-do-stash (notmuch-show-get-date))))
 
 (defun notmuch-show-stash-filename ()
   "Copy filename of current message to kill-ring."
