@@ -322,22 +322,29 @@ errors=0
 printf "int main(void){return 0;}\n" > minimal.c
 
 printf "Sanity checking C compilation environment... "
-if ${CC} ${CFLAGS} ${CPPFLAGS} minimal.c ${LDFLAGS} -o minimal > /dev/null 2>&1
+test_cmdline="${CC} ${CFLAGS} ${CPPFLAGS} minimal.c ${LDFLAGS} -o minimal"
+if  ${test_cmdline} > /dev/null 2>&1
 then
     printf "OK.\n"
 else
     printf "Fail.\n"
     errors=$((errors + 1))
+    printf Executed:; printf ' %s' ${test_cmdline}; echo
+    ${test_cmdline}
 fi
 
 printf "Sanity checking C++ compilation environment... "
-if ${CXX} ${CXXFLAGS_for_sh} ${CPPFLAGS} minimal.c ${LDFLAGS} -o minimal > /dev/null 2>&1
+test_cmdline="${CXX} ${CXXFLAGS_for_sh} ${CPPFLAGS} minimal.c ${LDFLAGS} -o minimal"
+if ${test_cmdline} > /dev/null 2>&1
 then
     printf "OK.\n"
 else
     printf "Fail.\n"
     errors=$((errors + 1))
+    printf Executed:; printf ' %s' ${test_cmdline}; echo
+    ${test_cmdline}
 fi
+unset test_cmdline
 
 if [ $errors -gt 0 ]; then
     cat <<EOF
