@@ -402,17 +402,17 @@ returns nil"
     (next-single-property-change (or pos (point)) 'notmuch-search-result
 				 nil (point-max))))
 
-(defun notmuch-search-foreach-result (beg end function)
-  "Invoke FUNCTION for each result between BEG and END.
+(defun notmuch-search-foreach-result (beg end fn)
+  "Invoke FN for each result between BEG and END.
 
-FUNCTION should take one argument.  It will be applied to the
+FN should take one argument.  It will be applied to the
 character position of the beginning of each result that overlaps
 the region between points BEG and END.  As a special case, if (=
-BEG END), FUNCTION will be applied to the result containing point
+BEG END), FN will be applied to the result containing point
 BEG."
 
   (lexical-let ((pos (notmuch-search-result-beginning beg))
-		;; End must be a marker in case function changes the
+		;; End must be a marker in case fn changes the
 		;; text.
 		(end (copy-marker end))
 		;; Make sure we examine at least one result, even if
@@ -423,7 +423,7 @@ BEG."
     ;; pos.
     (while (and pos (or (< pos end) first))
       (when (notmuch-search-get-result pos)
-	(funcall function pos))
+	(funcall fn pos))
       (setq pos (notmuch-search-result-end pos)
 	    first nil))))
 ;; Unindent the function argument of notmuch-search-foreach-result so
