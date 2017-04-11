@@ -1,0 +1,68 @@
+From: Timur Tabi <timur.tabi@gmail.com>
+Subject: Re: [PATCH v2 5/7] powerpc/85xx: Add MChk handler for SRIO port
+Date: Wed, 30 Jun 2010 16:00:56 -0500
+Lines: 12
+Message-ID: <AANLkTinKbimKyLpvFD7KOvavshu_n8gRcp2BvEJj0XZQ@mail.gmail.com>
+References: <20100308191005.GE4324@amak.tundra.com> <AANLkTine3pc2Ai2Woj81Y9fS_KgGs1sIMb2NMR6G74ww@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Cc: mporter@kernel.crashing.org, linux-kernel@vger.kernel.org,
+	linuxppc-dev@lists.ozlabs.org, thomas.moll@sysgo.com
+To: Alexandre Bounine <abounine@tundra.com>
+X-From: linux-kernel-owner@vger.kernel.org Wed Jun 30 23:01:37 2010
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Envelope-to: glk-linux-kernel-3@lo.gmane.org
+Received: from vger.kernel.org ([209.132.180.67])
+	by lo.gmane.org with esmtp (Exim 4.69)
+	(envelope-from <linux-kernel-owner@vger.kernel.org>)
+	id 1OU4PZ-0000HS-0T
+	for glk-linux-kernel-3@lo.gmane.org; Wed, 30 Jun 2010 23:01:37 +0200
+Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
+	id S1755703Ab0F3VB2 (ORCPT <rfc822;glk-linux-kernel-3@m.gmane.org>);
+	Wed, 30 Jun 2010 17:01:28 -0400
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:53141 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751784Ab0F3VB1 (ORCPT
+	<rfc822;linux-kernel@vger.kernel.org>);
+	Wed, 30 Jun 2010 17:01:27 -0400
+Received: by vws5 with SMTP id 5so1454517vws.19
+        for <linux-kernel@vger.kernel.org>; Wed, 30 Jun 2010 14:01:26 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=gamma;
+        h=domainkey-signature:received:mime-version:received:in-reply-to
+         :references:from:date:message-id:subject:to:cc:content-type;
+        bh=+BUKti+Oa03CrnVvRyT591FhcoxqR7S2rzZHtD6WSuY=;
+        b=O/b04HLJrmTE0aIq2mNCRznQrXxAAGHSMarHR5mrgYptmr68froM6UgmDqTZFLhNiH
+         BcT8g+AziiqSV1k/ckXjRyVR0s9Jdv4g2phMNtp8NStbPfOPpLDkUKTQadphOTonCfeK
+         e+ZrLBwh+FCoYNAOjvFioBKj6CxN2Oi5xIhPc=
+DomainKey-Signature: a=rsa-sha1; c=nofws;
+        d=gmail.com; s=gamma;
+        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
+         :cc:content-type;
+        b=UcKGhJIXCTTcSvBWwGwLUefPONGygVPsUnTt4nDSl4udB8JKMyi0EghzzgNXUyq4Dz
+         UCxzZAyxzjvjgsgPS3kzPhSsWG2PRG66pC1OA68RJ5YVOjt55/yOz/yfTqXBVvRSq2fV
+         QNcKACYHSjkIZ7Uq7ZEW9bEGI5tTKdz++N2UA=
+Received: by 10.220.124.73 with SMTP id t9mr5099129vcr.37.1277931686462; Wed, 
+	30 Jun 2010 14:01:26 -0700 (PDT)
+Received: by 10.220.161.137 with HTTP; Wed, 30 Jun 2010 14:00:56 -0700 (PDT)
+In-Reply-To: <AANLkTine3pc2Ai2Woj81Y9fS_KgGs1sIMb2NMR6G74ww@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+Precedence: bulk
+List-ID: <linux-kernel.vger.kernel.org>
+X-Mailing-List: linux-kernel@vger.kernel.org
+Archived-At: <http://permalink.gmane.org/gmane.linux.kernel/1004633>
+
+On Wed, Jun 30, 2010 at 3:55 PM, Timur Tabi <timur.tabi@gmail.com> wrote:
+
+> MCSR_MASK is not defined anywhere, so when I compile this code, I get this:
+
+Never mind.  I see that it's been fixed already, and that the patch
+that removed MCSR_MASK was posted around the same time that this patch
+was posted.
+
+
+-- 
+Timur Tabi
+Linux kernel developer at Freescale
+
+

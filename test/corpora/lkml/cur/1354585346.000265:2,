@@ -1,0 +1,85 @@
+Return-Path: <keithp@keithp.com>
+X-Original-To: notmuch@notmuchmail.org
+Delivered-To: notmuch@notmuchmail.org
+Received: from localhost (localhost [127.0.0.1])
+	by olra.theworths.org (Postfix) with ESMTP id 5656D431FBC
+	for <notmuch@notmuchmail.org>; Sat, 21 Nov 2009 16:28:35 -0800 (PST)
+X-Virus-Scanned: Debian amavisd-new at olra.theworths.org
+Received: from olra.theworths.org ([127.0.0.1])
+	by localhost (olra.theworths.org [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id Dam69vzNZiE1 for <notmuch@notmuchmail.org>;
+	Sat, 21 Nov 2009 16:28:34 -0800 (PST)
+Received: from keithp.com (home.keithp.com [63.227.221.253])
+	by olra.theworths.org (Postfix) with ESMTP id AA991431FAE
+	for <notmuch@notmuchmail.org>; Sat, 21 Nov 2009 16:28:34 -0800 (PST)
+Received: from localhost (localhost [127.0.0.1])
+	by keithp.com (Postfix) with ESMTP id 18FC076012A;
+	Sat, 21 Nov 2009 16:28:34 -0800 (PST)
+X-Virus-Scanned: Debian amavisd-new at keithp.com
+Received: from keithp.com ([127.0.0.1])
+	by localhost (keithp.com [127.0.0.1]) (amavisd-new, port 10024)
+	with LMTP id tw1iDvWYNGRC; Sat, 21 Nov 2009 16:28:31 -0800 (PST)
+Received: by keithp.com (Postfix, from userid 1033)
+	id 60F3176012B; Sat, 21 Nov 2009 16:28:31 -0800 (PST)
+Received: from keithp.com (localhost [127.0.0.1])
+	by keithp.com (Postfix) with ESMTP id 5330D76012A;
+	Sat, 21 Nov 2009 16:28:31 -0800 (PST)
+From: Keith Packard <keithp@keithp.com>
+To: Stefan Schmidt <stefan@datenfreihafen.org>, notmuch@notmuchmail.org
+In-Reply-To: <1258848661-4660-1-git-send-email-stefan@datenfreihafen.org>
+References: <yes> <1258848661-4660-1-git-send-email-stefan@datenfreihafen.org>
+Date: Sat, 21 Nov 2009 16:28:30 -0800
+Message-ID: <yunvdh3pfm9.fsf@aiko.keithp.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed; boundary="=-=-=";
+	micalg=pgp-sha1; protocol="application/pgp-signature"
+Subject: Re: [notmuch] [PATCH 1/2] lib/message: Add function to get maildir
+ flags.
+X-BeenThere: notmuch@notmuchmail.org
+X-Mailman-Version: 2.1.12
+Precedence: list
+List-Id: "Use and development of the notmuch mail system."
+	<notmuch.notmuchmail.org>
+List-Unsubscribe: <http://notmuchmail.org/mailman/options/notmuch>,
+	<mailto:notmuch-request@notmuchmail.org?subject=unsubscribe>
+List-Archive: <http://notmuchmail.org/pipermail/notmuch>
+List-Post: <mailto:notmuch@notmuchmail.org>
+List-Help: <mailto:notmuch-request@notmuchmail.org?subject=help>
+List-Subscribe: <http://notmuchmail.org/mailman/listinfo/notmuch>,
+	<mailto:notmuch-request@notmuchmail.org?subject=subscribe>
+X-List-Received-Date: Sun, 22 Nov 2009 00:28:35 -0000
+
+--=-=-=
+Content-Transfer-Encoding: quoted-printable
+
+On Sun, 22 Nov 2009 01:11:00 +0100, Stefan Schmidt <stefan@datenfreihafen.o=
+rg> wrote:
+
+> +const char *
+> +notmuch_message_get_flags (notmuch_message_t *message)
+
+This function should interpret the flags that it finds and return a
+suitable set of notmuch tags. I'd suggest that 'unread' messages get
+both 'unread' and 'inbox' tags, as Maildir doesn't distinguish between
+'don't show this to be by default again please' and 'I've read this
+message'. It seems best to hide the maildir-specific details inside the
+library instead of exposing them.
+
+Also, we have only the 'unread' tag; we don't have a 'read' tag, which
+would simply be the inverse of 'unread'.
+
+=2D-=20
+keith.packard@intel.com
+
+--=-=-=
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
+
+iD8DBQFLCIWuQp8BWwlsTdMRAvcTAKDXHYc6MTuuZFMzHvZFs1omBbr9CACdEY/b
+jqyT/QmmgoA/GtIcs/DfLMY=
+=LVlh
+-----END PGP SIGNATURE-----
+--=-=-=--
+

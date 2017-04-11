@@ -1,0 +1,73 @@
+From: Suresh Jayaraman <sjayaraman@suse.de>
+Subject: [RFC][PATCH 02/10] cifs: guard cifsglob.h against multiple inclusion
+Date: Tue, 22 Jun 2010 20:52:50 +0530
+Lines: 36
+Message-ID: <1277220170-3442-1-git-send-email-sjayaraman@suse.de>
+References: <yes>
+Cc: linux-cifs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+	linux-kernel@vger.kernel.org, David Howells <dhowells@redhat.com>
+To: Steve French <smfrench@gmail.com>
+X-From: linux-fsdevel-owner@vger.kernel.org Tue Jun 22 17:43:39 2010
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+Envelope-to: lnx-linux-fsdevel@lo.gmane.org
+Received: from vger.kernel.org ([209.132.180.67])
+	by lo.gmane.org with esmtp (Exim 4.69)
+	(envelope-from <linux-fsdevel-owner@vger.kernel.org>)
+	id 1OR5dT-0007sB-18
+	for lnx-linux-fsdevel@lo.gmane.org; Tue, 22 Jun 2010 17:43:39 +0200
+Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
+	id S1752441Ab0FVPn3 (ORCPT <rfc822;lnx-linux-fsdevel@m.gmane.org>);
+	Tue, 22 Jun 2010 11:43:29 -0400
+Received: from victor.provo.novell.com ([137.65.250.26]:41538 "EHLO
+	victor.provo.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751889Ab0FVPn2 (ORCPT
+	<rfc822;groupwise-SJayaraman@novell.com:0:0>);
+	Tue, 22 Jun 2010 11:43:28 -0400
+Received: from localhost (prv-ext-foundry1int.gns.novell.com [137.65.251.240])
+	by victor.provo.novell.com with ESMTP; Tue, 22 Jun 2010 09:22:52 -0600
+X-Mailer: git-send-email 1.6.4.2
+In-Reply-To: <yes>
+Sender: linux-fsdevel-owner@vger.kernel.org
+Precedence: bulk
+List-ID: <linux-fsdevel.vger.kernel.org>
+X-Mailing-List: linux-fsdevel@vger.kernel.org
+Archived-At: <http://permalink.gmane.org/gmane.linux.kernel/1001758>
+
+Add conditional compile macros to guard the header file against multiple
+inclusion.
+
+Signed-off-by: Suresh Jayaraman <sjayaraman@suse.de>
+---
+ fs/cifs/cifsglob.h |    5 +++++
+ 1 files changed, 5 insertions(+), 0 deletions(-)
+
+diff --git a/fs/cifs/cifsglob.h b/fs/cifs/cifsglob.h
+index a88479c..6b2c39d 100644
+--- a/fs/cifs/cifsglob.h
++++ b/fs/cifs/cifsglob.h
+@@ -16,6 +16,9 @@
+  *   the GNU Lesser General Public License for more details.
+  *
+  */
++#ifndef _CIFS_GLOB_H
++#define _CIFS_GLOB_H
++
+ #include <linux/in.h>
+ #include <linux/in6.h>
+ #include <linux/slab.h>
+@@ -733,3 +736,5 @@ GLOBAL_EXTERN unsigned int cifs_min_small;  /* min size of small buf pool */
+ GLOBAL_EXTERN unsigned int cifs_max_pending; /* MAX requests at once to server*/
+ 
+ extern const struct slow_work_ops cifs_oplock_break_ops;
++
++#endif	/* _CIFS_GLOB_H */
+-- 
+1.6.4.2
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-fsdevel" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+

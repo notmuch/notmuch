@@ -1,0 +1,106 @@
+From: Mark Brown <broonie@opensource.wolfsonmicro.com>
+Subject: Re: rfc: rewrite commit subject line for subsystem
+ maintainer preference tool
+Date: Wed, 17 Nov 2010 17:07:47 +0000
+Lines: 29
+Message-ID: <20101117170746.GB19488@rakim.wolfsonmicro.main>
+References: <20101116104921.GL12986@rakim.wolfsonmicro.main>
+	<1289919077.28741.50.camel@Joe-Laptop>
+	<20101116183707.179964dd@schatten.dmk.lab>
+	<20101116181226.GB26239@rakim.wolfsonmicro.main>
+	<20101116203522.65240b18@schatten.dmk.lab>
+	<20101116195530.GA7523@rakim.wolfsonmicro.main>
+	<20101116122102.86e7e0b9.rdunlap@xenotime.net>
+	<20101116230126.GB24623@opensource.wolfsonmicro.com>
+	<20101117014427.41d85b13@stein>
+	<alpine.LNX.2.00.1011170150060.7420@pobox.suse.cz>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Cc: alsa-devel@alsa-project.org, linux-kernel@vger.kernel.org,
+	Florian Mickler <florian@mickler.org>, Randy Dunlap <rdunlap@xenotime.net>,
+	Stefan Richter <stefanr@s5r6.in-berlin.de>, Joe Perches <joe@perches.com>,
+	Andrew Morton <akpm@linux-foundation.org>
+To: Jiri Kosina <jkosina@suse.cz>
+X-From: alsa-devel-bounces@alsa-project.org Wed Nov 17 18:07:59 2010
+Return-path: <alsa-devel-bounces@alsa-project.org>
+Envelope-to: glad-alsa-devel-2@m.gmane.org
+Received: from alsa0.perex.cz ([212.20.107.51])
+	by lo.gmane.org with esmtp (Exim 4.69)
+	(envelope-from <alsa-devel-bounces@alsa-project.org>)
+	id 1PIlUD-000436-I4
+	for glad-alsa-devel-2@m.gmane.org; Wed, 17 Nov 2010 18:07:57 +0100
+Received: by alsa0.perex.cz (Postfix, from userid 1000)
+	id B1000245CE; Wed, 17 Nov 2010 18:07:54 +0100 (CET)
+X-Spam-Checker-Version: SpamAssassin 3.2.4 (2008-01-01) on mail1.perex.cz
+X-Spam-Level: 
+X-Spam-Status: No, score=0.0 required=5.0 tests=none autolearn=disabled
+	version=3.2.4
+Received: from alsa0.perex.cz (localhost [127.0.0.1])
+	by alsa0.perex.cz (Postfix) with ESMTP id C35471037EC;
+	Wed, 17 Nov 2010 18:07:52 +0100 (CET)
+X-Original-To: alsa-devel@alsa-project.org
+Delivered-To: alsa-devel@alsa-project.org
+Received: by alsa0.perex.cz (Postfix, from userid 1000)
+	id 4EE8F1037EC; Wed, 17 Nov 2010 18:07:51 +0100 (CET)
+Received: from opensource2.wolfsonmicro.com (opensource.wolfsonmicro.com
+	[80.75.67.52]) by alsa0.perex.cz (Postfix) with ESMTP id A8A16245CE
+	for <alsa-devel@alsa-project.org>; Wed, 17 Nov 2010 18:07:50 +0100 (CET)
+Received: from rakim.wolfsonmicro.main (lumison.wolfsonmicro.com
+	[87.246.78.27])
+	by opensource2.wolfsonmicro.com (Postfix) with ESMTPSA id 9E3591147AC; 
+	Wed, 17 Nov 2010 17:07:48 +0000 (GMT)
+Received: from broonie by rakim.wolfsonmicro.main with local (Exim 4.72)
+	(envelope-from <broonie@rakim.wolfsonmicro.main>)
+	id 1PIlU3-00061C-Bl; Wed, 17 Nov 2010 17:07:47 +0000
+Content-Disposition: inline
+In-Reply-To: <alpine.LNX.2.00.1011170150060.7420@pobox.suse.cz>
+X-Cookie: Killing turkeys causes winter.
+User-Agent: Mutt/1.5.20 (2009-06-14)
+X-BeenThere: alsa-devel@alsa-project.org
+X-Mailman-Version: 2.1.9
+Precedence: list
+List-Id: "Alsa-devel mailing list for ALSA developers -
+	http://www.alsa-project.org" <alsa-devel.alsa-project.org>
+List-Unsubscribe: <http://mailman.alsa-project.org/mailman/listinfo/alsa-devel>, 
+	<mailto:alsa-devel-request@alsa-project.org?subject=unsubscribe>
+List-Archive: <http://mailman.alsa-project.org/pipermail/alsa-devel>
+List-Post: <mailto:alsa-devel@alsa-project.org>
+List-Help: <mailto:alsa-devel-request@alsa-project.org?subject=help>
+List-Subscribe: <http://mailman.alsa-project.org/mailman/listinfo/alsa-devel>, 
+	<mailto:alsa-devel-request@alsa-project.org?subject=subscribe>
+Sender: alsa-devel-bounces@alsa-project.org
+Errors-To: alsa-devel-bounces@alsa-project.org
+Archived-At: <http://permalink.gmane.org/gmane.linux.kernel/1064007>
+
+On Wed, Nov 17, 2010 at 01:53:35AM +0100, Jiri Kosina wrote:
+> On Wed, 17 Nov 2010, Stefan Richter wrote:
+
+> > Why should we codify our conventions in MAINTAINERS to accommodate the
+> > specific problem of virtually a _single_ patch author?
+
+It seems to be the way we're heading in general - look at all the recent
+work on MAINTAINERS and get_maintainer.pl.  There seems to be a genral
+push to make all this stuff automatable.
+
+> Either the maintainer wants the patch. Then he is certainly able to apply 
+> it no matter the subject line (I personally am getting a lot of patches 
+> which don't follow the format I am using in my tree ... converting 
+> Subject: lines is so trivial that I have never felt like bothering anyone 
+> about it ... it's basically single condition in a shellscript). Or the 
+
+It's slightly more than that if you're dealing with more than one area,
+and I also find this sort of stuff is a good flag for scrubbing the
+patch in greater detail - when patches stand out from a 1000ft visual
+overview there's a fair chance that there's other issues so if people
+regularly submit good patches that have only cosmetic issues I find it's
+worth guiding them away from that.
+
+> maintainer doesn't feel like the patch is worth it, and then the 
+> subject-line format really doesn't matter.
+
+In this case if I don't apply it it's likely to end up going in via your
+tree and then I'll still have to deal with the merge conflicts which are
+more annoying.
+
+

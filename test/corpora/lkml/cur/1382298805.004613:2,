@@ -1,0 +1,94 @@
+From: Henrik Kretzschmar <henne@nachtwindheim.de>
+Subject: [PATCH 1/6] x86: move ioapic_irq_destination_types
+Date: Mon, 14 Feb 2011 11:00:07 +0100
+Lines: 55
+Message-ID: <1297677612-12405-1-git-send-email-henne@nachtwindheim.de>
+Cc: tglx@linutronix.de, hpa@zytor.com, x86@kernel.org, tj@kernel.org,
+	yinghai@kernel.org, ak@linux.intel.com, robert.richter@amd.com,
+	linux-kernel@vger.kernel.org, henne@nachtwindheim.de
+To: mingo@readhat.com
+X-From: linux-kernel-owner@vger.kernel.org Mon Feb 14 11:00:33 2011
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Envelope-to: glk-linux-kernel-3@lo.gmane.org
+Received: from vger.kernel.org ([209.132.180.67])
+	by lo.gmane.org with esmtp (Exim 4.69)
+	(envelope-from <linux-kernel-owner@vger.kernel.org>)
+	id 1PovEP-0006ED-4Z
+	for glk-linux-kernel-3@lo.gmane.org; Mon, 14 Feb 2011 11:00:33 +0100
+Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
+	id S1752832Ab1BNKAX (ORCPT <rfc822;glk-linux-kernel-3@m.gmane.org>);
+	Mon, 14 Feb 2011 05:00:23 -0500
+Received: from server103.greatnet.de ([83.133.97.6]:38305 "EHLO
+	server103.greatnet.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752268Ab1BNKAW (ORCPT
+	<rfc822;linux-kernel@vger.kernel.org>);
+	Mon, 14 Feb 2011 05:00:22 -0500
+Received: from localhost.localdomain (cmnz-d9bab6be.pool.mediaWays.net [217.186.182.190])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by server103.greatnet.de (Postfix) with ESMTPSA id D2234950DB2;
+	Mon, 14 Feb 2011 10:59:03 +0100 (CET)
+X-Mailer: git-send-email 1.7.1
+Sender: linux-kernel-owner@vger.kernel.org
+Precedence: bulk
+List-ID: <linux-kernel.vger.kernel.org>
+X-Mailing-List: linux-kernel@vger.kernel.org
+Archived-At: <http://permalink.gmane.org/gmane.linux.kernel/1099645>
+
+This enum is used also by non-ioapic code, e.g apic_noop,
+so its better kept in apicdef.h.
+
+Signed-off-by: Henrik Kretzschmar <henne@nachtwindheim.de>
+---
+ arch/x86/include/asm/apicdef.h |   12 ++++++++++++
+ arch/x86/include/asm/io_apic.h |   11 -----------
+ 2 files changed, 12 insertions(+), 11 deletions(-)
+
+diff --git a/arch/x86/include/asm/apicdef.h b/arch/x86/include/asm/apicdef.h
+index 47a30ff..2de3e95 100644
+--- a/arch/x86/include/asm/apicdef.h
++++ b/arch/x86/include/asm/apicdef.h
+@@ -426,4 +426,16 @@ struct local_apic {
+ #else
+  #define BAD_APICID 0xFFFFu
+ #endif
++
++enum ioapic_irq_destination_types {
++	dest_Fixed = 0,
++	dest_LowestPrio = 1,
++	dest_SMI = 2,
++	dest__reserved_1 = 3,
++	dest_NMI = 4,
++	dest_INIT = 5,
++	dest__reserved_2 = 6,
++	dest_ExtINT = 7
++};
++
+ #endif /* _ASM_X86_APICDEF_H */
+diff --git a/arch/x86/include/asm/io_apic.h b/arch/x86/include/asm/io_apic.h
+index f327d38..e1a9b0e 100644
+--- a/arch/x86/include/asm/io_apic.h
++++ b/arch/x86/include/asm/io_apic.h
+@@ -63,17 +63,6 @@ union IO_APIC_reg_03 {
+ 	} __attribute__ ((packed)) bits;
+ };
+ 
+-enum ioapic_irq_destination_types {
+-	dest_Fixed = 0,
+-	dest_LowestPrio = 1,
+-	dest_SMI = 2,
+-	dest__reserved_1 = 3,
+-	dest_NMI = 4,
+-	dest_INIT = 5,
+-	dest__reserved_2 = 6,
+-	dest_ExtINT = 7
+-};
+-
+ struct IO_APIC_route_entry {
+ 	__u32	vector		:  8,
+ 		delivery_mode	:  3,	/* 000: FIXED
+-- 
+1.7.2.3
+
+
+

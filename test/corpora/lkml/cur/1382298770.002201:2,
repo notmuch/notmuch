@@ -1,0 +1,58 @@
+From: David Howells <dhowells@redhat.com>
+Subject: Re: [RFC][PATCH 10/10] cifs: add mount option to enable local caching
+Date: Wed, 23 Jun 2010 18:08:34 +0100
+Organization: Red Hat UK Ltd. Registered Address: Red Hat UK Ltd, Amberley
+	Place, 107-111 Peascod Street, Windsor, Berkshire, SI4 1TE, United
+	Kingdom.
+	Registered in England and Wales under Company Registration No. 3798903
+Lines: 12
+Message-ID: <9942.1277312914@redhat.com>
+References: <1277220309-3757-1-git-send-email-sjayaraman@suse.de> <yes>
+Cc: dhowells@redhat.com, Steve French <smfrench@gmail.com>,
+	linux-cifs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+To: Suresh Jayaraman <sjayaraman@suse.de>
+X-From: linux-kernel-owner@vger.kernel.org Wed Jun 23 19:09:22 2010
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Envelope-to: glk-linux-kernel-3@lo.gmane.org
+Received: from vger.kernel.org ([209.132.180.67])
+	by lo.gmane.org with esmtp (Exim 4.69)
+	(envelope-from <linux-kernel-owner@vger.kernel.org>)
+	id 1ORTRv-0002J8-2s
+	for glk-linux-kernel-3@lo.gmane.org; Wed, 23 Jun 2010 19:09:19 +0200
+Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
+	id S1753275Ab0FWRIt (ORCPT <rfc822;glk-linux-kernel-3@m.gmane.org>);
+	Wed, 23 Jun 2010 13:08:49 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:6156 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753203Ab0FWRIr (ORCPT <rfc822;linux-kernel@vger.kernel.org>);
+	Wed, 23 Jun 2010 13:08:47 -0400
+Received: from int-mx04.intmail.prod.int.phx2.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.17])
+	by mx1.redhat.com (8.13.8/8.13.8) with ESMTP id o5NH8dax006028
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK);
+	Wed, 23 Jun 2010 13:08:39 -0400
+Received: from redhat.com (ovpn01.gateway.prod.ext.phx2.redhat.com [10.5.9.1])
+	by int-mx04.intmail.prod.int.phx2.redhat.com (8.13.8/8.13.8) with ESMTP id o5NH8YmA020846;
+	Wed, 23 Jun 2010 13:08:36 -0400
+In-Reply-To: <1277220309-3757-1-git-send-email-sjayaraman@suse.de>
+X-Scanned-By: MIMEDefang 2.67 on 10.5.11.17
+Sender: linux-kernel-owner@vger.kernel.org
+Precedence: bulk
+List-ID: <linux-kernel.vger.kernel.org>
+X-Mailing-List: linux-kernel@vger.kernel.org
+Archived-At: <http://permalink.gmane.org/gmane.linux.kernel/1002231>
+
+Suresh Jayaraman <sjayaraman@suse.de> wrote:
+
+> Add a mount option 'fsc' to enable local caching on CIFS.
+> 
+> As the cifs-utils (userspace) changes are not done yet, this patch enables
+> 'fsc' by default to assist testing.
+> 
+> Signed-off-by: Suresh Jayaraman <sjayaraman@suse.de>
+
+Acked-by: David Howells <dhowells@redhat.com>
+
+(Give or take the debugging bit)
+
+

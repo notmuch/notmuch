@@ -1,0 +1,58 @@
+From: David Howells <dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [RFC][PATCH 06/10] cifs: define inode-level cache object and register them
+Date: Fri, 25 Jun 2010 13:55:49 +0100
+Organization: Red Hat UK Ltd. Registered Address: Red Hat UK Ltd, Amberley
+	Place, 107-111 Peascod Street, Windsor, Berkshire, SI4 1TE, United
+	Kingdom.
+	Registered in England and Wales under Company Registration No. 3798903
+Lines: 12
+Message-ID: <22697.1277470549@redhat.com>
+References: <4C24A606.5040001@suse.de> <1277220214-3597-1-git-send-email-sjayaraman@suse.de> <yes> <9822.1277312573@redhat.com>
+Cc: dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, Steve French <smfrench-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>,
+	linux-cifs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org,
+	linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Suresh Jayaraman <sjayaraman-l3A5Bk7waGM@public.gmane.org>
+X-From: linux-cifs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org Fri Jun 25 14:56:04 2010
+Return-path: <linux-cifs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Envelope-to: glkc-linux-cifs-1dZseelyfdZg9hUCZPvPmw@public.gmane.org
+Received: from vger.kernel.org ([209.132.180.67])
+	by lo.gmane.org with esmtp (Exim 4.69)
+	(envelope-from <linux-cifs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>)
+	id 1OS8Rw-0002tq-3k
+	for glkc-linux-cifs-1dZseelyfdZg9hUCZPvPmw@public.gmane.org; Fri, 25 Jun 2010 14:56:04 +0200
+Received: (majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org) by vger.kernel.org via listexpand
+	id S1753622Ab0FYM4B (ORCPT <rfc822;glkc-linux-cifs@m.gmane.org>);
+	Fri, 25 Jun 2010 08:56:01 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:50162 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752535Ab0FYM4B (ORCPT <rfc822;linux-cifs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>);
+	Fri, 25 Jun 2010 08:56:01 -0400
+Received: from int-mx01.intmail.prod.int.phx2.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
+	by mx1.redhat.com (8.13.8/8.13.8) with ESMTP id o5PCtqOd018091
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK);
+	Fri, 25 Jun 2010 08:55:52 -0400
+Received: from redhat.com (ovpn01.gateway.prod.ext.phx2.redhat.com [10.5.9.1])
+	by int-mx01.intmail.prod.int.phx2.redhat.com (8.13.8/8.13.8) with ESMTP id o5PCtn4G016466;
+	Fri, 25 Jun 2010 08:55:51 -0400
+In-Reply-To: <4C24A606.5040001-l3A5Bk7waGM@public.gmane.org>
+X-Scanned-By: MIMEDefang 2.67 on 10.5.11.11
+Sender: linux-cifs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Precedence: bulk
+List-ID: <linux-cifs.vger.kernel.org>
+X-Mailing-List: linux-cifs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Archived-At: <http://permalink.gmane.org/gmane.linux.kernel/1002949>
+
+Suresh Jayaraman <sjayaraman-l3A5Bk7waGM@public.gmane.org> wrote:
+
+> I think the creation time is currently being ignored as we won't be able
+> to accomodate in POSIX stat struct.
+
+The FS-Cache interface doesn't use the POSIX stat struct, but it could be
+really useful to save it and use it for cache coherency inside the kernel.
+
+Out of interest, what does Samba do when it comes to generating a creation time
+for UNIX where one does not exist?
+
+David
+
+

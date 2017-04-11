@@ -1,0 +1,68 @@
+From: Suresh Jayaraman <sjayaraman-l3A5Bk7waGM@public.gmane.org>
+Subject: Re: [RFC][PATCH 03/10] cifs: register CIFS for caching
+Date: Fri, 25 Jun 2010 16:26:22 +0530
+Lines: 26
+Message-ID: <4C248B56.8030207@suse.de>
+References: <1277220189-3485-1-git-send-email-sjayaraman@suse.de> <yes> <9603.1277311877@redhat.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+Cc: Steve French <smfrench-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-cifs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org,
+	linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: David Howells <dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+X-From: linux-cifs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org Fri Jun 25 12:56:32 2010
+Return-path: <linux-cifs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Envelope-to: glkc-linux-cifs-1dZseelyfdZg9hUCZPvPmw@public.gmane.org
+Received: from vger.kernel.org ([209.132.180.67])
+	by lo.gmane.org with esmtp (Exim 4.69)
+	(envelope-from <linux-cifs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>)
+	id 1OS6aG-00066f-1L
+	for glkc-linux-cifs-1dZseelyfdZg9hUCZPvPmw@public.gmane.org; Fri, 25 Jun 2010 12:56:32 +0200
+Received: (majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org) by vger.kernel.org via listexpand
+	id S1754188Ab0FYK4b (ORCPT <rfc822;glkc-linux-cifs@m.gmane.org>);
+	Fri, 25 Jun 2010 06:56:31 -0400
+Received: from cantor.suse.de ([195.135.220.2]:46564 "EHLO mx1.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753651Ab0FYK4a (ORCPT <rfc822;linux-cifs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>);
+	Fri, 25 Jun 2010 06:56:30 -0400
+Received: from relay2.suse.de (charybdis-ext.suse.de [195.135.221.2])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by mx1.suse.de (Postfix) with ESMTP id 17F1E6CB00;
+	Fri, 25 Jun 2010 12:56:30 +0200 (CEST)
+User-Agent: Mozilla/5.0 (X11; U; Linux x86_64; en-US; rv:1.9.1.5) Gecko/20091130 SUSE/3.0.0-1.1.1 Thunderbird/3.0
+In-Reply-To: <9603.1277311877-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Sender: linux-cifs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Precedence: bulk
+List-ID: <linux-cifs.vger.kernel.org>
+X-Mailing-List: linux-cifs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Archived-At: <http://permalink.gmane.org/gmane.linux.kernel/1002913>
+
+On 06/23/2010 10:21 PM, David Howells wrote:
+> Suresh Jayaraman <sjayaraman-l3A5Bk7waGM@public.gmane.org> wrote:
+> 
+>> +	rc = cifs_fscache_register();
+>> +	if (rc)
+>> +		goto out;
+>> +
+>>  	rc = cifs_init_inodecache();
+>>  	if (rc)
+>>  		goto out_clean_proc;
+>> @@ -949,8 +954,10 @@ init_cifs(void)
+>>  	cifs_destroy_mids();
+>>   out_destroy_inodecache:
+>>  	cifs_destroy_inodecache();
+>> +	cifs_fscache_unregister();
+>>   out_clean_proc:
+> 
+> This is incorrect.  You need to call cifs_fscache_unregister() if
+> cifs_init_inodecache() fails.
+> 
+
+Doh! I'll fix it.
+
+
+-- 
+Suresh Jayaraman
+
+

@@ -1,0 +1,61 @@
+From: David Howells <dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [RFC][PATCH 06/10] cifs: define inode-level cache object and register them
+Date: Wed, 23 Jun 2010 18:02:53 +0100
+Organization: Red Hat UK Ltd. Registered Address: Red Hat UK Ltd, Amberley
+	Place, 107-111 Peascod Street, Windsor, Berkshire, SI4 1TE, United
+	Kingdom.
+	Registered in England and Wales under Company Registration No. 3798903
+Lines: 15
+Message-ID: <9822.1277312573@redhat.com>
+References: <1277220214-3597-1-git-send-email-sjayaraman@suse.de> <yes>
+Cc: dhowells-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, Steve French <smfrench-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>,
+	linux-cifs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org,
+	linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Suresh Jayaraman <sjayaraman-l3A5Bk7waGM@public.gmane.org>
+X-From: linux-cifs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org Wed Jun 23 19:03:04 2010
+Return-path: <linux-cifs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Envelope-to: glkc-linux-cifs-1dZseelyfdZg9hUCZPvPmw@public.gmane.org
+Received: from vger.kernel.org ([209.132.180.67])
+	by lo.gmane.org with esmtp (Exim 4.69)
+	(envelope-from <linux-cifs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>)
+	id 1ORTLr-0007Bh-Cs
+	for glkc-linux-cifs-1dZseelyfdZg9hUCZPvPmw@public.gmane.org; Wed, 23 Jun 2010 19:03:03 +0200
+Received: (majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org) by vger.kernel.org via listexpand
+	id S1752063Ab0FWRDB (ORCPT <rfc822;glkc-linux-cifs@m.gmane.org>);
+	Wed, 23 Jun 2010 13:03:01 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:30823 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751804Ab0FWRDA (ORCPT <rfc822;linux-cifs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>);
+	Wed, 23 Jun 2010 13:03:00 -0400
+Received: from int-mx03.intmail.prod.int.phx2.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.16])
+	by mx1.redhat.com (8.13.8/8.13.8) with ESMTP id o5NH2v0J030982
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK);
+	Wed, 23 Jun 2010 13:02:57 -0400
+Received: from redhat.com (ovpn01.gateway.prod.ext.phx2.redhat.com [10.5.9.1])
+	by int-mx03.intmail.prod.int.phx2.redhat.com (8.13.8/8.13.8) with ESMTP id o5NH2r9N014323;
+	Wed, 23 Jun 2010 13:02:54 -0400
+In-Reply-To: <1277220214-3597-1-git-send-email-sjayaraman-l3A5Bk7waGM@public.gmane.org>
+X-Scanned-By: MIMEDefang 2.67 on 10.5.11.16
+Sender: linux-cifs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Precedence: bulk
+List-ID: <linux-cifs.vger.kernel.org>
+X-Mailing-List: linux-cifs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Archived-At: <http://permalink.gmane.org/gmane.linux.kernel/1002224>
+
+Suresh Jayaraman <sjayaraman-l3A5Bk7waGM@public.gmane.org> wrote:
+
+> Define inode-level data storage objects (managed by cifsInodeInfo structs).
+> Each inode-level object is created in a super-block level object and is
+> itself a data storage object in to which pages from the inode are stored.
+> 
+> The inode object is keyed by UniqueId. The coherency data being used is
+> LastWriteTime and the file size.
+
+Isn't there a file creation time too?
+
+I take it you don't support caching on files that are open for writing at this
+time?
+
+David
+
+
