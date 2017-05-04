@@ -61,7 +61,7 @@ format_part_reply (GMimeStream *stream, mime_node_t *node)
 				  recipients_string);
 	g_free (recipients_string);
 	g_mime_stream_printf (stream, "> Subject: %s\n", g_mime_message_get_subject (message));
-	g_mime_stream_printf (stream, "> Date: %s\n", g_mime_message_get_date_as_string (message));
+	g_mime_stream_printf (stream, "> Date: %s\n", g_mime_message_get_date_string (node, message));
 	g_mime_stream_printf (stream, ">\n");
     } else if (GMIME_IS_PART (node->part)) {
 	GMimeContentType *content_type = g_mime_object_get_content_type (node->part);

@@ -204,7 +204,6 @@ format_headers_sprinter (sprinter_t *sp, GMimeMessage *message,
     InternetAddressList *recipients;
     char *recipients_string;
     const char *reply_to_string;
-    char *date_string;
 
     sp->begin_map (sp);
 
@@ -252,9 +251,7 @@ format_headers_sprinter (sprinter_t *sp, GMimeMessage *message,
 	sp->string (sp, g_mime_object_get_header (GMIME_OBJECT (message), "References"));
     } else {
 	sp->map_key (sp, "Date");
-	date_string = g_mime_message_get_date_as_string (message);
-	sp->string (sp, date_string);
-	g_free (date_string);
+	sp->string (sp, g_mime_message_get_date_string (sp, message));
     }
 
     sp->end (sp);
@@ -532,9 +529,8 @@ format_part_text (const void *ctx, sprinter_t *sp, mime_node_t *node,
 	if (recipients_string)
 	    g_mime_stream_printf (stream, "Cc: %s\n", recipients_string);
 	g_free (recipients_string);
-	date_string = g_mime_message_get_date_as_string (message);
+	date_string = g_mime_message_get_date_string (node, message);
 	g_mime_stream_printf (stream, "Date: %s\n", date_string);
-	g_free (date_string);
 	g_mime_stream_printf (stream, "\fheader}\n");
 
 	g_mime_stream_printf (stream, "\fbody{\n");
