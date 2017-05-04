@@ -268,12 +268,11 @@ reply_to_header_is_redundant (GMimeMessage *message,
 
 static InternetAddressList *get_sender(GMimeMessage *message)
 {
-    const char *reply_to;
+    InternetAddressList *reply_to_list;
 
-    reply_to = g_mime_message_get_reply_to (message);
-    if (reply_to && *reply_to) {
-	InternetAddressList *reply_to_list;
-
+    reply_to_list = g_mime_message_get_reply_to_list (message);
+    if (reply_to_list &&
+	internet_address_list_length (reply_to_list) > 0) {
         /*
 	 * Some mailing lists munge the Reply-To header despite it
 	 * being A Bad Thing, see
@@ -287,7 +286,6 @@ static InternetAddressList *get_sender(GMimeMessage *message)
 	 * to the list. Note that the address in the Reply-To header
 	 * will always appear in the reply if reply_all is true.
 	 */
-	reply_to_list = internet_address_list_parse_string (reply_to);
 	if (! reply_to_header_is_redundant (message, reply_to_list))
 	    return reply_to_list;
 

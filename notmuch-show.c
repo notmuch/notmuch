@@ -204,6 +204,7 @@ format_headers_sprinter (sprinter_t *sp, GMimeMessage *message,
     InternetAddressList *recipients;
     char *recipients_string;
     const char *reply_to_string;
+    void *local = talloc_new (sp);
 
     sp->begin_map (sp);
 
@@ -237,7 +238,7 @@ format_headers_sprinter (sprinter_t *sp, GMimeMessage *message,
 	g_free (recipients_string);
     }
 
-    reply_to_string = g_mime_message_get_reply_to (message);
+    reply_to_string = g_mime_message_get_reply_to_string (local, message);
     if (reply_to_string) {
 	sp->map_key (sp, "Reply-To");
 	sp->string (sp, reply_to_string);
@@ -255,6 +256,7 @@ format_headers_sprinter (sprinter_t *sp, GMimeMessage *message,
     }
 
     sp->end (sp);
+    talloc_free (local);
 }
 
 /* Write a MIME text part out to the given stream.

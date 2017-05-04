@@ -39,6 +39,28 @@ g_mime_message_get_date_string (void *ctx, GMimeMessage *message)
     return g_string_talloc_strdup (ctx, date);
 }
 
+InternetAddressList *
+g_mime_message_get_reply_to_list (GMimeMessage *message)
+{
+    const char *reply_to;
+
+    reply_to = g_mime_message_get_reply_to (message);
+    if (reply_to && *reply_to)
+	return internet_address_list_parse_string (reply_to);
+    else
+	return NULL;
+}
+
+/**
+ * return talloc allocated reply-to string
+ */
+char *
+g_mime_message_get_reply_to_string (void *ctx, GMimeMessage *message)
+{
+    return talloc_strdup(ctx, g_mime_message_get_reply_to (message));
+}
+
+
 #else /* GMime >= 3.0 */
 
 char *
@@ -52,4 +74,19 @@ g_mime_message_get_date_string (void *ctx, GMimeMessage *message)
 	return talloc_strdup(ctx, "Thu, 01 Jan 1970 00:00:00 +0000");
     }
 }
+
+InternetAddressList *
+g_mime_message_get_reply_to_list(GMimeMessage *message)
+{
+    return g_mime_message_get_reply_to (message);
+}
+
+char *
+g_mime_message_get_reply_to_string (void *ctx, GMimeMessage *message)
+{
+    InternetAddressList *list = g_mime_message_get_reply_to (message);
+    return g_string_talloc_strdup (ctx, internet_address_list_to_string (list, NULL, 0));
+}
+
+
 #endif
