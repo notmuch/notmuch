@@ -490,7 +490,7 @@ _notmuch_message_index_file (notmuch_message_t *message,
 {
     GMimeMessage *mime_message;
     InternetAddressList *addresses;
-    const char *from, *subject;
+    const char *subject;
     notmuch_status_t status;
 
     status = _notmuch_message_file_get_mime_message (message_file,
@@ -498,9 +498,7 @@ _notmuch_message_index_file (notmuch_message_t *message,
     if (status)
 	return status;
 
-    from = g_mime_message_get_sender (mime_message);
-
-    addresses = internet_address_list_parse_string (from);
+    addresses = g_mime_message_get_from (mime_message);
     if (addresses) {
 	_index_address_list (message, "from", addresses);
 	g_object_unref (addresses);

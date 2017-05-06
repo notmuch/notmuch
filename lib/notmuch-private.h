@@ -46,7 +46,7 @@ NOTMUCH_BEGIN_DECLS
 
 #include <talloc.h>
 
-#include <gmime/gmime.h>
+#include "gmime-extra.h"
 
 #include "xutil.h"
 #include "error_util.h"

@@ -212,7 +212,7 @@ format_headers_sprinter (sprinter_t *sp, GMimeMessage *message,
     sp->string (sp, g_mime_message_get_subject (message));
 
     sp->map_key (sp, "From");
-    sp->string (sp, g_mime_message_get_sender (message));
+    sp->string (sp, g_mime_message_get_from_string (message));
 
     recipients = g_mime_message_get_recipients (message, GMIME_RECIPIENT_TYPE_TO);
     recipients_string = internet_address_list_to_string (recipients, 0);
@@ -520,9 +520,9 @@ format_part_text (const void *ctx, sprinter_t *sp, mime_node_t *node,
 	if (node->envelope_file)
 	    g_mime_stream_printf (stream, "%s\n", _get_one_line_summary (ctx, node->envelope_file));
 	g_mime_stream_printf (stream, "Subject: %s\n", g_mime_message_get_subject (message));
-	g_mime_stream_printf (stream, "From: %s\n", g_mime_message_get_sender (message));
 	recipients = g_mime_message_get_recipients (message, GMIME_RECIPIENT_TYPE_TO);
 	recipients_string = internet_address_list_to_string (recipients, 0);
+	g_mime_stream_printf (stream, "From: %s\n", g_mime_message_get_from_string (message));
 	if (recipients_string)
 	    g_mime_stream_printf (stream, "To: %s\n", recipients_string);
 	g_free (recipients_string);

@@ -40,6 +40,17 @@ g_mime_message_get_date_string (void *ctx, GMimeMessage *message)
 }
 
 InternetAddressList *
+g_mime_message_get_from (GMimeMessage *message)
+{
+    return internet_address_list_parse_string (g_mime_message_get_sender (message));
+}
+
+const char *
+g_mime_message_get_from_string (GMimeMessage *message) {
+    return  g_mime_message_get_sender (message);
+}
+
+InternetAddressList *
 g_mime_message_get_reply_to_list (GMimeMessage *message)
 {
     const char *reply_to;
@@ -79,6 +90,12 @@ InternetAddressList *
 g_mime_message_get_reply_to_list(GMimeMessage *message)
 {
     return g_mime_message_get_reply_to (message);
+}
+
+const char *
+g_mime_message_get_from_string (GMimeMessage *message)
+{
+    return g_mime_object_get_header (GMIME_OBJECT (message), "From");
 }
 
 char *

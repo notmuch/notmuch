@@ -47,9 +47,9 @@ format_part_reply (GMimeStream *stream, mime_node_t *node)
 	InternetAddressList *recipients;
 	char *recipients_string;
 
-	g_mime_stream_printf (stream, "> From: %s\n", g_mime_message_get_sender (message));
 	recipients = g_mime_message_get_recipients (message, GMIME_RECIPIENT_TYPE_TO);
 	recipients_string = internet_address_list_to_string (recipients, 0);
+	g_mime_stream_printf (stream, "> From: %s\n", g_mime_message_get_from_string (message));
 	if (recipients_string)
 	    g_mime_stream_printf (stream, "> To: %s\n",
 				  recipients_string);
@@ -292,8 +292,7 @@ static InternetAddressList *get_sender(GMimeMessage *message)
 	g_object_unref (G_OBJECT (reply_to_list));
     }
 
-    return internet_address_list_parse_string (
-	g_mime_message_get_sender (message));
+    return g_mime_message_get_from (message);
 }
 
 static InternetAddressList *get_to(GMimeMessage *message)
