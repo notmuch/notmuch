@@ -16,6 +16,29 @@ GMimeStream *g_mime_stream_stdout_new(void);
 
 #else /* GMime >= 3.0 */
 typedef GMimeAddressType GMimeRecipientType;
+
+#define GMIME_ENABLE_RFC_2047_WORKAROUNDS 0xdeadbeef
+#define g_mime_content_type_to_string(c) g_mime_content_type_get_mime_type (c)
+#define g_mime_filter_crlf_new(encode,dots) g_mime_filter_dos2unix_new (FALSE)
+#define g_mime_gpg_context_new(func,path) g_mime_gpg_context_new ()
+#define g_mime_gpg_context_set_use_agent(ctx,val) /*ignore*/
+#define g_mime_gpg_context_set_always_trust(ctx,val) /*ignore*/
+#define g_mime_init(flags) g_mime_init()
+#define g_mime_message_add_recipient(m,t,n,a) g_mime_message_add_mailbox (m,t,n,a)
+#define g_mime_message_set_subject(m,s) g_mime_message_set_subject(m,s,NULL)
+#define g_mime_multipart_encrypted_decrypt(mpe,ctx,out,err) g_mime_multipart_encrypted_decrypt(mpe, 0, NULL, out, err)
+#define g_mime_multipart_signed_verify(mps,ctx,err) g_mime_multipart_signed_verify(mps, 0, err)
+#define g_mime_object_write_to_stream(o,s) g_mime_object_write_to_stream (o,NULL,s)
+#define g_mime_object_set_header(o,h,v) g_mime_object_set_header (o,h,v,NULL)
+#define g_mime_parser_construct_message(p) g_mime_parser_construct_message (p, g_mime_parser_options_get_default ())
+#define g_mime_part_get_content_object(p) g_mime_part_get_content (p)
+#define g_mime_pkcs7_context_new(arg) g_mime_pkcs7_context_new()
+#define g_mime_pkcs7_context_set_always_trust(ctx,val) /*ignore*/
+#define g_mime_signature_get_errors(sig) g_mime_signature_get_status (sig)
+#define g_mime_utils_header_decode_text(txt) g_mime_utils_header_decode_text (NULL, txt)
+#define internet_address_to_string(ia,encode) internet_address_to_string (ia,NULL,encode)
+#define internet_address_list_parse_string(str) internet_address_list_parse (NULL,str)
+typedef GMimeAddressType GMimeRecipientType;
 #endif
 
 /**
