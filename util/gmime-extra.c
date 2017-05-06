@@ -33,6 +33,19 @@ g_string_talloc_strdup (void *ctx, char *g_string)
 #if (GMIME_MAJOR_VERSION < 3)
 
 char *
+g_mime_message_get_address_string (GMimeMessage *message, GMimeRecipientType type)
+{
+    InternetAddressList *list = g_mime_message_get_recipients (message, type);
+    return internet_address_list_to_string (list, 0);
+}
+
+inline InternetAddressList *
+g_mime_message_get_addresses (GMimeMessage *message, GMimeRecipientType type)
+{
+    return g_mime_message_get_recipients (message, type);
+}
+
+char *
 g_mime_message_get_date_string (void *ctx, GMimeMessage *message)
 {
     char *date = g_mime_message_get_date_as_string (message);
@@ -73,6 +86,13 @@ g_mime_message_get_reply_to_string (void *ctx, GMimeMessage *message)
 
 
 #else /* GMime >= 3.0 */
+
+char *
+g_mime_message_get_address_string (GMimeMessage *message, GMimeAddressType type)
+{
+    InternetAddressList *list = g_mime_message_get_addresses (message, type);
+    return internet_address_list_to_string (list, NULL, 0);
+}
 
 char *
 g_mime_message_get_date_string (void *ctx, GMimeMessage *message)

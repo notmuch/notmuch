@@ -201,7 +201,6 @@ format_headers_sprinter (sprinter_t *sp, GMimeMessage *message,
     /* Any changes to the JSON or S-Expression format should be
      * reflected in the file devel/schemata. */
 
-    InternetAddressList *recipients;
     char *recipients_string;
     const char *reply_to_string;
     void *local = talloc_new (sp);
@@ -214,24 +213,21 @@ format_headers_sprinter (sprinter_t *sp, GMimeMessage *message,
     sp->map_key (sp, "From");
     sp->string (sp, g_mime_message_get_from_string (message));
 
-    recipients = g_mime_message_get_recipients (message, GMIME_RECIPIENT_TYPE_TO);
-    recipients_string = internet_address_list_to_string (recipients, 0);
+    recipients_string = g_mime_message_get_address_string (message, GMIME_ADDRESS_TYPE_TO);
     if (recipients_string) {
 	sp->map_key (sp, "To");
 	sp->string (sp, recipients_string);
 	g_free (recipients_string);
     }
 
-    recipients = g_mime_message_get_recipients (message, GMIME_RECIPIENT_TYPE_CC);
-    recipients_string = internet_address_list_to_string (recipients, 0);
+    recipients_string = g_mime_message_get_address_string (message, GMIME_ADDRESS_TYPE_CC);
     if (recipients_string) {
 	sp->map_key (sp, "Cc");
 	sp->string (sp, recipients_string);
 	g_free (recipients_string);
     }
 
-    recipients = g_mime_message_get_recipients (message, GMIME_RECIPIENT_TYPE_BCC);
-    recipients_string = internet_address_list_to_string (recipients, 0);
+    recipients_string = g_mime_message_get_address_string (message, GMIME_ADDRESS_TYPE_BCC);
     if (recipients_string) {
 	sp->map_key (sp, "Bcc");
 	sp->string (sp, recipients_string);
@@ -512,7 +508,6 @@ format_part_text (const void *ctx, sprinter_t *sp, mime_node_t *node,
 
     if (GMIME_IS_MESSAGE (node->part)) {
 	GMimeMessage *message = GMIME_MESSAGE (node->part);
-	InternetAddressList *recipients;
 	char *recipients_string;
 	char *date_string;
 
@@ -520,14 +515,12 @@ format_part_text (const void *ctx, sprinter_t *sp, mime_node_t *node,
 	if (node->envelope_file)
 	    g_mime_stream_printf (stream, "%s\n", _get_one_line_summary (ctx, node->envelope_file));
 	g_mime_stream_printf (stream, "Subject: %s\n", g_mime_message_get_subject (message));
-	recipients = g_mime_message_get_recipients (message, GMIME_RECIPIENT_TYPE_TO);
-	recipients_string = internet_address_list_to_string (recipients, 0);
 	g_mime_stream_printf (stream, "From: %s\n", g_mime_message_get_from_string (message));
+	recipients_string = g_mime_message_get_address_string (message, GMIME_ADDRESS_TYPE_TO);
 	if (recipients_string)
 	    g_mime_stream_printf (stream, "To: %s\n", recipients_string);
 	g_free (recipients_string);
-	recipients = g_mime_message_get_recipients (message, GMIME_RECIPIENT_TYPE_CC);
-	recipients_string = internet_address_list_to_string (recipients, 0);
+	recipients_string = g_mime_message_get_address_string (message, GMIME_ADDRESS_TYPE_CC);
 	if (recipients_string)
 	    g_mime_stream_printf (stream, "Cc: %s\n", recipients_string);
 	g_free (recipients_string);

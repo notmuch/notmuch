@@ -44,18 +44,15 @@ format_part_reply (GMimeStream *stream, mime_node_t *node)
 			      notmuch_message_get_header (node->envelope_file, "from"));
     } else if (GMIME_IS_MESSAGE (node->part)) {
 	GMimeMessage *message = GMIME_MESSAGE (node->part);
-	InternetAddressList *recipients;
 	char *recipients_string;
 
-	recipients = g_mime_message_get_recipients (message, GMIME_RECIPIENT_TYPE_TO);
-	recipients_string = internet_address_list_to_string (recipients, 0);
 	g_mime_stream_printf (stream, "> From: %s\n", g_mime_message_get_from_string (message));
+	recipients_string = g_mime_message_get_address_string (message, GMIME_ADDRESS_TYPE_TO);
 	if (recipients_string)
 	    g_mime_stream_printf (stream, "> To: %s\n",
 				  recipients_string);
 	g_free (recipients_string);
-	recipients = g_mime_message_get_recipients (message, GMIME_RECIPIENT_TYPE_CC);
-	recipients_string = internet_address_list_to_string (recipients, 0);
+	recipients_string = g_mime_message_get_address_string (message, GMIME_ADDRESS_TYPE_CC);
 	if (recipients_string)
 	    g_mime_stream_printf (stream, "> Cc: %s\n",
 				  recipients_string);
@@ -297,17 +294,17 @@ static InternetAddressList *get_sender(GMimeMessage *message)
 
 static InternetAddressList *get_to(GMimeMessage *message)
 {
-    return g_mime_message_get_recipients (message, GMIME_RECIPIENT_TYPE_TO);
+    return g_mime_message_get_addresses (message, GMIME_ADDRESS_TYPE_TO);
 }
 
 static InternetAddressList *get_cc(GMimeMessage *message)
 {
-    return g_mime_message_get_recipients (message, GMIME_RECIPIENT_TYPE_CC);
+    return g_mime_message_get_addresses (message, GMIME_ADDRESS_TYPE_CC);
 }
 
 static InternetAddressList *get_bcc(GMimeMessage *message)
 {
-    return g_mime_message_get_recipients (message, GMIME_RECIPIENT_TYPE_BCC);
+    return g_mime_message_get_addresses (message, GMIME_ADDRESS_TYPE_BCC);
 }
 
 /* Augment the recipients of 'reply' from the "Reply-to:", "From:",
@@ -338,10 +335,10 @@ add_recipients_from_message (GMimeMessage *reply,
 	InternetAddressList * (*get_header)(GMimeMessage *message);
 	GMimeRecipientType recipient_type;
     } reply_to_map[] = {
-	{ get_sender,	GMIME_RECIPIENT_TYPE_TO },
-	{ get_to,	GMIME_RECIPIENT_TYPE_TO },
-	{ get_cc,	GMIME_RECIPIENT_TYPE_CC },
-	{ get_bcc,	GMIME_RECIPIENT_TYPE_BCC },
+	{ get_sender,	GMIME_ADDRESS_TYPE_TO },
+	{ get_to,	GMIME_ADDRESS_TYPE_TO },
+	{ get_cc,	GMIME_ADDRESS_TYPE_CC },
+	{ get_bcc,	GMIME_ADDRESS_TYPE_BCC },
     };
     const char *from_addr = NULL;
     unsigned int i;
