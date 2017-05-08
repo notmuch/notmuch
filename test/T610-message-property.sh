@@ -209,6 +209,15 @@ EOF
 notmuch dump | grep '^#=' > OUTPUT
 test_expect_equal_file PROPERTIES OUTPUT
 
+test_begin_subtest "dump _only_ message properties"
+test_subtest_known_broken
+cat <<EOF > EXPECTED
+#notmuch-dump batch-tag:3 properties
+#= 4EFC743A.3060609@april.org fancy%20key%20with%20%c3%a1cc%c3%a8nts=import%20value%20with%20= testkey1=alice testkey1=bob testkey1=testvalue1 testkey1=testvalue2 testkey3=alice3 testkey3=bob3 testkey3=testvalue3
+EOF
+notmuch dump --include=properties > OUTPUT
+test_expect_equal_file EXPECTED OUTPUT
+
 
 test_begin_subtest "restore missing message property (single line)"
 notmuch dump | grep '^#=' > BEFORE1
