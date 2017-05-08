@@ -250,7 +250,8 @@ database_dump_file (notmuch_database_t *notmuch, gzFile output,
 
 	message = notmuch_messages_get (messages);
 
-	if (dump_tags_message (notmuch, message, output_format, output,
+	if ((include & DUMP_INCLUDE_TAGS) &&
+	    dump_tags_message (notmuch, message, output_format, output,
 			       &buffer, &buffer_size))
 	    return EXIT_FAILURE;
 
