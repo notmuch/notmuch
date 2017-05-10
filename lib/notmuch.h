@@ -43,6 +43,8 @@ NOTMUCH_BEGIN_DECLS
 
 #include <time.h>
 
+#pragma GCC visibility push(default)
+
 #ifndef FALSE
 #define FALSE 0
 #endif
@@ -2119,6 +2121,8 @@ notmuch_config_list_destroy (notmuch_config_list_t *config_list);
 notmuch_bool_t
 notmuch_built_with (const char *name);
 /* @} */
+
+#pragma GCC visibility pop
 
 NOTMUCH_END_DECLS
 

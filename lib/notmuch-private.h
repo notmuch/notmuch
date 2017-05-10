@@ -52,8 +52,6 @@ NOTMUCH_BEGIN_DECLS
 #include "error_util.h"
 #include "string-util.h"
 
-#pragma GCC visibility push(hidden)
-
 #ifdef DEBUG
 # define DEBUG_DATABASE_SANITY 1
 # define DEBUG_QUERY 1
@@ -620,7 +618,5 @@ _notmuch_talloc_steal (const void *new_ctx, const T *ptr)
 #define talloc_steal _notmuch_talloc_steal
 #endif
 #endif
-
-#pragma GCC visibility pop
 
 #endif
