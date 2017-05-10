@@ -212,6 +212,7 @@ dataclean: distclean
 	rm -rf $(DATACLEAN)
 
 notmuch_client_srcs =		\
+	$(notmuch_compat_srcs)	\
 	command-line-arguments.c\
 	debugger.c		\
 	status.c		\
