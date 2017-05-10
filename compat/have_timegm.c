@@ -1,5 +1,4 @@
 #include <time.h>
-#include "compat.h"
 
 int main()
 {
