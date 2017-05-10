@@ -26,7 +26,7 @@
 
 #define EMPTY_STRING(s) ((s)[0] == '\0')
 
-struct visible _notmuch_thread {
+struct _notmuch_thread {
     notmuch_database_t *notmuch;
     char *thread_id;
     char *subject;

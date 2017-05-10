@@ -74,12 +74,6 @@ NOTMUCH_BEGIN_DECLS
 
 #define unused(x) x __attribute__ ((unused))
 
-#ifdef __cplusplus
-# define visible __attribute__((visibility("default")))
-#else
-# define visible
-#endif
-
 /* Thanks to Andrew Tridgell's (SAMBA's) talloc for this definition of
  * unlikely. The talloc source code comes to us via the GNU LGPL v. 3.
  */
@@ -453,7 +447,7 @@ typedef struct _notmuch_message_list {
  * somewhere with some nasty C++ objects in it. We'll try to maintain
  * ignorance of that here. (See notmuch_mset_messages_t in query.cc)
  */
-struct visible _notmuch_messages {
+struct _notmuch_messages {
     notmuch_bool_t is_of_list_type;
     notmuch_doc_id_set_t *excluded_doc_ids;
     notmuch_message_node_t *iterator;
@@ -522,7 +516,7 @@ typedef struct _notmuch_string_node {
     struct _notmuch_string_node *next;
 } notmuch_string_node_t;
 
-typedef struct visible _notmuch_string_list {
+typedef struct _notmuch_string_list {
     int length;
     notmuch_string_node_t *head;
     notmuch_string_node_t **tail;
