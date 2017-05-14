@@ -84,6 +84,20 @@ g_mime_message_get_reply_to_string (void *ctx, GMimeMessage *message)
     return talloc_strdup(ctx, g_mime_message_get_reply_to (message));
 }
 
+gboolean
+g_mime_signature_status_good (GMimeSignatureStatus status) {
+    return (status == GMIME_SIGNATURE_STATUS_GOOD);
+}
+
+gboolean
+g_mime_signature_status_bad (GMimeSignatureStatus status) {
+    return (status == GMIME_SIGNATURE_STATUS_BAD);
+}
+
+gboolean
+g_mime_signature_status_error (GMimeSignatureError error) {
+    return (error != GMIME_SIGNATURE_ERROR_NONE);
+}
 
 #else /* GMime >= 3.0 */
 
@@ -123,6 +137,33 @@ g_mime_message_get_reply_to_string (void *ctx, GMimeMessage *message)
 {
     InternetAddressList *list = g_mime_message_get_reply_to (message);
     return g_string_talloc_strdup (ctx, internet_address_list_to_string (list, NULL, 0));
+}
+
+void
+g_mime_parser_set_scan_from (GMimeParser *parser, gboolean flag)
+{
+    g_mime_parser_set_format (parser, flag ? GMIME_FORMAT_MBOX : GMIME_FORMAT_MESSAGE);
+}
+
+/* In GMime 3.0, status GOOD and VALID both imply something about the
+ * validity of the UIDs attached to the signing key. This forces us to
+ * use following somewhat relaxed definition of a "good" signature to
+ * preserve current notmuch semantics.
+ */
+
+gboolean
+g_mime_signature_status_good (GMimeSignatureStatus status) {
+    return ((status  & (GMIME_SIGNATURE_STATUS_RED | GMIME_SIGNATURE_STATUS_ERROR_MASK)) == 0);
+}
+
+gboolean
+g_mime_signature_status_bad (GMimeSignatureStatus status) {
+    return (status & GMIME_SIGNATURE_STATUS_RED);
+}
+
+gboolean
+g_mime_signature_status_error (GMimeSignatureStatus status) {
+    return (status & GMIME_SIGNATURE_STATUS_ERROR_MASK);
 }
 
 

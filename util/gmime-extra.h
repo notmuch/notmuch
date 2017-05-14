@@ -13,7 +13,6 @@ GMimeStream *g_mime_stream_stdout_new(void);
 #define GMIME_ADDRESS_TYPE_CC GMIME_RECIPIENT_TYPE_CC
 #define GMIME_ADDRESS_TYPE_BCC GMIME_RECIPIENT_TYPE_BCC
 
-
 #else /* GMime >= 3.0 */
 typedef GMimeAddressType GMimeRecipientType;
 
@@ -39,6 +38,9 @@ typedef GMimeAddressType GMimeRecipientType;
 #define internet_address_to_string(ia,encode) internet_address_to_string (ia,NULL,encode)
 #define internet_address_list_parse_string(str) internet_address_list_parse (NULL,str)
 typedef GMimeAddressType GMimeRecipientType;
+
+typedef GMimeSignatureStatus GMimeSignatureError;
+
 #endif
 
 /**
@@ -61,6 +63,7 @@ char *g_mime_message_get_date_string (void *ctx, GMimeMessage *message);
 
 InternetAddressList * g_mime_message_get_from (GMimeMessage *message);
 
+
 /**
  * return string for From: address
  * (owned by gmime)
@@ -73,4 +76,12 @@ InternetAddressList * g_mime_message_get_reply_to_list (GMimeMessage *message);
  * return talloc allocated reply-to string
  */
 char * g_mime_message_get_reply_to_string (void *ctx, GMimeMessage *message);
+
+void g_mime_parser_set_scan_from (GMimeParser *parser, gboolean flag);
+
+gboolean g_mime_signature_status_good (GMimeSignatureStatus status);
+
+gboolean g_mime_signature_status_bad (GMimeSignatureStatus status);
+
+gboolean g_mime_signature_status_error (GMimeSignatureError status);
 #endif

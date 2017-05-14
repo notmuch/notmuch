@@ -320,21 +320,20 @@ show_text_part_content (GMimeObject *part, GMimeStream *stream_out,
 	g_object_unref(stream_filter);
 }
 
-/* Get signature status string (GMime 2.6) */
 static const char*
-signature_status_to_string (GMimeSignatureStatus x)
+signature_status_to_string (GMimeSignatureStatus status)
 {
-    switch (x) {
-    case GMIME_SIGNATURE_STATUS_GOOD:
-	return "good";
-    case GMIME_SIGNATURE_STATUS_BAD:
+    if (g_mime_signature_status_bad (status))
 	return "bad";
-    case GMIME_SIGNATURE_STATUS_ERROR:
+
+    if (g_mime_signature_status_error (status))
 	return "error";
-    }
+
+    if (g_mime_signature_status_good (status))
+	return "good";
+
     return "unknown";
 }
-
 
 /* Print signature flags */
 struct key_map_struct {
@@ -358,6 +357,7 @@ do_format_signature_errors (sprinter_t *sp, struct key_map_struct *key_map,
     sp->end (sp);
 }
 
+#if (GMIME_MAJOR_VERSION < 3)
 static void
 format_signature_errors (sprinter_t *sp, GMimeSignature *signature)
 {
@@ -376,6 +376,30 @@ format_signature_errors (sprinter_t *sp, GMimeSignature *signature)
 
     do_format_signature_errors (sp, key_map, ARRAY_SIZE(key_map), errors);
 }
+#else
+static void
+format_signature_errors (sprinter_t *sp, GMimeSignature *signature)
+{
+    GMimeSignatureError errors = g_mime_signature_get_errors (signature);
+
+    if (!(errors & GMIME_SIGNATURE_STATUS_ERROR_MASK))
+	return;
+
+    struct key_map_struct key_map[] = {
+	{ GMIME_SIGNATURE_STATUS_KEY_REVOKED, "key-revoked"},
+	{ GMIME_SIGNATURE_STATUS_KEY_EXPIRED, "key-expired"},
+	{ GMIME_SIGNATURE_STATUS_SIG_EXPIRED, "sig-expired" },
+	{ GMIME_SIGNATURE_STATUS_KEY_MISSING, "key-missing"},
+	{ GMIME_SIGNATURE_STATUS_CRL_MISSING, "crl-missing"},
+	{ GMIME_SIGNATURE_STATUS_CRL_TOO_OLD, "crl-too-old"},
+	{ GMIME_SIGNATURE_STATUS_BAD_POLICY, "bad-policy"},
+	{ GMIME_SIGNATURE_STATUS_SYS_ERROR, "sys-error"},
+	{ GMIME_SIGNATURE_STATUS_TOFU_CONFLICT, "tofu-conflict"},
+    };
+
+    do_format_signature_errors (sp, key_map, ARRAY_SIZE(key_map), errors);
+}
+#endif
 
 /* Signature status sprinter (GMime 2.6) */
 static void
@@ -405,7 +429,7 @@ format_part_sigstatus_sprinter (sprinter_t *sp, mime_node_t *node)
 	sp->string (sp, signature_status_to_string (status));
 
 	GMimeCertificate *certificate = g_mime_signature_get_certificate (signature);
-	if (status == GMIME_SIGNATURE_STATUS_GOOD) {
+	if (g_mime_signature_status_good (status)) {
 	    if (certificate) {
 		sp->map_key (sp, "fingerprint");
 		sp->string (sp, g_mime_certificate_get_fingerprint (certificate));
@@ -443,7 +467,7 @@ format_part_sigstatus_sprinter (sprinter_t *sp, mime_node_t *node)
 
 	if (notmuch_format_version <= 3) {
 	    GMimeSignatureError errors = g_mime_signature_get_errors (signature);
-	    if (errors != GMIME_SIGNATURE_ERROR_NONE) {
+	    if (g_mime_signature_status_error (errors)) {
 		sp->map_key (sp, "errors");
 		sp->integer (sp, errors);
 	    }
