@@ -37,9 +37,19 @@ typedef GMimeAddressType GMimeRecipientType;
 #define g_mime_utils_header_decode_text(txt) g_mime_utils_header_decode_text (NULL, txt)
 #define internet_address_to_string(ia,encode) internet_address_to_string (ia,NULL,encode)
 #define internet_address_list_parse_string(str) internet_address_list_parse (NULL,str)
+
 typedef GMimeAddressType GMimeRecipientType;
 
 typedef GMimeSignatureStatus GMimeSignatureError;
+
+typedef GMimeTrust GMimeCertificateTrust;
+
+#define GMIME_CERTIFICATE_TRUST_UNKNOWN GMIME_TRUST_UNKNOWN
+#define GMIME_CERTIFICATE_TRUST_UNDEFINED GMIME_TRUST_UNDEFINED
+#define GMIME_CERTIFICATE_TRUST_NEVER GMIME_TRUST_NEVER
+#define GMIME_CERTIFICATE_TRUST_MARGINAL GMIME_TRUST_MARGINAL
+#define GMIME_CERTIFICATE_TRUST_FULLY GMIME_TRUST_FULL
+#define GMIME_CERTIFICATE_TRUST_ULTIMATE GMIME_TRUST_ULTIMATE
 
 #endif
 
