@@ -99,6 +99,11 @@ g_mime_signature_status_error (GMimeSignatureError error) {
     return (error != GMIME_SIGNATURE_ERROR_NONE);
 }
 
+time_t
+g_mime_utils_header_decode_date_unix (const char *date) {
+    return g_mime_utils_header_decode_date (date, NULL);
+}
+
 #else /* GMime >= 3.0 */
 
 char *
@@ -166,5 +171,19 @@ g_mime_signature_status_error (GMimeSignatureStatus status) {
     return (status & GMIME_SIGNATURE_STATUS_ERROR_MASK);
 }
 
+gint64
+g_mime_utils_header_decode_date_unix (const char *date) {
+    GDateTime* parsed_date = g_mime_utils_header_decode_date (date);
+    time_t ret;
+
+    if (parsed_date) {
+	ret = g_date_time_to_unix (parsed_date);
+	g_date_time_unref (parsed_date);
+    } else {
+	ret = 0;
+    }
+
+    return ret;
+}
 
 #endif

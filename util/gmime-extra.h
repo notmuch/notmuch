@@ -94,4 +94,6 @@ gboolean g_mime_signature_status_good (GMimeSignatureStatus status);
 gboolean g_mime_signature_status_bad (GMimeSignatureStatus status);
 
 gboolean g_mime_signature_status_error (GMimeSignatureError status);
+
+gint64 g_mime_utils_header_decode_date_unix (const char *date);
 #endif

@@ -1037,7 +1037,7 @@ _notmuch_message_set_header_values (notmuch_message_t *message,
     if (date == NULL || *date == '\0') {
 	time_value = 0;
     } else {
-	time_value = g_mime_utils_header_decode_date (date, NULL);
+	time_value = g_mime_utils_header_decode_date_unix (date);
 	/*
 	 * Workaround for https://bugzilla.gnome.org/show_bug.cgi?id=779923
 	 */
