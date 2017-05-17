@@ -201,6 +201,37 @@ _notmuch_message_file_get_mime_message (notmuch_message_file_t *message,
  *
  * Return NULL on errors, empty string for non-existing headers.
  */
+
+static char *
+_extend_header (char *combined, const char *value) {
+    char *decoded;
+
+    decoded = g_mime_utils_header_decode_text (value);
+    if (! decoded) {
+	if (combined) {
+	    g_free (combined);
+	    combined = NULL;
+	}
+	goto DONE;
+    }
+
+    if (combined) {
+	char *tmp = g_strdup_printf ("%s %s", combined, decoded);
+	g_free (decoded);
+	g_free (combined);
+	if (! tmp) {
+	    combined = NULL;
+	    goto DONE;
+	}
+
+	combined = tmp;
+    } else {
+	combined = decoded;
+    }
+ DONE:
+    return combined;
+}
+
 static char *
 _notmuch_message_file_get_combined_header (notmuch_message_file_t *message,
 					   const char *header)
@@ -222,37 +253,13 @@ _notmuch_message_file_get_combined_header (notmuch_message_file_t *message,
 
     do {
 	const char *value;
-	char *decoded;
-
 	if (strcasecmp (g_mime_header_iter_get_name (iter), header) != 0)
 	    continue;
 
 	/* Note that GMime retains ownership of value... */
 	value = g_mime_header_iter_get_value (iter);
 
-	/* ... while decoded needs to be freed with g_free(). */
-	decoded = g_mime_utils_header_decode_text (value);
-	if (! decoded) {
-	    if (combined) {
-		g_free (combined);
-		combined = NULL;
-	    }
-	    goto DONE;
-	}
-
-	if (combined) {
-	    char *tmp = g_strdup_printf ("%s %s", combined, decoded);
-	    g_free (decoded);
-	    g_free (combined);
-	    if (! tmp) {
-		combined = NULL;
-		goto DONE;
-	    }
-
-	    combined = tmp;
-	} else {
-	    combined = decoded;
-	}
+	combined = _extend_header (combined, value);
     } while (g_mime_header_iter_next (iter));
 
     /* Return empty string for non-existing headers. */
