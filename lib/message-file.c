@@ -232,6 +232,7 @@ _extend_header (char *combined, const char *value) {
     return combined;
 }
 
+#if (GMIME_MAJOR_VERSION < 3)
 static char *
 _notmuch_message_file_get_combined_header (notmuch_message_file_t *message,
 					   const char *header)
@@ -271,6 +272,39 @@ _notmuch_message_file_get_combined_header (notmuch_message_file_t *message,
 
     return combined;
 }
+#else
+static char *
+_notmuch_message_file_get_combined_header (notmuch_message_file_t *message,
+					   const char *header)
+{
+    char *combined = NULL;
+    GMimeHeaderList *headers;
+
+    headers = g_mime_object_get_header_list (GMIME_OBJECT (message->message));
+    if (! headers)
+	return NULL;
+
+
+    for (int i=0; i < g_mime_header_list_get_count (headers); i++) {
+	const char *value;
+	GMimeHeader *g_header = g_mime_header_list_get_header_at (headers, i);
+
+	if (strcasecmp (g_mime_header_get_name (g_header), header) != 0)
+	    continue;
+
+	/* GMime retains ownership of value, we hope */
+	value = g_mime_header_get_value (g_header);
+
+	combined = _extend_header (combined, value);
+    }
+
+    /* Return empty string for non-existing headers. */
+    if (! combined)
+	combined = g_strdup ("");
+
+    return combined;
+}
+#endif
 
 const char *
 _notmuch_message_file_get_header (notmuch_message_file_t *message,
