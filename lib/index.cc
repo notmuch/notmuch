@@ -501,7 +501,7 @@ _notmuch_message_index_file (notmuch_message_t *message,
     addresses = g_mime_message_get_from (mime_message);
     if (addresses) {
 	_index_address_list (message, "from", addresses);
-	g_object_unref (addresses);
+	g_mime_2_6_unref (addresses);
     }
 
     addresses = g_mime_message_get_all_recipients (mime_message);

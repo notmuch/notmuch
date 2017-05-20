@@ -13,6 +13,8 @@ GMimeStream *g_mime_stream_stdout_new(void);
 #define GMIME_ADDRESS_TYPE_CC GMIME_RECIPIENT_TYPE_CC
 #define GMIME_ADDRESS_TYPE_BCC GMIME_RECIPIENT_TYPE_BCC
 
+#define g_mime_2_6_unref(obj) g_object_unref (obj)
+
 #else /* GMime >= 3.0 */
 typedef GMimeAddressType GMimeRecipientType;
 
@@ -51,6 +53,7 @@ typedef GMimeTrust GMimeCertificateTrust;
 #define GMIME_CERTIFICATE_TRUST_FULLY GMIME_TRUST_FULL
 #define GMIME_CERTIFICATE_TRUST_ULTIMATE GMIME_TRUST_ULTIMATE
 
+#define g_mime_2_6_unref(obj) /*ignore*/
 #endif
 
 /**
