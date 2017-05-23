@@ -219,10 +219,21 @@ test_fixed=0
 test_broken=0
 test_success=0
 
+declare -a _exit_functions=()
+
+at_exit_function () {
+	_exit_functions=($1 ${_exit_functions[@]/$1})
+}
+
+rm_exit_function () {
+	_exit_functions=(${_exit_functions[@]/$1})
+}
+
 _exit_common () {
 	code=$?
 	trap - EXIT
 	set +ex
+	for _fn in ${_exit_functions[@]}; do $_fn; done
 	rm -rf "$TEST_TMPDIR"
 }
 
