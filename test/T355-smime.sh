@@ -7,6 +7,8 @@ add_gpgsm_home ()
 {
     local fpr
     [ -d ${GNUPGHOME} ] && return
+    _gnupg_exit () { gpgconf --kill all 2>/dev/null || true; }
+    at_exit_function _gnupg_exit
     mkdir -m 0700 "$GNUPGHOME"
     gpgsm --no-tty --no-common-certs-import --disable-dirmngr --import < $TEST_DIRECTORY/smime/test.crt >"$GNUPGHOME"/import.log 2>&1
     fpr=$(gpgsm  --list-key test_suite@notmuchmail.org | sed -n 's/.*fingerprint: //p')

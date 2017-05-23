@@ -11,6 +11,8 @@ add_gnupg_home ()
 {
     local output
     [ -d ${GNUPGHOME} ] && return
+    _gnupg_exit () { gpgconf --kill all 2>/dev/null || true; }
+    at_exit_function _gnupg_exit
     mkdir -m 0700 "$GNUPGHOME"
     gpg --no-tty --import <$TEST_DIRECTORY/gnupg-secret-key.asc >"$GNUPGHOME"/import.log 2>&1
     test_debug "cat $GNUPGHOME/import.log"
