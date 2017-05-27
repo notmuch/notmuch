@@ -484,8 +484,13 @@ fi
 GMIME_MINVER=2.6.7
 
 printf "Checking for GMime development files... "
-if pkg-config --exists "gmime-2.6 >= $GMIME_MINVER"; then
-    printf "Yes.\n"
+if pkg-config --exists "gmime-3.0"; then
+    printf "Yes (3.0).\n"
+    have_gmime=1
+    gmime_cflags=$(pkg-config --cflags gmime-3.0)
+    gmime_ldflags=$(pkg-config --libs gmime-3.0)
+elif pkg-config --exists "gmime-2.6 >= $GMIME_MINVER"; then
+    printf "Yes (2.6).\n"
     have_gmime=1
     gmime_cflags=$(pkg-config --cflags gmime-2.6)
     gmime_ldflags=$(pkg-config --libs gmime-2.6)
