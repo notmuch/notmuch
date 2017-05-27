@@ -45,7 +45,7 @@ format_part_reply (GMimeStream *stream, mime_node_t *node)
     } else if (GMIME_IS_MESSAGE (node->part)) {
 	GMimeMessage *message = GMIME_MESSAGE (node->part);
 	InternetAddressList *recipients;
-	const char *recipients_string;
+	char *recipients_string;
 
 	g_mime_stream_printf (stream, "> From: %s\n", g_mime_message_get_sender (message));
 	recipients = g_mime_message_get_recipients (message, GMIME_RECIPIENT_TYPE_TO);
@@ -53,11 +53,13 @@ format_part_reply (GMimeStream *stream, mime_node_t *node)
 	if (recipients_string)
 	    g_mime_stream_printf (stream, "> To: %s\n",
 				  recipients_string);
+	g_free (recipients_string);
 	recipients = g_mime_message_get_recipients (message, GMIME_RECIPIENT_TYPE_CC);
 	recipients_string = internet_address_list_to_string (recipients, 0);
 	if (recipients_string)
 	    g_mime_stream_printf (stream, "> Cc: %s\n",
 				  recipients_string);
+	g_free (recipients_string);
 	g_mime_stream_printf (stream, "> Subject: %s\n", g_mime_message_get_subject (message));
 	g_mime_stream_printf (stream, "> Date: %s\n", g_mime_message_get_date_as_string (message));
 	g_mime_stream_printf (stream, ">\n");
@@ -329,6 +331,12 @@ add_recipients_from_message (GMimeMessage *reply,
 			     GMimeMessage *message,
 			     notmuch_bool_t reply_all)
 {
+
+    /* There is a memory leak here with gmime-2.6 because get_sender
+     * returns a newly allocated list, while the others return
+     * references to libgmime owned data. This leak will be fixed with
+     * the transition to gmime-3.0.
+     */
     struct {
 	InternetAddressList * (*get_header)(GMimeMessage *message);
 	GMimeRecipientType recipient_type;
