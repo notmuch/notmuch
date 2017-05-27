@@ -86,6 +86,7 @@ typedef struct notmuch_show_params {
     int part;
     notmuch_crypto_t crypto;
     notmuch_bool_t include_html;
+    GMimeStream *out_stream;
 } notmuch_show_params_t;
 
 /* There's no point in continuing when we've detected that we've done
