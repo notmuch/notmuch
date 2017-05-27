@@ -29,7 +29,7 @@
 
 #include "compat.h"
 
-#include <gmime/gmime.h>
+#include "gmime-extra.h"
 
 typedef GMimeCryptoContext notmuch_crypto_context_t;
 /* This is automatically included only since gmime 2.6.10 */
