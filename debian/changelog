@@ -1,3 +1,10 @@
+notmuch (0.24.2-1) experimental; urgency=medium
+
+  * Fix dump output to not include tags when not asked for
+  * Fix file name stashing in emacs tree view.
+
+ -- David Bremner <bremner@debian.org>  Thu, 01 Jun 2017 07:24:55 -0300
+
 notmuch (0.24.1-1) experimental; urgency=medium
 
   * Restore Xapian wildcard queries to from: and subject:
