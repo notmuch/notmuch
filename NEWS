@@ -1,3 +1,15 @@
+Notmuch 0.24.2 (2017-06-01)
+
+Command Line Interface
+----------------------
+
+Fix output from `notmuch dump --include=properties` to not include tags.
+
+Emacs
+-----
+
+Fix filename stashing in tree view.
+
 Notmuch 0.24.1 (2017-04-01)
 ===========================
 
