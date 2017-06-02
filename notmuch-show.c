@@ -458,7 +458,7 @@ format_part_sigstatus_sprinter (sprinter_t *sp, mime_node_t *node)
 		}
 	    }
 	} else if (certificate) {
-	    const char *key_id = g_mime_certificate_get_key_id (certificate);
+	    const char *key_id = g_mime_certificate_get_fpr16 (certificate);
 	    if (key_id) {
 		sp->map_key (sp, "keyid");
 		sp->string (sp, key_id);

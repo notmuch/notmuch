@@ -1,4 +1,5 @@
 #include "gmime-extra.h"
+#include <string.h>
 
 GMimeStream *
 g_mime_stream_stdout_new()
@@ -105,6 +106,15 @@ g_mime_utils_header_decode_date_unix (const char *date) {
 }
 
 #else /* GMime >= 3.0 */
+
+const char*
+g_mime_certificate_get_fpr16 (GMimeCertificate *cert) {
+    const char *fpr = g_mime_certificate_get_fingerprint (cert);
+    if (!fpr || strlen (fpr) < 16)
+	return fpr;
+
+    return fpr + (strlen (fpr) - 16);
+}
 
 char *
 g_mime_message_get_address_string (GMimeMessage *message, GMimeAddressType type)

@@ -14,6 +14,7 @@ GMimeStream *g_mime_stream_stdout_new(void);
 #define GMIME_ADDRESS_TYPE_BCC GMIME_RECIPIENT_TYPE_BCC
 
 #define g_mime_2_6_unref(obj) g_object_unref (obj)
+#define g_mime_certificate_get_fpr16(cert) g_mime_certificate_get_key_id (cert)
 
 #else /* GMime >= 3.0 */
 typedef GMimeAddressType GMimeRecipientType;
@@ -56,6 +57,10 @@ typedef GMimeTrust GMimeCertificateTrust;
 #define g_mime_2_6_unref(obj) /*ignore*/
 #endif
 
+/**
+ * Get last 16 hex digits of fingerprint ("keyid")
+ */
+const char *g_mime_certificate_get_fpr16 (GMimeCertificate *cert);
 /**
  * Return the contents of the appropriate address header as a string
  * Should be freed using g_free
