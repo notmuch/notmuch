@@ -107,6 +107,49 @@ test_expect_equal_json \
     "$output" \
     "$expected"
 
+test_begin_subtest "corrupted pgp/mime signature"
+emacs_fcc_message \
+    "bad signed message 002" \
+    "Incriminating stuff. This is a test signed message." \
+    "(mml-secure-message-sign)"
+
+file=$(notmuch search --output=files subject:"bad signed message 002")
+
+awk '/-----BEGIN PGP SIGNATURE-----/{flag=1;print;next} \
+     /-----END PGP SIGNATURE-----/{flag=0;print;next} \
+     flag{gsub(/[A-Za-z]/,"0");print}!flag{print}' $file > $file.new
+
+rm $file
+mv $file.new $file
+
+output=$(notmuch show --format=json --verify subject:"bad signed message 002" \
+    | notmuch_json_show_sanitize \
+    | sed -e 's|"created": [1234567890]*|"created": 946728000|')
+expected='[[[{"id": "XXXXX",
+ "match": true,
+ "excluded": false,
+ "filename": ["YYYYY"],
+ "timestamp": 946728000,
+ "date_relative": "2000-01-01",
+ "tags": ["inbox","signed"],
+ "headers": {"Subject": "bad signed message 002",
+ "From": "Notmuch Test Suite <test_suite@notmuchmail.org>",
+ "To": "test_suite@notmuchmail.org",
+ "Date": "Sat, 01 Jan 2000 12:00:00 +0000"},
+ "body": [{"id": 1,
+ "sigstatus": [],
+ "content-type": "multipart/signed",
+ "content": [{"id": 2,
+ "content-type": "text/plain",
+ "content": "Incriminating stuff. This is a test signed message.\n"},
+ {"id": 3,
+ "content-type": "application/pgp-signature",
+ "content-length": "NONZERO"}]}]},
+ []]]]'
+test_expect_equal_json \
+    "$output" \
+    "$expected"
+
 test_begin_subtest "signature verification with full owner trust"
 # give the key full owner trust
 echo "${FINGERPRINT}:6:" | gpg --no-tty --import-ownertrust >>"$GNUPGHOME"/trust.log 2>&1
