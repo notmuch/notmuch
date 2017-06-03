@@ -465,8 +465,9 @@ notmuch show --format=raw --part=0 'id:87liy5ap00.fsf@yoom.home.cworth.org' >OUT
 test_expect_equal_file "${MAIL_DIR}"/multipart OUTPUT
 
 test_begin_subtest "--format=raw --part=1, message body"
+test_subtest_broken_gmime_2
 notmuch show --format=raw --part=1 'id:87liy5ap00.fsf@yoom.home.cworth.org' >OUTPUT
-test_expect_equal_file "${MAIL_DIR}"/multipart OUTPUT
+test_expect_equal_file multipart_body OUTPUT
 
 test_begin_subtest "--format=raw --part=2, multipart/mixed"
 notmuch show --format=raw --part=2 'id:87liy5ap00.fsf@yoom.home.cworth.org' >OUTPUT
@@ -518,30 +519,9 @@ notmuch show --format=raw --part=3 'id:87liy5ap00.fsf@yoom.home.cworth.org' >OUT
 test_expect_equal_file embedded_message OUTPUT
 
 test_begin_subtest "--format=raw --part=4, rfc822's multipart"
+test_subtest_broken_gmime_2
 notmuch show --format=raw --part=4 'id:87liy5ap00.fsf@yoom.home.cworth.org' >OUTPUT
-cat <<EOF >EXPECTED
-From: Carl Worth <cworth@cworth.org>
-To: cworth@cworth.org
-Subject: html message
-Date: Fri, 05 Jan 2001 15:42:57 +0000
-User-Agent: Notmuch/0.5 (http://notmuchmail.org) Emacs/23.3.1 (i486-pc-linux-gnu)
-Message-ID: <87liy5ap01.fsf@yoom.home.cworth.org>
-MIME-Version: 1.0
-Content-Type: multipart/alternative; boundary="==-=-=="
-
---==-=-==
-Content-Type: text/html
-
-<p>This is an embedded message, with a multipart/alternative part.</p>
-
---==-=-==
-Content-Type: text/plain
-
-This is an embedded message, with a multipart/alternative part.
-
---==-=-==--
-EOF
-test_expect_equal_file EXPECTED OUTPUT
+test_expect_equal_file embedded_message_body OUTPUT
 
 test_begin_subtest "--format=raw --part=5, rfc822's html part"
 notmuch show --format=raw --part=5 'id:87liy5ap00.fsf@yoom.home.cworth.org' >OUTPUT
