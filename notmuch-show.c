@@ -340,6 +340,48 @@ signature_status_to_string (GMimeSignatureStatus x)
     return "unknown";
 }
 
+
+/* Print signature flags */
+struct key_map_struct {
+    GMimeSignatureError bit;
+    const char * string;
+};
+
+static void
+do_format_signature_errors (sprinter_t *sp, struct key_map_struct *key_map,
+			    unsigned int array_map_len, GMimeSignatureError errors) {
+    sp->map_key (sp, "errors");
+    sp->begin_map (sp);
+
+    for (unsigned int i = 0; i < array_map_len; i++) {
+	if (errors & key_map[i].bit) {
+	    sp->map_key (sp, key_map[i].string);
+	    sp->boolean (sp, TRUE);
+	}
+    }
+
+    sp->end (sp);
+}
+
+static void
+format_signature_errors (sprinter_t *sp, GMimeSignature *signature)
+{
+    GMimeSignatureError errors = g_mime_signature_get_errors (signature);
+
+    if (errors == GMIME_SIGNATURE_ERROR_NONE)
+	return;
+
+    struct key_map_struct key_map[] = {
+	{ GMIME_SIGNATURE_ERROR_EXPSIG, "sig-expired" },
+	{ GMIME_SIGNATURE_ERROR_NO_PUBKEY, "key-missing"},
+	{ GMIME_SIGNATURE_ERROR_EXPKEYSIG, "key-expired"},
+	{ GMIME_SIGNATURE_ERROR_REVKEYSIG, "key-revoked"},
+	{ GMIME_SIGNATURE_ERROR_UNSUPP_ALGO, "alg-unsupported"},
+    };
+
+    do_format_signature_errors (sp, key_map, ARRAY_SIZE(key_map), errors);
+}
+
 /* Signature status sprinter (GMime 2.6) */
 static void
 format_part_sigstatus_sprinter (sprinter_t *sp, mime_node_t *node)
@@ -404,10 +446,14 @@ format_part_sigstatus_sprinter (sprinter_t *sp, mime_node_t *node)
 	    }
 	}
 
-	GMimeSignatureError errors = g_mime_signature_get_errors (signature);
-	if (errors != GMIME_SIGNATURE_ERROR_NONE) {
-	    sp->map_key (sp, "errors");
-	    sp->integer (sp, errors);
+	if (notmuch_format_version <= 3) {
+	    GMimeSignatureError errors = g_mime_signature_get_errors (signature);
+	    if (errors != GMIME_SIGNATURE_ERROR_NONE) {
+		sp->map_key (sp, "errors");
+		sp->integer (sp, errors);
+	    }
+	} else {
+	    format_signature_errors (sp, signature);
 	}
 
 	sp->end (sp);
