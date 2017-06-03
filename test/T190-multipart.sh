@@ -2,14 +2,7 @@
 test_description="output of multipart message"
 . ./test-lib.sh || exit 1
 
-cat <<EOF > embedded_message
-From: Carl Worth <cworth@cworth.org>
-To: cworth@cworth.org
-Subject: html message
-Date: Fri, 05 Jan 2001 15:42:57 +0000
-User-Agent: Notmuch/0.5 (http://notmuchmail.org) Emacs/23.3.1 (i486-pc-linux-gnu)
-Message-ID: <87liy5ap01.fsf@yoom.home.cworth.org>
-MIME-Version: 1.0
+cat <<EOF > embedded_message_body
 Content-Type: multipart/alternative; boundary="==-=-=="
 
 --==-=-==
@@ -24,15 +17,19 @@ This is an embedded message, with a multipart/alternative part.
 
 --==-=-==--
 EOF
-
-cat <<EOF > ${MAIL_DIR}/multipart
+cat <<EOF > embedded_message
 From: Carl Worth <cworth@cworth.org>
 To: cworth@cworth.org
-Subject: Multipart message
-Date: Fri, 05 Jan 2001 15:43:57 +0000
+Subject: html message
+Date: Fri, 05 Jan 2001 15:42:57 +0000
 User-Agent: Notmuch/0.5 (http://notmuchmail.org) Emacs/23.3.1 (i486-pc-linux-gnu)
-Message-ID: <87liy5ap00.fsf@yoom.home.cworth.org>
+Message-ID: <87liy5ap01.fsf@yoom.home.cworth.org>
 MIME-Version: 1.0
+EOF
+
+cat embedded_message_body >> embedded_message
+
+cat <<EOF > multipart_body
 Content-Type: multipart/signed; boundary="==-=-=";
 	micalg=pgp-sha1; protocol="application/pgp-signature"
 
@@ -44,8 +41,9 @@ Content-Type: message/rfc822
 Content-Disposition: inline
 
 EOF
-cat embedded_message >> ${MAIL_DIR}/multipart
-cat <<EOF >> ${MAIL_DIR}/multipart
+
+cat embedded_message >> multipart_body
+cat <<EOF >> multipart_body
 
 --=-=-=
 Content-Disposition: attachment; filename=attachment
@@ -72,6 +70,18 @@ W6cAmQE4dcYrx/LPLtYLZm1jsGauE5hE
 -----END PGP SIGNATURE-----
 --==-=-=--
 EOF
+
+cat <<EOF > ${MAIL_DIR}/multipart
+From: Carl Worth <cworth@cworth.org>
+To: cworth@cworth.org
+Subject: Multipart message
+Date: Fri, 05 Jan 2001 15:43:57 +0000
+User-Agent: Notmuch/0.5 (http://notmuchmail.org) Emacs/23.3.1 (i486-pc-linux-gnu)
+Message-ID: <87liy5ap00.fsf@yoom.home.cworth.org>
+MIME-Version: 1.0
+EOF
+
+cat multipart_body >> ${MAIL_DIR}/multipart
 
 cat <<EOF > ${MAIL_DIR}/base64-part-with-crlf
 From: Carl Worth <cworth@cworth.org>
