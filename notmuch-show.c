@@ -450,7 +450,7 @@ format_part_sigstatus_sprinter (sprinter_t *sp, mime_node_t *node)
 	    /* note that gmime is using the term "trust" here, which
 	     * is WRONG.  It's actually user id "validity". */
 	    if (certificate) {
-		const char *name = g_mime_certificate_get_name (certificate);
+		const char *name = g_mime_certificate_get_uid (certificate);
 		GMimeCertificateTrust trust = g_mime_certificate_get_trust (certificate);
 		if (name && (trust == GMIME_CERTIFICATE_TRUST_FULLY || trust == GMIME_CERTIFICATE_TRUST_ULTIMATE)) {
 		    sp->map_key (sp, "userid");

@@ -15,11 +15,12 @@ GMimeStream *g_mime_stream_stdout_new(void);
 
 #define g_mime_2_6_unref(obj) g_object_unref (obj)
 #define g_mime_certificate_get_fpr16(cert) g_mime_certificate_get_key_id (cert)
-
+#define g_mime_certificate_get_uid(cert) g_mime_certificate_get_name (cert);
 #else /* GMime >= 3.0 */
 typedef GMimeAddressType GMimeRecipientType;
 
 #define GMIME_ENABLE_RFC_2047_WORKAROUNDS 0xdeadbeef
+#define g_mime_certificate_get_uid(cert) g_mime_certificate_get_key_id (cert);
 #define g_mime_content_type_to_string(c) g_mime_content_type_get_mime_type (c)
 #define g_mime_filter_crlf_new(encode,dots) g_mime_filter_dos2unix_new (FALSE)
 #define g_mime_gpg_context_new(func,path) g_mime_gpg_context_new ()
