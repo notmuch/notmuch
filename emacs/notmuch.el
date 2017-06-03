@@ -994,7 +994,7 @@ the configured default sort order."
       (save-excursion
 	(let ((proc (notmuch-start-notmuch
 		     "notmuch-search" buffer #'notmuch-search-process-sentinel
-		     "search" "--format=sexp" "--format-version=2"
+		     "search" "--format=sexp" "--format-version=3"
 		     (if oldest-first
 			 "--sort=oldest-first"
 		       "--sort=newest-first")

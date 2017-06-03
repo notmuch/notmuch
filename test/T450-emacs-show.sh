@@ -191,7 +191,7 @@ This is an error (see *Notmuch errors* for more details)
 === ERROR ===
 [XXX]
 This is an error
-command: YYY/notmuch_fail show --format\\=sexp --format-version\\=1 --exclude\\=false \\' \\* \\'
+command: YYY/notmuch_fail show --format\\=sexp --format-version\\=3 --exclude\\=false \\' \\* \\'
 exit status: 1
 stderr:
 This is an error

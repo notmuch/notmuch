@@ -1014,7 +1014,7 @@ YYY/notmuch_fail exited with status 1 (see *Notmuch errors* for more details)
 === ERROR ===
 [XXX]
 YYY/notmuch_fail exited with status 1
-command: YYY/notmuch_fail search --format\=sexp --format-version\=2 --sort\=newest-first tag\:inbox
+command: YYY/notmuch_fail search --format\=sexp --format-version\=3 --sort\=newest-first tag\:inbox
 exit status: 1"
 
 test_begin_subtest "Search handles subprocess warnings"

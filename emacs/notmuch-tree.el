@@ -917,7 +917,7 @@ the same as for the function notmuch-tree."
     (notmuch-tag-clear-cache)
     (let ((proc (notmuch-start-notmuch
 		 "notmuch-tree" (current-buffer) #'notmuch-tree-process-sentinel
-		 "show" "--body=false" "--format=sexp" "--format-version=2"
+		 "show" "--body=false" "--format=sexp" "--format-version=3"
 		 message-arg search-args))
 	  ;; Use a scratch buffer to accumulate partial output.
 	  ;; This buffer will be killed by the sentinel, which
