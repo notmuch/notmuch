@@ -151,6 +151,7 @@ test_expect_equal_json \
     "$expected"
 
 test_begin_subtest "signature verification with full owner trust"
+test_subtest_broken_gmime_2
 # give the key full owner trust
 echo "${FINGERPRINT}:6:" | gpg --no-tty --import-ownertrust >>"$GNUPGHOME"/trust.log 2>&1
 gpg --no-tty --check-trustdb >>"$GNUPGHOME"/trust.log 2>&1
@@ -172,7 +173,7 @@ expected='[[[{"id": "XXXXX",
  "sigstatus": [{"status": "good",
  "fingerprint": "'$FINGERPRINT'",
  "created": 946728000,
- "userid": " Notmuch Test Suite <test_suite@notmuchmail.org> (INSECURE!)"}],
+ "userid": "Notmuch Test Suite <test_suite@notmuchmail.org> (INSECURE!)"}],
  "content-type": "multipart/signed",
  "content": [{"id": 2,
  "content-type": "text/plain",
@@ -358,6 +359,7 @@ test_expect_success \
     "(mml-secure-message-sign-encrypt)"'
 
 test_begin_subtest "decryption + signature verification"
+test_subtest_broken_gmime_2
 output=$(notmuch show --format=json --decrypt subject:"test encrypted message 002" \
     | notmuch_json_show_sanitize \
     | sed -e 's|"created": [1234567890]*|"created": 946728000|')
@@ -377,7 +379,7 @@ expected='[[[{"id": "XXXXX",
  "sigstatus": [{"status": "good",
  "fingerprint": "'$FINGERPRINT'",
  "created": 946728000,
- "userid": " Notmuch Test Suite <test_suite@notmuchmail.org> (INSECURE!)"}],
+ "userid": "Notmuch Test Suite <test_suite@notmuchmail.org> (INSECURE!)"}],
  "content-type": "multipart/encrypted",
  "content": [{"id": 2,
  "content-type": "application/pgp-encrypted",
