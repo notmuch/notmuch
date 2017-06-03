@@ -14,7 +14,7 @@ are interleaved. Keys are printed as keywords (symbols preceded by a
 colon), e.g. (:id "123" :time 54321 :from "foobar"). Null is printed as
 nil, true as t and false as nil.
 
-This is version 2 of the structured output format.
+This is version 4 of the structured output format.
 
 Version history
 ---------------
@@ -29,6 +29,10 @@ v2
 v3
 - Replaced message.filename string with a list of filenames.
 - Added part.content-disposition field.
+
+v4
+- replace signature error integer bitmask with a set of flags for
+  individual errors.
 
 Common non-terminals
 --------------------
@@ -121,7 +125,7 @@ sigstatus = [signature*]
 
 signature = {
     # (signature_status_to_string)
-    status:         "none"|"good"|"bad"|"error"|"unknown",
+    status:         "good"|"bad"|"error"|"unknown",
     # if status is "good":
     fingerprint?:   string,
     created?:       unix_time,
@@ -129,8 +133,20 @@ signature = {
     userid?:        string
     # if status is not "good":
     keyid?:         string
-    # if the signature has errors:
-    errors?:        int
+    errors?: 	    sig_errors
+}
+
+sig_errors = {
+    key-revoked?: bool,
+    key-expired?: bool,
+    sig-expired?: bool,
+    key-missing?: bool,
+    alg-unsupported?: bool,
+    crl-missing?: bool,
+    crl-too-old?: bool,
+    bad-policy?: bool,
+    sys-error?: bool,
+    tofu-conflict?: bool
 }
 
 notmuch search schema
