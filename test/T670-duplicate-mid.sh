@@ -7,7 +7,7 @@ add_message '[id]="duplicate"' '[subject]="message 2" [filename]=copy2'
 
 test_begin_subtest 'First subject preserved'
 cat <<EOF > EXPECTED
-thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; message 1 (inbox unread)
+thread:XXX   2001-01-05 [1/1(2)] Notmuch Test Suite; message 1 (inbox unread)
 EOF
 notmuch search id:duplicate | notmuch_search_sanitize > OUTPUT
 test_expect_equal_file EXPECTED OUTPUT

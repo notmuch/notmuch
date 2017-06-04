@@ -153,14 +153,14 @@ cp "$MAIL_DIR/cur/duplicated-message:2," "$MAIL_DIR/cur/duplicated-message-copy:
 NOTMUCH_NEW > output
 notmuch search subject:"Duplicated message" | notmuch_search_sanitize >> output
 test_expect_equal "$(< output)" "No new mail.
-thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; Duplicated message (inbox replied)"
+thread:XXX   2001-01-05 [1/1(2)] Notmuch Test Suite; Duplicated message (inbox replied)"
 
 test_begin_subtest "Adding duplicate message without flags does not remove tags"
 cp "$MAIL_DIR/cur/duplicated-message-copy:2,RS" "$MAIL_DIR/cur/duplicated-message-another-copy:2,"
 NOTMUCH_NEW > output
 notmuch search subject:"Duplicated message" | notmuch_search_sanitize >> output
 test_expect_equal "$(< output)" "No new mail.
-thread:XXX   2001-01-05 [1/1] Notmuch Test Suite; Duplicated message (inbox replied)"
+thread:XXX   2001-01-05 [1/1(3)] Notmuch Test Suite; Duplicated message (inbox replied)"
 
 test_begin_subtest "Tag changes modify flags of multiple files"
 notmuch tag -replied subject:"Duplicated message"

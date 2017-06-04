@@ -23,7 +23,7 @@ notmuch search date:18-Nov-2009_02:19:26-0800..2009-11-18_04:49:52-06:00 | notmu
 cat <<EOF >EXPECTED
 thread:XXX   2009-11-18 [1/3] Carl Worth| Jan Janak; [notmuch] What a great idea! (inbox unread)
 thread:XXX   2009-11-18 [1/2] Carl Worth| Jan Janak; [notmuch] [PATCH] Older versions of install do not support -C. (inbox unread)
-thread:XXX   2009-11-18 [1/3] Carl Worth| Aron Griffis, Keith Packard; [notmuch] archive (inbox unread)
+thread:XXX   2009-11-18 [1/3(4)] Carl Worth| Aron Griffis, Keith Packard; [notmuch] archive (inbox unread)
 thread:XXX   2009-11-18 [1/2] Carl Worth| Keith Packard; [notmuch] [PATCH] Make notmuch-show 'X' (and 'x') commands remove inbox (and unread) tags (inbox unread)
 EOF
 test_expect_equal_file EXPECTED OUTPUT

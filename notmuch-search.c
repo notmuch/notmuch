@@ -160,6 +160,7 @@ do_search_threads (search_context_t *ctx)
 	    const char *subject = notmuch_thread_get_subject (thread);
 	    const char *thread_id = notmuch_thread_get_thread_id (thread);
 	    int matched = notmuch_thread_get_matched_messages (thread);
+	    int files = notmuch_thread_get_total_files (thread);
 	    int total = notmuch_thread_get_total_messages (thread);
 	    const char *relative_date = NULL;
 	    notmuch_bool_t first_tag = TRUE;
@@ -175,13 +176,23 @@ do_search_threads (search_context_t *ctx)
 
 	    if (format->is_text_printer) {
                 /* Special case for the text formatter */
-		printf ("thread:%s %12s [%d/%d] %s; %s (",
+		printf ("thread:%s %12s ",
 			thread_id,
-			relative_date,
+			relative_date);
+		if (total == files)
+		    printf ("[%d/%d] %s; %s (",
 			matched,
 			total,
 			sanitize_string (ctx_quote, authors),
 			sanitize_string (ctx_quote, subject));
+		else
+		    printf ("[%d/%d(%d)] %s; %s (",
+			matched,
+			total,
+			files,
+			sanitize_string (ctx_quote, authors),
+			sanitize_string (ctx_quote, subject));
+
 	    } else { /* Structured Output */
 		format->map_key (format, "thread");
 		format->string (format, thread_id);
