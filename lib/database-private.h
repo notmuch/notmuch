@@ -246,4 +246,10 @@ _notmuch_database_get_terms_with_prefix (void *ctx, Xapian::TermIterator &i,
 					 Xapian::TermIterator &end,
 					 const char *prefix);
 
+void
+_notmuch_database_find_doc_ids (notmuch_database_t *notmuch,
+				const char *prefix_name,
+				const char *value,
+				Xapian::PostingIterator *begin,
+				Xapian::PostingIterator *end);
 #endif
