@@ -225,6 +225,7 @@ notmuch_client_srcs =		\
 	notmuch-dump.c		\
 	notmuch-insert.c	\
 	notmuch-new.c		\
+	notmuch-reindex.c       \
 	notmuch-reply.c		\
 	notmuch-restore.c	\
 	notmuch-search.c	\

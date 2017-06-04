@@ -30,4 +30,11 @@ EOF
 notmuch search --output=files "sekrit" | notmuch_dir_sanitize > OUTPUT
 test_expect_equal_file EXPECTED OUTPUT
 
+rm ${MAIL_DIR}/copy3
+test_begin_subtest 'reindex drops terms in duplicate file'
+cp /dev/null EXPECTED
+notmuch reindex '*'
+notmuch search --output=files "sekrit" | notmuch_dir_sanitize > OUTPUT
+test_expect_equal_file EXPECTED OUTPUT
+
 test_done

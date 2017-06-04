@@ -18,6 +18,7 @@ Contents:
    man5/notmuch-hooks
    man1/notmuch-insert
    man1/notmuch-new
+   man1/notmuch-reindex
    man1/notmuch-reply
    man1/notmuch-restore
    man1/notmuch-search

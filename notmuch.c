@@ -123,6 +123,8 @@ static command_t commands[] = {
       "Restore the tags from the given dump file (see 'dump')." },
     { "compact", notmuch_compact_command, NOTMUCH_CONFIG_OPEN,
       "Compact the notmuch database." },
+    { "reindex", notmuch_reindex_command, NOTMUCH_CONFIG_OPEN,
+      "Re-index all messages matching the search terms." },
     { "config", notmuch_config_command, NOTMUCH_CONFIG_OPEN,
       "Get or set settings in the notmuch configuration file." },
     { "help", notmuch_help_command, NOTMUCH_CONFIG_CREATE, /* create but don't save config */

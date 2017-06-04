@@ -95,6 +95,10 @@ man_pages = [
      u'incorporate new mail into the notmuch database',
      [notmuch_authors], 1),
 
+    ('man1/notmuch-reindex', 'notmuch-reindex',
+     u're-index matching messages',
+     [notmuch_authors], 1),
+
     ('man1/notmuch-reply', 'notmuch-reply',
      u'constructs a reply template for a set of messages',
      [notmuch_authors], 1),

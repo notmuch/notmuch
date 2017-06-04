@@ -201,6 +201,9 @@ int
 notmuch_insert_command (notmuch_config_t *config, int argc, char *argv[]);
 
 int
+notmuch_reindex_command (notmuch_config_t *config, int argc, char *argv[]);
+
+int
 notmuch_reply_command (notmuch_config_t *config, int argc, char *argv[]);
 
 int
