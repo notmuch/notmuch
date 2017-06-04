@@ -1097,6 +1097,18 @@ int
 notmuch_thread_get_total_messages (notmuch_thread_t *thread);
 
 /**
+ * Get the total number of files in 'thread'.
+ *
+ * This sums notmuch_message_count_files over all messages in the
+ * thread
+ * @returns Non-negative integer
+ * @since libnotmuch 5.0 (notmuch 0.25)
+ */
+
+int
+notmuch_thread_get_total_files (notmuch_thread_t *thread);
+
+/**
  * Get a notmuch_messages_t iterator for the top-level messages in
  * 'thread' in oldest-first order.
  *

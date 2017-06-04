@@ -44,6 +44,7 @@ struct _notmuch_thread {
 
     GHashTable *message_hash;
     int total_messages;
+    int total_files;
     int matched_messages;
     time_t oldest;
     time_t newest;
@@ -266,6 +267,7 @@ _thread_add_message (notmuch_thread_t *thread,
     _notmuch_message_list_add_message (thread->message_list,
 				       talloc_steal (thread, message));
     thread->total_messages++;
+    thread->total_files += notmuch_message_count_files (message);
 
     g_hash_table_insert (thread->message_hash,
 			 xstrdup (notmuch_message_get_message_id (message)),
@@ -495,6 +497,7 @@ _notmuch_thread_create (void *ctx,
 						  free, NULL);
 
     thread->total_messages = 0;
+    thread->total_files = 0;
     thread->matched_messages = 0;
     thread->oldest = 0;
     thread->newest = 0;
@@ -564,6 +567,12 @@ int
 notmuch_thread_get_total_messages (notmuch_thread_t *thread)
 {
     return thread->total_messages;
+}
+
+int
+notmuch_thread_get_total_files (notmuch_thread_t *thread)
+{
+    return thread->total_files;
 }
 
 int
