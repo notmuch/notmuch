@@ -550,6 +550,12 @@ typedef struct _notmuch_string_list {
 notmuch_string_list_t *
 _notmuch_string_list_create (const void *ctx);
 
+/*
+ * return the number of strings in 'list'
+ */
+int
+_notmuch_string_list_length (notmuch_string_list_t *list);
+
 /* Add 'string' to 'list'.
  *
  * The list will create its own talloced copy of 'string'.

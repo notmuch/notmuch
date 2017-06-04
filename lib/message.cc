@@ -946,6 +946,14 @@ notmuch_message_get_filenames (notmuch_message_t *message)
     return _notmuch_filenames_create (message, message->filename_list);
 }
 
+int
+notmuch_message_count_files (notmuch_message_t *message)
+{
+    _notmuch_message_ensure_filename_list (message);
+
+    return _notmuch_string_list_length (message->filename_list);
+}
+
 notmuch_bool_t
 notmuch_message_get_flag (notmuch_message_t *message,
 			  notmuch_message_flag_t flag)

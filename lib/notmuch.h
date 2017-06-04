@@ -1342,6 +1342,14 @@ notmuch_messages_t *
 notmuch_message_get_replies (notmuch_message_t *message);
 
 /**
+ * Get the total number of files associated with a message.
+ * @returns Non-negative integer
+ * @since libnotmuch 5.0 (notmuch 0.25)
+ */
+int
+notmuch_message_count_files (notmuch_message_t *message);
+
+/**
  * Get a filename for the email corresponding to 'message'.
  *
  * The returned filename is an absolute filename, (the initial

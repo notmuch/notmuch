@@ -42,6 +42,12 @@ _notmuch_string_list_create (const void *ctx)
     return list;
 }
 
+int
+_notmuch_string_list_length (notmuch_string_list_t *list)
+{
+    return list->length;
+}
+
 void
 _notmuch_string_list_append (notmuch_string_list_t *list,
 			     const char *string)
