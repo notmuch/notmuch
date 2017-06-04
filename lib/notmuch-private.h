@@ -492,6 +492,20 @@ notmuch_status_t
 _notmuch_query_count_documents (notmuch_query_t *query,
 				const char *type,
 				unsigned *count_out);
+/* message-id.c */
+
+/* Parse an RFC 822 message-id, discarding whitespace, any RFC 822
+ * comments, and the '<' and '>' delimiters.
+ *
+ * If not NULL, then *next will be made to point to the first character
+ * not parsed, (possibly pointing to the final '\0' terminator.
+ *
+ * Returns a newly talloc'ed string belonging to 'ctx'.
+ *
+ * Returns NULL if there is any error parsing the message-id. */
+char *
+_notmuch_message_id_parse (void *ctx, const char *message_id, const char **next);
+
 
 /* message.cc */
 

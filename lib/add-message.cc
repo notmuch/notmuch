@@ -1,109 +1,5 @@
 #include "database-private.h"
 
-/* Advance 'str' past any whitespace or RFC 822 comments. A comment is
- * a (potentially nested) parenthesized sequence with '\' used to
- * escape any character (including parentheses).
- *
- * If the sequence to be skipped continues to the end of the string,
- * then 'str' will be left pointing at the final terminating '\0'
- * character.
- */
-static void
-skip_space_and_comments (const char **str)
-{
-    const char *s;
-
-    s = *str;
-    while (*s && (isspace (*s) || *s == '(')) {
-	while (*s && isspace (*s))
-	    s++;
-	if (*s == '(') {
-	    int nesting = 1;
-	    s++;
-	    while (*s && nesting) {
-		if (*s == '(') {
-		    nesting++;
-		} else if (*s == ')') {
-		    nesting--;
-		} else if (*s == '\\') {
-		    if (*(s+1))
-			s++;
-		}
-		s++;
-	    }
-	}
-    }
-
-    *str = s;
-}
-
-/* Parse an RFC 822 message-id, discarding whitespace, any RFC 822
- * comments, and the '<' and '>' delimiters.
- *
- * If not NULL, then *next will be made to point to the first character
- * not parsed, (possibly pointing to the final '\0' terminator.
- *
- * Returns a newly talloc'ed string belonging to 'ctx'.
- *
- * Returns NULL if there is any error parsing the message-id. */
-static char *
-_parse_message_id (void *ctx, const char *message_id, const char **next)
-{
-    const char *s, *end;
-    char *result;
-
-    if (message_id == NULL || *message_id == '\0')
-	return NULL;
-
-    s = message_id;
-
-    skip_space_and_comments (&s);
-
-    /* Skip any unstructured text as well. */
-    while (*s && *s != '<')
-	s++;
-
-    if (*s == '<') {
-	s++;
-    } else {
-	if (next)
-	    *next = s;
-	return NULL;
-    }
-
-    skip_space_and_comments (&s);
-
-    end = s;
-    while (*end && *end != '>')
-	end++;
-    if (next) {
-	if (*end)
-	    *next = end + 1;
-	else
-	    *next = end;
-    }
-
-    if (end > s && *end == '>')
-	end--;
-    if (end <= s)
-	return NULL;
-
-    result = talloc_strndup (ctx, s, end - s + 1);
-
-    /* Finally, collapse any whitespace that is within the message-id
-     * itself. */
-    {
-	char *r;
-	int len;
-
-	for (r = result, len = strlen (r); *r; r++, len--)
-	    if (*r == ' ' || *r == '\t')
-		memmove (r, r+1, len);
-    }
-
-    return result;
-}
-
 /* Parse a References header value, putting a (talloc'ed under 'ctx')
  * copy of each referenced message-id into 'hash'.
  *
@@ -126,7 +22,7 @@ parse_references (void *ctx,
 	return NULL;
 
     while (*refs) {
-	ref = _parse_message_id (ctx, refs, &refs);
+	ref = _notmuch_message_id_parse (ctx, refs, &refs);
 
 	if (ref && strcmp (ref, message_id)) {
 	    g_hash_table_add (hash, ref);
