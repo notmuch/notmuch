@@ -425,6 +425,17 @@ const char *
 _notmuch_message_file_get_header (notmuch_message_file_t *message,
 				 const char *header);
 
+notmuch_status_t
+_notmuch_message_file_get_headers (notmuch_message_file_t *message_file,
+				   const char **from_out,
+				   const char **subject_out,
+				   const char **to_out,
+				   const char **date_out,
+				   char **message_id_out);
+
+const char *
+_notmuch_message_file_get_filename (notmuch_message_file_t *message);
+
 /* index.cc */
 
 notmuch_status_t
