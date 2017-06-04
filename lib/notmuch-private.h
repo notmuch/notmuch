@@ -436,6 +436,12 @@ _notmuch_message_file_get_headers (notmuch_message_file_t *message_file,
 const char *
 _notmuch_message_file_get_filename (notmuch_message_file_t *message);
 
+/* add-message.cc */
+notmuch_status_t
+_notmuch_database_link_message_to_parents (notmuch_database_t *notmuch,
+					   notmuch_message_t *message,
+					   notmuch_message_file_t *message_file,
+					   const char **thread_id);
 /* index.cc */
 
 notmuch_status_t

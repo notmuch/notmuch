@@ -579,7 +579,9 @@ void
 _notmuch_message_remove_terms (notmuch_message_t *message, const char *prefix)
 {
     Xapian::TermIterator i;
-    size_t prefix_len = strlen (prefix);
+    size_t prefix_len = 0;
+
+    prefix_len = strlen (prefix);
 
     while (1) {
 	i = message->doc.termlist_begin ();
@@ -1933,4 +1935,108 @@ notmuch_bool_t
 _notmuch_message_frozen (notmuch_message_t *message)
 {
     return message->frozen;
+}
+
+notmuch_status_t
+notmuch_message_reindex (notmuch_message_t *message,
+			 notmuch_param_t unused (*indexopts))
+{
+    notmuch_database_t *notmuch = NULL;
+    notmuch_status_t ret = NOTMUCH_STATUS_SUCCESS;
+    notmuch_private_status_t private_status;
+    notmuch_filenames_t *orig_filenames = NULL;
+    const char *orig_thread_id = NULL;
+    notmuch_message_file_t *message_file = NULL;
+
+    int found = 0;
+
+    if (message == NULL)
+	return NOTMUCH_STATUS_NULL_POINTER;
+
+    /* Save in case we need to delete message */
+    orig_thread_id = notmuch_message_get_thread_id (message);
+    if (!orig_thread_id) {
+	/* XXX TODO: make up new error return? */
+	INTERNAL_ERROR ("message without thread-id");
+    }
+
+    /* strdup it because the metadata may be invalidated */
+    orig_thread_id = talloc_strdup (message, orig_thread_id);
+
+    notmuch = _notmuch_message_database (message);
+
+    ret = _notmuch_database_ensure_writable (notmuch);
+    if (ret)
+	return ret;
+
+    orig_filenames = notmuch_message_get_filenames (message);
+
+    private_status = _notmuch_message_remove_indexed_terms (message);
+    if (private_status) {
+	ret = COERCE_STATUS(private_status, "error removing terms");
+	goto DONE;
+    }
+
+    /* re-add the filenames with the associated indexopts */
+    for (; notmuch_filenames_valid (orig_filenames);
+	 notmuch_filenames_move_to_next (orig_filenames)) {
+
+	const char *date;
+	const char *from, *to, *subject;
+	char *message_id = NULL;
+	const char *thread_id = NULL;
+
+	const char *filename = notmuch_filenames_get (orig_filenames);
+
+	message_file = _notmuch_message_file_open (notmuch, filename);
+	if (message_file == NULL)
+	    continue;
+
+	ret = _notmuch_message_file_get_headers (message_file,
+						 &from, &subject, &to, &date,
+						 &message_id);
+	if (ret)
+	    goto DONE;
+
+	/* XXX TODO: deal with changing message id? */
+
+	_notmuch_message_add_filename (message, filename);
+
+	ret = _notmuch_database_link_message_to_parents (notmuch, message,
+							 message_file,
+							 &thread_id);
+	if (ret)
+	    goto DONE;
+
+	if (thread_id == NULL)
+	    thread_id = orig_thread_id;
+
+	_notmuch_message_add_term (message, "thread", thread_id);
+	_notmuch_message_set_header_values (message, date, from, subject);
+
+	ret = _notmuch_message_index_file (message, message_file);
+
+	if (ret == NOTMUCH_STATUS_FILE_ERROR)
+	    continue;
+	if (ret)
+	    goto DONE;
+
+	found++;
+	_notmuch_message_file_close (message_file);
+	message_file = NULL;
+    }
+    if (found == 0) {
+	/* put back thread id to help cleanup */
+	_notmuch_message_add_term (message, "thread", orig_thread_id);
+	ret = _notmuch_message_delete (message);
+    } else {
+	_notmuch_message_sync (message);
+    }
+
+ DONE:
+    if (message_file)
+	_notmuch_message_file_close (message_file);
+
+    /* XXX TODO destroy orig_filenames? */
+    return ret;
 }

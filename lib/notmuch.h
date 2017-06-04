@@ -219,6 +219,7 @@ typedef struct _notmuch_tags notmuch_tags_t;
 typedef struct _notmuch_directory notmuch_directory_t;
 typedef struct _notmuch_filenames notmuch_filenames_t;
 typedef struct _notmuch_config_list notmuch_config_list_t;
+typedef struct _notmuch_param notmuch_param_t;
 #endif /* __DOXYGEN__ */
 
 /**
@@ -1392,6 +1393,20 @@ notmuch_message_get_filename (notmuch_message_t *message);
  */
 notmuch_filenames_t *
 notmuch_message_get_filenames (notmuch_message_t *message);
+
+/**
+ * Re-index the e-mail corresponding to 'message' using the supplied index options
+ *
+ * Returns the status of the re-index operation.  (see the return
+ * codes documented in notmuch_database_add_message)
+ *
+ * After reindexing, the user should discard the message object passed
+ * in here by calling notmuch_message_destroy, since it refers to the
+ * original message, not to the reindexed message.
+ */
+notmuch_status_t
+notmuch_message_reindex (notmuch_message_t *message,
+			 notmuch_param_t *indexopts);
 
 /**
  * Message flags.

@@ -220,7 +220,7 @@ _my_talloc_free_for_g_hash (void *ptr)
     talloc_free (ptr);
 }
 
-static notmuch_status_t
+notmuch_status_t
 _notmuch_database_link_message_to_parents (notmuch_database_t *notmuch,
 					   notmuch_message_t *message,
 					   notmuch_message_file_t *message_file,
