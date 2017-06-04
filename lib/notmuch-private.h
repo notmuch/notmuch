@@ -526,6 +526,8 @@ _notmuch_message_add_reply (notmuch_message_t *message,
 notmuch_database_t *
 _notmuch_message_database (notmuch_message_t *message);
 
+void
+_notmuch_message_remove_unprefixed_terms (notmuch_message_t *message);
 /* sha1.c */
 
 char *
