@@ -71,8 +71,8 @@ test_begin_subtest "Format version: too high"
 test_expect_code 21 "notmuch search --format-version=999 \\*"
 
 test_begin_subtest "Show message: multiple filenames"
-add_message "[id]=message-id@example.com [filename]=copy1"
-add_message "[id]=message-id@example.com [filename]=copy2"
+add_message '[id]=message-id@example.com [filename]=copy1 [date]="Fri, 05 Jan 2001 15:43:52 +0000"'
+add_message '[id]=message-id@example.com [filename]=copy2 [date]="Fri, 05 Jan 2001 15:43:52 +0000"'
 cat <<EOF > EXPECTED
 [
     [

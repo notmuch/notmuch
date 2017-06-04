@@ -529,19 +529,22 @@ notmuch_database_add_message (notmuch_database_t *notmuch,
 	    if (is_ghost)
 		/* Convert ghost message to a regular message */
 		_notmuch_message_remove_term (message, "type", "ghost");
-	    ret = _notmuch_database_link_message (notmuch, message,
-						  message_file, is_ghost);
-	    if (ret)
-		goto DONE;
+	}
 
+	ret = _notmuch_database_link_message (notmuch, message,
+						  message_file, is_ghost);
+	if (ret)
+	    goto DONE;
+
+	if (is_new || is_ghost)
 	    _notmuch_message_set_header_values (message, date, from, subject);
 
-	    ret = _notmuch_message_index_file (message, message_file);
-	    if (ret)
-		goto DONE;
-	} else {
+	ret = _notmuch_message_index_file (message, message_file);
+	if (ret)
+	    goto DONE;
+
+	if (! is_new && !is_ghost)
 	    ret = NOTMUCH_STATUS_DUPLICATE_MESSAGE_ID;
-	}
 
 	_notmuch_message_sync (message);
     } catch (const Xapian::Error &error) {
