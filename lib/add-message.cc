@@ -570,7 +570,7 @@ notmuch_database_add_message (notmuch_database_t *notmuch,
     notmuch_message_t *message = NULL;
     notmuch_status_t ret = NOTMUCH_STATUS_SUCCESS, ret2;
     notmuch_private_status_t private_status;
-    notmuch_bool_t is_ghost = false;
+    notmuch_bool_t is_ghost = FALSE, is_new = FALSE;
 
     const char *date, *header;
     const char *from, *to, *subject;
@@ -655,7 +655,17 @@ notmuch_database_add_message (notmuch_database_t *notmuch,
 
 	talloc_free (message_id);
 
-	if (message == NULL) {
+	/* We cannot call notmuch_message_get_flag for a new message */
+	switch (private_status) {
+	case NOTMUCH_PRIVATE_STATUS_NO_DOCUMENT_FOUND:
+	    is_ghost = FALSE;
+	    is_new = TRUE;
+	    break;
+	case NOTMUCH_PRIVATE_STATUS_SUCCESS:
+	    is_ghost = notmuch_message_get_flag (message, NOTMUCH_MESSAGE_FLAG_GHOST);
+	    is_new = FALSE;
+	    break;
+	default:
 	    ret = COERCE_STATUS (private_status,
 				 "Unexpected status value from _notmuch_message_create_for_message_id");
 	    goto DONE;
@@ -663,18 +673,11 @@ notmuch_database_add_message (notmuch_database_t *notmuch,
 
 	_notmuch_message_add_filename (message, filename);
 
-	/* Is this a newly created message object or a ghost
-	 * message?  We have to be slightly careful: if this is a
-	 * blank message, it's not safe to call
-	 * notmuch_message_get_flag yet. */
-	if (private_status == NOTMUCH_PRIVATE_STATUS_NO_DOCUMENT_FOUND ||
-	    (is_ghost = notmuch_message_get_flag (
-		message, NOTMUCH_MESSAGE_FLAG_GHOST))) {
+	if (is_new || is_ghost) {
 	    _notmuch_message_add_term (message, "type", "mail");
 	    if (is_ghost)
 		/* Convert ghost message to a regular message */
 		_notmuch_message_remove_term (message, "type", "ghost");
-
 	    ret = _notmuch_database_link_message (notmuch, message,
 						  message_file, is_ghost);
 	    if (ret)
