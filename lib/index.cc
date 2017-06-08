@@ -24,6 +24,40 @@
 
 #include <xapian.h>
 
+
+typedef struct {
+    int state;
+    int a;
+    int b;
+    int next_if_match;
+    int next_if_not_match;
+} scanner_state_t;
+
+/* Simple, linear state-transition diagram for the uuencode filter.
+ *
+ * If the character being processed is within the range of [a, b]
+ * for the current state then we transition next_if_match
+ * state. If not, we transition to the next_if_not_match state.
+ *
+ * The final two states are special in that they are the states in
+ * which we discard data. */
+static const int first_uuencode_skipping_state = 11;
+static const scanner_state_t uuencode_states[] = {
+    {0,  'b',  'b',  1,  0},
+    {1,  'e',  'e',  2,  0},
+    {2,  'g',  'g',  3,  0},
+    {3,  'i',  'i',  4,  0},
+    {4,  'n',  'n',  5,  0},
+    {5,  ' ',  ' ',  6,  0},
+    {6,  '0',  '7',  7,  0},
+    {7,  '0',  '7',  8,  0},
+    {8,  '0',  '7',  9,  0},
+    {9,  ' ',  ' ',  10, 0},
+    {10, '\n', '\n', 11, 10},
+    {11, 'M',  'M',  12, 0},
+    {12, ' ',  '`',  12, 11}
+};
+
 /* Oh, how I wish that gobject didn't require so much noisy boilerplate!
  * (Though I have at least eliminated some of the stock set...) */
 typedef struct _NotmuchFilterDiscardNonTerm NotmuchFilterDiscardNonTerm;
@@ -57,6 +91,8 @@ typedef struct _NotmuchFilterDiscardNonTermClass NotmuchFilterDiscardNonTermClas
 struct _NotmuchFilterDiscardNonTerm {
     GMimeFilter parent_object;
     int state;
+    int first_skipping_state;
+    const scanner_state_t *states;
 };
 
 struct _NotmuchFilterDiscardNonTermClass {
@@ -111,41 +147,13 @@ filter_filter (GMimeFilter *gmime_filter, char *inbuf, size_t inlen, size_t pres
 	       char **outbuf, size_t *outlen, size_t *outprespace)
 {
     NotmuchFilterDiscardNonTerm *filter = (NotmuchFilterDiscardNonTerm *) gmime_filter;
+    const scanner_state_t *states = filter->states;
     register const char *inptr = inbuf;
     const char *inend = inbuf + inlen;
     char *outptr;
 
     (void) prespace;
 
-    /* Simple, linear state-transition diagram for our filter.
-     *
-     * If the character being processed is within the range of [a, b]
-     * for the current state then we transition next_if_match
-     * state. If not, we transition to the next_if_not_match state.
-     *
-     * The final two states are special in that they are the states in
-     * which we discard data. */
-    static const struct {
-	int state;
-	int a;
-	int b;
-	int next_if_match;
-	int next_if_not_match;
-    } states[] = {
-	{0,  'b',  'b',  1,  0},
-	{1,  'e',  'e',  2,  0},
-	{2,  'g',  'g',  3,  0},
-	{3,  'i',  'i',  4,  0},
-	{4,  'n',  'n',  5,  0},
-	{5,  ' ',  ' ',  6,  0},
-	{6,  '0',  '7',  7,  0},
-	{7,  '0',  '7',  8,  0},
-	{8,  '0',  '7',  9,  0},
-	{9,  ' ',  ' ',  10, 0},
-	{10, '\n', '\n', 11, 10},
-	{11, 'M',  'M',  12, 0},
-	{12, ' ',  '`',  12, 11}
-    };
     int next;
 
     g_mime_filter_set_size (gmime_filter, inlen, FALSE);
@@ -162,7 +170,7 @@ filter_filter (GMimeFilter *gmime_filter, char *inbuf, size_t inlen, size_t pres
 	    next = states[filter->state].next_if_not_match;
 	}
 
-	if (filter->state < 11)
+	if (filter->state < filter->first_skipping_state)
 	    *outptr++ = *inptr;
 
 	filter->state = next;
@@ -220,6 +228,8 @@ notmuch_filter_discard_non_term_new (void)
 
     filter = (NotmuchFilterDiscardNonTerm *) g_object_newv (type, 0, NULL);
     filter->state = 0;
+    filter->states = uuencode_states;
+    filter->first_skipping_state = first_uuencode_skipping_state;
 
     return (GMimeFilter *) filter;
 }
