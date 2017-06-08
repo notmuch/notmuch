@@ -58,6 +58,33 @@ static const scanner_state_t uuencode_states[] = {
     {12, ' ',  '`',  12, 11}
 };
 
+/* The following table is intended to implement this DFA (in 'dot'
+   format). Note that 2 and 3 are "hidden" states used to step through
+   the possible out edges of state 1.
+
+digraph html_filter {
+       0 -> 1  [label="<"];
+       0 -> 0;
+       1 -> 4 [label="'"];
+       1 -> 5 [label="\""];
+       1 -> 0 [label=">"];
+       1 -> 1;
+       4 -> 1 [label="'"];
+       4 -> 4;
+       5 -> 1 [label="\""];
+       5 -> 5;
+}
+*/
+static const int first_html_skipping_state = 1;
+static const scanner_state_t html_states[] = {
+    {0,  '<',  '<',  1,  0},
+    {1,  '\'', '\'', 4,  2},  /* scanning for quote or > */
+    {1,  '"',  '"',  5,  3},
+    {1,  '>',  '>',  0,  1},
+    {4,  '\'', '\'', 1,  4},  /* inside single quotes */
+    {5,  '"', '"',   1,  5},  /* inside double quotes */
+};
+
 /* Oh, how I wish that gobject didn't require so much noisy boilerplate!
  * (Though I have at least eliminated some of the stock set...) */
 typedef struct _NotmuchFilterDiscardNonTerm NotmuchFilterDiscardNonTerm;
@@ -90,6 +117,7 @@ typedef struct _NotmuchFilterDiscardNonTermClass NotmuchFilterDiscardNonTermClas
  **/
 struct _NotmuchFilterDiscardNonTerm {
     GMimeFilter parent_object;
+    GMimeContentType *content_type;
     int state;
     int first_skipping_state;
     const scanner_state_t *states;
@@ -99,7 +127,7 @@ struct _NotmuchFilterDiscardNonTermClass {
     GMimeFilterClass parent_class;
 };
 
-static GMimeFilter *notmuch_filter_discard_non_term_new (void);
+static GMimeFilter *notmuch_filter_discard_non_term_new (GMimeContentType *content);
 
 static void notmuch_filter_discard_non_term_finalize (GObject *object);
 
@@ -138,8 +166,8 @@ notmuch_filter_discard_non_term_finalize (GObject *object)
 static GMimeFilter *
 filter_copy (GMimeFilter *gmime_filter)
 {
-    (void) gmime_filter;
-    return notmuch_filter_discard_non_term_new ();
+    NotmuchFilterDiscardNonTerm *filter = (NotmuchFilterDiscardNonTerm *) gmime_filter;
+    return notmuch_filter_discard_non_term_new (filter->content_type);
 }
 
 static void
@@ -211,7 +239,7 @@ filter_reset (GMimeFilter *gmime_filter)
  * Returns: a new #NotmuchFilterDiscardNonTerm filter.
  **/
 static GMimeFilter *
-notmuch_filter_discard_non_term_new (void)
+notmuch_filter_discard_non_term_new (GMimeContentType *content_type)
 {
     static GType type = 0;
     NotmuchFilterDiscardNonTerm *filter;
@@ -234,9 +262,15 @@ notmuch_filter_discard_non_term_new (void)
     }
 
     filter = (NotmuchFilterDiscardNonTerm *) g_object_newv (type, 0, NULL);
+    filter->content_type = content_type;
     filter->state = 0;
-    filter->states = uuencode_states;
-    filter->first_skipping_state = first_uuencode_skipping_state;
+    if (g_mime_content_type_is_type (content_type, "text", "html")) {
+      filter->states = html_states;
+      filter->first_skipping_state = first_html_skipping_state;
+    } else {
+      filter->states = uuencode_states;
+      filter->first_skipping_state = first_uuencode_skipping_state;
+    }
 
     return (GMimeFilter *) filter;
 }
@@ -413,7 +447,7 @@ _index_mime_part (notmuch_message_t *message,
     g_mime_stream_mem_set_owner (GMIME_STREAM_MEM (stream), FALSE);
 
     filter = g_mime_stream_filter_new (stream);
-    discard_non_term_filter = notmuch_filter_discard_non_term_new ();
+    discard_non_term_filter = notmuch_filter_discard_non_term_new (content_type);
 
     g_mime_stream_filter_add (GMIME_STREAM_FILTER (filter),
 			      discard_non_term_filter);
