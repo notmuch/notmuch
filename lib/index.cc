@@ -159,16 +159,23 @@ filter_filter (GMimeFilter *gmime_filter, char *inbuf, size_t inlen, size_t pres
     g_mime_filter_set_size (gmime_filter, inlen, FALSE);
     outptr = gmime_filter->outbuf;
 
+    next = filter->state;
     while (inptr < inend) {
-	if (*inptr >= states[filter->state].a &&
-	    *inptr <= states[filter->state].b)
-	{
-	    next = states[filter->state].next_if_match;
-	}
-	else
-	{
-	    next = states[filter->state].next_if_not_match;
-	}
+	 /* Each state is defined by a contiguous set of rows of the
+	 * state table marked by a common value for '.state'. The
+	 * state numbers must be equal to the index of the first row
+	 * in a given state; thus the loop condition here looks for a
+	 * jump to a first row of a state, which is a real transition
+	 * in the underlying DFA.
+	 */
+	do {
+	    if (*inptr >= states[next].a && *inptr <= states[next].b)  {
+		next = states[next].next_if_match;
+	    } else  {
+		next = states[next].next_if_not_match;
+	    }
+
+	} while (next != states[next].state);
 
 	if (filter->state < filter->first_skipping_state)
 	    *outptr++ = *inptr;
