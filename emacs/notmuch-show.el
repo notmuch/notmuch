@@ -1516,7 +1516,11 @@ All currently available key bindings:
 \\{notmuch-show-mode-map}"
   (setq notmuch-buffer-refresh-function #'notmuch-show-refresh-view)
   (setq buffer-read-only t
-	truncate-lines t))
+	truncate-lines t)
+  (setq imenu-prev-index-position-function
+        #'notmuch-show-imenu-prev-index-position-function)
+  (setq imenu-extract-index-name-function
+        #'notmuch-show-imenu-extract-index-name-function))
 
 (defun notmuch-tree-from-show-current-query ()
   "Call notmuch tree with the current query"
@@ -2464,6 +2468,23 @@ the new buffer."
    (list (completing-read "Mime type to use (default text/plain): "
 			  (mailcap-mime-types) nil nil nil nil "text/plain")))
   (notmuch-show-apply-to-current-part-handle #'notmuch-show--mm-display-part mime-type))
+
+(defun notmuch-show-imenu-prev-index-position-function ()
+  "Move point to previous message in notmuch-show buffer.
+This function is used as a value for
+`imenu-prev-index-position-function'."
+  (if (bobp)
+      nil
+    (notmuch-show-previous-message)
+    t))
+
+(defun notmuch-show-imenu-extract-index-name-function ()
+  "Return imenu name for line at point.
+This function is used as a value for
+`imenu-extract-index-name-function'.  Point should be at the
+beginning of the line."
+  (back-to-indentation)
+  (buffer-substring-no-properties (point) (line-end-position)))
 
 (provide 'notmuch-show)
 

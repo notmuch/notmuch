@@ -374,7 +374,11 @@ Complete list of currently available key bindings:
   (set (make-local-variable 'scroll-preserve-screen-position) t)
   (add-to-invisibility-spec (cons 'ellipsis t))
   (setq truncate-lines t)
-  (setq buffer-read-only t))
+  (setq buffer-read-only t)
+  (setq imenu-prev-index-position-function
+        #'notmuch-search-imenu-prev-index-position-function)
+  (setq imenu-extract-index-name-function
+        #'notmuch-search-imenu-extract-index-name-function))
 
 (defun notmuch-search-get-result (&optional pos)
   "Return the result object for the thread at POS (or point).
@@ -1094,8 +1098,8 @@ notmuch buffers exist, run `notmuch'."
 
     ;; Find the first notmuch buffer.
     (setq first (loop for buffer in (buffer-list)
-		     if (notmuch-interesting-buffer buffer)
-		     return buffer))
+		      if (notmuch-interesting-buffer buffer)
+		      return buffer))
 
     (if first
 	;; If the first one we found is any other than the starting
@@ -1103,6 +1107,23 @@ notmuch buffers exist, run `notmuch'."
 	(unless (eq first start)
 	  (switch-to-buffer first))
       (notmuch))))
+
+;;;; Imenu Support
+
+(defun notmuch-search-imenu-prev-index-position-function ()
+  "Move point to previous message in notmuch-search buffer.
+This function is used as a value for
+`imenu-prev-index-position-function'."
+  (notmuch-search-previous-thread))
+
+(defun notmuch-search-imenu-extract-index-name-function ()
+  "Return imenu name for line at point.
+This function is used as a value for
+`imenu-extract-index-name-function'.  Point should be at the
+beginning of the line."
+  (let ((subject (notmuch-search-find-subject))
+	(author (notmuch-search-find-authors)))
+    (format "%s (%s)" subject author)))
 
 (setq mail-user-agent 'notmuch-user-agent)
 
