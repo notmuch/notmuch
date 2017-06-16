@@ -250,7 +250,7 @@ If CREATE is non-nil then create the folder if necessary."
       ;; how to deal with it.
       (error
        (let ((response (notmuch-read-char-choice
-			"Insert failed: (r)etry, (c)reate folder, (i)gnore, or  (e)dit the header? "
+			"Insert failed: (r)etry, (c)reate folder, (i)gnore, or (e)dit the header? "
 			'(?r ?c ?i ?e))))
 	 (case response
 	       (?r (notmuch-maildir-fcc-with-notmuch-insert fcc-header))
