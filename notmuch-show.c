@@ -902,7 +902,7 @@ do_show_single (void *ctx,
 	return 1;
 
     if (count != 1) {
-	fprintf (stderr, "Error: search term did not match precisely one message (matched %d messages).\n", count);
+	fprintf (stderr, "Error: search term did not match precisely one message (matched %u messages).\n", count);
 	return 1;
     }
 

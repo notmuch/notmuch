@@ -111,7 +111,7 @@ print_count (notmuch_database_t *notmuch, const char *query_str,
     case OUTPUT_FILES:
 	count = count_files (query);
 	if (count >= 0) {
-	    printf ("%u", count);
+	    printf ("%d", count);
 	} else {
 	    ret = -1;
 	    goto DONE;

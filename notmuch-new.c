@@ -131,10 +131,10 @@ generic_print_progress (const char *action, const char *object,
     elapsed_overall = notmuch_time_elapsed (tv_start, tv_now);
     rate_overall = processed / elapsed_overall;
 
-    printf ("%s %d ", action, processed);
+    printf ("%s %u ", action, processed);
 
     if (total) {
-	printf ("of %d %s", total, object);
+	printf ("of %u %s", total, object);
 	if (processed > 0 && elapsed_overall > 0.5) {
 	    double time_remaining = ((total - processed) / rate_overall);
 	    printf (" (");
