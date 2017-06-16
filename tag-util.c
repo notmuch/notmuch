@@ -28,6 +28,9 @@ line_error (tag_parse_status_t status,
     fprintf (stderr, status < 0 ? "Error: " : "Warning: ");
     vfprintf (stderr, format, va_args);
     fprintf (stderr, " [%s]\n", line);
+
+    va_end (va_args);
+
     return status;
 }
 
@@ -200,6 +203,8 @@ message_error (notmuch_message_t *message,
     vfprintf (stderr, format, va_args);
     fprintf (stderr, "Message-ID: %s\n", notmuch_message_get_message_id (message));
     fprintf (stderr, "Status: %s\n", notmuch_status_to_string (status));
+
+    va_end (va_args);
 }
 
 static int
