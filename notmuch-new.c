@@ -850,7 +850,7 @@ _remove_directory (void *ctx,
 		   const char *path,
 		   add_files_state_t *add_files_state)
 {
-    notmuch_status_t status = NOTMUCH_STATUS_SUCCESS;
+    notmuch_status_t status;
     notmuch_directory_t *directory;
     notmuch_filenames_t *files, *subdirs;
     char *absolute;

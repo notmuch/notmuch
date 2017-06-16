@@ -218,7 +218,6 @@ makes_changes (notmuch_message_t *message,
     notmuch_bool_t changes = FALSE;
 
     /* First, do we delete an existing tag? */
-    changes = FALSE;
     for (tags = notmuch_message_get_tags (message);
 	 ! changes && notmuch_tags_valid (tags);
 	 notmuch_tags_move_to_next (tags)) {
