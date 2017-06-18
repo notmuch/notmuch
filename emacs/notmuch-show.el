@@ -247,6 +247,19 @@ every user interaction with notmuch."
   :type 'function
   :group 'notmuch-show)
 
+(defcustom notmuch-show-imenu-indent nil
+  "Should Imenu display messages indented.
+
+By default, Imenu (see Info node `(emacs) Imenu') in a
+notmuch-show buffer displays all messages straight.  This is
+because the default Emacs frontend for Imenu makes it difficult
+to select an Imenu entry with spaces in front.  Other imenu
+frontends such as counsel-imenu does not have this limitation.
+In these cases, Imenu entries can be indented to reflect the
+position of the message in the thread."
+  :type 'boolean
+  :group 'notmuch-show)
+
 (defmacro with-current-notmuch-show-message (&rest body)
   "Evaluate body with current buffer set to the text of current message"
   `(save-excursion
@@ -2484,7 +2497,10 @@ This function is used as a value for
 `imenu-extract-index-name-function'.  Point should be at the
 beginning of the line."
   (back-to-indentation)
-  (buffer-substring-no-properties (point) (line-end-position)))
+  (buffer-substring-no-properties (if notmuch-show-imenu-indent
+				      (line-beginning-position)
+				    (point))
+				  (line-end-position)))
 
 (provide 'notmuch-show)
 
