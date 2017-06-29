@@ -343,7 +343,7 @@ operation on the contents of the current buffer."
     (with-temp-buffer
       (insert all)
       (if indenting
-	  (indent-rigidly (point-min) (point-max) (- depth)))
+	  (indent-rigidly (point-min) (point-max) (- (* notmuch-show-indent-messages-width depth))))
       ;; Remove the original header.
       (goto-char (point-min))
       (re-search-forward "^$" (point-max) nil)
@@ -922,7 +922,7 @@ will return nil if the CID is unknown or cannot be retrieved."
 	(narrow-to-region part-beg part-end)
 	(delete-region part-beg part-end)
 	(apply #'notmuch-show-insert-bodypart-internal part-args)
-	(indent-rigidly part-beg part-end depth))
+	(indent-rigidly part-beg part-end (* notmuch-show-indent-messages-width depth)))
       (goto-char part-end)
       (delete-char 1)
       (notmuch-show-record-part-information (second part-args)
