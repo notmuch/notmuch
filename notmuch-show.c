@@ -1055,18 +1055,6 @@ static const notmuch_show_format_t *formatters[] = {
     [NOTMUCH_FORMAT_RAW] = &format_raw,
 };
 
-enum {
-    ENTIRE_THREAD_DEFAULT = -1,
-    ENTIRE_THREAD_FALSE = FALSE,
-    ENTIRE_THREAD_TRUE = TRUE,
-};
-
-/* The following is to allow future options to be added more easily */
-enum {
-    EXCLUDE_TRUE,
-    EXCLUDE_FALSE,
-};
-
 int
 notmuch_show_command (notmuch_config_t *config, int argc, char *argv[])
 {
@@ -1082,8 +1070,11 @@ notmuch_show_command (notmuch_config_t *config, int argc, char *argv[])
 	.output_body = TRUE,
     };
     int format = NOTMUCH_FORMAT_NOT_SPECIFIED;
-    int exclude = EXCLUDE_TRUE;
-    int entire_thread = ENTIRE_THREAD_DEFAULT;
+    int exclude = TRUE;
+
+    /* This value corresponds to neither true nor false being passed
+     * on the command line */
+    int entire_thread = -1;
     notmuch_bool_t single_message;
 
     notmuch_opt_desc_t options[] = {
@@ -1095,15 +1086,8 @@ notmuch_show_command (notmuch_config_t *config, int argc, char *argv[])
 				  { "raw", NOTMUCH_FORMAT_RAW },
 				  { 0, 0 } } },
 	{ NOTMUCH_OPT_INT, &notmuch_format_version, "format-version", 0, 0 },
-	{ NOTMUCH_OPT_KEYWORD, &exclude, "exclude", 'x',
-	  (notmuch_keyword_t []){ { "true", EXCLUDE_TRUE },
-				  { "false", EXCLUDE_FALSE },
-				  { 0, 0 } } },
-	{ NOTMUCH_OPT_KEYWORD, &entire_thread, "entire-thread", 't',
-	  (notmuch_keyword_t []){ { "true", ENTIRE_THREAD_TRUE },
-				  { "false", ENTIRE_THREAD_FALSE },
-				  { "", ENTIRE_THREAD_TRUE },
-				  { 0, 0 } } },
+	{ NOTMUCH_OPT_BOOLEAN, &exclude, "exclude", 'x', 0 },
+	{ NOTMUCH_OPT_BOOLEAN, &entire_thread, "entire-thread", 't', 0 },
 	{ NOTMUCH_OPT_INT, &params.part, "part", 'p', 0 },
 	{ NOTMUCH_OPT_BOOLEAN, &params.crypto.decrypt, "decrypt", 'd', 0 },
 	{ NOTMUCH_OPT_BOOLEAN, &params.crypto.verify, "verify", 'v', 0 },
@@ -1148,7 +1132,7 @@ notmuch_show_command (notmuch_config_t *config, int argc, char *argv[])
 
     /* Default is entire-thread = FALSE except for format=json and
      * format=sexp. */
-    if (entire_thread == ENTIRE_THREAD_DEFAULT) {
+    if (entire_thread != FALSE && entire_thread != TRUE) {
 	if (format == NOTMUCH_FORMAT_JSON || format == NOTMUCH_FORMAT_SEXP)
 	    params.entire_thread = TRUE;
 	else
@@ -1228,7 +1212,7 @@ notmuch_show_command (notmuch_config_t *config, int argc, char *argv[])
 	    }
 	}
 
-	if (exclude == EXCLUDE_FALSE) {
+	if (exclude == FALSE) {
 	    notmuch_query_set_omit_excluded (query, FALSE);
 	    params.omit_excluded = FALSE;
 	}
