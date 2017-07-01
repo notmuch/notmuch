@@ -70,8 +70,8 @@ parse_arguments (int argc, char **argv, const notmuch_opt_desc_t *options, int o
  * functions.
  */
 
-notmuch_bool_t
-parse_option (const char *arg, const notmuch_opt_desc_t* options);
+int
+parse_option (int argc, char **argv, const notmuch_opt_desc_t* options, int opt_index);
 
 notmuch_bool_t
 parse_position_arg (const char *arg,

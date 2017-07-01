@@ -121,18 +121,24 @@ parse_position_arg (const char *arg_str, int pos_arg_index,
  * parse a possible value, and assign to *output_var
  */
 
-notmuch_bool_t
-parse_option (const char *_arg, const notmuch_opt_desc_t *options)
+int
+parse_option (int argc, char **argv, const notmuch_opt_desc_t *options, int opt_index)
 {
+    assert(argv);
+
+    const char *_arg = argv[opt_index];
+
     assert(_arg);
     assert(options);
 
     const char *arg = _arg + 2; /* _arg starts with -- */
     const notmuch_opt_desc_t *try;
     for (try = options; try->opt_type != NOTMUCH_OPT_END; try++) {
-	if (try->opt_type == NOTMUCH_OPT_INHERIT &&
-	    parse_option (_arg, try->output_var))
-	    return TRUE;
+	if (try->opt_type == NOTMUCH_OPT_INHERIT) {
+	    int new_index = parse_option (argc, argv, try->output_var, opt_index);
+	    if (new_index >= 0)
+		return new_index;
+	}
 
 	if (! try->name)
 	    continue;
@@ -155,24 +161,33 @@ parse_option (const char *_arg, const notmuch_opt_desc_t *options)
 	if (try->output_var == NULL)
 	    INTERNAL_ERROR ("output pointer NULL for option %s", try->name);
 
+	notmuch_bool_t opt_status = FALSE;
 	switch (try->opt_type) {
 	case NOTMUCH_OPT_KEYWORD:
 	case NOTMUCH_OPT_KEYWORD_FLAGS:
-	    return _process_keyword_arg (try, next, value);
+	    opt_status = _process_keyword_arg (try, next, value);
+	    break;
 	case NOTMUCH_OPT_BOOLEAN:
-	    return _process_boolean_arg (try, next, value);
+	    opt_status = _process_boolean_arg (try, next, value);
+	    break;
 	case NOTMUCH_OPT_INT:
-	    return _process_int_arg (try, next, value);
+	    opt_status = _process_int_arg (try, next, value);
+	    break;
 	case NOTMUCH_OPT_STRING:
-	    return _process_string_arg (try, next, value);
+	    opt_status = _process_string_arg (try, next, value);
+	    break;
 	case NOTMUCH_OPT_POSITION:
 	case NOTMUCH_OPT_END:
 	default:
 	    INTERNAL_ERROR ("unknown or unhandled option type %d", try->opt_type);
 	    /*UNREACHED*/
 	}
+	if (opt_status)
+	    return opt_index+1;
+	else
+	    return -1;
     }
-    return FALSE;
+    return -1;
 }
 
 /* See command-line-arguments.h for description */
@@ -194,18 +209,16 @@ parse_arguments (int argc, char **argv,
 	    }
 
 	} else {
+	    int prev_opt_index = opt_index;
 
 	    if (strlen (argv[opt_index]) == 2)
 		return opt_index+1;
 
-	    more_args = parse_option (argv[opt_index], options);
-	    if (more_args) {
-		opt_index++;
-	    } else {
-		fprintf (stderr, "Unrecognized option: %s\n", argv[opt_index]);
-		opt_index = -1;
+	    opt_index = parse_option (argc, argv, options, opt_index);
+	    if (opt_index < 0) {
+		fprintf (stderr, "Unrecognized option: %s\n", argv[prev_opt_index]);
+		more_args = FALSE;
 	    }
-
 	}
     }
 
