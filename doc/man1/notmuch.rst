@@ -125,6 +125,20 @@ users to have their own notmuch related tools to be run via the
 notmuch command. By design, this does not allow notmuch's own commands
 to be overriden using external commands.
 
+OPTION SYNTAX
+-------------
+
+All options accepting an argument can be used with '=' or ':' as a
+separator. For the cases where it's not ambiguous (in particular
+excluding boolean options), a space can also be used. The following
+are all equivalent:
+
+::
+
+   notmuch --config=alt-config config get user.name
+   notmuch --config:alt-config config get user.name
+   notmuch --config alt-config config get user.name
+
 ENVIRONMENT
 ===========
 

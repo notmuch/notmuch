@@ -69,6 +69,14 @@ notmuch --config=alt-config config set user.name "Another Name"
 test_expect_equal "$(notmuch --config=alt-config config get user.name)" \
     "Another Name"
 
+test_begin_subtest "Top level --config:FILE option"
+test_expect_equal "$(notmuch --config:alt-config config get user.name)" \
+    "Another Name"
+
+test_begin_subtest "Top level --config<space>FILE option"
+test_expect_equal "$(notmuch --config  alt-config config get user.name)" \
+    "Another Name"
+
 test_begin_subtest "Top level --config=FILE option changed the right file"
 test_expect_equal "$(notmuch config get user.name)" \
     "Notmuch Test Suite"

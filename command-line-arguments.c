@@ -133,6 +133,11 @@ parse_option (int argc, char **argv, const notmuch_opt_desc_t *options, int opt_
 
     const char *arg = _arg + 2; /* _arg starts with -- */
     const notmuch_opt_desc_t *try;
+
+    const char *next_arg = NULL;
+    if (opt_index < argc - 1  && strncmp (argv[opt_index + 1], "--", 2) != 0)
+	next_arg = argv[opt_index + 1];
+
     for (try = options; try->opt_type != NOTMUCH_OPT_END; try++) {
 	if (try->opt_type == NOTMUCH_OPT_INHERIT) {
 	    int new_index = parse_option (argc, argv, try->output_var, opt_index);
@@ -157,6 +162,12 @@ parse_option (int argc, char **argv, const notmuch_opt_desc_t *options, int opt_
 	 */
 	if (next != '=' && next != ':' && next != '\0')
 	    continue;
+
+	if (next == '\0' && next_arg != NULL && try->opt_type != NOTMUCH_OPT_BOOLEAN) {
+	    next = ' ';
+	    value = next_arg;
+	    opt_index ++;
+	}
 
 	if (try->output_var == NULL)
 	    INTERNAL_ERROR ("output pointer NULL for option %s", try->name);
