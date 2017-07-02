@@ -1,3 +1,9 @@
+notmuch (0.24.2-2) unstable; urgency=medium
+
+  * rebuild for unstable
+
+ -- David Bremner <bremner@debian.org>  Sun, 02 Jul 2017 12:48:46 -0300
+
 notmuch (0.24.2-1) experimental; urgency=medium
 
   * Fix dump output to not include tags when not asked for
