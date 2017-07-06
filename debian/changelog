@@ -1,3 +1,9 @@
+notmuch (0.24.2-3) UNRELEASED; urgency=medium
+
+  * Drop notmuch-dbg, use notmuch-dbgsym if debug symbols are needed.
+
+ -- David Bremner <bremner@debian.org>  Thu, 06 Jul 2017 08:35:09 -0300
+
 notmuch (0.24.2-2) unstable; urgency=medium
 
   * rebuild for unstable
