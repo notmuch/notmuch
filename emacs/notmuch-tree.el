@@ -832,7 +832,7 @@ passed to it by notmuch-tree-process-filter."
   (mapc 'notmuch-tree-insert-forest-thread forest))
 
 (define-derived-mode notmuch-tree-mode fundamental-mode "notmuch-tree"
-  "Major mode displaying messages (as opposed to threads) of of a notmuch search.
+  "Major mode displaying messages (as opposed to threads) of a notmuch search.
 
 This buffer contains the results of a \"notmuch tree\" of your
 email archives. Each line in the buffer represents a single
