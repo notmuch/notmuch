@@ -49,7 +49,20 @@
 ;; Have fun, and let us know if you have any comment, questions, or
 ;; kudos: Notmuch list <notmuch@notmuchmail.org> (subscription is not
 ;; required, but is available from https://notmuchmail.org).
-
+;;
+;; Note for MELPA users (and others tracking the development version
+;; of notmuch-emacs):
+;;
+;; This emacs package needs a fairly closely matched version of the
+;; notmuch program. If you use the MELPA version of notmuch.el (as
+;; opposed to MELPA stable), you should be prepared to track the
+;; master development branch (i.e. build from git) for the notmuch
+;; program as well. Upgrading notmuch-emacs too far beyond the notmuch
+;; program can CAUSE YOUR EMAIL TO STOP WORKING.
+;;
+;; TL;DR: notmuch-emacs from MELPA and notmuch from distro packages is
+;; NOT SUPPORTED.
+;;
 ;;; Code:
 
 (eval-when-compile (require 'cl))
