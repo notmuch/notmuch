@@ -24,7 +24,7 @@
 (require 'epg)
 (require 'notmuch-lib)
 
-(defcustom notmuch-crypto-process-mime nil
+(defcustom notmuch-crypto-process-mime t
   "Should cryptographic MIME parts be processed?
 
 If this variable is non-nil signatures in multipart/signed
@@ -40,6 +40,7 @@ providing a prefix when viewing a signed or encrypted message, or
 by providing a prefix when reloading the message in notmuch-show
 mode."
   :type 'boolean
+  :package-version '(notmuch . "0.25")
   :group 'notmuch-crypto)
 
 (defface notmuch-crypto-part-header
