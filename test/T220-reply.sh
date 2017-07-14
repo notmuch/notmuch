@@ -133,6 +133,44 @@ On Tue, 05 Jan 2010 15:43:56 -0000, Sender <sender@example.com> wrote:
 > Un-munging Reply-To
 OK"
 
+test_begin_subtest "Un-munging Reply-To With Exact Match"
+add_message '[from]="Sender <sender@example.com>"' \
+	    '[to]="Some List <list@example.com>"' \
+	     [subject]=notmuch-reply-test \
+	    '[date]="Tue, 05 Jan 2010 15:43:56 -0000"' \
+	    '[body]="Un-munging Reply-To"' \
+	    '[reply-to]="Some List <list@example.com>"'
+
+output=$(notmuch reply id:${gen_msg_id} 2>&1 && echo OK)
+test_expect_equal "$output" "From: Notmuch Test Suite <test_suite@notmuchmail.org>
+Subject: Re: notmuch-reply-test
+To: Sender <sender@example.com>, Some List <list@example.com>
+In-Reply-To: <${gen_msg_id}>
+References: <${gen_msg_id}>
+
+On Tue, 05 Jan 2010 15:43:56 -0000, Sender <sender@example.com> wrote:
+> Un-munging Reply-To
+OK"
+
+test_begin_subtest "Un-munging Reply-To With Raw addr-spec"
+add_message '[from]="Sender <sender@example.com>"' \
+	    '[to]="Some List <list@example.com>"' \
+	     [subject]=notmuch-reply-test \
+	    '[date]="Tue, 05 Jan 2010 15:43:56 -0000"' \
+	    '[body]="Un-munging Reply-To"' \
+	    '[reply-to]="list@example.com"'
+
+output=$(notmuch reply id:${gen_msg_id} 2>&1 && echo OK)
+test_expect_equal "$output" "From: Notmuch Test Suite <test_suite@notmuchmail.org>
+Subject: Re: notmuch-reply-test
+To: Sender <sender@example.com>, Some List <list@example.com>
+In-Reply-To: <${gen_msg_id}>
+References: <${gen_msg_id}>
+
+On Tue, 05 Jan 2010 15:43:56 -0000, Sender <sender@example.com> wrote:
+> Un-munging Reply-To
+OK"
+
 test_begin_subtest "Message with header of exactly 200 bytes"
 add_message '[subject]="This subject is exactly 200 bytes in length. Other than its length there is not much of note here. Note that the length of 200 bytes includes the Subject: and Re: prefixes with two spaces"' \
 	    '[date]="Tue, 05 Jan 2010 15:43:56 -0000"' \
@@ -241,7 +279,7 @@ test_expect_equal_json "$output" '
         ],
         "date_relative": "2010-01-05",
         "excluded": false,
-        "filename": ["'${MAIL_DIR}'/msg-012"],
+        "filename": ["'${MAIL_DIR}'/msg-014"],
         "headers": {
             "Date": "Tue, 05 Jan 2010 15:43:56 +0000",
             "From": "\u2603 <snowman@example.com>",
