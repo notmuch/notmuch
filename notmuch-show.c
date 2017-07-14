@@ -603,7 +603,7 @@ format_omitted_part_meta_sprinter (sprinter_t *sp, GMimeObject *meta, GMimePart 
 
 void
 format_part_sprinter (const void *ctx, sprinter_t *sp, mime_node_t *node,
-		      notmuch_bool_t first, notmuch_bool_t output_body,
+		      notmuch_bool_t output_body,
 		      notmuch_bool_t include_html)
 {
     /* Any changes to the JSON or S-Expression format should be
@@ -619,7 +619,7 @@ format_part_sprinter (const void *ctx, sprinter_t *sp, mime_node_t *node,
 	if (output_body) {
 	    sp->map_key (sp, "body");
 	    sp->begin_list (sp);
-	    format_part_sprinter (ctx, sp, mime_node_child (node, 0), first, TRUE, include_html);
+	    format_part_sprinter (ctx, sp, mime_node_child (node, 0), TRUE, include_html);
 	    sp->end (sp);
 	}
 	sp->end (sp);
@@ -721,7 +721,7 @@ format_part_sprinter (const void *ctx, sprinter_t *sp, mime_node_t *node,
     }
 
     for (i = 0; i < node->nchildren; i++)
-	format_part_sprinter (ctx, sp, mime_node_child (node, i), i == 0, TRUE, include_html);
+	format_part_sprinter (ctx, sp, mime_node_child (node, i), TRUE, include_html);
 
     /* Close content structures */
     for (i = 0; i < nclose; i++)
@@ -735,7 +735,7 @@ format_part_sprinter_entry (const void *ctx, sprinter_t *sp,
 			    mime_node_t *node, unused (int indent),
 			    const notmuch_show_params_t *params)
 {
-    format_part_sprinter (ctx, sp, node, TRUE, params->output_body, params->include_html);
+    format_part_sprinter (ctx, sp, node, params->output_body, params->include_html);
 
     return NOTMUCH_STATUS_SUCCESS;
 }

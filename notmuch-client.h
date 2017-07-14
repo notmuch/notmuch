@@ -247,7 +247,7 @@ show_one_part (const char *filename, int part);
 
 void
 format_part_sprinter (const void *ctx, struct sprinter *sp, mime_node_t *node,
-		      notmuch_bool_t first, notmuch_bool_t output_body,
+		      notmuch_bool_t output_body,
 		      notmuch_bool_t include_html);
 
 void
