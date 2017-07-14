@@ -128,7 +128,9 @@ The available configuration items are described below.
     **crypto.gpg_path**
 
         Name (or full path) of gpg binary to use in verification and
-        decryption of PGP/MIME messages.
+        decryption of PGP/MIME messages.  NOTE: This configuration
+        item is deprecated, and will be ignored if notmuch is built
+        against GMime 3.0 or later.
 
         Default: ``gpg``.
 

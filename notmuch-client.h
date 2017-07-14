@@ -76,7 +76,9 @@ typedef struct notmuch_crypto {
     notmuch_crypto_context_t* pkcs7ctx;
     notmuch_bool_t verify;
     notmuch_bool_t decrypt;
+#if (GMIME_MAJOR_VERSION < 3)
     const char *gpgpath;
+#endif
 } notmuch_crypto_t;
 
 typedef struct notmuch_show_params {
@@ -289,12 +291,14 @@ void
 notmuch_config_set_database_path (notmuch_config_t *config,
 				  const char *database_path);
 
+#if (GMIME_MAJOR_VERSION < 3)
 const char *
 notmuch_config_get_crypto_gpg_path (notmuch_config_t *config);
 
 void
 notmuch_config_set_crypto_gpg_path (notmuch_config_t *config,
 				  const char *gpg_path);
+#endif
 
 const char *
 notmuch_config_get_user_name (notmuch_config_t *config);

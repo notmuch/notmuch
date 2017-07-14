@@ -19,6 +19,12 @@ another.suite@example.com
 foo bar
 baz
 EOF
+
+if [ "${NOTMUCH_GMIME_MAJOR}" -lt 3 ]; then
+    config_gpg_path="crypto.gpg_path=gpg
+"
+fi
+
 output=$(notmuch --config=new-notmuch-config config list | notmuch_built_with_sanitize)
 test_expect_equal "$output" "\
 database.path=/path/to/maildir
@@ -29,7 +35,7 @@ new.tags=foo;bar;
 new.ignore=
 search.exclude_tags=baz;
 maildir.synchronize_flags=true
-crypto.gpg_path=gpg
+""${config_gpg_path}""\
 built_with.compact=something
 built_with.field_processor=something
 built_with.retry_lock=something"

@@ -44,6 +44,12 @@ test_expect_equal "$(notmuch config get foo.nonexistent)" ""
 
 test_begin_subtest "List all items"
 notmuch config list 2>&1 | notmuch_config_sanitize > OUTPUT
+
+if [ "${NOTMUCH_GMIME_MAJOR}" -lt 3 ]; then
+    config_gpg_path="crypto.gpg_path=gpg
+"
+fi
+
 cat <<EOF > EXPECTED
 Error opening database at MAIL_DIR/.notmuch: No such file or directory
 database.path=MAIL_DIR
@@ -54,8 +60,7 @@ new.tags=unread;inbox;
 new.ignore=
 search.exclude_tags=
 maildir.synchronize_flags=true
-crypto.gpg_path=gpg
-foo.string=this is another string value
+${config_gpg_path}foo.string=this is another string value
 foo.list=this;is another;list value;
 built_with.compact=something
 built_with.field_processor=something
