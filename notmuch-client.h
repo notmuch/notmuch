@@ -72,11 +72,11 @@ typedef struct notmuch_show_format {
 } notmuch_show_format_t;
 
 typedef struct notmuch_crypto {
-    notmuch_crypto_context_t* gpgctx;
-    notmuch_crypto_context_t* pkcs7ctx;
     notmuch_bool_t verify;
     notmuch_bool_t decrypt;
 #if (GMIME_MAJOR_VERSION < 3)
+    notmuch_crypto_context_t* gpgctx;
+    notmuch_crypto_context_t* pkcs7ctx;
     const char *gpgpath;
 #endif
 } notmuch_crypto_t;
@@ -180,8 +180,10 @@ typedef struct _notmuch_config notmuch_config_t;
 void
 notmuch_exit_if_unsupported_format (void);
 
+#if (GMIME_MAJOR_VERSION <3)
 notmuch_crypto_context_t *
 notmuch_crypto_get_context (notmuch_crypto_t *crypto, const char *protocol);
+#endif
 
 int
 notmuch_crypto_cleanup (notmuch_crypto_t *crypto);
