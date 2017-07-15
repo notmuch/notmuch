@@ -291,8 +291,7 @@ add_file (notmuch_database_t *notmuch, const char *filename,
     case NOTMUCH_STATUS_READ_ONLY_DATABASE:
     case NOTMUCH_STATUS_XAPIAN_EXCEPTION:
     case NOTMUCH_STATUS_OUT_OF_MEMORY:
-	fprintf (stderr, "Error: %s. Halting processing.\n",
-		 notmuch_status_to_string (status));
+	(void) print_status_database("add_file", notmuch, status);
 	goto DONE;
     default:
 	INTERNAL_ERROR ("add_message returned unexpected value: %d", status);
