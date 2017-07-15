@@ -151,7 +151,7 @@ set_signature_list_destructor (mime_node_t *node)
 /* Verify a signed mime node (GMime 2.6) */
 static void
 node_verify (mime_node_t *node, GMimeObject *part,
-	     notmuch_crypto_context_t *cryptoctx)
+	     g_mime_3_unused(notmuch_crypto_context_t *cryptoctx))
 {
     GError *err = NULL;
 
@@ -172,7 +172,7 @@ node_verify (mime_node_t *node, GMimeObject *part,
 /* Decrypt and optionally verify an encrypted mime node (GMime 2.6) */
 static void
 node_decrypt_and_verify (mime_node_t *node, GMimeObject *part,
-			 notmuch_crypto_context_t *cryptoctx)
+			 g_mime_3_unused(notmuch_crypto_context_t *cryptoctx))
 {
     GError *err = NULL;
     GMimeDecryptResult *decrypt_result = NULL;
