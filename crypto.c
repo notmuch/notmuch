@@ -19,7 +19,7 @@
  */
 
 #include "notmuch-client.h"
-
+#if (GMIME_MAJOR_VERSION < 3)
 /* Create a GPG context (GMime 2.6) */
 static notmuch_crypto_context_t *
 create_gpg_context (notmuch_crypto_t *crypto)
@@ -132,3 +132,9 @@ notmuch_crypto_cleanup (notmuch_crypto_t *crypto)
 
     return 0;
 }
+#else
+int notmuch_crypto_cleanup (unused(notmuch_crypto_t *crypto))
+{
+    return 0;
+}
+#endif

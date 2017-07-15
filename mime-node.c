@@ -240,6 +240,7 @@ _mime_node_create (mime_node_t *parent, GMimeObject *part)
 	return NULL;
     }
 
+#if (GMIME_MAJOR_VERSION < 3)
     if ((GMIME_IS_MULTIPART_ENCRYPTED (part) && node->ctx->crypto->decrypt)
 	|| (GMIME_IS_MULTIPART_SIGNED (part) && node->ctx->crypto->verify)) {
 	GMimeContentType *content_type = g_mime_object_get_content_type (part);
@@ -248,6 +249,7 @@ _mime_node_create (mime_node_t *parent, GMimeObject *part)
 	if (!cryptoctx)
 	    return NULL;
     }
+#endif
 
     /* Handle PGP/MIME parts */
     if (GMIME_IS_MULTIPART_ENCRYPTED (part) && node->ctx->crypto->decrypt) {
