@@ -3,8 +3,12 @@ notmuch (0.25~rc0-1) experimental; urgency=medium
   * New upstream release candidate
   * Drop notmuch-dbg, use notmuch-dbgsym if debug symbols are needed.
   * [lib] Bump SONAME to libnotmuch.so.5
+  * Bug fix: "doesn't check gpg/pgp signatures by default", thanks
+    to Vagrant Cascadian (Closes: #755544).
+  * Bug fix: "allow separation of command-line options and their
+    values: --option foo", thanks to Paul Wise (Closes: #825886).
 
- -- David Bremner <bremner@debian.org>  Sun, 16 Jul 2017 08:19:54 -0300
+ -- David Bremner <bremner@debian.org>  Sun, 16 Jul 2017 08:48:59 -0300
 
 notmuch (0.24.2-2) unstable; urgency=medium
 
