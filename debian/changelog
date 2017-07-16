@@ -1,8 +1,10 @@
-notmuch (0.24.2-3) UNRELEASED; urgency=medium
+notmuch (0.25~rc0) UNRELEASED; urgency=medium
 
+  * New upstream release candidate
   * Drop notmuch-dbg, use notmuch-dbgsym if debug symbols are needed.
+  * [lib] Bump SONAME to libnotmuch.so.5
 
- -- David Bremner <bremner@debian.org>  Thu, 06 Jul 2017 08:35:09 -0300
+ -- David Bremner <bremner@debian.org>  Sun, 16 Jul 2017 08:06:56 -0300
 
 notmuch (0.24.2-2) unstable; urgency=medium
 
